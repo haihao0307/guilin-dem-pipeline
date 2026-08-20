@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": {
+    "id": "guilin-zhenbaoding-yangshuo-pingle",
+    "name": "真宝鼎以北15公里至阳朔平乐交界DEM拼接任务",
+    "taskMode": "standalone_incremental_mosaic",
+    "targetCrs": "EPSG:32649",
+    "targetPixelSpacingMeters": 12.5,
+    "accuracyLabel": "12.5米输出像元的ASF RTC参考DEM",
+    "lineagePolicy": "保留每张源DEM、下载记录、哈希、覆盖计数与填补标记，不将12.5米输出像元表述为原生12.5米测绘高程。"
+  },
+  "aoi": {
+    "westLongitude": 109.80230650918028,
+    "summit": {
+      "name": "Zhenbao Ding",
+      "longitude": 110.82528,
+      "latitude": 26.13556,
+      "source": "Mountain Planet coordinate converted from DMS"
+    },
+    "northExtensionMeters": 15000.0,
+    "eastSafetyBufferMeters": 5000.0,
+    "retrievalBufferMeters": 3000.0,
+    "fallbackSouthLatitude": 24.40,
+    "boundary": {
+      "provider": "OpenStreetMap",
+      "requireExactSharedBoundary": true,
+      "yangshuoRelationId": 2773823,
+      "pingleRelationId": 2773820,
+      "overpassEndpoints": [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter"
+      ],
+      "osmApiTemplate": "https://api.openstreetmap.org/api/0.6/relation/{relation_id}/full"
+    }
+  },
+  "source": {
+    "provider": "NASA ASF DAAC",
+    "dataset": "ALOS PALSAR",
+    "processingLevel": ["RTC_HI_RES"],
+    "classification": "ASF_RTC_12_5m_reference_dem",
+    "expectedAncillaryPatterns": ["*.dem.tif", "*_dem.tif"],
+    "excludedRasterPatterns": ["*_HH.tif", "*_HV.tif", "*_VH.tif", "*_VV.tif", "*.inc_map.tif", "*.ls_map.tif"]
+  },
+  "search": {
+    "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
+    "maxResults": 500,
+    "minimumCoverageFraction": 0.995,
+    "maxSelectedProducts": 32,
+    "gridSize": 220,
+    "deduplicateByPathFrame": true,
+    "initialCoverageFromExistingFive": true
+  },
+  "download": {
+    "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
+    "resumeExistingFiles": true,
+    "downloadMetadataXml": true,
+    "preferredTransfer": "direct_additional_dem_urls",
+    "fallbackTransfer": "default_product_archive",
+    "timeoutSeconds": 900
+  },
+  "existingFive": {
+    "verifySha256": true,
+    "allowHashMismatch": false,
+    "searchRoots": [
+      "C:\\HaihaoDEM\\ASF_ALOS_PALSAR_12_5m_Guilin_OneClick\\data\\raw\\dem",
+      "C:\\HaihaoDEM\\ASF_v104_local\\data\\raw\\dem",
+      "C:\\HaihaoDEM",
+      "%USERPROFILE%\\Downloads",
+      "%USERPROFILE%\\Desktop"
+    ]
+  },
+  "processing": {
+    "outputCrs": "EPSG:32649",
+    "outputPixelSpacingMeters": 12.5,
+    "resampling": "bilinear",
+    "overlapReducer": "median",
+    "nodata": -32768.0,
+    "compression": "DEFLATE",
+    "blockSize": 512,
+    "buildOverviews": true,
+    "overviewLevels": [2, 4, 8, 16, 32],
+    "minimumValidFraction": 0.995,
+    "fillSmallGaps": true,
+    "maxFillAreaKm2": 10.0,
+    "fillMaxSearchDistancePixels": 400,
+    "failOnLargeGap": true
+  },
+  "outputs": {
+    "finalDem": "outputs/DEM_Zhenbaoding15km_to_Yangshuo_Pingle_12_5m_COG.tif",
+    "sourceCount": "outputs/DEM_Zhenbaoding15km_to_Yangshuo_Pingle_source_count_COG.tif",
+    "fillClass": "outputs/DEM_Zhenbaoding15km_to_Yangshuo_Pingle_fill_class_COG.tif",
+    "resolvedAoiJson": "metadata/resolved_aoi.json",
+    "resolvedAoiGeoJson": "metadata/resolved_aoi.geojson",
+    "existingResolved": "metadata/existing_five_resolved.json",
+    "downloadPlan": "metadata/selected_new_products.json",
+    "sourceManifest": "metadata/source_manifest.json",
+    "qaReport": "reports/QA_REPORT.json",
+    "preview": "reports/DEM_PREVIEW.png"
+  }
+}
