@@ -1,36 +1,64 @@
 {
-  "generatedAt": "2026-08-20T06:08:38.569999+00:00",
+  "generatedAt": "2026-08-20T11:22:06.560350+00:00",
   "project": {
     "id": "guilin-zhenbaoding-yangshuo-pingle",
     "name": "真宝鼎以北15公里至阳朔平乐交界DEM拼接任务",
     "taskMode": "standalone_incremental_mosaic",
     "targetCrs": "EPSG:32649",
-    "targetPixelSpacingMeters": 12.5,
-    "accuracyLabel": "12.5米输出像元的ASF RTC参考DEM",
+    "targetPixelSpacingMeters": 30.0,
+    "accuracyLabel": "AWS Terrain Tiles约30米临时完整范围DEM",
     "lineagePolicy": "保留每张源DEM、下载记录、哈希、覆盖计数与填补标记，不将12.5米输出像元表述为原生12.5米测绘高程。"
   },
   "scope": {
     "northExtensionMeters": 15000.0,
-    "areaSquareKilometers": 20042.298445402343,
+    "areaSquareKilometers": 18831.327677902344,
     "bounds": [
       109.80230650918028,
-      24.599999999999998,
-      110.88027873316969,
+      24.6424154,
+      110.8752787331697,
       26.2709499176912
     ]
   },
-  "boundaryExact": false,
+  "boundaryExact": true,
   "runtimeSource": {
-    "mode": "pending",
-    "productLabel": "等待云端下载",
-    "temporaryFallback": false
+    "mode": "mapzen_skadi_fallback",
+    "status": "temporary_complete_range_preview",
+    "productLabel": "AWS Terrain Tiles约30米临时完整范围DEM",
+    "provider": "AWS Open Data Terrain Tiles, Mapzen Skadi",
+    "dataset": "Global bare-earth terrain tiles assembled from open elevation sources",
+    "nativeResolutionApproxMeters": 30,
+    "outputPixelSpacingMeters": 30,
+    "native12_5mSurveyClaim": false,
+    "temporaryFallback": true,
+    "replacementPolicy": "EARTHDATA_TOKEN可用后由ASF RTC_HI_RES参考DEM整体替换",
+    "attribution": "Terrain Tiles on AWS, Mapzen and upstream source attributions"
   },
   "terrain": {
-    "ready": false
+    "ready": true,
+    "gridWidth": 193,
+    "gridHeight": 321,
+    "minimumElevation": 95.21517944335938,
+    "maximumElevation": 1992.952392578125,
+    "bounds": [
+      378780.0,
+      2725410.0,
+      487560.0,
+      2906250.0
+    ],
+    "crs": "EPSG:32649",
+    "resolution": [
+      30.0,
+      30.0
+    ],
+    "widthMeters": 108780.0,
+    "heightMeters": 180840.0,
+    "heightBinary": "assets/height_u16.bin",
+    "maskBinary": "assets/mask_u8.bin",
+    "validFraction": 0.9636175810695204
   },
-  "asfPlanCreated": false,
-  "selectedProductCount": 0,
+  "asfPlanCreated": true,
+  "selectedProductCount": 10,
   "existingResolvedCount": 0,
-  "sourceFileCount": 0,
-  "qaStatus": null
+  "sourceFileCount": 6,
+  "qaStatus": "complete"
 }
