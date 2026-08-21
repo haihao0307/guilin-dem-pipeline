@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "guilin-gaea-processing-profile/v1",
+  "status": "template-planned-awaiting-licensed-gaea-2.3-build",
+  "purpose": "把 Gaea、侵蚀、喀斯特地貌、山体材质与植被衍生层接入近景可视化流程；不修改权威 DEM，也不把程序细节宣称为测量精度。",
+  "sourceContract": {
+    "input": "outputs/DEM_Zhenbaoding15km_to_Yangshuo_Pingle_fallback_30m_COG.tif",
+    "crs": "EPSG:32649",
+    "horizontalUnits": "metres",
+    "verticalUnits": "metres",
+    "sourceGroundResolutionMeters": 30,
+    "authoritativeBranchPreserved": true,
+    "native12_5mOr1mClaim": false
+  },
+  "gaeaTemplate": {
+    "file": null,
+    "reason": "必须在已安装的 Gaea 2.3 UI 中创建并用 Build > Copy Command Line 验证，不能伪造 undocumented .terrain 序列化。",
+    "requiredVariables": [
+      "InputHeightfield",
+      "OutputHeightfield",
+      "InputProcessMask",
+      "ProcessMix",
+      "Broad_Duration",
+      "Broad_ErosionScaleMeters",
+      "Fine_Duration",
+      "Fine_ErosionScaleMeters",
+      "Karst_SlopeMask",
+      "Vegetation_SlopeMask",
+      "DeterministicSeed"
+    ],
+    "profiles": ["Preview_1K", "Review_4K", "Tiles_Final"],
+    "seed": 1337,
+    "deterministic": true
+  },
+  "visualizationRecipe": {
+    "name": "guilin-erosion-karst-vegetation-v1",
+    "input": "DEM_Input",
+    "stages": [
+      {"node": "Erosion2", "role": "broad restrained macro drainage", "mix": 0.12, "authoritative": false},
+      {"node": "Erosion2", "role": "fine restrained detail", "mix": 0.08, "authoritative": false},
+      {"node": "Thermal2", "role": "masked talus on steep slopes", "mask": "Karst_SlopeMask", "authoritative": false},
+      {"node": "Outcrops", "role": "karst rock support/material mask", "mask": "Karst_SlopeMask", "authoritative": false},
+      {"node": "Height/Slope/Curvature/FlowMap/Normals", "role": "linear web material maps", "authoritative": false},
+      {"node": "Vegetation masks", "role": "ecology package placement", "mask": "Vegetation_SlopeMask", "authoritative": false}
+    ],
+    "preserveBlend": {"original": "DEM_Input", "processed": "VisualizationBranch", "ratioVariable": "ProcessMix", "sourceOfTruth": "original"}
+  },
+  "webLayers": {
+    "water": "metadata/waterways_osm.geojson",
+    "ecology": "metadata/ecology/v0.3.1",
+    "fineRegions": "metadata/fine_regions_1m_plan.json",
+    "renderPolicy": "近景 60 平方公里聚焦时显示植被与喀斯特材质；不冒充原生一米测绘层。"
+  },
+  "executionBoundary": {
+    "gaeaInstalledAndLicensed": false,
+    "dryRunAllowed": true,
+    "nextStep": "在 Windows Gaea 2.3 中按 references/graph-contract.md 创建模板，再用 scripts/gaea_swarm.py detect/prepare/command/run/verify。"
+  }
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from array import array
 import json
 import math
 import shutil
@@ -235,10 +236,164 @@ def attach_lijiang(terrain: dict[str, Any], geojson_path: Path) -> None:
     terrain["riverLicense"] = payload.get("properties", {}).get("license", "ODbL 1.0")
 
 
-def attach_waterways(terrain: dict[str, Any], geojson_path: Path) -> None:
-    """Project every downloaded OSM waterway onto the DEM; names are metadata only."""
+def _clip_segment(a: tuple[float, float], b: tuple[float, float]) -> list[tuple[float, float]]:
+    """Clip one UV segment to the complete terrain rectangle."""
+    x0, y0 = a
+    x1, y1 = b
+    dx, dy = x1 - x0, y1 - y0
+    t0, t1 = 0.0, 1.0
+    for p, q in ((-dx, x0), (dx, 1.0 - x0), (-dy, y0), (dy, 1.0 - y0)):
+        if abs(p) < 1e-12:
+            if q < 0:
+                return []
+            continue
+        t = q / p
+        if p < 0:
+            if t > t1:
+                return []
+            t0 = max(t0, t)
+        else:
+            if t < t0:
+                return []
+            t1 = min(t1, t)
+    return [(x0 + t0 * dx, y0 + t0 * dy), (x0 + t1 * dx, y0 + t1 * dy)]
+
+
+def _clip_polyline(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    clipped: list[tuple[float, float]] = []
+    for start, end in zip(points, points[1:]):
+        segment = _clip_segment(start, end)
+        if not segment:
+            continue
+        if not clipped or math.hypot(clipped[-1][0] - segment[0][0], clipped[-1][1] - segment[0][1]) > 1e-9:
+            clipped.append(segment[0])
+        clipped.append(segment[1])
+    return clipped
+
+
+def _clip_polygon(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Sutherland-Hodgman clip so surface water reaches the map edge exactly."""
+    output = points[:]
+    for axis, limit, keep_greater in ((0, 0.0, True), (0, 1.0, False), (1, 0.0, True), (1, 1.0, False)):
+        if not output:
+            break
+        clipped: list[tuple[float, float]] = []
+        for current, previous in zip(output, output[-1:] + output[:-1]):
+            current_inside = current[axis] >= limit if keep_greater else current[axis] <= limit
+            previous_inside = previous[axis] >= limit if keep_greater else previous[axis] <= limit
+            if current_inside != previous_inside:
+                delta = current[axis] - previous[axis]
+                ratio = (limit - previous[axis]) / delta if abs(delta) > 1e-12 else 0.0
+                clipped.append((previous[0] + ratio * (current[0] - previous[0]), previous[1] + ratio * (current[1] - previous[1])))
+            if current_inside:
+                clipped.append(current)
+        output = clipped
+    return output
+
+
+def _compact_ring(points: list[tuple[float, float]], max_points: int = 64) -> list[tuple[float, float]]:
+    if len(points) <= max_points:
+        return points
+    step = max(1, math.ceil((len(points) - 1) / (max_points - 1)))
+    result = points[::step]
+    if result[-1] != points[-1]:
+        result.append(points[-1])
+    return result
+
+
+def _triangulate(points: list[tuple[float, float]]) -> list[tuple[float, float, float, float, float, float]]:
+    """Small deterministic ear-clipping triangulator for clipped OSM water polygons."""
+    if len(points) < 3:
+        return []
+    ring = points[:]
+    area = sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(ring, ring[1:] + ring[:1]))
+    if abs(area) < 1e-12:
+        return []
+    if area < 0:
+        ring.reverse()
+    # Large OSM banks are already dense; a deterministic centroid fan keeps the
+    # metadata build bounded while retaining the mapped surface silhouette.
+    if len(ring) > 80:
+        center = (sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring))
+        return [(*center, *a, *b) for a, b in zip(ring, ring[1:] + ring[:1])]
+    indices = list(range(len(ring)))
+    triangles: list[tuple[float, float, float, float, float, float]] = []
+
+    def cross(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> float:
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+    def inside(p: tuple[float, float], a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> bool:
+        return cross(a, b, p) >= -1e-10 and cross(b, c, p) >= -1e-10 and cross(c, a, p) >= -1e-10
+
+    guard = 0
+    while len(indices) > 2 and guard < len(ring) * len(ring):
+        guard += 1
+        ear_found = False
+        for position, curr in enumerate(indices):
+            prev = indices[position - 1]
+            nxt = indices[(position + 1) % len(indices)]
+            a, b, c = ring[prev], ring[curr], ring[nxt]
+            if cross(a, b, c) <= 1e-10:
+                continue
+            if any(inside(ring[index], a, b, c) for index in indices if index not in (prev, curr, nxt)):
+                continue
+            triangles.append((a[0], a[1], b[0], b[1], c[0], c[1]))
+            indices.pop(position)
+            ear_found = True
+            break
+        if not ear_found:
+            # A malformed OSM ring is still rendered as a conservative fan rather than dropped.
+            center = (sum(p[0] for p in ring) / len(ring), sum(p[1] for p in ring) / len(ring))
+            return [(*center, *a, *b) for a, b in zip(ring, ring[1:] + ring[:1])]
+    return triangles
+
+
+def _parse_width(tags: dict[str, Any], default: float) -> float:
+    for key in ("width", "width:minimum", "waterway:width"):
+        value = tags.get(key)
+        if value is None:
+            continue
+        try:
+            numeric = float(str(value).replace("m", "").strip())
+            if math.isfinite(numeric) and numeric > 0:
+                return numeric
+        except ValueError:
+            continue
+    return default
+
+
+def _load_height_samples(terrain: dict[str, Any], assets: Path | None) -> array | None:
+    if not assets:
+        return None
+    path = assets / "height_u16.bin"
+    if not path.exists():
+        return None
+    samples = array("H")
+    samples.frombytes(path.read_bytes())
+    return samples
+
+
+def _sample_elevation(terrain: dict[str, Any], samples: array | None, point: tuple[float, float]) -> float:
+    if not samples:
+        return 0.0
+    u, v = point
+    col = max(0, min(int(round(u * (terrain["gridWidth"] - 1))), terrain["gridWidth"] - 1))
+    row = max(0, min(int(round(v * (terrain["gridHeight"] - 1))), terrain["gridHeight"] - 1))
+    normalized = samples[row * terrain["gridWidth"] + col] / 65535.0
+    return terrain["minimumElevation"] + normalized * (terrain["maximumElevation"] - terrain["minimumElevation"])
+
+
+def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path | None = None) -> None:
+    """Project OSM water surfaces and clipped/tapered centerlines onto the DEM.
+
+    Polygon water bodies retain their mapped surface. Centerline-only waterways receive
+    a width-aware surface strip that is 1x at the upstream end and 3x at the downstream
+    end. Clipping inserts exact edge intersections, so no channel stops inside the map.
+    """
     if not geojson_path.exists() or not terrain.get("ready"):
         terrain["waterways"] = []
+        terrain["waterwayPolygons"] = []
+        terrain["waterwayTriangles"] = []
         terrain["waterwayCount"] = 0
         return
     payload = read_json(geojson_path)
@@ -246,29 +401,76 @@ def attach_waterways(terrain: dict[str, Any], geojson_path: Path) -> None:
     width_m = terrain["widthMeters"]
     height_m = terrain["heightMeters"]
     lines = []
+    polygons = []
+    triangles: list[dict[str, Any]] = []
+    samples = _load_height_samples(terrain, assets)
     for feature in payload.get("features", []):
         geometry = feature.get("geometry") or {}
-        if geometry.get("type") != "LineString":
+        tags = feature.get("properties") or {}
+        geometry_type = geometry.get("type")
+        raw = geometry.get("coordinates") or []
+        if geometry_type == "Polygon":
+            rings = raw[:1]
+        elif geometry_type == "MultiPolygon":
+            rings = [ring for polygon in raw for ring in polygon[:1]]
+        else:
+            rings = []
+        for ring in rings:
+            if len(ring) < 3:
+                continue
+            longitudes = [float(point[0]) for point in ring]
+            latitudes = [float(point[1]) for point in ring]
+            xs, ys = transform("EPSG:4326", terrain["crs"], longitudes, latitudes)
+            uv = [((x - bounds[0]) / width_m, (bounds[3] - y) / height_m) for x, y in zip(xs, ys)]
+            clipped = _compact_ring(_clip_polygon(uv))
+            if len(clipped) >= 3:
+                polygons.append({"points": [round(float(value), 6) for point in clipped for value in point], "kind": tags.get("natural") or tags.get("water") or "water-surface"})
+        if geometry_type != "LineString":
             continue
-        coordinates = geometry.get("coordinates") or []
-        if len(coordinates) < 2:
+        if len(raw) < 2:
             continue
-        longitudes = [float(point[0]) for point in coordinates]
-        latitudes = [float(point[1]) for point in coordinates]
+        longitudes = [float(point[0]) for point in raw]
+        latitudes = [float(point[1]) for point in raw]
         xs, ys = transform("EPSG:4326", terrain["crs"], longitudes, latitudes)
-        points = []
-        for longitude, latitude, x, y in zip(longitudes, latitudes, xs, ys):
-            u = (x - bounds[0]) / width_m
-            v = (bounds[3] - y) / height_m
-            if -0.01 <= u <= 1.01 and -0.01 <= v <= 1.01:
-                points.append({"u": float(u), "v": float(v)})
-        if len(points) >= 2:
-            lines.append(points)
+        uv_all = [((x - bounds[0]) / width_m, (bounds[3] - y) / height_m) for x, y in zip(xs, ys)]
+        # OSM river ways are commonly downstream-directed. When a way is reversed,
+        # the coarser terrain endpoint is used as a deterministic upstream hint.
+        if _sample_elevation(terrain, samples, uv_all[0]) < _sample_elevation(terrain, samples, uv_all[-1]):
+            uv_all.reverse()
+        clipped = _clip_polyline(uv_all)
+        if len(clipped) < 2:
+            continue
+        kind = str(tags.get("waterway") or "unknown")
+        default_width = {"river": 36.0, "stream": 8.0, "canal": 10.0, "ditch": 3.0, "drain": 3.0, "riverbank": 45.0}.get(kind, 5.0)
+        end_width = _parse_width(tags, default_width)
+        start_width = max(0.75, end_width / 3.0)
+        left: list[tuple[float, float]] = []
+        right: list[tuple[float, float]] = []
+        for index, point in enumerate(clipped):
+            previous = clipped[max(0, index - 1)]
+            following = clipped[min(len(clipped) - 1, index + 1)]
+            dx, dy = following[0] - previous[0], following[1] - previous[1]
+            length = math.hypot(dx, dy) or 1.0
+            normal = (-dy / length, dx / length)
+            width = start_width + (end_width - start_width) * index / max(1, len(clipped) - 1)
+            # U/V are normalized, so use projected metres for the physical width.
+            nu, nv = normal[0] * width / width_m, normal[1] * width / height_m
+            left.append((point[0] + nu, point[1] + nv))
+            right.append((point[0] - nu, point[1] - nv))
+        surface = _compact_ring(_clip_polygon(left + list(reversed(right))))
+        if len(surface) >= 3:
+            polygons.append({"points": [round(float(value), 6) for point in surface for value in point], "kind": kind, "widthStartMeters": round(start_width, 2), "widthEndMeters": round(end_width, 2), "flow": "upstream-to-downstream"})
+        lines.append({"kind": kind, "widthStartMeters": round(start_width, 2), "widthEndMeters": round(end_width, 2), "flow": "upstream-to-downstream"})
+    # Centerlines remain count/provenance metadata only; the renderer consumes surfaces.
     terrain["waterways"] = lines
+    terrain["waterwayPolygons"] = polygons
+    terrain["waterwayTriangles"] = triangles
     terrain["waterwayCount"] = len(lines)
     terrain["waterwaySource"] = payload.get("properties", {}).get("source", "OpenStreetMap contributors")
     terrain["waterwayLicense"] = payload.get("properties", {}).get("license", "ODbL 1.0")
-    terrain["waterwayLabelPolicy"] = "只绘制水系线，不显示名称"
+    terrain["waterwayLabelPolicy"] = "只绘制水面，不显示水系名称"
+    terrain["waterwayRepresentation"] = "mapped-water-surface-polygons-with-tapered-centerline-fallback"
+    terrain["waterwayEdgePolicy"] = "clip-intersections-preserved-at-terrain-boundary"
 
 
 def attach_ecology(terrain: dict[str, Any], package_dir: Path, assets: Path) -> None:
@@ -382,15 +584,16 @@ class TerrainRenderer{
   this.programTerrain=this.program(tvs,tfs);const w=this.meta.gridWidth,H=this.meta.gridHeight;this.maxDim=Math.max(this.meta.widthMeters,this.meta.heightMeters);const verts=new Float32Array(w*H*4);let k=0;for(let r=0;r<H;r++)for(let c=0;c<w;c++){const i=r*w+c,n=this.height[i]/65535,valid=this.mask[i]>0;verts[k++]=(c/(w-1)-.5)*2*this.meta.widthMeters/this.maxDim;verts[k++]=valid?n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2:0;verts[k++]=(r/(H-1)-.5)*2*this.meta.heightMeters/this.maxDim;verts[k++]=n}
   const step=innerWidth<700?4:innerWidth<1100?2:1,qr=Math.ceil((H-1)/step),qc=Math.ceil((w-1)/step),idx=new Uint32Array(qr*qc*6);let q=0;for(let r=0;r<H-1;r+=step){const r1=Math.min(r+step,H-1);for(let c=0;c<w-1;c+=step){const c1=Math.min(c+step,w-1),a=r*w+c,b=r*w+c1,d=r1*w+c,e=r1*w+c1;idx[q++]=a;idx[q++]=d;idx[q++]=b;idx[q++]=b;idx[q++]=d;idx[q++]=e}}this.count=q;
   const vao=g.createVertexArray();g.bindVertexArray(vao);const vb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,vb);g.bufferData(g.ARRAY_BUFFER,verts,g.STATIC_DRAW);const pl=g.getAttribLocation(this.programTerrain,'p'),hl=g.getAttribLocation(this.programTerrain,'h');g.enableVertexAttribArray(pl);g.vertexAttribPointer(pl,3,g.FLOAT,false,16,0);g.enableVertexAttribArray(hl);g.vertexAttribPointer(hl,1,g.FLOAT,false,16,12);const ib=g.createBuffer();g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,ib);g.bufferData(g.ELEMENT_ARRAY_BUFFER,idx,g.STATIC_DRAW);this.vao=vao;this.vp=g.getUniformLocation(this.programTerrain,'vp');
-  const rvs=`#version 300 es\nin vec3 p;uniform mat4 vp;void main(){gl_Position=vp*vec4(p,1.);}`,rfs=`#version 300 es\nprecision highp float;out vec4 o;void main(){o=vec4(.22,.72,1.,.86);}`;this.programRiver=this.program(rvs,rfs);const river=[];for(const line of this.meta.waterways||this.meta.rivers||[])for(let i=1;i<line.length;i++)river.push(...this.point(line[i-1].u,line[i-1].v,.006),...this.point(line[i].u,line[i].v,.006));this.riverCount=river.length/3;this.riverVao=g.createVertexArray();g.bindVertexArray(this.riverVao);const rb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,rb);g.bufferData(g.ARRAY_BUFFER,new Float32Array(river),g.STATIC_DRAW);const rp=g.getAttribLocation(this.programRiver,'p');g.enableVertexAttribArray(rp);g.vertexAttribPointer(rp,3,g.FLOAT,false,12,0);this.riverVp=g.getUniformLocation(this.programRiver,'vp');g.enable(g.DEPTH_TEST);g.enable(g.CULL_FACE);g.cullFace(g.BACK);g.enable(g.BLEND);g.blendFunc(g.SRC_ALPHA,g.ONE_MINUS_SRC_ALPHA)}
+   const wvs=`#version 300 es\nin vec3 p;uniform mat4 vp;void main(){gl_Position=vp*vec4(p,1.);}`,wfs=`#version 300 es\nprecision highp float;out vec4 o;void main(){o=vec4(.10,.58,.76,.84);}`;this.programWater=this.program(wvs,wfs);const water=[];for(const poly of this.meta.waterwayPolygons||[]){const flat=poly.points||[];if(flat.length<6)continue;let cu=0,cv=0;for(let i=0;i<flat.length;i+=2){cu+=flat[i];cv+=flat[i+1]}cu/=flat.length/2;cv/=flat.length/2;for(let i=0;i<flat.length;i+=2){const j=(i+2)%flat.length;water.push(...this.point(cu,cv,.012),...this.point(flat[i],flat[i+1],.012),...this.point(flat[j],flat[j+1],.012))}}this.waterCount=water.length/3;this.waterVao=g.createVertexArray();g.bindVertexArray(this.waterVao);const wb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,wb);g.bufferData(g.ARRAY_BUFFER,new Float32Array(water),g.STATIC_DRAW);const wp=g.getAttribLocation(this.programWater,'p');g.enableVertexAttribArray(wp);g.vertexAttribPointer(wp,3,g.FLOAT,false,12,0);this.waterVp=g.getUniformLocation(this.programWater,'vp');g.enable(g.DEPTH_TEST);g.enable(g.BLEND);g.blendFunc(g.SRC_ALPHA,g.ONE_MINUS_SRC_ALPHA)}
  initLabels(){labelLayer.replaceChildren();this.labels=(this.meta.landmarks||[]).map(item=>{const el=document.createElement('div');el.className='label';el.style.setProperty('--marker',item.color||'#f2bd65');el.innerHTML=`<span class="ring"></span><span class="name">${item.name}</span>`;labelLayer.appendChild(el);let hold=null;const cancel=()=>{if(hold){clearTimeout(hold);hold=null}};el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();cancel();hold=setTimeout(()=>{hold=null;this.focusRegion(item);navigator.vibrate?.(24)},500)});['pointerup','pointercancel','pointerleave'].forEach(type=>el.addEventListener(type,cancel));return{item,el}})}
  focusRegion(item){const region=(this.meta.fineRegions||[]).find(entry=>entry.id===item.id);if(!region?.centerProjected)return;const [x,y]=region.centerProjected,b=this.meta.bounds,u=(x-b[0])/this.meta.widthMeters,v=(b[3]-y)/this.meta.heightMeters;const n=this.sample(u,v),scale=Math.max(this.meta.widthMeters,this.meta.heightMeters);this.target=[(u-.5)*2*this.meta.widthMeters/scale,n*(this.meta.maximumElevation-this.meta.minimumElevation)/scale*2+.04,(v-.5)*2*this.meta.heightMeters/scale];this.distance=Math.max(.16,Math.min(.7,region.sideMeters/scale*3.1))}
  projectLabel(item,vp,lift){const x=(item.gridU-.5)*2*this.meta.widthMeters/this.maxDim,z=(item.gridV-.5)*2*this.meta.heightMeters/this.maxDim,n=(item.elevationMeters-this.meta.minimumElevation)/(this.meta.maximumElevation-this.meta.minimumElevation),y=n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+lift,cx=vp[0]*x+vp[4]*y+vp[8]*z+vp[12],cy=vp[1]*x+vp[5]*y+vp[9]*z+vp[13],cw=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];return{nx:cx/cw,ny:cy/cw,visible:cw>0&&cx/cw>-1.08&&cx/cw<1.08&&cy/cw>-1.08&&cy/cw<1.08}}
  updateLabels(vp){for(const {item,el} of this.labels){const p=this.projectLabel(item,vp,.045);el.hidden=!p.visible;if(p.visible){el.classList.toggle('flip',p.nx>.42);el.style.left=`${(p.nx*.5+.5)*this.canvas.clientWidth}px`;el.style.top=`${(-p.ny*.5+.5)*this.canvas.clientHeight}px`}}}
  async loadEcology(){const e=this.meta.ecology;if(!e?.ready)return;try{const base=e.assetBase;const [tb,sb,rb]=await Promise.all([fetch(`${base}/${e.treeBinary}`).then(r=>r.arrayBuffer()),fetch(`${base}/${e.shrubBinary}`).then(r=>r.arrayBuffer()),fetch(`${base}/${e.riceBinary}`).then(r=>r.arrayBuffer())]);const points=[];const add=(bytes,stride,kind,tree)=>{const dv=new DataView(bytes),count=Math.floor(bytes.byteLength/stride),center=e.centerProjected,side=e.sideMeters;for(let i=0;i<count;i++){const o=i*stride,qx=dv.getUint16(o,true),qz=dv.getUint16(o+2,true),localX=qx/65535*side-side/2,localZ=qz/65535*side-side/2,px=center[0]+localX,py=center[1]-localZ,u=(px-this.meta.bounds[0])/this.meta.widthMeters,v=(this.meta.bounds[3]-py)/this.meta.heightMeters;if(u<0||u>1||v<0||v>1)continue;const ground=this.sample(u,v)*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+.008,size=tree?(.9+dv.getUint8(o+6)/255*2.3):(.55+dv.getUint8(o+6)/255*1.3);points.push((u-.5)*2*this.meta.widthMeters/this.maxDim,ground,(v-.5)*2*this.meta.heightMeters/this.maxDim,size,kind)}};add(tb,e.recordLayout.tree.stride,0,true);add(sb,e.recordLayout.shrub.stride,1,false);add(rb,e.recordLayout.rice.stride,2,false);const g=this.gl,vs=`#version 300 es\nin vec3 p;in float size;in float kind;uniform mat4 vp;uniform float zoom;out float vk;void main(){gl_Position=vp*vec4(p,1.);gl_PointSize=mix(1.2,6.5,zoom)*size;vk=kind;}`,fs=`#version 300 es\nprecision highp float;in float vk;uniform float zoom;out vec4 o;void main(){vec2 q=gl_PointCoord-.5;if(dot(q,q)>.25)discard;vec3 c=vk<.5?vec3(.12,.42,.16):vk<1.5?vec3(.32,.62,.22):vec3(.71,.77,.22);o=vec4(c,.62+.3*zoom);}`;this.programEcology=this.program(vs,fs);this.ecologyVao=g.createVertexArray();g.bindVertexArray(this.ecologyVao);const buffer=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,buffer);g.bufferData(g.ARRAY_BUFFER,new Float32Array(points),g.STATIC_DRAW);const pp=g.getAttribLocation(this.programEcology,'p'),ss=g.getAttribLocation(this.programEcology,'size'),kk=g.getAttribLocation(this.programEcology,'kind');g.enableVertexAttribArray(pp);g.vertexAttribPointer(pp,3,g.FLOAT,false,20,0);g.enableVertexAttribArray(ss);g.vertexAttribPointer(ss,1,g.FLOAT,false,20,12);g.enableVertexAttribArray(kk);g.vertexAttribPointer(kk,1,g.FLOAT,false,20,16);this.ecologyVp=g.getUniformLocation(this.programEcology,'vp');this.ecologyZoom=g.getUniformLocation(this.programEcology,'zoom');this.ecology={count:points.length/5}}catch(error){console.warn('ecology package unavailable',error)}}
- bind(){this.canvas.addEventListener('pointerdown',e=>{this.drag=true;this.x=e.clientX;this.y=e.clientY;this.canvas.setPointerCapture(e.pointerId)});this.canvas.addEventListener('pointermove',e=>{if(!this.drag)return;this.yaw+=(e.clientX-this.x)*.008;this.pitch=Math.max(.10,Math.min(1.45,this.pitch+(e.clientY-this.y)*.006));this.x=e.clientX;this.y=e.clientY});this.canvas.addEventListener('pointerup',()=>this.drag=false);this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.distance=Math.max(.09,Math.min(6,this.distance*Math.exp(e.deltaY*.0013)))},{passive:false});window.addEventListener('resize',()=>this.resize())}
+  zoomToPointer(e){const rect=this.canvas.getBoundingClientRect(),nx=e.clientX/rect.width-.5,nz=e.clientY/rect.height-.5,scale=Math.max(.08,this.distance/2.7);this.target=[this.target[0]+nx*.42*scale,this.target[1],this.target[2]+nz*.42*scale];this.distance=Math.max(.012,this.distance*.62)}
+  bind(){this.canvas.addEventListener('pointerdown',e=>{this.drag=true;this.moved=false;this.downAt=performance.now();this.x=e.clientX;this.y=e.clientY;this.canvas.setPointerCapture(e.pointerId)});this.canvas.addEventListener('pointermove',e=>{if(!this.drag)return;if(Math.hypot(e.clientX-this.x,e.clientY-this.y)>3)this.moved=true;this.yaw+=(e.clientX-this.x)*.008;this.pitch=Math.max(.10,Math.min(1.45,this.pitch+(e.clientY-this.y)*.006));this.x=e.clientX;this.y=e.clientY});this.canvas.addEventListener('pointerup',e=>{if(!this.moved&&performance.now()-this.downAt<450)this.zoomToPointer(e);this.drag=false});this.canvas.addEventListener('pointercancel',()=>this.drag=false);this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.distance=Math.max(.012,Math.min(6,this.distance*Math.exp(e.deltaY*.0013)))},{passive:false});window.addEventListener('resize',()=>this.resize())}
  resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight);if(this.canvas.width!==Math.round(w*d)||this.canvas.height!==Math.round(h*d)){this.canvas.width=Math.round(w*d);this.canvas.height=Math.round(h*d);this.gl.viewport(0,0,this.canvas.width,this.canvas.height)}}
- draw(){const g=this.gl;this.resize();g.clearColor(.006,.014,.012,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cp=Math.cos(this.pitch),eye=[this.target[0]+Math.sin(this.yaw)*cp*this.distance,this.target[1]+Math.sin(this.pitch)*this.distance+.12,this.target[2]+Math.cos(this.yaw)*cp*this.distance],vp=mul(perspective(.74,this.canvas.width/this.canvas.height,.002,30),lookAt(eye,this.target,[0,1,0]));g.useProgram(this.programTerrain);g.bindVertexArray(this.vao);g.uniformMatrix4fv(this.vp,false,vp);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);if(this.riverCount){g.useProgram(this.programRiver);g.bindVertexArray(this.riverVao);g.uniformMatrix4fv(this.riverVp,false,vp);g.lineWidth(2);g.drawArrays(g.LINES,0,this.riverCount)}if(this.ecology?.count&&this.distance<.72){g.useProgram(this.programEcology);g.bindVertexArray(this.ecologyVao);g.uniformMatrix4fv(this.ecologyVp,false,vp);g.uniform1f(this.ecologyZoom,Math.min(1,Math.max(0,(.72-this.distance)/.55)));g.drawArrays(g.POINTS,0,this.ecology.count)}this.updateLabels(vp);requestAnimationFrame(()=>this.draw())}
+  draw(){const g=this.gl;this.resize();g.clearColor(.006,.014,.012,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cp=Math.cos(this.pitch),eye=[this.target[0]+Math.sin(this.yaw)*cp*this.distance,this.target[1]+Math.sin(this.pitch)*this.distance+.12,this.target[2]+Math.cos(this.yaw)*cp*this.distance],vp=mul(perspective(.74,this.canvas.width/this.canvas.height,.0005,30),lookAt(eye,this.target,[0,1,0]));g.useProgram(this.programTerrain);g.bindVertexArray(this.vao);g.uniformMatrix4fv(this.vp,false,vp);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);if(this.waterCount){g.useProgram(this.programWater);g.bindVertexArray(this.waterVao);g.uniformMatrix4fv(this.waterVp,false,vp);g.drawArrays(g.TRIANGLES,0,this.waterCount)}if(this.ecology?.count&&this.distance<.72){g.useProgram(this.programEcology);g.bindVertexArray(this.ecologyVao);g.uniformMatrix4fv(this.ecologyVp,false,vp);g.uniform1f(this.ecologyZoom,Math.min(1,Math.max(0,(.72-this.distance)/.55)));g.drawArrays(g.POINTS,0,this.ecology.count)}this.updateLabels(vp);requestAnimationFrame(()=>this.draw())}
 }
 document.querySelector('#reset').onclick=()=>renderer?.reset();
 (async()=>{try{const t=META.terrain,[hb,mb]=await Promise.all([fetch(t.heightBinary).then(r=>r.arrayBuffer()),fetch(t.maskBinary).then(r=>r.arrayBuffer())]);renderer=new TerrainRenderer(canvas,t,new Uint16Array(hb),new Uint8Array(mb));document.querySelector('#loading').remove()}catch(error){console.error(error)}})();
@@ -549,7 +752,7 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     preview_uri = ""
     if dem_path.exists():
         terrain = downsample_height(dem_path, assets)
-        attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson")
+        attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets)
         if not terrain.get("waterways"):
             attach_lijiang(terrain, root / "metadata" / "lijiang_osm.geojson")
         terrain["verticalScale"] = 1.0
@@ -605,7 +808,7 @@ def run_from_manifest(manifest_path: Path, status_path: Path, root: Path, site: 
     assets.mkdir(parents=True, exist_ok=True)
     terrain = read_json(manifest_path)
     refresh_landmarks_from_manifest(terrain)
-    attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson")
+    attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets)
     if not terrain.get("waterways"):
         attach_lijiang(terrain, root / "metadata" / "lijiang_osm.geojson")
     terrain["verticalScale"] = 1.0
@@ -617,6 +820,9 @@ def run_from_manifest(manifest_path: Path, status_path: Path, root: Path, site: 
     meta["terrain"] = terrain
     meta["waterwayCount"] = terrain.get("waterwayCount", 0)
     meta["ecology"] = terrain.get("ecology", {})
+    plan = json_if_exists(root / "metadata" / "selected_new_products.json", {})
+    meta["asfPlanCreated"] = bool(plan.get("selectedNewProducts"))
+    meta["selectedProductCount"] = len(plan.get("selectedNewProducts", [])) if isinstance(plan, dict) else 0
     write_json(status_path, meta)
     (site / "index.html").write_text(build_minimal_html(meta), encoding="utf-8")
     print(f"网页预览：{site / 'index.html'}")

@@ -28,3 +28,11 @@
 ## 数据声明
 
 12.5 米表示输出像元间距。成果名称固定使用“ASF RTC 12.5 米参考 DEM”。公开预览成果保留约 30 米来源标识。源片、哈希、覆盖计数、填补分类和质检报告均分层保存。
+
+## 水面与近景处理
+
+`scripts/download_waterways_osm.py` 使用超出 DEM 边界的 Overpass 搜索包络，下载漓江、湘江、太平河及周边水系的中心线与已制图水面。网页把有原始水面多边形的要素按面渲染；没有面数据的河道才生成宽度感知的水面带，并在每个河段按上游 1 倍到下游 3 倍渐变。所有几何会插入与地图边界的交点，水面不会在边缘内侧自行截断。水系名称只保留在来源元数据，不进入画面。
+
+近景 60 平方公里区域由 `skills/generate-guilin-dem-fine-regions` 管理。`skills/process-dem-with-gaea` 及 `metadata/gaea/terrain-processing-profile.json` 负责 Gaea、Erosion2、Thermal2、Outcrops、喀斯特材质与植被衍生层的可审计接入；这些是可视化层，不会被冒充为实测高程。
+
+12.5 米下载检索已经选出 10 个 ASF 产品，当前唯一阻塞是 `EARTHDATA_TOKEN` 未设置，详情见 `metadata/12_5m_download_status.json`。

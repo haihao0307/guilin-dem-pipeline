@@ -7,9 +7,17 @@ import urllib.request
 from pathlib import Path
 
 
-DEFAULT_BOUNDS = (24.6152842480, 109.7724593260, 26.2980810697, 110.9051259163)
-QUERY_TEMPLATE = """[out:json][timeout:180];
-way[\"waterway\"]({south},{west},{north},{east});
+# Deliberately exceed the DEM's WGS84 envelope (about 109.699–111.224 E,
+# 24.545–26.486 N) so edge-crossing rivers are returned with outside vertices.
+DEFAULT_BOUNDS = (24.50, 109.65, 26.53, 111.28)
+QUERY_TEMPLATE = """[out:json][timeout:300];
+(
+  way[\"waterway\"]({south},{west},{north},{east});
+  way[\"natural\"=\"water\"]({south},{west},{north},{east});
+  way[\"water\"]({south},{west},{north},{east});
+  relation[\"natural\"=\"water\"]({south},{west},{north},{east});
+  relation[\"water\"]({south},{west},{north},{east});
+);
 out tags geom;"""
 
 
@@ -55,18 +63,28 @@ def main() -> int:
         if len(points) < 2:
             continue
         tags = element.get("tags") or {}
+        waterway = tags.get("waterway")
+        natural = tags.get("natural")
+        water = tags.get("water")
+        is_surface = natural == "water" or bool(water) or waterway == "riverbank"
+        simplified = simplify(points)
+        if is_surface and simplified[0] != simplified[-1]:
+            simplified.append(simplified[0])
         features.append(
             {
                 "type": "Feature",
                 "properties": {
-                    "waterway": tags.get("waterway", "unknown"),
+                    "waterway": waterway or "surface",
+                    "natural": natural,
+                    "water": water,
+                    "width": tags.get("width"),
                     "name": tags.get("name"),
                     "nameZh": tags.get("name:zh"),
                     "osmType": element.get("type"),
                     "osmId": element.get("id"),
                     "source": "OpenStreetMap contributors via Overpass API",
                 },
-                "geometry": {"type": "LineString", "coordinates": simplify(points)},
+                "geometry": {"type": "Polygon", "coordinates": [simplified]} if is_surface else {"type": "LineString", "coordinates": simplified},
             }
         )
     output = {
@@ -76,7 +94,8 @@ def main() -> int:
             "source": "OpenStreetMap contributors",
             "license": "ODbL 1.0",
             "queryBounds": [args.west, args.south, args.east, args.north],
-            "labelPolicy": "地图只绘制水系线，不显示水系名称",
+            "labelPolicy": "地图只绘制水面，不显示水系名称",
+            "representation": "mapped-water-surface-polygons-with-width-aware-centerline-fallback",
             "featureCount": len(features),
         },
         "features": features,
@@ -84,7 +103,9 @@ def main() -> int:
     target = Path(args.output).resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    print(f"{target} ({len(features)} line features)")
+    line_count = sum(feature["geometry"]["type"] == "LineString" for feature in features)
+    surface_count = len(features) - line_count
+    print(f"{target} ({line_count} centerlines, {surface_count} mapped water surfaces)")
     return 0
 
 

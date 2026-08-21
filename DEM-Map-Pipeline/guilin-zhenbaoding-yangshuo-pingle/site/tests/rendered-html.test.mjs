@@ -42,8 +42,12 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(manifest.sourceValidFraction, 1);
   assert.equal(manifest.verticalScale, 1);
   assert.ok(manifest.waterways.length > 2000);
+  assert.ok(manifest.waterwayPolygons.length > 3000);
+  assert.equal(manifest.waterwayTriangles.length, 0);
   assert.equal(manifest.waterwaySource, "OpenStreetMap contributors");
-  assert.equal(manifest.waterwayLabelPolicy, "只绘制水系线，不显示名称");
+  assert.equal(manifest.waterwayLabelPolicy, "只绘制水面，不显示水系名称");
+  assert.equal(manifest.waterwayRepresentation, "mapped-water-surface-polygons-with-tapered-centerline-fallback");
+  assert.equal(manifest.waterwayEdgePolicy, "clip-intersections-preserved-at-terrain-boundary");
   assert.equal(manifest.ecology.ready, true);
   assert.equal(manifest.ecology.sourceStatus, "deterministic-ecology-proof-awaiting-real-12.5m-dem");
   assert.deepEqual(manifest.fineRegions.map(({ status }) => status), [
@@ -72,6 +76,11 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   assert.doesNotMatch(html, /漓江|河流名称|river-name/);
   assert.match(html, /this\.exaggeration=1/);
   assert.match(html, /focusRegion/);
+  assert.match(html, /zoomToPointer/);
+  assert.match(html, /Math\.max\(\.012/);
+  assert.match(html, /programWater/);
+  assert.match(html, /waterwayPolygons/);
+  assert.doesNotMatch(html, /drawArrays\(g\.LINES/);
   assert.match(html, /setTimeout\(\(\)=>\{hold=null;this\.focusRegion\(item\)/);
   assert.match(html, /marker-spin/);
   assert.match(html, /loadEcology/);
