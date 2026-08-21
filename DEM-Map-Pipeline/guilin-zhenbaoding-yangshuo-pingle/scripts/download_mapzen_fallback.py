@@ -225,6 +225,15 @@ def run(config_path: Path, root: Path) -> int:
     if not isinstance(bounds, list) or len(bounds) != 4:
         raise PipelineError("resolved AOI bounds are unavailable")
     min_lon, min_lat, max_lon, max_lat = (float(value) for value in bounds)
+    context_bounds = config.get("webContext", {}).get("boundsWgs84")
+    if isinstance(context_bounds, list) and len(context_bounds) == 4:
+        context_min_lon, context_min_lat, context_max_lon, context_max_lat = (
+            float(value) for value in context_bounds
+        )
+        min_lon = min(min_lon, context_min_lon)
+        min_lat = min(min_lat, context_min_lat)
+        max_lon = max(max_lon, context_max_lon)
+        max_lat = max(max_lat, context_max_lat)
 
     lon_values = range(math.floor(min_lon), math.ceil(max_lon))
     lat_values = range(math.floor(min_lat), math.ceil(max_lat))

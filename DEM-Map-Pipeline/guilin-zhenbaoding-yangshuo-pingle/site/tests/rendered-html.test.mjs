@@ -37,11 +37,12 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(manifest.columnOrder, "west-to-east");
   assert.equal(Math.max(manifest.gridWidth, manifest.gridHeight), 2048);
   assert.equal(manifest.validFraction, 1);
-  assert.equal(manifest.visualFillApplied, true);
-  assert.ok(manifest.sourceValidFraction > 0.95);
+  assert.equal(manifest.visualFillApplied, false);
+  assert.equal(manifest.sourceCoverageType, "downloaded");
+  assert.equal(manifest.sourceValidFraction, 1);
   assert.deepEqual(
     manifest.landmarks.map(({ name }) => name),
-    ["真宝鼎", "阳朔县城"],
+    ["真宝鼎", "阳朔县城", "秧塘机场旧址"],
   );
 
   const height = await readFile(new URL("height_u16.bin", assetRoot));
@@ -58,7 +59,7 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   assert.match(html, /assets\/height_u16\.bin/);
   assert.match(html, /assets\/mask_u8\.bin/);
   assert.match(html, /assets\/DEM_PREVIEW\.png/);
-  assert.match(html, /2048 级连续高精度地形/);
-  assert.match(html, /真宝鼎与阳朔县城/);
+  assert.match(html, /2048 级真实 DEM 地形/);
+  assert.match(html, /真宝鼎、阳朔县城和秧塘机场旧址/);
   assert.doesNotMatch(html, /data:image\//);
 });
