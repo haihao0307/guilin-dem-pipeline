@@ -404,8 +404,6 @@ def make_cog(source_path: Path, output_path: Path, block_size: int, categorical:
 
 
 def save_preview(path: Path, dem_path: Path) -> None:
-    import matplotlib.pyplot as plt
-
     path.parent.mkdir(parents=True, exist_ok=True)
     with rasterio.open(dem_path) as dataset:
         max_size = 1600
@@ -413,16 +411,44 @@ def save_preview(path: Path, dem_path: Path) -> None:
         out_width = max(1, int(dataset.width / scale))
         out_height = max(1, int(dataset.height / scale))
         data = dataset.read(1, out_shape=(out_height, out_width), masked=True, resampling=Resampling.average)
-        extent = [dataset.bounds.left, dataset.bounds.right, dataset.bounds.bottom, dataset.bounds.top]
-    figure, axis = plt.subplots(figsize=(11, 12))
-    image = axis.imshow(data, extent=extent, origin="upper", cmap="terrain")
-    axis.set_title("Zhenbao Ding 15 km north to Yangshuo Pingle boundary DEM")
-    axis.set_xlabel("Easting, EPSG:32649")
-    axis.set_ylabel("Northing, EPSG:32649")
-    figure.colorbar(image, ax=axis, label="Elevation reference value")
-    figure.tight_layout()
-    figure.savefig(path, dpi=150)
-    plt.close(figure)
+    values = np.asarray(data.filled(np.nan), dtype=np.float32)
+    valid_mask = np.isfinite(values) & ~np.ma.getmaskarray(data)
+    valid = values[valid_mask]
+    if valid.size == 0:
+        raise PipelineError("DEM preview contains no valid pixels")
+
+    low, high = np.percentile(valid, [1.0, 99.0])
+    if high <= low:
+        high = low + 1.0
+    normalized = np.clip((np.nan_to_num(values, nan=low) - low) / (high - low), 0.0, 1.0)
+
+    stops = np.asarray([0.0, 0.18, 0.42, 0.68, 0.86, 1.0], dtype=np.float32)
+    colors = np.asarray(
+        [
+            [19, 55, 45],
+            [54, 104, 63],
+            [130, 142, 77],
+            [154, 117, 70],
+            [166, 154, 132],
+            [244, 243, 235],
+        ],
+        dtype=np.float32,
+    )
+    rgb = np.stack([np.interp(normalized, stops, colors[:, channel]) for channel in range(3)], axis=-1)
+
+    filled = np.nan_to_num(values, nan=float(np.nanmedian(valid)))
+    gradient_y, gradient_x = np.gradient(filled)
+    slope = np.pi / 2.0 - np.arctan(np.hypot(gradient_x, gradient_y))
+    aspect = np.arctan2(-gradient_x, gradient_y)
+    azimuth = np.deg2rad(315.0)
+    altitude = np.deg2rad(45.0)
+    shade = np.sin(altitude) * np.sin(slope) + np.cos(altitude) * np.cos(slope) * np.cos(azimuth - aspect)
+    shade = np.clip(0.52 + 0.48 * shade, 0.25, 1.08)
+    rgb = np.clip(rgb * shade[..., None], 0, 255).astype(np.uint8)
+    rgb[~valid_mask] = np.asarray([245, 244, 238], dtype=np.uint8)
+    with rasterio.open(path, "w", driver="PNG", width=out_width, height=out_height, count=3, dtype="uint8") as preview:
+        for band in range(3):
+            preview.write(rgb[:, :, band], band + 1)
 
 
 def run(config_path: Path, root: Path) -> int:

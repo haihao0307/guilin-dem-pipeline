@@ -434,9 +434,30 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    config_path = Path(args.config).resolve()
+    root = Path(args.root).resolve()
     try:
-        return run(Path(args.config).resolve(), Path(args.root).resolve(), bool(args.offline_preview))
+        return run(config_path, root, bool(args.offline_preview))
     except Exception as exc:
+        if not args.offline_preview:
+            try:
+                config = read_json(config_path)
+                cached_path = root / config["outputs"]["resolvedAoiJson"]
+                cached_geojson = root / config["outputs"]["resolvedAoiGeoJson"]
+                cached = read_json(cached_path)
+                expected_project = config.get("project", {}).get("id")
+                cached_project = cached.get("project", {}).get("id")
+                if (
+                    cached.get("status") == "exact_boundary_resolved"
+                    and cached_project == expected_project
+                    and cached_geojson.exists()
+                    and cached.get("final", {}).get("wgs84Polygon")
+                ):
+                    print(f"边界在线刷新失败，复用已验证的精确边界缓存：{cached_path}")
+                    print(f"刷新错误：{exc}")
+                    return 0
+            except Exception:
+                pass
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 

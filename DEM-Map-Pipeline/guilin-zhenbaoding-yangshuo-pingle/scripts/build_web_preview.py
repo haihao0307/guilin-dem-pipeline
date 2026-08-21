@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import math
 import shutil
@@ -12,19 +11,13 @@ from typing import Any
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
+from rasterio.warp import transform_bounds
 
-from common import read_json, utc_now, write_json
+from common import read_json, sha256_file, utc_now, write_json
 
 
 class PipelineError(RuntimeError):
     pass
-
-
-def image_data_uri(path: Path) -> str:
-    if not path.exists():
-        return ""
-    mime = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
-    return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
 
 
 def json_if_exists(path: Path, default: Any) -> Any:
@@ -57,22 +50,43 @@ def downsample_height(dem_path: Path, assets: Path, max_side: int = 321) -> dict
         height_path.write_bytes(quantized.tobytes(order="C"))
         mask_path.write_bytes(mask.tobytes(order="C"))
         bounds = list(dataset.bounds)
+        wgs84_bounds = list(transform_bounds(dataset.crs, "EPSG:4326", *dataset.bounds, densify_pts=21)) if dataset.crs else None
         resolution = [abs(dataset.transform.a), abs(dataset.transform.e)]
         width_m = float(bounds[2] - bounds[0])
         height_m = float(bounds[3] - bounds[1])
+        height_sha256 = sha256_file(height_path)
+        mask_sha256 = sha256_file(mask_path)
         return {
+            "schemaVersion": "terrain-manifest/v1",
+            "assetVersion": f"guilin-{height_sha256[:12]}",
             "ready": True,
             "gridWidth": width,
             "gridHeight": height,
             "minimumElevation": minimum,
             "maximumElevation": maximum,
             "bounds": bounds,
+            "wgs84Bounds": wgs84_bounds,
             "crs": dataset.crs.to_string() if dataset.crs else None,
             "resolution": resolution,
             "widthMeters": width_m,
             "heightMeters": height_m,
+            "axisConvention": {"x": "east", "y": "up", "z": "south"},
+            "rowOrder": "north-to-south",
+            "columnOrder": "west-to-east",
+            "heightEncoding": {
+                "sampleType": "uint16",
+                "byteOrder": "little-endian",
+                "quantizationMinimumMeters": minimum,
+                "quantizationMaximumMeters": maximum,
+                "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)",
+            },
             "heightBinary": "assets/height_u16.bin",
+            "heightByteLength": height_path.stat().st_size,
+            "heightSha256": height_sha256,
             "maskBinary": "assets/mask_u8.bin",
+            "maskByteLength": mask_path.stat().st_size,
+            "maskSha256": mask_sha256,
+            "noDataPolicy": "mask_u8: 1=valid elevation, 0=outside or NoData",
             "validFraction": float(mask.mean()),
         }
 
@@ -217,9 +231,11 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     preview_uri = ""
     if dem_path.exists():
         terrain = downsample_height(dem_path, assets)
+        terrain["manifestUrl"] = "assets/terrain-manifest.json"
+        write_json(assets / "terrain-manifest.json", terrain)
         if preview_path.exists():
             shutil.copy2(preview_path, assets / "DEM_PREVIEW.png")
-            preview_uri = image_data_uri(preview_path)
+            preview_uri = "assets/DEM_PREVIEW.png"
 
     scope = {
         "northExtensionMeters": float(config.get("aoi", {}).get("northExtensionMeters", 15000)),
@@ -243,7 +259,7 @@ def run(config_path: Path, root: Path, site: Path) -> int:
         "qaStatus": qa.get("status"),
     }
     write_json(site / "status.json", meta)
-    provisional_uri = image_data_uri(provisional_png)
+    provisional_uri = "assets/AOI_PREVIEW_PROVISIONAL.png" if provisional_png.exists() else ""
     html = build_html(meta, provisional_uri, preview_uri)
     (site / "index.html").write_text(html, encoding="utf-8")
     print(f"网页预览：{site / 'index.html'}")
