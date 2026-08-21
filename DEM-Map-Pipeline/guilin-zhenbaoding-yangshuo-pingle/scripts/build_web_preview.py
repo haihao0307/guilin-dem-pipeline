@@ -11,7 +11,6 @@ from typing import Any
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.fill import fillnodata
 from rasterio.warp import transform, transform_bounds
 
 from common import read_json, sha256_file, utc_now, write_json
@@ -45,6 +44,13 @@ LANDMARKS = [
         "latitude": 24.7815129,
         "color": "#73d7b0",
     },
+    {
+        "id": "yangtang-airfield",
+        "name": "秧塘机场旧址",
+        "longitude": 110.15569,
+        "latitude": 25.21753,
+        "color": "#7bb7ff",
+    },
 ]
 
 
@@ -59,16 +65,14 @@ def downsample_height(dem_path: Path, assets: Path, max_side: int = 2048) -> dic
         valid = values[np.isfinite(values) & (source_mask == 1)]
         if valid.size == 0:
             raise PipelineError("DEM preview grid contains no valid pixels")
-        filled = fillnodata(
-            values,
-            mask=source_mask,
-            max_search_distance=float(max(width, height)),
-            smoothing_iterations=2,
-        ).astype(np.float32)
-        remaining_voids = ~np.isfinite(filled)
-        if np.any(remaining_voids):
-            filled[remaining_voids] = float(np.nanmedian(valid))
-        mask = np.ones((height, width), dtype=np.uint8)
+        source_valid_fraction = float(source_mask.mean())
+        if source_valid_fraction < 0.9999:
+            raise PipelineError(
+                f"Web context DEM has incomplete real coverage ({source_valid_fraction:.6f}); "
+                "visual extrapolation is disabled"
+            )
+        filled = values
+        mask = source_mask
         minimum = float(np.nanmin(valid))
         maximum = float(np.nanmax(valid))
         value_range = max(maximum - minimum, 1e-6)
@@ -78,6 +82,20 @@ def downsample_height(dem_path: Path, assets: Path, max_side: int = 2048) -> dic
         mask_path = assets / "mask_u8.bin"
         height_path.write_bytes(quantized.tobytes(order="C"))
         mask_path.write_bytes(mask.tobytes(order="C"))
+        # A compact source-faithful 2D preview; it uses the same downloaded values.
+        palette = np.stack(
+            (
+                np.clip(18 + normalized * 205, 0, 255),
+                np.clip(55 + normalized * 175, 0, 255),
+                np.clip(42 + normalized * 105, 0, 255),
+            ),
+            axis=0,
+        ).astype(np.uint8)
+        with rasterio.open(
+            assets / "DEM_PREVIEW.png", "w", driver="PNG", width=width, height=height,
+            count=3, dtype="uint8"
+        ) as preview:
+            preview.write(palette)
         bounds = list(dataset.bounds)
         wgs84_bounds = list(transform_bounds(dataset.crs, "EPSG:4326", *dataset.bounds, densify_pts=21)) if dataset.crs else None
         resolution = [abs(dataset.transform.a), abs(dataset.transform.e)]
@@ -138,11 +156,12 @@ def downsample_height(dem_path: Path, assets: Path, max_side: int = 2048) -> dic
             "maskBinary": "assets/mask_u8.bin",
             "maskByteLength": mask_path.stat().st_size,
             "maskSha256": mask_sha256,
-            "noDataPolicy": "网页连续地形掩膜全部为1；原始无效区仅在网页层以最近有效高程补齐，权威COG不变",
+            "noDataPolicy": "网页只显示已下载的真实DEM像元；禁止插值外推补边",
             "validFraction": float(mask.mean()),
-            "sourceValidFraction": float(source_mask.mean()),
-            "visualFillApplied": bool(np.any(source_mask == 0)),
-            "visualFillMethod": "rasterio.fillnodata nearest-valid interpolation with two smoothing passes",
+            "sourceValidFraction": source_valid_fraction,
+            "visualFillApplied": False,
+            "visualFillMethod": None,
+            "sourceCoverageType": "downloaded",
             "landmarks": landmarks,
         }
 
@@ -174,7 +193,7 @@ def build_html(meta: dict[str, Any], provisional_uri: str, preview_uri: str) -> 
 <body>
 <div class="shell">
   <header class="top">
-    <div><div class="eyebrow">DEM MAP PIPELINE · GUILIN</div><h1 class="title">真宝鼎北延至阳朔平乐交界</h1><div class="subtitle">北端覆盖真宝鼎峰顶向真北延伸十五公里，南端沿阳朔县与平乐县共享边界，旧有五张源片能找到时直接复用，缺失时由云端重新检索下载。网页显示当前已经完成的实际数据层级和来源状态。</div></div>
+    <div><div class="eyebrow">DEM MAP PIPELINE · GUILIN</div><h1 class="title">桂林—全州扩展 DEM</h1><div class="subtitle">使用 9 张实际下载的约 30 米 DEM 源片连续拼接，范围从阳朔、平乐向北覆盖真宝鼎，并向东扩展至全州县城以东。网页不再使用插值补边。</div></div>
     <div id="statusBadge" class="badge"><span class="dot"></span><span id="statusText">读取状态</span></div>
   </header>
   <main class="grid">
@@ -184,16 +203,16 @@ def build_html(meta: dict[str, Any], provisional_uri: str, preview_uri: str) -> 
       <div id="landmarks" class="landmarks" aria-label="地形地标"></div>
       <div id="empty" class="empty hidden"><div><img id="scopeImage" alt="任务范围"><h3>云端 DEM 构建已经登记</h3><p>当前页面先显示任务范围。GitHub Actions 完成源片下载、拼接、裁切和质检后，这里会自动切换为可旋转的真实三维地形。</p></div></div>
       <div class="toolbar"><button class="btn active" data-view="3d">三维地形</button><button class="btn" data-view="2d">二维高程图</button><button class="btn" id="reset">重置视角</button></div>
-      <div class="hud"><div class="hud-card"><div class="hud-title" id="hudTitle">2048 级连续高精度地形</div><div class="hud-copy" id="hudCopy">拖动旋转，滚轮缩放。黑色缺口已在网页可视化层连续补齐，圆圈标出真宝鼎与阳朔县城。</div></div><label class="control">垂直倍率 <input id="exaggeration" type="range" min="0.6" max="8" step="0.1" value="3.2"><strong id="exValue">3.2×</strong></label></div>
+      <div class="hud"><div class="hud-card"><div class="hud-title" id="hudTitle">2048 级真实 DEM 地形</div><div class="hud-copy" id="hudCopy">拖动旋转，滚轮缩放。圆圈标出真宝鼎、阳朔县城和秧塘机场旧址。</div></div><label class="control">垂直倍率 <input id="exaggeration" type="range" min="0.6" max="8" step="0.1" value="3.2"><strong id="exValue">3.2×</strong></label></div>
     </section>
     <aside class="side">
-      <section class="card"><h2>范围</h2><div class="metric"><span>北端</span><strong id="north">读取中</strong></div><div class="metric"><span>南端</span><strong>阳朔与平乐共享边界</strong></div><div class="metric"><span>任务面积</span><strong id="area">读取中</strong></div><div class="metric"><span>目标坐标系</span><strong>EPSG:32649</strong></div></section>
+      <section class="card"><h2>范围</h2><div class="metric"><span>北端</span><strong id="north">读取中</strong></div><div class="metric"><span>南端</span><strong id="south">读取中</strong></div><div class="metric"><span>网页范围面积</span><strong id="area">读取中</strong></div><div class="metric"><span>目标坐标系</span><strong>EPSG:32649</strong></div></section>
       <section class="card"><h2>成果</h2><div class="metric"><span>当前数据源</span><strong id="source">读取中</strong></div><div class="metric"><span>输出像元</span><strong id="spacing">读取中</strong></div><div class="metric"><span>网页高度网格</span><strong id="gridResolution">读取中</strong></div><div class="metric"><span>连续覆盖</span><strong id="coverage">读取中</strong></div><div class="metric"><span>高程范围</span><strong id="elev">读取中</strong></div></section>
       <section class="card"><h2>构建状态</h2><div id="statusLines"></div></section>
       <section class="card"><h2>源片与谱系</h2><div id="sourceDetail" class="sources"></div></section>
     </aside>
   </main>
-  <div class="footer">成果登记规则：当前网页使用 2048 级高度网格；黑色缺口只在网页可视化层以邻近有效高程连续补齐，权威 COG 及其 NoData 记录保持不变。ASF RTC 产品按“12.5 米输出像元参考 DEM”记录，不登记为原生 12.5 米测绘高程。</div>
+  <div class="footer">成果登记规则：当前网页使用 2048 级高度网格，全部来自实际下载并拼接的约 30 米 DEM；不使用外推或网页补边。ASF RTC 产品按“12.5 米输出像元参考 DEM”记录，不登记为原生 12.5 米测绘高程。</div>
 </div>
 <script>
 const META=__META_JSON__;
@@ -205,7 +224,9 @@ function setStatus(){
   const t=META.terrain||{}; const s=META.runtimeSource||{}; const ready=!!t.ready;
   $('#statusText').textContent=ready?(s.temporaryFallback?'临时完整范围图已生成':'ASF 完整范围图已生成'):'等待云端构建';
   $('#statusBadge').classList.toggle('good',ready&&!s.temporaryFallback);
-  $('#north').textContent=`真宝鼎北 ${fmt(META.scope?.northExtensionMeters/1000,0)} km`;
+  const wb=META.scope?.webContextBounds;
+  $('#north').textContent=wb?`北纬 ${fmt(wb[3],2)}°（越过真宝鼎）`:`真宝鼎北 ${fmt(META.scope?.northExtensionMeters/1000,0)} km`;
+  $('#south').textContent=wb?`北纬 ${fmt(wb[1],2)}°（阳朔—平乐南侧）`:'阳朔与平乐共享边界';
   $('#area').textContent=`${fmt(META.scope?.areaSquareKilometers,1)} km²`;
   $('#source').textContent=s.productLabel||'等待下载';
   $('#spacing').textContent=t.resolution?`${fmt(t.resolution[0],1)} m`:(s.outputPixelSpacingMeters?`${fmt(s.outputPixelSpacingMeters,1)} m`:'待生成');
@@ -216,8 +237,8 @@ function setStatus(){
   lines.push([META.boundaryExact?'good':'warn',META.boundaryExact?'阳朔平乐共享边界已精确解析':'当前仍使用离线范围预览']);
   lines.push([META.asfPlanCreated?'good':'warn',META.asfPlanCreated?`ASF 新增选片计划已生成，共 ${META.selectedProductCount||0} 项`:'ASF 选片计划等待云端检索']);
   lines.push([ready?'good':'warn',ready?'拼接、裁切、COG 与网页高度网格已生成':'真实 DEM 尚未生成']);
-  if(t.visualFillApplied) lines.push(['good',`网页缺口已连续补齐；原始有效区 ${fmt((t.sourceValidFraction||0)*100,3)}%`]);
-  if(t.landmarks?.length) lines.push(['good','真宝鼎与阳朔县城地标已校准']);
+  lines.push([t.sourceCoverageType==='downloaded'?'good':'warn',`真实下载 DEM 覆盖 ${fmt((t.sourceValidFraction||0)*100,3)}%；未使用插值补边`]);
+  if(t.landmarks?.length) lines.push(['good','真宝鼎、阳朔县城与秧塘机场旧址地标已校准']);
   if(s.temporaryFallback) lines.push(['warn','当前显示公开约30米临时完整范围图，ASF 下载完成后会替换']);
   $('#statusLines').innerHTML=lines.map(([c,x])=>`<div class="statusline ${c==='warn'?'warn':c==='bad'?'bad':''}"><i></i><span>${x}</span></div>`).join('');
   const detail=[];
@@ -289,22 +310,25 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     existing = json_if_exists(root / config["outputs"]["existingResolved"], {})
     source_manifest = json_if_exists(root / config["outputs"]["sourceManifest"], {})
 
-    dem_path = root / config["outputs"]["finalDem"]
-    preview_path = root / config["outputs"]["preview"]
+    context_output = config.get("webContext", {}).get("output")
+    dem_path = root / context_output if context_output else root / config["outputs"]["finalDem"]
     terrain: dict[str, Any] = {"ready": False}
     preview_uri = ""
     if dem_path.exists():
         terrain = downsample_height(dem_path, assets)
         terrain["manifestUrl"] = "assets/terrain-manifest.json"
         write_json(assets / "terrain-manifest.json", terrain)
-        if preview_path.exists():
-            shutil.copy2(preview_path, assets / "DEM_PREVIEW.png")
-            preview_uri = "assets/DEM_PREVIEW.png"
+        preview_uri = "assets/DEM_PREVIEW.png"
 
     scope = {
         "northExtensionMeters": float(config.get("aoi", {}).get("northExtensionMeters", 15000)),
-        "areaSquareKilometers": resolved.get("final", {}).get("areaSquareKilometersProjected"),
-        "bounds": resolved.get("final", {}).get("bounds"),
+        "areaSquareKilometers": (
+            terrain.get("widthMeters", 0) * terrain.get("heightMeters", 0) / 1_000_000
+            if context_output and terrain.get("ready")
+            else resolved.get("final", {}).get("areaSquareKilometersProjected")
+        ),
+        "bounds": config.get("webContext", {}).get("boundsWgs84", resolved.get("final", {}).get("bounds")),
+        "webContextBounds": config.get("webContext", {}).get("boundsWgs84"),
     }
     selected = plan.get("selectedNewProducts", []) if isinstance(plan, dict) else []
     source_files = qa.get("sourceLineage", {}).get("files", []) if isinstance(qa, dict) else []
@@ -319,7 +343,12 @@ def run(config_path: Path, root: Path, site: Path) -> int:
         "asfPlanCreated": bool(selected) or bool(cloud_status.get("asfPlanCreated")),
         "selectedProductCount": len(selected),
         "existingResolvedCount": int(existing.get("resolvedCount", 0) or 0),
-        "sourceFileCount": len(source_files) if source_files else len(source_manifest.get("tiles", [])) if isinstance(source_manifest, dict) else 0,
+        "sourceFileCount": (
+            len(source_manifest.get("tiles", []))
+            if context_output and isinstance(source_manifest, dict)
+            else len(source_files) if source_files
+            else len(source_manifest.get("tiles", [])) if isinstance(source_manifest, dict) else 0
+        ),
         "qaStatus": qa.get("status"),
     }
     write_json(site / "status.json", meta)

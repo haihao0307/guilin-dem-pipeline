@@ -1,22 +1,28 @@
 {
-  "generatedAt": "2026-08-21T01:20:16.090156+00:00",
+  "generatedAt": "2026-08-21T01:59:21.596234+00:00",
   "project": {
     "id": "guilin-zhenbaoding-yangshuo-pingle",
     "name": "真宝鼎以北15公里至阳朔平乐交界DEM拼接任务",
     "taskMode": "standalone_incremental_mosaic",
     "targetCrs": "EPSG:32649",
-    "targetPixelSpacingMeters": 30.0,
-    "accuracyLabel": "AWS Terrain Tiles约30米临时完整范围DEM",
+    "targetPixelSpacingMeters": 12.5,
+    "accuracyLabel": "12.5米输出像元的ASF RTC参考DEM",
     "lineagePolicy": "保留每张源DEM、下载记录、哈希、覆盖计数与填补标记，不将12.5米输出像元表述为原生12.5米测绘高程。"
   },
   "scope": {
     "northExtensionMeters": 15000.0,
-    "areaSquareKilometers": 18831.327677902344,
+    "areaSquareKilometers": 32575.041,
     "bounds": [
-      109.80230650918028,
-      24.6424154,
-      110.8752787331697,
-      26.2709499176912
+      109.72,
+      24.55,
+      111.22,
+      26.48
+    ],
+    "webContextBounds": [
+      109.72,
+      24.55,
+      111.22,
+      26.48
     ]
   },
   "boundaryExact": true,
@@ -35,31 +41,31 @@
   },
   "terrain": {
     "schemaVersion": "terrain-manifest/v1",
-    "assetVersion": "guilin-fa181c41a434",
+    "assetVersion": "guilin-4dd8fcb8ee62",
     "ready": true,
-    "gridWidth": 1232,
+    "gridWidth": 1452,
     "gridHeight": 2048,
-    "minimumElevation": 69.88013458251953,
-    "maximumElevation": 2096.50390625,
+    "minimumElevation": 76.79379272460938,
+    "maximumElevation": 2090.25927734375,
     "bounds": [
-      378780.0,
-      2725410.0,
-      487560.0,
-      2906250.0
+      370350.0,
+      2715120.0,
+      522300.0,
+      2929500.0
     ],
     "wgs84Bounds": [
-      109.7859986597664,
-      24.638151497161182,
-      110.87707447280823,
-      26.27594883513768
+      109.69924191917795,
+      24.54455328815592,
+      111.2237548394558,
+      26.48593517028792
     ],
     "crs": "EPSG:32649",
     "resolution": [
       30.0,
       30.0
     ],
-    "widthMeters": 108780.0,
-    "heightMeters": 180840.0,
+    "widthMeters": 151950.0,
+    "heightMeters": 214380.0,
     "axisConvention": {
       "x": "east",
       "y": "up",
@@ -70,21 +76,22 @@
     "heightEncoding": {
       "sampleType": "uint16",
       "byteOrder": "little-endian",
-      "quantizationMinimumMeters": 69.88013458251953,
-      "quantizationMaximumMeters": 2096.50390625,
+      "quantizationMinimumMeters": 76.79379272460938,
+      "quantizationMaximumMeters": 2090.25927734375,
       "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)"
     },
     "heightBinary": "assets/height_u16.bin",
-    "heightByteLength": 5046272,
-    "heightSha256": "fa181c41a43418e8023b061e1571cfc94f28304449d2cf2197b8ab6bc9b082fb",
+    "heightByteLength": 5947392,
+    "heightSha256": "4dd8fcb8ee62db7a5a6865e5da6894646f5856fca29829a0e7b40c104bd58bae",
     "maskBinary": "assets/mask_u8.bin",
-    "maskByteLength": 2523136,
-    "maskSha256": "71ea6e044ef62f9b746901768efdbaff1d70779486f4c276640cfd4a784902e8",
-    "noDataPolicy": "网页连续地形掩膜全部为1；原始无效区仅在网页层以最近有效高程补齐，权威COG不变",
+    "maskByteLength": 2973696,
+    "maskSha256": "ea8c02cf1ce0cef9afb838f9a5b8d3dd84da885790f6d2d13cfcd3efa7461c24",
+    "noDataPolicy": "网页只显示已下载的真实DEM像元；禁止插值外推补边",
     "validFraction": 1.0,
-    "sourceValidFraction": 0.9558053945566153,
-    "visualFillApplied": true,
-    "visualFillMethod": "rasterio.fillnodata nearest-valid interpolation with two smoothing passes",
+    "sourceValidFraction": 1.0,
+    "visualFillApplied": false,
+    "visualFillMethod": null,
+    "sourceCoverageType": "downloaded",
     "landmarks": [
       {
         "id": "zhenbao-ding",
@@ -94,9 +101,9 @@
         "color": "#f2bd65",
         "projectedX": 482534.53046244296,
         "projectedY": 2890708.122979571,
-        "gridU": 0.953801530266988,
-        "gridV": 0.0859426953131436,
-        "elevationMeters": 1983.3739013671875
+        "gridU": 0.7382989829709967,
+        "gridV": 0.1809491418062734,
+        "elevationMeters": 1993.7269287109375
       },
       {
         "id": "yangshuo-county-seat",
@@ -106,9 +113,21 @@
         "color": "#73d7b0",
         "projectedX": 448648.49294540624,
         "projectedY": 2740850.7563136783,
-        "gridU": 0.6422917167255583,
-        "gridV": 0.914616476920602,
-        "elevationMeters": 100.38113403320312
+        "gridU": 0.5152911677881292,
+        "gridV": 0.8799759477858087,
+        "elevationMeters": 119.18640899658203
+      },
+      {
+        "id": "yangtang-airfield",
+        "name": "秧塘机场旧址",
+        "longitude": 110.15569,
+        "latitude": 25.21753,
+        "color": "#7bb7ff",
+        "projectedX": 414949.56581014313,
+        "projectedY": 2789301.889164384,
+        "gridU": 0.2935147470229887,
+        "gridV": 0.653970103720571,
+        "elevationMeters": 159.0520477294922
       }
     ],
     "manifestUrl": "assets/terrain-manifest.json"
@@ -116,6 +135,6 @@
   "asfPlanCreated": true,
   "selectedProductCount": 5,
   "existingResolvedCount": 5,
-  "sourceFileCount": 11,
+  "sourceFileCount": 9,
   "qaStatus": "complete"
 }

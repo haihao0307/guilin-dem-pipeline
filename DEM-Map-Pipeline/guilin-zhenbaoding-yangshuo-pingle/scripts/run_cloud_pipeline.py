@@ -82,6 +82,10 @@ def run(root: Path) -> int:
 
     runtime_config = make_runtime_config(config, root, fallback=use_fallback)
     invoke([python, str(scripts / "mosaic_dem.py"), "--config", str(runtime_config), "--root", str(root)])
+    if read_json(runtime_config).get("webContext"):
+        if not use_fallback:
+            invoke([python, str(scripts / "download_mapzen_fallback.py"), "--config", str(runtime_config), "--root", str(root)])
+        invoke([python, str(scripts / "build_web_context_dem.py"), "--config", str(runtime_config), "--root", str(root)])
 
     runtime_source = read_json(metadata / "runtime_source.json") if (metadata / "runtime_source.json").exists() else {}
     write_json(
