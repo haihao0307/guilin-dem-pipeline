@@ -6,8 +6,8 @@
   "outputPixelSpacingMeters": 12.5,
   "native12_5mSurveyClaim": false,
   "selectedProductCount": 10,
-  "selectedCoverageFraction": 0.9952027070438824,
-  "localVerifiedSourceCount": 5,
+  "selectedCoverageFraction": 0.9970016919024265,
+  "localVerifiedSourceCount": 6,
   "localVerifiedSources": [
     {
       "file": "AP_13049_FBD_F0480_RT1.dem.tif",
@@ -43,6 +43,23 @@
       "sha256": "eaa8d88a1814c6492f89a2820d89d81ffd0377a0443b1408e57308057db4eda9",
       "pixelSpacingMeters": 12.5,
       "crs": "EPSG:32649"
+    },
+    {
+      "file": "AP_18169_FBD_F0500_RT1.dem.tif",
+      "bytes": 72395828,
+      "sha256": "95c65851936ea1e4c62a2ad5a1c187c2955ffdb3a670142ee9c745f186ef0ce9",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    }
+  ],
+  "newlyReceivedArchives": [
+    {
+      "file": "AP_18169_FBD_F0500_RT1.zip",
+      "bytes": 358077859,
+      "sha256": "707ec1bc3a4c50cdcd0c339b41a69df2b476ec328545174ec19bcfdd9d945bb9",
+      "demEntry": "AP_18169_FBD_F0500_RT1/AP_18169_FBD_F0500_RT1.dem.tif",
+      "extractedDem": "data/raw/dem/AP_18169_FBD_F0500_RT1.dem.tif",
+      "verifiedAt": "2026-08-21T17:18:35+08:00"
     }
   ],
   "mosaicAttempt": {
@@ -69,6 +86,6 @@
   },
   "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
   "lastAttempt": "2026-08-21",
-  "nextStep": "五张本地源片已验证；仍需取得 selected_new_products.json 中缺失 ASF 产品的授权下载会话，再重新运行 scripts/asf_download_stdlib.py。下载器会复用现有选片，不会重复检索。",
+  "nextStep": "六张本地源片已验证，其中 AP_18169_FBD_F0500_RT1 为本次新接收瓦片；selected_new_products.json 中仍有另外四张计划瓦片缺失。取得其余授权下载文件后，再运行 scripts/mosaic_dem.py；在达到覆盖阈值前不发布拼接成果。",
   "fallbackPolicy": "继续使用约30米完整范围公开预览；不把增强或插值标作原生12.5米。"
 }
