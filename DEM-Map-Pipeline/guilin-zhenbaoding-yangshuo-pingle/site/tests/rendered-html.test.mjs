@@ -41,8 +41,11 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(manifest.sourceCoverageType, "downloaded");
   assert.equal(manifest.sourceValidFraction, 1);
   assert.equal(manifest.verticalScale, 1);
-  assert.ok(manifest.rivers.length > 0);
-  assert.equal(manifest.riverSource, "OpenStreetMap contributors");
+  assert.ok(manifest.waterways.length > 2000);
+  assert.equal(manifest.waterwaySource, "OpenStreetMap contributors");
+  assert.equal(manifest.waterwayLabelPolicy, "只绘制水系线，不显示名称");
+  assert.equal(manifest.ecology.ready, true);
+  assert.equal(manifest.ecology.sourceStatus, "deterministic-ecology-proof-awaiting-real-12.5m-dem");
   assert.deepEqual(manifest.fineRegions.map(({ status }) => status), [
     "awaiting_real_1m_source",
     "awaiting_real_1m_source",
@@ -50,7 +53,7 @@ test("terrain manifest matches the published binaries", async () => {
   ]);
   assert.deepEqual(
     manifest.landmarks.map(({ name }) => name),
-    ["真宝鼎", "阳朔县城", "秧塘机场旧址"],
+    ["真寶鼎", "陽朔縣", "秧塘機場", "桂林古城"],
   );
 
   const height = await readFile(new URL("height_u16.bin", assetRoot));
@@ -66,8 +69,12 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   const html = await readFile(new URL("../public/terrain/index.html", import.meta.url), "utf8");
   assert.match(html, /assets\/height_u16\.bin/);
   assert.match(html, /assets\/mask_u8\.bin/);
-  assert.match(html, /漓江/);
+  assert.doesNotMatch(html, /漓江|河流名称|river-name/);
   assert.match(html, /this\.exaggeration=1/);
+  assert.match(html, /focusRegion/);
+  assert.match(html, /setTimeout\(\(\)=>\{hold=null;this\.focusRegion\(item\)/);
+  assert.match(html, /marker-spin/);
+  assert.match(html, /loadEcology/);
   assert.doesNotMatch(html, /二维高程图/);
   assert.doesNotMatch(html, /垂直倍率/);
   assert.doesNotMatch(html, /class="side"|class="footer"|class="subtitle"/);
