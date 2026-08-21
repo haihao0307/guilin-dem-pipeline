@@ -166,6 +166,92 @@ def downsample_height(dem_path: Path, assets: Path, max_side: int = 2048) -> dic
         }
 
 
+def attach_lijiang(terrain: dict[str, Any], geojson_path: Path) -> None:
+    if not geojson_path.exists() or not terrain.get("ready"):
+        terrain["rivers"] = []
+        return
+    payload = read_json(geojson_path)
+    bounds = terrain["bounds"]
+    width_m = terrain["widthMeters"]
+    height_m = terrain["heightMeters"]
+    lines = []
+    for feature in payload.get("features", []):
+        coordinates = feature.get("geometry", {}).get("coordinates", [])
+        if len(coordinates) < 2:
+            continue
+        longitudes = [float(point[0]) for point in coordinates]
+        latitudes = [float(point[1]) for point in coordinates]
+        xs, ys = transform("EPSG:4326", terrain["crs"], longitudes, latitudes)
+        points = []
+        for longitude, latitude, x, y in zip(longitudes, latitudes, xs, ys):
+            u = (x - bounds[0]) / width_m
+            v = (bounds[3] - y) / height_m
+            if -0.01 <= u <= 1.01 and -0.01 <= v <= 1.01:
+                points.append({"u": float(u), "v": float(v), "longitude": longitude, "latitude": latitude})
+        if len(points) >= 2:
+            lines.append(points)
+    terrain["rivers"] = lines
+    terrain["riverSource"] = payload.get("properties", {}).get("source", "OpenStreetMap contributors")
+    terrain["riverLicense"] = payload.get("properties", {}).get("license", "ODbL 1.0")
+
+
+def build_minimal_html(meta: dict[str, Any]) -> str:
+    template = r'''<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>桂林真实 DEM</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020504;font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}body{touch-action:none}
+    .stage,#gl{position:absolute;inset:0;width:100%;height:100%;display:block}.stage{overflow:hidden;background:#020504}.labels{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+    .label{position:absolute;display:flex;align-items:center;gap:8px;transform:translate(-13px,-50%);filter:drop-shadow(0 6px 9px rgba(0,0,0,.85));will-change:left,top}.label.flip{flex-direction:row-reverse;transform:translate(calc(-100% + 13px),-50%)}
+    .ring{width:25px;height:25px;border:3px solid var(--marker);border-radius:50%;background:rgba(2,5,4,.28);box-shadow:0 0 0 5px color-mix(in srgb,var(--marker) 22%,transparent),inset 0 0 9px color-mix(in srgb,var(--marker) 45%,transparent);position:relative}.ring:after{content:"";position:absolute;left:50%;top:22px;width:2px;height:32px;background:linear-gradient(var(--marker),transparent);transform:translateX(-50%)}
+    .name{padding:7px 11px;border:1px solid color-mix(in srgb,var(--marker) 55%,transparent);border-radius:999px;background:rgba(2,8,6,.80);backdrop-filter:blur(10px);color:#fff;font-size:13px;font-weight:750;white-space:nowrap}
+    .river-name{position:absolute;color:#75d8ff;font-size:14px;font-weight:800;letter-spacing:.12em;text-shadow:0 2px 8px #00151d,0 0 10px rgba(80,200,255,.7);transform:translate(-50%,-50%)}
+    .reset{position:absolute;z-index:3;left:14px;top:14px;width:42px;height:42px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:rgba(3,10,7,.66);color:#fff;font-size:22px;cursor:pointer;backdrop-filter:blur(10px)}.reset:hover{border-color:#e7b760}.loading{position:absolute;inset:0;display:grid;place-items:center;color:transparent}
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <canvas id="gl" aria-label="桂林真实一比一垂直比例三维 DEM，可拖动旋转并用滚轮连续缩放"></canvas>
+    <div id="labels" class="labels" aria-label="地形地标"></div>
+    <button id="reset" class="reset" type="button" aria-label="重置视角" title="重置视角">↺</button>
+    <div id="loading" class="loading" aria-live="polite">加载中</div>
+  </main>
+<script>
+const META=__META_JSON__,canvas=document.querySelector('#gl'),labelLayer=document.querySelector('#labels');let renderer=null;
+function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function perspective(fov,aspect,near,far){const f=1/Math.tan(fov/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0])}
+function lookAt(e,c,u){let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2],zl=Math.hypot(zx,zy,zz)||1;zx/=zl;zy/=zl;zz/=zl;let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx,xl=Math.hypot(xx,xy,xz)||1;xx/=xl;xy/=xl;xz/=xl;const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;return new Float32Array([xx,yx,zx,0,xy,yy,zy,0,xz,yz,zz,0,-(xx*e[0]+xy*e[1]+xz*e[2]),-(yx*e[0]+yy*e[1]+yz*e[2]),-(zx*e[0]+zy*e[1]+zz*e[2]),1])}
+class TerrainRenderer{
+ constructor(canvas,meta,height,mask){this.canvas=canvas;this.meta=meta;this.height=height;this.mask=mask;this.yaw=.72;this.pitch=.62;this.distance=2.7;this.exaggeration=1;this.drag=false;this.init();this.initLabels();this.bind();this.resize();requestAnimationFrame(()=>this.draw())}
+ reset(){this.yaw=.72;this.pitch=.62;this.distance=2.7}
+ shader(type,src){const g=this.gl,s=g.createShader(type);g.shaderSource(s,src);g.compileShader(s);if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(s));return s}
+ program(vs,fs){const g=this.gl,p=g.createProgram();g.attachShader(p,this.shader(g.VERTEX_SHADER,vs));g.attachShader(p,this.shader(g.FRAGMENT_SHADER,fs));g.linkProgram(p);if(!g.getProgramParameter(p,g.LINK_STATUS))throw new Error(g.getProgramInfoLog(p));return p}
+ sample(u,v){const w=this.meta.gridWidth,h=this.meta.gridHeight,c=Math.max(0,Math.min(w-1,Math.round(u*(w-1)))),r=Math.max(0,Math.min(h-1,Math.round(v*(h-1))));return this.height[r*w+c]/65535}
+ point(u,v,lift=0){const n=this.sample(u,v);return[(u-.5)*2*this.meta.widthMeters/this.maxDim,n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+lift,(v-.5)*2*this.meta.heightMeters/this.maxDim]}
+ init(){const g=this.gl=this.canvas.getContext('webgl2',{antialias:true});if(!g)throw new Error('WebGL2 unavailable');
+  const tvs=`#version 300 es\nin vec3 p;in float h;uniform mat4 vp;out float vh;out vec3 wp;void main(){wp=p;vh=h;gl_Position=vp*vec4(p,1.);}`;
+  const tfs=`#version 300 es\nprecision highp float;in float vh;in vec3 wp;out vec4 o;vec3 pal(float t){vec3 a=mix(vec3(.035,.12,.10),vec3(.20,.38,.19),smoothstep(0.,.38,t));vec3 b=mix(vec3(.20,.38,.19),vec3(.62,.50,.27),smoothstep(.32,.72,t));vec3 c=mix(b,vec3(.90,.88,.78),smoothstep(.68,1.,t));return mix(a,c,smoothstep(.28,.8,t));}void main(){vec3 n=normalize(cross(dFdx(wp),dFdy(wp)));if(!gl_FrontFacing)n=-n;vec3 l=normalize(vec3(-.4,.85,.25));float d=.28+.72*max(dot(n,l),0.);o=vec4(pal(vh)*(d+pow(1.-max(n.y,0.),2.)*.12),1.);}`;
+  this.programTerrain=this.program(tvs,tfs);const w=this.meta.gridWidth,H=this.meta.gridHeight;this.maxDim=Math.max(this.meta.widthMeters,this.meta.heightMeters);const verts=new Float32Array(w*H*4);let k=0;for(let r=0;r<H;r++)for(let c=0;c<w;c++){const i=r*w+c,n=this.height[i]/65535,valid=this.mask[i]>0;verts[k++]=(c/(w-1)-.5)*2*this.meta.widthMeters/this.maxDim;verts[k++]=valid?n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2:0;verts[k++]=(r/(H-1)-.5)*2*this.meta.heightMeters/this.maxDim;verts[k++]=n}
+  const step=innerWidth<700?4:innerWidth<1100?2:1,qr=Math.ceil((H-1)/step),qc=Math.ceil((w-1)/step),idx=new Uint32Array(qr*qc*6);let q=0;for(let r=0;r<H-1;r+=step){const r1=Math.min(r+step,H-1);for(let c=0;c<w-1;c+=step){const c1=Math.min(c+step,w-1),a=r*w+c,b=r*w+c1,d=r1*w+c,e=r1*w+c1;idx[q++]=a;idx[q++]=d;idx[q++]=b;idx[q++]=b;idx[q++]=d;idx[q++]=e}}this.count=q;
+  const vao=g.createVertexArray();g.bindVertexArray(vao);const vb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,vb);g.bufferData(g.ARRAY_BUFFER,verts,g.STATIC_DRAW);const pl=g.getAttribLocation(this.programTerrain,'p'),hl=g.getAttribLocation(this.programTerrain,'h');g.enableVertexAttribArray(pl);g.vertexAttribPointer(pl,3,g.FLOAT,false,16,0);g.enableVertexAttribArray(hl);g.vertexAttribPointer(hl,1,g.FLOAT,false,16,12);const ib=g.createBuffer();g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,ib);g.bufferData(g.ELEMENT_ARRAY_BUFFER,idx,g.STATIC_DRAW);this.vao=vao;this.vp=g.getUniformLocation(this.programTerrain,'vp');
+  const rvs=`#version 300 es\nin vec3 p;uniform mat4 vp;void main(){gl_Position=vp*vec4(p,1.);}`,rfs=`#version 300 es\nprecision highp float;out vec4 o;void main(){o=vec4(.22,.72,1.,1.);}`;this.programRiver=this.program(rvs,rfs);const river=[];for(const line of this.meta.rivers||[])for(let i=1;i<line.length;i++)river.push(...this.point(line[i-1].u,line[i-1].v,.004),...this.point(line[i].u,line[i].v,.004));this.riverCount=river.length/3;this.riverVao=g.createVertexArray();g.bindVertexArray(this.riverVao);const rb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,rb);g.bufferData(g.ARRAY_BUFFER,new Float32Array(river),g.STATIC_DRAW);const rp=g.getAttribLocation(this.programRiver,'p');g.enableVertexAttribArray(rp);g.vertexAttribPointer(rp,3,g.FLOAT,false,12,0);this.riverVp=g.getUniformLocation(this.programRiver,'vp');g.enable(g.DEPTH_TEST);g.enable(g.CULL_FACE);g.cullFace(g.BACK)}
+ initLabels(){labelLayer.replaceChildren();this.labels=(this.meta.landmarks||[]).map(item=>{const el=document.createElement('div');el.className='label';el.style.setProperty('--marker',item.color||'#f2bd65');el.innerHTML=`<span class="ring"></span><span class="name">${item.name}</span>`;labelLayer.appendChild(el);return{item,el}});const points=(this.meta.rivers||[]).flat();if(points.length){const p=points[Math.floor(points.length*.58)],el=document.createElement('div');el.className='river-name';el.textContent='漓江';labelLayer.appendChild(el);this.riverLabel={item:{gridU:p.u,gridV:p.v,elevationMeters:this.meta.minimumElevation+this.sample(p.u,p.v)*(this.meta.maximumElevation-this.meta.minimumElevation)},el}}}
+ projectLabel(item,vp,lift){const x=(item.gridU-.5)*2*this.meta.widthMeters/this.maxDim,z=(item.gridV-.5)*2*this.meta.heightMeters/this.maxDim,n=(item.elevationMeters-this.meta.minimumElevation)/(this.meta.maximumElevation-this.meta.minimumElevation),y=n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+lift,cx=vp[0]*x+vp[4]*y+vp[8]*z+vp[12],cy=vp[1]*x+vp[5]*y+vp[9]*z+vp[13],cw=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];return{nx:cx/cw,ny:cy/cw,visible:cw>0&&cx/cw>-1.08&&cx/cw<1.08&&cy/cw>-1.08&&cy/cw<1.08}}
+ updateLabels(vp){for(const {item,el} of this.labels){const p=this.projectLabel(item,vp,.045);el.hidden=!p.visible;if(p.visible){el.classList.toggle('flip',p.nx>.42);el.style.left=`${(p.nx*.5+.5)*this.canvas.clientWidth}px`;el.style.top=`${(-p.ny*.5+.5)*this.canvas.clientHeight}px`}}if(this.riverLabel){const p=this.projectLabel(this.riverLabel.item,vp,.018),el=this.riverLabel.el;el.hidden=!p.visible;if(p.visible){el.style.left=`${(p.nx*.5+.5)*this.canvas.clientWidth}px`;el.style.top=`${(-p.ny*.5+.5)*this.canvas.clientHeight}px`}}}
+ bind(){this.canvas.addEventListener('pointerdown',e=>{this.drag=true;this.x=e.clientX;this.y=e.clientY;this.canvas.setPointerCapture(e.pointerId)});this.canvas.addEventListener('pointermove',e=>{if(!this.drag)return;this.yaw+=(e.clientX-this.x)*.008;this.pitch=Math.max(.10,Math.min(1.45,this.pitch+(e.clientY-this.y)*.006));this.x=e.clientX;this.y=e.clientY});this.canvas.addEventListener('pointerup',()=>this.drag=false);this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.distance=Math.max(.24,Math.min(6,this.distance*Math.exp(e.deltaY*.0013)))},{passive:false});window.addEventListener('resize',()=>this.resize())}
+ resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight);if(this.canvas.width!==Math.round(w*d)||this.canvas.height!==Math.round(h*d)){this.canvas.width=Math.round(w*d);this.canvas.height=Math.round(h*d);this.gl.viewport(0,0,this.canvas.width,this.canvas.height)}}
+ draw(){const g=this.gl;this.resize();g.clearColor(.006,.014,.012,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cp=Math.cos(this.pitch),eye=[Math.sin(this.yaw)*cp*this.distance,Math.sin(this.pitch)*this.distance+.12,Math.cos(this.yaw)*cp*this.distance],vp=mul(perspective(.74,this.canvas.width/this.canvas.height,.002,30),lookAt(eye,[0,.05,0],[0,1,0]));g.useProgram(this.programTerrain);g.bindVertexArray(this.vao);g.uniformMatrix4fv(this.vp,false,vp);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);if(this.riverCount){g.useProgram(this.programRiver);g.bindVertexArray(this.riverVao);g.uniformMatrix4fv(this.riverVp,false,vp);g.lineWidth(2);g.drawArrays(g.LINES,0,this.riverCount)}this.updateLabels(vp);requestAnimationFrame(()=>this.draw())}
+}
+document.querySelector('#reset').onclick=()=>renderer?.reset();
+(async()=>{try{const t=META.terrain,[hb,mb]=await Promise.all([fetch(t.heightBinary).then(r=>r.arrayBuffer()),fetch(t.maskBinary).then(r=>r.arrayBuffer())]);renderer=new TerrainRenderer(canvas,t,new Uint16Array(hb),new Uint8Array(mb));document.querySelector('#loading').remove()}catch(error){console.error(error)}})();
+</script>
+</body></html>'''
+    return template.replace("__META_JSON__", json.dumps(meta, ensure_ascii=False, separators=(",", ":")))
+
+
 def build_html(meta: dict[str, Any], provisional_uri: str, preview_uri: str) -> str:
     template = r'''<!doctype html>
 <html lang="zh-CN">
@@ -316,6 +402,9 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     preview_uri = ""
     if dem_path.exists():
         terrain = downsample_height(dem_path, assets)
+        attach_lijiang(terrain, root / "metadata" / "lijiang_osm.geojson")
+        terrain["verticalScale"] = 1.0
+        terrain["fineRegions"] = json_if_exists(root / "metadata" / "fine_regions_1m_plan.json", {}).get("regions", [])
         terrain["manifestUrl"] = "assets/terrain-manifest.json"
         write_json(assets / "terrain-manifest.json", terrain)
         preview_uri = "assets/DEM_PREVIEW.png"
@@ -353,7 +442,7 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     }
     write_json(site / "status.json", meta)
     provisional_uri = "assets/AOI_PREVIEW_PROVISIONAL.png" if provisional_png.exists() else ""
-    html = build_html(meta, provisional_uri, preview_uri)
+    html = build_minimal_html(meta)
     (site / "index.html").write_text(html, encoding="utf-8")
     print(f"网页预览：{site / 'index.html'}")
     return 0
