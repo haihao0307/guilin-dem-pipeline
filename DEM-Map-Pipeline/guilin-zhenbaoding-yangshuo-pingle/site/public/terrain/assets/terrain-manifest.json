@@ -1,11 +1,11 @@
 {
   "schemaVersion": "terrain-manifest/v1",
-  "assetVersion": "guilin-ca72bf32e6ce",
+  "assetVersion": "guilin-fa181c41a434",
   "ready": true,
-  "gridWidth": 193,
-  "gridHeight": 321,
-  "minimumElevation": 95.21517944335938,
-  "maximumElevation": 1992.952392578125,
+  "gridWidth": 1232,
+  "gridHeight": 2048,
+  "minimumElevation": 69.88013458251953,
+  "maximumElevation": 2096.50390625,
   "bounds": [
     378780.0,
     2725410.0,
@@ -35,17 +35,46 @@
   "heightEncoding": {
     "sampleType": "uint16",
     "byteOrder": "little-endian",
-    "quantizationMinimumMeters": 95.21517944335938,
-    "quantizationMaximumMeters": 1992.952392578125,
+    "quantizationMinimumMeters": 69.88013458251953,
+    "quantizationMaximumMeters": 2096.50390625,
     "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)"
   },
   "heightBinary": "assets/height_u16.bin",
-  "heightByteLength": 123906,
-  "heightSha256": "ca72bf32e6ce28c99e0a6fa47110c89aa9dd401b168175f2060f1bd2a07cb47b",
+  "heightByteLength": 5046272,
+  "heightSha256": "fa181c41a43418e8023b061e1571cfc94f28304449d2cf2197b8ab6bc9b082fb",
   "maskBinary": "assets/mask_u8.bin",
-  "maskByteLength": 61953,
-  "maskSha256": "979336d8e17dba11e12572230b120fda19e20d999b1e4120db4b07394f1dfbc4",
-  "noDataPolicy": "mask_u8: 1=valid elevation, 0=outside or NoData",
-  "validFraction": 0.9636175810695204,
+  "maskByteLength": 2523136,
+  "maskSha256": "71ea6e044ef62f9b746901768efdbaff1d70779486f4c276640cfd4a784902e8",
+  "noDataPolicy": "网页连续地形掩膜全部为1；原始无效区仅在网页层以最近有效高程补齐，权威COG不变",
+  "validFraction": 1.0,
+  "sourceValidFraction": 0.9558053945566153,
+  "visualFillApplied": true,
+  "visualFillMethod": "rasterio.fillnodata nearest-valid interpolation with two smoothing passes",
+  "landmarks": [
+    {
+      "id": "zhenbao-ding",
+      "name": "真宝鼎",
+      "longitude": 110.82528,
+      "latitude": 26.13556,
+      "color": "#f2bd65",
+      "projectedX": 482534.53046244296,
+      "projectedY": 2890708.122979571,
+      "gridU": 0.953801530266988,
+      "gridV": 0.0859426953131436,
+      "elevationMeters": 1983.3739013671875
+    },
+    {
+      "id": "yangshuo-county-seat",
+      "name": "阳朔县城",
+      "longitude": 110.4920133,
+      "latitude": 24.7815129,
+      "color": "#73d7b0",
+      "projectedX": 448648.49294540624,
+      "projectedY": 2740850.7563136783,
+      "gridU": 0.6422917167255583,
+      "gridV": 0.914616476920602,
+      "elevationMeters": 100.38113403320312
+    }
+  ],
   "manifestUrl": "assets/terrain-manifest.json"
 }

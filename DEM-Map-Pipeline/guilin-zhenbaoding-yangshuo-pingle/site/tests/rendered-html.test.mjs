@@ -35,7 +35,14 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(manifest.heightEncoding.byteOrder, "little-endian");
   assert.equal(manifest.rowOrder, "north-to-south");
   assert.equal(manifest.columnOrder, "west-to-east");
-  assert.ok(manifest.validFraction > 0.95);
+  assert.equal(Math.max(manifest.gridWidth, manifest.gridHeight), 2048);
+  assert.equal(manifest.validFraction, 1);
+  assert.equal(manifest.visualFillApplied, true);
+  assert.ok(manifest.sourceValidFraction > 0.95);
+  assert.deepEqual(
+    manifest.landmarks.map(({ name }) => name),
+    ["真宝鼎", "阳朔县城"],
+  );
 
   const height = await readFile(new URL("height_u16.bin", assetRoot));
   const mask = await readFile(new URL("mask_u8.bin", assetRoot));
@@ -43,6 +50,7 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(mask.byteLength, manifest.maskByteLength);
   assert.equal(createHash("sha256").update(height).digest("hex"), manifest.heightSha256);
   assert.equal(createHash("sha256").update(mask).digest("hex"), manifest.maskSha256);
+  assert.ok(mask.every((value) => value === 1));
 });
 
 test("terrain page uses cacheable assets rather than embedded preview images", async () => {
@@ -50,5 +58,7 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   assert.match(html, /assets\/height_u16\.bin/);
   assert.match(html, /assets\/mask_u8\.bin/);
   assert.match(html, /assets\/DEM_PREVIEW\.png/);
+  assert.match(html, /2048 级连续高精度地形/);
+  assert.match(html, /真宝鼎与阳朔县城/);
   assert.doesNotMatch(html, /data:image\//);
 });
