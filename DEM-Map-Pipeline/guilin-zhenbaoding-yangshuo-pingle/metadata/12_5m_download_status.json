@@ -1,14 +1,63 @@
 {
   "schemaVersion": "guilin-asf-download-status/v1",
-  "status": "blocked_earthdata_authorization",
+  "status": "local_12_5m_sources_verified_mosaic_incomplete",
   "provider": "NASA ASF DAAC",
   "product": "ALOS PALSAR RTC_HI_RES reference DEM",
   "outputPixelSpacingMeters": 12.5,
   "native12_5mSurveyClaim": false,
   "selectedProductCount": 10,
   "selectedCoverageFraction": 0.9952027070438824,
+  "localVerifiedSourceCount": 5,
+  "localVerifiedSources": [
+    {
+      "file": "AP_13049_FBD_F0480_RT1.dem.tif",
+      "bytes": 70351048,
+      "sha256": "326d3a64dff36cec34625435251da21ba48da9ce2122dfd05319f5e1d186d437",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    },
+    {
+      "file": "AP_13049_FBD_F0490_RT1.dem.tif",
+      "bytes": 70666396,
+      "sha256": "873c2077111c028ac66fbb04aa365af4ce2c89e25463736c12354ee20bdca3f6",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    },
+    {
+      "file": "AP_14427_FBS_F3110_RT1.dem.tif",
+      "bytes": 70957192,
+      "sha256": "dc8cd1364d1da6b9ff14db69a95a146ca0d4e03f143fc0adfcbccc35e9e70a63",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    },
+    {
+      "file": "AP_14427_FBS_F3120_RT1.dem.tif",
+      "bytes": 71942668,
+      "sha256": "3e9f84d5681cbaf59d5859529740b4e8095d3f8809fca387919327933be17c6d",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    },
+    {
+      "file": "AP_15733_FBS_F0500_RT1.dem.tif",
+      "bytes": 71646328,
+      "sha256": "eaa8d88a1814c6492f89a2820d89d81ffd0377a0443b1408e57308057db4eda9",
+      "pixelSpacingMeters": 12.5,
+      "crs": "EPSG:32649"
+    }
+  ],
+  "mosaicAttempt": {
+    "status": "rejected_incomplete_coverage",
+    "grid": {
+      "width": 8701,
+      "height": 14467,
+      "pixelSpacingMeters": 12.5
+    },
+    "coverageBeforeFill": 0.730596,
+    "unresolvedAreaSquareKilometers": 5054.348,
+    "policy": "不输出缺口超过阈值的12.5米完整成果"
+  },
   "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
   "lastAttempt": "2026-08-21",
-  "nextStep": "Earthdata 凭证已临时尝试但 ASF 下载端返回 HTTP 401；刷新或重新生成有效 bearer token 后重新运行 scripts/asf_download_stdlib.py，下载器会复用 selected_new_products.json，不会重复检索。",
+  "nextStep": "五张本地源片已验证；仍需取得 selected_new_products.json 中缺失 ASF 产品的授权下载会话，再重新运行 scripts/asf_download_stdlib.py。下载器会复用现有选片，不会重复检索。",
   "fallbackPolicy": "继续使用约30米完整范围公开预览；不把增强或插值标作原生12.5米。"
 }
