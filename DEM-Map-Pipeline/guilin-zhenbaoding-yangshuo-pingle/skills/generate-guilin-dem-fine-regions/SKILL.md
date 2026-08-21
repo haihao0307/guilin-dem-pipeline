@@ -1,6 +1,6 @@
 ---
 name: generate-guilin-dem-fine-regions
-description: Plan, validate, crop, and package real high-resolution DEM focus regions around Zhenbao Ding, the former Yangtang airfield, and Yangshuo county seat for the Guilin DEM production line. Use when requests mention these three 60 km2 fine regions, 1 m terrain, Guilin DEM detail layers, or Guilin_DEM_Full_Local_GitHub_Ready_v2.0.0. Do not use to upsample coarse DEMs or invent survey accuracy.
+description: Plan, validate, crop, and package real high-resolution DEM focus regions around Zhenbao Ding, the former Yangtang airfield, and Yangshuo county seat for the Guilin DEM production line. Use when requests mention these three 200 km2 fine regions, 1 m terrain, Guilin DEM detail layers, or Guilin_DEM_Full_Local_GitHub_Ready_v2.0.0. Do not use to upsample coarse DEMs or invent survey accuracy.
 ---
 
 # Generate Guilin DEM fine regions
@@ -11,7 +11,7 @@ Build three square focus regions centered on:
 - 秧塘机场旧址: 110.15569 E, 25.21753 N
 - 阳朔县城: 110.4920133 E, 24.7815129 N
 
-Each region targets 60 km². Use EPSG:32649 and a square side of 7,745.966692 m.
+Each region targets 200 km². Use EPSG:32649 and a square side of 14,142.135624 m.
 
 ## Source truth gate
 
@@ -30,6 +30,6 @@ Use `scripts/build_fine_regions.py --plan-only --report <path>` to generate the 
 
 The script fails closed on coarse inputs, incomplete coverage, missing CRS, or non-metric resolution. For every accepted region, preserve bounds, CRS, 1 m grid, NoData, source hash, coverage fraction, and output hash.
 
-For `Guilin_DEM_Full_Local_GitHub_Ready_v2.0.0`, store the plan under the project metadata directory and publish a focus-region package only after raster QA. Use tiled LOD in the browser; do not render a 60-million-sample region as one mesh.
+For `Guilin_DEM_Full_Local_GitHub_Ready_v2.0.0`, store the plan under the project metadata directory and publish a focus-region package only after raster QA. Use tiled LOD in the browser; do not render a 200-million-sample region as one mesh.
 
 Vertical scale 1.0 must map one horizontal metre to one vertical metre. Artistic erosion, sharpening, or Gaea surface detail must remain a separately named visualization layer and must not modify the authoritative 1 m claim.

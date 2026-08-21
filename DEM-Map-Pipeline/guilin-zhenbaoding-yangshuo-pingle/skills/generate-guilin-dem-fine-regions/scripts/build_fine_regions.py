@@ -13,7 +13,7 @@ REGIONS = [
     {"id": "yangtang-airfield", "name": "秧塘机场旧址", "longitude": 110.15569, "latitude": 25.21753},
     {"id": "yangshuo-county-seat", "name": "阳朔县城", "longitude": 110.4920133, "latitude": 24.7815129},
 ]
-AREA_M2 = 60_000_000.0
+AREA_M2 = 200_000_000.0
 SIDE_M = math.sqrt(AREA_M2)
 TARGET_CRS = "EPSG:32649"
 TARGET_RESOLUTION_M = 1.0
@@ -37,7 +37,7 @@ def plan() -> dict:
         half = SIDE_M / 2
         regions.append({
             **item,
-            "areaSquareKilometers": 60.0,
+            "areaSquareKilometers": AREA_M2 / 1_000_000.0,
             "sideMeters": SIDE_M,
             "targetCrs": TARGET_CRS,
             "targetResolutionMeters": TARGET_RESOLUTION_M,
