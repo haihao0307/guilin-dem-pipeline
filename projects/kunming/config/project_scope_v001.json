@@ -1,0 +1,48 @@
+{
+  "schema": "kunming_dem_project_scope@0.1.0",
+  "project_id": "kunming-dem-v001",
+  "phase": "download_mosaic_qa_only",
+  "epoch_target": {
+    "start_year": 1940,
+    "end_year": 1945
+  },
+  "center": {
+    "display_name_zh": "昆明翠湖",
+    "center_wgs84": [102.70228, 25.05042],
+    "source": "Wikidata Green Lake coordinate"
+  },
+  "aoi": {
+    "shape": "square",
+    "area_km2": 20000,
+    "side_m": 141421.3562373095,
+    "half_extent_m": 70710.6781186548,
+    "project_crs": "EPSG:32648",
+    "derive_projected_bounds_from_center": true
+  },
+  "future_core": {
+    "enabled_in_this_phase": false,
+    "center": "same_as_project_center",
+    "shape": "square",
+    "side_m": 10000,
+    "area_km2": 100
+  },
+  "current_phase_outputs": [
+    "source_products",
+    "source_manifest",
+    "checksums",
+    "mosaic_cog",
+    "coverage_report",
+    "nodata_report",
+    "elevation_statistics",
+    "hillshade_preview",
+    "download_handoff"
+  ],
+  "out_of_scope": [
+    "vegetation",
+    "agriculture",
+    "historical_landuse_reconstruction",
+    "seasonal_rendering",
+    "detailed_core_build",
+    "public_candidate_site"
+  ]
+}
