@@ -1,0 +1,48 @@
+{
+  "schema": "dem_codex_control_state@1.0",
+  "updated_at": "2026-08-22T06:09:00Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "stable_branch": "main",
+  "integration_branch": "integration/ecology-v040",
+  "stable_ecology_release": "v0.3.1",
+  "target_ecology_release": "v0.4.0",
+  "status": "dispatched",
+  "workers": [
+    {
+      "id": "codex-1",
+      "title": "terrain-hydrology-karst",
+      "branch": "codex/terrain-hydrology-karst-v040",
+      "issue": 1,
+      "state": "ready_for_codex"
+    },
+    {
+      "id": "codex-2",
+      "title": "ecology-agriculture",
+      "branch": "codex/ecology-agriculture-v040",
+      "issue": 2,
+      "state": "ready_for_codex"
+    },
+    {
+      "id": "codex-3",
+      "title": "runtime-control-plane",
+      "branch": "codex/runtime-control-plane-v040",
+      "issue": 3,
+      "state": "ready_for_codex"
+    }
+  ],
+  "merge_order": [
+    "codex/terrain-hydrology-karst-v040",
+    "codex/ecology-agriculture-v040",
+    "codex/runtime-control-plane-v040"
+  ],
+  "review_gates": [
+    "truth_dem_immutable",
+    "water_exclusion_zero",
+    "karst_rock_exclusion",
+    "agriculture_exclusion",
+    "deterministic_rebuild",
+    "tile_seam_tests",
+    "browser_console_zero_errors",
+    "v0.3.1_rollback_available"
+  ]
+}
