@@ -48,7 +48,10 @@ test("terrain manifest matches the published binaries", async () => {
   assert.ok(manifest.waterwayExcludedReservoirFeatures > 0);
   assert.equal(manifest.waterwayLabelPolicy, "只绘制水面，不显示水系名称");
   assert.equal(manifest.waterwayRepresentation, "mapped-water-surface-polygons-with-tapered-centerline-fallback");
-  assert.equal(manifest.waterwayEdgePolicy, "clip-intersections-preserved-at-terrain-boundary");
+  assert.equal(manifest.waterwayEdgePolicy, "split-then-clip-each-contiguous-part-at-terrain-boundary");
+  assert.equal(manifest.waterSurfacePolicy, "sampled-to-DEM-ground-plus-0.6m-render-epsilon");
+  assert.equal(manifest.waterwayNetworks.xiangjiang, "OSM-named-and-unnamed-river-ways");
+  assert.equal(manifest.waterwayNetworks.lijiang, "continuous-extract-plus-OSM-ways");
   assert.equal(manifest.ecology.ready, true);
   assert.equal(manifest.ecology.sourceStatus, "deterministic-ecology-proof-awaiting-real-12.5m-dem");
   assert.deepEqual(manifest.fineRegions.map(({ status }) => status), [
@@ -82,6 +85,11 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   assert.match(html, /zoomToPointer/);
   assert.match(html, /Math\.max\(\.012/);
   assert.match(html, /programWater/);
+  assert.match(html, /waterPoint/);
+  assert.match(html, /fx2/);
+  assert.match(html, /data-gaea="deposition"/);
+  assert.match(html, /data-gaea="talus"/);
+  assert.match(html, /data-gaea="rock"/);
   assert.match(html, /waterwayPolygons/);
   assert.doesNotMatch(html, /drawArrays\(g\.LINES/);
   assert.match(html, /setTimeout\(\(\)=>\{hold=null;this\.focusRegion\(item\)/);
