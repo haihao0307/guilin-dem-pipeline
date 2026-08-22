@@ -1,0 +1,94 @@
+{
+  "schema": "dem_ops_public_status@1.0",
+  "generated_at": "2026-08-22T07:20:00Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "status": "phase_a_merged_runtime_in_progress",
+  "stable_branch": "main",
+  "integration_branch": "integration/ecology-v040",
+  "stable_release": "v0.3.1",
+  "target_release": "v0.4.0-rc1",
+  "default_runtime_release": "v0.3.1",
+  "release_candidate": {
+    "release_id": "guilin-ecology-v0.4.0-rc1",
+    "status": "phase_a_runtime_candidate",
+    "default_runtime": false,
+    "rollback_release": "v0.3.1",
+    "release_blockers": [
+      "real_10km2_field_compilation",
+      "versioned_field_textures",
+      "versioned_instance_binary_streams",
+      "three_layer_canopy_browser_shader",
+      "parallax_fibre_crops_and_grass",
+      "full_scale_tile_seam_validation",
+      "browser_console_zero_errors",
+      "reference_visual_review",
+      "windows_release_package",
+      "pages_candidate_deployment"
+    ]
+  },
+  "workers": [
+    {
+      "id": "codex-1",
+      "title": "terrain-hydrology-karst",
+      "branch": "codex/terrain-hydrology-karst-v040",
+      "issue": 1,
+      "pull_request": 4,
+      "state": "phase_a_merged",
+      "tests_passed": 4,
+      "phase_b_pending": ["full_10km2_assets", "visual_calibration", "browser_screenshots"]
+    },
+    {
+      "id": "codex-2",
+      "title": "ecology-agriculture",
+      "branch": "codex/ecology-agriculture-v040",
+      "issue": 2,
+      "pull_request": 5,
+      "state": "phase_a_merged",
+      "tests_passed": 5,
+      "phase_b_pending": ["binary_instance_streams", "field_textures", "browser_shaders", "visual_screenshots"]
+    },
+    {
+      "id": "codex-3",
+      "title": "runtime-control-plane",
+      "branch": "codex/runtime-control-plane-v040",
+      "issue": 3,
+      "pull_request": 6,
+      "state": "controller_fallback_in_progress",
+      "tests_passed": 0,
+      "phase_b_pending": ["ops_page", "runtime_qa", "release_packaging", "pages_candidate"]
+    }
+  ],
+  "tests": {
+    "focused_passed": 9,
+    "completed_gates": [
+      "truth_dem_immutable_focused_test",
+      "water_hard_exclusion_focused_test",
+      "erosion_downhill_to_water_focused_test",
+      "terrain_deterministic_rebuild_focused_test",
+      "ecology_water_exclusion_focused_test",
+      "agriculture_exclusion_focused_test",
+      "declared_prototype_integrity_focused_test",
+      "minimum_18_active_prototypes_focused_test",
+      "ecology_deterministic_rebuild_focused_test",
+      "global_row_phase_focused_test"
+    ],
+    "pending_release_gates": [
+      "real_10km2_compilation",
+      "tile_seam_full_scale",
+      "browser_console_zero_errors",
+      "visual_reference_review",
+      "windows_release_package",
+      "pages_candidate_deployment",
+      "v0.3.1_rollback_browser_test"
+    ]
+  },
+  "links": {
+    "main_view": "../",
+    "live_terrain_view": "../live-terrain.html",
+    "github_repository": "https://github.com/haihao0307/guilin-dem-pipeline",
+    "terrain_pr": "https://github.com/haihao0307/guilin-dem-pipeline/pull/4",
+    "ecology_pr": "https://github.com/haihao0307/guilin-dem-pipeline/pull/5",
+    "runtime_pr": "https://github.com/haihao0307/guilin-dem-pipeline/pull/6"
+  },
+  "payload_sha256": "generated_by_ci"
+}
