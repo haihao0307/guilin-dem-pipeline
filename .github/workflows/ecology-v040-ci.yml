@@ -1,0 +1,88 @@
+name: Ecology v0.4 focused QA and package
+
+on:
+  pull_request:
+    branches:
+      - integration/ecology-v040
+    paths:
+      - .github/workflows/ecology-v040-ci.yml
+      - ops/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/ecology_v040/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/tests/test_*_v040.py
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.4.0/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/schemas/ecology/v0.4.0/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/ops/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/HANDOFF_*_V040.md
+  push:
+    branches:
+      - integration/ecology-v040
+      - 'codex/**'
+    paths:
+      - .github/workflows/ecology-v040-ci.yml
+      - ops/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/ecology_v040/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/tests/test_*_v040.py
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.4.0/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/schemas/ecology/v0.4.0/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/ops/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/HANDOFF_*_V040.md
+  workflow_dispatch:
+
+concurrency:
+  group: ecology-v040-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  focused-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Build sanitized ops payload
+        run: python scripts/ecology_v040/build_ops_control_plane.py --generated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Test terrain fields
+        run: python -m unittest tests/test_terrain_field_compiler_v040.py
+
+      - name: Test ecology and agriculture
+        run: python -m unittest tests/test_ecology_agriculture_compiler_v040.py
+
+      - name: Test runtime control plane
+        run: python -m unittest tests/test_ops_control_plane_v040.py
+
+      - name: Run runtime QA
+        run: python scripts/ecology_v040/runtime_qa.py
+
+      - name: Build Windows-compatible release package
+        run: python scripts/ecology_v040/package_v040_release.py
+
+      - name: Verify archive
+        run: python -m zipfile -t outputs/Guilin_Ecology_v0.4.0_PhaseA_Windows.zip
+
+      - name: Upload Phase A evidence and package
+        uses: actions/upload-artifact@v7
+        with:
+          name: guilin-ecology-v0.4.0-phase-a-${{ github.sha }}
+          path: |
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/reports/ECOLOGY_V040_RUNTIME_QA.json
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/outputs/Guilin_Ecology_v0.4.0_PhaseA_Windows.zip
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/outputs/Guilin_Ecology_v0.4.0_PhaseA_Windows.zip.sha256.txt
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/outputs/Guilin_Ecology_v0.4.0_PhaseA_Windows.zip.manifest.json
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/ops/**
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/site/public/terrain/ops/**
+          if-no-files-found: error
+          compression-level: 3
+          retention-days: 30
