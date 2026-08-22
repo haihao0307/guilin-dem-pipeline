@@ -1,25 +1,22 @@
-name: Build extended Guilin DEM and web preview
+name: Build extended Guilin DEM preview
 
 on:
-  push:
-    branches:
-      - dem-zhenbaoding-yangshuo-pingle
-      - main
-    paths:
-      - .github/workflows/guilin-dem-extended.yml
-      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/**
-      - '!DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/**'
   workflow_dispatch:
     inputs:
       data_mode:
         description: Data mode
         required: true
-        default: auto
+        default: asf
         type: choice
         options:
-          - auto
           - asf
+          - auto
           - fallback
+      publish_public:
+        description: Publish after controller visual approval
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: guilin-dem-zhenbaoding-yangshuo-pingle
@@ -39,7 +36,7 @@ jobs:
         working-directory: DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle
     env:
       EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
-      DEM_DATA_MODE: ${{ github.event.inputs.data_mode || 'auto' }}
+      DEM_DATA_MODE: ${{ github.event.inputs.data_mode || 'asf' }}
       PYTHONUNBUFFERED: '1'
     steps:
       - name: Checkout branch
@@ -55,61 +52,54 @@ jobs:
           cache-dependency-path: DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/requirements.txt
 
       - name: Install geospatial runtime
-        run: >-
-          python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements.txt
+        run: python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements.txt
 
-      - name: Build boundary, download sources, mosaic and web page
+      - name: Build boundary, sources, mosaic and private preview
         run: python scripts/run_cloud_pipeline.py --root "$PWD"
 
-      - name: Upload COG, manifests and QA reports
+      - name: Run release-blocking checks
+        run: |
+          test -f reports/QA_REPORT.json
+          test -f web/index.html
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          qa=json.loads(Path('reports/QA_REPORT.json').read_text(encoding='utf-8'))
+          if qa.get('releaseAllowed') is not True:
+              raise SystemExit('releaseAllowed is not true')
+          PY
+
+      - name: Upload COG, manifests, QA and private web preview
         uses: actions/upload-artifact@v7
         with:
-          name: guilin-dem-zhenbaoding-yangshuo-pingle
+          name: guilin-dem-private-preview-${{ github.sha }}
           path: |
             DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/outputs/*.tif
             DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/reports/**
             DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/**
+            DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/**
           if-no-files-found: error
           compression-level: 3
           retention-days: 30
 
-      - name: Commit lightweight web result and metadata
-        working-directory: ${{ github.workspace }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BASE="DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle"
-          git add -f -- "$BASE/web"
-          for file in \
-            "$BASE/reports/CLOUD_RUN_STATUS.json" \
-            "$BASE/reports/QA_REPORT.json" \
-            "$BASE/reports/DOWNLOAD_STATUS.json" \
-            "$BASE/metadata/resolved_aoi.json" \
-            "$BASE/metadata/selected_new_products.json" \
-            "$BASE/metadata/runtime_source.json" \
-            "$BASE/metadata/source_manifest.json"; do
-            if [ -f "$file" ]; then git add -f -- "$file"; fi
-          done
-          if ! git diff --cached --quiet; then
-            git commit -m "Update extended Guilin DEM web result [skip ci]"
-            git push origin HEAD:${GITHUB_REF_NAME}
-          fi
-
       - name: Configure GitHub Pages
+        if: ${{ inputs.publish_public == true }}
         uses: actions/configure-pages@v6.0.0
 
-      - name: Upload Pages artifact
+      - name: Upload approved Pages artifact
+        if: ${{ inputs.publish_public == true }}
         uses: actions/upload-pages-artifact@v5
         with:
           path: DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web
 
   deploy:
+    if: ${{ inputs.publish_public == true }}
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy DEM preview to GitHub Pages
+      - name: Deploy approved Guilin preview
         id: deployment
         uses: actions/deploy-pages@v5
