@@ -8,6 +8,26 @@ const SOURCE_REPLACEMENTS = [
     replace: '(state.showWater ? .35 * state.waterLevel : 0)',
     reason: 'fix invalid conditional expression in ground and water collision clearance',
   },
+  {
+    find: 'gl_PointSize=clamp(px*1.40,1.0,248.0)*keep;',
+    replace: 'gl_PointSize=clamp(px*.78,1.0,72.0)*keep;',
+    reason: 'cap far and medium canopy billboards before they become giant near-ground discs',
+  },
+  {
+    find: 'vFade=keep*smoothstep(.65,2.1,px)*(1.0-smoothstep(2750.0,5200.0,dist));',
+    replace: 'vFade=keep*smoothstep(.65,2.1,px)*smoothstep(70.0,220.0,dist)*(1.0-smoothstep(2750.0,5200.0,dist));',
+    reason: 'fade medium-distance canopy billboards out before the ground-observer range',
+  },
+  {
+    find: 'gl_PointSize=clamp(px,1.0,42.0)*keep;',
+    replace: 'gl_PointSize=clamp(px,1.0,18.0)*keep;',
+    reason: 'cap rice billboards pending bounded near-geometry replacement',
+  },
+  {
+    find: 'vFade=keep*smoothstep(1.1,3.2,px)*(1.0-smoothstep(1150.0,2100.0,dist));',
+    replace: 'vFade=keep*smoothstep(1.1,3.2,px)*smoothstep(4.0,16.0,dist)*(1.0-smoothstep(1150.0,2100.0,dist));',
+    reason: 'fade rice billboards at immediate camera range',
+  },
 ];
 
 function showFatal(error) {
@@ -34,6 +54,7 @@ async function startRecoveryRuntime() {
     applied,
     publicationBlocked: true,
     source: 'web/guilin-v050/runtime.js',
+    nearGeometryStatus: 'medium billboards capped; procedural near geometry remains a release blocker',
   };
   const blob = new Blob([`${source}\n//# sourceURL=guilin-v050-runtime-recovered.js`], { type: 'text/javascript' });
   const url = URL.createObjectURL(blob);
