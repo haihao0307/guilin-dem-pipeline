@@ -1,12 +1,20 @@
 {
-  "schema": "dem_codex_control_state@1.3",
-  "updated_at": "2026-08-22T09:10:00Z",
+  "schema": "dem_codex_control_state@1.4",
+  "updated_at": "2026-08-22T09:28:00Z",
   "repository": "haihao0307/guilin-dem-pipeline",
   "stable_branch": "main",
   "integration_branch": "integration/ecology-v040",
   "stable_ecology_release": "v0.3.1",
   "target_guilin_release": "v0.5.0-candidate",
-  "status": "guilin_v050_running_city_downloads_running",
+  "status": "guilin_camera_and_visual_rebuild_running_city_downloads_running",
+  "priority_order": [
+    "guilin_ground_camera_and_four_core_candidate",
+    "guilin_hydrology_and_dem_completion",
+    "guilin_ecology_agriculture_wind_and_visual_quality",
+    "guilin_gaea_controls_regression",
+    "kunming_dem_download",
+    "wenzhou_taizhou_dem_and_shallow_tidal_band_download"
+  ],
   "phase_a": {
     "state": "merged",
     "pull_requests": [4, 5, 6],
@@ -23,14 +31,14 @@
     "branch": "skill/dem-ecology-surface-v050",
     "issue": 10,
     "pull_request": 11,
-    "state": "accepted_by_codex",
+    "state": "apply_completed_codex_task_requested",
     "scope": [
       "habitat_rules",
       "three_layer_canopy",
       "parallax_strand_surface",
-      "wind",
+      "world_space_wind",
       "agriculture",
-      "bunds",
+      "bunds_and_irrigation_cuts",
       "season_profiles",
       "nearshore_tidal_interface"
     ]
@@ -46,41 +54,59 @@
       "秧塘机场旧址",
       "阳朔县城"
     ],
+    "candidate_path": "/guilin-v050/",
+    "stable_rollback": "v0.3.1",
+    "camera_blocker": {
+      "issue": 25,
+      "task": "ops/tasks/GUILIN_V050_CAMERA_GROUND_FIX.md",
+      "source_fixed_height_scene_units": 0.12,
+      "equivalent_height_m": 12862.8,
+      "source_near_plane_scene_units": 0.0005,
+      "equivalent_near_plane_m": 53.595,
+      "target_ground_clearance_m": 1.7,
+      "state": "assigned_to_runtime_worker"
+    },
     "workers": [
       {
-        "id": "guilin-1",
-        "title": "hydrology-dem-gaea",
+        "id": "guilin-1a",
+        "title": "dem_completion_li_xiang_hydrology",
         "branch": "codex/guilin-hydrology-gaea-v050",
         "issue": 12,
         "pull_request": 15,
-        "state": "accepted_by_codex"
+        "state": "focused_task_restarted"
+      },
+      {
+        "id": "guilin-1b",
+        "title": "gaea_controls_regression",
+        "branch": "codex/guilin-gaea-regression-v050",
+        "issue": 23,
+        "pull_request": 24,
+        "state": "running"
       },
       {
         "id": "guilin-2",
-        "title": "ecology-agriculture-wind-visual",
+        "title": "ecology_agriculture_wind_visual",
         "branch": "codex/guilin-ecology-visual-v050",
         "issue": 13,
         "pull_request": 16,
-        "state": "accepted_by_codex"
+        "state": "apply_completed_codex_task_requested"
       },
       {
         "id": "guilin-3",
-        "title": "overall-four-core-runtime",
+        "title": "overall_four_core_runtime_and_ground_camera",
         "branch": "codex/guilin-four-core-runtime-v050",
         "issue": 14,
+        "camera_issue": 25,
         "pull_request": 17,
-        "state": "accepted_by_codex"
+        "state": "apply_stage1_and_camera_fix_requested"
       }
-    ],
-    "priority": "show_online_candidate_first",
-    "candidate_path": "/guilin-v050/",
-    "stable_rollback": "v0.3.1"
+    ]
   },
   "kunming": {
     "branch": "project/kunming-dem-v001",
     "issue": 18,
     "pull_request": 20,
-    "state": "accepted_by_codex",
+    "state": "download_mosaic_qa_requested",
     "phase": "download_mosaic_qa_only",
     "area_km2": 20000,
     "center": "昆明翠湖",
@@ -90,7 +116,7 @@
     "branch": "project/wenzhou-taizhou-dem-v001",
     "issue": 19,
     "pull_request": 21,
-    "state": "accepted_by_codex",
+    "state": "land_and_shallow_tidal_download_requested",
     "phase": "land_dem_and_shallow_tidal_band_download_only",
     "target_depth_band_m": [0, -10],
     "stop_after_download": true
@@ -106,7 +132,11 @@
     "paddy_exclusion_zero",
     "bund_visibility",
     "wind_root_locking",
+    "parallax_strand_surface_visible",
     "four_exact_10km_cores",
+    "camera_reaches_two_metres_above_ground_in_all_cores",
+    "terrain_and_water_camera_collision",
+    "adaptive_near_plane_below_0_25m_in_ground_mode",
     "season_selector",
     "tile_seams",
     "browser_console_zero_errors",
