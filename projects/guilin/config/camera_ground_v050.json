@@ -1,0 +1,44 @@
+{
+  "schema": "guilin_ground_camera@0.5.0",
+  "status": "required_for_candidate",
+  "source_bug": {
+    "fixed_scene_height_offset": 0.12,
+    "overall_max_dimension_m": 214380,
+    "equivalent_fixed_clearance_m": 12862.8,
+    "fixed_near_plane_scene_units": 0.0005,
+    "equivalent_near_plane_m": 53.595,
+    "target_does_not_follow_terrain": true,
+    "pointer_zoom_uses_screen_offset_instead_of_terrain_intersection": true
+  },
+  "core_regions_ref": "core_regions_v050.json",
+  "requirements": {
+    "scene_units_per_metre_formula": "2 / maxDimMeters",
+    "terrain_following_target": true,
+    "terrain_collision": true,
+    "water_surface_collision": true,
+    "orbit_min_clearance_m": 3.0,
+    "ground_mode_clearance_m": 1.7,
+    "ground_mode_near_clip_max_m": 0.25,
+    "adaptive_near_far": true,
+    "pointer_raycast_or_iterative_height_intersection": true,
+    "automatic_detailed_core_switch": true,
+    "ground_observer_mode": true,
+    "keyboard_ground_navigation": true,
+    "touch_pinch_zoom": true,
+    "right_drag_or_shift_drag_pan": true,
+    "url_or_local_camera_state": true,
+    "vertical_scale_one_to_one_at_exaggeration_one": true
+  },
+  "fixed_cores": [
+    "zhenbao_ding",
+    "guilin_old_city",
+    "yangtang_airfield",
+    "yangshuo_county"
+  ],
+  "acceptance": {
+    "maximum_ground_clearance_test_m": 2.0,
+    "all_four_cores_ground_reachable": true,
+    "console_errors": 0,
+    "stable_rollback": "v0.3.1"
+  }
+}
