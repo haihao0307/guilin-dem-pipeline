@@ -1,0 +1,82 @@
+{
+  "schema": "guilin_release_gate@0.5.1",
+  "candidate": "v0.5.0",
+  "status": "rejected_regression_recovery_required",
+  "public_release_allowed": false,
+  "stable_release": "v0.3.1",
+  "automatic_publication_allowed": false,
+  "rejection_reasons": [
+    "unexplained_line_artifacts",
+    "river_surface_and_topology_bugs",
+    "li_river_incomplete",
+    "xiang_river_incomplete",
+    "hydrology_controls_missing",
+    "mixed_30m_overall_and_12_5m_focus_truth_sources",
+    "black_perimeter_and_hard_visual_cutoff",
+    "detailed_ecology_spread_outside_core_policy",
+    "v0_3_1_core_visual_behavior_not_integrated",
+    "ground_camera_not_reachable",
+    "gaea_and_ecology_regressions_not_visually_approved"
+  ],
+  "locked_architecture": {
+    "authoritative_dem_lineage": "single_continuous_12_5m_mosaic_required_for_final_candidate",
+    "core_size_m": 10000,
+    "core_count": 4,
+    "detailed_ecology_scope": "active_core_only",
+    "overall_ecology": "aggregate_landcover_and_blurred_canopy_only",
+    "far_view": "atmospheric_haze_desaturation_and_blur",
+    "outer_boundary": "terrain_skirt_or_horizon_fade_without_black_rectangle",
+    "hydrology": "named_real_network_with_topology_and_continuity_validation",
+    "v031_baseline": "recover_actual_runtime_behavior_then_bind_to_real_core_dem"
+  },
+  "required_gates": {
+    "terrain": [
+      "continuous_full_aoi_12_5m_source_coverage",
+      "single_crs_datum_alignment_and_vertical_scale",
+      "no_visible_source_resolution_boundary",
+      "no_black_perimeter",
+      "truth_dem_immutable"
+    ],
+    "hydrology": [
+      "li_river_named_network_continuous",
+      "xiang_river_named_network_continuous",
+      "zero_out_of_bounds_water_vertices",
+      "zero_bridging_water_triangles",
+      "zero_unexplained_line_artifacts",
+      "hydrology_controls_visible_and_functional"
+    ],
+    "ecology": [
+      "detailed_instances_load_only_in_active_core",
+      "v031_actual_visual_behavior_recovered",
+      "minimum_18_active_prototypes_per_representative_core",
+      "zero_vegetation_in_permanent_water_and_active_bank",
+      "crop_palettes_visibly_distinct",
+      "bund_core_shoulders_and_cuts_visible",
+      "wind_root_locking_and_species_response",
+      "parallax_strand_surface_visible_at_medium_distance"
+    ],
+    "camera": [
+      "all_four_cores_reach_two_metres_above_ground",
+      "adaptive_near_plane_below_0_25m_in_ground_mode",
+      "terrain_and_water_collision",
+      "actual_pointer_terrain_focus",
+      "ground_observer_mode"
+    ],
+    "visual": [
+      "overall_map_no_artifacts_screenshot",
+      "overall_named_river_overlay_screenshot",
+      "overall_far_blur_and_horizon_screenshot",
+      "five_altitude_views_for_each_core",
+      "water_paddy_forest_karst_erosion_and_top_views",
+      "gaea_controls_screenshot",
+      "hydrology_controls_screenshot"
+    ],
+    "runtime": [
+      "browser_console_zero_errors",
+      "all_routes_http_200",
+      "tile_and_field_phase_seams_pass",
+      "v0_3_1_rollback_browser_test"
+    ]
+  },
+  "promotion_rule": "All required gates must have attached machine-readable evidence and controller visual approval before public_release_allowed can become true."
+}
