@@ -1,0 +1,66 @@
+{
+  "schema": "wenzhou_taizhou_dem_project_scope@0.1.0",
+  "project_id": "wenzhou-taizhou-dem-v001",
+  "phase": "land_dem_and_shallow_tidal_band_download_only",
+  "epoch_target": {
+    "start_year": 1940,
+    "end_year": 1945
+  },
+  "project_crs": "EPSG:32651",
+  "aoi_wgs84": {
+    "type": "bbox",
+    "west": 120.20,
+    "south": 27.72,
+    "east": 121.72,
+    "north": 28.82,
+    "notes": "Includes Qingtian county-seat area, Yongjia and Nanxi River corridor, Daluo Mountain, Dongtou islands, Yuhuan, Yandang Mountain, Jiaojiang and approximately 15 km north of Jiaojiang."
+  },
+  "anchors": [
+    {"id": "qingtian_county_seat", "display_name_zh": "青田县城", "wgs84": [120.28521, 28.14275]},
+    {"id": "daluo_shan", "display_name_zh": "大罗山", "wgs84": [120.73333, 27.86667]},
+    {"id": "nanxi_river_confluence", "display_name_zh": "楠溪江下游", "wgs84": [120.67294, 28.03814]},
+    {"id": "nanxi_river_upper", "display_name_zh": "楠溪江上游", "wgs84": [120.7197, 28.4261]},
+    {"id": "yandang_mountain", "display_name_zh": "雁荡山", "wgs84": [121.0503, 28.3697]},
+    {"id": "jiaojiang", "display_name_zh": "椒江", "wgs84": [121.4386, 28.6758]},
+    {"id": "yuhuan", "display_name_zh": "玉环", "wgs84": [121.2276, 28.1395]},
+    {"id": "dongtou_island", "display_name_zh": "洞头岛", "wgs84": [121.14252, 27.83333]}
+  ],
+  "land_dem": {
+    "preferred_native_resolution_m": 12.5,
+    "fallback_resolution_m": 30,
+    "truthful_resolution_labels_required": true
+  },
+  "nearshore": {
+    "purpose": "tidal_band_and_water_level_relationship",
+    "deep_ocean_model": false,
+    "target_depth_band_m": [0, -10],
+    "retain_source_values_below_minus_10_for_traceability": true,
+    "runtime_phase_clip_to_minus_10": true,
+    "preferred_source": "GEBCO_2026 with TID grid",
+    "source_resolution_label_required": true,
+    "intertidal_and_coastline_vectors_required": true
+  },
+  "current_phase_outputs": [
+    "land_source_products",
+    "bathymetry_source_products",
+    "tid_grid",
+    "coastline_vectors",
+    "source_manifests",
+    "checksums",
+    "land_mosaic_cog",
+    "shallow_bathymetry_cog",
+    "land_sea_combined_reference_grid",
+    "coverage_and_nodata_reports",
+    "hillshade_and_bathymetry_preview",
+    "download_handoff"
+  ],
+  "out_of_scope": [
+    "tide_simulation",
+    "seasonal_tidal_rendering",
+    "deep_ocean_bathymetry_model",
+    "vegetation",
+    "agriculture",
+    "historical_landuse_reconstruction",
+    "public_candidate_site"
+  ]
+}
