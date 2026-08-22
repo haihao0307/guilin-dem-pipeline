@@ -1,0 +1,128 @@
+{
+  "schema": "guilin_core_recovery@0.5.1",
+  "version": "0.5.1-private-recovery",
+  "baselineVersion": "0.3.1",
+  "releaseStatus": "private-recovery-publication-blocked",
+  "projectId": "guilin-four-core-recovery",
+  "epoch": "1940-1945",
+  "activeCore": "yangtang-airfield",
+  "corePolicy": {
+    "coreSideMeters": 10000,
+    "detailedEcologyScope": "active-core-only",
+    "overallEcology": "aggregate-landcover-and-blurred-canopy-only",
+    "authoritativeTerrainTarget": "single-continuous-12.5m-lineage",
+    "currentBaselineTerrain": "v0.3.1-deterministic-proxy-awaiting-real-core-dem",
+    "farView": "atmospheric-haze-desaturation-and-progressive-blur",
+    "outerBoundary": "horizon-fade-without-invented-elevation"
+  },
+  "fixedCores": [
+    {
+      "id": "zhenbao-ding",
+      "name": "真宝鼎",
+      "sideMeters": 10000,
+      "status": "real-core-dem-pending"
+    },
+    {
+      "id": "guilin-old-city",
+      "name": "桂林古城",
+      "sideMeters": 10000,
+      "status": "real-core-dem-pending"
+    },
+    {
+      "id": "yangtang-airfield",
+      "name": "秧塘机场旧址",
+      "sideMeters": 10000,
+      "status": "baseline-runtime-bound"
+    },
+    {
+      "id": "yangshuo-county-seat",
+      "name": "阳朔县城",
+      "sideMeters": 10000,
+      "status": "real-core-dem-pending"
+    }
+  ],
+  "aoi": {
+    "areaKm2": 10.0,
+    "shape": "square",
+    "sideMeters": 3162.2776601683795,
+    "centerProjected": [415018.03522667295, 2789215.965156763],
+    "boundsProjected": [413436.89639658877, 2787634.8263266785, 416599.1740567571, 2790797.103986847],
+    "crs": "EPSG:32649",
+    "anchorWgs84": [110.156375, 25.216758]
+  },
+  "terrain": {
+    "grid": 257,
+    "minElevationM": 125.56208038330078,
+    "maxElevationM": 365.19049072265625,
+    "registeredCoreEnvelopeM": [125.56208038330078, 365.19049072265625],
+    "sourceLabel": "v0.3.1生态视觉恢复代理，等待真实12.5米核心DEM替换",
+    "sourceStatus": "deterministic-ecology-proof-awaiting-real-12.5m-dem",
+    "nativeSurveyClaim": false,
+    "exactRasterMounted": false
+  },
+  "ecology": {
+    "season": "summer-wet",
+    "treeCount": 23685,
+    "shrubCount": 7322,
+    "riceClusterCount": 5277,
+    "speciesArchetypeCount": 20,
+    "landUseClassCount": 9,
+    "waterPixelFraction": 0.02484130859375,
+    "forestMeanDensity": 0.40316305388056484,
+    "paddyAreaKm2Approx": 0.7528305053710938,
+    "terraceAreaKm2Approx": 0.6922531127929688,
+    "orchardAreaKm2Approx": 0.58502197265625,
+    "vegetableAreaKm2Approx": 0.1299285888671875,
+    "dryCropAreaKm2Approx": 0.31055450439453125,
+    "bambooInstanceCount": 2256,
+    "rockExposurePixelFraction": 0.041324615478515625,
+    "strongRockExposurePixelFraction": 0.0279541015625,
+    "fieldBundPixelFraction": 0.08198165893554688,
+    "channelVegetationCount": 0,
+    "cropPaletteClassCount": 8,
+    "erosionStreamlineCount": 68,
+    "additionalErosionIncisionMaxM": 8.629077911376953,
+    "fieldTextureOrientation": "world-aligned-no-y-flip"
+  },
+  "recordLayout": {
+    "tree": {"stride": 12, "format": "<HHHBBHBB"},
+    "shrub": {"stride": 10, "format": "<HHHBBH"},
+    "rice": {"stride": 10, "format": "<HHHBBH"}
+  },
+  "assets": {
+    "height": [
+      "./assets/height-grid.u16",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/runtime-assets/height-grid.u16"
+    ],
+    "field0": [
+      "../assets/ecology/v0.3.1/field0-elevation-slope-forest-water.png",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field0-elevation-slope-forest-water.png"
+    ],
+    "field1": [
+      "../assets/ecology/v0.3.1/field1-paddy-bund-rows-rock.png",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field1-paddy-bund-rows-rock.png"
+    ],
+    "field2": [
+      "../assets/ecology/v0.3.1/field2-wet-terrace-erosion-landuse.png",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field2-wet-terrace-erosion-landuse.png"
+    ],
+    "trees": [
+      "../assets/ecology/v0.3.1/trees.bin",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/trees.bin"
+    ],
+    "shrubs": [
+      "../assets/ecology/v0.3.1/shrubs.bin",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/shrubs.bin"
+    ],
+    "rice": [
+      "../assets/ecology/v0.3.1/rice.bin",
+      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/rice.bin"
+    ]
+  },
+  "publication": {
+    "allowed": false,
+    "automatic": false,
+    "stableRelease": "v0.3.1",
+    "requiredGate": "projects/guilin/config/release_gate_v050.json"
+  }
+}
