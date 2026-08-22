@@ -19,6 +19,11 @@ const SOURCE_REPLACEMENTS = [
     reason: 'fade medium-distance canopy billboards out before the ground-observer range',
   },
   {
+    find: 'vAlpha=keep*(1.0-smoothstep(1200.0,3600.0,dist))*(1.0-shrub*.92);',
+    replace: 'vAlpha=keep*smoothstep(35.0,120.0,dist)*(1.0-smoothstep(1200.0,3600.0,dist))*(1.0-shrub*.92);',
+    reason: 'fade temporary line-trunk cues before immediate ground range',
+  },
+  {
     find: 'gl_PointSize=clamp(px,1.0,42.0)*keep;',
     replace: 'gl_PointSize=clamp(px,1.0,18.0)*keep;',
     reason: 'cap rice billboards pending bounded near-geometry replacement',
@@ -54,7 +59,7 @@ async function startRecoveryRuntime() {
     applied,
     publicationBlocked: true,
     source: 'web/guilin-v050/runtime.js',
-    nearGeometryStatus: 'medium billboards capped; procedural near geometry remains a release blocker',
+    nearGeometryStatus: 'medium billboards and line trunks capped; procedural near geometry remains a release blocker',
   };
   const blob = new Blob([`${source}\n//# sourceURL=guilin-v050-runtime-recovered.js`], { type: 'text/javascript' });
   const url = URL.createObjectURL(blob);
