@@ -1,55 +1,114 @@
 {
-  "schema": "dem_codex_control_state@1.0",
-  "updated_at": "2026-08-22T06:41:00Z",
+  "schema": "dem_codex_control_state@1.3",
+  "updated_at": "2026-08-22T09:10:00Z",
   "repository": "haihao0307/guilin-dem-pipeline",
   "stable_branch": "main",
   "integration_branch": "integration/ecology-v040",
   "stable_ecology_release": "v0.3.1",
-  "target_ecology_release": "v0.4.0",
-  "status": "codex_applying_changes",
-  "workers": [
-    {
-      "id": "codex-1",
-      "title": "terrain-hydrology-karst",
-      "branch": "codex/terrain-hydrology-karst-v040",
-      "issue": 1,
-      "pull_request": 4,
-      "state": "on_it",
-      "expected_handoff": "HANDOFF_TERRAIN_V040.md"
-    },
-    {
-      "id": "codex-2",
-      "title": "ecology-agriculture",
-      "branch": "codex/ecology-agriculture-v040",
-      "issue": 2,
-      "pull_request": 5,
-      "state": "on_it",
-      "expected_handoff": "HANDOFF_ECOLOGY_V040.md"
-    },
-    {
-      "id": "codex-3",
-      "title": "runtime-control-plane",
-      "branch": "codex/runtime-control-plane-v040",
-      "issue": 3,
-      "pull_request": 6,
-      "state": "applying_completed_local_task",
-      "task_id": "cd_6a8940d1c2dc819199eb65602bdd5fcf",
-      "local_commit": "f718929",
-      "expected_handoff": "HANDOFF_RUNTIME_V040.md"
-    }
-  ],
-  "merge_order": [
-    "codex/terrain-hydrology-karst-v040",
-    "codex/ecology-agriculture-v040",
-    "codex/runtime-control-plane-v040"
-  ],
+  "target_guilin_release": "v0.5.0-candidate",
+  "status": "guilin_v050_running_city_downloads_running",
+  "phase_a": {
+    "state": "merged",
+    "pull_requests": [4, 5, 6],
+    "outputs": [
+      "terrain_field_compiler",
+      "ecology_agriculture_compiler",
+      "guilin_20_prototype_catalog",
+      "ops_control_plane",
+      "runtime_qa",
+      "windows_packager"
+    ]
+  },
+  "shared_skill": {
+    "branch": "skill/dem-ecology-surface-v050",
+    "issue": 10,
+    "pull_request": 11,
+    "state": "accepted_by_codex",
+    "scope": [
+      "habitat_rules",
+      "three_layer_canopy",
+      "parallax_strand_surface",
+      "wind",
+      "agriculture",
+      "bunds",
+      "season_profiles",
+      "nearshore_tidal_interface"
+    ]
+  },
+  "guilin": {
+    "project_branch": "project/guilin-v050-four-core",
+    "overall_map": true,
+    "epoch": "1940-1945",
+    "core_side_m": 10000,
+    "cores": [
+      "真宝鼎",
+      "桂林古城",
+      "秧塘机场旧址",
+      "阳朔县城"
+    ],
+    "workers": [
+      {
+        "id": "guilin-1",
+        "title": "hydrology-dem-gaea",
+        "branch": "codex/guilin-hydrology-gaea-v050",
+        "issue": 12,
+        "pull_request": 15,
+        "state": "accepted_by_codex"
+      },
+      {
+        "id": "guilin-2",
+        "title": "ecology-agriculture-wind-visual",
+        "branch": "codex/guilin-ecology-visual-v050",
+        "issue": 13,
+        "pull_request": 16,
+        "state": "accepted_by_codex"
+      },
+      {
+        "id": "guilin-3",
+        "title": "overall-four-core-runtime",
+        "branch": "codex/guilin-four-core-runtime-v050",
+        "issue": 14,
+        "pull_request": 17,
+        "state": "accepted_by_codex"
+      }
+    ],
+    "priority": "show_online_candidate_first",
+    "candidate_path": "/guilin-v050/",
+    "stable_rollback": "v0.3.1"
+  },
+  "kunming": {
+    "branch": "project/kunming-dem-v001",
+    "issue": 18,
+    "pull_request": 20,
+    "state": "accepted_by_codex",
+    "phase": "download_mosaic_qa_only",
+    "area_km2": 20000,
+    "center": "昆明翠湖",
+    "stop_after_download": true
+  },
+  "wenzhou_taizhou": {
+    "branch": "project/wenzhou-taizhou-dem-v001",
+    "issue": 19,
+    "pull_request": 21,
+    "state": "accepted_by_codex",
+    "phase": "land_dem_and_shallow_tidal_band_download_only",
+    "target_depth_band_m": [0, -10],
+    "stop_after_download": true
+  },
   "review_gates": [
     "truth_dem_immutable",
+    "li_river_continuity",
+    "xiang_river_continuity",
     "water_exclusion_zero",
-    "karst_rock_exclusion",
-    "agriculture_exclusion",
-    "deterministic_rebuild",
-    "tile_seam_tests",
+    "gaea_controls_restored",
+    "vegetation_regression_resolved",
+    "minimum_18_active_prototypes",
+    "paddy_exclusion_zero",
+    "bund_visibility",
+    "wind_root_locking",
+    "four_exact_10km_cores",
+    "season_selector",
+    "tile_seams",
     "browser_console_zero_errors",
     "v0.3.1_rollback_available"
   ]
