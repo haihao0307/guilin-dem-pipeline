@@ -1,0 +1,59 @@
+{
+  "schema": "dem_terrain_field_contract@1.0",
+  "version": "0.4.0",
+  "coordinatePolicy": {
+    "horizontal": "projected world coordinates in metres",
+    "vertical": "metres",
+    "textureOrigin": "global project origin",
+    "tilePhaseRule": "noise, rows and masks must use world coordinates and may not restart at tile edges"
+  },
+  "truthPolicy": {
+    "z_truth_m": "read-only",
+    "z_micro_delta_m": "versioned and reversible",
+    "z_visual_m": "z_truth_m + approved z_micro_delta_m",
+    "erosion_depth_m": "stored separately and subtracted only in the visual or approved derived surface"
+  },
+  "requiredFields": {
+    "permanent_water_mask": {"dtype": "uint8", "range": [0, 1]},
+    "active_bank_mask": {"dtype": "uint8", "range": [0, 1]},
+    "distance_to_water_m": {"dtype": "float32", "unit": "m"},
+    "flow_direction_xy": {"dtype": "float32", "channels": 2, "unit": "unit vector"},
+    "flow_accumulation": {"dtype": "float32", "unit": "upstream cells"},
+    "reaches_permanent_water": {"dtype": "uint8", "range": [0, 1]},
+    "erosion_channel_mask": {"dtype": "uint8", "range": [0, 1]},
+    "erosion_core_mask": {"dtype": "uint8", "range": [0, 1]},
+    "erosion_depth_m": {"dtype": "float32", "unit": "m", "minimum": 0},
+    "karst_rock_mask": {"dtype": "uint8", "range": [0, 1]},
+    "karst_rock_core_mask": {"dtype": "uint8", "range": [0, 1]},
+    "landform_class": {"dtype": "uint8"},
+    "hard_exclusion_mask": {"dtype": "uint16", "encoding": "bit field"}
+  },
+  "landformClasses": {
+    "0": "permanent_water",
+    "1": "active_bank",
+    "2": "valley_floor",
+    "3": "alluvial_terrace",
+    "4": "footslope",
+    "5": "mid_slope",
+    "6": "upper_slope",
+    "7": "ridge_peak",
+    "8": "karst_cliff",
+    "9": "erosion_channel"
+  },
+  "hardExclusionBits": {
+    "1": "permanent_water",
+    "2": "active_bank",
+    "4": "karst_rock_core",
+    "8": "erosion_core",
+    "16": "ridge_peak",
+    "32": "nodata"
+  },
+  "gates": [
+    "z_truth_m semantic checksum unchanged",
+    "permanent water has the permanent-water exclusion bit",
+    "erosion channels drain downhill and reach permanent water or an approved drainage outlet",
+    "karst rock core excludes large trees and dense shrubs",
+    "all fields are deterministic for identical inputs",
+    "shared tile borders agree within declared numeric tolerance"
+  ]
+}

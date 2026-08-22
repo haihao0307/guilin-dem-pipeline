@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haihao0307.github.io/guilin-dem-pipeline/schemas/ecology/v0.4.0/terrain-field-manifest.schema.json",
+  "title": "Guilin DEM terrain field release manifest v0.4.0",
+  "type": "object",
+  "required": ["schema", "grid", "compiler_config", "truth", "field_checksums", "statistics", "landform_classes", "release_sha256"],
+  "properties": {
+    "schema": {"const": "dem_terrain_fields@0.4.0"},
+    "grid": {
+      "type": "object",
+      "required": ["width", "height", "cell_size_m", "min_elevation_m", "max_elevation_m", "crs", "origin_col", "origin_row"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 2},
+        "height": {"type": "integer", "minimum": 2},
+        "cell_size_m": {"type": "number", "exclusiveMinimum": 0},
+        "min_elevation_m": {"type": "number"},
+        "max_elevation_m": {"type": "number"},
+        "crs": {"type": "string", "minLength": 1},
+        "bounds_projected": {
+          "anyOf": [
+            {"type": "null"},
+            {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}, {"type": "number"}, {"type": "number"}], "minItems": 4, "maxItems": 4}
+          ]
+        },
+        "origin_col": {"type": "integer"},
+        "origin_row": {"type": "integer"}
+      },
+      "additionalProperties": false
+    },
+    "compiler_config": {"type": "object"},
+    "truth": {
+      "type": "object",
+      "required": ["immutable", "sha256_before", "sha256_after"],
+      "properties": {
+        "immutable": {"const": true},
+        "sha256_before": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "sha256_after": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "field_checksums": {
+      "type": "object",
+      "required": [
+        "permanent_water_mask",
+        "active_bank_mask",
+        "distance_to_water_m",
+        "flow_direction_d8",
+        "flow_downstream_index",
+        "flow_accumulation",
+        "drains_to_permanent_water",
+        "slope_deg",
+        "curvature_m",
+        "local_relief_m",
+        "erosion_channel_mask",
+        "erosion_depth_m",
+        "karst_rock_mask",
+        "karst_rock_core_mask",
+        "landform_class",
+        "hard_exclusion_mask"
+      ],
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    },
+    "statistics": {"type": "object"},
+    "landform_classes": {
+      "type": "object",
+      "required": ["0", "1", "2", "3", "4", "5", "6", "7", "8"],
+      "additionalProperties": {"type": "string"}
+    },
+    "release_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": false
+}
