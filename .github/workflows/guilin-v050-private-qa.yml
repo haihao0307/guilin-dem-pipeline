@@ -1,0 +1,128 @@
+name: Guilin v0.5 private recovery QA
+
+on:
+  pull_request:
+    branches:
+      - project/guilin-v050-four-core
+    paths:
+      - .github/workflows/guilin-v050-private-qa.yml
+      - web/guilin-v050/**
+      - tests/test_guilin_v050_recovery_runtime.py
+      - projects/guilin/config/release_gate_v050.json
+      - projects/guilin/recovery/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/runtime-assets/**
+  push:
+    branches:
+      - fix/guilin-v050-recover-v031-baseline
+    paths:
+      - .github/workflows/guilin-v050-private-qa.yml
+      - web/guilin-v050/**
+      - tests/test_guilin_v050_recovery_runtime.py
+      - projects/guilin/config/release_gate_v050.json
+      - projects/guilin/recovery/**
+  workflow_dispatch:
+
+concurrency:
+  group: guilin-v050-private-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  private-recovery-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout recovery branch
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Validate JSON and static contracts
+        run: |
+          python -m json.tool web/guilin-v050/manifest.json >/dev/null
+          python -m json.tool projects/guilin/config/release_gate_v050.json >/dev/null
+          python -m unittest tests/test_guilin_v050_recovery_runtime.py -v
+          node --check web/guilin-v050/bootstrap.js
+
+      - name: Validate repaired runtime module syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          source = Path('web/guilin-v050/runtime.js').read_text(encoding='utf-8')
+          bad = 'state.showWater?.35*state.waterLevel:0'
+          good = '(state.showWater ? .35 * state.waterLevel : 0)'
+          if bad not in source:
+              raise SystemExit('expected guarded source pattern was not found')
+          repaired = source.replace(bad, good)
+          Path('/tmp/guilin-v050-runtime-repaired.mjs').write_text(repaired, encoding='utf-8')
+          PY
+          node --check /tmp/guilin-v050-runtime-repaired.mjs
+
+      - name: Assemble private artifact
+        run: |
+          set -euo pipefail
+          STABLE="DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web"
+          BASELINE="DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/runtime-assets"
+          OUT="_private_guilin_v050"
+          rm -rf "$OUT"
+          mkdir -p "$OUT/guilin-v050/assets"
+          cp -a "$STABLE/." "$OUT/"
+          cp -a web/guilin-v050/. "$OUT/guilin-v050/"
+          cp "$BASELINE/height-grid.u16" "$OUT/guilin-v050/assets/height-grid.u16"
+          touch "$OUT/.nojekyll"
+
+      - name: Verify private HTTP routes and assets
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory _private_guilin_v050 >/tmp/guilin-v050-http.log 2>&1 &
+          PID=$!
+          trap 'kill $PID' EXIT
+          sleep 2
+          for path in \
+            / \
+            /guilin-v050/ \
+            /guilin-v050/manifest.json \
+            /guilin-v050/bootstrap.js \
+            /guilin-v050/runtime.js \
+            /guilin-v050/assets/height-grid.u16 \
+            /assets/ecology/v0.3.1/field0-elevation-slope-forest-water.png \
+            /assets/ecology/v0.3.1/field1-paddy-bund-rows-rock.png \
+            /assets/ecology/v0.3.1/field2-wet-terrace-erosion-landuse.png \
+            /assets/ecology/v0.3.1/trees.bin \
+            /assets/ecology/v0.3.1/shrubs.bin \
+            /assets/ecology/v0.3.1/rice.bin; do
+            curl --fail --silent --show-error "http://127.0.0.1:8765${path}" >/dev/null
+          done
+
+      - name: Verify publication remains blocked
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          gate=json.loads(Path('projects/guilin/config/release_gate_v050.json').read_text(encoding='utf-8'))
+          manifest=json.loads(Path('web/guilin-v050/manifest.json').read_text(encoding='utf-8'))
+          assert gate['public_release_allowed'] is False
+          assert gate['automatic_publication_allowed'] is False
+          assert manifest['publication']['allowed'] is False
+          assert manifest['publication']['automatic'] is False
+          PY
+
+      - name: Upload private recovery preview
+        uses: actions/upload-artifact@v7
+        with:
+          name: guilin-v050-private-recovery-${{ github.sha }}
+          path: _private_guilin_v050
+          if-no-files-found: error
+          compression-level: 3
+          retention-days: 30
