@@ -44,17 +44,20 @@ test("terrain manifest matches the published binaries", async () => {
   assert.ok(manifest.waterways.length > 2000);
   assert.ok(manifest.waterwayPolygons.length > 3000);
   assert.equal(manifest.waterwayTriangles.length, 0);
-  assert.equal(manifest.waterwaySource, "OpenStreetMap contributors");
+  assert.match(manifest.waterwaySource, /OpenStreetMap contributors/);
+  assert.ok(manifest.waterwayExcludedReservoirFeatures > 0);
   assert.equal(manifest.waterwayLabelPolicy, "只绘制水面，不显示水系名称");
   assert.equal(manifest.waterwayRepresentation, "mapped-water-surface-polygons-with-tapered-centerline-fallback");
   assert.equal(manifest.waterwayEdgePolicy, "clip-intersections-preserved-at-terrain-boundary");
   assert.equal(manifest.ecology.ready, true);
   assert.equal(manifest.ecology.sourceStatus, "deterministic-ecology-proof-awaiting-real-12.5m-dem");
   assert.deepEqual(manifest.fineRegions.map(({ status }) => status), [
-    "awaiting_real_1m_source",
-    "awaiting_real_1m_source",
-    "awaiting_real_1m_source",
+    "incomplete_12_5m",
+    "ready_12_5m",
+    "ready_12_5m",
+    "ready_12_5m",
   ]);
+  assert.ok(manifest.fineRegions.every(({ assetManifest, requestedAreaSquareKilometers }) => assetManifest && requestedAreaSquareKilometers === 200));
   assert.deepEqual(
     manifest.landmarks.map(({ name }) => name),
     ["真寶鼎", "陽朔縣", "秧塘機場", "桂林古城"],
