@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="桂林 v0.5 私有恢复候选，恢复 v0.3.1 生态、农业、侵蚀、喀斯特、田埂、风动与地面相机行为">
+  <title>桂林 v0.5 私有恢复候选</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="gl" aria-label="桂林核心区三维地形"></canvas>
+  <div class="vignette"></div>
+
+  <header class="brand glass">
+    <div class="eyebrow">GUILIN DEM RECOVERY CANDIDATE</div>
+    <h1>桂林核心区生态地表恢复候选</h1>
+    <div class="sub">
+      <span class="tag warn">公开发布锁定</span>
+      <span class="tag">稳定基线 v0.3.1</span>
+      <span class="tag">1940–1945</span>
+      <span class="tag">EPSG:32649</span>
+      <span class="tag">详细生态仅当前核心区</span>
+    </div>
+  </header>
+
+  <nav class="presets" aria-label="观察镜头">
+    <button class="preset active" data-view="aerial">全景</button>
+    <button class="preset" data-view="water">水系</button>
+    <button class="preset" data-view="paddy">农田</button>
+    <button class="preset" data-view="forest">森林</button>
+    <button class="preset" data-view="karst">岩壁</button>
+    <button class="preset" data-view="erosion">侵蚀</button>
+    <button class="preset" data-view="bamboo">竹林</button>
+    <button class="preset" data-view="orchard">果园</button>
+    <button class="preset" data-view="top">顶视</button>
+  </nav>
+
+  <nav class="core-nav glass" id="coreNav" aria-label="桂林四个核心区">
+    <button class="core-btn pending" data-core="zhenbao-ding">真宝鼎</button>
+    <button class="core-btn pending" data-core="guilin-old-city">桂林古城</button>
+    <button class="core-btn active" data-core="yangtang-airfield">秧塘机场旧址</button>
+    <button class="core-btn pending" data-core="yangshuo-county-seat">阳朔县城</button>
+  </nav>
+
+  <aside class="panel glass">
+    <div class="panel-head">
+      <strong>核心区恢复控制器</strong>
+      <small>恢复旧版山体、农田、田埂、树木、竹林、作物、侵蚀、裸岩和风动。真实 12.5 米核心 DEM 接入前保持私有。</small>
+    </div>
+    <div class="panel-body">
+      <section class="section">
+        <div class="section-title"><b>核心图层</b><span>详细实例仅当前核心</span></div>
+        <div class="layers">
+          <label class="layer"><span>乔木竹林</span><input checked id="showForest" type="checkbox"></label>
+          <label class="layer"><span>林缘灌木</span><input checked id="showShrubs" type="checkbox"></label>
+          <label class="layer"><span>农田果园</span><input checked id="showPaddy" type="checkbox"></label>
+          <label class="layer"><span>稻株纤维</span><input checked id="showRice" type="checkbox"></label>
+          <label class="layer"><span>岩壁裸岩</span><input checked id="showRock" type="checkbox"></label>
+          <label class="layer"><span>台地田埂</span><input checked id="showTerrace" type="checkbox"></label>
+          <label class="layer"><span>生态合成</span><input checked id="showEcology" type="checkbox"></label>
+          <label class="layer"><span>永久水体</span><input checked id="showWater" type="checkbox"></label>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>GAEA 地形视觉</b><span>不改写真值高程</span></div>
+        <div class="control"><div class="control-row"><label for="verticalEx">垂直强调</label><output id="verticalExOut">1.6×</output></div><input id="verticalEx" min="1" max="3" step=".1" value="1.6" type="range"></div>
+        <div class="control"><div class="control-row"><label for="erosionStrength">侵蚀沟显示</label><output id="erosionStrengthOut">100%</output></div><input id="erosionStrength" min="0" max="1.5" step=".01" value="1" type="range"></div>
+        <div class="control"><div class="control-row"><label for="karstStrength">喀斯特裸岩</label><output id="karstStrengthOut">100%</output></div><input id="karstStrength" min="0" max="1.5" step=".01" value="1" type="range"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>水系系统</b><span>与水面材质分开</span></div>
+        <div class="layers">
+          <label class="layer"><span>河面与支沟</span><input checked id="hydrologySurface" type="checkbox"></label>
+          <label class="layer"><span>河岸诊断</span><input id="hydrologyBanks" type="checkbox"></label>
+          <label class="layer"><span>流向连续性</span><input id="hydrologyDiagnostics" type="checkbox"></label>
+          <label class="layer"><span>漓江湘江</span><input id="namedHydrology" type="checkbox"></label>
+        </div>
+        <div class="control"><div class="control-row"><label for="waterLevel">水面表现</label><output id="waterLevelOut">100%</output></div><input id="waterLevel" min=".15" max="1.4" step=".01" value="1" type="range"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>植被、作物与季节</b><span id="seasonLabel">1944 夏季</span></div>
+        <select id="season">
+          <option value="0">1944 夏季湿润期</option>
+          <option value="1">强降雨与涨水期</option>
+          <option value="2">秋季成熟与收割期</option>
+          <option value="3">冬季休耕期</option>
+        </select>
+        <div class="control"><div class="control-row"><label for="forestDensity">冠层密度</label><output id="forestDensityOut">100%</output></div><input id="forestDensity" min="0" max="1.25" step=".01" value="1" type="range"></div>
+        <div class="control"><div class="control-row"><label for="riceDetail">稻株细节</label><output id="riceDetailOut">100%</output></div><input id="riceDetail" min="0" max="1.3" step=".01" value="1" type="range"></div>
+        <div class="control"><div class="control-row"><label for="wind">世界风场</label><output id="windOut">34%</output></div><input id="wind" min="0" max="1" step=".01" value=".34" type="range"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>相机与地面观察</b><span>真实米制</span></div>
+        <div class="camera-tools">
+          <button class="small-btn active" id="orbitModeButton">轨道观察</button>
+          <button class="small-btn" id="groundModeButton">地面观察</button>
+        </div>
+        <div class="camera-diag" id="cameraDiag">相机初始化中</div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><b>恢复指标</b><span>v0.3.1 基线</span></div>
+        <div class="metrics">
+          <div class="metric"><span>山体网格</span><strong id="gridMetric">257 × 257</strong></div>
+          <div class="metric"><span>乔木竹类果树</span><strong id="treeMetric">23,685</strong></div>
+          <div class="metric"><span>灌木</span><strong id="shrubMetric">7,322</strong></div>
+          <div class="metric"><span>稻株簇</span><strong id="riceMetric">5,277</strong></div>
+          <div class="metric"><span>植被原型</span><strong id="speciesMetric">20 类</strong></div>
+          <div class="metric"><span>作物色谱</span><strong id="cropMetric">8 类</strong></div>
+          <div class="metric"><span>河道内植被</span><strong id="channelPlantMetric">0</strong></div>
+          <div class="metric"><span>侵蚀流线</span><strong id="erosionMetric">68</strong></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <div class="hud"><div class="coord glass"><span id="coordLabel">移动指针读取地表坐标</span><strong id="fpsLabel">初始化</strong></div></div>
+  <div class="compass" id="compass"><b>N</b></div>
+  <div class="release-lock"><strong>私有恢复候选 · 公开发布已锁定</strong><br>当前绑定秧塘 v0.3.1 生态视觉基线。真宝鼎、桂林古城、阳朔县城的真实 12.5 米核心 DEM 和生态字段仍在构建，不能用代理数据冒充完成。</div>
+  <div class="loading" id="loading"><div class="loader-card"><strong>正在恢复核心区生态运行时</strong><span id="loadingText">读取高程、程序字段和实例流</span></div></div>
+  <div class="toast" id="toast"></div>
+  <div class="error-card" id="errorCard"><strong>恢复候选启动失败</strong><p id="errorText"></p></div>
+
+  <script type="module" src="runtime.js"></script>
+</body>
+</html>
