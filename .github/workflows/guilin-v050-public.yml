@@ -1,0 +1,92 @@
+name: Publish Guilin v0.5 public candidate
+
+on:
+  push:
+    branches:
+      - project/guilin-v050-four-core
+    paths:
+      - .github/workflows/guilin-v050-public.yml
+      - web/guilin-v050/**
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/**
+      - projects/guilin/config/**
+  workflow_dispatch:
+
+concurrency:
+  group: guilin-v050-public
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  validate-and-assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Guilin candidate branch
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Validate four-core configuration
+        run: |
+          python -m json.tool projects/guilin/config/core_regions_v050.json >/dev/null
+          python -m json.tool projects/guilin/config/camera_ground_v050.json >/dev/null
+
+      - name: Run focused Guilin candidate tests when present
+        run: |
+          if [ -f tests/test_guilin_v050_runtime.py ]; then
+            python -m unittest tests/test_guilin_v050_runtime.py
+          fi
+          if [ -f tests/test_guilin_v050_camera.py ]; then
+            python -m unittest tests/test_guilin_v050_camera.py
+          fi
+
+      - name: Assemble stable site plus public v0.5 candidate
+        run: |
+          set -euo pipefail
+          STABLE="DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web"
+          CANDIDATE="web/guilin-v050"
+          OUT="_public_site"
+          test -f "$STABLE/index.html"
+          test -f "$CANDIDATE/index.html"
+          rm -rf "$OUT"
+          mkdir -p "$OUT/guilin-v050"
+          cp -a "$STABLE/." "$OUT/"
+          cp -a "$CANDIDATE/." "$OUT/guilin-v050/"
+          touch "$OUT/.nojekyll"
+
+      - name: Verify public routes in assembled artifact
+        run: |
+          test -f _public_site/index.html
+          test -f _public_site/guilin-v050/index.html
+          python -m http.server 8765 --directory _public_site >/tmp/guilin-v050-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:8765/ >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8765/guilin-v050/ >/dev/null
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+
+      - name: Upload public Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _public_site
+
+  deploy:
+    needs: validate-and-assemble
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy stable site and Guilin v0.5 candidate
+        id: deployment
+        uses: actions/deploy-pages@v5
