@@ -383,7 +383,28 @@ def _sample_elevation(terrain: dict[str, Any], samples: array | None, point: tup
     return terrain["minimumElevation"] + normalized * (terrain["maximumElevation"] - terrain["minimumElevation"])
 
 
-def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path | None = None) -> None:
+def _is_reservoir_feature(feature: dict[str, Any]) -> bool:
+    """Exclude modern reservoir/dam features from the 1942-style water layer."""
+    tags = feature.get("properties") or {}
+    waterway = str(tags.get("waterway") or "").lower()
+    natural = str(tags.get("natural") or "").lower()
+    water = str(tags.get("water") or "").lower()
+    landuse = str(tags.get("landuse") or "").lower()
+    return (
+        waterway in {"dam", "reservoir"}
+        or water in {"reservoir", "dam"}
+        or natural == "reservoir"
+        or landuse == "reservoir"
+        or bool(tags.get("reservoir_type"))
+    )
+
+
+def attach_waterways(
+    terrain: dict[str, Any],
+    geojson_path: Path,
+    assets: Path | None = None,
+    extra_geojson_path: Path | None = None,
+) -> None:
     """Project OSM water surfaces and clipped/tapered centerlines onto the DEM.
 
     Polygon water bodies retain their mapped surface. Centerline-only waterways receive
@@ -397,6 +418,13 @@ def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path |
         terrain["waterwayCount"] = 0
         return
     payload = read_json(geojson_path)
+    features = list(payload.get("features", []))
+    # The dedicated Lijiang extract contains long river ways that are not always
+    # present in the broad Overpass export. Merge it before projection so the
+    # river reaches the actual AOI boundary instead of stopping at a tile seam.
+    if extra_geojson_path and extra_geojson_path.exists():
+        extra = read_json(extra_geojson_path)
+        features.extend(extra.get("features", []))
     bounds = terrain["bounds"]
     width_m = terrain["widthMeters"]
     height_m = terrain["heightMeters"]
@@ -404,8 +432,17 @@ def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path |
     polygons = []
     triangles: list[dict[str, Any]] = []
     samples = _load_height_samples(terrain, assets)
-    for feature in payload.get("features", []):
+    seen_features: set[str] = set()
+    excluded_count = 0
+    for feature in features:
+        if _is_reservoir_feature(feature):
+            excluded_count += 1
+            continue
         geometry = feature.get("geometry") or {}
+        dedupe_key = json.dumps(geometry, sort_keys=True, separators=(",", ":"))
+        if dedupe_key in seen_features:
+            continue
+        seen_features.add(dedupe_key)
         tags = feature.get("properties") or {}
         geometry_type = geometry.get("type")
         raw = geometry.get("coordinates") or []
@@ -440,7 +477,10 @@ def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path |
         clipped = _clip_polyline(uv_all)
         if len(clipped) < 2:
             continue
-        kind = str(tags.get("waterway") or "unknown")
+        # The standalone Lijiang extract has no waterway tag; treat it as a
+        # river so it gets the same continuous 1x upstream / 3x downstream
+        # surface treatment as the primary river ways.
+        kind = str(tags.get("waterway") or ("river" if tags.get("name") in {"漓江", "�콭"} else "unknown"))
         default_width = {"river": 36.0, "stream": 8.0, "canal": 10.0, "ditch": 3.0, "drain": 3.0, "riverbank": 45.0}.get(kind, 5.0)
         end_width = _parse_width(tags, default_width)
         start_width = max(0.75, end_width / 3.0)
@@ -466,11 +506,12 @@ def attach_waterways(terrain: dict[str, Any], geojson_path: Path, assets: Path |
     terrain["waterwayPolygons"] = polygons
     terrain["waterwayTriangles"] = triangles
     terrain["waterwayCount"] = len(lines)
-    terrain["waterwaySource"] = payload.get("properties", {}).get("source", "OpenStreetMap contributors")
+    terrain["waterwaySource"] = "OpenStreetMap contributors + dedicated Lijiang extract"
     terrain["waterwayLicense"] = payload.get("properties", {}).get("license", "ODbL 1.0")
     terrain["waterwayLabelPolicy"] = "只绘制水面，不显示水系名称"
     terrain["waterwayRepresentation"] = "mapped-water-surface-polygons-with-tapered-centerline-fallback"
     terrain["waterwayEdgePolicy"] = "clip-intersections-preserved-at-terrain-boundary"
+    terrain["waterwayExcludedReservoirFeatures"] = excluded_count
 
 
 def attach_ecology(terrain: dict[str, Any], package_dir: Path, assets: Path) -> None:
@@ -557,23 +598,26 @@ def build_minimal_html(meta: dict[str, Any]) -> str:
     .ring{width:25px;height:25px;border:3px solid var(--marker);border-radius:50%;background:rgba(2,5,4,.28);box-shadow:0 0 0 5px color-mix(in srgb,var(--marker) 22%,transparent),inset 0 0 9px color-mix(in srgb,var(--marker) 45%,transparent);position:relative;animation:marker-spin 2.8s linear infinite}@keyframes marker-spin{to{transform:rotate(360deg)}}.ring:after{content:"";position:absolute;left:50%;top:22px;width:2px;height:32px;background:linear-gradient(var(--marker),transparent);transform:translateX(-50%)}
     .label-copy{padding:7px 11px;border:1px solid color-mix(in srgb,var(--marker) 55%,transparent);border-radius:14px;background:rgba(2,8,6,.80);backdrop-filter:blur(10px);white-space:nowrap}.name{display:block;color:#fff;font-size:13px;font-weight:750}.coords{display:block;margin-top:2px;color:#b6c7bf;font-size:10px;font-weight:500;letter-spacing:.01em}
     .reset{position:absolute;z-index:3;left:14px;top:14px;width:42px;height:42px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:rgba(3,10,7,.66);color:#fff;font-size:22px;cursor:pointer;backdrop-filter:blur(10px)}.reset:hover{border-color:#e7b760}.loading{position:absolute;inset:0;display:grid;place-items:center;color:transparent}
+    .control-panel{position:absolute;z-index:4;right:16px;top:16px;width:min(255px,calc(100% - 32px));padding:14px 15px;border:1px solid rgba(188,221,202,.22);border-radius:16px;background:rgba(4,12,9,.78);backdrop-filter:blur(16px);box-shadow:0 14px 40px rgba(0,0,0,.28);color:#eef5f0}.control-panel h2{margin:0 0 7px;font-size:14px}.control-panel p{margin:0;color:#aabdb2;font-size:11px;line-height:1.5}.focus-status{margin:9px 0;padding:8px 9px;border-radius:10px;background:rgba(231,183,96,.12);color:#f3d59a;font-size:12px;line-height:1.45}.panel-button{width:100%;margin:7px 0 10px;padding:8px 9px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.06);color:#eef5f0;cursor:pointer;font:inherit;font-size:12px}.panel-button:hover{border-color:#e7b760}.gaea-title{margin:10px 0 6px;color:#f0c879;font-size:12px}.gaea-row{display:grid;grid-template-columns:44px 1fr 28px;gap:7px;align-items:center;margin:6px 0;color:#b6c7bf;font-size:11px}.gaea-row input{width:100%;accent-color:#e7b760}.gaea-row output{text-align:right;color:#eef5f0;font-variant-numeric:tabular-nums}
   </style>
 </head>
 <body>
   <main class="stage">
     <canvas id="gl" aria-label="桂林真实一比一垂直比例三维 DEM，可拖动旋转并用滚轮连续缩放"></canvas>
     <div id="labels" class="labels" aria-label="地形地标"></div>
-    <button id="reset" class="reset" type="button" aria-label="重置视角" title="重置视角">↺</button>
+    <button id="reset" class="reset" type="button" aria-label="重置視角" title="重置視角">↺</button>
+    <aside class="control-panel" aria-label="Gaea 視覺調整與精細區域"><h2>精細區域 · 200 平方公里</h2><p>長按地標 0.5 秒載入該地 12.5 米 DEM。</p><div id="focusStatus" class="focus-status">全域總覽 · 約 30 米網頁高度網格</div><button id="overview" class="panel-button" type="button" hidden>返回全域總覽</button><div class="gaea-title">Gaea 視覺調整（僅顯示效果）</div><label class="gaea-row"><span>侵蝕</span><input data-gaea="erosion" type="range" min="0" max="1" step="0.01" value="0.25"><output>25</output></label><label class="gaea-row"><span>表面</span><input data-gaea="surface" type="range" min="0" max="1" step="0.01" value="0.30"><output>30</output></label><label class="gaea-row"><span>喀斯特</span><input data-gaea="karst" type="range" min="0" max="1" step="0.01" value="0.25"><output>25</output></label><label class="gaea-row"><span>植被</span><input data-gaea="vegetation" type="range" min="0" max="1" step="0.01" value="0.45"><output>45</output></label><p>不改寫原始 DEM，也不代表測繪精度。</p></aside>
     <div id="loading" class="loading" aria-live="polite">加载中</div>
   </main>
 <script>
-const META=__META_JSON__,canvas=document.querySelector('#gl'),labelLayer=document.querySelector('#labels');let renderer=null;
+const META=__META_JSON__,canvas=document.querySelector('#gl'),labelLayer=document.querySelector('#labels'),focusStatus=document.querySelector('#focusStatus'),overviewButton=document.querySelector('#overview');let renderer=null;
 function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
 function perspective(fov,aspect,near,far){const f=1/Math.tan(fov/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0])}
 function lookAt(e,c,u){let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2],zl=Math.hypot(zx,zy,zz)||1;zx/=zl;zy/=zl;zz/=zl;let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx,xl=Math.hypot(xx,xy,xz)||1;xx/=xl;xy/=xl;xz/=xl;const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;return new Float32Array([xx,yx,zx,0,xy,yy,zy,0,xz,yz,zz,0,-(xx*e[0]+xy*e[1]+xz*e[2]),-(yx*e[0]+yy*e[1]+yz*e[2]),-(zx*e[0]+zy*e[1]+zz*e[2]),1])}
+function remapWaterPolygons(source,focus){const gb=source.bounds,fb=focus.bounds,out=[];for(const poly of source.waterwayPolygons||[]){const flat=poly.points||[],p=[];for(let i=0;i+1<flat.length;i+=2){const x=gb[0]+Number(flat[i])*source.widthMeters,y=gb[3]-Number(flat[i+1])*source.heightMeters;p.push((x-fb[0])/focus.widthMeters,(fb[3]-y)/focus.heightMeters)}if(p.length<6)continue;let minU=1,maxU=0,minV=1,maxV=0;for(let i=0;i<p.length;i+=2){minU=Math.min(minU,p[i]);maxU=Math.max(maxU,p[i]);minV=Math.min(minV,p[i+1]);maxV=Math.max(maxV,p[i+1])}if(maxU>=-0.08&&minU<=1.08&&maxV>=-0.08&&minV<=1.08)out.push({...poly,points:p.map(v=>Number(v.toFixed(6)))});}return out}
 function triangulateWater(flat){const points=[];for(let i=0;i+1<flat.length;i+=2){const p=[Number(flat[i]),Number(flat[i+1])];if(!Number.isFinite(p[0])||!Number.isFinite(p[1]))continue;if(points.length&&Math.hypot(p[0]-points[points.length-1][0],p[1]-points[points.length-1][1])<1e-8)continue;points.push(p)}if(points.length>2&&Math.hypot(points[0][0]-points[points.length-1][0],points[0][1]-points[points.length-1][1])<1e-8)points.pop();if(points.length<3)return[];let area=0;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];area+=a[0]*b[1]-b[0]*a[1]}if(Math.abs(area)<1e-10)return[];const indices=points.map((_,i)=>i);if(area<0)indices.reverse();const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);const inside=(p,a,b,c)=>cross(a,b,p)>=-1e-10&&cross(b,c,p)>=-1e-10&&cross(c,a,p)>=-1e-10;const out=[];let guard=0;while(indices.length>2&&guard++<points.length*points.length){let found=false;for(let pos=0;pos<indices.length;pos++){const ia=indices[(pos+indices.length-1)%indices.length],ib=indices[pos],ic=indices[(pos+1)%indices.length],a=points[ia],b=points[ib],c=points[ic];if(cross(a,b,c)<=1e-10)continue;let blocked=false;for(const index of indices){if(index===ia||index===ib||index===ic)continue;if(inside(points[index],a,b,c)){blocked=true;break}}if(blocked)continue;out.push([a,b,c]);indices.splice(pos,1);found=true;break}if(!found)return[]}return out}
 class TerrainRenderer{
- constructor(canvas,meta,height,mask){this.canvas=canvas;this.meta=meta;this.height=height;this.mask=mask;this.yaw=.72;this.pitch=.62;this.distance=2.7;this.target=[0,.05,0];this.exaggeration=1;this.drag=false;this.ecology=null;this.init();this.initLabels();this.bind();this.resize();this.loadEcology();requestAnimationFrame(()=>this.draw())}
+ constructor(canvas,meta,height,mask){this.canvas=canvas;this.globalMeta=meta;this.meta=meta;this.height=height;this.mask=mask;this.yaw=.72;this.pitch=.62;this.distance=2.7;this.target=[0,.05,0];this.exaggeration=1;this.drag=false;this.ecology=null;this.gaea={erosion:.25,surface:.30,karst:.25,vegetation:.45};this.focused=false;this.init();this.initLabels();this.bind();this.resize();this.loadEcology();requestAnimationFrame(()=>this.draw())}
  reset(){this.yaw=.72;this.pitch=.62;this.distance=2.7;this.target=[0,.05,0]}
  shader(type,src){const g=this.gl,s=g.createShader(type);g.shaderSource(s,src);g.compileShader(s);if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(s));return s}
  program(vs,fs){const g=this.gl,p=g.createProgram();g.attachShader(p,this.shader(g.VERTEX_SHADER,vs));g.attachShader(p,this.shader(g.FRAGMENT_SHADER,fs));g.linkProgram(p);if(!g.getProgramParameter(p,g.LINK_STATUS))throw new Error(g.getProgramInfoLog(p));return p}
@@ -581,22 +625,24 @@ class TerrainRenderer{
  point(u,v,lift=0){const n=this.sample(u,v);return[(u-.5)*2*this.meta.widthMeters/this.maxDim,n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+lift,(v-.5)*2*this.meta.heightMeters/this.maxDim]}
  init(){const g=this.gl=this.canvas.getContext('webgl2',{antialias:true});if(!g)throw new Error('WebGL2 unavailable');
   const tvs=`#version 300 es\nin vec3 p;in float h;uniform mat4 vp;out float vh;out vec3 wp;void main(){wp=p;vh=h;gl_Position=vp*vec4(p,1.);}`;
-  const tfs=`#version 300 es\nprecision highp float;in float vh;in vec3 wp;out vec4 o;vec3 pal(float t){vec3 a=mix(vec3(.035,.12,.10),vec3(.20,.38,.19),smoothstep(0.,.38,t));vec3 b=mix(vec3(.20,.38,.19),vec3(.62,.50,.27),smoothstep(.32,.72,t));vec3 c=mix(b,vec3(.90,.88,.78),smoothstep(.68,1.,t));return mix(a,c,smoothstep(.28,.8,t));}void main(){vec3 n=normalize(cross(dFdx(wp),dFdy(wp)));if(!gl_FrontFacing)n=-n;vec3 l=normalize(vec3(-.4,.85,.25));float d=.28+.72*max(dot(n,l),0.);o=vec4(pal(vh)*(d+pow(1.-max(n.y,0.),2.)*.12),1.);}`;
-  this.programTerrain=this.program(tvs,tfs);const w=this.meta.gridWidth,H=this.meta.gridHeight;this.maxDim=Math.max(this.meta.widthMeters,this.meta.heightMeters);const verts=new Float32Array(w*H*4);let k=0;for(let r=0;r<H;r++)for(let c=0;c<w;c++){const i=r*w+c,n=this.height[i]/65535,valid=this.mask[i]>0;verts[k++]=(c/(w-1)-.5)*2*this.meta.widthMeters/this.maxDim;verts[k++]=valid?n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2:0;verts[k++]=(r/(H-1)-.5)*2*this.meta.heightMeters/this.maxDim;verts[k++]=n}
+  const tfs=`#version 300 es\nprecision highp float;in float vh;in vec3 wp;uniform vec4 fx;out vec4 o;vec3 pal(float t){vec3 a=mix(vec3(.035,.12,.10),vec3(.20,.38,.19),smoothstep(0.,.38,t));vec3 b=mix(vec3(.20,.38,.19),vec3(.62,.50,.27),smoothstep(.32,.72,t));vec3 c=mix(b,vec3(.90,.88,.78),smoothstep(.68,1.,t));return mix(a,c,smoothstep(.28,.8,t));}void main(){vec3 n=normalize(cross(dFdx(wp),dFdy(wp)));if(!gl_FrontFacing)n=-n;vec3 l=normalize(vec3(-.4,.85,.25));float d=.28+.72*max(dot(n,l),0.);vec3 col=pal(vh);col=mix(col,col*vec3(.72,1.04,.82),fx.x*.34);col=mix(col,col+vec3(.12,.07,-.03),fx.y*.22);col=mix(col,col*vec3(.88,.92,1.12),fx.z*.25);col=mix(col,col+vec3(.02,.10,.025),fx.w*.18);o=vec4(col*(d+pow(1.-max(n.y,0.),2.)*.12),1.);}`;
+  this.programTerrain=this.program(tvs,tfs);this.fx=this.gl.getUniformLocation(this.programTerrain,'fx');const w=this.meta.gridWidth,H=this.meta.gridHeight;this.maxDim=Math.max(this.meta.widthMeters,this.meta.heightMeters);const verts=new Float32Array(w*H*4);let k=0;for(let r=0;r<H;r++)for(let c=0;c<w;c++){const i=r*w+c,n=this.height[i]/65535,valid=this.mask[i]>0;verts[k++]=(c/(w-1)-.5)*2*this.meta.widthMeters/this.maxDim;verts[k++]=valid?n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2:0;verts[k++]=(r/(H-1)-.5)*2*this.meta.heightMeters/this.maxDim;verts[k++]=n}
   const step=innerWidth<700?4:innerWidth<1100?2:1,qr=Math.ceil((H-1)/step),qc=Math.ceil((w-1)/step),idx=new Uint32Array(qr*qc*6);let q=0;for(let r=0;r<H-1;r+=step){const r1=Math.min(r+step,H-1);for(let c=0;c<w-1;c+=step){const c1=Math.min(c+step,w-1),a=r*w+c,b=r*w+c1,d=r1*w+c,e=r1*w+c1;idx[q++]=a;idx[q++]=d;idx[q++]=b;idx[q++]=b;idx[q++]=d;idx[q++]=e}}this.count=q;
   const vao=g.createVertexArray();g.bindVertexArray(vao);const vb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,vb);g.bufferData(g.ARRAY_BUFFER,verts,g.STATIC_DRAW);const pl=g.getAttribLocation(this.programTerrain,'p'),hl=g.getAttribLocation(this.programTerrain,'h');g.enableVertexAttribArray(pl);g.vertexAttribPointer(pl,3,g.FLOAT,false,16,0);g.enableVertexAttribArray(hl);g.vertexAttribPointer(hl,1,g.FLOAT,false,16,12);const ib=g.createBuffer();g.bindBuffer(g.ELEMENT_ARRAY_BUFFER,ib);g.bufferData(g.ELEMENT_ARRAY_BUFFER,idx,g.STATIC_DRAW);this.vao=vao;this.vp=g.getUniformLocation(this.programTerrain,'vp');
    const wvs=`#version 300 es\nin vec3 p;uniform mat4 vp;void main(){gl_Position=vp*vec4(p,1.);}`,wfs=`#version 300 es\nprecision highp float;out vec4 o;void main(){o=vec4(.10,.58,.76,.84);}`;this.programWater=this.program(wvs,wfs);const water=[];for(const poly of this.meta.waterwayPolygons||[]){for(const tri of triangulateWater(poly.points||[])){for(const point of tri)water.push(...this.point(point[0],point[1],.012))}}this.waterCount=water.length/3;this.waterVao=g.createVertexArray();g.bindVertexArray(this.waterVao);const wb=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,wb);g.bufferData(g.ARRAY_BUFFER,new Float32Array(water),g.STATIC_DRAW);const wp=g.getAttribLocation(this.programWater,'p');g.enableVertexAttribArray(wp);g.vertexAttribPointer(wp,3,g.FLOAT,false,12,0);this.waterVp=g.getUniformLocation(this.programWater,'vp');g.enable(g.DEPTH_TEST);g.enable(g.BLEND);g.blendFunc(g.SRC_ALPHA,g.ONE_MINUS_SRC_ALPHA)}
  initLabels(){labelLayer.replaceChildren();this.labels=(this.meta.landmarks||[]).map(item=>{const el=document.createElement('div');el.className='label';el.style.setProperty('--marker',item.color||'#f2bd65');const lon=Number(item.longitude),lat=Number(item.latitude);el.innerHTML=`<span class="ring"></span><span class="label-copy"><span class="name">${item.name}</span><span class="coords">${lon.toFixed(4)}° E · ${lat.toFixed(4)}° N</span></span>`;labelLayer.appendChild(el);let hold=null;const cancel=()=>{if(hold){clearTimeout(hold);hold=null}};el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();cancel();hold=setTimeout(()=>{hold=null;this.focusRegion(item);navigator.vibrate?.(24)},500)});['pointerup','pointercancel','pointerleave'].forEach(type=>el.addEventListener(type,cancel));return{item,el}})}
- focusRegion(item){const region=(this.meta.fineRegions||[]).find(entry=>entry.id===item.id);if(!region?.centerProjected)return;const [x,y]=region.centerProjected,b=this.meta.bounds,u=Math.max(0,Math.min(1,(x-b[0])/this.meta.widthMeters)),v=Math.max(0,Math.min(1,(b[3]-y)/this.meta.heightMeters)),n=this.sample(u,v),scale=this.maxDim;this.target=[(u-.5)*2*this.meta.widthMeters/scale,n*(this.meta.maximumElevation-this.meta.minimumElevation)/scale*2+.04,(v-.5)*2*this.meta.heightMeters/scale];this.distance=Math.max(.09,Math.min(1.25,region.sideMeters/scale*4.5))}
+ async focusRegion(item){const region=(this.globalMeta.fineRegions||[]).find(entry=>entry.id===item.id);if(!region?.assetManifest)return;focusStatus.textContent=`正在載入 ${region.name} · 200 平方公里 · 12.5 米 DEM`;try{const manifest=await fetch(`${region.assetManifest}?v=${encodeURIComponent(this.globalMeta.generatedAt||'')}`).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()});const [hb,mb]=await Promise.all([fetch(`${region.assetManifest.replace(/terrain-manifest\.json$/,'')}${manifest.heightBinary}`).then(r=>r.arrayBuffer()),fetch(`${region.assetManifest.replace(/terrain-manifest\.json$/,'')}${manifest.maskBinary}`).then(r=>r.arrayBuffer())]);const focusMeta={...manifest,waterwayPolygons:remapWaterPolygons(this.globalMeta,manifest),landmarks:manifest.landmarks,ecology:this.globalMeta.ecology?{...this.globalMeta.ecology,centerProjected:region.centerProjected,sideMeters:Math.sqrt(200000000),renderPolicy:'200 平方公里視圖中的生態示意；沿用既有 10 平方公里樣本，不宣稱全域植被測繪'}:undefined};this.meta=focusMeta;this.height=new Uint16Array(hb);this.mask=new Uint8Array(mb);this.focused=true;this.init();this.initLabels();this.loadEcology();this.reset();this.distance=2.2;overviewButton.hidden=false;focusStatus.textContent=`${region.name} · 200 平方公里 · 12.5 米 DEM`;navigator.vibrate?.(24)}catch(error){console.error(error);focusStatus.textContent=`${region.name} 載入失敗，請重試`}}
+ async loadOverview(){this.meta=this.globalMeta;const [hb,mb]=await Promise.all([fetch(this.meta.heightBinary).then(r=>r.arrayBuffer()),fetch(this.meta.maskBinary).then(r=>r.arrayBuffer())]);this.height=new Uint16Array(hb);this.mask=new Uint8Array(mb);this.focused=false;this.init();this.initLabels();this.loadEcology();this.reset();overviewButton.hidden=true;focusStatus.textContent='全域總覽 · 約 30 米網頁高度網格'}
  projectLabel(item,vp,lift){const x=(item.gridU-.5)*2*this.meta.widthMeters/this.maxDim,z=(item.gridV-.5)*2*this.meta.heightMeters/this.maxDim,n=(item.elevationMeters-this.meta.minimumElevation)/(this.meta.maximumElevation-this.meta.minimumElevation),y=n*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+lift,cx=vp[0]*x+vp[4]*y+vp[8]*z+vp[12],cy=vp[1]*x+vp[5]*y+vp[9]*z+vp[13],cw=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];return{nx:cx/cw,ny:cy/cw,visible:cw>0&&cx/cw>-1.08&&cx/cw<1.08&&cy/cw>-1.08&&cy/cw<1.08}}
  updateLabels(vp){for(const {item,el} of this.labels){const p=this.projectLabel(item,vp,.045);el.hidden=!p.visible;if(p.visible){el.classList.toggle('flip',p.nx>.42);el.style.left=`${(p.nx*.5+.5)*this.canvas.clientWidth}px`;el.style.top=`${(-p.ny*.5+.5)*this.canvas.clientHeight}px`}}}
  async loadEcology(){const e=this.meta.ecology;if(!e?.ready)return;try{const base=e.assetBase;const [tb,sb,rb]=await Promise.all([fetch(`${base}/${e.treeBinary}`).then(r=>r.arrayBuffer()),fetch(`${base}/${e.shrubBinary}`).then(r=>r.arrayBuffer()),fetch(`${base}/${e.riceBinary}`).then(r=>r.arrayBuffer())]);const points=[];const add=(bytes,stride,kind,tree)=>{const dv=new DataView(bytes),count=Math.floor(bytes.byteLength/stride),center=e.centerProjected,side=e.sideMeters;for(let i=0;i<count;i++){const o=i*stride,qx=dv.getUint16(o,true),qz=dv.getUint16(o+2,true),localX=qx/65535*side-side/2,localZ=qz/65535*side-side/2,px=center[0]+localX,py=center[1]-localZ,u=(px-this.meta.bounds[0])/this.meta.widthMeters,v=(this.meta.bounds[3]-py)/this.meta.heightMeters;if(u<0||u>1||v<0||v>1)continue;const ground=this.sample(u,v)*(this.meta.maximumElevation-this.meta.minimumElevation)/this.maxDim*2+.008,size=tree?(.9+dv.getUint8(o+6)/255*2.3):(.55+dv.getUint8(o+6)/255*1.3);points.push((u-.5)*2*this.meta.widthMeters/this.maxDim,ground,(v-.5)*2*this.meta.heightMeters/this.maxDim,size,kind)}};add(tb,e.recordLayout.tree.stride,0,true);add(sb,e.recordLayout.shrub.stride,1,false);add(rb,e.recordLayout.rice.stride,2,false);const g=this.gl,vs=`#version 300 es\nin vec3 p;in float size;in float kind;uniform mat4 vp;uniform float zoom;out float vk;void main(){gl_Position=vp*vec4(p,1.);gl_PointSize=mix(1.2,6.5,zoom)*size;vk=kind;}`,fs=`#version 300 es\nprecision highp float;in float vk;uniform float zoom;out vec4 o;void main(){vec2 q=gl_PointCoord-.5;if(dot(q,q)>.25)discard;vec3 c=vk<.5?vec3(.12,.42,.16):vk<1.5?vec3(.32,.62,.22):vec3(.71,.77,.22);o=vec4(c,.62+.3*zoom);}`;this.programEcology=this.program(vs,fs);this.ecologyVao=g.createVertexArray();g.bindVertexArray(this.ecologyVao);const buffer=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,buffer);g.bufferData(g.ARRAY_BUFFER,new Float32Array(points),g.STATIC_DRAW);const pp=g.getAttribLocation(this.programEcology,'p'),ss=g.getAttribLocation(this.programEcology,'size'),kk=g.getAttribLocation(this.programEcology,'kind');g.enableVertexAttribArray(pp);g.vertexAttribPointer(pp,3,g.FLOAT,false,20,0);g.enableVertexAttribArray(ss);g.vertexAttribPointer(ss,1,g.FLOAT,false,20,12);g.enableVertexAttribArray(kk);g.vertexAttribPointer(kk,1,g.FLOAT,false,20,16);this.ecologyVp=g.getUniformLocation(this.programEcology,'vp');this.ecologyZoom=g.getUniformLocation(this.programEcology,'zoom');this.ecology={count:points.length/5}}catch(error){console.warn('ecology package unavailable',error)}}
   zoomToPointer(e){const rect=this.canvas.getBoundingClientRect(),nx=e.clientX/rect.width-.5,nz=e.clientY/rect.height-.5,scale=Math.max(.08,this.distance/2.7);this.target=[this.target[0]+nx*.42*scale,this.target[1],this.target[2]+nz*.42*scale];this.distance=Math.max(.012,this.distance*.62)}
   bind(){this.canvas.addEventListener('pointerdown',e=>{this.drag=true;this.moved=false;this.downAt=performance.now();this.x=e.clientX;this.y=e.clientY;this.canvas.setPointerCapture(e.pointerId)});this.canvas.addEventListener('pointermove',e=>{if(!this.drag)return;if(Math.hypot(e.clientX-this.x,e.clientY-this.y)>3)this.moved=true;this.yaw+=(e.clientX-this.x)*.008;this.pitch=Math.max(.10,Math.min(1.45,this.pitch+(e.clientY-this.y)*.006));this.x=e.clientX;this.y=e.clientY});this.canvas.addEventListener('pointerup',e=>{if(!this.moved&&performance.now()-this.downAt<450)this.zoomToPointer(e);this.drag=false});this.canvas.addEventListener('pointercancel',()=>this.drag=false);this.canvas.addEventListener('wheel',e=>{e.preventDefault();this.distance=Math.max(.012,Math.min(6,this.distance*Math.exp(e.deltaY*.0013)))},{passive:false});window.addEventListener('resize',()=>this.resize())}
  resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,this.canvas.clientWidth),h=Math.max(1,this.canvas.clientHeight);if(this.canvas.width!==Math.round(w*d)||this.canvas.height!==Math.round(h*d)){this.canvas.width=Math.round(w*d);this.canvas.height=Math.round(h*d);this.gl.viewport(0,0,this.canvas.width,this.canvas.height)}}
-  draw(){const g=this.gl;this.resize();g.clearColor(.006,.014,.012,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cp=Math.cos(this.pitch),eye=[this.target[0]+Math.sin(this.yaw)*cp*this.distance,this.target[1]+Math.sin(this.pitch)*this.distance+.12,this.target[2]+Math.cos(this.yaw)*cp*this.distance],vp=mul(perspective(.74,this.canvas.width/this.canvas.height,.0005,30),lookAt(eye,this.target,[0,1,0]));g.useProgram(this.programTerrain);g.bindVertexArray(this.vao);g.uniformMatrix4fv(this.vp,false,vp);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);if(this.waterCount){g.useProgram(this.programWater);g.bindVertexArray(this.waterVao);g.uniformMatrix4fv(this.waterVp,false,vp);g.drawArrays(g.TRIANGLES,0,this.waterCount)}if(this.ecology?.count&&this.distance<.72){g.useProgram(this.programEcology);g.bindVertexArray(this.ecologyVao);g.uniformMatrix4fv(this.ecologyVp,false,vp);g.uniform1f(this.ecologyZoom,Math.min(1,Math.max(0,(.72-this.distance)/.55)));g.drawArrays(g.POINTS,0,this.ecology.count)}this.updateLabels(vp);requestAnimationFrame(()=>this.draw())}
+  draw(){const g=this.gl;this.resize();g.clearColor(.006,.014,.012,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);const cp=Math.cos(this.pitch),eye=[this.target[0]+Math.sin(this.yaw)*cp*this.distance,this.target[1]+Math.sin(this.pitch)*this.distance+.12,this.target[2]+Math.cos(this.yaw)*cp*this.distance],vp=mul(perspective(.74,this.canvas.width/this.canvas.height,.0005,30),lookAt(eye,this.target,[0,1,0]));g.useProgram(this.programTerrain);g.bindVertexArray(this.vao);g.uniformMatrix4fv(this.vp,false,vp);g.uniform1f(this.ex,this.exaggeration);g.uniform4f(this.fx,this.gaea.erosion,this.gaea.surface,this.gaea.karst,this.gaea.vegetation);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);if(this.waterCount){g.useProgram(this.programWater);g.bindVertexArray(this.waterVao);g.uniformMatrix4fv(this.waterVp,false,vp);g.drawArrays(g.TRIANGLES,0,this.waterCount)}if(this.ecology?.count&&this.distance<.72){g.useProgram(this.programEcology);g.bindVertexArray(this.ecologyVao);g.uniformMatrix4fv(this.ecologyVp,false,vp);g.uniform1f(this.ecologyZoom,Math.min(1,Math.max(0,(.72-this.distance)/.55)));g.drawArrays(g.POINTS,0,this.ecology.count)}this.updateLabels(vp);requestAnimationFrame(()=>this.draw())}
 }
 document.querySelector('#reset').onclick=()=>renderer?.reset();
+(async()=>{for(const input of document.querySelectorAll('[data-gaea]')){input.addEventListener('input',()=>{const key=input.dataset.gaea,value=Number(input.value);if(renderer)renderer.gaea[key]=value;input.parentElement.querySelector('output').textContent=Math.round(value*100)});}overviewButton.onclick=()=>renderer?.loadOverview();})();
 (async()=>{try{const t=META.terrain,[hb,mb]=await Promise.all([fetch(t.heightBinary).then(r=>r.arrayBuffer()),fetch(t.maskBinary).then(r=>r.arrayBuffer())]);renderer=new TerrainRenderer(canvas,t,new Uint16Array(hb),new Uint8Array(mb));document.querySelector('#loading').remove()}catch(error){console.error(error)}})();
 </script>
 </body></html>'''
@@ -753,11 +799,12 @@ def run(config_path: Path, root: Path, site: Path) -> int:
     preview_uri = ""
     if dem_path.exists():
         terrain = downsample_height(dem_path, assets)
-        attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets)
+        attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets, root / "metadata" / "lijiang_osm.geojson")
         if not terrain.get("waterways"):
             attach_lijiang(terrain, root / "metadata" / "lijiang_osm.geojson")
         terrain["verticalScale"] = 1.0
-        terrain["fineRegions"] = json_if_exists(root / "metadata" / "fine_regions_1m_plan.json", {}).get("regions", [])
+        focus_index = json_if_exists(root / "metadata" / "fine_regions_12_5m.json", {})
+        terrain["fineRegions"] = focus_index.get("regions") or json_if_exists(root / "metadata" / "fine_regions_1m_plan.json", {}).get("regions", [])
         attach_ecology(terrain, root / "metadata" / "ecology" / "v0.3.1", assets)
         terrain["manifestUrl"] = "assets/terrain-manifest.json"
         write_json(assets / "terrain-manifest.json", terrain)
@@ -809,11 +856,12 @@ def run_from_manifest(manifest_path: Path, status_path: Path, root: Path, site: 
     assets.mkdir(parents=True, exist_ok=True)
     terrain = read_json(manifest_path)
     refresh_landmarks_from_manifest(terrain)
-    attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets)
+    attach_waterways(terrain, root / "metadata" / "waterways_osm.geojson", assets, root / "metadata" / "lijiang_osm.geojson")
     if not terrain.get("waterways"):
         attach_lijiang(terrain, root / "metadata" / "lijiang_osm.geojson")
     terrain["verticalScale"] = 1.0
-    terrain["fineRegions"] = json_if_exists(root / "metadata" / "fine_regions_1m_plan.json", {}).get("regions", [])
+    focus_index = json_if_exists(root / "metadata" / "fine_regions_12_5m.json", {})
+    terrain["fineRegions"] = focus_index.get("regions") or json_if_exists(root / "metadata" / "fine_regions_1m_plan.json", {}).get("regions", [])
     attach_ecology(terrain, root / "metadata" / "ecology" / "v0.3.1", assets)
     write_json(manifest_path, terrain)
     meta = json_if_exists(status_path, {})
