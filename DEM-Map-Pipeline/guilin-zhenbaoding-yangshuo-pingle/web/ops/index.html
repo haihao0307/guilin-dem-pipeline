@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>桂林 DEM 生产线总控台</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08100d;
+      --panel: rgba(16, 29, 23, 0.9);
+      --panel-strong: #13251d;
+      --line: rgba(178, 214, 189, 0.18);
+      --text: #eef7f0;
+      --muted: #9cb2a4;
+      --accent: #8dcf9d;
+      --accent-strong: #b9edc3;
+      --warn: #f1c981;
+      --bad: #ef8d84;
+      --shadow: 0 24px 64px rgba(0, 0, 0, 0.34);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(59, 111, 76, 0.32), transparent 36%),
+        radial-gradient(circle at 90% 10%, rgba(55, 91, 68, 0.25), transparent 32%),
+        linear-gradient(180deg, #07100c 0%, #0b1511 52%, #07100d 100%);
+    }
+    a { color: inherit; }
+    .shell { width: min(1440px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 54px; }
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(25, 48, 36, 0.94), rgba(11, 23, 18, 0.92));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+    h1 { margin: 8px 0 8px; font-size: clamp(28px, 4vw, 48px); line-height: 1.05; }
+    .subtitle { margin: 0; color: var(--muted); max-width: 780px; line-height: 1.65; }
+    .status-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 240px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(141, 207, 157, 0.32);
+      background: rgba(77, 138, 91, 0.14);
+      color: var(--accent-strong);
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 16px currentColor; }
+    .updated { color: var(--muted); font-size: 12px; text-align: right; }
+    .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .quick-links a {
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .quick-links a:hover { border-color: rgba(141, 207, 157, 0.5); background: rgba(141, 207, 157, 0.08); }
+    .grid { display: grid; gap: 16px; }
+    .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 18px; }
+    .metric, .panel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.18);
+    }
+    .metric { padding: 18px; }
+    .metric-label { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .metric-value { font-size: 24px; font-weight: 850; word-break: break-word; }
+    .metric-note { margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .layout { grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.8fr); margin-top: 18px; align-items: start; }
+    .panel { padding: 20px; }
+    .panel + .panel { margin-top: 16px; }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .panel-title h2 { margin: 0; font-size: 18px; }
+    .panel-title span { color: var(--muted); font-size: 12px; }
+    .workers { display: grid; gap: 12px; }
+    .worker {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 15px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .worker h3 { margin: 0 0 6px; font-size: 15px; }
+    .worker-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); font-size: 12px; }
+    .worker-state { align-self: start; color: var(--accent-strong); font-size: 12px; font-weight: 800; text-align: right; }
+    .worker-pending { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .gate-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+    .gate-list li { display: grid; grid-template-columns: 14px 1fr; gap: 9px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .gate-list li::before { content: ""; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--accent); }
+    .gate-list.pending li::before { background: var(--warn); }
+    .release-card {
+      padding: 17px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(141, 207, 157, 0.09), rgba(255,255,255,0.025));
+      border: 1px solid rgba(141, 207, 157, 0.24);
+    }
+    .release-id { font-size: 18px; font-weight: 850; margin-bottom: 8px; }
+    .release-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .release-row strong { color: var(--text); text-align: right; }
+    .error { display: none; margin-top: 16px; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(239, 141, 132, 0.35); background: rgba(239, 141, 132, 0.08); color: #ffd1cd; }
+    footer { margin-top: 24px; color: var(--muted); font-size: 12px; text-align: center; }
+    code { color: var(--accent-strong); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    @media (max-width: 980px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .status-stack { align-items: flex-start; min-width: 0; }
+      .updated { text-align: left; }
+      .topbar { flex-direction: column; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 10px; }
+      .topbar { padding: 18px; border-radius: 18px; }
+      .metrics { grid-template-columns: 1fr; }
+      .worker { grid-template-columns: 1fr; }
+      .worker-state { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">DEM Map Production Control</div>
+        <h1>桂林 DEM 地图生产线总控台</h1>
+        <p class="subtitle">集中显示地形、水系、喀斯特、植被、农业和网页运行时的分支状态、测试门槛、发布候选与回滚版本。稳定运行时持续保留 v0.3.1，v0.4.0 通过完整验收后再晋升。</p>
+        <nav class="quick-links" aria-label="固定验收入口">
+          <a id="mainView" href="../">主地形页</a>
+          <a id="liveView" href="../live-terrain.html">实时地形验证</a>
+          <a id="repoView" href="https://github.com/haihao0307/guilin-dem-pipeline">GitHub 仓库</a>
+          <a id="runtimePr" href="https://github.com/haihao0307/guilin-dem-pipeline/pull/6">运行时 PR</a>
+        </nav>
+      </div>
+      <div class="status-stack">
+        <div class="pill"><span class="dot"></span><span id="overallStatus">正在读取状态</span></div>
+        <div class="updated" id="updatedAt">等待 status.json</div>
+      </div>
+    </section>
+
+    <section class="grid metrics" aria-label="核心指标">
+      <article class="metric"><div class="metric-label">稳定生态版本</div><div class="metric-value" id="stableRelease">...</div><div class="metric-note">当前默认运行时</div></article>
+      <article class="metric"><div class="metric-label">目标候选版本</div><div class="metric-value" id="targetRelease">...</div><div class="metric-note">完成全部门槛后晋升</div></article>
+      <article class="metric"><div class="metric-label">聚焦测试通过</div><div class="metric-value" id="testsPassed">0</div><div class="metric-note">Phase A 自动测试</div></article>
+      <article class="metric"><div class="metric-label">待完成发布门槛</div><div class="metric-value" id="pendingCount">0</div><div class="metric-note">视觉、浏览器、打包与部署</div></article>
+    </section>
+
+    <section class="grid layout">
+      <div>
+        <article class="panel">
+          <div class="panel-title"><h2>执行节点</h2><span id="integrationBranch">integration/ecology-v040</span></div>
+          <div class="workers" id="workers"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-title"><h2>已完成门槛</h2><span id="completedCount">0</span></div>
+          <ul class="gate-list" id="completedGates"></ul>
+        </article>
+      </div>
+      <div>
+        <article class="panel">
+          <div class="panel-title"><h2>发布候选</h2><span>只读状态</span></div>
+          <div class="release-card">
+            <div class="release-id" id="releaseId">...</div>
+            <div class="release-row"><span>候选状态</span><strong id="candidateStatus">...</strong></div>
+            <div class="release-row"><span>默认运行时</span><strong id="candidateDefault">...</strong></div>
+            <div class="release-row"><span>回滚版本</span><strong id="rollbackRelease">...</strong></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-title"><h2>待完成发布门槛</h2><span id="releaseBlockerCount">0</span></div>
+          <ul class="gate-list pending" id="pendingGates"></ul>
+        </article>
+      </div>
+    </section>
+
+    <div class="error" id="errorBox" role="alert"></div>
+    <footer>状态来自经过清理的静态 JSON。浏览器页面不保存 GitHub 密钥、访问令牌或私有环境变量。</footer>
+  </main>
+
+  <script>
+    const text = (id, value) => { document.getElementById(id).textContent = String(value ?? ""); };
+    const link = (id, value) => { if (value) document.getElementById(id).href = value; };
+    const humanState = value => ({
+      phase_a_merged_runtime_in_progress: "Phase A 已合并，运行时推进中",
+      phase_a_merged: "Phase A 已合并",
+      controller_fallback_in_progress: "总控接管推进中",
+      phase_a_runtime_candidate: "Phase A 运行时候选"
+    }[value] || String(value || "未知状态"));
+    const label = value => String(value || "").replaceAll("_", " ");
+
+    function renderList(id, values) {
+      const root = document.getElementById(id);
+      root.replaceChildren();
+      for (const value of values || []) {
+        const item = document.createElement("li");
+        item.textContent = label(value);
+        root.append(item);
+      }
+    }
+
+    function renderWorkers(workers) {
+      const root = document.getElementById("workers");
+      root.replaceChildren();
+      for (const worker of workers || []) {
+        const card = document.createElement("article");
+        card.className = "worker";
+        const info = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = `${worker.id || "worker"} · ${label(worker.title)}`;
+        const meta = document.createElement("div");
+        meta.className = "worker-meta";
+        meta.innerHTML = `<span>分支 <code></code></span><span>PR #${Number(worker.pull_request || 0)}</span><span>测试 ${Number(worker.tests_passed || 0)}</span>`;
+        meta.querySelector("code").textContent = worker.branch || "";
+        info.append(title, meta);
+        const state = document.createElement("div");
+        state.className = "worker-state";
+        state.textContent = humanState(worker.state);
+        const pending = document.createElement("div");
+        pending.className = "worker-pending";
+        pending.textContent = (worker.phase_b_pending || []).length ? `后续：${worker.phase_b_pending.map(label).join("、")}` : "当前阶段已完成";
+        card.append(info, state, pending);
+        root.append(card);
+      }
+    }
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("./status.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`status.json HTTP ${response.status}`);
+        const data = await response.json();
+        text("overallStatus", humanState(data.status));
+        text("updatedAt", `更新 ${data.generated_at || "未知"} · 校验 ${String(data.payload_sha256 || "").slice(0, 12)}`);
+        text("stableRelease", data.stable_release);
+        text("targetRelease", data.target_release);
+        text("testsPassed", data.tests?.focused_passed || 0);
+        text("pendingCount", data.tests?.pending_release_gates?.length || 0);
+        text("integrationBranch", data.integration_branch);
+        text("completedCount", data.tests?.completed_gates?.length || 0);
+        text("releaseBlockerCount", data.release_candidate?.release_blockers?.length || 0);
+        text("releaseId", data.release_candidate?.release_id);
+        text("candidateStatus", humanState(data.release_candidate?.status));
+        text("candidateDefault", data.release_candidate?.default_runtime ? "已启用" : "保持关闭");
+        text("rollbackRelease", data.release_candidate?.rollback_release);
+        renderWorkers(data.workers);
+        renderList("completedGates", data.tests?.completed_gates);
+        renderList("pendingGates", data.tests?.pending_release_gates);
+        link("mainView", data.links?.main_view);
+        link("liveView", data.links?.live_terrain_view);
+        link("repoView", data.links?.github_repository);
+        link("runtimePr", data.links?.runtime_pr);
+      } catch (error) {
+        const box = document.getElementById("errorBox");
+        box.style.display = "block";
+        box.textContent = `总控状态读取失败：${error instanceof Error ? error.message : String(error)}`;
+        text("overallStatus", "状态读取失败");
+      }
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 30000);
+  </script>
+</body>
+</html>
