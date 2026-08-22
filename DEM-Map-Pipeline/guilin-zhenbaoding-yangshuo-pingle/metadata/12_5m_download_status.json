@@ -133,6 +133,15 @@
     "unresolvedAreaSquareKilometers": 5054.348,
     "policy": "不输出缺口超过阈值的12.5米完整成果"
   },
+  "pillowMosaic": {
+    "status": "incomplete_real_pixel_mosaic",
+    "method": "Pillow+NumPy direct georeferenced pixel placement; overlap mean; no interpolation",
+    "output": "outputs/DEM_Zhenbaoding15km_to_Yangshuo_Pingle_12_5m_incomplete_preview.tif",
+    "qaReport": "reports/QA_12_5M_PILLOW_MOSAIC.json",
+    "validFractionInsideTarget": 0.9967775698614473,
+    "gapAreaSquareKilometers": 60.45671875,
+    "releasePolicy": "即使覆盖率高于99.5%，只要仍有超过10平方公里的大缺口，就不替换正式COG，也不声称完整12.5米覆盖。"
+  },
   "authorizationDiagnostics": {
     "edlTokenPostValidation": "accepted_by_asf_search_client",
     "asfUrsSessionCookie": "failed_http_401",
@@ -146,6 +155,6 @@
   },
   "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
   "lastAttempt": "2026-08-21",
-  "nextStep": "十张本地源片已验证，selected_new_products.json 中的计划瓦片已全部取得；下一步运行 scripts/mosaic_dem.py 并重新验证覆盖率后，再发布拼接成果。",
+  "nextStep": "十张本地源片已验证；Pillow+NumPy 已生成真实像元拼接预览，但仍有约60.46平方公里缺口，正式COG与网页仍保持完整范围30米预览，待补齐源片后再替换。",
   "fallbackPolicy": "继续使用约30米完整范围公开预览；不把增强或插值标作原生12.5米。"
 }
