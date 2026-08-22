@@ -1,0 +1,48 @@
+{
+  "schema": "guilin_agriculture_config@0.4.0",
+  "epoch_target": "1940-1945",
+  "classes": {
+    "0": "none",
+    "1": "paddy_rice",
+    "2": "vegetable_leaf_green",
+    "3": "vegetable_blue_green",
+    "4": "dryland_maize",
+    "5": "dryland_root_crop",
+    "6": "orchard",
+    "7": "fallow",
+    "8": "harvested"
+  },
+  "placement_rules": {
+    "paddy": {"allowed_landforms": [2,3,4], "max_slope_deg": 5.5, "max_distance_to_water_m": 360, "requires_drainage_to_water": true},
+    "vegetable": {"allowed_landforms": [2,3,4], "max_slope_deg": 6.5, "max_distance_to_settlement_m": 360},
+    "dryland": {"allowed_landforms": [3,4,5], "max_slope_deg": 13, "min_distance_to_water_m": 100},
+    "orchard": {"allowed_landforms": [3,4,5], "slope_deg": [1,18], "distance_to_water_m": [70,900], "max_distance_to_settlement_m": 1600},
+    "forbidden_landforms": [0,1,6,7,8],
+    "forbidden_masks": ["permanent_water_mask","active_bank_mask","hard_exclusion_mask","karst_rock_core_mask","road_core_mask","building_mask","airport_mask"]
+  },
+  "crop_palettes": [
+    {"id": "rice_water_seedling", "colors": ["#7f9574","#91a982","#a5bb91"], "micro_height_m": [0.05,0.20]},
+    {"id": "rice_tillering_green", "colors": ["#5d8d42","#70a14b","#82b358"], "micro_height_m": [0.25,0.65]},
+    {"id": "rice_heading_gold", "colors": ["#8da14b","#a7ae4d","#c0b75a"], "micro_height_m": [0.65,1.20]},
+    {"id": "leaf_vegetable_green", "colors": ["#4d873e","#60a149","#77b65a"], "micro_height_m": [0.15,0.55]},
+    {"id": "leaf_vegetable_blue_green", "colors": ["#3f7c63","#55927a","#6aa68d"], "micro_height_m": [0.18,0.60]},
+    {"id": "dryland_maize", "colors": ["#769344","#90a64e","#a8b458"], "micro_height_m": [0.45,1.80]},
+    {"id": "dryland_root_crop", "colors": ["#627f3e","#7b9148","#918f53"], "micro_height_m": [0.15,0.70]},
+    {"id": "harvested_or_fallow", "colors": ["#8d8154","#a09061","#b1a071"], "micro_height_m": [0.02,0.18]}
+  ],
+  "field_geometry": {
+    "parent_partition": "approved_arable_mask",
+    "subdivision": "stable_global_cell_partition_phase_a",
+    "phase_b_target": "nested_voronoi_inside_parent_mask",
+    "bund_core_height_m": [0.18,0.45],
+    "bund_shoulder_height_m": [0.08,0.22],
+    "irrigation_channel_can_cut_bund": true,
+    "field_entry_can_cut_bund": true
+  },
+  "orchard_geometry": {
+    "stable_block_row_tree_ids": true,
+    "missing_row_probability": 0.08,
+    "missing_tree_probability": 0.12,
+    "global_coordinate_phase": true
+  }
+}

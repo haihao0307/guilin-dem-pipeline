@@ -1,0 +1,177 @@
+{
+  "schema": "guilin_ecology_knowledge@0.4.0",
+  "region": "Guilin karst and Lijiang valley working model",
+  "epoch_target": "1940-1945",
+  "truth_priority": ["historical_landuse", "permanent_water", "terrain_landform", "hard_exclusion", "habitat_rules", "stable_variation"],
+  "river_sequence": ["permanent_water", "bare_or_active_bank", "riparian_shrub", "riparian_tree", "phoenix_tail_bamboo", "moso_bamboo_or_alluvial_terrace"],
+  "global_rules": {
+    "permanent_water_has_terrestrial_vegetation": false,
+    "active_bank_has_woody_instances": false,
+    "karst_rock_core_has_large_tree_or_dense_shrub": false,
+    "agriculture_suppresses_wild_woody_instances": true,
+    "programmatic_fields_only_refine_approved_parent_masks": true,
+    "tile_phase_uses_global_projected_coordinates": true
+  },
+  "prototypes": [
+    {
+      "id": "ficus_riparian_giant",
+      "common_name": "Riparian Ficus giant",
+      "scientific_group": "Ficus spp.",
+      "kind": "tree",
+      "habitat": {"landform_classes": [2,3,4], "slope_deg": [0,12], "distance_to_water_m": [28,180], "moisture": [0.58,1.0], "distance_to_settlement_m": [0,1800], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [10,24], "scale_range": [0.82,1.25], "crown_shape": "broad_asymmetric_multi_lobed", "palette": ["#315f2d","#3f7436","#527f3d","#6d8d45"], "occurrence_weight": 0.77, "grouping": "isolated_or_small_cluster", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "pterocarya_riparian",
+      "common_name": "Chinese wingnut riparian tree",
+      "scientific_group": "Pterocarya stenoptera group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [2,3,4], "slope_deg": [0,11], "distance_to_water_m": [22,220], "moisture": [0.62,1.0], "distance_to_settlement_m": [0,2200], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [9,22], "scale_range": [0.78,1.22], "crown_shape": "open_round_riparian", "palette": ["#3f7337","#4d853e","#638f49","#789b55"], "occurrence_weight": 0.84, "grouping": "linear_riparian_cluster", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "celtis_riparian",
+      "common_name": "Riparian hackberry",
+      "scientific_group": "Celtis group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [2,3,4], "slope_deg": [0,14], "distance_to_water_m": [35,260], "moisture": [0.52,0.95], "distance_to_settlement_m": [0,2400], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [7,18], "scale_range": [0.78,1.18], "crown_shape": "rounded_irregular", "palette": ["#3e6f32","#4f7d39","#668c45","#7d9855"], "occurrence_weight": 0.76, "grouping": "scattered_cluster", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "cinnamomum_lowland",
+      "common_name": "Lowland evergreen cinnamon tree",
+      "scientific_group": "Cinnamomum group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [0,22], "distance_to_water_m": [80,700], "moisture": [0.35,0.82], "distance_to_settlement_m": [0,2400], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [7,17], "scale_range": [0.82,1.18], "crown_shape": "dense_rounded", "palette": ["#285d31","#35713a","#477e42","#5d8a4d"], "occurrence_weight": 0.72, "grouping": "mixed_evergreen", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "liquidambar_valley",
+      "common_name": "Valley sweetgum",
+      "scientific_group": "Liquidambar formosana group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [0,24], "distance_to_water_m": [80,850], "moisture": [0.32,0.82], "distance_to_settlement_m": [0,2600], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [8,22], "scale_range": [0.80,1.22], "crown_shape": "tall_rounded", "palette": ["#356b35","#4d7d3e","#6c8b47","#8b944f"], "occurrence_weight": 0.66, "grouping": "scattered_or_grove", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "castanopsis_evergreen",
+      "common_name": "Castanopsis evergreen broadleaf",
+      "scientific_group": "Castanopsis group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [4,5], "slope_deg": [5,32], "distance_to_water_m": [160,1800], "moisture": [0.25,0.72], "distance_to_settlement_m": [150,5000], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [9,23], "scale_range": [0.80,1.24], "crown_shape": "dense_multi_lobed", "palette": ["#24572d","#306633","#3d7138","#4a7b3f"], "occurrence_weight": 0.82, "grouping": "closed_mixed_forest", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "cyclobalanopsis_oak",
+      "common_name": "Evergreen ring-cupped oak",
+      "scientific_group": "Cyclobalanopsis group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [4,5,6], "slope_deg": [7,34], "distance_to_water_m": [200,2200], "moisture": [0.22,0.68], "distance_to_settlement_m": [200,6000], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [8,21], "scale_range": [0.78,1.22], "crown_shape": "rounded_rugged", "palette": ["#294f2b","#355f30","#426d36","#547a3e"], "occurrence_weight": 0.74, "grouping": "mixed_forest", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "schima_superba_slope",
+      "common_name": "Chinese guger tree",
+      "scientific_group": "Schima superba group",
+      "kind": "tree",
+      "habitat": {"landform_classes": [4,5], "slope_deg": [8,31], "distance_to_water_m": [180,1800], "moisture": [0.28,0.72], "distance_to_settlement_m": [100,5200], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [9,24], "scale_range": [0.80,1.20], "crown_shape": "high_irregular", "palette": ["#2d5f31","#397039","#497c40","#5b8748"], "occurrence_weight": 0.76, "grouping": "mixed_evergreen", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "cunninghamia_plantation",
+      "common_name": "Chinese fir stand",
+      "scientific_group": "Cunninghamia lanceolata",
+      "kind": "tree",
+      "habitat": {"landform_classes": [4,5,6], "slope_deg": [7,35], "distance_to_water_m": [220,2400], "moisture": [0.22,0.70], "distance_to_settlement_m": [100,4200], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [10,25], "scale_range": [0.82,1.18], "crown_shape": "narrow_conical", "palette": ["#274f30","#315e36","#3b6b3d","#4a7745"], "occurrence_weight": 0.63, "grouping": "managed_patch", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "pinus_massoniana_ridge",
+      "common_name": "Masson pine",
+      "scientific_group": "Pinus massoniana",
+      "kind": "tree",
+      "habitat": {"landform_classes": [5,6], "slope_deg": [8,38], "distance_to_water_m": [320,4000], "moisture": [0.10,0.55], "distance_to_settlement_m": [250,6500], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [8,22], "scale_range": [0.78,1.24], "crown_shape": "open_umbrella_conifer", "palette": ["#385c2f","#466937","#557440","#687f4a"], "occurrence_weight": 0.72, "grouping": "ridge_open_forest", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "phoenix_tail_bamboo",
+      "common_name": "Phoenix-tail bamboo",
+      "scientific_group": "Bambusa multiplex group",
+      "kind": "bamboo",
+      "habitat": {"landform_classes": [2,3,4], "slope_deg": [0,12], "distance_to_water_m": [24,145], "moisture": [0.60,1.0], "distance_to_settlement_m": [0,900], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [3,8], "scale_range": [0.78,1.30], "crown_shape": "dense_low_arching_clump", "palette": ["#3f7f37","#529044","#65a151","#7bab5c"], "occurrence_weight": 0.91, "grouping": "linear_dense_clump", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "moso_bamboo",
+      "common_name": "Moso bamboo",
+      "scientific_group": "Phyllostachys edulis",
+      "kind": "bamboo",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [2,25], "distance_to_water_m": [70,420], "moisture": [0.46,0.90], "distance_to_settlement_m": [0,1500], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [8,17], "scale_range": [0.80,1.22], "crown_shape": "tall_culms_light_canopy", "palette": ["#2f7038","#3f8242","#55934c","#6ba457"], "occurrence_weight": 0.78, "grouping": "grove", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "riparian_large_shrub",
+      "common_name": "Large riparian shrub community",
+      "scientific_group": "Riparian shrub guild",
+      "kind": "shrub",
+      "habitat": {"landform_classes": [2,3,4], "slope_deg": [0,14], "distance_to_water_m": [18,130], "moisture": [0.58,1.0], "distance_to_settlement_m": [0,2200], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [2,6], "scale_range": [0.72,1.35], "crown_shape": "broad_tangled", "palette": ["#406f34","#53803d","#688f48","#7b9a54"], "occurrence_weight": 0.88, "grouping": "linear_thicket", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "forest_edge_shrub",
+      "common_name": "Forest-edge shrub community",
+      "scientific_group": "Subtropical edge shrub guild",
+      "kind": "shrub",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [0,26], "distance_to_water_m": [90,1200], "moisture": [0.25,0.82], "distance_to_settlement_m": [0,3500], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [1.5,5], "scale_range": [0.72,1.34], "crown_shape": "irregular_dense", "palette": ["#496c32","#5c7b39","#708943","#84964e"], "occurrence_weight": 0.82, "grouping": "edge_band", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "rubus_thicket",
+      "common_name": "Rubus thorn thicket",
+      "scientific_group": "Rubus group",
+      "kind": "shrub",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [0,24], "distance_to_water_m": [70,900], "moisture": [0.28,0.88], "distance_to_settlement_m": [0,3000], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [1,3.5], "scale_range": [0.70,1.38], "crown_shape": "low_tangled", "palette": ["#536c31","#687b39","#7b8942","#8e954d"], "occurrence_weight": 0.61, "grouping": "patchy_thicket", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "karst_drought_shrub",
+      "common_name": "Karst drought shrub",
+      "scientific_group": "Limestone drought shrub guild",
+      "kind": "shrub",
+      "habitat": {"landform_classes": [5,6], "slope_deg": [10,36], "distance_to_water_m": [350,5000], "moisture": [0.08,0.48], "distance_to_settlement_m": [300,6500], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [1,4.5], "scale_range": [0.68,1.30], "crown_shape": "sparse_rounded", "palette": ["#5a6734","#6d7440","#7d7e49","#8a8755"], "occurrence_weight": 0.69, "grouping": "sparse_patch", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "citrus_orchard",
+      "common_name": "Citrus orchard tree",
+      "scientific_group": "Citrus reticulata group",
+      "kind": "fruit_tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [1,18], "distance_to_water_m": [70,900], "moisture": [0.25,0.78], "distance_to_settlement_m": [0,1600], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [2.5,5.5], "scale_range": [0.82,1.18], "crown_shape": "small_round_regular", "palette": ["#3c7434","#4d843b","#5f9145","#e39a31"], "occurrence_weight": 0.90, "grouping": "regular_rows", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "pomelo_orchard",
+      "common_name": "Pomelo orchard tree",
+      "scientific_group": "Citrus maxima group",
+      "kind": "fruit_tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [1,18], "distance_to_water_m": [80,1000], "moisture": [0.25,0.78], "distance_to_settlement_m": [0,1600], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [3.5,7], "scale_range": [0.82,1.20], "crown_shape": "medium_round_regular", "palette": ["#366f33","#47803a","#5a8d43","#d4b83a"], "occurrence_weight": 0.82, "grouping": "regular_rows", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "persimmon_orchard",
+      "common_name": "Persimmon orchard tree",
+      "scientific_group": "Diospyros kaki",
+      "kind": "fruit_tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [1,18], "distance_to_water_m": [90,1100], "moisture": [0.22,0.72], "distance_to_settlement_m": [0,1800], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [3,7.5], "scale_range": [0.80,1.22], "crown_shape": "open_round_regular", "palette": ["#4b7334","#637f3c","#7b8c45","#d66f32"], "occurrence_weight": 0.74, "grouping": "regular_rows", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    },
+    {
+      "id": "loquat_plum_peach_orchard",
+      "common_name": "Mixed loquat plum peach orchard",
+      "scientific_group": "Eriobotrya Prunus mixed guild",
+      "kind": "fruit_tree",
+      "habitat": {"landform_classes": [3,4,5], "slope_deg": [1,18], "distance_to_water_m": [80,1100], "moisture": [0.24,0.76], "distance_to_settlement_m": [0,1800], "forbidden": ["permanent_water","active_channel","karst_rock_core","airport","building","road_core"]},
+      "height_m": [2.5,7], "scale_range": [0.78,1.24], "crown_shape": "mixed_small_round", "palette": ["#46753a","#5b8442","#708f4b","#cf7f52"], "occurrence_weight": 0.78, "grouping": "regular_rows_with_gaps", "evidence_status": "regional_rule_v040", "historical_1944_status": "requires_local_archive_confirmation"
+    }
+  ]
+}
