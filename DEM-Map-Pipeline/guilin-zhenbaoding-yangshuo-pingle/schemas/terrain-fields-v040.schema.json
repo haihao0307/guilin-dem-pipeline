@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dem-mapline.local/schemas/terrain-fields-v040.schema.json",
+  "title": "DEM terrain field release manifest v0.4.0",
+  "type": "object",
+  "required": ["schema", "version", "crs", "boundsProjected", "grid", "truthPolicy", "fields", "validation"],
+  "properties": {
+    "schema": {"const": "dem_terrain_fields@1.0"},
+    "version": {"const": "0.4.0"},
+    "crs": {"type": "string", "minLength": 1},
+    "boundsProjected": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}, {"type": "number"}, {"type": "number"}],
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "grid": {
+      "type": "object",
+      "required": ["width", "height", "dxM", "dyM"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 2},
+        "height": {"type": "integer", "minimum": 2},
+        "dxM": {"type": "number", "exclusiveMinimum": 0},
+        "dyM": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "truthPolicy": {
+      "type": "object",
+      "required": ["zTruthReadOnly", "erosionStoredSeparately"],
+      "properties": {
+        "zTruthReadOnly": {"const": true},
+        "erosionStoredSeparately": {"const": "erosion_depth_m"}
+      }
+    },
+    "fields": {
+      "type": "object",
+      "required": [
+        "z_truth_m",
+        "permanent_water_mask",
+        "active_bank_mask",
+        "distance_to_water_m",
+        "flow_direction_xy",
+        "flow_accumulation",
+        "erosion_channel_mask",
+        "erosion_depth_m",
+        "karst_rock_mask",
+        "karst_rock_core_mask",
+        "landform_class",
+        "hard_exclusion_mask"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path", "dtype", "shape", "sha256", "semantic_sha256"]
+      }
+    },
+    "validation": {"type": "object"}
+  }
+}
