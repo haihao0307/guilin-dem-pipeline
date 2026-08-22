@@ -1,12 +1,12 @@
 {
   "schema": "dem_codex_control_state@1.0",
-  "updated_at": "2026-08-22T06:25:30Z",
+  "updated_at": "2026-08-22T06:41:00Z",
   "repository": "haihao0307/guilin-dem-pipeline",
   "stable_branch": "main",
   "integration_branch": "integration/ecology-v040",
   "stable_ecology_release": "v0.3.1",
   "target_ecology_release": "v0.4.0",
-  "status": "codex_running",
+  "status": "codex_applying_changes",
   "workers": [
     {
       "id": "codex-1",
@@ -14,7 +14,8 @@
       "branch": "codex/terrain-hydrology-karst-v040",
       "issue": 1,
       "pull_request": 4,
-      "state": "accepted_by_codex"
+      "state": "on_it",
+      "expected_handoff": "HANDOFF_TERRAIN_V040.md"
     },
     {
       "id": "codex-2",
@@ -22,7 +23,8 @@
       "branch": "codex/ecology-agriculture-v040",
       "issue": 2,
       "pull_request": 5,
-      "state": "accepted_by_codex"
+      "state": "on_it",
+      "expected_handoff": "HANDOFF_ECOLOGY_V040.md"
     },
     {
       "id": "codex-3",
@@ -30,7 +32,10 @@
       "branch": "codex/runtime-control-plane-v040",
       "issue": 3,
       "pull_request": 6,
-      "state": "accepted_by_codex"
+      "state": "applying_completed_local_task",
+      "task_id": "cd_6a8940d1c2dc819199eb65602bdd5fcf",
+      "local_commit": "f718929",
+      "expected_handoff": "HANDOFF_RUNTIME_V040.md"
     }
   ],
   "merge_order": [
