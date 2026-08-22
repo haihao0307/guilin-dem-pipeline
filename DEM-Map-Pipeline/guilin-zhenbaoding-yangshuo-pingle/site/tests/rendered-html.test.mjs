@@ -50,12 +50,15 @@ test("terrain manifest matches the published binaries", async () => {
   assert.equal(manifest.waterwayRepresentation, "mapped-water-surface-polygons-with-tapered-centerline-fallback");
   assert.equal(manifest.waterwayEdgePolicy, "split-then-clip-each-contiguous-part-at-terrain-boundary");
   assert.equal(manifest.waterSurfacePolicy, "sampled-to-DEM-ground-plus-0.6m-render-epsilon");
+  assert.match(manifest.waterwayCenterlinePolicy, /centerlines/);
+  assert.match(manifest.waterwayControlPolicy, /browser-only/);
+  assert.ok(manifest.waterways.every(({ points, network }) => Array.isArray(points) && points.length >= 4 && network));
   assert.equal(manifest.waterwayNetworks.xiangjiang, "OSM-named-and-unnamed-river-ways");
   assert.equal(manifest.waterwayNetworks.lijiang, "continuous-extract-plus-OSM-ways");
   assert.equal(manifest.ecology.ready, true);
   assert.equal(manifest.ecology.sourceStatus, "deterministic-ecology-proof-awaiting-real-12.5m-dem");
   assert.deepEqual(manifest.fineRegions.map(({ status }) => status), [
-    "incomplete_12_5m",
+    "ready_12_5m",
     "ready_12_5m",
     "ready_12_5m",
     "ready_12_5m",
@@ -79,7 +82,7 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   const html = await readFile(new URL("../public/terrain/index.html", import.meta.url), "utf8");
   assert.match(html, /assets\/height_u16\.bin/);
   assert.match(html, /assets\/mask_u8\.bin/);
-  assert.doesNotMatch(html, /漓江|河流名称|river-name/);
+  assert.doesNotMatch(html, /河流名称|river-name/);
   assert.match(html, /this\.exaggeration=1/);
   assert.match(html, /focusRegion/);
   assert.match(html, /zoomToPointer/);
@@ -95,6 +98,12 @@ test("terrain page uses cacheable assets rather than embedded preview images", a
   assert.match(html, /setTimeout\(\(\)=>\{hold=null;this\.focusRegion\(item\)/);
   assert.match(html, /marker-spin/);
   assert.match(html, /loadEcology/);
+  assert.match(html, /resampleDisplayGrid/);
+  assert.match(html, /2,400/);
+  assert.match(html, /data-water-width="lijiang"/);
+  assert.match(html, /data-water-width="xiangjiang"/);
+  assert.match(html, /data-water-color/);
+  assert.match(html, /waterwayCenterlinePolicy/);
   assert.doesNotMatch(html, /二维高程图/);
   assert.doesNotMatch(html, /垂直倍率/);
   assert.doesNotMatch(html, /class="side"|class="footer"|class="subtitle"/);

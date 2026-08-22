@@ -17,17 +17,18 @@
   "heightMeters": 14150.0,
   "gridWidth": 1132,
   "gridHeight": 1132,
+  "displayGridPolicy": "12.5m source pixels; browser may resample focus view to 2,400×2,400 for smoother display",
   "resolution": [
     12.5,
     12.5
   ],
-  "minimumElevation": 403.0,
+  "minimumElevation": 360.0,
   "maximumElevation": 2089.5,
   "verticalScale": 1.0,
   "heightBinary": "height_u16.bin",
   "maskBinary": "mask_u8.bin",
-  "validFraction": 0.8530221066563448,
-  "status": "incomplete_12_5m",
+  "validFraction": 1.0,
+  "status": "ready_12_5m",
   "centerProjected": [
     482534.5304624392,
     2890708.1229911866
@@ -44,5 +45,9 @@
       "elevationMeters": 1955.5
     }
   ],
-  "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded"
+  "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded",
+  "sourceCoveragePolicy": "mosaic-first; fill only NoData cells from verified 12.5m source GeoTIFF tiles when the mosaic extent is insufficient",
+  "directSourceFiles": [
+    "AP_15908_FBS_F0510_RT1.dem.tif"
+  ]
 }

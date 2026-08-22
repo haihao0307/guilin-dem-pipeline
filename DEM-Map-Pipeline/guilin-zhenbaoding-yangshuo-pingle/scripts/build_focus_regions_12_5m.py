@@ -78,6 +78,87 @@ def write_geotiff(path: Path, data: np.ndarray, template: Image.Image, x0: float
     Image.fromarray(data.astype(np.float32), mode="F").save(path, format="TIFF", compression="tiff_deflate", tiffinfo=tags)
 
 
+def verified_source_tiles(root: Path) -> list[Path]:
+    """Return bounded, locally verified DEM tiles that can fill mosaic extent gaps.
+
+    The mosaic is the authoritative merge, but its AOI crop can end before a focus
+    square.  Reading the original GeoTIFF tiles here preserves the measured 12.5 m
+    pixels instead of inventing values or upsampling a coarse raster.
+    """
+    candidates = [root / "data" / "raw" / "dem"]
+    # Keep the existing ASF cache in scope when this project was copied without the
+    # original raw tiles.  It is a fixed, explicit path rather than a broad search.
+    candidates.append(Path(r"C:\HaihaoDEM\ASF_v104_local\data\raw\dem"))
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for folder in candidates:
+        if not folder.exists():
+            continue
+        for path in sorted(folder.glob("*.tif")):
+            resolved = path.resolve()
+            if resolved in seen:
+                continue
+            try:
+                georef(path)
+            except Exception:
+                continue
+            seen.add(resolved)
+            out.append(path)
+    return out
+
+
+def fill_from_direct_sources(
+    crop: np.ndarray,
+    mask: np.ndarray,
+    bounds: list[float],
+    source_tiles: list[Path],
+) -> list[str]:
+    """Fill only currently missing target cells from intersecting 12.5 m tiles."""
+    if not source_tiles or not np.any(mask == 0):
+        return []
+    used: list[str] = []
+    target_x0, target_y_bottom, target_x1, target_y_top = bounds
+    for path in source_tiles:
+        sw, sh, sres, sx0, sy_top = georef(path)
+        if abs(sres - RESOLUTION) > 0.01:
+            continue
+        sx1, sy_bottom = sx0 + sw * sres, sy_top - sh * sres
+        if sx1 <= target_x0 or sx0 >= target_x1 or sy_bottom >= target_y_top or sy_top <= target_y_bottom:
+            continue
+        image = Image.open(path)
+        source = np.asarray(image, dtype=np.float32)
+        # Compute a compact target window from the projected intersection.
+        col0 = max(0, int(math.floor((max(target_x0, sx0) - target_x0) / RESOLUTION)))
+        col1 = min(crop.shape[1], int(math.ceil((min(target_x1, sx1) - target_x0) / RESOLUTION)))
+        row0 = max(0, int(math.floor((target_y_top - min(target_y_top, sy_top)) / RESOLUTION)))
+        row1 = min(crop.shape[0], int(math.ceil((target_y_top - max(target_y_bottom, sy_bottom)) / RESOLUTION)))
+        if col1 <= col0 or row1 <= row0:
+            continue
+        target_cols = np.arange(col0, col1, dtype=np.int64)
+        target_rows = np.arange(row0, row1, dtype=np.int64)
+        src_cols = np.rint((target_x0 + target_cols * RESOLUTION - sx0) / sres).astype(np.int64)
+        src_rows = np.rint((sy_top - (target_y_top - target_rows * RESOLUTION)) / sres).astype(np.int64)
+        valid_cols = (src_cols >= 0) & (src_cols < sw)
+        valid_rows = (src_rows >= 0) & (src_rows < sh)
+        if not valid_cols.any() or not valid_rows.any():
+            continue
+        dst_c = target_cols[valid_cols]
+        src_c = src_cols[valid_cols]
+        dst_r = target_rows[valid_rows]
+        src_r = src_rows[valid_rows]
+        values = source[np.ix_(src_r, src_c)]
+        valid = np.isfinite(values) & (values != NODATA)
+        existing = mask[np.ix_(dst_r, dst_c)] == 0
+        write = valid & existing
+        if not write.any():
+            continue
+        rows, cols = np.nonzero(write)
+        crop[dst_r[rows], dst_c[cols]] = values[rows, cols]
+        mask[dst_r[rows], dst_c[cols]] = 1
+        used.append(path.name)
+    return used
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -97,6 +178,7 @@ def main() -> int:
     site_assets = root / "site" / "public" / "terrain" / "assets" / "fine-regions"
     web_assets = root / "web" / "assets" / "fine-regions"
     output_dir = root / "outputs" / "fine_regions_12_5m"
+    source_tiles = verified_source_tiles(root)
     records = []
     for region_id, name, lon, lat, color in REGIONS:
         cx, cy = utm49(lon, lat)
@@ -116,6 +198,8 @@ def main() -> int:
             valid = (np.asarray(counts[src_r0:src_r1, src_c0:src_c1]) > 0) & np.isfinite(chunk) & (chunk != NODATA)
             crop[dst_r0:dst_r0 + chunk.shape[0], dst_c0:dst_c0 + chunk.shape[1]][valid] = chunk[valid]
             mask[dst_r0:dst_r0 + chunk.shape[0], dst_c0:dst_c0 + chunk.shape[1]][valid] = 1
+        actual_bounds = [x0 + col0 * resolution, y_top - row1 * resolution, x0 + col1 * resolution, y_top - row0 * resolution]
+        direct_sources = fill_from_direct_sources(crop, mask, actual_bounds, source_tiles)
         valid_values = crop[mask > 0]
         if valid_values.size == 0:
             raise RuntimeError(f"no valid pixels in focus region {region_id}")
@@ -132,7 +216,6 @@ def main() -> int:
         tif_path = output_dir / f"{region_id}_12_5m.tif"
         geotiff_crop = crop.copy()
         write_geotiff(tif_path, geotiff_crop, Image.open(base_path), x0 + col0 * resolution, y_top - row0 * resolution)
-        actual_bounds = [x0 + col0 * resolution, y_top - row1 * resolution, x0 + col1 * resolution, y_top - row0 * resolution]
         actual_area = pixel_width * pixel_height * resolution * resolution / 1_000_000.0
         valid_fraction = float(mask.mean())
         manifest = {
@@ -149,6 +232,7 @@ def main() -> int:
             "heightMeters": pixel_height * resolution,
             "gridWidth": pixel_width,
             "gridHeight": pixel_height,
+            "displayGridPolicy": "12.5m source pixels; browser may resample focus view to 2,400×2,400 for smoother display",
             "resolution": [RESOLUTION, RESOLUTION],
             "minimumElevation": minimum,
             "maximumElevation": maximum,
@@ -160,6 +244,8 @@ def main() -> int:
             "centerProjected": [cx, cy],
             "landmarks": [{"id": region_id, "name": name, "longitude": lon, "latitude": lat, "color": color, "gridU": 0.5, "gridV": 0.5, "elevationMeters": float(crop[pixel_height // 2, pixel_width // 2] if mask[pixel_height // 2, pixel_width // 2] else minimum)}],
             "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded",
+            "sourceCoveragePolicy": "mosaic-first; fill only NoData cells from verified 12.5m source GeoTIFF tiles when the mosaic extent is insufficient",
+            "directSourceFiles": direct_sources,
         }
         write_json(site_assets / region_id / "terrain-manifest.json", manifest)
         write_json(web_assets / region_id / "terrain-manifest.json", manifest)
