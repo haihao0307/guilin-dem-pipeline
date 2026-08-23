@@ -1,0 +1,53 @@
+name: Verify public Guilin v0.5 inspection website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/guilin-v050-external-verify.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify public HTML, runtime and data assets
+        run: |
+          set -euo pipefail
+          BASE="https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site"
+          fetch() {
+            local url="$1"
+            for attempt in 1 2 3 4 5; do
+              if curl --fail --location --silent --show-error --retry 2 "$url"; then return 0; fi
+              sleep 4
+            done
+            return 1
+          }
+          fetch "$BASE/guilin-v050-check/index.html" > /tmp/index.html
+          grep -q "桂林核心区生态地表恢复候选" /tmp/index.html
+          grep -q "桂林 v0.5 可视检查版" /tmp/index.html
+          fetch "$BASE/guilin-v050-check/runtime.js" > /tmp/runtime.js
+          test -s /tmp/runtime.js
+          fetch "$BASE/guilin-v050-check/manifest.json" > /tmp/manifest.json
+          python -m json.tool /tmp/manifest.json >/dev/null
+          fetch "$BASE/guilin-v050-check/assets/height-grid.u16" > /tmp/height.u16
+          test "$(stat -c%s /tmp/height.u16)" -gt 100000
+          fetch "$BASE/assets/ecology/v0.3.1/trees.bin" > /tmp/trees.bin
+          fetch "$BASE/assets/ecology/v0.3.1/shrubs.bin" > /tmp/shrubs.bin
+          fetch "$BASE/assets/ecology/v0.3.1/rice.bin" > /tmp/rice.bin
+          test -s /tmp/trees.bin
+          test -s /tmp/shrubs.bin
+          test -s /tmp/rice.bin
+
+      - name: Publish verified link in job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## 已验证的桂林 v0.5 可视检查网站
+
+          https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/guilin-v050-check/index.html
+          EOF
