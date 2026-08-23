@@ -667,14 +667,21 @@ async function main() {
         const recordReachable = async (locator, label, panel) => {
           await locator.scrollIntoViewIfNeeded();
           await locator.click({ trial: true });
-          const box = await locator.boundingBox();
-          const centerHit = await locator.evaluate((element) => {
-            const rect = element.getBoundingClientRect();
+          const interaction = await locator.evaluate((element) => {
+            const target = element.matches('input[type="checkbox"], input[type="radio"]')
+              ? element.closest('label') || element
+              : element;
+            const rect = target.getBoundingClientRect();
             const top = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-            return top === element || element.contains(top);
+            return {
+              box: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+              centerHit: top === target || target.contains(top),
+              tagName: element.tagName,
+              inputType: element.getAttribute('type'),
+            };
           });
-          requireValue(box && box.width >= 24 && box.height >= 18 && centerHit, `Mobile control is obscured or unreachable: ${label}`, { box, centerHit, panel });
-          reachable.push({ selector: label, panel, box });
+          requireValue(interaction.box.width >= 24 && interaction.box.height >= 18 && interaction.centerHit, `Mobile control is obscured or unreachable: ${label}`, { interaction, panel });
+          reachable.push({ selector: label, panel, ...interaction });
         };
         for (const selector of ['#panelToggle', '[data-workspace]', '[data-core]', '#touchPad [data-move]']) {
           const controls = page.locator(selector);
