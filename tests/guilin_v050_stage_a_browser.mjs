@@ -183,6 +183,9 @@ async function writeReports(report, outputDir) {
     `- Result: ${report.ok ? 'PASS' : 'FAIL'}`,
     `- Profile: ${report.profile}`,
     `- Browser: ${report.browser?.version || 'not launched'}`,
+    `- Source head: ${report.sourceHeadSha || 'local/unset'}`,
+    `- Tested commit: ${report.testedCommitSha || 'local/unset'}`,
+    `- Workflow run: ${report.workflow?.runId || 'local/unset'}`,
     `- Base URL: ${report.baseUrl}`,
     `- Core screenshots: ${report.summary.coreScreenshotCount}/12`,
     `- HTTP 404: ${report.summary.http404Count}`,
@@ -203,6 +206,14 @@ async function main() {
     completedAt: null,
     ok: false,
     profile: options.profile,
+    sourceHeadSha: process.env.GUILIN_SOURCE_HEAD_SHA || null,
+    testedCommitSha: process.env.GUILIN_TESTED_COMMIT_SHA || process.env.GITHUB_SHA || null,
+    workflow: {
+      runId: process.env.GITHUB_RUN_ID || null,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+      job: process.env.GITHUB_JOB || null,
+      repository: process.env.GITHUB_REPOSITORY || null,
+    },
     baseUrl: options.baseUrl,
     outputDirectory: options.outputDir,
     executablePath: null,
@@ -349,8 +360,62 @@ async function main() {
       return surface;
     });
 
+    await page.evaluate(() => {
+      const handles = window.__GUILIN_SHARED_RUNTIME_HANDLES__;
+      window.__GUILIN_STAGE_A_INITIAL_HANDLES__ = handles ? {
+        root: handles,
+        canvas: handles.canvas,
+        camera: handles.camera,
+        store: handles.store,
+      } : null;
+    });
+
+    await check('overall-manifest-truth-and-fallback', async () => {
+      await page.evaluate(() => {
+        window.GuilinWorkbench.selectWorkspace('overall');
+        window.GuilinWorkbench.setCameraHeight('overview');
+      });
+      await page.waitForTimeout(500);
+      const truth = await page.evaluate(() => {
+        const manifest = window.GuilinWorkbench.getManifest();
+        const diagnostics = window.GuilinWorkbench.getDiagnostics();
+        return {
+          releaseStatus: manifest.releaseStatus,
+          taskAreaSquareKilometers: manifest.taskAoi?.areaSquareKilometers,
+          webContextAreaSquareKilometers: manifest.webContext?.areaSquareKilometers,
+          continuous12_5mComplete: manifest.coverage?.continuous12_5mComplete,
+          gapAreaSquareKilometers: manifest.coverage?.gapAreaSquareKilometers,
+          fallbackActive: manifest.fallback?.active,
+          fallbackSourceResolutionMeters: manifest.fallback?.sourceResolutionMeters,
+          fallbackWebSpacingMeters: manifest.fallback?.rasterSpacingMeters,
+          mayClaimComplete12_5m: manifest.fallback?.mayClaimComplete12_5m,
+          dataset: diagnostics.dataset,
+          visibleText: document.querySelector('[data-panel="overall"]')?.textContent || '',
+        };
+      });
+      requireValue(truth.releaseStatus === 'draft-publication-blocked', 'Release status is not Draft/publication blocked', truth);
+      requireValue(truth.taskAreaSquareKilometers === 18831.3276779, 'Exact task AOI area is missing', truth);
+      requireValue(truth.webContextAreaSquareKilometers === 32575.041, 'Web context area is missing', truth);
+      requireValue(truth.continuous12_5mComplete === false && truth.mayClaimComplete12_5m === false, 'The UI may claim complete 12.5 m coverage', truth);
+      requireValue(Math.abs(truth.gapAreaSquareKilometers - 60.45671875) < 1e-9, 'The 12.5 m gap area is not exact', truth);
+      requireValue(truth.fallbackActive === true && truth.fallbackSourceResolutionMeters === 30, 'The 30 m source fallback is not explicit', truth);
+      requireValue(truth.dataset?.sourceResolutionMeters === 30 && truth.dataset?.gridWidth === 1452 && truth.dataset?.gridHeight === 2048, 'Overall web dataset truth is inconsistent', truth);
+      requireValue(truth.dataset?.rasterSampling?.method === 'bilinear', 'Overall web downsampling method is not declared', truth);
+      requireValue(truth.visibleText.includes('60.4567') && truth.visibleText.includes('30 m') && truth.visibleText.includes('104.72'), 'Visible manifest truth omits the gap, source resolution, or web spacing', truth);
+      const image = await screenshot('overall-manifest-truth.png', 'overall-manifest-truth');
+      if (options.profile === 'mobile') await page.locator('#closePanel').click();
+      return { ...truth, screenshot: image.artifact.file };
+    });
+
     await check('four-core-manifests-and-review-heights', async () => {
       for (const coreId of CORE_IDS) {
+        const beforeSwitch = await page.evaluate(() => {
+          const ecology = window.GuilinWorkbench.getDiagnostics().ecology;
+          return {
+            generatedInstanceCount: Number(ecology?.generatedInstanceCount || 0),
+            releasedDenseInstanceCount: Number(ecology?.releasedDenseInstanceCount || 0),
+          };
+        });
         await page.locator(`[data-core="${coreId}"]`).click();
         await page.evaluate(() => window.GuilinWorkbench.waitForIdle());
         await page.waitForFunction((expectedId) => {
@@ -375,12 +440,36 @@ async function main() {
             widthMeters: manifest.widthMeters,
             heightMeters: manifest.heightMeters,
             sourceStatus: manifest.sourceStatus || manifest.status,
+            heightSha256: manifest.heightSha256,
+            maskSha256: manifest.maskSha256,
+            sourceMosaicId: manifest.sourceMosaic?.mosaicId,
+            sourceMosaicGridOriginProjected: manifest.sourceMosaic?.gridOriginProjected,
+            ecology: diagnostics.ecology,
+            runtimeIdentityStable: Boolean(
+              window.__GUILIN_STAGE_A_INITIAL_HANDLES__ &&
+              window.__GUILIN_SHARED_RUNTIME_HANDLES__ === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.root &&
+              window.__GUILIN_SHARED_RUNTIME_HANDLES__.canvas === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.canvas &&
+              window.__GUILIN_SHARED_RUNTIME_HANDLES__.camera === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.camera &&
+              window.__GUILIN_SHARED_RUNTIME_HANDLES__.store === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.store
+            ),
             activeButton: document.querySelector(`[data-core="${manifest.id}"]`)?.classList.contains('active') || false,
           };
         });
         requireValue(core.activeCoreId === coreId && core.datasetId === coreId && core.manifestId === coreId, `Active core identity mismatch for ${coreId}`, core);
         requireValue(core.rasterWidth === 800 && core.rasterHeight === 800, `${coreId} is not backed by an 800x800 manifest`, core);
         requireValue(core.resolutionMeters === 12.5 && core.widthMeters === 10_000 && core.heightMeters === 10_000, `${coreId} manifest has the wrong metric grid`, core);
+        requireValue(core.sourceMosaicId === 'verified-12.5m-mosaic-all-10', `${coreId} did not load the common 12.5 m mosaic lineage`, core);
+        requireValue(JSON.stringify(core.sourceMosaicGridOriginProjected) === JSON.stringify([378787.5, 2906250]), `${coreId} did not preserve the common pixel origin`, core);
+        requireValue(typeof core.heightSha256 === 'string' && typeof core.maskSha256 === 'string', `${coreId} did not load distinct DEM/mask asset identities`, core);
+        requireValue(core.ecology?.datasetId === coreId && core.ecology?.activeCoreId === coreId, `${coreId} ecology runtime identity did not switch`, core);
+        requireValue(core.ecology?.densityPolicy === 'active-core-dense' && core.ecology?.generatedInstanceCount > 0, `${coreId} dense ecology asset did not become active`, core);
+        requireValue(core.ecology?.rootPinned === true && core.ecology?.hydrologyExclusionAvailable === true && core.ecology?.channelVegetationCount === 0, `${coreId} ecology root/water exclusion contract failed`, core);
+        requireValue(
+          Number(core.ecology?.releasedDenseInstanceCount || 0) >= beforeSwitch.releasedDenseInstanceCount + beforeSwitch.generatedInstanceCount,
+          `${coreId} did not release the dense instances from the dataset it left`,
+          { beforeSwitch, afterSwitch: core.ecology },
+        );
+        requireValue(core.runtimeIdentityStable, `${coreId} replaced the shared canvas, camera, or store`, core);
         requireValue(core.activeButton, `${coreId} button did not become active`, core);
         core.screenshots = [];
         for (const height of REVIEW_HEIGHTS) {
@@ -393,6 +482,8 @@ async function main() {
           }, height);
           await page.waitForTimeout(850);
           const camera = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().camera);
+          requireValue(camera.inspectionView?.datasetId === coreId, `${coreId} did not select its own inspection viewpoint`, camera);
+          requireValue(Number(camera.inspectionView?.minimumClearanceMetersAt1_7m) > 0.35, `${coreId} inspection ray remains terrain-occluded at 1.7 m`, camera);
           const heightLabel = String(height).replace('.', '_');
           const image = await screenshot(`core-${coreId}-${heightLabel}m.png`, 'core-review', { coreId, heightMeters: height });
           const entry = { coreId, heightMeters: height, camera, file: image.artifact.file };
@@ -402,14 +493,137 @@ async function main() {
         report.cores.push(core);
       }
       requireValue(report.coreScreenshots.length === 12, 'Exactly 12 four-core height screenshots are required', { count: report.coreScreenshots.length });
+      requireValue(new Set(report.cores.map((core) => core.heightSha256)).size === CORE_IDS.length, 'Four core buttons did not load four distinct DEM assets', report.cores);
       return { cores: report.cores, screenshotCount: report.coreScreenshots.length };
     });
 
+    await check('independent-hydrology-summer-winter-and-safety', async () => {
+      await page.evaluate(() => {
+        window.GuilinWorkbench.setCameraHeight(50);
+        window.GuilinWorkbench.selectWorkspace('hydrology');
+      });
+      await page.locator('#showCenterlines').check();
+      await page.locator('#showBreaks').check();
+      for (const [selector, value] of [['#waterLevel', '1.35'], ['#waterWidth', '1.25']]) {
+        await page.locator(selector).evaluate((input, nextValue) => {
+          input.value = nextValue;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, value);
+      }
+      await page.locator('[data-water-season="summer"]').click();
+      await page.waitForFunction(() => window.GuilinWorkbench.getDiagnostics().hydrology?.lastRender?.waterStage === 'summer');
+      await page.waitForTimeout(850);
+      const summer = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().hydrology);
+      const summerImage = await screenshot('hydrology-summer-segments.png', 'hydrology-summer');
+      await page.locator('[data-water-season="winter"]').click();
+      await page.waitForFunction(() => window.GuilinWorkbench.getDiagnostics().hydrology?.lastRender?.waterStage === 'winter');
+      await page.waitForTimeout(850);
+      const winter = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().hydrology);
+      const winterImage = await screenshot('hydrology-winter-segments.png', 'hydrology-winter');
+      const safety = winter.geometrySafety || {};
+      requireValue(summer.source?.classSourceParts?.lijiang > 0 && summer.source?.classSourceParts?.xiangjiang > 0, 'Independent Li/Xiang source systems are missing', summer.source);
+      requireValue(summer.lastRender?.centerlineBatches > 0 && summer.lastRender?.surfaceBatches > 0 && summer.lastRender?.bankBatches > 0 && summer.lastRender?.flowBatches > 0 && summer.lastRender?.breakpointBatches > 0, 'Hydrology did not render all independent feature classes', summer.lastRender);
+      requireValue(safety.sourcePartsRemainIndependent === true && safety.clipRunsRemainIndependent === true, 'Hydrology source parts were merged', safety);
+      requireValue(safety.crossSegmentConnections === 0 && safety.bridgeTriangles === 0 && safety.outOfBoundsVertices === 0, 'Hydrology introduced cross-part or invalid geometry', safety);
+      requireValue(summer.lastRender?.levelOffsetM > winter.lastRender?.levelOffsetM, 'Summer water surface is not higher than winter water surface', { summer: summer.lastRender, winter: winter.lastRender });
+      requireValue(summer.lastRender?.surfaceTriangles > 0 && winter.lastRender?.surfaceTriangles > 0, 'Real water-surface geometry is missing', { summer: summer.lastRender, winter: winter.lastRender });
+      requireValue(summerImage.artifact.sha256 !== winterImage.artifact.sha256, 'Summer/winter hydrology did not alter the rendered viewport');
+      report.hydrology = {
+        summer: summer.lastRender,
+        winter: winter.lastRender,
+        source: summer.source,
+        continuity: summer.continuity,
+        geometrySafety: safety,
+        summerScreenshot: summerImage.artifact.file,
+        winterScreenshot: winterImage.artifact.file,
+      };
+      return report.hydrology;
+    });
+
+    await check('ecology-seasons-years-wind-and-water-exclusion', async () => {
+      await page.evaluate(() => window.GuilinWorkbench.selectWorkspace('ecology'));
+      const exercised = { seasons: [], years: [] };
+      for (const season of ['spring', 'summer', 'autumn', 'winter']) {
+        await page.locator('#season').selectOption(season);
+        const stateSeason = await page.evaluate(() => window.GuilinWorkbench.getState().ecology.season);
+        requireValue(stateSeason === season, `Season control did not reach shared state: ${season}`, { stateSeason });
+        exercised.seasons.push(season);
+      }
+      for (const year of ['1940', '1941', '1942', '1943', '1944', '1945']) {
+        await page.locator('#year').selectOption(year);
+        const stateYear = await page.evaluate(() => window.GuilinWorkbench.getState().ecology.year);
+        requireValue(stateYear === Number(year), `Year control did not reach shared state: ${year}`, { stateYear });
+        exercised.years.push(Number(year));
+      }
+      await page.locator('#season').selectOption('summer');
+      await page.locator('#year').selectOption('1942');
+      for (const [selector, value] of [['#windDirection', '135'], ['#windSpeed', '4.2'], ['#gustStrength', '0.28']]) {
+        await page.locator(selector).evaluate((input, nextValue) => {
+          input.value = nextValue;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, value);
+      }
+      await page.waitForFunction(() => {
+        const ecology = window.GuilinWorkbench.getDiagnostics().ecology;
+        return ecology?.season === 'summer' && ecology?.year === 1942 && Math.abs(ecology?.windDirectionDegrees - 135) < 0.1;
+      });
+      await page.waitForTimeout(850);
+      const summer = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().ecology);
+      const summerImage = await screenshot('ecology-summer-1942-wind.png', 'ecology-summer');
+      await page.locator('#season').selectOption('winter');
+      await page.locator('#year').selectOption('1945');
+      for (const [selector, value] of [['#windDirection', '315'], ['#windSpeed', '12'], ['#gustStrength', '0.72']]) {
+        await page.locator(selector).evaluate((input, nextValue) => {
+          input.value = nextValue;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, value);
+      }
+      await page.waitForFunction(() => {
+        const ecology = window.GuilinWorkbench.getDiagnostics().ecology;
+        return ecology?.season === 'winter' && ecology?.year === 1945 && Math.abs(ecology?.windDirectionDegrees - 315) < 0.1;
+      });
+      await page.waitForTimeout(850);
+      const winter = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().ecology);
+      const winterImage = await screenshot('ecology-winter-1945-wind.png', 'ecology-winter');
+      requireValue(summer.activeCoreId === 'yangshuo-county-seat' && winter.activeCoreId === 'yangshuo-county-seat', 'Ecology lost the active core identity', { summer, winter });
+      requireValue(summer.rootPinned === true && winter.rootPinned === true && summer.rootHeightSource === 'sampleHeight', 'Ecology roots are not pinned to current terrain', { summer, winter });
+      requireValue(summer.hydrologyExclusionAvailable === true && winter.channelVegetationCount === 0, 'Hydrology exclusion did not protect the river channel', { summer, winter });
+      requireValue(JSON.stringify(summer.supportedSeasons) === JSON.stringify(['spring', 'summer', 'autumn', 'winter']), 'Full four-season support is missing', summer);
+      requireValue(JSON.stringify(summer.supportedYears) === JSON.stringify([1940, 1941, 1942, 1943, 1944, 1945]), '1940 to 1945 support is incomplete', summer);
+      requireValue(summerImage.artifact.sha256 !== winterImage.artifact.sha256, 'Season/year/wind changes did not alter the rendered viewport');
+      report.ecology = {
+        exercised,
+        summer,
+        winter,
+        summerScreenshot: summerImage.artifact.file,
+        winterScreenshot: winterImage.artifact.file,
+      };
+      return report.ecology;
+    });
+
     await check('gaea-browser-preview-before-after', async () => {
-      await page.locator('[data-workspace="gaea"]').click();
+      await page.evaluate(() => {
+        window.GuilinWorkbench.setCameraHeight(50);
+        window.GuilinWorkbench.selectWorkspace('gaea');
+      });
       await page.waitForFunction(() => document.querySelector('[data-panel="gaea"]')?.classList.contains('active'));
       await page.evaluate(() => { document.querySelector('.controller-scroll').scrollTop = 0; });
-      await page.waitForTimeout(300);
+      await page.locator('[data-gaea-mode="worker"]').click();
+      await page.locator('#gaeaBuildButton').click();
+      await page.waitForFunction(() => {
+        const gaea = window.GuilinWorkbench.getDiagnostics().gaea;
+        return gaea?.worker?.status === 'unavailable' && gaea?.build?.status === 'unavailable';
+      });
+      const unavailable = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
+      requireValue(unavailable.worker?.reason === 'worker-not-configured' && unavailable.build?.reason === 'worker-not-configured', 'Unconfigured Worker did not expose truthful health/build failure information', unavailable);
+      await page.locator('#gaeaResetButton').click();
+      await page.waitForFunction(() => {
+        const gaea = window.GuilinWorkbench.getDiagnostics().gaea;
+        return gaea?.build?.status === 'idle' && gaea?.preview?.runtimeParameters?.verticalEx === 1.6;
+      });
+      const reset = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
+      await page.locator('[data-gaea-mode="browser"]').click();
+      await page.waitForTimeout(450);
       const beforeState = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
       const beforeImage = await screenshot('gaea-before.png', 'gaea-before');
       const revision = Number(beforeState.preview?.revision || 0);
@@ -434,6 +648,8 @@ async function main() {
       requireValue(afterState.preview?.authoritativeElevationChanged === false, 'Browser preview claimed to change authoritative elevation', afterState);
       requireValue(Math.abs(afterState.preview?.runtimeParameters?.verticalEx - 2.2) < 0.001, 'GAEA vertical preview parameter did not reach the shared runtime', afterState);
       report.gaea = {
+        unavailable,
+        reset,
         before: beforeState,
         after: afterState,
         beforeScreenshot: beforeImage.artifact.file,
@@ -448,37 +664,46 @@ async function main() {
         requireValue(viewport?.width === 390 && viewport?.height === 844, 'Mobile viewport is not 390x844', viewport);
         if (await page.locator('#controller.open').count()) await page.locator('#closePanel').click();
         const reachable = [];
-        for (const selector of [
-          '[data-workspace="gaea"]',
-          '[data-core="yangshuo-county-seat"]',
-          '#touchPad [data-move="forward"]',
-        ]) {
-          const locator = page.locator(selector);
+        const recordReachable = async (locator, label, panel) => {
           await locator.scrollIntoViewIfNeeded();
           await locator.click({ trial: true });
           const box = await locator.boundingBox();
-          requireValue(box && box.width > 0 && box.height > 0, `Mobile control is not reachable while the panel is closed: ${selector}`, box);
-          reachable.push({ selector, panel: 'closed', box });
+          const centerHit = await locator.evaluate((element) => {
+            const rect = element.getBoundingClientRect();
+            const top = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            return top === element || element.contains(top);
+          });
+          requireValue(box && box.width >= 24 && box.height >= 18 && centerHit, `Mobile control is obscured or unreachable: ${label}`, { box, centerHit, panel });
+          reachable.push({ selector: label, panel, box });
+        };
+        for (const selector of ['#panelToggle', '[data-workspace]', '[data-core]', '#touchPad [data-move]']) {
+          const controls = page.locator(selector);
+          const count = await controls.count();
+          for (let index = 0; index < count; index += 1) {
+            await recordReachable(controls.nth(index), `${selector}:nth(${index})`, 'closed');
+          }
         }
-        const toggleBox = await page.locator('#panelToggle').boundingBox();
-        requireValue(toggleBox, 'Mobile controller toggle is not reachable');
-        await page.touchscreen.tap(toggleBox.x + toggleBox.width / 2, toggleBox.y + toggleBox.height / 2);
-        await page.waitForFunction(() => document.querySelector('#controller')?.classList.contains('open'));
-        const reachableSelectors = [
-          '#verticalEx',
-          '[data-camera="1.7m"]',
-          '#closePanel',
-        ];
-        for (const selector of reachableSelectors) {
-          const locator = page.locator(selector);
-          await locator.scrollIntoViewIfNeeded();
-          await locator.click({ trial: true });
-          const box = await locator.boundingBox();
-          requireValue(box && box.width > 0 && box.height > 0, `Mobile control is not reachable: ${selector}`, box);
-          reachable.push({ selector, panel: 'open', box });
+        const panelControlCounts = {};
+        for (const workspace of ['overall', 'gaea', 'hydrology', 'ecology']) {
+          await page.evaluate((name) => window.GuilinWorkbench.selectWorkspace(name), workspace);
+          await page.waitForFunction((name) => (
+            document.querySelector('#controller')?.classList.contains('open') &&
+            document.querySelector(`[data-panel="${name}"]`)?.classList.contains('active')
+          ), workspace);
+          const touchPadDisplay = await page.locator('#touchPad').evaluate((element) => getComputedStyle(element).display);
+          requireValue(touchPadDisplay === 'none', `Touch pad overlaps the open ${workspace} controller`, { touchPadDisplay });
+          const controls = page.locator(`#controller [data-panel="${workspace}"] button, #controller [data-panel="${workspace}"] input, #controller [data-panel="${workspace}"] select, #controller .camera-section button, #closePanel`);
+          panelControlCounts[workspace] = await controls.count();
+          for (let index = 0; index < panelControlCounts[workspace]; index += 1) {
+            await recordReachable(controls.nth(index), `${workspace}:control(${index})`, 'open');
+          }
+          await page.locator('#closePanel').click();
+          await page.waitForFunction(() => !document.querySelector('#controller')?.classList.contains('open'));
         }
-        const closeBox = await page.locator('#closePanel').boundingBox();
-        await page.touchscreen.tap(closeBox.x + closeBox.width / 2, closeBox.y + closeBox.height / 2);
+        requireValue(Object.values(panelControlCounts).every((count) => count > 0), 'A mobile workspace exposed no reachable controls', panelControlCounts);
+
+        await page.evaluate(() => window.GuilinWorkbench.selectWorkspace('overall'));
+        await page.locator('#closePanel').click();
         await page.waitForFunction(() => !document.querySelector('#controller')?.classList.contains('open'));
 
         const forward = page.locator('#touchPad [data-move="forward"]');
@@ -487,6 +712,11 @@ async function main() {
         const beforeText = await page.locator('#cameraDiagnostics').textContent();
         const beforeCoordinate = projectedCoordinate(beforeText);
         requireValue(beforeCoordinate, 'Could not read the camera coordinate before touch movement', { beforeText });
+        const beforeWorkspace = await page.evaluate(() => ({
+          state: window.GuilinWorkbench.getState().workspace,
+          active: document.querySelector('[data-workspace].active')?.dataset.workspace || null,
+          core: window.GuilinWorkbench.getDiagnostics().activeCoreId,
+        }));
         const beforeImage = await screenshot('mobile-touch-before.png', 'mobile-touch-before');
         const cdp = await context.newCDPSession(page);
         const point = {
@@ -512,14 +742,23 @@ async function main() {
           afterCoordinate.easting - beforeCoordinate.easting,
           afterCoordinate.northing - beforeCoordinate.northing,
         );
+        const afterWorkspace = await page.evaluate(() => ({
+          state: window.GuilinWorkbench.getState().workspace,
+          active: document.querySelector('[data-workspace].active')?.dataset.workspace || null,
+          core: window.GuilinWorkbench.getDiagnostics().activeCoreId,
+        }));
         const afterImage = await screenshot('mobile-touch-after.png', 'mobile-touch-after');
         requireValue(distanceMeters >= 1, 'Touch hold did not move the shared camera', { beforeCoordinate, afterCoordinate, distanceMeters });
+        requireValue(JSON.stringify(beforeWorkspace) === JSON.stringify(afterWorkspace), 'Touch movement changed the workspace or active core', { beforeWorkspace, afterWorkspace });
         requireValue(beforeImage.artifact.sha256 !== afterImage.artifact.sha256, 'Touch movement did not alter the rendered viewport');
         report.mobile = {
           viewport,
           reachable,
+          panelControlCounts,
           beforeCoordinate,
           afterCoordinate,
+          beforeWorkspace,
+          afterWorkspace,
           distanceMeters,
           beforeScreenshot: beforeImage.artifact.file,
           afterScreenshot: afterImage.artifact.file,
@@ -533,6 +772,13 @@ async function main() {
       const finalSurface = await page.evaluate(() => ({
         iframeCount: document.querySelectorAll('iframe').length,
         canvasCount: document.querySelectorAll('canvas').length,
+        runtimeIdentityStable: Boolean(
+          window.__GUILIN_STAGE_A_INITIAL_HANDLES__ &&
+          window.__GUILIN_SHARED_RUNTIME_HANDLES__ === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.root &&
+          window.__GUILIN_SHARED_RUNTIME_HANDLES__.canvas === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.canvas &&
+          window.__GUILIN_SHARED_RUNTIME_HANDLES__.camera === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.camera &&
+          window.__GUILIN_SHARED_RUNTIME_HANDLES__.store === window.__GUILIN_STAGE_A_INITIAL_HANDLES__.store
+        ),
       }));
       const counts = {
         http404: report.events.http404.length,
@@ -541,6 +787,7 @@ async function main() {
         pageErrors: report.events.pageErrors.length,
       };
       requireValue(finalSurface.iframeCount === 0 && finalSurface.canvasCount === 1, 'Unified surface changed during interaction', finalSurface);
+      requireValue(finalSurface.runtimeIdentityStable, 'Shared runtime object identities changed during Stage A interactions', finalSurface);
       requireValue(Object.values(counts).every((count) => count === 0), 'HTTP or runtime error channels are not zero', {
         counts,
         events: report.events,

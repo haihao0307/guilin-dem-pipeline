@@ -112,6 +112,9 @@ jobs:
 
       - name: Run Stage A browser profile with repository server
         shell: pwsh
+        env:
+          GUILIN_SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GUILIN_TESTED_COMMIT_SHA: ${{ github.sha }}
         run: |
           $output = "_stage_a_browser_qa/${{ matrix.profile }}"
           New-Item -ItemType Directory -Force -Path $output | Out-Null

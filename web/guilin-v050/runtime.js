@@ -960,7 +960,94 @@ const camera = {
   far: 500000,
   viewProjection: Mat4.identity(),
   altitudeAboveGround: 0,
+  inspectionView: null,
 };
+
+function scoreInspectionRay(dataset, x, z, azimuth) {
+  const originHeight = approximateVisualOffset(dataset, x, z);
+  if (originHeight == null) return null;
+  const forward = [-Math.sin(azimuth), -Math.cos(azimuth)];
+  const baseStep = Math.max(12.5, Math.min(32, Math.max(...dataset.rasterSpacingMeters)));
+  const distances = [1, 2, 4, 8, 16, 28].map((multiplier) => baseStep * multiplier);
+  const rises = [];
+  for (const distance of distances) {
+    const sample = approximateVisualOffset(
+      dataset,
+      x + forward[0] * distance,
+      z + forward[1] * distance,
+    );
+    if (sample == null) return null;
+    rises.push(sample - originHeight);
+  }
+  const clearances = rises.map((rise, index) => 1.7 + distances[index] * 0.004 - rise);
+  const minimumClearance = Math.min(...clearances);
+  const maximumRise = Math.max(...rises);
+  const maximumDrop = Math.max(0, -Math.min(...rises));
+  const nearRise = Math.max(...rises.slice(0, 3));
+  const occlusionPenalty = Math.max(0, 0.65 - minimumClearance) * 260;
+  const nearSlopePenalty = Math.max(0, nearRise + 0.15) * 18;
+  const cliffPenalty = Math.max(0, maximumDrop - 95) * 0.6;
+  return {
+    azimuth,
+    forward,
+    distances,
+    rises,
+    minimumClearanceMetersAt1_7m: minimumClearance,
+    maximumTerrainRiseMeters: maximumRise,
+    maximumTerrainDropMeters: maximumDrop,
+    score: occlusionPenalty + nearSlopePenalty + cliffPenalty,
+  };
+}
+
+function chooseInspectionView(dataset) {
+  const spanX = Math.min(2200, dataset.widthMeters * 0.22);
+  const spanZ = Math.min(2200, dataset.heightMeters * 0.22);
+  const offsets = [-1, -0.5, 0, 0.5, 1];
+  let best = null;
+  for (const xScale of offsets) {
+    for (const zScale of offsets) {
+      const x = xScale * spanX;
+      const z = zScale * spanZ;
+      const centerPenalty = Math.hypot(x / Math.max(spanX, 1), z / Math.max(spanZ, 1)) * 0.45;
+      for (let direction = 0; direction < 16; direction += 1) {
+        const ray = scoreInspectionRay(dataset, x, z, direction / 16 * Math.PI * 2);
+        if (!ray) continue;
+        const score = ray.score + centerPenalty;
+        if (!best || score < best.score) best = { datasetId: dataset.id, x, z, ...ray, score };
+      }
+    }
+  }
+  if (best) return best;
+  return {
+    datasetId: dataset.id,
+    x: 0,
+    z: 0,
+    azimuth: camera.desiredAzimuth,
+    forward: [-Math.sin(camera.desiredAzimuth), -Math.cos(camera.desiredAzimuth)],
+    distances: [],
+    rises: [],
+    minimumClearanceMetersAt1_7m: null,
+    maximumTerrainRiseMeters: null,
+    maximumTerrainDropMeters: null,
+    score: null,
+  };
+}
+
+function applyInspectionView(dataset, force = false) {
+  if (!dataset) return null;
+  if (!force && camera.inspectionView?.datasetId === dataset.id) return camera.inspectionView;
+  const view = chooseInspectionView(dataset);
+  camera.target[0] = camera.desiredTarget[0] = view.x;
+  camera.target[2] = camera.desiredTarget[2] = view.z;
+  camera.azimuth = camera.desiredAzimuth = view.azimuth;
+  const bounds = dataset.projectedBounds;
+  camera.inspectionView = {
+    ...view,
+    projectedEasting: (bounds[0] + bounds[2]) / 2 + view.x,
+    projectedNorthing: (bounds[1] + bounds[3]) / 2 - view.z,
+  };
+  return camera.inspectionView;
+}
 
 function cameraProjectedPosition(dataset) {
   if (!dataset || !dataset.projectedBounds) return null;
@@ -1001,7 +1088,9 @@ function updateCamera(dataset, dt) {
     const lookX = clamp(camera.target[0] + forward[0] * lookDistance, -dataset.widthMeters / 2, dataset.widthMeters / 2);
     const lookZ = clamp(camera.target[2] + forward[1] * lookDistance, -dataset.heightMeters / 2, dataset.heightMeters / 2);
     const lookGround = approximateVisualOffset(dataset, lookX, lookZ) ?? targetHeight;
-    center = [lookX, lookGround + Math.min(1.55, clearance * 0.08), lookZ];
+    center = clearance <= 2
+      ? [lookX, targetHeight + clearance * 0.94, lookZ]
+      : [lookX, lookGround + Math.min(1.55, clearance * 0.08), lookZ];
     camera.altitudeAboveGround = clearance;
     camera.near = clearance <= 2 ? 0.06 : Math.max(0.12, clearance * 0.015);
   }
@@ -1037,7 +1126,9 @@ function setCameraMode(mode) {
     camera.mode = 'inspection';
     camera.reviewHeight = height;
     camera.desiredElevation = 0.08;
+    applyInspectionView(dataset);
     byId('cameraModeLabel').textContent = height + ' m 观察';
+    setStatus(dataset.name + ' · ' + height + ' m 地面检查视点', 'ok');
   }
   document.querySelectorAll('[data-camera]').forEach((button) => {
     button.classList.toggle('active', button.dataset.camera === mode);
@@ -1389,6 +1480,7 @@ async function switchDataset(id, options = {}) {
       camera.target[0] = camera.desiredTarget[0] = 0;
       camera.target[2] = camera.desiredTarget[2] = 0;
     }
+    if (camera.mode === 'inspection') applyInspectionView(dataset, true);
     if (camera.mode === 'overview') {
       camera.distance = camera.desiredDistance = Math.max(dataset.widthMeters, dataset.heightMeters) * 1.08;
     }
@@ -1592,8 +1684,8 @@ function bindUi() {
   });
   byId('gaeaBuildButton').addEventListener('click', async () => {
     if (store.state.gaea.requestedMode === 'worker') {
-      const health = await gaeaBridge.health();
-      if (health.ok) await gaeaBridge.build({ parameters: store.state.gaea.parameters });
+      await gaeaBridge.health();
+      await gaeaBridge.build({ parameters: store.state.gaea.parameters });
     } else {
       setGaeaParameters({ ...store.state.gaea.parameters });
       onGaeaStatus({ phase: 'preview', status: 'ready', revision: store.state.gaea.preview?.revision || 0 });
@@ -1657,7 +1749,7 @@ function bindUi() {
       store.state.ecology[id] = Number(event.target.value);
       store.setState({ ecology: { ...store.state.ecology } });
       updateRangeOutput(id);
-      if (id === 'forestDensity') scheduleEcologyRefresh();
+      scheduleEcologyRefresh();
     });
   }
   for (const id of ['season', 'year']) {
@@ -1776,6 +1868,15 @@ function updateDiagnostics() {
       reviewHeightMeters: camera.reviewHeight,
       altitudeAboveGroundMeters: camera.altitudeAboveGround,
       objectIdentity: 'shared-camera-1',
+      inspectionView: camera.inspectionView ? {
+        datasetId: camera.inspectionView.datasetId,
+        projectedEasting: camera.inspectionView.projectedEasting,
+        projectedNorthing: camera.inspectionView.projectedNorthing,
+        azimuthDegrees: camera.inspectionView.azimuth / Math.PI * 180,
+        minimumClearanceMetersAt1_7m: camera.inspectionView.minimumClearanceMetersAt1_7m,
+        maximumTerrainRiseMeters: camera.inspectionView.maximumTerrainRiseMeters,
+        score: camera.inspectionView.score,
+      } : null,
     },
     gaea: {
       mode: store.state.gaea.mode,
@@ -1844,6 +1945,12 @@ async function initialise() {
   });
   await switchDataset('overall', { initial: true });
   await gaeaBridge.health({ force: false, timeoutMs: 800 });
+
+  window.__GUILIN_SHARED_RUNTIME_HANDLES__ = Object.freeze({
+    canvas: ui.canvas,
+    camera,
+    store,
+  });
 
   window.GuilinWorkbench = Object.freeze({
     getState: () => structuredClone(store.state),
