@@ -7,10 +7,15 @@ on:
       - main
     paths:
       - .github/workflows/guilin-v050-check-preview.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - preview/guilin-v050-check-trigger.json
   workflow_dispatch:
 
 concurrency:
-  group: guilin-v050-check-preview
+  group: guilin-v050-check-preview-${{ github.event.pull_request.number || 'main' }}
   cancel-in-progress: true
 
 permissions:
@@ -105,11 +110,13 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Checkout repository to record successful deployment
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/checkout@v6
         with:
           ref: main
 
       - name: Record public inspection URL and deployment SHA
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
