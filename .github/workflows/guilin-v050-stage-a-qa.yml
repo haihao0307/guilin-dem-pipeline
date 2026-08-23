@@ -110,59 +110,43 @@ jobs:
           Write-Host "Chrome: $chrome"
           Write-Host "Edge: $edge"
 
-      - name: Start repository-root HTTP server
+      - name: Run Stage A browser profile with repository server
         shell: pwsh
         run: |
+          $output = "_stage_a_browser_qa/${{ matrix.profile }}"
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
           $stdout = Join-Path $env:RUNNER_TEMP "guilin-http-${{ matrix.profile }}.out.log"
           $stderr = Join-Path $env:RUNNER_TEMP "guilin-http-${{ matrix.profile }}.err.log"
           $server = Start-Process -FilePath python -ArgumentList @(
             "-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "."
           ) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          "GUILIN_SERVER_PID=$($server.Id)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "GUILIN_SERVER_STDOUT=$stdout" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "GUILIN_SERVER_STDERR=$stderr" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $ready = $false
-          for ($attempt = 0; $attempt -lt 80; $attempt++) {
-            try {
-              $response = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Uri "http://127.0.0.1:8765/web/guilin-v050/"
-              if ($response.StatusCode -eq 200) {
-                $ready = $true
-                break
+          $browserExit = 1
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 80; $attempt++) {
+              try {
+                $response = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Uri "http://127.0.0.1:8765/web/guilin-v050/"
+                if ($response.StatusCode -eq 200) {
+                  $ready = $true
+                  break
+                }
+              } catch {
+                Start-Sleep -Milliseconds 250
               }
-            } catch {
-              Start-Sleep -Milliseconds 250
             }
+            if (-not $ready) { throw "Repository-root HTTP server did not become ready" }
+            node tests/guilin_v050_stage_a_browser.mjs `
+              --profile "${{ matrix.profile }}" `
+              --base-url "http://127.0.0.1:8765/web/guilin-v050/" `
+              --output-dir $output
+            $browserExit = $LASTEXITCODE
+          } finally {
+            Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+            Wait-Process -Id $server.Id -ErrorAction SilentlyContinue
+            if (Test-Path $stdout) { Copy-Item $stdout (Join-Path $output "http-server.out.log") }
+            if (Test-Path $stderr) { Copy-Item $stderr (Join-Path $output "http-server.err.log") }
           }
-          if (-not $ready) {
-            if (Test-Path $stdout) { Get-Content $stdout }
-            if (Test-Path $stderr) { Get-Content $stderr }
-            throw "Repository-root HTTP server did not become ready"
-          }
-
-      - name: Run Stage A browser profile
-        shell: pwsh
-        run: |
-          node tests/guilin_v050_stage_a_browser.mjs `
-            --profile "${{ matrix.profile }}" `
-            --base-url "http://127.0.0.1:8765/web/guilin-v050/" `
-            --output-dir "_stage_a_browser_qa/${{ matrix.profile }}"
-
-      - name: Stop server and preserve logs
-        if: always()
-        shell: pwsh
-        run: |
-          if ($env:GUILIN_SERVER_PID) {
-            Stop-Process -Id ([int]$env:GUILIN_SERVER_PID) -Force -ErrorAction SilentlyContinue
-            Wait-Process -Id ([int]$env:GUILIN_SERVER_PID) -ErrorAction SilentlyContinue
-          }
-          $output = "_stage_a_browser_qa/${{ matrix.profile }}"
-          New-Item -ItemType Directory -Force -Path $output | Out-Null
-          if ($env:GUILIN_SERVER_STDOUT -and (Test-Path $env:GUILIN_SERVER_STDOUT)) {
-            Copy-Item $env:GUILIN_SERVER_STDOUT (Join-Path $output "http-server.out.log")
-          }
-          if ($env:GUILIN_SERVER_STDERR -and (Test-Path $env:GUILIN_SERVER_STDERR)) {
-            Copy-Item $env:GUILIN_SERVER_STDERR (Join-Path $output "http-server.err.log")
-          }
+          if ($browserExit -ne 0) { exit $browserExit }
 
       - name: Upload browser report and screenshots
         if: always()
