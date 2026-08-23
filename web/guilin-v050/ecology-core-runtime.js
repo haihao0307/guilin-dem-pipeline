@@ -75,6 +75,7 @@ const DEFAULT_STATE = Object.freeze({
   windDirection: 135,
   windSpeed: 4.2,
   gustStrength: 0.28,
+  terrainRevision: 0,
 });
 
 function clamp(value, minimum, maximum) {
@@ -127,6 +128,7 @@ function emptyRenderData(datasetId = null, state = DEFAULT_STATE, diagnostics = 
     excludedCandidateCount: diagnostics.excludedCandidateCount || 0,
     rootPinned: true,
     rootHeightSource: 'sampleHeight',
+    rootTerrainRevision: state.terrainRevision,
     claim: ECOLOGY_CLAIM,
     nativeSurveyClaim: false,
     season: state.season,
@@ -197,6 +199,7 @@ function normalizeState(previous, patch = {}) {
   next.windDirection = ((finiteNumber(next.windDirection, DEFAULT_STATE.windDirection) % 360) + 360) % 360;
   next.windSpeed = clamp(finiteNumber(next.windSpeed, DEFAULT_STATE.windSpeed), 0, 60);
   next.gustStrength = clamp(finiteNumber(next.gustStrength, DEFAULT_STATE.gustStrength), 0, 1);
+  next.terrainRevision = Math.max(0, Math.trunc(finiteNumber(next.terrainRevision, previous.terrainRevision ?? 0)));
   return next;
 }
 
@@ -339,7 +342,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
     const { minimum, maximum } = elevationRange(dataset);
     const activeId = state.activeCoreId || datasetId;
     const seedLabel = `${activeId}|${identity}|${manifest.sourceLineage?.lineageId || manifest.lineage || 'declared-manifest'}`;
-    const generatedKey = `${seedLabel}|${hydrologyRevision(hydrologyRuntime)}`;
+    const generatedKey = `${seedLabel}|${hydrologyRevision(hydrologyRuntime)}|terrain:${state.terrainRevision}`;
     const margin = Math.max(10, Math.min(width, height) * 0.006);
     const terrainStep = Math.max(12.5, Math.min(75, Math.min(width, height) / 600));
     const bundSpacing = activeId === 'overall' ? 1200 : 140;
@@ -398,6 +401,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
       count: categories.length,
       seed: fnv1a(seedLabel),
       seedLabel,
+      terrainRevision: state.terrainRevision,
       width,
       height,
     });
@@ -425,6 +429,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
       currentState.windDirection.toFixed(2),
       currentState.windSpeed.toFixed(3),
       currentState.gustStrength.toFixed(4),
+      currentState.terrainRevision,
       currentState.hydrologyRevision || currentState.waterWidth || '',
       hydrologyRevision(hydrologyRuntime),
     ].join('|');
@@ -440,7 +445,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
     if (!dataset) return emptyRenderData(null, state);
     if (typeof sampleHeight !== 'function') throw new TypeError('getRenderData requires a sampleHeight(x, z) function');
 
-    const requiredBaseKey = `${state.activeCoreId}|${identity}|${datasetManifest(dataset)?.sourceLineage?.lineageId || datasetManifest(dataset)?.lineage || 'declared-manifest'}|${hydrologyRevision(hydrologyRuntime)}`;
+    const requiredBaseKey = `${state.activeCoreId}|${identity}|${datasetManifest(dataset)?.sourceLineage?.lineageId || datasetManifest(dataset)?.lineage || 'declared-manifest'}|${hydrologyRevision(hydrologyRuntime)}|terrain:${state.terrainRevision}`;
     if (!baseInstances || baseKey !== requiredBaseKey || cachedSampleHeight !== sampleHeight) {
       if (baseInstances) releaseDenseInstances('terrain-or-hydrology-change');
       generateBaseInstances(sampleHeight);
@@ -517,6 +522,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
       excludedCandidateCount,
       rootPinned: true,
       rootHeightSource: 'sampleHeight',
+      rootTerrainRevision: baseInstances.terrainRevision,
       claim: ECOLOGY_CLAIM,
       nativeSurveyClaim: false,
       densityPolicy: datasetId === 'overall' ? 'overall-low-density-aggregate' : 'active-core-dense',
@@ -550,6 +556,7 @@ export function createEcologyCoreRuntime({ onStatus, hydrologyRuntime } = {}) {
       hydrologyExclusionAvailable: Boolean(hydrologyRuntime && typeof hydrologyRuntime.isLandExcluded === 'function'),
       rootPinned: true,
       rootHeightSource: 'sampleHeight',
+      rootTerrainRevision: baseInstances?.terrainRevision ?? null,
       releasedDenseInstanceCount,
       generation,
       season: state.season,

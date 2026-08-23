@@ -473,39 +473,6 @@ function sourceSamplePosition(dataset, column, row) {
   ];
 }
 
-function sampleDatasetElevation(dataset, x, z) {
-  if (!dataset) return null;
-  if (
-    x < -dataset.widthMeters / 2 || x > dataset.widthMeters / 2 ||
-    z < -dataset.heightMeters / 2 || z > dataset.heightMeters / 2
-  ) return null;
-  const pixelCenters = usesPixelCenters(dataset);
-  const rawU = pixelCenters
-    ? (x + dataset.widthMeters / 2) / dataset.rasterSpacingMeters[0] - 0.5
-    : (x / dataset.widthMeters + 0.5) * (dataset.gridWidth - 1);
-  const rawV = pixelCenters
-    ? (z + dataset.heightMeters / 2) / dataset.rasterSpacingMeters[1] - 0.5
-    : (z / dataset.heightMeters + 0.5) * (dataset.gridHeight - 1);
-  const u = clamp(rawU, 0, dataset.gridWidth - 1);
-  const v = clamp(rawV, 0, dataset.gridHeight - 1);
-  const x0 = Math.floor(u);
-  const y0 = Math.floor(v);
-  const x1 = Math.min(dataset.gridWidth - 1, x0 + 1);
-  const y1 = Math.min(dataset.gridHeight - 1, y0 + 1);
-  const indices = [
-    y0 * dataset.gridWidth + x0,
-    y0 * dataset.gridWidth + x1,
-    y1 * dataset.gridWidth + x0,
-    y1 * dataset.gridWidth + x1,
-  ];
-  if (dataset.mask && indices.some((index) => !dataset.mask[index])) return null;
-  const tx = u - x0;
-  const ty = v - y0;
-  const top = lerp(decodeElevation(dataset, indices[0]), decodeElevation(dataset, indices[1]), tx);
-  const bottom = lerp(decodeElevation(dataset, indices[2]), decodeElevation(dataset, indices[3]), tx);
-  return lerp(top, bottom, ty);
-}
-
 function browserPreviewParameters() {
   const preview = store.state.gaea.preview && store.state.gaea.preview.runtimeParameters;
   const parameters = store.state.gaea.parameters || GAEA_DEFAULT_PARAMETERS;
@@ -522,13 +489,15 @@ function browserPreviewParameters() {
   };
 }
 
-function approximateVisualOffset(dataset, x, z) {
-  const parameters = browserPreviewParameters();
-  const raw = sampleDatasetElevation(dataset, x, z);
-  if (raw == null) return null;
-  const relative = raw - dataset.minimumElevation;
+function visualOffsetFromRelative(
+  dataset,
+  x,
+  z,
+  relative,
+  parameters = browserPreviewParameters(),
+  seed = coreSeed(dataset.id),
+) {
   const normalHeight = clamp(relative / Math.max(dataset.maximumElevation - dataset.minimumElevation, 1), 0, 1);
-  const seed = coreSeed(dataset.id);
   const macro = Math.sin(x * 0.00073 + seed) * Math.cos(z * 0.00061 - seed * 0.7);
   const karst = 1 - Math.abs(((x * 0.0019 + z * 0.0013 + seed) % 1 + 1) % 1 * 2 - 1);
   const drainage = Math.pow(Math.abs(Math.sin(x * 0.0011 - z * 0.0017 + seed * 0.4)), 10);
@@ -543,28 +512,163 @@ function approximateVisualOffset(dataset, x, z) {
   return relative * parameters.verticalEx + visual;
 }
 
-function buildTerrainGeometry(gl, dataset) {
+const terrainMeshLayouts = new WeakMap();
+
+function terrainMeshDimensions(dataset) {
   const maxSamples = dataset.id === 'overall' ? 300 : 321;
   const longest = Math.max(dataset.gridWidth, dataset.gridHeight);
-  const columns = Math.max(2, Math.round(maxSamples * dataset.gridWidth / longest));
-  const rows = Math.max(2, Math.round(maxSamples * dataset.gridHeight / longest));
+  return {
+    columns: Math.max(2, Math.round(maxSamples * dataset.gridWidth / longest)),
+    rows: Math.max(2, Math.round(maxSamples * dataset.gridHeight / longest)),
+  };
+}
+
+function getTerrainMeshLayout(dataset) {
+  const cached = terrainMeshLayouts.get(dataset);
+  if (cached) return cached;
+  const { columns, rows } = terrainMeshDimensions(dataset);
+  const sourceColumns = new Int32Array(columns);
+  const sourceRows = new Int32Array(rows);
+  // Float32 mirrors the values uploaded to WebGL, including vertex precision.
+  const xPositions = new Float32Array(columns);
+  const zPositions = new Float32Array(rows);
+  const relativeHeights = new Float32Array(columns * rows);
+  const valid = new Uint8Array(columns * rows);
+  for (let column = 0; column < columns; column += 1) {
+    const sourceColumn = Math.round(column * (dataset.gridWidth - 1) / (columns - 1));
+    sourceColumns[column] = sourceColumn;
+    const sourceX = sourceSamplePosition(dataset, sourceColumn, 0)[0];
+    // Pixel values cover cells; extend the two edge-center samples by half a
+    // pixel so an exact 10 km package also renders as an exact 10 km surface.
+    xPositions[column] = usesPixelCenters(dataset) && column === 0
+      ? -dataset.widthMeters / 2
+      : usesPixelCenters(dataset) && column === columns - 1
+        ? dataset.widthMeters / 2
+        : sourceX;
+  }
+  for (let row = 0; row < rows; row += 1) {
+    const sourceRow = Math.round(row * (dataset.gridHeight - 1) / (rows - 1));
+    sourceRows[row] = sourceRow;
+    const sourceZ = sourceSamplePosition(dataset, 0, sourceRow)[1];
+    zPositions[row] = usesPixelCenters(dataset) && row === 0
+      ? -dataset.heightMeters / 2
+      : usesPixelCenters(dataset) && row === rows - 1
+        ? dataset.heightMeters / 2
+        : sourceZ;
+    for (let column = 0; column < columns; column += 1) {
+      const sourceIndex = sourceRow * dataset.gridWidth + sourceColumns[column];
+      const vertex = row * columns + column;
+      relativeHeights[vertex] = decodeElevation(dataset, sourceIndex) - dataset.minimumElevation;
+      valid[vertex] = dataset.mask ? Number(dataset.mask[sourceIndex] > 0) : 1;
+    }
+  }
+  const layout = {
+    columns,
+    rows,
+    sourceColumns,
+    sourceRows,
+    xPositions,
+    zPositions,
+    relativeHeights,
+    valid,
+    seed: coreSeed(dataset.id),
+    visualRevision: null,
+    visualHeights: null,
+  };
+  terrainMeshLayouts.set(dataset, layout);
+  return layout;
+}
+
+function renderedVertexHeights(dataset, layout) {
+  const revision = store.state.gaea.preview?.revision ?? -1;
+  if (layout.visualHeights && layout.visualRevision === revision) return layout.visualHeights;
+  const parameters = browserPreviewParameters();
+  const heights = new Float32Array(layout.relativeHeights.length);
+  for (let row = 0; row < layout.rows; row += 1) {
+    for (let column = 0; column < layout.columns; column += 1) {
+      const vertex = row * layout.columns + column;
+      heights[vertex] = visualOffsetFromRelative(
+        dataset,
+        layout.xPositions[column],
+        layout.zPositions[row],
+        layout.relativeHeights[vertex],
+        parameters,
+        layout.seed,
+      );
+    }
+  }
+  layout.visualRevision = revision;
+  layout.visualHeights = heights;
+  return heights;
+}
+
+function findMeshIntervals(values, value) {
+  const last = values.length - 1;
+  if (!Number.isFinite(value) || value < values[0] || value > values[last]) return null;
+  if (value === values[0]) return [{ index: 0, amount: 0 }];
+  if (value === values[last]) return [{ index: last - 1, amount: 1 }];
+  let low = 0;
+  let high = last;
+  while (low + 1 < high) {
+    const middle = (low + high) >> 1;
+    if (values[middle] <= value) low = middle;
+    else high = middle;
+  }
+  const span = values[low + 1] - values[low];
+  const amount = span > 0 ? (value - values[low]) / span : 0;
+  if (Math.abs(amount) <= 1e-9 && low > 0) {
+    return [{ index: low - 1, amount: 1 }, { index: low, amount: 0 }];
+  }
+  return [{ index: low, amount }];
+}
+
+// Samples the exact two-triangle surface submitted by buildTerrainGeometry.
+// This is the shared height contract for the camera, rivers, ecology, and overlays.
+function sampleRenderedTerrainHeight(dataset, x, z) {
+  if (!dataset) return null;
+  const layout = getTerrainMeshLayout(dataset);
+  const xCells = findMeshIntervals(layout.xPositions, x);
+  const zCells = findMeshIntervals(layout.zPositions, z);
+  if (!xCells || !zCells) return null;
+  const heights = renderedVertexHeights(dataset, layout);
+  for (const zCell of zCells) {
+    for (const xCell of xCells) {
+      const column = xCell.index;
+      const row = zCell.index;
+      const tx = clamp(xCell.amount, 0, 1);
+      const tz = clamp(zCell.amount, 0, 1);
+      const a = row * layout.columns + column;
+      const b = a + 1;
+      const c = a + layout.columns;
+      const d = c + 1;
+      if (tx + tz <= 1 && layout.valid[a] && layout.valid[b] && layout.valid[c]) {
+        return heights[a] + tx * (heights[b] - heights[a]) + tz * (heights[c] - heights[a]);
+      }
+      if (tx + tz >= 1 && layout.valid[b] && layout.valid[d] && layout.valid[c]) {
+        return heights[d] + (1 - tz) * (heights[b] - heights[d]) + (1 - tx) * (heights[c] - heights[d]);
+      }
+    }
+  }
+  return null;
+}
+
+function buildTerrainGeometry(gl, dataset) {
+  const layout = getTerrainMeshLayout(dataset);
+  const { columns, rows } = layout;
   const positions = new Float32Array(columns * rows * 3);
   const normals = new Float32Array(columns * rows * 3);
   const uvs = new Float32Array(columns * rows * 2);
-  const valid = new Uint8Array(columns * rows);
   const heights = new Float32Array(columns * rows);
 
   for (let row = 0; row < rows; row += 1) {
-    const sourceRow = Math.round(row * (dataset.gridHeight - 1) / (rows - 1));
+    const sourceRow = layout.sourceRows[row];
     for (let column = 0; column < columns; column += 1) {
-      const sourceColumn = Math.round(column * (dataset.gridWidth - 1) / (columns - 1));
-      const sourceIndex = sourceRow * dataset.gridWidth + sourceColumn;
+      const sourceColumn = layout.sourceColumns[column];
       const vertex = row * columns + column;
-      const elevation = decodeElevation(dataset, sourceIndex);
-      const relative = elevation - dataset.minimumElevation;
-      const [sampleX, sampleZ] = sourceSamplePosition(dataset, sourceColumn, sourceRow);
+      const relative = layout.relativeHeights[vertex];
+      const sampleX = layout.xPositions[column];
+      const sampleZ = layout.zPositions[row];
       heights[vertex] = relative;
-      valid[vertex] = dataset.mask ? Number(dataset.mask[sourceIndex] > 0) : 1;
       positions[vertex * 3] = sampleX;
       positions[vertex * 3 + 1] = relative;
       positions[vertex * 3 + 2] = sampleZ;
@@ -577,8 +681,8 @@ function buildTerrainGeometry(gl, dataset) {
     }
   }
 
-  const xStep = dataset.widthMeters / (columns - 1);
-  const zStep = dataset.heightMeters / (rows - 1);
+  const xStep = (layout.xPositions[columns - 1] - layout.xPositions[0]) / (columns - 1);
+  const zStep = (layout.zPositions[rows - 1] - layout.zPositions[0]) / (rows - 1);
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
       const left = heights[row * columns + Math.max(0, column - 1)];
@@ -602,8 +706,8 @@ function buildTerrainGeometry(gl, dataset) {
       const b = a + 1;
       const c = a + columns;
       const d = c + 1;
-      if (valid[a] && valid[b] && valid[c]) indices.push(a, b, c);
-      if (valid[b] && valid[d] && valid[c]) indices.push(b, d, c);
+      if (layout.valid[a] && layout.valid[b] && layout.valid[c]) indices.push(a, b, c);
+      if (layout.valid[b] && layout.valid[d] && layout.valid[c]) indices.push(b, d, c);
     }
   }
 
@@ -626,7 +730,7 @@ function buildTerrainGeometry(gl, dataset) {
     count: indices.length,
     columns,
     rows,
-    validVertices: valid.reduce((sum, value) => sum + value, 0),
+    validVertices: layout.valid.reduce((sum, value) => sum + value, 0),
   };
 }
 
@@ -960,42 +1064,156 @@ const camera = {
   far: 500000,
   viewProjection: Mat4.identity(),
   altitudeAboveGround: 0,
+  renderedEyeGround: null,
   inspectionView: null,
 };
 
-function scoreInspectionRay(dataset, x, z, azimuth) {
-  const originHeight = approximateVisualOffset(dataset, x, z);
+const INSPECTION_EYE_HEIGHT_METERS = 1.7;
+const INSPECTION_TRACE_LIMIT_METERS = 600;
+const INSPECTION_SIDE_RAY_OFFSETS_DEGREES = [-32, -16, 0, 16, 32];
+const INSPECTION_CANDIDATE_HINTS = Object.freeze({
+  // A validated, low-slope saddle in the mountainous core. It remains a
+  // candidate only; every current GAEA revision must pass the same ray tests.
+  'zhenbao-ding': [[1750, -1050]],
+});
+
+function inspectionLocalSlope(dataset, x, z) {
+  const layout = getTerrainMeshLayout(dataset);
+  const xCells = findMeshIntervals(layout.xPositions, x);
+  const zCells = findMeshIntervals(layout.zPositions, z);
+  if (!xCells || !zCells) return null;
+  const heights = renderedVertexHeights(dataset, layout);
+  const slopes = [];
+  for (const zCell of zCells) {
+    for (const xCell of xCells) {
+      const column = xCell.index;
+      const row = zCell.index;
+      const tx = clamp(xCell.amount, 0, 1);
+      const tz = clamp(zCell.amount, 0, 1);
+      const a = row * layout.columns + column;
+      const b = a + 1;
+      const c = a + layout.columns;
+      const d = c + 1;
+      const dx = layout.xPositions[column + 1] - layout.xPositions[column];
+      const dz = layout.zPositions[row + 1] - layout.zPositions[row];
+      if (tx + tz <= 1 && layout.valid[a] && layout.valid[b] && layout.valid[c]) {
+        slopes.push(Math.atan(Math.hypot((heights[b] - heights[a]) / dx, (heights[c] - heights[a]) / dz)) * 180 / Math.PI);
+      }
+      if (tx + tz >= 1 && layout.valid[b] && layout.valid[d] && layout.valid[c]) {
+        slopes.push(Math.atan(Math.hypot((heights[d] - heights[c]) / dx, (heights[d] - heights[b]) / dz)) * 180 / Math.PI);
+      }
+    }
+  }
+  return slopes.length ? Math.max(...slopes) : null;
+}
+
+function traceInspectionRay(dataset, x, z, azimuth) {
+  const originHeight = sampleRenderedTerrainHeight(dataset, x, z);
   if (originHeight == null) return null;
   const forward = [-Math.sin(azimuth), -Math.cos(azimuth)];
-  const baseStep = Math.max(12.5, Math.min(32, Math.max(...dataset.rasterSpacingMeters)));
-  const distances = [1, 2, 4, 8, 16, 28].map((multiplier) => baseStep * multiplier);
-  const rises = [];
-  for (const distance of distances) {
-    const sample = approximateVisualOffset(
+  const stepMeters = 4;
+  const eyeY = originHeight + INSPECTION_EYE_HEIGHT_METERS;
+  let previousDistance = 0;
+  let previousClearance = INSPECTION_EYE_HEIGHT_METERS;
+  let firstIntersectionMeters = null;
+  let sampledDistanceMeters = 0;
+  let minimumClearanceMeters = INSPECTION_EYE_HEIGHT_METERS;
+  let maximumTerrainRiseMeters = 0;
+  let maximumTerrainDropMeters = 0;
+  let sampleCount = 0;
+  let terminatedBy = 'trace-limit';
+  for (let distance = stepMeters; distance <= INSPECTION_TRACE_LIMIT_METERS; distance += stepMeters) {
+    const terrainY = sampleRenderedTerrainHeight(
       dataset,
       x + forward[0] * distance,
       z + forward[1] * distance,
     );
-    if (sample == null) return null;
-    rises.push(sample - originHeight);
+    if (terrainY == null) {
+      terminatedBy = 'missing-terrain';
+      break;
+    }
+    sampleCount += 1;
+    sampledDistanceMeters = distance;
+    const rise = terrainY - originHeight;
+    const clearance = eyeY - terrainY;
+    maximumTerrainRiseMeters = Math.max(maximumTerrainRiseMeters, rise);
+    maximumTerrainDropMeters = Math.max(maximumTerrainDropMeters, -rise);
+    minimumClearanceMeters = Math.min(minimumClearanceMeters, clearance);
+    if (clearance <= 0.1) {
+      const previousBuffered = previousClearance - 0.1;
+      const currentBuffered = clearance - 0.1;
+      const span = previousBuffered - currentBuffered;
+      const amount = span > 1e-9 ? clamp(previousBuffered / span, 0, 1) : 1;
+      firstIntersectionMeters = previousDistance + (distance - previousDistance) * amount;
+      terminatedBy = 'terrain-intersection';
+      break;
+    }
+    previousDistance = distance;
+    previousClearance = clearance;
   }
-  const clearances = rises.map((rise, index) => 1.7 + distances[index] * 0.004 - rise);
-  const minimumClearance = Math.min(...clearances);
-  const maximumRise = Math.max(...rises);
-  const maximumDrop = Math.max(0, -Math.min(...rises));
-  const nearRise = Math.max(...rises.slice(0, 3));
-  const occlusionPenalty = Math.max(0, 0.65 - minimumClearance) * 260;
-  const nearSlopePenalty = Math.max(0, nearRise + 0.15) * 18;
-  const cliffPenalty = Math.max(0, maximumDrop - 95) * 0.6;
   return {
     azimuth,
     forward,
-    distances,
-    rises,
-    minimumClearanceMetersAt1_7m: minimumClearance,
-    maximumTerrainRiseMeters: maximumRise,
-    maximumTerrainDropMeters: maximumDrop,
-    score: occlusionPenalty + nearSlopePenalty + cliffPenalty,
+    firstIntersectionMeters,
+    visibleDistanceMeters: firstIntersectionMeters ?? sampledDistanceMeters,
+    sampledDistanceMeters,
+    minimumClearanceMeters,
+    maximumTerrainRiseMeters,
+    maximumTerrainDropMeters,
+    sampleCount,
+    terminatedBy,
+  };
+}
+
+function scoreInspectionRay(dataset, x, z, azimuth) {
+  const anchorRenderedGroundMeters = sampleRenderedTerrainHeight(dataset, x, z);
+  const localSlopeDegrees = inspectionLocalSlope(dataset, x, z);
+  if (anchorRenderedGroundMeters == null || localSlopeDegrees == null) return null;
+  if (hydrologyRuntime?.isLandExcluded?.(
+    x / dataset.widthMeters + 0.5,
+    0.5 - z / dataset.heightMeters,
+  )) return null;
+  const rays = INSPECTION_SIDE_RAY_OFFSETS_DEGREES.map((offsetDegrees) => (
+    traceInspectionRay(dataset, x, z, azimuth + radians(offsetDegrees))
+  ));
+  if (rays.some((ray) => !ray || ray.terminatedBy === 'missing-terrain')) return null;
+  const visibleDistances = rays.map((ray) => ray.visibleDistanceMeters);
+  const minimumVerifiedVisibleDistanceMeters = Math.min(...visibleDistances);
+  const intersections = rays
+    .map((ray) => ray.firstIntersectionMeters)
+    .filter((distance) => Number.isFinite(distance));
+  const nearestIntersectionMeters = intersections.length ? Math.min(...intersections) : null;
+  const averageVisibleDistanceMeters = visibleDistances.reduce((sum, value) => sum + value, 0) / visibleDistances.length;
+  const minimumRayClearanceMeters = Math.min(...rays.map((ray) => ray.minimumClearanceMeters));
+  const maximumTerrainRiseMeters = Math.max(...rays.map((ray) => ray.maximumTerrainRiseMeters));
+  const maximumTerrainDropMeters = Math.max(...rays.map((ray) => ray.maximumTerrainDropMeters));
+  if (
+    localSlopeDegrees > 10 ||
+    minimumVerifiedVisibleDistanceMeters < 200 ||
+    minimumRayClearanceMeters < 0.15
+  ) return null;
+  const qualityScore =
+    minimumVerifiedVisibleDistanceMeters * 7 +
+    averageVisibleDistanceMeters * 1.5 +
+    Math.min(90, maximumTerrainRiseMeters) * 0.12 -
+    localSlopeDegrees * 9 -
+    Math.max(0, 220 - minimumVerifiedVisibleDistanceMeters) * 10 -
+    Math.max(0, 0.65 - minimumRayClearanceMeters) * 140;
+  return {
+    azimuth,
+    forward: [-Math.sin(azimuth), -Math.cos(azimuth)],
+    anchorRenderedGroundMeters,
+    localSlopeDegrees,
+    minimumVerifiedVisibleDistanceMeters,
+    nearestIntersectionMeters,
+    averageVisibleDistanceMeters,
+    minimumRayClearanceMeters,
+    maximumTerrainRiseMeters,
+    maximumTerrainDropMeters,
+    traceLimitMeters: INSPECTION_TRACE_LIMIT_METERS,
+    sideRayOffsetsDegrees: [...INSPECTION_SIDE_RAY_OFFSETS_DEGREES],
+    rays,
+    qualityScore,
   };
 }
 
@@ -1003,19 +1221,22 @@ function chooseInspectionView(dataset) {
   const spanX = Math.min(2200, dataset.widthMeters * 0.22);
   const spanZ = Math.min(2200, dataset.heightMeters * 0.22);
   const offsets = [-1, -0.5, 0, 0.5, 1];
-  let best = null;
+  const candidates = [];
   for (const xScale of offsets) {
-    for (const zScale of offsets) {
-      const x = xScale * spanX;
-      const z = zScale * spanZ;
-      const centerPenalty = Math.hypot(x / Math.max(spanX, 1), z / Math.max(spanZ, 1)) * 0.45;
-      for (let direction = 0; direction < 16; direction += 1) {
-        const ray = scoreInspectionRay(dataset, x, z, direction / 16 * Math.PI * 2);
+    for (const zScale of offsets) candidates.push([xScale * spanX, zScale * spanZ]);
+  }
+  for (const hint of INSPECTION_CANDIDATE_HINTS[dataset.id] || []) candidates.push(hint);
+  let best = null;
+  for (const [x, z] of candidates) {
+      const centerPenalty = Math.hypot(x / Math.max(spanX, 1), z / Math.max(spanZ, 1)) * 24;
+      for (let direction = 0; direction < 24; direction += 1) {
+        const ray = scoreInspectionRay(dataset, x, z, direction / 24 * Math.PI * 2);
         if (!ray) continue;
-        const score = ray.score + centerPenalty;
-        if (!best || score < best.score) best = { datasetId: dataset.id, x, z, ...ray, score };
+        const qualityScore = ray.qualityScore - centerPenalty;
+        if (!best || qualityScore > best.qualityScore) {
+          best = { datasetId: dataset.id, x, z, ...ray, qualityScore };
+        }
       }
-    }
   }
   if (best) return best;
   return {
@@ -1024,18 +1245,29 @@ function chooseInspectionView(dataset) {
     z: 0,
     azimuth: camera.desiredAzimuth,
     forward: [-Math.sin(camera.desiredAzimuth), -Math.cos(camera.desiredAzimuth)],
-    distances: [],
-    rises: [],
-    minimumClearanceMetersAt1_7m: null,
+    anchorRenderedGroundMeters: sampleRenderedTerrainHeight(dataset, 0, 0),
+    localSlopeDegrees: null,
+    minimumVerifiedVisibleDistanceMeters: null,
+    nearestIntersectionMeters: null,
+    averageVisibleDistanceMeters: null,
+    minimumRayClearanceMeters: null,
     maximumTerrainRiseMeters: null,
     maximumTerrainDropMeters: null,
-    score: null,
+    traceLimitMeters: INSPECTION_TRACE_LIMIT_METERS,
+    sideRayOffsetsDegrees: [...INSPECTION_SIDE_RAY_OFFSETS_DEGREES],
+    rays: [],
+    qualityScore: null,
   };
 }
 
 function applyInspectionView(dataset, force = false) {
   if (!dataset) return null;
-  if (!force && camera.inspectionView?.datasetId === dataset.id) return camera.inspectionView;
+  const previewRevision = Number(store.state.gaea.preview?.revision || 0);
+  if (
+    !force &&
+    camera.inspectionView?.datasetId === dataset.id &&
+    camera.inspectionView?.previewRevision === previewRevision
+  ) return camera.inspectionView;
   const view = chooseInspectionView(dataset);
   camera.target[0] = camera.desiredTarget[0] = view.x;
   camera.target[2] = camera.desiredTarget[2] = view.z;
@@ -1043,8 +1275,10 @@ function applyInspectionView(dataset, force = false) {
   const bounds = dataset.projectedBounds;
   camera.inspectionView = {
     ...view,
+    previewRevision,
     projectedEasting: (bounds[0] + bounds[2]) / 2 + view.x,
     projectedNorthing: (bounds[1] + bounds[3]) / 2 - view.z,
+    bearingDegrees: (360 - (view.azimuth * 180 / Math.PI % 360) + 360) % 360,
   };
   return camera.inspectionView;
 }
@@ -1066,7 +1300,7 @@ function updateCamera(dataset, dt) {
   camera.azimuth = damp(camera.azimuth, camera.desiredAzimuth, 9, dt);
   camera.elevation = damp(camera.elevation, camera.desiredElevation, 9, dt);
   camera.distance = damp(camera.distance, camera.desiredDistance, 7, dt);
-  const targetHeight = approximateVisualOffset(dataset, camera.target[0], camera.target[2]) ?? 0;
+  const targetHeight = sampleRenderedTerrainHeight(dataset, camera.target[0], camera.target[2]) ?? 0;
   let center;
   if (camera.mode === 'overview') {
     camera.target[1] = damp(camera.target[1], targetHeight, 8, dt);
@@ -1077,8 +1311,10 @@ function updateCamera(dataset, dt) {
       camera.target[2] + camera.distance * cosine * Math.cos(camera.azimuth),
     ];
     center = [...camera.target];
-    const eyeGround = approximateVisualOffset(dataset, camera.eye[0], camera.eye[2]) ?? 0;
-    camera.altitudeAboveGround = Math.max(0, camera.eye[1] - eyeGround);
+    camera.renderedEyeGround = sampleRenderedTerrainHeight(dataset, camera.eye[0], camera.eye[2]);
+    camera.altitudeAboveGround = camera.renderedEyeGround == null
+      ? 0
+      : Math.max(0, camera.eye[1] - camera.renderedEyeGround);
     camera.near = Math.max(0.35, Math.min(80, camera.distance * 0.0008));
   } else {
     const clearance = Number(camera.reviewHeight || 1.7);
@@ -1087,11 +1323,12 @@ function updateCamera(dataset, dt) {
     const lookDistance = Math.max(14, clearance * 4);
     const lookX = clamp(camera.target[0] + forward[0] * lookDistance, -dataset.widthMeters / 2, dataset.widthMeters / 2);
     const lookZ = clamp(camera.target[2] + forward[1] * lookDistance, -dataset.heightMeters / 2, dataset.heightMeters / 2);
-    const lookGround = approximateVisualOffset(dataset, lookX, lookZ) ?? targetHeight;
+    const lookGround = sampleRenderedTerrainHeight(dataset, lookX, lookZ) ?? targetHeight;
     center = clearance <= 2
-      ? [lookX, targetHeight + clearance * 0.94, lookZ]
+      ? [lookX, targetHeight + clearance, lookZ]
       : [lookX, lookGround + Math.min(1.55, clearance * 0.08), lookZ];
-    camera.altitudeAboveGround = clearance;
+    camera.renderedEyeGround = sampleRenderedTerrainHeight(dataset, camera.eye[0], camera.eye[2]);
+    camera.altitudeAboveGround = camera.renderedEyeGround == null ? 0 : camera.eye[1] - camera.renderedEyeGround;
     camera.near = clearance <= 2 ? 0.06 : Math.max(0.12, clearance * 0.015);
   }
   camera.far = Math.max(12000, maxDimension * 5, camera.distance * 4);
@@ -1139,6 +1376,7 @@ function setCameraMode(mode) {
 function moveCamera(direction, amount) {
   const dataset = store.state.dataset;
   if (!dataset) return;
+  const layout = getTerrainMeshLayout(dataset);
   const forward = [-Math.sin(camera.azimuth), -Math.cos(camera.azimuth)];
   const right = [Math.cos(camera.azimuth), -Math.sin(camera.azimuth)];
   let x = 0;
@@ -1149,13 +1387,13 @@ function moveCamera(direction, amount) {
   if (direction === 'right') [x, z] = right;
   camera.desiredTarget[0] = clamp(
     camera.desiredTarget[0] + x * amount,
-    -dataset.widthMeters / 2 + 1,
-    dataset.widthMeters / 2 - 1,
+    layout.xPositions[0] + 0.1,
+    layout.xPositions[layout.columns - 1] - 0.1,
   );
   camera.desiredTarget[2] = clamp(
     camera.desiredTarget[2] + z * amount,
-    -dataset.heightMeters / 2 + 1,
-    dataset.heightMeters / 2 - 1,
+    layout.zPositions[0] + 0.1,
+    layout.zPositions[layout.rows - 1] - 0.1,
   );
 }
 
@@ -1169,9 +1407,19 @@ let overallDataset;
 let switchRevision = 0;
 let hydrologyRefreshTimer = 0;
 let ecologyRefreshTimer = 0;
+let inspectionRefreshTimer = 0;
 let latestHydrologyBatches = null;
 let latestEcologyData = null;
 const coreManifests = new Map();
+
+function scheduleInspectionRefresh() {
+  window.clearTimeout(inspectionRefreshTimer);
+  if (camera.mode !== 'inspection' || !store.state.dataset) return;
+  inspectionRefreshTimer = window.setTimeout(() => {
+    applyInspectionView(store.state.dataset, true);
+    updateDiagnostics();
+  }, 120);
+}
 
 async function loadOverallDataset() {
   if (overallDataset) return overallDataset;
@@ -1256,7 +1504,7 @@ function coreResultToDataset(id, result) {
 }
 
 function moduleDataset(dataset) {
-  const visualRelief = Math.max(1, approximateVisualOffset(dataset, 0, 0) ?? (dataset.maximumElevation - dataset.minimumElevation));
+  const visualRelief = Math.max(1, sampleRenderedTerrainHeight(dataset, 0, 0) ?? (dataset.maximumElevation - dataset.minimumElevation));
   return {
     id: dataset.id,
     activeCoreId: dataset.id,
@@ -1285,13 +1533,13 @@ function sampleVisualFromNormalised(xNorm, zNorm, point) {
   const dataset = store.state.dataset;
   if (!dataset) return null;
   const x = point?.x ?? (Number(xNorm) - 0.5) * dataset.widthMeters;
-  const z = point?.z ?? (Number(zNorm) - 0.5) * dataset.heightMeters;
-  return approximateVisualOffset(dataset, x, z);
+  const z = point?.z ?? (0.5 - Number(zNorm)) * dataset.heightMeters;
+  return sampleRenderedTerrainHeight(dataset, x, z);
 }
 
 function sampleEcologyHeight(x, z) {
   const dataset = store.state.dataset;
-  return dataset ? approximateVisualOffset(dataset, x, z) : null;
+  return dataset ? sampleRenderedTerrainHeight(dataset, x, z) : null;
 }
 
 async function buildCoreBoundaryBatches(dataset) {
@@ -1314,7 +1562,10 @@ async function buildCoreBoundaryBatches(dataset) {
     ];
     const positions = new Float32Array(local.length * 3);
     local.forEach((point, index) => {
-      const height = approximateVisualOffset(dataset, point[0], point[1]) ?? 0;
+      const layout = getTerrainMeshLayout(dataset);
+      const sampleX = clamp(point[0], layout.xPositions[0], layout.xPositions[layout.columns - 1]);
+      const sampleZ = clamp(point[1], layout.zPositions[0], layout.zPositions[layout.rows - 1]);
+      const height = sampleRenderedTerrainHeight(dataset, sampleX, sampleZ) ?? 0;
       positions.set([point[0], height + (overall ? 28 : 4), point[1]], index * 3);
     });
     batches.push({
@@ -1369,6 +1620,7 @@ async function refreshEcologyNow() {
     ...store.state.ecology,
     activeCoreId: store.state.activeCoreId,
     waterWidth: store.state.hydrology.waterWidth,
+    terrainRevision: Number(store.state.gaea.preview?.revision || 0),
   };
   if (typeof ecologyRuntime.updateState === 'function') ecologyRuntime.updateState(ecologyState);
   latestEcologyData = await Promise.resolve(
@@ -1530,6 +1782,8 @@ function setGaeaParameters(partial) {
     },
   });
   scheduleHydrologyRefresh();
+  scheduleInspectionRefresh();
+  scheduleEcologyRefresh();
   buildCoreBoundaryBatches(store.state.dataset);
 }
 
@@ -1599,6 +1853,13 @@ function onGaeaStatus(event) {
     status.textContent = 'Worker 构建 ' + event.status +
       (event.stage ? ' · ' + event.stage : '') +
       (event.error ? ' · ' + event.error : '');
+  }
+  if (event.phase === 'reset') {
+    progress.value = 0;
+    status.className = 'health-card ' + (event.worker?.status === 'unavailable' ? 'warn' : 'ok');
+    status.textContent = event.worker?.status === 'unavailable'
+      ? 'GAEA 已复位 · 真实 Worker unavailable · ' + (event.worker.reason || '未配置')
+      : 'GAEA 已复位 · Worker 健康状态等待重新检查';
   }
   updateDiagnostics();
 }
@@ -1671,6 +1932,8 @@ function bindUi() {
         item.classList.toggle('active', item === button);
       });
       scheduleHydrologyRefresh();
+      scheduleInspectionRefresh();
+      scheduleEcologyRefresh();
       buildCoreBoundaryBatches(store.state.dataset);
     });
   });
@@ -1696,6 +1959,8 @@ function bindUi() {
     gaeaBridge.reset();
     syncGaeaInputs();
     scheduleHydrologyRefresh();
+    scheduleInspectionRefresh();
+    scheduleEcologyRefresh();
     buildCoreBoundaryBatches(store.state.dataset);
   });
 
@@ -1833,6 +2098,7 @@ function bindUi() {
 
 function updateDiagnostics() {
   const dataset = store.state.dataset;
+  const terrainLayout = dataset ? getTerrainMeshLayout(dataset) : null;
   const hydro = hydrologyRuntime?.getDiagnostics?.() || null;
   const ecology = ecologyRuntime?.getDiagnostics?.() || null;
   window.__GUILIN_WORKBENCH_DIAGNOSTICS__ = {
@@ -1862,20 +2128,43 @@ function updateDiagnostics() {
       validFraction: dataset.validFraction,
       status: dataset.status,
       projectedBounds: [...dataset.projectedBounds],
+      renderedMesh: {
+        columns: terrainLayout.columns,
+        rows: terrainLayout.rows,
+        widthMeters: terrainLayout.xPositions[terrainLayout.columns - 1] - terrainLayout.xPositions[0],
+        heightMeters: terrainLayout.zPositions[terrainLayout.rows - 1] - terrainLayout.zPositions[0],
+        heightContract: 'shared-rendered-triangle-mesh',
+      },
     } : null,
     camera: {
       mode: camera.mode,
       reviewHeightMeters: camera.reviewHeight,
       altitudeAboveGroundMeters: camera.altitudeAboveGround,
+      eyeWorldY: camera.eye[1],
+      renderedEyeGroundY: camera.renderedEyeGround,
+      groundSampleValid: Number.isFinite(camera.renderedEyeGround),
       objectIdentity: 'shared-camera-1',
       inspectionView: camera.inspectionView ? {
         datasetId: camera.inspectionView.datasetId,
         projectedEasting: camera.inspectionView.projectedEasting,
         projectedNorthing: camera.inspectionView.projectedNorthing,
         azimuthDegrees: camera.inspectionView.azimuth / Math.PI * 180,
-        minimumClearanceMetersAt1_7m: camera.inspectionView.minimumClearanceMetersAt1_7m,
+        bearingDegrees: camera.inspectionView.bearingDegrees,
+        anchorRenderedGroundMeters: camera.inspectionView.anchorRenderedGroundMeters,
+        renderedAltitudeAboveGroundMeters: camera.altitudeAboveGround,
+        localSlopeDegrees: camera.inspectionView.localSlopeDegrees,
+        minimumVerifiedVisibleDistanceMeters: camera.inspectionView.minimumVerifiedVisibleDistanceMeters,
+        nearestIntersectionMeters: camera.inspectionView.nearestIntersectionMeters,
+        averageVisibleDistanceMeters: camera.inspectionView.averageVisibleDistanceMeters,
+        minimumRayClearanceMeters: camera.inspectionView.minimumRayClearanceMeters,
+        traceLimitMeters: camera.inspectionView.traceLimitMeters,
+        sideRayOffsetsDegrees: camera.inspectionView.sideRayOffsetsDegrees,
+        rayCount: camera.inspectionView.rays?.length || 0,
+        rayTerminations: camera.inspectionView.rays?.map((ray) => ray.terminatedBy) || [],
         maximumTerrainRiseMeters: camera.inspectionView.maximumTerrainRiseMeters,
-        score: camera.inspectionView.score,
+        maximumTerrainDropMeters: camera.inspectionView.maximumTerrainDropMeters,
+        qualityScore: camera.inspectionView.qualityScore,
+        previewRevision: camera.inspectionView.previewRevision,
       } : null,
     },
     gaea: {

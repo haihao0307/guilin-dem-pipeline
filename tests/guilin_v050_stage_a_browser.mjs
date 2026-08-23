@@ -444,6 +444,7 @@ async function main() {
             maskSha256: manifest.maskSha256,
             sourceMosaicId: manifest.sourceMosaic?.mosaicId,
             sourceMosaicGridOriginProjected: manifest.sourceMosaic?.gridOriginProjected,
+            renderedMesh: diagnostics.dataset?.renderedMesh,
             ecology: diagnostics.ecology,
             runtimeIdentityStable: Boolean(
               window.__GUILIN_STAGE_A_INITIAL_HANDLES__ &&
@@ -460,6 +461,13 @@ async function main() {
         requireValue(core.resolutionMeters === 12.5 && core.widthMeters === 10_000 && core.heightMeters === 10_000, `${coreId} manifest has the wrong metric grid`, core);
         requireValue(core.sourceMosaicId === 'verified-12.5m-mosaic-all-10', `${coreId} did not load the common 12.5 m mosaic lineage`, core);
         requireValue(JSON.stringify(core.sourceMosaicGridOriginProjected) === JSON.stringify([378787.5, 2906250]), `${coreId} did not preserve the common pixel origin`, core);
+        requireValue(
+          core.renderedMesh?.heightContract === 'shared-rendered-triangle-mesh' &&
+            Math.abs(core.renderedMesh.widthMeters - 10_000) < 0.01 &&
+            Math.abs(core.renderedMesh.heightMeters - 10_000) < 0.01,
+          `${coreId} camera/water/ecology height contract does not cover the exact rendered core surface`,
+          core,
+        );
         requireValue(typeof core.heightSha256 === 'string' && typeof core.maskSha256 === 'string', `${coreId} did not load distinct DEM/mask asset identities`, core);
         requireValue(core.ecology?.datasetId === coreId && core.ecology?.activeCoreId === coreId, `${coreId} ecology runtime identity did not switch`, core);
         requireValue(core.ecology?.densityPolicy === 'active-core-dense' && core.ecology?.generatedInstanceCount > 0, `${coreId} dense ecology asset did not become active`, core);
@@ -483,7 +491,45 @@ async function main() {
           await page.waitForTimeout(850);
           const camera = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().camera);
           requireValue(camera.inspectionView?.datasetId === coreId, `${coreId} did not select its own inspection viewpoint`, camera);
-          requireValue(Number(camera.inspectionView?.minimumClearanceMetersAt1_7m) > 0.35, `${coreId} inspection ray remains terrain-occluded at 1.7 m`, camera);
+          requireValue(
+            Number(camera.inspectionView?.minimumVerifiedVisibleDistanceMeters) >= 200,
+            `${coreId} 1.7 m center/side view rays meet rendered terrain too soon`,
+            camera,
+          );
+          requireValue(
+            Number(camera.inspectionView?.localSlopeDegrees) <= 10,
+            `${coreId} inspection anchor is too steep for a ground-access viewpoint`,
+            camera,
+          );
+          requireValue(
+            Number(camera.inspectionView?.minimumRayClearanceMeters) >= 0.15,
+            `${coreId} inspection center/side ray grazes the rendered terrain`,
+            camera,
+          );
+          requireValue(
+            camera.inspectionView?.traceLimitMeters === 600 &&
+              camera.inspectionView?.rayCount === 5 &&
+              JSON.stringify(camera.inspectionView?.sideRayOffsetsDegrees) === JSON.stringify([-32, -16, 0, 16, 32]) &&
+              !camera.inspectionView?.rayTerminations?.includes('missing-terrain'),
+            `${coreId} inspection audit does not cover the desktop horizontal field of view`,
+            camera,
+          );
+          requireValue(
+            Math.abs(Number(camera.inspectionView?.renderedAltitudeAboveGroundMeters) - height) < 0.15,
+            `${coreId} requested camera height does not match the rendered triangle mesh`,
+            camera,
+          );
+          requireValue(
+            camera.groundSampleValid === true &&
+              Math.abs((Number(camera.eyeWorldY) - Number(camera.renderedEyeGroundY)) - height) < 0.15,
+            `${coreId} camera eye and rendered ground do not independently prove the review height`,
+            camera,
+          );
+          requireValue(
+            Number(camera.inspectionView?.bearingDegrees) >= 0 && Number(camera.inspectionView?.bearingDegrees) < 360,
+            `${coreId} inspection bearing is invalid`,
+            camera,
+          );
           const heightLabel = String(height).replace('.', '_');
           const image = await screenshot(`core-${coreId}-${heightLabel}m.png`, 'core-review', { coreId, heightMeters: height });
           const entry = { coreId, heightMeters: height, camera, file: image.artifact.file };
@@ -511,7 +557,13 @@ async function main() {
         }, value);
       }
       await page.locator('[data-water-season="summer"]').click();
-      await page.waitForFunction(() => window.GuilinWorkbench.getDiagnostics().hydrology?.lastRender?.waterStage === 'summer');
+      await page.waitForFunction(() => {
+        const render = window.GuilinWorkbench.getDiagnostics().hydrology?.lastRender;
+        return render?.waterStage === 'summer' &&
+          Math.abs(render.waterLevel - 1.35) < 0.001 &&
+          Math.abs(render.waterWidth - 1.25) < 0.001 &&
+          render.centerlineBatches > 0 && render.breakpointBatches > 0;
+      });
       await page.waitForTimeout(850);
       const summer = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().hydrology);
       const summerImage = await screenshot('hydrology-summer-segments.png', 'hydrology-summer');
@@ -619,12 +671,19 @@ async function main() {
       await page.locator('#gaeaResetButton').click();
       await page.waitForFunction(() => {
         const gaea = window.GuilinWorkbench.getDiagnostics().gaea;
-        return gaea?.build?.status === 'idle' && gaea?.preview?.runtimeParameters?.verticalEx === 1.6;
+        return gaea?.build?.status === 'idle' &&
+          gaea?.preview?.runtimeParameters?.verticalEx === 1.6 &&
+          document.querySelector('#gaeaProgress')?.value === 0 &&
+          document.querySelector('#gaeaStatus')?.textContent.includes('已复位');
       });
       const reset = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
       await page.locator('[data-gaea-mode="browser"]').click();
       await page.waitForTimeout(450);
-      const beforeState = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
+      const beforeSnapshot = await page.evaluate(() => {
+        const diagnostics = window.GuilinWorkbench.getDiagnostics();
+        return { gaea: diagnostics.gaea, ecology: diagnostics.ecology };
+      });
+      const beforeState = beforeSnapshot.gaea;
       const beforeImage = await screenshot('gaea-before.png', 'gaea-before');
       const revision = Number(beforeState.preview?.revision || 0);
       const changes = { verticalEx: '2.20', mountainBoost: '0.82', karstStrength: '0.88', erosionStrength: '0.84' };
@@ -640,18 +699,35 @@ async function main() {
         const gaea = window.GuilinWorkbench?.getDiagnostics?.().gaea;
         return gaea?.preview?.approximation === true && Number(gaea.preview.revision) > previousRevision;
       }, revision);
+      await page.waitForFunction((previousGeneration) => {
+        const diagnostics = window.GuilinWorkbench?.getDiagnostics?.();
+        return Number(diagnostics?.ecology?.generation) > previousGeneration &&
+          Number(diagnostics?.ecology?.rootTerrainRevision) === Number(diagnostics?.gaea?.preview?.revision);
+      }, Number(beforeSnapshot.ecology?.generation || 0));
       await page.evaluate(() => { document.querySelector('.controller-scroll').scrollTop = 0; });
       await page.waitForTimeout(850);
-      const afterState = await page.evaluate(() => window.GuilinWorkbench.getDiagnostics().gaea);
+      const afterSnapshot = await page.evaluate(() => {
+        const diagnostics = window.GuilinWorkbench.getDiagnostics();
+        return { gaea: diagnostics.gaea, ecology: diagnostics.ecology };
+      });
+      const afterState = afterSnapshot.gaea;
       const afterImage = await screenshot('gaea-after.png', 'gaea-after');
       requireValue(afterState.preview?.approximation === true, 'GAEA browser preview lost its approximation label', afterState);
       requireValue(afterState.preview?.authoritativeElevationChanged === false, 'Browser preview claimed to change authoritative elevation', afterState);
       requireValue(Math.abs(afterState.preview?.runtimeParameters?.verticalEx - 2.2) < 0.001, 'GAEA vertical preview parameter did not reach the shared runtime', afterState);
+      requireValue(
+        Number(afterSnapshot.ecology?.generation) > Number(beforeSnapshot.ecology?.generation) &&
+          Number(afterSnapshot.ecology?.rootTerrainRevision) === Number(afterState.preview?.revision),
+        'GAEA terrain revision did not re-pin ecology roots to the current rendered mesh',
+        { before: beforeSnapshot.ecology, after: afterSnapshot.ecology, gaea: afterState },
+      );
       report.gaea = {
         unavailable,
         reset,
         before: beforeState,
         after: afterState,
+        ecologyBefore: beforeSnapshot.ecology,
+        ecologyAfter: afterSnapshot.ecology,
         beforeScreenshot: beforeImage.artifact.file,
         afterScreenshot: afterImage.artifact.file,
       };
