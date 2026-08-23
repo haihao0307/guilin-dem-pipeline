@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Verify public HTML, runtime and data assets
+      - name: Verify public workbench, HTML, runtime and data assets
         run: |
           set -euo pipefail
           BASE="https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site"
@@ -33,6 +33,16 @@ jobs:
             done
             return 1
           }
+          fetch "$BASE/guilin-workbench/index.html" > /tmp/workbench.html
+          grep -q "桂林 DEM 统一可视检查工作台" /tmp/workbench.html
+          grep -q "全域总图" /tmp/workbench.html
+          grep -q "GAEA 桥接" /tmp/workbench.html
+          grep -q "真宝鼎" /tmp/workbench.html
+          grep -q "桂林古城" /tmp/workbench.html
+          grep -q "秧塘机场" /tmp/workbench.html
+          grep -q "阳朔县城" /tmp/workbench.html
+          fetch "$BASE/index.html" > /tmp/overall.html
+          test -s /tmp/overall.html
           fetch "$BASE/guilin-v050-check/index.html" > /tmp/index.html
           grep -q "桂林核心区生态地表恢复候选" /tmp/index.html
           grep -q "桂林 v0.5 可视检查版" /tmp/index.html
@@ -49,10 +59,12 @@ jobs:
           test -s /tmp/shrubs.bin
           test -s /tmp/rice.bin
 
-      - name: Publish verified link in job summary
+      - name: Publish verified links in job summary
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
-          ## 已验证的桂林 v0.5 可视检查网站
+          ## 已验证的桂林可视检查网站
 
-          https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/guilin-v050-check/index.html
+          - 统一工作台: https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/guilin-workbench/index.html
+          - 全域总图: https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/index.html
+          - 核心生态页: https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/guilin-v050-check/index.html
           EOF
