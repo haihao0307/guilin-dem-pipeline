@@ -90,8 +90,10 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:8765/assets/ecology/v0.3.1/trees.bin >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:8765/assets/fine-regions/yangtang-airfield/height_u16.bin >/dev/null
 
-      - name: Configure GitHub Pages
+      - name: Enable and configure GitHub Pages
         uses: actions/configure-pages@v6.0.0
+        with:
+          enablement: true
 
       - name: Upload stable site plus visible inspection build
         uses: actions/upload-pages-artifact@v5
@@ -126,13 +128,14 @@ jobs:
           import json, os
           from datetime import datetime, timezone
           from pathlib import Path
+          base = os.environ.get('PAGE_URL','').rstrip('/')
           payload = {
             "schema": "guilin_v050_check_deployment@1.0",
             "status": "deployed",
             "deployed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
             "commit_sha": os.environ['GITHUB_SHA'],
-            "pages_base_url": os.environ.get('PAGE_URL',''),
-            "public_check_url": "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin-v050-check/",
+            "pages_base_url": base,
+            "public_check_url": f"{base}/guilin-v050-check/" if base else "",
             "artifact_id": 9483744971
           }
           Path('reports/guilin-v050-check-deployment.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
