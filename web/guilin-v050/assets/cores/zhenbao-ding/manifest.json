@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "guilin-core-dem/v1",
+  "id": "zhenbao-ding",
+  "name": "真寶鼎",
+  "crs": "EPSG:32649",
+  "sourceResolutionMeters": 12.5,
+  "accuracyPolicy": "12.5m verified source pixels; no upsampling and not a native 1m survey",
+  "requestedAreaSquareKilometers": 100.0,
+  "actualAreaSquareKilometers": 100.0,
+  "bounds": [
+    477537.5,
+    2885700.0,
+    487537.5,
+    2895700.0
+  ],
+  "projectedBounds": [
+    477537.5,
+    2885700.0,
+    487537.5,
+    2895700.0
+  ],
+  "wgs84Bounds": [
+    110.77520491095994,
+    26.090269121080453,
+    110.8753762515223,
+    26.180686850586437
+  ],
+  "widthMeters": 10000.0,
+  "heightMeters": 10000.0,
+  "gridWidth": 800,
+  "gridHeight": 800,
+  "resolution": [
+    12.5,
+    12.5
+  ],
+  "raster": {
+    "width": 800,
+    "height": 800,
+    "resolutionMeters": 12.5,
+    "gridConvention": "pixel-center",
+    "spacingDerivation": "projected-extent/grid-dimension",
+    "rowOrder": "north-to-south",
+    "columnOrder": "west-to-east",
+    "sampleType": "uint16",
+    "byteOrder": "little-endian"
+  },
+  "rowOrder": "north-to-south",
+  "columnOrder": "west-to-east",
+  "pixelOrigin": [
+    7900,
+    844
+  ],
+  "pixelOriginProjected": [
+    477537.5,
+    2895700.0
+  ],
+  "firstPixelCenterProjected": [
+    477543.75,
+    2895693.75
+  ],
+  "gridCenterProjected": [
+    482537.5,
+    2890700.0
+  ],
+  "centerProjected": [
+    482534.5304624392,
+    2890708.1229911866
+  ],
+  "minimumElevation": 403.0,
+  "maximumElevation": 2089.5,
+  "validElevationRangeMeters": [
+    546.0057297627222,
+    2089.5
+  ],
+  "verticalScale": 1.0,
+  "heightEncoding": {
+    "sampleType": "uint16",
+    "byteOrder": "little-endian",
+    "quantizationMinimumMeters": 403.0,
+    "quantizationMaximumMeters": 2089.5,
+    "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)"
+  },
+  "heightBinary": "height_u16.bin",
+  "heightByteLength": 1280000,
+  "heightSha256": "213ea974c2c994f533fd2d04fc3558422b1ca4116536dd814d7b15c8fd685760",
+  "maskBinary": "mask_u8.bin",
+  "maskByteLength": 640000,
+  "maskSha256": "bdbfab6a38d61787949a9b823b482ad31f108ded53f050c736585c1c5507b614",
+  "validPixelCount": 639737,
+  "missingPixelCount": 263,
+  "validFraction": 0.9995890625,
+  "status": "incomplete_12_5m",
+  "sourceStatus": "incomplete_12_5m",
+  "gapPolicy": "source-mask-preserved-no-fill",
+  "coverage": {
+    "validFraction": 0.9995890625,
+    "validPixelCount": 639737,
+    "missingPixelCount": 263,
+    "complete": false
+  },
+  "fallback": {
+    "applied": false,
+    "allowed": false,
+    "policy": "mask-invalid-pixels-and-report-source-gap"
+  },
+  "landmarks": [
+    {
+      "id": "zhenbao-ding",
+      "name": "真寶鼎",
+      "longitude": 110.82528,
+      "latitude": 26.13556,
+      "color": "#f2bd65",
+      "gridU": 0.4997030462439172,
+      "gridV": 0.49918770088134334,
+      "elevationMeters": 1955.5
+    }
+  ],
+  "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded",
+  "sourceLineage": {
+    "lineageId": "verified-12.5m-fine-region-centered-core",
+    "sourceMosaicId": "verified-12.5m-mosaic-all-10",
+    "sourceMosaicGridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/zhenbao-ding/terrain-manifest.json",
+    "sourceHeightBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/zhenbao-ding/height_u16.bin",
+    "sourceMaskBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/zhenbao-ding/mask_u8.bin",
+    "sourceManifestSha256": "f351284dada526cb53ea9cf7e5650e923f7dec6eb4e26de3bf449bad00f4be38",
+    "sourceHeightSha256": "c2bd238004d5584e79f71e1d91f538bdd905cac61ed03ef39bc6879f68647d59",
+    "sourceMaskSha256": "10e9d1b6e983267c77cb460e4cd204005b402d010b07cca3821e5c8dcc01f23f",
+    "sourceGridWidth": 1132,
+    "sourceGridHeight": 1132,
+    "sourceBounds": [
+      475462.5,
+      2883625.0,
+      489612.5,
+      2897775.0
+    ],
+    "sourcePixelOrigin": [
+      7734,
+      678
+    ],
+    "sourceValidFraction": 0.8530221066563448,
+    "sourceMinimumElevation": 403.0,
+    "sourceMaximumElevation": 2089.5,
+    "sourceStatus": "incomplete_12_5m",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00",
+    "cropMethod": "center-window-no-spatial-resampling",
+    "cropWindow": {
+      "columnOffset": 166,
+      "rowOffset": 166,
+      "width": 800,
+      "height": 800
+    },
+    "heightReencoding": "none-source-u16-codes-cropped-byte-for-byte"
+  },
+  "sourceMosaic": {
+    "mosaicId": "verified-12.5m-mosaic-all-10",
+    "crs": "EPSG:32649",
+    "resolutionMeters": 12.5,
+    "gridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "gridOriginConvention": "west-north-vertex",
+    "pixelOrigin": [
+      7734,
+      678
+    ],
+    "fineRegionId": "zhenbao-ding",
+    "fineRegionGridWidth": 1132,
+    "fineRegionGridHeight": 1132,
+    "fineRegionBounds": [
+      475462.5,
+      2883625.0,
+      489612.5,
+      2897775.0
+    ],
+    "fineRegionValidFraction": 0.8530221066563448,
+    "cropColumnOffset": 166,
+    "cropRowOffset": 166,
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/zhenbao-ding/terrain-manifest.json",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00"
+  }
+}

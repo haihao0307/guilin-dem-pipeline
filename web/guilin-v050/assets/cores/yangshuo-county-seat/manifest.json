@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "guilin-core-dem/v1",
+  "id": "yangshuo-county-seat",
+  "name": "陽朔縣",
+  "crs": "EPSG:32649",
+  "sourceResolutionMeters": 12.5,
+  "accuracyPolicy": "12.5m verified source pixels; no upsampling and not a native 1m survey",
+  "requestedAreaSquareKilometers": 100.0,
+  "actualAreaSquareKilometers": 100.0,
+  "bounds": [
+    443650.0,
+    2735850.0,
+    453650.0,
+    2745850.0
+  ],
+  "projectedBounds": [
+    443650.0,
+    2735850.0,
+    453650.0,
+    2745850.0
+  ],
+  "wgs84Bounds": [
+    110.44236633818717,
+    24.736175368347563,
+    110.5416543429442,
+    24.82682095229258
+  ],
+  "widthMeters": 10000.0,
+  "heightMeters": 10000.0,
+  "gridWidth": 800,
+  "gridHeight": 800,
+  "resolution": [
+    12.5,
+    12.5
+  ],
+  "raster": {
+    "width": 800,
+    "height": 800,
+    "resolutionMeters": 12.5,
+    "gridConvention": "pixel-center",
+    "spacingDerivation": "projected-extent/grid-dimension",
+    "rowOrder": "north-to-south",
+    "columnOrder": "west-to-east",
+    "sampleType": "uint16",
+    "byteOrder": "little-endian"
+  },
+  "rowOrder": "north-to-south",
+  "columnOrder": "west-to-east",
+  "pixelOrigin": [
+    5189,
+    12832
+  ],
+  "pixelOriginProjected": [
+    443650.0,
+    2745850.0
+  ],
+  "firstPixelCenterProjected": [
+    443656.25,
+    2745843.75
+  ],
+  "gridCenterProjected": [
+    448650.0,
+    2740850.0
+  ],
+  "centerProjected": [
+    448648.4929454023,
+    2740850.7563219736
+  ],
+  "minimumElevation": 13.5,
+  "maximumElevation": 535.5,
+  "validElevationRangeMeters": [
+    13.5,
+    535.5
+  ],
+  "verticalScale": 1.0,
+  "heightEncoding": {
+    "sampleType": "uint16",
+    "byteOrder": "little-endian",
+    "quantizationMinimumMeters": 13.5,
+    "quantizationMaximumMeters": 535.5,
+    "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)"
+  },
+  "heightBinary": "height_u16.bin",
+  "heightByteLength": 1280000,
+  "heightSha256": "2909176a544b42319a01a0abfe5ab8f8261d1bec4721d1a5bfba226b274fc222",
+  "maskBinary": "mask_u8.bin",
+  "maskByteLength": 640000,
+  "maskSha256": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
+  "validPixelCount": 640000,
+  "missingPixelCount": 0,
+  "validFraction": 1.0,
+  "status": "ready_12_5m",
+  "sourceStatus": "ready_12_5m",
+  "gapPolicy": "complete-source-window",
+  "coverage": {
+    "validFraction": 1.0,
+    "validPixelCount": 640000,
+    "missingPixelCount": 0,
+    "complete": true
+  },
+  "fallback": {
+    "applied": false,
+    "allowed": false,
+    "policy": "mask-invalid-pixels-and-report-source-gap"
+  },
+  "landmarks": [
+    {
+      "id": "yangshuo-county-seat",
+      "name": "陽朔縣",
+      "longitude": 110.4920133,
+      "latitude": 24.7815129,
+      "color": "#73d7b0",
+      "gridU": 0.49984929454022786,
+      "gridV": 0.4999243678026367,
+      "elevationMeters": 102.0
+    }
+  ],
+  "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded",
+  "sourceLineage": {
+    "lineageId": "verified-12.5m-fine-region-centered-core",
+    "sourceMosaicId": "verified-12.5m-mosaic-all-10",
+    "sourceMosaicGridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/yangshuo-county-seat/terrain-manifest.json",
+    "sourceHeightBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/yangshuo-county-seat/height_u16.bin",
+    "sourceMaskBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/yangshuo-county-seat/mask_u8.bin",
+    "sourceManifestSha256": "6b23f7fd90c90f791122bf84210a66059014030596933e6908a97e0cabe337bc",
+    "sourceHeightSha256": "53866dec1b21dc73f4c1cb8d06efb3360043be25106545240b371013fe78eb40",
+    "sourceMaskSha256": "00fdff54c29d5da4a045de560da5396ecd1a75826e7d6a4ef49e7b35afb68321",
+    "sourceGridWidth": 1132,
+    "sourceGridHeight": 1132,
+    "sourceBounds": [
+      441575.0,
+      2733775.0,
+      455725.0,
+      2747925.0
+    ],
+    "sourcePixelOrigin": [
+      5023,
+      12666
+    ],
+    "sourceValidFraction": 1.0,
+    "sourceMinimumElevation": 13.5,
+    "sourceMaximumElevation": 535.5,
+    "sourceStatus": "ready_12_5m",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00",
+    "cropMethod": "center-window-no-spatial-resampling",
+    "cropWindow": {
+      "columnOffset": 166,
+      "rowOffset": 166,
+      "width": 800,
+      "height": 800
+    },
+    "heightReencoding": "none-source-u16-codes-cropped-byte-for-byte"
+  },
+  "sourceMosaic": {
+    "mosaicId": "verified-12.5m-mosaic-all-10",
+    "crs": "EPSG:32649",
+    "resolutionMeters": 12.5,
+    "gridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "gridOriginConvention": "west-north-vertex",
+    "pixelOrigin": [
+      5023,
+      12666
+    ],
+    "fineRegionId": "yangshuo-county-seat",
+    "fineRegionGridWidth": 1132,
+    "fineRegionGridHeight": 1132,
+    "fineRegionBounds": [
+      441575.0,
+      2733775.0,
+      455725.0,
+      2747925.0
+    ],
+    "fineRegionValidFraction": 1.0,
+    "cropColumnOffset": 166,
+    "cropRowOffset": 166,
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/yangshuo-county-seat/terrain-manifest.json",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00"
+  }
+}

@@ -1,58 +1,162 @@
-const $ = (selector) => document.querySelector(selector);
-const canvas = $('#gl');
-const loading = $('#loading');
-const loadingText = $('#loadingText');
-const toast = $('#toast');
-const errorCard = $('#errorCard');
-const errorText = $('#errorText');
+import { createCoreLoader, CORE_IDS } from './core-loader.js';
+import {
+  createGaeaBridge,
+  GAEA_DEFAULT_PARAMETERS,
+  GAEA_PRESETS,
+} from './gaea-bridge.js';
+import { createHydrologyRuntime } from './hydrology-runtime.js';
+import { createEcologyCoreRuntime } from './ecology-core-runtime.js';
 
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const byId = (id) => document.getElementById(id);
+const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 const lerp = (a, b, t) => a + (b - a) * t;
 const damp = (a, b, lambda, dt) => lerp(a, b, 1 - Math.exp(-lambda * dt));
 const radians = (degrees) => degrees * Math.PI / 180;
+const formatNumber = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 });
 
-function showToast(message, duration = 2800) {
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove('show'), duration);
-}
-
-async function fetchFirst(urls, type = 'arrayBuffer') {
-  const failures = [];
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      if (type === 'json') return await response.json();
-      if (type === 'blob') return await response.blob();
-      return await response.arrayBuffer();
-    } catch (error) {
-      failures.push(`${url}: ${error.message}`);
+function createSharedStore(initialState) {
+  const state = initialState;
+  const listeners = new Set();
+  const notify = () => {
+    for (const listener of listeners) {
+      try {
+        listener(state);
+      } catch {
+        // A diagnostic subscriber must never interrupt the shared runtime.
+      }
     }
-  }
-  throw new Error(failures.join(' | '));
+  };
+  return {
+    state,
+    getState: () => state,
+    getSnapshot: () => state,
+    setState(partial) {
+      Object.assign(state, partial);
+      notify();
+    },
+    patch(partial) {
+      Object.assign(state, partial);
+      notify();
+    },
+    set(key, value) {
+      state[key] = value;
+      notify();
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
 }
 
-async function imageFromUrls(urls) {
-  const blob = await fetchFirst(urls, 'blob');
-  const objectUrl = URL.createObjectURL(blob);
-  try {
-    return await new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('字段纹理解码失败'));
-      image.src = objectUrl;
-    });
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
+const store = createSharedStore({
+  manifest: null,
+  workspace: 'overall',
+  activeCoreId: 'overall',
+  dataset: null,
+  switchingDataset: false,
+  gaea: {
+    mode: 'browser-preview',
+    requestedMode: 'browser',
+    workerUrl: null,
+    parameters: { ...GAEA_DEFAULT_PARAMETERS },
+  },
+  hydrology: {
+    showLijiang: true,
+    showXiangjiang: true,
+    showTributaries: true,
+    showCenterlines: false,
+    showSurface: true,
+    showBanks: true,
+    showFlow: true,
+    showDiagnostics: false,
+    waterSeason: 'summer',
+    waterLevel: 1,
+    waterWidth: 1,
+  },
+  ecology: {
+    showForest: true,
+    showShrubs: true,
+    showPaddy: true,
+    showDryCrops: true,
+    showOrchards: true,
+    showBunds: true,
+    showRock: true,
+    showInstances: true,
+    forestDensity: 0.72,
+    windSpeed: 4.2,
+    windDirection: 135,
+    gustStrength: 0.28,
+    season: 'summer',
+    year: 1942,
+  },
+  display: {
+    showTerrain: true,
+    showAtmosphere: true,
+    showCoreBounds: true,
+    showDiagnostics: false,
+  },
+});
+
+const ui = {
+  canvas: byId('gl'),
+  loading: byId('loading'),
+  loadingText: byId('loadingText'),
+  errorCard: byId('errorCard'),
+  errorText: byId('errorText'),
+  statusDot: byId('statusDot'),
+  statusText: byId('statusText'),
+  fps: byId('fpsLabel'),
+  controller: byId('controller'),
+  controllerTitle: byId('controllerTitle'),
+  controllerSubtitle: byId('controllerSubtitle'),
+  panelToggle: byId('panelToggle'),
+  closePanel: byId('closePanel'),
+};
+
+function setStatus(message, kind = 'working') {
+  ui.statusText.textContent = message;
+  ui.statusDot.className = kind === 'ok' ? 'ok' : kind === 'error' ? 'error' : '';
+}
+
+function showFatal(error) {
+  const message = String(error && (error.stack || error.message) || error);
+  ui.loading.classList.add('hidden');
+  ui.errorText.textContent = message;
+  ui.errorCard.classList.add('visible');
+  setStatus('统一运行时启动失败', 'error');
+  window.__GUILIN_WORKBENCH_DIAGNOSTICS__ = {
+    ready: false,
+    fatalError: message,
+    publicationBlocked: true,
+  };
+}
+
+async function fetchJson(url, signal) {
+  const response = await fetch(url, { cache: 'no-store', signal });
+  if (!response.ok) throw new Error('JSON HTTP ' + response.status + ': ' + url);
+  return response.json();
+}
+
+async function fetchBuffer(url, signal) {
+  const response = await fetch(url, { cache: 'no-store', signal });
+  if (!response.ok) throw new Error('binary HTTP ' + response.status + ': ' + url);
+  return response.arrayBuffer();
+}
+
+function littleEndianUint16(buffer) {
+  if (buffer.byteLength % 2) throw new Error('高程二进制长度必须为偶数');
+  const count = buffer.byteLength / 2;
+  const output = new Uint16Array(count);
+  const view = new DataView(buffer);
+  for (let index = 0; index < count; index += 1) output[index] = view.getUint16(index * 2, true);
+  return output;
 }
 
 const Vec3 = {
-  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
-  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
-  scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+  sub(a, b) {
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  },
   normalize(a) {
     const length = Math.hypot(a[0], a[1], a[2]) || 1;
     return [a[0] / length, a[1] / length, a[2] / length];
@@ -95,354 +199,1698 @@ const Mat4 = {
     ]);
   },
   multiply(a, b) {
-    const out = new Float32Array(16);
-    for (let column = 0; column < 4; column++) {
-      for (let row = 0; row < 4; row++) {
-        out[column * 4 + row] =
+    const output = new Float32Array(16);
+    for (let column = 0; column < 4; column += 1) {
+      for (let row = 0; row < 4; row += 1) {
+        output[column * 4 + row] =
           a[row] * b[column * 4] +
           a[4 + row] * b[column * 4 + 1] +
           a[8 + row] * b[column * 4 + 2] +
           a[12 + row] * b[column * 4 + 3];
       }
     }
-    return out;
-  },
-  invert(matrix) {
-    const m = matrix;
-    const out = new Float32Array(16);
-    const b00 = m[0] * m[5] - m[1] * m[4];
-    const b01 = m[0] * m[6] - m[2] * m[4];
-    const b02 = m[0] * m[7] - m[3] * m[4];
-    const b03 = m[1] * m[6] - m[2] * m[5];
-    const b04 = m[1] * m[7] - m[3] * m[5];
-    const b05 = m[2] * m[7] - m[3] * m[6];
-    const b06 = m[8] * m[13] - m[9] * m[12];
-    const b07 = m[8] * m[14] - m[10] * m[12];
-    const b08 = m[8] * m[15] - m[11] * m[12];
-    const b09 = m[9] * m[14] - m[10] * m[13];
-    const b10 = m[9] * m[15] - m[11] * m[13];
-    const b11 = m[10] * m[15] - m[11] * m[14];
-    let determinant = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-    if (!determinant) return null;
-    determinant = 1 / determinant;
-    out[0] = (m[5] * b11 - m[6] * b10 + m[7] * b09) * determinant;
-    out[1] = (-m[1] * b11 + m[2] * b10 - m[3] * b09) * determinant;
-    out[2] = (m[13] * b05 - m[14] * b04 + m[15] * b03) * determinant;
-    out[3] = (-m[9] * b05 + m[10] * b04 - m[11] * b03) * determinant;
-    out[4] = (-m[4] * b11 + m[6] * b08 - m[7] * b07) * determinant;
-    out[5] = (m[0] * b11 - m[2] * b08 + m[3] * b07) * determinant;
-    out[6] = (-m[12] * b05 + m[14] * b02 - m[15] * b01) * determinant;
-    out[7] = (m[8] * b05 - m[10] * b02 + m[11] * b01) * determinant;
-    out[8] = (m[4] * b10 - m[5] * b08 + m[7] * b06) * determinant;
-    out[9] = (-m[0] * b10 + m[1] * b08 - m[3] * b06) * determinant;
-    out[10] = (m[12] * b04 - m[13] * b02 + m[15] * b00) * determinant;
-    out[11] = (-m[8] * b04 + m[9] * b02 - m[11] * b00) * determinant;
-    out[12] = (-m[4] * b09 + m[5] * b07 - m[6] * b06) * determinant;
-    out[13] = (m[0] * b09 - m[1] * b07 + m[2] * b06) * determinant;
-    out[14] = (-m[12] * b03 + m[13] * b01 - m[14] * b00) * determinant;
-    out[15] = (m[8] * b03 - m[9] * b01 + m[10] * b00) * determinant;
-    return out;
-  },
-  transformPoint(matrix, point) {
-    const x = point[0], y = point[1], z = point[2], w = point[3] ?? 1;
-    const rx = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * w;
-    const ry = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * w;
-    const rz = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] * w;
-    const rw = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] * w;
-    return [rx / rw, ry / rw, rz / rw];
+    return output;
   },
 };
 
-const manifest = await fetchFirst(['./manifest.json'], 'json');
-const terrainMeta = manifest.terrain;
-const ecologyMeta = manifest.ecology;
-const aoi = manifest.aoi;
-const sideM = aoi.sideMeters;
-const halfM = sideM / 2;
-const meshN = terrainMeta.grid;
-const minH = terrainMeta.minElevationM;
-const maxH = terrainMeta.maxElevationM;
-const reliefM = maxH - minH;
-
-loadingText.textContent = '读取 v0.3.1 恢复资产';
-const [heightBuffer, field0Image, field1Image, field2Image, treesBuffer, shrubsBuffer, riceBuffer] = await Promise.all([
-  fetchFirst(manifest.assets.height),
-  imageFromUrls(manifest.assets.field0),
-  imageFromUrls(manifest.assets.field1),
-  imageFromUrls(manifest.assets.field2),
-  fetchFirst(manifest.assets.trees),
-  fetchFirst(manifest.assets.shrubs),
-  fetchFirst(manifest.assets.rice),
-]);
-
-const gl = canvas.getContext('webgl2', { antialias: true, alpha: true, powerPreference: 'high-performance' });
-if (!gl) throw new Error('浏览器不支持 WebGL2');
-
-const common = '#version 300 es\nprecision highp float;\n';
-const terrainVS = `${common}
-layout(location=0) in vec3 aPosition;
-layout(location=1) in vec3 aNormal;
-layout(location=2) in vec2 aUv;
-uniform mat4 uViewProj;
-uniform float uVerticalEx;
-uniform sampler2D uField0;
-uniform sampler2D uField1;
-uniform sampler2D uField2;
-out vec3 vWorld;
-out vec3 vNormal;
-out vec2 vUv;
-void main(){
-  vec4 f0=texture(uField0,aUv); vec4 f1=texture(uField1,aUv); vec4 f2=texture(uField2,aUv);
-  float y=aPosition.y;
-  float terrace=clamp(f2.g,0.0,1.0);
-  float terraceY=floor((y+.675)/1.35)*1.35;
-  y=mix(y,terraceY,terrace*.62);
-  float agriculture=max(step(.04,f1.r),step(.05,f2.a));
-  float bund=smoothstep(.58,.94,f1.g)*agriculture*(1.0-smoothstep(.04,.20,f0.a));
-  y+=bund*.36;
-  vWorld=vec3(aPosition.x,y*uVerticalEx,aPosition.z);
-  vNormal=normalize(vec3(aNormal.x,aNormal.y/max(uVerticalEx,.001),aNormal.z));
-  vUv=aUv;
-  gl_Position=uViewProj*vec4(vWorld,1.0);
-}`;
-
-const terrainFS = `${common}
-in vec3 vWorld; in vec3 vNormal; in vec2 vUv; out vec4 outColor;
-uniform sampler2D uField0; uniform sampler2D uField1; uniform sampler2D uField2;
-uniform vec3 uCameraPos; uniform vec3 uSunDir; uniform vec3 uFogColor;
-uniform float uTime; uniform float uSeason; uniform float uForestDensity; uniform float uWaterLevel;
-uniform float uShowForest; uniform float uShowPaddy; uniform float uShowWater; uniform float uShowRock;
-uniform float uShowTerrace; uniform float uShowEcology; uniform float uErosionStrength;
-uniform float uKarstStrength; uniform float uHydrologyDiagnostics;
-float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
-vec2 hash22(vec2 p){float n=sin(dot(p,vec2(41.0,289.0)));return fract(vec2(262144.0,32768.0)*n);}
-float voronoiF1(vec2 x){vec2 n=floor(x),f=fract(x);float md=8.0;for(int j=-1;j<=1;j++){for(int i=-1;i<=1;i++){vec2 g=vec2(float(i),float(j));vec2 o=.12+.76*hash22(n+g);vec2 r=g+o-f;md=min(md,dot(r,r));}}return sqrt(md);}
-float codeMask(float code,float target){return 1.0-smoothstep(.34,.52,abs(code-target));}
-void main(){
-  vec4 f0=texture(uField0,vUv); vec4 f1=texture(uField1,vUv); vec4 f2=texture(uField2,vUv);
-  float elevation=f0.r, slope=f0.g, waterRaw=f0.a;
-  float water=smoothstep(.035,.18,waterRaw)*uShowWater*uShowEcology*(1.0-smoothstep(.56,.92,slope));
-  float stage=f1.r*4.0;
-  float paddyMask=smoothstep(.15,.34,stage)*uShowPaddy*uShowEcology*(1.0-smoothstep(.13,.29,slope))*(1.0-water);
-  float landCode=floor(f2.a*8.0+.5);
-  float farmMask=step(.5,landCode)*uShowPaddy*uShowEcology*(1.0-water);
-  float parcel=f1.g*max(paddyMask,farmMask); float row=f1.b*max(paddyMask,farmMask);
-  float rock=smoothstep(.035,.32,f1.a*uShowRock*uKarstStrength*(1.0-water)*(1.0-max(paddyMask,farmMask)*.96));
-  float wet=f2.r; float terrace=f2.g*uShowTerrace; float tributary=f2.b;
-  float forest=clamp(f0.b*uForestDensity,0.0,1.0)*uShowForest*uShowEcology;
-  forest*=clamp(1.0-water*1.35-rock*.98-max(paddyMask,farmMask),0.0,1.0);
-  float n=hash12(floor(vWorld.xz*.18))+hash12(floor(vWorld.xz*.057+17.0))*.45;
-  float parcelNoise=hash12(floor(vWorld.xz*.019+vec2(7.1,19.3)));
-  float cropVariant=hash12(floor(vWorld.xz*.0107+vec2(43.7,11.9)));
-  vec3 base=mix(vec3(.225,.315,.150),vec3(.335,.410,.225),elevation);
-  base=mix(base,vec3(.365,.285,.168),smoothstep(.32,.82,slope)*.52+max(0.0,n-.82)*.16);
-  base*=mix(.80,1.10,n*.55); base=mix(base,base*vec3(.70,.82,.72),wet*.24);
-  float strata=.5+.5*sin(vWorld.y*.43+vWorld.x*.014+vWorld.z*.009+n*3.1);
-  float ledge=smoothstep(.76,.96,strata);
-  vec3 limestone=mix(vec3(.345,.355,.335),vec3(.805,.810,.755),elevation*.30+n*.08+ledge*.35);
-  base=mix(base,limestone,rock*.975);
-  float c1=codeMask(landCode,1.0),c2=codeMask(landCode,2.0),c3=codeMask(landCode,3.0),c4=codeMask(landCode,4.0);
-  float c5=codeMask(landCode,5.0),c6=codeMask(landCode,6.0),c7=codeMask(landCode,7.0),c8=codeMask(landCode,8.0);
-  vec3 dryA=mix(vec3(.48,.45,.16),vec3(.62,.54,.19),cropVariant);
-  vec3 dryB=mix(vec3(.36,.40,.16),vec3(.52,.46,.18),parcelNoise);
-  vec3 vegA=cropVariant<.33?vec3(.12,.43,.17):(cropVariant<.66?vec3(.20,.48,.40):vec3(.47,.60,.29));
-  vec3 vegB=parcelNoise<.5?vec3(.17,.52,.25):vec3(.38,.63,.39);
-  vec3 farm=c1*vec3(.37,.47,.23)+c2*dryA+c3*dryB+c4*vegA+c5*vegB+c6*vec3(.12,.30,.10)+c7*vec3(.17,.34,.10)+c8*vec3(.29,.34,.12);
-  float cf=max(max(max(c1,c2),max(c3,c4)),max(max(c5,c6),max(c7,c8))); farm/=max(cf,.001);
-  farm*=mix(.84,1.14,parcelNoise); farm+=row*vec3(.06,.08,.02); base=mix(base,farm,farmMask);
-  vec3 paddy=stage<1.5?vec3(.255,.495,.545):(stage<2.5?vec3(.235,.570,.225):(stage<3.5?vec3(.470,.585,.180):vec3(.505,.400,.190)));
-  if(uSeason>1.5&&uSeason<2.5)paddy=mix(paddy,vec3(.61,.50,.16),.46); if(uSeason>2.5)paddy=mix(paddy,vec3(.40,.33,.20),.60);
-  paddy*=mix(.89,1.10,parcelNoise); paddy+=row*vec3(.075,.090,.020); base=mix(base,paddy,paddyMask);
-  float bundCore=smoothstep(.82,.98,parcel),bundShoulder=smoothstep(.54,.84,parcel)*(1.0-bundCore);
-  vec3 bundSoil=mix(vec3(.205,.145,.072),vec3(.305,.325,.120),wet*.45+cropVariant*.20);
-  base=mix(base,bundSoil,bundCore*.82); base=mix(base,mix(bundSoil,vec3(.46,.425,.185),.42),bundShoulder*.38);
-  float va=clamp(1.0-voronoiF1(vWorld.xz/11.5)*1.55,0.0,1.0);
-  float vb=clamp(1.0-voronoiF1(vWorld.xz/23.0+19.7)*1.44,0.0,1.0);
-  float vc=clamp(1.0-voronoiF1(vWorld.xz/47.0-vec2(11.3,27.8))*1.34,0.0,1.0);
-  float crownPattern=clamp(pow(va,mix(.48,2.22,hash12(floor(vWorld.xz/84.0))))*.70+vb*.31+vc*.17,0.0,1.0)*forest;
-  vec3 forestGround=mix(vec3(.038,.130,.060),vec3(.155,.335,.145),n*.34+elevation*.24);
-  forestGround*=mix(1.0,mix(.61,1.34,crownPattern),forest*.82); base=mix(base,forestGround,forest*.93);
-  float erosion=smoothstep(.07,.62,tributary)*(1.0-water)*uErosionStrength;
-  float erosionCore=smoothstep(.42,.90,tributary)*(1.0-water)*uErosionStrength;
-  float erosionShoulder=smoothstep(.12,.44,tributary)*(1.0-smoothstep(.48,.82,tributary))*(1.0-water)*uErosionStrength;
-  base=mix(base,base*vec3(.42,.58,.46),erosion*.44); base=mix(base,vec3(.095,.125,.082),erosionCore*.58); base=mix(base,vec3(.245,.235,.155),erosionShoulder*.16); base=mix(base,base*vec3(.82,.89,.78),terrace*.18);
-  vec3 geomN=normalize(cross(dFdx(vWorld),dFdy(vWorld))); if(geomN.y<0.0)geomN=-geomN;
-  vec3 N=normalize(mix(vNormal,geomN,.72)); vec3 V=normalize(uCameraPos-vWorld); vec3 L=normalize(uSunDir);
-  float light=.44+.66*max(dot(N,L)*.72+.28,0.0)+.10*max(dot(N,-L),0.0);
-  vec3 color=base*light*(1.0-.13*slope-.14*forest-.07*wet-.09*erosionCore);
-  if(water>.01){float rip=sin(vWorld.x*.047+uTime*1.35)+sin(vWorld.z*.061-uTime*.82);vec3 WN=normalize(vec3(cos(vWorld.x*.045+uTime)*.025,1.0,sin(vWorld.z*.052-uTime*.7)*.025));float fres=pow(1.0-max(dot(WN,V),0.0),2.4);float spec=pow(max(dot(reflect(-L,WN),V),0.0),52.0);vec3 wc=mix(vec3(.085,.215,.265),vec3(.305,.505,.545),fres*.58+.12);wc*=.91+.035*rip;wc+=vec3(.76,.84,.79)*spec*.66*uWaterLevel;color=mix(color,wc,clamp(water*(.76+.24*uWaterLevel),0.0,1.0));}
-  color=mix(color,vec3(.08,.58,.86),uHydrologyDiagnostics*water*.55);
-  float bankDiag=smoothstep(.015,.12,wet)*(1.0-water)*uHydrologyDiagnostics; color=mix(color,vec3(.82,.58,.16),bankDiag*.42);
-  float dist=length(uCameraPos-vWorld); float fog=smoothstep(2450.0,6200.0,dist);
-  color=mix(color,uFogColor,fog*.88); color=mix(base,color,uShowEcology*.94+.06); color=pow(clamp(color,0.0,1.25),vec3(.88)); outColor=vec4(color,1.0);
-}`;
-
-const spriteVS = `${common}
-layout(location=0) in vec3 aBase; layout(location=1) in float aHeight; layout(location=2) in float aSize; layout(location=3) in float aSeed; layout(location=4) in float aSpecies;
-uniform mat4 uViewProj; uniform vec3 uCameraPos; uniform float uVerticalEx; uniform float uViewportHeight; uniform float uFov; uniform float uTime; uniform float uWind; uniform float uDensity; uniform float uType;
-out float vSeed; out float vSpecies; out float vFade; out float vType;
-void main(){float keep=step(aSeed,min(uDensity,1.0));float sid=floor(aSpecies+.5);float conifer=step(7.5,sid)*(1.0-step(9.5,sid));float bamboo=step(9.5,sid)*(1.0-step(11.5,sid));float shrub=step(11.5,sid)*(1.0-step(15.5,sid));float orchard=step(15.5,sid);float center=mix(.70,.55,max(conifer,bamboo));center=mix(center,.48,shrub);center=mix(center,.60,orchard);float phase=aSeed*41.0;float sway=(sin(uTime*(.45+fract(aSeed*7.13))+phase)+.35*sin(uTime*1.7+phase*2.3))*uWind*aHeight*.045;vec3 world=vec3(aBase.x+sway,aBase.y*uVerticalEx+aHeight*center,aBase.z+sway*.36);float pointWorld=max(aSize,max(aHeight*.83*conifer,aHeight*.78*bamboo));pointWorld=max(pointWorld,aHeight*1.25*shrub);float dist=max(length(uCameraPos-world),1.0);float px=pointWorld*uViewportHeight/(2.0*tan(uFov*.5)*dist);px*=mix(.92,1.16,fract(aSeed*91.7));gl_PointSize=clamp(px*1.40,1.0,248.0)*keep;gl_Position=uViewProj*vec4(world,1.0);vSeed=aSeed;vSpecies=aSpecies;vType=uType;vFade=keep*smoothstep(.65,2.1,px)*(1.0-smoothstep(2750.0,5200.0,dist));}`;
-
-const spriteFS = `${common}
-in float vSeed; in float vSpecies; in float vFade; in float vType; out vec4 outColor; uniform float uSeason;
-float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}float blob(vec2 p,vec2 c,float r,vec2 s){return 1.0-smoothstep(r*.74,r,length((p-c)/s));}
-vec3 speciesColor(float sid){if(sid<.5)return vec3(.045,.205,.090);if(sid<1.5)return vec3(.120,.315,.125);if(sid<2.5)return vec3(.145,.330,.135);if(sid<3.5)return vec3(.055,.235,.095);if(sid<4.5)return vec3(.175,.355,.145);if(sid<5.5)return vec3(.050,.205,.080);if(sid<6.5)return vec3(.095,.260,.090);if(sid<7.5)return vec3(.105,.285,.110);if(sid<8.5)return vec3(.095,.285,.165);if(sid<9.5)return vec3(.095,.240,.135);if(sid<10.5)return vec3(.185,.430,.170);if(sid<11.5)return vec3(.115,.330,.130);if(sid<12.5)return vec3(.165,.365,.150);if(sid<15.5)return vec3(.140,.330,.125);if(sid<16.5)return vec3(.075,.255,.075);if(sid<17.5)return vec3(.100,.285,.075);if(sid<18.5)return vec3(.255,.325,.095);return vec3(.155,.300,.105);}
-void main(){if(vFade<.02)discard;vec2 p=gl_PointCoord*2.0-1.0;p.y=-p.y;float sid=floor(vSpecies+.5);float seed=vSeed*6.2831853;float broad=max(blob(p,vec2(0),.82,vec2(1,.86)),max(blob(p,vec2(-.42,.02),.58,vec2(.94,.82)),blob(p,vec2(.42,-.02),.60,vec2(.96,.82))));broad=max(broad,max(blob(p,vec2(-.18,.42),.48,vec2(1,.9)),blob(p,vec2(.22,.39),.50,vec2(1,.92))));float y01=clamp((p.y+1.0)*.5,0.0,1.0);float hw=mix(.79,.045,y01);float conifer=(1.0-smoothstep(hw*.78,hw,abs(p.x)))*smoothstep(-1.0,-.86,p.y)*(1.0-smoothstep(.88,1.0,p.y));float bamboo=max(blob(p,vec2(-.25,.25),.55,vec2(.55,1.1)),blob(p,vec2(.25,.38),.55,vec2(.55,1.1)));float shrub=max(blob(p,vec2(0,-.18),.80,vec2(1.26,.62)),max(blob(p,vec2(-.43,-.08),.55,vec2(1.08,.68)),blob(p,vec2(.43,-.08),.55,vec2(1.08,.68))));float orchard=max(blob(p,vec2(0,.02),.82,vec2(.94,.9)),max(blob(p,vec2(-.28,.10),.48,vec2(.92,.88)),blob(p,vec2(.28,.08),.48,vec2(.92,.88))));float mask=broad;if(sid>7.5&&sid<9.5)mask=conifer;else if(sid>9.5&&sid<11.5)mask=bamboo;else if(sid>11.5&&sid<15.5)mask=shrub;else if(sid>15.5)mask=orchard;if(vType>.5)mask=shrub;float leafA=hash21(floor((p+vSeed*5.3)*23.0));float leafB=hash21(floor((p+vSeed*8.1)*47.0));float alpha=smoothstep(.055,.245,mask)*mix(.58,1.0,smoothstep(.44,.72,leafA))*vFade;alpha*=mix(.88,1.12,leafB);if(alpha<.085)discard;vec3 col=speciesColor(sid);if(uSeason>1.5&&uSeason<2.5)col=mix(col,vec3(.34,.37,.12),sid<8.0?.18:.08);if(uSeason>2.5)col=mix(col,vec3(.22,.27,.13),sid<8.0?.34:.18);float sphere=sqrt(max(0.0,1.0-dot(p*.72,p*.72)));float volume=clamp(.48+.72*dot(normalize(vec3(-p.x*.72,p.y*.58,sphere)),normalize(vec3(-.52,.68,.72))),.35,1.28);col*=volume*mix(.86,1.14,leafA*.55+leafB*.45);outColor=vec4(col,alpha);}`;
-
-const trunkVS = `${common}
-layout(location=0) in vec3 aBase; layout(location=1) in float aOffset; layout(location=2) in float aSeed; layout(location=3) in float aSpecies;
-uniform mat4 uViewProj; uniform vec3 uCameraPos; uniform float uVerticalEx; uniform float uDensity; out float vAlpha; out float vSpecies;
-void main(){float keep=step(aSeed,min(uDensity,1.0));vec3 world=vec3(aBase.x,aBase.y*uVerticalEx+aOffset,aBase.z);float dist=length(uCameraPos-world);float sid=floor(aSpecies+.5);float shrub=step(11.5,sid)*(1.0-step(15.5,sid));vAlpha=keep*(1.0-smoothstep(1200.0,3600.0,dist))*(1.0-shrub*.92);vSpecies=sid;gl_Position=uViewProj*vec4(world,1.0);}`;
-const trunkFS = `${common}in float vAlpha;in float vSpecies;out vec4 outColor;void main(){if(vAlpha<.02)discard;vec3 c=vec3(.17,.105,.045);if(vSpecies>9.5&&vSpecies<11.5)c=vec3(.20,.30,.10);else if(vSpecies>15.5)c=vec3(.20,.125,.052);outColor=vec4(c,vAlpha*.78);}`;
-
-const riceVS = `${common}
-layout(location=0) in vec3 aBase;layout(location=1) in float aHeight;layout(location=2) in float aStage;layout(location=3) in float aSeed;
-uniform mat4 uViewProj;uniform vec3 uCameraPos;uniform float uVerticalEx;uniform float uViewportHeight;uniform float uFov;uniform float uTime;uniform float uWind;uniform float uDetail;out float vSeed;out float vStage;out float vFade;
-void main(){float keep=step(aSeed,min(uDetail,1.0));float sway=(sin(uTime*1.8+aSeed*53.0)+.35*sin(uTime*3.2+aSeed*97.0))*uWind*aHeight*.13;vec3 world=vec3(aBase.x+sway,aBase.y*uVerticalEx+aHeight*.55,aBase.z+sway*.25);float dist=max(length(uCameraPos-world),1.0);float px=3.1*uViewportHeight/(2.0*tan(uFov*.5)*dist);gl_PointSize=clamp(px,1.0,42.0)*keep;gl_Position=uViewProj*vec4(world,1.0);vSeed=aSeed;vStage=aStage;vFade=keep*smoothstep(1.1,3.2,px)*(1.0-smoothstep(1150.0,2100.0,dist));}`;
-const riceFS = `${common}
-in float vSeed;in float vStage;in float vFade;out vec4 outColor;uniform float uSeason;
-float lineMask(vec2 p,float slope,float offset,float width){float x=p.x-(p.y+1.0)*slope-offset;return smoothstep(width,0.0,abs(x))*smoothstep(-1.0,-.25,p.y)*(1.0-smoothstep(.70,1.0,p.y));}
-void main(){if(vFade<.02)discard;vec2 p=gl_PointCoord*2.0-1.0;p.y=-p.y;float m=clamp(lineMask(p,.25,-.10,.12)+lineMask(p,-.21,.10,.115)+lineMask(p,.06,0.0,.10),0.0,1.0);if(m<.08)discard;vec3 col=vStage>2.5?vec3(.49,.61,.16):vec3(.28,.65,.24);if(uSeason>1.5&&uSeason<2.5)col=mix(col,vec3(.68,.54,.15),.62);if(uSeason>2.5)col=mix(col,vec3(.39,.31,.16),.68);outColor=vec4(col,m*vFade*.92);}`;
-
-function compileShader(type, source, label) {
+function compileShader(gl, type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(`${label}着色器错误：${gl.getShaderInfoLog(shader)}`);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const message = gl.getShaderInfoLog(shader) || '未知着色器错误';
+    gl.deleteShader(shader);
+    throw new Error(message);
+  }
   return shader;
 }
-function createProgram(vs, fs, label) {
+
+function createProgram(gl, vertexSource, fragmentSource) {
   const program = gl.createProgram();
-  gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vs, label));
-  gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fs, label));
+  const vertex = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
+  const fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`${label}程序错误：${gl.getProgramInfoLog(program)}`);
+  gl.deleteShader(vertex);
+  gl.deleteShader(fragment);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const message = gl.getProgramInfoLog(program) || '未知程序链接错误';
+    gl.deleteProgram(program);
+    throw new Error(message);
+  }
   return program;
 }
-function uniforms(program, names) { return Object.fromEntries(names.map((name) => [name, gl.getUniformLocation(program, name)])); }
-function buffer(target, data) { const value = gl.createBuffer(); gl.bindBuffer(target, value); gl.bufferData(target, data, gl.STATIC_DRAW); return value; }
 
-const terrainProgram = createProgram(terrainVS, terrainFS, '地形');
-const spriteProgram = createProgram(spriteVS, spriteFS, '树冠');
-const trunkProgram = createProgram(trunkVS, trunkFS, '树干');
-const riceProgram = createProgram(riceVS, riceFS, '稻株');
-const terrainU = uniforms(terrainProgram, ['uViewProj','uVerticalEx','uField0','uField1','uField2','uCameraPos','uSunDir','uFogColor','uTime','uSeason','uForestDensity','uWaterLevel','uShowForest','uShowPaddy','uShowWater','uShowRock','uShowTerrace','uShowEcology','uErosionStrength','uKarstStrength','uHydrologyDiagnostics']);
-const spriteU = uniforms(spriteProgram, ['uViewProj','uCameraPos','uVerticalEx','uViewportHeight','uFov','uTime','uWind','uDensity','uType','uSeason']);
-const trunkU = uniforms(trunkProgram, ['uViewProj','uCameraPos','uVerticalEx','uDensity']);
-const riceU = uniforms(riceProgram, ['uViewProj','uCameraPos','uVerticalEx','uViewportHeight','uFov','uTime','uWind','uDetail','uSeason']);
-
-function textureFromImage(image, unit) {
-  const texture = gl.createTexture();
-  gl.activeTexture(gl.TEXTURE0 + unit);
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-  return texture;
+function uniformLocations(gl, program, names) {
+  return Object.fromEntries(names.map((name) => [name, gl.getUniformLocation(program, name)]));
 }
-textureFromImage(field0Image, 0); textureFromImage(field1Image, 1); textureFromImage(field2Image, 2);
 
-function buildTerrain(arrayBuffer) {
-  const view = new DataView(arrayBuffer);
-  if (view.byteLength !== meshN * meshN * 2) throw new Error(`高程网格长度错误：${view.byteLength}`);
-  const heights = new Float32Array(meshN * meshN);
-  for (let index = 0; index < heights.length; index++) heights[index] = view.getUint16(index * 2, true) / 65535 * reliefM;
-  const vertices = new Float32Array(meshN * meshN * 8);
-  const step = sideM / (meshN - 1);
-  for (let row = 0; row < meshN; row++) for (let column = 0; column < meshN; column++) {
-    const index = row * meshN + column;
-    const left = heights[row * meshN + Math.max(0, column - 1)];
-    const right = heights[row * meshN + Math.min(meshN - 1, column + 1)];
-    const down = heights[Math.max(0, row - 1) * meshN + column];
-    const up = heights[Math.min(meshN - 1, row + 1) * meshN + column];
-    const normal = Vec3.normalize([-(right - left) / (step * 2), 1, -(up - down) / (step * 2)]);
-    const offset = index * 8;
-    vertices[offset] = column / (meshN - 1) * sideM - halfM;
-    vertices[offset + 1] = heights[index];
-    vertices[offset + 2] = row / (meshN - 1) * sideM - halfM;
-    vertices[offset + 3] = normal[0]; vertices[offset + 4] = normal[1]; vertices[offset + 5] = normal[2];
-    vertices[offset + 6] = column / (meshN - 1); vertices[offset + 7] = row / (meshN - 1);
+const GLSL_HEAD = '#version 300 es\nprecision highp float;\n';
+const TERRAIN_VERTEX = GLSL_HEAD + [
+  'layout(location=0) in vec3 aPosition;',
+  'layout(location=1) in vec3 aNormal;',
+  'layout(location=2) in vec2 aUv;',
+  'uniform mat4 uViewProj;',
+  'uniform float uVertical;',
+  'uniform float uRelief;',
+  'uniform float uMountain;',
+  'uniform float uKarst;',
+  'uniform float uErosion;',
+  'uniform float uDeposit;',
+  'uniform float uThermal;',
+  'uniform float uDetail;',
+  'uniform float uValley;',
+  'uniform float uCoreSeed;',
+  'out vec3 vWorld;',
+  'out vec3 vNormal;',
+  'out vec2 vUv;',
+  'out float vRawHeight;',
+  'float ridge(float value){return 1.0-abs(fract(value)*2.0-1.0);}',
+  'void main(){',
+  '  float normalHeight=clamp(aPosition.y/max(uRelief,1.0),0.0,1.0);',
+  '  float macro=sin(aPosition.x*.00073+uCoreSeed)*cos(aPosition.z*.00061-uCoreSeed*.7);',
+  '  float karst=ridge(aPosition.x*.0019+aPosition.z*.0013+uCoreSeed);',
+  '  float drainage=pow(abs(sin(aPosition.x*.0011-aPosition.z*.0017+uCoreSeed*.4)),10.0);',
+  '  float detail=sin(aPosition.x*.012+uCoreSeed)*sin(aPosition.z*.010-uCoreSeed);',
+  '  float visual=uMountain*macro*(3.0+normalHeight*16.0);',
+  '  visual+=uKarst*karst*normalHeight*8.0;',
+  '  visual-=uErosion*drainage*(1.0-normalHeight*.4)*5.5;',
+  '  visual+=uDeposit*(1.0-normalHeight)*2.6;',
+  '  visual-=uThermal*normalHeight*abs(detail)*2.4;',
+  '  visual+=uDetail*detail*1.25;',
+  '  visual-=uValley*drainage*3.2;',
+  '  vWorld=vec3(aPosition.x,aPosition.y*uVertical+visual,aPosition.z);',
+  '  vNormal=normalize(vec3(aNormal.x,aNormal.y/max(uVertical,.001),aNormal.z));',
+  '  vUv=aUv;',
+  '  vRawHeight=aPosition.y;',
+  '  gl_Position=uViewProj*vec4(vWorld,1.0);',
+  '}',
+].join('\n');
+
+const TERRAIN_FRAGMENT = GLSL_HEAD + [
+  'in vec3 vWorld;',
+  'in vec3 vNormal;',
+  'in vec2 vUv;',
+  'in float vRawHeight;',
+  'out vec4 outColor;',
+  'uniform vec3 uCamera;',
+  'uniform vec3 uFogColor;',
+  'uniform float uFogStart;',
+  'uniform float uFogEnd;',
+  'uniform float uRelief;',
+  'uniform float uCoreSeed;',
+  'uniform float uSeason;',
+  'uniform float uYear;',
+  'uniform float uShowForest;',
+  'uniform float uShowPaddy;',
+  'uniform float uShowDry;',
+  'uniform float uShowOrchards;',
+  'uniform float uShowBunds;',
+  'uniform float uShowRock;',
+  'uniform float uForestDensity;',
+  'float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}',
+  'void main(){',
+  '  vec3 N=normalize(vNormal);',
+  '  float slope=clamp(1.0-N.y,0.0,1.0);',
+  '  float heightN=clamp(vRawHeight/max(uRelief,1.0),0.0,1.0);',
+  '  float fine=hash12(floor(vWorld.xz/22.0)+uCoreSeed);',
+  '  float parcel=hash12(floor(vWorld.xz/145.0)+uCoreSeed*11.0);',
+  '  float ridge=abs(sin(vWorld.x*.0041+vWorld.z*.0029+uCoreSeed));',
+  '  vec3 soil=mix(vec3(.19,.24,.13),vec3(.40,.34,.21),heightN*.65+slope*.42);',
+  '  soil*=mix(.82,1.12,fine);',
+  '  float farmable=(1.0-smoothstep(.10,.32,slope))*(1.0-smoothstep(.48,.72,heightN));',
+  '  float paddy=farmable*step(.66,parcel)*uShowPaddy;',
+  '  float dryCrop=farmable*step(.46,parcel)*(1.0-step(.66,parcel))*uShowDry;',
+  '  float orchard=farmable*step(.31,parcel)*(1.0-step(.46,parcel))*uShowOrchards;',
+  '  vec3 paddyColor=uSeason<.5?vec3(.31,.51,.28):uSeason<1.5?vec3(.18,.49,.25):uSeason<2.5?vec3(.62,.52,.20):vec3(.38,.32,.20);',
+  '  vec3 dryColor=uSeason<2.0?vec3(.49,.46,.18):vec3(.63,.48,.17);',
+  '  vec3 orchardColor=mix(vec3(.18,.38,.13),vec3(.40,.43,.15),step(2.0,uSeason));',
+  '  vec3 color=mix(soil,paddyColor,paddy*.88);',
+  '  color=mix(color,dryColor,dryCrop*.82);',
+  '  color=mix(color,orchardColor,orchard*.78);',
+  '  float bund=farmable*smoothstep(.86,.98,abs(sin(vWorld.x*.018)*sin(vWorld.z*.021)))*uShowBunds;',
+  '  color=mix(color,vec3(.31,.22,.10),bund*.82);',
+  '  float forest=smoothstep(.18,.62,heightN+slope*.38)*(1.0-farmable*.72)*uShowForest*uForestDensity;',
+  '  color=mix(color,vec3(.045,.19,.085)*(1.0+fine*.34),clamp(forest,0.0,.88));',
+  '  float rock=smoothstep(.18,.56,slope+heightN*.38)*smoothstep(.58,.92,ridge)*uShowRock;',
+  '  color=mix(color,vec3(.48,.49,.44)*(0.82+fine*.25),rock*.88);',
+  '  float yearTone=(uYear-1940.0)/5.0;',
+  '  color*=mix(.96,1.035,yearTone);',
+  '  vec3 lightDir=normalize(vec3(-.46,.82,-.34));',
+  '  float light=.36+.72*max(dot(N,lightDir),0.0)+.12*max(dot(N,-lightDir),0.0);',
+  '  color*=light;',
+  '  float distanceToCamera=length(uCamera-vWorld);',
+  '  float fog=smoothstep(uFogStart,uFogEnd,distanceToCamera);',
+  '  color=mix(color,uFogColor,fog*.90);',
+  '  outColor=vec4(pow(clamp(color,0.0,1.2),vec3(.91)),1.0);',
+  '}',
+].join('\n');
+
+const FLAT_VERTEX = GLSL_HEAD + [
+  'layout(location=0) in vec3 aPosition;',
+  'layout(location=1) in vec4 aColor;',
+  'uniform mat4 uViewProj;',
+  'uniform float uPointSize;',
+  'out vec4 vColor;',
+  'void main(){vColor=aColor;gl_Position=uViewProj*vec4(aPosition,1.0);gl_PointSize=uPointSize;}',
+].join('\n');
+
+const FLAT_FRAGMENT = GLSL_HEAD + [
+  'in vec4 vColor;',
+  'out vec4 outColor;',
+  'uniform float uRoundPoint;',
+  'void main(){if(uRoundPoint>.5&&length(gl_PointCoord-.5)>.5)discard;outColor=vColor;}',
+].join('\n');
+
+const ECOLOGY_VERTEX = GLSL_HEAD + [
+  'layout(location=0) in vec3 aPosition;',
+  'layout(location=1) in vec4 aColor;',
+  'layout(location=2) in float aSize;',
+  'layout(location=3) in float aCategory;',
+  'uniform mat4 uViewProj;',
+  'uniform vec3 uCamera;',
+  'uniform float uViewportHeight;',
+  'uniform float uFov;',
+  'uniform float uTime;',
+  'uniform float uWindSpeed;',
+  'uniform float uWindDirection;',
+  'uniform float uGust;',
+  'uniform vec4 uCategoryA;',
+  'uniform vec4 uCategoryB;',
+  'out vec4 vColor;',
+  'out float vVisible;',
+  'float categoryVisible(float category){',
+  '  if(category<.5)return uCategoryA.x;',
+  '  if(category<1.5)return uCategoryA.y;',
+  '  if(category<2.5)return uCategoryA.z;',
+  '  if(category<3.5)return uCategoryA.w;',
+  '  if(category<4.5)return uCategoryB.x;',
+  '  if(category<5.5)return uCategoryB.y;',
+  '  return uCategoryB.z;',
+  '}',
+  'void main(){',
+  '  float angle=radians(uWindDirection);',
+  '  float phase=aPosition.x*.013+aPosition.z*.017;',
+  '  float gustWave=.55+.45*sin(uTime*(1.1+uGust*2.2)+phase);',
+  '  float sway=uWindSpeed*.018*(.35+uGust*gustWave)*min(aSize,12.0);',
+  '  vec3 world=aPosition+vec3(sin(angle)*sway,0.0,cos(angle)*sway);',
+  '  float distanceToCamera=max(length(uCamera-world),1.0);',
+  '  float pixels=aSize*uViewportHeight/(2.0*tan(uFov*.5)*distanceToCamera);',
+  '  gl_PointSize=clamp(pixels*1.5,1.0,96.0);',
+  '  gl_Position=uViewProj*vec4(world,1.0);',
+  '  vColor=aColor;',
+  '  vVisible=categoryVisible(aCategory)*(1.0-smoothstep(3800.0,8500.0,distanceToCamera));',
+  '}',
+].join('\n');
+
+const ECOLOGY_FRAGMENT = GLSL_HEAD + [
+  'in vec4 vColor;',
+  'in float vVisible;',
+  'out vec4 outColor;',
+  'void main(){',
+  '  vec2 p=gl_PointCoord*2.0-1.0;',
+  '  float alpha=(1.0-smoothstep(.72,1.0,dot(p,p)))*vColor.a*vVisible;',
+  '  if(alpha<.03)discard;',
+  '  float volume=.72+.30*sqrt(max(0.0,1.0-dot(p,p)));',
+  '  outColor=vec4(vColor.rgb*volume,alpha);',
+  '}',
+].join('\n');
+
+function createBuffer(gl, target, data, usage = gl.STATIC_DRAW) {
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(target, buffer);
+  gl.bufferData(target, data, usage);
+  return buffer;
+}
+
+function destroyGeometry(gl, geometry) {
+  if (!geometry) return;
+  if (geometry.vao) gl.deleteVertexArray(geometry.vao);
+  for (const buffer of geometry.buffers || []) gl.deleteBuffer(buffer);
+}
+
+function seasonIndex(season) {
+  return { spring: 0, summer: 1, autumn: 2, winter: 3 }[season] ?? 1;
+}
+
+function coreSeed(id) {
+  let hash = 2166136261;
+  for (const character of String(id)) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
   }
-  const indices = new Uint32Array((meshN - 1) * (meshN - 1) * 6);
-  let cursor = 0;
-  for (let row = 0; row < meshN - 1; row++) for (let column = 0; column < meshN - 1; column++) {
-    const index = row * meshN + column;
-    indices[cursor++] = index; indices[cursor++] = index + meshN; indices[cursor++] = index + 1;
-    indices[cursor++] = index + 1; indices[cursor++] = index + meshN; indices[cursor++] = index + meshN + 1;
+  return ((hash >>> 0) % 10000) / 733;
+}
+
+function datasetEncoding(dataset) {
+  const encoding = dataset.heightEncoding || dataset.manifest.heightEncoding || {};
+  return {
+    minimum: Number(encoding.quantizationMinimumMeters ?? dataset.minimumElevation),
+    maximum: Number(encoding.quantizationMaximumMeters ?? dataset.maximumElevation),
+  };
+}
+
+function decodeElevation(dataset, index) {
+  const encoding = datasetEncoding(dataset);
+  return encoding.minimum + dataset.height[index] / 65535 * (encoding.maximum - encoding.minimum);
+}
+
+function usesPixelCenters(dataset) {
+  return dataset.rasterSampling?.gridConvention === 'pixel-center';
+}
+
+function sourceSamplePosition(dataset, column, row) {
+  if (usesPixelCenters(dataset)) {
+    return [
+      -dataset.widthMeters / 2 + (column + 0.5) * dataset.rasterSpacingMeters[0],
+      -dataset.heightMeters / 2 + (row + 0.5) * dataset.rasterSpacingMeters[1],
+    ];
   }
-  const vao = gl.createVertexArray(); gl.bindVertexArray(vao); buffer(gl.ARRAY_BUFFER, vertices);
-  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 32, 0);
-  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 32, 12);
-  gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 32, 24);
-  buffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.bindVertexArray(null);
-  return { vao, heights, count: indices.length };
+  return [
+    -dataset.widthMeters / 2 + column / Math.max(dataset.gridWidth - 1, 1) * dataset.widthMeters,
+    -dataset.heightMeters / 2 + row / Math.max(dataset.gridHeight - 1, 1) * dataset.heightMeters,
+  ];
 }
 
-function decodeTrees(arrayBuffer) {
-  const stride = manifest.recordLayout.tree.stride, count = Math.floor(arrayBuffer.byteLength / stride), view = new DataView(arrayBuffer);
-  const points = new Float32Array(count * 7), trunks = new Float32Array(count * 12);
-  for (let index = 0; index < count; index++) {
-    const offset = index * stride, qx = view.getUint16(offset, true), qz = view.getUint16(offset + 2, true), qg = view.getUint16(offset + 4, true);
-    const height = 1 + view.getUint8(offset + 6) / 255 * 28, crown = .8 + view.getUint8(offset + 7) / 255 * 16;
-    const seed = view.getUint16(offset + 8, true) / 65535, species = view.getUint8(offset + 10);
-    const x = qx / 65535 * sideM - halfM, z = qz / 65535 * sideM - halfM, ground = qg / 65535 * reliefM;
-    points.set([x, ground, z, height, crown, seed, species], index * 7);
-    let trunkTop = height * .62; if (species >= 8 && species <= 9) trunkTop = height * .72; else if (species >= 10 && species <= 11) trunkTop = height * .84; else if (species >= 12 && species <= 15) trunkTop = height * .16;
-    trunks.set([x, ground, z, 0, seed, species, x, ground, z, trunkTop, seed, species], index * 12);
+function sampleDatasetElevation(dataset, x, z) {
+  if (!dataset) return null;
+  if (
+    x < -dataset.widthMeters / 2 || x > dataset.widthMeters / 2 ||
+    z < -dataset.heightMeters / 2 || z > dataset.heightMeters / 2
+  ) return null;
+  const pixelCenters = usesPixelCenters(dataset);
+  const rawU = pixelCenters
+    ? (x + dataset.widthMeters / 2) / dataset.rasterSpacingMeters[0] - 0.5
+    : (x / dataset.widthMeters + 0.5) * (dataset.gridWidth - 1);
+  const rawV = pixelCenters
+    ? (z + dataset.heightMeters / 2) / dataset.rasterSpacingMeters[1] - 0.5
+    : (z / dataset.heightMeters + 0.5) * (dataset.gridHeight - 1);
+  const u = clamp(rawU, 0, dataset.gridWidth - 1);
+  const v = clamp(rawV, 0, dataset.gridHeight - 1);
+  const x0 = Math.floor(u);
+  const y0 = Math.floor(v);
+  const x1 = Math.min(dataset.gridWidth - 1, x0 + 1);
+  const y1 = Math.min(dataset.gridHeight - 1, y0 + 1);
+  const indices = [
+    y0 * dataset.gridWidth + x0,
+    y0 * dataset.gridWidth + x1,
+    y1 * dataset.gridWidth + x0,
+    y1 * dataset.gridWidth + x1,
+  ];
+  if (dataset.mask && indices.some((index) => !dataset.mask[index])) return null;
+  const tx = u - x0;
+  const ty = v - y0;
+  const top = lerp(decodeElevation(dataset, indices[0]), decodeElevation(dataset, indices[1]), tx);
+  const bottom = lerp(decodeElevation(dataset, indices[2]), decodeElevation(dataset, indices[3]), tx);
+  return lerp(top, bottom, ty);
+}
+
+function browserPreviewParameters() {
+  const preview = store.state.gaea.preview && store.state.gaea.preview.runtimeParameters;
+  const parameters = store.state.gaea.parameters || GAEA_DEFAULT_PARAMETERS;
+  return {
+    verticalEx: Number(preview?.verticalEx ?? parameters.verticalExaggeration ?? 1),
+    mountainEmphasis: Number(preview?.mountainEmphasis ?? parameters.mountainEmphasis ?? 0),
+    karstStrength: Number(preview?.karstStrength ?? parameters.karstSharpen ?? 0),
+    erosionStrength: Number(preview?.erosionStrength ?? parameters.erosionStrength ?? 0),
+    depositionStrength: Number(preview?.depositionStrength ?? parameters.depositionThickness ?? 0),
+    thermalWeathering: Number(preview?.thermalWeathering ?? parameters.thermalWeathering ?? 0),
+    rockExposure: Number(preview?.rockExposure ?? parameters.rockExposure ?? 0),
+    surfaceDetail: Number(preview?.surfaceDetail ?? parameters.surfaceDetail ?? 0),
+    valleyCut: Number(preview?.valleyCut ?? parameters.valleyCut ?? 0),
+  };
+}
+
+function approximateVisualOffset(dataset, x, z) {
+  const parameters = browserPreviewParameters();
+  const raw = sampleDatasetElevation(dataset, x, z);
+  if (raw == null) return null;
+  const relative = raw - dataset.minimumElevation;
+  const normalHeight = clamp(relative / Math.max(dataset.maximumElevation - dataset.minimumElevation, 1), 0, 1);
+  const seed = coreSeed(dataset.id);
+  const macro = Math.sin(x * 0.00073 + seed) * Math.cos(z * 0.00061 - seed * 0.7);
+  const karst = 1 - Math.abs(((x * 0.0019 + z * 0.0013 + seed) % 1 + 1) % 1 * 2 - 1);
+  const drainage = Math.pow(Math.abs(Math.sin(x * 0.0011 - z * 0.0017 + seed * 0.4)), 10);
+  const detail = Math.sin(x * 0.012 + seed) * Math.sin(z * 0.010 - seed);
+  let visual = parameters.mountainEmphasis * macro * (3 + normalHeight * 16);
+  visual += parameters.karstStrength * karst * normalHeight * 8;
+  visual -= parameters.erosionStrength * drainage * (1 - normalHeight * 0.4) * 5.5;
+  visual += parameters.depositionStrength * (1 - normalHeight) * 2.6;
+  visual -= parameters.thermalWeathering * normalHeight * Math.abs(detail) * 2.4;
+  visual += parameters.surfaceDetail * detail * 1.25;
+  visual -= parameters.valleyCut * drainage * 3.2;
+  return relative * parameters.verticalEx + visual;
+}
+
+function buildTerrainGeometry(gl, dataset) {
+  const maxSamples = dataset.id === 'overall' ? 300 : 321;
+  const longest = Math.max(dataset.gridWidth, dataset.gridHeight);
+  const columns = Math.max(2, Math.round(maxSamples * dataset.gridWidth / longest));
+  const rows = Math.max(2, Math.round(maxSamples * dataset.gridHeight / longest));
+  const positions = new Float32Array(columns * rows * 3);
+  const normals = new Float32Array(columns * rows * 3);
+  const uvs = new Float32Array(columns * rows * 2);
+  const valid = new Uint8Array(columns * rows);
+  const heights = new Float32Array(columns * rows);
+
+  for (let row = 0; row < rows; row += 1) {
+    const sourceRow = Math.round(row * (dataset.gridHeight - 1) / (rows - 1));
+    for (let column = 0; column < columns; column += 1) {
+      const sourceColumn = Math.round(column * (dataset.gridWidth - 1) / (columns - 1));
+      const sourceIndex = sourceRow * dataset.gridWidth + sourceColumn;
+      const vertex = row * columns + column;
+      const elevation = decodeElevation(dataset, sourceIndex);
+      const relative = elevation - dataset.minimumElevation;
+      const [sampleX, sampleZ] = sourceSamplePosition(dataset, sourceColumn, sourceRow);
+      heights[vertex] = relative;
+      valid[vertex] = dataset.mask ? Number(dataset.mask[sourceIndex] > 0) : 1;
+      positions[vertex * 3] = sampleX;
+      positions[vertex * 3 + 1] = relative;
+      positions[vertex * 3 + 2] = sampleZ;
+      uvs[vertex * 2] = usesPixelCenters(dataset)
+        ? (sourceColumn + 0.5) / dataset.gridWidth
+        : sourceColumn / Math.max(dataset.gridWidth - 1, 1);
+      uvs[vertex * 2 + 1] = usesPixelCenters(dataset)
+        ? (sourceRow + 0.5) / dataset.gridHeight
+        : sourceRow / Math.max(dataset.gridHeight - 1, 1);
+    }
   }
-  return { points, trunks, count };
-}
-function decodeShrubs(arrayBuffer) {
-  const stride = manifest.recordLayout.shrub.stride, count = Math.floor(arrayBuffer.byteLength / stride), view = new DataView(arrayBuffer), points = new Float32Array(count * 7);
-  for (let index = 0; index < count; index++) { const offset = index * stride; points.set([view.getUint16(offset,true)/65535*sideM-halfM,view.getUint16(offset+4,true)/65535*reliefM,view.getUint16(offset+2,true)/65535*sideM-halfM,.5+view.getUint8(offset+6)/255*6.5,.8+view.getUint8(offset+7)/255*8,view.getUint16(offset+8,true)/65535,12+(index%4)],index*7); }
-  return { points, count };
-}
-function decodeRice(arrayBuffer) {
-  const stride = manifest.recordLayout.rice.stride, count = Math.floor(arrayBuffer.byteLength / stride), view = new DataView(arrayBuffer), points = new Float32Array(count * 6);
-  for (let index = 0; index < count; index++) { const offset = index * stride; points.set([view.getUint16(offset,true)/65535*sideM-halfM,view.getUint16(offset+4,true)/65535*reliefM,view.getUint16(offset+2,true)/65535*sideM-halfM,view.getUint8(offset+6)/255*1.4,view.getUint8(offset+7),view.getUint16(offset+8,true)/65535],index*6); }
-  return { points, count };
-}
-function spriteVao(points, components) { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); buffer(gl.ARRAY_BUFFER, points); const stride = components * 4; for (let index = 0; index < components; index++) { gl.enableVertexAttribArray(index); gl.vertexAttribPointer(index, 1, gl.FLOAT, false, stride, index * 4); } gl.bindVertexArray(null); return vao; }
-function treeVao(points) { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); buffer(gl.ARRAY_BUFFER, points); const stride=28; gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride,0); for(let i=1;i<5;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,1,gl.FLOAT,false,stride,(i+2)*4);} gl.bindVertexArray(null); return vao; }
-function trunkVao(points) { const vao=gl.createVertexArray();gl.bindVertexArray(vao);buffer(gl.ARRAY_BUFFER,points);const stride=24;gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride,0);for(let i=1;i<4;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,1,gl.FLOAT,false,stride,(i+2)*4);}gl.bindVertexArray(null);return vao; }
-function riceVao(points) { const vao=gl.createVertexArray();gl.bindVertexArray(vao);buffer(gl.ARRAY_BUFFER,points);const stride=24;gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride,0);for(let i=1;i<4;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,1,gl.FLOAT,false,stride,(i+2)*4);}gl.bindVertexArray(null);return vao; }
 
-const terrain = buildTerrain(heightBuffer);
-const trees = decodeTrees(treesBuffer), shrubs = decodeShrubs(shrubsBuffer), rice = decodeRice(riceBuffer);
-const objects = { terrain, tree: { vao: treeVao(trees.points), trunkVao: trunkVao(trees.trunks), count: trees.count }, shrub: { vao: treeVao(shrubs.points), count: shrubs.count }, rice: { vao: riceVao(rice.points), count: rice.count } };
+  const xStep = dataset.widthMeters / (columns - 1);
+  const zStep = dataset.heightMeters / (rows - 1);
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const left = heights[row * columns + Math.max(0, column - 1)];
+      const right = heights[row * columns + Math.min(columns - 1, column + 1)];
+      const north = heights[Math.max(0, row - 1) * columns + column];
+      const south = heights[Math.min(rows - 1, row + 1) * columns + column];
+      const vector = Vec3.normalize([
+        -(right - left) / Math.max(xStep * 2, 1),
+        1,
+        -(south - north) / Math.max(zStep * 2, 1),
+      ]);
+      const offset = (row * columns + column) * 3;
+      normals.set(vector, offset);
+    }
+  }
 
-function sampleHeight(x, z) {
-  const u = (x / sideM + .5) * (meshN - 1), v = (z / sideM + .5) * (meshN - 1);
-  if (u < 0 || u > meshN - 1 || v < 0 || v > meshN - 1) return null;
-  const x0=Math.floor(u),z0=Math.floor(v),x1=Math.min(meshN-1,x0+1),z1=Math.min(meshN-1,z0+1),tx=u-x0,tz=v-z0;
-  return lerp(lerp(terrain.heights[z0*meshN+x0],terrain.heights[z0*meshN+x1],tx),lerp(terrain.heights[z1*meshN+x0],terrain.heights[z1*meshN+x1],tx),tz);
+  const indices = [];
+  for (let row = 0; row < rows - 1; row += 1) {
+    for (let column = 0; column < columns - 1; column += 1) {
+      const a = row * columns + column;
+      const b = a + 1;
+      const c = a + columns;
+      const d = c + 1;
+      if (valid[a] && valid[b] && valid[c]) indices.push(a, b, c);
+      if (valid[b] && valid[d] && valid[c]) indices.push(b, d, c);
+    }
+  }
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, positions);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  const normalBuffer = createBuffer(gl, gl.ARRAY_BUFFER, normals);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+  const uvBuffer = createBuffer(gl, gl.ARRAY_BUFFER, uvs);
+  gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
+  const indexBuffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices));
+  gl.bindVertexArray(null);
+  return {
+    vao,
+    buffers: [positionBuffer, normalBuffer, uvBuffer, indexBuffer],
+    count: indices.length,
+    columns,
+    rows,
+    validVertices: valid.reduce((sum, value) => sum + value, 0),
+  };
 }
 
-const presets = {
-  aerial:{target:[-90,118,60],distance:4250,azimuth:-.84,elevation:.57},water:{target:[-120,82,-130],distance:2080,azimuth:-.58,elevation:.66},paddy:{target:[-650,58,-1080],distance:1180,azimuth:2.72,elevation:.44},forest:{target:[760,132,-330],distance:1120,azimuth:2.20,elevation:.39},karst:{target:[965,194,377],distance:920,azimuth:2.42,elevation:.31},erosion:{target:[896,82,-312],distance:760,azimuth:2.58,elevation:.30},bamboo:{target:[-420,42,-40],distance:560,azimuth:1.95,elevation:.30},orchard:{target:[-435,76,845],distance:720,azimuth:-2.25,elevation:.34},top:{target:[0,100,0],distance:3900,azimuth:0,elevation:1.515}
+function createFlatGroup(gl, batches) {
+  if (!batches || !batches.length) return null;
+  let vertexTotal = 0;
+  let indexTotal = 0;
+  for (const batch of batches) {
+    vertexTotal += Number(batch.vertexCount || batch.positions?.length / 3 || 0);
+    indexTotal += batch.indices ? batch.indices.length : 0;
+  }
+  if (!vertexTotal) return null;
+  const positions = new Float32Array(vertexTotal * 3);
+  const colors = new Float32Array(vertexTotal * 4);
+  const indices = indexTotal ? new Uint32Array(indexTotal) : null;
+  const ranges = [];
+  let vertexOffset = 0;
+  let indexOffset = 0;
+  for (const batch of batches) {
+    const vertexCount = Number(batch.vertexCount || batch.positions?.length / 3 || 0);
+    if (!vertexCount) continue;
+    positions.set(batch.positions, vertexOffset * 3);
+    const color = batch.style?.color || [0.4, 0.75, 0.9, 0.8];
+    const alpha = Number(batch.style?.opacity ?? color[3] ?? 1);
+    for (let index = 0; index < vertexCount; index += 1) {
+      colors.set([Number(color[0]), Number(color[1]), Number(color[2]), alpha], (vertexOffset + index) * 4);
+    }
+    if (batch.indices && indices) {
+      for (let index = 0; index < batch.indices.length; index += 1) {
+        indices[indexOffset + index] = vertexOffset + batch.indices[index];
+      }
+      ranges.push({
+        primitive: batch.primitive,
+        indexed: true,
+        start: indexOffset,
+        count: batch.indices.length,
+        id: batch.segmentId || batch.id,
+      });
+      indexOffset += batch.indices.length;
+    } else {
+      ranges.push({
+        primitive: batch.primitive,
+        indexed: false,
+        start: vertexOffset,
+        count: vertexCount,
+        id: batch.segmentId || batch.id,
+        pointSize: batch.style?.pointSizePx,
+      });
+    }
+    vertexOffset += vertexCount;
+  }
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, positions);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  const colorBuffer = createBuffer(gl, gl.ARRAY_BUFFER, colors);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0);
+  const buffers = [positionBuffer, colorBuffer];
+  if (indices) buffers.push(createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, indices));
+  gl.bindVertexArray(null);
+  return { vao, buffers, ranges, vertexTotal, indexTotal };
+}
+
+function ecologyArray(data, names, fallbackLength = 0) {
+  for (const name of names) {
+    const value = data && data[name];
+    if (value && typeof value.length === 'number') return value;
+  }
+  return new Float32Array(fallbackLength);
+}
+
+function createEcologyGeometry(gl, data) {
+  if (!data) return null;
+  const positions = ecologyArray(data, ['positions', 'instancePositions']);
+  const count = Number(data.count || data.instanceCount || positions.length / 3 || 0);
+  if (!count || positions.length < count * 3) return null;
+  let colors = ecologyArray(data, ['colors', 'instanceColors']);
+  let sizes = ecologyArray(data, ['sizes', 'instanceSizes']);
+  let categories = ecologyArray(data, ['categories', 'instanceCategories']);
+  if (colors.length === count * 3) {
+    const withAlpha = new Float32Array(count * 4);
+    for (let index = 0; index < count; index += 1) {
+      withAlpha.set([colors[index * 3], colors[index * 3 + 1], colors[index * 3 + 2], 0.9], index * 4);
+    }
+    colors = withAlpha;
+  }
+  if (colors.length < count * 4) {
+    colors = new Float32Array(count * 4);
+    for (let index = 0; index < count; index += 1) colors.set([0.12, 0.36, 0.14, 0.82], index * 4);
+  }
+  if (sizes.length < count) {
+    sizes = new Float32Array(count);
+    sizes.fill(5);
+  }
+  if (categories.length < count) categories = new Float32Array(count);
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, positions);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  const colorBuffer = createBuffer(gl, gl.ARRAY_BUFFER, colors);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0);
+  const sizeBuffer = createBuffer(gl, gl.ARRAY_BUFFER, sizes);
+  gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
+  const categoryBuffer = createBuffer(gl, gl.ARRAY_BUFFER, categories);
+  gl.enableVertexAttribArray(3);
+  gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+  return {
+    vao,
+    buffers: [positionBuffer, colorBuffer, sizeBuffer, categoryBuffer],
+    count,
+    diagnostics: data.diagnostics || null,
+  };
+}
+
+class WorkbenchRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.gl = canvas.getContext('webgl2', {
+      antialias: true,
+      alpha: false,
+      depth: true,
+      powerPreference: 'high-performance',
+    });
+    if (!this.gl) throw new Error('当前浏览器无法建立 WebGL2 共享画布');
+    const gl = this.gl;
+    this.terrainProgram = createProgram(gl, TERRAIN_VERTEX, TERRAIN_FRAGMENT);
+    this.flatProgram = createProgram(gl, FLAT_VERTEX, FLAT_FRAGMENT);
+    this.ecologyProgram = createProgram(gl, ECOLOGY_VERTEX, ECOLOGY_FRAGMENT);
+    this.terrainUniforms = uniformLocations(gl, this.terrainProgram, [
+      'uViewProj', 'uVertical', 'uRelief', 'uMountain', 'uKarst', 'uErosion',
+      'uDeposit', 'uThermal', 'uDetail', 'uValley', 'uCoreSeed', 'uCamera',
+      'uFogColor', 'uFogStart', 'uFogEnd', 'uSeason', 'uYear', 'uShowForest',
+      'uShowPaddy', 'uShowDry', 'uShowOrchards', 'uShowBunds', 'uShowRock',
+      'uForestDensity',
+    ]);
+    this.flatUniforms = uniformLocations(gl, this.flatProgram, ['uViewProj', 'uPointSize', 'uRoundPoint']);
+    this.ecologyUniforms = uniformLocations(gl, this.ecologyProgram, [
+      'uViewProj', 'uCamera', 'uViewportHeight', 'uFov', 'uTime', 'uWindSpeed',
+      'uWindDirection', 'uGust', 'uCategoryA', 'uCategoryB',
+    ]);
+    this.terrain = null;
+    this.hydrologyGroups = [];
+    this.boundary = null;
+    this.ecology = null;
+    this.dataset = null;
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+  }
+
+  setDataset(dataset) {
+    destroyGeometry(this.gl, this.terrain);
+    this.dataset = dataset;
+    this.terrain = buildTerrainGeometry(this.gl, dataset);
+  }
+
+  setHydrology(batchCollection) {
+    for (const group of this.hydrologyGroups) destroyGeometry(this.gl, group.geometry);
+    this.hydrologyGroups = [];
+    if (!batchCollection) return;
+    const definitions = [
+      ['surfaces', batchCollection.surfaces],
+      ['banks', batchCollection.banks],
+      ['centerlines', batchCollection.centerlines],
+      ['flowArrows', batchCollection.flowArrows],
+      ['breakpoints', batchCollection.breakpoints],
+    ];
+    for (const [name, batches] of definitions) {
+      const geometry = createFlatGroup(this.gl, batches);
+      if (geometry) this.hydrologyGroups.push({ name, geometry });
+    }
+  }
+
+  setBoundary(batches) {
+    destroyGeometry(this.gl, this.boundary);
+    this.boundary = createFlatGroup(this.gl, batches);
+  }
+
+  setEcology(data) {
+    destroyGeometry(this.gl, this.ecology);
+    this.ecology = createEcologyGeometry(this.gl, data);
+  }
+
+  resize() {
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.75);
+    const width = Math.max(1, Math.round(this.canvas.clientWidth * ratio));
+    const height = Math.max(1, Math.round(this.canvas.clientHeight * ratio));
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.gl.viewport(0, 0, width, height);
+    }
+  }
+
+  primitiveMode(primitive) {
+    const gl = this.gl;
+    if (primitive === 'triangles') return gl.TRIANGLES;
+    if (primitive === 'lines') return gl.LINES;
+    if (primitive === 'points') return gl.POINTS;
+    return gl.LINE_STRIP;
+  }
+
+  drawFlatGroup(group, viewProjection) {
+    if (!group) return;
+    const gl = this.gl;
+    gl.bindVertexArray(group.vao);
+    for (const range of group.ranges) {
+      const point = range.primitive === 'points';
+      gl.uniform1f(this.flatUniforms.uRoundPoint, point ? 1 : 0);
+      gl.uniform1f(this.flatUniforms.uPointSize, Number(range.pointSize || 6));
+      const mode = this.primitiveMode(range.primitive);
+      if (range.indexed) gl.drawElements(mode, range.count, gl.UNSIGNED_INT, range.start * 4);
+      else gl.drawArrays(mode, range.start, range.count);
+    }
+    gl.bindVertexArray(null);
+  }
+
+  render(camera, timeSeconds) {
+    this.resize();
+    const gl = this.gl;
+    const ecologyState = store.state.ecology;
+    const display = store.state.display;
+    const gaea = browserPreviewParameters();
+    const palette = {
+      spring: [0.52, 0.66, 0.65],
+      summer: [0.48, 0.62, 0.62],
+      autumn: [0.63, 0.62, 0.52],
+      winter: [0.58, 0.62, 0.60],
+    }[ecologyState.season] || [0.48, 0.62, 0.62];
+    const clear = display.showAtmosphere ? palette : [0.055, 0.075, 0.065];
+    gl.clearColor(clear[0], clear[1], clear[2], 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (!this.dataset || !this.terrain) return;
+
+    if (display.showTerrain) {
+      const uniforms = this.terrainUniforms;
+      gl.disable(gl.BLEND);
+      gl.depthMask(true);
+      gl.useProgram(this.terrainProgram);
+      gl.bindVertexArray(this.terrain.vao);
+      gl.uniformMatrix4fv(uniforms.uViewProj, false, camera.viewProjection);
+      gl.uniform1f(uniforms.uVertical, gaea.verticalEx);
+      gl.uniform1f(uniforms.uRelief, this.dataset.maximumElevation - this.dataset.minimumElevation);
+      gl.uniform1f(uniforms.uMountain, gaea.mountainEmphasis);
+      gl.uniform1f(uniforms.uKarst, gaea.karstStrength);
+      gl.uniform1f(uniforms.uErosion, gaea.erosionStrength);
+      gl.uniform1f(uniforms.uDeposit, gaea.depositionStrength);
+      gl.uniform1f(uniforms.uThermal, gaea.thermalWeathering);
+      gl.uniform1f(uniforms.uDetail, gaea.surfaceDetail);
+      gl.uniform1f(uniforms.uValley, gaea.valleyCut);
+      gl.uniform1f(uniforms.uCoreSeed, coreSeed(this.dataset.id));
+      gl.uniform3fv(uniforms.uCamera, camera.eye);
+      gl.uniform3fv(uniforms.uFogColor, clear);
+      gl.uniform1f(uniforms.uFogStart, Math.max(900, Math.max(this.dataset.widthMeters, this.dataset.heightMeters) * 0.22));
+      gl.uniform1f(uniforms.uFogEnd, Math.max(5000, Math.max(this.dataset.widthMeters, this.dataset.heightMeters) * 1.3));
+      gl.uniform1f(uniforms.uSeason, seasonIndex(ecologyState.season));
+      gl.uniform1f(uniforms.uYear, Number(ecologyState.year));
+      gl.uniform1f(uniforms.uShowForest, Number(ecologyState.showForest));
+      gl.uniform1f(uniforms.uShowPaddy, Number(ecologyState.showPaddy));
+      gl.uniform1f(uniforms.uShowDry, Number(ecologyState.showDryCrops));
+      gl.uniform1f(uniforms.uShowOrchards, Number(ecologyState.showOrchards));
+      gl.uniform1f(uniforms.uShowBunds, Number(ecologyState.showBunds));
+      gl.uniform1f(uniforms.uShowRock, Number(ecologyState.showRock) * gaea.rockExposure);
+      gl.uniform1f(uniforms.uForestDensity, Number(ecologyState.forestDensity));
+      gl.drawElements(gl.TRIANGLES, this.terrain.count, gl.UNSIGNED_INT, 0);
+      gl.bindVertexArray(null);
+    }
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    gl.useProgram(this.flatProgram);
+    gl.uniformMatrix4fv(this.flatUniforms.uViewProj, false, camera.viewProjection);
+    for (const entry of this.hydrologyGroups) this.drawFlatGroup(entry.geometry, camera.viewProjection);
+    if (display.showCoreBounds) this.drawFlatGroup(this.boundary, camera.viewProjection);
+
+    if (this.ecology && ecologyState.showInstances) {
+      gl.useProgram(this.ecologyProgram);
+      const uniforms = this.ecologyUniforms;
+      gl.bindVertexArray(this.ecology.vao);
+      gl.uniformMatrix4fv(uniforms.uViewProj, false, camera.viewProjection);
+      gl.uniform3fv(uniforms.uCamera, camera.eye);
+      gl.uniform1f(uniforms.uViewportHeight, this.canvas.height);
+      gl.uniform1f(uniforms.uFov, camera.fov);
+      gl.uniform1f(uniforms.uTime, timeSeconds);
+      gl.uniform1f(uniforms.uWindSpeed, Number(ecologyState.windSpeed));
+      gl.uniform1f(uniforms.uWindDirection, Number(ecologyState.windDirection));
+      gl.uniform1f(uniforms.uGust, Number(ecologyState.gustStrength));
+      gl.uniform4f(
+        uniforms.uCategoryA,
+        Number(ecologyState.showForest),
+        Number(ecologyState.showShrubs),
+        Number(ecologyState.showPaddy),
+        Number(ecologyState.showDryCrops),
+      );
+      gl.uniform4f(
+        uniforms.uCategoryB,
+        Number(ecologyState.showOrchards),
+        Number(ecologyState.showBunds),
+        Number(ecologyState.showRock),
+        1,
+      );
+      gl.drawArrays(gl.POINTS, 0, this.ecology.count);
+      gl.bindVertexArray(null);
+    }
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+  }
+}
+
+const camera = {
+  mode: 'overview',
+  reviewHeight: null,
+  target: [0, 0, 0],
+  desiredTarget: [0, 0, 0],
+  distance: 10000,
+  desiredDistance: 10000,
+  azimuth: -0.72,
+  desiredAzimuth: -0.72,
+  elevation: 0.58,
+  desiredElevation: 0.58,
+  eye: [0, 0, 0],
+  fov: radians(43),
+  near: 0.15,
+  far: 500000,
+  viewProjection: Mat4.identity(),
+  altitudeAboveGround: 0,
 };
-const camera = { target:[...presets.aerial.target],desiredTarget:[...presets.aerial.target],distance:presets.aerial.distance,desiredDistance:presets.aerial.distance,azimuth:presets.aerial.azimuth,desiredAzimuth:presets.aerial.azimuth,elevation:presets.aerial.elevation,desiredElevation:presets.aerial.elevation,fov:radians(43),eye:[0,0,0],view:Mat4.identity(),proj:Mat4.identity(),viewProj:Mat4.identity(),inverseViewProj:Mat4.identity(),mode:'orbit',groundClearanceM:1.7,nearM:2,farM:12000,altitudeAboveGroundM:0};
-const state = { verticalEx:1.6,forestDensity:1,riceDetail:1,waterLevel:1,wind:.34,season:0,showForest:1,showShrubs:1,showPaddy:1,showRice:1,showWater:1,showRock:1,showTerrace:1,showEcology:1,erosionStrength:1,karstStrength:1,hydrologyDiagnostics:0,currentView:'aerial' };
 
-function applyPreset(name, instant=false){const preset=presets[name]||presets.aerial;camera.mode='orbit';camera.desiredTarget=[...preset.target];camera.desiredDistance=preset.distance;camera.desiredAzimuth=preset.azimuth;camera.desiredElevation=preset.elevation;state.currentView=name;document.querySelectorAll('.preset').forEach((button)=>button.classList.toggle('active',button.dataset.view===name));if(instant){camera.target=[...preset.target];camera.distance=preset.distance;camera.azimuth=preset.azimuth;camera.elevation=preset.elevation;}}
-function setCameraMode(mode){camera.mode=mode==='ground'?'ground':'orbit';if(camera.mode==='ground'){camera.groundClearanceM=1.7;camera.desiredDistance=8;camera.desiredElevation=.08;}$('#groundModeButton').classList.toggle('active',camera.mode==='ground');$('#orbitModeButton').classList.toggle('active',camera.mode==='orbit');}
+function cameraProjectedPosition(dataset) {
+  if (!dataset || !dataset.projectedBounds) return null;
+  const bounds = dataset.projectedBounds;
+  return [
+    (bounds[0] + bounds[2]) / 2 + camera.target[0],
+    (bounds[1] + bounds[3]) / 2 - camera.target[2],
+  ];
+}
 
-function resize(){const ratio=Math.min(devicePixelRatio||1,1.65),width=Math.max(1,Math.round(innerWidth*ratio)),height=Math.max(1,Math.round(innerHeight*ratio));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;gl.viewport(0,0,width,height);}}
-function updateCamera(dt){camera.target[0]=damp(camera.target[0],camera.desiredTarget[0],7,dt);camera.target[2]=damp(camera.target[2],camera.desiredTarget[2],7,dt);const targetGround=sampleHeight(camera.target[0],camera.target[2]);if(targetGround!=null)camera.target[1]=damp(camera.target[1],targetGround*state.verticalEx+.25,9,dt);camera.distance=damp(camera.distance,camera.desiredDistance,7,dt);camera.azimuth=damp(camera.azimuth,camera.desiredAzimuth,7,dt);camera.elevation=damp(camera.elevation,camera.desiredElevation,7,dt);const ce=Math.cos(camera.elevation);let eye=[camera.target[0]+camera.distance*ce*Math.sin(camera.azimuth),camera.target[1]+camera.distance*Math.sin(camera.elevation),camera.target[2]+camera.distance*ce*Math.cos(camera.azimuth)];const rawGround=sampleHeight(eye[0],eye[2])??0,eyeGround=rawGround*state.verticalEx,minimumEye=eyeGround+Math.max(camera.groundClearanceM,state.showWater?.35*state.waterLevel:0);if(camera.mode==='ground'){eye[1]=minimumEye;const lookDistance=12;camera.target[0]=clamp(eye[0]-Math.sin(camera.azimuth)*lookDistance,-halfM,halfM);camera.target[2]=clamp(eye[2]-Math.cos(camera.azimuth)*lookDistance,-halfM,halfM);camera.target[1]=(sampleHeight(camera.target[0],camera.target[2])??rawGround)*state.verticalEx+1.55;}else if(eye[1]<minimumEye)eye[1]=minimumEye;camera.eye=eye;camera.altitudeAboveGroundM=Math.max(0,eye[1]-eyeGround);camera.nearM=camera.mode==='ground'?Math.min(.22,Math.max(.08,camera.altitudeAboveGroundM*.08)):Math.min(2,Math.max(.12,camera.altitudeAboveGroundM*.04));camera.farM=Math.max(12000,camera.distance*4.5);camera.view=Mat4.lookAt(camera.eye,camera.target,[0,1,0]);camera.proj=Mat4.perspective(camera.fov,canvas.width/Math.max(1,canvas.height),camera.nearM,camera.farM);camera.viewProj=Mat4.multiply(camera.proj,camera.view);camera.inverseViewProj=Mat4.invert(camera.viewProj);$('#compass').style.setProperty('--compass-rot',`${-camera.azimuth*180/Math.PI}deg`);$('#cameraDiag').textContent=`mode ${camera.mode}\nclearance ${camera.altitudeAboveGroundM.toFixed(2)} m\ndistance ${camera.distance.toFixed(1)} m\nnear ${camera.nearM.toFixed(2)} m · far ${camera.farM.toFixed(0)} m\ngrid ${meshN} × ${meshN}`;}
-function pointerRay(clientX,clientY){if(!camera.inverseViewProj)return null;const rect=canvas.getBoundingClientRect(),x=(clientX-rect.left)/rect.width*2-1,y=1-(clientY-rect.top)/rect.height*2,near=Mat4.transformPoint(camera.inverseViewProj,[x,y,-1,1]),far=Mat4.transformPoint(camera.inverseViewProj,[x,y,1,1]);return{origin:near,direction:Vec3.normalize(Vec3.sub(far,near))};}
-function rayTerrainHit(ray){if(!ray)return null;let tMin=0,tMax=12000;for(const axis of [0,2]){const origin=ray.origin[axis],direction=ray.direction[axis];if(Math.abs(direction)<1e-7){if(origin<-halfM||origin>halfM)return null;}else{let t1=(-halfM-origin)/direction,t2=(halfM-origin)/direction;if(t1>t2)[t1,t2]=[t2,t1];tMin=Math.max(tMin,t1);tMax=Math.min(tMax,t2);if(tMin>tMax)return null;}}let previousT=Math.max(tMin,0),previousPoint=Vec3.add(ray.origin,Vec3.scale(ray.direction,previousT)),previousHeight=sampleHeight(previousPoint[0],previousPoint[2]);if(previousHeight==null)return null;let previousF=previousPoint[1]-previousHeight*state.verticalEx;for(let index=1;index<=96;index++){const t=lerp(tMin,tMax,index/96),point=Vec3.add(ray.origin,Vec3.scale(ray.direction,t)),height=sampleHeight(point[0],point[2]);if(height==null)continue;const f=point[1]-height*state.verticalEx;if(previousF>=0&&f<=0){let low=previousT,high=t;for(let pass=0;pass<15;pass++){const mid=(low+high)/2,midPoint=Vec3.add(ray.origin,Vec3.scale(ray.direction,mid)),midHeight=sampleHeight(midPoint[0],midPoint[2]);if(midPoint[1]-midHeight*state.verticalEx>0)low=mid;else high=mid;}const hit=Vec3.add(ray.origin,Vec3.scale(ray.direction,(low+high)/2)),relative=sampleHeight(hit[0],hit[2]);return{x:hit[0],z:hit[2],elevation:minH+relative};}previousT=t;previousF=f;}return null;}
+function updateCamera(dataset, dt) {
+  if (!dataset) return;
+  const maxDimension = Math.max(dataset.widthMeters, dataset.heightMeters);
+  camera.target[0] = damp(camera.target[0], camera.desiredTarget[0], 8, dt);
+  camera.target[2] = damp(camera.target[2], camera.desiredTarget[2], 8, dt);
+  camera.azimuth = damp(camera.azimuth, camera.desiredAzimuth, 9, dt);
+  camera.elevation = damp(camera.elevation, camera.desiredElevation, 9, dt);
+  camera.distance = damp(camera.distance, camera.desiredDistance, 7, dt);
+  const targetHeight = approximateVisualOffset(dataset, camera.target[0], camera.target[2]) ?? 0;
+  let center;
+  if (camera.mode === 'overview') {
+    camera.target[1] = damp(camera.target[1], targetHeight, 8, dt);
+    const cosine = Math.cos(camera.elevation);
+    camera.eye = [
+      camera.target[0] + camera.distance * cosine * Math.sin(camera.azimuth),
+      camera.target[1] + camera.distance * Math.sin(camera.elevation),
+      camera.target[2] + camera.distance * cosine * Math.cos(camera.azimuth),
+    ];
+    center = [...camera.target];
+    const eyeGround = approximateVisualOffset(dataset, camera.eye[0], camera.eye[2]) ?? 0;
+    camera.altitudeAboveGround = Math.max(0, camera.eye[1] - eyeGround);
+    camera.near = Math.max(0.35, Math.min(80, camera.distance * 0.0008));
+  } else {
+    const clearance = Number(camera.reviewHeight || 1.7);
+    camera.eye = [camera.target[0], targetHeight + clearance, camera.target[2]];
+    const forward = [-Math.sin(camera.azimuth), -Math.cos(camera.azimuth)];
+    const lookDistance = Math.max(14, clearance * 4);
+    const lookX = clamp(camera.target[0] + forward[0] * lookDistance, -dataset.widthMeters / 2, dataset.widthMeters / 2);
+    const lookZ = clamp(camera.target[2] + forward[1] * lookDistance, -dataset.heightMeters / 2, dataset.heightMeters / 2);
+    const lookGround = approximateVisualOffset(dataset, lookX, lookZ) ?? targetHeight;
+    center = [lookX, lookGround + Math.min(1.55, clearance * 0.08), lookZ];
+    camera.altitudeAboveGround = clearance;
+    camera.near = clearance <= 2 ? 0.06 : Math.max(0.12, clearance * 0.015);
+  }
+  camera.far = Math.max(12000, maxDimension * 5, camera.distance * 4);
+  const view = Mat4.lookAt(camera.eye, center, [0, 1, 0]);
+  const projection = Mat4.perspective(
+    camera.fov,
+    Math.max(1, ui.canvas.width) / Math.max(1, ui.canvas.height),
+    camera.near,
+    camera.far,
+  );
+  camera.viewProjection = Mat4.multiply(projection, view);
+  const projected = cameraProjectedPosition(dataset);
+  byId('cameraDiagnostics').textContent =
+    '模式 ' + (camera.mode === 'overview' ? '全景轨道' : '地面检查') +
+    ' · 高度 ' + camera.altitudeAboveGround.toFixed(2) + ' m\n' +
+    'E ' + (projected ? projected[0].toFixed(1) : 'n/a') +
+    ' · N ' + (projected ? projected[1].toFixed(1) : 'n/a') +
+    ' · near ' + camera.near.toFixed(2) + ' m';
+}
 
-const keys=new Set();window.addEventListener('keydown',(event)=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;keys.add(event.code);if(event.code==='Escape')setCameraMode('orbit');});window.addEventListener('keyup',(event)=>keys.delete(event.code));
-function updateGroundMovement(dt){if(camera.mode!=='ground')return;const forward=[-Math.sin(camera.azimuth),0,-Math.cos(camera.azimuth)],right=[Math.cos(camera.azimuth),0,-Math.sin(camera.azimuth)];let x=0,z=0;if(keys.has('KeyW')||keys.has('ArrowUp')){x+=forward[0];z+=forward[2];}if(keys.has('KeyS')||keys.has('ArrowDown')){x-=forward[0];z-=forward[2];}if(keys.has('KeyA')||keys.has('ArrowLeft')){x-=right[0];z-=right[2];}if(keys.has('KeyD')||keys.has('ArrowRight')){x+=right[0];z+=right[2];}const length=Math.hypot(x,z);if(length<1e-5)return;const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')?18:6;camera.target[0]=clamp(camera.target[0]+x/length*speed*dt,-halfM+2,halfM-2);camera.target[2]=clamp(camera.target[2]+z/length*speed*dt,-halfM+2,halfM-2);camera.desiredTarget[0]=camera.target[0];camera.desiredTarget[2]=camera.target[2];}
+function setCameraMode(mode) {
+  const dataset = store.state.dataset;
+  if (!dataset) return;
+  if (mode === 'overview') {
+    camera.mode = 'overview';
+    camera.reviewHeight = null;
+    camera.desiredDistance = Math.max(dataset.widthMeters, dataset.heightMeters) * 1.08;
+    camera.desiredElevation = 0.60;
+    byId('cameraModeLabel').textContent = '全景';
+  } else {
+    const height = Number(String(mode).replace('m', ''));
+    camera.mode = 'inspection';
+    camera.reviewHeight = height;
+    camera.desiredElevation = 0.08;
+    byId('cameraModeLabel').textContent = height + ' m 观察';
+  }
+  document.querySelectorAll('[data-camera]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.camera === mode);
+  });
+  updateDiagnostics();
+}
 
-let dragging=null;canvas.addEventListener('contextmenu',(event)=>event.preventDefault());canvas.addEventListener('pointerdown',(event)=>{canvas.setPointerCapture(event.pointerId);dragging={id:event.pointerId,x:event.clientX,y:event.clientY,button:event.button};canvas.style.cursor=event.button===2?'move':'grabbing';});canvas.addEventListener('pointermove',(event)=>{if(dragging&&dragging.id===event.pointerId){const dx=event.clientX-dragging.x,dy=event.clientY-dragging.y;dragging.x=event.clientX;dragging.y=event.clientY;if(dragging.button===2||event.shiftKey){const forward=Vec3.normalize([camera.target[0]-camera.eye[0],0,camera.target[2]-camera.eye[2]]),right=Vec3.normalize([forward[2],0,-forward[0]]),scale=Math.max(1,camera.distance*.0012);camera.desiredTarget[0]=clamp(camera.desiredTarget[0]+(-right[0]*dx+forward[0]*dy)*scale,-halfM,halfM);camera.desiredTarget[2]=clamp(camera.desiredTarget[2]+(-right[2]*dx+forward[2]*dy)*scale,-halfM,halfM);}else{camera.desiredAzimuth-=dx*.0065;camera.desiredElevation=clamp(camera.desiredElevation-dy*.0055,.03,1.535);}}else{const hit=rayTerrainHit(pointerRay(event.clientX,event.clientY));if(hit)$('#coordLabel').textContent=`E ${(aoi.centerProjected[0]+hit.x).toFixed(1)} · N ${(aoi.centerProjected[1]+hit.z).toFixed(1)} · Z ${hit.elevation.toFixed(1)} m`;}});canvas.addEventListener('pointerup',(event)=>{if(dragging?.id===event.pointerId)dragging=null;canvas.style.cursor='grab';});canvas.addEventListener('pointercancel',()=>{dragging=null;canvas.style.cursor='grab';});canvas.addEventListener('wheel',(event)=>{event.preventDefault();setCameraMode('orbit');camera.desiredDistance=clamp(camera.desiredDistance*Math.exp(event.deltaY*.00105),1.25,7200);},{passive:false});canvas.addEventListener('dblclick',(event)=>{const hit=rayTerrainHit(pointerRay(event.clientX,event.clientY));if(!hit)return;setCameraMode('orbit');camera.desiredTarget=[hit.x,(hit.elevation-minH)*state.verticalEx+.25,hit.z];camera.desiredDistance=Math.max(18,Math.min(camera.desiredDistance*.42,850));showToast(`聚焦地表 Z ${hit.elevation.toFixed(1)} m`);});canvas.style.cursor='grab';
+function moveCamera(direction, amount) {
+  const dataset = store.state.dataset;
+  if (!dataset) return;
+  const forward = [-Math.sin(camera.azimuth), -Math.cos(camera.azimuth)];
+  const right = [Math.cos(camera.azimuth), -Math.sin(camera.azimuth)];
+  let x = 0;
+  let z = 0;
+  if (direction === 'forward') [x, z] = forward;
+  if (direction === 'back') [x, z] = [-forward[0], -forward[1]];
+  if (direction === 'left') [x, z] = [-right[0], -right[1]];
+  if (direction === 'right') [x, z] = right;
+  camera.desiredTarget[0] = clamp(
+    camera.desiredTarget[0] + x * amount,
+    -dataset.widthMeters / 2 + 1,
+    dataset.widthMeters / 2 - 1,
+  );
+  camera.desiredTarget[2] = clamp(
+    camera.desiredTarget[2] + z * amount,
+    -dataset.heightMeters / 2 + 1,
+    dataset.heightMeters / 2 - 1,
+  );
+}
 
-function bindUi(){document.querySelectorAll('.preset').forEach((button)=>button.addEventListener('click',()=>applyPreset(button.dataset.view)));for(const [id,key,format] of [['verticalEx','verticalEx',(v)=>`${v.toFixed(1)}×`],['forestDensity','forestDensity',(v)=>`${Math.round(v*100)}%`],['riceDetail','riceDetail',(v)=>`${Math.round(v*100)}%`],['waterLevel','waterLevel',(v)=>`${Math.round(v*100)}%`],['wind','wind',(v)=>`${Math.round(v*100)}%`],['erosionStrength','erosionStrength',(v)=>`${Math.round(v*100)}%`],['karstStrength','karstStrength',(v)=>`${Math.round(v*100)}%`]]){const input=$(`#${id}`),output=$(`#${id}Out`);input.addEventListener('input',()=>{state[key]=Number(input.value);output.value=format(state[key]);});}for(const key of ['showForest','showShrubs','showPaddy','showRice','showWater','showRock','showTerrace','showEcology'])$(`#${key}`).addEventListener('change',(event)=>state[key]=event.target.checked?1:0);$('#season').addEventListener('change',(event)=>{state.season=Number(event.target.value);$('#seasonLabel').textContent=['1944 夏季','强降雨期','秋季收割','冬季休耕'][state.season];});$('#hydrologySurface').addEventListener('change',(event)=>{state.showWater=event.target.checked?1:0;$('#showWater').checked=event.target.checked;});for(const id of ['hydrologyBanks','hydrologyDiagnostics'])$(`#${id}`).addEventListener('change',()=>state.hydrologyDiagnostics=$('#hydrologyBanks').checked||$('#hydrologyDiagnostics').checked?1:0);$('#namedHydrology').addEventListener('change',(event)=>{if(event.target.checked){event.target.checked=false;showToast('漓江与湘江命名拓扑资产仍在构建，发布门槛保持关闭。',4300);}});$('#groundModeButton').addEventListener('click',()=>setCameraMode('ground'));$('#orbitModeButton').addEventListener('click',()=>setCameraMode('orbit'));document.querySelectorAll('.core-btn').forEach((button)=>button.addEventListener('click',()=>{if(button.dataset.core==='yangtang-airfield')return;showToast(`${button.textContent.replace(' · 数据待绑定','')}真实 12.5 米核心 DEM 和生态字段仍在绑定。`,4200);}));}
+let renderer;
+let mainManifest;
+let coreLoader;
+let gaeaBridge;
+let hydrologyRuntime;
+let ecologyRuntime;
+let overallDataset;
+let switchRevision = 0;
+let hydrologyRefreshTimer = 0;
+let ecologyRefreshTimer = 0;
+let latestHydrologyBatches = null;
+let latestEcologyData = null;
+const coreManifests = new Map();
 
-function render(time,dt){resize();updateGroundMovement(dt);updateCamera(dt);const fogColor=state.season===1?[.57,.66,.65]:state.season===2?[.67,.65,.52]:state.season===3?[.61,.64,.58]:[.55,.64,.62],sunDir=state.season===1?[-.28,.80,-.43]:[-.46,.78,-.42];gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.disable(gl.BLEND);gl.depthMask(true);gl.useProgram(terrainProgram);gl.bindVertexArray(objects.terrain.vao);gl.uniformMatrix4fv(terrainU.uViewProj,false,camera.viewProj);gl.uniform1f(terrainU.uVerticalEx,state.verticalEx);gl.uniform3fv(terrainU.uCameraPos,camera.eye);gl.uniform3fv(terrainU.uSunDir,sunDir);gl.uniform3fv(terrainU.uFogColor,fogColor);gl.uniform1f(terrainU.uTime,time);gl.uniform1f(terrainU.uSeason,state.season);gl.uniform1f(terrainU.uForestDensity,state.forestDensity);gl.uniform1f(terrainU.uWaterLevel,state.waterLevel);gl.uniform1f(terrainU.uShowForest,state.showForest);gl.uniform1f(terrainU.uShowPaddy,state.showPaddy);gl.uniform1f(terrainU.uShowWater,state.showWater);gl.uniform1f(terrainU.uShowRock,state.showRock);gl.uniform1f(terrainU.uShowTerrace,state.showTerrace);gl.uniform1f(terrainU.uShowEcology,state.showEcology);gl.uniform1f(terrainU.uErosionStrength,state.erosionStrength);gl.uniform1f(terrainU.uKarstStrength,state.karstStrength);gl.uniform1f(terrainU.uHydrologyDiagnostics,state.hydrologyDiagnostics);gl.uniform1i(terrainU.uField0,0);gl.uniform1i(terrainU.uField1,1);gl.uniform1i(terrainU.uField2,2);gl.drawElements(gl.TRIANGLES,objects.terrain.count,gl.UNSIGNED_INT,0);if(state.showEcology&&state.showForest){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.useProgram(trunkProgram);gl.bindVertexArray(objects.tree.trunkVao);gl.uniformMatrix4fv(trunkU.uViewProj,false,camera.viewProj);gl.uniform3fv(trunkU.uCameraPos,camera.eye);gl.uniform1f(trunkU.uVerticalEx,state.verticalEx);gl.uniform1f(trunkU.uDensity,state.forestDensity);gl.drawArrays(gl.LINES,0,objects.tree.count*2);gl.useProgram(spriteProgram);gl.uniformMatrix4fv(spriteU.uViewProj,false,camera.viewProj);gl.uniform3fv(spriteU.uCameraPos,camera.eye);gl.uniform1f(spriteU.uVerticalEx,state.verticalEx);gl.uniform1f(spriteU.uViewportHeight,canvas.height);gl.uniform1f(spriteU.uFov,camera.fov);gl.uniform1f(spriteU.uTime,time);gl.uniform1f(spriteU.uWind,state.wind);gl.uniform1f(spriteU.uDensity,state.forestDensity);gl.uniform1f(spriteU.uType,0);gl.uniform1f(spriteU.uSeason,state.season);gl.bindVertexArray(objects.tree.vao);gl.drawArrays(gl.POINTS,0,objects.tree.count);if(state.showShrubs){gl.uniform1f(spriteU.uType,1);gl.uniform1f(spriteU.uDensity,Math.min(1,state.forestDensity*1.1));gl.bindVertexArray(objects.shrub.vao);gl.drawArrays(gl.POINTS,0,objects.shrub.count);}}if(state.showEcology&&state.showPaddy&&state.showRice){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.useProgram(riceProgram);gl.bindVertexArray(objects.rice.vao);gl.uniformMatrix4fv(riceU.uViewProj,false,camera.viewProj);gl.uniform3fv(riceU.uCameraPos,camera.eye);gl.uniform1f(riceU.uVerticalEx,state.verticalEx);gl.uniform1f(riceU.uViewportHeight,canvas.height);gl.uniform1f(riceU.uFov,camera.fov);gl.uniform1f(riceU.uTime,time);gl.uniform1f(riceU.uWind,state.wind);gl.uniform1f(riceU.uDetail,state.riceDetail);gl.uniform1f(riceU.uSeason,state.season);gl.drawArrays(gl.POINTS,0,objects.rice.count);}gl.depthMask(true);gl.disable(gl.BLEND);gl.bindVertexArray(null);}
+async function loadOverallDataset() {
+  if (overallDataset) return overallDataset;
+  const main = mainManifest.overall;
+  const [sourceManifest, heightBuffer, maskBuffer] = await Promise.all([
+    fetchJson(main.sourceManifest),
+    fetchBuffer(main.heightBinary),
+    fetchBuffer(main.maskBinary),
+  ]);
+  const height = littleEndianUint16(heightBuffer);
+  const mask = new Uint8Array(maskBuffer);
+  const expected = Number(sourceManifest.gridWidth) * Number(sourceManifest.gridHeight);
+  if (height.length !== expected || mask.length !== expected) throw new Error('全域 DEM 像元数与 manifest 不一致');
+  const rasterSpacingMeters = [
+    Number(sourceManifest.widthMeters) / (Number(sourceManifest.gridWidth) - 1),
+    Number(sourceManifest.heightMeters) / (Number(sourceManifest.gridHeight) - 1),
+  ];
+  const declaredSpacing = main.rasterSpacingMeters || [];
+  if (
+    declaredSpacing.length !== 2 ||
+    declaredSpacing.some((value, index) => Math.abs(Number(value) - rasterSpacingMeters[index]) > 1e-6)
+  ) {
+    throw new Error('全域网页栅格间距与范围、网格维度不一致');
+  }
+  overallDataset = {
+    id: 'overall',
+    name: main.name,
+    manifest: sourceManifest,
+    height,
+    mask,
+    gridWidth: Number(sourceManifest.gridWidth),
+    gridHeight: Number(sourceManifest.gridHeight),
+    resolutionMeters: Number(main.resolutionMeters),
+    sourceResolutionMeters: Number(main.sourceResolutionMeters),
+    rasterSpacingMeters,
+    rasterSampling: { ...main.rasterSampling },
+    widthMeters: Number(sourceManifest.widthMeters),
+    heightMeters: Number(sourceManifest.heightMeters),
+    minimumElevation: Number(sourceManifest.minimumElevation),
+    maximumElevation: Number(sourceManifest.maximumElevation),
+    heightEncoding: sourceManifest.heightEncoding,
+    projectedBounds: [...sourceManifest.bounds],
+    wgs84Bounds: [...sourceManifest.wgs84Bounds],
+    validFraction: Number(sourceManifest.validFraction),
+    status: main.status,
+    sourceStatus: main.status,
+    lineage: main.lineage,
+  };
+  return overallDataset;
+}
 
-bindUi();applyPreset('aerial',true);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);$('#treeMetric').textContent=trees.count.toLocaleString('zh-CN');$('#shrubMetric').textContent=shrubs.count.toLocaleString('zh-CN');$('#riceMetric').textContent=rice.count.toLocaleString('zh-CN');window.DEMEcologySurface={ready:true,getState:()=>structuredClone(state),getManifest:()=>structuredClone(manifest),setCameraMode,setCameraPreset:(name)=>{applyPreset(name,true);return true;},setLayerVisibility:(id,visible)=>{const map={forest:'showForest',shrubs:'showShrubs',paddy:'showPaddy',rice:'showRice',water:'showWater',rock:'showRock',terrace:'showTerrace',ecology:'showEcology'};if(!map[id])return false;state[map[id]]=visible?1:0;return true;}};window.__GUILIN_RECOVERY_DIAGNOSTICS__={publicationBlocked:true,baseline:'v0.3.1',activeCore:'yangtang-airfield',detailedEcologyScope:'active-core-only',groundClearanceM:1.7};window.__DEMO_READY__=true;loading.classList.add('done');setTimeout(()=>loading.remove(),650);
-let last=performance.now(),fpsStart=last,frames=0;function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;render(now/1000,dt);frames++;if(now-fpsStart>800){$('#fpsLabel').textContent=`${Math.round(frames*1000/(now-fpsStart))} FPS · ${state.currentView}`;fpsStart=now;frames=0;}requestAnimationFrame(loop);}requestAnimationFrame(loop);
+function coreResultToDataset(id, result) {
+  const manifest = result.manifest;
+  return {
+    id,
+    name: manifest.name,
+    manifest,
+    height: result.height,
+    mask: result.mask,
+    gridWidth: result.gridWidth,
+    gridHeight: result.gridHeight,
+    resolutionMeters: Number(manifest.raster.resolutionMeters),
+    sourceResolutionMeters: Number(manifest.raster.resolutionMeters),
+    rasterSpacingMeters: [Number(manifest.raster.resolutionMeters), Number(manifest.raster.resolutionMeters)],
+    rasterSampling: {
+      method: 'center-window-no-spatial-resampling',
+      gridConvention: manifest.raster.gridConvention,
+      spacingDerivation: manifest.raster.spacingDerivation,
+    },
+    widthMeters: Number(manifest.widthMeters),
+    heightMeters: Number(manifest.heightMeters),
+    minimumElevation: Number(manifest.minimumElevation),
+    maximumElevation: Number(manifest.maximumElevation),
+    heightEncoding: manifest.heightEncoding,
+    projectedBounds: [...manifest.projectedBounds],
+    wgs84Bounds: [...manifest.wgs84Bounds],
+    validFraction: Number(manifest.validFraction),
+    status: manifest.status,
+    sourceStatus: manifest.sourceStatus,
+    lineage: manifest.sourceLineage?.lineageId || 'verified-12.5m-core',
+  };
+}
+
+function moduleDataset(dataset) {
+  const visualRelief = Math.max(1, approximateVisualOffset(dataset, 0, 0) ?? (dataset.maximumElevation - dataset.minimumElevation));
+  return {
+    id: dataset.id,
+    activeCoreId: dataset.id,
+    manifest: dataset.manifest,
+    widthMeters: dataset.widthMeters,
+    heightMeters: dataset.heightMeters,
+    gridWidth: dataset.gridWidth,
+    gridHeight: dataset.gridHeight,
+    resolutionMeters: dataset.resolutionMeters,
+    sourceResolutionMeters: dataset.sourceResolutionMeters,
+    rasterSpacingMeters: [...dataset.rasterSpacingMeters],
+    rasterSampling: { ...dataset.rasterSampling },
+    wgs84Bounds: [...dataset.wgs84Bounds],
+    projectedBounds: [...dataset.projectedBounds],
+    minimumElevation: dataset.minimumElevation,
+    maximumElevation: dataset.maximumElevation,
+    minElevation: 0,
+    maxElevation: Math.max(visualRelief, (dataset.maximumElevation - dataset.minimumElevation) * browserPreviewParameters().verticalEx + 32),
+    validFraction: dataset.validFraction,
+    sampleHeightIsWorldY: true,
+    baseHeightM: 0,
+  };
+}
+
+function sampleVisualFromNormalised(xNorm, zNorm, point) {
+  const dataset = store.state.dataset;
+  if (!dataset) return null;
+  const x = point?.x ?? (Number(xNorm) - 0.5) * dataset.widthMeters;
+  const z = point?.z ?? (Number(zNorm) - 0.5) * dataset.heightMeters;
+  return approximateVisualOffset(dataset, x, z);
+}
+
+function sampleEcologyHeight(x, z) {
+  const dataset = store.state.dataset;
+  return dataset ? approximateVisualOffset(dataset, x, z) : null;
+}
+
+async function buildCoreBoundaryBatches(dataset) {
+  const batches = [];
+  const overall = dataset.id === 'overall';
+  const datasetCenterX = (dataset.projectedBounds[0] + dataset.projectedBounds[2]) / 2;
+  const datasetCenterY = (dataset.projectedBounds[1] + dataset.projectedBounds[3]) / 2;
+  const manifests = overall
+    ? [...coreManifests.values()]
+    : [dataset.manifest];
+  for (const manifest of manifests) {
+    const bounds = manifest.projectedBounds || manifest.bounds;
+    if (!bounds) continue;
+    const local = [
+      [bounds[0] - datasetCenterX, datasetCenterY - bounds[1]],
+      [bounds[2] - datasetCenterX, datasetCenterY - bounds[1]],
+      [bounds[2] - datasetCenterX, datasetCenterY - bounds[3]],
+      [bounds[0] - datasetCenterX, datasetCenterY - bounds[3]],
+      [bounds[0] - datasetCenterX, datasetCenterY - bounds[1]],
+    ];
+    const positions = new Float32Array(local.length * 3);
+    local.forEach((point, index) => {
+      const height = approximateVisualOffset(dataset, point[0], point[1]) ?? 0;
+      positions.set([point[0], height + (overall ? 28 : 4), point[1]], index * 3);
+    });
+    batches.push({
+      id: 'core-boundary-' + manifest.id,
+      segmentId: manifest.id,
+      primitive: 'line-strip',
+      positions,
+      vertexCount: local.length,
+      style: {
+        color: manifest.id === 'zhenbao-ding' && manifest.status !== 'ready_12_5m'
+          ? [0.95, 0.69, 0.27, 0.96]
+          : [0.45, 0.92, 0.65, 0.92],
+      },
+    });
+  }
+  renderer.setBoundary(batches);
+}
+
+async function refreshHydrologyNow() {
+  if (!hydrologyRuntime || !store.state.dataset) return;
+  latestHydrologyBatches = hydrologyRuntime.getRenderBatches(store.state, sampleVisualFromNormalised);
+  renderer.setHydrology(latestHydrologyBatches);
+  const diagnostics = hydrologyRuntime.getDiagnostics();
+  const classes = diagnostics.clipped?.byClass || {};
+  byId('hydrologySummary').textContent =
+    '漓江 ' + (classes.lijiang || 0) +
+    ' · 湘江 ' + (classes.xiangjiang || 0) +
+    ' · 支流 ' + (classes.tributary || 0);
+  const continuity = diagnostics.continuity || {};
+  const renderStats = diagnostics.lastRender || {};
+  byId('hydrologyDiagnostics').textContent =
+    '独立片段 ' + (diagnostics.clipped?.runs || 0) +
+    ' · 连通分量 ' + (continuity.components || 0) +
+    ' · 表面三角形 ' + (renderStats.surfaceTriangles || 0) + '\n' +
+    '跨片连接 0 · 桥接三角形 0 · 越界顶点 ' +
+    (diagnostics.geometrySafety?.outOfBoundsVertices || 0) +
+    ' · 缺失高度样本 ' + (renderStats.missingHeightSamples || 0);
+}
+
+function scheduleHydrologyRefresh() {
+  window.clearTimeout(hydrologyRefreshTimer);
+  hydrologyRefreshTimer = window.setTimeout(() => {
+    refreshHydrologyNow().catch((error) => {
+      setStatus('水文刷新失败: ' + error.message, 'error');
+    });
+  }, 80);
+}
+
+async function refreshEcologyNow() {
+  if (!ecologyRuntime || !store.state.dataset) return;
+  const ecologyState = {
+    ...store.state.ecology,
+    activeCoreId: store.state.activeCoreId,
+    waterWidth: store.state.hydrology.waterWidth,
+  };
+  if (typeof ecologyRuntime.updateState === 'function') ecologyRuntime.updateState(ecologyState);
+  latestEcologyData = await Promise.resolve(
+    ecologyRuntime.getRenderData(ecologyState, sampleEcologyHeight),
+  );
+  renderer.setEcology(latestEcologyData);
+  const diagnostics = ecologyRuntime.getDiagnostics();
+  const count = Number(latestEcologyData?.count || latestEcologyData?.instanceCount || diagnostics.activeInstanceCount || 0);
+  byId('instanceMetric').textContent = formatNumber.format(count);
+  byId('channelPlantMetric').textContent = String(diagnostics.channelVegetationCount ?? 0);
+  byId('reconstructionMetric').textContent = diagnostics.claim === 'deterministic-historical-reconstruction-preview'
+    ? '历史重建预览'
+    : '聚合预览';
+  byId('ecologySourceLabel').textContent =
+    diagnostics.nativeSurveyClaim ? '测绘资产' : '确定性历史重建预览';
+}
+
+function scheduleEcologyRefresh() {
+  window.clearTimeout(ecologyRefreshTimer);
+  ecologyRefreshTimer = window.setTimeout(() => {
+    refreshEcologyNow().catch((error) => {
+      setStatus('生态刷新失败: ' + error.message, 'error');
+    });
+  }, 90);
+}
+
+function updateDatasetUi(dataset) {
+  const manifest = dataset.manifest;
+  const area = dataset.widthMeters * dataset.heightMeters / 1e6;
+  const spacing = dataset.rasterSpacingMeters.map((value) => Number(value).toFixed(2));
+  const sourceResolution = formatNumber.format(dataset.sourceResolutionMeters);
+  byId('currentAreaMetric').textContent = area.toFixed(3) + ' km²';
+  byId('taskAreaMetric').textContent = mainManifest.taskAoi.areaSquareKilometers.toFixed(3) + ' km²';
+  byId('contextAreaMetric').textContent = mainManifest.webContext.areaSquareKilometers.toFixed(3) + ' km²';
+  byId('pixelMetric').textContent = dataset.id === 'overall'
+    ? dataset.gridWidth + ' × ' + dataset.gridHeight + ' · 网页 ' + spacing[0] + ' × ' + spacing[1] + ' m'
+    : dataset.gridWidth + ' × ' + dataset.gridHeight + ' · ' + dataset.resolutionMeters + ' m';
+  byId('activeCoreMetric').textContent = dataset.id;
+  byId('terrainLineageBadge').textContent = dataset.id === 'overall'
+    ? '源 DEM ' + sourceResolution + ' m · 网页 ' + spacing[0] + '×' + spacing[1] + ' m · ' + manifest.crs
+    : '同源 ' + sourceResolution + ' m · ' + manifest.crs;
+  byId('resolutionBadge').textContent = dataset.id === 'overall'
+    ? '源 ' + sourceResolution + ' m · 网页 ' + spacing[0] + '×' + spacing[1] + ' m'
+    : dataset.resolutionMeters + ' m · ' + dataset.gridWidth + '×' + dataset.gridHeight;
+  byId('datasetStatus').textContent = dataset.status;
+  if (dataset.id === 'overall') {
+    byId('gapMetric').textContent = mainManifest.coverage.gapAreaSquareKilometers.toFixed(4) + ' km²';
+    byId('fallbackNotice').classList.add('warn');
+    byId('fallbackNotice').textContent = mainManifest.coverage.fallbackLabel;
+  } else {
+    const missing = Number(manifest.missingPixelCount || 0);
+    byId('gapMetric').textContent = missing ? missing + ' 个像元' : '0';
+    byId('fallbackNotice').classList.toggle('warn', missing > 0);
+    byId('fallbackNotice').textContent = missing
+      ? '当前核心保留 ' + missing + ' 个真实源缺口，无插值、无 ' +
+        mainManifest.fallback.sourceResolutionMeters + ' m 回填。'
+      : '当前核心为同一 ' + sourceResolution + ' m 网格、CRS 和像元原点裁切的完整 10 km 包。';
+  }
+  const sourceLineage = manifest.sourceLineage || {};
+  const rasterLineage = dataset.id === 'overall'
+    ? ' · 源分辨率 ' + dataset.sourceResolutionMeters + ' m · 网页采样 ' + spacing[0] + ' × ' + spacing[1] +
+      ' m · ' + dataset.rasterSampling.method + ' / max-side ' + dataset.rasterSampling.maximumSidePixels
+    : ' · 无空间重采样';
+  byId('lineagePanel').textContent =
+    'CRS ' + (manifest.crs || mainManifest.overall.crs) +
+    ' · 像元原点 ' + JSON.stringify(manifest.pixelOrigin || 'overall-web-raster') + '\n' +
+    '谱系 ' + (sourceLineage.lineageId || dataset.lineage) + rasterLineage +
+    ' · 有效覆盖 ' + (dataset.validFraction * 100).toFixed(4) + '%';
+  document.querySelectorAll('[data-core]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.core === dataset.id);
+  });
+}
+
+async function switchDataset(id, options = {}) {
+  const revision = ++switchRevision;
+  const previous = store.state.dataset;
+  const previousId = store.state.activeCoreId;
+  store.setState({ switchingDataset: true });
+  document.querySelectorAll('[data-core]').forEach((button) => button.classList.toggle('loading', button.dataset.core === id));
+  ui.loadingText.textContent = id === 'overall'
+    ? '读取完整 ' + mainManifest.overall.sourceResolutionMeters + ' m 源 DEM 的 ' +
+      mainManifest.overall.gridWidth + ' × ' + mainManifest.overall.gridHeight + ' 降采样全域网页栅格'
+    : '读取 ' + id + ' 精确 10 km 核心包';
+  if (!options.initial) ui.loading.classList.remove('hidden');
+  setStatus('切换数据集: ' + id);
+  try {
+    const dataset = id === 'overall'
+      ? await loadOverallDataset()
+      : coreResultToDataset(id, await coreLoader.loadCore(id));
+    if (revision !== switchRevision) return;
+    const oldProjected = previous ? cameraProjectedPosition(previous) : null;
+    if (ecologyRuntime && typeof ecologyRuntime.releaseDenseInstances === 'function') {
+      ecologyRuntime.releaseDenseInstances();
+    }
+    renderer.setDataset(dataset);
+    store.setState({ dataset, activeCoreId: id });
+    const moduleInput = moduleDataset(dataset);
+    hydrologyRuntime.setDataset(moduleInput);
+    await Promise.resolve(ecologyRuntime.setDataset(moduleInput));
+    if (oldProjected) {
+      const centerX = (dataset.projectedBounds[0] + dataset.projectedBounds[2]) / 2;
+      const centerY = (dataset.projectedBounds[1] + dataset.projectedBounds[3]) / 2;
+      const mappedX = oldProjected[0] - centerX;
+      const mappedZ = centerY - oldProjected[1];
+      const inside = Math.abs(mappedX) < dataset.widthMeters / 2 && Math.abs(mappedZ) < dataset.heightMeters / 2;
+      camera.target[0] = camera.desiredTarget[0] = inside ? mappedX : 0;
+      camera.target[2] = camera.desiredTarget[2] = inside ? mappedZ : 0;
+    } else {
+      camera.target[0] = camera.desiredTarget[0] = 0;
+      camera.target[2] = camera.desiredTarget[2] = 0;
+    }
+    if (camera.mode === 'overview') {
+      camera.distance = camera.desiredDistance = Math.max(dataset.widthMeters, dataset.heightMeters) * 1.08;
+    }
+    await buildCoreBoundaryBatches(dataset);
+    await Promise.all([refreshHydrologyNow(), refreshEcologyNow()]);
+    updateDatasetUi(dataset);
+    if (previousId !== 'overall' && previousId !== id) coreLoader.release(previousId);
+    setStatus(dataset.name + ' 已进入共享运行时', 'ok');
+  } finally {
+    if (revision === switchRevision) {
+      store.setState({ switchingDataset: false });
+      document.querySelectorAll('[data-core]').forEach((button) => button.classList.remove('loading'));
+      ui.loading.classList.add('hidden');
+    }
+    updateDiagnostics();
+  }
+}
+
+function selectWorkspace(name) {
+  store.setState({ workspace: name });
+  document.querySelectorAll('[data-workspace]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.workspace === name);
+  });
+  document.querySelectorAll('[data-panel]').forEach((panel) => {
+    panel.classList.toggle('active', panel.dataset.panel === name);
+  });
+  const labels = {
+    overall: ['全域数据与范围', 'manifest 驱动的 AOI、分辨率、缺口和数据谱系'],
+    gaea: ['GAEA 地形控制', '浏览器近似预览与真实 Worker 构建分离'],
+    hydrology: ['独立水文系统', '每个连续片段独立绘制并保持河道植被排除'],
+    ecology: ['生态农业与风季节', '四核心确定性历史重建预览'],
+  };
+  ui.controllerTitle.textContent = labels[name][0];
+  ui.controllerSubtitle.textContent = labels[name][1];
+  if (window.matchMedia('(max-width: 760px), (pointer: coarse)').matches) {
+    ui.controller.classList.add('open');
+    ui.panelToggle.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function setGaeaParameters(partial) {
+  const gaea = store.state.gaea;
+  store.setState({
+    gaea: {
+      ...gaea,
+      parameters: { ...gaea.parameters, ...partial },
+    },
+  });
+  scheduleHydrologyRefresh();
+  buildCoreBoundaryBatches(store.state.dataset);
+}
+
+function syncGaeaInputs() {
+  const parameters = store.state.gaea.parameters;
+  const mapping = {
+    verticalEx: parameters.verticalExaggeration,
+    mountainBoost: parameters.mountainEmphasis,
+    karstStrength: parameters.karstSharpen,
+    erosionStrength: parameters.erosionStrength,
+    deposition: parameters.depositionThickness,
+    thermal: parameters.thermalWeathering,
+    rockExposure: parameters.rockExposure,
+    surfaceDetail: parameters.surfaceDetail,
+    valleyCut: parameters.valleyCut,
+  };
+  for (const [id, value] of Object.entries(mapping)) {
+    const input = byId(id);
+    if (input) input.value = value;
+    updateRangeOutput(id);
+  }
+}
+
+function updateRangeOutput(id) {
+  const input = byId(id);
+  const output = byId(id + 'Out');
+  if (!input || !output) return;
+  const value = Number(input.value);
+  const formats = {
+    verticalEx: value.toFixed(2) + '×',
+    mountainBoost: Math.round(value * 100) + '%',
+    karstStrength: Math.round(value * 100) + '%',
+    erosionStrength: Math.round(value * 100) + '%',
+    deposition: Math.round(value * 100) + '%',
+    thermal: Math.round(value * 100) + '%',
+    rockExposure: Math.round(value * 100) + '%',
+    surfaceDetail: Math.round(value * 100) + '%',
+    valleyCut: Math.round(value * 100) + '%',
+    forestDensity: Math.round(value * 100) + '%',
+    windSpeed: value.toFixed(1) + ' m/s',
+    windDirection: Math.round(value) + '°',
+    gustStrength: Math.round(value * 100) + '%',
+    waterLevel: value.toFixed(2) + '×',
+    waterWidth: value.toFixed(2) + '×',
+  };
+  output.value = formats[id] || String(value);
+  output.textContent = formats[id] || String(value);
+}
+
+function onGaeaStatus(event) {
+  const status = byId('gaeaStatus');
+  const progress = byId('gaeaProgress');
+  if (event.phase === 'preview') {
+    status.className = 'health-card ok';
+    status.textContent = '浏览器近似预览已作用于当前地形 · 不修改权威 DEM · revision ' + event.revision;
+  }
+  if (event.phase === 'worker-health') {
+    status.className = 'health-card ' + (event.status === 'ready' ? 'ok' : 'warn');
+    status.textContent = event.status === 'ready'
+      ? '真实 GAEA Worker 健康检查通过'
+      : '真实 Worker ' + event.status + ' · ' + (event.reason || event.error || '未配置');
+  }
+  if (event.phase === 'worker-build') {
+    const percent = Math.round(Number(event.progress || 0) * 100);
+    progress.value = percent;
+    status.className = 'health-card ' + (event.status === 'succeeded' ? 'ok' : event.status === 'building' ? '' : 'warn');
+    status.textContent = 'Worker 构建 ' + event.status +
+      (event.stage ? ' · ' + event.stage : '') +
+      (event.error ? ' · ' + event.error : '');
+  }
+  updateDiagnostics();
+}
+
+function bindUi() {
+  document.querySelectorAll('[data-workspace]').forEach((button) => {
+    button.addEventListener('click', () => selectWorkspace(button.dataset.workspace));
+  });
+  document.querySelectorAll('[data-core]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!store.state.switchingDataset && button.dataset.core !== store.state.activeCoreId) {
+        switchDataset(button.dataset.core).catch(showFatal);
+      }
+    });
+  });
+  document.querySelectorAll('[data-camera]').forEach((button) => {
+    button.addEventListener('click', () => setCameraMode(button.dataset.camera));
+  });
+  ui.panelToggle.addEventListener('click', () => {
+    const open = ui.controller.classList.toggle('open');
+    ui.panelToggle.setAttribute('aria-expanded', String(open));
+  });
+  ui.closePanel.addEventListener('click', () => {
+    ui.controller.classList.remove('open');
+    ui.panelToggle.setAttribute('aria-expanded', 'false');
+  });
+
+  const displayInputs = ['showTerrain', 'showAtmosphere', 'showCoreBounds', 'showDiagnostics'];
+  for (const id of displayInputs) {
+    byId(id).addEventListener('change', (event) => {
+      store.state.display[id] = event.target.checked;
+      store.setState({ display: { ...store.state.display } });
+    });
+  }
+
+  const gaeaMapping = {
+    verticalEx: 'verticalExaggeration',
+    mountainBoost: 'mountainEmphasis',
+    karstStrength: 'karstSharpen',
+    erosionStrength: 'erosionStrength',
+    deposition: 'depositionThickness',
+    thermal: 'thermalWeathering',
+    rockExposure: 'rockExposure',
+    surfaceDetail: 'surfaceDetail',
+    valleyCut: 'valleyCut',
+  };
+  for (const [id, key] of Object.entries(gaeaMapping)) {
+    byId(id).addEventListener('input', (event) => {
+      updateRangeOutput(id);
+      setGaeaParameters({ [key]: Number(event.target.value) });
+    });
+  }
+  document.querySelectorAll('[data-gaea-preset]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const aliases = {
+        base: 'base-dem',
+        guilin1942: 'guilin-1942',
+        karst: 'karst-enhanced',
+        fields: 'colorful-fields',
+      };
+      const presetName = aliases[button.dataset.gaeaPreset];
+      store.setState({
+        gaea: {
+          ...store.state.gaea,
+          parameters: { ...GAEA_PRESETS[presetName] },
+        },
+      });
+      syncGaeaInputs();
+      document.querySelectorAll('[data-gaea-preset]').forEach((item) => {
+        item.classList.toggle('active', item === button);
+      });
+      scheduleHydrologyRefresh();
+      buildCoreBoundaryBatches(store.state.dataset);
+    });
+  });
+  document.querySelectorAll('[data-gaea-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.dataset.gaeaMode;
+      store.state.gaea.requestedMode = mode;
+      byId('gaeaModeLabel').textContent = mode === 'worker' ? '真实 Worker 构建' : '浏览器近似预览';
+      document.querySelectorAll('[data-gaea-mode]').forEach((item) => item.classList.toggle('active', item === button));
+    });
+  });
+  byId('gaeaBuildButton').addEventListener('click', async () => {
+    if (store.state.gaea.requestedMode === 'worker') {
+      const health = await gaeaBridge.health();
+      if (health.ok) await gaeaBridge.build({ parameters: store.state.gaea.parameters });
+    } else {
+      setGaeaParameters({ ...store.state.gaea.parameters });
+      onGaeaStatus({ phase: 'preview', status: 'ready', revision: store.state.gaea.preview?.revision || 0 });
+    }
+  });
+  byId('gaeaCancelButton').addEventListener('click', () => gaeaBridge.cancel('user'));
+  byId('gaeaResetButton').addEventListener('click', () => {
+    gaeaBridge.reset();
+    syncGaeaInputs();
+    scheduleHydrologyRefresh();
+    buildCoreBoundaryBatches(store.state.dataset);
+  });
+
+  const hydrologyCheckboxes = {
+    showLijiang: 'showLijiang',
+    showXiangjiang: 'showXiangjiang',
+    showTributaries: 'showTributaries',
+    showCenterlines: 'showCenterlines',
+    showWaterSurface: 'showSurface',
+    showBanks: 'showBanks',
+    showFlow: 'showFlow',
+    showBreaks: 'showDiagnostics',
+  };
+  for (const [id, key] of Object.entries(hydrologyCheckboxes)) {
+    byId(id).addEventListener('change', (event) => {
+      store.state.hydrology[key] = event.target.checked;
+      store.setState({ hydrology: { ...store.state.hydrology } });
+      scheduleHydrologyRefresh();
+    });
+  }
+  for (const id of ['waterLevel', 'waterWidth']) {
+    byId(id).addEventListener('input', (event) => {
+      store.state.hydrology[id] = Number(event.target.value);
+      store.setState({ hydrology: { ...store.state.hydrology } });
+      updateRangeOutput(id);
+      scheduleHydrologyRefresh();
+    });
+  }
+  document.querySelectorAll('[data-water-season]').forEach((button) => {
+    button.addEventListener('click', () => {
+      store.state.hydrology.waterSeason = button.dataset.waterSeason;
+      store.setState({ hydrology: { ...store.state.hydrology } });
+      document.querySelectorAll('[data-water-season]').forEach((item) => item.classList.toggle('active', item === button));
+      scheduleHydrologyRefresh();
+    });
+  });
+
+  const ecologyCheckboxes = [
+    'showForest', 'showShrubs', 'showPaddy', 'showDryCrops',
+    'showOrchards', 'showBunds', 'showRock', 'showInstances',
+  ];
+  for (const id of ecologyCheckboxes) {
+    byId(id).addEventListener('change', (event) => {
+      store.state.ecology[id] = event.target.checked;
+      store.setState({ ecology: { ...store.state.ecology } });
+      if (id !== 'showInstances') scheduleEcologyRefresh();
+    });
+  }
+  for (const id of ['forestDensity', 'windSpeed', 'windDirection', 'gustStrength']) {
+    byId(id).addEventListener('input', (event) => {
+      store.state.ecology[id] = Number(event.target.value);
+      store.setState({ ecology: { ...store.state.ecology } });
+      updateRangeOutput(id);
+      if (id === 'forestDensity') scheduleEcologyRefresh();
+    });
+  }
+  for (const id of ['season', 'year']) {
+    byId(id).addEventListener('change', (event) => {
+      store.state.ecology[id] = id === 'year' ? Number(event.target.value) : event.target.value;
+      store.setState({ ecology: { ...store.state.ecology } });
+      scheduleEcologyRefresh();
+    });
+  }
+
+  let dragging = null;
+  ui.canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+  ui.canvas.addEventListener('pointerdown', (event) => {
+    ui.canvas.setPointerCapture(event.pointerId);
+    dragging = { id: event.pointerId, x: event.clientX, y: event.clientY, button: event.button };
+  });
+  ui.canvas.addEventListener('pointermove', (event) => {
+    if (!dragging || dragging.id !== event.pointerId) return;
+    const dx = event.clientX - dragging.x;
+    const dy = event.clientY - dragging.y;
+    dragging.x = event.clientX;
+    dragging.y = event.clientY;
+    if (dragging.button === 2 || event.shiftKey) {
+      const scale = camera.mode === 'overview' ? Math.max(2, camera.distance * 0.0014) : 0.16;
+      moveCamera(dx > 0 ? 'left' : 'right', Math.abs(dx) * scale);
+      moveCamera(dy > 0 ? 'back' : 'forward', Math.abs(dy) * scale);
+    } else {
+      camera.desiredAzimuth -= dx * 0.006;
+      if (camera.mode === 'overview') camera.desiredElevation = clamp(camera.desiredElevation - dy * 0.005, 0.08, 1.48);
+    }
+  });
+  const clearDrag = () => { dragging = null; };
+  ui.canvas.addEventListener('pointerup', clearDrag);
+  ui.canvas.addEventListener('pointercancel', clearDrag);
+  ui.canvas.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    if (camera.mode !== 'overview') setCameraMode('overview');
+    const dataset = store.state.dataset;
+    camera.desiredDistance = clamp(
+      camera.desiredDistance * Math.exp(event.deltaY * 0.001),
+      8,
+      Math.max(dataset.widthMeters, dataset.heightMeters) * 3.5,
+    );
+  }, { passive: false });
+
+  const heldMoves = new Set();
+  const keys = new Set();
+  window.addEventListener('keydown', (event) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    keys.add(event.code);
+  });
+  window.addEventListener('keyup', (event) => keys.delete(event.code));
+  document.querySelectorAll('[data-move]').forEach((button) => {
+    const start = (event) => {
+      event.preventDefault();
+      heldMoves.add(button.dataset.move);
+      button.setPointerCapture?.(event.pointerId);
+    };
+    const end = () => heldMoves.delete(button.dataset.move);
+    button.addEventListener('pointerdown', start);
+    button.addEventListener('pointerup', end);
+    button.addEventListener('pointercancel', end);
+    button.addEventListener('lostpointercapture', end);
+  });
+  bindUi.updateMovement = (dt) => {
+    const speed = camera.mode === 'overview'
+      ? Math.max(20, camera.distance * 0.12)
+      : keys.has('ShiftLeft') || keys.has('ShiftRight') ? 14 : 5;
+    if (keys.has('KeyW') || keys.has('ArrowUp') || heldMoves.has('forward')) moveCamera('forward', speed * dt);
+    if (keys.has('KeyS') || keys.has('ArrowDown') || heldMoves.has('back')) moveCamera('back', speed * dt);
+    if (keys.has('KeyA') || keys.has('ArrowLeft') || heldMoves.has('left')) moveCamera('left', speed * dt);
+    if (keys.has('KeyD') || keys.has('ArrowRight') || heldMoves.has('right')) moveCamera('right', speed * dt);
+  };
+
+  for (const id of [
+    'verticalEx', 'mountainBoost', 'karstStrength', 'erosionStrength', 'deposition',
+    'thermal', 'rockExposure', 'surfaceDetail', 'valleyCut', 'forestDensity',
+    'windSpeed', 'windDirection', 'gustStrength', 'waterLevel', 'waterWidth',
+  ]) updateRangeOutput(id);
+}
+
+function updateDiagnostics() {
+  const dataset = store.state.dataset;
+  const hydro = hydrologyRuntime?.getDiagnostics?.() || null;
+  const ecology = ecologyRuntime?.getDiagnostics?.() || null;
+  window.__GUILIN_WORKBENCH_DIAGNOSTICS__ = {
+    ready: Boolean(window.__DEMO_READY__),
+    schema: mainManifest?.schema || null,
+    releaseStatus: mainManifest?.releaseStatus || null,
+    publicationBlocked: true,
+    pullRequestMustRemainDraft: true,
+    activeCoreId: store.state.activeCoreId,
+    workspace: store.state.workspace,
+    sharedRuntime: {
+      canvasCount: document.querySelectorAll('canvas').length,
+      iframeCount: document.querySelectorAll('iframe').length,
+      oneCameraObject: true,
+      oneStoreObject: true,
+    },
+    dataset: dataset ? {
+      id: dataset.id,
+      resolutionMeters: dataset.resolutionMeters,
+      sourceResolutionMeters: dataset.sourceResolutionMeters,
+      rasterSpacingMeters: [...dataset.rasterSpacingMeters],
+      rasterSampling: { ...dataset.rasterSampling },
+      gridWidth: dataset.gridWidth,
+      gridHeight: dataset.gridHeight,
+      widthMeters: dataset.widthMeters,
+      heightMeters: dataset.heightMeters,
+      validFraction: dataset.validFraction,
+      status: dataset.status,
+      projectedBounds: [...dataset.projectedBounds],
+    } : null,
+    camera: {
+      mode: camera.mode,
+      reviewHeightMeters: camera.reviewHeight,
+      altitudeAboveGroundMeters: camera.altitudeAboveGround,
+      objectIdentity: 'shared-camera-1',
+    },
+    gaea: {
+      mode: store.state.gaea.mode,
+      requestedMode: store.state.gaea.requestedMode,
+      preview: store.state.gaea.preview || null,
+      worker: store.state.gaea.worker || null,
+      build: store.state.gaea.build || null,
+    },
+    hydrology: hydro,
+    ecology,
+    browserEvidence: 'unmeasured-until-stage-a-browser-run',
+    resource404Count: null,
+    consoleErrorCount: null,
+  };
+}
+
+async function initialise() {
+  setStatus('读取统一 manifest');
+  mainManifest = await fetchJson('./manifest.json');
+  store.setState({ manifest: mainManifest });
+  byId('taskAreaMetric').textContent = mainManifest.taskAoi.areaSquareKilometers.toFixed(3) + ' km²';
+  byId('contextAreaMetric').textContent = mainManifest.webContext.areaSquareKilometers.toFixed(3) + ' km²';
+  byId('releaseBadge').textContent = 'Draft · 用户视觉批准待完成';
+  renderer = new WorkbenchRenderer(ui.canvas);
+  coreLoader = createCoreLoader({
+    onStatus(event) {
+      if (event.type === 'load-error') setStatus('核心包读取失败: ' + event.id, 'error');
+    },
+  });
+  bindUi();
+  gaeaBridge = createGaeaBridge({
+    store,
+    onStatus: onGaeaStatus,
+    onBuildApplied(event) {
+      setStatus('真实 GAEA Worker 构建已应用: ' + event.requestId, 'ok');
+    },
+  });
+  syncGaeaInputs();
+
+  ui.loadingText.textContent = '读取四核心 manifest 与独立水文源';
+  const hydrologySources = {
+    lijiang: mainManifest.hydrology.sources.lijiang,
+    waterways: mainManifest.hydrology.sources.all,
+  };
+  const initialTasks = [
+    createHydrologyRuntime({
+      sourceUrls: hydrologySources,
+      onStatus(event) {
+        if (event.phase === 'load' && event.status === 'loading') setStatus('读取分段水文源');
+      },
+    }),
+    ...CORE_IDS.map(async (id) => {
+      const manifest = await coreLoader.getManifest(id);
+      coreManifests.set(id, manifest);
+      const button = document.querySelector('[data-core="' + id + '"]');
+      if (button) button.dataset.coverage = manifest.coverage?.complete ? 'complete' : 'incomplete';
+    }),
+  ];
+  const results = await Promise.all(initialTasks);
+  hydrologyRuntime = results[0];
+  ecologyRuntime = createEcologyCoreRuntime({
+    hydrologyRuntime,
+    onStatus(event) {
+      if (event.status === 'failed') setStatus('生态运行时失败: ' + (event.error || event.phase), 'error');
+    },
+  });
+  await switchDataset('overall', { initial: true });
+  await gaeaBridge.health({ force: false, timeoutMs: 800 });
+
+  window.GuilinWorkbench = Object.freeze({
+    getState: () => structuredClone(store.state),
+    getManifest: () => structuredClone(mainManifest),
+    getDiagnostics: () => structuredClone(window.__GUILIN_WORKBENCH_DIAGNOSTICS__),
+    switchCore: (id) => switchDataset(id),
+    selectWorkspace,
+    setCameraHeight: (height) => setCameraMode(height === 'overview' ? 'overview' : String(height).replace('m', '') + 'm'),
+    resetGaea: () => gaeaBridge.reset(),
+    waitForIdle: async () => {
+      while (store.state.switchingDataset) await new Promise((resolve) => window.setTimeout(resolve, 25));
+      return true;
+    },
+  });
+  window.__DEMO_READY__ = true;
+  ui.loading.classList.add('hidden');
+  setStatus('统一工作台 Stage A 已就绪，发布门槛保持锁定', 'ok');
+  updateDiagnostics();
+
+  let last = performance.now();
+  let fpsStart = last;
+  let frames = 0;
+  function frame(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    bindUi.updateMovement?.(dt);
+    updateCamera(store.state.dataset, dt);
+    renderer.render(camera, now / 1000);
+    frames += 1;
+    if (now - fpsStart >= 800) {
+      ui.fps.textContent = Math.round(frames * 1000 / (now - fpsStart)) + ' FPS';
+      frames = 0;
+      fpsStart = now;
+      updateDiagnostics();
+    }
+    window.requestAnimationFrame(frame);
+  }
+  window.requestAnimationFrame(frame);
+}
+
+window.addEventListener('beforeunload', () => {
+  window.clearTimeout(hydrologyRefreshTimer);
+  window.clearTimeout(ecologyRefreshTimer);
+  gaeaBridge?.dispose();
+  hydrologyRuntime?.dispose();
+  ecologyRuntime?.dispose();
+  coreLoader?.dispose();
+});
+
+initialise().catch(showFatal);

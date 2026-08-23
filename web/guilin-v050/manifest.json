@@ -1,128 +1,154 @@
 {
-  "schema": "guilin_core_recovery@0.5.1",
-  "version": "0.5.1-private-recovery",
-  "baselineVersion": "0.3.1",
-  "releaseStatus": "private-recovery-publication-blocked",
-  "projectId": "guilin-four-core-recovery",
-  "epoch": "1940-1945",
-  "activeCore": "yangtang-airfield",
-  "corePolicy": {
-    "coreSideMeters": 10000,
-    "detailedEcologyScope": "active-core-only",
-    "overallEcology": "aggregate-landcover-and-blurred-canopy-only",
-    "authoritativeTerrainTarget": "single-continuous-12.5m-lineage",
-    "currentBaselineTerrain": "v0.3.1-deterministic-proxy-awaiting-real-core-dem",
-    "farView": "atmospheric-haze-desaturation-and-progressive-blur",
-    "outerBoundary": "horizon-fade-without-invented-elevation"
+  "schema": "guilin-unified-workbench/v0.5-stage-a",
+  "version": "0.5.2-stage-a",
+  "projectId": "guilin-zhenbaoding-yangshuo-pingle",
+  "releaseStatus": "draft-publication-blocked",
+  "runtimePolicy": {
+    "canvas": "single-webgl2-canvas",
+    "camera": "single-shared-camera",
+    "state": "single-observable-store",
+    "iframeNavigationAllowed": false,
+    "denseEcologyScope": "active-core-only"
+  },
+  "taskAoi": {
+    "label": "真宝鼎以北 15 km 至阳朔平乐交界精确任务 AOI",
+    "areaSquareKilometers": 18831.3276779,
+    "status": "exact-boundary-resolved",
+    "crs": "EPSG:32649",
+    "source": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/resolved_aoi.json"
+  },
+  "webContext": {
+    "label": "网页完整地形上下文矩形",
+    "areaSquareKilometers": 32575.041,
+    "projectedBounds": [370350.0, 2715120.0, 522300.0, 2929500.0],
+    "wgs84Bounds": [109.69924191917795, 24.54455328815592, 111.2237548394558, 26.48593517028792],
+    "crs": "EPSG:32649"
+  },
+  "coverage": {
+    "continuous12_5mComplete": false,
+    "verified12_5mFractionInsideTask": 0.9967775698614473,
+    "gapAreaSquareKilometers": 60.45671875,
+    "currentOverallSourceResolutionMeters": 30,
+    "currentOverallWebRasterSpacingMeters": [104.72088215024121, 104.72887151929653],
+    "fallbackLabel": "连续全域 12.5 m 尚有 60.4567 km² 缺口；当前全域网页栅格来自完整 30 m 源 DEM，经 bilinear 降采样为 1452 × 2048，实际采样间距约 104.72 × 104.73 m",
+    "native12_5mSurveyClaim": false,
+    "statusSource": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/12_5m_download_status.json"
+  },
+  "fallback": {
+    "active": true,
+    "sourceResolutionMeters": 30,
+    "rasterSpacingMeters": [104.72088215024121, 104.72887151929653],
+    "rasterSampling": {
+      "method": "bilinear",
+      "maximumSidePixels": 2048,
+      "gridConvention": "vertex-grid",
+      "spacingDerivation": "projected-extent/(grid-dimension-1)"
+    },
+    "reason": "continuous-12.5m-task-aoi-gap",
+    "gapAreaSquareKilometers": 60.45671875,
+    "label": "连续全域 12.5 m 尚有缺口；全域显示使用 30 m 源 DEM 的约 104.72 m 网页栅格，不宣称当前二进制为 30 m 像元",
+    "mayClaimComplete12_5m": false
+  },
+  "overall": {
+    "id": "overall",
+    "name": "桂林全域",
+    "resolutionMeters": 104.72487683476887,
+    "sourceResolutionMeters": 30,
+    "rasterSpacingMeters": [104.72088215024121, 104.72887151929653],
+    "rasterSampling": {
+      "method": "bilinear",
+      "maximumSidePixels": 2048,
+      "gridConvention": "vertex-grid",
+      "spacingDerivation": "projected-extent/(grid-dimension-1)",
+      "sourceManifestResolutionSemantics": "source-dem-resolution-not-web-raster-spacing"
+    },
+    "gridWidth": 1452,
+    "gridHeight": 2048,
+    "widthMeters": 151950.0,
+    "heightMeters": 214380.0,
+    "areaSquareKilometers": 32575.041,
+    "crs": "EPSG:32649",
+    "projectedBounds": [370350.0, 2715120.0, 522300.0, 2929500.0],
+    "wgs84Bounds": [109.69924191917795, 24.54455328815592, 111.2237548394558, 26.48593517028792],
+    "minimumElevationMeters": 76.79379272460938,
+    "maximumElevationMeters": 2090.25927734375,
+    "validFraction": 1.0,
+    "status": "complete-web-raster-from-30m-source",
+    "sourceManifest": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/terrain-manifest.json",
+    "heightBinary": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/height_u16.bin",
+    "maskBinary": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/mask_u8.bin",
+    "lineage": "NASA ASF ALOS PALSAR RTC reference DEM，30 m 源 DEM 经 bilinear 降采样为 1452 × 2048 网页栅格；网页采样间距约 104.72 × 104.73 m"
+  },
+  "corePackages": {
+    "zhenbao-ding": "./assets/cores/zhenbao-ding/manifest.json",
+    "guilin-old-city": "./assets/cores/guilin-old-city/manifest.json",
+    "yangtang-airfield": "./assets/cores/yangtang-airfield/manifest.json",
+    "yangshuo-county-seat": "./assets/cores/yangshuo-county-seat/manifest.json"
   },
   "fixedCores": [
-    {
-      "id": "zhenbao-ding",
-      "name": "真宝鼎",
-      "sideMeters": 10000,
-      "status": "real-core-dem-pending"
-    },
-    {
-      "id": "guilin-old-city",
-      "name": "桂林古城",
-      "sideMeters": 10000,
-      "status": "real-core-dem-pending"
-    },
-    {
-      "id": "yangtang-airfield",
-      "name": "秧塘机场旧址",
-      "sideMeters": 10000,
-      "status": "baseline-runtime-bound"
-    },
-    {
-      "id": "yangshuo-county-seat",
-      "name": "阳朔县城",
-      "sideMeters": 10000,
-      "status": "real-core-dem-pending"
-    }
+    {"id": "zhenbao-ding", "name": "真宝鼎", "sideMeters": 10000, "resolutionMeters": 12.5, "status": "incomplete-12.5m-real-pixels"},
+    {"id": "guilin-old-city", "name": "桂林古城", "sideMeters": 10000, "resolutionMeters": 12.5, "status": "ready-12.5m-real-pixels"},
+    {"id": "yangtang-airfield", "name": "秧塘机场旧址", "sideMeters": 10000, "resolutionMeters": 12.5, "status": "ready-12.5m-real-pixels"},
+    {"id": "yangshuo-county-seat", "name": "阳朔县城", "sideMeters": 10000, "resolutionMeters": 12.5, "status": "ready-12.5m-real-pixels"}
   ],
-  "aoi": {
-    "areaKm2": 10.0,
-    "shape": "square",
-    "sideMeters": 3162.2776601683795,
-    "centerProjected": [415018.03522667295, 2789215.965156763],
-    "boundsProjected": [413436.89639658877, 2787634.8263266785, 416599.1740567571, 2790797.103986847],
+  "hydrology": {
+    "runtime": "hydrology-runtime.js",
     "crs": "EPSG:32649",
-    "anchorWgs84": [110.156375, 25.216758]
+    "sources": {
+      "all": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/waterways_osm.geojson",
+      "lijiang": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson"
+    },
+    "networks": ["lijiang", "xiangjiang", "tributaries"],
+    "segmentPolicy": "each-linestring-part-independent",
+    "features": ["centerline", "surface", "banks", "flow", "breaks", "summer-level", "winter-level", "vegetation-exclusion"],
+    "sourceLabel": "OpenStreetMap contributors，ODbL 1.0"
   },
-  "terrain": {
-    "grid": 257,
-    "minElevationM": 125.56208038330078,
-    "maxElevationM": 365.19049072265625,
-    "registeredCoreEnvelopeM": [125.56208038330078, 365.19049072265625],
-    "sourceLabel": "v0.3.1生态视觉恢复代理，等待真实12.5米核心DEM替换",
-    "sourceStatus": "deterministic-ecology-proof-awaiting-real-12.5m-dem",
-    "nativeSurveyClaim": false,
-    "exactRasterMounted": false
+  "gaea": {
+    "runtime": "gaea-bridge.js",
+    "browserMode": "non-authoritative-approximation-preview",
+    "workerMode": "licensed-gaea-2.3-required",
+    "workerConfigured": false,
+    "health": "unavailable-until-windows-worker-configured",
+    "profile": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/gaea/terrain-processing-profile.json",
+    "authoritativeTerrainPreserved": true
   },
   "ecology": {
-    "season": "summer-wet",
-    "treeCount": 23685,
-    "shrubCount": 7322,
-    "riceClusterCount": 5277,
-    "speciesArchetypeCount": 20,
-    "landUseClassCount": 9,
-    "waterPixelFraction": 0.02484130859375,
-    "forestMeanDensity": 0.40316305388056484,
-    "paddyAreaKm2Approx": 0.7528305053710938,
-    "terraceAreaKm2Approx": 0.6922531127929688,
-    "orchardAreaKm2Approx": 0.58502197265625,
-    "vegetableAreaKm2Approx": 0.1299285888671875,
-    "dryCropAreaKm2Approx": 0.31055450439453125,
-    "bambooInstanceCount": 2256,
-    "rockExposurePixelFraction": 0.041324615478515625,
-    "strongRockExposurePixelFraction": 0.0279541015625,
-    "fieldBundPixelFraction": 0.08198165893554688,
-    "channelVegetationCount": 0,
-    "cropPaletteClassCount": 8,
-    "erosionStreamlineCount": 68,
-    "additionalErosionIncisionMaxM": 8.629077911376953,
-    "fieldTextureOrientation": "world-aligned-no-y-flip"
+    "runtime": "ecology-core-runtime.js",
+    "epochYears": [1940, 1941, 1942, 1943, 1944, 1945],
+    "seasons": ["spring", "summer", "autumn", "winter"],
+    "features": ["forest", "shrubs", "paddy", "dry-crops", "orchards", "field-bunds", "wind-direction", "gust", "root-pinning", "real-water-height-exclusion"],
+    "claim": "deterministic-historical-reconstruction-preview",
+    "nativeSurveyClaim": false,
+    "source": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.4.0/ecology-release-candidate.json"
   },
-  "recordLayout": {
-    "tree": {"stride": 12, "format": "<HHHBBHBB"},
-    "shrub": {"stride": 10, "format": "<HHHBBH"},
-    "rice": {"stride": 10, "format": "<HHHBBH"}
+  "camera": {
+    "sharedAcrossDatasets": true,
+    "reviewHeightsMeters": [50, 2, 1.7],
+    "mobileTouchMovement": true
   },
-  "assets": {
-    "height": [
-      "./assets/height-grid.u16",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/runtime-assets/height-grid.u16"
-    ],
-    "field0": [
-      "../assets/ecology/v0.3.1/field0-elevation-slope-forest-water.png",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field0-elevation-slope-forest-water.png"
-    ],
-    "field1": [
-      "../assets/ecology/v0.3.1/field1-paddy-bund-rows-rock.png",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field1-paddy-bund-rows-rock.png"
-    ],
-    "field2": [
-      "../assets/ecology/v0.3.1/field2-wet-terrace-erosion-landuse.png",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/field2-wet-terrace-erosion-landuse.png"
-    ],
-    "trees": [
-      "../assets/ecology/v0.3.1/trees.bin",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/trees.bin"
-    ],
-    "shrubs": [
-      "../assets/ecology/v0.3.1/shrubs.bin",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/shrubs.bin"
-    ],
-    "rice": [
-      "../assets/ecology/v0.3.1/rice.bin",
-      "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/ecology/v0.3.1/rice.bin"
-    ]
+  "stageA": {
+    "requiredBrowsers": ["Windows Chrome", "Windows Edge", "mobile viewport"],
+    "requiredResource404Count": 0,
+    "requiredConsoleErrorCount": 0,
+    "requiredScreenshots": ["gaea-before-after", "four-cores-at-50m", "four-cores-at-2m", "four-cores-at-1.7m"]
   },
   "publication": {
     "allowed": false,
     "automatic": false,
-    "stableRelease": "v0.3.1",
-    "requiredGate": "projects/guilin/config/release_gate_v050.json"
+    "pullRequestMustRemainDraft": true,
+    "mergeAllowed": false,
+    "blockedBy": [
+      "continuous-12.5m-task-aoi-gap",
+      "licensed-gaea-worker-build-not-run",
+      "windows-chrome-edge-visual-acceptance-not-run"
+    ]
+  },
+  "publishGate": {
+    "status": "blocked",
+    "requiresUserVisualApproval": true,
+    "pullRequestMustRemainDraft": true,
+    "mergeAllowed": false,
+    "stableRollbackLabel": "v0.3.1",
+    "stableRollbackUrl": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/index.html"
   }
 }

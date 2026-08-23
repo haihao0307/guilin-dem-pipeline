@@ -1,0 +1,175 @@
+name: Guilin v0.5 Stage A truthfulness QA
+
+on:
+  pull_request:
+    paths:
+      - "web/guilin-v050/**"
+      - "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/build_guilin_v050_cores.py"
+      - "projects/guilin/config/release_gate_v050.json"
+      - "tests/test_guilin_v050_recovery_runtime.py"
+      - "tests/test_guilin_v050_stage_a_workbench.py"
+      - "tests/guilin_v050_stage_a_browser.mjs"
+      - ".github/workflows/guilin-v050-private-qa.yml"
+      - ".github/workflows/guilin-v050-stage-a-qa.yml"
+  push:
+    branches:
+      - "fix/guilin-v050-restore-v130-workbench"
+    paths:
+      - "web/guilin-v050/**"
+      - "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/build_guilin_v050_cores.py"
+      - "projects/guilin/config/release_gate_v050.json"
+      - "tests/test_guilin_v050_recovery_runtime.py"
+      - "tests/test_guilin_v050_stage_a_workbench.py"
+      - "tests/guilin_v050_stage_a_browser.mjs"
+      - ".github/workflows/guilin-v050-private-qa.yml"
+      - ".github/workflows/guilin-v050-stage-a-qa.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: guilin-v050-stage-a-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  truthfulness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run Stage A source and asset gates
+        run: |
+          python -m unittest discover -s tests -v
+          python DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/build_guilin_v050_cores.py --check-only
+          for module in \
+            web/guilin-v050/runtime.js \
+            web/guilin-v050/core-loader.js \
+            web/guilin-v050/gaea-bridge.js \
+            web/guilin-v050/hydrology-runtime.js \
+            web/guilin-v050/ecology-core-runtime.js \
+            tests/guilin_v050_stage_a_browser.mjs; do
+            node --check "$module"
+          done
+
+  windows-browser-qa:
+    name: Windows ${{ matrix.profile }} browser QA
+    needs: truthfulness
+    runs-on: windows-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [chrome, edge, mobile]
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Playwright core only
+        shell: pwsh
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright-core@1.55.0
+
+      - name: Resolve system Chrome and Edge
+        shell: pwsh
+        run: |
+          $chromeCandidates = @(
+            $env:CHROME_PATH,
+            "C:\Program Files\Google\Chrome\Application\chrome.exe",
+            "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+          ) | Where-Object { $_ -and (Test-Path $_) }
+          $edgeCandidates = @(
+            $env:EDGE_PATH,
+            $env:MSEDGE_PATH,
+            "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            "C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            "$env:LOCALAPPDATA\Microsoft\Edge\Application\msedge.exe"
+          ) | Where-Object { $_ -and (Test-Path $_) }
+          $chrome = $chromeCandidates | Select-Object -First 1
+          $edge = $edgeCandidates | Select-Object -First 1
+          if (-not $chrome) { throw "System Chrome was not found on windows-latest" }
+          if (-not $edge) { throw "System Edge was not found on windows-latest" }
+          "CHROME_PATH=$chrome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EDGE_PATH=$edge" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Chrome: $chrome"
+          Write-Host "Edge: $edge"
+
+      - name: Start repository-root HTTP server
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP "guilin-http-${{ matrix.profile }}.out.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "guilin-http-${{ matrix.profile }}.err.log"
+          $server = Start-Process -FilePath python -ArgumentList @(
+            "-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "."
+          ) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          "GUILIN_SERVER_PID=$($server.Id)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "GUILIN_SERVER_STDOUT=$stdout" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "GUILIN_SERVER_STDERR=$stderr" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $ready = $false
+          for ($attempt = 0; $attempt -lt 80; $attempt++) {
+            try {
+              $response = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Uri "http://127.0.0.1:8765/web/guilin-v050/"
+              if ($response.StatusCode -eq 200) {
+                $ready = $true
+                break
+              }
+            } catch {
+              Start-Sleep -Milliseconds 250
+            }
+          }
+          if (-not $ready) {
+            if (Test-Path $stdout) { Get-Content $stdout }
+            if (Test-Path $stderr) { Get-Content $stderr }
+            throw "Repository-root HTTP server did not become ready"
+          }
+
+      - name: Run Stage A browser profile
+        shell: pwsh
+        run: |
+          node tests/guilin_v050_stage_a_browser.mjs `
+            --profile "${{ matrix.profile }}" `
+            --base-url "http://127.0.0.1:8765/web/guilin-v050/" `
+            --output-dir "_stage_a_browser_qa/${{ matrix.profile }}"
+
+      - name: Stop server and preserve logs
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:GUILIN_SERVER_PID) {
+            Stop-Process -Id ([int]$env:GUILIN_SERVER_PID) -Force -ErrorAction SilentlyContinue
+            Wait-Process -Id ([int]$env:GUILIN_SERVER_PID) -ErrorAction SilentlyContinue
+          }
+          $output = "_stage_a_browser_qa/${{ matrix.profile }}"
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          if ($env:GUILIN_SERVER_STDOUT -and (Test-Path $env:GUILIN_SERVER_STDOUT)) {
+            Copy-Item $env:GUILIN_SERVER_STDOUT (Join-Path $output "http-server.out.log")
+          }
+          if ($env:GUILIN_SERVER_STDERR -and (Test-Path $env:GUILIN_SERVER_STDERR)) {
+            Copy-Item $env:GUILIN_SERVER_STDERR (Join-Path $output "http-server.err.log")
+          }
+
+      - name: Upload browser report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-v050-stage-a-${{ matrix.profile }}-${{ github.sha }}
+          path: _stage_a_browser_qa/${{ matrix.profile }}
+          if-no-files-found: error
+          compression-level: 3
+          retention-days: 30

@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "guilin-core-dem/v1",
+  "id": "guilin-old-city",
+  "name": "桂林古城",
+  "crs": "EPSG:32649",
+  "sourceResolutionMeters": 12.5,
+  "accuracyPolicy": "12.5m verified source pixels; no upsampling and not a native 1m survey",
+  "requestedAreaSquareKilometers": 100.0,
+  "actualAreaSquareKilometers": 100.0,
+  "bounds": [
+    424462.5,
+    2790487.5,
+    434462.5,
+    2800487.5
+  ],
+  "projectedBounds": [
+    424462.5,
+    2790487.5,
+    434462.5,
+    2800487.5
+  ],
+  "wgs84Bounds": [
+    110.24949883417719,
+    25.228745314582465,
+    110.34932988171212,
+    25.319517511843856
+  ],
+  "widthMeters": 10000.0,
+  "heightMeters": 10000.0,
+  "gridWidth": 800,
+  "gridHeight": 800,
+  "resolution": [
+    12.5,
+    12.5
+  ],
+  "raster": {
+    "width": 800,
+    "height": 800,
+    "resolutionMeters": 12.5,
+    "gridConvention": "pixel-center",
+    "spacingDerivation": "projected-extent/grid-dimension",
+    "rowOrder": "north-to-south",
+    "columnOrder": "west-to-east",
+    "sampleType": "uint16",
+    "byteOrder": "little-endian"
+  },
+  "rowOrder": "north-to-south",
+  "columnOrder": "west-to-east",
+  "pixelOrigin": [
+    3654,
+    8461
+  ],
+  "pixelOriginProjected": [
+    424462.5,
+    2800487.5
+  ],
+  "firstPixelCenterProjected": [
+    424468.75,
+    2800481.25
+  ],
+  "gridCenterProjected": [
+    429462.5,
+    2795487.5
+  ],
+  "centerProjected": [
+    429459.2395402377,
+    2795494.225030082
+  ],
+  "minimumElevation": 91.5,
+  "maximumElevation": 480.0,
+  "validElevationRangeMeters": [
+    91.5,
+    376.0028152895399
+  ],
+  "verticalScale": 1.0,
+  "heightEncoding": {
+    "sampleType": "uint16",
+    "byteOrder": "little-endian",
+    "quantizationMinimumMeters": 91.5,
+    "quantizationMaximumMeters": 480.0,
+    "decodeFormula": "min_m + sample_u16 / 65535 * (max_m - min_m)"
+  },
+  "heightBinary": "height_u16.bin",
+  "heightByteLength": 1280000,
+  "heightSha256": "985536019885d19e3edcef75aea11d3b97ea6b57040951d99892787c2d17b6ec",
+  "maskBinary": "mask_u8.bin",
+  "maskByteLength": 640000,
+  "maskSha256": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
+  "validPixelCount": 640000,
+  "missingPixelCount": 0,
+  "validFraction": 1.0,
+  "status": "ready_12_5m",
+  "sourceStatus": "ready_12_5m",
+  "gapPolicy": "complete-source-window",
+  "coverage": {
+    "validFraction": 1.0,
+    "validPixelCount": 640000,
+    "missingPixelCount": 0,
+    "complete": true
+  },
+  "fallback": {
+    "applied": false,
+    "allowed": false,
+    "policy": "mask-invalid-pixels-and-report-source-gap"
+  },
+  "landmarks": [
+    {
+      "id": "guilin-old-city",
+      "name": "桂林古城",
+      "longitude": 110.2994,
+      "latitude": 25.2742,
+      "color": "#e989b7",
+      "gridU": 0.4996739540237701,
+      "gridV": 0.4993274969918188,
+      "elevationMeters": 132.0
+    }
+  ],
+  "waterwayPolicy": "focus remaps the filtered global water-surface polygons; reservoirs and dams excluded",
+  "sourceLineage": {
+    "lineageId": "verified-12.5m-fine-region-centered-core",
+    "sourceMosaicId": "verified-12.5m-mosaic-all-10",
+    "sourceMosaicGridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/terrain-manifest.json",
+    "sourceHeightBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/height_u16.bin",
+    "sourceMaskBinary": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/mask_u8.bin",
+    "sourceManifestSha256": "995e7b3c1315ef4c835bf9f5d6e2a6c964324813d2228849a3aebc7d170ee7f3",
+    "sourceHeightSha256": "d10c4011e0736dc8f476800adb02843155deff16bb3fc445acf82c27fcc8a6c3",
+    "sourceMaskSha256": "00fdff54c29d5da4a045de560da5396ecd1a75826e7d6a4ef49e7b35afb68321",
+    "sourceGridWidth": 1132,
+    "sourceGridHeight": 1132,
+    "sourceBounds": [
+      422387.5,
+      2788412.5,
+      436537.5,
+      2802562.5
+    ],
+    "sourcePixelOrigin": [
+      3488,
+      8295
+    ],
+    "sourceValidFraction": 1.0,
+    "sourceMinimumElevation": 91.5,
+    "sourceMaximumElevation": 480.0,
+    "sourceStatus": "ready_12_5m",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00",
+    "cropMethod": "center-window-no-spatial-resampling",
+    "cropWindow": {
+      "columnOffset": 166,
+      "rowOffset": 166,
+      "width": 800,
+      "height": 800
+    },
+    "heightReencoding": "none-source-u16-codes-cropped-byte-for-byte"
+  },
+  "sourceMosaic": {
+    "mosaicId": "verified-12.5m-mosaic-all-10",
+    "crs": "EPSG:32649",
+    "resolutionMeters": 12.5,
+    "gridOriginProjected": [
+      378787.5,
+      2906250.0
+    ],
+    "gridOriginConvention": "west-north-vertex",
+    "pixelOrigin": [
+      3488,
+      8295
+    ],
+    "fineRegionId": "guilin-old-city",
+    "fineRegionGridWidth": 1132,
+    "fineRegionGridHeight": 1132,
+    "fineRegionBounds": [
+      422387.5,
+      2788412.5,
+      436537.5,
+      2802562.5
+    ],
+    "fineRegionValidFraction": 1.0,
+    "cropColumnOffset": 166,
+    "cropRowOffset": 166,
+    "sourceManifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/terrain-manifest.json",
+    "sourceIndexSchemaVersion": "guilin-focus-dem-index/v1",
+    "sourceIndexGeneratedAt": "2026-08-22T00:00:00+00:00"
+  }
+}
