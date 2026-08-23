@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web" / "guilin-v050"
 CORE_ASSETS = WEB / "assets" / "cores"
+REVIEW = WEB / "review"
 RELEASE_GATE = ROOT / "projects" / "guilin" / "config" / "release_gate_v050.json"
 
 CORE_IDS = (
@@ -863,6 +864,53 @@ runtime.dispose();
         self.assertRegex(self.index, r"(?:用户视觉批准|待用户批准|发布锁定)")
         self.assertRegex(self.index, r"id=[\"']stableRollbackLink[\"'][^>]+href=[\"'][^\"']+[\"']")
         self.assertIn("v0.3.1", self.index)
+
+    def test_stage_a_evidence_is_complete_and_does_not_claim_visual_approval(self) -> None:
+        evidence = read_json(REVIEW / "evidence.json")
+        gallery = read_text(REVIEW / "index.html")
+        manifest_evidence = self.manifest["stageA"]["evidence"]
+        gate_evidence = self.gate["stage_a_evidence"]
+
+        self.assertEqual(evidence["verdict"]["stageATechnical"], "pass")
+        self.assertEqual(evidence["verdict"]["userVisualApproval"], "pending")
+        self.assertEqual(evidence["verdict"]["publication"], "blocked")
+        self.assertEqual(manifest_evidence["technicalResult"], "pass")
+        self.assertEqual(manifest_evidence["userVisualApproval"], "pending")
+        self.assertEqual(gate_evidence["user_visual_approval"], "pending")
+        self.assertIn("用户视觉批准 PENDING", gallery)
+        self.assertIn("发布 BLOCKED", gallery)
+        self.assertRegex(self.index, r"""href=["']\./review/["']""")
+
+        source_head = evidence["runtimeSourceHead"]
+        tested_commit = evidence["testedMergeCommit"]
+        artifact_total = 0
+        for profile_id, profile_evidence in evidence["profiles"].items():
+            report = read_json(REVIEW / profile_id / "report.json")
+            self.assertTrue(report["ok"], profile_id)
+            self.assertIsNone(report["fatalError"], profile_id)
+            self.assertEqual(report["sourceHeadSha"], source_head, profile_id)
+            self.assertEqual(report["testedCommitSha"], tested_commit, profile_id)
+            self.assertEqual(report["workflow"]["runId"], evidence["workflow"]["runId"])
+            summary = report["summary"]
+            for metric in (
+                "failedCheckCount",
+                "http404Count",
+                "requestFailedCount",
+                "consoleErrorCount",
+                "pageErrorCount",
+            ):
+                self.assertEqual(summary[metric], 0, f"{profile_id}:{metric}")
+            self.assertEqual(summary["coreScreenshotCount"], 12, profile_id)
+            self.assertEqual(len(report["artifacts"]), profile_evidence["imageCount"])
+            artifact_total += len(report["artifacts"])
+            for artifact in report["artifacts"]:
+                image = REVIEW / profile_id / artifact["file"]
+                self.assertTrue(image.is_file(), image)
+                self.assertEqual(sha256(image), artifact["sha256"], image)
+
+        self.assertEqual(artifact_total, evidence["manualReview"]["hashVerifiedImages"])
+        self.assertEqual(evidence["manualReview"]["reviewedImages"], 59)
+        self.assertEqual(artifact_total, 59)
 
     def test_startup_failures_are_visible_and_error_counts_are_not_fabricated(self) -> None:
         self.assertRegex(self.index, r"id=[\"']errorCard[\"'][^>]+role=[\"']alert[\"']")

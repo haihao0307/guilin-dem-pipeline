@@ -1,0 +1,108 @@
+{
+  "schema": "guilin-v050-stage-a-evidence/v1",
+  "capturedAt": "2026-08-23",
+  "runtimeSourceHead": "daf4d8748b88ceede81fcc378845f05819df01d0",
+  "testedMergeCommit": "abef123fb76fac46fedd5a19d8c5dcc992128dd8",
+  "workflow": {
+    "runId": "32652129602",
+    "url": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/32652129602",
+    "result": "success"
+  },
+  "verdict": {
+    "stageATechnical": "pass",
+    "userVisualApproval": "pending",
+    "publication": "blocked",
+    "pullRequestPolicy": "draft-only-no-merge"
+  },
+  "profiles": {
+    "chrome": {
+      "label": "Windows Chrome",
+      "browserVersion": "151.0.7922.170",
+      "viewport": [1600, 1000],
+      "artifactId": "9496548269",
+      "artifactDigest": "sha256:6d44e706fa401cfa0a78d21324a4562ac457188b6c47e6c98583880ca179a93a",
+      "report": "./chrome/report.json",
+      "summary": "./chrome/summary.md",
+      "checkCount": 9,
+      "failedCheckCount": 0,
+      "http404Count": 0,
+      "requestFailedCount": 0,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "coreScreenshotCount": 12,
+      "imageCount": 19
+    },
+    "edge": {
+      "label": "Windows Edge",
+      "browserVersion": "151.0.4129.93",
+      "viewport": [1600, 1000],
+      "artifactId": "9496508695",
+      "artifactDigest": "sha256:40e00f7fd4d7717ab35ca0dee7260d121aa1b394e22456b36780a33318248bef",
+      "report": "./edge/report.json",
+      "summary": "./edge/summary.md",
+      "checkCount": 9,
+      "failedCheckCount": 0,
+      "http404Count": 0,
+      "requestFailedCount": 0,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "coreScreenshotCount": 12,
+      "imageCount": 19
+    },
+    "mobile": {
+      "label": "Windows Chrome 手机视口",
+      "browserVersion": "151.0.7922.170",
+      "viewport": [390, 844],
+      "artifactId": "9496531879",
+      "artifactDigest": "sha256:e759f685a494203b1b17287db8b0177c5bfaa7cd3930df18dcf9b01c52cabdf2",
+      "report": "./mobile/report.json",
+      "summary": "./mobile/summary.md",
+      "checkCount": 10,
+      "failedCheckCount": 0,
+      "http404Count": 0,
+      "requestFailedCount": 0,
+      "consoleErrorCount": 0,
+      "pageErrorCount": 0,
+      "coreScreenshotCount": 12,
+      "imageCount": 21,
+      "reachableControls": 82,
+      "testedControls": 82,
+      "touchMovementMeters": 3.1048
+    }
+  },
+  "cameraEvidence": {
+    "cores": ["zhenbao-ding", "guilin-old-city", "yangtang-airfield", "yangshuo-county-seat"],
+    "heightsMeters": [50, 2, 1.7],
+    "screenshotCountPerProfile": 12,
+    "fiveRayTraceDistanceMeters": 600,
+    "terrainIntersectionCount": 0
+  },
+  "manualReview": {
+    "hashVerifiedImages": 59,
+    "reviewedImages": 59,
+    "result": "user-visual-approval-pending",
+    "strengths": [
+      "四核心三高度均可加载，未见穿地、空白画布或控件遮断",
+      "单画布、零 iframe、运行时对象和活动核心状态在切换中保持一致",
+      "GAEA 参数修订、水文季节、生态季节与手机触控均产生机器可核对的状态变化"
+    ],
+    "blockers": [
+      "地形仍有明显粗多边形和大色块，未达到用户级地貌质感",
+      "生态实例仍呈半球占位体，树木、作物、果园和田埂缺少可信形态",
+      "水面与岸线仍有硬转角、三角断面、彩色边线和局部硬结束",
+      "GAEA、水文与季节对比截图被控制面板覆盖过多，难以直接判断画面差异",
+      "生态截图只有夏季 1942 与冬季 1945；春、秋及 1940、1941、1943、1944 尚无完整视觉矩阵",
+      "2 m 与 1.7 m 画面差异很小，真宝鼎和秧塘机场低位地面辨识度弱",
+      "四核心截图缺少可确认的道路、步道或入口；古城、机场、县城和真宝鼎接近路线的地面访问身份不可辨识",
+      "激活核心后右栏仍使用全域标题且左侧全域工作区保持高亮，活动核心 ID 正确但界面语义可能误导验收者",
+      "手机方向键约 31 px、工作区和核心按钮高 34 px、滑杆命中高度约 18 px，拇指操作余量不足 44 px",
+      "本轮为 Windows headless 浏览器和手机视口仿真，不构成实体设备或硬件 GPU 性能证据"
+    ]
+  },
+  "dataBlockers": [
+    "连续 12.5 m 任务 AOI 仍缺 60.45671875 km²；全域网页当前使用 30 m 源 DEM 的约 104.72 m 栅格 fallback",
+    "真宝鼎核心保留 263 个源缺失像元",
+    "授权 GAEA 2.3 Worker 未配置，当前只通过浏览器近似预览与 truthful unavailable 状态",
+    "当前阳朔水文截图没有活动湘江片段，湘江运行时分类仍需切至覆盖区单独形成视觉证据"
+  ]
+}

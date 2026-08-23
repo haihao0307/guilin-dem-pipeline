@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="桂林 v0.5 Stage A Windows Chrome、Edge 与手机视口浏览器验收截图">
+  <title>桂林 v0.5 Stage A 验收证据</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root{color-scheme:dark;--bg:#07100f;--card:#111c1a;--line:#29413b;--text:#eef7f1;--muted:#a9bdb5;--pass:#79e5ad;--warn:#ffd17a;--bad:#ff9b8f;--accent:#a7d9ca}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#15302b 0,#07100f 42rem);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:var(--accent)}header,main,footer{width:min(1500px,calc(100% - 28px));margin:auto}header{padding:44px 0 24px}h1{font-size:clamp(28px,5vw,54px);line-height:1.05;margin:0 0 14px}h2{font-size:23px;margin:42px 0 14px}p{max-width:980px;color:var(--muted)}.eyebrow{letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-size:12px}.badges,.links,.tabs{display:flex;gap:9px;flex-wrap:wrap}.badge,.links a,.tab{border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:#0b1715}.badge.pass{border-color:#327d5a;color:var(--pass)}.badge.pending{border-color:#7c6332;color:var(--warn)}.badge.blocked{border-color:#7f453f;color:var(--bad)}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:20px 0}.metric,.notice{border:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent);border-radius:14px;padding:15px}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:20px;margin-top:4px}.notice{border-color:#765d2d;color:#f4deb0}.notice strong{color:var(--warn)}.tabs{position:sticky;top:0;z-index:5;padding:12px 0;background:linear-gradient(#07100ff5,#07100fd9 75%,transparent)}button.tab{color:var(--muted);cursor:pointer;font:inherit}.tab.active{color:#07100f;background:var(--accent);border-color:var(--accent)}.profile{display:none}.profile.active{display:block}.group{margin:25px 0}.group h3{margin:0 0 10px;font-size:17px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}.shot{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}.shot a{display:block}.shot img{width:100%;height:auto;aspect-ratio:16/10;object-fit:contain;background:#030807;display:block}.profile[data-profile="mobile"] .shot img{aspect-ratio:390/844;max-height:620px}.shot figcaption{padding:10px 12px;color:var(--muted)}.shot figcaption strong{color:var(--text);display:block}.blockers{display:grid;gap:8px;padding-left:20px;color:var(--muted)}footer{padding:42px 0 70px;color:var(--muted)}code{overflow-wrap:anywhere;color:#c8eadd}@media(max-width:560px){header{padding-top:28px}.grid{grid-template-columns:1fr}.shot img{aspect-ratio:auto}.tabs{top:0}.metric strong{font-size:17px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Guilin unified workbench · Stage A evidence</div>
+    <h1>浏览器验收截图</h1>
+    <p>本页固定展示运行时提交 <code>daf4d874…</code> 在 Windows Chrome、Windows Edge 和 390 × 844 手机视口的完整证据。机器门槛通过，人工逐图复核后仍未授予用户视觉批准。</p>
+    <div class="badges">
+      <span class="badge pass">Stage A 技术 PASS</span>
+      <span class="badge pending">用户视觉批准 PENDING</span>
+      <span class="badge blocked">发布 BLOCKED</span>
+    </div>
+    <div class="links" style="margin-top:14px">
+      <a href="../">返回统一工作台</a>
+      <a href="./evidence.json">机器可读证据</a>
+      <a href="https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/32652129602">GitHub Actions 运行</a>
+      <a href="https://github.com/haihao0307/guilin-dem-pipeline/pull/40">Draft PR #40</a>
+    </div>
+  </header>
+  <main>
+    <section class="summary" aria-label="测试摘要">
+      <div class="metric"><span>配置</span><strong>Chrome · Edge · Mobile</strong></div>
+      <div class="metric"><span>核心三高度截图</span><strong>36 / 36</strong></div>
+      <div class="metric"><span>HTTP 404 / 请求失败</span><strong>0 / 0</strong></div>
+      <div class="metric"><span>Console / Page error</span><strong>0 / 0</strong></div>
+      <div class="metric"><span>画布 / iframe</span><strong>1 / 0</strong></div>
+      <div class="metric"><span>手机控件命中</span><strong>82 / 82</strong></div>
+    </section>
+    <div class="notice"><strong>真实性边界：</strong>连续 12.5 m 任务 AOI 仍缺 60.45671875 km²，全域当前是 30 m 源 DEM 经 bilinear 降采样后的约 104.72 m 网页栅格；GAEA Worker 未配置；真宝鼎保留 263 个缺失像元。</div>
+
+    <nav class="tabs" role="tablist" aria-label="浏览器证据筛选">
+      <button class="tab active" id="tab-chrome" role="tab" aria-selected="true" aria-controls="panel-chrome" data-target="chrome">Windows Chrome</button>
+      <button class="tab" id="tab-edge" role="tab" aria-selected="false" aria-controls="panel-edge" data-target="edge">Windows Edge</button>
+      <button class="tab" id="tab-mobile" role="tab" aria-selected="false" aria-controls="panel-mobile" data-target="mobile">手机 390 × 844</button>
+    </nav>
+    <div id="profiles"></div>
+
+    <section aria-labelledby="visual-gap-title">
+      <h2 id="visual-gap-title">距离用户视觉批准仍差什么</h2>
+      <ul class="blockers">
+        <li>地形仍呈粗多边形和大色块；生态树木、作物、果园与田埂仍偏半球占位形态。</li>
+        <li>水面和岸线有硬转角、三角断面、彩色边线与局部硬结束，需要重做视觉连续性。</li>
+        <li>GAEA、水文和季节前后截图被控制面板覆盖过多，下一轮应固定相机并提供无面板的同构对比。</li>
+        <li>生态截图只有夏季 1942 与冬季 1945；春、秋及 1940、1941、1943、1944 尚无完整视觉矩阵，功能接线不能替代完整视觉验收。</li>
+        <li>2 m 与 1.7 m 画面差异小；真宝鼎、秧塘机场的低位地面特征弱，50 m 也缺少核心全貌。</li>
+        <li>四核心截图缺少可确认的道路、步道或入口；古城、机场、县城和真宝鼎接近路线的地面访问身份不可辨识。</li>
+        <li>核心已激活时右栏仍使用全域标题且左侧全域工作区保持高亮，活动核心 ID 虽正确，验收语义仍需修正。</li>
+        <li>手机方向键约 31 px、导航按钮高 34 px、滑杆命中高度约 18 px，需提升至更稳妥的拇指操作尺寸并复核文字裁切。</li>
+        <li>本轮使用 Windows headless 浏览器与手机视口仿真，尚缺实体手机、硬件 GPU 帧率和最终人工交互验收。</li>
+      </ul>
+    </section>
+  </main>
+  <footer>报告中的 SHA-256 与仓库内 59 张 PNG 已逐一核对。证据提交仅增加报告、截图与入口，不改变被测运行时。</footer>
+  <script>
+    const coreNames={"zhenbao-ding":"真宝鼎","guilin-old-city":"桂林古城","yangtang-airfield":"秧塘机场旧址","yangshuo-county-seat":"阳朔县城"};
+    const heightNames={"50m":"50 m","2m":"2 m","1_7m":"1.7 m"};
+    const common=[
+      ["总体真值与 manifest","overall-manifest-truth.png"],
+      ["GAEA 参数前","gaea-before.png"],["GAEA 参数后","gaea-after.png"],
+      ["水文夏季分段","hydrology-summer-segments.png"],["水文冬季分段","hydrology-winter-segments.png"],
+      ["生态夏季 1942 与风","ecology-summer-1942-wind.png"],["生态冬季 1945 与风","ecology-winter-1945-wind.png"]
+    ];
+    const profiles=[
+      {id:"chrome",label:"Windows Chrome 151.0.7922.170",viewport:"1600 × 1000",count:19},
+      {id:"edge",label:"Windows Edge 151.0.4129.93",viewport:"1600 × 1000",count:19},
+      {id:"mobile",label:"Windows Chrome 手机视口",viewport:"390 × 844",count:21}
+    ];
+    const shot=(profile,title,file)=>`<figure class="shot"><a href="./${profile}/${file}"><img loading="lazy" src="./${profile}/${file}" alt="${title}"></a><figcaption><strong>${title}</strong>${file}</figcaption></figure>`;
+    const section=(title,shots)=>`<section class="group"><h3>${title}</h3><div class="grid">${shots}</div></section>`;
+    const root=document.querySelector("#profiles");
+    for(const profile of profiles){
+      const article=document.createElement("article");article.className=`profile${profile.id==="chrome"?" active":""}`;article.dataset.profile=profile.id;article.id=`panel-${profile.id}`;article.setAttribute("role","tabpanel");article.setAttribute("aria-labelledby",`tab-${profile.id}`);article.hidden=profile.id!=="chrome";
+      const report=`<div class="links"><a href="./${profile.id}/report.json">完整 JSON 报告</a><a href="./${profile.id}/summary.md">摘要</a><span class="badge pass">${profile.label} · ${profile.viewport} · ${profile.count} 图 · 0 错误</span></div>`;
+      const general=common.map(([title,file])=>shot(profile.id,title,file)).join("");
+      const cores=[];for(const [id,name] of Object.entries(coreNames)){for(const [suffix,height] of Object.entries(heightNames)){cores.push(shot(profile.id,`${name} · ${height}`,`core-${id}-${suffix}.png`));}}
+      const touch=profile.id==="mobile"?section("触控移动",shot(profile.id,"触控移动前","mobile-touch-before.png")+shot(profile.id,"触控移动后","mobile-touch-after.png")):"";
+      article.innerHTML=`<h2>${profile.label}</h2>${report}${section("真值、GAEA、水文与生态",general)}${section("四核心 × 50 m / 2 m / 1.7 m",cores.join(""))}${touch}`;root.append(article);
+    }
+    document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(node=>{node.classList.remove("active");node.setAttribute("aria-selected","false");});document.querySelectorAll(".profile").forEach(node=>{node.classList.remove("active");node.hidden=true;});tab.classList.add("active");tab.setAttribute("aria-selected","true");const panel=document.querySelector(`[data-profile="${tab.dataset.target}"]`);panel.classList.add("active");panel.hidden=false;}));
+  </script>
+</body>
+</html>
