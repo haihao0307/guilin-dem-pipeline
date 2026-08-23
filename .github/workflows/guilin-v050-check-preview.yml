@@ -1,6 +1,6 @@
 name: Publish Guilin v0.5 inspectable preview
 
-# Visible inspection deployment. Stable root remains available; the recovery build is mounted at /guilin-v050-check/.
+# Builds a directly viewable public inspection website from the validated recovery artifact.
 on:
   push:
     branches:
@@ -21,18 +21,18 @@ concurrency:
 permissions:
   contents: write
   actions: read
-  pages: write
-  id-token: write
 
 jobs:
-  assemble:
+  build-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
-      - name: Checkout stable site
+      - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Download the latest validated private recovery artifact
+      - name: Download validated Guilin recovery artifact
         env:
           GH_TOKEN: ${{ github.token }}
           ARTIFACT_ID: '9483744971'
@@ -52,11 +52,11 @@ jobs:
           test -f /tmp/guilin-v050-recovery/guilin-v050/manifest.json
           test -f /tmp/guilin-v050-recovery/guilin-v050/assets/height-grid.u16
 
-      - name: Assemble stable website and the visible inspection build
+      - name: Assemble stable root and interactive Guilin inspection route
         run: |
           set -euo pipefail
           STABLE="DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web"
-          OUT="_public_site"
+          OUT="/tmp/guilin-v050-public-site"
           PREVIEW="$OUT/guilin-v050-check"
           test -f "$STABLE/index.html"
           rm -rf "$OUT"
@@ -65,7 +65,7 @@ jobs:
           cp -a /tmp/guilin-v050-recovery/guilin-v050/. "$PREVIEW/"
           python - <<'PY'
           from pathlib import Path
-          path = Path('_public_site/guilin-v050-check/index.html')
+          path = Path('/tmp/guilin-v050-public-site/guilin-v050-check/index.html')
           html = path.read_text(encoding='utf-8')
           notice = '''<div id="inspection-build-notice" style="position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:99999;padding:8px 14px;border:1px solid rgba(255,255,255,.32);border-radius:999px;background:rgba(18,26,22,.88);color:#fff;font:600 13px/1.2 system-ui,sans-serif;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.28);pointer-events:none">桂林 v0.5 可视检查版 · 可旋转、缩放、切换图层和进入地面观察</div>'''
           if '<body' in html and 'inspection-build-notice' not in html:
@@ -75,10 +75,10 @@ jobs:
           PY
           touch "$OUT/.nojekyll"
 
-      - name: Verify visible routes and required assets
+      - name: Verify site routes and required runtime assets
         run: |
           set -euo pipefail
-          python -m http.server 8765 --directory _public_site >/tmp/guilin-preview-http.log 2>&1 &
+          python -m http.server 8765 --directory /tmp/guilin-v050-public-site >/tmp/guilin-preview-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID' EXIT
           sleep 2
@@ -88,62 +88,61 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:8765/guilin-v050-check/manifest.json >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:8765/guilin-v050-check/assets/height-grid.u16 >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:8765/assets/ecology/v0.3.1/trees.bin >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8765/assets/ecology/v0.3.1/shrubs.bin >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:8765/assets/ecology/v0.3.1/rice.bin >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:8765/assets/fine-regions/yangtang-airfield/height_u16.bin >/dev/null
 
-      - name: Enable and configure GitHub Pages
-        uses: actions/configure-pages@v6.0.0
-        with:
-          enablement: true
-
-      - name: Upload stable site plus visible inspection build
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: _public_site
-
-  deploy:
-    needs: assemble
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy visible Guilin inspection website
-        id: deployment
-        uses: actions/deploy-pages@v5
-
-      - name: Checkout repository to record successful deployment
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/checkout@v6
-        with:
-          ref: main
-
-      - name: Record public inspection URL and deployment SHA
-        if: ${{ github.event_name != 'pull_request' }}
+      - name: Publish the verified website to a dedicated public branch
         env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          PUBLIC_BRANCH: guilin-v050-check-site
         run: |
           set -euo pipefail
-          mkdir -p reports
-          python - <<'PY'
-          import json, os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          base = os.environ.get('PAGE_URL','').rstrip('/')
-          payload = {
-            "schema": "guilin_v050_check_deployment@1.0",
-            "status": "deployed",
-            "deployed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
-            "commit_sha": os.environ['GITHUB_SHA'],
-            "pages_base_url": base,
-            "public_check_url": f"{base}/guilin-v050-check/" if base else "",
-            "artifact_id": 9483744971
-          }
-          Path('reports/guilin-v050-check-deployment.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          PY
+          rm -rf /tmp/guilin-site-git
+          mkdir -p /tmp/guilin-site-git
+          cp -a /tmp/guilin-v050-public-site/. /tmp/guilin-site-git/
+          cd /tmp/guilin-site-git
+          git init
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/guilin-v050-check-deployment.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Record Guilin v0.5 inspection deployment [skip ci]"
-            git push origin HEAD:main
-          fi
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout -b "$PUBLIC_BRANCH"
+          cat > DEPLOYMENT.json <<EOF
+          {
+            "schema": "guilin_v050_visible_site@1.0",
+            "source_artifact_id": 9483744971,
+            "source_workflow_sha": "${GITHUB_SHA}",
+            "inspection_path": "/guilin-v050-check/",
+            "status": "published_for_visual_inspection"
+          }
+          EOF
+          git add -A
+          git commit -m "Publish Guilin v0.5 visual inspection website"
+          git push --force origin "HEAD:${PUBLIC_BRANCH}"
+
+      - name: Verify public branch files through GitHub raw endpoints
+        run: |
+          set -euo pipefail
+          BASE="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/guilin-v050-check-site"
+          for path in \
+            "guilin-v050-check/index.html" \
+            "guilin-v050-check/runtime.js" \
+            "guilin-v050-check/manifest.json" \
+            "guilin-v050-check/assets/height-grid.u16" \
+            "assets/ecology/v0.3.1/trees.bin" \
+            "DEPLOYMENT.json"; do
+            for attempt in 1 2 3 4 5; do
+              if curl --fail --silent --show-error "$BASE/$path" >/dev/null; then break; fi
+              if [ "$attempt" = 5 ]; then exit 1; fi
+              sleep 3
+            done
+          done
+
+      - name: Write public inspection links to the job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## 桂林 v0.5 可视检查网站
+
+          - 交互网页: https://raw.githack.com/haihao0307/guilin-dem-pipeline/guilin-v050-check-site/guilin-v050-check/index.html
+          - GitHub 文件: https://github.com/haihao0307/guilin-dem-pipeline/blob/guilin-v050-check-site/guilin-v050-check/index.html
+          - 稳定旧版: https://guilin-dem-terrain.sunhaihao.chatgpt.site/
+          EOF
