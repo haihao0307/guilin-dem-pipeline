@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
   actions: read
   pages: write
   id-token: write
@@ -103,3 +103,37 @@ jobs:
       - name: Deploy visible Guilin inspection website
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Checkout repository to record successful deployment
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Record public inspection URL and deployment SHA
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          payload = {
+            "schema": "guilin_v050_check_deployment@1.0",
+            "status": "deployed",
+            "deployed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+            "commit_sha": os.environ['GITHUB_SHA'],
+            "pages_base_url": os.environ.get('PAGE_URL',''),
+            "public_check_url": "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin-v050-check/",
+            "artifact_id": 9483744971
+          }
+          Path('reports/guilin-v050-check-deployment.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/guilin-v050-check-deployment.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record Guilin v0.5 inspection deployment [skip ci]"
+            git push origin HEAD:main
+          fi
