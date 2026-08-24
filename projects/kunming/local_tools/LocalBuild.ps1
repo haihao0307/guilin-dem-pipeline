@@ -14,6 +14,7 @@ $common = Join-Path $sharedRoot 'local_tools\Common.ps1'
 $downloader = Join-Path $sharedRoot 'scripts\asf_download_stdlib.py'
 $mosaic = Join-Path $sharedRoot 'scripts\mosaic_dem.py'
 $requirements = Join-Path $sharedRoot 'requirements.txt'
+$chromeRepair = Join-Path $repoRoot 'tools\asf-local\RepairChromeSessionDownloader.ps1'
 
 foreach ($required in @($common, $downloader, $mosaic, $requirements)) {
     if (-not (Test-Path -LiteralPath $required)) {
@@ -205,7 +206,14 @@ try {
         $env:ASF_PROJECT_WORK_ROOT = $workRoot
         $env:ASF_PROJECT_ID = 'kunming-cuihu-20000km2'
 
-        $command = Get-Command -LiteralPath $chromeSessionScript
+        if (Test-Path -LiteralPath $chromeRepair) {
+            & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $chromeRepair -Path $chromeSessionScript -Apply
+            if ($LASTEXITCODE -ne 0) {
+                throw "ASF Chrome session Count repair stopped with exit code $LASTEXITCODE"
+            }
+        }
+
+        $command = Get-Command -Name $chromeSessionScript
         $chromeArguments = @()
         if ($command.Parameters.ContainsKey('TaskFile')) {
             $chromeArguments += @('-TaskFile', $chromeTaskPath)
