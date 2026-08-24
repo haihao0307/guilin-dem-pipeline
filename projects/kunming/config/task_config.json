@@ -1,46 +1,33 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "project": {
-    "id": "kunming-cuihu-20000km2",
-    "name": "昆明翠湖中心20000平方公里ASF RTC参考DEM拼接",
-    "taskMode": "standalone_authenticated_mosaic",
+    "id": "kunming-asf-11tiles-rect",
+    "name": "昆明11张ASF RTC参考DEM连续长方形拼接与第一版预览",
+    "taskMode": "verified_local_mosaic_and_reversible_visual_preview",
     "targetCrs": "EPSG:32648",
     "targetPixelSpacingMeters": 12.5,
     "accuracyLabel": "12.5米输出像元的ASF RTC参考DEM",
-    "lineagePolicy": "保留每张源DEM、下载记录、哈希、覆盖计数与填补标记；native12_5mSurveyClaim=false。"
+    "lineagePolicy": "保留11张源DEM、下载记录、哈希、覆盖计数与视觉派生层；native12_5mSurveyClaim=false。"
   },
   "aoi": {
-    "authoritativeGeoJson": "aoi/kunming_cuihu_20000km2_square.geojson",
-    "centerWgs84": [102.70228, 25.05042],
-    "areaKm2": 20000.0,
-    "sideMeters": 141421.3562373095,
-    "projectedBoundsMeters": [197481.638882, 2701788.7925, 338902.99512, 2843210.148737],
-    "retrievalBufferMeters": 3000.0
+    "authoritativeGeoJson": "aoi/kunming_asf_11tiles_rect.geojson",
+    "selectionPolicy": "largest practical zero-gap rectangle from the delivered 11 DEM rasters",
+    "centerWgs84": [102.7877223260291, 25.014487387381998],
+    "areaKm2": 31639.25,
+    "widthMeters": 135500.0,
+    "heightMeters": 233500.0,
+    "projectedBoundsMeters": [209000.0, 2651625.0, 344500.0, 2885125.0],
+    "previousCuihuSquareRole": "historical_planning_only"
   },
   "source": {
     "provider": "NASA ASF DAAC",
     "dataset": "ALOS PALSAR",
     "processingLevel": ["RTC_HI_RES"],
     "classification": "ASF_RTC_12_5m_reference_dem",
-    "expectedAncillaryPatterns": ["*.dem.tif", "*_dem.tif"],
+    "expectedDemPatterns": ["*.dem.tif", "*_dem.tif"],
+    "sourceDemCount": 11,
+    "truthCogSha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
     "excludedRasterPatterns": ["*_HH.tif", "*_HV.tif", "*_VH.tif", "*_VV.tif", "*.inc_map.tif", "*.ls_map.tif"]
-  },
-  "search": {
-    "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
-    "maxResults": 500,
-    "minimumCoverageFraction": 0.995,
-    "maxSelectedProducts": 64,
-    "gridSize": 320,
-    "deduplicateByPathFrame": true,
-    "initialCoverageFromExistingFive": false
-  },
-  "download": {
-    "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
-    "resumeExistingFiles": true,
-    "downloadMetadataXml": true,
-    "preferredTransfer": "direct_additional_dem_urls",
-    "fallbackTransfer": "default_product_archive",
-    "timeoutSeconds": 900
   },
   "processing": {
     "outputCrs": "EPSG:32648",
@@ -51,23 +38,37 @@
     "compression": "DEFLATE",
     "blockSize": 512,
     "buildOverviews": true,
-    "overviewLevels": [2, 4, 8, 16, 32],
-    "minimumValidFraction": 0.995,
-    "fillSmallGaps": true,
-    "maxFillAreaKm2": 10.0,
-    "fillMaxSearchDistancePixels": 400,
-    "failOnLargeGap": true
+    "overviewLevels": [2, 4, 8, 16, 32, 64],
+    "minimumValidFraction": 1.0,
+    "fillSmallGaps": false,
+    "failOnGap": true,
+    "gridWidth": 10840,
+    "gridHeight": 18680
+  },
+  "heightPolicy": {
+    "truthHeight": "read_only_verified_cog",
+    "microDelta": "reversible_visual_or_future_gaea_layer",
+    "visualHeight": "runtime_display_only",
+    "modifyTruthDemInFirstPreview": false
+  },
+  "preview": {
+    "skill": "projects/kunming/skills/process-kunming-dem-first-pass/SKILL.md",
+    "browserPreviewWidth": 1024,
+    "modes": ["terrain", "elevation", "slope", "rock", "erosion", "source_overlap"],
+    "webgl2ThreeDimensional": true,
+    "interactiveTwoDimensionalFallback": true,
+    "derivedFieldsAreMeasuredData": false
   },
   "outputs": {
-    "finalDem": "outputs/KUNMING_CUIHU_20000KM2_ASF_RTC_12_5M_COG.tif",
-    "sourceCount": "outputs/KUNMING_CUIHU_source_count_COG.tif",
-    "fillClass": "outputs/KUNMING_CUIHU_fill_class_COG.tif",
+    "finalDem": "outputs/KUNMING_ASF_11TILES_RECT_12P5M_COG.tif",
+    "sourceCount": "outputs/KUNMING_ASF_11TILES_SOURCE_COUNT_COG.tif",
+    "authoritativeAoi": "aoi/kunming_asf_11tiles_rect.geojson",
     "resolvedAoiJson": "metadata/resolved_aoi.json",
     "resolvedAoiGeoJson": "metadata/resolved_aoi.geojson",
-    "existingResolved": "metadata/existing_resolved.json",
-    "downloadPlan": "metadata/selected_products.json",
-    "sourceManifest": "metadata/source_manifest.json",
-    "qaReport": "reports/QA_REPORT.json",
-    "preview": "reports/DEM_PREVIEW.png"
+    "sourceManifest": "metadata/KUNMING_ASF_11TILES_SOURCE_MANIFEST.json",
+    "qaReport": "reports/KUNMING_ASF_11TILES_QA.json",
+    "firstPreview": "web/kunming-guilin-skill-v001/index.html",
+    "previewManifest": "web/kunming-guilin-skill-v001/assets/manifest.json",
+    "previewQa": "reports/KUNMING_GUILIN_SKILL_V001_QA.json"
   }
 }
