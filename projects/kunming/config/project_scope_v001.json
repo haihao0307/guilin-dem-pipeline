@@ -1,7 +1,7 @@
 {
-  "schema": "kunming_dem_project_scope@0.2.1",
+  "schema": "kunming_dem_project_scope@0.3.0",
   "project_id": "kunming-dem-v001",
-  "phase": "strict_12p5m_download_mosaic_only",
+  "phase": "authenticated_asf_download_and_mosaic",
   "epoch_target": {
     "start_year": 1940,
     "end_year": 1945
@@ -13,66 +13,66 @@
   },
   "aoi": {
     "shape": "square",
-    "area_km2": 20000,
+    "area_km2": 20000.0,
     "side_m": 141421.3562373095,
     "half_extent_m": 70710.6781186548,
     "project_crs": "EPSG:32648",
-    "derive_projected_bounds_from_center": true,
     "authoritative_geojson": "projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson"
   },
   "source_policy": {
-    "candidate_catalog": "NASA Earthdata / Alaska Satellite Facility",
-    "candidate_collection": "ALOS PALSAR",
-    "candidate_processing_level": "RTC_HI_RES",
-    "required_asset_kind": "standalone DEM elevation GeoTIFF",
-    "required_native_or_effective_resolution_m_lte": 12.5,
-    "required_output_pixel_spacing_m": 12.5,
-    "pixel_spacing_alone_is_sufficient": false,
-    "reject_reference_only_ancillary_dem": true,
-    "reject_resampled_srtm_or_copernicus_lineage": true,
-    "authentication": "EARTHDATA_TOKEN",
-    "preserve_original_assets": true,
+    "provider": "NASA ASF DAAC",
+    "dataset": "ALOS PALSAR",
+    "processing_level": "RTC_HI_RES",
+    "classification": "ASF_RTC_12_5m_reference_dem",
+    "product_label_zh": "12.5米输出像元的ASF RTC参考DEM",
+    "expected_dem_patterns": ["*.dem.tif", "*_dem.tif"],
+    "output_pixel_spacing_m": 12.5,
+    "native_12_5m_survey_claim": false,
     "preserve_source_lineage": true,
-    "allow_30m_fallback": false,
-    "allow_30m_preview": false,
-    "allow_coarse_upsample_substitution": false,
-    "fail_closed": true
+    "preserve_original_assets": true,
+    "allow_30m_final_fallback": false,
+    "allow_synthetic_substitute": false
   },
-  "completion_gate": {
-    "minimum_valid_aoi_fraction": 0.999,
-    "require_source_checksums": true,
-    "require_source_lineage_verification": true,
-    "require_cog_validation": true,
-    "require_exact_aoi_extent": true,
-    "require_12p5m_output_grid": true
+  "authentication": {
+    "execution_environment": "user_windows_machine",
+    "accepted_modes": [
+      "EARTHDATA_TOKEN environment variable",
+      "Windows DPAPI file %APPDATA%/HaihaoDEM/earthdata-token.dpapi",
+      "existing authenticated ASF Chrome session under C:/HaihaoDEM/ASF_v104_local"
+    ],
+    "commit_credentials": false,
+    "request_password_again_by_default": false
   },
-  "future_core": {
-    "enabled_in_this_phase": false,
-    "center": "same_as_project_center",
-    "shape": "square",
-    "side_m": 10000,
-    "area_km2": 100
+  "processing": {
+    "output_crs": "EPSG:32648",
+    "output_pixel_spacing_m": 12.5,
+    "overlap_reducer": "median",
+    "retain_source_count": true,
+    "retain_fill_class": true,
+    "build_cog": true,
+    "minimum_valid_fraction": 0.995
   },
   "current_phase_outputs": [
     "aoi_geojson",
+    "asf_search_response",
+    "selected_product_plan",
     "source_products",
     "source_metadata",
     "source_manifest",
     "checksums",
     "mosaic_cog",
-    "coverage_report",
-    "nodata_report",
-    "overlap_and_seam_report",
-    "elevation_statistics",
+    "source_count_cog",
+    "fill_class_cog",
+    "qa_report",
     "download_handoff"
   ],
   "out_of_scope": [
     "copernicus_glo30",
     "mapzen_or_aws_terrain_preview",
-    "resampled_srtm_or_copernicus_reference_dem",
-    "resampled_30m_substitute",
-    "hillshade_website",
-    "vegetation",
+    "synthetic_terrain",
+    "tandem_x_procurement",
+    "commercial_license_application",
+    "ecology",
     "agriculture",
     "historical_landuse_reconstruction",
     "seasonal_rendering",
