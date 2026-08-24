@@ -1,70 +1,78 @@
 {
-  "schema": "kunming_dem_project_scope@0.3.0",
+  "schema": "kunming_dem_project_scope@0.4.0",
   "project_id": "kunming-dem-v001",
-  "phase": "authenticated_asf_download_and_mosaic",
+  "phase": "verified_11_tile_rectangle_and_first_visual_preview",
   "epoch_target": {
     "start_year": 1940,
     "end_year": 1945
   },
-  "center": {
+  "reference_center": {
     "display_name_zh": "昆明翠湖",
     "center_wgs84": [102.70228, 25.05042],
-    "source": "Wikidata Green Lake coordinate"
+    "role": "reference_only_not_clip_authority"
   },
   "aoi": {
-    "shape": "square",
-    "area_km2": 20000.0,
-    "side_m": 141421.3562373095,
-    "half_extent_m": 70710.6781186548,
+    "shape": "rectangle",
+    "selection_policy": "largest practical zero-gap rectangle from the 11 delivered DEM rasters",
+    "area_km2": 31639.25,
+    "width_m": 135500.0,
+    "height_m": 233500.0,
     "project_crs": "EPSG:32648",
-    "authoritative_geojson": "projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson"
+    "projected_bounds_m": [209000.0, 2651625.0, 344500.0, 2885125.0],
+    "wgs84_center": [102.7877223260291, 25.014487387381998],
+    "authoritative_geojson": "projects/kunming/aoi/kunming_asf_11tiles_rect.geojson",
+    "previous_cuihu_20000km2_square": "historical_planning_only"
   },
-  "source_policy": {
+  "source_release": {
     "provider": "NASA ASF DAAC",
     "dataset": "ALOS PALSAR",
     "processing_level": "RTC_HI_RES",
     "classification": "ASF_RTC_12_5m_reference_dem",
     "product_label_zh": "12.5米输出像元的ASF RTC参考DEM",
-    "expected_dem_patterns": ["*.dem.tif", "*_dem.tif"],
+    "source_dem_count": 11,
     "output_pixel_spacing_m": 12.5,
     "native_12_5m_survey_claim": false,
     "preserve_source_lineage": true,
-    "preserve_original_assets": true,
+    "truth_cog_sha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
     "allow_30m_final_fallback": false,
     "allow_synthetic_substitute": false
   },
-  "authentication": {
-    "execution_environment": "user_windows_machine",
-    "accepted_modes": [
-      "EARTHDATA_TOKEN environment variable",
-      "Windows DPAPI file %APPDATA%/HaihaoDEM/earthdata-token.dpapi",
-      "existing authenticated ASF Chrome session under C:/HaihaoDEM/ASF_v104_local"
-    ],
-    "commit_credentials": false,
-    "request_password_again_by_default": false
-  },
-  "processing": {
-    "output_crs": "EPSG:32648",
-    "output_pixel_spacing_m": 12.5,
+  "mosaic": {
+    "file": "KUNMING_ASF_11TILES_RECT_12P5M_COG.tif",
+    "crs": "EPSG:32648",
+    "grid_width": 10840,
+    "grid_height": 18680,
+    "valid_fraction": 1.0,
+    "gap_area_km2": 0.0,
+    "elevation_min_m": 855.1320190429688,
+    "elevation_max_m": 3620.4873046875,
     "overlap_reducer": "median",
-    "retain_source_count": true,
-    "retain_fill_class": true,
-    "build_cog": true,
-    "minimum_valid_fraction": 0.995
+    "overlap_fraction": 0.4477791133639388,
+    "mean_overlap_source_range_m": 0.37086558745992965,
+    "build_cog": true
+  },
+  "skill_bindings": [
+    "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/skills/process-dem-with-gaea",
+    "skills/dem-ecology-surface",
+    "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/skills/generate-guilin-dem-fine-regions",
+    "projects/kunming/skills/process-kunming-dem-first-pass"
+  ],
+  "height_policy": {
+    "z_truth_m": "read_only_verified_cog",
+    "z_micro_delta_m": "reversible_visual_or_future_gaea_layer",
+    "z_visual_m": "runtime_display_height",
+    "truth_dem_modified_by_first_preview": false
   },
   "current_phase_outputs": [
-    "aoi_geojson",
-    "asf_search_response",
-    "selected_product_plan",
-    "source_products",
-    "source_metadata",
-    "source_manifest",
-    "checksums",
-    "mosaic_cog",
+    "authoritative_rectangle_aoi",
+    "verified_11_source_mosaic_cog",
     "source_count_cog",
-    "fill_class_cog",
-    "qa_report",
-    "download_handoff"
+    "source_manifest",
+    "mosaic_qa",
+    "first_visual_preview_html",
+    "terrain_elevation_slope_rock_erosion_overlap_preview_layers",
+    "kunming_project_skill",
+    "preview_handoff"
   ],
   "out_of_scope": [
     "copernicus_glo30",
@@ -72,6 +80,8 @@
     "synthetic_terrain",
     "tandem_x_procurement",
     "commercial_license_application",
+    "authoritative_gaea_height_rewrite",
+    "verified_hydrology_build",
     "ecology",
     "agriculture",
     "historical_landuse_reconstruction",
