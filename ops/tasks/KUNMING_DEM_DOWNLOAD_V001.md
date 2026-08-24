@@ -22,14 +22,16 @@ The checked-in AOI GeoJSON is authoritative. The projected square area and cente
 
 ## Strict source policy
 
-1. Use only the established authenticated NASA Earthdata and ASF acquisition path for ALOS PALSAR `RTC_HI_RES` DEM assets with 12.5 m posting.
-2. Download DEM elevation assets ending in `.dem.tif` or `_dem.tif`, together with the matching metadata needed to establish source lineage, footprint, CRS, vertical reference and pixel spacing.
-3. Preserve every original source file without modification and record URL, granule, byte count and SHA-256 checksum.
-4. A NASA Earthdata bearer token must be supplied through the existing secret or local token mechanism. Never commit credentials.
-5. Do not download, generate, test or publish Copernicus GLO-30, Mapzen, AWS Terrain Tiles, SRTM preview mosaics or any other approximately 30 m fallback.
-6. Do not upsample a coarser fallback and label it 12.5 m.
-7. If authenticated 12.5 m acquisition cannot complete, fail closed and report the exact blocking request. Do not create a substitute mosaic.
-8. Do not use Chinese commercial download sites or unverified mirrors.
+1. Use the established authenticated NASA Earthdata and ASF search path only to locate candidate ALOS PALSAR `RTC_HI_RES` DEM assets.
+2. Download DEM elevation assets ending in `.dem.tif` or `_dem.tif`, together with the matching metadata needed to establish source lineage, footprint, CRS, vertical reference, original source DEM and pixel spacing.
+3. A 12.5 m output pixel grid alone does not qualify the source. Read the package metadata, XML and README. Accept a candidate only when its original or effective source DEM horizontal resolution is 12.5 m or finer.
+4. Reject any RTC reference DEM resampled from SRTM, Copernicus or another coarser DEM. Do not use a reference-only ancillary DEM as the final standalone elevation source when its lineage is coarser than 12.5 m.
+5. Preserve every accepted original source file without modification and record URL, granule, byte count and SHA-256 checksum.
+6. A NASA Earthdata bearer token must be supplied through the existing secret or local token mechanism. Never commit credentials.
+7. Do not download, generate, test or publish Copernicus GLO-30, Mapzen, AWS Terrain Tiles, SRTM preview mosaics or any other approximately 30 m fallback.
+8. Do not upsample a coarser source and label it 12.5 m.
+9. If verified 12.5 m-or-finer source acquisition cannot complete, fail closed and report the exact product, licensing, credential or request blocker. Do not create a substitute mosaic.
+10. Do not use Chinese commercial download sites or unverified mirrors.
 
 ## Required implementation
 
@@ -39,9 +41,9 @@ Required outputs:
 
 - `aoi/kunming_cuihu_20000km2_square.geojson`;
 - deterministic AOI derivation and validation;
-- ASF search plan listing all selected granules and approximate AOI coverage;
+- source search plan listing all selected products and approximate AOI coverage;
 - resumable authenticated download;
-- original 12.5 m-posting DEM assets and source metadata;
+- accepted 12.5 m-or-finer DEM source assets and source metadata;
 - source manifest and SHA-256 checksums;
 - exact-AOI mosaic in EPSG:32648 with 12.5 m output spacing;
 - Cloud Optimized GeoTIFF output;
@@ -60,6 +62,6 @@ Required outputs:
 
 ## Stop condition
 
-Stop immediately after the verified 12.5 m-posting source download, exact-AOI mosaic COG, minimal QA reports, checksums and handoff are complete.
+Stop immediately after the verified 12.5 m-or-finer source download, exact-AOI mosaic COG, minimal QA reports, checksums and handoff are complete.
 
 Do not build a 30 m preview, hillshade website, ecology, agriculture, seasons, historical reconstruction, future core terrain or a public site. Keep the PR open and Draft. Do not merge it.
