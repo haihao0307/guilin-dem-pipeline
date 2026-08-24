@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": {
+    "id": "kunming-cuihu-20000km2",
+    "name": "昆明翠湖中心20000平方公里ASF RTC参考DEM拼接",
+    "taskMode": "standalone_authenticated_mosaic",
+    "targetCrs": "EPSG:32648",
+    "targetPixelSpacingMeters": 12.5,
+    "accuracyLabel": "12.5米输出像元的ASF RTC参考DEM",
+    "lineagePolicy": "保留每张源DEM、下载记录、哈希、覆盖计数与填补标记；native12_5mSurveyClaim=false。"
+  },
+  "aoi": {
+    "authoritativeGeoJson": "aoi/kunming_cuihu_20000km2_square.geojson",
+    "centerWgs84": [102.70228, 25.05042],
+    "areaKm2": 20000.0,
+    "sideMeters": 141421.3562373095,
+    "projectedBoundsMeters": [197481.638882, 2701788.7925, 338902.99512, 2843210.148737],
+    "retrievalBufferMeters": 3000.0
+  },
+  "source": {
+    "provider": "NASA ASF DAAC",
+    "dataset": "ALOS PALSAR",
+    "processingLevel": ["RTC_HI_RES"],
+    "classification": "ASF_RTC_12_5m_reference_dem",
+    "expectedAncillaryPatterns": ["*.dem.tif", "*_dem.tif"],
+    "excludedRasterPatterns": ["*_HH.tif", "*_HV.tif", "*_VH.tif", "*_VV.tif", "*.inc_map.tif", "*.ls_map.tif"]
+  },
+  "search": {
+    "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
+    "maxResults": 500,
+    "minimumCoverageFraction": 0.995,
+    "maxSelectedProducts": 64,
+    "gridSize": 320,
+    "deduplicateByPathFrame": true,
+    "initialCoverageFromExistingFive": false
+  },
+  "download": {
+    "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
+    "resumeExistingFiles": true,
+    "downloadMetadataXml": true,
+    "preferredTransfer": "direct_additional_dem_urls",
+    "fallbackTransfer": "default_product_archive",
+    "timeoutSeconds": 900
+  },
+  "processing": {
+    "outputCrs": "EPSG:32648",
+    "outputPixelSpacingMeters": 12.5,
+    "resampling": "bilinear",
+    "overlapReducer": "median",
+    "nodata": -32768.0,
+    "compression": "DEFLATE",
+    "blockSize": 512,
+    "buildOverviews": true,
+    "overviewLevels": [2, 4, 8, 16, 32],
+    "minimumValidFraction": 0.995,
+    "fillSmallGaps": true,
+    "maxFillAreaKm2": 10.0,
+    "fillMaxSearchDistancePixels": 400,
+    "failOnLargeGap": true
+  },
+  "outputs": {
+    "finalDem": "outputs/KUNMING_CUIHU_20000KM2_ASF_RTC_12_5M_COG.tif",
+    "sourceCount": "outputs/KUNMING_CUIHU_source_count_COG.tif",
+    "fillClass": "outputs/KUNMING_CUIHU_fill_class_COG.tif",
+    "resolvedAoiJson": "metadata/resolved_aoi.json",
+    "resolvedAoiGeoJson": "metadata/resolved_aoi.geojson",
+    "existingResolved": "metadata/existing_resolved.json",
+    "downloadPlan": "metadata/selected_products.json",
+    "sourceManifest": "metadata/source_manifest.json",
+    "qaReport": "reports/QA_REPORT.json",
+    "preview": "reports/DEM_PREVIEW.png"
+  }
+}
