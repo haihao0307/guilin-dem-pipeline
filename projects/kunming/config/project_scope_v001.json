@@ -1,7 +1,7 @@
 {
-  "schema": "kunming_dem_project_scope@0.1.0",
+  "schema": "kunming_dem_project_scope@0.2.0",
   "project_id": "kunming-dem-v001",
-  "phase": "download_mosaic_qa_only",
+  "phase": "strict_12p5m_download_mosaic_only",
   "epoch_target": {
     "start_year": 1940,
     "end_year": 1945
@@ -17,7 +17,29 @@
     "side_m": 141421.3562373095,
     "half_extent_m": 70710.6781186548,
     "project_crs": "EPSG:32648",
-    "derive_projected_bounds_from_center": true
+    "derive_projected_bounds_from_center": true,
+    "authoritative_geojson": "projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson"
+  },
+  "source_policy": {
+    "required_provider": "NASA Earthdata / Alaska Satellite Facility",
+    "required_collection": "ALOS PALSAR",
+    "required_processing_level": "RTC_HI_RES",
+    "required_asset_kind": "DEM elevation GeoTIFF",
+    "required_output_pixel_spacing_m": 12.5,
+    "authentication": "EARTHDATA_TOKEN",
+    "preserve_original_assets": true,
+    "preserve_source_lineage": true,
+    "allow_30m_fallback": false,
+    "allow_30m_preview": false,
+    "allow_coarse_upsample_substitution": false,
+    "fail_closed": true
+  },
+  "completion_gate": {
+    "minimum_valid_aoi_fraction": 0.999,
+    "require_source_checksums": true,
+    "require_cog_validation": true,
+    "require_exact_aoi_extent": true,
+    "require_12p5m_output_grid": true
   },
   "future_core": {
     "enabled_in_this_phase": false,
@@ -27,17 +49,23 @@
     "area_km2": 100
   },
   "current_phase_outputs": [
+    "aoi_geojson",
     "source_products",
+    "source_metadata",
     "source_manifest",
     "checksums",
     "mosaic_cog",
     "coverage_report",
     "nodata_report",
+    "overlap_and_seam_report",
     "elevation_statistics",
-    "hillshade_preview",
     "download_handoff"
   ],
   "out_of_scope": [
+    "copernicus_glo30",
+    "mapzen_or_aws_terrain_preview",
+    "resampled_30m_substitute",
+    "hillshade_website",
     "vegetation",
     "agriculture",
     "historical_landuse_reconstruction",
