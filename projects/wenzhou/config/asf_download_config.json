@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": {
+    "id": "wenzhou-qingjiang-dem-v001",
+    "name": "Wenzhou Qingjiang 22000 km2 square 12.5 m ASF DEM download",
+    "targetCrs": "EPSG:32651",
+    "targetPixelSpacingMeters": 12.5,
+    "accuracyLabel": "12.5 m output-grid ASF RTC reference DEM"
+  },
+  "source": {
+    "provider": "NASA ASF DAAC",
+    "dataset": "ALOS PALSAR",
+    "processingLevel": [
+      "RTC_HI_RES"
+    ],
+    "classification": "ASF_RTC_12_5m_reference_dem",
+    "expectedAncillaryPatterns": [
+      "*.dem.tif",
+      "*_dem.tif"
+    ],
+    "excludedRasterPatterns": [
+      "*_HH.tif",
+      "*_HV.tif",
+      "*_VH.tif",
+      "*_VV.tif",
+      "*.inc_map.tif",
+      "*.ls_map.tif"
+    ]
+  },
+  "search": {
+    "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
+    "maxResults": 1000,
+    "minimumCoverageFraction": 0.999,
+    "maxSelectedProducts": 96,
+    "gridSize": 320,
+    "deduplicateByPathFrame": true,
+    "initialCoverageFromExistingFive": false
+  },
+  "download": {
+    "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
+    "resumeExistingFiles": true,
+    "downloadMetadataXml": true,
+    "preferredTransfer": "direct_additional_dem_urls",
+    "fallbackTransfer": "default_product_archive",
+    "timeoutSeconds": 1800
+  },
+  "processing": {
+    "outputCrs": "EPSG:32651",
+    "outputPixelSpacingMeters": 12.5
+  },
+  "outputs": {
+    "resolvedAoiJson": "metadata/resolved_aoi.json",
+    "existingResolved": "metadata/existing_resolved.json",
+    "downloadPlan": "metadata/selected_products.json",
+    "sourceManifest": "metadata/source_manifest.json"
+  }
+}
