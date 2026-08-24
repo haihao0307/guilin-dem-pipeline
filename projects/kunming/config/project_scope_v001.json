@@ -1,5 +1,5 @@
 {
-  "schema": "kunming_dem_project_scope@0.2.0",
+  "schema": "kunming_dem_project_scope@0.2.1",
   "project_id": "kunming-dem-v001",
   "phase": "strict_12p5m_download_mosaic_only",
   "epoch_target": {
@@ -21,11 +21,15 @@
     "authoritative_geojson": "projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson"
   },
   "source_policy": {
-    "required_provider": "NASA Earthdata / Alaska Satellite Facility",
-    "required_collection": "ALOS PALSAR",
-    "required_processing_level": "RTC_HI_RES",
-    "required_asset_kind": "DEM elevation GeoTIFF",
+    "candidate_catalog": "NASA Earthdata / Alaska Satellite Facility",
+    "candidate_collection": "ALOS PALSAR",
+    "candidate_processing_level": "RTC_HI_RES",
+    "required_asset_kind": "standalone DEM elevation GeoTIFF",
+    "required_native_or_effective_resolution_m_lte": 12.5,
     "required_output_pixel_spacing_m": 12.5,
+    "pixel_spacing_alone_is_sufficient": false,
+    "reject_reference_only_ancillary_dem": true,
+    "reject_resampled_srtm_or_copernicus_lineage": true,
     "authentication": "EARTHDATA_TOKEN",
     "preserve_original_assets": true,
     "preserve_source_lineage": true,
@@ -37,6 +41,7 @@
   "completion_gate": {
     "minimum_valid_aoi_fraction": 0.999,
     "require_source_checksums": true,
+    "require_source_lineage_verification": true,
     "require_cog_validation": true,
     "require_exact_aoi_extent": true,
     "require_12p5m_output_grid": true
@@ -64,6 +69,7 @@
   "out_of_scope": [
     "copernicus_glo30",
     "mapzen_or_aws_terrain_preview",
+    "resampled_srtm_or_copernicus_reference_dem",
     "resampled_30m_substitute",
     "hillshade_website",
     "vegetation",
