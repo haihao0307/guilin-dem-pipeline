@@ -9,6 +9,7 @@ on:
       - 'ops/tasks/KUNMING_DEM_DOWNLOAD_V001.md'
       - 'skills/asf-rtc-reference-dem/**'
       - 'tools/asf-local/**'
+      - '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
       - '.github/workflows/kunming-asf-plan-and-local-contract.yml'
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - 'ops/tasks/KUNMING_DEM_DOWNLOAD_V001.md'
       - 'skills/asf-rtc-reference-dem/**'
       - 'tools/asf-local/**'
+      - '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
   workflow_dispatch:
 
 permissions:
@@ -49,6 +51,7 @@ jobs:
               Path('projects/kunming/config/task_config.json'),
               Path('projects/kunming/config/existing_five_manifest.json'),
               Path('projects/kunming/metadata/resolved_aoi.json'),
+              Path('projects/kunming/metadata/runtime_source.json'),
               Path('projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson'),
           ]
           for path in paths:
@@ -74,6 +77,7 @@ jobs:
         run: |
           $paths = @(
             'projects/kunming/local_tools/LocalBuild.ps1',
+            'tools/asf-local/InvokeChromeSessionDownload.ps1',
             'tools/asf-local/RepairChromeSessionDownloader.ps1'
           )
           foreach ($path in $paths) {
@@ -89,6 +93,23 @@ jobs:
               throw "PowerShell syntax validation failed: $path"
             }
             Write-Host "validated $path"
+          }
+
+      - name: Validate local launcher contract
+        shell: powershell
+        run: |
+          $paths = @(
+            '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd',
+            'projects/kunming/local_tools/RUN_KUNMING_ASF_12_5M_KEEP_OPEN.cmd'
+          )
+          foreach ($path in $paths) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing local launcher: $path"
+            }
+          }
+          $entry = Get-Content -Raw -LiteralPath '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
+          if ($entry -notmatch 'projects\\kunming\\local_tools\\LocalBuild.ps1') {
+            throw 'Root launcher does not call the Kunming local build.'
           }
 
       - name: Build live ASF selected-product plan
@@ -133,5 +154,6 @@ jobs:
             projects/kunming/metadata/selected_products.json
             projects/kunming/metadata/resolved_aoi.json
             projects/kunming/metadata/resolved_aoi.geojson
+            projects/kunming/metadata/runtime_source.json
             projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson
           if-no-files-found: error
