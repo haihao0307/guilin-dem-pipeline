@@ -1,67 +1,88 @@
-# Kunming DEM v0.1 strict 12.5 m download and mosaic task
+# Kunming Cuihu 20000 km² ASF RTC 12.5 m output-grid DEM task
 
-## Branch
+## Branch and pull request policy
 
-`project/kunming-dem-v001`
+Work only on `project/kunming-dem-v001` and keep PR #20 open and Draft.
 
-## Target
-
-`integration/ecology-v040`
+Do not merge, close, retarget, force push, rewrite history, or modify `main`, `gh-pages`, or `integration/ecology-v040`.
 
 ## Fixed AOI
 
-- Center: 昆明翠湖
-- WGS84 center: 102.70228 E, 25.05042 N
-- Shape: projected square
-- Area: 20,000 km²
-- Side length: 141,421.356237 m
-- Project CRS: EPSG:32648
-- Output grid spacing: 12.5 m
+Use `projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson` as the authoritative AOI.
 
-The checked-in AOI GeoJSON is authoritative. The projected square area and center containment must be verified before acquisition.
+- Center: Kunming Cuihu
+- WGS84 center: `102.70228 E, 25.05042 N`
+- Requested area: exactly `20000.0 km²`
+- Requested side length: `141421.356237 m`
+- Project CRS: `EPSG:32648`
+- Output grid spacing: `12.5 m`
 
-## Strict source policy
+Verify the projected square area and center containment before searching ASF.
 
-1. Use the established authenticated NASA Earthdata and ASF search path only to locate candidate ALOS PALSAR `RTC_HI_RES` DEM assets.
-2. Download DEM elevation assets ending in `.dem.tif` or `_dem.tif`, together with the matching metadata needed to establish source lineage, footprint, CRS, vertical reference, original source DEM and pixel spacing.
-3. A 12.5 m output pixel grid alone does not qualify the source. Read the package metadata, XML and README. Accept a candidate only when its original or effective source DEM horizontal resolution is 12.5 m or finer.
-4. Reject any RTC reference DEM resampled from SRTM, Copernicus or another coarser DEM. Do not use a reference-only ancillary DEM as the final standalone elevation source when its lineage is coarser than 12.5 m.
-5. Preserve every accepted original source file without modification and record URL, granule, byte count and SHA-256 checksum.
-6. A NASA Earthdata bearer token must be supplied through the existing secret or local token mechanism. Never commit credentials.
-7. Do not download, generate, test or publish Copernicus GLO-30, Mapzen, AWS Terrain Tiles, SRTM preview mosaics or any other approximately 30 m fallback.
-8. Do not upsample a coarser source and label it 12.5 m.
-9. If verified 12.5 m-or-finer source acquisition cannot complete, fail closed and report the exact product, licensing, credential or request blocker. Do not create a substitute mosaic.
-10. Do not use Chinese commercial download sites or unverified mirrors.
+## Existing production convention
 
-## Required implementation
+Reuse the authenticated Guilin ASF pipeline already stored in this repository:
 
-Work only under `projects/kunming/` and reuse proven repository utilities where appropriate.
+1. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/asf_download_stdlib.py`
+2. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/mosaic_dem.py`
+3. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/Common.ps1`
+4. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/SetEarthdataToken.ps1`
+5. `07_SET_EARTHDATA_TOKEN_NO_FLASH.cmd`
+6. the already authenticated Windows Chrome session workflow under `C:\HaihaoDEM\ASF_v104_local`
 
-Required outputs:
+Use the repository's established product label:
 
-- `aoi/kunming_cuihu_20000km2_square.geojson`;
-- deterministic AOI derivation and validation;
-- source search plan listing all selected products and approximate AOI coverage;
-- resumable authenticated download;
-- accepted 12.5 m-or-finer DEM source assets and source metadata;
-- source manifest and SHA-256 checksums;
-- exact-AOI mosaic in EPSG:32648 with 12.5 m output spacing;
-- Cloud Optimized GeoTIFF output;
-- coverage, NoData, overlap, seam and extent QA;
-- source and mosaic elevation statistics;
-- `HANDOFF_KUNMING_DEM_V001.md`.
+`12.5米输出像元的ASF RTC参考DEM`
 
-## Mosaic rules
+Keep `native12_5mSurveyClaim=false`. The `12.5 m` value records the output pixel spacing used by the production pipeline.
 
-- Use the checked-in square AOI as the clip boundary.
-- Keep all source rasters traceable through the manifest.
-- Use a single aligned EPSG:32648 grid with 12.5 m pixel spacing.
-- Do not silently fill uncovered AOI cells from another dataset.
-- Do not declare completion below 99.9% valid AOI coverage. Any remaining gap must stop the build and be listed by area and location.
-- Validate the final COG, dimensions, transform, bounds, data type, NoData value, elevation range and checksum.
+Do not introduce TanDEM-X procurement, commercial-license applications, Copernicus GLO-30, Mapzen, AWS Terrain Tiles, SRTM preview products, synthetic terrain, or any 30 m final fallback into this task.
+
+## Authentication and execution
+
+The production download must run in the user's Windows environment because that environment already contains the authenticated ASF access state.
+
+Supported credential paths are:
+
+1. `EARTHDATA_TOKEN` already present in the process environment.
+2. Windows DPAPI file `%APPDATA%\HaihaoDEM\earthdata-token.dpapi`, loaded through the existing `Load-EarthdataToken` implementation.
+3. The already logged-in ASF Chrome session and its existing local session downloader.
+
+Never commit a password, token, cookie, Chrome profile, or decrypted credential.
+
+Do not request the user's password again while either the DPAPI token or the authenticated Chrome session remains usable.
+
+A cloud Codex checkout that cannot see the user's Windows credential state must prepare and validate the scripts, then report the local execution requirement. It must not replace the source with a public 30 m product.
+
+## Required project workspace
+
+Complete the implementation under `projects/kunming/` with at least:
+
+1. `README.md`
+2. `config/task_config.json`
+3. `config/existing_five_manifest.json`
+4. `metadata/resolved_aoi.json`
+5. `local_tools/LocalBuild.ps1`
+6. `local_tools/RUN_KUNMING_ASF_12_5M_KEEP_OPEN.cmd`
+7. source manifest, selected-product plan, checksums, QA report and handoff
+
+The local build must use the existing ASF SearchAPI planner, authenticated resumable downloader, source preservation and `*.dem.tif` extraction.
+
+## Download and mosaic
+
+1. Search `ALOS PALSAR` with processing level `RTC_HI_RES` over the fixed AOI plus the configured retrieval buffer.
+2. Deduplicate by path and frame and select enough products to meet the configured AOI coverage target.
+3. Preserve search response, selected products, original DEM assets, metadata XML or archives, byte counts and SHA-256 hashes.
+4. Extract only `*.dem.tif` and `*_dem.tif`. Exclude polarization, incidence, layover and shadow rasters.
+5. Resume partial downloads and validate TIFF or archive signatures.
+6. Mosaic into one aligned `EPSG:32648` grid at `12.5 m` spacing.
+7. Use median overlap reduction and retain source-count and fill-class rasters.
+8. Clip to the authoritative square AOI and build a COG.
+9. Record coverage, NoData, overlap, fill class, elevation statistics, raster bounds, dimensions, CRS, pixel spacing and checksums.
+10. Fail closed when the authenticated download or coverage gate fails. Do not switch to a 30 m source.
 
 ## Stop condition
 
-Stop immediately after the verified 12.5 m-or-finer source download, exact-AOI mosaic COG, minimal QA reports, checksums and handoff are complete.
+Stop after the real ASF source download, exact-AOI mosaic COG, source-count raster, fill-class raster, QA, checksums and `HANDOFF_KUNMING_DEM_V001.md` are complete.
 
-Do not build a 30 m preview, hillshade website, ecology, agriculture, seasons, historical reconstruction, future core terrain or a public site. Keep the PR open and Draft. Do not merge it.
+Do not continue into ecology, agriculture, historical reconstruction, GAEA processing, a detailed core, browser terrain work or public deployment in this task.
