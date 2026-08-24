@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.0.1",
   "project": {
     "id": "wenzhou-qingjiang-dem-v001",
     "name": "Wenzhou Qingjiang 22000 km2 square 12.5 m ASF DEM download",
@@ -30,11 +30,12 @@
   "search": {
     "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
     "maxResults": 1000,
-    "minimumCoverageFraction": 0.999,
+    "minimumCoverageFraction": 0.95,
     "maxSelectedProducts": 96,
     "gridSize": 320,
     "deduplicateByPathFrame": true,
-    "initialCoverageFromExistingFive": false
+    "initialCoverageFromExistingFive": false,
+    "coveragePolicy": "Select real RTC_HI_RES footprints for complete land and island coverage; offshore cells are classified later by the marine mask."
   },
   "download": {
     "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
