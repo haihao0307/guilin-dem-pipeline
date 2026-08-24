@@ -1,0 +1,151 @@
+name: Download Wenzhou Qingjiang 12.5 m ASF DEM sources
+
+on:
+  push:
+    branches:
+      - project/wenzhou-qingjiang-22000km2-dem-v001
+    paths:
+      - .github/workflows/wenzhou-qingjiang-12m5-download.yml
+      - projects/wenzhou/aoi/**
+      - projects/wenzhou/config/**
+      - projects/wenzhou/metadata/resolved_aoi.json
+  workflow_dispatch:
+
+concurrency:
+  group: wenzhou-qingjiang-12m5-download
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout Wenzhou branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Search and download only the 12.5 m ASF DEM sources
+        id: download
+        shell: bash
+        run: |
+          set +e
+          ROOT="$GITHUB_WORKSPACE/projects/wenzhou"
+          CONFIG="$ROOT/config/asf_download_config.json"
+          DOWNLOADER="$GITHUB_WORKSPACE/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/asf_download_stdlib.py"
+          mkdir -p "$ROOT/metadata" "$ROOT/reports" "$ROOT/logs" "$ROOT/data/raw/dem" "$ROOT/data/raw/archives" "$ROOT/data/raw/metadata"
+
+          python "$DOWNLOADER" --config "$CONFIG" --root "$ROOT" --plan-only 2>&1 | tee "$ROOT/logs/asf_plan.log"
+          PLAN_RC=${PIPESTATUS[0]}
+          DOWNLOAD_RC=99
+          TOKEN_PRESENT=false
+
+          if [ -n "$EARTHDATA_TOKEN" ]; then
+            TOKEN_PRESENT=true
+          fi
+
+          if [ "$PLAN_RC" -eq 0 ] && [ "$TOKEN_PRESENT" = true ]; then
+            python "$DOWNLOADER" --config "$CONFIG" --root "$ROOT" 2>&1 | tee "$ROOT/logs/asf_download.log"
+            DOWNLOAD_RC=${PIPESTATUS[0]}
+          elif [ "$PLAN_RC" -eq 0 ]; then
+            DOWNLOAD_RC=20
+            echo "EARTHDATA_TOKEN is absent; authenticated 12.5 m download cannot start." | tee "$ROOT/logs/asf_download.log"
+          else
+            DOWNLOAD_RC=21
+            echo "ASF search plan failed; authenticated download was not attempted." | tee "$ROOT/logs/asf_download.log"
+          fi
+
+          export PLAN_RC DOWNLOAD_RC TOKEN_PRESENT ROOT
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          root = Path(os.environ['ROOT'])
+          plan_rc = int(os.environ['PLAN_RC'])
+          download_rc = int(os.environ['DOWNLOAD_RC'])
+          token_present = os.environ['TOKEN_PRESENT'].lower() == 'true'
+          dem_files = sorted((root / 'data' / 'raw' / 'dem').glob('*'))
+          dem_files = [p for p in dem_files if p.is_file() and p.stat().st_size > 0]
+          payload = {
+              'generatedAt': datetime.now(timezone.utc).isoformat(),
+              'status': 'download_complete' if download_rc == 0 and dem_files else 'blocked',
+              'resolutionMeters': 12.5,
+              'planExitCode': plan_rc,
+              'downloadExitCode': download_rc,
+              'earthdataTokenPresent': token_present,
+              'downloadedDemFileCount': len(dem_files),
+              'downloadedDemBytes': sum(p.stat().st_size for p in dem_files),
+              'downloadedDemFiles': [str(p.relative_to(root)) for p in dem_files],
+              'requiredCredential': None if token_present else 'EARTHDATA_TOKEN',
+              'fallbackUsed': False
+          }
+          (root / 'reports' / 'GITHUB_ACTIONS_DOWNLOAD_STATUS.json').write_text(
+              json.dumps(payload, indent=2, ensure_ascii=False) + '\n', encoding='utf-8'
+          )
+          if payload['status'] != 'download_complete':
+              (root / 'reports' / 'BLOCKED_DOWNLOAD.json').write_text(
+                  json.dumps(payload, indent=2, ensure_ascii=False) + '\n', encoding='utf-8'
+              )
+          PY
+
+          if [ "$DOWNLOAD_RC" -ne 0 ]; then
+            exit "$DOWNLOAD_RC"
+          fi
+
+      - name: Upload ASF search, manifests and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: wenzhou-qingjiang-12m5-download-records
+          path: |
+            projects/wenzhou/metadata/**
+            projects/wenzhou/reports/**
+            projects/wenzhou/logs/**
+            projects/wenzhou/data/raw/metadata/**
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
+
+      - name: Upload downloaded 12.5 m DEM source files
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: wenzhou-qingjiang-12m5-source-dem
+          path: |
+            projects/wenzhou/data/raw/dem/**
+            projects/wenzhou/data/raw/archives/**
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
+
+      - name: Commit lightweight download records
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for path in \
+            projects/wenzhou/metadata/asf_search_results_jsonlite2.json \
+            projects/wenzhou/metadata/selected_products.json \
+            projects/wenzhou/metadata/source_manifest.json \
+            projects/wenzhou/metadata/runtime_source.json \
+            projects/wenzhou/reports/GITHUB_ACTIONS_DOWNLOAD_STATUS.json \
+            projects/wenzhou/reports/BLOCKED_DOWNLOAD.json; do
+            if [ -f "$path" ]; then git add -f -- "$path"; fi
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m "Record Wenzhou 12.5 m ASF download run [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
