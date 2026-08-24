@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Use the repository's established NASA ASF DAAC workflow to search, download, preserve and mosaic ALOS PALSAR `RTC_HI_RES` ancillary DEM assets for DEM production projects such as Guilin, Kunming and Wenzhou.
+Use the repository's established NASA ASF DAAC workflow to search, download, preserve and mosaic ALOS PALSAR `RTC_HI_RES` ancillary DEM assets for projects such as Guilin, Kunming and Wenzhou.
 
 ## Product identity
 
@@ -10,156 +10,112 @@ The canonical production label is:
 
 `12.5米输出像元的ASF RTC参考DEM`
 
-The pipeline writes a `12.5 m` output grid and keeps:
+The pipeline writes a `12.5 m` output grid and retains:
 
-- `native12_5mSurveyClaim=false`
-- original source products
-- search response and selected-product plan
-- source URLs and product IDs
-- metadata XML or downloaded archives
-- byte counts and SHA-256 hashes
-- source-count and fill-class rasters
-- coverage and elevation QA
+1. `native12_5mSurveyClaim=false`
+2. original source packages and extracted DEM files
+3. ASF search response and selected product plan
+4. source URLs and product IDs
+5. metadata, byte counts and SHA-256 hashes
+6. source count and fill class rasters
+7. coverage and elevation QA
 
-Do not rename this product as a native 12.5 m survey DEM.
+Do not label this product as a native 12.5 m survey DEM.
 
 ## Approved authentication paths
 
-Run authenticated downloads in the user's Windows environment. Use the first available path:
+Authenticated transfers run in the user's Windows environment. Use the first available path:
 
 1. `EARTHDATA_TOKEN` already present in the process environment.
-2. `%APPDATA%\HaihaoDEM\earthdata-token.dpapi`, decrypted only through the existing Windows DPAPI loader in `Common.ps1`.
-3. The existing authenticated ASF Chrome session under `C:\HaihaoDEM\ASF_v104_local`.
+2. `%APPDATA%\HaihaoDEM\earthdata-token.dpapi`, decrypted only by the existing Windows DPAPI loader.
+3. The running Chrome profile that already displays the authenticated ASF `Welcome` state.
 
-Credentials stay local. Never commit a password, token, cookie, browser profile or decrypted credential.
+Credentials remain local. Never commit a password, token, cookie, browser profile or decrypted credential.
 
-Do not ask the user to send the ASF password again while the saved DPAPI token or the logged-in Chrome session remains usable.
+Do not ask the user to send the ASF password again while the saved DPAPI token or authenticated Chrome session remains usable.
 
-A cloud Codex environment cannot inherit Windows DPAPI state or the local Chrome profile. Codex must prepare and validate the project configuration and local runner, then leave the authenticated transfer to the Windows runner. It must not use a public 30 m replacement.
+A cloud Codex checkout cannot inherit Windows DPAPI state or the user's local Chrome profile. Cloud jobs perform code checks and ASF planning. Real authenticated transfer is handed to the Windows launcher. A public 30 m substitute is prohibited.
 
-## Existing reusable implementation
+## Reusable repository implementation
 
-Reuse these files:
+Use these shared files:
 
-- `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/asf_download_stdlib.py`
-- `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/mosaic_dem.py`
-- `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/Common.ps1`
-- `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/SetEarthdataToken.ps1`
-- `07_SET_EARTHDATA_TOKEN_NO_FLASH.cmd`
+1. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/asf_download_stdlib.py`
+2. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/mosaic_dem.py`
+3. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/Common.ps1`
+4. `DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/local_tools/SetEarthdataToken.ps1`
+5. `tools/asf-local/InvokeChromeSessionDownload.ps1`
+6. `tools/asf-local/RepairChromeSessionDownloader.ps1`
+7. `07_SET_EARTHDATA_TOKEN_NO_FLASH.cmd`
 
-The Python downloader already provides:
+The Python downloader provides ASF SearchAPI planning, path and frame deduplication, AOI sample coverage selection, bearer authorization across redirects, resumable `.part` transfers, TIFF and archive signature validation, direct DEM transfer, archive extraction, metadata transfer, SHA-256 recording and source manifest generation.
 
-- ASF SearchAPI planning
-- path and frame deduplication
-- AOI sample-coverage selection
-- bearer authorization across redirects
-- resumable `.part` downloads with HTTP Range
-- TIFF and archive signature validation
-- direct `*.dem.tif` transfer
-- archive fallback and DEM extraction
-- metadata transfer
-- SHA-256 recording
-- source manifest generation
+The mosaic implementation provides CRS inspection, reprojection, aligned 12.5 m output grids, median overlap reduction, source count and fill class rasters, configurable gap treatment, COG generation, overviews, coverage statistics, elevation statistics and output checksums.
 
-The mosaic implementation already provides:
+## Authenticated Chrome session downloader
 
-- CRS inspection
-- reprojection to the project CRS
-- aligned 12.5 m output grid
-- median overlap reduction
-- source-count raster
-- fill-class raster
-- configurable small-gap treatment
-- COG generation
-- overviews
-- coverage and elevation statistics
-- output checksums
+The production helper is:
 
-## Chrome session contract
+`tools/asf-local/InvokeChromeSessionDownload.ps1`
 
-The local Chrome-session implementation is expected at:
+It receives a verified `selected_products.json`, discovers the running Chrome profile, opens each selected ASF archive URL in that authenticated profile, monitors the known download directories, waits for stable completed files, validates ZIP or TIFF signatures, moves the source packages into the project work directory, extracts only `*.dem.tif` and `*_dem.tif`, computes SHA-256 values and writes `chrome_session_download_manifest.json`.
+
+The helper does not read account passwords, tokens, cookies or the Chrome password store. Chrome may display one permission prompt for multiple downloads or file retention. One approval is sufficient when that prompt appears.
+
+The legacy local script remains at:
 
 `C:\HaihaoDEM\ASF_v104_local\scripts\run_chrome_session_download.ps1`
 
-It reuses a browser session that already displays the ASF `Welcome` state. It does not read the account password, token or Chrome password store. Chrome may request one confirmation for multiple downloads or file retention.
+Its previous v1.0.7 run stopped on the first task because PowerShell treated a single object as a scalar and `.Count` was unavailable. `RepairChromeSessionDownloader.ps1` performs an AST based, backed up repair by wrapping unguarded Count expressions with `@(...)` and validating the revised script before writing it. New project runners use the repository production helper directly, so the legacy script is no longer required for the main path.
 
-Project runners expose:
+## PowerShell collection rule
 
-- `ASF_CHROME_TASK_FILE`
-- `ASF_PROJECT_WORK_ROOT`
-- `ASF_PROJECT_ID`
-
-When the Chrome script declares `TaskFile` or `OutputRoot` parameters, pass the same values explicitly.
-
-PowerShell values returned from JSON, COM, browser windows or process queries may collapse to a scalar when one item is returned. Before reading `.Count`, always coerce the value to an array:
+PowerShell may collapse a one item pipeline result into a scalar. Before reading `.Count`, coerce the value to an array:
 
 ```powershell
 $count = @($value).Count
 ```
 
-Use the same rule for task lists, browser targets, downloaded files and selected products. This prevents the previously observed strict-mode error that reported a missing `Count` property on the first download item.
+Apply this rule to selected products, task lists, Chrome processes, download candidates, archive entries and DEM files.
 
-## Per-project files
+## Per project contract
 
-Each project must contain:
+Each project contains:
 
-- authoritative AOI GeoJSON
-- `config/task_config.json`
-- `config/existing_five_manifest.json`
-- `metadata/resolved_aoi.json`
-- Windows keep-open launcher
-- Windows local build script
-- final handoff
+1. authoritative AOI GeoJSON
+2. project task configuration
+3. existing source manifest
+4. resolved AOI compatibility JSON
+5. Windows keep open launcher
+6. Windows local build or download script
+7. source and result handoff
 
-The compatibility `resolved_aoi.json` must contain:
+The compatibility `resolved_aoi.json` includes:
 
-- `status: exact_boundary_resolved`
-- `final.wgs84Polygon`
-- `search.envelopeWkt`
+1. `status: exact_boundary_resolved`
+2. `final.wgs84Polygon`
+3. `search.envelopeWkt`
 
-This allows reuse of the proven downloader and mosaic scripts without hardcoding a new project into the Guilin source files.
+This allows the proven shared downloader and mosaic scripts to be reused without hardcoding each new project into the Guilin source.
 
 ## Standard execution
 
-1. Copy the project config and resolved AOI into a local work directory under `C:\HaihaoDEM`.
-2. Create or reuse the Python virtual environment from the shared requirements file.
+1. Copy project configuration and resolved AOI into a local work directory under `C:\HaihaoDEM`.
+2. Create or reuse the Python environment from the shared requirements file.
 3. Run ASF planning with `--plan-only`.
-4. Load the saved local credential or invoke the logged-in Chrome session route.
+4. Load the saved DPAPI token or invoke `InvokeChromeSessionDownload.ps1` against the authenticated Chrome profile.
 5. Download and preserve the selected sources.
-6. Confirm that genuine `*.dem.tif` or `*_dem.tif` files exist.
-7. Run `mosaic_dem.py` with the project config.
-8. Verify the COG, source-count raster, fill-class raster, QA report and hashes.
+6. Confirm genuine `*.dem.tif` or `*_dem.tif` files.
+7. Run the project mosaic when the phase includes mosaic construction.
+8. Verify COG outputs, masks, QA and hashes.
 9. Write the handoff and stop.
 
 ## Prohibited substitutions
 
-For a project configured as strict ASF output, do not switch to:
+For a strict ASF project, do not switch to Copernicus GLO-30, Mapzen, AWS Terrain Tiles, SRTM, ASTER, synthetic terrain, an upsampled public fallback, a mocked raster or a plan only result.
 
-- Copernicus GLO-30
-- Mapzen or AWS Terrain Tiles
-- SRTM or ASTER 30 m
-- synthetic terrain
-- an upsampled public fallback
-- a plan-only or mocked raster result
-
-If authentication, source transfer or coverage fails, record the precise blocker and retain resumable state.
+When authentication, source transfer or coverage fails, record the precise blocker and retain resumable state.
 
 ## Completion gate
 
-Completion requires real files on disk and file-based QA. A source plan, source-code assertion, skipped job or status message cannot satisfy the gate.
-
-At minimum report:
-
-- project AOI
-- selected product count
-- source DEM file count
-- final COG path
-- file size
-- SHA-256
-- CRS
-- pixel spacing
-- raster dimensions and bounds
-- valid coverage fraction
-- NoData and fill counts
-- elevation statistics
-- credential route used, without exposing credential contents
+Completion requires real files on disk and file based QA. At minimum report the AOI, selected product count, source DEM file count, final COG path, file size, SHA-256, CRS, pixel spacing, raster dimensions and bounds, valid coverage fraction, NoData and fill counts, elevation statistics, and the credential route used without exposing credential contents.
