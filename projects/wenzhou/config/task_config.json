@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": {
+    "id": "wenzhou-qingjiang-dem-v001",
+    "name": "温州清江镇中心 22000 平方公里正方形 DEM",
+    "taskMode": "standalone_fixed_square_mosaic",
+    "targetCrs": "EPSG:32651",
+    "targetPixelSpacingMeters": 12.5,
+    "accuracyLabel": "12.5 米输出像元的 ASF RTC 参考 DEM",
+    "lineagePolicy": "保留每张源 DEM、产品 ID、下载记录、原始元数据、SHA-256、覆盖计数、海陆掩膜与填补标记。不得将 12.5 米输出像元表述为原生 12.5 米测绘高程。"
+  },
+  "aoi": {
+    "geoJson": "projects/wenzhou/aoi/wenzhou.geojson",
+    "center": {
+      "name": "Qingjiang Town, Yueqing, Wenzhou",
+      "longitude": 121.101666666667,
+      "latitude": 28.275,
+      "source": "Wikidata Q14065537"
+    },
+    "constructionCrs": "EPSG:32651",
+    "requestedAreaKm2": 22000.0,
+    "requestedSideMeters": 148323.969742,
+    "requestedBoundsUtmMeters": [
+      239646.167823,
+      3054965.625915,
+      387970.137565,
+      3203289.595657
+    ],
+    "retrievalBufferMeters": 3000.0
+  },
+  "grid": {
+    "pixelSpacingMeters": 12.5,
+    "widthPixels": 11866,
+    "heightPixels": 11866,
+    "sideMeters": 148325.0,
+    "areaKm2": 22000.305625,
+    "snapPolicy": "centered_outward",
+    "fullCoverageRequired": true
+  },
+  "source": {
+    "provider": "NASA ASF DAAC",
+    "dataset": "ALOS PALSAR",
+    "processingLevel": [
+      "RTC_HI_RES"
+    ],
+    "classification": "ASF_RTC_12_5m_reference_dem",
+    "expectedAncillaryPatterns": [
+      "*.dem.tif",
+      "*_dem.tif"
+    ],
+    "excludedRasterPatterns": [
+      "*_HH.tif",
+      "*_HV.tif",
+      "*_VH.tif",
+      "*_VV.tif",
+      "*.inc_map.tif",
+      "*.ls_map.tif"
+    ],
+    "allowThirtyMeterFallback": false,
+    "failClosedWithoutAuthenticatedSource": true
+  },
+  "search": {
+    "endpoint": "https://api.daac.asf.alaska.edu/services/search/param",
+    "maxResults": 1000,
+    "minimumSceneFootprintCoverageFraction": 0.999,
+    "maxSelectedProducts": 96,
+    "gridSize": 320,
+    "deduplicateByPathFrame": true
+  },
+  "download": {
+    "tokenEnvironmentVariable": "EARTHDATA_TOKEN",
+    "resumeExistingFiles": true,
+    "downloadMetadataXml": true,
+    "preferredTransfer": "direct_additional_dem_urls",
+    "fallbackTransfer": "default_product_archive",
+    "timeoutSeconds": 1800,
+    "retryCount": 6,
+    "preserveArchives": true,
+    "writeSha256": true
+  },
+  "processing": {
+    "outputCrs": "EPSG:32651",
+    "outputPixelSpacingMeters": 12.5,
+    "resampling": "bilinear",
+    "overlapReducer": "median",
+    "nodata": -32768.0,
+    "compression": "DEFLATE",
+    "blockSize": 512,
+    "buildOverviews": true,
+    "overviewLevels": [
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "landMinimumValidFraction": 0.9999,
+    "allowTerrestrialGapFill": false,
+    "failOnAnyUnclassifiedNoData": true
+  },
+  "marine": {
+    "mode": "sea_level_surface",
+    "seaElevationMeters": 0.0,
+    "requireTraceableCoastlineMask": true,
+    "keepMarineMask": true,
+    "keepOriginalNoDataMask": true,
+    "doNotDescribeAsBathymetry": true
+  },
+  "outputs": {
+    "finalDem": "projects/wenzhou/outputs/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "sourceCount": "projects/wenzhou/outputs/WENZHOU_QINGJIANG_source_count_COG.tif",
+    "marineMask": "projects/wenzhou/outputs/WENZHOU_QINGJIANG_marine_mask_COG.tif",
+    "sourceNoDataMask": "projects/wenzhou/outputs/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif",
+    "downloadPlan": "projects/wenzhou/metadata/selected_products.json",
+    "sourceManifest": "projects/wenzhou/metadata/source_manifest.json",
+    "qaReport": "projects/wenzhou/reports/QA_REPORT.json",
+    "preview": "projects/wenzhou/reports/DEM_PREVIEW.png",
+    "handoff": "projects/wenzhou/HANDOFF_WENZHOU_QINGJIANG_DEM_V001.md"
+  }
+}
