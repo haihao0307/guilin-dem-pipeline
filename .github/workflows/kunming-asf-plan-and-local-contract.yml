@@ -25,6 +25,9 @@ jobs:
   validate-and-plan:
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
 
     steps:
       - name: Checkout
@@ -111,7 +114,7 @@ jobs:
 
           path = Path('projects/kunming/metadata/selected_products.json')
           plan = json.loads(path.read_text(encoding='utf-8'))
-          diagnostics = plan['coverageDiagnostics']
+          diagnostics = plan['searchDiagnostics']
           selected = plan['selectedNewProducts']
           assert selected, 'ASF plan selected zero products'
           assert diagnostics['selectedCoverageFraction'] >= diagnostics['targetCoverageFraction']
@@ -126,8 +129,9 @@ jobs:
         with:
           name: kunming-asf-selected-product-plan
           path: |
+            projects/kunming/metadata/asf_search_results_jsonlite2.json
             projects/kunming/metadata/selected_products.json
-            projects/kunming/metadata/source_manifest.json
             projects/kunming/metadata/resolved_aoi.json
+            projects/kunming/metadata/resolved_aoi.geojson
             projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson
           if-no-files-found: error
