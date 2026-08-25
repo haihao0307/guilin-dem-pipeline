@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Build independent 100 m coastal bathymetry, TID and uncertainty COG layers."""
+"""Build full-buffer and truth-AOI GEBCO bathymetry quality layers.
+
+The official GEBCO subset is preserved across the entire buffered coastal
+forcing domain. The archived 12.5 m land DEM and its marine mask are never
+modified. A second bathymetry layer is clipped to the archived marine mask for
+coastline comparison and conflict QA.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +29,31 @@ DERIVED_ROOT = REPO_ROOT / "projects/wenzhou/coastal/data/derived"
 QA_PATH = REPO_ROOT / "projects/wenzhou/coastal/reports/GEBCO_2026_QA.json"
 
 DIRECT_TID_CODES = set(range(10, 18))
+INDIRECT_TID_CODES = set(range(40, 49))
+UNKNOWN_TID_CODES = {70, 71, 72}
+TID_CODE_DEFINITIONS = {
+    0: "land",
+    10: "singlebeam",
+    11: "multibeam",
+    12: "seismic",
+    13: "isolated_sounding",
+    14: "enc_sounding",
+    15: "lidar",
+    16: "optical_light_sensor",
+    17: "combination_of_direct_measurements",
+    40: "satellite_gravity_guided_prediction",
+    41: "computer_algorithm_interpolation",
+    42: "digital_bathymetric_contours",
+    43: "digital_enc_bathymetric_contours",
+    44: "mixed_measured_and_derived_gridded_bathymetry",
+    45: "flight_gravity_prediction",
+    46: "grounded_iceberg_draft_estimate",
+    47: "grounded_argo_float",
+    48: "animal_borne_logger",
+    70: "pre_generated_mixed_source_grid",
+    71: "unknown_source",
+    72: "steering_point",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -194,6 +225,40 @@ def inspect_output(path: Path) -> dict[str, Any]:
         }
 
 
+def stats(values: np.ndarray) -> dict[str, Any]:
+    if values.size == 0:
+        return {
+            "count": 0,
+            "minimumMeters": None,
+            "maximumMeters": None,
+            "percentilesMeters": {},
+        }
+    return {
+        "count": int(values.size),
+        "minimumMeters": float(np.min(values)),
+        "maximumMeters": float(np.max(values)),
+        "meanMeters": float(np.mean(values)),
+        "percentilesMeters": {
+            "p01": float(np.percentile(values, 1)),
+            "p05": float(np.percentile(values, 5)),
+            "p50": float(np.percentile(values, 50)),
+            "p95": float(np.percentile(values, 95)),
+            "p99": float(np.percentile(values, 99)),
+        },
+    }
+
+
+def histogram(values: np.ndarray) -> dict[str, Any]:
+    counts = Counter(int(value) for value in values.tolist())
+    return {
+        str(code): {
+            "count": count,
+            "definition": TID_CODE_DEFINITIONS.get(code, "unrecognised_code"),
+        }
+        for code, count in sorted(counts.items())
+    }
+
+
 def main() -> int:
     try:
         from rasterio.enums import Resampling
@@ -202,7 +267,7 @@ def main() -> int:
         return 2
 
     report: dict[str, Any] = {
-        "schema": "wenzhou_gebco_2026_qa@1.0.0",
+        "schema": "wenzhou_gebco_2026_qa@1.1.0",
         "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
         "passed": False,
     }
@@ -243,24 +308,49 @@ def main() -> int:
             255.0,
             Resampling.nearest,
         )
-        tid = np.where(np.isfinite(tid_float), np.rint(tid_float), 255).astype("uint8")
+        tid_valid_float = np.isfinite(tid_float) & (tid_float != 255.0)
+        tid = np.full((height, width), 255, dtype="uint8")
+        tid[tid_valid_float] = np.rint(tid_float[tid_valid_float]).astype("uint8")
         marine = reproject_marine_mask(marine_source, transform, width, height)
 
-        valid_bathy = bathy != -99999.0
-        marine_cells = marine == 1
-        unknown_marine_mask = marine == 255
+        valid_bathy = np.isfinite(bathy) & (bathy != -99999.0)
+        valid_tid = tid != 255
+        full_coverage = valid_bathy & valid_tid
+        truth_marine = marine == 1
+        truth_land = marine == 0
+        truth_unknown = marine == 255
 
-        coastal_bathy = np.where(marine_cells & valid_bathy, bathy, -99999.0).astype("float32")
-        coastal_tid = np.where(marine_cells, tid, 255).astype("uint8")
-        direct_measurement = np.isin(coastal_tid, list(DIRECT_TID_CODES))
-        uncertainty = np.zeros((height, width), dtype="uint8")
-        uncertainty[marine_cells & (~direct_measurement)] = 1
-        uncertainty[marine_cells & valid_bathy & (bathy > -20.0)] = 1
-        uncertainty[unknown_marine_mask] = 2
+        full_buffer_bathy = np.where(valid_bathy, bathy, -99999.0).astype("float32")
+        full_buffer_tid = np.where(valid_tid, tid, 255).astype("uint8")
+        truth_marine_bathy = np.where(truth_marine & valid_bathy, bathy, -99999.0).astype("float32")
 
-        bathy_path = DERIVED_ROOT / "WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif"
+        conflict = np.full((height, width), 255, dtype="uint8")
+        conflict[truth_land | truth_marine] = 0
+        conflict[truth_marine & valid_bathy & (bathy > 0.0)] = 1
+        conflict[truth_land & valid_bathy & (bathy <= 0.0)] = 2
+
+        seabed_candidate = valid_bathy & (bathy <= 0.0) & valid_tid & (tid != 0)
+        direct = seabed_candidate & np.isin(tid, list(DIRECT_TID_CODES))
+        indirect = seabed_candidate & np.isin(tid, list(INDIRECT_TID_CODES))
+        mixed_unknown = seabed_candidate & (
+            np.isin(tid, list(UNKNOWN_TID_CODES))
+            | (~np.isin(tid, list(DIRECT_TID_CODES | INDIRECT_TID_CODES | {0})))
+        )
+        shallow = seabed_candidate & (bathy > -20.0)
+
+        uncertainty = np.full((height, width), 255, dtype="uint8")
+        uncertainty[direct] = 0
+        uncertainty[indirect] = 1
+        uncertainty[mixed_unknown] = 2
+        uncertainty[shallow] = 3
+        uncertainty[truth_marine & valid_bathy & (bathy > 0.0)] = 4
+        uncertainty[truth_land & valid_bathy & (bathy <= 0.0)] = 5
+
+        full_bathy_path = DERIVED_ROOT / "WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif"
+        truth_marine_path = DERIVED_ROOT / "WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif"
         tid_path = DERIVED_ROOT / "WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif"
         uncertainty_path = DERIVED_ROOT / "WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif"
+        conflict_path = DERIVED_ROOT / "WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif"
 
         common_tags = {
             "SOURCE_DATASET": "GEBCO_2026",
@@ -268,24 +358,46 @@ def main() -> int:
             "MODEL_ALIGNMENT_RESOLUTION": "100 m",
             "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
             "LAND_TRUTH_LFS_OID": config["truthDem"]["lfsOid"],
+            "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
         }
         write_cog(
-            bathy_path,
-            coastal_bathy,
+            full_bathy_path,
+            full_buffer_bathy,
             transform,
             "EPSG:32651",
             -99999.0,
             "average",
-            {**common_tags, "ROLE": "marine_only_bathymetry"},
+            {
+                **common_tags,
+                "ROLE": "full_buffer_gebco_elevation_reference",
+                "LAND_SEA_USE": "apply coastline or wet-dry mask downstream; values remain unmodified",
+            },
+        )
+        write_cog(
+            truth_marine_path,
+            truth_marine_bathy,
+            transform,
+            "EPSG:32651",
+            -99999.0,
+            "average",
+            {
+                **common_tags,
+                "ROLE": "archived_truth_aoi_marine_masked_bathymetry",
+                "MASK_SOURCE": "WENZHOU_QINGJIANG_marine_mask_COG.tif",
+            },
         )
         write_cog(
             tid_path,
-            coastal_tid,
+            full_buffer_tid,
             transform,
             "EPSG:32651",
             255,
             "nearest",
-            {**common_tags, "ROLE": "GEBCO_type_identifier"},
+            {
+                **common_tags,
+                "ROLE": "full_buffer_gebco_type_identifier",
+                "TID_CODES": "0 land; 10-17 direct; 40-48 indirect; 70-72 unknown or mixed",
+            },
         )
         write_cog(
             uncertainty_path,
@@ -296,18 +408,38 @@ def main() -> int:
             "nearest",
             {
                 **common_tags,
-                "ROLE": "vertical_datum_and_source_uncertainty",
-                "VALUES": "0=lower_uncertainty,1=review_required,2=land_sea_mask_unknown,255=nodata",
+                "ROLE": "source_and_vertical_datum_uncertainty",
+                "VALUES": (
+                    "0=direct seabed;1=indirect seabed;2=mixed or unknown seabed;"
+                    "3=shallow datum review;4=truth marine GEBCO positive;"
+                    "5=truth land GEBCO nonpositive;255=not classified"
+                ),
+            },
+        )
+        write_cog(
+            conflict_path,
+            conflict,
+            transform,
+            "EPSG:32651",
+            255,
+            "nearest",
+            {
+                **common_tags,
+                "ROLE": "archived_truth_mask_vs_gebco_conflict",
+                "VALUES": "0=no conflict;1=truth marine GEBCO positive;2=truth land GEBCO nonpositive;255=outside truth mask",
             },
         )
 
-        marine_valid = coastal_bathy != -99999.0
-        marine_values = coastal_bathy[marine_valid]
-        tid_counts = Counter(int(value) for value in coastal_tid[coastal_tid != 255].tolist())
-        anomalous_positive = marine_cells & valid_bathy & (bathy > 0.0)
-        missing_bathy = marine_cells & (~valid_bathy)
-
-        outputs = [inspect_output(path) for path in (bathy_path, tid_path, uncertainty_path)]
+        outputs = [
+            inspect_output(path)
+            for path in (
+                full_bathy_path,
+                truth_marine_path,
+                tid_path,
+                uncertainty_path,
+                conflict_path,
+            )
+        ]
         structure_passed = all(
             item["crs"] == "EPSG:32651"
             and item["resolution"] == [spacing, spacing]
@@ -315,9 +447,27 @@ def main() -> int:
             and item["imageStructure"].get("COMPRESSION") == "DEFLATE"
             for item in outputs
         )
+
+        full_values = bathy[valid_bathy]
+        candidate_values = bathy[seabed_candidate]
+        truth_marine_values = bathy[truth_marine & valid_bathy]
+        positive_truth_marine = truth_marine & valid_bathy & (bathy > 0.0)
+        nonpositive_truth_land = truth_land & valid_bathy & (bathy <= 0.0)
+        open_boundary = np.zeros((height, width), dtype=bool)
+        open_boundary[0, :] = True
+        open_boundary[-1, :] = True
+        open_boundary[:, 0] = True
+        open_boundary[:, -1] = True
+
         report.update(
             {
-                "passed": structure_passed and marine_values.size > 0 and int(missing_bathy.sum()) == 0,
+                "passed": (
+                    structure_passed
+                    and int(valid_bathy.sum()) == width * height
+                    and int(valid_tid.sum()) == width * height
+                    and candidate_values.size > 0
+                    and int((open_boundary & valid_bathy).sum()) == int(open_boundary.sum())
+                ),
                 "parentTruthPreflight": {
                     "passed": preflight["passed"],
                     "truthDemSha256": config["truthDem"]["lfsOid"].removeprefix("sha256:"),
@@ -328,35 +478,39 @@ def main() -> int:
                     "spacingMeters": spacing,
                     "width": width,
                     "height": height,
+                    "cellCount": width * height,
                     "bounds": aligned_bounds,
+                    "fullBufferBathymetryCoveragePercent": 100.0 * float(valid_bathy.sum()) / float(width * height),
+                    "fullBufferTidCoveragePercent": 100.0 * float(valid_tid.sum()) / float(width * height),
+                    "openBoundaryValidCells": int((open_boundary & valid_bathy).sum()),
+                    "openBoundaryCellCount": int(open_boundary.sum()),
                 },
-                "bathymetry": {
-                    "validMarineCells": int(marine_values.size),
-                    "missingMarineCells": int(missing_bathy.sum()),
-                    "anomalousPositiveMarineCells": int(anomalous_positive.sum()),
-                    "minimumMeters": float(np.min(marine_values)) if marine_values.size else None,
-                    "maximumMeters": float(np.max(marine_values)) if marine_values.size else None,
-                    "percentilesMeters": {
-                        "p01": float(np.percentile(marine_values, 1)) if marine_values.size else None,
-                        "p05": float(np.percentile(marine_values, 5)) if marine_values.size else None,
-                        "p50": float(np.percentile(marine_values, 50)) if marine_values.size else None,
-                        "p95": float(np.percentile(marine_values, 95)) if marine_values.size else None,
-                        "p99": float(np.percentile(marine_values, 99)) if marine_values.size else None,
-                    },
+                "fullBufferElevation": stats(full_values),
+                "preliminaryNonpositiveSeabedReference": {
+                    **stats(candidate_values),
+                    "definition": "GEBCO elevation <= 0 m and TID != land; final sea mask pending coastline and wet-dry topology",
                 },
-                "tidHistogram": {str(code): count for code, count in sorted(tid_counts.items())},
-                "sourceQuality": {
-                    "directMeasurementCells": int((marine_cells & direct_measurement).sum()),
-                    "indirectOrInterpolatedCells": int(
-                        (marine_cells & (~direct_measurement) & (coastal_tid != 255)).sum()
-                    ),
-                    "unknownMaskCells": int(unknown_marine_mask.sum()),
+                "truthAoiMarineMaskComparison": {
+                    **stats(truth_marine_values),
+                    "truthMarineCells": int(truth_marine.sum()),
+                    "truthLandCells": int(truth_land.sum()),
+                    "outsideTruthMaskCells": int(truth_unknown.sum()),
+                    "truthMarineGebcoPositiveCells": int(positive_truth_marine.sum()),
+                    "truthLandGebcoNonpositiveCells": int(nonpositive_truth_land.sum()),
+                },
+                "tidHistogramFullBuffer": histogram(tid[valid_tid]),
+                "tidHistogramPreliminarySeabed": histogram(tid[seabed_candidate]),
+                "sourceQualityPreliminarySeabed": {
+                    "directMeasurementCells": int(direct.sum()),
+                    "indirectOrInterpolatedCells": int(indirect.sum()),
+                    "mixedOrUnknownCells": int(mixed_unknown.sum()),
+                    "shallowDatumReviewCells": int(shallow.sum()),
                 },
                 "outputs": outputs,
             }
         )
         if not report["passed"]:
-            report["error"] = "derived_bathymetry_qa_failed"
+            report["error"] = "derived_full_buffer_bathymetry_qa_failed"
     except Exception as exc:
         report["error"] = type(exc).__name__
         report["detail"] = str(exc)
