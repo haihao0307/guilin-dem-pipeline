@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<meta name="color-scheme" content="dark light" />
+<title>昆明 DEM 纯净基线裁切查看器</title>
+<style>
+:root{
+  font-family:Inter,"Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+  --panel:rgba(16,21,23,.93);
+  --text:#eef3f3;
+  --muted:#aebbbb;
+  --accent:#dbe6b7;
+  --border:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#161b1d;color:var(--text)}
+#stage{position:fixed;inset:0;overflow:hidden;cursor:grab;background:linear-gradient(180deg,#242b2e,#121719)}
+#stage.dragging{cursor:grabbing}
+#imageWrap{position:absolute;left:50%;top:50%;transform-origin:0 0;will-change:transform}
+#demImage{display:block;width:568px;height:780px;max-width:none;user-select:none;-webkit-user-drag:none;box-shadow:0 24px 70px rgba(0,0,0,.42);background:#202525}
+#demImage.pixelated{image-rendering:pixelated}
+.panel{position:fixed;left:16px;top:16px;width:min(390px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:17px;border:1px solid var(--border);border-radius:15px;background:var(--panel);backdrop-filter:blur(14px);box-shadow:0 18px 52px rgba(0,0,0,.28)}
+h1{font-size:18px;line-height:1.35;margin:0 0 6px}.sub{font-size:12px;line-height:1.55;color:var(--muted)}
+.section{margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,.1)}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+button{border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 7px;background:#253034;color:#e5ecec;cursor:pointer;font-size:12px}
+button:hover{background:#344247}button.active{background:var(--accent);color:#172018;border-color:var(--accent);font-weight:700}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{padding:9px;border-radius:9px;background:rgba(255,255,255,.05)}
+.stat b{display:block;font-size:12px;color:#fff;margin-bottom:3px}.stat span{font-size:11px;color:#aab6b7;line-height:1.35}
+.note{font-size:11px;line-height:1.6;color:#b6c1c2}.truth{color:var(--accent)}
+.status{position:fixed;right:13px;bottom:12px;max-width:min(70vw,850px);padding:8px 11px;border-radius:9px;background:rgba(16,23,26,.8);font-size:11px;color:#eef4f4;pointer-events:none}
+.scaleBox{display:flex;align-items:center;gap:10px}.scaleBox input{flex:1;accent-color:var(--accent)}.scaleBox output{min-width:52px;text-align:right;font-size:12px;color:var(--accent)}
+@media(max-width:720px){.panel{left:8px;top:8px;width:calc(100vw - 16px);max-height:52vh;padding:13px}.status{left:8px;right:auto;max-width:calc(100vw - 16px)}}
+</style>
+</head>
+<body>
+<div id="stage" aria-label="昆明 DEM 裁切预览画布">
+  <div id="imageWrap"><img id="demImage" src="assets/KUNMING_BASELINE_RESET_CROP_PREVIEW.png" width="568" height="780" alt="昆明 DEM 纯净基线裁切预览" draggable="false" /></div>
+</div>
+<aside class="panel">
+  <h1>昆明 DEM 纯净基线裁切查看器</h1>
+  <div class="sub">从指定 SHA 的 12.5 米输出网格基线重新开始。当前网页只显示原始裁切预览，不叠加水系、岩石、碎石、侵蚀、等高线或垂直夸张。</div>
+  <div class="section actions">
+    <button id="fit" class="active">适合窗口</button>
+    <button id="actual">原始像素 1:1</button>
+    <button id="reset">复位</button>
+    <button id="smooth" class="active">平滑显示</button>
+    <button id="pixel">像素显示</button>
+    <button id="fullscreen">全屏</button>
+  </div>
+  <div class="section scaleBox">
+    <input id="zoom" type="range" min="10" max="1600" value="100" step="1" aria-label="缩放比例" />
+    <output id="zoomValue">100%</output>
+  </div>
+  <div class="section stats">
+    <div class="stat"><b>12.5 m × 12.5 m</b><span>权威 DEM 输出像元间距</span></div>
+    <div class="stat"><b>5892 × 8095</b><span>裁切后权威栅格尺寸</span></div>
+    <div class="stat"><b>73.650 × 101.1875 km</b><span>裁切地面尺寸</span></div>
+    <div class="stat"><b>7,452.459375 km²</b><span>裁切面积</span></div>
+    <div class="stat"><b>EPSG:32648</b><span>工程坐标系</span></div>
+    <div class="stat"><b>100%</b><span>现有来源计数窗口覆盖率</span></div>
+  </div>
+  <div class="section note"><span class="truth">权威数据规则：</span>主 DEM 必须保持 float32、12.5 米像元、无降采样、无重采样。该 PNG 是未经再次处理的无损视觉预览，不能替代无压缩权威 DEM。</div>
+</aside>
+<div id="status" class="status">正在载入无损预览…</div>
+<script src="app.js?v=1"></script>
+</body>
+</html>
