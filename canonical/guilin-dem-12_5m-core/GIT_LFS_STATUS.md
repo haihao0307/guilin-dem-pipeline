@@ -8,6 +8,6 @@
 
 大小：71398860 字节
 
-`lfs_object_uploaded` 当前仍为 `false`。GitHub 连接器可以提交指针和文本，无法上传 Git LFS 实体对象。需要在持有本地 DEM 文件且已经登录 GitHub 的电脑上执行一次 Git LFS 推送，随后在全新目录执行 `git lfs pull` 并运行 `tools/verify_dem.py`。
+`lfs_object_uploaded` 已为 `true`。GitHub LFS 实体对象已上传，并已通过远端 LFS 批量接口确认可下载；对象 SHA256 与本目录指针一致。随后可在全新目录执行 `git lfs pull` 并运行 `tools/verify_dem.py`。
 
 另外十张源 DEM 的实际字节文件尚未进入当前运行环境，不能伪造为已上传。
