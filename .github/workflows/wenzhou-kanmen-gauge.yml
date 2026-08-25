@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: wenzhou-kanmen-uhslc
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   ingest-kanmen:
@@ -38,6 +38,25 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
+
+      - name: Install station OPeNDAP runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check \
+            'numpy>=2.0,<3' \
+            'pandas>=2.2,<3' \
+            'xarray>=2024.10,<2027' \
+            'pydap>=3.5,<4'
+          python - <<'PY'
+          import numpy, pandas, pydap, xarray
+          print('numpy', numpy.__version__)
+          print('pandas', pandas.__version__)
+          print('pydap', pydap.__version__)
+          print('xarray', xarray.__version__)
+          PY
 
       - name: Validate configuration and script
         shell: bash
@@ -48,7 +67,7 @@ jobs:
           python -m json.tool projects/wenzhou/coastal/config/tide_points_v100.json >/dev/null
           python -m json.tool projects/wenzhou/coastal/config/kanmen_station_metadata_v100.json >/dev/null
 
-      - name: Download and validate official UHSLC Kanmen observations
+      - name: Download and validate official UHSLC Kanmen station record
         shell: bash
         run: |
           set -euo pipefail
@@ -70,6 +89,7 @@ jobs:
           qa = json.loads((root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
           assert acquisition['passed'] is True
           assert qa['passed'] is True
+          assert acquisition['sourceMode'] == 'dedicated station OPeNDAP record'
           assert acquisition['uhslcId'] == 632
           assert acquisition['recordId'] == 6321
           assert acquisition['version'] == 'A'
@@ -82,10 +102,10 @@ jobs:
           assert qa['duplicateTimestampCount'] == 0
           assert qa['unexpectedTimestampCount'] == 0
           assert qa['completenessFraction'] >= 0.95
+          assert len(acquisition['files']) == 5
 
           checked = []
-          for key in ('raw', 'normalized', 'datasetMetadata'):
-              item = acquisition[key]
+          for item in acquisition['files']:
               path = root / item['path']
               assert path.is_file(), path
               digest = hashlib.sha256()
@@ -96,7 +116,11 @@ jobs:
               assert digest.hexdigest() == item['sha256']
               checked.append(item)
 
-          normalized_path = root / acquisition['normalized']['path']
+          normalized_item = next(
+              item for item in acquisition['files']
+              if item['role'] == 'mean_removed_comparison_series'
+          )
+          normalized_path = root / normalized_item['path']
           with normalized_path.open(encoding='utf-8', newline='') as handle:
               rows = list(csv.DictReader(handle))
           assert len(rows) == qa['validSampleCount']
@@ -126,7 +150,7 @@ jobs:
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json \
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json
           test -n "$(git diff --cached --name-only)"
-          git commit -m 'Add verified Kanmen UHSLC observation window [skip kanmen gauge] [skip coastal stage-a]'
+          git commit -m 'Add verified Kanmen UHSLC station window [skip kanmen gauge] [skip coastal stage-a]'
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
 
@@ -149,13 +173,12 @@ jobs:
           assert acquisition['passed'] is True
           assert qa['passed'] is True
           checked = []
-          for key in ('raw', 'normalized', 'datasetMetadata'):
-              item = acquisition[key]
+          for item in acquisition['files']:
               path = root / item['path']
               digest = hashlib.sha256(path.read_bytes()).hexdigest()
               assert path.stat().st_size == item['bytes']
               assert digest == item['sha256']
-              checked.append({'path': item['path'], 'bytes': item['bytes'], 'sha256': digest})
+              checked.append({'role': item['role'], 'path': item['path'], 'bytes': item['bytes'], 'sha256': digest})
           evidence = {'freshDownloadVerified': True, 'files': checked}
           Path('/tmp/wenzhou-kanmen-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
           print(json.dumps(evidence, indent=2))
@@ -177,12 +200,14 @@ jobs:
           acquisition = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text())
           qa = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
           receipt = {
-              'schema': 'wenzhou_kanmen_uhslc_receipt@1.0.0',
+              'schema': 'wenzhou_kanmen_uhslc_receipt@1.1.0',
               'completedAtUtc': datetime.now(timezone.utc).isoformat(),
               'repository': os.environ['GITHUB_REPOSITORY'],
               'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
               'observationCommit': os.environ['OBSERVATION_COMMIT'],
               'dataset': acquisition['dataset'],
+              'sourceMode': acquisition['sourceMode'],
+              'sourceUrl': acquisition['sourceUrl'],
               'uhslcId': 632,
               'recordId': 6321,
               'version': 'A',
@@ -197,7 +222,7 @@ jobs:
           path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           git add -- projects/wenzhou/coastal/reports/KANMEN_UHSLC_RECEIPT.json
-          git commit -m 'Record verified Kanmen observation receipt [skip kanmen gauge] [skip coastal stage-a]'
+          git commit -m 'Record verified Kanmen station receipt [skip kanmen gauge] [skip coastal stage-a]'
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
 
       - name: Preserve gauge evidence artifact
