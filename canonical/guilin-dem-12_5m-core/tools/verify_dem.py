@@ -3,29 +3,45 @@ import hashlib
 import json
 import sys
 
-root = Path(__file__).resolve().parents[1]
-manifest = json.loads((root / "catalog" / "source_manifest.json").read_text(encoding="utf-8"))
-failures = []
 
-for item in manifest["sources"]:
-    if not item.get("available_in_package"):
-        continue
-    path = root / "data" / "raw" / "asf" / item["file"]
-    if not path.exists():
-        failures.append(f"MISSING {path.relative_to(root)}")
-        continue
-    h = hashlib.sha256()
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "raw" / "asf"
+MANIFEST = ROOT / "catalog" / "source_manifest.json"
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            h.update(chunk)
-    actual = h.hexdigest()
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+failures = []
+expected = set()
+
+for item in manifest["sources"]:
+    path = DATA / item["file"]
+    expected.add(path.name)
+    if not path.exists():
+        failures.append(f"MISSING {path.relative_to(ROOT)}")
+        continue
     if path.stat().st_size != item["bytes"]:
-        failures.append(f"SIZE {item['file']} expected={item['bytes']} actual={path.stat().st_size}")
+        failures.append(f"SIZE {item['file']}")
+    actual = sha256(path)
     if actual != item["sha256"]:
         failures.append(f"HASH {item['file']} expected={item['sha256']} actual={actual}")
+    metadata = DATA / item["metadata_file"]
+    if not metadata.exists():
+        failures.append(f"MISSING_METADATA {metadata.relative_to(ROOT)}")
+
+actual_tifs = {path.name for path in DATA.glob("*.dem.tif")}
+if actual_tifs != expected:
+    failures.append(f"SOURCE_SET_MISMATCH expected={sorted(expected)} actual={sorted(actual_tifs)}")
 
 if failures:
     print("\n".join(failures))
     sys.exit(1)
 
-print("OK: all physically present 12.5 m DEM files match the clean manifest.")
+print(f"OK: {len(expected)} DEM sources and paired ISO metadata match the clean manifest.")

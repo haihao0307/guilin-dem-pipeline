@@ -1,13 +1,7 @@
 # Git LFS 状态
 
-当前目录只保留一个 12.5 米 DEM 的 Git LFS 指针。
+本目录的 12 张 `.dem.tif` 源片使用 Git LFS；对应的 `.iso.xml` 和清单文件使用普通 Git。
 
-文件：`data/raw/asf/AP_10613_FBS_F0480_RT1.dem.tif`
+当前提交前状态：LFS 对象待上传。完成上传后，应在全新目录执行 `git lfs pull`，再运行 `tools/verify_dem.py`。
 
-对象 SHA256：`ff968e6f826d7b02605466fcbf8fa1a29f72033767361786c33539cd20342747`
-
-大小：71398860 字节
-
-`lfs_object_uploaded` 已为 `true`。GitHub LFS 实体对象已上传，并已通过远端 LFS 批量接口确认可下载；对象 SHA256 与本目录指针一致。随后可在全新目录执行 `git lfs pull` 并运行 `tools/verify_dem.py`。
-
-另外十张源 DEM 的实际字节文件尚未进入当前运行环境，不能伪造为已上传。
+旧的 `AP_10613_FBS_F0480_RT1.dem.tif` 不属于本次重建源包，已从当前目录移除。
