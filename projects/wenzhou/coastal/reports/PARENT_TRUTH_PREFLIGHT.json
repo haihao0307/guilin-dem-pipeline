@@ -1,0 +1,115 @@
+{
+  "schema": "wenzhou_parent_truth_preflight@1.0.0",
+  "generatedAtUtc": "2026-08-25T10:33:09.580371+00:00",
+  "project": "wenzhou-qingjiang-22000km2-coastal",
+  "parentArchive": {
+    "branch": "archive/wenzhou-qingjiang-22000km2-dem-truth-v001",
+    "commit": "f1bf9edf6e573082996277d4fc09b3b272deb5a7",
+    "status": "archived_verified"
+  },
+  "passed": true,
+  "binaryChecks": [
+    {
+      "label": "truthDem",
+      "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+      "exists": true,
+      "expectedBytes": 54638031,
+      "expectedSha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+      "lfsPointerOnly": false,
+      "observedBytes": 54638031,
+      "observedSha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+      "passed": true
+    },
+    {
+      "label": "marineMask",
+      "path": "projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif",
+      "exists": true,
+      "expectedBytes": 941115,
+      "expectedSha256": "153e81de252fb6eb08fc9782b0e06dcf94af4ebc40f50034e332c3d1b5286200",
+      "lfsPointerOnly": false,
+      "observedBytes": 941115,
+      "observedSha256": "153e81de252fb6eb08fc9782b0e06dcf94af4ebc40f50034e332c3d1b5286200",
+      "passed": true
+    },
+    {
+      "label": "sourceCount",
+      "path": "projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_count_COG.tif",
+      "exists": true,
+      "expectedBytes": 905758,
+      "expectedSha256": "cec4cdd613747bd4386db4b98fd184a948a9e0ca2b508c2e3c0a48533bb5f508",
+      "lfsPointerOnly": false,
+      "observedBytes": 905758,
+      "observedSha256": "cec4cdd613747bd4386db4b98fd184a948a9e0ca2b508c2e3c0a48533bb5f508",
+      "passed": true
+    },
+    {
+      "label": "sourceNodataMask",
+      "path": "projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif",
+      "exists": true,
+      "expectedBytes": 257604,
+      "expectedSha256": "20bbcf7115a1532fcdc0f2bd3d24ef76a7acde26fa171fac63958fbef0260784",
+      "lfsPointerOnly": false,
+      "observedBytes": 257604,
+      "observedSha256": "20bbcf7115a1532fcdc0f2bd3d24ef76a7acde26fa171fac63958fbef0260784",
+      "passed": true
+    }
+  ],
+  "rasterCheck": {
+    "passed": true,
+    "checks": {
+      "driver": true,
+      "crs": true,
+      "grid": true,
+      "bandCount": true,
+      "dtype": true,
+      "resolution": true,
+      "bounds": true,
+      "cogLayout": true,
+      "losslessCompression": true,
+      "overviews": true
+    },
+    "observed": {
+      "driver": "GTiff",
+      "crs": "EPSG:32651",
+      "width": 11866,
+      "height": 11866,
+      "count": 1,
+      "dtype": [
+        "int16"
+      ],
+      "nodata": -32768.0,
+      "resolution": [
+        12.5,
+        12.5
+      ],
+      "bounds": [
+        239645.652694,
+        3054965.110786,
+        387970.652694,
+        3203290.110786
+      ],
+      "blockShapes": [
+        [
+          512,
+          512
+        ]
+      ],
+      "overviews": [
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "AVERAGE",
+        "PREDICTOR": "2"
+      }
+    }
+  },
+  "nextStageAllowed": true
+}

@@ -1,0 +1,333 @@
+{
+  "schema": "wenzhou_gebco_2026_acquisition@1.2.0",
+  "generatedAtUtc": "2026-08-25T10:33:09.700939+00:00",
+  "dataset": "GEBCO_2026 Grid and Type Identifier Grid",
+  "source": "NERC CEDA official archive",
+  "passed": true,
+  "requestedBoundsWgs84": [
+    120.15,
+    27.4,
+    122.25,
+    29.15
+  ],
+  "sourceCatalogues": {
+    "grid": "https://data.ceda.ac.uk/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff?json=",
+    "tid": "https://data.ceda.ac.uk/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff?json="
+  },
+  "sourceTiles": {
+    "grid": {
+      "ext": ".tif",
+      "path": "/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff/gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+      "size": 933257450,
+      "name": "gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+      "location": [
+        "on_disk"
+      ],
+      "fileset": "spot-60086-gebco",
+      "type": "file",
+      "directory": "/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff",
+      "last_modified": "2026-04-22T15:18:30",
+      "md5": "78a1fc19d36f55378f0a7d62e67ebf53",
+      "download": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff/gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1"
+    },
+    "tid": {
+      "ext": ".tif",
+      "path": "/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff/gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+      "size": 466699844,
+      "name": "gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+      "location": [
+        "on_disk"
+      ],
+      "fileset": "spot-60086-gebco",
+      "type": "file",
+      "directory": "/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff",
+      "last_modified": "2026-04-22T15:25:18",
+      "md5": "710bde6a6300749c63426a4061f8c604",
+      "download": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff/gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1"
+    }
+  },
+  "sourceRasterMetadata": {
+    "grid": {
+      "crs": "EPSG:4326",
+      "width": 21600,
+      "height": 21600,
+      "dtype": "int16",
+      "nodata": -32767.0,
+      "transform": [
+        0.004166666666666668,
+        0.0,
+        89.99999999999997,
+        0.0,
+        -0.004166666666666667,
+        89.99999999999999
+      ],
+      "resolution": [
+        0.004166666666666668,
+        0.004166666666666667
+      ],
+      "bounds": [
+        89.99999999999997,
+        -1.4210854715202004e-14,
+        180.0,
+        89.99999999999999
+      ]
+    },
+    "tid": {
+      "crs": "EPSG:4326",
+      "width": 21600,
+      "height": 21600,
+      "dtype": "int8",
+      "nodata": 127.0,
+      "transform": [
+        0.004166666666666667,
+        0.0,
+        89.99999999999997,
+        0.0,
+        -0.004166666666666667,
+        90.0
+      ],
+      "resolution": [
+        0.004166666666666667,
+        0.004166666666666667
+      ],
+      "bounds": [
+        89.99999999999997,
+        0.0,
+        179.99999999999997,
+        90.0
+      ]
+    }
+  },
+  "bathymetrySourceWindow": [
+    7236,
+    14603,
+    505,
+    421
+  ],
+  "subsetTransform": [
+    0.004166666666666668,
+    0.0,
+    120.14999999999998,
+    0.0,
+    -0.004166666666666667,
+    29.154166666666654
+  ],
+  "subsetShape": [
+    421,
+    505
+  ],
+  "tidAlignment": {
+    "method": "nearest-neighbour reprojection to bathymetry subset grid",
+    "reason": "official grid and TID tiles use a sub-pixel registration offset"
+  },
+  "outputs": [
+    {
+      "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif",
+      "bytes": 256576,
+      "sha256": "66a1f8ef688a9990924cc565558729aadc5631088461e504f756ff8232ed6d91",
+      "driver": "GTiff",
+      "crs": "EPSG:4326",
+      "width": 505,
+      "height": 421,
+      "dtype": "int16",
+      "nodata": -32767.0,
+      "resolution": [
+        0.004166666666666668,
+        0.004166666666666667
+      ],
+      "bounds": [
+        120.14999999999998,
+        27.399999999999988,
+        122.25416666666665,
+        29.154166666666654
+      ],
+      "blockShapes": [
+        [
+          256,
+          256
+        ]
+      ],
+      "overviews": [
+        2
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "AVERAGE"
+      },
+      "tags": {
+        "EXTRACTION_METHOD": "GDAL HTTP range window from official CEDA tile",
+        "REGISTRATION_NOTE": "Native GEBCO bathymetry pixel grid selected by enclosing source window",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "SOURCE_ROLE": "bathymetry",
+        "SOURCE_TILE": "gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+        "SOURCE_TILE_BYTES": "933257450",
+        "SOURCE_TILE_LAST_MODIFIED": "2026-04-22T15:18:30",
+        "SOURCE_TILE_MD5": "78a1fc19d36f55378f0a7d62e67ebf53",
+        "SOURCE_URL": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff/gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1",
+        "AREA_OR_POINT": "Area"
+      }
+    },
+    {
+      "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif",
+      "bytes": 13957,
+      "sha256": "ba4b89d73a974b8e9a0681af488479231f8fd939d275fd107d65fd799cab00e3",
+      "driver": "GTiff",
+      "crs": "EPSG:4326",
+      "width": 505,
+      "height": 421,
+      "dtype": "uint8",
+      "nodata": 255.0,
+      "resolution": [
+        0.004166666666666668,
+        0.004166666666666667
+      ],
+      "bounds": [
+        120.14999999999998,
+        27.399999999999988,
+        122.25416666666665,
+        29.154166666666654
+      ],
+      "blockShapes": [
+        [
+          256,
+          256
+        ]
+      ],
+      "overviews": [
+        2
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "NEAREST"
+      },
+      "tags": {
+        "EXTRACTION_METHOD": "GDAL HTTP range window from official CEDA tile",
+        "REGISTRATION_NOTE": "Nearest-neighbour aligned to the exact bathymetry subset grid",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "SOURCE_ROLE": "type_identifier",
+        "SOURCE_TILE": "gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+        "SOURCE_TILE_BYTES": "466699844",
+        "SOURCE_TILE_LAST_MODIFIED": "2026-04-22T15:25:18",
+        "SOURCE_TILE_MD5": "710bde6a6300749c63426a4061f8c604",
+        "SOURCE_URL": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff/gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1",
+        "AREA_OR_POINT": "Area"
+      }
+    }
+  ],
+  "doi": "10.5285/4f68d5c7-45eb-f999-e063-7086abc036fa",
+  "attribution": "GEBCO Bathymetric Compilation Group 2026 (2026). The GEBCO_2026 Grid, NERC EDS BODC NOC.",
+  "grid": {
+    "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif",
+    "bytes": 256576,
+    "sha256": "66a1f8ef688a9990924cc565558729aadc5631088461e504f756ff8232ed6d91",
+    "metadata": {
+      "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif",
+      "bytes": 256576,
+      "sha256": "66a1f8ef688a9990924cc565558729aadc5631088461e504f756ff8232ed6d91",
+      "driver": "GTiff",
+      "crs": "EPSG:4326",
+      "width": 505,
+      "height": 421,
+      "dtype": "int16",
+      "nodata": -32767.0,
+      "resolution": [
+        0.004166666666666668,
+        0.004166666666666667
+      ],
+      "bounds": [
+        120.14999999999998,
+        27.399999999999988,
+        122.25416666666665,
+        29.154166666666654
+      ],
+      "blockShapes": [
+        [
+          256,
+          256
+        ]
+      ],
+      "overviews": [
+        2
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "AVERAGE"
+      },
+      "tags": {
+        "EXTRACTION_METHOD": "GDAL HTTP range window from official CEDA tile",
+        "REGISTRATION_NOTE": "Native GEBCO bathymetry pixel grid selected by enclosing source window",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "SOURCE_ROLE": "bathymetry",
+        "SOURCE_TILE": "gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+        "SOURCE_TILE_BYTES": "933257450",
+        "SOURCE_TILE_LAST_MODIFIED": "2026-04-22T15:18:30",
+        "SOURCE_TILE_MD5": "78a1fc19d36f55378f0a7d62e67ebf53",
+        "SOURCE_URL": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/ice_surface_elevation/geotiff/gebco_2026_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1",
+        "AREA_OR_POINT": "Area"
+      }
+    }
+  },
+  "tid": {
+    "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif",
+    "bytes": 13957,
+    "sha256": "ba4b89d73a974b8e9a0681af488479231f8fd939d275fd107d65fd799cab00e3",
+    "metadata": {
+      "path": "projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif",
+      "bytes": 13957,
+      "sha256": "ba4b89d73a974b8e9a0681af488479231f8fd939d275fd107d65fd799cab00e3",
+      "driver": "GTiff",
+      "crs": "EPSG:4326",
+      "width": 505,
+      "height": 421,
+      "dtype": "uint8",
+      "nodata": 255.0,
+      "resolution": [
+        0.004166666666666668,
+        0.004166666666666667
+      ],
+      "bounds": [
+        120.14999999999998,
+        27.399999999999988,
+        122.25416666666665,
+        29.154166666666654
+      ],
+      "blockShapes": [
+        [
+          256,
+          256
+        ]
+      ],
+      "overviews": [
+        2
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "NEAREST"
+      },
+      "tags": {
+        "EXTRACTION_METHOD": "GDAL HTTP range window from official CEDA tile",
+        "REGISTRATION_NOTE": "Nearest-neighbour aligned to the exact bathymetry subset grid",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "SOURCE_ROLE": "type_identifier",
+        "SOURCE_TILE": "gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif",
+        "SOURCE_TILE_BYTES": "466699844",
+        "SOURCE_TILE_LAST_MODIFIED": "2026-04-22T15:25:18",
+        "SOURCE_TILE_MD5": "710bde6a6300749c63426a4061f8c604",
+        "SOURCE_URL": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2026/type_identifier_grid/geotiff/gebco_2026_tid_n90.0_s0.0_w90.0_e180.0_geotiff.tif?download=1",
+        "AREA_OR_POINT": "Area"
+      }
+    }
+  }
+}
