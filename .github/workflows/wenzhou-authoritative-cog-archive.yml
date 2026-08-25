@@ -113,8 +113,12 @@ jobs:
           done
 
           git add -- "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"
-          git commit -m 'Archive verified Wenzhou 22000 km2 truth COG with Git LFS'
-          BINARY_COMMIT="$(git rev-parse HEAD)"
+          if git diff --cached --quiet; then
+            BINARY_COMMIT="$(git rev-parse HEAD)"
+          else
+            git commit --only -m 'Archive verified Wenzhou 22000 km2 truth COG with Git LFS' -- "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"
+            BINARY_COMMIT="$(git rev-parse HEAD)"
+          fi
           POINTER_BYTES="$(git cat-file -s "HEAD:$TARGET")"
           echo "BINARY_COMMIT=$BINARY_COMMIT" >> "$GITHUB_ENV"
           echo "POINTER_BYTES=$POINTER_BYTES" >> "$GITHUB_ENV"
@@ -221,7 +225,7 @@ jobs:
           Path('projects/wenzhou/archive/truth/upload-receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           git add -- projects/wenzhou/archive/truth/archive-manifest.json projects/wenzhou/archive/truth/upload-receipt.json
-          git commit -m 'Mark Wenzhou authoritative DEM archive verified after fresh LFS pull'
+          git commit --only -m 'Mark Wenzhou authoritative DEM archive verified after fresh LFS pull' -- projects/wenzhou/archive/truth/archive-manifest.json projects/wenzhou/archive/truth/upload-receipt.json
           git push origin HEAD:archive/wenzhou-qingjiang-22000km2-dem-truth-v001
 
       - name: Remove temporary transfer branch
