@@ -1,0 +1,1 @@
+"use strict";try{const s=window.__WZ_APP;window.__WZ_APP="";(0,eval)(s)}catch(e){console.error(e);document.documentElement.dataset.ready="error";const x=document.getElementById("errorText");if(x)x.textContent=(e&&e.stack)||String(e)}
