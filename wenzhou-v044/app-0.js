@@ -1,6 +1,6 @@
 "use strict";
 
-const META={grid:257,nativeGrid:[11866,11866],world:[148325,148325],min:0,max:1373,heightChunks:10,riverChunks:0,truthSha:"8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e"};
+const META={grid:129,nativeGrid:[11866,11866],world:[148325,148325],min:0,max:1373,heightChunks:3,riverChunks:0,truthSha:"8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e"};
 const ANCHORS={
  wenzhou:{label:"温州城",c:[-43250,-29787.5],zoom:6.4},
  xianxi:{label:"仙溪镇",c:[-3225,15862.5],zoom:7.4},
