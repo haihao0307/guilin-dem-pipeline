@@ -72,7 +72,17 @@ def aligned_grid(bounds: list[float], spacing: float) -> tuple[Any, int, int, li
     return from_origin(left, top, spacing, spacing), width, height, [left, bottom, right, top]
 
 
-def reproject_array(source_path: Path, role: str, transform: Any, width: int, height: int, dtype: str, nodata: float | int, resampling: Any) -> np.ndarray:
+def reproject_array(
+    source_path: Path,
+    role: str,
+    transform: Any,
+    width: int,
+    height: int,
+    dtype: str,
+    nodata: float | int,
+    resampling: Any,
+) -> np.ndarray:
+    import rasterio
     from rasterio.warp import reproject
 
     destination = np.full((height, width), nodata, dtype=dtype)
@@ -113,7 +123,15 @@ def reproject_marine_mask(source_path: Path, transform: Any, width: int, height:
     return destination
 
 
-def write_cog(path: Path, array: np.ndarray, transform: Any, crs: str, nodata: float | int, resampling: str, tags: dict[str, str]) -> None:
+def write_cog(
+    path: Path,
+    array: np.ndarray,
+    transform: Any,
+    crs: str,
+    nodata: float | int,
+    resampling: str,
+    tags: dict[str, str],
+) -> None:
     import rasterio
     from rasterio.shutil import copy as raster_copy
 
@@ -178,7 +196,6 @@ def inspect_output(path: Path) -> dict[str, Any]:
 
 def main() -> int:
     try:
-        import rasterio
         from rasterio.enums import Resampling
     except ImportError as exc:
         print(f"Required dependency missing: {exc}", file=sys.stderr)
@@ -231,7 +248,6 @@ def main() -> int:
 
         valid_bathy = bathy != -99999.0
         marine_cells = marine == 1
-        land_cells = marine == 0
         unknown_marine_mask = marine == 255
 
         coastal_bathy = np.where(marine_cells & valid_bathy, bathy, -99999.0).astype("float32")
@@ -253,8 +269,24 @@ def main() -> int:
             "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
             "LAND_TRUTH_LFS_OID": config["truthDem"]["lfsOid"],
         }
-        write_cog(bathy_path, coastal_bathy, transform, "EPSG:32651", -99999.0, "average", {**common_tags, "ROLE": "marine_only_bathymetry"})
-        write_cog(tid_path, coastal_tid, transform, "EPSG:32651", 255, "nearest", {**common_tags, "ROLE": "GEBCO_type_identifier"})
+        write_cog(
+            bathy_path,
+            coastal_bathy,
+            transform,
+            "EPSG:32651",
+            -99999.0,
+            "average",
+            {**common_tags, "ROLE": "marine_only_bathymetry"},
+        )
+        write_cog(
+            tid_path,
+            coastal_tid,
+            transform,
+            "EPSG:32651",
+            255,
+            "nearest",
+            {**common_tags, "ROLE": "GEBCO_type_identifier"},
+        )
         write_cog(
             uncertainty_path,
             uncertainty,
@@ -315,7 +347,9 @@ def main() -> int:
                 "tidHistogram": {str(code): count for code, count in sorted(tid_counts.items())},
                 "sourceQuality": {
                     "directMeasurementCells": int((marine_cells & direct_measurement).sum()),
-                    "indirectOrInterpolatedCells": int((marine_cells & (~direct_measurement) & (coastal_tid != 255)).sum()),
+                    "indirectOrInterpolatedCells": int(
+                        (marine_cells & (~direct_measurement) & (coastal_tid != 255)).sum()
+                    ),
                     "unknownMaskCells": int(unknown_marine_mask.sum()),
                 },
                 "outputs": outputs,
