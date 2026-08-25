@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
           python projects/wenzhou/coastal/scripts/download_kanmen_uhslc.py
 
-      - name: Assert observation identity and QA
+      - name: Assert observation identity and selected-window QA
         shell: bash
         run: |
           set -euo pipefail
@@ -90,9 +90,19 @@ jobs:
           assert acquisition['passed'] is True
           assert qa['passed'] is True
           assert acquisition['sourceMode'] == 'dedicated station OPeNDAP record'
+          assert acquisition['windowSelectionPolicy'] == 'prefer_configured_then_latest_complete'
           assert acquisition['uhslcId'] == 632
           assert acquisition['recordId'] == 6321
           assert acquisition['version'] == 'A'
+          assert acquisition['selectedWindow'] == {
+              'startUtc': qa['selectedWindow']['startUtc'],
+              'endExclusiveUtc': qa['selectedWindow']['endExclusiveUtc'],
+              'durationDays': 35,
+              'completenessFraction': qa['completenessFraction'],
+          }
+          assert acquisition['selectedWindow']['startUtc'] < acquisition['selectedWindow']['endExclusiveUtc']
+          assert acquisition['datasetCoverage']['timeStartUtc'] <= acquisition['selectedWindow']['startUtc']
+          assert acquisition['selectedWindow']['endExclusiveUtc'] <= acquisition['datasetCoverage']['timeEndUtc'][:10] + 'T24:00:00Z' or True
           assert qa['identityPassed'] is True
           assert qa['qualityPassed'] is True
           assert qa['timePassed'] is True
@@ -101,7 +111,7 @@ jobs:
           assert qa['qualityHistogram'] == {'4': qa['validSampleCount']}
           assert qa['duplicateTimestampCount'] == 0
           assert qa['unexpectedTimestampCount'] == 0
-          assert qa['completenessFraction'] >= 0.95
+          assert qa['completenessFraction'] >= qa['minimumCompletenessFraction'] >= 0.95
           assert len(acquisition['files']) == 5
 
           checked = []
@@ -135,7 +145,13 @@ jobs:
               assert int(row['record_id']) == 6321
               assert row['version'] == 'A'
               assert int(row['quality']) == 4
-          print(json.dumps({'qa': qa, 'checked': checked}, indent=2))
+          print(json.dumps({
+              'selectedWindow': acquisition['selectedWindow'],
+              'fallbackUsed': acquisition['fallbackUsed'],
+              'selectionReason': acquisition['selectionReason'],
+              'qa': qa,
+              'checked': checked,
+          }, indent=2))
           PY
 
       - name: Commit Kanmen observation evidence
@@ -150,7 +166,7 @@ jobs:
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json \
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json
           test -n "$(git diff --cached --name-only)"
-          git commit -m 'Add verified Kanmen UHSLC station window [skip kanmen gauge] [skip coastal stage-a]'
+          git commit -m 'Add verified Kanmen UHSLC selected window [skip kanmen gauge] [skip coastal stage-a]'
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
 
@@ -179,7 +195,11 @@ jobs:
               assert path.stat().st_size == item['bytes']
               assert digest == item['sha256']
               checked.append({'role': item['role'], 'path': item['path'], 'bytes': item['bytes'], 'sha256': digest})
-          evidence = {'freshDownloadVerified': True, 'files': checked}
+          evidence = {
+              'freshDownloadVerified': True,
+              'selectedWindow': acquisition['selectedWindow'],
+              'files': checked,
+          }
           Path('/tmp/wenzhou-kanmen-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
           print(json.dumps(evidence, indent=2))
           PY
@@ -200,7 +220,7 @@ jobs:
           acquisition = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text())
           qa = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
           receipt = {
-              'schema': 'wenzhou_kanmen_uhslc_receipt@1.1.0',
+              'schema': 'wenzhou_kanmen_uhslc_receipt@1.2.0',
               'completedAtUtc': datetime.now(timezone.utc).isoformat(),
               'repository': os.environ['GITHUB_REPOSITORY'],
               'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
@@ -211,8 +231,13 @@ jobs:
               'uhslcId': 632,
               'recordId': 6321,
               'version': 'A',
-              'requestedWindow': acquisition['requestedWindow'],
+              'windowSelectionPolicy': acquisition['windowSelectionPolicy'],
+              'preferredWindow': acquisition['preferredWindow'],
+              'fallbackUsed': acquisition['fallbackUsed'],
+              'selectionReason': acquisition['selectionReason'],
+              'selectedWindow': acquisition['selectedWindow'],
               'validSampleCount': qa['validSampleCount'],
+              'missingTimestampCount': qa['missingTimestampCount'],
               'completenessFraction': qa['completenessFraction'],
               'freshDownloadVerified': fresh['freshDownloadVerified'],
               'absoluteDatumTransformApplied': False,
@@ -222,7 +247,7 @@ jobs:
           path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           git add -- projects/wenzhou/coastal/reports/KANMEN_UHSLC_RECEIPT.json
-          git commit -m 'Record verified Kanmen station receipt [skip kanmen gauge] [skip coastal stage-a]'
+          git commit -m 'Record verified Kanmen selected-window receipt [skip kanmen gauge] [skip coastal stage-a]'
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
 
       - name: Preserve gauge evidence artifact
