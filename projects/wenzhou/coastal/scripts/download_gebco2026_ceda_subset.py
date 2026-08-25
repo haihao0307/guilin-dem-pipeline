@@ -2,9 +2,9 @@
 """Download exact GEBCO_2026 and TID subsets from official CEDA GeoTIFF tiles.
 
 The source tiles remain identified by the CEDA JSON catalogue. GDAL HTTP range
-requests read only the configured Wenzhou coastal window instead of downloading
-both complete global quadrant files. The TID subset is nearest-neighbour aligned
-to the exact bathymetry subset grid because the official source tiles can differ
+requests read only the WGS84 envelope required to cover the complete aligned
+EPSG:32651 coastal model grid. The TID subset is nearest-neighbour aligned to
+the exact bathymetry subset grid because the official source tiles can differ
 by a sub-pixel registration offset.
 """
 
@@ -81,6 +81,48 @@ def catalogue_item(catalogue_url: str, filename: str) -> dict[str, Any]:
     if not str(item["download"]).startswith("https://dap.ceda.ac.uk/"):
         raise RuntimeError(f"Unexpected non-CEDA download URL: {item['download']}")
     return item
+
+
+def aligned_projected_bounds(config: dict[str, Any]) -> list[float]:
+    spacing = float(config["domains"]["coastalModelGrid"]["pixelSpacingMeters"][0])
+    bounds = config["domains"]["bathymetryAndTideBoundaryProjected"]["bounds"]
+    return [
+        math.floor(bounds[0] / spacing) * spacing,
+        math.floor(bounds[1] / spacing) * spacing,
+        math.ceil(bounds[2] / spacing) * spacing,
+        math.ceil(bounds[3] / spacing) * spacing,
+    ]
+
+
+def derive_source_read_bounds(config: dict[str, Any]) -> tuple[list[float], list[float]]:
+    """Densify the aligned UTM boundary, transform to WGS84 and pad two source cells."""
+    from pyproj import Transformer
+
+    projected = aligned_projected_bounds(config)
+    left, bottom, right, top = projected
+    transformer = Transformer.from_crs("EPSG:32651", "EPSG:4326", always_xy=True)
+    samples: list[tuple[float, float]] = []
+    for index in range(101):
+        ratio = index / 100.0
+        samples.extend(
+            [
+                (left + ratio * (right - left), bottom),
+                (left + ratio * (right - left), top),
+                (left, bottom + ratio * (top - bottom)),
+                (right, bottom + ratio * (top - bottom)),
+            ]
+        )
+    transformed = [transformer.transform(x, y) for x, y in samples]
+    longitudes = [item[0] for item in transformed]
+    latitudes = [item[1] for item in transformed]
+    padding = 2.0 * EXPECTED_RESOLUTION
+    source_bounds = [
+        min(longitudes) - padding,
+        min(latitudes) - padding,
+        max(longitudes) + padding,
+        max(latitudes) + padding,
+    ]
+    return projected, source_bounds
 
 
 def source_window(dataset: Any, bounds: list[float]) -> Any:
@@ -223,7 +265,7 @@ def inspect_local(path: Path) -> dict[str, Any]:
 
 def main() -> int:
     report: dict[str, Any] = {
-        "schema": "wenzhou_gebco_2026_acquisition@1.2.0",
+        "schema": "wenzhou_gebco_2026_acquisition@1.3.0",
         "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
         "dataset": "GEBCO_2026 Grid and Type Identifier Grid",
         "source": "NERC CEDA official archive",
@@ -236,7 +278,8 @@ def main() -> int:
         from rasterio.windows import transform as window_transform
 
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        requested_bounds = config["domains"]["bathymetryAndTideBoundaryWgs84"]["bounds"]
+        configured_bounds = config["domains"]["bathymetryAndTideBoundaryWgs84"]["bounds"]
+        target_projected_bounds, source_read_bounds = derive_source_read_bounds(config)
         grid_item = catalogue_item(GRID_CATALOGUE, GRID_TILE)
         tid_item = catalogue_item(TID_CATALOGUE, TID_TILE)
 
@@ -253,7 +296,7 @@ def main() -> int:
         with rasterio.Env(**environment):
             with rasterio.open(grid_source_url) as grid_source:
                 grid_source_metadata = validate_remote_dataset(grid_source, "bathymetry")
-                grid_window = source_window(grid_source, requested_bounds)
+                grid_window = source_window(grid_source, source_read_bounds)
                 grid_data = grid_source.read(1, window=grid_window)
                 target_transform = window_transform(grid_window, grid_source.transform)
                 target_crs = grid_source.crs
@@ -269,7 +312,7 @@ def main() -> int:
             target_nodata,
             "bathymetry",
             grid_item,
-            "Native GEBCO bathymetry pixel grid selected by enclosing source window",
+            "Native GEBCO source window covering the complete aligned EPSG:32651 model grid",
         )
 
         tid_source_url = f"/vsicurl/{tid_item['download']}"
@@ -299,7 +342,7 @@ def main() -> int:
             255,
             "type_identifier",
             tid_item,
-            "Nearest-neighbour aligned to the exact bathymetry subset grid",
+            "Nearest-neighbour aligned to the expanded bathymetry source window",
         )
 
         outputs = [inspect_local(grid_destination), inspect_local(tid_destination)]
@@ -314,7 +357,10 @@ def main() -> int:
         report.update(
             {
                 "passed": True,
-                "requestedBoundsWgs84": requested_bounds,
+                "configuredCoastalBoundsWgs84": configured_bounds,
+                "targetModelBoundsProjected": target_projected_bounds,
+                "sourceReadBoundsWgs84": source_read_bounds,
+                "sourceReadPaddingArcSeconds": 30.0,
                 "sourceCatalogues": {
                     "grid": GRID_CATALOGUE,
                     "tid": TID_CATALOGUE,
@@ -336,7 +382,7 @@ def main() -> int:
                 "subsetTransform": list(target_transform)[:6],
                 "subsetShape": list(target_shape),
                 "tidAlignment": {
-                    "method": "nearest-neighbour reprojection to bathymetry subset grid",
+                    "method": "nearest-neighbour reprojection to bathymetry source window",
                     "reason": "official grid and TID tiles use a sub-pixel registration offset",
                 },
                 "outputs": outputs,
