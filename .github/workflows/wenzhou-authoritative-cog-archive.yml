@@ -1,0 +1,134 @@
+name: Archive Wenzhou authoritative COG
+
+on:
+  push:
+    branches:
+      - archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+    paths:
+      - projects/wenzhou/archive/truth/transfer-source.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-authoritative-cog-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout archive branch
+        uses: actions/checkout@v4
+        with:
+          ref: archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+          fetch-depth: 0
+          lfs: false
+
+      - name: Validate transfer authorization
+        id: transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_JSON='projects/wenzhou/archive/truth/transfer-source.json'
+          test -f "$SOURCE_JSON"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          p = Path('projects/wenzhou/archive/truth/transfer-source.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data.get('status') == 'authorized', 'transfer is not authorized'
+          assert data.get('expectedBytes') == 54638031, 'unexpected byte gate'
+          assert data.get('expectedSha256') == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e', 'unexpected hash gate'
+          url = data.get('sourceUrl', '')
+          assert url.startswith('https://'), 'sourceUrl must use HTTPS'
+          provider = data.get('provider', 'direct')
+          assert provider in {'direct', 'google_drive'}, 'unsupported provider'
+          print(f"provider={provider}")
+          print(f"source_url={url}")
+          PY
+
+      - name: Download exact COG
+        shell: bash
+        env:
+          SOURCE_URL: ${{ steps.transfer.outputs.source_url }}
+          PROVIDER: ${{ steps.transfer.outputs.provider }}
+        run: |
+          set -euo pipefail
+          mkdir -p .archive-download
+          DEST='.archive-download/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          if [ "$PROVIDER" = 'google_drive' ]; then
+            python -m pip install --disable-pip-version-check --quiet gdown
+            gdown --fuzzy "$SOURCE_URL" --output "$DEST"
+          else
+            curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
+              --output "$DEST" "$SOURCE_URL"
+          fi
+          test "$(stat -c '%s' "$DEST")" = '54638031'
+          echo '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e  '"$DEST" | sha256sum --check --strict
+
+      - name: Commit verified COG through Git LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          RECEIPT='projects/wenzhou/archive/truth/upload-receipt.json'
+          MANIFEST='projects/wenzhou/archive/truth/archive-manifest.json'
+
+          git lfs install --local
+          test "$(git check-attr filter -- "$TARGET")" = "$TARGET: filter: lfs"
+          mv '.archive-download/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif' "$TARGET"
+
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          manifest_path = Path('projects/wenzhou/archive/truth/archive-manifest.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          manifest['status'] = 'binary_uploaded_pending_fresh_download_verification'
+          manifest['github']['binaryObjectPresent'] = True
+          manifest['github']['downloadHashVerified'] = False
+          manifest['github']['uploadedAtUtc'] = datetime.now(timezone.utc).isoformat()
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          receipt = {
+              'schema': 'wenzhou_dem_github_lfs_upload_receipt@1.0.0',
+              'uploadedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'branch': 'archive/wenzhou-qingjiang-22000km2-dem-truth-v001',
+              'repositoryPath': 'projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif',
+              'bytes': 54638031,
+              'sha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
+              'sourceHashVerified': True,
+              'gitLfsRequired': True,
+              'gitLfsPushRequested': True,
+              'freshDownloadVerified': False,
+              'workflowRunId': '${{ github.run_id }}'
+          }
+          Path('projects/wenzhou/archive/truth/upload-receipt.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$TARGET" "$RECEIPT" "$MANIFEST"
+          git commit -m 'Archive verified Wenzhou 22000 km2 truth COG with Git LFS'
+          git lfs push origin HEAD
+          git push origin HEAD:archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+          git lfs fsck
+
+      - name: Preserve workflow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-authoritative-cog-archive-evidence
+          path: |
+            projects/wenzhou/archive/truth/archive-manifest.json
+            projects/wenzhou/archive/truth/upload-receipt.json
+            projects/wenzhou/archive/truth/transfer-source.json
+          if-no-files-found: warn
+          retention-days: 90
