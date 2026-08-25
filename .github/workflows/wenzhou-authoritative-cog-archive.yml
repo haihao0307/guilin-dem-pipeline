@@ -1,0 +1,248 @@
+name: Archive Wenzhou authoritative COG
+
+on:
+  push:
+    branches:
+      - archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+    paths:
+      - projects/wenzhou/archive/truth/transfer-source.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-authoritative-cog-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout archive branch
+        uses: actions/checkout@v4
+        with:
+          ref: archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+          fetch-depth: 0
+          lfs: false
+
+      - name: Validate transfer authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('projects/wenzhou/archive/truth/transfer-source.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data.get('status') == 'authorized', 'transfer is not authorized'
+          assert data.get('provider') == 'github_chunks', 'unexpected transfer provider'
+          assert data.get('expectedBytes') == 54638031, 'unexpected byte gate'
+          assert data.get('expectedSha256') == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e', 'unexpected hash gate'
+          url = data.get('sourceManifestUrl', '')
+          assert url.startswith('https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'), 'source manifest must use the approved GitHub raw host'
+          assert data.get('transferBranch') == 'transfer/wenzhou-qingjiang-20260825-cog-staging', 'unexpected transfer branch'
+          PY
+
+      - name: Download and verify exact COG files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from urllib.request import urlopen
+
+          source = json.loads(Path('projects/wenzhou/archive/truth/transfer-source.json').read_text(encoding='utf-8'))
+          with urlopen(source['sourceManifestUrl']) as response:
+              manifest = json.load(response)
+
+          assert manifest['branch'] == source['transferBranch']
+          expected = {
+              'WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif': ('projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif', 54638031, '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'),
+              'WENZHOU_QINGJIANG_marine_mask_COG.tif': ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif', 941115, '153e81de252fb6eb08fc9782b0e06dcf94af4ebc40f50034e332c3d1b5286200'),
+              'WENZHOU_QINGJIANG_source_count_COG.tif': ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_count_COG.tif', 905758, 'cec4cdd613747bd4386db4b98fd184a948a9e0ca2b508c2e3c0a48533bb5f508'),
+              'WENZHOU_QINGJIANG_source_nodata_mask_COG.tif': ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif', 257604, '20bbcf7115a1532fcdc0f2bd3d24ef76a7acde26fa171fac63958fbef0260784')
+          }
+
+          assert {item['filename'] for item in manifest['files']} == set(expected)
+          base = f"https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{manifest['branch']}/"
+          for item in manifest['files']:
+              name = item['filename']
+              destination, expected_bytes, expected_sha = expected[name]
+              assert item['destination'] == destination
+              assert item['bytes'] == expected_bytes
+              assert item['sha256'] == expected_sha
+              target = Path(destination)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              digest = hashlib.sha256()
+              total = 0
+              with target.open('wb') as output:
+                  for chunk in sorted(item['paths'], key=lambda x: x['index']):
+                      assert chunk['path'].startswith('.transfer/wenzhou/')
+                      with urlopen(base + chunk['path']) as response:
+                          while True:
+                              block = response.read(1024 * 1024)
+                              if not block:
+                                  break
+                              output.write(block)
+                              digest.update(block)
+                              total += len(block)
+              assert total == expected_bytes, f'{name}: unexpected bytes {total}'
+              assert digest.hexdigest() == expected_sha, f'{name}: unexpected SHA-256 {digest.hexdigest()}'
+          PY
+
+      - name: Commit verified COG files through Git LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          MARINE='projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif'
+          SOURCE_COUNT='projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_count_COG.tif'
+          SOURCE_NODATA='projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif'
+
+          git lfs install --local
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for path in "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"; do
+            test "$(git check-attr filter -- "$path")" = "$path: filter: lfs"
+          done
+
+          git add -- "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"
+          if git diff --cached --quiet; then
+            BINARY_COMMIT="$(git rev-parse HEAD)"
+          else
+            git commit --only -m 'Archive verified Wenzhou 22000 km2 truth COG with Git LFS' -- "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"
+            BINARY_COMMIT="$(git rev-parse HEAD)"
+          fi
+          POINTER_BYTES="$(git cat-file -s "HEAD:$TARGET")"
+          echo "BINARY_COMMIT=$BINARY_COMMIT" >> "$GITHUB_ENV"
+          echo "POINTER_BYTES=$POINTER_BYTES" >> "$GITHUB_ENV"
+          git lfs push origin HEAD
+          git push origin HEAD:archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+          git lfs fsck
+
+      - name: Fresh clone and LFS verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .fresh-verify
+          GIT_LFS_SKIP_SMUDGE=1 git clone --branch archive/wenzhou-qingjiang-22000km2-dem-truth-v001 --single-branch https://github.com/haihao0307/guilin-dem-pipeline.git .fresh-verify
+          git -C .fresh-verify lfs pull
+          git -C .fresh-verify lfs fsck
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          checks = [
+              ('projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif', 54638031, '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'),
+              ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif', 941115, '153e81de252fb6eb08fc9782b0e06dcf94af4ebc40f50034e332c3d1b5286200'),
+              ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_count_COG.tif', 905758, 'cec4cdd613747bd4386db4b98fd184a948a9e0ca2b508c2e3c0a48533bb5f508'),
+              ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif', 257604, '20bbcf7115a1532fcdc0f2bd3d24ef76a7acde26fa171fac63958fbef0260784'),
+              ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_QA_REPORT.json', 5398, '0da73a5d74d3bb59278e8a00adce8efe751a3dab4f4d750a6c1925f775006512'),
+              ('projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_SOURCE_MANIFEST.json', 8038, '896f0d8001ba1c64d888f9c69222fe5b5c786d63c9f4d720625c4e06d799a068'),
+              ('projects/wenzhou/archive/truth/evidence/baseline/00_READ_ME_FIRST.txt', 1403, '11f2240321541a004eea9ad02f2ed2d228159a80c95f008309b18e47dd02be16'),
+              ('projects/wenzhou/archive/truth/evidence/baseline/01_NEW_WORKSPACE_PROMPT.txt', 991, 'c82075f2b752a615b26279ab58b757e4eca4da6fc74a30cd1532ec2bec14c278'),
+              ('projects/wenzhou/archive/truth/evidence/baseline/FILE_HASH_MANIFEST.json', 1946, 'c9ee6e4d22c09ee80c974760080e54232c64863d1b2a6161dc8efaa8f2f10fee'),
+              ('projects/wenzhou/archive/truth/evidence/baseline/FULL_RES_BASELINE_LOCK.json', 1266, 'be333418c4cce2080e4e0c92587423632fbdc88994df3b2d811f0a2c8dc0df55')
+          ]
+          root = Path('.fresh-verify')
+          for relative, expected_bytes, expected_sha in checks:
+              path = root / relative
+              digest = hashlib.sha256()
+              total = 0
+              with path.open('rb') as source:
+                  while True:
+                      block = source.read(1024 * 1024)
+                      if not block:
+                          break
+                      digest.update(block)
+                      total += len(block)
+              assert total == expected_bytes, f'{relative}: unexpected bytes {total}'
+              assert digest.hexdigest() == expected_sha, f'{relative}: unexpected SHA-256 {digest.hexdigest()}'
+          PY
+          echo 'FRESH_DOWNLOAD_VERIFIED=true' >> "$GITHUB_ENV"
+
+      - name: Mark archive verified
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          expected_sha = '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
+          manifest_path = Path('projects/wenzhou/archive/truth/archive-manifest.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          manifest['status'] = 'archived_verified'
+          manifest.setdefault('authoritativeDem', {})['lfsOid'] = f'sha256:{expected_sha}'
+          manifest['authoritativeDem']['lfsPointerBytes'] = int(os.environ['POINTER_BYTES'])
+          manifest.setdefault('github', {})['binaryObjectPresent'] = True
+          manifest['github']['downloadHashVerified'] = True
+          manifest['github']['binaryCommit'] = os.environ['BINARY_COMMIT']
+          manifest['github']['verifiedAtUtc'] = datetime.now(timezone.utc).isoformat()
+          manifest['github']['uploadedAtUtc'] = manifest['github'].get('uploadedAtUtc') or datetime.now(timezone.utc).isoformat()
+          manifest['supportingEvidence'] = {
+              'qaReport': 'projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_QA_REPORT.json',
+              'sourceManifest': 'projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_SOURCE_MANIFEST.json',
+              'marineMask': 'projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif',
+              'sourceCount': 'projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_count_COG.tif',
+              'sourceNodataMask': 'projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif',
+              'baselineLock': 'projects/wenzhou/archive/truth/evidence/baseline/FULL_RES_BASELINE_LOCK.json'
+          }
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          receipt = {
+              'schema': 'wenzhou_dem_github_lfs_upload_receipt@1.1.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': 'haihao0307/guilin-dem-pipeline',
+              'branch': 'archive/wenzhou-qingjiang-22000km2-dem-truth-v001',
+              'pullRequest': 46,
+              'repositoryPath': 'projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif',
+              'binaryCommit': os.environ['BINARY_COMMIT'],
+              'lfsOid': f'sha256:{expected_sha}',
+              'lfsPointerBytes': int(os.environ['POINTER_BYTES']),
+              'objectBytes': 54638031,
+              'sha256': expected_sha,
+              'sourceHashVerified': True,
+              'copiedHashVerified': True,
+              'gitLfsPushCompleted': True,
+              'gitLfsFsckPassed': True,
+              'freshDownloadVerified': os.environ.get('FRESH_DOWNLOAD_VERIFIED') == 'true',
+              'supportingEvidenceFreshVerified': True,
+              'crs': 'EPSG:32651',
+              'grid': [11866, 11866],
+              'pixelSpacingMeters': [12.5, 12.5],
+              'bounds': [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+              'sourceProvenance': 'WENZHOU_CLEAN_BASELINE_12_5M_FULL_RES_LOSSLESS_V1'
+          }
+          Path('projects/wenzhou/archive/truth/upload-receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git add -- projects/wenzhou/archive/truth/archive-manifest.json projects/wenzhou/archive/truth/upload-receipt.json
+          git commit --only -m 'Mark Wenzhou authoritative DEM archive verified after fresh LFS pull' -- projects/wenzhou/archive/truth/archive-manifest.json projects/wenzhou/archive/truth/upload-receipt.json
+          git push origin HEAD:archive/wenzhou-qingjiang-22000km2-dem-truth-v001
+
+      - name: Remove temporary transfer branch
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin --delete transfer/wenzhou-qingjiang-20260825-cog-staging || true
+
+      - name: Preserve workflow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-authoritative-cog-archive-evidence
+          path: |
+            projects/wenzhou/archive/truth/archive-manifest.json
+            projects/wenzhou/archive/truth/upload-receipt.json
+            projects/wenzhou/archive/truth/transfer-source.json
+          if-no-files-found: warn
+          retention-days: 90
