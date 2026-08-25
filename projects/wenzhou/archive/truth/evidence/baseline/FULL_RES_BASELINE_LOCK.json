@@ -1,0 +1,45 @@
+{
+  "baseline_id": "WENZHOU_QINGJIANG_12_5M_FULL_RES_LOSSLESS_V1",
+  "status": "clean_restart",
+  "authoritative_heightmap": {
+    "path": "source_truth_full_resolution/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "width": 11866,
+    "height": 11866,
+    "pixel_size_m": [
+      12.5,
+      12.5
+    ],
+    "crs": "EPSG:32651",
+    "dtype": "int16",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "internal_compression": "DEFLATE lossless",
+    "byte_preservation_required": true
+  },
+  "forbidden": {
+    "global_downsampled_height_textures": [
+      "2046x2046",
+      "2048x2048"
+    ],
+    "lossy_height_formats": [
+      "JPEG",
+      "lossy WebP",
+      "8-bit normalized height PNG"
+    ],
+    "resampling_as_authoritative_height": true,
+    "precision_reduction": true,
+    "30m_fallback": true,
+    "synthetic_terrain": true
+  },
+  "viewer_policy": {
+    "truth_source": "full-resolution COG",
+    "range_requests": true,
+    "dynamic_lod": true,
+    "cog_overviews_visualization_only": true,
+    "near_field_returns_to_native_12_5m": true
+  },
+  "supersedes": [
+    "WENZHOU_CLEAN_RESTART_12_5M_2046_NO_RECOMPRESSION.zip",
+    "all Wenzhou 2046/2048 web height textures",
+    "Wenzhou web v0.1 through v0.5.x"
+  ]
+}
