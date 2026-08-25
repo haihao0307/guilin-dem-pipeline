@@ -106,6 +106,8 @@ jobs:
           SOURCE_NODATA='projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_source_nodata_mask_COG.tif'
 
           git lfs install --local
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           for path in "$TARGET" "$MARINE" "$SOURCE_COUNT" "$SOURCE_NODATA"; do
             test "$(git check-attr filter -- "$path")" = "$path: filter: lfs"
           done
