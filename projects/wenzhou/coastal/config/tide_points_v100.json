@@ -1,10 +1,18 @@
 {
-  "schema": "wenzhou_tide_points@1.0.0",
+  "schema": "wenzhou_tide_points@1.1.0",
   "crs": "EPSG:4326",
   "predictionWindow": {
-    "startUtc": "2026-09-01T00:00:00Z",
+    "startUtc": "2024-09-01T00:00:00Z",
     "durationDays": 35,
-    "intervalMinutes": 15
+    "intervalMinutes": 15,
+    "purpose": "FES2022b prediction window overlapping the UHSLC Kanmen research-quality hourly record"
+  },
+  "observationWindow": {
+    "startUtc": "2024-09-01T00:00:00Z",
+    "endExclusiveUtc": "2024-10-06T00:00:00Z",
+    "intervalMinutes": 60,
+    "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
+    "datasetId": "global_hourly_rqds"
   },
   "points": [
     {
@@ -16,7 +24,15 @@
       "codes": {
         "GLOSS": "94",
         "UHSLC": "632",
-        "PSMSL": "934"
+        "PSMSL": "934",
+        "SSC": "kanm"
+      },
+      "uhslc": {
+        "recordId": 6321,
+        "version": "A",
+        "publishedCoordinates": [121.282, 28.088],
+        "qualityLevelExpected": 4,
+        "units": "millimeters"
       }
     },
     {
