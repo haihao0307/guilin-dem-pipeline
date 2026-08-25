@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Acquire source-traceable OSM coastline and waterway ways for Wenzhou.
 
-The raw Overpass JSON responses are preserved with deterministic gzip encoding.
-Source way coordinates remain unchanged in WGS84. Projected and clipped geometry
-is written as a separate derived layer in EPSG:32651.
+Each Overpass response contains way tags, node IDs and inline coordinates. Raw
+responses and exact queries are preserved. Source coordinates remain unchanged
+in WGS84. Projection and clipping are separate derived operations in EPSG:32651.
+No river-width operation is performed in this stage.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
-import math
 import os
 import sys
 import tempfile
@@ -124,24 +124,30 @@ def overpass_query(bounds: list[float], timeout_seconds: int) -> str:
         f'  way["natural"="coastline"]({bbox});\n'
         f'  way["waterway"~"^(river|stream|canal|tidal_channel)$"]({bbox});\n'
         ");\n"
-        "out body;\n"
-        ">;\n"
-        "out skel qt;\n"
+        "out tags geom qt;\n"
     )
 
 
-def request_overpass(endpoints: list[str], query: str) -> tuple[bytes, dict[str, Any]]:
+def request_overpass(
+    endpoints: list[str],
+    query: str,
+    attempts_per_endpoint: int,
+    pause_429: float,
+    pause_other: float,
+) -> tuple[bytes, dict[str, Any]]:
     encoded = urllib.parse.urlencode({"data": query}).encode("utf-8")
     attempts: list[dict[str, Any]] = []
-    for endpoint in endpoints:
-        for attempt in range(1, 4):
+    for round_index in range(attempts_per_endpoint):
+        for endpoint in endpoints:
+            attempt_number = round_index + 1
             started = time.monotonic()
             request = urllib.request.Request(
                 endpoint,
                 data=encoded,
                 method="POST",
                 headers={
-                    "User-Agent": "WenzhouCoastalPipeline/1.0",
+                    "User-Agent": "WenzhouCoastalPipeline/1.1 repository=haihao0307/guilin-dem-pipeline",
+                    "Referer": "https://github.com/haihao0307/guilin-dem-pipeline",
                     "Accept": "application/json",
                     "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 },
@@ -152,15 +158,15 @@ def request_overpass(endpoints: list[str], query: str) -> tuple[bytes, dict[str,
                     status = getattr(response, "status", 200)
                     content_type = response.headers.get("Content-Type", "")
                     duration = time.monotonic() - started
-                    attempt_record = {
+                    selected = {
                         "endpoint": endpoint,
-                        "attempt": attempt,
+                        "attempt": attempt_number,
                         "httpStatus": status,
                         "contentType": content_type,
                         "contentLengthHeader": response.headers.get("Content-Length"),
                         "durationSeconds": duration,
                     }
-                    attempts.append(attempt_record)
+                    attempts.append(selected)
                     if status != 200:
                         raise RuntimeError(f"Overpass returned HTTP {status}")
                     if not content:
@@ -173,22 +179,57 @@ def request_overpass(endpoints: list[str], query: str) -> tuple[bytes, dict[str,
                         raise RuntimeError("Overpass JSON lacks an elements array")
                     return content, {
                         "selectedEndpoint": endpoint,
-                        "selectedAttempt": attempt,
+                        "selectedAttempt": attempt_number,
                         "attempts": attempts,
                     }
+            except urllib.error.HTTPError as exc:
+                code = int(exc.code)
+                attempts.append(
+                    {
+                        "endpoint": endpoint,
+                        "attempt": attempt_number,
+                        "error": "HTTPError",
+                        "httpStatus": code,
+                        "detail": str(exc),
+                        "retryAfter": exc.headers.get("Retry-After") if exc.headers else None,
+                        "durationSeconds": time.monotonic() - started,
+                    }
+                )
+                time.sleep(pause_429 if code == 429 else pause_other)
             except Exception as exc:
                 attempts.append(
                     {
                         "endpoint": endpoint,
-                        "attempt": attempt,
+                        "attempt": attempt_number,
                         "error": type(exc).__name__,
                         "detail": str(exc),
                         "durationSeconds": time.monotonic() - started,
                     }
                 )
-                if attempt < 3:
-                    time.sleep(min(2**attempt * 3, 20))
+                time.sleep(pause_other)
     raise RuntimeError(f"All Overpass endpoints failed: {attempts}")
+
+
+def parse_way_geometry(element: dict[str, Any]) -> list[tuple[float, float]]:
+    geometry = element.get("geometry")
+    if not isinstance(geometry, list):
+        return []
+    coordinates: list[tuple[float, float]] = []
+    for item in geometry:
+        if not isinstance(item, dict) or "lon" not in item or "lat" not in item:
+            return []
+        coordinates.append((float(item["lon"]), float(item["lat"])))
+    return coordinates
+
+
+def canonical_way(element: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": int(element["id"]),
+        "nodes": [int(item) for item in element.get("nodes", [])],
+        "tags": {str(key): str(value) for key, value in element.get("tags", {}).items()},
+        "coordinates": parse_way_geometry(element),
+        "bounds": element.get("bounds"),
+    }
 
 
 def canonical_feature_collection(
@@ -238,12 +279,12 @@ def coordinate_hash(features: list[dict[str, Any]]) -> str:
 def main() -> int:
     generated = datetime.now(timezone.utc).isoformat()
     acquisition: dict[str, Any] = {
-        "schema": "wenzhou_osm_hydrology_acquisition@1.0.0",
+        "schema": "wenzhou_osm_hydrology_acquisition@1.1.0",
         "generatedAtUtc": generated,
         "passed": False,
     }
     qa: dict[str, Any] = {
-        "schema": "wenzhou_hydrology_topology_qa@1.0.0",
+        "schema": "wenzhou_hydrology_topology_qa@1.1.0",
         "generatedAtUtc": generated,
         "passed": False,
         "estuaryConnectivityStatus": "pending named network and coastline topology stage",
@@ -259,6 +300,7 @@ def main() -> int:
         domain = config["domain"]
         tiling = config["tiling"]
         query_config = config["query"]
+        retry_config = config["retry"]
         endpoints = [source_config["primaryEndpoint"], *source_config["fallbackEndpoints"]]
         tiles = tile_bounds(
             domain["wgs84Bounds"],
@@ -267,13 +309,21 @@ def main() -> int:
             float(tiling["overlapDegrees"]),
         )
 
-        all_nodes: dict[int, tuple[float, float]] = {}
         all_ways: dict[int, dict[str, Any]] = {}
+        source_node_ids: set[int] = set()
+        missing_way_geometry: list[int] = []
         tile_records: list[dict[str, Any]] = []
         raw_files: list[dict[str, Any]] = []
-        for tile in tiles:
+
+        for tile_index, tile in enumerate(tiles):
             query = overpass_query(tile["bounds"], int(query_config["timeoutSeconds"]))
-            content, transfer = request_overpass(endpoints, query)
+            content, transfer = request_overpass(
+                endpoints,
+                query,
+                int(retry_config["attemptsPerEndpoint"]),
+                float(retry_config["http429PauseSeconds"]),
+                float(retry_config["otherRetryPauseSeconds"]),
+            )
             payload = json.loads(content)
             raw_path = RAW_ROOT / f"overpass_r{tile['row']}_c{tile['column']}.json.gz"
             query_path = RAW_ROOT / f"overpass_r{tile['row']}_c{tile['column']}.query.overpassql"
@@ -286,28 +336,23 @@ def main() -> int:
                 ]
             )
 
-            element_counts: dict[str, int] = {}
+            way_count = 0
             for element in payload["elements"]:
-                element_type = str(element.get("type"))
-                element_counts[element_type] = element_counts.get(element_type, 0) + 1
-                if element_type == "node":
-                    node_id = int(element["id"])
-                    coordinate = (float(element["lon"]), float(element["lat"]))
-                    previous = all_nodes.get(node_id)
-                    if previous is not None and previous != coordinate:
-                        raise RuntimeError(f"OSM node {node_id} changed across tile responses")
-                    all_nodes[node_id] = coordinate
-                elif element_type == "way":
-                    way_id = int(element["id"])
-                    way = {
-                        "id": way_id,
-                        "nodes": [int(item) for item in element.get("nodes", [])],
-                        "tags": {str(key): str(value) for key, value in element.get("tags", {}).items()},
-                    }
-                    previous = all_ways.get(way_id)
-                    if previous is not None and previous != way:
-                        raise RuntimeError(f"OSM way {way_id} changed across tile responses")
-                    all_ways[way_id] = way
+                if element.get("type") != "way":
+                    continue
+                way_count += 1
+                way = canonical_way(element)
+                way_id = way["id"]
+                source_node_ids.update(way["nodes"])
+                if len(way["coordinates"]) < int(config["derived"]["minimumWayVertexCount"]):
+                    missing_way_geometry.append(way_id)
+                    continue
+                previous = all_ways.get(way_id)
+                if previous is not None and previous != way:
+                    raise RuntimeError(
+                        f"OSM way {way_id} changed across tile responses or Overpass instances"
+                    )
+                all_ways[way_id] = way
 
             tile_records.append(
                 {
@@ -320,15 +365,16 @@ def main() -> int:
                     "osmGenerator": payload.get("generator"),
                     "osmVersion": payload.get("version"),
                     "osm3s": payload.get("osm3s"),
-                    "elementCounts": element_counts,
+                    "wayCount": way_count,
                     "transfer": transfer,
                 }
             )
+            if tile_index < len(tiles) - 1:
+                time.sleep(float(tiling["secondsBetweenSuccessfulTiles"]))
 
         transformer = Transformer.from_crs("EPSG:4326", domain["projectedCrs"], always_xy=True)
         clip_bounds = [float(value) for value in domain["projectedClipBounds"]]
         clip_polygon = box(*clip_bounds)
-        missing_references: list[dict[str, Any]] = []
         source_features: list[dict[str, Any]] = []
         projected_features: list[dict[str, Any]] = []
         introduced_self_intersections: list[str] = []
@@ -341,19 +387,12 @@ def main() -> int:
             waterway = tags.get("waterway")
             if not is_coastline and waterway not in {"river", "stream", "canal", "tidal_channel"}:
                 continue
-            node_ids = way["nodes"]
-            absent = [node_id for node_id in node_ids if node_id not in all_nodes]
-            if absent:
-                missing_references.append({"wayId": way_id, "missingNodeIds": absent})
-                continue
-            coordinates = [all_nodes[node_id] for node_id in node_ids]
-            if len(coordinates) < int(config["derived"]["minimumWayVertexCount"]):
-                continue
+            coordinates = way["coordinates"]
             source_line = LineString(coordinates)
             category = "coastline" if is_coastline else "waterway"
             source_properties = {
                 "source_way_id": way_id,
-                "source_node_ids": node_ids,
+                "source_node_ids": way["nodes"],
                 "category": category,
                 "waterway": waterway,
                 "name": tags.get("name"),
@@ -361,6 +400,7 @@ def main() -> int:
                 "tags": tags,
                 "source_vertex_count": len(coordinates),
                 "source_is_simple": bool(source_line.is_simple),
+                "source_geometry_preserved": True,
             }
             source_features.append(
                 {
@@ -383,7 +423,6 @@ def main() -> int:
                 part_ids.append(part_id)
                 if source_line.is_simple and not part.is_simple:
                     introduced_self_intersections.append(part_id)
-                part_coordinates = [[float(x), float(y)] for x, y in part.coords]
                 for x, y in part.coords:
                     if not (
                         clip_bounds[0] - 1e-6 <= x <= clip_bounds[2] + 1e-6
@@ -402,7 +441,7 @@ def main() -> int:
                             "waterway": waterway,
                             "name": tags.get("name"),
                             "name_en": tags.get("name:en"),
-                            "source_node_count": len(node_ids),
+                            "source_node_count": len(way["nodes"]),
                             "length_m": float(part.length),
                             "centerline_immutable": True,
                             "width_changes_lateral_offsets_only": True,
@@ -430,6 +469,7 @@ def main() -> int:
             "attribution": source_config["attribution"],
             "retrievedAtUtc": generated,
             "rawTileCount": len(tile_records),
+            "queryMode": query_config["output"],
         }
         output_payloads = [
             (
@@ -477,10 +517,11 @@ def main() -> int:
         total_coastline_length = sum(
             float(feature["properties"]["length_m"]) for feature in coastline_projected
         )
+        missing_unique = sorted(set(missing_way_geometry))
 
         qa.update(
             {
-                "sourceNodeCount": len(all_nodes),
+                "sourceNodeIdCount": len(source_node_ids),
                 "sourceWayCount": len(all_ways),
                 "sourceFeatureCount": len(source_features),
                 "sourceCoastlineWayCount": len(coastline_source),
@@ -490,10 +531,10 @@ def main() -> int:
                 "waterwayTypePartCounts": waterway_type_counts,
                 "totalCoastlineLengthMeters": total_coastline_length,
                 "totalWaterwayLengthMeters": total_waterway_length,
-                "missingNodeReferenceCount": sum(
-                    len(item["missingNodeIds"]) for item in missing_references
-                ),
-                "missingNodeReferences": missing_references,
+                "missingWayGeometryCount": len(missing_unique),
+                "missingWayGeometryIds": missing_unique,
+                "missingNodeReferenceCount": 0,
+                "missingNodeReferences": [],
                 "duplicatePartIdCount": duplicate_part_ids,
                 "outOfBoundsVertexCount": out_of_bounds_vertices,
                 "introducedSelfIntersectionCount": len(introduced_self_intersections),
@@ -509,7 +550,7 @@ def main() -> int:
         qa["passed"] = (
             len(coastline_projected) > 0
             and len(waterway_projected) > 0
-            and qa["missingNodeReferenceCount"] == 0
+            and len(missing_unique) == 0
             and duplicate_part_ids == 0
             and out_of_bounds_vertices == 0
             and not introduced_self_intersections
@@ -529,7 +570,7 @@ def main() -> int:
                     for item in raw_files
                     if item["role"] == "raw_overpass_json_gzip"
                 ),
-                "deduplicatedNodeCount": len(all_nodes),
+                "deduplicatedNodeIdCount": len(source_node_ids),
                 "deduplicatedWayCount": len(all_ways),
                 "outputFiles": output_files,
                 "license": source_config["license"],
