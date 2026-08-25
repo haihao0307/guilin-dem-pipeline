@@ -1,0 +1,158 @@
+{
+  "schema": "wenzhou_guilin_skill_binding@0.2.0",
+  "project": "wenzhou-qingjiang-22000km2",
+  "executionBranch": "project/wenzhou-v020-terrain-hydrology-web",
+  "baseBranch": "project/wenzhou-qingjiang-22000km2-dem-v001",
+  "task": "ops/tasks/WENZHOU_V020_TERRAIN_HYDROLOGY_WEB.md",
+  "truth": {
+    "file": "WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "crs": "EPSG:32651",
+    "nativeGrid": [11866, 11866],
+    "pixelSpacingMeters": 12.5,
+    "bounds": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+    "areaKm2": 22000.305625,
+    "sourceDemCount": 13,
+    "immutable": true,
+    "verticalScale": "1:1"
+  },
+  "sourceSkills": [
+    {
+      "id": "GUILIN_V060_TERRAIN_HYDROLOGY_ONLY",
+      "ref": "fix/guilin-v060-terrain-hydrology-only",
+      "path": "ops/tasks/GUILIN_V060_TERRAIN_HYDROLOGY_ONLY.md",
+      "transfer": [
+        "immutable_truth_dem",
+        "grayscale_terrain_fields",
+        "one_terrain_runtime",
+        "fixed_centerline_hydrology",
+        "lateral_width_only",
+        "camera_anchors",
+        "browser_diagnostics",
+        "release_gates"
+      ]
+    },
+    {
+      "id": "dem-ecology-surface",
+      "ref": "skill/dem-ecology-surface-v050",
+      "path": "skills/dem-ecology-surface/SKILL.md",
+      "transfer": [
+        "z_truth_m",
+        "z_micro_delta_m",
+        "z_visual_m",
+        "world_coordinate_continuity",
+        "hard_exclusions",
+        "riverbank_microterrain",
+        "qa_release_rollback"
+      ]
+    },
+    {
+      "id": "process-dem-with-gaea",
+      "transfer": [
+        "geospatial_preflight",
+        "untouched_truth_branch",
+        "reversible_terrain_stages",
+        "difference_slope_hillshade_drainage_qa",
+        "browser_packaging"
+      ],
+      "runtimeExclusion": "No external GAEA bridge or iframe dependency"
+    },
+    {
+      "id": "generate-guilin-dem-fine-regions",
+      "transfer": [
+        "source_truth_gate",
+        "high_resolution_label_integrity",
+        "core_asset_lineage"
+      ]
+    }
+  ],
+  "web": {
+    "route": "web/wenzhou-v020/index.html",
+    "fullHeightGrid": [2048, 2048],
+    "coreHeightGrid": [2048, 2048],
+    "coreFootprintMeters": [25600, 25600],
+    "proceduralVisualDetailMeters": 1.0,
+    "proceduralDetailLabel": "1 m procedural visual detail",
+    "minimumGroundClearanceMeters": 1.6,
+    "squareScreenshot": [2048, 2048],
+    "verticalExaggeration": false,
+    "contours": false
+  },
+  "cameraAnchors": [
+    {
+      "id": "wenzhou_city",
+      "label": "温州城",
+      "wgs84": [120.66682, 27.99942],
+      "epsg32651": [270558.9123, 3099332.0532],
+      "profile": "oujiang_alluvial_city"
+    },
+    {
+      "id": "xianxi_town",
+      "label": "仙溪镇",
+      "wgs84": [121.06631, 28.41754],
+      "epsg32651": [310592.7935, 3144978.2366],
+      "profile": "yandang_west_mountain_town"
+    },
+    {
+      "id": "haimen_city",
+      "label": "海门城",
+      "wgs84": [121.45, 28.68333],
+      "epsg32651": [348562.234, 3173885.4365],
+      "profile": "jiaojiang_estuary_city"
+    },
+    {
+      "id": "yandang_mountain",
+      "label": "雁荡山",
+      "wgs84": [121.0503, 28.3697],
+      "epsg32651": [308938.4435, 3139702.063],
+      "profile": "yandang_volcanic_cliff"
+    }
+  ],
+  "grayscaleMasks": [
+    "danxia_visual_mask",
+    "cliff_mask",
+    "erosion_mask",
+    "sediment_mask",
+    "plateau_mask",
+    "terrace_mask",
+    "fracture_mask",
+    "yandang_volcanic_focus_mask",
+    "debris_large_mask",
+    "debris_medium_mask",
+    "debris_small_mask",
+    "riverbank_microterrain_mask"
+  ],
+  "hydrology": {
+    "canonicalCenterlineRequired": true,
+    "allowedSources": ["official", "OpenStreetMap"],
+    "sourceIdsRequired": true,
+    "checksumRequired": true,
+    "widthControl": "lateral_offset_only",
+    "invariantWidthMultipliers": [0.5, 1.0, 2.0, 4.0],
+    "invariants": [
+      "coordinate_sha256",
+      "total_length",
+      "bounds",
+      "vertex_count",
+      "topology",
+      "names"
+    ]
+  },
+  "excludedTransfers": [
+    "Li River",
+    "Xiang River",
+    "Guilin karst strength presets",
+    "Guilin crop catalogs",
+    "Guilin ecology assets",
+    "Guilin camera locations",
+    "proxy core demos",
+    "external GAEA bridge",
+    "iframe workbench navigation"
+  ],
+  "release": {
+    "draftOnly": true,
+    "publicDeploymentEnabled": false,
+    "controllerVisualApprovalRequired": true,
+    "rollbackRequired": true
+  }
+}
