@@ -1,0 +1,104 @@
+name: Deploy Kunming clean 3D viewer V001
+
+on:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - 'projects/kunming/clean-3d-viewer-v001/**'
+      - '.github/workflows/deploy-kunming-clean-3d-v001.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kunming-clean-3d-v001-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+      RELEASE_ASSET_ID: '528996453'
+      EXPECTED_TIFF_SHA256: '9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+      SITE_PATH: 'kunming-clean-3d-v001'
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout project branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install raster build dependencies
+        run: python -m pip install --disable-pip-version-check numpy pillow rasterio
+
+      - name: Download verified uncompressed DEM from draft Release
+        shell: bash
+        run: |
+          mkdir -p .work
+          gh api \
+            -H 'Accept: application/octet-stream' \
+            "/repos/${GITHUB_REPOSITORY}/releases/assets/${RELEASE_ASSET_ID}" \
+            > .work/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif
+          echo "${EXPECTED_TIFF_SHA256}  .work/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif" | sha256sum -c -
+
+      - name: Build clean three-dimensional viewer
+        run: |
+          python projects/kunming/clean-3d-viewer-v001/build_assets.py \
+            --input .work/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif \
+            --output .work/site \
+            --template projects/kunming/clean-3d-viewer-v001/template
+
+      - name: Validate generated site
+        run: |
+          node --check .work/site/app.js
+          python -m json.tool .work/site/manifest.json >/dev/null
+          python -m json.tool .work/site/QA.json >/dev/null
+          test -s .work/site/assets/height_rg16.png
+          test -s .work/site/assets/surface.png
+          test -s .work/site/assets/fallback.png
+
+      - name: Upload built site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kunming-clean-3d-v001-site
+          path: .work/site
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 1
+
+      - name: Replace dedicated Kunming viewer directory
+        shell: bash
+        run: |
+          rm -rf "pages/${SITE_PATH}"
+          mkdir -p "pages/${SITE_PATH}"
+          cp -a .work/site/. "pages/${SITE_PATH}/"
+          touch pages/.nojekyll
+
+      - name: Commit and push gh-pages
+        shell: bash
+        working-directory: pages
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "${SITE_PATH}" .nojekyll
+          if git diff --cached --quiet; then
+            echo 'No gh-pages changes to commit.'
+          else
+            git commit -m 'Deploy Kunming clean 3D viewer V001'
+            git push origin HEAD:gh-pages
+          fi
