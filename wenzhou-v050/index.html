@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN" data-ready="loading">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>温州连续 12.5 米 DEM 三维工作台 v0.5.2</title>
+<style>
+:root{color-scheme:dark;--bg:#06100f;--panel:rgba(8,18,17,.94);--panel2:rgba(13,28,25,.92);--line:rgba(144,202,180,.22);--text:#e6f1ed;--muted:#95aaa2;--accent:#7fc9ac;--warn:#d6b465;--bad:#ef8b7f;--shadow:0 18px 55px rgba(0,0,0,.46)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;color:var(--text)}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:#071312}
+#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:30;background:#06100f;transition:opacity .45s}
+html[data-ready="3d"] #loading{opacity:0;pointer-events:none}
+.load-card{width:min(560px,86vw);padding:26px 28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.load-card h1{font-size:21px;margin:0 0 10px}.load-card p{margin:0;color:var(--muted);line-height:1.65;font-size:13px}.bar{height:6px;margin-top:20px;border-radius:99px;overflow:hidden;background:#20332f}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5ba78b,#a2d7c2);transition:width .25s}.load-row{margin-top:10px;font-size:11px;color:#a8beb5;display:flex;justify-content:space-between;gap:12px}
+.top{position:fixed;left:16px;right:16px;top:14px;height:52px;z-index:8;display:flex;align-items:center;justify-content:space-between;pointer-events:none}.brand,.tools{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);backdrop-filter:blur(15px)}.brand{padding:9px 13px}.brand strong{font-size:14px;display:block}.brand small{font-size:10px;color:var(--muted);display:block;margin-top:2px}.tools{display:flex;gap:6px;padding:6px}
+button,select{font:inherit}button{border:1px solid var(--line);background:#13231f;color:var(--text);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:11px}button:hover{background:#1e3730;border-color:rgba(127,201,172,.6)}button.active{background:rgba(83,153,126,.35);border-color:var(--accent)}
+.panel{position:fixed;z-index:9;left:16px;top:78px;bottom:49px;width:310px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);backdrop-filter:blur(15px)}.panel::-webkit-scrollbar{width:7px}.panel::-webkit-scrollbar-thumb{background:#29463e;border-radius:8px}
+.section{border-bottom:1px solid var(--line)}.section:last-child{border-bottom:0}.head{width:100%;border:0;border-radius:0;background:transparent;display:flex;justify-content:space-between;padding:13px 14px;font-weight:650}.section.closed .body{display:none}.body{padding:0 14px 14px}.note{font-size:10px;line-height:1.6;color:var(--muted);padding:9px 10px;border:1px solid rgba(255,255,255,.05);border-radius:8px;background:rgba(0,0,0,.16)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:10px 0 5px}.row label{font-size:11px}.value{font-size:10px;color:var(--accent);font-variant-numeric:tabular-nums}.range{width:100%;accent-color:var(--accent)}select{width:100%;padding:7px;background:#12211e;color:var(--text);border:1px solid var(--line);border-radius:7px}.switch{display:flex;justify-content:space-between;align-items:center;margin:10px 0;font-size:11px}.switch input{accent-color:var(--accent)}
+.readout{position:fixed;right:16px;top:78px;z-index:8;width:218px;padding:12px 13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);font-size:10px;color:var(--muted);line-height:1.55;backdrop-filter:blur(15px)}.readout strong{display:block;color:var(--text);font-size:12px;margin-bottom:5px}.ok{color:var(--accent)}
+.status{position:fixed;left:16px;right:16px;bottom:12px;z-index:8;height:30px;padding:0 11px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,12,11,.86);border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:10px;backdrop-filter:blur(12px)}.status strong{color:#e1ece8}.badge{display:inline-block;padding:2px 6px;border-radius:5px;background:rgba(127,201,172,.14);color:#9bd5bd;margin-right:6px}
+#error{position:fixed;z-index:50;inset:0;display:none;place-items:center;background:#06100f;padding:20px}html[data-ready="error"] #error{display:grid}html[data-ready="error"] #loading{display:none}.error-card{max-width:650px;padding:25px;background:#1b1715;border:1px solid rgba(239,139,127,.35);border-radius:14px;box-shadow:var(--shadow)}.error-card h2{margin-top:0;color:#ffd6d1}.error-card pre{white-space:pre-wrap;color:#efb1aa;font-size:11px;background:#0e0c0b;padding:10px;border-radius:8px;max-height:240px;overflow:auto}
+.cross{position:fixed;left:50%;top:50%;width:14px;height:14px;z-index:7;pointer-events:none;opacity:.75}.cross:before,.cross:after{content:"";position:absolute;background:#fff}.cross:before{width:14px;height:1px;top:6px}.cross:after{height:14px;width:1px;left:6px}
+@media(max-width:820px){.panel{width:min(310px,calc(100vw - 32px));bottom:55px}.readout{display:none}.tools button:nth-child(2){display:none}.brand small{display:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="cross"></div>
+<div id="loading"><div class="load-card"><h1>载入温州连续三维地形</h1><p>读取同一张完整 12.5 米拼接 DEM，建立全域连续网格、固定水系和同源精细地形块。页面只提供三维视图。</p><div class="bar"><i id="bar"></i></div><div class="load-row"><span id="loadText">准备地形数据</span><span id="loadPct">0%</span></div></div></div>
+<div id="error"><div class="error-card"><h2>三维地形启动失败</h2><p>页面不会切换到二维替代图。下面是实际错误信息。</p><pre id="errorText"></pre><button onclick="location.reload()">重新载入</button></div></div>
+<div class="top"><div class="brand"><strong>温州连续 12.5 米 DEM 三维工作台 v0.5.2</strong><small>一张连续地形 · 四个镜头锚点 · 垂直比例 1:1</small></div><div class="tools"><button id="reset">全域总览</button><button id="capture">2048 截图</button><button id="ground">近地 1.6 m</button></div></div>
+<aside class="panel">
+<section class="section"><button class="head"><span>连续地形结构</span><span>−</span></button><div class="body"><div class="note">全域使用同一张拼接 DEM。温州城、仙溪镇、海门城、雁荡山只是同一地形上的镜头坐标。精细网格继续采样同一张全域高程纹理，不存在四套独立高程。</div></div></section>
+<section class="section"><button class="head"><span>镜头飞行</span><span>−</span></button><div class="body"><div class="grid2"><button data-anchor="wenzhou">温州城</button><button data-anchor="xianxi">仙溪镇</button><button data-anchor="haimen">海门城</button><button data-anchor="yandang">雁荡山</button></div></div></section>
+<section class="section"><button class="head"><span>地形塑造</span><span>−</span></button><div class="body">
+<div class="row"><label>地形塑造</label><span class="value" id="sculptV">0.62</span></div><input class="range" id="sculpt" type="range" min="0" max="1" step=".01" value=".62">
+<div class="row"><label>侵蚀强度</label><span class="value" id="erosionV">0.58</span></div><input class="range" id="erosion" type="range" min="0" max="1" step=".01" value=".58">
+<div class="row"><label>沉积分布</label><span class="value" id="sedimentV">0.50</span></div><input class="range" id="sediment" type="range" min="0" max="1" step=".01" value=".50">
+<div class="row"><label>崖壁暴露</label><span class="value" id="cliffV">0.72</span></div><input class="range" id="cliff" type="range" min="0" max="1" step=".01" value=".72">
+<div class="row"><label>喀斯特锐化</label><span class="value" id="karstV">0.34</span></div><input class="range" id="karst" type="range" min="0" max="1" step=".01" value=".34">
+<div class="row"><label>河岸冲刷</label><span class="value" id="bankV">0.36</span></div><input class="range" id="bank" type="range" min="0" max="1" step=".01" value=".36">
+<div class="row"><label>表面细节密度</label><span class="value" id="detailV">0.56</span></div><input class="range" id="detail" type="range" min="0" max="1" step=".01" value=".56">
+<div class="row"><label>卫星色彩风格</label></div><select id="satellite"><option value="0">自然地貌色</option><option value="1">湿润夏季</option><option value="2">岩壁增强</option><option value="3">灰度诊断</option><option value="4">历史低饱和</option></select>
+<div class="note" style="margin-top:10px">原始高程保持锁定。程序化细节只进入可回滚的视觉层，最大微地形变化约 ±1 米。</div>
+</div></section>
+<section class="section"><button class="head"><span>高级地貌</span><span>−</span></button><div class="body">
+<div class="row"><label>丹霞式层理</label><span class="value" id="danxiaV">0.28</span></div><input class="range" id="danxia" type="range" min="0" max="1" step=".01" value=".28">
+<div class="row"><label>台地与阶地</label><span class="value" id="terraceV">0.42</span></div><input class="range" id="terrace" type="range" min="0" max="1" step=".01" value=".42">
+<div class="row"><label>裂隙与小沟蚀</label><span class="value" id="fractureV">0.62</span></div><input class="range" id="fracture" type="range" min="0" max="1" step=".01" value=".62">
+<div class="row"><label>雁荡山火山岩响应</label><span class="value" id="yandangV">0.76</span></div><input class="range" id="yandang" type="range" min="0" max="1" step=".01" value=".76">
+</div></section>
+<section class="section"><button class="head"><span>固定水系</span><span>−</span></button><div class="body"><label class="switch"><span>水系显示</span><input id="river" type="checkbox" checked></label><label class="switch"><span>中心线诊断</span><input id="centerline" type="checkbox"></label><div class="row"><label>河宽横向倍率</label><span class="value" id="widthV">1.00×</span></div><input class="range" id="width" type="range" min=".35" max="4" step=".05" value="1"><div class="note">中心线坐标和长度固定。滑块只改变中心线两侧的横向偏移。</div></div></section>
+<section class="section"><button class="head"><span>光照与大气</span><span>−</span></button><div class="body"><div class="row"><label>太阳高度</label><span class="value" id="sunV">42°</span></div><input class="range" id="sun" type="range" min="5" max="85" step="1" value="42"><div class="row"><label>大气雾化</label><span class="value" id="fogV">0.18</span></div><input class="range" id="fog" type="range" min="0" max=".8" step=".01" value=".18"></div></section>
+</aside>
+<div class="readout"><strong id="location">全域总览</strong><span id="camera">准备三维相机</span><br><span id="riverInfo">固定水系准备中</span><br><span class="ok" id="readyInfo">加载中</span></div>
+<div class="status"><div><span class="badge">仅三维</span><strong id="fps">0 FPS</strong> · <span id="statusText">初始化</span></div><div>真实 DEM 11866 × 11866 · <span id="gridInfo">在线高程流读取中</span> · 1:1</div></div>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
