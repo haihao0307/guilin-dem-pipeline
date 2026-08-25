@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Acquire and validate the official Kanmen UHSLC hourly research-quality record."""
+"""Acquire and validate the official Kanmen UHSLC hourly research-quality record.
+
+The script reads the dedicated Kanmen station dataset instead of scanning the
+large global ERDDAP table. The selected source values remain in their published
+millimetre reference datum. A second series with the window mean removed is
+provided for phase and tidal-range comparison before an absolute datum transform
+has been verified.
+"""
 
 from __future__ import annotations
 
@@ -11,12 +18,13 @@ import math
 import os
 import sys
 import tempfile
-import urllib.parse
 import urllib.request
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 POINTS_PATH = REPO_ROOT / "projects/wenzhou/coastal/config/tide_points_v100.json"
@@ -26,24 +34,11 @@ REPORT_ROOT = REPO_ROOT / "projects/wenzhou/coastal/reports"
 ACQUISITION_REPORT = REPORT_ROOT / "KANMEN_UHSLC_ACQUISITION.json"
 QA_REPORT = REPORT_ROOT / "KANMEN_UHSLC_QA.json"
 
-DATASET_ID = "global_hourly_rqds"
-BASE_URL = f"https://uhslc.soest.hawaii.edu/erddap/tabledap/{DATASET_ID}"
-VARIABLES = [
-    "time",
-    "sea_level",
-    "quality",
-    "latitude",
-    "longitude",
-    "station_name",
-    "station_country",
-    "station_country_code",
-    "record_id",
-    "uhslc_id",
-    "version",
-    "gloss_id",
-    "ssc_id",
-    "reference_datum",
-]
+DATASET_ID = "h632a"
+SOURCE_URL = "https://uhslc.soest.hawaii.edu/opendap/rqds/pacific/hourly/h632a.nc"
+SOURCE_DAS_URL = f"{SOURCE_URL}.das"
+SOURCE_DDS_URL = f"{SOURCE_URL}.dds"
+DIRECT_CSV_URL = "https://uhslc.soest.hawaii.edu/data/csv/rqds/pacific/hourly/h632a.csv"
 EXPECTED_UHSLC_ID = 632
 EXPECTED_RECORD_ID = 6321
 EXPECTED_VERSION = "A"
@@ -51,10 +46,6 @@ EXPECTED_GLOSS_ID = 94
 EXPECTED_SSC_ID = "kanm"
 EXPECTED_QUALITY = 4
 FILL_VALUE = -32767
-
-
-def sha256_bytes(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
 
 
 def sha256_file(path: Path) -> str:
@@ -96,87 +87,83 @@ def iso_z(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
-def build_query(start: str, end_exclusive: str) -> str:
-    selections = ",".join(VARIABLES)
-    constraints = [
-        f"uhslc_id={EXPECTED_UHSLC_ID}",
-        f"record_id={EXPECTED_RECORD_ID}",
-        f'version="{EXPECTED_VERSION}"',
-        f"time>={start}",
-        f"time<{end_exclusive}",
-        'orderBy("time")',
-    ]
-    raw_query = selections + "&" + "&".join(constraints)
-    return urllib.parse.quote(raw_query, safe=",=&<>():")
-
-
-def fetch(url: str) -> tuple[bytes, dict[str, Any]]:
+def fetch_text(url: str) -> tuple[bytes, dict[str, Any]]:
     request = urllib.request.Request(
         url,
         headers={
             "User-Agent": "WenzhouCoastalPipeline/1.0",
-            "Accept": "text/csv,text/plain,application/octet-stream,*/*",
+            "Accept": "text/plain,application/octet-stream,*/*",
         },
     )
-    with urllib.request.urlopen(request, timeout=180) as response:
+    with urllib.request.urlopen(request, timeout=120) as response:
         content = response.read()
         status = getattr(response, "status", 200)
-        content_type = response.headers.get("Content-Type", "")
         if status != 200:
-            raise RuntimeError(f"UHSLC ERDDAP returned HTTP {status}: {url}")
+            raise RuntimeError(f"UHSLC metadata endpoint returned HTTP {status}: {url}")
+        if not content:
+            raise RuntimeError(f"UHSLC metadata endpoint returned no bytes: {url}")
         prefix = content[:256].lstrip().lower()
         if b"<html" in prefix or b"<!doctype" in prefix:
-            raise RuntimeError(f"UHSLC endpoint returned HTML instead of data: {content_type}")
-        if not content:
-            raise RuntimeError("UHSLC endpoint returned an empty response")
-        metadata = {
+            raise RuntimeError(f"UHSLC metadata endpoint returned HTML: {url}")
+        return content, {
             "requestUrl": url,
             "httpStatus": status,
-            "contentType": content_type,
+            "contentType": response.headers.get("Content-Type", ""),
             "contentLengthHeader": response.headers.get("Content-Length"),
             "lastModified": response.headers.get("Last-Modified"),
             "etag": response.headers.get("ETag"),
         }
-        return content, metadata
 
 
-def parse_csv_response(content: bytes) -> tuple[list[str], list[str], list[dict[str, str]]]:
-    text = content.decode("utf-8-sig")
-    rows = list(csv.reader(io.StringIO(text)))
-    if len(rows) < 3:
-        raise RuntimeError(f"UHSLC CSV contained fewer than three rows: {len(rows)}")
-    header = [item.strip() for item in rows[0]]
-    units = [item.strip() for item in rows[1]]
-    if header != VARIABLES:
-        raise RuntimeError(f"Unexpected UHSLC CSV header: {header}")
-    if len(units) != len(header):
-        raise RuntimeError(f"UHSLC CSV units row length mismatch: {units}")
-    records: list[dict[str, str]] = []
-    for row_number, row in enumerate(rows[2:], start=3):
-        if not row or all(not item.strip() for item in row):
-            continue
-        if len(row) != len(header):
-            raise RuntimeError(
-                f"UHSLC CSV row {row_number} has {len(row)} values, expected {len(header)}"
-            )
-        records.append(dict(zip(header, [item.strip() for item in row], strict=True)))
-    if not records:
-        raise RuntimeError("UHSLC CSV contained no observation records")
-    return header, units, records
+def clean_scalar(value: Any) -> Any:
+    array = np.asarray(value)
+    if array.size == 0:
+        return None
+    if array.size == 1:
+        item = array.reshape(-1)[0]
+        if isinstance(item, np.generic):
+            item = item.item()
+        if isinstance(item, bytes):
+            return item.decode("utf-8", errors="replace").strip("\x00 ")
+        if isinstance(item, str):
+            return item.strip("\x00 ")
+        return item
+    flat = array.reshape(-1)
+    if array.dtype.kind == "S":
+        return b"".join(bytes(item) for item in flat).decode("utf-8", errors="replace").strip("\x00 ")
+    if array.dtype.kind == "U":
+        return "".join(str(item) for item in flat).strip("\x00 ")
+    values: list[Any] = []
+    for item in flat:
+        if isinstance(item, np.generic):
+            item = item.item()
+        if isinstance(item, bytes):
+            item = item.decode("utf-8", errors="replace").strip("\x00 ")
+        values.append(item)
+    return values
 
 
-def integer(value: str, field: str) -> int:
+def integer_scalar(value: Any, label: str) -> int:
+    scalar = clean_scalar(value)
     try:
-        return int(value)
-    except ValueError as exc:
-        raise RuntimeError(f"Invalid integer in field {field}: {value!r}") from exc
+        return int(scalar)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"Invalid integer metadata {label}: {scalar!r}") from exc
 
 
-def floating(value: str, field: str) -> float:
+def float_scalar(value: Any, label: str) -> float:
+    scalar = clean_scalar(value)
     try:
-        return float(value)
-    except ValueError as exc:
-        raise RuntimeError(f"Invalid float in field {field}: {value!r}") from exc
+        return float(scalar)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"Invalid float metadata {label}: {scalar!r}") from exc
+
+
+def text_scalar(value: Any, label: str) -> str:
+    scalar = clean_scalar(value)
+    if scalar is None:
+        raise RuntimeError(f"Missing text metadata {label}")
+    return str(scalar).strip()
 
 
 def expected_timestamps(start: datetime, end_exclusive: datetime) -> list[datetime]:
@@ -188,57 +175,156 @@ def expected_timestamps(start: datetime, end_exclusive: datetime) -> list[dateti
     return values
 
 
+def datetime64_to_utc(value: np.datetime64) -> datetime:
+    seconds = value.astype("datetime64[s]").astype(np.int64)
+    return datetime.fromtimestamp(int(seconds), tz=timezone.utc)
+
+
+def get_station_metadata(dataset: Any) -> dict[str, Any]:
+    required = [
+        "latitude",
+        "longitude",
+        "station_name",
+        "station_country",
+        "station_country_code",
+        "record_id",
+        "uhslc_id",
+        "version",
+        "gloss_id",
+        "ssc_id",
+        "reference_datum",
+    ]
+    missing = [name for name in required if name not in dataset.variables]
+    if missing:
+        raise RuntimeError(f"Kanmen station dataset lacks required variables: {missing}")
+    return {
+        "latitude": float_scalar(dataset["latitude"].values, "latitude"),
+        "longitude": float_scalar(dataset["longitude"].values, "longitude"),
+        "stationName": text_scalar(dataset["station_name"].values, "station_name"),
+        "stationCountry": text_scalar(dataset["station_country"].values, "station_country"),
+        "stationCountryCode": integer_scalar(
+            dataset["station_country_code"].values, "station_country_code"
+        ),
+        "recordId": integer_scalar(dataset["record_id"].values, "record_id"),
+        "uhslcId": integer_scalar(dataset["uhslc_id"].values, "uhslc_id"),
+        "version": text_scalar(dataset["version"].values, "version"),
+        "glossId": integer_scalar(dataset["gloss_id"].values, "gloss_id"),
+        "sscId": text_scalar(dataset["ssc_id"].values, "ssc_id"),
+        "referenceDatum": text_scalar(dataset["reference_datum"].values, "reference_datum"),
+    }
+
+
+def station_quality(dataset: Any, selected_indices: np.ndarray) -> np.ndarray:
+    if "quality" not in dataset.variables:
+        raise RuntimeError("Kanmen station dataset lacks the quality variable")
+    quality = dataset["quality"]
+    if "time" in quality.dims:
+        time_axis = quality.dims.index("time")
+        indexers: dict[str, Any] = {"time": selected_indices}
+        for dimension in quality.dims:
+            if dimension != "time":
+                indexers[dimension] = 0
+        values = np.asarray(quality.isel(**indexers).values).reshape(-1)
+        if values.size != selected_indices.size:
+            raise RuntimeError(
+                f"Time-varying quality returned {values.size} values for {selected_indices.size} timestamps"
+            )
+        return values.astype("int16")
+    scalar = integer_scalar(quality.values, "quality")
+    return np.full(selected_indices.size, scalar, dtype="int16")
+
+
+def load_station_window(start: datetime, end_exclusive: datetime) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    try:
+        import xarray as xr
+    except ImportError as exc:
+        raise RuntimeError("xarray is required for the UHSLC station OPeNDAP record") from exc
+
+    start64 = np.datetime64(start.replace(tzinfo=None), "s")
+    end64 = np.datetime64(end_exclusive.replace(tzinfo=None), "s")
+    with xr.open_dataset(SOURCE_URL, engine="pydap", decode_times=True) as dataset:
+        if "time" not in dataset.variables or "sea_level" not in dataset.variables:
+            raise RuntimeError("Kanmen station dataset lacks time or sea_level")
+        times = np.asarray(dataset["time"].values).astype("datetime64[s]")
+        selected_indices = np.flatnonzero((times >= start64) & (times < end64))
+        if selected_indices.size == 0:
+            raise RuntimeError(
+                f"Kanmen station dataset contains no samples from {iso_z(start)} to {iso_z(end_exclusive)}"
+            )
+        if not np.array_equal(
+            selected_indices,
+            np.arange(selected_indices[0], selected_indices[-1] + 1),
+        ):
+            raise RuntimeError("Kanmen selected time indices are not contiguous")
+
+        sea_level = dataset["sea_level"]
+        indexers: dict[str, Any] = {"time": selected_indices}
+        for dimension in sea_level.dims:
+            if dimension != "time":
+                indexers[dimension] = 0
+        sea_values = np.asarray(sea_level.isel(**indexers).values).reshape(-1)
+        if sea_values.size != selected_indices.size:
+            raise RuntimeError(
+                f"Sea-level selection returned {sea_values.size} values for {selected_indices.size} timestamps"
+            )
+        quality_values = station_quality(dataset, selected_indices)
+        metadata = get_station_metadata(dataset)
+        source_attributes = {key: str(value) for key, value in dataset.attrs.items()}
+        variable_attributes = {
+            name: {key: str(value) for key, value in dataset[name].attrs.items()}
+            for name in ("time", "sea_level", "quality")
+            if name in dataset.variables
+        }
+
+    records: list[dict[str, Any]] = []
+    invalid: list[dict[str, Any]] = []
+    for offset, source_index in enumerate(selected_indices.tolist()):
+        timestamp = datetime64_to_utc(times[source_index])
+        sea_value = sea_values[offset]
+        quality_value = quality_values[offset]
+        if np.ma.is_masked(sea_value) or not np.isfinite(float(sea_value)):
+            invalid.append({"time": iso_z(timestamp), "reason": "masked_or_nonfinite_sea_level"})
+            continue
+        sea_level_mm = int(round(float(sea_value)))
+        if sea_level_mm == FILL_VALUE:
+            invalid.append({"time": iso_z(timestamp), "reason": "uhslc_fill_value"})
+            continue
+        records.append(
+            {
+                "time": timestamp,
+                "sourceIndex": int(source_index),
+                "seaLevelMillimeters": sea_level_mm,
+                "quality": int(quality_value),
+                **metadata,
+            }
+        )
+
+    source = {
+        "datasetUrl": SOURCE_URL,
+        "directCsvCompanionUrl": DIRECT_CSV_URL,
+        "selectedSourceIndexStart": int(selected_indices[0]),
+        "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
+        "selectedSourceIndexCount": int(selected_indices.size),
+        "datasetTimeCount": int(times.size),
+        "datasetTimeStartUtc": iso_z(datetime64_to_utc(times[0])),
+        "datasetTimeEndUtc": iso_z(datetime64_to_utc(times[-1])),
+        "stationMetadata": metadata,
+        "datasetAttributes": source_attributes,
+        "variableAttributes": variable_attributes,
+        "invalidSourceSamples": invalid,
+    }
+    return records, source
+
+
 def normalize_records(
-    records: list[dict[str, str]],
+    records: list[dict[str, Any]],
     start: datetime,
     end_exclusive: datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    normalized: list[dict[str, Any]] = []
-    invalid_rows: list[dict[str, Any]] = []
-    for row_index, record in enumerate(records, start=1):
-        try:
-            timestamp = parse_utc(record["time"])
-            sea_level_mm = integer(record["sea_level"], "sea_level")
-            quality = integer(record["quality"], "quality")
-            latitude = floating(record["latitude"], "latitude")
-            longitude = floating(record["longitude"], "longitude")
-            row = {
-                "time": timestamp,
-                "seaLevelMillimeters": sea_level_mm,
-                "quality": quality,
-                "latitude": latitude,
-                "longitude": longitude,
-                "stationName": record["station_name"],
-                "stationCountry": record["station_country"],
-                "stationCountryCode": integer(
-                    record["station_country_code"], "station_country_code"
-                ),
-                "recordId": integer(record["record_id"], "record_id"),
-                "uhslcId": integer(record["uhslc_id"], "uhslc_id"),
-                "version": record["version"],
-                "glossId": integer(record["gloss_id"], "gloss_id"),
-                "sscId": record["ssc_id"],
-                "referenceDatum": record["reference_datum"],
-            }
-            if sea_level_mm == FILL_VALUE:
-                raise RuntimeError("sea_level is the UHSLC fill value")
-            if not (start <= timestamp < end_exclusive):
-                raise RuntimeError("timestamp is outside the requested observation window")
-            normalized.append(row)
-        except Exception as exc:
-            invalid_rows.append(
-                {
-                    "rowIndex": row_index,
-                    "error": type(exc).__name__,
-                    "detail": str(exc),
-                    "record": record,
-                }
-            )
-
-    normalized.sort(key=lambda item: item["time"])
+    records.sort(key=lambda item: item["time"])
     expected = expected_timestamps(start, end_exclusive)
     expected_set = set(expected)
-    observed_times = [item["time"] for item in normalized]
+    observed_times = [item["time"] for item in records]
     observed_set = set(observed_times)
     duplicate_count = len(observed_times) - len(observed_set)
     missing = sorted(expected_set - observed_set)
@@ -256,29 +342,32 @@ def normalize_records(
                 }
             )
 
-    sea_levels = [item["seaLevelMillimeters"] for item in normalized]
-    window_mean_mm = sum(sea_levels) / len(sea_levels) if sea_levels else math.nan
-    for item in normalized:
+    sea_levels = [item["seaLevelMillimeters"] for item in records]
+    if not sea_levels:
+        raise RuntimeError("Kanmen selected window contains no valid sea-level observations")
+    window_mean_mm = float(sum(sea_levels)) / float(len(sea_levels))
+    for item in records:
         item["seaLevelMetersRelativeReferenceDatum"] = item["seaLevelMillimeters"] / 1000.0
         item["seaLevelMetersWindowMeanRemoved"] = (
             item["seaLevelMillimeters"] - window_mean_mm
         ) / 1000.0
 
-    quality_histogram = Counter(item["quality"] for item in normalized)
-    references = sorted({item["referenceDatum"] for item in normalized})
-    coordinate_pairs = sorted(
-        {(round(item["longitude"], 6), round(item["latitude"], 6)) for item in normalized}
-    )
+    quality_histogram = Counter(item["quality"] for item in records)
     identities = {
-        "stationNames": sorted({item["stationName"] for item in normalized}),
-        "stationCountries": sorted({item["stationCountry"] for item in normalized}),
-        "recordIds": sorted({item["recordId"] for item in normalized}),
-        "uhslcIds": sorted({item["uhslcId"] for item in normalized}),
-        "versions": sorted({item["version"] for item in normalized}),
-        "glossIds": sorted({item["glossId"] for item in normalized}),
-        "sscIds": sorted({item["sscId"] for item in normalized}),
-        "referenceDatums": references,
-        "coordinatePairs": coordinate_pairs,
+        "stationNames": sorted({item["stationName"] for item in records}),
+        "stationCountries": sorted({item["stationCountry"] for item in records}),
+        "recordIds": sorted({item["recordId"] for item in records}),
+        "uhslcIds": sorted({item["uhslcId"] for item in records}),
+        "versions": sorted({item["version"] for item in records}),
+        "glossIds": sorted({item["glossId"] for item in records}),
+        "sscIds": sorted({item["sscId"] for item in records}),
+        "referenceDatums": sorted({item["referenceDatum"] for item in records}),
+        "coordinatePairs": sorted(
+            {
+                (round(item["longitude"], 6), round(item["latitude"], 6))
+                for item in records
+            }
+        ),
     }
     completeness = len(observed_set & expected_set) / len(expected_set) if expected_set else 0.0
     identity_passed = (
@@ -295,10 +384,7 @@ def normalize_records(
 
     qa = {
         "expectedSampleCount": len(expected),
-        "observedRowCount": len(records),
-        "validSampleCount": len(normalized),
-        "invalidRowCount": len(invalid_rows),
-        "invalidRows": invalid_rows,
+        "validSampleCount": len(records),
         "uniqueTimestampCount": len(observed_set),
         "duplicateTimestampCount": duplicate_count,
         "missingTimestampCount": len(missing),
@@ -315,21 +401,58 @@ def normalize_records(
         "timePassed": time_passed,
         "coveragePassed": coverage_passed,
         "windowMeanMillimeters": window_mean_mm,
-        "minimumMillimeters": min(sea_levels) if sea_levels else None,
-        "maximumMillimeters": max(sea_levels) if sea_levels else None,
-        "rangeMillimeters": max(sea_levels) - min(sea_levels) if sea_levels else None,
+        "minimumMillimeters": min(sea_levels),
+        "maximumMillimeters": max(sea_levels),
+        "rangeMillimeters": max(sea_levels) - min(sea_levels),
         "absoluteDatumTransformApplied": False,
         "comparisonSeries": "seaLevelMetersWindowMeanRemoved",
     }
     qa["passed"] = (
-        bool(normalized)
-        and not invalid_rows
-        and identity_passed
+        identity_passed
         and quality_passed
         and time_passed
         and coverage_passed
     )
-    return normalized, qa
+    return records, qa
+
+
+def write_source_csv(path: Path, records: list[dict[str, Any]]) -> None:
+    buffer = io.StringIO(newline="")
+    writer = csv.writer(buffer)
+    writer.writerow(
+        [
+            "time_utc",
+            "source_time_index",
+            "sea_level_mm_relative_reference_datum",
+            "quality",
+            "longitude",
+            "latitude",
+            "record_id",
+            "uhslc_id",
+            "version",
+            "gloss_id",
+            "ssc_id",
+            "reference_datum",
+        ]
+    )
+    for item in records:
+        writer.writerow(
+            [
+                iso_z(item["time"]),
+                item["sourceIndex"],
+                item["seaLevelMillimeters"],
+                item["quality"],
+                f"{item['longitude']:.6f}",
+                f"{item['latitude']:.6f}",
+                item["recordId"],
+                item["uhslcId"],
+                item["version"],
+                item["glossId"],
+                item["sscId"],
+                item["referenceDatum"],
+            ]
+        )
+    atomic_write(path, buffer.getvalue().encode("utf-8"))
 
 
 def write_normalized_csv(path: Path, records: list[dict[str, Any]]) -> None:
@@ -373,13 +496,24 @@ def write_normalized_csv(path: Path, records: list[dict[str, Any]]) -> None:
     atomic_write(path, buffer.getvalue().encode("utf-8"))
 
 
+def file_record(path: Path, role: str) -> dict[str, Any]:
+    return {
+        "role": role,
+        "path": str(path.relative_to(REPO_ROOT)),
+        "bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
+
+
 def main() -> int:
     generated = datetime.now(timezone.utc).isoformat()
     acquisition: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_acquisition@1.0.0",
+        "schema": "wenzhou_kanmen_uhslc_acquisition@1.1.0",
         "generatedAtUtc": generated,
         "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
         "datasetId": DATASET_ID,
+        "sourceMode": "dedicated station OPeNDAP record",
+        "sourceUrl": SOURCE_URL,
         "station": "Kanmen",
         "uhslcId": EXPECTED_UHSLC_ID,
         "recordId": EXPECTED_RECORD_ID,
@@ -387,7 +521,7 @@ def main() -> int:
         "passed": False,
     }
     qa_report: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_qa@1.0.0",
+        "schema": "wenzhou_kanmen_uhslc_qa@1.1.0",
         "generatedAtUtc": generated,
         "passed": False,
     }
@@ -403,58 +537,69 @@ def main() -> int:
         if end_exclusive <= start:
             raise RuntimeError("Kanmen observation end must be later than start")
 
-        query = build_query(start_text, end_text)
-        data_url = f"{BASE_URL}.csv?{query}"
-        metadata_url = f"{BASE_URL}.das"
-        raw_content, transfer = fetch(data_url)
-        das_content, das_transfer = fetch(metadata_url)
-
-        header, units, records = parse_csv_response(raw_content)
+        das_content, das_transfer = fetch_text(SOURCE_DAS_URL)
+        dds_content, dds_transfer = fetch_text(SOURCE_DDS_URL)
+        records, source_evidence = load_station_window(start, end_exclusive)
         normalized, qa = normalize_records(records, start, end_exclusive)
-        raw_name = (
-            f"KANMEN_UHSLC_RQDS_{start.strftime('%Y%m%dT%H%M%SZ')}_"
-            f"{end_exclusive.strftime('%Y%m%dT%H%M%SZ')}.csv"
-        )
-        raw_path = DATA_ROOT / raw_name
-        normalized_path = DATA_ROOT / raw_name.replace(".csv", "_NORMALIZED.csv")
-        das_path = DATA_ROOT / f"{DATASET_ID}.das"
-        atomic_write(raw_path, raw_content)
-        atomic_write(das_path, das_content)
-        write_normalized_csv(normalized_path, normalized)
 
-        acquisition.update(
+        stem = (
+            f"KANMEN_UHSLC_RQDS_{start.strftime('%Y%m%dT%H%M%SZ')}_"
+            f"{end_exclusive.strftime('%Y%m%dT%H%M%SZ')}"
+        )
+        source_csv_path = DATA_ROOT / f"{stem}_SOURCE_VALUES.csv"
+        normalized_path = DATA_ROOT / f"{stem}_NORMALIZED.csv"
+        source_evidence_path = DATA_ROOT / f"{stem}_OPENDAP_REQUEST.json"
+        das_path = DATA_ROOT / f"{DATASET_ID}.das"
+        dds_path = DATA_ROOT / f"{DATASET_ID}.dds"
+
+        write_source_csv(source_csv_path, normalized)
+        write_normalized_csv(normalized_path, normalized)
+        write_json(
+            source_evidence_path,
             {
-                "passed": True,
-                "request": transfer,
-                "metadataRequest": das_transfer,
+                "schema": "wenzhou_kanmen_opendap_request@1.0.0",
+                "generatedAtUtc": generated,
+                "datasetUrl": SOURCE_URL,
+                "dasUrl": SOURCE_DAS_URL,
+                "ddsUrl": SOURCE_DDS_URL,
+                "directCsvCompanionUrl": DIRECT_CSV_URL,
                 "requestedWindow": {
                     "startUtc": start_text,
                     "endExclusiveUtc": end_text,
                 },
-                "variables": header,
-                "unitsRow": units,
-                "raw": {
-                    "path": str(raw_path.relative_to(REPO_ROOT)),
-                    "bytes": raw_path.stat().st_size,
-                    "sha256": sha256_file(raw_path),
+                **source_evidence,
+            },
+        )
+        atomic_write(das_path, das_content)
+        atomic_write(dds_path, dds_content)
+
+        files = [
+            file_record(source_csv_path, "materialized_official_source_values"),
+            file_record(normalized_path, "mean_removed_comparison_series"),
+            file_record(source_evidence_path, "opendap_request_and_source_identity"),
+            file_record(das_path, "official_opendap_das"),
+            file_record(dds_path, "official_opendap_dds"),
+        ]
+        acquisition.update(
+            {
+                "passed": True,
+                "requestedWindow": {
+                    "startUtc": start_text,
+                    "endExclusiveUtc": end_text,
                 },
-                "normalized": {
-                    "path": str(normalized_path.relative_to(REPO_ROOT)),
-                    "bytes": normalized_path.stat().st_size,
-                    "sha256": sha256_file(normalized_path),
-                    "absoluteDatumTransformApplied": False,
+                "opendapMetadataRequests": {
+                    "das": das_transfer,
+                    "dds": dds_transfer,
                 },
-                "datasetMetadata": {
-                    "path": str(das_path.relative_to(REPO_ROOT)),
-                    "bytes": das_path.stat().st_size,
-                    "sha256": sha256_file(das_path),
-                },
+                "sourceEvidence": source_evidence,
+                "files": files,
                 "stationMetadata": station_metadata,
             }
         )
         qa_report.update(qa)
-        qa_report["rawSha256"] = acquisition["raw"]["sha256"]
-        qa_report["normalizedSha256"] = acquisition["normalized"]["sha256"]
+        qa_report["sourceInvalidSamples"] = source_evidence["invalidSourceSamples"]
+        qa_report["sourceInvalidSampleCount"] = len(source_evidence["invalidSourceSamples"])
+        qa_report["files"] = files
         qa_report["referenceDatumPolicy"] = station_metadata["datumPolicy"]
     except Exception as exc:
         acquisition["error"] = type(exc).__name__
