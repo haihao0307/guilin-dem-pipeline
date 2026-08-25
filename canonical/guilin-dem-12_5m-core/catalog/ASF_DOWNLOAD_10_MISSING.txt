@@ -1,0 +1,87 @@
+桂林 12.5 米 DEM：ASF 缺失十片下载清单
+
+用途：补齐当前 clean core 中缺失的十张 ALOS PALSAR RTC_HI_RES 参考 DEM。
+
+在 ASF Vertex 中使用 Granule Search。每次粘贴一个 Granule 编号，下载对应的 RTC_HI_RES 完整 ZIP。不要解压，不要改名。
+
+01
+Granule: ALPSRP130490480
+Expected archive: AP_13049_FBD_F0480_RT1.zip
+Required DEM member: AP_13049_FBD_F0480_RT1.dem.tif
+Expected DEM bytes: 70351048
+Expected DEM SHA256: 326d3a64dff36cec34625435251da21ba48da9ce2122dfd05319f5e1d186d437
+
+02
+Granule: ALPSRP130490490
+Expected archive: AP_13049_FBD_F0490_RT1.zip
+Required DEM member: AP_13049_FBD_F0490_RT1.dem.tif
+Expected DEM bytes: 70666396
+Expected DEM SHA256: 873c2077111c028ac66fbb04aa365af4ce2c89e25463736c12354ee20bdca3f6
+
+03
+Granule: ALPSRP144273110
+Expected archive: AP_14427_FBS_F3110_RT1.zip
+Required DEM member: AP_14427_FBS_F3110_RT1.dem.tif
+Expected DEM bytes: 70957192
+Expected DEM SHA256: dc8cd1364d1da6b9ff14db69a95a146ca0d4e03f143fc0adfcbccc35e9e70a63
+
+04
+Granule: ALPSRP144273120
+Expected archive: AP_14427_FBS_F3120_RT1.zip
+Required DEM member: AP_14427_FBS_F3120_RT1.dem.tif
+Expected DEM bytes: 71942668
+Expected DEM SHA256: 3e9f84d5681cbaf59d5859529740b4e8095d3f8809fca387919327933be17c6d
+
+05
+Granule: ALPSRP157330500
+Expected archive: AP_15733_FBS_F0500_RT1.zip
+Required DEM member: AP_15733_FBS_F0500_RT1.dem.tif
+Expected DEM bytes: 71646328
+Expected DEM SHA256: eaa8d88a1814c6492f89a2820d89d81ffd0377a0443b1408e57308057db4eda9
+
+06
+Granule: ALPSRP157330510
+Expected archive: AP_15733_FBS_F0510_RT1.zip
+Required DEM member: AP_15733_FBS_F0510_RT1.dem.tif
+Expected DEM bytes: 71574748
+Expected DEM SHA256: 1153026e3011599ab126b75887b41108b8a785901afb937dc6d591cf7d325fb3
+
+07
+Granule: ALPSRP159080500
+Expected archive: AP_15908_FBS_F0500_RT1.zip
+Required DEM member: AP_15908_FBS_F0500_RT1.dem.tif
+Expected DEM bytes: 71163524
+Expected DEM SHA256: 272af7d354a91470ded503a1e978a322d716557fc92d8baf50b5222fd4af2ba0
+
+08
+Granule: ALPSRP159080510
+Expected archive: AP_15908_FBS_F0510_RT1.zip
+Required DEM member: AP_15908_FBS_F0510_RT1.dem.tif
+Expected DEM bytes: 70798536
+Expected DEM SHA256: 8cf9f3ca6236debc68c455f012c3cb70a187224d9df4a751f9f71c113fff2972
+
+09
+Granule: ALPSRP181690500
+Expected archive: AP_18169_FBD_F0500_RT1.zip
+Required DEM member: AP_18169_FBD_F0500_RT1.dem.tif
+Expected DEM bytes: 72395828
+Expected DEM SHA256: 95c65851936ea1e4c62a2ad5a1c187c2955ffdb3a670142ee9c745f186ef0ce9
+
+10
+Granule: ALPSRP181690510
+Expected archive: AP_18169_FBD_F0510_RT1.zip
+Required DEM member: AP_18169_FBD_F0510_RT1.dem.tif
+Expected DEM bytes: 71275804
+Expected DEM SHA256: 243ab533e5c0dd53bf2f5ce22d47f26b03f038abf136d5fbd4c5717545fa1847
+
+已存在，无需重复下载：
+Granule: ALPSRP106130480
+Archive: AP_10613_FBS_F0480_RT1.zip
+DEM: AP_10613_FBS_F0480_RT1.dem.tif
+
+接收规则：
+1. 发送原始 ZIP。
+2. 不解压。
+3. 不改文件名。
+4. 收到后逐包校验 DEM 成员的字节数与 SHA256。
+5. 十一张全部通过后，才重建唯一连续 12.5 米 DEM，并重新运行覆盖、NoData、缺口与接缝 QA。
