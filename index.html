@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>昆明 DEM 在线地形预览</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,"Microsoft YaHei",system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#dce3e4;color:#102022}
+#gl,#fallback{position:fixed;inset:0;width:100%;height:100%;display:block;background:linear-gradient(180deg,#e9eeee 0%,#cfd9da 100%)}#fallback{display:none;cursor:grab}
+.panel{position:fixed;left:16px;top:16px;width:min(390px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:17px;border:1px solid rgba(255,255,255,.14);border-radius:15px;background:rgba(16,23,26,.88);backdrop-filter:blur(14px);box-shadow:0 18px 52px rgba(0,0,0,.23);color:#eef3f3}
+h1{margin:0 0 6px;font-size:18px;line-height:1.35}.sub{font-size:12px;line-height:1.55;color:#c2cdcf}.section{margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,.1)}.label{font-size:12px;color:#c4cfd0;margin-bottom:8px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}button{border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:8px 7px;background:#233034;color:#e1e8e8;cursor:pointer;font-size:12px}button:hover{background:#344347}button.active{background:#d8e2b5;color:#162017;border-color:#d8e2b5;font-weight:700}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:10px 0 4px}.value{font-size:12px;color:#d8e2b5;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#d8e2b5}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{padding:8px 9px;border-radius:8px;background:rgba(255,255,255,.05)}.stat b{display:block;font-size:12px;color:#fff;margin-bottom:2px}.stat span{font-size:11px;color:#a9b6b7}.note{font-size:11px;line-height:1.55;color:#b9c5c6}.truth{color:#d8e2b5}.status{position:fixed;right:13px;bottom:12px;max-width:min(65vw,820px);padding:8px 11px;border-radius:9px;background:rgba(16,23,26,.76);font-size:11px;color:#eef4f4;pointer-events:none}
+@media(max-width:720px){.panel{left:8px;top:8px;width:calc(100vw - 16px);max-height:58vh;padding:13px}.status{left:8px;right:auto;max-width:calc(100vw - 16px)}}
+</style></head>
+<body><canvas id="gl"></canvas><canvas id="fallback"></canvas>
+<div class="panel"><h1>昆明 DEM 在线地形预览</h1><div class="sub">11 张 ASF DEM 连续覆盖区。自然高程比例，明亮底色，固定水系中心线。河宽滑块只改变横向宽度。</div>
+<div class="section"><div class="label">显示模式</div><div class="modes"><button class="active" data-mode="0">地形</button><button data-mode="1">高程</button><button data-mode="2">坡度</button><button data-mode="3">岩石</button><button data-mode="4">碎石</button><button data-mode="5">水系</button></div></div>
+<div class="section"><div class="row"><div class="label">岩石暴露</div><div id="vRock" class="value">48%</div></div><input id="rock" type="range" min="0" max="100" value="48" /><div class="row"><div class="label">崩积碎石</div><div id="vDebris" class="value">42%</div></div><input id="debris" type="range" min="0" max="100" value="42" /><div class="row"><div class="label">河宽</div><div id="vRiver" class="value">45%</div></div><input id="river" type="range" min="0" max="100" value="45" /><div class="row"><div class="label">光照方向</div><div id="vLight" class="value">315°</div></div><input id="light" type="range" min="0" max="360" value="315" /></div>
+<div class="section actions"><button id="perspective">透视</button><button id="top">俯视</button><button id="reset">复位</button><button id="fullscreen">全屏</button><button id="screenshot">截图</button><button id="help">操作</button></div>
+<div class="section stats"><div class="stat"><b>31,639 km²</b><span>连续覆盖</span></div><div class="stat"><b>12.5 m</b><span>真值输出像元</span></div><div class="stat"><b>2048 级</b><span>在线画布上限</span></div><div class="stat"><b>1.6 m</b><span>最近镜头距离</span></div></div>
+<div class="section note"><span class="truth">真值保护：</span>在线页面使用压缩预览高度纹理。权威 COG 未被改写。碎石、水系、岩石均为可回滚视觉层。</div></div>
+<div id="status" class="status">正在载入在线地形…</div>
+<script src="height.js"></script><script src="config.js"></script><script src="water.js"></script><script src="gl-utils.js"></script><script src="main.js"></script><script src="ui.js"></script>
+</body></html>
