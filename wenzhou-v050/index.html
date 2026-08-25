@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-store">
-<title>温州连续 12.5 米 DEM 三维工作台 v0.5.2</title>
+<title>温州连续 12.5 米 DEM 三维工作台 v0.5.3</title>
 <style>
 :root{color-scheme:dark;--bg:#06100f;--panel:rgba(8,18,17,.94);--panel2:rgba(13,28,25,.92);--line:rgba(144,202,180,.22);--text:#e6f1ed;--muted:#95aaa2;--accent:#7fc9ac;--warn:#d6b465;--bad:#ef8b7f;--shadow:0 18px 55px rgba(0,0,0,.46)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;color:var(--text)}
@@ -29,7 +29,7 @@ button,select{font:inherit}button{border:1px solid var(--line);background:#13231
 <div class="cross"></div>
 <div id="loading"><div class="load-card"><h1>载入温州连续三维地形</h1><p>读取同一张完整 12.5 米拼接 DEM，建立全域连续网格、固定水系和同源精细地形块。页面只提供三维视图。</p><div class="bar"><i id="bar"></i></div><div class="load-row"><span id="loadText">准备地形数据</span><span id="loadPct">0%</span></div></div></div>
 <div id="error"><div class="error-card"><h2>三维地形启动失败</h2><p>页面不会切换到二维替代图。下面是实际错误信息。</p><pre id="errorText"></pre><button onclick="location.reload()">重新载入</button></div></div>
-<div class="top"><div class="brand"><strong>温州连续 12.5 米 DEM 三维工作台 v0.5.2</strong><small>一张连续地形 · 四个镜头锚点 · 垂直比例 1:1</small></div><div class="tools"><button id="reset">全域总览</button><button id="capture">2048 截图</button><button id="ground">近地 1.6 m</button></div></div>
+<div class="top"><div class="brand"><strong>温州连续 12.5 米 DEM 三维工作台 v0.5.3</strong><small>一张连续地形 · 四个镜头锚点 · 垂直比例 1:1</small></div><div class="tools"><button id="reset">全域总览</button><button id="capture">2048 截图</button><button id="ground">近地 1.6 m</button></div></div>
 <aside class="panel">
 <section class="section"><button class="head"><span>连续地形结构</span><span>−</span></button><div class="body"><div class="note">全域使用同一张拼接 DEM。温州城、仙溪镇、海门城、雁荡山只是同一地形上的镜头坐标。精细网格继续采样同一张全域高程纹理，不存在四套独立高程。</div></div></section>
 <section class="section"><button class="head"><span>镜头飞行</span><span>−</span></button><div class="body"><div class="grid2"><button data-anchor="wenzhou">温州城</button><button data-anchor="xianxi">仙溪镇</button><button data-anchor="haimen">海门城</button><button data-anchor="yandang">雁荡山</button></div></div></section>
@@ -55,5 +55,5 @@ button,select{font:inherit}button{border:1px solid var(--line);background:#13231
 </aside>
 <div class="readout"><strong id="location">全域总览</strong><span id="camera">准备三维相机</span><br><span id="riverInfo">固定水系准备中</span><br><span class="ok" id="readyInfo">加载中</span></div>
 <div class="status"><div><span class="badge">仅三维</span><strong id="fps">0 FPS</strong> · <span id="statusText">初始化</span></div><div>真实 DEM 11866 × 11866 · <span id="gridInfo">在线高程流读取中</span> · 1:1</div></div>
-<script src="config.js"></script><script src="chunk-00.js"></script><script src="chunk-01.js"></script><script src="chunk-02.js"></script><script src="chunk-03.js"></script><script src="chunk-04.js"></script><script src="chunk-05.js"></script><script src="run.js"></script>
+<script src="config.js?v=053"></script><script src="chunk-00.js?v=053"></script><script src="chunk-01.js?v=053"></script><script src="chunk-02.js?v=053"></script><script src="chunk-03.js?v=053"></script><script src="chunk-04.js?v=053"></script><script src="chunk-05.js?v=053"></script><script src="run.js?v=053"></script>
 </body></html>
