@@ -1,6 +1,6 @@
 {
-  "schema": "wenzhou_gebco_2026_qa@1.0.0",
-  "generatedAtUtc": "2026-08-25T10:33:45.850503+00:00",
+  "schema": "wenzhou_gebco_2026_qa@1.1.0",
+  "generatedAtUtc": "2026-08-25T10:39:45.560408+00:00",
   "passed": true,
   "parentTruthPreflight": {
     "passed": true,
@@ -12,43 +12,155 @@
     "spacingMeters": 100.0,
     "width": 2090,
     "height": 1971,
+    "cellCount": 4119390,
     "bounds": [
       218100.0,
       3030900.0,
       427100.0,
       3228000.0
-    ]
+    ],
+    "fullBufferBathymetryCoveragePercent": 100.0,
+    "fullBufferTidCoveragePercent": 100.0,
+    "openBoundaryValidCells": 8118,
+    "openBoundaryCellCount": 8118
   },
-  "bathymetry": {
-    "validMarineCells": 896908,
-    "missingMarineCells": 0,
-    "anomalousPositiveMarineCells": 84722,
+  "fullBufferElevation": {
+    "count": 4119390,
+    "minimumMeters": -90.82556915283203,
+    "maximumMeters": 1397.9703369140625,
+    "meanMeters": 138.58151245117188,
+    "percentilesMeters": {
+      "p01": -82.2026138305664,
+      "p05": -68.49665832519531,
+      "p50": 5.078211307525635,
+      "p95": 682.7387084960938,
+      "p99": 912.0159301757812
+    }
+  },
+  "preliminaryNonpositiveSeabedReference": {
+    "count": 1880268,
+    "minimumMeters": -90.82556915283203,
+    "maximumMeters": -0.0004432777932379395,
+    "meanMeters": -28.337743759155273,
+    "percentilesMeters": {
+      "p01": -84.53644561767578,
+      "p05": -77.7536849975586,
+      "p50": -19.0,
+      "p95": -3.0790293216705322,
+      "p99": -1.0895556211471558
+    },
+    "definition": "GEBCO elevation <= 0 m and TID != land; final sea mask pending coastline and wet-dry topology"
+  },
+  "truthAoiMarineMaskComparison": {
+    "count": 896908,
     "minimumMeters": -64.0,
     "maximumMeters": 93.68317413330078,
+    "meanMeters": -13.581375122070312,
     "percentilesMeters": {
       "p01": -52.0,
       "p05": -41.11235427856445,
       "p50": -11.753961563110352,
       "p95": 3.8880298137664795,
       "p99": 18.51094627380371
+    },
+    "truthMarineCells": 896908,
+    "truthLandCells": 1303864,
+    "outsideTruthMaskCells": 1918618,
+    "truthMarineGebcoPositiveCells": 84722,
+    "truthLandGebcoNonpositiveCells": 5813
+  },
+  "tidHistogramFullBuffer": {
+    "0": {
+      "count": 2229300,
+      "definition": "land"
+    },
+    "17": {
+      "count": 31172,
+      "definition": "combination_of_direct_measurements"
+    },
+    "40": {
+      "count": 1799196,
+      "definition": "satellite_gravity_guided_prediction"
+    },
+    "44": {
+      "count": 59722,
+      "definition": "mixed_measured_and_derived_gridded_bathymetry"
     }
   },
-  "tidHistogram": {
-    "0": 94816,
-    "17": 12638,
-    "40": 757326,
-    "44": 32128
+  "tidHistogramPreliminarySeabed": {
+    "17": {
+      "count": 29054,
+      "definition": "combination_of_direct_measurements"
+    },
+    "40": {
+      "count": 1792227,
+      "definition": "satellite_gravity_guided_prediction"
+    },
+    "44": {
+      "count": 58987,
+      "definition": "mixed_measured_and_derived_gridded_bathymetry"
+    }
   },
-  "sourceQuality": {
-    "directMeasurementCells": 12638,
-    "indirectOrInterpolatedCells": 884270,
-    "unknownMaskCells": 1918618
+  "sourceQualityPreliminarySeabed": {
+    "directMeasurementCells": 29054,
+    "indirectOrInterpolatedCells": 1851214,
+    "mixedOrUnknownCells": 0,
+    "shallowDatumReviewCells": 969606
   },
   "outputs": [
     {
       "path": "projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif",
-      "bytes": 3648517,
-      "sha256": "5ce83e881881a7970284209c3009760b44fa299012efe79617c1bcc52d9fafe2",
+      "bytes": 17637178,
+      "sha256": "591e92eef61699088a87e32bfd83417498f89cfe3a6a84f4ce6a2e2ac3b689fc",
+      "driver": "GTiff",
+      "crs": "EPSG:32651",
+      "width": 2090,
+      "height": 1971,
+      "dtype": "float32",
+      "nodata": -99999.0,
+      "resolution": [
+        100.0,
+        100.0
+      ],
+      "bounds": [
+        218100.0,
+        3030900.0,
+        427100.0,
+        3228000.0
+      ],
+      "blockShapes": [
+        [
+          512,
+          512
+        ]
+      ],
+      "overviews": [
+        2,
+        4,
+        8
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "AVERAGE"
+      },
+      "tags": {
+        "LAND_SEA_USE": "apply coastline or wet-dry mask downstream; values remain unmodified",
+        "LAND_TRUTH_LFS_OID": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+        "MODEL_ALIGNMENT_RESOLUTION": "100 m",
+        "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
+        "ROLE": "full_buffer_gebco_elevation_reference",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
+        "AREA_OR_POINT": "Area"
+      }
+    },
+    {
+      "path": "projects/wenzhou/coastal/data/derived/WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif",
+      "bytes": 3648707,
+      "sha256": "d722ab6ce121dca4ae2681ee4eea5c3131058a9c7cf76b96025a59c62867dfe7",
       "driver": "GTiff",
       "crs": "EPSG:32651",
       "width": 2090,
@@ -84,18 +196,20 @@
       },
       "tags": {
         "LAND_TRUTH_LFS_OID": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+        "MASK_SOURCE": "WENZHOU_QINGJIANG_marine_mask_COG.tif",
         "MODEL_ALIGNMENT_RESOLUTION": "100 m",
         "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
-        "ROLE": "marine_only_bathymetry",
+        "ROLE": "archived_truth_aoi_marine_masked_bathymetry",
         "SOURCE_DATASET": "GEBCO_2026",
         "SOURCE_RESOLUTION": "15 arc-second",
+        "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
         "AREA_OR_POINT": "Area"
       }
     },
     {
       "path": "projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif",
-      "bytes": 91057,
-      "sha256": "78242ceddbd9a0b15e562f35ec3b335b58803e1b9c663cf3ce6876f71b205d8f",
+      "bytes": 80594,
+      "sha256": "57ec051848a52b34f808586454651072a0184f254943fc6d53299e5151651825",
       "driver": "GTiff",
       "crs": "EPSG:32651",
       "width": 2090,
@@ -133,16 +247,18 @@
         "LAND_TRUTH_LFS_OID": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
         "MODEL_ALIGNMENT_RESOLUTION": "100 m",
         "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
-        "ROLE": "GEBCO_type_identifier",
+        "ROLE": "full_buffer_gebco_type_identifier",
         "SOURCE_DATASET": "GEBCO_2026",
         "SOURCE_RESOLUTION": "15 arc-second",
+        "TID_CODES": "0 land; 10-17 direct; 40-48 indirect; 70-72 unknown or mixed",
+        "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
         "AREA_OR_POINT": "Area"
       }
     },
     {
       "path": "projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif",
-      "bytes": 69008,
-      "sha256": "ca6a79b1eeba137c19de94bff0eb593db255b450cdeeaab7ec6e53b0c013db3f",
+      "bytes": 107821,
+      "sha256": "2d6104c944a1100efe744661674274cc8e3bbd1afd8a8bc30dd473c5a7c3c14e",
       "driver": "GTiff",
       "crs": "EPSG:32651",
       "width": 2090,
@@ -180,10 +296,60 @@
         "LAND_TRUTH_LFS_OID": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
         "MODEL_ALIGNMENT_RESOLUTION": "100 m",
         "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
-        "ROLE": "vertical_datum_and_source_uncertainty",
+        "ROLE": "source_and_vertical_datum_uncertainty",
         "SOURCE_DATASET": "GEBCO_2026",
         "SOURCE_RESOLUTION": "15 arc-second",
-        "VALUES": "0=lower_uncertainty,1=review_required,2=land_sea_mask_unknown,255=nodata",
+        "VALUES": "0=direct seabed;1=indirect seabed;2=mixed or unknown seabed;3=shallow datum review;4=truth marine GEBCO positive;5=truth land GEBCO nonpositive;255=not classified",
+        "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
+        "AREA_OR_POINT": "Area"
+      }
+    },
+    {
+      "path": "projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif",
+      "bytes": 78618,
+      "sha256": "46ba81fd67cccc43301e713df96b2eec3d7f0047e324d2d09018db12039cda76",
+      "driver": "GTiff",
+      "crs": "EPSG:32651",
+      "width": 2090,
+      "height": 1971,
+      "dtype": "uint8",
+      "nodata": 255.0,
+      "resolution": [
+        100.0,
+        100.0
+      ],
+      "bounds": [
+        218100.0,
+        3030900.0,
+        427100.0,
+        3228000.0
+      ],
+      "blockShapes": [
+        [
+          512,
+          512
+        ]
+      ],
+      "overviews": [
+        2,
+        4,
+        8
+      ],
+      "imageStructure": {
+        "LAYOUT": "COG",
+        "COMPRESSION": "DEFLATE",
+        "INTERLEAVE": "BAND",
+        "OVERVIEW_RESAMPLING": "NEAREST"
+      },
+      "tags": {
+        "LAND_TRUTH_LFS_OID": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+        "MODEL_ALIGNMENT_RESOLUTION": "100 m",
+        "NATIVE_12_5M_BATHYMETRY_CLAIM": "false",
+        "ROLE": "archived_truth_mask_vs_gebco_conflict",
+        "SOURCE_DATASET": "GEBCO_2026",
+        "SOURCE_RESOLUTION": "15 arc-second",
+        "VALUES": "0=no conflict;1=truth marine GEBCO positive;2=truth land GEBCO nonpositive;255=outside truth mask",
+        "VERTICAL_REFERENCE_NOTE": "GEBCO assumes MSL; shallow source datums may differ",
         "AREA_OR_POINT": "Area"
       }
     }
