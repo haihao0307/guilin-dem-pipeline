@@ -97,19 +97,28 @@ jobs:
           assert qa['parentTruthPreflight']['landPixelsModified'] == 0
           assert qa['parentTruthPreflight']['truthDemSha256'] == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
           assert len(acquisition['outputs']) == 2
-          assert len(qa['outputs']) == 3
+          assert len(qa['outputs']) == 5
+          assert qa['modelGrid']['fullBufferBathymetryCoveragePercent'] == 100.0
+          assert qa['modelGrid']['fullBufferTidCoveragePercent'] == 100.0
+          assert qa['modelGrid']['openBoundaryValidCells'] == qa['modelGrid']['openBoundaryCellCount']
           for item in acquisition['outputs'] + qa['outputs']:
               path = root / item['path']
               assert path.is_file(), path
-              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
               assert path.stat().st_size == item['bytes']
-              assert digest == item['sha256']
+              assert digest.hexdigest() == item['sha256']
           print(json.dumps({
               'sourceSubset': acquisition['outputs'],
               'derived': qa['outputs'],
               'modelGrid': qa['modelGrid'],
-              'bathymetry': qa['bathymetry'],
-              'tidHistogram': qa['tidHistogram'],
+              'fullBufferElevation': qa['fullBufferElevation'],
+              'preliminaryNonpositiveSeabedReference': qa['preliminaryNonpositiveSeabedReference'],
+              'truthAoiMarineMaskComparison': qa['truthAoiMarineMaskComparison'],
+              'tidHistogramPreliminarySeabed': qa['tidHistogramPreliminarySeabed'],
+              'sourceQualityPreliminarySeabed': qa['sourceQualityPreliminarySeabed'],
           }, indent=2))
           PY
 
@@ -127,7 +136,7 @@ jobs:
             projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json \
             projects/wenzhou/coastal/reports/GEBCO_2026_QA.json
           test -n "$(git diff --cached --name-only)"
-          git commit -m 'Add verified Wenzhou GEBCO 2026 bathymetry Stage A [skip coastal stage-a]'
+          git commit -m 'Add verified full-buffer Wenzhou GEBCO 2026 Stage A [skip coastal stage-a]'
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git lfs push origin HEAD
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
@@ -183,12 +192,13 @@ jobs:
 
           fresh = json.loads(Path('/tmp/wenzhou-stage-a-fresh-verification.json').read_text())
           receipt = {
-              'schema': 'wenzhou_coastal_stage_a_receipt@1.0.0',
+              'schema': 'wenzhou_coastal_stage_a_receipt@1.1.0',
               'completedAtUtc': datetime.now(timezone.utc).isoformat(),
               'repository': os.environ['GITHUB_REPOSITORY'],
               'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
               'binaryCommit': os.environ['BINARY_COMMIT'],
               'source': 'GEBCO_2026 official CEDA range-read subset',
+              'scope': 'full buffered coastal forcing domain plus archived truth-AOI marine comparison',
               'truthDemSha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
               'landPixelsModified': 0,
               'freshDownloadVerified': fresh['freshDownloadVerified'],
@@ -198,7 +208,7 @@ jobs:
           path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           git add -- projects/wenzhou/coastal/reports/STAGE_A_UPLOAD_RECEIPT.json
-          git commit -m 'Record verified Wenzhou coastal Stage A receipt [skip coastal stage-a]'
+          git commit -m 'Record verified full-buffer Wenzhou coastal Stage A receipt [skip coastal stage-a]'
           git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
 
       - name: Preserve Stage A evidence artifact
