@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Acquire and validate the official Kanmen UHSLC hourly research-quality record.
+"""Acquire a verified Kanmen UHSLC hourly research-quality window.
 
-The script reads the dedicated Kanmen station dataset instead of scanning the
-large global ERDDAP table. The selected source values remain in their published
-millimetre reference datum. A second series with the window mean removed is
-provided for phase and tidal-range comparison before an absolute datum transform
-has been verified.
+The dedicated UHSLC 632, record 6321, version A station dataset is the only
+observation source accepted here. The preferred configured window is tested
+first. When that station version does not contain the preferred dates or the
+window is less than 95 percent complete, the script selects the latest complete
+35-day window from the same immutable station version and records the exact
+reason, dates, source indices, missing hours and hashes.
+
+Published observations remain in the UHSLC millimetre reference datum. A second
+window-mean-removed series is generated for phase and tidal-range comparison.
+No absolute datum transform is applied.
 """
 
 from __future__ import annotations
@@ -62,11 +67,11 @@ def atomic_write(path: Path, content: bytes) -> None:
         temporary.write(content)
         temporary.flush()
         os.fsync(temporary.fileno())
-        temp_path = Path(temporary.name)
+        temporary_path = Path(temporary.name)
     try:
-        os.replace(temp_path, path)
+        os.replace(temporary_path, path)
     finally:
-        temp_path.unlink(missing_ok=True)
+        temporary_path.unlink(missing_ok=True)
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -85,6 +90,15 @@ def parse_utc(value: str) -> datetime:
 
 def iso_z(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def np_datetime(value: datetime) -> np.datetime64:
+    return np.datetime64(value.astimezone(timezone.utc).replace(tzinfo=None), "s")
+
+
+def datetime64_to_utc(value: np.datetime64) -> datetime:
+    seconds = value.astype("datetime64[s]").astype(np.int64)
+    return datetime.fromtimestamp(int(seconds), tz=timezone.utc)
 
 
 def fetch_text(url: str) -> tuple[bytes, dict[str, Any]]:
@@ -166,20 +180,6 @@ def text_scalar(value: Any, label: str) -> str:
     return str(scalar).strip()
 
 
-def expected_timestamps(start: datetime, end_exclusive: datetime) -> list[datetime]:
-    values: list[datetime] = []
-    current = start
-    while current < end_exclusive:
-        values.append(current)
-        current += timedelta(hours=1)
-    return values
-
-
-def datetime64_to_utc(value: np.datetime64) -> datetime:
-    seconds = value.astype("datetime64[s]").astype(np.int64)
-    return datetime.fromtimestamp(int(seconds), tz=timezone.utc)
-
-
 def get_station_metadata(dataset: Any) -> dict[str, Any]:
     required = [
         "latitude",
@@ -214,60 +214,169 @@ def get_station_metadata(dataset: Any) -> dict[str, Any]:
     }
 
 
-def station_quality(dataset: Any, selected_indices: np.ndarray) -> np.ndarray:
-    if "quality" not in dataset.variables:
-        raise RuntimeError("Kanmen station dataset lacks the quality variable")
-    quality = dataset["quality"]
-    if "time" in quality.dims:
-        time_axis = quality.dims.index("time")
-        indexers: dict[str, Any] = {"time": selected_indices}
-        for dimension in quality.dims:
-            if dimension != "time":
-                indexers[dimension] = 0
-        values = np.asarray(quality.isel(**indexers).values).reshape(-1)
-        if values.size != selected_indices.size:
-            raise RuntimeError(
-                f"Time-varying quality returned {values.size} values for {selected_indices.size} timestamps"
+def time_axis_values(variable: Any, expected_count: int, label: str) -> np.ndarray:
+    if "time" not in variable.dims:
+        scalar = clean_scalar(variable.values)
+        return np.full(expected_count, scalar)
+    indexers: dict[str, Any] = {}
+    for dimension in variable.dims:
+        if dimension != "time":
+            indexers[dimension] = 0
+    values = np.asarray(variable.isel(**indexers).values).reshape(-1)
+    if values.size != expected_count:
+        raise RuntimeError(
+            f"{label} returned {values.size} values for {expected_count} timestamps"
+        )
+    return values
+
+
+def evaluate_window(
+    times: np.ndarray,
+    valid_mask: np.ndarray,
+    start: datetime,
+    end_exclusive: datetime,
+) -> dict[str, Any]:
+    start64 = np_datetime(start)
+    end64 = np_datetime(end_exclusive)
+    selected = (times >= start64) & (times < end64)
+    selected_times = times[selected]
+    valid_times = times[selected & valid_mask]
+    unique_valid = np.unique(valid_times)
+    expected_count = int((end_exclusive - start).total_seconds() // 3600)
+    completeness = float(unique_valid.size) / float(expected_count) if expected_count else 0.0
+    duplicate_count = int(valid_times.size - unique_valid.size)
+    return {
+        "startUtc": iso_z(start),
+        "endExclusiveUtc": iso_z(end_exclusive),
+        "expectedSampleCount": expected_count,
+        "sourceSampleCount": int(selected_times.size),
+        "validSampleCount": int(valid_times.size),
+        "uniqueValidTimestampCount": int(unique_valid.size),
+        "duplicateValidTimestampCount": duplicate_count,
+        "completenessFraction": completeness,
+        "containsAnySourceSamples": bool(selected_times.size),
+    }
+
+
+def select_latest_complete_window(
+    times: np.ndarray,
+    valid_mask: np.ndarray,
+    duration_days: int,
+    minimum_completeness: float,
+) -> tuple[datetime, datetime, dict[str, Any]]:
+    duration_hours = duration_days * 24
+    required_count = int(math.ceil(duration_hours * minimum_completeness))
+    valid_hours = np.unique(times[valid_mask].astype("datetime64[h]"))
+    if valid_hours.size < required_count:
+        raise RuntimeError(
+            f"Kanmen station has only {valid_hours.size} valid unique hours, "
+            f"fewer than the required {required_count}"
+        )
+
+    for right_index in range(valid_hours.size - 1, required_count - 2, -1):
+        end_hour = valid_hours[right_index] + np.timedelta64(1, "h")
+        start_hour = end_hour - np.timedelta64(duration_hours, "h")
+        left_index = int(np.searchsorted(valid_hours, start_hour, side="left"))
+        valid_count = right_index - left_index + 1
+        if valid_count < required_count:
+            continue
+        start = datetime64_to_utc(start_hour.astype("datetime64[s]"))
+        end_exclusive = datetime64_to_utc(end_hour.astype("datetime64[s]"))
+        evaluation = evaluate_window(times, valid_mask, start, end_exclusive)
+        if evaluation["completenessFraction"] >= minimum_completeness:
+            return start, end_exclusive, evaluation
+
+    raise RuntimeError(
+        f"No {duration_days}-day window in UHSLC 632 record 6321 version A "
+        f"meets completeness {minimum_completeness}"
+    )
+
+
+def select_window(
+    times: np.ndarray,
+    sea_values: np.ndarray,
+    quality_values: np.ndarray,
+    window_config: dict[str, Any],
+) -> dict[str, Any]:
+    duration_days = int(window_config["durationDays"])
+    minimum = float(window_config["minimumCompletenessFraction"])
+    policy = str(window_config["windowSelectionPolicy"])
+    if policy != "prefer_configured_then_latest_complete":
+        raise RuntimeError(f"Unsupported Kanmen window selection policy: {policy}")
+
+    finite = np.isfinite(sea_values.astype("float64", copy=False))
+    valid_mask = finite & (sea_values.astype("float64", copy=False) != FILL_VALUE)
+    valid_mask &= quality_values.astype("int64", copy=False) == EXPECTED_QUALITY
+
+    preferred_start = parse_utc(window_config["preferredStartUtc"])
+    preferred_end = parse_utc(window_config["preferredEndExclusiveUtc"])
+    if preferred_end - preferred_start != timedelta(days=duration_days):
+        raise RuntimeError("Preferred Kanmen observation window does not match durationDays")
+    preferred = evaluate_window(times, valid_mask, preferred_start, preferred_end)
+    preferred_passed = (
+        preferred["completenessFraction"] >= minimum
+        and preferred["duplicateValidTimestampCount"] == 0
+    )
+    preferred["passed"] = preferred_passed
+
+    if preferred_passed:
+        selected_start = preferred_start
+        selected_end = preferred_end
+        selected = preferred
+        fallback_used = False
+        reason = "preferred window meets completeness and identity gates"
+    else:
+        selected_start, selected_end, selected = select_latest_complete_window(
+            times,
+            valid_mask,
+            duration_days,
+            minimum,
+        )
+        fallback_used = True
+        if not preferred["containsAnySourceSamples"]:
+            reason = "preferred window is outside the time coverage of UHSLC 632 record 6321 version A"
+        else:
+            reason = (
+                "preferred window failed completeness or duplicate-time gates; "
+                "latest complete window selected from the same station record and version"
             )
-        return values.astype("int16")
-    scalar = integer_scalar(quality.values, "quality")
-    return np.full(selected_indices.size, scalar, dtype="int16")
+
+    selected["passed"] = (
+        selected["completenessFraction"] >= minimum
+        and selected["duplicateValidTimestampCount"] == 0
+    )
+    return {
+        "policy": policy,
+        "durationDays": duration_days,
+        "minimumCompletenessFraction": minimum,
+        "preferredWindow": preferred,
+        "fallbackUsed": fallback_used,
+        "selectionReason": reason,
+        "selectedWindow": selected,
+        "selectedStart": selected_start,
+        "selectedEndExclusive": selected_end,
+        "validMask": valid_mask,
+    }
 
 
-def load_station_window(start: datetime, end_exclusive: datetime) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def load_station_arrays() -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
     try:
         import xarray as xr
     except ImportError as exc:
         raise RuntimeError("xarray is required for the UHSLC station OPeNDAP record") from exc
 
-    start64 = np.datetime64(start.replace(tzinfo=None), "s")
-    end64 = np.datetime64(end_exclusive.replace(tzinfo=None), "s")
     with xr.open_dataset(SOURCE_URL, engine="pydap", decode_times=True) as dataset:
         if "time" not in dataset.variables or "sea_level" not in dataset.variables:
             raise RuntimeError("Kanmen station dataset lacks time or sea_level")
-        times = np.asarray(dataset["time"].values).astype("datetime64[s]")
-        selected_indices = np.flatnonzero((times >= start64) & (times < end64))
-        if selected_indices.size == 0:
-            raise RuntimeError(
-                f"Kanmen station dataset contains no samples from {iso_z(start)} to {iso_z(end_exclusive)}"
-            )
-        if not np.array_equal(
-            selected_indices,
-            np.arange(selected_indices[0], selected_indices[-1] + 1),
-        ):
-            raise RuntimeError("Kanmen selected time indices are not contiguous")
-
-        sea_level = dataset["sea_level"]
-        indexers: dict[str, Any] = {"time": selected_indices}
-        for dimension in sea_level.dims:
-            if dimension != "time":
-                indexers[dimension] = 0
-        sea_values = np.asarray(sea_level.isel(**indexers).values).reshape(-1)
-        if sea_values.size != selected_indices.size:
-            raise RuntimeError(
-                f"Sea-level selection returned {sea_values.size} values for {selected_indices.size} timestamps"
-            )
-        quality_values = station_quality(dataset, selected_indices)
+        times = np.asarray(dataset["time"].values).astype("datetime64[s]").reshape(-1)
+        if times.size == 0 or np.isnat(times).any():
+            raise RuntimeError("Kanmen station dataset contains empty or invalid timestamps")
+        if np.any(times[1:] < times[:-1]):
+            raise RuntimeError("Kanmen station dataset timestamps are not monotonic")
+        sea_values = time_axis_values(dataset["sea_level"], times.size, "sea_level")
+        if "quality" not in dataset.variables:
+            raise RuntimeError("Kanmen station dataset lacks quality")
+        quality_values = time_axis_values(dataset["quality"], times.size, "quality")
         metadata = get_station_metadata(dataset)
         source_attributes = {key: str(value) for key, value in dataset.attrs.items()}
         variable_attributes = {
@@ -276,53 +385,69 @@ def load_station_window(start: datetime, end_exclusive: datetime) -> tuple[list[
             if name in dataset.variables
         }
 
+    return (
+        times,
+        np.asarray(sea_values),
+        np.asarray(quality_values),
+        {
+            "stationMetadata": metadata,
+            "datasetAttributes": source_attributes,
+            "variableAttributes": variable_attributes,
+        },
+    )
+
+
+def materialize_selected_records(
+    times: np.ndarray,
+    sea_values: np.ndarray,
+    quality_values: np.ndarray,
+    metadata: dict[str, Any],
+    selection: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], np.ndarray]:
+    start64 = np_datetime(selection["selectedStart"])
+    end64 = np_datetime(selection["selectedEndExclusive"])
+    selected_indices = np.flatnonzero((times >= start64) & (times < end64))
     records: list[dict[str, Any]] = []
     invalid: list[dict[str, Any]] = []
-    for offset, source_index in enumerate(selected_indices.tolist()):
+    valid_mask = selection["validMask"]
+
+    for source_index in selected_indices.tolist():
         timestamp = datetime64_to_utc(times[source_index])
-        sea_value = sea_values[offset]
-        quality_value = quality_values[offset]
-        if np.ma.is_masked(sea_value) or not np.isfinite(float(sea_value)):
-            invalid.append({"time": iso_z(timestamp), "reason": "masked_or_nonfinite_sea_level"})
-            continue
-        sea_level_mm = int(round(float(sea_value)))
-        if sea_level_mm == FILL_VALUE:
-            invalid.append({"time": iso_z(timestamp), "reason": "uhslc_fill_value"})
+        if not bool(valid_mask[source_index]):
+            invalid.append(
+                {
+                    "time": iso_z(timestamp),
+                    "sourceIndex": source_index,
+                    "seaLevel": str(sea_values[source_index]),
+                    "quality": str(quality_values[source_index]),
+                    "reason": "fill_nonfinite_or_quality_not_4",
+                }
+            )
             continue
         records.append(
             {
                 "time": timestamp,
-                "sourceIndex": int(source_index),
-                "seaLevelMillimeters": sea_level_mm,
-                "quality": int(quality_value),
+                "sourceIndex": source_index,
+                "seaLevelMillimeters": int(round(float(sea_values[source_index]))),
+                "quality": int(quality_values[source_index]),
                 **metadata,
             }
         )
-
-    source = {
-        "datasetUrl": SOURCE_URL,
-        "directCsvCompanionUrl": DIRECT_CSV_URL,
-        "selectedSourceIndexStart": int(selected_indices[0]),
-        "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
-        "selectedSourceIndexCount": int(selected_indices.size),
-        "datasetTimeCount": int(times.size),
-        "datasetTimeStartUtc": iso_z(datetime64_to_utc(times[0])),
-        "datasetTimeEndUtc": iso_z(datetime64_to_utc(times[-1])),
-        "stationMetadata": metadata,
-        "datasetAttributes": source_attributes,
-        "variableAttributes": variable_attributes,
-        "invalidSourceSamples": invalid,
-    }
-    return records, source
+    return records, invalid, selected_indices
 
 
 def normalize_records(
     records: list[dict[str, Any]],
     start: datetime,
     end_exclusive: datetime,
+    minimum_completeness: float,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     records.sort(key=lambda item: item["time"])
-    expected = expected_timestamps(start, end_exclusive)
+    expected: list[datetime] = []
+    current = start
+    while current < end_exclusive:
+        expected.append(current)
+        current += timedelta(hours=1)
     expected_set = set(expected)
     observed_times = [item["time"] for item in records]
     observed_set = set(observed_times)
@@ -331,20 +456,20 @@ def normalize_records(
     unexpected = sorted(observed_set - expected_set)
 
     cadence_anomalies: list[dict[str, Any]] = []
-    for previous, current in zip(observed_times, observed_times[1:]):
-        delta = current - previous
+    for previous, current_time in zip(observed_times, observed_times[1:]):
+        delta = current_time - previous
         if delta != timedelta(hours=1):
             cadence_anomalies.append(
                 {
                     "previous": iso_z(previous),
-                    "current": iso_z(current),
+                    "current": iso_z(current_time),
                     "deltaSeconds": int(delta.total_seconds()),
                 }
             )
 
     sea_levels = [item["seaLevelMillimeters"] for item in records]
     if not sea_levels:
-        raise RuntimeError("Kanmen selected window contains no valid sea-level observations")
+        raise RuntimeError("Selected Kanmen window contains no valid observations")
     window_mean_mm = float(sum(sea_levels)) / float(len(sea_levels))
     for item in records:
         item["seaLevelMetersRelativeReferenceDatum"] = item["seaLevelMillimeters"] / 1000.0
@@ -380,9 +505,13 @@ def normalize_records(
     )
     quality_passed = set(quality_histogram) == {EXPECTED_QUALITY}
     time_passed = duplicate_count == 0 and not unexpected and observed_times == sorted(observed_times)
-    coverage_passed = completeness >= 0.95
+    coverage_passed = completeness >= minimum_completeness
 
     qa = {
+        "selectedWindow": {
+            "startUtc": iso_z(start),
+            "endExclusiveUtc": iso_z(end_exclusive),
+        },
         "expectedSampleCount": len(expected),
         "validSampleCount": len(records),
         "uniqueTimestampCount": len(observed_set),
@@ -394,6 +523,7 @@ def normalize_records(
         "cadenceAnomalyCount": len(cadence_anomalies),
         "cadenceAnomalies": cadence_anomalies,
         "completenessFraction": completeness,
+        "minimumCompletenessFraction": minimum_completeness,
         "qualityHistogram": {str(key): value for key, value in sorted(quality_histogram.items())},
         "identity": identities,
         "identityPassed": identity_passed,
@@ -407,12 +537,7 @@ def normalize_records(
         "absoluteDatumTransformApplied": False,
         "comparisonSeries": "seaLevelMetersWindowMeanRemoved",
     }
-    qa["passed"] = (
-        identity_passed
-        and quality_passed
-        and time_passed
-        and coverage_passed
-    )
+    qa["passed"] = identity_passed and quality_passed and time_passed and coverage_passed
     return records, qa
 
 
@@ -508,7 +633,7 @@ def file_record(path: Path, role: str) -> dict[str, Any]:
 def main() -> int:
     generated = datetime.now(timezone.utc).isoformat()
     acquisition: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_acquisition@1.1.0",
+        "schema": "wenzhou_kanmen_uhslc_acquisition@1.2.0",
         "generatedAtUtc": generated,
         "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
         "datasetId": DATASET_ID,
@@ -521,27 +646,37 @@ def main() -> int:
         "passed": False,
     }
     qa_report: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_qa@1.1.0",
+        "schema": "wenzhou_kanmen_uhslc_qa@1.2.0",
         "generatedAtUtc": generated,
         "passed": False,
     }
 
     try:
         points = json.loads(POINTS_PATH.read_text(encoding="utf-8"))
-        station_metadata = json.loads(STATION_PATH.read_text(encoding="utf-8"))
-        observation_window = points["observationWindow"]
-        start_text = observation_window["startUtc"]
-        end_text = observation_window["endExclusiveUtc"]
-        start = parse_utc(start_text)
-        end_exclusive = parse_utc(end_text)
-        if end_exclusive <= start:
-            raise RuntimeError("Kanmen observation end must be later than start")
-
+        station_metadata_config = json.loads(STATION_PATH.read_text(encoding="utf-8"))
+        window_config = points["observationWindow"]
         das_content, das_transfer = fetch_text(SOURCE_DAS_URL)
         dds_content, dds_transfer = fetch_text(SOURCE_DDS_URL)
-        records, source_evidence = load_station_window(start, end_exclusive)
-        normalized, qa = normalize_records(records, start, end_exclusive)
 
+        times, sea_values, quality_values, source_metadata = load_station_arrays()
+        selection = select_window(times, sea_values, quality_values, window_config)
+        station_identity = source_metadata["stationMetadata"]
+        records, invalid_samples, selected_indices = materialize_selected_records(
+            times,
+            sea_values,
+            quality_values,
+            station_identity,
+            selection,
+        )
+        normalized, qa = normalize_records(
+            records,
+            selection["selectedStart"],
+            selection["selectedEndExclusive"],
+            float(window_config["minimumCompletenessFraction"]),
+        )
+
+        start = selection["selectedStart"]
+        end_exclusive = selection["selectedEndExclusive"]
         stem = (
             f"KANMEN_UHSLC_RQDS_{start.strftime('%Y%m%dT%H%M%SZ')}_"
             f"{end_exclusive.strftime('%Y%m%dT%H%M%SZ')}"
@@ -557,17 +692,27 @@ def main() -> int:
         write_json(
             source_evidence_path,
             {
-                "schema": "wenzhou_kanmen_opendap_request@1.0.0",
+                "schema": "wenzhou_kanmen_opendap_request@1.1.0",
                 "generatedAtUtc": generated,
                 "datasetUrl": SOURCE_URL,
                 "dasUrl": SOURCE_DAS_URL,
                 "ddsUrl": SOURCE_DDS_URL,
                 "directCsvCompanionUrl": DIRECT_CSV_URL,
-                "requestedWindow": {
-                    "startUtc": start_text,
-                    "endExclusiveUtc": end_text,
+                "windowSelection": {
+                    key: value
+                    for key, value in selection.items()
+                    if key not in {"selectedStart", "selectedEndExclusive", "validMask"}
                 },
-                **source_evidence,
+                "selectedSourceIndexStart": int(selected_indices[0]),
+                "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
+                "selectedSourceIndexCount": int(selected_indices.size),
+                "datasetTimeCount": int(times.size),
+                "datasetTimeStartUtc": iso_z(datetime64_to_utc(times[0])),
+                "datasetTimeEndUtc": iso_z(datetime64_to_utc(times[-1])),
+                "stationMetadata": station_identity,
+                "datasetAttributes": source_metadata["datasetAttributes"],
+                "variableAttributes": source_metadata["variableAttributes"],
+                "invalidSelectedSamples": invalid_samples,
             },
         )
         atomic_write(das_path, das_content)
@@ -576,31 +721,50 @@ def main() -> int:
         files = [
             file_record(source_csv_path, "materialized_official_source_values"),
             file_record(normalized_path, "mean_removed_comparison_series"),
-            file_record(source_evidence_path, "opendap_request_and_source_identity"),
+            file_record(source_evidence_path, "opendap_request_and_window_selection"),
             file_record(das_path, "official_opendap_das"),
             file_record(dds_path, "official_opendap_dds"),
         ]
         acquisition.update(
             {
-                "passed": True,
-                "requestedWindow": {
-                    "startUtc": start_text,
-                    "endExclusiveUtc": end_text,
+                "passed": qa["passed"],
+                "windowSelectionPolicy": selection["policy"],
+                "preferredWindow": selection["preferredWindow"],
+                "fallbackUsed": selection["fallbackUsed"],
+                "selectionReason": selection["selectionReason"],
+                "selectedWindow": {
+                    "startUtc": iso_z(start),
+                    "endExclusiveUtc": iso_z(end_exclusive),
+                    "durationDays": selection["durationDays"],
+                    "completenessFraction": qa["completenessFraction"],
+                },
+                "datasetCoverage": {
+                    "timeStartUtc": iso_z(datetime64_to_utc(times[0])),
+                    "timeEndUtc": iso_z(datetime64_to_utc(times[-1])),
+                    "timeCount": int(times.size),
                 },
                 "opendapMetadataRequests": {
                     "das": das_transfer,
                     "dds": dds_transfer,
                 },
-                "sourceEvidence": source_evidence,
+                "sourceStationMetadata": station_identity,
+                "selectedSourceIndexStart": int(selected_indices[0]),
+                "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
+                "selectedSourceIndexCount": int(selected_indices.size),
+                "invalidSelectedSampleCount": len(invalid_samples),
                 "files": files,
-                "stationMetadata": station_metadata,
+                "stationMetadataContract": station_metadata_config,
             }
         )
         qa_report.update(qa)
-        qa_report["sourceInvalidSamples"] = source_evidence["invalidSourceSamples"]
-        qa_report["sourceInvalidSampleCount"] = len(source_evidence["invalidSourceSamples"])
+        qa_report["windowSelectionPolicy"] = selection["policy"]
+        qa_report["preferredWindow"] = selection["preferredWindow"]
+        qa_report["fallbackUsed"] = selection["fallbackUsed"]
+        qa_report["selectionReason"] = selection["selectionReason"]
+        qa_report["sourceInvalidSampleCount"] = len(invalid_samples)
+        qa_report["sourceInvalidSamples"] = invalid_samples
         qa_report["files"] = files
-        qa_report["referenceDatumPolicy"] = station_metadata["datumPolicy"]
+        qa_report["referenceDatumPolicy"] = station_metadata_config["datumPolicy"]
     except Exception as exc:
         acquisition["error"] = type(exc).__name__
         acquisition["detail"] = str(exc)
