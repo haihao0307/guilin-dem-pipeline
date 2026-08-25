@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="color-scheme" content="dark"><title>昆明 DEM 纯净基线三维查看器</title><link rel="stylesheet" href="styles.css?v=2"></head>
+<body><canvas id="terrain" aria-label="昆明 DEM 三维地形"></canvas><div id="fallback" hidden><img id="fallbackImage" src="assets/fallback.png" alt="昆明 DEM 二维地形预览" draggable="false"></div>
+<aside class="panel"><h1>昆明 DEM 纯净基线三维查看器</h1><p class="lead">只使用冻结的无压缩 12.5 米 DEM 基线。网页不叠加水系、岩石、碎石、侵蚀、等高线或垂直夸张。</p>
+<section><div class="mode-grid"><button class="active" data-mode="0">自然地形</button><button data-mode="1">灰度地形</button><button data-mode="2">高程分层</button></div></section>
+<section class="button-grid"><button id="overview">总览</button><button id="top">俯视</button><button id="north">朝北</button><button id="reset">复位</button><button id="fullscreen">全屏</button><button id="screenshot">截图</button></section>
+<section class="stats"><div><b>12.5 m × 12.5 m</b><span>权威输出像元</span></div><div><b>5892 × 8095</b><span>权威栅格尺寸</span></div><div><b>73.650 × 101.1875 km</b><span>地面范围</span></div><div><b>7,452.459375 km²</b><span>裁切面积</span></div><div><b>1.0×</b><span>自然垂直比例</span></div><div><b>EPSG:32648</b><span>工程坐标系</span></div></section>
+<section class="note"><strong>操作：</strong>左键拖动旋转，右键或 Shift 加拖动平移，滚轮缩放。页面使用无损浏览器纹理展示三维形态，权威 float32 DEM 主文件保持无压缩并单独保存。</section></aside><div id="status" class="status">正在载入三维地形…</div><script type="module" src="app.js?v=2"></script></body></html>
