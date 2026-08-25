@@ -1,6 +1,6 @@
 ---
 name: process-kunming-dem-first-pass
-description: Apply the Guilin DEM production skills to the verified 11-tile Kunming ASF mosaic, preserve the truth COG, build reversible terrain-visualization fields, and package a browser review candidate with source lineage, QA, and rollback.
+description: Apply the Guilin DEM production skills to the verified Kunming ASF mosaic while preserving an uncompressed, pixel-exact 12.5 m float32 authority raster and keeping every preview or procedural field separate and reversible.
 ---
 
 # Process Kunming DEM first pass
@@ -18,17 +18,18 @@ This project-specific skill binds three GitHub skill families into the Kunming p
 
 ## Fixed source release
 
-The current truth source is the verified 11-raster Kunming mosaic:
+The verified source is:
 
 ```text
 KUNMING_ASF_11TILES_RECT_12P5M_COG.tif
 ```
 
-Contract:
+Source contract:
 
 ```text
 CRS: EPSG:32648
-pixel spacing: 12.5 m
+pixel spacing: 12.5 m × 12.5 m
+dtype: float32
 projected bounds: 209000, 2651625, 344500, 2885125
 width: 135500 m
 height: 233500 m
@@ -39,7 +40,57 @@ NoData gap area: 0 km²
 truth SHA-256: af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50
 ```
 
-The earlier Cuihu-centered 20,000 km² square remains historical planning evidence. It is no longer the authoritative production clip.
+The output grid spacing is independently verified:
+
+```text
+135500 m / 10840 pixels = 12.5 m
+233500 m / 18680 pixels = 12.5 m
+```
+
+This confirms a 12.5 m output-pixel grid. Keep `native12_5mSurveyClaim=false` unless qualifying source documentation separately establishes a native survey claim.
+
+## Clean reset crop
+
+The new working scope is the exact source-aligned crop:
+
+```text
+window: col_off=2790, row_off=5116, width=5892, height=8095
+bounds: 243875.0, 2719987.5, 317525.0, 2821175.0
+size: 73.650 km × 101.1875 km
+area: 7452.459375 km²
+```
+
+The authority output must be named:
+
+```text
+KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif
+```
+
+## Mandatory no-compression rule
+
+The authoritative DEM working master must always satisfy:
+
+```text
+dtype = float32
+compression = NONE
+internal overviews = none
+resampling = none
+pixel spacing = 12.5 m × 12.5 m
+pixel values = exact source-window values
+```
+
+Rules:
+
+1. Do not use DEFLATE, LZW, ZSTD, JPEG, WEBP or any other compression on the authority master.
+2. Do not create internal pyramid levels or overviews in the authority master.
+3. Do not resample, smooth, quantize, normalize or reduce the master grid.
+4. Record the raw source-window pixel-array SHA-256 and output pixel-array SHA-256.
+5. Require those two pixel-array hashes to match.
+6. Require pixel-by-pixel equality, including NaN and NoData placement.
+7. Keep every web image, PNG, JPEG, mesh, overview and preview asset outside the authority chain.
+8. Never use a preview asset as the source for GAEA, hydrology, terrain derivatives or later production.
+
+The uploaded QA records the original COG with lossless DEFLATE compression. Its float32 values remain intact. The stricter Kunming production rule still requires the new cropped authority master to be stored completely uncompressed.
 
 ## Height separation
 
@@ -47,7 +98,7 @@ Keep these concepts separate:
 
 ```text
 z_truth_m
-read-only values from the verified COG
+read-only values from the verified uncompressed master
 
 z_micro_delta_m
 reversible visual or future Gaea increments
@@ -56,64 +107,41 @@ z_visual_m
 browser display height derived from z_truth_m plus approved visual increments
 ```
 
-The first-pass candidate keeps `z_micro_delta_m = 0` for the authoritative raster. Rock, erosion, moisture and local-relief fields are visualization masks only.
+At clean restart, keep `z_micro_delta_m = 0`. Do not inherit the previous synthetic water, lake, rock, debris, erosion, contour, vertical-exaggeration or low-resolution browser work.
 
-## First-pass workflow
+## Clean first-pass workflow
 
-1. Preflight the COG and verify CRS, dimensions, transform, bounds, pixel spacing, NoData and checksum.
-2. Read a browser-resolution elevation grid without changing the source file.
-3. Derive reversible visualization fields:
-   - slope;
-   - convexity and concavity;
-   - local and macro relief;
-   - rock-exposure proxy;
-   - erosion proxy;
-   - valley and moisture proxy;
-   - source-overlap count.
-4. Encode height into a browser-safe 16-bit R/G texture.
-5. Package terrain, elevation, slope, rock, erosion and source-overlap modes.
-6. Provide WebGL2 3D rendering and an interactive 2D fallback.
-7. Write a manifest and file-based QA report.
-8. Preserve the original COG and all source lineage outside the web package.
+1. Verify source file SHA-256, CRS, dimensions, transform, bounds, pixel spacing, dtype and NoData.
+2. Crop by the exact integer source window without resampling.
+3. Write an uncompressed tiled float32 GeoTIFF with no overviews.
+4. Reopen the output and verify compression, dtype, grid, bounds and resolution.
+5. Compare source-window and output pixel arrays through SHA-256 and exact equality.
+6. Record coverage and elevation statistics.
+7. Freeze the resulting uncompressed crop as the new authority master.
+8. Stop before hydrology, GAEA, 1 m visual sequencing, surface detail or browser production.
 
-## Browser candidate
+## Later browser candidates
 
-The candidate exposes:
-
-```text
-terrain
-elevation
-slope
-rock exposure
-erosion preview
-source overlap
-vertical exaggeration
-rock strength
-erosion strength
-light direction
-perspective and top views
-pan, orbit, zoom, screenshot and fullscreen
-```
-
-The browser mesh is a review asset. It is not the authoritative GIS raster.
+Browser assets may be produced only after the uncompressed authority master passes every gate. Browser textures and meshes are review assets. They must carry explicit derivative labels and may never replace the GIS raster.
 
 ## Future Gaea route
 
 A later Gaea build must follow the shared `process-dem-with-gaea` skill:
 
-1. run DEM preflight;
-2. preserve a 32-bit working heightfield and validity mask;
+1. read the uncompressed float32 authority master;
+2. preserve the untouched `z_truth_m` branch;
 3. use a reviewed `.terrain` graph with a small variable allowlist;
-4. preserve the untouched DEM branch;
-5. keep repair, macro erosion, fine erosion, surface detail and outputs as separate graph stages;
-6. restore and verify the geospatial transform after export;
-7. compare source and result through difference, slope, hillshade, drainage and control-point QA;
+4. keep repair, macro erosion, fine erosion, surface detail and outputs as separate graph stages;
+5. restore and verify the geospatial transform after export;
+6. compare source and result through difference, slope, hillshade, drainage and control-point QA;
+7. retain the uncompressed authority master independently from all Gaea results;
 8. publish only after browser and GIS gates pass.
 
 ## Guardrails
 
-- Do not rewrite the truth COG for visual relief.
-- Do not label derived rock, erosion or moisture masks as surveyed data.
+- Do not rewrite or compress the authority master.
+- Do not build internal overviews into the authority master.
+- Do not label derived rock, erosion, moisture or hydrology masks as surveyed data.
 - Do not use 30 m fallback terrain in this project release.
 - Do not describe browser resampling as improved source resolution.
 - Do not define future 1 m or sub-12.5 m cores until qualifying real source data is verified.
