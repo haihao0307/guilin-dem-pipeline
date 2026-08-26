@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="温州 22,000 平方公里真实三维 DEM、卫星色彩、OSM 水系与海洋审阅运行时">
+  <title>小温 · 温州真实三维地图 V1.1.1</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <canvas id="gl" aria-label="温州真实三维地形画布"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="mark">温</div>
+      <div>
+        <div class="eyebrow">WENZHOU TRUTH TERRAIN · V1.1.1 HIRES DRAFT</div>
+        <h1>小温 · 温州真实三维地图</h1>
+      </div>
+    </div>
+    <div class="truth-strip">
+      <span class="tag warn">Draft · 视觉验收中</span>
+      <span class="tag" id="truthTag">12.5 m 真值 + 高精 LOD</span>
+      <span class="tag" id="materialTag">离线卫星色彩</span>
+      <span class="tag" id="hydrologyTag">OSM 水系载入中</span>
+      <span class="tag" id="fpsTag">FPS --</span>
+    </div>
+    <button class="panel-toggle" id="panelToggle" aria-expanded="true">控制</button>
+  </header>
+
+  <nav class="camera-bar glass" aria-label="连续镜头">
+    <button class="camera-btn active" data-anchor="overall">全域</button>
+    <button class="camera-btn" data-anchor="wenzhou">温州城</button>
+    <button class="camera-btn" data-anchor="xianxi">仙溪镇</button>
+    <button class="camera-btn" data-anchor="haimen">海门城</button>
+    <button class="camera-btn" data-anchor="yandang">雁荡山</button>
+    <button class="camera-btn" data-anchor="oujiang">瓯江口</button>
+    <button class="camera-btn" data-anchor="yueqing">乐清湾</button>
+    <button class="camera-btn" data-anchor="kanmen">坎门</button>
+  </nav>
+
+  <aside class="controller glass open" id="controller">
+    <div class="controller-head">
+      <div>
+        <strong>三维地图控制台</strong>
+        <small>同一画布、相机、EPSG:32651 世界</small>
+      </div>
+      <button id="closePanel" class="icon-btn" aria-label="收起控制台">×</button>
+    </div>
+    <div class="controller-scroll">
+      <section>
+        <div class="section-title"><b>显示材质</b><span id="materialStatus">离线可用</span></div>
+        <div class="segmented" id="materialModes">
+          <button class="segment active" data-material="satellite">卫星色彩</button>
+          <button class="segment" data-material="online">真实卫星</button>
+          <button class="segment" data-material="hillshade">阴影</button>
+          <button class="segment" data-material="gray">灰度</button>
+          <button class="segment" data-material="bathy">海底</button>
+        </div>
+        <div class="source-note" id="satelliteSource">默认优先载入 EOX Sentinel-2 cloudless 2024 PNG；离线层为 4096 PNG 无损 satellite-color material。</div>
+      </section>
+
+      <section>
+        <div class="section-title"><b>地形与水体</b><span>真实数据分层</span></div>
+        <div class="layers">
+          <label><span>陆地三维地形</span><input id="showTerrain" type="checkbox" checked></label>
+          <label><span>海面</span><input id="showOcean" type="checkbox" checked></label>
+          <label><span>GEBCO 海底</span><input id="showBathy" type="checkbox" checked></label>
+          <label><span>OSM 主要水系</span><input id="showRivers" type="checkbox" checked></label>
+          <label><span>OSM 海岸线</span><input id="showCoast" type="checkbox" checked></label>
+          <label><span>河口待核断点</span><input id="showPending" type="checkbox"></label>
+        </div>
+        <div class="control">
+          <div class="control-row"><label for="riverWidth">河宽显示倍率</label><output id="riverWidthOut">1.00×</output></div>
+          <input id="riverWidth" type="range" min="0.5" max="2" value="1" step="0.05">
+        </div>
+        <div class="control">
+          <div class="control-row"><label for="waterOpacity">海面透明度</label><output id="waterOpacityOut">68%</output></div>
+          <input id="waterOpacity" type="range" min="0.2" max="0.9" value="0.68" step="0.02">
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title"><b>相机</b><span id="cameraModeLabel">全域斜视</span></div>
+        <div class="camera-grid">
+          <button class="small-btn active" data-view="oblique">斜视</button>
+          <button class="small-btn" data-view="top">正射</button>
+          <button class="small-btn" data-view="ground">近地 1.6 m</button>
+          <button class="small-btn" data-view="reset">复位</button>
+        </div>
+        <p class="help">左键旋转 · 滚轮缩放 · 右键或 Shift 拖动平移 · WASD 近地移动</p>
+      </section>
+
+      <section>
+        <div class="section-title"><b>运行数据</b><span id="runtimeState">初始化</span></div>
+        <div class="metrics">
+          <div><span>高程网格</span><strong id="gridMetric">1025²</strong></div>
+          <div><span>地形三角形</span><strong id="triangleMetric">2,097,152</strong></div>
+          <div><span>高程范围</span><strong id="elevationMetric">0–1345 m</strong></div>
+          <div><span>河段</span><strong id="riverMetric">载入中</strong></div>
+          <div><span>海岸段</span><strong id="coastMetric">载入中</strong></div>
+          <div><span>海底网格</span><strong id="bathyMetric">1025²</strong></div>
+        </div>
+        <div class="lineage" id="lineage">权威陆地 SHA 8a1bc6ee17dd…0b1c6e<br>河口连通状态：pending</div>
+      </section>
+    </div>
+  </aside>
+
+  <div class="statusbar glass">
+    <span class="dot working" id="statusDot"></span>
+    <span id="statusText">正在载入真实三维资产</span>
+    <span class="status-spacer"></span>
+    <span id="cameraReadout">相机 --</span>
+    <span id="renderReadout">WebGL2 --</span>
+  </div>
+
+  <div class="loading-card glass" id="loadingCard">
+    <strong id="loadingTitle">建立温州三维世界</strong>
+    <span id="loadingDetail">先载入低层级真值地形，再加载海底与 OSM 水系</span>
+    <progress id="loadingProgress" max="100" value="4">4%</progress>
+  </div>
+
+  <div class="error-card glass" id="errorCard" role="alert">
+    <strong>运行时发生错误</strong>
+    <pre id="errorText"></pre>
+  </div>
+
+  <footer class="attribution">
+    地形：温州 12.5 m 真值 COG · 水系：© OpenStreetMap contributors，ODbL 1.0 · 海底：GEBCO 2026 · 在线卫星：EOxCloudless / modified Copernicus Sentinel data 2024
+  </footer>
+
+  <script src="./runtime.js"></script>
+</body>
+</html>
