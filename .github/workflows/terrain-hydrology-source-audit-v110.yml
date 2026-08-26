@@ -1,0 +1,100 @@
+name: Terrain hydrology source audit v1.1
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/terrain-hydrology-source-audit-v110.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install audit dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs file
+          python -m pip install --disable-pip-version-check numpy pillow rasterio
+      - name: Fetch source branches
+        run: |
+          git fetch origin project/wenzhou-v110-3d-satellite-osm-water project/kunming-dem-v001
+          git worktree add /tmp/wenzhou origin/project/wenzhou-v110-3d-satellite-osm-water
+          git worktree add /tmp/kunming origin/project/kunming-dem-v001
+      - name: Audit Wenzhou authoritative COG
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/source-audit/wenzhou
+          target=/tmp/wenzhou/projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif
+          git -C /tmp/wenzhou lfs install --local
+          git -C /tmp/wenzhou lfs pull --include='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          stat -c '%s' "$target" > /tmp/source-audit/wenzhou/bytes.txt
+          sha256sum "$target" > /tmp/source-audit/wenzhou/sha256.txt
+          file "$target" > /tmp/source-audit/wenzhou/file.txt
+          python - "$target" /tmp/source-audit/wenzhou/raster.json <<'PY'
+          import json, sys
+          import rasterio
+          path, out = sys.argv[1:]
+          with rasterio.open(path) as ds:
+              report = {
+                  'path': path,
+                  'driver': ds.driver,
+                  'crs': str(ds.crs),
+                  'grid': [ds.width, ds.height],
+                  'count': ds.count,
+                  'dtypes': list(ds.dtypes),
+                  'res': list(ds.res),
+                  'bounds': list(ds.bounds),
+                  'nodata': ds.nodata,
+                  'overviews': ds.overviews(1),
+                  'compression': ds.profile.get('compress'),
+              }
+          open(out, 'w', encoding='utf-8').write(json.dumps(report, indent=2) + '\n')
+          PY
+      - name: Materialize and audit Kunming reviewed V004 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/source-audit/kunming
+          python /tmp/kunming/scripts/materialize_kunming_yunnan_hydrology_v004_final.py
+          base=/tmp/kunming/projects/kunming/web/yunnan-hydrology-v004
+          find "$base" -maxdepth 3 -type f -printf '%P\t%s\n' | sort > /tmp/source-audit/kunming/files.tsv
+          cp "$base/manifest.json" /tmp/source-audit/kunming/manifest.json
+          python - "$base" /tmp/source-audit/kunming/images.json <<'PY'
+          import json, sys
+          from pathlib import Path
+          from PIL import Image
+          base, out = Path(sys.argv[1]), Path(sys.argv[2])
+          rows = []
+          for path in sorted((base / 'assets').glob('*')):
+              if not path.is_file():
+                  continue
+              item = {'file': path.name, 'bytes': path.stat().st_size}
+              try:
+                  with Image.open(path) as im:
+                      item.update({'format': im.format, 'mode': im.mode, 'size': list(im.size)})
+              except Exception as exc:
+                  item['imageError'] = str(exc)
+              rows.append(item)
+          out.write_text(json.dumps(rows, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Upload source audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-source-audit-v110-${{ github.sha }}
+          path: /tmp/source-audit/**
+          if-no-files-found: error
+          retention-days: 30
