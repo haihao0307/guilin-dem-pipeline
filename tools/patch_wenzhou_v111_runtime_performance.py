@@ -28,6 +28,8 @@ def patch_index() -> None:
     text = INDEX.read_text(encoding="utf-8")
     text = replace_once(text, '<input id="showBathy" type="checkbox" checked>', '<input id="showBathy" type="checkbox">')
     text = text.replace("<span>GEBCO 海底</span>", "<span>GEBCO 海底诊断</span>")
+    text = replace_once(text, '<output id="waterOpacityOut">68%</output>', '<output id="waterOpacityOut">76%</output>')
+    text = replace_once(text, 'id="waterOpacity" type="range" min="0.2" max="0.9" value="0.68"', 'id="waterOpacity" type="range" min="0.2" max="0.9" value="0.76"')
     INDEX.write_text(text, encoding="utf-8")
 
 
@@ -103,6 +105,12 @@ function resizeCanvas'''
         text,
         "riverParts:state.riverData.partCount,coastlineParts:state.coastData.partCount,",
         "riverParts:state.riverData.partCount,renderedRiverParts:state.renderedRiverParts??0,renderedRiverSegments:state.renderedRiverSegments??0,coastlineParts:state.coastData.partCount,",
+    )
+
+    text = replace_once(
+        text,
+        "  setTimeout(()=>void enableOnlineSatellite(),120);",
+        "  ui.materialStatus.textContent='离线 4096 PNG 已载入，真实卫星可手动切换';",
     )
 
     RUNTIME.write_text(text, encoding="utf-8")
