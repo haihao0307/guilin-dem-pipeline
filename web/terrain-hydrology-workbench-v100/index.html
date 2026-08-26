@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>三地区真实地貌与水系工作台 v1.0</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">TERRAIN · TERRACE · HYDROLOGY</div>
+      <h1>三地区真实地貌与水系工作台</h1>
+      <p>桂林、温州、昆明各自绑定真实 DEM 小片区。工作台只处理地形、台地和水系，参考图与文字资料先进入地区收件箱，经过小华蒸馏后写入 GitHub 知识库。</p>
+    </div>
+    <div class="top-status">
+      <span>负责人 <b>小华</b></span>
+      <span>目标片区 <b>10 km × 10 km</b></span>
+      <span>植被运行时 <b>已移出</b></span>
+      <span>发布 <b>Draft</b></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="scope-strip" aria-label="生产范围">
+      <div><b>本线生产</b><span>真实高程、坡面、台地、阶地、沟谷、河道、河岸、水面边界</span></div>
+      <div><b>外部系统生产</b><span>树木、竹林、灌木、草地、农作物、冠层、风场和植被实例</span></div>
+      <div><b>真值门槛</b><span>缺少真实裁片时保持锁定，不用程序山体填空</span></div>
+    </section>
+
+    <section class="shared-intake intake-card" data-scope="shared">
+      <div class="intake-heading">
+        <div>
+          <div class="eyebrow">SHARED KNOWLEDGE</div>
+          <h2>三地区共用知识入口</h2>
+          <p>需要三地共同遵守的资料放在这里。地区专属图片放到下方对应面板。</p>
+        </div>
+        <code>knowledge/terrain-hydrology/shared/inbox/</code>
+      </div>
+      <div class="intake-grid">
+        <label class="text-field">共同说明<textarea data-note placeholder="例如：三地台地分级方法、河道宽度判据、共同的参考图说明"></textarea></label>
+        <div class="upload-block">
+          <label class="upload-button">上传共用参考图<input data-images type="file" accept="image/*" multiple></label>
+          <div class="tag-row" data-tags></div>
+          <div class="intake-actions">
+            <button data-export type="button">导出共用入库包</button>
+            <button data-clear type="button" class="quiet">清空本地暂存</button>
+          </div>
+        </div>
+      </div>
+      <div class="gallery" data-gallery></div>
+      <div class="save-state" data-save-state>尚未输入资料</div>
+    </section>
+
+    <section class="region-list" id="regions" aria-label="三地区工作区"></section>
+
+    <section class="github-flow">
+      <div>
+        <div class="eyebrow">GITHUB KNOWLEDGE FLOW</div>
+        <h2>页面与 GitHub 的固定关系</h2>
+      </div>
+      <ol>
+        <li>你在对应地区上传原图并填写说明。</li>
+        <li>工作台在浏览器本地保存，同时可以导出标准 JSON 入库包。</li>
+        <li>你把原图或入库包传到对话或 Codex，小华读取原件并做来源、冲突和规则蒸馏。</li>
+        <li>原始资料进入 <code>inbox</code>，稳定规则进入 <code>distilled</code>，两者保持可追溯关系。</li>
+      </ol>
+      <button id="exportAll" type="button" class="primary">导出三地完整资料包</button>
+    </section>
+  </main>
+
+  <dialog id="focusDialog" class="focus-dialog">
+    <div class="focus-shell">
+      <div class="focus-head">
+        <div><div class="eyebrow">REAL TERRAIN FOCUS</div><h2 id="focusTitle">单独查看</h2></div>
+        <button id="closeFocus" type="button" aria-label="关闭单独查看">关闭</button>
+      </div>
+      <div id="focusMount" class="focus-mount"></div>
+    </div>
+  </dialog>
+
+  <template id="regionTemplate">
+    <article class="region-card">
+      <div class="region-head">
+        <div><div class="eyebrow" data-region-code></div><h2 data-title></h2><p data-subtitle></p></div>
+        <span class="state-badge" data-state></span>
+      </div>
+      <div class="region-workspace">
+        <section class="terrain-column">
+          <div class="viewer-shell">
+            <canvas class="terrain-canvas" data-canvas></canvas>
+            <div class="viewer-overlay" data-overlay></div>
+            <div class="viewer-readout" data-readout></div>
+          </div>
+          <div class="viewer-actions">
+            <button data-focus type="button" class="primary">单独查看</button>
+            <button data-reset type="button">全景</button>
+            <button data-near type="button">近景</button>
+            <button data-ground type="button">贴地</button>
+          </div>
+          <div class="viewer-help">左键拖动旋转，右键或 Shift 拖动平移，滚轮连续缩放。真实裁片未挂载的地区保持锁定。</div>
+          <details class="source-details"><summary>真实切片与来源信息</summary><pre data-source></pre></details>
+        </section>
+        <section class="region-intake intake-card" data-intake>
+          <div class="intake-heading compact">
+            <div><h3>本地区资料输入</h3><p>输入文字并上传参考图，图片只绑定当前地区。</p></div>
+            <code data-inbox></code>
+          </div>
+          <label class="text-field">你的说明<textarea data-note placeholder="说明图中需要学习的山体、台地、河谷、河道、岸线或水系细节"></textarea></label>
+          <label class="upload-button">上传本地区参考图<input data-images type="file" accept="image/*" multiple></label>
+          <div class="tag-row" data-tags></div>
+          <div class="gallery" data-gallery></div>
+          <div class="intake-actions">
+            <button data-export type="button">导出地区入库包</button>
+            <button data-copy-path type="button">复制 GitHub 路径</button>
+            <button data-clear type="button" class="quiet">清空本地暂存</button>
+          </div>
+          <div class="save-state" data-save-state>尚未输入资料</div>
+        </section>
+      </div>
+    </article>
+  </template>
+
+  <script id="embeddedSlices" type="application/json">{
+  "schemaVersion": "terrain-hydrology-real-slices@1.0.0",
+  "workbenchVersion": "1.0.0",
+  "controllerAlias": "小华",
+  "scope": ["terrain", "terrace", "hydrology"],
+  "vegetationOwnedBy": "dem-ecology-surface",
+  "uniformTarget": {
+    "shape": "square",
+    "widthMeters": 10000.0,
+    "heightMeters": 10000.0,
+    "areaKm2": 100.0,
+    "preferredSpacingMeters": 12.5,
+    "resamplingPolicy": "none-for-truth-slice"
+  },
+  "regions": [
+    {
+      "id": "guilin",
+      "nameZh": "桂林真实地貌片区",
+      "subtitle": "桂林古城中心 10 km × 10 km",
+      "state": "mounted-real-height",
+      "viewerMode": "real-height-binary",
+      "source": {
+        "branch": "skill/dem-procedural-landscape-v010",
+        "manifestPath": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/terrain-manifest.json",
+        "heightPath": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/height_u16.bin",
+        "maskPath": "../../DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/mask_u8.bin",
+        "sourceStatus": "ready_12_5m",
+        "crs": "EPSG:32649",
+        "spacingMeters": 12.5,
+        "sourceGrid": [1132, 1132],
+        "sourceBounds": [422387.5, 2788412.5, 436537.5, 2802562.5],
+        "minimumElevationMeters": 91.5,
+        "maximumElevationMeters": 480.0,
+        "native1mSurveyClaim": false
+      },
+      "slice": {
+        "pixelWindow": [166, 166, 800, 800],
+        "grid": [800, 800],
+        "bounds": [424462.5, 2790487.5, 434462.5, 2800487.5],
+        "areaKm2": 100.0,
+        "exact": true
+      },
+      "truthNotice": "页面直接读取仓库内 12.5 m 高程二进制，只裁切中心 10 km × 10 km，不生成合成山体。",
+      "knowledge": {
+        "inbox": "knowledge/terrain-hydrology/guilin/inbox/",
+        "distilled": "knowledge/terrain-hydrology/guilin/distilled/"
+      }
+    },
+    {
+      "id": "wenzhou",
+      "nameZh": "温州真实地貌片区",
+      "subtitle": "清江 22000 km² 父级 DEM 中心候选 10 km × 10 km",
+      "state": "source-verified-awaiting-slice-build",
+      "viewerMode": "locked-until-real-slice",
+      "source": {
+        "branch": "project/wenzhou-v110-3d-satellite-osm-water",
+        "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+        "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+        "bytes": 54638031,
+        "crs": "EPSG:32651",
+        "spacingMeters": 12.5,
+        "sourceGrid": [11866, 11866],
+        "sourceBounds": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+        "immutable": true,
+        "native12p5mSurveyClaim": false
+      },
+      "slice": {
+        "centerProjected": [313808.152694, 3129127.610786],
+        "targetBounds": [308808.152694, 3124127.610786, 318808.152694, 3134127.610786],
+        "targetGrid": [800, 800],
+        "areaKm2": 100.0,
+        "exact": false,
+        "blocker": "LFS COG must be materialized on the Windows build node before lossless cropping."
+      },
+      "truthNotice": "权威父级 COG 和校验和已冻结。工作台保持锁定，直到 10 km × 10 km 无重采样裁片实体生成并校验。",
+      "knowledge": {
+        "inbox": "knowledge/terrain-hydrology/wenzhou/inbox/",
+        "distilled": "knowledge/terrain-hydrology/wenzhou/distilled/"
+      }
+    },
+    {
+      "id": "kunming",
+      "nameZh": "昆明真实地貌片区",
+      "subtitle": "昆明基线裁切中心候选 10 km × 10 km",
+      "state": "source-verified-awaiting-source-mount",
+      "viewerMode": "locked-until-real-slice",
+      "source": {
+        "branch": "project/kunming-baseline-viewer-v001",
+        "path": "KUNMING_ASF_11TILES_RECT_12P5M_COG.tif",
+        "sha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+        "crs": "EPSG:32648",
+        "spacingMeters": 12.5,
+        "sourceGrid": [10840, 18680],
+        "sourceBounds": [209000.0, 2651625.0, 344500.0, 2885125.0],
+        "mounted": false,
+        "native12p5mSurveyClaim": false
+      },
+      "slice": {
+        "centerProjected": [280700.0, 2770581.25],
+        "targetBounds": [275700.0, 2765581.25, 285700.0, 2775581.25],
+        "targetGrid": [800, 800],
+        "areaKm2": 100.0,
+        "exact": false,
+        "blocker": "Authoritative source file is not mounted in the current execution environment."
+      },
+      "truthNotice": "当前只有权威源合同和校验和。工作台不会用预览图或程序地形代替真实高程裁片。",
+      "knowledge": {
+        "inbox": "knowledge/terrain-hydrology/kunming/inbox/",
+        "distilled": "knowledge/terrain-hydrology/kunming/distilled/"
+      }
+    }
+  ],
+  "sharedKnowledge": {
+    "inbox": "knowledge/terrain-hydrology/shared/inbox/",
+    "distilled": "knowledge/terrain-hydrology/shared/distilled/"
+  },
+  "release": {
+    "status": "draft",
+    "truthOverwrite": false,
+    "syntheticGapFill": false,
+    "vegetationRuntimeIncluded": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "publicReleaseApproved": false
+  }
+}</script>
+  <script src="./app.js"></script>
+</body>
+</html>

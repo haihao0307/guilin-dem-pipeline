@@ -1,0 +1,73 @@
+name: Terrain hydrology workbench v1.0
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - web/terrain-hydrology-workbench-v100/**
+      - tools/terrain_hydrology/**
+      - skills/dem-procedural-landscape/TERRAIN_HYDROLOGY_SCOPE.md
+      - skills/dem-procedural-landscape/schemas/*knowledge-v1.schema.json
+      - skills/dem-procedural-landscape/schemas/reference-intake-v1.schema.json
+      - knowledge/terrain-hydrology/**
+      - ops/tasks/TERRAIN_HYDROLOGY_WORKBENCH_V100.md
+      - .github/workflows/terrain-hydrology-workbench-v100.yml
+  pull_request:
+    paths:
+      - web/terrain-hydrology-workbench-v100/**
+      - tools/terrain_hydrology/**
+      - skills/dem-procedural-landscape/TERRAIN_HYDROLOGY_SCOPE.md
+      - skills/dem-procedural-landscape/schemas/**
+      - knowledge/terrain-hydrology/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terrain-hydrology-workbench-v100-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate files, scope and truth locks
+        run: python tools/terrain_hydrology/validate_workbench.py --root .
+      - name: Compile scripts
+        run: python -m py_compile tools/terrain_hydrology/*.py
+      - name: Check browser JavaScript syntax
+        run: node --check web/terrain-hydrology-workbench-v100/app.js
+
+  browser:
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+      - name: Run real terrain and intake browser QA
+        run: python tools/terrain_hydrology/browser_qa.py --root . --output reports/terrain-hydrology-workbench-v100
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v100-${{ github.sha }}
+          path: reports/terrain-hydrology-workbench-v100/**
+          if-no-files-found: error
+          retention-days: 30
