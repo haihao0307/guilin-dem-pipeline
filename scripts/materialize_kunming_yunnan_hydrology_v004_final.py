@@ -45,3 +45,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# Deployment trigger: public 3D V004 build and browser acceptance.
