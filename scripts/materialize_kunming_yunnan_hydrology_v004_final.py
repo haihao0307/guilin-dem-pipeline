@@ -57,12 +57,10 @@ def main() -> int:
     if mesh_patch_count != 1:
         raise SystemExit(f"failed to patch V004 browser mesh declaration: {mesh_patch_count}")
 
-    resize_pattern = (
-        r"function resize\(\)\{const ratio=Math\.min\(devicePixelRatio\|\|1,2\),"
-    )
+    resize_pattern = r"function resize\(\)\{const ratio=.*?,width="
     resize_replacement = (
         "const qaRenderMode=new URLSearchParams(location.search).has('qa');"
-        "function resize(){const ratio=qaRenderMode?0.35:Math.min(devicePixelRatio||1,1.5),"
+        "function resize(){const ratio=qaRenderMode?0.35:Math.min(devicePixelRatio||1,1.5),width="
     )
     app_text, resize_patch_count = re.subn(
         resize_pattern,
