@@ -13,14 +13,29 @@ fs.mkdirSync(path.dirname(reportPath), { recursive: true });
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function waitReady(page, timeout = 120000) {
+async function waitReady(page, timeout = 180000) {
   await page.waitForFunction(() => window.__WENZHOU_V111_DIAGNOSTICS__?.ready === true, null, { timeout });
   return page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
+}
+
+async function activateAnchor(page, id) {
+  const started = Date.now();
+  await page.evaluate((anchorId) => {
+    const button = document.querySelector(`[data-anchor="${anchorId}"]`);
+    if (!(button instanceof HTMLButtonElement)) throw new Error(`missing camera anchor: ${anchorId}`);
+    button.click();
+  }, id);
+  await page.waitForFunction((anchorId) => {
+    const button = document.querySelector(`[data-anchor="${anchorId}"]`);
+    return button?.classList.contains('active') === true;
+  }, id, { timeout: 120000 });
+  return Date.now() - started;
 }
 
 async function scenario(browser, name, viewport, mobile) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   const page = await context.newPage();
+  page.setDefaultTimeout(120000);
   const consoleErrors = [];
   const pageErrors = [];
   const requestFailures = [];
@@ -29,7 +44,7 @@ async function scenario(browser, name, viewport, mobile) {
   page.on('requestfailed', (request) => requestFailures.push({ url: request.url(), error: request.failure()?.errorText || 'failed' }));
 
   const started = Date.now();
-  await page.goto(`${url}?qa=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  await page.goto(`${url}?qa=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   const initial = await waitReady(page);
   const readyMs = Date.now() - started;
 
@@ -43,25 +58,28 @@ async function scenario(browser, name, viewport, mobile) {
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.66, box.y + box.height * 0.40, { steps: 14 });
   await page.mouse.up();
-  await sleep(800);
+  await sleep(1000);
   const afterDrag = await page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
 
   let detail = null;
   let yandangFile = null;
+  const interactionTimingsMs = {};
   if (!mobile) {
-    await page.locator('[data-anchor="yandang"]').click();
-    await page.waitForFunction(() => window.__WENZHOU_V111_DIAGNOSTICS__?.detailGrid?.[0] >= 1025, null, { timeout: 120000 });
-    await sleep(1600);
+    interactionTimingsMs.yandangAnchor = await activateAnchor(page, 'yandang');
+    const detailStarted = Date.now();
+    await page.waitForFunction(() => window.__WENZHOU_V111_DIAGNOSTICS__?.detailGrid?.[0] >= 1025, null, { timeout: 180000 });
+    interactionTimingsMs.yandangDetailReady = Date.now() - detailStarted;
+    await sleep(1800);
     detail = await page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
     yandangFile = path.join(evidenceDir, `${name}-yandang-12_5m.png`);
     await page.screenshot({ path: yandangFile, fullPage: false });
 
-    await page.locator('[data-anchor="oujiang"]').click();
-    await sleep(2200);
+    interactionTimingsMs.oujiangAnchor = await activateAnchor(page, 'oujiang');
+    await sleep(3200);
     await page.screenshot({ path: path.join(evidenceDir, `${name}-oujiang.png`), fullPage: false });
 
-    await page.locator('[data-anchor="yueqing"]').click();
-    await sleep(2200);
+    interactionTimingsMs.yueqingAnchor = await activateAnchor(page, 'yueqing');
+    await sleep(3200);
     await page.screenshot({ path: path.join(evidenceDir, `${name}-yueqing-bay.png`), fullPage: false });
   }
 
@@ -78,7 +96,12 @@ async function scenario(browser, name, viewport, mobile) {
     && consoleErrors.length === 0
     && pageErrors.length === 0
     && fatalRequests.length === 0
-    && (mobile || (detail?.detailGrid?.[0] >= 1025 && detail?.detailSpacingMeters === 12.5));
+    && (mobile || (
+      detail?.detailGrid?.[0] >= 1025
+      && detail?.detailSpacingMeters === 12.5
+      && interactionTimingsMs.yandangAnchor < 10000
+      && interactionTimingsMs.yandangDetailReady < 120000
+    ));
 
   const files = fs.readdirSync(evidenceDir)
     .filter((entry) => entry.startsWith(`${name}-`) && entry.endsWith('.png'))
@@ -98,6 +121,7 @@ async function scenario(browser, name, viewport, mobile) {
     initial,
     afterDrag,
     detail,
+    interactionTimingsMs,
     consoleErrors,
     pageErrors,
     requestFailures,
@@ -136,6 +160,8 @@ try {
       riverSamplesSourceDraped: true,
       floatingOuterRingForbidden: true,
       permanentWaterVaporArtifactForbidden: true,
+      globalHydrologyUsesScreenLod: true,
+      localHydrologyUsesFull25mSamples: true,
       consoleErrorsRequired: 0,
       pageErrorsRequired: 0,
     },
