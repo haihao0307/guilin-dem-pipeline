@@ -1,0 +1,290 @@
+name: Wenzhou v1.1.1 final online review
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v111-final-online.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v111-final-online-review
+  cancel-in-progress: false
+
+jobs:
+  qa-package-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Checkout latest Wenzhou Draft branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify runtime and high-resolution assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/wenzhou-v111/runtime.js
+          node --check tests/wenzhou_v111_browser.mjs
+          python3 -m json.tool web/wenzhou-v111/assets/hires/manifest.json >/dev/null
+          python3 -m json.tool projects/wenzhou/reports/WENZHOU_V111_COASTLINE_CHORD_FILTER.json >/dev/null
+          test "$(stat -c '%s' web/wenzhou-v111/assets/hires/terrain_height_1025_i16.bin)" = '2101250'
+          test "$(stat -c '%s' web/wenzhou-v111/assets/hires/terrain_marine_1025_u8.bin)" = '1050625'
+          test "$(stat -c '%s' web/wenzhou-v111/assets/hires/bathymetry_height_1025_i16.bin)" = '2101250'
+          test "$(stat -c '%s' web/wenzhou-v111/assets/hires/offline_satellite_color_4096_lossless.png)" -gt '12000000'
+          grep -q "coast: false" web/wenzhou-v111/runtime.js
+          grep -q "oceanTerrain" web/wenzhou-v111/runtime.js
+          grep -q "mobile?385:769" web/wenzhou-v111/runtime.js
+          grep -q "ui.controller.classList.remove('open')" web/wenzhou-v111/runtime.js
+          grep -q 'OSM 海岸线诊断' web/wenzhou-v111/index.html
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local review server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 18992 --bind 127.0.0.1 >/tmp/wenzhou-v111-http.log 2>&1 &
+          echo $! >/tmp/wenzhou-v111-http.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18992/web/wenzhou-v111/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/wenzhou-v111-http.log
+          exit 1
+
+      - name: Run desktop and mobile WebGL QA
+        shell: bash
+        env:
+          WENZHOU_V111_URL: http://127.0.0.1:18992/web/wenzhou-v111/
+        run: |
+          set -euo pipefail
+          rm -rf projects/wenzhou/evidence/v111 projects/wenzhou/reports/WENZHOU_V111_BROWSER_QA.json
+          node tests/wenzhou_v111_browser.mjs | tee /tmp/wenzhou-v111-browser.log
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('projects/wenzhou/reports/WENZHOU_V111_BROWSER_QA.json').read_text(encoding='utf-8'))
+          assert report['passed'] is True
+          assert report['desktop']['passed'] is True
+          assert report['mobile']['passed'] is True
+          assert report['desktop']['initial']['terrainGrid'] == [1025, 1025]
+          assert report['desktop']['initial']['oceanGrid'] == [769, 769]
+          assert report['desktop']['initial']['bathymetryVisible'] is False
+          assert report['desktop']['detail']['detailGrid'] == [1025, 1025]
+          assert report['desktop']['detail']['detailSpacingMeters'] == 12.5
+          assert report['desktop']['detail']['renderedRiverSegments'] > 0
+          assert report['mobile']['initial']['terrainGrid'] == [513, 513]
+          assert report['mobile']['initial']['oceanGrid'] == [385, 385]
+          assert report['mobile']['mobilePanelOpen'] is False
+          assert report['desktop']['cameraChanged'] is True
+          assert report['mobile']['cameraChanged'] is True
+          for section in ('desktop', 'mobile'):
+              assert report[section]['consoleErrors'] == []
+              assert report[section]['pageErrors'] == []
+              assert report[section]['fatalRequestFailures'] == []
+          screenshots = sorted(Path('projects/wenzhou/evidence/v111').glob('*.png'))
+          assert len(screenshots) >= 5
+          hashes = [hashlib.sha256(path.read_bytes()).hexdigest() for path in screenshots]
+          assert len(set(hashes)) == len(hashes)
+          print(json.dumps({
+              'passed': True,
+              'desktopReadyMs': report['desktop']['readyMs'],
+              'mobileReadyMs': report['mobile']['readyMs'],
+              'desktopOceanGrid': report['desktop']['initial']['oceanGrid'],
+              'mobileOceanGrid': report['mobile']['initial']['oceanGrid'],
+              'detailSpacingMeters': report['desktop']['detail']['detailSpacingMeters'],
+              'screenshots': len(screenshots),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Build complete Windows local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE.zip
+          mkdir -p /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/web /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/tools
+          cp -a web/wenzhou-v111 /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/web/
+          cat > /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/tools/serve.py <<'PY'
+          from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+          from pathlib import Path
+          import os
+          import webbrowser
+
+          root = Path(__file__).resolve().parents[1]
+          os.chdir(root)
+          url = 'http://127.0.0.1:18992/web/wenzhou-v111/'
+          webbrowser.open(url)
+
+          class Handler(SimpleHTTPRequestHandler):
+              def end_headers(self):
+                  self.send_header('Cache-Control', 'no-store')
+                  super().end_headers()
+
+          ThreadingHTTPServer(('127.0.0.1', 18992), Handler).serve_forever()
+          PY
+          cat > /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/START_WENZHOU_V111_3D.cmd <<'CMD'
+          @echo off
+          chcp 65001 >nul
+          cd /d "%~dp0"
+          where py >nul 2>nul
+          if %errorlevel%==0 (
+            py -3 tools\serve.py
+          ) else (
+            python tools\serve.py
+          )
+          pause
+          CMD
+          cat > /tmp/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE/README_CN.txt <<'TXT'
+          温州真实三维地图 V1.1.1 高精在线审阅版
+
+          解压完整压缩包后，双击 START_WENZHOU_V111_3D.cmd。
+          保持命令窗口开启，浏览器会自动打开地图。
+
+          桌面全域地形 1025 × 1025，海面 769 × 769。
+          移动端全域地形 513 × 513，海面 385 × 385。
+          七个镜头区域加载 1025 × 1025、原生 12.5 米 Int16 高程瓦片。
+          离线卫星色彩采用 4096 × 4096 无损 PNG。
+          河流与海岸线已经裁切到权威 DEM 边界，河流按原始 COG 每 25 米以内采样贴地。
+          海岸线诊断和 GEBCO 海底诊断默认关闭，均可在控制面板中打开。
+
+          权威陆地 COG SHA-256：
+          8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e
+          TXT
+          (cd /tmp && zip -qr "$GITHUB_WORKSPACE/WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE.zip" WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE)
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          package = Path('WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE.zip')
+          payload = {
+              'schema': 'wenzhou_v111_delivery@1.1.3',
+              'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'branch': 'project/wenzhou-v110-3d-satellite-osm-water',
+              'package': package.name,
+              'bytes': package.stat().st_size,
+              'sha256': hashlib.sha256(package.read_bytes()).hexdigest(),
+              'truthDemSha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
+              'onlineUrl': 'https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v111/',
+              'status': 'draft-online-review-candidate',
+          }
+          Path('projects/wenzhou/reports/WENZHOU_V111_DELIVERY.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(payload, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit verified evidence to Draft branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- projects/wenzhou/evidence/v111 projects/wenzhou/reports/WENZHOU_V111_BROWSER_QA.json projects/wenzhou/reports/WENZHOU_V111_DELIVERY.json
+          git commit -m 'Add verified Wenzhou v1.1.1 final browser evidence [skip v111 final]'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+
+      - name: Publish Draft online review to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-v111-gh-pages
+          git fetch origin gh-pages
+          git worktree add -B gh-pages /tmp/wenzhou-v111-gh-pages origin/gh-pages
+          rm -rf /tmp/wenzhou-v111-gh-pages/wenzhou-v111
+          cp -a web/wenzhou-v111 /tmp/wenzhou-v111-gh-pages/wenzhou-v111
+          touch /tmp/wenzhou-v111-gh-pages/.nojekyll
+          python3 - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          payload = {
+              'schema': 'wenzhou_v111_online_build@1.1.3',
+              'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'sourceBranch': 'project/wenzhou-v110-3d-satellite-osm-water',
+              'truthDemSha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
+              'status': 'draft-online-review-candidate',
+          }
+          Path('/tmp/wenzhou-v111-gh-pages/wenzhou-v111/ONLINE_BUILD.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          cd /tmp/wenzhou-v111-gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .nojekyll wenzhou-v111
+          git commit -m 'Publish Wenzhou v1.1.1 final Draft online review'
+          git push origin HEAD:gh-pages
+
+      - name: Verify public online page and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v111/'
+          success=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/wenzhou-v111-online.html; then
+              if grep -q '温州真实三维地图' /tmp/wenzhou-v111-online.html; then
+                success=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          test "$success" = '1'
+          curl --fail --silent --show-error --location "${URL}assets/hires/manifest.json" -o /tmp/wenzhou-v111-online-manifest.json
+          curl --fail --silent --show-error --location "${URL}assets/hires/offline_satellite_color_4096_lossless.png" -o /tmp/wenzhou-v111-online-satellite.png
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('/tmp/wenzhou-v111-online-manifest.json').read_text(encoding='utf-8'))
+          assert manifest['truth']['sha256'] == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
+          assert manifest['terrainOverview']['grid'] == [1025, 1025]
+          assert manifest['offlineSatelliteColor']['losslessPng'] is True
+          assert manifest['hydrology']['coastlineDroppedLongDirectSegmentCount'] == 10
+          assert Path('/tmp/wenzhou-v111-online-satellite.png').stat().st_size > 12000000
+          print(json.dumps({
+              'onlineVerified': True,
+              'url': 'https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v111/',
+              'terrainGrid': manifest['terrainOverview']['grid'],
+              'losslessSatelliteBytes': Path('/tmp/wenzhou-v111-online-satellite.png').stat().st_size,
+              'coastlineDroppedLongDirectSegments': manifest['hydrology']['coastlineDroppedLongDirectSegmentCount'],
+          }, indent=2))
+          PY
+
+      - name: Upload final package and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v111-final-online-review
+          path: |
+            WENZHOU_V111_HIRES_3D_LOCAL_PACKAGE.zip
+            projects/wenzhou/evidence/v111/**
+            projects/wenzhou/reports/WENZHOU_V111_BROWSER_QA.json
+            projects/wenzhou/reports/WENZHOU_V111_DELIVERY.json
+            projects/wenzhou/reports/WENZHOU_V111_COASTLINE_CHORD_FILTER.json
+            /tmp/wenzhou-v111-browser.log
+            /tmp/wenzhou-v111-http.log
+            /tmp/wenzhou-v111-online.html
+            /tmp/wenzhou-v111-online-manifest.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
