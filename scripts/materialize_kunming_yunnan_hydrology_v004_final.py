@@ -39,11 +39,15 @@ def main() -> int:
     )
     index_path.write_text(index_text, encoding="utf-8")
 
-    print(f"materialized {len(infos)} reviewed Kunming V004 source files")
+    qa_override = root / "scripts/qa_kunming_yunnan_hydrology_v004_override.mjs"
+    qa_target = root / "scripts/qa_kunming_yunnan_hydrology_v004.mjs"
+    if not qa_override.exists():
+        raise SystemExit(f"browser QA override missing: {qa_override}")
+    qa_target.write_text(qa_override.read_text(encoding="utf-8"), encoding="utf-8")
+
+    print(f"materialized {len(infos)} reviewed Kunming V004 source files and installed robust browser QA")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-# Deployment trigger: public 3D V004 build and browser acceptance.
