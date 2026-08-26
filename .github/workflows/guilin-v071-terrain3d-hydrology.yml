@@ -1,0 +1,123 @@
+name: Guilin v0.7.1 three-dimensional terrain and OSM hydrology
+
+on:
+  push:
+    branches:
+      - project/guilin-v071-terrain3d-hydrology
+    paths:
+      - .github/workflows/guilin-v071-terrain3d-hydrology.yml
+      - projects/guilin-v071-terrain3d-hydrology/**
+      - projects/guilin-v070-raw-mosaic-aoi-draw/build_raw_mosaic.py
+      - canonical/guilin-dem-12_5m-core/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v071-terrain3d-hydrology
+  cancel-in-progress: false
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PROJECT_DIR: projects/guilin-v071-terrain3d-hydrology
+      MOSAIC_PROJECT: projects/guilin-v070-raw-mosaic-aoi-draw
+      SOURCE_DIR: canonical/guilin-dem-12_5m-core/data/raw/asf
+      SOURCE_MANIFEST: canonical/guilin-dem-12_5m-core/catalog/source_manifest.json
+    steps:
+      - name: Checkout without automatic LFS smudge
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Pull the 12 canonical DEM objects
+        shell: bash
+        run: |
+          git lfs install --local
+          git lfs pull --include="${SOURCE_DIR}/*.dem.tif" --exclude=""
+          test "$(find "${SOURCE_DIR}" -maxdepth 1 -type f -name '*.dem.tif' | wc -l)" -eq 12
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pillow rasterio pyproj
+
+      - name: Rebuild raw mosaic and 3D terrain assets
+        run: |
+          rm -rf "${PROJECT_DIR}/derived" dist
+          python "${MOSAIC_PROJECT}/build_raw_mosaic.py" \
+            --source-dir "${SOURCE_DIR}" \
+            --source-manifest "${SOURCE_MANIFEST}" \
+            --output-dir "${PROJECT_DIR}/derived/raw" \
+            --web-data-dir "${PROJECT_DIR}/derived/selection-data" \
+            --preview-max-width 2048
+          mkdir -p dist/data
+          python "${PROJECT_DIR}/build_terrain3d.py" \
+            --mosaic "${PROJECT_DIR}/derived/raw/guilin_raw_union_12_5m.tif" \
+            --output-dir dist/data \
+            --height-max-width 768 \
+            --texture-max-width 2048
+
+      - name: Fetch OSM hydrology for the mosaic extent
+        run: |
+          python "${PROJECT_DIR}/fetch_osm_hydrology.py" \
+            --terrain-manifest dist/data/terrain_manifest.json \
+            --output dist/data/osm_hydrology.geojson
+
+      - name: Assemble web viewer
+        run: |
+          cp "${PROJECT_DIR}/web/index.html" dist/index.html
+          cp "${PROJECT_DIR}/web/app.js" dist/app.js
+          cp "${PROJECT_DIR}/web/styles.css" dist/styles.css
+
+      - name: Browser smoke test and visual evidence
+        run: |
+          npm install --no-save playwright@1.51.1
+          npx playwright install --with-deps chromium
+          python -m http.server 8000 --directory dist >/tmp/guilin-v071-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill ${server_pid} || true' EXIT
+          node "${PROJECT_DIR}/browser_smoke.mjs"
+
+      - name: Upload evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-v071-terrain3d-hydrology-evidence
+          path: |
+            dist/data/terrain_manifest.json
+            dist/data/osm_hydrology.geojson
+            dist/evidence/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish 3D viewer to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./dist
+          destination_dir: guilin-v071-terrain3d
+          keep_files: true
+          force_orphan: false
+          commit_message: "Publish Guilin v0.7.1 3D terrain from ${{ github.sha }}"
+
+      - name: Write job summary
+        run: |
+          {
+            echo '## Xiaogui Guilin v0.7.1 3D terrain'
+            echo
+            echo '- Online: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v071-terrain3d/'
+            echo '- Source: 12 new 12.5 m DEM files'
+            echo '- Vertical scale: 1.00x locked'
+            echo '- Hydrology: OpenStreetMap first pass'
+          } >> "$GITHUB_STEP_SUMMARY"

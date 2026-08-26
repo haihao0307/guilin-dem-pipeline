@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>小桂 · 桂林 12.5 米三維地形</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <span class="eyebrow">XIAOGUI · GUILIN DEM · v0.7.1</span>
+      <h1>桂林 12.5 米三維地形與 OSM 水系</h1>
+      <p>12 張新源片聯合底座 · 原始高差 1:1 · NoData 保留 · OSM 第一輪水系</p>
+    </div>
+    <div id="status" class="status">正在載入三維地形</div>
+  </header>
+
+  <main>
+    <section id="viewerShell">
+      <div id="viewer" aria-label="桂林 12.5 米三維地形"></div>
+      <div id="labelLayer"></div>
+      <div class="help">左鍵旋轉 · 右鍵平移 · 滾輪縮放</div>
+    </section>
+
+    <aside>
+      <section>
+        <h2>地形底座</h2>
+        <dl class="metrics">
+          <div><dt>Source</dt><dd id="source">--</dd></div>
+          <div><dt>Grid</dt><dd id="grid">--</dd></div>
+          <div><dt>World</dt><dd id="world">--</dd></div>
+          <div><dt>Elevation</dt><dd id="elevation">--</dd></div>
+          <div><dt>Vertical</dt><dd>1.00× locked</dd></div>
+          <div><dt>CRS</dt><dd>EPSG:32649</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <h2>顯示</h2>
+        <label class="switch"><input id="terrainToggle" type="checkbox" checked /><span>地形材質</span></label>
+        <label class="switch"><input id="wireToggle" type="checkbox" /><span>地形網格</span></label>
+        <label class="switch"><input id="hydrologyToggle" type="checkbox" checked /><span>OSM 水系</span></label>
+        <label class="switch"><input id="labelsToggle" type="checkbox" checked /><span>四地標</span></label>
+      </section>
+
+      <section>
+        <h2>鏡頭</h2>
+        <div class="button-grid">
+          <button data-target="overview">全域</button>
+          <button data-target="zhenbaoding">真寶鼎</button>
+          <button data-target="guilin">桂林城</button>
+          <button data-target="yangtang">秧塘機場</button>
+          <button data-target="yangshuo">陽朔縣</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>水系狀態</h2>
+        <dl class="metrics one-column">
+          <div><dt>Li system ways</dt><dd id="liCount">--</dd></div>
+          <div><dt>Xiang system ways</dt><dd id="xiangCount">--</dd></div>
+          <div><dt>Other named rivers</dt><dd id="otherCount">--</dd></div>
+        </dl>
+        <p class="notice">本版先放置 OSM 河流與有名稱溪流。漓江、湘江按名稱高亮，後續再做河網拓撲、河寬與河岸。</p>
+        <p class="osm">Water data © OpenStreetMap contributors</p>
+      </section>
+
+      <section>
+        <a class="link" href="../guilin-v070-selection/">返回二維選區頁</a>
+      </section>
+    </aside>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
