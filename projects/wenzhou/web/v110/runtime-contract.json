@@ -1,0 +1,177 @@
+{
+  "schema": "wenzhou_3d_runtime_contract@1.1.0",
+  "project": "wenzhou-qingjiang-22000km2",
+  "status": "draft-execution-contract",
+  "branch": "project/wenzhou-v110-3d-satellite-osm-water",
+  "task": "ops/tasks/WENZHOU_V110_3D_SATELLITE_OSM_WATER_RUNTIME.md",
+  "runtime": {
+    "route": "web/wenzhou-v110/index.html",
+    "requiredDimension": "interactive-3d",
+    "renderer": [
+      "WebGL2",
+      "Three.js WebGLRenderer",
+      "equivalent GPU 3D runtime"
+    ],
+    "projection": "perspective",
+    "sharedCanvas": true,
+    "sharedCamera": true,
+    "sharedWorldTransform": true,
+    "terrainRuntimeId": "wenzhou-epsg32651-v110",
+    "verticalScale": 1.0,
+    "staticPosterMayNotSatisfyRuntime": true,
+    "fullCogBase64InHtmlForbidden": true
+  },
+  "truthTerrain": {
+    "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "bytes": 54638031,
+    "crs": "EPSG:32651",
+    "grid": [11866, 11866],
+    "spacingMeters": [12.5, 12.5],
+    "bounds": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+    "immutable": true,
+    "landPixelsModifiedRequired": 0
+  },
+  "bathymetry": {
+    "path": "projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif",
+    "sha256": "591e92eef61699088a87e32bfd83417498f89cfe3a6a84f4ce6a2e2ac3b689fc",
+    "crs": "EPSG:32651",
+    "grid": [2090, 1971],
+    "spacingMeters": [100.0, 100.0],
+    "bounds": [218100.0, 3030900.0, 427100.0, 3228000.0],
+    "coveragePercent": 100.0,
+    "source": "GEBCO_2026",
+    "sourceResolution": "15 arc-second",
+    "native12_5mBathymetryClaim": false
+  },
+  "hydrology": {
+    "coastlineProjected": {
+      "path": "projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson",
+      "sha256": "5cfeb0465df59590c78c6b163f60ae8764731e1ea65e3adcbc5052813b299181",
+      "partCount": 934,
+      "totalLengthMeters": 2289581.9526503016
+    },
+    "riverCenterlinesProjected": {
+      "path": "projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson",
+      "sha256": "585220c369ed8ec6b588f1913489870c585cc98ddd7c5357beaff9ddaae7a9d9",
+      "coordinateSha256": "df6fe335d7cb8d69aa1971b897cc8fedfeeaf44bee95ffaab9ac472b01a175f4",
+      "partCount": 5819,
+      "totalLengthMeters": 9093110.239461595,
+      "typePartCounts": {
+        "canal": 3369,
+        "river": 1219,
+        "stream": 1230,
+        "tidal_channel": 1
+      }
+    },
+    "attribution": "© OpenStreetMap contributors",
+    "license": "ODbL 1.0",
+    "widthControl": "lateral-offset-only",
+    "estuaryConnectivityStatus": "pending",
+    "topologyPassed": false,
+    "projectedSkeletonPassed": true
+  },
+  "satellite": {
+    "onlinePriority": [
+      {
+        "id": "eox-sentinel2-cloudless-2024",
+        "provider": "EOX",
+        "dataset": "Sentinel-2 cloudless 2024",
+        "service": ["WMTS", "WMS"],
+        "requiredAttribution": true,
+        "repositoryCachingAllowedOnlyAfterLicenseReview": true
+      },
+      {
+        "id": "copernicus-data-space-sentinel2",
+        "provider": "Copernicus Data Space Ecosystem",
+        "dataset": "Sentinel-2 true color",
+        "requiredAttribution": true,
+        "configurationAndAuthorizationEvidenceRequired": true
+      }
+    ],
+    "offlineMaterial": {
+      "label": "satellite-color material",
+      "mayClaimOriginalSatelliteImage": false,
+      "inputs": [
+        "truth elevation",
+        "slope",
+        "aspect",
+        "coastline",
+        "OSM hydrology",
+        "approved land-cover evidence"
+      ]
+    },
+    "modesRequired": [
+      "online-real-satellite",
+      "offline-satellite-color",
+      "hillshade",
+      "grayscale-analysis",
+      "bathymetry"
+    ]
+  },
+  "water": {
+    "layersRequired": [
+      "ocean-surface",
+      "bathymetry-surface",
+      "coastline",
+      "island-cutouts",
+      "river-surfaces",
+      "stream-surfaces",
+      "canal-surfaces",
+      "tidal-channel-surfaces",
+      "estuary-diagnostics",
+      "land-sea-conflict-diagnostics"
+    ],
+    "defaultSeaLevelMeters": 0.0,
+    "syntheticSinusoidalTideForbidden": true,
+    "fes2022bStatus": "blocked-on-authoritative-native-model-files",
+    "staticOceanMustNotBeBlockedByFes": true,
+    "wavesAreVisualOnly": true
+  },
+  "cameraAnchors": [
+    "overall",
+    "wenzhou-city",
+    "xianxi-town",
+    "haimen-city",
+    "yandang-mountain",
+    "oujiang-estuary",
+    "yueqing-bay",
+    "kanmen"
+  ],
+  "cameraModes": [
+    "overview",
+    "oblique",
+    "orthographic",
+    "ground-1.6m"
+  ],
+  "lod": {
+    "strategy": [
+      "quadtree",
+      "hierarchical-terrain-tiles",
+      "adaptive-mesh"
+    ],
+    "nearTruthSpacingMeters": 12.5,
+    "tileEdgeContinuityRequired": true,
+    "activeTileEvictionRequired": true,
+    "full11866SquaredMeshForbidden": true
+  },
+  "acceptance": {
+    "threeColdStarts": true,
+    "desktop": true,
+    "mobileViewport": [390, 844],
+    "consoleErrors": 0,
+    "unhandledPromiseRejections": 0,
+    "permanentBlackScreenForbidden": true,
+    "brokenImagesForbidden": true,
+    "allRequiredAssetsHttpStatus": [200, 206],
+    "runtimeScreenshotsRequired": true,
+    "preRenderedPosterCannotReplaceRuntimeScreenshot": true,
+    "visualApprovalRequiredBeforePublish": true
+  },
+  "release": {
+    "draftOnly": true,
+    "mergeEnabled": false,
+    "publicDeploymentEnabled": false,
+    "controllerVisualApprovalRequired": true
+  }
+}
