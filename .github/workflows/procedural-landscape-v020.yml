@@ -1,0 +1,98 @@
+name: Procedural landscape v0.2 foundation QA
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/procedural-landscape-v020.yml
+      - skills/dem-procedural-landscape/**
+      - projects/*/config/procedural_landscape_binding_v020.json
+      - tools/procedural_landscape/**
+      - tests/procedural_landscape/**
+      - web/procedural-landscape-skill/**
+      - HANDOFF_DEM_PROCEDURAL_LANDSCAPE_FOUNDATION_V020.md
+  pull_request:
+    branches:
+      - skill/dem-ecology-surface-v050
+    paths:
+      - .github/workflows/procedural-landscape-v020.yml
+      - skills/dem-procedural-landscape/**
+      - projects/*/config/procedural_landscape_binding_v020.json
+      - tools/procedural_landscape/**
+      - tests/procedural_landscape/**
+      - web/procedural-landscape-skill/**
+      - HANDOFF_DEM_PROCEDURAL_LANDSCAPE_FOUNDATION_V020.md
+  workflow_dispatch:
+
+concurrency:
+  group: procedural-landscape-v020-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Schemas, bindings and fail-closed validator
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Validate production-line contracts
+        run: >-
+          python tools/procedural_landscape/validate.py
+          --root .
+          --json-report reports/PROCEDURAL_LANDSCAPE_FOUNDATION_V020_VALIDATION.json
+
+      - name: Run fail-closed unit tests
+        run: python -m unittest discover -s tests/procedural_landscape -p 'test_*.py' -v
+
+      - name: Upload contract QA
+        uses: actions/upload-artifact@v7
+        with:
+          name: procedural-landscape-v020-contracts-${{ github.sha }}
+          path: reports/PROCEDURAL_LANDSCAPE_FOUNDATION_V020_VALIDATION.json
+          if-no-files-found: error
+          retention-days: 30
+
+  browser:
+    name: Desktop and 390x844 browser QA
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run real Chromium QA
+        run: >-
+          python tools/procedural_landscape/browser_qa.py
+          --root .
+          --transport http
+          --output reports/procedural-landscape-browser-v020
+
+      - name: Upload browser QA
+        uses: actions/upload-artifact@v7
+        with:
+          name: procedural-landscape-v020-browser-${{ github.sha }}
+          path: reports/procedural-landscape-browser-v020/**
+          if-no-files-found: error
+          retention-days: 30
