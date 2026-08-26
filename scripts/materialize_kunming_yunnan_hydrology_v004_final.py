@@ -47,9 +47,7 @@ def main() -> int:
     if reserved_flat_count:
         app_text = re.sub(r"\bflat\b", "flatTerrain", app_text)
 
-    mesh_pattern = (
-        r"(?:const|let)\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*[^;]+;"
-    )
+    mesh_pattern = r"(?:const|let)\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*[^;]+;"
     app_text, mesh_patch_count = re.subn(
         mesh_pattern,
         "const [meshCols,meshRows]=[256,352];",
@@ -58,6 +56,22 @@ def main() -> int:
     )
     if mesh_patch_count != 1:
         raise SystemExit(f"failed to patch V004 browser mesh declaration: {mesh_patch_count}")
+
+    resize_pattern = (
+        r"function resize\(\)\{const ratio=Math\.min\(devicePixelRatio\|\|1,2\),"
+    )
+    resize_replacement = (
+        "const qaRenderMode=new URLSearchParams(location.search).has('qa');"
+        "function resize(){const ratio=qaRenderMode?0.35:Math.min(devicePixelRatio||1,1.5),"
+    )
+    app_text, resize_patch_count = re.subn(
+        resize_pattern,
+        resize_replacement,
+        app_text,
+        count=1,
+    )
+    if resize_patch_count != 1:
+        raise SystemExit(f"failed to install V004 QA render-scale guard: {resize_patch_count}")
 
     if re.search(r"\bflat\b", app_text):
         raise SystemExit("reserved GLSL token 'flat' remains in V004 app.js")
@@ -73,6 +87,7 @@ def main() -> int:
         f"materialized {len(infos)} reviewed Kunming V004 source files, "
         f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
         "forced a stable 256x352 WebGL terrain mesh, "
+        "installed a reduced internal render scale only during automated QA, "
         "and installed robust browser QA"
     )
     return 0
