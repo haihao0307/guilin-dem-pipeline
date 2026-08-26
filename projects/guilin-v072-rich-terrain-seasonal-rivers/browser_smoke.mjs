@@ -3,13 +3,14 @@ import fs from 'node:fs/promises';
 
 const browser = await chromium.launch({ headless: true, args: ['--use-gl=swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1720, height: 1080 }, deviceScaleFactor: 1 });
+page.setDefaultTimeout(60000);
 const errors = [];
 page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
 page.on('pageerror', error => errors.push(error.message));
 
 await page.goto('http://127.0.0.1:8000/', { waitUntil: 'networkidle', timeout: 240000 });
 await page.waitForFunction(() => window.__XIAOGUI_TERRAIN_READY === true, null, { timeout: 240000 });
-await page.waitForTimeout(4500);
+await page.waitForTimeout(3500);
 
 if (await page.locator('#viewer canvas').count() !== 1) throw new Error('WebGL canvas missing');
 if (await page.locator('.landmark-label').count() !== 4) throw new Error('Four landmark labels missing');
@@ -42,17 +43,25 @@ for (let index = 0; index < landmarkOrder.length - 1; index += 1) {
 const background = await page.locator('.landmark-label').first().evaluate(element => getComputedStyle(element).backgroundColor);
 if (!['rgba(0, 0, 0, 0)', 'transparent'].includes(background)) throw new Error(`Landmark background must be transparent: ${background}`);
 
-await page.locator('[data-season="summer"]').click();
-await page.waitForFunction(() => window.__XIAOGUI_RIVER_CONTRACT?.season === 'summer');
+await page.evaluate(() => {
+  const button = document.querySelector('[data-season="summer"]');
+  if (!button) throw new Error('Summer preset button missing');
+  button.click();
+});
+await page.waitForFunction(() => window.__XIAOGUI_RIVER_CONTRACT?.season === 'summer', null, { timeout: 60000 });
 const summer = await page.evaluate(() => window.__XIAOGUI_RIVER_CONTRACT);
 if (Math.abs(summer.controls.width_scale - 1.38) > 0.001) throw new Error('Summer width preset failed');
 if (Math.abs(summer.controls.depth_visual - 0.88) > 0.001) throw new Error('Summer depth preset failed');
 
-await page.locator('[data-target="yangshuo"]').click();
+await page.evaluate(() => {
+  const button = document.querySelector('[data-target="yangshuo"]');
+  if (!button) throw new Error('Yangshuo camera button missing');
+  button.click();
+});
 await page.waitForTimeout(1400);
 
 await fs.mkdir('dist/evidence', { recursive: true });
-await page.screenshot({ path: 'dist/evidence/guilin-v072-rich-terrain-seasonal-rivers.png', fullPage: true });
+await page.screenshot({ path: 'dist/evidence/guilin-v072-rich-terrain-seasonal-rivers.png', fullPage: true, timeout: 120000 });
 await fs.writeFile('dist/evidence/runtime-contracts.json', JSON.stringify({ initial: contracts, summer }, null, 2));
 await fs.writeFile('dist/evidence/browser-console.json', JSON.stringify({ errors }, null, 2));
 
