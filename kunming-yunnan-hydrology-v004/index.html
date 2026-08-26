@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>昆明 DEM 云南卫星图式与真实 OSM 水系 V004</title>
+<link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+<canvas id="terrain" aria-label="昆明 DEM 云南卫星图式三维地形"></canvas>
+<div id="fallback" hidden><img id="fallbackImage" src="assets/fallback_yunnan_water_v004.jpg" alt="昆明 DEM 云南卫星图式二维预览" draggable="false"></div>
+<aside class="panel">
+  <div class="eyebrow">XIAOKUN · KUNMING GEODATA</div>
+  <h1>昆明 DEM 云南卫星图式与真实 OSM 水系 V004</h1>
+  <p class="lead">沿用冻结的无压缩 12.5 米 DEM。地表颜色由高程、坡度、局部起伏、湿润谷地和裸岩字段共同驱动。河道与湖泊来自现代 OpenStreetMap 参考数据，手绘水系为 0。</p>
+  <div class="badges"><span>现代 OSM 参考</span><span>历史真值 0</span><span>手绘水系 0</span></div>
+  <section>
+    <div class="mode-grid">
+      <button class="active" data-mode="0">云南卫星图</button>
+      <button data-mode="1">自然地形</button>
+      <button data-mode="2">高程分层</button>
+      <button data-mode="3">水系强调</button>
+    </div>
+  </section>
+  <section class="toggle-grid">
+    <button id="toggleRivers" class="active">河道开启</button>
+    <button id="toggleLakes" class="active">湖泊开启</button>
+  </section>
+  <section class="controls">
+    <label><span>卫星色彩层次</span><output id="richnessOut">62%</output></label><input id="richness" type="range" min="0" max="100" value="62">
+    <label><span>湿润绿色</span><output id="moistureOut">50%</output></label><input id="moisture" type="range" min="0" max="100" value="50">
+    <label><span>裸岩与红土</span><output id="rockOut">48%</output></label><input id="rock" type="range" min="0" max="100" value="48">
+    <label><span>水色深浅</span><output id="waterColorOut">58%</output></label><input id="waterColor" type="range" min="0" max="100" value="58">
+    <label><span>水系层级</span><output id="hydroDetailOut">18%</output></label><input id="hydroDetail" type="range" min="0" max="100" value="18">
+    <label><span>河道宽度</span><output id="riverWidthOut">28%</output></label><input id="riverWidth" type="range" min="0" max="100" value="28">
+    <label><span>河流速度</span><output id="flowSpeedOut">52%</output></label><input id="flowSpeed" type="range" min="0" max="100" value="52">
+    <label><span>湖面波浪</span><output id="waveOut">46%</output></label><input id="wave" type="range" min="0" max="100" value="46">
+  </section>
+  <section class="stats">
+    <div><b>12.5 m</b><span>权威输出像元</span></div>
+    <div><b>5892 × 8095</b><span>权威栅格</span></div>
+    <div><b id="riverCount">911</b><span>主要 OSM 河流与溪流</span></div>
+    <div><b id="lakeCount">821</b><span>显示湖泊、水库与水面</span></div>
+    <div><b>7,452.459375 km²</b><span>当前裁切面积</span></div>
+    <div><b>1.0×</b><span>自然垂直比例</span></div>
+  </section>
+  <details>
+    <summary>数据与操作说明</summary>
+    <p>左键拖动旋转，右键拖动或按住 Shift 平移，滚轮连续缩放。页面不提供任何相机预设，镜头完全由你自行控制。</p>
+    <p>河流中心线固定，河宽滑块只改变中心线两侧的横向显示宽度。水系层级从主要河流逐步加入沟渠与排水支线。湖岸边界固定，湖面按每个 OSM 水体的 DEM 中位高程形成平面，波浪只改变颜色、高光和明暗。当前水系属于现代 OSM 参考，尚未登记为 1940 至 1945 年历史真值。</p>
+    <p>© OpenStreetMap contributors，ODbL 1.0。</p>
+  </details>
+</aside>
+<div id="status" class="status">正在载入昆明 V004 三维地形与真实 OSM 水系…</div>
+<script type="module" src="app.js?v=4"></script>
+</body>
+</html>
