@@ -47,29 +47,28 @@ async function dragScene(page, mobile) {
     await page.mouse.up();
     return;
   }
-  await page.evaluate(({ startX, startY, endX, endY }) => {
-    const canvas = document.querySelector('#gl');
-    if (!(canvas instanceof HTMLCanvasElement)) throw new Error('missing WebGL canvas');
-    const dispatch = (type, x, y, buttons) => canvas.dispatchEvent(new PointerEvent(type, {
-      pointerId: 71,
-      pointerType: 'touch',
-      isPrimary: true,
-      bubbles: true,
-      cancelable: true,
-      clientX: x,
-      clientY: y,
-      button: type === 'pointerdown' ? 0 : -1,
-      buttons,
-      pressure: buttons ? 0.5 : 0,
-    }));
-    dispatch('pointerdown', startX, startY, 1);
-    const steps = 18;
-    for (let step = 1; step <= steps; step += 1) {
-      const t = step / steps;
-      dispatch('pointermove', startX + (endX - startX) * t, startY + (endY - startY) * t, 1);
-    }
-    dispatch('pointerup', endX, endY, 0);
-  }, { startX, startY, endX, endY });
+  const client = await page.context().newCDPSession(page);
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: startX, y: startY, id: 71, radiusX: 4, radiusY: 4, force: 0.5 }],
+  });
+  const steps = 18;
+  for (let step = 1; step <= steps; step += 1) {
+    const t = step / steps;
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{
+        x: startX + (endX - startX) * t,
+        y: startY + (endY - startY) * t,
+        id: 71,
+        radiusX: 4,
+        radiusY: 4,
+        force: 0.5,
+      }],
+    });
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await client.detach();
 }
 
 async function scenario(browser, name, viewport, mobile) {
@@ -98,7 +97,7 @@ async function scenario(browser, name, viewport, mobile) {
   await page.screenshot({ path: overviewFile, fullPage: false });
 
   await dragScene(page, mobile);
-  await sleep(mobile ? 1500 : 1000);
+  await sleep(mobile ? 1800 : 1000);
   const afterDrag = await page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
 
   let detail = null;
@@ -186,7 +185,7 @@ try {
   const desktop = await scenario(browser, 'desktop-1920x1080', { width: 1920, height: 1080 }, false);
   const mobile = await scenario(browser, 'mobile-390x844', { width: 390, height: 844 }, true);
   report = {
-    schema: 'wenzhou_v111_browser_qa@1.1.2',
+    schema: 'wenzhou_v111_browser_qa@1.1.3',
     generatedAtUtc: new Date().toISOString(),
     url,
     passed: desktop.passed && mobile.passed,
