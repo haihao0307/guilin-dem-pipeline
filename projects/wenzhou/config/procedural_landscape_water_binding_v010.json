@@ -1,0 +1,95 @@
+{
+  "schema": "wenzhou_procedural_landscape_water_binding@1.0.0",
+  "project": "wenzhou-qingjiang-22000km2",
+  "skill": {
+    "id": "dem-procedural-landscape",
+    "version": "0.1.0",
+    "ref": "skill/dem-procedural-landscape-v010",
+    "path": "skills/dem-procedural-landscape/SKILL.md"
+  },
+  "activeBranch": {
+    "id": "water-system",
+    "path": "skills/dem-procedural-landscape/branches/water-system/SKILL.md",
+    "role": "active-coastal-implementation"
+  },
+  "implementation": {
+    "branch": "project/wenzhou-v100-bathymetry-tides-hydrology",
+    "draftPr": 49,
+    "expectedHeadAtBindingCreation": "df14b6dfe35a32350c0d762287d633029c8a4f1a",
+    "keepDraft": true,
+    "mergeAllowed": false,
+    "publicDeploymentAllowed": false
+  },
+  "landTruth": {
+    "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "bytes": 54638031,
+    "crs": "EPSG:32651",
+    "grid": [11866, 11866],
+    "pixelSpacingMeters": 12.5,
+    "immutable": true
+  },
+  "coastalSources": {
+    "bathymetry": {
+      "product": "GEBCO 2026 Grid",
+      "typeIdentifier": "GEBCO 2026 Type Identifier Grid",
+      "sourceStage": "Stage A",
+      "overwriteLandTruthAllowed": false
+    },
+    "tides": {
+      "primary": "FES2022b through PyFES",
+      "comparison": "TPXO10 atlas v2",
+      "gaugeAndDatumValidationRequired": true
+    }
+  },
+  "requiredWaterClasses": [
+    "freshwater-river",
+    "estuary-mixing",
+    "intertidal",
+    "nearshore",
+    "offshore"
+  ],
+  "requiredLayers": [
+    "geometry-and-datum",
+    "primary-motion",
+    "wave-shape",
+    "foam-and-breaking",
+    "color-and-turbidity",
+    "interaction"
+  ],
+  "truthSeparation": {
+    "bedElevationTruth": true,
+    "waterLevelTruth": true,
+    "visualWaveDeltaSeparate": true,
+    "centerlineImmutable": true,
+    "shorelineImmutableAfterApproval": true,
+    "verticalDatumUncertaintyVisible": true
+  },
+  "guilinReference": {
+    "branchId": "guilin-10km2-detail",
+    "role": "method-and-visual-reference-only",
+    "transferProxyElevation": false,
+    "transferCityHydrology": false,
+    "transferInstanceCounts": false,
+    "transferHardExclusions": true,
+    "transferWorldCoordinateContinuity": true,
+    "transferStableIdMethod": true,
+    "transferRiverbankSequence": true
+  },
+  "completionClaims": {
+    "landTruthArchived": true,
+    "waterSkillBound": true,
+    "continuousHydrodynamics": false,
+    "estuaryMixingValidated": false,
+    "productionFoamValidated": false,
+    "boatPhysicsValidated": false,
+    "publicReleaseApproved": false
+  },
+  "release": {
+    "draftOnly": true,
+    "controllerVisualApprovalRequired": true,
+    "dataQaRequired": true,
+    "browserQaRequired": true,
+    "rollbackRequired": true
+  }
+}
