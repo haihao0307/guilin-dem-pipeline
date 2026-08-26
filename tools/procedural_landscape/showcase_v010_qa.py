@@ -50,8 +50,22 @@ def inspect(page,url,name,viewport,out,region=None):
         ecology=page.locator('[data-layer="ecology"]');ecology.click();off=ecology.get_attribute("aria-pressed")=="false";ecology.click();on=ecology.get_attribute("aria-pressed")=="true"
         box=canvas.bounding_box()
         if box:
-            page.mouse.move(box["x"]+box["width"]*.45,box["y"]+box["height"]*.55);page.mouse.down();page.mouse.move(box["x"]+box["width"]*.58,box["y"]+box["height"]*.48,steps=5);page.mouse.up();page.mouse.wheel(0,-160);page.wait_for_timeout(120)
+            page.mouse.move(box["x"]+box["width"]*.45,box["y"]+box["height"]*.55);page.mouse.down();page.mouse.move(box["x"]+box["width"]*.58,box["y"]+box["height"]*.48,steps=5);page.mouse.up();page.mouse.wheel(0,-160);page.wait_for_timeout(160)
         after=page.evaluate("window.__LANDSCAPE_SHOWCASE__.state.frame")
+        page.locator("#reset").click()
+        page.wait_for_timeout(260)
+        reset_state=page.evaluate("({yaw,zoom,vertical,frame}) => ({yaw,zoom,vertical,frame})",page.evaluate("window.__LANDSCAPE_SHOWCASE__.state"))
+        pixels=page.evaluate("""() => {
+          const c=document.querySelector('#terrain'),x=c.getContext('2d');
+          const w=c.width,h=c.height,s=x.getImageData(Math.floor(w*.18),Math.floor(h*.34),Math.max(1,Math.floor(w*.64)),Math.max(1,Math.floor(h*.58))).data;
+          let terrain=0,total=0;
+          for(let i=0;i<s.length;i+=64){
+            const r=s[i],g=s[i+1],b=s[i+2];
+            if(g>r*1.03 && g>b*.82 && r>25) terrain++;
+            total++;
+          }
+          return {terrain,total,fraction:total?terrain/total:0};
+        }""")
         assertions.update({
             "selectedRegion":selected==region,
             "widthKm":manifest["uniformAoi"]["widthKm"]==10,
@@ -64,6 +78,8 @@ def inspect(page,url,name,viewport,out,region=None):
             "toggleWorks":off and on,
             "canvasVisible":bool(box and box["width"]>=300 and box["height"]>=300),
             "renderAdvanced":after>before,
+            "resetWorks":abs(reset_state["yaw"]+.65)<1e-9 and abs(reset_state["zoom"]-1)<1e-9 and abs(reset_state["vertical"]-1)<1e-9 and reset_state["frame"]>after,
+            "terrainPixelsVisible":pixels["fraction"]>.015,
         })
         if region=="guilin": assertions["oldCoreDisclosed"]="原验证核心为 10 km²" in page.locator("#truth").inner_text()
         if region=="wenzhou": assertions["parentShaVisible"]="12.5 m COG" in page.locator("#truth").inner_text()
