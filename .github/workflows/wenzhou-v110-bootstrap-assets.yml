@@ -75,6 +75,32 @@ jobs:
           print('Pillow', PIL.__version__)
           PY
 
+      - name: Apply fail-closed masked-raster compatibility fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py')
+          source = path.read_text(encoding='utf-8')
+          replacements = {
+              'np.asarray(array.filled(np.nan), dtype=np.float32)':
+                  'np.asarray(array.astype(np.float32).filled(np.nan), dtype=np.float32)',
+              ').filled(np.nan).astype(np.float32)':
+                  ').astype(np.float32).filled(np.nan)',
+          }
+          counts = {}
+          for old, new in replacements.items():
+              count = source.count(old)
+              if count < 1:
+                  raise SystemExit(f'Expected masked-raster pattern missing: {old}')
+              counts[old] = count
+              source = source.replace(old, new)
+          path.write_text(source, encoding='utf-8')
+          print({'patched': counts})
+          PY
+
       - name: Syntax and contract checks
         shell: bash
         run: |
@@ -126,6 +152,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git checkout -- projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- web/wenzhou-v110/assets/bootstrap projects/wenzhou/reports/WENZHOU_V110_BOOTSTRAP_ASSET_BUILD.json
