@@ -213,7 +213,7 @@ jobs:
               && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
               && curl --fail --silent --show-error "$BASE/DEPLOYMENT_REPORT.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-deployment.json" \
               && curl --fail --silent --show-error "$BASE/assets/height_rg16.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-height.png" \
-              && curl --fail --silent --show-error "$BASE/assets/water_mask.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-water.png"; then
+              && curl --fail --silent --show-error "$BASE/assets/osm_water_mask_v004.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-water.png"; then
               python - <<'PY'
           import json, pathlib
           m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
