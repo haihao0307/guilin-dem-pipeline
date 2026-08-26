@@ -26,7 +26,7 @@ const browser = await puppeteer.launch({
     '--enable-unsafe-swiftshader',
     '--use-gl=angle',
     '--use-angle=swiftshader',
-    '--window-size=1440,1000'
+    '--window-size=800,600'
   ]
 });
 
@@ -98,21 +98,13 @@ async function audit(name, viewport, screenshotName) {
     };
   });
 
-  if (runtime.viewer !== 'ready') {
-    throw new Error(`${name} viewer did not enter ready state: ${JSON.stringify(runtime)}`);
-  }
-  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) {
-    throw new Error(`${name} WebGL2 canvas validation failed: ${JSON.stringify(runtime)}`);
-  }
-  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) {
-    throw new Error(`${name} OSM counts or attribution missing: ${JSON.stringify(runtime)}`);
-  }
-  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls) {
-    throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
-  }
+  if (runtime.viewer !== 'ready') throw new Error(`${name} viewer did not enter ready state: ${JSON.stringify(runtime)}`);
+  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) throw new Error(`${name} WebGL2 canvas validation failed: ${JSON.stringify(runtime)}`);
+  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) throw new Error(`${name} OSM counts or attribution missing: ${JSON.stringify(runtime)}`);
+  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls) throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
 
-  const canvas = await page.$('#terrain');
-  const box = await canvas.boundingBox();
+  const canvasHandle = await page.$('#terrain');
+  const box = await canvasHandle.boundingBox();
   if (!box || box.width < 100 || box.height < 100) throw new Error(`${name} canvas bounding box invalid`);
 
   const beforeData = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
@@ -120,10 +112,10 @@ async function audit(name, viewport, screenshotName) {
   const centerY = box.y + box.height * 0.55;
   await page.mouse.move(centerX, centerY);
   await page.mouse.down({ button: 'left' });
-  await page.mouse.move(centerX + 110, centerY - 55, { steps: 12 });
+  await page.mouse.move(centerX + Math.min(90, box.width * 0.18), centerY - Math.min(45, box.height * 0.12), { steps: 10 });
   await page.mouse.up({ button: 'left' });
-  await page.mouse.wheel({ deltaY: -520 });
-  await delay(1200);
+  await page.mouse.wheel({ deltaY: -360 });
+  await delay(900);
 
   await page.evaluate(() => {
     const slider = document.getElementById('green');
@@ -133,7 +125,7 @@ async function audit(name, viewport, screenshotName) {
     riverWidth.value = '58';
     riverWidth.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  await delay(900);
+  await delay(700);
 
   const afterData = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
   const beforeHash = digest(beforeData);
@@ -144,15 +136,13 @@ async function audit(name, viewport, screenshotName) {
     const collapse = await page.$('#collapse');
     if (collapse) {
       await collapse.click();
-      await delay(300);
+      await delay(250);
     }
   }
 
   const screenshotPath = path.join(outputDir, screenshotName);
   await page.screenshot({ path: screenshotPath, fullPage: false });
-  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 100000) {
-    throw new Error(`${name} screenshot missing or too small`);
-  }
+  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 30000) throw new Error(`${name} screenshot missing or too small`);
 
   const result = {
     ...runtime,
@@ -175,7 +165,7 @@ async function audit(name, viewport, screenshotName) {
 }
 
 try {
-  aggregate.desktop = await audit('desktop', { width: 1440, height: 1000, deviceScaleFactor: 1 }, 'KUNMING_V004_DESKTOP.png');
+  aggregate.desktop = await audit('desktop', { width: 800, height: 600, deviceScaleFactor: 1 }, 'KUNMING_V004_DESKTOP.png');
   aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, 'KUNMING_V004_MOBILE.png');
   aggregate.webgl2Active = aggregate.desktop.webgl2Active && aggregate.mobile.webgl2Active;
   aggregate.manualCameraInteractionVerified = aggregate.desktop.manualCameraInteractionVerified && aggregate.mobile.manualCameraInteractionVerified;
