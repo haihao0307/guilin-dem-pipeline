@@ -69,20 +69,24 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/source-audit/kunming
+          before=/tmp/source-audit/kunming/before.txt
+          after=/tmp/source-audit/kunming/after.txt
+          find /tmp/kunming -type f -printf '%P\t%s\n' | sort > "$before"
           python /tmp/kunming/scripts/materialize_kunming_yunnan_hydrology_v004_final.py
-          base=/tmp/kunming/projects/kunming/web/yunnan-hydrology-v004
-          find "$base" -maxdepth 3 -type f -printf '%P\t%s\n' | sort > /tmp/source-audit/kunming/files.tsv
-          cp "$base/manifest.json" /tmp/source-audit/kunming/manifest.json
-          python - "$base" /tmp/source-audit/kunming/images.json <<'PY'
+          find /tmp/kunming -type f -printf '%P\t%s\n' | sort > "$after"
+          git -C /tmp/kunming status --short > /tmp/source-audit/kunming/git-status.txt
+          comm -13 "$before" "$after" > /tmp/source-audit/kunming/new-files.tsv || true
+          find /tmp/kunming -type f \( -name 'manifest.json' -o -name '*height*' -o -name '*surface*' -o -name '*water*' -o -name '*fallback*' \) -printf '%P\t%s\n' | sort > /tmp/source-audit/kunming/candidate-assets.tsv
+          python - /tmp/kunming /tmp/source-audit/kunming/images.json <<'PY'
           import json, sys
           from pathlib import Path
           from PIL import Image
-          base, out = Path(sys.argv[1]), Path(sys.argv[2])
+          root, out = Path(sys.argv[1]), Path(sys.argv[2])
           rows = []
-          for path in sorted((base / 'assets').glob('*')):
-              if not path.is_file():
+          for path in sorted(root.rglob('*')):
+              if not path.is_file() or path.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.webp', '.avif'}:
                   continue
-              item = {'file': path.name, 'bytes': path.stat().st_size}
+              item = {'file': str(path.relative_to(root)), 'bytes': path.stat().st_size}
               try:
                   with Image.open(path) as im:
                       item.update({'format': im.format, 'mode': im.mode, 'size': list(im.size)})
@@ -91,7 +95,13 @@ jobs:
               rows.append(item)
           out.write_text(json.dumps(rows, indent=2) + '\n', encoding='utf-8')
           PY
+          find /tmp/kunming -type f -name 'manifest.json' -print0 | while IFS= read -r -d '' file; do
+            rel=${file#/tmp/kunming/}
+            safe=$(printf '%s' "$rel" | tr '/ ' '__')
+            cp "$file" "/tmp/source-audit/kunming/${safe}"
+          done
       - name: Upload source audit
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: terrain-hydrology-source-audit-v110-${{ github.sha }}
