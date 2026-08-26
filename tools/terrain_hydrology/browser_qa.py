@@ -72,6 +72,8 @@ def inspect(browser, url: str, output: Path, name: str, width: int, height: int)
         assertions["kunmingLocked"] = "等待生成" in page.locator('[data-region="kunming"] [data-overlay]').inner_text()
 
         canvas = page.locator('[data-region="guilin"] [data-canvas]')
+        canvas.scroll_into_view_if_needed()
+        page.wait_for_timeout(250)
         box = canvas.bounding_box()
         before = page.evaluate("window.__TERRAIN_HYDROLOGY_WORKBENCH__.viewers.get('guilin').camera.distance")
         if box:
@@ -79,14 +81,18 @@ def inspect(browser, url: str, output: Path, name: str, width: int, height: int)
             page.mouse.down()
             page.mouse.move(box["x"] + box["width"] * 0.58, box["y"] + box["height"] * 0.36, steps=8)
             page.mouse.up()
+            page.mouse.move(box["x"] + box["width"] * 0.50, box["y"] + box["height"] * 0.50)
             page.mouse.wheel(0, -420)
             page.wait_for_timeout(500)
         after = page.evaluate("window.__TERRAIN_HYDROLOGY_WORKBENCH__.viewers.get('guilin').camera.distance")
         yaw = page.evaluate("window.__TERRAIN_HYDROLOGY_WORKBENCH__.viewers.get('guilin').camera.yaw")
+        assertions["canvasInViewport"] = bool(box and box["y"] < height and box["y"] + box["height"] > 0)
         assertions["zoomWorks"] = after < before
         assertions["rotationWorks"] = abs(yaw + 0.62) > 0.05
 
-        page.locator('[data-region="guilin"] [data-focus]').click()
+        focus_button = page.locator('[data-region="guilin"] [data-focus]')
+        focus_button.scroll_into_view_if_needed()
+        focus_button.click()
         page.wait_for_timeout(350)
         assertions["focusOpens"] = page.locator("#focusDialog").evaluate("element => element.open") is True
         page.locator("#closeFocus").click()
@@ -96,7 +102,8 @@ def inspect(browser, url: str, output: Path, name: str, width: int, height: int)
         png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z4mQAAAAASUVORK5CYII=")
         test_image = output / "qa-reference.png"
         test_image.write_bytes(png)
-        page.locator('[data-region="guilin"] input[data-images]').set_input_files(str(test_image))
+        image_input = page.locator('[data-region="guilin"] input[data-images]')
+        image_input.set_input_files(str(test_image))
         page.wait_for_timeout(600)
         assertions["referenceUploadWorks"] = page.locator('[data-region="guilin"] .image-card').count() == 1
 
