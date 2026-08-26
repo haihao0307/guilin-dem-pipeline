@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>小坤｜昆明 DEM 真实水系在线版 V001</title>
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+<canvas id="terrain" aria-label="昆明 DEM 与现代 OSM 真实水系三维画布"></canvas>
+<div id="fallback" hidden><img src="../kunming-clean-3d-v001/assets/fallback.png" alt="昆明 DEM 二维回退预览"></div>
+<aside class="panel">
+  <header>
+    <div class="eyebrow">XIAOKUN · KUNMING GEODATA</div>
+    <h1>昆明 DEM 真实水系 V001</h1>
+    <p>恢复纯净地形显示，撤销全部手画河流。当前水体来自本次真实抓取的现代 OpenStreetMap，历史水系继续按 1940 至 1945 年资料核验。</p>
+    <div class="badges"><span class="ok">现代 OSM 已接入</span><span class="warn">历史真值 0</span><span class="ok">手绘水系 0</span></div>
+  </header>
+
+  <section>
+    <div class="mode-grid">
+      <button class="active" data-mode="0">自然地形</button>
+      <button data-mode="1">丰富卫星图式</button>
+      <button data-mode="2">高程分层</button>
+      <button data-mode="3">水系强调</button>
+    </div>
+  </section>
+
+  <section class="toggle-grid">
+    <button id="toggleOsm" class="active">现代 OSM 水系开</button>
+    <button id="toggleOhm">OHM 历史候选关</button>
+    <button id="toggleMinor" class="active">溪流沟渠开</button>
+    <button id="toggleLakes" class="active">湖泊水库开</button>
+  </section>
+
+  <section class="controls">
+    <label><span>河道显示宽度</span><output id="riverWidthOut">6.0×</output></label>
+    <input id="riverWidth" type="range" min="5" max="120" value="55">
+    <label><span>水色深浅</span><output id="waterColorOut">62%</output></label>
+    <input id="waterColor" type="range" min="0" max="100" value="62">
+    <label><span>河流速度</span><output id="flowSpeedOut">58%</output></label>
+    <input id="flowSpeed" type="range" min="0" max="100" value="58">
+    <label><span>湖面波浪</span><output id="waveOut">54%</output></label>
+    <input id="wave" type="range" min="0" max="100" value="54">
+    <label><span>卫星色彩丰富度</span><output id="richOut">68%</output></label>
+    <input id="rich" type="range" min="0" max="100" value="68">
+  </section>
+
+  <section class="button-grid">
+    <button id="overview">总览</button><button id="top">俯视</button><button id="low">低空</button>
+    <button id="reset">复位</button><button id="fullscreen">全屏</button><button id="screenshot">截图</button>
+  </section>
+
+  <section class="stats" id="stats">
+    <div><b>12.5 m</b><span>权威输出像元</span></div>
+    <div><b>5892 × 8095</b><span>无压缩基线栅格</span></div>
+    <div><b>7,452.459375 km²</b><span>正式裁切面积</span></div>
+    <div><b>1.0×</b><span>自然垂直比例</span></div>
+  </section>
+
+  <section class="source-card">
+    <h2>本次真实水系</h2>
+    <div class="source-numbers"><span><b id="countWays">…</b> 水路线</span><span><b id="countAreas">…</b> 水体面</span><span><b id="countNodes">…</b> 水工节点</span><span><b id="countRelations">…</b> 水路关系</span></div>
+    <p id="sourceTime">正在读取数据谱系…</p>
+  </section>
+
+  <details class="names">
+    <summary>查看有名湖泊和河流</summary>
+    <div class="name-tabs"><button class="active" data-list="areas">湖泊水库</button><button data-list="ways">河流河道</button></div>
+    <div id="nameList" class="name-list"></div>
+  </details>
+
+  <section class="progress">
+    <h2>小坤当前进度</h2>
+    <ol>
+      <li class="done"><i></i><div><b>无压缩 12.5 米 DEM 冻结</b><span>权威主文件保持 float32、无重采样</span></div></li>
+      <li class="done"><i></i><div><b>现代 OSM 水系真实抓取</b><span>河道、湖泊、水库、节点和关系已经入库</span></div></li>
+      <li class="done"><i></i><div><b>在线三维真实水系 V001</b><span>当前页面，所有蓝色几何均来自 OSM 数据</span></div></li>
+      <li class="current"><i></i><div><b>1940 至 1945 年历史核验</b><span>OHM 候选尚无年代标签，历史真值保持 0</span></div></li>
+      <li><i></i><div><b>DEM 流向和历史图幅校正</b><span>后续将验证坡降、上下游与旧河道版本</span></div></li>
+    </ol>
+  </section>
+
+  <footer>水系署名：© OpenStreetMap contributors，ODbL 1.0。网页资产只用于显示，不回写无压缩 DEM。</footer>
+</aside>
+<div id="status" class="status">小坤正在载入真实 OSM 水系…</div>
+<script type="module" src="app.js?v=1"></script>
+</body>
+</html>
