@@ -90,6 +90,7 @@ jobs:
           --output reports/procedural-landscape-browser-v020
 
       - name: Upload browser QA
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: procedural-landscape-v020-browser-${{ github.sha }}
