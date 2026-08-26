@@ -1,0 +1,232 @@
+name: Wenzhou OSM coastline and hydrology skeleton
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v100-bathymetry-tides-hydrology
+    paths:
+      - .github/workflows/wenzhou-osm-hydrology.yml
+      - projects/wenzhou/coastal/config/osm_hydrology_v100.json
+      - projects/wenzhou/coastal/scripts/download_osm_hydrology.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-osm-hydrology
+  cancel-in-progress: true
+
+jobs:
+  build-hydrology-skeleton:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip osm hydrology]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact coastal branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v100-bathymetry-tides-hydrology
+          fetch-depth: 0
+          lfs: false
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install projected topology runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check \
+            'pyproj>=3.7,<4' \
+            'shapely>=2.0,<3'
+          python - <<'PY'
+          import pyproj, shapely
+          print('pyproj', pyproj.__version__)
+          print('shapely', shapely.__version__)
+          PY
+
+      - name: Validate acquisition contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'project/wenzhou-v100-bathymetry-tides-hydrology'
+          python -m py_compile projects/wenzhou/coastal/scripts/download_osm_hydrology.py
+          python -m json.tool projects/wenzhou/coastal/config/osm_hydrology_v100.json >/dev/null
+
+      - name: Acquire OSM source ways and build projected skeleton
+        shell: bash
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/coastal/scripts/download_osm_hydrology.py
+
+      - name: Assert source lineage and topology QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import gzip
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          assert acquisition['passed'] is True
+          assert qa['schema'] == 'wenzhou_hydrology_topology_qa@1.2.0'
+          assert qa['passed'] is False
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          assert qa['hydrologyTopologyPassed'] is False
+          assert qa['estuaryConnectivityStatus'] == 'pending'
+          assert qa['nodeReferenceValidationStatus'] == 'not_evaluable_source_omits_node_ids'
+          assert acquisition['license'] == 'ODbL 1.0'
+          assert acquisition['attribution'] == '© OpenStreetMap contributors'
+          assert len(acquisition['tiles']) == 4
+          assert qa['sourceCoastlineWayCount'] > 0
+          assert qa['sourceWaterwayWayCount'] > 0
+          assert qa['derivedCoastlinePartCount'] > 0
+          assert qa['derivedWaterwayPartCount'] > 0
+          assert qa['missingNodeReferenceCount'] == 0
+          assert qa['duplicatePartIdCount'] == 0
+          assert qa['outOfBoundsVertexCount'] == 0
+          assert qa['introducedSelfIntersectionCount'] == 0
+          assert qa['widthCenterlineInvariantPolicy'] == 'width changes lateral offsets only'
+
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              assert path.is_file(), path
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              assert path.stat().st_size == item['bytes']
+              assert digest.hexdigest() == item['sha256']
+              checked.append(item)
+
+          for tile in acquisition['tiles']:
+              raw_path = root / tile['rawCompressed']['path']
+              raw = gzip.decompress(raw_path.read_bytes())
+              assert len(raw) == tile['rawUncompressedBytes']
+              assert hashlib.sha256(raw).hexdigest() == tile['rawUncompressedSha256']
+              payload = json.loads(raw)
+              assert isinstance(payload['elements'], list)
+          print(json.dumps({'qa': qa, 'checkedFileCount': len(checked)}, indent=2))
+          PY
+
+      - name: Commit OSM source and projected hydrology evidence
+        id: commit_hydrology
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/coastal/data/hydrology/osm \
+            projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json \
+            projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'Add source-traceable Wenzhou OSM hydrology skeleton [skip osm hydrology] [skip coastal stage-a]'
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+
+      - name: Verify hydrology files from a fresh clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-hydrology-fresh
+          git clone --depth 1 --branch project/wenzhou-v100-bathymetry-tides-hydrology \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-hydrology-fresh
+          cd /tmp/wenzhou-hydrology-fresh
+          python - <<'PY'
+          import gzip
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          assert acquisition['passed'] is True
+          assert qa['schema'] == 'wenzhou_hydrology_topology_qa@1.2.0'
+          assert qa['passed'] is False
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          assert qa['hydrologyTopologyPassed'] is False
+          assert qa['estuaryConnectivityStatus'] == 'pending'
+          assert qa['nodeReferenceValidationStatus'] == 'not_evaluable_source_omits_node_ids'
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert path.stat().st_size == item['bytes']
+              assert digest == item['sha256']
+              checked.append({'role': item['role'], 'path': item['path'], 'bytes': item['bytes'], 'sha256': digest})
+          for tile in acquisition['tiles']:
+              raw_path = root / tile['rawCompressed']['path']
+              raw = gzip.decompress(raw_path.read_bytes())
+              assert hashlib.sha256(raw).hexdigest() == tile['rawUncompressedSha256']
+          evidence = {'freshDownloadVerified': True, 'files': checked}
+          Path('/tmp/wenzhou-hydrology-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+          print(json.dumps(evidence, indent=2))
+          PY
+
+      - name: Record hydrology round trip receipt
+        shell: bash
+        env:
+          HYDROLOGY_COMMIT: ${{ steps.commit_hydrology.outputs.commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          fresh = json.loads(Path('/tmp/wenzhou-hydrology-fresh-verification.json').read_text())
+          acquisition = json.loads(Path('projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads(Path('projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          receipt = {
+              'schema': 'wenzhou_osm_hydrology_receipt@1.0.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
+              'hydrologyCommit': os.environ['HYDROLOGY_COMMIT'],
+              'license': acquisition['license'],
+              'attribution': acquisition['attribution'],
+              'rawTileCount': len(acquisition['tiles']),
+              'sourceCoastlineWayCount': qa['sourceCoastlineWayCount'],
+              'sourceWaterwayWayCount': qa['sourceWaterwayWayCount'],
+              'derivedCoastlinePartCount': qa['derivedCoastlinePartCount'],
+              'derivedWaterwayPartCount': qa['derivedWaterwayPartCount'],
+              'derivedWaterwayCoordinateHash': qa['derivedWaterwayCoordinateHash'],
+              'freshDownloadVerified': fresh['freshDownloadVerified'],
+              'files': fresh['files'],
+          }
+          path = Path('projects/wenzhou/coastal/reports/OSM_HYDROLOGY_RECEIPT.json')
+          path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git add -- projects/wenzhou/coastal/reports/OSM_HYDROLOGY_RECEIPT.json
+          git commit -m 'Record verified Wenzhou OSM hydrology receipt [skip osm hydrology] [skip coastal stage-a]'
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+
+      - name: Preserve hydrology evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-osm-hydrology-evidence
+          path: |
+            projects/wenzhou/coastal/data/hydrology/osm/**
+            projects/wenzhou/coastal/reports/OSM_HYDROLOGY_*.json
+            projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json
+          if-no-files-found: warn
+          retention-days: 90

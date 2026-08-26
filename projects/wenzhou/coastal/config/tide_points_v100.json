@@ -1,0 +1,80 @@
+{
+  "schema": "wenzhou_tide_points@1.2.1",
+  "workflowTriggerRevision": 2,
+  "crs": "EPSG:4326",
+  "predictionWindow": {
+    "durationDays": 35,
+    "intervalMinutes": 15,
+    "source": "selected Kanmen observation window recorded by KANMEN_UHSLC_ACQUISITION.json",
+    "purpose": "FES2022b prediction window aligned exactly to the selected UHSLC Kanmen research-quality record"
+  },
+  "observationWindow": {
+    "preferredStartUtc": "2024-09-01T00:00:00Z",
+    "preferredEndExclusiveUtc": "2024-10-06T00:00:00Z",
+    "durationDays": 35,
+    "intervalMinutes": 60,
+    "minimumCompletenessFraction": 1.0,
+    "requiredSampleCount": 840,
+    "windowSelectionPolicy": "prefer_configured_then_latest_complete",
+    "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
+    "datasetId": "h632a",
+    "recordPolicy": "UHSLC 632 record 6321 version A only; do not combine station versions or benchmarks"
+  },
+  "points": [
+    {
+      "id": "kanmen_gauge",
+      "name": "Kanmen tide gauge",
+      "longitude": 121.28333,
+      "latitude": 28.08333,
+      "role": "observation_validation",
+      "codes": {
+        "GLOSS": "94",
+        "UHSLC": "632",
+        "PSMSL": "934",
+        "SSC": "kanm"
+      },
+      "uhslc": {
+        "recordId": 6321,
+        "version": "A",
+        "publishedCoordinates": [121.282, 28.088],
+        "qualityLevelExpected": 4,
+        "units": "millimeters"
+      }
+    },
+    {
+      "id": "open_boundary_south",
+      "name": "Southern open boundary",
+      "longitude": 121.6,
+      "latitude": 27.45,
+      "role": "tidal_boundary"
+    },
+    {
+      "id": "open_boundary_east_south",
+      "name": "Eastern open boundary south",
+      "longitude": 122.2,
+      "latitude": 27.65,
+      "role": "tidal_boundary"
+    },
+    {
+      "id": "open_boundary_east_mid",
+      "name": "Eastern open boundary middle",
+      "longitude": 122.2,
+      "latitude": 28.25,
+      "role": "tidal_boundary"
+    },
+    {
+      "id": "open_boundary_east_north",
+      "name": "Eastern open boundary north",
+      "longitude": 122.2,
+      "latitude": 28.95,
+      "role": "tidal_boundary"
+    },
+    {
+      "id": "open_boundary_north",
+      "name": "Northern open boundary",
+      "longitude": 121.6,
+      "latitude": 29.1,
+      "role": "tidal_boundary"
+    }
+  ]
+}

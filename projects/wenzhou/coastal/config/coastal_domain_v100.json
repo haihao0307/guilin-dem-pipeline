@@ -1,0 +1,106 @@
+{
+  "schema": "wenzhou_coastal_domain@1.0.0",
+  "project": "wenzhou-qingjiang-22000km2-coastal",
+  "parentArchive": {
+    "branch": "archive/wenzhou-qingjiang-22000km2-dem-truth-v001",
+    "commit": "f1bf9edf6e573082996277d4fc09b3b272deb5a7",
+    "status": "archived_verified"
+  },
+  "truthDem": {
+    "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "lfsOid": "sha256:8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "bytes": 54638031,
+    "crs": "EPSG:32651",
+    "grid": [11866, 11866],
+    "pixelSpacingMeters": [12.5, 12.5],
+    "bounds": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+    "immutable": true
+  },
+  "domains": {
+    "truthAoiProjected": {
+      "crs": "EPSG:32651",
+      "bounds": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786]
+    },
+    "truthAoiWgs84Envelope": {
+      "crs": "EPSG:4326",
+      "bounds": [120.32924313432964, 27.593630306851292, 121.86465539742724, 28.952707073382708]
+    },
+    "bathymetryAndTideBoundaryWgs84": {
+      "crs": "EPSG:4326",
+      "bounds": [120.15, 27.4, 122.25, 29.15],
+      "purpose": "buffered coastal forcing domain"
+    },
+    "bathymetryAndTideBoundaryProjected": {
+      "crs": "EPSG:32651",
+      "bounds": [218176.60523505468, 3030963.525155368, 427054.6625769235, 3227965.035591264]
+    },
+    "coastalModelGrid": {
+      "crs": "EPSG:32651",
+      "pixelSpacingMeters": [100.0, 100.0],
+      "sourceResolutionLabel": "GEBCO_2026 15 arc-second source, reprojected for model alignment",
+      "native12_5mBathymetryClaim": false
+    }
+  },
+  "bathymetry": {
+    "primary": {
+      "dataset": "GEBCO_2026 Grid",
+      "resolution": "15 arc-second",
+      "verticalReference": "assumed mean sea level with documented shallow-water datum caveats",
+      "requiredCompanion": "GEBCO_2026 TID Grid",
+      "license": "public domain under GEBCO terms",
+      "downloadApp": "https://download.gebco.net/",
+      "documentation": "https://www.gebco.net/data-products-gridded-bathymetry-data/gebco2026-grid"
+    },
+    "secondaryQa": {
+      "dataset": "NOAA ETOPO 2022 15 Arc-Second Global Relief Model",
+      "role": "independent comparison only",
+      "mayReplacePrimary": false
+    }
+  },
+  "tides": {
+    "primary": {
+      "dataset": "FES2022b ocean tide",
+      "software": "PyFES",
+      "reference": "https://doi.org/10.24400/527896/A01-2024.004",
+      "access": "AVISO credentials may be required",
+      "datum": "mean sea level relative harmonic elevation"
+    },
+    "independentCheck": {
+      "dataset": "TPXO10-atlas-v2",
+      "resolution": "1/30 degree coastal atlas",
+      "access": "registration required for academic and non-commercial use",
+      "maySilentlyReplacePrimary": false
+    },
+    "minimumConstituents": ["M2", "S2", "N2", "K2", "K1", "O1", "P1", "Q1", "M4", "MS4", "MN4"],
+    "validationGauge": {
+      "name": "Kanmen",
+      "coordinatesWgs84": [121.28333, 28.08333],
+      "catalog": "IOC Sea Level Station Catalog",
+      "linkedCodes": {
+        "GLOSS": "94",
+        "UHSLC": "632",
+        "PSMSL": "934"
+      }
+    }
+  },
+  "layerOrder": [
+    "immutable_land_dem",
+    "native_bathymetry_and_tid",
+    "projected_coastal_bathymetry",
+    "coastline_and_estuary_topology",
+    "tidal_harmonic_forcing",
+    "wetting_and_drying",
+    "river_centerlines_and_catchments",
+    "river_discharge_and_estuarine_mixing",
+    "browser_runtime_and_visual_qa"
+  ],
+  "forbidden": [
+    "overwrite_authoritative_land_dem",
+    "invented_seabed_depths",
+    "unlabelled_bathymetry_upsampling",
+    "silent_tide_model_substitution",
+    "30m_land_dem_fallback",
+    "synthetic_gap_filling",
+    "public_release_before_controller_approval"
+  ]
+}

@@ -1,0 +1,244 @@
+name: Wenzhou coastal Stage A GEBCO 2026
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v100-bathymetry-tides-hydrology
+    paths:
+      - .github/workflows/wenzhou-coastal-stage-a.yml
+      - projects/wenzhou/coastal/config/coastal_domain_v100.json
+      - projects/wenzhou/coastal/scripts/run_stage_a.py
+      - projects/wenzhou/coastal/scripts/verify_parent_truth.py
+      - projects/wenzhou/coastal/scripts/download_gebco2026_ceda_subset.py
+      - projects/wenzhou/coastal/scripts/build_coastal_bathymetry.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-coastal-stage-a
+  cancel-in-progress: false
+
+jobs:
+  build-stage-a:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip coastal stage-a]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact coastal branch with Git LFS
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v100-bathymetry-tides-hydrology
+          fetch-depth: 0
+          lfs: true
+
+      - name: Confirm branch and immutable parent truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'project/wenzhou-v100-bathymetry-tides-hydrology'
+          git lfs install --local
+          git lfs pull --include='projects/wenzhou/archive/truth/*.tif,projects/wenzhou/archive/truth/evidence/*.tif'
+          test "$(stat -c '%s' projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif)" = '54638031'
+          echo '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e  projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif' | sha256sum --check --strict
+
+      - name: Install geospatial runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install pinned Stage A dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check 'numpy>=2.0,<3' 'rasterio>=1.4,<2' 'pyproj>=3.7,<4'
+          python - <<'PY'
+          import numpy, rasterio, pyproj
+          print('numpy', numpy.__version__)
+          print('rasterio', rasterio.__version__)
+          print('GDAL', rasterio.__gdal_version__)
+          print('pyproj', pyproj.__version__)
+          PY
+
+      - name: Static syntax checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            projects/wenzhou/coastal/scripts/run_stage_a.py \
+            projects/wenzhou/coastal/scripts/verify_parent_truth.py \
+            projects/wenzhou/coastal/scripts/download_gebco2026_ceda_subset.py \
+            projects/wenzhou/coastal/scripts/build_coastal_bathymetry.py
+          python -m json.tool projects/wenzhou/coastal/config/coastal_domain_v100.json >/dev/null
+
+      - name: Run official CEDA range extraction and Stage A QA
+        shell: bash
+        env:
+          CPL_CURL_VERBOSE: 'NO'
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/coastal/scripts/run_stage_a.py
+
+      - name: Assert real outputs and immutable land truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          preflight = json.loads((root / 'projects/wenzhou/coastal/reports/PARENT_TRUTH_PREFLIGHT.json').read_text())
+          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/coastal/reports/GEBCO_2026_QA.json').read_text())
+          assert preflight['passed'] is True
+          assert acquisition['passed'] is True
+          assert qa['passed'] is True
+          assert qa['parentTruthPreflight']['landPixelsModified'] == 0
+          assert qa['parentTruthPreflight']['truthDemSha256'] == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
+          assert len(acquisition['outputs']) == 2
+          assert len(qa['outputs']) == 5
+          assert qa['modelGrid']['fullBufferBathymetryCoveragePercent'] == 100.0
+          assert qa['modelGrid']['fullBufferTidCoveragePercent'] == 100.0
+          assert qa['modelGrid']['openBoundaryValidCells'] == qa['modelGrid']['openBoundaryCellCount']
+          for item in acquisition['outputs'] + qa['outputs']:
+              path = root / item['path']
+              assert path.is_file(), path
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              assert path.stat().st_size == item['bytes']
+              assert digest.hexdigest() == item['sha256']
+          print(json.dumps({
+              'sourceSubset': acquisition['outputs'],
+              'derived': qa['outputs'],
+              'modelGrid': qa['modelGrid'],
+              'fullBufferElevation': qa['fullBufferElevation'],
+              'preliminaryNonpositiveSeabedReference': qa['preliminaryNonpositiveSeabedReference'],
+              'truthAoiMarineMaskComparison': qa['truthAoiMarineMaskComparison'],
+              'tidHistogramPreliminarySeabed': qa['tidHistogramPreliminarySeabed'],
+              'sourceQualityPreliminarySeabed': qa['sourceQualityPreliminarySeabed'],
+          }, indent=2))
+          PY
+
+      - name: Commit Stage A rasters and reports through Git LFS
+        id: commit_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif \
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif \
+            projects/wenzhou/coastal/reports/PARENT_TRUTH_PREFLIGHT.json \
+            projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json \
+            projects/wenzhou/coastal/reports/GEBCO_2026_QA.json
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'Add verified full-buffer Wenzhou GEBCO 2026 Stage A [skip coastal stage-a]'
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git lfs push origin HEAD
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+          git lfs fsck
+
+      - name: Verify all Stage A LFS objects in a fresh clone
+        id: fresh_verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-coastal-fresh
+          git clone --depth 1 --branch project/wenzhou-v100-bathymetry-tides-hydrology \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-coastal-fresh
+          cd /tmp/wenzhou-coastal-fresh
+          git lfs install --local
+          git lfs pull
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/coastal/reports/GEBCO_2026_QA.json').read_text())
+          checked = []
+          for item in acquisition['outputs'] + qa['outputs']:
+              path = root / item['path']
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              actual = digest.hexdigest()
+              assert path.stat().st_size == item['bytes'], item['path']
+              assert actual == item['sha256'], item['path']
+              checked.append({'path': item['path'], 'bytes': path.stat().st_size, 'sha256': actual})
+          print(json.dumps({'freshDownloadVerified': True, 'checked': checked}, indent=2))
+          (Path('/tmp') / 'wenzhou-stage-a-fresh-verification.json').write_text(
+              json.dumps({'freshDownloadVerified': True, 'checked': checked}, indent=2) + '\n'
+          )
+          PY
+
+      - name: Record Stage A round trip receipt
+        shell: bash
+        env:
+          BINARY_COMMIT: ${{ steps.commit_outputs.outputs.commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          fresh = json.loads(Path('/tmp/wenzhou-stage-a-fresh-verification.json').read_text())
+          receipt = {
+              'schema': 'wenzhou_coastal_stage_a_receipt@1.1.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
+              'binaryCommit': os.environ['BINARY_COMMIT'],
+              'source': 'GEBCO_2026 official CEDA range-read subset',
+              'scope': 'full buffered coastal forcing domain plus archived truth-AOI marine comparison',
+              'truthDemSha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
+              'landPixelsModified': 0,
+              'freshDownloadVerified': fresh['freshDownloadVerified'],
+              'files': fresh['checked'],
+          }
+          path = Path('projects/wenzhou/coastal/reports/STAGE_A_UPLOAD_RECEIPT.json')
+          path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git add -- projects/wenzhou/coastal/reports/STAGE_A_UPLOAD_RECEIPT.json
+          git commit -m 'Record verified full-buffer Wenzhou coastal Stage A receipt [skip coastal stage-a]'
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+
+      - name: Preserve Stage A evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-coastal-stage-a-evidence
+          path: |
+            projects/wenzhou/coastal/reports/PARENT_TRUTH_PREFLIGHT.json
+            projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json
+            projects/wenzhou/coastal/reports/GEBCO_2026_QA.json
+            projects/wenzhou/coastal/reports/STAGE_A_UPLOAD_RECEIPT.json
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif
+          if-no-files-found: warn
+          retention-days: 90

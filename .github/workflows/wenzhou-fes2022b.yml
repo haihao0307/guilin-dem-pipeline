@@ -1,0 +1,412 @@
+name: Wenzhou FES2022b native tide ingest
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-fes2022b-native
+  cancel-in-progress: false
+
+jobs:
+  ingest-fes2022b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+
+    steps:
+      - name: Checkout exact coastal branch with frozen Stage A LFS files
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v100-bathymetry-tides-hydrology
+          fetch-depth: 0
+          lfs: true
+
+      - name: Confirm branch, disk and immutable inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'project/wenzhou-v100-bathymetry-tides-hydrology'
+          git lfs install --local
+          git lfs pull --include='projects/wenzhou/archive/truth/*.tif,projects/wenzhou/coastal/data/derived/*.tif'
+          test "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1)" -gt 10000000000
+          echo '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e  projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif' | sha256sum --check --strict
+
+      - name: Install pinned FES runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install PyFES and geospatial dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check \
+            'pyfes==2026.5.2' \
+            'netCDF4>=1.7,<2' \
+            'rasterio>=1.4,<2' \
+            'pyproj>=3.7,<4' \
+            'PyYAML>=6,<7'
+          python - <<'PY'
+          import netCDF4, numpy, pyfes, pyproj, rasterio, yaml
+          assert pyfes.__version__ == '2026.5.2'
+          print('pyfes', pyfes.__version__)
+          print('numpy', numpy.__version__)
+          print('netCDF4', netCDF4.__version__)
+          print('rasterio', rasterio.__version__)
+          print('pyproj', pyproj.__version__)
+          print('PyYAML', yaml.__version__)
+          PY
+
+      - name: Validate receiver and real upstream dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            projects/wenzhou/coastal/scripts/acquire_fes2022b_native.py \
+            projects/wenzhou/coastal/scripts/build_fes2022b_tides.py
+          python -m json.tool projects/wenzhou/coastal/config/tide_points_v100.json >/dev/null
+          python -m json.tool projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json >/dev/null
+          python -m json.tool projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json >/dev/null
+          python -m unittest projects/wenzhou/coastal/tests/test_fes2022b_receiver.py
+
+      - name: Create private runner workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          work_dir="$(mktemp -d "$RUNNER_TEMP/wenzhou-fes2022b.XXXXXX")"
+          case "$work_dir" in
+            "$RUNNER_TEMP"/wenzhou-fes2022b.*) ;;
+            *) exit 1 ;;
+          esac
+          echo "FES_WORK_DIR=$work_dir" >> "$GITHUB_ENV"
+          echo "FES_NATIVE_FILE=$work_dir/FES2022b_OceanTide_NSgrid.nc" >> "$GITHUB_ENV"
+          echo "FES_STAGING_ROOT=$work_dir/staging" >> "$GITHUB_ENV"
+          echo "FES_SOURCE_MANIFEST=$work_dir/FES2022B_SOURCE_MANIFEST.json" >> "$GITHUB_ENV"
+          echo "FES_FAILURE_REPORT=$work_dir/FES2022B_AUTH_FAILURE.json" >> "$GITHUB_ENV"
+
+      - name: Download and inspect licensed native model
+        id: acquire
+        continue-on-error: true
+        shell: bash
+        env:
+          AVISO_FES_USERNAME: ${{ secrets.AVISO_FES_USERNAME }}
+          AVISO_FES_PASSWORD: ${{ secrets.AVISO_FES_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/coastal/scripts/acquire_fes2022b_native.py \
+            --output "$FES_NATIVE_FILE" \
+            --config-output "$FES_STAGING_ROOT/projects/wenzhou/coastal/config/fes2022b_native_v100.yaml" \
+            --manifest-output "$FES_SOURCE_MANIFEST" \
+            --failure-report "$FES_FAILURE_REPORT"
+
+      - name: Preserve sanitized authorization failure evidence
+        if: steps.acquire.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-fes2022b-authorization-failure
+          path: ${{ env.FES_FAILURE_REPORT }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Stop after an exact authorization or acquisition failure
+        if: steps.acquire.outcome != 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool "$FES_FAILURE_REPORT"
+          exit 1
+
+      - name: Build native tide predictions and 34-constituent exports
+        shell: bash
+        env:
+          FES2022B_NATIVE_FILE: ${{ env.FES_NATIVE_FILE }}
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/coastal/scripts/build_fes2022b_tides.py \
+            --config "$FES_STAGING_ROOT/projects/wenzhou/coastal/config/fes2022b_native_v100.yaml" \
+            --source-manifest "$FES_SOURCE_MANIFEST" \
+            --output-root "$FES_STAGING_ROOT/projects/wenzhou/coastal/data/tides/fes2022b" \
+            --report-root "$FES_STAGING_ROOT/projects/wenzhou/coastal/reports" \
+            --variant native
+
+      - name: Assert real Stage B structural contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          staging = Path(os.environ['FES_STAGING_ROOT'])
+          acquisition = json.loads((staging / 'projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json').read_text())
+          qa = json.loads((staging / 'projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json').read_text())
+          assert acquisition['passed'] is True
+          assert acquisition['modelRole'] == 'primary'
+          assert acquisition['dataset'] == 'FES2022b ocean tide'
+          assert acquisition['sourceVariant'] == 'native_non_structured'
+          assert acquisition['constituentCount'] == 34
+          assert acquisition['rawSourceCommitted'] is False
+          assert acquisition['pyfesVersion'] == '2026.5.2'
+          assert acquisition['sourceFinalUrl'].startswith('https://')
+          assert acquisition['sourceHttpStatus'] in (200, 206)
+          assert acquisition['sourceLastModified']
+          assert acquisition['sourceRetrievedAtUtc']
+          assert acquisition['sourceDirectory'] == 'dataset-auxiliary-fes-tide-model/fes2022b/ocean_tide_non_structured'
+          assert acquisition['sourceCatalog']['sourceFileListed'] is True
+          assert acquisition['sourceCatalog']['datasetName'] == 'FES2022b_OceanTide_NSgrid.nc'
+          assert acquisition['sourceCatalog']['sourceModifiedAtUtc']
+          assert acquisition['sourcePyfesValidation']['passed'] is True
+          assert acquisition['sourcePyfesValidation']['constituentCount'] == 34
+          assert acquisition['modelSourceUnit'] == 'centimeter'
+          assert acquisition['sourceToMeterFactor'] == 0.01
+          assert acquisition['modelSourcePhaseUnit'] == 'degree'
+          assert acquisition['sourcePhaseToDegreeFactor'] == 1.0
+          assert acquisition['netcdfCLibraryVersion']
+          assert acquisition['hdf5LibraryVersion']
+          assert acquisition['rasterioVersion']
+          assert acquisition['pyprojVersion']
+          assert acquisition['absoluteDatumTransformApplied'] is False
+          assert acquisition['predictionWindow']['samplesPerPoint'] == 3360
+          assert qa['constituentAmplitudePhaseExtractionPassed'] is True
+          assert qa['roundTrip']['passed'] is True
+          assert qa['roundTrip']['maximumErrorMeters'] <= 1e-4
+          assert qa['absoluteDatumValidationPassed'] is False
+          assert qa['hydrodynamicSimulationPassed'] is False
+          assert len(qa['points']) == 6
+          assert qa['undefinedPointCount'] >= 0
+          assert qa['undefinedBoundaryNodeCount'] >= 0
+          assert qa['extrapolatedPointCount'] >= 0
+          assert qa['extrapolatedBoundaryNodeCount'] >= 0
+          checked = []
+          for item in acquisition['outputs']:
+              path = staging / item['path']
+              assert path.is_file(), path
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert path.stat().st_size == item['bytes']
+              assert digest == item['sha256']
+              checked.append(item['path'])
+          assert len(checked) == 8
+          config = staging / 'projects/wenzhou/coastal/config/fes2022b_native_v100.yaml'
+          text = config.read_text()
+          assert '${FES2022B_NATIVE_FILE}' in text
+          assert str(Path(os.environ['RUNNER_TEMP'])) not in text
+          assert '/home/runner/' not in text
+          print(json.dumps({
+              'stageBTideReady': qa['stageBTideReady'],
+              'qualityFlagHistogram': qa['qualityFlagHistogram'],
+              'checked': checked,
+          }, indent=2))
+          PY
+
+      - name: Promote only derived FES files
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d projects/wenzhou/coastal/config
+          install -d projects/wenzhou/coastal/data/tides
+          install -d projects/wenzhou/coastal/reports
+          cp "$FES_STAGING_ROOT/projects/wenzhou/coastal/config/fes2022b_native_v100.yaml" \
+            projects/wenzhou/coastal/config/fes2022b_native_v100.yaml
+          cp -a "$FES_STAGING_ROOT/projects/wenzhou/coastal/data/tides/fes2022b" \
+            projects/wenzhou/coastal/data/tides/
+          cp "$FES_STAGING_ROOT/projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json" \
+            projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json
+          cp "$FES_STAGING_ROOT/projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json" \
+            projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json
+          test -z "$(git ls-files '*FES2022b_OceanTide_NSgrid.nc')"
+          test -z "$(find projects/wenzhou/coastal -type f -name 'FES2022b_OceanTide_NSgrid.nc' -print -quit)"
+
+      - name: Commit real derived FES evidence
+        id: commit_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/coastal/config/fes2022b_native_v100.yaml \
+            projects/wenzhou/coastal/data/tides/fes2022b \
+            projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json \
+            projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json
+          test -n "$(git diff --cached --name-only)"
+          git diff --cached --check
+          git commit -m 'Add verified Wenzhou FES2022b native forcing [skip coastal stage-a]'
+          git fetch origin project/wenzhou-v100-bathymetry-tides-hydrology
+          git merge-base --is-ancestor origin/project/wenzhou-v100-bathymetry-tides-hydrology HEAD
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify derived FES evidence from a fresh clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          fresh_dir="$(mktemp -d "$RUNNER_TEMP/wenzhou-fes-fresh.XXXXXX")"
+          git clone --depth 1 --branch project/wenzhou-v100-bathymetry-tides-hydrology \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$fresh_dir"
+          cd "$fresh_dir"
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          acquisition = json.loads(Path('projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json').read_text())
+          qa_path = Path('projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json')
+          qa = json.loads(qa_path.read_text())
+          checked = []
+          for item in acquisition['outputs']:
+              path = Path(item['path'])
+              assert path.stat().st_size == item['bytes']
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
+              checked.append(item)
+          config = Path(acquisition['configPath'])
+          assert config.stat().st_size == acquisition['configBytes']
+          assert hashlib.sha256(config.read_bytes()).hexdigest() == acquisition['configSha256']
+          assert not list(Path('.').rglob('FES2022b_OceanTide_NSgrid.nc'))
+          evidence = {
+              'freshDownloadVerified': True,
+              'rawSourceAbsentVerified': True,
+              'stageBTideReady': qa['stageBTideReady'],
+              'files': checked + [
+                  {
+                      'role': 'runtime_portable_config',
+                      'path': str(config),
+                      'bytes': config.stat().st_size,
+                      'sha256': hashlib.sha256(config.read_bytes()).hexdigest(),
+                  },
+                  {
+                      'role': 'acquisition_report',
+                      'path': 'projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json',
+                      'bytes': Path('projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json').stat().st_size,
+                      'sha256': hashlib.sha256(Path('projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json').read_bytes()).hexdigest(),
+                  },
+                  {
+                      'role': 'tidal_harmonics_qa',
+                      'path': str(qa_path),
+                      'bytes': qa_path.stat().st_size,
+                      'sha256': hashlib.sha256(qa_path.read_bytes()).hexdigest(),
+                  },
+              ],
+          }
+          Path('/tmp/wenzhou-fes-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+          print(json.dumps(evidence, indent=2))
+          PY
+
+      - name: Record FES round trip receipt
+        shell: bash
+        env:
+          OUTPUT_COMMIT: ${{ steps.commit_outputs.outputs.commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          evidence = json.loads(Path('/tmp/wenzhou-fes-fresh-verification.json').read_text())
+          acquisition = json.loads(Path('projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json').read_text())
+          receipt = {
+              'schema': 'wenzhou_fes2022b_receipt@1.0.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
+              'outputCommit': os.environ['OUTPUT_COMMIT'],
+              'dataset': acquisition['dataset'],
+              'sourceVariant': acquisition['sourceVariant'],
+              'sourceSha256': acquisition['sourceSha256'],
+              'sourceBytes': acquisition['sourceBytes'],
+              'sourceUrl': acquisition['sourceUrl'],
+              'sourceFinalUrl': acquisition['sourceFinalUrl'],
+              'sourceHttpStatus': acquisition['sourceHttpStatus'],
+              'sourceEtag': acquisition['sourceEtag'],
+              'sourceLastModified': acquisition['sourceLastModified'],
+              'sourceRetrievedAtUtc': acquisition['sourceRetrievedAtUtc'],
+              'sourceDirectory': acquisition['sourceDirectory'],
+              'sourceCatalog': acquisition['sourceCatalog'],
+              'doi': acquisition['doi'],
+              'licenseUrl': acquisition['licenseUrl'],
+              'licenseVersion': acquisition['licenseVersion'],
+              'pyfesVersion': acquisition['pyfesVersion'],
+              'rawSourceCommitted': False,
+              'rawSourceAbsentVerified': evidence['rawSourceAbsentVerified'],
+              'freshDownloadVerified': evidence['freshDownloadVerified'],
+              'stageBTideReady': evidence['stageBTideReady'],
+              'files': evidence['files'],
+          }
+          Path('projects/wenzhou/coastal/reports/FES2022B_RECEIPT.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n'
+          )
+          PY
+          git add -- projects/wenzhou/coastal/reports/FES2022B_RECEIPT.json
+          git diff --cached --check
+          git commit -m 'Record verified Wenzhou FES2022b receipt [skip coastal stage-a]'
+          git fetch origin project/wenzhou-v100-bathymetry-tides-hydrology
+          git merge-base --is-ancestor origin/project/wenzhou-v100-bathymetry-tides-hydrology HEAD
+          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+
+      - name: Verify FES receipt after its push
+        shell: bash
+        run: |
+          set -euo pipefail
+          verify_dir="$(mktemp -d "$RUNNER_TEMP/wenzhou-fes-receipt.XXXXXX")"
+          git clone --depth 1 --branch project/wenzhou-v100-bathymetry-tides-hydrology \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$verify_dir"
+          cd "$verify_dir"
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          receipt_path = Path('projects/wenzhou/coastal/reports/FES2022B_RECEIPT.json')
+          receipt = json.loads(receipt_path.read_text())
+          assert receipt['freshDownloadVerified'] is True
+          assert receipt['rawSourceAbsentVerified'] is True
+          assert receipt['rawSourceCommitted'] is False
+          for item in receipt['files']:
+              path = Path(item['path'])
+              assert path.stat().st_size == item['bytes']
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
+          assert not list(Path('.').rglob('FES2022b_OceanTide_NSgrid.nc'))
+          print(json.dumps({
+              'receiptSha256': hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+              'receiptBytes': receipt_path.stat().st_size,
+              'checkedFileCount': len(receipt['files']),
+          }, indent=2))
+          PY
+
+      - name: Preserve only derived FES evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-fes2022b-derived-evidence
+          path: |
+            projects/wenzhou/coastal/config/fes2022b_native_v100.yaml
+            projects/wenzhou/coastal/data/tides/fes2022b/**
+            projects/wenzhou/coastal/reports/FES2022B_ACQUISITION.json
+            projects/wenzhou/coastal/reports/TIDAL_HARMONICS_QA.json
+            projects/wenzhou/coastal/reports/FES2022B_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Delete licensed raw source and prove absence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${FES_WORK_DIR:-}" ]; then
+            case "$FES_WORK_DIR" in
+              "$RUNNER_TEMP"/wenzhou-fes2022b.*) ;;
+              *) echo 'Refusing unsafe cleanup target' >&2; exit 1 ;;
+            esac
+            find "$FES_WORK_DIR" -type f -delete
+            find "$FES_WORK_DIR" -depth -type d -empty -delete
+            test ! -e "$FES_WORK_DIR"
+          fi
+          test -z "$(git ls-files '*FES2022b_OceanTide_NSgrid.nc')"
+          test -z "$(find projects/wenzhou/coastal -type f -name 'FES2022b_OceanTide_NSgrid.nc' -print -quit)"

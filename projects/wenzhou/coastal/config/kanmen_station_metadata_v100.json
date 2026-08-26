@@ -1,0 +1,46 @@
+{
+  "schema": "wenzhou_kanmen_station_metadata@1.0.0",
+  "station": {
+    "name": "Kanmen",
+    "country": "China",
+    "coordinatesWgs84": [121.28333, 28.08333],
+    "timeZone": "GMT+08:00",
+    "ocean": "Pacific",
+    "operational": true,
+    "recordingInterval": "hourly"
+  },
+  "linkedCodes": {
+    "GLOSS": "94",
+    "UHSLC": "632",
+    "PSMSL": "934",
+    "SSC": "kanm",
+    "SONEL_TG": "2832"
+  },
+  "uhslcResearchQualityRecord": {
+    "datasetId": "global_hourly_rqds",
+    "recordId": 6321,
+    "version": "A",
+    "publishedCoordinatesWgs84": [121.282, 28.088],
+    "units": "millimeters",
+    "qualityLevel": 4,
+    "processing": "JASL/UHSLC Level 1 variability assessment and Level 2 datum-stability assessment"
+  },
+  "benchmarkRelationships": {
+    "tideGaugeZeroBelowTgbmZkz13Meters": 10.842,
+    "tideGaugeZeroBelowYellowSeaMsl1956OldMeters": 3.645,
+    "tideGaugeZeroBelowYellowSeaMsl1985NewMeters": 3.684,
+    "tideGaugeZeroBelowKanmenMslMeters": 3.87
+  },
+  "source": {
+    "stationCatalog": "IOC Sea Level Station Catalog SSC-kanm",
+    "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
+    "datasetEndpoint": "https://uhslc.soest.hawaii.edu/erddap/tabledap/global_hourly_rqds.html",
+    "stationCatalogEndpoint": "https://www.ioc-sealevelmonitoring.org/ssc/stationdetails.php?id=SSC-kanm"
+  },
+  "datumPolicy": {
+    "rawObservationDatum": "UHSLC published reference_datum field",
+    "modelComparisonBeforeDatumTransform": "remove the observation-window mean and compare phase and range only",
+    "absoluteWaterLevelUseAllowed": false,
+    "absoluteWaterLevelUnlock": "requires an explicit verified transform between the selected FES mean sea level reference and the chosen Kanmen benchmark or Yellow Sea datum"
+  }
+}

@@ -1,0 +1,402 @@
+{
+  "schema": "wenzhou_kanmen_uhslc_acquisition@2.0.0",
+  "generatedAtUtc": "2026-08-26T01:13:08Z",
+  "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
+  "datasetId": "h632a",
+  "sourceMode": "official_static_station_netcdf_local_read",
+  "sourceUrl": "https://uhslc.soest.hawaii.edu/data/netcdf/rqds/pacific/hourly/h632a.nc",
+  "metadataUrl": "https://uhslc.soest.hawaii.edu/rqds/metadata_yaml/632Ameta.yaml",
+  "erddapSecondaryUrl": "https://uhslc.soest.hawaii.edu/erddap/tabledap/global_hourly_rqds.csv",
+  "remoteOpendapArrayAccess": false,
+  "station": "Kanmen",
+  "uhslcId": 632,
+  "recordId": 6321,
+  "version": "A",
+  "absoluteDatumTransformApplied": false,
+  "passed": true,
+  "transfers": {
+    "netcdf": {
+      "requestUrl": "https://uhslc.soest.hawaii.edu/data/netcdf/rqds/pacific/hourly/h632a.nc",
+      "finalUrl": "https://uhslc.soest.hawaii.edu/data/netcdf/rqds/pacific/hourly/h632a.nc",
+      "httpStatus": 200,
+      "contentType": "application/octet-stream",
+      "contentLengthHeader": "309054",
+      "contentRange": null,
+      "etag": "\"6a5505d0-4b73e\"",
+      "lastModified": "Mon, 13 Jul 2026 15:35:44 GMT",
+      "acceptRanges": "bytes",
+      "completedAtUtc": "2026-08-26T01:13:11Z",
+      "attemptCount": 1,
+      "resumed": false,
+      "bytes": 309054,
+      "sha256": "bcd0dd9b193301f2fed40d249d103bdce82352aea2e9d81ef3f9da75e7461610"
+    },
+    "metadataYaml": {
+      "requestUrl": "https://uhslc.soest.hawaii.edu/rqds/metadata_yaml/632Ameta.yaml",
+      "finalUrl": "https://uhslc.soest.hawaii.edu/rqds/metadata_yaml/632Ameta.yaml",
+      "httpStatus": 200,
+      "contentType": "application/octet-stream",
+      "contentLengthHeader": "5573",
+      "contentRange": null,
+      "etag": "\"6786068c-15c5\"",
+      "lastModified": "Tue, 14 Jan 2025 06:39:08 GMT",
+      "acceptRanges": "bytes",
+      "completedAtUtc": "2026-08-26T01:13:11Z",
+      "attemptCount": 1,
+      "resumed": false,
+      "bytes": 5573,
+      "sha256": "ac203672a0db10d1143d52e63d65b60c0e1a24e9020a8214cf71a1e2c1f760cf"
+    }
+  },
+  "windowSelectionPolicy": "prefer_configured_then_latest_complete",
+  "preferredWindow": {
+    "startUtc": "2024-09-01T00:00:00Z",
+    "endExclusiveUtc": "2024-10-06T00:00:00Z",
+    "expectedSampleCount": 840,
+    "sourceSampleCount": 0,
+    "uniqueSourceTimestampCount": 0,
+    "validSampleCount": 0,
+    "uniqueValidTimestampCount": 0,
+    "duplicateSourceTimestampCount": 0,
+    "duplicateValidTimestampCount": 0,
+    "missingTimestampCount": 840,
+    "unexpectedTimestampCount": 0,
+    "completenessFraction": 0.0,
+    "containsAnySourceSamples": false,
+    "passed": false
+  },
+  "fallbackUsed": true,
+  "selectionReason": "preferred window is outside this record coverage",
+  "selectedWindow": {
+    "startUtc": "1997-11-26T16:00:00Z",
+    "endExclusiveUtc": "1997-12-31T16:00:00Z",
+    "durationDays": 35,
+    "intervalMinutes": 60,
+    "expectedSampleCount": 840,
+    "validSampleCount": 840,
+    "completenessFraction": 1.0
+  },
+  "datasetCoverage": {
+    "timeStartUtc": "1975-01-01T00:00:00Z",
+    "timeEndInclusiveUtc": "1997-12-31T15:00:00Z",
+    "availableEndExclusiveUtc": "1997-12-31T16:00:00Z",
+    "timeCount": 201616
+  },
+  "sourceStationMetadata": {
+    "latitude": 28.088300704956055,
+    "longitude": 121.28170013427734,
+    "stationName": "Kanmen",
+    "stationCountry": "China",
+    "stationCountryCode": 156,
+    "recordId": 6321,
+    "uhslcId": 632,
+    "version": "A",
+    "glossId": 94,
+    "sscId": "kanm",
+    "referenceDatum": "station zero"
+  },
+  "metadataYamlIdentity": {
+    "station": "Kanmen-A",
+    "jaslNumber": "632A",
+    "latitude": 28.0883,
+    "longitude": 121.2817,
+    "dateStart": "1975-01-01",
+    "dateEnd": "1997-12-31",
+    "units": "millimeters",
+    "referenceLevel": [
+      "The sea level heights are referred to the zero point assigned to the tide gauge. Bench mark information is available upon request from the contributors."
+    ]
+  },
+  "netcdfStructure": {
+    "dimensions": {
+      "record_id": 1,
+      "time": 201616
+    },
+    "variables": {
+      "gloss_id": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "long_name": "unique station ID number used by the WMO/IOC Global Sea Level Observing System (GLOSS)"
+        }
+      },
+      "lat": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "standard_name": "latitude",
+          "units": "degrees_north",
+          "axis": "Y",
+          "valid_min": "-90.0",
+          "valid_max": "90.0"
+        }
+      },
+      "lon": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "standard_name": "longitude",
+          "units": "degrees_east",
+          "axis": "X",
+          "valid_min": "0.0",
+          "valid_max": "360.0"
+        }
+      },
+      "quality": {
+        "dimensions": [
+          "record_id",
+          "time"
+        ],
+        "shape": [
+          1,
+          201616
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "long_name": "data quality level",
+          "comment": "Integer defining data quality where higher values indicate better quality."
+        }
+      },
+      "record_id": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "int16",
+        "attributes": {
+          "long_name": "unique identifier for each record (i.e., station and version) in the database"
+        }
+      },
+      "reference_datum": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "|S12",
+        "attributes": {
+          "long_name": "datum reference level",
+          "comment": "Reference datum for sea level measurements"
+        }
+      },
+      "sea_level": {
+        "dimensions": [
+          "record_id",
+          "time"
+        ],
+        "shape": [
+          1,
+          201616
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "long_name": "relative sea level",
+          "units": "millimeters",
+          "source": "in situ tide gauge water level observations",
+          "platform": "station_name, station_country, station_country_code, uhslc_id, gloss_id, ssc_id"
+        }
+      },
+      "ssc_id": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "|S4",
+        "attributes": {
+          "long_name": "unique station ID code in the Sealevel Station Catalog (SSC) produced by the WMO/IOC Sea Level Monitoring Facility (VLIZ)",
+          "comment": "Note that SSC IDs vary in length. The IDs are padded with space characters to produce the rectangular character matrix provided here."
+        }
+      },
+      "station_country": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "|S5",
+        "attributes": {
+          "long_name": "station country (ISO 3166-1)"
+        }
+      },
+      "station_country_code": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "float32",
+        "attributes": {
+          "long_name": "station country code (ISO 3166-1 numeric)",
+          "comment": "These are 3-digit country codes (e.g., 003) stored as integers."
+        }
+      },
+      "station_name": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "|S6",
+        "attributes": {
+          "long_name": "station name"
+        }
+      },
+      "time": {
+        "dimensions": [
+          "time"
+        ],
+        "shape": [
+          201616
+        ],
+        "dtype": "datetime64[ns]",
+        "attributes": {
+          "long_name": "time",
+          "axis": "T"
+        }
+      },
+      "uhslc_id": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "int16",
+        "attributes": {
+          "long_name": "unique station ID number used by the University of Hawaii Sea Level Center (UHSLC)"
+        }
+      },
+      "version": {
+        "dimensions": [
+          "record_id"
+        ],
+        "shape": [
+          1
+        ],
+        "dtype": "|S1",
+        "attributes": {
+          "long_name": "station version",
+          "comment": "The station version is a letter from A to Z differentiating segments of a station record that cannot be linked to a common benchmark."
+        }
+      }
+    },
+    "globalAttributes": {
+      "title": "JASL/UHSLC Research Quality Tide Gauge Data (hourly)",
+      "ncei_template_version": "NCEI_NetCDF_TimeSeries_Orthogonal_Template_v2.0",
+      "featureType": "timeSeries",
+      "Conventions": "CF-1.6, ACDD-1.3",
+      "date_created": "2026-07-10T02:07:05Z",
+      "publisher_name": "University of Hawaii Sea Level Center (UHSLC)",
+      "publisher_email": "philiprt@hawaii.edu, markm@soest.hawaii.edu",
+      "publisher_url": "http://uhslc.soest.hawaii.edu",
+      "summary": "The Joint Archive for Sea Level (JASL) Research Quality Data Set (RQDS) is a collaboration between the University of Hawaii Sea Level Center (UHSLC) and the World Data Center for Oceanography of the National Centers for Environmental Information (NCEI), National Oceanic and Atmospheric Administration (NOAA). The objective of the JASL RQDS is to assemble a well-documented, quality-controlled archive of hourly and daily sea level values that is appropriate for scientific research applications. The JASL RQDS is the largest global collection of quality-controlled hourly sea level data, and ongoing efforts seek to acquire new sites and uncover historic records as available.",
+      "processing_level": "The JASL receives hourly data from regional and national sea level networks operating world-wide. JASL RQDS data undergo a level 1 quality assessment focused on variability (e.g., unit and timing evaluation, outlier detection, combination of multiple channels into a primary channel, etc.) followed by a level 2 quality assessment focused on datum stability (e.g., tide gauge datum evaluation, assessment of level ties to tide gauge benchmarks, comparison with nearby stations, etc.).",
+      "acknowledgment": "The JASL/UHSLC Research Quality Data Set is supported by the National Oceanic and Atmospheric Administration (NOAA) via the National Centers for Environmental Information (NCEI) and the Office of Climate Observations (OCO)."
+    }
+  },
+  "selectedSourceIndexStart": 200776,
+  "selectedSourceIndexEndInclusive": 201615,
+  "selectedSourceIndexCount": 840,
+  "invalidSelectedSampleCount": 0,
+  "files": [
+    {
+      "role": "official_static_station_netcdf",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/h632a.nc",
+      "bytes": 309054,
+      "sha256": "bcd0dd9b193301f2fed40d249d103bdce82352aea2e9d81ef3f9da75e7461610"
+    },
+    {
+      "role": "official_station_metadata_yaml",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/632Ameta.yaml",
+      "bytes": 5573,
+      "sha256": "ac203672a0db10d1143d52e63d65b60c0e1a24e9020a8214cf71a1e2c1f760cf"
+    },
+    {
+      "role": "materialized_official_source_values",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_SOURCE_VALUES.csv",
+      "bytes": 74059,
+      "sha256": "1bedb0b4a2c95e5928a2e97c53506f889ed632ece8ae95aa6e7b1274ace86899"
+    },
+    {
+      "role": "window_mean_removed_comparison_series",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_MEAN_REMOVED.csv",
+      "bytes": 57661,
+      "sha256": "ee0ed6d2d230ab81d0551643719e91219af776fcbada4f3f799e238ba6d16ffd"
+    }
+  ],
+  "stationMetadataContract": {
+    "schema": "wenzhou_kanmen_station_metadata@1.0.0",
+    "station": {
+      "name": "Kanmen",
+      "country": "China",
+      "coordinatesWgs84": [
+        121.28333,
+        28.08333
+      ],
+      "timeZone": "GMT+08:00",
+      "ocean": "Pacific",
+      "operational": true,
+      "recordingInterval": "hourly"
+    },
+    "linkedCodes": {
+      "GLOSS": "94",
+      "UHSLC": "632",
+      "PSMSL": "934",
+      "SSC": "kanm",
+      "SONEL_TG": "2832"
+    },
+    "uhslcResearchQualityRecord": {
+      "datasetId": "global_hourly_rqds",
+      "recordId": 6321,
+      "version": "A",
+      "publishedCoordinatesWgs84": [
+        121.282,
+        28.088
+      ],
+      "units": "millimeters",
+      "qualityLevel": 4,
+      "processing": "JASL/UHSLC Level 1 variability assessment and Level 2 datum-stability assessment"
+    },
+    "benchmarkRelationships": {
+      "tideGaugeZeroBelowTgbmZkz13Meters": 10.842,
+      "tideGaugeZeroBelowYellowSeaMsl1956OldMeters": 3.645,
+      "tideGaugeZeroBelowYellowSeaMsl1985NewMeters": 3.684,
+      "tideGaugeZeroBelowKanmenMslMeters": 3.87
+    },
+    "source": {
+      "stationCatalog": "IOC Sea Level Station Catalog SSC-kanm",
+      "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
+      "datasetEndpoint": "https://uhslc.soest.hawaii.edu/erddap/tabledap/global_hourly_rqds.html",
+      "stationCatalogEndpoint": "https://www.ioc-sealevelmonitoring.org/ssc/stationdetails.php?id=SSC-kanm"
+    },
+    "datumPolicy": {
+      "rawObservationDatum": "UHSLC published reference_datum field",
+      "modelComparisonBeforeDatumTransform": "remove the observation-window mean and compare phase and range only",
+      "absoluteWaterLevelUseAllowed": false,
+      "absoluteWaterLevelUnlock": "requires an explicit verified transform between the selected FES mean sea level reference and the chosen Kanmen benchmark or Yellow Sea datum"
+    }
+  }
+}

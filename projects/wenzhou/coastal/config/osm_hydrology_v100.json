@@ -1,0 +1,62 @@
+{
+  "schema": "wenzhou_osm_hydrology@1.1.0",
+  "source": {
+    "project": "OpenStreetMap",
+    "license": "ODbL 1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "primaryEndpoint": "https://overpass.private.coffee/api/interpreter",
+    "fallbackEndpoints": [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.osm.jp/api/interpreter"
+    ],
+    "endpointPolicySource": "OpenStreetMap Wiki public Overpass API instances"
+  },
+  "domain": {
+    "wgs84Bounds": [120.15, 27.4, 122.25, 29.15],
+    "projectedCrs": "EPSG:32651",
+    "projectedClipBounds": [218100.0, 3030900.0, 427100.0, 3228000.0]
+  },
+  "tiling": {
+    "columns": 2,
+    "rows": 2,
+    "overlapDegrees": 0.002,
+    "secondsBetweenSuccessfulTiles": 5
+  },
+  "query": {
+    "coastline": {
+      "element": "way",
+      "filter": "natural=coastline"
+    },
+    "waterways": {
+      "element": "way",
+      "filterRegex": "waterway=^(river|stream|canal|tidal_channel)$"
+    },
+    "timeoutSeconds": 180,
+    "output": "way tags, node ids and inline geometry; no recursive node body",
+    "overpassQlOutputStatement": "out tags geom qt"
+  },
+  "retry": {
+    "attemptsPerEndpoint": 2,
+    "http429PauseSeconds": 35,
+    "otherRetryPauseSeconds": 8,
+    "rotateEndpointBeforeRetry": true
+  },
+  "derived": {
+    "preserveSourceCoordinates": true,
+    "preserveSourceWayIds": true,
+    "preserveSourceNodeIdsWhenReturned": true,
+    "clipProjectedGeometry": true,
+    "mutateSourceGeometry": false,
+    "riverWidthMayModifyCenterline": false,
+    "minimumWayVertexCount": 2
+  },
+  "qa": {
+    "maximumOutOfBoundsVertices": 0,
+    "maximumDuplicatePartIds": 0,
+    "maximumMissingWayGeometry": 0,
+    "maximumIntroducedSelfIntersections": 0,
+    "requireCoastlineFeatures": true,
+    "requireWaterwayFeatures": true,
+    "estuaryConnectivityStatus": "pending named network and coastline topology stage"
+  }
+}
