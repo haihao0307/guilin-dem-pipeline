@@ -1,55 +1,65 @@
 # 程序化地貌生产线基础实现 v0.2 交接
 
-## 远端起点
+## 远端身份
 
 ```text
 repository: haihao0307/guilin-dem-pipeline
 branch: skill/dem-procedural-landscape-v010
 Draft PR: 51
-starting head: 6064a9ad3374221d3726c67d77a827a4b5a068e0
+controller alias: 小王
+contract commit: 6064a9ad3374221d3726c67d77a827a4b5a068e0
+foundation commit: 020e105f334f6b794fad6333d23d3249c78c1e5f
+browser fix commit: a6c591b0cb5e3b520bfd3d2105db65ba851592f7
 ```
 
-## 本轮实现
+## 本轮完成
 
 ```text
-4 份 JSON Schema
+程序化地貌生产纲领
+桂林参考、地形地貌、水体、生态农业、历史重建、运行时发布六条分支
+4 份 Draft 2020-12 JSON Schema
 无外部依赖的 fail-closed validator
 8 个故障夹具单元测试
 桂林、温州、昆明 v0.2 项目绑定
-程序化地貌生产线统一状态网页
-桌面与 390 × 844 Chromium QA 脚本
-GitHub Actions 合同与浏览器工作流
-本地 QA manifest
+统一状态网页
+桌面与 390 × 844 Chromium QA
+GitHub Actions 合同和浏览器工作流
+远端 CI 证据 manifest
 ```
 
-## 已通过的本地证据
+## 远端 Actions 证据
 
 ```text
-validator:
-passed=true
-errors=0
-warnings=0
-projectBindings=3
-registeredBranches=6
+workflow: Procedural landscape v0.2 foundation QA
+run: 32933500293
+conclusion: success
 
-unit tests:
-8 passed
-0 failed
+contract job:
+id: 98070189072
+validator errors: 0
+validator warnings: 0
+project bindings: 3
+registered branches: 6
+unit tests: 8 passed
 
-JSON Schema:
-4 schemas passed Draft 2020-12 check
-registry passed
-3 project bindings passed
+browser job:
+id: 98070222626
+desktop 1440 × 1000: passed
+mobile 390 × 844: passed
+branch cards: 6
+project cards: 3
+console errors: 0
+page errors: 0
+failed requests: 0
 ```
 
-## 浏览器状态
+浏览器 artifact ID 为 `9594041753`，artifact digest 为
+`sha256:a39309bd8cdf1b6b40d9b2043bc9e1c6e3c43294d4b952dc09c758b0ea0cc03e`。
+合同 artifact ID 为 `9594022183`，artifact digest 为
+`sha256:dd06ecf29ea60fdd223f6c4f6cf14d07c4c5fee01f80ee308999b0ca21cad2a5`。
 
-当前执行环境中的 Chromium 对 localhost 和 file URL 返回
-`ERR_BLOCKED_BY_ADMINISTRATOR`。本轮没有把该次尝试记录为浏览器通过。
-
-`.github/workflows/procedural-landscape-v020.yml` 已配置真实 Chromium 作业，
-要求桌面 1440 × 1000、移动 390 × 844、控制台错误为 0，并上传截图与
-`report.json`。远端 Actions 结果需要在提交后重新核对。
+首轮浏览器作业暴露 `/favicon.ico` 404。修复提交加入实体 favicon，并将失败证据上传改为
+`if: always()`。修复后的桌面和移动作业均已成功。
 
 ## 真值保护
 
@@ -58,6 +68,8 @@ registry passed
 海底数据修改: 0
 潮汐数据修改: 0
 水系、道路、聚落、机场和历史真值修改: 0
+30 m 最终回退: 0
+合成缺口填充: 0
 公开发布: false
 PR 状态: Draft
 ```
@@ -67,7 +79,8 @@ PR 状态: Draft
 ### 桂林
 
 保留 10 km² v0.3.1 方法和视觉回归。真实 12.5 m DEM 尚未挂载。竹类实例
-2152 与 2256 的记录保留为待解释差异。
+`2152` 与 `2256` 的记录保留为待解释差异。已有两个参考入口，继续作为方法与
+GAEA 视觉证明，不传播代理高程。
 
 ### 温州
 
@@ -83,10 +96,13 @@ GEBCO 2026 Stage A QA 已通过，陆地修改像元为 0。FES2022b、验潮站
 权威源 DEM 未挂载，5892 × 8095 无压缩像元一致裁剪主文件尚未生成。
 地貌、水文、GAEA、1 m 历史增强和网页阶段保持锁定。
 
-## 下一步
+## 下一阶段 v0.3
 
-1. 核对远端 Actions 的合同与浏览器作业。
-2. 将截图、控制台和报告结果写回状态 manifest。
-3. 补齐分支级 layer manifest 示例和 validator。
-4. 建立统一网页候选的受保护部署流程。
-5. 保持 PR #51 为 open、Draft，等待用户视觉审阅。
+```text
+01 为 truth、derived、historical-delta、procedural-delta 和 visual-delta 建立样例
+02 增加坡度、坡向、曲率、汇流、湿度、河距和地貌单元 manifest
+03 增加父级掩膜、最大增量、回滚值和真值校验和的编译门槛
+04 从温州沿海真实实现接入第一组只读图层状态
+05 建立受保护的统一状态网页候选
+06 保持 PR #51 open、Draft，等待用户视觉批准
+```
