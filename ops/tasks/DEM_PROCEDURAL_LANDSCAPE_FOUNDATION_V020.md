@@ -104,7 +104,7 @@ web/procedural-landscape-skill/index.html
 
 ```text
 生产线版本
-负责人小王
+负责人小华
 分支结构
 项目绑定
 真值状态

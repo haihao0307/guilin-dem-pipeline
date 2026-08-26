@@ -139,7 +139,7 @@ def validate_status(validation: Any) -> None:
     release = document.get("release") if isinstance(document.get("release"), dict) else {}
     if document.get("schemaVersion") != "2.0.0" or document.get("documentType") != "dem-procedural-landscape-foundation-status":
         validation.add("STATUS_CONTRACT", STATUS, "Status contract is invalid.")
-    if (skill.get("controllerAlias"), skill.get("version")) != ("小王", "0.2.0"):
+    if (skill.get("controllerAlias"), skill.get("version")) != ("小华", "0.2.0"):
         validation.add("STATUS_SKILL", STATUS, "Status skill identity is invalid.")
     if quality.get("truthDataModified") is not False:
         validation.add("STATUS_TRUTH_MODIFIED", STATUS, "Foundation work must not modify truth data.")

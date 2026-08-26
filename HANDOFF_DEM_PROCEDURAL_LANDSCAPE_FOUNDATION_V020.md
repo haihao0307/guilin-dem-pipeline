@@ -6,7 +6,7 @@
 repository: haihao0307/guilin-dem-pipeline
 branch: skill/dem-procedural-landscape-v010
 Draft PR: 51
-controller alias: 小王
+controller alias: 小华
 contract commit: 6064a9ad3374221d3726c67d77a827a4b5a068e0
 foundation commit: 020e105f334f6b794fad6333d23d3249c78c1e5f
 browser fix commit: a6c591b0cb5e3b520bfd3d2105db65ba851592f7

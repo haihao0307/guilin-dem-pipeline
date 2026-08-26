@@ -7,13 +7,13 @@
 ## 负责人
 
 ```text
-总控代号: 小王
+总控代号: 小华
 仓库: haihao0307/guilin-dem-pipeline
 技能分支: skill/dem-procedural-landscape-v010
 Draft PR: 51
 ```
 
-小王负责研究、总体设计、任务拆分、Codex 调度、结果审查、版本管理、回滚和验收入口整理。用户保留最终视觉批准权。GitHub 保存合同、数据谱系、任务、提交和验收证据。Codex 只执行已经冻结的任务合同，完成声明必须附真实数据、测试和浏览器证据。
+小华负责研究、总体设计、任务拆分、Codex 调度、结果审查、版本管理、回滚和验收入口整理。用户保留最终视觉批准权。GitHub 保存合同、数据谱系、任务、提交和验收证据。Codex 只执行已经冻结的任务合同，完成声明必须附真实数据、测试和浏览器证据。
 
 详细治理规则见：
 
@@ -262,7 +262,7 @@ GAEA 节点图与参数版本
 skill version: 0.2.0
 status: expanded-architecture-and-contract
 parent skill retained: dem-ecology-surface v0.5
-controller alias: 小王
+controller alias: 小华
 reference branch: guilin-10km2-detail
 active branches:
   terrain-geomorphology

@@ -44,8 +44,8 @@ def validate_registry(validation: Any) -> tuple[dict[str, dict[str, Any]], str]:
         validation.add("SKILL_ID", REGISTRY, "Invalid skill id.")
     if skill.get("version") != "0.2.0":
         validation.add("SKILL_VERSION", REGISTRY, "Skill version must be 0.2.0.")
-    if skill.get("controllerAlias") != "小王":
-        validation.add("CONTROLLER_ALIAS", REGISTRY, "Controller alias must be 小王.")
+    if skill.get("controllerAlias") != "小华":
+        validation.add("CONTROLLER_ALIAS", REGISTRY, "Controller alias must be 小华.")
     for key in (
         "userVisualApprovalRequired",
         "githubIsAuthoritativeBridge",
