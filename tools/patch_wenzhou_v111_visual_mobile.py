@@ -28,13 +28,8 @@ def patch_runtime() -> None:
     text = RUNTIME.read_text(encoding="utf-8")
     text = replace_once(
         text,
-        "function createInterleavedTerrain(gl, heightBuffer, marineBuffer, manifest, mobile) {",
-        "function createInterleavedTerrain(gl, heightBuffer, marineBuffer, manifest, mobile, targetOverride = null) {",
-    )
-    text = replace_once(
-        text,
-        "const targetGrid = mobile ? Math.min(513, sourceGrid) : sourceGrid;",
-        "const targetGrid = targetOverride || (mobile ? Math.min(513, sourceGrid) : sourceGrid);",
+        "function createInterleavedTerrain(gl, heightBuffer, marineBuffer, manifest, mobile) {\n  const sourceGrid = manifest.terrainOverview.grid[0];\n  const targetGrid = mobile ? Math.min(513, sourceGrid) : sourceGrid;",
+        "function createInterleavedTerrain(gl, heightBuffer, marineBuffer, manifest, mobile, targetOverride = null) {\n  const sourceGrid = manifest.terrainOverview.grid[0];\n  const targetGrid = targetOverride || (mobile ? Math.min(513, sourceGrid) : sourceGrid);",
     )
     text = replace_once(
         text,
