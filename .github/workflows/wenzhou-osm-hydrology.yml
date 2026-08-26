@@ -81,7 +81,13 @@ jobs:
           acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
           qa = json.loads((root / 'projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
           assert acquisition['passed'] is True
-          assert qa['passed'] is True
+          assert qa['schema'] == 'wenzhou_hydrology_topology_qa@1.2.0'
+          assert qa['passed'] is False
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          assert qa['hydrologyTopologyPassed'] is False
+          assert qa['estuaryConnectivityStatus'] == 'pending'
+          assert qa['nodeReferenceValidationStatus'] == 'not_evaluable_source_omits_node_ids'
           assert acquisition['license'] == 'ODbL 1.0'
           assert acquisition['attribution'] == '© OpenStreetMap contributors'
           assert len(acquisition['tiles']) == 4
@@ -151,7 +157,13 @@ jobs:
           acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
           qa = json.loads((root / 'projects/wenzhou/coastal/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
           assert acquisition['passed'] is True
-          assert qa['passed'] is True
+          assert qa['schema'] == 'wenzhou_hydrology_topology_qa@1.2.0'
+          assert qa['passed'] is False
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          assert qa['hydrologyTopologyPassed'] is False
+          assert qa['estuaryConnectivityStatus'] == 'pending'
+          assert qa['nodeReferenceValidationStatus'] == 'not_evaluable_source_omits_node_ids'
           checked = []
           for item in acquisition['rawFiles'] + acquisition['outputFiles']:
               path = root / item['path']

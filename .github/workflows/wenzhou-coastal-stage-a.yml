@@ -6,7 +6,11 @@ on:
       - project/wenzhou-v100-bathymetry-tides-hydrology
     paths:
       - .github/workflows/wenzhou-coastal-stage-a.yml
-      - projects/wenzhou/coastal/**
+      - projects/wenzhou/coastal/config/coastal_domain_v100.json
+      - projects/wenzhou/coastal/scripts/run_stage_a.py
+      - projects/wenzhou/coastal/scripts/verify_parent_truth.py
+      - projects/wenzhou/coastal/scripts/download_gebco2026_ceda_subset.py
+      - projects/wenzhou/coastal/scripts/build_coastal_bathymetry.py
   workflow_dispatch:
 
 permissions:
@@ -66,9 +70,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile projects/wenzhou/coastal/scripts/*.py
+          python -m py_compile \
+            projects/wenzhou/coastal/scripts/run_stage_a.py \
+            projects/wenzhou/coastal/scripts/verify_parent_truth.py \
+            projects/wenzhou/coastal/scripts/download_gebco2026_ceda_subset.py \
+            projects/wenzhou/coastal/scripts/build_coastal_bathymetry.py
           python -m json.tool projects/wenzhou/coastal/config/coastal_domain_v100.json >/dev/null
-          python -m json.tool projects/wenzhou/coastal/config/tide_points_v100.json >/dev/null
 
       - name: Run official CEDA range extraction and Stage A QA
         shell: bash
@@ -130,8 +137,13 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- \
-            projects/wenzhou/coastal/data/raw/gebco_2026 \
-            projects/wenzhou/coastal/data/derived \
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif \
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif \
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif \
             projects/wenzhou/coastal/reports/PARENT_TRUTH_PREFLIGHT.json \
             projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json \
             projects/wenzhou/coastal/reports/GEBCO_2026_QA.json
@@ -217,8 +229,16 @@ jobs:
         with:
           name: wenzhou-coastal-stage-a-evidence
           path: |
-            projects/wenzhou/coastal/reports/*.json
-            projects/wenzhou/coastal/data/raw/gebco_2026/*.tif
-            projects/wenzhou/coastal/data/derived/*.tif
+            projects/wenzhou/coastal/reports/PARENT_TRUTH_PREFLIGHT.json
+            projects/wenzhou/coastal/reports/GEBCO_2026_ACQUISITION.json
+            projects/wenzhou/coastal/reports/GEBCO_2026_QA.json
+            projects/wenzhou/coastal/reports/STAGE_A_UPLOAD_RECEIPT.json
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_BATHY_NATIVE.tif
+            projects/wenzhou/coastal/data/raw/gebco_2026/WENZHOU_GEBCO_2026_TID_NATIVE.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_TRUTH_AOI_MARINE_BATHY_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_TID_100M_EPSG32651_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif
+            projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_LAND_SEA_CONFLICT_100M_COG.tif
           if-no-files-found: warn
           retention-days: 90

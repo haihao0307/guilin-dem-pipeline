@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Acquire source-traceable OSM coastline and waterway ways for Wenzhou.
 
-Each Overpass response contains way tags, node IDs and inline coordinates. Raw
-responses and exact queries are preserved. Source coordinates remain unchanged
-in WGS84. Projection and clipping are separate derived operations in EPSG:32651.
-No river-width operation is performed in this stage.
+Each Overpass response contains way tags and inline coordinates. The current
+``out tags geom`` query omits node ID arrays, so node-reference topology remains
+explicitly not evaluable. Raw responses and exact queries are preserved. Source
+coordinates remain unchanged in WGS84. Projection and clipping are separate
+derived operations in EPSG:32651. No river-width operation is performed here.
 """
 
 from __future__ import annotations
@@ -284,10 +285,14 @@ def main() -> int:
         "passed": False,
     }
     qa: dict[str, Any] = {
-        "schema": "wenzhou_hydrology_topology_qa@1.1.0",
+        "schema": "wenzhou_hydrology_topology_qa@1.2.0",
         "generatedAtUtc": generated,
         "passed": False,
-        "estuaryConnectivityStatus": "pending named network and coastline topology stage",
+        "sourceAcquisitionPassed": False,
+        "projectedSkeletonPassed": False,
+        "hydrologyTopologyPassed": False,
+        "estuaryConnectivityStatus": "pending",
+        "nodeReferenceValidationStatus": "not_evaluable_source_omits_node_ids",
     }
 
     try:
@@ -547,7 +552,12 @@ def main() -> int:
                 "files": output_files,
             }
         )
-        qa["passed"] = (
+        source_acquisition_passed = (
+            len(tile_records) == len(tiles)
+            and len(raw_files) == 2 * len(tiles)
+            and len(all_ways) > 0
+        )
+        projected_skeleton_passed = (
             len(coastline_projected) > 0
             and len(waterway_projected) > 0
             and len(missing_unique) == 0
@@ -555,9 +565,17 @@ def main() -> int:
             and out_of_bounds_vertices == 0
             and not introduced_self_intersections
         )
+        qa.update(
+            {
+                "passed": False,
+                "sourceAcquisitionPassed": source_acquisition_passed,
+                "projectedSkeletonPassed": projected_skeleton_passed,
+                "hydrologyTopologyPassed": False,
+            }
+        )
         acquisition.update(
             {
-                "passed": qa["passed"],
+                "passed": source_acquisition_passed and projected_skeleton_passed,
                 "source": source_config,
                 "domain": domain,
                 "tiles": tile_records,
@@ -577,8 +595,10 @@ def main() -> int:
                 "attribution": source_config["attribution"],
             }
         )
-        if not qa["passed"]:
-            acquisition["error"] = "hydrology_topology_qa_failed"
+        if not source_acquisition_passed:
+            acquisition["error"] = "osm_source_acquisition_failed"
+        elif not projected_skeleton_passed:
+            acquisition["error"] = "projected_hydrology_skeleton_qa_failed"
     except Exception as exc:
         acquisition["error"] = type(exc).__name__
         acquisition["detail"] = str(exc)
@@ -589,7 +609,11 @@ def main() -> int:
     write_json(ACQUISITION_REPORT, acquisition)
     write_json(QA_REPORT, qa)
     print(json.dumps({"acquisition": acquisition, "qa": qa}, ensure_ascii=False, indent=2))
-    return 0 if acquisition["passed"] and qa["passed"] else 2
+    return (
+        0
+        if qa["sourceAcquisitionPassed"] and qa["projectedSkeletonPassed"]
+        else 2
+    )
 
 
 if __name__ == "__main__":
