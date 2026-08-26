@@ -13,12 +13,6 @@ PAYLOAD_SHA256 = "ab3ee7c09ddaaf5e91b5d1ac613c32055e5a3aca26564e33e47e8b03eb6fa3
 EXPECTED_PARTS = 8
 
 
-def replace_mesh_contract(text: str, key: str, dimensions: tuple[int, int]) -> tuple[str, int]:
-    pattern = rf'(["\']{re.escape(key)}["\']\s*:\s*)\[\s*\d+\s*,\s*\d+\s*\]'
-    replacement = rf'\g<1>[{dimensions[0]}, {dimensions[1]}]'
-    return re.subn(pattern, replacement, text, count=1)
-
-
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     parts_dir = Path(__file__).parent / "v004_final_payload_parts"
@@ -48,23 +42,26 @@ def main() -> int:
 
     app_path = root / "projects/kunming/web/yunnan-hydrology-v004/app.js"
     app_text = app_path.read_text(encoding="utf-8")
+
     reserved_flat_count = len(re.findall(r"\bflat\b", app_text))
     if reserved_flat_count:
         app_text = re.sub(r"\bflat\b", "flatTerrain", app_text)
-        app_path.write_text(app_text, encoding="utf-8")
-    if re.search(r"\bflat\b", app_path.read_text(encoding="utf-8")):
-        raise SystemExit("reserved GLSL token 'flat' remains in V004 app.js")
 
-    builder_path = root / "scripts/build_kunming_yunnan_hydrology_v004.py"
-    builder_text = builder_path.read_text(encoding="utf-8")
-    builder_text, desktop_replacements = replace_mesh_contract(builder_text, "meshDesktop", (480, 660))
-    builder_text, compatibility_replacements = replace_mesh_contract(builder_text, "meshCompatibility", (256, 352))
-    if desktop_replacements != 1 or compatibility_replacements != 1:
-        raise SystemExit(
-            "failed to reduce V004 browser mesh contract: "
-            f"desktop={desktop_replacements}, compatibility={compatibility_replacements}"
-        )
-    builder_path.write_text(builder_text, encoding="utf-8")
+    mesh_pattern = (
+        r"(?:const|let)\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*[^;]+;"
+    )
+    app_text, mesh_patch_count = re.subn(
+        mesh_pattern,
+        "const [meshCols,meshRows]=[256,352];",
+        app_text,
+        count=1,
+    )
+    if mesh_patch_count != 1:
+        raise SystemExit(f"failed to patch V004 browser mesh declaration: {mesh_patch_count}")
+
+    if re.search(r"\bflat\b", app_text):
+        raise SystemExit("reserved GLSL token 'flat' remains in V004 app.js")
+    app_path.write_text(app_text, encoding="utf-8")
 
     qa_override = root / "scripts/qa_kunming_yunnan_hydrology_v004_override.mjs"
     qa_target = root / "scripts/qa_kunming_yunnan_hydrology_v004.mjs"
@@ -75,7 +72,7 @@ def main() -> int:
     print(
         f"materialized {len(infos)} reviewed Kunming V004 source files, "
         f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
-        "reduced browser meshes to desktop 480x660 and compatibility 256x352, "
+        "forced a stable 256x352 WebGL terrain mesh, "
         "and installed robust browser QA"
     )
     return 0
