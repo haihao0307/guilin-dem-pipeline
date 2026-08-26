@@ -1,0 +1,234 @@
+name: Deploy Kunming Yunnan hydrology V004 direct
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - .github/workflows/deploy-kunming-yunnan-hydrology-v004-direct.yml
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  TARGET_DIR: kunming-yunnan-hydrology-v004
+  SOURCE_RUN_ID: "32925496927"
+  SOURCE_ARTIFACT: kunming-hydrology-knowledge-v001
+  PACKAGE_NAME: KUNMING_YUNNAN_HYDROLOGY_V004_DIRECT_WEB
+
+jobs:
+  build-deploy-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout latest project branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/kunming-dem-v001
+          fetch-depth: 1
+
+      - name: Materialize reviewed V004 source
+        run: |
+          set -euo pipefail
+          python scripts/materialize_kunming_yunnan_hydrology_v004_final.py
+          python - <<'PY'
+          import pathlib, re
+          p=pathlib.Path('projects/kunming/web/yunnan-hydrology-v004/app.js')
+          text=p.read_text(encoding='utf-8')
+          text,count=re.subn(
+              r'const\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*\[\s*128\s*,\s*176\s*\]\s*;',
+              'const [meshCols,meshRows]=[256,352];',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f'expected one stable mesh declaration, found {count}')
+          p.write_text(text,encoding='utf-8')
+          PY
+          test -f projects/kunming/web/yunnan-hydrology-v004/index.html
+          test -f projects/kunming/web/yunnan-hydrology-v004/app.js
+          test -f scripts/build_kunming_yunnan_hydrology_v004.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deterministic geodata builder dependencies
+        run: python -m pip install --disable-pip-version-check numpy pillow pyproj shapely opencv-python-headless
+
+      - name: Download approved OSM hydrology knowledge artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/hydrology"
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$SOURCE_ARTIFACT" --dir "$RUNNER_TEMP/hydrology"
+          test -f "$RUNNER_TEMP/hydrology/distilled/osm-current/waterways.geojson"
+          test -f "$RUNNER_TEMP/hydrology/distilled/osm-current/water_areas.geojson"
+          test -f "$RUNNER_TEMP/hydrology/QA_REPORT.json"
+
+      - name: Fetch frozen clean terrain height display asset
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/input"
+          curl --fail --location --retry 5 --retry-all-errors \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/gh-pages/kunming-clean-3d-v001/assets/height_rg16.png" \
+            --output "$RUNNER_TEMP/input/height_rg16.png"
+          test "$(stat -c%s "$RUNNER_TEMP/input/height_rg16.png")" -eq 8878779
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path("${{ runner.temp }}/input/height_rg16.png")
+          with Image.open(p) as image:
+              assert image.size == (2048,2814), image.size
+              assert image.mode in {'RGB','RGBA'}, image.mode
+              image.verify()
+          print('frozen height display asset verified')
+          PY
+
+      - name: Build Yunnan satellite color and real OSM water fields
+        run: |
+          set -euo pipefail
+          DIST="$RUNNER_TEMP/site/$TARGET_DIR"
+          mkdir -p "$DIST"
+          cp projects/kunming/web/yunnan-hydrology-v004/index.html "$DIST/index.html"
+          cp projects/kunming/web/yunnan-hydrology-v004/styles.css "$DIST/styles.css"
+          cp projects/kunming/web/yunnan-hydrology-v004/app.js "$DIST/app.js"
+          cp projects/kunming/web/yunnan-hydrology-v004/README.md "$DIST/README.md"
+          python scripts/build_kunming_yunnan_hydrology_v004.py \
+            --height "$RUNNER_TEMP/input/height_rg16.png" \
+            --waterways "$RUNNER_TEMP/hydrology/distilled/osm-current/waterways.geojson" \
+            --water-areas "$RUNNER_TEMP/hydrology/distilled/osm-current/water_areas.geojson" \
+            --output-dir "$DIST"
+          node --check "$DIST/app.js"
+
+      - name: Fail closed on truth, water, color and camera contracts
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib, re
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          m=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+          r=json.loads((root/'BUILD_REPORT.json').read_text(encoding='utf-8'))
+          assert m['authoritativeDem']['sha256']=='9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+          assert m['authoritativeDem']['compression']=='NONE'
+          assert m['authoritativeDem']['resampled'] is False
+          assert m['displayRules']['manualCameraOnly'] is True
+          assert m['displayRules']['cameraPresetButtons']==[]
+          assert m['displayRules']['handDrawnWaterCount']==0
+          assert m['hydrology']['historicalAcceptedTruthCount']==0
+          assert m['hydrology']['mainWaterwayFeatures']>=900
+          assert m['hydrology']['displayedWaterAreaFeatures']>=800
+          assert m['hydrology']['centerlineFixed'] is True
+          assert m['hydrology']['widthSliderLateralOnly'] is True
+          assert m['hydrology']['lakeShorelineFixed'] is True
+          assert r['authoritativeDemModified'] is False
+          index=(root/'index.html').read_text(encoding='utf-8')
+          app=(root/'app.js').read_text(encoding='utf-8')
+          assert all(label not in index for label in ['总览','俯视','朝北'])
+          assert 'Float32Array(await' not in app
+          assert 'riverLines' not in app and 'lakePolygons' not in app
+          assert not re.search(r'\bflat\b',app)
+          assert 'const [meshCols,meshRows]=[256,352];' in app
+          for group in ['height','fallback']:
+              item=m['browserAssets'][group]
+              p=root/item['file']
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
+          surface=m['browserAssets']['surface']
+          for file_key,hash_key in [('desktopFile','desktopSha256'),('compatibilityFile','compatibilitySha256')]:
+              p=root/surface[file_key]
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==surface[hash_key]
+          for item in m['browserAssets']['water'].values():
+              p=root/item['file']
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
+          report={
+            'status':'public_deployment_ready',
+            'sourceCommit':'${{ github.sha }}',
+            'staticQa':'pass',
+            'browserVisualAcceptance':'pending_user_review',
+            'mesh':[256,352],
+            'mainWaterways':m['hydrology']['mainWaterwayFeatures'],
+            'minorWaterways':m['hydrology']['minorWaterwayFeatures'],
+            'displayedWaterAreas':m['hydrology']['displayedWaterAreaFeatures'],
+            'handDrawnWater':0,
+            'historicalAcceptedTruth':0,
+            'cameraPresetButtons':0,
+            'authoritativeDemModified':False,
+          }
+          (root/'DEPLOYMENT_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+
+      - name: Create downloadable web package
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/site"
+          zip -0 -r "$RUNNER_TEMP/${PACKAGE_NAME}.zip" "$TARGET_DIR"
+          sha256sum "$RUNNER_TEMP/${PACKAGE_NAME}.zip" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256.txt"
+
+      - name: Upload web package and build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/DEPLOYMENT_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/manifest.json
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy V004 into existing gh-pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR"
+          git commit -m "Deploy Kunming Yunnan hydrology V004 direct from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
+
+      - name: Verify public V004 assets and contracts
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
+              && curl --fail --silent --show-error "$BASE/DEPLOYMENT_REPORT.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-deployment.json" \
+              && curl --fail --silent --show-error "$BASE/assets/height_rg16.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-height.png" \
+              && curl --fail --silent --show-error "$BASE/assets/water_mask.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-water.png"; then
+              python - <<'PY'
+          import json, pathlib
+          m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
+          d=json.loads(pathlib.Path("${{ runner.temp }}/public-deployment.json").read_text(encoding='utf-8'))
+          assert m['status']=='modern_osm_reference_ready_historical_truth_pending'
+          assert m['displayRules']['cameraPresetButtons']==[]
+          assert m['hydrology']['handDrawnWaterCount']==0
+          assert d['status']=='public_deployment_ready'
+          assert d['staticQa']=='pass'
+          assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size==8878779
+          assert pathlib.Path("${{ runner.temp }}/public-water.png").stat().st_size>1000
+          print('public V004 direct deployment verification passed')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
