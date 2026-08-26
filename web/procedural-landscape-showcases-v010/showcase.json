@@ -1,0 +1,55 @@
+{
+  "schema": "dem_procedural_landscape_showcases@1.0.0",
+  "controllerAlias": "小华",
+  "uniformAoi": {"widthKm": 10.0, "heightKm": 10.0, "areaKm2": 100.0, "shape": "square"},
+  "visualAcceptance": false,
+  "productionReady": false,
+  "publicReleaseApproved": false,
+  "regions": [
+    {
+      "id": "guilin",
+      "name": "桂林喀斯特河谷生态",
+      "subtitle": "峰丛、河谷、稻田、竹林与裸岩",
+      "seed": 314159,
+      "sourceStatus": "visual-method-reference",
+      "truthSummary": "沿用桂林秧塘 v0.3.1 的生态方法与视觉基线。原验证核心为 10 km²；本页扩展成统一 10 km × 10 km 展示框架。真实 12.5 m DEM 仍待挂载。",
+      "exactTenByTenTruthCutoutMounted": false,
+      "parentTruth": {"type": "proxy-terrain", "native12p5mSurveyClaim": false},
+      "referenceEntries": [
+        "https://guilin-dem-terrain.sunhaihao.chatgpt.site",
+        "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof"
+      ],
+      "palette": ["#162419", "#2d4b30", "#5f7b42", "#a4a45c", "#7ca5a5"]
+    },
+    {
+      "id": "wenzhou",
+      "name": "温州沿海山地河口生态",
+      "subtitle": "海岸山地、河口、潮滩、常绿林与梯田",
+      "seed": 271828,
+      "sourceStatus": "authoritative-parent-dem-procedural-showcase",
+      "truthSummary": "父级陆地使用已校验 12.5 m COG。当前 100 km² 页面是数据约束的程序化典型生态，尚未挂载对应的精确 10 km × 10 km 真值裁片。潮汐与垂直基准验收仍开放。",
+      "exactTenByTenTruthCutoutMounted": false,
+      "parentTruth": {"type": "dem", "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e", "resolutionMeters": 12.5, "crs": "EPSG:32651", "immutable": true, "native12p5mSurveyClaim": false},
+      "palette": ["#10232a", "#1e4c46", "#47734f", "#82915a", "#9ab7b7"]
+    },
+    {
+      "id": "kunming",
+      "name": "昆明高原盆地生态",
+      "subtitle": "高原盆地、红土丘陵、季节湿地、农田与疏林",
+      "seed": 161803,
+      "sourceStatus": "verified-parent-source-preview",
+      "truthSummary": "父级 12.5 m 源 COG 与裁剪合同已经登记。当前分支仍有失败检查，所以本页保持预演标签，不宣告 100 km² 精确真值裁片完成，也不把手绘水体当作真值。",
+      "exactTenByTenTruthCutoutMounted": false,
+      "parentTruth": {"type": "dem", "sha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50", "resolutionMeters": 12.5, "crs": "EPSG:32648", "immutable": true, "native12p5mSurveyClaim": false},
+      "palette": ["#2a2119", "#6b4930", "#91704d", "#71824d", "#7fa0a1"]
+    }
+  ],
+  "truthClaims": {
+    "proceduralPreview": true,
+    "native12p5mTruthForEachShowcase": false,
+    "native1mSurveyClaim": false,
+    "truthOverwrite": false,
+    "syntheticGapFill": false,
+    "visualApprovalRequired": true
+  }
+}
