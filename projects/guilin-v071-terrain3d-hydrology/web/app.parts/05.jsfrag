@@ -1,0 +1,128 @@
+yToggle').addEventListener('change', event => { hydrologyGroup.visible = event.target.checked; });
+  $('labelsToggle').addEventListener('change', event => {
+    labelLayer.style.display = event.target.checked ? 'block' : 'none';
+  });
+
+  $('colorRichness').addEventListener('input', event => {
+    terrainStyle.colorRichness = Number(event.target.value);
+    updateTerrainAppearance();
+  });
+  $('karstDetail').addEventListener('input', event => {
+    terrainStyle.karstDetail = Number(event.target.value) / 100;
+    updateTerrainAppearance();
+  });
+
+  $('waterWidth').addEventListener('input', event => {
+    waterState.season = 'custom';
+    waterState.widthScale = Number(event.target.value);
+    document.querySelectorAll('[data-season]').forEach(button => button.classList.remove('active'));
+    updateWaterAppearance();
+  });
+  $('waterDepth').addEventListener('input', event => {
+    waterState.season = 'custom';
+    waterState.depth = Number(event.target.value);
+    document.querySelectorAll('[data-season]').forEach(button => button.classList.remove('active'));
+    updateWaterAppearance();
+  });
+  $('waterColor').addEventListener('input', event => {
+    waterState.season = 'custom';
+    waterState.color = event.target.value;
+    document.querySelectorAll('[data-season]').forEach(button => button.classList.remove('active'));
+    updateWaterAppearance();
+  });
+  document.querySelectorAll('[data-season]').forEach(button => {
+    button.addEventListener('click', () => applySeason(button.dataset.season));
+  });
+  document.querySelectorAll('[data-target]').forEach(button => {
+    button.addEventListener('click', () => flyTo(button.dataset.target));
+  });
+}
+
+async function boot() {
+  try {
+    proj4.defs('EPSG:32649', '+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs +type=crs');
+
+    const [manifestResponse, heightResponse, hydrologyResponse] = await Promise.all([
+      fetch('./data/terrain_manifest.json', { cache: 'no-store' }),
+      fetch('./data/terrain_height_u16.bin', { cache: 'no-store' }),
+      fetch('./data/osm_hydrology.geojson', { cache: 'no-store' }),
+    ]);
+    if (!manifestResponse.ok || !heightResponse.ok || !hydrologyResponse.ok) throw new Error('三维资产读取失败');
+
+    manifest = await manifestResponse.json();
+    hydrologyData = await hydrologyResponse.json();
+    [terrainTexture, terrainDetailTexture] = await Promise.all([
+      new THREE.TextureLoader().loadAsync(`./data/${manifest.texture.file}`),
+      new THREE.TextureLoader().loadAsync(`./data/${manifest.detail.file}`),
+    ]);
+
+    const decoded = decodeHeights(await heightResponse.arrayBuffer(), manifest.height, manifest.elevation_range_m);
+    heightValues = decoded.heights;
+    validMask = decoded.mask;
+    [worldWidth, worldDepth] = manifest.world_size_m;
+    [minElevation, maxElevation] = manifest.elevation_range_m;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07120c);
+    scene.fog = new THREE.FogExp2(0x07120c, 0.0000036);
+
+    camera = new THREE.PerspectiveCamera(44, 1, 50, 800000);
+    camera.position.set(worldWidth * 0.55, 155000, worldDepth * 0.72);
+
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: 'high-performance',
+      logarithmicDepthBuffer: true,
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    viewer.appendChild(renderer.domElement);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 450, 0);
+    controls.minDistance = 2800;
+    controls.maxDistance = 600000;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    scene.add(new THREE.HemisphereLight(0xf0f8ff, 0x1f392a, 1.55));
+    const sun = new THREE.DirectionalLight(0xfff2d1, 2.35);
+    sun.position.set(-80000, 140000, 90000);
+    scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xaed8ff, 0.58);
+    fill.position.set(105000, 68000, -90000);
+    scene.add(fill);
+
+    terrain = buildTerrain(terrainTexture, terrainDetailTexture);
+    hydrologyGroup = addHydrology(hydrologyData);
+    addLandmarks();
+
+    $('source').textContent = manifest.source_mosaic;
+    $('grid').textContent = `${manifest.source_grid[0]} × ${manifest.source_grid[1]}`;
+    $('world').textContent = `${(worldWidth / 1000).toFixed(1)} × ${(worldDepth / 1000).toFixed(1)} km`;
+    $('elevation').textContent = `${minElevation.toFixed(0)}…${maxElevation.toFixed(0)} m`;
+    $('styleVersion').textContent = manifest.terrain_style?.style_version || 'karst-rich';
+
+    bindControls();
+    applySeason('spring');
+    updateTerrainAppearance();
+    publishStyleContracts();
+
+    resize();
+    window.addEventListener('resize', resize);
+    window.__XIAOGUI_TERRAIN_READY = true;
+    setStatus('峰叢細節與可調季節河道已載入', true);
+
+    function frame(now) {
+      requestAnimationFrame(frame);
+      animateFlight(now);
+      controls.update();
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(frame);
+  } catch (error) {
+    console.error(error)

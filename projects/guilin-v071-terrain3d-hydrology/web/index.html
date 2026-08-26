@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>小桂 · 桂林 12.5 米三維地形</title>
-  <link rel="stylesheet" href="./styles.css?v=0712" />
+  <title>小桂 · 桂林 12.5 米三維地形 v0.7.2</title>
+  <link rel="stylesheet" href="./styles.css?v=0720" />
   <script type="importmap">
     {
       "imports": {
@@ -17,9 +17,9 @@
 <body>
   <header>
     <div>
-      <span class="eyebrow">XIAOGUI · GUILIN DEM · v0.7.1</span>
-      <h1>桂林 12.5 米三維地形與 OSM 水系</h1>
-      <p>12 張新源片聯合底座 · 原始高差 1:1 · NoData 保留 · OSM 第一輪水系</p>
+      <span class="eyebrow">XIAOGUI · GUILIN DEM · v0.7.2</span>
+      <h1>桂林 12.5 米峰叢地形與季節河道</h1>
+      <p>12 張新源片聯合底座 · 原始高差 1:1 · 衛星综合色增強 · 可調寬度與水色</p>
     </div>
     <div id="status" class="status">正在載入三維地形</div>
   </header>
@@ -40,15 +40,53 @@
           <div><dt>World</dt><dd id="world">--</dd></div>
           <div><dt>Elevation</dt><dd id="elevation">--</dd></div>
           <div><dt>Vertical</dt><dd>1.00× locked</dd></div>
-          <div><dt>CRS</dt><dd>EPSG:32649</dd></div>
+          <div><dt>Style</dt><dd id="styleVersion">--</dd></div>
         </dl>
+      </section>
+
+      <section>
+        <h2>地形表現</h2>
+        <div class="control-block">
+          <div class="control-head"><label for="colorRichness">色彩豐富度</label><output id="colorRichnessValue">1.24×</output></div>
+          <input id="colorRichness" type="range" min="0.75" max="1.60" step="0.05" value="1.24" />
+        </div>
+        <div class="control-block">
+          <div class="control-head"><label for="karstDetail">峰叢細節</label><output id="karstDetailValue">74%</output></div>
+          <input id="karstDetail" type="range" min="0" max="100" step="1" value="74" />
+        </div>
+        <p class="micro-note">細節只進入综合色、光照與凹凸場，源 DEM 高程保持 0 米改動。</p>
+      </section>
+
+      <section>
+        <h2>河道季節</h2>
+        <div class="season-grid">
+          <button type="button" data-season="winter">冬季清水</button>
+          <button type="button" data-season="spring" class="active">春季平水</button>
+          <button type="button" data-season="summer">夏季豐水</button>
+          <button type="button" data-season="autumn">秋季回落</button>
+        </div>
+        <div class="season-state">當前：<strong id="seasonName">春季平水</strong></div>
+
+        <div class="control-block">
+          <div class="control-head"><label for="waterWidth">河道寬度</label><output id="waterWidthValue">1.00×</output></div>
+          <input id="waterWidth" type="range" min="0.40" max="2.20" step="0.02" value="1.00" />
+        </div>
+        <div class="control-block">
+          <div class="control-head"><label for="waterDepth">水深表現</label><output id="waterDepthValue">58%</output></div>
+          <input id="waterDepth" type="range" min="0.15" max="1.00" step="0.01" value="0.58" />
+        </div>
+        <div class="color-control">
+          <label for="waterColor">河水顏色</label>
+          <input id="waterColor" type="color" value="#2f9f83" />
+        </div>
+        <p class="micro-note">河道中心線與位置固定。寬度、水深感和顏色只改視覺表現。</p>
       </section>
 
       <section>
         <h2>顯示</h2>
         <label class="switch"><input id="terrainToggle" type="checkbox" checked /><span>地形材質</span></label>
         <label class="switch"><input id="wireToggle" type="checkbox" /><span>地形網格</span></label>
-        <label class="switch"><input id="hydrologyToggle" type="checkbox" checked /><span>OSM 水系</span></label>
+        <label class="switch"><input id="hydrologyToggle" type="checkbox" checked /><span>OSM 河道</span></label>
         <label class="switch"><input id="labelsToggle" type="checkbox" checked /><span>四地標</span></label>
       </section>
 
@@ -70,7 +108,7 @@
           <div><dt>Xiang system ways</dt><dd id="xiangCount">--</dd></div>
           <div><dt>Other named rivers</dt><dd id="otherCount">--</dd></div>
         </dl>
-        <p class="notice">本版先放置 OSM 河流與有名稱溪流。漓江、湘江按名稱高亮，所有線段按地形網格加密取樣並貼地顯示。</p>
+        <p class="notice">OSM 中心線已轉成貼地河道帶。漓江、湘江按名稱高亮，後續繼續整理河網拓撲與真實河寬資料。</p>
         <p class="osm">Water data © OpenStreetMap contributors</p>
       </section>
 
@@ -81,6 +119,6 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
-  <script type="module" src="./app.js?v=0712"></script>
+  <script type="module" src="./app.js?v=0720"></script>
 </body>
 </html>

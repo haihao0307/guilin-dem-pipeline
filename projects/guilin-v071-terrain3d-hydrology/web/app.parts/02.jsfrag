@@ -1,0 +1,158 @@
+ metalness: 0.0,
+    side: THREE.DoubleSide,
+  });
+  material.onBeforeCompile = shader => {
+    Object.assign(shader.uniforms, terrainUniforms);
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      `#include <map_fragment>
+       float xgLuma = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+       diffuseColor.rgb = mix(vec3(xgLuma), diffuseColor.rgb, uXgSaturation);
+       diffuseColor.rgb = clamp((diffuseColor.rgb - vec3(0.5)) * uXgContrast + vec3(0.5), 0.0, 1.0);`
+    );
+    material.userData.shader = shader;
+  };
+  material.customProgramCacheKey = () => 'xiaogui-terrain-rich-v072';
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+function updateTerrainAppearance() {
+  const richness = terrainStyle.colorRichness;
+  const detail = terrainStyle.karstDetail;
+  if (terrainUniforms) {
+    terrainUniforms.uXgSaturation.value = richness;
+    terrainUniforms.uXgContrast.value = 0.98 + (richness - 0.75) * 0.17;
+  }
+  if (terrain) {
+    terrain.material.bumpScale = 12 + detail * 164;
+    terrain.material.roughness = 0.90 - detail * 0.20;
+  }
+  if (renderer) renderer.toneMappingExposure = 0.99 + richness * 0.085;
+  if ($('colorRichnessValue')) $('colorRichnessValue').textContent = `${richness.toFixed(2)}×`;
+  if ($('karstDetailValue')) $('karstDetailValue').textContent = `${Math.round(detail * 100)}%`;
+  publishStyleContracts();
+}
+
+function insideWorld(world) {
+  return Math.abs(world.x) <= worldWidth / 2 && Math.abs(world.z) <= worldDepth / 2;
+}
+
+function drapePair(startLonLat, endLonLat) {
+  const [startE, startN] = utmFromLonLat(startLonLat[0], startLonLat[1]);
+  const [endE, endN] = utmFromLonLat(endLonLat[0], endLonLat[1]);
+  const start = worldFromUtm(startE, startN);
+  const end = worldFromUtm(endE, endN);
+  const distance = Math.hypot(end.x - start.x, end.z - start.z);
+  const steps = Math.max(1, Math.ceil(distance / HYDROLOGY_SAMPLE_STEP_M));
+  const points = [];
+
+  for (let index = 0; index <= steps; index += 1) {
+    const t = index / steps;
+    const x = THREE.MathUtils.lerp(start.x, end.x, t);
+    const z = THREE.MathUtils.lerp(start.z, end.z, t);
+    const world = new THREE.Vector3(x, 0, z);
+    if (!insideWorld(world)) {
+      points.push(null);
+      continue;
+    }
+    const sampled = terrainSample(x, z);
+    if (!sampled.valid) {
+      points.push(null);
+      continue;
+    }
+    world.y = sampled.height;
+    points.push(world);
+  }
+
+  return points;
+}
+
+function featureRuns(feature) {
+  if (String(feature.properties.tunnel || '').toLowerCase() === 'yes') return [];
+  const coordinates = feature.geometry.coordinates;
+  const runs = [];
+  let run = [];
+
+  function flush() {
+    if (run.length >= 2) runs.push(run);
+    run = [];
+  }
+
+  for (let segmentIndex = 0; segmentIndex < coordinates.length - 1; segmentIndex += 1) {
+    const points = drapePair(coordinates[segmentIndex], coordinates[segmentIndex + 1]);
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+      if (segmentIndex > 0 && pointIndex === 0) continue;
+      const point = points[pointIndex];
+      if (!point) {
+        flush();
+        continue;
+      }
+      const previous = run[run.length - 1];
+      if (previous && previous.distanceToSquared(point) < 0.01) continue;
+      run.push(point);
+    }
+  }
+  flush();
+  return runs;
+}
+
+function clampWidth(value) {
+  return THREE.MathUtils.clamp(value, 2, 600);
+}
+
+function baseWidthForFeature(feature, system) {
+  const tagged = Number(feature.properties.width_m);
+  const hasTagged = Number.isFinite(tagged) && tagged > 0;
+  const waterway = feature.properties.waterway;
+
+  if (system === 'li') {
+    const fallback = waterway === 'river' ? 165 : 72;
+    return clampWidth(Math.max(hasTagged ? tagged : 0, fallback));
+  }
+  if (system === 'xiang') {
+    const fallback = waterway === 'river' ? 150 : 65;
+    return clampWidth(Math.max(hasTagged ? tagged : 0, fallback));
+  }
+  if (hasTagged) return clampWidth(tagged);
+  if (waterway === 'river') return 42;
+  if (waterway === 'canal') return 16;
+  return 7;
+}
+
+function buildHydrologyPolylines(data) {
+  const systems = { li: [], xiang: [], other: [] };
+  hydrologyDebug.sampled_center_points = 0;
+
+  for (const feature of data.features) {
+    const system = ['li', 'xiang'].includes(feature.properties.system) ? feature.properties.system : 'other';
+    const width = baseWidthForFeature(feature, system);
+    for (const points of featureRuns(feature)) {
+      hydrologyDebug.sampled_center_points += points.length;
+      systems[system].push({ points, baseWidth: width, properties: feature.properties });
+    }
+  }
+  return systems;
+}
+
+function buildRibbonGeometry(runs) {
+  const positions = [];
+  const offsets = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+
+  for (const run of runs) {
+    const points = run.points;
+    if (points.length < 2) continue;
+    const baseIndex = positions.length / 3;
+    let distance = 0;
+
+    for (let index = 0; index < points.length; index += 1) {
+      const point = points[index];
+      const before = points[Math.max(0, index - 1)];
+      const after = points[Math.min(points.length - 1, index + 1)];
+      let tx = a

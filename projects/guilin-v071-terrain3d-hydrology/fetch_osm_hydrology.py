@@ -17,6 +17,7 @@ ENDPOINTS = [
 
 LI_RE = re.compile(r"(?:漓江|漓水|桂江|Li River|Li Jiang|Lijiang)", re.I)
 XIANG_RE = re.compile(r"(?:湘江|湘水|Xiang River|Xiang Jiang|Xiangjiang)", re.I)
+NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 
 
 def query_overpass(query: str) -> dict:
@@ -29,7 +30,7 @@ def query_overpass(query: str) -> dict:
                     endpoint,
                     data=payload,
                     headers={
-                        "User-Agent": "GuilinDEM/0.7.1 (https://github.com/haihao0307/guilin-dem-pipeline)",
+                        "User-Agent": "GuilinDEM/0.7.2 (https://github.com/haihao0307/guilin-dem-pipeline)",
                         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
                     },
                 )
@@ -51,6 +52,20 @@ def classify(tags: dict) -> str:
     if XIANG_RE.search(names):
         return "xiang"
     return "other"
+
+
+def numeric_width(tags: dict) -> float | None:
+    for key in ("width", "est_width"):
+        raw = str(tags.get(key, "")).strip()
+        if not raw:
+            continue
+        match = NUMBER_RE.search(raw)
+        if not match:
+            continue
+        value = float(match.group(0))
+        if 0.5 <= value <= 2000:
+            return value
+    return None
 
 
 def main() -> int:
@@ -80,13 +95,16 @@ out tags geom;
     payload = query_overpass(query)
     features: list[dict] = []
     counts = {"li": 0, "xiang": 0, "other": 0}
+    waterway_counts: dict[str, int] = {}
     for element in payload.get("elements", []):
         geometry = element.get("geometry") or []
         if len(geometry) < 2:
             continue
         tags = element.get("tags") or {}
         system = classify(tags)
+        waterway = tags.get("waterway", "")
         counts[system] += 1
+        waterway_counts[waterway] = waterway_counts.get(waterway, 0) + 1
         features.append(
             {
                 "type": "Feature",
@@ -94,10 +112,15 @@ out tags geom;
                     "osm_type": element.get("type"),
                     "osm_id": element.get("id"),
                     "system": system,
-                    "waterway": tags.get("waterway", ""),
+                    "waterway": waterway,
                     "name": tags.get("name", ""),
                     "name_zh": tags.get("name:zh", ""),
                     "name_en": tags.get("name:en", ""),
+                    "width_m": numeric_width(tags),
+                    "intermittent": tags.get("intermittent", ""),
+                    "tunnel": tags.get("tunnel", ""),
+                    "bridge": tags.get("bridge", ""),
+                    "layer": tags.get("layer", ""),
                 },
                 "geometry": {
                     "type": "LineString",
@@ -108,16 +131,17 @@ out tags geom;
 
     result = {
         "type": "FeatureCollection",
-        "name": "Guilin OSM hydrology first pass",
+        "name": "Guilin OSM hydrology first pass with width metadata",
         "generated_from": "OpenStreetMap Overpass API",
         "osm_attribution": "© OpenStreetMap contributors",
         "query_bbox_wgs84": [w, s, e, n],
         "feature_counts": counts,
+        "waterway_counts": waterway_counts,
         "features": features,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps({"feature_counts": counts, "total": len(features)}, ensure_ascii=False))
+    print(json.dumps({"feature_counts": counts, "waterway_counts": waterway_counts, "total": len(features)}, ensure_ascii=False))
     if counts["li"] == 0 or counts["xiang"] == 0:
         print("WARNING: one named main river system has zero exact-name OSM ways; generic OSM rivers remain available.")
     return 0

@@ -1,0 +1,159 @@
+tent = SEASON_PRESETS[waterState.season]?.label || '自訂';
+  publishStyleContracts();
+}
+
+function applySeason(season) {
+  const preset = SEASON_PRESETS[season];
+  if (!preset) return;
+  waterState.season = season;
+  waterState.widthScale = preset.widthScale;
+  waterState.depth = preset.depth;
+  waterState.color = preset.color;
+
+  $('waterWidth').value = String(preset.widthScale);
+  $('waterDepth').value = String(preset.depth);
+  $('waterColor').value = preset.color;
+  document.querySelectorAll('[data-season]').forEach(button => {
+    button.classList.toggle('active', button.dataset.season === season);
+  });
+  updateWaterAppearance();
+}
+
+function addLandmarks() {
+  for (const place of LANDMARKS) {
+    const [easting, northing] = utmFromLonLat(place.lon, place.lat);
+    const world = worldFromUtm(easting, northing);
+    const sampled = terrainSample(world.x, world.z);
+    world.y = sampled.height + 4;
+
+    const element = document.createElement('div');
+    element.className = 'landmark-label';
+    element.dataset.placeId = place.id;
+    element.innerHTML = `<strong>${place.name}</strong><small>E ${place.lon.toFixed(6)}° · N ${place.lat.toFixed(6)}°</small>`;
+    labelLayer.appendChild(element);
+    labelObjects.push({
+      place,
+      world,
+      element,
+      easting,
+      northing,
+      terrainHeight: sampled.height,
+      rasterRow: sampled.row,
+      rasterCol: sampled.col,
+    });
+  }
+}
+
+function updateLabels() {
+  const width = viewer.clientWidth;
+  const height = viewer.clientHeight;
+  for (const item of labelObjects) {
+    const projected = item.world.clone().project(camera);
+    const visible = projected.z > -1 && projected.z < 1;
+    item.element.style.display = visible ? 'block' : 'none';
+    if (!visible) continue;
+    item.element.style.left = `${(projected.x * 0.5 + 0.5) * width}px`;
+    item.element.style.top = `${(-projected.y * 0.5 + 0.5) * height}px`;
+  }
+}
+
+function flyTo(targetId) {
+  let target = new THREE.Vector3(0, (minElevation + maxElevation) * 0.25, 0);
+  let distance = Math.max(worldWidth, worldDepth) * 0.82;
+  if (targetId !== 'overview') {
+    const item = labelObjects.find(entry => entry.place.id === targetId);
+    if (!item) return;
+    target = item.world.clone();
+    distance = 24000;
+  }
+  const direction = new THREE.Vector3(0.55, 0.65, 0.75).normalize();
+  animationTarget = {
+    startTime: performance.now(),
+    duration: 950,
+    fromPosition: camera.position.clone(),
+    toPosition: target.clone().add(direction.multiplyScalar(distance)),
+    fromTarget: controls.target.clone(),
+    toTarget: target,
+  };
+}
+
+function animateFlight(now) {
+  if (!animationTarget) return;
+  const t = Math.min(1, (now - animationTarget.startTime) / animationTarget.duration);
+  const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  camera.position.lerpVectors(animationTarget.fromPosition, animationTarget.toPosition, eased);
+  controls.target.lerpVectors(animationTarget.fromTarget, animationTarget.toTarget, eased);
+  if (t >= 1) animationTarget = null;
+}
+
+function resize() {
+  const width = viewer.clientWidth;
+  const height = viewer.clientHeight;
+  renderer.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+}
+
+function publishCoordinateContract() {
+  window.__XIAOGUI_COORDINATE_CONTRACT = {
+    version: 'v2',
+    world_axes: {
+      x: 'east-positive',
+      z: 'south-positive',
+      north: 'negative-z',
+    },
+    source_raster: {
+      row_0: 'north',
+      row_last: 'south',
+    },
+    hydrology: hydrologyDebug,
+    landmarks: Object.fromEntries(labelObjects.map(item => [
+      item.place.id,
+      {
+        lon: item.place.lon,
+        lat: item.place.lat,
+        easting: item.easting,
+        northing: item.northing,
+        x: item.world.x,
+        y: item.world.y,
+        z: item.world.z,
+        terrain_height: item.terrainHeight,
+        raster_row: item.rasterRow,
+        raster_col: item.rasterCol,
+      },
+    ])),
+  };
+}
+
+function publishStyleContracts() {
+  window.__XIAOGUI_TERRAIN_STYLE = {
+    version: 'v0.7.2',
+    color_richness: terrainStyle.colorRichness,
+    karst_detail: terrainStyle.karstDetail,
+    bump_scale: terrain ? terrain.material.bumpScale : null,
+    texture_style: manifest?.terrain_style?.style_version || null,
+    source_elevation_changed: false,
+  };
+  window.__XIAOGUI_WATER_STATE = {
+    version: 'v0.7.2',
+    season: waterState.season,
+    season_label: SEASON_PRESETS[waterState.season]?.label || '自訂',
+    width_scale: waterState.widthScale,
+    depth: waterState.depth,
+    color: waterState.color,
+    base_surface_lift_m: WATER_SURFACE_BASE_LIFT_M,
+    displayed_surface_lift_m: hydrologyDebug.drape_offset_m,
+    ribbon_vertices: hydrologyDebug.ribbon_vertices,
+    ribbon_triangles: hydrologyDebug.ribbon_triangles,
+    mesh_count: hydrologyDebug.mesh_count,
+  };
+  publishCoordinateContract();
+}
+
+function bindControls() {
+  $('terrainToggle').addEventListener('change', event => {
+    terrain.material.map = event.target.checked ? terrainTexture : null;
+    terrain.material.needsUpdate = true;
+  });
+  $('wireToggle').addEventListener('change', event => { terrain.material.wireframe = event.target.checked; });
+  $('hydrolog

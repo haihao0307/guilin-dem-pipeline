@@ -1,0 +1,146 @@
+fter.x - before.x;
+      let tz = after.z - before.z;
+      const length = Math.hypot(tx, tz) || 1;
+      tx /= length;
+      tz /= length;
+      const nx = -tz;
+      const nz = tx;
+      const halfWidth = run.baseWidth * 0.5;
+
+      if (index > 0) distance += point.distanceTo(points[index - 1]);
+      for (const side of [1, -1]) {
+        positions.push(point.x, point.y, point.z);
+        offsets.push(nx * halfWidth * side, nz * halfWidth * side);
+        normals.push(0, 1, 0);
+        uvs.push(distance / 2000, side > 0 ? 0 : 1);
+      }
+    }
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const a = baseIndex + index * 2;
+      const b = a + 1;
+      const c = a + 2;
+      const d = a + 3;
+      indices.push(a, b, c, b, d, c);
+    }
+  }
+
+  if (!indices.length) return null;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('waterOffset', new THREE.Float32BufferAttribute(offsets, 2));
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeBoundingSphere();
+  hydrologyDebug.ribbon_vertices += positions.length / 3;
+  hydrologyDebug.ribbon_triangles += indices.length / 3;
+  return geometry;
+}
+
+function createWaterMaterial(system) {
+  const widthUniforms = {
+    uWaterWidthScale: { value: waterState.widthScale },
+    uWaterLift: { value: WATER_SURFACE_BASE_LIFT_M },
+  };
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0x2f9f83,
+    emissive: 0x0b2d27,
+    emissiveIntensity: 0.24,
+    transparent: true,
+    opacity: system === 'other' ? 0.50 : 0.82,
+    roughness: 0.36,
+    metalness: 0.0,
+    clearcoat: 0.62,
+    clearcoatRoughness: 0.28,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
+  });
+  material.onBeforeCompile = shader => {
+    Object.assign(shader.uniforms, widthUniforms);
+    shader.vertexShader = `
+      attribute vec2 waterOffset;
+      uniform float uWaterWidthScale;
+      uniform float uWaterLift;
+    ${shader.vertexShader}`;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `vec3 transformed = vec3(position);
+       transformed.x += waterOffset.x * uWaterWidthScale;
+       transformed.z += waterOffset.y * uWaterWidthScale;
+       transformed.y += uWaterLift;`
+    );
+    material.userData.shader = shader;
+  };
+  material.userData.waterUniforms = widthUniforms;
+  material.userData.system = system;
+  material.customProgramCacheKey = () => `xiaogui-water-ribbon-v072-${system}`;
+  waterMaterials.set(system, material);
+  return material;
+}
+
+function addHydrology(data) {
+  const group = new THREE.Group();
+  hydrologyDebug.ribbon_vertices = 0;
+  hydrologyDebug.ribbon_triangles = 0;
+  hydrologyDebug.mesh_count = 0;
+  const polylines = buildHydrologyPolylines(data);
+
+  for (const system of ['other', 'li', 'xiang']) {
+    const geometry = buildRibbonGeometry(polylines[system]);
+    if (!geometry) continue;
+    const mesh = new THREE.Mesh(geometry, createWaterMaterial(system));
+    mesh.renderOrder = system === 'other' ? 3 : 4;
+    mesh.frustumCulled = false;
+    mesh.userData.system = system;
+    group.add(mesh);
+    hydrologyDebug.mesh_count += 1;
+  }
+
+  scene.add(group);
+  $('liCount').textContent = String(data.feature_counts.li);
+  $('xiangCount').textContent = String(data.feature_counts.xiang);
+  $('otherCount').textContent = String(data.feature_counts.other);
+  updateWaterAppearance();
+  return group;
+}
+
+function deriveWaterColor(system) {
+  const color = new THREE.Color(waterState.color);
+  const hsl = {};
+  color.getHSL(hsl);
+  if (system === 'xiang') {
+    color.setHSL((hsl.h + 0.035) % 1, Math.min(1, hsl.s * 1.04), Math.min(1, hsl.l * 1.03));
+  } else if (system === 'other') {
+    color.setHSL(hsl.h, hsl.s * 0.72, hsl.l * 0.82);
+  }
+  color.offsetHSL(0, 0.04 * waterState.depth, -0.055 * waterState.depth);
+  return color;
+}
+
+function updateWaterAppearance() {
+  const depth = waterState.depth;
+  for (const [system, material] of waterMaterials.entries()) {
+    const color = deriveWaterColor(system);
+    material.color.copy(color);
+    material.emissive.copy(color).multiplyScalar(system === 'other' ? 0.10 : 0.17);
+    material.emissiveIntensity = 0.18 + depth * 0.20;
+    material.opacity = system === 'other'
+      ? 0.28 + depth * 0.30
+      : 0.58 + depth * 0.34;
+    material.roughness = 0.55 - depth * 0.28;
+    material.clearcoat = 0.34 + depth * 0.48;
+    material.clearcoatRoughness = 0.38 - depth * 0.19;
+    const uniforms = material.userData.waterUniforms;
+    uniforms.uWaterWidthScale.value = waterState.widthScale;
+    uniforms.uWaterLift.value = WATER_SURFACE_BASE_LIFT_M + depth * 0.38;
+  }
+
+  hydrologyDebug.drape_offset_m = WATER_SURFACE_BASE_LIFT_M + depth * 0.38;
+  if ($('waterWidthValue')) $('waterWidthValue').textContent = `${waterState.widthScale.toFixed(2)}×`;
+  if ($('waterDepthValue')) $('waterDepthValue').textContent = `${Math.round(depth * 100)}%`;
+  if ($('seasonName')) $('seasonName').textCon

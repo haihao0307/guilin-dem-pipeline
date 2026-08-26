@@ -1,4 +1,4 @@
-name: Guilin v0.7.1 three-dimensional terrain and OSM hydrology
+name: Guilin v0.7.2 karst terrain and seasonal river channels
 
 on:
   push:
@@ -50,9 +50,9 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install numpy pillow rasterio pyproj
+          python -m pip install numpy pillow rasterio pyproj scipy
 
-      - name: Rebuild raw mosaic and 3D terrain assets
+      - name: Rebuild raw mosaic and richer 3D terrain assets
         run: |
           rm -rf "${PROJECT_DIR}/derived" dist
           python "${MOSAIC_PROJECT}/build_raw_mosaic.py" \
@@ -65,10 +65,10 @@ jobs:
           python "${PROJECT_DIR}/build_terrain3d.py" \
             --mosaic "${PROJECT_DIR}/derived/raw/guilin_raw_union_12_5m.tif" \
             --output-dir dist/data \
-            --height-max-width 768 \
-            --texture-max-width 2048
+            --height-max-width 1024 \
+            --texture-max-width 4096
 
-      - name: Fetch OSM hydrology for the mosaic extent
+      - name: Fetch OSM hydrology with width metadata
         run: |
           python "${PROJECT_DIR}/fetch_osm_hydrology.py" \
             --terrain-manifest dist/data/terrain_manifest.json \
@@ -77,14 +77,14 @@ jobs:
       - name: Assemble web viewer
         run: |
           cp "${PROJECT_DIR}/web/index.html" dist/index.html
-          cp "${PROJECT_DIR}/web/app.js" dist/app.js
+          cat "${PROJECT_DIR}/web/app.parts/"*.jsfrag > dist/app.js
           cp "${PROJECT_DIR}/web/styles.css" dist/styles.css
 
       - name: Browser smoke test and visual evidence
         run: |
           npm install --no-save playwright@1.51.1
           npx playwright install --with-deps chromium
-          python -m http.server 8000 --directory dist >/tmp/guilin-v071-http.log 2>&1 &
+          python -m http.server 8000 --directory dist >/tmp/guilin-v072-http.log 2>&1 &
           server_pid=$!
           trap 'kill ${server_pid} || true' EXIT
           node "${PROJECT_DIR}/browser_smoke.mjs"
@@ -92,7 +92,7 @@ jobs:
       - name: Upload evidence artifact
         uses: actions/upload-artifact@v4
         with:
-          name: guilin-v071-terrain3d-hydrology-evidence
+          name: guilin-v072-karst-seasonal-water-evidence
           path: |
             dist/data/terrain_manifest.json
             dist/data/osm_hydrology.geojson
@@ -109,16 +109,17 @@ jobs:
           destination_dir: guilin-v071-terrain3d
           keep_files: true
           force_orphan: false
-          commit_message: "Publish Guilin v0.7.1 3D terrain from ${{ github.sha }}"
+          commit_message: "Publish Guilin v0.7.2 karst terrain and seasonal water from ${{ github.sha }}"
 
       - name: Write job summary
         run: |
           {
-            echo '## Xiaogui Guilin v0.7.1 3D terrain'
+            echo '## Xiaogui Guilin v0.7.2 karst terrain and seasonal water'
             echo
             echo '- Online: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v071-terrain3d/'
             echo '- Source: 12 new 12.5 m DEM files'
             echo '- Vertical scale: 1.00x locked'
-            echo '- Hydrology: OpenStreetMap first pass, terrain-draped'
+            echo '- Terraint : richer satellite-style color plus DEM-derived karst detail'
+            echo '- Hydrology: terrain-draped ribmon channels with adjustable width, depth appearance and seasonal color'
             echo '- Coordinates: x east-positive, z south-positive, north negative-z'
           } >> "$GITHUB_STEP_SUMMARY"

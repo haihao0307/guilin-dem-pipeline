@@ -1,0 +1,186 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const $ = id => document.getElementById(id);
+const statusNode = $('status');
+const viewer = $('viewer');
+const labelLayer = $('labelLayer');
+
+const LANDMARKS = [
+  { id: 'yangshuo', name: '陽朔縣', lon: 110.4920133, lat: 24.7815129 },
+  { id: 'yangtang', name: '秧塘機場', lon: 110.15569, lat: 25.21753 },
+  { id: 'guilin', name: '桂林城', lon: 110.2994, lat: 25.2742 },
+  { id: 'zhenbaoding', name: '真寶鼎', lon: 110.82528, lat: 26.13556 },
+];
+
+const HYDROLOGY_SAMPLE_STEP_M = 180;
+const WATER_SURFACE_BASE_LIFT_M = 0.72;
+
+const SEASON_PRESETS = {
+  winter: { label: '冬季清水', widthScale: 0.72, depth: 0.42, color: '#2d9d91' },
+  spring: { label: '春季平水', widthScale: 1.00, depth: 0.58, color: '#2f9f83' },
+  summer: { label: '夏季豐水', widthScale: 1.38, depth: 0.82, color: '#718551' },
+  autumn: { label: '秋季回落', widthScale: 0.88, depth: 0.54, color: '#2d8277' },
+};
+
+const terrainStyle = {
+  colorRichness: 1.24,
+  karstDetail: 0.74,
+};
+
+const waterState = {
+  season: 'spring',
+  widthScale: SEASON_PRESETS.spring.widthScale,
+  depth: SEASON_PRESETS.spring.depth,
+  color: SEASON_PRESETS.spring.color,
+};
+
+let manifest;
+let heightValues;
+let validMask;
+let scene;
+let camera;
+let renderer;
+let controls;
+let terrain;
+let terrainTexture;
+let terrainDetailTexture;
+let hydrologyGroup;
+let hydrologyData;
+let labelObjects = [];
+let waterMaterials = new Map();
+let worldWidth;
+let worldDepth;
+let minElevation;
+let maxElevation;
+let animationTarget = null;
+let terrainUniforms = null;
+let hydrologyDebug = {
+  sampled_center_points: 0,
+  ribbon_vertices: 0,
+  ribbon_triangles: 0,
+  mesh_count: 0,
+  drape_offset_m: WATER_SURFACE_BASE_LIFT_M,
+  sample_step_m: HYDROLOGY_SAMPLE_STEP_M,
+};
+
+function setStatus(text, ok = false) {
+  statusNode.textContent = text;
+  statusNode.classList.toggle('ok', ok);
+}
+
+function decodeHeights(buffer, meta, range) {
+  const values = new Uint16Array(buffer);
+  const expected = meta.width * meta.height;
+  if (values.length !== expected) throw new Error(`高度数据长度异常：${values.length} / ${expected}`);
+  const [minimum, maximum] = range;
+  const span = maximum - minimum;
+  const heights = new Float32Array(values.length);
+  const mask = new Uint8Array(values.length);
+  for (let index = 0; index < values.length; index += 1) {
+    const code = values[index];
+    if (code === meta.nodata_code) {
+      heights[index] = minimum;
+      mask[index] = 0;
+    } else {
+      heights[index] = minimum + (code / 65534) * span;
+      mask[index] = 1;
+    }
+  }
+  return { heights, mask };
+}
+
+function terrainSample(x, z) {
+  const width = manifest.height.width;
+  const height = manifest.height.height;
+
+  const gx = THREE.MathUtils.clamp(
+    ((x + worldWidth / 2) / worldWidth) * (width - 1),
+    0,
+    width - 1
+  );
+  const gy = THREE.MathUtils.clamp(
+    ((z + worldDepth / 2) / worldDepth) * (height - 1),
+    0,
+    height - 1
+  );
+
+  const col = Math.min(width - 2, Math.max(0, Math.floor(gx)));
+  const row = Math.min(height - 2, Math.max(0, Math.floor(gy)));
+  const fu = gx - col;
+  const fv = gy - row;
+
+  const a = row * width + col;
+  const d = a + 1;
+  const b = a + width;
+  const c = b + 1;
+
+  let indices;
+  let weights;
+  if (fu + fv <= 1) {
+    indices = [a, d, b];
+    weights = [1 - fu - fv, fu, fv];
+  } else {
+    indices = [b, c, d];
+    weights = [1 - fu, fu + fv - 1, 1 - fv];
+  }
+
+  if (indices.some(index => validMask[index] === 0)) {
+    return { valid: false, height: minElevation, row, col };
+  }
+
+  const sampledHeight = (
+    heightValues[indices[0]] * weights[0]
+    + heightValues[indices[1]] * weights[1]
+    + heightValues[indices[2]] * weights[2]
+  );
+
+  return { valid: true, height: sampledHeight, row, col };
+}
+
+function utmFromLonLat(lon, lat) {
+  return proj4('EPSG:4326', 'EPSG:32649', [lon, lat]);
+}
+
+function worldFromUtm(easting, northing) {
+  const [centerX, centerY] = manifest.center_epsg32649;
+  return new THREE.Vector3(
+    easting - centerX,
+    0,
+    centerY - northing
+  );
+}
+
+function buildTerrain(texture, detailTexture) {
+  const width = manifest.height.width;
+  const height = manifest.height.height;
+  const geometry = new THREE.PlaneGeometry(worldWidth, worldDepth, width - 1, height - 1);
+  geometry.rotateX(-Math.PI / 2);
+  const positions = geometry.attributes.position;
+  for (let row = 0; row < height; row += 1) {
+    for (let col = 0; col < width; col += 1) {
+      const index = row * width + col;
+      positions.setY(index, heightValues[index]);
+    }
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = Math.min(12, renderer.capabilities.getMaxAnisotropy());
+  detailTexture.colorSpace = THREE.NoColorSpace;
+  detailTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+  terrainUniforms = {
+    uXgSaturation: { value: terrainStyle.colorRichness },
+    uXgContrast: { value: 1.06 },
+  };
+
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    bumpMap: detailTexture,
+    bumpScale: 118,
+    transparent: true,
+    alphaTest: 0.08,
+    roughness: 0.78,
+   
