@@ -13,8 +13,9 @@ await page.waitForTimeout(2500);
 
 if (await page.locator('#viewer canvas').count() !== 1) throw new Error('WebGL canvas missing');
 if (await page.locator('.landmark-label').count() !== 4) throw new Error('Four landmark labels missing');
+const landmarkTexts = (await page.locator('.landmark-label strong').allTextContents()).map(text => text.trim());
 for (const name of ['陽朔縣', '秧塘機場', '桂林城', '真寶鼎']) {
-  if (await page.getByText(name, { exact: true }).count() !== 1) throw new Error(`Missing landmark: ${name}`);
+  if (!landmarkTexts.includes(name)) throw new Error(`Missing landmark DOM text: ${name}; found=${landmarkTexts.join('|')}`);
 }
 if ((await page.locator('#source').textContent()) === '--') throw new Error('Terrain manifest not displayed');
 
@@ -23,4 +24,4 @@ await page.screenshot({ path: 'dist/evidence/guilin-v071-terrain3d-hydrology.png
 await fs.writeFile('dist/evidence/browser-console.json', JSON.stringify({ errors }, null, 2));
 await browser.close();
 if (errors.length) throw new Error(`Browser console errors: ${errors.join(' | ')}`);
-console.log('OK: 3D terrain viewer passed smoke test with zero console errors.');
+console.log('OK: 3D terrain viewer passed smoke test with four landmarks and zero console errors.');
