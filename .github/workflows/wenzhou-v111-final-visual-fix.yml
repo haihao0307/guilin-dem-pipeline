@@ -1,0 +1,135 @@
+name: Wenzhou v1.1.1 final coastline ocean mobile fix
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v111-final-visual-fix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v111-final-visual-fix
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout latest Draft branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Static preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/rebuild_wenzhou_v111_coastline.py
+          python3 -m py_compile tools/patch_wenzhou_v111_visual_mobile.py
+          test -f web/wenzhou-v111/assets/hires/manifest.json
+          test -f web/wenzhou-v111/assets/hires/coastline_truth_aoi_draped.json
+          test -f projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson
+          echo '5cfeb0465df59590c78c6b163f60ae8764731e1ea65e3adcbc5052813b299181  projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson' | sha256sum --check --strict
+
+      - name: Remove coastline closure chords and patch runtime defaults
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/rebuild_wenzhou_v111_coastline.py | tee /tmp/wenzhou-v111-coastline-filter.log
+          python3 tools/patch_wenzhou_v111_visual_mobile.py
+          node --check web/wenzhou-v111/runtime.js
+
+      - name: Validate visible domain and runtime contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import math
+          from pathlib import Path
+
+          root = Path('.')
+          manifest_path = root / 'web/wenzhou-v111/assets/hires/manifest.json'
+          coast_path = root / 'web/wenzhou-v111/assets/hires/coastline_truth_aoi_draped.json'
+          report_path = root / 'projects/wenzhou/reports/WENZHOU_V111_COASTLINE_CHORD_FILTER.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          coast = json.loads(coast_path.read_text(encoding='utf-8'))
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          assert report['passed'] is True
+          assert report['maximumRetainedSourceSegmentMeters'] <= 2500.01
+          assert coast['longDirectSourceSegmentsRemoved'] is True
+          assert coast['truthAoiClipped'] is True
+          assert coast['maximumSampleSpacingMeters'] == 25.0
+          assert manifest['hydrology']['coastlineDroppedLongDirectSegmentCount'] == report['droppedLongDirectSegmentCount']
+          half_x = manifest['terrainOverview']['widthMeters'] / 2 + .1
+          half_z = manifest['terrainOverview']['heightMeters'] / 2 + .1
+          longest_draw_segment = 0.0
+          for part in coast['parts']:
+              coords = part['coords']
+              for point in coords:
+                  assert -half_x <= point[0] <= half_x
+                  assert -half_z <= point[2] <= half_z
+              for index in range(1, len(coords)):
+                  distance = math.hypot(coords[index][0]-coords[index-1][0], coords[index][2]-coords[index-1][2])
+                  longest_draw_segment = max(longest_draw_segment, distance)
+          assert longest_draw_segment <= 25.02, longest_draw_segment
+          asset = next(item for item in manifest['assets'] if item['path'].endswith('coastline_truth_aoi_draped.json'))
+          assert asset['bytes'] == coast_path.stat().st_size
+          assert asset['sha256'] == hashlib.sha256(coast_path.read_bytes()).hexdigest()
+
+          runtime = (root/'web/wenzhou-v111/runtime.js').read_text(encoding='utf-8')
+          index = (root/'web/wenzhou-v111/index.html').read_text(encoding='utf-8')
+          assert 'coast: false' in runtime
+          assert 'oceanTerrain' in runtime
+          assert 'mobile?385:769' in runtime
+          assert "ui.controller.classList.remove('open')" in runtime
+          assert '<input id="showCoast" type="checkbox">' in index
+          assert 'OSM 海岸线诊断' in index
+          print(json.dumps({
+              'passed': True,
+              'coastlineParts': coast['partCount'],
+              'coastlineSamples': coast['sampleCount'],
+              'droppedLongDirectSegments': report['droppedLongDirectSegmentCount'],
+              'maximumRetainedSourceSegmentMeters': report['maximumRetainedSourceSegmentMeters'],
+              'maximumRenderedSegmentMeters': longest_draw_segment,
+              'desktopOceanGrid': 769,
+              'mobileOceanGrid': 385,
+              'mobilePanelClosed': True,
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit and push final visual corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            web/wenzhou-v111/index.html \
+            web/wenzhou-v111/runtime.js \
+            web/wenzhou-v111/assets/hires/coastline_truth_aoi_draped.json \
+            web/wenzhou-v111/assets/hires/manifest.json \
+            projects/wenzhou/reports/WENZHOU_V111_COASTLINE_CHORD_FILTER.json
+          git commit -m 'Remove Wenzhou coastline chords and refine ocean/mobile runtime'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+
+      - name: Upload visual-fix evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v111-final-visual-fix
+          path: |
+            projects/wenzhou/reports/WENZHOU_V111_COASTLINE_CHORD_FILTER.json
+            web/wenzhou-v111/assets/hires/manifest.json
+            /tmp/wenzhou-v111-coastline-filter.log
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
