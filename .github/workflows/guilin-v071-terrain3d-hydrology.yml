@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: guilin-v071-terrain3d-hydrology
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-publish:
@@ -119,5 +119,6 @@ jobs:
             echo '- Online: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v071-terrain3d/'
             echo '- Source: 12 new 12.5 m DEM files'
             echo '- Vertical scale: 1.00x locked'
-            echo '- Hydrology: OpenStreetMap first pass'
+            echo '- Hydrology: OpenStreetMap first pass, terrain-draped'
+            echo '- Coordinates: x east-positive, z south-positive, north negative-z'
           } >> "$GITHUB_STEP_SUMMARY"
