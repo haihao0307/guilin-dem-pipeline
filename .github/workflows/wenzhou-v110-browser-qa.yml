@@ -1,0 +1,170 @@
+name: Wenzhou v1.1 real 3D browser QA
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v110-browser-qa.yml
+      - web/wenzhou-v110/index.html
+      - web/wenzhou-v110/style.css
+      - web/wenzhou-v110/runtime.js
+      - web/wenzhou-v110/assets/bootstrap/**
+      - tests/wenzhou_v110_browser.mjs
+      - tools/serve_wenzhou_v110.py
+      - START_WENZHOU_V110_3D.cmd
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v110-browser-qa
+  cancel-in-progress: false
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact runtime branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Static runtime checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/wenzhou-v110/runtime.js
+          node --check tests/wenzhou_v110_browser.mjs
+          python3 -m py_compile tools/serve_wenzhou_v110.py
+          python3 -m json.tool web/wenzhou-v110/assets/bootstrap/manifest.json >/dev/null
+          test "$(stat -c '%s' web/wenzhou-v110/assets/bootstrap/terrain_height_513_u16.bin)" = '526338'
+          test "$(stat -c '%s' web/wenzhou-v110/assets/bootstrap/terrain_marine_513_u8.bin)" = '263169'
+          test "$(stat -c '%s' web/wenzhou-v110/assets/bootstrap/bathymetry_height_257_i16.bin)" = '132098'
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start no-store review server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 18991 --bind 127.0.0.1 >/tmp/wenzhou-v110-http.log 2>&1 &
+          echo $! >/tmp/wenzhou-v110-http.pid
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:18991/web/wenzhou-v110/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/wenzhou-v110-http.log
+          exit 1
+
+      - name: Run desktop and mobile WebGL browser QA
+        shell: bash
+        env:
+          WENZHOU_V110_URL: http://127.0.0.1:18991/web/wenzhou-v110/
+        run: |
+          set -euo pipefail
+          node tests/wenzhou_v110_browser.mjs | tee /tmp/wenzhou-v110-browser.log
+
+      - name: Build complete Windows local package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE
+          mkdir -p /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE/tools
+          cp -a web /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE/
+          cp START_WENZHOU_V110_3D.cmd /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE/
+          cp tools/serve_wenzhou_v110.py /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE/tools/
+          cat > /tmp/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE/README_CN.txt <<'TXT'
+          温州真实三维地图 V1.1
+
+          解压整个包后，双击 START_WENZHOU_V110_3D.cmd。
+          启动窗口保持打开，浏览器会自动进入温州三维地图。
+
+          左键拖动旋转，滚轮缩放，右键或 Shift 拖动平移。
+          顶部可切换全域、温州城、仙溪镇、海门城、雁荡山、瓯江口、乐清湾和坎门。
+          控制台可切换卫星色彩、真实卫星、阴影、灰度、海底、海面、OSM 水系和海岸线。
+
+          权威陆地 DEM：11866 × 11866，12.5 m，EPSG:32651。
+          SHA-256：8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e。
+          离线卫星色彩属于 satellite-color material，不宣称原始卫星照片。
+          河口连通状态仍为 pending，FES2022b 权威模型仍为 blocked。
+          TXT
+          rm -f WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE.zip
+          (cd /tmp && zip -qr "$GITHUB_WORKSPACE/WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE.zip" WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE)
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          package = Path('WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE.zip')
+          digest = hashlib.sha256(package.read_bytes()).hexdigest()
+          payload = {
+              'schema': 'wenzhou_v110_delivery@1.0.0',
+              'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'package': package.name,
+              'bytes': package.stat().st_size,
+              'sha256': digest,
+              'branch': 'project/wenzhou-v110-3d-satellite-osm-water',
+              'truthDemSha256': '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e',
+              'publicationBlocked': True,
+          }
+          Path('projects/wenzhou/reports/WENZHOU_V110_DELIVERY.json').write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(payload, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit verified browser evidence and package
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/evidence/v110 \
+            projects/wenzhou/reports/WENZHOU_V110_BROWSER_QA.json \
+            projects/wenzhou/reports/WENZHOU_V110_DELIVERY.json \
+            WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE.zip
+          if git diff --cached --quiet; then
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m 'Add verified Wenzhou v1.1 3D browser evidence and package [skip v110 browser]'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload browser QA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v110-real-3d-browser-qa
+          path: |
+            projects/wenzhou/evidence/v110/**
+            projects/wenzhou/reports/WENZHOU_V110_BROWSER_QA.json
+            projects/wenzhou/reports/WENZHOU_V110_DELIVERY.json
+            WENZHOU_V110_3D_RUNTIME_LOCAL_PACKAGE.zip
+            /tmp/wenzhou-v110-browser.log
+            /tmp/wenzhou-v110-http.log
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
