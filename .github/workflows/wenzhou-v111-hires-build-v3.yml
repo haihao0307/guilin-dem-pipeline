@@ -1,0 +1,143 @@
+name: Wenzhou v1.1.1 high-resolution truthful assets v3
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v111-hires-build-v3.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v111-hires-build-v3
+  cancel-in-progress: false
+
+jobs:
+  build-hires:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: true
+
+      - name: Pull and verify truth inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git lfs install --local
+          git lfs pull --include='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif,projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif,projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif'
+          echo '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e  projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif' | sha256sum --check --strict
+          echo '591e92eef61699088a87e32bfd83417498f89cfe3a6a84f4ce6a2e2ac3b689fc  projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif' | sha256sum --check --strict
+          echo '5cfeb0465df59590c78c6b163f60ae8764731e1ea65e3adcbc5052813b299181  projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson' | sha256sum --check --strict
+          echo '585220c369ed8ec6b588f1913489870c585cc98ddd7c5357beaff9ddaae7a9d9  projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson' | sha256sum --check --strict
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install builder dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check 'numpy>=2.0,<3' 'rasterio>=1.4,<2' 'Pillow>=11,<12'
+
+      - name: Correct patcher typo and build lossless candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/build_wenzhou_v111_runtime.py')
+          text = path.read_text(encoding='utf-8')
+          bad = 'text = replace_required(text, "f*.8),1.0);}`, "f*.16),1.0);}`")'
+          good = 'text = replace_required(text, "f*.8),1.0);}", "f*.16),1.0);}")'
+          if bad not in text:
+              raise SystemExit('expected patcher typo not found')
+          path.write_text(text.replace(bad, good, 1), encoding='utf-8')
+          PY
+          python -m py_compile tools/build_wenzhou_v111_runtime.py
+          python -m py_compile projects/wenzhou/web/v111/scripts/build_v111_hires_assets.py
+          rm -rf web/wenzhou-v111 projects/wenzhou/reports/WENZHOU_V111_HIRES_ASSET_BUILD.json
+          python tools/build_wenzhou_v111_runtime.py
+          python projects/wenzhou/web/v111/scripts/build_v111_hires_assets.py | tee /tmp/wenzhou-v111-hires-build.log
+
+      - name: Validate precision, clipping, draping and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/wenzhou-v111/runtime.js
+          python - <<'PY'
+          import hashlib, json, math
+          from pathlib import Path
+          root = Path('.')
+          manifest = json.loads((root/'web/wenzhou-v111/assets/hires/manifest.json').read_text(encoding='utf-8'))
+          report = json.loads((root/'projects/wenzhou/reports/WENZHOU_V111_HIRES_ASSET_BUILD.json').read_text(encoding='utf-8'))
+          assert report['passed'] is True
+          assert manifest['truth']['sha256'] == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
+          assert manifest['terrainOverview']['grid'] == [1025,1025]
+          assert manifest['terrainOverview']['triangleCount'] == 2097152
+          assert manifest['terrainOverview']['spacingMeters'][0] < 145
+          assert manifest['offlineSatelliteColor']['size'] == [4096,4096]
+          assert manifest['offlineSatelliteColor']['losslessPng'] is True
+          assert manifest['bathymetryOverview']['grid'] == [1025,1025]
+          assert manifest['bathymetryOverview']['landCellsEncodedAsNoData'] is True
+          assert manifest['hydrology']['truthAoiClipped'] is True
+          assert manifest['hydrology']['sourceDemDraped'] is True
+          assert manifest['hydrology']['riverSampleSpacingMaximumMeters'] <= 25.01
+          assert set(manifest['detailTiles']) == {'wenzhou','xianxi','haimen','yandang','oujiang','yueqing','kanmen'}
+          assert all(tile['sourceSpacingMeters'] == 12.5 for tile in manifest['detailTiles'].values())
+          half = manifest['terrainOverview']['widthMeters']/2 + .1
+          for key in ('coastlineAsset','riverAsset'):
+              data = json.loads((root/'web/wenzhou-v111/assets/hires'/manifest['hydrology'][key]).read_text(encoding='utf-8'))
+              for part in data['parts']:
+                  for point in part['coords']:
+                      assert len(point)==3 and all(math.isfinite(float(v)) for v in point)
+                      assert -half <= point[0] <= half and -half <= point[2] <= half
+          for item in manifest['assets']:
+              path = root/item['path']
+              assert path.is_file()
+              assert path.stat().st_size == item['bytes']
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
+          print(json.dumps({
+              'passed': True,
+              'terrainGrid': manifest['terrainOverview']['grid'],
+              'terrainSpacingMeters': manifest['terrainOverview']['spacingMeters'],
+              'bathymetryGrid': manifest['bathymetryOverview']['grid'],
+              'riverParts': manifest['hydrology']['riverPartCount'],
+              'riverSamples': manifest['hydrology']['riverSampleCount'],
+              'maximumRiverSampleSpacingMeters': manifest['hydrology']['riverSampleSpacingMaximumMeters'],
+              'coastlineParts': manifest['hydrology']['coastlinePartCount'],
+              'detailTiles': list(manifest['detailTiles']),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit and push generated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -- tools/build_wenzhou_v111_runtime.py
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          git add -- web/wenzhou-v111 projects/wenzhou/reports/WENZHOU_V111_HIRES_ASSET_BUILD.json
+          git commit -m 'Build Wenzhou v1.1.1 lossless high-resolution 3D candidate [skip v111 hires]'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+
+      - name: Upload build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v111-hires-build-v3
+          path: |
+            projects/wenzhou/reports/WENZHOU_V111_HIRES_ASSET_BUILD.json
+            web/wenzhou-v111/assets/hires/manifest.json
+            /tmp/wenzhou-v111-hires-build.log
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
