@@ -1,12 +1,22 @@
 {
-  "schema": "dem_procedural_landscape_branch_registry@1.0.0",
+  "schema": "dem_procedural_landscape_branch_registry@2.0.0",
   "skill": {
     "id": "dem-procedural-landscape",
     "nameZh": "程序化地貌生产线",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "repository": "haihao0307/guilin-dem-pipeline",
     "branch": "skill/dem-procedural-landscape-v010",
-    "status": "draft-contract"
+    "draftPr": 51,
+    "status": "expanded-draft-contract",
+    "controllerAlias": "小王"
+  },
+  "governance": {
+    "doctrinePath": "skills/dem-procedural-landscape/PRODUCTION_DOCTRINE.md",
+    "userVisualApprovalRequired": true,
+    "githubIsAuthoritativeBridge": true,
+    "codexIsDownstreamExecutor": true,
+    "truthLayersReadOnly": true,
+    "failClosed": true
   },
   "parentSkill": {
     "id": "dem-ecology-surface",
@@ -15,7 +25,25 @@
     "path": "skills/dem-ecology-surface/SKILL.md",
     "retained": true
   },
-  "branches": [
+  "sourcePriority": [
+    "authoritative-measured",
+    "verified-project-source",
+    "historically-reconstructed",
+    "reviewed-manual-repair",
+    "procedural-within-approved-parent-mask",
+    "visual-only"
+  ],
+  "heightModel": [
+    "z_truth_m",
+    "z_base_resampled_m",
+    "z_historical_delta_m",
+    "z_micro_delta_m",
+    "z_visual_m",
+    "water_level_truth_m",
+    "water_visual_delta_m",
+    "water_surface_visual_m"
+  ],
+  "referenceBranches": [
     {
       "id": "guilin-10km2-detail",
       "nameZh": "桂林 10 平方公里精细地表参考分支",
@@ -38,26 +66,34 @@
         "instanceCounts": false,
         "unverifiedHistoricalPlacement": false
       }
+    }
+  ],
+  "activeBranches": [
+    {
+      "id": "terrain-geomorphology",
+      "nameZh": "地形与地貌分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/terrain-geomorphology/SKILL.md",
+      "role": "active-contract",
+      "owns": [
+        "terrain-derivatives",
+        "landform-classification",
+        "erosion",
+        "rock-exposure",
+        "reversible-microrelief",
+        "gaea-terrain-deltas"
+      ]
     },
     {
       "id": "water-system",
       "nameZh": "水体分支",
       "skillPath": "skills/dem-procedural-landscape/branches/water-system/SKILL.md",
-      "role": "active-child-branch",
+      "role": "active-contract",
       "classes": [
         "freshwater-river",
         "estuary-mixing",
         "intertidal",
         "nearshore",
         "offshore"
-      ],
-      "layers": [
-        "geometry-and-datum",
-        "primary-motion",
-        "wave-shape",
-        "foam-and-breaking",
-        "color-and-turbidity",
-        "interaction"
       ],
       "bindings": [
         {
@@ -82,32 +118,53 @@
         "boatPhysics": false,
         "publicRelease": false
       }
-    }
-  ],
-  "futureBranches": [
-    {
-      "id": "terrain-geomorphology",
-      "status": "reserved"
     },
     {
       "id": "ecology-agriculture",
-      "status": "covered-by-parent-until-promoted"
+      "nameZh": "生态与农业分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/ecology-agriculture/SKILL.md",
+      "role": "active-contract",
+      "parentSkillRetained": true
     },
     {
       "id": "historical-reconstruction",
-      "status": "reserved"
+      "nameZh": "历史重建分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/historical-reconstruction/SKILL.md",
+      "role": "active-contract",
+      "targetEpoch": "1940-1945",
+      "defaultDetailedCoreKm2": 48.0,
+      "outputClaims": {
+        "historicalEnhanced1m": true,
+        "native1mSurveyClaim": false
+      }
     },
     {
       "id": "runtime-publication",
-      "status": "reserved"
+      "nameZh": "运行时与发布分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/runtime-publication/SKILL.md",
+      "role": "active-contract",
+      "architecture": [
+        "github-versioned-control-plane",
+        "private-windows-gaea-worker",
+        "threejs-webgpu-runtime",
+        "online-candidate",
+        "windows-local-package",
+        "rollback"
+      ]
     }
   ],
-  "releasePolicy": {
-    "draftOnly": true,
+  "globalRules": {
+    "defaultOutputGridM": 12.5,
+    "no30mFinalFallback": true,
+    "noSyntheticGapFill": true,
+    "noTruthOverwrite": true,
+    "proceduralFieldsRequireParentMask": true,
+    "historicalLayersSeparate": true,
+    "visualLayersSeparate": true,
+    "verticalScale": "1:1",
     "controllerVisualApprovalRequired": true,
-    "truthImmutabilityRequired": true,
-    "sourceLineageRequired": true,
     "browserQaRequired": true,
     "rollbackRequired": true
-  }
+  },
+  "nextTask": "ops/tasks/DEM_PROCEDURAL_LANDSCAPE_FOUNDATION_V020.md"
 }
