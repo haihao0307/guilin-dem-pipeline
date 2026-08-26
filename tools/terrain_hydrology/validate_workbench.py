@@ -24,7 +24,16 @@ def main() -> int:
         root / "skills/dem-procedural-landscape/schemas/reference-intake-v1.schema.json",
         root / "skills/dem-procedural-landscape/schemas/distilled-knowledge-v1.schema.json",
         root / "knowledge/terrain-hydrology/README.md",
+        root / "knowledge/terrain-hydrology/shared/inbox/README.md",
+        root / "knowledge/terrain-hydrology/shared/distilled/WORKBENCH_OPERATING_RULES_V1.md",
+        root / "knowledge/terrain-hydrology/guilin/inbox/README.md",
+        root / "knowledge/terrain-hydrology/wenzhou/inbox/README.md",
+        root / "knowledge/terrain-hydrology/kunming/inbox/README.md",
         root / "tools/terrain_hydrology/compile_real_slice.py",
+        root / "tools/terrain_hydrology/package_local.py",
+        root / "tools/terrain_hydrology/local_package/START_WORKBENCH.cmd",
+        root / "tools/terrain_hydrology/local_package/start_workbench.py",
+        root / "tools/terrain_hydrology/local_package/README_CN.txt",
     ]
     errors: list[str] = []
     for path in required:
@@ -88,6 +97,7 @@ def main() -> int:
         "wenzhouRealSliceMounted": by_id["wenzhou"].get("state") == "mounted-real-height",
         "kunmingRealSliceMounted": by_id["kunming"].get("state") == "mounted-real-height",
         "vegetationRuntimeIncluded": manifest["release"]["vegetationRuntimeIncluded"],
+        "localPackageContract": True,
         "errors": errors,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2))
