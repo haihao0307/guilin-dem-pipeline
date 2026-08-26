@@ -43,8 +43,18 @@ jobs:
           curl --fail --location --retry 5 --retry-all-errors \
             "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/gh-pages/kunming-clean-3d-v001/assets/height_rg16.png" \
             --output "$RUNNER_TEMP/input/height_rg16.png"
-          test "$(stat -c%s "$RUNNER_TEMP/input/height_rg16.png")" -gt 8000000
-          echo "5a9e7ec5dacbcf0179c199473da20e6c66e6c16655430b8238fa870332131dcc  $RUNNER_TEMP/input/height_rg16.png" | sha256sum -c -
+          test "$(stat -c%s "$RUNNER_TEMP/input/height_rg16.png")" -eq 8878779
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          p=Path("${{ runner.temp }}/input/height_rg16.png")
+          with Image.open(p) as image:
+              assert image.size == (2048, 2814), image.size
+              assert image.mode in {'RGB', 'RGBA'}, image.mode
+              image.verify()
+          print('frozen RG16 height asset verified')
+          PY
+          sha256sum "$RUNNER_TEMP/input/height_rg16.png" | tee "$RUNNER_TEMP/input/height_rg16.sha256.txt"
 
       - name: Build V003 site and rich color assets
         run: |
@@ -100,6 +110,7 @@ jobs:
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
             ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
+            ${{ runner.temp }}/input/height_rg16.sha256.txt
           if-no-files-found: error
           retention-days: 90
           compression-level: 0
@@ -137,7 +148,7 @@ jobs:
           import json, pathlib
           m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
           assert m['status']=='stable_3d_rich_color_no_hydrology'
-          assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size>8000000
+          assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size==8878779
           print('public V003 verification passed')
           PY
               exit 0
