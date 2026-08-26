@@ -1,0 +1,82 @@
+{
+  "schema": "guilin_procedural_landscape_binding@1.0.0",
+  "project": "guilin-yangtang",
+  "skill": {
+    "id": "dem-procedural-landscape",
+    "version": "0.1.0",
+    "ref": "skill/dem-procedural-landscape-v010",
+    "path": "skills/dem-procedural-landscape/SKILL.md"
+  },
+  "activeBranch": {
+    "id": "guilin-10km2-detail",
+    "path": "skills/dem-procedural-landscape/branches/guilin-10km2-detail/SKILL.md",
+    "role": "reference-implementation"
+  },
+  "sourceRelease": {
+    "ref": "integration/ecology-v040",
+    "version": "0.3.1",
+    "manifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/ecology-release-manifest.json",
+    "singleFileReview": "桂林10平方公里生态地表演示_单文件.html",
+    "aoiKm2": 10.0,
+    "shape": "square",
+    "sideMeters": 3162.2776601683795,
+    "crs": "EPSG:32649",
+    "anchorWgs84": [110.156375, 25.216758]
+  },
+  "terrainTruthGate": {
+    "sourceStatus": "deterministic-ecology-proof-awaiting-real-12.5m-dem",
+    "nativeSurveyClaim": false,
+    "exactRasterMounted": false,
+    "proxyTerrainTransferAllowed": false,
+    "realDemReplacementRequired": true
+  },
+  "verifiedReferenceFacts": {
+    "treeCount": 23685,
+    "shrubCount": 7322,
+    "riceClusterCount": 5277,
+    "speciesArchetypeCount": 20,
+    "erosionStreamlineCount": 68,
+    "permanentChannelTerrestrialVegetationCount": 0,
+    "releaseBambooInstanceCount": 2152,
+    "validationBambooInstanceCount": 2256,
+    "bambooCountNeedsReconciliation": true
+  },
+  "waterInterface": {
+    "branchId": "water-system",
+    "skillPath": "skills/dem-procedural-landscape/branches/water-system/SKILL.md",
+    "role": "inland-reference-integration",
+    "requiredInputs": [
+      "permanent_water_mask",
+      "active_channel_mask",
+      "active_bank_mask",
+      "distance_to_water_m",
+      "flow_direction_xy",
+      "flow_accumulation"
+    ],
+    "requiredOutputs": [
+      "water_surface_visual_m",
+      "flow_velocity_xy",
+      "turbidity",
+      "foam_mask",
+      "wet_margin_mask",
+      "shore_contact_mask"
+    ]
+  },
+  "transferPolicy": {
+    "methods": true,
+    "fieldContracts": true,
+    "hardExclusions": true,
+    "stableIds": true,
+    "visualRegressionBaseline": true,
+    "coordinates": false,
+    "proxyElevation": false,
+    "cityHydrology": false,
+    "historicalParcelPlacement": false,
+    "fixedInstanceCounts": false
+  },
+  "release": {
+    "draftOnly": true,
+    "controllerVisualApprovalRequired": true,
+    "publicAccessRequiresReverification": true
+  }
+}
