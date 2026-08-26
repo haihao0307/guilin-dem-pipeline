@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "kunming_dem_knowledge@1.0.0",
+  "status": "truth_first_distilled_knowledge",
+  "authoritativeSource": {
+    "fullMosaic": {
+      "file": "KUNMING_ASF_11TILES_RECT_12P5M_COG.tif",
+      "sha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+      "inputDemCount": 11,
+      "crs": "EPSG:32648",
+      "pixelSpacingMeters": [12.5, 12.5],
+      "grid": [10840, 18680],
+      "bounds": [209000.0, 2651625.0, 344500.0, 2885125.0],
+      "validFraction": 1.0,
+      "storageCompression": "DEFLATE lossless",
+      "internalOverviews": [2, 4, 8, 16, 32, 64],
+      "overviewResampling": "AVERAGE"
+    },
+    "cleanCrop": {
+      "file": "KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif",
+      "sha256": "9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2",
+      "dtype": "float32",
+      "crs": "EPSG:32648",
+      "pixelSpacingMeters": [12.5, 12.5],
+      "grid": [5892, 8095],
+      "bounds": [243875.0, 2719987.5, 317525.0, 2821175.0],
+      "widthMeters": 73650.0,
+      "heightMeters": 101187.5,
+      "areaKm2": 7452.459375,
+      "compression": "NONE",
+      "internalOverviews": [],
+      "resampled": false
+    }
+  },
+  "storagePolicy": {
+    "gitHistoryStoresLargeDemBinary": false,
+    "singleCanonicalBinaryPolicy": true,
+    "canonicalBinaryRole": "cold archive and verification source",
+    "repositoryStores": [
+      "source identifiers and SHA-256",
+      "data lineage",
+      "CRS, pixel grid, bounds and crop contract",
+      "algorithms and parameters",
+      "hydrology source status",
+      "QA gates",
+      "regeneration scripts"
+    ],
+    "browserTexturesAre": "regenerable display caches",
+    "browserTexturesCanBeProcessingInput": false,
+    "duplicateTiffPolicy": "forbidden"
+  },
+  "displayPolicy": {
+    "authoritativeGrid": [5892, 8095],
+    "currentV002DisplayTexture": [2048, 2814],
+    "currentV002Mesh": [512, 703],
+    "diagnosis": "V002 visual softness is caused by browser downsampling and coarse mesh sampling, not loss of float32 DEM values.",
+    "nextDisplayTexture": [3072, 4221],
+    "nextMesh": [896, 1231],
+    "naturalVerticalScale": 1.0,
+    "contours": false
+  },
+  "hydrologyPolicy": {
+    "manualDrawingAllowed": false,
+    "currentReference": "OpenStreetMap present-day waterways and water areas via Overpass API",
+    "demRole": "terrain support, flat-lake detection and flow-topology validation",
+    "historicalTruthStatus": "pending",
+    "riverCenterlineRule": "centerline comes from cited vector source; width control changes lateral display width only",
+    "uncertaintyRule": "when a cited source is missing or conflicts with DEM topology, hide or mark the feature instead of inventing geometry",
+    "attribution": "© OpenStreetMap contributors, ODbL 1.0"
+  },
+  "surfaceKnowledge": {
+    "model": "Gaea-inspired satellite-style color synthesis",
+    "inputs": [
+      "elevation",
+      "slope",
+      "aspect",
+      "multi-direction hillshade",
+      "local relief",
+      "macro valley position",
+      "deterministic multi-scale variation"
+    ],
+    "referenceConcepts": [
+      "Gaea SatMaps",
+      "CLUT and data-map colorization",
+      "Flow-based texture control",
+      "multi-map blending"
+    ],
+    "authoritativeElevationModified": false
+  }
+}
