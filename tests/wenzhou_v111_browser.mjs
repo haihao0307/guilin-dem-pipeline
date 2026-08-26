@@ -32,8 +32,53 @@ async function activateAnchor(page, id) {
   return Date.now() - started;
 }
 
+async function dragScene(page, mobile) {
+  const canvas = page.locator('#gl');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('WebGL canvas has no bounding box');
+  const startX = box.x + box.width * 0.48;
+  const startY = box.y + box.height * 0.55;
+  const endX = box.x + box.width * 0.70;
+  const endY = box.y + box.height * 0.38;
+  if (!mobile) {
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(endX, endY, { steps: 16 });
+    await page.mouse.up();
+    return;
+  }
+  await page.evaluate(({ startX, startY, endX, endY }) => {
+    const canvas = document.querySelector('#gl');
+    if (!(canvas instanceof HTMLCanvasElement)) throw new Error('missing WebGL canvas');
+    const dispatch = (type, x, y, buttons) => canvas.dispatchEvent(new PointerEvent(type, {
+      pointerId: 71,
+      pointerType: 'touch',
+      isPrimary: true,
+      bubbles: true,
+      cancelable: true,
+      clientX: x,
+      clientY: y,
+      button: type === 'pointerdown' ? 0 : -1,
+      buttons,
+      pressure: buttons ? 0.5 : 0,
+    }));
+    dispatch('pointerdown', startX, startY, 1);
+    const steps = 18;
+    for (let step = 1; step <= steps; step += 1) {
+      const t = step / steps;
+      dispatch('pointermove', startX + (endX - startX) * t, startY + (endY - startY) * t, 1);
+    }
+    dispatch('pointerup', endX, endY, 0);
+  }, { startX, startY, endX, endY });
+}
+
 async function scenario(browser, name, viewport, mobile) {
-  const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 1,
+    isMobile: mobile,
+    hasTouch: mobile,
+  });
   const page = await context.newPage();
   page.setDefaultTimeout(120000);
   const consoleErrors = [];
@@ -47,22 +92,16 @@ async function scenario(browser, name, viewport, mobile) {
   await page.goto(`${url}?qa=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 180000 });
   const initial = await waitReady(page);
   const readyMs = Date.now() - started;
+  const mobilePanelOpen = mobile ? await page.locator('#controller').evaluate((element) => element.classList.contains('open')) : null;
 
   const overviewFile = path.join(evidenceDir, `${name}-overview.png`);
   await page.screenshot({ path: overviewFile, fullPage: false });
 
-  const canvas = page.locator('#gl');
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error('WebGL canvas has no bounding box');
-  await page.mouse.move(box.x + box.width * 0.50, box.y + box.height * 0.52);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.66, box.y + box.height * 0.40, { steps: 14 });
-  await page.mouse.up();
-  await sleep(1000);
+  await dragScene(page, mobile);
+  await sleep(mobile ? 1500 : 1000);
   const afterDrag = await page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
 
   let detail = null;
-  let yandangFile = null;
   const interactionTimingsMs = {};
   if (!mobile) {
     interactionTimingsMs.yandangAnchor = await activateAnchor(page, 'yandang');
@@ -71,8 +110,7 @@ async function scenario(browser, name, viewport, mobile) {
     interactionTimingsMs.yandangDetailReady = Date.now() - detailStarted;
     await sleep(1800);
     detail = await page.evaluate(() => structuredClone(window.__WENZHOU_V111_DIAGNOSTICS__));
-    yandangFile = path.join(evidenceDir, `${name}-yandang-12_5m.png`);
-    await page.screenshot({ path: yandangFile, fullPage: false });
+    await page.screenshot({ path: path.join(evidenceDir, `${name}-yandang-12_5m.png`), fullPage: false });
 
     interactionTimingsMs.oujiangAnchor = await activateAnchor(page, 'oujiang');
     await sleep(3200);
@@ -83,22 +121,23 @@ async function scenario(browser, name, viewport, mobile) {
     await page.screenshot({ path: path.join(evidenceDir, `${name}-yueqing-bay.png`), fullPage: false });
   }
 
-  const fatalRequests = requestFailures.filter((item) => {
-    if (item.url.includes('tiles.maps.eox.at')) return false;
-    return true;
-  });
+  const fatalRequests = requestFailures.filter((item) => !item.url.includes('tiles.maps.eox.at'));
+  const cameraChanged = Math.abs(afterDrag.camera.azimuth - initial.camera.azimuth) > 0.01
+    || Math.abs(afterDrag.camera.elevation - initial.camera.elevation) > 0.01;
   const passed = initial.renderer === 'WebGL2'
     && initial.perspectiveProjectionActive === true
     && initial.depthTestActive === true
     && initial.terrainGrid[0] >= (mobile ? 513 : 1025)
     && initial.terrainElevationRangeMeters[1] > initial.terrainElevationRangeMeters[0]
-    && Math.abs(afterDrag.camera.azimuth - initial.camera.azimuth) > 0.01
+    && cameraChanged
     && consoleErrors.length === 0
     && pageErrors.length === 0
     && fatalRequests.length === 0
+    && (!mobile || mobilePanelOpen === false)
     && (mobile || (
       detail?.detailGrid?.[0] >= 1025
       && detail?.detailSpacingMeters === 12.5
+      && detail?.renderedRiverSegments > 0
       && interactionTimingsMs.yandangAnchor < 10000
       && interactionTimingsMs.yandangDetailReady < 120000
     ));
@@ -118,6 +157,8 @@ async function scenario(browser, name, viewport, mobile) {
     mobile,
     passed,
     readyMs,
+    mobilePanelOpen,
+    cameraChanged,
     initial,
     afterDrag,
     detail,
@@ -145,7 +186,7 @@ try {
   const desktop = await scenario(browser, 'desktop-1920x1080', { width: 1920, height: 1080 }, false);
   const mobile = await scenario(browser, 'mobile-390x844', { width: 390, height: 844 }, true);
   report = {
-    schema: 'wenzhou_v111_browser_qa@1.1.1',
+    schema: 'wenzhou_v111_browser_qa@1.1.2',
     generatedAtUtc: new Date().toISOString(),
     url,
     passed: desktop.passed && mobile.passed,
@@ -162,6 +203,8 @@ try {
       permanentWaterVaporArtifactForbidden: true,
       globalHydrologyUsesScreenLod: true,
       localHydrologyUsesFull25mSamples: true,
+      mobileMapVisibleOnStartup: true,
+      mouseAndTouchCameraInteraction: true,
       consoleErrorsRequired: 0,
       pageErrorsRequired: 0,
     },
