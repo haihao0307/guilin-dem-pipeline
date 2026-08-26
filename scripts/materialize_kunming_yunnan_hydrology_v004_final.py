@@ -9,13 +9,13 @@ import zipfile
 from pathlib import Path
 
 PAYLOAD_SHA256 = "ab3ee7c09ddaaf5e91b5d1ac613c32055e5a3aca26564e33e47e8b03eb6fa3b8"
-EXPECTED_PARTS = 2
+EXPECTED_PARTS = 8
 
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     parts_dir = Path(__file__).parent / "v004_final_payload_parts"
-    parts = sorted(parts_dir.glob("final_part_*.txt"))
+    parts = sorted(parts_dir.glob("chunk_*.txt"))
     if len(parts) != EXPECTED_PARTS:
         raise SystemExit(f"expected {EXPECTED_PARTS} payload parts, found {len(parts)}")
     encoded = "".join(part.read_text(encoding="ascii").strip() for part in parts)
