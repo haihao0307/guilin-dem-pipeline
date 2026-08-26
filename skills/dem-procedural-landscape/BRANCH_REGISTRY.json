@@ -1,0 +1,113 @@
+{
+  "schema": "dem_procedural_landscape_branch_registry@1.0.0",
+  "skill": {
+    "id": "dem-procedural-landscape",
+    "nameZh": "程序化地貌生产线",
+    "version": "0.1.0",
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "branch": "skill/dem-procedural-landscape-v010",
+    "status": "draft-contract"
+  },
+  "parentSkill": {
+    "id": "dem-ecology-surface",
+    "ref": "skill/dem-ecology-surface-v050",
+    "commit": "de4ae8c75696ddc9225945e88941651e9deea3e9",
+    "path": "skills/dem-ecology-surface/SKILL.md",
+    "retained": true
+  },
+  "branches": [
+    {
+      "id": "guilin-10km2-detail",
+      "nameZh": "桂林 10 平方公里精细地表参考分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/guilin-10km2-detail/SKILL.md",
+      "role": "reference-implementation",
+      "source": {
+        "ref": "integration/ecology-v040",
+        "manifest": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/ecology/v0.3.1/ecology-release-manifest.json",
+        "release": "0.3.1",
+        "projectId": "guilin-yangtang",
+        "aoiKm2": 10.0,
+        "crs": "EPSG:32649",
+        "terrainStatus": "deterministic-ecology-proof-awaiting-real-12.5m-dem"
+      },
+      "transferPolicy": {
+        "methodsAndContracts": true,
+        "proxyTerrain": false,
+        "cityCoordinates": false,
+        "cityHydrology": false,
+        "instanceCounts": false,
+        "unverifiedHistoricalPlacement": false
+      }
+    },
+    {
+      "id": "water-system",
+      "nameZh": "水体分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/water-system/SKILL.md",
+      "role": "active-child-branch",
+      "classes": [
+        "freshwater-river",
+        "estuary-mixing",
+        "intertidal",
+        "nearshore",
+        "offshore"
+      ],
+      "layers": [
+        "geometry-and-datum",
+        "primary-motion",
+        "wave-shape",
+        "foam-and-breaking",
+        "color-and-turbidity",
+        "interaction"
+      ],
+      "bindings": [
+        {
+          "project": "guilin-yangtang",
+          "role": "inland-reference-integration",
+          "sourceRef": "integration/ecology-v040"
+        },
+        {
+          "project": "wenzhou-qingjiang-22000km2",
+          "role": "active-coastal-implementation",
+          "branch": "project/wenzhou-v100-bathymetry-tides-hydrology",
+          "draftPr": 49,
+          "landTruthPath": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+          "landTruthSha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e"
+        }
+      ],
+      "completionClaims": {
+        "skillContract": true,
+        "continuousHydrodynamics": false,
+        "estuaryMixingModel": false,
+        "productionFoam": false,
+        "boatPhysics": false,
+        "publicRelease": false
+      }
+    }
+  ],
+  "futureBranches": [
+    {
+      "id": "terrain-geomorphology",
+      "status": "reserved"
+    },
+    {
+      "id": "ecology-agriculture",
+      "status": "covered-by-parent-until-promoted"
+    },
+    {
+      "id": "historical-reconstruction",
+      "status": "reserved"
+    },
+    {
+      "id": "runtime-publication",
+      "status": "reserved"
+    }
+  ],
+  "releasePolicy": {
+    "draftOnly": true,
+    "controllerVisualApprovalRequired": true,
+    "truthImmutabilityRequired": true,
+    "sourceLineageRequired": true,
+    "browserQaRequired": true,
+    "rollbackRequired": true
+  }
+}
