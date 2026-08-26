@@ -1,0 +1,84 @@
+name: Apply Wenzhou v1.1.1 responsive water patch
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v111-apply-performance-patch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v111-apply-performance-patch
+  cancel-in-progress: false
+
+jobs:
+  apply-patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact Draft branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Confirm expected high-resolution candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f web/wenzhou-v111/index.html
+          test -f web/wenzhou-v111/runtime.js
+          test -f tools/patch_wenzhou_v111_runtime_performance.py
+          python3 -m py_compile tools/patch_wenzhou_v111_runtime_performance.py
+          grep -q "terrainRuntimeId.*v111-hires" web/wenzhou-v111/assets/hires/manifest.json
+          grep -q "setTimeout(()=>void enableOnlineSatellite(),120);" web/wenzhou-v111/runtime.js
+          grep -q "bathy: true" web/wenzhou-v111/runtime.js
+
+      - name: Apply responsive water and hydrology patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/patch_wenzhou_v111_runtime_performance.py
+          node --check web/wenzhou-v111/runtime.js
+          python3 - <<'PY'
+          from pathlib import Path
+          runtime = Path('web/wenzhou-v111/runtime.js').read_text(encoding='utf-8')
+          index = Path('web/wenzhou-v111/index.html').read_text(encoding='utf-8')
+          assert "bathy: false" in runtime
+          assert "waterOpacity: .76" in runtime
+          assert "setTimeout(()=>void enableOnlineSatellite(),120);" not in runtime
+          assert "renderedRiverSegments" in runtime
+          assert "全域 OSM" in runtime
+          assert "局部 OSM" in runtime
+          assert '<input id="showBathy" type="checkbox">' in index
+          assert '<output id="waterOpacityOut">76%</output>' in index
+          assert 'value="0.76"' in index
+          print('responsive patch verified')
+          PY
+
+      - name: Commit patched runtime and trigger browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- web/wenzhou-v111/index.html web/wenzhou-v111/runtime.js
+          git commit -m 'Fix Wenzhou v1.1.1 outer ring, water noise and hydrology responsiveness'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+
+      - name: Upload patch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v111-responsive-patch
+          path: |
+            web/wenzhou-v111/index.html
+            web/wenzhou-v111/runtime.js
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
