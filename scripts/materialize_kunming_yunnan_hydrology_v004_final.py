@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import io
+import re
 import zipfile
 from pathlib import Path
 
@@ -39,13 +40,26 @@ def main() -> int:
     )
     index_path.write_text(index_text, encoding="utf-8")
 
+    app_path = root / "projects/kunming/web/yunnan-hydrology-v004/app.js"
+    app_text = app_path.read_text(encoding="utf-8")
+    reserved_flat_count = len(re.findall(r"\bflat\b", app_text))
+    if reserved_flat_count:
+        app_text = re.sub(r"\bflat\b", "flatTerrain", app_text)
+        app_path.write_text(app_text, encoding="utf-8")
+    if re.search(r"\bflat\b", app_path.read_text(encoding="utf-8")):
+        raise SystemExit("reserved GLSL token 'flat' remains in V004 app.js")
+
     qa_override = root / "scripts/qa_kunming_yunnan_hydrology_v004_override.mjs"
     qa_target = root / "scripts/qa_kunming_yunnan_hydrology_v004.mjs"
     if not qa_override.exists():
         raise SystemExit(f"browser QA override missing: {qa_override}")
     qa_target.write_text(qa_override.read_text(encoding="utf-8"), encoding="utf-8")
 
-    print(f"materialized {len(infos)} reviewed Kunming V004 source files and installed robust browser QA")
+    print(
+        f"materialized {len(infos)} reviewed Kunming V004 source files, "
+        f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
+        "and installed robust browser QA"
+    )
     return 0
 
 
