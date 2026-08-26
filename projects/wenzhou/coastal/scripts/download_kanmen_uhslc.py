@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Acquire a verified Kanmen UHSLC hourly research-quality window.
+"""Download and validate the official static Kanmen UHSLC record.
 
-The dedicated UHSLC 632, record 6321, version A station dataset is the only
-observation source accepted here. The preferred configured window is tested
-first. When that station version does not contain the preferred dates or the
-window is less than 95 percent complete, the script selects the latest complete
-35-day window from the same immutable station version and records the exact
-reason, dates, source indices, missing hours and hashes.
-
-Published observations remain in the UHSLC millimetre reference datum. A second
-window-mean-removed series is generated for phase and tidal-range comparison.
-No absolute datum transform is applied.
+Only UHSLC record 6321, station 632, version A is accepted. The complete
+official NetCDF is downloaded first and all array access is local. Published
+sea levels remain relative to the UHSLC ``reference_datum``. A separate
+window-mean-removed series is produced solely for tidal shape comparison.
 """
 
 from __future__ import annotations
@@ -21,13 +15,17 @@ import io
 import json
 import math
 import os
+import re
 import sys
 import tempfile
+import time as time_module
+import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
@@ -40,17 +38,48 @@ ACQUISITION_REPORT = REPORT_ROOT / "KANMEN_UHSLC_ACQUISITION.json"
 QA_REPORT = REPORT_ROOT / "KANMEN_UHSLC_QA.json"
 
 DATASET_ID = "h632a"
-SOURCE_URL = "https://uhslc.soest.hawaii.edu/opendap/rqds/pacific/hourly/h632a.nc"
-SOURCE_DAS_URL = f"{SOURCE_URL}.das"
-SOURCE_DDS_URL = f"{SOURCE_URL}.dds"
-DIRECT_CSV_URL = "https://uhslc.soest.hawaii.edu/data/csv/rqds/pacific/hourly/h632a.csv"
+SOURCE_URL = "https://uhslc.soest.hawaii.edu/data/netcdf/rqds/pacific/hourly/h632a.nc"
+METADATA_URL = "https://uhslc.soest.hawaii.edu/rqds/metadata_yaml/632Ameta.yaml"
+ERDDAP_SECONDARY_URL = (
+    "https://uhslc.soest.hawaii.edu/erddap/tabledap/global_hourly_rqds.csv"
+)
+NETCDF_PATH = DATA_ROOT / "h632a.nc"
+METADATA_PATH = DATA_ROOT / "632Ameta.yaml"
+
+EXPECTED_STATION_NAME = "Kanmen"
 EXPECTED_UHSLC_ID = 632
 EXPECTED_RECORD_ID = 6321
 EXPECTED_VERSION = "A"
 EXPECTED_GLOSS_ID = 94
 EXPECTED_SSC_ID = "kanm"
 EXPECTED_QUALITY = 4
+EXPECTED_DURATION_DAYS = 35
+EXPECTED_SAMPLE_COUNT = EXPECTED_DURATION_DAYS * 24
 FILL_VALUE = -32767
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def iso_z(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def parse_utc(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def np_datetime(value: datetime) -> np.datetime64:
+    return np.datetime64(value.astimezone(timezone.utc).replace(tzinfo=None), "s")
+
+
+def datetime64_to_utc(value: np.datetime64) -> datetime:
+    seconds = value.astype("datetime64[s]").astype(np.int64)
+    return datetime.fromtimestamp(int(seconds), tz=timezone.utc)
 
 
 def sha256_file(path: Path) -> str:
@@ -81,52 +110,134 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
-def parse_utc(value: str) -> datetime:
-    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+def _header(headers: Any, name: str) -> str | None:
+    value = headers.get(name) if headers is not None else None
+    return str(value) if value is not None else None
 
 
-def iso_z(value: datetime) -> str:
-    return value.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
-
-
-def np_datetime(value: datetime) -> np.datetime64:
-    return np.datetime64(value.astimezone(timezone.utc).replace(tzinfo=None), "s")
-
-
-def datetime64_to_utc(value: np.datetime64) -> datetime:
-    seconds = value.astype("datetime64[s]").astype(np.int64)
-    return datetime.fromtimestamp(int(seconds), tz=timezone.utc)
-
-
-def fetch_text(url: str) -> tuple[bytes, dict[str, Any]]:
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "WenzhouCoastalPipeline/1.0",
-            "Accept": "text/plain,application/octet-stream,*/*",
-        },
+def _content_range(value: str | None) -> tuple[int, int, int | None] | None:
+    if not value:
+        return None
+    match = re.fullmatch(r"bytes\s+(\d+)-(\d+)/(\d+|\*)", value.strip())
+    if not match:
+        return None
+    return (
+        int(match.group(1)),
+        int(match.group(2)),
+        None if match.group(3) == "*" else int(match.group(3)),
     )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        content = response.read()
-        status = getattr(response, "status", 200)
-        if status != 200:
-            raise RuntimeError(f"UHSLC metadata endpoint returned HTTP {status}: {url}")
-        if not content:
-            raise RuntimeError(f"UHSLC metadata endpoint returned no bytes: {url}")
-        prefix = content[:256].lstrip().lower()
-        if b"<html" in prefix or b"<!doctype" in prefix:
-            raise RuntimeError(f"UHSLC metadata endpoint returned HTML: {url}")
-        return content, {
-            "requestUrl": url,
-            "httpStatus": status,
-            "contentType": response.headers.get("Content-Type", ""),
-            "contentLengthHeader": response.headers.get("Content-Length"),
-            "lastModified": response.headers.get("Last-Modified"),
-            "etag": response.headers.get("ETag"),
+
+
+def _validate_download(path: Path) -> None:
+    if not path.is_file() or path.stat().st_size == 0:
+        raise RuntimeError(f"Downloaded source is empty: {path}")
+    with path.open("rb") as handle:
+        prefix = handle.read(512).lstrip().lower()
+    if prefix.startswith(b"<html") or prefix.startswith(b"<!doctype"):
+        raise RuntimeError(f"Downloaded source is HTML, not data: {path}")
+
+
+def download_https(
+    url: str,
+    destination: Path,
+    *,
+    attempts: int = 4,
+    timeout_seconds: int = 120,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+    sleeper: Callable[[float], None] = time_module.sleep,
+) -> dict[str, Any]:
+    """Download atomically and resume an interrupted request on retry."""
+
+    if urllib.parse.urlparse(url).scheme != "https":
+        raise ValueError(f"Only HTTPS UHSLC sources are allowed: {url}")
+    if attempts < 1:
+        raise ValueError("attempts must be positive")
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_name(destination.name + ".part")
+    # A partial is scoped to this invocation. This avoids appending a stale
+    # prefix if UHSLC replaced the upstream object between workflow runs.
+    partial.unlink(missing_ok=True)
+    last_error: Exception | None = None
+
+    for attempt in range(1, attempts + 1):
+        offset = partial.stat().st_size if partial.exists() else 0
+        headers = {
+            "User-Agent": "WenzhouCoastalPipeline/2.0",
+            "Accept": "application/octet-stream,text/yaml,text/plain,*/*",
         }
+        if offset:
+            headers["Range"] = f"bytes={offset}-"
+        request = urllib.request.Request(url, headers=headers)
+
+        try:
+            with opener(request, timeout=timeout_seconds) as response:
+                status = int(getattr(response, "status", response.getcode()))
+                response_headers = response.headers
+                content_range = _content_range(_header(response_headers, "Content-Range"))
+                if offset and status == 206:
+                    if content_range is None or content_range[0] != offset:
+                        partial.unlink(missing_ok=True)
+                        raise RuntimeError(
+                            f"Invalid resume Content-Range for {url}: "
+                            f"{_header(response_headers, 'Content-Range')!r}"
+                        )
+                    mode = "ab"
+                elif status == 200:
+                    # The origin may ignore Range. Truncate instead of corrupting
+                    # the destination by appending a complete response.
+                    mode = "wb"
+                    offset = 0
+                else:
+                    raise RuntimeError(f"Unexpected HTTP {status} while downloading {url}")
+
+                with partial.open(mode) as output:
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        output.write(chunk)
+                    output.flush()
+                    os.fsync(output.fileno())
+
+                actual_bytes = partial.stat().st_size
+                expected_total: int | None = None
+                if content_range is not None:
+                    expected_total = content_range[2]
+                elif _header(response_headers, "Content-Length") is not None:
+                    expected_total = offset + int(_header(response_headers, "Content-Length") or 0)
+                if expected_total is not None and actual_bytes != expected_total:
+                    raise RuntimeError(
+                        f"Incomplete UHSLC download for {url}: {actual_bytes} of {expected_total} bytes"
+                    )
+
+                _validate_download(partial)
+                os.replace(partial, destination)
+                return {
+                    "requestUrl": url,
+                    "finalUrl": str(response.geturl()),
+                    "httpStatus": status,
+                    "contentType": _header(response_headers, "Content-Type"),
+                    "contentLengthHeader": _header(response_headers, "Content-Length"),
+                    "contentRange": _header(response_headers, "Content-Range"),
+                    "etag": _header(response_headers, "ETag"),
+                    "lastModified": _header(response_headers, "Last-Modified"),
+                    "acceptRanges": _header(response_headers, "Accept-Ranges"),
+                    "completedAtUtc": iso_z(utc_now()),
+                    "attemptCount": attempt,
+                    "resumed": status == 206,
+                    "bytes": destination.stat().st_size,
+                    "sha256": sha256_file(destination),
+                }
+        except (OSError, RuntimeError, urllib.error.URLError) as exc:
+            last_error = exc
+            if attempt == attempts:
+                break
+            sleeper(min(2 ** (attempt - 1), 8))
+
+    raise RuntimeError(
+        f"UHSLC HTTPS download failed after {attempts} attempts: {url}: {last_error}"
+    ) from last_error
 
 
 def clean_scalar(value: Any) -> Any:
@@ -144,17 +255,19 @@ def clean_scalar(value: Any) -> Any:
         return item
     flat = array.reshape(-1)
     if array.dtype.kind == "S":
-        return b"".join(bytes(item) for item in flat).decode("utf-8", errors="replace").strip("\x00 ")
+        return b"".join(bytes(item) for item in flat).decode(
+            "utf-8", errors="replace"
+        ).strip("\x00 ")
     if array.dtype.kind == "U":
         return "".join(str(item) for item in flat).strip("\x00 ")
-    values: list[Any] = []
+    result: list[Any] = []
     for item in flat:
         if isinstance(item, np.generic):
             item = item.item()
         if isinstance(item, bytes):
             item = item.decode("utf-8", errors="replace").strip("\x00 ")
-        values.append(item)
-    return values
+        result.append(item)
+    return result
 
 
 def integer_scalar(value: Any, label: str) -> int:
@@ -182,8 +295,8 @@ def text_scalar(value: Any, label: str) -> str:
 
 def get_station_metadata(dataset: Any) -> dict[str, Any]:
     required = [
-        "latitude",
-        "longitude",
+        "lat",
+        "lon",
         "station_name",
         "station_country",
         "station_country_code",
@@ -198,8 +311,8 @@ def get_station_metadata(dataset: Any) -> dict[str, Any]:
     if missing:
         raise RuntimeError(f"Kanmen station dataset lacks required variables: {missing}")
     return {
-        "latitude": float_scalar(dataset["latitude"].values, "latitude"),
-        "longitude": float_scalar(dataset["longitude"].values, "longitude"),
+        "latitude": float_scalar(dataset["lat"].values, "lat"),
+        "longitude": float_scalar(dataset["lon"].values, "lon"),
         "stationName": text_scalar(dataset["station_name"].values, "station_name"),
         "stationCountry": text_scalar(dataset["station_country"].values, "station_country"),
         "stationCountryCode": integer_scalar(
@@ -214,20 +327,127 @@ def get_station_metadata(dataset: Any) -> dict[str, Any]:
     }
 
 
+def validate_station_identity(metadata: dict[str, Any]) -> None:
+    expected = {
+        "stationName": EXPECTED_STATION_NAME,
+        "recordId": EXPECTED_RECORD_ID,
+        "uhslcId": EXPECTED_UHSLC_ID,
+        "version": EXPECTED_VERSION,
+        "glossId": EXPECTED_GLOSS_ID,
+        "sscId": EXPECTED_SSC_ID,
+    }
+    mismatches = {
+        key: {"expected": value, "actual": metadata.get(key)}
+        for key, value in expected.items()
+        if metadata.get(key) != value
+    }
+    if mismatches:
+        raise RuntimeError(f"Kanmen identity contract failed: {mismatches}")
+    if not metadata.get("referenceDatum"):
+        raise RuntimeError("Kanmen reference_datum is empty")
+
+
+def validate_metadata_yaml(path: Path, station: dict[str, Any]) -> dict[str, Any]:
+    try:
+        import yaml
+    except ImportError as exc:
+        raise RuntimeError("PyYAML is required to validate 632Ameta.yaml") from exc
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    location = payload.get("Location", {})
+    expected = {"Station": "Kanmen-A", "JASL_Number": "632A"}
+    mismatches = {
+        key: {"expected": value, "actual": location.get(key)}
+        for key, value in expected.items()
+        if str(location.get(key)) != value
+    }
+    for key, station_key in (("Latitude", "latitude"), ("Longitude", "longitude")):
+        if not math.isclose(float(location.get(key)), float(station[station_key]), abs_tol=1e-4):
+            mismatches[key] = {
+                "expected": station[station_key],
+                "actual": location.get(key),
+            }
+    if str(payload.get("Units")).lower() != "millimeters":
+        mismatches["Units"] = {"expected": "millimeters", "actual": payload.get("Units")}
+    if mismatches:
+        raise RuntimeError(f"Kanmen metadata YAML identity contract failed: {mismatches}")
+    return {
+        "station": location.get("Station"),
+        "jaslNumber": location.get("JASL_Number"),
+        "latitude": float(location.get("Latitude")),
+        "longitude": float(location.get("Longitude")),
+        "dateStart": payload.get("Time_Details", {}).get("Date_Start"),
+        "dateEnd": payload.get("Time_Details", {}).get("Date_End"),
+        "units": payload.get("Units"),
+        "referenceLevel": payload.get("Reference_Level"),
+    }
+
+
 def time_axis_values(variable: Any, expected_count: int, label: str) -> np.ndarray:
     if "time" not in variable.dims:
         scalar = clean_scalar(variable.values)
         return np.full(expected_count, scalar)
-    indexers: dict[str, Any] = {}
-    for dimension in variable.dims:
-        if dimension != "time":
-            indexers[dimension] = 0
+    indexers = {dimension: 0 for dimension in variable.dims if dimension != "time"}
     values = np.asarray(variable.isel(**indexers).values).reshape(-1)
     if values.size != expected_count:
-        raise RuntimeError(
-            f"{label} returned {values.size} values for {expected_count} timestamps"
-        )
+        raise RuntimeError(f"{label} returned {values.size} values for {expected_count} timestamps")
     return values
+
+
+def load_station_arrays(
+    source_path: Path,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
+    try:
+        import xarray as xr
+    except ImportError as exc:
+        raise RuntimeError("xarray and h5netcdf are required for local UHSLC NetCDF access") from exc
+
+    with xr.open_dataset(source_path, engine="h5netcdf", decode_times=True) as dataset:
+        required = {
+            "lat",
+            "lon",
+            "time",
+            "sea_level",
+            "quality",
+            "record_id",
+            "station_country",
+            "station_country_code",
+            "station_name",
+            "uhslc_id",
+            "version",
+            "gloss_id",
+            "ssc_id",
+            "reference_datum",
+        }
+        missing = sorted(required - set(dataset.variables))
+        if missing:
+            raise RuntimeError(f"Kanmen station dataset lacks required variables: {missing}")
+        times = np.asarray(dataset["time"].values).astype("datetime64[s]").reshape(-1)
+        if times.size == 0 or np.isnat(times).any():
+            raise RuntimeError("Kanmen station dataset contains empty or invalid timestamps")
+        if np.any(times[1:] < times[:-1]):
+            raise RuntimeError("Kanmen station dataset timestamps are not monotonic")
+        sea_values = time_axis_values(dataset["sea_level"], times.size, "sea_level")
+        quality_values = time_axis_values(dataset["quality"], times.size, "quality")
+        station = get_station_metadata(dataset)
+        structure = {
+            "dimensions": {name: int(size) for name, size in dataset.sizes.items()},
+            "variables": {
+                name: {
+                    "dimensions": list(dataset[name].dims),
+                    "shape": [int(value) for value in dataset[name].shape],
+                    "dtype": str(dataset[name].dtype),
+                    "attributes": {key: str(value) for key, value in dataset[name].attrs.items()},
+                }
+                for name in sorted(required)
+            },
+            "globalAttributes": {key: str(value) for key, value in dataset.attrs.items()},
+        }
+    return (
+        times,
+        np.asarray(sea_values),
+        np.asarray(quality_values),
+        {"stationMetadata": station, "netcdfStructure": structure},
+    )
 
 
 def evaluate_window(
@@ -241,54 +461,76 @@ def evaluate_window(
     selected = (times >= start64) & (times < end64)
     selected_times = times[selected]
     valid_times = times[selected & valid_mask]
+    unique_source = np.unique(selected_times)
     unique_valid = np.unique(valid_times)
     expected_count = int((end_exclusive - start).total_seconds() // 3600)
-    completeness = float(unique_valid.size) / float(expected_count) if expected_count else 0.0
-    duplicate_count = int(valid_times.size - unique_valid.size)
+    expected_times = start64 + np.arange(expected_count, dtype="timedelta64[h]")
+    missing = np.setdiff1d(expected_times, unique_valid)
+    unexpected = np.setdiff1d(unique_source, expected_times)
     return {
         "startUtc": iso_z(start),
         "endExclusiveUtc": iso_z(end_exclusive),
         "expectedSampleCount": expected_count,
         "sourceSampleCount": int(selected_times.size),
+        "uniqueSourceTimestampCount": int(unique_source.size),
         "validSampleCount": int(valid_times.size),
         "uniqueValidTimestampCount": int(unique_valid.size),
-        "duplicateValidTimestampCount": duplicate_count,
-        "completenessFraction": completeness,
+        "duplicateSourceTimestampCount": int(selected_times.size - unique_source.size),
+        "duplicateValidTimestampCount": int(valid_times.size - unique_valid.size),
+        "missingTimestampCount": int(missing.size),
+        "unexpectedTimestampCount": int(unexpected.size),
+        "completenessFraction": (
+            float(unique_valid.size) / float(expected_count) if expected_count else 0.0
+        ),
         "containsAnySourceSamples": bool(selected_times.size),
     }
+
+
+def window_is_exactly_complete(evaluation: dict[str, Any]) -> bool:
+    expected = int(evaluation["expectedSampleCount"])
+    return (
+        expected == EXPECTED_SAMPLE_COUNT
+        and evaluation["sourceSampleCount"] == expected
+        and evaluation["uniqueSourceTimestampCount"] == expected
+        and evaluation["validSampleCount"] == expected
+        and evaluation["uniqueValidTimestampCount"] == expected
+        and evaluation["duplicateSourceTimestampCount"] == 0
+        and evaluation["duplicateValidTimestampCount"] == 0
+        and evaluation["missingTimestampCount"] == 0
+        and evaluation["unexpectedTimestampCount"] == 0
+        and math.isclose(evaluation["completenessFraction"], 1.0)
+    )
 
 
 def select_latest_complete_window(
     times: np.ndarray,
     valid_mask: np.ndarray,
     duration_days: int,
-    minimum_completeness: float,
 ) -> tuple[datetime, datetime, dict[str, Any]]:
     duration_hours = duration_days * 24
-    required_count = int(math.ceil(duration_hours * minimum_completeness))
-    valid_hours = np.unique(times[valid_mask].astype("datetime64[h]"))
-    if valid_hours.size < required_count:
+    if duration_hours != EXPECTED_SAMPLE_COUNT:
+        raise RuntimeError(f"Kanmen duration must be {EXPECTED_DURATION_DAYS} days")
+    valid_times = np.unique(times[valid_mask].astype("datetime64[s]"))
+    if valid_times.size < duration_hours:
         raise RuntimeError(
-            f"Kanmen station has only {valid_hours.size} valid unique hours, "
-            f"fewer than the required {required_count}"
+            f"Kanmen station has only {valid_times.size} valid unique hours, "
+            f"fewer than the required {duration_hours}"
         )
 
-    for right_index in range(valid_hours.size - 1, required_count - 2, -1):
-        end_hour = valid_hours[right_index] + np.timedelta64(1, "h")
-        start_hour = end_hour - np.timedelta64(duration_hours, "h")
-        left_index = int(np.searchsorted(valid_hours, start_hour, side="left"))
-        valid_count = right_index - left_index + 1
-        if valid_count < required_count:
+    for right_index in range(valid_times.size - 1, duration_hours - 2, -1):
+        end_time = valid_times[right_index] + np.timedelta64(1, "h")
+        start_time = end_time - np.timedelta64(duration_hours, "h")
+        left_index = int(np.searchsorted(valid_times, start_time, side="left"))
+        if right_index - left_index + 1 != duration_hours:
             continue
-        start = datetime64_to_utc(start_hour.astype("datetime64[s]"))
-        end_exclusive = datetime64_to_utc(end_hour.astype("datetime64[s]"))
+        start = datetime64_to_utc(start_time)
+        end_exclusive = datetime64_to_utc(end_time)
         evaluation = evaluate_window(times, valid_mask, start, end_exclusive)
-        if evaluation["completenessFraction"] >= minimum_completeness:
+        if window_is_exactly_complete(evaluation):
             return start, end_exclusive, evaluation
-
     raise RuntimeError(
-        f"No {duration_days}-day window in UHSLC 632 record 6321 version A "
-        f"meets completeness {minimum_completeness}"
+        f"No exact {duration_days}-day, {duration_hours}-sample Research Quality window "
+        "exists in UHSLC 632 record 6321 version A"
     )
 
 
@@ -303,48 +545,37 @@ def select_window(
     policy = str(window_config["windowSelectionPolicy"])
     if policy != "prefer_configured_then_latest_complete":
         raise RuntimeError(f"Unsupported Kanmen window selection policy: {policy}")
+    if duration_days != EXPECTED_DURATION_DAYS or not math.isclose(minimum, 1.0):
+        raise RuntimeError("Kanmen window contract requires 35 days and completeness 1.0")
 
-    finite = np.isfinite(sea_values.astype("float64", copy=False))
-    valid_mask = finite & (sea_values.astype("float64", copy=False) != FILL_VALUE)
-    valid_mask &= quality_values.astype("int64", copy=False) == EXPECTED_QUALITY
+    sea_numeric = sea_values.astype("float64", copy=False)
+    quality_numeric = quality_values.astype("float64", copy=False)
+    valid_mask = np.isfinite(sea_numeric) & np.isfinite(quality_numeric)
+    valid_mask &= sea_numeric != FILL_VALUE
+    valid_mask &= quality_numeric == EXPECTED_QUALITY
 
     preferred_start = parse_utc(window_config["preferredStartUtc"])
     preferred_end = parse_utc(window_config["preferredEndExclusiveUtc"])
     if preferred_end - preferred_start != timedelta(days=duration_days):
         raise RuntimeError("Preferred Kanmen observation window does not match durationDays")
     preferred = evaluate_window(times, valid_mask, preferred_start, preferred_end)
-    preferred_passed = (
-        preferred["completenessFraction"] >= minimum
-        and preferred["duplicateValidTimestampCount"] == 0
-    )
-    preferred["passed"] = preferred_passed
+    preferred["passed"] = window_is_exactly_complete(preferred)
 
-    if preferred_passed:
-        selected_start = preferred_start
-        selected_end = preferred_end
-        selected = preferred
+    if preferred["passed"]:
+        selected_start, selected_end, selected = preferred_start, preferred_end, preferred
         fallback_used = False
-        reason = "preferred window meets completeness and identity gates"
+        reason = "preferred window is an exact 840-sample Research Quality window"
     else:
         selected_start, selected_end, selected = select_latest_complete_window(
-            times,
-            valid_mask,
-            duration_days,
-            minimum,
+            times, valid_mask, duration_days
         )
         fallback_used = True
-        if not preferred["containsAnySourceSamples"]:
-            reason = "preferred window is outside the time coverage of UHSLC 632 record 6321 version A"
-        else:
-            reason = (
-                "preferred window failed completeness or duplicate-time gates; "
-                "latest complete window selected from the same station record and version"
-            )
-
-    selected["passed"] = (
-        selected["completenessFraction"] >= minimum
-        and selected["duplicateValidTimestampCount"] == 0
-    )
+        reason = (
+            "preferred window is outside this record coverage"
+            if not preferred["containsAnySourceSamples"]
+            else "preferred window is not exact; selected latest exact complete window"
+        )
+    selected["passed"] = window_is_exactly_complete(selected)
     return {
         "policy": policy,
         "durationDays": duration_days,
@@ -359,44 +590,6 @@ def select_window(
     }
 
 
-def load_station_arrays() -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
-    try:
-        import xarray as xr
-    except ImportError as exc:
-        raise RuntimeError("xarray is required for the UHSLC station OPeNDAP record") from exc
-
-    with xr.open_dataset(SOURCE_URL, engine="pydap", decode_times=True) as dataset:
-        if "time" not in dataset.variables or "sea_level" not in dataset.variables:
-            raise RuntimeError("Kanmen station dataset lacks time or sea_level")
-        times = np.asarray(dataset["time"].values).astype("datetime64[s]").reshape(-1)
-        if times.size == 0 or np.isnat(times).any():
-            raise RuntimeError("Kanmen station dataset contains empty or invalid timestamps")
-        if np.any(times[1:] < times[:-1]):
-            raise RuntimeError("Kanmen station dataset timestamps are not monotonic")
-        sea_values = time_axis_values(dataset["sea_level"], times.size, "sea_level")
-        if "quality" not in dataset.variables:
-            raise RuntimeError("Kanmen station dataset lacks quality")
-        quality_values = time_axis_values(dataset["quality"], times.size, "quality")
-        metadata = get_station_metadata(dataset)
-        source_attributes = {key: str(value) for key, value in dataset.attrs.items()}
-        variable_attributes = {
-            name: {key: str(value) for key, value in dataset[name].attrs.items()}
-            for name in ("time", "sea_level", "quality")
-            if name in dataset.variables
-        }
-
-    return (
-        times,
-        np.asarray(sea_values),
-        np.asarray(quality_values),
-        {
-            "stationMetadata": metadata,
-            "datasetAttributes": source_attributes,
-            "variableAttributes": variable_attributes,
-        },
-    )
-
-
 def materialize_selected_records(
     times: np.ndarray,
     sea_values: np.ndarray,
@@ -406,12 +599,11 @@ def materialize_selected_records(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], np.ndarray]:
     start64 = np_datetime(selection["selectedStart"])
     end64 = np_datetime(selection["selectedEndExclusive"])
-    selected_indices = np.flatnonzero((times >= start64) & (times < end64))
+    indices = np.flatnonzero((times >= start64) & (times < end64))
     records: list[dict[str, Any]] = []
     invalid: list[dict[str, Any]] = []
     valid_mask = selection["validMask"]
-
-    for source_index in selected_indices.tolist():
+    for source_index in indices.tolist():
         timestamp = datetime64_to_utc(times[source_index])
         if not bool(valid_mask[source_index]):
             invalid.append(
@@ -424,55 +616,49 @@ def materialize_selected_records(
                 }
             )
             continue
+        sea_level = float(sea_values[source_index])
+        if not sea_level.is_integer():
+            raise RuntimeError(f"UHSLC millimeter source value is not integral at {iso_z(timestamp)}")
         records.append(
             {
                 "time": timestamp,
                 "sourceIndex": source_index,
-                "seaLevelMillimeters": int(round(float(sea_values[source_index]))),
-                "quality": int(quality_values[source_index]),
+                "seaLevelMillimeters": int(sea_level),
+                "quality": int(float(quality_values[source_index])),
                 **metadata,
             }
         )
-    return records, invalid, selected_indices
+    return records, invalid, indices
 
 
 def normalize_records(
     records: list[dict[str, Any]],
     start: datetime,
     end_exclusive: datetime,
-    minimum_completeness: float,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     records.sort(key=lambda item: item["time"])
-    expected: list[datetime] = []
-    current = start
-    while current < end_exclusive:
-        expected.append(current)
-        current += timedelta(hours=1)
+    expected = [start + timedelta(hours=index) for index in range(EXPECTED_SAMPLE_COUNT)]
     expected_set = set(expected)
     observed_times = [item["time"] for item in records]
     observed_set = set(observed_times)
-    duplicate_count = len(observed_times) - len(observed_set)
     missing = sorted(expected_set - observed_set)
     unexpected = sorted(observed_set - expected_set)
-
-    cadence_anomalies: list[dict[str, Any]] = []
-    for previous, current_time in zip(observed_times, observed_times[1:]):
-        delta = current_time - previous
-        if delta != timedelta(hours=1):
-            cadence_anomalies.append(
-                {
-                    "previous": iso_z(previous),
-                    "current": iso_z(current_time),
-                    "deltaSeconds": int(delta.total_seconds()),
-                }
-            )
-
-    sea_levels = [item["seaLevelMillimeters"] for item in records]
-    if not sea_levels:
+    duplicate_count = len(observed_times) - len(observed_set)
+    cadence_anomalies = [
+        {
+            "previous": iso_z(previous),
+            "current": iso_z(current),
+            "deltaSeconds": int((current - previous).total_seconds()),
+        }
+        for previous, current in zip(observed_times, observed_times[1:])
+        if current - previous != timedelta(hours=1)
+    ]
+    if not records:
         raise RuntimeError("Selected Kanmen window contains no valid observations")
+
+    sea_levels = [int(item["seaLevelMillimeters"]) for item in records]
     window_mean_mm = float(sum(sea_levels)) / float(len(sea_levels))
     for item in records:
-        item["seaLevelMetersRelativeReferenceDatum"] = item["seaLevelMillimeters"] / 1000.0
         item["seaLevelMetersWindowMeanRemoved"] = (
             item["seaLevelMillimeters"] - window_mean_mm
         ) / 1000.0
@@ -480,7 +666,6 @@ def normalize_records(
     quality_histogram = Counter(item["quality"] for item in records)
     identities = {
         "stationNames": sorted({item["stationName"] for item in records}),
-        "stationCountries": sorted({item["stationCountry"] for item in records}),
         "recordIds": sorted({item["recordId"] for item in records}),
         "uhslcIds": sorted({item["uhslcId"] for item in records}),
         "versions": sorted({item["version"] for item in records}),
@@ -494,25 +679,26 @@ def normalize_records(
             }
         ),
     }
-    completeness = len(observed_set & expected_set) / len(expected_set) if expected_set else 0.0
     identity_passed = (
-        identities["stationNames"] == ["Kanmen"]
+        identities["stationNames"] == [EXPECTED_STATION_NAME]
         and identities["recordIds"] == [EXPECTED_RECORD_ID]
         and identities["uhslcIds"] == [EXPECTED_UHSLC_ID]
         and identities["versions"] == [EXPECTED_VERSION]
         and identities["glossIds"] == [EXPECTED_GLOSS_ID]
         and identities["sscIds"] == [EXPECTED_SSC_ID]
     )
-    quality_passed = set(quality_histogram) == {EXPECTED_QUALITY}
-    time_passed = duplicate_count == 0 and not unexpected and observed_times == sorted(observed_times)
-    coverage_passed = completeness >= minimum_completeness
-
+    quality_passed = quality_histogram == Counter({EXPECTED_QUALITY: EXPECTED_SAMPLE_COUNT})
+    time_passed = (
+        len(records) == EXPECTED_SAMPLE_COUNT
+        and duplicate_count == 0
+        and not missing
+        and not unexpected
+        and not cadence_anomalies
+        and observed_times == expected
+    )
     qa = {
-        "selectedWindow": {
-            "startUtc": iso_z(start),
-            "endExclusiveUtc": iso_z(end_exclusive),
-        },
-        "expectedSampleCount": len(expected),
+        "selectedWindow": {"startUtc": iso_z(start), "endExclusiveUtc": iso_z(end_exclusive)},
+        "expectedSampleCount": EXPECTED_SAMPLE_COUNT,
         "validSampleCount": len(records),
         "uniqueTimestampCount": len(observed_set),
         "duplicateTimestampCount": duplicate_count,
@@ -522,28 +708,29 @@ def normalize_records(
         "unexpectedTimestamps": [iso_z(item) for item in unexpected],
         "cadenceAnomalyCount": len(cadence_anomalies),
         "cadenceAnomalies": cadence_anomalies,
-        "completenessFraction": completeness,
-        "minimumCompletenessFraction": minimum_completeness,
+        "completenessFraction": len(observed_set & expected_set) / EXPECTED_SAMPLE_COUNT,
+        "minimumCompletenessFraction": 1.0,
         "qualityHistogram": {str(key): value for key, value in sorted(quality_histogram.items())},
         "identity": identities,
         "identityPassed": identity_passed,
         "qualityPassed": quality_passed,
         "timePassed": time_passed,
-        "coveragePassed": coverage_passed,
+        "coveragePassed": time_passed,
         "windowMeanMillimeters": window_mean_mm,
         "minimumMillimeters": min(sea_levels),
         "maximumMillimeters": max(sea_levels),
         "rangeMillimeters": max(sea_levels) - min(sea_levels),
+        "sourceDatum": identities["referenceDatums"],
         "absoluteDatumTransformApplied": False,
         "comparisonSeries": "seaLevelMetersWindowMeanRemoved",
     }
-    qa["passed"] = identity_passed and quality_passed and time_passed and coverage_passed
+    qa["passed"] = identity_passed and quality_passed and time_passed
     return records, qa
 
 
 def write_source_csv(path: Path, records: list[dict[str, Any]]) -> None:
     buffer = io.StringIO(newline="")
-    writer = csv.writer(buffer)
+    writer = csv.writer(buffer, lineterminator="\n")
     writer.writerow(
         [
             "time_utc",
@@ -580,42 +767,32 @@ def write_source_csv(path: Path, records: list[dict[str, Any]]) -> None:
     atomic_write(path, buffer.getvalue().encode("utf-8"))
 
 
-def write_normalized_csv(path: Path, records: list[dict[str, Any]]) -> None:
+def write_mean_removed_csv(path: Path, records: list[dict[str, Any]]) -> None:
     buffer = io.StringIO(newline="")
-    writer = csv.writer(buffer)
+    writer = csv.writer(buffer, lineterminator="\n")
     writer.writerow(
         [
             "time_utc",
-            "sea_level_mm_relative_reference_datum",
-            "sea_level_m_relative_reference_datum",
             "sea_level_m_window_mean_removed",
             "quality",
-            "longitude",
-            "latitude",
             "record_id",
             "uhslc_id",
             "version",
-            "gloss_id",
-            "ssc_id",
             "reference_datum",
+            "absolute_datum_transform_applied",
         ]
     )
     for item in records:
         writer.writerow(
             [
                 iso_z(item["time"]),
-                item["seaLevelMillimeters"],
-                f"{item['seaLevelMetersRelativeReferenceDatum']:.6f}",
-                f"{item['seaLevelMetersWindowMeanRemoved']:.6f}",
+                f"{item['seaLevelMetersWindowMeanRemoved']:.12f}",
                 item["quality"],
-                f"{item['longitude']:.6f}",
-                f"{item['latitude']:.6f}",
                 item["recordId"],
                 item["uhslcId"],
                 item["version"],
-                item["glossId"],
-                item["sscId"],
                 item["referenceDatum"],
+                "false",
             ]
         )
     atomic_write(path, buffer.getvalue().encode("utf-8"))
@@ -631,49 +808,60 @@ def file_record(path: Path, role: str) -> dict[str, Any]:
 
 
 def main() -> int:
-    generated = datetime.now(timezone.utc).isoformat()
+    generated = iso_z(utc_now())
     acquisition: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_acquisition@1.2.0",
+        "schema": "wenzhou_kanmen_uhslc_acquisition@2.0.0",
         "generatedAtUtc": generated,
         "dataset": "JASL/UHSLC Research Quality Tide Gauge Data hourly",
         "datasetId": DATASET_ID,
-        "sourceMode": "dedicated station OPeNDAP record",
+        "sourceMode": "official_static_station_netcdf_local_read",
         "sourceUrl": SOURCE_URL,
-        "station": "Kanmen",
+        "metadataUrl": METADATA_URL,
+        "erddapSecondaryUrl": ERDDAP_SECONDARY_URL,
+        "remoteOpendapArrayAccess": False,
+        "station": EXPECTED_STATION_NAME,
         "uhslcId": EXPECTED_UHSLC_ID,
         "recordId": EXPECTED_RECORD_ID,
         "version": EXPECTED_VERSION,
+        "absoluteDatumTransformApplied": False,
         "passed": False,
     }
     qa_report: dict[str, Any] = {
-        "schema": "wenzhou_kanmen_uhslc_qa@1.2.0",
+        "schema": "wenzhou_kanmen_uhslc_qa@2.0.0",
         "generatedAtUtc": generated,
+        "absoluteDatumTransformApplied": False,
         "passed": False,
     }
 
     try:
         points = json.loads(POINTS_PATH.read_text(encoding="utf-8"))
-        station_metadata_config = json.loads(STATION_PATH.read_text(encoding="utf-8"))
+        station_config = json.loads(STATION_PATH.read_text(encoding="utf-8"))
         window_config = points["observationWindow"]
-        das_content, das_transfer = fetch_text(SOURCE_DAS_URL)
-        dds_content, dds_transfer = fetch_text(SOURCE_DDS_URL)
+        netcdf_transfer = download_https(SOURCE_URL, NETCDF_PATH)
+        metadata_transfer = download_https(METADATA_URL, METADATA_PATH)
+        acquisition["transfers"] = {
+            "netcdf": netcdf_transfer,
+            "metadataYaml": metadata_transfer,
+        }
 
-        times, sea_values, quality_values, source_metadata = load_station_arrays()
-        selection = select_window(times, sea_values, quality_values, window_config)
+        times, sea_values, quality_values, source_metadata = load_station_arrays(NETCDF_PATH)
         station_identity = source_metadata["stationMetadata"]
+        validate_station_identity(station_identity)
+        yaml_identity = validate_metadata_yaml(METADATA_PATH, station_identity)
+        selection = select_window(times, sea_values, quality_values, window_config)
         records, invalid_samples, selected_indices = materialize_selected_records(
-            times,
-            sea_values,
-            quality_values,
-            station_identity,
-            selection,
+            times, sea_values, quality_values, station_identity, selection
         )
         normalized, qa = normalize_records(
-            records,
-            selection["selectedStart"],
-            selection["selectedEndExclusive"],
-            float(window_config["minimumCompletenessFraction"]),
+            records, selection["selectedStart"], selection["selectedEndExclusive"]
         )
+        if invalid_samples or selected_indices.size != EXPECTED_SAMPLE_COUNT:
+            raise RuntimeError(
+                f"Selected Kanmen source slice is not exact: {selected_indices.size} positions, "
+                f"{len(invalid_samples)} invalid"
+            )
+        if not qa["passed"]:
+            raise RuntimeError("Selected Kanmen window failed exact identity, time, or quality QA")
 
         start = selection["selectedStart"]
         end_exclusive = selection["selectedEndExclusive"]
@@ -682,52 +870,19 @@ def main() -> int:
             f"{end_exclusive.strftime('%Y%m%dT%H%M%SZ')}"
         )
         source_csv_path = DATA_ROOT / f"{stem}_SOURCE_VALUES.csv"
-        normalized_path = DATA_ROOT / f"{stem}_NORMALIZED.csv"
-        source_evidence_path = DATA_ROOT / f"{stem}_OPENDAP_REQUEST.json"
-        das_path = DATA_ROOT / f"{DATASET_ID}.das"
-        dds_path = DATA_ROOT / f"{DATASET_ID}.dds"
-
+        mean_removed_path = DATA_ROOT / f"{stem}_MEAN_REMOVED.csv"
         write_source_csv(source_csv_path, normalized)
-        write_normalized_csv(normalized_path, normalized)
-        write_json(
-            source_evidence_path,
-            {
-                "schema": "wenzhou_kanmen_opendap_request@1.1.0",
-                "generatedAtUtc": generated,
-                "datasetUrl": SOURCE_URL,
-                "dasUrl": SOURCE_DAS_URL,
-                "ddsUrl": SOURCE_DDS_URL,
-                "directCsvCompanionUrl": DIRECT_CSV_URL,
-                "windowSelection": {
-                    key: value
-                    for key, value in selection.items()
-                    if key not in {"selectedStart", "selectedEndExclusive", "validMask"}
-                },
-                "selectedSourceIndexStart": int(selected_indices[0]),
-                "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
-                "selectedSourceIndexCount": int(selected_indices.size),
-                "datasetTimeCount": int(times.size),
-                "datasetTimeStartUtc": iso_z(datetime64_to_utc(times[0])),
-                "datasetTimeEndUtc": iso_z(datetime64_to_utc(times[-1])),
-                "stationMetadata": station_identity,
-                "datasetAttributes": source_metadata["datasetAttributes"],
-                "variableAttributes": source_metadata["variableAttributes"],
-                "invalidSelectedSamples": invalid_samples,
-            },
-        )
-        atomic_write(das_path, das_content)
-        atomic_write(dds_path, dds_content)
+        write_mean_removed_csv(mean_removed_path, normalized)
 
         files = [
+            file_record(NETCDF_PATH, "official_static_station_netcdf"),
+            file_record(METADATA_PATH, "official_station_metadata_yaml"),
             file_record(source_csv_path, "materialized_official_source_values"),
-            file_record(normalized_path, "mean_removed_comparison_series"),
-            file_record(source_evidence_path, "opendap_request_and_window_selection"),
-            file_record(das_path, "official_opendap_das"),
-            file_record(dds_path, "official_opendap_dds"),
+            file_record(mean_removed_path, "window_mean_removed_comparison_series"),
         ]
         acquisition.update(
             {
-                "passed": qa["passed"],
+                "passed": True,
                 "windowSelectionPolicy": selection["policy"],
                 "preferredWindow": selection["preferredWindow"],
                 "fallbackUsed": selection["fallbackUsed"],
@@ -736,35 +891,48 @@ def main() -> int:
                     "startUtc": iso_z(start),
                     "endExclusiveUtc": iso_z(end_exclusive),
                     "durationDays": selection["durationDays"],
+                    "intervalMinutes": 60,
+                    "expectedSampleCount": EXPECTED_SAMPLE_COUNT,
+                    "validSampleCount": qa["validSampleCount"],
                     "completenessFraction": qa["completenessFraction"],
                 },
                 "datasetCoverage": {
                     "timeStartUtc": iso_z(datetime64_to_utc(times[0])),
-                    "timeEndUtc": iso_z(datetime64_to_utc(times[-1])),
+                    "timeEndInclusiveUtc": iso_z(datetime64_to_utc(times[-1])),
+                    "availableEndExclusiveUtc": iso_z(
+                        datetime64_to_utc(times[-1]) + timedelta(hours=1)
+                    ),
                     "timeCount": int(times.size),
                 },
-                "opendapMetadataRequests": {
-                    "das": das_transfer,
-                    "dds": dds_transfer,
-                },
                 "sourceStationMetadata": station_identity,
+                "metadataYamlIdentity": yaml_identity,
+                "netcdfStructure": source_metadata["netcdfStructure"],
                 "selectedSourceIndexStart": int(selected_indices[0]),
                 "selectedSourceIndexEndInclusive": int(selected_indices[-1]),
                 "selectedSourceIndexCount": int(selected_indices.size),
-                "invalidSelectedSampleCount": len(invalid_samples),
+                "invalidSelectedSampleCount": 0,
                 "files": files,
-                "stationMetadataContract": station_metadata_config,
+                "stationMetadataContract": station_config,
             }
         )
         qa_report.update(qa)
-        qa_report["windowSelectionPolicy"] = selection["policy"]
-        qa_report["preferredWindow"] = selection["preferredWindow"]
-        qa_report["fallbackUsed"] = selection["fallbackUsed"]
-        qa_report["selectionReason"] = selection["selectionReason"]
-        qa_report["sourceInvalidSampleCount"] = len(invalid_samples)
-        qa_report["sourceInvalidSamples"] = invalid_samples
-        qa_report["files"] = files
-        qa_report["referenceDatumPolicy"] = station_metadata_config["datumPolicy"]
+        qa_report.update(
+            {
+                "windowSelectionPolicy": selection["policy"],
+                "preferredWindow": selection["preferredWindow"],
+                "fallbackUsed": selection["fallbackUsed"],
+                "selectionReason": selection["selectionReason"],
+                "sourceInvalidSampleCount": 0,
+                "sourceInvalidSamples": [],
+                "qualityContract": {
+                    "datasetClass": "Research Quality Data Set",
+                    "requiredQualityCode": EXPECTED_QUALITY,
+                    "requiredSampleCount": EXPECTED_SAMPLE_COUNT,
+                },
+                "files": files,
+                "referenceDatumPolicy": station_config["datumPolicy"],
+            }
+        )
     except Exception as exc:
         acquisition["error"] = type(exc).__name__
         acquisition["detail"] = str(exc)

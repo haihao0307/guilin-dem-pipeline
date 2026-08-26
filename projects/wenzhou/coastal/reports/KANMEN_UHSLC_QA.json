@@ -1,0 +1,124 @@
+{
+  "schema": "wenzhou_kanmen_uhslc_qa@2.0.0",
+  "generatedAtUtc": "2026-08-26T00:58:50Z",
+  "absoluteDatumTransformApplied": false,
+  "passed": true,
+  "selectedWindow": {
+    "startUtc": "1997-11-26T16:00:00Z",
+    "endExclusiveUtc": "1997-12-31T16:00:00Z"
+  },
+  "expectedSampleCount": 840,
+  "validSampleCount": 840,
+  "uniqueTimestampCount": 840,
+  "duplicateTimestampCount": 0,
+  "missingTimestampCount": 0,
+  "missingTimestamps": [],
+  "unexpectedTimestampCount": 0,
+  "unexpectedTimestamps": [],
+  "cadenceAnomalyCount": 0,
+  "cadenceAnomalies": [],
+  "completenessFraction": 1.0,
+  "minimumCompletenessFraction": 1.0,
+  "qualityHistogram": {
+    "4": 840
+  },
+  "identity": {
+    "stationNames": [
+      "Kanmen"
+    ],
+    "recordIds": [
+      6321
+    ],
+    "uhslcIds": [
+      632
+    ],
+    "versions": [
+      "A"
+    ],
+    "glossIds": [
+      94
+    ],
+    "sscIds": [
+      "kanm"
+    ],
+    "referenceDatums": [
+      "station zero"
+    ],
+    "coordinatePairs": [
+      [
+        121.2817,
+        28.088301
+      ]
+    ]
+  },
+  "identityPassed": true,
+  "qualityPassed": true,
+  "timePassed": true,
+  "coveragePassed": true,
+  "windowMeanMillimeters": 3930.734523809524,
+  "minimumMillimeters": 710,
+  "maximumMillimeters": 6780,
+  "rangeMillimeters": 6070,
+  "sourceDatum": [
+    "station zero"
+  ],
+  "comparisonSeries": "seaLevelMetersWindowMeanRemoved",
+  "windowSelectionPolicy": "prefer_configured_then_latest_complete",
+  "preferredWindow": {
+    "startUtc": "2024-09-01T00:00:00Z",
+    "endExclusiveUtc": "2024-10-06T00:00:00Z",
+    "expectedSampleCount": 840,
+    "sourceSampleCount": 0,
+    "uniqueSourceTimestampCount": 0,
+    "validSampleCount": 0,
+    "uniqueValidTimestampCount": 0,
+    "duplicateSourceTimestampCount": 0,
+    "duplicateValidTimestampCount": 0,
+    "missingTimestampCount": 840,
+    "unexpectedTimestampCount": 0,
+    "completenessFraction": 0.0,
+    "containsAnySourceSamples": false,
+    "passed": false
+  },
+  "fallbackUsed": true,
+  "selectionReason": "preferred window is outside this record coverage",
+  "sourceInvalidSampleCount": 0,
+  "sourceInvalidSamples": [],
+  "qualityContract": {
+    "datasetClass": "Research Quality Data Set",
+    "requiredQualityCode": 4,
+    "requiredSampleCount": 840
+  },
+  "files": [
+    {
+      "role": "official_static_station_netcdf",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/h632a.nc",
+      "bytes": 309054,
+      "sha256": "bcd0dd9b193301f2fed40d249d103bdce82352aea2e9d81ef3f9da75e7461610"
+    },
+    {
+      "role": "official_station_metadata_yaml",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/632Ameta.yaml",
+      "bytes": 5573,
+      "sha256": "ac203672a0db10d1143d52e63d65b60c0e1a24e9020a8214cf71a1e2c1f760cf"
+    },
+    {
+      "role": "materialized_official_source_values",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_SOURCE_VALUES.csv",
+      "bytes": 74059,
+      "sha256": "1bedb0b4a2c95e5928a2e97c53506f889ed632ece8ae95aa6e7b1274ace86899"
+    },
+    {
+      "role": "window_mean_removed_comparison_series",
+      "path": "projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_MEAN_REMOVED.csv",
+      "bytes": 57661,
+      "sha256": "ee0ed6d2d230ab81d0551643719e91219af776fcbada4f3f799e238ba6d16ffd"
+    }
+  ],
+  "referenceDatumPolicy": {
+    "rawObservationDatum": "UHSLC published reference_datum field",
+    "modelComparisonBeforeDatumTransform": "remove the observation-window mean and compare phase and range only",
+    "absoluteWaterLevelUseAllowed": false,
+    "absoluteWaterLevelUnlock": "requires an explicit verified transform between the selected FES mean sea level reference and the chosen Kanmen benchmark or Yellow Sea datum"
+  }
+}

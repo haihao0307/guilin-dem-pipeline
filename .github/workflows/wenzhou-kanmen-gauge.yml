@@ -9,6 +9,7 @@ on:
       - projects/wenzhou/coastal/config/tide_points_v100.json
       - projects/wenzhou/coastal/config/kanmen_station_metadata_v100.json
       - projects/wenzhou/coastal/scripts/download_kanmen_uhslc.py
+      - projects/wenzhou/coastal/tests/test_download_kanmen_uhslc.py
   workflow_dispatch:
 
 permissions:
@@ -25,6 +26,8 @@ jobs:
       !contains(github.event.head_commit.message, '[skip kanmen gauge]')
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      COASTAL_BRANCH: project/wenzhou-v100-bathymetry-tides-hydrology
 
     steps:
       - name: Checkout exact coastal branch
@@ -40,40 +43,54 @@ jobs:
           python-version: '3.12'
           cache: pip
 
-      - name: Install station OPeNDAP runtime
+      - name: Install local NetCDF runtime
         shell: bash
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check --upgrade pip
           python -m pip install --disable-pip-version-check \
             'numpy>=2.0,<3' \
-            'pandas>=2.2,<3' \
+            'pandas>=2.2,<4' \
             'xarray>=2024.10,<2027' \
-            'pydap>=3.5,<4'
+            'h5py>=3.11,<4' \
+            'h5netcdf>=1.6,<2' \
+            'PyYAML>=6,<7'
           python - <<'PY'
-          import numpy, pandas, pydap, xarray
+          import h5netcdf
+          import h5py
+          import numpy
+          import pandas
+          import xarray
+          import yaml
+
           print('numpy', numpy.__version__)
           print('pandas', pandas.__version__)
-          print('pydap', pydap.__version__)
           print('xarray', xarray.__version__)
+          print('h5py', h5py.__version__)
+          print('h5netcdf', h5netcdf.__version__)
+          print('PyYAML', yaml.__version__)
           PY
 
-      - name: Validate configuration and script
+      - name: Validate receiver and unit contracts
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git branch --show-current)" = 'project/wenzhou-v100-bathymetry-tides-hydrology'
+          test "$(git branch --show-current)" = "$COASTAL_BRANCH"
           python -m py_compile projects/wenzhou/coastal/scripts/download_kanmen_uhslc.py
+          python -m py_compile projects/wenzhou/coastal/tests/test_download_kanmen_uhslc.py
           python -m json.tool projects/wenzhou/coastal/config/tide_points_v100.json >/dev/null
           python -m json.tool projects/wenzhou/coastal/config/kanmen_station_metadata_v100.json >/dev/null
+          python -m unittest -v projects/wenzhou/coastal/tests/test_download_kanmen_uhslc.py
+          git diff --check
 
-      - name: Download and validate official UHSLC Kanmen station record
+      - name: Download static UHSLC files and validate local arrays
         shell: bash
         run: |
           set -euo pipefail
           python projects/wenzhou/coastal/scripts/download_kanmen_uhslc.py
+          python -m unittest -v projects/wenzhou/coastal/tests/test_download_kanmen_uhslc.py
 
-      - name: Assert observation identity and selected-window QA
+      - name: Assert identity, exact window, datum policy, and hashes
         shell: bash
         run: |
           set -euo pipefail
@@ -81,38 +98,76 @@ jobs:
           import csv
           import hashlib
           import json
-          from datetime import datetime
+          from datetime import datetime, timedelta
           from pathlib import Path
 
           root = Path('.')
-          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text())
-          qa = json.loads((root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
+          acquisition_path = root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json'
+          qa_path = root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json'
+          acquisition = json.loads(acquisition_path.read_text())
+          qa = json.loads(qa_path.read_text())
           assert acquisition['passed'] is True
           assert qa['passed'] is True
-          assert acquisition['sourceMode'] == 'dedicated station OPeNDAP record'
+          assert acquisition['sourceMode'] == 'official_static_station_netcdf_local_read'
+          assert acquisition['remoteOpendapArrayAccess'] is False
           assert acquisition['windowSelectionPolicy'] == 'prefer_configured_then_latest_complete'
           assert acquisition['uhslcId'] == 632
           assert acquisition['recordId'] == 6321
           assert acquisition['version'] == 'A'
-          assert acquisition['selectedWindow'] == {
-              'startUtc': qa['selectedWindow']['startUtc'],
-              'endExclusiveUtc': qa['selectedWindow']['endExclusiveUtc'],
-              'durationDays': 35,
-              'completenessFraction': qa['completenessFraction'],
-          }
-          assert acquisition['selectedWindow']['startUtc'] < acquisition['selectedWindow']['endExclusiveUtc']
-          assert acquisition['datasetCoverage']['timeStartUtc'] <= acquisition['selectedWindow']['startUtc']
-          assert acquisition['selectedWindow']['endExclusiveUtc'] <= acquisition['datasetCoverage']['timeEndUtc'][:10] + 'T24:00:00Z' or True
+          assert acquisition['sourceStationMetadata']['stationName'] == 'Kanmen'
+          assert acquisition['sourceStationMetadata']['glossId'] == 94
+          assert acquisition['sourceStationMetadata']['sscId'] == 'kanm'
+          assert acquisition['sourceStationMetadata']['referenceDatum'] == 'station zero'
+
+          selected = acquisition['selectedWindow']
+          assert selected['durationDays'] == 35
+          assert selected['intervalMinutes'] == 60
+          assert selected['expectedSampleCount'] == 840
+          assert selected['validSampleCount'] == 840
+          assert selected['completenessFraction'] == 1.0
+          assert selected['startUtc'] == qa['selectedWindow']['startUtc']
+          assert selected['endExclusiveUtc'] == qa['selectedWindow']['endExclusiveUtc']
+          selected_start = datetime.fromisoformat(selected['startUtc'].replace('Z', '+00:00'))
+          selected_end = datetime.fromisoformat(selected['endExclusiveUtc'].replace('Z', '+00:00'))
+          coverage_start = datetime.fromisoformat(
+              acquisition['datasetCoverage']['timeStartUtc'].replace('Z', '+00:00')
+          )
+          coverage_end = datetime.fromisoformat(
+              acquisition['datasetCoverage']['timeEndInclusiveUtc'].replace('Z', '+00:00')
+          )
+          assert selected_end - selected_start == timedelta(days=35)
+          assert coverage_start <= selected_start
+          assert selected_end <= coverage_end + timedelta(hours=1)
+
           assert qa['identityPassed'] is True
           assert qa['qualityPassed'] is True
           assert qa['timePassed'] is True
           assert qa['coveragePassed'] is True
           assert qa['absoluteDatumTransformApplied'] is False
-          assert qa['qualityHistogram'] == {'4': qa['validSampleCount']}
+          assert acquisition['absoluteDatumTransformApplied'] is False
+          assert qa['qualityHistogram'] == {'4': 840}
+          assert qa['validSampleCount'] == 840
+          assert qa['uniqueTimestampCount'] == 840
           assert qa['duplicateTimestampCount'] == 0
+          assert qa['missingTimestampCount'] == 0
           assert qa['unexpectedTimestampCount'] == 0
-          assert qa['completenessFraction'] >= qa['minimumCompletenessFraction'] >= 0.95
-          assert len(acquisition['files']) == 5
+          assert qa['cadenceAnomalyCount'] == 0
+          assert qa['completenessFraction'] == 1.0
+          assert qa['minimumCompletenessFraction'] == 1.0
+
+          expected_roles = {
+              'official_static_station_netcdf': 'projects/wenzhou/coastal/data/gauges/kanmen/h632a.nc',
+              'official_station_metadata_yaml': 'projects/wenzhou/coastal/data/gauges/kanmen/632Ameta.yaml',
+              'materialized_official_source_values': None,
+              'window_mean_removed_comparison_series': None,
+          }
+          actual_roles = {item['role']: item['path'] for item in acquisition['files']}
+          assert set(actual_roles) == set(expected_roles)
+          for role, expected_path in expected_roles.items():
+              if expected_path is not None:
+                  assert actual_roles[role] == expected_path
+          assert actual_roles['materialized_official_source_values'].endswith('_SOURCE_VALUES.csv')
+          assert actual_roles['window_mean_removed_comparison_series'].endswith('_MEAN_REMOVED.csv')
 
           checked = []
           for item in acquisition['files']:
@@ -126,35 +181,53 @@ jobs:
               assert digest.hexdigest() == item['sha256']
               checked.append(item)
 
-          normalized_item = next(
-              item for item in acquisition['files']
-              if item['role'] == 'mean_removed_comparison_series'
+          netcdf_transfer = acquisition['transfers']['netcdf']
+          metadata_transfer = acquisition['transfers']['metadataYaml']
+          assert netcdf_transfer['finalUrl'].startswith('https://')
+          assert metadata_transfer['finalUrl'].startswith('https://')
+          assert netcdf_transfer['httpStatus'] in (200, 206)
+          assert metadata_transfer['httpStatus'] in (200, 206)
+          assert netcdf_transfer['etag'] and netcdf_transfer['lastModified']
+          assert metadata_transfer['etag'] and metadata_transfer['lastModified']
+          assert netcdf_transfer['bytes'] == next(
+              item['bytes'] for item in checked if item['role'] == 'official_static_station_netcdf'
           )
-          normalized_path = root / normalized_item['path']
-          with normalized_path.open(encoding='utf-8', newline='') as handle:
-              rows = list(csv.DictReader(handle))
-          assert len(rows) == qa['validSampleCount']
-          assert rows
+          assert netcdf_transfer['sha256'] == next(
+              item['sha256'] for item in checked if item['role'] == 'official_static_station_netcdf'
+          )
+          assert metadata_transfer['bytes'] == next(
+              item['bytes'] for item in checked if item['role'] == 'official_station_metadata_yaml'
+          )
+          assert metadata_transfer['sha256'] == next(
+              item['sha256'] for item in checked if item['role'] == 'official_station_metadata_yaml'
+          )
+
+          source_path = root / actual_roles['materialized_official_source_values']
+          mean_path = root / actual_roles['window_mean_removed_comparison_series']
+          with source_path.open(encoding='utf-8', newline='') as handle:
+              source_rows = list(csv.DictReader(handle))
+          with mean_path.open(encoding='utf-8', newline='') as handle:
+              mean_rows = list(csv.DictReader(handle))
+          assert len(source_rows) == len(mean_rows) == 840
           previous = None
-          for row in rows:
-              current = datetime.fromisoformat(row['time_utc'].replace('Z', '+00:00'))
+          for source_row, mean_row in zip(source_rows, mean_rows):
+              current = datetime.fromisoformat(source_row['time_utc'].replace('Z', '+00:00'))
               if previous is not None:
-                  assert current > previous
+                  assert current - previous == timedelta(hours=1)
               previous = current
-              assert int(row['uhslc_id']) == 632
-              assert int(row['record_id']) == 6321
-              assert row['version'] == 'A'
-              assert int(row['quality']) == 4
-          print(json.dumps({
-              'selectedWindow': acquisition['selectedWindow'],
-              'fallbackUsed': acquisition['fallbackUsed'],
-              'selectionReason': acquisition['selectionReason'],
-              'qa': qa,
-              'checked': checked,
-          }, indent=2))
+              assert source_row['time_utc'] == mean_row['time_utc']
+              assert int(source_row['uhslc_id']) == 632
+              assert int(source_row['record_id']) == 6321
+              assert source_row['version'] == 'A'
+              assert int(source_row['quality']) == 4
+              assert source_row['reference_datum'] == 'station zero'
+              assert mean_row['reference_datum'] == 'station zero'
+              assert mean_row['absolute_datum_transform_applied'] == 'false'
+          assert abs(sum(float(row['sea_level_m_window_mean_removed']) for row in mean_rows)) < 1e-9
+          print(json.dumps({'selectedWindow': selected, 'checked': checked}, indent=2))
           PY
 
-      - name: Commit Kanmen observation evidence
+      - name: Commit Kanmen source files and QA evidence
         id: commit_observations
         shell: bash
         run: |
@@ -166,45 +239,92 @@ jobs:
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json \
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json
           test -n "$(git diff --cached --name-only)"
-          git commit -m 'Add verified Kanmen UHSLC selected window [skip kanmen gauge] [skip coastal stage-a]'
+          git diff --cached --check
+          git commit -m 'Add verified static Kanmen UHSLC window [skip kanmen gauge] [skip coastal stage-a]'
+          git fetch origin "$COASTAL_BRANCH:refs/remotes/origin/$COASTAL_BRANCH"
+          git merge-base --is-ancestor "origin/$COASTAL_BRANCH" HEAD
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+          git push origin "HEAD:$COASTAL_BRANCH"
 
-      - name: Verify observations from a fresh clone
+      - name: Capture expected first-clone hashes
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/wenzhou-kanmen-fresh
-          git clone --depth 1 --branch project/wenzhou-v100-bathymetry-tides-hydrology \
-            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-kanmen-fresh
-          cd /tmp/wenzhou-kanmen-fresh
           python - <<'PY'
           import hashlib
           import json
           from pathlib import Path
 
           root = Path('.')
-          acquisition = json.loads((root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text())
-          qa = json.loads((root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
-          assert acquisition['passed'] is True
-          assert qa['passed'] is True
+          acquisition = json.loads(
+              (root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text()
+          )
+          files = list(acquisition['files'])
+          for relative in (
+              'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json',
+              'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json',
+          ):
+              path = root / relative
+              files.append({
+                  'role': 'acquisition_report' if 'ACQUISITION' in relative else 'qa_report',
+                  'path': relative,
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              })
+          Path('/tmp/wenzhou-kanmen-expected-files.json').write_text(
+              json.dumps(files, indent=2) + '\n'
+          )
+          PY
+
+      - name: Verify source files and reports from first fresh clone
+        shell: bash
+        env:
+          OBSERVATION_COMMIT: ${{ steps.commit_observations.outputs.commit }}
+        run: |
+          set -euo pipefail
+          fresh_dir="$(mktemp -d)"
+          git clone --depth 1 --branch "$COASTAL_BRANCH" \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$fresh_dir"
+          FRESH_DIR="$fresh_dir" python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          root = Path(os.environ['FRESH_DIR'])
+          assert subprocess.check_output(
+              ['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True
+          ).strip() == os.environ['OBSERVATION_COMMIT']
+          expected = json.loads(Path('/tmp/wenzhou-kanmen-expected-files.json').read_text())
           checked = []
-          for item in acquisition['files']:
+          for item in expected:
               path = root / item['path']
               digest = hashlib.sha256(path.read_bytes()).hexdigest()
               assert path.stat().st_size == item['bytes']
               assert digest == item['sha256']
-              checked.append({'role': item['role'], 'path': item['path'], 'bytes': item['bytes'], 'sha256': digest})
+              checked.append(item)
+          acquisition = json.loads(
+              (root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text()
+          )
+          qa = json.loads(
+              (root / 'projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text()
+          )
+          assert acquisition['passed'] is True and qa['passed'] is True
           evidence = {
-              'freshDownloadVerified': True,
+              'freshCloneVerified': True,
+              'freshCloneCommit': os.environ['OBSERVATION_COMMIT'],
               'selectedWindow': acquisition['selectedWindow'],
               'files': checked,
           }
-          Path('/tmp/wenzhou-kanmen-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+          Path('/tmp/wenzhou-kanmen-first-fresh-verification.json').write_text(
+              json.dumps(evidence, indent=2) + '\n'
+          )
           print(json.dumps(evidence, indent=2))
           PY
 
-      - name: Record Kanmen round trip receipt
+      - name: Record Kanmen round-trip receipt
+        id: commit_receipt
         shell: bash
         env:
           OBSERVATION_COMMIT: ${{ steps.commit_observations.outputs.commit }}
@@ -216,18 +336,22 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
 
-          fresh = json.loads(Path('/tmp/wenzhou-kanmen-fresh-verification.json').read_text())
-          acquisition = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text())
+          fresh = json.loads(Path('/tmp/wenzhou-kanmen-first-fresh-verification.json').read_text())
+          acquisition = json.loads(
+              Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_ACQUISITION.json').read_text()
+          )
           qa = json.loads(Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_QA.json').read_text())
           receipt = {
-              'schema': 'wenzhou_kanmen_uhslc_receipt@1.2.0',
+              'schema': 'wenzhou_kanmen_uhslc_receipt@2.0.0',
               'completedAtUtc': datetime.now(timezone.utc).isoformat(),
               'repository': os.environ['GITHUB_REPOSITORY'],
-              'branch': 'project/wenzhou-v100-bathymetry-tides-hydrology',
+              'branch': os.environ['COASTAL_BRANCH'],
               'observationCommit': os.environ['OBSERVATION_COMMIT'],
               'dataset': acquisition['dataset'],
               'sourceMode': acquisition['sourceMode'],
               'sourceUrl': acquisition['sourceUrl'],
+              'metadataUrl': acquisition['metadataUrl'],
+              'transfers': acquisition['transfers'],
               'uhslcId': 632,
               'recordId': 6321,
               'version': 'A',
@@ -239,7 +363,8 @@ jobs:
               'validSampleCount': qa['validSampleCount'],
               'missingTimestampCount': qa['missingTimestampCount'],
               'completenessFraction': qa['completenessFraction'],
-              'freshDownloadVerified': fresh['freshDownloadVerified'],
+              'freshCloneVerified': fresh['freshCloneVerified'],
+              'freshCloneCommit': fresh['freshCloneCommit'],
               'absoluteDatumTransformApplied': False,
               'files': fresh['files'],
           }
@@ -247,8 +372,73 @@ jobs:
           path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           git add -- projects/wenzhou/coastal/reports/KANMEN_UHSLC_RECEIPT.json
-          git commit -m 'Record verified Kanmen selected-window receipt [skip kanmen gauge] [skip coastal stage-a]'
-          git push origin HEAD:project/wenzhou-v100-bathymetry-tides-hydrology
+          git diff --cached --check
+          git commit -m 'Record static Kanmen UHSLC receipt [skip kanmen gauge] [skip coastal stage-a]'
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          path = Path('projects/wenzhou/coastal/reports/KANMEN_UHSLC_RECEIPT.json')
+          Path('/tmp/wenzhou-kanmen-expected-receipt.json').write_text(json.dumps({
+              'path': str(path),
+              'bytes': path.stat().st_size,
+              'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+          }, indent=2) + '\n')
+          PY
+          git fetch origin "$COASTAL_BRANCH:refs/remotes/origin/$COASTAL_BRANCH"
+          git merge-base --is-ancestor "origin/$COASTAL_BRANCH" HEAD
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git push origin "HEAD:$COASTAL_BRANCH"
+
+      - name: Verify receipt from second fresh clone
+        shell: bash
+        env:
+          RECEIPT_COMMIT: ${{ steps.commit_receipt.outputs.commit }}
+        run: |
+          set -euo pipefail
+          fresh_dir="$(mktemp -d)"
+          git clone --depth 1 --branch "$COASTAL_BRANCH" \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$fresh_dir"
+          FRESH_DIR="$fresh_dir" python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          root = Path(os.environ['FRESH_DIR'])
+          assert subprocess.check_output(
+              ['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True
+          ).strip() == os.environ['RECEIPT_COMMIT']
+          expected_receipt = json.loads(
+              Path('/tmp/wenzhou-kanmen-expected-receipt.json').read_text()
+          )
+          receipt_path = root / expected_receipt['path']
+          receipt_digest = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+          assert receipt_path.stat().st_size == expected_receipt['bytes']
+          assert receipt_digest == expected_receipt['sha256']
+          receipt = json.loads(receipt_path.read_text())
+          assert receipt['freshCloneVerified'] is True
+          assert receipt['validSampleCount'] == 840
+          assert receipt['missingTimestampCount'] == 0
+          assert receipt['completenessFraction'] == 1.0
+          assert receipt['absoluteDatumTransformApplied'] is False
+          for item in receipt['files']:
+              path = root / item['path']
+              assert path.stat().st_size == item['bytes']
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
+          result = {
+              'receiptFreshCloneVerified': True,
+              'receiptCommit': os.environ['RECEIPT_COMMIT'],
+              'receipt': expected_receipt,
+              'verifiedFileCount': len(receipt['files']),
+          }
+          Path('/tmp/wenzhou-kanmen-receipt-verification.json').write_text(
+              json.dumps(result, indent=2) + '\n'
+          )
+          print(json.dumps(result, indent=2))
+          PY
 
       - name: Preserve gauge evidence artifact
         if: always()
@@ -258,5 +448,7 @@ jobs:
           path: |
             projects/wenzhou/coastal/data/gauges/kanmen/*
             projects/wenzhou/coastal/reports/KANMEN_UHSLC_*.json
+            /tmp/wenzhou-kanmen-first-fresh-verification.json
+            /tmp/wenzhou-kanmen-receipt-verification.json
           if-no-files-found: warn
           retention-days: 90
