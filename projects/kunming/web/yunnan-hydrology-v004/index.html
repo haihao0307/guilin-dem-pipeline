@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <title>昆明 DEM 云南色彩与真实水系 V004</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+  <canvas id="terrain" aria-label="昆明 DEM 云南色彩与真实 OSM 水系三维地形"></canvas>
+  <div id="fallback" hidden><img id="fallbackImage" src="assets/fallback.png" alt="昆明 DEM 云南色彩二维预览" draggable="false"></div>
+
+  <aside id="panel" class="panel">
+    <header class="panel-head">
+      <div>
+        <div class="eyebrow">XIAOKUN · KUNMING GEODATA</div>
+        <h1>昆明 DEM 云南色彩与真实水系 V004</h1>
+      </div>
+      <button id="collapse" class="icon-button" aria-label="折叠面板">收起</button>
+    </header>
+    <p class="lead">以冻结的无压缩 12.5 米 DEM 为地形基线。色彩由高程、坡度、坡向、局部起伏和谷地湿润度确定性生成；水系只读取现代 OSM 河道、湖泊和水库，手绘水系保持为零。</p>
+
+    <div class="pills">
+      <span>现代 OSM 参考</span><span>手绘水系 0</span><span>历史核验 0</span>
+    </div>
+
+    <section>
+      <h2>云南卫星图式色彩</h2>
+      <label><span>谷地绿度</span><output id="greenOut">64%</output></label>
+      <input id="green" type="range" min="0" max="100" value="64">
+      <label><span>红土暖色</span><output id="redEarthOut">56%</output></label>
+      <input id="redEarth" type="range" min="0" max="100" value="56">
+      <label><span>裸岩层次</span><output id="rockOut">58%</output></label>
+      <input id="rock" type="range" min="0" max="100" value="58">
+      <label><span>明暗层次</span><output id="shadeOut">70%</output></label>
+      <input id="shade" type="range" min="0" max="100" value="70">
+      <label><span>综合色彩对比</span><output id="contrastOut">54%</output></label>
+      <input id="contrast" type="range" min="0" max="100" value="54">
+    </section>
+
+    <section>
+      <div class="section-head"><h2>现代 OSM 真实水系</h2><span class="license">© OSM contributors</span></div>
+      <div class="toggle-grid">
+        <button id="toggleRivers" class="active">河流开</button>
+        <button id="toggleLakes" class="active">湖泊开</button>
+      </div>
+      <label><span>河道显示宽度</span><output id="riverWidthOut">46%</output></label>
+      <input id="riverWidth" type="range" min="5" max="100" value="46">
+      <label><span>水体深浅</span><output id="waterColorOut">60%</output></label>
+      <input id="waterColor" type="range" min="0" max="100" value="60">
+      <label><span>河流速度</span><output id="flowSpeedOut">52%</output></label>
+      <input id="flowSpeed" type="range" min="0" max="100" value="52">
+      <label><span>湖面波浪</span><output id="waveOut">48%</output></label>
+      <input id="wave" type="range" min="0" max="100" value="48">
+    </section>
+
+    <section class="stats">
+      <div><b>12.5 m</b><span>权威输出像元</span></div>
+      <div><b>5892 × 8095</b><span>无压缩基线栅格</span></div>
+      <div><b id="countWays">读取中</b><span>现代 OSM 水路线</span></div>
+      <div><b id="countAreas">读取中</b><span>现代 OSM 水体面</span></div>
+    </section>
+
+    <section class="actions">
+      <button id="resetColor">恢复色彩参数</button>
+      <button id="fullscreen">全屏</button>
+      <button id="screenshot">截图</button>
+    </section>
+
+    <section class="note">
+      <strong>操作：</strong>左键拖动旋转，右键拖动或按住 Shift 平移，滚轮缩放。页面不提供总览、俯视或朝北预设，镜头完全由你直接控制。河流中心线和湖岸保持固定，滑块只改变显示宽度、颜色和材质动画。
+      <div id="sourceTime" class="source-time"></div>
+    </section>
+  </aside>
+
+  <div id="status" class="status">小坤正在载入昆明 V004…</div>
+  <script type="module" src="app.js?v=4"></script>
+</body>
+</html>
