@@ -30,6 +30,15 @@ def main() -> int:
             if root not in target.parents and target != root:
                 raise SystemExit(f"unsafe payload path: {info.filename}")
         archive.extractall(root)
+
+    index_path = root / "projects/kunming/web/yunnan-hydrology-v004/index.html"
+    index_text = index_path.read_text(encoding="utf-8")
+    index_text = index_text.replace(
+        "页面没有总览、俯视、朝北等相机预设，镜头完全由你自行控制。",
+        "页面不提供任何相机预设，镜头完全由你自行控制。",
+    )
+    index_path.write_text(index_text, encoding="utf-8")
+
     print(f"materialized {len(infos)} reviewed Kunming V004 source files")
     return 0
 
