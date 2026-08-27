@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>小温 · 温州上一版整版卫星拼接图</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#05090c;
+      --panel:rgba(7,16,20,.92);
+      --panel2:rgba(11,27,31,.88);
+      --line:rgba(166,226,211,.22);
+      --text:#edf7f4;
+      --muted:#9db7b1;
+      --green:#55d19a;
+      --red:#ff6f61;
+      --blue:#55b9ff;
+    }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--text); font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+    button,a { font:inherit; }
+    #app { position:fixed; inset:0; background:radial-gradient(circle at 35% 25%,#17313a 0%,#071116 46%,#030507 100%); }
+    #viewport { position:absolute; inset:0; overflow:hidden; touch-action:none; cursor:grab; }
+    #viewport.dragging { cursor:grabbing; }
+    #scene { position:absolute; left:0; top:0; width:4096px; height:4096px; transform-origin:0 0; will-change:transform; }
+    #mosaic { position:absolute; inset:0; width:4096px; height:4096px; display:block; user-select:none; pointer-events:none; image-rendering:auto; }
+    #frame { position:absolute; inset:0; border:10px solid rgba(134,224,200,.9); box-shadow:inset 0 0 0 2px rgba(255,255,255,.45),0 0 34px rgba(53,179,148,.42); pointer-events:none; }
+    #overlay { position:absolute; inset:0; pointer-events:none; transition:opacity .18s ease; }
+    #overlay.hidden { opacity:0; }
+    .marker { position:absolute; width:70px; height:70px; transform:translate(-50%,-50%); }
+    .marker-dot { position:absolute; left:20px; top:20px; width:30px; height:30px; border-radius:50%; border:5px solid white; background:var(--green); box-shadow:0 0 0 7px rgba(85,209,154,.26),0 8px 28px rgba(0,0,0,.7); }
+    .marker-label { position:absolute; left:58px; top:4px; min-width:250px; padding:12px 14px; border:2px solid rgba(85,209,154,.75); border-radius:13px; background:rgba(4,16,18,.9); color:#f0fff9; font-size:27px; line-height:1.35; font-weight:750; box-shadow:0 12px 36px rgba(0,0,0,.55); }
+    .marker-label small { display:block; margin-top:4px; color:#b5d9cd; font-size:20px; font-weight:500; }
+    .outside-yuhu { position:absolute; left:8px; top:78.8157%; transform:translateY(-50%); display:flex; align-items:center; gap:18px; }
+    .outside-arrow { width:110px; height:8px; border-radius:8px; background:var(--red); box-shadow:0 0 18px rgba(255,111,97,.72); }
+    .outside-arrow::before { content:""; position:absolute; left:0; top:50%; width:34px; height:34px; border-left:10px solid var(--red); border-bottom:10px solid var(--red); transform:translate(-2px,-50%) rotate(45deg); }
+    .outside-label { max-width:420px; padding:13px 16px; border:2px solid rgba(255,111,97,.78); border-radius:13px; background:rgba(24,7,8,.91); color:#fff0ee; font-size:27px; line-height:1.35; font-weight:780; box-shadow:0 12px 36px rgba(0,0,0,.62); }
+    .outside-label small { display:block; margin-top:4px; color:#e5b6b1; font-size:20px; font-weight:500; }
+    .topbar { position:absolute; z-index:20; left:12px; right:12px; top:12px; min-height:62px; display:flex; align-items:center; gap:14px; padding:9px 12px; border:1px solid var(--line); border-radius:15px; background:rgba(4,13,17,.92); box-shadow:0 16px 40px rgba(0,0,0,.42); backdrop-filter:blur(14px); }
+    .brand { display:flex; align-items:center; gap:11px; min-width:340px; }
+    .badge { width:43px; height:43px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(145deg,#9fe7cf,#4c9d88); color:#042017; font-size:20px; font-weight:900; }
+    .title { font-size:17px; font-weight:800; line-height:1.2; }
+    .subtitle { margin-top:3px; color:var(--muted); font-size:10px; letter-spacing:.09em; }
+    .chips { display:flex; flex-wrap:wrap; gap:7px; }
+    .chip { padding:7px 10px; border:1px solid var(--line); border-radius:999px; background:rgba(15,42,46,.75); color:#d6eae5; font-size:11px; white-space:nowrap; }
+    .toolbar { position:absolute; z-index:20; left:14px; top:89px; display:grid; gap:7px; width:190px; padding:10px; border:1px solid var(--line); border-radius:13px; background:var(--panel); box-shadow:0 16px 40px rgba(0,0,0,.4); backdrop-filter:blur(12px); }
+    .toolbar button,.toolbar a { min-height:39px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border:1px solid rgba(134,224,200,.25); border-radius:9px; background:rgba(20,59,61,.84); color:#e5f5f1; text-decoration:none; cursor:pointer; }
+    .toolbar button:hover,.toolbar a:hover { background:rgba(35,84,80,.94); }
+    .toolbar .primary { background:rgba(31,83,112,.86); border-color:rgba(85,185,255,.58); }
+    .toolbar .active { background:rgba(37,105,83,.9); border-color:rgba(85,209,154,.68); }
+    .zoom-row { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .zoom-row button { padding:0; font-size:18px; }
+    .info { position:absolute; z-index:20; right:14px; top:89px; width:min(380px,calc(100vw - 230px)); padding:12px; border:1px solid var(--line); border-radius:13px; background:var(--panel); box-shadow:0 16px 40px rgba(0,0,0,.4); backdrop-filter:blur(12px); }
+    .info h2 { margin:0 0 8px; font-size:14px; }
+    .info p { margin:6px 0; color:var(--muted); font-size:12px; line-height:1.55; }
+    .info strong { color:#f2fbf8; }
+    .notice { padding:8px 9px; border:1px solid rgba(255,111,97,.28); border-radius:9px; background:rgba(255,111,97,.08); color:#ffd7d2!important; }
+    .status { position:absolute; z-index:19; left:14px; bottom:14px; max-width:min(760px,calc(100vw - 28px)); padding:9px 11px; border:1px solid var(--line); border-radius:10px; background:rgba(4,14,18,.88); color:#bdd3ce; font-size:11px; box-shadow:0 10px 28px rgba(0,0,0,.36); backdrop-filter:blur(10px); }
+    .loading { position:absolute; z-index:30; inset:0; display:grid; place-items:center; background:#05090c; transition:opacity .35s ease; }
+    .loading.done { opacity:0; pointer-events:none; }
+    .loading-card { padding:18px 22px; border:1px solid var(--line); border-radius:14px; background:rgba(7,20,24,.94); color:#dceee9; box-shadow:0 20px 60px rgba(0,0,0,.55); }
+    @media(max-width:760px) {
+      .topbar { left:7px; right:7px; top:7px; min-height:53px; padding:7px 9px; }
+      .brand { min-width:0; }
+      .badge { width:37px; height:37px; border-radius:11px; }
+      .title { font-size:14px; }
+      .subtitle,.chips { display:none; }
+      .toolbar { left:7px; top:67px; width:158px; padding:7px; }
+      .toolbar button,.toolbar a { min-height:35px; font-size:11px; }
+      .info { left:7px; right:7px; top:auto; bottom:49px; width:auto; max-height:31vh; overflow:auto; padding:9px; }
+      .status { left:7px; right:7px; bottom:7px; max-width:none; font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <div id="viewport" aria-label="温州上一版 4096 像素整版卫星拼接图，可拖动与缩放">
+      <div id="scene">
+        <img id="mosaic" src="WENZHOU_V111_FULL_SATELLITE_MOSAIC_4096.png" width="4096" height="4096" alt="温州上一版整版卫星拼接图" draggable="false" />
+        <div id="frame"></div>
+        <div id="overlay" class="hidden">
+          <div class="marker" style="left:27.6903%;top:46.1041%">
+            <div class="marker-dot"></div>
+            <div class="marker-label">永嘉自然岛参考区<small>枫林镇范围参考点，位于当前整版图内</small></div>
+          </div>
+          <div class="outside-yuhu">
+            <div class="outside-arrow"></div>
+            <div class="outside-label">文成县玉壶镇在图外西侧<small>距离当前西边界约 20.8 km</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div class="brand"><div class="badge">温</div><div><div class="title">小温 · 温州上一版整版卫星拼接图</div><div class="subtitle">FULL PREVIOUS SATELLITE MOSAIC · 4096 × 4096</div></div></div>
+      <div class="chips"><span class="chip">原文件整版显示</span><span class="chip">4096 × 4096 PNG</span><span class="chip">当前 22,000.3 km² AOI</span><span class="chip">可拖动与连续缩放</span></div>
+    </header>
+
+    <section class="toolbar" aria-label="查看工具">
+      <button id="fit" class="primary">整版显示</button>
+      <div class="zoom-row"><button id="minus" title="缩小">−</button><button id="one" title="原始像素比例">1:1</button><button id="plus" title="放大">＋</button></div>
+      <button id="toggleOverlay">显示地点标记</button>
+      <button id="goNature">定位自然岛参考区</button>
+      <a href="WENZHOU_V111_FULL_SATELLITE_MOSAIC_4096.png" download>保存原始整版 PNG</a>
+      <a href="../wenzhou-scope-review/">返回范围复核页</a>
+    </section>
+
+    <aside class="info">
+      <h2>这一张就是上一版使用的整版卫星拼接图</h2>
+      <p>页面直接显示原有 <strong>offline_satellite_color_4096_lossless.png</strong>，没有重新着色、插值补画或局部裁切。</p>
+      <p class="notice"><strong>玉壶镇没有出现在这张整版图中。</strong>它位于当前图像西边界外约 20.8 km。调整范围时，需要从原始西侧源图幅重新制作扩展后的卫星整版图。</p>
+      <p>永嘉自然岛所在的枫林参考区位于当前图内。点击“显示地点标记”可以查看位置，关闭标记后可以完整观察原图内容。</p>
+    </aside>
+
+    <div class="status" id="status">正在读取原始 4096 像素卫星拼接图。</div>
+    <div class="loading" id="loading"><div class="loading-card">正在加载上一版整版卫星拼接图，请稍候。</div></div>
+  </main>
+
+  <script>
+    const W = 4096;
+    const H = 4096;
+    const viewport = document.querySelector('#viewport');
+    const scene = document.querySelector('#scene');
+    const mosaic = document.querySelector('#mosaic');
+    const overlay = document.querySelector('#overlay');
+    const status = document.querySelector('#status');
+    const loading = document.querySelector('#loading');
+    const toggleOverlay = document.querySelector('#toggleOverlay');
+
+    let scale = 1;
+    let tx = 0;
+    let ty = 0;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let overlayVisible = false;
+
+    function clampScale(value) { return Math.min(8, Math.max(0.08, value)); }
+    function apply() {
+      scene.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+      status.textContent = `整版 4096 × 4096，当前缩放 ${(scale * 100).toFixed(scale < 1 ? 1 : 0)}%。拖动平移，滚轮或双指缩放。`;
+    }
+    function fit() {
+      const r = viewport.getBoundingClientRect();
+      scale = clampScale(Math.min(r.width / W, r.height / H) * 0.94);
+      tx = (r.width - W * scale) / 2;
+      ty = (r.height - H * scale) / 2;
+      apply();
+    }
+    function zoomAt(nextScale, cx, cy) {
+      nextScale = clampScale(nextScale);
+      const worldX = (cx - tx) / scale;
+      const worldY = (cy - ty) / scale;
+      tx = cx - worldX * nextScale;
+      ty = cy - worldY * nextScale;
+      scale = nextScale;
+      apply();
+    }
+    function centerOn(percentX, percentY, targetScale) {
+      const r = viewport.getBoundingClientRect();
+      scale = clampScale(targetScale);
+      tx = r.width / 2 - W * percentX * scale;
+      ty = r.height / 2 - H * percentY * scale;
+      apply();
+    }
+
+    mosaic.addEventListener('load', () => {
+      loading.classList.add('done');
+      fit();
+      window.__WENZHOU_SATELLITE_FULL_READY__ = {
+        ready:true,
+        naturalWidth:mosaic.naturalWidth,
+        naturalHeight:mosaic.naturalHeight,
+        originalAsset:'WENZHOU_V111_FULL_SATELLITE_MOSAIC_4096.png',
+        currentAoiKm2:22000.305625,
+        yuhuInsideCurrentImage:false,
+        naturalIslandReferenceInsideCurrentImage:true
+      };
+    });
+    mosaic.addEventListener('error', () => {
+      loading.querySelector('.loading-card').textContent = '整版卫星图加载失败，请刷新页面。';
+      status.textContent = '原始卫星拼接图未能读取。';
+    });
+
+    viewport.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      const r = viewport.getBoundingClientRect();
+      const factor = Math.exp(-event.deltaY * 0.0012);
+      zoomAt(scale * factor, event.clientX - r.left, event.clientY - r.top);
+    }, { passive:false });
+
+    viewport.addEventListener('pointerdown', (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      viewport.setPointerCapture(event.pointerId);
+      viewport.classList.add('dragging');
+    });
+    viewport.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      tx += event.clientX - lastX;
+      ty += event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      apply();
+    });
+    function stopDrag(event) {
+      dragging = false;
+      viewport.classList.remove('dragging');
+      if (event && viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+    }
+    viewport.addEventListener('pointerup', stopDrag);
+    viewport.addEventListener('pointercancel', stopDrag);
+
+    document.querySelector('#fit').addEventListener('click', fit);
+    document.querySelector('#plus').addEventListener('click', () => {
+      const r = viewport.getBoundingClientRect(); zoomAt(scale * 1.35, r.width / 2, r.height / 2);
+    });
+    document.querySelector('#minus').addEventListener('click', () => {
+      const r = viewport.getBoundingClientRect(); zoomAt(scale / 1.35, r.width / 2, r.height / 2);
+    });
+    document.querySelector('#one').addEventListener('click', () => {
+      const r = viewport.getBoundingClientRect(); zoomAt(1, r.width / 2, r.height / 2);
+    });
+    toggleOverlay.addEventListener('click', () => {
+      overlayVisible = !overlayVisible;
+      overlay.classList.toggle('hidden', !overlayVisible);
+      toggleOverlay.classList.toggle('active', overlayVisible);
+      toggleOverlay.textContent = overlayVisible ? '隐藏地点标记' : '显示地点标记';
+    });
+    document.querySelector('#goNature').addEventListener('click', () => {
+      if (!overlayVisible) toggleOverlay.click();
+      centerOn(0.2769025, 0.4610409, Math.max(scale, 0.72));
+    });
+    window.addEventListener('resize', fit);
+  </script>
+</body>
+</html>
