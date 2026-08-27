@@ -7,26 +7,43 @@ uniform highp usampler2D uMask;
 uniform mat4 uMVP;
 uniform vec2 uWorldSize;
 uniform ivec2 uGridSize;
+uniform vec2 uPatchUvOrigin;
+uniform vec2 uPatchUvScale;
 uniform float uHeightOffset;
 uniform float uHeightScale;
 uniform float uMeanElevation;
 uniform float uVerticalScale;
 out vec2 vUV;
 flat out uint vValid;
+
 float decodeHeight(ivec2 pixel) {
   uint raw = texelFetch(uHeight, clamp(pixel, ivec2(0), uGridSize - 1), 0).r;
   return uHeightOffset + float(raw) * uHeightScale;
 }
+
+float sampleHeight(vec2 uv) {
+  vec2 coordinate = clamp(uv, vec2(0.0), vec2(1.0)) * vec2(uGridSize - 1);
+  ivec2 pixel0 = ivec2(floor(coordinate));
+  ivec2 pixel1 = min(pixel0 + ivec2(1), uGridSize - 1);
+  vec2 fraction = fract(coordinate);
+  float h00 = decodeHeight(pixel0);
+  float h10 = decodeHeight(ivec2(pixel1.x, pixel0.y));
+  float h01 = decodeHeight(ivec2(pixel0.x, pixel1.y));
+  float h11 = decodeHeight(pixel1);
+  return mix(mix(h00, h10, fraction.x), mix(h01, h11, fraction.x), fraction.y);
+}
+
 void main() {
-  ivec2 pixel = ivec2(round(aUV * vec2(uGridSize - 1)));
-  float elevation = decodeHeight(pixel);
-  vValid = texelFetch(uMask, clamp(pixel, ivec2(0), uGridSize - 1), 0).r;
+  vec2 fullUV = clamp(uPatchUvOrigin + aUV * uPatchUvScale, vec2(0.0), vec2(1.0));
+  ivec2 maskPixel = ivec2(round(fullUV * vec2(uGridSize - 1)));
+  float elevation = sampleHeight(fullUV);
+  vValid = texelFetch(uMask, clamp(maskPixel, ivec2(0), uGridSize - 1), 0).r;
   vec3 world = vec3(
-    (aUV.x - 0.5) * uWorldSize.x,
+    (fullUV.x - 0.5) * uWorldSize.x,
     (elevation - uMeanElevation) * uVerticalScale,
-    (0.5 - aUV.y) * uWorldSize.y
+    (0.5 - fullUV.y) * uWorldSize.y
   );
-  vUV = aUV;
+  vUV = fullUV;
   gl_Position = uMVP * vec4(world, 1.0);
 }`;
 
@@ -46,10 +63,24 @@ uniform float uMinElevation;
 uniform float uMaxElevation;
 uniform float uVerticalScale;
 uniform int uMode;
-float heightAt(ivec2 pixel) {
+
+float decodeHeight(ivec2 pixel) {
   uint raw = texelFetch(uHeight, clamp(pixel, ivec2(0), uGridSize - 1), 0).r;
   return uHeightOffset + float(raw) * uHeightScale;
 }
+
+float heightAt(vec2 uv) {
+  vec2 coordinate = clamp(uv, vec2(0.0), vec2(1.0)) * vec2(uGridSize - 1);
+  ivec2 pixel0 = ivec2(floor(coordinate));
+  ivec2 pixel1 = min(pixel0 + ivec2(1), uGridSize - 1);
+  vec2 fraction = fract(coordinate);
+  float h00 = decodeHeight(pixel0);
+  float h10 = decodeHeight(ivec2(pixel1.x, pixel0.y));
+  float h01 = decodeHeight(ivec2(pixel0.x, pixel1.y));
+  float h11 = decodeHeight(pixel1);
+  return mix(mix(h00, h10, fraction.x), mix(h01, h11, fraction.x), fraction.y);
+}
+
 vec3 earthPalette(float t, float slope) {
   vec3 low = vec3(0.26, 0.235, 0.19);
   vec3 middle = vec3(0.43, 0.355, 0.255);
@@ -58,14 +89,15 @@ vec3 earthPalette(float t, float slope) {
   vec3 color = t < 0.48 ? mix(low, middle, t / 0.48) : mix(middle, high, (t - 0.48) / 0.52);
   return mix(color, rock, clamp(slope * 1.30 + t * 0.10, 0.0, 0.76));
 }
+
 void main() {
   if (vValid == uint(0)) discard;
-  ivec2 pixel = ivec2(round(vUV * vec2(uGridSize - 1)));
-  float center = heightAt(pixel);
-  float leftH = heightAt(pixel + ivec2(-1, 0));
-  float rightH = heightAt(pixel + ivec2(1, 0));
-  float downH = heightAt(pixel + ivec2(0, -1));
-  float upH = heightAt(pixel + ivec2(0, 1));
+  vec2 texelStep = 1.0 / max(vec2(1.0), vec2(uGridSize - 1));
+  float center = heightAt(vUV);
+  float leftH = heightAt(vUV - vec2(texelStep.x, 0.0));
+  float rightH = heightAt(vUV + vec2(texelStep.x, 0.0));
+  float downH = heightAt(vUV - vec2(0.0, texelStep.y));
+  float upH = heightAt(vUV + vec2(0.0, texelStep.y));
   float dx = (rightH - leftH) / max(0.001, 2.0 * uSpacing.x);
   float dz = (upH - downH) / max(0.001, 2.0 * uSpacing.y);
   vec3 normal = normalize(vec3(-dx * uVerticalScale, 1.0, dz * uVerticalScale));
@@ -77,6 +109,7 @@ void main() {
   float shade = 0.57 + 0.47 * diffuse;
   vec4 hydro = texture(uHydrology, vUV);
   vec3 color = earthPalette(t, slope) * shade;
+
   if (uMode == 1) {
     float flatness = 1.0 - smoothstep(0.035, 0.28, slope);
     float bench = flatness * smoothstep(0.025, 0.44, curvature);
@@ -103,5 +136,6 @@ void main() {
     color = mix(color, vec3(0.05, 0.36, 0.56), realWater);
     color = mix(color, vec3(0.76, 0.66, 0.40), hydro.a * 0.10);
   }
+
   outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }`;
