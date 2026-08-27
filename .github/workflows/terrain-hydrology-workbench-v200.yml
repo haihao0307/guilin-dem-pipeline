@@ -1,0 +1,236 @@
+name: Terrain hydrology high precision workbench v2.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - web/terrain-hydrology-workbench-v200/**
+      - tools/terrain_hydrology_v200/**
+      - .github/workflows/terrain-hydrology-workbench-v200.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: terrain-hydrology-workbench-v200-pages
+  cancel-in-progress: false
+
+env:
+  TARGET_DIR: terrain-hydrology-workbench-v200
+  KUNMING_RELEASE_ASSET_ID: "528996453"
+  KUNMING_SHA256: "9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2"
+  WENZHOU_SHA256: "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e"
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "utf-8"
+
+jobs:
+  build-qa-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout workbench branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Materialize v200 source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE="tools/terrain_hydrology_v200/v200_source_bundle.zip"
+          if [ -f "$BUNDLE" ]; then
+            python - "$BUNDLE" "$GITHUB_WORKSPACE" <<'PY'
+          import sys, zipfile
+          bundle, root = sys.argv[1:]
+          with zipfile.ZipFile(bundle) as archive:
+              for info in archive.infolist():
+                  target = (__import__('pathlib').Path(root) / info.filename).resolve()
+                  base = __import__('pathlib').Path(root).resolve()
+                  if target != base and base not in target.parents:
+                      raise SystemExit(f'unsafe bundle path: {info.filename}')
+              archive.extractall(root)
+          PY
+            rm -f "$BUNDLE"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add web/terrain-hydrology-workbench-v200 tools/terrain_hydrology_v200
+            git commit -m "Materialize terrain hydrology workbench v200 source"
+            git push origin HEAD:skill/dem-procedural-landscape-v010
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install deterministic build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          python -m pip install --disable-pip-version-check numpy pillow rasterio pyproj shapely playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Materialize Wenzhou authoritative COG
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        run: |
+          set -euo pipefail
+          git fetch origin project/wenzhou-v110-3d-satellite-osm-water
+          git worktree add "$RUNNER_TEMP/wenzhou" origin/project/wenzhou-v110-3d-satellite-osm-water
+          git -C "$RUNNER_TEMP/wenzhou" lfs install --local
+          git -C "$RUNNER_TEMP/wenzhou" lfs pull --include='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          COG="$RUNNER_TEMP/wenzhou/projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif"
+          test "$(stat -c%s "$COG")" -eq 54638031
+          echo "$WENZHOU_SHA256  $COG" | sha256sum -c -
+
+      - name: Checkout existing public assets for Kunming hydrology
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages-source
+          fetch-depth: 1
+
+      - name: Download verified Kunming 12.5 m Float32 TIFF
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/kunming"
+          gh api -H 'Accept: application/octet-stream' \
+            "/repos/${GITHUB_REPOSITORY}/releases/assets/${KUNMING_RELEASE_ASSET_ID}" \
+            > "$RUNNER_TEMP/kunmin/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif"
+          echo "$KUNMING_SHA256  $RUNNER_TEMP/kunming/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif" | sha256sum -c -
+
+      - name: Build three exact 10 km Ã— 10 km truth windows
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology_v200/build_site.py \
+            --root "$GITHUB_WORKSPACE" \
+            --wenzhou-root "$RUNNER_TEMP/wenzhou" \
+            --gh-pages-root "$GITHUB_WORKSPACE/pages-source" \
+            --kunming-tif "$RUNNER_TEMP/kunmin/KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif" \
+            --output "$RUNNER_TEMP/site/$TARGET_DIR"
+          python tools/terrain_hydrology_v200/validate_site.py --site "$RUNNER_TEMP/site/$TARGET_DIR"
+          node --check "$RUNNER_TEMP/site/$TARGET_DIR/app.js"
+          node --check "$RUNNER_TEMP/site/$TARGET_DIR/renderer.js"
+          node --check "$RUNNER_TEMP/site/$TARGET_DIR/intake.js"
+
+      - name: Start local site
+        run: |
+          python -m http.server 8123 --directory "$RUNNER_TEMP/site" > "$RUNNER_TEMP/http.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/http.pid"
+          for attempt in $(seq 1 30); do
+            curl --fail --silent "http://127.0.0.1:8123/$TARGET_DIR/manifest.json" >/dev/null && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/http.log"
+          exit 1
+
+      - name: Desktop and mobile Chromium QA
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology_v200/browser_qa.py \
+            --url "http://127.0.0.1:8123/$TARGET_DIR/" \
+            --output "$RUNNER_TEMP/qa-local" \
+            --width 1440 --height 1000 --label desktop
+          python tools/terrain_hydrology_v200/browser_qa.py \
+            --url "http://127.0.0.1:8123/$TARGET_DIR/" \
+            --output "$RUNNER_TEMP/qa-local" \
+            --width 390 --height 844 --label mobile-390x844
+
+      - name: Upload pre-deploy evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v200-predeploy-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}
+            ${{ runner.temp }}/qa-local
+          if-no-files-found: error
+          retention-days: 60
+          compression-level: 0
+
+      - name: Deploy direct path into gh-pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages-deploy"
+          rm -rf "$RUNNER_TEMP/pages-deploy/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages-deploy/$TARGET_DIR"
+          touch "$RUNNER_TEMP/pages-deploy/.nojekyll"
+          cd "$RUNNER_TEMP/pages-deploy"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR" .nojekyll
+          git commit -m "Deploy terrain hydrology workbench v200 from ${GITHUB_SHA}"
+          for attempt in 1 2 3 4; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git rebase --abort || true
+            sleep $((attempt * 6))
+          done
+          exit 1
+
+      - name: Verify direct public URL and assets
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$BASE/" -o "$RUNNER_TEMP/public-index.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
+              && curl --fail --silent --show-error "$BASE/assets/guilin/height_u16.bin?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-guilin.bin" \
+              && curl --fail --silent --show-error "$BASE/assets/wenzhou/height_u16.bin?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-wenzhou.bin" \
+              && curl --fail --silent --show-error "$BASE/assets/kunming/height_u16.bin?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-kunmin.bin"; then
+              python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}")
+          manifest=json.loads((root/'public-manifest.json').read_text(encoding='utf-8'))
+          assert manifest['schema']=='terrain-hydrology-workbench@2.0.0'
+          assert len(manifest['regions'])==3
+          for name in ['public-guilin.bin','public-wenzhou.bin','public-kunmin.bin']:
+              assert (root/name).stat().st_size==800*800*2
+          html=(root/'public-index.html').read_text(encoding='utf-8')
+          assert 'http-equiv="refresh'' not in html.lower()
+          assert 'location.href' not in html
+          print('direct public URL Verified')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+
+      - name: Public Chromium QA
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology_v200/browser_qa.py \
+            --url "https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR/?v=${GITHUB_SHA}" \
+            --output "$RUNNER_TEMP/qa-public" \
+            --width 1440 --height 1000 --label public-desktop
+
+      - name: Upload final public evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v200-public-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/qa-public
+            ${{ runner.temp }}/public-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Publish job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## ä¸‰åœ°åŒºé«˜ç²¾åº¦çœŸå®žåœ°è²Œä¸Žæ°´ç³»å·¥ä½œå° v2.0
+
+          * ç›´æŽ¥ç½‘å€è¡ÑÑÁÌè¼½¡…¥¡…¼ÀÌÀÜ¹¥Ñ¡Õˆ¹¥¼½Õ¥±¥¸µ‘•´µÁ¥Á•±¥¹”¼‘QIQ}%H¼(€€€€€€€€€€¨ƒš†šz\è€àÀÀƒ\€àÀÀƒ–:–?–¾ò0ÄÈ¸Ô·¾ò3š^ƒ¦7¦š‚Ü(€€€€€€€€€€¨ƒšâ§–Þxè€àÀÀƒ\€àÀÀƒ–:–?–¾ò0ÄÈ¸Ô·¾ò3š^ƒ¦7¦š‚Ü(€€€€€€€€€€¨ƒšbšb8è€àÀÀƒ\€àÀÀƒ–:–?–¾ò0ÄÈ¸Ô·¾ò3š^ƒ¦7¦š‚Ü(€€€€€€€€€€¨ƒš’7¢Š¯¢þC¢†3š^Øè€À(€€€€€€€€€€¨•Í¥Õ´ƒ¢þC¢†3š^Øè€À(€€€€€€€€€€¨ƒš†3¦v‹Žžžï–*£Žšr³–rÃŽ–³–òšÖ?¢ž#–f Eèƒ¦k¢þ(€€€€€€€€€=
