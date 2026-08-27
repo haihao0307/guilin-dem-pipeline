@@ -1,0 +1,233 @@
+name: Deploy Kunming Yunnan fine surface V006
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - .github/workflows/deploy-kunming-yunnan-surface-v006.yml
+      - scripts/patch_kunming_yunnan_surface_v006.py
+      - scripts/generate_kunming_yunnan_surface_v006.py
+      - scripts/qa_kunming_yunnan_surface_v006.mjs
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_DIR: kunming-yunnan-hydrology-v005
+  TARGET_DIR: kunming-yunnan-surface-v006
+  PACKAGE_NAME: KUNMING_YUNNAN_SURFACE_V006_FINE_COLOR_STATIC_WATER
+
+jobs:
+  build-browser-qa-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout project branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/kunming-dem-v001
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deterministic surface dependencies
+        run: python -m pip install --disable-pip-version-check numpy pillow scipy scikit-image
+
+      - name: Fetch verified V005 without altering it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/index.html"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/app.js"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/manifest.json"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/assets/height_rg16.png"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/assets/osm_water_mask_v004.png"
+
+      - name: Build V006 shell and deterministic display assets
+        run: |
+          set -euo pipefail
+          python scripts/patch_kunming_yunnan_surface_v006.py \
+            --source "$RUNNER_TEMP/pages/$SOURCE_DIR" \
+            --output "$RUNNER_TEMP/site/$TARGET_DIR"
+          python scripts/generate_kunming_yunnan_surface_v006.py \
+            --site "$RUNNER_TEMP/site/$TARGET_DIR" \
+            --report "$RUNNER_TEMP/site/$TARGET_DIR/BUILD_REPORT.json"
+          rm -f \
+            "$RUNNER_TEMP/site/$TARGET_DIR/assets/surface_yunnan_v004.png" \
+            "$RUNNER_TEMP/site/$TARGET_DIR/assets/surface_yunnan_v004_2048.png" \
+            "$RUNNER_TEMP/site/$TARGET_DIR/assets/fallback_yunnan_water_v004.jpg" \
+            "$RUNNER_TEMP/site/$TARGET_DIR/assets/osm_water_mask_v004.png"
+          node --check "$RUNNER_TEMP/site/$TARGET_DIR/app.js"
+
+      - name: Fail closed on surface, river width and static water
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          manifest=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+          report=json.loads((root/'BUILD_REPORT.json').read_text(encoding='utf-8'))
+          app=(root/'app.js').read_text(encoding='utf-8')
+          index=(root/'index.html').read_text(encoding='utf-8')
+          assert manifest['schemaVersion']=='kunming_yunnan_surface_web@6.0.0'
+          assert manifest['authoritativeDem']['sha256']=='9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+          assert manifest['authoritativeDem']['compression']=='NONE'
+          assert manifest['authoritativeDem']['resampled'] is False
+          assert manifest['displayRules']['orientation']=='east-positive-x_north-negative-z'
+          assert manifest['displayRules']['defaultRiverWidthPercent']==4
+          assert manifest['displayRules']['defaultMinorDrainagePercent']==0
+          assert manifest['displayRules']['waterAnimation'] is False
+          assert manifest['hydrology']['handDrawnWaterCount']==0
+          assert report['status']=='complete' and report['authoritativeDemModified'] is False
+          assert report['waterAnimation'] is False
+          assert report['waterMask']['mainSkeletonPixels'] < report['waterMask']['sourceMainPlateauPixels'] * 0.25
+          assert 'surface_yunnan_v006.png' in app and 'osm_water_mask_v006.png' in app
+          assert 'riverWidth: 0.04' in app and 'hydroDetail: 0.00' in app
+          assert 'mainThreshold=mix(.996,.42,widthCurve)' in app
+          assert 'waveA=' not in app and 'waveB=' not in app and 'flowPhase=' not in app and 'glint=' not in app
+          assert 'id="wave"' not in index and 'id="flowSpeed"' not in index
+          assert '云南高原' in index and '静态水' in index
+          for name in [
+              'assets/height_rg16.png',
+              'assets/surface_yunnan_v006.png',
+              'assets/surface_yunnan_v006_2048.png',
+              'assets/osm_water_mask_v006.png',
+              'assets/fallback_yunnan_static_v006.jpg',
+          ]:
+              path=root/name
+              assert path.exists() and path.stat().st_size > 100000, name
+          print('V006 static and asset QA passed')
+          PY
+
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install browser QA runtime
+        run: npm install --no-save puppeteer-core
+
+      - name: Run desktop and narrow-screen browser QA
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          QA_BASE: http://127.0.0.1:8765
+          QA_OUT: ${{ runner.temp }}/browser-qa-v006
+        run: |
+          set -euo pipefail
+          mkdir -p "$QA_OUT"
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/site/$TARGET_DIR" >"$RUNNER_TEMP/http-v006.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/qa_kunming_yunnan_surface_v006.mjs
+          test -f "$QA_OUT/BROWSER_QA.json"
+          test -f "$QA_OUT/KUNMING_V006_DESKTOP.png"
+          test -f "$QA_OUT/KUNMING_V006_MOBILE.png"
+
+      - name: Create package and evidence
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/browser-qa-v006/BROWSER_QA.json" "$RUNNER_TEMP/site/$TARGET_DIR/BROWSER_QA.json"
+          cp "$RUNNER_TEMP/browser-qa-v006/KUNMING_V006_DESKTOP.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V006_DESKTOP.png"
+          cp "$RUNNER_TEMP/browser-qa-v006/KUNMING_V006_MOBILE.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V006_MOBILE.png"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          qa=json.loads((root/'BROWSER_QA.json').read_text(encoding='utf-8'))
+          assert qa['status']=='pass'
+          assert qa['webgl2Active'] is True
+          assert qa['orientationVerified'] is True
+          assert qa['orbitVerified'] is True
+          assert qa['panVerified'] is True
+          assert qa['riverDefaultsVerified'] is True
+          assert qa['staticWaterVerified'] is True
+          deployment={
+            'status':'browser_qa_pass_public_deployment_pending',
+            'sourceV005Preserved':True,
+            'onlineDirectory':'kunming-yunnan-surface-v006',
+            'surface':'fine Yunnan plateau 4096/2048 display assets',
+            'defaultRiverWidthPercent':4,
+            'defaultMinorDrainagePercent':0,
+            'waterAnimation':False,
+            'authoritativeDemModified':False,
+          }
+          (root/'DEPLOYMENT_REPORT.json').write_text(json.dumps(deployment,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          cd "$RUNNER_TEMP/site"
+          zip -0 -r "$RUNNER_TEMP/${PACKAGE_NAME}.zip" "$TARGET_DIR"
+          sha256sum "$RUNNER_TEMP/${PACKAGE_NAME}.zip" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256.txt"
+
+      - name: Upload V006 package and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/manifest.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BROWSER_QA.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/DEPLOYMENT_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/KUNMING_V006_DESKTOP.png
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/KUNMING_V006_MOBILE.png
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy V006 without replacing previous viewers
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR"
+          git commit -m "Deploy Kunming Yunnan fine surface V006 from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
+
+      - name: Verify public V006
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index-v006.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest-v006.json" \
+              && curl --fail --silent --show-error "$BASE/BROWSER_QA.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-qa-v006.json" \
+              && curl --fail --silent --show-error "$BASE/app.js?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-app-v006.js" \
+              && curl --fail --silent --show-error "$BASE/assets/osm_water_mask_v006.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-water-v006.png"; then
+              python - <<'PY'
+          import json, pathlib
+          manifest=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest-v006.json").read_text(encoding='utf-8'))
+          qa=json.loads(pathlib.Path("${{ runner.temp }}/public-qa-v006.json").read_text(encoding='utf-8'))
+          app=pathlib.Path("${{ runner.temp }}/public-app-v006.js").read_text(encoding='utf-8')
+          assert manifest['schemaVersion']=='kunming_yunnan_surface_web@6.0.0'
+          assert manifest['displayRules']['defaultRiverWidthPercent']==4
+          assert manifest['displayRules']['waterAnimation'] is False
+          assert qa['status']=='pass' and qa['staticWaterVerified'] is True
+          assert 'surface_yunnan_v006.png' in app and 'osm_water_mask_v006.png' in app
+          assert pathlib.Path("${{ runner.temp }}/public-water-v006.png").stat().st_size > 100000
+          print('public V006 verification passed')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
