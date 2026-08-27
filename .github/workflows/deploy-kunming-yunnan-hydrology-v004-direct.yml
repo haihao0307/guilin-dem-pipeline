@@ -34,18 +34,15 @@ jobs:
           set -euo pipefail
           python scripts/materialize_kunming_yunnan_hydrology_v004_final.py
           python - <<'PY'
-          import pathlib, re
+          import pathlib
           p=pathlib.Path('projects/kunming/web/yunnan-hydrology-v004/app.js')
           text=p.read_text(encoding='utf-8')
-          text,count=re.subn(
-              r'const\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*\[\s*128\s*,\s*176\s*\]\s*;',
-              'const [meshCols,meshRows]=[256,352];',
-              text,
-              count=1,
-          )
-          if count != 1:
-              raise SystemExit(f'expected one stable mesh declaration, found {count}')
-          p.write_text(text,encoding='utf-8')
+          assert "const qaRenderMode=new URLSearchParams(location.search).has('qa');" in text
+          assert 'qaRenderMode?[128,176]:[256,352]' in text
+          assert "dataset.viewer = 'loading'" in text
+          assert "dataset.viewer = 'ready'" in text
+          assert "dataset.viewer = 'fallback'" in text
+          print('query-aware mesh and viewer state contract verified')
           PY
           test -f projects/kunming/web/yunnan-hydrology-v004/index.html
           test -f projects/kunming/web/yunnan-hydrology-v004/app.js
@@ -132,7 +129,10 @@ jobs:
           assert 'Float32Array(await' not in app
           assert 'riverLines' not in app and 'lakePolygons' not in app
           assert not re.search(r'\bflat\b',app)
-          assert 'const [meshCols,meshRows]=[256,352];' in app
+          assert "const qaRenderMode=new URLSearchParams(location.search).has('qa');" in app
+          assert 'qaRenderMode?[128,176]:[256,352]' in app
+          assert "dataset.viewer = 'ready'" in app
+          assert "dataset.viewer = 'fallback'" in app
           for group in ['height','fallback']:
               item=m['browserAssets'][group]
               p=root/item['file']
@@ -150,6 +150,8 @@ jobs:
             'staticQa':'pass',
             'browserVisualAcceptance':'pending_user_review',
             'mesh':[256,352],
+            'qaMesh':[128,176],
+            'viewerStateContract':'loading_ready_fallback',
             'mainWaterways':m['hydrology']['mainWaterwayFeatures'],
             'minorWaterways':m['hydrology']['minorWaterwayFeatures'],
             'displayedWaterAreas':m['hydrology']['displayedWaterAreaFeatures'],
@@ -175,7 +177,7 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: |
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
-            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME}.zip.sha256.txt
             ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
             ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/DEPLOYMENT_REPORT.json
             ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/manifest.json
@@ -223,6 +225,7 @@ jobs:
           assert m['hydrology']['handDrawnWaterCount']==0
           assert d['status']=='public_deployment_ready'
           assert d['staticQa']=='pass'
+          assert d['viewerStateContract']=='loading_ready_fallback'
           assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size==8878779
           assert pathlib.Path("${{ runner.temp }}/public-water.png").stat().st_size>1000
           print('public V004 direct deployment verification passed')
