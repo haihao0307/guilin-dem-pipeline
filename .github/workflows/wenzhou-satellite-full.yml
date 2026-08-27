@@ -115,6 +115,7 @@ jobs:
           });
           const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
           const page = await context.newPage();
+          await page.route('**/favicon.ico', route => route.fulfill({ status: 204, body: '' }));
           const consoleErrors = [];
           const pageErrors = [];
           const requestFailures = [];
