@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Create Kunming V005 from the published V004 browser site.
 
-ASCII-only source. V005 changes display orientation, orbit/pan controls, and river
-rendering defaults. It copies browser assets and never opens the authoritative DEM.
+V005 changes display orientation, orbit/pan controls, and river rendering defaults.
+It copies browser assets and never opens the authoritative DEM.
 """
 from __future__ import annotations
 
@@ -84,21 +85,42 @@ def patch_app(source: Path, target: Path) -> None:
         "  const camera = { yaw: 0.0, pitch: 0.72, distance: 104000, x: 0, z: 0 };\n  const compassNeedle = document.getElementById('compassNeedle');\n  const fovRadians = Math.PI / 4;\n  const rotateSpeed = 0.86;",
         "camera",
     )
-    old_move = """    if (panning) {
-      const scale = Math.max(2, camera.distance * 0.00125);
-      const rightX = Math.cos(camera.yaw);
-      const rightZ = -Math.sin(camera.yaw);
-      const forwardX = Math.sin(camera.yaw);
-      const forwardZ = Math.cos(camera.yaw);
-      camera.x -= dx * scale * rightX + dy * scale * forwardX;
-      camera.z -= dx * scale * rightZ + dy * scale * forwardZ;
-      camera.x = Math.max(-worldWidth / 2, Math.min(worldWidth / 2, camera.x));
-      camera.z = Math.max(-worldDepth / 2, Math.min(worldDepth / 2, camera.z));
-    } else {
-      camera.yaw -= dx * 0.0055;
-      camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch - dy * 0.0047));
-    }"""
-    new_move = """    if (panning) {
+
+    controls_pattern = (
+        re.escape("  document.documentElement.dataset.buttonlessCamera = 'enabled';")
+        + r".*?"
+        + re.escape(
+            "  canvas.addEventListener('pointercancel', event => {\n"
+            "    dragging = false;\n"
+            "    panning = false;\n"
+            "    hoverReady = false;\n"
+            "    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);\n"
+            "  });"
+        )
+    )
+    controls_replacement = """  document.documentElement.dataset.buttonlessCamera = 'disabled';
+  if (qaRenderMode) window.__KUNMING_V005_QA_CAMERA__ = camera;
+  let dragging = false;
+  let panning = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  canvas.addEventListener('contextmenu', event => event.preventDefault());
+  canvas.addEventListener('pointerdown', event => {
+    dragging = true;
+    panning = event.button === 2 || event.shiftKey;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    canvas.setPointerCapture(event.pointerId);
+    canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove', event => {
+    if (!dragging) return;
+    const dx = event.clientX - lastX;
+    const dy = event.clientY - lastY;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    if (panning) {
       const targetDistance = camera.distance * Math.tan(fovRadians / 2);
       const panX = 2 * dx * targetDistance / Math.max(1, canvas.clientHeight);
       const panY = 2 * dy * targetDistance / Math.max(1, canvas.clientHeight);
@@ -113,11 +135,19 @@ def patch_app(source: Path, target: Path) -> None:
     } else {
       const height = Math.max(1, canvas.clientHeight);
       camera.yaw -= 2 * Math.PI * dx / height * rotateSpeed;
-      camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch - 2 * Math.PI * dy / height * rotateSpeed));
-    }"""
-    text = one(text, old_move, new_move, "mouse controls")
-    text = one(text, "    canvas.setPointerCapture(event.pointerId);", "    canvas.setPointerCapture(event.pointerId);\n    canvas.classList.add('dragging');", "drag start")
-    text = one(text, "    canvas.releasePointerCapture(event.pointerId);\n  });", "    canvas.releasePointerCapture(event.pointerId);\n    canvas.classList.remove('dragging');\n  });\n  canvas.addEventListener('pointercancel', () => { dragging = false; canvas.classList.remove('dragging'); });", "drag end")
+      camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch + 2 * Math.PI * dy / height * rotateSpeed));
+    }
+  });
+  function endPointer(event) {
+    dragging = false;
+    panning = false;
+    canvas.classList.remove('dragging');
+    if (event && canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);"""
+    text = sub_one(text, controls_pattern, controls_replacement, "mouse controls", flags=re.S)
+
     text = one(text, "    perspective(projection, Math.PI / 4, canvas.width / canvas.height, near, far);", "    perspective(projection, fovRadians, canvas.width / canvas.height, near, far);", "fov")
     text = text.replace("`V004 · ${desktopHigh", "`V005 · 北向已校正 · ${desktopHigh", 1)
     text = one(text, "    statusEl.textContent = `V005 · 北向已校正 · ${desktopHigh", "    if (compassNeedle) compassNeedle.style.transform = `rotate(${camera.yaw}rad)`;\n    statusEl.textContent = `V005 · 北向已校正 · ${desktopHigh", "compass update")
@@ -145,7 +175,7 @@ def patch_manifest(source: Path, target: Path) -> None:
         "northSouthAxis": "raster north maps to world -Z",
         "groundSampling": "v=z/worldDepth+0.5",
         "terrainNormal": "Z derivative sign corrected",
-        "orbit": "canvas-height normalized",
+        "orbit": "canvas-height normalized drag-only",
         "pan": "perspective/FOV normalized",
         "riverWidth": "conservative nonlinear threshold",
     }
@@ -165,7 +195,7 @@ def main() -> int:
     patch_app(args.source / "app.js", args.output / "app.js")
     patch_manifest(args.source / "manifest.json", args.output / "manifest.json")
     readme = (args.source / "README.md").read_text(encoding="utf-8")
-    (args.output / "README.md").write_text(readme + "\n\nV005 fixes north orientation, standard orbit/pan response, and river display scale.\n", encoding="utf-8")
+    (args.output / "README.md").write_text(readme + "\n\nV005 fixes north orientation, drag-only standard orbit/pan response, and river display scale.\n", encoding="utf-8")
     for name in ["DEPLOYMENT_REPORT.json", "BROWSER_QA.json", "KUNMING_V004_DESKTOP.png", "KUNMING_V004_MOBILE.png"]:
         stale = args.output / name
         if stale.exists():
