@@ -26,8 +26,18 @@ def collect_state(page: Page) -> dict[str, Any]:
         """
         () => {
           const state = window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__;
-          if (!state) return { missing: true };
+          const common = {
+            documentReadyState: document.readyState,
+            workbenchDataset: document.documentElement.dataset.workbenchReady || null,
+            title: document.title,
+            globalStatus: document.getElementById('globalStatus')?.textContent || null,
+            globalDetail: document.getElementById('globalDetail')?.textContent || null,
+            regionCardCount: document.querySelectorAll('.region-card').length,
+            moduleScripts: [...document.querySelectorAll('script[type="module"]')].map((item) => item.src),
+          };
+          if (!state) return { ...common, missing: true };
           return {
+            ...common,
             ready: state.ready,
             failures: state.failures,
             regions: state.manifest.regions.map((region) => ({
@@ -54,34 +64,44 @@ def collect_state(page: Page) -> dict[str, Any]:
 
 
 def run_viewport(browser, url: str, output: Path, name: str, width: int, height: int, focus_checks: bool) -> dict[str, Any]:
-    context = browser.new_context(viewport={"width": width, "height": height}, device_scale_factor=1)
+    context = browser.new_context(
+        viewport={"width": width, "height": height},
+        device_scale_factor=1,
+        locale="zh-CN",
+    )
     page = context.new_page()
     console_errors: list[str] = []
+    console_messages: list[str] = []
     page_errors: list[str] = []
     failed_requests: list[str] = []
-    page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+    response_errors: list[str] = []
+    page.on("console", lambda message: (console_messages.append(f"{message.type}: {message.text}"), console_errors.append(message.text) if message.type == "error" else None))
     page.on("pageerror", lambda error: page_errors.append(str(error)))
     page.on("requestfailed", lambda request: failed_requests.append(f"{request.method} {request.url}: {request.failure}"))
+    page.on("response", lambda response: response_errors.append(f"{response.status} {response.url}") if response.status >= 400 else None)
 
     result: dict[str, Any] = {
         "viewport": f"{width}x{height}",
         "name": name,
         "consoleErrors": console_errors,
+        "consoleMessages": console_messages,
         "pageErrors": page_errors,
         "failedRequests": failed_requests,
+        "httpErrors": response_errors,
         "focusChecks": [],
         "canvasSignals": {},
     }
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=180_000)
+        response = page.goto(url, wait_until="networkidle", timeout=120_000)
+        result["entryStatus"] = response.status if response else None
         page.wait_for_function(
-            "document.documentElement.dataset.workbenchReady === 'true'",
-            timeout=240_000,
+            "['true', 'partial'].includes(document.documentElement.dataset.workbenchReady)",
+            timeout=60_000,
         )
-        page.wait_for_timeout(1200)
+        page.wait_for_timeout(1000)
         state = collect_state(page)
         result["state"] = state
-        if state.get("missing") or not state.get("ready"):
+        if state.get("missing") or state.get("workbenchDataset") != "true" or not state.get("ready"):
             raise AssertionError(f"workbench did not become ready: {state}")
         if [item["id"] for item in state["regions"]] != list(REGIONS):
             raise AssertionError(f"region order mismatch: {state['regions']}")
@@ -103,7 +123,7 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
                 raise AssertionError(f"{viewer['id']} card mesh is too low")
 
         overview_path = output / f"{name}-overview.png"
-        page.screenshot(path=str(overview_path), full_page=True)
+        page.screenshot(path=str(overview_path), full_page=False)
         result["overviewScreenshot"] = overview_path.name
         result["overviewSignal"] = image_signal(overview_path)
         if result["overviewSignal"] < 7.0:
@@ -111,6 +131,7 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
 
         for region_id in REGIONS:
             canvas = page.locator(f"#{region_id} [data-canvas]")
+            canvas.scroll_into_view_if_needed()
             canvas_path = output / f"{name}-{region_id}-canvas.png"
             canvas.screenshot(path=str(canvas_path))
             signal = image_signal(canvas_path)
@@ -119,6 +140,7 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
                 raise AssertionError(f"{region_id} canvas signal is too low: {signal}")
 
         first = page.locator("#guilin [data-canvas]")
+        first.scroll_into_view_if_needed()
         first.hover()
         distance_before = page.evaluate("window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.viewers.get('guilin').camera.distance")
         page.mouse.wheel(0, -1200)
@@ -136,10 +158,11 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
 
         if focus_checks:
             for region_id in REGIONS:
+                page.locator(f"#{region_id} [data-focus]").scroll_into_view_if_needed()
                 page.locator(f"#{region_id} [data-focus]").click()
                 page.wait_for_function(
                     f"window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.activeRegion === '{region_id}' && window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.focusViewer && window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.focusViewer.loaded",
-                    timeout=240_000,
+                    timeout=90_000,
                 )
                 page.wait_for_timeout(500)
                 focus = page.evaluate(
@@ -177,16 +200,24 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
                 page.locator("#closeFocus").click()
                 page.wait_for_function("window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.focusViewer === null")
 
-        if console_errors or page_errors or failed_requests:
+        if console_errors or page_errors or failed_requests or response_errors:
             raise AssertionError(
-                f"browser errors: console={console_errors}, page={page_errors}, requests={failed_requests}"
+                f"browser errors: console={console_errors}, page={page_errors}, requests={failed_requests}, http={response_errors}"
             )
         result["passed"] = True
     except Exception as error:
         result["passed"] = False
         result["error"] = str(error)
         try:
-            page.screenshot(path=str(output / f"{name}-failure.png"), full_page=True)
+            result["diagnosticState"] = collect_state(page)
+        except Exception as diagnostic_error:
+            result["diagnosticError"] = str(diagnostic_error)
+        try:
+            (output / f"{name}-page.html").write_text(page.content(), encoding="utf-8")
+        except Exception:
+            pass
+        try:
+            page.screenshot(path=str(output / f"{name}-failure.png"), full_page=False)
         except Exception:
             pass
     finally:
@@ -202,15 +233,7 @@ def main() -> int:
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            headless=True,
-            args=[
-                "--enable-webgl",
-                "--ignore-gpu-blocklist",
-                "--enable-unsafe-swiftshader",
-                "--use-gl=swiftshader",
-            ],
-        )
+        browser = playwright.chromium.launch(headless=True)
         runs = [
             run_viewport(browser, args.url, output, "desktop", 1440, 1000, True),
             run_viewport(browser, args.url, output, "mobile", 390, 844, False),
