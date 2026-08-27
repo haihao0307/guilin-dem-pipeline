@@ -3,107 +3,123 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>小温 · 温州 DEM 原始未裁切源覆盖与范围复核</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHTNNc5nMZqJYpYb0lFGiLhPp4g=" crossorigin="" />
+  <meta name="color-scheme" content="dark" />
+  <title>小温 · 温州 DEM 原始源覆盖与范围复核</title>
   <style>
-    :root { color-scheme: dark; --bg:#071013; --panel:rgba(9,25,29,.94); --line:rgba(143,222,202,.18); --text:#e7f3f0; --muted:#9cb8b2; --accent:#86e0c8; --orange:#f2a65a; --red:#ff6f61; --blue:#55b9ff; --violet:#bd8cff; }
+    :root { color-scheme: dark; --bg:#061014; --panel:rgba(7,23,27,.94); --panel-soft:rgba(11,35,39,.78); --line:rgba(148,226,207,.19); --text:#e8f5f1; --muted:#93b1aa; --accent:#86e0c8; --orange:#f2a65a; --red:#ff6f61; --blue:#55b9ff; --violet:#bd8cff; --green:#55d19a; }
     * { box-sizing:border-box; }
-    html,body { width:100%; height:100%; margin:0; overflow:hidden; font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--text); }
-    #map { position:absolute; inset:0; background:#081216; }
-    .topbar { position:absolute; z-index:1000; left:12px; right:12px; top:12px; min-height:58px; display:flex; align-items:center; gap:12px; padding:9px 12px; background:rgba(5,17,20,.9); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.35); backdrop-filter:blur(14px); }
-    .brand { display:flex; align-items:center; gap:10px; min-width:260px; }
-    .badge { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(145deg,#99e5ca,#4a9b89); color:#052019; font-weight:900; font-size:19px; }
-    .title { font-weight:760; font-size:17px; line-height:1.15; }
-    .subtitle { margin-top:3px; color:var(--muted); font-size:11px; letter-spacing:.05em; }
-    .chips { display:flex; flex-wrap:wrap; gap:7px; }
-    .chip { border:1px solid var(--line); background:rgba(17,45,49,.72); color:#cce7e1; border-radius:999px; padding:7px 10px; font-size:11px; }
-    .chip.warn { color:#ffd9a3; border-color:rgba(242,166,90,.45); }
-    .panel { position:absolute; z-index:1000; top:82px; bottom:14px; right:14px; width:min(390px,calc(100vw - 28px)); overflow:auto; padding:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,.42); backdrop-filter:blur(14px); }
-    .section { padding:11px; border:1px solid var(--line); border-radius:12px; background:rgba(13,35,39,.72); margin-bottom:10px; }
-    .section h2 { font-size:13px; margin:0 0 8px; color:#f2fbf8; }
-    .section p { font-size:12px; line-height:1.55; margin:5px 0; color:var(--muted); }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--text); font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+    button,input,textarea { font:inherit; }
+    #stage { position:absolute; inset:0; overflow:hidden; background:radial-gradient(circle at 34% 38%,#123039 0%,#091a20 44%,#050b0e 100%); }
+    #mapSvg { width:100%; height:100%; display:block; touch-action:none; cursor:grab; }
+    #mapSvg.dragging { cursor:grabbing; }
+    .topbar { position:absolute; z-index:20; top:12px; left:12px; right:12px; min-height:60px; display:flex; align-items:center; gap:13px; padding:9px 12px; background:rgba(4,17,20,.91); border:1px solid var(--line); border-radius:14px; box-shadow:0 14px 34px rgba(0,0,0,.36); backdrop-filter:blur(14px); }
+    .brand { display:flex; align-items:center; gap:10px; min-width:320px; }
+    .badge { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; background:linear-gradient(145deg,#a4ead1,#489783); color:#042119; font-size:20px; font-weight:900; box-shadow:inset 0 0 0 1px rgba(255,255,255,.28); }
+    .title { font-size:17px; font-weight:780; line-height:1.16; }
+    .subtitle { margin-top:3px; color:var(--muted); font-size:10px; letter-spacing:.08em; }
+    .chips { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
+    .chip { padding:7px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(18,48,51,.72); color:#cae5de; font-size:11px; white-space:nowrap; }
+    .chip.warn { color:#ffd8a6; border-color:rgba(242,166,90,.42); }
+    .panel { position:absolute; z-index:20; top:84px; right:14px; bottom:14px; width:min(400px,calc(100vw - 28px)); overflow:auto; padding:12px; background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 46px rgba(0,0,0,.46); backdrop-filter:blur(14px); scrollbar-color:#31685f transparent; }
+    .section { padding:11px; margin-bottom:10px; border:1px solid var(--line); border-radius:12px; background:var(--panel-soft); }
+    .section h2 { margin:0 0 8px; font-size:13px; color:#f3fbf8; }
+    .section p { margin:5px 0; color:var(--muted); font-size:12px; line-height:1.55; }
+    .note { padding:8px; border-radius:9px; border:1px solid rgba(255,111,97,.24); background:rgba(255,111,97,.08); color:#ffd3ce!important; }
+    .ok { color:#a7ead5!important; }
     .metric-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-    .metric { padding:8px; border-radius:9px; background:rgba(4,17,20,.55); border:1px solid rgba(143,222,202,.12); }
-    .metric strong { display:block; font-size:14px; color:#eafaf6; }
-    .metric span { font-size:10px; color:var(--muted); }
+    .metric { padding:8px; border:1px solid rgba(148,226,207,.12); border-radius:9px; background:rgba(3,15,18,.56); }
+    .metric strong { display:block; color:#edf9f5; font-size:14px; }
+    .metric span { color:var(--muted); font-size:10px; }
     .buttons { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-    button { font:inherit; color:#dff4ee; background:rgba(21,61,62,.82); border:1px solid rgba(134,224,200,.25); border-radius:9px; padding:9px 8px; cursor:pointer; }
-    button:hover { background:rgba(34,84,80,.9); }
-    button.primary { border-color:rgba(85,185,255,.55); background:rgba(30,82,112,.82); }
-    .legend { display:grid; gap:7px; font-size:11px; color:#c9ded9; }
+    button { min-height:37px; border:1px solid rgba(134,224,200,.25); border-radius:9px; background:rgba(20,59,61,.82); color:#e0f2ed; cursor:pointer; }
+    button:hover,button:focus-visible { background:rgba(34,83,80,.92); outline:none; }
+    button.primary { border-color:rgba(85,185,255,.55); background:rgba(29,78,107,.86); }
+    .legend { display:grid; gap:7px; color:#cadfd9; font-size:11px; }
     .legend-row { display:flex; align-items:center; gap:8px; }
-    .swatch { width:23px; height:8px; border-radius:2px; }
-    .note { padding:8px; border-radius:8px; background:rgba(255,111,97,.08); border:1px solid rgba(255,111,97,.22); color:#ffd5d0!important; }
-    .ok { color:#a7edd9!important; }
-    code { color:#b9e5dc; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10px; word-break:break-all; }
-    textarea { width:100%; min-height:132px; resize:vertical; border:1px solid var(--line); border-radius:8px; background:#061215; color:#c9ebe2; padding:8px; font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace; }
-    .leaflet-control-layers,.leaflet-bar { border:1px solid var(--line)!important; box-shadow:0 8px 20px rgba(0,0,0,.3)!important; }
-    .leaflet-control-layers { background:rgba(6,19,22,.92)!important; color:#deefeb!important; }
-    .leaflet-bar a { background:rgba(6,19,22,.92)!important; color:#dcefeb!important; border-color:var(--line)!important; }
-    .leaflet-tooltip { background:rgba(4,16,18,.94); border:1px solid rgba(134,224,200,.38); color:#ecf9f6; box-shadow:0 8px 20px rgba(0,0,0,.35); }
-    .pin { width:22px; height:22px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid white; box-shadow:0 4px 12px rgba(0,0,0,.5); }
-    .pin.yuhu { background:#ff6f61; }
-    .pin.nature { background:#55d19a; }
-    .pin>span { display:block; transform:rotate(45deg); text-align:center; line-height:18px; color:#041412; font-size:10px; font-weight:900; }
-    .footer { font-size:10px; color:#7f9d97; line-height:1.5; }
-    @media(max-width:760px){ .topbar{left:7px;right:7px;top:7px;padding:7px 9px;min-height:52px}.brand{min-width:0}.title{font-size:14px}.subtitle,.chips{display:none}.panel{top:auto;height:44vh;bottom:7px;left:7px;right:7px;width:auto}.leaflet-top{top:59px} }
+    .swatch { width:24px; height:8px; border-radius:3px; flex:0 0 auto; }
+    .layer-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+    .layer-toggle { display:flex; gap:7px; align-items:center; min-height:34px; padding:7px; border-radius:8px; border:1px solid rgba(148,226,207,.11); background:rgba(4,16,19,.52); color:#cfe4de; font-size:11px; }
+    .layer-toggle input { accent-color:var(--accent); }
+    textarea { width:100%; min-height:126px; resize:vertical; padding:8px; color:#cae9e1; background:#051316; border:1px solid var(--line); border-radius:8px; font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace; }
+    code { color:#bae6dc; font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace; word-break:break-all; }
+    .selection { min-height:62px; padding:9px; border-radius:9px; background:rgba(4,16,19,.64); border:1px solid rgba(148,226,207,.13); color:#d7ebe6; font-size:11px; line-height:1.55; }
+    .footer { color:#789891; font-size:10px; line-height:1.5; }
+    .map-tools { position:absolute; z-index:16; left:14px; top:86px; display:grid; gap:7px; }
+    .map-tools button { width:39px; min-height:39px; padding:0; font-size:18px; background:rgba(5,20,23,.9); box-shadow:0 7px 18px rgba(0,0,0,.32); }
+    .map-status { position:absolute; z-index:15; left:14px; bottom:14px; max-width:min(640px,calc(100vw - 440px)); padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:rgba(4,17,20,.86); color:#b9d3cd; font-size:10px; backdrop-filter:blur(9px); }
+    .map-title { fill:#dceee9; font-size:18px; font-weight:760; paint-order:stroke; stroke:rgba(4,14,17,.9); stroke-width:5px; }
+    .map-label { fill:#c9ded8; font-size:13px; font-weight:650; paint-order:stroke; stroke:rgba(2,11,14,.95); stroke-width:4px; }
+    .small-label { fill:#9fbbb4; font-size:10px; paint-order:stroke; stroke:rgba(2,11,14,.95); stroke-width:3px; }
+    .grid-line { stroke:rgba(155,213,203,.12); stroke-width:1; vector-effect:non-scaling-stroke; }
+    .grid-major { stroke:rgba(155,213,203,.22); }
+    .raw-footprint { fill:rgba(242,166,90,.11); stroke:rgba(242,166,90,.86); stroke-width:1.4; vector-effect:non-scaling-stroke; transition:fill .15s,stroke-width .15s; }
+    .raw-footprint:hover { fill:rgba(242,166,90,.24); stroke-width:2.6; }
+    .current-aoi { fill:rgba(73,169,145,.07); stroke:var(--accent); stroke-width:3.3; vector-effect:non-scaling-stroke; }
+    .suggested-aoi { fill:rgba(85,185,255,.045); stroke:var(--blue); stroke-width:3.1; stroke-dasharray:10 7; vector-effect:non-scaling-stroke; }
+    .old-aoi { fill:none; stroke:var(--violet); stroke-width:2; stroke-dasharray:4 7; vector-effect:non-scaling-stroke; }
+    .location-ring { fill:rgba(85,209,154,.05); stroke:var(--green); stroke-width:1.7; stroke-dasharray:6 5; vector-effect:non-scaling-stroke; }
+    .marker-line { stroke:rgba(255,255,255,.7); stroke-width:1.2; vector-effect:non-scaling-stroke; }
+    .marker-yuhu { fill:var(--red); stroke:white; stroke-width:2; vector-effect:non-scaling-stroke; }
+    .marker-nature { fill:var(--green); stroke:white; stroke-width:2; vector-effect:non-scaling-stroke; }
+    .point-hit { fill:transparent; cursor:pointer; }
+    .bounds-mask { fill:url(#oceanPattern); opacity:.86; }
+    .decor-contour { fill:none; stroke:rgba(99,160,154,.08); stroke-width:1; vector-effect:non-scaling-stroke; }
+    @media(max-width:760px) { .topbar{top:7px;left:7px;right:7px;min-height:53px;padding:7px 9px}.brand{min-width:0}.title{font-size:14px}.subtitle,.chips{display:none}.badge{width:37px;height:37px;border-radius:11px}.panel{left:7px;right:7px;top:auto;bottom:7px;width:auto;height:43vh;padding:9px}.map-tools{top:67px;left:7px}.map-status{left:7px;right:7px;bottom:calc(43vh + 14px);max-width:none}.section{padding:9px} }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <header class="topbar">
-    <div class="brand"><div class="badge">温</div><div><div class="title">小温 · 温州 DEM 原始未裁切源覆盖与范围复核</div><div class="subtitle">RAW SOURCE FOOTPRINTS · CURRENT CROP · AOI ADJUSTMENT</div></div></div>
-    <div class="chips"><span class="chip">11 个 ALOS PALSAR 原始图幅</span><span class="chip">当前 22,000.3 km² 裁切范围</span><span class="chip warn">玉壶镇位于当前范围西侧</span><span class="chip">自然岛位于永嘉枫林范围</span></div>
-  </header>
+  <main id="stage">
+    <svg id="mapSvg" role="img" aria-label="温州原始源图幅、当前裁切范围、建议扩展范围、玉壶镇与永嘉自然岛位置图" viewBox="0 0 1400 1260" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="oceanGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2931"/><stop offset="1" stop-color="#061216"/></linearGradient>
+        <pattern id="oceanPattern" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="url(#oceanGradient)"/><path d="M0 9 Q13 3 25 9 T50 9 M0 31 Q13 25 25 31 T50 31" fill="none" stroke="rgba(112,183,186,.055)" stroke-width="1"/></pattern>
+        <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect class="bounds-mask" width="1400" height="1260"/>
+      <g id="gridLayer"></g><g id="decorLayer"></g><g id="oldLayer"></g><g id="rawLayer"></g><g id="suggestedLayer"></g><g id="currentLayer"></g><g id="locationsLayer"></g><g id="labelsLayer"></g>
+    </svg>
+    <div class="map-tools" aria-label="地图缩放"><button id="zoomIn" title="放大">＋</button><button id="zoomOut" title="缩小">−</button><button id="resetMap" title="返回原始图幅">⌂</button></div>
+    <div class="map-status" id="mapStatus">拖动平移，滚轮缩放。橙色区域为 11 个未裁切源图幅覆盖，绿色为当前 COG，蓝色为建议范围。</div>
+  </main>
+  <header class="topbar"><div class="brand"><div class="badge">温</div><div><div class="title">小温 · 温州 DEM 原始源覆盖与范围复核</div><div class="subtitle">RAW SOURCE FOOTPRINTS · CURRENT CROP · AOI ADJUSTMENT</div></div></div><div class="chips"><span class="chip">11 个 ALOS PALSAR 原始图幅</span><span class="chip">当前 22,000.3 km²</span><span class="chip warn">玉壶镇位于当前西边界外约 20.8 km</span><span class="chip">自然岛枫林参考区位于当前范围内</span></div></header>
   <aside class="panel">
-    <section class="section"><h2>范围结论</h2><p class="note"><strong>玉壶镇当前没有进入 22,000 km² 最终 COG。</strong>按 EPSG:32651 计算，玉壶镇参考点约在当前西边界外 20.8 km。</p><p class="ok"><strong>永嘉枫林镇及楠溪江自然岛所在区域在当前 COG 内。</strong>页面先以枫林镇开放地图参考点标出，并加 3 km 复核圈。营地精确 POI 后续继续核验。</p></section>
-    <section class="section"><h2>数据概况</h2><div class="metric-grid"><div class="metric"><strong>11</strong><span>原始未裁切 ASF 图幅</span></div><div class="metric"><strong>22,000.3 km²</strong><span>当前最终 COG</span></div><div class="metric"><strong>12.5 m</strong><span>权威高程像元</span></div><div class="metric"><strong>26,620 km²</strong><span>建议扩展约面积</span></div></div></section>
+    <section class="section"><h2>范围结论</h2><p class="note"><strong>玉壶镇当前没有进入 22,000 km² 最终 COG。</strong>玉壶镇参考点位于当前西边界外约 20.8 km，但仍落在 11 个原始 ALOS PALSAR 图幅的联合覆盖内。</p><p class="ok"><strong>永嘉枫林镇及楠溪江自然岛所在区域在当前 COG 内。</strong>目前先显示枫林镇参考点和 3 km 核验圈。自然岛营地的精确 POI 仍标记为待核验。</p></section>
+    <section class="section"><h2>数据概况</h2><div class="metric-grid"><div class="metric"><strong>11</strong><span>原始未裁切源图幅</span></div><div class="metric"><strong>22,000.3 km²</strong><span>当前最终 COG</span></div><div class="metric"><strong>12.5 m</strong><span>权威高程像元</span></div><div class="metric"><strong>26,620 km²</strong><span>建议扩展约面积</span></div></div></section>
     <section class="section"><h2>快速定位</h2><div class="buttons"><button id="fitRaw">原始源图幅</button><button id="fitCurrent">当前裁切范围</button><button id="fitSuggested" class="primary">建议扩展范围</button><button id="fitOld">旧温台参考范围</button><button id="goYuhu">文成 · 玉壶镇</button><button id="goNature">永嘉 · 自然岛</button><button id="open3d">打开当前三维页</button><button id="copyJson">复制建议范围</button></div></section>
-    <section class="section"><h2>图层说明</h2><div class="legend"><div class="legend-row"><span class="swatch" style="background:rgba(242,166,90,.7)"></span>原始未裁切 ALOS PALSAR 图幅</div><div class="legend-row"><span class="swatch" style="background:#86e0c8"></span>当前 22,000 km² COG 裁切边界</div><div class="legend-row"><span class="swatch" style="background:#55b9ff"></span>建议向西扩展范围，保留现有东、南、北边界</div><div class="legend-row"><span class="swatch" style="background:#bd8cff"></span>旧温州至台州参考范围</div><div class="legend-row"><span class="swatch" style="background:#ff6f61"></span>玉壶镇参考点</div><div class="legend-row"><span class="swatch" style="background:#55d19a"></span>自然岛枫林镇参考点与复核圈</div></div></section>
-    <section class="section"><h2>建议范围 JSON</h2><textarea id="scopeJson" readonly></textarea><p>建议边界采用 EPSG:32651：<code>[208500, 3054965.110786, 387970.652694, 3203290.110786]</code>。它在玉壶镇西侧保留约 10.3 km 缓冲，同时完整保留当前东部海域。</p></section>
-    <section class="section"><h2>重要说明</h2><p>“原始未裁切地图”在本页表示 11 个入选 ALOS PALSAR RTC 高分辨率源产品的原始覆盖足迹。当前仓库中长期保存的是已经裁成 22,000 km² 的权威 COG，原始 11 图幅的完整像元拼图尚未建立独立在线发布件。</p><p>调整边界前，当前权威 COG、三维网页和 SHA256 全部保持冻结。确认新范围以后，再从原始源图幅重建新的 COG，不在旧 COG 上拉伸或补画。</p><div class="footer">来源：仓库内 ASF 选片清单、当前 AOI GeoJSON、Wikidata 玉壶镇坐标、OpenStreetMap/GeoNames 枫林镇参考坐标。底图由 OpenStreetMap 与 Esri World Imagery 提供。</div></section>
+    <section class="section"><h2>图层开关</h2><div class="layer-grid"><label class="layer-toggle"><input id="toggleRaw" type="checkbox" checked>原始源图幅</label><label class="layer-toggle"><input id="toggleCurrent" type="checkbox" checked>当前裁切</label><label class="layer-toggle"><input id="toggleSuggested" type="checkbox" checked>建议范围</label><label class="layer-toggle"><input id="toggleOld" type="checkbox">旧温台范围</label><label class="layer-toggle"><input id="toggleYuhu" type="checkbox" checked>玉壶镇</label><label class="layer-toggle"><input id="toggleNature" type="checkbox" checked>自然岛参考区</label></div></section>
+    <section class="section"><h2>当前选择</h2><div class="selection" id="selectionInfo">当前显示 11 个原始源产品覆盖。点击任一橙色图幅、玉壶镇或自然岛参考点查看详情。</div></section>
+    <section class="section"><h2>图层说明</h2><div class="legend"><div class="legend-row"><span class="swatch" style="background:rgba(242,166,90,.78)"></span>原始未裁切 ALOS PALSAR 图幅</div><div class="legend-row"><span class="swatch" style="background:#86e0c8"></span>当前 22,000 km² COG 裁切边界</div><div class="legend-row"><span class="swatch" style="background:#55b9ff"></span>建议向西扩展范围</div><div class="legend-row"><span class="swatch" style="background:#bd8cff"></span>旧温州至台州参考范围</div><div class="legend-row"><span class="swatch" style="background:#ff6f61"></span>玉壶镇参考点</div><div class="legend-row"><span class="swatch" style="background:#55d19a"></span>自然岛枫林参考点与 3 km 核验圈</div></div></section>
+    <section class="section"><h2>建议范围 JSON</h2><textarea id="scopeJson" readonly></textarea><p>建议边界采用 EPSG:32651：<code>[208500, 3054965.110786, 387970.652694, 3203290.110786]</code>。玉壶镇西侧约保留 10.3 km 缓冲，当前东部海域完整保留。</p></section>
+    <section class="section"><h2>重要说明</h2><p>这里显示的“原始未裁切地图”是 11 个入选 ALOS PALSAR RTC 高分辨率源产品的原始覆盖足迹。仓库长期保存的权威栅格仍是已经裁成 22,000 km² 的 COG。原始 11 图幅的完整像元拼图尚未建立独立在线发布件。</p><p>范围确认之前，当前权威 COG、三维网页和 SHA256 全部冻结。确认新边界以后，从原始源图幅重新拼接新 COG，不在现有 COG 上拉伸或补画。</p><div class="footer">坐标依据：仓库 ASF 选片清单与当前 AOI；玉壶镇坐标使用 Wikidata；自然岛暂用永嘉枫林镇开放地图参考点，精确营地位置继续核验。</div></section>
   </aside>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-    const rawProducts=[
-      {name:'AP_03640_FBS_F0550_RT1',coords:[[28.244,121.66],[28.81,121.554],[28.71,120.884],[28.144,120.993]]},
-      {name:'AP_03888_FBD_F0540_RT1',coords:[[27.747,121.223],[28.313,121.116],[28.212,120.449],[27.646,120.56]]},
-      {name:'AP_27300_FBS_F0560_RT1',coords:[[28.528,121.064],[29.032,120.961],[28.926,120.297],[28.422,120.403]]},
-      {name:'AP_03640_FBS_F0540_RT1',coords:[[27.749,121.752],[28.315,121.646],[28.215,120.98],[27.648,121.088]]},
-      {name:'AP_13384_FBD_F0560_RT1',coords:[[28.525,122.104],[29.029,122.001],[28.922,121.336],[28.418,121.443]]},
-      {name:'AP_14551_FBD_F0550_RT1',coords:[[28.033,121.119],[28.537,121.015],[28.43,120.354],[27.926,120.461]]},
-      {name:'AP_13384_FBD_F0550_RT1',coords:[[28.029,122.203],[28.533,122.102],[28.427,121.441],[27.922,121.545]]},
-      {name:'AP_12115_FBD_F0540_RT1',coords:[[27.425,120.069],[27.532,120.724],[28.036,120.621],[27.93,119.963]]},
-      {name:'AP_03640_FBS_F0560_RT1',coords:[[28.739,121.568],[29.304,121.46],[29.205,120.787],[28.639,120.898]]},
-      {name:'AP_03888_FBD_F0530_RT1',coords:[[27.252,121.315],[27.818,121.21],[27.717,120.546],[27.151,120.655]]},
-      {name:'AP_12115_FBD_F0550_RT1',coords:[[27.921,119.965],[28.027,120.623],[28.532,120.523],[28.426,119.861]]}
-    ];
-    const currentAoi=[[27.593635051527,120.362408800068],[27.614060721889,121.864650129812],[28.952702379589,121.850359552964],[28.931106070604,120.329248533004]];
-    const suggestedAoi=[[27.587279599753,120.047195772012],[27.614056115036,121.864655397427],[28.952707073383,121.850364786952],[28.924396022678,120.010085873177]];
-    const oldWenzhouTaizhou=[[27.72,120.20],[27.72,121.72],[28.82,121.72],[28.82,120.20]];
-    const yuhu={name:'文成县玉壶镇',lat:27.872777777778,lng:120.144444444444};
-    const nature={name:'永嘉自然岛 · 枫林镇范围参考点',lat:28.32202,lng:120.76339,provisional:true};
-    const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([28.25,120.85],9);
-    const imagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri, Maxar, Earthstar Geographics, and the GIS User Community'}).addTo(map);
-    const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
-    const topo=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'Map data © OpenStreetMap contributors, SRTM | Map style © OpenTopoMap'});
-    const rawLayer=L.featureGroup();
-    rawProducts.forEach((item,index)=>L.polygon(item.coords,{color:'#f2a65a',weight:1.4,opacity:.85,fillColor:'#f2a65a',fillOpacity:.14}).bindTooltip(`${index+1}. ${item.name}<br>原始未裁切源图幅`,{sticky:true}).addTo(rawLayer));
-    rawLayer.addTo(map);
-    const currentLayer=L.polygon(currentAoi,{color:'#86e0c8',weight:3,fillColor:'#49a991',fillOpacity:.07}).bindTooltip('当前权威 COG 裁切范围<br>22,000.305625 km² · 11866 × 11866 · 12.5 m').addTo(map);
-    const suggestedLayer=L.polygon(suggestedAoi,{color:'#55b9ff',weight:3,dashArray:'10 7',fillColor:'#55b9ff',fillOpacity:.045}).bindTooltip('建议向西扩展范围<br>约 26,620 km² · 玉壶镇西侧约 10.3 km 缓冲').addTo(map);
-    const oldLayer=L.polygon(oldWenzhouTaizhou,{color:'#bd8cff',weight:2,dashArray:'5 7',fillOpacity:0}).bindTooltip('旧温州至台州参考范围<br>西边界 120.20°，仍未覆盖玉壶镇');
-    function pinIcon(kind,text){return L.divIcon({className:'',html:`<div class="pin ${kind}"><span>${text}</span></div>`,iconSize:[24,30],iconAnchor:[12,28],popupAnchor:[0,-26]});}
-    const yuhuMarker=L.marker([yuhu.lat,yuhu.lng],{icon:pinIcon('yuhu','玉')}).bindPopup(`<strong>${yuhu.name}</strong><br>Wikidata 参考坐标：${yuhu.lat.toFixed(6)}, ${yuhu.lng.toFixed(6)}<br><span style="color:#ff9b90">当前 22,000 km² COG 范围外</span>`).addTo(map);
-    const natureMarker=L.marker([nature.lat,nature.lng],{icon:pinIcon('nature','岛')}).bindPopup(`<strong>${nature.name}</strong><br>开放地图枫林镇参考坐标：${nature.lat.toFixed(6)}, ${nature.lng.toFixed(6)}<br><span style="color:#9deac9">位于当前 COG 内</span><br>营地精确点位仍需复核。`).addTo(map);
-    const natureCircle=L.circle([nature.lat,nature.lng],{radius:3000,color:'#55d19a',weight:1.5,dashArray:'6 5',fillColor:'#55d19a',fillOpacity:.06}).addTo(map);
-    L.control.layers({'Esri 卫星影像':imagery,'OpenStreetMap':osm,'OpenTopoMap':topo},{'原始未裁切源图幅':rawLayer,'当前 22,000 km² 裁切':currentLayer,'建议扩展范围':suggestedLayer,'旧温台参考范围':oldLayer,'玉壶镇':yuhuMarker,'自然岛参考点':natureMarker,'自然岛 3 km 复核圈':natureCircle},{collapsed:false,position:'bottomleft'}).addTo(map);
-    const rawBounds=rawLayer.getBounds(); map.fitBounds(rawBounds.pad(.04));
-    const scopePayload={schema:'wenzhou_scope_review@0.1.0',status:'draft-for-user-range-approval',currentTruthCog:{areaKm2:22000.305625,crs:'EPSG:32651',grid:[11866,11866],spacingMeters:12.5,boundsUtm:[239645.652694,3054965.110786,387970.652694,3203290.110786],sha256:'8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'},proposedExpandedAoi:{purpose:'retain all current coverage and include Yuhu Town with about 10 km west buffer',crs:'EPSG:32651',boundsUtm:[208500,3054965.110786,387970.652694,3203290.110786],approximateAreaKm2:26619.984561,polygonWgs84:suggestedAoi.map(([lat,lng])=>[lng,lat])},anchors:{yuhuTown:{wgs84:[yuhu.lng,yuhu.lat],status:'outside-current-inside-proposed'},naturalIsland:{wgs84:[nature.lng,nature.lat],status:'inside-current-provisional-fenglin-reference',uncertaintyRadiusMeters:3000}}};
-    document.getElementById('scopeJson').value=JSON.stringify(scopePayload,null,2);
-    document.getElementById('fitRaw').onclick=()=>map.fitBounds(rawBounds.pad(.04)); document.getElementById('fitCurrent').onclick=()=>map.fitBounds(currentLayer.getBounds().pad(.08)); document.getElementById('fitSuggested').onclick=()=>map.fitBounds(suggestedLayer.getBounds().pad(.08)); document.getElementById('fitOld').onclick=()=>{if(!map.hasLayer(oldLayer))oldLayer.addTo(map);map.fitBounds(oldLayer.getBounds().pad(.08));}; document.getElementById('goYuhu').onclick=()=>{map.setView([yuhu.lat,yuhu.lng],13);yuhuMarker.openPopup();}; document.getElementById('goNature').onclick=()=>{map.setView([nature.lat,nature.lng],13);natureMarker.openPopup();}; document.getElementById('open3d').onclick=()=>window.open('../wenzhou-v111/','_blank','noopener');
-    document.getElementById('copyJson').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(scopePayload,null,2));document.getElementById('copyJson').textContent='已复制';setTimeout(()=>document.getElementById('copyJson').textContent='复制建议范围',1400);}catch{document.getElementById('scopeJson').select();document.execCommand('copy');}};
-    map.on('click',event=>L.popup().setLatLng(event.latlng).setContent(`坐标：${event.latlng.lat.toFixed(6)}, ${event.latlng.lng.toFixed(6)}`).openOn(map));
+    (()=>{'use strict';
+      const DOMAIN={west:119.75,east:122.30,south:27.05,north:29.35,width:1400,height:1260};
+      const rawProducts=[{name:'AP_03640_FBS_F0550_RT1',coords:[[28.244,121.66],[28.81,121.554],[28.71,120.884],[28.144,120.993]]},{name:'AP_03888_FBD_F0540_RT1',coords:[[27.747,121.223],[28.313,121.116],[28.212,120.449],[27.646,120.56]]},{name:'AP_27300_FBS_F0560_RT1',coords:[[28.528,121.064],[29.032,120.961],[28.926,120.297],[28.422,120.403]]},{name:'AP_03640_FBS_F0540_RT1',coords:[[27.749,121.752],[28.315,121.646],[28.215,120.98],[27.648,121.088]]},{name:'AP_13384_FBD_F0560_RT1',coords:[[28.525,122.104],[29.029,122.001],[28.922,121.336],[28.418,121.443]]},{name:'AP_14551_FBD_F0550_RT1',coords:[[28.033,121.119],[28.537,121.015],[28.43,120.354],[27.926,120.461]]},{name:'AP_13384_FBD_F0550_RT1',coords:[[28.029,122.203],[28.533,122.102],[28.427,121.441],[27.922,121.545]]},{name:'AP_12115_FBD_F0540_RT1',coords:[[27.425,120.069],[27.532,120.724],[28.036,120.621],[27.93,119.963]]},{name:'AP_03640_FBS_F0560_RT1',coords:[[28.739,121.568],[29.304,121.46],[29.205,120.787],[28.639,120.898]]},{name:'AP_03888_FBD_F0530_RT1',coords:[[27.252,121.315],[27.818,121.21],[27.717,120.546],[27.151,120.655]]},{name:'AP_12115_FBD_F0550_RT1',coords:[[27.921,119.965],[28.027,120.623],[28.532,120.523],[28.426,119.861]]}];
+      const currentAoi=[[27.593635051527,120.362408800068],[27.614060721889,121.864650129812],[28.952702379589,121.850359552964],[28.931106070604,120.329248533004]],suggestedAoi=[[27.587279599753,120.047195772012],[27.614056115036,121.864655397427],[28.952707073383,121.850364786952],[28.924396022678,120.010085873177]],oldAoi=[[27.72,120.20],[27.72,121.72],[28.82,121.72],[28.82,120.20]];
+      const points={yuhu:{name:'文成县玉壶镇',lat:27.872777777778,lon:120.144444444444,source:'Wikidata Q14054965',status:'当前 COG 范围外，位于原始源覆盖内'},nature:{name:'永嘉自然岛 · 枫林镇范围参考点',lat:28.32202,lon:120.76339,source:'OpenStreetMap / GeoNames 枫林镇参考',status:'当前 COG 范围内，精确营地 POI 待核验'}};
+      const scopePayload={schema:'wenzhou_scope_review@0.1.1',status:'draft-for-user-range-approval',currentTruthCog:{areaKm2:22000.305625,crs:'EPSG:32651',grid:[11866,11866],spacingMeters:12.5,boundsUtm:[239645.652694,3054965.110786,387970.652694,3203290.110786],sha256:'8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'},uncroppedSourceCoverage:{selectedProductCount:11,envelopeWgs84:[119.861,27.151,122.203,29.304],completeUncroppedPixelMosaicPublished:false},proposedExpandedAoi:{crs:'EPSG:32651',boundsUtm:[208500,3054965.110786,387970.652694,3203290.110786],approximateAreaKm2:26619.984561,includesYuhuTown:true,includesNaturalIslandReference:true},anchors:{yuhuTown:{wgs84:[points.yuhu.lon,points.yuhu.lat],insideCurrentTruthCog:false},naturalIsland:{wgs84:[points.nature.lon,points.nature.lat],insideCurrentTruthCog:true,exactPoiVerified:false,reviewUncertaintyRadiusMeters:3000}}};
+      const svg=document.getElementById('mapSvg'),ns='http://www.w3.org/2000/svg',layers={grid:document.getElementById('gridLayer'),decor:document.getElementById('decorLayer'),old:document.getElementById('oldLayer'),raw:document.getElementById('rawLayer'),suggested:document.getElementById('suggestedLayer'),current:document.getElementById('currentLayer'),locations:document.getElementById('locationsLayer'),labels:document.getElementById('labelsLayer')},selection=document.getElementById('selectionInfo'),status=document.getElementById('mapStatus');
+      const project=(lat,lon)=>({x:(lon-DOMAIN.west)/(DOMAIN.east-DOMAIN.west)*DOMAIN.width,y:(DOMAIN.north-lat)/(DOMAIN.north-DOMAIN.south)*DOMAIN.height}),pointString=coords=>coords.map(([lat,lon])=>{const p=project(lat,lon);return `${p.x.toFixed(2)},${p.y.toFixed(2)}`}).join(' '),element=(name,attributes={},parent=null)=>{const node=document.createElementNS(ns,name);Object.entries(attributes).forEach(([key,value])=>node.setAttribute(key,String(value)));if(parent)parent.appendChild(node);return node},text=(parent,x,y,value,className='map-label',anchor='middle')=>{const node=element('text',{x,y,class:className,'text-anchor':anchor},parent);node.textContent=value;return node},centroid=coords=>{const sum=coords.reduce((acc,[lat,lon])=>({lat:acc.lat+lat,lon:acc.lon+lon}),{lat:0,lon:0});return [sum.lat/coords.length,sum.lon/coords.length]},bbox=coords=>{const lats=coords.map(p=>p[0]),lons=coords.map(p=>p[1]);return [Math.min(...lons),Math.min(...lats),Math.max(...lons),Math.max(...lats)]};
+      for(let lon=119.75;lon<=122.301;lon+=.25){const a=project(DOMAIN.south,lon),b=project(DOMAIN.north,lon),major=Math.abs(lon*2-Math.round(lon*2))<.001;element('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:`grid-line ${major?'grid-major':''}`},layers.grid);if(major)text(layers.grid,a.x+4,18,`${lon.toFixed(1)}°E`,'small-label','start')}
+      for(let lat=27.0;lat<=29.351;lat+=.25){const a=project(lat,DOMAIN.west),b=project(lat,DOMAIN.east),major=Math.abs(lat*2-Math.round(lat*2))<.001;element('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:`grid-line ${major?'grid-major':''}`},layers.grid);if(major)text(layers.grid,8,a.y-4,`${lat.toFixed(1)}°N`,'small-label','start')}
+      for(let i=0;i<15;i+=1){const cx=160+(i*193)%1090,cy=120+(i*137)%1010,rx=110+i%4*42,ry=48+i%5*20;element('ellipse',{cx,cy,rx,ry,class:'decor-contour',transform:`rotate(${i*19%55-28} ${cx} ${cy})`},layers.decor)}
+      rawProducts.forEach((product,index)=>{const polygon=element('polygon',{points:pointString(product.coords),class:'raw-footprint','data-layer':'raw-footprint','data-index':index,tabindex:'0'},layers.raw),[lat,lon]=centroid(product.coords),p=project(lat,lon);text(layers.raw,p.x,p.y,String(index+1),'small-label');const show=()=>{selection.innerHTML=`<strong>${index+1}. ${product.name}</strong><br>原始未裁切 ALOS PALSAR RTC 源图幅。<br>覆盖边界：${bbox(product.coords).map(v=>v.toFixed(3)).join(', ')}`;status.textContent=`${product.name}，点击“原始源图幅”可返回全部覆盖。`};polygon.addEventListener('click',show);polygon.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')show()})});
+      const oldPolygon=element('polygon',{points:pointString(oldAoi),class:'old-aoi','data-layer':'old-aoi'},layers.old),suggestedPolygon=element('polygon',{points:pointString(suggestedAoi),class:'suggested-aoi','data-layer':'suggested-aoi'},layers.suggested),currentPolygon=element('polygon',{points:pointString(currentAoi),class:'current-aoi','data-layer':'current-aoi'},layers.current);
+      text(layers.labels,project(28.90,121.80).x,project(28.90,121.80).y,'当前 22,000 km² COG','map-label','end');text(layers.labels,project(28.80,120.02).x,project(28.80,120.02).y,'建议向西扩展','map-label','start');text(layers.labels,project(29.27,121.18).x,project(29.27,121.18).y,'11 个原始源图幅联合覆盖','map-title');
+      const natureP=project(points.nature.lat,points.nature.lon),radiusLat=3000/111320,radiusLon=3000/(111320*Math.cos(points.nature.lat*Math.PI/180)),radiusX=Math.abs(project(points.nature.lat,points.nature.lon+radiusLon).x-natureP.x),radiusY=Math.abs(project(points.nature.lat+radiusLat,points.nature.lon).y-natureP.y);element('ellipse',{cx:natureP.x,cy:natureP.y,rx:radiusX,ry:radiusY,class:'location-ring','data-layer':'nature-circle'},layers.locations);
+      const addMarker=(key,label,markerClass,letter)=>{const item=points[key],p=project(item.lat,item.lon),group=element('g',{'data-layer':`${key}-marker`,tabindex:'0'},layers.locations);element('line',{x1:p.x,y1:p.y-10,x2:p.x,y2:p.y-46,class:'marker-line'},group);element('circle',{cx:p.x,cy:p.y,r:11,class:markerClass,filter:'url(#glow)'},group);text(group,p.x,p.y+4,letter,'small-label');text(group,p.x+17,p.y-25,label,'map-label','start');element('circle',{cx:p.x,cy:p.y,r:26,class:'point-hit'},group);const show=()=>{selection.innerHTML=`<strong>${item.name}</strong><br>坐标：${item.lat.toFixed(6)}, ${item.lon.toFixed(6)}<br>${item.status}<br>来源：${item.source}`;status.textContent=`${item.name}，${item.status}。`};group.addEventListener('click',show);group.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')show()})};
+      addMarker('yuhu','文成县玉壶镇','marker-yuhu','玉');addMarker('nature','永嘉自然岛参考区','marker-nature','岛');
+      oldPolygon.addEventListener('click',()=>selection.innerHTML='<strong>旧温州至台州参考范围</strong><br>西边界约 120.20°E，仍未覆盖玉壶镇。');currentPolygon.addEventListener('click',()=>selection.innerHTML='<strong>当前权威 COG</strong><br>22,000.305625 km²，11866 × 11866，12.5 m，EPSG:32651。');suggestedPolygon.addEventListener('click',()=>selection.innerHTML='<strong>建议扩展范围</strong><br>约 26,619.98 km²，向西扩展至 EPSG:32651 X=208500，包含玉壶镇与自然岛参考区。');
+      const rawEnvelope=[119.861,27.151,122.203,29.304],currentEnvelope=[120.329248533004,27.593635051527,121.864650129812,28.952702379589],suggestedEnvelope=[120.010085873177,27.587279599753,121.864655397427,28.952707073383],oldEnvelope=[120.20,27.72,121.72,28.82];let view={x:0,y:0,w:DOMAIN.width,h:DOMAIN.height},drag=null;
+      const setView=next=>{view=next;svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`)},fitGeoBounds=(bounds,padding=.08)=>{const [west,south,east,north]=bounds,topLeft=project(north,west),bottomRight=project(south,east);let x=topLeft.x,y=topLeft.y,w=bottomRight.x-topLeft.x,h=bottomRight.y-topLeft.y;x-=w*padding;y-=h*padding;w*=1+padding*2;h*=1+padding*2;const aspect=Math.max(1,svg.clientWidth)/Math.max(1,svg.clientHeight),boxAspect=w/h;if(boxAspect>aspect){const targetH=w/aspect;y-=(targetH-h)/2;h=targetH}else{const targetW=h*aspect;x-=(targetW-w)/2;w=targetW}setView({x,y,w,h})},focusPoint=(point,span=.28)=>fitGeoBounds([point.lon-span,point.lat-span*.62,point.lon+span,point.lat+span*.62],.05),zoom=(factor,cx=view.x+view.w/2,cy=view.y+view.h/2)=>{const nw=Math.max(95,Math.min(DOMAIN.width*1.5,view.w*factor)),nh=nw/(Math.max(1,svg.clientWidth)/Math.max(1,svg.clientHeight)),tx=(cx-view.x)/view.w,ty=(cy-view.y)/view.h;setView({x:cx-tx*nw,y:cy-ty*nh,w:nw,h:nh})};
+      svg.addEventListener('pointerdown',event=>{svg.setPointerCapture(event.pointerId);svg.classList.add('dragging');drag={id:event.pointerId,x:event.clientX,y:event.clientY,start:{...view}}});svg.addEventListener('pointermove',event=>{if(!drag||drag.id!==event.pointerId)return;const scaleX=view.w/Math.max(1,svg.clientWidth),scaleY=view.h/Math.max(1,svg.clientHeight);setView({x:drag.start.x-(event.clientX-drag.x)*scaleX,y:drag.start.y-(event.clientY-drag.y)*scaleY,w:drag.start.w,h:drag.start.h})});const release=event=>{if(drag?.id===event.pointerId){drag=null;svg.classList.remove('dragging')}};svg.addEventListener('pointerup',release);svg.addEventListener('pointercancel',release);svg.addEventListener('wheel',event=>{event.preventDefault();const rect=svg.getBoundingClientRect(),cx=view.x+(event.clientX-rect.left)/rect.width*view.w,cy=view.y+(event.clientY-rect.top)/rect.height*view.h;zoom(Math.exp(event.deltaY*.0012),cx,cy)},{passive:false});
+      document.getElementById('fitRaw').onclick=()=>{fitGeoBounds(rawEnvelope,.05);selection.textContent='当前显示 11 个原始未裁切源图幅的联合覆盖。'};document.getElementById('fitCurrent').onclick=()=>{fitGeoBounds(currentEnvelope,.08);selection.innerHTML='<strong>当前权威 COG</strong><br>玉壶镇位于西侧范围外，自然岛参考区位于范围内。'};document.getElementById('fitSuggested').onclick=()=>{fitGeoBounds(suggestedEnvelope,.08);selection.innerHTML='<strong>建议扩展范围</strong><br>向西扩展到 X=208500，约 26,620 km²。当前 COG 暂不修改。'};document.getElementById('fitOld').onclick=()=>{document.getElementById('toggleOld').checked=true;layers.old.style.display='';fitGeoBounds(oldEnvelope,.08);selection.innerHTML='<strong>旧温台参考范围</strong><br>西边界约 120.20°E，仍然未覆盖玉壶镇。'};document.getElementById('goYuhu').onclick=()=>{focusPoint(points.yuhu,.19);selection.innerHTML=`<strong>${points.yuhu.name}</strong><br>坐标：${points.yuhu.lat.toFixed(6)}, ${points.yuhu.lon.toFixed(6)}<br>${points.yuhu.status}`};document.getElementById('goNature').onclick=()=>{focusPoint(points.nature,.19);selection.innerHTML=`<strong>${points.nature.name}</strong><br>坐标：${points.nature.lat.toFixed(6)}, ${points.nature.lon.toFixed(6)}<br>${points.nature.status}`};document.getElementById('open3d').onclick=()=>window.open('../wenzhou-v111/','_blank','noopener');
+      document.getElementById('copyJson').onclick=async()=>{const value=JSON.stringify(scopePayload,null,2);try{await navigator.clipboard.writeText(value)}catch{const area=document.getElementById('scopeJson');area.focus();area.select();document.execCommand('copy')}const button=document.getElementById('copyJson');button.textContent='已复制';setTimeout(()=>button.textContent='复制建议范围',1400)};document.getElementById('zoomIn').onclick=()=>zoom(.72);document.getElementById('zoomOut').onclick=()=>zoom(1.38);document.getElementById('resetMap').onclick=()=>fitGeoBounds(rawEnvelope,.05);
+      document.getElementById('toggleRaw').onchange=e=>layers.raw.style.display=e.target.checked?'':'none';document.getElementById('toggleCurrent').onchange=e=>layers.current.style.display=e.target.checked?'':'none';document.getElementById('toggleSuggested').onchange=e=>layers.suggested.style.display=e.target.checked?'':'none';document.getElementById('toggleOld').onchange=e=>layers.old.style.display=e.target.checked?'':'none';const updateLocations=()=>{const yuhu=document.querySelector('[data-layer="yuhu-marker"]'),nature=document.querySelector('[data-layer="nature-marker"]'),circle=document.querySelector('[data-layer="nature-circle"]');yuhu.style.display=document.getElementById('toggleYuhu').checked?'':'none';const showNature=document.getElementById('toggleNature').checked;nature.style.display=showNature?'':'none';circle.style.display=showNature?'':'none'};document.getElementById('toggleYuhu').onchange=updateLocations;document.getElementById('toggleNature').onchange=updateLocations;
+      layers.old.style.display='none';document.getElementById('scopeJson').value=JSON.stringify(scopePayload,null,2);fitGeoBounds(rawEnvelope,.05);window.__WENZHOU_SCOPE_READY__={ready:true,rawSourceFootprints:rawProducts.length,currentAoi:true,proposedAoi:true,yuhuMarker:true,naturalIslandReferenceMarker:true,externalDependencies:0};
+    })();
   </script>
 </body>
 </html>
