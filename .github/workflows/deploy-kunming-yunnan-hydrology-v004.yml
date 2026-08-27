@@ -1,0 +1,243 @@
+name: Deploy Kunming Yunnan hydrology V004
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - .github/workflows/deploy-kunming-yunnan-hydrology-v004.yml
+      - scripts/materialize_kunming_yunnan_hydrology_v004_final.py
+      - scripts/v004_final_payload_parts/**
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  TARGET_DIR: kunming-yunnan-hydrology-v004
+  SOURCE_RUN_ID: "32925496927"
+  SOURCE_ARTIFACT: kunming-hydrology-knowledge-v001
+  PACKAGE_NAME: KUNMING_YUNNAN_HYDROLOGY_V004_WEB
+
+jobs:
+  build-browser-qa-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout latest project branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/kunming-dem-v001
+          fetch-depth: 1
+
+      - name: Materialize reviewed V004 source
+        run: |
+          set -euo pipefail
+          python scripts/materialize_kunming_yunnan_hydrology_v004_final.py
+          test -f projects/kunming/web/yunnan-hydrology-v004/index.html
+          test -f projects/kunming/web/yunnan-hydrology-v004/app.js
+          test -f scripts/build_kunming_yunnan_hydrology_v004.py
+          test -f scripts/qa_kunming_yunnan_hydrology_v004.mjs
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deterministic geodata builder dependencies
+        run: python -m pip install --disable-pip-version-check numpy pillow pyproj shapely opencv-python-headless
+
+      - name: Download successful OSM hydrology knowledge artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/hydrology"
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$SOURCE_ARTIFACT" --dir "$RUNNER_TEMP/hydrology"
+          test -f "$RUNNER_TEMP/hydrology/distilled/osm-current/waterways.geojson"
+          test -f "$RUNNER_TEMP/hydrology/distilled/osm-current/water_areas.geojson"
+          test -f "$RUNNER_TEMP/hydrology/QA_REPORT.json"
+
+      - name: Fetch frozen clean terrain height display asset
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/input"
+          curl --fail --location --retry 5 --retry-all-errors \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/gh-pages/kunming-clean-3d-v001/assets/height_rg16.png" \
+            --output "$RUNNER_TEMP/input/height_rg16.png"
+          test "$(stat -c%s "$RUNNER_TEMP/input/height_rg16.png")" -eq 8878779
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path("${{ runner.temp }}/input/height_rg16.png")
+          with Image.open(p) as image:
+              assert image.size == (2048, 2814), image.size
+              assert image.mode in {'RGB','RGBA'}, image.mode
+              image.verify()
+          print('frozen height display asset verified')
+          PY
+          sha256sum "$RUNNER_TEMP/input/height_rg16.png" | tee "$RUNNER_TEMP/input/height_rg16.sha256.txt"
+
+      - name: Build Yunnan satellite color and OSM water knowledge fields
+        run: |
+          set -euo pipefail
+          DIST="$RUNNER_TEMP/site/$TARGET_DIR"
+          mkdir -p "$DIST"
+          cp projects/kunming/web/yunnan-hydrology-v004/index.html "$DIST/index.html"
+          cp projects/kunming/web/yunnan-hydrology-v004/styles.css "$DIST/styles.css"
+          cp projects/kunming/web/yunnan-hydrology-v004/app.js "$DIST/app.js"
+          cp projects/kunming/web/yunnan-hydrology-v004/README.md "$DIST/README.md"
+          python scripts/build_kunming_yunnan_hydrology_v004.py \
+            --height "$RUNNER_TEMP/input/height_rg16.png" \
+            --waterways "$RUNNER_TEMP/hydrology/distilled/osm-current/waterways.geojson" \
+            --water-areas "$RUNNER_TEMP/hydrology/distilled/osm-current/water_areas.geojson" \
+            --output-dir "$DIST"
+          node --check "$DIST/app.js"
+
+      - name: Fail closed on truth, water and camera rules
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          m=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+          r=json.loads((root/'BUILD_REPORT.json').read_text(encoding='utf-8'))
+          assert m['authoritativeDem']['sha256']=='9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+          assert m['authoritativeDem']['compression']=='NONE'
+          assert m['authoritativeDem']['resampled'] is False
+          assert m['displayRules']['manualCameraOnly'] is True
+          assert m['displayRules']['cameraPresetButtons']==[]
+          assert m['displayRules']['handDrawnWaterCount']==0
+          assert m['hydrology']['historicalAcceptedTruthCount']==0
+          assert m['hydrology']['mainWaterwayFeatures']>=900
+          assert m['hydrology']['displayedWaterAreaFeatures']>=800
+          assert m['hydrology']['omittedWastewaterAreas']>=50
+          assert m['hydrology']['centerlineFixed'] is True
+          assert m['hydrology']['widthSliderLateralOnly'] is True
+          assert m['hydrology']['lakeShorelineFixed'] is True
+          assert r['authoritativeDemModified'] is False
+          index=(root/'index.html').read_text(encoding='utf-8')
+          app=(root/'app.js').read_text(encoding='utf-8')
+          assert all(label not in index for label in ['总览','俯视','朝北'])
+          assert 'Float32Array(await' not in app
+          assert 'riverLines' not in app and 'lakePolygons' not in app
+          for group in ['height','fallback']:
+              item=m['browserAssets'][group]
+              p=root/item['file']
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
+          surface=m['browserAssets']['surface']
+          for file_key,hash_key in [('desktopFile','desktopSha256'),('compatibilityFile','compatibilitySha256')]:
+              p=root/surface[file_key]
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==surface[hash_key]
+          for item in m['browserAssets']['water'].values():
+              p=root/item['file']
+              assert p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
+          print(json.dumps({
+            'status':'pass',
+            'mainWaterways':m['hydrology']['mainWaterwayFeatures'],
+            'minorWaterways':m['hydrology']['minorWaterwayFeatures'],
+            'displayedWaterAreas':m['hydrology']['displayedWaterAreaFeatures'],
+            'handDrawnWater':0,
+            'historicalTruth':0,
+            'cameraPresets':0
+          },ensure_ascii=False))
+          PY
+
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install browser QA runtime
+        run: npm install --no-save puppeteer-core
+
+      - name: Run real desktop and mobile browser QA
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          QA_BASE: http://127.0.0.1:8765
+          QA_OUT: ${{ runner.temp }}/browser-qa
+        run: |
+          set -euo pipefail
+          mkdir -p "$QA_OUT"
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/site/$TARGET_DIR" >"$RUNNER_TEMP/http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/qa_kunming_yunnan_hydrology_v004.mjs
+          test -f "$QA_OUT/BROWSER_QA.json"
+          test -f "$QA_OUT/KUNMING_V004_DESKTOP.png"
+          test -f "$QA_OUT/KUNMING_V004_MOBILE.png"
+
+      - name: Create full downloadable package
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/browser-qa/BROWSER_QA.json" "$RUNNER_TEMP/site/$TARGET_DIR/BROWSER_QA.json"
+          cp "$RUNNER_TEMP/browser-qa/KUNMING_V004_DESKTOP.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V004_DESKTOP.png"
+          cp "$RUNNER_TEMP/browser-qa/KUNMING_V004_MOBILE.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V004_MOBILE.png"
+          cd "$RUNNER_TEMP/site"
+          zip -0 -r "$RUNNER_TEMP/${PACKAGE_NAME}.zip" "$TARGET_DIR"
+          sha256sum "$RUNNER_TEMP/${PACKAGE_NAME}.zip" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256.txt"
+
+      - name: Upload V004 package and browser evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/manifest.json
+            ${{ runner.temp }}/browser-qa/BROWSER_QA.json
+            ${{ runner.temp }}/browser-qa/KUNMING_V004_DESKTOP.png
+            ${{ runner.temp }}/browser-qa/KUNMING_V004_MOBILE.png
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy without replacing other project pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR"
+          git commit -m "Deploy Kunming Yunnan hydrology V004 from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
+
+      - name: Verify public V004
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
+              && curl --fail --silent --show-error "$BASE/BROWSER_QA.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-browser-qa.json"; then
+              python - <<'PY'
+          import json, pathlib
+          m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
+          q=json.loads(pathlib.Path("${{ runner.temp }}/public-browser-qa.json").read_text(encoding='utf-8'))
+          assert m['status']=='modern_osm_reference_ready_historical_truth_pending'
+          assert m['displayRules']['cameraPresetButtons']==[]
+          assert m['hydrology']['handDrawnWaterCount']==0
+          assert q['status']=='pass' and q['webgl2Active'] is True
+          print('public V004 verification passed')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1

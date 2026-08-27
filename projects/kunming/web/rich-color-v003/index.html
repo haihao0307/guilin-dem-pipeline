@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="color-scheme" content="dark"><title>昆明 DEM 丰富卫星图式三维查看器 V003</title><link rel="stylesheet" href="styles.css?v=3"></head>
+<body><canvas id="terrain" aria-label="昆明 DEM 丰富卫星图式三维地形"></canvas><div id="fallback" hidden><img id="fallbackImage" src="assets/fallback.png" alt="昆明 DEM 丰富色彩二维预览" draggable="false"></div>
+<aside class="panel"><h1>昆明 DEM 丰富卫星图式三维查看器 V003</h1><p class="lead">使用冻结的无压缩 12.5 米 DEM 基线，稳定恢复三维浏览，并以可重复生成的色彩规则强化山脊、坡面、谷地、裸岩和高处明暗层次。本版暂不接入水系，避免继续显示错误或手画河道。</p>
+<section><div class="mode-grid"><button class="active" data-mode="0">丰富卫星图式</button><button data-mode="1">灰度地形</button><button data-mode="2">高程分层</button></div></section>
+<section class="button-grid"><button id="overview">总览</button><button id="top">俯视</button><button id="north">朝北</button><button id="reset">复位</button><button id="fullscreen">全屏</button><button id="screenshot">截图</button></section>
+<section class="stats"><div><b>12.5 m × 12.5 m</b><span>权威输出像元</span></div><div><b>5892 × 8095</b><span>权威栅格尺寸</span></div><div><b>73.650 × 101.1875 km</b><span>地面范围</span></div><div><b>7,452.459375 km²</b><span>裁切面积</span></div><div><b>1.0×</b><span>自然垂直比例</span></div><div><b>EPSG:32648</b><span>工程坐标系</span></div></section>
+<section class="note"><strong>操作：</strong>左键拖动旋转，右键或 Shift 加拖动平移，滚轮缩放。网页只读取可再生成的 RG16 高度纹理和丰富色彩图。权威 float32 DEM 保持无压缩、无重采样且不被网页回写。</section></aside><div id="status" class="status">正在载入三维地形 V003…</div><script type="module" src="app.js?v=3"></script></body></html>

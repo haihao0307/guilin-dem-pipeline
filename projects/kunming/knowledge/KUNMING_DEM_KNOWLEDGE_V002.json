@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "kunming_dem_knowledge@2.0.0",
+  "status": "truth_first_with_osm_and_historical_hydrology_contract",
+  "supersedes": "KUNMING_DEM_KNOWLEDGE_V001.json",
+  "authoritativeDem": {
+    "sourceMosaicSha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+    "cleanCropSha256": "9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2",
+    "crs": "EPSG:32648",
+    "pixelSpacingMeters": [12.5, 12.5],
+    "cleanCropGrid": [5892, 8095],
+    "cleanCropAreaKm2": 7452.459375,
+    "cleanCropCompression": "NONE",
+    "resampled": false
+  },
+  "knowledgeReferences": {
+    "hydrologyContract": "projects/kunming/knowledge/KUNMING_OSM_HISTORICAL_HYDROLOGY_V001.md",
+    "hydrologySourceRegister": "projects/kunming/knowledge/KUNMING_HYDROLOGY_SOURCE_REGISTER_V001.json",
+    "currentOsmQuery": "projects/kunming/knowledge/osm/KUNMING_OSM_HYDROLOGY_CURRENT.ql",
+    "executionTask": "ops/tasks/KUNMING_OSM_HISTORICAL_HYDROLOGY_V001.md"
+  },
+  "hydrologyEpochPolicy": {
+    "targetEpoch": [1940, 1945],
+    "earliestSufficientlyDetailedSourceWins": true,
+    "preserveMultipleDatedVersions": true,
+    "crossEpochGeometryMerge": false,
+    "modernOsmCanClaimHistoricalTruth": false,
+    "osmHistoryMeans": "mapping history, primarily from 2007 onward",
+    "demRole": ["flow topology", "valley validation", "candidate channels", "lake flatness"],
+    "demCanOverrideCitedHistoricalGeometry": false
+  },
+  "acceptedHydrologyClasses": {
+    "linear": ["river", "stream", "canal", "ditch", "drain", "tidal_channel", "flowline"],
+    "areas": ["lake", "reservoir", "river", "canal", "pond", "basin", "oxbow", "lagoon", "legacy riverbank"],
+    "nodesAndBarriers": ["spring", "dam", "weir", "waterfall", "lock_gate", "rapids"],
+    "relations": ["type=waterway main_stream", "type=waterway side_stream", "spring", "mouth"]
+  },
+  "featureKnowledgeSchema": {
+    "required": [
+      "feature_id",
+      "class",
+      "geometry",
+      "source_ids",
+      "source_date",
+      "valid_from",
+      "valid_to",
+      "confidence",
+      "historical_status",
+      "dem_topology_check"
+    ],
+    "osmRequiredWhenApplicable": ["osm_type", "osm_id", "version", "timestamp", "changeset", "tags"],
+    "flowingWaterRequired": ["flow_direction", "main_or_side", "width_model"],
+    "lakeRequired": ["shoreline_source", "surface_elevation_method", "outlet_status"]
+  },
+  "displayPolicy": {
+    "handDrawnWaterAccepted": false,
+    "riverCenterlineFixed": true,
+    "widthSliderChangesLateralWidthOnly": true,
+    "lakeShorelineFixed": true,
+    "wavesChangeGeometryBoundary": false,
+    "flowAnimationUsesStoredDownstreamDirection": true,
+    "layerToggles": ["modern OSM", "historical verified", "historical candidate", "DEM candidate"],
+    "authoritativeDemModified": false
+  },
+  "storagePolicy": {
+    "repositoryStores": ["source registry", "queries", "small vector knowledge", "algorithms", "parameters", "hashes", "QA", "handoff"],
+    "largeRawHistoricalImages": "local cache or dedicated release",
+    "largeOsmHistoryExtracts": "local cache or dedicated release",
+    "browserTextures": "regenerable display cache",
+    "duplicateTiffPolicy": "forbidden"
+  },
+  "attribution": {
+    "osm": "© OpenStreetMap contributors, ODbL 1.0",
+    "historical": "retain institution-specific credit and rights statement per source"
+  }
+}

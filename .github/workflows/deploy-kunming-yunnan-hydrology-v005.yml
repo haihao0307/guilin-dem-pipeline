@@ -1,0 +1,210 @@
+name: Deploy Kunming orientation controls river V005
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - .github/workflows/deploy-kunming-yunnan-hydrology-v005.yml
+      - scripts/patch_kunming_yunnan_hydrology_v005.py
+      - scripts/qa_kunming_yunnan_hydrology_v005.mjs
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_DIR: kunming-yunnan-hydrology-v004
+  TARGET_DIR: kunming-yunnan-hydrology-v005
+  PACKAGE_NAME: KUNMING_YUNNAN_HYDROLOGY_V005_ORIENTATION_RIVER_FIX
+
+jobs:
+  build-browser-qa-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout project branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/kunming-dem-v001
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch published V004 without altering it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/index.html"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/app.js"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/manifest.json"
+          test -f "$RUNNER_TEMP/pages/$SOURCE_DIR/assets/height_rg16.png"
+
+      - name: Build additive V005 correction
+        run: |
+          set -euo pipefail
+          python scripts/patch_kunming_yunnan_hydrology_v005.py \
+            --source "$RUNNER_TEMP/pages/$SOURCE_DIR" \
+            --output "$RUNNER_TEMP/site/$TARGET_DIR"
+          node --check "$RUNNER_TEMP/site/$TARGET_DIR/app.js"
+
+      - name: Fail closed on orientation, controls and river scale
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          manifest=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+          app=(root/'app.js').read_text(encoding='utf-8')
+          index=(root/'index.html').read_text(encoding='utf-8')
+          assert manifest['schemaVersion']=='kunming_yunnan_hydrology_web@5.0.0'
+          assert manifest['authoritativeDem']['sha256']=='9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+          assert manifest['authoritativeDem']['compression']=='NONE'
+          assert manifest['authoritativeDem']['resampled'] is False
+          assert manifest['displayRules']['orientation']=='east-positive-x_north-negative-z'
+          assert manifest['displayRules']['northUpRaster'] is True
+          assert manifest['displayRules']['defaultRiverWidthPercent']==10
+          assert manifest['displayRules']['defaultMinorDrainagePercent']==0
+          assert manifest['hydrology']['handDrawnWaterCount']==0
+          assert manifest['hydrology']['historicalAcceptedTruthCount']==0
+          assert '(aUV.y-.5)*uWorldSize.y' in app
+          assert 'z / worldDepth + 0.5' in app
+          assert 'vec3 normal=normalize(vec3(-dx,1.0,-dz));' in app
+          assert 'mainThreshold=mix(.995,.905,widthCurve)' in app
+          assert 'hydroDetail: 0.00' in app and 'riverWidth: 0.10' in app
+          assert "dataset.orientation = 'east-positive-x_north-negative-z'" in app
+          assert '2 * Math.PI * dx / height * rotateSpeed' in app
+          assert '2 * dx * targetDistance / Math.max(1, canvas.clientHeight)' in app
+          assert 'id="compassNeedle"' in index
+          assert all(label not in index for label in ['总览','俯视','朝北'])
+          for asset in manifest['browserAssets'].values():
+              if isinstance(asset, dict) and 'file' in asset:
+                  assert (root/asset['file']).exists(), asset['file']
+          print('V005 static QA passed')
+          PY
+
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install browser QA runtime
+        run: npm install --no-save puppeteer-core
+
+      - name: Run desktop and mobile browser QA
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          QA_BASE: http://127.0.0.1:8765
+          QA_OUT: ${{ runner.temp }}/browser-qa-v005
+        run: |
+          set -euo pipefail
+          mkdir -p "$QA_OUT"
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/site/$TARGET_DIR" >"$RUNNER_TEMP/http-v005.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/qa_kunming_yunnan_hydrology_v005.mjs
+          test -f "$QA_OUT/BROWSER_QA.json"
+          test -f "$QA_OUT/KUNMING_V005_DESKTOP.png"
+          test -f "$QA_OUT/KUNMING_V005_MOBILE.png"
+
+      - name: Create package and QA evidence
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/browser-qa-v005/BROWSER_QA.json" "$RUNNER_TEMP/site/$TARGET_DIR/BROWSER_QA.json"
+          cp "$RUNNER_TEMP/browser-qa-v005/KUNMING_V005_DESKTOP.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V005_DESKTOP.png"
+          cp "$RUNNER_TEMP/browser-qa-v005/KUNMING_V005_MOBILE.png" "$RUNNER_TEMP/site/$TARGET_DIR/KUNMING_V005_MOBILE.png"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          q=json.loads((root/'BROWSER_QA.json').read_text(encoding='utf-8'))
+          assert q['status']=='pass'
+          assert q['webgl2Active'] is True
+          assert q['orientationVerified'] is True
+          assert q['orbitVerified'] is True
+          assert q['panVerified'] is True
+          assert q['riverDefaultsVerified'] is True
+          report={
+            'status':'browser_qa_pass_public_deployment_pending',
+            'sourceV004Preserved':True,
+            'orientation':'east-positive-x_north-negative-z',
+            'mouseControls':'orbit-standard',
+            'defaultRiverWidthPercent':10,
+            'defaultMinorDrainagePercent':0,
+            'authoritativeDemModified':False,
+          }
+          (root/'DEPLOYMENT_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          cd "$RUNNER_TEMP/site"
+          zip -0 -r "$RUNNER_TEMP/${PACKAGE_NAME}.zip" "$TARGET_DIR"
+          sha256sum "$RUNNER_TEMP/${PACKAGE_NAME}.zip" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256.txt"
+
+      - name: Upload V005 package and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/manifest.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BROWSER_QA.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/DEPLOYMENT_REPORT.json
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/KUNMING_V005_DESKTOP.png
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/KUNMING_V005_MOBILE.png
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy V005 without replacing V004
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR"
+          git commit -m "Deploy Kunming V005 orientation controls river fix from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
+
+      - name: Verify public V005
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index-v005.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest-v005.json" \
+              && curl --fail --silent --show-error "$BASE/BROWSER_QA.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-qa-v005.json" \
+              && curl --fail --silent --show-error "$BASE/app.js?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-app-v005.js"; then
+              python - <<'PY'
+          import json, pathlib
+          m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest-v005.json").read_text(encoding='utf-8'))
+          q=json.loads(pathlib.Path("${{ runner.temp }}/public-qa-v005.json").read_text(encoding='utf-8'))
+          app=pathlib.Path("${{ runner.temp }}/public-app-v005.js").read_text(encoding='utf-8')
+          assert m['schemaVersion']=='kunming_yunnan_hydrology_web@5.0.0'
+          assert m['displayRules']['orientation']=='east-positive-x_north-negative-z'
+          assert m['displayRules']['defaultRiverWidthPercent']==10
+          assert q['status']=='pass' and q['orientationVerified'] is True
+          assert '(aUV.y-.5)*uWorldSize.y' in app
+          print('public V005 verification passed')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1

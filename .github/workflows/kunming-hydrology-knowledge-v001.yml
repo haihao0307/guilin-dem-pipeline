@@ -1,0 +1,155 @@
+name: Kunming OSM and historical hydrology knowledge V001
+
+on:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - 'projects/kunming/knowledge/osm/KUNMING_OSM_HYDROLOGY_CURRENT.ql'
+      - 'projects/kunming/knowledge/ohm/KUNMING_OHM_HYDROLOGY_ALL_DATES.ql'
+      - 'projects/kunming/hydrology-knowledge-v001/scripts/fetch_hydrology_sources.py'
+      - 'projects/kunming/hydrology-knowledge-v001/scripts/distill_hydrology_knowledge.py'
+      - '.github/workflows/kunming-hydrology-knowledge-v001.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kunming-hydrology-knowledge-v001
+  cancel-in-progress: false
+
+jobs:
+  fetch-distill-and-record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+      BRANCH_NAME: project/kunming-dem-v001
+
+    steps:
+      - name: Checkout project branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate executables and queries
+        run: |
+          python -m py_compile projects/kunming/hydrology-knowledge-v001/scripts/fetch_hydrology_sources.py
+          python -m py_compile projects/kunming/hydrology-knowledge-v001/scripts/distill_hydrology_knowledge.py
+          test -s projects/kunming/knowledge/osm/KUNMING_OSM_HYDROLOGY_CURRENT.ql
+          test -s projects/kunming/knowledge/ohm/KUNMING_OHM_HYDROLOGY_ALL_DATES.ql
+
+      - name: Fetch OSM, OHM and Library of Congress candidates
+        id: fetch
+        continue-on-error: true
+        run: |
+          rm -rf .work/hydrology-v001
+          python projects/kunming/hydrology-knowledge-v001/scripts/fetch_hydrology_sources.py \
+            --osm-query projects/kunming/knowledge/osm/KUNMING_OSM_HYDROLOGY_CURRENT.ql \
+            --ohm-query projects/kunming/knowledge/ohm/KUNMING_OHM_HYDROLOGY_ALL_DATES.ql \
+            --output .work/hydrology-v001
+
+      - name: Distill relation topology and historical review
+        id: distill
+        continue-on-error: true
+        shell: bash
+        run: |
+          if test -s .work/hydrology-v001/osm-current/raw/overpass.json \
+             && test -s .work/hydrology-v001/ohm-history/raw/overpass.json; then
+            python projects/kunming/hydrology-knowledge-v001/scripts/distill_hydrology_knowledge.py \
+              --root .work/hydrology-v001
+          else
+            echo 'Both OSM and OHM raw extracts are required for combined distillation.'
+          fi
+
+      - name: Upload complete source-preserving artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kunming-hydrology-knowledge-v001
+          path: .work/hydrology-v001
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Prepare small repository receipts
+        if: always()
+        shell: bash
+        run: |
+          OUT=projects/kunming/hydrology-knowledge-v001/generated
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+          for pair in \
+            '.work/hydrology-v001/QA_REPORT.json:QA_REPORT.json' \
+            '.work/hydrology-v001/osm-current/manifest.json:osm_current_manifest.json' \
+            '.work/hydrology-v001/ohm-history/manifest.json:ohm_history_manifest.json' \
+            '.work/hydrology-v001/historical_catalog/LOC_HISTORICAL_CATALOG_CANDIDATES.json:LOC_HISTORICAL_CATALOG_CANDIDATES.json' \
+            '.work/hydrology-v001/distilled/DISTILLED_SUMMARY.json:DISTILLED_SUMMARY.json' \
+            '.work/hydrology-v001/distilled/HISTORICAL_REVIEW.json:HISTORICAL_REVIEW.json' \
+            '.work/hydrology-v001/distilled/osm-current/SUMMARY.json:OSM_CURRENT_SUMMARY.json' \
+            '.work/hydrology-v001/distilled/ohm-history/SUMMARY.json:OHM_HISTORY_SUMMARY.json'
+          do
+            SRC="${pair%%:*}"
+            DST="${pair##*:}"
+            if test -s "$SRC"; then cp "$SRC" "$OUT/$DST"; fi
+          done
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          out = Path('projects/kunming/hydrology-knowledge-v001/generated')
+          receipt = {
+              'schemaVersion': 'kunming_hydrology_run_receipt@1.0.0',
+              'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ.get('GITHUB_REPOSITORY'),
+              'workflowRunId': os.environ.get('GITHUB_RUN_ID'),
+              'workflowRunAttempt': os.environ.get('GITHUB_RUN_ATTEMPT'),
+              'sourceCommit': os.environ.get('GITHUB_SHA'),
+              'statusFilePresent': (out / 'QA_REPORT.json').exists(),
+              'distilledSummaryPresent': (out / 'DISTILLED_SUMMARY.json').exists(),
+              'artifactName': 'kunming-hydrology-knowledge-v001',
+              'note': 'Large raw Overpass and complete geometry outputs remain in the workflow artifact. Git stores distilled manifests, source audit, relation-topology summary and catalog receipts.'
+          }
+          (out / 'RUN_RECEIPT.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+
+      - name: Commit generated receipts and rebase before push
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/kunming/hydrology-knowledge-v001/generated
+          if git diff --cached --quiet; then
+            echo 'No hydrology receipt changes to commit.'
+          else
+            git commit -m 'Record Kunming OSM and historical hydrology source receipts'
+            git fetch origin "$BRANCH_NAME"
+            git rebase "origin/$BRANCH_NAME"
+            git push origin "HEAD:$BRANCH_NAME"
+          fi
+
+      - name: Final fail-closed status gate
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('projects/kunming/hydrology-knowledge-v001/generated')
+          qa_path = root / 'QA_REPORT.json'
+          if not qa_path.exists():
+              raise SystemExit('Hydrology QA report was not created.')
+          report = json.loads(qa_path.read_text(encoding='utf-8'))
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          if report.get('status') == 'failed':
+              raise SystemExit('Both OSM and OHM source fetches failed. See artifact and QA report.')
+          distilled = root / 'DISTILLED_SUMMARY.json'
+          if not distilled.exists():
+              raise SystemExit('Source-preserving hydrology distillation was not created.')
+          PY

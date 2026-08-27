@@ -1,0 +1,159 @@
+name: Kunming ASF plan and local contract
+
+on:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - 'projects/kunming/**'
+      - 'ops/tasks/KUNMING_DEM_DOWNLOAD_V001.md'
+      - 'skills/asf-rtc-reference-dem/**'
+      - 'tools/asf-local/**'
+      - '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
+      - '.github/workflows/kunming-asf-plan-and-local-contract.yml'
+  pull_request:
+    paths:
+      - 'projects/kunming/**'
+      - 'ops/tasks/KUNMING_DEM_DOWNLOAD_V001.md'
+      - 'skills/asf-rtc-reference-dem/**'
+      - 'tools/asf-local/**'
+      - '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-plan:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate JSON contracts
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          paths = [
+              Path('projects/kunming/config/project_scope_v001.json'),
+              Path('projects/kunming/config/task_config.json'),
+              Path('projects/kunming/config/existing_five_manifest.json'),
+              Path('projects/kunming/metadata/resolved_aoi.json'),
+              Path('projects/kunming/metadata/runtime_source.json'),
+              Path('projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson'),
+          ]
+          for path in paths:
+              json.loads(path.read_text(encoding='utf-8'))
+              print(f'validated {path}')
+
+          config = json.loads(Path('projects/kunming/config/task_config.json').read_text(encoding='utf-8'))
+          assert config['project']['targetPixelSpacingMeters'] == 12.5
+          assert config['processing']['outputPixelSpacingMeters'] == 12.5
+          assert config['project']['targetCrs'] == 'EPSG:32648'
+          assert config['source']['provider'] == 'NASA ASF DAAC'
+          assert config['source']['dataset'] == 'ALOS PALSAR'
+          assert config['source']['processingLevel'] == ['RTC_HI_RES']
+          assert config['project']['accuracyLabel'] == '12.5米输出像元的ASF RTC参考DEM'
+
+          scope = json.loads(Path('projects/kunming/config/project_scope_v001.json').read_text(encoding='utf-8'))
+          assert scope['source_policy']['native_12_5m_survey_claim'] is False
+          assert scope['source_policy']['allow_30m_final_fallback'] is False
+          assert abs(scope['aoi']['area_km2'] - 20000.0) < 1e-9
+
+      - name: Validate PowerShell syntax
+        shell: powershell
+        run: |
+          $paths = @(
+            'projects/kunming/local_tools/LocalBuild.ps1',
+            'tools/asf-local/InvokeChromeSessionDownload.ps1',
+            'tools/asf-local/RepairChromeSessionDownloader.ps1'
+          )
+          foreach ($path in $paths) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $path),
+              [ref]$tokens,
+              [ref]$errors
+            )
+            if (@($errors).Count -gt 0) {
+              $errors | Format-List *
+              throw "PowerShell syntax validation failed: $path"
+            }
+            Write-Host "validated $path"
+          }
+
+      - name: Validate local launcher contract
+        shell: powershell
+        run: |
+          $paths = @(
+            '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd',
+            'projects/kunming/local_tools/RUN_KUNMING_ASF_12_5M_KEEP_OPEN.cmd'
+          )
+          foreach ($path in $paths) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing local launcher: $path"
+            }
+          }
+          $entry = Get-Content -Raw -LiteralPath '09_KUNMING_12_5M_BUILD_NO_FLASH.cmd'
+          if ($entry -notmatch 'projects\\kunming\\local_tools\\LocalBuild.ps1') {
+            throw 'Root launcher does not call the Kunming local build.'
+          }
+
+      - name: Build live ASF selected-product plan
+        shell: python
+        run: |
+          import subprocess
+          import sys
+
+          command = [
+              sys.executable,
+              'DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/scripts/asf_download_stdlib.py',
+              '--config', 'projects/kunming/config/task_config.json',
+              '--root', 'projects/kunming',
+              '--plan-only',
+          ]
+          raise SystemExit(subprocess.call(command))
+
+      - name: Validate selected-product coverage
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          path = Path('projects/kunming/metadata/selected_products.json')
+          plan = json.loads(path.read_text(encoding='utf-8'))
+          diagnostics = plan['searchDiagnostics']
+          selected = plan['selectedNewProducts']
+          assert selected, 'ASF plan selected zero products'
+          assert diagnostics['selectedCoverageFraction'] >= diagnostics['targetCoverageFraction']
+          print(json.dumps({
+              'selectedProductCount': len(selected),
+              'selectedCoverageFraction': diagnostics['selectedCoverageFraction'],
+              'targetCoverageFraction': diagnostics['targetCoverageFraction'],
+          }, indent=2))
+
+      - name: Upload ASF plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kunming-asf-selected-product-plan
+          path: |
+            projects/kunming/metadata/asf_search_results_jsonlite2.json
+            projects/kunming/metadata/selected_products.json
+            projects/kunming/metadata/resolved_aoi.json
+            projects/kunming/metadata/resolved_aoi.geojson
+            projects/kunming/metadata/runtime_source.json
+            projects/kunming/aoi/kunming_cuihu_20000km2_square.geojson
+          if-no-files-found: error

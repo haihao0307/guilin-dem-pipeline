@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "kunming_historical_hydrography_priority@1.0.0",
+  "status": "priority_sources_identified_geometry_review_pending",
+  "targetEpoch": [1940, 1945],
+  "searchAliases": [
+    "Kunming",
+    "K'un-Ming",
+    "K'un-ming shih",
+    "Yunnan-fu",
+    "Yunnan Fu",
+    "Yün-nan-fu",
+    "NG 48",
+    "NG-48",
+    "Yunnan Army Map Service",
+    "Kunming airfield 1943"
+  ],
+  "prioritySources": [
+    {
+      "sourceId": "ut-imw-ng48-kunming-ams",
+      "title": "NG 48 K'un-Ming [China], International Map of the World, Series 1301, Edition 5-AMS",
+      "institution": "University of Texas Libraries, Perry-Castañeda Library Map Collection",
+      "date": "wartime-era; exact edition date must be read from map margin",
+      "scale": "1:1,000,000",
+      "url": "https://maps.lib.utexas.edu/maps/imw/txu-oclc-6654394-ng-48-5th-ed.jpg",
+      "role": [
+        "major river and lake presence",
+        "wartime-era names",
+        "regional drainage context",
+        "historical sheet-index anchor"
+      ],
+      "geometryUse": "major hydrography only after georeferencing and margin inspection",
+      "shorelineAuthority": false,
+      "status": "identified_pending_image_inspection"
+    },
+    {
+      "sourceId": "loc-yunnan-quan-tu-1864",
+      "title": "Yunnan quan tu",
+      "institution": "Library of Congress Geography and Map Division",
+      "date": "1864",
+      "scale": "not suitable for 12.5 m geometry",
+      "url": "https://www.loc.gov/item/96685901/",
+      "role": [
+        "early major hydrography",
+        "historical names",
+        "pre-modern lake and river existence",
+        "search vocabulary"
+      ],
+      "geometryUse": "name and major-feature discovery only",
+      "shorelineAuthority": false,
+      "status": "catalog_identified"
+    },
+    {
+      "sourceId": "loc-airfields-china-1943",
+      "title": "Airfields in occupied & unoccupied China",
+      "institution": "Library of Congress",
+      "date": "February 1943",
+      "scale": "regional operational map",
+      "url": "https://www.loc.gov/item/2007627806/",
+      "role": [
+        "wartime place-name context",
+        "airfield and infrastructure context",
+        "candidate hydrographic reference near Kunming"
+      ],
+      "geometryUse": "inspect Kunming coverage before accepting any water geometry",
+      "shorelineAuthority": false,
+      "status": "catalog_identified_pending_image_inspection"
+    },
+    {
+      "sourceId": "loc-wwii-situation-maps",
+      "title": "World War II Military Situation Maps",
+      "institution": "Library of Congress",
+      "date": "1944-1945",
+      "url": "https://www.loc.gov/item/2006577707/",
+      "role": ["wartime catalog discovery", "named geographic context"],
+      "geometryUse": "no Kunming sheet accepted yet",
+      "shorelineAuthority": false,
+      "status": "catalog_identified_kunming_coverage_unconfirmed"
+    }
+  ],
+  "acceptanceRules": [
+    "Inspect the map image and margin before assigning a date or scale.",
+    "Confirm that the clean Kunming crop is actually covered.",
+    "Georeference independently and record control points and residuals.",
+    "Keep each dated geometry as a separate version.",
+    "Do not use 1:1,000,000 or smaller-scale maps for detailed shorelines.",
+    "Cross-check accepted geometry against DEM topology and modern OSM without silently snapping it."
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "kunming_hydrology_sources@1.0.0",
+  "status": "source_hierarchy_ready_geometry_not_yet_accepted",
+  "aoi": {
+    "projectCrs": "EPSG:32648",
+    "cleanCropBounds": [243875.0, 2719987.5, 317525.0, 2821175.0],
+    "wgs84BboxSouthWestNorthEast": [24.572710196159, 102.452264770003, 25.496535815227, 103.19792874295],
+    "targetEpoch": [1940, 1945]
+  },
+  "priorityRule": "Prefer the earliest date-specific source with sufficient spatial detail. Preserve all dated versions. Never use a modern geometry as historical truth without independent evidence.",
+  "sources": [
+    {
+      "sourceId": "osm-current-overpass",
+      "title": "OpenStreetMap current waterways and water areas",
+      "dateCoverage": "current",
+      "sourceType": "vector",
+      "authority": "OpenStreetMap contributors",
+      "url": "https://www.openstreetmap.org/",
+      "queryFile": "osm/KUNMING_OSM_HYDROLOGY_CURRENT.ql",
+      "role": ["modern river skeleton", "lake and reservoir polygons", "names", "flow direction", "waterway relations"],
+      "historicalGeometryAuthority": false,
+      "license": "ODbL 1.0",
+      "status": "approved_for_modern_reference"
+    },
+    {
+      "sourceId": "osm-full-history",
+      "title": "OpenStreetMap full-history planet",
+      "dateCoverage": "mostly October 2007 onward",
+      "sourceType": "versioned vector",
+      "authority": "OpenStreetMap contributors",
+      "url": "https://planet.openstreetmap.org/pbf/full-history/",
+      "role": ["OSM object versions", "deleted modern objects", "mapping history", "modern geometry change detection"],
+      "historicalGeometryAuthority": false,
+      "warning": "OSM edit timestamps are mapping timestamps, not the physical creation date of a river or lake.",
+      "status": "approved_for_osm_history_only"
+    },
+    {
+      "sourceId": "ohsome-full-history",
+      "title": "HeiGIT ohsome full-history extraction",
+      "dateCoverage": "OSM history",
+      "sourceType": "history API",
+      "authority": "HeiGIT",
+      "url": "https://docs.ohsome.org/ohsome-api/v1/endpoints.html",
+      "role": ["feature validFrom and validTo", "historical OSM geometry extraction", "OSM data quality analysis"],
+      "historicalGeometryAuthority": false,
+      "transitionNote": "API v1 is being replaced by v2 during 2026. Keep a local full-history PBF workflow as the stable fallback.",
+      "status": "approved_as_convenience_service"
+    },
+    {
+      "sourceId": "openhistoricalmap",
+      "title": "OpenHistoricalMap",
+      "dateCoverage": "feature-dependent",
+      "sourceType": "historical vector",
+      "authority": "OpenHistoricalMap community",
+      "url": "https://www.openhistoricalmap.org/",
+      "role": ["dated historical waterways", "dated lake polygons", "historical names", "source citations"],
+      "historicalGeometryAuthority": "conditional",
+      "conditions": ["source citation present", "date parseable", "geometry independently checked", "no unresolved conflict with primary map"],
+      "status": "coverage_not_yet_verified_for_kunming"
+    },
+    {
+      "sourceId": "loc-wwii-situation-maps",
+      "title": "World War II Military Situation Maps",
+      "dateCoverage": "1944-1945",
+      "sourceType": "historical map collection",
+      "authority": "Library of Congress",
+      "url": "https://www.loc.gov/item/2006577707/",
+      "role": ["wartime context", "source discovery", "named geographic features"],
+      "historicalGeometryAuthority": "conditional",
+      "status": "catalog_verified_kunming_sheet_not_yet_identified"
+    },
+    {
+      "sourceId": "loc-ams-gsgs-china-series",
+      "title": "Army Map Service and War Office China topographic series",
+      "dateCoverage": "1930s-1945",
+      "sourceType": "historical topographic map series",
+      "authority": "Library of Congress and military map archives",
+      "url": "https://www.loc.gov/maps/",
+      "role": ["primary target for 1940-1945 river and lake geometry", "old names", "bridges and waterworks", "historical shoreline"],
+      "historicalGeometryAuthority": true,
+      "status": "highest_priority_search_target_kunming_sheet_not_yet_confirmed_online"
+    },
+    {
+      "sourceId": "loc-far-east-1943",
+      "title": "The Far East and adjoining areas",
+      "dateCoverage": "1943",
+      "sourceType": "regional map",
+      "authority": "Library of Congress",
+      "url": "https://www.loc.gov/item/2006636620/",
+      "role": ["regional context", "old-name discovery", "major water-body presence"],
+      "historicalGeometryAuthority": false,
+      "status": "catalog_verified_scale_too_small_for_detailed_geometry"
+    },
+    {
+      "sourceId": "loc-missions-china-1891",
+      "title": "Map of missions in China",
+      "dateCoverage": "1891",
+      "sourceType": "historical regional map",
+      "authority": "Library of Congress",
+      "url": "https://www.loc.gov/item/87692367/",
+      "role": ["early names", "major river and lake existence", "search vocabulary"],
+      "historicalGeometryAuthority": false,
+      "status": "catalog_verified_scale_too_small_for_detailed_geometry"
+    },
+    {
+      "sourceId": "loc-chinese-empire-1847",
+      "title": "Map of the Chinese empire, compiled from native and foreign authorities",
+      "dateCoverage": "1847",
+      "sourceType": "historical regional map",
+      "authority": "Library of Congress",
+      "url": "https://www.loc.gov/item/2006629423/",
+      "role": ["very early hydrographic names", "major water-body presence", "source discovery"],
+      "historicalGeometryAuthority": false,
+      "status": "catalog_verified_discovery_only"
+    },
+    {
+      "sourceId": "loc-china-japan-1842",
+      "title": "Carte de l'empire chinois et du Japon",
+      "dateCoverage": "1842",
+      "sourceType": "historical regional map",
+      "authority": "Library of Congress",
+      "url": "https://www.loc.gov/resource/g7820.ct005080/",
+      "role": ["very early major hydrography", "historic place-name discovery"],
+      "historicalGeometryAuthority": false,
+      "status": "catalog_verified_discovery_only"
+    },
+    {
+      "sourceId": "dem-hydrology",
+      "title": "Kunming authoritative 12.5 m DEM hydrology derivatives",
+      "dateCoverage": "terrain reference, not a historical water date",
+      "sourceType": "derived terrain analysis",
+      "authority": "Kunming DEM pipeline",
+      "role": ["flow direction", "flow accumulation", "valley bottoms", "lake flatness", "topology QA", "candidate tributaries"],
+      "historicalGeometryAuthority": false,
+      "warning": "DEM-derived channels are candidates until confirmed by a dated map, imagery, or cited vector source.",
+      "status": "approved_for_validation_and_candidate_generation"
+    }
+  ],
+  "acceptance": {
+    "historicalFeatureMinimum": ["sourceId", "sourceDate", "validFrom", "validTo or open interval", "confidence", "geometry", "DEM topology check"],
+    "modernOsmFeatureMinimum": ["osm type", "osm id", "version", "timestamp", "tags", "geometry", "attribution"],
+    "hiddenByDefault": ["uncited hand drawing", "source conflict below confidence 0.30", "geometry that climbs across ridgelines without cited engineering evidence"]
+  }
+}

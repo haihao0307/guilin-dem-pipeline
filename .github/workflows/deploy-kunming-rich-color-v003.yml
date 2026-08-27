@@ -1,0 +1,158 @@
+name: Deploy Kunming rich-color 3D V003
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/kunming-dem-v001
+    paths:
+      - .github/workflows/deploy-kunming-rich-color-v003.yml
+      - scripts/generate_kunming_rich_surface_v003.py
+      - projects/kunming/web/rich-color-v003/**
+
+permissions:
+  contents: write
+
+env:
+  TARGET_DIR: kunming-rich-color-v003
+  PACKAGE_NAME: KUNMING_DEM_3D_WEB_V003_RICH_COLOR_FIX
+
+jobs:
+  build-deploy-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout project branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/kunming-dem-v001
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deterministic renderer dependencies
+        run: python -m pip install --disable-pip-version-check numpy pillow
+
+      - name: Fetch frozen RG16 height visualization asset
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/input"
+          curl --fail --location --retry 5 --retry-all-errors \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/gh-pages/kunming-clean-3d-v001/assets/height_rg16.png" \
+            --output "$RUNNER_TEMP/input/height_rg16.png"
+          test "$(stat -c%s "$RUNNER_TEMP/input/height_rg16.png")" -eq 8878779
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          p=Path("${{ runner.temp }}/input/height_rg16.png")
+          with Image.open(p) as image:
+              assert image.size == (2048, 2814), image.size
+              assert image.mode in {'RGB', 'RGBA'}, image.mode
+              image.verify()
+          print('frozen RG16 height asset verified')
+          PY
+          sha256sum "$RUNNER_TEMP/input/height_rg16.png" | tee "$RUNNER_TEMP/input/height_rg16.sha256.txt"
+
+      - name: Build V003 site and rich color assets
+        run: |
+          set -euo pipefail
+          DIST="$RUNNER_TEMP/site/$TARGET_DIR"
+          mkdir -p "$DIST/assets"
+          cp projects/kunming/web/rich-color-v003/index.html "$DIST/index.html"
+          cp projects/kunming/web/rich-color-v003/styles.css "$DIST/styles.css"
+          cp projects/kunming/web/rich-color-v003/app.js "$DIST/app.js"
+          cp projects/kunming/web/rich-color-v003/manifest.json "$DIST/manifest.json"
+          cp projects/kunming/web/rich-color-v003/README.md "$DIST/README.md"
+          cp "$RUNNER_TEMP/input/height_rg16.png" "$DIST/assets/height_rg16.png"
+          python scripts/generate_kunming_rich_surface_v003.py \
+            --height "$DIST/assets/height_rg16.png" \
+            --surface "$DIST/assets/surface.png" \
+            --fallback "$DIST/assets/fallback.png" \
+            --report "$DIST/BUILD_REPORT.json"
+          node --check "$DIST/app.js"
+
+      - name: Fail closed on 3D and provenance rules
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("${{ runner.temp }}/site/${{ env.TARGET_DIR }}")
+          m=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+          r=json.loads((root/'BUILD_REPORT.json').read_text(encoding='utf-8'))
+          assert m['authoritativeMaster']['sha256']=='9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2'
+          assert m['authoritativeMaster']['compression']=='NONE'
+          assert m['browserAssets']['mesh']['naturalVerticalScale']==1.0
+          assert r['deterministic'] is True and r['authoritativeDemModified'] is False
+          text=(root/'app.js').read_text(encoding='utf-8')
+          assert 'Float32Array(await' not in text
+          assert 'riverLines' not in text and 'lakePolygons' not in text
+          for name in ['height_rg16.png','surface.png','fallback.png']:
+              p=root/'assets'/name
+              assert p.exists() and p.stat().st_size>1000000
+          print('V003 source and asset QA passed')
+          PY
+
+      - name: Create downloadable full package
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/site"
+          zip -0 -r "$RUNNER_TEMP/${PACKAGE_NAME}.zip" "$TARGET_DIR"
+          sha256sum "$RUNNER_TEMP/${PACKAGE_NAME}.zip" > "$RUNNER_TEMP/${PACKAGE_NAME}.zip.sha256.txt"
+
+      - name: Upload source package to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256.txt
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/BUILD_REPORT.json
+            ${{ runner.temp }}/input/height_rg16.sha256.txt
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy into existing gh-pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_DIR"
+          git commit -m "Deploy Kunming rich-color 3D V003 from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
+
+      - name: Verify public webpage
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index.html" \
+              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
+              && curl --fail --silent --show-error "$BASE/assets/height_rg16.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-height.png"; then
+              python - <<'PY'
+          import json, pathlib
+          m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
+          assert m['status']=='stable_3d_rich_color_no_hydrology'
+          assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size==8878779
+          print('public V003 verification passed')
+          PY
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1

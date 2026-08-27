@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "kunming_baseline_reset@1.1.0",
+  "status": "crop_contract_complete_uncompressed_master_required_source_dem_not_mounted",
+  "authoritativeSource": {
+    "file": "KUNMING_ASF_11TILES_RECT_12P5M_COG.tif",
+    "sha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+    "crs": "EPSG:32648",
+    "width": 10840,
+    "height": 18680,
+    "pixel_spacing_m": 12.5,
+    "dtype": "float32",
+    "bounds": [209000.0, 2651625.0, 344500.0, 2885125.0],
+    "storage_in_uploaded_qa": {
+      "compression": "DEFLATE",
+      "compression_is_lossless": true,
+      "internal_overviews": [2, 4, 8, 16, 32, 64],
+      "overview_resampling": "AVERAGE"
+    },
+    "preview": {
+      "file": "KUNMING_ASF_11TILES_RECT_PREVIEW.png",
+      "width": 1045,
+      "height": 1800
+    }
+  },
+  "resolutionVerification": {
+    "reported_pixel_spacing_m": [12.5, 12.5],
+    "width_check": "135500.0 m / 10840 pixels = 12.5 m",
+    "height_check": "233500.0 m / 18680 pixels = 12.5 m",
+    "confirmed_output_grid_spacing_m": 12.5,
+    "native_12_5m_survey_claim": false
+  },
+  "authoritativeMasterStoragePolicy": {
+    "output_file": "KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif",
+    "dtype": "float32",
+    "compression": "NONE",
+    "internal_overviews": [],
+    "resampling": "NONE",
+    "pixel_dimension_reduction": false,
+    "pixel_values_must_match_source_window_exactly": true,
+    "source_and_output_pixel_array_sha256_required": true,
+    "preview_assets_may_replace_master": false,
+    "web_assets_are_authoritative": false
+  },
+  "referenceCropMatch": {
+    "uploaded_reference_file": "KUNMING_ASF_11TILES_RECT_PREVIEW(1).png",
+    "reference_size_px": [568, 780],
+    "matched_full_preview_file": "KUNMING_ASF_11TILES_RECT_PREVIEW.png",
+    "full_preview_size_px": [1045, 1800],
+    "exact_match_score": 1.0,
+    "preview_window": [269, 493, 568, 780],
+    "pixel_identical": true
+  },
+  "rasterCrop": {
+    "window_col_row_width_height": [2790, 5116, 5892, 8095],
+    "fractional_window_before_snap": [2790.3923444976076, 5116.2444444444445, 8682.373205741627, 13210.91111111111],
+    "bounds_epsg32648": [243875.0, 2719987.5, 317525.0, 2821175.0],
+    "width_m": 73650.0,
+    "height_m": 101187.5,
+    "area_km2": 7452.459375,
+    "grid_width": 5892,
+    "grid_height": 8095,
+    "total_pixels": 47695740,
+    "center_epsg32648": [280700.0, 2770581.25],
+    "center_wgs84": [102.82649131251483, 25.034974909253624],
+    "wgs84_polygon": [[102.47105857848926, 24.57271019615898], [103.19792874295025, 24.58316455218786], [103.18452800113268, 25.496535815226753], [102.45226477000254, 25.485639475169364], [102.47105857848926, 24.57271019615898]]
+  },
+  "availableQa": {
+    "source_count_crop_file": "KUNMING_BASELINE_RESET_SOURCE_COUNT_COG.tif",
+    "source_count_crop_sha256": "aecf8822f009b611e0421077bfee2941d7e323c86098287733175e1c074e1c56",
+    "valid_pixels": 47695740,
+    "total_pixels": 47695740,
+    "valid_fraction": 1.0,
+    "source_count_histogram": {
+      "1": 21827454,
+      "2": 20046720,
+      "3": 3898659,
+      "4": 1922907
+    }
+  },
+  "resetPolicy": {
+    "discard_from_new_baseline": [
+      "all current online water overlays",
+      "synthetic water polygons",
+      "procedural rock/debris/erosion layers",
+      "vertical exaggeration",
+      "contour display",
+      "low-resolution 160x160 online height texture",
+      "compressed or overview-bearing authoritative crop outputs"
+    ],
+    "retain": [
+      "authoritative source identified by SHA-256",
+      "12.5 m float32 pixel grid",
+      "EPSG:32648",
+      "exact uploaded crop window",
+      "source lineage and QA",
+      "uncompressed pixel-identical cropped master"
+    ],
+    "nextStep": "Run scripts/crop_authoritative_dem.py where the 766,765,914-byte authoritative source is mounted; require COMPRESS=NONE, no overviews, no resampling and identical source/output pixel-array SHA-256 before any enhancement."
+  }
+}

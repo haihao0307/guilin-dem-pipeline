@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>昆明 DEM 真值优先 V003</title>
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+<canvas id="terrain" aria-label="昆明 DEM 三维地形"></canvas>
+<div id="fallback" hidden><img id="fallbackImage" src="assets/fallback.jpg" alt="昆明 DEM 二维地形预览" draggable="false"></div>
+<aside class="panel">
+  <div class="eyebrow">KUNMING DEM · TRUTH FIRST</div>
+  <h1>昆明 DEM 真值优先 V003</h1>
+  <p class="lead">撤销手绘水系。当前河流和湖泊采用 OpenStreetMap 当代参考几何，DEM 只用于地形、湖面平坦性检查和后续流向验证。权威高程保持 12.5 米、float32、无压缩。</p>
+  <section>
+    <div class="mode-grid">
+      <button class="active" data-mode="0">自然地形</button>
+      <button data-mode="1">卫星图式</button>
+      <button data-mode="2">高程分层</button>
+      <button data-mode="3">水系核对</button>
+    </div>
+  </section>
+  <section class="controls">
+    <label><span>水色深浅</span><output id="waterColorOut">58%</output></label><input id="waterColor" type="range" min="0" max="100" value="58">
+    <label><span>河宽显示</span><output id="riverWidthOut">48%</output></label><input id="riverWidth" type="range" min="10" max="100" value="48">
+    <label><span>河流速度</span><output id="flowSpeedOut">52%</output></label><input id="flowSpeed" type="range" min="0" max="100" value="52">
+    <label><span>湖面波浪</span><output id="waveOut">46%</output></label><input id="wave" type="range" min="0" max="100" value="46">
+    <label><span>地表丰富度</span><output id="richOut">68%</output></label><input id="rich" type="range" min="0" max="100" value="68">
+  </section>
+  <section class="button-grid">
+    <button id="overview">总览</button><button id="top">俯视</button><button id="low">低空</button>
+    <button id="reset">复位</button><button id="fullscreen">全屏</button><button id="screenshot">截图</button>
+  </section>
+  <section class="stats">
+    <div><b>12.5 m</b><span>权威像元间距</span></div>
+    <div><b>5892 × 8095</b><span>权威栅格</span></div>
+    <div><b id="textureStat">载入中</b><span>网页显示纹理</span></div>
+    <div><b id="hydroStat">载入中</b><span>当代水系参考</span></div>
+    <div><b>7,452.459375 km²</b><span>裁切面积</span></div>
+    <div><b>无压缩</b><span>权威 TIFF</span></div>
+  </section>
+  <section class="lineage">
+    <h2>数据与知识边界</h2>
+    <dl>
+      <dt>高程真值</dt><dd>无压缩 float32 DEM，网页不回写</dd>
+      <dt>河流与湖泊</dt><dd>OSM 当代参考，历史状态待重建</dd>
+      <dt>地表色彩</dt><dd>可再生成的 Gaea 风格显示模型</dd>
+      <dt>仓库存储</dt><dd>哈希、谱系、算法、参数、QA 和重建脚本</dd>
+    </dl>
+  </section>
+  <section class="note"><strong>操作：</strong>左键旋转，右键或 Shift 加拖动平移，滚轮缩放。河宽滑块只改变横向显示宽度，不移动中心线。</section>
+</aside>
+<div id="status" class="status">正在载入真值优先三维网页…</div>
+<script type="module" src="app.js?v=3"></script>
+</body>
+</html>

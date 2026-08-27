@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "kunming_dem_3d_viewer@3.0.0",
+  "title": "昆明 DEM 丰富卫星图式三维查看器 V003",
+  "status": "stable_3d_rich_color_no_hydrology",
+  "authoritativeMaster": {
+    "file": "KUNMING_BASELINE_RESET_CROP_12P5M_FLOAT32_UNCOMPRESSED.tif",
+    "sha256": "9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2",
+    "sourceBaselineSha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+    "dtype": "float32",
+    "compression": "NONE",
+    "internalOverviews": [],
+    "crs": "EPSG:32648",
+    "pixelSpacingMeters": [12.5, 12.5],
+    "grid": [5892, 8095],
+    "bounds": [243875.0, 2719987.5, 317525.0, 2821175.0],
+    "widthMeters": 73650.0,
+    "heightMeters": 101187.5,
+    "areaKm2": 7452.459375,
+    "elevationMeters": {
+      "min": 1280.53662109375,
+      "max": 2788.21044921875,
+      "mean": 1994.944580078125,
+      "std": 209.484619140625
+    }
+  },
+  "browserAssets": {
+    "height": {
+      "file": "assets/height_rg16.png",
+      "width": 2048,
+      "height": 2814,
+      "encoding": "RG16 normalized PNG",
+      "lossless": true
+    },
+    "surface": {
+      "file": "assets/surface.png",
+      "width": 2048,
+      "height": 2814,
+      "role": "deterministically generated rich-color visualization",
+      "lossless": true
+    },
+    "fallback": {
+      "file": "assets/fallback.png",
+      "width": 2048,
+      "height": 2814,
+      "role": "viewer-only WebGL fallback",
+      "lossless": true
+    },
+    "mesh": {
+      "columns": 768,
+      "rows": 1055,
+      "naturalVerticalScale": 1.0
+    }
+  },
+  "colorKnowledge": {
+    "generator": "scripts/generate_kunming_rich_surface_v003.py",
+    "inputs": ["RG16 normalized height"],
+    "drivers": ["normalized elevation", "slope", "local relief", "deterministic hillshade"],
+    "classes": ["deep valley olive", "valley green", "open slope yellow-green", "tan slope", "earth brown", "rock brown", "pale rock", "high pale"],
+    "randomSeed": null
+  },
+  "rules": [
+    "Authoritative DEM remains uncompressed and unchanged.",
+    "Browser assets are regenerable display caches only.",
+    "No vertical exaggeration.",
+    "No hand-drawn or synthetic water accepted.",
+    "Real OSM hydrology must be integrated only after binary and browser QA pass."
+  ]
+}
