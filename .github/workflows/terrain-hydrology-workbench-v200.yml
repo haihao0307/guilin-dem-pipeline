@@ -1,4 +1,4 @@
-name: Bootstrap terrain hydrology workbench v200
+name: Deploy terrain hydrology workbench v2.0
 
 on:
   push:
@@ -6,51 +6,327 @@ on:
       - skill/dem-procedural-landscape-v010
     paths:
       - .github/workflows/terrain-hydrology-workbench-v200.yml
-      - tools/terrain_hydrology_v200/bootstrap_parts/**
-      - tools/terrain_hydrology_v200/v200_source_bundle.zip
+      - web/terrain-hydrology-workbench-v200/**
+      - tools/terrain_hydrology/build_v200.py
+      - tools/terrain_hydrology/validate_v200.py
+      - tools/terrain_hydrology/browser_qa_v200.py
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: terrain-hydrology-workbench-v200-bootstrap
+  group: terrain-hydrology-workbench-v200-pages
   cancel-in-progress: false
 
+env:
+  TARGET_DIR: terrain-hydrology-workbench-v200
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/
+  RELEASE_ASSET_ID: '528996453'
+  KUNMING_TIFF_SHA256: 9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2
+  WENZHOU_COG_SHA256: 8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e
+
 jobs:
-  materialize:
+  build-test-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 70
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+
     steps:
-      - name: Checkout branch
+      - name: Checkout workbench branch
         uses: actions/checkout@v4
         with:
+          ref: skill/dem-procedural-landscape-v010
           fetch-depth: 0
           lfs: false
 
-      - name: Verify, extract, and commit source
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build and browser dependencies
         shell: bash
         run: |
           set -euo pipefail
-          PARTS="tools/terrain_hydrology_v200/bootstrap_parts"
-          test -d "$PARTS"
-          cat "$PARTS"/chunk_*.txt | base64 --decode > "$RUNNER_TEMP/v200-full-source.zip"
-          echo "043147975f9b68ff9e6029b992358c28d1dfa91078598644ed352cf8537e56a2  $RUNNER_TEMP/v200-full-source.zip" | sha256sum -c -
-          python - "$RUNNER_TEMP/v200-full-source.zip" "$GITHUB_WORKSPACE" <<'PY'
-          import sys, zipfile
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+          python -m pip install --disable-pip-version-check numpy pillow rasterio playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Fetch and verify Wenzhou authoritative source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin project/wenzhou-v110-3d-satellite-osm-water
+          git worktree add "$RUNNER_TEMP/wenzhou" origin/project/wenzhou-v110-3d-satellite-osm-water
+          git -C "$RUNNER_TEMP/wenzhou" lfs install --local
+          git -C "$RUNNER_TEMP/wenzhou" lfs pull --include='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          WENZHOU_COG="$RUNNER_TEMP/wenzhou/projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif"
+          test -s "$WENZHOU_COG"
+          echo "$WENZHOU_COG_SHA256  $WENZHOU_COG" | sha256sum -c -
+
+      - name: Clone current gh-pages data sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "$RUNNER_TEMP/pages"
+          test -s "$RUNNER_TEMP/pages/kunming-osm-hydrology-v001/data/rivers.f32.gz"
+          test -s "$RUNNER_TEMP/pages/kunming-osm-hydrology-v001/data/water_areas.f32.gz"
+
+      - name: Download and verify Kunming authoritative TIFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api \
+            -H 'Accept: application/octet-stream' \
+            "/repos/${GITHUB_REPOSITORY}/releases/assets/${RELEASE_ASSET_ID}" \
+            > "$RUNNER_TEMP/kunming-authoritative.tif"
+          echo "$KUNMING_TIFF_SHA256  $RUNNER_TEMP/kunming-authoritative.tif" | sha256sum -c -
+
+      - name: Build three exact 10 km terrain slices
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/site"
+          python tools/terrain_hydrology/build_v200.py \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --wenzhou-root "$RUNNER_TEMP/wenzhou" \
+            --pages-root "$RUNNER_TEMP/pages" \
+            --kunming-tif "$RUNNER_TEMP/kunming-authoritative.tif" \
+            --output "$RUNNER_TEMP/site/$TARGET_DIR"
+
+      - name: Fail closed on source, precision, and runtime contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology/validate_v200.py \
+            --site "$RUNNER_TEMP/site/$TARGET_DIR"
+          for script in "$RUNNER_TEMP/site/$TARGET_DIR"/*.js; do
+            node --input-type=module --check < "$script"
+          done
+          test "$(stat -c%s "$RUNNER_TEMP/site/$TARGET_DIR/assets/guilin/height_u16.bin")" -eq 1280000
+          test "$(stat -c%s "$RUNNER_TEMP/site/$TARGET_DIR/assets/wenzhou/height_u16.bin")" -eq 1280000
+          test "$(stat -c%s "$RUNNER_TEMP/site/$TARGET_DIR/assets/kunming/height_u16.bin")" -eq 1280000
+
+      - name: Run local desktop and mobile Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4173 --directory "$RUNNER_TEMP/site" \
+            > "$RUNNER_TEMP/local-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/local-server.pid"
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "http://127.0.0.1:4173/$TARGET_DIR/" >/dev/null; then break; fi
+            sleep 1
+          done
+          python tools/terrain_hydrology/browser_qa_v200.py \
+            --url "http://127.0.0.1:4173/$TARGET_DIR/" \
+            --output "$RUNNER_TEMP/local-browser-qa"
+
+      - name: Create predeployment evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
           from pathlib import Path
-          archive_path, root_text = sys.argv[1:]
-          root = Path(root_text).resolve()
-          with zipfile.ZipFile(archive_path) as archive:
-              for info in archive.infolist():
-                  target = (root / info.filename).resolve()
-                  if target != root and root not in target.parents:
-                      raise SystemExit(f"unsafe path: {info.filename}")
-              archive.extractall(root)
+          root=Path(os.environ['RUNNER_TEMP'])
+          site=root/'site'/os.environ['TARGET_DIR']
+          manifest=json.loads((site/'manifest.json').read_text(encoding='utf-8'))
+          qa=json.loads((root/'local-browser-qa'/'report.json').read_text(encoding='utf-8'))
+          evidence={
+            'schema':'terrain-hydrology-workbench-release-evidence@2.0.0',
+            'generatedAtUtc':datetime.now(timezone.utc).isoformat(),
+            'repository':os.environ['GITHUB_REPOSITORY'],
+            'branch':os.environ['GITHUB_REF_NAME'],
+            'branchHead':os.environ['GITHUB_SHA'],
+            'workflowRunId':int(os.environ['GITHUB_RUN_ID']),
+            'publicUrl':os.environ['PUBLIC_URL'],
+            'deploymentStage':'local-qa-passed',
+            'regions':[{'id':r['id'],'grid':r['grid'],'exactMetricSlice':r['exactMetricSlice'],'sourceResampled':r['source']['resampled'],'assetHashes':r['assets']['hashes']} for r in manifest['regions']],
+            'localBrowserQa':{'passed':qa['passed'],'viewports':[run['viewport'] for run in qa['runs']]},
+            'truthBoundary':manifest['release'],
+          }
+          (site/'release-evidence.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
-          rm -rf "$PARTS" tools/terrain_hydrology_v200/v200_source_bundle.zip
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/terrain-hydrology-workbench-v200.yml web/terrain-hydrology-workbench-v200 tools/terrain_hydrology_v200
-          git commit -m "Materialize high precision terrain hydrology workbench v200"
-          git push origin HEAD:skill/dem-procedural-landscape-v010
+
+      - name: Upload predeployment site and QA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v200-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/site/${{ env.TARGET_DIR }}/**
+            ${{ runner.temp }}/local-browser-qa/**
+            ${{ runner.temp }}/local-server.log
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Deploy verified site into existing gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/pages/$TARGET_DIR"
+          cp -a "$RUNNER_TEMP/site/$TARGET_DIR" "$RUNNER_TEMP/pages/$TARGET_DIR"
+          touch "$RUNNER_TEMP/pages/.nojekyll"
+          cd "$RUNNER_TEMP/pages"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_DIR" .nojekyll
+          git commit -m "Deploy terrain hydrology workbench v2.0 from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            sleep $((attempt * 5))
+          done
+
+      - name: Verify public files return HTTP 200
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-check"
+          published=false
+          for attempt in $(seq 1 36); do
+            status="$(curl --silent --show-error --output "$RUNNER_TEMP/public-check/index.html" --write-out '%{http_code}' -H 'Cache-Control: no-cache' "$PUBLIC_URL")"
+            if [ "$status" = '200' ] \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}manifest.json" -o "$RUNNER_TEMP/public-check/manifest.json" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}assets/guilin/height_u16.bin" -o "$RUNNER_TEMP/public-check/guilin-height.bin" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}assets/wenzhou/height_u16.bin" -o "$RUNNER_TEMP/public-check/wenzhou-height.bin" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}assets/kunming/height_u16.bin" -o "$RUNNER_TEMP/public-check/kunming-height.bin"; then
+              published=true
+              break
+            fi
+            sleep 10
+          done
+          test "$published" = true
+          for region in guilin wenzhou kunming; do
+            test "$(stat -c%s "$RUNNER_TEMP/public-check/${region}-height.bin")" -eq 1280000
+          done
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest=json.loads((Path(os.environ['RUNNER_TEMP'])/'public-check'/'manifest.json').read_text(encoding='utf-8'))
+          assert manifest['directPublicPath']=='/terrain-hydrology-workbench-v200/'
+          assert [r['id'] for r in manifest['regions']]==['guilin','wenzhou','kunming']
+          assert all(r['grid']=={'width':800,'height':800,'spacingMeters':[12.5,12.5]} for r in manifest['regions'])
+          assert all(r['exactMetricSlice'] is True and r['source']['resampled'] is False for r in manifest['regions'])
+          PY
+
+      - name: Run fresh public desktop and mobile Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology/browser_qa_v200.py \
+            --url "$PUBLIC_URL" \
+            --output "$RUNNER_TEMP/public-browser-qa"
+
+      - name: Publish final public evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          manifest=json.loads((root/'public-check'/'manifest.json').read_text(encoding='utf-8'))
+          local=json.loads((root/'local-browser-qa'/'report.json').read_text(encoding='utf-8'))
+          public=json.loads((root/'public-browser-qa'/'report.json').read_text(encoding='utf-8'))
+          evidence={
+            'schema':'terrain-hydrology-workbench-release-evidence@2.0.0',
+            'verifiedAtUtc':datetime.now(timezone.utc).isoformat(),
+            'repository':os.environ['GITHUB_REPOSITORY'],
+            'branch':os.environ['GITHUB_REF_NAME'],
+            'branchHead':os.environ['GITHUB_SHA'],
+            'workflowRunId':int(os.environ['GITHUB_RUN_ID']),
+            'workflowRunAttempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'publicUrl':os.environ['PUBLIC_URL'],
+            'entryHttpStatus':200,
+            'directEntry':True,
+            'redirectShell':False,
+            'queryRoutingRequired':False,
+            'regions':[{'id':r['id'],'grid':r['grid'],'exactMetricSlice':r['exactMetricSlice'],'sourceResampled':r['source']['resampled'],'truthLabel':r['truthLabel'],'assetHashes':r['assets']['hashes']} for r in manifest['regions']],
+            'localBrowserQa':{'passed':local['passed'],'viewports':[run['viewport'] for run in local['runs']]},
+            'publicBrowserQa':{
+              'passed':public['passed'],
+              'viewports':[run['viewport'] for run in public['runs']],
+              'consoleErrors':sum(len(run['consoleErrors']) for run in public['runs']),
+              'pageErrors':sum(len(run['pageErrors']) for run in public['runs']),
+              'failedRequests':sum(len(run['failedRequests']) for run in public['runs']),
+            },
+            'truthBoundary':manifest['release'],
+          }
+          path=root/'pages'/os.environ['TARGET_DIR']/'release-evidence.json'
+          path.write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          (root/'final-release-evidence.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          cd "$RUNNER_TEMP/pages"
+          git add "$TARGET_DIR/release-evidence.json"
+          git commit -m "Record public terrain hydrology v2.0 evidence from ${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            sleep $((attempt * 5))
+          done
+
+      - name: Verify final evidence endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          verified=false
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}release-evidence.json" -o "$RUNNER_TEMP/published-evidence.json"; then
+              if python - <<'PY'
+          import json, os
+          from pathlib import Path
+          evidence=json.loads((Path(os.environ['RUNNER_TEMP'])/'published-evidence.json').read_text(encoding='utf-8'))
+          assert evidence['branchHead']==os.environ['GITHUB_SHA']
+          assert evidence['workflowRunId']==int(os.environ['GITHUB_RUN_ID'])
+          assert evidence['entryHttpStatus']==200
+          assert evidence['publicBrowserQa']['passed'] is True
+          PY
+              then
+                verified=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$verified" = true
+
+      - name: Upload final public QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v200-public-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/final-release-evidence.json
+            ${{ runner.temp }}/published-evidence.json
+            ${{ runner.temp }}/public-browser-qa/**
+            ${{ runner.temp }}/public-check/manifest.json
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+
+      - name: Write direct public URL to summary
+        if: success()
+        run: |
+          {
+            echo '## 三地区高精度真实地貌与水系工作台 v2.0'
+            echo
+            echo "$PUBLIC_URL"
+            echo
+            echo 'Public HTTP 200, exact 800 × 800 source grids, and fresh desktop/mobile Chromium QA passed.'
+          } >> "$GITHUB_STEP_SUMMARY"
