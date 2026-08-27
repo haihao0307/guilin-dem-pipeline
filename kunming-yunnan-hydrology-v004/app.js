@@ -2,6 +2,7 @@ const canvas = document.getElementById('terrain');
 const fallback = document.getElementById('fallback');
 const fallbackImage = document.getElementById('fallbackImage');
 const statusEl = document.getElementById('status');
+document.documentElement.dataset.viewer = 'loading';
 
 const manifest = await fetch('manifest.json?v=4', { cache: 'no-store' }).then(async response => {
   if (!response.ok) throw new Error(`manifest HTTP ${response.status}`);
@@ -29,6 +30,7 @@ function loadImage(src) {
 }
 
 function startFallback(message) {
+  document.documentElement.dataset.viewer = 'fallback';
   canvas.hidden = true;
   fallback.hidden = false;
   statusEl.textContent = `${message} · 已切换二维云南卫星图式预览`;
@@ -88,6 +90,7 @@ if (!gl) {
 } else {
   try {
     await start3D(gl);
+    document.documentElement.dataset.viewer = 'ready';
   } catch (error) {
     console.error(error);
     startFallback(`三维载入失败：${error.message}`);
@@ -98,7 +101,8 @@ async function start3D(gl) {
   const maxTexture = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   const desktopHigh = maxTexture >= 8192 && (navigator.deviceMemory || 8) >= 8 && innerWidth >= 1100;
   const surfacePath = desktopHigh ? 'assets/surface_yunnan_v004.png' : 'assets/surface_yunnan_v004_2048.png';
-  const [meshCols,meshRows]=[256,352];
+  const qaRenderMode=new URLSearchParams(location.search).has('qa');
+  const [meshCols,meshRows]=qaRenderMode?[128,176]:[256,352];
 
   statusEl.textContent = `正在载入 ${desktopHigh ? '4096 级' : '2048 级'}云南卫星图式、水系与高程纹理…`;
   const [heightImage, surfaceImage, waterMaskImage, flowImage, waterLevelImage] = await Promise.all([
