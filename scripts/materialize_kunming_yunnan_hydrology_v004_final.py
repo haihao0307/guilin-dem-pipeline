@@ -38,6 +38,11 @@ def main() -> int:
         "页面没有总览、俯视、朝北等相机预设，镜头完全由你自行控制。",
         "页面不提供任何相机预设，镜头完全由你自行控制。",
     )
+    favicon_tag = '<link rel="icon" href="data:,">'
+    if favicon_tag not in index_text:
+        if "</head>" not in index_text:
+            raise SystemExit("V004 index.html is missing </head>")
+        index_text = index_text.replace("</head>", f"  {favicon_tag}\n</head>", 1)
     index_path.write_text(index_text, encoding="utf-8")
 
     app_path = root / "projects/kunming/web/yunnan-hydrology-v004/app.js"
@@ -108,6 +113,7 @@ def main() -> int:
         f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
         "installed 128x176 automated-QA and 256x352 public meshes, "
         "installed explicit loading/ready/fallback viewer states, "
+        "suppressed the implicit favicon request, "
         "and installed current browser QA"
     )
     return 0
