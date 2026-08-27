@@ -42,10 +42,10 @@ This Draft project extends the verified Guilin coordinate contract without alter
 
 | Season | Width | Visual depth | Colour |
 | --- | ---: | ---: | --- |
-| Winter | 0.66 | 0.18 | `#4f83a8` |
-| Spring | 0.92 | 0.34 | `#3d91b8` |
-| Summer | 1.38 | 0.58 | `#277ca5` |
-| Autumn | 0.82 | 0.28 | `#508da6` |
+| Winter | 0.66 | 0.32 | `#42b69d` |
+| Spring | 0.92 | 0.55 | `#45c4b5` |
+| Summer | 1.38 | 0.88 | `#348e73` |
+| Autumn | 0.82 | 0.46 | `#3fa9aa` |
 
 - Each season has a final gzip Float32 position buffer and gzip Uint32 index buffer. Browser rendering consumes only the serialized final display mesh that passed the versioned QA contract.
 - Final bank vertices are resampled at their actual X/Z coordinates. They do not inherit the centreline Y value.

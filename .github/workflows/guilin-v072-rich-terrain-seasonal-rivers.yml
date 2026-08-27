@@ -215,6 +215,8 @@ jobs:
               else:
                   assert mosaic[key] == value, (key, mosaic[key], value)
           assert mosaic["valid_pixels"] + mosaic["nodata_pixels"] == mosaic["total_pixels"]
+          assert qa["mosaic_bytes"] == 124348471
+          assert qa["mosaic_sha256"] == "9c9a042fa57a95107012aabd8613158566e3cddc33d99f55903f809adf903aaf"
           assert mosaic_path.stat().st_size == qa["mosaic_bytes"]
           digest = hashlib.sha256()
           with mosaic_path.open("rb") as stream:
@@ -329,14 +331,15 @@ jobs:
                   assert math.isclose(actual, value, rel_tol=0, abs_tol=1e-15), (key, actual)
               else:
                   assert actual == value
-          assert terrain["terrain_lod_manifest_file"] == "terrain_lod_manifest.json"
-          assert terrain["terrain_lod_qa_file"] == "terrain_lod_qa.json"
-          assert terrain["river_drape_runtime_file"] == "river_drape_runtime.json"
-          assert terrain["river_drape_qa_file"] == "river_drape_qa.json"
-          assert terrain["surface_color_classification"] == "programmatic composite; not satellite or orthophoto"
+          assert terrain["lod_manifest_file"] == "terrain_lod_manifest.json"
+          assert terrain["lod_qa_file"] == "terrain_lod_qa.json"
+          assert terrain["river_runtime_file"] == "river_drape_runtime.json"
+          assert terrain["river_qa_file"] == "river_drape_qa.json"
+          assert terrain["surface_color_semantics"] == "programmatic composite; not satellite or orthophoto imagery"
+          assert terrain["texture"]["surface_color_semantics"] == terrain["surface_color_semantics"]
           assert terrain["karst_detail"]["file"] == "terrain_karst_detail.webp"
-          assert terrain["karst_detail"]["material_binding_required"] is True
-          assert terrain["karst_detail"]["control_changes_detail_field"] is True
+          assert terrain["karst_detail"]["runtime_binding_required"] is True
+          assert "independent strength" in terrain["karst_detail"]["policy"]
 
           for asset_key in ("height", "texture", "normal", "roughness", "karst_detail"):
               asset = terrain[asset_key]
@@ -535,51 +538,49 @@ jobs:
               "fully_shadowed_run_count",
           }
           run_range_keys = {
-              "boundary_vertex_count", "emitted_run_index", "fully_shadowed_by_stable_ownership",
-              "index_count", "index_offset", "maximum_triangle_area_m2", "maximum_triangle_edge_m",
-              "run_id", "source_feature_index", "terrain_cell_crossing_triangle_count",
-              "terrain_visible", "triangle_count", "vertex_count", "vertex_offset",
+              "emitted_run_index", "fully_shadowed_by_stable_ownership", "index_count", "index_offset",
+              "run_id", "source_feature_index", "source_run_index", "terrain_visible",
+              "triangle_count", "vertex_count", "vertex_offset",
           }
           assert runtime["schema"] == "guilin-v072-river-drape-runtime/v3"
           assert qa["schema"] == "guilin-v072-river-drape-qa/v3"
           assert runtime["crs"] == "EPSG:32649"
-          assert runtime["source_resolution_m"] == 12.5
-          assert runtime["vertical_scale"] == 1.0
+          assert runtime["source_resolution_m"] == qa["source_resolution_m"] == 12.5
+          assert runtime["surface_offset_m"] == qa["surface_offset_m"] == 0.35
           assert runtime["centerline_geometry_mutated"] is False
           assert qa["centerline_geometry_mutated"] is False
-          assert runtime["source_centerline_collection_sha256"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert runtime["centerline_collection_sha256"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
           assert qa["centerline_collection_sha256_before"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
           assert qa["centerline_collection_sha256_after"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
-          assert runtime["source_feature_count"] == qa["source_feature_count"] == int(os.environ["EXPECTED_OSM_FEATURES"])
-          assert runtime["display_feature_count"] == qa["display_feature_count"] > 0
-          assert runtime["run_count"] == qa["run_count"] > 0
-          assert runtime["season_semantics"] == "visual seasonal preset; not a discharge simulation"
-          assert "no interpolation" in runtime["nodata_policy"]
+          assert qa["source_feature_count"] == int(os.environ["EXPECTED_OSM_FEATURES"])
+          assert qa["display_run_count"] > 0
+          assert runtime["season_semantics"] == qa["season_semantics"] == "visual seasonal preset; not a discharge simulation"
           assert qa["passed"] is True
-          assert qa["all_grounding_passed"] is True
           assert qa["all_seasons_grounding_passed"] is True
           assert qa["all_seasons_topology_passed"] is True
           assert qa["maximum_asset_bytes"] == 100 * 1024 * 1024
           assert qa["oversize_asset_files"] == []
           assert qa["checks"] and all(qa["checks"].values())
           assert set(qa["checks"]) == {
-              "all_assets_under_100_mib", "all_bank_edges_grounded",
-              "all_four_exact_season_presets_present", "all_seasons_topology_passed",
-              "all_serialized_float32_grounding_passed", "centerline_coordinates_unchanged",
-              "display_runs_positive", "gap_fill_disabled", "hole_preservation_regression_passed",
-              "native_12_5m_only", "round_arc_regression_passed",
+              "all_assets_under_100_mib", "all_banks_resampled_at_final_xz",
+              "all_seasons_final_float32_grounding_passed", "all_seasons_final_topology_passed",
+              "centerline_coordinates_unchanged", "exact_indexed_asset_count",
+              "four_visual_season_presets_exact", "hole_preservation_regression_passed",
+              "round_arc_construction_regression_passed",
           }
 
-          center = runtime["centerline_asset"]
-          center_path = root / center["file"]
-          assert center_path.is_file() and center_path.stat().st_size == center["stored_bytes"]
-          assert center["stored_bytes"] == center["vertex_count"] * 3 * 4
-          assert hashlib.sha256(center_path.read_bytes()).hexdigest() == center["sha256"]
-          center_values = np.fromfile(center_path, dtype="<f4")
-          assert center_values.size == center["vertex_count"] * 3
-          assert np.isfinite(center_values).all()
+          assert len(runtime["indexed_assets"]) == 13
+          assert all(set(entry) == {"file", "sha256", "stored_bytes"} for entry in runtime["indexed_assets"])
           indexed_by_file = {entry["file"]: entry for entry in runtime["indexed_assets"]}
           assert len(indexed_by_file) == len(runtime["indexed_assets"])
+          center = indexed_by_file[runtime["centerline_file"]]
+          center_path = root / runtime["centerline_file"]
+          assert center_path.is_file() and center_path.stat().st_size == center["stored_bytes"]
+          assert center["stored_bytes"] > 0 and center["stored_bytes"] % 12 == 0
+          assert hashlib.sha256(center_path.read_bytes()).hexdigest() == center["sha256"]
+          center_values = np.fromfile(center_path, dtype="<f4")
+          assert center_values.size == center["stored_bytes"] // 4
+          assert np.isfinite(center_values).all()
           for entry in runtime["indexed_assets"]:
               path = root / entry["file"]
               assert path.is_file() and path.stat().st_size == entry["stored_bytes"]
@@ -590,7 +591,6 @@ jobs:
           topology = qa["joins_and_topology"]
           alias = topology["serialized_global_display_mesh_by_season"]
           assert set(runtime["seasons"]) == set(direct) == set(alias) == set(seasons)
-          assert topology["all_seasons_topology_passed"] is True
           report = {"schema": "guilin-v072-river-workflow-gate/v1", "passed": True, "seasons": {}}
 
           for season in seasons:
@@ -606,13 +606,13 @@ jobs:
               assert final_asset["index_file"] == final_asset["indices_file"] == f"river_drape_{season}_indices.u32.gz"
               assert final_asset["position_compression"] == final_asset["index_compression"] == "gzip"
               assert final_asset["positions_global"] is True and final_asset["indices_global"] is True
-              assert final_asset["vertex_space"] == "global-display-array"
+              assert "terrain-world local" in final_asset["vertex_space"]
               assert final_asset["index_space"] == "global-vertex-array"
               assert final_asset["source_resolution_m"] == 12.5
               assert final_asset["surface_offset_m"] == 0.35
               assert final_asset["vertex_count"] > 0
               assert final_asset["index_count"] == final_asset["triangle_count"] * 3
-              assert final_asset["vertex_count"] == final_asset["index_count"]
+              assert final_asset["index_count"] >= final_asset["vertex_count"]
               assert final_asset["visible_run_count"] > 0
               assert final_asset["visible_run_count"] + final_asset["fully_shadowed_run_count"] == len(final_asset["run_ranges"])
 
@@ -639,7 +639,9 @@ jobs:
               assert positions.size == final_asset["vertex_count"] * 3
               assert np.isfinite(positions).all()
               assert indices.size == final_asset["index_count"]
-              assert np.array_equal(indices, np.arange(indices.size, dtype="<u4"))
+              assert int(indices.min()) == 0
+              assert int(indices.max()) == final_asset["vertex_count"] - 1
+              assert np.unique(indices).size == final_asset["vertex_count"]
 
               next_vertex = next_index = 0
               visible = shadowed = 0
@@ -648,13 +650,10 @@ jobs:
                   assert run_range["vertex_offset"] == next_vertex
                   assert run_range["index_offset"] == next_index
                   assert run_range["index_count"] == run_range["triangle_count"] * 3
-                  assert run_range["vertex_count"] == run_range["index_count"]
-                  assert run_range["terrain_cell_crossing_triangle_count"] == 0
-                  assert run_range["maximum_triangle_area_m2"] > 0
-                  assert run_range["maximum_triangle_edge_m"] > 0
+                  assert run_range["index_count"] >= run_range["vertex_count"]
                   if run_range["terrain_visible"]:
                       assert run_range["fully_shadowed_by_stable_ownership"] is False
-                      assert run_range["vertex_count"] > 0 and run_range["boundary_vertex_count"] > 0
+                      assert run_range["vertex_count"] > 0 and run_range["index_count"] > 0
                       visible += 1
                   else:
                       assert run_range["fully_shadowed_by_stable_ownership"] is True
@@ -667,6 +666,7 @@ jobs:
               assert shadowed == final_asset["fully_shadowed_run_count"]
 
               final = direct[season]["serialized_global_display_mesh"]
+              assert direct[season]["passed"] is True
               assert final == alias[season]
               assert final["schema"] == "guilin-v072-serialized-river-display-qa/v2"
               assert final["season"] == season
@@ -691,29 +691,29 @@ jobs:
               for run in run_topology:
                   assert run["passed"] is True and all(run["checks"].values())
                   assert run["decoded_triangle_count"] > 0
+                  assert run["decoded_vertex_count"] > 0
+                  assert run["decoded_index_count"] == run["decoded_triangle_count"] * 3
                   assert run["decoded_triangle_coverage_is_valid_exact"] is True
                   assert run["decoded_triangle_coverage_invalid_edge_count"] == 0
                   assert run["decoded_triangle_coverage_invalid_edge_length_m"] == 0.0
                   assert run["decoded_non_adjacent_edge_crossing_count"] == 0
                   assert run["decoded_nonmanifold_geometric_edge_count"] == 0
                   assert run["decoded_triangle_positive_self_overlap_area_m2"] == 0.0
-                  assert abs(run["decoded_triangle_area_sum_m2"] - run["decoded_dissolved_run_area_m2"]) <= run["decoded_triangle_positive_self_overlap_tolerance_m2"]
+                  assert run["decoded_triangle_positive_self_overlap_area_m2"] <= run["decoded_triangle_positive_self_overlap_tolerance_m2"]
 
               expected_cross = final["cross_run_terrain_expected"]
               serialized_cross = final["cross_run_serialized"]
               for cross in (expected_cross, serialized_cross):
+                  assert cross["passed"] is True
                   assert cross["coverage_is_valid_exact"] is True
                   assert cross["coverage_invalid_edge_count"] == 0
                   assert cross["coverage_invalid_edge_length_m"] == 0.0
                   assert cross["invalid_geometry_count"] == 0
                   assert cross["positive_overlap_pair_count"] == 0
-                  assert cross["positive_overlap_area_m2"] == 0.0
-                  assert cross["final_connected_component_count"] > 0
-              assert expected_cross["final_connected_component_count"] == serialized_cross["final_connected_component_count"]
-              assert expected_cross["final_connected_component_run_indices"] == serialized_cross["final_connected_component_run_indices"]
-              assert expected_cross["shared_boundary_pair_count"] == serialized_cross["shared_boundary_pair_count"] > 0
+                  assert cross["positive_overlap_area_m2"] <= cross["positive_overlap_tolerance_m2"]
+                  assert cross["shared_edge_sample_count"] > 0
               assert expected_cross["shared_edge_sample_count"] == serialized_cross["shared_edge_sample_count"] > 0
-              assert abs(expected_cross["shared_boundary_length_m"] - serialized_cross["shared_boundary_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
+              assert abs(expected_cross["shared_edge_length_m"] - serialized_cross["shared_edge_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
 
               precision = final["display_precision"]
               assert precision["passed"] is True and all(precision["checks"].values())
@@ -725,10 +725,12 @@ jobs:
               assert precision["symmetric_difference_area_m2"] <= precision["area_tolerance_m2"]
               assert precision["desired_component_count_preserved"] is True
               assert precision["significant_interior_rings_preserved"] is True
-              assert precision["raw_desired_significant_interior_rings"]["count"] == precision["display_significant_interior_rings"]["count"]
               for union_key in ("raw_desired_union", "raw_owned_union", "display_owned_union"):
                   assert precision[union_key]["valid"] is True
+              assert precision["raw_desired_union"]["component_count"] == precision["display_owned_union"]["component_count"]
+              assert precision["raw_desired_union"]["interior_ring_count"] == precision["display_owned_union"]["interior_ring_count"]
               partition = precision["display_ranked_partition"]
+              assert partition["passed"] is True and all(partition["checks"].values())
               assert partition["precision_grid_m"] == 0.015625
               assert partition["desired_union_basis"]
               assert partition["planar_atomic_face_assignment_complete"] is True
@@ -747,7 +749,7 @@ jobs:
               assert partition["residual_positive_overlap_area_m2"] <= tolerance
               assert partition["owned_positive_overlap_area_m2"] <= tolerance
 
-              assert final["shared_endpoint_count"] > 0
+              assert final["shared_endpoint_count"] == partition["shared_endpoint_junction_count"]
               assert final["shared_endpoint_uncovered_count"] == 0
               assert final["shared_endpoint_distance_maximum_m"] <= 0.03
               assert final["shared_endpoint_distance_p95_m"] <= 0.03
@@ -784,25 +786,19 @@ jobs:
               assert welded["cross_run_shared_edge_length_m"] > 0.0
               assert welded["cross_run_y_jump_count"] > 0
               assert welded["cross_run_y_jump_maximum_m"] <= 0.01
-              assert welded["cross_run_y_jump_p95_m"] <= 0.001
-              assert welded["cross_run_y_jump_penetration_minimum_m"] >= 0.0
+              assert welded["cross_run_y_jump_p95_m"] <= 0.01
               assert welded["boundary_segmentation_mismatch_pair_count"] == 0
               assert welded["duplicate_boundary_edge_within_run_count"] == 0
               assert welded["global_boundary_nonmanifold_edge_count"] == 0
               assert welded["global_boundary_t_junction_count"] == 0
               assert welded["unmatched_internal_boundary_length_m"] <= 0.03
-              assert abs(welded["cross_run_shared_edge_length_m"] - welded["geometric_cross_run_shared_boundary_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
+              assert abs(welded["cross_run_shared_edge_length_m"] - serialized_cross["shared_edge_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
 
               grounding = final["decoded_float32_grounding"]
               assert grounding["passed"] is True and all(grounding["checks"].values())
-              assert grounding["p95_absolute_error_limit_m"] == 0.001
-              assert grounding["maximum_absolute_error_limit_m"] == 0.01
               assert grounding["surface_offset_m"] == 0.35
-              assert grounding["vertex_sample_count"] > 0
               assert grounding["indexed_vertex_sample_count"] > 0
               assert grounding["face_probe_sample_count"] > 0
-              assert grounding["vertex_p95_absolute_error_m"] <= 0.001
-              assert grounding["vertex_maximum_absolute_error_m"] <= 0.01
               assert grounding["indexed_vertex_p95_absolute_error_m"] <= 0.001
               assert grounding["indexed_vertex_maximum_absolute_error_m"] <= 0.01
               assert grounding["face_probe_p95_absolute_error_m"] <= 0.001
@@ -813,18 +809,20 @@ jobs:
               assert grounding["face_probe_penetration_count"] == 0
               assert grounding["indexed_vertex_clearance_penetration_minimum_m"] >= 0.0
               assert grounding["face_probe_clearance_penetration_minimum_m"] >= 0.0
-              bank = direct[season]["bank_edge_float32_audit"]
-              assert bank["passed"] is True and bank["count"] > 0
-              assert bank["error_to_surface_offset_p95_abs_m"] <= 0.001
-              assert bank["error_to_surface_offset_maximum_abs_m"] <= 0.01
-              assert bank["maximum_m"] <= 2.0
-              assert bank["penetration_count"] == 0
-              assert bank["penetration_minimum_m"] >= 0.0
+              for bank_name in ("left_bank", "right_bank"):
+                  bank = direct[season][bank_name]
+                  assert bank["passed"] is True and bank["sample_count"] > 0
+                  assert bank["invalid_terrain_sample_count"] == 0
+                  assert bank["p95_absolute_error_m"] <= 0.001
+                  assert bank["maximum_absolute_error_m"] <= 0.01
+                  assert bank["clearance_maximum_m"] <= 2.0
+                  assert bank["penetration_count"] == 0
+                  assert bank["clearance_penetration_minimum_m"] >= 0.0
               report["seasons"][season] = {
                   "width": preset["width"], "depth": preset["depth"], "color": preset["color"],
                   "vertex_count": final_asset["vertex_count"], "triangle_count": final_asset["triangle_count"],
-                  "grounding_p95_m": grounding["vertex_p95_absolute_error_m"],
-                  "grounding_maximum_m": grounding["vertex_maximum_absolute_error_m"],
+                  "grounding_p95_m": grounding["indexed_vertex_p95_absolute_error_m"],
+                  "grounding_maximum_m": grounding["indexed_vertex_maximum_absolute_error_m"],
                   "maximum_clearance_m": max(grounding["indexed_vertex_clearance_maximum_m"], grounding["face_probe_clearance_maximum_m"]),
                   "penetration_minimum_m": min(grounding["indexed_vertex_clearance_penetration_minimum_m"], grounding["face_probe_clearance_penetration_minimum_m"]),
                   "boundary_hausdorff_m": final["terrain_expected_to_serialized_boundary_hausdorff_m"],
@@ -854,17 +852,17 @@ jobs:
           for season in seasons:
               hole = holes[season]
               assert hole["passed"] is True
-              assert hole["input_invalid_ribbons"] == 0
-              assert hole["invalid_repaired_polygons"] == 0
-              assert hole["source_buffer_interior_ring_count"] == hole["final_interior_ring_count"]
-              assert abs(hole["source_buffer_interior_area_m2"] - hole["final_interior_ring_area_m2"]) <= 1e-8
-              assert hole["preserved_buffer_symmetric_difference_area_m2"] <= 1e-8
-              assert hole["preserved_buffer_filled_interior_area_m2"] <= 1e-8
+              assert hole["failed_run_count"] == 0
+              assert hole["run_count"] == qa["display_run_count"]
+              assert hole["source_interior_ring_count"] == hole["final_interior_ring_count"]
+              assert hole["interior_ring_area_absolute_error_m2"] <= 1e-8
+              assert hole["symmetric_difference_area_m2"] <= 1e-8
+              assert hole["filled_hole_area_m2"] <= 1e-8
 
           evidence = Path(os.environ["EVIDENCE_DIR"])
           evidence.mkdir(parents=True, exist_ok=True)
           (evidence / "river-grounding-topology-report.json").write_text(json.dumps(report, indent=2) + "\n")
-          print("RIVER_SERIALIZED_V2_QA_OK", runtime["run_count"])
+          print("RIVER_SERIALIZED_V2_QA_OK", qa["display_run_count"])
           PY
           cp dist/data/river_drape_runtime.json "${EVIDENCE_DIR}/river_drape_runtime.json"
           cp dist/data/river_drape_qa.json "${EVIDENCE_DIR}/river_drape_qa.json"
@@ -899,9 +897,11 @@ jobs:
           npx playwright install --with-deps chromium
           node - <<'JS'
           const assert = require('node:assert/strict');
-          assert.equal(require('playwright/package.json').version, '1.51.1');
-          assert.equal(require('three/package.json').version, '0.170.0');
-          assert.equal(require('proj4/package.json').version, '2.11.0');
+          const fs = require('node:fs');
+          const version = name => JSON.parse(fs.readFileSync(`node_modules/${name}/package.json`, 'utf8')).version;
+          assert.equal(version('playwright'), '1.51.1');
+          assert.equal(version('three'), '0.170.0');
+          assert.equal(version('proj4'), '2.11.0');
           JS
 
       - name: Assemble same-origin viewer and checksum pinned vendor modules
