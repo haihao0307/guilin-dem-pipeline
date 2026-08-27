@@ -34,6 +34,7 @@ const aggregate = {
   status: 'running',
   webgl2Active: false,
   manualCameraInteractionVerified: false,
+  buttonlessCameraVerified: false,
   consoleErrors: [],
   pageErrors: [],
   requestFailures: [],
@@ -107,6 +108,8 @@ async function audit(name, viewport, screenshotName) {
       modeButtonCount: document.querySelectorAll('[data-mode]').length,
       hasCameraPresetButtons: ['overview', 'top', 'north', 'viewHome', 'viewTop', 'viewLow'].some(id => document.getElementById(id)),
       hasExpectedControls: expectedControlIds.every(id => document.getElementById(id)),
+      buttonlessCameraEnabled: document.documentElement.dataset.buttonlessCamera === 'enabled',
+      qaCameraAvailable: Boolean(window.__KUNMING_V004_QA_CAMERA__),
       bodyMentionsOsm: /OSM/.test(text)
     };
   });
@@ -123,20 +126,45 @@ async function audit(name, viewport, screenshotName) {
   if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls || runtime.modeButtonCount !== 4) {
     throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
   }
+  if (!runtime.buttonlessCameraEnabled || !runtime.qaCameraAvailable) {
+    throw new Error(`${name} buttonless camera contract missing: ${JSON.stringify(runtime)}`);
+  }
 
   const canvasHandle = await page.$('#terrain');
   const box = await canvasHandle.boundingBox();
   if (!box || box.width < 100 || box.height < 100) throw new Error(`${name} canvas bounding box invalid`);
 
   const beforeData = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
+  const cameraBefore = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
   const centerX = box.x + box.width * 0.58;
   const centerY = box.y + box.height * 0.55;
+
   await page.mouse.move(centerX, centerY);
+  await delay(80);
+  await page.mouse.move(
+    centerX + Math.min(82, box.width * 0.16),
+    centerY - Math.min(38, box.height * 0.10),
+    { steps: 10 }
+  );
+  await delay(300);
+
+  const cameraAfterHover = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
+  const buttonlessCameraVerified =
+    Math.abs(cameraAfterHover.yaw - cameraBefore.yaw) > 0.0001 ||
+    Math.abs(cameraAfterHover.pitch - cameraBefore.pitch) > 0.0001;
+  if (!buttonlessCameraVerified) {
+    throw new Error(`${name} camera did not change after buttonless pointer movement: ${JSON.stringify({ cameraBefore, cameraAfterHover })}`);
+  }
+
   await page.mouse.down({ button: 'left' });
-  await page.mouse.move(centerX + Math.min(90, box.width * 0.18), centerY - Math.min(45, box.height * 0.12), { steps: 10 });
+  await page.mouse.move(
+    centerX + Math.min(118, box.width * 0.22),
+    centerY - Math.min(56, box.height * 0.15),
+    { steps: 8 }
+  );
   await page.mouse.up({ button: 'left' });
   await page.mouse.wheel({ deltaY: -360 });
-  await delay(900);
+  await delay(650);
 
   await page.evaluate(() => {
     const richness = document.getElementById('richness');
@@ -146,7 +174,7 @@ async function audit(name, viewport, screenshotName) {
     riverWidth.value = '58';
     riverWidth.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  await delay(700);
+  await delay(550);
 
   const afterData = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
   const beforeHash = digest(beforeData);
@@ -166,6 +194,9 @@ async function audit(name, viewport, screenshotName) {
     screenshotBytes: fs.statSync(screenshotPath).size,
     canvasBeforeSha256: beforeHash,
     canvasAfterSha256: afterHash,
+    cameraBefore,
+    cameraAfterHover,
+    buttonlessCameraVerified,
     manualCameraInteractionVerified: true,
     consoleErrors,
     pageErrors,
@@ -184,6 +215,8 @@ try {
   aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, 'KUNMING_V004_MOBILE.png');
   aggregate.webgl2Active = aggregate.desktop.webgl2Active && aggregate.mobile.webgl2Active;
   aggregate.manualCameraInteractionVerified = aggregate.desktop.manualCameraInteractionVerified && aggregate.mobile.manualCameraInteractionVerified;
+  aggregate.buttonlessCameraVerified = aggregate.desktop.buttonlessCameraVerified && aggregate.mobile.buttonlessCameraVerified;
+  if (!aggregate.buttonlessCameraVerified) throw new Error('buttonless mouse camera verification failed');
   if (aggregate.consoleErrors.length || aggregate.pageErrors.length || aggregate.requestFailures.length) {
     throw new Error(`browser errors detected: ${JSON.stringify({ consoleErrors: aggregate.consoleErrors, pageErrors: aggregate.pageErrors, requestFailures: aggregate.requestFailures })}`);
   }
