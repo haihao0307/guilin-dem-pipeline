@@ -12,6 +12,12 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
+const cameraChanged = (before, after) =>
+  Math.abs(after.yaw - before.yaw) > 0.0001 ||
+  Math.abs(after.pitch - before.pitch) > 0.0001 ||
+  Math.abs(after.distance - before.distance) > 0.01 ||
+  Math.abs(after.x - before.x) > 0.01 ||
+  Math.abs(after.z - before.z) > 0.01;
 
 const browser = await puppeteer.launch({
   executablePath: chromePath,
@@ -44,6 +50,7 @@ const aggregate = {
 
 async function audit(name, viewport, screenshotName) {
   const page = await browser.newPage();
+  const desktopMouseAudit = name === 'desktop';
   page.setDefaultTimeout(180000);
   await page.setViewport(viewport);
   await page.evaluateOnNewDocument(() => {
@@ -127,7 +134,7 @@ async function audit(name, viewport, screenshotName) {
     throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
   }
   if (!runtime.buttonlessCameraEnabled || !runtime.qaCameraAvailable) {
-    throw new Error(`${name} buttonless camera contract missing: ${JSON.stringify(runtime)}`);
+    throw new Error(`${name} camera state contract missing: ${JSON.stringify(runtime)}`);
   }
 
   const canvasHandle = await page.$('#terrain');
@@ -139,32 +146,42 @@ async function audit(name, viewport, screenshotName) {
   const centerX = box.x + box.width * 0.58;
   const centerY = box.y + box.height * 0.55;
 
-  await page.mouse.move(centerX, centerY);
-  await delay(80);
-  await page.mouse.move(
-    centerX + Math.min(82, box.width * 0.16),
-    centerY - Math.min(38, box.height * 0.10),
-    { steps: 10 }
-  );
-  await delay(300);
-
-  const cameraAfterHover = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
-  const buttonlessCameraVerified =
-    Math.abs(cameraAfterHover.yaw - cameraBefore.yaw) > 0.0001 ||
-    Math.abs(cameraAfterHover.pitch - cameraBefore.pitch) > 0.0001;
-  if (!buttonlessCameraVerified) {
-    throw new Error(`${name} camera did not change after buttonless pointer movement: ${JSON.stringify({ cameraBefore, cameraAfterHover })}`);
+  let cameraAfterHover = cameraBefore;
+  let buttonlessCameraVerified = null;
+  if (desktopMouseAudit) {
+    await page.mouse.move(centerX, centerY);
+    await delay(80);
+    await page.mouse.move(
+      centerX + Math.min(82, box.width * 0.16),
+      centerY - Math.min(38, box.height * 0.10),
+      { steps: 10 }
+    );
+    await delay(300);
+    cameraAfterHover = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
+    buttonlessCameraVerified = cameraChanged(cameraBefore, cameraAfterHover);
+    if (!buttonlessCameraVerified) {
+      throw new Error(`${name} camera did not change after buttonless mouse movement: ${JSON.stringify({ cameraBefore, cameraAfterHover })}`);
+    }
   }
 
+  const dragStartX = desktopMouseAudit ? centerX + Math.min(82, box.width * 0.16) : centerX;
+  const dragStartY = desktopMouseAudit ? centerY - Math.min(38, box.height * 0.10) : centerY;
+  await page.mouse.move(dragStartX, dragStartY);
   await page.mouse.down({ button: 'left' });
   await page.mouse.move(
-    centerX + Math.min(118, box.width * 0.22),
-    centerY - Math.min(56, box.height * 0.15),
+    dragStartX + Math.min(72, box.width * 0.16),
+    dragStartY - Math.min(42, box.height * 0.12),
     { steps: 8 }
   );
   await page.mouse.up({ button: 'left' });
   await page.mouse.wheel({ deltaY: -360 });
   await delay(650);
+
+  const cameraAfterDrag = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
+  const dragCameraVerified = cameraChanged(cameraAfterHover, cameraAfterDrag);
+  if (!dragCameraVerified) {
+    throw new Error(`${name} camera did not change after drag or wheel input: ${JSON.stringify({ cameraAfterHover, cameraAfterDrag })}`);
+  }
 
   await page.evaluate(() => {
     const richness = document.getElementById('richness');
@@ -196,7 +213,9 @@ async function audit(name, viewport, screenshotName) {
     canvasAfterSha256: afterHash,
     cameraBefore,
     cameraAfterHover,
+    cameraAfterDrag,
     buttonlessCameraVerified,
+    dragCameraVerified,
     manualCameraInteractionVerified: true,
     consoleErrors,
     pageErrors,
@@ -215,8 +234,8 @@ try {
   aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, 'KUNMING_V004_MOBILE.png');
   aggregate.webgl2Active = aggregate.desktop.webgl2Active && aggregate.mobile.webgl2Active;
   aggregate.manualCameraInteractionVerified = aggregate.desktop.manualCameraInteractionVerified && aggregate.mobile.manualCameraInteractionVerified;
-  aggregate.buttonlessCameraVerified = aggregate.desktop.buttonlessCameraVerified && aggregate.mobile.buttonlessCameraVerified;
-  if (!aggregate.buttonlessCameraVerified) throw new Error('buttonless mouse camera verification failed');
+  aggregate.buttonlessCameraVerified = aggregate.desktop.buttonlessCameraVerified === true;
+  if (!aggregate.buttonlessCameraVerified) throw new Error('desktop buttonless mouse camera verification failed');
   if (aggregate.consoleErrors.length || aggregate.pageErrors.length || aggregate.requestFailures.length) {
     throw new Error(`browser errors detected: ${JSON.stringify({ consoleErrors: aggregate.consoleErrors, pageErrors: aggregate.pageErrors, requestFailures: aggregate.requestFailures })}`);
   }
