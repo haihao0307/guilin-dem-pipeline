@@ -38,6 +38,7 @@ NODATA_CODE = np.uint16(65535)
 EXPECTED_CRS = "EPSG:32649"
 SOURCE_RESOLUTION_M = 12.5
 MAX_ASSET_BYTES = 100 * 1024 * 1024
+NODATA_POLICY = "source GDAL mask; conservative overview samples and cells remain transparent on any NoData contribution; no smoothing; no gap fill"
 RIVER_FLOAT32_XZ_TOLERANCE_M = 0.03
 RIVER_DISPLAY_PRECISION_GRID_M = 0.015625
 RIVER_ROUND_BUFFER_QUAD_SEGS = 16
@@ -47,6 +48,11 @@ RIVER_CLEARANCE_ERROR_MAXIMUM_TOLERANCE_M = 0.01
 RIVER_MAX_CLEARANCE_M = 2.0
 RIVER_BOUNDARY_LENGTH_EPSILON_M = 1e-6
 RIVER_GEOMETRY_AREA_EPSILON_M2 = 1e-8
+RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M = 2.0
+RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM = 0.02
+RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM = 0.10
+RIVER_GROUNDING_VISUAL_CROSS_SLOPE_TARGET = 0.06
+RIVER_GROUNDING_REPRESENTATIVE_SYSTEMS = ("li", "xiang")
 LOD_LEVELS = (
     ("lod1600m", 128), ("lod800m", 64), ("lod400m", 32),
     ("lod200m", 16), ("lod100m", 8), ("lod50m", 4),
@@ -63,6 +69,26 @@ SEASON_PRESETS = {
 def scaled_shape(width: int, height: int, max_width: int) -> tuple[int, int]:
     scale = min(1.0, max_width / width)
     return max(2, int(round(width * scale))), max(2, int(round(height * scale)))
+
+
+def _overview_sample_geometry(bounds: rasterio.coords.BoundingBox, width: int, height: int) -> dict[str, Any]:
+    """Return the actual output-pixel-centre domain used by rasterio ``out_shape``."""
+    if width < 2 or height < 2:
+        raise ValueError("overview grid must have at least two samples per axis")
+    spacing_x = (bounds.right - bounds.left) / width
+    spacing_y = (bounds.top - bounds.bottom) / height
+    first_e = bounds.left + spacing_x / 2.0
+    last_e = bounds.right - spacing_x / 2.0
+    first_n = bounds.top - spacing_y / 2.0
+    last_n = bounds.bottom + spacing_y / 2.0
+    center_e = (bounds.left + bounds.right) / 2.0
+    center_n = (bounds.bottom + bounds.top) / 2.0
+    return {
+        "actual_vertex_spacing_m": max(spacing_x, spacing_y),
+        "actual_vertex_spacing_xy_m": [spacing_x, spacing_y],
+        "sample_center_bounds_epsg32649": [first_e, last_n, last_e, first_n],
+        "bounds_world_xz": [first_e - center_e, center_n - first_n, last_e - center_e, center_n - last_n],
+    }
 
 
 def _conservative_downsample_mask(ds, output_height: int, output_width: int) -> np.ndarray:
@@ -465,63 +491,201 @@ def _nearest_verified_native_pixel(ds, lon: float, lat: float, radius_m: float =
     }
 
 
-def _hydrology_acceptance_anchors(hydrology: dict[str, Any] | None) -> dict[str, tuple[float, float]]:
-    fallback = {"river-grounding": (110.50, 24.78), "river-turn": (110.48, 24.80)}
+def _native_mask_3x3_count(ds, easting: float, northing: float) -> tuple[int, int, int]:
+    row, col = ds.index(easting, northing)
+    if row < 1 or col < 1 or row >= ds.height - 1 or col >= ds.width - 1:
+        return 0, int(row), int(col)
+    mask = ds.read_masks(1, window=Window(col - 1, row - 1, 3, 3)) > 0
+    return int(mask.sum()), int(row), int(col)
+
+
+def _hydrology_acceptance_anchors(ds, hydrology: dict[str, Any] | None) -> dict[str, Any]:
     if not hydrology:
-        return fallback
+        raise RuntimeError("Reviewed hydrology is required for deterministic river acceptance anchors")
     features = hydrology.get("features", [])
-    grounding: tuple[float, int, tuple[float, float]] | None = None
     turn: tuple[float, int, int, tuple[float, float]] | None = None
     to_utm = Transformer.from_crs("EPSG:4326", EXPECTED_CRS, always_xy=True)
+    center_e = (ds.bounds.left + ds.bounds.right) / 2.0
+    center_n = (ds.bounds.bottom + ds.bounds.top) / 2.0
+    summer = SEASON_PRESETS["summer"]
+    reviewed_interior_native_candidate_count = 0
+    constraint_matching_candidates: list[tuple[Any, ...]] = []
     for feature_index, feature in enumerate(features):
         geometry = feature.get("geometry") or {}
         coordinates = geometry.get("coordinates") or []
         if geometry.get("type") != "LineString" or len(coordinates) < 2:
             continue
-        width = float((feature.get("properties") or {}).get("base_width_m") or 0)
-        midpoint = coordinates[len(coordinates) // 2]
-        choice = (-width, feature_index, (float(midpoint[0]), float(midpoint[1])))
-        if grounding is None or choice < grounding:
-            grounding = choice
-        if len(coordinates) < 3:
-            continue
+        properties = feature.get("properties") or {}
+        base_width = float(properties.get("base_width_m") or 0)
         values = np.asarray(coordinates, dtype=np.float64)
         east, north = to_utm.transform(values[:, 0], values[:, 1])
-        for index in range(1, len(values) - 1):
-            first = np.asarray([east[index] - east[index - 1], north[index] - north[index - 1]])
-            second = np.asarray([east[index + 1] - east[index], north[index + 1] - north[index]])
-            denominator = np.linalg.norm(first) * np.linalg.norm(second)
-            if denominator <= 1e-9:
+        east, north = np.asarray(east, dtype=np.float64), np.asarray(north, dtype=np.float64)
+        if len(values) >= 3:
+            for index in range(1, len(values) - 1):
+                first = np.asarray([east[index] - east[index - 1], north[index] - north[index - 1]])
+                second = np.asarray([east[index + 1] - east[index], north[index + 1] - north[index]])
+                denominator = np.linalg.norm(first) * np.linalg.norm(second)
+                if denominator <= 1e-9:
+                    continue
+                angle = math.degrees(math.acos(float(np.clip(np.dot(first, second) / denominator, -1, 1))))
+                candidate = (-angle, feature_index, index, (float(values[index, 0]), float(values[index, 1])))
+                if turn is None or candidate < turn:
+                    turn = candidate
+        system_normalized = str(properties.get("system") or "").strip().lower()
+        source_name = properties.get("name")
+        if (base_width <= 0 or system_normalized not in RIVER_GROUNDING_REPRESENTATIVE_SYSTEMS or
+                not isinstance(source_name, str) or not source_name.strip()):
+            continue
+        tangent_e, tangent_n = np.empty_like(east), np.empty_like(north)
+        tangent_e[0], tangent_n[0] = east[1] - east[0], north[1] - north[0]
+        tangent_e[-1], tangent_n[-1] = east[-1] - east[-2], north[-1] - north[-2]
+        if len(east) > 2:
+            tangent_e[1:-1], tangent_n[1:-1] = east[2:] - east[:-2], north[2:] - north[:-2]
+        tangent_length = np.hypot(tangent_e, tangent_n)
+        tangent_valid = tangent_length > 1e-9
+        normal_e, normal_n = np.zeros_like(east), np.zeros_like(north)
+        normal_e[tangent_valid] = -tangent_n[tangent_valid] / tangent_length[tangent_valid]
+        normal_n[tangent_valid] = tangent_e[tangent_valid] / tangent_length[tangent_valid]
+        final_width = base_width * summer["width"]
+        half_width = final_width / 2.0
+        left_e, left_n = east + normal_e * half_width, north + normal_n * half_width
+        right_e, right_n = east - normal_e * half_width, north - normal_n * half_width
+        center_height, center_valid = _sample_terrain(ds, east, north)
+        left_height, left_valid = _sample_terrain(ds, left_e, left_n)
+        right_height, right_valid = _sample_terrain(ds, right_e, right_n)
+        visible = tangent_valid & center_valid & left_valid & right_valid
+        for vertex_index in range(1, len(values) - 1):
+            if not visible[vertex_index]:
                 continue
-            angle = math.degrees(math.acos(float(np.clip(np.dot(first, second) / denominator, -1, 1))))
-            candidate = (-angle, feature_index, index, (float(values[index, 0]), float(values[index, 1])))
-            if turn is None or candidate < turn:
-                turn = candidate
-    if grounding:
-        fallback["river-grounding"] = grounding[2]
-    if turn:
-        fallback["river-turn"] = turn[3]
-    return fallback
+            reviewed_interior_native_candidate_count += 1
+            bank_delta = abs(float(left_height[vertex_index] - right_height[vertex_index]))
+            cross_slope = bank_delta / final_width
+            if (bank_delta < RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M or
+                    not RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM <= cross_slope <= RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM):
+                continue
+            item = (
+                final_width, -abs(cross_slope - RIVER_GROUNDING_VISUAL_CROSS_SLOPE_TARGET),
+                cross_slope, bank_delta, -feature_index, -int(vertex_index),
+                feature_index, int(vertex_index), float(values[vertex_index, 0]), float(values[vertex_index, 1]),
+                base_width, final_width, float(east[vertex_index]), float(north[vertex_index]),
+                float(left_e[vertex_index]), float(left_n[vertex_index]),
+                float(right_e[vertex_index]), float(right_n[vertex_index]),
+                float(center_height[vertex_index]), float(left_height[vertex_index]), float(right_height[vertex_index]),
+                properties.get("osm_type"), properties.get("osm_id"), source_name, system_normalized,
+            )
+            constraint_matching_candidates.append(item)
+    selected: tuple[Any, ...] | None = None
+    selection_scan_rank = 0
+    selected_mask_counts: tuple[int, int, int] | None = None
+    for rank, item in enumerate(sorted(constraint_matching_candidates, reverse=True), start=1):
+        center_count, _, _ = _native_mask_3x3_count(ds, item[12], item[13])
+        left_count, _, _ = _native_mask_3x3_count(ds, item[14], item[15])
+        right_count, _, _ = _native_mask_3x3_count(ds, item[16], item[17])
+        if center_count == left_count == right_count == 9:
+            selected, selection_scan_rank = item, rank
+            selected_mask_counts = (center_count, left_count, right_count)
+            break
+    if selected is None or selected_mask_counts is None:
+        raise RuntimeError("No representative Li/Xiang interior centerline candidate satisfies the stable summer cross-slope contract")
+    (ranked_final_width, _, cross_slope, bank_delta, _, _, feature_index, vertex_index, lon, lat, base_width, final_width,
+     east, north, left_e, left_n, right_e, right_n, center_height, left_height, right_height,
+     osm_type, osm_id, name, system) = selected
+    if ranked_final_width != final_width:
+        raise RuntimeError("River-grounding candidate rank payload is inconsistent")
+    center_count, left_count, right_count = selected_mask_counts
+    _, source_row, source_col = _native_mask_3x3_count(ds, east, north)
+    left_distance = math.hypot(left_e - east, left_n - north)
+    right_distance = math.hypot(right_e - east, right_n - north)
+    bank_distance = math.hypot(left_e - right_e, left_n - right_n)
+    grounding_checks = {
+        "reviewed_osm_original_vertex_preserved": [lon, lat] == list(features[feature_index]["geometry"]["coordinates"][vertex_index]),
+        "representative_system_is_li_or_xiang": system in RIVER_GROUNDING_REPRESENTATIVE_SYSTEMS,
+        "representative_source_name_present": isinstance(name, str) and bool(name.strip()),
+        "non_endpoint_original_vertex": 0 < vertex_index < len(features[feature_index]["geometry"]["coordinates"]) - 1,
+        "summer_final_width_used": abs(final_width - base_width * summer["width"]) <= 1e-9,
+        "center_and_banks_native_3x3_valid": center_count == left_count == right_count == 9,
+        "left_and_right_final_xz_distinct": bank_distance > 0 and left_distance > 0 and right_distance > 0,
+        "bank_offsets_match_final_half_width": abs(left_distance - final_width / 2) <= 1e-6 and abs(right_distance - final_width / 2) <= 1e-6 and abs(bank_distance - final_width) <= 1e-6,
+        "left_and_right_terrain_y_independently_sampled": bank_delta > 1e-9 and left_height != right_height,
+        "bank_delta_visually_readable": bank_delta >= RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M,
+        "cross_slope_in_representative_visual_range": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM <= cross_slope <= RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM,
+        "deterministic_width_first_stable_candidate_selected": selection_scan_rank >= 1,
+    }
+    grounding = {
+        "lon": lon, "lat": lat, "easting": east, "northing": north,
+        "source_row": source_row, "source_col": source_col,
+        "native_available": True, "native_mask_verified": True, "native_3x3_valid_count": center_count,
+        "native_elevation_m": center_height, "native_slope_degrees": math.degrees(math.atan(cross_slope)),
+        "requested_lon": lon, "requested_lat": lat, "requested_to_selected_distance_m": 0.0,
+        "centerline_coordinate_mutated": False,
+        "original_centerline_lonlat": [lon, lat],
+        "center_epsg32649": [east, north], "left_bank_epsg32649": [left_e, left_n], "right_bank_epsg32649": [right_e, right_n],
+        "center_xz_m": [east - center_e, center_n - north],
+        "left_bank_xz_m": [left_e - center_e, center_n - left_n],
+        "right_bank_xz_m": [right_e - center_e, center_n - right_n],
+        "center_terrain_height_m": center_height, "left_bank_terrain_height_m": left_height,
+        "right_bank_terrain_height_m": right_height,
+        "left_minus_right_terrain_y_m": left_height - right_height,
+        "bank_delta_y_m": bank_delta, "cross_slope": cross_slope,
+        "cross_slope_degrees": math.degrees(math.atan(cross_slope)),
+        "season": "summer", "width": summer["width"], "base_width_m": base_width, "final_width_m": final_width,
+        "center_native_3x3_valid_count": center_count, "left_bank_native_3x3_valid_count": left_count,
+        "right_bank_native_3x3_valid_count": right_count,
+        "source_feature_index": feature_index, "source_vertex_index": vertex_index,
+        "osm_type": osm_type, "osm_id": osm_id, "name": name, "system": system,
+        "non_endpoint": True,
+        "reviewed_interior_native_candidate_count": reviewed_interior_native_candidate_count,
+        "constraint_matching_candidate_count": len(constraint_matching_candidates),
+        "candidate_count": len(constraint_matching_candidates),
+        "selection_scan_rank": selection_scan_rank,
+        "selected_stable_rank": 1,
+        "higher_ranked_stable_candidate_count": 0,
+        "candidate_constraints": {
+            "allowed_systems": list(RIVER_GROUNDING_REPRESENTATIVE_SYSTEMS),
+            "source_name_required": True,
+            "non_endpoint": True,
+            "center_left_right_native_samples_valid": True,
+            "center_left_right_native_3x3_valid": True,
+            "season": "summer",
+            "width_multiplier": summer["width"],
+            "bank_delta_y_minimum_m": RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M,
+            "cross_slope_minimum": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM,
+            "cross_slope_maximum": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM,
+            "cross_slope_target": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_TARGET,
+            "ranking": ["final_width_m descending", "absolute cross_slope distance from 0.06 ascending", "cross_slope descending", "bank_delta_y_m descending", "source_feature_index ascending", "source_vertex_index ascending"],
+        },
+        "selection_policy": "reviewed Li/Xiang OSM named interior vertices; summer final-width independent native DEM bank samples; require center/left/right native 3x3 validity, bank delta >=2m and 0.02<=cross_slope<=0.10; rank final_width descending, closeness to 0.06, cross_slope/bank_delta descending, then source feature/vertex ascending",
+        "terrain_sampling_policy": "native 12.5m triangular interpolation independently at final center/left/right XZ; no smoothing or fill",
+        "visual_bank_delta_minimum_m": RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M,
+        "visual_cross_slope_minimum": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM,
+        "visual_cross_slope_maximum": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM,
+        "visual_cross_slope_target": RIVER_GROUNDING_VISUAL_CROSS_SLOPE_TARGET,
+        "checks": grounding_checks, "passed": all(grounding_checks.values()),
+    }
+    if turn is None:
+        raise RuntimeError("Reviewed hydrology contains no valid interior turn candidate")
+    return {"river-grounding": grounding, "river-turn": turn[3]}
 
 
 def _acceptance_points(ds, hydrology: dict[str, Any] | None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    river = _hydrology_acceptance_anchors(hydrology)
+    river = _hydrology_acceptance_anchors(ds, hydrology)
+    grounding = river["river-grounding"]
     anchors = [
         ("guilin", 110.2994, 25.2742), ("yangshuo", 110.4920133, 24.7815129),
         ("peaks", 110.35, 25.05), ("cliff", 110.43, 24.91), ("gully", 110.58, 25.02),
-        ("river-grounding", *river["river-grounding"]), ("river-turn", *river["river-turn"]),
+        ("river-grounding", grounding["lon"], grounding["lat"]), ("river-turn", *river["river-turn"]),
         ("yangtang", 110.15569, 25.21753), ("zhenbaoding", 110.82528, 26.13556),
     ]
     roles = {
         "guilin": "urban terrain close-up", "yangshuo": "Yangshuo karst valley",
         "peaks": "peak-cluster detail", "cliff": "rock-wall detail", "gully": "gully detail",
-        "river-grounding": "widest reviewed OSM feature bank-grounding audit",
+        "river-grounding": "representative stable summer cross-slope on reviewed named Li/Xiang OSM centerline",
         "river-turn": "maximum reviewed OSM centerline turn-angle audit",
         "yangtang": "Yangtang landmark", "zhenbaoding": "high-relief landmark",
     }
     result = []
     for point_id, lon, lat in anchors:
-        receipt = _nearest_verified_native_pixel(ds, lon, lat)
+        receipt = grounding if point_id == "river-grounding" else _nearest_verified_native_pixel(ds, lon, lat)
         result.append({"id": point_id, **receipt, "acceptance_role": roles[point_id],
                        "anchor_source": "reviewed OSM geometry" if point_id.startswith("river-") else "fixed reviewed landmark",
                        "required_level": "native12_5m", "actual_vertex_spacing_m": SOURCE_RESOLUTION_M})
@@ -535,11 +699,16 @@ def _acceptance_points(ds, hydrology: dict[str, Any] | None) -> tuple[list[dict[
         "all_terrain_points_report_finite_native_height_and_slope": all(math.isfinite(item.get("native_elevation_m", math.nan)) and math.isfinite(item.get("native_slope_degrees", math.nan)) for item in result if item["id"] != "nodata"),
         "all_fixed_and_hydrology_anchors_resolve_within_search_radius": all(item.get("requested_to_selected_distance_m", math.inf) <= 1200 for item in result if item["id"] != "nodata"),
         "yangshuo_river_turn_grounding_and_yangtang_verified": all(next(item for item in result if item["id"] == point_id)["native_mask_verified"] for point_id in ("yangshuo", "river-grounding", "river-turn", "yangtang")),
+        "river_grounding_original_centerline_coordinate_preserved": grounding["centerline_coordinate_mutated"] is False and grounding["checks"]["reviewed_osm_original_vertex_preserved"],
+        "river_grounding_summer_final_bank_xz_independently_sampled": grounding["season"] == "summer" and grounding["width"] == SEASON_PRESETS["summer"]["width"] and grounding["checks"]["left_and_right_final_xz_distinct"] and grounding["checks"]["left_and_right_terrain_y_independently_sampled"],
+        "river_grounding_cross_slope_visually_readable": grounding["bank_delta_y_m"] >= RIVER_GROUNDING_VISUAL_BANK_DELTA_MINIMUM_M and RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MINIMUM <= grounding["cross_slope"] <= RIVER_GROUNDING_VISUAL_CROSS_SLOPE_MAXIMUM,
+        "river_grounding_contract_passed": grounding["passed"],
         "nodata_600m_contains_valid_pixels": nodata["neighborhood_valid_pixel_count"] > 0,
         "nodata_600m_contains_nodata_pixels": nodata["neighborhood_nodata_pixel_count"] > 0,
         "nodata_gap_fill_disabled": nodata["gap_fill_applied"] is False,
     }
-    return result, {"checks": checks, "required_ids": required_ids, "passed": all(checks.values()), "nodata_boundary": nodata}
+    return result, {"checks": checks, "required_ids": required_ids, "passed": all(checks.values()),
+                    "river_grounding": grounding, "nodata_boundary": nodata}
 
 
 def _tile_axis_starts(sample_count: int, stride: int, intervals: int) -> list[int]:
@@ -1650,9 +1819,11 @@ def _build_river_season(ds, output_dir: Path, runs: list[dict[str, Any]], juncti
     for run_range in run_ranges:
         receipt, geometry, boundary = _decoded_run_topology(run_range, decoded_positions, decoded_indices)
         decoded_topology.append(receipt); serialized_by_run.append(geometry); run_boundaries.append(boundary)
+    decoded_vertex_count, decoded_index_count = len(decoded_positions), len(decoded_indices)
+    grounding = _grounding_from_decoded(ds, decoded_positions, decoded_indices, center_e, center_n)
+    del decoded_positions, decoded_indices
     serialized_union = _union_parts(serialized_by_run); expected_union = _union_parts(expected_by_run)
     accounted_union = _union_parts(accounted_by_run); nodata_union = _union_parts(nodata_by_run); extent_union = _union_parts(extent_by_run)
-    grounding = _grounding_from_decoded(ds, decoded_positions, decoded_indices, center_e, center_n)
     cross_serialized = _cross_run_contract(serialized_by_run); cross_expected = _cross_run_contract(expected_by_run)
     invalid_edge_count = (sum(item["decoded_triangle_coverage_invalid_edge_count"] for item in decoded_topology)
                           + cross_serialized["coverage_invalid_edge_count"])
@@ -1746,8 +1917,8 @@ def _build_river_season(ds, output_dir: Path, runs: list[dict[str, Any]], juncti
         "position_compression": "gzip", "index_compression": "gzip",
         "positions_global": True, "indices_global": True,
         "vertex_space": "terrain-world local X,height,local Z; source DEM height plus 0.35m",
-        "index_space": "global-vertex-array", "vertex_count": len(decoded_positions),
-        "index_count": len(decoded_indices), "triangle_count": len(decoded_indices) // 3,
+        "index_space": "global-vertex-array", "vertex_count": decoded_vertex_count,
+        "index_count": decoded_index_count, "triangle_count": decoded_index_count // 3,
         "position_stored_bytes": position_path.stat().st_size, "index_stored_bytes": index_path.stat().st_size,
         "position_sha256": sha256_file(position_path), "index_sha256": sha256_file(index_path),
         "surface_offset_m": RIVER_SURFACE_OFFSET_M, "source_resolution_m": SOURCE_RESOLUTION_M,
@@ -1762,7 +1933,7 @@ def _build_river_season(ds, output_dir: Path, runs: list[dict[str, Any]], juncti
         "run_count": len(hole_contracts), "failed_run_count": sum(not item["passed"] for item in hole_contracts),
     }
     ribbon["passed"] = ribbon["failed_run_count"] == 0 and ribbon["source_interior_ring_count"] == ribbon["final_interior_ring_count"] and ribbon["interior_ring_area_absolute_error_m2"] <= 1e-8 and ribbon["filled_hole_area_m2"] <= 1e-8 and ribbon["symmetric_difference_area_m2"] <= 1e-8
-    return asset, final, ribbon, {"positions": decoded_positions, "indices": decoded_indices}
+    return asset, final, ribbon, {"vertex_count": decoded_vertex_count, "index_count": decoded_index_count}
 
 
 def build_river_products(ds, output_dir: Path, hydrology: dict[str, Any], sample_step: float) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -1823,6 +1994,7 @@ def build_river_products(ds, output_dir: Path, hydrology: dict[str, Any], sample
     runtime = {
         "schema": "guilin-v072-river-drape-runtime/v3", "crs": EXPECTED_CRS,
         "center_epsg32649": [center_e, center_n], "source_resolution_m": SOURCE_RESOLUTION_M,
+        "vertical_scale": 1.0, "source_elevation_modified_m": 0.0, "nodata_policy": NODATA_POLICY,
         "surface_offset_m": RIVER_SURFACE_OFFSET_M, "centerline_collection_sha256": before,
         "centerline_geometry_mutated": False, "centerline_file": center_path.name,
         "season_semantics": "visual seasonal preset; not a discharge simulation", "seasons": seasons_runtime,
@@ -1915,8 +2087,8 @@ def main() -> int:
         lon_values = [point[0] for point in corners]
         lat_values = [point[1] for point in corners]
 
-        overview_x_spacing = (east - west) / hwidth
-        overview_y_spacing = (north - south) / hheight
+        overview_geometry = _overview_sample_geometry(ds.bounds, hwidth, hheight)
+        overview_x_spacing, overview_y_spacing = overview_geometry["actual_vertex_spacing_xy_m"]
         manifest = {
             "schema": "guilin-v072-terrain-seasonal-rivers/v2",
             "crs": EXPECTED_CRS,
@@ -1941,9 +2113,10 @@ def main() -> int:
                 "nodata_code": int(NODATA_CODE),
                 "valid_min_code": 0,
                 "valid_max_code": 65534,
-                "actual_vertex_spacing_xy_m": [overview_x_spacing, overview_y_spacing],
+                **overview_geometry,
                 "overview_only": True,
                 "mask_downsampling": "conservative: valid only when every covered native source pixel is valid",
+                "nodata_policy": NODATA_POLICY,
             },
             "texture": {
                 "file": "terrain_texture.webp",

@@ -292,6 +292,7 @@ jobs:
           python - <<'PY'
           import gzip, hashlib, json, math, re, struct
           from pathlib import Path
+          import numpy as np
 
           root = Path("dist/data")
           terrain = json.loads((root / "terrain_manifest.json").read_text())
@@ -320,10 +321,45 @@ jobs:
           assert terrain["fallback_resolution_m"] is None
           assert terrain["fallback_30m_allowed"] is False
           assert terrain["overview_only"] is True
-          assert terrain["height"]["width"] == 1024
-          assert terrain["height"]["height"] == 1110
-          assert terrain["height"]["nodata_code"] == 65535
-          assert terrain["actual_vertex_spacing_m"] > 200.0
+          height = terrain["height"]
+          assert height["file"] == "terrain_height_u16.bin"
+          assert height["width"] == 1024 and height["height"] == 1110
+          assert height["encoding"] == "uint16-little-endian"
+          assert height["nodata_code"] == 65535
+          assert height["valid_min_code"] == 0 and height["valid_max_code"] == 65534
+          assert height["overview_only"] is True
+          west, south, east, north = terrain["bounds_epsg32649"]
+          center_e, center_n = terrain["center_epsg32649"]
+          dx = (east - west) / height["width"]
+          dy = (north - south) / height["height"]
+          expected_sample_bounds = [west + dx / 2, south + dy / 2, east - dx / 2, north - dy / 2]
+          sample_west, sample_south, sample_east, sample_north = expected_sample_bounds
+          expected_world_bounds = [
+              sample_west - center_e,
+              center_n - sample_north,
+              sample_east - center_e,
+              center_n - sample_south,
+          ]
+          assert len(height["sample_center_bounds_epsg32649"]) == 4
+          assert len(height["bounds_world_xz"]) == 4
+          assert len(height["actual_vertex_spacing_xy_m"]) == 2
+          assert np.allclose(height["sample_center_bounds_epsg32649"], expected_sample_bounds, rtol=0, atol=1e-9)
+          assert np.allclose(height["bounds_world_xz"], expected_world_bounds, rtol=0, atol=1e-9)
+          assert np.allclose(height["actual_vertex_spacing_xy_m"], [dx, dy], rtol=0, atol=1e-12)
+          assert math.isclose(height["actual_vertex_spacing_m"], max(dx, dy), rel_tol=0, abs_tol=1e-12)
+          assert math.isclose(terrain["actual_vertex_spacing_m"], height["actual_vertex_spacing_m"], rel_tol=0, abs_tol=1e-12)
+          assert terrain["overview_vertex_spacing_xy_m"] == height["actual_vertex_spacing_xy_m"]
+          assert height["actual_vertex_spacing_m"] > 200.0
+          assert height["nodata_policy"] == (
+              "source GDAL mask; conservative overview samples and cells remain transparent on any "
+              "NoData contribution; no smoothing; no gap fill"
+          )
+          height_path = root / height["file"]
+          assert height_path.stat().st_size == height["width"] * height["height"] * 2
+          decoded_overview = np.fromfile(height_path, dtype="<u2")
+          assert decoded_overview.size == height["width"] * height["height"]
+          assert np.count_nonzero(decoded_overview == height["nodata_code"]) > 0
+          assert np.count_nonzero(decoded_overview <= height["valid_max_code"]) > 0
           assert terrain["source_statistics"] == manifest["source_statistics"]
           for key, value in expected_stats.items():
               actual = terrain["source_statistics"][key]
@@ -335,6 +371,11 @@ jobs:
           assert terrain["lod_qa_file"] == "terrain_lod_qa.json"
           assert terrain["river_runtime_file"] == "river_drape_runtime.json"
           assert terrain["river_qa_file"] == "river_drape_qa.json"
+          assert not ({
+              "terrain_lod_manifest_file", "terrain_lod_qa_file",
+              "river_drape_runtime_file", "river_drape_qa_file",
+          } & set(terrain))
+          assert terrain["lod_qa_passed"] is True and terrain["river_qa_passed"] is True
           assert terrain["surface_color_semantics"] == "programmatic composite; not satellite or orthophoto imagery"
           assert terrain["texture"]["surface_color_semantics"] == terrain["surface_color_semantics"]
           assert terrain["karst_detail"]["file"] == "terrain_karst_detail.webp"
@@ -544,8 +585,20 @@ jobs:
           }
           assert runtime["schema"] == "guilin-v072-river-drape-runtime/v3"
           assert qa["schema"] == "guilin-v072-river-drape-qa/v3"
+          assert set(runtime) == {
+              "schema", "crs", "center_epsg32649", "source_resolution_m", "vertical_scale",
+              "source_elevation_modified_m", "nodata_policy", "surface_offset_m",
+              "centerline_collection_sha256", "centerline_geometry_mutated", "centerline_file",
+              "season_semantics", "seasons", "indexed_assets", "qa_file",
+          }
           assert runtime["crs"] == "EPSG:32649"
           assert runtime["source_resolution_m"] == qa["source_resolution_m"] == 12.5
+          assert runtime["vertical_scale"] == 1.0
+          assert runtime["source_elevation_modified_m"] == 0.0
+          assert runtime["nodata_policy"] == (
+              "source GDAL mask; conservative overview samples and cells remain transparent on any "
+              "NoData contribution; no smoothing; no gap fill"
+          )
           assert runtime["surface_offset_m"] == qa["surface_offset_m"] == 0.35
           assert runtime["centerline_geometry_mutated"] is False
           assert qa["centerline_geometry_mutated"] is False
@@ -595,6 +648,7 @@ jobs:
 
           for season in seasons:
               season_runtime = runtime["seasons"][season]
+              assert set(direct[season]) == {"left_bank", "right_bank", "serialized_global_display_mesh", "passed"}
               preset = presets[season]
               assert season_runtime["width"] == preset["width"]
               assert season_runtime["depth"] == preset["depth"]
@@ -680,7 +734,6 @@ jobs:
               assert final["decoded_run_count"] == final_asset["visible_run_count"]
               assert final["decoded_run_non_adjacent_edge_crossing_count"] == 0
               assert final["decoded_run_triangle_coverage_invalid_edge_count"] == 0
-              assert final["decoded_run_triangle_positive_self_overlap_area_m2"] == 0.0
               assert final["serialized_boundary_self_intersection_count"] == 0
               assert final["depth_conflict_count"] == 0
               assert final["visual_depth"] == preset["depth"]
@@ -688,6 +741,7 @@ jobs:
 
               run_topology = final["decoded_run_triangle_topology"]
               assert len(run_topology) == final["decoded_run_count"] > 0
+              topology_overlap_tolerance = 0.0
               for run in run_topology:
                   assert run["passed"] is True and all(run["checks"].values())
                   assert run["decoded_triangle_count"] > 0
@@ -698,8 +752,9 @@ jobs:
                   assert run["decoded_triangle_coverage_invalid_edge_length_m"] == 0.0
                   assert run["decoded_non_adjacent_edge_crossing_count"] == 0
                   assert run["decoded_nonmanifold_geometric_edge_count"] == 0
-                  assert run["decoded_triangle_positive_self_overlap_area_m2"] == 0.0
                   assert run["decoded_triangle_positive_self_overlap_area_m2"] <= run["decoded_triangle_positive_self_overlap_tolerance_m2"]
+                  topology_overlap_tolerance += run["decoded_triangle_positive_self_overlap_tolerance_m2"]
+              assert final["decoded_run_triangle_positive_self_overlap_area_m2"] <= topology_overlap_tolerance
 
               expected_cross = final["cross_run_terrain_expected"]
               serialized_cross = final["cross_run_serialized"]

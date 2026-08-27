@@ -19,6 +19,48 @@ const MOBILE = { width: 390, height: 844 };
 const MAX_ASSET_BYTES = 100 * 1024 * 1024;
 const WATER_TIME = 137.25;
 const REQUIRED_SCREENSHOT_COUNT = 80;
+const NODATA_POLICY = 'source GDAL mask; conservative overview samples and cells remain transparent on any NoData contribution; no smoothing; no gap fill';
+const RIVER_GLOBAL_CHECK_KEYS = Object.freeze([
+  'all_assets_under_100_mib',
+  'all_banks_resampled_at_final_xz',
+  'all_seasons_final_float32_grounding_passed',
+  'all_seasons_final_topology_passed',
+  'centerline_coordinates_unchanged',
+  'exact_indexed_asset_count',
+  'four_visual_season_presets_exact',
+  'hole_preservation_regression_passed',
+  'round_arc_construction_regression_passed',
+]);
+const RIVER_GROUNDING_CHECK_KEYS = Object.freeze([
+  'reviewed_osm_original_vertex_preserved',
+  'representative_system_is_li_or_xiang',
+  'representative_source_name_present',
+  'non_endpoint_original_vertex',
+  'summer_final_width_used',
+  'center_and_banks_native_3x3_valid',
+  'left_and_right_final_xz_distinct',
+  'bank_offsets_match_final_half_width',
+  'left_and_right_terrain_y_independently_sampled',
+  'bank_delta_visually_readable',
+  'cross_slope_in_representative_visual_range',
+  'deterministic_width_first_stable_candidate_selected',
+]);
+const RIVER_GROUNDING_CORE_FIELDS = Object.freeze([
+  'original_centerline_lonlat', 'centerline_coordinate_mutated',
+  'center_epsg32649', 'left_bank_epsg32649', 'right_bank_epsg32649',
+  'center_xz_m', 'left_bank_xz_m', 'right_bank_xz_m',
+  'center_terrain_height_m', 'left_bank_terrain_height_m', 'right_bank_terrain_height_m',
+  'left_minus_right_terrain_y_m', 'bank_delta_y_m', 'cross_slope', 'cross_slope_degrees',
+  'season', 'width', 'base_width_m', 'final_width_m',
+  'system', 'name', 'non_endpoint', 'source_feature_index', 'source_vertex_index',
+  'candidate_constraints', 'checks', 'passed',
+]);
+const EXPECTED_OVERVIEW_HEIGHT = Object.freeze({
+  actual_vertex_spacing_m: 212.5,
+  actual_vertex_spacing_xy_m: [212.5, 212.46621621621622],
+  sample_center_bounds_epsg32649: [349968.75, 2703118.733108108, 567356.25, 2938743.766891892],
+  bounds_world_xz: [-108693.75, -117812.51689189207, 108693.75, 117812.51689189207],
+});
 const SEASONS = Object.freeze({
   winter: { width: 0.66, depth: 0.32, color: '#42b69d', label: '冬季枯水' },
   spring: { width: 0.92, depth: 0.55, color: '#45c4b5', label: '春季平水' },
@@ -26,10 +68,13 @@ const SEASONS = Object.freeze({
   autumn: { width: 0.82, depth: 0.46, color: '#3fa9aa', label: '秋季回落' },
 });
 const TARGETS = Object.freeze([
-  'overview', 'guilin', 'yangshuo', 'peaks', 'cliff', 'gully',
+  'overview', 'guilin', 'yangtang', 'yangshuo', 'peaks', 'cliff', 'gully',
   'river-grounding', 'river-turn', 'zhenbaoding', 'nodata',
 ]);
-const NATIVE_ACCEPTANCE_TARGETS = Object.freeze([...TARGETS]);
+const NATIVE_ACCEPTANCE_TARGETS = Object.freeze([
+  'guilin', 'yangtang', 'yangshuo', 'peaks', 'cliff', 'gully',
+  'river-grounding', 'river-turn', 'zhenbaoding', 'nodata',
+]);
 const LOD_CASES = Object.freeze([
   { distance_m: 6990, expected_max_resolution_m: 12.5, native: true },
   { distance_m: 7010, expected_max_resolution_m: 25, native: false },
@@ -102,11 +147,11 @@ const consoleEvidence = { messages: [], errors: [], page_errors: [] };
 const networkEvidence = { navigations: [], responses_ge_400: [], http_404: [], request_failed: [], executable_resources: [], vendor_resources: [], displayed_river_asset_responses: [] };
 const runtimeEvidence = { initial: null, seasons: {}, mobile_season: null, final: null };
 const cameraEvidence = { trusted_targets: {}, trusted_gestures: {}, canonical_poses: {}, collision_recovery: null };
-const terrainEvidence = { manifest: null, lod_manifest: null, lod_qa: null, decoded_tile_receipts: [], native_neighborhoods: {}, nodata_roi: null, domain_edge_evidence: null };
+const terrainEvidence = { manifest: null, lod_manifest: null, lod_qa: null, decoded_tile_receipts: [], native_neighborhoods: {}, nodata_roi: null, domain_edge_evidence: null, river_grounding_cross_slope: null };
 const lodEvidence = { threshold_matrix: [], runtime_seam_probes: [], wireframe_diagnostic: null };
 const fpsEvidence = { samples: [], result: null };
 const karstEvidence = { viewpoints: {} };
-const riverVisualEvidence = { cases: [], fixed_water_time: WATER_TIME };
+const riverVisualEvidence = { cases: [], fixed_water_time: WATER_TIME, grounding_cross_slope_closeup: null };
 const screenshotInventory = [];
 const publishedAssets = { json: {}, binary: [], vendor: [] };
 const pages = new Set();
@@ -361,14 +406,38 @@ function validateSerializedRiverSeason(finalQa, season, preset) {
 function validateRiverAssets(runtime, qa) {
   check(runtime?.schema === 'guilin-v072-river-drape-runtime/v3', 'river runtime schema v3', runtime?.schema);
   check(qa?.schema === 'guilin-v072-river-drape-qa/v3', 'river QA schema v3', qa?.schema);
+  deepEqual(Object.keys(runtime).sort(), [
+    'center_epsg32649', 'centerline_collection_sha256', 'centerline_file', 'centerline_geometry_mutated',
+    'crs', 'indexed_assets', 'nodata_policy', 'qa_file', 'schema', 'season_semantics', 'seasons',
+    'source_elevation_modified_m', 'source_resolution_m', 'surface_offset_m', 'vertical_scale',
+  ].sort(), 'river runtime v3 exact frozen keys');
   check(qa.passed === true && qa.all_seasons_grounding_passed === true && qa.all_seasons_topology_passed === true, 'river top-level pass flags');
+  deepEqual(Object.keys(qa.checks).sort(), [...RIVER_GLOBAL_CHECK_KEYS].sort(), 'river QA exact nine global check keys');
   allTrue(qa.checks, 'river QA checks');
   check(qa.centerline_collection_sha256_before === qa.centerline_collection_sha256_after && qa.centerline_geometry_mutated === false, 'river centerline immutability');
-  check(runtime.centerline_geometry_mutated === false, 'runtime centerline immutability');
+  check(isHexSha(runtime.centerline_collection_sha256), 'runtime unique centerline collection digest');
+  check(runtime.centerline_collection_sha256 === qa.centerline_collection_sha256_before, 'runtime/QA centerline collection digest exact');
+  check(!Object.hasOwn(runtime, 'source_centerline_collection_sha256'), 'runtime forbids obsolete duplicate centerline digest alias');
+  check(runtime.centerline_geometry_mutated === false && runtime.centerline_file === 'river_drape_center.f32', 'runtime centerline immutability/file');
+  check(runtime.crs === 'EPSG:32649' && runtime.source_resolution_m === 12.5, 'runtime CRS/native source spacing');
+  check(runtime.vertical_scale === 1 && runtime.source_elevation_modified_m === 0, 'runtime source elevation unchanged');
+  check(runtime.nodata_policy === NODATA_POLICY, 'runtime frozen NoData policy', runtime.nodata_policy);
+  close(runtime.surface_offset_m, 0.35, 0, 'runtime river surface offset');
+  check(runtime.qa_file === 'river_drape_qa.json', 'runtime QA pointer exact');
+  check(runtime.season_semantics === 'visual seasonal preset; not a discharge simulation', 'runtime visual season semantics');
   check(Array.isArray(qa.oversize_asset_files) && qa.oversize_asset_files.length === 0 && qa.maximum_asset_bytes === MAX_ASSET_BYTES, 'river asset size QA');
   check(Array.isArray(runtime.indexed_assets) && runtime.indexed_assets.length === 13, 'exactly 13 indexed river assets');
   check(new Set(runtime.indexed_assets.map(asset => asset.file)).size === 13, 'river indexed asset names unique');
+  deepEqual(runtime.indexed_assets.map(asset => asset.file).sort(), [
+    'river_drape_center.f32',
+    ...Object.keys(SEASONS).flatMap(season => [
+      `river_drape_${season}.f32`,
+      `river_drape_${season}_positions.f32.gz`,
+      `river_drape_${season}_indices.u32.gz`,
+    ]),
+  ].sort(), 'river exact 13 indexed filenames');
   for (const asset of runtime.indexed_assets) {
+    deepEqual(Object.keys(asset).sort(), ['file', 'sha256', 'stored_bytes'], `${asset.file || 'unnamed river asset'} exact indexed asset keys`);
     check(typeof asset.file === 'string' && asset.file.length > 0, 'river indexed asset filename');
     positive(asset.stored_bytes, `${asset.file}.stored_bytes`); check(asset.stored_bytes < MAX_ASSET_BYTES, `${asset.file} under 100 MiB`);
     check(isHexSha(asset.sha256), `${asset.file}.sha256`);
@@ -391,10 +460,12 @@ function validateRiverAssets(runtime, qa) {
     close(runtimeSeason.depth, preset.depth, 1e-12, `${season}.depth`);
     check(canonicalColor(runtimeSeason.color) === preset.color, `${season}.color`);
     check(runtimeSeason.semantics === 'visual seasonal preset; not a discharge simulation', `${season}.semantics`);
+    check(runtimeSeason.bank_audit_file === `river_drape_${season}.f32`, `${season} bank audit filename exact`);
     const mesh = runtimeSeason.serialized_global_display_mesh;
     check(mesh?.positions_file === `river_drape_${season}_positions.f32.gz` && mesh.indices_file === `river_drape_${season}_indices.u32.gz`, `${season} serialized filenames`);
     check(mesh.position_compression === 'gzip' && mesh.index_compression === 'gzip', `${season} gzip compression`);
     check(mesh.positions_global === true && mesh.indices_global === true && mesh.index_space === 'global-vertex-array', `${season} global arrays`);
+    check(mesh.vertex_space === 'terrain-world local X,height,local Z; source DEM height plus 0.35m', `${season} exact vertex-space semantics`, mesh.vertex_space);
     positive(mesh.vertex_count, `${season}.vertex_count`); positive(mesh.index_count, `${season}.index_count`); positive(mesh.triangle_count, `${season}.triangle_count`);
     check(mesh.index_count === mesh.triangle_count * 3, `${season} index/triangle exact`);
     check(isHexSha(mesh.position_sha256) && isHexSha(mesh.index_sha256), `${season} mesh hashes`);
@@ -415,16 +486,23 @@ function validateRiverAssets(runtime, qa) {
     deepEqual(direct, alias, `${season} serialized QA alias deep equality`);
     validateSerializedRiverSeason(direct, season, preset);
     const groundingSeason = qa.grounding_by_season[season];
-    const bank = groundingSeason.bank_edge_float32_audit;
-    check(bank?.passed === true, `${season} bank edge Float32 audit passed`);
-    positive(bank.count, `${season}.bank_edge_float32_audit.count`);
-    check(bank.maximum_m <= 2 && bank.penetration_minimum_m >= 0 && bank.penetration_count === 0, `${season} bank edge clearance/penetration`);
-    check(bank.error_to_surface_offset_p95_abs_m <= 0.001 && bank.error_to_surface_offset_maximum_abs_m <= 0.01, `${season} bank edge errors`);
+    deepEqual(Object.keys(groundingSeason).sort(), ['left_bank', 'passed', 'right_bank', 'serialized_global_display_mesh'], `${season} exact grounding keys`);
+    check(groundingSeason.passed === true, `${season} aggregate grounding passed`);
+    for (const bankName of ['left_bank', 'right_bank']) {
+      const bank = groundingSeason[bankName]; const bp = `${season}.${bankName}`;
+      check(bank?.passed === true, `${bp} Float32 audit passed`);
+      positive(bank.sample_count, `${bp}.sample_count`); check(bank.clearance_count === bank.sample_count, `${bp} clearance/sample count exact`);
+      check(bank.invalid_terrain_sample_count === 0, `${bp} native terrain samples all valid`);
+      check(bank.clearance_maximum_m <= 2 && bank.clearance_penetration_minimum_m >= 0 && bank.penetration_count === 0, `${bp} clearance/penetration`);
+      check(bank.p95_absolute_error_m <= 0.001 && bank.maximum_absolute_error_m <= 0.01, `${bp} errors`);
+    }
+    const bankAsset = runtime.indexed_assets.find(asset => asset.file === runtimeSeason.bank_audit_file);
+    check(bankAsset.stored_bytes === (groundingSeason.left_bank.sample_count + groundingSeason.right_bank.sample_count) * 3 * 4, `${season} bank audit binary exactly left+right Float32 XYZ samples`);
     const ribbon = qa.joins_and_topology?.ribbon_hole_preservation_by_season?.[season];
     check(ribbon?.passed === true, `${season} ribbon hole preservation`);
-    check(ribbon.source_buffer_interior_ring_count === ribbon.final_interior_ring_count, `${season} ribbon ring count`);
-    check(Math.abs(ribbon.source_buffer_interior_area_m2 - ribbon.final_interior_ring_area_m2) <= 1e-8, `${season} ribbon ring area`);
-    check(ribbon.preserved_buffer_filled_interior_area_m2 <= 1e-8 && ribbon.preserved_buffer_symmetric_difference_area_m2 <= 1e-8, `${season} ribbon hole areas`);
+    positive(ribbon.run_count, `${season} ribbon run count`); check(ribbon.failed_run_count === 0, `${season} ribbon failed runs zero`);
+    check(ribbon.source_interior_ring_count === ribbon.final_interior_ring_count, `${season} ribbon ring count`);
+    check(ribbon.interior_ring_area_absolute_error_m2 <= 1e-8 && ribbon.filled_hole_area_m2 <= 1e-8 && ribbon.symmetric_difference_area_m2 <= 1e-8, `${season} ribbon hole areas`);
   }
   return { assertions: assertionCount, seasons: Object.keys(SEASONS), indexed_asset_count: runtime.indexed_assets.length };
 }
@@ -464,8 +542,110 @@ function validateTerrainManifest(manifest) {
   check(manifest.source_statistics.count === 284579268 && manifest.source_statistics.valid_pixels === 284579268, 'terrain exact valid source count', manifest.source_statistics);
   check(manifest.source_statistics.nodata_pixels === 43857468 && manifest.source_statistics.total_pixels === 328436736, 'terrain exact NoData/total source counts', manifest.source_statistics);
   close(manifest.source_statistics.valid_fraction + manifest.source_statistics.nodata_fraction, 1, 1e-12, 'terrain source fractions exhaust grid');
-  check(typeof manifest.lod_manifest_file === 'string' && typeof manifest.lod_qa_file === 'string', 'terrain LOD pointers missing');
-  check(typeof manifest.river_runtime_file === 'string' && typeof manifest.river_qa_file === 'string', 'terrain river pointers missing');
+  deepEqual({
+    lod_manifest_file: manifest.lod_manifest_file,
+    lod_qa_file: manifest.lod_qa_file,
+    river_runtime_file: manifest.river_runtime_file,
+    river_qa_file: manifest.river_qa_file,
+  }, {
+    lod_manifest_file: 'terrain_lod_manifest.json',
+    lod_qa_file: 'terrain_lod_qa.json',
+    river_runtime_file: 'river_drape_runtime.json',
+    river_qa_file: 'river_drape_qa.json',
+  }, 'terrain manifest four frozen asset pointers exact');
+  const height = manifest.height;
+  check(height && typeof height === 'object' && height.overview_only === true, 'terrain height must be an overview-only contract');
+  check(Number.isInteger(height.width) && height.width > 1 && Number.isInteger(height.height) && height.height > 1, 'terrain height overview dimensions');
+  check(Array.isArray(height.sample_center_bounds_epsg32649) && height.sample_center_bounds_epsg32649.length === 4 && height.sample_center_bounds_epsg32649.every(Number.isFinite), 'terrain height exact EPSG:32649 sample-center bounds');
+  check(Array.isArray(height.bounds_world_xz) && height.bounds_world_xz.length === 4 && height.bounds_world_xz.every(Number.isFinite), 'terrain height exact world X/Z bounds');
+  check(Array.isArray(height.actual_vertex_spacing_xy_m) && height.actual_vertex_spacing_xy_m.length === 2 && height.actual_vertex_spacing_xy_m.every(value => Number.isFinite(value) && value > 12.5), 'terrain height exact non-native X/Y overview spacing');
+  const [west, south, east, north] = height.sample_center_bounds_epsg32649;
+  const [centerEasting, centerNorthing] = manifest.center_epsg32649;
+  check(west < east && south < north, 'terrain height sample-center bounds ordered');
+  const derivedWorldBounds = [west - centerEasting, centerNorthing - north, east - centerEasting, centerNorthing - south];
+  close(vectorDistance(height.bounds_world_xz, derivedWorldBounds), 0, 1e-6, 'terrain height EPSG/world bounds exact transform');
+  close((east - west) / (height.width - 1), height.actual_vertex_spacing_xy_m[0], 1e-6, 'terrain height X sample-center span/spacing exact');
+  close((north - south) / (height.height - 1), height.actual_vertex_spacing_xy_m[1], 1e-6, 'terrain height Y sample-center span/spacing exact');
+  close(manifest.actual_vertex_spacing_m, Math.max(...height.actual_vertex_spacing_xy_m), 1e-6, 'terrain height/manifest actual overview spacing exact');
+  close(manifest.actual_vertex_spacing_m, EXPECTED_OVERVIEW_HEIGHT.actual_vertex_spacing_m, 1e-9, 'terrain production overview maximum spacing exact');
+  for (const [index, expected] of EXPECTED_OVERVIEW_HEIGHT.actual_vertex_spacing_xy_m.entries()) close(height.actual_vertex_spacing_xy_m[index], expected, 1e-9, `terrain production overview XY spacing[${index}] exact`);
+  for (const [index, expected] of EXPECTED_OVERVIEW_HEIGHT.sample_center_bounds_epsg32649.entries()) close(height.sample_center_bounds_epsg32649[index], expected, 1e-6, `terrain production sample-center bound[${index}] exact`);
+  for (const [index, expected] of EXPECTED_OVERVIEW_HEIGHT.bounds_world_xz.entries()) close(height.bounds_world_xz[index], expected, 1e-6, `terrain production world bound[${index}] exact`);
+  check(height.nodata_policy === NODATA_POLICY, 'terrain height frozen conservative NoData policy', height.nodata_policy);
+}
+
+function pickFields(object, keys) { return Object.fromEntries(keys.map(key => [key, object?.[key]])); }
+
+function validateRiverGroundingAcceptance(manifest, qa) {
+  const point = manifest.acceptance_points?.find(item => item.id === 'river-grounding');
+  const manifestReceipt = manifest.acceptance_source_qa?.river_grounding;
+  const qaReceipt = qa.native_acceptance?.source_validation?.river_grounding;
+  check(point && manifestReceipt && qaReceipt, 'river-grounding receipt present at all three frozen LOD paths');
+  deepEqual(manifestReceipt, qaReceipt, 'river-grounding manifest/QA source receipt deep equality');
+  deepEqual(pickFields(point, Object.keys(manifestReceipt)), manifestReceipt, 'river-grounding acceptance point contains the complete source receipt unchanged');
+  deepEqual(pickFields(point, RIVER_GROUNDING_CORE_FIELDS), pickFields(manifestReceipt, RIVER_GROUNDING_CORE_FIELDS), 'river-grounding acceptance-point/source receipt core equality');
+  const receipt = qaReceipt;
+  check(receipt.passed === true, 'river-grounding cross-slope receipt passed');
+  deepEqual(Object.keys(receipt.checks || {}).sort(), [...RIVER_GROUNDING_CHECK_KEYS].sort(), 'river-grounding exact twelve check keys');
+  allTrue(receipt.checks, 'river-grounding checks');
+  for (const key of ['original_centerline_lonlat', 'center_epsg32649', 'left_bank_epsg32649', 'right_bank_epsg32649', 'center_xz_m', 'left_bank_xz_m', 'right_bank_xz_m']) {
+    check(Array.isArray(receipt[key]) && receipt[key].length === 2 && receipt[key].every(Number.isFinite), `river-grounding ${key} finite pair`);
+  }
+  for (const key of ['center_terrain_height_m', 'left_bank_terrain_height_m', 'right_bank_terrain_height_m', 'left_minus_right_terrain_y_m', 'bank_delta_y_m', 'cross_slope', 'cross_slope_degrees', 'width', 'base_width_m', 'final_width_m']) finite(receipt[key], `river-grounding ${key}`);
+  check(receipt.centerline_coordinate_mutated === false, 'river-grounding original centerline coordinate unchanged');
+  check(receipt.season === 'summer' && receipt.width === SEASONS.summer.width, 'river-grounding uses exact summer visual width multiplier');
+  check(['li', 'xiang'].includes(receipt.system), 'river-grounding representative river system is Li/Xiang', receipt.system);
+  check(typeof receipt.name === 'string' && receipt.name.trim().length > 0, 'river-grounding representative source name present', receipt.name);
+  check(receipt.non_endpoint === true, 'river-grounding source vertex is not a line endpoint');
+  positive(receipt.base_width_m, 'river-grounding base width'); positive(receipt.final_width_m, 'river-grounding final width');
+  close(receipt.final_width_m, receipt.base_width_m * receipt.width, 1e-9, 'river-grounding final width derives from summer width');
+  for (const key of ['center_native_3x3_valid_count', 'left_bank_native_3x3_valid_count', 'right_bank_native_3x3_valid_count']) check(receipt[key] === 9, `river-grounding ${key} exact native 3x3 coverage`, receipt[key]);
+  check(Number.isInteger(receipt.source_feature_index) && receipt.source_feature_index >= 0 && Number.isInteger(receipt.source_vertex_index) && receipt.source_vertex_index >= 0, 'river-grounding source indices');
+  const constraints = receipt.candidate_constraints;
+  deepEqual(Object.keys(constraints || {}).sort(), [
+    'allowed_systems', 'bank_delta_y_minimum_m', 'center_left_right_native_3x3_valid',
+    'center_left_right_native_samples_valid', 'cross_slope_maximum', 'cross_slope_minimum',
+    'cross_slope_target', 'non_endpoint', 'ranking', 'season', 'source_name_required', 'width_multiplier',
+  ].sort(), 'river-grounding candidate constraint keys exact');
+  deepEqual(constraints.allowed_systems, ['li', 'xiang'], 'river-grounding allowed systems exact');
+  check(constraints.source_name_required === true && constraints.non_endpoint === true && constraints.center_left_right_native_samples_valid === true && constraints.center_left_right_native_3x3_valid === true, 'river-grounding candidate boolean constraints');
+  check(constraints.season === 'summer' && constraints.width_multiplier === SEASONS.summer.width, 'river-grounding candidate summer constraints');
+  close(constraints.bank_delta_y_minimum_m, 2, 0, 'river-grounding candidate minimum bank delta');
+  close(constraints.cross_slope_minimum, 0.02, 0, 'river-grounding candidate minimum cross slope');
+  close(constraints.cross_slope_maximum, 0.10, 0, 'river-grounding candidate maximum cross slope');
+  close(constraints.cross_slope_target, 0.06, 0, 'river-grounding candidate target cross slope');
+  deepEqual(constraints.ranking, ['final_width_m descending', 'absolute cross_slope distance from 0.06 ascending', 'cross_slope descending', 'bank_delta_y_m descending', 'source_feature_index ascending', 'source_vertex_index ascending'], 'river-grounding deterministic width-first representative-slope ranking');
+
+  const leftOffset = vectorDistance(receipt.center_xz_m, receipt.left_bank_xz_m);
+  const rightOffset = vectorDistance(receipt.center_xz_m, receipt.right_bank_xz_m);
+  const bankSpan = vectorDistance(receipt.left_bank_xz_m, receipt.right_bank_xz_m);
+  const leftOffsetEpsg = vectorDistance(receipt.center_epsg32649, receipt.left_bank_epsg32649);
+  const rightOffsetEpsg = vectorDistance(receipt.center_epsg32649, receipt.right_bank_epsg32649);
+  const bankSpanEpsg = vectorDistance(receipt.left_bank_epsg32649, receipt.right_bank_epsg32649);
+  check(bankSpan > 0 && leftOffset > 0 && rightOffset > 0, 'river-grounding left/right XZ are genuinely distinct');
+  close(leftOffset, receipt.final_width_m / 2, 1e-6, 'river-grounding left XZ is final half-width');
+  close(rightOffset, receipt.final_width_m / 2, 1e-6, 'river-grounding right XZ is final half-width');
+  close(bankSpan, receipt.final_width_m, 1e-6, 'river-grounding bank XZ span is final width');
+  close(leftOffsetEpsg, leftOffset, 1e-6, 'river-grounding left EPSG/world offset agrees');
+  close(rightOffsetEpsg, rightOffset, 1e-6, 'river-grounding right EPSG/world offset agrees');
+  close(bankSpanEpsg, bankSpan, 1e-6, 'river-grounding EPSG/world bank span agrees');
+  const signedDelta = receipt.left_bank_terrain_height_m - receipt.right_bank_terrain_height_m;
+  close(receipt.left_minus_right_terrain_y_m, signedDelta, 1e-9, 'river-grounding signed bank terrain delta exact');
+  close(receipt.bank_delta_y_m, Math.abs(signedDelta), 1e-9, 'river-grounding absolute bank terrain delta exact');
+  check(receipt.bank_delta_y_m >= 2 && receipt.bank_delta_y_m > 0, 'river-grounding readable nonzero bank height delta >=2m', receipt.bank_delta_y_m);
+  close(receipt.cross_slope, receipt.bank_delta_y_m / receipt.final_width_m, 1e-12, 'river-grounding cross-slope derives from bank delta/final width');
+  check(receipt.cross_slope >= 0.02 && receipt.cross_slope <= 0.10, 'river-grounding representative cross-slope within [0.02,0.10]', receipt.cross_slope);
+  close(receipt.cross_slope_degrees, Math.atan(receipt.cross_slope) * 180 / Math.PI, 1e-12, 'river-grounding slope degrees derive from slope');
+
+  terrainEvidence.river_grounding_cross_slope = {
+    receipt, paths_verified: [
+      'terrain_lod_manifest.acceptance_points[id=river-grounding]',
+      'terrain_lod_manifest.acceptance_source_qa.river_grounding',
+      'terrain_lod_qa.native_acceptance.source_validation.river_grounding',
+    ],
+    derived: { left_offset_m: leftOffset, right_offset_m: rightOffset, bank_span_m: bankSpan, signed_bank_delta_y_m: signedDelta },
+  };
+  return receipt;
 }
 
 function validateLodAssets(manifest, qa, terrainManifest) {
@@ -480,6 +660,18 @@ function validateLodAssets(manifest, qa, terrainManifest) {
   const counts = [1, 4, 9, 25, 90, 323, 1258, 5032];
   check(Array.isArray(manifest.levels) && manifest.levels.length === 8, 'LOD must have eight levels');
   check(manifest.levels.reduce((sum, level) => sum + level.tile_count, 0) === 6742, 'LOD exact total 6742 tiles');
+  check(Array.isArray(manifest.acceptance_points) && manifest.acceptance_points.length === NATIVE_ACCEPTANCE_TARGETS.length, 'LOD exact native acceptance point inventory');
+  deepEqual(manifest.acceptance_points.map(point => point.id).sort(), [...NATIVE_ACCEPTANCE_TARGETS].sort(), 'LOD/browser native acceptance ids exact');
+  for (const point of manifest.acceptance_points) {
+    check(point.required_level === 'native12_5m' && point.actual_vertex_spacing_m === 12.5, `${point.id} acceptance native spacing contract`);
+    check(point.native_available === true && point.native_mask_verified === true, `${point.id} acceptance native source verified`);
+    if (point.id === 'nodata') check(point.neighborhood_valid_pixel_count > 0 && point.neighborhood_nodata_pixel_count > 0 && point.gap_fill_applied === false, 'NoData acceptance mixed 600m source mask');
+    else check(point.native_3x3_valid_count === 9 && Number.isFinite(point.native_elevation_m) && Number.isFinite(point.native_slope_degrees), `${point.id} valid native 3x3/elevation/slope`);
+  }
+  check(qa.native_acceptance?.passed === true && qa.native_acceptance.all_required_available === true, 'LOD QA native acceptance passed');
+  deepEqual([...qa.native_acceptance.required_ids].sort(), [...NATIVE_ACCEPTANCE_TARGETS].sort(), 'LOD QA required native acceptance ids exact');
+  deepEqual([...qa.native_acceptance.available_ids].sort(), [...NATIVE_ACCEPTANCE_TARGETS].sort(), 'LOD QA available native acceptance ids exact');
+  validateRiverGroundingAcceptance(manifest, qa);
   for (const [index, level] of manifest.levels.entries()) {
     const prefix = `LOD level[${index}]`;
     check(level.id === level.level_id, `${prefix} id/level_id exact`);
@@ -804,14 +996,51 @@ async function validatePublishedRiverBinaries(page, runtime) {
   for (const asset of runtime.indexed_assets) {
     const { body, receipt } = await requestBuffer(page, `data/${asset.file}`, `river asset ${asset.file}`);
     check(receipt.bytes === asset.stored_bytes && receipt.sha256 === asset.sha256, `${asset.file} bytes/hash exact`);
-    if (asset.compression === 'gzip') {
-      const decoded = await gunzip(body);
-      check(decoded.length === asset.uncompressed_bytes && sha256(decoded) === asset.uncompressed_sha256, `${asset.file} uncompressed bytes/hash exact`);
-      check(decoded.length % 4 === 0, `${asset.file} scalar alignment`);
-    }
+    const decodedReceipt = await validateRiverBinaryBuffer(asset, body, runtime);
+    Object.assign(publishedAssets.binary.at(-1), decodedReceipt);
     publishedAssets.binary.at(-1).displayed_asset = expectedDisplayFiles.has(asset.file);
   }
   check(publishedAssets.binary.filter(item => item.displayed_asset).length === 8, 'all eight displayed river binaries actually HTTP 200');
+}
+
+async function validateRiverBinaryBuffer(asset, stored, runtime) {
+  check(stored.length === asset.stored_bytes && sha256(stored) === asset.sha256, `${asset.file} stored bytes/hash exact`);
+  const reference = Object.entries(runtime.seasons).flatMap(([season, value]) => {
+    const mesh = value.serialized_global_display_mesh;
+    return [
+      { season, kind: 'positions', file: mesh.positions_file, mesh },
+      { season, kind: 'indices', file: mesh.indices_file, mesh },
+    ];
+  }).find(item => item.file === asset.file);
+  if (!reference) {
+    check(asset.file.endsWith('.f32') && !asset.file.endsWith('.gz'), `${asset.file} non-display audit encoding`);
+    check(stored.length > 0 && stored.length % 12 === 0, `${asset.file} raw Float32 XYZ alignment`);
+    for (let offset = 0; offset < stored.length; offset += 4) check(Number.isFinite(stored.readFloatLE(offset)), `${asset.file} finite Float32 audit scalar`);
+    return { decoded: true, encoding: 'float32-little-endian-xyz', decoded_bytes: stored.length, decoded_sha256: sha256(stored), scalar_count: stored.length / 4 };
+  }
+  const { mesh, season, kind } = reference;
+  check(mesh.position_compression === 'gzip' && mesh.index_compression === 'gzip', `${season} serialized references gzip`);
+  if (kind === 'positions') {
+    check(mesh.position_stored_bytes === asset.stored_bytes && mesh.position_sha256 === asset.sha256, `${season} position reference/indexed asset exact`);
+  } else {
+    check(mesh.index_stored_bytes === asset.stored_bytes && mesh.index_sha256 === asset.sha256, `${season} index reference/indexed asset exact`);
+  }
+  const decoded = await gunzip(stored);
+  if (kind === 'positions') {
+    check(decoded.length === mesh.vertex_count * 3 * 4, `${season} decoded positions exactly vertex_count*XYZ*f32`, { decoded_bytes: decoded.length, vertex_count: mesh.vertex_count });
+    for (let offset = 0; offset < decoded.length; offset += 4) check(Number.isFinite(decoded.readFloatLE(offset)), `${season} decoded position finite`);
+  } else {
+    check(decoded.length === mesh.index_count * 4, `${season} decoded indices exactly index_count*u32`, { decoded_bytes: decoded.length, index_count: mesh.index_count });
+    check(mesh.triangle_count * 3 === mesh.index_count, `${season} triangle/index count exact`);
+    let maximumIndex = 0;
+    for (let offset = 0; offset < decoded.length; offset += 4) maximumIndex = Math.max(maximumIndex, decoded.readUInt32LE(offset));
+    check(maximumIndex < mesh.vertex_count, `${season} every global index is within welded vertex array`, { maximumIndex, vertex_count: mesh.vertex_count });
+  }
+  return {
+    decoded: true, compression: 'gzip', season, kind,
+    decoded_bytes: decoded.length, decoded_sha256: sha256(decoded),
+    scalar_count: decoded.length / 4,
+  };
 }
 
 function validateLodRuntime(lod, expectedCase = null) {
@@ -819,16 +1048,22 @@ function validateLodRuntime(lod, expectedCase = null) {
   check(lod.loading === false && lod.debounce_pending === false, 'LOD stable flags');
   check(lod.request_revision === lod.active_revision, 'LOD request/active revision exact');
   check(Array.isArray(lod.active_tiles) && lod.active_tiles.length > 0, 'LOD active tiles non-vacuous');
+  check(lod.active_tiles.length <= 36, 'LOD active tile union bounded to 36', lod.active_tiles.length);
   check(Array.isArray(lod.active_resolutions_m) && lod.active_resolutions_m.length > 0, 'LOD active resolutions non-vacuous');
   check(Array.isArray(lod.load_errors) && lod.load_errors.length === 0, 'LOD load errors zero', lod.load_errors);
   if (expectedCase) {
     const focusSpacing = lod.focus_actual_vertex_spacing_m ?? lod.target_actual_vertex_spacing_m;
     close(focusSpacing, expectedCase.expected_max_resolution_m, 1e-6, `LOD ${expectedCase.distance_m} focus spacing`);
+    close(lod.actual_vertex_spacing_m, expectedCase.expected_max_resolution_m, 1e-6, `LOD ${expectedCase.distance_m} displayed actual spacing follows active focus, not overview backdrop`);
     check(lod.active_resolutions_m.some(value => Math.abs(value - expectedCase.expected_max_resolution_m) <= 1e-6), `LOD ${expectedCase.distance_m} active focus level present`, lod.active_resolutions_m);
     check(lod.native_12_5m_claim_allowed === expectedCase.native, `LOD ${expectedCase.distance_m} native claim exact`, lod.native_12_5m_claim_allowed);
     if (expectedCase.native) {
       allTrue(lod.native_claim_checks, `LOD ${expectedCase.distance_m} native_claim_checks`);
       check(lod.source_actual_spacing_m === 12.5 || lod.actual_vertex_spacing_m === 12.5, `LOD ${expectedCase.distance_m} actual native spacing`);
+      close(lod.focus_actual_vertex_spacing_m, 12.5, 0, `LOD ${expectedCase.distance_m} focus actual native spacing`);
+      check(lod.native_12_5m_focus_covered === true, `LOD ${expectedCase.distance_m} focus native covered`);
+      close(lod.camera_actual_vertex_spacing_m, 12.5, 0, `LOD ${expectedCase.distance_m} camera-position actual native spacing`);
+      check(lod.camera_native_12_5m_covered === true, `LOD ${expectedCase.distance_m} camera-position native covered`);
     }
   }
 }
@@ -852,6 +1087,17 @@ async function setLodDistance(page, focusId, item) {
   const returned = await page.evaluate(async ({ focusId, distance_m }) => window.__XIAOGUI_QA.setLodTestDistance({ focus_id: focusId, distance_m }), { focusId, distance_m: item.distance_m });
   await waitForLodStable(page); await render(page);
   const contracts = await readContracts(page); validateLodRuntime(contracts.lod, item);
+  const hud = await page.evaluate(() => ({
+    current_lod: document.querySelector('#currentLodPanel')?.textContent?.trim() || null,
+    actual_spacing: document.querySelector('#actualSpacingPanel')?.textContent?.trim() || null,
+  }));
+  check(typeof hud.current_lod === 'string' && hud.current_lod.length > 0 && typeof hud.actual_spacing === 'string' && hud.actual_spacing.length > 0, `LOD ${item.distance_m} HUD fields non-empty`, hud);
+  check(hud.current_lod === contracts.lod.current_lod, `LOD ${item.distance_m} HUD current LOD exact with contract`, { hud: hud.current_lod, contract: contracts.lod.current_lod });
+  const hudSpacing = Number(hud.actual_spacing.match(/\d+(?:\.\d+)?/)?.[0]);
+  close(hudSpacing, contracts.lod.actual_vertex_spacing_m, 0.051, `LOD ${item.distance_m} HUD/contract actual spacing`);
+  close(hudSpacing, item.expected_max_resolution_m, 0.051, `LOD ${item.distance_m} HUD threshold spacing`);
+  if (item.native) check(/native12_5m|12\.5\s*m/i.test(hud.current_lod), 'native threshold HUD identifies 12.5m');
+  if (item.distance_m === 112010) check(/800\s*m/i.test(hud.current_lod) && !/overview/i.test(hud.current_lod), '112010m HUD is active 800m LOD, not overview backdrop', hud.current_lod);
   if (item.native) {
     check(contracts.elevation.runtime_native_active === true, `${focusId}@${item.distance_m} elevation native active`);
     positive(contracts.elevation.source_correspondence.sample_count, `${focusId}@${item.distance_m} elevation correspondence samples`);
@@ -859,7 +1105,7 @@ async function setLodDistance(page, focusId, item) {
   }
   const seamProbe = await page.evaluate(() => window.__XIAOGUI_QA.probeLodSeamTopology());
   validateRuntimeSeamProbe(seamProbe, `${focusId}@${item.distance_m}`);
-  const record = { focus_id: focusId, distance_m: item.distance_m, hook_receipt: returned, lod: contracts.lod, actual_seam_probe: seamProbe };
+  const record = { focus_id: focusId, distance_m: item.distance_m, hook_receipt: returned, hud, lod: contracts.lod, actual_seam_probe: seamProbe };
   lodEvidence.threshold_matrix.push(record); lodEvidence.runtime_seam_probes.push({ focus_id: focusId, distance_m: item.distance_m, ...seamProbe });
   return record;
 }
@@ -867,6 +1113,7 @@ async function setLodDistance(page, focusId, item) {
 async function validateNativeNeighborhoods(page) {
   const nativeCase = LOD_CASES[0];
   for (const target of NATIVE_ACCEPTANCE_TARGETS) {
+    await trustedTargetClick(page, target);
     await setLodDistance(page, target, nativeCase);
     const sample = await page.evaluate(async target => window.__XIAOGUI_QA.sampleNativeTerrainNeighborhood({ focus_id: target, radius_m: 75, step_m: 12.5 }), target);
     check(sample?.native_12_5m_only === true && sample.actual_spacing_m === 12.5, `${target} native neighborhood source`);
@@ -911,17 +1158,33 @@ async function validateWireframeDiagnostic(page) {
   const toggle = page.locator('#wireToggle'); check(await toggle.count() === 1, 'wireToggle exists');
   if (await toggle.isChecked()) await toggle.click();
   const before = await readContracts(page); check(before.render.wireframe_all_active === false || before.render.wireframe_active_material_count === 0, 'wireframe starts off');
+  const offPageShot = await capture(page, 'terrain-wireframe-off-control-current-lod-page');
+  const offCanvasShot = await capture(page, 'terrain-wireframe-off-control-current-lod-canvas', { canvas: true });
   await toggle.click(); check(await toggle.isChecked(), 'trusted wireToggle on'); await render(page);
   const enabled = await readContracts(page);
   positive(enabled.render.terrain_material_count, 'terrain material count');
   check(enabled.render.wireframe_all_active === true && enabled.render.wireframe_active_material_count === enabled.render.terrain_material_count, 'wireframe applied to all active terrain materials');
   const domDiagnostics = await page.evaluate(() => ({
     toggle_checked: document.querySelector('#wireToggle')?.checked,
-    lod_text: document.querySelector('#lodStatus, #lodDiagnostics, [data-lod-diagnostics]')?.textContent?.trim() || null,
+    current_lod: document.querySelector('#currentLodPanel')?.textContent?.trim() || null,
+    actual_spacing: document.querySelector('#actualSpacingPanel')?.textContent?.trim() || null,
+    seam_status: document.querySelector('#seamStatus')?.textContent?.trim() || null,
   }));
+  check(domDiagnostics.toggle_checked === true, 'wire diagnostic DOM toggle on');
+  for (const key of ['current_lod', 'actual_spacing', 'seam_status']) check(typeof domDiagnostics[key] === 'string' && domDiagnostics[key].length > 0, `wire diagnostic DOM ${key} non-empty`, domDiagnostics);
+  check(/native12_5m|12\.5\s*m/i.test(domDiagnostics.current_lod), 'wire diagnostic current LOD identifies native 12.5m', domDiagnostics.current_lod);
+  check(domDiagnostics.actual_spacing.replace(/\s+/g, '').includes('12.5m'), 'wire diagnostic actual spacing contains 12.5m', domDiagnostics.actual_spacing);
+  check(/pass|通过|通過/i.test(domDiagnostics.seam_status), 'wire diagnostic seam status reports pass', domDiagnostics.seam_status);
   const pageShot = await capture(page, 'terrain-wireframe-current-lod-diagnostics-page');
   const canvasShot = await capture(page, 'terrain-wireframe-current-lod-diagnostics-canvas', { canvas: true });
-  lodEvidence.wireframe_diagnostic = { dom: domDiagnostics, render: enabled.render, lod: enabled.lod, screenshots: [pageShot.item.file, canvasShot.item.file] };
+  const pixelDifference = await pixelDiff(offCanvasShot.buffer, canvasShot.buffer);
+  requireMaterialPixelDifference(pixelDifference, 'terrain wireframe off/on');
+  lodEvidence.wireframe_diagnostic = {
+    dom: domDiagnostics, render: enabled.render, lod: enabled.lod,
+    screenshots: [offPageShot.item.file, offCanvasShot.item.file, pageShot.item.file, canvasShot.item.file],
+    screenshot_receipts: [offPageShot.item, offCanvasShot.item, pageShot.item, canvasShot.item],
+    off_vs_on_pixel_difference: pixelDifference,
+  };
   await toggle.click(); check(!(await toggle.isChecked()), 'trusted wireToggle restored off'); await render(page);
   const restored = await readContracts(page); check(restored.render.wireframe_all_active === false && restored.render.wireframe_active_material_count === 0, 'wireframe materials restored off');
 }
@@ -1108,15 +1371,88 @@ async function captureRiverOcclusionCase(page, { season, target, view, distance 
   await shot('empty-control', false, false, 'production');
   await shot('unoccluded-reference', false, true, 'production');
   const metrics = await occlusionMetrics(Object.fromEntries(Object.entries(modes).map(([key, value]) => [key.replace('-control', '').replace('-mask', '').replace('unoccluded-', ''), value.buffer])), view);
+  const productionVsTerrain = await pixelDiff(modes.production.buffer, modes['terrain-control'].buffer);
+  requireMaterialPixelDifference(productionVsTerrain, `${slug} depth-safe river production versus terrain control`);
   await page.evaluate(async () => { await window.__XIAOGUI_QA.setTerrainVisible(true); await window.__XIAOGUI_QA.setHydrologyVisible(true); await window.__XIAOGUI_QA.setRiverMaskMode('production'); await window.__XIAOGUI_QA.renderNow(); });
-  const record = { season, target, view, distance_m: distance, season_receipt: isolatedSeasonReceipt[season], metrics, screenshots: Object.fromEntries(Object.entries(modes).map(([key, value]) => [key, value.item.file])) };
+  const record = { season, target, view, distance_m: distance, season_receipt: isolatedSeasonReceipt[season], metrics, production_vs_terrain_pixel_difference: productionVsTerrain, screenshots: Object.fromEntries(Object.entries(modes).map(([key, value]) => [key, value.item.file])) };
   riverVisualEvidence.cases.push(record); return record;
+}
+
+function projectWorldPoint(camera, viewport, point) {
+  const subtract = (a, b) => a.map((value, index) => value - b[index]);
+  const dot = (a, b) => a.reduce((sum, value, index) => sum + value * b[index], 0);
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const normalize = value => { const length = Math.sqrt(dot(value, value)); check(length > 1e-9, 'camera projection basis non-degenerate'); return value.map(item => item / length); };
+  const forward = normalize(subtract(camera.target, camera.position));
+  const right = normalize(cross(forward, [0, 1, 0]));
+  const up = cross(right, forward);
+  const relative = subtract(point, camera.position); const depth = dot(relative, forward);
+  positive(depth, 'projected grounding bank lies in front of camera');
+  const tangent = Math.tan(camera.fov_deg * Math.PI / 360); const aspect = viewport.width / viewport.height;
+  const ndc = [dot(relative, right) / (depth * tangent * aspect), dot(relative, up) / (depth * tangent)];
+  return { world: point, ndc, depth_m: depth, x: (ndc[0] * 0.5 + 0.5) * viewport.width, y: (-ndc[1] * 0.5 + 0.5) * viewport.height };
+}
+
+async function validateRiverGroundingCrossSlopeCloseup(page) {
+  const receipt = terrainEvidence.river_grounding_cross_slope?.receipt;
+  check(receipt, 'validated river-grounding cross-slope receipt available for visual evidence');
+  const isolatedSeasonReceipt = {};
+  await clickSeason(page, 'summer', publishedRiverRuntime, publishedRiverQa, isolatedSeasonReceipt);
+  await setLodDistance(page, 'river-grounding', LOD_CASES[0]);
+  const bankDx = receipt.right_bank_xz_m[0] - receipt.left_bank_xz_m[0];
+  const bankDz = receipt.right_bank_xz_m[1] - receipt.left_bank_xz_m[1];
+  const bankLength = Math.hypot(bankDx, bankDz); positive(bankLength, 'river-grounding bank direction length');
+  const tangent = [-bankDz / bankLength, bankDx / bankLength];
+  const target = [receipt.center_xz_m[0], (receipt.left_bank_terrain_height_m + receipt.right_bank_terrain_height_m) / 2 + 0.35, receipt.center_xz_m[1]];
+  const position = [target[0] + tangent[0] * 420, target[1] + 160, target[2] + tangent[1] * 420];
+  await page.evaluate(async pose => { await window.__XIAOGUI_QA.setCameraPose(pose); await window.__XIAOGUI_QA.renderNow(); }, { position, target });
+  await waitForLodStable(page);
+  const productionContracts = await readContracts(page); validateCameraContract(productionContracts.camera, 'river-grounding cross-slope close-up camera');
+  validateLodRuntime(productionContracts.lod, LOD_CASES[0]);
+  const canvasBox = await page.locator('#viewer canvas').boundingBox();
+  check(canvasBox && canvasBox.width > 200 && canvasBox.height > 200, 'river-grounding close-up canvas dimensions');
+  const viewport = { width: canvasBox.width, height: canvasBox.height };
+  const leftProjection = projectWorldPoint(productionContracts.camera, viewport, [receipt.left_bank_xz_m[0], receipt.left_bank_terrain_height_m + 0.35, receipt.left_bank_xz_m[1]]);
+  const rightProjection = projectWorldPoint(productionContracts.camera, viewport, [receipt.right_bank_xz_m[0], receipt.right_bank_terrain_height_m + 0.35, receipt.right_bank_xz_m[1]]);
+  for (const [name, projection] of Object.entries({ left: leftProjection, right: rightProjection })) {
+    check(Math.abs(projection.ndc[0]) <= 0.95 && Math.abs(projection.ndc[1]) <= 0.95, `river-grounding ${name} bank safely inside close-up viewport`, projection);
+  }
+  const projectedBankSpan = Math.hypot(leftProjection.x - rightProjection.x, leftProjection.y - rightProjection.y);
+  const projectedBankVerticalSeparation = Math.abs(leftProjection.y - rightProjection.y);
+  check(projectedBankSpan >= 80, 'river-grounding banks have independently readable projected separation >=80px', projectedBankSpan);
+  check(projectedBankVerticalSeparation >= 30, 'river-grounding terrain bank height delta has readable projected vertical separation >=30px', projectedBankVerticalSeparation);
+
+  await page.evaluate(async time => {
+    await window.__XIAOGUI_QA.setTerrainVisible(true); await window.__XIAOGUI_QA.setHydrologyVisible(true);
+    await window.__XIAOGUI_QA.setRiverMaskMode('production'); await window.__XIAOGUI_QA.setWaterTime(time); await window.__XIAOGUI_QA.renderNow();
+  }, WATER_TIME);
+  const productionPage = await capture(page, 'fixed-river-grounding-summer-cross-slope-closeup-page');
+  const productionCanvas = await capture(page, 'fixed-river-grounding-summer-cross-slope-closeup-canvas', { canvas: true });
+  const productionCamera = cameraState((await readContracts(page)).camera);
+  await page.evaluate(async () => { await window.__XIAOGUI_QA.setHydrologyVisible(false); await window.__XIAOGUI_QA.renderNow(); });
+  const terrainPage = await capture(page, 'fixed-river-grounding-summer-cross-slope-terrain-control-page');
+  const terrainCanvas = await capture(page, 'fixed-river-grounding-summer-cross-slope-terrain-control-canvas', { canvas: true });
+  const terrainCamera = cameraState((await readContracts(page)).camera);
+  for (const key of ['position', 'target', 'matrix_world', 'projection_matrix']) close(vectorDistance(productionCamera[key], terrainCamera[key]), 0, 1e-9, `river-grounding close-up same-camera ${key}`);
+  close(productionCamera.distance, terrainCamera.distance, 1e-9, 'river-grounding close-up same-camera distance');
+  const materialDifference = await pixelDiff(productionCanvas.buffer, terrainCanvas.buffer);
+  requireMaterialPixelDifference(materialDifference, 'river-grounding cross-slope production versus terrain control');
+  await page.evaluate(async () => { await window.__XIAOGUI_QA.setHydrologyVisible(true); await window.__XIAOGUI_QA.renderNow(); });
+  riverVisualEvidence.grounding_cross_slope_closeup = {
+    season: 'summer', source_receipt: receipt, camera: productionCamera,
+    bank_projection: { viewport, left: leftProjection, right: rightProjection, projected_bank_span_px: projectedBankSpan, projected_bank_vertical_separation_px: projectedBankVerticalSeparation },
+    same_camera_terrain_control: terrainCamera, production_vs_terrain_pixel_difference: materialDifference,
+    screenshots: [productionPage.item.file, productionCanvas.item.file, terrainPage.item.file, terrainCanvas.item.file],
+    screenshot_receipts: [productionPage.item, productionCanvas.item, terrainPage.item, terrainCanvas.item],
+    season_receipt: isolatedSeasonReceipt.summer,
+  };
 }
 
 let publishedRiverRuntime = null;
 let publishedRiverQa = null;
 
 async function validateRiverVisualEvidence(page) {
+  await validateRiverGroundingCrossSlopeCloseup(page);
   for (const season of Object.keys(SEASONS)) {
     await captureRiverOcclusionCase(page, { season, target: 'river-grounding', view: 'overhead' });
     await captureRiverOcclusionCase(page, { season, target: 'river-grounding', view: 'low-glancing' });
@@ -1249,6 +1585,7 @@ async function persistEvidence() {
     root_url: ROOT_URL, assertion_count: assertionCount, screenshot_count: screenshotInventory.length,
     requirements: {
       exact_desktop_viewport: DESKTOP, exact_mobile_viewport: MOBILE, minimum_screenshots: REQUIRED_SCREENSHOT_COUNT,
+      fixed_screenshot_targets: TARGETS, native_acceptance_targets: NATIVE_ACCEPTANCE_TARGETS,
       console_page_request_http404_zero: diagnostics.passed, public_live_vendor_no_interception: true,
       frozen_water_time: WATER_TIME, actual_renderer_fps_gate: 20,
     },
@@ -1293,8 +1630,17 @@ async function runFixtureReplay(directory) {
     fs.readFile(path.join(directory, 'river_drape_qa.json'), 'utf8'),
   ]);
   const before = assertionCount;
-  const receipt = validateRiverAssets(JSON.parse(runtimeText), JSON.parse(qaText));
-  process.stdout.write(`${JSON.stringify({ schema: 'guilin-v072-browser-river-fixture-replay/v1', passed: true, fixture_directory: directory, assertions: assertionCount - before, receipt }, null, 2)}\n`);
+  const runtime = JSON.parse(runtimeText); const receipt = validateRiverAssets(runtime, JSON.parse(qaText));
+  const binaryReceipts = [];
+  for (const asset of runtime.indexed_assets) {
+    const stored = await fs.readFile(path.join(directory, asset.file));
+    binaryReceipts.push({ file: asset.file, stored_bytes: stored.length, stored_sha256: sha256(stored), ...(await validateRiverBinaryBuffer(asset, stored, runtime)) });
+  }
+  process.stdout.write(`${JSON.stringify({
+    schema: 'guilin-v072-browser-river-fixture-replay/v1', passed: true,
+    fixture_directory: directory, assertions: assertionCount - before, receipt,
+    binary_receipts: binaryReceipts,
+  }, null, 2)}\n`);
 }
 
 async function runBrowserQa() {

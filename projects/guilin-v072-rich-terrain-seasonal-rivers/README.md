@@ -21,11 +21,11 @@ This Draft project extends the verified Guilin coordinate contract without alter
 
 ## Terrain LOD truth
 
-- `terrain_height_u16.png` is an overview-only `1024 × 1110` backdrop. It is not described as 12.5 m near-field geometry.
+- `terrain_height_u16.bin` is an overview-only `1024 × 1110` backdrop. It is not described as 12.5 m near-field geometry.
 - Runtime geometry uses eight deterministic tiled levels with strides `128, 64, 32, 16, 8, 4, 2, 1` and tile counts `1, 4, 9, 25, 90, 323, 1258, 5032` respectively: 6,742 gzip tiles total.
 - The native stride-1 layer is the only layer that claims complete source-centre-domain coverage and supplies 12.5 m vertex spacing near the camera and fixed acceptance locations.
 - Non-divisible coarse grids do not invent a nonuniform final sample and do not claim full-domain coverage. The overview-only backdrop covers the narrow east/south edge strips when a coarse LOD is visible; it is not evidence of native geometry.
-- Adjacent tile ownership is deterministic. Shared boundary samples are identical, mixed-LOD alignment is checked, and cracks are eliminated through shared topology rather than visual skirts.
+- Same-level shared samples are measured offline and must match exactly. Mixed-level continuity is not inferred from source alignment alone: it must be demonstrated on the final `BufferGeometry` by the runtime seam probe and fixed visual evidence. The current renderer explicitly uses coarse-tile shader clipping plus fine-tile transition skirts (edge curtains) at raster edges; until those runtime and visual gates pass, this project does not claim that mixed-LOD cracks are eliminated.
 - The page reports current LOD, actual vertex spacing, source resolution, valid coverage, and NoData ratio at runtime.
 - Native tile decoding is compared with source DEM samples. P95 and maximum errors must satisfy the generated elevation QA contract before publication.
 
