@@ -1,0 +1,221 @@
+name: Verify terrain hydrology workbench v2.1 public
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/terrain-hydrology-workbench-v210-public-qa.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: terrain-hydrology-workbench-v210-public-qa
+  cancel-in-progress: false
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/
+  TARGET_DIR: terrain-hydrology-workbench-v200
+  SITE_SOURCE_HEAD: b1a1bb1dfbfa10e03182aab33ab5d5c270449443
+
+jobs:
+  verify-public-v210:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+
+    steps:
+      - name: Checkout current workbench branch
+        uses: actions/checkout@v4
+        with:
+          ref: skill/dem-procedural-landscape-v010
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Chromium QA dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for the v2.1 Pages payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-v210"
+          ready=false
+          for attempt in $(seq 1 60); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v210/index.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}intake.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v210/intake.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}renderer.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v210/renderer.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}shaders.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v210/shaders.js"; then
+              if grep -Fq '工作台 v2.1' "$RUNNER_TEMP/public-v210/index.html" \
+                && grep -Fq 'terrain-hydrology-reference-intake@2.1.0' "$RUNNER_TEMP/public-v210/intake.js" \
+                && grep -Fq 'Math.max(requested, 1025)' "$RUNNER_TEMP/public-v210/renderer.js" \
+                && grep -Fq 'uPatchUvOrigin' "$RUNNER_TEMP/public-v210/shaders.js"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$ready" = true
+
+      - name: Run fresh public desktop and mobile Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/terrain_hydrology/browser_qa_v200.py \
+            --url "${PUBLIC_URL}?verify=${GITHUB_SHA}" \
+            --output "$RUNNER_TEMP/public-browser-qa-v210"
+
+      - name: Publish v2.1 public evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "$RUNNER_TEMP/pages"
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          root = Path(os.environ['RUNNER_TEMP'])
+          report = json.loads((root / 'public-browser-qa-v210' / 'report.json').read_text(encoding='utf-8'))
+          manifest = json.loads((root / 'pages' / os.environ['TARGET_DIR'] / 'manifest.json').read_text(encoding='utf-8'))
+          evidence = {
+              'schema': 'terrain-hydrology-workbench-release-evidence@2.1.0',
+              'verifiedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'skill/dem-procedural-landscape-v010',
+              'siteSourceHead': os.environ['SITE_SOURCE_HEAD'],
+              'verificationHead': os.environ['GITHUB_SHA'],
+              'workflowRunId': int(os.environ['GITHUB_RUN_ID']),
+              'publicUrl': os.environ['PUBLIC_URL'],
+              'entryHttpStatus': 200,
+              'directEntry': True,
+              'redirectShell': False,
+              'queryRoutingRequired': False,
+              'runtime': {
+                  'version': '2.1',
+                  'heightInterpolation': 'manual-bilinear',
+                  'desktopFocusMesh': [1025, 1025],
+                  'mobileFocusMesh': [513, 513],
+                  'adaptiveFocusPatch': True,
+                  'minimumCameraDistanceMeters': 12,
+                  'truthSpacingMeters': 12.5,
+                  'displayTessellationIsSurveyPrecision': False,
+              },
+              'referenceIntake': {
+                  'schema': 'terrain-hydrology-reference-intake@2.1.0',
+                  'originalImageBytesEmbedded': True,
+                  'browserPersistence': 'IndexedDB',
+                  'requiresPackageUploadToChatOrCodex': True,
+              },
+              'regions': [
+                  {
+                      'id': region['id'],
+                      'grid': region['grid'],
+                      'exactMetricSlice': region['exactMetricSlice'],
+                      'sourceResampled': region['source']['resampled'],
+                      'truthLabel': region['truthLabel'],
+                      'assetHashes': region['assets']['hashes'],
+                  }
+                  for region in manifest['regions']
+              ],
+              'publicBrowserQa': {
+                  'passed': report['passed'],
+                  'viewports': [run['viewport'] for run in report['runs']],
+                  'consoleErrors': sum(len(run['consoleErrors']) for run in report['runs']),
+                  'pageErrors': sum(len(run['pageErrors']) for run in report['runs']),
+                  'failedRequests': sum(len(run['failedRequests']) for run in report['runs']),
+                  'focusChecks': [check for run in report['runs'] for check in run.get('focusChecks', [])],
+              },
+              'truthBoundary': manifest['release'],
+          }
+          assert evidence['publicBrowserQa']['passed'] is True
+          evidence_path = root / 'pages' / os.environ['TARGET_DIR'] / 'release-evidence.json'
+          evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          (root / 'terrain-hydrology-workbench-v210-public-evidence.json').write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          cd "$RUNNER_TEMP/pages"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_DIR/release-evidence.json"
+          git commit -m "Record public terrain hydrology v2.1 evidence"
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            sleep $((attempt * 5))
+          done
+
+      - name: Verify published v2.1 evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          verified=false
+          for attempt in $(seq 1 36); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+              "${PUBLIC_URL}release-evidence.json?verify=${nonce}" \
+              -o "$RUNNER_TEMP/published-v210-evidence.json"; then
+              if python - <<'PY'
+          import json, os
+          from pathlib import Path
+          evidence = json.loads((Path(os.environ['RUNNER_TEMP']) / 'published-v210-evidence.json').read_text(encoding='utf-8'))
+          assert evidence['schema'] == 'terrain-hydrology-workbench-release-evidence@2.1.0'
+          assert evidence['verificationHead'] == os.environ['GITHUB_SHA']
+          assert evidence['workflowRunId'] == int(os.environ['GITHUB_RUN_ID'])
+          assert evidence['entryHttpStatus'] == 200
+          assert evidence['publicBrowserQa']['passed'] is True
+          assert evidence['runtime']['adaptiveFocusPatch'] is True
+          assert evidence['referenceIntake']['originalImageBytesEmbedded'] is True
+          PY
+              then
+                verified=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$verified" = true
+
+      - name: Upload public v2.1 QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-hydrology-workbench-v210-public-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/terrain-hydrology-workbench-v210-public-evidence.json
+            ${{ runner.temp }}/published-v210-evidence.json
+            ${{ runner.temp }}/public-browser-qa-v210/**
+            ${{ runner.temp }}/public-v210/**
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+
+      - name: Write direct public URL to summary
+        if: success()
+        run: |
+          {
+            echo '## 三地区高精度真实地貌与水系工作台 v2.1'
+            echo
+            echo "$PUBLIC_URL"
+            echo
+            echo 'Public v2.1 payload, original-image intake package, adaptive close-detail patch, and fresh desktop/mobile Chromium QA passed.'
+          } >> "$GITHUB_STEP_SUMMARY"
