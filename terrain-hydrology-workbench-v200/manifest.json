@@ -1,0 +1,275 @@
+{
+  "schema": "terrain-hydrology-workbench@2.0.0",
+  "generatedAt": "2026-08-27T03:10:32.461464+00:00",
+  "title": "三地区高精度真实地貌与水系工作台",
+  "directPublicPath": "/terrain-hydrology-workbench-v200/",
+  "scope": [
+    "terrain",
+    "terrace",
+    "hydrology"
+  ],
+  "excludedRuntimeScope": [
+    "trees",
+    "shrubs",
+    "grass",
+    "crops",
+    "canopy"
+  ],
+  "regions": [
+    {
+      "id": "guilin",
+      "code": "GUILIN",
+      "title": "桂林真实喀斯特地貌",
+      "subtitle": "桂林古城中心 10 km × 10 km，12.5 m 原像元整数窗口",
+      "truthLabel": "12.5 m 已验证真实裁片",
+      "sourceSummary": "桂林 12.5 m 高程二进制，中心 800 × 800 原像元",
+      "lineage": "由已验证的 guilin-old-city 1132 × 1132 高程源按整数像元裁切，没有重采样和合成填洞。",
+      "knowledgePath": "knowledge/terrain-hydrology/guilin/inbox/",
+      "world": {
+        "widthMeters": 10000,
+        "heightMeters": 10000
+      },
+      "grid": {
+        "width": 800,
+        "height": 800,
+        "spacingMeters": [
+          12.5,
+          12.5
+        ]
+      },
+      "bounds": [
+        424462.5,
+        2790487.5,
+        434462.5,
+        2800487.5
+      ],
+      "crs": "EPSG:32649",
+      "encoding": {
+        "offset": 91.5,
+        "scale": 0.004341234571102273
+      },
+      "elevation": {
+        "min": 91.5,
+        "max": 376.0028076171875,
+        "mean": 141.44964599609375,
+        "std": 25.25619125366211
+      },
+      "assets": {
+        "root": "./assets/guilin",
+        "height": "height_u16.bin",
+        "mask": "mask_u8.bin",
+        "hydrology": "hydrology.png",
+        "preview": "preview.png",
+        "hashes": {
+          "height": "60334cc7932a92056b8f9a0e45dd69b0ea8b7c094697592692da81b72c20097d",
+          "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
+          "hydrology": "c6b886a99dcdfad0a72e35e6612ad5da378232e56c221280c0954a1955b458cb",
+          "preview": "a2f055e3aea35e1972924473214d8d6c8d07a7b5848e122af8bc15958a902cce"
+        }
+      },
+      "render": {
+        "cardMesh": 257,
+        "focusMesh": 800
+      },
+      "hydrology": {
+        "summary": "现代 OSM 水系参考与地形汇流诊断分层显示",
+        "sourceRole": "modern reference and derived diagnostic",
+        "vectorCounts": {
+          "waterAreas": 90,
+          "mainRivers": 10,
+          "minorRivers": 82,
+          "coastline": 0
+        },
+        "derivedFlowDiagnostic": true,
+        "derivedFlowAuthoritative": false,
+        "realAreaPixels": 16061,
+        "realMainRiverPixels": 13969,
+        "realMinorRiverPixels": 9557,
+        "coastOrWetPixels": 512417
+      },
+      "source": {
+        "path": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/web/assets/fine-regions/guilin-old-city/height_u16.bin",
+        "grid": [
+          1132,
+          1132
+        ],
+        "validFraction": 1.0,
+        "resampled": false
+      },
+      "exactMetricSlice": true
+    },
+    {
+      "id": "wenzhou",
+      "code": "WENZHOU",
+      "title": "温州清江山海地貌",
+      "subtitle": "清江镇中心 10 km × 10 km，权威 12.5 m COG 原像元窗口",
+      "truthLabel": "12.5 m 权威 COG 精确裁片",
+      "sourceSummary": "温州清江 22000 km² 权威陆地 COG，中心 800 × 800 原像元",
+      "lineage": "Git LFS 权威 COG 经过 SHA256、CRS、网格和像元间距验证后，只读裁出精确窗口。",
+      "knowledgePath": "knowledge/terrain-hydrology/wenzhou/inbox/",
+      "world": {
+        "widthMeters": 10000,
+        "heightMeters": 10000
+      },
+      "grid": {
+        "width": 800,
+        "height": 800,
+        "spacingMeters": [
+          12.5,
+          12.5
+        ]
+      },
+      "bounds": [
+        308808.152694,
+        3124127.610786,
+        318808.152694,
+        3134127.610786
+      ],
+      "crs": "EPSG:32651",
+      "encoding": {
+        "offset": 0.0,
+        "scale": 0.005722133211261158
+      },
+      "elevation": {
+        "min": 0.0,
+        "max": 375.0,
+        "mean": 41.4423828125,
+        "std": 64.84988403320312
+      },
+      "assets": {
+        "root": "./assets/wenzhou",
+        "height": "height_u16.bin",
+        "mask": "mask_u8.bin",
+        "hydrology": "hydrology.png",
+        "preview": "preview.png",
+        "hashes": {
+          "height": "342501eeb37f19915642f7ecac6256481f8eb6cc6cb23747e81570bbf49ec065",
+          "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
+          "hydrology": "2a753db69b076836f737b810e8fc71aab26879bce26691bdc959b4c337c973ba",
+          "preview": "0bf30683721189df6a91d52bb9cd2c2a234d4dc8fc9162b2b3b57ee8d1a4e9af"
+        }
+      },
+      "render": {
+        "cardMesh": 257,
+        "focusMesh": 800
+      },
+      "hydrology": {
+        "summary": "真实 OSM 河道与海岸参考叠加地形汇流诊断",
+        "sourceRole": "modern OSM reference and derived diagnostic",
+        "vectorCounts": {
+          "waterAreas": 0,
+          "mainRivers": 14,
+          "minorRivers": 24,
+          "coastline": 11
+        },
+        "derivedFlowDiagnostic": true,
+        "derivedFlowAuthoritative": false,
+        "realAreaPixels": 0,
+        "realMainRiverPixels": 9197,
+        "realMinorRiverPixels": 4344,
+        "coastOrWetPixels": 298553
+      },
+      "source": {
+        "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+        "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+        "grid": [
+          11866,
+          11866
+        ],
+        "validFraction": 1.0,
+        "resampled": false
+      },
+      "exactMetricSlice": true
+    },
+    {
+      "id": "kunming",
+      "code": "KUNMING",
+      "title": "昆明高原盆地地貌",
+      "subtitle": "昆明权威无压缩裁片中心 10 km × 10 km，12.5 m 原像元窗口",
+      "truthLabel": "12.5 m 权威无压缩裁片",
+      "sourceSummary": "昆明无压缩 float32 权威裁片，中心 800 × 800 原像元",
+      "lineage": "从 draft Release 的锁定 TIFF 按整数像元窗口裁切。Y 方向因源网格为奇数行，窗口中心向北对齐 6.25 m。",
+      "knowledgePath": "knowledge/terrain-hydrology/kunming/inbox/",
+      "world": {
+        "widthMeters": 10000,
+        "heightMeters": 10000
+      },
+      "grid": {
+        "width": 800,
+        "height": 800,
+        "spacingMeters": [
+          12.5,
+          12.5
+        ]
+      },
+      "bounds": [
+        275700.0,
+        2765587.5,
+        285700.0,
+        2775587.5
+      ],
+      "crs": "EPSG:32648",
+      "encoding": {
+        "offset": 1858.47021484375,
+        "scale": 0.006003482603522927
+      },
+      "elevation": {
+        "min": 1858.47021484375,
+        "max": 2251.908447265625,
+        "mean": 1959.072021484375,
+        "std": 64.486572265625
+      },
+      "assets": {
+        "root": "./assets/kunming",
+        "height": "height_u16.bin",
+        "mask": "mask_u8.bin",
+        "hydrology": "hydrology.png",
+        "preview": "preview.png",
+        "hashes": {
+          "height": "6db697e90bae01ff0dd618a3e447ee0134d70f0f5dd437b4aadf622e4930f96d",
+          "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
+          "hydrology": "219e0d4568b76f3823b7512432365fac12aaa61a1ae8dd000e8654400a64a00d",
+          "preview": "52962bf4ebd949209df7177e1f60ff7ce580f62b2bdfed7ec190b9bc98f5a8f4"
+        }
+      },
+      "render": {
+        "cardMesh": 257,
+        "focusMesh": 800
+      },
+      "hydrology": {
+        "summary": "昆明现代 OSM 河湖参考与地形汇流诊断分层显示",
+        "sourceRole": "modern OSM reference and derived diagnostic",
+        "vectorCounts": {
+          "waterAreaTriangles": 314,
+          "riverSegments": 170
+        },
+        "derivedFlowDiagnostic": true,
+        "derivedFlowAuthoritative": false,
+        "realAreaPixels": 7448,
+        "realMainRiverPixels": 2614,
+        "realMinorRiverPixels": 341,
+        "coastOrWetPixels": 612085
+      },
+      "source": {
+        "file": "kunming-authoritative.tif",
+        "sha256": "9f672e16714d98b7bc7f002826cdf788379bcb54db84227a21f53539b083f3a2",
+        "sourceBaselineSha256": "af95c47f55ab8ff25d33ddc96d07c6d85fc1fcd4c2a2de9e2bef51a015860c50",
+        "grid": [
+          5892,
+          8095
+        ],
+        "validFraction": 1.0,
+        "resampled": false
+      },
+      "exactMetricSlice": true
+    }
+  ],
+  "release": {
+    "truthOverwrite": false,
+    "syntheticGapFill": false,
+    "sourceResampling": false,
+    "derivedHydrologyAuthoritative": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}

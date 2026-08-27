@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08100d">
+  <title>三地区高精度真实地貌与水系工作台 v2.0</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title-block">
+      <p class="eyebrow">REAL DEM · TERRAIN · TERRACE · HYDROLOGY</p>
+      <h1>三地区高精度真实地貌与水系工作台</h1>
+      <p class="lead">桂林、温州、昆明各显示一块真实 10 km × 10 km 地形片区。工作台只观察高程、山脊、坡面、台地、沟谷、河道和水面边界。参考图和文字资料分别进入三地知识收件箱，再由小华蒸馏入库。</p>
+    </div>
+    <div class="status-box" aria-live="polite">
+      <span class="status-dot"></span>
+      <strong id="globalStatus">正在读取三地区真实高程</strong>
+      <small id="globalDetail">完整 800 × 800 高程样本正在进入浏览器</small>
+    </div>
+  </header>
+
+  <main>
+    <section id="regionGrid" class="region-grid" aria-label="桂林、温州、昆明真实地貌"></section>
+
+    <section class="shared-intake intake-panel" data-scope="shared">
+      <div class="intake-heading">
+        <div>
+          <p class="eyebrow">SHARED KNOWLEDGE INBOX</p>
+          <h2>三地区共用资料入口</h2>
+        </div>
+        <span class="path-chip">knowledge/terrain-hydrology/shared/inbox/</span>
+      </div>
+      <p>同时约束桂林、温州和昆明的地形、台地与水系资料放在这里。原图保持不改动，稳定规则经过来源核对后写入 distilled。</p>
+      <textarea data-note placeholder="输入三地区共同遵守的地形、水系、台地规则，或说明参考图中需要重点观察的内容。"></textarea>
+      <div class="upload-row">
+        <label class="upload-button">选择共用参考图<input data-images type="file" accept="image/*" multiple></label>
+        <input data-tags class="tag-input" placeholder="标签，例如：坡脚台地、冲沟、河谷">
+        <button data-export type="button">导出共用入库包</button>
+      </div>
+      <div data-gallery class="gallery" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <template id="regionTemplate">
+    <article class="region-card">
+      <header class="card-header">
+        <div>
+          <p class="eyebrow" data-code></p>
+          <h2 data-title></h2>
+          <p data-subtitle class="card-subtitle"></p>
+        </div>
+        <span class="truth-badge" data-truth-badge></span>
+      </header>
+
+      <div class="viewer-shell">
+        <canvas data-canvas aria-label="可旋转、平移、连续缩放的真实三维地形"></canvas>
+        <img data-fallback alt="高精度地形二维预览" hidden>
+        <div class="viewer-overlay top-left" data-readout>正在载入</div>
+        <div class="viewer-overlay bottom-left">
+          <span data-distance></span>
+          <span data-grid></span>
+        </div>
+      </div>
+
+      <div class="viewer-controls" role="group" aria-label="地形显示控制">
+        <button type="button" data-mode="terrain" class="active">真实地形</button>
+        <button type="button" data-mode="terrace">台地诊断</button>
+        <button type="button" data-mode="hydrology">水系诊断</button>
+        <button type="button" data-mode="slope">坡面分析</button>
+        <button type="button" data-view="overview">全景</button>
+        <button type="button" data-view="near">近景</button>
+        <button type="button" data-view="ground">贴地</button>
+        <button type="button" data-focus class="primary">单独精细查看</button>
+      </div>
+
+      <dl class="facts">
+        <div><dt>显示窗口</dt><dd data-window></dd></div>
+        <div><dt>高程来源</dt><dd data-source></dd></div>
+        <div><dt>浏览网格</dt><dd data-mesh></dd></div>
+        <div><dt>水系来源</dt><dd data-hydro></dd></div>
+      </dl>
+
+      <section class="intake-panel region-intake">
+        <div class="intake-heading compact">
+          <h3 data-intake-title></h3>
+          <span class="path-chip" data-path></span>
+        </div>
+        <textarea data-note placeholder="输入该地区地形、台地或水系资料说明。"></textarea>
+        <div class="upload-row">
+          <label class="upload-button">选择参考图<input data-images type="file" accept="image/*" multiple></label>
+          <input data-tags class="tag-input" placeholder="标签">
+          <button data-export type="button">导出入库包</button>
+        </div>
+        <div data-gallery class="gallery" aria-live="polite"></div>
+      </section>
+    </article>
+  </template>
+
+  <dialog id="focusDialog">
+    <div class="focus-layout">
+      <header class="focus-header">
+        <div>
+          <p class="eyebrow">FULL RESOLUTION INSPECTION</p>
+          <h2 id="focusTitle">单独精细查看</h2>
+          <p id="focusLineage"></p>
+        </div>
+        <button id="closeFocus" type="button" aria-label="关闭单独查看">关闭</button>
+      </header>
+      <div class="focus-viewer">
+        <canvas id="focusCanvas"></canvas>
+        <img id="focusFallback" alt="高精度地形二维预览" hidden>
+        <div class="viewer-overlay top-left" id="focusReadout"></div>
+        <div class="viewer-overlay bottom-left" id="focusMetrics"></div>
+      </div>
+      <div class="focus-controls">
+        <button type="button" data-focus-mode="terrain" class="active">真实地形</button>
+        <button type="button" data-focus-mode="terrace">台地诊断</button>
+        <button type="button" data-focus-mode="hydrology">水系诊断</button>
+        <button type="button" data-focus-mode="slope">坡面分析</button>
+        <button type="button" data-focus-view="overview">全景</button>
+        <button type="button" data-focus-view="near">近景</button>
+        <button type="button" data-focus-view="ground">贴地</button>
+      </div>
+      <p class="focus-help">左键或单指旋转，右键或按住 Shift 拖动平移，滚轮或双指连续缩放。数字键 1、2、3 切换全景、近景、贴地。</p>
+    </div>
+  </dialog>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
