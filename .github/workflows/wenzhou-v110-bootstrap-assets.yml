@@ -1,0 +1,179 @@
+name: Wenzhou v1.1 truthful 3D bootstrap assets
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-v110-bootstrap-assets.yml
+      - projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py
+      - projects/wenzhou/web/v110/runtime-contract.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v110-bootstrap-assets
+  cancel-in-progress: false
+
+jobs:
+  build-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact branch and Git LFS data
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: true
+
+      - name: Pull and verify authoritative inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git lfs install --local
+          git lfs pull --include='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif,projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif,projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif'
+
+          LAND='projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif'
+          MARINE='projects/wenzhou/archive/truth/evidence/WENZHOU_QINGJIANG_marine_mask_COG.tif'
+          BATHY='projects/wenzhou/coastal/data/derived/WENZHOU_COASTAL_BATHY_100M_EPSG32651_COG.tif'
+          COAST='projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson'
+          RIVERS='projects/wenzhou/coastal/data/hydrology/osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson'
+
+          test "$(stat -c '%s' "$LAND")" = '54638031'
+          test "$(stat -c '%s' "$BATHY")" = '17637178'
+          test "$(stat -c '%s' "$MARINE")" -gt 900000
+          test "$(stat -c '%s' "$COAST")" = '7243887'
+          test "$(stat -c '%s' "$RIVERS")" = '12649515'
+
+          echo '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e  '"$LAND" | sha256sum --check --strict
+          echo '591e92eef61699088a87e32bfd83417498f89cfe3a6a84f4ce6a2e2ac3b689fc  '"$BATHY" | sha256sum --check --strict
+          echo '5cfeb0465df59590c78c6b163f60ae8764731e1ea65e3adcbc5052813b299181  '"$COAST" | sha256sum --check --strict
+          echo '585220c369ed8ec6b588f1913489870c585cc98ddd7c5357beaff9ddaae7a9d9  '"$RIVERS" | sha256sum --check --strict
+          git lfs fsck
+
+      - name: Install pinned geospatial builder
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check 'numpy>=2.0,<3' 'rasterio>=1.4,<2' 'Pillow>=11,<12'
+          python - <<'PY'
+          import numpy, rasterio, PIL
+          print('numpy', numpy.__version__)
+          print('rasterio', rasterio.__version__)
+          print('GDAL', rasterio.__gdal_version__)
+          print('Pillow', PIL.__version__)
+          PY
+
+      - name: Apply fail-closed masked-raster compatibility fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py')
+          source = path.read_text(encoding='utf-8')
+          replacements = {
+              'np.asarray(array.filled(np.nan), dtype=np.float32)':
+                  'np.asarray(array.astype(np.float32).filled(np.nan), dtype=np.float32)',
+              ').filled(np.nan).astype(np.float32)':
+                  ').astype(np.float32).filled(np.nan)',
+          }
+          counts = {}
+          for old, new in replacements.items():
+              count = source.count(old)
+              if count < 1:
+                  raise SystemExit(f'Expected masked-raster pattern missing: {old}')
+              counts[old] = count
+              source = source.replace(old, new)
+          path.write_text(source, encoding='utf-8')
+          print({'patched': counts})
+          PY
+
+      - name: Syntax and contract checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py
+          python -m json.tool projects/wenzhou/web/v110/runtime-contract.json >/dev/null
+
+      - name: Build truthful overview, satellite-color, bathymetry and OSM assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py | tee /tmp/wenzhou-v110-build.log
+
+      - name: Validate generated artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          report_path = root / 'projects/wenzhou/reports/WENZHOU_V110_BOOTSTRAP_ASSET_BUILD.json'
+          manifest_path = root / 'web/wenzhou-v110/assets/bootstrap/manifest.json'
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          assert report['passed'] is True
+          assert manifest['truth']['sha256'] == '8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e'
+          assert manifest['terrainOverview']['grid'] == [513, 513]
+          assert manifest['terrainOverview']['triangleCount'] == 524288
+          assert manifest['offlineSatelliteColor']['size'] == [2048, 2048]
+          assert manifest['offlineSatelliteColor']['originalSatelliteImageClaim'] is False
+          assert manifest['bathymetryOverview']['sourceSha256'] == '591e92eef61699088a87e32bfd83417498f89cfe3a6a84f4ce6a2e2ac3b689fc'
+          assert manifest['hydrology']['estuaryConnectivityStatus'] == 'pending'
+          checked = []
+          for item in manifest['assets']:
+              path = root / item['path']
+              assert path.is_file(), path
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert path.stat().st_size == item['bytes'], item
+              assert digest == item['sha256'], item
+              checked.append(item['path'])
+          print(json.dumps({'passed': True, 'checked': checked}, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit generated runtime assets and report
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -- projects/wenzhou/web/v110/scripts/build_bootstrap_assets.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- web/wenzhou-v110/assets/bootstrap projects/wenzhou/reports/WENZHOU_V110_BOOTSTRAP_ASSET_BUILD.json
+          if git diff --cached --quiet; then
+            echo 'No generated asset changes.'
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m 'Build truthful Wenzhou v1.1 GPU bootstrap assets [skip v110 bootstrap]'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v110-bootstrap-assets
+          path: |
+            web/wenzhou-v110/assets/bootstrap/**
+            projects/wenzhou/reports/WENZHOU_V110_BOOTSTRAP_ASSET_BUILD.json
+            /tmp/wenzhou-v110-build.log
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30

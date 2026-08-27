@@ -1,0 +1,225 @@
+name: Wenzhou full previous satellite mosaic viewer
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-satellite-full.yml
+      - web/wenzhou-satellite-full/**
+      - web/wenzhou-v111/assets/hires/offline_satellite_color_4096_lossless.png
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-satellite-full
+  cancel-in-progress: false
+
+jobs:
+  verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_IMAGE: web/wenzhou-v111/assets/hires/offline_satellite_color_4096_lossless.png
+      PUBLIC_IMAGE_NAME: WENZHOU_V111_FULL_SATELLITE_MOSAIC_4096.png
+    steps:
+      - name: Checkout latest Wenzhou Draft branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Verify original full mosaic bytes and dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f web/wenzhou-satellite-full/index.html
+          test -f "$SOURCE_IMAGE"
+          test "$(stat -c '%s' "$SOURCE_IMAGE")" = '12491959'
+          grep -q '温州上一版整版卫星拼接图' web/wenzhou-satellite-full/index.html
+          grep -q "$PUBLIC_IMAGE_NAME" web/wenzhou-satellite-full/index.html
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import struct
+          from pathlib import Path
+
+          path = Path('web/wenzhou-v111/assets/hires/offline_satellite_color_4096_lossless.png')
+          data = path.read_bytes()
+          assert data[:8] == b'\x89PNG\r\n\x1a\n'
+          assert data[12:16] == b'IHDR'
+          width, height = struct.unpack('>II', data[16:24])
+          assert (width, height) == (4096, 4096)
+          report = {
+            'schema': 'wenzhou_full_satellite_mosaic_asset_qa@0.1.0',
+            'sourcePath': str(path),
+            'bytes': len(data),
+            'sha256': hashlib.sha256(data).hexdigest(),
+            'width': width,
+            'height': height,
+            'exactPreviousAsset': True,
+          }
+          Path('/tmp/wenzhou-full-satellite-asset-qa.json').write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false playwright-core@1.55.0
+          command -v google-chrome
+
+      - name: Start local viewer server
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p web/wenzhou-satellite-full
+          cp "$SOURCE_IMAGE" "web/wenzhou-satellite-full/$PUBLIC_IMAGE_NAME"
+          python3 -m http.server 18995 --bind 127.0.0.1 >/tmp/wenzhou-satellite-http.log 2>&1 &
+          echo $! >/tmp/wenzhou-satellite-http.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18995/web/wenzhou-satellite-full/ >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/wenzhou-satellite-http.log
+          exit 1
+
+      - name: Run real browser visual QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf projects/wenzhou/evidence/satellite-full
+          mkdir -p projects/wenzhou/evidence/satellite-full
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright-core';
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+
+          const browser = await chromium.launch({
+            executablePath: '/usr/bin/google-chrome',
+            headless: true,
+            args: ['--no-sandbox', '--disable-dev-shm-usage'],
+          });
+          const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
+          const page = await context.newPage();
+          await page.route('**/favicon.ico', route => route.fulfill({ status: 204, body: '' }));
+          const consoleErrors = [];
+          const pageErrors = [];
+          const requestFailures = [];
+          page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+          page.on('pageerror', error => pageErrors.push(String(error.stack || error.message || error)));
+          page.on('requestfailed', request => requestFailures.push({ url: request.url(), error: request.failure()?.errorText || 'failed' }));
+
+          await page.goto('http://127.0.0.1:18995/web/wenzhou-satellite-full/', { waitUntil: 'domcontentloaded', timeout: 120000 });
+          await page.waitForFunction(() => window.__WENZHOU_SATELLITE_FULL_READY__?.ready === true, null, { timeout: 120000 });
+          await page.waitForTimeout(1000);
+          const diagnostics = await page.evaluate(() => window.__WENZHOU_SATELLITE_FULL_READY__);
+          if (diagnostics.naturalWidth !== 4096 || diagnostics.naturalHeight !== 4096) throw new Error('Full satellite mosaic dimensions failed');
+
+          const fullPath = 'projects/wenzhou/evidence/satellite-full/desktop-full-original.png';
+          await page.screenshot({ path: fullPath, fullPage: false });
+          await page.locator('#toggleOverlay').click();
+          await page.locator('#goNature').click();
+          await page.waitForTimeout(500);
+          const markerPath = 'projects/wenzhou/evidence/satellite-full/desktop-natural-island-reference.png';
+          await page.screenshot({ path: markerPath, fullPage: false });
+
+          const sha = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+          const files = [fullPath, markerPath].map(path => ({ path, bytes: fs.statSync(path).size, sha256: sha(path) }));
+          const report = {
+            schema: 'wenzhou_full_satellite_mosaic_browser_qa@0.1.0',
+            passed: consoleErrors.length === 0 && pageErrors.length === 0 && requestFailures.length === 0 && files.every(x => x.bytes > 100000) && new Set(files.map(x => x.sha256)).size === 2,
+            url: 'http://127.0.0.1:18995/web/wenzhou-satellite-full/',
+            diagnostics,
+            consoleErrors,
+            pageErrors,
+            requestFailures,
+            files,
+          };
+          fs.writeFileSync('/tmp/wenzhou-full-satellite-browser-qa.json', JSON.stringify(report, null, 2) + '\n');
+          console.log(JSON.stringify(report, null, 2));
+          await browser.close();
+          if (!report.passed) process.exitCode = 1;
+          NODE
+
+      - name: Prepare exact original delivery artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-satellite-full-delivery
+          mkdir -p /tmp/wenzhou-satellite-full-delivery/evidence
+          cp "$SOURCE_IMAGE" "/tmp/wenzhou-satellite-full-delivery/$PUBLIC_IMAGE_NAME"
+          cp web/wenzhou-satellite-full/index.html /tmp/wenzhou-satellite-full-delivery/index.html
+          cp /tmp/wenzhou-full-satellite-asset-qa.json /tmp/wenzhou-satellite-full-delivery/ASSET_QA.json
+          cp /tmp/wenzhou-full-satellite-browser-qa.json /tmp/wenzhou-satellite-full-delivery/BROWSER_QA.json
+          cp projects/wenzhou/evidence/satellite-full/*.png /tmp/wenzhou-satellite-full-delivery/evidence/
+
+      - name: Publish exact original mosaic viewer to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-satellite-gh-pages
+          git fetch origin gh-pages
+          git worktree add -B gh-pages /tmp/wenzhou-satellite-gh-pages origin/gh-pages
+          rm -rf /tmp/wenzhou-satellite-gh-pages/wenzhou-satellite-full
+          mkdir -p /tmp/wenzhou-satellite-gh-pages/wenzhou-satellite-full
+          cp web/wenzhou-satellite-full/index.html /tmp/wenzhou-satellite-gh-pages/wenzhou-satellite-full/index.html
+          cp "$SOURCE_IMAGE" "/tmp/wenzhou-satellite-gh-pages/wenzhou-satellite-full/$PUBLIC_IMAGE_NAME"
+          touch /tmp/wenzhou-satellite-gh-pages/.nojekyll
+          cd /tmp/wenzhou-satellite-gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .nojekyll wenzhou-satellite-full
+          git commit -m 'Publish full previous Wenzhou satellite mosaic viewer'
+          git push origin HEAD:gh-pages
+
+      - name: Verify public page and exact image bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-satellite-full/'
+          success=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/wenzhou-satellite-online.html; then
+              if grep -q '温州上一版整版卫星拼接图' /tmp/wenzhou-satellite-online.html; then
+                success=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          test "$success" = '1'
+          curl --fail --silent --show-error --location "${URL}${PUBLIC_IMAGE_NAME}" -o /tmp/wenzhou-satellite-online.png
+          test "$(stat -c '%s' /tmp/wenzhou-satellite-online.png)" = '12491959'
+          test "$(sha256sum "$SOURCE_IMAGE" | awk '{print $1}')" = "$(sha256sum /tmp/wenzhou-satellite-online.png | awk '{print $1}')"
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+          data = Path('/tmp/wenzhou-satellite-online.png').read_bytes()
+          assert data[:8] == b'\x89PNG\r\n\x1a\n'
+          assert struct.unpack('>II', data[16:24]) == (4096, 4096)
+          print('Public full satellite mosaic verified: 4096 x 4096, exact SHA256 match')
+          PY
+
+      - name: Upload full mosaic and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-full-previous-satellite-mosaic
+          path: /tmp/wenzhou-satellite-full-delivery/**
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
