@@ -670,7 +670,9 @@ jobs:
               assert final_asset["index_count"] == final_asset["triangle_count"] * 3
               assert final_asset["index_count"] >= final_asset["vertex_count"]
               assert final_asset["visible_run_count"] > 0
-              assert final_asset["visible_run_count"] + final_asset["fully_shadowed_run_count"] == len(final_asset["run_ranges"])
+              assert final_asset["visible_run_count"] == len(final_asset["run_ranges"])
+              assert final_asset["fully_shadowed_run_count"] >= 0
+              assert final_asset["visible_run_count"] + final_asset["fully_shadowed_run_count"] == qa["display_run_count"]
 
               position_path = root / final_asset["position_file"]
               index_path = root / final_asset["index_file"]
@@ -700,26 +702,22 @@ jobs:
               assert np.unique(indices).size == final_asset["vertex_count"]
 
               next_vertex = next_index = 0
-              visible = shadowed = 0
+              visible = 0
               for run_range in final_asset["run_ranges"]:
                   assert set(run_range) == run_range_keys
                   assert run_range["vertex_offset"] == next_vertex
                   assert run_range["index_offset"] == next_index
                   assert run_range["index_count"] == run_range["triangle_count"] * 3
                   assert run_range["index_count"] >= run_range["vertex_count"]
-                  if run_range["terrain_visible"]:
-                      assert run_range["fully_shadowed_by_stable_ownership"] is False
-                      assert run_range["vertex_count"] > 0 and run_range["index_count"] > 0
-                      visible += 1
-                  else:
-                      assert run_range["fully_shadowed_by_stable_ownership"] is True
-                      shadowed += 1
+                  assert run_range["terrain_visible"] is True
+                  assert run_range["fully_shadowed_by_stable_ownership"] is False
+                  assert run_range["vertex_count"] > 0 and run_range["index_count"] > 0
+                  visible += 1
                   next_vertex += run_range["vertex_count"]
                   next_index += run_range["index_count"]
               assert next_vertex == final_asset["vertex_count"]
               assert next_index == final_asset["index_count"]
               assert visible == final_asset["visible_run_count"]
-              assert shadowed == final_asset["fully_shadowed_run_count"]
 
               final = direct[season]["serialized_global_display_mesh"]
               assert direct[season]["passed"] is True
@@ -773,7 +771,18 @@ jobs:
               assert abs(expected_cross["shared_edge_length_m"] - serialized_cross["shared_edge_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
 
               precision = final["display_precision"]
-              assert precision["passed"] is True and all(precision["checks"].values())
+              expected_precision_checks = {
+                  "boundary_hausdorff_within_3cm",
+                  "components_preserved",
+                  "display_boundary_continuously_inside_raw_3cm_buffer",
+                  "display_partition_passed",
+                  "raw_boundary_continuously_inside_display_3cm_buffer",
+                  "significant_interior_rings_preserved",
+                  "symmetric_difference_within_boundary_corridor",
+              }
+              assert precision["passed"] is True
+              assert set(precision["checks"]) == expected_precision_checks
+              assert all(precision["checks"].values())
               assert precision["grid_m"] == 0.015625
               assert precision["boundary_tolerance_m"] == 0.03
               assert precision["raw_desired_to_display_boundary_hausdorff_m"] <= 0.03
@@ -789,7 +798,21 @@ jobs:
               assert precision["raw_desired_union"]["component_count"] == precision["display_owned_union"]["component_count"]
               assert precision["raw_desired_union"]["interior_ring_count"] == precision["display_owned_union"]["interior_ring_count"]
               partition = precision["display_ranked_partition"]
-              assert partition["passed"] is True and all(partition["checks"].values())
+              expected_partition_checks = {
+                  "all_partition_geometries_valid",
+                  "atomic_face_assignment_complete",
+                  "interior_rings_preserved",
+                  "join_gap_within_numerical_tolerance",
+                  "no_desired_unowned_area",
+                  "no_new_global_interior_rings",
+                  "no_owned_outside_desired",
+                  "no_owned_positive_overlap",
+                  "no_residual_positive_overlap",
+                  "shared_endpoints_covered",
+              }
+              assert partition["passed"] is True
+              assert set(partition["checks"]) == expected_partition_checks
+              assert all(partition["checks"].values())
               assert partition["precision_grid_m"] == 0.015625
               assert partition["desired_union_basis"]
               assert partition["planar_atomic_face_assignment_complete"] is True

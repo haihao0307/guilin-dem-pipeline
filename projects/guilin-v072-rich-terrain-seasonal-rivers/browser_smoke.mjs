@@ -31,6 +31,18 @@ const RIVER_GLOBAL_CHECK_KEYS = Object.freeze([
   'hole_preservation_regression_passed',
   'round_arc_construction_regression_passed',
 ]);
+const DISPLAY_PRECISION_CHECK_KEYS = Object.freeze([
+  'boundary_hausdorff_within_3cm', 'components_preserved',
+  'display_boundary_continuously_inside_raw_3cm_buffer', 'display_partition_passed',
+  'raw_boundary_continuously_inside_display_3cm_buffer', 'significant_interior_rings_preserved',
+  'symmetric_difference_within_boundary_corridor',
+]);
+const DISPLAY_PARTITION_CHECK_KEYS = Object.freeze([
+  'all_partition_geometries_valid', 'atomic_face_assignment_complete', 'interior_rings_preserved',
+  'join_gap_within_numerical_tolerance', 'no_desired_unowned_area', 'no_new_global_interior_rings',
+  'no_owned_outside_desired', 'no_owned_positive_overlap', 'no_residual_positive_overlap',
+  'shared_endpoints_covered',
+]);
 const RIVER_GROUNDING_CHECK_KEYS = Object.freeze([
   'reviewed_osm_original_vertex_preserved',
   'representative_system_is_li_or_xiang',
@@ -384,7 +396,9 @@ function validateSerializedRiverSeason(finalQa, season, preset) {
   check(finalQa.preclip_owned_significant_interior_rings.count === finalQa.preclip_accounted_after_terrain_clipping_significant_interior_rings.count, `${p}.preclip rings changed`);
 
   const dp = finalQa.display_precision; const dpp = `${p}.display_precision`;
-  check(dp?.passed === true, `${dpp}.passed`); allTrue(dp.checks, `${dpp}.checks`);
+  check(dp?.passed === true, `${dpp}.passed`);
+  deepEqual(Object.keys(dp.checks).sort(), [...DISPLAY_PRECISION_CHECK_KEYS].sort(), `${dpp}.exact check keys`);
+  allTrue(dp.checks, `${dpp}.checks`);
   close(dp.grid_m, 0.015625, 0, `${dpp}.grid_m`);
   check(dp.boundary_tolerance_m <= 0.03 && dp.raw_desired_to_display_boundary_hausdorff_m <= 0.03, `${dpp}.boundary limits`);
   check(dp.raw_desired_boundary_outside_display_3cm_buffer_length_m <= 1e-6 && dp.display_boundary_outside_raw_desired_3cm_buffer_length_m <= 1e-6, `${dpp}.continuous buffers`);
@@ -394,6 +408,9 @@ function validateSerializedRiverSeason(finalQa, season, preset) {
   validateUnion(dp.raw_desired_union, `${dpp}.raw_desired_union`);
   validateUnion(dp.display_owned_union, `${dpp}.display_owned_union`);
   const partition = dp.display_ranked_partition;
+  check(partition?.passed === true, `${dpp}.partition passed`);
+  deepEqual(Object.keys(partition.checks).sort(), [...DISPLAY_PARTITION_CHECK_KEYS].sort(), `${dpp}.partition exact check keys`);
+  allTrue(partition.checks, `${dpp}.partition checks`);
   check(partition.planar_atomic_face_assignment_complete === true, `${dpp}.partition complete`);
   check(partition.invalid_or_self_intersecting_partition_count === 0, `${dpp}.invalid partition`);
   check(partition.uncovered_shared_endpoint_count === 0, `${dpp}.uncovered endpoints`);
@@ -471,6 +488,9 @@ function validateRiverAssets(runtime, qa) {
     check(isHexSha(mesh.position_sha256) && isHexSha(mesh.index_sha256), `${season} mesh hashes`);
     check(mesh.position_stored_bytes < MAX_ASSET_BYTES && mesh.index_stored_bytes < MAX_ASSET_BYTES, `${season} displayed assets <100MiB`);
     check(Array.isArray(mesh.run_ranges) && mesh.run_ranges.length === mesh.visible_run_count, `${season} run ranges exact`);
+    integer(mesh.fully_shadowed_run_count, `${season}.fully_shadowed_run_count`);
+    check(mesh.fully_shadowed_run_count >= 0, `${season}.fully_shadowed_run_count non-negative`);
+    check(mesh.visible_run_count + mesh.fully_shadowed_run_count === qa.display_run_count, `${season} visible plus shadowed run count exact`);
     let vertexOffset = 0; let indexOffset = 0;
     for (const range of mesh.run_ranges) {
       check(range.vertex_offset === vertexOffset && range.index_offset === indexOffset, `${season} contiguous run ranges`);
