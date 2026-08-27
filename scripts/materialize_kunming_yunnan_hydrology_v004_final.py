@@ -58,6 +58,17 @@ def main() -> int:
     if reserved_flat_count:
         app_text = re.sub(r"\bflat\b", "flatTerrain", app_text)
 
+    canvas_marker = "const canvas = document.getElementById('terrain');"
+    canvas_replacement = canvas_marker + "\ncanvas.style.touchAction = 'none';"
+    app_text, touch_action_patch_count = re.subn(
+        re.escape(canvas_marker),
+        canvas_replacement,
+        app_text,
+        count=1,
+    )
+    if touch_action_patch_count != 1:
+        raise SystemExit(f"failed to install V004 touch-action guard: {touch_action_patch_count}")
+
     mesh_pattern = r"(?:const|let)\s*\[\s*meshCols\s*,\s*meshRows\s*\]\s*=\s*[^;]+;"
     app_text, mesh_patch_count = re.subn(
         mesh_pattern,
@@ -202,6 +213,8 @@ def main() -> int:
         raise SystemExit("V004 buttonless camera contract is incomplete")
     if "window.__KUNMING_V004_QA_CAMERA__ = camera" not in app_text:
         raise SystemExit("V004 QA camera state is unavailable")
+    if "canvas.style.touchAction = 'none'" not in app_text:
+        raise SystemExit("V004 touch drag contract is incomplete")
     app_path.write_text(app_text, encoding="utf-8")
 
     qa_override = root / "scripts/qa_kunming_yunnan_hydrology_v004_override.mjs"
@@ -213,6 +226,8 @@ def main() -> int:
         raise SystemExit("V004 QA is missing desktop mouse scoping")
     if "aggregate.desktop.buttonlessCameraVerified === true" not in qa_text:
         raise SystemExit("V004 QA does not require desktop buttonless camera evidence")
+    if "dispatchTouchDrag" not in qa_text or "aggregate.mobile.touchDragVerified === true" not in qa_text:
+        raise SystemExit("V004 QA does not require real mobile touch drag evidence")
     qa_target.write_text(qa_text, encoding="utf-8")
 
     print(
@@ -221,7 +236,7 @@ def main() -> int:
         "installed 128x176 automated-QA and 256x352 public meshes, "
         "installed explicit loading/ready/fallback viewer states, "
         "enabled desktop mouse movement orbit without a pressed button, "
-        "scoped buttonless QA to desktop mouse input while retaining mobile drag checks, "
+        "enabled real mobile touch drag with touch-action suppression, "
         "suppressed the implicit favicon request, "
         "and installed current browser QA"
     )
