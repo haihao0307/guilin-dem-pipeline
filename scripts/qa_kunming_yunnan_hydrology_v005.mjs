@@ -107,8 +107,11 @@ async function audit(name, viewport, screenshotName) {
     compass: document.getElementById('compassNeedle')?.style.transform || ''
   }));
 
-  const centerX = box.x + box.width * 0.62;
-  const centerY = box.y + box.height * 0.57;
+  const centerX = box.x + box.width * (name === 'mobile' ? 0.72 : 0.62);
+  const centerY = box.y + box.height * (name === 'mobile' ? 0.82 : 0.57);
+  const hitTarget = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.id || document.elementFromPoint(x, y)?.tagName || '', { x: centerX, y: centerY });
+  if (hitTarget !== 'terrain') throw new Error(`${name} QA interaction point is covered by ${hitTarget}`);
+
   await page.mouse.move(centerX, centerY);
   await page.mouse.down({ button: 'left' });
   await page.mouse.move(centerX + Math.min(100, box.width * 0.18), centerY - Math.min(55, box.height * 0.12), { steps: 12 });
@@ -138,6 +141,7 @@ async function audit(name, viewport, screenshotName) {
   const result = {
     ...runtime,
     viewport,
+    interactionPoint: { x: centerX, y: centerY, hitTarget },
     screenshot: screenshotName,
     screenshotBytes: fs.statSync(screenshotPath).size,
     canvasBeforeSha256: digest(before.canvas),
