@@ -1,4 +1,4 @@
-name: Guilin v0.7.2 rich terrain and seasonal river ribbons
+name: Guilin v0.7.2 native terrain LOD and serialized rivers
 
 on:
   push:
@@ -13,95 +13,1150 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: guilin-v072-rich-terrain-seasonal-rivers
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-publish:
+  build-qa-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     env:
+      EXPECTED_BRANCH: project/guilin-v072-rich-terrain-seasonal-rivers
+      EXPECTED_PR: "54"
       PROJECT_DIR: projects/guilin-v072-rich-terrain-seasonal-rivers
       MOSAIC_PROJECT: projects/guilin-v070-raw-mosaic-aoi-draw
       SOURCE_DIR: canonical/guilin-dem-12_5m-core/data/raw/asf
       SOURCE_MANIFEST: canonical/guilin-dem-12_5m-core/catalog/source_manifest.json
+      RAW_DIR: ${{ runner.temp }}/guilin-v072-raw
+      EVIDENCE_DIR: ${{ runner.temp }}/guilin-v072-evidence
+      DESTINATION_DIR: guilin-v072-terrain-rivers
+      PUBLIC_BASE_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v072-terrain-rivers/
+      EXPECTED_OSM_SHA256: be3e8e67f625fa87c843e2d7ea423c48b98e750c6912cae8cf3863df6ae6d4df
+      EXPECTED_CENTERLINE_SHA256: fc69d8197106de229af2ecb9ca1d77cafe3e7ed291b5d119c0689682e68473d0
+      EXPECTED_OSM_FEATURES: "1426"
+
     steps:
-      - name: Checkout without automatic LFS smudge
-        uses: actions/checkout@v4
+      - name: Checkout the triggering commit without automatic LFS smudge
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           lfs: false
 
-      - name: Pull the 12 canonical DEM objects
+      - name: Confirm remote HEAD and Draft PR identity
+        id: source_identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = branch
+          test "${GITHUB_REF_NAME}" = "${EXPECTED_BRANCH}"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          remote_sha="$(git ls-remote --exit-code origin "refs/heads/${EXPECTED_BRANCH}" | awk '{print $1}')"
+          test -n "${remote_sha}"
+          test "${remote_sha}" = "${GITHUB_SHA}"
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${EXPECTED_PR}")"
+          PR_JSON="${pr_json}" python - <<'PY'
+          import json, os
+          pr = json.loads(os.environ["PR_JSON"])
+          expected_sha = os.environ["GITHUB_SHA"]
+          expected_branch = os.environ["EXPECTED_BRANCH"]
+          assert pr["number"] == int(os.environ["EXPECTED_PR"])
+          assert pr["state"] == "open"
+          assert pr["draft"] is True
+          assert pr["merged"] is False and pr["merged_at"] is None
+          assert pr["head"]["ref"] == expected_branch
+          assert pr["head"]["sha"] == expected_sha
+          assert pr["base"]["ref"] == "main"
+          PY
+          printf 'source_sha=%s\n' "${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.12"
+
+      - name: Install deterministic build and QA dependencies
+        id: dependencies
         shell: bash
         run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check \
+            numpy==2.2.4 \
+            pillow==11.1.0 \
+            rasterio==1.4.3 \
+            pyproj==3.7.1 \
+            shapely==2.1.0
+          python - <<'PY'
+          import numpy, PIL, pyproj, rasterio, shapely
+          assert numpy.__version__ == "2.2.4"
+          assert PIL.__version__ == "11.1.0"
+          assert pyproj.__version__ == "3.7.1"
+          assert rasterio.__version__ == "1.4.3"
+          assert shapely.__version__ == "2.1.0"
+          PY
+
+      - name: Verify and materialize the exact 12 canonical LFS DEM objects
+        id: source_qa
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, re, subprocess
+          from pathlib import Path
+
+          manifest_path = Path("canonical/guilin-dem-12_5m-core/catalog/source_manifest.json")
+          source_dir = Path("canonical/guilin-dem-12_5m-core/data/raw/asf")
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          assert manifest["schema"] == "guilin-dem-12_5m-clean-rebuild/v2"
+          assert manifest["source_count"] == 12
+          assert manifest["truth_policy"] == {
+              "source_resolution_m": 12.5,
+              "source_dem_read_only": True,
+              "active_30m_dem_allowed": False,
+              "derived_web_or_mosaic_is_measured_source": False,
+          }
+          sources = manifest["sources"]
+          assert len(sources) == 12
+          assert len({entry["file"] for entry in sources}) == 12
+          for entry in sources:
+              assert entry["file"].endswith(".dem.tif")
+              assert entry["bytes"] > 70_000_000
+              assert re.fullmatch(r"[0-9a-f]{64}", entry["sha256"])
+              assert entry["crs"] == "EPSG:32649"
+              assert entry["pixel_size_m"] == [12.5, 12.5]
+              relative = (source_dir / entry["file"]).as_posix()
+              pointer = subprocess.check_output(["git", "show", f"HEAD:{relative}"], text=True)
+              assert pointer.startswith("version https://git-lfs.github.com/spec/v1\n")
+              assert f"oid sha256:{entry['sha256']}\n" in pointer
+              assert f"size {entry['bytes']}\n" in pointer
+          PY
           git lfs install --local
           git lfs pull --include="${SOURCE_DIR}/*.dem.tif" --exclude=""
-          test "$(find "${SOURCE_DIR}" -maxdepth 1 -type f -name '*.dem.tif' | wc -l)" -eq 12
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
+          manifest = json.loads(Path("canonical/guilin-dem-12_5m-core/catalog/source_manifest.json").read_text())
+          source_dir = Path("canonical/guilin-dem-12_5m-core/data/raw/asf")
+          actual = sorted(source_dir.glob("*.dem.tif"))
+          expected = {entry["file"]: entry for entry in manifest["sources"]}
+          assert [path.name for path in actual] == sorted(expected)
+          for path in actual:
+              entry = expected[path.name]
+              assert path.stat().st_size == entry["bytes"]
+              digest = hashlib.sha256()
+              with path.open("rb") as stream:
+                  for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+                      digest.update(chunk)
+              assert digest.hexdigest() == entry["sha256"]
+          print("SOURCE_LFS_QA_OK", len(actual))
+          PY
 
-      - name: Install build dependencies
+      - name: Rebuild the uncropped source mosaic
+        id: mosaic_build
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install numpy pillow rasterio pyproj
-
-      - name: Rebuild raw mosaic and rich terrain assets
-        run: |
-          rm -rf "${PROJECT_DIR}/derived" dist
+          set -euo pipefail
+          test ! -e "${RAW_DIR}"
+          mkdir -p "${RAW_DIR}/raw" "${RAW_DIR}/selection-data" "${EVIDENCE_DIR}"
           python "${MOSAIC_PROJECT}/build_raw_mosaic.py" \
             --source-dir "${SOURCE_DIR}" \
             --source-manifest "${SOURCE_MANIFEST}" \
-            --output-dir "${PROJECT_DIR}/derived/raw" \
-            --web-data-dir "${PROJECT_DIR}/derived/selection-data" \
-            --preview-max-width 2048
+            --output-dir "${RAW_DIR}/raw" \
+            --web-data-dir "${RAW_DIR}/selection-data" \
+            --preview-max-width 2048 \
+            >"${EVIDENCE_DIR}/mosaic-build.log" 2>&1
+          test -s "${RAW_DIR}/raw/guilin_raw_union_12_5m.tif"
+          test -s "${RAW_DIR}/raw/mosaic_qa.json"
+          cp "${RAW_DIR}/raw/mosaic_qa.json" "${EVIDENCE_DIR}/mosaic_qa.json"
+
+      - name: Gate exact mosaic truth without filling NoData
+        id: mosaic_qa
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "${RAW_DIR}/raw/mosaic_qa.json" "${RAW_DIR}/raw/guilin_raw_union_12_5m.tif" <<'PY'
+          import hashlib, json, math, sys
+          from pathlib import Path
+          import rasterio
+
+          qa_path, mosaic_path = map(Path, sys.argv[1:])
+          qa = json.loads(qa_path.read_text())
+          assert qa["schema"] == "guilin-v070-raw-union/v1"
+          assert qa["source_policy"] == "12 new 12.5 m DEM files only"
+          assert qa["source_count"] == 12 and len(qa["source_order"]) == 12
+          assert qa["merge_policy"] == "nearest-neighbour, first-valid, target-aligned 12.5 m grid"
+          assert qa["crop_applied"] is False
+          assert qa["gap_fill_applied"] is False
+          assert qa["edge_trim_applied"] is False
+          expected = {
+              "width": 17408,
+              "height": 18867,
+              "bounds": [349862.5, 2703012.5, 567462.5, 2938850.0],
+              "transform": [12.5, 0.0, 349862.5, 0.0, -12.5, 2938850.0],
+              "crs": "EPSG:32649",
+              "resolution_m": [12.5, 12.5],
+              "valid_pixels": 284579268,
+              "nodata_pixels": 43857468,
+              "total_pixels": 328436736,
+              "valid_fraction": 0.8664660094539486,
+              "nodata_fraction": 0.13353399054605147,
+              "minimum_elevation_m": -6,
+              "maximum_elevation_m": 2093,
+          }
+          mosaic = qa["mosaic"]
+          for key, value in expected.items():
+              if isinstance(value, float):
+                  assert math.isclose(mosaic[key], value, rel_tol=0, abs_tol=1e-15)
+              else:
+                  assert mosaic[key] == value, (key, mosaic[key], value)
+          assert mosaic["valid_pixels"] + mosaic["nodata_pixels"] == mosaic["total_pixels"]
+          assert mosaic_path.stat().st_size == qa["mosaic_bytes"]
+          digest = hashlib.sha256()
+          with mosaic_path.open("rb") as stream:
+              for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+                  digest.update(chunk)
+          assert digest.hexdigest() == qa["mosaic_sha256"]
+          with rasterio.open(mosaic_path) as ds:
+              assert ds.width == 17408 and ds.height == 18867
+              assert str(ds.crs) == "EPSG:32649"
+              assert list(ds.bounds) == expected["bounds"]
+              assert [ds.transform.a, ds.transform.b, ds.transform.c,
+                      ds.transform.d, ds.transform.e, ds.transform.f] == expected["transform"]
+              assert ds.nodata == 0
+          print("MOSAIC_QA_OK", qa["mosaic_sha256"])
+          PY
+
+      - name: Fetch and reject any OSM drift from the reviewed network
+        id: osm_qa
+        shell: bash
+        run: |
+          set -euo pipefail
           mkdir -p dist/data
-          python "${PROJECT_DIR}/build_terrain3d_runtime.py" \
-            --mosaic "${PROJECT_DIR}/derived/raw/guilin_raw_union_12_5m.tif" \
-            --output-dir dist/data \
-            --height-max-width 1024 \
-            --texture-max-width 2560
-
-      - name: Fetch OSM hydrology with width metadata
-        run: |
           python "${PROJECT_DIR}/fetch_osm_hydrology.py" \
-            --terrain-manifest dist/data/terrain_manifest.json \
-            --output dist/data/osm_hydrology.geojson
+            --terrain-manifest "${RAW_DIR}/raw/mosaic_qa.json" \
+            --output dist/data/osm_hydrology.geojson \
+            --allow-live-overpass \
+            --expected-reviewed-source-sha256 "${EXPECTED_OSM_SHA256}" \
+            --expected-feature-count "${EXPECTED_OSM_FEATURES}" \
+            --expected-centerline-coordinates-sha256 "${EXPECTED_CENTERLINE_SHA256}" \
+            >"${EVIDENCE_DIR}/osm-fetch.log" 2>&1
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = json.loads(Path("dist/data/osm_hydrology.geojson").read_text())
+          assert data["source_mode"] == "live-overpass"
+          assert data["reviewed_source_sha256"] == os.environ["EXPECTED_OSM_SHA256"]
+          assert data["expected_reviewed_source_sha256"] == os.environ["EXPECTED_OSM_SHA256"]
+          assert data["reviewed_source_digest_verified"] is True
+          assert data["centerline_coordinates_sha256"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert data["expected_centerline_coordinates_sha256"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert data["centerline_digest_verified"] is True
+          assert len(data["features"]) == int(os.environ["EXPECTED_OSM_FEATURES"])
+          assert data["overpass_query_sha256"] and data["overpass_payload_sha256"]
+          assert data["overpass_endpoint"]
+          PY
+          cp dist/data/osm_hydrology.geojson "${EVIDENCE_DIR}/osm_hydrology.geojson"
 
-      - name: Assemble web viewer
+      - name: Build complete terrain LOD and serialized river release assets
+        id: full_build
+        shell: bash
         run: |
-          cp "${PROJECT_DIR}/web/index.html" dist/index.html
-          cp "${PROJECT_DIR}/web/app.js" dist/app.js
-          cp "${PROJECT_DIR}/web/styles.css" dist/styles.css
+          set -euo pipefail
+          python "${PROJECT_DIR}/build_terrain3d_runtime.py" \
+            --mosaic "${RAW_DIR}/raw/guilin_raw_union_12_5m.tif" \
+            --output-dir dist/data \
+            --hydrology dist/data/osm_hydrology.geojson \
+            --height-max-width 1024 \
+            --texture-max-width 2560 \
+            --tile-intervals 256 \
+            --river-sample-step 50 \
+            >"${EVIDENCE_DIR}/terrain-river-build.log" 2>&1
+          test -s dist/data/terrain_manifest.json
+          test -s dist/data/terrain_lod_manifest.json
+          test -s dist/data/terrain_lod_qa.json
+          test -s dist/data/river_drape_runtime.json
+          test -s dist/data/river_drape_qa.json
 
-      - name: Browser smoke test and visual evidence
+      - name: Gate all terrain assets and every native/coarse LOD tile
+        id: terrain_qa
+        shell: bash
         run: |
-          npm install --no-save playwright@1.51.1
+          set -euo pipefail
+          python - <<'PY'
+          import gzip, hashlib, json, math, re, struct
+          from pathlib import Path
+
+          root = Path("dist/data")
+          terrain = json.loads((root / "terrain_manifest.json").read_text())
+          manifest = json.loads((root / "terrain_lod_manifest.json").read_text())
+          qa = json.loads((root / "terrain_lod_qa.json").read_text())
+          seasons = ("winter", "spring", "summer", "autumn")
+          expected_stats = {
+              "valid_pixels": 284579268,
+              "nodata_pixels": 43857468,
+              "total_pixels": 328436736,
+              "valid_fraction": 0.8664660094539486,
+              "nodata_fraction": 0.13353399054605147,
+              "minimum_m": -6.0,
+              "maximum_m": 2093.0,
+          }
+          assert terrain["schema"] == "guilin-v072-terrain-seasonal-rivers/v2"
+          assert terrain["crs"] == "EPSG:32649"
+          assert terrain["source_resolution_m"] == [12.5, 12.5]
+          assert terrain["source_grid"] == [17408, 18867]
+          assert terrain["bounds_epsg32649"] == [349862.5, 2703012.5, 567462.5, 2938850.0]
+          assert terrain["vertical_scale"] == 1.0
+          assert terrain["source_elevation_modified_m"] == 0.0
+          assert terrain["crop_applied"] is False
+          assert terrain["smoothing_applied"] is False
+          assert terrain["gap_fill_applied"] is False
+          assert terrain["fallback_resolution_m"] is None
+          assert terrain["fallback_30m_allowed"] is False
+          assert terrain["overview_only"] is True
+          assert terrain["height"]["width"] == 1024
+          assert terrain["height"]["height"] == 1110
+          assert terrain["height"]["nodata_code"] == 65535
+          assert terrain["actual_vertex_spacing_m"] > 200.0
+          assert terrain["source_statistics"] == manifest["source_statistics"]
+          for key, value in expected_stats.items():
+              actual = terrain["source_statistics"][key]
+              if isinstance(value, float):
+                  assert math.isclose(actual, value, rel_tol=0, abs_tol=1e-15), (key, actual)
+              else:
+                  assert actual == value
+          assert terrain["terrain_lod_manifest_file"] == "terrain_lod_manifest.json"
+          assert terrain["terrain_lod_qa_file"] == "terrain_lod_qa.json"
+          assert terrain["river_drape_runtime_file"] == "river_drape_runtime.json"
+          assert terrain["river_drape_qa_file"] == "river_drape_qa.json"
+          assert terrain["surface_color_classification"] == "programmatic composite; not satellite or orthophoto"
+          assert terrain["karst_detail"]["file"] == "terrain_karst_detail.webp"
+          assert terrain["karst_detail"]["material_binding_required"] is True
+          assert terrain["karst_detail"]["control_changes_detail_field"] is True
+
+          for asset_key in ("height", "texture", "normal", "roughness", "karst_detail"):
+              asset = terrain[asset_key]
+              path = root / asset["file"]
+              assert path.is_file() and path.stat().st_size > 0
+              if "stored_bytes" in asset:
+                  assert path.stat().st_size == asset["stored_bytes"]
+              if "sha256" in asset:
+                  assert hashlib.sha256(path.read_bytes()).hexdigest() == asset["sha256"]
+
+          assert manifest["schema"] == "guilin-v072-terrain-lod/v4"
+          assert qa["schema"] == "guilin-v072-terrain-lod-qa/v4"
+          assert manifest["source_grid"] == [17408, 18867]
+          assert manifest["source_resolution_m"] == [12.5, 12.5]
+          assert manifest["bounds_epsg32649"] == terrain["bounds_epsg32649"]
+          assert manifest["vertical_scale"] == 1.0
+          assert manifest["source_elevation_modified_m"] == 0.0
+          assert manifest["smoothing_applied"] is False
+          assert manifest["gap_fill_applied"] is False
+          assert manifest["fallback_resolution_m"] is None
+          assert manifest["fallback_30m_allowed"] is False
+          assert manifest["coarse_level_full_domain_claimed"] is False
+          assert manifest["native_full_domain"] is True
+          assert qa["coarse_level_full_domain_claimed"] is False
+          assert qa["native_full_domain"] is True
+          assert manifest["overview_only_backdrop_policy"] == qa["overview_only_backdrop_policy"]
+          assert "coarse" in manifest["overview_only_backdrop_policy"]
+          assert "native" in manifest["overview_only_backdrop_policy"]
+          assert manifest["tile_count"] == qa["tile_count"] == 6742
+          assert manifest["tile_format"] == {
+              "magic": "GLTILE4\u0000",
+              "header_struct_little_endian": "<8sIIII3d",
+              "payload_order": ["height_f32", "vertex_mask_u8", "conservative_cell_mask_u8"],
+              "file_pattern": "terrain_lod/{level_id}/r{row:03d}_c{col:03d}.tile.gz",
+              "deterministic_gzip": True,
+          }
+          expected_ids = ["lod1600m", "lod800m", "lod400m", "lod200m", "lod100m", "lod50m", "lod25m", "native12_5m"]
+          expected_strides = [128, 64, 32, 16, 8, 4, 2, 1]
+          expected_counts = [1, 4, 9, 25, 90, 323, 1258, 5032]
+          expected_spacings = [1600.0, 800.0, 400.0, 200.0, 100.0, 50.0, 25.0, 12.5]
+          levels = manifest["levels"]
+          assert [level["id"] for level in levels] == expected_ids
+          assert [level["level_id"] for level in levels] == expected_ids
+          assert [level["stride"] for level in levels] == expected_strides
+          assert [level["spacing_m"] for level in levels] == expected_spacings
+          assert [level["resolution_m"] for level in levels] == expected_spacings
+          assert [level["tile_count"] for level in levels] == expected_counts
+          coverage = qa["level_domain_coverage"]
+          assert coverage == [
+              {
+                  "id": level["id"],
+                  "full_source_center_domain_coverage": level["full_source_center_domain_coverage"],
+                  "source_center_edge_gaps_m": level["source_center_edge_gaps_m"],
+              }
+              for level in levels
+          ]
+          for level in levels[:-1]:
+              assert level["full_source_center_domain_coverage"] is False
+              assert max(level["source_center_edge_gaps_m"].values()) > 0.0
+              assert level["domain_coverage_policy"] == "native full-domain; coarse grids never invent non-uniform edge samples"
+          native = levels[-1]
+          assert native["full_source_center_domain_coverage"] is True
+          assert max(native["source_center_edge_gaps_m"].values()) <= 1e-9
+
+          seen_files = set()
+          total = 0
+          maximum_bytes = 0
+          for level, expected_count in zip(levels, expected_counts, strict=True):
+              assert len(level["tiles"]) == expected_count
+              assert level["tile_intervals"] == 256
+              assert level["smoothing_applied"] is False
+              assert level["gap_fill_applied"] is False
+              assert level["height_encoding"] == "source float32 little-endian"
+              for tile in level["tiles"]:
+                  relative = tile["file"]
+                  assert re.fullmatch(rf"terrain_lod/{re.escape(level['id'])}/r\d{{3}}_c\d{{3}}\.tile\.gz", relative)
+                  assert relative not in seen_files
+                  seen_files.add(relative)
+                  path = root / relative
+                  assert path.is_file()
+                  assert path.stat().st_size == tile["stored_bytes"]
+                  assert tile["stored_bytes"] < 100 * 1024 * 1024
+                  maximum_bytes = max(maximum_bytes, tile["stored_bytes"])
+                  assert hashlib.sha256(path.read_bytes()).hexdigest() == tile["sha256"]
+                  assert tile["width"] == tile["sample_width"]
+                  assert tile["height"] == tile["sample_height"]
+                  assert tile["cell_width"] == tile["width"] - 1
+                  assert tile["cell_height"] == tile["height"] - 1
+                  assert tile["smoothing_applied"] is False
+                  assert tile["gap_fill_applied"] is False
+                  assert tile["fallback_resolution_m"] is None
+                  assert tile["fallback_30m_allowed"] is False
+                  assert tile["decode_receipt"] and all(tile["decode_receipt"].values())
+                  with gzip.open(path, "rb") as stream:
+                      header = stream.read(48)
+                      magic, width, height, cell_width, cell_height, origin_e, origin_n, spacing = struct.unpack("<8sIIII3d", header)
+                      payload = stream.read()
+                  assert magic == b"GLTILE4\0"
+                  assert [width, height, cell_width, cell_height] == [tile["width"], tile["height"], tile["cell_width"], tile["cell_height"]]
+                  assert math.isclose(spacing, level["spacing_m"], rel_tol=0, abs_tol=1e-12)
+                  assert math.isclose(origin_e, tile["bounds_epsg32649"][0], rel_tol=0, abs_tol=1e-9)
+                  assert math.isclose(origin_n, tile["bounds_epsg32649"][3], rel_tol=0, abs_tol=1e-9)
+                  assert len(payload) == width * height * 5 + cell_width * cell_height
+                  total += 1
+          assert total == 6742 and len(seen_files) == 6742
+          assert maximum_bytes == qa["maximum_stored_tile_bytes"]
+
+          assert qa["passed"] is True
+          assert qa["checks"] and all(qa["checks"].values())
+          correspondence = qa["source_correspondence"]
+          assert correspondence["passed"] is True
+          assert correspondence["decoded_valid_samples"] > 0
+          assert correspondence["maximum_error_m"] == 0.0
+          assert correspondence["p95_error_m"] == 0.0
+          assert correspondence["mask_mismatch_count"] == 0
+          nodata = qa["nodata_preservation"]
+          assert nodata["passed"] is True and nodata["gap_fill_applied"] is False
+          assert nodata["source_valid_pixels"] == 284579268
+          assert nodata["source_nodata_pixels"] == 43857468
+          assert math.isclose(nodata["source_nodata_fraction"], 0.13353399054605147, rel_tol=0, abs_tol=1e-15)
+          assert nodata["decode_mask_mismatch_count"] == 0
+          assert qa["conservative_cell_masks"]["passed"] is True
+          assert qa["conservative_cell_masks"]["gap_fill_applied"] is False
+          assert qa["conservative_cell_masks"]["decode_mismatch_count"] == 0
+          shared = qa["shared_edges"]
+          assert shared["passed"] is True and shared["sample_count"] > 0
+          assert shared["maximum_height_error_m"] == 0.0
+          assert shared["p95_height_error_m"] == 0.0
+          assert shared["mask_mismatch_count"] == 0
+          assert shared["source_index_mismatch_count"] == 0
+          mixed = qa["mixed_lod_transitions"]
+          assert mixed["passed"] is True
+          assert mixed["runtime_required"] is True
+          assert mixed["offline_source_alignment_passed"] is True
+          assert mixed["coincident_source_index_samples"] > 0
+          assert mixed["coincident_maximum_vertical_jump_m"] == 0.0
+          assert mixed["coincident_p95_vertical_jump_m"] == 0.0
+          assert mixed["maximum_horizontal_alignment_error_m"] == 0.0
+          assert mixed["mask_mismatch_count"] == 0
+          assert qa["native_acceptance"]["passed"] is True
+          assert qa["native_acceptance"]["all_required_available"] is True
+          assert qa["native_acceptance"]["actual_vertex_spacing_m"] == 12.5
+          assert set(qa["native_acceptance"]["required_ids"]) == set(qa["native_acceptance"]["available_ids"])
+          assert qa["nodata_acceptance_boundary"]["passed"] is True
+          print("TERRAIN_LOD_QA_OK", total)
+          PY
+          cp dist/data/terrain_manifest.json "${EVIDENCE_DIR}/terrain_manifest.json"
+          cp dist/data/terrain_lod_manifest.json "${EVIDENCE_DIR}/terrain_lod_manifest.json"
+          cp dist/data/terrain_lod_qa.json "${EVIDENCE_DIR}/terrain_lod_qa.json"
+
+      - name: Gate final serialized river assets, topology, holes, joins, and Float32 grounding
+        id: river_qa
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import gzip, hashlib, json, math, os, re
+          from pathlib import Path
+          import numpy as np
+
+          root = Path("dist/data")
+          runtime = json.loads((root / "river_drape_runtime.json").read_text())
+          qa = json.loads((root / "river_drape_qa.json").read_text())
+          seasons = ("winter", "spring", "summer", "autumn")
+          presets = {
+              "winter": {"width": 0.66, "depth": 0.32, "color": "#42b69d"},
+              "spring": {"width": 0.92, "depth": 0.55, "color": "#45c4b5"},
+              "summer": {"width": 1.38, "depth": 0.88, "color": "#348e73"},
+              "autumn": {"width": 0.82, "depth": 0.46, "color": "#3fa9aa"},
+          }
+          expected_check_names = {
+              "all_decoded_runs_internal_topology_valid",
+              "all_non_shadowed_runs_decoded",
+              "all_run_geometries_valid",
+              "cross_run_edges_and_y_match",
+              "cross_run_positive_overlap_zero",
+              "decoded_float32_grounding_strict",
+              "exact_float32_coverage_valid",
+              "float32_boundary_within_tolerance",
+              "global_boundary_topology_valid",
+              "nodata_and_extent_remain_transparent",
+              "positive_run_count",
+              "preclip_owned_continuously_accounted_after_terrain_clipping",
+              "shared_endpoints_covered_after_serialization",
+              "terrain_expected_components_preserved_after_serialization",
+              "terrain_expected_serialized_area_agree",
+              "terrain_expected_significant_interior_rings_preserved_after_serialization",
+              "visual_depth_does_not_modify_or_conflict_with_geometry",
+          }
+          asset_keys = {
+              "position_file", "positions_file", "index_file", "indices_file",
+              "position_compression", "index_compression", "positions_global", "indices_global",
+              "vertex_space", "index_space", "vertex_count", "index_count", "triangle_count",
+              "position_stored_bytes", "index_stored_bytes", "position_sha256", "index_sha256",
+              "surface_offset_m", "source_resolution_m", "run_ranges", "visible_run_count",
+              "fully_shadowed_run_count",
+          }
+          run_range_keys = {
+              "boundary_vertex_count", "emitted_run_index", "fully_shadowed_by_stable_ownership",
+              "index_count", "index_offset", "maximum_triangle_area_m2", "maximum_triangle_edge_m",
+              "run_id", "source_feature_index", "terrain_cell_crossing_triangle_count",
+              "terrain_visible", "triangle_count", "vertex_count", "vertex_offset",
+          }
+          assert runtime["schema"] == "guilin-v072-river-drape-runtime/v3"
+          assert qa["schema"] == "guilin-v072-river-drape-qa/v3"
+          assert runtime["crs"] == "EPSG:32649"
+          assert runtime["source_resolution_m"] == 12.5
+          assert runtime["vertical_scale"] == 1.0
+          assert runtime["centerline_geometry_mutated"] is False
+          assert qa["centerline_geometry_mutated"] is False
+          assert runtime["source_centerline_collection_sha256"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert qa["centerline_collection_sha256_before"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert qa["centerline_collection_sha256_after"] == os.environ["EXPECTED_CENTERLINE_SHA256"]
+          assert runtime["source_feature_count"] == qa["source_feature_count"] == int(os.environ["EXPECTED_OSM_FEATURES"])
+          assert runtime["display_feature_count"] == qa["display_feature_count"] > 0
+          assert runtime["run_count"] == qa["run_count"] > 0
+          assert runtime["season_semantics"] == "visual seasonal preset; not a discharge simulation"
+          assert "no interpolation" in runtime["nodata_policy"]
+          assert qa["passed"] is True
+          assert qa["all_grounding_passed"] is True
+          assert qa["all_seasons_grounding_passed"] is True
+          assert qa["all_seasons_topology_passed"] is True
+          assert qa["maximum_asset_bytes"] == 100 * 1024 * 1024
+          assert qa["oversize_asset_files"] == []
+          assert qa["checks"] and all(qa["checks"].values())
+          assert set(qa["checks"]) == {
+              "all_assets_under_100_mib", "all_bank_edges_grounded",
+              "all_four_exact_season_presets_present", "all_seasons_topology_passed",
+              "all_serialized_float32_grounding_passed", "centerline_coordinates_unchanged",
+              "display_runs_positive", "gap_fill_disabled", "hole_preservation_regression_passed",
+              "native_12_5m_only", "round_arc_regression_passed",
+          }
+
+          center = runtime["centerline_asset"]
+          center_path = root / center["file"]
+          assert center_path.is_file() and center_path.stat().st_size == center["stored_bytes"]
+          assert center["stored_bytes"] == center["vertex_count"] * 3 * 4
+          assert hashlib.sha256(center_path.read_bytes()).hexdigest() == center["sha256"]
+          center_values = np.fromfile(center_path, dtype="<f4")
+          assert center_values.size == center["vertex_count"] * 3
+          assert np.isfinite(center_values).all()
+          indexed_by_file = {entry["file"]: entry for entry in runtime["indexed_assets"]}
+          assert len(indexed_by_file) == len(runtime["indexed_assets"])
+          for entry in runtime["indexed_assets"]:
+              path = root / entry["file"]
+              assert path.is_file() and path.stat().st_size == entry["stored_bytes"]
+              assert entry["stored_bytes"] < 100 * 1024 * 1024
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == entry["sha256"]
+
+          direct = qa["grounding_by_season"]
+          topology = qa["joins_and_topology"]
+          alias = topology["serialized_global_display_mesh_by_season"]
+          assert set(runtime["seasons"]) == set(direct) == set(alias) == set(seasons)
+          assert topology["all_seasons_topology_passed"] is True
+          report = {"schema": "guilin-v072-river-workflow-gate/v1", "passed": True, "seasons": {}}
+
+          for season in seasons:
+              season_runtime = runtime["seasons"][season]
+              preset = presets[season]
+              assert season_runtime["width"] == preset["width"]
+              assert season_runtime["depth"] == preset["depth"]
+              assert season_runtime["color"].lower() == preset["color"]
+              assert season_runtime["semantics"] == "visual seasonal preset; not a discharge simulation"
+              final_asset = season_runtime["serialized_global_display_mesh"]
+              assert set(final_asset) == asset_keys
+              assert final_asset["position_file"] == final_asset["positions_file"] == f"river_drape_{season}_positions.f32.gz"
+              assert final_asset["index_file"] == final_asset["indices_file"] == f"river_drape_{season}_indices.u32.gz"
+              assert final_asset["position_compression"] == final_asset["index_compression"] == "gzip"
+              assert final_asset["positions_global"] is True and final_asset["indices_global"] is True
+              assert final_asset["vertex_space"] == "global-display-array"
+              assert final_asset["index_space"] == "global-vertex-array"
+              assert final_asset["source_resolution_m"] == 12.5
+              assert final_asset["surface_offset_m"] == 0.35
+              assert final_asset["vertex_count"] > 0
+              assert final_asset["index_count"] == final_asset["triangle_count"] * 3
+              assert final_asset["vertex_count"] == final_asset["index_count"]
+              assert final_asset["visible_run_count"] > 0
+              assert final_asset["visible_run_count"] + final_asset["fully_shadowed_run_count"] == len(final_asset["run_ranges"])
+
+              position_path = root / final_asset["position_file"]
+              index_path = root / final_asset["index_file"]
+              for path, bytes_key, sha_key in (
+                  (position_path, "position_stored_bytes", "position_sha256"),
+                  (index_path, "index_stored_bytes", "index_sha256"),
+              ):
+                  assert path.is_file()
+                  assert path.stat().st_size == final_asset[bytes_key]
+                  assert path.stat().st_size < 100 * 1024 * 1024
+                  assert hashlib.sha256(path.read_bytes()).hexdigest() == final_asset[sha_key]
+                  assert indexed_by_file[path.name]["sha256"] == final_asset[sha_key]
+                  assert indexed_by_file[path.name]["stored_bytes"] == final_asset[bytes_key]
+              with gzip.open(position_path, "rb") as stream:
+                  position_bytes = stream.read()
+              with gzip.open(index_path, "rb") as stream:
+                  index_bytes = stream.read()
+              assert len(position_bytes) == final_asset["vertex_count"] * 12
+              assert len(index_bytes) == final_asset["index_count"] * 4
+              positions = np.frombuffer(position_bytes, dtype="<f4")
+              indices = np.frombuffer(index_bytes, dtype="<u4")
+              assert positions.size == final_asset["vertex_count"] * 3
+              assert np.isfinite(positions).all()
+              assert indices.size == final_asset["index_count"]
+              assert np.array_equal(indices, np.arange(indices.size, dtype="<u4"))
+
+              next_vertex = next_index = 0
+              visible = shadowed = 0
+              for run_range in final_asset["run_ranges"]:
+                  assert set(run_range) == run_range_keys
+                  assert run_range["vertex_offset"] == next_vertex
+                  assert run_range["index_offset"] == next_index
+                  assert run_range["index_count"] == run_range["triangle_count"] * 3
+                  assert run_range["vertex_count"] == run_range["index_count"]
+                  assert run_range["terrain_cell_crossing_triangle_count"] == 0
+                  assert run_range["maximum_triangle_area_m2"] > 0
+                  assert run_range["maximum_triangle_edge_m"] > 0
+                  if run_range["terrain_visible"]:
+                      assert run_range["fully_shadowed_by_stable_ownership"] is False
+                      assert run_range["vertex_count"] > 0 and run_range["boundary_vertex_count"] > 0
+                      visible += 1
+                  else:
+                      assert run_range["fully_shadowed_by_stable_ownership"] is True
+                      shadowed += 1
+                  next_vertex += run_range["vertex_count"]
+                  next_index += run_range["index_count"]
+              assert next_vertex == final_asset["vertex_count"]
+              assert next_index == final_asset["index_count"]
+              assert visible == final_asset["visible_run_count"]
+              assert shadowed == final_asset["fully_shadowed_run_count"]
+
+              final = direct[season]["serialized_global_display_mesh"]
+              assert final == alias[season]
+              assert final["schema"] == "guilin-v072-serialized-river-display-qa/v2"
+              assert final["season"] == season
+              assert final["season_semantics"] == "visual seasonal preset; not a discharge simulation"
+              assert final["passed"] is True
+              assert set(final["checks"]) == expected_check_names
+              assert all(final["checks"].values())
+              assert final["coverage_is_valid_exact"] is True
+              assert final["coverage_invalid_edge_count"] == 0
+              assert final["coverage_invalid_edge_length_m"] == 0.0
+              assert final["decoded_run_count"] == final_asset["visible_run_count"]
+              assert final["decoded_run_non_adjacent_edge_crossing_count"] == 0
+              assert final["decoded_run_triangle_coverage_invalid_edge_count"] == 0
+              assert final["decoded_run_triangle_positive_self_overlap_area_m2"] == 0.0
+              assert final["serialized_boundary_self_intersection_count"] == 0
+              assert final["depth_conflict_count"] == 0
+              assert final["visual_depth"] == preset["depth"]
+              assert final["visual_depth_geometry_displacement_m"] == 0.0
+
+              run_topology = final["decoded_run_triangle_topology"]
+              assert len(run_topology) == final["decoded_run_count"] > 0
+              for run in run_topology:
+                  assert run["passed"] is True and all(run["checks"].values())
+                  assert run["decoded_triangle_count"] > 0
+                  assert run["decoded_triangle_coverage_is_valid_exact"] is True
+                  assert run["decoded_triangle_coverage_invalid_edge_count"] == 0
+                  assert run["decoded_triangle_coverage_invalid_edge_length_m"] == 0.0
+                  assert run["decoded_non_adjacent_edge_crossing_count"] == 0
+                  assert run["decoded_nonmanifold_geometric_edge_count"] == 0
+                  assert run["decoded_triangle_positive_self_overlap_area_m2"] == 0.0
+                  assert abs(run["decoded_triangle_area_sum_m2"] - run["decoded_dissolved_run_area_m2"]) <= run["decoded_triangle_positive_self_overlap_tolerance_m2"]
+
+              expected_cross = final["cross_run_terrain_expected"]
+              serialized_cross = final["cross_run_serialized"]
+              for cross in (expected_cross, serialized_cross):
+                  assert cross["coverage_is_valid_exact"] is True
+                  assert cross["coverage_invalid_edge_count"] == 0
+                  assert cross["coverage_invalid_edge_length_m"] == 0.0
+                  assert cross["invalid_geometry_count"] == 0
+                  assert cross["positive_overlap_pair_count"] == 0
+                  assert cross["positive_overlap_area_m2"] == 0.0
+                  assert cross["final_connected_component_count"] > 0
+              assert expected_cross["final_connected_component_count"] == serialized_cross["final_connected_component_count"]
+              assert expected_cross["final_connected_component_run_indices"] == serialized_cross["final_connected_component_run_indices"]
+              assert expected_cross["shared_boundary_pair_count"] == serialized_cross["shared_boundary_pair_count"] > 0
+              assert expected_cross["shared_edge_sample_count"] == serialized_cross["shared_edge_sample_count"] > 0
+              assert abs(expected_cross["shared_boundary_length_m"] - serialized_cross["shared_boundary_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
+
+              precision = final["display_precision"]
+              assert precision["passed"] is True and all(precision["checks"].values())
+              assert precision["grid_m"] == 0.015625
+              assert precision["boundary_tolerance_m"] == 0.03
+              assert precision["raw_desired_to_display_boundary_hausdorff_m"] <= 0.03
+              assert precision["display_boundary_outside_raw_desired_3cm_buffer_length_m"] <= 1e-6
+              assert precision["raw_desired_boundary_outside_display_3cm_buffer_length_m"] <= 1e-6
+              assert precision["symmetric_difference_area_m2"] <= precision["area_tolerance_m2"]
+              assert precision["desired_component_count_preserved"] is True
+              assert precision["significant_interior_rings_preserved"] is True
+              assert precision["raw_desired_significant_interior_rings"]["count"] == precision["display_significant_interior_rings"]["count"]
+              for union_key in ("raw_desired_union", "raw_owned_union", "display_owned_union"):
+                  assert precision[union_key]["valid"] is True
+              partition = precision["display_ranked_partition"]
+              assert partition["precision_grid_m"] == 0.015625
+              assert partition["desired_union_basis"]
+              assert partition["planar_atomic_face_assignment_complete"] is True
+              assert partition["planar_covered_face_count"] == partition["planar_assigned_face_count"]
+              assert partition["planar_unowned_face_count"] >= 0
+              assert partition["planar_unowned_face_scope"]
+              assert partition["invalid_or_self_intersecting_partition_count"] == 0
+              assert partition["new_global_interior_ring_count"] == 0
+              assert partition["desired_union_interior_ring_count"] == partition["owned_union_interior_ring_count"]
+              assert partition["maximum_join_gap_m"] <= 1e-6
+              assert partition["uncovered_shared_endpoint_count"] == 0
+              tolerance = partition["numerical_area_tolerance_m2"]
+              assert partition["desired_unowned_area_m2"] <= tolerance
+              assert partition["owned_outside_desired_area_m2"] <= tolerance
+              assert partition["junction_uncovered_area_m2"] <= tolerance
+              assert partition["residual_positive_overlap_area_m2"] <= tolerance
+              assert partition["owned_positive_overlap_area_m2"] <= tolerance
+
+              assert final["shared_endpoint_count"] > 0
+              assert final["shared_endpoint_uncovered_count"] == 0
+              assert final["shared_endpoint_distance_maximum_m"] <= 0.03
+              assert final["shared_endpoint_distance_p95_m"] <= 0.03
+              assert final["preclip_owned_to_accounted_after_terrain_clipping_boundary_hausdorff_m"] <= 0.03
+              assert final["preclip_owned_boundary_outside_accounted_3cm_buffer_length_m"] <= 1e-6
+              assert final["accounted_boundary_outside_preclip_owned_3cm_buffer_length_m"] <= 1e-6
+              assert final["preclip_owned_to_accounted_after_terrain_clipping_symmetric_difference_area_m2"] <= final["numerical_area_tolerance_m2"]
+              for union_key in (
+                  "preclip_owned_union", "preclip_accounted_after_terrain_clipping_union",
+                  "terrain_clipped_expected_union", "serialized_visible_union",
+              ):
+                  assert final[union_key]["valid"] is True
+              assert final["preclip_owned_union"]["component_count"] == final["preclip_accounted_after_terrain_clipping_union"]["component_count"]
+              assert final["preclip_owned_significant_interior_rings"]["count"] == final["preclip_accounted_after_terrain_clipping_significant_interior_rings"]["count"]
+
+              assert final["terrain_expected_to_serialized_lost_component_count"] == 0
+              assert final["terrain_expected_to_serialized_new_component_count"] == 0
+              assert final["terrain_expected_to_serialized_lost_significant_interior_ring_count"] == 0
+              assert final["terrain_expected_to_serialized_new_significant_interior_ring_count"] == 0
+              assert final["terrain_clipped_expected_union"]["component_count"] == final["serialized_visible_union"]["component_count"]
+              assert final["terrain_clipped_expected_significant_interior_rings"]["count"] == final["serialized_significant_interior_rings"]["count"]
+              assert final["terrain_expected_to_serialized_union_area_absolute_error_m2"] <= final["float32_area_tolerance_m2"]
+              assert final["terrain_expected_to_serialized_symmetric_difference_area_m2"] <= final["float32_area_tolerance_m2"]
+              assert final["terrain_expected_to_serialized_boundary_hausdorff_m"] <= 0.03
+              assert final["terrain_expected_boundary_outside_serialized_3cm_buffer_length_m"] <= 1e-6
+              assert final["serialized_boundary_outside_terrain_expected_3cm_buffer_length_m"] <= 1e-6
+              assert final["terrain_expected_uncovered_area_m2"] <= final["float32_area_tolerance_m2"]
+              assert final["serialized_outside_terrain_expected_area_m2"] <= final["float32_area_tolerance_m2"]
+              assert final["serialized_over_nodata_area_m2"] <= final["nodata_float32_area_tolerance_m2"]
+              assert final["serialized_over_extent_clipped_area_m2"] <= final["extent_float32_area_tolerance_m2"]
+
+              welded = final["global_welded_boundary_topology"]
+              assert welded["cross_run_shared_edge_count"] > 0
+              assert welded["cross_run_shared_edge_length_m"] > 0.0
+              assert welded["cross_run_y_jump_count"] > 0
+              assert welded["cross_run_y_jump_maximum_m"] <= 0.01
+              assert welded["cross_run_y_jump_p95_m"] <= 0.001
+              assert welded["cross_run_y_jump_penetration_minimum_m"] >= 0.0
+              assert welded["boundary_segmentation_mismatch_pair_count"] == 0
+              assert welded["duplicate_boundary_edge_within_run_count"] == 0
+              assert welded["global_boundary_nonmanifold_edge_count"] == 0
+              assert welded["global_boundary_t_junction_count"] == 0
+              assert welded["unmatched_internal_boundary_length_m"] <= 0.03
+              assert abs(welded["cross_run_shared_edge_length_m"] - welded["geometric_cross_run_shared_boundary_length_m"]) <= final["cross_run_shared_boundary_length_tolerance_m"]
+
+              grounding = final["decoded_float32_grounding"]
+              assert grounding["passed"] is True and all(grounding["checks"].values())
+              assert grounding["p95_absolute_error_limit_m"] == 0.001
+              assert grounding["maximum_absolute_error_limit_m"] == 0.01
+              assert grounding["surface_offset_m"] == 0.35
+              assert grounding["vertex_sample_count"] > 0
+              assert grounding["indexed_vertex_sample_count"] > 0
+              assert grounding["face_probe_sample_count"] > 0
+              assert grounding["vertex_p95_absolute_error_m"] <= 0.001
+              assert grounding["vertex_maximum_absolute_error_m"] <= 0.01
+              assert grounding["indexed_vertex_p95_absolute_error_m"] <= 0.001
+              assert grounding["indexed_vertex_maximum_absolute_error_m"] <= 0.01
+              assert grounding["face_probe_p95_absolute_error_m"] <= 0.001
+              assert grounding["face_probe_maximum_absolute_error_m"] <= 0.01
+              assert grounding["indexed_vertex_clearance_maximum_m"] <= 2.0
+              assert grounding["face_probe_clearance_maximum_m"] <= 2.0
+              assert grounding["indexed_vertex_penetration_count"] == 0
+              assert grounding["face_probe_penetration_count"] == 0
+              assert grounding["indexed_vertex_clearance_penetration_minimum_m"] >= 0.0
+              assert grounding["face_probe_clearance_penetration_minimum_m"] >= 0.0
+              bank = direct[season]["bank_edge_float32_audit"]
+              assert bank["passed"] is True and bank["count"] > 0
+              assert bank["error_to_surface_offset_p95_abs_m"] <= 0.001
+              assert bank["error_to_surface_offset_maximum_abs_m"] <= 0.01
+              assert bank["maximum_m"] <= 2.0
+              assert bank["penetration_count"] == 0
+              assert bank["penetration_minimum_m"] >= 0.0
+              report["seasons"][season] = {
+                  "width": preset["width"], "depth": preset["depth"], "color": preset["color"],
+                  "vertex_count": final_asset["vertex_count"], "triangle_count": final_asset["triangle_count"],
+                  "grounding_p95_m": grounding["vertex_p95_absolute_error_m"],
+                  "grounding_maximum_m": grounding["vertex_maximum_absolute_error_m"],
+                  "maximum_clearance_m": max(grounding["indexed_vertex_clearance_maximum_m"], grounding["face_probe_clearance_maximum_m"]),
+                  "penetration_minimum_m": min(grounding["indexed_vertex_clearance_penetration_minimum_m"], grounding["face_probe_clearance_penetration_minimum_m"]),
+                  "boundary_hausdorff_m": final["terrain_expected_to_serialized_boundary_hausdorff_m"],
+                  "endpoint_maximum_m": final["shared_endpoint_distance_maximum_m"],
+              }
+
+          round_arc = topology["round_arc_regression"]
+          assert round_arc["passed"] is True
+          assert round_arc["round_buffer_quad_segs"] == 16
+          assert round_arc["round_arc_sample_count"] > 0
+          assert round_arc["round_arc_max_heading_step_deg"] <= 6.0
+          assert round_arc["round_arc_max_heading_step_limit_deg"] == 6.0
+          assert round_arc["round_arc_max_sagitta_ratio"] <= 0.002
+          assert round_arc["round_arc_max_sagitta_ratio_limit"] == 0.002
+          assert round_arc["maximum_actual_radius_m"] > 0.0
+          assert round_arc["maximum_actual_sagitta_m"] <= 0.25
+          assert round_arc["maximum_actual_sagitta_limit_m"] == 0.25
+          assert round_arc["construction_regression"]
+          hole_regression = topology["hole_preservation_regression"]
+          assert hole_regression["passed"] is True
+          assert hole_regression["source_interior_ring_count"] > 0
+          assert abs(hole_regression["source_area_m2"] - hole_regression["triangle_area_m2"]) <= 1e-8
+          assert hole_regression["symmetric_difference_area_m2"] <= 1e-8
+          assert hole_regression["triangle_hole_overlap_area_m2"] <= 1e-8
+          holes = topology["ribbon_hole_preservation_by_season"]
+          assert set(holes) == set(seasons)
+          for season in seasons:
+              hole = holes[season]
+              assert hole["passed"] is True
+              assert hole["input_invalid_ribbons"] == 0
+              assert hole["invalid_repaired_polygons"] == 0
+              assert hole["source_buffer_interior_ring_count"] == hole["final_interior_ring_count"]
+              assert abs(hole["source_buffer_interior_area_m2"] - hole["final_interior_ring_area_m2"]) <= 1e-8
+              assert hole["preserved_buffer_symmetric_difference_area_m2"] <= 1e-8
+              assert hole["preserved_buffer_filled_interior_area_m2"] <= 1e-8
+
+          evidence = Path(os.environ["EVIDENCE_DIR"])
+          evidence.mkdir(parents=True, exist_ok=True)
+          (evidence / "river-grounding-topology-report.json").write_text(json.dumps(report, indent=2) + "\n")
+          print("RIVER_SERIALIZED_V2_QA_OK", runtime["run_count"])
+          PY
+          cp dist/data/river_drape_runtime.json "${EVIDENCE_DIR}/river_drape_runtime.json"
+          cp dist/data/river_drape_qa.json "${EVIDENCE_DIR}/river_drape_qa.json"
+
+      - name: Install pinned browser runtime and verify Traditional Chinese font
+        id: browser_dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk fontconfig
+          fc-cache -f
+          font_family="$(fc-match -f '%{family}\n' 'Noto Sans CJK TC' | head -n 1)"
+          printf '%s\n' "${font_family}" | grep -F 'Noto Sans CJK'
+          FONT_FAMILY="${font_family}" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          family = os.environ["FONT_FAMILY"]
+          assert "Noto Sans CJK" in family
+          out = Path(os.environ["EVIDENCE_DIR"]) / "font-receipt.json"
+          out.write_text(json.dumps({
+              "schema": "guilin-v072-font-receipt/v1",
+              "requested_family": "Noto Sans CJK TC",
+              "matched_family": family,
+              "passed": True,
+          }, ensure_ascii=False, indent=2) + "\n")
+          PY
+          npm install --no-save --ignore-scripts \
+            playwright@1.51.1 \
+            three@0.170.0 \
+            proj4@2.11.0
           npx playwright install --with-deps chromium
-          python -m http.server 8000 --directory dist >/tmp/guilin-v072-http.log 2>&1 &
+          node - <<'JS'
+          const assert = require('node:assert/strict');
+          assert.equal(require('playwright/package.json').version, '1.51.1');
+          assert.equal(require('three/package.json').version, '0.170.0');
+          assert.equal(require('proj4/package.json').version, '2.11.0');
+          JS
+
+      - name: Assemble same-origin viewer and checksum pinned vendor modules
+        id: assemble
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 0644 "${PROJECT_DIR}/web/index.html" dist/index.html
+          install -m 0644 "${PROJECT_DIR}/web/app.js" dist/app.js
+          install -m 0644 "${PROJECT_DIR}/web/styles.css" dist/styles.css
+          mkdir -p dist/vendor
+          install -m 0644 node_modules/three/build/three.module.js dist/vendor/three.module.js
+          install -m 0644 node_modules/three/examples/jsm/controls/OrbitControls.js dist/vendor/OrbitControls.js
+          install -m 0644 node_modules/proj4/dist/proj4.js dist/vendor/proj4.js
+          printf '%s  %s\n' \
+            ce1fa418de16a19495a9f72495580e3015d7745c296d3ce0485897f902ddedfb dist/vendor/three.module.js \
+            80efaadea4f8a636a65fb0bd08bfef62f3d93a0bb94e2e7500f23176c5c07f4e dist/vendor/OrbitControls.js \
+            4975fbf411fac1842c5b91d362d323d3f01ca0cb52385a2ea219790ffaa20a80 dist/vendor/proj4.js \
+            | sha256sum --check --strict
+          grep -F './vendor/three.module.js' dist/index.html
+          grep -F './vendor/OrbitControls.js' dist/index.html
+          grep -F './vendor/proj4.js' dist/index.html
+          if grep -E 'https?://(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com)' dist/index.html dist/app.js; then
+            echo 'Runtime CDN dependency is forbidden' >&2
+            exit 1
+          fi
+          SOURCE_SHA="${GITHUB_SHA}" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          receipt = {
+              "schema": "guilin-v072-deployment-receipt/v1",
+              "source_repository": os.environ["GITHUB_REPOSITORY"],
+              "source_branch": os.environ["EXPECTED_BRANCH"],
+              "source_commit": os.environ["SOURCE_SHA"],
+              "destination_dir": os.environ["DESTINATION_DIR"],
+              "public_url": os.environ["PUBLIC_BASE_URL"],
+              "vertical_scale": 1.0,
+              "source_resolution_m": 12.5,
+              "gap_fill": False,
+              "pr_number": int(os.environ["EXPECTED_PR"]),
+          }
+          Path("dist/deployment_receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
+
+      - name: Freeze exact publish tree and exhaustive public resource inventory
+        id: release_inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, re
+          from pathlib import Path
+
+          dist = Path("dist")
+          evidence = Path(os.environ["EVIDENCE_DIR"])
+          files = sorted(path for path in dist.rglob("*") if path.is_file())
+          assert files
+          paths = [path.relative_to(dist).as_posix() for path in files]
+          assert len(paths) == len(set(paths))
+          assert not any(path.startswith("/") or ".." in Path(path).parts for path in paths)
+          tile_paths = [path for path in paths if re.fullmatch(r"data/terrain_lod/[^/]+/r\d{3}_c\d{3}\.tile\.gz", path)]
+          assert len(tile_paths) == 6742
+          required = {
+              "index.html", "app.js", "styles.css", "deployment_receipt.json",
+              "vendor/three.module.js", "vendor/OrbitControls.js", "vendor/proj4.js",
+              "data/terrain_manifest.json", "data/terrain_lod_manifest.json", "data/terrain_lod_qa.json",
+              "data/terrain_height_u16.bin", "data/terrain_texture.webp", "data/terrain_normal.png",
+              "data/terrain_roughness.webp", "data/terrain_karst_detail.webp",
+              "data/osm_hydrology.geojson", "data/river_drape_runtime.json", "data/river_drape_qa.json",
+          }
+          assert required <= set(paths)
+          resources = []
+          for path in files:
+              data = path.read_bytes()
+              assert data
+              resources.append({
+                  "path": path.relative_to(dist).as_posix(),
+                  "bytes": len(data),
+                  "sha256": hashlib.sha256(data).hexdigest(),
+              })
+          inventory = {
+              "schema": "guilin-v072-publish-inventory/v1",
+              "source_commit": os.environ["GITHUB_SHA"],
+              "destination_dir": os.environ["DESTINATION_DIR"],
+              "resource_count": len(resources),
+              "terrain_lod_tile_count": len(tile_paths),
+              "resources": resources,
+          }
+          evidence.mkdir(parents=True, exist_ok=True)
+          (evidence / "release-inventory.json").write_text(json.dumps(inventory, indent=2) + "\n")
+          print("RELEASE_INVENTORY_OK", len(resources), len(tile_paths))
+          PY
+
+      - name: Run local Chromium interaction and visual evidence QA
+        id: local_browser
+        continue-on-error: true
+        timeout-minutes: 100
+        shell: bash
+        run: |
+          set -euo pipefail
+          local_evidence="${EVIDENCE_DIR}/local"
+          mkdir -p "${local_evidence}"
+          python -m http.server 8000 --bind 127.0.0.1 --directory dist \
+            >"${local_evidence}/http-server.log" 2>&1 &
           server_pid=$!
-          trap 'kill ${server_pid} || true' EXIT
-          node "${PROJECT_DIR}/browser_smoke.mjs"
+          cleanup() {
+            kill "${server_pid}" 2>/dev/null || true
+            wait "${server_pid}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:8000/ >/dev/null; then
+              break
+            fi
+            if [ "${attempt}" -eq 60 ]; then
+              echo 'Local server failed to become ready' >&2
+              exit 1
+            fi
+            sleep 1
+          done
+          set +e
+          EVIDENCE_DIR="${local_evidence}" \
+          XIAOGUI_BASE_URL="http://127.0.0.1:8000/" \
+          BROWSER_MODE="local" \
+          HOST_DEADLINE_MS="4500000" \
+            timeout --signal=TERM --kill-after=5m 90m \
+            node "${PROJECT_DIR}/browser_smoke.mjs" \
+            >"${local_evidence}/browser-smoke.log" 2>&1
+          browser_status=$?
+          set -e
+          BROWSER_STATUS="${browser_status}" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ["EVIDENCE_DIR"]) / "local"
+          status = int(os.environ["BROWSER_STATUS"])
+          receipt = {
+              "schema": "guilin-v072-browser-process-receipt/v1",
+              "mode": "local",
+              "exit_code": status,
+              "node_host_deadline_ms": 4_500_000,
+              "shell_timeout_minutes": 90,
+              "step_timeout_minutes": 100,
+              "evidence_flush_margin_minutes": 15,
+          }
+          (root / "process-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          required = ["browser-qa-report.json", "diagnostics.json", "browser-console.json", "browser-network.json"]
+          missing = [name for name in required if not (root / name).is_file()]
+          if missing:
+              raise AssertionError(f"local browser failed to persist required evidence: {missing}")
+          report = json.loads((root / "browser-qa-report.json").read_text())
+          diagnostics = json.loads((root / "diagnostics.json").read_text())
+          console = json.loads((root / "browser-console.json").read_text())
+          network = json.loads((root / "browser-network.json").read_text())
+          assert status == 0, receipt
+          assert report["schema"] == "guilin-v072-browser-qa-report/v3" and report["passed"] is True
+          assert report["browser_mode"] == "local"
+          assert diagnostics["passed"] is True and diagnostics["fatal_error"] is None
+          assert report["screenshot_count"] >= 80
+          assert console["errors"] == [] and console["page_errors"] == []
+          assert network["http_404"] == [] and network["responses_ge_400"] == []
+          assert network["request_failed"] == []
+          PY
 
-      - name: Upload evidence artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: guilin-v072-rich-terrain-seasonal-rivers-evidence
-          path: |
-            dist/data/terrain_manifest.json
-            dist/data/osm_hydrology.geojson
-            dist/evidence/
-          if-no-files-found: error
-          retention-days: 90
+      - name: Recheck release prerequisites immediately before Pages publication
+        id: pre_publish_gate
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_IDENTITY_OUTCOME: ${{ steps.source_identity.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          SOURCE_QA_OUTCOME: ${{ steps.source_qa.outcome }}
+          MOSAIC_BUILD_OUTCOME: ${{ steps.mosaic_build.outcome }}
+          MOSAIC_QA_OUTCOME: ${{ steps.mosaic_qa.outcome }}
+          OSM_QA_OUTCOME: ${{ steps.osm_qa.outcome }}
+          FULL_BUILD_OUTCOME: ${{ steps.full_build.outcome }}
+          TERRAIN_QA_OUTCOME: ${{ steps.terrain_qa.outcome }}
+          RIVER_QA_OUTCOME: ${{ steps.river_qa.outcome }}
+          BROWSER_DEPENDENCIES_OUTCOME: ${{ steps.browser_dependencies.outcome }}
+          ASSEMBLE_OUTCOME: ${{ steps.assemble.outcome }}
+          RELEASE_INVENTORY_OUTCOME: ${{ steps.release_inventory.outcome }}
+          LOCAL_BROWSER_OUTCOME: ${{ steps.local_browser.outcome }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          gates = {
+              key.removesuffix("_OUTCOME").lower(): value
+              for key, value in os.environ.items() if key.endswith("_OUTCOME")
+          }
+          failed = {key: value for key, value in gates.items() if value != "success"}
+          if failed:
+              raise AssertionError(f"pre-publish QA outcomes are not all successful: {failed}")
+          report = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "local/browser-qa-report.json").read_text())
+          diagnostics = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "local/diagnostics.json").read_text())
+          assert report["passed"] is True and diagnostics["passed"] is True
+          inventory = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "release-inventory.json").read_text())
+          assert inventory["source_commit"] == os.environ["GITHUB_SHA"]
+          assert inventory["terrain_lod_tile_count"] == 6742
+          assert inventory["resource_count"] == len(inventory["resources"])
+          PY
+          remote_sha="$(git ls-remote --exit-code origin "refs/heads/${EXPECTED_BRANCH}" | awk '{print $1}')"
+          test "${remote_sha}" = "${GITHUB_SHA}"
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${EXPECTED_PR}")"
+          PR_JSON="${pr_json}" python - <<'PY'
+          import json, os
+          pr = json.loads(os.environ["PR_JSON"])
+          assert pr["state"] == "open" and pr["draft"] is True
+          assert pr["merged"] is False and pr["merged_at"] is None
+          assert pr["head"]["ref"] == os.environ["EXPECTED_BRANCH"]
+          assert pr["head"]["sha"] == os.environ["GITHUB_SHA"]
+          assert pr["base"]["ref"] == "main"
+          PY
 
-      - name: Publish v0.7.2 viewer to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Capture gh-pages ancestry and non-destination tree before publication
+        id: pages_before
+        if: steps.pre_publish_gate.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
+          before="$(git rev-parse refs/remotes/origin/gh-pages)"
+          test -n "${before}"
+          printf 'commit=%s\n' "${before}" >> "${GITHUB_OUTPUT}"
+          BEFORE_COMMIT="${before}" python - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          before = os.environ["BEFORE_COMMIT"]
+          destination = os.environ["DESTINATION_DIR"].rstrip("/") + "/"
+          raw = subprocess.check_output(["git", "ls-tree", "-rz", "--full-tree", before])
+          entries = []
+          for record in raw.split(b"\0"):
+              if not record:
+                  continue
+              metadata, path_bytes = record.split(b"\t", 1)
+              path = path_bytes.decode("utf-8")
+              if not path.startswith(destination):
+                  entries.append({"metadata": metadata.decode("ascii"), "path": path})
+          payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":")).encode()
+          receipt = {
+              "schema": "guilin-v072-pages-before/v1",
+              "commit": before,
+              "outside_destination_entry_count": len(entries),
+              "outside_destination_tree_sha256": hashlib.sha256(payload).hexdigest(),
+              "entries": entries,
+          }
+          out = Path(os.environ["EVIDENCE_DIR"]) / "pages-before.json"
+          out.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n")
+          PY
+
+      - name: Publish only the QA-approved destination tree to gh-pages
+        id: publish
+        if: steps.pages_before.outcome == 'success' && steps.pre_publish_gate.outcome == 'success'
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
@@ -109,17 +1164,574 @@ jobs:
           destination_dir: guilin-v072-terrain-rivers
           keep_files: true
           force_orphan: false
-          commit_message: "Publish Guilin v0.7.2 rich terrain and seasonal rivers from ${{ github.sha }}"
+          enable_jekyll: false
+          commit_message: "Publish Guilin v0.7.2 from source ${{ github.sha }}"
 
-      - name: Write job summary
+      - name: Verify non-force Pages ancestry, destination-only delta, and every published byte
+        id: pages_verify
+        if: steps.publish.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          BEFORE_COMMIT: ${{ steps.pages_before.outputs.commit }}
         run: |
-          {
-            echo '## Xiaogui Guilin v0.7.2'
-            echo
-            echo '- Online: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v072-terrain-rivers/'
-            echo '- Source: 12 new 12.5 m DEM files'
-            echo '- Vertical scale: 1.00x locked'
-            echo '- Terrain: richer satellite color + higher-resolution normal/roughness detail'
-            echo '- Hydrology: ground-draped ribbon meshes with width, depth, color and four seasonal presets'
-            echo '- Centerlines: immutable OSM coordinates'
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          test -n "${BEFORE_COMMIT}"
+          git fetch --no-tags origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
+          after="$(git rev-parse refs/remotes/origin/gh-pages)"
+          test "${after}" != "${BEFORE_COMMIT}"
+          git merge-base --is-ancestor "${BEFORE_COMMIT}" "${after}"
+          parent_count="$(git rev-list --parents -n 1 "${after}" | awk '{print NF-1}')"
+          test "${parent_count}" -eq 1
+          test "$(git rev-parse "${after}^")" = "${BEFORE_COMMIT}"
+          git log -1 --format=%B "${after}" | grep -F "${GITHUB_SHA}"
+          while IFS= read -r changed; do
+            test -n "${changed}"
+            case "${changed}" in
+              "${DESTINATION_DIR}"/*) ;;
+              *) echo "Unexpected gh-pages path changed: ${changed}" >&2; exit 1 ;;
+            esac
+          done < <(git diff-tree --no-commit-id --name-only -r "${BEFORE_COMMIT}" "${after}")
+          AFTER_COMMIT="${after}" python - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          before = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "pages-before.json").read_text())
+          after = os.environ["AFTER_COMMIT"]
+          destination = os.environ["DESTINATION_DIR"].rstrip("/") + "/"
+          raw = subprocess.check_output(["git", "ls-tree", "-rz", "--full-tree", after])
+          entries = []
+          for record in raw.split(b"\0"):
+              if not record:
+                  continue
+              metadata, path_bytes = record.split(b"\t", 1)
+              path = path_bytes.decode("utf-8")
+              if not path.startswith(destination):
+                  entries.append({"metadata": metadata.decode("ascii"), "path": path})
+          payload = json.dumps(entries, ensure_ascii=False, separators=(",", ":")).encode()
+          assert entries == before["entries"]
+          assert hashlib.sha256(payload).hexdigest() == before["outside_destination_tree_sha256"]
+          PY
+          published_tree="$(mktemp -d)"
+          git archive "${after}:${DESTINATION_DIR}" | tar -x -C "${published_tree}"
+          PUBLISHED_TREE="${published_tree}" AFTER_COMMIT="${after}" python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path(os.environ["PUBLISHED_TREE"])
+          inventory = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "release-inventory.json").read_text())
+          expected = {entry["path"]: entry for entry in inventory["resources"]}
+          actual_paths = sorted(path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file())
+          assert actual_paths == sorted(expected), (len(actual_paths), len(expected))
+          for relative, entry in expected.items():
+              path = root / relative
+              data = path.read_bytes()
+              assert len(data) == entry["bytes"], relative
+              assert hashlib.sha256(data).hexdigest() == entry["sha256"], relative
+          receipt = {
+              "schema": "guilin-v072-pages-tree-verification/v1",
+              "source_commit": os.environ["GITHUB_SHA"],
+              "before_commit": json.loads((Path(os.environ["EVIDENCE_DIR"]) / "pages-before.json").read_text())["commit"],
+              "published_commit": os.environ["AFTER_COMMIT"],
+              "destination_dir": os.environ["DESTINATION_DIR"],
+              "resource_count": len(expected),
+              "all_bytes_match": True,
+              "outside_destination_unchanged": True,
+              "single_non_force_parent": True,
+              "passed": True,
+          }
+          (Path(os.environ["EVIDENCE_DIR"]) / "pages-tree-verification.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
+          printf 'pages_commit=%s\n' "${after}" >> "${GITHUB_OUTPUT}"
+
+      - name: Poll the real public origin for the exact source deployment receipt
+        id: public_freshness
+        if: steps.publish.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          started = time.monotonic()
+          deadline_seconds = 18 * 60
+          base = os.environ["PUBLIC_BASE_URL"]
+          expected = os.environ["GITHUB_SHA"]
+          attempts = []
+          matched = False
+          while time.monotonic() - started < deadline_seconds:
+              url = f"{base}deployment_receipt.json?source={expected}&attempt={len(attempts) + 1}"
+              item = {"url": url, "status": None, "source_commit": None, "error": None}
+              try:
+                  request = Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "guilin-v072-public-freshness"})
+                  with urlopen(request, timeout=20) as response:
+                      item["status"] = response.status
+                      payload = json.loads(response.read())
+                  item["source_commit"] = payload.get("source_commit")
+                  matched = response.status == 200 and payload.get("schema") == "guilin-v072-deployment-receipt/v1" and payload.get("source_commit") == expected
+              except HTTPError as error:
+                  item["status"] = error.code
+                  item["error"] = str(error)
+              except (URLError, TimeoutError, json.JSONDecodeError) as error:
+                  item["error"] = str(error)
+              attempts.append(item)
+              if matched:
+                  break
+              time.sleep(10)
+          elapsed = time.monotonic() - started
+          report = {
+              "schema": "guilin-v072-public-freshness/v1",
+              "public_url": base,
+              "expected_source_commit": expected,
+              "matched": matched,
+              "passed": matched and elapsed < 20 * 60,
+              "elapsed_seconds": elapsed,
+              "attempts": attempts,
+          }
+          path = Path(os.environ["EVIDENCE_DIR"]) / "public-freshness.json"
+          path.write_text(json.dumps(report, indent=2) + "\n")
+          assert report["passed"], report
+          PY
+
+      - name: Run Chromium QA against the unmodified real public origin
+        id: public_browser
+        if: steps.publish.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 75
+        shell: bash
+        run: |
+          set -euo pipefail
+          public_evidence="${EVIDENCE_DIR}/public"
+          mkdir -p "${public_evidence}"
+          set +e
+          EVIDENCE_DIR="${public_evidence}" \
+          XIAOGUI_BASE_URL="${PUBLIC_BASE_URL}" \
+          BROWSER_MODE="public" \
+          HOST_DEADLINE_MS="3600000" \
+            timeout --signal=TERM --kill-after=5m 70m \
+            node "${PROJECT_DIR}/browser_smoke.mjs" \
+            >"${public_evidence}/browser-smoke.log" 2>&1
+          browser_status=$?
+          set -e
+          BROWSER_STATUS="${browser_status}" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ["EVIDENCE_DIR"]) / "public"
+          status = int(os.environ["BROWSER_STATUS"])
+          receipt = {
+              "schema": "guilin-v072-browser-process-receipt/v1", "mode": "public-live-vendor",
+              "exit_code": status, "node_host_deadline_ms": 3_600_000,
+              "shell_timeout_minutes": 70, "step_timeout_minutes": 75,
+              "evidence_flush_margin_minutes": 10,
+          }
+          (root / "process-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          required = ["browser-qa-report.json", "diagnostics.json", "browser-console.json", "browser-network.json"]
+          missing = [name for name in required if not (root / name).is_file()]
+          if missing:
+              raise AssertionError(f"public browser failed to persist required evidence: {missing}")
+          report = json.loads((root / "browser-qa-report.json").read_text())
+          diagnostics = json.loads((root / "diagnostics.json").read_text())
+          console = json.loads((root / "browser-console.json").read_text())
+          network = json.loads((root / "browser-network.json").read_text())
+          assert status == 0, receipt
+          assert report["schema"] == "guilin-v072-browser-qa-report/v3" and report["passed"] is True
+          assert report["browser_mode"] == "public-live-vendor"
+          assert diagnostics["passed"] is True and diagnostics["fatal_error"] is None
+          assert report["screenshot_count"] >= 80
+          assert console["errors"] == [] and console["page_errors"] == []
+          assert network["http_404"] == [] and network["responses_ge_400"] == []
+          assert network["request_failed"] == []
+          PY
+
+      - name: Check every published resource and every observed HTTP attempt
+        id: public_resources
+        if: steps.publish.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import concurrent.futures, hashlib, json, os, time
+          from pathlib import Path
+          from urllib.error import HTTPError, URLError
+          from urllib.parse import quote
+          from urllib.request import Request, urlopen
+
+          inventory = json.loads((Path(os.environ["EVIDENCE_DIR"]) / "release-inventory.json").read_text())
+          resources = inventory["resources"]
+          assert inventory["terrain_lod_tile_count"] == 6742
+          assert inventory["resource_count"] == len(resources)
+          base = os.environ["PUBLIC_BASE_URL"]
+          started = time.monotonic()
+          deadline = started + 18 * 60
+
+          def check_resource(entry):
+              attempts = []
+              success = False
+              for attempt_number in (1, 2):
+                  remaining = deadline - time.monotonic()
+                  if remaining <= 1:
+                      attempts.append({"attempt": attempt_number, "status": None, "error": "global deadline exhausted"})
+                      break
+                  encoded_path = "/".join(quote(part, safe="") for part in entry["path"].split("/"))
+                  url = f"{base}{encoded_path}?qa={entry['sha256'][:16]}&attempt={attempt_number}"
+                  item = {"attempt": attempt_number, "url": url, "status": None, "bytes": None, "sha256": None, "error": None}
+                  try:
+                      request = Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "guilin-v072-public-resource-qa"})
+                      with urlopen(request, timeout=min(8.0, max(1.0, remaining))) as response:
+                          body = response.read()
+                          item["status"] = response.status
+                      item["bytes"] = len(body)
+                      item["sha256"] = hashlib.sha256(body).hexdigest()
+                      success = item["status"] == 200 and item["bytes"] == entry["bytes"] and item["sha256"] == entry["sha256"]
+                  except HTTPError as error:
+                      item["status"] = error.code
+                      item["error"] = str(error)
+                  except (URLError, TimeoutError, OSError) as error:
+                      item["error"] = str(error)
+                  attempts.append(item)
+                  if success:
+                      break
+                  time.sleep(0.1)
+              return {"path": entry["path"], "expected_bytes": entry["bytes"], "expected_sha256": entry["sha256"], "passed": success, "attempts": attempts}
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=128) as executor:
+              results = list(executor.map(check_resource, resources))
+          elapsed = time.monotonic() - started
+          failures = [result["path"] for result in results if not result["passed"]]
+          observed_attempt_404 = sum(
+              1 for result in results for attempt in result["attempts"] if attempt.get("status") == 404
+          )
+          report = {
+              "schema": "guilin-v072-public-all-resources-http/v2",
+              "public_base_url": base,
+              "source_commit": os.environ["GITHUB_SHA"],
+              "expected_resource_count": len(resources),
+              "checked_resource_count": len(results),
+              "terrain_lod_tile_count": inventory["terrain_lod_tile_count"],
+              "failed_resource_count": len(failures),
+              "failed_resources": failures,
+              "http_404_count": observed_attempt_404,
+              "observed_attempt_http_404_count": observed_attempt_404,
+              "attempt_count": sum(len(result["attempts"]) for result in results),
+              "elapsed_seconds": elapsed,
+              "deadline_seconds": 18 * 60,
+              "completed_before_deadline": elapsed < 20 * 60,
+              "results": results,
+          }
+          report["passed"] = (
+              report["checked_resource_count"] == report["expected_resource_count"]
+              and report["terrain_lod_tile_count"] == 6742
+              and report["failed_resource_count"] == 0
+              and report["http_404_count"] == 0
+              and report["observed_attempt_http_404_count"] == 0
+              and report["completed_before_deadline"]
+          )
+          path = Path(os.environ["EVIDENCE_DIR"]) / "public-all-resources-http.json"
+          path.write_text(json.dumps(report, indent=2) + "\n")
+          assert report["passed"], {
+              "failed_resource_count": len(failures),
+              "observed_attempt_http_404_count": observed_attempt_404,
+              "elapsed_seconds": elapsed,
+          }
+          PY
+
+      - name: Inventory all available evidence even when QA failed
+        id: evidence_inventory
+        if: always()
+        shell: bash
+        env:
+          SOURCE_IDENTITY_OUTCOME: ${{ steps.source_identity.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          SOURCE_QA_OUTCOME: ${{ steps.source_qa.outcome }}
+          MOSAIC_BUILD_OUTCOME: ${{ steps.mosaic_build.outcome }}
+          MOSAIC_QA_OUTCOME: ${{ steps.mosaic_qa.outcome }}
+          OSM_QA_OUTCOME: ${{ steps.osm_qa.outcome }}
+          FULL_BUILD_OUTCOME: ${{ steps.full_build.outcome }}
+          TERRAIN_QA_OUTCOME: ${{ steps.terrain_qa.outcome }}
+          RIVER_QA_OUTCOME: ${{ steps.river_qa.outcome }}
+          BROWSER_DEPENDENCIES_OUTCOME: ${{ steps.browser_dependencies.outcome }}
+          ASSEMBLE_OUTCOME: ${{ steps.assemble.outcome }}
+          RELEASE_INVENTORY_OUTCOME: ${{ steps.release_inventory.outcome }}
+          LOCAL_BROWSER_OUTCOME: ${{ steps.local_browser.outcome }}
+          PRE_PUBLISH_GATE_OUTCOME: ${{ steps.pre_publish_gate.outcome }}
+          PAGES_BEFORE_OUTCOME: ${{ steps.pages_before.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          PAGES_VERIFY_OUTCOME: ${{ steps.pages_verify.outcome }}
+          PUBLIC_FRESHNESS_OUTCOME: ${{ steps.public_freshness.outcome }}
+          PUBLIC_BROWSER_OUTCOME: ${{ steps.public_browser.outcome }}
+          PUBLIC_RESOURCES_OUTCOME: ${{ steps.public_resources.outcome }}
+          PAGES_COMMIT: ${{ steps.pages_verify.outputs.pages_commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${EVIDENCE_DIR}/contracts"
+          for path in \
+            "${RAW_DIR}/raw/mosaic_qa.json" \
+            dist/deployment_receipt.json \
+            dist/data/terrain_manifest.json \
+            dist/data/terrain_lod_manifest.json \
+            dist/data/terrain_lod_qa.json \
+            dist/data/osm_hydrology.geojson \
+            dist/data/river_drape_runtime.json \
+            dist/data/river_drape_qa.json; do
+            if [ -f "${path}" ]; then
+              cp "${path}" "${EVIDENCE_DIR}/contracts/$(basename "${path}")"
+            fi
+          done
+          git fetch --no-tags origin main >/dev/null 2>&1 || true
+          git diff --name-only "origin/main...${GITHUB_SHA}" >"${EVIDENCE_DIR}/modified-files.txt" || \
+            git show --pretty='' --name-only "${GITHUB_SHA}" >"${EVIDENCE_DIR}/modified-files.txt"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path(os.environ["EVIDENCE_DIR"])
+          outcomes = {
+              key.removesuffix("_OUTCOME").lower(): value
+              for key, value in os.environ.items() if key.endswith("_OUTCOME")
+          }
+          (root / "workflow-step-outcomes.json").write_text(json.dumps({
+              "schema": "guilin-v072-workflow-step-outcomes/v1",
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "source_commit": os.environ["GITHUB_SHA"],
+              "pages_commit": os.environ.get("PAGES_COMMIT") or None,
+              "outcomes": outcomes,
+          }, indent=2) + "\n")
+          files = []
+          for path in sorted(root.rglob("*")):
+              if not path.is_file() or path.name == "evidence-inventory.json":
+                  continue
+              data = path.read_bytes()
+              files.append({
+                  "path": path.relative_to(root).as_posix(),
+                  "bytes": len(data),
+                  "sha256": hashlib.sha256(data).hexdigest(),
+              })
+          assert files
+          inventory = {
+              "schema": "guilin-v072-evidence-inventory/v1",
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "source_commit": os.environ["GITHUB_SHA"],
+              "artifact_name": f"guilin-v072-rich-terrain-seasonal-rivers-evidence-{os.environ['GITHUB_RUN_ID']}",
+              "file_count": len(files),
+              "files": files,
+          }
+          (root / "evidence-inventory.json").write_text(json.dumps(inventory, indent=2) + "\n")
+          print("EVIDENCE_INVENTORY_OK", len(files))
+          PY
+
+      - name: Upload logs, contracts, diagnostics, and screenshots on success or failure
+        id: evidence_artifact
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: guilin-v072-rich-terrain-seasonal-rivers-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/guilin-v072-evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Write truthful run, artifact, public, and QA summary
+        id: job_summary
+        if: always()
+        shell: bash
+        env:
+          SOURCE_IDENTITY_OUTCOME: ${{ steps.source_identity.outcome }}
+          SOURCE_QA_OUTCOME: ${{ steps.source_qa.outcome }}
+          MOSAIC_QA_OUTCOME: ${{ steps.mosaic_qa.outcome }}
+          OSM_QA_OUTCOME: ${{ steps.osm_qa.outcome }}
+          TERRAIN_QA_OUTCOME: ${{ steps.terrain_qa.outcome }}
+          RIVER_QA_OUTCOME: ${{ steps.river_qa.outcome }}
+          LOCAL_BROWSER_OUTCOME: ${{ steps.local_browser.outcome }}
+          PRE_PUBLISH_GATE_OUTCOME: ${{ steps.pre_publish_gate.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          PAGES_VERIFY_OUTCOME: ${{ steps.pages_verify.outcome }}
+          PUBLIC_FRESHNESS_OUTCOME: ${{ steps.public_freshness.outcome }}
+          PUBLIC_BROWSER_OUTCOME: ${{ steps.public_browser.outcome }}
+          PUBLIC_RESOURCES_OUTCOME: ${{ steps.public_resources.outcome }}
+          EVIDENCE_ARTIFACT_OUTCOME: ${{ steps.evidence_artifact.outcome }}
+          ARTIFACT_URL: ${{ steps.evidence_artifact.outputs.artifact-url }}
+          ARTIFACT_ID: ${{ steps.evidence_artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_artifact.outputs.artifact-digest }}
+          PAGES_COMMIT: ${{ steps.pages_verify.outputs.pages_commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' >>"${GITHUB_STEP_SUMMARY}"
+          import json, os
+          from pathlib import Path
+
+          evidence = Path(os.environ["EVIDENCE_DIR"])
+          def load(relative):
+              path = evidence / relative
+              try:
+                  return json.loads(path.read_text())
+              except (FileNotFoundError, json.JSONDecodeError):
+                  return None
+          outcomes = {
+              key.removesuffix("_OUTCOME").lower(): value
+              for key, value in os.environ.items() if key.endswith("_OUTCOME")
+          }
+          run_url = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          artifact_name = f"guilin-v072-rich-terrain-seasonal-rivers-evidence-{os.environ['GITHUB_RUN_ID']}"
+          local_report, public_report = load("local/browser-qa-report.json"), load("public/browser-qa-report.json")
+          local_console, public_console = load("local/browser-console.json"), load("public/browser-console.json")
+          local_network, public_network = load("local/browser-network.json"), load("public/browser-network.json")
+          resources = load("public-all-resources-http.json")
+          freshness = load("public-freshness.json")
+          river = load("river-grounding-topology-report.json")
+          print("## Guilin v0.7.2 Draft release evidence")
+          print()
+          print(f"- Actions run: [{os.environ['GITHUB_RUN_ID']}]({run_url}) (attempt {os.environ['GITHUB_RUN_ATTEMPT']})")
+          print(f"- Source commit: `{os.environ['GITHUB_SHA']}`")
+          print(f"- Pages commit: `{os.environ.get('PAGES_COMMIT') or 'not verified'}`")
+          print(f"- Public URL: {os.environ['PUBLIC_BASE_URL']}")
+          print(f"- Artifact: `{artifact_name}`; ID `{os.environ.get('ARTIFACT_ID') or 'not uploaded'}`")
+          if os.environ.get("ARTIFACT_URL"):
+              print(f"- Artifact download: {os.environ['ARTIFACT_URL']}")
+          if os.environ.get("ARTIFACT_DIGEST"):
+              print(f"- Artifact digest: `{os.environ['ARTIFACT_DIGEST']}`")
+          print("- PR policy: remains open, Draft, unmerged; this workflow never changes readiness or merges.")
+          print()
+          print("### Step outcomes")
+          print()
+          print("| Gate | Outcome |")
+          print("| --- | --- |")
+          for key in sorted(outcomes):
+              print(f"| `{key}` | `{outcomes[key]}` |")
+          print()
+          print("### Browser and public origin")
+          print()
+          print("| Evidence | Local | Public |")
+          print("| --- | ---: | ---: |")
+          def flag(report): return "pass" if report and report.get("passed") is True else "not passed"
+          def count(record, key): return len(record.get(key, [])) if record else "not available"
+          print(f"| Browser contract | {flag(local_report)} | {flag(public_report)} |")
+          print(f"| Console errors | {count(local_console, 'errors')} | {count(public_console, 'errors')} |")
+          print(f"| Page errors | {count(local_console, 'page_errors')} | {count(public_console, 'page_errors')} |")
+          print(f"| Browser HTTP 404 | {count(local_network, 'http_404')} | {count(public_network, 'http_404')} |")
+          print(f"| Failed requests | {count(local_network, 'request_failed')} | {count(public_network, 'request_failed')} |")
+          if resources:
+              print(f"- Exhaustive public resources: {resources.get('checked_resource_count')}/{resources.get('expected_resource_count')}; all-attempt 404 count: {resources.get('observed_attempt_http_404_count')}; passed: {resources.get('passed')}.")
+          else:
+              print("- Exhaustive public resources: not available.")
+          print(f"- Exact public freshness: {freshness.get('passed') if freshness else 'not available'}.")
+          if river:
+              print()
+              print("### Final decoded river grounding")
+              print()
+              print("| Season | Width | Depth | P95 error m | Maximum error m | Maximum clearance m | Penetration minimum m |")
+              print("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+              for season in ("winter", "spring", "summer", "autumn"):
+                  item = river["seasons"][season]
+                  print(f"| {season} | {item['width']} | {item['depth']} | {item['grounding_p95_m']:.9g} | {item['grounding_maximum_m']:.9g} | {item['maximum_clearance_m']:.9g} | {item['penetration_minimum_m']:.9g} |")
+          print()
+          print("### Modified files in this PR")
+          print()
+          modified_path = evidence / "modified-files.txt"
+          modified = [line for line in modified_path.read_text().splitlines() if line] if modified_path.exists() else []
+          if modified:
+              for path in modified:
+                  print(f"- `{path}`")
+          else:
+              print("- Not available")
+          PY
+
+      - name: Final fail-closed public release and Draft PR gate
+        id: final_gate
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_IDENTITY_OUTCOME: ${{ steps.source_identity.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          SOURCE_QA_OUTCOME: ${{ steps.source_qa.outcome }}
+          MOSAIC_BUILD_OUTCOME: ${{ steps.mosaic_build.outcome }}
+          MOSAIC_QA_OUTCOME: ${{ steps.mosaic_qa.outcome }}
+          OSM_QA_OUTCOME: ${{ steps.osm_qa.outcome }}
+          FULL_BUILD_OUTCOME: ${{ steps.full_build.outcome }}
+          TERRAIN_QA_OUTCOME: ${{ steps.terrain_qa.outcome }}
+          RIVER_QA_OUTCOME: ${{ steps.river_qa.outcome }}
+          BROWSER_DEPENDENCIES_OUTCOME: ${{ steps.browser_dependencies.outcome }}
+          ASSEMBLE_OUTCOME: ${{ steps.assemble.outcome }}
+          RELEASE_INVENTORY_OUTCOME: ${{ steps.release_inventory.outcome }}
+          LOCAL_BROWSER_OUTCOME: ${{ steps.local_browser.outcome }}
+          PRE_PUBLISH_GATE_OUTCOME: ${{ steps.pre_publish_gate.outcome }}
+          PAGES_BEFORE_OUTCOME: ${{ steps.pages_before.outcome }}
+          PUBLISH_OUTCOME: ${{ steps.publish.outcome }}
+          PAGES_VERIFY_OUTCOME: ${{ steps.pages_verify.outcome }}
+          PUBLIC_FRESHNESS_OUTCOME: ${{ steps.public_freshness.outcome }}
+          PUBLIC_BROWSER_OUTCOME: ${{ steps.public_browser.outcome }}
+          PUBLIC_RESOURCES_OUTCOME: ${{ steps.public_resources.outcome }}
+          EVIDENCE_INVENTORY_OUTCOME: ${{ steps.evidence_inventory.outcome }}
+          EVIDENCE_ARTIFACT_OUTCOME: ${{ steps.evidence_artifact.outcome }}
+          JOB_SUMMARY_OUTCOME: ${{ steps.job_summary.outcome }}
+          ARTIFACT_ID: ${{ steps.evidence_artifact.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.evidence_artifact.outputs.artifact-url }}
+          PAGES_COMMIT: ${{ steps.pages_verify.outputs.pages_commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          evidence = Path(os.environ["EVIDENCE_DIR"])
+          outcomes = {
+              key.removesuffix("_OUTCOME").lower(): value
+              for key, value in os.environ.items() if key.endswith("_OUTCOME")
+          }
+          failed = {key: value for key, value in outcomes.items() if value != "success"}
+          if failed:
+              raise AssertionError(f"final required step outcomes are not all successful: {failed}")
+          assert os.environ.get("ARTIFACT_ID") and os.environ.get("ARTIFACT_URL")
+          pages = json.loads((evidence / "pages-tree-verification.json").read_text())
+          assert pages["passed"] is True
+          assert pages["source_commit"] == os.environ["GITHUB_SHA"]
+          assert pages["published_commit"] == os.environ["PAGES_COMMIT"]
+          assert pages["resource_count"] > 6742
+          freshness = json.loads((evidence / "public-freshness.json").read_text())
+          assert freshness["passed"] is True and freshness["matched"] is True
+          assert freshness["expected_source_commit"] == os.environ["GITHUB_SHA"]
+          for mode in ("local", "public"):
+              report = json.loads((evidence / mode / "browser-qa-report.json").read_text())
+              diagnostics = json.loads((evidence / mode / "diagnostics.json").read_text())
+              console = json.loads((evidence / mode / "browser-console.json").read_text())
+              network = json.loads((evidence / mode / "browser-network.json").read_text())
+              assert report["passed"] is True and report["screenshot_count"] >= 80
+              assert diagnostics["passed"] is True and diagnostics["fatal_error"] is None
+              assert console["errors"] == [] and console["page_errors"] == []
+              assert network["http_404"] == [] and network["responses_ge_400"] == []
+              assert network["request_failed"] == []
+          resources = json.loads((evidence / "public-all-resources-http.json").read_text())
+          observed = sum(1 for result in resources["results"] for attempt in result["attempts"] if attempt.get("status") == 404)
+          assert resources["passed"] is True
+          assert resources["expected_resource_count"] == resources["checked_resource_count"]
+          assert resources["failed_resource_count"] == 0 and resources["failed_resources"] == []
+          assert resources["terrain_lod_tile_count"] == 6742
+          assert resources["http_404_count"] == resources["observed_attempt_http_404_count"] == observed == 0
+          assert resources["completed_before_deadline"] is True
+          inventory = json.loads((evidence / "evidence-inventory.json").read_text())
+          assert inventory["source_commit"] == os.environ["GITHUB_SHA"]
+          assert inventory["artifact_name"] == f"guilin-v072-rich-terrain-seasonal-rivers-evidence-{os.environ['GITHUB_RUN_ID']}"
+          assert inventory["file_count"] > 0
+          print("FINAL_REPORT_GATES_OK")
+          PY
+          remote_sha="$(git ls-remote --exit-code origin "refs/heads/${EXPECTED_BRANCH}" | awk '{print $1}')"
+          test "${remote_sha}" = "${GITHUB_SHA}"
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${EXPECTED_PR}")"
+          PR_JSON="${pr_json}" python - <<'PY'
+          import json, os
+          pr = json.loads(os.environ["PR_JSON"])
+          assert pr["state"] == "open" and pr["draft"] is True
+          assert pr["merged"] is False and pr["merged_at"] is None
+          assert pr["head"]["ref"] == os.environ["EXPECTED_BRANCH"]
+          assert pr["head"]["sha"] == os.environ["GITHUB_SHA"]
+          assert pr["base"]["ref"] == "main"
+          PY
+          git fetch --no-tags origin refs/heads/gh-pages:refs/remotes/origin/gh-pages
+          test "$(git rev-parse refs/remotes/origin/gh-pages)" = "${PAGES_COMMIT}"
+          git merge-base --is-ancestor "${{ steps.pages_before.outputs.commit }}" "${PAGES_COMMIT}"
+          echo "Final public QA passed for source ${GITHUB_SHA}, Pages ${PAGES_COMMIT}; PR #${EXPECTED_PR} remains Draft."
