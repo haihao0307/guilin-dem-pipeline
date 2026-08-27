@@ -85,7 +85,7 @@ const LOD_CASES = Object.freeze([
   { distance_m: 55990, expected_max_resolution_m: 100, native: false },
   { distance_m: 56010, expected_max_resolution_m: 200, native: false },
   { distance_m: 111990, expected_max_resolution_m: 200, native: false },
-  { distance_m: 112010, expected_max_resolution_m: 800, native: false },
+  { distance_m: 112010, expected_max_resolution_m: EXPECTED_OVERVIEW_HEIGHT.actual_vertex_spacing_m, native: false, backdrop_only: true },
 ]);
 const VENDOR_FILES = Object.freeze(['vendor/three.module.js', 'vendor/OrbitControls.js', 'vendor/proj4.js']);
 const REQUIRED_HOOKS = Object.freeze([
@@ -593,6 +593,15 @@ function validateRiverGroundingAcceptance(manifest, qa) {
   }
   for (const key of ['center_terrain_height_m', 'left_bank_terrain_height_m', 'right_bank_terrain_height_m', 'left_minus_right_terrain_y_m', 'bank_delta_y_m', 'cross_slope', 'cross_slope_degrees', 'width', 'base_width_m', 'final_width_m']) finite(receipt[key], `river-grounding ${key}`);
   check(receipt.centerline_coordinate_mutated === false, 'river-grounding original centerline coordinate unchanged');
+  finite(receipt.lon, 'river-grounding source longitude'); finite(receipt.lat, 'river-grounding source latitude');
+  close(vectorDistance(receipt.original_centerline_lonlat, [receipt.lon, receipt.lat]), 0, 1e-12, 'river-grounding selected lon/lat is the unchanged original centerline coordinate');
+  check(Array.isArray(manifest.center_epsg32649) && manifest.center_epsg32649.length === 2, 'LOD manifest world center for river-grounding transform');
+  for (const [prefix, epsgKey, worldKey] of [
+    ['center', 'center_epsg32649', 'center_xz_m'], ['left bank', 'left_bank_epsg32649', 'left_bank_xz_m'], ['right bank', 'right_bank_epsg32649', 'right_bank_xz_m'],
+  ]) {
+    const expectedWorld = [receipt[epsgKey][0] - manifest.center_epsg32649[0], manifest.center_epsg32649[1] - receipt[epsgKey][1]];
+    close(vectorDistance(receipt[worldKey], expectedWorld), 0, 1e-6, `river-grounding ${prefix} EPSG:32649 to terrain-world XZ exact`);
+  }
   check(receipt.season === 'summer' && receipt.width === SEASONS.summer.width, 'river-grounding uses exact summer visual width multiplier');
   check(['li', 'xiang'].includes(receipt.system), 'river-grounding representative river system is Li/Xiang', receipt.system);
   check(typeof receipt.name === 'string' && receipt.name.trim().length > 0, 'river-grounding representative source name present', receipt.name);
@@ -1047,10 +1056,30 @@ function validateLodRuntime(lod, expectedCase = null) {
   check(lod && typeof lod === 'object', 'LOD runtime contract missing');
   check(lod.loading === false && lod.debounce_pending === false, 'LOD stable flags');
   check(lod.request_revision === lod.active_revision, 'LOD request/active revision exact');
-  check(Array.isArray(lod.active_tiles) && lod.active_tiles.length > 0, 'LOD active tiles non-vacuous');
+  check(Array.isArray(lod.active_tiles), 'LOD active tiles array');
   check(lod.active_tiles.length <= 36, 'LOD active tile union bounded to 36', lod.active_tiles.length);
-  check(Array.isArray(lod.active_resolutions_m) && lod.active_resolutions_m.length > 0, 'LOD active resolutions non-vacuous');
+  check(lod.active_tile_count === lod.active_tiles.length && Array.isArray(lod.active_tile_ids) && lod.active_tile_ids.length === lod.active_tiles.length, 'LOD active tile count/id arrays exact');
+  check(Array.isArray(lod.active_resolutions_m), 'LOD active resolutions array');
   check(Array.isArray(lod.load_errors) && lod.load_errors.length === 0, 'LOD load errors zero', lod.load_errors);
+  const backdropOnly = expectedCase?.backdrop_only === true || (!expectedCase && lod.current_lod === 'overview-backdrop');
+  const backdropTransition = lod.backdrop_transition_probe;
+  check(backdropTransition?.measurement === 'camera projection of every coarsest active outer-perimeter cell edge against overview-backdrop ownership', 'LOD backdrop transition measurement exact', backdropTransition?.measurement);
+  check(backdropTransition.passed === true && backdropTransition.visible_sample_count === 0 && backdropTransition.projection_margin_px === 48, 'LOD active/backdrop transition outside camera view with 48px safety margin', backdropTransition);
+  check(lod.backdrop_transition_visible_sample_count === 0 && lod.backdrop_transition_outside_view === true, 'LOD backdrop transition aliases exact');
+  if (backdropOnly) {
+    check(lod.current_lod === 'overview-backdrop', 'backdrop-only LOD current_lod exact', lod.current_lod);
+    check(lod.active_tiles.length === 0 && lod.active_resolutions_m.length === 0, 'backdrop-only mode has no active LOD tile or transition');
+    check(backdropTransition.sample_count === 0, 'backdrop-only mode has no active/backdrop perimeter samples');
+    const expectedSpacing = expectedCase?.expected_max_resolution_m ?? lod.overview_backdrop_actual_vertex_spacing_m;
+    close(lod.actual_vertex_spacing_m, expectedSpacing, 1e-6, 'backdrop-only actual overview spacing');
+    close(lod.focus_actual_vertex_spacing_m, expectedSpacing, 1e-6, 'backdrop-only focus owned by overview');
+    close(lod.source_actual_spacing_m, expectedSpacing, 1e-6, 'backdrop-only source ownership spacing');
+    close(lod.camera_actual_vertex_spacing_m, expectedSpacing, 1e-6, 'backdrop-only camera owned by overview');
+    check(lod.native_12_5m_claim_allowed === false && lod.native_12_5m_visible === false && lod.native_12_5m_focus_covered === false && lod.camera_native_12_5m_covered === false, 'backdrop-only mode makes no native claim');
+    return;
+  }
+  check(lod.active_tiles.length > 0 && lod.active_resolutions_m.length > 0, 'active LOD tiles/resolutions non-vacuous outside backdrop-only mode');
+  positive(backdropTransition.sample_count, 'active LOD/backdrop outer perimeter samples measured');
   if (expectedCase) {
     const focusSpacing = lod.focus_actual_vertex_spacing_m ?? lod.target_actual_vertex_spacing_m;
     close(focusSpacing, expectedCase.expected_max_resolution_m, 1e-6, `LOD ${expectedCase.distance_m} focus spacing`);
@@ -1068,19 +1097,109 @@ function validateLodRuntime(lod, expectedCase = null) {
   }
 }
 
-function validateRuntimeSeamProbe(probe, label) {
-  check(probe?.schema === 'guilin-v072-runtime-lod-seam-probe/v1', `${label} seam probe schema`, probe?.schema);
-  check(probe.passed === true, `${label} actual seam probe passed`);
-  check(probe.measurement_source === 'rendered active tile boundary vertices' || /active.*tile.*boundar/i.test(probe.measurement_source), `${label} seam measurement source`, probe.measurement_source);
+function validateRuntimeSeamProbe(probe, label, activeResolutions = []) {
+  check(probe?.schema === 'guilin-v072-runtime-lod-seam-probe/v2', `${label} seam probe schema v2`, probe?.schema);
+  check(probe.backdrop_only === false, `${label} is an active indexed-LOD seam probe`, probe.backdrop_only);
+  check(probe.passed === true, `${label} final indexed seam probe passed`);
+  check(probe.measurement === 'CPU ownership and final indexed BufferGeometry half-edge graph', `${label} seam measurement exact`, probe.measurement);
+  check(probe.measurement_source === 'final indexed BufferGeometry half-edge graph and decoded conservative cell masks', `${label} seam measurement source exact`, probe.measurement_source);
+  check(probe.ownership_method === 'coarse covered cells omitted; coarse boundary cells retriangulated with exact fine source-vertex chains', `${label} CPU ownership method exact`, probe.ownership_method);
+  check(probe.cpu_ownership_measured === true && probe.clip_ownership_measured === false, `${label} CPU ownership measured without shader-clip proxy`);
+  check(typeof probe.normal_policy === 'string' && /identical.*normals.*continuous terrain normal map/i.test(probe.normal_policy), `${label} shared normal policy`, probe.normal_policy);
   positive(probe.active_transition_count, `${label} active transitions`);
-  positive(probe.sample_count ?? probe.boundary_vertex_sample_count, `${label} actual seam sample count`);
-  check(probe.t_junction_count === 0, `${label} T-junctions zero`);
-  check(probe.height_modified_count === 0, `${label} seam does not modify heights`);
-  check(probe.maximum_gap_m <= 0.001, `${label} maximum seam gap <=1mm`, probe.maximum_gap_m);
-  if (Array.isArray(probe.transitions)) {
-    check(probe.transitions.length === probe.active_transition_count, `${label} transition records exact`);
-    for (const transition of probe.transitions) check(transition.passed === true && transition.sample_count > 0 && transition.t_junction_count === 0 && transition.maximum_gap_m <= 0.001, `${label} actual transition pass`, transition);
+  positive(probe.sample_count, `${label} actual final half-edge sample count`);
+  positive(probe.expected_boundary_segment_count, `${label} expected boundary segment count`);
+  check(probe.sample_count === probe.expected_boundary_segment_count, `${label} samples enumerate expected final boundary segments`);
+  check(probe.shared_boundary_segment_count === probe.expected_boundary_segment_count, `${label} every expected boundary segment has incidence two`);
+  for (const key of [
+    'missing_boundary_segment_count', 'shared_edge_incidence_mismatch_count', 't_junction_count',
+    'nonmanifold_edge_count', 'height_modified_count', 'source_vertex_height_modified_count',
+    'derived_edge_split_off_segment_count', 'nodata_bridge_triangle_count',
+    'unmatched_valid_transition_edge_count', 'unmatched_valid_transition_edge_length_m',
+  ]) check(probe[key] === 0, `${label} ${key} must be measured zero`, probe[key]);
+  check(probe.unclassified_open_edge_length_m === 0 && probe.uncovered_world_gap_maximum_m === 0, `${label} uncovered/unclassified valid seam length exactly zero`, { unclassified: probe.unclassified_open_edge_length_m, uncovered: probe.uncovered_world_gap_maximum_m });
+  check(probe.positive_overlap_area_m2 === 0 && probe.visible_positive_overlap_area_m2 === 0, `${label} positive surface overlap exactly zero`, { positive: probe.positive_overlap_area_m2, visible: probe.visible_positive_overlap_area_m2 });
+  integer(probe.expected_nodata_open_edge_count, `${label} classified conservative-NoData open edges`);
+  check(Number.isFinite(probe.expected_nodata_open_edge_length_m) && probe.expected_nodata_open_edge_length_m >= 0, `${label} classified conservative-NoData open length`, probe.expected_nodata_open_edge_length_m);
+  check((probe.expected_nodata_open_edge_count === 0) === (probe.expected_nodata_open_edge_length_m === 0), `${label} conservative-NoData open edge count/length non-vacuity agrees`, { count: probe.expected_nodata_open_edge_count, length_m: probe.expected_nodata_open_edge_length_m });
+  check(probe.maximum_shared_xz_gap_m <= 1e-6, `${label} shared XZ gap <=1um`, probe.maximum_shared_xz_gap_m);
+  check(probe.maximum_shared_y_gap_m <= 1e-5, `${label} shared Y gap <=10um`, probe.maximum_shared_y_gap_m);
+  check(probe.maximum_duplicate_normal_angle_deg <= 0.1, `${label} duplicate normal angle <=0.1deg`, probe.maximum_duplicate_normal_angle_deg);
+  check(probe.maximum_duplicate_uv_delta <= 1e-7, `${label} duplicate UV delta <=1e-7`, probe.maximum_duplicate_uv_delta);
+  close(probe.maximum_gap_m, Math.max(probe.maximum_shared_xz_gap_m, probe.maximum_shared_y_gap_m), 1e-12, `${label} aggregate seam gap derives from measured XZ/Y gaps`);
+  for (const alias of ['max_gap', 'max_gap_m', 'maximum_world_gap_m']) close(probe[alias], probe.maximum_gap_m, 1e-12, `${label} ${alias} agrees with maximum_gap_m`);
+  check(probe.skirt_triangle_count === 0 && probe.curtain_triangle_count === 0 && probe.active_shader_clip_rect_count === 0, `${label} no skirt/curtain/shader-clip seam substitute`, { skirt: probe.skirt_triangle_count, curtain: probe.curtain_triangle_count, clip_rects: probe.active_shader_clip_rect_count });
+  check(Array.isArray(probe.transitions) && probe.transitions.length === probe.active_transition_count, `${label} transition records exact`);
+  for (const [index, transition] of probe.transitions.entries()) {
+    const prefix = `${label}.transitions[${index}]`;
+    check(transition.passed === true, `${prefix} passed`); positive(transition.sample_count, `${prefix} measured samples`);
+    check(transition.t_junction_count === 0 && transition.height_modified_count === 0, `${prefix} topology/height unchanged`, transition);
+    check(transition.maximum_gap_m <= 1e-5, `${prefix} maximum measured gap`, transition.maximum_gap_m);
+    if (transition.type === 'same-level-final-indexed-edge') {
+      check(transition.mask_mismatch_count === 0 && transition.maximum_height_difference_m === 0, `${prefix} same-level decoded edge exact`, transition);
+    } else {
+      check(transition.type === 'mixed-level-cpu-stitch', `${prefix} known transition type`, transition.type);
+    }
   }
+
+  const resolutions = [...new Set(activeResolutions)].sort((a, b) => a - b);
+  check(resolutions.length > 0 && resolutions.every(value => Number.isFinite(value) && value > 0), `${label} active resolution input`);
+  const mixedRequired = resolutions.length > 1;
+  check(Array.isArray(probe.mixed_level_pairs), `${label} mixed pair records array`);
+  check(probe.mixed_transition_count === probe.mixed_level_pairs.length, `${label} mixed transition count exact`);
+  const transitionMixed = probe.transitions.filter(item => item.type === 'mixed-level-cpu-stitch');
+  deepEqual(transitionMixed, probe.mixed_level_pairs, `${label} transition/mixed record arrays deep equal`);
+  const observedPairs = new Set(); let mixedExpectedSegments = 0; let mixedSharedSegments = 0;
+  for (const [index, mixed] of probe.mixed_level_pairs.entries()) {
+    const prefix = `${label}.mixed_level_pairs[${index}]`;
+    check(mixed.type === 'mixed-level-cpu-stitch' && mixed.passed === true, `${prefix} actual CPU stitch passed`);
+    check(Number.isFinite(mixed.fine_spacing_m) && Number.isFinite(mixed.coarse_spacing_m) && mixed.fine_spacing_m < mixed.coarse_spacing_m, `${prefix} ordered fine/coarse spacing`, mixed);
+    check(resolutions.includes(mixed.fine_spacing_m) && resolutions.includes(mixed.coarse_spacing_m), `${prefix} spacings are active`, { resolutions, mixed });
+    check(typeof mixed.coarse_tile_id === 'string' && mixed.coarse_tile_id.length > 0 && mixed.coarse_tile === mixed.coarse_tile_id, `${prefix} coarse rendered tile identity`);
+    check(Array.isArray(mixed.fine_tile_ids) && mixed.fine_tile_ids.length > 0 && mixed.fine_tile_ids.every(id => typeof id === 'string' && id.length > 0), `${prefix} fine rendered tile identities`, mixed.fine_tile_ids);
+    deepEqual(mixed.fine_tiles, mixed.fine_tile_ids, `${prefix} fine tile aliases exact`);
+    positive(mixed.sample_count, `${prefix} actual shared samples`);
+    check(mixed.expected_boundary_segment_count === mixed.sample_count, `${prefix} expected segments/sample count exact`);
+    check(mixed.shared_boundary_segment_count === mixed.expected_boundary_segment_count, `${prefix} every mixed segment shared twice`);
+    for (const key of ['missing_boundary_segment_count', 'shared_edge_incidence_mismatch_count', 't_junction_count', 'nonmanifold_edge_count', 'height_modified_count']) check(mixed[key] === 0, `${prefix} ${key} zero`, mixed[key]);
+    check(mixed.maximum_shared_xz_gap_m <= 1e-6 && mixed.maximum_shared_y_gap_m <= 1e-5 && mixed.maximum_gap_m <= 1e-5, `${prefix} measured XZ/Y/gap thresholds`, mixed);
+    observedPairs.add(`${mixed.fine_spacing_m}->${mixed.coarse_spacing_m}`);
+    mixedExpectedSegments += mixed.expected_boundary_segment_count; mixedSharedSegments += mixed.shared_boundary_segment_count;
+  }
+  check(probe.mixed_level_pair_count === observedPairs.size, `${label} distinct mixed level pair count exact`, { reported: probe.mixed_level_pair_count, observed: [...observedPairs] });
+  if (mixedRequired) {
+    positive(probe.mixed_transition_count, `${label} mixed transitions genuinely active`);
+    positive(probe.mixed_level_pair_count, `${label} mixed level pairs genuinely active`);
+    positive(probe.stitch_triangle_count, `${label} emitted CPU stitch triangles`);
+    check(mixedExpectedSegments > 0 && mixedExpectedSegments === mixedSharedSegments, `${label} mixed expected/shared segment aggregates exact`, { mixedExpectedSegments, mixedSharedSegments });
+    const expectedPairs = resolutions.slice(0, -1).map((value, index) => `${value}->${resolutions[index + 1]}`);
+    for (const pair of expectedPairs) check(observedPairs.has(pair), `${label} active adjacent transition ${pair} measured`, [...observedPairs]);
+    check(probe.mixed_level_pair_count >= expectedPairs.length, `${label} every active adjacent LOD pair represented`);
+  } else {
+    check(probe.mixed_transition_count === 0 && probe.mixed_level_pair_count === 0 && probe.stitch_triangle_count === 0, `${label} single-level case has no fabricated mixed stitch evidence`);
+  }
+}
+
+function validateBackdropOnlySeamProbe(probe, label) {
+  check(probe?.schema === 'guilin-v072-runtime-lod-seam-probe/v2', `${label} backdrop-only seam probe schema v2`, probe?.schema);
+  check(probe.backdrop_only === true && probe.passed === true, `${label} explicit backdrop-only no-active-seam receipt`);
+  check(probe.measurement_source === 'final indexed BufferGeometry half-edge graph and decoded conservative cell masks', `${label} backdrop-only measurement source exact`, probe.measurement_source);
+  for (const key of [
+    'active_transition_count', 'mixed_transition_count', 'sample_count', 'expected_boundary_segment_count',
+    'shared_boundary_segment_count', 'missing_boundary_segment_count', 'shared_edge_incidence_mismatch_count',
+    't_junction_count', 'nonmanifold_edge_count', 'height_modified_count', 'source_vertex_height_modified_count',
+    'derived_edge_split_off_segment_count', 'nodata_bridge_triangle_count', 'expected_nodata_open_edge_count',
+    'expected_nodata_open_edge_length_m', 'unmatched_valid_transition_edge_count',
+    'unmatched_valid_transition_edge_length_m', 'unclassified_open_edge_length_m', 'positive_overlap_area_m2',
+    'visible_positive_overlap_area_m2', 'maximum_shared_xz_gap_m', 'maximum_shared_y_gap_m',
+    'maximum_duplicate_normal_angle_deg', 'maximum_duplicate_uv_delta', 'maximum_gap_m',
+    'stitch_triangle_count', 'skirt_triangle_count', 'curtain_triangle_count', 'active_shader_clip_rect_count',
+    'same_level_pair_count', 'same_level_sample_count', 'same_level_maximum_height_difference_m',
+    'same_level_mask_mismatch_count', 'mixed_level_pair_count',
+  ]) check(probe[key] === 0, `${label} backdrop-only ${key} exactly zero`, probe[key]);
+  for (const alias of ['max_gap', 'max_gap_m', 'maximum_world_gap_m', 'uncovered_world_gap_maximum_m']) check(probe[alias] === 0, `${label} backdrop-only ${alias} exactly zero`, probe[alias]);
+  check(probe.cpu_ownership_measured === true && probe.clip_ownership_measured === false, `${label} backdrop-only CPU ownership receipt semantics`);
+  check(Array.isArray(probe.transitions) && probe.transitions.length === 0 && Array.isArray(probe.mixed_level_pairs) && probe.mixed_level_pairs.length === 0, `${label} backdrop-only transition arrays empty`);
 }
 
 async function setLodDistance(page, focusId, item) {
@@ -1097,14 +1216,16 @@ async function setLodDistance(page, focusId, item) {
   close(hudSpacing, contracts.lod.actual_vertex_spacing_m, 0.051, `LOD ${item.distance_m} HUD/contract actual spacing`);
   close(hudSpacing, item.expected_max_resolution_m, 0.051, `LOD ${item.distance_m} HUD threshold spacing`);
   if (item.native) check(/native12_5m|12\.5\s*m/i.test(hud.current_lod), 'native threshold HUD identifies 12.5m');
-  if (item.distance_m === 112010) check(/800\s*m/i.test(hud.current_lod) && !/overview/i.test(hud.current_lod), '112010m HUD is active 800m LOD, not overview backdrop', hud.current_lod);
+  if (item.backdrop_only) check(hud.current_lod === 'overview-backdrop', '112010m HUD is overview-only backdrop; parsed spacing is gated against the manifest contract', hud);
   if (item.native) {
     check(contracts.elevation.runtime_native_active === true, `${focusId}@${item.distance_m} elevation native active`);
     positive(contracts.elevation.source_correspondence.sample_count, `${focusId}@${item.distance_m} elevation correspondence samples`);
     check(contracts.elevation.source_correspondence.passed === true && contracts.elevation.source_correspondence.p95_error_m <= 0.001 && contracts.elevation.source_correspondence.maximum_error_m <= 0.01, `${focusId}@${item.distance_m} elevation source error limits`);
   }
   const seamProbe = await page.evaluate(() => window.__XIAOGUI_QA.probeLodSeamTopology());
-  validateRuntimeSeamProbe(seamProbe, `${focusId}@${item.distance_m}`);
+  if (item.backdrop_only) validateBackdropOnlySeamProbe(seamProbe, `${focusId}@${item.distance_m}`);
+  else validateRuntimeSeamProbe(seamProbe, `${focusId}@${item.distance_m}`, contracts.lod.active_resolutions_m);
+  deepEqual(seamProbe, contracts.lod.runtime_seam_probe, `${focusId}@${item.distance_m} explicit probe/runtime contract deep equality`);
   const record = { focus_id: focusId, distance_m: item.distance_m, hook_receipt: returned, hud, lod: contracts.lod, actual_seam_probe: seamProbe };
   lodEvidence.threshold_matrix.push(record); lodEvidence.runtime_seam_probes.push({ focus_id: focusId, distance_m: item.distance_m, ...seamProbe });
   return record;
@@ -1123,7 +1244,9 @@ async function validateNativeNeighborhoods(page) {
     check(Array.isArray(sample.native_tile_ids) && sample.native_tile_ids.length > 0, `${target} native tile coverage`);
     if (target !== 'nodata') positive(sample.valid_count, `${target} valid native samples`);
     else positive(sample.nodata_count, 'NoData target conservative NoData samples');
-    terrainEvidence.native_neighborhoods[target] = sample;
+    const pageShot = await capture(page, `native-acceptance-${target}-12.5m-closeup-page`);
+    const canvasShot = await capture(page, `native-acceptance-${target}-12.5m-closeup-canvas`, { canvas: true });
+    terrainEvidence.native_neighborhoods[target] = { ...sample, screenshots: [pageShot.item.file, canvasShot.item.file], screenshot_receipts: [pageShot.item, canvasShot.item] };
   }
 }
 
@@ -1137,6 +1260,9 @@ async function validateDomainEdge(page, terrainManifest) {
   await page.evaluate(async () => { await window.__XIAOGUI_QA.setTerrainVisible(true); await window.__XIAOGUI_QA.renderNow(); });
   const probe = await page.evaluate(() => window.__XIAOGUI_QA.probeDomainEdgeCoverage());
   const contracts = await readContracts(page); const lod = contracts.lod;
+  check(lod.current_lod === 'overview-backdrop' && lod.active_tile_count === 0 && lod.active_tiles.length === 0 && lod.active_resolutions_m.length === 0, 'full-domain overview screenshot uses backdrop only, with no unstitched active-LOD/backdrop boundary', lod);
+  close(lod.actual_vertex_spacing_m, terrainManifest.actual_vertex_spacing_m, 1e-6, 'full-domain overview actual spacing is manifest overview spacing');
+  check(lod.backdrop_transition_probe?.passed === true && lod.backdrop_transition_probe.sample_count === 0 && lod.backdrop_transition_probe.visible_sample_count === 0, 'full-domain overview has no active/backdrop transition to hide');
   check(probe.projection_method === 'camera-projected source-domain perimeter', 'domain edge projection method');
   for (const key of ['perimeter_sample_count', 'expected_in_view_sample_count', 'covered_by_native_lod_count', 'covered_by_coarse_lod_count', 'covered_by_overview_backdrop_count', 'uncovered_non_nodata_count', 'allowed_transparent_nodata_count', 'east_edge_uncovered_non_nodata_count', 'south_edge_uncovered_non_nodata_count']) integer(probe[key], `domain_edge_evidence.${key}`);
   positive(probe.perimeter_sample_count, 'domain perimeter samples'); positive(probe.expected_in_view_sample_count, 'domain in-view samples');
