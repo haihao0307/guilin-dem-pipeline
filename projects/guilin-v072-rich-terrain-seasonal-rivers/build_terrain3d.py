@@ -356,7 +356,7 @@ def _select_nodata_boundary_acceptance(ds, radius_m: float = 600.0) -> dict[str,
     rx = int(math.ceil(radius_m / abs(ds.transform.a)))
     ry = int(math.ceil(radius_m / abs(ds.transform.e)))
     center_row, center_col = (ds.height - 1) / 2, (ds.width - 1) / 2
-    best: tuple[float, int, int] | None = None
+    block_candidates: list[tuple[float, int, int]] = []
     for _, window in ds.block_windows(1):
         r0, c0 = int(window.row_off), int(window.col_off)
         r1, c1 = r0 + int(window.height), c0 + int(window.width)
@@ -380,12 +380,26 @@ def _select_nodata_boundary_acceptance(ds, radius_m: float = 600.0) -> dict[str,
             continue
         score = (rows - center_row) ** 2 + (cols - center_col) ** 2
         order = np.lexsort((cols, rows, score))
-        candidate = (float(score[order[0]]), int(rows[order[0]]), int(cols[order[0]]))
-        if best is None or candidate < best:
-            best = candidate
-    if best is None:
+        block_candidates.append((float(score[order[0]]), int(rows[order[0]]), int(cols[order[0]])))
+    if not block_candidates:
         raise RuntimeError("No valid/NoData boundary supports a complete 600 m neighborhood")
-    _, row, col = best
+    # A merely adjacent pixel can sit beside a one-pixel speck and make a useless visual
+    # acceptance ROI.  Evaluate one stable candidate from every source block and prefer
+    # the boundary with the largest minority class in the full source-mask circle.
+    # Distance to the mosaic centre, row and column are deterministic tie-breakers.
+    ranked: list[tuple[int, float, int, int, int, int, int]] = []
+    for distance_score, candidate_row, candidate_col in block_candidates:
+        cr0, cr1 = candidate_row - ry, candidate_row + ry + 1
+        cc0, cc1 = candidate_col - rx, candidate_col + rx + 1
+        candidate_mask = ds.read_masks(1, window=Window(cc0, cr0, cc1 - cc0, cr1 - cr0)) > 0
+        candidate_dy = (np.arange(cr0, cr1) - candidate_row) * abs(ds.transform.e)
+        candidate_dx = (np.arange(cc0, cc1) - candidate_col) * abs(ds.transform.a)
+        candidate_circle = candidate_dy[:, None] ** 2 + candidate_dx[None, :] ** 2 <= radius_m ** 2 + 1e-9
+        candidate_valid = int(np.count_nonzero(candidate_mask & candidate_circle))
+        candidate_nodata = int(np.count_nonzero(~candidate_mask & candidate_circle))
+        ranked.append((-min(candidate_valid, candidate_nodata), distance_score, candidate_row, candidate_col,
+                       candidate_valid, candidate_nodata, int(candidate_circle.sum())))
+    _, _, row, col, precomputed_valid, precomputed_nodata, precomputed_count = min(ranked)
     r0, r1, c0, c1 = row - ry, row + ry + 1, col - rx, col + rx + 1
     mask = ds.read_masks(1, window=Window(c0, r0, c1 - c0, r1 - r0)) > 0
     dy = (np.arange(r0, r1) - row) * abs(ds.transform.e)
@@ -394,13 +408,15 @@ def _select_nodata_boundary_acceptance(ds, radius_m: float = 600.0) -> dict[str,
     valid_count = int(np.count_nonzero(mask & circle))
     nodata_count = int(np.count_nonzero(~mask & circle))
     count = int(circle.sum())
+    if (valid_count, nodata_count, count) != (precomputed_valid, precomputed_nodata, precomputed_count):
+        raise RuntimeError("NoData acceptance selection was not deterministic on source mask re-read")
     easting, northing = ds.xy(row, col)
     lon, lat = Transformer.from_crs(EXPECTED_CRS, "EPSG:4326", always_xy=True).transform(easting, northing)
     return {
         "id": "nodata", "lon": float(lon), "lat": float(lat),
         "easting": float(easting), "northing": float(northing), "source_row": row, "source_col": col,
         "selected_source_pixel_valid": True,
-        "selection_policy": "centre-nearest valid source pixel four-adjacent to NoData; row/column tie-break",
+        "selection_policy": "one centre-nearest valid/NoData boundary candidate per source block; maximize 600m minority-class count, then mosaic-centre distance/row/column",
         "neighborhood_radius_m": radius_m,
         "neighborhood_shape": "source pixel centres within inclusive Euclidean radius",
         "neighborhood_sample_count": count,
@@ -886,7 +902,8 @@ def build_lod_products(ds, output_dir: Path, source_stats: dict[str, Any], tile_
               "acceptance_native_source_verified": acceptance_qa["passed"],
               "nodata_600m_mixed_boundary_verified": acceptance_qa["nodata_boundary"]["passed"] and native_nodata_decoded["passed"],
               "vertical_scale_is_1": True, "source_elevation_unmodified": True, "nodata_preserved_without_fill": True,
-              "all_files_under_100_mib": maximum_file < MAX_ASSET_BYTES}
+              "all_files_under_100_mib": maximum_file < MAX_ASSET_BYTES,
+              "exact_expected_tile_count": total_tiles == 6742}
     qa = {"schema": "guilin-v072-terrain-lod-qa/v4", "checks": checks, "passed": all(checks.values()), "source_statistics": source_stats,
           "smoothing": False, "gap_fill": False, "fallback_resolution_m": None, "fallback_30m_allowed": False,
           "source_correspondence": {"decoded_valid_samples": decoded_valid_samples,
@@ -907,11 +924,11 @@ def build_lod_products(ds, output_dir: Path, source_stats: dict[str, Any], tile_
           "coarse_level_full_domain_claimed": False, "native_full_domain": levels[-1]["full_source_center_domain_coverage"],
           "level_domain_coverage": [{"id": l["id"], "full_source_center_domain_coverage": l["full_source_center_domain_coverage"], "source_center_edge_gaps_m": l["source_center_edge_gaps_m"]} for l in levels],
           "overview_only_backdrop_policy": manifest["overview_only_backdrop_policy"], "memory_policy": "tile/component streaming; no full DEM materialization"}
-    if total_tiles != 6742:
-        raise RuntimeError(f"Unexpected terrain LOD tile count: {total_tiles} / 6742")
-    if not qa["passed"]:
-        raise RuntimeError("Terrain LOD QA failed")
     json_write(output_dir / "terrain_lod_manifest.json", manifest); json_write(output_dir / "terrain_lod_qa.json", qa)
+    if total_tiles != 6742:
+        raise RuntimeError(f"Unexpected terrain LOD tile count: {total_tiles} / 6742 (diagnostic contracts written)")
+    if not qa["passed"]:
+        raise RuntimeError("Terrain LOD QA failed (diagnostic contracts written)")
     return manifest, qa
 
 
@@ -1572,6 +1589,7 @@ def _build_river_season(ds, output_dir: Path, runs: list[dict[str, Any]], juncti
     raw_owned_union = _union_parts(raw_partition.owned_groups)
     display_owned_union = _union_parts(display_partition.owned_groups)
     display_contract = _display_precision_contract(raw_desired_union, raw_owned_union, display_owned_union, display_partition.contract(junctions))
+    del raw_partition, display_partition, raw_owned, candidates, display_candidates, raw_desired_union, raw_owned_union
     run_ranges = []
     expected_by_run, accounted_by_run, nodata_by_run, extent_by_run = [], [], [], []
     vertex_offset = index_offset = fully_shadowed = 0
@@ -1605,6 +1623,7 @@ def _build_river_season(ds, output_dir: Path, runs: list[dict[str, Any]], juncti
         position_spool.write(memoryview(run_positions).cast("B")); index_spool.write(memoryview(run_indices).cast("B"))
         vertex_offset += len(run_positions); index_offset += len(run_indices)
     position_spool.close(); index_spool.close()
+    del owned
     if not index_offset:
         raise RuntimeError(f"No visible terrain-conforming river triangles for {season}")
     positions = np.memmap(position_spool.name, dtype="<f4", mode="r", shape=(vertex_offset, 3))
