@@ -22,7 +22,7 @@ const REQUIRED_SCREENSHOT_COUNT = 80;
 const SEASONS = Object.freeze({
   winter: { width: 0.66, depth: 0.32, color: '#42b69d', label: '冬季枯水' },
   spring: { width: 0.92, depth: 0.55, color: '#45c4b5', label: '春季平水' },
-  summer: { width: 1.38, depth: 0.88, color: '#348e73', label: '夏季丰水' },
+  summer: { width: 1.38, depth: 0.88, color: '#348e73', label: '夏季豐水' },
   autumn: { width: 0.82, depth: 0.46, color: '#3fa9aa', label: '秋季回落' },
 });
 const TARGETS = Object.freeze([
@@ -47,7 +47,7 @@ const REQUIRED_HOOKS = Object.freeze([
   'setWaterTime', 'renderNow', 'setHydrologyVisible', 'setTerrainVisible',
   'setCameraPose', 'setLodTestDistance', 'setRiverMaskMode',
   'sampleNativeTerrainNeighborhood', 'getContracts', 'probeDomainEdgeCoverage',
-  'probeLodSeamTopology', 'probeNoDataRoi',
+  'probeLodSeamTopology', 'probeNoDataRoi', 'runCollisionProbe',
 ]);
 
 let assertionCount = 0;
@@ -99,7 +99,7 @@ const diagnostics = {
   passed: false, assertion_count: 0, phase: 'initializing', fatal_error: null, signal: null,
 };
 const consoleEvidence = { messages: [], errors: [], page_errors: [] };
-const networkEvidence = { navigations: [], responses_ge_400: [], http_404: [], request_failed: [], executable_resources: [], vendor_resources: [] };
+const networkEvidence = { navigations: [], responses_ge_400: [], http_404: [], request_failed: [], executable_resources: [], vendor_resources: [], displayed_river_asset_responses: [] };
 const runtimeEvidence = { initial: null, seasons: {}, mobile_season: null, final: null };
 const cameraEvidence = { trusted_targets: {}, trusted_gestures: {}, canonical_poses: {}, collision_recovery: null };
 const terrainEvidence = { manifest: null, lod_manifest: null, lod_qa: null, decoded_tile_receipts: [], native_neighborhoods: {}, nodata_roi: null, domain_edge_evidence: null };
@@ -137,6 +137,7 @@ function observePage(page, label) {
     if (response.status() === 404) networkEvidence.http_404.push(item);
     if (['script', 'stylesheet', 'wasm'].includes(request.resourceType())) networkEvidence.executable_resources.push(item);
     if (VENDOR_FILES.some(file => new URL(response.url()).pathname.endsWith(`/${file}`))) networkEvidence.vendor_resources.push(item);
+    if (/\/data\/river_drape_(winter|spring|summer|autumn)_(positions\.f32|indices\.u32)\.gz$/.test(new URL(response.url()).pathname)) networkEvidence.displayed_river_asset_responses.push(item);
   });
 }
 
@@ -460,6 +461,9 @@ function validateTerrainManifest(manifest) {
   check(manifest.smoothing === false && manifest.gap_fill === false, 'terrain smoothing/gap fill forbidden');
   check(manifest.source_statistics && typeof manifest.source_statistics === 'object', 'exact source statistics missing');
   for (const key of ['count', 'minimum_m', 'maximum_m', 'mean_m']) finite(manifest.source_statistics[key], `terrain source_statistics.${key}`);
+  check(manifest.source_statistics.count === 284579268 && manifest.source_statistics.valid_pixels === 284579268, 'terrain exact valid source count', manifest.source_statistics);
+  check(manifest.source_statistics.nodata_pixels === 43857468 && manifest.source_statistics.total_pixels === 328436736, 'terrain exact NoData/total source counts', manifest.source_statistics);
+  close(manifest.source_statistics.valid_fraction + manifest.source_statistics.nodata_fraction, 1, 1e-12, 'terrain source fractions exhaust grid');
   check(typeof manifest.lod_manifest_file === 'string' && typeof manifest.lod_qa_file === 'string', 'terrain LOD pointers missing');
   check(typeof manifest.river_runtime_file === 'string' && typeof manifest.river_qa_file === 'string', 'terrain river pointers missing');
 }
@@ -554,7 +558,8 @@ async function readContracts(page) {
       river: fromHook.river ?? window.__XIAOGUI_RIVER_CONTRACT,
       camera: fromHook.camera ?? window.__XIAOGUI_CAMERA_CONTRACT,
       lod: fromHook.lod ?? window.__XIAOGUI_LOD_CONTRACT,
-      performance: fromHook.performance ?? window.__XIAOGUI_PERFORMANCE_CONTRACT,
+      elevation: fromHook.elevation ?? window.__XIAOGUI_ELEVATION_QA,
+      performance: fromHook.performance ?? window.__XIAOGUI_PERFORMANCE_CONTRACT ?? window.__XIAOGUI_PERFORMANCE,
       hooks: { schema: window.__XIAOGUI_QA.schema, capabilities: window.__XIAOGUI_QA.capabilities },
     };
   });
@@ -629,20 +634,37 @@ async function runDesktopGestures(page) {
   const box = await canvas.boundingBox(); check(box && box.width > 200 && box.height > 200, 'desktop canvas gesture box');
   const x = box.x + box.width * 0.55; const y = box.y + box.height * 0.55;
   let before = (await readContracts(page)).camera;
+  const rotateBefore = await capture(page, 'gesture-desktop-left-rotate-before-page');
+  const rotateBeforeCanvas = await capture(page, 'gesture-desktop-left-rotate-before-canvas', { canvas: true });
   await page.mouse.move(x, y); await page.mouse.down({ button: 'left' }); await page.mouse.move(x + 96, y + 42, { steps: 12 }); await page.mouse.up({ button: 'left' });
   await page.waitForTimeout(300); await waitForLodStable(page);
   let after = (await readContracts(page)).camera;
   cameraEvidence.trusted_gestures.desktop_left_rotate = assertCameraReceipt(before, after, { event_type: 'pointerup', input_action: 'rotate', button: 0, pointer_type: 'mouse', touch_count: 0 }, 'left rotate');
+  const rotateAfter = await capture(page, 'gesture-desktop-left-rotate-after-page');
+  const rotateAfterCanvas = await capture(page, 'gesture-desktop-left-rotate-after-canvas', { canvas: true });
+  cameraEvidence.trusted_gestures.desktop_left_rotate.screenshots = [rotateBefore.item.file, rotateBeforeCanvas.item.file, rotateAfter.item.file, rotateAfterCanvas.item.file];
   check(vectorDistance(before.target, after.target) <= Math.max(1e-3, before.distance * 1e-5), 'rotate keeps target stable');
 
-  before = after; await page.mouse.move(x, y); await page.mouse.wheel(0, -700); await page.waitForTimeout(400); await waitForLodStable(page);
+  before = after;
+  const wheelBefore = await capture(page, 'gesture-desktop-wheel-before-page');
+  const wheelBeforeCanvas = await capture(page, 'gesture-desktop-wheel-before-canvas', { canvas: true });
+  await page.mouse.move(x, y); await page.mouse.wheel(0, -700); await page.waitForTimeout(400); await waitForLodStable(page);
   after = (await readContracts(page)).camera;
   cameraEvidence.trusted_gestures.desktop_wheel_zoom = assertCameraReceipt(before, after, { event_type: 'wheel', input_action: 'wheel-zoom', pointer_type: 'mouse', touch_count: 0 }, 'wheel zoom');
+  const wheelAfter = await capture(page, 'gesture-desktop-wheel-after-page');
+  const wheelAfterCanvas = await capture(page, 'gesture-desktop-wheel-after-canvas', { canvas: true });
+  cameraEvidence.trusted_gestures.desktop_wheel_zoom.screenshots = [wheelBefore.item.file, wheelBeforeCanvas.item.file, wheelAfter.item.file, wheelAfterCanvas.item.file];
   check(Math.abs(before.distance - after.distance) > 1e-3, 'wheel changes distance');
 
-  before = after; await page.mouse.move(x, y); await page.mouse.down({ button: 'right' }); await page.mouse.move(x - 74, y + 57, { steps: 12 }); await page.mouse.up({ button: 'right' });
+  before = after;
+  const panBefore = await capture(page, 'gesture-desktop-right-pan-before-page');
+  const panBeforeCanvas = await capture(page, 'gesture-desktop-right-pan-before-canvas', { canvas: true });
+  await page.mouse.move(x, y); await page.mouse.down({ button: 'right' }); await page.mouse.move(x - 74, y + 57, { steps: 12 }); await page.mouse.up({ button: 'right' });
   await page.waitForTimeout(300); await waitForLodStable(page); after = (await readContracts(page)).camera;
   cameraEvidence.trusted_gestures.desktop_right_pan = assertCameraReceipt(before, after, { event_type: 'pointerup', input_action: 'pan', button: 2, pointer_type: 'mouse', touch_count: 0 }, 'right pan');
+  const panAfter = await capture(page, 'gesture-desktop-right-pan-after-page');
+  const panAfterCanvas = await capture(page, 'gesture-desktop-right-pan-after-canvas', { canvas: true });
+  cameraEvidence.trusted_gestures.desktop_right_pan.screenshots = [panBefore.item.file, panBeforeCanvas.item.file, panAfter.item.file, panAfterCanvas.item.file];
   check(vectorDistance(before.target, after.target) > 1e-3, 'pan changes target');
 }
 
@@ -659,8 +681,8 @@ async function validateCanonicalCameras(page) {
 }
 
 function validateBaseContracts(contracts) {
-  const { coordinate, render: renderContract, river, camera, lod, performance } = contracts;
-  for (const [name, value] of Object.entries({ coordinate, render: renderContract, river, camera, lod, performance })) check(value && typeof value === 'object', `runtime ${name} contract missing`);
+  const { coordinate, render: renderContract, river, camera, lod, elevation, performance } = contracts;
+  for (const [name, value] of Object.entries({ coordinate, render: renderContract, river, camera, lod, elevation, performance })) check(value && typeof value === 'object', `runtime ${name} contract missing`);
   check(contracts.hooks.schema === 'guilin-v072-browser-qa-hooks/v3', 'browser QA hook schema v3');
   const capabilities = new Set(contracts.hooks.capabilities || []);
   for (const capability of ['source-domain-edge-coverage', 'runtime-lod-seam-probe', 'projected-nodata-roi', 'active-terrain-collision-probe']) check(capabilities.has(capability), `QA capability missing: ${capability}`);
@@ -677,6 +699,10 @@ function validateBaseContracts(contracts) {
   check(river.centerline_geometry_mutated === false, 'displayed river centerline immutable');
   check(performance.schema === 'guilin-v072-render-performance/v2', 'performance schema v2', performance.schema);
   check(performance.total_frames_semantics === 'increments only after renderer.render returns' || /renderer\.render.*returns/i.test(performance.total_frames_semantics), 'real renderer frame semantics', performance.total_frames_semantics);
+  check(elevation.source_resolution_m === 12.5 || (Array.isArray(elevation.source_resolution_m) && elevation.source_resolution_m.every(value => value === 12.5)), 'elevation source resolution native 12.5m');
+  check(elevation.source_elevation_modified_m === 0 && elevation.vertical_scale === 1, 'elevation source unmodified and vertical scale one');
+  check(elevation.gap_fill_applied === false && elevation.smoothing_applied === false && elevation.fallback_resolution_m === null && elevation.fallback_30m_allowed === false, 'elevation no fill/smoothing/fallback');
+  check(elevation.nodata_transparent === true, 'elevation NoData transparent');
   const landmarks = coordinate.landmarks;
   for (const id of ['zhenbaoding', 'guilin', 'yangtang', 'yangshuo']) check(landmarks?.[id], `coordinate landmark ${id}`);
   for (const [north, south] of [['zhenbaoding', 'guilin'], ['guilin', 'yangtang'], ['yangtang', 'yangshuo']]) {
@@ -796,7 +822,9 @@ function validateLodRuntime(lod, expectedCase = null) {
   check(Array.isArray(lod.active_resolutions_m) && lod.active_resolutions_m.length > 0, 'LOD active resolutions non-vacuous');
   check(Array.isArray(lod.load_errors) && lod.load_errors.length === 0, 'LOD load errors zero', lod.load_errors);
   if (expectedCase) {
-    check(Math.max(...lod.active_resolutions_m) <= expectedCase.expected_max_resolution_m + 1e-6, `LOD ${expectedCase.distance_m} resolution`, lod.active_resolutions_m);
+    const focusSpacing = lod.focus_actual_vertex_spacing_m ?? lod.target_actual_vertex_spacing_m;
+    close(focusSpacing, expectedCase.expected_max_resolution_m, 1e-6, `LOD ${expectedCase.distance_m} focus spacing`);
+    check(lod.active_resolutions_m.some(value => Math.abs(value - expectedCase.expected_max_resolution_m) <= 1e-6), `LOD ${expectedCase.distance_m} active focus level present`, lod.active_resolutions_m);
     check(lod.native_12_5m_claim_allowed === expectedCase.native, `LOD ${expectedCase.distance_m} native claim exact`, lod.native_12_5m_claim_allowed);
     if (expectedCase.native) {
       allTrue(lod.native_claim_checks, `LOD ${expectedCase.distance_m} native_claim_checks`);
@@ -824,6 +852,11 @@ async function setLodDistance(page, focusId, item) {
   const returned = await page.evaluate(async ({ focusId, distance_m }) => window.__XIAOGUI_QA.setLodTestDistance({ focus_id: focusId, distance_m }), { focusId, distance_m: item.distance_m });
   await waitForLodStable(page); await render(page);
   const contracts = await readContracts(page); validateLodRuntime(contracts.lod, item);
+  if (item.native) {
+    check(contracts.elevation.runtime_native_active === true, `${focusId}@${item.distance_m} elevation native active`);
+    positive(contracts.elevation.source_correspondence.sample_count, `${focusId}@${item.distance_m} elevation correspondence samples`);
+    check(contracts.elevation.source_correspondence.passed === true && contracts.elevation.source_correspondence.p95_error_m <= 0.001 && contracts.elevation.source_correspondence.maximum_error_m <= 0.01, `${focusId}@${item.distance_m} elevation source error limits`);
+  }
   const seamProbe = await page.evaluate(() => window.__XIAOGUI_QA.probeLodSeamTopology());
   validateRuntimeSeamProbe(seamProbe, `${focusId}@${item.distance_m}`);
   const record = { focus_id: focusId, distance_m: item.distance_m, hook_receipt: returned, lod: contracts.lod, actual_seam_probe: seamProbe };
@@ -835,7 +868,7 @@ async function validateNativeNeighborhoods(page) {
   const nativeCase = LOD_CASES[0];
   for (const target of NATIVE_ACCEPTANCE_TARGETS) {
     await setLodDistance(page, target, nativeCase);
-    const sample = await page.evaluate(async () => window.__XIAOGUI_QA.sampleNativeTerrainNeighborhood({ radius_m: 75, step_m: 12.5 }));
+    const sample = await page.evaluate(async target => window.__XIAOGUI_QA.sampleNativeTerrainNeighborhood({ focus_id: target, radius_m: 75, step_m: 12.5 }), target);
     check(sample?.native_12_5m_only === true && sample.actual_spacing_m === 12.5, `${target} native neighborhood source`);
     positive(sample.sample_count, `${target} neighborhood sample count`);
     check(sample.valid_count + sample.nodata_count + sample.outside_count + sample.other_invalid_count === sample.sample_count, `${target} neighborhood classification exact`);
@@ -1057,7 +1090,8 @@ async function setRiverView(page, target, view, distance = null) {
 }
 
 async function captureRiverOcclusionCase(page, { season, target, view, distance = null }) {
-  await clickSeason(page, season, publishedRiverRuntime, publishedRiverQa, runtimeEvidence.seasons);
+  const isolatedSeasonReceipt = {};
+  await clickSeason(page, season, publishedRiverRuntime, publishedRiverQa, isolatedSeasonReceipt);
   await setRiverView(page, target, view, distance);
   const slug = `river-${season}-${target}-${view}${distance ? `-${distance}` : ''}`;
   const modes = {};
@@ -1075,7 +1109,7 @@ async function captureRiverOcclusionCase(page, { season, target, view, distance 
   await shot('unoccluded-reference', false, true, 'production');
   const metrics = await occlusionMetrics(Object.fromEntries(Object.entries(modes).map(([key, value]) => [key.replace('-control', '').replace('-mask', '').replace('unoccluded-', ''), value.buffer])), view);
   await page.evaluate(async () => { await window.__XIAOGUI_QA.setTerrainVisible(true); await window.__XIAOGUI_QA.setHydrologyVisible(true); await window.__XIAOGUI_QA.setRiverMaskMode('production'); await window.__XIAOGUI_QA.renderNow(); });
-  const record = { season, target, view, distance_m: distance, metrics, screenshots: Object.fromEntries(Object.entries(modes).map(([key, value]) => [key, value.item.file])) };
+  const record = { season, target, view, distance_m: distance, season_receipt: isolatedSeasonReceipt[season], metrics, screenshots: Object.fromEntries(Object.entries(modes).map(([key, value]) => [key, value.item.file])) };
   riverVisualEvidence.cases.push(record); return record;
 }
 
@@ -1152,6 +1186,8 @@ async function validateMobile(page, context) {
   await trustedTargetClick(page, 'guilin');
   const canvas = page.locator('#viewer canvas'); const box = await canvas.boundingBox(); check(box && box.width > 100 && box.height > 100, 'mobile canvas touch box');
   const before = (await readContracts(page)).camera;
+  const pinchBeforePage = await capture(page, 'mobile-two-touch-pinch-before-page');
+  const pinchBeforeCanvas = await capture(page, 'mobile-two-touch-pinch-before-canvas', { canvas: true });
   const cdp = await context.newCDPSession(page); await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   const cx = box.x + box.width * 0.5; const cy = box.y + box.height * 0.55;
   const point = (id, x, y) => ({ x: Math.round(x), y: Math.round(y), radiusX: 2, radiusY: 2, force: 1, id });
@@ -1166,9 +1202,9 @@ async function validateMobile(page, context) {
   check(Math.abs(after.distance - before.distance) > 1e-3, 'mobile pinch changes camera distance');
   cameraEvidence.trusted_gestures.mobile_two_touch_pinch.viewport = MOBILE;
   cameraEvidence.trusted_gestures.mobile_two_touch_pinch.real_mobile_context = true;
-  const pinchBefore = await capture(page, 'mobile-two-touch-pinch-after-page');
+  const pinchAfter = await capture(page, 'mobile-two-touch-pinch-after-page');
   const pinchCanvas = await capture(page, 'mobile-two-touch-pinch-after-canvas', { canvas: true });
-  cameraEvidence.trusted_gestures.mobile_two_touch_pinch.screenshots = [pinchBefore.item.file, pinchCanvas.item.file];
+  cameraEvidence.trusted_gestures.mobile_two_touch_pinch.screenshots = [pinchBeforePage.item.file, pinchBeforeCanvas.item.file, pinchAfter.item.file, pinchCanvas.item.file];
 }
 
 async function verifyVendorAndNetwork() {
@@ -1184,6 +1220,13 @@ async function verifyVendorAndNetwork() {
   check(consoleEvidence.errors.length === 0 && consoleEvidence.page_errors.length === 0, 'console/page errors zero', consoleEvidence);
   const external = networkEvidence.executable_resources.filter(item => new URL(item.url).origin !== origin);
   check(external.length === 0, 'no external runtime executable hosts', external);
+  const displayedRiverFiles = Object.values(SEASONS).flatMap((_, index) => {
+    const season = Object.keys(SEASONS)[index];
+    return [`river_drape_${season}_positions.f32.gz`, `river_drape_${season}_indices.u32.gz`];
+  });
+  for (const file of displayedRiverFiles) {
+    check(networkEvidence.displayed_river_asset_responses.some(item => item.url.endsWith(`/data/${file}`) && item.status === 200), `displayed app river binary ${file} actual HTTP 200`);
+  }
   publishedAssets.vendor = VENDOR_FILES.map(file => ({ file, responses: networkEvidence.vendor_resources.filter(item => new URL(item.url).pathname.endsWith(`/${file}`)) }));
 }
 
@@ -1313,16 +1356,18 @@ const fixtureDirectory = process.env.XIAOGUI_RIVER_FIXTURE_DIR;
 if (fixtureDirectory) {
   await runFixtureReplay(path.resolve(fixtureDirectory));
 } else {
+  let deadlineTimer;
   try {
     await Promise.race([
       runBrowserQa(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error(`host deadline exceeded after ${HOST_DEADLINE_MS}ms`)), HOST_DEADLINE_MS)),
+      new Promise((_, reject) => { deadlineTimer = setTimeout(() => reject(new Error(`host deadline exceeded after ${HOST_DEADLINE_MS}ms`)), HOST_DEADLINE_MS); deadlineTimer.unref(); }),
     ]);
   } catch (error) {
     fatalError = error; diagnostics.passed = false;
     try { await captureFailureEvidence(error); } catch (captureError) { diagnostics.failure_capture_error = captureError.message; }
     try { await persistEvidence(); } catch (persistError) { process.stderr.write(`failure evidence persistence failed: ${persistError.stack || persistError}\n`); }
   } finally {
+    if (deadlineTimer) clearTimeout(deadlineTimer);
     if (!evidencePersisted) { try { await persistEvidence(); } catch {} }
     await closeBrowser();
   }
