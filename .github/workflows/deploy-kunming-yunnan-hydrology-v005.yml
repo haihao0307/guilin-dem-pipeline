@@ -74,7 +74,7 @@ jobs:
           assert manifest['hydrology']['historicalAcceptedTruthCount']==0
           assert '(aUV.y-.5)*uWorldSize.y' in app
           assert 'z / worldDepth + 0.5' in app
-          assert 'vec3 normal=normalize(vec3(-dx,1,-dz));' in app
+          assert 'vec3 normal=normalize(vec3(-dx,1.0,-dz));' in app
           assert 'mainThreshold=mix(.995,.905,widthCurve)' in app
           assert 'hydroDetail: 0.00' in app and 'riverWidth: 0.10' in app
           assert "dataset.orientation = 'east-positive-x_north-negative-z'" in app
