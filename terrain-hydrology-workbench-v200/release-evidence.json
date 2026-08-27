@@ -1,12 +1,38 @@
 {
-  "schema": "terrain-hydrology-workbench-release-evidence@2.0.0",
-  "generatedAtUtc": "2026-08-27T08:06:53.480580+00:00",
+  "schema": "terrain-hydrology-workbench-release-evidence@2.1.0",
+  "verifiedAtUtc": "2026-08-27T08:23:58.258543+00:00",
   "repository": "haihao0307/guilin-dem-pipeline",
   "branch": "skill/dem-procedural-landscape-v010",
-  "branchHead": "b1a1bb1dfbfa10e03182aab33ab5d5c270449443",
-  "workflowRunId": 33052472036,
+  "siteSourceHead": "b1a1bb1dfbfa10e03182aab33ab5d5c270449443",
+  "verificationHead": "52432642b141a0ff653f72c6514a6c878538c522",
+  "workflowRunId": 33053742272,
   "publicUrl": "https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/",
-  "deploymentStage": "local-qa-passed",
+  "entryHttpStatus": 200,
+  "directEntry": true,
+  "redirectShell": false,
+  "queryRoutingRequired": false,
+  "runtime": {
+    "version": "2.1",
+    "heightInterpolation": "manual-bilinear",
+    "desktopFocusMesh": [
+      1025,
+      1025
+    ],
+    "mobileFocusMesh": [
+      513,
+      513
+    ],
+    "adaptiveFocusPatch": true,
+    "minimumCameraDistanceMeters": 12,
+    "truthSpacingMeters": 12.5,
+    "displayTessellationIsSurveyPrecision": false
+  },
+  "referenceIntake": {
+    "schema": "terrain-hydrology-reference-intake@2.1.0",
+    "originalImageBytesEmbedded": true,
+    "browserPersistence": "IndexedDB",
+    "requiresPackageUploadToChatOrCodex": true
+  },
   "regions": [
     {
       "id": "guilin",
@@ -20,6 +46,7 @@
       },
       "exactMetricSlice": true,
       "sourceResampled": false,
+      "truthLabel": "12.5 m 已验证真实裁片",
       "assetHashes": {
         "height": "60334cc7932a92056b8f9a0e45dd69b0ea8b7c094697592692da81b72c20097d",
         "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
@@ -39,6 +66,7 @@
       },
       "exactMetricSlice": true,
       "sourceResampled": false,
+      "truthLabel": "12.5 m 权威 COG 精确裁片",
       "assetHashes": {
         "height": "342501eeb37f19915642f7ecac6256481f8eb6cc6cb23747e81570bbf49ec065",
         "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
@@ -58,6 +86,7 @@
       },
       "exactMetricSlice": true,
       "sourceResampled": false,
+      "truthLabel": "12.5 m 权威无压缩裁片",
       "assetHashes": {
         "height": "6db697e90bae01ff0dd618a3e447ee0134d70f0f5dd437b4aadf622e4930f96d",
         "mask": "3c297afc821a60c6bb52b46864de34a1d50374a1e49fc5c2f3c0dc74b92614d9",
@@ -66,11 +95,73 @@
       }
     }
   ],
-  "localBrowserQa": {
+  "publicBrowserQa": {
     "passed": true,
     "viewports": [
       "1440x1000",
       "390x844"
+    ],
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "failedRequests": 0,
+    "focusChecks": [
+      {
+        "backend": "webgl2-r16ui-height-texture",
+        "heightSamples": 640000,
+        "maskSamples": 640000,
+        "meshCols": 1025,
+        "meshRows": 1025,
+        "distance": 13400,
+        "region": "guilin",
+        "ground": {
+          "distance": 180,
+          "patchWidthMeters": 990,
+          "patchHeightMeters": 990,
+          "visualSpacingMeters": 0.966796875,
+          "metrics": "0.180 km 镜头 · 1025 × 1025 网格 · 视觉三角约 0.97 m · 真值 12.5 m",
+          "readout": "12.5 m 已验证真实裁片 · 完整 800 × 800 高程纹理 · 近景连续重建显示，真值采样仍为 12.5 m · 镜头离地约 35.0 m"
+        },
+        "screenshot": "desktop-guilin-focus.png",
+        "signal": 36.18898385468555
+      },
+      {
+        "backend": "webgl2-r16ui-height-texture",
+        "heightSamples": 640000,
+        "maskSamples": 640000,
+        "meshCols": 1025,
+        "meshRows": 1025,
+        "distance": 13400,
+        "region": "wenzhou",
+        "ground": {
+          "distance": 180,
+          "patchWidthMeters": 990,
+          "patchHeightMeters": 990,
+          "visualSpacingMeters": 0.966796875,
+          "metrics": "0.180 km 镜头 · 1025 × 1025 网格 · 视觉三角约 0.97 m · 真值 12.5 m",
+          "readout": "12.5 m 权威 COG 精确裁片 · 完整 800 × 800 高程纹理 · 近景连续重建显示，真值采样仍为 12.5 m · 镜头离地约 28.7 m"
+        },
+        "screenshot": "desktop-wenzhou-focus.png",
+        "signal": 31.347249223447033
+      },
+      {
+        "backend": "webgl2-r16ui-height-texture",
+        "heightSamples": 640000,
+        "maskSamples": 640000,
+        "meshCols": 1025,
+        "meshRows": 1025,
+        "distance": 13400,
+        "region": "kunming",
+        "ground": {
+          "distance": 180,
+          "patchWidthMeters": 990,
+          "patchHeightMeters": 990,
+          "visualSpacingMeters": 0.966796875,
+          "metrics": "0.180 km 镜头 · 1025 × 1025 网格 · 视觉三角约 0.97 m · 真值 12.5 m",
+          "readout": "12.5 m 权威无压缩裁片 · 完整 800 × 800 高程纹理 · 近景连续重建显示，真值采样仍为 12.5 m · 镜头离地约 21.9 m"
+        },
+        "screenshot": "desktop-kunming-focus.png",
+        "signal": 26.82756019404647
+      }
     ]
   },
   "truthBoundary": {
