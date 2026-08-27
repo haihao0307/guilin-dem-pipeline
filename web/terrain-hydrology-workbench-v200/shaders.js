@@ -78,11 +78,11 @@ void main() {
   vec4 hydro = texture(uHydrology, vUV);
   vec3 color = earthPalette(t, slope) * shade;
   if (uMode == 1) {
-    float flat = 1.0 - smoothstep(0.035, 0.28, slope);
-    float bench = flat * smoothstep(0.025, 0.44, curvature);
+    float flatness = 1.0 - smoothstep(0.035, 0.28, slope);
+    float bench = flatness * smoothstep(0.025, 0.44, curvature);
     vec3 base = mix(vec3(0.16, 0.18, 0.17), vec3(0.55, 0.46, 0.33), clamp(slope * 1.45, 0.0, 1.0));
     color = mix(base, vec3(0.98, 0.67, 0.16), bench * 0.92);
-    color = mix(color, vec3(0.29, 0.73, 0.89), smoothstep(0.42, 0.84, curvature) * (1.0 - flat) * 0.50);
+    color = mix(color, vec3(0.29, 0.73, 0.89), smoothstep(0.42, 0.84, curvature) * (1.0 - flatness) * 0.50);
   } else if (uMode == 2) {
     color = mix(vec3(0.19, 0.21, 0.20), color, 0.33);
     float waterArea = hydro.r;
