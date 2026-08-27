@@ -1,0 +1,97 @@
+{
+  "schema": "guilin-v072-terrain-seasonal-rivers/v1",
+  "crs": "EPSG:32649",
+  "source_resolution_m": [
+    12.5,
+    12.5
+  ],
+  "source_grid": [
+    17408,
+    18867
+  ],
+  "bounds_epsg32649": [
+    349862.5,
+    2703012.5,
+    567462.5,
+    2938850.0
+  ],
+  "bounds_wgs84": [
+    109.492645271133,
+    24.43338595115868,
+    111.67738702953262,
+    26.56874847634171
+  ],
+  "world_size_m": [
+    217600.0,
+    235837.5
+  ],
+  "center_epsg32649": [
+    458662.5,
+    2820931.25
+  ],
+  "elevation_range_m": [
+    65.0,
+    2044.0
+  ],
+  "height": {
+    "file": "terrain_height_u16.bin",
+    "width": 1024,
+    "height": 1110,
+    "encoding": "uint16-little-endian",
+    "nodata_code": 65535,
+    "valid_min_code": 0,
+    "valid_max_code": 65534
+  },
+  "texture": {
+    "file": "terrain_texture.webp",
+    "width": 2560,
+    "height": 2775,
+    "alpha_is_valid_data_mask": true
+  },
+  "normal": {
+    "file": "terrain_normal.png",
+    "width": 2560,
+    "height": 2775,
+    "policy": "visual shading only; source elevation unchanged"
+  },
+  "roughness": {
+    "file": "terrain_roughness.webp",
+    "width": 2560,
+    "height": 2775
+  },
+  "karst_detail": {
+    "file": "terrain_karst_detail.webp",
+    "width": 2560,
+    "height": 2775,
+    "policy": "diagnostic and shading field only"
+  },
+  "analysis": {
+    "percentile_stretch_m": [
+      118.0,
+      1454.0
+    ],
+    "valid_percentiles_m": {
+      "p01": 107.0,
+      "p02": 118.0,
+      "p50": 418.0,
+      "p98": 1454.0,
+      "p995": 1663.0
+    },
+    "derivative_resolution_m": [
+      85.0,
+      84.98648648648648
+    ],
+    "slope_degrees": {
+      "p50": 14.081299781799316,
+      "p90": 28.106603622436523,
+      "p99": 37.612953186035156
+    },
+    "karst_detail_mean": 0.16242997348308563,
+    "limestone_exposure_mean": 0.00582122104242444
+  },
+  "vertical_scale": 1.0,
+  "source_elevation_modified_m": 0.0,
+  "crop_applied": false,
+  "gap_fill_applied": false,
+  "source_mosaic": "guilin_raw_union_12_5m.tif"
+}
