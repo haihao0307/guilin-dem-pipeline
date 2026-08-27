@@ -39,7 +39,7 @@ jobs:
           test -f projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json
           python3 -m json.tool projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json >/dev/null
           node --check tests/wenzhou_scope_review_browser.mjs
-          grep -q '原始未裁切源覆盖与范围复核' web/wenzhou-scope-review/index.html
+          grep -q '原始源覆盖与范围复核' web/wenzhou-scope-review/index.html
           grep -q 'AP_12115_FBD_F0550_RT1' web/wenzhou-scope-review/index.html
           grep -q '文成县玉壶镇' web/wenzhou-scope-review/index.html
           grep -q '永嘉自然岛' web/wenzhou-scope-review/index.html
@@ -133,7 +133,7 @@ jobs:
           success=0
           for attempt in $(seq 1 120); do
             if curl --fail --silent --show-error --location "$URL" -o /tmp/wenzhou-scope-online.html; then
-              if grep -q '原始未裁切源覆盖与范围复核' /tmp/wenzhou-scope-online.html; then
+              if grep -q '原始源覆盖与范围复核' /tmp/wenzhou-scope-online.html; then
                 success=1
                 break
               fi
