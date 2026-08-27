@@ -35,14 +35,15 @@ jobs:
           python scripts/materialize_kunming_yunnan_hydrology_v004_final.py
           python - <<'PY'
           import pathlib
-          p=pathlib.Path('projects/kunming/web/yunnan-hydrology-v004/app.js')
-          text=p.read_text(encoding='utf-8')
-          assert "const qaRenderMode=new URLSearchParams(location.search).has('qa');" in text
-          assert 'qaRenderMode?[128,176]:[256,352]' in text
-          assert "dataset.viewer = 'loading'" in text
-          assert "dataset.viewer = 'ready'" in text
-          assert "dataset.viewer = 'fallback'" in text
-          print('query-aware mesh and viewer state contract verified')
+          index=pathlib.Path('projects/kunming/web/yunnan-hydrology-v004/index.html').read_text(encoding='utf-8')
+          app=pathlib.Path('projects/kunming/web/yunnan-hydrology-v004/app.js').read_text(encoding='utf-8')
+          assert '<link rel="icon" href="data:,">' in index
+          assert "const qaRenderMode=new URLSearchParams(location.search).has('qa');" in app
+          assert 'qaRenderMode?[128,176]:[256,352]' in app
+          assert "dataset.viewer = 'loading'" in app
+          assert "dataset.viewer = 'ready'" in app
+          assert "dataset.viewer = 'fallback'" in app
+          print('query-aware mesh, favicon and viewer state contracts verified')
           PY
           test -f projects/kunming/web/yunnan-hydrology-v004/index.html
           test -f projects/kunming/web/yunnan-hydrology-v004/app.js
@@ -126,6 +127,7 @@ jobs:
           index=(root/'index.html').read_text(encoding='utf-8')
           app=(root/'app.js').read_text(encoding='utf-8')
           assert all(label not in index for label in ['总览','俯视','朝北'])
+          assert '<link rel="icon" href="data:,">' in index
           assert 'Float32Array(await' not in app
           assert 'riverLines' not in app and 'lakePolygons' not in app
           assert not re.search(r'\bflat\b',app)
@@ -152,6 +154,7 @@ jobs:
             'mesh':[256,352],
             'qaMesh':[128,176],
             'viewerStateContract':'loading_ready_fallback',
+            'faviconRequestSuppressed':True,
             'mainWaterways':m['hydrology']['mainWaterwayFeatures'],
             'minorWaterways':m['hydrology']['minorWaterwayFeatures'],
             'displayedWaterAreas':m['hydrology']['displayedWaterAreaFeatures'],
@@ -211,27 +214,39 @@ jobs:
           set -euo pipefail
           BASE="https://haihao0307.github.io/guilin-dem-pipeline/$TARGET_DIR"
           for attempt in $(seq 1 24); do
-            if curl --fail --silent --show-error "$BASE/index.html?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-index.html" \
-              && curl --fail --silent --show-error "$BASE/manifest.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-manifest.json" \
-              && curl --fail --silent --show-error "$BASE/DEPLOYMENT_REPORT.json?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-deployment.json" \
-              && curl --fail --silent --show-error "$BASE/assets/height_rg16.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-height.png" \
-              && curl --fail --silent --show-error "$BASE/assets/osm_water_mask_v004.png?v=${GITHUB_SHA}" -o "$RUNNER_TEMP/public-water.png"; then
-              python - <<'PY'
+            VERSION="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/index.html?v=$VERSION" -o "$RUNNER_TEMP/public-index.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/app.js?v=$VERSION" -o "$RUNNER_TEMP/public-app.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/manifest.json?v=$VERSION" -o "$RUNNER_TEMP/public-manifest.json" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/DEPLOYMENT_REPORT.json?v=$VERSION" -o "$RUNNER_TEMP/public-deployment.json" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/assets/height_rg16.png?v=$VERSION" -o "$RUNNER_TEMP/public-height.png" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' "$BASE/assets/osm_water_mask_v004.png?v=$VERSION" -o "$RUNNER_TEMP/public-water.png"; then
+              if python - <<'PY'
           import json, pathlib
+          index=pathlib.Path("${{ runner.temp }}/public-index.html").read_text(encoding='utf-8')
+          app=pathlib.Path("${{ runner.temp }}/public-app.js").read_text(encoding='utf-8')
           m=json.loads(pathlib.Path("${{ runner.temp }}/public-manifest.json").read_text(encoding='utf-8'))
           d=json.loads(pathlib.Path("${{ runner.temp }}/public-deployment.json").read_text(encoding='utf-8'))
           assert m['status']=='modern_osm_reference_ready_historical_truth_pending'
           assert m['displayRules']['cameraPresetButtons']==[]
           assert m['hydrology']['handDrawnWaterCount']==0
           assert d['status']=='public_deployment_ready'
+          assert d['sourceCommit']=='${{ github.sha }}'
           assert d['staticQa']=='pass'
           assert d['viewerStateContract']=='loading_ready_fallback'
+          assert d['faviconRequestSuppressed'] is True
+          assert '<link rel="icon" href="data:,">' in index
+          assert "dataset.viewer = 'ready'" in app
+          assert 'qaRenderMode?[128,176]:[256,352]' in app
           assert pathlib.Path("${{ runner.temp }}/public-height.png").stat().st_size==8878779
           assert pathlib.Path("${{ runner.temp }}/public-water.png").stat().st_size>1000
           print('public V004 direct deployment verification passed')
           PY
-              exit 0
+              then
+                exit 0
+              fi
             fi
+            echo "Pages propagation pending on attempt $attempt"
             sleep 10
           done
           exit 1
