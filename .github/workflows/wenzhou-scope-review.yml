@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm install --no-save playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0
           npx playwright install --with-deps chromium
 
       - name: Start local review server
@@ -100,6 +100,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf node_modules
+          if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            git checkout -- package-lock.json
+          else
+            rm -f package-lock.json
+          fi
+          if git ls-files --error-unmatch package.json >/dev/null 2>&1; then
+            git checkout -- package.json
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- projects/wenzhou/evidence/scope-review projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_BROWSER_QA.json
