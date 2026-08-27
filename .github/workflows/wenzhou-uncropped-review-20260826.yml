@@ -1,0 +1,123 @@
+name: Restore frozen Wenzhou pre-crop review 2026-08-26
+
+on:
+  push:
+    branches:
+      - review/wenzhou-uncropped-20260826
+    paths:
+      - .github/workflows/wenzhou-uncropped-review-20260826.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-uncropped-review-20260826
+  cancel-in-progress: false
+
+jobs:
+  restore-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout frozen review branch
+        uses: actions/checkout@v4
+        with:
+          ref: review/wenzhou-uncropped-20260826
+          fetch-depth: 0
+          lfs: false
+
+      - name: Verify exact restored review inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f web/wenzhou-scope-review/index.html
+          test -f projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json
+          grep -q '温州 DEM 原始源覆盖与范围复核' web/wenzhou-scope-review/index.html
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          source_commit = '7959d195688fb98675a76f9d48a5d5e015cfcd78'
+          page = Path('web/wenzhou-scope-review/index.html')
+          report = Path('projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json')
+          data = json.loads(report.read_text(encoding='utf-8'))
+          assert data['uncroppedSourceCoverage']['selectedProductCount'] == 11
+          assert data['anchors']['yuhuTown']['insideCurrentTruthCog'] is False
+          assert data['anchors']['naturalIsland']['insideCurrentTruthCog'] is True
+          payload = {
+              'schema': 'wenzhou_uncropped_review_restore@1.0.0',
+              'sourceCommit': source_commit,
+              'sourceDate': '2026-08-26',
+              'restoredWithoutPageEdits': True,
+              'pageSha256': hashlib.sha256(page.read_bytes()).hexdigest(),
+              'scopeReportSha256': hashlib.sha256(report.read_bytes()).hexdigest(),
+              'status': 'frozen-pre-crop-review',
+              'warning': 'This is the exact visual review state restored from the prior commit. Final re-cropping must use the authoritative 13-source manifest and recovered source DEM rasters.'
+          }
+          Path('/tmp/RESTORED_FROM.json').write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(payload, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Publish frozen review route to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-uncropped-gh-pages
+          git fetch origin gh-pages
+          git worktree add -B gh-pages /tmp/wenzhou-uncropped-gh-pages origin/gh-pages
+          TARGET='/tmp/wenzhou-uncropped-gh-pages/wenzhou-uncropped-review-20260826'
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp web/wenzhou-scope-review/index.html "$TARGET/index.html"
+          cp projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json "$TARGET/SCOPE_REVIEW.json"
+          cp /tmp/RESTORED_FROM.json "$TARGET/RESTORED_FROM.json"
+          touch /tmp/wenzhou-uncropped-gh-pages/.nojekyll
+          cd /tmp/wenzhou-uncropped-gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .nojekyll wenzhou-uncropped-review-20260826
+          git commit -m 'Restore frozen Wenzhou pre-crop review from 2026-08-26'
+          git push origin HEAD:gh-pages
+
+      - name: Verify public frozen route
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-uncropped-review-20260826/'
+          ok=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/wenzhou-uncropped-online.html; then
+              if grep -q '温州 DEM 原始源覆盖与范围复核' /tmp/wenzhou-uncropped-online.html; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          test "$ok" = '1'
+          curl --fail --silent --show-error --location "${URL}RESTORED_FROM.json" -o /tmp/wenzhou-uncropped-restored.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/wenzhou-uncropped-restored.json').read_text(encoding='utf-8'))
+          assert data['sourceCommit'] == '7959d195688fb98675a76f9d48a5d5e015cfcd78'
+          assert data['restoredWithoutPageEdits'] is True
+          print(json.dumps({'onlineVerified': True, 'url': 'https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-uncropped-review-20260826/', 'sourceCommit': data['sourceCommit']}, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload restore evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-uncropped-review-20260826
+          path: |
+            web/wenzhou-scope-review/index.html
+            projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json
+            /tmp/RESTORED_FROM.json
+            /tmp/wenzhou-uncropped-online.html
+            /tmp/wenzhou-uncropped-restored.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
