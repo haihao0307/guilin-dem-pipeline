@@ -1,0 +1,57 @@
+{
+  "schema": "dem-procedural-landscape-reference-binding@1.0.0",
+  "project": "guilin",
+  "bindingId": "guilin-yangshuo-karst-reference-binding-v100",
+  "status": "knowledge-distilled-implementation-pending",
+  "skill": {
+    "name": "dem-procedural-surface-ecology",
+    "version": "0.1.0",
+    "module": "DEM-M03",
+    "scopeOverride": [
+      "terrain",
+      "terrace",
+      "hydrology",
+      "surface-material"
+    ],
+    "vegetationExcluded": true
+  },
+  "referenceSites": [
+    {
+      "role": "historical-project-reference",
+      "url": "https://guilin-dem-terrain.sunhaihao.chatgpt.site",
+      "accessStatus": "recorded"
+    },
+    {
+      "role": "gaea-method-proof-reference",
+      "url": "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof",
+      "accessStatus": "recorded"
+    }
+  ],
+  "sourceReceipt": "knowledge/terrain-hydrology/guilin/inbox/2026-08-27_guilin-geomorphology-photo-set-v001_RECEIPT.json",
+  "distilledProfile": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_KARST_REFERENCE_PROFILE_V1.json",
+  "distilledGrammar": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_YANGSHUO_KARST_VISUAL_GRAMMAR_V1.md",
+  "evidenceMatrix": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_KARST_IMAGE_EVIDENCE_MATRIX_V1.json",
+  "implementationTask": "ops/tasks/DEM_GUILIN_REFERENCE_GUIDED_KARST_DETAIL_V100.md",
+  "truthInput": {
+    "role": "z_truth_m",
+    "spacingMeters": 12.5,
+    "readOnly": true,
+    "verticalScale": 1.0
+  },
+  "outputs": [
+    "terrain_derivatives",
+    "karst_peak_and_corridor_masks",
+    "cliff_and_rock_response_fields",
+    "approved_hydrology_fields",
+    "reversible_micro_delta_candidates",
+    "runtime_normal_roughness_ao_parallax_fields",
+    "comparison_bundle"
+  ],
+  "gates": {
+    "rawImagesPublicRedistributionApproved": false,
+    "truthOverwrite": false,
+    "microDeltaDefaultZero": true,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
