@@ -26,7 +26,7 @@ const browser = await puppeteer.launch({
     '--enable-unsafe-swiftshader',
     '--use-gl=angle',
     '--use-angle=swiftshader',
-    '--window-size=800,600'
+    '--window-size=900,650'
   ]
 });
 
@@ -43,7 +43,7 @@ const aggregate = {
 
 async function audit(name, viewport, screenshotName) {
   const page = await browser.newPage();
-  page.setDefaultTimeout(240000);
+  page.setDefaultTimeout(180000);
   await page.setViewport(viewport);
   await page.evaluateOnNewDocument(() => {
     try {
@@ -70,8 +70,8 @@ async function audit(name, viewport, screenshotName) {
   await page.waitForFunction(() => {
     const viewer = document.documentElement.dataset.viewer || '';
     const text = document.getElementById('status')?.textContent || '';
-    return viewer === 'ready' || viewer === 'fallback' || /失败|无法|错误/.test(text);
-  }, { polling: 500, timeout: 240000 });
+    return viewer === 'ready' || viewer === 'fallback' || /^V004\s*·/.test(text) || /失败|无法|错误|二维云南/.test(text);
+  }, { polling: 500, timeout: 180000 });
 
   const runtime = await page.evaluate(() => {
     const canvas = document.getElementById('terrain');
@@ -81,27 +81,48 @@ async function audit(name, viewport, screenshotName) {
     const gl = canvas?.getContext('webgl2');
     const count = id => Number((document.getElementById(id)?.textContent || '').replace(/[^0-9]/g, ''));
     const text = document.body.innerText;
+    const expectedControlIds = [
+      'richness',
+      'moisture',
+      'rock',
+      'waterColor',
+      'hydroDetail',
+      'riverWidth',
+      'flowSpeed',
+      'wave',
+      'toggleRivers',
+      'toggleLakes'
+    ];
     return {
       viewer,
+      readyByStatus: /^V004\s*·/.test(status),
       status,
       webgl2Active: Boolean(gl),
       canvasHidden: Boolean(canvas?.hidden),
       canvasWidth: canvas?.width || 0,
       canvasHeight: canvas?.height || 0,
       fallbackHidden: Boolean(fallback?.hidden),
-      waterwayCount: count('countWays'),
-      waterAreaCount: count('countAreas'),
-      sourceText: document.getElementById('sourceTime')?.textContent || '',
+      waterwayCount: count('riverCount'),
+      waterAreaCount: count('lakeCount'),
+      modeButtonCount: document.querySelectorAll('[data-mode]').length,
       hasCameraPresetButtons: ['overview', 'top', 'north', 'viewHome', 'viewTop', 'viewLow'].some(id => document.getElementById(id)),
-      hasExpectedControls: ['green', 'redEarth', 'rock', 'shade', 'contrast', 'riverWidth', 'waterColor', 'flowSpeed', 'wave', 'toggleRivers', 'toggleLakes'].every(id => document.getElementById(id)),
+      hasExpectedControls: expectedControlIds.every(id => document.getElementById(id)),
       bodyMentionsOsm: /OSM/.test(text)
     };
   });
 
-  if (runtime.viewer !== 'ready') throw new Error(`${name} viewer did not enter ready state: ${JSON.stringify(runtime)}`);
-  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) throw new Error(`${name} WebGL2 canvas validation failed: ${JSON.stringify(runtime)}`);
-  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) throw new Error(`${name} OSM counts or attribution missing: ${JSON.stringify(runtime)}`);
-  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls) throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
+  if (!(runtime.viewer === 'ready' || runtime.readyByStatus)) {
+    throw new Error(`${name} viewer did not enter ready state: ${JSON.stringify(runtime)}`);
+  }
+  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) {
+    throw new Error(`${name} WebGL2 canvas validation failed: ${JSON.stringify(runtime)}`);
+  }
+  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) {
+    throw new Error(`${name} OSM counts or attribution missing: ${JSON.stringify(runtime)}`);
+  }
+  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls || runtime.modeButtonCount !== 4) {
+    throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
+  }
 
   const canvasHandle = await page.$('#terrain');
   const box = await canvasHandle.boundingBox();
@@ -118,9 +139,9 @@ async function audit(name, viewport, screenshotName) {
   await delay(900);
 
   await page.evaluate(() => {
-    const slider = document.getElementById('green');
-    slider.value = '73';
-    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    const richness = document.getElementById('richness');
+    richness.value = '73';
+    richness.dispatchEvent(new Event('input', { bubbles: true }));
     const riverWidth = document.getElementById('riverWidth');
     riverWidth.value = '58';
     riverWidth.dispatchEvent(new Event('input', { bubbles: true }));
@@ -132,17 +153,11 @@ async function audit(name, viewport, screenshotName) {
   const afterHash = digest(afterData);
   if (beforeHash === afterHash) throw new Error(`${name} canvas did not change after camera and parameter interaction`);
 
-  if (name === 'mobile') {
-    const collapse = await page.$('#collapse');
-    if (collapse) {
-      await collapse.click();
-      await delay(250);
-    }
-  }
-
   const screenshotPath = path.join(outputDir, screenshotName);
   await page.screenshot({ path: screenshotPath, fullPage: false });
-  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 30000) throw new Error(`${name} screenshot missing or too small`);
+  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 30000) {
+    throw new Error(`${name} screenshot missing or too small`);
+  }
 
   const result = {
     ...runtime,
@@ -165,7 +180,7 @@ async function audit(name, viewport, screenshotName) {
 }
 
 try {
-  aggregate.desktop = await audit('desktop', { width: 800, height: 600, deviceScaleFactor: 1 }, 'KUNMING_V004_DESKTOP.png');
+  aggregate.desktop = await audit('desktop', { width: 900, height: 650, deviceScaleFactor: 1 }, 'KUNMING_V004_DESKTOP.png');
   aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, 'KUNMING_V004_MOBILE.png');
   aggregate.webgl2Active = aggregate.desktop.webgl2Active && aggregate.mobile.webgl2Active;
   aggregate.manualCameraInteractionVerified = aggregate.desktop.manualCameraInteractionVerified && aggregate.mobile.manualCameraInteractionVerified;
