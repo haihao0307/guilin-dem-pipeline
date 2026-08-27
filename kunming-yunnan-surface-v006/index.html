@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
+<title>昆明 DEM 云南高原卫星图式与真实 OSM 水系 V006</title>
+<link rel="stylesheet" href="styles.css?v=6">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+<div id="compass" class="compass" aria-label="North"><div id="compassNeedle" class="compass-needle">&#8593;</div><b>N</b></div>
+<canvas id="terrain" aria-label="昆明 DEM 云南高原卫星图式三维地形"></canvas>
+<div id="fallback" hidden><img id="fallbackImage" src="assets/fallback_yunnan_static_v006.jpg" alt="昆明 DEM 云南高原精细卫星图式二维预览" draggable="false"></div>
+<aside class="panel">
+  <div class="eyebrow">XIAOKUN · KUNMING GEODATA</div>
+  <h1>昆明 DEM 云南高原卫星图式与真实 OSM 水系 V006</h1>
+  <p class="lead">沿用冻结的无压缩 12.5 米 DEM。V006 重点重建云南高原地表色彩，以高程、坡度、坡向、曲率、局部起伏、谷地湿润度和多光向明暗共同驱动。河道与湖泊仍来自现代 OpenStreetMap，河道中心线已收窄，水面保持静态。</p>
+  <div class="badges"><span>现代 OSM 参考</span><span>历史真值 0</span><span>手绘水系 0</span></div>
+  <section>
+    <div class="mode-grid">
+      <button class="active" data-mode="0">云南高原卫星图</button>
+      <button data-mode="1">自然地形</button>
+      <button data-mode="2">高程分层</button>
+      <button data-mode="3">水系强调</button>
+    </div>
+  </section>
+  <section class="toggle-grid">
+    <button id="toggleRivers" class="active">河道开启</button>
+    <button id="toggleLakes" class="active">湖泊开启</button>
+  </section>
+  <section class="controls">
+    <label><span>地表细节层次</span><output id="richnessOut">78%</output></label><input id="richness" type="range" min="0" max="100" value="78">
+    <label><span>谷地与林地绿色</span><output id="moistureOut">58%</output></label><input id="moisture" type="range" min="0" max="100" value="58">
+    <label><span>红土与裸岩层次</span><output id="rockOut">64%</output></label><input id="rock" type="range" min="0" max="100" value="64">
+    <label><span>静态水色深浅</span><output id="waterColorOut">42%</output></label><input id="waterColor" type="range" min="0" max="100" value="42">
+    <label><span>水系层级</span><output id="hydroDetailOut">0%</output></label><input id="hydroDetail" type="range" min="0" max="100" value="0">
+    <label><span>河道显示宽度</span><output id="riverWidthOut">4%</output></label><input id="riverWidth" type="range" min="0" max="100" value="4">
+</section>
+  <section class="stats">
+    <div><b>12.5 m</b><span>权威输出像元</span></div>
+    <div><b>5892 × 8095</b><span>权威栅格</span></div>
+    <div><b id="riverCount">911</b><span>主要 OSM 河流与溪流</span></div>
+    <div><b id="lakeCount">821</b><span>显示湖泊、水库与水面</span></div>
+    <div><b>7,452.459375 km²</b><span>当前裁切面积</span></div>
+    <div><b>1.0×</b><span>自然垂直比例</span></div>
+  </section>
+  <details>
+    <summary>数据与操作说明</summary>
+    <p>左键拖动旋转，右键拖动或按住 Shift 拖动用于平移，滚轮连续缩放。页面不提供相机预设，镜头完全由你自行控制。</p>
+    <p>河流中心线固定，河宽滑块只改变中心线两侧的横向显示宽度。默认只显示主要水路，次级沟渠保持关闭。湖岸边界固定，水面采用静态颜色，本版不生成波纹、流动高光或动画。</p>
+    <p>V006 地表色彩使用云南高原知识规则生成，网页资产可重新构建，权威 DEM 保持无压缩且不被回写。© OpenStreetMap contributors，ODbL 1.0。</p>
+  </details>
+</aside>
+<div id="status" class="status">正在载入昆明 V006 云南高原精细地表与静态 OSM 水系…</div>
+<script type="module" src="app.js?v=6"></script>
+</body>
+</html>
