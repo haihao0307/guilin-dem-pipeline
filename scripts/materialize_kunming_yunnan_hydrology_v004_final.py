@@ -38,6 +38,12 @@ def main() -> int:
         "页面没有总览、俯视、朝北等相机预设，镜头完全由你自行控制。",
         "页面不提供任何相机预设，镜头完全由你自行控制。",
     )
+    index_text = index_text.replace(
+        "左键拖动旋转，右键拖动或按住 Shift 平移，滚轮连续缩放。页面不提供任何相机预设，镜头完全由你自行控制。",
+        "鼠标在地形画面上直接移动即可旋转视角。左键拖动可精细旋转，右键拖动或按住 Shift 拖动用于平移，滚轮连续缩放。页面不提供任何相机预设，镜头完全由你自行控制。",
+    )
+    if "鼠标在地形画面上直接移动即可旋转视角" not in index_text:
+        raise SystemExit("failed to install V004 buttonless camera instructions")
     favicon_tag = '<link rel="icon" href="data:,">'
     if favicon_tag not in index_text:
         if "</head>" not in index_text:
@@ -96,10 +102,106 @@ def main() -> int:
     if ready_patch_count != 1:
         raise SystemExit(f"failed to install V004 ready state: {ready_patch_count}")
 
+    camera_interaction_pattern = (
+        r"  const camera = \{ yaw: -0\.62, pitch: 0\.72, distance: 104000, x: 0, z: 0 \};\n"
+        r".*?"
+        r"  canvas\.addEventListener\('wheel', event => \{"
+    )
+    camera_interaction_replacement = """  const camera = { yaw: -0.62, pitch: 0.72, distance: 104000, x: 0, z: 0 };
+  document.documentElement.dataset.buttonlessCamera = 'enabled';
+  if (qaRenderMode) window.__KUNMING_V004_QA_CAMERA__ = camera;
+  let dragging = false;
+  let panning = false;
+  let hoverReady = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  function orbitByPointer(dx, dy, sensitivity = 1) {
+    camera.yaw -= dx * 0.0055 * sensitivity;
+    camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch - dy * 0.0047 * sensitivity));
+  }
+
+  canvas.addEventListener('contextmenu', event => event.preventDefault());
+  canvas.addEventListener('pointerenter', event => {
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverReady = true;
+  });
+  canvas.addEventListener('pointerleave', () => {
+    if (!dragging) hoverReady = false;
+  });
+  canvas.addEventListener('pointerdown', event => {
+    dragging = true;
+    panning = event.button === 2 || event.shiftKey;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverReady = true;
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove', event => {
+    const buttonlessMouse = !dragging && event.pointerType === 'mouse' && event.buttons === 0;
+    if (!dragging && !buttonlessMouse) {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      return;
+    }
+    if (!hoverReady) {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      hoverReady = true;
+      return;
+    }
+    const dx = event.clientX - lastX;
+    const dy = event.clientY - lastY;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    if (dragging && panning) {
+      const scale = Math.max(2, camera.distance * 0.00125);
+      const rightX = Math.cos(camera.yaw);
+      const rightZ = -Math.sin(camera.yaw);
+      const forwardX = Math.sin(camera.yaw);
+      const forwardZ = Math.cos(camera.yaw);
+      camera.x -= dx * scale * rightX + dy * scale * forwardX;
+      camera.z -= dx * scale * rightZ + dy * scale * forwardZ;
+      camera.x = Math.max(-worldWidth / 2, Math.min(worldWidth / 2, camera.x));
+      camera.z = Math.max(-worldDepth / 2, Math.min(worldDepth / 2, camera.z));
+    } else {
+      orbitByPointer(dx, dy, dragging ? 1 : 0.68);
+    }
+  });
+  canvas.addEventListener('pointerup', event => {
+    dragging = false;
+    panning = false;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverReady = true;
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointercancel', event => {
+    dragging = false;
+    panning = false;
+    hoverReady = false;
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('wheel', event => {"""
+    app_text, camera_patch_count = re.subn(
+        camera_interaction_pattern,
+        camera_interaction_replacement,
+        app_text,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if camera_patch_count != 1:
+        raise SystemExit(f"failed to install V004 buttonless camera control: {camera_patch_count}")
+
     if re.search(r"\bflat\b", app_text):
         raise SystemExit("reserved GLSL token 'flat' remains in V004 app.js")
     if "dataset.viewer = 'ready'" not in app_text or "dataset.viewer = 'fallback'" not in app_text:
         raise SystemExit("V004 viewer state contract is incomplete")
+    if "dataset.buttonlessCamera = 'enabled'" not in app_text:
+        raise SystemExit("V004 buttonless camera contract is incomplete")
+    if "window.__KUNMING_V004_QA_CAMERA__ = camera" not in app_text:
+        raise SystemExit("V004 QA camera state is unavailable")
     app_path.write_text(app_text, encoding="utf-8")
 
     qa_override = root / "scripts/qa_kunming_yunnan_hydrology_v004_override.mjs"
@@ -113,6 +215,7 @@ def main() -> int:
         f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
         "installed 128x176 automated-QA and 256x352 public meshes, "
         "installed explicit loading/ready/fallback viewer states, "
+        "enabled mouse movement orbit without a pressed button, "
         "suppressed the implicit favicon request, "
         "and installed current browser QA"
     )
