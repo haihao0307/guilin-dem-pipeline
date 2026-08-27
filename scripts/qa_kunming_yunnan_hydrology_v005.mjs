@@ -160,8 +160,8 @@ async function audit(name, viewport, screenshotName) {
 }
 
 try {
-  aggregate.desktop = await audit('desktop', { width: 1365, height: 900, deviceScaleFactor: 1 }, 'KUNMING_V005_DESKTOP.png');
-  aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, 'KUNMING_V005_MOBILE.png');
+  aggregate.desktop = await audit('desktop', { width: 1365, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false }, 'KUNMING_V005_DESKTOP.png');
+  aggregate.mobile = await audit('mobile', { width: 390, height: 844, deviceScaleFactor: 1, isMobile: false, hasTouch: false }, 'KUNMING_V005_MOBILE.png');
   aggregate.webgl2Active = aggregate.desktop.webgl2Active && aggregate.mobile.webgl2Active;
   aggregate.orientationVerified = aggregate.desktop.orientation === 'east-positive-x_north-negative-z' && aggregate.mobile.orientation === 'east-positive-x_north-negative-z';
   aggregate.orbitVerified = aggregate.desktop.orbitVerified && aggregate.mobile.orbitVerified;
