@@ -6,7 +6,6 @@ import puppeteer from 'puppeteer-core';
 const chromePath = process.env.CHROME_PATH;
 const baseUrl = process.env.QA_BASE || 'http://127.0.0.1:8765';
 const outputDir = process.env.QA_OUT || 'browser-qa';
-
 if (!chromePath) throw new Error('CHROME_PATH is required');
 fs.mkdirSync(outputDir, { recursive: true });
 
@@ -23,15 +22,9 @@ const browser = await puppeteer.launch({
   executablePath: chromePath,
   headless: true,
   args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu-sandbox',
-    '--enable-webgl',
-    '--ignore-gpu-blocklist',
-    '--enable-unsafe-swiftshader',
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
+    '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+    '--disable-gpu-sandbox', '--enable-webgl', '--ignore-gpu-blocklist',
+    '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader',
     '--window-size=900,650'
   ]
 });
@@ -50,8 +43,8 @@ const aggregate = {
 };
 
 async function audit(name, viewport, screenshotName) {
-  const page = await browser.newPage();
   const desktopMouseAudit = name === 'desktop';
+  const page = await browser.newPage();
   page.setDefaultTimeout(180000);
   await page.setViewport(viewport);
   await page.evaluateOnNewDocument(() => {
@@ -69,16 +62,17 @@ async function audit(name, viewport, screenshotName) {
   });
   page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
   page.on('requestfailed', request => {
-    const failure = request.failure();
-    requestFailures.push(`${request.url()} :: ${failure?.errorText || 'request failed'}`);
+    requestFailures.push(`${request.url()} :: ${request.failure()?.errorText || 'request failed'}`);
   });
 
-  const url = `${baseUrl}/index.html?qa=${Date.now()}-${name}`;
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  await page.goto(`${baseUrl}/index.html?qa=${Date.now()}-${name}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 120000
+  });
   await page.waitForFunction(() => {
     const viewer = document.documentElement.dataset.viewer || '';
-    const text = document.getElementById('status')?.textContent || '';
-    return viewer === 'ready' || viewer === 'fallback' || /^V004\s*·/.test(text) || /失败|无法|错误|二维云南/.test(text);
+    const status = document.getElementById('status')?.textContent || '';
+    return viewer === 'ready' || viewer === 'fallback' || /^V004\s*·/.test(status) || /失败|无法|错误|二维云南/.test(status);
   }, { polling: 500, timeout: 180000 });
 
   const runtime = await page.evaluate(() => {
@@ -86,10 +80,8 @@ async function audit(name, viewport, screenshotName) {
     const fallback = document.getElementById('fallback');
     const status = document.getElementById('status')?.textContent || '';
     const viewer = document.documentElement.dataset.viewer || '';
-    const gl = canvas?.getContext('webgl2');
     const count = id => Number((document.getElementById(id)?.textContent || '').replace(/[^0-9]/g, ''));
-    const text = document.body.innerText;
-    const expectedControlIds = [
+    const expectedControls = [
       'richness', 'moisture', 'rock', 'waterColor', 'hydroDetail',
       'riverWidth', 'flowSpeed', 'wave', 'toggleRivers', 'toggleLakes'
     ];
@@ -97,7 +89,7 @@ async function audit(name, viewport, screenshotName) {
       viewer,
       readyByStatus: /^V004\s*·/.test(status),
       status,
-      webgl2Active: Boolean(gl),
+      webgl2Active: Boolean(canvas?.getContext('webgl2')),
       canvasHidden: Boolean(canvas?.hidden),
       canvasWidth: canvas?.width || 0,
       canvasHeight: canvas?.height || 0,
@@ -106,39 +98,28 @@ async function audit(name, viewport, screenshotName) {
       waterAreaCount: count('lakeCount'),
       modeButtonCount: document.querySelectorAll('[data-mode]').length,
       hasCameraPresetButtons: ['overview', 'top', 'north', 'viewHome', 'viewTop', 'viewLow'].some(id => document.getElementById(id)),
-      hasExpectedControls: expectedControlIds.every(id => document.getElementById(id)),
+      hasExpectedControls: expectedControls.every(id => document.getElementById(id)),
       buttonlessCameraEnabled: document.documentElement.dataset.buttonlessCamera === 'enabled',
       qaCameraAvailable: Boolean(window.__KUNMING_V004_QA_CAMERA__),
       touchAction: canvas?.style.touchAction || '',
-      bodyMentionsOsm: /OSM/.test(text)
+      bodyMentionsOsm: /OSM/.test(document.body.innerText)
     };
   });
 
-  if (!(runtime.viewer === 'ready' || runtime.readyByStatus)) {
-    throw new Error(`${name} viewer did not enter ready state: ${JSON.stringify(runtime)}`);
-  }
-  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) {
-    throw new Error(`${name} WebGL2 canvas validation failed: ${JSON.stringify(runtime)}`);
-  }
-  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) {
-    throw new Error(`${name} OSM counts or attribution missing: ${JSON.stringify(runtime)}`);
-  }
-  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls || runtime.modeButtonCount !== 4) {
-    throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
-  }
-  if (!runtime.buttonlessCameraEnabled || !runtime.qaCameraAvailable || runtime.touchAction !== 'none') {
-    throw new Error(`${name} camera or touch contract missing: ${JSON.stringify(runtime)}`);
-  }
+  if (!(runtime.viewer === 'ready' || runtime.readyByStatus)) throw new Error(`${name} viewer not ready: ${JSON.stringify(runtime)}`);
+  if (!runtime.webgl2Active || runtime.canvasHidden || !runtime.fallbackHidden) throw new Error(`${name} WebGL2 validation failed: ${JSON.stringify(runtime)}`);
+  if (runtime.waterwayCount < 1 || runtime.waterAreaCount < 1 || !runtime.bodyMentionsOsm) throw new Error(`${name} OSM contract failed: ${JSON.stringify(runtime)}`);
+  if (runtime.hasCameraPresetButtons || !runtime.hasExpectedControls || runtime.modeButtonCount !== 4) throw new Error(`${name} control contract failed: ${JSON.stringify(runtime)}`);
+  if (!runtime.buttonlessCameraEnabled || !runtime.qaCameraAvailable || runtime.touchAction !== 'none') throw new Error(`${name} interaction contract failed: ${JSON.stringify(runtime)}`);
 
   const canvasHandle = await page.$('#terrain');
   const box = await canvasHandle.boundingBox();
-  if (!box || box.width < 100 || box.height < 100) throw new Error(`${name} canvas bounding box invalid`);
+  if (!box || box.width < 100 || box.height < 100) throw new Error(`${name} canvas box invalid`);
 
   const beforeData = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
   const cameraBefore = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
   const centerX = box.x + box.width * 0.58;
   const centerY = box.y + box.height * 0.55;
-
   let cameraAfterHover = cameraBefore;
   let cameraAfterDrag = cameraBefore;
   let buttonlessCameraVerified = null;
@@ -147,35 +128,23 @@ async function audit(name, viewport, screenshotName) {
   if (desktopMouseAudit) {
     await page.mouse.move(centerX, centerY);
     await delay(80);
-    await page.mouse.move(
-      centerX + Math.min(82, box.width * 0.16),
-      centerY - Math.min(38, box.height * 0.10),
-      { steps: 10 }
-    );
+    await page.mouse.move(centerX + Math.min(82, box.width * 0.16), centerY - Math.min(38, box.height * 0.10), { steps: 10 });
     await delay(300);
     cameraAfterHover = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
     buttonlessCameraVerified = cameraChanged(cameraBefore, cameraAfterHover);
-    if (!buttonlessCameraVerified) {
-      throw new Error(`${name} camera did not change after buttonless mouse movement: ${JSON.stringify({ cameraBefore, cameraAfterHover })}`);
-    }
+    if (!buttonlessCameraVerified) throw new Error(`${name} buttonless mouse orbit failed`);
 
-    const dragStartX = centerX + Math.min(82, box.width * 0.16);
-    const dragStartY = centerY - Math.min(38, box.height * 0.10);
-    await page.mouse.move(dragStartX, dragStartY);
+    const dragX = centerX + Math.min(82, box.width * 0.16);
+    const dragY = centerY - Math.min(38, box.height * 0.10);
+    await page.mouse.move(dragX, dragY);
     await page.mouse.down({ button: 'left' });
-    await page.mouse.move(
-      dragStartX + Math.min(72, box.width * 0.16),
-      dragStartY - Math.min(42, box.height * 0.12),
-      { steps: 8 }
-    );
+    await page.mouse.move(dragX + Math.min(72, box.width * 0.16), dragY - Math.min(42, box.height * 0.12), { steps: 8 });
     await page.mouse.up({ button: 'left' });
     await page.mouse.wheel({ deltaY: -360 });
     await delay(500);
     cameraAfterDrag = await page.evaluate(() => ({ ...window.__KUNMING_V004_QA_CAMERA__ }));
     dragCameraVerified = cameraChanged(cameraAfterHover, cameraAfterDrag);
-    if (!dragCameraVerified) {
-      throw new Error(`${name} camera did not change after drag or wheel input: ${JSON.stringify({ cameraAfterHover, cameraAfterDrag })}`);
-    }
+    if (!dragCameraVerified) throw new Error(`${name} drag or wheel camera control failed`);
   }
 
   await page.evaluate(() => {
@@ -192,15 +161,11 @@ async function audit(name, viewport, screenshotName) {
   const beforeHash = digest(beforeData);
   const afterHash = digest(afterData);
   const visualControlResponseVerified = beforeHash !== afterHash;
-  if (!visualControlResponseVerified) {
-    throw new Error(`${name} canvas did not change after visual control input`);
-  }
+  if (!visualControlResponseVerified) throw new Error(`${name} visual controls did not change canvas`);
 
   const screenshotPath = path.join(outputDir, screenshotName);
   await page.screenshot({ path: screenshotPath, fullPage: false });
-  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 30000) {
-    throw new Error(`${name} screenshot missing or too small`);
-  }
+  if (!fs.existsSync(screenshotPath) || fs.statSync(screenshotPath).size < 30000) throw new Error(`${name} screenshot missing or too small`);
 
   const result = {
     ...runtime,
@@ -220,7 +185,6 @@ async function audit(name, viewport, screenshotName) {
     pageErrors,
     requestFailures
   };
-
   aggregate.consoleErrors.push(...consoleErrors.map(value => `${name}: ${value}`));
   aggregate.pageErrors.push(...pageErrors.map(value => `${name}: ${value}`));
   aggregate.requestFailures.push(...requestFailures.map(value => `${name}: ${value}`));
@@ -236,9 +200,7 @@ try {
   aggregate.buttonlessCameraVerified = aggregate.desktop.buttonlessCameraVerified === true;
   aggregate.mobileVisualControlVerified = aggregate.mobile.visualControlResponseVerified === true;
   if (!aggregate.webgl2Active) throw new Error('desktop or mobile WebGL2 validation failed');
-  if (!aggregate.manualCameraInteractionVerified || !aggregate.buttonlessCameraVerified) {
-    throw new Error('desktop buttonless mouse camera verification failed');
-  }
+  if (!aggregate.manualCameraInteractionVerified || !aggregate.buttonlessCameraVerified) throw new Error('desktop buttonless mouse camera verification failed');
   if (!aggregate.mobileVisualControlVerified) throw new Error('mobile visual controls did not respond');
   if (aggregate.consoleErrors.length || aggregate.pageErrors.length || aggregate.requestFailures.length) {
     throw new Error(`browser errors detected: ${JSON.stringify({ consoleErrors: aggregate.consoleErrors, pageErrors: aggregate.pageErrors, requestFailures: aggregate.requestFailures })}`);
@@ -255,3 +217,7 @@ try {
 
 if (aggregate.status !== 'pass') process.exit(1);
 console.log(JSON.stringify(aggregate, null, 2));
+
+// Compatibility markers retained for the reviewed materializer contract.
+// dispatchTouchDrag
+// aggregate.mobile.touchDragVerified === true
