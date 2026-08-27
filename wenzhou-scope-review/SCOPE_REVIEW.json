@@ -1,0 +1,80 @@
+{
+  "schema": "wenzhou_scope_review@0.1.0",
+  "status": "draft-for-user-range-approval",
+  "generatedAtUtc": "2026-08-27T00:00:00Z",
+  "reviewPage": "web/wenzhou-scope-review/index.html",
+  "currentTruthCog": {
+    "path": "projects/wenzhou/archive/truth/WENZHOU_QINGJIANG_22000KM2_12_5M_COG.tif",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "crs": "EPSG:32651",
+    "grid": [11866, 11866],
+    "spacingMeters": [12.5, 12.5],
+    "areaKm2": 22000.305625,
+    "boundsUtm": [239645.652694, 3054965.110786, 387970.652694, 3203290.110786],
+    "polygonWgs84": [
+      [120.362408800068, 27.593635051527],
+      [121.864650129812, 27.614060721889],
+      [121.850359552964, 28.952702379589],
+      [120.329248533004, 28.931106070604],
+      [120.362408800068, 27.593635051527]
+    ],
+    "immutableUntilUserRangeApproval": true
+  },
+  "uncroppedSourceCoverage": {
+    "meaning": "footprints of the eleven selected ALOS PALSAR RTC high-resolution source products before final AOI crop",
+    "metadataPath": "projects/wenzhou/metadata/selected_products.json",
+    "selectedProductCount": 11,
+    "envelopeWgs84": [119.861, 27.151, 122.203, 29.304],
+    "completeUncroppedPixelMosaicPublished": false,
+    "sourceFootprintsPublishedForReview": true
+  },
+  "anchors": {
+    "yuhuTown": {
+      "displayNameZh": "文成县玉壶镇",
+      "wgs84": [120.144444444444, 27.872777777778],
+      "utmEpsg32651": [218839.53653, 3086386.742951],
+      "coordinateSource": "Wikidata Q14054965",
+      "insideCurrentTruthCog": false,
+      "westOfCurrentBoundaryMeters": 20806.116164
+    },
+    "naturalIsland": {
+      "displayNameZh": "永嘉自然岛",
+      "referenceLabel": "枫林镇范围参考点",
+      "wgs84": [120.76339, 28.32202],
+      "utmEpsg32651": [280717.221862, 3134906.216847],
+      "coordinateSource": "OpenStreetMap/GeoNames Fenglin town reference",
+      "insideCurrentTruthCog": true,
+      "exactPoiVerified": false,
+      "reviewUncertaintyRadiusMeters": 3000
+    }
+  },
+  "oldWenzhouTaizhouReference": {
+    "path": "projects/wenzhou-taizhou/config/project_scope_v001.json",
+    "bboxWgs84": [120.2, 27.72, 121.72, 28.82],
+    "includesYuhuTown": false,
+    "includesNaturalIslandReference": true
+  },
+  "proposedExpandedAoi": {
+    "purpose": "retain all current east, south and north coverage while including Yuhu Town with approximately ten kilometres of west buffer",
+    "crs": "EPSG:32651",
+    "boundsUtm": [208500.0, 3054965.110786, 387970.652694, 3203290.110786],
+    "approximateAreaKm2": 26619.984561,
+    "polygonWgs84": [
+      [120.047195772012, 27.587279599753],
+      [121.864655397427, 27.614056115036],
+      [121.850364786952, 28.952707073383],
+      [120.010085873177, 28.924396022678],
+      [120.047195772012, 27.587279599753]
+    ],
+    "yuhuWestBufferMeters": 10339.53653,
+    "includesYuhuTown": true,
+    "includesNaturalIslandReference": true,
+    "approved": false
+  },
+  "rules": {
+    "doNotAlterCurrentTruthCogBeforeApproval": true,
+    "doNotStretchOrInterpolateCurrentCogToNewBoundary": true,
+    "rebuildFromOriginalSourceProductsAfterApproval": true,
+    "preserveCurrentTruthSha": true
+  }
+}
