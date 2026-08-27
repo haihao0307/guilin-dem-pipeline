@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Browser QA for the direct three-region terrain hydrology workbench v2.0."""
+"""Browser QA for the direct three-region terrain hydrology workbench v2.1."""
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -63,11 +65,46 @@ def collect_state(page: Page) -> dict[str, Any]:
     )
 
 
+def verify_embedded_reference_package(page: Page, output: Path, name: str) -> dict[str, Any]:
+    image_path = output / f"{name}-reference-source.png"
+    Image.new("RGB", (5, 4), (121, 73, 39)).save(image_path)
+    source_bytes = image_path.read_bytes()
+    image_input = page.locator("#guilin input[data-images]")
+    image_input.set_input_files(str(image_path))
+    page.wait_for_function(
+        "document.querySelector('#guilin [data-export]').textContent.includes('1 张')",
+        timeout=30_000,
+    )
+    with page.expect_download(timeout=60_000) as download_info:
+        page.locator("#guilin [data-export]").click()
+    download = download_info.value
+    package_path = output / f"{name}-embedded-reference.terrain-intake.json"
+    download.save_as(str(package_path))
+    payload = json.loads(package_path.read_text(encoding="utf-8"))
+    files = payload.get("files") or []
+    if payload.get("schema") != "terrain-hydrology-reference-intake@2.1.0":
+        raise AssertionError(f"embedded intake schema mismatch: {payload.get('schema')}")
+    if payload.get("transfer", {}).get("sourceImagesEmbedded") is not True:
+        raise AssertionError("embedded source image flag missing")
+    if len(files) != 1 or files[0].get("encoding") != "base64" or not files[0].get("dataBase64"):
+        raise AssertionError("embedded source image payload missing")
+    decoded = base64.b64decode(files[0]["dataBase64"])
+    if decoded != source_bytes:
+        raise AssertionError("embedded source image bytes differ from uploaded file")
+    return {
+        "schema": payload["schema"],
+        "imageCount": len(files),
+        "embeddedBytes": len(decoded),
+        "package": package_path.name,
+    }
+
+
 def run_viewport(browser, url: str, output: Path, name: str, width: int, height: int, focus_checks: bool) -> dict[str, Any]:
     context = browser.new_context(
         viewport={"width": width, "height": height},
         device_scale_factor=1,
         locale="zh-CN",
+        accept_downloads=True,
     )
     page = context.new_page()
     console_errors: list[str] = []
@@ -92,7 +129,9 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
         "canvasSignals": {},
     }
     try:
-        response = page.goto(url, wait_until="networkidle", timeout=120_000)
+        separator = "&" if "?" in url else "?"
+        qa_url = f"{url}{separator}qa={name}-{int(time.time() * 1000)}"
+        response = page.goto(qa_url, wait_until="networkidle", timeout=120_000)
         result["entryStatus"] = response.status if response else None
         page.wait_for_function(
             "['true', 'partial'].includes(document.documentElement.dataset.workbenchReady)",
@@ -103,6 +142,10 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
         result["state"] = state
         if state.get("missing") or state.get("workbenchDataset") != "true" or not state.get("ready"):
             raise AssertionError(f"workbench did not become ready: {state}")
+        if "v2.1" not in (state.get("title") or ""):
+            raise AssertionError(f"stale page title: {state.get('title')}")
+        if not any("app.js?v=210" in item for item in state.get("moduleScripts", [])):
+            raise AssertionError(f"cache-busted app module missing: {state.get('moduleScripts')}")
         if [item["id"] for item in state["regions"]] != list(REGIONS):
             raise AssertionError(f"region order mismatch: {state['regions']}")
         for region in state["regions"]:
@@ -156,6 +199,8 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
         if hydrology_mode != 2:
             raise AssertionError("hydrology diagnostic mode did not activate")
 
+        result["embeddedReferencePackage"] = verify_embedded_reference_package(page, output, name)
+
         if focus_checks:
             for region_id in REGIONS:
                 page.locator(f"#{region_id} [data-focus]").scroll_into_view_if_needed()
@@ -186,11 +231,39 @@ def run_viewport(browser, url: str, output: Path, name: str, width: int, height:
                     raise AssertionError(f"{region_id} focus backend is {focus['backend']}")
                 if focus["heightSamples"] != 640_000 or focus["maskSamples"] != 640_000:
                     raise AssertionError(f"{region_id} focus source samples mismatch")
-                if focus["meshCols"] < 700 or focus["meshRows"] < 700:
-                    raise AssertionError(f"{region_id} focus mesh is too low: {focus}")
+                if focus["meshCols"] < 1000 or focus["meshRows"] < 1000:
+                    raise AssertionError(f"{region_id} focus mesh did not load v2.1 density: {focus}")
                 page.locator("[data-focus-mode='hydrology']").click()
                 page.locator("[data-focus-view='ground']").click()
-                page.wait_for_timeout(350)
+                page.wait_for_timeout(600)
+                ground = page.evaluate(
+                    """
+                    () => {
+                      const viewer = window.__TERRAIN_HYDROLOGY_WORKBENCH_V200__.focusViewer;
+                      const visualSpacing = Math.max(
+                        viewer.patch.widthMeters / Math.max(1, viewer.meshCols - 1),
+                        viewer.patch.heightMeters / Math.max(1, viewer.meshRows - 1),
+                      );
+                      return {
+                        distance: viewer.camera.distance,
+                        patchWidthMeters: viewer.patch.widthMeters,
+                        patchHeightMeters: viewer.patch.heightMeters,
+                        visualSpacingMeters: visualSpacing,
+                        metrics: document.getElementById('focusMetrics').textContent,
+                        readout: document.getElementById('focusReadout').textContent,
+                      };
+                    }
+                    """
+                )
+                focus["ground"] = ground
+                if ground["distance"] > 250:
+                    raise AssertionError(f"{region_id} ground preset is too far: {ground}")
+                if ground["patchWidthMeters"] > 1200 or ground["visualSpacingMeters"] > 1.25:
+                    raise AssertionError(f"{region_id} adaptive near patch is too coarse: {ground}")
+                if "视觉三角约" not in ground["metrics"] or "真值 12.5 m" not in ground["metrics"]:
+                    raise AssertionError(f"{region_id} precision readout missing: {ground}")
+                if "近景连续重建显示" not in ground["readout"]:
+                    raise AssertionError(f"{region_id} near-field truth label missing: {ground}")
                 focus_path = output / f"{name}-{region_id}-focus.png"
                 page.locator("#focusDialog").screenshot(path=str(focus_path))
                 focus["screenshot"] = focus_path.name
@@ -240,7 +313,7 @@ def main() -> int:
         ]
         browser.close()
     report = {
-        "schema": "terrain-hydrology-browser-qa@2.0.0",
+        "schema": "terrain-hydrology-browser-qa@2.1.0",
         "url": args.url,
         "passed": all(run.get("passed") for run in runs),
         "runs": runs,

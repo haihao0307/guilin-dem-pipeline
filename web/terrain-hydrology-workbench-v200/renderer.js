@@ -1,5 +1,5 @@
-import { clamp, identity, perspective, lookAt, multiply, loadImage, loadArrayBuffer } from './math.js';
-import { vertexSource, fragmentSource } from './shaders.js';
+import { clamp, identity, perspective, lookAt, multiply, loadImage, loadArrayBuffer } from './math.js?v=210';
+import { vertexSource, fragmentSource } from './shaders.js?v=210';
 
 const MODE_INDEX = Object.freeze({ terrain: 0, terrace: 1, hydrology: 2, slope: 3 });
 
@@ -145,8 +145,7 @@ export class TerrainRenderer {
     const requested = this.focus ? this.region.render.focusMesh : this.region.render.cardMesh;
     if (!this.focus) return requested;
     const mobile = matchMedia('(max-width: 720px)').matches;
-    const lowMemory = Number(navigator.deviceMemory || 8) < 6;
-    if (mobile || lowMemory) return 513;
+    if (mobile) return 513;
     return Math.max(requested, 1025);
   }
 
