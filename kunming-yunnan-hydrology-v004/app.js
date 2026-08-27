@@ -1,4 +1,5 @@
 const canvas = document.getElementById('terrain');
+canvas.style.touchAction = 'none';
 const fallback = document.getElementById('fallback');
 const fallbackImage = document.getElementById('fallbackImage');
 const statusEl = document.getElementById('status');
@@ -483,25 +484,54 @@ void main(){
   });
 
   const camera = { yaw: -0.62, pitch: 0.72, distance: 104000, x: 0, z: 0 };
+  document.documentElement.dataset.buttonlessCamera = 'enabled';
+  if (qaRenderMode) window.__KUNMING_V004_QA_CAMERA__ = camera;
   let dragging = false;
   let panning = false;
+  let hoverReady = false;
   let lastX = 0;
   let lastY = 0;
+
+  function orbitByPointer(dx, dy, sensitivity = 1) {
+    camera.yaw -= dx * 0.0055 * sensitivity;
+    camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch - dy * 0.0047 * sensitivity));
+  }
+
   canvas.addEventListener('contextmenu', event => event.preventDefault());
+  canvas.addEventListener('pointerenter', event => {
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverReady = true;
+  });
+  canvas.addEventListener('pointerleave', () => {
+    if (!dragging) hoverReady = false;
+  });
   canvas.addEventListener('pointerdown', event => {
     dragging = true;
     panning = event.button === 2 || event.shiftKey;
     lastX = event.clientX;
     lastY = event.clientY;
+    hoverReady = true;
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', event => {
-    if (!dragging) return;
+    const buttonlessMouse = !dragging && event.pointerType === 'mouse' && event.buttons === 0;
+    if (!dragging && !buttonlessMouse) {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      return;
+    }
+    if (!hoverReady) {
+      lastX = event.clientX;
+      lastY = event.clientY;
+      hoverReady = true;
+      return;
+    }
     const dx = event.clientX - lastX;
     const dy = event.clientY - lastY;
     lastX = event.clientX;
     lastY = event.clientY;
-    if (panning) {
+    if (dragging && panning) {
       const scale = Math.max(2, camera.distance * 0.00125);
       const rightX = Math.cos(camera.yaw);
       const rightZ = -Math.sin(camera.yaw);
@@ -512,13 +542,22 @@ void main(){
       camera.x = Math.max(-worldWidth / 2, Math.min(worldWidth / 2, camera.x));
       camera.z = Math.max(-worldDepth / 2, Math.min(worldDepth / 2, camera.z));
     } else {
-      camera.yaw -= dx * 0.0055;
-      camera.pitch = Math.max(0.035, Math.min(1.555, camera.pitch - dy * 0.0047));
+      orbitByPointer(dx, dy, dragging ? 1 : 0.68);
     }
   });
   canvas.addEventListener('pointerup', event => {
     dragging = false;
-    canvas.releasePointerCapture(event.pointerId);
+    panning = false;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverReady = true;
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointercancel', event => {
+    dragging = false;
+    panning = false;
+    hoverReady = false;
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   });
   canvas.addEventListener('wheel', event => {
     event.preventDefault();
