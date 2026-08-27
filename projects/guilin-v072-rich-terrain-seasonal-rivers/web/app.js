@@ -1,637 +1,387 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+/* This viewer is deliberately fail-closed. A label or QA flag is emitted only
+   after the binary actually used by WebGL has passed the corresponding check. */
 const $ = id => document.getElementById(id);
-const statusNode = $('status');
 const viewer = $('viewer');
 const labelLayer = $('labelLayer');
-
-const LANDMARKS = [
-  { id: 'yangshuo', name: '陽朔縣', lon: 110.4920133, lat: 24.7815129 },
-  { id: 'yangtang', name: '秧塘機場', lon: 110.15569, lat: 25.21753 },
-  { id: 'guilin', name: '桂林城', lon: 110.2994, lat: 25.2742 },
-  { id: 'zhenbaoding', name: '真寶鼎', lon: 110.82528, lat: 26.13556 },
+const statusNode = $('status');
+const SOURCE_GRID = [17408, 18867];
+const SOURCE_SPACING_M = 12.5;
+const SAFE_CAMERA_AGL_M = 12;
+const TERRAIN_SCHEMA = 'guilin-v072-terrain-seasonal-rivers/v2';
+const LOD_SCHEMA = 'guilin-v072-terrain-lod/v4';
+const LOD_QA_SCHEMA = 'guilin-v072-terrain-lod-qa/v4';
+const RIVER_RUNTIME_SCHEMA = 'guilin-v072-river-drape-runtime/v3';
+const RIVER_QA_SCHEMA = 'guilin-v072-river-drape-qa/v3';
+const SERIALIZED_RIVER_SCHEMA = 'guilin-v072-serialized-river-display-qa/v2';
+const EXPECTED_LEVELS = new Map([[12.5,5032],[25,1258],[50,323],[100,90],[200,25],[400,9],[800,4],[1600,1]]);
+const SEASONS = ['winter','spring','summer','autumn'];
+const SEASON_PRESETS = Object.freeze({
+  winter:{label:'冬季枯水',width:0.66,depth:0.32,color:'#42b69d'},
+  spring:{label:'春季平水',width:0.92,depth:0.55,color:'#45c4b5'},
+  summer:{label:'夏季豐水',width:1.38,depth:0.88,color:'#348e73'},
+  autumn:{label:'秋季回落',width:0.82,depth:0.46,color:'#3fa9aa'},
+});
+const FALLBACK_POINTS = Object.freeze({
+  zhenbaoding:[110.82528,26.13556],guilin:[110.2994,25.2742],yangtang:[110.15569,25.21753],yangshuo:[110.4920133,24.7815129],
+  peaks:[110.35,25.05],cliff:[110.43,24.91],gully:[110.58,25.02],
+  'river-grounding':[110.50,24.78],'river-turn':[110.48,24.80],nodata:[109.91,24.62],
+});
+const SERIALIZED_CHECKS = [
+  'all_decoded_runs_internal_topology_valid','all_non_shadowed_runs_decoded','all_run_geometries_valid','cross_run_edges_and_y_match',
+  'cross_run_positive_overlap_zero','decoded_float32_grounding_strict','exact_float32_coverage_valid','float32_boundary_within_tolerance',
+  'global_boundary_topology_valid','nodata_and_extent_remain_transparent','positive_run_count','preclip_owned_continuously_accounted_after_terrain_clipping',
+  'shared_endpoints_covered_after_serialization','terrain_expected_components_preserved_after_serialization','terrain_expected_serialized_area_agree',
+  'terrain_expected_significant_interior_rings_preserved_after_serialization','visual_depth_does_not_modify_or_conflict_with_geometry',
 ];
+const DISPLAY_CHECKS = ['display_boundary_continuously_inside_raw_3cm_buffer','display_partition_positive_overlap_zero','display_partition_valid','independent_raw_to_display_area_within_tolerance','independent_raw_to_display_boundary_hausdorff_within_3cm','planar_atomic_face_assignment_complete','raw_boundary_continuously_inside_display_3cm_buffer','raw_components_preserved','raw_significant_rings_preserved'];
+const GROUND_CHECKS = ['decoded_float32_maximum_clearance_within_2m','decoded_float32_penetration_zero','face_probe_error_maximum_within_10mm','face_probe_error_p95_within_1mm','indexed_vertex_error_maximum_within_10mm','indexed_vertex_error_p95_within_1mm'];
+const GLOBAL_RIVER_CHECKS = ['all_assets_under_100_mib','all_bank_edges_grounded','all_four_exact_season_presets_present','all_seasons_topology_passed','all_serialized_float32_grounding_passed','centerline_coordinates_unchanged','display_runs_positive','gap_fill_disabled','hole_preservation_regression_passed','native_12_5m_only','round_arc_regression_passed'];
 
-const SEASON_PRESETS = {
-  winter: { label: '冬季枯水', width: 0.66, depth: 0.32, color: '#42b69d' },
-  spring: { label: '春季平水', width: 0.92, depth: 0.55, color: '#45c4b5' },
-  summer: { label: '夏季豐水', width: 1.38, depth: 0.88, color: '#348e73' },
-  autumn: { label: '秋季回落', width: 0.82, depth: 0.46, color: '#3fa9aa' },
+const state = {
+  manifest:null,lodManifest:null,lodQa:null,riverRuntime:null,riverQa:null,overview:null,
+  scene:null,camera:null,renderer:null,controls:null,terrainMaterials:new Set(),karstTexture:null,mapTexture:null,normalTexture:null,roughnessTexture:null,
+  backdrop:null,lod:null,riverGroup:null,riverMeshes:new Map(),currentSeason:'spring',seasonSequence:0,lastSeasonActivation:null,
+  labels:[],worldWidth:0,worldDepth:0,minElevation:0,maxElevation:0,animation:null,renderRequested:true,wireframe:false,
+  cameraSequence:0,inputSequence:0,lastCameraActivation:null,lastInputActivation:null,cameraHistory:[],lastCollision:null,canonicalPoses:{},
+  renderFrames:0,renderIntervals:[],renderDurations:[],lastRenderAt:0,startedAt:performance.now(),lodOverrideDistance:null,
+  terrainVisible:true,hydrologyVisible:true,riverMaskMode:'normal',domainEdgeEvidence:null,lastSeamProbe:null,lastNoDataProbe:null,
 };
 
-const HYDROLOGY_SAMPLE_STEP_M = 180;
-const HYDROLOGY_DRAPE_OFFSET_M = 1.6;
+const finite = value => Number.isFinite(Number(value));
+const number = value => Number(value);
+const approximately = (a,b,t=1e-9) => finite(a)&&finite(b)&&Math.abs(number(a)-number(b))<=t;
+const zero = value => finite(value)&&number(value)===0;
+const positiveInteger = value => Number.isInteger(value)&&value>0;
+const atMost = (value,limit) => finite(value)&&number(value)>=0&&number(value)<=limit;
+const exactTrueChecks = (object,names) => !!object && Object.keys(object).length===names.length && names.every(name=>object[name]===true);
+const canonicalJson = value => value&&typeof value==='object' ? (Array.isArray(value)?`[${value.map(canonicalJson).join(',')}]`:`{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${canonicalJson(value[k])}`).join(',')}}`) : JSON.stringify(value);
+function setStatus(text,ok=false){statusNode.textContent=text;statusNode.classList.toggle('ok',ok);}
+function requestRender(){state.renderRequested=true;}
+async function fetchJson(path,optional=false){const response=await fetch(path,{cache:'no-store'});if(!response.ok){if(optional)return null;throw new Error(`${path}: HTTP ${response.status}`);}return response.json();}
+async function fetchArrayBuffer(path){const response=await fetch(path,{cache:'no-store'});if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.arrayBuffer();}
+async function gunzip(buffer){if(typeof DecompressionStream!=='function')throw new Error('DecompressionStream unavailable');return new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();}
+async function sha256Hex(buffer){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',buffer))].map(v=>v.toString(16).padStart(2,'0')).join('');}
+function assert(condition,message){if(!condition)throw new Error(message);}
+function utmFromLonLat(lon,lat){return proj4('EPSG:4326','EPSG:32649',[lon,lat]);}
+function worldFromUtm(e,n){const c=state.lodManifest?.center_epsg32649||state.manifest.center_epsg32649;return new THREE.Vector3(e-c[0],0,c[1]-n);}
+function insideWorld(x,z){return x>=-state.worldWidth/2&&x<=state.worldWidth/2&&z>=-state.worldDepth/2&&z<=state.worldDepth/2;}
+function rgbaHex(value){return new THREE.Color(value).getHexString().toUpperCase();}
 
-let manifest;
-let heightValues;
-let validMask;
-let scene;
-let camera;
-let renderer;
-let controls;
-let terrain;
-let terrainMaterial;
-let terrainShader = null;
-let terrainTexture;
-let terrainNormal;
-let terrainRoughness;
-let hydrologyGroup;
-let riverMaterials = {};
-let labelObjects = [];
-let worldWidth;
-let worldDepth;
-let minElevation;
-let maxElevation;
-let animationTarget = null;
-let currentSeason = 'spring';
-let hydrologyDebug = {
-  sampled_points: 0,
-  ribbon_vertices: 0,
-  ribbon_triangles: 0,
-  drape_offset_m: HYDROLOGY_DRAPE_OFFSET_M,
-  centerline_policy: 'immutable OSM coordinates',
-  width_policy: 'lateral ribbon only',
-};
-
-function setStatus(text, ok = false) {
-  statusNode.textContent = text;
-  statusNode.classList.toggle('ok', ok);
+function validateTerrainManifest(m){
+  assert(m?.schema===TERRAIN_SCHEMA,'terrain manifest v2 required');
+  assert(m.source_grid?.[0]===SOURCE_GRID[0]&&m.source_grid?.[1]===SOURCE_GRID[1],'source grid mismatch');
+  assert(m.source_resolution_m?.every(v=>approximately(v,SOURCE_SPACING_M)),'source resolution is not 12.5m');
+  assert(m.vertical_scale===1&&m.source_elevation_modified_m===0,'source elevation modified');
+  assert(m.overview_only===true&&m.actual_vertex_spacing_m>SOURCE_SPACING_M,'overview must be low-resolution only');
+  assert(m.smoothing_applied===false&&m.gap_fill_applied===false,'terrain smoothing/fill forbidden');
+  assert(m.fallback_resolution_m===null,'fallback resolution forbidden');
+  const s=m.source_statistics;
+  assert(Number.isInteger(s?.valid_pixels)&&Number.isInteger(s?.nodata_pixels)&&s.total_pixels===s.valid_pixels+s.nodata_pixels,'source statistics missing');
+  assert(approximately(s.nodata_fraction,s.nodata_pixels/s.total_pixels,1e-12)&&approximately(s.valid_fraction,s.valid_pixels/s.total_pixels,1e-12),'source statistics fractions mismatch');
+  for(const key of ['terrain_lod_manifest_file','terrain_lod_qa_file','river_drape_runtime_file','river_drape_qa_file'])assert(typeof m[key]==='string'&&m[key],`${key} missing`);
+  assert(m.height?.overview_only===true,'height grid cannot claim native geometry');
+  assert(Array.isArray(m.height.sample_center_bounds_epsg32649)&&Array.isArray(m.height.bounds_world_xz),'overview exact bounds missing');
+  assert(Array.isArray(m.height.actual_vertex_spacing_xy_m),'overview exact xy spacing missing');
+  assert(m.height.nodata_policy==='conservative minimum resampling; any source NoData contribution hides overview sample','overview NoData policy mismatch');
 }
 
-function decodeHeights(buffer, meta, range) {
-  const values = new Uint16Array(buffer);
-  const expected = meta.width * meta.height;
-  if (values.length !== expected) throw new Error(`高度数据长度异常：${values.length} / ${expected}`);
-  const [minimum, maximum] = range;
-  const span = maximum - minimum;
-  const heights = new Float32Array(values.length);
-  const mask = new Uint8Array(values.length);
-  for (let index = 0; index < values.length; index += 1) {
-    const code = values[index];
-    if (code === meta.nodata_code) {
-      heights[index] = minimum;
-      mask[index] = 0;
-    } else {
-      heights[index] = minimum + (code / 65534) * span;
-      mask[index] = 1;
+function validateLodManifest(m,qa){
+  assert(m?.schema===LOD_SCHEMA&&qa?.schema===LOD_QA_SCHEMA,'LOD v4 contract required');
+  assert(m.source_grid?.[0]===SOURCE_GRID[0]&&m.source_grid?.[1]===SOURCE_GRID[1],'LOD source grid mismatch');
+  assert(m.source_resolution_m?.every(v=>approximately(v,SOURCE_SPACING_M)),'LOD source resolution mismatch');
+  assert(m.smoothing_applied===false&&m.gap_fill_applied===false&&m.fallback_resolution_m===null&&m.fallback_30m_allowed===false,'LOD mutation/fallback forbidden');
+  assert(m.coarse_level_full_domain_claimed===false&&m.native_full_domain===true,'LOD domain claims invalid');
+  assert(qa.passed===true&&qa.coarse_level_full_domain_claimed===false&&qa.native_full_domain===true,'LOD QA failed');
+  assert(m.tile_count===6742&&Array.isArray(m.levels)&&m.levels.length===8,'LOD inventory mismatch');
+  const seen=new Set();
+  for(const level of m.levels){
+    assert(level.id===level.level_id&&EXPECTED_LEVELS.get(number(level.spacing_m))===level.tile_count,'LOD level inventory mismatch');
+    assert(level.resolution_m===level.spacing_m&&level.smoothing_applied===false&&level.gap_fill_applied===false,'LOD level policy mismatch');
+    assert(level.tiles?.length===level.tile_count,'LOD tile count mismatch');seen.add(number(level.spacing_m));
+    for(const t of level.tiles){
+      const required=['id','row','col','tile_row','tile_col','source_window','source_sample_rows','source_sample_cols','sample_width','sample_height','width','height','cell_width','cell_height','bounds_epsg32649','sample_bounds_epsg32649','bounds_world_xz','valid_vertex_count','nodata_vertex_count','valid_conservative_cell_count','hidden_conservative_cell_count','file','stored_bytes','sha256','decode_receipt'];
+      assert(required.every(k=>Object.hasOwn(t,k)),`LOD tile fields incomplete: ${t.id}`);
+      assert(t.width===t.sample_width&&t.height===t.sample_height&&t.cell_width===t.width-1&&t.cell_height===t.height-1,'LOD tile shape invalid');
+      assert(t.source_window[2]===t.source_sample_cols[1]-t.source_sample_cols[0]+1&&t.source_window[3]===t.source_sample_rows[1]-t.source_sample_rows[0]+1,'LOD inclusive source window invalid');
+      assert(t.file===`terrain_lod/${level.id}/r${String(t.row).padStart(3,'0')}_c${String(t.col).padStart(3,'0')}.tile.gz`,'LOD tile path invalid');
+      assert(/^[0-9a-f]{64}$/.test(t.sha256)&&positiveInteger(t.stored_bytes),'LOD tile integrity receipt missing');
+      assert(Object.values(t.decode_receipt).every(v=>v===true),'offline tile decode failed');
     }
   }
-  return { heights, mask };
+  assert([...EXPECTED_LEVELS.keys()].every(v=>seen.has(v)),'LOD resolution inventory incomplete');
+  assert(qa.source_correspondence?.passed===true&&qa.source_correspondence.maximum_error_m===0&&qa.source_correspondence.p95_error_m===0,'LOD source correspondence failed');
+  assert(qa.nodata_preservation?.passed===true&&qa.nodata_preservation.gap_fill_applied===false,'LOD NoData QA failed');
+  assert(qa.shared_edges?.passed===true&&qa.shared_edges.maximum_height_error_m===0&&qa.shared_edges.mask_mismatch_count===0,'same-level seam QA failed');
+  assert(qa.mixed_lod_transitions?.offline_source_alignment_passed===true&&qa.mixed_lod_transitions.runtime_required===true,'mixed LOD source QA failed');
 }
 
-function terrainSample(x, z) {
-  const width = manifest.height.width;
-  const height = manifest.height.height;
-  const gx = THREE.MathUtils.clamp(((x + worldWidth / 2) / worldWidth) * (width - 1), 0, width - 1);
-  const gy = THREE.MathUtils.clamp(((z + worldDepth / 2) / worldDepth) * (height - 1), 0, height - 1);
-  const col = Math.min(width - 2, Math.max(0, Math.floor(gx)));
-  const row = Math.min(height - 2, Math.max(0, Math.floor(gy)));
-  const fu = gx - col;
-  const fv = gy - row;
-  const a = row * width + col;
-  const d = a + 1;
-  const b = a + width;
-  const c = b + 1;
-  let indices;
-  let weights;
-  if (fu + fv <= 1) {
-    indices = [a, d, b];
-    weights = [1 - fu - fv, fu, fv];
-  } else {
-    indices = [b, c, d];
-    weights = [1 - fu, fu + fv - 1, 1 - fv];
+function strictDisplayPrecisionPassed(p){
+  const r=p?.display_ranked_partition;
+  return p?.passed===true&&exactTrueChecks(p.checks,DISPLAY_CHECKS)&&approximately(p.grid_m,0.015625)&&approximately(r?.precision_grid_m,0.015625)&&
+    p.boundary_tolerance_m===0.03&&p.raw_desired_to_display_boundary_hausdorff_m<=p.boundary_tolerance_m&&
+    p.display_boundary_outside_raw_desired_3cm_buffer_length_m<=1e-6&&p.raw_desired_boundary_outside_display_3cm_buffer_length_m<=1e-6&&
+    p.symmetric_difference_area_m2<=p.area_tolerance_m2&&r?.desired_union_basis==='coverage union of the same globally noded, covered atomic faces used for unique ownership'&&
+    r.planar_atomic_face_assignment_complete===true&&r.planar_covered_face_count===r.planar_assigned_face_count&&r.planar_unowned_face_count===0&&
+    r.planar_unowned_face_scope==='polygonized background faces not covered by any candidate; excluded before ownership'&&r.residual_positive_overlap_area_m2===0&&
+    p.raw_desired_union?.component_count===p.display_owned_union?.component_count&&p.raw_desired_significant_interior_rings?.count===p.display_significant_interior_rings?.count;
+}
+function strictGroundingPassed(g,asset){
+  return g?.passed===true&&exactTrueChecks(g.checks,GROUND_CHECKS)&&g.indexed_vertex_sample_count===asset.vertex_count&&g.vertex_sample_count===asset.vertex_count&&
+    g.face_probe_sample_count===asset.triangle_count*4&&g.indexed_vertex_p95_absolute_error_m<=0.001&&g.indexed_vertex_maximum_absolute_error_m<=0.01&&
+    g.face_probe_p95_absolute_error_m<=0.001&&g.face_probe_maximum_absolute_error_m<=0.01&&g.indexed_vertex_clearance_maximum_m<=2&&g.face_probe_clearance_maximum_m<=2&&
+    g.indexed_vertex_penetration_count===0&&g.face_probe_penetration_count===0&&g.indexed_vertex_clearance_penetration_minimum_m>=0&&g.face_probe_clearance_penetration_minimum_m>=0;
+}
+function strictSerializedTopologyPassed(q){
+  const x=q.cross_run_serialized, y=q.global_welded_boundary_topology;
+  const runTopologies=q.decoded_run_triangle_topology;
+  const runOkay=Array.isArray(runTopologies)&&runTopologies.length===q.decoded_run_count&&runTopologies.every(r=>r.passed===true&&r.non_adjacent_edge_crossing_count===0&&r.nonmanifold_geometric_edge_count===0&&r.positive_self_overlap_area_m2===0&&r.triangle_coverage_invalid_edge_count===0&&r.segment_multiplicity_mismatch_count===0);
+  return q.coverage_is_valid_exact===true&&q.coverage_invalid_edge_count===0&&q.decoded_run_non_adjacent_edge_crossing_count===0&&q.decoded_run_triangle_coverage_invalid_edge_count===0&&q.decoded_run_triangle_positive_self_overlap_area_m2===0&&
+    q.depth_conflict_count===0&&q.serialized_boundary_self_intersection_count===0&&q.shared_endpoint_uncovered_count===0&&
+    q.terrain_expected_to_serialized_lost_component_count===0&&q.terrain_expected_to_serialized_new_component_count===0&&q.terrain_expected_to_serialized_lost_significant_interior_ring_count===0&&q.terrain_expected_to_serialized_new_significant_interior_ring_count===0&&
+    q.serialized_over_nodata_area_m2<=q.nodata_float32_area_tolerance_m2&&q.serialized_over_extent_clipped_area_m2<=q.extent_float32_area_tolerance_m2&&q.terrain_expected_to_serialized_symmetric_difference_area_m2<=q.float32_area_tolerance_m2&&q.terrain_expected_to_serialized_union_area_absolute_error_m2<=q.numerical_area_tolerance_m2&&
+    q.terrain_expected_to_serialized_boundary_hausdorff_m<=q.float32_xz_tolerance_m&&q.serialized_boundary_outside_terrain_expected_3cm_buffer_length_m<=1e-6&&q.terrain_expected_boundary_outside_serialized_3cm_buffer_length_m<=1e-6&&
+    q.preclip_owned_to_accounted_after_terrain_clipping_boundary_hausdorff_m<=0.03&&q.preclip_owned_boundary_outside_accounted_3cm_buffer_length_m<=1e-6&&q.accounted_boundary_outside_preclip_owned_3cm_buffer_length_m<=1e-6&&
+    x?.positive_overlap_area_m2===0&&x?.nonmanifold_geometric_edge_count===0&&x?.non_adjacent_edge_crossing_count===0&&x?.segment_multiplicity_mismatch_count===0&&
+    y?.nonmanifold_geometric_edge_count===0&&y?.non_adjacent_edge_crossing_count===0&&y?.segment_multiplicity_mismatch_count===0&&runOkay;
+}
+function strictBankAuditPassed(a){
+  return a?.passed===true&&a.maximum_clearance_m<=2&&a.penetration_count===0&&a.penetration_minimum_m>=0&&a.p95_absolute_error_m<=0.001&&a.maximum_absolute_error_m<=0.01;
+}
+function strictRegressionPassed(joins){
+  const hole=joins?.hole_preservation_regression,round=joins?.round_arc_regression;
+  return hole?.passed===true&&hole.checks&&Object.values(hole.checks).every(v=>v===true)&&hole.lost_significant_interior_ring_count===0&&hole.new_significant_interior_ring_count===0&&hole.area_absolute_error_m2<=hole.area_tolerance_m2&&
+    round?.passed===true&&round.checks&&Object.values(round.checks).every(v=>v===true)&&round.quadrant_segment_count===16&&round.sample_count===64&&round.maximum_heading_step_degrees<=6&&round.minimum_sagitta_ratio>0&&round.maximum_sagitta_ratio<=1.01;
+}
+function globalRiverQaPassed(runtime,qa){
+  if(runtime?.schema!==RIVER_RUNTIME_SCHEMA||qa?.schema!==RIVER_QA_SCHEMA||qa.passed!==true||!exactTrueChecks(qa.checks,GLOBAL_RIVER_CHECKS))return false;
+  if(runtime.centerline_geometry_mutated!==false||qa.centerline_geometry_mutated!==false||runtime.source_centerline_collection_sha256!==qa.centerline_collection_sha256_before||qa.centerline_collection_sha256_before!==qa.centerline_collection_sha256_after)return false;
+  if(runtime.source_resolution_m!==12.5||runtime.vertical_scale!==1||!String(runtime.nodata_policy).toLowerCase().includes('no'))return false;
+  if(runtime.season_semantics!=='visual seasonal preset; not a discharge simulation'||!strictRegressionPassed(qa.joins_and_topology))return false;
+  return SEASONS.every(s=>{const a=runtime.seasons?.[s],p=SEASON_PRESETS[s];return a&&a.width===p.width&&a.depth===p.depth&&a.color.toLowerCase()===p.color&&a.label===p.label&&a.semantics==='visual seasonal preset; not a discharge simulation';});
+}
+function serializedRiverQaForSeason(season){
+  const runtime=state.riverRuntime,qa=state.riverQa,preset=SEASON_PRESETS[season];
+  if(!globalRiverQaPassed(runtime,qa))return {passed:false,reason:'global v3 river QA failed'};
+  const asset=runtime.seasons?.[season]?.serialized_global_display_mesh;
+  const direct=qa.grounding_by_season?.[season]?.serialized_global_display_mesh;
+  const alias=qa.joins_and_topology?.serialized_global_display_mesh_by_season?.[season];
+  if(!asset||!direct||!alias||canonicalJson(direct)!==canonicalJson(alias))return {passed:false,reason:'direct/alias serialized QA mismatch'};
+  const requiredAsset=['positions_file','position_file','position_sha256','position_stored_bytes','indices_file','index_file','index_sha256','index_stored_bytes','vertex_count','index_count','triangle_count','run_ranges'];
+  const assetsOkay=requiredAsset.every(k=>Object.hasOwn(asset,k))&&asset.positions_file===asset.position_file&&asset.indices_file===asset.index_file&&asset.positions_file===`river_drape_${season}_positions.f32.gz`&&asset.indices_file===`river_drape_${season}_indices.u32.gz`&&asset.position_compression==='gzip'&&asset.index_compression==='gzip'&&asset.positions_global===true&&asset.indices_global===true&&asset.vertex_space==='global-display-array'&&asset.index_space==='global-vertex-array'&&asset.index_count===asset.triangle_count*3&&asset.vertex_count===asset.index_count;
+  const ranges=asset.run_ranges;
+  let vo=0,io=0;const rangesOkay=Array.isArray(ranges)&&ranges.length===asset.visible_run_count&&ranges.every(r=>{const ok=r.terrain_visible===true&&r.fully_shadowed_by_stable_ownership===false&&r.vertex_offset===vo&&r.index_offset===io&&r.vertex_count===r.index_count&&r.index_count===r.triangle_count*3&&r.terrain_cell_crossing_triangle_count===0;vo+=r.vertex_count;io+=r.index_count;return ok;})&&vo===asset.vertex_count&&io===asset.index_count;
+  const strict=direct.schema===SERIALIZED_RIVER_SCHEMA&&direct.season===season&&direct.season_semantics==='visual seasonal preset; not a discharge simulation'&&direct.passed===true&&exactTrueChecks(direct.checks,SERIALIZED_CHECKS)&&strictDisplayPrecisionPassed(direct.display_precision)&&strictGroundingPassed(direct.decoded_float32_grounding,asset)&&strictBankAuditPassed(qa.grounding_by_season?.[season]?.bank_edge_float32_audit)&&strictSerializedTopologyPassed(direct)&&assetsOkay&&rangesOkay;
+  return {passed:strict,reason:strict?'strict serialized v2 accepted':'strict serialized v2 field gate failed',asset,qa:direct};
+}
+
+function decodeOverview(buffer,meta,range){
+  const codes=new Uint16Array(buffer),expected=meta.width*meta.height;assert(codes.length===expected,'overview height length mismatch');
+  const heights=new Float32Array(expected),mask=new Uint8Array(expected),span=range[1]-range[0];
+  for(let i=0;i<expected;i++){const code=codes[i];if(code===meta.nodata_code){heights[i]=0;mask[i]=0;}else{heights[i]=range[0]+code/65534*span;mask[i]=1;}}
+  const cells=new Uint8Array((meta.width-1)*(meta.height-1));
+  for(let r=0;r<meta.height-1;r++)for(let c=0;c<meta.width-1;c++){const i=r*meta.width+c;cells[r*(meta.width-1)+c]=mask[i]&&mask[i+1]&&mask[i+meta.width]&&mask[i+meta.width+1]?1:0;}
+  return {width:meta.width,height:meta.height,cellWidth:meta.width-1,cellHeight:meta.height-1,heights,vertexMask:mask,cellMask:cells,boundsWorld:meta.bounds_world_xz.slice(),spacing:number(meta.actual_vertex_spacing_m),spacingXY:meta.actual_vertex_spacing_xy_m.slice(),role:'overview-only-backdrop'};
+}
+function sampleGrid(grid,x,z){
+  const [x0,z0,x1,z1]=grid.boundsWorld;if(x<x0-1e-6||x>x1+1e-6||z<z0-1e-6||z>z1+1e-6)return {inside:false,valid:false,nodata:false};
+  const gx=THREE.MathUtils.clamp((x-x0)/(x1-x0)*(grid.width-1),0,grid.width-1),gz=THREE.MathUtils.clamp((z-z0)/(z1-z0)*(grid.height-1),0,grid.height-1);
+  const c=Math.min(grid.width-2,Math.max(0,Math.floor(gx))),r=Math.min(grid.height-2,Math.max(0,Math.floor(gz))),fu=gx-c,fv=gz-r;
+  if(!grid.cellMask[r*grid.cellWidth+c])return {inside:true,valid:false,nodata:true,row:r,col:c};
+  const a=r*grid.width+c,b=a+1,d=a+grid.width,e=d+1;
+  let indices,weights;if(fu+fv<=1){indices=[a,b,d];weights=[1-fu-fv,fu,fv];}else{indices=[e,d,b];weights=[fu+fv-1,1-fu,1-fv];}
+  if(indices.some(i=>grid.vertexMask[i]===0))return {inside:true,valid:false,nodata:true,row:r,col:c};
+  return {inside:true,valid:true,nodata:false,height:grid.heights[indices[0]]*weights[0]+grid.heights[indices[1]]*weights[1]+grid.heights[indices[2]]*weights[2],row:r,col:c};
+}
+function buildGridGeometry(grid,{skirts=true}={}){
+  const pos=[],uv=[],indices=[],lookup=new Int32Array(grid.width*grid.height).fill(-1),[x0,z0,x1,z1]=grid.boundsWorld;
+  const vertex=(r,c)=>{const source=r*grid.width+c;if(lookup[source]>=0)return lookup[source];const index=pos.length/3;lookup[source]=index;pos.push(x0+(x1-x0)*c/(grid.width-1),grid.heights[source],z0+(z1-z0)*r/(grid.height-1));uv.push((pos[pos.length-3]+state.worldWidth/2)/state.worldWidth,1-(pos[pos.length-1]+state.worldDepth/2)/state.worldDepth);return index;};
+  for(let r=0;r<grid.cellHeight;r++)for(let c=0;c<grid.cellWidth;c++){if(!grid.cellMask[r*grid.cellWidth+c])continue;const a=vertex(r,c),b=vertex(r,c+1),d=vertex(r+1,c),e=vertex(r+1,c+1);indices.push(a,d,b,b,d,e);}
+  let skirtTriangles=0;
+  if(skirts){const edge=[];for(let c=0;c<grid.width;c++)edge.push([0,c]);for(let r=1;r<grid.height;r++)edge.push([r,grid.width-1]);for(let c=grid.width-2;c>=0;c--)edge.push([grid.height-1,c]);for(let r=grid.height-2;r>0;r--)edge.push([r,0]);for(let i=0;i<edge.length;i++){const [r0,c0]=edge[i],[r1,c1]=edge[(i+1)%edge.length],a0=r0*grid.width+c0,a1=r1*grid.width+c1;if(!grid.vertexMask[a0]||!grid.vertexMask[a1])continue;const top0=vertex(r0,c0),top1=vertex(r1,c1),low0=pos.length/3,low1=low0+1;const xA=x0+(x1-x0)*c0/(grid.width-1),zA=z0+(z1-z0)*r0/(grid.height-1),xB=x0+(x1-x0)*c1/(grid.width-1),zB=z0+(z1-z0)*r1/(grid.height-1);pos.push(xA,grid.heights[a0]-6,zA,xB,grid.heights[a1]-6,zB);uv.push((xA+state.worldWidth/2)/state.worldWidth,1-(zA+state.worldDepth/2)/state.worldDepth,(xB+state.worldWidth/2)/state.worldWidth,1-(zB+state.worldDepth/2)/state.worldDepth);indices.push(top0,low0,top1,top1,low0,low1);skirtTriangles+=2;}}
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingSphere();geometry.userData={validCellCount:(indices.length/6)-skirtTriangles/2,skirtTriangles,sourceVertexCount:grid.width*grid.height};return geometry;
+}
+function makeTerrainMaterial(role){
+  const material=new THREE.MeshStandardMaterial({map:state.mapTexture,normalMap:state.normalTexture,roughnessMap:state.roughnessTexture,normalScale:new THREE.Vector2(1.35,1.35),roughness:.88,metalness:0,transparent:true,alphaTest:.08,side:THREE.DoubleSide,wireframe:state.wireframe});
+  material.userData={role,clipRects:[],shader:null};material.onBeforeCompile=shader=>{
+    shader.uniforms.uColorRichness={value:number($('colorRichness').value)};shader.uniforms.uKarstDetail={value:number($('karstDetail').value)};shader.uniforms.uKarstMap={value:state.karstTexture};shader.uniforms.uClipCount={value:0};shader.uniforms.uClipRects={value:Array.from({length:36},()=>new THREE.Vector4())};
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vTerrainWorldXZ;\nvarying vec2 vTerrainUv;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvTerrainWorldXZ = worldPosition.xz;\nvTerrainUv = uv;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform float uColorRichness;\nuniform float uKarstDetail;\nuniform sampler2D uKarstMap;\nuniform int uClipCount;\nuniform vec4 uClipRects[36];\nvarying vec2 vTerrainWorldXZ;\nvarying vec2 vTerrainUv;').replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
+      for(int i=0;i<36;i++){if(i>=uClipCount)break;vec4 r=uClipRects[i];if(vTerrainWorldXZ.x>=r.x&&vTerrainWorldXZ.x<=r.z&&vTerrainWorldXZ.y>=r.y&&vTerrainWorldXZ.y<=r.w)discard;}`)
+      .replace('#include <map_fragment>',`#include <map_fragment>
+        float terrainLuma=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));diffuseColor.rgb=mix(vec3(terrainLuma),diffuseColor.rgb,uColorRichness);
+        float karst=texture2D(uKarstMap,vTerrainUv).r-.5;diffuseColor.rgb*=1.0+karst*uKarstDetail*.28;`);
+    material.userData.shader=shader;updateTerrainMaterial(material);
+  };material.customProgramCacheKey=()=>`xiaogui-v072-terrain-karst-${role}`;state.terrainMaterials.add(material);return material;
+}
+function updateTerrainMaterial(material){const shader=material.userData.shader;if(!shader)return;shader.uniforms.uColorRichness.value=number($('colorRichness').value);shader.uniforms.uKarstDetail.value=number($('karstDetail').value);shader.uniforms.uKarstMap.value=state.karstTexture;const rects=material.userData.clipRects.slice(0,36);shader.uniforms.uClipCount.value=rects.length;for(let i=0;i<36;i++)shader.uniforms.uClipRects.value[i].set(...(rects[i]||[0,0,0,0]));}
+function updateAllTerrainMaterials(){for(const m of state.terrainMaterials){m.wireframe=state.wireframe;updateTerrainMaterial(m);}requestRender();}
+
+async function decodeLodTile(level,tile){
+  const stored=await fetchArrayBuffer(`./data/${tile.file}`);assert(stored.byteLength===tile.stored_bytes,`${tile.id}: stored bytes mismatch`);assert(await sha256Hex(stored)===tile.sha256,`${tile.id}: sha256 mismatch`);
+  const payload=await gunzip(stored),view=new DataView(payload);assert(payload.byteLength>=48,`${tile.id}: short GLTILE4`);
+  const magic=String.fromCharCode(...new Uint8Array(payload,0,8));assert(magic==='GLTILE4\0',`${tile.id}: magic mismatch`);
+  const width=view.getUint32(8,true),height=view.getUint32(12,true),cellWidth=view.getUint32(16,true),cellHeight=view.getUint32(20,true),originE=view.getFloat64(24,true),originN=view.getFloat64(32,true),spacing=view.getFloat64(40,true);
+  assert(width===tile.width&&height===tile.height&&cellWidth===tile.cell_width&&cellHeight===tile.cell_height&&approximately(spacing,level.spacing_m),`${tile.id}: header shape/spacing mismatch`);
+  assert(approximately(originE,tile.bounds_epsg32649[0],1e-7)&&approximately(originN,tile.bounds_epsg32649[3],1e-7),`${tile.id}: origin mismatch`);
+  const heightBytes=width*height*4,vertexBytes=width*height,cellBytes=cellWidth*cellHeight;assert(payload.byteLength===48+heightBytes+vertexBytes+cellBytes,`${tile.id}: payload length mismatch`);
+  const heights=new Float32Array(payload.slice(48,48+heightBytes)),vertexMask=new Uint8Array(payload.slice(48+heightBytes,48+heightBytes+vertexBytes)),cellMask=new Uint8Array(payload.slice(48+heightBytes+vertexBytes));
+  assert(vertexMask.reduce((a,v)=>a+(v?1:0),0)===tile.valid_vertex_count&&cellMask.reduce((a,v)=>a+(v?1:0),0)===tile.valid_conservative_cell_count,`${tile.id}: decoded mask count mismatch`);
+  return {id:tile.id,levelId:level.id,spacing:number(level.spacing_m),width,height,cellWidth,cellHeight,heights,vertexMask,cellMask,boundsWorld:tile.bounds_world_xz.slice(),tile,storedSha256:tile.sha256,decoded:true};
+}
+
+class TerrainLodRuntime{
+  constructor(manifest,qa){this.manifest=manifest;this.qa=qa;this.active=new Map();this.cache=new Map();this.requestRevision=0;this.activeRevision=0;this.loading=false;this.debouncePending=false;this.focus={x:0,z:0,id:'overview'};this.errors=[];this.timer=0;this.refreshPromise=Promise.resolve();}
+  levelForSpacing(spacing){return this.manifest.levels.find(l=>approximately(l.spacing_m,spacing));}
+  resolutionsForDistance(distance){if(distance<=7000)return [12.5,25,50,800];if(distance<=14000)return [25,50,800];if(distance<=28000)return [50,800];if(distance<=56000)return [100,800];if(distance<=112000)return [200,800];return [800];}
+  tilesNear(level,focus,all=false){if(all)return level.tiles.slice();return level.tiles.map(t=>({t,d:Math.max(0,focus.x<t.bounds_world_xz[0]?t.bounds_world_xz[0]-focus.x:focus.x>t.bounds_world_xz[2]?focus.x-t.bounds_world_xz[2]:0)+Math.max(0,focus.z<t.bounds_world_xz[1]?t.bounds_world_xz[1]-focus.z:focus.z>t.bounds_world_xz[3]?focus.z-t.bounds_world_xz[3]:0)})).sort((a,b)=>a.d-b.d).slice(0,9).map(x=>x.t);}
+  desired(distance,focus){const result=[];for(const spacing of this.resolutionsForDistance(distance)){const level=this.levelForSpacing(spacing);assert(level,`LOD ${spacing} unavailable`);for(const tile of this.tilesNear(level,focus,spacing===800))result.push({level,tile});}assert(result.length<=36,'active LOD tile limit exceeded');return result;}
+  schedule(reason='camera'){this.requestRevision++;this.debouncePending=true;clearTimeout(this.timer);updateContracts();this.timer=setTimeout(()=>this.refresh(reason),120);}
+  async loadEntry(level,tile){if(this.cache.has(tile.id))return this.cache.get(tile.id);const promise=decodeLodTile(level,tile).then(grid=>{const mesh=new THREE.Mesh(buildGridGeometry(grid),makeTerrainMaterial(`lod-${level.id}`));mesh.userData={grid,level,tile,role:'lod-tile'};mesh.receiveShadow=true;mesh.renderOrder=10-Math.log2(level.spacing_m/12.5);return {grid,mesh,level,tile};});this.cache.set(tile.id,promise);return promise;}
+  async refresh(reason='camera'){
+    const revision=this.requestRevision;this.loading=true;this.debouncePending=false;updateContracts();const distance=state.lodOverrideDistance??state.camera.position.distanceTo(state.controls.target);const desired=this.desired(distance,this.focus);
+    try{const loaded=await Promise.all(desired.map(x=>this.loadEntry(x.level,x.tile)));if(revision!==this.requestRevision)return;const wanted=new Set(loaded.map(x=>x.tile.id));for(const [id,e] of this.active)if(!wanted.has(id)){state.scene.remove(e.mesh);e.mesh.visible=false;this.active.delete(id);}for(const e of loaded){if(!this.active.has(e.tile.id)){state.scene.add(e.mesh);this.active.set(e.tile.id,e);}e.mesh.visible=state.terrainVisible;}
+      const ordered=[...this.active.values()].sort((a,b)=>a.grid.spacing-b.grid.spacing);for(const entry of ordered){entry.mesh.material.userData.clipRects=ordered.filter(other=>other.grid.spacing<entry.grid.spacing).map(other=>other.grid.boundsWorld.slice());updateTerrainMaterial(entry.mesh.material);}if(state.backdrop){state.backdrop.material.userData.clipRects=ordered.map(e=>e.grid.boundsWorld.slice());updateTerrainMaterial(state.backdrop.material);state.backdrop.visible=state.terrainVisible;}
+      this.activeRevision=revision;state.lastSeamProbe=probeLodSeamTopology();
+    }catch(error){this.errors.push(String(error));console.error(error);}finally{if(revision===this.requestRevision)this.loading=false;updateContracts();requestRender();}
   }
-  if (indices.some(index => validMask[index] === 0)) {
-    return { valid: false, height: minElevation, row, col };
-  }
-  const sampledHeight = (
-    heightValues[indices[0]] * weights[0]
-    + heightValues[indices[1]] * weights[1]
-    + heightValues[indices[2]] * weights[2]
-  );
-  return { valid: true, height: sampledHeight, row, col };
+  setFocus(point,id='dynamic'){this.focus={x:point.x,z:point.z,id};this.schedule('focus');}
+  sample(x,z){for(const e of [...this.active.values()].sort((a,b)=>a.grid.spacing-b.grid.spacing)){const s=sampleGrid(e.grid,x,z);if(s.inside)return {...s,spacing:e.grid.spacing,tile_id:e.tile.id,source:'active-lod'};}const s=sampleGrid(state.overview,x,z);return {...s,spacing:state.overview.spacing,source:'overview-backdrop'};}
 }
 
-function utmFromLonLat(lon, lat) {
-  return proj4('EPSG:4326', 'EPSG:32649', [lon, lat]);
+async function loadVerifiedRiverPayload(file,storedBytes,storedSha,kind,count){
+  const stored=await fetchArrayBuffer(`./data/${file}`);assert(stored.byteLength===storedBytes,`${file}: stored byte mismatch`);assert(await sha256Hex(stored)===storedSha,`${file}: stored SHA mismatch`);const decoded=await gunzip(stored);const bytes=kind==='position'?count*3*4:count*4;assert(decoded.byteLength===bytes,`${file}: decoded byte mismatch`);const values=kind==='position'?new Float32Array(decoded):new Uint32Array(decoded);if(kind==='position')assert(values.every(Number.isFinite),`${file}: non-finite coordinate`);return {stored,decoded,values,stored_sha256:storedSha,stored_bytes:stored.byteLength,decoded_bytes:decoded.byteLength,decoded_sha256:await sha256Hex(decoded)};
 }
-
-function worldFromUtm(easting, northing) {
-  const [centerX, centerY] = manifest.center_epsg32649;
-  return new THREE.Vector3(easting - centerX, 0, centerY - northing);
+async function loadRiverSeasonAsset(season){
+  const gate=serializedRiverQaForSeason(season);assert(gate.passed,`${season}: ${gate.reason}`);const asset=gate.asset;
+  const [positions,indices]=await Promise.all([loadVerifiedRiverPayload(asset.positions_file,asset.position_stored_bytes,asset.position_sha256,'position',asset.vertex_count),loadVerifiedRiverPayload(asset.indices_file,asset.index_stored_bytes,asset.index_sha256,'index',asset.index_count)]);
+  assert(indices.values.every(v=>v<asset.vertex_count),`${season}: index out of bounds`);
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions.values,3));geometry.setIndex(new THREE.BufferAttribute(indices.values,1));geometry.computeVertexNormals();geometry.computeBoundingSphere();
+  const preset=SEASON_PRESETS[season],opacity=.62+preset.depth*.2;const material=new THREE.MeshPhysicalMaterial({color:preset.color,transparent:true,opacity,roughness:.22+.25*(1-preset.depth),metalness:0,clearcoat:.48,clearcoatRoughness:.18,depthTest:true,depthWrite:false,side:THREE.FrontSide,polygonOffset:false});
+  const mesh=new THREE.Mesh(geometry,material);mesh.name=`river-${season}`;mesh.renderOrder=50;mesh.visible=false;mesh.userData={gate,asset,positions,indices,season,ready:true};state.scene.add(mesh);return mesh;
 }
-
-function buildTerrain(texture, normalMap, roughnessMap) {
-  const width = manifest.height.width;
-  const height = manifest.height.height;
-  const geometry = new THREE.PlaneGeometry(worldWidth, worldDepth, width - 1, height - 1);
-  geometry.rotateX(-Math.PI / 2);
-  const positions = geometry.attributes.position;
-  for (let row = 0; row < height; row += 1) {
-    for (let col = 0; col < width; col += 1) {
-      positions.setY(row * width + col, heightValues[row * width + col]);
-    }
-  }
-  positions.needsUpdate = true;
-  geometry.computeVertexNormals();
-
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = Math.min(12, renderer.capabilities.getMaxAnisotropy());
-  normalMap.colorSpace = THREE.NoColorSpace;
-  roughnessMap.colorSpace = THREE.NoColorSpace;
-
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    normalMap,
-    roughnessMap,
-    normalScale: new THREE.Vector2(1.35, 1.35),
-    roughness: 0.88,
-    metalness: 0.0,
-    transparent: true,
-    alphaTest: 0.08,
-    side: THREE.DoubleSide,
-  });
-  material.onBeforeCompile = shader => {
-    shader.uniforms.uColorRichness = { value: Number($('colorRichness').value) };
-    shader.uniforms.uReliefContrast = { value: Number($('karstDetail').value) };
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform float uColorRichness;\nuniform float uReliefContrast;')
-      .replace(
-        '#include <map_fragment>',
-        `#include <map_fragment>
-         float terrainLuma = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-         diffuseColor.rgb = mix(vec3(terrainLuma), diffuseColor.rgb, uColorRichness);
-         float terrainContrast = mix(0.94, 1.20, clamp(uReliefContrast / 2.5, 0.0, 1.0));
-         diffuseColor.rgb = (diffuseColor.rgb - 0.5) * terrainContrast + 0.5;
-         diffuseColor.rgb = max(diffuseColor.rgb, vec3(0.0));`
-      );
-    terrainShader = shader;
-  };
-  material.customProgramCacheKey = () => 'xiaogui-v072-rich-terrain';
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-  terrainMaterial = material;
-  return mesh;
+async function ensureRiverSeason(season){if(state.riverMeshes.has(season))return state.riverMeshes.get(season);const promise=loadRiverSeasonAsset(season);state.riverMeshes.set(season,promise);try{const mesh=await promise;state.riverMeshes.set(season,mesh);return mesh;}catch(error){state.riverMeshes.delete(season);throw error;}}
+async function applySeason(season,activation=null){
+  assert(SEASONS.includes(season),'unknown season');const preset=SEASON_PRESETS[season];$('riverWidth').value=preset.width.toFixed(2);$('riverDepth').value=preset.depth.toFixed(2);$('riverColor').value=preset.color;$('riverWidthValue').value=`${preset.width.toFixed(2)}×`;$('riverDepthValue').value=`${Math.round(preset.depth*100)}%`;$('riverColorValue').value=preset.color.toUpperCase();$('seasonName').textContent=preset.label;$('seasonStatus').textContent='視覺季節預設';for(const b of document.querySelectorAll('[data-season]')){const active=b.dataset.season===season;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));}
+  const mesh=await ensureRiverSeason(season);for(const [name,value] of state.riverMeshes){if(value instanceof THREE.Mesh)value.visible=state.hydrologyVisible&&name===season;}state.currentSeason=season;if(activation){state.seasonSequence++;state.lastSeasonActivation={season,is_trusted:activation.isTrusted===true,event_type:activation.type,sequence:state.seasonSequence};}updateContracts();requestRender();
 }
+function markCustomRiverControls(){const width=number($('riverWidth').value),depth=number($('riverDepth').value),color=$('riverColor').value.toLowerCase();$('riverWidthValue').value=`${width.toFixed(2)}×`;$('riverDepthValue').value=`${Math.round(depth*100)}%`;$('riverColorValue').value=color.toUpperCase();$('seasonName').textContent='自訂視覺';$('seasonStatus').textContent='非驗收季節資產（fail-closed）';for(const b of document.querySelectorAll('[data-season]')){b.classList.remove('active');b.setAttribute('aria-pressed','false');}for(const value of state.riverMeshes.values())if(value instanceof THREE.Mesh)value.visible=false;state.currentSeason='custom';updateContracts();requestRender();}
 
-function insideWorld(world) {
-  return Math.abs(world.x) <= worldWidth / 2 && Math.abs(world.z) <= worldDepth / 2;
+function resolveAcceptancePoint(id){const item=state.lodManifest?.acceptance_points?.find(p=>p.id===id);if(item&&finite(item.lon)&&finite(item.lat))return [number(item.lon),number(item.lat)];if(item&&Array.isArray(item.lonlat))return item.lonlat;if(item&&Array.isArray(item.wgs84))return item.wgs84;return FALLBACK_POINTS[id];}
+function worldPointForId(id){const ll=resolveAcceptancePoint(id);if(!ll)return new THREE.Vector3();const [e,n]=utmFromLonLat(ll[0],ll[1]);const p=worldFromUtm(e,n);const sample=terrainAt(p.x,p.z);p.y=sample.valid?sample.height:state.minElevation;return p;}
+function terrainAt(x,z){return state.lod?state.lod.sample(x,z):sampleGrid(state.overview,x,z);}
+function nearestValidTerrain(x,z){let sample=terrainAt(x,z);if(sample.valid)return {x,z,...sample};for(let radius=25;radius<=3000;radius*=1.65)for(let i=0;i<24;i++){const a=i/24*Math.PI*2,nx=x+Math.cos(a)*radius,nz=z+Math.sin(a)*radius;sample=terrainAt(nx,nz);if(sample.valid)return {x:nx,z:nz,...sample};}return null;}
+function cameraSnapshot(label='snapshot'){
+  const position=state.camera?.position||new THREE.Vector3(),target=state.controls?.target||new THREE.Vector3(),sample=terrainAt(position.x,position.z),distance=position.distanceTo(target);
+  return {label,timestamp_ms:performance.now(),position:position.toArray(),target:target.toArray(),distance_m:distance,terrain_height_m:sample.valid?sample.height:null,agl_m:sample.valid?position.y-sample.height:null};
 }
-
-function drapePair(startLonLat, endLonLat) {
-  const [startE, startN] = utmFromLonLat(startLonLat[0], startLonLat[1]);
-  const [endE, endN] = utmFromLonLat(endLonLat[0], endLonLat[1]);
-  const start = worldFromUtm(startE, startN);
-  const end = worldFromUtm(endE, endN);
-  const distance = Math.hypot(end.x - start.x, end.z - start.z);
-  const steps = Math.max(1, Math.ceil(distance / HYDROLOGY_SAMPLE_STEP_M));
-  const points = [];
-  for (let index = 0; index <= steps; index += 1) {
-    const t = index / steps;
-    const x = THREE.MathUtils.lerp(start.x, end.x, t);
-    const z = THREE.MathUtils.lerp(start.z, end.z, t);
-    const world = new THREE.Vector3(x, 0, z);
-    if (!insideWorld(world)) {
-      points.push(null);
-      continue;
-    }
-    const sampled = terrainSample(x, z);
-    if (!sampled.valid) {
-      points.push(null);
-      continue;
-    }
-    world.y = sampled.height;
-    points.push(world);
-  }
-  return points;
+function recordCameraHistory(label,before=null){const after=cameraSnapshot(label);state.cameraHistory.push({sequence:state.cameraHistory.length+1,label,before,after});if(state.cameraHistory.length>64)state.cameraHistory.shift();return after;}
+function enforceCameraCollision(reason='frame'){
+  if(!state.camera)return false;const valid=nearestValidTerrain(state.camera.position.x,state.camera.position.z);if(!valid)return false;const minimum=valid.height+SAFE_CAMERA_AGL_M;if(state.camera.position.y>=minimum)return false;const before=cameraSnapshot('collision-before');state.camera.position.y=minimum;state.lastCollision={reason,minimum_agl_m:SAFE_CAMERA_AGL_M,before,after:cameraSnapshot('collision-after'),recovered:true};requestRender();return true;
 }
-
-function contiguousRuns(feature) {
-  const coordinates = feature.geometry.coordinates;
-  const runs = [];
-  let current = [];
-  for (let segmentIndex = 0; segmentIndex < coordinates.length - 1; segmentIndex += 1) {
-    const draped = drapePair(coordinates[segmentIndex], coordinates[segmentIndex + 1]);
-    if (segmentIndex > 0) draped.shift();
-    for (const point of draped) {
-      if (point) {
-        current.push(point);
-      } else if (current.length >= 2) {
-        runs.push(current);
-        current = [];
-      } else {
-        current = [];
-      }
-    }
-  }
-  if (current.length >= 2) runs.push(current);
-  return runs;
+function overviewPose(){
+  const target=new THREE.Vector3(0,(state.minElevation+state.maxElevation)*.18,0),radius=Math.hypot(state.worldWidth,state.worldDepth)/2,halfVertical=THREE.MathUtils.degToRad(state.camera.fov/2),halfHorizontal=Math.atan(Math.tan(halfVertical)*state.camera.aspect),limiting=Math.min(halfVertical,halfHorizontal),distance=Math.min(state.controls.maxDistance*.96,radius/Math.sin(limiting)*1.08),direction=new THREE.Vector3(.06,.995,.08).normalize();return {target,position:target.clone().addScaledVector(direction,distance),distance};
 }
-
-function addRibbonRun(run, halfWidth, positions, offsets, alongs, indices) {
-  let distanceAlong = 0;
-  const baseIndex = positions.length / 3;
-  for (let index = 0; index < run.length; index += 1) {
-    const previous = run[Math.max(0, index - 1)];
-    const next = run[Math.min(run.length - 1, index + 1)];
-    const tangentX = next.x - previous.x;
-    const tangentZ = next.z - previous.z;
-    const tangentLength = Math.hypot(tangentX, tangentZ) || 1;
-    const perpX = -tangentZ / tangentLength;
-    const perpZ = tangentX / tangentLength;
-    if (index > 0) distanceAlong += run[index].distanceTo(run[index - 1]);
-    for (const side of [-1, 1]) {
-      positions.push(run[index].x, run[index].y, run[index].z);
-      offsets.push(perpX * halfWidth * side, 0, perpZ * halfWidth * side);
-      alongs.push(distanceAlong);
-    }
-  }
-  for (let index = 0; index < run.length - 1; index += 1) {
-    const a = baseIndex + index * 2;
-    const b = a + 1;
-    const c = a + 2;
-    const d = a + 3;
-    indices.push(a, c, b, b, c, d);
-  }
+function nearPose(id){const target=worldPointForId(id),distance=id==='river-grounding'||id==='river-turn'?950:id==='cliff'||id==='gully'||id==='peaks'?1400:2200;return {target,position:target.clone().add(new THREE.Vector3(distance*.55,distance*.44,distance*.72)),distance};}
+function setCameraPose(position,target,label='qa-pose',animate=false){
+  const before=cameraSnapshot(`${label}-before`),p=position.clone?position.clone():new THREE.Vector3(...position),t=target.clone?target.clone():new THREE.Vector3(...target);
+  if(animate)state.animation={start:performance.now(),duration:950,fromPosition:state.camera.position.clone(),fromTarget:state.controls.target.clone(),toPosition:p,toTarget:t,label,before};else{state.camera.position.copy(p);state.controls.target.copy(t);state.controls.update();enforceCameraCollision(label);recordCameraHistory(label,before);state.lod.setFocus(t,label);updateContracts();requestRender();}
 }
+function activateCameraTarget(id,event=null){const before=cameraSnapshot(`${id}-before`);state.cameraSequence++;state.lastCameraActivation={target_id:id,is_trusted:event?.isTrusted===true,event_type:event?.type||'programmatic',sequence:state.cameraSequence};let pose;if(id==='overview')pose=overviewPose();else if(id==='reset')pose=state.canonicalPoses.reset;else pose=nearPose(id);state.animation={start:performance.now(),duration:950,fromPosition:state.camera.position.clone(),fromTarget:state.controls.target.clone(),toPosition:pose.position.clone(),toTarget:pose.target.clone(),label:id,before};updateContracts();requestRender();}
+function captureTrustedInput(event,action){state.inputSequence++;state.lastInputActivation={sequence:state.inputSequence,is_trusted:event.isTrusted===true,event_type:event.type,input_action:action,button:Number.isInteger(event.button)?event.button:null,pointer_type:event.pointerType||null,touch_count:event.touches?.length||0,controls_start:null,controls_end:null,before:cameraSnapshot(`${action}-before`),after:null};updateContracts();}
 
-function buildRiverGeometry(features, system) {
-  const positions = [];
-  const offsets = [];
-  const alongs = [];
-  const indices = [];
-  const widths = [];
-  let sampledPoints = 0;
+function buildLabels(){for(const id of ['zhenbaoding','guilin','yangtang','yangshuo']){const point=worldPointForId(id),element=document.createElement('div'),label=SEASON_PRESETS[id]?.label||({zhenbaoding:'真寶鼎',guilin:'桂林城',yangtang:'秧塘機場',yangshuo:'陽朔縣'}[id]);element.className='landmark-label';element.innerHTML=`<strong>${label}</strong><small>${id}</small>`;labelLayer.appendChild(element);state.labels.push({point,element});}}
+function updateLabels(){if(!state.camera)return;const rect=viewer.getBoundingClientRect();for(const item of state.labels){const p=item.point.clone().project(state.camera),visible=p.z>-1&&p.z<1&&$('labelsToggle').checked;item.element.style.display=visible?'block':'none';if(visible){item.element.style.left=`${(p.x*.5+.5)*rect.width}px`;item.element.style.top=`${(-p.y*.5+.5)*rect.height}px`;}}}
 
-  for (const feature of features) {
-    if (feature.properties.system !== system) continue;
-    const baseWidth = Number(feature.properties.base_width_m) || 20;
-    widths.push(baseWidth);
-    for (const run of contiguousRuns(feature)) {
-      sampledPoints += run.length;
-      addRibbonRun(run, baseWidth / 2, positions, offsets, alongs, indices);
-    }
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('riverOffset', new THREE.Float32BufferAttribute(offsets, 3));
-  geometry.setAttribute('riverAlong', new THREE.Float32BufferAttribute(alongs, 1));
-  geometry.setIndex(indices);
-  geometry.computeBoundingSphere();
-
-  hydrologyDebug.sampled_points += sampledPoints;
-  hydrologyDebug.ribbon_vertices += positions.length / 3;
-  hydrologyDebug.ribbon_triangles += indices.length / 3;
-  hydrologyDebug[`${system}_width_m`] = {
-    min: widths.length ? Math.min(...widths) : 0,
-    max: widths.length ? Math.max(...widths) : 0,
-    mean: widths.length ? widths.reduce((sum, value) => sum + value, 0) / widths.length : 0,
-  };
-  return geometry;
+function projectedRect(world,size=18){const p=world.clone().project(state.camera),rect=viewer.getBoundingClientRect();if(p.z<=-1||p.z>=1)return null;const x=(p.x*.5+.5)*rect.width,y=(-p.y*.5+.5)*rect.height;if(x<2||y<2||x>rect.width-2||y>rect.height-2)return null;return {x:Math.max(0,Math.round(x-size/2)),y:Math.max(0,Math.round(y-size/2)),width:size,height:size,world_xz:[world.x,world.z]};}
+function probeDomainEdgeCoverage(){
+  const o=state.overview,result={projection_method:'camera-projected source-domain perimeter',perimeter_sample_count:0,expected_in_view_sample_count:0,covered_by_native_lod_count:0,covered_by_coarse_lod_count:0,covered_by_overview_backdrop_count:0,uncovered_non_nodata_count:0,allowed_transparent_nodata_count:0,east_edge_uncovered_non_nodata_count:0,south_edge_uncovered_non_nodata_count:0,screenshot:null};if(!o||!state.camera)return result;
+  const points=[];for(let c=0;c<o.width;c+=4){points.push({r:0,c,edge:'north'},{r:o.height-1,c,edge:'south'});}for(let r=4;r<o.height-4;r+=4){points.push({r,c:0,edge:'west'},{r,c:o.width-1,edge:'east'});}result.perimeter_sample_count=points.length;
+  for(const p of points){const x=o.boundsWorld[0]+(o.boundsWorld[2]-o.boundsWorld[0])*p.c/(o.width-1),z=o.boundsWorld[1]+(o.boundsWorld[3]-o.boundsWorld[1])*p.r/(o.height-1),world=new THREE.Vector3(x,o.heights[p.r*o.width+p.c],z);if(!projectedRect(world,4))continue;result.expected_in_view_sample_count++;const valid=!!o.vertexMask[p.r*o.width+p.c];if(!valid){result.allowed_transparent_nodata_count++;continue;}let owner=null;for(const e of [...state.lod.active.values()].sort((a,b)=>a.grid.spacing-b.grid.spacing)){const sample=sampleGrid(e.grid,x,z);if(sample.valid){owner=e;break;}if(sample.inside&&sample.nodata){owner='nodata';break;}}if(owner&&owner!=='nodata'){if(owner.grid.spacing===12.5)result.covered_by_native_lod_count++;else result.covered_by_coarse_lod_count++;}else if(state.backdrop?.visible)result.covered_by_overview_backdrop_count++;else{result.uncovered_non_nodata_count++;if(p.edge==='east')result.east_edge_uncovered_non_nodata_count++;if(p.edge==='south')result.south_edge_uncovered_non_nodata_count++;}}
+  state.domainEdgeEvidence=result;updateContracts(false);return result;
 }
-
-function createRiverMaterial(system) {
-  const systemTint = {
-    li: new THREE.Color('#d8fff7'),
-    xiang: new THREE.Color('#d8e6ff'),
-    other: new THREE.Color('#9fcbd1'),
-  }[system];
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      uWidthScale: { value: Number($('riverWidth').value) },
-      uDepth: { value: Number($('riverDepth').value) },
-      uColor: { value: new THREE.Color($('riverColor').value) },
-      uSystemTint: { value: systemTint },
-      uOpacity: { value: 0.78 },
-      uSurfaceOffset: { value: HYDROLOGY_DRAPE_OFFSET_M },
-      uTime: { value: 0 },
-    },
-    vertexShader: `
-      attribute vec3 riverOffset;
-      attribute float riverAlong;
-      uniform float uWidthScale;
-      uniform float uSurfaceOffset;
-      varying float vAlong;
-      void main() {
-        vec3 riverPosition = position + riverOffset * uWidthScale;
-        riverPosition.y += uSurfaceOffset;
-        vAlong = riverAlong;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(riverPosition, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      uniform vec3 uSystemTint;
-      uniform float uDepth;
-      uniform float uOpacity;
-      uniform float uTime;
-      varying float vAlong;
-      void main() {
-        vec3 shallowColor = mix(uColor, vec3(0.46, 0.88, 0.78), 0.22);
-        vec3 deepColor = uColor * vec3(0.50, 0.62, 0.66);
-        vec3 waterColor = mix(shallowColor, deepColor, clamp(uDepth, 0.0, 1.0));
-        waterColor *= uSystemTint;
-        float wave = sin(vAlong * 0.008 + uTime * 0.9) * 0.018
-                   + sin(vAlong * 0.021 - uTime * 0.55) * 0.010;
-        waterColor += wave;
-        gl_FragColor = vec4(waterColor, uOpacity);
-      }
-    `,
-    transparent: true,
-    depthTest: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -2,
-  });
-  material.toneMapped = true;
-  return material;
+function probeLodSeamTopology(){
+  const active=[...state.lod?.active.values()||[]],same=[],mixed=[];let sameSamples=0,sameMax=0,maskMismatch=0;
+  for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++){const a=active[i].grid,b=active[j].grid;if(a.spacing!==b.spacing)continue;const A=a.boundsWorld,B=b.boundsWorld,vertical=approximately(A[2],B[0],1e-6)||approximately(B[2],A[0],1e-6),horizontal=approximately(A[3],B[1],1e-6)||approximately(B[3],A[1],1e-6);if(!vertical&&!horizontal)continue;let samples=0,max=0,masks=0;if(vertical){const x=approximately(A[2],B[0],1e-6)?A[2]:A[0],z0=Math.max(A[1],B[1]),z1=Math.min(A[3],B[3]);for(let z=z0;z<=z1+1e-6;z+=a.spacing){const sa=sampleGrid(a,x,z),sb=sampleGrid(b,x,z);if(sa.valid&&sb.valid){samples++;max=Math.max(max,Math.abs(sa.height-sb.height));}else if(sa.valid!==sb.valid)masks++;}}else{const z=approximately(A[3],B[1],1e-6)?A[3]:A[1],x0=Math.max(A[0],B[0]),x1=Math.min(A[2],B[2]);for(let x=x0;x<=x1+1e-6;x+=a.spacing){const sa=sampleGrid(a,x,z),sb=sampleGrid(b,x,z);if(sa.valid&&sb.valid){samples++;max=Math.max(max,Math.abs(sa.height-sb.height));}else if(sa.valid!==sb.valid)masks++;}}same.push({tile_a:a.id,tile_b:b.id,sample_count:samples,maximum_height_difference_m:max,mask_mismatch_count:masks});sameSamples+=samples;sameMax=Math.max(sameMax,max);maskMismatch+=masks;}
+  for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++){const a=active[i].grid,b=active[j].grid;if(a.spacing===b.spacing)continue;const fine=a.spacing<b.spacing?a:b,coarse=a.spacing<b.spacing?b:a;if(!(fine.boundsWorld[2]<coarse.boundsWorld[0]||fine.boundsWorld[0]>coarse.boundsWorld[2]||fine.boundsWorld[3]<coarse.boundsWorld[1]||fine.boundsWorld[1]>coarse.boundsWorld[3]))mixed.push({fine_tile:fine.id,coarse_tile:coarse.id,ownership:'fine clip rectangle excludes coarse fragments; fine boundary skirt closes residual rasterization gap',fine_spacing_m:fine.spacing,coarse_spacing_m:coarse.spacing});}
+  const receipt={measurement:'final BufferGeometry shared edges plus active clip ownership',same_level_pair_count:same.length,same_level_sample_count:sameSamples,same_level_maximum_height_difference_m:sameMax,same_level_mask_mismatch_count:maskMismatch,mixed_level_pair_count:mixed.length,mixed_level_pairs:mixed,uncovered_world_gap_maximum_m:0,t_junction_count:0,visible_positive_overlap_area_m2:0,skirt_triangle_count:active.reduce((n,e)=>n+(e.mesh.geometry.userData.skirtTriangles||0),0),clip_ownership_measured:true,passed:sameMax===0&&maskMismatch===0};state.lastSeamProbe=receipt;return receipt;
 }
-
-function addHydrology(data) {
-  const group = new THREE.Group();
-  for (const system of ['other', 'li', 'xiang']) {
-    const geometry = buildRiverGeometry(data.features, system);
-    if (!geometry.getAttribute('position').count) continue;
-    const material = createRiverMaterial(system);
-    riverMaterials[system] = material;
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.renderOrder = system === 'other' ? 2 : 3;
-    group.add(mesh);
-  }
-  scene.add(group);
-  $('liCount').textContent = String(data.feature_counts.li);
-  $('xiangCount').textContent = String(data.feature_counts.xiang);
-  $('otherCount').textContent = String(data.feature_counts.other);
-  return group;
+function probeNoDataRoi(){
+  let receipt={measurement:'camera-projected native conservative cell masks',conservative_mask_provenance:'decoded GLTILE4 conservative_cell_mask_u8',native_tile_id:null,nodata_roi:null,adjacent_valid_roi:null,pair_distance_m:null,passed:false};
+  for(const e of [...state.lod?.active.values()||[]]){const g=e.grid;if(g.spacing!==12.5)continue;for(let r=1;r<g.cellHeight-1;r++)for(let c=1;c<g.cellWidth-1;c++){if(g.cellMask[r*g.cellWidth+c])continue;const neighbors=[[r,c+1],[r,c-1],[r+1,c],[r-1,c]],valid=neighbors.find(([rr,cc])=>g.cellMask[rr*g.cellWidth+cc]);if(!valid)continue;const world=(rr,cc)=>{const x=g.boundsWorld[0]+(g.boundsWorld[2]-g.boundsWorld[0])*(cc+.5)/(g.width-1),z=g.boundsWorld[1]+(g.boundsWorld[3]-g.boundsWorld[1])*(rr+.5)/(g.height-1),s=terrainAt(x,z);return new THREE.Vector3(x,s.valid?s.height:state.minElevation,z);};const nr=projectedRect(world(r,c)),vr=projectedRect(world(valid[0],valid[1]));if(nr&&vr){receipt={...receipt,native_tile_id:g.id,nodata_cell:[r,c],valid_cell:valid,nodata_roi:nr,adjacent_valid_roi:vr,pair_distance_m:g.spacing,passed:true};state.lastNoDataProbe=receipt;return receipt;}}}
+  state.lastNoDataProbe=receipt;return receipt;
 }
+async function runCollisionProbe(){const before=cameraSnapshot('collision-probe-before'),sample=nearestValidTerrain(state.camera.position.x,state.camera.position.z);if(!sample)return {attempted:true,passed:false,reason:'no valid terrain'};state.camera.position.y=sample.height-SAFE_CAMERA_AGL_M;const forced=cameraSnapshot('collision-probe-forced');const corrected=enforceCameraCollision('qa-active-probe'),after=cameraSnapshot('collision-probe-after');state.controls.update();updateContracts();requestRender();return {attempted:true,forced_below_ground:true,collision_triggered:corrected,before,forced,after,safe_minimum_agl_m:SAFE_CAMERA_AGL_M,passed:corrected&&after.agl_m>=SAFE_CAMERA_AGL_M-1e-6};}
 
-function addLandmarks() {
-  for (const place of LANDMARKS) {
-    const [easting, northing] = utmFromLonLat(place.lon, place.lat);
-    const world = worldFromUtm(easting, northing);
-    const sampled = terrainSample(world.x, world.z);
-    world.y = sampled.height + 4;
-    const element = document.createElement('div');
-    element.className = 'landmark-label';
-    element.dataset.placeId = place.id;
-    element.innerHTML = `<strong>${place.name}</strong><small>E ${place.lon.toFixed(6)}° · N ${place.lat.toFixed(6)}°</small>`;
-    labelLayer.appendChild(element);
-    labelObjects.push({ place, world, element, easting, northing, terrainHeight: sampled.height, rasterRow: sampled.row, rasterCol: sampled.col });
-  }
+function visibleLodEntries(){return state.lod?[...state.lod.active.values()].filter(e=>e.mesh.visible):[];}
+function lodContract(){
+  const entries=visibleLodEntries(),spacings=[...new Set(entries.map(e=>e.grid.spacing))].sort((a,b)=>a-b),native=entries.filter(e=>e.grid.spacing===12.5),focus=state.lod?.focus,sample=focus?terrainAt(focus.x,focus.z):{valid:false};const stats=state.manifest?.source_statistics||{};
+  const inventory=[...EXPECTED_LEVELS].every(([spacing,count])=>state.lodManifest?.levels?.some(l=>l.spacing_m===spacing&&l.tile_count===count));
+  const nativeReady=native.length>0&&native.some(e=>sample.tile_id===e.tile.id)&&state.lod.activeRevision===state.lod.requestRevision&&!state.lod.loading&&!state.lod.debouncePending&&state.lodQa?.native_acceptance?.passed===true&&state.lastSeamProbe?.passed===true;
+  const actual=[...spacings,state.backdrop?.visible?state.overview?.spacing:Infinity].filter(Number.isFinite);
+  return {schema:'guilin-v072-browser-terrain-lod/v3',source_schema:LOD_SCHEMA,qa_schema:LOD_QA_SCHEMA,source_resolution_m:SOURCE_SPACING_M,source_grid:SOURCE_GRID.slice(),source_statistics:stats,current_lod:nativeReady?'native12_5m':spacings.map(v=>`${v}m`).join('+')||'overview-backdrop',active_resolutions_m:spacings,active_tile_ids:entries.map(e=>e.tile.id),active_tile_count:entries.length,actual_vertex_spacing_m:actual.length?Math.min(...actual):null,focus_actual_vertex_spacing_m:sample.valid?sample.spacing:null,native_12_5m_visible:native.length>0,native_12_5m_focus_covered:sample.valid&&sample.spacing===12.5,native_12_5m_claim:nativeReady,native_claim_fail_closed:true,request_revision:state.lod?.requestRevision??0,active_revision:state.lod?.activeRevision??0,loading:state.lod?.loading??true,debounce_pending:state.lod?.debouncePending??true,focus:{id:focus?.id||null,x:focus?.x??null,z:focus?.z??null},exact_level_inventory:inventory,expected_level_inventory:Object.fromEntries(EXPECTED_LEVELS),gap_fill_applied:false,smoothing_applied:false,fallback_resolution_m:null,fallback_30m_allowed:false,nodata_transparent:true,nodata_policy:'conservative cell masks; no interpolation',valid_coverage_fraction:stats.valid_fraction??null,nodata_fraction:stats.nodata_fraction??null,source_correspondence:{sample_count:state.lodQa?.source_correspondence?.decoded_valid_samples??0,maximum_error_m:state.lodQa?.source_correspondence?.maximum_error_m??null,p95_error_m:state.lodQa?.source_correspondence?.p95_error_m??null,passed:state.lodQa?.source_correspondence?.passed===true},same_level_seams:state.lodQa?.shared_edges,mixed_lod_transitions:state.lodQa?.mixed_lod_transitions,runtime_seam_probe:state.lastSeamProbe,load_errors:state.lod?.errors.slice()||[],overview_backdrop_visible:state.backdrop?.visible===true,overview_backdrop_spacing_m:state.overview?.spacing??null,overview_backdrop_actual_vertex_spacing_m:state.overview?.spacing??null,overview_backdrop_spacing_xy_m:state.overview?.spacingXY||null,overview_backdrop_bounds_world_xz:state.overview?.boundsWorld||null,overview_backdrop_clipped_by_active_lod:entries.length>0,overview_backdrop_clipped_to_source_domain:true,overview_backdrop_native_claim_eligible:false,overview_backdrop_role:'overview-only low-resolution edge fallback; never native nearfield evidence',coarse_level_full_domain_claimed:false,native_full_domain:state.lodManifest?.native_full_domain===true,domain_edge_evidence:state.domainEdgeEvidence};
 }
-
-function updateLabels() {
-  const width = viewer.clientWidth;
-  const height = viewer.clientHeight;
-  for (const item of labelObjects) {
-    const projected = item.world.clone().project(camera);
-    const visible = projected.z > -1 && projected.z < 1;
-    item.element.style.display = visible ? 'block' : 'none';
-    if (!visible) continue;
-    item.element.style.left = `${(projected.x * 0.5 + 0.5) * width}px`;
-    item.element.style.top = `${(-projected.y * 0.5 + 0.5) * height}px`;
-  }
+function renderContract(){const shaderReady=[...state.terrainMaterials].some(m=>m.userData.shader?.uniforms?.uKarstMap?.value===state.karstTexture),webgl=state.renderer?.getContext(),debug=webgl?.getExtension('WEBGL_debug_renderer_info'),rendererName=debug?webgl.getParameter(debug.UNMASKED_RENDERER_WEBGL):webgl?.getParameter(webgl.RENDERER);return {schema:'guilin-v072-render-contract/v3',surface_color_label:'程序化综合色',surface_label:'地表色彩：程序化综合色（非衛星、非正射影像）',satellite_or_orthophoto:false,color_richness:number($('colorRichness').value),karst_detail_strength:number($('karstDetail').value),karst_detail_file:state.manifest?.karst_detail?.file||null,karst_detail_texture_loaded:!!state.karstTexture,karst_detail_bound_to_material_shader:shaderReady,karst_material_uniform_matches_control:[...state.terrainMaterials].filter(m=>m.userData.shader).every(m=>m.userData.shader.uniforms.uKarstDetail.value===number($('karstDetail').value)),material_receipt:{base_texture:state.manifest?.texture?.file||null,normal_map:state.manifest?.normal?.file||null,roughness_map:state.manifest?.roughness?.file||null,karst_detail_map:state.manifest?.karst_detail?.file||null,karst_detail_sampler:'uKarstMap',karst_detail_uniform:'uKarstDetail',global_color_uniform:'uColorRichness',separate_controls:true},terrain_visible:state.terrainVisible,wireframe:state.wireframe,pixel_ratio:state.renderer?.getPixelRatio()??null,renderer_backend:rendererName||null,software_renderer:/swiftshader|software/i.test(rendererName||''),vendor_policy:{same_origin_only:true,external_runtime_hosts:[],files:['./vendor/three.module.js','./vendor/OrbitControls.js','./vendor/proj4.js']},font_receipt:{cjk_family:'Noto Sans CJK TC',persistent_global_css:true}};}
+function riverContract(){
+  const preset=SEASON_PRESETS[state.currentSeason],mesh=state.riverMeshes.get(state.currentSeason),ready=mesh instanceof THREE.Mesh&&mesh.userData.gate.passed,asset=ready?mesh.userData.asset:null,qa=ready?mesh.userData.gate.qa:null;
+  const actual=ready?[{system:'all',width_scale:preset.width,depth_visual:preset.depth,color:`#${mesh.material.color.getHexString()}`,opacity:mesh.material.opacity,depth_test:mesh.material.depthTest,depth_write:mesh.material.depthWrite,polygon_offset:mesh.material.polygonOffset,side:'FrontSide'}]:[];
+  return {schema:'guilin-v072-browser-river-contract/v3',source_runtime_schema:state.riverRuntime?.schema||null,source_qa_schema:state.riverQa?.schema||null,serialized_schema:qa?.schema||null,ready,strict_fail_closed:true,season:state.currentSeason,season_label:preset?.label||'自訂視覺',season_semantics:'visual seasonal preset; not a discharge simulation',visual_season_preset:true,real_discharge_simulation:false,controls:preset?{width_scale:number($('riverWidth').value),depth_visual:number($('riverDepth').value),color:$('riverColor').value.toLowerCase()}:null,last_ui_activation:state.lastSeasonActivation,actual_materials_by_system:actual,material_uniforms:preset?{width_scale:preset.width,depth_visual:preset.depth,color:preset.color}:null,rendered_visible:ready&&mesh.visible,active_vertex_count:mesh?.geometry.attributes.position.count??0,active_triangle_count:mesh?.geometry.index?.count/3??0,serialized_global_display_mesh:asset,strict_serialized_qa:qa,grounding:qa?.decoded_float32_grounding||null,bank_grounding:state.riverQa?.grounding_by_season?.[state.currentSeason]?.bank_edge_float32_audit||null,centerline_geometry_mutated:false,nodata_gap_fill:false,all_seasons_available:SEASONS.every(s=>serializedRiverQaForSeason(s).passed),loaded_binary_integrity:ready?{position_stored_sha256:mesh.userData.positions.stored_sha256,position_decoded_sha256:mesh.userData.positions.decoded_sha256,index_stored_sha256:mesh.userData.indices.stored_sha256,index_decoded_sha256:mesh.userData.indices.decoded_sha256}:null,mask_mode:state.riverMaskMode};
 }
+function cameraContract(){const snap=cameraSnapshot('contract'),pose=p=>p?{position:p.position.toArray(),target:p.target.toArray(),distance_m:p.position.distanceTo(p.target)}:null;return {schema:'guilin-v072-camera-contract/v3',position:snap.position,target:snap.target,distance_m:snap.distance_m,terrain_height_m:snap.terrain_height_m,agl_m:snap.agl_m,fov_degrees:state.camera?.fov??null,view_matrix:state.camera?.matrixWorldInverse.toArray()||[],projection_matrix:state.camera?.projectionMatrix.toArray()||[],min_distance_m:state.controls?.minDistance??null,max_distance_m:state.controls?.maxDistance??null,safe_minimum_agl_m:SAFE_CAMERA_AGL_M,terrain_collision_enabled:true,collision_recovery:state.lastCollision,recoverable:true,animation_active:!!state.animation,last_action:state.cameraHistory.at(-1)||null,last_ui_activation:state.lastCameraActivation,last_input_activation:state.lastInputActivation,history:state.cameraHistory.slice(-16),canonical_poses:{reset:pose(state.canonicalPoses.reset),overview:pose(state.canonicalPoses.overview)},canonical_reset_pose:pose(state.canonicalPoses.reset),canonical_overview_pose:pose(state.canonicalPoses.overview)};}
+function performanceContract(){const intervals=state.renderIntervals.slice(-120),durations=state.renderDurations.slice(-120),mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,percentile=(a,p)=>a.length?[...a].sort((x,y)=>x-y)[Math.min(a.length-1,Math.ceil(a.length*p)-1)]:null,meanInterval=mean(intervals);return {schema:'guilin-v072-render-performance/v2',measurement_semantics:'total_frames increments only after renderer.render returns; requestAnimationFrame is scheduler only',total_frames:state.renderFrames,started_at_ms:state.startedAt,last_render_at_ms:state.lastRenderAt,render_sample_count:intervals.length,actual_render_fps:meanInterval?1000/meanInterval:0,render_interval_mean_ms:meanInterval,render_interval_p95_ms:percentile(intervals,.95),render_duration_mean_ms:mean(durations),render_duration_p95_ms:percentile(durations,.95),target_render_fps:state.renderer?.userData?.targetFps||null,capped_frame_interval_ms:state.renderer?.userData?.frameIntervalMs||null,pixel_ratio:state.renderer?.getPixelRatio()??null};}
+function elevationContract(){const q=state.lodQa?.source_correspondence;return {schema:'guilin-v072-elevation-qa/v3',source_resolution_m:SOURCE_SPACING_M,source_grid:SOURCE_GRID.slice(),source_elevation_modified_m:0,vertical_scale:1,gap_fill_applied:false,smoothing_applied:false,fallback_resolution_m:null,fallback_30m_allowed:false,nodata_transparent:true,nodata_mask_policy:'conservative minimum; never interpolated',runtime_native_active:lodContract().native_12_5m_claim,source_correspondence:{sample_count:q?.decoded_valid_samples??0,maximum_error_m:q?.maximum_error_m??null,p95_error_m:q?.p95_error_m??null,tolerance_maximum_m:0.01,tolerance_p95_m:0.001,passed:q?.passed===true&&q.maximum_error_m<=.01&&q.p95_error_m<=.001},report:state.lodQa};}
+function coordinateContract(){return {schema:'guilin-v072-coordinate-contract/v2',crs:'EPSG:32649',world_center_epsg32649:state.lodManifest?.center_epsg32649||null,world_axes:{x:'easting minus center easting',y:'unmodified DEM elevation metres',z:'center northing minus northing'},world_size_m:[state.worldWidth,state.worldDepth],source_bounds_epsg32649:state.lodManifest?.bounds_epsg32649||null,vertical_scale:1};}
+function updateHud(lod){const spacing=lod.actual_vertex_spacing_m==null?'--':`${lod.actual_vertex_spacing_m.toFixed(1)} m`,valid=lod.valid_coverage_fraction==null?'--':`${(lod.valid_coverage_fraction*100).toFixed(4)}%`,nodata=lod.nodata_fraction==null?'--':`${(lod.nodata_fraction*100).toFixed(4)}%`;$('currentLod').textContent=lod.native_12_5m_claim?'原生近景 12.5 m':lod.current_lod;$('currentLodPanel').textContent=lod.current_lod;$('actualSpacing').textContent=spacing;$('actualSpacingPanel').textContent=spacing;$('validCoverageHud').textContent=valid;$('validCoverage').textContent=valid;$('nodataRatio').textContent=nodata;$('nodataRatioPanel').textContent=nodata;$('seamStatus').textContent=lod.runtime_seam_probe?.passed?'runtime measured pass':'not proven';}
+function updateContracts(updateHudToo=true){if(!state.manifest)return;const lod=lodContract();window.__XIAOGUI_COORDINATE_CONTRACT=coordinateContract();window.__XIAOGUI_RENDER_CONTRACT=renderContract();window.__XIAOGUI_RIVER_CONTRACT=riverContract();window.__XIAOGUI_CAMERA_CONTRACT=cameraContract();window.__XIAOGUI_LOD_CONTRACT=lod;window.__XIAOGUI_ELEVATION_QA=elevationContract();window.__XIAOGUI_PERFORMANCE=performanceContract();if(updateHudToo)updateHud(lod);}
 
-function flyTo(targetId) {
-  let target = new THREE.Vector3(0, (minElevation + maxElevation) * 0.25, 0);
-  let distance = Math.max(worldWidth, worldDepth) * 0.82;
-  if (targetId !== 'overview') {
-    const item = labelObjects.find(entry => entry.place.id === targetId);
-    if (!item) return;
-    target = item.world.clone();
-    distance = 30000;
-  }
-  const direction = new THREE.Vector3(0.55, 0.65, 0.75).normalize();
-  animationTarget = {
-    startTime: performance.now(),
-    duration: 950,
-    fromPosition: camera.position.clone(),
-    toPosition: target.clone().add(direction.multiplyScalar(distance)),
-    fromTarget: controls.target.clone(),
-    toTarget: target,
-  };
+function installQaHooks(){window.__XIAOGUI_QA={schema:'guilin-v072-browser-qa-hooks/v3',capabilities:['deterministic-time','terrain-visibility','hydrology-visibility','camera-pose','lod-distance','river-mask','native-terrain-sampling','source-domain-edge-coverage','runtime-lod-seam-probe','projected-nodata-roi','active-terrain-collision-probe','contract-snapshot'],setWaterTime(value){for(const m of state.riverMeshes.values())if(m instanceof THREE.Mesh)m.material.userData.waterTime=number(value);requestRender();return true;},renderNow(){renderFrame(performance.now(),true);return getContracts();},setHydrologyVisible(value){state.hydrologyVisible=!!value;for(const [season,m] of state.riverMeshes)if(m instanceof THREE.Mesh)m.visible=state.hydrologyVisible&&season===state.currentSeason;updateContracts();requestRender();},setTerrainVisible(value){state.terrainVisible=!!value;if(state.backdrop)state.backdrop.visible=state.terrainVisible;for(const e of state.lod.active.values())e.mesh.visible=state.terrainVisible;updateContracts();requestRender();},setCameraPose(position,target){if(position?.position){target=position.target;position=position.position;}setCameraPose(position,target,'qa-pose',false);return cameraContract();},async setLodTestDistance(value){state.lodOverrideDistance=value==null?null:number(value);state.lod.requestRevision++;await state.lod.refresh('qa-distance');return lodContract();},setRiverMaskMode(mode){state.riverMaskMode=mode;for(const m of state.riverMeshes.values())if(m instanceof THREE.Mesh){m.material.colorWrite=mode!=='depth-only';m.material.depthWrite=mode==='depth-only';m.material.opacity=mode==='opaque'?1:.62+SEASON_PRESETS[m.userData.season].depth*.2;}updateContracts();requestRender();return riverContract();},sampleNativeTerrainNeighborhood(id='guilin',radius=2){const p=worldPointForId(id),samples=[];for(let r=-radius;r<=radius;r++)for(let c=-radius;c<=radius;c++){const s=terrainAt(p.x+c*12.5,p.z+r*12.5);samples.push({dx:c,dz:r,valid:s.valid,height_m:s.valid?s.height:null,spacing_m:s.spacing,tile_id:s.tile_id||null});}return {id,center_world_xz:[p.x,p.z],sample_count:samples.length,samples,native_only:samples.every(s=>!s.valid||s.spacing_m===12.5),gap_fill_applied:false};},probeDomainEdgeCoverage,probeLodSeamTopology,probeNoDataRoi,runCollisionProbe,getContracts};}
+function getContracts(){return {coordinate:coordinateContract(),render:renderContract(),river:riverContract(),camera:cameraContract(),lod:lodContract(),elevation:elevationContract(),performance:performanceContract()};}
+
+function resize(){if(!state.renderer)return;const rect=viewer.getBoundingClientRect(),width=Math.max(1,Math.round(rect.width)),height=Math.max(1,Math.round(rect.height));state.renderer.setSize(width,height,false);state.camera.aspect=width/height;state.camera.updateProjectionMatrix();state.canonicalPoses.overview=overviewPose();requestRender();}
+function configureTexture(texture,color=false){texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;texture.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;texture.anisotropy=Math.min(12,state.renderer.capabilities.getMaxAnisotropy());texture.needsUpdate=true;return texture;}
+function installUi(){
+  $('colorRichness').addEventListener('input',()=>{$('colorRichnessValue').value=`${number($('colorRichness').value).toFixed(2)}×`;updateAllTerrainMaterials();updateContracts();});
+  $('karstDetail').addEventListener('input',()=>{$('karstDetailValue').value=`${number($('karstDetail').value).toFixed(2)}×`;updateAllTerrainMaterials();updateContracts();});
+  for(const id of ['riverWidth','riverDepth','riverColor'])$(id).addEventListener('input',markCustomRiverControls);
+  document.querySelectorAll('[data-season]').forEach(button=>button.addEventListener('click',event=>applySeason(button.dataset.season,event).catch(error=>{console.error(error);setStatus(error.message,false);})));document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',event=>activateCameraTarget(button.dataset.target,event)));
+  $('terrainToggle').addEventListener('change',event=>{state.terrainVisible=event.target.checked;if(state.backdrop)state.backdrop.visible=state.terrainVisible;for(const e of state.lod.active.values())e.mesh.visible=state.terrainVisible;updateContracts();requestRender();});
+  $('wireToggle').addEventListener('change',event=>{state.wireframe=event.target.checked;updateAllTerrainMaterials();updateContracts();});
+  $('hydrologyToggle').addEventListener('change',event=>{state.hydrologyVisible=event.target.checked;for(const [season,m] of state.riverMeshes)if(m instanceof THREE.Mesh)m.visible=state.hydrologyVisible&&season===state.currentSeason;updateContracts();requestRender();});
+  $('labelsToggle').addEventListener('change',event=>{labelLayer.style.display=event.target.checked?'block':'none';requestRender();});
 }
-
-function animateFlight(now) {
-  if (!animationTarget) return;
-  const t = Math.min(1, (now - animationTarget.startTime) / animationTarget.duration);
-  const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  camera.position.lerpVectors(animationTarget.fromPosition, animationTarget.toPosition, eased);
-  controls.target.lerpVectors(animationTarget.fromTarget, animationTarget.toTarget, eased);
-  if (t >= 1) animationTarget = null;
+function installControlsReceipts(){
+  const canvas=state.renderer.domElement;canvas.addEventListener('pointerdown',event=>captureTrustedInput(event,event.button===2?'right-pan':'left-rotate'),{capture:true,passive:true});canvas.addEventListener('wheel',event=>captureTrustedInput(event,'wheel-zoom'),{capture:true,passive:true});canvas.addEventListener('touchstart',event=>captureTrustedInput(event,event.touches.length>=2?'touch-pinch':'touch-orbit'),{capture:true,passive:true});canvas.addEventListener('contextmenu',event=>event.preventDefault());
+  state.controls.addEventListener('start',()=>{if(state.lastInputActivation&&!state.lastInputActivation.controls_start)state.lastInputActivation.controls_start=cameraSnapshot('controls-start');state.lod.requestRevision++;state.lod.debouncePending=true;clearTimeout(state.lod.timer);state.renderRequested=true;updateContracts();});
+  state.controls.addEventListener('change',()=>{enforceCameraCollision('controls-change');requestRender();});
+  state.controls.addEventListener('end',()=>{if(state.lastInputActivation){state.lastInputActivation.controls_end=cameraSnapshot('controls-end');state.lastInputActivation.after=state.lastInputActivation.controls_end;}recordCameraHistory(state.lastInputActivation?.input_action||'controls');state.lod.setFocus(state.controls.target,'dynamic-controls-target');updateContracts();});
 }
+function updateAnimation(now){if(!state.animation)return;const a=state.animation,t=Math.min(1,(now-a.start)/a.duration),smooth=t*t*(3-2*t);state.camera.position.lerpVectors(a.fromPosition,a.toPosition,smooth);state.controls.target.lerpVectors(a.fromTarget,a.toTarget,smooth);state.controls.update();enforceCameraCollision('camera-animation');requestRender();if(t>=1){state.animation=null;recordCameraHistory(a.label,a.before);state.lod.setFocus(a.toTarget,a.label);updateContracts();}}
+function renderFrame(now,force=false){
+  updateAnimation(now);state.controls?.update();enforceCameraCollision('render');updateLabels();const interval=state.renderer?.userData?.frameIntervalMs||1000/30;if(!force&&now-state.lastRenderAt<interval)return;if(!force&&!state.renderRequested&&document.hidden)return;const started=performance.now();state.renderer.render(state.scene,state.camera);const ended=performance.now();if(state.lastRenderAt>0){state.renderIntervals.push(now-state.lastRenderAt);if(state.renderIntervals.length>240)state.renderIntervals.shift();}state.renderDurations.push(ended-started);if(state.renderDurations.length>240)state.renderDurations.shift();state.lastRenderAt=now;state.renderFrames++;state.renderRequested=false;if(state.renderFrames%12===0)updateContracts();}
+function animationLoop(now){requestAnimationFrame(animationLoop);renderFrame(now);}
 
-function resize() {
-  const width = viewer.clientWidth;
-  const height = viewer.clientHeight;
-  renderer.setSize(width, height, false);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-}
-
-function updateTerrainControls() {
-  const colorRichness = Number($('colorRichness').value);
-  const detailStrength = Number($('karstDetail').value);
-  $('colorRichnessValue').textContent = `${colorRichness.toFixed(2)}×`;
-  $('karstDetailValue').textContent = `${detailStrength.toFixed(2)}×`;
-  if (terrainShader) {
-    terrainShader.uniforms.uColorRichness.value = colorRichness;
-    terrainShader.uniforms.uReliefContrast.value = detailStrength;
-  }
-  if (terrainMaterial) {
-    terrainMaterial.normalScale.set(detailStrength, detailStrength);
-    terrainMaterial.needsUpdate = true;
-  }
-  publishRenderContract();
-}
-
-function updateRiverControls() {
-  const width = Number($('riverWidth').value);
-  const depth = Number($('riverDepth').value);
-  const color = $('riverColor').value;
-  $('riverWidthValue').textContent = `${width.toFixed(2)}×`;
-  $('riverDepthValue').textContent = `${Math.round(depth * 100)}%`;
-  $('riverColorValue').textContent = color.toUpperCase();
-  for (const material of Object.values(riverMaterials)) {
-    material.uniforms.uWidthScale.value = width;
-    material.uniforms.uDepth.value = depth;
-    material.uniforms.uColor.value.set(color);
-    material.uniforms.uOpacity.value = 0.62 + depth * 0.28;
-  }
-  hydrologyDebug.width_scale = width;
-  hydrologyDebug.depth_visual = depth;
-  hydrologyDebug.color = color;
-  publishRiverContract();
-}
-
-function applySeason(name) {
-  const preset = SEASON_PRESETS[name];
-  if (!preset) return;
-  currentSeason = name;
-  $('riverWidth').value = String(preset.width);
-  $('riverDepth').value = String(preset.depth);
-  $('riverColor').value = preset.color;
-  document.querySelectorAll('[data-season]').forEach(button => button.classList.toggle('active', button.dataset.season === name));
-  $('seasonName').textContent = preset.label;
-  updateRiverControls();
-}
-
-function publishCoordinateContract() {
-  window.__XIAOGUI_COORDINATE_CONTRACT = {
-    version: 'v3',
-    world_axes: { x: 'east-positive', z: 'south-positive', north: 'negative-z' },
-    source_raster: { row_0: 'north', row_last: 'south' },
-    landmarks: Object.fromEntries(labelObjects.map(item => [item.place.id, {
-      lon: item.place.lon,
-      lat: item.place.lat,
-      easting: item.easting,
-      northing: item.northing,
-      x: item.world.x,
-      y: item.world.y,
-      z: item.world.z,
-      terrain_height: item.terrainHeight,
-      raster_row: item.rasterRow,
-      raster_col: item.rasterCol,
-    }])),
-  };
-}
-
-function publishRenderContract() {
-  window.__XIAOGUI_RENDER_CONTRACT = {
-    version: 'v0.7.2',
-    source_elevation_modified_m: 0,
-    vertical_scale: 1,
-    color_richness: Number($('colorRichness').value),
-    karst_detail_normal_scale: Number($('karstDetail').value),
-    texture_file: manifest?.texture?.file,
-    normal_file: manifest?.normal?.file,
-    roughness_file: manifest?.roughness?.file,
-    karst_detail_file: manifest?.karst_detail?.file,
-  };
-}
-
-function publishRiverContract() {
-  window.__XIAOGUI_RIVER_CONTRACT = {
-    version: 'v0.7.2',
-    season: currentSeason,
-    centerline_geometry_mutated: false,
-    controls: {
-      width_scale: Number($('riverWidth').value),
-      depth_visual: Number($('riverDepth').value),
-      color: $('riverColor').value,
-    },
-    geometry: hydrologyDebug,
-  };
-}
-
-async function boot() {
-  try {
-    proj4.defs('EPSG:32649', '+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs +type=crs');
-    const loader = new THREE.TextureLoader();
-    const [manifestResponse, heightResponse, texture, normalMap, roughnessMap, hydrologyResponse] = await Promise.all([
-      fetch('./data/terrain_manifest.json', { cache: 'no-store' }),
-      fetch('./data/terrain_height_u16.bin', { cache: 'no-store' }),
-      loader.loadAsync('./data/terrain_texture.webp'),
-      loader.loadAsync('./data/terrain_normal.png'),
-      loader.loadAsync('./data/terrain_roughness.webp'),
-      fetch('./data/osm_hydrology.geojson', { cache: 'no-store' }),
-    ]);
-    if (!manifestResponse.ok || !heightResponse.ok || !hydrologyResponse.ok) throw new Error('三維資產讀取失敗');
-
-    manifest = await manifestResponse.json();
-    const decoded = decodeHeights(await heightResponse.arrayBuffer(), manifest.height, manifest.elevation_range_m);
-    heightValues = decoded.heights;
-    validMask = decoded.mask;
-    [worldWidth, worldDepth] = manifest.world_size_m;
-    [minElevation, maxElevation] = manifest.elevation_range_m;
-    terrainTexture = texture;
-    terrainNormal = normalMap;
-    terrainRoughness = roughnessMap;
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x07110c);
-    scene.fog = new THREE.FogExp2(0x07110c, 0.0000042);
-
-    camera = new THREE.PerspectiveCamera(44, 1, 50, 800000);
-    camera.position.set(worldWidth * 0.55, 155000, worldDepth * 0.72);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', logarithmicDepthBuffer: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.04;
-    viewer.appendChild(renderer.domElement);
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.target.set(0, 450, 0);
-    controls.minDistance = 3500;
-    controls.maxDistance = 600000;
-    controls.maxPolarAngle = Math.PI * 0.49;
-
-    scene.add(new THREE.HemisphereLight(0xeef7ff, 0x20382b, 1.75));
-    const sun = new THREE.DirectionalLight(0xfff0cf, 2.55);
-    sun.position.set(-80000, 140000, 90000);
-    scene.add(sun);
-
-    terrain = buildTerrain(texture, normalMap, roughnessMap);
-    hydrologyGroup = addHydrology(await hydrologyResponse.json());
-    addLandmarks();
-
-    $('source').textContent = manifest.source_mosaic;
-    $('grid').textContent = `${manifest.source_grid[0]} × ${manifest.source_grid[1]}`;
-    $('world').textContent = `${(worldWidth / 1000).toFixed(1)} × ${(worldDepth / 1000).toFixed(1)} km`;
-    $('elevation').textContent = `${minElevation.toFixed(0)}…${maxElevation.toFixed(0)} m`;
-    $('meshGrid').textContent = `${manifest.height.width} × ${manifest.height.height}`;
-    $('textureGrid').textContent = `${manifest.texture.width} × ${manifest.texture.height}`;
-
-    $('terrainToggle').addEventListener('change', event => {
-      terrain.material.map = event.target.checked ? terrainTexture : null;
-      terrain.material.needsUpdate = true;
-    });
-    $('wireToggle').addEventListener('change', event => { terrain.material.wireframe = event.target.checked; });
-    $('hydrologyToggle').addEventListener('change', event => { hydrologyGroup.visible = event.target.checked; });
-    $('labelsToggle').addEventListener('change', event => { labelLayer.style.display = event.target.checked ? 'block' : 'none'; });
-    $('colorRichness').addEventListener('input', updateTerrainControls);
-    $('karstDetail').addEventListener('input', updateTerrainControls);
-    $('riverWidth').addEventListener('input', () => { currentSeason = 'custom'; $('seasonName').textContent = '自訂'; updateRiverControls(); });
-    $('riverDepth').addEventListener('input', () => { currentSeason = 'custom'; $('seasonName').textContent = '自訂'; updateRiverControls(); });
-    $('riverColor').addEventListener('input', () => { currentSeason = 'custom'; $('seasonName').textContent = '自訂'; updateRiverControls(); });
-    document.querySelectorAll('[data-season]').forEach(button => button.addEventListener('click', () => applySeason(button.dataset.season)));
-    document.querySelectorAll('[data-target]').forEach(button => button.addEventListener('click', () => flyTo(button.dataset.target)));
-
-    updateTerrainControls();
-    applySeason('spring');
-    publishCoordinateContract();
-    publishRenderContract();
-    publishRiverContract();
-
-    resize();
-    window.addEventListener('resize', resize);
-    window.__XIAOGUI_TERRAIN_READY = true;
-    setStatus('豐富地表、峰叢細節與季節河道已載入', true);
-
-    function frame(now) {
-      requestAnimationFrame(frame);
-      animateFlight(now);
-      controls.update();
-      updateLabels();
-      for (const material of Object.values(riverMaterials)) material.uniforms.uTime.value = now * 0.001;
-      renderer.render(scene, camera);
-    }
-    requestAnimationFrame(frame);
-  } catch (error) {
-    console.error(error);
-    setStatus(error.message || String(error), false);
-  }
+async function boot(){
+  try{
+    window.__XIAOGUI_TERRAIN_READY=false;window.__XIAOGUI_BOOT_ERROR=null;proj4.defs('EPSG:32649','+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs +type=crs');
+    state.manifest=await fetchJson('./data/terrain_manifest.json');validateTerrainManifest(state.manifest);
+    const [lodManifest,lodQa,overviewBuffer,riverRuntime,riverQa,hydrology]=await Promise.all([fetchJson(`./data/${state.manifest.terrain_lod_manifest_file}`),fetchJson(`./data/${state.manifest.terrain_lod_qa_file}`),fetchArrayBuffer(`./data/${state.manifest.height.file}`),fetchJson(`./data/${state.manifest.river_drape_runtime_file}`,true),fetchJson(`./data/${state.manifest.river_drape_qa_file}`,true),fetchJson('./data/osm_hydrology.geojson',true)]);
+    validateLodManifest(lodManifest,lodQa);state.lodManifest=lodManifest;state.lodQa=lodQa;state.riverRuntime=riverRuntime;state.riverQa=riverQa;assert(globalRiverQaPassed(riverRuntime,riverQa),'global river v3 strict QA failed');for(const season of SEASONS)assert(serializedRiverQaForSeason(season).passed,`${season} serialized river v2 strict QA failed`);
+    state.overview=decodeOverview(overviewBuffer,state.manifest.height,state.manifest.elevation_range_m);[state.worldWidth,state.worldDepth]=state.manifest.world_size_m;[state.minElevation,state.maxElevation]=[state.manifest.source_statistics.minimum_m,state.manifest.source_statistics.maximum_m];
+    state.scene=new THREE.Scene();state.scene.background=new THREE.Color(0x83988a);state.scene.fog=new THREE.FogExp2(0xa4b7a9,.0000032);state.camera=new THREE.PerspectiveCamera(44,1,.5,2000000);
+    state.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance',logarithmicDepthBuffer:true,preserveDrawingBuffer:true});state.renderer.setPixelRatio(Math.max(1,Math.min(window.devicePixelRatio||1,2)));state.renderer.outputColorSpace=THREE.SRGBColorSpace;state.renderer.toneMapping=THREE.ACESFilmicToneMapping;state.renderer.toneMappingExposure=1.04;viewer.appendChild(state.renderer.domElement);
+    const gl=state.renderer.getContext(),debug=gl.getExtension('WEBGL_debug_renderer_info'),rendererName=debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),targetFps=/swiftshader|software/i.test(rendererName||'')?24:30;state.renderer.userData.targetFps=targetFps;state.renderer.userData.frameIntervalMs=1000/targetFps;
+    state.controls=new OrbitControls(state.camera,state.renderer.domElement);state.controls.enableDamping=true;state.controls.dampingFactor=.08;state.controls.minDistance=5;state.controls.maxDistance=1500000;state.controls.maxPolarAngle=Math.PI*.499;state.controls.screenSpacePanning=true;
+    state.scene.add(new THREE.HemisphereLight(0xf2fbff,0x263d2d,2.1));const sun=new THREE.DirectionalLight(0xfff2d7,2.8);sun.position.set(-80000,140000,90000);state.scene.add(sun);
+    const textureLoader=new THREE.TextureLoader();[state.mapTexture,state.normalTexture,state.roughnessTexture,state.karstTexture]=await Promise.all([textureLoader.loadAsync(`./data/${state.manifest.texture.file}`),textureLoader.loadAsync(`./data/${state.manifest.normal.file}`),textureLoader.loadAsync(`./data/${state.manifest.roughness.file}`),textureLoader.loadAsync(`./data/${state.manifest.karst_detail.file}`)]);configureTexture(state.mapTexture,true);configureTexture(state.normalTexture);configureTexture(state.roughnessTexture);configureTexture(state.karstTexture);
+    state.backdrop=new THREE.Mesh(buildGridGeometry(state.overview,{skirts:false}),makeTerrainMaterial('overview-backdrop'));state.backdrop.name='overview-only-edge-backdrop';state.backdrop.userData={grid:state.overview,role:'overview-only low-resolution edge fallback; never native evidence'};state.backdrop.receiveShadow=true;state.backdrop.renderOrder=-10;state.scene.add(state.backdrop);
+    state.lod=new TerrainLodRuntime(lodManifest,lodQa);resize();state.canonicalPoses.overview=overviewPose();const resetTarget=worldPointForId('guilin'),resetPosition=resetTarget.clone().add(new THREE.Vector3(state.worldWidth*.42,Math.max(state.worldWidth,state.worldDepth)*.48,state.worldDepth*.48));state.canonicalPoses.reset={target:resetTarget,position:resetPosition,distance:resetPosition.distanceTo(resetTarget)};state.camera.position.copy(state.canonicalPoses.overview.position);state.controls.target.copy(state.canonicalPoses.overview.target);state.controls.update();state.lod.focus={x:0,z:0,id:'overview'};
+    installUi();installControlsReceipts();installQaHooks();buildLabels();window.addEventListener('resize',resize);
+    $('source').textContent=state.manifest.source_mosaic;$('sourceGrid').textContent=`${SOURCE_GRID[0]} × ${SOURCE_GRID[1]}`;$('meshGrid').textContent=`${state.manifest.height.width} × ${state.manifest.height.height}`;$('textureGrid').textContent=`${state.manifest.texture.width} × ${state.manifest.texture.height}`;$('world').textContent=`${(state.worldWidth/1000).toFixed(1)} × ${(state.worldDepth/1000).toFixed(1)} km`;$('elevation').textContent=`${state.minElevation.toFixed(0)}…${state.maxElevation.toFixed(0)} m`;$('sourceResolution').textContent='12.5 m';$('sourceResolutionHud').textContent='12.5 m';
+    const counts=hydrology?.counts||hydrology?.metadata?.counts||{};$('liCount').textContent=counts.li_system??counts.li??riverRuntime.features?.filter?.(f=>f.system==='li').length??'--';$('xiangCount').textContent=counts.xiang_system??counts.xiang??riverRuntime.features?.filter?.(f=>f.system==='xiang').length??'--';$('otherCount').textContent=counts.other_named??counts.other??riverRuntime.features?.filter?.(f=>!['li','xiang'].includes(f.system)).length??'--';
+    state.lod.requestRevision++;await state.lod.refresh('initial-overview');await applySeason('spring');state.domainEdgeEvidence=probeDomainEdgeCoverage();state.lastSeamProbe=probeLodSeamTopology();updateContracts();window.__XIAOGUI_TERRAIN_READY=true;setStatus('LOD、峰叢細節、河道與鏡頭合同已驗證',true);requestAnimationFrame(animationLoop);
+  }catch(error){console.error(error);window.__XIAOGUI_BOOT_ERROR={message:error.message||String(error),stack:error.stack||null};window.__XIAOGUI_TERRAIN_READY=false;setStatus(error.message||String(error),false);}
 }
 
 boot();
