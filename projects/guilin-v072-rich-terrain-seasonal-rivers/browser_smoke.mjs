@@ -390,8 +390,8 @@ function validateSerializedRiverSeason(finalQa, season, preset) {
   check(dp.raw_desired_boundary_outside_display_3cm_buffer_length_m <= 1e-6 && dp.display_boundary_outside_raw_desired_3cm_buffer_length_m <= 1e-6, `${dpp}.continuous buffers`);
   check(dp.symmetric_difference_area_m2 <= dp.area_tolerance_m2, `${dpp}.symmetric difference tolerance`);
   check(dp.desired_component_count_preserved === true && dp.significant_interior_rings_preserved === true, `${dpp}.component/ring preservation`);
+  check(!Object.hasOwn(dp, 'raw_owned_union') && !Object.hasOwn(dp.checks, 'raw_owned_exactly_covers_raw_desired'), `${dpp}.no redundant raw ownership claim`);
   validateUnion(dp.raw_desired_union, `${dpp}.raw_desired_union`);
-  validateUnion(dp.raw_owned_union, `${dpp}.raw_owned_union`);
   validateUnion(dp.display_owned_union, `${dpp}.display_owned_union`);
   const partition = dp.display_ranked_partition;
   check(partition.planar_atomic_face_assignment_complete === true, `${dpp}.partition complete`);

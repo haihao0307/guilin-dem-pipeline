@@ -38,7 +38,7 @@ const SERIALIZED_CHECKS = [
   'shared_endpoints_covered_after_serialization','terrain_expected_components_preserved_after_serialization','terrain_expected_serialized_area_agree',
   'terrain_expected_significant_interior_rings_preserved_after_serialization','visual_depth_does_not_modify_or_conflict_with_geometry',
 ];
-const DISPLAY_CHECKS = ['boundary_hausdorff_within_3cm','components_preserved','display_boundary_continuously_inside_raw_3cm_buffer','display_partition_passed','raw_boundary_continuously_inside_display_3cm_buffer','raw_owned_exactly_covers_raw_desired','significant_interior_rings_preserved','symmetric_difference_within_boundary_corridor'];
+const DISPLAY_CHECKS = ['boundary_hausdorff_within_3cm','components_preserved','display_boundary_continuously_inside_raw_3cm_buffer','display_partition_passed','raw_boundary_continuously_inside_display_3cm_buffer','significant_interior_rings_preserved','symmetric_difference_within_boundary_corridor'];
 const PARTITION_CHECKS = ['all_partition_geometries_valid','atomic_face_assignment_complete','interior_rings_preserved','join_gap_within_numerical_tolerance','no_desired_unowned_area','no_new_global_interior_rings','no_owned_outside_desired','no_owned_positive_overlap','no_residual_positive_overlap','shared_endpoints_covered'];
 const GROUND_CHECKS = ['all_face_probes_sample_valid_native_terrain','all_indexed_vertices_sample_valid_native_terrain','face_probe_maximum_error_within_1cm','face_probe_p95_error_within_1mm','indexed_vertex_maximum_error_within_1cm','indexed_vertex_p95_error_within_1mm','maximum_clearance_not_over_2m','no_terrain_penetration'];
 const RUN_TOPOLOGY_CHECKS = ['coverage_invalid_edges_zero','coverage_valid_exact','decoded_geometry_valid','non_adjacent_edge_crossings_zero','nonmanifold_geometric_edges_zero','positive_self_overlap_within_tolerance','positive_triangle_count'];
@@ -137,7 +137,7 @@ function strictDisplayPrecisionPassed(p){
     p.boundary_tolerance_m<=.03&&p.raw_desired_to_display_boundary_hausdorff_m<=.03&&
     p.raw_desired_boundary_outside_display_3cm_buffer_length_m<=1e-6&&p.display_boundary_outside_raw_desired_3cm_buffer_length_m<=1e-6&&
     p.symmetric_difference_area_m2<=p.area_tolerance_m2&&p.desired_component_count_preserved===true&&p.significant_interior_rings_preserved===true&&
-    validUnion(p.raw_desired_union)&&validUnion(p.raw_owned_union)&&validUnion(p.display_owned_union)&&r?.passed===true&&exactTrueChecks(r.checks,PARTITION_CHECKS)&&
+    validUnion(p.raw_desired_union)&&validUnion(p.display_owned_union)&&r?.passed===true&&exactTrueChecks(r.checks,PARTITION_CHECKS)&&
     approximately(r.precision_grid_m,.015625,0)&&r.planar_atomic_face_assignment_complete===true&&r.planar_covered_face_count===r.planar_assigned_face_count&&
     r.invalid_or_self_intersecting_partition_count===0&&r.uncovered_shared_endpoint_count===0&&r.desired_union_interior_ring_count===r.owned_union_interior_ring_count&&
     r.maximum_join_gap_m<=1e-6&&r.new_global_interior_ring_count===0&&['desired_unowned_area_m2','residual_positive_overlap_area_m2','owned_positive_overlap_area_m2','owned_outside_desired_area_m2','junction_uncovered_area_m2'].every(k=>r[k]<=r.numerical_area_tolerance_m2);
