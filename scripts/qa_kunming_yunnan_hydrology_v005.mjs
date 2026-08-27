@@ -129,7 +129,7 @@ async function audit(name, viewport, screenshotName) {
   await delay(600);
 
   const afterPan = await page.evaluate(() => document.getElementById('terrain').toDataURL('image/png'));
-  if (digest(afterOrbit.canvas) === digest(afterPan)) throw new Error(`${name} pan/zoom did not change canvas );
+  if (digest(afterOrbit.canvas) === digest(afterPan)) throw new Error(`${name} pan/zoom did not change canvas`);
 
   const screenshotPath = path.join(outputDir, screenshotName);
   await page.screenshot({ path: screenshotPath, fullPage: false });
