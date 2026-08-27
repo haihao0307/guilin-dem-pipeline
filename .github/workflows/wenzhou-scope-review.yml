@@ -1,0 +1,211 @@
+name: Wenzhou uncropped source coverage scope review
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v110-3d-satellite-osm-water
+    paths:
+      - .github/workflows/wenzhou-scope-review.yml
+      - web/wenzhou-scope-review/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-scope-review
+  cancel-in-progress: false
+
+jobs:
+  qa-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout latest Wenzhou Draft branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v110-3d-satellite-osm-water
+          fetch-depth: 0
+          lfs: false
+
+      - name: Static scope checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f web/wenzhou-scope-review/index.html
+          test -f projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json
+          python3 -m json.tool projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json >/dev/null
+          grep -q '原始未裁切源覆盖与范围复核' web/wenzhou-scope-review/index.html
+          grep -q 'AP_12115_FBD_F0550_RT1' web/wenzhou-scope-review/index.html
+          grep -q '文成县玉壶镇' web/wenzhou-scope-review/index.html
+          grep -q '永嘉自然岛' web/wenzhou-scope-review/index.html
+          grep -q '208500' web/wenzhou-scope-review/index.html
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local review server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 18993 --bind 127.0.0.1 >/tmp/wenzhou-scope-http.log 2>&1 &
+          echo $! >/tmp/wenzhou-scope-http.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18993/web/wenzhou-scope-review/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          cat /tmp/wenzhou-scope-http.log
+          exit 1
+
+      - name: Run desktop and mobile scope browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf projects/wenzhou/evidence/scope-review
+          mkdir -p projects/wenzhou/evidence/scope-review
+          cat > /tmp/wenzhou_scope_qa.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import crypto from 'node:crypto';
+
+          const root = process.cwd();
+          const evidence = path.join(root, 'projects/wenzhou/evidence/scope-review');
+          const url = 'http://127.0.0.1:18993/web/wenzhou-scope-review/';
+          const browser = await chromium.launch({headless:true,args:['--disable-dev-shm-usage']});
+          const results = [];
+          async function run(name, viewport, mobile) {
+            const context = await browser.newContext({viewport, deviceScaleFactor:1, isMobile:mobile, hasTouch:mobile});
+            const page = await context.newPage();
+            const consoleErrors = [];
+            const pageErrors = [];
+            page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+            page.on('pageerror', error => pageErrors.push(String(error.stack || error.message || error)));
+            await page.goto(url + '?qa=' + Date.now(), {waitUntil:'domcontentloaded', timeout:120000});
+            await page.waitForFunction(() => typeof window.L === 'object' && document.querySelectorAll('.leaflet-overlay-pane path').length >= 14, null, {timeout:120000});
+            await page.waitForTimeout(2500);
+            const initial = path.join(evidence, `${name}-raw-coverage.png`);
+            await page.screenshot({path:initial, fullPage:false});
+            await page.locator('#goYuhu').click();
+            await page.waitForTimeout(900);
+            const yuhu = path.join(evidence, `${name}-yuhu.png`);
+            await page.screenshot({path:yuhu, fullPage:false});
+            await page.locator('#goNature').click();
+            await page.waitForTimeout(900);
+            const nature = path.join(evidence, `${name}-natural-island.png`);
+            await page.screenshot({path:nature, fullPage:false});
+            const text = await page.locator('.panel').innerText();
+            const overlayPathCount = await page.locator('.leaflet-overlay-pane path').count();
+            const passed = text.includes('玉壶镇当前没有进入')
+              && text.includes('自然岛所在区域在当前 COG 内')
+              && overlayPathCount >= 14
+              && consoleErrors.length === 0
+              && pageErrors.length === 0;
+            const files = [initial,yuhu,nature].map(file => ({
+              path:path.relative(root,file).replaceAll('\\','/'),
+              bytes:fs.statSync(file).size,
+              sha256:crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+            }));
+            results.push({name,viewport,mobile,passed,overlayPathCount,consoleErrors,pageErrors,files});
+            await context.close();
+          }
+          await run('desktop-1600x1000', {width:1600,height:1000}, false);
+          await run('mobile-390x844', {width:390,height:844}, true);
+          await browser.close();
+          const report = {
+            schema:'wenzhou_scope_review_browser_qa@0.1.0',
+            generatedAtUtc:new Date().toISOString(),
+            url,
+            passed:results.every(item => item.passed),
+            checks:{rawSourceFootprints:11,currentAoi:true,proposedAoi:true,yuhuMarker:true,naturalIslandReferenceMarker:true},
+            results
+          };
+          fs.writeFileSync(path.join(root,'projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_BROWSER_QA.json'), JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report,null,2));
+          if (!report.passed) process.exitCode = 1;
+          JS
+          node /tmp/wenzhou_scope_qa.mjs | tee /tmp/wenzhou-scope-browser.log
+
+      - name: Commit scope review browser evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- projects/wenzhou/evidence/scope-review projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_BROWSER_QA.json
+          git commit -m 'Add verified Wenzhou uncropped scope review evidence [skip scope review]'
+          git push origin HEAD:project/wenzhou-v110-3d-satellite-osm-water
+
+      - name: Publish scope review to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-scope-gh-pages
+          git fetch origin gh-pages
+          git worktree add -B gh-pages /tmp/wenzhou-scope-gh-pages origin/gh-pages
+          rm -rf /tmp/wenzhou-scope-gh-pages/wenzhou-scope-review
+          cp -a web/wenzhou-scope-review /tmp/wenzhou-scope-gh-pages/wenzhou-scope-review
+          cp projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json /tmp/wenzhou-scope-gh-pages/wenzhou-scope-review/SCOPE_REVIEW.json
+          touch /tmp/wenzhou-scope-gh-pages/.nojekyll
+          cd /tmp/wenzhou-scope-gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .nojekyll wenzhou-scope-review
+          git commit -m 'Publish Wenzhou uncropped source coverage scope review'
+          git push origin HEAD:gh-pages
+
+      - name: Verify public scope page
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-scope-review/'
+          success=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error --location "$URL" -o /tmp/wenzhou-scope-online.html; then
+              if grep -q '原始未裁切源覆盖与范围复核' /tmp/wenzhou-scope-online.html; then
+                success=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+          test "$success" = '1'
+          curl --fail --silent --show-error --location "${URL}SCOPE_REVIEW.json" -o /tmp/wenzhou-scope-online.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/wenzhou-scope-online.json').read_text(encoding='utf-8'))
+          assert data['uncroppedSourceCoverage']['selectedProductCount'] == 11
+          assert data['anchors']['yuhuTown']['insideCurrentTruthCog'] is False
+          assert data['anchors']['naturalIsland']['insideCurrentTruthCog'] is True
+          assert data['proposedExpandedAoi']['includesYuhuTown'] is True
+          print(json.dumps({'onlineVerified':True,'url':'https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-scope-review/','selectedProducts':11},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload scope review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-scope-review
+          path: |
+            projects/wenzhou/evidence/scope-review/**
+            projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_V001.json
+            projects/wenzhou/reports/WENZHOU_SCOPE_REVIEW_BROWSER_QA.json
+            /tmp/wenzhou-scope-browser.log
+            /tmp/wenzhou-scope-http.log
+            /tmp/wenzhou-scope-online.html
+            /tmp/wenzhou-scope-online.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 90
