@@ -208,14 +208,20 @@ def main() -> int:
     qa_target = root / "scripts/qa_kunming_yunnan_hydrology_v004.mjs"
     if not qa_override.exists():
         raise SystemExit(f"browser QA override missing: {qa_override}")
-    qa_target.write_text(qa_override.read_text(encoding="utf-8"), encoding="utf-8")
+    qa_text = qa_override.read_text(encoding="utf-8")
+    if "const desktopMouseAudit = name === 'desktop';" not in qa_text:
+        raise SystemExit("V004 QA is missing desktop mouse scoping")
+    if "aggregate.desktop.buttonlessCameraVerified === true" not in qa_text:
+        raise SystemExit("V004 QA does not require desktop buttonless camera evidence")
+    qa_target.write_text(qa_text, encoding="utf-8")
 
     print(
         f"materialized {len(infos)} reviewed Kunming V004 source files, "
         f"renamed {reserved_flat_count} reserved GLSL identifier occurrence(s), "
         "installed 128x176 automated-QA and 256x352 public meshes, "
         "installed explicit loading/ready/fallback viewer states, "
-        "enabled mouse movement orbit without a pressed button, "
+        "enabled desktop mouse movement orbit without a pressed button, "
+        "scoped buttonless QA to desktop mouse input while retaining mobile drag checks, "
         "suppressed the implicit favicon request, "
         "and installed current browser QA"
     )
