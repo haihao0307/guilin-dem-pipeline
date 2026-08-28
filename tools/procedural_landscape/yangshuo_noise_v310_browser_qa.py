@@ -79,7 +79,16 @@ def wait_ready(page: Page, preset: str, timeout: int = 240_000) -> dict[str, Any
         f"window.__terrainQA?.ready === true && window.__terrainQA?.preset === '{preset}'",
         timeout=timeout,
     )
-    page.wait_for_timeout(1200)
+    page.wait_for_function(
+        """() => {
+          const loading = document.querySelector('#loading');
+          if (!loading) return true;
+          const style = getComputedStyle(loading);
+          return loading.hidden || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) <= .05;
+        }""",
+        timeout=30_000,
+    )
+    page.wait_for_timeout(350)
     return snapshot(page)
 
 
@@ -181,7 +190,7 @@ def run(args: argparse.Namespace) -> int:
     hard_console_errors = [entry for entry in console if entry["type"] == "error"]
     passed = failure is None and not page_errors and not hard_console_errors and not request_failures
     report = {
-        "schema": "yangshuo-noise-terrain-browser-qa/v3.1.1",
+        "schema": "yangshuo-noise-terrain-browser-qa/v3.1.2",
         "url": args.url,
         "elapsedSeconds": round(time.time() - started, 3),
         "states": states,
