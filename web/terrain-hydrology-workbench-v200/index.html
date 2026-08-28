@@ -4,16 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08100d">
-  <title>三地区高精度真实地貌与水系工作台 v2.2</title>
+  <title>三地区高精度真实地貌与水系工作台 v2.1 / v2.2 蒸馏示范</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=220">
+  <link rel="stylesheet" href="./style.css?v=210">
+  <link rel="stylesheet" href="./reference-demo.css?v=220">
 </head>
 <body>
   <header class="topbar">
     <div class="title-block">
       <p class="eyebrow">REAL DEM · TERRAIN · TERRACE · HYDROLOGY</p>
       <h1>三地区高精度真实地貌与水系工作台</h1>
-      <p class="lead">桂林、温州、昆明各显示一块真实 10 km × 10 km 地形片区。工作台布局保持不变，只观察高程、山脊、坡面、台地、沟谷、河道和水面边界。桂林卡片新增 1 km² 参考图蒸馏示范区，真实高程保持只读，候选微地形可随时关闭和回退。</p>
+      <p class="lead">桂林、温州、昆明各显示一块真实 10 km × 10 km 地形片区。工作台布局和三地区操作保持不变，只观察高程、山脊、坡面、台地、沟谷、河道和水面边界。桂林卡片新增 1 km² 参考图蒸馏示范区，真实高程保持只读，候选微地形可以随时关闭和回退。</p>
     </div>
     <div class="status-box" aria-live="polite">
       <span class="status-dot"></span>
@@ -121,30 +122,56 @@
         <button type="button" data-focus-mode="terrace">台地诊断</button>
         <button type="button" data-focus-mode="hydrology">水系诊断</button>
         <button type="button" data-focus-mode="slope">坡面分析</button>
-        <button type="button" data-focus-mode="reference" id="focusReferenceMode" class="reference-button" hidden>蒸馏示范</button>
         <button type="button" data-focus-view="overview">全景</button>
         <button type="button" data-focus-view="near">近景</button>
         <button type="button" data-focus-view="ground">贴地</button>
       </div>
-      <section id="focusReferencePanel" class="reference-panel" hidden>
+      <p class="focus-help">左键或单指旋转，右键或按住 Shift 拖动平移，滚轮或双指连续缩放。数字键 1、2、3 切换全景、近景、贴地。左下角同时显示视觉三角间距与真实高程采样间距。</p>
+    </div>
+  </dialog>
+
+  <dialog id="referenceDialog" class="reference-dialog">
+    <div class="focus-layout">
+      <header class="focus-header reference-header">
+        <div>
+          <p class="eyebrow">REFERENCE-DISTILLED GUILIN CALIBRATION TILE</p>
+          <h2 data-demo-title>桂林阳朔喀斯特蒸馏示范区</h2>
+          <p>同一块真实 1 km² 地形中对照真实基底 A 与参考图约束候选 B。主峰、谷底、水系和真实高程保持锁定。</p>
+        </div>
+        <button id="closeReferenceDemo" type="button" aria-label="关闭蒸馏示范区">关闭</button>
+      </header>
+      <div class="focus-viewer reference-viewer">
+        <canvas id="referenceCanvas" aria-label="桂林参考图蒸馏地形示范"></canvas>
+        <div class="viewer-overlay top-left" id="referenceReadout"></div>
+        <div class="viewer-overlay bottom-left" id="referenceMetrics"></div>
+      </div>
+      <div class="focus-controls reference-controls">
+        <button type="button" data-demo-mode="truth">真实基底 A</button>
+        <button type="button" data-demo-mode="candidate" class="active reference-button">蒸馏候选 B</button>
+        <button type="button" data-demo-view="overview">全景</button>
+        <button type="button" data-demo-view="near">近景</button>
+        <button type="button" data-demo-view="ground">贴地</button>
+      </div>
+      <section class="reference-panel">
         <div class="reference-panel-heading">
           <div>
-            <p class="eyebrow">REFERENCE-DISTILLED CANDIDATE</p>
-            <h3 data-reference-title>桂林阳朔喀斯特蒸馏示范区</h3>
+            <p class="eyebrow">DISTILLED KNOWLEDGE APPLIED</p>
+            <h3>18 张桂林与阳朔参考照片形成的地貌语法</h3>
           </div>
           <span class="reference-status">真值只读 · 候选可回退</span>
         </div>
         <div class="reference-facts">
-          <span data-reference-window></span>
-          <span data-reference-precision></span>
+          <span data-demo-window></span>
+          <span data-demo-precision></span>
         </div>
-        <ul data-reference-rules class="reference-rule-list"></ul>
-        <p data-reference-boundary class="reference-boundary"></p>
+        <ul data-demo-rules class="reference-rule-list"></ul>
+        <p class="reference-boundary">B 层只增加可逆的崖壁、峰脚、岩石、滩地和地表响应候选，幅度受限。照片只约束形态语法，无法替代真实 DEM、批准河道、绝对高程或水位。</p>
       </section>
-      <p class="focus-help">左键或单指旋转，右键或按住 Shift 拖动平移，滚轮或双指连续缩放。数字键 1、2、3 切换全景、近景、贴地，桂林示范区可用数字键 4 返回蒸馏候选。左下角同时显示视觉三角间距与真实高程采样间距。</p>
+      <p class="focus-help">左键或单指旋转，右键或按住 Shift 拖动平移，滚轮或双指缩放。数字键 1、2、3 切换全景、近景、贴地。按 A 查看真实基底，按 B 查看蒸馏候选。</p>
     </div>
   </dialog>
 
-  <script type="module" src="./app.js?v=220"></script>
+  <script type="module" src="./app.js?v=210"></script>
+  <script type="module" src="./reference-demo.js?v=220"></script>
 </body>
 </html>

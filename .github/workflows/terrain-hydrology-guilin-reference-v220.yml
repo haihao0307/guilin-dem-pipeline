@@ -1,0 +1,301 @@
+name: Verify Guilin distilled reference demo v2.2
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/terrain-hydrology-guilin-reference-v220.yml
+      - web/terrain-hydrology-workbench-v200/index.html
+      - web/terrain-hydrology-workbench-v200/reference-demo.js
+      - web/terrain-hydrology-workbench-v200/reference-demo.css
+      - web/terrain-hydrology-workbench-v200/guilin-reference-demo.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terrain-hydrology-guilin-reference-v220
+  cancel-in-progress: false
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/
+
+jobs:
+  public-browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
+
+    steps:
+      - name: Checkout workbench branch
+        uses: actions/checkout@v4
+        with:
+          ref: skill/dem-procedural-landscape-v010
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install browser QA dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for v2.2 public payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-v220"
+          ready=false
+          for attempt in $(seq 1 90); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v220/index.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}reference-demo.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v220/reference-demo.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}reference-demo.css?verify=${nonce}" -o "$RUNNER_TEMP/public-v220/reference-demo.css" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}guilin-reference-demo.json?verify=${nonce}" -o "$RUNNER_TEMP/public-v220/guilin-reference-demo.json"; then
+              if grep -Fq 'v2.2 蒸馏示范' "$RUNNER_TEMP/public-v220/index.html" \
+                && grep -Fq 'REFERENCE-DISTILLED GUILIN CALIBRATION TILE' "$RUNNER_TEMP/public-v220/index.html" \
+                && grep -Fq '__GUILIN_REFERENCE_DEMO_V220__' "$RUNNER_TEMP/public-v220/reference-demo.js" \
+                && grep -Fq 'guilin-yangshuo-karst-reference-v001' "$RUNNER_TEMP/public-v220/guilin-reference-demo.json"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$ready" = true
+
+      - name: Run desktop and mobile public Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/guilin-reference-v220-qa"
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import time
+          from pathlib import Path
+
+          from PIL import Image, ImageChops, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          PUBLIC_URL = os.environ['PUBLIC_URL']
+          OUTPUT = Path(os.environ['RUNNER_TEMP']) / 'guilin-reference-v220-qa'
+          OUTPUT.mkdir(parents=True, exist_ok=True)
+
+          def image_signal(path: Path) -> float:
+              with Image.open(path) as image:
+                  stat = ImageStat.Stat(image.convert('RGB').resize((160, 100)))
+                  return float(sum(stat.stddev) / len(stat.stddev))
+
+          def image_difference(left: Path, right: Path) -> float:
+              with Image.open(left) as a, Image.open(right) as b:
+                  aa = a.convert('RGB').resize((256, 256))
+                  bb = b.convert('RGB').resize((256, 256))
+                  stat = ImageStat.Stat(ImageChops.difference(aa, bb))
+                  return float(sum(stat.mean) / len(stat.mean))
+
+          report = {
+              'schema': 'guilin-reference-demo-public-qa@2.2.0',
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branchHead': os.environ['GITHUB_SHA'],
+              'workflowRunId': int(os.environ['GITHUB_RUN_ID']),
+              'publicUrl': PUBLIC_URL,
+              'runs': [],
+          }
+
+          with sync_playwright() as playwright:
+              browser = playwright.chromium.launch(
+                  headless=True,
+                  args=[
+                      '--use-angle=swiftshader',
+                      '--enable-webgl',
+                      '--ignore-gpu-blocklist',
+                      '--disable-dev-shm-usage',
+                  ],
+              )
+              for name, width, height, expected_mesh in (
+                  ('desktop-1440x1000', 1440, 1000, 1025),
+                  ('mobile-390x844', 390, 844, 513),
+              ):
+                  context = browser.new_context(
+                      viewport={'width': width, 'height': height},
+                      device_scale_factor=1,
+                      locale='zh-CN',
+                  )
+                  page = context.new_page()
+                  console_errors: list[str] = []
+                  page_errors: list[str] = []
+                  failed_requests: list[str] = []
+                  http_errors: list[str] = []
+                  page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
+                  page.on('pageerror', lambda error: page_errors.append(str(error)))
+                  page.on('requestfailed', lambda request: failed_requests.append(f'{request.method} {request.url}: {request.failure}'))
+                  page.on('response', lambda response: http_errors.append(f'{response.status} {response.url}') if response.status >= 400 else None)
+
+                  qa_url = f"{PUBLIC_URL}?guilin-reference-qa={name}-{int(time.time() * 1000)}"
+                  response = page.goto(qa_url, wait_until='networkidle', timeout=150_000)
+                  page.wait_for_function("document.documentElement.dataset.workbenchReady === 'true'", timeout=90_000)
+                  page.wait_for_function("document.documentElement.dataset.guilinReferenceButton === 'ready'", timeout=45_000)
+                  page.wait_for_timeout(600)
+
+                  if response is None or response.status != 200:
+                      raise AssertionError(f'{name}: entry HTTP status is {response.status if response else None}')
+                  if page.locator('.region-card').count() != 3:
+                      raise AssertionError(f'{name}: three-region workbench changed')
+                  button = page.locator('#guilin [data-reference-demo]')
+                  if not button.is_visible():
+                      raise AssertionError(f'{name}: Guilin distilled demo button is not visible')
+
+                  overview_path = OUTPUT / f'{name}-workbench.png'
+                  page.screenshot(path=str(overview_path), full_page=False)
+                  button.scroll_into_view_if_needed()
+                  button.click()
+                  page.wait_for_function("document.documentElement.dataset.guilinReferenceDemo === 'ready'", timeout=180_000)
+                  page.wait_for_timeout(900)
+
+                  state = page.evaluate(
+                      """
+                      () => {
+                        const state = window.__GUILIN_REFERENCE_DEMO_V220__;
+                        return {
+                          loaded: state?.loaded,
+                          mode: state?.mode,
+                          failures: state?.failures,
+                          heightSamples: state?.height?.length || 0,
+                          maskSamples: state?.mask?.length || 0,
+                          meshCols: state?.meshCols || 0,
+                          meshRows: state?.meshRows || 0,
+                          camera: state?.renderer?.camera || null,
+                          dialogOpen: document.getElementById('referenceDialog')?.open || false,
+                          ruleCount: document.querySelectorAll('[data-demo-rules] li').length,
+                          readout: document.getElementById('referenceReadout')?.textContent || '',
+                          metrics: document.getElementById('referenceMetrics')?.textContent || '',
+                          title: document.title,
+                        };
+                      }
+                      """
+                  )
+                  if not state['loaded'] or state['failures']:
+                      raise AssertionError(f'{name}: demo did not load cleanly: {state}')
+                  if not state['dialogOpen'] or state['mode'] != 'candidate':
+                      raise AssertionError(f'{name}: candidate dialog state is wrong: {state}')
+                  if state['heightSamples'] != 640_000 or state['maskSamples'] != 640_000:
+                      raise AssertionError(f'{name}: source sample count mismatch: {state}')
+                  if state['meshCols'] != expected_mesh or state['meshRows'] != expected_mesh:
+                      raise AssertionError(f'{name}: expected {expected_mesh} mesh, got {state}')
+                  if state['ruleCount'] != 6:
+                      raise AssertionError(f'{name}: distilled rule count mismatch: {state}')
+                  if 'z_truth_m 未改写' not in state['readout'] or '真值 12.5 m' not in state['metrics']:
+                      raise AssertionError(f'{name}: truth boundary labels missing: {state}')
+
+                  candidate_canvas = OUTPUT / f'{name}-candidate-canvas.png'
+                  page.locator('#referenceCanvas').screenshot(path=str(candidate_canvas))
+                  candidate_page = OUTPUT / f'{name}-candidate.png'
+                  page.screenshot(path=str(candidate_page), full_page=False)
+                  candidate_signal = image_signal(candidate_canvas)
+                  if candidate_signal < 4.0:
+                      raise AssertionError(f'{name}: candidate canvas is visually blank: {candidate_signal}')
+
+                  page.locator('[data-demo-mode="truth"]').click()
+                  page.wait_for_timeout(550)
+                  truth_mode = page.evaluate("window.__GUILIN_REFERENCE_DEMO_V220__.mode")
+                  if truth_mode != 'truth':
+                      raise AssertionError(f'{name}: A layer did not activate')
+                  truth_canvas = OUTPUT / f'{name}-truth-canvas.png'
+                  page.locator('#referenceCanvas').screenshot(path=str(truth_canvas))
+                  truth_page = OUTPUT / f'{name}-truth.png'
+                  page.screenshot(path=str(truth_page), full_page=False)
+                  truth_signal = image_signal(truth_canvas)
+                  difference = image_difference(candidate_canvas, truth_canvas)
+                  if truth_signal < 4.0:
+                      raise AssertionError(f'{name}: truth canvas is visually blank: {truth_signal}')
+                  if difference < 0.75:
+                      raise AssertionError(f'{name}: A/B visual difference is too small: {difference}')
+
+                  page.locator('[data-demo-mode="candidate"]').click()
+                  page.locator('[data-demo-view="near"]').click()
+                  page.wait_for_timeout(250)
+                  distance_before = page.evaluate("window.__GUILIN_REFERENCE_DEMO_V220__.renderer.camera.distance")
+                  page.locator('#referenceCanvas').hover()
+                  page.mouse.wheel(0, -700)
+                  page.wait_for_timeout(250)
+                  distance_after = page.evaluate("window.__GUILIN_REFERENCE_DEMO_V220__.renderer.camera.distance")
+                  if not distance_after < distance_before:
+                      raise AssertionError(f'{name}: continuous zoom failed: {distance_before} -> {distance_after}')
+
+                  run = {
+                      'name': name,
+                      'viewport': f'{width}x{height}',
+                      'entryHttpStatus': response.status,
+                      'state': state,
+                      'candidateSignal': candidate_signal,
+                      'truthSignal': truth_signal,
+                      'abMeanDifference': difference,
+                      'zoom': {'before': distance_before, 'after': distance_after},
+                      'screenshots': {
+                          'workbench': overview_path.name,
+                          'candidate': candidate_page.name,
+                          'truth': truth_page.name,
+                          'candidateCanvas': candidate_canvas.name,
+                          'truthCanvas': truth_canvas.name,
+                      },
+                      'consoleErrors': console_errors,
+                      'pageErrors': page_errors,
+                      'failedRequests': failed_requests,
+                      'httpErrors': http_errors,
+                  }
+                  if console_errors or page_errors or failed_requests or http_errors:
+                      raise AssertionError(f'{name}: browser errors: {run}')
+                  report['runs'].append(run)
+                  context.close()
+              browser.close()
+
+          report['passed'] = True
+          report['truthBoundary'] = {
+              'truthOverwrite': False,
+              'sourceResampling': False,
+              'microDeltaDefaultMeters': 0,
+              'candidateVisualMaxMeters': 1.2,
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          (OUTPUT / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload Guilin distilled demo QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-reference-demo-v220-public-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/guilin-reference-v220-qa/**
+            ${{ runner.temp }}/public-v220/**
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Write direct online entry to summary
+        if: success()
+        run: |
+          {
+            echo '## 桂林阳朔参考图蒸馏示范区 v2.2'
+            echo
+            echo "$PUBLIC_URL"
+            echo
+            echo '在桂林卡片点击“蒸馏示范区”，可以在同一工作台内查看真实基底 A 与蒸馏候选 B。'
+          } >> "$GITHUB_STEP_SUMMARY"
