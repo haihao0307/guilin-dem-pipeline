@@ -1,0 +1,272 @@
+name: Publish Yangshuo Lijiang 2048 native assets v3.0
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/publish-yangshuo-lijiang-2048-assets-v300.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-yangshuo-lijiang-2048-assets-v300
+  cancel-in-progress: false
+
+env:
+  RELEASE_URL: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+  EXPECTED_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  PUBLISH_DIR: yangshuo-lijiang-2048-v300/data
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install raster compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check numpy pillow rasterio
+
+      - name: Download and verify locked 12.5 metre Release mosaic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/yangshuo-v300"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output "$RUNNER_TEMP/yangshuo-v300/guilin_raw_union_12_5m.tif" \
+            "$RELEASE_URL"
+          actual="$(sha256sum "$RUNNER_TEMP/yangshuo-v300/guilin_raw_union_12_5m.tif" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_SHA256"
+          test "$(stat -c '%s' "$RUNNER_TEMP/yangshuo-v300/guilin_raw_union_12_5m.tif")" = "124348471"
+
+      - name: Compile four exact 2048 native-pixel web assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/yangshuo-v300/compile.py" <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          import numpy as np
+          import rasterio
+          from PIL import Image
+          from rasterio.windows import Window
+
+          source = Path(os.environ['RUNNER_TEMP']) / 'yangshuo-v300' / 'guilin_raw_union_12_5m.tif'
+          out = Path(os.environ['RUNNER_TEMP']) / 'yangshuo-v300' / 'site-data'
+          out.mkdir(parents=True, exist_ok=True)
+
+          expected_sha = os.environ['EXPECTED_SHA256']
+          candidates = {
+              'D': {
+                  'name': '相公山至兴坪第一湾',
+                  'role': '首选视觉',
+                  'window': [6996, 13629, 2048, 2048],
+                  'bounds': [437312.5, 2742887.5, 462912.5, 2768487.5],
+                  'centerWgs84': [110.505964, 24.915551],
+              },
+              'A': {
+                  'name': '阳朔县城北侧漓江峰丛谷地',
+                  'role': '工程校准',
+                  'window': [6983, 14506, 2048, 2048],
+                  'bounds': [437150.0, 2731925.0, 462750.0, 2757525.0],
+                  'centerWgs84': [110.504749, 24.816544],
+              },
+              'C': {
+                  'name': '兴坪南侧九马画山漓江贴水峡谷段',
+                  'role': '贴水陡崖',
+                  'window': [6955, 13988, 2048, 2048],
+                  'bounds': [436800.0, 2738400.0, 462400.0, 2764000.0],
+                  'centerWgs84': [110.501051, 24.875008],
+              },
+              'B': {
+                  'name': '阳朔县城东北漓江弯道与低地',
+                  'role': '对照窗口',
+                  'window': [7137, 14858, 2048, 2048],
+                  'bounds': [439075.0, 2727525.0, 464675.0, 2753125.0],
+                  'centerWgs84': [110.523948, 24.776870],
+              },
+          }
+
+          def sha256(path: Path) -> str:
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for block in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(block)
+              return h.hexdigest()
+
+          def terrain_rgb(array: np.ndarray, valid: np.ndarray, zmin: float, zmax: float) -> np.ndarray:
+              work = array.astype(np.float32)
+              work[~valid] = zmin
+              gy, gx = np.gradient(work, 12.5, 12.5)
+              nx = -gx
+              ny = np.ones_like(work)
+              nz = gy
+              norm = np.sqrt(nx * nx + ny * ny + nz * nz)
+              nx /= norm
+              ny /= norm
+              nz /= norm
+              sun = np.array([-0.45, 0.78, -0.43], dtype=np.float32)
+              shade = np.clip(0.58 + 0.48 * (nx * sun[0] + ny * sun[1] + nz * sun[2]), 0.18, 1.05)
+              t = np.clip((work - zmin) / max(1.0, zmax - zmin), 0.0, 1.0)
+              stops_t = np.array([0.0, 0.18, 0.38, 0.58, 0.75, 0.9, 1.0], dtype=np.float32)
+              stops_c = np.array([
+                  [48, 83, 56], [70, 100, 61], [91, 111, 69], [115, 119, 85],
+                  [139, 132, 105], [165, 156, 137], [203, 199, 185],
+              ], dtype=np.float32)
+              rgb = np.empty((*work.shape, 3), dtype=np.float32)
+              for channel in range(3):
+                  rgb[..., channel] = np.interp(t, stops_t, stops_c[:, channel])
+              slope = np.clip(np.hypot(gx, gy) / 2.2, 0.0, 1.0)
+              rock = np.clip((slope - 0.18) * 1.35 + t * 0.28, 0.0, 1.0)
+              rgb *= shade[..., None]
+              rgb += rock[..., None] * np.array([10.0, 8.0, 7.0], dtype=np.float32)
+              rgb[~valid] = np.array([54.0, 66.0, 62.0], dtype=np.float32)
+              return np.clip(rgb, 0, 255).astype(np.uint8)
+
+          index = {
+              'schema': 'yangshuo-lijiang-native-web-assets/v3.0.0',
+              'source': {
+                  'releaseTag': 'guilin-v070-raw-mosaic-v001',
+                  'asset': 'guilin_raw_union_12_5m.tif',
+                  'bytes': source.stat().st_size,
+                  'sha256': expected_sha,
+                  'crs': 'EPSG:32649',
+                  'pixelSpacingMeters': 12.5,
+              },
+              'grid': [2048, 2048],
+              'extentMeters': [25600.0, 25600.0],
+              'macroDeltaMeters': 0.0,
+              'microDeltaMeters': 0.0,
+              'resampling': False,
+              'gapFill': False,
+              'candidates': {},
+          }
+
+          with rasterio.open(source) as ds:
+              if ds.width != 17408 or ds.height != 18867:
+                  raise RuntimeError(f'Unexpected raster grid: {ds.width}x{ds.height}')
+              if ds.crs is None or ds.crs.to_epsg() != 32649:
+                  raise RuntimeError(f'Unexpected CRS: {ds.crs}')
+              if abs(ds.res[0] - 12.5) > 1e-6 or abs(ds.res[1] - 12.5) > 1e-6:
+                  raise RuntimeError(f'Unexpected resolution: {ds.res}')
+
+              for cid, spec in candidates.items():
+                  col, row, width, height = spec['window']
+                  arr = ds.read(1, window=Window(col, row, width, height), boundless=False)
+                  if arr.shape != (2048, 2048):
+                      raise RuntimeError(f'{cid}: unexpected window shape {arr.shape}')
+                  valid = np.isfinite(arr) & (arr != 0) & (arr > -1000) & (arr < 10000)
+                  valid_fraction = float(valid.mean())
+                  if valid_fraction < 0.995:
+                      raise RuntimeError(f'{cid}: valid fraction {valid_fraction:.8f} below 0.995')
+                  zmin = float(arr[valid].min())
+                  zmax = float(arr[valid].max())
+                  directory = out / cid
+                  directory.mkdir(parents=True, exist_ok=True)
+
+                  height_path = directory / 'height_i16.bin'
+                  arr.astype('<i2', copy=False).tofile(height_path)
+                  texture_path = directory / 'terrain.jpg'
+                  Image.fromarray(terrain_rgb(arr, valid, zmin, zmax), mode='RGB').save(
+                      texture_path,
+                      format='JPEG',
+                      quality=91,
+                      subsampling=1,
+                      optimize=True,
+                      progressive=True,
+                  )
+                  manifest = {
+                      'schema': 'yangshuo-lijiang-native-candidate/v3.0.0',
+                      'id': cid,
+                      **spec,
+                      'grid': [2048, 2048],
+                      'pixelSpacingMeters': 12.5,
+                      'widthMeters': 25600.0,
+                      'heightMeters': 25600.0,
+                      'validFraction': valid_fraction,
+                      'minimumElevationMeters': zmin,
+                      'maximumElevationMeters': zmax,
+                      'dataType': 'int16-little-endian',
+                      'nodataValue': 0,
+                      'heightFile': 'height_i16.bin',
+                      'heightBytes': height_path.stat().st_size,
+                      'heightSha256': sha256(height_path),
+                      'textureFile': 'terrain.jpg',
+                      'textureBytes': texture_path.stat().st_size,
+                      'textureSha256': sha256(texture_path),
+                      'sourceSha256': expected_sha,
+                      'macroDeltaMeters': 0.0,
+                      'microDeltaMeters': 0.0,
+                      'resampling': False,
+                      'gapFill': False,
+                  }
+                  manifest_path = directory / 'manifest.json'
+                  manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+                  index['candidates'][cid] = manifest
+                  print(json.dumps({'candidate': cid, 'validFraction': valid_fraction, 'min': zmin, 'max': zmax, 'heightSha256': manifest['heightSha256'], 'textureSha256': manifest['textureSha256']}, ensure_ascii=False))
+
+          index_path = out / 'index.json'
+          index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding='utf-8')
+          checksums = []
+          for path in sorted(out.rglob('*')):
+              if path.is_file():
+                  checksums.append(f'{sha256(path)}  {path.relative_to(out).as_posix()}')
+          (out / 'SHA256SUMS.txt').write_text('\n'.join(checksums) + '\n', encoding='utf-8')
+          print(json.dumps(index, ensure_ascii=False, indent=2))
+          PY
+          python "$RUNNER_TEMP/yangshuo-v300/compile.py"
+          test "$(stat -c '%s' "$RUNNER_TEMP/yangshuo-v300/site-data/D/height_i16.bin")" = "8388608"
+          test "$(stat -c '%s' "$RUNNER_TEMP/yangshuo-v300/site-data/A/height_i16.bin")" = "8388608"
+          test "$(stat -c '%s' "$RUNNER_TEMP/yangshuo-v300/site-data/C/height_i16.bin")" = "8388608"
+          test "$(stat -c '%s' "$RUNNER_TEMP/yangshuo-v300/site-data/B/height_i16.bin")" = "8388608"
+
+      - name: Publish compiled assets to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add "$RUNNER_TEMP/yangshuo-v300/gh-pages" origin/gh-pages
+          site="$RUNNER_TEMP/yangshuo-v300/gh-pages"
+          rm -rf "$site/$PUBLISH_DIR"
+          mkdir -p "$site/$PUBLISH_DIR"
+          cp -a "$RUNNER_TEMP/yangshuo-v300/site-data/." "$site/$PUBLISH_DIR/"
+          cd "$site"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$PUBLISH_DIR"
+          if git diff --cached --quiet; then
+            echo 'Compiled assets already match gh-pages.'
+            exit 0
+          fi
+          git commit -m 'Publish Yangshuo Lijiang 2048 native DEM assets v3.0'
+          git pull --rebase origin gh-pages
+          git push origin HEAD:gh-pages
+
+      - name: Upload compiler evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-lijiang-2048-native-assets-v300-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/yangshuo-v300/site-data/index.json
+            ${{ runner.temp }}/yangshuo-v300/site-data/SHA256SUMS.txt
+            ${{ runner.temp }}/yangshuo-v300/site-data/*/manifest.json
+          if-no-files-found: error
+          retention-days: 30
