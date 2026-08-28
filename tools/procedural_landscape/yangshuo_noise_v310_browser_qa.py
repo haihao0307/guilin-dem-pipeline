@@ -23,7 +23,15 @@ def snapshot(page: Page) -> dict[str, Any]:
           canvasCount: document.querySelectorAll('#viewer canvas').length,
           canvasWidth: document.querySelector('#viewer canvas')?.width || 0,
           canvasHeight: document.querySelector('#viewer canvas')?.height || 0,
-          loadingOpacity: Number(getComputedStyle(document.querySelector('#loading')).opacity)
+          loadingOpacity: Number(getComputedStyle(document.querySelector('#loading')).opacity),
+          loadingDisplay: getComputedStyle(document.querySelector('#loading')).display,
+          loadingVisibility: getComputedStyle(document.querySelector('#loading')).visibility,
+          loadingVisible: (() => {
+            const loading = document.querySelector('#loading');
+            if (!loading) return false;
+            const style = getComputedStyle(loading);
+            return !loading.hidden && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > .05;
+          })()
         })"""
     )
 
@@ -49,12 +57,20 @@ def assert_common(state: dict[str, Any], expected_preset: str, expected_grid: in
     width = float(qa.get("riverAverageWidthMeters") or 0)
     if not 35 <= width <= 110:
         raise RuntimeError(f"{expected_preset}: river width out of range: {state}")
-    bed_depth = float(qa.get("minimumRiverBedDepthMeters") or 0)
-    if not 0.25 <= bed_depth <= 6:
-        raise RuntimeError(f"{expected_preset}: riverbed clearance failed: {state}")
+    minimum_clearance = float(qa.get("minimumRiverClearanceMeters") or qa.get("minimumRiverBedDepthMeters") or 0)
+    maximum_clearance = float(qa.get("maximumRiverClearanceMeters") or 0)
+    mean_clearance = float(qa.get("meanRiverClearanceMeters") or 0)
+    clearance_samples = int(qa.get("riverClearanceSampleCount") or 0)
+    penetration = float(qa.get("maximumWaterTerrainPenetrationMeters") or 0)
+    if not 0.25 <= minimum_clearance <= 1.25:
+        raise RuntimeError(f"{expected_preset}: minimum river clearance failed: {state}")
+    if not minimum_clearance <= mean_clearance <= maximum_clearance <= 4.25:
+        raise RuntimeError(f"{expected_preset}: river clearance envelope failed: {state}")
+    if clearance_samples < 100 or penetration > 0.01:
+        raise RuntimeError(f"{expected_preset}: water terrain intersection failed: {state}")
     if state.get("canvasCount", 0) < 1 or state.get("canvasWidth", 0) < 350 or state.get("canvasHeight", 0) < 500:
         raise RuntimeError(f"{expected_preset}: canvas failed: {state}")
-    if state.get("loadingOpacity", 1) > 0.05:
+    if state.get("loadingVisible", True):
         raise RuntimeError(f"{expected_preset}: loading overlay remains visible: {state}")
 
 
@@ -66,6 +82,16 @@ def wait_ready(page: Page, preset: str, timeout: int = 240_000) -> dict[str, Any
     page.wait_for_timeout(1200)
     return snapshot(page)
 
+
+
+def capture(page: Page, path: Path) -> None:
+    page.screenshot(
+        path=str(path),
+        full_page=False,
+        animations="disabled",
+        caret="hide",
+        timeout=120_000,
+    )
 
 def run(args: argparse.Namespace) -> int:
     output = Path(args.output)
@@ -105,24 +131,24 @@ def run(args: argparse.Namespace) -> int:
             assert_common(states["karstDesktop"], "karst", 513, 1)
             if int(states["karstDesktop"]["qa"].get("karstMaskVertices") or 0) < 100:
                 raise RuntimeError(f"karst parent mask too small: {states['karstDesktop']}")
-            page.screenshot(path=str(output / "karst-desktop.png"), full_page=True)
+            capture(page, output / "karst-desktop.png")
 
             page.locator('[data-preset="paddy"]').click()
             states["paddyDesktop"] = wait_ready(page, "paddy")
             assert_common(states["paddyDesktop"], "paddy", 513, 1)
             if int(states["paddyDesktop"]["qa"].get("paddyMaskVertices") or 0) < 100:
                 raise RuntimeError(f"paddy parent mask too small: {states['paddyDesktop']}")
-            page.screenshot(path=str(output / "paddy-desktop.png"), full_page=True)
+            capture(page, output / "paddy-desktop.png")
 
             page.locator('[data-preset="river"]').click()
             states["riverDesktop"] = wait_ready(page, "river")
             assert_common(states["riverDesktop"], "river", 513, 1)
-            page.screenshot(path=str(output / "river-desktop.png"), full_page=True)
+            capture(page, output / "river-desktop.png")
 
             page.locator("#truthToggle").click()
             page.wait_for_function("window.__terrainQA?.enhanceMix === 0", timeout=10_000)
             states["truthRollback"] = snapshot(page)
-            page.screenshot(path=str(output / "truth-rollback-desktop.png"), full_page=True)
+            capture(page, output / "truth-rollback-desktop.png")
             context.close()
 
             mobile_context = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=1)
@@ -140,12 +166,12 @@ def run(args: argparse.Namespace) -> int:
                 raise RuntimeError(f"mobile page HTTP status: {None if response is None else response.status}")
             states["paddyMobile"] = wait_ready(mobile, "paddy")
             assert_common(states["paddyMobile"], "paddy", 257, 2)
-            mobile.screenshot(path=str(output / "paddy-mobile-390x844.png"), full_page=True)
+            capture(mobile, output / "paddy-mobile-390x844.png")
             mobile_context.close()
         except Exception as exc:  # noqa: BLE001
             failure = str(exc)
             try:
-                page.screenshot(path=str(output / "failure-desktop.png"), full_page=True)
+                capture(page, output / "failure-desktop.png")
                 states["failureState"] = snapshot(page)
             except Exception as capture_exc:  # noqa: BLE001
                 failure += f"; capture failed: {capture_exc}"
@@ -155,7 +181,7 @@ def run(args: argparse.Namespace) -> int:
     hard_console_errors = [entry for entry in console if entry["type"] == "error"]
     passed = failure is None and not page_errors and not hard_console_errors and not request_failures
     report = {
-        "schema": "yangshuo-noise-terrain-browser-qa/v3.1.0",
+        "schema": "yangshuo-noise-terrain-browser-qa/v3.1.1",
         "url": args.url,
         "elapsedSeconds": round(time.time() - started, 3),
         "states": states,
