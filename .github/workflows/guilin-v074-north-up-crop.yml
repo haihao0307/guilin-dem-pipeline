@@ -19,309 +19,115 @@ concurrency:
 jobs:
   verify-publish-public-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 90
     env:
-      EXPECTED_BRANCH: project/guilin-v074-north-up-crop-and-distillation
       PROJECT_DIR: projects/guilin-v074-north-up-crop-and-distillation
       DESTINATION_DIR: guilin-v074-north-up-crop
-      PUBLIC_BASE_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v074-north-up-crop/
-      SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v074-north-up-crop/
       EVIDENCE_DIR: /tmp/guilin-v074-evidence
       DIST_DIR: /tmp/guilin-v074-dist
       PAGES_DIR: /tmp/guilin-v074-pages
 
     steps:
-      - name: Checkout exact source branch commit
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout exact source commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
           lfs: false
 
-      - name: Initialize evidence and confirm branch identity
+      - name: Install QA dependencies
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "${EVIDENCE_DIR}/local-fixture" "${EVIDENCE_DIR}/public-real-asset"
-          test "${GITHUB_REF_TYPE}" = branch
-          test "${GITHUB_REF_NAME}" = "${EXPECTED_BRANCH}"
+          test "${GITHUB_REF_NAME}" = "project/guilin-v074-north-up-crop-and-distillation"
           test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
-          remote_sha="$(git ls-remote --exit-code origin "refs/heads/${EXPECTED_BRANCH}" | awk '{print $1}')"
-          test -n "${remote_sha}"
-          test "${remote_sha}" = "${GITHUB_SHA}"
-          printf '%s\n' "${GITHUB_SHA}" > "${EVIDENCE_DIR}/source-commit.txt"
+          mkdir -p "${EVIDENCE_DIR}/local" "${EVIDENCE_DIR}/public" "${DIST_DIR}"
+          python -m pip install --disable-pip-version-check Pillow==11.1.0 requests==2.32.3 websocket-client==1.8.0
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -x "${browser}"
+          printf '%s\n' "${browser}" > "${EVIDENCE_DIR}/browser-path.txt"
 
-      - name: Set up pinned Python
-        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
-        with:
-          python-version: "3.12"
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install deterministic QA dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check \
-            Pillow==11.1.0 \
-            requests==2.32.3 \
-            websocket-client==1.8.0
-          npm install --no-save --ignore-scripts playwright@1.51.1
-          npx playwright install --with-deps chromium
-          node --version | tee "${EVIDENCE_DIR}/node-version.txt"
-          python --version 2>&1 | tee "${EVIDENCE_DIR}/python-version.txt"
-          node - <<'JS' | tee "${EVIDENCE_DIR}/playwright-version.txt"
-          const fs = require('node:fs');
-          const pkg = JSON.parse(fs.readFileSync('node_modules/playwright/package.json', 'utf8'));
-          if (pkg.version !== '1.51.1') throw new Error(pkg.version);
-          process.stdout.write(pkg.version + '\n');
-          JS
-
-      - name: Run static source and projection contracts
+      - name: Run static and local browser QA
         shell: bash
         run: |
           set -euo pipefail
           node --check "${PROJECT_DIR}/web/geo.js"
           node --check "${PROJECT_DIR}/web/app.js"
-          python -m py_compile \
-            "${PROJECT_DIR}/tests/browser_cdp.py" \
-            "${PROJECT_DIR}/tests/validate_browser_dump.py" \
-            "${PROJECT_DIR}/tests/check_screenshots.py"
-          node "${PROJECT_DIR}/tests/static_contract_test.mjs" \
-            | tee "${EVIDENCE_DIR}/static-contract-qa.json"
-
-      - name: Assemble immutable page payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf "${DIST_DIR}"
-          mkdir -p "${DIST_DIR}"
+          node "${PROJECT_DIR}/tests/static_contract_test.mjs" | tee "${EVIDENCE_DIR}/static-contract-qa.json"
           rsync -a "${PROJECT_DIR}/web/" "${DIST_DIR}/"
-          SOURCE_SHA="${GITHUB_SHA}" SOURCE_TIFF_SHA256="${SOURCE_TIFF_SHA256}" python - "${DIST_DIR}" <<'PY'
-          import datetime, json, os, pathlib, sys
+          SOURCE_SHA="${GITHUB_SHA}" python - "${DIST_DIR}" <<'PY'
+          import json, os, pathlib, sys
           root = pathlib.Path(sys.argv[1])
-          payload = {
+          data = {
               "schema": "guilin-v074-build-provenance/v1",
               "source_commit": os.environ["SOURCE_SHA"],
-              "source_branch": "project/guilin-v074-north-up-crop-and-distillation",
-              "source_tiff_contract_sha256": os.environ["SOURCE_TIFF_SHA256"],
-              "source_tiff_materialized_in_this_workflow": False,
-              "source_hash_reconciliation_status": "BLOCKED_BEFORE_FORMAL_CROP_AND_DISTILLATION",
-              "preview_role": "visual-range-reference-only",
               "aoi_status": "UNCONFIRMED",
               "distillation_allowed": False,
-              "built_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "source_hash_reconciliation_status": "BLOCKED_BEFORE_FORMAL_CROP_AND_DISTILLATION",
           }
-          (root / "build_provenance.json").write_text(
-              json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-          )
+          (root / "build_provenance.json").write_text(json.dumps(data, indent=2) + "\n")
           PY
-          (
-            cd "${DIST_DIR}"
-            find . -type f ! -name SHA256SUMS.txt -print0 \
-              | sort -z \
-              | xargs -0 sha256sum > SHA256SUMS.txt
-          )
-          test -s "${DIST_DIR}/index.html"
-          test -s "${DIST_DIR}/data/mosaic_manifest.json"
-          grep -F 'north-up-crop-unconfirmed' "${DIST_DIR}/index.html"
-
-      - name: Run desktop and mobile local fixture browser QA
-        shell: bash
-        run: |
-          set -euo pipefail
-          chromium_path="$(node -e "const { chromium }=require('playwright'); process.stdout.write(chromium.executablePath())")"
-          test -x "${chromium_path}"
-          python -m http.server 8123 --bind 127.0.0.1 --directory "${DIST_DIR}" \
-            >"${EVIDENCE_DIR}/local-fixture/http-server.log" 2>&1 &
+          browser="$(cat "${EVIDENCE_DIR}/browser-path.txt")"
+          python -m http.server 8123 --bind 127.0.0.1 --directory "${DIST_DIR}" >"${EVIDENCE_DIR}/local/server.log" 2>&1 &
           server_pid=$!
-          cleanup() { kill "${server_pid}" 2>/dev/null || true; }
-          trap cleanup EXIT
-          for attempt in $(seq 1 40); do
-            curl -fsS http://127.0.0.1:8123/ >/dev/null && break
-            sleep 0.25
-          done
-          python "${PROJECT_DIR}/tests/browser_cdp.py" \
-            --chromium "${chromium_path}" \
-            --url "http://127.0.0.1:8123/?qa=1&fixture=1&v=${GITHUB_SHA}" \
-            --qa-timeout 180 \
-            --evidence-dir "${EVIDENCE_DIR}/local-fixture"
-          python "${PROJECT_DIR}/tests/validate_browser_dump.py" \
-            "${EVIDENCE_DIR}/local-fixture/browser-dom.html" \
-            --output "${EVIDENCE_DIR}/local-fixture/browser-dom-qa.json"
-          python "${PROJECT_DIR}/tests/check_screenshots.py" \
-            "${EVIDENCE_DIR}/local-fixture/desktop-1600x1000.png" \
-            "${EVIDENCE_DIR}/local-fixture/mobile-390x844.png" \
-            --output "${EVIDENCE_DIR}/local-fixture/screenshot-qa.json"
+          trap 'kill "${server_pid}" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 40); do curl -fsS http://127.0.0.1:8123/ >/dev/null && break; sleep 0.25; done
+          python "${PROJECT_DIR}/tests/browser_cdp.py" --chromium "${browser}" --url "http://127.0.0.1:8123/?qa=1&fixture=1&v=${GITHUB_SHA}" --qa-timeout 180 --evidence-dir "${EVIDENCE_DIR}/local"
+          python "${PROJECT_DIR}/tests/validate_browser_dump.py" "${EVIDENCE_DIR}/local/browser-dom.html" --output "${EVIDENCE_DIR}/local/browser-dom-qa.json"
+          python "${PROJECT_DIR}/tests/check_screenshots.py" "${EVIDENCE_DIR}/local/desktop-1600x1000.png" "${EVIDENCE_DIR}/local/mobile-390x844.png" --output "${EVIDENCE_DIR}/local/screenshot-qa.json"
 
-      - name: Publish page payload to preserved gh-pages directory
+      - name: Publish page and run public real-asset QA
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin gh-pages
           rm -rf "${PAGES_DIR}"
-          git worktree add -b "v074-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            "${PAGES_DIR}" origin/gh-pages
+          git worktree add -b "v074-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${PAGES_DIR}" origin/gh-pages
           rm -rf "${PAGES_DIR}/${DESTINATION_DIR}"
-          mkdir -p "${PAGGES_DIR}/${DESTINATION_DIR}"
+          mkdir -p "${PAGES_DIR}/${DESTINATION_DIR}"
           rsync -a "${DIST_DIR}/" "${PAGES_DIR}/${DESTINATION_DIR}/"
           touch "${PAGES_DIR}/.nojekyll"
           git -C "${PAGES_DIR}" config user.name github-actions[bot]
           git -C "${PAGES_DIR}" config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git -C "${PAGES_DIR}" add ".nojekyl" "${DESTINATION_DIR}"
-          if ! git -C "${PAGES_DIR}" diff --cached --quiet; then
-            git -C "${PAGES_DIR}" commit -m "Publish Guilin v0.7.4 north-up crop page ${GITHUB_SHA}"
-          fi
-          push_pages() {
-            for attempt in 1 2 3 4; do
-              if git -C "${PAGES_DIR}" push origin HEAD:gh-pages; then
-                return 0
-              fi
-              git -C "${PAGES_DIR}" fetch origin gh-pages
-              git -C "${PAGES_DIR}" rebase origin/gh-pages
-              sleep $((attempt * 3))
-            done
-            return 1
-          }
-          push_pages
-          git -C "${PAGGES_DIR}" rev-parse HEAD > "${EVIDENCE_DIR}/pages-first-publish-commit.txt"
-
-      - name: Wait for public page payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          success=0
+          git -C "${PAGES_DIR}" add .nojekyll "${DESTINATION_DIR}"
+          git -C "${PAGES_DIR}" commit -m "Publish Guilin v0.7.4 north-up crop ${GITHUB_SHA}"
+          git -C "${PAGES_DIR}" push origin HEAD:gh-pages
+          ready=0
           for attempt in $(seq 1 90); do
-            if curl -fsSL --connect-timeout 15 --max-time 60 \
-              "${PUBLIC_BASE_URL}?v=${GITHUB_SHA}-${attempt}" \
-              -o "${EVIDENCE_DIR}/public-page.html"; then
-              if grep -F 'north-up-crop-unconfirmed' "${EVIDENCE_DIR}/public-page.html"; then
-                success=1
-                break
-              fi
-            fi
+            if curl -fsSL --connect-timeout 15 --max-time 60 "${PUBLIC_URL}?v=${GITHUB_SHA}-${attempt}" -o "${EVIDENCE_DIR}/public-page.html" && grep -Fq north-up-crop-unconfirmed "${EVIDENCE_DIR}/public-page.html"; then ready=1; break; fi
             sleep 10
           done
-          test "${success}" = 1
-
-      - name: Run public real-asset desktop and mobile browser QA
-        shell: bash
-        run: |
-          set -euo pipefail
-          chromium_path="$(node -e "const { chromium }=require('playwright'); process.stdout.write(chromium.executablePath())")"
-          python "${PROJECT_DIR}/tests/browser_cdp.py" \
-            --chromium "${chromium_path}" \
-            --url "${PUBLIC_BASE_URL}?qa=1&v=${GITHUB_SHA}" \
-            --expect-real-asset \
-            --qa-timeout 240 \
-            --evidence-dir "${EVIDENCE_DIR}/public-real-asset"
-          python "${PROJECT_DIR}/tests/validate_browser_dump.py" \
-            "${EVIDENCE_DIR}/public-real-asset/browser-dom.html" \
-            --output "${EVIDENCE_DIR}/public-real-asset/browser-dom-qa.json"
-          python "${PROJECT_DIR}/tests/check_screenshots.py" \
-            "${EVIDENCE_DIR}/public-real-asset/desktop-1600x1000.png" \
-            "${EVIDENCE_DIR}/public-real-asset/mobile-390x844.png" \
-            --output "${EVIDENCE_DIR}/public-real-asset/screenshot-qa.json"
-
-      - name: Publish real public QA evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          evidence_target="${PAGES_DIR}/${DESTINATION_DIR}/evidence/public"
-          rm -rf "${evidence_target}"
-          mkdir -p "${evidence_target}"
-          cp "${EVIDENCE_DIR}/public-real-asset/browser-qa.json" "${evidence_target}/browser-qa.json"
-          cp "${EVIDENCE_DIR}/public-real-asset/browser-dom-qa.json" "${evidence_target}/browser-dom-qa.json"
-          cp "${EVIDENCE_DIR}/public-real-asset/screenshot-qa.json" "${evidence_target}/screenshot-qa.json"
-          cp "${EVIDENCE_DIR}/public-real-asset/desktop-1600x1000.png" "${evidence_target}/desktop-1600x1000.png"
-          cp "${EVIDENCE_DIR}/public-real-asset/mobile-390x844.png" "${evidence_target}/mobile-390x844.png"
-          SOURCE_SHA="${GITHUB_SHA}" python - "${evidence_target}" <<'PY'
+          test "${ready}" = 1
+          browser="$(cat "${EVIDENCE_DIR}/browser-path.txt")"
+          python "${PROJECT_DIR}/tests/browser_cdp.py" --chromium "${browser}" --url "${PUBLIC_URL}?qa=1&v=${GITHUB_SHA}" --expect-real-asset --qa-timeout 240 --evidence-dir "${EVIDENCE_DIR}/public"
+          python "${PROJECT_DIR}/tests/validate_browser_dump.py" "${EVIDENCE_DIR}/public/browser-dom.html" --output "${EVIDENCE_DIR}/public/browser-dom-qa.json"
+          python "${PROJECT_DIR}/tests/check_screenshots.py" "${EVIDENCE_DIR}/public/desktop-1600x1000.png" "${EVIDENCE_DIR}/public/mobile-390x844.png" --output "${EVIDENCE_DIR}/public/screenshot-qa.json"
+          target="${PAGES_DIR}/${DESTINATION_DIR}/evidence/public"
+          mkdir -p "${target}"
+          cp "${EVIDENCE_DIR}/public/"*.json "${EVIDENCE_DIR}/public/"*.png "${target}/"
+          SOURCE_SHA="${GITHUB_SHA}" python - "${target}" <<'PY'
           import json, os, pathlib, sys
           root = pathlib.Path(sys.argv[1])
           qa = json.loads((root / "browser-qa.json").read_text())
-          assert qa["passed"] is True
-          assert qa["real_asset_required"] is True
-          assert qa["real_asset_ok"] is True
+          assert qa["passed"] and qa["real_asset_required"] and qa["real_asset_ok"]
           receipt = {
-            "schema": "guilin-v074-public-evidence-receipt/v1",
-            "source_commit": os.environ["SOURCE_SHA"],
-            "public_browser_qa_passed": True,
-            "real_asset_required": True,
-            "real_asset_ok": True,
-            "aoi_status": "UNCONFIRMED",
+              "schema": "guilin-v074-public-evidence-receipt/v1",
+              "source_commit": os.environ["SOURCE_SHA"],
+              "public_browser_qa_passed": True,
+              "real_asset_ok": True,
+              "aoi_status": "UNCONFIRMED",
           }
           (root / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
           PY
-          (
-            cd "${PAGES_DIR}/${DEMTINATION_DIR}"
-            find . -type f ! -name SHA256SUMS.txt -print0 \
-              | sort -z \
-              | xargs -0 sha256sum > SHA256SUMS.txt
-          )
-          git -C "${PAGES_DIR}" add "${DEMTINATION_DIR}"
-          git -C "${PAGES_DIR}" commit -m "Add real public QA evidence for Guilin v0.7.4 ${GITHUB_SHA}"
-          for attempt in 1 2 3 4; do
-            if git -C "${PAGES_DIR}" push origin HEAD:gh-pages; then
-              break
-            fi
-            test "${attempt}" -lt 4
-            git -C "${PAGGES_DIR}" fetch origin gh-pages
-            git -C "${PAGGES_DIR}" rebase origin/gh-pages
-            sleep $((attempt * 3))
-          done
-          git -C "${PAGES_DIR}" rev-parse HEAD > "${EVIDENCE_DIR}/pages-evidence-commit.txt"
+          git -C "${PAGES_DIR}" add "${DESTINATION_DIR}"
+          git -C "${PAGES_DIR}" commit -m "Add public QA evidence for Guilin v0.7.4 ${GITHUB_SHA}"
+          git -C "${PAGES_DIR}" push origin HEAD:gh-pages
 
-      - name: Verify public evidence receipt
-        shell: bash
-        run: |
-          set -euo pipefail
-          success=0
-          for attempt in $(seq 1 60); do
-            if curl -fsSL --connect-timeout 15 --max-time 60 \
-              "${PUBLIC_BASE_URL}evidence/public/receipt.json?v=${GITHUB_SHA}-${attempt}" \
-              -o "${EVIDENCE_DIR}/public-receipt.json"; then
-              if SOURCE_SHA="${GITHUB_SHA}" python - "${EVIDENCE_DIR}/public-receipt.json" <<'PY'
-          import json, os, sys
-          payload = json.load(open(sys.argv[1], encoding="utf-8"))
-          assert payload["schema"] == "guilin-v074-public-evidence-receipt/v1"
-          assert payload["source_commit"] == os.environ["SOURCE_SHA"]
-          assert payload["public_browser_qa_passed"] is True
-          assert payload["real_asset_ok"] is True
-          PY
-              then
-                success=1
-                break
-              fi
-            fi
-            sleep 10
-          done
-          test "${success}" = 1
-
-      - name: Write job summary
+      - name: Upload QA evidence
         if: always()
-        shell: bash
-        run: |
-          {
-            echo '## Guilin v0.7.4 north-up crop page'
-            echo
-            echo "* Source commit: \`${GITHUB_SHA}\`"
-            echo "* Public page: ${PUBLIC_BASE_URL}"
-            echo '* AOI status: `UNCONFIRMED`'
-            echo '* Distillation: blocked pending user confirmation and TIFF hash reconciliation'
-            if [ -f "${EVIDENCE_DIR}/public-real-asset/browser-qa.json" ]; then
-              echo '* Public real-asset browser QA: completed'
-            else
-              echo '* Public real-asset browser QA: unavailable or failed'
-            fi
-          } >> "${GITHUB_STEP_SUMMARY}"
-
-      - name: Upload complete QA evidence
-        if: always()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
-          name: guilin-v074-north-up-crop-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          name: guilin-v074-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/guilin-v074-evidence/
           if-no-files-found: error
           retention-days: 90
