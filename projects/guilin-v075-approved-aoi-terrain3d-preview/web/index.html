@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hans" data-app="guilin-v075-approved-aoi-terrain3d">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e8eee8">
+  <title>桂林 12.5 米 DEM 选区三维预览 v0.7.5</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-release="guilin-v075-approved-aoi-terrain3d" data-ready="false">
+  <header class="topbar">
+    <div class="title-block">
+      <div class="eyebrow">GUILIN DEM · V0.7.5 · ACCEPTED AOI</div>
+      <h1>桂林 12.5 米 DEM 选区三维预览</h1>
+      <p>按浩哥确认的 33,113.874 km² 矩形裁切，数值高程驱动，NoData 保持透明</p>
+    </div>
+    <div id="statusPill" class="status-pill loading" aria-live="polite">
+      <span class="status-dot"></span>
+      <span id="statusText">正在载入真实高程</span>
+    </div>
+  </header>
+
+  <nav class="toolbar" aria-label="三维地形控制">
+    <button type="button" data-view="overview" class="active">总览</button>
+    <button type="button" data-view="north">正北俯视</button>
+    <button type="button" data-view="low">低角度</button>
+    <button type="button" data-view="guilin">桂林方向</button>
+    <span class="toolbar-separator"></span>
+    <label class="compact-control">垂直显示
+      <select id="verticalScale" aria-label="垂直显示比例">
+        <option value="1" selected>1.00× 真实比例</option>
+        <option value="1.5">1.50× 观察</option>
+        <option value="2">2.00× 观察</option>
+      </select>
+    </label>
+    <button type="button" id="resetView">重置视角</button>
+    <button type="button" id="togglePanel" class="panel-toggle" aria-expanded="true">收起数据</button>
+  </nav>
+
+  <main id="viewerShell" class="viewer-shell">
+    <canvas id="terrainCanvas" aria-label="桂林选区三维数字高程地形"></canvas>
+    <canvas id="fallbackCanvas" class="fallback-canvas" hidden aria-label="二维高程备用预览"></canvas>
+
+    <div id="loadingCard" class="loading-card" role="status">
+      <div class="spinner"></div>
+      <strong id="loadingTitle">读取 12.5 米来源的数值高程预览网格</strong>
+      <span id="loadingDetail">正在核对 AOI、网格和 NoData</span>
+      <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+    </div>
+
+    <aside id="dataPanel" class="data-panel">
+      <section>
+        <div class="section-kicker">ACCEPTED AOI</div>
+        <h2>浩哥确认范围</h2>
+        <dl class="metric-grid">
+          <div><dt>面积</dt><dd>33,113.874 km²</dd></div>
+          <div><dt>状态</dt><dd class="accepted">ACCEPTED</dd></div>
+          <div class="wide"><dt>EPSG:32649</dt><dd>W 380331.8 · S 2705928.1<br>E 530128.2 · N 2926987.2 m</dd></div>
+          <div class="wide"><dt>WGS84 边界</dt><dd>109.799604°E 至 111.302242°E<br>24.462357°N 至 26.462927°N</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <div class="section-kicker">NUMERIC TERRAIN</div>
+        <h2>当前三维网格</h2>
+        <dl class="metric-grid">
+          <div><dt>来源分辨率</dt><dd>12.5 m</dd></div>
+          <div><dt>坐标系</dt><dd>EPSG:32649</dd></div>
+          <div><dt>预览采样</dt><dd id="meshGrid">载入中</dd></div>
+          <div><dt>有效三角形</dt><dd id="triangleCount">载入中</dd></div>
+          <div><dt>高程范围</dt><dd id="elevationRange">载入中</dd></div>
+          <div><dt>NoData</dt><dd id="nodataCount">载入中</dd></div>
+        </dl>
+        <p class="contract-note">三维页使用 12.5 米原始 DEM 生成的数值预览网格进行裁切。缺口透明保留，不进行插值、补洞或 30 米替代。</p>
+      </section>
+
+      <section class="legend-section">
+        <div class="section-kicker">ELEVATION</div>
+        <h2>高程色阶</h2>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span>谷地</span><span>山脊</span><span>高峰</span></div>
+      </section>
+    </aside>
+
+    <div class="compass" aria-label="方向指示">
+      <span>N</span>
+      <i></i>
+    </div>
+
+    <div class="interaction-hint">
+      <span>左键旋转</span><span>右键平移</span><span>滚轮缩放</span><span>触屏双指缩放</span>
+    </div>
+
+    <div id="errorCard" class="error-card" hidden>
+      <strong>三维加载出现问题</strong>
+      <p id="errorMessage"></p>
+      <button type="button" id="showFallback">打开数值高程备用预览</button>
+    </div>
+  </main>
+
+  <footer class="footer-strip">
+    <span>数据合同：12.5 m · EPSG:32649 · 垂直比例默认 1.00×</span>
+    <span id="renderInfo">等待 WebGL2</span>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
