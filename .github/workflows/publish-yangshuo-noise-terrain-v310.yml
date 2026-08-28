@@ -1,0 +1,236 @@
+name: Publish Yangshuo noise terrain v3.1
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/publish-yangshuo-noise-terrain-v310.yml
+      - web/yangshuo-noise-terrain-v310/**
+      - projects/guilin/config/yangshuo_noise_terrain_v310.json
+      - skills/dem-procedural-landscape/branches/terrain-geomorphology/NOISE_DISTILLATION_V310.md
+      - tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+      - DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-yangshuo-noise-terrain-v310
+  cancel-in-progress: false
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-noise-terrain-v310/
+  TARGET_DIR: yangshuo-noise-terrain-v310
+
+jobs:
+  publish:
+    name: Validate and publish 1 metre enhanced terrain lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact production branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate source, contract and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          html_path = Path('web/yangshuo-noise-terrain-v310/index.html')
+          config_path = Path('projects/guilin/config/yangshuo_noise_terrain_v310.json')
+          qa_path = Path('tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py')
+          note_path = Path('skills/dem-procedural-landscape/branches/terrain-geomorphology/NOISE_DISTILLATION_V310.md')
+          for path in (html_path, config_path, qa_path, note_path):
+              if not path.is_file() or path.stat().st_size < 100:
+                  raise SystemExit(f'missing or empty required file: {path}')
+
+          html = html_path.read_text(encoding='utf-8')
+          required = [
+              'XIAOWANG · YANGSHUO KARST · TSL NOISE v3.1',
+              'const PATCH_METERS = 512',
+              'const RIVER_SAMPLE_METERS = 4',
+              "riverGeometry:'triangle-ribbon-water-surface'",
+              'truthMutationCount:0',
+              'vegetationInstances:0',
+              "import * as THREE from 'three/webgpu'",
+              "from 'three/tsl'",
+          ]
+          for marker in required:
+              if marker not in html:
+                  raise SystemExit(f'missing HTML marker: {marker}')
+          if 'TubeGeometry' in html:
+              raise SystemExit('TubeGeometry is forbidden in the v3.1 river implementation')
+
+          config = json.loads(config_path.read_text(encoding='utf-8'))
+          if config['truth']['sha256'] != '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4':
+              raise SystemExit('truth SHA mismatch')
+          if config['truth']['truthOverwrite'] is not False:
+              raise SystemExit('truthOverwrite must remain false')
+          if config['enhancedPatch']['desktopSpacingMeters'] != 1.0:
+              raise SystemExit('desktop enhanced spacing must be 1 metre')
+          if config['river']['geometryType'] != 'triangle-ribbon-water-surface':
+              raise SystemExit('river geometry contract mismatch')
+          if config['river']['tubeGeometryAllowed'] is not False:
+              raise SystemExit('tube geometry must remain forbidden')
+          if config['vegetation']['instanceCountRequired'] != 0:
+              raise SystemExit('vegetation must remain outside this terrain build')
+
+          module = re.search(r'<script type="module">\s*(.*?)\s*</script>', html, re.S)
+          if not module:
+              raise SystemExit('module script not found')
+          Path('/tmp/yangshuo-noise-v310.mjs').write_text(module.group(1), encoding='utf-8')
+          PY
+          node --check /tmp/yangshuo-noise-v310.mjs
+          python -m py_compile tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+
+      - name: Stage public website on gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf "$RUNNER_TEMP/pages"
+          git worktree add --detach "$RUNNER_TEMP/pages" origin/gh-pages
+          target="$RUNNER_TEMP/pages/$TARGET_DIR"
+          rm -rf "$target"
+          mkdir -p "$target/data"
+          cp web/yangshuo-noise-terrain-v310/index.html "$target/index.html"
+          cp projects/guilin/config/yangshuo_noise_terrain_v310.json "$target/contract.json"
+          cp DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson "$target/data/lijiang_osm.geojson"
+          cat > "$target/build.json" <<JSON
+          {
+            "schema": "yangshuo-noise-terrain-public-build/v3.1.0",
+            "sourceBranch": "skill/dem-procedural-landscape-v010",
+            "sourceCommit": "${GITHUB_SHA}",
+            "truthSha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+            "truthMutationCount": 0,
+            "desktopDetailSpacingMeters": 1.0,
+            "riverGeometry": "triangle-ribbon-water-surface",
+            "vegetationInstances": 0
+          }
+          JSON
+          touch "$RUNNER_TEMP/pages/.nojekyll"
+
+      - name: Commit and push public website
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/pages"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_DIR" .nojekyll
+          if git diff --cached --quiet; then
+            echo 'Public website already matches this build.'
+            exit 0
+          fi
+          git commit -m "Publish Yangshuo 1 m noise terrain lab v3.1"
+          for attempt in 1 2 3 4; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+          echo 'Unable to fast-forward gh-pages after four attempts.' >&2
+          exit 1
+
+  browser-qa:
+    name: Online desktop and mobile browser QA
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact production branch head
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Chromium QA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for exact public build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-v310"
+          ready=false
+          for attempt in $(seq 1 120); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v310/index.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}build.json?verify=${nonce}" -o "$RUNNER_TEMP/public-v310/build.json" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}data/lijiang_osm.geojson?verify=${nonce}" -o "$RUNNER_TEMP/public-v310/lijiang_osm.geojson"; then
+              if grep -Fq 'XIAOWANG · YANGSHUO KARST · TSL NOISE v3.1' "$RUNNER_TEMP/public-v310/index.html" \
+                && grep -Fq "\"sourceCommit\": \"${GITHUB_SHA}\"" "$RUNNER_TEMP/public-v310/build.json" \
+                && grep -Fq '"name": "漓江"' "$RUNNER_TEMP/public-v310/lijiang_osm.geojson"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" = true
+
+      - name: Run real online Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py \
+            --url "$PUBLIC_URL" \
+            --output reports/yangshuo-noise-terrain-v310-browser
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-noise-terrain-v310-browser-${{ github.sha }}
+          path: reports/yangshuo-noise-terrain-v310-browser/**
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '## Yangshuo noise terrain v3.1'
+            echo
+            echo "Public URL: ${PUBLIC_URL}"
+            echo
+            if [ -f reports/yangshuo-noise-terrain-v310-browser/report.json ]; then
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('reports/yangshuo-noise-terrain-v310-browser/report.json').read_text(encoding='utf-8'))
+          print(f"Browser QA passed: {report.get('passed')}")
+          states = report.get('states', {})
+          for key in ('karstDesktop','paddyDesktop','riverDesktop','paddyMobile'):
+              state = states.get(key, {})
+              qa = state.get('qa', {}) if isinstance(state, dict) else {}
+              if qa:
+                  print(f"{key}: grid={qa.get('detailGrid')} spacing={qa.get('detailSpacingMeters')} riverVertices={qa.get('riverVertexCount')}")
+          PY
+            else
+              echo 'Browser QA report was not produced.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
