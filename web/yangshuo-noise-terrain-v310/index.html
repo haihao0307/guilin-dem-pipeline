@@ -202,7 +202,6 @@
       normalLocal,
       positionLocal,
       smoothstep,
-      snoise,
       uniform,
       vec2,
       vec3
@@ -712,16 +711,16 @@
 
       const fbm = Fn(([p]) => {
         const sum = float(0).toVar();
-        sum.addAssign(snoise(vec3(p.mul(.0105), uniforms.seed.add(1))).mul(.52));
-        sum.addAssign(snoise(vec3(p.mul(.021), uniforms.seed.add(7))).mul(.25));
-        sum.addAssign(snoise(vec3(p.mul(.042), uniforms.seed.add(13))).mul(.13));
-        sum.addAssign(snoise(vec3(p.mul(.084), uniforms.seed.add(29))).mul(.065));
+        sum.addAssign(mx_noise_float(vec3(p.mul(.0105), uniforms.seed.add(1))).mul(.52));
+        sum.addAssign(mx_noise_float(vec3(p.mul(.021), uniforms.seed.add(7))).mul(.25));
+        sum.addAssign(mx_noise_float(vec3(p.mul(.042), uniforms.seed.add(13))).mul(.13));
+        sum.addAssign(mx_noise_float(vec3(p.mul(.084), uniforms.seed.add(29))).mul(.065));
         return sum;
       });
 
       const ridged = Fn(([p]) => {
-        const n1 = float(1).sub(snoise(vec3(p.mul(.0085),uniforms.seed.add(17))).abs()).pow(3);
-        const n2 = float(1).sub(snoise(vec3(p.mul(.017),uniforms.seed.add(41))).abs()).pow(4).mul(.42);
+        const n1 = float(1).sub(mx_noise_float(vec3(p.mul(.0085),uniforms.seed.add(17))).abs()).pow(3);
+        const n2 = float(1).sub(mx_noise_float(vec3(p.mul(.017),uniforms.seed.add(41))).abs()).pow(4).mul(.42);
         return n1.add(n2).sub(.47);
       });
 
@@ -730,18 +729,18 @@
         const position = positionLocal.toVar();
         const world = worldPosition.toVar();
         const warp = vec2(
-          snoise(vec3(world.mul(.0022),uniforms.seed.add(5))),
-          snoise(vec3(world.mul(.0022).add(vec2(31.7,-18.2)),uniforms.seed.add(19)))
+          mx_noise_float(vec3(world.mul(.0022),uniforms.seed.add(5))),
+          mx_noise_float(vec3(world.mul(.0022).add(vec2(31.7,-18.2)),uniforms.seed.add(19)))
         ).mul(32);
         const warped = world.add(warp);
         const macro = ridged(warped).mul(3.2).mul(aKarst).mul(uniforms.macro);
         const erosional = mx_noise_float(vec3(warped.mul(.031),uniforms.seed.add(73)),1,0).abs().pow(2.2).mul(-.46);
         const microSignal = fbm(warped.mul(1.35)).mul(.48).add(erosional).mul(aKarst).mul(uniforms.micro);
-        const fracture = float(1).sub(snoise(vec3(warped.mul(.115),uniforms.seed.add(111))).abs()).pow(10).mul(-.24).mul(aKarst).mul(uniforms.micro);
+        const fracture = float(1).sub(mx_noise_float(vec3(warped.mul(.115),uniforms.seed.add(111))).abs()).pow(10).mul(-.24).mul(aKarst).mul(uniforms.micro);
 
         const fieldWarp = vec2(
-          snoise(vec3(world.mul(.006),uniforms.seed.add(141))),
-          snoise(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
+          mx_noise_float(vec3(world.mul(.006),uniforms.seed.add(141))),
+          mx_noise_float(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
         ).mul(7.5);
         const field = world.add(fieldWarp);
         const cellX = fract(field.x.div(43));
@@ -764,7 +763,7 @@
 
       material.colorNode = Fn(() => {
         const world = worldPosition;
-        const tone = snoise(vec3(world.mul(.018),uniforms.seed.add(211))).mul(.09).add(1);
+        const tone = mx_noise_float(vec3(world.mul(.018),uniforms.seed.add(211))).mul(.09).add(1);
         const limestoneNoise = fbm(world.mul(.72)).mul(.14).add(.88);
         const soil = color('#70664a');
         const lowland = color('#6c684b');
@@ -773,8 +772,8 @@
         const wet = color('#44524a');
         const bundSoil = color('#7b704f');
         const fieldWarp = vec2(
-          snoise(vec3(world.mul(.006),uniforms.seed.add(141))),
-          snoise(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
+          mx_noise_float(vec3(world.mul(.006),uniforms.seed.add(141))),
+          mx_noise_float(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
         ).mul(7.5);
         const field = world.add(fieldWarp);
         const cx = fract(field.x.div(43));
