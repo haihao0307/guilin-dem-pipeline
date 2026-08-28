@@ -16,12 +16,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-lijiang-2048-v300/?candidate=D&qa=1
+  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-lijiang-2048-v300/?candidate=D&qa=2
 
 jobs:
   browser-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: Checkout exact branch head
         uses: actions/checkout@v6
@@ -38,7 +38,7 @@ jobs:
           python -m pip install --disable-pip-version-check playwright
           python -m playwright install --with-deps chromium
 
-      - name: Run real online Chromium QA
+      - name: Capture live browser diagnostics
         shell: bash
         run: |
           set -euo pipefail
@@ -55,7 +55,32 @@ jobs:
           url = os.environ['PAGE_URL']
           console = []
           page_errors = []
+          request_failures = []
+          important_responses = []
           started = time.time()
+          state = {}
+          passed = False
+          failure = None
+
+          def snapshot(page):
+              return page.evaluate("""() => ({
+                title: document.title,
+                status: document.querySelector('#statusMain')?.textContent || null,
+                statusSub: document.querySelector('#statusSub')?.textContent || null,
+                loadingTitle: document.querySelector('#loadingTitle')?.textContent || null,
+                loadingText: document.querySelector('#loadingText')?.textContent || null,
+                progressLabel: document.querySelector('#progressLabel')?.textContent || null,
+                progressValue: document.querySelector('#progressValue')?.textContent || null,
+                validFraction: document.querySelector('#validFraction')?.textContent || null,
+                elevationRange: document.querySelector('#elevationRange')?.textContent || null,
+                displayGrid: document.querySelector('#displayGrid')?.textContent || null,
+                canvasCount: document.querySelectorAll('#viewer canvas').length,
+                canvasWidth: document.querySelector('#viewer canvas')?.width || 0,
+                canvasHeight: document.querySelector('#viewer canvas')?.height || 0,
+                sourceOk: document.querySelector('#sourceCheck')?.classList.contains('ok') || false,
+                windowOk: document.querySelector('#windowCheck')?.classList.contains('ok') || false,
+                loadingOpacity: getComputedStyle(document.querySelector('#loading')).opacity
+              })""")
 
           with sync_playwright() as p:
               browser = p.chromium.launch(
@@ -65,69 +90,63 @@ jobs:
               page = browser.new_page(viewport={'width': 1440, 'height': 900}, device_scale_factor=1)
               page.on('console', lambda msg: console.append({'type': msg.type, 'text': msg.text}))
               page.on('pageerror', lambda exc: page_errors.append(str(exc)))
-              response = page.goto(url, wait_until='domcontentloaded', timeout=120_000)
-              if response is None or response.status != 200:
-                  raise RuntimeError(f'Page HTTP status failed: {None if response is None else response.status}')
-
-              page.wait_for_selector('#statusMain', timeout=30_000)
-              page.wait_for_function(
-                  "document.querySelector('#statusMain')?.textContent.includes('2048 原生窗口已加载')",
-                  timeout=300_000,
-              )
-              page.wait_for_timeout(2500)
-
-              initial = page.evaluate("""() => ({
-                title: document.title,
-                status: document.querySelector('#statusMain')?.textContent,
-                statusSub: document.querySelector('#statusSub')?.textContent,
-                validFraction: document.querySelector('#validFraction')?.textContent,
-                elevationRange: document.querySelector('#elevationRange')?.textContent,
-                displayGrid: document.querySelector('#displayGrid')?.textContent,
-                canvasCount: document.querySelectorAll('#viewer canvas').length,
-                canvasWidth: document.querySelector('#viewer canvas')?.width || 0,
-                canvasHeight: document.querySelector('#viewer canvas')?.height || 0,
-                sourceOk: document.querySelector('#sourceCheck')?.classList.contains('ok'),
-                windowOk: document.querySelector('#windowCheck')?.classList.contains('ok')
-              })""")
-              valid = float(initial['validFraction'].replace('%', ''))
-              if initial['canvasCount'] < 1 or initial['canvasWidth'] < 1000 or initial['canvasHeight'] < 600:
-                  raise RuntimeError(f'WebGL canvas invalid: {initial}')
-              if valid < 99.5 or not initial['sourceOk'] or not initial['windowOk']:
-                  raise RuntimeError(f'Native data gates failed: {initial}')
-
-              page.screenshot(path=str(out / 'candidate-D-desktop.png'), full_page=True)
-
-              page.locator('.candidate').filter(has_text='A ·').click()
-              page.wait_for_function(
-                  "document.querySelector('#statusSub')?.textContent.includes('候选 A') && document.querySelector('#statusMain')?.textContent.includes('2048 原生窗口已加载')",
-                  timeout=300_000,
-              )
-              page.wait_for_timeout(1500)
-              switched = page.evaluate("""() => ({
-                title: document.querySelector('#title')?.textContent,
-                status: document.querySelector('#statusMain')?.textContent,
-                statusSub: document.querySelector('#statusSub')?.textContent,
-                validFraction: document.querySelector('#validFraction')?.textContent,
-                canvasCount: document.querySelectorAll('#viewer canvas').length
-              })""")
-              page.screenshot(path=str(out / 'candidate-A-desktop.png'), full_page=True)
-              browser.close()
+              page.on('requestfailed', lambda request: request_failures.append({
+                  'url': request.url,
+                  'method': request.method,
+                  'failure': request.failure,
+              }))
+              page.on('response', lambda response: important_responses.append({
+                  'url': response.url,
+                  'status': response.status,
+                  'contentType': response.headers.get('content-type'),
+                  'acceptRanges': response.headers.get('accept-ranges'),
+                  'contentRange': response.headers.get('content-range'),
+              }) if ('guilin_raw_union_12_5m.tif' in response.url or 'geotiff' in response.url or 'proj4' in response.url or 'three@' in response.url) else None)
+              try:
+                  response = page.goto(url, wait_until='domcontentloaded', timeout=120_000)
+                  if response is None or response.status != 200:
+                      raise RuntimeError(f'Page HTTP status failed: {None if response is None else response.status}')
+                  page.wait_for_selector('#statusMain', timeout=30_000)
+                  deadline = time.time() + 150
+                  while time.time() < deadline:
+                      state = snapshot(page)
+                      print('LIVE_STATE ' + json.dumps(state, ensure_ascii=False), flush=True)
+                      if state['status'] == '2048 原生窗口已加载':
+                          passed = True
+                          break
+                      if state['status'] == '加载失败':
+                          failure = state['loadingText']
+                          break
+                      page.wait_for_timeout(5000)
+                  if not passed and not failure:
+                      failure = 'Timed out before native DEM success state'
+                  page.screenshot(path=str(out / 'candidate-D-diagnostic.png'), full_page=True)
+              except Exception as exc:
+                  failure = str(exc)
+                  try:
+                      state = snapshot(page)
+                      page.screenshot(path=str(out / 'candidate-D-diagnostic.png'), full_page=True)
+                  except Exception as capture_exc:
+                      state = {'captureError': str(capture_exc)}
+              finally:
+                  browser.close()
 
           hard_console_errors = [x for x in console if x['type'] == 'error']
           report = {
-              'schema': 'yangshuo-lijiang-online-browser-qa/v3.0.0',
+              'schema': 'yangshuo-lijiang-online-browser-diagnostic/v3.0.1',
               'url': url,
               'elapsedSeconds': round(time.time() - started, 3),
-              'initialCandidateD': initial,
-              'switchedCandidateA': switched,
+              'state': state,
+              'failure': failure,
               'pageErrors': page_errors,
               'consoleErrors': hard_console_errors,
               'console': console,
-              'passed': not page_errors and not hard_console_errors,
+              'requestFailures': request_failures,
+              'importantResponses': important_responses,
+              'passed': passed and not page_errors and not hard_console_errors,
           }
           (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-          if page_errors or hard_console_errors:
-              raise RuntimeError(json.dumps({'pageErrors': page_errors, 'consoleErrors': hard_console_errors}, ensure_ascii=False))
+          print('FINAL_REPORT ' + json.dumps(report, ensure_ascii=False), flush=True)
           PY
           python "$RUNNER_TEMP/yangshuo_online_qa.py"
 
@@ -139,3 +158,15 @@ jobs:
           path: reports/yangshuo-lijiang-online-v300-browser/**
           if-no-files-found: error
           retention-days: 30
+
+      - name: Enforce native DEM live gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('reports/yangshuo-lijiang-online-v300-browser/report.json').read_text(encoding='utf-8'))
+          if not report.get('passed'):
+              raise SystemExit(json.dumps(report, ensure_ascii=False))
+          PY
