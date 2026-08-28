@@ -1,0 +1,88 @@
+name: Fix Yangshuo TSL noise import v3.1.1
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/fix-yangshuo-noise-import-v311.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-yangshuo-noise-import-v311
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Replace unsupported snoise export with MaterialX noise
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path('web/yangshuo-noise-terrain-v310/index.html')
+          text = path.read_text(encoding='utf-8')
+          before_calls = len(re.findall(r'\bsnoise\s*\(', text))
+          if before_calls < 1:
+              raise SystemExit('Expected at least one snoise call before patch')
+
+          pattern = re.compile(r"import\s*\{(?P<body>.*?)\}\s*from\s*['\"]three/tsl['\"]\s*;", re.S)
+          match = pattern.search(text)
+          if not match:
+              raise SystemExit('Unable to locate three/tsl named import')
+
+          names = []
+          for raw in match.group('body').split(','):
+              name = raw.strip()
+              if not name or name == 'snoise':
+                  continue
+              if name not in names:
+                  names.append(name)
+          if 'mx_noise_float' not in names:
+              names.append('mx_noise_float')
+          replacement = "import {\n      " + ",\n      ".join(names) + "\n    } from 'three/tsl';"
+          text = text[:match.start()] + replacement + text[match.end():]
+          text = re.sub(r'\bsnoise\s*\(', 'mx_noise_float(', text)
+
+          if re.search(r'\bsnoise\b', text):
+              raise SystemExit('Unsupported snoise token remains after patch')
+          if text.count('mx_noise_float') < before_calls + 1:
+              raise SystemExit('MaterialX replacement count is unexpectedly low')
+
+          path.write_text(text, encoding='utf-8')
+          print({'replacedCalls': before_calls, 'mxNoiseTokens': text.count('mx_noise_float')})
+          PY
+
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('web/yangshuo-noise-terrain-v310/index.html').read_text(encoding='utf-8')
+          module = re.search(r'<script type="module">\s*(.*?)\s*</script>', html, re.S)
+          if not module:
+              raise SystemExit('module script not found')
+          Path('/tmp/yangshuo-noise-v311.mjs').write_text(module.group(1), encoding='utf-8')
+          PY
+          node --check /tmp/yangshuo-noise-v311.mjs
+
+      - name: Commit patch to existing Draft PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/yangshuo-noise-terrain-v310/index.html
+          git commit -m "fix(guilin): use supported MaterialX TSL noise export"
+          git push origin HEAD:skill/dem-procedural-landscape-v010
