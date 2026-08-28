@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>阳朔漓江 2048 原生 DEM 三维检查</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    :root{color-scheme:dark;--panel:rgba(12,18,17,.86);--line:rgba(255,255,255,.14);--text:#f3f5ef;--muted:#aeb9ad;--accent:#a8d18d;--blue:#77b8c6}
+    *{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:#101817;color:var(--text);font-family:Inter,"Noto Sans SC","Microsoft YaHei",sans-serif}
+    #viewer{position:fixed;inset:0}canvas{display:block}
+    .topbar{position:fixed;left:18px;top:16px;right:18px;z-index:5;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;pointer-events:none}
+    .brand,.status-card,.panel,.loading-card{background:var(--panel);border:1px solid var(--line);box-shadow:0 16px 48px rgba(0,0,0,.28);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+    .brand{padding:13px 15px;border-radius:14px;max-width:min(590px,68vw)}
+    .brand small{display:block;color:var(--accent);font-weight:750;letter-spacing:.12em;font-size:10px}.brand h1{margin:4px 0 2px;font-size:19px;line-height:1.2}.brand p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+    .status-card{padding:10px 13px;border-radius:12px;min-width:188px;text-align:right}.status-card strong{display:block;font-size:12px}.status-card span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+    .panel{position:fixed;right:18px;top:100px;bottom:18px;z-index:6;width:300px;border-radius:16px;padding:14px;overflow:auto;overscroll-behavior:contain}
+    .section{padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid var(--line)}.section:last-child{border:0;margin-bottom:0;padding-bottom:0}.section h2{font-size:11px;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;text-transform:uppercase}
+    .candidate-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.candidate{appearance:none;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:rgba(255,255,255,.04);color:var(--text);text-align:left;cursor:pointer}.candidate b{display:block;font-size:13px}.candidate span{font-size:10px;color:var(--muted)}.candidate.active{border-color:rgba(168,209,141,.78);background:rgba(168,209,141,.15)}.candidate:disabled{opacity:.45;cursor:wait}
+    .metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}.metric{border:1px solid var(--line);border-radius:10px;padding:8px;background:rgba(255,255,255,.025)}.metric dt{font-size:9px;color:var(--muted);margin:0}.metric dd{font-size:12px;font-weight:700;margin:4px 0 0;overflow-wrap:anywhere}
+    label.row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:9px 0 5px}label.row output{color:var(--accent);font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#a8d18d}
+    .button-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.action{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--text);border-radius:9px;padding:8px 6px;font-size:11px;cursor:pointer}.action:hover{background:rgba(255,255,255,.09)}.action.active{border-color:rgba(119,184,198,.7);background:rgba(119,184,198,.13)}
+    .checks{display:grid;gap:7px}.check{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}.dot{width:7px;height:7px;border-radius:50%;background:#6e7a70}.dot.ok{background:#8fc27a;box-shadow:0 0 12px rgba(143,194,122,.65)}.dot.bad{background:#dd7f70}
+    .help{position:fixed;left:18px;bottom:18px;z-index:5;background:rgba(10,15,14,.72);border:1px solid var(--line);border-radius:10px;padding:8px 11px;color:var(--muted);font-size:10px;pointer-events:none}
+    #loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,rgba(44,70,61,.92),rgba(8,12,12,.97));transition:opacity .35s ease}.loading-card{width:min(450px,calc(100vw - 34px));border-radius:17px;padding:19px}.loading-card h2{margin:0 0 8px;font-size:17px}.loading-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}.progress{height:6px;background:rgba(255,255,255,.09);border-radius:999px;margin:14px 0 8px;overflow:hidden}.progress i{display:block;height:100%;width:5%;border-radius:inherit;background:linear-gradient(90deg,#7da875,#acd493);transition:width .25s ease}.loading-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:10px}.error{color:#ffb1a7!important;white-space:pre-wrap}.retry{display:none;margin-top:13px;width:100%}
+    @media(max-width:820px){.topbar{left:10px;right:10px;top:10px}.brand{max-width:calc(100vw - 20px);padding:10px 12px}.brand h1{font-size:15px}.brand p{display:none}.status-card{display:none}.panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;height:210px;padding:11px}.panel .section{display:none}.panel .section:first-child,.panel .section:nth-child(3){display:block}.candidate-grid{grid-template-columns:repeat(4,1fr)}.candidate{padding:8px 6px}.candidate span{display:none}.help{display:none}}
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+  <div class="topbar">
+    <div class="brand"><small>YANGSHUO LIJIANG · NATIVE DEM V300</small><h1 id="title">相公山至兴坪第一湾</h1><p>2048 × 2048 原生像元 · 12.5 米 · 25.6 公里正方形 · 高程改动 0 米</p></div>
+    <div class="status-card"><strong id="statusMain">正在连接原生 DEM</strong><span id="statusSub">候选 D</span></div>
+  </div>
+  <aside class="panel">
+    <section class="section"><h2>候选窗口</h2><div id="candidateGrid" class="candidate-grid"></div></section>
+    <section class="section"><h2>原生数据</h2><dl class="metrics">
+      <div class="metric"><dt>源窗口</dt><dd id="sourceGrid">2048 × 2048</dd></div><div class="metric"><dt>采样间距</dt><dd>12.5 m</dd></div>
+      <div class="metric"><dt>覆盖范围</dt><dd>25.6 × 25.6 km</dd></div><div class="metric"><dt>有效覆盖</dt><dd id="validFraction">读取中</dd></div>
+      <div class="metric"><dt>高程范围</dt><dd id="elevationRange">读取中</dd></div><div class="metric"><dt>显示网格</dt><dd id="displayGrid">512 × 512</dd></div>
+    </dl></section>
+    <section class="section"><h2>视图</h2><div class="button-row"><button class="action" data-view="overview">总览</button><button class="action" data-view="valley">河谷</button><button class="action" data-view="close">近地</button></div>
+      <label class="row" for="vertical"><span>垂直显示</span><output id="verticalValue">1.00×</output></label><input id="vertical" type="range" min="0.70" max="2.00" step="0.05" value="1.00" />
+      <label class="row" for="light"><span>光照方向</span><output id="lightValue">315°</output></label><input id="light" type="range" min="0" max="359" step="1" value="315" />
+      <div class="button-row" style="margin-top:10px"><button id="riverToggle" class="action active">漓江</button><button id="wireToggle" class="action">网格</button><button id="resetButton" class="action">复位</button></div>
+    </section>
+    <section class="section"><h2>验证</h2><div class="checks"><div class="check"><span>原始 12.5 米 Release</span><i id="sourceCheck" class="dot"></i></div><div class="check"><span>2048 原生像元窗口</span><i id="windowCheck" class="dot"></i></div><div class="check"><span>无插值与补洞</span><i id="policyCheck" class="dot ok"></i></div><div class="check"><span>宏观与微观增量 0 米</span><i class="dot ok"></i></div></div></section>
+  </aside>
+  <div class="help">左键旋转 · 右键平移 · 滚轮缩放 · 点击 A/B/C/D 切换真实窗口</div>
+  <div id="loading"><div class="loading-card"><h2 id="loadingTitle">加载 2048 原生高程窗口</h2><p id="loadingText">连接已锁定的 12.5 米 GeoTIFF，并读取候选 D。</p><div class="progress"><i id="progressBar"></i></div><div class="loading-meta"><span id="progressLabel">准备</span><span id="progressValue">0%</span></div><button id="retryButton" class="action retry">重新加载</button></div></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { fromUrl } from 'https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm';
+    import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.11.0/+esm';
+
+    const RELEASE_URL = 'https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif';
+    const RIVER_URL = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/4b85e23093e89fdb273795ae1c53c160ba41e4dd/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson';
+    const EXPECTED = { width:17408, height:18867, resolution:12.5, sourceSha:'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4' };
+    const CANDIDATES = {
+      D:{id:'D',name:'相公山至兴坪第一湾',role:'首选视觉',window:[6996,13629,2048,2048],bounds:[437312.5,2742887.5,462912.5,2768487.5],center:[110.505964,24.915551]},
+      A:{id:'A',name:'阳朔县城北侧漓江峰丛谷地',role:'工程校准',window:[6983,14506,2048,2048],bounds:[437150,2731925,462750,2757525],center:[110.504749,24.816544]},
+      C:{id:'C',name:'兴坪南侧九马画山漓江贴水峡谷段',role:'贴水陡崖',window:[6955,13988,2048,2048],bounds:[436800,2738400,462400,2764000],center:[110.501051,24.875008]},
+      B:{id:'B',name:'阳朔县城东北漓江弯道与低地',role:'对照窗口',window:[7137,14858,2048,2048],bounds:[439075,2727525,464675,2753125],center:[110.523948,24.776870]}
+    };
+    const ORDER=['D','A','C','B'];
+    const $=id=>document.getElementById(id);
+    let renderer,scene,camera,controls,terrain,wire,texture,sourceHeights,baseVertexHeights,current=CANDIDATES.D,currentMin=0,currentMax=1,currentGrid=512,tiffImage,riverGeoJSON,riverGroup,verticalScale=1;
+
+    const ui={loading:$('loading'),loadingTitle:$('loadingTitle'),loadingText:$('loadingText'),progressBar:$('progressBar'),progressLabel:$('progressLabel'),progressValue:$('progressValue'),retry:$('retryButton'),statusMain:$('statusMain'),statusSub:$('statusSub')};
+    function progress(value,label,text){const pct=Math.max(0,Math.min(100,Math.round(value)));ui.progressBar.style.width=pct+'%';ui.progressValue.textContent=pct+'%';ui.progressLabel.textContent=label;if(text)ui.loadingText.textContent=text;}
+    function setStatus(main,sub){ui.statusMain.textContent=main;ui.statusSub.textContent=sub||'';}
+    function nextFrame(){return new Promise(resolve=>requestAnimationFrame(resolve));}
+    function setBusy(busy){document.querySelectorAll('.candidate').forEach(b=>b.disabled=busy);}
+    function showError(error){console.error(error);ui.loading.style.opacity='1';ui.loading.style.pointerEvents='auto';ui.loadingTitle.textContent='原生 DEM 加载失败';ui.loadingText.classList.add('error');ui.loadingText.textContent=(error&&error.message?error.message:String(error))+'\n\n请刷新页面重试。';ui.retry.style.display='block';progress(0,'失败');setStatus('加载失败','可重新加载');$('sourceCheck').className='dot bad';setBusy(false);}
+
+    function initScene(){
+      renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;$('viewer').appendChild(renderer.domElement);
+      scene=new THREE.Scene();scene.background=new THREE.Color(0xb7c7bd);scene.fog=new THREE.FogExp2(0xb7c7bd,.025);
+      camera=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.02,220);camera.position.set(19,12,23);
+      controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.065;controls.target.set(0,.23,0);controls.minDistance=.8;controls.maxDistance=80;controls.maxPolarAngle=Math.PI*.49;
+      scene.add(new THREE.HemisphereLight(0xeaf2e7,0x394137,1.65));
+      const sun=new THREE.DirectionalLight(0xfff1d7,2.8);sun.name='sun';sun.position.set(-18,30,-18);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-24;sun.shadow.camera.right=24;sun.shadow.camera.top=24;sun.shadow.camera.bottom=-24;scene.add(sun);
+      const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:0x718077,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.035;floor.receiveShadow=true;scene.add(floor);
+      addCompass();animate();
+      addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+    }
+    function addCompass(){const g=new THREE.Group();const mat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7});const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.7,8),mat);shaft.rotation.z=-Math.PI/2;shaft.position.set(-12.25,.12,-11.9);g.add(shaft);const tip=new THREE.Mesh(new THREE.ConeGeometry(.065,.22,12),new THREE.MeshBasicMaterial({color:0xe6a37d}));tip.rotation.z=-Math.PI/2;tip.position.set(-11.82,.12,-11.9);g.add(tip);scene.add(g)}
+    function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+
+    function buildCandidateButtons(){const host=$('candidateGrid');host.innerHTML='';for(const id of ORDER){const c=CANDIDATES[id];const b=document.createElement('button');b.className='candidate'+(id===current.id?' active':'');b.innerHTML=`<b>${id} · ${c.name}</b><span>${c.role}</span>`;b.onclick=()=>loadCandidate(id);host.appendChild(b)}}
+
+    async function ensureSource(){
+      if(tiffImage)return;
+      progress(8,'连接 GeoTIFF','读取 GitHub Release 中锁定的 12.5 米联合 DEM。');
+      const tiff=await fromUrl(RELEASE_URL,{cacheSize:320});
+      tiffImage=await tiff.getImage();
+      const width=tiffImage.getWidth(),height=tiffImage.getHeight();
+      const resolution=tiffImage.getResolution();
+      if(width!==EXPECTED.width||height!==EXPECTED.height)throw new Error(`源栅格尺寸不符：${width} × ${height}`);
+      if(Math.abs(Math.abs(resolution[0])-EXPECTED.resolution)>.001||Math.abs(Math.abs(resolution[1])-EXPECTED.resolution)>.001)throw new Error(`源栅格分辨率不符：${resolution.join(', ')}`);
+      $('sourceCheck').className='dot ok';
+    }
+
+    async function readWindow(candidate){
+      const [col,row,w,h]=candidate.window;
+      progress(16,'读取原生像元',`候选 ${candidate.id} · ${candidate.name} · 2048 × 2048`);
+      const data=await tiffImage.readRasters({window:[col,row,col+w,row+h],samples:[0],interleave:true});
+      if(data.length!==w*h)throw new Error(`窗口像元数不符：${data.length}`);
+      return data;
+    }
+
+    function scanHeights(data){let min=Infinity,max=-Infinity,valid=0;for(let i=0;i<data.length;i++){const v=data[i];if(Number.isFinite(v)&&v!==0&&v>-1000&&v<10000){if(v<min)min=v;if(v>max)max=v;valid++}}return{min,max,valid,fraction:valid/data.length}}
+    function sampleHeight(data,x,y){const xx=Math.max(0,Math.min(2047,x|0)),yy=Math.max(0,Math.min(2047,y|0));const v=data[yy*2048+xx];return Number.isFinite(v)&&v!==0?v:currentMin}
+    function palette(t){
+      const stops=[[0,[48,83,56]],[.18,[70,100,61]],[.38,[91,111,69]],[.58,[115,119,85]],[.75,[139,132,105]],[.9,[165,156,137]],[1,[203,199,185]]];
+      for(let i=1;i<stops.length;i++){if(t<=stops[i][0]){const a=stops[i-1],b=stops[i],q=(t-a[0])/(b[0]-a[0]);return a[1].map((v,j)=>v+(b[1][j]-v)*q)}}return stops.at(-1)[1]
+    }
+
+    async function buildTexture(data,min,max){
+      progress(42,'生成 2048 地表纹理','计算原生高程着色和阴影。');
+      const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=2048;const ctx=canvas.getContext('2d',{alpha:false});const image=ctx.createImageData(2048,2048);const out=image.data;const range=Math.max(1,max-min);const sun=[-.45,.78,-.43];
+      for(let y=0;y<2048;y++){
+        const ym=Math.max(0,y-1),yp=Math.min(2047,y+1);
+        for(let x=0;x<2048;x++){
+          const xm=Math.max(0,x-1),xp=Math.min(2047,x+1),idx=y*2048+x,o=idx*4,z=data[idx];
+          if(!Number.isFinite(z)||z===0){out[o]=54;out[o+1]=66;out[o+2]=62;out[o+3]=255;continue}
+          const dx=(sampleHeight(data,xp,y)-sampleHeight(data,xm,y))/25;const dz=(sampleHeight(data,x,yp)-sampleHeight(data,x,ym))/25;let nx=-dx,ny=1,nz=-dz;const inv=1/Math.hypot(nx,ny,nz);nx*=inv;ny*=inv;nz*=inv;const shade=Math.max(.18,Math.min(1.05,.58+.48*(nx*sun[0]+ny*sun[1]+nz*sun[2])));const slope=Math.min(1,Math.hypot(dx,dz)/2.2);const t=Math.max(0,Math.min(1,(z-min)/range));const c=palette(t);const rock=Math.min(1,Math.max(0,(slope-.18)*1.35+t*.28));out[o]=Math.min(255,c[0]*shade+rock*10);out[o+1]=Math.min(255,c[1]*shade+rock*8);out[o+2]=Math.min(255,c[2]*shade+rock*7);out[o+3]=255;
+        }
+        if(y%128===0){progress(42+y/2048*25,'生成 2048 地表纹理');await nextFrame()}
+      }
+      ctx.putImageData(image,0,0);const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;return tex;
+    }
+
+    function disposeTerrain(){if(terrain){scene.remove(terrain);terrain.geometry.dispose();terrain.material.dispose();terrain=null}if(wire){scene.remove(wire);wire.geometry.dispose();wire.material.dispose();wire=null}if(texture){texture.dispose();texture=null}if(riverGroup){scene.remove(riverGroup);riverGroup.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});riverGroup=null}}
+    function buildTerrain(data,min,max,tex){
+      disposeTerrain();sourceHeights=data;texture=tex;currentMin=min;currentMax=max;const segments=currentGrid-1;const geometry=new THREE.PlaneGeometry(25.6,25.6,segments,segments);geometry.rotateX(-Math.PI/2);const pos=geometry.attributes.position;baseVertexHeights=new Float32Array(pos.count);
+      for(let gy=0;gy<currentGrid;gy++){const sy=Math.round(gy*(2047/segments));for(let gx=0;gx<currentGrid;gx++){const sx=Math.round(gx*(2047/segments));const i=gy*currentGrid+gx;const h=(sampleHeight(data,sx,sy)-min)/1000;baseVertexHeights[i]=h;pos.setY(i,h*verticalScale)}}
+      pos.needsUpdate=true;geometry.computeVertexNormals();const material=new THREE.MeshStandardMaterial({map:tex,roughness:.96,metalness:0,side:THREE.DoubleSide});terrain=new THREE.Mesh(geometry,material);terrain.castShadow=true;terrain.receiveShadow=true;scene.add(terrain);
+      const wireMat=new THREE.MeshBasicMaterial({color:0xc8d3c7,wireframe:true,transparent:true,opacity:.12,depthWrite:false});wire=new THREE.Mesh(geometry.clone(),wireMat);wire.visible=false;wire.position.y=.005;scene.add(wire);$('displayGrid').textContent=`${currentGrid} × ${currentGrid}`;
+    }
+    function updateVertical(value){verticalScale=value;if(!terrain||!baseVertexHeights)return;for(const mesh of [terrain,wire]){const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,baseVertexHeights[i]*value);p.needsUpdate=true;mesh.geometry.computeVertexNormals()}buildRivers();}
+
+    async function ensureRiverData(){if(riverGeoJSON)return riverGeoJSON;try{const r=await fetch(RIVER_URL,{cache:'force-cache'});if(!r.ok)throw new Error('river '+r.status);riverGeoJSON=await r.json()}catch(e){console.warn('River overlay unavailable',e);riverGeoJSON={type:'FeatureCollection',features:[]}}return riverGeoJSON}
+    function geometryLines(g){if(!g)return[];if(g.type==='LineString')return[g.coordinates];if(g.type==='MultiLineString')return g.coordinates;if(g.type==='GeometryCollection')return g.geometries.flatMap(geometryLines);return[]}
+    function buildRivers(){
+      if(riverGroup){scene.remove(riverGroup);riverGroup.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});riverGroup=null}if(!sourceHeights||!riverGeoJSON||!$('riverToggle').classList.contains('active'))return;
+      riverGroup=new THREE.Group();const [minX,minY,maxX,maxY]=current.bounds;const paths=[];
+      for(const f of riverGeoJSON.features||[]){for(const line of geometryLines(f.geometry)){let run=[];for(const ll of line){const p=proj4('EPSG:4326','EPSG:32649',ll);const inside=p[0]>=minX&&p[0]<=maxX&&p[1]>=minY&&p[1]<=maxY;if(inside){const col=(p[0]-minX)/12.5,row=(maxY-p[1])/12.5,h=(sampleHeight(sourceHeights,col,row)-currentMin)/1000*verticalScale+.012;run.push(new THREE.Vector3((p[0]-minX)/1000-12.8,h,(maxY-p[1])/1000-12.8))}else if(run.length>1){paths.push(run);run=[]}else run=[]}if(run.length>1)paths.push(run)}}
+      for(const path of paths){const step=Math.max(1,Math.floor(path.length/180));const pts=path.filter((_,i)=>i%step===0||i===path.length-1);if(pts.length<2)continue;const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');const geo=new THREE.TubeGeometry(curve,Math.min(420,Math.max(16,pts.length*3)),.035,6,false);const mat=new THREE.MeshPhysicalMaterial({color:0x4f9cad,roughness:.24,metalness:0,transparent:true,opacity:.9,clearcoat:.65});const m=new THREE.Mesh(geo,mat);riverGroup.add(m)}scene.add(riverGroup);
+    }
+
+    function viewPreset(name){const peak=(currentMax-currentMin)/1000*verticalScale;if(name==='overview'){camera.position.set(19,Math.max(9,peak*7+7),22);controls.target.set(0,peak*.22,0)}else if(name==='valley'){camera.position.set(6,Math.max(2.2,peak*2.6),9);controls.target.set(-1,peak*.16,-1.5)}else{camera.position.set(2.8,Math.max(.9,peak*1.4),4.2);controls.target.set(0,peak*.28,0)}controls.update()}
+    function setSun(deg){const r=THREE.MathUtils.degToRad(deg),sun=scene.getObjectByName('sun');sun.position.set(Math.sin(r)*28,30,-Math.cos(r)*28)}
+
+    async function loadCandidate(id){
+      current=CANDIDATES[id]||CANDIDATES.D;buildCandidateButtons();setBusy(true);ui.loading.style.opacity='1';ui.loading.style.pointerEvents='auto';ui.loadingTitle.textContent='加载 2048 原生高程窗口';ui.loadingText.classList.remove('error');ui.retry.style.display='none';$('title').textContent=current.name;setStatus('正在读取原生 DEM',`候选 ${current.id}`);$('windowCheck').className='dot';$('validFraction').textContent='读取中';$('elevationRange').textContent='读取中';
+      try{
+        await ensureSource();const data=await readWindow(current);progress(34,'验证像元覆盖');const stats=scanHeights(data);if(stats.fraction<.995)throw new Error(`有效覆盖率 ${(stats.fraction*100).toFixed(3)}%，低于 99.5% 门槛`);$('validFraction').textContent=(stats.fraction*100).toFixed(3)+'%';$('elevationRange').textContent=`${stats.min.toFixed(1)}–${stats.max.toFixed(1)} m`;$('windowCheck').className='dot ok';
+        const tex=await buildTexture(data,stats.min,stats.max);progress(72,'构建三维网格');buildTerrain(data,stats.min,stats.max,tex);await ensureRiverData();progress(88,'叠加漓江');buildRivers();viewPreset('overview');
+        progress(100,'完成');setStatus('2048 原生窗口已加载',`候选 ${current.id} · ${(stats.fraction*100).toFixed(2)}% 有效`);setTimeout(()=>{ui.loading.style.opacity='0';ui.loading.style.pointerEvents='none'},260);setBusy(false);
+        const u=new URL(location.href);u.searchParams.set('candidate',current.id);history.replaceState(null,'',u);
+      }catch(e){showError(e)}
+    }
+
+    proj4.defs('EPSG:32649','+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs +type=crs');
+    initScene();buildCandidateButtons();
+    document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>viewPreset(b.dataset.view)));
+    $('vertical').addEventListener('input',e=>{$('verticalValue').textContent=Number(e.target.value).toFixed(2)+'×';updateVertical(Number(e.target.value))});
+    $('light').addEventListener('input',e=>{$('lightValue').textContent=e.target.value+'°';setSun(Number(e.target.value))});
+    $('wireToggle').onclick=()=>{wire.visible=!wire.visible;$('wireToggle').classList.toggle('active',wire.visible)};
+    $('riverToggle').onclick=()=>{$('riverToggle').classList.toggle('active');buildRivers()};
+    $('resetButton').onclick=()=>viewPreset('overview');ui.retry.onclick=()=>location.reload();
+    const initial=(new URL(location.href)).searchParams.get('candidate')?.toUpperCase();loadCandidate(CANDIDATES[initial]?initial:'D');
+  </script>
+</body>
+</html>
