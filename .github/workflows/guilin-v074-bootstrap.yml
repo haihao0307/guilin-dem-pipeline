@@ -1,0 +1,60 @@
+name: Guilin v0.7.4 source bootstrap
+
+on:
+  push:
+    branches:
+      - project/guilin-v074-north-up-crop-and-distillation
+    paths:
+      - .github/workflows/guilin-v074-bootstrap.yml
+      - projects/guilin-v074-north-up-crop-and-distillation/.bootstrap/**
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v074-source-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  materialize-reviewed-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_BRANCH: project/guilin-v074-north-up-crop-and-distillation
+      BOOTSTRAP_DIR: projects/guilin-v074-north-up-crop-and-distillation/.bootstrap
+      ARCHIVE_SHA256: 54e9011f5c900dc77f465b95c4ade1328831cc1744ff49a44e15d3fb49c5ae5a
+    steps:
+      - name: Checkout exact bootstrap commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Reconstruct and verify reviewed source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "${EXPECTED_BRANCH}"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          archive="${RUNNER_TEMP}/guilin-v074-reviewed-source.tar.gz"
+          cat "${BOOTSTRAP_DIR}"/source.tar.gz.part-* > "${archive}"
+          echo "${ARCHIVE_SHA256}  ${archive}" | sha256sum -c -
+          tar -tzf "${archive}" > "${RUNNER_TEMP}/archive-files.txt"
+          grep -Fx '.github/workflows/guilin-v074-north-up-crop.yml' "${RUNNER_TEMP}/archive-files.txt"
+          grep -Fx 'projects/guilin-v074-north-up-crop-and-distillation/web/index.html' "${RUNNER_TEMP}/archive-files.txt"
+          tar -xzf "${archive}" -C "${GITHUB_WORKSPACE}"
+          node projects/guilin-v074-north-up-crop-and-distillation/tests/static_contract_test.mjs
+
+      - name: Replace bootstrap carrier with normal source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${BOOTSTRAP_DIR}"
+          rm -f .github/workflows/guilin-v074-bootstrap.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/guilin-v074-north-up-crop.yml \
+            .github/workflows/guilin-v074-bootstrap.yml \
+            projects/guilin-v074-north-up-crop-and-distillation
+          git commit -m 'feat(v074): materialize reviewed north-up crop source'
+          git push origin "HEAD:${EXPECTED_BRANCH}"
