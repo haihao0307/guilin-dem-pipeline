@@ -45,16 +45,18 @@ jobs:
           tar -xzf "${archive}" -C "${GITHUB_WORKSPACE}"
           node projects/guilin-v074-north-up-crop-and-distillation/tests/static_contract_test.mjs
 
-      - name: Replace bootstrap carrier with normal source tree
+      - name: Commit normal project source without workflow mutation
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf "${BOOTSTRAP_DIR}"
-          rm -f .github/workflows/guilin-v074-bootstrap.yml
+          rm -f .github/workflows/guilin-v074-north-up-crop.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add .github/workflows/guilin-v074-north-up-crop.yml \
-            .github/workflows/guilin-v074-bootstrap.yml \
-            projects/guilin-v074-north-up-crop-and-distillation
-          git commit -m 'feat(v074): materialize reviewed north-up crop source'
+          git add projects/guilin-v074-north-up-crop-and-distillation
+          test -n "$(git diff --cached --name-only)"
+          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+            echo 'Bootstrap must not mutate workflow files' >&2
+            exit 1
+          fi
+          git commit -m 'feat(v074): materialize reviewed north-up crop project source'
           git push origin "HEAD:${EXPECTED_BRANCH}"
