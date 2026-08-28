@@ -1,0 +1,79 @@
+name: Audit Guilin v0.7 Release mosaic for Yangshuo 2048
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/yangshuo-lijiang-release-audit-v300.yml
+      - projects/guilin/config/yangshuo_lijiang_release_audit_v300.json
+      - projects/guilin/config/yangshuo_lijiang_candidates_v300.json
+      - tools/terrain_hydrology/audit_yangshuo_release_mosaic_v300.py
+  workflow_dispatch:
+
+concurrency:
+  group: yangshuo-release-audit-v300-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Fixed Release asset, grid coverage and NoData audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AUDIT_DIR: .release-audit/guilin-v070-raw-mosaic-v001
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+
+      - name: Install GDAL and NumPy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal python3-numpy
+          gdalinfo --version
+          /usr/bin/python3 -c "from osgeo import gdal, osr; import numpy; print(gdal.VersionInfo())"
+
+      - name: Download fixed public Release assets
+        run: |
+          mkdir -p "$AUDIT_DIR"
+          gh release download guilin-v070-raw-mosaic-v001 \
+            --repo haihao0307/guilin-dem-pipeline \
+            --pattern guilin_raw_union_12_5m.tif \
+            --pattern mosaic_manifest.json \
+            --pattern mosaic_qa.json \
+            --dir "$AUDIT_DIR" \
+            --clobber
+          ls -lh "$AUDIT_DIR"
+          sha256sum "$AUDIT_DIR"/*
+
+      - name: Audit four native 2048 windows without production
+        id: audit
+        continue-on-error: true
+        run: |
+          /usr/bin/python3 tools/terrain_hydrology/audit_yangshuo_release_mosaic_v300.py \
+            --root . \
+            --source "$AUDIT_DIR/guilin_raw_union_12_5m.tif" \
+            --audit-config projects/guilin/config/yangshuo_lijiang_release_audit_v300.json \
+            --report reports/YANGSHUO_LIJIANG_RELEASE_MOSAIC_AUDIT_V300.json
+
+      - name: Upload Release mosaic audit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-release-mosaic-audit-v300-${{ github.sha }}
+          path: |
+            reports/YANGSHUO_LIJIANG_RELEASE_MOSAIC_AUDIT_V300.json
+            .release-audit/guilin-v070-raw-mosaic-v001/mosaic_manifest.json
+            .release-audit/guilin-v070-raw-mosaic-v001/mosaic_qa.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce audit result
+        if: steps.audit.outcome != 'success'
+        run: |
+          echo "Release mosaic audit failed or one or more native 2048 windows lack required coverage." >&2
+          exit 1

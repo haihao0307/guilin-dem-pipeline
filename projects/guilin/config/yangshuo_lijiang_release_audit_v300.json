@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "guilin-yangshuo-release-mosaic-audit/v3.0.0",
+  "status": "audit-only-unapproved",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "candidateConfigPath": "projects/guilin/config/yangshuo_lijiang_candidates_v300.json",
+  "releaseAsset": {
+    "tag": "guilin-v070-raw-mosaic-v001",
+    "releaseId": 376827923,
+    "assetId": 530206518,
+    "name": "guilin_raw_union_12_5m.tif",
+    "expectedSha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+    "bytes": 124348471,
+    "contentType": "image/tiff",
+    "sourceCount": 12,
+    "role": "audit-only-release-fallback",
+    "approvedForExtraction": false
+  },
+  "expectedRaster": {
+    "crs": "EPSG:32649",
+    "pixelSpacingMeters": [
+      12.5,
+      12.5
+    ],
+    "northUp": true,
+    "minimumCandidateValidFraction": 0.995,
+    "requiredWindowGrid": [
+      2048,
+      2048
+    ]
+  },
+  "companionAssets": [
+    {
+      "assetId": 530206516,
+      "name": "mosaic_manifest.json",
+      "expectedSha256": "e835a4a6f66ef4b8934ead60ba491c1bbf9930ff2b738646ce077b1ffc481527"
+    },
+    {
+      "assetId": 530206524,
+      "name": "mosaic_qa.json",
+      "expectedSha256": "011b3249d8bc48a9b919a03ed7dd40bff211c4db1aebc62eed6700802bac4a2c"
+    }
+  ],
+  "policy": {
+    "switchTruthSourceOnAuditPass": false,
+    "generateTerrain": false,
+    "generateCandidatePreviews": false,
+    "resample": false,
+    "interpolateNoData": false,
+    "macroDeltaMeters": 0.0,
+    "microDeltaMeters": 0.0,
+    "userAreaApproval": false,
+    "visualAcceptance": false
+  },
+  "reportPath": "reports/YANGSHUO_LIJIANG_RELEASE_MOSAIC_AUDIT_V300.json"
+}
