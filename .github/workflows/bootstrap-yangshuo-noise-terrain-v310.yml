@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
   group: bootstrap-yangshuo-noise-terrain-v310
@@ -42,7 +41,8 @@ jobs:
           python -m json.tool projects/guilin/config/yangshuo_noise_terrain_v310.json > /dev/null
           python -m py_compile tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
           rm -rf .bootstrap
-          rm -f .github/workflows/bootstrap-yangshuo-noise-terrain-v310.yml
+          rm -rf tools/procedural_landscape/__pycache__
+          rm -f .github/workflows/publish-yangshuo-noise-terrain-v310.yml
 
       - name: Commit implementation to the existing Draft PR branch
         shell: bash
@@ -53,19 +53,3 @@ jobs:
           git add -A
           git commit -m "feat(guilin): add TSL noise terrain v3.1"
           git push origin HEAD:skill/dem-procedural-landscape-v010
-
-      - name: Dispatch public publish and browser QA
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          for attempt in 1 2 3 4 5; do
-            if gh api --method POST \
-              "repos/${GITHUB_REPOSITORY}/actions/workflows/publish-yangshuo-noise-terrain-v310.yml/dispatches" \
-              -f ref='skill/dem-procedural-landscape-v010'; then
-              exit 0
-            fi
-            sleep $((attempt * 3))
-          done
-          exit 1
