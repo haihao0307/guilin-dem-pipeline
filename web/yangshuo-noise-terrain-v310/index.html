@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>小王 · 阳朔喀斯特 1 米增强地形实验室 v3.1</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.webgpu.js",
+      "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.webgpu.js",
+      "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.tsl.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101714;
+      --panel: rgba(12, 19, 16, .88);
+      --panel-soft: rgba(255, 255, 255, .045);
+      --line: rgba(255, 255, 255, .14);
+      --line-strong: rgba(191, 220, 169, .46);
+      --text: #f1f4ed;
+      --muted: #aab5a8;
+      --accent: #b5d892;
+      --accent-2: #79b8bd;
+      --warn: #e7bf77;
+      --bad: #ef8576;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+    button, input { font: inherit; }
+    #viewer { position: fixed; inset: 0; }
+    canvas { display: block; }
+    .topbar { position: fixed; left: 18px; right: 18px; top: 16px; z-index: 6; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; pointer-events: none; }
+    .glass { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 16px 48px rgba(0,0,0,.3); backdrop-filter: blur(17px); -webkit-backdrop-filter: blur(17px); }
+    .brand { max-width: min(680px, calc(100vw - 370px)); padding: 13px 15px; border-radius: 15px; }
+    .brand small { display: block; color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .brand h1 { margin: 4px 0 3px; font-size: 20px; line-height: 1.18; }
+    .brand p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .status { min-width: 220px; padding: 10px 13px; border-radius: 13px; text-align: right; }
+    .status strong { display: block; font-size: 12px; }
+    .status span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .panel { position: fixed; z-index: 7; top: 104px; right: 18px; bottom: 18px; width: 328px; overflow: auto; overscroll-behavior: contain; border-radius: 17px; padding: 14px; }
+    .section { padding: 0 0 14px; margin: 0 0 14px; border-bottom: 1px solid var(--line); }
+    .section:last-child { border: 0; padding-bottom: 0; margin-bottom: 0; }
+    .section h2 { margin: 0 0 10px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; }
+    .preset-grid { display: grid; grid-template-columns: 1fr; gap: 7px; }
+    .preset, .action { appearance: none; border: 1px solid var(--line); background: var(--panel-soft); color: var(--text); border-radius: 10px; cursor: pointer; transition: .16s ease; }
+    .preset { padding: 10px 11px; text-align: left; }
+    .preset b { display: block; font-size: 12px; }
+    .preset span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+    .preset:hover, .action:hover { background: rgba(255,255,255,.085); }
+    .preset.active { border-color: var(--line-strong); background: rgba(181,216,146,.14); }
+    .preset:disabled, .action:disabled { opacity: .45; cursor: wait; }
+    .button-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .action { padding: 8px 6px; font-size: 10px; }
+    .action.active { border-color: rgba(121,184,189,.75); background: rgba(121,184,189,.15); }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 0; }
+    .metric { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.025); }
+    .metric dt { margin: 0; color: var(--muted); font-size: 8px; }
+    .metric dd { margin: 4px 0 0; font-size: 11px; font-weight: 750; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    label.row { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin: 9px 0 5px; font-size: 11px; }
+    label.row output { color: var(--accent); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: #a9cc88; }
+    .checks { display: grid; gap: 7px; }
+    .check { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 10px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: #6d776d; }
+    .dot.ok { background: #91c77b; box-shadow: 0 0 13px rgba(145,199,123,.65); }
+    .dot.bad { background: var(--bad); }
+    .notice { margin: 9px 0 0; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(231,191,119,.26); background: rgba(231,191,119,.07); color: #d8c9a9; font-size: 9px; line-height: 1.55; }
+    .help { position: fixed; z-index: 5; left: 18px; bottom: 18px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px; background: rgba(8,13,11,.72); color: var(--muted); font-size: 9px; pointer-events: none; }
+    #loading { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: radial-gradient(circle at 50% 38%, rgba(53,77,62,.95), rgba(7,11,9,.98)); transition: opacity .35s ease; }
+    .loading-card { width: min(470px, calc(100vw - 32px)); padding: 20px; border-radius: 18px; }
+    .loading-card h2 { margin: 0 0 7px; font-size: 17px; }
+    .loading-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .progress { height: 6px; margin: 15px 0 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.09); }
+    .progress i { display: block; width: 4%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #769e70, #b9df96); transition: width .22s ease; }
+    .loading-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; }
+    .error { color: #ffb1a7 !important; white-space: pre-wrap; }
+    #retryButton { display: none; width: 100%; margin-top: 12px; }
+    @media (max-width: 840px) {
+      .topbar { left: 10px; right: 10px; top: 10px; }
+      .brand { max-width: calc(100vw - 20px); padding: 10px 12px; }
+      .brand h1 { font-size: 15px; }
+      .brand p, .status { display: none; }
+      .panel { left: 10px; right: 10px; top: auto; bottom: 10px; width: auto; height: 250px; padding: 11px; }
+      .section { display: none; }
+      .section:nth-child(1), .section:nth-child(3), .section:nth-child(4) { display: block; }
+      .preset-grid { grid-template-columns: repeat(3, 1fr); }
+      .preset { padding: 8px 7px; }
+      .preset span { display: none; }
+      .metrics { grid-template-columns: repeat(4, 1fr); }
+      .metric:nth-child(n+5) { display: none; }
+      .help { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer" aria-label="阳朔喀斯特一米增强地形三维实验室"></div>
+  <header class="topbar">
+    <div class="brand glass">
+      <small>XIAOWANG · YANGSHUO KARST · TSL NOISE v3.1</small>
+      <h1 id="title">相公山至兴坪第一湾 · 喀斯特峰壁细化</h1>
+      <p>12.5 米原生 DEM 只读底座 · 512 米局部 1 米运行时网格 · 稻田田埂 · 河床贴地 · 漓江水面网格 · 无植物</p>
+    </div>
+    <div class="status glass"><strong id="statusMain">正在连接原生高程</strong><span id="statusSub">准备噪声地貌编译</span></div>
+  </header>
+
+  <aside class="panel glass">
+    <section class="section">
+      <h2>地貌工作镜头</h2>
+      <div id="presetGrid" class="preset-grid">
+        <button class="preset active" data-preset="karst"><b>喀斯特峰壁</b><span>候选 D · 塔峰、陡壁、裂隙与短促峰脚</span></button>
+        <button class="preset" data-preset="paddy"><b>稻田台地</b><span>候选 A · 低地、田块、田埂与灌排边缘</span></button>
+        <button class="preset" data-preset="river"><b>漓江河谷</b><span>候选 C · 高密采样河道与连续水面</span></button>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>真值与增强网格</h2>
+      <dl class="metrics">
+        <div class="metric"><dt>真值窗口</dt><dd id="sourceGrid">2048 × 2048</dd></div>
+        <div class="metric"><dt>真值间距</dt><dd>12.5 m</dd></div>
+        <div class="metric"><dt>增强网格</dt><dd id="detailGrid">513 × 513</dd></div>
+        <div class="metric"><dt>增强间距</dt><dd id="detailSpacing">1.00 m</dd></div>
+        <div class="metric"><dt>局部范围</dt><dd>512 × 512 m</dd></div>
+        <div class="metric"><dt>高程范围</dt><dd id="elevationRange">读取中</dd></div>
+        <div class="metric"><dt>河道采样</dt><dd id="riverSampling">4.0 m</dd></div>
+        <div class="metric"><dt>平均河宽</dt><dd id="riverWidth">读取中</dd></div>
+      </dl>
+      <p class="notice">页面标记为 1 米增强地形运行时样板。1 米表示局部输出网格与噪声细节预算，不代表原生 1 米测绘数据。</p>
+    </section>
+
+    <section class="section">
+      <h2>可逆地貌增量</h2>
+      <label class="row" for="macro"><span>喀斯特宏观细化</span><output id="macroValue">1.00×</output></label>
+      <input id="macro" type="range" min="0" max="1.5" step="0.05" value="1" />
+      <label class="row" for="micro"><span>岩壁微观细节</span><output id="microValue">1.00×</output></label>
+      <input id="micro" type="range" min="0" max="1.5" step="0.05" value="1" />
+      <label class="row" for="bund"><span>稻田田埂与台地</span><output id="bundValue">1.00×</output></label>
+      <input id="bund" type="range" min="0" max="1.5" step="0.05" value="1" />
+      <label class="row" for="riverCarve"><span>河床贴地切入</span><output id="riverCarveValue">1.00×</output></label>
+      <input id="riverCarve" type="range" min="0" max="1.25" step="0.05" value="1" />
+      <label class="row" for="vertical"><span>垂直显示</span><output id="verticalValue">1.00×</output></label>
+      <input id="vertical" type="range" min="0.65" max="1.75" step="0.05" value="1" />
+    </section>
+
+    <section class="section">
+      <h2>显示与镜头</h2>
+      <div class="button-grid">
+        <button id="truthToggle" class="action">真值对照</button>
+        <button id="waterToggle" class="action active">水面</button>
+        <button id="wireToggle" class="action">1 m 网格</button>
+      </div>
+      <div class="button-grid" style="margin-top:7px">
+        <button class="action" data-view="overview">总览</button>
+        <button class="action" data-view="ground">近地</button>
+        <button id="resetButton" class="action">复位</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>在线验证</h2>
+      <div class="checks">
+        <div class="check"><span>原生 DEM SHA256 锁定</span><i id="sourceCheck" class="dot"></i></div>
+        <div class="check"><span>真值高程修改数为 0</span><i id="truthCheck" class="dot ok"></i></div>
+        <div class="check"><span>局部 1 米网格已编译</span><i id="gridCheck" class="dot"></i></div>
+        <div class="check"><span>河道为带宽水面网格</span><i id="riverCheck" class="dot"></i></div>
+        <div class="check"><span>植物实例数量为 0</span><i class="dot ok"></i></div>
+      </div>
+    </section>
+  </aside>
+
+  <div class="help">左键旋转 · 右键平移 · 滚轮缩放 · 选择喀斯特、稻田或漓江工作镜头</div>
+
+  <div id="loading">
+    <div class="loading-card glass">
+      <h2 id="loadingTitle">连接 12.5 米原生高程</h2>
+      <p id="loadingText">读取同源 2048 × 2048 高程资产，建立局部 1 米增强网格。</p>
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="loading-meta"><span id="progressLabel">准备</span><span id="progressValue">0%</span></div>
+      <button id="retryButton" class="action">重新加载</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three/webgpu';
+    import {
+      Fn,
+      attribute,
+      bumpMap,
+      color,
+      float,
+      floor,
+      fract,
+      mix,
+      mx_noise_float,
+      normalLocal,
+      positionLocal,
+      smoothstep,
+      snoise,
+      uniform,
+      vec2,
+      vec3
+    } from 'three/tsl';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.11.0/+esm';
+
+    const SOURCE_ROOT = '../yangshuo-lijiang-2048-v300/data';
+    const RIVER_URL = './data/lijiang_osm.geojson';
+    const ASSET_VERSION = '3100';
+    const PATCH_METERS = 512;
+    const RIVER_SAMPLE_METERS = 4;
+    const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
+    const CANDIDATES = {
+      D: { id:'D', name:'相公山至兴坪第一湾', bounds:[437312.5,2742887.5,462912.5,2768487.5], window:[6996,13629,2048,2048] },
+      A: { id:'A', name:'阳朔县城北侧漓江峰丛谷地', bounds:[437150,2731925,462750,2757525], window:[6983,14506,2048,2048] },
+      C: { id:'C', name:'兴坪南侧九马画山漓江贴水峡谷段', bounds:[436800,2738400,462400,2764000], window:[6955,13988,2048,2048] }
+    };
+    const PRESETS = {
+      karst: { id:'karst', candidate:'D', title:'相公山至兴坪第一湾 · 喀斯特峰壁细化', seed:31.7, macro:1, micro:1, bund:.25, river:1 },
+      paddy: { id:'paddy', candidate:'A', title:'阳朔县城北侧 · 稻田台地与田埂', seed:67.2, macro:.35, micro:.55, bund:1, river:1 },
+      river: { id:'river', candidate:'C', title:'九马画山贴水峡谷 · 漓江连续水面', seed:93.4, macro:.7, micro:.75, bund:.35, river:1 }
+    };
+
+    const $ = id => document.getElementById(id);
+    const ui = {
+      loading: $('loading'), loadingTitle: $('loadingTitle'), loadingText: $('loadingText'), progressBar: $('progressBar'),
+      progressLabel: $('progressLabel'), progressValue: $('progressValue'), retry: $('retryButton'), statusMain: $('statusMain'),
+      statusSub: $('statusSub'), title: $('title')
+    };
+
+    let renderer, scene, camera, controls, sun, terrain, terrainMaterial, waterGroup, currentPreset = PRESETS.karst;
+    let sourceIndex, riverGeoJSON, sourceData, sourceManifest, currentCandidate, patchState, currentDatum = 0;
+    const sourceCache = new Map();
+    const uniforms = {
+      enhance: uniform(1), macro: uniform(1), micro: uniform(1), bund: uniform(1), river: uniform(1), vertical: uniform(1),
+      center: uniform(new THREE.Vector2()), seed: uniform(31.7)
+    };
+
+    window.__terrainQA = {
+      schema: 'yangshuo-noise-terrain-online-qa/v3.1.0', ready: false, error: null, preset: null,
+      truthSourceSha256: EXPECTED_SOURCE_SHA, sourceGrid: [2048,2048], sourceSpacingMeters: 12.5,
+      patchMeters: PATCH_METERS, detailGrid: null, detailSpacingMeters: null, truthMutationCount: 0,
+      vegetationInstances: 0, riverGeometry: null, riverSampleMeters: RIVER_SAMPLE_METERS,
+      riverVertexCount: 0, riverAverageWidthMeters: 0, rendererBackend: null, deltaCapsMeters: { macro:3.2, micro:.72, bund:.42, riverBed:4.2 }
+    };
+
+    function progress(value, label, text) {
+      const pct = Math.max(0, Math.min(100, Math.round(value)));
+      ui.progressBar.style.width = `${pct}%`;
+      ui.progressValue.textContent = `${pct}%`;
+      ui.progressLabel.textContent = label;
+      if (text) ui.loadingText.textContent = text;
+    }
+
+    function setStatus(main, sub='') {
+      ui.statusMain.textContent = main;
+      ui.statusSub.textContent = sub;
+    }
+
+    function setBusy(busy) {
+      document.querySelectorAll('button').forEach(button => {
+        if (button !== ui.retry) button.disabled = busy;
+      });
+    }
+
+    function showLoading(title, text) {
+      ui.loadingTitle.textContent = title;
+      ui.loadingText.classList.remove('error');
+      ui.loadingText.textContent = text;
+      ui.retry.style.display = 'none';
+      ui.loading.style.opacity = '1';
+      ui.loading.style.pointerEvents = 'auto';
+    }
+
+    function hideLoading() {
+      ui.loading.style.opacity = '0';
+      ui.loading.style.pointerEvents = 'none';
+    }
+
+    function showError(error) {
+      console.error(error);
+      window.__terrainQA.ready = false;
+      window.__terrainQA.error = error?.message || String(error);
+      ui.loading.style.opacity = '1';
+      ui.loading.style.pointerEvents = 'auto';
+      ui.loadingTitle.textContent = '增强地形编译失败';
+      ui.loadingText.classList.add('error');
+      ui.loadingText.textContent = `${window.__terrainQA.error}\n\n可刷新页面重新验证。`;
+      ui.retry.style.display = 'block';
+      progress(0, '失败');
+      setStatus('加载失败', '已保留原始真值状态');
+      setBusy(false);
+    }
+
+    function smooth01(a, b, x) {
+      if (a === b) return x < a ? 0 : 1;
+      const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    }
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function distance2(a, b) { const dx = a[0] - b[0], dy = a[1] - b[1]; return dx * dx + dy * dy; }
+
+    async function sha256Hex(buffer) {
+      const digest = await crypto.subtle.digest('SHA-256', buffer);
+      return [...new Uint8Array(digest)].map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function initRenderer() {
+      const params = new URL(location.href).searchParams;
+      renderer = new THREE.WebGPURenderer({ antialias: true, forceWebGL: params.get('webgl') === '1' });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.shadowMap.enabled = false;
+      await renderer.init();
+      $('viewer').appendChild(renderer.domElement);
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xaebdb2);
+      scene.fog = new THREE.FogExp2(0xaebdb2, 0.0015);
+
+      camera = new THREE.PerspectiveCamera(43, innerWidth / innerHeight, 0.4, 6000);
+      camera.position.set(410, 260, 430);
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.07;
+      controls.minDistance = 12;
+      controls.maxDistance = 1800;
+      controls.maxPolarAngle = Math.PI * 0.495;
+      controls.target.set(0, 35, 0);
+
+      scene.add(new THREE.HemisphereLight(0xdce8dc, 0x455044, 2.4));
+      sun = new THREE.DirectionalLight(0xfff4db, 4.6);
+      sun.position.set(-360, 620, 280);
+      scene.add(sun);
+
+      renderer.setAnimationLoop(() => {
+        controls.update();
+        renderer.render(scene, camera);
+      });
+      window.__terrainQA.rendererBackend = renderer.backend?.isWebGLBackend ? 'WebGL2 fallback' : 'WebGPU';
+    }
+
+    async function ensureSources() {
+      if (sourceIndex && riverGeoJSON) return;
+      progress(6, '校验真值索引', '读取同源发布的原生 DEM 索引与漓江几何。');
+      const [indexResponse, riverResponse] = await Promise.all([
+        fetch(`${SOURCE_ROOT}/index.json?v=${ASSET_VERSION}`, { cache:'no-cache' }),
+        fetch(`${RIVER_URL}?v=${ASSET_VERSION}`, { cache:'no-cache' })
+      ]);
+      if (!indexResponse.ok) throw new Error(`真值索引 HTTP ${indexResponse.status}`);
+      if (!riverResponse.ok) throw new Error(`漓江几何 HTTP ${riverResponse.status}`);
+      sourceIndex = await indexResponse.json();
+      riverGeoJSON = await riverResponse.json();
+      if (sourceIndex?.source?.sha256 !== EXPECTED_SOURCE_SHA) throw new Error('原生 DEM SHA256 与锁定值不符');
+      if (sourceIndex?.source?.pixelSpacingMeters !== 12.5) throw new Error('原生 DEM 像元间距并非 12.5 米');
+      if (sourceIndex?.grid?.[0] !== 2048 || sourceIndex?.grid?.[1] !== 2048) throw new Error('真值窗口并非 2048 × 2048');
+      if (sourceIndex?.resampling !== false || sourceIndex?.gapFill !== false) throw new Error('真值资产违反无重采样或无补洞规则');
+      $('sourceCheck').className = 'dot ok';
+    }
+
+    async function loadCandidateSource(candidate) {
+      if (sourceCache.has(candidate.id)) return sourceCache.get(candidate.id);
+      progress(13, '读取原生高程', `候选 ${candidate.id} · 2048 × 2048 · 12.5 米`);
+      const manifestResponse = await fetch(`${SOURCE_ROOT}/${candidate.id}/manifest.json?v=${ASSET_VERSION}`, { cache:'no-cache' });
+      if (!manifestResponse.ok) throw new Error(`候选 ${candidate.id} 清单 HTTP ${manifestResponse.status}`);
+      const manifest = await manifestResponse.json();
+      if (manifest.sourceSha256 !== EXPECTED_SOURCE_SHA) throw new Error(`候选 ${candidate.id} 源 SHA256 不符`);
+      if (manifest.grid?.[0] !== 2048 || manifest.grid?.[1] !== 2048 || manifest.pixelSpacingMeters !== 12.5) throw new Error(`候选 ${candidate.id} 网格规格不符`);
+      if (manifest.resampling !== false || manifest.gapFill !== false) throw new Error(`候选 ${candidate.id} 违反原生像元规则`);
+      if (JSON.stringify(manifest.window) !== JSON.stringify(candidate.window)) throw new Error(`候选 ${candidate.id} 像元窗口不符`);
+      const heightResponse = await fetch(`${SOURCE_ROOT}/${candidate.id}/${manifest.heightFile}?v=${ASSET_VERSION}`, { cache:'force-cache' });
+      if (!heightResponse.ok) throw new Error(`候选 ${candidate.id} 高程 HTTP ${heightResponse.status}`);
+      const buffer = await heightResponse.arrayBuffer();
+      if (buffer.byteLength !== 2048 * 2048 * 2 || buffer.byteLength !== manifest.heightBytes) throw new Error(`候选 ${candidate.id} 高程字节数不符`);
+      progress(22, '复核高程哈希', `候选 ${candidate.id} · SHA256`);
+      const actualSha = await sha256Hex(buffer);
+      if (actualSha !== manifest.heightSha256) throw new Error(`候选 ${candidate.id} 高程 SHA256 不符`);
+      let data = new Int16Array(buffer);
+      const littleEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
+      if (!littleEndian) {
+        const swapped = new Int16Array(data.length);
+        const view = new DataView(buffer);
+        for (let i = 0; i < swapped.length; i++) swapped[i] = view.getInt16(i * 2, true);
+        data = swapped;
+      }
+      const result = { data, manifest };
+      sourceCache.set(candidate.id, result);
+      return result;
+    }
+
+    function sampleRaster(data, col, row) {
+      const x = clamp(col, 0, 2047), y = clamp(row, 0, 2047);
+      const x0 = Math.floor(x), y0 = Math.floor(y), x1 = Math.min(2047, x0 + 1), y1 = Math.min(2047, y0 + 1);
+      const tx = x - x0, ty = y - y0;
+      const value = (ix, iy) => {
+        const v = data[iy * 2048 + ix];
+        return Number.isFinite(v) && v !== 0 && v > -1000 && v < 10000 ? v : NaN;
+      };
+      const values = [value(x0,y0), value(x1,y0), value(x0,y1), value(x1,y1)];
+      const valid = values.filter(Number.isFinite);
+      if (!valid.length) return 0;
+      const fallback = valid.reduce((a,b) => a + b, 0) / valid.length;
+      const a = lerp(Number.isFinite(values[0]) ? values[0] : fallback, Number.isFinite(values[1]) ? values[1] : fallback, tx);
+      const b = lerp(Number.isFinite(values[2]) ? values[2] : fallback, Number.isFinite(values[3]) ? values[3] : fallback, tx);
+      return lerp(a, b, ty);
+    }
+
+    function sampleWorld(data, candidate, x, y) {
+      const [minX, , , maxY] = candidate.bounds;
+      return sampleRaster(data, (x - minX) / 12.5, (maxY - y) / 12.5);
+    }
+
+    function slopeRelief(data, candidate, x, y) {
+      const d = 18.75;
+      const hE = sampleWorld(data, candidate, x + d, y), hW = sampleWorld(data, candidate, x - d, y);
+      const hN = sampleWorld(data, candidate, x, y + d), hS = sampleWorld(data, candidate, x, y - d);
+      const gx = (hE - hW) / (2 * d), gy = (hN - hS) / (2 * d);
+      const slope = Math.atan(Math.hypot(gx, gy)) * 180 / Math.PI;
+      const radius = 75;
+      const samples = [
+        sampleWorld(data,candidate,x,y), sampleWorld(data,candidate,x+radius,y), sampleWorld(data,candidate,x-radius,y),
+        sampleWorld(data,candidate,x,y+radius), sampleWorld(data,candidate,x,y-radius),
+        sampleWorld(data,candidate,x+radius*.7,y+radius*.7), sampleWorld(data,candidate,x-radius*.7,y+radius*.7),
+        sampleWorld(data,candidate,x+radius*.7,y-radius*.7), sampleWorld(data,candidate,x-radius*.7,y-radius*.7)
+      ];
+      const relief = Math.max(...samples) - Math.min(...samples);
+      return { slope, relief, elevation: samples[0] };
+    }
+
+    function geometryLines(geometry) {
+      if (!geometry) return [];
+      if (geometry.type === 'LineString') return [geometry.coordinates];
+      if (geometry.type === 'MultiLineString') return geometry.coordinates;
+      if (geometry.type === 'GeometryCollection') return geometry.geometries.flatMap(geometryLines);
+      return [];
+    }
+
+    function densifyLine(projected, step = RIVER_SAMPLE_METERS) {
+      const out = [];
+      for (let i = 0; i < projected.length - 1; i++) {
+        const a = projected[i], b = projected[i + 1];
+        const dx = b[0] - a[0], dy = b[1] - a[1];
+        const distance = Math.hypot(dx, dy);
+        const count = Math.max(1, Math.ceil(distance / step));
+        for (let j = 0; j < count; j++) {
+          const t = j / count;
+          if (!out.length || distance2(out[out.length - 1], [a[0] + dx*t, a[1] + dy*t]) > .01) out.push([a[0] + dx*t, a[1] + dy*t]);
+        }
+      }
+      if (projected.length) out.push(projected[projected.length - 1]);
+      return out;
+    }
+
+    function projectRiverSequences(candidate) {
+      const sequences = [];
+      const [minX,minY,maxX,maxY] = candidate.bounds;
+      for (const feature of riverGeoJSON.features || []) {
+        for (const line of geometryLines(feature.geometry)) {
+          const projected = line.map(ll => proj4('EPSG:4326','EPSG:32649',ll));
+          const dense = densifyLine(projected);
+          const countInside = dense.reduce((sum,p) => sum + (p[0] >= minX-500 && p[0] <= maxX+500 && p[1] >= minY-500 && p[1] <= maxY+500 ? 1 : 0), 0);
+          if (countInside > 8) sequences.push(dense);
+        }
+      }
+      if (!sequences.length) throw new Error(`候选 ${candidate.id} 内没有可用漓江采样序列`);
+      sequences.sort((a,b) => b.length - a.length);
+      return sequences;
+    }
+
+    function nearestPointIndex(points, target) {
+      let best = 0, bestD = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const d = distance2(points[i], target);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      return best;
+    }
+
+    function findFocus(data, candidate, preset, sequence) {
+      const center = [(candidate.bounds[0] + candidate.bounds[2]) * .5, (candidate.bounds[1] + candidate.bounds[3]) * .5];
+      const start = nearestPointIndex(sequence, center);
+      if (preset.id === 'river') return { center:[...sequence[start]], riverIndex:start, landPoint:[...sequence[start]] };
+      let best = null;
+      const from = Math.max(2, start - 650), to = Math.min(sequence.length - 3, start + 650);
+      for (let i = from; i <= to; i += 10) {
+        const prev = sequence[i - 2], next = sequence[i + 2];
+        const tx = next[0] - prev[0], ty = next[1] - prev[1], len = Math.hypot(tx,ty) || 1;
+        const nx = -ty / len, ny = tx / len;
+        const riverPoint = sequence[i];
+        const offsets = preset.id === 'karst' ? [-190,-155,-120,120,155,190] : [-180,-145,-110,-82,82,110,145,180];
+        for (const offset of offsets) {
+          const x = riverPoint[0] + nx * offset, y = riverPoint[1] + ny * offset;
+          if (x < candidate.bounds[0] + 300 || x > candidate.bounds[2] - 300 || y < candidate.bounds[1] + 300 || y > candidate.bounds[3] - 300) continue;
+          const sr = slopeRelief(data, candidate, x, y);
+          const centerPenalty = Math.sqrt(distance2([x,y],center)) * .001;
+          let score;
+          if (preset.id === 'karst') score = sr.slope * 2.4 + sr.relief * .34 - Math.abs(Math.abs(offset) - 145) * .035 - centerPenalty;
+          else score = 150 - sr.slope * 8.5 - sr.relief * .7 - Math.abs(Math.abs(offset) - 118) * .07 - sr.elevation * .018 - centerPenalty;
+          if (!best || score > best.score) best = { score, riverIndex:i, riverPoint:[...riverPoint], landPoint:[x,y], sr };
+        }
+      }
+      if (!best) return { center:[...sequence[start]], riverIndex:start, landPoint:[...sequence[start]] };
+      const landWeight = preset.id === 'karst' ? .66 : .74;
+      return {
+        center:[lerp(best.riverPoint[0],best.landPoint[0],landWeight), lerp(best.riverPoint[1],best.landPoint[1],landWeight)],
+        riverIndex:best.riverIndex,
+        landPoint:best.landPoint,
+        selection:best.sr
+      };
+    }
+
+    function movingAverage(values, radius) {
+      const out = new Float64Array(values.length);
+      for (let i = 0; i < values.length; i++) {
+        let sum = 0, weight = 0;
+        for (let j = Math.max(0,i-radius); j <= Math.min(values.length-1,i+radius); j++) {
+          const w = 1 - Math.abs(i-j)/(radius+1);
+          sum += values[j] * w;
+          weight += w;
+        }
+        out[i] = sum / weight;
+      }
+      return out;
+    }
+
+    function prepareLocalRiver(data, candidate, sequence, focus) {
+      const start = focus.riverIndex;
+      const from = Math.max(1, start - 420), to = Math.min(sequence.length - 2, start + 420);
+      const points = [];
+      for (let i = from; i <= to; i++) {
+        const p = sequence[i];
+        if (Math.abs(p[0] - focus.center[0]) > PATCH_METERS * .78 || Math.abs(p[1] - focus.center[1]) > PATCH_METERS * .78) continue;
+        const prev = sequence[i - 1], next = sequence[i + 1];
+        const tx = next[0] - prev[0], ty = next[1] - prev[1], len = Math.hypot(tx,ty) || 1;
+        const nx = -ty/len, ny = tx/len;
+        const phase = i * .071 + currentPreset.seed;
+        const width = clamp(66 + Math.sin(phase) * 10 + Math.sin(phase*.31) * 8, 44, 94);
+        const cross = [
+          sampleWorld(data,candidate,p[0],p[1]),
+          sampleWorld(data,candidate,p[0]+nx*width*.22,p[1]+ny*width*.22),
+          sampleWorld(data,candidate,p[0]-nx*width*.22,p[1]-ny*width*.22),
+          sampleWorld(data,candidate,p[0]+nx*width*.40,p[1]+ny*width*.40),
+          sampleWorld(data,candidate,p[0]-nx*width*.40,p[1]-ny*width*.40)
+        ];
+        points.push({ x:p[0], y:p[1], nx, ny, width, rawWater:Math.min(...cross) + .22 });
+      }
+      if (points.length < 8) throw new Error('局部河道采样不足，无法生成连续水面');
+      let levels = Float64Array.from(points.map(p => p.rawWater));
+      levels = movingAverage(levels, 6);
+      levels = movingAverage(levels, 4);
+      for (let i = 0; i < points.length; i++) points[i].water = levels[i];
+      const averageWidth = points.reduce((sum,p) => sum + p.width, 0) / points.length;
+      return { points, averageWidth };
+    }
+
+    function buildRiverSegments(localRiver) {
+      const segments = [];
+      for (let i = 0; i < localRiver.points.length - 1; i++) {
+        const a = localRiver.points[i], b = localRiver.points[i+1];
+        const length = Math.hypot(b.x-a.x,b.y-a.y);
+        if (length > RIVER_SAMPLE_METERS * 2.6) continue;
+        segments.push({ a, b, dx:b.x-a.x, dy:b.y-a.y, length2:length*length });
+      }
+      if (!segments.length) throw new Error('河道连续线段生成失败');
+      return segments;
+    }
+
+    function nearestRiverInfo(x, y, segments) {
+      let best = null, bestD2 = Infinity;
+      for (const segment of segments) {
+        const t = clamp(((x-segment.a.x)*segment.dx + (y-segment.a.y)*segment.dy) / (segment.length2 || 1), 0, 1);
+        const px = segment.a.x + segment.dx*t, py = segment.a.y + segment.dy*t;
+        const dx = x-px, dy = y-py, d2 = dx*dx+dy*dy;
+        if (d2 < bestD2) {
+          bestD2 = d2;
+          best = {
+            distance:Math.sqrt(d2), t,
+            width:lerp(segment.a.width,segment.b.width,t),
+            water:lerp(segment.a.water,segment.b.water,t)
+          };
+        }
+      }
+      return best || { distance:9999, width:60, water:0, t:0 };
+    }
+
+    function makeGridGeometry(data, candidate, focus, localRiver) {
+      const mobile = matchMedia('(max-width: 840px)').matches;
+      const spacing = mobile ? 2 : 1;
+      const segments = Math.round(PATCH_METERS / spacing);
+      const grid = segments + 1;
+      const count = grid * grid;
+      const positions = new Float32Array(count * 3);
+      const uv = new Float32Array(count * 2);
+      const karst = new Float32Array(count);
+      const paddy = new Float32Array(count);
+      const slopeAttr = new Float32Array(count);
+      const reliefAttr = new Float32Array(count);
+      const riverMask = new Float32Array(count);
+      const riverDelta = new Float32Array(count);
+      const segmentsRiver = buildRiverSegments(localRiver);
+      const rawHeights = new Float64Array(count);
+      let min = Infinity, max = -Infinity;
+
+      progress(38, '重建 1 米基础曲面', `${grid} × ${grid} · 双线性读取 12.5 米真值`);
+      for (let gy = 0; gy < grid; gy++) {
+        const z = gy * spacing - PATCH_METERS * .5;
+        const worldY = focus.center[1] - z;
+        for (let gx = 0; gx < grid; gx++) {
+          const x = gx * spacing - PATCH_METERS * .5;
+          const worldX = focus.center[0] + x;
+          const i = gy * grid + gx;
+          const h = sampleWorld(data,candidate,worldX,worldY);
+          rawHeights[i] = h;
+          if (h < min) min = h;
+          if (h > max) max = h;
+        }
+      }
+      currentDatum = Math.floor(min / 10) * 10;
+
+      progress(49, '生成地貌父级掩膜', '坡度、局地起伏、低地、强岩壁与河距。');
+      let paddyCount = 0, karstCount = 0, riverCount = 0, minimumBedDepth = Infinity;
+      for (let gy = 0; gy < grid; gy++) {
+        const z = gy * spacing - PATCH_METERS * .5;
+        const worldY = focus.center[1] - z;
+        for (let gx = 0; gx < grid; gx++) {
+          const x = gx * spacing - PATCH_METERS * .5;
+          const worldX = focus.center[0] + x;
+          const i = gy * grid + gx;
+          const h = rawHeights[i];
+          const sr = slopeRelief(data,candidate,worldX,worldY);
+          const river = nearestRiverInfo(worldX,worldY,segmentsRiver);
+          const halfWidth = river.width * .5;
+          const waterCore = 1 - smooth01(Math.max(1,halfWidth-4), halfWidth+4, river.distance);
+          const bankMask = 1 - smooth01(halfWidth+2, halfWidth+24, river.distance);
+          let karstMask = smooth01(11,31,sr.slope) * smooth01(22,105,sr.relief) * (1-bankMask);
+          const relative = h - min;
+          let lowland = (1-smooth01(4.5,12,sr.slope)) * (1-smooth01(42,145,relative)) * (1-smooth01(halfWidth+18,halfWidth+260,river.distance));
+          let paddyMask = lowland * (1-waterCore) * (1-smooth01(16,30,sr.relief));
+          if (currentPreset.id === 'karst') paddyMask *= .28;
+          if (currentPreset.id === 'paddy') karstMask *= .42;
+          const normalizedSlope = clamp(sr.slope / 55,0,1);
+          const normalizedRelief = clamp(sr.relief / 140,0,1);
+          const bedDepth = 2.25 + (1-clamp(river.distance/Math.max(halfWidth,1),0,1)) * 1.35;
+          const targetBed = river.water - bedDepth;
+          const carve = waterCore * Math.min(0, targetBed - h);
+          if (waterCore > .3) minimumBedDepth = Math.min(minimumBedDepth, river.water - (h + carve));
+
+          positions[i*3] = x;
+          positions[i*3+1] = h - currentDatum;
+          positions[i*3+2] = z;
+          uv[i*2] = gx / segments;
+          uv[i*2+1] = 1 - gy / segments;
+          karst[i] = karstMask;
+          paddy[i] = paddyMask;
+          slopeAttr[i] = normalizedSlope;
+          reliefAttr[i] = normalizedRelief;
+          riverMask[i] = waterCore;
+          riverDelta[i] = carve;
+          if (karstMask > .35) karstCount++;
+          if (paddyMask > .35) paddyCount++;
+          if (waterCore > .35) riverCount++;
+        }
+      }
+
+      const indexCount = segments * segments * 6;
+      const indices = new Uint32Array(indexCount);
+      let k = 0;
+      for (let y = 0; y < segments; y++) {
+        for (let x = 0; x < segments; x++) {
+          const a = y*grid+x, b=a+1, c=a+grid, d=c+1;
+          indices[k++] = a; indices[k++] = c; indices[k++] = b;
+          indices[k++] = b; indices[k++] = c; indices[k++] = d;
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setIndex(new THREE.BufferAttribute(indices,1));
+      geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+      geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+      geometry.setAttribute('aKarst',new THREE.BufferAttribute(karst,1));
+      geometry.setAttribute('aPaddy',new THREE.BufferAttribute(paddy,1));
+      geometry.setAttribute('aSlope',new THREE.BufferAttribute(slopeAttr,1));
+      geometry.setAttribute('aRelief',new THREE.BufferAttribute(reliefAttr,1));
+      geometry.setAttribute('aRiverMask',new THREE.BufferAttribute(riverMask,1));
+      geometry.setAttribute('aRiverDelta',new THREE.BufferAttribute(riverDelta,1));
+      geometry.computeVertexNormals();
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+      if (geometry.boundingBox) { geometry.boundingBox.min.y -= 8; geometry.boundingBox.max.y += 8; }
+      return { geometry, grid, spacing, min, max, paddyCount, karstCount, riverCount, minimumBedDepth, riverSegments:segmentsRiver };
+    }
+
+    function makeTerrainMaterial() {
+      const aKarst = attribute('aKarst');
+      const aPaddy = attribute('aPaddy');
+      const aSlope = attribute('aSlope');
+      const aRelief = attribute('aRelief');
+      const aRiverMask = attribute('aRiverMask');
+      const aRiverDelta = attribute('aRiverDelta');
+
+      const worldPosition = Fn(() => vec2(positionLocal.x.add(uniforms.center.x), uniforms.center.y.sub(positionLocal.z)))();
+
+      const fbm = Fn(([p]) => {
+        const sum = float(0).toVar();
+        sum.addAssign(snoise(vec3(p.mul(.0105), uniforms.seed.add(1))).mul(.52));
+        sum.addAssign(snoise(vec3(p.mul(.021), uniforms.seed.add(7))).mul(.25));
+        sum.addAssign(snoise(vec3(p.mul(.042), uniforms.seed.add(13))).mul(.13));
+        sum.addAssign(snoise(vec3(p.mul(.084), uniforms.seed.add(29))).mul(.065));
+        return sum;
+      });
+
+      const ridged = Fn(([p]) => {
+        const n1 = float(1).sub(snoise(vec3(p.mul(.0085),uniforms.seed.add(17))).abs()).pow(3);
+        const n2 = float(1).sub(snoise(vec3(p.mul(.017),uniforms.seed.add(41))).abs()).pow(4).mul(.42);
+        return n1.add(n2).sub(.47);
+      });
+
+      const material = new THREE.MeshStandardNodeMaterial({ metalness:0, roughness:.88, side:THREE.DoubleSide });
+      material.positionNode = Fn(() => {
+        const position = positionLocal.toVar();
+        const world = worldPosition.toVar();
+        const warp = vec2(
+          snoise(vec3(world.mul(.0022),uniforms.seed.add(5))),
+          snoise(vec3(world.mul(.0022).add(vec2(31.7,-18.2)),uniforms.seed.add(19)))
+        ).mul(32);
+        const warped = world.add(warp);
+        const macro = ridged(warped).mul(3.2).mul(aKarst).mul(uniforms.macro);
+        const erosional = mx_noise_float(vec3(warped.mul(.031),uniforms.seed.add(73)),1,0).abs().pow(2.2).mul(-.46);
+        const microSignal = fbm(warped.mul(1.35)).mul(.48).add(erosional).mul(aKarst).mul(uniforms.micro);
+        const fracture = float(1).sub(snoise(vec3(warped.mul(.115),uniforms.seed.add(111))).abs()).pow(10).mul(-.24).mul(aKarst).mul(uniforms.micro);
+
+        const fieldWarp = vec2(
+          snoise(vec3(world.mul(.006),uniforms.seed.add(141))),
+          snoise(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
+        ).mul(7.5);
+        const field = world.add(fieldWarp);
+        const cellX = fract(field.x.div(43));
+        const cellY = fract(field.y.div(57));
+        const edgeX = cellX.min(cellX.oneMinus());
+        const edgeY = cellY.min(cellY.oneMinus());
+        const edge = edgeX.min(edgeY);
+        const bundLine = float(1).sub(smoothstep(float(.006),float(.032),edge));
+        const terraceTarget = floor(positionLocal.y.div(.24)).mul(.24);
+        const terraceDelta = terraceTarget.sub(positionLocal.y).mul(.62);
+        const paddyDelta = terraceDelta.add(bundLine.mul(.42)).mul(aPaddy).mul(uniforms.bund);
+        const riverDelta = aRiverDelta.mul(uniforms.river);
+        const verticalDelta = macro.add(microSignal).add(fracture).add(paddyDelta).add(riverDelta).mul(uniforms.enhance);
+        position.y.addAssign(verticalDelta);
+        const normalDetail = normalLocal.mul(microSignal.add(fracture).mul(.34).mul(uniforms.enhance));
+        position.addAssign(normalDetail);
+        position.y.mulAssign(uniforms.vertical);
+        return position;
+      })();
+
+      material.colorNode = Fn(() => {
+        const world = worldPosition;
+        const tone = snoise(vec3(world.mul(.018),uniforms.seed.add(211))).mul(.09).add(1);
+        const limestoneNoise = fbm(world.mul(.72)).mul(.14).add(.88);
+        const soil = color('#70664a');
+        const lowland = color('#6c684b');
+        const limestone = color('#7f8478').mul(limestoneNoise);
+        const cliff = color('#50584f');
+        const wet = color('#44524a');
+        const bundSoil = color('#7b704f');
+        const fieldWarp = vec2(
+          snoise(vec3(world.mul(.006),uniforms.seed.add(141))),
+          snoise(vec3(world.mul(.006).add(vec2(-22.4,46.1)),uniforms.seed.add(159)))
+        ).mul(7.5);
+        const field = world.add(fieldWarp);
+        const cx = fract(field.x.div(43));
+        const cy = fract(field.y.div(57));
+        const edge = cx.min(cx.oneMinus()).min(cy.min(cy.oneMinus()));
+        const bundLine = float(1).sub(smoothstep(float(.006),float(.032),edge)).mul(aPaddy);
+        let finalColor = soil.toVar();
+        finalColor.assign(mix(finalColor,lowland,aPaddy.mul(.88)));
+        finalColor.assign(mix(finalColor,limestone,aKarst.mul(.92)));
+        finalColor.assign(mix(finalColor,cliff,aSlope.mul(aKarst).mul(.72)));
+        finalColor.assign(mix(finalColor,bundSoil,bundLine.mul(.9)));
+        finalColor.assign(mix(finalColor,wet,aRiverMask.mul(.75)));
+        finalColor.mulAssign(tone);
+        return finalColor;
+      })();
+
+      const normalSignal = fbm(worldPosition.mul(1.9)).mul(aKarst).add(mx_noise_float(vec3(worldPosition.mul(.18),uniforms.seed.add(301)),1,0).mul(aRelief).mul(.25));
+      material.normalNode = bumpMap(normalSignal, uniforms.micro.mul(.38).mul(uniforms.enhance));
+      material.roughnessNode = mix(float(.78),float(.97),aPaddy).add(aRiverMask.mul(.01));
+      return material;
+    }
+
+    function splitRiverRuns(points, focus) {
+      const runs = [];
+      let run = [];
+      const limit = PATCH_METERS * .5 + 70;
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const inside = Math.abs(p.x-focus.center[0]) <= limit && Math.abs(p.y-focus.center[1]) <= limit;
+        if (inside) {
+          if (run.length) {
+            const prev = run[run.length-1];
+            if (Math.hypot(p.x-prev.x,p.y-prev.y) > RIVER_SAMPLE_METERS*2.7) { if (run.length>2) runs.push(run); run=[]; }
+          }
+          run.push(p);
+        } else if (run.length) {
+          if (run.length > 2) runs.push(run);
+          run = [];
+        }
+      }
+      if (run.length > 2) runs.push(run);
+      return runs;
+    }
+
+    function makeWaterGroup(localRiver, focus) {
+      const group = new THREE.Group();
+      const material = new THREE.MeshPhysicalMaterial({
+        color:0x3c8794, roughness:.19, metalness:0, transparent:true, opacity:.86,
+        transmission:.18, thickness:1.2, ior:1.333, side:THREE.DoubleSide, depthWrite:false
+      });
+      let vertexCount = 0;
+      for (const run of splitRiverRuns(localRiver.points,focus)) {
+        const positions = new Float32Array(run.length*2*3);
+        const uv = new Float32Array(run.length*2*2);
+        const indices = new Uint32Array((run.length-1)*6);
+        for (let i = 0; i < run.length; i++) {
+          const p = run[i];
+          const half = p.width*.5;
+          const leftX = p.x + p.nx*half - focus.center[0];
+          const leftZ = focus.center[1] - (p.y + p.ny*half);
+          const rightX = p.x - p.nx*half - focus.center[0];
+          const rightZ = focus.center[1] - (p.y - p.ny*half);
+          const y = p.water - currentDatum + .10;
+          const j = i*6;
+          positions[j]=leftX; positions[j+1]=y; positions[j+2]=leftZ;
+          positions[j+3]=rightX; positions[j+4]=y; positions[j+5]=rightZ;
+          uv[i*4]=0; uv[i*4+1]=i/(run.length-1); uv[i*4+2]=1; uv[i*4+3]=i/(run.length-1);
+        }
+        let k=0;
+        for (let i=0;i<run.length-1;i++) {
+          const a=i*2,b=a+1,c=a+2,d=a+3;
+          indices[k++]=a;indices[k++]=c;indices[k++]=b;indices[k++]=b;indices[k++]=c;indices[k++]=d;
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setIndex(new THREE.BufferAttribute(indices,1));
+        geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+        geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+        geometry.computeVertexNormals();
+        const mesh = new THREE.Mesh(geometry,material);
+        mesh.renderOrder=4;
+        group.add(mesh);
+        vertexCount += run.length*2;
+      }
+      group.scale.y = uniforms.vertical.value;
+      group.userData.material = material;
+      group.userData.vertexCount = vertexCount;
+      return group;
+    }
+
+    function disposeCurrent() {
+      if (terrain) {
+        scene.remove(terrain);
+        terrain.geometry.dispose();
+        terrain.material.dispose();
+        terrain = null;
+      }
+      if (waterGroup) {
+        scene.remove(waterGroup);
+        waterGroup.traverse(object => object.geometry?.dispose());
+        waterGroup.userData.material?.dispose();
+        waterGroup = null;
+      }
+    }
+
+    function updatePresetButtons() {
+      document.querySelectorAll('[data-preset]').forEach(button => button.classList.toggle('active',button.dataset.preset===currentPreset.id));
+    }
+
+    function updateControlsFromPreset() {
+      const values = { macro:currentPreset.macro, micro:currentPreset.micro, bund:currentPreset.bund, riverCarve:currentPreset.river };
+      for (const [id,value] of Object.entries(values)) {
+        $(id).value = value;
+        $(`${id}Value`).textContent = `${Number(value).toFixed(2)}×`;
+      }
+      uniforms.macro.value=currentPreset.macro;
+      uniforms.micro.value=currentPreset.micro;
+      uniforms.bund.value=currentPreset.bund;
+      uniforms.river.value=currentPreset.river;
+      uniforms.seed.value=currentPreset.seed;
+      uniforms.enhance.value=1;
+      $('truthToggle').classList.remove('active');
+      $('truthToggle').textContent='真值对照';
+    }
+
+    function viewPreset(name='overview') {
+      if (!patchState) return;
+      const relief = patchState.max-patchState.min;
+      const vertical = uniforms.vertical.value;
+      const targetY = Math.max(12,relief*.26*vertical);
+      if (name==='ground') {
+        const height = currentPreset.id==='paddy' ? 34 : currentPreset.id==='river' ? 52 : 76;
+        camera.position.set(155,height*vertical,168);
+        controls.target.set(0,Math.max(4,targetY*.34),0);
+      } else {
+        const height = Math.max(190,relief*1.25+115)*vertical;
+        camera.position.set(390,height,425);
+        controls.target.set(0,targetY,0);
+      }
+      controls.update();
+    }
+
+    function applyVertical(value) {
+      uniforms.vertical.value=value;
+      if (waterGroup) waterGroup.scale.y=value;
+    }
+
+    async function buildPreset(presetId) {
+      currentPreset = PRESETS[presetId] || PRESETS.karst;
+      currentCandidate = CANDIDATES[currentPreset.candidate];
+      updatePresetButtons();
+      updateControlsFromPreset();
+      setBusy(true);
+      showLoading('编译 1 米增强地形',`${currentCandidate.name} · ${currentPreset.title}`);
+      setStatus('正在读取原生 DEM',`候选 ${currentCandidate.id}`);
+      window.__terrainQA.ready=false;
+      window.__terrainQA.error=null;
+      $('gridCheck').className='dot';
+      $('riverCheck').className='dot';
+      try {
+        await ensureSources();
+        const source = await loadCandidateSource(currentCandidate);
+        sourceData=source.data;
+        sourceManifest=source.manifest;
+        progress(28,'高密采样漓江',`${RIVER_SAMPLE_METERS.toFixed(1)} 米中心线采样，并建立横向水面宽度。`);
+        const sequences = projectRiverSequences(currentCandidate);
+        const candidateCenter=[(currentCandidate.bounds[0]+currentCandidate.bounds[2])*.5,(currentCandidate.bounds[1]+currentCandidate.bounds[3])*.5];
+        sequences.sort((a,b)=>distance2(a[nearestPointIndex(a,candidateCenter)],candidateCenter)-distance2(b[nearestPointIndex(b,candidateCenter)],candidateCenter));
+        const sequence=sequences[0];
+        const focus=findFocus(sourceData,currentCandidate,currentPreset,sequence);
+        const localRiver=prepareLocalRiver(sourceData,currentCandidate,sequence,focus);
+        const gridResult=makeGridGeometry(sourceData,currentCandidate,focus,localRiver);
+        progress(69,'编译 TSL 噪声图','Simplex、FBM、ridged、domain warp、侵蚀纹与田块边界。');
+        disposeCurrent();
+        uniforms.center.value.set(focus.center[0],focus.center[1]);
+        terrainMaterial=makeTerrainMaterial();
+        terrain=new THREE.Mesh(gridResult.geometry,terrainMaterial);
+        terrain.frustumCulled=false;
+        scene.add(terrain);
+        waterGroup=makeWaterGroup(localRiver,focus);
+        scene.add(waterGroup);
+        patchState={...gridResult,focus,localRiver};
+        progress(87,'构建河道水面','生成有宽度的三角带水面，并将河床增量压入地形。');
+        if (renderer.compileAsync) await renderer.compileAsync(scene,camera);
+        await new Promise(resolve=>setTimeout(resolve,180));
+        viewPreset(currentPreset.id==='paddy'?'ground':'overview');
+        ui.title.textContent=currentPreset.title;
+        $('detailGrid').textContent=`${gridResult.grid} × ${gridResult.grid}`;
+        $('detailSpacing').textContent=`${gridResult.spacing.toFixed(2)} m`;
+        $('elevationRange').textContent=`${gridResult.min.toFixed(1)}–${gridResult.max.toFixed(1)} m`;
+        $('riverSampling').textContent=`${RIVER_SAMPLE_METERS.toFixed(1)} m`;
+        $('riverWidth').textContent=`${localRiver.averageWidth.toFixed(1)} m`;
+        $('gridCheck').className='dot ok';
+        $('riverCheck').className=waterGroup.userData.vertexCount>4?'dot ok':'dot bad';
+        progress(100,'完成');
+        setStatus('1 米增强地形已加载',`${currentPreset.title} · 水面 ${waterGroup.userData.vertexCount} 顶点`);
+        window.__terrainQA={
+          ...window.__terrainQA,
+          ready:true,error:null,preset:currentPreset.id,candidate:currentCandidate.id,
+          detailGrid:[gridResult.grid,gridResult.grid],detailSpacingMeters:gridResult.spacing,
+          focusProjected:focus.center.map(v=>Number(v.toFixed(3))),
+          elevationRangeMeters:[Number(gridResult.min.toFixed(3)),Number(gridResult.max.toFixed(3))],
+          karstMaskVertices:gridResult.karstCount,paddyMaskVertices:gridResult.paddyCount,riverMaskVertices:gridResult.riverCount,
+          riverGeometry:'triangle-ribbon-water-surface',riverSampleMeters:RIVER_SAMPLE_METERS,
+          riverVertexCount:waterGroup.userData.vertexCount,riverAverageWidthMeters:Number(localRiver.averageWidth.toFixed(3)),
+          minimumRiverBedDepthMeters:Number(gridResult.minimumBedDepth.toFixed(3)),tubeGeometryUsed:false,
+          truthMutationCount:0,vegetationInstances:0,macroDeltaEnabled:uniforms.macro.value,
+          microDeltaEnabled:uniforms.micro.value,bundDeltaEnabled:uniforms.bund.value,riverCarveEnabled:uniforms.river.value
+        };
+        hideLoading();
+        setBusy(false);
+        const url=new URL(location.href);url.searchParams.set('preset',currentPreset.id);history.replaceState(null,'',url);
+      } catch (error) { showError(error); }
+    }
+
+    function bindRange(id,uniformNode,callback) {
+      $(id).addEventListener('input',event=>{
+        const value=Number(event.target.value);
+        $(`${id}Value`).textContent=`${value.toFixed(2)}×`;
+        uniformNode.value=value;
+        if (callback) callback(value);
+        if (window.__terrainQA.ready) window.__terrainQA[`${id}Value`]=value;
+      });
+    }
+
+    proj4.defs('EPSG:32649','+proj=utm +zone=49 +datum=WGS84 +units=m +no_defs +type=crs');
+    await initRenderer();
+    document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>buildPreset(button.dataset.preset)));
+    document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>viewPreset(button.dataset.view)));
+    bindRange('macro',uniforms.macro);
+    bindRange('micro',uniforms.micro);
+    bindRange('bund',uniforms.bund);
+    bindRange('riverCarve',uniforms.river);
+    bindRange('vertical',uniforms.vertical,applyVertical);
+    $('truthToggle').addEventListener('click',()=>{
+      const truth=uniforms.enhance.value>.5;
+      uniforms.enhance.value=truth?0:1;
+      $('truthToggle').classList.toggle('active',truth);
+      $('truthToggle').textContent=truth?'增强地形':'真值对照';
+      window.__terrainQA.enhanceMix=uniforms.enhance.value;
+    });
+    $('waterToggle').addEventListener('click',()=>{
+      if(!waterGroup)return;
+      waterGroup.visible=!waterGroup.visible;
+      $('waterToggle').classList.toggle('active',waterGroup.visible);
+      window.__terrainQA.waterVisible=waterGroup.visible;
+    });
+    $('wireToggle').addEventListener('click',()=>{
+      if(!terrainMaterial)return;
+      terrainMaterial.wireframe=!terrainMaterial.wireframe;
+      terrainMaterial.needsUpdate=true;
+      $('wireToggle').classList.toggle('active',terrainMaterial.wireframe);
+      window.__terrainQA.wireframe=terrainMaterial.wireframe;
+    });
+    $('resetButton').addEventListener('click',()=>viewPreset('overview'));
+    ui.retry.addEventListener('click',()=>location.reload());
+    addEventListener('resize',()=>{
+      camera.aspect=innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth,innerHeight);
+    });
+    const requested=new URL(location.href).searchParams.get('preset');
+    await buildPreset(PRESETS[requested]?requested:'karst');
+  </script>
+</body>
+</html>
