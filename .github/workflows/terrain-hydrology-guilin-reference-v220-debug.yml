@@ -1,0 +1,80 @@
+name: Debug Guilin reference demo v2.2
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/terrain-hydrology-guilin-reference-v220-debug.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+      - name: Capture demo state
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/debug"
+          python - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          out=Path(os.environ['RUNNER_TEMP'])/'debug'
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True,args=['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
+              c=b.new_context(viewport={'width':1440,'height':1000},locale='zh-CN')
+              page=c.new_page(); console=[]; errors=[]; failed=[]
+              page.on('console',lambda m: console.append({'type':m.type,'text':m.text}))
+              page.on('pageerror',lambda e: errors.append(str(e)))
+              page.on('requestfailed',lambda r: failed.append({'url':r.url,'failure':str(r.failure)}))
+              page.goto(os.environ['PUBLIC_URL']+f'?debug={time.time_ns()}',wait_until='networkidle',timeout=150000)
+              page.wait_for_function("document.documentElement.dataset.workbenchReady === 'true'",timeout=90000)
+              page.wait_for_function("document.documentElement.dataset.guilinReferenceButton === 'ready'",timeout=60000)
+              page.locator('#guilin [data-reference-demo]').click()
+              try:
+                  page.wait_for_function("['ready','failed'].includes(document.documentElement.dataset.guilinReferenceDemo)",timeout=60000)
+              except Exception:
+                  pass
+              state=page.evaluate("""() => ({
+                dataset:{...document.documentElement.dataset},
+                dialog:document.getElementById('referenceDialog')?.open,
+                readout:document.getElementById('referenceReadout')?.textContent,
+                metrics:document.getElementById('referenceMetrics')?.textContent,
+                demo:window.__GUILIN_REFERENCE_DEMO_V220__ ? {
+                  loaded:window.__GUILIN_REFERENCE_DEMO_V220__.loaded,
+                  mode:window.__GUILIN_REFERENCE_DEMO_V220__.mode,
+                  failures:window.__GUILIN_REFERENCE_DEMO_V220__.failures,
+                  meshCols:window.__GUILIN_REFERENCE_DEMO_V220__.meshCols,
+                  meshRows:window.__GUILIN_REFERENCE_DEMO_V220__.meshRows,
+                  rendererLoaded:window.__GUILIN_REFERENCE_DEMO_V220__.renderer?.loaded,
+                  hasGl:!!window.__GUILIN_REFERENCE_DEMO_V220__.renderer?.gl,
+                  program:!!window.__GUILIN_REFERENCE_DEMO_V220__.renderer?.program
+                }:null,
+                console:arguments[0], errors:arguments[1], failed:arguments[2]
+              })""", console, errors, failed)
+              (out/'state.json').write_text(json.dumps(state,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+              page.screenshot(path=str(out/'after-click.png'),full_page=False)
+              print(json.dumps(state,ensure_ascii=False,indent=2))
+              b.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: guilin-reference-v220-debug-${{ github.sha }}
+          path: ${{ runner.temp }}/debug/**
+          if-no-files-found: warn
+          retention-days: 7
