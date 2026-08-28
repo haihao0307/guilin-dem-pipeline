@@ -26,9 +26,9 @@ jobs:
       DESTINATION_DIR: guilin-v074-north-up-crop
       PUBLIC_BASE_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v074-north-up-crop/
       SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
-      EVIDENCE_DIR: ${{ runner.temp }}/guilin-v074-evidence
-      DIST_DIR: ${{ runner.temp }}/guilin-v074-dist
-      PAGES_DIR: ${{ runner.temp }}/guilin-v074-pages
+      EVIDENCE_DIR: /tmp/guilin-v074-evidence
+      DIST_DIR: /tmp/guilin-v074-dist
+      PAGES_DIR: /tmp/guilin-v074-pages
 
     steps:
       - name: Checkout exact source branch commit
@@ -165,12 +165,12 @@ jobs:
           git worktree add -b "v074-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             "${PAGES_DIR}" origin/gh-pages
           rm -rf "${PAGES_DIR}/${DESTINATION_DIR}"
-          mkdir -p "${PAGES_DIR}/${DESTINATION_DIR}"
+          mkdir -p "${PAGGES_DIR}/${DESTINATION_DIR}"
           rsync -a "${DIST_DIR}/" "${PAGES_DIR}/${DESTINATION_DIR}/"
           touch "${PAGES_DIR}/.nojekyll"
           git -C "${PAGES_DIR}" config user.name github-actions[bot]
           git -C "${PAGES_DIR}" config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git -C "${PAGES_DIR}" add ".nojekyll" "${DESTINATION_DIR}"
+          git -C "${PAGES_DIR}" add ".nojekyl" "${DESTINATION_DIR}"
           if ! git -C "${PAGES_DIR}" diff --cached --quiet; then
             git -C "${PAGES_DIR}" commit -m "Publish Guilin v0.7.4 north-up crop page ${GITHUB_SHA}"
           fi
@@ -186,7 +186,7 @@ jobs:
             return 1
           }
           push_pages
-          git -C "${PAGES_DIR}" rev-parse HEAD > "${EVIDENCE_DIR}/pages-first-publish-commit.txt"
+          git -C "${PAGGES_DIR}" rev-parse HEAD > "${EVIDENCE_DIR}/pages-first-publish-commit.txt"
 
       - name: Wait for public page payload
         shell: bash
@@ -245,30 +245,30 @@ jobs:
           assert qa["real_asset_required"] is True
           assert qa["real_asset_ok"] is True
           receipt = {
-              "schema": "guilin-v074-public-evidence-receipt/v1",
-              "source_commit": os.environ["SOURCE_SHA"],
-              "public_browser_qa_passed": True,
-              "real_asset_required": True,
-              "real_asset_ok": True,
-              "aoi_status": "UNCONFIRMED",
+            "schema": "guilin-v074-public-evidence-receipt/v1",
+            "source_commit": os.environ["SOURCE_SHA"],
+            "public_browser_qa_passed": True,
+            "real_asset_required": True,
+            "real_asset_ok": True,
+            "aoi_status": "UNCONFIRMED",
           }
           (root / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
           PY
           (
-            cd "${PAGES_DIR}/${DESTINATION_DIR}"
+            cd "${PAGES_DIR}/${DEMTINATION_DIR}"
             find . -type f ! -name SHA256SUMS.txt -print0 \
               | sort -z \
               | xargs -0 sha256sum > SHA256SUMS.txt
           )
-          git -C "${PAGES_DIR}" add "${DESTINATION_DIR}"
+          git -C "${PAGES_DIR}" add "${DEMTINATION_DIR}"
           git -C "${PAGES_DIR}" commit -m "Add real public QA evidence for Guilin v0.7.4 ${GITHUB_SHA}"
           for attempt in 1 2 3 4; do
             if git -C "${PAGES_DIR}" push origin HEAD:gh-pages; then
               break
             fi
             test "${attempt}" -lt 4
-            git -C "${PAGES_DIR}" fetch origin gh-pages
-            git -C "${PAGES_DIR}" rebase origin/gh-pages
+            git -C "${PAGGES_DIR}" fetch origin gh-pages
+            git -C "${PAGGES_DIR}" rebase origin/gh-pages
             sleep $((attempt * 3))
           done
           git -C "${PAGES_DIR}" rev-parse HEAD > "${EVIDENCE_DIR}/pages-evidence-commit.txt"
@@ -322,6 +322,6 @@ jobs:
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: guilin-v074-north-up-crop-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/guilin-v074-evidence/
+          path: /tmp/guilin-v074-evidence/
           if-no-files-found: error
           retention-days: 90
