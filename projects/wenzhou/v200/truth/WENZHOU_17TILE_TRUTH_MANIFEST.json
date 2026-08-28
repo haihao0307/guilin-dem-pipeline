@@ -1,0 +1,73 @@
+{
+  "schema": "wenzhou_17tile_truth_manifest@1.0.0",
+  "status": "metadata_frozen_binary_pending",
+  "generatedAtUtc": "2026-08-28T08:00:00Z",
+  "sourcePackage": {
+    "name": "温州DEM(1).zip",
+    "expectedBytes": 397278157,
+    "expectedSha256": "ba0baedb7e1bc11810a44066e97291745443621ff473d7a31d0fce0298f591c0",
+    "sourceDemCount": 17,
+    "binaryPresentInBranch": false
+  },
+  "truthCog": {
+    "name": "WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "repositoryPath": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "expectedBytes": 136760745,
+    "expectedSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "driver": "GTiff",
+    "crs": "EPSG:32651",
+    "grid": [17555, 17918],
+    "pixelSpacingMeters": [12.5, 12.5],
+    "transform": [12.5, 0.0, 187912.5, 0.0, -12.5, 3243587.5],
+    "bounds": [187912.5, 3019612.5, 407350.0, 3243587.5],
+    "dtype": "int16",
+    "nodata": -32768,
+    "blockShape": [512, 512],
+    "overviews": [2, 4, 8, 16, 32, 64],
+    "compression": "ZSTD",
+    "binaryObjectPresent": false,
+    "freshDownloadVerified": false,
+    "gitLfsRequired": true
+  },
+  "coverageQa": {
+    "totalPixels": 314550490,
+    "validFraction": 0.9227424220512261,
+    "validAreaKm2": 45351.41890625,
+    "nodataPixels": 24301409,
+    "elevationMinMeters": -15,
+    "elevationMaxMeters": 1509,
+    "elevationMeanMeters": 231.35701280997338,
+    "overlapPixels": 166522108,
+    "overlapFractionOfValid": 0.5737213962100366,
+    "overlapSpreadMeanMeters": 1.3457177890157384,
+    "overlapSpreadMaxMeters": 114
+  },
+  "wgs84Corners": {
+    "northWest": [119.84414553534705, 29.283957626923918],
+    "northEast": [122.04605568821894, 29.286519694859074],
+    "southEast": [122.04907102781185, 27.296407891083906],
+    "southWest": [119.84716087493995, 27.293797468756548]
+  },
+  "retiredTruth": {
+    "id": "WENZHOU_QINGJIANG_22000KM2_12_5M_COG",
+    "sha256": "8a1bc6ee17dd731007804a0281f9e083e01f5745468f90cf2c11c108ec0b1c6e",
+    "activeUseAllowed": false,
+    "preserveHistory": true,
+    "migrationPolicy": "do_not_copy_elevation_crop_geometry_marine_mask_or_runtime_assets"
+  },
+  "hardRules": {
+    "oldQingjiangTruthUsed": false,
+    "syntheticGapFill": false,
+    "manualRiverGeometry": false,
+    "manualCoastlineGeometry": false,
+    "manualPlaceClamping": false,
+    "verticalScale": 1.0,
+    "publicDeploymentAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "blocker": {
+    "code": "EXACT_17TILE_COG_BINARY_NOT_MOUNTED",
+    "detail": "The current execution runtime contains QA and transfer metadata but does not contain the exact 136760745-byte COG or the 397278157-byte source ZIP. Git LFS upload and truth-dependent raster processing must remain closed until the exact binary is mounted and verified."
+  }
+}
