@@ -1,0 +1,250 @@
+name: Verify Guilin distilled knowledge page v2.3
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/terrain-hydrology-guilin-knowledge-v230.yml
+      - web/terrain-hydrology-workbench-v200/guilin-distilled-knowledge.html
+      - web/terrain-hydrology-workbench-v200/guilin-distilled-knowledge.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terrain-hydrology-guilin-knowledge-v230
+  cancel-in-progress: false
+
+env:
+  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/guilin-distilled-knowledge.html
+  JSON_URL: https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/guilin-distilled-knowledge.json
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: 'utf-8'
+
+jobs:
+  public-browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout workbench branch
+        uses: actions/checkout@v4
+        with:
+          ref: skill/dem-procedural-landscape-v010
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install browser QA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for public knowledge page
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-v230"
+          ready=false
+          for attempt in $(seq 1 120); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PAGE_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v230/page.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${JSON_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v230/data.json"; then
+              if grep -Fq '桂林阳朔喀斯特蒸馏知识档案 v2.3' "$RUNNER_TEMP/public-v230/page.html" \
+                && grep -Fq 'guilin-distilled-knowledge-web@2.3.0' "$RUNNER_TEMP/public-v230/data.json" \
+                && grep -Fq '"imageCount": 18' "$RUNNER_TEMP/public-v230/data.json"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$ready" = true
+
+      - name: Run desktop and mobile Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/guilin-knowledge-v230-qa"
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import time
+          from pathlib import Path
+
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          PAGE_URL = os.environ['PAGE_URL']
+          OUTPUT = Path(os.environ['RUNNER_TEMP']) / 'guilin-knowledge-v230-qa'
+          OUTPUT.mkdir(parents=True, exist_ok=True)
+
+          def image_signal(path: Path) -> float:
+              with Image.open(path) as image:
+                  stat = ImageStat.Stat(image.convert('RGB').resize((180, 120)))
+                  return float(sum(stat.stddev) / len(stat.stddev))
+
+          report = {
+              'schema': 'guilin-distilled-knowledge-public-qa@2.3.0',
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branchHead': os.environ['GITHUB_SHA'],
+              'workflowRunId': int(os.environ['GITHUB_RUN_ID']),
+              'publicUrl': PAGE_URL,
+              'runs': [],
+          }
+
+          with sync_playwright() as playwright:
+              browser = playwright.chromium.launch(
+                  headless=True,
+                  args=[
+                      '--use-angle=swiftshader',
+                      '--enable-webgl',
+                      '--ignore-gpu-blocklist',
+                      '--disable-dev-shm-usage',
+                  ],
+              )
+              for name, width, height in (
+                  ('desktop-1440x1000', 1440, 1000),
+                  ('mobile-390x844', 390, 844),
+              ):
+                  context = browser.new_context(
+                      viewport={'width': width, 'height': height},
+                      device_scale_factor=1,
+                      locale='zh-CN',
+                  )
+                  page = context.new_page()
+                  console_errors: list[str] = []
+                  page_errors: list[str] = []
+                  failed_requests: list[str] = []
+                  http_errors: list[str] = []
+
+                  page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
+                  page.on('pageerror', lambda error: page_errors.append(str(error)))
+                  page.on('requestfailed', lambda request: failed_requests.append(f'{request.method} {request.url}: {request.failure}'))
+                  page.on('response', lambda response: http_errors.append(f'{response.status} {response.url}') if response.status >= 400 else None)
+
+                  qa_url = f"{PAGE_URL}?qa={name}-{int(time.time() * 1000)}"
+                  response = page.goto(qa_url, wait_until='networkidle', timeout=150_000)
+                  page.wait_for_function("document.documentElement.dataset.knowledgeReady === 'true'", timeout=60_000)
+                  page.wait_for_timeout(400)
+
+                  if response is None or response.status != 200:
+                      raise AssertionError(f'{name}: page HTTP status is {response.status if response else None}')
+
+                  state = page.evaluate("window.__GUILIN_DISTILLED_KNOWLEDGE_V230__")
+                  if not state or state.get('loaded') is not True:
+                      raise AssertionError(f'{name}: knowledge state missing: {state}')
+                  if state.get('schema') != 'guilin-distilled-knowledge-web@2.3.0':
+                      raise AssertionError(f'{name}: schema mismatch: {state}')
+                  if state.get('evidenceCount') != 18:
+                      raise AssertionError(f'{name}: evidence count mismatch: {state}')
+                  if state.get('stableKnowledgeCount') != 6:
+                      raise AssertionError(f'{name}: stable knowledge count mismatch: {state}')
+                  if state.get('nodeCount') != 13:
+                      raise AssertionError(f'{name}: node count mismatch: {state}')
+                  if page.locator('[data-evidence-id]').count() != 18:
+                      raise AssertionError(f'{name}: initial evidence cards are not 18')
+
+                  page.locator('[data-filter="historical-looking-photo"]').click()
+                  page.wait_for_timeout(120)
+                  historical_count = page.locator('[data-evidence-id]').count()
+                  if historical_count != 5:
+                      raise AssertionError(f'{name}: historical filter count is {historical_count}')
+
+                  page.locator('[data-filter="all"]').click()
+                  search = page.locator('#evidenceSearch')
+                  search.fill('天然穿洞')
+                  page.wait_for_timeout(120)
+                  search_count = page.locator('[data-evidence-id]').count()
+                  if search_count != 1:
+                      raise AssertionError(f'{name}: search result count is {search_count}')
+                  search.fill('')
+                  page.wait_for_timeout(120)
+
+                  expected_links = {
+                      'https://haihao0307.github.io/guilin-dem-pipeline/terrain-hydrology-workbench-v200/',
+                      'https://guilin-dem-terrain.sunhaihao.chatgpt.site',
+                      'https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof',
+                      'https://github.com/haihao0307/guilin-dem-pipeline/pull/51',
+                  }
+                  links = set(page.locator('#referenceLinks a').evaluate_all("(nodes) => nodes.map((node) => node.href)"))
+                  if links != expected_links:
+                      raise AssertionError(f'{name}: reference links mismatch: {links}')
+
+                  screenshot = OUTPUT / f'{name}.png'
+                  page.screenshot(path=str(screenshot), full_page=True)
+                  signal = image_signal(screenshot)
+                  if signal < 8.0:
+                      raise AssertionError(f'{name}: screenshot signal too low: {signal}')
+
+                  run = {
+                      'name': name,
+                      'viewport': f'{width}x{height}',
+                      'entryHttpStatus': response.status,
+                      'state': state,
+                      'historicalFilterCount': historical_count,
+                      'searchResultCount': search_count,
+                      'screenshot': screenshot.name,
+                      'screenshotSignal': signal,
+                      'consoleErrors': console_errors,
+                      'pageErrors': page_errors,
+                      'failedRequests': failed_requests,
+                      'httpErrors': http_errors,
+                  }
+                  if console_errors or page_errors or failed_requests or http_errors:
+                      raise AssertionError(f'{name}: browser errors: {run}')
+                  report['runs'].append(run)
+                  context.close()
+              browser.close()
+
+          report['passed'] = True
+          report['truthBoundary'] = {
+              'truthOverwrite': False,
+              'sourceResampling': False,
+              'syntheticGapFill': False,
+              'microDeltaDefaultMeters': 0,
+              'rawImagesPublicRedistributionApproved': False,
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          (OUTPUT / 'report.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload knowledge page QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-distilled-knowledge-v230-public-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/guilin-knowledge-v230-qa/**
+            ${{ runner.temp }}/public-v230/**
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Write public entry to summary
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '## 桂林阳朔喀斯特蒸馏知识档案 v2.3'
+            echo
+            echo "$PAGE_URL"
+            echo
+            echo 'Desktop and mobile Chromium QA passed. The page renders 18 evidence cards, 6 stable knowledge units and 13 executable nodes.'
+          } >> "$GITHUB_STEP_SUMMARY"
