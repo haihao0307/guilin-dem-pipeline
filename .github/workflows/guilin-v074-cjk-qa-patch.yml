@@ -1,0 +1,50 @@
+name: Guilin v0.7.4 CJK QA patch
+
+on:
+  push:
+    branches:
+      - project/guilin-v074-north-up-crop-and-distillation
+    paths:
+      - .github/workflows/guilin-v074-cjk-qa-patch.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v074-cjk-qa-patch
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact patch commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Materialize and verify CJK visual gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "project/guilin-v074-north-up-crop-and-distillation"
+          test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
+          python .github/scripts/guilin-v074-materialize-cjk.py
+          node --check projects/guilin-v074-north-up-crop-and-distillation/web/app.js
+          python -m py_compile \
+            projects/guilin-v074-north-up-crop-and-distillation/tests/browser_cdp.py \
+            projects/guilin-v074-north-up-crop-and-distillation/tests/validate_browser_dump.py
+          node projects/guilin-v074-north-up-crop-and-distillation/tests/static_contract_test.mjs
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add \
+            projects/guilin-v074-north-up-crop-and-distillation/web/styles.css \
+            projects/guilin-v074-north-up-crop-and-distillation/web/app.js \
+            projects/guilin-v074-north-up-crop-and-distillation/tests/browser_cdp.py \
+            projects/guilin-v074-north-up-crop-and-distillation/tests/validate_browser_dump.py \
+            projects/guilin-v074-north-up-crop-and-distillation/tests/static_contract_test.mjs
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'fix(v074): require rendered CJK glyphs in visual QA'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
