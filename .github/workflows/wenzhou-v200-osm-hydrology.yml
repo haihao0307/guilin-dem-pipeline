@@ -1,0 +1,246 @@
+name: Wenzhou V200 17-tile OSM hydrology reacquisition
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v200-17tile-truth-hydrology-rebuild
+    paths:
+      - .github/workflows/wenzhou-v200-osm-hydrology.yml
+      - projects/wenzhou/v200/config/osm_hydrology_v200.json
+      - projects/wenzhou/v200/aoi/WENZHOU_17TILE_AOI_EPSG32651.geojson
+      - projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json
+      - projects/wenzhou/v200/scripts/run_osm_reacquisition_v200.py
+      - projects/wenzhou/coastal/scripts/download_osm_hydrology.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v200-osm-hydrology
+  cancel-in-progress: false
+
+jobs:
+  reacquire-osm:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip v200 osm]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout exact V200 branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+          lfs: false
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install projected topology runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check \
+            'pyproj>=3.7,<4' \
+            'shapely>=2.0,<3'
+          python - <<'PY'
+          import pyproj, shapely
+          print('pyproj', pyproj.__version__)
+          print('shapely', shapely.__version__)
+          PY
+
+      - name: Validate V200 contracts and binary gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          python -m py_compile \
+            projects/wenzhou/v200/scripts/run_osm_reacquisition_v200.py \
+            projects/wenzhou/coastal/scripts/download_osm_hydrology.py
+          python -m json.tool projects/wenzhou/v200/config/osm_hydrology_v200.json >/dev/null
+          python -m json.tool projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json >/dev/null
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json').read_text())
+          assert manifest['truthCog']['expectedBytes'] == 136760745
+          assert manifest['truthCog']['expectedSha256'] == 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43'
+          assert manifest['truthCog']['binaryObjectPresent'] is False
+          assert manifest['truthCog']['freshDownloadVerified'] is False
+          assert manifest['hardRules']['manualRiverGeometry'] is False
+          assert manifest['hardRules']['manualCoastlineGeometry'] is False
+          print('truth binary gate remains closed; OSM reacquisition is independent and may proceed')
+          PY
+
+      - name: Reacquire exact OSM source and build V200 projected skeleton
+        shell: bash
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/v200/scripts/run_osm_reacquisition_v200.py
+
+      - name: Assert source lineage and geometry invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          config = json.loads((root / 'projects/wenzhou/v200/config/osm_hydrology_v200.json').read_text())
+          acquisition = json.loads((root / 'projects/wenzhou/v200/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          state = json.loads((root / 'projects/wenzhou/v200/reports/WENZHOU_V200_OSM_REACQUISITION_STATE.json').read_text())
+
+          expected_tiles = config['tiling']['columns'] * config['tiling']['rows']
+          assert expected_tiles == 9
+          assert acquisition['passed'] is True
+          assert acquisition['manualGeometryUsed'] is False
+          assert acquisition['truthCogSha256'] == 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43'
+          assert len(acquisition['tiles']) == expected_tiles
+          assert acquisition['license'] == 'ODbL 1.0'
+          assert acquisition['attribution'] == '© OpenStreetMap contributors'
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          assert qa['hydrologyTopologyPassed'] is False
+          assert qa['estuaryConnectivityStatus'] == 'pending'
+          assert qa['manualGeometryUsed'] is False
+          assert qa['outOfBoundsVertexCount'] == 0
+          assert qa['duplicatePartIdCount'] == 0
+          assert qa['introducedSelfIntersectionCount'] == 0
+          assert qa['sourceCoastlineWayCount'] > 0
+          assert qa['sourceWaterwayWayCount'] > 0
+          assert qa['derivedCoastlinePartCount'] > 0
+          assert qa['derivedWaterwayPartCount'] > 0
+          assert qa['widthCenterlineInvariantPolicy'] == 'width changes lateral offsets only'
+          assert state['status'] == 'source_acquired_projected_skeleton_passed_estuary_topology_pending'
+          assert state['truthBinaryPresent'] is False
+          assert state['truthDependentDrapingAllowed'] is False
+
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              assert path.is_file(), path
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              assert path.stat().st_size == item['bytes']
+              assert digest.hexdigest() == item['sha256']
+              checked.append(item['path'])
+          print(json.dumps({'tileCount': expected_tiles, 'checkedFileCount': len(checked), 'state': state}, indent=2))
+          PY
+
+      - name: Commit V200 OSM source and projected outputs
+        id: commit_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/v200/data/hydrology/osm \
+            projects/wenzhou/v200/reports/OSM_HYDROLOGY_ACQUISITION.json \
+            projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json \
+            projects/wenzhou/v200/reports/WENZHOU_V200_OSM_REACQUISITION_STATE.json
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'Add source-traceable V200 OSM hydrology for 17-tile AOI [skip v200 osm]'
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+
+      - name: Verify V200 OSM outputs from a fresh clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-v200-osm-fresh
+          git clone --depth 1 --branch project/wenzhou-v200-17tile-truth-hydrology-rebuild \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-v200-osm-fresh
+          cd /tmp/wenzhou-v200-osm-fresh
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/v200/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert path.stat().st_size == item['bytes']
+              assert actual == item['sha256']
+              checked.append({'path': item['path'], 'bytes': item['bytes'], 'sha256': actual})
+          assert qa['sourceAcquisitionPassed'] is True
+          assert qa['projectedSkeletonPassed'] is True
+          evidence = {
+              'freshCloneVerified': True,
+              'truthCogSha256': acquisition['truthCogSha256'],
+              'manualGeometryUsed': acquisition['manualGeometryUsed'],
+              'files': checked,
+          }
+          Path('/tmp/wenzhou-v200-osm-fresh-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+          print(json.dumps(evidence, indent=2))
+          PY
+
+      - name: Record V200 OSM round-trip receipt
+        shell: bash
+        env:
+          OUTPUT_COMMIT: ${{ steps.commit_outputs.outputs.commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          fresh = json.loads(Path('/tmp/wenzhou-v200-osm-fresh-verification.json').read_text())
+          acquisition = json.loads(Path('projects/wenzhou/v200/reports/OSM_HYDROLOGY_ACQUISITION.json').read_text())
+          qa = json.loads(Path('projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json').read_text())
+          receipt = {
+              'schema': 'wenzhou_v200_osm_hydrology_receipt@1.0.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'project/wenzhou-v200-17tile-truth-hydrology-rebuild',
+              'outputCommit': os.environ['OUTPUT_COMMIT'],
+              'truthCogSha256': acquisition['truthCogSha256'],
+              'license': acquisition['license'],
+              'attribution': acquisition['attribution'],
+              'rawTileCount': len(acquisition['tiles']),
+              'sourceCoastlineWayCount': qa['sourceCoastlineWayCount'],
+              'sourceWaterwayWayCount': qa['sourceWaterwayWayCount'],
+              'derivedCoastlinePartCount': qa['derivedCoastlinePartCount'],
+              'derivedWaterwayPartCount': qa['derivedWaterwayPartCount'],
+              'estuaryConnectivityStatus': 'pending',
+              'manualGeometryUsed': False,
+              'freshCloneVerified': fresh['freshCloneVerified'],
+              'files': fresh['files'],
+          }
+          path = Path('projects/wenzhou/v200/reports/OSM_HYDROLOGY_RECEIPT.json')
+          path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git add -- projects/wenzhou/v200/reports/OSM_HYDROLOGY_RECEIPT.json
+          git commit -m 'Record verified V200 OSM hydrology receipt [skip v200 osm]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+
+      - name: Preserve V200 OSM evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v200-osm-hydrology-evidence
+          path: |
+            projects/wenzhou/v200/data/hydrology/osm/**
+            projects/wenzhou/v200/reports/OSM_HYDROLOGY_*.json
+            projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json
+            projects/wenzhou/v200/reports/WENZHOU_V200_OSM_REACQUISITION_STATE.json
+          if-no-files-found: warn
+          retention-days: 90
