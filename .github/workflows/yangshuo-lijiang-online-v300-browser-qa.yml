@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-lijiang-2048-v300/?candidate=D&qa=2
+  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-lijiang-2048-v300/?candidate=D&qa=4
 
 jobs:
   browser-qa:
@@ -38,7 +38,7 @@ jobs:
           python -m pip install --disable-pip-version-check playwright
           python -m playwright install --with-deps chromium
 
-      - name: Capture live browser diagnostics
+      - name: Run real online Chromium QA
         shell: bash
         run: |
           set -euo pipefail
@@ -56,31 +56,47 @@ jobs:
           console = []
           page_errors = []
           request_failures = []
-          important_responses = []
+          data_responses = []
           started = time.time()
-          state = {}
-          passed = False
+          initial = {}
+          switched = {}
           failure = None
 
           def snapshot(page):
               return page.evaluate("""() => ({
                 title: document.title,
+                heading: document.querySelector('#title')?.textContent || null,
                 status: document.querySelector('#statusMain')?.textContent || null,
                 statusSub: document.querySelector('#statusSub')?.textContent || null,
                 loadingTitle: document.querySelector('#loadingTitle')?.textContent || null,
                 loadingText: document.querySelector('#loadingText')?.textContent || null,
-                progressLabel: document.querySelector('#progressLabel')?.textContent || null,
                 progressValue: document.querySelector('#progressValue')?.textContent || null,
                 validFraction: document.querySelector('#validFraction')?.textContent || null,
                 elevationRange: document.querySelector('#elevationRange')?.textContent || null,
+                sourceGrid: document.querySelector('#sourceGrid')?.textContent || null,
                 displayGrid: document.querySelector('#displayGrid')?.textContent || null,
                 canvasCount: document.querySelectorAll('#viewer canvas').length,
                 canvasWidth: document.querySelector('#viewer canvas')?.width || 0,
                 canvasHeight: document.querySelector('#viewer canvas')?.height || 0,
                 sourceOk: document.querySelector('#sourceCheck')?.classList.contains('ok') || false,
                 windowOk: document.querySelector('#windowCheck')?.classList.contains('ok') || false,
-                loadingOpacity: getComputedStyle(document.querySelector('#loading')).opacity
+                loadingOpacity: Number(getComputedStyle(document.querySelector('#loading')).opacity)
               })""")
+
+          def assert_loaded(state, candidate):
+              if state['status'] != '2048 原生窗口已加载':
+                  raise RuntimeError(f'{candidate} did not reach loaded state: {state}')
+              if f'候选 {candidate}' not in (state['statusSub'] or ''):
+                  raise RuntimeError(f'{candidate} status label mismatch: {state}')
+              if state['sourceGrid'] != '2048 × 2048':
+                  raise RuntimeError(f'{candidate} source grid mismatch: {state}')
+              if state['canvasCount'] < 1 or state['canvasWidth'] < 1000 or state['canvasHeight'] < 600:
+                  raise RuntimeError(f'{candidate} WebGL canvas invalid: {state}')
+              valid = float(state['validFraction'].replace('%', ''))
+              if valid < 99.5 or not state['sourceOk'] or not state['windowOk']:
+                  raise RuntimeError(f'{candidate} native-data gate failed: {state}')
+              if state['loadingOpacity'] > 0.05:
+                  raise RuntimeError(f'{candidate} loading overlay remains visible: {state}')
 
           with sync_playwright() as p:
               browser = p.chromium.launch(
@@ -95,55 +111,61 @@ jobs:
                   'method': request.method,
                   'failure': request.failure,
               }))
-              page.on('response', lambda response: important_responses.append({
+              page.on('response', lambda response: data_responses.append({
                   'url': response.url,
                   'status': response.status,
+                  'contentLength': response.headers.get('content-length'),
                   'contentType': response.headers.get('content-type'),
-                  'acceptRanges': response.headers.get('accept-ranges'),
-                  'contentRange': response.headers.get('content-range'),
-              }) if ('guilin_raw_union_12_5m.tif' in response.url or 'geotiff' in response.url or 'proj4' in response.url or 'three@' in response.url) else None)
+              }) if '/yangshuo-lijiang-2048-v300/data/' in response.url else None)
               try:
                   response = page.goto(url, wait_until='domcontentloaded', timeout=120_000)
                   if response is None or response.status != 200:
                       raise RuntimeError(f'Page HTTP status failed: {None if response is None else response.status}')
                   page.wait_for_selector('#statusMain', timeout=30_000)
-                  deadline = time.time() + 150
-                  while time.time() < deadline:
-                      state = snapshot(page)
-                      print('LIVE_STATE ' + json.dumps(state, ensure_ascii=False), flush=True)
-                      if state['status'] == '2048 原生窗口已加载':
-                          passed = True
-                          break
-                      if state['status'] == '加载失败':
-                          failure = state['loadingText']
-                          break
-                      page.wait_for_timeout(5000)
-                  if not passed and not failure:
-                      failure = 'Timed out before native DEM success state'
-                  page.screenshot(path=str(out / 'candidate-D-diagnostic.png'), full_page=True)
+                  page.wait_for_function(
+                      "document.querySelector('#statusMain')?.textContent === '2048 原生窗口已加载' && Number(getComputedStyle(document.querySelector('#loading')).opacity) <= 0.05",
+                      timeout=180_000,
+                  )
+                  initial = snapshot(page)
+                  assert_loaded(initial, 'D')
+                  page.screenshot(path=str(out / 'candidate-D-desktop.png'), full_page=True)
+
+                  page.locator('.candidate').filter(has_text='A ·').click()
+                  page.wait_for_function(
+                      "document.querySelector('#statusSub')?.textContent.includes('候选 A') && document.querySelector('#statusMain')?.textContent === '2048 原生窗口已加载' && Number(getComputedStyle(document.querySelector('#loading')).opacity) <= 0.05",
+                      timeout=180_000,
+                  )
+                  switched = snapshot(page)
+                  assert_loaded(switched, 'A')
+                  page.screenshot(path=str(out / 'candidate-A-desktop.png'), full_page=True)
               except Exception as exc:
                   failure = str(exc)
                   try:
-                      state = snapshot(page)
-                      page.screenshot(path=str(out / 'candidate-D-diagnostic.png'), full_page=True)
+                      if not initial:
+                          initial = snapshot(page)
+                      page.screenshot(path=str(out / 'failure-desktop.png'), full_page=True)
                   except Exception as capture_exc:
-                      state = {'captureError': str(capture_exc)}
+                      failure += f'; capture failed: {capture_exc}'
               finally:
                   browser.close()
 
           hard_console_errors = [x for x in console if x['type'] == 'error']
+          bad_data_responses = [x for x in data_responses if x['status'] not in (200, 206)]
+          passed = failure is None and not page_errors and not hard_console_errors and not request_failures and not bad_data_responses
           report = {
-              'schema': 'yangshuo-lijiang-online-browser-diagnostic/v3.0.1',
+              'schema': 'yangshuo-lijiang-online-browser-qa/v3.0.2',
               'url': url,
               'elapsedSeconds': round(time.time() - started, 3),
-              'state': state,
+              'initialCandidateD': initial,
+              'switchedCandidateA': switched,
               'failure': failure,
               'pageErrors': page_errors,
               'consoleErrors': hard_console_errors,
-              'console': console,
               'requestFailures': request_failures,
-              'importantResponses': important_responses,
-              'passed': passed and not page_errors and not hard_console_errors,
+              'dataResponses': data_responses,
+              'badDataResponses': bad_data_responses,
+              'console': console,
+              'passed': passed,
           }
           (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
           print('FINAL_REPORT ' + json.dumps(report, ensure_ascii=False), flush=True)
