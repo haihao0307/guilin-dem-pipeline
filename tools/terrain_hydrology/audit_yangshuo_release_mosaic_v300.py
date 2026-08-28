@@ -121,16 +121,28 @@ def audit(root: Path, source: Path, audit_config_path: Path, report_path: Path) 
     all_passed = True
     for candidate in candidate_config["candidates"]:
         candidate_id = str(candidate["id"])
-        bounds = list(map(float, candidate["alignedBounds"]))
-        min_x, min_y, max_x, max_y = bounds
+        original_bounds = list(map(float, candidate["alignedBounds"]))
+        desired_center = list(map(float, candidate["alignedCenterProjected"]))
+        window_width, window_height = required_grid
 
-        col = integer((min_x - transform[0]) / transform[1], f"{candidate_id}.col")
-        row = integer((transform[3] - max_y) / abs(transform[5]), f"{candidate_id}.row")
-        window_width = integer((max_x - min_x) / transform[1], f"{candidate_id}.width")
-        window_height = integer((max_y - min_y) / abs(transform[5]), f"{candidate_id}.height")
+        # Snap only the window origin to the nearest Release-mosaic pixel. This preserves
+        # the native 12.5 m samples and moves the requested center by at most half a pixel
+        # per axis. No raster values are resampled or interpolated.
+        col = int(round((desired_center[0] - transform[0]) / transform[1] - window_width / 2))
+        row = int(round((transform[3] - desired_center[1]) / abs(transform[5]) - window_height / 2))
+        min_x = transform[0] + col * transform[1]
+        max_y = transform[3] + row * transform[5]
+        max_x = min_x + window_width * transform[1]
+        min_y = max_y + window_height * transform[5]
+        bounds = [float(min_x), float(min_y), float(max_x), float(max_y)]
+        release_center = [(min_x + max_x) / 2, (min_y + max_y) / 2]
+        shift_x = release_center[0] - desired_center[0]
+        shift_y = release_center[1] - desired_center[1]
+        shift_distance = math.hypot(shift_x, shift_y)
+        maximum_shift = float(expected_raster["maximumCenterShiftMeters"])
 
-        require([window_width, window_height] == required_grid,
-                f"{candidate_id}: Release-derived window must be exactly {required_grid}")
+        require(shift_distance <= maximum_shift + 1e-6,
+                f"{candidate_id}: nearest native grid center shift {shift_distance} m exceeds {maximum_shift} m")
         require(col >= 0 and row >= 0 and col + window_width <= width and row + window_height <= height,
                 f"{candidate_id}: candidate exceeds Release mosaic bounds")
 
@@ -154,7 +166,16 @@ def audit(root: Path, source: Path, audit_config_path: Path, report_path: Path) 
         candidates.append({
             "id": candidate_id,
             "slug": candidate["slug"],
-            "alignedBounds": bounds,
+            "originalAlignedBounds": original_bounds,
+            "desiredCenterProjected": desired_center,
+            "releaseAlignedBounds": bounds,
+            "releaseAlignedCenterProjected": release_center,
+            "centerShiftMeters": {
+                "x": float(shift_x),
+                "y": float(shift_y),
+                "distance": float(shift_distance),
+                "maximumAllowed": maximum_shift,
+            },
             "releasePixelWindow": [col, row, window_width, window_height],
             "grid": required_grid,
             "validFraction": valid_fraction,
