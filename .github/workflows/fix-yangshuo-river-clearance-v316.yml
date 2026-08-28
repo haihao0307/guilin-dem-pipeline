@@ -1,0 +1,214 @@
+name: Fix Yangshuo river clearance v3.1.6
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/fix-yangshuo-river-clearance-v316.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-yangshuo-river-clearance-v316
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Patch runtime and QA using line anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def one(lines: list[str], marker: str, label: str) -> int:
+              found = [i for i, line in enumerate(lines) if marker in line]
+              if len(found) != 1:
+                  raise SystemExit(f'{label}: expected one match, found {len(found)}')
+              return found[0]
+
+          def indent_of(line: str) -> str:
+              return line[:len(line) - len(line.lstrip())]
+
+          html_path = Path('web/yangshuo-noise-terrain-v310/index.html')
+          h = html_path.read_text(encoding='utf-8').splitlines()
+
+          i = one(h, 'for (let i = 0; i < points.length; i++) points[i].water = levels[i];', 'water profile')
+          ind = indent_of(h[i])
+          h[i:i+1] = [
+              f'{ind}for (let i = 0; i < points.length; i++) {{',
+              f'{ind}  const localWater = points[i].rawWater;',
+              f'{ind}  points[i].water = clamp(levels[i], localWater - .20, localWater + .45);',
+              f'{ind}}}',
+          ]
+
+          i = one(h, 'let paddyCount = 0, karstCount = 0, riverCount = 0, minimumBedDepth = Infinity;', 'clearance accumulators')
+          ind = indent_of(h[i])
+          h[i:i+1] = [
+              f'{ind}let paddyCount = 0, karstCount = 0, riverCount = 0;',
+              f'{ind}let minimumBedDepth = Infinity, maximumBedDepth = -Infinity;',
+              f'{ind}let riverClearanceSum = 0, riverClearanceSamples = 0, maximumWaterTerrainPenetration = 0;',
+          ]
+
+          i = one(h, 'const bedDepth = 2.25 +', 'old river carve')
+          if i + 3 >= len(h) or 'minimumBedDepth' not in h[i+3]:
+              raise SystemExit('old river carve block shape changed')
+          ind = indent_of(h[i])
+          h[i:i+4] = [
+              f'{ind}const lateral = 1 - clamp(river.distance/Math.max(halfWidth,1),0,1);',
+              f'{ind}const bedDepth = .32 + Math.pow(lateral,.72) * 3.28;',
+              f'{ind}const targetBed = river.water - bedDepth;',
+              f'{ind}const bankCarve = 1 - smooth01(halfWidth, halfWidth+10, river.distance);',
+              f'{ind}const carveWeight = river.distance <= halfWidth ? 1 : bankCarve;',
+              f'{ind}const carve = carveWeight * Math.min(0, targetBed - h);',
+              f'{ind}if (river.distance <= halfWidth) {{',
+              f'{ind}  const clearance = (river.water + .10) - (h + carve);',
+              f'{ind}  minimumBedDepth = Math.min(minimumBedDepth, clearance);',
+              f'{ind}  maximumBedDepth = Math.max(maximumBedDepth, clearance);',
+              f'{ind}  riverClearanceSum += clearance;',
+              f'{ind}  riverClearanceSamples++;',
+              f'{ind}  maximumWaterTerrainPenetration = Math.max(maximumWaterTerrainPenetration, Math.max(0,-clearance));',
+              f'{ind}}}',
+          ]
+
+          i = one(h, 'return { geometry, grid, spacing, min, max, paddyCount, karstCount, riverCount, minimumBedDepth, riverSegments:segmentsRiver };', 'return contract')
+          ind = indent_of(h[i])
+          h[i:i+1] = [
+              f'{ind}if (!riverClearanceSamples || !Number.isFinite(minimumBedDepth) || !Number.isFinite(maximumBedDepth)) {{',
+              f"{ind}  throw new Error('河道水面与河床净空采样失败');",
+              f'{ind}}}',
+              f'{ind}const meanRiverClearance = riverClearanceSum / riverClearanceSamples;',
+              f'{ind}return {{',
+              f'{ind}  geometry, grid, spacing, min, max, paddyCount, karstCount, riverCount,',
+              f'{ind}  minimumBedDepth, maximumBedDepth, meanRiverClearance, riverClearanceSamples,',
+              f'{ind}  maximumWaterTerrainPenetration, riverSegments:segmentsRiver',
+              f'{ind}}};',
+          ]
+
+          i = one(h, 'minimumRiverBedDepthMeters:Number(gridResult.minimumBedDepth.toFixed(3)),tubeGeometryUsed:false,', 'online QA fields')
+          ind = indent_of(h[i])
+          h[i:i+1] = [
+              f'{ind}minimumRiverBedDepthMeters:Number(gridResult.minimumBedDepth.toFixed(3)),',
+              f'{ind}minimumRiverClearanceMeters:Number(gridResult.minimumBedDepth.toFixed(3)),',
+              f'{ind}maximumRiverClearanceMeters:Number(gridResult.maximumBedDepth.toFixed(3)),',
+              f'{ind}meanRiverClearanceMeters:Number(gridResult.meanRiverClearance.toFixed(3)),',
+              f'{ind}riverClearanceSampleCount:gridResult.riverClearanceSamples,',
+              f'{ind}maximumWaterTerrainPenetrationMeters:Number(gridResult.maximumWaterTerrainPenetration.toFixed(3)),',
+              f'{ind}tubeGeometryUsed:false,',
+          ]
+
+          html = '\n'.join(h) + '\n'
+          html = html.replace("schema: 'yangshuo-noise-terrain-online-qa/v3.1.0'", "schema: 'yangshuo-noise-terrain-online-qa/v3.1.1'")
+          html_path.write_text(html, encoding='utf-8')
+
+          qa_path = Path('tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py')
+          q = qa_path.read_text(encoding='utf-8').splitlines()
+
+          i = one(q, "loadingOpacity: Number(getComputedStyle(document.querySelector('#loading')).opacity)", 'loading snapshot')
+          ind = indent_of(q[i])
+          q[i:i+1] = [
+              f"{ind}loadingOpacity: Number(getComputedStyle(document.querySelector('#loading')).opacity),",
+              f"{ind}loadingDisplay: getComputedStyle(document.querySelector('#loading')).display,",
+              f"{ind}loadingVisibility: getComputedStyle(document.querySelector('#loading')).visibility,",
+              f'{ind}loadingVisible: (() => {{',
+              f"{ind}  const loading = document.querySelector('#loading');",
+              f'{ind}  if (!loading) return false;',
+              f'{ind}  const style = getComputedStyle(loading);',
+              f"{ind}  return !loading.hidden && style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > .05;",
+              f'{ind}}})()',
+          ]
+
+          i = one(q, 'bed_depth = float(qa.get("minimumRiverBedDepthMeters") or 0)', 'old clearance gate')
+          if i + 2 >= len(q) or 'riverbed clearance failed' not in q[i+2]:
+              raise SystemExit('old clearance gate shape changed')
+          ind = indent_of(q[i])
+          q[i:i+3] = [
+              f'{ind}minimum_clearance = float(qa.get("minimumRiverClearanceMeters") or qa.get("minimumRiverBedDepthMeters") or 0)',
+              f'{ind}maximum_clearance = float(qa.get("maximumRiverClearanceMeters") or 0)',
+              f'{ind}mean_clearance = float(qa.get("meanRiverClearanceMeters") or 0)',
+              f'{ind}clearance_samples = int(qa.get("riverClearanceSampleCount") or 0)',
+              f'{ind}penetration = float(qa.get("maximumWaterTerrainPenetrationMeters") or 0)',
+              f'{ind}if not 0.25 <= minimum_clearance <= 1.25:',
+              f'{ind}    raise RuntimeError(f"{{expected_preset}}: minimum river clearance failed: {{state}}")',
+              f'{ind}if not minimum_clearance <= mean_clearance <= maximum_clearance <= 4.25:',
+              f'{ind}    raise RuntimeError(f"{{expected_preset}}: river clearance envelope failed: {{state}}")',
+              f'{ind}if clearance_samples < 100 or penetration > 0.01:',
+              f'{ind}    raise RuntimeError(f"{{expected_preset}}: water terrain intersection failed: {{state}}")',
+          ]
+
+          i = one(q, 'if state.get("loadingOpacity", 1) > 0.05:', 'old loading gate')
+          if i + 1 >= len(q) or 'loading overlay remains visible' not in q[i+1]:
+              raise SystemExit('old loading gate shape changed')
+          ind = indent_of(q[i])
+          q[i:i+2] = [
+              f'{ind}if state.get("loadingVisible", True):',
+              f'{ind}    raise RuntimeError(f"{{expected_preset}}: loading overlay remains visible: {{state}}")',
+          ]
+
+          i = one(q, 'def run(args: argparse.Namespace) -> int:', 'run function')
+          helper = [
+              '',
+              'def capture(page: Page, path: Path) -> None:',
+              '    page.screenshot(',
+              '        path=str(path),',
+              '        full_page=False,',
+              '        animations="disabled",',
+              '        caret="hide",',
+              '        timeout=120_000,',
+              '    )',
+              '',
+          ]
+          q[i:i] = helper
+
+          shots = {
+              'page.screenshot(path=str(output / "karst-desktop.png"), full_page=True)': 'capture(page, output / "karst-desktop.png")',
+              'page.screenshot(path=str(output / "paddy-desktop.png"), full_page=True)': 'capture(page, output / "paddy-desktop.png")',
+              'page.screenshot(path=str(output / "river-desktop.png"), full_page=True)': 'capture(page, output / "river-desktop.png")',
+              'page.screenshot(path=str(output / "truth-rollback-desktop.png"), full_page=True)': 'capture(page, output / "truth-rollback-desktop.png")',
+              'mobile.screenshot(path=str(output / "paddy-mobile-390x844.png"), full_page=True)': 'capture(mobile, output / "paddy-mobile-390x844.png")',
+              'page.screenshot(path=str(output / "failure-desktop.png"), full_page=True)': 'capture(page, output / "failure-desktop.png")',
+          }
+          for old, new in shots.items():
+              i = one(q, old, f'screenshot {old}')
+              q[i] = q[i].replace(old, new)
+
+          qa = '\n'.join(q) + '\n'
+          qa = qa.replace('"schema": "yangshuo-noise-terrain-browser-qa/v3.1.0"', '"schema": "yangshuo-noise-terrain-browser-qa/v3.1.1"')
+          qa_path.write_text(qa, encoding='utf-8')
+          PY
+
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('web/yangshuo-noise-terrain-v310/index.html').read_text(encoding='utf-8')
+          module = re.search(r'<script type="module">\s*(.*?)\s*</script>', html, re.S)
+          if not module:
+              raise SystemExit('module script not found')
+          Path('/tmp/yangshuo-noise-v316.mjs').write_text(module.group(1), encoding='utf-8')
+          for marker in ('minimumRiverClearanceMeters','maximumRiverClearanceMeters','maximumWaterTerrainPenetrationMeters','river.distance <= halfWidth ? 1 : bankCarve'):
+              if marker not in html:
+                  raise SystemExit(f'missing corrected marker: {marker}')
+          PY
+          node --check /tmp/yangshuo-noise-v316.mjs
+          python -m py_compile tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+
+      - name: Commit corrected runtime and QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/yangshuo-noise-terrain-v310/index.html tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+          git commit -m "fix(guilin): enforce terrain-contact river clearance"
+          git push origin HEAD:skill/dem-procedural-landscape-v010
