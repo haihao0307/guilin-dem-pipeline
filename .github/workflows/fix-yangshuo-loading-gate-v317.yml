@@ -1,0 +1,83 @@
+name: Fix Yangshuo loading gate v3.1.7
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/fix-yangshuo-loading-gate-v317.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-yangshuo-loading-gate-v317
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Wait for the loading overlay to finish its real fade
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''def wait_ready(page: Page, preset: str, timeout: int = 240_000) -> dict[str, Any]:
+              page.wait_for_function(
+                  f"window.__terrainQA?.ready === true && window.__terrainQA?.preset === '{preset}'",
+                  timeout=timeout,
+              )
+              page.wait_for_timeout(1200)
+              return snapshot(page)
+          '''
+          new = '''def wait_ready(page: Page, preset: str, timeout: int = 240_000) -> dict[str, Any]:
+              page.wait_for_function(
+                  f"window.__terrainQA?.ready === true && window.__terrainQA?.preset === '{preset}'",
+                  timeout=timeout,
+              )
+              page.wait_for_function(
+                  """() => {
+                    const loading = document.querySelector('#loading');
+                    if (!loading) return true;
+                    const style = getComputedStyle(loading);
+                    return loading.hidden || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) <= .05;
+                  }""",
+                  timeout=30_000,
+              )
+              page.wait_for_timeout(350)
+              return snapshot(page)
+          '''
+          if text.count(old) != 1:
+              raise SystemExit(f'wait_ready block match count: {text.count(old)}')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '"schema": "yangshuo-noise-terrain-browser-qa/v3.1.1"',
+              '"schema": "yangshuo-noise-terrain-browser-qa/v3.1.2"',
+              1,
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+          python -m py_compile tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+          grep -Fq "Number(style.opacity) <= .05" tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+
+      - name: Commit corrected browser timing gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/procedural_landscape/yangshuo_noise_v310_browser_qa.py
+          git commit -m "fix(guilin): wait for terrain loading overlay fade"
+          git push origin HEAD:skill/dem-procedural-landscape-v010
