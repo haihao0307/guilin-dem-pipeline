@@ -55,17 +55,17 @@
     <section class="section"><h2>验证</h2><div class="checks"><div class="check"><span>原始 12.5 米 Release</span><i id="sourceCheck" class="dot"></i></div><div class="check"><span>2048 原生像元窗口</span><i id="windowCheck" class="dot"></i></div><div class="check"><span>无插值与补洞</span><i id="policyCheck" class="dot ok"></i></div><div class="check"><span>宏观与微观增量 0 米</span><i class="dot ok"></i></div></div></section>
   </aside>
   <div class="help">左键旋转 · 右键平移 · 滚轮缩放 · 点击 A/B/C/D 切换真实窗口</div>
-  <div id="loading"><div class="loading-card"><h2 id="loadingTitle">加载 2048 原生高程窗口</h2><p id="loadingText">连接已锁定的 12.5 米 GeoTIFF，并读取候选 D。</p><div class="progress"><i id="progressBar"></i></div><div class="loading-meta"><span id="progressLabel">准备</span><span id="progressValue">0%</span></div><button id="retryButton" class="action retry">重新加载</button></div></div>
+  <div id="loading"><div class="loading-card"><h2 id="loadingTitle">加载 2048 原生高程窗口</h2><p id="loadingText">读取同源发布的 2048 原生高程资产，并打开候选 D。</p><div class="progress"><i id="progressBar"></i></div><div class="loading-meta"><span id="progressLabel">准备</span><span id="progressValue">0%</span></div><button id="retryButton" class="action retry">重新加载</button></div></div>
 
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { fromUrl } from 'https://cdn.jsdelivr.net/npm/geotiff@2.1.3/+esm';
     import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.11.0/+esm';
 
-    const RELEASE_URL = 'https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif';
+    const DATA_ROOT = './data';
+    const ASSET_VERSION = '3004';
     const RIVER_URL = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/4b85e23093e89fdb273795ae1c53c160ba41e4dd/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson';
-    const EXPECTED = { width:17408, height:18867, resolution:12.5, sourceSha:'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4' };
+    const EXPECTED = { grid:[2048,2048], resolution:12.5, sourceSha:'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4' };
     const CANDIDATES = {
       D:{id:'D',name:'相公山至兴坪第一湾',role:'首选视觉',window:[6996,13629,2048,2048],bounds:[437312.5,2742887.5,462912.5,2768487.5],center:[110.505964,24.915551]},
       A:{id:'A',name:'阳朔县城北侧漓江峰丛谷地',role:'工程校准',window:[6983,14506,2048,2048],bounds:[437150,2731925,462750,2757525],center:[110.504749,24.816544]},
@@ -74,7 +74,8 @@
     };
     const ORDER=['D','A','C','B'];
     const $=id=>document.getElementById(id);
-    let renderer,scene,camera,controls,terrain,wire,texture,sourceHeights,baseVertexHeights,current=CANDIDATES.D,currentMin=0,currentMax=1,currentGrid=512,tiffImage,riverGeoJSON,riverGroup,verticalScale=1;
+    let renderer,scene,camera,controls,terrain,wire,texture,sourceHeights,baseVertexHeights,current=CANDIDATES.D,currentMin=0,currentMax=1,currentGrid=512,assetIndex,currentManifest,riverGeoJSON,riverGroup,verticalScale=1;
+    const assetCache=new Map();
 
     const ui={loading:$('loading'),loadingTitle:$('loadingTitle'),loadingText:$('loadingText'),progressBar:$('progressBar'),progressLabel:$('progressLabel'),progressValue:$('progressValue'),retry:$('retryButton'),statusMain:$('statusMain'),statusSub:$('statusSub')};
     function progress(value,label,text){const pct=Math.max(0,Math.min(100,Math.round(value)));ui.progressBar.style.width=pct+'%';ui.progressValue.textContent=pct+'%';ui.progressLabel.textContent=label;if(text)ui.loadingText.textContent=text;}
@@ -99,48 +100,70 @@
 
     function buildCandidateButtons(){const host=$('candidateGrid');host.innerHTML='';for(const id of ORDER){const c=CANDIDATES[id];const b=document.createElement('button');b.className='candidate'+(id===current.id?' active':'');b.innerHTML=`<b>${id} · ${c.name}</b><span>${c.role}</span>`;b.onclick=()=>loadCandidate(id);host.appendChild(b)}}
 
-    async function ensureSource(){
-      if(tiffImage)return;
-      progress(8,'连接 GeoTIFF','读取 GitHub Release 中锁定的 12.5 米联合 DEM。');
-      const tiff=await fromUrl(RELEASE_URL,{cacheSize:320});
-      tiffImage=await tiff.getImage();
-      const width=tiffImage.getWidth(),height=tiffImage.getHeight();
-      const resolution=tiffImage.getResolution();
-      if(width!==EXPECTED.width||height!==EXPECTED.height)throw new Error(`源栅格尺寸不符：${width} × ${height}`);
-      if(Math.abs(Math.abs(resolution[0])-EXPECTED.resolution)>.001||Math.abs(Math.abs(resolution[1])-EXPECTED.resolution)>.001)throw new Error(`源栅格分辨率不符：${resolution.join(', ')}`);
-      $('sourceCheck').className='dot ok';
-    }
+    async function sha256Hex(buffer){
+    const digest=await crypto.subtle.digest('SHA-256',buffer);
+    return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+  }
 
-    async function readWindow(candidate){
-      const [col,row,w,h]=candidate.window;
-      progress(16,'读取原生像元',`候选 ${candidate.id} · ${candidate.name} · 2048 × 2048`);
-      const data=await tiffImage.readRasters({window:[col,row,col+w,row+h],samples:[0],interleave:true});
-      if(data.length!==w*h)throw new Error(`窗口像元数不符：${data.length}`);
-      return data;
+  async function ensureSource(){
+    if(assetIndex)return;
+    progress(8,'连接同源资产','读取已校验的 2048 原生高程索引。');
+    const response=await fetch(`${DATA_ROOT}/index.json?v=${ASSET_VERSION}`,{cache:'no-cache'});
+    if(!response.ok)throw new Error(`原生高程索引 HTTP ${response.status}`);
+    assetIndex=await response.json();
+    if(assetIndex?.source?.sha256!==EXPECTED.sourceSha)throw new Error('源 DEM SHA256 与锁定值不符');
+    if(assetIndex?.source?.pixelSpacingMeters!==EXPECTED.resolution)throw new Error('源 DEM 分辨率与 12.5 米锁定值不符');
+    if(assetIndex?.grid?.[0]!==2048||assetIndex?.grid?.[1]!==2048)throw new Error('发布资产并非 2048 × 2048 原生窗口');
+    if(assetIndex?.resampling!==false||assetIndex?.gapFill!==false)throw new Error('发布资产违反无重采样或无补洞规则');
+    for(const id of ORDER){if(!assetIndex?.candidates?.[id])throw new Error(`缺少候选 ${id} 的锁定清单`)}
+    $('sourceCheck').className='dot ok';
+  }
+
+  async function readCandidate(candidate){
+    if(assetCache.has(candidate.id))return assetCache.get(candidate.id);
+    progress(18,'读取原生像元',`候选 ${candidate.id} · ${candidate.name} · 2048 × 2048`);
+    const manifestResponse=await fetch(`${DATA_ROOT}/${candidate.id}/manifest.json?v=${ASSET_VERSION}`,{cache:'no-cache'});
+    if(!manifestResponse.ok)throw new Error(`候选 ${candidate.id} 清单 HTTP ${manifestResponse.status}`);
+    const manifest=await manifestResponse.json();
+    if(manifest.sourceSha256!==EXPECTED.sourceSha)throw new Error(`候选 ${candidate.id} 源 SHA256 不符`);
+    if(manifest.grid?.[0]!==2048||manifest.grid?.[1]!==2048||manifest.pixelSpacingMeters!==12.5)throw new Error(`候选 ${candidate.id} 网格规格不符`);
+    if(manifest.resampling!==false||manifest.gapFill!==false)throw new Error(`候选 ${candidate.id} 违反原生像元规则`);
+    if(JSON.stringify(manifest.window)!==JSON.stringify(candidate.window))throw new Error(`候选 ${candidate.id} 像元窗口不符`);
+    const heightResponse=await fetch(`${DATA_ROOT}/${candidate.id}/${manifest.heightFile}?v=${ASSET_VERSION}`,{cache:'force-cache'});
+    if(!heightResponse.ok)throw new Error(`候选 ${candidate.id} 高程 HTTP ${heightResponse.status}`);
+    const buffer=await heightResponse.arrayBuffer();
+    if(buffer.byteLength!==2048*2048*2||buffer.byteLength!==manifest.heightBytes)throw new Error(`候选 ${candidate.id} 高程字节数不符`);
+    progress(28,'校验高程哈希',`候选 ${candidate.id} · SHA256`);
+    const actualSha=await sha256Hex(buffer);
+    if(actualSha!==manifest.heightSha256)throw new Error(`候选 ${candidate.id} 高程 SHA256 不符`);
+    let data=new Int16Array(buffer);
+    const littleEndian=new Uint8Array(new Uint16Array([1]).buffer)[0]===1;
+    if(!littleEndian){
+      const swapped=new Int16Array(data.length);
+      const view=new DataView(buffer);
+      for(let i=0;i<swapped.length;i++)swapped[i]=view.getInt16(i*2,true);
+      data=swapped;
     }
+    const result={data,manifest};
+    assetCache.set(candidate.id,result);
+    return result;
+  }
+
+  async function loadTerrainTexture(candidate,manifest){
+    progress(54,'加载 2048 地表纹理',`候选 ${candidate.id} · 同源编译纹理`);
+    const url=`${DATA_ROOT}/${candidate.id}/${manifest.textureFile}?v=${ASSET_VERSION}`;
+    return await new Promise((resolve,reject)=>{
+      new THREE.TextureLoader().load(url,tex=>{
+        tex.colorSpace=THREE.SRGBColorSpace;
+        tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+        tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
+        resolve(tex);
+      },undefined,error=>reject(new Error(`候选 ${candidate.id} 地表纹理加载失败：${error?.message||error}`)));
+    });
+  }
 
     function scanHeights(data){let min=Infinity,max=-Infinity,valid=0;for(let i=0;i<data.length;i++){const v=data[i];if(Number.isFinite(v)&&v!==0&&v>-1000&&v<10000){if(v<min)min=v;if(v>max)max=v;valid++}}return{min,max,valid,fraction:valid/data.length}}
     function sampleHeight(data,x,y){const xx=Math.max(0,Math.min(2047,x|0)),yy=Math.max(0,Math.min(2047,y|0));const v=data[yy*2048+xx];return Number.isFinite(v)&&v!==0?v:currentMin}
-    function palette(t){
-      const stops=[[0,[48,83,56]],[.18,[70,100,61]],[.38,[91,111,69]],[.58,[115,119,85]],[.75,[139,132,105]],[.9,[165,156,137]],[1,[203,199,185]]];
-      for(let i=1;i<stops.length;i++){if(t<=stops[i][0]){const a=stops[i-1],b=stops[i],q=(t-a[0])/(b[0]-a[0]);return a[1].map((v,j)=>v+(b[1][j]-v)*q)}}return stops.at(-1)[1]
-    }
-
-    async function buildTexture(data,min,max){
-      progress(42,'生成 2048 地表纹理','计算原生高程着色和阴影。');
-      const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=2048;const ctx=canvas.getContext('2d',{alpha:false});const image=ctx.createImageData(2048,2048);const out=image.data;const range=Math.max(1,max-min);const sun=[-.45,.78,-.43];
-      for(let y=0;y<2048;y++){
-        const ym=Math.max(0,y-1),yp=Math.min(2047,y+1);
-        for(let x=0;x<2048;x++){
-          const xm=Math.max(0,x-1),xp=Math.min(2047,x+1),idx=y*2048+x,o=idx*4,z=data[idx];
-          if(!Number.isFinite(z)||z===0){out[o]=54;out[o+1]=66;out[o+2]=62;out[o+3]=255;continue}
-          const dx=(sampleHeight(data,xp,y)-sampleHeight(data,xm,y))/25;const dz=(sampleHeight(data,x,yp)-sampleHeight(data,x,ym))/25;let nx=-dx,ny=1,nz=-dz;const inv=1/Math.hypot(nx,ny,nz);nx*=inv;ny*=inv;nz*=inv;const shade=Math.max(.18,Math.min(1.05,.58+.48*(nx*sun[0]+ny*sun[1]+nz*sun[2])));const slope=Math.min(1,Math.hypot(dx,dz)/2.2);const t=Math.max(0,Math.min(1,(z-min)/range));const c=palette(t);const rock=Math.min(1,Math.max(0,(slope-.18)*1.35+t*.28));out[o]=Math.min(255,c[0]*shade+rock*10);out[o+1]=Math.min(255,c[1]*shade+rock*8);out[o+2]=Math.min(255,c[2]*shade+rock*7);out[o+3]=255;
-        }
-        if(y%128===0){progress(42+y/2048*25,'生成 2048 地表纹理');await nextFrame()}
-      }
-      ctx.putImageData(image,0,0);const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;return tex;
-    }
-
     function disposeTerrain(){if(terrain){scene.remove(terrain);terrain.geometry.dispose();terrain.material.dispose();terrain=null}if(wire){scene.remove(wire);wire.geometry.dispose();wire.material.dispose();wire=null}if(texture){texture.dispose();texture=null}if(riverGroup){scene.remove(riverGroup);riverGroup.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});riverGroup=null}}
     function buildTerrain(data,min,max,tex){
       disposeTerrain();sourceHeights=data;texture=tex;currentMin=min;currentMax=max;const segments=currentGrid-1;const geometry=new THREE.PlaneGeometry(25.6,25.6,segments,segments);geometry.rotateX(-Math.PI/2);const pos=geometry.attributes.position;baseVertexHeights=new Float32Array(pos.count);
@@ -165,8 +188,8 @@
     async function loadCandidate(id){
       current=CANDIDATES[id]||CANDIDATES.D;buildCandidateButtons();setBusy(true);ui.loading.style.opacity='1';ui.loading.style.pointerEvents='auto';ui.loadingTitle.textContent='加载 2048 原生高程窗口';ui.loadingText.classList.remove('error');ui.retry.style.display='none';$('title').textContent=current.name;setStatus('正在读取原生 DEM',`候选 ${current.id}`);$('windowCheck').className='dot';$('validFraction').textContent='读取中';$('elevationRange').textContent='读取中';
       try{
-        await ensureSource();const data=await readWindow(current);progress(34,'验证像元覆盖');const stats=scanHeights(data);if(stats.fraction<.995)throw new Error(`有效覆盖率 ${(stats.fraction*100).toFixed(3)}%，低于 99.5% 门槛`);$('validFraction').textContent=(stats.fraction*100).toFixed(3)+'%';$('elevationRange').textContent=`${stats.min.toFixed(1)}–${stats.max.toFixed(1)} m`;$('windowCheck').className='dot ok';
-        const tex=await buildTexture(data,stats.min,stats.max);progress(72,'构建三维网格');buildTerrain(data,stats.min,stats.max,tex);await ensureRiverData();progress(88,'叠加漓江');buildRivers();viewPreset('overview');
+        await ensureSource();const {data,manifest}=await readCandidate(current);currentManifest=manifest;progress(38,'验证像元覆盖');const stats=scanHeights(data);if(stats.fraction<.995)throw new Error(`有效覆盖率 ${(stats.fraction*100).toFixed(3)}%，低于 99.5% 门槛`);if(Math.abs(stats.fraction-manifest.validFraction)>1e-7||stats.min!==manifest.minimumElevationMeters||stats.max!==manifest.maximumElevationMeters)throw new Error(`候选 ${current.id} 浏览器复核与编译清单不一致`);$('sourceGrid').textContent=`${manifest.grid[0]} × ${manifest.grid[1]}`;$('validFraction').textContent=(stats.fraction*100).toFixed(3)+'%';$('elevationRange').textContent=`${stats.min.toFixed(1)}–${stats.max.toFixed(1)} m`;$('windowCheck').className='dot ok';
+        const tex=await loadTerrainTexture(current,manifest);progress(72,'构建三维网格');buildTerrain(data,stats.min,stats.max,tex);await ensureRiverData();progress(88,'叠加漓江');buildRivers();viewPreset('overview');
         progress(100,'完成');setStatus('2048 原生窗口已加载',`候选 ${current.id} · ${(stats.fraction*100).toFixed(2)}% 有效`);setTimeout(()=>{ui.loading.style.opacity='0';ui.loading.style.pointerEvents='none'},260);setBusy(false);
         const u=new URL(location.href);u.searchParams.set('candidate',current.id);history.replaceState(null,'',u);
       }catch(e){showError(e)}
