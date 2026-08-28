@@ -107,6 +107,36 @@ def collect_cdp_errors(events: list[dict]) -> list[dict]:
     return errors
 
 
+def ensure_cjk_font() -> str:
+    fontconfig = shutil.which("fc-match")
+    if not fontconfig:
+        return "fontconfig-unavailable; relying on platform CJK fonts"
+    probe = subprocess.run(
+        [fontconfig, "Noto Sans CJK TC"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if "Noto Sans CJK TC" in probe:
+        return probe
+    if os.environ.get("CI", "").lower() != "true":
+        raise SystemExit(f"Rendered CJK QA font unavailable: {probe}")
+    subprocess.run(["sudo", "apt-get", "update"], check=True)
+    subprocess.run(
+        ["sudo", "apt-get", "install", "-y", "--no-install-recommends", "fonts-noto-cjk"],
+        check=True,
+    )
+    probe = subprocess.run(
+        [fontconfig, "Noto Sans CJK TC"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if "Noto Sans CJK TC" not in probe:
+        raise SystemExit(f"Rendered CJK QA font still unavailable: {probe}")
+    return probe
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
@@ -118,6 +148,8 @@ def main() -> int:
     if not args.chromium:
         raise SystemExit("Chromium executable not found")
     args.evidence_dir.mkdir(parents=True, exist_ok=True)
+    font_match = ensure_cjk_font()
+    (args.evidence_dir / 'cjk-font-match.txt').write_text(font_match + '\n', encoding='utf-8')
     port = free_port()
     profile = args.evidence_dir / "chromium-profile"
     if profile.exists():

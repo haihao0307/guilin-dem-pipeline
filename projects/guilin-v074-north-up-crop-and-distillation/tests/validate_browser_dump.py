@@ -51,6 +51,7 @@ def main() -> int:
         "preview_visual_reference_only",
         "status_unconfirmed",
         "default_light",
+        "cjk_glyphs_rendered",
         "console_errors_zero",
         "li_xiang_layer",
     }
