@@ -1,0 +1,262 @@
+name: Wenzhou V200 OSM places V2
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v200-17tile-truth-hydrology-rebuild
+    paths:
+      - .github/workflows/wenzhou-v200-osm-places-v2.yml
+      - projects/wenzhou/v200/config/osm_places_v200.json
+      - projects/wenzhou/v200/scripts/acquire_osm_places_v200.py
+      - projects/wenzhou/v200/scripts/run_osm_places_v200.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v200-osm-places-v2
+  cancel-in-progress: true
+
+jobs:
+  resolve-places:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip v200 places v2]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact V200 branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+          lfs: false
+
+      - name: Install Python and pyproj
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install coordinate runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install --disable-pip-version-check 'pyproj>=3.7,<4'
+          python -m py_compile \
+            projects/wenzhou/v200/scripts/acquire_osm_places_v200.py \
+            projects/wenzhou/v200/scripts/run_osm_places_v200.py
+
+      - name: Validate immutable placement rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path('projects/wenzhou/v200/config/osm_places_v200.json').read_text())
+          manifest = json.loads(Path('projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json').read_text())
+          assert config['domain']['truthCogSha256'] == manifest['truthCog']['expectedSha256']
+          assert config['selection']['allowManualCoordinates'] is False
+          assert config['selection']['allowEdgeClamping'] is False
+          assert config['selection']['requireInsideAoi'] is True
+          assert config['selection']['requireExactAliasMatch'] is True
+          assert len(config['targets']) == 7
+          PY
+
+      - name: Query and resolve OSM source features
+        shell: bash
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/v200/scripts/run_osm_places_v200.py
+
+      - name: Verify resolved coordinates and source IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/v200/reports/OSM_PLACES_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/v200/reports/OSM_PLACES_QA.json').read_text())
+          resolution = json.loads((root / 'projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_LABELS_RESOLUTION.json').read_text())
+
+          assert acquisition['passed'] is True
+          assert acquisition['manualCoordinatesUsed'] is False
+          assert acquisition['edgeClampingUsed'] is False
+          assert acquisition['domain']['truthCogSha256'] == 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43'
+          assert acquisition['license'] == 'ODbL 1.0'
+          assert acquisition['attribution'] == '© OpenStreetMap contributors'
+          assert qa['passed'] is True
+          assert qa['requestedTargetCount'] == 7
+          assert qa['manualCoordinateCount'] == 0
+          assert qa['edgeClampingCount'] == 0
+          assert qa['ambiguousCount'] == 0
+          assert qa['requiredUnresolvedTargetIds'] == []
+          assert qa['outOfBoundsResolvedTargetIds'] == []
+          assert qa['sourceIdMissingTargetIds'] == []
+          assert set(qa['unresolvedTargetIds']).issubset({'natural_island'})
+          assert resolution['manualCoordinatesUsed'] is False
+          assert resolution['edgeClampingUsed'] is False
+
+          selected = {}
+          for target in resolution['targets']:
+              if target['status'] != 'resolved':
+                  continue
+              source = target['selected']
+              assert source['sourceElementId'] is not None
+              assert source['insideWgs84Aoi'] is True
+              assert source['insideProjectedAoi'] is True
+              assert source['manualCoordinate'] is False
+              assert source['edgeClamped'] is False
+              selected[target['targetId']] = {
+                  'displayLabel': target['displayLabel'],
+                  'sourceName': source['sourceName'],
+                  'sourceElementType': source['sourceElementType'],
+                  'sourceElementId': source['sourceElementId'],
+                  'wgs84': source['wgs84'],
+                  'projected': source['projected'],
+              }
+
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              assert path.stat().st_size == item['bytes']
+              assert digest.hexdigest() == item['sha256']
+              checked.append(item['path'])
+          print(json.dumps({'selected': selected, 'checkedFileCount': len(checked)}, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit source-traceable labels and rebase normally
+        id: output_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH='project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/v200/data/places/osm \
+            projects/wenzhou/v200/reports/OSM_PLACES_ACQUISITION.json \
+            projects/wenzhou/v200/reports/OSM_PLACES_QA.json
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'Add verified V200 OSM place labels [skip v200 places v2]'
+          git fetch origin "$BRANCH"
+          git rebase "origin/$BRANCH"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git push origin "HEAD:$BRANCH"
+
+      - name: Verify output files from a fresh clone
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-v200-places-v2-fresh
+          git clone --depth 1 --branch project/wenzhou-v200-17tile-truth-hydrology-rebuild \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-v200-places-v2-fresh
+          cd /tmp/wenzhou-v200-places-v2-fresh
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path('.')
+          acquisition = json.loads((root / 'projects/wenzhou/v200/reports/OSM_PLACES_ACQUISITION.json').read_text())
+          qa = json.loads((root / 'projects/wenzhou/v200/reports/OSM_PLACES_QA.json').read_text())
+          resolution = json.loads((root / 'projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_LABELS_RESOLUTION.json').read_text())
+          checked = []
+          for item in acquisition['rawFiles'] + acquisition['outputFiles']:
+              path = root / item['path']
+              digest = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+                      digest.update(chunk)
+              actual = digest.hexdigest()
+              assert path.stat().st_size == item['bytes']
+              assert actual == item['sha256']
+              checked.append({'path': item['path'], 'bytes': item['bytes'], 'sha256': actual})
+          assert qa['passed'] is True
+          evidence = {
+              'freshCloneVerified': True,
+              'truthCogSha256': resolution['truthCogSha256'],
+              'resolvedTargetIds': qa['resolvedTargetIds'],
+              'unresolvedTargetIds': qa['unresolvedTargetIds'],
+              'manualCoordinateCount': qa['manualCoordinateCount'],
+              'edgeClampingCount': qa['edgeClampingCount'],
+              'files': checked,
+          }
+          Path('/tmp/wenzhou-v200-places-v2-verification.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
+          print(json.dumps(evidence, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Record round-trip receipt
+        shell: bash
+        env:
+          OUTPUT_COMMIT: ${{ steps.output_commit.outputs.commit }}
+        run: |
+          set -euo pipefail
+          BRANCH='project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          fresh = json.loads(Path('/tmp/wenzhou-v200-places-v2-verification.json').read_text())
+          qa = json.loads(Path('projects/wenzhou/v200/reports/OSM_PLACES_QA.json').read_text())
+          resolution = json.loads(Path('projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_LABELS_RESOLUTION.json').read_text())
+          selected = []
+          for target in resolution['targets']:
+              source = target.get('selected')
+              selected.append({
+                  'targetId': target['targetId'],
+                  'displayLabel': target['displayLabel'],
+                  'status': target['status'],
+                  'sourceElementType': source.get('sourceElementType') if source else None,
+                  'sourceElementId': source.get('sourceElementId') if source else None,
+                  'sourceName': source.get('sourceName') if source else None,
+                  'wgs84': source.get('wgs84') if source else None,
+                  'projected': source.get('projected') if source else None,
+              })
+          receipt = {
+              'schema': 'wenzhou_v200_osm_places_receipt@2.0.0',
+              'completedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'branch': 'project/wenzhou-v200-17tile-truth-hydrology-rebuild',
+              'outputCommit': os.environ['OUTPUT_COMMIT'],
+              'truthCogSha256': fresh['truthCogSha256'],
+              'license': 'ODbL 1.0',
+              'attribution': '© OpenStreetMap contributors',
+              'resolvedTargetIds': qa['resolvedTargetIds'],
+              'unresolvedTargetIds': qa['unresolvedTargetIds'],
+              'manualCoordinateCount': 0,
+              'edgeClampingCount': 0,
+              'freshCloneVerified': fresh['freshCloneVerified'],
+              'selected': selected,
+              'files': fresh['files'],
+          }
+          Path('projects/wenzhou/v200/reports/OSM_PLACES_RECEIPT.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+          PY
+          git add -- projects/wenzhou/v200/reports/OSM_PLACES_RECEIPT.json
+          git commit -m 'Record verified V200 OSM place receipt [skip v200 places v2]'
+          git fetch origin "$BRANCH"
+          git rebase "origin/$BRANCH"
+          git push origin "HEAD:$BRANCH"
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v200-osm-places-v2-evidence
+          path: |
+            projects/wenzhou/v200/data/places/osm/**
+            projects/wenzhou/v200/reports/OSM_PLACES_*.json
+          if-no-files-found: warn
+          retention-days: 90
