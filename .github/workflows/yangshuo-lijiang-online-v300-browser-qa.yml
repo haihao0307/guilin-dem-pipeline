@@ -1,0 +1,141 @@
+name: Yangshuo Lijiang 2048 online browser QA
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/yangshuo-lijiang-online-v300-browser-qa.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yangshuo-lijiang-online-v300-browser-qa
+  cancel-in-progress: true
+
+env:
+  PAGE_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-lijiang-2048-v300/?candidate=D&qa=1
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Chromium QA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run real online Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/yangshuo-lijiang-online-v300-browser
+          cat > "$RUNNER_TEMP/yangshuo_online_qa.py" <<'PY'
+          import json
+          import os
+          import time
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          out = Path('reports/yangshuo-lijiang-online-v300-browser')
+          out.mkdir(parents=True, exist_ok=True)
+          url = os.environ['PAGE_URL']
+          console = []
+          page_errors = []
+          started = time.time()
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(
+                  headless=True,
+                  args=['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+              )
+              page = browser.new_page(viewport={'width': 1440, 'height': 900}, device_scale_factor=1)
+              page.on('console', lambda msg: console.append({'type': msg.type, 'text': msg.text}))
+              page.on('pageerror', lambda exc: page_errors.append(str(exc)))
+              response = page.goto(url, wait_until='domcontentloaded', timeout=120_000)
+              if response is None or response.status != 200:
+                  raise RuntimeError(f'Page HTTP status failed: {None if response is None else response.status}')
+
+              page.wait_for_selector('#statusMain', timeout=30_000)
+              page.wait_for_function(
+                  "document.querySelector('#statusMain')?.textContent.includes('2048 原生窗口已加载')",
+                  timeout=300_000,
+              )
+              page.wait_for_timeout(2500)
+
+              initial = page.evaluate("""() => ({
+                title: document.title,
+                status: document.querySelector('#statusMain')?.textContent,
+                statusSub: document.querySelector('#statusSub')?.textContent,
+                validFraction: document.querySelector('#validFraction')?.textContent,
+                elevationRange: document.querySelector('#elevationRange')?.textContent,
+                displayGrid: document.querySelector('#displayGrid')?.textContent,
+                canvasCount: document.querySelectorAll('#viewer canvas').length,
+                canvasWidth: document.querySelector('#viewer canvas')?.width || 0,
+                canvasHeight: document.querySelector('#viewer canvas')?.height || 0,
+                sourceOk: document.querySelector('#sourceCheck')?.classList.contains('ok'),
+                windowOk: document.querySelector('#windowCheck')?.classList.contains('ok')
+              })""")
+              valid = float(initial['validFraction'].replace('%', ''))
+              if initial['canvasCount'] < 1 or initial['canvasWidth'] < 1000 or initial['canvasHeight'] < 600:
+                  raise RuntimeError(f'WebGL canvas invalid: {initial}')
+              if valid < 99.5 or not initial['sourceOk'] or not initial['windowOk']:
+                  raise RuntimeError(f'Native data gates failed: {initial}')
+
+              page.screenshot(path=str(out / 'candidate-D-desktop.png'), full_page=True)
+
+              page.locator('.candidate').filter(has_text='A ·').click()
+              page.wait_for_function(
+                  "document.querySelector('#statusSub')?.textContent.includes('候选 A') && document.querySelector('#statusMain')?.textContent.includes('2048 原生窗口已加载')",
+                  timeout=300_000,
+              )
+              page.wait_for_timeout(1500)
+              switched = page.evaluate("""() => ({
+                title: document.querySelector('#title')?.textContent,
+                status: document.querySelector('#statusMain')?.textContent,
+                statusSub: document.querySelector('#statusSub')?.textContent,
+                validFraction: document.querySelector('#validFraction')?.textContent,
+                canvasCount: document.querySelectorAll('#viewer canvas').length
+              })""")
+              page.screenshot(path=str(out / 'candidate-A-desktop.png'), full_page=True)
+              browser.close()
+
+          hard_console_errors = [x for x in console if x['type'] == 'error']
+          report = {
+              'schema': 'yangshuo-lijiang-online-browser-qa/v3.0.0',
+              'url': url,
+              'elapsedSeconds': round(time.time() - started, 3),
+              'initialCandidateD': initial,
+              'switchedCandidateA': switched,
+              'pageErrors': page_errors,
+              'consoleErrors': hard_console_errors,
+              'console': console,
+              'passed': not page_errors and not hard_console_errors,
+          }
+          (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+          if page_errors or hard_console_errors:
+              raise RuntimeError(json.dumps({'pageErrors': page_errors, 'consoleErrors': hard_console_errors}, ensure_ascii=False))
+          PY
+          python "$RUNNER_TEMP/yangshuo_online_qa.py"
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-lijiang-online-v300-browser-${{ github.sha }}
+          path: reports/yangshuo-lijiang-online-v300-browser/**
+          if-no-files-found: error
+          retention-days: 30
