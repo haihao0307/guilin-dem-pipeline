@@ -1039,6 +1039,33 @@
     return value === 'rgba(0,0,0,0)' || value === 'transparent';
   }
 
+  function cjkGlyphsRendered() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 56;
+    canvas.height = 56;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return false;
+    const family = getComputedStyle(document.documentElement).fontFamily;
+    const signatures = ['桂', '林', '真', '寶', '鼎'].map(character => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = '#000';
+      context.textBaseline = 'alphabetic';
+      context.font = `900 40px ${family}`;
+      context.fillText(character, 4, 44);
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let hash = 2166136261;
+      let ink = 0;
+      for (let index = 3; index < pixels.length; index += 4) {
+        const alpha = pixels[index];
+        if (alpha > 0) ink += 1;
+        hash ^= alpha;
+        hash = Math.imul(hash, 16777619);
+      }
+      return `${ink}:${hash >>> 0}`;
+    });
+    return signatures.every(signature => Number(signature.split(':')[0]) > 30) && new Set(signatures).size >= 4;
+  }
+
   async function runSelfTest() {
     const checks = {};
     const expectedUtm = {
@@ -1085,6 +1112,7 @@
     checks.preview_visual_reference_only = state.manifest.preview.provenance_status === 'PENDING_SOURCE_TIFF_HASH_RECONCILIATION' && state.manifest.preview.exact_locked_tiff_derivation_verified === false;
     checks.status_unconfirmed = state.aoiStatus.status === 'UNCONFIRMED' && state.aoiStatus.distillation_allowed === false;
     checks.default_light = getComputedStyle(document.documentElement).colorScheme.includes('light');
+    checks.cjk_glyphs_rendered = cjkGlyphsRendered();
     checks.console_errors_zero = runtimeErrors.length === 0;
 
     $('layerFootprints').checked = true;
