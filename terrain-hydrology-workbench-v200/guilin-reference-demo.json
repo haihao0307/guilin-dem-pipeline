@@ -1,0 +1,57 @@
+{
+  "schema": "terrain-hydrology-reference-demo@1.0.0",
+  "version": "2.2",
+  "demos": [
+    {
+      "id": "guilin-yangshuo-karst-reference-v001",
+      "regionId": "guilin",
+      "title": "桂林阳朔喀斯特蒸馏示范区",
+      "status": "visual-candidate",
+      "sourceReceipt": "knowledge/terrain-hydrology/guilin/inbox/2026-08-27_guilin-geomorphology-photo-set-v001_RECEIPT.json",
+      "visualGrammar": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_YANGSHUO_KARST_VISUAL_GRAMMAR_V1.md",
+      "referenceProfile": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_KARST_REFERENCE_PROFILE_V1.json",
+      "window": {
+        "pixelWindow": { "x": 136, "y": 32, "width": 80, "height": 80 },
+        "uvCenter": [0.2202753442, 0.0901126408],
+        "uvBounds": [0.1702127659, 0.0400500626, 0.2703379224, 0.1401752190],
+        "worldCenterMeters": [-2797.246558, 4098.873592],
+        "bounds": [426162.5, 2799087.5, 427162.5, 2800087.5],
+        "crs": "EPSG:32649",
+        "widthMeters": 1000,
+        "heightMeters": 1000,
+        "selectionReason": "在真实 12.5 m 桂林片区内同时包含高起伏峰体、连续低地与批准水系参考的 1 km² 校准窗口。"
+      },
+      "camera": {
+        "yaw": -0.56,
+        "pitch": 0.22,
+        "distanceMeters": 180
+      },
+      "rendering": {
+        "desktopFocusMesh": 1025,
+        "mobileFocusMesh": 513,
+        "targetPatchMeters": 990,
+        "truthSpacingMeters": 12.5,
+        "visualTriangleSpacingMeters": 0.966796875,
+        "microDeltaMaxMeters": 1.2,
+        "visualOnly": true,
+        "truthOverwrite": false,
+        "sourceResampling": false
+      },
+      "rulesApplied": [
+        "峰体保持厚实体量，禁止针刺峰、统一圆锥和规则阵列",
+        "峰间低廊道保持连续，程序细节不得抬高或切断谷底",
+        "河道沿批准低廊道连续前进，绕开峰体核心",
+        "崖壁采用斑块、竖向条带、台肩和裂隙组合",
+        "峰脚转折短而明显，局部允许坡脚沉积、低滩和沙洲",
+        "天然穿洞属于稀有地标，默认生成数量为零"
+      ],
+      "truthBoundary": {
+        "zTruthWritable": false,
+        "microDeltaDefaultMeters": 0,
+        "derivedHydrologyAuthoritative": false,
+        "visualAcceptance": false,
+        "productionReady": false
+      }
+    }
+  ]
+}
