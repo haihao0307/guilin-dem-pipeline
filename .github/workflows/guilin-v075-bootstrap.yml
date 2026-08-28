@@ -1,91 +1,162 @@
-name: Bootstrap Guilin v0.7.5 3D page
+name: Guilin v0.7.5 3D visual evidence
 
 on:
   push:
-    branches: [project/guilin-v075-approved-aoi-terrain3d-preview]
+    branches:
+      - project/guilin-v075-approved-aoi-terrain3d-preview
     paths:
       - .github/workflows/guilin-v075-bootstrap.yml
-      - projects/guilin-v075-approved-aoi-terrain3d-preview/bootstrap_payload.part-*
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: guilin-v075-bootstrap
+  group: guilin-v075-visual-evidence
   cancel-in-progress: false
 
 jobs:
-  publish:
+  capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
-      PROJECT_DIR: projects/guilin-v075-approved-aoi-terrain3d-preview
-      PARTS: projects/guilin-v075-approved-aoi-terrain3d-preview/bootstrap_payload.part-*
       DEST: guilin-v075-approved-aoi-terrain3d
-      PAYLOAD_SHA: 9c1275d49a6ca76390cad574b8d1baccd96320c44700b88f2b0ddf12924228cd
       HEIGHT_BYTES: "2273280"
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Checkout source branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
           lfs: false
-      - name: Materialize source, verify and publish
+
+      - name: Verify deployed page and capture browser evidence
         shell: bash
         run: |
           set -euo pipefail
-          test "${GITHUB_REF_NAME}" = "project/guilin-v075-approved-aoi-terrain3d-preview"
-          compgen -G "${PARTS}" >/dev/null
-          cat ${PARTS} > /tmp/payload.b64
-          base64 -d /tmp/payload.b64 > /tmp/payload.tar.gz
-          printf '%s  %s\n' "${PAYLOAD_SHA}" /tmp/payload.tar.gz | sha256sum -c -
-          tar -xzf /tmp/payload.tar.gz -C .
-          rm -f ${PARTS} .github/workflows/guilin-v075-approved-aoi-terrain3d.yml
-          node --check "${PROJECT_DIR}/web/app.js"
-          node "${PROJECT_DIR}/tests/static_contract_test.mjs"
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A "${PROJECT_DIR}"
-          git commit -m "feat(v075): materialize accepted AOI 3D preview"
-          git push origin HEAD:project/guilin-v075-approved-aoi-terrain3d-preview
-          SOURCE_SHA="$(git rev-parse HEAD)"
           git fetch origin gh-pages
-          rm -rf /tmp/v075-dist /tmp/v075-pages
-          mkdir -p /tmp/v075-dist/data/source
-          rsync -a --exclude 'data/source/' "${PROJECT_DIR}/web/" /tmp/v075-dist/
-          git show origin/gh-pages:guilin-v072-terrain-rivers/data/terrain_manifest.json > /tmp/v075-dist/data/source/terrain_manifest.json
-          git show origin/gh-pages:guilin-v072-terrain-rivers/data/terrain_height_u16.bin > /tmp/v075-dist/data/source/terrain_height_u16.bin
-          test "$(wc -c < /tmp/v075-dist/data/source/terrain_height_u16.bin | tr -d ' ')" = "${HEIGHT_BYTES}"
-          python - /tmp/v075-dist "${SOURCE_SHA}" <<'PY'
-          import hashlib,json,pathlib,sys
-          root=pathlib.Path(sys.argv[1]); sha=sys.argv[2]
-          manifest=json.loads((root/'data/source/terrain_manifest.json').read_text())
-          height=(root/'data/source/terrain_height_u16.bin').read_bytes()
-          assert manifest['crs']=='EPSG:32649'
-          assert manifest['source_resolution_m']==[12.5,12.5]
-          assert manifest['height']['width']==1024 and manifest['height']['height']==1110
-          assert manifest['height']['nodata_code']==65535
-          assert manifest['vertical_scale']==1.0
-          assert manifest['gap_fill_applied'] is False
-          assert len(height)==2273280
-          receipt={'schema':'guilin-v075-build-provenance/v1','source_commit':sha,'aoi_status':'ACCEPTED','aoi_geometry_sha256':'36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80','source_resolution_m':12.5,'preview_grid':[1024,1110],'height_sha256':hashlib.sha256(height).hexdigest(),'default_vertical_scale':1.0,'gap_fill_applied':False,'fallback_30m_used':False,'stage':'numeric-crop-3d-preview'}
-          (root/'build_provenance.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          rm -rf /tmp/v075-pages /tmp/v075-evidence
+          git worktree add -b "v075-visual-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" /tmp/v075-pages origin/gh-pages
+          page="/tmp/v075-pages/${DEST}"
+          evidence="/tmp/v075-evidence"
+          mkdir -p "${evidence}"
+
+          test -s "${page}/index.html"
+          test -s "${page}/styles.css"
+          test -s "${page}/app.js"
+          test -s "${page}/data/accepted_aoi.json"
+          test -s "${page}/data/source/terrain_manifest.json"
+          test -s "${page}/data/source/terrain_height_u16.bin"
+          test "$(wc -c < "${page}/data/source/terrain_height_u16.bin" | tr -d ' ')" = "${HEIGHT_BYTES}"
+          node --check "${page}/app.js"
+
+          python - "${page}" "${GITHUB_SHA}" <<'PY'
+          import hashlib, json, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          source_sha = sys.argv[2]
+          aoi = json.loads((root / "data/accepted_aoi.json").read_text())
+          manifest = json.loads((root / "data/source/terrain_manifest.json").read_text())
+          height = (root / "data/source/terrain_height_u16.bin").read_bytes()
+          assert aoi["status"] == "ACCEPTED"
+          assert aoi["geometry_sha256"] == "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80"
+          assert aoi["bounds_epsg32649"] == [380331.8, 2705928.1, 530128.2, 2926987.2]
+          assert manifest["crs"] == "EPSG:32649"
+          assert manifest["source_resolution_m"] == [12.5, 12.5]
+          assert manifest["height"]["width"] == 1024
+          assert manifest["height"]["height"] == 1110
+          assert manifest["height"]["nodata_code"] == 65535
+          assert manifest["gap_fill_applied"] is False
+          assert len(height) == 2273280
+          receipt = {
+              "schema": "guilin-v075-visual-evidence/v1",
+              "workflow_source_commit": source_sha,
+              "aoi_status": "ACCEPTED",
+              "aoi_geometry_sha256": aoi["geometry_sha256"],
+              "source_resolution_m": 12.5,
+              "height_bytes": len(height),
+              "height_sha256": hashlib.sha256(height).hexdigest(),
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+          }
+          pathlib.Path("/tmp/v075-evidence/static-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
           PY
-          git worktree add -b "v075-pages-${GITHUB_RUN_ID}" /tmp/v075-pages origin/gh-pages
-          rm -rf "/tmp/v075-pages/${DEST}"
-          mkdir -p "/tmp/v075-pages/${DEST}"
-          rsync -a /tmp/v075-dist/ "/tmp/v075-pages/${DEST}/"
-          touch /tmp/v075-pages/.nojekyll
+
+          python -m http.server 8125 --bind 127.0.0.1 --directory "${page}" >"${evidence}/server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "${server_pid}" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8125/ >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:8125/ >/dev/null
+
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -x "${browser}"
+          printf '%s\n' "${browser}" > "${evidence}/browser-path.txt"
+          url="http://127.0.0.1:8125/?visualEvidence=${GITHUB_RUN_ID}"
+          common=(
+            --headless=new
+            --no-sandbox
+            --disable-dev-shm-usage
+            --hide-scrollbars
+            --disable-background-networking
+            --disable-component-update
+            --disable-default-apps
+            --disable-extensions
+            --disable-sync
+            --metrics-recording-only
+            --no-first-run
+            --use-angle=swiftshader
+            --enable-unsafe-swiftshader
+            --force-device-scale-factor=1
+          )
+
+          "${browser}" "${common[@]}" --window-size=1600,1000 --virtual-time-budget=30000 --dump-dom "${url}" > "${evidence}/desktop-dom.html" 2> "${evidence}/desktop-chrome.log"
+          grep -Fq 'data-ready="true"' "${evidence}/desktop-dom.html"
+          grep -Fq 'ACCEPTED' "${evidence}/desktop-dom.html"
+          grep -Fq 'WebGL2' "${evidence}/desktop-dom.html"
+
+          "${browser}" "${common[@]}" --window-size=1600,1000 --virtual-time-budget=30000 --screenshot="${evidence}/desktop-1600x1000.png" "${url}" 2>> "${evidence}/desktop-chrome.log"
+          "${browser}" "${common[@]}" --window-size=390,844 --virtual-time-budget=30000 --screenshot="${evidence}/mobile-390x844.png" "${url}" 2> "${evidence}/mobile-chrome.log"
+          test -s "${evidence}/desktop-1600x1000.png"
+          test -s "${evidence}/mobile-390x844.png"
+
+          python - "${evidence}" "${GITHUB_RUN_ID}" <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          payload = {
+              "schema": "guilin-v075-browser-visual-qa/v1",
+              "passed": True,
+              "workflow_run_id": int(sys.argv[2]),
+              "data_ready": True,
+              "webgl2_text_present": True,
+              "desktop_screenshot_bytes": (root / "desktop-1600x1000.png").stat().st_size,
+              "mobile_screenshot_bytes": (root / "mobile-390x844.png").stat().st_size,
+              "aoi_status": "ACCEPTED",
+              "source_resolution_m": 12.5,
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+          }
+          (root / "browser-qa.json").write_text(json.dumps(payload, indent=2) + "\n")
+          PY
+
+          target="${page}/evidence"
+          mkdir -p "${target}"
+          cp "${evidence}/desktop-1600x1000.png" "${target}/current-desktop.png"
+          cp "${evidence}/mobile-390x844.png" "${target}/current-mobile.png"
+          cp "${evidence}/browser-qa.json" "${target}/browser-qa.json"
+          cp "${evidence}/static-receipt.json" "${target}/static-receipt.json"
+
           git -C /tmp/v075-pages config user.name github-actions[bot]
           git -C /tmp/v075-pages config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git -C /tmp/v075-pages add .nojekyll "${DEST}"
-          git -C /tmp/v075-pages commit -m "Publish Guilin v0.7.5 accepted AOI 3D ${SOURCE_SHA}"
+          git -C /tmp/v075-pages add "${DEST}/evidence"
+          git -C /tmp/v075-pages commit -m "Add Guilin v0.7.5 browser visual evidence ${GITHUB_SHA}"
           git -C /tmp/v075-pages push origin HEAD:gh-pages
-      - name: Upload static evidence
+
+      - name: Upload visual evidence
         if: always()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdf959f0f0fb45cf08
         with:
-          name: guilin-v075-bootstrap-${{ github.run_id }}
-          path: /tmp/v075-dist/build_provenance.json
-          if-no-files-found: warn
-          retention-days: 30
+          name: guilin-v075-visual-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/v075-evidence/
+          if-no-files-found: error
+          retention-days: 90
