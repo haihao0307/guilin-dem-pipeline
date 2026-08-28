@@ -3,8 +3,9 @@
 
 Overpass uses POSIX regular expressions. Python ``re.escape`` emits escaped
 spaces and the original non-capturing group syntax is not portable to that
-engine. This runner keeps the resolver logic unchanged and supplies an explicit
-node, way and relation query using a POSIX capturing group.
+engine. This runner keeps the resolver logic unchanged and supplies explicit
+node, way and relation queries with a POSIX capturing group. The output
+modifiers follow Overpass QL order: verbosity first, geometry modifier second.
 """
 
 from __future__ import annotations
@@ -12,7 +13,6 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any
 
 MODULE_PATH = Path(__file__).with_name("acquire_osm_places_v200.py")
 SPEC = importlib.util.spec_from_file_location("wenzhou_v200_places_core", MODULE_PATH)
@@ -45,7 +45,7 @@ def overpass_query(
         "(\n"
         + "\n".join(clauses)
         + "\n);\n"
-        "out center tags qt;\n"
+        "out tags center qt;\n"
     )
 
 
