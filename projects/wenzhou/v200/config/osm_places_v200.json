@@ -1,0 +1,101 @@
+{
+  "schema": "wenzhou_osm_places@1.0.0",
+  "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "source": {
+    "project": "OpenStreetMap",
+    "license": "ODbL 1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "primaryEndpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "fallbackEndpoints": [
+      "https://overpass.private.coffee/api/interpreter",
+      "https://overpass-api.de/api/interpreter"
+    ]
+  },
+  "domain": {
+    "wgs84Bounds": [
+      119.84414553534705,
+      27.293797468756548,
+      122.04907102781185,
+      29.286519694859074
+    ],
+    "projectedCrs": "EPSG:32651",
+    "projectedBounds": [
+      187912.5,
+      3019612.5,
+      407350.0,
+      3243587.5
+    ],
+    "truthCogSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43"
+  },
+  "targets": [
+    {
+      "id": "qingtian",
+      "displayLabel": "青田",
+      "aliases": ["青田", "青田县", "Qingtian", "Qingtian County"],
+      "expectedKinds": ["city", "town", "administrative"]
+    },
+    {
+      "id": "yuhu",
+      "displayLabel": "玉壶镇",
+      "aliases": ["玉壶", "玉壶镇", "Yuhu", "Yuhu Town"],
+      "expectedKinds": ["town", "village", "administrative"]
+    },
+    {
+      "id": "wenzhou",
+      "displayLabel": "温州城",
+      "aliases": ["温州", "温州市", "Wenzhou"],
+      "expectedKinds": ["city", "administrative"]
+    },
+    {
+      "id": "natural_island",
+      "displayLabel": "自然岛",
+      "aliases": ["自然岛", "永嘉自然岛", "Natural Island"],
+      "expectedKinds": ["island", "islet", "attraction", "locality"],
+      "resolutionPolicy": "keep_unresolved_when_no_exact_named_osm_feature"
+    },
+    {
+      "id": "xianxi",
+      "displayLabel": "仙溪镇",
+      "aliases": ["仙溪", "仙溪镇", "Xianxi", "Xianxi Town"],
+      "expectedKinds": ["town", "village", "administrative"]
+    },
+    {
+      "id": "wengyang",
+      "displayLabel": "翁垟镇",
+      "aliases": ["翁垟", "翁垟镇", "翁垟街道", "Wengyang", "Wengyang Subdistrict"],
+      "expectedKinds": ["town", "suburb", "administrative"]
+    },
+    {
+      "id": "haimen",
+      "displayLabel": "海门",
+      "aliases": ["海门", "海门镇", "海门街道", "Haimen", "Haimen Subdistrict"],
+      "expectedKinds": ["town", "suburb", "administrative"]
+    }
+  ],
+  "query": {
+    "tagKeys": ["name", "name:zh", "official_name", "short_name", "alt_name", "old_name", "name:en"],
+    "timeoutSeconds": 120,
+    "outputStatement": "out center tags qt"
+  },
+  "retry": {
+    "attemptsPerEndpoint": 2,
+    "http429PauseSeconds": 45,
+    "otherRetryPauseSeconds": 12,
+    "secondsBetweenTargets": 3
+  },
+  "selection": {
+    "requireInsideAoi": true,
+    "requireExactAliasMatch": true,
+    "allowManualCoordinates": false,
+    "allowEdgeClamping": false,
+    "tiePolicy": "ambiguous",
+    "unresolvedPolicy": "retain_target_without_coordinate"
+  },
+  "qa": {
+    "maximumOutOfBoundsResolvedPoints": 0,
+    "maximumManualCoordinateCount": 0,
+    "requireSourceElementIdForResolvedPoint": true,
+    "requireProjectedCoordinatesForResolvedPoint": true,
+    "naturalIslandMayRemainUnresolved": true
+  }
+}
