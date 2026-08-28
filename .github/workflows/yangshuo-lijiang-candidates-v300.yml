@@ -1,0 +1,85 @@
+name: Yangshuo Lijiang 2048 native candidates v3.0
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_path:
+        description: Absolute path to the verified AP_14427_FBS_F3120_RT1.dem.tif on the Windows truth-data node
+        required: true
+        type: string
+        default: 'C:\HaihaoDEM\ASF_v104_local\data\raw\dem\AP_14427_FBS_F3120_RT1.dem.tif'
+      candidate:
+        description: Candidate window to compile
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - A
+          - B
+          - C
+          - D
+
+concurrency:
+  group: yangshuo-lijiang-candidates-v300-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    name: Exact 2048 native-pixel extraction
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+
+      - name: Verify Python, GDAL, NumPy and Pillow
+        shell: powershell
+        run: |
+          python --version
+          python -c "from osgeo import gdal, osr; import numpy; from PIL import Image; print(gdal.VersionInfo())"
+
+      - name: Validate locked 2048 contract
+        shell: powershell
+        run: |
+          python tools/terrain_hydrology/validate_yangshuo_candidates_v300.py `
+            --root . `
+            --report reports/YANGSHUO_LIJIANG_CANDIDATES_V300_VALIDATION.json
+
+      - name: Verify local source path
+        shell: powershell
+        run: |
+          $source = '${{ inputs.source_path }}'
+          if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "Verified source DEM is not visible to the runner: $source"
+          }
+          Get-Item -LiteralPath $source | Format-List FullName,Length,LastWriteTimeUtc
+
+      - name: Compile native candidate assets
+        shell: powershell
+        run: |
+          $arguments = @(
+            "tools/terrain_hydrology/compile_yangshuo_candidates_v300.py",
+            "--root", ".",
+            "--source", '${{ inputs.source_path }}',
+            "--output-dir", "reports/yangshuo-lijiang-candidates-v300",
+            "--overwrite"
+          )
+          if ('${{ inputs.candidate }}' -ne 'all') {
+            $arguments += @("--candidate", '${{ inputs.candidate }}')
+          }
+          python @arguments
+
+      - name: Upload candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-lijiang-2048-candidates-v300-${{ github.sha }}-${{ inputs.candidate }}
+          path: |
+            reports/YANGSHUO_LIJIANG_CANDIDATES_V300_VALIDATION.json
+            reports/yangshuo-lijiang-candidates-v300/**
+          if-no-files-found: error
+          retention-days: 30

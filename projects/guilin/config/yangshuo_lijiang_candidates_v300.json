@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "guilin-yangshuo-candidate-windows/v3.0.0",
+  "status": "candidate-evaluation-locked",
+  "project": "guilin",
+  "region": "yangshuo-lijiang",
+  "crs": "EPSG:32649",
+  "truthSource": {
+    "id": "AP_14427_FBS_F3120_RT1",
+    "file": "AP_14427_FBS_F3120_RT1.dem.tif",
+    "expectedSha256": "3e9f84d5681cbaf59d5859529740b4e8095d3f8809fca387919327933be17c6d",
+    "bytes": 71942668,
+    "pixelSpacingMeters": [
+      12.5,
+      12.5
+    ],
+    "grid": [
+      6392,
+      5624
+    ],
+    "transform": [
+      412981.09375,
+      12.5,
+      0.0,
+      2773836.5,
+      0.0,
+      -12.5
+    ],
+    "bounds": [
+      412981.09375,
+      2703536.5,
+      492881.09375,
+      2773836.5
+    ],
+    "nodata": 0,
+    "preflightPath": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/reports/source_preflight/AP_14427_FBS_F3120_RT1.json",
+    "verificationIndexPath": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/12_5m_download_status.json",
+    "readOnly": true
+  },
+  "hydrology": {
+    "path": "DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson",
+    "gitBlobSha": "7bc4ea134a8934d09aa001b787a2bb7f9ce1238f",
+    "crs": "EPSG:4326",
+    "policy": "Use the versioned Lijiang geometry only for candidate analysis and approved water placement."
+  },
+  "windowContract": {
+    "grid": [
+      2048,
+      2048
+    ],
+    "sourcePixelSpacingMeters": 12.5,
+    "widthMeters": 25600.0,
+    "heightMeters": 25600.0,
+    "areaSquareKilometers": 655.36,
+    "minimumValidFractionForApproval": 0.995,
+    "resamplingAllowed": false,
+    "permanentDownsample": false,
+    "interpolatedFakeDetail": false,
+    "webTerrainMode": "tiled-lod",
+    "macroDeltaMeters": 0.0,
+    "microDeltaMeters": 0.0,
+    "userAreaApproval": false,
+    "visualAcceptance": false
+  },
+  "candidateSelection": {
+    "candidateCount": 4,
+    "primaryVisualCandidate": "D",
+    "engineeringCalibrationCandidate": "A",
+    "approvalRequiredBeforeTerrainGeneration": true,
+    "analysisProducts": [
+      "truth-slice.tif",
+      "height_f32.bin",
+      "valid_u8.bin",
+      "elevation.png",
+      "slope.png",
+      "curvature.png",
+      "hillshade.png",
+      "river-peak-lowland.png",
+      "candidate-manifest.json"
+    ]
+  },
+  "candidates": [
+    {
+      "id": "A",
+      "slug": "yangshuo-north-lijiang-valley",
+      "name": "阳朔县城北侧漓江峰丛谷地",
+      "seedCenterWgs84": [
+        110.504749,
+        24.816544
+      ],
+      "pixelWindow": [
+        1934,
+        1305,
+        2048,
+        2048
+      ],
+      "alignedBounds": [
+        437156.09375,
+        2731924.0,
+        462756.09375,
+        2757524.0
+      ],
+      "alignedCenterProjected": [
+        449956.09375,
+        2744724.0
+      ],
+      "priority": "engineering-calibration",
+      "selectionReason": "Calibrate river width, peak-foot transition, valley lowland and field-scale relationships.",
+      "status": "planned-native-window"
+    },
+    {
+      "id": "B",
+      "slug": "yangshuo-northeast-bend-lowland",
+      "name": "阳朔县城东北漓江弯道与低地",
+      "seedCenterWgs84": [
+        110.523948,
+        24.77687
+      ],
+      "pixelWindow": [
+        2088,
+        1657,
+        2048,
+        2048
+      ],
+      "alignedBounds": [
+        439081.09375,
+        2727524.0,
+        464681.09375,
+        2753124.0
+      ],
+      "alignedCenterProjected": [
+        451881.09375,
+        2740324.0
+      ],
+      "priority": "secondary",
+      "selectionReason": "Evaluate a broad river bend, floodplain continuity, agriculture-ready lowland and urban interference.",
+      "status": "planned-native-window"
+    },
+    {
+      "id": "C",
+      "slug": "xingping-south-nine-horses-corridor",
+      "name": "兴坪南侧九马画山漓江贴水峡谷段",
+      "seedCenterWgs84": [
+        110.501051,
+        24.875008
+      ],
+      "pixelWindow": [
+        1906,
+        787,
+        2048,
+        2048
+      ],
+      "alignedBounds": [
+        436806.09375,
+        2738399.0,
+        462406.09375,
+        2763999.0
+      ],
+      "alignedCenterProjected": [
+        449606.09375,
+        2751199.0
+      ],
+      "priority": "close-water-cliff-study",
+      "selectionReason": "Evaluate close-water peak walls, steep limestone slopes, short peak-foot transitions and gorge-scale water.",
+      "status": "planned-native-window"
+    },
+    {
+      "id": "D",
+      "slug": "xianggong-xingping-first-bend",
+      "name": "相公山至兴坪第一湾",
+      "seedCenterWgs84": [
+        110.505964,
+        24.915551
+      ],
+      "pixelWindow": [
+        1947,
+        428,
+        2048,
+        2048
+      ],
+      "alignedBounds": [
+        437318.59375,
+        2742886.5,
+        462918.59375,
+        2768486.5
+      ],
+      "alignedCenterProjected": [
+        450118.59375,
+        2755686.5
+      ],
+      "priority": "primary-visual",
+      "selectionReason": "Evaluate the recognizable Lijiang bend, layered tower karst, close river slopes and long-range depth.",
+      "status": "planned-native-window"
+    }
+  ],
+  "outputs": {
+    "root": "outputs/yangshuo_lijiang_candidates_v300",
+    "indexManifest": "candidate-index.json",
+    "validationReport": "reports/YANGSHUO_LIJIANG_CANDIDATES_V300_VALIDATION.json"
+  }
+}

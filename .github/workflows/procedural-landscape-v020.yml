@@ -8,9 +8,14 @@ on:
       - .github/workflows/procedural-landscape-v020.yml
       - skills/dem-procedural-landscape/**
       - projects/*/config/procedural_landscape_binding_v020.json
+      - projects/guilin/config/yangshuo_lijiang_candidates_v300.json
       - tools/procedural_landscape/**
+      - tools/terrain_hydrology/validate_yangshuo_candidates_v300.py
+      - tools/terrain_hydrology/compile_yangshuo_candidates_v300.py
+      - tools/terrain_hydrology/yangshuo_candidates_v300_*.py
       - tests/procedural_landscape/**
       - web/procedural-landscape-skill/**
+      - ops/tasks/DEM_YANGSHUO_LIJIANG_KARST_REBUILD_V300.md
       - HANDOFF_DEM_PROCEDURAL_LANDSCAPE_FOUNDATION_V020.md
   pull_request:
     branches:
@@ -19,9 +24,14 @@ on:
       - .github/workflows/procedural-landscape-v020.yml
       - skills/dem-procedural-landscape/**
       - projects/*/config/procedural_landscape_binding_v020.json
+      - projects/guilin/config/yangshuo_lijiang_candidates_v300.json
       - tools/procedural_landscape/**
+      - tools/terrain_hydrology/validate_yangshuo_candidates_v300.py
+      - tools/terrain_hydrology/compile_yangshuo_candidates_v300.py
+      - tools/terrain_hydrology/yangshuo_candidates_v300_*.py
       - tests/procedural_landscape/**
       - web/procedural-landscape-skill/**
+      - ops/tasks/DEM_YANGSHUO_LIJIANG_KARST_REBUILD_V300.md
       - HANDOFF_DEM_PROCEDURAL_LANDSCAPE_FOUNDATION_V020.md
   workflow_dispatch:
 
@@ -52,6 +62,12 @@ jobs:
           --root .
           --json-report reports/PROCEDURAL_LANDSCAPE_FOUNDATION_V020_VALIDATION.json
 
+      - name: Validate Yangshuo 2048 native candidate contract
+        run: >-
+          python tools/terrain_hydrology/validate_yangshuo_candidates_v300.py
+          --root .
+          --report reports/YANGSHUO_LIJIANG_CANDIDATES_V300_VALIDATION.json
+
       - name: Run fail-closed unit tests
         run: python -m unittest discover -s tests/procedural_landscape -p 'test_*.py' -v
 
@@ -59,7 +75,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: procedural-landscape-v020-contracts-${{ github.sha }}
-          path: reports/PROCEDURAL_LANDSCAPE_FOUNDATION_V020_VALIDATION.json
+          path: |
+            reports/PROCEDURAL_LANDSCAPE_FOUNDATION_V020_VALIDATION.json
+            reports/YANGSHUO_LIJIANG_CANDIDATES_V300_VALIDATION.json
           if-no-files-found: error
           retention-days: 30
 
