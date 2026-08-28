@@ -49,7 +49,8 @@ jobs:
                   page.wait_for_function("['ready','failed'].includes(document.documentElement.dataset.guilinReferenceDemo)",timeout=60000)
               except Exception:
                   pass
-              state=page.evaluate("""() => ({
+              captured={'console':console,'errors':errors,'failed':failed}
+              state=page.evaluate("""(captured) => ({
                 dataset:{...document.documentElement.dataset},
                 dialog:document.getElementById('referenceDialog')?.open,
                 readout:document.getElementById('referenceReadout')?.textContent,
@@ -64,8 +65,10 @@ jobs:
                   hasGl:!!window.__GUILIN_REFERENCE_DEMO_V220__.renderer?.gl,
                   program:!!window.__GUILIN_REFERENCE_DEMO_V220__.renderer?.program
                 }:null,
-                console:arguments[0], errors:arguments[1], failed:arguments[2]
-              })""", console, errors, failed)
+                console:captured.console,
+                errors:captured.errors,
+                failed:captured.failed
+              })""", captured)
               (out/'state.json').write_text(json.dumps(state,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
               page.screenshot(path=str(out/'after-click.png'),full_page=False)
               print(json.dumps(state,ensure_ascii=False,indent=2))
