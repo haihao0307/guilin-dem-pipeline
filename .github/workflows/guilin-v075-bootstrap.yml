@@ -1,0 +1,231 @@
+name: Bootstrap and publish Guilin v0.7.5 terrain 3D
+
+on:
+  push:
+    branches:
+      - project/guilin-v075-approved-aoi-terrain3d-preview
+    paths:
+      - .github/workflows/guilin-v075-bootstrap.yml
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/bootstrap_payload.part-*
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v075-bootstrap-publish
+  cancel-in-progress: false
+
+jobs:
+  materialize-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PROJECT_DIR: projects/guilin-v075-approved-aoi-terrain3d-preview
+      PAYLOAD_GLOB: projects/guilin-v075-approved-aoi-terrain3d-preview/bootstrap_payload.part-*
+      DESTINATION_DIR: guilin-v075-approved-aoi-terrain3d
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v075-approved-aoi-terrain3d/
+      DIST_DIR: /tmp/guilin-v075-dist
+      PAGES_DIR: /tmp/guilin-v075-pages
+      EVIDENCE_DIR: /tmp/guilin-v075-evidence
+      SOURCE_PREVIEW_DIR: guilin-v072-terrain-rivers/data
+      EXPECTED_HEIGHT_BYTES: "2273280"
+      EXPECTED_PAYLOAD_SHA256: 9c1275d49a6ca76390cad574b8d1baccd96320c44700b88f2b0ddf12924228cd
+
+    steps:
+      - name: Checkout bootstrap commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Materialize complete v0.7.5 source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "project/guilin-v075-approved-aoi-terrain3d-preview"
+          compgen -G "${PAYLOAD_GLOB}" >/dev/null
+          cat ${PAYLOAD_GLOB} > /tmp/guilin-v075-payload.b64
+          base64 -d /tmp/guilin-v075-payload.b64 > /tmp/guilin-v075-payload.tar.gz
+          printf '%s  %s\n' "${EXPECTED_PAYLOAD_SHA256}" /tmp/guilin-v075-payload.tar.gz | sha256sum -c -
+          tar -tzf /tmp/guilin-v075-payload.tar.gz | grep -Fq 'projects/guilin-v075-approved-aoi-terrain3d-preview/web/index.html'
+          tar -tzf /tmp/guilin-v075-payload.tar.gz | grep -Fq '.github/workflows/guilin-v075-approved-aoi-terrain3d.yml'
+          tar -xzf /tmp/guilin-v075-payload.tar.gz -C .
+          rm -f ${PAYLOAD_GLOB}
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A .github/workflows/guilin-v075-approved-aoi-terrain3d.yml "${PROJECT_DIR}"
+          git commit -m "feat(v075): materialize accepted AOI terrain 3D preview"
+          git push origin HEAD:project/guilin-v075-approved-aoi-terrain3d-preview
+          printf 'SOURCE_SHA=%s\n' "$(git rev-parse HEAD)" >> "${GITHUB_ENV}"
+
+      - name: Install QA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${DIST_DIR}/data/source" "${EVIDENCE_DIR}/public"
+          python -m pip install --disable-pip-version-check Pillow==11.1.0 requests==2.32.3 websocket-client==1.8.0
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -x "${browser}"
+          printf '%s\n' "${browser}" > "${EVIDENCE_DIR}/browser-path.txt"
+
+      - name: Materialize locked numeric preview assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rsync -a --exclude 'data/source/' "${PROJECT_DIR}/web/" "${DIST_DIR}/"
+          mkdir -p "${DIST_DIR}/data/source"
+          git show "origin/gh-pages:${SOURCE_PREVIEW_DIR}/terrain_manifest.json" > "${DIST_DIR}/data/source/terrain_manifest.json"
+          git show "origin/gh-pages:${SOURCE_PREVIEW_DIR}/terrain_height_u16.bin" > "${DIST_DIR}/data/source/terrain_height_u16.bin"
+          actual_bytes="$(wc -c < "${DIST_DIR}/data/source/terrain_height_u16.bin" | tr -d ' ')"
+          test "${actual_bytes}" = "${EXPECTED_HEIGHT_BYTES}"
+          python - "${DIST_DIR}" "${SOURCE_SHA}" <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import sys
+          root = pathlib.Path(sys.argv[1])
+          source_commit = sys.argv[2]
+          manifest_path = root / "data/source/terrain_manifest.json"
+          height_path = root / "data/source/terrain_height_u16.bin"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          payload = height_path.read_bytes()
+          assert manifest["crs"] == "EPSG:32649"
+          assert manifest["source_resolution_m"] == [12.5, 12.5]
+          assert manifest["source_grid"] == [17408, 18867]
+          assert manifest["height"]["width"] == 1024 and manifest["height"]["height"] == 1110
+          assert manifest["height"]["nodata_code"] == 65535
+          assert manifest["vertical_scale"] == 1.0 and manifest["source_elevation_modified_m"] == 0.0
+          assert manifest["gap_fill_applied"] is False and len(payload) == 2_273_280
+          receipt = {
+              "schema": "guilin-v075-source-preview-receipt/v1",
+              "source_commit": source_commit,
+              "materialized_from": "origin/gh-pages:guilin-v072-terrain-rivers/data",
+              "height_bytes": len(payload),
+              "height_sha256": hashlib.sha256(payload).hexdigest(),
+              "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+              "source_resolution_m": [12.5, 12.5],
+              "source_grid": [17408, 18867],
+              "preview_grid": [1024, 1110],
+              "nodata_code": 65535,
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+          }
+          (root / "data/source/source_asset_receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          print(json.dumps(receipt, indent=2))
+          PY
+
+      - name: Run static contract QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check "${PROJECT_DIR}/web/app.js"
+          node "${PROJECT_DIR}/tests/static_contract_test.mjs" | tee "${EVIDENCE_DIR}/static-contract-qa.json"
+          python -m py_compile "${PROJECT_DIR}/tests/browser_cdp.py" "${PROJECT_DIR}/tests/check_screenshots.py"
+          test -f "${DIST_DIR}/index.html"
+          test -f "${DIST_DIR}/data/accepted_aoi.json"
+          test -f "${DIST_DIR}/data/source/terrain_height_u16.bin"
+
+      - name: Publish exact build to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${PAGES_DIR}"
+          git worktree add -b "v075-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${PAGES_DIR}" origin/gh-pages
+          rm -rf "${PAGES_DIR}/${DESTINATION_DIR}"
+          mkdir -p "${PAGES_DIR}/${DESTINATION_DIR}"
+          rsync -a "${DIST_DIR}/" "${PAGES_DIR}/${DESTINATION_DIR}/"
+          SOURCE_SHA="${SOURCE_SHA}" python - "${PAGES_DIR}/${DESTINATION_DIR}" <<'PY'
+          import json, os, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          receipt = {
+              "schema": "guilin-v075-build-provenance/v1",
+              "source_commit": os.environ["SOURCE_SHA"],
+              "aoi_status": "ACCEPTED",
+              "aoi_geometry_sha256": "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80",
+              "source_resolution_m": 12.5,
+              "default_vertical_scale": 1.0,
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+              "stage": "numeric-crop-3d-preview",
+          }
+          (root / "build_provenance.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
+          touch "${PAGES_DIR}/.nojekyll"
+          git -C "${PAGES_DIR}" config user.name github-actions[bot]
+          git -C "${PAGES_DIR}" config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git -C "${PAGES_DIR}" add .nojekyll "${DESTINATION_DIR}"
+          git -C "${PAGES_DIR}" commit -m "Publish Guilin v0.7.5 accepted AOI terrain 3D ${SOURCE_SHA}"
+          git -C "${PAGES_DIR}" push origin HEAD:gh-pages
+
+      - name: Wait for public page and real assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=0
+          for attempt in $(seq 1 75); do
+            if curl -fsSL --connect-timeout 15 --max-time 60 "${PUBLIC_URL}?v=${SOURCE_SHA}-${attempt}" -o "${EVIDENCE_DIR}/public-page.html" \
+              && grep -Fq 'data-release="guilin-v075-approved-aoi-terrain3d"' "${EVIDENCE_DIR}/public-page.html"; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          test "${ready}" = 1
+          curl -fsSL "${PUBLIC_URL}data/source/terrain_manifest.json?v=${SOURCE_SHA}" > "${EVIDENCE_DIR}/public-source-manifest.json"
+          public_bytes="$(curl -fsSL "${PUBLIC_URL}data/source/terrain_height_u16.bin?v=${SOURCE_SHA}" | wc -c | tr -d ' ')"
+          test "${public_bytes}" = "${EXPECTED_HEIGHT_BYTES}"
+
+      - name: Run public browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          browser="$(cat "${EVIDENCE_DIR}/browser-path.txt")"
+          python "${PROJECT_DIR}/tests/browser_cdp.py" \
+            --chromium "${browser}" \
+            --url "${PUBLIC_URL}?qa=1&v=${SOURCE_SHA}" \
+            --qa-timeout 240 \
+            --evidence-dir "${EVIDENCE_DIR}/public"
+          python "${PROJECT_DIR}/tests/check_screenshots.py" \
+            "${EVIDENCE_DIR}/public/desktop-1600x1000.png" \
+            "${EVIDENCE_DIR}/public/mobile-390x844.png" \
+            --output "${EVIDENCE_DIR}/public/screenshot-qa.json"
+
+      - name: Publish browser evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${PAGES_DIR}/${DESTINATION_DIR}/evidence/public"
+          mkdir -p "${target}"
+          cp "${EVIDENCE_DIR}/public/"*.json "${EVIDENCE_DIR}/public/"*.png "${target}/"
+          SOURCE_SHA="${SOURCE_SHA}" python - "${target}" <<'PY'
+          import json, os, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          browser = json.loads((root / "browser-qa.json").read_text())
+          screenshot = json.loads((root / "screenshot-qa.json").read_text())
+          assert browser["passed"] is True and screenshot["passed"] is True
+          receipt = {
+              "schema": "guilin-v075-public-evidence-receipt/v1",
+              "source_commit": os.environ["SOURCE_SHA"],
+              "public_browser_qa_passed": True,
+              "public_screenshot_qa_passed": True,
+              "webgl2_desktop": browser["desktop_webgl"]["available"],
+              "webgl2_mobile": browser["mobile_webgl"]["available"],
+              "aoi_status": "ACCEPTED",
+          }
+          (root / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
+          git -C "${PAGES_DIR}" add "${DESTINATION_DIR}/evidence/public"
+          git -C "${PAGES_DIR}" commit -m "Add browser QA evidence for Guilin v0.7.5 ${SOURCE_SHA}"
+          git -C "${PAGES_DIR}" push origin HEAD:gh-pages
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: guilin-v075-bootstrap-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/guilin-v075-evidence/
+          if-no-files-found: error
+          retention-days: 90
