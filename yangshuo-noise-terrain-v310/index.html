@@ -242,7 +242,7 @@
     };
 
     window.__terrainQA = {
-      schema: 'yangshuo-noise-terrain-online-qa/v3.1.0', ready: false, error: null, preset: null,
+      schema: 'yangshuo-noise-terrain-online-qa/v3.1.1', ready: false, error: null, preset: null,
       truthSourceSha256: EXPECTED_SOURCE_SHA, sourceGrid: [2048,2048], sourceSpacingMeters: 12.5,
       patchMeters: PATCH_METERS, detailGrid: null, detailSpacingMeters: null, truthMutationCount: 0,
       vegetationInstances: 0, riverGeometry: null, riverSampleMeters: RIVER_SAMPLE_METERS,
@@ -557,7 +557,10 @@
       let levels = Float64Array.from(points.map(p => p.rawWater));
       levels = movingAverage(levels, 6);
       levels = movingAverage(levels, 4);
-      for (let i = 0; i < points.length; i++) points[i].water = levels[i];
+      for (let i = 0; i < points.length; i++) {
+        const localWater = points[i].rawWater;
+        points[i].water = clamp(levels[i], localWater - .20, localWater + .45);
+      }
       const averageWidth = points.reduce((sum,p) => sum + p.width, 0) / points.length;
       return { points, averageWidth };
     }
@@ -627,7 +630,9 @@
       currentDatum = Math.floor(min / 10) * 10;
 
       progress(49, '生成地貌父级掩膜', '坡度、局地起伏、低地、强岩壁与河距。');
-      let paddyCount = 0, karstCount = 0, riverCount = 0, minimumBedDepth = Infinity;
+      let paddyCount = 0, karstCount = 0, riverCount = 0;
+      let minimumBedDepth = Infinity, maximumBedDepth = -Infinity;
+      let riverClearanceSum = 0, riverClearanceSamples = 0, maximumWaterTerrainPenetration = 0;
       for (let gy = 0; gy < grid; gy++) {
         const z = gy * spacing - PATCH_METERS * .5;
         const worldY = focus.center[1] - z;
@@ -649,10 +654,20 @@
           if (currentPreset.id === 'paddy') karstMask *= .42;
           const normalizedSlope = clamp(sr.slope / 55,0,1);
           const normalizedRelief = clamp(sr.relief / 140,0,1);
-          const bedDepth = 2.25 + (1-clamp(river.distance/Math.max(halfWidth,1),0,1)) * 1.35;
+          const lateral = 1 - clamp(river.distance/Math.max(halfWidth,1),0,1);
+          const bedDepth = .32 + Math.pow(lateral,.72) * 3.28;
           const targetBed = river.water - bedDepth;
-          const carve = waterCore * Math.min(0, targetBed - h);
-          if (waterCore > .3) minimumBedDepth = Math.min(minimumBedDepth, river.water - (h + carve));
+          const bankCarve = 1 - smooth01(halfWidth, halfWidth+10, river.distance);
+          const carveWeight = river.distance <= halfWidth ? 1 : bankCarve;
+          const carve = carveWeight * Math.min(0, targetBed - h);
+          if (river.distance <= halfWidth) {
+            const clearance = (river.water + .10) - (h + carve);
+            minimumBedDepth = Math.min(minimumBedDepth, clearance);
+            maximumBedDepth = Math.max(maximumBedDepth, clearance);
+            riverClearanceSum += clearance;
+            riverClearanceSamples++;
+            maximumWaterTerrainPenetration = Math.max(maximumWaterTerrainPenetration, Math.max(0,-clearance));
+          }
 
           positions[i*3] = x;
           positions[i*3+1] = h - currentDatum;
@@ -696,7 +711,15 @@
       geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
       if (geometry.boundingBox) { geometry.boundingBox.min.y -= 8; geometry.boundingBox.max.y += 8; }
-      return { geometry, grid, spacing, min, max, paddyCount, karstCount, riverCount, minimumBedDepth, riverSegments:segmentsRiver };
+      if (!riverClearanceSamples || !Number.isFinite(minimumBedDepth) || !Number.isFinite(maximumBedDepth)) {
+        throw new Error('河道水面与河床净空采样失败');
+      }
+      const meanRiverClearance = riverClearanceSum / riverClearanceSamples;
+      return {
+        geometry, grid, spacing, min, max, paddyCount, karstCount, riverCount,
+        minimumBedDepth, maximumBedDepth, meanRiverClearance, riverClearanceSamples,
+        maximumWaterTerrainPenetration, riverSegments:segmentsRiver
+      };
     }
 
     function makeTerrainMaterial() {
@@ -978,7 +1001,13 @@
           karstMaskVertices:gridResult.karstCount,paddyMaskVertices:gridResult.paddyCount,riverMaskVertices:gridResult.riverCount,
           riverGeometry:'triangle-ribbon-water-surface',riverSampleMeters:RIVER_SAMPLE_METERS,
           riverVertexCount:waterGroup.userData.vertexCount,riverAverageWidthMeters:Number(localRiver.averageWidth.toFixed(3)),
-          minimumRiverBedDepthMeters:Number(gridResult.minimumBedDepth.toFixed(3)),tubeGeometryUsed:false,
+          minimumRiverBedDepthMeters:Number(gridResult.minimumBedDepth.toFixed(3)),
+          minimumRiverClearanceMeters:Number(gridResult.minimumBedDepth.toFixed(3)),
+          maximumRiverClearanceMeters:Number(gridResult.maximumBedDepth.toFixed(3)),
+          meanRiverClearanceMeters:Number(gridResult.meanRiverClearance.toFixed(3)),
+          riverClearanceSampleCount:gridResult.riverClearanceSamples,
+          maximumWaterTerrainPenetrationMeters:Number(gridResult.maximumWaterTerrainPenetration.toFixed(3)),
+          tubeGeometryUsed:false,
           truthMutationCount:0,vegetationInstances:0,macroDeltaEnabled:uniforms.macro.value,
           microDeltaEnabled:uniforms.micro.value,bundDeltaEnabled:uniforms.bund.value,riverCarveEnabled:uniforms.river.value
         };
