@@ -1,14 +1,14 @@
 {
-  "schema": "wenzhou_osm_places@1.0.0",
+  "schema": "wenzhou_osm_places@1.1.0",
   "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
   "source": {
     "project": "OpenStreetMap",
     "license": "ODbL 1.0",
     "attribution": "© OpenStreetMap contributors",
-    "primaryEndpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "primaryEndpoint": "https://overpass-api.de/api/interpreter",
     "fallbackEndpoints": [
-      "https://overpass.private.coffee/api/interpreter",
-      "https://overpass-api.de/api/interpreter"
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.private.coffee/api/interpreter"
     ]
   },
   "domain": {
@@ -74,14 +74,15 @@
   ],
   "query": {
     "tagKeys": ["name", "name:zh", "official_name", "short_name", "alt_name", "old_name", "name:en"],
-    "timeoutSeconds": 120,
-    "outputStatement": "out center tags qt"
+    "timeoutSeconds": 180,
+    "outputStatement": "out tags center qt",
+    "snapshotPolicy": "one_combined_query_for_all_requested_aliases"
   },
   "retry": {
-    "attemptsPerEndpoint": 2,
-    "http429PauseSeconds": 45,
-    "otherRetryPauseSeconds": 12,
-    "secondsBetweenTargets": 3
+    "attemptsPerEndpoint": 1,
+    "http429PauseSeconds": 30,
+    "otherRetryPauseSeconds": 6,
+    "secondsBetweenTargets": 0
   },
   "selection": {
     "requireInsideAoi": true,
