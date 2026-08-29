@@ -67,7 +67,7 @@ jobs:
                   raise SystemExit(f'missing HTML marker: {marker}')
 
           app_markers = [
-              'app.part1.js',
+              'const partUrls',
               'AsyncFunction',
               "import * as THREE from 'three/webgpu'",
           ]
@@ -213,7 +213,7 @@ jobs:
                  "${PUBLIC_URL}build.json?verify=${nonce}" -o "$RUNNER_TEMP/public-v320/build.json"; then
               if grep -Fq 'XIAOWANG · GUILIN KARST DISTILLED GRAPH v3.2' "$RUNNER_TEMP/public-v320/index.html" \
                 && grep -Fq "\"sourceCommit\": \"${GITHUB_SHA}\"" "$RUNNER_TEMP/public-v320/build.json" \
-                && grep -Fq 'app.part1.js' "$RUNNER_TEMP/public-v320/app.js" \
+                && grep -Fq 'const partUrls' "$RUNNER_TEMP/public-v320/app.js" \
                 && grep -Fq "riverGeometry:'multi-cross-section-water-surface'" "$RUNNER_TEMP/public-v320/app.part5.js"; then
                 ready=true
                 break
