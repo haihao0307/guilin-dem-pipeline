@@ -1,0 +1,54 @@
+{
+  "schema": "wenzhou_osm_water_polygons@1.0.0",
+  "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "source": {
+    "project": "OpenStreetMap",
+    "license": "ODbL 1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "primaryEndpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "fallbackEndpoints": [
+      "https://overpass.private.coffee/api/interpreter",
+      "https://overpass-api.de/api/interpreter"
+    ]
+  },
+  "domain": {
+    "wgs84Bounds": [119.84414553534705, 27.293797468756548, 122.04907102781185, 29.286519694859074],
+    "projectedCrs": "EPSG:32651",
+    "projectedClipBounds": [187912.5, 3019612.5, 407350.0, 3243587.5],
+    "truthCogSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43"
+  },
+  "tiling": {
+    "columns": 3,
+    "rows": 3,
+    "overlapDegrees": 0.003,
+    "secondsBetweenSuccessfulTiles": 4
+  },
+  "query": {
+    "timeoutSeconds": 240,
+    "waterValues": ["river", "canal", "lagoon", "lake", "reservoir", "basin", "oxbow", "pond"],
+    "includeRiverbank": true,
+    "includeBayAndStrait": true,
+    "outputStatement": "out body geom qt"
+  },
+  "retry": {
+    "attemptsPerEndpoint": 2,
+    "http429PauseSeconds": 45,
+    "otherRetryPauseSeconds": 12
+  },
+  "derived": {
+    "preserveSourceElementIds": true,
+    "preserveSourceTags": true,
+    "preserveSourceCoordinates": true,
+    "clipProjectedGeometry": true,
+    "manualGeometryAllowed": false,
+    "topologyGapBridgingAllowed": false,
+    "outputRoot": "projects/wenzhou/v200/data/hydrology/osm_water_polygons",
+    "reportRoot": "projects/wenzhou/v200/reports"
+  },
+  "qa": {
+    "requireAtLeastOneProjectedPolygon": true,
+    "maximumOutOfBoundsVertices": 0,
+    "manualGeometryCount": 0,
+    "estuaryTopologyStatusAfterThisStage": "source_water_polygons_available_coastline_union_pending"
+  }
+}
