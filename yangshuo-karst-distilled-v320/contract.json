@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "guilin-yangshuo-karst-distilled-graph/v3.2.0",
+  "status": "implementation-and-visual-review",
+  "controllerAlias": "小王",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "skill/dem-procedural-landscape-v010",
+  "pullRequest": 51,
+  "publicPath": "yangshuo-karst-distilled-v320",
+  "referenceContract": {
+    "id": "guilin-gold-reference-01",
+    "sourceFile": "1126796564_16065260452161n.jpg",
+    "sourceSha256": "b1711f4c3c119e6a0620b6a06561cb2eab4c1823e251b52d8153b47d4674f7bd",
+    "pixelDimensions": [1809, 1356],
+    "publicRedistribution": false,
+    "imageEmbeddedInPublicBuild": false,
+    "roles": [
+      "overall-peak-forest-proportion",
+      "open-paddy-valley-proportion",
+      "short-footslope-calibration",
+      "foreground-midground-background-layering",
+      "paddy-plain-and-local-terrace-coexistence"
+    ],
+    "visualTargets": {
+      "visiblePeakMinimum": 18,
+      "peakDepthLayerTarget": [5, 7],
+      "towerHeightToFootprintRatioTarget": [1.22, 2.14],
+      "valleyProtectedFractionMinimum": 0.12,
+      "valleyMeanMacroDeltaMaximumMeters": 0.12,
+      "broadSkirtSuppressionRequired": true,
+      "singleCentralDomeForbidden": true,
+      "paddyPlainDominatesLocalTerraces": true,
+      "vegetationGeometryIncluded": false
+    }
+  },
+  "truth": {
+    "role": "read-only-height-foundation",
+    "releaseTag": "guilin-v070-raw-mosaic-v001",
+    "asset": "guilin_raw_union_12_5m.tif",
+    "sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+    "crs": "EPSG:32649",
+    "pixelSpacingMeters": 12.5,
+    "candidateGrid": [2048, 2048],
+    "truthOverwrite": false,
+    "truthMutationCountRequired": 0,
+    "nativeOneMetreSurveyClaim": false,
+    "runtimeBaseLayer": "z_base_resampled_m"
+  },
+  "scaleGraph": {
+    "regional": {
+      "extentMeters": 20480,
+      "desktopGrid": [257, 257],
+      "mobileGrid": [129, 129],
+      "role": "peak-group distribution, distant silhouettes, valley continuity"
+    },
+    "geomorphology": {
+      "extentMeters": 6400,
+      "desktopGrid": [513, 513],
+      "mobileGrid": [257, 257],
+      "desktopSpacingMeters": 12.5,
+      "role": "tower peaks, peak chains, saddles, footslopes and valley protection"
+    },
+    "local": {
+      "extentMeters": 512,
+      "desktopGrid": [513, 513],
+      "mobileGrid": [257, 257],
+      "desktopSpacingMeters": 1.0,
+      "mobileSpacingMeters": 2.0,
+      "role": "cliff grooves, fissures, paddy bunds, drainage and river cross-sections"
+    }
+  },
+  "operatorGraph": [
+    {
+      "stage": "truth-derivatives",
+      "operators": ["small-box-blur", "medium-box-blur", "coarse-box-blur", "slope", "relative-relief", "valley-mask", "karst-mask", "paddy-mask"],
+      "writesTruth": false
+    },
+    {
+      "stage": "peak-skeleton",
+      "operators": ["local-maxima", "prominence", "non-maximum-suppression", "peak-family-seed", "height-footprint-ratio"],
+      "writesTruth": false
+    },
+    {
+      "stage": "macro-profile",
+      "operators": ["anisotropic-tower-envelope", "profile-shaper", "domain-warp", "asymmetry-field", "footslope-contraction", "saddle-preservation"],
+      "maximumPositiveDeltaMeters": 92,
+      "maximumNegativeDeltaMeters": -32,
+      "parentMasks": ["karst-mask", "valley-exclusion", "edge-feather"],
+      "rollbackValue": 0
+    },
+    {
+      "stage": "process-detail",
+      "operators": ["ridged-fbm", "worley-pitting", "downslope-flow-grooves", "directional-layering", "large-cracks", "medium-cracks", "small-cracks"],
+      "maximumPositiveDeltaMeters": 2.2,
+      "maximumNegativeDeltaMeters": -2.6,
+      "parentMasks": ["karst-mask", "edge-feather"],
+      "rollbackValue": 0
+    },
+    {
+      "stage": "paddy-engineering",
+      "operators": ["warped-worley-fields", "local-level-quantisation", "bund-distance-field", "drainage-groove-field"],
+      "maximumPositiveDeltaMeters": 0.54,
+      "maximumNegativeDeltaMeters": -0.52,
+      "parentMasks": ["low-slope", "low-relative-relief", "valley-mask"],
+      "rollbackValue": 0
+    },
+    {
+      "stage": "river-geomorphology",
+      "operators": ["four-metre-centreline-resampling", "variable-width", "cross-section-mesh", "longitudinal-water-profile", "bank-transition", "channel-carve"],
+      "geometryType": "multi-cross-section-water-surface",
+      "crossSectionVertexCount": 11,
+      "samplingStepMeters": 4,
+      "tubeGeometryAllowed": false,
+      "parentMasks": ["approved-lijiang-centreline", "variable-width-river-footprint"],
+      "rollbackValue": 0
+    }
+  ],
+  "presets": {
+    "atlas": {"candidate": "A", "purpose": "gold-reference overall peak forest and paddy valley calibration"},
+    "paddy": {"candidate": "A", "purpose": "paddy plain, local terraces, bunds and drainage without vegetation"},
+    "cliff": {"candidate": "D", "purpose": "tower wall, short footslope, asymmetry and multi-scale process detail"},
+    "river": {"candidate": "C", "purpose": "Lijiang bed, banks, variable-width water surface and longitudinal profile"}
+  },
+  "vegetation": {
+    "included": false,
+    "instanceCountRequired": 0,
+    "futureSystem": "separate-vegetation-runtime"
+  },
+  "qa": {
+    "desktopViewport": [1600, 1000],
+    "mobileViewport": [390, 844],
+    "browserConsoleErrorsRequired": 0,
+    "pageErrorsRequired": 0,
+    "requestFailuresRequired": 0,
+    "truthMutationCountRequired": 0,
+    "presetSwitchesRequired": ["atlas", "paddy", "cliff", "river"],
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
