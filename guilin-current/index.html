@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-Hans" data-app="guilin-v075-accepted-aoi-2048-hydrology">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e7eee8">
+  <link rel="icon" href="data:,">
+  <title>桂林 12.5 米 DEM 2048 三维水系预览</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-release="guilin-v075-accepted-aoi-2048-hydrology" data-ready="false">
+  <header class="topbar">
+    <div class="title-block">
+      <div class="eyebrow">GUILIN DEM · ACCEPTED AOI · 2048 GRID · HYDROLOGY</div>
+      <h1>桂林 12.5 米 DEM 高精三维水系预览</h1>
+      <p>浩哥确认范围 33,113.874 km²，2048 × 2048 数值网格，水系按真实中心线采样贴地</p>
+    </div>
+    <div id="statusPill" class="status-pill loading" aria-live="polite">
+      <span class="status-dot"></span>
+      <span id="statusText">正在载入 2048 高程与水系</span>
+    </div>
+  </header>
+
+  <nav class="toolbar" aria-label="三维地形控制">
+    <button type="button" data-view="overview" class="active">总览</button>
+    <button type="button" data-view="north">正北俯视</button>
+    <button type="button" data-view="low">低角度</button>
+    <button type="button" data-view="guilin">桂林方向</button>
+    <span class="toolbar-separator"></span>
+    <label class="compact-control">实时网格
+      <select id="renderQuality" aria-label="实时网格精度">
+        <option value="512">稳定 512</option>
+        <option value="768" selected>清晰 768</option>
+        <option value="1024">高精 1024</option>
+      </select>
+    </label>
+    <label class="compact-control">垂直显示
+      <select id="verticalScale" aria-label="垂直显示比例">
+        <option value="1" selected>1.00× 真实比例</option>
+        <option value="1.5">1.50× 观察</option>
+        <option value="2">2.00× 观察</option>
+      </select>
+    </label>
+    <label class="check-control"><input id="toggleWater" type="checkbox" checked> 水系</label>
+    <button type="button" id="resetView">重置视角</button>
+    <button type="button" id="togglePanel" class="panel-toggle" aria-expanded="true">收起数据</button>
+  </nav>
+
+  <main id="viewerShell" class="viewer-shell">
+    <canvas id="terrainCanvas" aria-label="桂林确认范围 2048 数值高程三维地形与采样水系"></canvas>
+    <canvas id="fallbackCanvas" class="fallback-canvas" hidden aria-label="二维数值高程备用预览"></canvas>
+    <div id="labelLayer" class="label-layer" aria-hidden="true"></div>
+
+    <div id="loadingCard" class="loading-card" role="status">
+      <div class="spinner"></div>
+      <strong id="loadingTitle">读取 2048 × 2048 数值高程</strong>
+      <span id="loadingDetail">随后载入水系采样网格</span>
+      <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+    </div>
+
+    <aside id="dataPanel" class="data-panel">
+      <section>
+        <div class="section-kicker">ACCEPTED AOI</div>
+        <h2>浩哥确认范围</h2>
+        <dl class="metric-grid">
+          <div><dt>面积</dt><dd>33,113.874 km²</dd></div>
+          <div><dt>状态</dt><dd class="accepted">ACCEPTED</dd></div>
+          <div class="wide"><dt>EPSG:32649</dt><dd>W 380331.8 · S 2705928.1<br>E 530128.2 · N 2926987.2 m</dd></div>
+          <div class="wide"><dt>WGS84 边界</dt><dd>109.799604°E 至 111.302242°E<br>24.462357°N 至 26.462927°N</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <div class="section-kicker">NUMERIC TERRAIN</div>
+        <h2>高程精度</h2>
+        <dl class="metric-grid">
+          <div><dt>真值来源</dt><dd>12.5 m</dd></div>
+          <div><dt>数值网格</dt><dd id="sourceGrid">2048 × 2048</dd></div>
+          <div><dt>实时网格</dt><dd id="meshGrid">载入中</dd></div>
+          <div><dt>有效三角形</dt><dd id="triangleCount">载入中</dd></div>
+          <div><dt>高程范围</dt><dd id="elevationRange">载入中</dd></div>
+          <div><dt>NoData</dt><dd id="nodataCount">载入中</dd></div>
+        </dl>
+        <p class="contract-note">2048 网格由锁定的 12.5 米原始联合 DEM 在确认范围内生成。NoData 透明保留，未插值补洞，未使用 30 米替代数据。</p>
+      </section>
+
+      <section>
+        <div class="section-kicker">HYDROLOGY SAMPLING</div>
+        <h2>水系采样</h2>
+        <dl class="metric-grid">
+          <div><dt>裁入水系</dt><dd id="waterFeatures">载入中</dd></div>
+          <div><dt>有效分段</dt><dd id="waterSegments">载入中</dd></div>
+          <div><dt>三角顶点</dt><dd id="waterVertices">载入中</dd></div>
+          <div><dt>NoData 断开</dt><dd id="waterBreaks">载入中</dd></div>
+        </dl>
+        <div class="water-legend"><span class="li"></span>漓江系统 <span class="xiang"></span>湘江系统 <span class="other"></span>其他河流</div>
+        <p class="contract-note">中心线坐标保持固定，显示宽度只向中心线两侧展开。水面按原生 12.5 米 DEM 采样贴地，遇 NoData 自动断开。</p>
+      </section>
+
+      <section class="legend-section">
+        <div class="section-kicker">ELEVATION</div>
+        <h2>高程色阶</h2>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span>谷地</span><span>山脊</span><span>高峰</span></div>
+      </section>
+    </aside>
+
+    <div class="compass" aria-label="方向指示"><span>N</span><i></i></div>
+    <div class="interaction-hint"><span>左键旋转</span><span>右键平移</span><span>滚轮缩放</span><span>触屏双指缩放</span></div>
+
+    <div id="errorCard" class="error-card" hidden>
+      <strong>三维加载出现问题</strong>
+      <p id="errorMessage"></p>
+      <button type="button" id="showFallback">打开数值高程备用预览</button>
+    </div>
+  </main>
+
+  <footer class="footer-strip">
+    <span>数据合同：12.5 m 真值 · 2048 × 2048 预览 · EPSG:32649 · 垂直比例默认 1.00×</span>
+    <span id="renderInfo">等待 WebGL2</span>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
