@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.11.0/+esm';
 
-const partUrls = [1,2,3,4,5,6].map(index => `./app.part${index}.js?v=3203`);
+const partUrls = [1,2,3,4,5,7,6].map(index => `./app.part${index}.js?v=3204`);
 const sources = await Promise.all(partUrls.map(async url => {
   const response = await fetch(url, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`地貌运行时分片 ${url} HTTP ${response.status}`);
