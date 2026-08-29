@@ -15,15 +15,20 @@
   const errorMessage = $('errorMessage');
   const renderInfo = $('renderInfo');
   const viewerShell = $('viewerShell');
+  const labelLayer = $('labelLayer');
 
-  const SOURCE_MANIFEST_URL = 'data/source/terrain_manifest.json';
-  const SOURCE_HEIGHT_URL = 'data/source/terrain_height_u16.bin';
+  const TERRAIN_MANIFEST_URL = 'data/terrain_2048_manifest.json';
+  const TERRAIN_HEIGHT_URL = 'data/terrain_2048_u16.bin';
+  const WATER_MANIFEST_URL = 'data/hydrology_sample_manifest.json';
+  const WATER_BUFFER_URL = 'data/hydrology_ribbons.f32.bin';
   const AOI_URL = 'data/accepted_aoi.json';
-  const EXPECTED_SOURCE_GRID = [1024, 1110];
-  const EXPECTED_SOURCE_BYTES = 1024 * 1110 * 2;
+  const EXPECTED_GRID = 2048;
+  const EXPECTED_HEIGHT_BYTES = EXPECTED_GRID * EXPECTED_GRID * 2;
+  const EXPECTED_AOI_SHA = '36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80';
+  const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
   const EXPECTED_AOI_BOUNDS = [380331.8, 2705928.1, 530128.2, 2926987.2];
   const NODATA_CODE = 65535;
-  const MAX_DEVICE_PIXEL_RATIO = 1.75;
+  const MAX_DEVICE_PIXEL_RATIO = 1.6;
   const runtimeErrors = [];
 
   const LANDMARKS = [
@@ -34,39 +39,56 @@
   ];
 
   const state = {
-    manifest: null,
+    terrainManifest: null,
+    waterManifest: null,
     aoi: null,
     codes: null,
-    model: null,
+    waterFloats: null,
     gl: null,
-    program: null,
-    vao: null,
-    buffers: [],
-    uniform: {},
+    terrainProgram: null,
+    waterProgram: null,
+    terrainVao: null,
+    terrainIndexBuffer: null,
+    terrainIndexCount: 0,
+    validCellCount: 0,
+    terrainUniforms: {},
+    waterVao: null,
+    waterBuffer: null,
+    waterVertexCount: 0,
+    waterUniforms: {},
+    heightTexture: null,
+    renderGrid: 768,
+    verticalScale: 1,
+    waterVisible: true,
+    worldWidth: 1,
+    worldDepth: 1,
+    renderOriginElevation: 0,
     projection: new Float32Array(16),
     view: new Float32Array(16),
     viewProjection: new Float32Array(16),
     dirty: true,
-    renderedFrames: 0,
-    verticalScale: 1,
-    camera: {
-      target: [0, 280, 0],
-      yaw: -0.68,
-      pitch: 0.58,
-      distance: 260000,
-      minDistance: 12000,
-      maxDistance: 900000,
-    },
-    pointers: new Map(),
-    labels: [],
+    frameCount: 0,
     fallbackReady: false,
+    pointers: new Map(),
+    pinch: null,
+    labels: [],
+    camera: {
+      target: [0, 300, 0],
+      yaw: -0.72,
+      pitch: 0.58,
+      distance: 300000,
+      minDistance: 6000,
+      maxDistance: 1200000,
+    },
   };
 
   window.addEventListener('error', event => {
     runtimeErrors.push(String(event.message || event.error || 'window error'));
+    updateQaResult();
   });
   window.addEventListener('unhandledrejection', event => {
     runtimeErrors.push(String(event.reason || 'unhandled rejection'));
+    updateQaResult();
   });
 
   function setProgress(percent, title, detail) {
@@ -88,6 +110,7 @@
     errorMessage.textContent = text;
     errorCard.hidden = false;
     loadingCard.hidden = true;
+    document.body.dataset.ready = 'false';
   }
 
   function assert(condition, message) {
@@ -110,290 +133,67 @@
     return response.arrayBuffer();
   }
 
-  function validateContracts(manifest, aoi, binary) {
-    assert(manifest && manifest.crs === 'EPSG:32649', '来源坐标系合同不正确');
-    assert(Array.isArray(manifest.source_resolution_m) && manifest.source_resolution_m.every(value => approximately(value, 12.5)), '来源分辨率必须为 12.5 米');
-    assert(Array.isArray(manifest.source_grid) && manifest.source_grid[0] === 17408 && manifest.source_grid[1] === 18867, '原始网格合同不正确');
-    assert(manifest.vertical_scale === 1 && manifest.source_elevation_modified_m === 0, '来源高程发生了修改');
-    assert(manifest.gap_fill_applied === false, '来源数据禁止补洞');
-    assert(manifest.height?.width === EXPECTED_SOURCE_GRID[0] && manifest.height?.height === EXPECTED_SOURCE_GRID[1], '三维预览网格尺寸不正确');
-    assert(manifest.height?.nodata_code === NODATA_CODE, 'NoData 编码不正确');
-    assert(binary.byteLength === EXPECTED_SOURCE_BYTES, `高程网格字节数不正确：${binary.byteLength}`);
-    assert(aoi?.status === 'ACCEPTED' && aoi.distillation_allowed === true, 'AOI 尚未进入 ACCEPTED');
-    assert(aoi.crs === 'EPSG:32649', 'AOI 坐标系不正确');
-    assert(Array.isArray(aoi.bounds_epsg32649) && aoi.bounds_epsg32649.length === 4, 'AOI 范围缺失');
-    assert(aoi.bounds_epsg32649.every((value, index) => approximately(value, EXPECTED_AOI_BOUNDS[index], 0.11)), 'AOI 与浩哥确认范围不一致');
-    assert(aoi.nodata_policy.includes('no interpolation') && aoi.nodata_policy.includes('no 30 m substitution'), 'AOI NoData 合同不完整');
+  async function sha256Hex(buffer) {
+    const digest = await crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join('');
   }
 
-  function decodeCodes(buffer) {
+  function isLittleEndian() {
+    const probe = new ArrayBuffer(2);
+    new DataView(probe).setUint16(0, 0x00ff, true);
+    return new Uint16Array(probe)[0] === 0x00ff;
+  }
+
+  function decodeUint16(buffer) {
+    if (isLittleEndian()) return new Uint16Array(buffer);
     const view = new DataView(buffer);
     const result = new Uint16Array(buffer.byteLength / 2);
-    for (let index = 0; index < result.length; index += 1) {
-      result[index] = view.getUint16(index * 2, true);
-    }
+    for (let index = 0; index < result.length; index += 1) result[index] = view.getUint16(index * 2, true);
     return result;
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+  function decodeFloat32(buffer) {
+    if (isLittleEndian()) return new Float32Array(buffer);
+    const view = new DataView(buffer);
+    const result = new Float32Array(buffer.byteLength / 4);
+    for (let index = 0; index < result.length; index += 1) result[index] = view.getFloat32(index * 4, true);
+    return result;
   }
 
-  function makeIndexList(start, end, step) {
-    const values = [];
-    for (let value = start; value <= end; value += step) values.push(value);
-    if (values[values.length - 1] !== end) values.push(end);
-    return values;
+  function validateContracts(terrainManifest, waterManifest, aoi, heightBuffer, waterBuffer, heightSha, waterSha) {
+    assert(terrainManifest?.schema === 'guilin-v075-accepted-aoi-terrain-grid/v2', '2048 高程合同版本不正确');
+    assert(terrainManifest.crs === 'EPSG:32649', '高程坐标系合同不正确');
+    assert(terrainManifest.aoi_status === 'ACCEPTED', '高程 AOI 状态不正确');
+    assert(terrainManifest.aoi_geometry_sha256 === EXPECTED_AOI_SHA, '高程 AOI 哈希不正确');
+    assert(Array.isArray(terrainManifest.output_grid) && terrainManifest.output_grid[0] === EXPECTED_GRID && terrainManifest.output_grid[1] === EXPECTED_GRID, '数值高程必须为 2048 × 2048');
+    assert(heightBuffer.byteLength === EXPECTED_HEIGHT_BYTES, `2048 高程字节数不正确：${heightBuffer.byteLength}`);
+    assert(terrainManifest.stored_bytes === EXPECTED_HEIGHT_BYTES, '高程清单字节数不正确');
+    assert(terrainManifest.sha256 === heightSha, '2048 高程 SHA256 不一致');
+    assert(terrainManifest.source_sha256 === EXPECTED_SOURCE_SHA, '高程来源 TIFF 哈希不正确');
+    assert(Array.isArray(terrainManifest.source_resolution_m) && terrainManifest.source_resolution_m.every(value => approximately(value, 12.5)), '高程真值来源必须为 12.5 米');
+    assert(terrainManifest.source_elevation_modified_m === 0, '来源高程被修改');
+    assert(terrainManifest.vertical_scale === 1, '默认垂直比例必须为 1.00');
+    assert(terrainManifest.gap_fill_applied === false && terrainManifest.fallback_30m_used === false, '禁止补洞或 30 米替代');
+    assert(terrainManifest.output_nodata_code === NODATA_CODE, 'NoData 编码不正确');
+
+    assert(aoi?.status === 'ACCEPTED' && aoi.distillation_allowed === true, '确认范围尚未锁定');
+    assert(aoi.geometry_sha256 === EXPECTED_AOI_SHA, '确认范围哈希不一致');
+    assert(Array.isArray(aoi.bounds_epsg32649) && aoi.bounds_epsg32649.every((value, index) => approximately(value, EXPECTED_AOI_BOUNDS[index], 0.11)), '确认范围边界不一致');
+
+    assert(waterManifest?.schema === 'guilin-v075-hydrology-sampled-ribbons/v1', '水系采样合同版本不正确');
+    assert(waterManifest.crs === 'EPSG:32649', '水系坐标系不正确');
+    assert(waterManifest.aoi_geometry_sha256 === EXPECTED_AOI_SHA, '水系 AOI 哈希不一致');
+    assert(waterManifest.centerline_coordinates_mutated === false, '水系中心线坐标发生变化');
+    assert(waterManifest.gap_fill_applied === false && waterManifest.fallback_30m_used === false, '水系禁止补洞或 30 米替代');
+    assert(waterManifest.primitive === 'triangles', '水系图元合同不正确');
+    assert(waterManifest.vertex_count > 0 && waterManifest.vertex_count % 6 === 0, '水系三角顶点数量不正确');
+    assert(waterManifest.stored_bytes === waterBuffer.byteLength, '水系字节数不一致');
+    assert(waterBuffer.byteLength === waterManifest.vertex_count * 4 * 4, '水系顶点布局不一致');
+    assert(waterManifest.sha256 === waterSha, '水系 SHA256 不一致');
   }
 
-  function buildNoDataPrefix(codes, width, height) {
-    const stride = width + 1;
-    const prefix = new Uint32Array((height + 1) * stride);
-    for (let row = 0; row < height; row += 1) {
-      let rowSum = 0;
-      const sourceOffset = row * width;
-      const currentOffset = (row + 1) * stride;
-      const previousOffset = row * stride;
-      for (let col = 0; col < width; col += 1) {
-        if (codes[sourceOffset + col] === NODATA_CODE) rowSum += 1;
-        prefix[currentOffset + col + 1] = prefix[previousOffset + col + 1] + rowSum;
-      }
-    }
-    return { prefix, stride };
-  }
-
-  function regionNoDataCount(prefixData, row0, col0, row1, col1) {
-    const { prefix, stride } = prefixData;
-    const r0 = row0;
-    const c0 = col0;
-    const r1 = row1 + 1;
-    const c1 = col1 + 1;
-    return prefix[r1 * stride + c1] - prefix[r0 * stride + c1] - prefix[r1 * stride + c0] + prefix[r0 * stride + c0];
-  }
-
-  function decodeElevation(code, minElevation, maxElevation) {
-    return minElevation + (code / 65534) * (maxElevation - minElevation);
-  }
-
-  function lerp(a, b, t) {
-    return a + (b - a) * t;
-  }
-
-  function terrainColor(elevation, normalY, low, high) {
-    const stops = [
-      [0.00, [0.055, 0.205, 0.125]],
-      [0.24, [0.105, 0.330, 0.170]],
-      [0.45, [0.285, 0.430, 0.205]],
-      [0.63, [0.475, 0.470, 0.245]],
-      [0.79, [0.645, 0.585, 0.410]],
-      [0.91, [0.670, 0.675, 0.625]],
-      [1.00, [0.900, 0.900, 0.845]],
-    ];
-    const t = clamp((elevation - low) / Math.max(1, high - low), 0, 1);
-    let left = stops[0];
-    let right = stops[stops.length - 1];
-    for (let index = 0; index < stops.length - 1; index += 1) {
-      if (t >= stops[index][0] && t <= stops[index + 1][0]) {
-        left = stops[index];
-        right = stops[index + 1];
-        break;
-      }
-    }
-    const local = (t - left[0]) / Math.max(1e-6, right[0] - left[0]);
-    const slopeTone = 0.88 + normalY * 0.12;
-    return [
-      lerp(left[1][0], right[1][0], local) * slopeTone,
-      lerp(left[1][1], right[1][1], local) * slopeTone,
-      lerp(left[1][2], right[1][2], local) * slopeTone,
-    ];
-  }
-
-  function buildTerrainModel(manifest, aoi, codes) {
-    const width = manifest.height.width;
-    const height = manifest.height.height;
-    const [sourceWest, sourceSouth, sourceEast, sourceNorth] = manifest.bounds_epsg32649;
-    const [aoiWest, aoiSouth, aoiEast, aoiNorth] = aoi.bounds_epsg32649;
-    const dx = (sourceEast - sourceWest) / (width - 1);
-    const dz = (sourceNorth - sourceSouth) / (height - 1);
-
-    const col0 = clamp(Math.floor((aoiWest - sourceWest) / (sourceEast - sourceWest) * (width - 1)), 0, width - 1);
-    const col1 = clamp(Math.ceil((aoiEast - sourceWest) / (sourceEast - sourceWest) * (width - 1)), 0, width - 1);
-    const row0 = clamp(Math.floor((sourceNorth - aoiNorth) / (sourceNorth - sourceSouth) * (height - 1)), 0, height - 1);
-    const row1 = clamp(Math.ceil((sourceNorth - aoiSouth) / (sourceNorth - sourceSouth) * (height - 1)), 0, height - 1);
-    assert(col1 > col0 && row1 > row0, 'AOI 裁切窗口为空');
-
-    const cropWidth = col1 - col0 + 1;
-    const cropHeight = row1 - row0 + 1;
-    const adaptiveStep = Math.max(1, Math.ceil(Math.max(cropWidth / 280, cropHeight / 420)));
-    const cols = makeIndexList(col0, col1, adaptiveStep);
-    const rows = makeIndexList(row0, row1, adaptiveStep);
-    const meshWidth = cols.length;
-    const meshHeight = rows.length;
-    const vertexCount = meshWidth * meshHeight;
-    const [sourceMinElevation, sourceMaxElevation] = manifest.elevation_range_m;
-    const centerE = (aoiWest + aoiEast) / 2;
-    const centerN = (aoiSouth + aoiNorth) / 2;
-
-    const prefixData = buildNoDataPrefix(codes, width, height);
-    const heights = new Float32Array(vertexCount);
-    const valid = new Uint8Array(vertexCount);
-    const xCoordinates = new Float32Array(meshWidth);
-    const zCoordinates = new Float32Array(meshHeight);
-    let validVertexCount = 0;
-    let noDataVertexCount = 0;
-    let minElevation = Number.POSITIVE_INFINITY;
-    let maxElevation = Number.NEGATIVE_INFINITY;
-
-    for (let colIndex = 0; colIndex < meshWidth; colIndex += 1) {
-      xCoordinates[colIndex] = sourceWest + cols[colIndex] * dx - centerE;
-    }
-    for (let rowIndex = 0; rowIndex < meshHeight; rowIndex += 1) {
-      const northing = sourceNorth - rows[rowIndex] * dz;
-      zCoordinates[rowIndex] = centerN - northing;
-    }
-
-    for (let rowIndex = 0; rowIndex < meshHeight; rowIndex += 1) {
-      const sourceRow = rows[rowIndex];
-      for (let colIndex = 0; colIndex < meshWidth; colIndex += 1) {
-        const sourceCol = cols[colIndex];
-        const vertexIndex = rowIndex * meshWidth + colIndex;
-        const code = codes[sourceRow * width + sourceCol];
-        if (code === NODATA_CODE) {
-          heights[vertexIndex] = Number.NaN;
-          noDataVertexCount += 1;
-          continue;
-        }
-        const elevation = decodeElevation(code, sourceMinElevation, sourceMaxElevation);
-        heights[vertexIndex] = elevation;
-        valid[vertexIndex] = 1;
-        validVertexCount += 1;
-        minElevation = Math.min(minElevation, elevation);
-        maxElevation = Math.max(maxElevation, elevation);
-      }
-    }
-    assert(validVertexCount > 100, 'AOI 内有效高程样本过少');
-
-    const positions = new Float32Array(vertexCount * 3);
-    const normals = new Float32Array(vertexCount * 3);
-    const colors = new Float32Array(vertexCount * 3);
-    const renderOriginElevation = minElevation;
-
-    function heightAt(rowIndex, colIndex, fallback) {
-      const row = clamp(rowIndex, 0, meshHeight - 1);
-      const col = clamp(colIndex, 0, meshWidth - 1);
-      const value = heights[row * meshWidth + col];
-      return Number.isFinite(value) ? value : fallback;
-    }
-
-    const colorLow = Math.max(minElevation, manifest.analysis?.percentile_stretch_m?.[0] ?? minElevation);
-    const colorHigh = Math.min(maxElevation, manifest.analysis?.percentile_stretch_m?.[1] ?? maxElevation);
-
-    for (let rowIndex = 0; rowIndex < meshHeight; rowIndex += 1) {
-      for (let colIndex = 0; colIndex < meshWidth; colIndex += 1) {
-        const vertexIndex = rowIndex * meshWidth + colIndex;
-        const base = vertexIndex * 3;
-        const elevation = heights[vertexIndex];
-        positions[base] = xCoordinates[colIndex];
-        positions[base + 2] = zCoordinates[rowIndex];
-        if (!Number.isFinite(elevation)) {
-          positions[base + 1] = 0;
-          normals[base + 1] = 1;
-          continue;
-        }
-        positions[base + 1] = elevation - renderOriginElevation;
-        const hLeft = heightAt(rowIndex, colIndex - 1, elevation);
-        const hRight = heightAt(rowIndex, colIndex + 1, elevation);
-        const hNorth = heightAt(rowIndex - 1, colIndex, elevation);
-        const hSouth = heightAt(rowIndex + 1, colIndex, elevation);
-        const xLeft = xCoordinates[Math.max(0, colIndex - 1)];
-        const xRight = xCoordinates[Math.min(meshWidth - 1, colIndex + 1)];
-        const zNorth = zCoordinates[Math.max(0, rowIndex - 1)];
-        const zSouth = zCoordinates[Math.min(meshHeight - 1, rowIndex + 1)];
-        const gradientX = (hRight - hLeft) / Math.max(1, xRight - xLeft);
-        const gradientZ = (hSouth - hNorth) / Math.max(1, zSouth - zNorth);
-        let nx = -gradientX;
-        let ny = 1;
-        let nz = -gradientZ;
-        const length = Math.hypot(nx, ny, nz) || 1;
-        nx /= length;
-        ny /= length;
-        nz /= length;
-        normals[base] = nx;
-        normals[base + 1] = ny;
-        normals[base + 2] = nz;
-        const color = terrainColor(elevation, ny, colorLow, colorHigh);
-        colors[base] = color[0];
-        colors[base + 1] = color[1];
-        colors[base + 2] = color[2];
-      }
-    }
-
-    const indexValues = [];
-    let hiddenNoDataCells = 0;
-    for (let rowIndex = 0; rowIndex < meshHeight - 1; rowIndex += 1) {
-      const rawRow0 = rows[rowIndex];
-      const rawRow1 = rows[rowIndex + 1];
-      for (let colIndex = 0; colIndex < meshWidth - 1; colIndex += 1) {
-        const rawCol0 = cols[colIndex];
-        const rawCol1 = cols[colIndex + 1];
-        if (regionNoDataCount(prefixData, rawRow0, rawCol0, rawRow1, rawCol1) > 0) {
-          hiddenNoDataCells += 1;
-          continue;
-        }
-        const a = rowIndex * meshWidth + colIndex;
-        const b = (rowIndex + 1) * meshWidth + colIndex;
-        const c = rowIndex * meshWidth + colIndex + 1;
-        const d = (rowIndex + 1) * meshWidth + colIndex + 1;
-        if (!(valid[a] && valid[b] && valid[c] && valid[d])) {
-          hiddenNoDataCells += 1;
-          continue;
-        }
-        indexValues.push(a, b, c, c, b, d);
-      }
-    }
-    assert(indexValues.length > 600, 'AOI 内没有足够的有效三角形');
-    const indices = new Uint32Array(indexValues);
-
-    const landmarkPoints = LANDMARKS.map(landmark => {
-      const sourceCol = clamp(Math.round((landmark.e - sourceWest) / dx), 0, width - 1);
-      const sourceRow = clamp(Math.round((sourceNorth - landmark.n) / dz), 0, height - 1);
-      const code = codes[sourceRow * width + sourceCol];
-      const elevation = code === NODATA_CODE ? minElevation : decodeElevation(code, sourceMinElevation, sourceMaxElevation);
-      return {
-        ...landmark,
-        x: landmark.e - centerE,
-        y: elevation - renderOriginElevation + 120,
-        z: centerN - landmark.n,
-      };
-    });
-
-    return {
-      sourceWindow: { col0, col1, row0, row1, cropWidth, cropHeight, adaptiveStep },
-      rows,
-      cols,
-      meshWidth,
-      meshHeight,
-      vertexCount,
-      validVertexCount,
-      noDataVertexCount,
-      hiddenNoDataCells,
-      triangleCount: indices.length / 3,
-      positions,
-      normals,
-      colors,
-      indices,
-      valid,
-      heights,
-      minElevation,
-      maxElevation,
-      renderOriginElevation,
-      worldWidth: xCoordinates[meshWidth - 1] - xCoordinates[0],
-      worldDepth: zCoordinates[meshHeight - 1] - zCoordinates[0],
-      xCoordinates,
-      zCoordinates,
-      landmarkPoints,
-      nodataPolicy: 'Every displayed cell is rejected when any underlying source overview sample in its footprint is NoData. No interpolation and no gap fill.',
-    };
+  function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
   }
 
   function createShader(gl, type, source) {
@@ -401,121 +201,278 @@
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const message = gl.getShaderInfoLog(shader) || 'shader compile failed';
+      const log = gl.getShaderInfoLog(shader) || 'shader compile failed';
       gl.deleteShader(shader);
-      throw new Error(message);
+      throw new Error(log);
     }
     return shader;
   }
 
-  function createProgram(gl) {
-    const vertexSource = `#version 300 es
-      precision highp float;
-      layout(location=0) in vec3 aPosition;
-      layout(location=1) in vec3 aNormal;
-      layout(location=2) in vec3 aColor;
-      uniform mat4 uProjection;
-      uniform mat4 uView;
-      uniform float uVerticalScale;
-      out vec3 vNormal;
-      out vec3 vColor;
-      out float vDepth;
-      void main() {
-        vec3 position = vec3(aPosition.x, aPosition.y * uVerticalScale, aPosition.z);
-        vec4 viewPosition = uView * vec4(position, 1.0);
-        gl_Position = uProjection * viewPosition;
-        vNormal = normalize(vec3(aNormal.x, aNormal.y / max(0.001, uVerticalScale), aNormal.z));
-        vColor = aColor;
-        vDepth = -viewPosition.z;
-      }
-    `;
-    const fragmentSource = `#version 300 es
-      precision highp float;
-      in vec3 vNormal;
-      in vec3 vColor;
-      in float vDepth;
-      uniform float uFogNear;
-      uniform float uFogFar;
-      out vec4 outColor;
-      void main() {
-        vec3 lightDirection = normalize(vec3(-0.48, 0.82, -0.31));
-        float diffuse = max(dot(normalize(vNormal), lightDirection), 0.0);
-        float opposite = max(dot(normalize(vNormal), -lightDirection), 0.0);
-        float light = 0.47 + diffuse * 0.52 + opposite * 0.045;
-        vec3 terrain = vColor * light;
-        float fog = smoothstep(uFogNear, uFogFar, vDepth);
-        vec3 sky = vec3(0.82, 0.875, 0.865);
-        outColor = vec4(mix(terrain, sky, fog * 0.58), 1.0);
-      }
-    `;
+  function createProgram(gl, vertexSource, fragmentSource) {
+    const program = gl.createProgram();
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-    const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
     gl.deleteShader(vertexShader);
     gl.deleteShader(fragmentShader);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      const message = gl.getProgramInfoLog(program) || 'program link failed';
+      const log = gl.getProgramInfoLog(program) || 'program link failed';
       gl.deleteProgram(program);
-      throw new Error(message);
+      throw new Error(log);
     }
     return program;
   }
 
-  function uploadBuffer(gl, target, data, location, size) {
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(target, buffer);
-    gl.bufferData(target, data, gl.STATIC_DRAW);
-    if (location !== null) {
-      gl.enableVertexAttribArray(location);
-      gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
-    }
-    state.buffers.push(buffer);
-    return buffer;
+  const TERRAIN_VERTEX_SHADER = `#version 300 es
+precision highp float;
+precision highp int;
+uniform highp usampler2D uHeight;
+uniform ivec2 uSourceSize;
+uniform int uGridSize;
+uniform vec2 uWorldSize;
+uniform float uMinElevation;
+uniform float uMaxElevation;
+uniform float uRenderOrigin;
+uniform float uVerticalScale;
+uniform mat4 uViewProjection;
+out vec2 vSourcePosition;
+out float vElevation;
+void main() {
+  int column = gl_VertexID % uGridSize;
+  int row = gl_VertexID / uGridSize;
+  int sourceX = int(round(float(column) * float(uSourceSize.x - 1) / float(uGridSize - 1)));
+  int sourceY = int(round(float(row) * float(uSourceSize.y - 1) / float(uGridSize - 1)));
+  uint code = texelFetch(uHeight, ivec2(sourceX, sourceY), 0).r;
+  float elevation = mix(uMinElevation, uMaxElevation, float(code) / 65534.0);
+  float tx = float(column) / float(uGridSize - 1);
+  float tz = float(row) / float(uGridSize - 1);
+  vec3 worldPosition = vec3(
+    mix(-0.5 * uWorldSize.x, 0.5 * uWorldSize.x, tx),
+    (elevation - uRenderOrigin) * uVerticalScale,
+    mix(-0.5 * uWorldSize.y, 0.5 * uWorldSize.y, tz)
+  );
+  vSourcePosition = vec2(float(sourceX), float(sourceY));
+  vElevation = elevation;
+  gl_Position = uViewProjection * vec4(worldPosition, 1.0);
+}`;
+
+  const TERRAIN_FRAGMENT_SHADER = `#version 300 es
+precision highp float;
+precision highp int;
+uniform highp usampler2D uHeight;
+uniform ivec2 uSourceSize;
+uniform vec2 uSourceSpacing;
+uniform float uMinElevation;
+uniform float uMaxElevation;
+uniform float uVerticalScale;
+in vec2 vSourcePosition;
+in float vElevation;
+out vec4 outColor;
+float decodeHeight(uint code, float fallbackValue) {
+  return code == 65535u ? fallbackValue : mix(uMinElevation, uMaxElevation, float(code) / 65534.0);
+}
+vec3 elevationRamp(float t) {
+  t = clamp(t, 0.0, 1.0);
+  if (t < 0.18) return mix(vec3(0.035,0.185,0.105), vec3(0.075,0.305,0.145), t / 0.18);
+  if (t < 0.38) return mix(vec3(0.075,0.305,0.145), vec3(0.230,0.405,0.190), (t - 0.18) / 0.20);
+  if (t < 0.58) return mix(vec3(0.230,0.405,0.190), vec3(0.440,0.475,0.245), (t - 0.38) / 0.20);
+  if (t < 0.76) return mix(vec3(0.440,0.475,0.245), vec3(0.650,0.575,0.370), (t - 0.58) / 0.18);
+  if (t < 0.90) return mix(vec3(0.650,0.575,0.370), vec3(0.690,0.690,0.635), (t - 0.76) / 0.14);
+  return mix(vec3(0.690,0.690,0.635), vec3(0.930,0.925,0.875), (t - 0.90) / 0.10);
+}
+void main() {
+  ivec2 p = clamp(ivec2(round(vSourcePosition)), ivec2(0), uSourceSize - 1);
+  float center = vElevation;
+  float leftHeight = decodeHeight(texelFetch(uHeight, ivec2(max(p.x - 1, 0), p.y), 0).r, center);
+  float rightHeight = decodeHeight(texelFetch(uHeight, ivec2(min(p.x + 1, uSourceSize.x - 1), p.y), 0).r, center);
+  float northHeight = decodeHeight(texelFetch(uHeight, ivec2(p.x, max(p.y - 1, 0)), 0).r, center);
+  float southHeight = decodeHeight(texelFetch(uHeight, ivec2(p.x, min(p.y + 1, uSourceSize.y - 1)), 0).r, center);
+  float slopeX = (rightHeight - leftHeight) * uVerticalScale / max(2.0 * uSourceSpacing.x, 0.001);
+  float slopeZ = (southHeight - northHeight) * uVerticalScale / max(2.0 * uSourceSpacing.y, 0.001);
+  vec3 normal = normalize(vec3(-slopeX, 1.0, -slopeZ));
+  vec3 lightDirection = normalize(vec3(-0.48, 0.72, 0.50));
+  float directLight = max(dot(normal, lightDirection), 0.0);
+  float skyLight = 0.44 + 0.18 * normal.y;
+  float t = (vElevation - uMinElevation) / max(uMaxElevation - uMinElevation, 1.0);
+  vec3 base = elevationRamp(t);
+  float contour = 0.985 + 0.015 * smoothstep(0.45, 0.55, abs(fract(vElevation / 100.0) - 0.5));
+  float detail = 0.94 + 0.10 * clamp(length(vec2(slopeX, slopeZ)) * 2.0, 0.0, 1.0);
+  vec3 color = base * (skyLight + directLight * 0.72) * contour * detail;
+  float haze = smoothstep(0.72, 1.0, t) * 0.08;
+  color = mix(color, vec3(0.93,0.94,0.90), haze);
+  color = pow(max(color, vec3(0.0)), vec3(0.92));
+  outColor = vec4(color, 1.0);
+}`;
+
+  const WATER_VERTEX_SHADER = `#version 300 es
+precision highp float;
+precision highp int;
+layout(location=0) in vec4 aPositionClass;
+uniform highp usampler2D uHeight;
+uniform ivec2 uSourceSize;
+uniform vec2 uWorldSize;
+uniform float uMinElevation;
+uniform float uMaxElevation;
+uniform float uRenderOrigin;
+uniform float uVerticalScale;
+uniform float uSurfaceOffset;
+uniform mat4 uViewProjection;
+out float vClass;
+void main() {
+  vec2 uv = clamp(vec2(aPositionClass.x / uWorldSize.x + 0.5, aPositionClass.z / uWorldSize.y + 0.5), vec2(0.0), vec2(1.0));
+  ivec2 p = ivec2(round(uv * vec2(uSourceSize - 1)));
+  uint code = texelFetch(uHeight, p, 0).r;
+  float elevation = code == 65535u ? aPositionClass.y - uSurfaceOffset : mix(uMinElevation, uMaxElevation, float(code) / 65534.0);
+  vec3 worldPosition = vec3(aPositionClass.x, (elevation + uSurfaceOffset - uRenderOrigin) * uVerticalScale, aPositionClass.z);
+  vClass = aPositionClass.w;
+  gl_Position = uViewProjection * vec4(worldPosition, 1.0);
+}`;
+
+  const WATER_FRAGMENT_SHADER = `#version 300 es
+precision highp float;
+in float vClass;
+out vec4 outColor;
+void main() {
+  vec3 color = vec3(0.10, 0.42, 0.54);
+  float alpha = 0.82;
+  if (vClass > 1.5) {
+    color = vec3(0.10, 0.58, 0.51);
+    alpha = 0.90;
+  } else if (vClass > 0.5) {
+    color = vec3(0.10, 0.62, 0.78);
+    alpha = 0.94;
+  }
+  outColor = vec4(color, alpha);
+}`;
+
+  function createHeightTexture(gl, codes) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 2);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16UI, EXPECTED_GRID, EXPECTED_GRID, 0, gl.RED_INTEGER, gl.UNSIGNED_SHORT, codes);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    return texture;
   }
 
-  function initializeWebGL(model) {
-    const gl = canvas.getContext('webgl2', {
-      antialias: true,
-      alpha: false,
-      depth: true,
-      powerPreference: 'high-performance',
-      preserveDrawingBuffer: true,
-    });
-    if (!gl) throw new Error('当前浏览器没有可用的 WebGL2');
-    const program = createProgram(gl);
-    const vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-    uploadBuffer(gl, gl.ARRAY_BUFFER, model.positions, 0, 3);
-    uploadBuffer(gl, gl.ARRAY_BUFFER, model.normals, 1, 3);
-    uploadBuffer(gl, gl.ARRAY_BUFFER, model.colors, 2, 3);
-    uploadBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, model.indices, null, 0);
+  function sampledSourceIndices(gridSize) {
+    const result = new Int32Array(gridSize);
+    const scale = (EXPECTED_GRID - 1) / (gridSize - 1);
+    for (let index = 0; index < gridSize; index += 1) result[index] = Math.round(index * scale);
+    return result;
+  }
+
+  function buildTerrainIndices(codes, gridSize) {
+    const sourceColumns = sampledSourceIndices(gridSize);
+    const sourceRows = sampledSourceIndices(gridSize);
+    let validCellCount = 0;
+    for (let row = 0; row < gridSize - 1; row += 1) {
+      const sourceRow0 = sourceRows[row] * EXPECTED_GRID;
+      const sourceRow1 = sourceRows[row + 1] * EXPECTED_GRID;
+      for (let column = 0; column < gridSize - 1; column += 1) {
+        const sourceColumn0 = sourceColumns[column];
+        const sourceColumn1 = sourceColumns[column + 1];
+        if (
+          codes[sourceRow0 + sourceColumn0] !== NODATA_CODE &&
+          codes[sourceRow0 + sourceColumn1] !== NODATA_CODE &&
+          codes[sourceRow1 + sourceColumn0] !== NODATA_CODE &&
+          codes[sourceRow1 + sourceColumn1] !== NODATA_CODE
+        ) validCellCount += 1;
+      }
+    }
+    const indices = new Uint32Array(validCellCount * 6);
+    let cursor = 0;
+    for (let row = 0; row < gridSize - 1; row += 1) {
+      const sourceRow0 = sourceRows[row] * EXPECTED_GRID;
+      const sourceRow1 = sourceRows[row + 1] * EXPECTED_GRID;
+      const vertexRow0 = row * gridSize;
+      const vertexRow1 = (row + 1) * gridSize;
+      for (let column = 0; column < gridSize - 1; column += 1) {
+        const sourceColumn0 = sourceColumns[column];
+        const sourceColumn1 = sourceColumns[column + 1];
+        if (
+          codes[sourceRow0 + sourceColumn0] === NODATA_CODE ||
+          codes[sourceRow0 + sourceColumn1] === NODATA_CODE ||
+          codes[sourceRow1 + sourceColumn0] === NODATA_CODE ||
+          codes[sourceRow1 + sourceColumn1] === NODATA_CODE
+        ) continue;
+        const a = vertexRow0 + column;
+        const b = a + 1;
+        const c = vertexRow1 + column;
+        const d = c + 1;
+        indices[cursor++] = a;
+        indices[cursor++] = c;
+        indices[cursor++] = b;
+        indices[cursor++] = b;
+        indices[cursor++] = c;
+        indices[cursor++] = d;
+      }
+    }
+    return { indices, validCellCount };
+  }
+
+  function setupPrograms(gl) {
+    state.terrainProgram = createProgram(gl, TERRAIN_VERTEX_SHADER, TERRAIN_FRAGMENT_SHADER);
+    state.terrainUniforms = {
+      height: gl.getUniformLocation(state.terrainProgram, 'uHeight'),
+      sourceSize: gl.getUniformLocation(state.terrainProgram, 'uSourceSize'),
+      gridSize: gl.getUniformLocation(state.terrainProgram, 'uGridSize'),
+      worldSize: gl.getUniformLocation(state.terrainProgram, 'uWorldSize'),
+      sourceSpacing: gl.getUniformLocation(state.terrainProgram, 'uSourceSpacing'),
+      minElevation: gl.getUniformLocation(state.terrainProgram, 'uMinElevation'),
+      maxElevation: gl.getUniformLocation(state.terrainProgram, 'uMaxElevation'),
+      renderOrigin: gl.getUniformLocation(state.terrainProgram, 'uRenderOrigin'),
+      verticalScale: gl.getUniformLocation(state.terrainProgram, 'uVerticalScale'),
+      viewProjection: gl.getUniformLocation(state.terrainProgram, 'uViewProjection'),
+    };
+    state.terrainVao = gl.createVertexArray();
+    state.terrainIndexBuffer = gl.createBuffer();
+
+    state.waterProgram = createProgram(gl, WATER_VERTEX_SHADER, WATER_FRAGMENT_SHADER);
+    state.waterUniforms = {
+      height: gl.getUniformLocation(state.waterProgram, 'uHeight'),
+      sourceSize: gl.getUniformLocation(state.waterProgram, 'uSourceSize'),
+      worldSize: gl.getUniformLocation(state.waterProgram, 'uWorldSize'),
+      minElevation: gl.getUniformLocation(state.waterProgram, 'uMinElevation'),
+      maxElevation: gl.getUniformLocation(state.waterProgram, 'uMaxElevation'),
+      renderOrigin: gl.getUniformLocation(state.waterProgram, 'uRenderOrigin'),
+      verticalScale: gl.getUniformLocation(state.waterProgram, 'uVerticalScale'),
+      surfaceOffset: gl.getUniformLocation(state.waterProgram, 'uSurfaceOffset'),
+      viewProjection: gl.getUniformLocation(state.waterProgram, 'uViewProjection'),
+    };
+    state.waterVao = gl.createVertexArray();
+    state.waterBuffer = gl.createBuffer();
+  }
+
+  function uploadTerrainIndices(gl, gridSize) {
+    const { indices, validCellCount } = buildTerrainIndices(state.codes, gridSize);
+    gl.bindVertexArray(state.terrainVao);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.terrainIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
     gl.bindVertexArray(null);
+    state.renderGrid = gridSize;
+    state.terrainIndexCount = indices.length;
+    state.validCellCount = validCellCount;
+    $('meshGrid').textContent = `${gridSize} × ${gridSize}`;
+    $('triangleCount').textContent = (validCellCount * 2).toLocaleString();
+    renderInfo.textContent = `WebGL2 · 2048 高程采样 · ${gridSize} 实时网格 · 水系 ${state.waterVertexCount.toLocaleString()} 顶点`;
+    state.dirty = true;
+    updateQaResult();
+  }
 
-    state.gl = gl;
-    state.program = program;
-    state.vao = vao;
-    state.uniform.projection = gl.getUniformLocation(program, 'uProjection');
-    state.uniform.view = gl.getUniformLocation(program, 'uView');
-    state.uniform.verticalScale = gl.getUniformLocation(program, 'uVerticalScale');
-    state.uniform.fogNear = gl.getUniformLocation(program, 'uFogNear');
-    state.uniform.fogFar = gl.getUniformLocation(program, 'uFogFar');
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.BACK);
-    gl.frontFace(gl.CCW);
-    gl.clearColor(0.82, 0.875, 0.865, 1);
-
-    const maximumDimension = Math.max(model.worldWidth, model.worldDepth);
-    state.camera.minDistance = Math.max(7000, maximumDimension * 0.07);
-    state.camera.maxDistance = maximumDimension * 4.5;
-    applyViewPreset('overview');
-    resizeCanvas();
-    requestRender();
+  function uploadWater(gl, waterFloats) {
+    gl.bindVertexArray(state.waterVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, state.waterBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, waterFloats, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 0);
+    gl.bindVertexArray(null);
+    state.waterVertexCount = waterFloats.length / 4;
   }
 
   function mat4Perspective(out, fovy, aspect, near, far) {
@@ -555,13 +512,13 @@
 
   function mat4Multiply(out, a, b) {
     const result = new Float32Array(16);
-    for (let col = 0; col < 4; col += 1) {
+    for (let column = 0; column < 4; column += 1) {
       for (let row = 0; row < 4; row += 1) {
-        result[col * 4 + row] =
-          a[0 * 4 + row] * b[col * 4 + 0] +
-          a[1 * 4 + row] * b[col * 4 + 1] +
-          a[2 * 4 + row] * b[col * 4 + 2] +
-          a[3 * 4 + row] * b[col * 4 + 3];
+        result[column * 4 + row] =
+          a[row] * b[column * 4] +
+          a[4 + row] * b[column * 4 + 1] +
+          a[8 + row] * b[column * 4 + 2] +
+          a[12 + row] * b[column * 4 + 3];
       }
     }
     out.set(result);
@@ -579,373 +536,462 @@
   }
 
   function resizeCanvas() {
-    if (!state.gl) return;
-    const rect = canvas.getBoundingClientRect();
-    const dpr = Math.min(MAX_DEVICE_PIXEL_RATIO, window.devicePixelRatio || 1);
-    const width = Math.max(2, Math.round(rect.width * dpr));
-    const height = Math.max(2, Math.round(rect.height * dpr));
+    const ratio = Math.min(MAX_DEVICE_PIXEL_RATIO, window.devicePixelRatio || 1);
+    const width = Math.max(2, Math.floor(canvas.clientWidth * ratio));
+    const height = Math.max(2, Math.floor(canvas.clientHeight * ratio));
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
       canvas.height = height;
-      state.gl.viewport(0, 0, width, height);
+      state.dirty = true;
     }
-    requestRender();
   }
 
-  function requestRender() {
-    state.dirty = true;
-  }
-
-  function render() {
-    if (!state.gl || !state.model || !state.program) return;
-    const gl = state.gl;
-    const model = state.model;
-    const camera = state.camera;
+  function updateCameraMatrices() {
+    resizeCanvas();
     const eye = cameraEye();
-    const aspect = canvas.width / Math.max(1, canvas.height);
-    const far = Math.max(model.worldWidth, model.worldDepth) * 8;
-    mat4Perspective(state.projection, Math.PI / 4, aspect, 20, far);
-    mat4LookAt(state.view, eye, camera.target, [0, 1, 0]);
+    const near = Math.max(10, state.camera.distance / 6000);
+    const far = state.camera.distance + Math.max(state.worldWidth, state.worldDepth) * 5;
+    mat4Perspective(state.projection, Math.PI / 4.2, canvas.width / Math.max(1, canvas.height), near, far);
+    mat4LookAt(state.view, eye, state.camera.target, [0, 1, 0]);
     mat4Multiply(state.viewProjection, state.projection, state.view);
+  }
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.useProgram(state.program);
-    gl.uniformMatrix4fv(state.uniform.projection, false, state.projection);
-    gl.uniformMatrix4fv(state.uniform.view, false, state.view);
-    gl.uniform1f(state.uniform.verticalScale, state.verticalScale);
-    gl.uniform1f(state.uniform.fogNear, camera.distance * 0.72);
-    gl.uniform1f(state.uniform.fogFar, camera.distance * 1.65);
-    gl.bindVertexArray(state.vao);
-    gl.drawElements(gl.TRIANGLES, model.indices.length, gl.UNSIGNED_INT, 0);
+  function drawTerrain(gl) {
+    const manifest = state.terrainManifest;
+    const uniforms = state.terrainUniforms;
+    gl.useProgram(state.terrainProgram);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, state.heightTexture);
+    gl.uniform1i(uniforms.height, 0);
+    gl.uniform2i(uniforms.sourceSize, EXPECTED_GRID, EXPECTED_GRID);
+    gl.uniform1i(uniforms.gridSize, state.renderGrid);
+    gl.uniform2f(uniforms.worldSize, state.worldWidth, state.worldDepth);
+    gl.uniform2f(uniforms.sourceSpacing, manifest.output_spacing_xy_m[0], manifest.output_spacing_xy_m[1]);
+    gl.uniform1f(uniforms.minElevation, manifest.elevation_range_m[0]);
+    gl.uniform1f(uniforms.maxElevation, manifest.elevation_range_m[1]);
+    gl.uniform1f(uniforms.renderOrigin, state.renderOriginElevation);
+    gl.uniform1f(uniforms.verticalScale, state.verticalScale);
+    gl.uniformMatrix4fv(uniforms.viewProjection, false, state.viewProjection);
+    gl.bindVertexArray(state.terrainVao);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+    gl.drawElements(gl.TRIANGLES, state.terrainIndexCount, gl.UNSIGNED_INT, 0);
     gl.bindVertexArray(null);
-
-    state.renderedFrames += 1;
-    updateLandmarkLabels();
-    updateCompass();
-    if (state.renderedFrames === 1) finalizeReadyState();
   }
 
-  function animationLoop() {
-    if (state.dirty) {
-      state.dirty = false;
-      render();
+  function drawWater(gl) {
+    if (!state.waterVisible || !state.waterVertexCount) return;
+    const uniforms = state.waterUniforms;
+    gl.useProgram(state.waterProgram);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, state.heightTexture);
+    gl.uniform1i(uniforms.height, 0);
+    gl.uniform2i(uniforms.sourceSize, EXPECTED_GRID, EXPECTED_GRID);
+    gl.uniform2f(uniforms.worldSize, state.worldWidth, state.worldDepth);
+    gl.uniform1f(uniforms.minElevation, state.terrainManifest.elevation_range_m[0]);
+    gl.uniform1f(uniforms.maxElevation, state.terrainManifest.elevation_range_m[1]);
+    gl.uniform1f(uniforms.renderOrigin, state.renderOriginElevation);
+    gl.uniform1f(uniforms.verticalScale, state.verticalScale);
+    gl.uniform1f(uniforms.surfaceOffset, state.waterManifest.water_surface_offset_m);
+    gl.uniformMatrix4fv(uniforms.viewProjection, false, state.viewProjection);
+    gl.bindVertexArray(state.waterVao);
+    gl.disable(gl.CULL_FACE);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    gl.drawArrays(gl.TRIANGLES, 0, state.waterVertexCount);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+    gl.bindVertexArray(null);
+  }
+
+  function renderScene() {
+    const gl = state.gl;
+    if (!gl || !state.terrainIndexCount) return;
+    updateCameraMatrices();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.84, 0.89, 0.86, 1);
+    gl.clearDepth(1);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    drawTerrain(gl);
+    drawWater(gl);
+    state.frameCount += 1;
+    updateLabels();
+    state.dirty = false;
+  }
+
+  function renderLoop() {
+    if (state.dirty) renderScene();
+    requestAnimationFrame(renderLoop);
+  }
+
+  function sampleElevationAtUtm(easting, northing) {
+    const manifest = state.terrainManifest;
+    if (!manifest || !state.codes) return null;
+    const [west, south, east, north] = manifest.aoi_bounds_epsg32649;
+    const column = clamp(Math.round((easting - west) / (east - west) * (EXPECTED_GRID - 1)), 0, EXPECTED_GRID - 1);
+    const row = clamp(Math.round((north - northing) / (north - south) * (EXPECTED_GRID - 1)), 0, EXPECTED_GRID - 1);
+    const code = state.codes[row * EXPECTED_GRID + column];
+    if (code === NODATA_CODE) return null;
+    const [minimum, maximum] = manifest.elevation_range_m;
+    return minimum + code / 65534 * (maximum - minimum);
+  }
+
+  function makeLabels() {
+    labelLayer.replaceChildren();
+    state.labels = [];
+    const [centerE, centerN] = state.terrainManifest.aoi_center_epsg32649;
+    for (const landmark of LANDMARKS) {
+      if (
+        landmark.e < EXPECTED_AOI_BOUNDS[0] || landmark.e > EXPECTED_AOI_BOUNDS[2] ||
+        landmark.n < EXPECTED_AOI_BOUNDS[1] || landmark.n > EXPECTED_AOI_BOUNDS[3]
+      ) continue;
+      const elevation = sampleElevationAtUtm(landmark.e, landmark.n);
+      if (elevation === null) continue;
+      const element = document.createElement('div');
+      element.className = 'landmark-label';
+      element.textContent = landmark.name;
+      labelLayer.appendChild(element);
+      state.labels.push({
+        element,
+        x: landmark.e - centerE,
+        z: centerN - landmark.n,
+        elevation,
+      });
     }
-    requestAnimationFrame(animationLoop);
   }
 
-  function applyViewPreset(name) {
-    if (!state.model) return;
-    const maxDimension = Math.max(state.model.worldWidth, state.model.worldDepth);
+  function projectWorld(x, y, z) {
+    const matrix = state.viewProjection;
+    const clipX = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12];
+    const clipY = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13];
+    const clipZ = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14];
+    const clipW = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
+    if (clipW <= 0) return null;
+    const nx = clipX / clipW;
+    const ny = clipY / clipW;
+    const nz = clipZ / clipW;
+    if (nx < -1.12 || nx > 1.12 || ny < -1.12 || ny > 1.12 || nz < -1 || nz > 1) return null;
+    return [
+      (nx * 0.5 + 0.5) * canvas.clientWidth,
+      (1 - (ny * 0.5 + 0.5)) * canvas.clientHeight,
+    ];
+  }
+
+  function updateLabels() {
+    for (const label of state.labels) {
+      const y = (label.elevation - state.renderOriginElevation) * state.verticalScale + 10;
+      const projected = projectWorld(label.x, y, label.z);
+      if (!projected) {
+        label.element.hidden = true;
+        continue;
+      }
+      label.element.hidden = false;
+      label.element.style.left = `${projected[0]}px`;
+      label.element.style.top = `${projected[1]}px`;
+    }
+  }
+
+  function setView(name) {
+    const span = Math.max(state.worldWidth, state.worldDepth);
+    const relief = Math.max(1, state.terrainManifest.elevation_range_m[1] - state.terrainManifest.elevation_range_m[0]);
     const camera = state.camera;
+    camera.target = [0, relief * 0.20 * state.verticalScale, 0];
     if (name === 'north') {
-      camera.target = [0, (state.model.maxElevation - state.model.renderOriginElevation) * 0.16, 0];
       camera.yaw = 0;
-      camera.pitch = Math.PI / 2 - 0.015;
-      camera.distance = maxDimension * 1.25;
+      camera.pitch = 1.545;
+      camera.distance = span * 0.92;
     } else if (name === 'low') {
-      camera.target = [0, (state.model.maxElevation - state.model.renderOriginElevation) * 0.18, 0];
-      camera.yaw = -0.72;
+      camera.yaw = -0.95;
       camera.pitch = 0.18;
-      camera.distance = maxDimension * 0.92;
+      camera.distance = span * 0.83;
+      camera.target[1] = relief * 0.28 * state.verticalScale;
     } else if (name === 'guilin') {
-      const guilin = state.model.landmarkPoints.find(item => item.id === 'guilin');
-      camera.target = [guilin?.x || 0, Math.max(120, (guilin?.y || 300) * 0.45), guilin?.z || 0];
-      camera.yaw = -0.9;
+      const guilin = LANDMARKS.find(item => item.id === 'guilin');
+      const [centerE, centerN] = state.terrainManifest.aoi_center_epsg32649;
+      const elevation = sampleElevationAtUtm(guilin.e, guilin.n) ?? state.renderOriginElevation;
+      camera.target = [guilin.e - centerE, (elevation - state.renderOriginElevation) * state.verticalScale, centerN - guilin.n];
+      camera.yaw = -0.62;
       camera.pitch = 0.34;
-      camera.distance = maxDimension * 0.42;
+      camera.distance = span * 0.38;
     } else {
-      camera.target = [0, (state.model.maxElevation - state.model.renderOriginElevation) * 0.18, 0];
-      camera.yaw = -0.67;
-      camera.pitch = 0.56;
-      camera.distance = maxDimension * 1.12;
+      camera.yaw = -0.72;
+      camera.pitch = 0.58;
+      camera.distance = span * 1.22;
     }
     camera.distance = clamp(camera.distance, camera.minDistance, camera.maxDistance);
     document.querySelectorAll('[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === name));
-    requestRender();
+    state.dirty = true;
   }
 
-  function orbit(deltaX, deltaY) {
-    state.camera.yaw -= deltaX * 0.006;
-    state.camera.pitch = clamp(state.camera.pitch + deltaY * 0.005, 0.075, Math.PI / 2 - 0.012);
-    requestRender();
-  }
-
-  function pan(deltaX, deltaY) {
-    const camera = state.camera;
-    const scale = camera.distance * 0.00125;
-    const rightX = Math.cos(camera.yaw);
-    const rightZ = -Math.sin(camera.yaw);
-    const forwardX = -Math.sin(camera.yaw);
-    const forwardZ = -Math.cos(camera.yaw);
-    camera.target[0] -= rightX * deltaX * scale;
-    camera.target[2] -= rightZ * deltaX * scale;
-    camera.target[0] += forwardX * deltaY * scale;
-    camera.target[2] += forwardZ * deltaY * scale;
-    const halfWidth = state.model.worldWidth * 0.7;
-    const halfDepth = state.model.worldDepth * 0.7;
-    camera.target[0] = clamp(camera.target[0], -halfWidth, halfWidth);
-    camera.target[2] = clamp(camera.target[2], -halfDepth, halfDepth);
-    requestRender();
-  }
-
-  function zoom(factor) {
-    state.camera.distance = clamp(state.camera.distance * factor, state.camera.minDistance, state.camera.maxDistance);
-    requestRender();
-  }
-
-  function installInteractions() {
+  function bindControls() {
     canvas.addEventListener('contextmenu', event => event.preventDefault());
     canvas.addEventListener('pointerdown', event => {
       canvas.setPointerCapture(event.pointerId);
-      state.pointers.set(event.pointerId, {
-        x: event.clientX,
-        y: event.clientY,
-        previousX: event.clientX,
-        previousY: event.clientY,
-        button: event.button,
-        pointerType: event.pointerType,
-      });
+      state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, button: event.button });
+      if (state.pointers.size === 2) {
+        const points = Array.from(state.pointers.values());
+        state.pinch = { distance: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) };
+      }
     });
     canvas.addEventListener('pointermove', event => {
-      const pointer = state.pointers.get(event.pointerId);
-      if (!pointer) return;
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
-      const pointers = [...state.pointers.values()];
-      if (pointers.length === 1) {
-        const dx = pointer.x - pointer.previousX;
-        const dy = pointer.y - pointer.previousY;
-        if (pointer.button === 2 || (event.buttons & 2) === 2) pan(dx, dy);
-        else orbit(dx, dy);
-      } else if (pointers.length >= 2) {
-        const first = pointers[0];
-        const second = pointers[1];
-        const previousDistance = Math.hypot(first.previousX - second.previousX, first.previousY - second.previousY) || 1;
-        const currentDistance = Math.hypot(first.x - second.x, first.y - second.y) || 1;
-        const previousCenterX = (first.previousX + second.previousX) / 2;
-        const previousCenterY = (first.previousY + second.previousY) / 2;
-        const currentCenterX = (first.x + second.x) / 2;
-        const currentCenterY = (first.y + second.y) / 2;
-        zoom(previousDistance / currentDistance);
-        pan(currentCenterX - previousCenterX, currentCenterY - previousCenterY);
+      const previous = state.pointers.get(event.pointerId);
+      if (!previous) return;
+      state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, button: previous.button });
+      if (state.pointers.size >= 2) {
+        const points = Array.from(state.pointers.values());
+        const distance = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+        if (state.pinch && state.pinch.distance > 0) {
+          state.camera.distance = clamp(state.camera.distance * state.pinch.distance / Math.max(distance, 1), state.camera.minDistance, state.camera.maxDistance);
+          state.dirty = true;
+        }
+        state.pinch = { distance };
+        return;
       }
-      for (const item of state.pointers.values()) {
-        item.previousX = item.x;
-        item.previousY = item.y;
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+      if (previous.button === 2 || event.shiftKey) {
+        const scale = state.camera.distance / Math.max(300, canvas.clientHeight);
+        const rightX = Math.cos(state.camera.yaw);
+        const rightZ = -Math.sin(state.camera.yaw);
+        const forwardX = Math.sin(state.camera.yaw);
+        const forwardZ = Math.cos(state.camera.yaw);
+        state.camera.target[0] -= rightX * dx * scale;
+        state.camera.target[2] -= rightZ * dx * scale;
+        state.camera.target[0] += forwardX * dy * scale;
+        state.camera.target[2] += forwardZ * dy * scale;
+      } else {
+        state.camera.yaw -= dx * 0.006;
+        state.camera.pitch = clamp(state.camera.pitch + dy * 0.0045, 0.05, 1.56);
       }
+      state.dirty = true;
     });
-    const release = event => {
+    const releasePointer = event => {
       state.pointers.delete(event.pointerId);
-      try { canvas.releasePointerCapture(event.pointerId); } catch (_) { /* no-op */ }
+      if (state.pointers.size < 2) state.pinch = null;
     };
-    canvas.addEventListener('pointerup', release);
-    canvas.addEventListener('pointercancel', release);
+    canvas.addEventListener('pointerup', releasePointer);
+    canvas.addEventListener('pointercancel', releasePointer);
     canvas.addEventListener('wheel', event => {
       event.preventDefault();
-      zoom(Math.exp(event.deltaY * 0.0011));
+      state.camera.distance = clamp(state.camera.distance * Math.exp(event.deltaY * 0.0011), state.camera.minDistance, state.camera.maxDistance);
+      state.dirty = true;
     }, { passive: false });
 
-    document.querySelectorAll('[data-view]').forEach(button => {
-      button.addEventListener('click', () => applyViewPreset(button.dataset.view));
-    });
-    $('resetView').addEventListener('click', () => applyViewPreset('overview'));
+    document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+    $('resetView').addEventListener('click', () => setView('overview'));
     $('verticalScale').addEventListener('change', event => {
-      state.verticalScale = Number(event.target.value) || 1;
-      requestRender();
+      state.verticalScale = Number(event.target.value);
+      setView(document.querySelector('[data-view].active')?.dataset.view || 'overview');
+      updateQaResult();
+    });
+    $('toggleWater').addEventListener('change', event => {
+      state.waterVisible = event.target.checked;
+      state.dirty = true;
+      updateQaResult();
     });
     $('togglePanel').addEventListener('click', event => {
-      const collapsed = dataPanel.classList.toggle('collapsed');
-      event.currentTarget.textContent = collapsed ? '展开数据' : '收起数据';
-      event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
+      const hidden = viewerShell.classList.toggle('panel-hidden');
+      event.currentTarget.textContent = hidden ? '展开数据' : '收起数据';
+      event.currentTarget.setAttribute('aria-expanded', String(!hidden));
     });
-    $('showFallback').addEventListener('click', () => {
-      if (state.model) renderFallback(state.model);
-    });
-    window.addEventListener('resize', resizeCanvas, { passive: true });
-    if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(viewerShell);
-  }
-
-  function createLandmarkLabels(model) {
-    const layer = document.createElement('div');
-    layer.className = 'landmark-layer';
-    layer.setAttribute('aria-hidden', 'true');
-    viewerShell.appendChild(layer);
-    state.labels = model.landmarkPoints.map(point => {
-      const node = document.createElement('div');
-      node.className = 'landmark-label';
-      node.innerHTML = `<span>${point.name}</span><i></i>`;
-      layer.appendChild(node);
-      return { node, point };
-    });
-  }
-
-  function projectPoint(point) {
-    const matrix = state.viewProjection;
-    const x = point.x;
-    const y = point.y * state.verticalScale;
-    const z = point.z;
-    const clipX = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12];
-    const clipY = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13];
-    const clipW = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
-    if (clipW <= 0) return null;
-    const ndcX = clipX / clipW;
-    const ndcY = clipY / clipW;
-    return {
-      x: (ndcX * 0.5 + 0.5) * canvas.clientWidth,
-      y: (-ndcY * 0.5 + 0.5) * canvas.clientHeight,
-      visible: ndcX > -1.15 && ndcX < 1.15 && ndcY > -1.15 && ndcY < 1.15,
-    };
-  }
-
-  function updateLandmarkLabels() {
-    for (const item of state.labels) {
-      const projected = projectPoint(item.point);
-      if (!projected || !projected.visible) {
-        item.node.hidden = true;
-        continue;
+    $('renderQuality').addEventListener('change', async event => {
+      const quality = Number(event.target.value);
+      event.target.disabled = true;
+      setProgress(92, `构建 ${quality} × ${quality} 实时网格`, '保留 2048 数值高程作为着色与坡面法线来源');
+      loadingCard.hidden = false;
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      try {
+        uploadTerrainIndices(state.gl, quality);
+        loadingCard.hidden = true;
+      } finally {
+        event.target.disabled = false;
       }
-      item.node.hidden = false;
-      item.node.style.transform = `translate(${projected.x}px, ${projected.y}px) translate(-50%, -100%)`;
+    });
+    $('showFallback').addEventListener('click', () => showFallback());
+    window.addEventListener('resize', () => { state.dirty = true; });
+    new ResizeObserver(() => { state.dirty = true; }).observe(viewerShell);
+  }
+
+  function fallbackColor(code, minimum, maximum) {
+    if (code === NODATA_CODE) return [222, 229, 223, 255];
+    const elevation = minimum + code / 65534 * (maximum - minimum);
+    const t = clamp((elevation - minimum) / Math.max(1, maximum - minimum), 0, 1);
+    const stops = [
+      [0, [14, 61, 39]], [0.24, [30, 103, 55]], [0.5, [99, 127, 69]],
+      [0.72, [164, 143, 91]], [0.9, [180, 179, 160]], [1, [235, 233, 222]],
+    ];
+    let left = stops[0];
+    let right = stops[stops.length - 1];
+    for (let index = 0; index < stops.length - 1; index += 1) {
+      if (t >= stops[index][0] && t <= stops[index + 1][0]) { left = stops[index]; right = stops[index + 1]; break; }
     }
+    const local = (t - left[0]) / Math.max(1e-6, right[0] - left[0]);
+    return [0, 1, 2].map(channel => Math.round(left[1][channel] + (right[1][channel] - left[1][channel]) * local)).concat(255);
   }
 
-  function updateCompass() {
-    const arrow = document.querySelector('.compass i');
-    if (arrow) arrow.style.transform = `rotate(${state.camera.yaw}rad)`;
-  }
-
-  function renderFallback(model) {
-    fallbackCanvas.hidden = false;
-    canvas.hidden = true;
-    const rect = fallbackCanvas.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    fallbackCanvas.width = Math.max(2, Math.round(rect.width * dpr));
-    fallbackCanvas.height = Math.max(2, Math.round(rect.height * dpr));
-    const context = fallbackCanvas.getContext('2d');
-    const offscreen = document.createElement('canvas');
-    offscreen.width = model.meshWidth;
-    offscreen.height = model.meshHeight;
-    const offscreenContext = offscreen.getContext('2d');
-    const image = offscreenContext.createImageData(model.meshWidth, model.meshHeight);
-    for (let index = 0; index < model.vertexCount; index += 1) {
-      const pixel = index * 4;
-      const color = index * 3;
-      if (!model.valid[index]) {
-        image.data[pixel + 3] = 0;
-        continue;
+  function buildFallback() {
+    if (state.fallbackReady || !state.codes) return;
+    const size = 768;
+    fallbackCanvas.width = size;
+    fallbackCanvas.height = size;
+    const context = fallbackCanvas.getContext('2d', { alpha: false });
+    const image = context.createImageData(size, size);
+    const [minimum, maximum] = state.terrainManifest.elevation_range_m;
+    for (let row = 0; row < size; row += 1) {
+      const sourceRow = Math.round(row * (EXPECTED_GRID - 1) / (size - 1));
+      for (let column = 0; column < size; column += 1) {
+        const sourceColumn = Math.round(column * (EXPECTED_GRID - 1) / (size - 1));
+        const color = fallbackColor(state.codes[sourceRow * EXPECTED_GRID + sourceColumn], minimum, maximum);
+        const offset = (row * size + column) * 4;
+        image.data[offset] = color[0];
+        image.data[offset + 1] = color[1];
+        image.data[offset + 2] = color[2];
+        image.data[offset + 3] = 255;
       }
-      image.data[pixel] = clamp(Math.round(model.colors[color] * 255), 0, 255);
-      image.data[pixel + 1] = clamp(Math.round(model.colors[color + 1] * 255), 0, 255);
-      image.data[pixel + 2] = clamp(Math.round(model.colors[color + 2] * 255), 0, 255);
-      image.data[pixel + 3] = 255;
     }
-    offscreenContext.putImageData(image, 0, 0);
-    const background = context.createLinearGradient(0, 0, 0, fallbackCanvas.height);
-    background.addColorStop(0, '#dce7e5');
-    background.addColorStop(1, '#eef0e8');
-    context.fillStyle = background;
-    context.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
-    const sourceAspect = model.meshWidth / model.meshHeight;
-    const targetAspect = fallbackCanvas.width / fallbackCanvas.height;
-    let drawWidth;
-    let drawHeight;
-    if (sourceAspect > targetAspect) {
-      drawWidth = fallbackCanvas.width * 0.92;
-      drawHeight = drawWidth / sourceAspect;
-    } else {
-      drawHeight = fallbackCanvas.height * 0.92;
-      drawWidth = drawHeight * sourceAspect;
-    }
-    const x = (fallbackCanvas.width - drawWidth) / 2;
-    const y = (fallbackCanvas.height - drawHeight) / 2;
-    context.imageSmoothingEnabled = true;
-    context.drawImage(offscreen, x, y, drawWidth, drawHeight);
-    errorCard.hidden = true;
-    setErrorStatus('WebGL2 不可用，当前显示数值高程备用俯视图。');
-    errorCard.hidden = true;
-    statusText.textContent = '已打开备用高程预览';
+    context.putImageData(image, 0, 0);
     state.fallbackReady = true;
   }
 
-  function updateMetrics(model) {
-    $('meshGrid').textContent = `${model.meshWidth.toLocaleString()} × ${model.meshHeight.toLocaleString()}`;
-    $('triangleCount').textContent = model.triangleCount.toLocaleString();
-    $('elevationRange').textContent = `${Math.round(model.minElevation).toLocaleString()} 至 ${Math.round(model.maxElevation).toLocaleString()} m`;
-    $('nodataCount').textContent = `${model.hiddenNoDataCells.toLocaleString()} 个透明网格`;
-    renderInfo.textContent = `WebGL2 · ${model.vertexCount.toLocaleString()} 顶点 · 预览步长 ${model.sourceWindow.adaptiveStep}`;
+  function showFallback() {
+    buildFallback();
+    fallbackCanvas.hidden = false;
+    canvas.hidden = true;
+    labelLayer.hidden = true;
+    errorCard.hidden = true;
+    renderInfo.textContent = '二维 2048 数值高程备用预览';
   }
 
-  function finalizeReadyState() {
-    if (document.body.dataset.ready === 'true') return;
-    loadingCard.hidden = true;
-    document.body.dataset.ready = 'true';
-    setReadyStatus('三维 DEM 已载入');
-    const model = state.model;
-    window.__GUILIN_V075_QA__ = Object.freeze({
-      schema: 'guilin-v075-browser-qa/v1',
-      passed: runtimeErrors.length === 0 && !!state.gl && model.triangleCount > 0,
+  function populateMetrics() {
+    const terrain = state.terrainManifest;
+    const water = state.waterManifest;
+    $('sourceGrid').textContent = `${terrain.output_grid[0]} × ${terrain.output_grid[1]}`;
+    $('elevationRange').textContent = `${terrain.elevation_range_m[0].toFixed(0)} 至 ${terrain.elevation_range_m[1].toFixed(0)} m`;
+    $('nodataCount').textContent = `${terrain.nodata_sample_count.toLocaleString()} · ${(terrain.nodata_sample_count / (EXPECTED_GRID * EXPECTED_GRID) * 100).toFixed(2)}%`;
+    const clipped = water.clipped_feature_counts;
+    $('waterFeatures').textContent = (clipped.li + clipped.xiang + clipped.other).toLocaleString();
+    $('waterSegments').textContent = water.emitted_segment_count.toLocaleString();
+    $('waterVertices').textContent = water.vertex_count.toLocaleString();
+    $('waterBreaks').textContent = water.nodata_break_count.toLocaleString();
+  }
+
+  function updateQaResult() {
+    if (!state.terrainManifest || !state.waterManifest) return;
+    const passed =
+      document.body.dataset.ready === 'true' &&
+      runtimeErrors.length === 0 &&
+      state.terrainManifest.output_grid?.[0] === EXPECTED_GRID &&
+      state.terrainManifest.output_grid?.[1] === EXPECTED_GRID &&
+      state.terrainManifest.gap_fill_applied === false &&
+      state.terrainManifest.fallback_30m_used === false &&
+      state.waterManifest.centerline_coordinates_mutated === false &&
+      state.waterVertexCount > 0 && state.validCellCount > 0;
+    window.__GUILIN_V075_QA_RESULT = {
+      schema: 'guilin-v075-2048-hydrology-browser-qa/v1',
+      passed,
       release: document.body.dataset.release,
-      webgl2: !!state.gl,
-      aoi_status: state.aoi.status,
-      aoi_geometry_sha256: state.aoi.geometry_sha256,
-      aoi_bounds_epsg32649: state.aoi.bounds_epsg32649,
-      source_resolution_m: state.manifest.source_resolution_m,
-      source_grid: state.manifest.source_grid,
-      source_preview_grid: [state.manifest.height.width, state.manifest.height.height],
-      source_binary_bytes: state.codes.byteLength,
-      source_binary_exact_bytes: state.codes.byteLength === EXPECTED_SOURCE_BYTES,
-      preview_mesh_grid: [model.meshWidth, model.meshHeight],
-      preview_step: model.sourceWindow.adaptiveStep,
-      valid_vertex_count: model.validVertexCount,
-      triangle_count: model.triangleCount,
-      hidden_nodata_cells: model.hiddenNoDataCells,
-      nodata_policy: model.nodataPolicy,
+      data_ready: document.body.dataset.ready === 'true',
+      aoi_status: state.aoi?.status,
+      aoi_geometry_sha256: state.aoi?.geometry_sha256,
+      source_resolution_m: 12.5,
+      source_grid: state.terrainManifest.output_grid,
+      terrain_height_bytes: state.terrainManifest.stored_bytes,
+      terrain_height_sha256: state.terrainManifest.sha256,
+      render_grid: [state.renderGrid, state.renderGrid],
+      valid_triangle_count: state.validCellCount * 2,
+      water_loaded: state.waterVertexCount > 0,
+      water_visible: state.waterVisible,
+      water_vertex_count: state.waterVertexCount,
+      water_segment_count: state.waterManifest.emitted_segment_count,
+      water_nodata_break_count: state.waterManifest.nodata_break_count,
+      centerline_coordinates_mutated: state.waterManifest.centerline_coordinates_mutated,
       gap_fill_applied: false,
       fallback_30m_used: false,
-      external_runtime_dependency_count: 0,
-      render_origin_elevation_m: model.renderOriginElevation,
-      default_vertical_scale: 1,
+      default_vertical_scale: Number($('verticalScale').value),
+      webgl2: Boolean(state.gl),
+      webgl_renderer: state.gl ? state.gl.getParameter(state.gl.RENDERER) : null,
+      webgl_vendor: state.gl ? state.gl.getParameter(state.gl.VENDOR) : null,
+      max_texture_size: state.gl ? state.gl.getParameter(state.gl.MAX_TEXTURE_SIZE) : 0,
       runtime_errors: [...runtimeErrors],
-    });
-    window.dispatchEvent(new CustomEvent('guilin-v075-ready', { detail: window.__GUILIN_V075_QA__ }));
+    };
   }
 
   async function initialize() {
-    try {
-      setProgress(10, '核对浩哥确认的 AOI', '读取 ACCEPTED 几何与边界');
-      const aoi = await fetchJson(AOI_URL);
-      setProgress(24, '读取数值高程合同', '核对 12.5 米、EPSG:32649 与 NoData');
-      const manifest = await fetchJson(SOURCE_MANIFEST_URL);
-      setProgress(42, '读取真实高程预览网格', '下载 1,136,640 个高程编码');
-      const binary = await fetchBinary(SOURCE_HEIGHT_URL);
-      validateContracts(manifest, aoi, binary);
-      state.aoi = aoi;
-      state.manifest = manifest;
-      setProgress(58, '解码高程', '使用小端 uint16 数值网格');
-      state.codes = decodeCodes(binary);
-      setProgress(72, '裁切确认范围', '生成保留 NoData 的三维网格');
-      state.model = buildTerrainModel(manifest, aoi, state.codes);
-      setProgress(88, '建立 WebGL2 地形', '上传顶点、法线、色阶与三角形');
-      initializeWebGL(state.model);
-      createLandmarkLabels(state.model);
-      updateMetrics(state.model);
-      installInteractions();
-      setProgress(100, '三维 DEM 已完成', '正在显示总览视角');
-      animationLoop();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      runtimeErrors.push(message);
-      console.error(error);
-      setErrorStatus(message);
-      window.__GUILIN_V075_QA__ = Object.freeze({
-        schema: 'guilin-v075-browser-qa/v1',
-        passed: false,
-        release: document.body.dataset.release,
-        runtime_errors: [...runtimeErrors],
-      });
-      if (state.model) renderFallback(state.model);
-    }
+    setProgress(8, '读取确认范围与数据合同', '锁定 33,113.874 km² AOI');
+    const [terrainManifest, waterManifest, aoi] = await Promise.all([
+      fetchJson(TERRAIN_MANIFEST_URL),
+      fetchJson(WATER_MANIFEST_URL),
+      fetchJson(AOI_URL),
+    ]);
+    state.terrainManifest = terrainManifest;
+    state.waterManifest = waterManifest;
+    state.aoi = aoi;
+
+    setProgress(24, '读取 2048 × 2048 数值高程', '8,388,608 字节，NoData 原样保留');
+    const heightBuffer = await fetchBinary(TERRAIN_HEIGHT_URL);
+    setProgress(48, '读取水系采样三角网格', '漓江、湘江与其他河流按中心线贴地');
+    const waterBuffer = await fetchBinary(WATER_BUFFER_URL);
+
+    setProgress(62, '核对高程与水系哈希', '验证真值来源、AOI 和水系中心线合同');
+    const [heightSha, waterSha] = await Promise.all([sha256Hex(heightBuffer), sha256Hex(waterBuffer)]);
+    validateContracts(terrainManifest, waterManifest, aoi, heightBuffer, waterBuffer, heightSha, waterSha);
+    state.codes = decodeUint16(heightBuffer);
+    state.waterFloats = decodeFloat32(waterBuffer);
+    state.worldWidth = terrainManifest.aoi_world_size_m[0];
+    state.worldDepth = terrainManifest.aoi_world_size_m[1];
+    state.renderOriginElevation = terrainManifest.elevation_range_m[0];
+    state.camera.minDistance = Math.max(5000, Math.min(state.worldWidth, state.worldDepth) * 0.03);
+    state.camera.maxDistance = Math.max(state.worldWidth, state.worldDepth) * 5.5;
+
+    setProgress(72, '初始化 WebGL2 地形渲染', '2048 高程纹理参与坡面法线与着色');
+    const gl = canvas.getContext('webgl2', {
+      antialias: true,
+      alpha: false,
+      depth: true,
+      preserveDrawingBuffer: true,
+      powerPreference: 'high-performance',
+    });
+    assert(gl, '当前浏览器无法建立 WebGL2 三维环境');
+    state.gl = gl;
+    setupPrograms(gl);
+    state.heightTexture = createHeightTexture(gl, state.codes);
+    uploadWater(gl, state.waterFloats);
+
+    setProgress(82, `构建 ${state.renderGrid} × ${state.renderGrid} 实时地形`, '三角形按 NoData 保守剔除');
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    uploadTerrainIndices(gl, state.renderGrid);
+    populateMetrics();
+    makeLabels();
+    bindControls();
+    setView('overview');
+    if (window.innerWidth < 600) viewerShell.classList.add('panel-hidden');
+
+    setProgress(100, '2048 高程与水系已就绪', '可以旋转、缩放和切换实时网格');
+    renderLoop();
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    state.dirty = true;
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    const glError = gl.getError();
+    assert(glError === gl.NO_ERROR, `WebGL2 初始绘制错误：${glError}`);
+    loadingCard.hidden = true;
+    document.body.dataset.ready = 'true';
+    setReadyStatus('2048 高程与水系已载入');
+    updateQaResult();
   }
 
-  initialize();
+  initialize().catch(error => {
+    console.error(error);
+    runtimeErrors.push(String(error?.message || error));
+    setErrorStatus(String(error?.message || error));
+    if (state.codes) {
+      buildFallback();
+      fallbackCanvas.hidden = false;
+      canvas.hidden = true;
+      labelLayer.hidden = true;
+    }
+    updateQaResult();
+  });
 })();
