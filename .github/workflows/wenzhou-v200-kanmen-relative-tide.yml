@@ -1,0 +1,194 @@
+name: Wenzhou V200 numeric-only Kanmen relative tide
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v200-17tile-truth-hydrology-rebuild
+    paths:
+      - .github/workflows/wenzhou-v200-kanmen-relative-tide.yml
+      - projects/wenzhou/v200/config/numeric_field_pipeline_v200.json
+      - projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py
+      - projects/wenzhou/v200/docs/NUMERIC_FIELD_PIPELINE_V200.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v200-kanmen-relative-tide
+  cancel-in-progress: false
+
+jobs:
+  build-relative-tide:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip v200 kanmen numeric]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout exact V200 branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+          lfs: false
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate numeric-only contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          python -m py_compile projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py
+          python -m json.tool projects/wenzhou/v200/config/numeric_field_pipeline_v200.json >/dev/null
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path('projects/wenzhou/v200/config/numeric_field_pipeline_v200.json').read_text())
+          assert config['persistentStorage']['intermediatePolicy'] == 'rebuild_then_delete_unless_explicitly_promoted_as_numeric_truth'
+          assert config['runtime']['persistedMeshAllowed'] is False
+          assert config['runtime']['intermediateMeshAllowedInArchive'] is False
+          assert config['kanmenTide']['absoluteWaterLevelUseAllowed'] is False
+          assert config['kanmenTide']['currentDailyPredictionReady'] is False
+          assert config['hardGates']['noOceanPlaneFallback'] is True
+          assert config['hardGates']['noDemNodataAsOcean'] is True
+          PY
+
+      - name: Materialize audited PR49 source series
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_BRANCH='project/wenzhou-v100-bathymetry-tides-hydrology'
+          SOURCE_PATH='projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_MEAN_REMOVED.csv'
+          DEST='/tmp/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_MEAN_REMOVED.csv'
+          git fetch --no-tags origin "$SOURCE_BRANCH"
+          git show "origin/$SOURCE_BRANCH:$SOURCE_PATH" > "$DEST"
+          test "$(stat -c '%s' "$DEST")" = '57661'
+          echo 'ee0ed6d2d230ab81d0551643719e91219af776fcbada4f3f799e238ba6d16ffd  '"$DEST" | sha256sum --check --strict
+          echo "path=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Build compact numeric tide driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          python projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py \
+            --source '${{ steps.source.outputs.path }}'
+          python projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py --verify
+
+      - name: Assert zero persisted mesh artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find \
+            projects/wenzhou/v200/data/tides/kanmen \
+            projects/wenzhou/v200/reports \
+            web/wenzhou-v200-tide-inspector \
+            -type f \( -iname '*.obj' -o -iname '*.fbx' -o -iname '*.glb' -o -iname '*.gltf' -o -iname '*.ply' -o -iname '*.stl' -o -iname '*.mesh' \) \
+            | grep -q .; then
+            echo 'Persisted mesh artifact detected' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          qa = json.loads(Path('projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json').read_text())
+          state = json.loads(Path('projects/wenzhou/v200/reports/WENZHOU_V200_NUMERIC_PIPELINE_STATE.json').read_text())
+          assert qa['passed'] is True
+          assert qa['sampleCount'] == 840
+          assert qa['persistedMeshCount'] == 0
+          assert qa['intermediateMeshCount'] == 0
+          assert qa['absoluteWaterLevelUseAllowed'] is False
+          assert qa['currentDailyPredictionReady'] is False
+          assert state['absoluteTideSurfaceStatus'] == 'blocked_vertical_datum_transform_missing'
+          assert state['currentDatePredictionStatus'] == 'blocked_materialized_fes2022b_output_missing'
+          PY
+
+      - name: Commit generated numeric outputs
+        id: output
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH='project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/v200/data/tides/kanmen \
+            projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_35D_QA.svg \
+            projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json \
+            projects/wenzhou/v200/reports/WENZHOU_V200_NUMERIC_PIPELINE_STATE.json \
+            web/wenzhou-v200-tide-inspector
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'Add verified Kanmen relative tide numbers [skip v200 kanmen numeric]'
+          for attempt in 1 2 3; do
+            git fetch --no-tags origin "$BRANCH"
+            git rebase "origin/$BRANCH"
+            if git push origin "HEAD:$BRANCH"; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify from a fresh clone
+        shell: bash
+        env:
+          OUTPUT_COMMIT: ${{ steps.output.outputs.commit }}
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-v200-kanmen-fresh
+          git clone --depth 1 --branch project/wenzhou-v200-17tile-truth-hydrology-rebuild \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-v200-kanmen-fresh
+          cd /tmp/wenzhou-v200-kanmen-fresh
+          test "$(git rev-parse HEAD)" = "$OUTPUT_COMMIT"
+          python projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py --verify
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          qa = json.loads(Path('projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json').read_text())
+          payload = {
+              'schema': 'kanmen_relative_tide_fresh_clone_verification@1.0.0',
+              'verifiedAtUtc': datetime.now(timezone.utc).isoformat(),
+              'outputCommit': os.environ['OUTPUT_COMMIT'],
+              'freshCloneVerified': True,
+              'sampleCount': qa['sampleCount'],
+              'rangeMillimeters': qa['rangeMillimeters'],
+              'persistedMeshCount': qa['persistedMeshCount'],
+              'intermediateMeshCount': qa['intermediateMeshCount'],
+              'absoluteWaterLevelUseAllowed': qa['absoluteWaterLevelUseAllowed'],
+              'currentDailyPredictionReady': qa['currentDailyPredictionReady'],
+              'qaSha256': hashlib.sha256(Path('projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json').read_bytes()).hexdigest(),
+          }
+          Path('/tmp/KANMEN_RELATIVE_TIDE_FRESH_CLONE_VERIFICATION.json').write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(payload, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Preserve numeric evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v200-kanmen-relative-tide-numeric
+          path: |
+            projects/wenzhou/v200/config/numeric_field_pipeline_v200.json
+            projects/wenzhou/v200/docs/NUMERIC_FIELD_PIPELINE_V200.md
+            projects/wenzhou/v200/data/tides/kanmen/**
+            projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_35D_QA.svg
+            projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json
+            projects/wenzhou/v200/reports/WENZHOU_V200_NUMERIC_PIPELINE_STATE.json
+            web/wenzhou-v200-tide-inspector/index.html
+            /tmp/KANMEN_RELATIVE_TIDE_FRESH_CLONE_VERIFICATION.json
+          if-no-files-found: warn
+          retention-days: 90
