@@ -57,6 +57,21 @@ def wait_ready(page: Page, preset: str, timeout_ms: int = 300_000) -> dict[str, 
     return snapshot(page)
 
 
+def trigger(page: Page, selector: str) -> None:
+    """Dispatch a click without waiting for a long synchronous terrain rebuild handler."""
+    clicked = page.evaluate(
+        """selector => {
+          const element = document.querySelector(selector);
+          if (!element) return false;
+          element.click();
+          return true;
+        }""",
+        selector,
+    )
+    if not clicked:
+        raise RuntimeError(f"missing interactive control: {selector}")
+
+
 def assert_common(state: dict[str, Any], preset: str, mobile: bool = False) -> None:
     qa = state.get("qa") or {}
     if not qa.get("ready") or qa.get("preset") != preset:
@@ -155,32 +170,32 @@ def run(args: argparse.Namespace) -> int:
         page.on("pageerror", lambda exc: page_errors.append(str(exc)))
         page.on("requestfailed", lambda request: request_failures.append({"url": request.url, "method": request.method, "failure": request.failure}))
         try:
-            response = page.goto(f"{args.url}?preset=atlas&qa=1&webgl=1", wait_until="domcontentloaded", timeout=120_000)
+            response = page.goto(f"{args.url}?preset=atlas&qa=2&webgl=1", wait_until="domcontentloaded", timeout=120_000)
             if response is None or response.status != 200:
                 raise RuntimeError(f"desktop HTTP status: {None if response is None else response.status}")
             states["atlasDesktop"] = wait_ready(page, "atlas")
             assert_common(states["atlasDesktop"], "atlas")
             capture(page, output / "atlas-desktop.png")
 
-            page.locator('[data-preset="paddy"]').click()
+            trigger(page, '[data-preset="paddy"]')
             states["paddyDesktop"] = wait_ready(page, "paddy")
             assert_common(states["paddyDesktop"], "paddy")
             assert_paddy(states["paddyDesktop"])
             capture(page, output / "paddy-desktop.png")
 
-            page.locator('[data-preset="cliff"]').click()
+            trigger(page, '[data-preset="cliff"]')
             states["cliffDesktop"] = wait_ready(page, "cliff")
             assert_common(states["cliffDesktop"], "cliff")
             assert_cliff(states["cliffDesktop"])
             capture(page, output / "cliff-desktop.png")
 
-            page.locator('[data-preset="river"]').click()
+            trigger(page, '[data-preset="river"]')
             states["riverDesktop"] = wait_ready(page, "river")
             assert_common(states["riverDesktop"], "river")
             assert_river(states["riverDesktop"])
             capture(page, output / "river-desktop.png")
 
-            page.locator('#truthToggle').click()
+            trigger(page, '#truthToggle')
             page.wait_for_function("window.__terrainV320QA?.ready === true && window.__terrainV320QA?.enhanceMix === 0", timeout=300_000)
             states["truthRollback"] = wait_ready(page, "river")
             if states["truthRollback"]["qa"].get("truthMutationCount") != 0:
@@ -193,7 +208,7 @@ def run(args: argparse.Namespace) -> int:
             mobile.on("console", lambda msg: console.append({"type": msg.type, "text": msg.text}))
             mobile.on("pageerror", lambda exc: page_errors.append(str(exc)))
             mobile.on("requestfailed", lambda request: request_failures.append({"url": request.url, "method": request.method, "failure": request.failure}))
-            response = mobile.goto(f"{args.url}?preset=atlas&qa=1&webgl=1&mobile=1", wait_until="domcontentloaded", timeout=120_000)
+            response = mobile.goto(f"{args.url}?preset=atlas&qa=2&webgl=1&mobile=1", wait_until="domcontentloaded", timeout=120_000)
             if response is None or response.status != 200:
                 raise RuntimeError(f"mobile HTTP status: {None if response is None else response.status}")
             states["atlasMobile"] = wait_ready(mobile, "atlas")
@@ -213,7 +228,7 @@ def run(args: argparse.Namespace) -> int:
     hard_console_errors = [entry for entry in console if entry["type"] == "error"]
     passed = failure is None and not page_errors and not hard_console_errors and not request_failures
     report = {
-        "schema": "guilin-yangshuo-karst-distilled-browser-qa/v3.2.0",
+        "schema": "guilin-yangshuo-karst-distilled-browser-qa/v3.2.1",
         "url": args.url,
         "elapsedSeconds": round(time.time() - started, 3),
         "states": states,
