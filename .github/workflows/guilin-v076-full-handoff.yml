@@ -1,0 +1,389 @@
+name: Guilin v0.7.6 full Codex handoff package
+
+on:
+  push:
+    branches:
+      - project/guilin-v076-hydrology-2048
+    paths:
+      - .github/workflows/guilin-v076-full-handoff.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: guilin-v076-full-handoff
+  cancel-in-progress: false
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      REPOSITORY: haihao0307/guilin-dem-pipeline
+      SOURCE_BRANCH: project/guilin-v076-hydrology-2048
+      FROZEN_BRANCH: project/guilin-v075-approved-aoi-terrain3d-preview
+      FROZEN_COMMIT: 0496a8ad0d9f8fd58965b1461a1288c8462c97c4
+      FROZEN_TAG: guilin-v075-approved-aoi-terrain3d-frozen
+      PACKAGE_NAME: Xiaogui_Guilin_DEM_V076_Full_Codex_Handoff_2026-08-29
+      RAW_TIFF_URL: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+      RAW_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+      RAW_TIFF_BYTES: "124348471"
+      QA_RUN_ID: "33225907299"
+      QA_ARTIFACT_NAME: guilin-v075-2048-hydrology-evidence-33225907299-1
+
+    steps:
+      - name: Checkout exact source branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/guilin-v076-hydrology-2048
+          fetch-depth: 0
+          lfs: false
+
+      - name: Prepare package directories and source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          rm -rf "${root}" /tmp/guilin-pages /tmp/guilin-v076-package
+          mkdir -p \
+            "${root}/00_GUIDE" \
+            "${root}/01_SOURCE_REPOSITORY_LAYOUT" \
+            "${root}/02_PUBLISHED_HTML" \
+            "${root}/03_TRUTH_DATA" \
+            "${root}/04_QA_EVIDENCE" \
+            "${root}/05_HISTORY_AND_RECEIPTS"
+
+          test "$(git branch --show-current)" = "${SOURCE_BRANCH}"
+          source_head="$(git rev-parse HEAD)"
+          source_tree="$(git rev-parse HEAD^{tree})"
+          printf '%s\n' "${source_head}" > "${root}/05_HISTORY_AND_RECEIPTS/source_head.txt"
+          printf '%s\n' "${source_tree}" > "${root}/05_HISTORY_AND_RECEIPTS/source_tree.txt"
+          git status --short > "${root}/05_HISTORY_AND_RECEIPTS/source_worktree_status.txt"
+          test ! -s "${root}/05_HISTORY_AND_RECEIPTS/source_worktree_status.txt"
+          git log --date=iso-strict --pretty=format:'%H%x09%P%x09%ad%x09%an%x09%s' -n 120 \
+            > "${root}/05_HISTORY_AND_RECEIPTS/source_log_120.tsv"
+          git show --stat --summary "${source_head}" \
+            > "${root}/05_HISTORY_AND_RECEIPTS/source_head_summary.txt"
+
+          source_root="${root}/01_SOURCE_REPOSITORY_LAYOUT"
+          mkdir -p "${source_root}/.github/workflows" "${source_root}/projects" "${source_root}/canonical/guilin-dem-12_5m-core"
+          cp .gitattributes "${source_root}/" || true
+          cp .gitignore "${source_root}/" || true
+          cp PROJECT_MANIFEST.json "${source_root}/" || true
+          cp SHA256SUMS.txt "${source_root}/" || true
+          cp .github/workflows/guilin-v075-bootstrap.yml "${source_root}/.github/workflows/"
+          cp .github/workflows/guilin-v076-full-handoff.yml "${source_root}/.github/workflows/"
+          cp -a projects/guilin-v075-approved-aoi-terrain3d-preview \
+            "${source_root}/projects/"
+          cp -a canonical/guilin-dem-12_5m-core/catalog \
+            "${source_root}/canonical/guilin-dem-12_5m-core/"
+          cp -a canonical/guilin-dem-12_5m-core/tools \
+            "${source_root}/canonical/guilin-dem-12_5m-core/"
+          cp canonical/guilin-dem-12_5m-core/README.md \
+            "${source_root}/canonical/guilin-dem-12_5m-core/"
+          cp canonical/guilin-dem-12_5m-core/GIT_LFS_STATUS.md \
+            "${source_root}/canonical/guilin-dem-12_5m-core/"
+
+          git archive --format=tar.gz \
+            --output="${root}/05_HISTORY_AND_RECEIPTS/v075_frozen_selected_source_${FROZEN_COMMIT}.tar.gz" \
+            "${FROZEN_COMMIT}" \
+            .github/workflows/guilin-v075-bootstrap.yml \
+            projects/guilin-v075-approved-aoi-terrain3d-preview
+
+      - name: Capture current published HTML trees
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          git fetch origin gh-pages --depth=1
+          git worktree add --detach /tmp/guilin-pages origin/gh-pages
+          pages_head="$(git -C /tmp/guilin-pages rev-parse HEAD)"
+          pages_tree="$(git -C /tmp/guilin-pages rev-parse HEAD^{tree})"
+          printf '%s\n' "${pages_head}" > "${root}/05_HISTORY_AND_RECEIPTS/gh_pages_head.txt"
+          printf '%s\n' "${pages_tree}" > "${root}/05_HISTORY_AND_RECEIPTS/gh_pages_tree.txt"
+
+          for dir in guilin-current guilin-v076-hydrology-2048 guilin-v075-approved-aoi-terrain3d; do
+            test -s "/tmp/guilin-pages/${dir}/index.html"
+            cp -a "/tmp/guilin-pages/${dir}" "${root}/02_PUBLISHED_HTML/"
+          done
+
+          test "$(wc -c < "${root}/02_PUBLISHED_HTML/guilin-current/data/terrain_2048_u16.bin" | tr -d ' ')" = "8388608"
+          test "$(wc -c < "${root}/02_PUBLISHED_HTML/guilin-v076-hydrology-2048/data/terrain_2048_u16.bin" | tr -d ' ')" = "8388608"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-current/data/hydrology_ribbons.f32.bin"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-v076-hydrology-2048/data/hydrology_ribbons.f32.bin"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-v075-approved-aoi-terrain3d/data/terrain/height_u16.bin"
+
+      - name: Materialize and verify locked 12.5 metre truth TIFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          truth="${root}/03_TRUTH_DATA/guilin_raw_union_12_5m.tif"
+          curl -fL --retry 8 --retry-all-errors --connect-timeout 30 --max-time 2400 \
+            "${RAW_TIFF_URL}" -o "${truth}"
+          test "$(wc -c < "${truth}" | tr -d ' ')" = "${RAW_TIFF_BYTES}"
+          printf '%s  %s\n' "${RAW_TIFF_SHA256}" "${truth}" | sha256sum -c -
+          cat > "${root}/03_TRUTH_DATA/TRUTH_DATA_RECEIPT.txt" <<EOF
+          file=guilin_raw_union_12_5m.tif
+          bytes=${RAW_TIFF_BYTES}
+          sha256=${RAW_TIFF_SHA256}
+          source_release=guilin-v070-raw-mosaic-v001
+          source_url=${RAW_TIFF_URL}
+          crs=EPSG:32649
+          nominal_resolution_m=12.5
+          gap_fill_applied=false
+          fallback_30m_used=false
+          EOF
+
+      - name: Download complete workflow QA evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          mkdir -p "${root}/04_QA_EVIDENCE/workflow_run_${QA_RUN_ID}"
+          gh run view "${QA_RUN_ID}" --repo "${REPOSITORY}" --json \
+            databaseId,name,displayTitle,event,status,conclusion,headBranch,headSha,createdAt,updatedAt,url \
+            > "${root}/04_QA_EVIDENCE/workflow_run_${QA_RUN_ID}/run.json"
+          gh run download "${QA_RUN_ID}" --repo "${REPOSITORY}" \
+            --name "${QA_ARTIFACT_NAME}" \
+            --dir "${root}/04_QA_EVIDENCE/workflow_run_${QA_RUN_ID}/artifact"
+          test -s "${root}/04_QA_EVIDENCE/workflow_run_${QA_RUN_ID}/artifact/public/desktop-1600x1000.png"
+          test -s "${root}/04_QA_EVIDENCE/workflow_run_${QA_RUN_ID}/artifact/public/browser-qa.json"
+          cp "${root}/02_PUBLISHED_HTML/guilin-current/evidence/current-desktop.png" \
+            "${root}/04_QA_EVIDENCE/current_public_desktop.png"
+          cp "${root}/02_PUBLISHED_HTML/guilin-current/evidence/current-mobile.png" \
+            "${root}/04_QA_EVIDENCE/current_public_mobile.png"
+
+      - name: Write Codex handoff documents and machine receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          source_head="$(cat "${root}/05_HISTORY_AND_RECEIPTS/source_head.txt")"
+          pages_head="$(cat "${root}/05_HISTORY_AND_RECEIPTS/gh_pages_head.txt")"
+          python - "${root}" "${source_head}" "${pages_head}" <<'PY'
+          from __future__ import annotations
+          import datetime as dt
+          import hashlib
+          import json
+          from pathlib import Path
+          import sys
+
+          root = Path(sys.argv[1])
+          source_head = sys.argv[2]
+          pages_head = sys.argv[3]
+
+          readme = f"""# 小桂林 桂林 DEM v0.7.6 全量 Codex 交接包
+
+生成日期：2026-08-29
+目标仓库：haihao0307/guilin-dem-pipeline
+当前生产分支：project/guilin-v076-hydrology-2048
+打包源提交：{source_head}
+公开 Pages 提交：{pages_head}
+
+本包保存用户已经确认的桂林裁切范围、当前 2048 数值高程场、水系贴地采样、三维 HTML、冻结的 v0.7.5 回退页、原始 12.5 米联合 TIFF、完整浏览器 QA 证据以及 Codex 推送说明。
+
+优先阅读顺序：
+
+1. 00_GUIDE/01_CODEX_PUSH_TASK_CN.md
+2. 00_GUIDE/02_CURRENT_STATUS_CN.md
+3. 05_HISTORY_AND_RECEIPTS/PACKAGE_RECEIPT.json
+4. 05_HISTORY_AND_RECEIPTS/SHA256SUMS.txt
+
+关键约束：
+
+1. 用户批准范围固定为 33,113.874 平方公里。
+2. WGS84 边界固定为 109.799604E 至 111.302242E，24.462357N 至 26.462927N。
+3. EPSG:32649 边界固定为 W 380331.8，S 2705928.1，E 530128.2，N 2926987.2 米。
+4. 保留 NoData，不做插值填洞，不使用 30 米替代高程。
+5. 冻结 v0.7.5 继续作为视觉回退基线。
+6. 当前数值高程场为 2048 乘 2048。页面实时网格提供 512、768、1024 三档，底层数值场和水系采样保持 2048 乘 2048。
+7. Codex 开始前必须重新核对远端 HEAD，禁止覆盖远端新增提交。
+"""
+          (root / "00_GUIDE/00_READ_ME_FIRST_CN.md").write_text(readme, encoding="utf-8")
+
+          codex = f"""# Codex 推送任务
+
+请在 GitHub 仓库 haihao0307/guilin-dem-pipeline 中执行。
+
+## 一 开始前核对
+
+1. 读取本包 00_GUIDE、05_HISTORY_AND_RECEIPTS 与 01_SOURCE_REPOSITORY_LAYOUT。
+2. 获取远端分支 project/guilin-v076-hydrology-2048 的最新 HEAD。
+3. 本包打包源提交为 {source_head}。远端若已有更新，从远端最新 HEAD 正常快进继续，禁止强推和改写历史。
+4. 保留 project/guilin-v075-approved-aoi-terrain3d-preview、标签 guilin-v075-approved-aoi-terrain3d-frozen，以及公开目录 guilin-v075-approved-aoi-terrain3d。
+5. 禁止修改 main，禁止修改温州、昆明和其他城市项目。
+
+## 二 入库内容
+
+1. 将 01_SOURCE_REPOSITORY_LAYOUT 中的文件按原相对路径同步到当前生产分支。
+2. 将 03_TRUTH_DATA/guilin_raw_union_12_5m.tif 通过 Git LFS 或 Release 资产保存。提交前验证 124348471 bytes 和 SHA256 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4。
+3. 保留源目录 projects/guilin-v075-approved-aoi-terrain3d-preview。这个目录名属于现有运行合同，重命名需要同步修改工作流、测试和发布路径。
+4. 02_PUBLISHED_HTML 仅供逐文件核对和故障恢复。正常发布应由工作流生成，禁止把未经 QA 的手工页面覆盖到 gh-pages。
+
+## 三 必须验证
+
+1. accepted_aoi.json 状态为 ACCEPTED。
+2. AOI geometry SHA256 为 36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80。
+3. terrain_2048_u16.bin 为 8388608 bytes。
+4. terrain_2048_manifest.json 的 output_grid 为 2048 乘 2048，source_resolution_m 为 12.5。
+5. hydrology_ribbons.f32.bin、hydrology_sample_manifest.json 均存在且非空。
+6. gap_fill_applied 为 false，fallback_30m_used 为 false。
+7. 本地桌面和 390 乘 844 移动浏览器 QA 通过。
+8. Pages 发布后，从外部公开地址重新打开并截图，不能只检查仓库文件树。
+
+## 四 公开入口
+
+当前稳定入口：
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-current/index.html
+
+当前版本入口：
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-v076-hydrology-2048/index.html
+
+冻结回退入口：
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-v075-approved-aoi-terrain3d/index.html
+
+## 五 交付回报
+
+请回报远端起始 HEAD、最终提交 SHA、修改文件清单、工作流运行号、Pages 提交 SHA、公开桌面与移动截图、三个公开入口的 HTTP 与浏览器结果。任何门槛失败时保持失败状态，禁止宣告完成。
+"""
+          (root / "00_GUIDE/01_CODEX_PUSH_TASK_CN.md").write_text(codex, encoding="utf-8")
+
+          status = f"""# 当前状态
+
+用户已经批准裁切范围和 v0.7.5 三维总体形态。
+
+当前生产成果包含：
+
+1. 真实 12.5 米联合 DEM 和批准 AOI。
+2. 2048 乘 2048 数值高程场。
+3. OSM 水系中心线裁入、加密采样和贴地水面条带。
+4. NoData 断开规则。
+5. 可旋转、缩放、平移的 WebGL2 HTML。
+6. 桌面与移动浏览器 QA 证据。
+7. 稳定公开入口 guilin-current。
+
+当前需要继续改进的内容：
+
+1. 页面实时几何网格最高档仍为 1024。下一步可采用分块 LOD 或 GPU 位移，让近景观察使用更高几何密度。
+2. 水系来源主要为 OSM 中心线，仍需补充水面多边形、河宽和湖库边界的可信真值层。
+3. 后续 4096 与局部分块必须从 12.5 米真值直接生成，禁止从 2048 结果继续放大冒充新增测绘精度。
+4. 每次发布后都要从外部公开域名实际打开，避免再次交付 404 地址。
+
+打包源提交：{source_head}
+Pages 提交：{pages_head}
+"""
+          (root / "00_GUIDE/02_CURRENT_STATUS_CN.md").write_text(status, encoding="utf-8")
+
+          urls = """GitHub repository
+https://github.com/haihao0307/guilin-dem-pipeline
+
+Stable current HTML
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-current/index.html
+
+Versioned v0.7.6 HTML
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-v076-hydrology-2048/index.html
+
+Frozen v0.7.5 HTML
+https://haihao0307.github.io/guilin-dem-pipeline/guilin-v075-approved-aoi-terrain3d/index.html
+
+ChatGPT hosted reference
+https://guilin-dem-terrain.sunhaihao.chatgpt.site
+
+GAEA proof reference
+https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof
+"""
+          (root / "00_GUIDE/03_PUBLIC_URLS.txt").write_text(urls, encoding="utf-8")
+
+          files = []
+          for path in sorted(p for p in root.rglob("*") if p.is_file()):
+              rel = path.relative_to(root).as_posix()
+              data = path.read_bytes()
+              files.append({
+                  "path": rel,
+                  "bytes": len(data),
+                  "sha256": hashlib.sha256(data).hexdigest(),
+              })
+
+          receipt = {
+              "schema": "xiaogui-guilin-dem-v076-full-codex-handoff/v1",
+              "generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+              "repository": "haihao0307/guilin-dem-pipeline",
+              "source_branch": "project/guilin-v076-hydrology-2048",
+              "source_head": source_head,
+              "pages_head": pages_head,
+              "frozen_commit": "0496a8ad0d9f8fd58965b1461a1288c8462c97c4",
+              "frozen_tag": "guilin-v075-approved-aoi-terrain3d-frozen",
+              "accepted_aoi_area_km2": 33113.874,
+              "accepted_aoi_geometry_sha256": "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80",
+              "terrain_numeric_grid": [2048, 2048],
+              "source_resolution_m": 12.5,
+              "raw_truth_tiff": {
+                  "path": "03_TRUTH_DATA/guilin_raw_union_12_5m.tif",
+                  "bytes": 124348471,
+                  "sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+              },
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+              "qa_run_id": 33225907299,
+              "file_count_before_manifest": len(files),
+          }
+          (root / "05_HISTORY_AND_RECEIPTS/PACKAGE_RECEIPT.json").write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+          )
+
+          files = []
+          for path in sorted(p for p in root.rglob("*") if p.is_file()):
+              rel = path.relative_to(root).as_posix()
+              data = path.read_bytes()
+              files.append({
+                  "path": rel,
+                  "bytes": len(data),
+                  "sha256": hashlib.sha256(data).hexdigest(),
+              })
+          (root / "05_HISTORY_AND_RECEIPTS/FILE_MANIFEST.json").write_text(
+              json.dumps({"files": files}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+          )
+          sums = "".join(f"{item['sha256']}  {item['path']}\n" for item in files)
+          (root / "05_HISTORY_AND_RECEIPTS/SHA256SUMS.txt").write_text(sums, encoding="utf-8")
+          PY
+
+      - name: Validate package and create final ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="/tmp/${PACKAGE_NAME}"
+          test -s "${root}/00_GUIDE/00_READ_ME_FIRST_CN.md"
+          test -s "${root}/00_GUIDE/01_CODEX_PUSH_TASK_CN.md"
+          test -s "${root}/01_SOURCE_REPOSITORY_LAYOUT/projects/guilin-v075-approved-aoi-terrain3d-preview/build_2048_hydrology.py"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-current/index.html"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-v076-hydrology-2048/index.html"
+          test -s "${root}/02_PUBLISHED_HTML/guilin-v075-approved-aoi-terrain3d/index.html"
+          test "$(wc -c < "${root}/03_TRUTH_DATA/guilin_raw_union_12_5m.tif" | tr -d ' ')" = "${RAW_TIFF_BYTES}"
+          printf '%s  %s\n' "${RAW_TIFF_SHA256}" "${root}/03_TRUTH_DATA/guilin_raw_union_12_5m.tif" | sha256sum -c -
+          test -s "${root}/04_QA_EVIDENCE/current_public_desktop.png"
+          test -s "${root}/05_HISTORY_AND_RECEIPTS/FILE_MANIFEST.json"
+          test -s "${root}/05_HISTORY_AND_RECEIPTS/SHA256SUMS.txt"
+
+          mkdir -p /tmp/guilin-v076-package
+          cd /tmp
+          zip -9 -r "/tmp/guilin-v076-package/${PACKAGE_NAME}.zip" "${PACKAGE_NAME}" >/tmp/guilin-v076-package/zip.log
+          sha256sum "/tmp/guilin-v076-package/${PACKAGE_NAME}.zip" \
+            > "/tmp/guilin-v076-package/${PACKAGE_NAME}.zip.sha256"
+          stat -c '%n %s bytes' "/tmp/guilin-v076-package/${PACKAGE_NAME}.zip" \
+            > /tmp/guilin-v076-package/package-size.txt
+          unzip -t "/tmp/guilin-v076-package/${PACKAGE_NAME}.zip" \
+            > /tmp/guilin-v076-package/unzip-test.txt
+
+      - name: Upload full Codex handoff package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xiaogui-Guilin-DEM-V076-Full-Codex-Handoff
+          path: /tmp/guilin-v076-package/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
