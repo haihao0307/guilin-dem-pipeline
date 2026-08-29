@@ -11,7 +11,7 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
-def patch_overview(root: Path) -> None:
+def patch_overview(root: Path, asset_base_url: str) -> None:
     index = root / "overview" / "index.html"
     app = root / "overview" / "app.js"
     html = index.read_text(encoding="utf-8")
@@ -23,10 +23,12 @@ def patch_overview(root: Path) -> None:
 
     js = app.read_text(encoding="utf-8")
     js = js.replace("public_deployment_allowed: false", "public_deployment_allowed: true")
+    js = js.replace("const TERRAIN_HEIGHT_URL = 'data/terrain_2048_u16.bin';", f"const TERRAIN_HEIGHT_URL = '{asset_base_url}/terrain_2048_u16.bin';")
+    js = js.replace("const WATER_BUFFER_URL = 'data/hydrology_ribbons.f32.bin';", f"const WATER_BUFFER_URL = '{asset_base_url}/hydrology_ribbons.f32.bin';")
     app.write_text(js, encoding="utf-8")
 
 
-def patch_native(root: Path) -> None:
+def patch_native(root: Path, asset_base_url: str) -> None:
     index = root / "native" / "index.html"
     app = root / "native" / "app.js"
     styles = root / "native" / "styles.css"
@@ -55,6 +57,14 @@ def patch_native(root: Path) -> None:
     js = app.read_text(encoding="utf-8")
     js = js.replace("const NATIVE_WINDOW = 512;", "const NATIVE_WINDOW = 768;")
     js = js.replace("public_deployment_allowed: false", "public_deployment_allowed: true")
+    js = js.replace("const buffer = await fetchBinary(`data/${tile.file}`);", "const buffer = await fetchBinary(tile.file.startsWith('http') ? tile.file : `data/${tile.file}`);")
+
+    manifest_path = root / "native" / "data" / "native_lod_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    for tile in manifest.get("tiles", []):
+        tile["file"] = f"{asset_base_url}/{Path(tile['file']).name}"
+    manifest["online_asset_base_url"] = asset_base_url
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     old_load_tail = '''    state.currentTile = tile;
     state.codes = cache.codes;
@@ -141,7 +151,7 @@ def patch_native(root: Path) -> None:
     styles.write_text(css, encoding="utf-8")
 
 
-def write_version(root: Path, head: str, run_id: str) -> None:
+def write_version(root: Path, head: str, run_id: str, asset_base_url: str) -> None:
     manifest = {
         "schema": "guilin-v079-online-3d/v1",
         "status": "online-interactive-candidate",
@@ -150,6 +160,7 @@ def write_version(root: Path, head: str, run_id: str) -> None:
         "overview": "overview/index.html",
         "native_12_5m": "native/index.html",
         "native_tile_count": 54,
+        "asset_base_url": asset_base_url,
         "lake_assets": 0,
         "visualAcceptance": False,
         "productionReady": False,
@@ -162,10 +173,11 @@ def main() -> int:
     parser.add_argument("--site-root", type=Path, required=True)
     parser.add_argument("--head", default="unknown")
     parser.add_argument("--run-id", default="unknown")
+    parser.add_argument("--asset-base-url", required=True)
     args = parser.parse_args()
-    patch_overview(args.site_root)
-    patch_native(args.site_root)
-    write_version(args.site_root, args.head, args.run_id)
+    patch_overview(args.site_root, args.asset_base_url)
+    patch_native(args.site_root, args.asset_base_url)
+    write_version(args.site_root, args.head, args.run_id, args.asset_base_url)
     return 0
 
 
