@@ -1,11 +1,13 @@
-/* v3.2.3 watertight river carve, restrained surface colour and review cameras. */
+/* v3.2.4 controlled river cross-section, restrained surface colour and review cameras. */
 carveRiverSampleV322=function(base,nearest,edge=1){
   if(!nearest)return{height:base,q:Infinity,clearance:0};
   const q=nearest.distance/(nearest.section.width*.5),bankBlend=q<=1?1:1-smoothstep(1,1.22,q);
   if(bankBlend<=0)return{height:base,q,clearance:0};
   const channel=clamp(1-q,0,1),clearance=.42+3.18*Math.pow(channel,1.32),target=nearest.section.water-clearance;
   const strength=state.enhanceMix*state.river*bankBlend;
-  const height=q<=1&&state.enhanceMix>0?Math.min(base,target):lerp(base,Math.min(base,target),strength);
+  const deepestAllowed=nearest.section.water-3.6;
+  const controlledBed=Math.max(deepestAllowed,Math.min(base,target));
+  const height=q<=1&&state.enhanceMix>0?controlledBed:lerp(base,Math.min(base,target),strength);
   return{height,q,clearance};
 };
 
