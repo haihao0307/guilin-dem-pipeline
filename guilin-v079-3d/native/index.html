@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN" data-build="guilin-v079-native-lod-online-viewer">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23081115%27/%3E%3Cpath d=%27M4 26 12 9l5 9 4-7 7 15Z%27 fill=%27%23b7e0bb%27/%3E%3C/svg%3E">
+  <title>桂林 V0.7.9 在线原生 12.5 米地形</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="viewerShell" class="viewer-shell">
+    <canvas id="terrainCanvas" aria-label="桂林原生 12.5 米高程地形"></canvas>
+    <div id="labelLayer" class="label-layer" aria-hidden="true"></div>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">小桂林 · DEM 真值线</p>
+        <h1>桂林 V0.7.9 在线原生 12.5 米地形</h1>
+      </div>
+      <div class="topbar-badges">
+        <span class="badge badge-truth">原生像元</span>
+        <span class="badge badge-local">在线 WebGL2</span>
+      </div>
+    </header>
+
+    <button id="togglePanel" class="panel-toggle" type="button" aria-expanded="true" aria-controls="controlPanel">参数</button>
+
+    <aside id="controlPanel" class="control-panel">
+      <section class="panel-section">
+        <p class="section-kicker">地标镜头</p>
+        <div class="button-grid" id="anchorButtons">
+          <button type="button" data-anchor="zhenbaoding">真寶鼎</button>
+          <button type="button" data-anchor="guilin">桂林城</button>
+          <button type="button" data-anchor="yangtang">秧塘機場</button>
+          <button type="button" data-anchor="yangshuo">陽朔縣</button>
+        </div>
+      </section>
+
+
+      <section class="panel-section">
+        <p class="section-kicker">全域原生瓦片</p>
+        <label class="field-label" for="tileSelector">选择 9 × 6 瓦片</label>
+        <select id="tileSelector" aria-label="选择桂林原生地形瓦片"></select>
+        <p class="microcopy">每块文件保持 2048 × 2048 原生高程。切换瓦片后可继续旋转、平移和缩放。</p>
+      </section>
+
+      <section class="panel-section">
+        <p class="section-kicker">查看尺度</p>
+        <div class="segmented" role="group" aria-label="查看尺度">
+          <button id="overviewMode" type="button" data-mode="overview" class="active">整块 25.6 km</button>
+          <button id="nativeMode" type="button" data-mode="native">原生近景 9.6 km</button>
+        </div>
+        <label class="field-label" for="overviewQuality">整块绘制网格</label>
+        <select id="overviewQuality">
+          <option value="512" selected>512 × 512</option>
+          <option value="768">768 × 768</option>
+          <option value="1024">1024 × 1024</option>
+        </select>
+        <p class="microcopy">原生近景固定为 768 × 768，每个顶点对应一个真实 12.5 米源像元。整块模式可检查当前 25.6 公里瓦片。</p>
+      </section>
+
+      <section class="panel-section actions">
+        <button id="resetCamera" type="button" class="primary">回到当前范围</button>
+        <button id="toggleLabels" type="button">隐藏地标</button>
+      </section>
+
+      <section class="panel-section data-panel" id="dataPanel">
+        <p class="section-kicker">当前真值</p>
+        <dl>
+          <div><dt>瓦片</dt><dd id="tileId">加载中</dd></div>
+          <div><dt>数据范围</dt><dd id="tileRange">加载中</dd></div>
+          <div><dt>海拔</dt><dd id="elevationRange">加载中</dd></div>
+          <div><dt>源像元</dt><dd>12.5 m × 12.5 m</dd></div>
+          <div><dt>当前顶点间距</dt><dd id="vertexSpacing">加载中</dd></div>
+          <div><dt>垂直比例</dt><dd>1.00</dd></div>
+          <div><dt>重采样</dt><dd>无</dd></div>
+          <div><dt>补洞</dt><dd>关闭</dd></div>
+          <div><dt>30 米替代</dt><dd>关闭</dd></div>
+        </dl>
+      </section>
+    </aside>
+
+    <div id="loadingCard" class="loading-card" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <div><strong>正在核验原生瓦片</strong><span id="loadingDetail">读取清单与 SHA256</span></div>
+    </div>
+
+    <div id="errorCard" class="error-card" hidden>
+      <strong>原生瓦片加载失败</strong>
+      <span id="errorMessage"></span>
+    </div>
+
+    <footer class="statusbar">
+      <span id="renderInfo">等待 WebGL2</span>
+      <span class="status-separator">·</span>
+      <span>左键旋转</span>
+      <span>Shift 拖动平移</span>
+      <span>滚轮缩放</span>
+    </footer>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>
