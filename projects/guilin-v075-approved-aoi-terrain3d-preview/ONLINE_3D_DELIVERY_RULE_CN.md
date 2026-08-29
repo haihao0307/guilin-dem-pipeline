@@ -15,3 +15,11 @@
 https://haihao0307.github.io/guilin-dem-pipeline/guilin-v079-3d/
 
 当前通过的公开浏览器验收运行：33243830758
+
+当前门禁：
+
+```text
+publicReviewDeployment=true
+visualAcceptance=false
+productionReady=false
+```
