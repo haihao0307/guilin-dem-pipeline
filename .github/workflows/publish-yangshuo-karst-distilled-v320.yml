@@ -1,0 +1,268 @@
+name: Publish Yangshuo karst distilled graph v3.2
+
+on:
+  push:
+    branches:
+      - skill/dem-procedural-landscape-v010
+    paths:
+      - .github/workflows/publish-yangshuo-karst-distilled-v320.yml
+      - web/yangshuo-karst-distilled-v320/**
+      - projects/guilin/config/yangshuo_karst_distilled_v320.json
+      - skills/dem-procedural-landscape/branches/terrain-geomorphology/GUILIN_MULTI_FIELD_GEOMORPHOLOGY_V320.md
+      - tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-yangshuo-karst-distilled-v320
+  cancel-in-progress: false
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-karst-distilled-v320/
+  TARGET_DIR: yangshuo-karst-distilled-v320
+
+jobs:
+  publish:
+    name: Validate and publish Guilin multi-field terrain graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact production branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate graph contract and source syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          required_files = [
+              Path('web/yangshuo-karst-distilled-v320/index.html'),
+              Path('web/yangshuo-karst-distilled-v320/app.js'),
+              *[Path(f'web/yangshuo-karst-distilled-v320/app.part{i}.js') for i in range(1, 7)],
+              Path('projects/guilin/config/yangshuo_karst_distilled_v320.json'),
+              Path('skills/dem-procedural-landscape/branches/terrain-geomorphology/GUILIN_MULTI_FIELD_GEOMORPHOLOGY_V320.md'),
+              Path('tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py'),
+          ]
+          for path in required_files:
+              if not path.is_file() or path.stat().st_size < 100:
+                  raise SystemExit(f'missing or empty required file: {path}')
+
+          html = required_files[0].read_text(encoding='utf-8')
+          app = required_files[1].read_text(encoding='utf-8')
+          runtime = ''.join(Path(f'web/yangshuo-karst-distilled-v320/app.part{i}.js').read_text(encoding='utf-8') for i in range(1, 7))
+          markers = [
+              'XIAOWANG · GUILIN KARST DISTILLED GRAPH v3.2',
+              '20.48 km 区域层',
+              '512 m 局部 1 米层',
+          ]
+          for marker in markers:
+              if marker not in html:
+                  raise SystemExit(f'missing HTML marker: {marker}')
+
+          app_markers = [
+              'app.part1.js',
+              'AsyncFunction',
+              "import * as THREE from 'three/webgpu'",
+          ]
+          for marker in app_markers:
+              if marker not in app:
+                  raise SystemExit(f'missing loader marker: {marker}')
+
+          runtime_markers = [
+              "const REGIONAL_EXTENT = 20480",
+              "const CONTEXT_EXTENT = 6400",
+              "const DETAIL_EXTENT = 512",
+              "const RIVER_SAMPLE_METERS = 4",
+              "riverGeometry:'multi-cross-section-water-surface'",
+              'truthMutationCount:0',
+              'vegetationInstances:0',
+              'function peakEnvelopeAt',
+              'function paddyDetail',
+              'function prepareRiverSections',
+          ]
+          for marker in runtime_markers:
+              if marker not in runtime:
+                  raise SystemExit(f'missing runtime marker: {marker}')
+          if 'TubeGeometry' in runtime:
+              raise SystemExit('TubeGeometry is forbidden')
+
+          config = json.loads(Path('projects/guilin/config/yangshuo_karst_distilled_v320.json').read_text(encoding='utf-8'))
+          if config['truth']['sha256'] != '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4':
+              raise SystemExit('truth SHA mismatch')
+          if config['referenceContract']['sourceSha256'] != 'b1711f4c3c119e6a0620b6a06561cb2eab4c1823e251b52d8153b47d4674f7bd':
+              raise SystemExit('reference SHA mismatch')
+          if config['referenceContract']['imageEmbeddedInPublicBuild'] is not False:
+              raise SystemExit('gold reference image must not be embedded')
+          if config['truth']['truthOverwrite'] is not False:
+              raise SystemExit('truthOverwrite must remain false')
+          if config['scaleGraph']['local']['desktopSpacingMeters'] != 1.0:
+              raise SystemExit('desktop local grid must remain 1 metre')
+          if config['vegetation']['instanceCountRequired'] != 0:
+              raise SystemExit('vegetation must remain outside this build')
+          river = next(item for item in config['operatorGraph'] if item['stage'] == 'river-geomorphology')
+          if river['geometryType'] != 'multi-cross-section-water-surface' or river['tubeGeometryAllowed'] is not False:
+              raise SystemExit('river geometry contract mismatch')
+          PY
+          node --check web/yangshuo-karst-distilled-v320/app.js
+          cat web/yangshuo-karst-distilled-v320/app.part*.js > /tmp/yangshuo-karst-v320-runtime.mjs
+          node --check /tmp/yangshuo-karst-v320-runtime.mjs
+          python -m py_compile tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py
+
+      - name: Stage public website on gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf "$RUNNER_TEMP/pages"
+          git worktree add --detach "$RUNNER_TEMP/pages" origin/gh-pages
+          target="$RUNNER_TEMP/pages/$TARGET_DIR"
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -a web/yangshuo-karst-distilled-v320/. "$target/"
+          cp projects/guilin/config/yangshuo_karst_distilled_v320.json "$target/contract.json"
+          cp skills/dem-procedural-landscape/branches/terrain-geomorphology/GUILIN_MULTI_FIELD_GEOMORPHOLOGY_V320.md "$target/graph.md"
+          cat > "$target/build.json" <<JSON
+          {
+            "schema": "guilin-yangshuo-karst-distilled-public-build/v3.2.0",
+            "sourceBranch": "skill/dem-procedural-landscape-v010",
+            "sourceCommit": "${GITHUB_SHA}",
+            "truthSha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+            "referenceSha256": "b1711f4c3c119e6a0620b6a06561cb2eab4c1823e251b52d8153b47d4674f7bd",
+            "referenceImageEmbedded": false,
+            "regionalExtentMeters": 20480,
+            "contextExtentMeters": 6400,
+            "localExtentMeters": 512,
+            "desktopLocalSpacingMeters": 1.0,
+            "truthMutationCount": 0,
+            "vegetationInstances": 0,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          touch "$RUNNER_TEMP/pages/.nojekyll"
+
+      - name: Commit and push public website
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/pages"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_DIR" .nojekyll
+          if git diff --cached --quiet; then
+            echo 'Public website already matches this build.'
+            exit 0
+          fi
+          git commit -m "Publish Guilin karst distilled graph v3.2"
+          for attempt in 1 2 3 4; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+          echo 'Unable to fast-forward gh-pages after four attempts.' >&2
+          exit 1
+
+  browser-qa:
+    name: Online desktop and mobile morphology QA
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact production branch head
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Chromium QA dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for exact public build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/public-v320"
+          ready=false
+          for attempt in $(seq 1 120); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}?verify=${nonce}" -o "$RUNNER_TEMP/public-v320/index.html" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}app.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v320/app.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}app.part5.js?verify=${nonce}" -o "$RUNNER_TEMP/public-v320/app.part5.js" \
+              && curl --fail --silent --show-error -H 'Cache-Control: no-cache' \
+                 "${PUBLIC_URL}build.json?verify=${nonce}" -o "$RUNNER_TEMP/public-v320/build.json"; then
+              if grep -Fq 'XIAOWANG · GUILIN KARST DISTILLED GRAPH v3.2' "$RUNNER_TEMP/public-v320/index.html" \
+                && grep -Fq "\"sourceCommit\": \"${GITHUB_SHA}\"" "$RUNNER_TEMP/public-v320/build.json" \
+                && grep -Fq 'app.part1.js' "$RUNNER_TEMP/public-v320/app.js" \
+                && grep -Fq "riverGeometry:'multi-cross-section-water-surface'" "$RUNNER_TEMP/public-v320/app.part5.js"; then
+                ready=true
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" = true
+
+      - name: Run real online Chromium QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py \
+            --url "$PUBLIC_URL" \
+            --output reports/yangshuo-karst-distilled-v320-browser
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: yangshuo-karst-distilled-v320-browser-${{ github.sha }}
+          path: reports/yangshuo-karst-distilled-v320-browser/**
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '## Guilin Yangshuo karst distilled graph v3.2'
+            echo
+            echo "Public URL: ${PUBLIC_URL}"
+            echo
+            if [ -f reports/yangshuo-karst-distilled-v320-browser/report.json ]; then
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('reports/yangshuo-karst-distilled-v320-browser/report.json').read_text(encoding='utf-8'))
+          print(f"Browser QA passed: {report.get('passed')}")
+          print(f"Failure: {report.get('failure')}")
+          for key, state in report.get('states', {}).items():
+              qa = state.get('qa', {}) if isinstance(state, dict) else {}
+              if qa:
+                  print(f"{key}: peaks={qa.get('detectedPeakCount')} ratio={qa.get('heightFootprintRatioRange')} valleyMacro={qa.get('valleyMeanMacroAbsMeters')} riverVertices={qa.get('riverVertexCount')}")
+          PY
+            else
+              echo 'Browser QA report was not produced.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
