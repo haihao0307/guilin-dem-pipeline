@@ -71,10 +71,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- projects/wenzhou/v200/data/hydrology/osm_water_polygons projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_ACQUISITION.json projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_QA.json
           git commit -m 'Add verified V200 OSM water polygons [skip v200 water polygons]'
-          git reset --hard HEAD
-          git clean -fd
-          git fetch origin "$BRANCH"
-          git rebase "origin/$BRANCH"
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git push origin "HEAD:$BRANCH"
 
@@ -103,10 +99,6 @@ jobs:
           PY
           git add -- projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_RECEIPT.json
           git commit -m 'Record V200 OSM water polygon receipt [skip v200 water polygons]'
-          git reset --hard HEAD
-          git clean -fd
-          git fetch origin "$BRANCH"
-          git rebase "origin/$BRANCH"
           git push origin "HEAD:$BRANCH"
 
       - name: Preserve evidence
