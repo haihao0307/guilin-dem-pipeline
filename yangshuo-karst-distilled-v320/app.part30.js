@@ -1,24 +1,17 @@
 /* v3.5.1 paddy visual compiler: clean parcel albedo, wider normal filtering and a safe oblique review camera. */
 
+const PADDY_STAGES_V351=[new THREE.Color(0x4d5b36),new THREE.Color(0x5b6a3b),new THREE.Color(0x6b7840),new THREE.Color(0x7d7546)];
+const PADDY_WET_V351=new THREE.Color(0x596c60),PADDY_BUND_V351=new THREE.Color(0x4b4234),PADDY_CHANNEL_V351=new THREE.Color(0x405a55),PADDY_GROUND_A_V351=new THREE.Color(0x5a5b3f),PADDY_GROUND_B_V351=new THREE.Color(0x485a3d),PADDY_GROUND_C_V351=new THREE.Color(0x665b43);
+const PADDY_STAGE_SCRATCH_V351=new THREE.Color(),PADDY_GROUND_SCRATCH_V351=new THREE.Color();
 function paddyParcelColourV351(field,index,worldX,worldY,slopeDeg){
   const mask=clamp(field.paddyMask?.[index]??field.paddy?.[index]??0,0,1),valley=clamp(field.valley?.[index]||0,0,1),frame=parcelFrameV348(worldX,worldY,601,1),broad=fbm(worldX*.00082,worldY*.00082,6901,4);
-  const stages=[
-    new THREE.Color(0x4d5b36),
-    new THREE.Color(0x5b6a3b),
-    new THREE.Color(0x6b7840),
-    new THREE.Color(0x7d7546)
-  ];
-  const stageIndex=Math.min(3,Math.floor(frame.fieldSeed*4)),stage=stages[stageIndex].clone();
+  const stageIndex=Math.min(3,Math.floor(frame.fieldSeed*4)),stage=PADDY_STAGE_SCRATCH_V351.copy(PADDY_STAGES_V351[stageIndex]);
   stage.offsetHSL(0,broad*.002,broad*.018);
   const wet=clamp(frame.wetness*.16*mask,0,.16),boundary=clamp(frame.boundary*.68*mask,0,.68),channel=clamp(frame.irrigation*.72*mask,0,.72);
-  stage.lerp(new THREE.Color(0x596c60),wet);
-  stage.lerp(new THREE.Color(0x4b4234),boundary);
-  stage.lerp(new THREE.Color(0x405a55),channel);
-  const ground=new THREE.Color(0x5a5b3f).lerp(new THREE.Color(0x485a3d),valley*.38).lerp(new THREE.Color(0x665b43),smoothstep(5,16,slopeDeg)*.35);
-  const colour=ground.lerp(stage,mask*.96);
+  stage.lerp(PADDY_WET_V351,wet);stage.lerp(PADDY_BUND_V351,boundary);stage.lerp(PADDY_CHANNEL_V351,channel);
+  const colour=PADDY_GROUND_SCRATCH_V351.copy(PADDY_GROUND_A_V351).lerp(PADDY_GROUND_B_V351,valley*.38).lerp(PADDY_GROUND_C_V351,smoothstep(5,16,slopeDeg)*.35).lerp(stage,mask*.96);
   const parcelInterior=clamp((1-frame.boundary)*(1-frame.irrigation)*mask,0,1),furrowPhase=.5+.5*Math.sin((frame.u/frame.widthU*6.0+frame.v/frame.widthV*.35)*Math.PI*2);
-  colour.offsetHSL(0,0,(furrowPhase-.5)*.012*parcelInterior);
-  return colour;
+  colour.offsetHSL(0,0,(furrowPhase-.5)*.012*parcelInterior);return colour;
 }
 
 const terrainColourV351Base=terrainColourRichV330;
