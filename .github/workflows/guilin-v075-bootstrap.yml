@@ -44,25 +44,35 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "${EVIDENCE_DIR}"
+          exec > >(tee -a "${EVIDENCE_DIR}/materialize.log") 2>&1
+          set -x
           test "${GITHUB_REF_NAME}" = "project/guilin-v075-approved-aoi-terrain3d-preview"
           test "${GITHUB_SHA}" = "$(git rev-parse HEAD)"
           shopt -s nullglob
           parts=("${PROJECT_DIR}"/bootstrap_v2048_xz.part-*)
           if ((${#parts[@]} > 0)); then
+            printf 'payload parts: %s\n' "${#parts[@]}"
+            printf '%s\n' "${parts[@]}" | tee "${EVIDENCE_DIR}/payload-parts.txt"
             test "${#parts[@]}" = "15"
             cat "${parts[@]}" | base64 --decode > /tmp/v075-source.tar.xz
             test "$(wc -c < /tmp/v075-source.tar.xz | tr -d ' ')" = "25572"
             printf '%s  %s\n' "5a331ce9fcb9c1a2c9f7d7000119108a4db4239835ec28bf70daf475e828f500" /tmp/v075-source.tar.xz | sha256sum -c -
+            tar -tvJf /tmp/v075-source.tar.xz | tee "${EVIDENCE_DIR}/payload-members.txt"
             tar -xJf /tmp/v075-source.tar.xz -C "${PROJECT_DIR}"
+            find "${PROJECT_DIR}" -maxdepth 3 -type f -printf '%P %s\n' | sort | tee "${EVIDENCE_DIR}/materialized-files.txt"
             rm -f "${parts[@]}"
             test -s "${PROJECT_DIR}/build_2048_hydrology.py"
             test -s "${PROJECT_DIR}/tests/validate_2048.py"
             test -s "${PROJECT_DIR}/web/app.js"
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add "${PROJECT_DIR}"
-            git commit -m "feat(v075): materialize accepted AOI 2048 hydrology source"
-            git push origin HEAD:project/guilin-v075-approved-aoi-terrain3d-preview
+            git add -A "${PROJECT_DIR}"
+            git status --short | tee "${EVIDENCE_DIR}/git-status.txt"
+            if ! git diff --cached --quiet; then
+              git commit -m "feat(v075): materialize accepted AOI 2048 hydrology source"
+              git push origin HEAD:project/guilin-v075-approved-aoi-terrain3d-preview
+            fi
           fi
           test -s "${PROJECT_DIR}/build_2048_hydrology.py"
           test -s "${PROJECT_DIR}/sources/osm_hydrology.geojson"
