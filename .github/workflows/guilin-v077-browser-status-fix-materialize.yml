@@ -1,0 +1,55 @@
+name: Guilin V077 materialize browser status timing fix
+
+on:
+  push:
+    branches:
+      - project/guilin-v077-native-12p5m-lod-foundation
+    paths:
+      - .github/workflows/guilin-v077-browser-status-fix-materialize.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v077-browser-status-fix-materialize
+  cancel-in-progress: false
+
+jobs:
+  apply-status-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize QA state with rendered status
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/app.js")
+          text = path.read_text(encoding="utf-8")
+          old = "  function updateQaResult() {\n    const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;"
+          new = "  function updateQaResult() {\n    if (state.currentTile) updateRenderInfo();\n    const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;"
+          if new not in text:
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f"Expected one updateQaResult match, found {count}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
+          node --check projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/app.js
+          git diff --check
+
+      - name: Commit reviewed status timing fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/app.js
+          git diff --cached --quiet && { echo "Status timing fix already present"; exit 0; }
+          git commit -m "fix(v077): synchronize QA render status"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
