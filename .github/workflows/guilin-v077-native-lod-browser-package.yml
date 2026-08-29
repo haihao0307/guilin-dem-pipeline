@@ -1,0 +1,271 @@
+name: Guilin V077 native LOD browser package
+
+on:
+  push:
+    branches:
+      - project/guilin-v077-native-12p5m-lod-foundation
+    paths:
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/viewer_source_v1.b64.part-*
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/**
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_package/**
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/tests/browser_native_lod_cdp.py
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/browser_materialization_complete_v077.json
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/build_native_lod_tiles.py
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/tests/validate_native_lod.py
+      - projects/guilin-v075-approved-aoi-terrain3d-preview/config/native_lod_v077.json
+      - .github/workflows/guilin-v077-native-lod-browser-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v077-native-lod-browser-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-browser-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PROJECT_DIR: projects/guilin-v075-approved-aoi-terrain3d-preview
+      CACHE_DIR: .cache/guilin-v077-browser
+      BUILD_DIR: out/guilin-v077-native-lod
+      PACKAGE_DIR: out/guilin-v077-native-lod-browser
+      PAYLOAD_B64_BYTES: '23856'
+      PAYLOAD_B64_SHA256: 1ced9b70fe8b021531eb4905f075ee06e9b6b2807c7de3e253a4a22ec7a6b6ad
+      PAYLOAD_XZ_BYTES: '17892'
+      PAYLOAD_XZ_SHA256: 93603e8c86047360ff77a159eb81428c08abc8048f5ac815906da3aa4031f539
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize reviewed browser source payload
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          parts=("$PROJECT_DIR"/viewer_source_v1.b64.part-*)
+          if [[ ${#parts[@]} -eq 0 ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Browser source is already materialized."
+            exit 0
+          fi
+          if [[ ${#parts[@]} -ne 8 ]]; then
+            echo "Expected 8 payload parts, found ${#parts[@]}" >&2
+            exit 1
+          fi
+          cat "${parts[@]}" > /tmp/guilin-v077-viewer.b64
+          test "$(stat -c '%s' /tmp/guilin-v077-viewer.b64)" = "$PAYLOAD_B64_BYTES"
+          echo "$PAYLOAD_B64_SHA256  /tmp/guilin-v077-viewer.b64" | sha256sum -c -
+          base64 --decode /tmp/guilin-v077-viewer.b64 > /tmp/guilin-v077-viewer.tar.xz
+          test "$(stat -c '%s' /tmp/guilin-v077-viewer.tar.xz)" = "$PAYLOAD_XZ_BYTES"
+          echo "$PAYLOAD_XZ_SHA256  /tmp/guilin-v077-viewer.tar.xz" | sha256sum -c -
+          if tar -tJf /tmp/guilin-v077-viewer.tar.xz | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
+            echo "Unsafe payload path detected" >&2
+            exit 1
+          fi
+          tar -xJf /tmp/guilin-v077-viewer.tar.xz -C "$PROJECT_DIR"
+          rm -f "${parts[@]}"
+          python3 - \
+            "$PROJECT_DIR/native_lod_package/open_native_lod_viewer.py" \
+            "$PROJECT_DIR/tests/browser_native_lod_cdp.py" <<'PY'
+          from pathlib import Path
+          import sys
+          for value in sys.argv[1:]:
+              path = Path(value)
+              compile(path.read_text(encoding="utf-8"), str(path), "exec")
+          PY
+          node --check "$PROJECT_DIR/native_lod_viewer/app.js"
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add "$PROJECT_DIR"
+          git commit -m "feat(v077): materialize native LOD browser source"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install raster, browser QA, and CJK font dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check \
+            numpy==2.1.3 \
+            rasterio==1.4.3 \
+            requests==2.32.4 \
+            websocket-client==1.8.0 \
+            Pillow==11.1.0
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          command -v google-chrome || command -v chromium || command -v chromium-browser
+          fc-match "Noto Sans CJK SC"
+
+      - name: Download and verify locked 12.5 m truth TIFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$CACHE_DIR"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+          test "$(stat -c '%s' "$CACHE_DIR/guilin_raw_union_12_5m.tif")" = "124348471"
+          echo "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4  $CACHE_DIR/guilin_raw_union_12_5m.tif" | sha256sum -c -
+
+      - name: Build native anchor and seam-probe tiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$BUILD_DIR" "$PACKAGE_DIR"
+          mkdir -p "$BUILD_DIR" "$PACKAGE_DIR/evidence"
+          python "$PROJECT_DIR/build_native_lod_tiles.py" \
+            --mosaic "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            --output-dir "$BUILD_DIR" \
+            --anchors zhenbaoding guilin yangtang yangshuo \
+            --tile 5,2 \
+            --tile 6,1 \
+            | tee "$PACKAGE_DIR/evidence/native-lod-build.log"
+
+      - name: Validate source identity, NoData padding, and shared edges
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$PROJECT_DIR/tests/validate_native_lod.py" \
+            --mosaic "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            --output-dir "$BUILD_DIR" \
+            | tee "$PACKAGE_DIR/evidence/native-lod-validation.log"
+
+      - name: Assemble artifact-only browser package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$PACKAGE_DIR/site/data" "$PACKAGE_DIR/receipts" "$PACKAGE_DIR/evidence"
+          cp "$PROJECT_DIR/native_lod_package/OPEN_GUILIN_V077_NATIVE_LOD.cmd" "$PACKAGE_DIR/"
+          cp "$PROJECT_DIR/native_lod_package/README_FIRST_CN.txt" "$PACKAGE_DIR/"
+          cp "$PROJECT_DIR/native_lod_package/open_native_lod_viewer.py" "$PACKAGE_DIR/"
+          cp "$PROJECT_DIR/native_lod_viewer/index.html" "$PACKAGE_DIR/site/"
+          cp "$PROJECT_DIR/native_lod_viewer/styles.css" "$PACKAGE_DIR/site/"
+          cp "$PROJECT_DIR/native_lod_viewer/app.js" "$PACKAGE_DIR/site/"
+          cp "$BUILD_DIR"/native-r*-2048x2048-i16.bin "$PACKAGE_DIR/site/data/"
+          cp "$BUILD_DIR/native_lod_manifest.json" "$PACKAGE_DIR/site/data/"
+          cp "$BUILD_DIR/native_lod_build_receipt.json" "$PACKAGE_DIR/receipts/"
+          cp "$BUILD_DIR/native_lod_validation.json" "$PACKAGE_DIR/receipts/"
+          python - \
+            "$PACKAGE_DIR/open_native_lod_viewer.py" \
+            "$PROJECT_DIR/tests/browser_native_lod_cdp.py" <<'PY'
+          from pathlib import Path
+          import sys
+          for value in sys.argv[1:]:
+              path = Path(value)
+              compile(path.read_text(encoding="utf-8"), str(path), "exec")
+          PY
+          node --check "$PACKAGE_DIR/site/app.js"
+          CURRENT_HEAD="$(git rev-parse HEAD)"
+          CURRENT_TREE="$(git show -s --format=%T HEAD)"
+          export CURRENT_HEAD CURRENT_TREE
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          package = Path(os.environ["PACKAGE_DIR"])
+          receipt = {
+              "schema": "guilin-v077-native-lod-browser-package/v1",
+              "status": "candidate",
+              "repository": "haihao0307/guilin-dem-pipeline",
+              "branch": os.environ["GITHUB_REF_NAME"],
+              "head": os.environ["CURRENT_HEAD"],
+              "tree": os.environ["CURRENT_TREE"],
+              "workflow_run_id": int(os.environ["GITHUB_RUN_ID"]),
+              "source_tiff_sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+              "aoi_geometry_sha256": "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80",
+              "tile_count": 5,
+              "native_resolution_m": 12.5,
+              "vertical_scale": 1.0,
+              "resampling": "none",
+              "gap_fill_applied": False,
+              "fallback_30m_used": False,
+              "source_elevation_modified_m": 0.0,
+              "hydrology_centerline_mutated": False,
+              "public_deployment_allowed": False,
+              "visual_acceptance": False,
+              "production_ready": False,
+          }
+          (package / "receipts" / "browser-package-receipt.json").write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+
+      - name: Run real Chromium WebGL2 desktop and mobile QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$PACKAGE_DIR/site" \
+            > "$PACKAGE_DIR/evidence/http-server.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error http://127.0.0.1:8765/index.html > /dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          curl --fail --silent --show-error http://127.0.0.1:8765/index.html > /dev/null
+          python "$PROJECT_DIR/tests/browser_native_lod_cdp.py" \
+            --url "http://127.0.0.1:8765/?anchor=guilin" \
+            --evidence-dir "$PACKAGE_DIR/evidence" \
+            --timeout 420 \
+            | tee "$PACKAGE_DIR/evidence/browser-qa-console.log"
+
+      - name: Record and verify package checksums
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -d "$PACKAGE_DIR" ]]; then
+            (
+              cd "$PACKAGE_DIR"
+              find . -type f ! -name SHA256SUMS.txt -printf '%P\n' | sort > FILE_LIST.txt
+              find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+              sha256sum -c SHA256SUMS.txt
+            )
+          fi
+
+      - name: Upload complete local browser package and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-v077-native-lod-browser-package
+          path: out/guilin-v077-native-lod-browser
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Guilin v0.7.7 native LOD browser package'
+            echo
+            echo "* checked-out workflow SHA: $GITHUB_SHA"
+            echo "* final working-tree HEAD: $(git rev-parse HEAD)"
+            echo "* source materialized in this run: ${{ steps.materialize.outputs.changed }}"
+            echo '* public deployment: false'
+            echo '* Pages mutation: none'
+            echo '* source resampling: none'
+            echo '* 30 m fallback: false'
+            echo '* gap fill: false'
+            echo '* vertical scale: 1.00'
+            echo
+            if [[ -f "$PACKAGE_DIR/evidence/browser-qa.json" ]]; then
+              echo '```json'
+              cat "$PACKAGE_DIR/evidence/browser-qa.json"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
