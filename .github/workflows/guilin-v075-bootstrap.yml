@@ -29,6 +29,15 @@ jobs:
           fetch-depth: 0
           lfs: false
 
+      - name: Install CJK screenshot fonts
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK SC"
+
       - name: Verify deployed page and capture browser evidence
         shell: bash
         run: |
@@ -92,6 +101,7 @@ jobs:
           browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -x "${browser}"
           printf '%s\n' "${browser}" > "${evidence}/browser-path.txt"
+          fc-match "Noto Sans CJK SC" > "${evidence}/cjk-font-match.txt"
           url="http://127.0.0.1:8125/?visualEvidence=${GITHUB_RUN_ID}"
           common=(
             --headless=new
@@ -129,6 +139,7 @@ jobs:
               "workflow_run_id": int(sys.argv[2]),
               "data_ready": True,
               "webgl2_text_present": True,
+              "cjk_font_match": (root / "cjk-font-match.txt").read_text().strip(),
               "desktop_screenshot_bytes": (root / "desktop-1600x1000.png").stat().st_size,
               "mobile_screenshot_bytes": (root / "mobile-390x844.png").stat().st_size,
               "aoi_status": "ACCEPTED",
@@ -149,7 +160,7 @@ jobs:
           git -C /tmp/v075-pages config user.name github-actions[bot]
           git -C /tmp/v075-pages config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git -C /tmp/v075-pages add "${DEST}/evidence"
-          git -C /tmp/v075-pages commit -m "Add Guilin v0.7.5 browser visual evidence ${GITHUB_SHA}"
+          git -C /tmp/v075-pages commit -m "Add Guilin v0.7.5 CJK browser evidence ${GITHUB_SHA}"
           git -C /tmp/v075-pages push origin HEAD:gh-pages
 
       - name: Upload visual evidence
