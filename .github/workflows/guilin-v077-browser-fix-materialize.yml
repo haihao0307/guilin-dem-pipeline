@@ -1,0 +1,113 @@
+name: Guilin V077 materialize browser QA fix
+
+on:
+  push:
+    branches:
+      - project/guilin-v077-native-12p5m-lod-foundation
+    paths:
+      - .github/workflows/guilin-v077-browser-fix-materialize.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v077-browser-fix-materialize
+  cancel-in-progress: false
+
+jobs:
+  apply-reviewed-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply reviewed overlay, favicon, and QA corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("projects/guilin-v075-approved-aoi-terrain3d-preview")
+
+          def replace_once(path: Path, old: str, new: str) -> None:
+              text = path.read_text(encoding="utf-8")
+              if new in text:
+                  return
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f"Expected one match in {path}, found {count}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          index_path = root / "native_lod_viewer/index.html"
+          replace_once(
+              index_path,
+              '  <meta name="color-scheme" content="dark">\n  <title>',
+              '  <meta name="color-scheme" content="dark">\n'
+              '  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23081115%27/%3E%3Cpath d=%27M4 26 12 9l5 9 4-7 7 15Z%27 fill=%27%23b7e0bb%27/%3E%3C/svg%3E">\n'
+              '  <title>',
+          )
+
+          styles_path = root / "native_lod_viewer/styles.css"
+          replace_once(
+              styles_path,
+              '* { box-sizing: border-box; }\nhtml, body',
+              '* { box-sizing: border-box; }\n[hidden] { display: none !important; }\nhtml, body',
+          )
+
+          app_path = root / "native_lod_viewer/app.js"
+          replace_once(
+              app_path,
+              "    errorCard.hidden = true;\n\n    let cache",
+              "    errorCard.hidden = true;\n    errorMessage.textContent = '';\n\n    let cache",
+          )
+          replace_once(
+              app_path,
+              "    renderInfo.textContent = `${mode} · ${state.renderGrid}² 顶点 · ${state.validTriangleCount.toLocaleString()} 三角形 · ${state.fps.toFixed(0)} FPS`;",
+              "    renderInfo.textContent = `${mode} · ${state.renderGrid}² 顶点 · ${state.validTriangleCount.toLocaleString()} 三角形 · WebGL2 按需渲染`;",
+          )
+          replace_once(
+              app_path,
+              "  function updateQaResult() {\n    const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;\n    const result = {\n      schema: 'guilin-v077-native-lod-browser-qa/v1',\n      passed: Boolean(state.qaReady && state.gl && state.currentTile && state.currentTileSha === state.currentTile.sha256 && runtimeErrors.length === 0),",
+              "  function updateQaResult() {\n    const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;\n    const loadingOverlayDisplayed = getComputedStyle(loadingCard).display !== 'none';\n    const errorOverlayDisplayed = getComputedStyle(errorCard).display !== 'none';\n    const result = {\n      schema: 'guilin-v077-native-lod-browser-qa/v1',\n      passed: Boolean(\n        state.qaReady &&\n        state.gl &&\n        state.currentTile &&\n        state.currentTileSha === state.currentTile.sha256 &&\n        runtimeErrors.length === 0 &&\n        !loadingOverlayDisplayed &&\n        !errorOverlayDisplayed\n      ),",
+          )
+          replace_once(
+              app_path,
+              "      max_texture_size: state.gl ? state.gl.getParameter(state.gl.MAX_TEXTURE_SIZE) : 0,\n      runtime_errors: runtimeErrors.slice(),\n    };",
+              "      max_texture_size: state.gl ? state.gl.getParameter(state.gl.MAX_TEXTURE_SIZE) : 0,\n      runtime_errors: runtimeErrors.slice(),\n      loading_overlay_displayed: loadingOverlayDisplayed,\n      error_overlay_displayed: errorOverlayDisplayed,\n      render_status: renderInfo.textContent,\n    };",
+          )
+
+          qa_path = root / "tests/browser_native_lod_cdp.py"
+          replace_once(
+              qa_path,
+              '        "hydrology_centerline_mutated": False,\n    }',
+              '        "hydrology_centerline_mutated": False,\n        "loading_overlay_displayed": False,\n        "error_overlay_displayed": False,\n    }',
+          )
+          replace_once(
+              qa_path,
+              '    if result.get("runtime_errors"):\n        failures.append(f"runtime_errors: {result.get(\'runtime_errors\')}")\n    if expected_mode == "native":',
+              '    if result.get("runtime_errors"):\n        failures.append(f"runtime_errors: {result.get(\'runtime_errors\')}")\n    if "WebGL2 按需渲染" not in str(result.get("render_status", "")):\n        failures.append(f"render_status mismatch: {result.get(\'render_status\')}")\n    if expected_mode == "native":',
+          )
+
+          compile(app_path.read_text(encoding="utf-8"), str(app_path), "exec") if False else None
+          compile(qa_path.read_text(encoding="utf-8"), str(qa_path), "exec")
+          PY
+          node --check projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/app.js
+          git diff --check
+
+      - name: Commit one reviewed browser fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add \
+            projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/index.html \
+            projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/styles.css \
+            projects/guilin-v075-approved-aoi-terrain3d-preview/native_lod_viewer/app.js \
+            projects/guilin-v075-approved-aoi-terrain3d-preview/tests/browser_native_lod_cdp.py
+          git diff --cached --quiet && { echo "Reviewed fix already present"; exit 0; }
+          git commit -m "fix(v077): clear browser overlays and favicon QA"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
