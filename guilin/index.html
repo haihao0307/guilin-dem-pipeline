@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN" data-build="guilin-native-12p5m-single-truth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="桂林唯一真值原生12.5米数值高程三维审查器">
+  <title>小桂林 · 唯一真值 DEM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="viewerShell" class="viewer-shell">
+    <canvas id="terrainCanvas" aria-label="桂林原生数值高程三维地形"></canvas>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">小桂林 · 唯一真值数据资产</p>
+        <h1>桂林原生 12.5 米 DEM</h1>
+        <p class="subtitle">int16 数值样本直接生成顶点与法线 · 54 块未压缩瓦片</p>
+      </div>
+      <div class="badges"><span>唯一真值</span><span>无高度贴图</span><span>WebGL2</span></div>
+    </header>
+
+    <button id="togglePanel" class="panel-toggle" type="button" aria-expanded="true">参数</button>
+    <aside id="controlPanel" class="control-panel">
+      <section>
+        <p class="section-title">地标</p>
+        <div class="anchor-grid">
+          <button type="button" data-anchor="zhenbaoding">真宝鼎</button>
+          <button type="button" data-anchor="guilin">桂林城</button>
+          <button type="button" data-anchor="yangtang">秧塘机场</button>
+          <button type="button" data-anchor="yangshuo">阳朔县</button>
+        </div>
+      </section>
+
+      <section>
+        <p class="section-title">9 × 6 原生瓦片</p>
+        <div id="tileGrid" class="tile-grid"></div>
+      </section>
+
+      <section>
+        <p class="section-title">原生窗口移动</p>
+        <div class="window-pad">
+          <span></span><button id="moveNorth" type="button">北</button><span></span>
+          <button id="moveWest" type="button">西</button><button id="centerWindow" type="button">居中</button><button id="moveEast" type="button">东</button>
+          <span></span><button id="moveSouth" type="button">南</button><span></span>
+        </div>
+        <p class="microcopy">观察窗口固定 512 × 512。每个顶点对应一个 12.5 米源样本。</p>
+      </section>
+
+      <section class="actions">
+        <button id="resetCamera" class="primary" type="button">重置视角</button>
+        <button id="fullscreen" type="button">全屏</button>
+      </section>
+
+      <section class="data-panel">
+        <p class="section-title">当前数据</p>
+        <dl>
+          <div><dt>瓦片</dt><dd id="tileId">加载中</dd></div>
+          <div><dt>矩阵</dt><dd id="tileMatrix">加载中</dd></div>
+          <div><dt>窗口</dt><dd id="windowInfo">加载中</dd></div>
+          <div><dt>范围</dt><dd id="worldInfo">加载中</dd></div>
+          <div><dt>海拔</dt><dd id="elevationInfo">加载中</dd></div>
+          <div><dt>采样间距</dt><dd>12.5 m</dd></div>
+          <div><dt>高程来源</dt><dd>原生数值顶点缓冲区</dd></div>
+          <div><dt>高度贴图</dt><dd>无</dd></div>
+          <div><dt>压缩</dt><dd>无</dd></div>
+          <div><dt>重采样</dt><dd>无</dd></div>
+          <div><dt>垂直比例</dt><dd>1.00</dd></div>
+        </dl>
+      </section>
+    </aside>
+
+    <div id="loadingCard" class="loading-card" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <div><strong>正在读取唯一真值</strong><span id="loadingDetail">核对清单和 SHA256</span></div>
+    </div>
+    <div id="errorCard" class="error-card" hidden><strong>数据加载失败</strong><span id="errorMessage"></span></div>
+
+    <footer class="statusbar">
+      <span id="renderInfo">等待 WebGL2</span>
+      <span>左键旋转</span><span>Shift 拖动平移</span><span>滚轮缩放</span>
+    </footer>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>
