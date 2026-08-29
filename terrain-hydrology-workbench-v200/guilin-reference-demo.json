@@ -1,0 +1,78 @@
+{
+  "schema": "terrain-hydrology-reference-demo@1.0.0",
+  "version": "2.2.1",
+  "demos": [
+    {
+      "id": "guilin-yangshuo-karst-reference-v001",
+      "regionId": "guilin",
+      "title": "桂林阳朔喀斯特蒸馏示范区",
+      "status": "visual-candidate",
+      "sourceReceipt": "knowledge/terrain-hydrology/guilin/inbox/2026-08-27_guilin-geomorphology-photo-set-v001_RECEIPT.json",
+      "visualGrammar": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_YANGSHUO_KARST_VISUAL_GRAMMAR_V1.md",
+      "referenceProfile": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_KARST_REFERENCE_PROFILE_V1.json",
+      "window": {
+        "pixelWindow": {
+          "x": 50,
+          "y": 130,
+          "width": 80,
+          "height": 80
+        },
+        "uvCenter": [
+          0.11264080100125157,
+          0.2127659574468085
+        ],
+        "uvBounds": [
+          0.0625782227784731,
+          0.16270337922403003,
+          0.16270337922403003,
+          0.26282853566958697
+        ],
+        "worldCenterMeters": [
+          -3873.5919899874843,
+          2872.340425531915
+        ],
+        "bounds": [
+          425087.5,
+          2797862.5,
+          426087.5,
+          2798862.5
+        ],
+        "crs": "EPSG:32649",
+        "widthMeters": 1000,
+        "heightMeters": 1000,
+        "selectionReason": "在真实 12.5 m 桂林片区内选取同时包含约 254 m 局部高差、显著塔状峰体、连续低地和水系参考的 1 km² 校准窗口。"
+      },
+      "camera": {
+        "yaw": 2.18,
+        "pitch": 0.38,
+        "distanceMeters": 520
+      },
+      "rendering": {
+        "desktopFocusMesh": 1025,
+        "mobileFocusMesh": 513,
+        "targetPatchMeters": 990,
+        "truthSpacingMeters": 12.5,
+        "visualTriangleSpacingMeters": 0.966796875,
+        "microDeltaMaxMeters": 1.2,
+        "visualOnly": true,
+        "truthOverwrite": false,
+        "sourceResampling": false
+      },
+      "rulesApplied": [
+        "峰体保持厚实体量，禁止针刺峰、统一圆锥和规则阵列",
+        "峰间低廊道保持连续，程序细节不得抬高或切断谷底",
+        "河道沿批准低廊道连续前进，绕开峰体核心",
+        "崖壁采用斑块、竖向条带、台肩和裂隙组合",
+        "峰脚转折短而明显，局部允许坡脚沉积、低滩和沙洲",
+        "天然穿洞属于稀有地标，默认生成数量为零"
+      ],
+      "truthBoundary": {
+        "zTruthWritable": false,
+        "microDeltaDefaultMeters": 0,
+        "derivedHydrologyAuthoritative": false,
+        "visualAcceptance": false,
+        "productionReady": false
+      }
+    }
+  ]
+}
