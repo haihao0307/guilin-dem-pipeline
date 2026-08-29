@@ -65,8 +65,8 @@ jobs:
             test -s "${PROJECT_DIR}/build_2048_hydrology.py"
             test -s "${PROJECT_DIR}/tests/validate_2048.py"
             test -s "${PROJECT_DIR}/web/app.js"
-            git config user.name github-actions[bot]
-            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A "${PROJECT_DIR}"
             git status --short | tee "${EVIDENCE_DIR}/git-status.txt"
             if ! git diff --cached --quiet; then
@@ -206,8 +206,8 @@ jobs:
           mkdir -p "${PAGES_DIR}/${PUBLISH_DIR}"
           rsync -a "${DIST_DIR}/" "${PAGES_DIR}/${PUBLISH_DIR}/"
           touch "${PAGES_DIR}/.nojekyll"
-          git -C "${PAGES_DIR}" config user.name github-actions[bot]
-          git -C "${PAGES_DIR}" config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git -C "${PAGES_DIR}" config user.name "github-actions[bot]"
+          git -C "${PAGES_DIR}" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C "${PAGES_DIR}" add .nojekyll "${PUBLISH_DIR}"
           if ! git -C "${PAGES_DIR}" diff --cached --quiet; then
             git -C "${PAGES_DIR}" commit -m "Publish Guilin accepted AOI 2048 hydrology ${MATERIALIZED_SOURCE_SHA}"
