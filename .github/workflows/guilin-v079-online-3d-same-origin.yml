@@ -1,0 +1,263 @@
+name: Guilin V079 online interactive 3D same origin
+
+on:
+  push:
+    branches:
+      - project/guilin-v078-connected-river-network
+    paths:
+      - .github/workflows/guilin-v079-online-3d-same-origin.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-v079-online-3d-publish
+  cancel-in-progress: true
+
+env:
+  PROJECT_DIR: projects/guilin-v075-approved-aoi-terrain3d-preview
+  CACHE_DIR: .cache/guilin-v079-online-same-origin
+  SITE_DIR: out/guilin-v079-online-site
+  OVERVIEW_BUILD: out/guilin-v079-overview-build
+  NATIVE_BUILD: out/guilin-v079-native-build
+  EVIDENCE_DIR: out/guilin-v079-online-evidence
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin-v079-3d
+  RELEASE_ASSET_BASE: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v079-online-3d-assets
+
+jobs:
+  build-publish-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout V079 branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install raster and browser dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check \
+            numpy==2.1.3 \
+            rasterio==1.4.3 \
+            pyproj==3.7.1 \
+            shapely==2.1.1 \
+            requests==2.32.4 \
+            websocket-client==1.8.0 \
+            Pillow==11.1.0
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          command -v google-chrome || command -v chromium || command -v chromium-browser
+          fc-match "Noto Sans CJK SC"
+
+      - name: Download and verify locked 12.5 m truth TIFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$CACHE_DIR"
+          curl --fail --location --retry 6 --retry-all-errors \
+            --output "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+          test "$(stat -c '%s' "$CACHE_DIR/guilin_raw_union_12_5m.tif")" = "124348471"
+          echo "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4  $CACHE_DIR/guilin_raw_union_12_5m.tif" | sha256sum -c -
+          test "$(stat -c '%s' "$PROJECT_DIR/sources/osm_hydrology.geojson")" = "5832414"
+
+      - name: Build full-area WebGL2 terrain and river network
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$SITE_DIR" "$OVERVIEW_BUILD" "$NATIVE_BUILD" "$EVIDENCE_DIR"
+          mkdir -p "$SITE_DIR/overview/data" "$SITE_DIR/native/data" "$EVIDENCE_DIR"
+          python "$PROJECT_DIR/build_2048_hydrology.py" \
+            --mosaic "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            --hydrology "$PROJECT_DIR/sources/osm_hydrology.geojson" \
+            --output-dir "$OVERVIEW_BUILD" \
+            | tee "$EVIDENCE_DIR/overview-build.log"
+          python "$PROJECT_DIR/tests/validate_2048.py" "$OVERVIEW_BUILD" \
+            --output "$EVIDENCE_DIR/overview-static-qa.json"
+          cp "$PROJECT_DIR/web/index.html" "$PROJECT_DIR/web/styles.css" "$PROJECT_DIR/web/app.js" "$SITE_DIR/overview/"
+          cp "$PROJECT_DIR/web/data/accepted_aoi.json" "$SITE_DIR/overview/data/"
+          cp "$OVERVIEW_BUILD"/* "$SITE_DIR/overview/data/"
+
+      - name: Build all 54 uncompressed native 12.5 m terrain tiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$PROJECT_DIR/build_native_lod_tiles.py" \
+            --mosaic "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            --output-dir "$NATIVE_BUILD" \
+            --all-tiles \
+            | tee "$EVIDENCE_DIR/native-build.log"
+          python "$PROJECT_DIR/tests/validate_native_lod.py" \
+            --mosaic "$CACHE_DIR/guilin_raw_union_12_5m.tif" \
+            --output-dir "$NATIVE_BUILD" \
+            | tee "$EVIDENCE_DIR/native-static-qa.log"
+          cp "$PROJECT_DIR/native_lod_viewer/index.html" "$PROJECT_DIR/native_lod_viewer/styles.css" "$PROJECT_DIR/native_lod_viewer/app.js" "$SITE_DIR/native/"
+          cp "$NATIVE_BUILD/native_lod_manifest.json" "$SITE_DIR/native/data/"
+          cp "$NATIVE_BUILD"/native-r*-2048x2048-i16.bin "$SITE_DIR/native/data/"
+          test "$(find "$SITE_DIR/native/data" -maxdepth 1 -name 'native-r*-2048x2048-i16.bin' | wc -l)" = "54"
+
+      - name: Assemble one online entry and force same-origin raw data loading
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$PROJECT_DIR/online_v079/index.html" "$SITE_DIR/index.html"
+          python "$PROJECT_DIR/online_v079/patch_online.py" \
+            --site-root "$SITE_DIR" \
+            --head "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --asset-base-url "$RELEASE_ASSET_BASE"
+          touch "$SITE_DIR/.nojekyll"
+          export SITE_DIR
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ['SITE_DIR'])
+          overview_app = root / 'overview/app.js'
+          overview_text = overview_app.read_text(encoding='utf-8')
+          overview_text = overview_text.replace(
+              "const TERRAIN_HEIGHT_URL = 'https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v079-online-3d-assets/terrain_2048_u16.bin';",
+              "const TERRAIN_HEIGHT_URL = 'data/terrain_2048_u16.bin';",
+          )
+          overview_text = overview_text.replace(
+              "const WATER_BUFFER_URL = 'https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v079-online-3d-assets/hydrology_ribbons.f32.bin';",
+              "const WATER_BUFFER_URL = 'data/hydrology_ribbons.f32.bin';",
+          )
+          overview_app.write_text(overview_text, encoding='utf-8')
+
+          native_path = root / 'native/data/native_lod_manifest.json'
+          native = json.loads(native_path.read_text(encoding='utf-8'))
+          for tile in native['tiles']:
+              tile['file'] = Path(tile['file']).name
+          native['online_asset_base_url'] = 'same-origin'
+          native_path.write_text(json.dumps(native, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          version_path = root / 'version.json'
+          version = json.loads(version_path.read_text(encoding='utf-8'))
+          version['asset_base_url'] = 'same-origin'
+          version['runtime_asset_delivery'] = 'uncompressed raw files on GitHub Pages'
+          version_path.write_text(json.dumps(version, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          bins = list(root.rglob('*.bin'))
+          assert len(native['tiles']) == 54
+          assert native['tile_matrix']['full_matrix_tile_count'] == 54
+          assert all(not str(tile['file']).startswith('http') for tile in native['tiles'])
+          assert len(bins) == 56, len(bins)
+          assert sum(path.stat().st_size for path in bins) == 469275680
+          assert 'releases/download' not in overview_app.read_text(encoding='utf-8')
+          print({
+              'site_files': len([path for path in root.rglob('*') if path.is_file()]),
+              'native_tiles': len(native['tiles']),
+              'raw_binary_files': len(bins),
+              'raw_binary_bytes': sum(path.stat().st_size for path in bins),
+          })
+          PY
+          node --check "$SITE_DIR/overview/app.js"
+          node --check "$SITE_DIR/native/app.js"
+          du -sh "$SITE_DIR"
+
+      - name: Run real Chromium QA against same-origin uncompressed site
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$PROJECT_DIR/tests/browser_native_lod_cdp.py" /tmp/browser_native_online.py
+          sed -i 's/"tile_count": 5/"tile_count": 54/' /tmp/browser_native_online.py
+          sed -i 's/"public_deployment_allowed": False/"public_deployment_allowed": True/' /tmp/browser_native_online.py
+          sed -i 's/\[512, 512\]/[768, 768]/g' /tmp/browser_native_online.py
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$SITE_DIR" > "$EVIDENCE_DIR/local-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null && break
+            sleep 0.25
+          done
+          python "$PROJECT_DIR/tests/browser_cdp.py" \
+            --url http://127.0.0.1:8765/overview/index.html \
+            --evidence-dir "$EVIDENCE_DIR/local-overview" \
+            --timeout 300
+          python /tmp/browser_native_online.py \
+            --url 'http://127.0.0.1:8765/native/index.html?anchor=guilin' \
+            --evidence-dir "$EVIDENCE_DIR/local-native" \
+            --timeout 420
+
+      - name: Publish raw interactive viewer to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ${{ env.SITE_DIR }}
+          destination_dir: guilin-v079-3d
+          keep_files: true
+          enable_jekyll: false
+          commit_message: "deploy(guilin-v079): same-origin interactive 3D ${{ github.sha }}"
+
+      - name: Wait for the exact online version
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error "$PUBLIC_URL/version.json?run=$GITHUB_RUN_ID" > "$EVIDENCE_DIR/online-version.json"; then
+              grep -q "${GITHUB_RUN_ID}" "$EVIDENCE_DIR/online-version.json" && break
+            fi
+            sleep 5
+          done
+          grep -q "${GITHUB_RUN_ID}" "$EVIDENCE_DIR/online-version.json"
+          curl --fail --silent --show-error "$PUBLIC_URL/index.html?run=$GITHUB_RUN_ID" > /dev/null
+          curl --fail --silent --show-error "$PUBLIC_URL/overview/data/terrain_2048_u16.bin" -o /tmp/terrain.bin
+          test "$(stat -c '%s' /tmp/terrain.bin)" = "8388608"
+          curl --fail --silent --show-error "$PUBLIC_URL/native/data/native-r05-c01-2048x2048-i16.bin" -o /tmp/native.bin
+          test "$(stat -c '%s' /tmp/native.bin)" = "8388608"
+
+      - name: Run final Chromium QA against the public online URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$PROJECT_DIR/tests/browser_native_lod_cdp.py" /tmp/browser_native_public.py
+          sed -i 's/"tile_count": 5/"tile_count": 54/' /tmp/browser_native_public.py
+          sed -i 's/"public_deployment_allowed": False/"public_deployment_allowed": True/' /tmp/browser_native_public.py
+          sed -i 's/\[512, 512\]/[768, 768]/g' /tmp/browser_native_public.py
+          python "$PROJECT_DIR/tests/browser_cdp.py" \
+            --url "$PUBLIC_URL/overview/index.html?run=$GITHUB_RUN_ID" \
+            --evidence-dir "$EVIDENCE_DIR/public-overview" \
+            --timeout 300
+          python /tmp/browser_native_public.py \
+            --url "$PUBLIC_URL/native/index.html?anchor=guilin&run=$GITHUB_RUN_ID" \
+            --evidence-dir "$EVIDENCE_DIR/public-native" \
+            --timeout 420
+
+      - name: Upload online deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-v079-online-3d-same-origin-evidence
+          path: out/guilin-v079-online-evidence
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Write deployment summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Guilin V0.7.9 online interactive 3D'
+            echo
+            echo "* public entry: $PUBLIC_URL/"
+            echo "* full-area river terrain: $PUBLIC_URL/overview/"
+            echo "* native 12.5 m viewer: $PUBLIC_URL/native/"
+            echo "* source HEAD: $GITHUB_SHA"
+            echo '* raw native tiles on the same origin: 54'
+            echo '* raw runtime binary files: 56'
+            echo '* lakes: 0'
+            echo '* screenshot-only viewer: false'
+            echo '* WebGL2 camera rotation, pan, zoom and native tile selection: browser-tested'
+          } >> "$GITHUB_STEP_SUMMARY"
