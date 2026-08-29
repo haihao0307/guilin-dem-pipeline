@@ -589,6 +589,7 @@ void main() {
     loadingCard.hidden = false;
     loadingDetail.textContent = `${tile.id} · 校验 8,388,608 字节`;
     errorCard.hidden = true;
+    errorMessage.textContent = '';
 
     let cache = state.tileCache.get(tile.id);
     if (!cache) {
@@ -649,7 +650,7 @@ void main() {
   function updateRenderInfo() {
     if (!state.currentTile) return;
     const mode = state.mode === 'native' ? '原生近景' : '整块';
-    renderInfo.textContent = `${mode} · ${state.renderGrid}² 顶点 · ${state.validTriangleCount.toLocaleString()} 三角形 · ${state.fps.toFixed(0)} FPS`;
+    renderInfo.textContent = `${mode} · ${state.renderGrid}² 顶点 · ${state.validTriangleCount.toLocaleString()} 三角形 · WebGL2 按需渲染`;
   }
 
   function rebuildLabels() {
@@ -706,9 +707,19 @@ void main() {
 
   function updateQaResult() {
     const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;
+    const loadingOverlayDisplayed = getComputedStyle(loadingCard).display !== 'none';
+    const errorOverlayDisplayed = getComputedStyle(errorCard).display !== 'none';
     const result = {
       schema: 'guilin-v077-native-lod-browser-qa/v1',
-      passed: Boolean(state.qaReady && state.gl && state.currentTile && state.currentTileSha === state.currentTile.sha256 && runtimeErrors.length === 0),
+      passed: Boolean(
+        state.qaReady &&
+        state.gl &&
+        state.currentTile &&
+        state.currentTileSha === state.currentTile.sha256 &&
+        runtimeErrors.length === 0 &&
+        !loadingOverlayDisplayed &&
+        !errorOverlayDisplayed
+      ),
       data_ready: Boolean(state.qaReady && state.currentTile),
       webgl2: Boolean(state.gl),
       source_sha256: state.manifest?.source?.sha256 || null,
@@ -734,6 +745,9 @@ void main() {
       hydrology_centerline_mutated: false,
       max_texture_size: state.gl ? state.gl.getParameter(state.gl.MAX_TEXTURE_SIZE) : 0,
       runtime_errors: runtimeErrors.slice(),
+      loading_overlay_displayed: loadingOverlayDisplayed,
+      error_overlay_displayed: errorOverlayDisplayed,
+      render_status: renderInfo.textContent,
     };
     window.__GUILIN_V077_QA_RESULT = result;
     return result;

@@ -169,6 +169,8 @@ def validate_common(result: dict, expected_tile: str, expected_mode: str) -> lis
         "source_elevation_modified_m": 0,
         "public_deployment_allowed": False,
         "hydrology_centerline_mutated": False,
+        "loading_overlay_displayed": False,
+        "error_overlay_displayed": False,
     }
     for key, expected_value in expected.items():
         if result.get(key) != expected_value:
@@ -179,6 +181,8 @@ def validate_common(result: dict, expected_tile: str, expected_mode: str) -> lis
         failures.append("MAX_TEXTURE_SIZE below 2048")
     if result.get("runtime_errors"):
         failures.append(f"runtime_errors: {result.get('runtime_errors')}")
+    if "WebGL2 按需渲染" not in str(result.get("render_status", "")):
+        failures.append(f"render_status mismatch: {result.get('render_status')}")
     if expected_mode == "native":
         if result.get("native_vertex_mode") is not True:
             failures.append("native_vertex_mode is false")
