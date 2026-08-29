@@ -706,6 +706,7 @@ void main() {
   }
 
   function updateQaResult() {
+    if (state.currentTile) updateRenderInfo();
     const sourceStep = state.renderGrid > 1 ? (state.sourceWindow.width - 1) / (state.renderGrid - 1) : 0;
     const loadingOverlayDisplayed = getComputedStyle(loadingCard).display !== 'none';
     const errorOverlayDisplayed = getComputedStyle(errorCard).display !== 'none';
