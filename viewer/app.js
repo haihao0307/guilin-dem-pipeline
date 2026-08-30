@@ -242,8 +242,8 @@ void main(){
   vec2 centerNdc=centerClip.xy/max(0.00001,centerClip.w);
   vec2 widthNdc=widthClip.xy/max(0.00001,widthClip.w);
   float projectedHalfWidth=length((widthNdc-centerNdc)*uViewport*0.5);
-  float minimumHalfWidth=(aMainstemCode>0.5?0.10:(aClass<0.5?0.075:(aClass<1.5?0.055:0.06)))*uPixelRatio;
-  float halfWidth=max(minimumHalfWidth,projectedHalfWidth);
+  float minimumHalfWidth=(aMainstemCode>0.5?0.35:(aClass<0.5?0.24:(aClass<1.5?0.18:0.18)))*uPixelRatio;
+  float halfWidth=max(minimumHalfWidth,projectedHalfWidth*uZoomScale);
   vec2 ndcStart=clipStart.xy/max(0.00001,clipStart.w);
   vec2 ndcEnd=clipEnd.xy/max(0.00001,clipEnd.w);
   vec2 pixelDelta=(ndcEnd-ndcStart)*uViewport*0.5;
@@ -281,8 +281,8 @@ void main(){
   vec3 ordinary=vClass<0.5?mix(riverUp,riverDown,p):(vClass<1.5?mix(streamUp,streamDown,p):mix(canalUp,canalDown,p));
   vec3 mainColor=mix(mainUp,mainDown,pow(p,1.12));
   vec3 color=mix(ordinary,mainColor,vMainstem);
-  float ordinaryAlpha=vClass<0.5?mix(0.43,0.79,p):(vClass<1.5?mix(0.22,0.54,p):mix(0.28,0.58,p));
-  float mainAlpha=mix(0.38,0.94,pow(p,0.88));
+  float ordinaryAlpha=vClass<0.5?mix(0.56,0.86,p):(vClass<1.5?mix(0.42,0.68,p):mix(0.44,0.70,p));
+  float mainAlpha=mix(0.66,0.97,pow(p,0.88));
   float flowReady=0.997+0.003*fract(vFlowDistance/5000.0);
   outColor=vec4(color,coverage*mix(ordinaryAlpha,mainAlpha,vMainstem)*flowReady);
 }`;
@@ -320,8 +320,8 @@ void main(){
   vec2 centerNdc=centerClip.xy/max(0.00001,centerClip.w);
   vec2 offsetNdc=offsetClip.xy/max(0.00001,offsetClip.w);
   float halfWidthPx=length((offsetNdc-centerNdc)*uViewport*0.5);
-  float minimumHalfWidth=(aMainstemCode>0.5?0.10:(aClass<0.5?0.075:0.055))*uPixelRatio;
-  halfWidthPx=max(minimumHalfWidth,halfWidthPx);
+  float minimumHalfWidth=(aMainstemCode>0.5?0.35:(aClass<0.5?0.24:0.18))*uPixelRatio;
+  halfWidthPx=max(minimumHalfWidth,halfWidthPx*uZoomScale);
   gl_Position=centerClip;
   float multiplier=aDegree>2.5?2.18:(aDegree>1.5?2.08:1.72);
   gl_PointSize=max(0.58*uPixelRatio,halfWidthPx*multiplier+0.12*uPixelRatio);
@@ -348,8 +348,8 @@ void main(){
   vec3 stream=mix(vec3(0.49,0.75,0.78),vec3(0.17,0.52,0.64),p);
   vec3 canal=mix(vec3(0.39,0.63,0.67),vec3(0.13,0.43,0.55),p);
   vec3 ordinary=vClass<0.5?river:(vClass<1.5?stream:canal);
-  float ordinaryAlpha=vClass<0.5?mix(0.43,0.79,p):(vClass<1.5?mix(0.22,0.54,p):mix(0.28,0.58,p));
-  float mainAlpha=mix(0.38,0.94,pow(p,0.88));
+  float ordinaryAlpha=vClass<0.5?mix(0.56,0.86,p):(vClass<1.5?mix(0.42,0.68,p):mix(0.44,0.70,p));
+  float mainAlpha=mix(0.66,0.97,pow(p,0.88));
   outColor=vec4(mix(ordinary,mainColor,vMainstem),coverage*mix(ordinaryAlpha,mainAlpha,vMainstem));
 }`;
 
@@ -667,7 +667,7 @@ void main(){
   }
 
   function waterwayZoomScale() {
-    return 1;
+    return clamp(approximateMetersPerCssPixel() / 95, 1, 2.4);
   }
 
   function waterwayPhysicalWidthM(classIndex, mainstemCode, sourceWidthM, progress) {
@@ -696,8 +696,8 @@ void main(){
 
   function waterwayFullWidthCssPx(classIndex, mainstemCode, sourceWidthM, progress) {
     const physical = waterwayPhysicalWidthM(classIndex, mainstemCode, sourceWidthM, progress) * state.waterwayEmphasis;
-    const minimum = mainstemCode > 0 ? 0.20 : (classIndex === 0 ? 0.15 : 0.11);
-    return Math.max(minimum, physical / approximateMetersPerCssPixel());
+    const minimum = mainstemCode > 0 ? 0.70 : (classIndex === 0 ? 0.48 : 0.36);
+    return Math.max(minimum, physical / approximateMetersPerCssPixel() * waterwayZoomScale());
   }
 
   function waterwayStyleMetrics() {
@@ -715,6 +715,7 @@ void main(){
       profile: WATERWAY_STYLE_PROFILE,
       width_mode: 'source-width-meters-projected-to-screen',
       emphasis: Number(state.waterwayEmphasis.toFixed(3)),
+      cartographic_visibility_boost: Number(waterwayZoomScale().toFixed(3)),
       approximate_meters_per_css_pixel: Number(approximateMetersPerCssPixel().toFixed(3)),
       mainstem_upstream_physical_width_m: Number(waterwayPhysicalWidthM(0, 1, mainstemSourceWidth, 0).toFixed(3)),
       mainstem_midstream_physical_width_m: Number(waterwayPhysicalWidthM(0, 1, mainstemSourceWidth, 0.5).toFixed(3)),
