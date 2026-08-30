@@ -1,0 +1,38 @@
+name: Apply Guilin hydrology v6.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-guilin-hydrology-v61.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply and verify visibility calibration
+        run: |
+          set -euo pipefail
+          python tools/apply_guilin_hydrology_visibility_v61.py
+          node --check viewer/app.js
+          grep -q 'cartographic_visibility_boost' viewer/app.js
+          grep -q 'projectedHalfWidth\*uZoomScale' viewer/app.js
+      - name: Commit production viewer
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add viewer/app.js
+          git commit -m 'fix(guilin): keep physical river widths visible at overview scale'
+          git push origin HEAD:main
