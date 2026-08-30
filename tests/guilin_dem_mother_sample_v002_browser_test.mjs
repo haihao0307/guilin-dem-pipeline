@@ -50,26 +50,35 @@ async function capture(name, viewport, isMobile) {
   if (qa.visualAcceptance !== false || qa.productionReady !== false) throw new Error(`${name}: approval flags changed`);
 
   const api = 'window.__GUILIN_DEM_MOTHER_SAMPLE_V002_TEST_API';
-  await page.evaluate(api => window.eval(api).setMode(0), api);
-  await page.evaluate(api => window.eval(api).setView('overview'), api);
-  await page.waitForTimeout(350);
-  await page.screenshot({ path: path.join(evidenceDir, `${name}-01-composite-overview.png`), fullPage: true });
+  const set = async (mode, view, wait = 320) => {
+    await page.evaluate(({ api, mode, view }) => {
+      window.eval(api).setMode(mode);
+      window.eval(api).setView(view);
+    }, { api, mode, view });
+    await page.waitForTimeout(wait);
+  };
+  const shot = async file => page.screenshot({ path: path.join(evidenceDir, `${name}-${file}.png`), fullPage: true });
 
-  await page.evaluate(api => { window.eval(api).setMode(2); window.eval(api).setView('karst'); }, api);
-  await page.waitForTimeout(350);
-  await page.screenshot({ path: path.join(evidenceDir, `${name}-02-karst-close.png`), fullPage: true });
+  await set(0, 'overview', 360);
+  await shot('01-composite-overview');
 
-  await page.evaluate(api => { window.eval(api).setMode(3); window.eval(api).setView('field'); }, api);
-  await page.waitForTimeout(350);
-  await page.screenshot({ path: path.join(evidenceDir, `${name}-03-fields-close.png`), fullPage: true });
+  await set(0, 'karst', 360);
+  await shot('02-composite-karst-close');
 
-  await page.evaluate(api => { window.eval(api).setMode(1); window.eval(api).setView('overview'); }, api);
-  await page.waitForTimeout(250);
-  await page.screenshot({ path: path.join(evidenceDir, `${name}-04-truth.png`), fullPage: true });
+  await set(2, 'karst', 300);
+  await shot('03-karst-diagnostic-close');
 
-  await page.evaluate(api => window.eval(api).setMode(6), api);
-  await page.waitForTimeout(250);
-  await page.screenshot({ path: path.join(evidenceDir, `${name}-05-compare.png`), fullPage: true });
+  await set(0, 'field', 360);
+  await shot('04-composite-field-close');
+
+  await set(3, 'field', 300);
+  await shot('05-field-diagnostic-close');
+
+  await set(1, 'overview', 250);
+  await shot('06-truth');
+
+  await set(6, 'overview', 250);
+  await shot('07-compare');
 
   const finalQa = await page.evaluate(() => window.__GUILIN_DEM_MOTHER_SAMPLE_V002__);
   const result = { name, viewport, isMobile, initial, finalQa, consoleErrors, pageErrors, failedRequests };
@@ -84,10 +93,11 @@ await capture('desktop-1440x1000', { width: 1440, height: 1000 }, false);
 await capture('mobile-390x844', { width: 390, height: 844 }, true);
 
 const report = {
-  schema: 'guilin-dem-mother-sample-v002-browser-evidence/v1',
+  schema: 'guilin-dem-mother-sample-v002-browser-evidence/v2',
   generated_at: new Date().toISOString(),
   passed: true,
   evidence_source: 'current-interactive-webgl2-runtime',
+  screenshot_kind: 'runtime-rendered-3d-only',
   conceptImageCount: 0,
   aiGeneratedAcceptanceImageCount: 0,
   visualAcceptance: false,
