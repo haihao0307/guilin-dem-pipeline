@@ -1,0 +1,128 @@
+name: Build Guilin DEM-M03 sample v0.1.0
+
+on:
+  push:
+    branches:
+      - experiment/guilin-dem-m03-sample-v001
+    paths:
+      - experiments/guilin-dem-m03-sample-v001/**
+      - .github/workflows/guilin-dem-m03-sample-v001.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guilin-dem-m03-sample-v001-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout experiment branch
+        uses: actions/checkout@v4
+
+      - name: Assemble standalone viewer template
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="experiments/guilin-dem-m03-sample-v001"
+          cat "$root"/viewer_template.part*.html > "$root/viewer_template.html"
+          test -s "$root/viewer_template.html"
+          grep -q '__PAYLOAD__' "$root/viewer_template.html"
+          grep -q "getContext('webgl2'" "$root/viewer_template.html"
+
+      - name: Download locked canonical numeric inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p input
+          base="https://haihao0307.github.io/guilin-dem-pipeline/guilin/data"
+          curl --fail --location --retry 5 --retry-all-errors \
+            "$base/NATIVE_ELEVATION_MANIFEST.json" \
+            --output input/NATIVE_ELEVATION_MANIFEST.json
+          curl --fail --location --retry 5 --retry-all-errors \
+            "$base/native-r05-c01-2048x2048-i16.bin" \
+            --output input/native-r05-c01-2048x2048-i16.bin
+          curl --fail --location --retry 5 --retry-all-errors \
+            "$base/osm-waterways-manifest.json" \
+            --output input/osm-waterways-manifest.json
+          curl --fail --location --retry 5 --retry-all-errors \
+            "$base/osm-waterway-segments.f32.bin" \
+            --output input/osm-waterway-segments.f32.bin
+          test "$(stat -c '%s' input/native-r05-c01-2048x2048-i16.bin)" = "8388608"
+          test "$(stat -c '%s' input/osm-waterway-segments.f32.bin)" = "4973728"
+
+      - name: Build one-square-kilometre WebGL2 sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          python experiments/guilin-dem-m03-sample-v001/build_sample.py \
+            --manifest input/NATIVE_ELEVATION_MANIFEST.json \
+            --tile input/native-r05-c01-2048x2048-i16.bin \
+            --hydrology-manifest input/osm-waterways-manifest.json \
+            --hydrology-segments input/osm-waterway-segments.f32.bin \
+            --output dist
+
+      - name: Verify fail-closed sample contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('dist/sample-manifest.json').read_text(encoding='utf-8'))
+          qa = json.loads(Path('dist/qa-report.json').read_text(encoding='utf-8'))
+          html = Path('dist/index.html').read_text(encoding='utf-8')
+          checks = qa['checks']
+          assert qa['passed'] is True
+          assert checks['canonical_source_sha_verified'] is True
+          assert checks['canonical_tile_sha_verified'] is True
+          assert checks['canonical_hydrology_sha_verified'] is True
+          assert checks['source_pixel_window_integer'] is True
+          assert checks['source_spacing_m'] == 12.5
+          assert checks['sample_grid'] == [81, 81]
+          assert checks['nodata_count'] == 0
+          assert checks['resampled'] is False
+          assert checks['synthetic_gap_fill'] is False
+          assert checks['source_elevation_mutated'] is False
+          assert checks['vertical_scale'] == 1.0
+          assert checks['immutable_waterway_segment_count'] > 0
+          assert checks['visualAcceptance'] is False
+          assert checks['productionReady'] is False
+          assert manifest['sample']['truth_read_only'] is True
+          assert manifest['procedural_layers']['historical_land_use_claim'] is False
+          assert manifest['procedural_layers']['vegetation_instances_included'] is False
+          assert "getContext('webgl2'" in html
+          assert 'height_i16_le_base64' in html
+          assert 'window.__GUILIN_DEM_M03_SAMPLE__' in html
+          PY
+
+      - name: Write build summary
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('dist/sample-manifest.json').read_text(encoding='utf-8'))
+          qa = json.loads(Path('dist/qa-report.json').read_text(encoding='utf-8'))
+          print('# Guilin DEM-M03 sample v0.1.0')
+          print()
+          print(f"- Center EPSG:32649: `{manifest['sample']['center_epsg32649']}`")
+          print(f"- Elevation range: `{manifest['sample']['elevation_range_m']} m`")
+          print(f"- Native grid: `{manifest['sample']['grid']}` at `{manifest['sample']['spacing_m']} m`")
+          print(f"- Immutable waterway segments: `{qa['checks']['immutable_waterway_segment_count']}`")
+          print(f"- HTML SHA256: `{manifest['entry_sha256']}`")
+          print('- visualAcceptance: `false`')
+          print('- productionReady: `false`')
+          PY
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-dem-m03-sample-v001
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
