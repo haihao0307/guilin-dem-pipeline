@@ -1,13 +1,17 @@
 {
   "schema": "guilin-canonical-elevation-store-authority/v1",
-  "status": "PIXEL_EXACT_VERIFIED_CUTOVER_PENDING",
+  "status": "AUTHORITATIVE_PRODUCTION_SOURCE",
+  "effective_date": "2026-08-30",
   "release_tag": "guilin-canonical-elevation-store-12p5m-v1",
+  "source_cold_backup_release_tag": "guilin-native-12p5m-single-truth-v001",
   "source_cold_backup_sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
   "aoi_geometry_sha256": "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80",
   "canonical_stream_sha256": "91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a",
   "sample_count": 211919355,
   "data_bytes": 423838710,
   "chunk_count": 840,
+  "chunk_matrix": [35, 24],
+  "nominal_chunk_grid": [512, 512],
   "shard_count": 7,
   "pixel_mismatch_count": 0,
   "maximum_absolute_elevation_difference_m": 0,
@@ -16,9 +20,26 @@
   "compression": "none",
   "resampling": "none",
   "quantization": "none",
+  "interpolation": "none",
   "source_elevation_modified_m": 0.0,
   "source_tiff_role_after_cutover": "cold_backup_only",
   "normal_production_source_tiff_reads_allowed_after_cutover": false,
+  "normal_production_elevation_source": "canonical-pixel-exact-store",
+  "browser_delivery": {
+    "mode": "same-origin-http-byte-range",
+    "public_store_url": "https://haihao0307.github.io/guilin-dem-pipeline/guilin-elevation-store-v1/",
+    "http_206_verified": true,
+    "full_truth_downloaded_on_page_open": false,
+    "legacy_54_tile_public_store_required": false
+  },
+  "public_map_url": "https://haihao0307.github.io/guilin-dem-pipeline/guilin/",
+  "cutover_validation": {
+    "canonical_store_only_reconstruction_passed": true,
+    "public_full_map_browser_qa_passed": true,
+    "public_canonical_range_browser_qa_passed": true,
+    "source_tiff_read_during_cutover_build": false,
+    "legacy_native_tile_store_removed": true
+  },
   "visualAcceptance": false,
   "productionReady": false
 }
