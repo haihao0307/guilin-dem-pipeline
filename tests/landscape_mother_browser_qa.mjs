@@ -7,6 +7,30 @@ const baseUrl = process.argv[2] || 'http://127.0.0.1:4175/';
 const outputDir = process.argv[3] || 'build/landscape-mother-v001/qa';
 fs.mkdirSync(outputDir, { recursive: true });
 const results = [];
+const modeThresholds = Object.freeze({
+  composite: { luminanceStdDev: 0.025, edgeEnergy: 0.0020 },
+  truth: { luminanceStdDev: 0.025, edgeEnergy: 0.0020 },
+  geomorphology: { luminanceStdDev: 0.025, edgeEnergy: 0.0018 },
+  fields: { luminanceStdDev: 0.025, edgeEnergy: 0.0010 },
+  hydrology: { luminanceStdDev: 0.025, edgeEnergy: 0.0012 },
+  events: { luminanceStdDev: 0.025, edgeEnergy: 0.0018 },
+  compare: { luminanceStdDev: 0.025, edgeEnergy: 0.0015 },
+});
+
+function writePartial(name, payload) {
+  fs.writeFileSync(
+    path.join(outputDir, `${name}-partial.json`),
+    `${JSON.stringify({
+      schema: 'landscape-mother-browser-partial-diagnostics/v1',
+      generatedAt: new Date().toISOString(),
+      name,
+      imageFileCount: 0,
+      screenshotArtifactCount: 0,
+      materialTextureCount: 0,
+      ...payload,
+    }, null, 2)}\n`,
+  );
+}
 
 async function run(name, viewport, quality, isMobile) {
   const browser = await chromium.launch({ headless: true });
@@ -45,6 +69,7 @@ async function run(name, viewport, quality, isMobile) {
       }
     }),
   }));
+  writePartial(name, { stage: 'static-contract', viewport, quality, isMobile, staticState });
   const qa = staticState.qa;
   if (!qa?.passed) throw new Error(`${name}: browser QA failed\n${JSON.stringify(staticState, null, 2)}`);
   if (qa.renderMode !== 'interactive-webgl2-3d' || !qa.webgl2Active) throw new Error(`${name}: WebGL2 3D gate failed`);
@@ -84,12 +109,24 @@ async function run(name, viewport, quality, isMobile) {
       api.setMode(mode);
       return api.signature();
     }, { mode, view });
-    if (!(signatures[modeName].luminanceStdDev > 0.025)) throw new Error(`${name}: ${modeName} luminance structure too weak`);
-    if (!(signatures[modeName].edgeEnergy > 0.0025)) throw new Error(`${name}: ${modeName} edge energy too weak`);
+    const diagnostic = { name, modeName, signature: signatures[modeName], threshold: modeThresholds[modeName] };
+    console.log(JSON.stringify(diagnostic));
+    writePartial(name, { stage: `signature-${modeName}`, viewport, quality, isMobile, staticState, signatures });
+    const threshold = modeThresholds[modeName];
+    if (!(signatures[modeName].luminanceStdDev > threshold.luminanceStdDev)) {
+      throw new Error(`${name}: ${modeName} luminance structure too weak: ${JSON.stringify(diagnostic)}`);
+    }
+    if (!(signatures[modeName].edgeEnergy > threshold.edgeEnergy)) {
+      throw new Error(`${name}: ${modeName} edge energy too weak: ${JSON.stringify(diagnostic)}`);
+    }
   }
   if (signatures.composite.hash === signatures.truth.hash) throw new Error(`${name}: composite and truth pixel signatures are identical`);
+  if (signatures.fields.hash === signatures.truth.hash) throw new Error(`${name}: field and truth signatures are identical`);
   if (signatures.fields.hash === signatures.hydrology.hash) throw new Error(`${name}: field and hydrology signatures are identical`);
   if (signatures.events.hash === signatures.geomorphology.hash) throw new Error(`${name}: event and geomorphology signatures are identical`);
+  if (Math.abs(signatures.fields.meanLuminance - signatures.truth.meanLuminance) < 0.004) {
+    throw new Error(`${name}: field mode mean luminance is not separated from truth`);
+  }
 
   const beforeInteraction = signatures.composite.hash;
   const afterInteraction = await page.evaluate(() => {
@@ -104,6 +141,7 @@ async function run(name, viewport, quality, isMobile) {
 
   const finalQa = await page.evaluate(() => window.__LANDSCAPE_MOTHER_QA__);
   const result = { name, viewport, quality, isMobile, staticState, signatures, afterInteraction, finalQa, consoleErrors, pageErrors, failedRequests, imageRequests };
+  writePartial(name, { stage: 'complete', ...result });
   if (consoleErrors.length || pageErrors.length || failedRequests.length || imageRequests.length || finalQa.runtimeErrors.length) {
     throw new Error(`${name}: browser diagnostics failed\n${JSON.stringify(result, null, 2)}`);
   }
@@ -119,6 +157,7 @@ const report = {
   generatedAt: new Date().toISOString(),
   passed: true,
   evidenceType: 'numeric-webgl-frame-signatures',
+  modeThresholds,
   imageFileCount: 0,
   screenshotArtifactCount: 0,
   materialTextureCount: 0,
