@@ -1,0 +1,114 @@
+name: Wenzhou V7.0 public HTTP QA
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v200-17tile-truth-hydrology-rebuild
+    paths:
+      - .github/workflows/wenzhou-v700-public-http-qa.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v700-public-http-qa
+  cancel-in-progress: false
+
+jobs:
+  verify-public-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout Wenzhou V200 branch
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+
+      - name: Wait for GitHub Pages and verify public assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          PAGE='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v700-numeric/?v=7002'
+          BASE='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v700-numeric/'
+          NUMERIC='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v111/assets/hires/'
+          success=0
+          for attempt in $(seq 1 120); do
+            code="$(curl --silent --show-error --location --output /tmp/wenzhou-v700.html --write-out '%{http_code}' "$PAGE" || true)"
+            if [ "$code" = '200' ] && grep -q '小温州 · V7.0 在线纯数字地形与程序化海洋' /tmp/wenzhou-v700.html; then
+              success=1
+              break
+            fi
+            sleep 2
+          done
+          test "$success" = '1'
+          test "$(curl --silent --show-error --location --output /tmp/online-build.json --write-out '%{http_code}' "${BASE}ONLINE_BUILD.json")" = '200'
+          test "$(curl --silent --show-error --location --output /tmp/numeric-manifest.json --write-out '%{http_code}' "${NUMERIC}manifest.json")" = '200'
+          curl --fail --silent --show-error --location --range 0-15 "${NUMERIC}terrain_height_1025_i16.bin" >/tmp/terrain-header.bin
+          curl --fail --silent --show-error --location 'https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js' --range 0-80 >/tmp/three-header.js
+          curl --fail --silent --show-error --location 'https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/controls/OrbitControls.js' --range 0-80 >/tmp/orbit-header.js
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          build = json.loads(Path('/tmp/online-build.json').read_text(encoding='utf-8'))
+          manifest = json.loads(Path('/tmp/numeric-manifest.json').read_text(encoding='utf-8'))
+          html = Path('/tmp/wenzhou-v700.html').read_text(encoding='utf-8')
+          assert build['imageTextureCount'] == 0
+          assert build['proceduralTerrain'] is True
+          assert build['proceduralOcean'] is True
+          assert build['cameraMinimumClearanceMeters'] == 1.6
+          assert 'offline_satellite_color_4096_lossless.png' not in html
+          assert 'marine_mask_4096_lossless.png' not in html
+          assert 'TextureLoader' not in html
+          assert manifest['terrainOverview']['heightAsset'] == 'terrain_height_1025_i16.bin'
+          assert manifest['terrainOverview']['marineAsset'] == 'terrain_marine_1025_u8.bin'
+          payload = {
+              'schema': 'wenzhou_v700_public_http_qa@1.0.0',
+              'passed': True,
+              'publicUrl': 'https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v700-numeric/?v=7002',
+              'httpStatus': 200,
+              'titleMatched': True,
+              'onlineBuildStatus': 200,
+              'numericManifestStatus': 200,
+              'terrainBinaryRangeRequestPassed': True,
+              'threeModuleRequestPassed': True,
+              'orbitControlsRequestPassed': True,
+              'imageTextureCount': 0,
+              'proceduralTerrain': True,
+              'proceduralOcean': True,
+              'cameraMinimumClearanceMeters': 1.6,
+              'productionReady': False,
+              'visualAcceptance': False,
+          }
+          output = Path('projects/wenzhou/v200/reports/WENZHOU_V700_PUBLIC_HTTP_QA.json')
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(payload, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit public QA receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- projects/wenzhou/v200/reports/WENZHOU_V700_PUBLIC_HTTP_QA.json
+          git commit -m 'Record verified Wenzhou V7.0 public HTTP QA [skip v700 public qa]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+
+      - name: Upload HTTP QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v700-public-http-qa
+          path: |
+            /tmp/wenzhou-v700.html
+            /tmp/online-build.json
+            /tmp/numeric-manifest.json
+            /tmp/terrain-header.bin
+            /tmp/three-header.js
+            /tmp/orbit-header.js
+            projects/wenzhou/v200/reports/WENZHOU_V700_PUBLIC_HTTP_QA.json
+          if-no-files-found: warn
+          retention-days: 90
