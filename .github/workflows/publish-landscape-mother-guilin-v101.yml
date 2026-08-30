@@ -1,0 +1,142 @@
+name: Publish Landscape Mother Guilin v1.0 corrected
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-guilin-v100-continuous-fields
+    paths:
+      - web/landscape-mother-guilin-v100/**
+      - tools/procedural_landscape/landscape_mother_guilin_v100_browser_qa.py
+      - .github/workflows/publish-landscape-mother-guilin-v101.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PUBLIC_DIR: landscape-mother-guilin-v100
+  SOURCE_DATA_DIR: yangshuo-karst-distilled-v320/data
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-guilin-v100/
+  LOCKED_DEM_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+
+concurrency:
+  group: landscape-mother-guilin-v100
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 0
+      - name: Validate source
+        run: |
+          set -euo pipefail
+          node --check source/web/landscape-mother-guilin-v100/app.js
+          node --check source/web/landscape-mother-guilin-v100/terrain-worker.js
+          test -d "pages/${SOURCE_DATA_DIR}"
+          test -f "pages/${SOURCE_DATA_DIR}/index.json"
+          test -f source/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson
+          python - <<'PY'
+          from pathlib import Path
+          files=list(Path('pages/yangshuo-karst-distilled-v320/data').rglob('height_i16.bin'))
+          assert files, 'missing height assets'
+          assert any(p.stat().st_size == 2048*2048*2 for p in files), [(str(p),p.stat().st_size) for p in files]
+          PY
+      - name: Stage public candidate
+        run: |
+          set -euo pipefail
+          rm -rf "pages/${PUBLIC_DIR}"
+          mkdir -p "pages/${PUBLIC_DIR}"
+          cp -R source/web/landscape-mother-guilin-v100/. "pages/${PUBLIC_DIR}/"
+          cp -R "pages/${SOURCE_DATA_DIR}" "pages/${PUBLIC_DIR}/data"
+          cp source/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson "pages/${PUBLIC_DIR}/data/lijiang_osm.geojson"
+          mkdir -p "pages/${PUBLIC_DIR}/knowledge"
+          cp source/knowledge/terrain-hydrology/shared/distilled/GAEA_TERRAIN_FIELD_GRAPH_V100.md "pages/${PUBLIC_DIR}/knowledge/"
+          cp source/knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md "pages/${PUBLIC_DIR}/knowledge/"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          data={
+            'schema':'landscape_mother_public_build@1.0.0',
+            'sourceBranch':os.environ['GITHUB_REF_NAME'],
+            'sourceCommit':os.environ['GITHUB_SHA'],
+            'knowledgeBaseCommit':'6ac47d984bfca8336a7c0f58d176ab8153db26cd',
+            'truthSha256':os.environ['LOCKED_DEM_SHA256'],
+            'sourceGrid':[2048,2048],
+            'sourceSpacingMeters':12.5,
+            'runtime':'continuous-world-fields+global-river+adaptive-martini',
+            'truthApproved':False,
+            'visualApproved':False,
+            'productionReady':False,
+          }
+          Path('pages/landscape-mother-guilin-v100/build.json').write_text(json.dumps(data,indent=2),encoding='utf-8')
+          PY
+      - name: Push gh-pages
+        working-directory: pages
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${PUBLIC_DIR}"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "publish(landscape-mother): continuous Guilin ${GITHUB_SHA::7}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            sleep $((attempt*3))
+          done
+          exit 1
+
+  browser-qa:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Chromium
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Wait for exact build
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl -fsS "${PUBLIC_URL}build.json?run=${GITHUB_RUN_ID}" -o /tmp/build.json && python -c "import json,os; assert json.load(open('/tmp/build.json'))['sourceCommit']==os.environ['GITHUB_SHA']"; then
+              cat /tmp/build.json
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Run browser QA
+        run: |
+          python tools/procedural_landscape/landscape_mother_guilin_v100_browser_qa.py \
+            --url "${PUBLIC_URL}" \
+            --out "$RUNNER_TEMP/landscape-mother-qa"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-guilin-v100-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/landscape-mother-qa
+          if-no-files-found: error
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Landscape Mother Guilin v1.0" >> "$GITHUB_STEP_SUMMARY"
+          echo "${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          if test -f "$RUNNER_TEMP/landscape-mother-qa/report.json"; then
+            python -c "import json,os; d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'landscape-mother-qa','report.json'))); print(json.dumps({'passed':d['passed'],'failures':d['failures']},ensure_ascii=False,indent=2))" >> "$GITHUB_STEP_SUMMARY"
+          fi
