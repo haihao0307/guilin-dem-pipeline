@@ -29,7 +29,7 @@ env:
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Check out 3D experiment branch
         uses: actions/checkout@v4
@@ -71,10 +71,10 @@ jobs:
           assert contract['schema'] == 'dem-mother-guilin-sample/v2'
           assert contract['renderMode'] == 'interactive-webgl2-3d'
           assert contract['sample']['truthGrid'] == [81, 81]
-          assert contract['sample']['renderGrid'] == [321, 321]
+          assert contract['sample']['renderGrid'] == [641, 641]
           assert contract['sample']['truthSpacingM'] == 12.5
-          assert contract['sample']['renderSpacingM'] == 3.125
-          assert contract['sample']['subdivisionFactor'] == 4
+          assert contract['sample']['renderSpacingM'] == 1.5625
+          assert contract['sample']['subdivisionFactor'] == 8
           assert contract['source']['sourceTiffSha256'] == '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
           assert contract['source']['parentTileSha256'] == '5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215'
           rules = contract['rules']
@@ -175,6 +175,8 @@ jobs:
               'canonical_assets': 'passed',
               'truth_grid': [81, 81],
               'truth_elevation_range_m': [min(values), max(values)],
+              'render_grid': [641, 641],
+              'render_spacing_m': 1.5625,
               'source_resampling': False,
               'truth_overwrite': False,
               'vertical_scale': 1.0,
@@ -195,7 +197,7 @@ jobs:
           python -m http.server 4174 --directory "$SITE_DIR" > /tmp/guilin-dem-mother-v002-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
-          for _ in $(seq 1 45); do
+          for _ in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:4174/ >/dev/null; then break; fi
             sleep 1
           done
@@ -223,7 +225,7 @@ jobs:
               files[relative] = {'bytes': path.stat().st_size, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
           qa = browser['results'][0]['finalQa']
           evidence = {
-              'schema': 'guilin-dem-mother-sample-v002-release-evidence/v1',
+              'schema': 'guilin-dem-mother-sample-v002-release-evidence/v2',
               'commit': os.environ['GITHUB_SHA'],
               'branch': os.environ['GITHUB_REF_NAME'],
               'destination_dir': os.environ['DESTINATION_DIR'],
@@ -232,6 +234,8 @@ jobs:
               'render_mode': qa['render_mode'],
               'truth_grid': qa['truth_grid'],
               'render_grid': qa['render_grid'],
+              'render_spacing_m': qa['render_spacing_m'],
+              'render_subdivision_factor': qa['render_subdivision_factor'],
               'source_node_preservation_max_error_m': qa['source_node_preservation_max_error_m'],
               'karst_peak_count': qa['karst_peak_count'],
               'karst_additive_range_m': qa['karst_additive_range_m'],
@@ -279,6 +283,7 @@ jobs:
           git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
           git show "origin/gh-pages:$DESTINATION_DIR/index.html" | grep -q 'INTERACTIVE 3D ONLY'
           git show "origin/gh-pages:$DESTINATION_DIR/sample-contract.json" | grep -q 'interactive-webgl2-3d'
+          git show "origin/gh-pages:$DESTINATION_DIR/sample-contract.json" | grep -q '1.5625'
           git show "origin/gh-pages:$DESTINATION_DIR/release-evidence.json" | grep -q "${GITHUB_SHA}"
 
       - name: Write job summary
@@ -288,7 +293,7 @@ jobs:
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           from pathlib import Path
-          print('# Guilin DEM Mother Fine 3D Sample v0.2.0')
+          print('# Guilin DEM Mother Fine 3D Sample v0.2.7')
           evidence = Path('build/guilin-mother-sample-v002/release-evidence.json')
           if evidence.exists():
               data = json.loads(evidence.read_text(encoding='utf-8'))
@@ -297,9 +302,12 @@ jobs:
               print(f"- render mode: `{data['render_mode']}`")
               print(f"- truth grid: `{data['truth_grid']}`")
               print(f"- render grid: `{data['render_grid']}`")
+              print(f"- render spacing: `{data['render_spacing_m']} m`")
               print(f"- karst peaks: `{data['karst_peak_count']}`")
               print(f"- karst range: `{data['karst_additive_range_m']} m`")
               print(f"- field range: `{data['field_microrelief_range_m']} m`")
+              print(f"- terrain vertices: `{data['terrain_vertex_count']}`")
+              print(f"- terrain triangles: `{data['terrain_triangle_count']}`")
               print(f"- concept images: `{data['concept_image_count']}`")
               print(f"- plant layers: `{data['plant_layer_count']}`")
               print('- visualAcceptance: `false`')
