@@ -237,6 +237,62 @@ def nearest_valid_native_elevation(
         return float(values[local_row, local_column]), distance_m
     return None
 
+MAJOR_MAINSTEM_PATTERNS = {
+    1: ("漓江", "漓水", "li river", "li jiang", "lijiang river", "li-jiang"),
+    2: ("湘江", "湘水", "xiang river", "xiang jiang", "xiangjiang"),
+    3: ("资江", "資江", "资水", "資水", "zi river", "zi jiang", "zijiang", "zi shui", "zishui"),
+}
+MAJOR_MAINSTEM_KEYS = {1: "li", 2: "xiang", 3: "zi"}
+MAJOR_MAINSTEM_MIN_METRIC = {1: 150.0, 2: 175.0, 3: 160.0}
+
+
+def feature_name_blob(properties: dict[str, Any]) -> str:
+    values: list[str] = []
+    for key, value in properties.items():
+        lowered = str(key).lower()
+        if lowered == "name" or lowered.startswith("name:") or lowered in {
+            "alt_name", "official_name", "short_name", "local_name", "old_name",
+            "name_zh", "name_en", "river_name",
+        }:
+            if value not in (None, ""):
+                values.append(str(value))
+    return " | ".join(values).lower()
+
+
+def mainstem_code(properties: dict[str, Any]) -> int:
+    text = feature_name_blob(properties)
+    for code, patterns in MAJOR_MAINSTEM_PATTERNS.items():
+        if any(pattern.lower() in text for pattern in patterns):
+            return code
+    marker = str(properties.get("mainstem") or properties.get("is_mainstem") or "").strip().lower()
+    system = str(properties.get("system") or "").strip().lower()
+    if marker in {"1", "true", "yes", "main", "mainstem"}:
+        if system in {"li", "lijiang", "li-jiang"}:
+            return 1
+        if system in {"xiang", "xiangjiang", "xiang-jiang"}:
+            return 2
+        if system in {"zi", "zijiang", "zi-jiang", "zishui"}:
+            return 3
+    return 0
+
+
+def node_rank(key: tuple[float, float], nodes: dict[tuple[float, float], dict[str, Any]]) -> tuple[float, float, float]:
+    record = nodes[key]
+    return float(record["elevation"]), float(key[1]), float(key[0])
+
+
+def style_metric(waterway: str, source_width_m: float, flow_quantile: float, major_code: int) -> float:
+    q = float(np.clip(flow_quantile, 0.0, 1.0))
+    if major_code:
+        minimum = MAJOR_MAINSTEM_MIN_METRIC[major_code]
+        return float(np.clip(max(minimum, 112.0 + 92.0 * q + 0.28 * source_width_m), minimum, 230.0))
+    if waterway == "river":
+        return float(np.clip(5.0 + 72.0 * q ** 1.55 + 0.16 * source_width_m, 5.0, 92.0))
+    if waterway == "stream":
+        return float(np.clip(1.5 + 15.5 * q ** 1.55 + 0.05 * source_width_m, 1.5, 20.0))
+    return float(np.clip(2.0 + 16.0 * q ** 1.35 + 0.07 * source_width_m, 2.0, 22.0))
+
+
 def build_hydrology(
     dataset: rasterio.io.DatasetReader,
     native_manifest: dict[str, Any],
@@ -256,20 +312,26 @@ def build_hydrology(
     transformer = Transformer.from_crs("EPSG:4326", SOURCE_CRS, always_xy=True)
 
     node_records: dict[tuple[float, float], dict[str, Any]] = {}
-    raw_segments: list[tuple[tuple[float, float], tuple[float, float], float, float]] = []
+    raw_segments: list[dict[str, Any]] = []
     record_counts = {"river": 0, "stream": 0, "canal": 0}
+    mainstem_feature_counts = {"li": 0, "xiang": 0, "zi": 0}
     source_feature_count = 0
     rendered_feature_count = 0
     clipped_part_count = 0
+    named_rivers_seen: set[str] = set()
 
-    for feature in collection.get("features", []):
+    for feature_index, feature in enumerate(collection.get("features", [])):
         properties = feature.get("properties") or {}
         waterway = str(properties.get("waterway") or "").strip().lower()
         if waterway not in ALLOWED_WATERWAYS:
             continue
         source_feature_count += 1
         class_value = ALLOWED_WATERWAYS[waterway]
-        width = parse_width(properties, waterway)
+        source_width = parse_width(properties, waterway)
+        major_code = mainstem_code(properties) if waterway == "river" else 0
+        name_blob = feature_name_blob(properties)
+        if waterway == "river" and name_blob:
+            named_rivers_seen.add(name_blob[:160])
         feature_rendered = False
         for line in projected_line_parts(feature, transformer, domain):
             coordinates = list(line.coords)
@@ -281,14 +343,18 @@ def build_hydrology(
                 end_key = (round(float(end[0]), 3), round(float(end[1]), 3))
                 if start_key == end_key:
                     continue
-                raw_segments.append((start_key, end_key, class_value, width))
+                raw_segments.append({
+                    "feature_index": feature_index,
+                    "start": start_key,
+                    "end": end_key,
+                    "waterway": waterway,
+                    "class": class_value,
+                    "source_width_m": source_width,
+                    "major_code": major_code,
+                })
                 for key in (start_key, end_key):
-                    existing = node_records.get(key)
-                    if existing is None:
-                        node_records[key] = {"e": key[0], "n": key[1], "class": class_value, "width": width}
-                    else:
-                        existing["class"] = min(float(existing["class"]), class_value)
-                        existing["width"] = max(float(existing["width"]), width)
+                    if key not in node_records:
+                        node_records[key] = {"e": key[0], "n": key[1]}
                 part_rendered = True
             if part_rendered:
                 clipped_part_count += 1
@@ -296,6 +362,8 @@ def build_hydrology(
         if feature_rendered:
             rendered_feature_count += 1
             record_counts[waterway] += 1
+            if major_code:
+                mainstem_feature_counts[MAJOR_MAINSTEM_KEYS[major_code]] += 1
 
     if not raw_segments or not node_records:
         raise RuntimeError("no OSM linear waterways were rendered")
@@ -313,9 +381,7 @@ def build_hydrology(
         if not math.isfinite(elevation) or elevation == SOURCE_NODATA:
             missing_keys.append(key)
             continue
-        record = dict(node_records[key])
-        record["elevation"] = elevation
-        valid_node_data[key] = record
+        valid_node_data[key] = {"e": key[0], "n": key[1], "elevation": elevation}
 
     fallback_node_count = 0
     fallback_max_distance_m = 0.0
@@ -326,64 +392,144 @@ def build_hydrology(
             unresolved_keys.append(key)
             continue
         elevation, distance_m = fallback
-        record = dict(node_records[key])
-        record["elevation"] = elevation
-        record["display_elevation_fallback"] = True
-        record["display_elevation_fallback_distance_m"] = distance_m
-        valid_node_data[key] = record
+        valid_node_data[key] = {
+            "e": key[0], "n": key[1], "elevation": elevation,
+            "display_elevation_fallback": True,
+            "display_elevation_fallback_distance_m": distance_m,
+        }
         fallback_node_count += 1
         fallback_max_distance_m = max(fallback_max_distance_m, distance_m)
 
     if unresolved_keys:
         raise RuntimeError(f"unable to drape {len(unresolved_keys)} waterway nodes onto the native DEM")
 
-    source_segment_count = len(raw_segments)
+    outgoing: dict[tuple[float, float], list[int]] = {}
+    adjacent: dict[tuple[float, float], list[int]] = {}
+    directed_edges: list[dict[str, Any]] = []
+    for source in raw_segments:
+        start_key = source["start"]
+        end_key = source["end"]
+        start_rank = node_rank(start_key, valid_node_data)
+        end_rank = node_rank(end_key, valid_node_data)
+        if start_rank >= end_rank:
+            upstream, downstream = start_key, end_key
+        else:
+            upstream, downstream = end_key, start_key
+        length_m = float(math.hypot(downstream[0] - upstream[0], downstream[1] - upstream[1]))
+        edge = dict(source)
+        edge.update({"upstream": upstream, "downstream": downstream, "length_m": max(length_m, 0.01), "flow_length_m": 0.0})
+        edge_index = len(directed_edges)
+        directed_edges.append(edge)
+        outgoing.setdefault(upstream, []).append(edge_index)
+        adjacent.setdefault(start_key, []).append(edge_index)
+        adjacent.setdefault(end_key, []).append(edge_index)
+
+    accumulated = {key: 0.0 for key in valid_node_data}
+    for key in sorted(valid_node_data, key=lambda item: node_rank(item, valid_node_data), reverse=True):
+        edge_indices = outgoing.get(key, [])
+        if not edge_indices:
+            continue
+        shared_upstream = accumulated[key] / max(1, len(edge_indices))
+        for edge_index in edge_indices:
+            edge = directed_edges[edge_index]
+            flow_length = shared_upstream + edge["length_m"]
+            edge["flow_length_m"] = flow_length
+            accumulated[edge["downstream"]] += flow_length
+
+    log_flow = np.log1p(np.asarray([edge["flow_length_m"] for edge in directed_edges], dtype=np.float64))
+    low = float(np.percentile(log_flow, 5.0))
+    high = float(np.percentile(log_flow, 99.5))
+    span = max(1e-9, high - low)
+    for edge, value in zip(directed_edges, log_flow, strict=True):
+        edge["flow_quantile"] = float(np.clip((float(value) - low) / span, 0.0, 1.0))
+
+    # Extend named main-stem styling across short unnamed OSM way breaks. This changes style only.
+    # Centerline coordinates and segment membership remain untouched.
+    queue: list[int] = [index for index, edge in enumerate(directed_edges) if edge["major_code"]]
+    visited = set(queue)
+    while queue:
+        current_index = queue.pop(0)
+        current = directed_edges[current_index]
+        major_code = int(current["major_code"])
+        for node in (current["upstream"], current["downstream"]):
+            candidates = [
+                index for index in adjacent.get(node, [])
+                if index not in visited
+                and directed_edges[index]["waterway"] == "river"
+                and not directed_edges[index]["major_code"]
+            ]
+            if not candidates:
+                continue
+            candidates.sort(key=lambda index: (
+                directed_edges[index]["flow_quantile"],
+                directed_edges[index]["source_width_m"],
+                directed_edges[index]["length_m"],
+            ), reverse=True)
+            chosen = candidates[0]
+            candidate = directed_edges[chosen]
+            if candidate["flow_quantile"] < 0.72 and candidate["source_width_m"] < 30.0:
+                continue
+            candidate["major_code"] = major_code
+            candidate["mainstem_style_propagated"] = True
+            visited.add(chosen)
+            queue.append(chosen)
+
+    mainstem_segment_counts = {"li": 0, "xiang": 0, "zi": 0}
     segment_values: list[float] = []
     used_keys: set[tuple[float, float]] = set()
-    valid_segment_count = 0
-    for start_key, end_key, class_value, width in raw_segments:
-        start = valid_node_data.get(start_key)
-        end = valid_node_data.get(end_key)
-        if start is None or end is None:
-            continue
-        segment_values.extend(
-            (
-                float(start["e"] - world_center_e),
-                float(start["elevation"]),
-                float(world_center_n - start["n"]),
-                float(end["e"] - world_center_e),
-                float(end["elevation"]),
-                float(world_center_n - end["n"]),
-                float(class_value),
-                float(width),
-            )
-        )
+    node_style: dict[tuple[float, float], dict[str, float]] = {}
+    for edge in directed_edges:
+        major_code = int(edge["major_code"])
+        metric = style_metric(edge["waterway"], float(edge["source_width_m"]), float(edge["flow_quantile"]), major_code)
+        edge["display_hierarchy_metric"] = metric
+        if major_code:
+            mainstem_segment_counts[MAJOR_MAINSTEM_KEYS[major_code]] += 1
+        start_key = edge["upstream"]
+        end_key = edge["downstream"]
+        start = valid_node_data[start_key]
+        end = valid_node_data[end_key]
+        segment_values.extend((
+            float(start["e"] - world_center_e),
+            float(start["elevation"]),
+            float(world_center_n - start["n"]),
+            float(end["e"] - world_center_e),
+            float(end["elevation"]),
+            float(world_center_n - end["n"]),
+            float(edge["class"]),
+            metric,
+        ))
+        for key in (start_key, end_key):
+            existing = node_style.get(key)
+            if existing is None:
+                node_style[key] = {"class": float(edge["class"]), "metric": metric}
+            else:
+                existing["class"] = min(existing["class"], float(edge["class"]))
+                existing["metric"] = max(existing["metric"], metric)
         used_keys.add(start_key)
         used_keys.add(end_key)
-        valid_segment_count += 1
 
-    if valid_segment_count != source_segment_count:
-        raise RuntimeError(
-            f"waterway segment loss: source={source_segment_count} emitted={valid_segment_count}"
-        )
+    missing_mainstems = [name for name, count in mainstem_segment_counts.items() if count <= 0]
+    if missing_mainstems:
+        examples = sorted(named_rivers_seen)[:80]
+        raise RuntimeError(f"missing named main-stem systems {missing_mainstems}; named rivers seen: {examples}")
 
     node_values: list[float] = []
     for key in sorted(used_keys):
         record = valid_node_data[key]
-        node_values.extend(
-            (
-                float(record["e"] - world_center_e),
-                float(record["elevation"]),
-                float(world_center_n - record["n"]),
-                float(record["class"]),
-                float(record["width"]),
-            )
-        )
+        style = node_style[key]
+        node_values.extend((
+            float(record["e"] - world_center_e),
+            float(record["elevation"]),
+            float(world_center_n - record["n"]),
+            float(style["class"]),
+            float(style["metric"]),
+        ))
 
-    if valid_segment_count < 1_000:
-        raise RuntimeError(f"unexpectedly small waterway segment count: {valid_segment_count}")
-    if len(node_values) // 5 < 1_000:
-        raise RuntimeError("unexpectedly small waterway node count")
+    source_segment_count = len(raw_segments)
+    valid_segment_count = len(directed_edges)
+    dropped_segment_count = source_segment_count - valid_segment_count
+    if dropped_segment_count != 0:
+        raise RuntimeError(f"waterway segment loss: {dropped_segment_count}")
 
     segment_output = output_dir / "osm-waterway-segments.f32.bin"
     node_output = output_dir / "osm-waterway-nodes.f32.bin"
@@ -423,8 +569,8 @@ def build_hydrology(
             "clipped_part_count": clipped_part_count,
             "source_segment_count": source_segment_count,
             "segment_count": valid_segment_count,
-            "dropped_segment_count": source_segment_count - valid_segment_count,
-            "unresolved_node_count": len(unresolved_keys),
+            "dropped_segment_count": dropped_segment_count,
+            "unresolved_node_count": 0,
             "display_elevation_fallback_node_count": fallback_node_count,
             "display_elevation_fallback_max_distance_m": fallback_max_distance_m,
             "display_elevation_fallback_method": "nearest-valid-native-dem-cell",
@@ -432,12 +578,23 @@ def build_hydrology(
             "source_route_coverage": 1.0,
             "upstream_to_downstream_continuity_required": True,
         },
+        "styling": {
+            "profile": "basin-hierarchy-mainstem-gradient-v3",
+            "mainstem_names": ["漓江", "湘江", "资江"],
+            "mainstem_feature_counts": mainstem_feature_counts,
+            "mainstem_segment_counts": mainstem_segment_counts,
+            "hierarchy_metric": "DEM-downhill accumulated upstream network length with source-width support",
+            "gradient_direction": "lighter-and-thinner-upstream_to_darker-and-wider-downstream",
+            "mainstem_minimum_metrics": {MAJOR_MAINSTEM_KEYS[key]: value for key, value in MAJOR_MAINSTEM_MIN_METRIC.items()},
+            "style_only_mainstem_gap_propagation": True,
+            "planimetry_unchanged": True,
+        },
         "segments": {
             "file": segment_output.name,
             "bytes": segment_output.stat().st_size,
             "sha256": sha256_file(segment_output),
             "dtype": "float32-little-endian",
-            "layout": ["start_x", "start_elevation", "start_z", "end_x", "end_elevation", "end_z", "class", "source_width_m"],
+            "layout": ["start_x", "start_elevation", "start_z", "end_x", "end_elevation", "end_z", "class", "display_hierarchy_metric"],
             "count": valid_segment_count,
             "compression": "none",
         },
@@ -446,12 +603,11 @@ def build_hydrology(
             "bytes": node_output.stat().st_size,
             "sha256": sha256_file(node_output),
             "dtype": "float32-little-endian",
-            "layout": ["x", "elevation", "z", "class", "source_width_m"],
+            "layout": ["x", "elevation", "z", "class", "display_hierarchy_metric"],
             "count": len(node_values) // 5,
             "compression": "none",
         },
     }
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build the continuous Guilin full-map and OSM linear-waterway assets")

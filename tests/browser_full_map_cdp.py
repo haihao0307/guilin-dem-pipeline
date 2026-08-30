@@ -148,12 +148,37 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
     if result.get("hydrology_visual_join_policy") != "overlapped-segments-and-degree-caps":
         failures.append(f"hydrology join policy: {result.get('hydrology_visual_join_policy')}")
     style = result.get("waterway_style") or {}
-    if style.get("profile") != "thin-hierarchical-continuous-v2":
+    if style.get("profile") != "basin-hierarchy-mainstem-gradient-v3":
         failures.append(f"waterway style profile: {style.get('profile')}")
     maximum_width = float(style.get("max_full_width_css_px") or 999)
-    width_limit = 4.0 if require_detail else 1.8
+    width_limit = 3.0 if require_detail else 1.8
     if maximum_width > width_limit + 1e-6:
-        failures.append(f"waterway width {maximum_width:.3f}px exceeds {width_limit:.1f}px")
+        failures.append(f"secondary waterway width {maximum_width:.3f}px exceeds {width_limit:.1f}px")
+    mainstem_width = float(style.get("mainstem_full_width_css_px") or 0)
+    mainstem_minimum, mainstem_maximum = ((4.2, 9.0) if require_detail else (2.2, 4.2))
+    if not mainstem_minimum <= mainstem_width <= mainstem_maximum:
+        failures.append(
+            f"mainstem width {mainstem_width:.3f}px outside {mainstem_minimum:.1f}-{mainstem_maximum:.1f}px"
+        )
+    secondary_width = float(style.get("secondary_river_max_full_width_css_px") or 999)
+    stream_width = float(style.get("stream_max_full_width_css_px") or 999)
+    canal_width = float(style.get("canal_max_full_width_css_px") or 999)
+    if not require_detail and secondary_width > 1.8:
+        failures.append(f"secondary river too wide: {secondary_width:.3f}px")
+    if not require_detail and stream_width > 0.9:
+        failures.append(f"stream too wide: {stream_width:.3f}px")
+    if not require_detail and canal_width > 1.0:
+        failures.append(f"canal too wide: {canal_width:.3f}px")
+    if mainstem_width <= secondary_width * 1.8:
+        failures.append(
+            f"mainstem hierarchy too weak: main {mainstem_width:.3f}px secondary {secondary_width:.3f}px"
+        )
+    if style.get("color_gradient") != "lighter-and-thinner-upstream_to_darker-and-wider-downstream":
+        failures.append(f"waterway color gradient: {style.get('color_gradient')}")
+    mainstem_counts = style.get("mainstem_segment_counts") or {}
+    for name in ("li", "xiang", "zi"):
+        if int(mainstem_counts.get(name, 0)) <= 0:
+            failures.append(f"missing {name} mainstem segments")
     counts = result.get("waterway_record_counts") or {}
     if sum(int(counts.get(key, 0)) for key in ("river", "stream", "canal")) < 500:
         failures.append(f"waterway record count too small: {counts}")
@@ -243,8 +268,11 @@ def validate_waterway_pixels(metrics: dict) -> list[str]:
     if water_pixels < 1_000:
         failures.append(f"too few detected waterway pixels: {water_pixels}")
     core_fraction = float(metrics.get("core_after_two_fraction", 1.0))
-    if core_fraction > 0.06:
+    if core_fraction > 0.12:
         failures.append(f"waterway two-pixel core fraction too large: {core_fraction:.4f}")
+    coverage = water_pixels / max(1, int(metrics.get("width", 1)) * int(metrics.get("height", 1)))
+    if coverage > 0.025:
+        failures.append(f"waterway screen coverage too large: {coverage:.4f}")
     return failures
 
 
