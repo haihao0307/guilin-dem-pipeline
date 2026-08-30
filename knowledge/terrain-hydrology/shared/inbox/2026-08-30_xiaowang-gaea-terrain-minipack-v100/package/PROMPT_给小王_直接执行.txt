@@ -1,0 +1,31 @@
+小王，请完整阅读这个小包。
+
+本轮目标是把 GAEA 式场图知识蒸馏进程序化地貌生产线，服务桂林、温州、昆明和后续地区。
+
+最高规则：真实 DEM、OSM、GEBCO、岸线、水系、AOI、CRS、仿射变换和哈希全部只读。程序化节点只能生成有边界的增强层、Data Maps、颜色、法线、粗糙度和 AO。禁止移动山峰、河流、湖岸、海岸、机场、道路和城市。
+
+请先建立五层架构：
+
+1. Truth
+2. Shape
+3. Erosion and Data
+4. Color and Render
+5. QA and Evidence
+
+请按以下最短闭环实现：
+
+Truth DEM
+→ Slope、Curvature、真实 Flow
+→ 两层低强度 Rugged
+→ 局部 Stratify
+→ 遮罩控制的 MicroErosion
+→ RockMap、Soil、Wetness、Exposure
+→ AutoLevel、Clarity、CLUT5、归一化 Splat
+→ Normal、Roughness、AO
+→ 固定相机和数据通道证据
+
+种子至少拆分为 shape、warp、geology、erosion、hydrologyVisual、color、microDetail、ecology。全部使用世界坐标取样，保证瓦片连续。
+
+先完成一个 10 × 10 km 的真实 DEM 核心区验证。输出 Z_truth、Z_delta、Slope、Curvature、Flow、RockMap、Wetness、Final Color、Normal 和 QA 报告。任何真值、接缝、水文或幅度门失败时立即停止，productionReady 保持 false。
+
+不要引入 Brick Mother 的砖块几何和砖材参数。只吸收场图、节点职责、综合色彩、种子隔离和证据闭环。
