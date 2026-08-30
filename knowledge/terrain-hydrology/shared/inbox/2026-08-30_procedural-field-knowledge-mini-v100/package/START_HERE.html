@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>程序化字段知识最小包</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d0e;--panel:#15191b;--line:#30363a;--text:#f1efe9;--muted:#b7bbb8;--accent:#d9a35f}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 15% 0,#6a47223a,transparent 38rem),var(--bg);color:var(--text);font-family:Inter,"Segoe UI","Microsoft YaHei",system-ui,sans-serif}
+main{width:min(1120px,calc(100vw - 28px));margin:auto;padding:28px 0 58px}
+section{border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:22px;margin-bottom:16px}
+h1{margin:0 0 10px;font-size:clamp(28px,4vw,46px)}
+h2{color:var(--accent)}
+p,li{color:var(--muted);line-height:1.8}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.flow div{border:1px solid var(--line);border-radius:11px;padding:13px;background:#0f1213;text-align:center}
+a{color:#f1d2aa}
+@media(max-width:850px){.flow{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+<section>
+<h1>程序化字段知识最小包</h1>
+<p>用于通用造型、材质、色彩、噪波和测量结果可视化。整个包只保留可迁移的方法、合同和参考代码。</p>
+</section>
+<section>
+<h2>核心流程</h2>
+<div class="flow">
+<div>Source</div>
+<div>Shape</div>
+<div>Data and Mask</div>
+<div>Color</div>
+<div>Render and QA</div>
+</div>
+</section>
+<section>
+<h2>核心方法</h2>
+<ol>
+<li>多尺度噪波</li>
+<li>共享域扭曲</li>
+<li>低强度多次复合</li>
+<li>父级遮罩和过程遮罩</li>
+<li>数据驱动综合色彩</li>
+<li>多通道事件关联</li>
+<li>独立种子和确定性</li>
+<li>诊断图和范围 QA</li>
+</ol>
+</section>
+<section>
+<h2>阅读入口</h2>
+<p><a href="00_README_FIRST.md">README</a></p>
+<p><a href="01_CORE_KNOWLEDGE.md">核心知识</a></p>
+<p><a href="02_ADAPTATION_GUIDE.md">适配指南</a></p>
+<p><a href="field_graph_recipes.json">图谱配方</a></p>
+<p><a href="field_contract.schema.json">字段合同</a></p>
+<p><a href="field_reference.js">参考代码</a></p>
+</section>
+</main>
+</body>
+</html>

@@ -3,12 +3,12 @@
   "skill": {
     "id": "dem-procedural-landscape",
     "nameZh": "程序化地貌生产线",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "repository": "haihao0307/guilin-dem-pipeline",
     "branch": "skill/dem-procedural-landscape-v010",
     "currentIntegrationRef": "skill/xiaowang-gaea-terrain-field-v100",
     "sourceClosedDraftPr": 51,
-    "status": "gaea-terrain-field-graph-integrated",
+    "status": "landscape-mother-field-core-integrated",
     "controllerAlias": "小华",
     "handoffTargetAlias": "小王"
   },
@@ -102,6 +102,25 @@
       "sourceIntake": "knowledge/terrain-hydrology/shared/inbox/2026-08-30_xiaowang-gaea-terrain-minipack-v100/RECEIPT.json"
     },
     {
+      "id": "procedural-field-core",
+      "nameZh": "程序化字段核心分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/procedural-field-core/SKILL.md",
+      "role": "cross-cutting-active-contract",
+      "owns": [
+        "source-shape-data-color-render-field-architecture",
+        "macro-meso-micro-scale-budget",
+        "low-strength-multipass-composition",
+        "shared-domain-warp",
+        "separation-mask",
+        "five-stop-color-map",
+        "normalized-splat",
+        "correlated-event-fields",
+        "deterministic-seed-bank",
+        "field-diagnostics"
+      ],
+      "sourceIntake": "knowledge/terrain-hydrology/shared/inbox/2026-08-30_procedural-field-knowledge-mini-v100/RECEIPT.json"
+    },
+    {
       "id": "water-system",
       "nameZh": "水体分支",
       "skillPath": "skills/dem-procedural-landscape/branches/water-system/SKILL.md",
@@ -182,7 +201,10 @@
     "verticalScale": "1:1",
     "controllerVisualApprovalRequired": true,
     "browserQaRequired": true,
-    "rollbackRequired": true
+    "rollbackRequired": true,
+    "continuousRiverTopologyRequired": true,
+    "tileSeedRestartForbidden": true,
+    "fieldDiagnosticsRequired": true
   },
   "nextTask": "ops/tasks/DEM_PROCEDURAL_LANDSCAPE_LAYER_MANIFEST_V030.md",
   "showcaseProgram": {

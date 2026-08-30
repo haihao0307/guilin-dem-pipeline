@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/procedural-field-contract-v1.json",
+  "title": "Procedural Field Contract",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "source",
+    "seedBank",
+    "nodes",
+    "outputs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "immutable"
+      ],
+      "properties": {
+        "immutable": {
+          "type": "boolean"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "units": {
+          "type": "string"
+        },
+        "coordinateSpace": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "seedBank": {
+      "type": "object",
+      "required": [
+        "master",
+        "shape",
+        "warp",
+        "structure",
+        "damage",
+        "color",
+        "weather",
+        "micro"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "family",
+          "inputs",
+          "outputs",
+          "scaleBand"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "source",
+              "shape",
+              "warp",
+              "data",
+              "mask",
+              "color",
+              "render",
+              "utility"
+            ]
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "scaleBand": {
+            "enum": [
+              "macro",
+              "meso",
+              "micro",
+              "subpixel"
+            ]
+          },
+          "seedChannel": {
+            "type": "string"
+          },
+          "parentMask": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "diagnostic": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "final"
+      ],
+      "properties": {
+        "final": {
+          "type": "string"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

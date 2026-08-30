@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "procedural_field_graph_recipes",
+  "recipes": [
+    {
+      "id": "measured_surface",
+      "inputs": [
+        "sourceShape",
+        "distanceError",
+        "normalDifference",
+        "curvature",
+        "confidence"
+      ],
+      "graph": [
+        "sourceReadOnly",
+        "autoLevel(distanceError)",
+        "clarity(curvature)",
+        "confidenceMask",
+        "fiveStopColorMap",
+        "normalizedSplat",
+        "debugChannels"
+      ],
+      "outputs": [
+        "color",
+        "roughness",
+        "normalDebug",
+        "confidenceDebug"
+      ],
+      "shapeImpact": "none"
+    },
+    {
+      "id": "generic_surface_material",
+      "inputs": [
+        "sourceShape",
+        "materialRegion",
+        "exposure",
+        "moisture"
+      ],
+      "graph": [
+        "sharedDomainWarp",
+        "macroFbm",
+        "mesoRidgedA",
+        "mesoRidgedB",
+        "microTurbulence",
+        "cavityAndProtrusion",
+        "separationMask",
+        "fiveStopColorMap",
+        "normalizedSplat"
+      ],
+      "outputs": [
+        "shapeDelta",
+        "albedo",
+        "roughness",
+        "normal",
+        "ao"
+      ],
+      "shapeImpact": "bounded"
+    },
+    {
+      "id": "layered_surface",
+      "inputs": [
+        "sourceShape",
+        "layerDirection",
+        "layerMask"
+      ],
+      "graph": [
+        "directionalWarp",
+        "layerFieldA",
+        "layerFieldB",
+        "localBreakup",
+        "separationMask",
+        "layerColorMap"
+      ],
+      "outputs": [
+        "shapeDelta",
+        "layerMask",
+        "albedo",
+        "normal"
+      ],
+      "shapeImpact": "bounded"
+    },
+    {
+      "id": "weathered_surface",
+      "inputs": [
+        "sourceShape",
+        "exposure",
+        "runoff",
+        "contact"
+      ],
+      "graph": [
+        "broadWeatherField",
+        "runoffMask",
+        "contactWear",
+        "depositMask",
+        "colorCorrection",
+        "roughnessCorrelation"
+      ],
+      "outputs": [
+        "weatherMask",
+        "albedo",
+        "roughness",
+        "wetness"
+      ],
+      "shapeImpact": "visual_first"
+    }
+  ]
+}

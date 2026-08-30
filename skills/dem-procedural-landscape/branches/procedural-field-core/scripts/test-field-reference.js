@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const f = require('./field-reference.js');
+const seedsA=f.deriveSeeds(370001),seedsB=f.deriveSeeds(370001),seedsC=f.deriveSeeds(370002);
+assert.deepEqual(seedsA,seedsB);
+assert.notDeepEqual(seedsA,seedsC);
+const a=f.evaluateFields(450000,2750000,seedsA),b=f.evaluateFields(450000,2750000,seedsA),c=f.evaluateFields(450128,2750128,seedsA);
+assert.deepEqual(a,b);
+assert.notDeepEqual(a,c);
+for(const value of Object.values(a))assert.ok(Number.isFinite(value)&&value>=0&&value<=1);
+const splat=f.normalizedSplat([.2,.4,.7,.1]);assert.ok(Math.abs(splat.reduce((x,y)=>x+y,0)-1)<1e-12);
+assert.equal(f.separationMask(.5,.5),0);
+const colour=f.clut5(.5,[[0,0,0],[.2,.2,.2],[.4,.4,.4],[.7,.7,.7],[1,1,1]]);assert.deepEqual(colour,[.4,.4,.4]);
+console.log(JSON.stringify({passed:true,invariants:8,seedChannels:Object.keys(seedsA)},null,2));
