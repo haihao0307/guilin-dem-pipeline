@@ -1,0 +1,43 @@
+name: Fix Guilin distilled selection
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/fix_guilin_distilled_selection.py
+      - .github/workflows/fix-guilin-distilled-selection.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-guilin-distilled-selection
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply fixed selection budgets
+        run: |
+          set -euo pipefail
+          python tools/fix_guilin_distilled_selection.py
+          python -m py_compile pipeline/distill_online_runtime.py
+          ! grep -q 'source width >= 40 m' pipeline/distill_online_runtime.py
+      - name: Commit corrected runtime builder
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add pipeline/distill_online_runtime.py
+          git diff --cached --check
+          git commit -m 'fix(guilin): bound distilled first-load hydrology size'
+          git push origin HEAD:main
