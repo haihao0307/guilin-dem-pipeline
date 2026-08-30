@@ -2,205 +2,1501 @@
   'use strict';
 
   const MANIFEST_URL = 'data/NATIVE_ELEVATION_MANIFEST.json';
-  const EXPECTED_SCHEMA = 'guilin-canonical-native-dem/v1';
+  const OVERVIEW_MANIFEST_URL = 'data/overview-direct-samples-manifest.json';
+  const HYDROLOGY_MANIFEST_URL = 'data/osm-waterways-manifest.json';
+
   const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
   const EXPECTED_AOI_SHA = '36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80';
-  const EXPECTED_TILE_COUNT = 54;
-  const EXPECTED_TILE_BYTES = 8_388_608;
-  const TILE_GRID = 2048;
-  const WINDOW_GRID = 512;
-  const WINDOW_STEP = 384;
   const SOURCE_SPACING_M = 12.5;
   const NODATA = 0;
-  const MAX_DPR = 1.6;
+  const TILE_GRID = 2048;
+  const TILE_STRIDE = 2047;
+  const TILE_BYTES = 8_388_608;
+  const TILE_COUNT = 54;
+  const DETAIL_GRID = 640;
+  const DETAIL_EDGE_FADE = 72;
+  const DETAIL_ENABLE_DISTANCE_M = 92_000;
+  const DETAIL_REFRESH_DISTANCE_M = 1_800;
+  const MAX_TILE_CACHE = 8;
+  const MAX_DPR = 1.65;
+
+  const ANCHORS = [
+    { id: 'zhenbaoding', name: '真宝鼎', e: 482_534.530462443, n: 2_890_708.122979571 },
+    { id: 'guilin', name: '桂林城', e: 429_459.239540243, n: 2_795_494.225020682 },
+    { id: 'yangtang', name: '秧塘机场', e: 414_949.565810143, n: 2_789_301.889164384 },
+    { id: 'yangshuo', name: '阳朔县', e: 448_648.462659552, n: 2_740_850.767499203 },
+  ];
 
   const $ = id => document.getElementById(id);
   const canvas = $('terrainCanvas');
   const loadingCard = $('loadingCard');
   const loadingDetail = $('loadingDetail');
+  const detailLoading = $('detailLoading');
+  const detailLoadingText = $('detailLoadingText');
   const errorCard = $('errorCard');
   const errorMessage = $('errorMessage');
   const controlPanel = $('controlPanel');
   const togglePanel = $('togglePanel');
   const renderInfo = $('renderInfo');
+  const labelLayer = $('labelLayer');
   const runtimeErrors = [];
 
   const state = {
     manifest: null,
+    overviewManifest: null,
+    hydrologyManifest: null,
     tileById: new Map(),
-    anchorById: new Map(),
-    currentTile: null,
-    currentAnchor: null,
-    currentTileSha: null,
-    codes: null,
-    window: { x: 0, y: 0, width: WINDOW_GRID, height: WINDOW_GRID },
-    worldWidth: (WINDOW_GRID - 1) * SOURCE_SPACING_M,
-    worldDepth: (WINDOW_GRID - 1) * SOURCE_SPACING_M,
-    elevationMin: 0,
-    elevationMax: 1,
+    tileByMatrix: new Map(),
+    tileCache: new Map(),
+    tileLoadPromises: new Map(),
+    overviewValues: null,
+    overviewColumns: null,
+    overviewRows: null,
+    overviewMesh: null,
+    detailMesh: null,
+    detailPatch: null,
+    detailRequestToken: 0,
+    detailTimer: null,
+    detailActive: false,
+    hydrologySegments: null,
+    hydrologyNodes: null,
+    hydrologySegmentCount: 0,
+    hydrologyNodeCount: 0,
+    waterwaysVisible: true,
+    waterwayEmphasis: 1.25,
+    labelsVisible: true,
+    labels: [],
     gl: null,
-    program: null,
-    vao: null,
-    vertexBuffer: null,
-    indexBuffer: null,
-    indexCount: 0,
-    validTriangleCount: 0,
-    uniforms: {},
+    terrainProgram: null,
+    segmentProgram: null,
+    nodeProgram: null,
+    segmentVao: null,
+    segmentInstanceBuffer: null,
+    nodeVao: null,
+    nodeBuffer: null,
+    terrainUniforms: null,
+    segmentUniforms: null,
+    nodeUniforms: null,
     projection: new Float32Array(16),
     view: new Float32Array(16),
     viewProjection: new Float32Array(16),
-    dirty: true,
-    qaReady: false,
-    frameCount: 0,
-    fps: 0,
-    fpsStart: performance.now(),
+    inverseViewProjection: new Float32Array(16),
+    worldCenterE: 0,
+    worldCenterN: 0,
+    worldWidth: 1,
+    worldDepth: 1,
+    verticalOrigin: 0,
+    elevationMin: 0,
+    elevationMax: 1,
+    camera: {
+      target: [0, 180, 0],
+      yaw: -0.72,
+      pitch: 0.66,
+      distance: 310_000,
+      minDistance: 140,
+      maxDistance: 1_200_000,
+    },
     pointers: new Map(),
     pinch: null,
-    loadToken: 0,
-    camera: { target: [0, 250, 0], yaw: -0.78, pitch: 0.52, distance: 9500, minDistance: 100, maxDistance: 80000 },
+    dirty: true,
+    overviewReady: false,
+    hydrologyReady: false,
+    ready: false,
+    activeAnchor: 'full',
   };
 
-  window.addEventListener('error', event => { runtimeErrors.push(String(event.error?.stack || event.message || 'window error')); updateQa(); });
-  window.addEventListener('unhandledrejection', event => { runtimeErrors.push(String(event.reason?.stack || event.reason || 'unhandled rejection')); updateQa(); });
+  window.addEventListener('error', event => {
+    runtimeErrors.push(String(event.error?.stack || event.message || 'window error'));
+    updateQa();
+  });
+  window.addEventListener('unhandledrejection', event => {
+    runtimeErrors.push(String(event.reason?.stack || event.reason || 'unhandled rejection'));
+    updateQa();
+  });
 
-  const VERTEX_SHADER = `#version 300 es
+  const TERRAIN_VERTEX_SHADER = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPosition;
 layout(location=1) in vec3 aNormal;
 layout(location=2) in float aElevation;
+layout(location=3) in float aFade;
 uniform mat4 uViewProjection;
 uniform float uMinElevation;
 uniform float uMaxElevation;
 out vec3 vNormal;
 out float vElevationT;
-void main(){vNormal=aNormal;vElevationT=clamp((aElevation-uMinElevation)/max(1.0,uMaxElevation-uMinElevation),0.0,1.0);gl_Position=uViewProjection*vec4(aPosition,1.0);}`;
+out float vFade;
+void main(){
+  vNormal=aNormal;
+  vElevationT=clamp((aElevation-uMinElevation)/max(1.0,uMaxElevation-uMinElevation),0.0,1.0);
+  vFade=aFade;
+  gl_Position=uViewProjection*vec4(aPosition,1.0);
+}`;
 
-  const FRAGMENT_SHADER = `#version 300 es
+  const TERRAIN_FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 in vec3 vNormal;
 in float vElevationT;
+in float vFade;
+uniform float uOpacity;
 out vec4 outColor;
-vec3 ramp(float t){if(t<0.20)return mix(vec3(0.035,0.18,0.10),vec3(0.08,0.30,0.15),t/0.20);if(t<0.45)return mix(vec3(0.08,0.30,0.15),vec3(0.24,0.40,0.20),(t-0.20)/0.25);if(t<0.70)return mix(vec3(0.24,0.40,0.20),vec3(0.48,0.48,0.29),(t-0.45)/0.25);if(t<0.88)return mix(vec3(0.48,0.48,0.29),vec3(0.61,0.58,0.46),(t-0.70)/0.18);return mix(vec3(0.61,0.58,0.46),vec3(0.86,0.85,0.79),(t-0.88)/0.12);}
-void main(){vec3 n=normalize(vNormal);vec3 sun=normalize(vec3(-0.52,0.78,0.34));vec3 fill=normalize(vec3(0.35,0.45,-0.55));float light=0.30+max(dot(n,sun),0.0)*0.58+max(dot(n,fill),0.0)*0.12;float slope=1.0-clamp(n.y,0.0,1.0);vec3 base=mix(ramp(vElevationT),vec3(0.57,0.56,0.51),smoothstep(0.28,0.88,slope)*0.45);outColor=vec4(pow(max(base*light,vec3(0.0)),vec3(0.92)),1.0);}`;
+vec3 ramp(float t){
+  if(t<0.18)return mix(vec3(0.035,0.16,0.09),vec3(0.07,0.27,0.13),t/0.18);
+  if(t<0.43)return mix(vec3(0.07,0.27,0.13),vec3(0.22,0.38,0.19),(t-0.18)/0.25);
+  if(t<0.68)return mix(vec3(0.22,0.38,0.19),vec3(0.45,0.46,0.28),(t-0.43)/0.25);
+  if(t<0.87)return mix(vec3(0.45,0.46,0.28),vec3(0.61,0.58,0.46),(t-0.68)/0.19);
+  return mix(vec3(0.61,0.58,0.46),vec3(0.88,0.87,0.81),(t-0.87)/0.13);
+}
+void main(){
+  vec3 n=normalize(vNormal);
+  vec3 sun=normalize(vec3(-0.52,0.78,0.34));
+  vec3 fill=normalize(vec3(0.34,0.44,-0.56));
+  float light=0.29+max(dot(n,sun),0.0)*0.59+max(dot(n,fill),0.0)*0.12;
+  float slope=1.0-clamp(n.y,0.0,1.0);
+  vec3 base=mix(ramp(vElevationT),vec3(0.55,0.54,0.49),smoothstep(0.26,0.90,slope)*0.42);
+  outColor=vec4(pow(max(base*light,vec3(0.0)),vec3(0.92)),clamp(vFade*uOpacity,0.0,1.0));
+}`;
 
-  function assert(condition, message) { if (!condition) throw new Error(message); }
-  function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
-  async function fetchJson(url) { const response = await fetch(url, { cache: 'no-store' }); if (!response.ok) throw new Error(`${url} HTTP ${response.status}`); return response.json(); }
-  async function fetchBinary(url) { const response = await fetch(url, { cache: 'no-store' }); if (!response.ok) throw new Error(`${url} HTTP ${response.status}`); return response.arrayBuffer(); }
-  async function sha256Hex(buffer) { const digest = await crypto.subtle.digest('SHA-256', buffer); return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join(''); }
+  const SEGMENT_VERTEX_SHADER = `#version 300 es
+precision highp float;
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec3 aStart;
+layout(location=2) in vec3 aEnd;
+layout(location=3) in float aClass;
+layout(location=4) in float aSourceWidth;
+uniform mat4 uViewProjection;
+uniform vec2 uViewport;
+uniform float uVerticalOrigin;
+uniform float uEmphasis;
+out float vClass;
+void main(){
+  vec3 startPosition=vec3(aStart.x,aStart.y-uVerticalOrigin+2.1,aStart.z);
+  vec3 endPosition=vec3(aEnd.x,aEnd.y-uVerticalOrigin+2.1,aEnd.z);
+  vec4 clipStart=uViewProjection*vec4(startPosition,1.0);
+  vec4 clipEnd=uViewProjection*vec4(endPosition,1.0);
+  if(clipStart.w<=0.0||clipEnd.w<=0.0){gl_Position=vec4(2.0,2.0,2.0,1.0);vClass=aClass;return;}
+  vec2 ndcStart=clipStart.xy/max(0.00001,clipStart.w);
+  vec2 ndcEnd=clipEnd.xy/max(0.00001,clipEnd.w);
+  vec2 pixelDelta=(ndcEnd-ndcStart)*uViewport*0.5;
+  float pixelLength=max(length(pixelDelta),0.001);
+  vec2 perpendicular=vec2(-pixelDelta.y,pixelDelta.x)/pixelLength;
+  float classWidth=aClass<0.5?2.65:(aClass<1.5?1.55:1.35);
+  float sourceBoost=clamp(log2(max(1.0,aSourceWidth)+1.0)*0.18,0.0,1.7);
+  float halfWidth=(classWidth+sourceBoost)*uEmphasis;
+  vec4 clipPosition=mix(clipStart,clipEnd,aCorner.x);
+  vec2 ndcOffset=perpendicular*aCorner.y*halfWidth*2.0/uViewport;
+  clipPosition.xy+=ndcOffset*clipPosition.w;
+  gl_Position=clipPosition;
+  vClass=aClass;
+}`;
+
+  const SEGMENT_FRAGMENT_SHADER = `#version 300 es
+precision highp float;
+in float vClass;
+out vec4 outColor;
+void main(){
+  vec3 river=vec3(0.11,0.57,0.82);
+  vec3 stream=vec3(0.17,0.66,0.86);
+  vec3 canal=vec3(0.28,0.58,0.72);
+  vec3 color=vClass<0.5?river:(vClass<1.5?stream:canal);
+  outColor=vec4(color,0.90);
+}`;
+
+  const NODE_VERTEX_SHADER = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPosition;
+layout(location=1) in float aClass;
+layout(location=2) in float aSourceWidth;
+uniform mat4 uViewProjection;
+uniform float uVerticalOrigin;
+uniform float uEmphasis;
+out float vClass;
+void main(){
+  vec3 position=vec3(aPosition.x,aPosition.y-uVerticalOrigin+2.25,aPosition.z);
+  gl_Position=uViewProjection*vec4(position,1.0);
+  float classWidth=aClass<0.5?3.2:(aClass<1.5?2.1:1.8);
+  float sourceBoost=clamp(log2(max(1.0,aSourceWidth)+1.0)*0.20,0.0,1.8);
+  gl_PointSize=(classWidth+sourceBoost)*uEmphasis;
+  vClass=aClass;
+}`;
+
+  const NODE_FRAGMENT_SHADER = `#version 300 es
+precision highp float;
+in float vClass;
+out vec4 outColor;
+void main(){
+  vec2 q=gl_PointCoord*2.0-1.0;
+  if(dot(q,q)>1.0)discard;
+  vec3 river=vec3(0.11,0.57,0.82);
+  vec3 stream=vec3(0.17,0.66,0.86);
+  vec3 canal=vec3(0.28,0.58,0.72);
+  vec3 color=vClass<0.5?river:(vClass<1.5?stream:canal);
+  outColor=vec4(color,0.90);
+}`;
+
+  function assert(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+
+  function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
+  }
+
+  function smoothstep(edge0, edge1, value) {
+    const t = clamp((value - edge0) / Math.max(1e-9, edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
+    return response.json();
+  }
+
+  async function fetchBinary(url) {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
+    return response.arrayBuffer();
+  }
+
+  async function sha256Hex(buffer) {
+    const digest = await crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join('');
+  }
+
+  function hostIsLittleEndian() {
+    const probe = new ArrayBuffer(2);
+    new DataView(probe).setUint16(0, 0x00ff, true);
+    return new Uint16Array(probe)[0] === 0x00ff;
+  }
 
   function decodeInt16LE(buffer) {
-    assert(buffer.byteLength === EXPECTED_TILE_BYTES, `瓦片字节数不正确：${buffer.byteLength}`);
-    const probe = new ArrayBuffer(2); new DataView(probe).setUint16(0, 0x00ff, true);
-    if (new Uint16Array(probe)[0] === 0x00ff) return new Int16Array(buffer);
-    const view = new DataView(buffer); const result = new Int16Array(buffer.byteLength / 2);
-    for (let i = 0; i < result.length; i += 1) result[i] = view.getInt16(i * 2, true);
+    if (hostIsLittleEndian()) return new Int16Array(buffer);
+    const view = new DataView(buffer);
+    const values = new Int16Array(buffer.byteLength / 2);
+    for (let index = 0; index < values.length; index += 1) values[index] = view.getInt16(index * 2, true);
+    return values;
+  }
+
+  function decodeFloat32LE(buffer) {
+    if (hostIsLittleEndian()) return new Float32Array(buffer);
+    const view = new DataView(buffer);
+    const values = new Float32Array(buffer.byteLength / 4);
+    for (let index = 0; index < values.length; index += 1) values[index] = view.getFloat32(index * 4, true);
+    return values;
+  }
+
+  function compileShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const log = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error(log || 'shader compile failed');
+    }
+    return shader;
+  }
+
+  function createProgram(gl, vertexSource, fragmentSource) {
+    const vertex = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
+    const fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const log = gl.getProgramInfoLog(program);
+      gl.deleteProgram(program);
+      throw new Error(log || 'program link failed');
+    }
+    return program;
+  }
+
+  function setupWebGL() {
+    const gl = canvas.getContext('webgl2', {
+      antialias: true,
+      alpha: false,
+      depth: true,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: true,
+    });
+    assert(gl, '当前浏览器未提供 WebGL2');
+    state.gl = gl;
+    state.terrainProgram = createProgram(gl, TERRAIN_VERTEX_SHADER, TERRAIN_FRAGMENT_SHADER);
+    state.segmentProgram = createProgram(gl, SEGMENT_VERTEX_SHADER, SEGMENT_FRAGMENT_SHADER);
+    state.nodeProgram = createProgram(gl, NODE_VERTEX_SHADER, NODE_FRAGMENT_SHADER);
+    state.terrainUniforms = {
+      viewProjection: gl.getUniformLocation(state.terrainProgram, 'uViewProjection'),
+      minimum: gl.getUniformLocation(state.terrainProgram, 'uMinElevation'),
+      maximum: gl.getUniformLocation(state.terrainProgram, 'uMaxElevation'),
+      opacity: gl.getUniformLocation(state.terrainProgram, 'uOpacity'),
+    };
+    state.segmentUniforms = {
+      viewProjection: gl.getUniformLocation(state.segmentProgram, 'uViewProjection'),
+      viewport: gl.getUniformLocation(state.segmentProgram, 'uViewport'),
+      verticalOrigin: gl.getUniformLocation(state.segmentProgram, 'uVerticalOrigin'),
+      emphasis: gl.getUniformLocation(state.segmentProgram, 'uEmphasis'),
+    };
+    state.nodeUniforms = {
+      viewProjection: gl.getUniformLocation(state.nodeProgram, 'uViewProjection'),
+      verticalOrigin: gl.getUniformLocation(state.nodeProgram, 'uVerticalOrigin'),
+      emphasis: gl.getUniformLocation(state.nodeProgram, 'uEmphasis'),
+    };
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+    gl.frontFace(gl.CCW);
+    gl.clearColor(0.022, 0.050, 0.051, 1);
+  }
+
+  function createTerrainMesh() {
+    const gl = state.gl;
+    return {
+      vao: gl.createVertexArray(),
+      vertexBuffer: gl.createBuffer(),
+      indexBuffer: gl.createBuffer(),
+      indexCount: 0,
+      triangleCount: 0,
+      vertexCount: 0,
+    };
+  }
+
+  function uploadTerrainMesh(mesh, vertices, indices, indexCount) {
+    const gl = state.gl;
+    gl.bindVertexArray(mesh.vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    const stride = 8 * 4;
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 3 * 4);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, stride, 6 * 4);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, stride, 7 * 4);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices.subarray(0, indexCount), gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
+    mesh.indexCount = indexCount;
+    mesh.triangleCount = indexCount / 3;
+    mesh.vertexCount = vertices.length / 8;
+  }
+
+  function validateManifests(manifest, overview, hydrology) {
+    assert(manifest?.schema === 'guilin-canonical-native-dem/v1', '唯一真值清单版本不正确');
+    assert(manifest.status === 'sole_authoritative', '唯一真值状态不正确');
+    assert(manifest.source?.sha256 === EXPECTED_SOURCE_SHA, '源 TIFF SHA256 不正确');
+    assert(manifest.aoi?.geometry_sha256 === EXPECTED_AOI_SHA, 'AOI SHA256 不正确');
+    assert(manifest.source?.resolution_m?.[0] === SOURCE_SPACING_M, '源采样间距不正确');
+    assert(manifest.tiles?.length === TILE_COUNT, '原生瓦片数量不正确');
+    assert(manifest.tile_matrix?.compression === 'none', '原生瓦片出现压缩');
+    assert(manifest.rules?.height_image_texture_used === false, '检测到高度图片贴图');
+    assert(manifest.rules?.reservoir_surface_asset_emitted === false, '检测到水库面');
+    assert(manifest.rules?.lake_surface_asset_emitted === false, '检测到湖泊面');
+
+    assert(overview?.schema === 'guilin-full-map-direct-sample-overview/v1', '全域总图清单版本不正确');
+    assert(overview.source?.sha256 === EXPECTED_SOURCE_SHA, '全域总图来源不正确');
+    assert(overview.aoi?.geometry_sha256 === EXPECTED_AOI_SHA, '全域总图 AOI 不正确');
+    assert(overview.asset?.compression === 'none', '全域总图资产出现压缩');
+    assert(overview.asset?.interpolation === 'none', '全域总图资产出现插值');
+    assert(overview.asset?.height_texture === false, '全域总图使用了高度贴图');
+
+    assert(hydrology?.schema === 'guilin-osm-linear-waterways-render-asset/v1', '水系清单版本不正确');
+    assert(hydrology.source?.centerline_coordinates_mutated === false, 'OSM 水系中心线发生变化');
+    assert(hydrology.source?.manual_centerline_added === false, '检测到手工河道');
+    assert(hydrology.source?.synthetic_gap_line_added === false, '检测到合成补线');
+    assert(hydrology.filter?.lake_surface_asset_emitted === false, '检测到湖泊面');
+    assert(hydrology.filter?.reservoir_surface_asset_emitted === false, '检测到水库面');
+    assert(hydrology.filter?.synthetic_surface_asset_emitted === false, '检测到合成水面');
+    assert(hydrology.segments?.compression === 'none', '水系线段资产出现压缩');
+    assert(hydrology.nodes?.compression === 'none', '水系节点资产出现压缩');
+  }
+
+  function setupWorld(manifest, overviewManifest) {
+    const bounds = manifest.aoi.native_sample_center_bounds_epsg32649;
+    const west = bounds[0];
+    const south = bounds[1];
+    const east = bounds[2];
+    const north = bounds[3];
+    state.worldCenterE = (west + east) * 0.5;
+    state.worldCenterN = (south + north) * 0.5;
+    state.worldWidth = east - west;
+    state.worldDepth = north - south;
+    state.elevationMin = overviewManifest.asset.elevation_range_m[0];
+    state.elevationMax = overviewManifest.asset.elevation_range_m[1];
+    state.verticalOrigin = state.elevationMin;
+  }
+
+  function overviewSampleAt(outputColumn, outputRow) {
+    const width = state.overviewManifest.asset.grid[0];
+    const height = state.overviewManifest.asset.grid[1];
+    const column = clamp(outputColumn, 0, width - 1);
+    const row = clamp(outputRow, 0, height - 1);
+    return state.overviewValues[row * width + column];
+  }
+
+  function nearestIndex(sortedValues, target) {
+    let low = 0;
+    let high = sortedValues.length - 1;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (sortedValues[middle] < target) low = middle + 1;
+      else high = middle;
+    }
+    if (low > 0 && Math.abs(sortedValues[low - 1] - target) <= Math.abs(sortedValues[low] - target)) return low - 1;
+    return low;
+  }
+
+  function overviewElevationAtWorld(x, z) {
+    const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+    const easting = state.worldCenterE + x;
+    const northing = state.worldCenterN - z;
+    const globalColumn = Math.round((easting - bounds[0]) / SOURCE_SPACING_M);
+    const globalRow = Math.round((bounds[3] - northing) / SOURCE_SPACING_M);
+    const outputColumn = nearestIndex(state.overviewColumns, globalColumn);
+    const outputRow = nearestIndex(state.overviewRows, globalRow);
+    const value = overviewSampleAt(outputColumn, outputRow);
+    return value === NODATA ? state.elevationMin : value;
+  }
+
+  function buildOverviewGeometry() {
+    loadingDetail.textContent = '构建全域连续地形几何';
+    const width = state.overviewManifest.asset.grid[0];
+    const height = state.overviewManifest.asset.grid[1];
+    const columns = state.overviewColumns;
+    const rows = state.overviewRows;
+    const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+    const west = bounds[0];
+    const north = bounds[3];
+    const vertices = new Float32Array(width * height * 8);
+
+    let cursor = 0;
+    for (let row = 0; row < height; row += 1) {
+      const sourceRow = rows[row];
+      const northing = north - sourceRow * SOURCE_SPACING_M;
+      const previousRow = Math.max(0, row - 1);
+      const nextRow = Math.min(height - 1, row + 1);
+      const dz = Math.max(
+        SOURCE_SPACING_M,
+        (rows[nextRow] - rows[previousRow]) * SOURCE_SPACING_M
+      );
+      for (let column = 0; column < width; column += 1) {
+        const sourceColumn = columns[column];
+        const easting = west + sourceColumn * SOURCE_SPACING_M;
+        const value = overviewSampleAt(column, row);
+        const elevation = value === NODATA ? state.elevationMin : value;
+        const previousColumn = Math.max(0, column - 1);
+        const nextColumn = Math.min(width - 1, column + 1);
+        const leftRaw = overviewSampleAt(previousColumn, row);
+        const rightRaw = overviewSampleAt(nextColumn, row);
+        const northRaw = overviewSampleAt(column, previousRow);
+        const southRaw = overviewSampleAt(column, nextRow);
+        const left = leftRaw === NODATA ? elevation : leftRaw;
+        const right = rightRaw === NODATA ? elevation : rightRaw;
+        const northValue = northRaw === NODATA ? elevation : northRaw;
+        const southValue = southRaw === NODATA ? elevation : southRaw;
+        const dx = Math.max(
+          SOURCE_SPACING_M,
+          (columns[nextColumn] - columns[previousColumn]) * SOURCE_SPACING_M
+        );
+        let nx = -(right - left) / dx;
+        let ny = 1;
+        let nz = -(southValue - northValue) / dz;
+        const length = Math.hypot(nx, ny, nz) || 1;
+        nx /= length;
+        ny /= length;
+        nz /= length;
+
+        vertices[cursor++] = easting - state.worldCenterE;
+        vertices[cursor++] = elevation - state.verticalOrigin;
+        vertices[cursor++] = state.worldCenterN - northing;
+        vertices[cursor++] = nx;
+        vertices[cursor++] = ny;
+        vertices[cursor++] = nz;
+        vertices[cursor++] = elevation;
+        vertices[cursor++] = 1;
+      }
+    }
+
+    const maximumIndices = (width - 1) * (height - 1) * 6;
+    const indices = new Uint32Array(maximumIndices);
+    let indexCursor = 0;
+    for (let row = 0; row < height - 1; row += 1) {
+      for (let column = 0; column < width - 1; column += 1) {
+        const a = row * width + column;
+        const b = a + 1;
+        const c = a + width;
+        const d = c + 1;
+        if (
+          state.overviewValues[a] === NODATA ||
+          state.overviewValues[b] === NODATA ||
+          state.overviewValues[c] === NODATA ||
+          state.overviewValues[d] === NODATA
+        ) continue;
+        indices[indexCursor++] = a;
+        indices[indexCursor++] = c;
+        indices[indexCursor++] = b;
+        indices[indexCursor++] = b;
+        indices[indexCursor++] = c;
+        indices[indexCursor++] = d;
+      }
+    }
+
+    state.overviewMesh = createTerrainMesh();
+    uploadTerrainMesh(state.overviewMesh, vertices, indices, indexCursor);
+    state.overviewReady = true;
+  }
+
+  function setupHydrologyGeometry(segmentValues, nodeValues) {
+    const gl = state.gl;
+    state.hydrologySegments = segmentValues;
+    state.hydrologyNodes = nodeValues;
+    state.hydrologySegmentCount = segmentValues.length / 8;
+    state.hydrologyNodeCount = nodeValues.length / 5;
+
+    const corners = new Float32Array([
+      0, -1,
+      0, 1,
+      1, -1,
+      1, 1,
+    ]);
+    const cornerBuffer = gl.createBuffer();
+    state.segmentInstanceBuffer = gl.createBuffer();
+    state.segmentVao = gl.createVertexArray();
+    gl.bindVertexArray(state.segmentVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, corners, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, state.segmentInstanceBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, segmentValues, gl.STATIC_DRAW);
+    const segmentStride = 8 * 4;
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, segmentStride, 0);
+    gl.vertexAttribDivisor(1, 1);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 3, gl.FLOAT, false, segmentStride, 3 * 4);
+    gl.vertexAttribDivisor(2, 1);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, segmentStride, 6 * 4);
+    gl.vertexAttribDivisor(3, 1);
+    gl.enableVertexAttribArray(4);
+    gl.vertexAttribPointer(4, 1, gl.FLOAT, false, segmentStride, 7 * 4);
+    gl.vertexAttribDivisor(4, 1);
+    gl.bindVertexArray(null);
+
+    state.nodeBuffer = gl.createBuffer();
+    state.nodeVao = gl.createVertexArray();
+    gl.bindVertexArray(state.nodeVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, state.nodeBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, nodeValues, gl.STATIC_DRAW);
+    const nodeStride = 5 * 4;
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, nodeStride, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, nodeStride, 3 * 4);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, nodeStride, 4 * 4);
+    gl.bindVertexArray(null);
+    state.hydrologyReady = true;
+  }
+
+  function globalSampleToTile(globalRow, globalColumn) {
+    const rows = state.manifest.tile_matrix.rows;
+    const columns = state.manifest.tile_matrix.columns;
+    const tileRow = clamp(Math.floor(globalRow / TILE_STRIDE), 0, rows - 1);
+    const tileColumn = clamp(Math.floor(globalColumn / TILE_STRIDE), 0, columns - 1);
+    const tile = state.tileByMatrix.get(`${tileRow},${tileColumn}`);
+    assert(tile, `找不到原生瓦片 ${tileRow},${tileColumn}`);
+    return {
+      tile,
+      localRow: globalRow - tileRow * TILE_STRIDE,
+      localColumn: globalColumn - tileColumn * TILE_STRIDE,
+    };
+  }
+
+  async function loadNativeTile(tile) {
+    const existing = state.tileCache.get(tile.id);
+    if (existing) {
+      existing.lastUsed = performance.now();
+      return existing.codes;
+    }
+    if (state.tileLoadPromises.has(tile.id)) return state.tileLoadPromises.get(tile.id);
+
+    const promise = (async () => {
+      const buffer = await fetchBinary(`data/${tile.file}`);
+      assert(buffer.byteLength === TILE_BYTES, `${tile.id} 字节数不正确`);
+      const digest = await sha256Hex(buffer);
+      assert(digest === tile.sha256, `${tile.id} SHA256 不正确`);
+      const codes = decodeInt16LE(buffer);
+      state.tileCache.set(tile.id, { codes, lastUsed: performance.now() });
+      state.tileLoadPromises.delete(tile.id);
+      return codes;
+    })().catch(error => {
+      state.tileLoadPromises.delete(tile.id);
+      throw error;
+    });
+    state.tileLoadPromises.set(tile.id, promise);
+    return promise;
+  }
+
+  function evictTileCache(protectedIds) {
+    if (state.tileCache.size <= MAX_TILE_CACHE) return;
+    const candidates = [...state.tileCache.entries()]
+      .filter(([id]) => !protectedIds.has(id))
+      .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
+    while (state.tileCache.size > MAX_TILE_CACHE && candidates.length) {
+      const [id] = candidates.shift();
+      state.tileCache.delete(id);
+    }
+  }
+
+  function sampleLoadedGlobal(globalRow, globalColumn) {
+    const width = state.manifest.aoi.native_sample_window[2];
+    const height = state.manifest.aoi.native_sample_window[3];
+    const row = clamp(globalRow, 0, height - 1);
+    const column = clamp(globalColumn, 0, width - 1);
+    const mapping = globalSampleToTile(row, column);
+    const cached = state.tileCache.get(mapping.tile.id);
+    if (!cached) throw new Error(`原生瓦片尚未读取 ${mapping.tile.id}`);
+    return cached.codes[mapping.localRow * TILE_GRID + mapping.localColumn];
+  }
+
+  function buildDetailGeometry(startColumn, startRow, width, height) {
+    const values = new Int16Array(width * height);
+    let minimum = Infinity;
+    let maximum = -Infinity;
+    for (let row = 0; row < height; row += 1) {
+      for (let column = 0; column < width; column += 1) {
+        const value = sampleLoadedGlobal(startRow + row, startColumn + column);
+        values[row * width + column] = value;
+        if (value !== NODATA) {
+          minimum = Math.min(minimum, value);
+          maximum = Math.max(maximum, value);
+        }
+      }
+    }
+    assert(Number.isFinite(minimum), '当前原生近景没有有效高程');
+
+    const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+    const west = bounds[0];
+    const north = bounds[3];
+    const vertices = new Float32Array(width * height * 8);
+    let cursor = 0;
+    for (let row = 0; row < height; row += 1) {
+      const globalRow = startRow + row;
+      const northing = north - globalRow * SOURCE_SPACING_M;
+      for (let column = 0; column < width; column += 1) {
+        const globalColumn = startColumn + column;
+        const easting = west + globalColumn * SOURCE_SPACING_M;
+        const raw = values[row * width + column];
+        const elevation = raw === NODATA ? minimum : raw;
+        const leftRaw = values[row * width + Math.max(0, column - 1)];
+        const rightRaw = values[row * width + Math.min(width - 1, column + 1)];
+        const northRaw = values[Math.max(0, row - 1) * width + column];
+        const southRaw = values[Math.min(height - 1, row + 1) * width + column];
+        const left = leftRaw === NODATA ? elevation : leftRaw;
+        const right = rightRaw === NODATA ? elevation : rightRaw;
+        const northValue = northRaw === NODATA ? elevation : northRaw;
+        const southValue = southRaw === NODATA ? elevation : southRaw;
+        let nx = -(right - left) / (2 * SOURCE_SPACING_M);
+        let ny = 1;
+        let nz = -(southValue - northValue) / (2 * SOURCE_SPACING_M);
+        const length = Math.hypot(nx, ny, nz) || 1;
+        nx /= length;
+        ny /= length;
+        nz /= length;
+        const edgeDistance = Math.min(column, row, width - 1 - column, height - 1 - row);
+        const fade = smoothstep(0, DETAIL_EDGE_FADE, edgeDistance);
+
+        vertices[cursor++] = easting - state.worldCenterE;
+        vertices[cursor++] = elevation - state.verticalOrigin + 0.35;
+        vertices[cursor++] = state.worldCenterN - northing;
+        vertices[cursor++] = nx;
+        vertices[cursor++] = ny;
+        vertices[cursor++] = nz;
+        vertices[cursor++] = elevation;
+        vertices[cursor++] = fade;
+      }
+    }
+
+    const maximumIndices = (width - 1) * (height - 1) * 6;
+    const indices = new Uint32Array(maximumIndices);
+    let indexCursor = 0;
+    for (let row = 0; row < height - 1; row += 1) {
+      for (let column = 0; column < width - 1; column += 1) {
+        const a = row * width + column;
+        const b = a + 1;
+        const c = a + width;
+        const d = c + 1;
+        if (
+          values[a] === NODATA ||
+          values[b] === NODATA ||
+          values[c] === NODATA ||
+          values[d] === NODATA
+        ) continue;
+        indices[indexCursor++] = a;
+        indices[indexCursor++] = c;
+        indices[indexCursor++] = b;
+        indices[indexCursor++] = b;
+        indices[indexCursor++] = c;
+        indices[indexCursor++] = d;
+      }
+    }
+
+    if (!state.detailMesh) state.detailMesh = createTerrainMesh();
+    uploadTerrainMesh(state.detailMesh, vertices, indices, indexCursor);
+    state.detailPatch = {
+      startColumn,
+      startRow,
+      width,
+      height,
+      centerX: west + (startColumn + (width - 1) * 0.5) * SOURCE_SPACING_M - state.worldCenterE,
+      centerZ: state.worldCenterN - (north - (startRow + (height - 1) * 0.5) * SOURCE_SPACING_M),
+      elevationRange: [minimum, maximum],
+    };
+    state.detailActive = true;
+    updateDataPanel();
+    state.dirty = true;
+  }
+
+  async function updateDetailPatch(force = false) {
+    clearTimeout(state.detailTimer);
+    if (!state.ready) return;
+    if (state.camera.distance > DETAIL_ENABLE_DISTANCE_M) {
+      state.detailRequestToken += 1;
+      state.detailActive = false;
+      state.detailPatch = null;
+      $('detailStatus').textContent = '放大后自动载入 12.5 m';
+      detailLoading.hidden = true;
+      state.dirty = true;
+      updateQa();
+      return;
+    }
+
+    const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+    const width = state.manifest.aoi.native_sample_window[2];
+    const height = state.manifest.aoi.native_sample_window[3];
+    const targetE = state.worldCenterE + state.camera.target[0];
+    const targetN = state.worldCenterN - state.camera.target[2];
+    const globalColumn = clamp(Math.round((targetE - bounds[0]) / SOURCE_SPACING_M), 0, width - 1);
+    const globalRow = clamp(Math.round((bounds[3] - targetN) / SOURCE_SPACING_M), 0, height - 1);
+    const patchWidth = Math.min(DETAIL_GRID, width);
+    const patchHeight = Math.min(DETAIL_GRID, height);
+    const startColumn = clamp(Math.round(globalColumn - patchWidth / 2), 0, width - patchWidth);
+    const startRow = clamp(Math.round(globalRow - patchHeight / 2), 0, height - patchHeight);
+
+    if (!force && state.detailPatch) {
+      const centerColumn = state.detailPatch.startColumn + state.detailPatch.width * 0.5;
+      const centerRow = state.detailPatch.startRow + state.detailPatch.height * 0.5;
+      const movement = Math.hypot(globalColumn - centerColumn, globalRow - centerRow) * SOURCE_SPACING_M;
+      if (movement < DETAIL_REFRESH_DISTANCE_M) return;
+    }
+
+    const token = ++state.detailRequestToken;
+    detailLoading.hidden = false;
+    detailLoadingText.textContent = '读取视野中心的原生 12.5 米高程';
+    const requiredTiles = new Map();
+    const rowStart = Math.floor(startRow / TILE_STRIDE);
+    const rowStop = Math.floor((startRow + patchHeight - 1) / TILE_STRIDE);
+    const columnStart = Math.floor(startColumn / TILE_STRIDE);
+    const columnStop = Math.floor((startColumn + patchWidth - 1) / TILE_STRIDE);
+    for (let tileRow = rowStart; tileRow <= rowStop; tileRow += 1) {
+      for (let tileColumn = columnStart; tileColumn <= columnStop; tileColumn += 1) {
+        const tile = state.tileByMatrix.get(`${tileRow},${tileColumn}`);
+        if (tile) requiredTiles.set(tile.id, tile);
+      }
+    }
+
+    await Promise.all([...requiredTiles.values()].map(tile => loadNativeTile(tile)));
+    if (token !== state.detailRequestToken) return;
+    detailLoadingText.textContent = '建立无贴图原生顶点与法线';
+    await nextFrame();
+    buildDetailGeometry(startColumn, startRow, patchWidth, patchHeight);
+    if (token !== state.detailRequestToken) return;
+    evictTileCache(new Set(requiredTiles.keys()));
+    detailLoading.hidden = true;
+    updateQa();
+  }
+
+  function scheduleDetailPatch(force = false) {
+    clearTimeout(state.detailTimer);
+    state.detailTimer = setTimeout(() => {
+      updateDetailPatch(force).catch(showError);
+    }, force ? 0 : 260);
+  }
+
+  function mat4Multiply(out, a, b) {
+    const result = new Float32Array(16);
+    for (let column = 0; column < 4; column += 1) {
+      for (let row = 0; row < 4; row += 1) {
+        result[column * 4 + row] =
+          a[row] * b[column * 4] +
+          a[4 + row] * b[column * 4 + 1] +
+          a[8 + row] * b[column * 4 + 2] +
+          a[12 + row] * b[column * 4 + 3];
+      }
+    }
+    out.set(result);
+    return out;
+  }
+
+  function mat4Perspective(out, fovy, aspect, near, far) {
+    const f = 1 / Math.tan(fovy / 2);
+    out.fill(0);
+    out[0] = f / aspect;
+    out[5] = f;
+    out[10] = (far + near) / (near - far);
+    out[11] = -1;
+    out[14] = 2 * far * near / (near - far);
+    return out;
+  }
+
+  function mat4LookAt(out, eye, center, up) {
+    let zx = eye[0] - center[0];
+    let zy = eye[1] - center[1];
+    let zz = eye[2] - center[2];
+    let length = Math.hypot(zx, zy, zz) || 1;
+    zx /= length;
+    zy /= length;
+    zz /= length;
+    let xx = up[1] * zz - up[2] * zy;
+    let xy = up[2] * zx - up[0] * zz;
+    let xz = up[0] * zy - up[1] * zx;
+    length = Math.hypot(xx, xy, xz) || 1;
+    xx /= length;
+    xy /= length;
+    xz /= length;
+    const yx = zy * xz - zz * xy;
+    const yy = zz * xx - zx * xz;
+    const yz = zx * xy - zy * xx;
+    out[0] = xx; out[1] = yx; out[2] = zx; out[3] = 0;
+    out[4] = xy; out[5] = yy; out[6] = zy; out[7] = 0;
+    out[8] = xz; out[9] = yz; out[10] = zz; out[11] = 0;
+    out[12] = -(xx * eye[0] + xy * eye[1] + xz * eye[2]);
+    out[13] = -(yx * eye[0] + yy * eye[1] + yz * eye[2]);
+    out[14] = -(zx * eye[0] + zy * eye[1] + zz * eye[2]);
+    out[15] = 1;
+    return out;
+  }
+
+  function mat4Invert(out, a) {
+    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    const b00 = a00 * a11 - a01 * a10;
+    const b01 = a00 * a12 - a02 * a10;
+    const b02 = a00 * a13 - a03 * a10;
+    const b03 = a01 * a12 - a02 * a11;
+    const b04 = a01 * a13 - a03 * a11;
+    const b05 = a02 * a13 - a03 * a12;
+    const b06 = a20 * a31 - a21 * a30;
+    const b07 = a20 * a32 - a22 * a30;
+    const b08 = a20 * a33 - a23 * a30;
+    const b09 = a21 * a32 - a22 * a31;
+    const b10 = a21 * a33 - a23 * a31;
+    const b11 = a22 * a33 - a23 * a32;
+    let determinant =
+      b00 * b11 -
+      b01 * b10 +
+      b02 * b09 +
+      b03 * b08 -
+      b04 * b07 +
+      b05 * b06;
+    if (!determinant) return false;
+    determinant = 1 / determinant;
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * determinant;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * determinant;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * determinant;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * determinant;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * determinant;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * determinant;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * determinant;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * determinant;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * determinant;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * determinant;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * determinant;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * determinant;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * determinant;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * determinant;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * determinant;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * determinant;
+    return true;
+  }
+
+  function transformVec4(matrix, vector) {
+    return [
+      matrix[0] * vector[0] + matrix[4] * vector[1] + matrix[8] * vector[2] + matrix[12] * vector[3],
+      matrix[1] * vector[0] + matrix[5] * vector[1] + matrix[9] * vector[2] + matrix[13] * vector[3],
+      matrix[2] * vector[0] + matrix[6] * vector[1] + matrix[10] * vector[2] + matrix[14] * vector[3],
+      matrix[3] * vector[0] + matrix[7] * vector[1] + matrix[11] * vector[2] + matrix[15] * vector[3],
+    ];
+  }
+
+  function resizeCanvas() {
+    const ratio = Math.min(MAX_DPR, window.devicePixelRatio || 1);
+    const width = Math.max(2, Math.floor(canvas.clientWidth * ratio));
+    const height = Math.max(2, Math.floor(canvas.clientHeight * ratio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      state.dirty = true;
+    }
+  }
+
+  function cameraEye() {
+    const camera = state.camera;
+    const horizontal = Math.cos(camera.pitch) * camera.distance;
+    return [
+      camera.target[0] + Math.sin(camera.yaw) * horizontal,
+      camera.target[1] + Math.sin(camera.pitch) * camera.distance,
+      camera.target[2] + Math.cos(camera.yaw) * horizontal,
+    ];
+  }
+
+  function updateMatrices() {
+    resizeCanvas();
+    const eye = cameraEye();
+    const span = Math.max(state.worldWidth, state.worldDepth);
+    const near = Math.max(0.5, state.camera.distance / 12_000);
+    const far = state.camera.distance + span * 10 + 30_000;
+    mat4Perspective(state.projection, Math.PI / 4.05, canvas.width / Math.max(1, canvas.height), near, far);
+    mat4LookAt(state.view, eye, state.camera.target, [0, 1, 0]);
+    mat4Multiply(state.viewProjection, state.projection, state.view);
+    mat4Invert(state.inverseViewProjection, state.viewProjection);
+  }
+
+  function drawTerrainMesh(mesh, opacity, detail = false) {
+    if (!mesh || mesh.indexCount <= 0) return;
+    const gl = state.gl;
+    gl.useProgram(state.terrainProgram);
+    gl.uniformMatrix4fv(state.terrainUniforms.viewProjection, false, state.viewProjection);
+    gl.uniform1f(state.terrainUniforms.minimum, state.elevationMin);
+    gl.uniform1f(state.terrainUniforms.maximum, state.elevationMax);
+    gl.uniform1f(state.terrainUniforms.opacity, opacity);
+    gl.bindVertexArray(mesh.vao);
+
+    if (detail) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      gl.disable(gl.CULL_FACE);
+    } else {
+      gl.enable(gl.POLYGON_OFFSET_FILL);
+      gl.polygonOffset(1, 1);
+    }
+    gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_INT, 0);
+    if (detail) {
+      gl.enable(gl.CULL_FACE);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+    } else {
+      gl.disable(gl.POLYGON_OFFSET_FILL);
+    }
+    gl.bindVertexArray(null);
+  }
+
+  function drawHydrology() {
+    if (!state.waterwaysVisible || !state.hydrologyReady) return;
+    const gl = state.gl;
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    gl.disable(gl.CULL_FACE);
+
+    gl.useProgram(state.segmentProgram);
+    gl.uniformMatrix4fv(state.segmentUniforms.viewProjection, false, state.viewProjection);
+    gl.uniform2f(state.segmentUniforms.viewport, canvas.width, canvas.height);
+    gl.uniform1f(state.segmentUniforms.verticalOrigin, state.verticalOrigin);
+    gl.uniform1f(state.segmentUniforms.emphasis, state.waterwayEmphasis);
+    gl.bindVertexArray(state.segmentVao);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, state.hydrologySegmentCount);
+
+    gl.useProgram(state.nodeProgram);
+    gl.uniformMatrix4fv(state.nodeUniforms.viewProjection, false, state.viewProjection);
+    gl.uniform1f(state.nodeUniforms.verticalOrigin, state.verticalOrigin);
+    gl.uniform1f(state.nodeUniforms.emphasis, state.waterwayEmphasis);
+    gl.bindVertexArray(state.nodeVao);
+    gl.drawArrays(gl.POINTS, 0, state.hydrologyNodeCount);
+
+    gl.bindVertexArray(null);
+    gl.enable(gl.CULL_FACE);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+  }
+
+  function render() {
+    if (!state.gl || !state.overviewReady) return;
+    updateMatrices();
+    const gl = state.gl;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    drawTerrainMesh(state.overviewMesh, 1, false);
+    if (state.detailActive) drawTerrainMesh(state.detailMesh, 1, true);
+    drawHydrology();
+    updateLabels();
+    updateDataPanel();
+    updateQa();
+    state.dirty = false;
+  }
+
+  function renderLoop() {
+    if (state.dirty) render();
+    requestAnimationFrame(renderLoop);
+  }
+
+  function resetFullView() {
+    const span = Math.max(state.worldWidth, state.worldDepth);
+    const relief = Math.max(1, state.elevationMax - state.elevationMin);
+    state.camera.target = [0, relief * 0.18, 0];
+    state.camera.yaw = -0.72;
+    state.camera.pitch = 0.68;
+    state.camera.distance = span * 1.36;
+    state.camera.minDistance = 140;
+    state.camera.maxDistance = span * 5.5;
+    state.activeAnchor = 'full';
+    updateAnchorButtons();
+    state.dirty = true;
+    scheduleDetailPatch();
+  }
+
+  function setTopView() {
+    const span = Math.max(state.worldWidth, state.worldDepth);
+    state.camera.target = [0, (state.elevationMax - state.verticalOrigin) * 0.18, 0];
+    state.camera.yaw = 0;
+    state.camera.pitch = 1.48;
+    state.camera.distance = span * 1.05;
+    state.activeAnchor = 'full';
+    updateAnchorButtons();
+    state.dirty = true;
+    scheduleDetailPatch();
+  }
+
+  function focusAnchor(anchorId) {
+    if (anchorId === 'full') {
+      resetFullView();
+      return;
+    }
+    const anchor = ANCHORS.find(item => item.id === anchorId);
+    assert(anchor, `找不到地标 ${anchorId}`);
+    const x = anchor.e - state.worldCenterE;
+    const z = state.worldCenterN - anchor.n;
+    const elevation = overviewElevationAtWorld(x, z);
+    state.camera.target = [x, elevation - state.verticalOrigin + 120, z];
+    state.camera.yaw = -0.78;
+    state.camera.pitch = 0.52;
+    state.camera.distance = 32_000;
+    state.activeAnchor = anchorId;
+    updateAnchorButtons();
+    state.dirty = true;
+    scheduleDetailPatch(true);
+  }
+
+  function updateAnchorButtons() {
+    document.querySelectorAll('[data-anchor]').forEach(button => {
+      button.classList.toggle('active', button.dataset.anchor === state.activeAnchor);
+    });
+  }
+
+  function screenRay(clientX, clientY) {
+    updateMatrices();
+    const rect = canvas.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = 1 - ((clientY - rect.top) / rect.height) * 2;
+    const near = transformVec4(state.inverseViewProjection, [x, y, -1, 1]);
+    const far = transformVec4(state.inverseViewProjection, [x, y, 1, 1]);
+    if (Math.abs(near[3]) < 1e-9 || Math.abs(far[3]) < 1e-9) return null;
+    const nearPoint = [near[0] / near[3], near[1] / near[3], near[2] / near[3]];
+    const farPoint = [far[0] / far[3], far[1] / far[3], far[2] / far[3]];
+    const direction = [
+      farPoint[0] - nearPoint[0],
+      farPoint[1] - nearPoint[1],
+      farPoint[2] - nearPoint[2],
+    ];
+    const length = Math.hypot(...direction) || 1;
+    return {
+      origin: nearPoint,
+      direction: direction.map(value => value / length),
+    };
+  }
+
+  function focusAtScreen(clientX, clientY) {
+    const ray = screenRay(clientX, clientY);
+    if (!ray) return;
+    const planeY = state.camera.target[1];
+    if (Math.abs(ray.direction[1]) < 1e-6) return;
+    const distance = (planeY - ray.origin[1]) / ray.direction[1];
+    if (distance <= 0) return;
+    const x = ray.origin[0] + ray.direction[0] * distance;
+    const z = ray.origin[2] + ray.direction[2] * distance;
+    const halfWidth = state.worldWidth * 0.52;
+    const halfDepth = state.worldDepth * 0.52;
+    state.camera.target[0] = clamp(x, -halfWidth, halfWidth);
+    state.camera.target[2] = clamp(z, -halfDepth, halfDepth);
+    const elevation = overviewElevationAtWorld(state.camera.target[0], state.camera.target[2]);
+    state.camera.target[1] = elevation - state.verticalOrigin + 80;
+    state.camera.distance = clamp(state.camera.distance * 0.46, state.camera.minDistance, state.camera.maxDistance);
+    state.activeAnchor = '';
+    updateAnchorButtons();
+    state.dirty = true;
+    scheduleDetailPatch(true);
+  }
+
+  function setupControls() {
+    document.querySelectorAll('[data-anchor]').forEach(button => {
+      button.addEventListener('click', () => {
+        try {
+          focusAnchor(button.dataset.anchor);
+        } catch (error) {
+          showError(error);
+        }
+      });
+    });
+
+    $('resetFull').addEventListener('click', resetFullView);
+    $('topView').addEventListener('click', setTopView);
+    $('fullscreen').addEventListener('click', async () => {
+      if (!document.fullscreenElement) await $('viewerShell').requestFullscreen();
+      else await document.exitFullscreen();
+    });
+    $('waterwaysToggle').addEventListener('change', event => {
+      state.waterwaysVisible = event.target.checked;
+      state.dirty = true;
+      updateQa();
+    });
+    $('waterwayEmphasis').addEventListener('input', event => {
+      state.waterwayEmphasis = Number(event.target.value);
+      state.dirty = true;
+    });
+    $('labelsToggle').addEventListener('change', event => {
+      state.labelsVisible = event.target.checked;
+      labelLayer.hidden = !state.labelsVisible;
+      state.dirty = true;
+    });
+    togglePanel.addEventListener('click', () => {
+      const collapsed = controlPanel.classList.toggle('collapsed');
+      togglePanel.setAttribute('aria-expanded', String(!collapsed));
+    });
+
+    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    canvas.addEventListener('pointerdown', event => {
+      canvas.setPointerCapture(event.pointerId);
+      state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (state.pointers.size === 2) {
+        const points = [...state.pointers.values()];
+        state.pinch = {
+          distance: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y),
+          cameraDistance: state.camera.distance,
+        };
+      }
+    });
+    canvas.addEventListener('pointermove', event => {
+      const previous = state.pointers.get(event.pointerId);
+      if (!previous) return;
+      const current = { x: event.clientX, y: event.clientY };
+      state.pointers.set(event.pointerId, current);
+      if (state.pointers.size === 2 && state.pinch) {
+        const points = [...state.pointers.values()];
+        const distance = Math.max(8, Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y));
+        state.camera.distance = clamp(
+          state.pinch.cameraDistance * state.pinch.distance / distance,
+          state.camera.minDistance,
+          state.camera.maxDistance
+        );
+      } else {
+        const dx = current.x - previous.x;
+        const dy = current.y - previous.y;
+        if (event.shiftKey || event.buttons === 2) {
+          const scale = state.camera.distance * 0.00125;
+          const rightX = Math.cos(state.camera.yaw);
+          const rightZ = -Math.sin(state.camera.yaw);
+          const forwardX = Math.sin(state.camera.yaw);
+          const forwardZ = Math.cos(state.camera.yaw);
+          state.camera.target[0] -= dx * scale * rightX + dy * scale * forwardX;
+          state.camera.target[2] -= dx * scale * rightZ + dy * scale * forwardZ;
+          state.camera.target[0] = clamp(state.camera.target[0], -state.worldWidth * 0.58, state.worldWidth * 0.58);
+          state.camera.target[2] = clamp(state.camera.target[2], -state.worldDepth * 0.58, state.worldDepth * 0.58);
+          state.activeAnchor = '';
+          updateAnchorButtons();
+        } else {
+          state.camera.yaw -= dx * 0.005;
+          state.camera.pitch = clamp(state.camera.pitch + dy * 0.004, 0.08, 1.49);
+        }
+      }
+      state.dirty = true;
+      scheduleDetailPatch();
+    });
+
+    const releasePointer = event => {
+      state.pointers.delete(event.pointerId);
+      if (state.pointers.size < 2) state.pinch = null;
+      scheduleDetailPatch();
+    };
+    canvas.addEventListener('pointerup', releasePointer);
+    canvas.addEventListener('pointercancel', releasePointer);
+    canvas.addEventListener('wheel', event => {
+      event.preventDefault();
+      state.camera.distance = clamp(
+        state.camera.distance * Math.exp(event.deltaY * 0.001),
+        state.camera.minDistance,
+        state.camera.maxDistance
+      );
+      state.dirty = true;
+      scheduleDetailPatch();
+    }, { passive: false });
+    canvas.addEventListener('dblclick', event => focusAtScreen(event.clientX, event.clientY));
+    window.addEventListener('resize', () => {
+      state.dirty = true;
+    });
+  }
+
+  function buildLabels() {
+    labelLayer.replaceChildren();
+    state.labels = [];
+    for (const anchor of ANCHORS) {
+      const element = document.createElement('div');
+      element.className = 'landmark-label';
+      element.textContent = anchor.name;
+      labelLayer.appendChild(element);
+      const x = anchor.e - state.worldCenterE;
+      const z = state.worldCenterN - anchor.n;
+      const elevation = overviewElevationAtWorld(x, z);
+      state.labels.push({
+        element,
+        x,
+        y: elevation - state.verticalOrigin + 65,
+        z,
+      });
+    }
+  }
+
+  function projectWorld(x, y, z) {
+    const matrix = state.viewProjection;
+    const clipX = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12];
+    const clipY = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13];
+    const clipZ = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14];
+    const clipW = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
+    if (clipW <= 0) return null;
+    const nx = clipX / clipW;
+    const ny = clipY / clipW;
+    const nz = clipZ / clipW;
+    if (nx < -1.08 || nx > 1.08 || ny < -1.08 || ny > 1.08 || nz < -1 || nz > 1) return null;
+    return [
+      (nx * 0.5 + 0.5) * canvas.clientWidth,
+      (1 - (ny * 0.5 + 0.5)) * canvas.clientHeight,
+    ];
+  }
+
+  function updateLabels() {
+    if (!state.labelsVisible) return;
+    for (const label of state.labels) {
+      const projected = projectWorld(label.x, label.y, label.z);
+      if (!projected) {
+        label.element.style.display = 'none';
+      } else {
+        label.element.style.display = '';
+        label.element.style.left = `${projected[0]}px`;
+        label.element.style.top = `${projected[1]}px`;
+      }
+    }
+  }
+
+  function updateDataPanel() {
+    if (!state.overviewManifest || !state.hydrologyManifest) return;
+    $('aoiRange').textContent = `${(state.worldWidth / 1000).toFixed(1)} × ${(state.worldDepth / 1000).toFixed(1)} km`;
+    const grid = state.overviewManifest.asset.grid;
+    $('overviewGrid').textContent = `${grid[0]} × ${grid[1]} 全域数值几何`;
+    if (state.detailActive && state.detailPatch) {
+      $('detailStatus').textContent = `${state.detailPatch.width} × ${state.detailPatch.height} · 12.5 m`;
+    } else if (state.camera.distance <= DETAIL_ENABLE_DISTANCE_M) {
+      $('detailStatus').textContent = '正在载入原生近景';
+    } else {
+      $('detailStatus').textContent = '放大后自动载入 12.5 m';
+    }
+    $('cameraScale').textContent = `${(state.camera.distance / 1000).toFixed(state.camera.distance < 10_000 ? 2 : 1)} km`;
+    const counts = state.hydrologyManifest.topology.record_counts;
+    $('waterwayStatus').textContent = `河 ${counts.river.toLocaleString()} · 溪 ${counts.stream.toLocaleString()} · 渠 ${counts.canal.toLocaleString()}`;
+    const detailText = state.detailActive ? ` · 原生近景 ${state.detailMesh.triangleCount.toLocaleString()} 三角形` : '';
+    renderInfo.textContent = `桂林全域 ${state.overviewMesh?.triangleCount.toLocaleString() || 0} 三角形${detailText} · OSM 水系 ${state.hydrologySegmentCount.toLocaleString()} 段`;
+  }
+
+  function updateQa() {
+    const loadingVisible = getComputedStyle(loadingCard).display !== 'none';
+    const errorVisible = getComputedStyle(errorCard).display !== 'none';
+    const result = {
+      schema: 'guilin-continuous-full-map-browser-qa/v1',
+      passed: Boolean(
+        state.ready &&
+        state.overviewReady &&
+        state.hydrologyReady &&
+        state.gl &&
+        runtimeErrors.length === 0 &&
+        !loadingVisible &&
+        !errorVisible
+      ),
+      data_ready: state.ready,
+      webgl2: Boolean(state.gl),
+      source_sha256: state.manifest?.source?.sha256 || null,
+      aoi_geometry_sha256: state.manifest?.aoi?.geometry_sha256 || null,
+      native_spacing_m: SOURCE_SPACING_M,
+      native_tile_count: state.manifest?.tiles?.length || 0,
+      full_aoi_overview: Boolean(state.overviewReady),
+      one_continuous_map: true,
+      continuous_zoom: true,
+      tile_picker_required: false,
+      overview_grid: state.overviewManifest?.asset?.grid || null,
+      overview_direct_source_selection: state.overviewManifest?.asset?.selection || null,
+      overview_interpolation: state.overviewManifest?.asset?.interpolation || null,
+      native_detail_available: true,
+      native_detail_active: state.detailActive,
+      native_detail_grid: state.detailActive && state.detailPatch ? [state.detailPatch.width, state.detailPatch.height] : null,
+      loaded_native_tile_count: state.tileCache.size,
+      direct_numeric_vertex_geometry: true,
+      height_image_texture_used: false,
+      texture_upload_count: 0,
+      source_tile_compression: 'none',
+      source_resampling: 'none',
+      source_elevation_modified_m: 0,
+      vertical_scale: 1,
+      osm_linear_waterways_loaded: state.hydrologyReady,
+      hydrology_segment_count: state.hydrologySegmentCount,
+      hydrology_node_count: state.hydrologyNodeCount,
+      waterway_record_counts: state.hydrologyManifest?.topology?.record_counts || null,
+      centerline_coordinates_mutated: false,
+      manual_centerline_added: false,
+      synthetic_gap_line_added: false,
+      lake_surface_asset_count: 0,
+      reservoir_surface_asset_count: 0,
+      synthetic_surface_asset_count: 0,
+      runtime_errors: runtimeErrors.slice(),
+      loading_overlay_displayed: loadingVisible,
+      error_overlay_displayed: errorVisible,
+    };
+    window.__GUILIN_FULL_MAP_QA_RESULT = result;
+    document.body.dataset.ready = String(result.passed);
+    document.body.dataset.fullMap = String(result.full_aoi_overview);
+    document.body.dataset.continuousZoom = String(result.continuous_zoom);
+    document.body.dataset.hydrology = String(result.osm_linear_waterways_loaded);
+    document.body.dataset.reservoirSurfaceCount = '0';
+    document.body.dataset.textureCount = '0';
     return result;
   }
 
-  function validateManifest(manifest) {
-    assert(manifest?.schema === EXPECTED_SCHEMA, '唯一真值清单版本不正确');
-    assert(manifest.status === 'sole_authoritative', '唯一真值状态不正确');
-    assert(manifest.canonical_identity?.sole_guilin_dem_truth === true, '唯一真值身份缺失');
-    assert(manifest.source?.sha256 === EXPECTED_SOURCE_SHA, '源 TIFF SHA256 不正确');
-    assert(manifest.aoi?.geometry_sha256 === EXPECTED_AOI_SHA, 'AOI SHA256 不正确');
-    assert(manifest.source?.resolution_m?.[0] === 12.5 && manifest.source?.resolution_m?.[1] === 12.5, '源像元间距不正确');
-    assert(manifest.source?.dtype === 'int16' && manifest.source?.nodata === NODATA, '源数据编码不正确');
-    assert(manifest.tiles?.length === EXPECTED_TILE_COUNT, '原生瓦片数量不正确');
-    assert(manifest.tile_matrix?.compression === 'none' && manifest.tile_matrix?.resampling === 'none' && manifest.tile_matrix?.quantization === 'none', '原生瓦片存储合同不正确');
-    assert(manifest.rules?.source_resampling === false && manifest.rules?.source_reencoding === false && manifest.rules?.source_recompression === false, '源数据被变换');
-    assert(manifest.rules?.gap_fill_applied === false && manifest.rules?.fallback_30m_used === false, '禁止补洞或回退');
-    assert(manifest.rules?.source_elevation_modified_m === 0 && manifest.rules?.vertical_scale === 1, '高程或垂直比例不正确');
-    assert(manifest.rules?.height_image_texture_used === false && manifest.rules?.direct_numeric_vertex_geometry === true, '几何生成路线不正确');
-    assert(manifest.rules?.legacy_procedural_terrain_runtime_allowed === false, '旧程序地形路线未关闭');
+  function showError(error) {
+    const message = String(error?.stack || error?.message || error);
+    runtimeErrors.push(message);
+    console.error(error);
+    loadingCard.hidden = true;
+    detailLoading.hidden = true;
+    errorMessage.textContent = message;
+    errorCard.hidden = false;
+    updateQa();
+  }
+
+  async function initialize() {
+    setupControls();
+    setupWebGL();
+
+    loadingDetail.textContent = '读取唯一真值、全域总图和 OSM 水系清单';
+    const [manifest, overviewManifest, hydrologyManifest] = await Promise.all([
+      fetchJson(MANIFEST_URL),
+      fetchJson(OVERVIEW_MANIFEST_URL),
+      fetchJson(HYDROLOGY_MANIFEST_URL),
+    ]);
+    validateManifests(manifest, overviewManifest, hydrologyManifest);
+    state.manifest = manifest;
+    state.overviewManifest = overviewManifest;
+    state.hydrologyManifest = hydrologyManifest;
     for (const tile of manifest.tiles) {
-      assert(tile.stored_bytes === EXPECTED_TILE_BYTES, `${tile.id} 字节数不正确`);
-      assert(tile.compression === 'none' && tile.resampling === 'none' && tile.quantization === 'none', `${tile.id} 存储合同不正确`);
-      assert(tile.source_elevation_modified_m === 0, `${tile.id} 高程被修改`);
+      state.tileById.set(tile.id, tile);
+      state.tileByMatrix.set(`${tile.matrix_index[0]},${tile.matrix_index[1]}`, tile);
     }
+    setupWorld(manifest, overviewManifest);
+
+    loadingDetail.textContent = '下载全域数值样本与 OSM 线状水系';
+    const [overviewBuffer, segmentBuffer, nodeBuffer] = await Promise.all([
+      fetchBinary(`data/${overviewManifest.asset.file}`),
+      fetchBinary(`data/${hydrologyManifest.segments.file}`),
+      fetchBinary(`data/${hydrologyManifest.nodes.file}`),
+    ]);
+    assert(overviewBuffer.byteLength === overviewManifest.asset.bytes, '全域数值资产字节数不正确');
+    assert(segmentBuffer.byteLength === hydrologyManifest.segments.bytes, '水系线段资产字节数不正确');
+    assert(nodeBuffer.byteLength === hydrologyManifest.nodes.bytes, '水系节点资产字节数不正确');
+
+    loadingDetail.textContent = '核对全域数值资产 SHA256';
+    const [overviewSha, segmentSha, nodeSha] = await Promise.all([
+      sha256Hex(overviewBuffer),
+      sha256Hex(segmentBuffer),
+      sha256Hex(nodeBuffer),
+    ]);
+    assert(overviewSha === overviewManifest.asset.sha256, '全域数值资产 SHA256 不正确');
+    assert(segmentSha === hydrologyManifest.segments.sha256, '水系线段资产 SHA256 不正确');
+    assert(nodeSha === hydrologyManifest.nodes.sha256, '水系节点资产 SHA256 不正确');
+
+    state.overviewValues = decodeInt16LE(overviewBuffer);
+    state.overviewColumns = Int32Array.from(overviewManifest.asset.source_columns);
+    state.overviewRows = Int32Array.from(overviewManifest.asset.source_rows);
+    assert(
+      state.overviewValues.length === overviewManifest.asset.grid[0] * overviewManifest.asset.grid[1],
+      '全域总图数值数量不正确'
+    );
+
+    await nextFrame();
+    buildOverviewGeometry();
+    await nextFrame();
+    setupHydrologyGeometry(decodeFloat32LE(segmentBuffer), decodeFloat32LE(nodeBuffer));
+    buildLabels();
+    resetFullView();
+
+    state.ready = true;
+    loadingCard.hidden = true;
+    errorCard.hidden = true;
+    updateDataPanel();
+    updateQa();
+    state.dirty = true;
+    requestAnimationFrame(renderLoop);
+
+    window.__GUILIN_FULL_MAP_TEST_API = {
+      getState: updateQa,
+      resetFull() {
+        resetFullView();
+        return updateQa();
+      },
+      focusAnchor(id) {
+        focusAnchor(id);
+        return updateQa();
+      },
+      async activateNativeDetail() {
+        state.camera.distance = 24_000;
+        await updateDetailPatch(true);
+        return updateQa();
+      },
+      toggleWaterways(value) {
+        state.waterwaysVisible = Boolean(value);
+        $('waterwaysToggle').checked = state.waterwaysVisible;
+        state.dirty = true;
+        return updateQa();
+      },
+      setWaterwayEmphasis(value) {
+        state.waterwayEmphasis = clamp(Number(value), 0.7, 2.4);
+        $('waterwayEmphasis').value = String(state.waterwayEmphasis);
+        state.dirty = true;
+        return updateQa();
+      },
+    };
   }
 
-  function compileShader(gl, type, source) { const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader); if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader) || 'shader compile failed'); return shader; }
-  function createProgram(gl, vertexSource, fragmentSource) { const vertex = compileShader(gl, gl.VERTEX_SHADER, vertexSource); const fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource); const program = gl.createProgram(); gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program); gl.deleteShader(vertex); gl.deleteShader(fragment); if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) || 'program link failed'); return program; }
-
-  function setupWebGL() {
-    const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, depth: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
-    assert(gl, '当前浏览器未提供 WebGL2');
-    state.gl = gl; state.program = createProgram(gl, VERTEX_SHADER, FRAGMENT_SHADER);
-    state.uniforms = { viewProjection: gl.getUniformLocation(state.program, 'uViewProjection'), minElevation: gl.getUniformLocation(state.program, 'uMinElevation'), maxElevation: gl.getUniformLocation(state.program, 'uMaxElevation') };
-    state.vao = gl.createVertexArray(); state.vertexBuffer = gl.createBuffer(); state.indexBuffer = gl.createBuffer();
-    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW); gl.clearColor(0.025, 0.055, 0.06, 1);
-  }
-
-  function sourceValue(x, y, fallback) { const value = state.codes[y * TILE_GRID + x]; return value === NODATA ? fallback : value; }
-  function buildGeometry() {
-    const { x, y, width, height } = state.window;
-    const vertexCount = width * height;
-    const vertices = new Float32Array(vertexCount * 7);
-    let minimum = Infinity, maximum = -Infinity;
-    for (let row = 0; row < height; row += 1) for (let col = 0; col < width; col += 1) { const elevation = state.codes[(y + row) * TILE_GRID + x + col]; if (elevation !== NODATA) { minimum = Math.min(minimum, elevation); maximum = Math.max(maximum, elevation); } }
-    assert(Number.isFinite(minimum), '当前窗口没有有效高程');
-    state.elevationMin = minimum; state.elevationMax = maximum;
-    const halfWidth = (width - 1) * SOURCE_SPACING_M * 0.5; const halfDepth = (height - 1) * SOURCE_SPACING_M * 0.5;
-    let cursor = 0;
-    for (let row = 0; row < height; row += 1) {
-      const sy = y + row;
-      for (let col = 0; col < width; col += 1) {
-        const sx = x + col; const elevation = state.codes[sy * TILE_GRID + sx]; const value = elevation === NODATA ? minimum : elevation;
-        const left = sourceValue(Math.max(0, sx - 1), sy, value); const right = sourceValue(Math.min(TILE_GRID - 1, sx + 1), sy, value);
-        const north = sourceValue(sx, Math.max(0, sy - 1), value); const south = sourceValue(sx, Math.min(TILE_GRID - 1, sy + 1), value);
-        let nx = -(right - left) / (2 * SOURCE_SPACING_M); let ny = 1; let nz = -(south - north) / (2 * SOURCE_SPACING_M); const length = Math.hypot(nx, ny, nz) || 1; nx /= length; ny /= length; nz /= length;
-        vertices[cursor++] = col * SOURCE_SPACING_M - halfWidth; vertices[cursor++] = value - minimum; vertices[cursor++] = row * SOURCE_SPACING_M - halfDepth;
-        vertices[cursor++] = nx; vertices[cursor++] = ny; vertices[cursor++] = nz; vertices[cursor++] = value;
-      }
-    }
-    const maxIndices = (width - 1) * (height - 1) * 6; const indices = new Uint32Array(maxIndices); let indexCursor = 0; let validCells = 0;
-    for (let row = 0; row < height - 1; row += 1) {
-      const sy = y + row;
-      for (let col = 0; col < width - 1; col += 1) {
-        const sx = x + col;
-        const e0 = state.codes[sy * TILE_GRID + sx], e1 = state.codes[sy * TILE_GRID + sx + 1], e2 = state.codes[(sy + 1) * TILE_GRID + sx], e3 = state.codes[(sy + 1) * TILE_GRID + sx + 1];
-        if (e0 === NODATA || e1 === NODATA || e2 === NODATA || e3 === NODATA) continue;
-        const a = row * width + col, b = a + 1, c = a + width, d = c + 1;
-        indices[indexCursor++] = a; indices[indexCursor++] = c; indices[indexCursor++] = b; indices[indexCursor++] = b; indices[indexCursor++] = c; indices[indexCursor++] = d; validCells += 1;
-      }
-    }
-    const gl = state.gl; gl.bindVertexArray(state.vao); gl.bindBuffer(gl.ARRAY_BUFFER, state.vertexBuffer); gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    const stride = 7 * 4; gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 3 * 4); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, stride, 6 * 4);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, state.indexBuffer); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices.subarray(0, indexCursor), gl.STATIC_DRAW); gl.bindVertexArray(null);
-    state.indexCount = indexCursor; state.validTriangleCount = validCells * 2; state.worldWidth = (width - 1) * SOURCE_SPACING_M; state.worldDepth = (height - 1) * SOURCE_SPACING_M; updateDataPanel(); state.dirty = true;
-  }
-
-  function centeredWindow(tile) { const [validWidth, validHeight] = tile.valid_grid; const width = Math.min(WINDOW_GRID, validWidth), height = Math.min(WINDOW_GRID, validHeight); return { x: Math.max(0, Math.floor((validWidth - width) / 2)), y: Math.max(0, Math.floor((validHeight - height) / 2)), width, height }; }
-  function anchorWindow(tile, anchor) { const [validWidth, validHeight] = tile.valid_grid; const [west, , , north] = tile.source_sample_center_bounds_epsg32649; const col = Math.round((anchor.e - west) / SOURCE_SPACING_M); const row = Math.round((north - anchor.n) / SOURCE_SPACING_M); const width = Math.min(WINDOW_GRID, validWidth), height = Math.min(WINDOW_GRID, validHeight); return { x: clamp(Math.round(col - width / 2), 0, validWidth - width), y: clamp(Math.round(row - height / 2), 0, validHeight - height), width, height }; }
-  function moveWindow(dx, dy) { if (!state.currentTile) return; const [validWidth, validHeight] = state.currentTile.valid_grid; state.currentAnchor = null; state.window.x = clamp(state.window.x + dx, 0, validWidth - state.window.width); state.window.y = clamp(state.window.y + dy, 0, validHeight - state.window.height); buildGeometry(); resetCamera(); updateButtons(); updateQa(); }
-
-  async function loadTile(tileId, anchorId = null) {
-    const token = ++state.loadToken; const tile = state.tileById.get(tileId); assert(tile, `找不到瓦片 ${tileId}`); loadingCard.hidden = false; errorCard.hidden = true; loadingDetail.textContent = `${tile.id} · 校验 8,388,608 字节`;
-    const buffer = await fetchBinary(`data/${tile.file}`); if (token !== state.loadToken) return; assert(buffer.byteLength === EXPECTED_TILE_BYTES, `${tile.id} 字节数不一致`); const digest = await sha256Hex(buffer); if (token !== state.loadToken) return; assert(digest === tile.sha256, `${tile.id} SHA256 不一致`);
-    state.currentTile = tile; state.currentTileSha = digest; state.codes = decodeInt16LE(buffer); state.currentAnchor = anchorId ? state.anchorById.get(anchorId) : null; state.window = state.currentAnchor ? anchorWindow(tile, state.currentAnchor) : centeredWindow(tile); buildGeometry(); resetCamera(); state.qaReady = true; loadingCard.hidden = true; updateButtons(); updateQa();
-  }
-  async function selectAnchor(anchorId) { const anchor = state.anchorById.get(anchorId); assert(anchor, `找不到地标 ${anchorId}`); await loadTile(state.manifest.anchor_tile_map[anchorId], anchorId); }
-
-  function updateButtons() { document.querySelectorAll('[data-anchor]').forEach(button => button.classList.toggle('active', button.dataset.anchor === state.currentAnchor?.id)); document.querySelectorAll('[data-tile]').forEach(button => button.classList.toggle('active', button.dataset.tile === state.currentTile?.id)); }
-  function updateDataPanel() { if (!state.currentTile) return; $('tileId').textContent = state.currentTile.id; $('tileMatrix').textContent = `第 ${state.currentTile.matrix_index[0] + 1} 行 · 第 ${state.currentTile.matrix_index[1] + 1} 列`; $('windowInfo').textContent = `x ${state.window.x} · y ${state.window.y} · ${state.window.width}²`; $('worldInfo').textContent = `${(state.worldWidth / 1000).toFixed(2)} km × ${(state.worldDepth / 1000).toFixed(2)} km`; $('elevationInfo').textContent = `${state.elevationMin.toFixed(0)} 至 ${state.elevationMax.toFixed(0)} m`; }
-  function buildTileGrid() { const grid = $('tileGrid'); grid.replaceChildren(); const tiles = [...state.tileById.values()].sort((a,b) => a.matrix_index[0]-b.matrix_index[0] || a.matrix_index[1]-b.matrix_index[1]); for (const tile of tiles) { const button = document.createElement('button'); button.type='button'; button.dataset.tile=tile.id; button.textContent=`${tile.matrix_index[0]+1}-${tile.matrix_index[1]+1}`; button.title=tile.id; button.addEventListener('click',()=>loadTile(tile.id).catch(showError)); grid.appendChild(button); } }
-
-  function mat4Multiply(out,a,b){const r=new Float32Array(16);for(let c=0;c<4;c+=1)for(let row=0;row<4;row+=1)r[c*4+row]=a[row]*b[c*4]+a[4+row]*b[c*4+1]+a[8+row]*b[c*4+2]+a[12+row]*b[c*4+3];out.set(r);return out;}
-  function mat4Perspective(out,fovy,aspect,near,far){const f=1/Math.tan(fovy/2);out.fill(0);out[0]=f/aspect;out[5]=f;out[10]=(far+near)/(near-far);out[11]=-1;out[14]=2*far*near/(near-far);return out;}
-  function mat4LookAt(out,eye,center,up){let zx=eye[0]-center[0],zy=eye[1]-center[1],zz=eye[2]-center[2],l=Math.hypot(zx,zy,zz)||1;zx/=l;zy/=l;zz/=l;let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx;l=Math.hypot(xx,xy,xz)||1;xx/=l;xy/=l;xz/=l;const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;out[0]=xx;out[1]=yx;out[2]=zx;out[3]=0;out[4]=xy;out[5]=yy;out[6]=zy;out[7]=0;out[8]=xz;out[9]=yz;out[10]=zz;out[11]=0;out[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);out[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);out[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);out[15]=1;return out;}
-  function resizeCanvas(){const ratio=Math.min(MAX_DPR,window.devicePixelRatio||1),width=Math.max(2,Math.floor(canvas.clientWidth*ratio)),height=Math.max(2,Math.floor(canvas.clientHeight*ratio));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;state.dirty=true;}}
-  function cameraEye(){const c=state.camera,h=Math.cos(c.pitch)*c.distance;return[c.target[0]+Math.sin(c.yaw)*h,c.target[1]+Math.sin(c.pitch)*c.distance,c.target[2]+Math.cos(c.yaw)*h];}
-  function resetCamera(){const relief=Math.max(1,state.elevationMax-state.elevationMin),span=Math.max(state.worldWidth,state.worldDepth);state.camera={target:[0,relief*0.22,0],yaw:-0.78,pitch:0.52,distance:span*1.18,minDistance:80,maxDistance:span*8};state.dirty=true;}
-  function updateMatrices(){resizeCanvas();const eye=cameraEye(),span=Math.max(state.worldWidth,state.worldDepth),near=Math.max(.5,state.camera.distance/8000),far=state.camera.distance+span*8+4000;mat4Perspective(state.projection,Math.PI/4.1,canvas.width/Math.max(1,canvas.height),near,far);mat4LookAt(state.view,eye,state.camera.target,[0,1,0]);mat4Multiply(state.viewProjection,state.projection,state.view);}
-  function render(timestamp){if(!state.gl||!state.currentTile||state.indexCount<=0)return;updateMatrices();const gl=state.gl;gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(state.program);gl.uniformMatrix4fv(state.uniforms.viewProjection,false,state.viewProjection);gl.uniform1f(state.uniforms.minElevation,state.elevationMin);gl.uniform1f(state.uniforms.maxElevation,state.elevationMax);gl.bindVertexArray(state.vao);gl.drawElements(gl.TRIANGLES,state.indexCount,gl.UNSIGNED_INT,0);gl.bindVertexArray(null);state.frameCount+=1;const elapsed=timestamp-state.fpsStart;if(elapsed>=750){state.fps=state.frameCount*1000/elapsed;state.frameCount=0;state.fpsStart=timestamp;}renderInfo.textContent=`512² 原生数值顶点 · ${state.validTriangleCount.toLocaleString()} 三角形 · 直接顶点缓冲区 · ${state.fps.toFixed(1)} FPS`;state.dirty=false;updateQa();}
-  function loop(timestamp){if(state.dirty)render(timestamp);requestAnimationFrame(loop);}
-
-  function updateQa(){const loadingVisible=getComputedStyle(loadingCard).display!=='none',errorVisible=getComputedStyle(errorCard).display!=='none';const result={schema:'guilin-single-truth-browser-qa/v1',passed:Boolean(state.qaReady&&state.gl&&state.currentTile&&state.currentTileSha===state.currentTile.sha256&&state.validTriangleCount>100000&&runtimeErrors.length===0&&!loadingVisible&&!errorVisible),data_ready:Boolean(state.qaReady&&state.currentTile),webgl2:Boolean(state.gl),source_sha256:state.manifest?.source?.sha256||null,aoi_geometry_sha256:state.manifest?.aoi?.geometry_sha256||null,source_resolution_m:12.5,tile_count:state.manifest?.tiles?.length||0,current_tile_id:state.currentTile?.id||null,current_tile_sha256_verified:Boolean(state.currentTile&&state.currentTileSha===state.currentTile.sha256),render_grid:[WINDOW_GRID,WINDOW_GRID],source_window:[state.window.x,state.window.y,state.window.width,state.window.height],vertex_spacing_m:12.5,direct_numeric_vertex_geometry:true,height_image_texture_used:false,texture_upload_count:0,valid_triangle_count:state.validTriangleCount,vertical_scale:1,resampling:'none',tile_compression:'none',gap_fill_applied:false,fallback_30m_used:false,source_elevation_modified_m:0,legacy_procedural_runtime_allowed:false,runtime_errors:runtimeErrors.slice(),loading_overlay_displayed:loadingVisible,error_overlay_displayed:errorVisible,render_status:renderInfo.textContent};window.__GUILIN_SINGLE_TRUTH_QA=result;document.body.dataset.ready=String(result.passed);document.body.dataset.textureCount='0';document.body.dataset.tileCount=String(result.tile_count);document.body.dataset.directNumericGeometry='true';return result;}
-
-  function setupControls(){document.querySelectorAll('[data-anchor]').forEach(button=>button.addEventListener('click',()=>selectAnchor(button.dataset.anchor).catch(showError)));$('moveNorth').addEventListener('click',()=>moveWindow(0,-WINDOW_STEP));$('moveSouth').addEventListener('click',()=>moveWindow(0,WINDOW_STEP));$('moveWest').addEventListener('click',()=>moveWindow(-WINDOW_STEP,0));$('moveEast').addEventListener('click',()=>moveWindow(WINDOW_STEP,0));$('centerWindow').addEventListener('click',()=>{if(!state.currentTile)return;state.currentAnchor=null;state.window=centeredWindow(state.currentTile);buildGeometry();resetCamera();updateButtons();});$('resetCamera').addEventListener('click',resetCamera);$('fullscreen').addEventListener('click',()=>document.fullscreenElement?document.exitFullscreen():$('viewerShell').requestFullscreen());togglePanel.addEventListener('click',()=>{const collapsed=controlPanel.classList.toggle('collapsed');togglePanel.setAttribute('aria-expanded',String(!collapsed));});canvas.addEventListener('contextmenu',event=>event.preventDefault());canvas.addEventListener('pointerdown',event=>{canvas.setPointerCapture(event.pointerId);state.pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(state.pointers.size===2){const points=[...state.pointers.values()];state.pinch={distance:Math.hypot(points[1].x-points[0].x,points[1].y-points[0].y),cameraDistance:state.camera.distance};}});canvas.addEventListener('pointermove',event=>{const previous=state.pointers.get(event.pointerId);if(!previous)return;const current={x:event.clientX,y:event.clientY};state.pointers.set(event.pointerId,current);if(state.pointers.size===2&&state.pinch){const points=[...state.pointers.values()],distance=Math.max(8,Math.hypot(points[1].x-points[0].x,points[1].y-points[0].y));state.camera.distance=clamp(state.pinch.cameraDistance*state.pinch.distance/distance,state.camera.minDistance,state.camera.maxDistance);}else{const dx=current.x-previous.x,dy=current.y-previous.y;if(event.shiftKey||event.buttons===2){const scale=state.camera.distance*.0014,rightX=Math.cos(state.camera.yaw),rightZ=-Math.sin(state.camera.yaw),forwardX=Math.sin(state.camera.yaw),forwardZ=Math.cos(state.camera.yaw);state.camera.target[0]-=dx*scale*rightX+dy*scale*forwardX;state.camera.target[2]-=dx*scale*rightZ+dy*scale*forwardZ;}else{state.camera.yaw-=dx*.005;state.camera.pitch=clamp(state.camera.pitch+dy*.004,.08,1.42);}}state.dirty=true;});const release=event=>{state.pointers.delete(event.pointerId);if(state.pointers.size<2)state.pinch=null;};canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('wheel',event=>{event.preventDefault();state.camera.distance=clamp(state.camera.distance*Math.exp(event.deltaY*.001),state.camera.minDistance,state.camera.maxDistance);state.dirty=true;},{passive:false});window.addEventListener('resize',()=>{state.dirty=true;});}
-  function showError(error){const message=String(error?.stack||error?.message||error);runtimeErrors.push(message);console.error(error);loadingCard.hidden=true;errorMessage.textContent=message;errorCard.hidden=false;updateQa();}
-
-  async function initialize(){setupControls();setupWebGL();const manifest=await fetchJson(MANIFEST_URL);validateManifest(manifest);state.manifest=manifest;for(const tile of manifest.tiles){state.tileById.set(tile.id,tile);for(const anchor of tile.anchors||[])state.anchorById.set(anchor.id,anchor);}buildTileGrid();const requested=new URLSearchParams(location.search).get('anchor')||'guilin';const anchor=state.anchorById.has(requested)?requested:state.anchorById.keys().next().value;await selectAnchor(anchor);requestAnimationFrame(loop);window.__GUILIN_SINGLE_TRUTH_TEST_API={async selectTile(tileId){await loadTile(tileId);state.dirty=true;await new Promise(resolve=>requestAnimationFrame(resolve));return updateQa();},async selectAnchor(anchorId){await selectAnchor(anchorId);state.dirty=true;await new Promise(resolve=>requestAnimationFrame(resolve));return updateQa();},moveWindow(dx,dy){moveWindow(dx,dy);return updateQa();},resetCamera(){resetCamera();return updateQa();},getState(){return updateQa();}};updateQa();}
   initialize().catch(showError);
 })();
