@@ -1,0 +1,218 @@
+name: Publish Landscape Mother Guilin v1.0
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-guilin-v100-continuous-fields
+    paths:
+      - web/landscape-mother-guilin-v100/**
+      - tools/procedural_landscape/landscape_mother_guilin_v100_browser_qa.py
+      - knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md
+      - skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/**
+      - .github/workflows/publish-landscape-mother-guilin-v100.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PUBLIC_DIR: landscape-mother-guilin-v100
+  SOURCE_DATA_DIR: yangshuo-karst-distilled-v320/data
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-guilin-v100/
+  LOCKED_DEM_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+
+concurrency:
+  group: landscape-mother-guilin-v100
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Stage continuous field runtime on gh-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact source head
+        uses: actions/checkout@v4
+        with:
+          path: source
+          fetch-depth: 0
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+          fetch-depth: 0
+
+      - name: Validate knowledge and runtime source
+        run: |
+          set -euo pipefail
+          test -f source/knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md
+          test -f source/skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/references/procedural-field-knowledge-v100.md
+          test -f source/web/landscape-mother-guilin-v100/index.html
+          test -f source/web/landscape-mother-guilin-v100/app.js
+          test -f source/web/landscape-mother-guilin-v100/terrain-worker.js
+          node --check source/web/landscape-mother-guilin-v100/app.js
+          node --check source/web/landscape-mother-guilin-v100/terrain-worker.js
+          grep -q "truthMutationCount" source/web/landscape-mother-guilin-v100/terrain-worker.js
+          grep -q "riverInternalBreakCount" source/web/landscape-mother-guilin-v100/terrain-worker.js
+          grep -q "tileSeedRestartCount" source/web/landscape-mother-guilin-v100/terrain-worker.js
+          grep -q "visualApproved:false" source/web/landscape-mother-guilin-v100/terrain-worker.js
+          grep -q "productionReady:false" source/web/landscape-mother-guilin-v100/terrain-worker.js
+
+      - name: Validate locked public truth assets
+        run: |
+          set -euo pipefail
+          test -d "pages/${SOURCE_DATA_DIR}"
+          test -f "pages/${SOURCE_DATA_DIR}/index.json"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          root = Path('pages/yangshuo-karst-distilled-v320/data')
+          index = json.loads((root / 'index.json').read_text(encoding='utf-8'))
+          height_files = list(root.rglob('height_i16.bin'))
+          if not height_files:
+              raise SystemExit('no height_i16.bin assets found')
+          sizes = {p.relative_to(root).as_posix(): p.stat().st_size for p in height_files}
+          if not any(size == 2048 * 2048 * 2 for size in sizes.values()):
+              raise SystemExit(f'no 2048x2048 Int16 height asset: {sizes}')
+          print(json.dumps({'heightAssets': sizes, 'indexKeys': sorted(index)[:20]}, indent=2))
+          PY
+
+      - name: Stage self-contained Landscape Mother site
+        run: |
+          set -euo pipefail
+          rm -rf "pages/${PUBLIC_DIR}"
+          mkdir -p "pages/${PUBLIC_DIR}"
+          cp -R source/web/landscape-mother-guilin-v100/. "pages/${PUBLIC_DIR}/"
+          cp -R "pages/${SOURCE_DATA_DIR}" "pages/${PUBLIC_DIR}/data"
+          cp source/DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson "pages/${PUBLIC_DIR}/data/lijiang_osm.geojson"
+          mkdir -p "pages/${PUBLIC_DIR}/knowledge"
+          cp source/knowledge/terrain-hydrology/shared/distilled/GAEA_TERRAIN_FIELD_GRAPH_V100.md "pages/${PUBLIC_DIR}/knowledge/"
+          cp source/knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md "pages/${PUBLIC_DIR}/knowledge/"
+          cat > "pages/${PUBLIC_DIR}/build.json" <<JSON
+          {
+            "schema": "landscape_mother_public_build@1.0.0",
+            "sourceBranch": "${GITHUB_REF_NAME}",
+            "sourceCommit": "${GITHUB_SHA}",
+            "knowledgeBaseCommit": "6ac47d984bfca8336a7c0f58d176ab8153db26cd",
+            "truthSha256": "${LOCKED_DEM_SHA256}",
+            "sourceGrid": [2048, 2048],
+            "sourceSpacingMeters": 12.5,
+            "runtime": "continuous-world-fields+global-river+adaptive-martini",
+            "truthApproved": false,
+            "visualApproved": false,
+            "productionReady": false
+          }
+          JSON
+
+      - name: Commit and push public candidate
+        id: publish
+        working-directory: pages
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${PUBLIC_DIR}"
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "publish(landscape-mother): Guilin continuous field candidate ${GITHUB_SHA::7}"
+            for attempt in 1 2 3 4; do
+              if git push origin HEAD:gh-pages; then
+                echo "changed=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              sleep $((attempt * 3))
+            done
+            exit 1
+          fi
+
+      - name: Upload publication source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-guilin-v100-source-${{ github.sha }}
+          path: |
+            source/web/landscape-mother-guilin-v100
+            source/knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md
+            source/skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/references/procedural-field-knowledge-v100.md
+          if-no-files-found: error
+
+  browser-qa:
+    name: Online desktop and mobile continuous-field QA
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact source head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Chromium QA dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Wait for exact public build
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error "${PUBLIC_URL}build.json?run=${GITHUB_RUN_ID}" -o /tmp/build.json; then
+              if python - <<'PY'
+          import json, os
+          data = json.load(open('/tmp/build.json', encoding='utf-8'))
+          raise SystemExit(0 if data.get('sourceCommit') == os.environ['GITHUB_SHA'] else 1)
+          PY
+              then
+                cat /tmp/build.json
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "exact public build did not appear" >&2
+          exit 1
+
+      - name: Run real online Chromium QA
+        run: |
+          python tools/procedural_landscape/landscape_mother_guilin_v100_browser_qa.py \
+            --url "${PUBLIC_URL}?commit=${GITHUB_SHA}" \
+            --out "$RUNNER_TEMP/landscape-mother-qa"
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-guilin-v100-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/landscape-mother-qa
+          if-no-files-found: error
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## Landscape Mother Guilin v1.0"
+            echo
+            echo "Public URL: ${PUBLIC_URL}"
+            echo
+            echo "Source commit: ${GITHUB_SHA}"
+            echo
+            echo "Truth, visual and production approvals remain false."
+            if test -f "$RUNNER_TEMP/landscape-mother-qa/report.json"; then
+              echo
+              echo '```json'
+              python - <<'PY'
+          import json, os
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'landscape-mother-qa', 'report.json')
+          data = json.load(open(path, encoding='utf-8'))
+          print(json.dumps({'passed': data['passed'], 'failures': data['failures']}, ensure_ascii=False, indent=2))
+          PY
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
