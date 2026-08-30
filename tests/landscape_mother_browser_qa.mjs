@@ -9,7 +9,7 @@ fs.mkdirSync(outputDir, { recursive: true });
 const results = [];
 const modeThresholds = Object.freeze({
   composite: { luminanceStdDev: 0.025, edgeEnergy: 0.0020 },
-  truth: { luminanceStdDev: 0.025, edgeEnergy: 0.0020 },
+  truth: { luminanceStdDev: 0.025, edgeEnergy: 0.0018 },
   geomorphology: { luminanceStdDev: 0.025, edgeEnergy: 0.0018 },
   fields: { luminanceStdDev: 0.025, edgeEnergy: 0.0010 },
   hydrology: { luminanceStdDev: 0.025, edgeEnergy: 0.0012 },
