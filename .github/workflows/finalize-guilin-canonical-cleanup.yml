@@ -1,0 +1,276 @@
+name: Finalize Guilin canonical truth and cold backup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/finalize-guilin-canonical-cleanup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CANONICAL_SHA: 91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a
+  SOURCE_SHA: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  SOURCE_BYTES: '124348471'
+  CANONICAL_BYTES: '423838710'
+  COLD_TAG: guilin-native-12p5m-single-truth-v001
+  CANONICAL_TAG: guilin-canonical-elevation-store-12p5m-v1
+  TRUTH_BRANCH: truth/guilin-dem-12p5m-canonical
+  TEMP_BRANCH: project/guilin-canonical-elevation-store-v1
+  PUBLIC_MAP: https://haihao0307.github.io/guilin-dem-pipeline/guilin/
+  PUBLIC_STORE: https://haihao0307.github.io/guilin-dem-pipeline/guilin-elevation-store-v1/
+  EVIDENCE: out/final-canonical-evidence
+
+concurrency:
+  group: finalize-guilin-canonical-truth-and-cold-backup
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify authoritative source state
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pointer=json.loads(Path('truth/CANONICAL_ELEVATION_STORE_POINTER.json').read_text())
+          validation=json.loads(Path('truth/CANONICAL_ELEVATION_VALIDATION_V1.json').read_text())
+          assert pointer['status']=='AUTHORITATIVE_PRODUCTION_SOURCE'
+          assert pointer['canonical_stream_sha256']=='91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a'
+          assert pointer['source_cold_backup_sha256']=='9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert pointer['sample_count']==211919355
+          assert pointer['data_bytes']==423838710
+          assert pointer['chunk_count']==840
+          assert pointer['shard_count']==7
+          assert pointer['pixel_mismatch_count']==0
+          assert pointer['normal_production_source_tiff_reads_allowed_after_cutover'] is False
+          assert pointer['normal_production_elevation_source']=='canonical-pixel-exact-store'
+          assert validation['passed'] is True
+          assert validation['pixel_mismatch_count']==0
+          assert validation['maximum_absolute_elevation_difference_m']==0
+          assert validation['post_cutover_daily_source_tiff_reads_allowed'] is False
+          PY
+          test "$(find .github/workflows -maxdepth 1 -type f -name '*.yml' | wc -l)" -ge 2
+          test -f .github/workflows/guilin-online-canonical-store-v1.yml
+
+      - name: Mirror the authoritative source tree to the workflow-free truth branch
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          MAIN_SHA="$(git rev-parse HEAD)"
+          rm -rf .github/workflows
+          git add -A
+          git commit -m 'refactor(guilin): mirror canonical source to workflow-free truth branch'
+          TRUTH_SHA="$(git rev-parse HEAD)"
+          git push origin HEAD:"$TRUTH_BRANCH" --force
+          REMOTE_TRUTH_SHA="$(git ls-remote origin "refs/heads/$TRUTH_BRANCH" | cut -f1)"
+          test "$TRUTH_SHA" = "$REMOTE_TRUTH_SHA"
+          echo "MAIN_SOURCE_SHA=$MAIN_SHA" >> "$GITHUB_ENV"
+          echo "TRUTH_SHA=$TRUTH_SHA" >> "$GITHUB_ENV"
+
+      - name: Remove the temporary canonical-store project branch
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code origin "refs/heads/$TEMP_BRANCH" >/dev/null 2>&1; then
+            git push origin --delete "$TEMP_BRANCH"
+          fi
+          ! git ls-remote --exit-code origin "refs/heads/$TEMP_BRANCH" >/dev/null 2>&1
+
+      - name: Reduce the old release to the TIFF cold backup only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$COLD_TAG" > "$EVIDENCE/cold-release-before.json"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$COLD_TAG" --jq '.assets[] | [.id,.name] | @tsv' | while IFS=$'\t' read -r asset_id asset_name; do
+            if [[ "$asset_name" != "guilin_raw_union_12_5m.tif" ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
+            fi
+          done
+          cat > /tmp/GUILIN_TIFF_COLD_BACKUP_RECEIPT.json <<EOF
+          {
+            "schema": "guilin-source-tiff-cold-backup/v1",
+            "status": "COLD_BACKUP_ONLY",
+            "file": "guilin_raw_union_12_5m.tif",
+            "bytes": 124348471,
+            "sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+            "crs": "EPSG:32649",
+            "native_spacing_m": [12.5, 12.5],
+            "normal_production_reads_allowed": false,
+            "normal_production_source": "guilin-canonical-elevation-store-12p5m-v1",
+            "canonical_stream_sha256": "91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a",
+            "pixel_exact_validation_mismatch_count": 0,
+            "source_elevation_modified_m": 0,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          EOF
+          gh release upload "$COLD_TAG" /tmp/GUILIN_TIFF_COLD_BACKUP_RECEIPT.json --clobber
+          gh release edit "$COLD_TAG" \
+            --title 'Guilin native 12.5 m TIFF cold backup' \
+            --notes 'Cold backup only. Normal production reads the pixel-exact canonical elevation store and does not read this TIFF.'
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$COLD_TAG" > "$EVIDENCE/cold-release-after.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('out/final-canonical-evidence/cold-release-after.json').read_text())
+          assets={a['name']:a for a in d['assets']}
+          assert set(assets)=={'guilin_raw_union_12_5m.tif','GUILIN_TIFF_COLD_BACKUP_RECEIPT.json'}, set(assets)
+          tif=assets['guilin_raw_union_12_5m.tif']
+          assert tif['size']==124348471
+          assert tif.get('digest')=='sha256:9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert not [name for name in assets if name.startswith('native-r')]
+          PY
+
+      - name: Verify the canonical release and public runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$CANONICAL_TAG" > "$EVIDENCE/canonical-release.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('out/final-canonical-evidence/canonical-release.json').read_text())
+          assets={a['name']:a for a in d['assets']}
+          shards=[a for name,a in assets.items() if name.startswith('elevation-shard-') and name.endswith('.i16pack')]
+          assert len(shards)==7
+          assert sum(a['size'] for a in shards)==423838710
+          assert 'CANONICAL_ELEVATION_MANIFEST.json' in assets
+          PY
+          curl --fail --silent "$PUBLIC_MAP/version.json?final=$GITHUB_RUN_ID" > "$EVIDENCE/public-map-version.json"
+          curl --fail --silent "$PUBLIC_STORE/STORE_VERSION.json?final=$GITHUB_RUN_ID" > "$EVIDENCE/public-store-version.json"
+          grep -q "$CANONICAL_SHA" "$EVIDENCE/public-map-version.json"
+          grep -q '"source_tiff_read": false' "$EVIDENCE/public-map-version.json"
+          grep -q '"legacy_native_tile_store_required": false' "$EVIDENCE/public-map-version.json"
+          grep -q "$CANONICAL_SHA" "$EVIDENCE/public-store-version.json"
+          grep -q '"source_tiff_read": false' "$EVIDENCE/public-store-version.json"
+          curl --fail --silent --header 'Range: bytes=0-1023' \
+            --dump-header "$EVIDENCE/public-range-headers.txt" \
+            --output "$EVIDENCE/public-range.bin" \
+            "$PUBLIC_STORE/shards/elevation-shard-000.i16pack?final=$GITHUB_RUN_ID"
+          test "$(stat -c '%s' "$EVIDENCE/public-range.bin")" = 1024
+          grep -q '206' "$EVIDENCE/public-range-headers.txt"
+          OLD_CODE="$(curl --silent --location --output /dev/null --write-out '%{http_code}' https://haihao0307.github.io/guilin-dem-pipeline/guilin-truth-data/TRUTH_RUNTIME_STORE.json?final=$GITHUB_RUN_ID)"
+          test "$OLD_CODE" = 404
+          echo "$OLD_CODE" > "$EVIDENCE/old-public-tile-store-http-status.txt"
+
+      - name: Verify the final branch topology
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CURRENT_MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          CURRENT_TRUTH_SHA="$(gh api "repos/$GITHUB_REPOSITORY/branches/$TRUTH_BRANCH" --jq '.commit.sha')"
+          test "$CURRENT_MAIN_SHA" = "$MAIN_SOURCE_SHA"
+          test "$CURRENT_TRUTH_SHA" = "$TRUTH_SHA"
+          gh api "repos/$GITHUB_REPOSITORY/git/trees/$CURRENT_TRUTH_SHA?recursive=1" > "$EVIDENCE/truth-tree.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('out/final-canonical-evidence/truth-tree.json').read_text())
+          paths=[item['path'] for item in d['tree'] if item.get('type')=='blob']
+          assert not [p for p in paths if p.startswith('.github/workflows/')]
+          assert 'truth/CANONICAL_ELEVATION_STORE_POINTER.json' in paths
+          assert 'pipeline/canonical_elevation_store.py' in paths
+          assert 'pipeline/build_online_assets_from_canonical_store.py' in paths
+          PY
+
+      - name: Write the final machine receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          map_version=json.loads(Path('out/final-canonical-evidence/public-map-version.json').read_text())
+          receipt={
+              'schema':'guilin-canonical-elevation-final-receipt/v1',
+              'passed':True,
+              'source_tiff':{
+                  'file':'guilin_raw_union_12_5m.tif',
+                  'bytes':124348471,
+                  'sha256':'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4',
+                  'role':'cold-backup-only',
+                  'normal_production_reads_allowed':False,
+              },
+              'canonical_elevation_store':{
+                  'release':'guilin-canonical-elevation-store-12p5m-v1',
+                  'canonical_stream_sha256':'91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a',
+                  'sample_count':211919355,
+                  'data_bytes':423838710,
+                  'chunk_count':840,
+                  'chunk_matrix':[35,24],
+                  'nominal_chunk_grid':[512,512],
+                  'shard_count':7,
+                  'overlap_samples':0,
+                  'padding_samples':0,
+                  'compression':'none',
+                  'resampling':'none',
+                  'quantization':'none',
+                  'interpolation':'none',
+                  'pixel_mismatch_count':0,
+                  'maximum_absolute_elevation_difference_m':0,
+              },
+              'online_runtime':{
+                  'public_map_url':'https://haihao0307.github.io/guilin-dem-pipeline/guilin/',
+                  'public_store_url':'https://haihao0307.github.io/guilin-dem-pipeline/guilin-elevation-store-v1/',
+                  'source_tiff_read':False,
+                  'native_detail_delivery':'same-origin-canonical-byte-range',
+                  'http_206_verified':True,
+                  'full_truth_downloaded_on_page_open':False,
+                  'legacy_54_tile_public_store_required':False,
+                  'legacy_54_tile_public_store_removed':True,
+                  'initial_numeric_data_bytes':map_version.get('initial_numeric_data_bytes'),
+                  'viewer_head':map_version.get('head'),
+              },
+              'repository':{
+                  'main_sha':os.environ['MAIN_SOURCE_SHA'],
+                  'truth_branch':'truth/guilin-dem-12p5m-canonical',
+                  'truth_sha':os.environ['TRUTH_SHA'],
+                  'truth_branch_workflow_count':0,
+                  'temporary_project_branch_removed':True,
+                  'active_main_workflow':'guilin-online-canonical-store-v1.yml',
+              },
+              'visualAcceptance':False,
+              'productionReady':False,
+          }
+          Path('out/final-canonical-evidence/GUILIN_CANONICAL_ELEVATION_FINAL_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Upload final evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-canonical-elevation-final-receipt-${{ github.run_id }}
+          path: out/final-canonical-evidence
+          retention-days: 90
+          compression-level: 6
+
+      - name: Summarize
+        if: always()
+        run: |
+          {
+            echo '## Guilin canonical elevation finalization'
+            echo
+            echo '* canonical samples: 211,919,355'
+            echo '* canonical bytes: 423,838,710'
+            echo '* pixel mismatch: 0'
+            echo '* source TIFF: cold backup only'
+            echo '* normal TIFF reads: prohibited'
+            echo '* old 54-tile release assets: removed'
+            echo '* old public 54-tile store: removed'
+            echo '* truth branch workflows: 0'
+            echo "* public map: $PUBLIC_MAP"
+          } >> "$GITHUB_STEP_SUMMARY"
