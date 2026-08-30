@@ -122,6 +122,9 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
         "hydrology_flow_progress_monotonic": True,
         "hydrology_flow_distance_monotonic": True,
         "hydrology_future_flow_animation_ready": True,
+        "hydrology_orientation_method": "connected-network outlet shortest-path distance",
+        "hydrology_runtime_route_break_count": 0,
+        "li_reaches_aoi_south_boundary": True,
         "centerline_coordinates_mutated": False,
         "manual_centerline_added": False,
         "synthetic_gap_line_added": False,
@@ -156,47 +159,32 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
     if result.get("hydrology_visual_join_policy") != "overlapped-segments-and-degree-caps":
         failures.append(f"hydrology join policy: {result.get('hydrology_visual_join_policy')}")
     style = result.get("waterway_style") or {}
-    if style.get("profile") != "longitudinal-flow-taper-v4":
+    if style.get("profile") != "network-directed-physical-width-v6":
         failures.append(f"waterway style profile: {style.get('profile')}")
-    maximum_width = float(style.get("max_full_width_css_px") or 999)
-    width_limit = 2.8 if require_detail else 1.35
-    if maximum_width > width_limit + 1e-6:
-        failures.append(f"secondary waterway width {maximum_width:.3f}px exceeds {width_limit:.2f}px")
+    if style.get("width_mode") != "source-width-meters-projected-to-screen":
+        failures.append(f"waterway width mode: {style.get('width_mode')}")
+    upstream_m = float(style.get("mainstem_upstream_physical_width_m") or 0)
+    midstream_m = float(style.get("mainstem_midstream_physical_width_m") or 0)
+    downstream_m = float(style.get("mainstem_downstream_physical_width_m") or 0)
+    if not 8.0 <= upstream_m <= 18.0:
+        failures.append(f"mainstem upstream physical width {upstream_m:.3f}m")
+    if not upstream_m < midstream_m < downstream_m:
+        failures.append(f"mainstem physical width is not increasing: {upstream_m:.3f}, {midstream_m:.3f}, {downstream_m:.3f}")
+    if downstream_m < 150.0:
+        failures.append(f"mainstem downstream physical width too small: {downstream_m:.3f}m")
     upstream = float(style.get("mainstem_upstream_full_width_css_px") or 0)
     midstream = float(style.get("mainstem_midstream_full_width_css_px") or 0)
     downstream = float(style.get("mainstem_downstream_full_width_css_px") or 0)
-    if require_detail:
-        upstream_range = (0.55, 1.50)
-        midstream_range = (1.80, 4.50)
-        downstream_range = (4.80, 9.00)
-    else:
-        upstream_range = (0.25, 0.75)
-        midstream_range = (0.90, 2.00)
-        downstream_range = (2.50, 4.20)
-    for label, value, bounds in (
-        ("upstream", upstream, upstream_range),
-        ("midstream", midstream, midstream_range),
-        ("downstream", downstream, downstream_range),
-    ):
-        if not bounds[0] <= value <= bounds[1]:
-            failures.append(f"mainstem {label} width {value:.3f}px outside {bounds[0]:.2f}-{bounds[1]:.2f}px")
-    if not upstream < midstream < downstream:
-        failures.append(f"mainstem width is not longitudinally increasing: {upstream:.3f}, {midstream:.3f}, {downstream:.3f}")
-    if downstream < upstream * 5.0:
-        failures.append(f"mainstem downstream/upstream width ratio too small: {downstream / max(upstream, 1e-6):.3f}")
-    secondary_width = float(style.get("secondary_river_max_full_width_css_px") or 999)
-    stream_width = float(style.get("stream_max_full_width_css_px") or 999)
-    canal_width = float(style.get("canal_max_full_width_css_px") or 999)
-    if not require_detail and secondary_width > 1.35:
-        failures.append(f"secondary river too wide: {secondary_width:.3f}px")
-    if not require_detail and stream_width > 0.65:
-        failures.append(f"stream too wide: {stream_width:.3f}px")
-    if not require_detail and canal_width > 0.72:
-        failures.append(f"canal too wide: {canal_width:.3f}px")
-    if not require_detail and upstream > max(secondary_width * 0.80, stream_width * 1.45):
-        failures.append(
-            f"mainstem upstream is not minor-waterway scale: upstream {upstream:.3f}px, secondary {secondary_width:.3f}px, stream {stream_width:.3f}px"
-        )
+    if not upstream <= midstream <= downstream:
+        failures.append(f"projected mainstem width is not increasing: {upstream:.3f}, {midstream:.3f}, {downstream:.3f}")
+    if int(style.get("li_gui_continuation_segment_count", 0)) <= 0:
+        failures.append("Gui River continuation is missing")
+    if int(style.get("li_south_of_yangshuo_segment_count", 0)) <= 0:
+        failures.append("Li River stops at Yangshuo")
+    if style.get("li_reaches_aoi_south_boundary") is not True:
+        failures.append("Li and Gui mainstem does not reach AOI south boundary")
+    if int(style.get("runtime_route_break_count", -1)) != 0:
+        failures.append(f"distilled waterway route breaks: {style.get('runtime_route_break_count')}")
     if style.get("color_gradient") != "upstream-light-and-thin_to_downstream-dark-and-wide":
         failures.append(f"waterway color gradient: {style.get('color_gradient')}")
     if style.get("flow_direction") != "upstream_to_downstream":

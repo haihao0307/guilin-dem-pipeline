@@ -15,6 +15,8 @@ from rasterio.windows import Window
 from shapely.geometry import GeometryCollection, LineString, MultiLineString, box, shape
 from shapely.ops import transform as shapely_transform
 
+from hydrology_network_v6 import orient_network
+
 SOURCE_NAME = "guilin_raw_union_12_5m.tif"
 SOURCE_BYTES = 124_348_471
 SOURCE_SHA256 = "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4"
@@ -238,14 +240,12 @@ def nearest_valid_native_elevation(
     return None
 
 MAJOR_MAINSTEM_PATTERNS = {
-    1: ("漓江", "漓水", "li river", "li jiang", "lijiang river", "li-jiang"),
+    1: ("漓江", "漓水", "桂江", "桂水", "li river", "li jiang", "lijiang river", "li-jiang", "gui river", "gui jiang", "guijiang"),
     2: ("湘江", "湘水", "xiang river", "xiang jiang", "xiangjiang"),
     3: ("资江", "資江", "资水", "資水", "夫夷水", "夫夷江", "zi river", "zi jiang", "zijiang", "zi shui", "zishui", "fuyi river", "fu yi river", "fuyi shui"),
 }
 MAJOR_MAINSTEM_KEYS = {1: "li", 2: "xiang", 3: "zi"}
-FLOW_STYLE_PROFILE = "longitudinal-flow-taper-v4"
-MAINSTEM_PROGRESS_ELEVATION_WEIGHT = 0.58
-MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT = 0.42
+FLOW_STYLE_PROFILE = "network-directed-physical-width-v6"
 
 
 def feature_name_values(properties: dict[str, Any]) -> list[str]:
@@ -270,15 +270,21 @@ def feature_name_blob(properties: dict[str, Any]) -> str:
 
 
 def mainstem_code(properties: dict[str, Any]) -> int:
+    system = str(properties.get("system") or "").strip().lower()
+    if system in {"li", "lijiang", "li-jiang", "guijiang", "gui-jiang"}:
+        return 1
+    if system in {"xiang", "xiangjiang", "xiang-jiang"}:
+        return 2
+    if system in {"zi", "zijiang", "zi-jiang", "zishui", "fuyi"}:
+        return 3
     values = {normalize_river_name(value) for value in feature_name_values(properties)}
     for code, patterns in MAJOR_MAINSTEM_PATTERNS.items():
         aliases = {normalize_river_name(pattern) for pattern in patterns}
         if values.intersection(aliases):
             return code
     marker = str(properties.get("mainstem") or properties.get("is_mainstem") or "").strip().lower()
-    system = str(properties.get("system") or "").strip().lower()
     if marker in {"1", "true", "yes", "main", "mainstem"}:
-        if system in {"li", "lijiang", "li-jiang"}:
+        if system in {"li", "lijiang", "li-jiang", "guijiang", "gui-jiang"}:
             return 1
         if system in {"xiang", "xiangjiang", "xiang-jiang"}:
             return 2
@@ -331,6 +337,7 @@ def build_hydrology(
         source_feature_count += 1
         class_value = ALLOWED_WATERWAYS[waterway]
         source_width = parse_width(properties, waterway)
+        source_system = str(properties.get("system") or "").strip().lower()
         major_code = mainstem_code(properties) if waterway == "river" else 0
         name_blob = feature_name_blob(properties)
         if waterway == "river" and name_blob:
@@ -354,6 +361,9 @@ def build_hydrology(
                     "class": class_value,
                     "source_width_m": source_width,
                     "major_code": major_code,
+                    "system": source_system,
+                    "name_blob": name_blob,
+                    "osm_id": properties.get("osm_id"),
                 })
                 for key in (start_key, end_key):
                     if key not in node_records:
@@ -406,146 +416,11 @@ def build_hydrology(
     if unresolved_keys:
         raise RuntimeError(f"unable to drape {len(unresolved_keys)} waterway nodes onto the native DEM")
 
-    outgoing: dict[tuple[float, float], list[int]] = {}
-    directed_edges: list[dict[str, Any]] = []
-    for source in raw_segments:
-        start_key = source["start"]
-        end_key = source["end"]
-        start_rank = node_rank(start_key, valid_node_data)
-        end_rank = node_rank(end_key, valid_node_data)
-        if start_rank >= end_rank:
-            upstream, downstream = start_key, end_key
-        else:
-            upstream, downstream = end_key, start_key
-        length_m = float(math.hypot(downstream[0] - upstream[0], downstream[1] - upstream[1]))
-        edge = dict(source)
-        edge.update({
-            "upstream": upstream,
-            "downstream": downstream,
-            "length_m": max(length_m, 0.01),
-            "flow_accumulation_start_m": 0.0,
-            "flow_accumulation_end_m": 0.0,
-            "flow_distance_start_m": 0.0,
-            "flow_distance_end_m": 0.0,
-            "start_flow_progress": 0.0,
-            "end_flow_progress": 0.0,
-        })
-        edge_index = len(directed_edges)
-        directed_edges.append(edge)
-        outgoing.setdefault(upstream, []).append(edge_index)
-
-    # The graph order is strictly descending in native DEM rank. Accumulation controls
-    # hierarchy, while longest upstream route distance is retained for the next animated
-    # flow stage. Every stored segment is ordered upstream first and downstream second.
-    accumulation_at_node = {key: 0.0 for key in valid_node_data}
-    route_distance_at_node = {key: 0.0 for key in valid_node_data}
-    for key in sorted(valid_node_data, key=lambda item: node_rank(item, valid_node_data), reverse=True):
-        edge_indices = outgoing.get(key, [])
-        if not edge_indices:
-            continue
-        accumulation_start = accumulation_at_node[key] / max(1, len(edge_indices))
-        route_start = route_distance_at_node[key]
-        for edge_index in edge_indices:
-            edge = directed_edges[edge_index]
-            accumulation_end = accumulation_start + edge["length_m"]
-            route_end = route_start + edge["length_m"]
-            edge["flow_accumulation_start_m"] = accumulation_start
-            edge["flow_accumulation_end_m"] = accumulation_end
-            edge["flow_distance_start_m"] = route_start
-            edge["flow_distance_end_m"] = route_end
-            accumulation_at_node[edge["downstream"]] += accumulation_end
-            route_distance_at_node[edge["downstream"]] = max(
-                route_distance_at_node[edge["downstream"]], route_end
-            )
-
-    all_accumulation_logs = np.log1p(np.asarray([
-        value
-        for edge in directed_edges
-        for value in (edge["flow_accumulation_start_m"], edge["flow_accumulation_end_m"])
-    ], dtype=np.float64))
-    ordinary_low = float(np.percentile(all_accumulation_logs, 2.0))
-    ordinary_high = float(np.percentile(all_accumulation_logs, 99.5))
-    ordinary_span = max(1e-9, ordinary_high - ordinary_low)
-    for edge in directed_edges:
-        start_log = math.log1p(edge["flow_accumulation_start_m"])
-        end_log = math.log1p(edge["flow_accumulation_end_m"])
-        start_progress = unit_interval(start_log, ordinary_low, ordinary_high)
-        end_progress = max(start_progress, unit_interval(end_log, ordinary_low, ordinary_high))
-        edge["ordinary_start_progress"] = start_progress
-        edge["ordinary_end_progress"] = end_progress
-
-    # Each explicit main river receives its own 0..1 longitudinal coordinate. Native DEM
-    # descent supplies the geographic upstream/downstream concept and network accumulation
-    # supplies confluence growth. A second normalization guarantees a narrow headwater end
-    # and a broad downstream end for every named main-stem system.
-    mainstem_progress_stats: dict[int, dict[str, float]] = {}
-    for code in MAJOR_MAINSTEM_KEYS:
-        selected = [edge for edge in directed_edges if int(edge["major_code"]) == code]
-        if not selected:
-            continue
-        elevations = [
-            valid_node_data[key]["elevation"]
-            for edge in selected
-            for key in (edge["upstream"], edge["downstream"])
-        ]
-        accumulation_logs = [
-            math.log1p(value)
-            for edge in selected
-            for value in (edge["flow_accumulation_start_m"], edge["flow_accumulation_end_m"])
-        ]
-        elevation_low = float(min(elevations))
-        elevation_high = float(max(elevations))
-        accumulation_low = float(min(accumulation_logs))
-        accumulation_high = float(max(accumulation_logs))
-        for edge in selected:
-            start_elevation = float(valid_node_data[edge["upstream"]]["elevation"])
-            end_elevation = float(valid_node_data[edge["downstream"]]["elevation"])
-            start_elevation_progress = 1.0 - unit_interval(start_elevation, elevation_low, elevation_high)
-            end_elevation_progress = 1.0 - unit_interval(end_elevation, elevation_low, elevation_high)
-            start_accumulation_progress = unit_interval(
-                math.log1p(edge["flow_accumulation_start_m"]), accumulation_low, accumulation_high
-            )
-            end_accumulation_progress = unit_interval(
-                math.log1p(edge["flow_accumulation_end_m"]), accumulation_low, accumulation_high
-            )
-            raw_start = (
-                MAINSTEM_PROGRESS_ELEVATION_WEIGHT * start_elevation_progress +
-                MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT * start_accumulation_progress
-            )
-            raw_end = (
-                MAINSTEM_PROGRESS_ELEVATION_WEIGHT * end_elevation_progress +
-                MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT * end_accumulation_progress
-            )
-            edge["raw_mainstem_start_progress"] = raw_start
-            edge["raw_mainstem_end_progress"] = max(raw_start, raw_end)
-        raw_values = [
-            value
-            for edge in selected
-            for value in (edge["raw_mainstem_start_progress"], edge["raw_mainstem_end_progress"])
-        ]
-        raw_low = float(min(raw_values))
-        raw_high = float(max(raw_values))
-        for edge in selected:
-            start_progress = unit_interval(edge["raw_mainstem_start_progress"], raw_low, raw_high)
-            end_progress = max(
-                start_progress,
-                unit_interval(edge["raw_mainstem_end_progress"], raw_low, raw_high),
-            )
-            edge["start_flow_progress"] = start_progress
-            edge["end_flow_progress"] = end_progress
-        mainstem_progress_stats[code] = {
-            "raw_low": raw_low,
-            "raw_high": raw_high,
-            "elevation_low_m": elevation_low,
-            "elevation_high_m": elevation_high,
-            "source_width_min_m": float(min(edge["source_width_m"] for edge in selected)),
-            "source_width_max_m": float(max(edge["source_width_m"] for edge in selected)),
-        }
-
-    for edge in directed_edges:
-        if not int(edge["major_code"]):
-            edge["start_flow_progress"] = edge["ordinary_start_progress"]
-            edge["end_flow_progress"] = edge["ordinary_end_progress"]
+    directed_edges, network_diagnostics = orient_network(
+        raw_segments,
+        valid_node_data,
+        (west, south, east, north),
+    )
 
     uphill_segment_count = sum(
         1 for edge in directed_edges
@@ -559,11 +434,10 @@ def build_hydrology(
         1 for edge in directed_edges
         if edge["flow_distance_end_m"] <= edge["flow_distance_start_m"]
     )
-    if uphill_segment_count or flow_progress_inversion_count or flow_distance_inversion_count:
+    if flow_progress_inversion_count or flow_distance_inversion_count:
         raise RuntimeError(
-            "invalid upstream/downstream contract: "
-            f"uphill={uphill_segment_count}, progress={flow_progress_inversion_count}, "
-            f"distance={flow_distance_inversion_count}"
+            "invalid upstream/downstream network contract: "
+            f"progress={flow_progress_inversion_count}, distance={flow_distance_inversion_count}"
         )
 
     mainstem_segment_counts = {"li": 0, "xiang": 0, "zi": 0}
@@ -714,6 +588,7 @@ def build_hydrology(
             "node_count": len(node_values) // 8,
             "source_route_coverage": 1.0,
             "upstream_to_downstream_continuity_required": True,
+            "local_dem_uphill_segment_count": uphill_segment_count,
             "uphill_segment_count": uphill_segment_count,
             "flow_progress_inversion_count": flow_progress_inversion_count,
             "flow_distance_inversion_count": flow_distance_inversion_count,
@@ -721,24 +596,37 @@ def build_hydrology(
         },
         "styling": {
             "profile": FLOW_STYLE_PROFILE,
-            "mainstem_names": ["漓江", "湘江", "资江"],
-            "mainstem_aliases": {"zi": ["夫夷水", "夫夷江", "Fuyi River"]},
+            "mainstem_names": ["漓江及桂江连续干流", "湘江", "资江"],
+            "mainstem_aliases": {
+                "li": ["漓江", "桂江", "Li River", "Gui River"],
+                "zi": ["夫夷水", "夫夷江", "Fuyi River"],
+            },
             "mainstem_feature_counts": mainstem_feature_counts,
             "mainstem_segment_counts": mainstem_segment_counts,
             "mainstem_progress_ranges": mainstem_progress_ranges,
             "mainstem_source_width_ranges_m": mainstem_source_width_ranges_m,
-            "progress_basis": "native-DEM descent blended with upstream network accumulation",
+            "progress_basis": "connected mainstem distance to verified network outlet",
             "gradient_direction": "upstream-light-and-thin_to_downstream-dark-and-wide",
-            "upstream_mainstem_width_equivalent": "minor-stream-scale",
+            "upstream_mainstem_width_equivalent": "headwater-scale-derived-from-source-width",
             "downstream_mainstem_width_uses_source_width": True,
-            "mainstem_classification": "exact-match-on-individual-OSM-name-values",
+            "width_mode": "source-width-meters-projected-to-screen",
+            "mainstem_classification": "source-system plus exact OSM name aliases",
+            "li_gui_continuation_segment_count": network_diagnostics["li_gui_continuation_segment_count"],
+            "li_south_of_yangshuo_segment_count": network_diagnostics["li_south_of_yangshuo_segment_count"],
+            "li_min_northing_m": network_diagnostics["li_min_northing_m"],
+            "li_reaches_aoi_south_boundary": network_diagnostics["li_reaches_aoi_south_boundary"],
+            "mainstem_component_counts": network_diagnostics["mainstem_component_counts"],
             "style_only_mainstem_gap_propagation": False,
             "explicit_mainstem_segment_count": explicit_mainstem_segment_count,
             "planimetry_unchanged": True,
         },
         "direction": {
             "segment_vertex_order": "upstream_to_downstream",
-            "orientation_method": "native-DEM-descending-rank",
+            "orientation_method": network_diagnostics["orientation_method"],
+            "general_component_count": network_diagnostics["general_component_count"],
+            "general_outlet_count": network_diagnostics["general_outlet_count"],
+            "distance_tie_segment_count": network_diagnostics["distance_tie_segment_count"],
+            "li_continuity_verified_south_of_yangshuo": True,
             "flow_progress_monotonic": True,
             "flow_distance_monotonic": True,
             "future_flow_animation_ready": True,
