@@ -1,0 +1,51 @@
+name: Apply Guilin basin hierarchy waterway v3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-guilin-hydrology-v3.yml
+      - tools/apply_guilin_hydrology_v3.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-guilin-hydrology-v3
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply reviewed main-river hierarchy and tributary gradient
+        run: |
+          set -euo pipefail
+          python tools/apply_guilin_hydrology_v3.py
+
+      - name: Verify source edits
+        run: |
+          set -euo pipefail
+          python -m py_compile pipeline/build_online_assets.py tests/browser_full_map_cdp.py tools/apply_guilin_hydrology_v3.py
+          node --check viewer/app.js
+          grep -q 'basin-hierarchy-mainstem-gradient-v3' viewer/app.js
+          grep -q 'mainstem_segment_counts' pipeline/build_online_assets.py
+          grep -q 'lighter-and-thinner-upstream_to_darker-and-wider-downstream' tests/browser_full_map_cdp.py
+          grep -q 'overview_mainstem_width_css_px' viewer/HYDROLOGY_RENDER_V2.json
+          git diff --check
+
+      - name: Commit renderer, topology hierarchy and visual QA
+        run: |
+          set -euo pipefail
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add viewer/app.js viewer/HYDROLOGY_RENDER_V2.json pipeline/build_online_assets.py tests/browser_full_map_cdp.py
+          git commit -m "feat(guilin): separate major rivers from tributary hierarchy"
+          git push origin HEAD:main
