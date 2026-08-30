@@ -1,0 +1,1 @@
+const files=["runtime.part000.txt", "runtime.part001.txt"];const code=(await Promise.all(files.map(f=>fetch(f,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(f+' HTTP '+r.status);return r.text()})))).join('');await import(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));
