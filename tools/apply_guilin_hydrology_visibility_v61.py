@@ -45,7 +45,7 @@ def main() -> int:
         text,
         "float ordinaryAlpha=vClass<0.5?mix(0.43,0.79,p):(vClass<1.5?mix(0.22,0.54,p):mix(0.28,0.58,p));\n  float mainAlpha=mix(0.38,0.94,pow(p,0.88));",
         "float ordinaryAlpha=vClass<0.5?mix(0.56,0.86,p):(vClass<1.5?mix(0.42,0.68,p):mix(0.44,0.70,p));\n  float mainAlpha=mix(0.66,0.97,pow(p,0.88));",
-        1,
+        2,
         "waterway alpha",
     )
     text = replace_exact(
