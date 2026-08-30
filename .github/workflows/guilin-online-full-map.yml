@@ -32,12 +32,14 @@ env:
   ASSET_DIR: out/generated
   DISTILLED_DIR: out/distilled
   EVIDENCE_DIR: out/evidence
+  LOCAL_ROOT: out/local-root
   PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin/
+  PUBLIC_TILE_STORE: https://haihao0307.github.io/guilin-dem-pipeline/guilin-truth-data/native/
 
 jobs:
   build-publish-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 180
     steps:
       - name: Checkout the sole truth main line
         uses: actions/checkout@v4
@@ -74,7 +76,8 @@ jobs:
           grep -q 'guilin-continuous-full-map-v1' viewer/index.html
           grep -q '知识索引 + 按需原生数据' viewer/index.html
           grep -q 'distilled_knowledge_runtime' viewer/app.js
-          grep -q 'release-on-demand' viewer/app.js
+          grep -q 'same-origin-on-demand' viewer/app.js
+          grep -q "../guilin-truth-data/native/" viewer/app.js
           grep -q 'full_truth_downloaded_on_page_open: false' viewer/app.js
           grep -q 'longitudinal-flow-taper-v4' viewer/app.js
           grep -q 'start_flow_distance_m' pipeline/build_online_assets.py
@@ -95,8 +98,9 @@ jobs:
           assert contract['status']=='ACTIVE'
           assert contract['architecture']['page_open_must_download_full_truth'] is False
           assert contract['architecture']['native_tiles_are_on_demand'] is True
+          assert contract['architecture']['native_tile_delivery']=='same-origin-on-demand'
           assert contract['architecture']['stale_public_assets_allowed'] is False
-          assert contract['first_load']['maximum_public_site_bytes_excluding_remote_native_tiles']==6291456
+          assert contract['first_load']['maximum_viewer_directory_bytes']==6291456
           PY
 
       - name: Download and verify the immutable source TIFF
@@ -174,6 +178,7 @@ jobs:
           assert manifest['source']['centerline_coordinates_mutated'] is False
           assert manifest['filter']['lake_surface_asset_emitted'] is False
           assert manifest['filter']['reservoir_surface_asset_emitted'] is False
+          assert knowledge['runtime']['native_tile_delivery']=='same-origin-on-demand'
           assert knowledge['runtime']['all_native_tiles_downloaded_on_page_open'] is False
           assert knowledge['runtime']['full_truth_downloaded_on_page_open'] is False
           PY
@@ -205,7 +210,8 @@ jobs:
           assert not list(root.rglob('*.jpg'))
           assert not list(root.rglob('*.jpeg'))
           app=(root/'app.js').read_text()
-          assert 'release-on-demand' in app
+          assert 'same-origin-on-demand' in app
+          assert '../guilin-truth-data/native/' in app
           for token in ('createTexture','texImage2D','sampler2D','heightmap'):
               assert token not in app, token
           knowledge=json.loads((root/'data/guilin-distilled-knowledge.json').read_text())
@@ -220,8 +226,9 @@ jobs:
               'continuous_zoom':True,
               'distilled_knowledge_runtime':True,
               'initial_numeric_data_bytes':knowledge['runtime']['initial_numeric_data_bytes'],
-              'native_tile_delivery':'release-on-demand',
-              'native_tiles_in_public_site':0,
+              'native_tile_delivery':'same-origin-on-demand',
+              'runtime_native_tile_store':'../guilin-truth-data/native/',
+              'native_tiles_in_viewer_directory':0,
               'full_truth_downloaded_on_page_open':False,
               'stale_public_assets_allowed':False,
               'lake_surface_asset_count':0,
@@ -235,39 +242,59 @@ jobs:
           version_path=root/'version.json'
           for _ in range(3):
               version_path.write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
-              version['public_site_bytes_excluding_sha256s']=sum(
+              version['viewer_directory_bytes_excluding_sha256s']=sum(
                   path.stat().st_size for path in root.rglob('*') if path.is_file() and path.name!='SHA256SUMS.txt'
               )
           version_path.write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
-          site_bytes=sum(path.stat().st_size for path in root.rglob('*') if path.is_file())
-          assert site_bytes <= 6_291_456, site_bytes
+          viewer_bytes=sum(path.stat().st_size for path in root.rglob('*') if path.is_file())
+          assert viewer_bytes <= 6_291_456, viewer_bytes
           (Path('out/evidence')/'PUBLIC_SITE_SIZE.json').write_text(json.dumps({
-              'public_site_bytes':site_bytes,
-              'public_site_mib':round(site_bytes/1024/1024,3),
-              'native_tiles_in_public_site':0,
+              'viewer_directory_bytes':viewer_bytes,
+              'viewer_directory_mib':round(viewer_bytes/1024/1024,3),
+              'native_tiles_in_viewer_directory':0,
               'initial_numeric_data_bytes':knowledge['runtime']['initial_numeric_data_bytes'],
+              'native_tile_delivery':'same-origin-on-demand',
           },ensure_ascii=False,indent=2)+'\n')
           PY
           (cd "$SITE_DIR" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
 
+      - name: Prepare same-origin native tiles for local browser QA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf "$LOCAL_ROOT"
+          mkdir -p "$LOCAL_ROOT/guilin" "$LOCAL_ROOT/guilin-truth-data/native"
+          cp -a "$SITE_DIR/." "$LOCAL_ROOT/guilin/"
+          for tile in \
+            native-r04-c01-2048x2048-i16.bin \
+            native-r04-c02-2048x2048-i16.bin \
+            native-r05-c01-2048x2048-i16.bin \
+            native-r05-c02-2048x2048-i16.bin; do
+            gh release download "$RELEASE_TAG" --pattern "$tile" --dir "$LOCAL_ROOT/guilin-truth-data/native" --clobber
+          done
+          test "$(find "$LOCAL_ROOT/guilin-truth-data/native" -type f | wc -l)" = 4
+
       - name: Run local desktop, native-detail and mobile browser QA
         run: |
           set -euo pipefail
-          python -m http.server 8765 --bind 127.0.0.1 --directory "$SITE_DIR" > "$EVIDENCE_DIR/local-http.log" 2>&1 &
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$LOCAL_ROOT" > "$EVIDENCE_DIR/local-http.log" 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           for attempt in $(seq 1 80); do
-            curl --fail --silent http://127.0.0.1:8765/ >/dev/null && break
+            curl --fail --silent http://127.0.0.1:8765/guilin/ >/dev/null && break
             sleep .25
           done
           python tests/browser_full_map_cdp.py \
-            --url http://127.0.0.1:8765/?build="$GITHUB_SHA" \
+            --url http://127.0.0.1:8765/guilin/?build="$GITHUB_SHA" \
             --evidence-dir "$EVIDENCE_DIR/local" \
             --timeout 600
           kill "$SERVER_PID" 2>/dev/null || true
           trap - EXIT
 
-      - name: Replace only the Guilin public destination
+      - name: Replace the small Guilin viewer and preserve the verified truth runtime store
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name 'Haihao_Nature Grace HK'
@@ -277,16 +304,56 @@ jobs:
           git worktree add /tmp/guilin-gh-pages origin/gh-pages
           cd /tmp/guilin-gh-pages
           git switch -C gh-pages origin/gh-pages
+          mkdir -p guilin-truth-data/native
+          if [ "$(find guilin-truth-data/native -name 'native-r*-c*-2048x2048-i16.bin' | wc -l)" != 54 ]; then
+            if [ -d guilin/data ]; then
+              find guilin/data -maxdepth 1 -name 'native-r*-c*-2048x2048-i16.bin' -exec mv -t guilin-truth-data/native {} + || true
+            fi
+          fi
+          if [ "$(find guilin-truth-data/native -name 'native-r*-c*-2048x2048-i16.bin' | wc -l)" != 54 ]; then
+            rm -f guilin-truth-data/native/native-r*-c*-2048x2048-i16.bin
+            gh release download "$RELEASE_TAG" --pattern 'native-r*-c*-2048x2048-i16.bin' --dir guilin-truth-data/native --clobber
+          fi
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          workspace=Path(os.environ['GITHUB_WORKSPACE'])
+          manifest=json.loads((workspace/'out/site/data/NATIVE_ELEVATION_MANIFEST.json').read_text())
+          root=Path('guilin-truth-data/native')
+          assert len(list(root.glob('native-r*-c*-2048x2048-i16.bin')))==54
+          total=0
+          for tile in manifest['tiles']:
+              path=root/tile['file']
+              assert path.is_file(), path
+              assert path.stat().st_size==8_388_608, path
+              digest=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert digest==tile['sha256'], (path,digest,tile['sha256'])
+              total+=path.stat().st_size
+          assert total==452_984_832, total
+          receipt={
+              'schema':'guilin-native-runtime-store/v1',
+              'status':'verified-read-only-mirror',
+              'canonical_release':'guilin-native-12p5m-single-truth-v001',
+              'source_sha256':'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4',
+              'native_spacing_m':12.5,
+              'tile_count':54,
+              'tile_bytes_each':8_388_608,
+              'total_tile_bytes':total,
+              'compression':'none',
+              'resampling':'none',
+          }
+          Path('guilin-truth-data/TRUTH_RUNTIME_STORE.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          PY
           rm -rf guilin
           mkdir -p guilin
           cp -a "$GITHUB_WORKSPACE/$SITE_DIR/." guilin/
           test "$(find guilin/data -name 'native-r*-c*-2048x2048-i16.bin' | wc -l)" = 0
           test "$(du -sb guilin | cut -f1)" -le 6291456
-          git add -A guilin
+          git add -A guilin guilin-truth-data
           git commit -m "Publish Guilin distilled knowledge runtime $GITHUB_SHA"
           git push origin HEAD:gh-pages
 
-      - name: Wait for the exact small public build
+      - name: Wait for the exact small public build and runtime store
         run: |
           set -euo pipefail
           for attempt in $(seq 1 150); do
@@ -299,19 +366,28 @@ jobs:
           grep -q "$GITHUB_SHA" "$EVIDENCE_DIR/public-version.json"
           curl --fail --silent "$PUBLIC_URL/data/guilin-distilled-knowledge.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-knowledge.json"
           curl --fail --silent "$PUBLIC_URL/data/osm-waterways-manifest.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-hydrology-manifest.json"
+          curl --fail --silent "https://haihao0307.github.io/guilin-dem-pipeline/guilin-truth-data/TRUTH_RUNTIME_STORE.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-runtime-store.json"
+          curl --fail --silent --range 0-31 "$PUBLIC_TILE_STORE/native-r05-c01-2048x2048-i16.bin?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-native-range.bin"
+          test "$(stat -c '%s' "$EVIDENCE_DIR/public-native-range.bin")" -ge 32
           python - <<'PY'
           import json
           from pathlib import Path
-          version=json.loads(Path('out/evidence/public-version.json').read_text())
-          knowledge=json.loads(Path('out/evidence/public-knowledge.json').read_text())
-          hydro=json.loads(Path('out/evidence/public-hydrology-manifest.json').read_text())
+          root=Path('out/evidence')
+          version=json.loads((root/'public-version.json').read_text())
+          knowledge=json.loads((root/'public-knowledge.json').read_text())
+          hydro=json.loads((root/'public-hydrology-manifest.json').read_text())
+          store=json.loads((root/'public-runtime-store.json').read_text())
           assert version['distilled_knowledge_runtime'] is True
-          assert version['native_tiles_in_public_site']==0
+          assert version['native_tiles_in_viewer_directory']==0
           assert version['full_truth_downloaded_on_page_open'] is False
           assert version['stale_public_assets_allowed'] is False
-          assert version['public_site_bytes_excluding_sha256s'] <= 6291456
-          assert knowledge['runtime']['native_tile_delivery']=='release-on-demand'
+          assert version['viewer_directory_bytes_excluding_sha256s'] <= 6291456
+          assert version['native_tile_delivery']=='same-origin-on-demand'
+          assert knowledge['runtime']['native_tile_delivery']=='same-origin-on-demand'
           assert hydro['runtime']['profile']=='knowledge-indexed-first-load-v1'
+          assert store['status']=='verified-read-only-mirror'
+          assert store['tile_count']==54
+          assert store['total_tile_bytes']==452_984_832
           PY
 
       - name: Run public desktop, native-detail and mobile browser QA
@@ -344,10 +420,10 @@ jobs:
             echo
             echo "* public URL: $PUBLIC_URL"
             echo "* source SHA256: $SOURCE_SHA256"
-            echo '* public site target: <= 6 MiB'
+            echo '* viewer directory target: <= 6 MiB'
             echo '* full 12.5 m truth on page open: no'
-            echo '* native tiles: GitHub Release, on demand'
-            echo '* stale Guilin public files: removed before publish'
+            echo '* native tiles: separate same-origin runtime store, on demand'
+            echo '* stale Guilin viewer files: removed before publish'
             echo '* one continuous map: required'
             echo '* waterway direction: upstream to downstream'
             echo '* future animated-flow coordinate: present'
