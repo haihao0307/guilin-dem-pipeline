@@ -4,6 +4,8 @@ import argparse
 import copy
 import hashlib
 import json
+import math
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -11,12 +13,10 @@ import numpy as np
 
 SEGMENT_STRIDE = 13
 NODE_STRIDE = 8
-RUNTIME_PROFILE = "knowledge-indexed-first-load-v1"
-CANONICAL_TILE_RELEASE_BASE_URL = (
-    "https://github.com/haihao0307/guilin-dem-pipeline/releases/download/"
-    "guilin-native-12p5m-single-truth-v001/"
-)
-RUNTIME_TILE_BASE_URL = "../guilin-truth-data/native/"
+RUNTIME_PROFILE = "knowledge-indexed-connected-routes-v6"
+TILE_RUNTIME_BASE_URL = "../guilin-truth-data/native/"
+CLASS_BUDGETS = {0: 12_000, 1: 2_500, 2: 500}
+TOTAL_SEGMENT_LIMIT = 30_000
 
 
 def sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
@@ -35,61 +35,247 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def select_top(indices: np.ndarray, progress: np.ndarray, limit: int) -> np.ndarray:
-    if indices.size <= limit:
-        return indices
-    order = np.argsort(progress[indices], kind="stable")
-    return indices[order[-limit:]]
+def node_key(x: float, z: float) -> tuple[float, float]:
+    return round(float(x), 3), round(float(z), 3)
+
+
+def segment_length(segment: np.ndarray) -> float:
+    return float(math.hypot(float(segment[3] - segment[0]), float(segment[5] - segment[2])))
 
 
 def node_record_from_segment(segment: np.ndarray, endpoint: int) -> tuple[float, ...]:
     if endpoint == 0:
         return (
-            float(segment[0]),
-            float(segment[1]),
-            float(segment[2]),
-            float(segment[6]),
-            float(segment[7]),
-            float(segment[8]),
-            float(segment[9]),
-            float(segment[11]),
+            float(segment[0]), float(segment[1]), float(segment[2]),
+            float(segment[6]), float(segment[7]), float(segment[8]),
+            float(segment[9]), float(segment[11]),
         )
     return (
-        float(segment[3]),
-        float(segment[4]),
-        float(segment[5]),
-        float(segment[6]),
-        float(segment[7]),
-        float(segment[8]),
-        float(segment[10]),
-        float(segment[12]),
+        float(segment[3]), float(segment[4]), float(segment[5]),
+        float(segment[6]), float(segment[7]), float(segment[8]),
+        float(segment[10]), float(segment[12]),
     )
 
 
 def build_runtime_nodes(segments: np.ndarray) -> np.ndarray:
     records: dict[tuple[float, float], tuple[float, ...]] = {}
+    degree: Counter[tuple[float, float]] = Counter()
     for segment in segments:
+        start_key = node_key(segment[0], segment[2])
+        end_key = node_key(segment[3], segment[5])
+        degree[start_key] += 1
+        degree[end_key] += 1
         for endpoint in (0, 1):
             record = node_record_from_segment(segment, endpoint)
-            key = (round(record[0], 3), round(record[2], 3))
+            key = node_key(record[0], record[2])
             previous = records.get(key)
             if previous is None:
                 records[key] = record
                 continue
-            previous_mainstem = previous[4]
-            current_mainstem = record[4]
-            previous_progress = previous[6]
-            current_progress = record[6]
-            if current_mainstem > previous_mainstem or (
-                current_mainstem == previous_mainstem and current_progress > previous_progress
-            ):
+            if record[4] > previous[4] or (record[4] == previous[4] and record[6] > previous[6]):
                 records[key] = record
-    ordered = [records[key] for key in sorted(records)]
+    ordered = []
+    for key in sorted(records):
+        record = list(records[key])
+        record[7] = max(record[7], float(degree[key]))
+        ordered.append(record)
     return np.asarray(ordered, dtype="<f4")
 
 
+def build_graph(segments: np.ndarray):
+    outgoing: dict[tuple[float, float], list[int]] = defaultdict(list)
+    incoming: dict[tuple[float, float], list[int]] = defaultdict(list)
+    starts: list[tuple[float, float]] = []
+    ends: list[tuple[float, float]] = []
+    for index, segment in enumerate(segments):
+        start = node_key(segment[0], segment[2])
+        end = node_key(segment[3], segment[5])
+        starts.append(start)
+        ends.append(end)
+        outgoing[start].append(index)
+        incoming[end].append(index)
+    return outgoing, incoming, starts, ends
+
+
+def choose_downstream(candidates: list[int], segments: np.ndarray, visited: set[int]) -> int | None:
+    available = [index for index in candidates if index not in visited]
+    if not available:
+        return None
+    return max(
+        available,
+        key=lambda index: (
+            1 if segments[index, 7] > 0.5 else 0,
+            float(segments[index, 8]),
+            float(segments[index, 10]),
+            segment_length(segments[index]),
+            -index,
+        ),
+    )
+
+
+def trace_route(
+    seed_index: int,
+    segments: np.ndarray,
+    outgoing: dict[tuple[float, float], list[int]],
+    ends: list[tuple[float, float]],
+    selected: set[int],
+) -> tuple[list[int], tuple[float, float], str]:
+    route: list[int] = []
+    visited: set[int] = set()
+    current = seed_index
+    terminal = ends[current]
+    reason = "outlet"
+    while current is not None and current not in visited:
+        if current in selected:
+            terminal = node_key(segments[current, 0], segments[current, 2])
+            reason = "joined-selected-network"
+            break
+        visited.add(current)
+        route.append(current)
+        terminal = ends[current]
+        next_candidates = outgoing.get(terminal, [])
+        selected_next = [index for index in next_candidates if index in selected]
+        if selected_next:
+            reason = "joined-selected-network"
+            break
+        current = choose_downstream(next_candidates, segments, visited)
+        if current is None:
+            reason = "outlet"
+            break
+    if current in visited and current is not None:
+        reason = "cycle"
+    return route, terminal, reason
+
+
+def route_metrics(route: list[int], segments: np.ndarray, reason: str) -> dict[str, Any]:
+    class_counts = Counter(int(round(float(segments[index, 6]))) for index in route if segments[index, 7] <= 0.5)
+    return {
+        "route": route,
+        "reason": reason,
+        "class_counts": dict(class_counts),
+        "max_width": max((float(segments[index, 8]) for index in route), default=0.0),
+        "max_progress": max((float(segments[index, 10]) for index in route), default=0.0),
+        "length_m": sum(segment_length(segments[index]) for index in route),
+        "contains_mainstem": any(segments[index, 7] > 0.5 for index in route),
+    }
+
+
+def select_connected_routes(segments: np.ndarray) -> tuple[np.ndarray, dict[str, Any]]:
+    outgoing, incoming, starts, ends = build_graph(segments)
+    main_indices = set(int(index) for index in np.flatnonzero(segments[:, 7] > 0.5))
+    selected = set(main_indices)
+    ordinary_indices = [index for index in range(len(segments)) if index not in main_indices]
+
+    headwater_seeds = []
+    for index in ordinary_indices:
+        start = starts[index]
+        ordinary_incoming = [candidate for candidate in incoming.get(start, []) if candidate not in main_indices]
+        if not ordinary_incoming:
+            headwater_seeds.append(index)
+
+    route_records: list[dict[str, Any]] = []
+    seen_seeds: set[int] = set()
+    for seed in headwater_seeds:
+        if seed in seen_seeds:
+            continue
+        route, _, reason = trace_route(seed, segments, outgoing, ends, selected)
+        if not route or reason == "cycle":
+            continue
+        seen_seeds.update(route)
+        route_records.append(route_metrics(route, segments, reason))
+
+    route_records.sort(
+        key=lambda item: (
+            item["reason"] == "joined-selected-network",
+            item["max_width"],
+            item["max_progress"],
+            item["length_m"],
+        ),
+        reverse=True,
+    )
+
+    used_budgets = Counter()
+    accepted_route_count = 0
+    skipped_for_budget = 0
+    for record in route_records:
+        additions = [index for index in record["route"] if index not in selected]
+        if not additions:
+            continue
+        counts = Counter(int(round(float(segments[index, 6]))) for index in additions)
+        if len(selected) + len(additions) > TOTAL_SEGMENT_LIMIT:
+            skipped_for_budget += 1
+            continue
+        if any(used_budgets[class_index] + counts[class_index] > CLASS_BUDGETS[class_index] for class_index in CLASS_BUDGETS):
+            skipped_for_budget += 1
+            continue
+        selected.update(additions)
+        used_budgets.update(counts)
+        accepted_route_count += 1
+
+    fallback_candidates = sorted(
+        (index for index in ordinary_indices if index not in selected),
+        key=lambda index: (
+            float(segments[index, 8]),
+            float(segments[index, 10]),
+            segment_length(segments[index]),
+        ),
+        reverse=True,
+    )
+    fallback_route_count = 0
+    for seed in fallback_candidates:
+        class_index = int(round(float(segments[seed, 6])))
+        if used_budgets[class_index] >= CLASS_BUDGETS[class_index]:
+            continue
+        route, _, reason = trace_route(seed, segments, outgoing, ends, selected)
+        if not route or reason == "cycle":
+            continue
+        additions = [index for index in route if index not in selected]
+        counts = Counter(int(round(float(segments[index, 6]))) for index in additions)
+        if len(selected) + len(additions) > TOTAL_SEGMENT_LIMIT:
+            continue
+        if any(used_budgets[key] + counts[key] > CLASS_BUDGETS[key] for key in CLASS_BUDGETS):
+            continue
+        selected.update(additions)
+        used_budgets.update(counts)
+        fallback_route_count += 1
+
+    selected_indices = np.asarray(sorted(selected), dtype=np.int64)
+    runtime_segments = np.asarray(segments[selected_indices], dtype="<f4")
+
+    selected_outgoing: dict[tuple[float, float], list[int]] = defaultdict(list)
+    for index in selected_indices:
+        selected_outgoing[starts[int(index)]].append(int(index))
+
+    route_breaks = []
+    for index in selected_indices:
+        index = int(index)
+        if segments[index, 7] > 0.5:
+            continue
+        end = ends[index]
+        full_next = outgoing.get(end, [])
+        selected_next = selected_outgoing.get(end, [])
+        if full_next and not selected_next:
+            route_breaks.append(index)
+    if route_breaks:
+        raise RuntimeError(f"distilled routes contain {len(route_breaks)} internal downstream breaks")
+
+    diagnostics = {
+        "mainstem_segment_count": len(main_indices),
+        "headwater_seed_count": len(headwater_seeds),
+        "candidate_route_count": len(route_records),
+        "accepted_route_count": accepted_route_count,
+        "fallback_route_count": fallback_route_count,
+        "skipped_route_count_for_budget": skipped_for_budget,
+        "ordinary_class_budgets": {str(key): value for key, value in CLASS_BUDGETS.items()},
+        "ordinary_class_selected": {str(key): int(used_budgets[key]) for key in CLASS_BUDGETS},
+        "runtime_route_break_count": 0,
+        "selection_method": "complete headwater-to-mainstem-or-outlet routes",
+    }
+    return runtime_segments, diagnostics
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Distill the Guilin truth into a small first-load runtime")
+    parser = argparse.ArgumentParser(description="Distill Guilin truth into a connected-route first-load runtime")
     parser.add_argument("--native-manifest", type=Path, required=True)
     parser.add_argument("--overview-manifest", type=Path, required=True)
     parser.add_argument("--hydrology-manifest", type=Path, required=True)
@@ -102,7 +288,6 @@ def main() -> int:
     native = read_json(args.native_manifest)
     overview = read_json(args.overview_manifest)
     hydrology = read_json(args.hydrology_manifest)
-
     raw = np.fromfile(args.segments, dtype="<f4")
     if raw.size % SEGMENT_STRIDE:
         raise RuntimeError(f"invalid full hydrology segment float count: {raw.size}")
@@ -111,25 +296,8 @@ def main() -> int:
     if len(full_segments) != expected_full_count:
         raise RuntimeError(f"full hydrology count mismatch: {len(full_segments)} != {expected_full_count}")
 
-    class_value = full_segments[:, 6]
-    mainstem_code = full_segments[:, 7]
-    source_width = full_segments[:, 8]
-    end_progress = full_segments[:, 10]
-
-    main_indices = np.flatnonzero(mainstem_code > 0.5)
-    ordinary_river = np.flatnonzero((class_value < 0.5) & (mainstem_code <= 0.5))
-    streams = np.flatnonzero((class_value >= 0.5) & (class_value < 1.5))
-    canals = np.flatnonzero(class_value >= 1.5)
-
-    selected = set(int(index) for index in main_indices)
-    selected.update(int(index) for index in select_top(ordinary_river, end_progress, 12_000))
-    selected.update(int(index) for index in select_top(streams, end_progress, 2_500))
-    selected.update(int(index) for index in select_top(canals, end_progress, 500))
-
-    selected_indices = np.asarray(sorted(selected), dtype=np.int64)
-    runtime_segments = np.asarray(full_segments[selected_indices], dtype="<f4")
+    runtime_segments, route_diagnostics = select_connected_routes(full_segments)
     runtime_nodes = build_runtime_nodes(runtime_segments)
-
     segment_output = args.output_dir / "osm-waterway-segments.f32.bin"
     node_output = args.output_dir / "osm-waterway-nodes.f32.bin"
     runtime_segments.tofile(segment_output)
@@ -140,8 +308,10 @@ def main() -> int:
         "xiang": int(np.count_nonzero(runtime_segments[:, 7] == 2.0)),
         "zi": int(np.count_nonzero(runtime_segments[:, 7] == 3.0)),
     }
-    if any(value <= 0 for value in main_counts.values()):
-        raise RuntimeError(f"distilled runtime lost a named mainstem: {main_counts}")
+    full_main_counts = hydrology["styling"]["mainstem_segment_counts"]
+    for name in main_counts:
+        if main_counts[name] != int(full_main_counts[name]):
+            raise RuntimeError(f"distilled runtime lost {name} mainstem segments: {main_counts[name]} != {full_main_counts[name]}")
 
     selected_class_counts = {
         "river_segments": int(np.count_nonzero(runtime_segments[:, 6] < 0.5)),
@@ -159,14 +329,14 @@ def main() -> int:
         "selected_node_count": int(len(runtime_nodes)),
         "selected_class_counts": selected_class_counts,
         "selection_policy": {
-            "named_mainstems": "all",
-            "ordinary_rivers": "top 12000 by downstream progress",
-            "streams": "top 2500 by downstream progress",
-            "canals": "top 500 by downstream progress",
+            "named_mainstems": "all segments, including Li to Gui continuation south of Yangshuo",
+            "ordinary_waterways": "complete directed routes from headwater to selected mainstem or outlet",
             "geometry_mutated": False,
             "simplification": "none",
             "coordinate_quantization": "none beyond original float32 runtime storage",
+            "internal_route_breaks_allowed": False,
         },
+        "route_diagnostics": route_diagnostics,
         "full_detail_source": "truth/OSM_HYDROLOGY_IMMUTABLE.geojson",
         "stale_assets_allowed": False,
     }
@@ -176,6 +346,7 @@ def main() -> int:
     runtime_manifest["topology"]["node_count"] = int(len(runtime_nodes))
     runtime_manifest["topology"]["dropped_segment_count"] = 0
     runtime_manifest["topology"]["runtime_selected_route_coverage"] = 1.0
+    runtime_manifest["topology"]["runtime_route_break_count"] = 0
     runtime_manifest["styling"]["mainstem_segment_counts"] = main_counts
     runtime_manifest["segments"] = {
         "file": segment_output.name,
@@ -205,7 +376,7 @@ def main() -> int:
         + args.overview_manifest.stat().st_size
     )
     knowledge = {
-        "schema": "guilin-dem-distilled-knowledge-runtime/v1",
+        "schema": "guilin-dem-distilled-knowledge-runtime/v2",
         "status": "review_asset",
         "truth": {
             "source_file": native["source"]["file"],
@@ -233,27 +404,30 @@ def main() -> int:
             "full_source_segment_count": expected_full_count,
             "full_source_node_count": hydrology["topology"]["node_count"],
             "mainstem_names": hydrology["styling"]["mainstem_names"],
+            "mainstem_aliases": hydrology["styling"]["mainstem_aliases"],
             "mainstem_segment_counts": hydrology["styling"]["mainstem_segment_counts"],
+            "li_gui_continuation_segment_count": hydrology["styling"]["li_gui_continuation_segment_count"],
+            "li_south_of_yangshuo_segment_count": hydrology["styling"]["li_south_of_yangshuo_segment_count"],
+            "li_reaches_aoi_south_boundary": hydrology["styling"]["li_reaches_aoi_south_boundary"],
             "segment_vertex_order": hydrology["direction"]["segment_vertex_order"],
+            "orientation_method": hydrology["direction"]["orientation_method"],
             "flow_progress_monotonic": hydrology["direction"]["flow_progress_monotonic"],
             "flow_distance_monotonic": hydrology["direction"]["flow_distance_monotonic"],
             "future_flow_animation_ready": hydrology["direction"]["future_flow_animation_ready"],
+            "runtime_route_break_count": 0,
             "lake_surface_asset_count": 0,
             "reservoir_surface_asset_count": 0,
             "synthetic_surface_asset_count": 0,
         },
         "runtime": {
             "profile": RUNTIME_PROFILE,
-            "online_page_mode": "small viewer plus knowledge index plus on-demand data",
+            "online_page_mode": "small viewer plus knowledge index plus connected route LOD plus on-demand native data",
             "initial_numeric_data_bytes": int(initial_data_bytes),
             "initial_numeric_data_mib": round(initial_data_bytes / 1024 / 1024, 3),
             "distilled_hydrology_segment_count": int(len(runtime_segments)),
             "distilled_hydrology_node_count": int(len(runtime_nodes)),
             "native_tile_delivery": "same-origin-on-demand",
-            "canonical_native_tile_store": "GitHub Release guilin-native-12p5m-single-truth-v001",
-            "canonical_native_tile_release_base_url": CANONICAL_TILE_RELEASE_BASE_URL,
-            "runtime_native_tile_store": "GitHub Pages /guilin-truth-data/native/",
-            "native_tile_runtime_base_url": RUNTIME_TILE_BASE_URL,
+            "native_tile_runtime_base_url": TILE_RUNTIME_BASE_URL,
             "native_tile_download_bytes_per_tile": native["tile_matrix"]["expected_tile_bytes"],
             "all_native_tiles_downloaded_on_page_open": False,
             "full_truth_downloaded_on_page_open": False,
@@ -269,7 +443,7 @@ def main() -> int:
     write_json(args.output_dir / "guilin-distilled-knowledge.json", knowledge)
 
     receipt = {
-        "schema": "guilin-dem-distilled-runtime-build-receipt/v1",
+        "schema": "guilin-dem-distilled-runtime-build-receipt/v2",
         "passed": True,
         "runtime_profile": RUNTIME_PROFILE,
         "full_source_segment_count": expected_full_count,
@@ -279,6 +453,9 @@ def main() -> int:
         "distilled_node_bytes": node_output.stat().st_size,
         "initial_numeric_data_bytes": int(initial_data_bytes),
         "native_tiles_on_page_open": 0,
+        "runtime_route_break_count": 0,
+        "li_gui_continuation_segment_count": hydrology["styling"]["li_gui_continuation_segment_count"],
+        "li_south_of_yangshuo_segment_count": hydrology["styling"]["li_south_of_yangshuo_segment_count"],
         "stale_assets_allowed": False,
     }
     write_json(args.output_dir / "DISTILLED_RUNTIME_BUILD_RECEIPT.json", receipt)

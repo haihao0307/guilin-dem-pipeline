@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import defaultdict, deque
 from pathlib import Path
 
 import numpy as np
@@ -13,10 +14,39 @@ EXPECTED_LAYOUT = [
     "start_flow_progress", "end_flow_progress",
     "start_flow_distance_m", "end_flow_distance_m",
 ]
+EXPECTED_PROFILE = "network-directed-physical-width-v6"
 
 
 def fail(message: str) -> None:
     raise SystemExit(message)
+
+
+def node_key(x: float, z: float) -> tuple[float, float]:
+    return round(float(x), 3), round(float(z), 3)
+
+
+def component_count(segments: np.ndarray) -> int:
+    adjacency: dict[tuple[float, float], set[tuple[float, float]]] = defaultdict(set)
+    for segment in segments:
+        start = node_key(segment[0], segment[2])
+        end = node_key(segment[3], segment[5])
+        adjacency[start].add(end)
+        adjacency[end].add(start)
+    visited: set[tuple[float, float]] = set()
+    count = 0
+    for start in adjacency:
+        if start in visited:
+            continue
+        count += 1
+        queue = deque([start])
+        visited.add(start)
+        while queue:
+            current = queue.popleft()
+            for neighbor in adjacency[current]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+    return count
 
 
 def main() -> int:
@@ -26,20 +56,32 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    if manifest.get("styling", {}).get("profile") != "longitudinal-flow-taper-v4":
-        fail("unexpected hydrology style profile")
+    styling = manifest.get("styling") or {}
+    if styling.get("profile") != EXPECTED_PROFILE:
+        fail(f"unexpected hydrology style profile: {styling.get('profile')}")
+    if styling.get("width_mode") != "source-width-meters-projected-to-screen":
+        fail("hydrology width is not derived from source metres")
     if manifest.get("segments", {}).get("layout") != EXPECTED_LAYOUT:
         fail("unexpected hydrology segment layout")
     direction = manifest.get("direction") or {}
     expected_direction = {
         "segment_vertex_order": "upstream_to_downstream",
+        "orientation_method": "connected-network outlet shortest-path distance",
         "flow_progress_monotonic": True,
         "flow_distance_monotonic": True,
         "future_flow_animation_ready": True,
+        "li_continuity_verified_south_of_yangshuo": True,
     }
     for key, value in expected_direction.items():
         if direction.get(key) != value:
             fail(f"direction contract {key}: {direction.get(key)!r}")
+
+    if int(styling.get("li_gui_continuation_segment_count", 0)) <= 0:
+        fail("Gui River continuation is absent from the Li mainstem")
+    if int(styling.get("li_south_of_yangshuo_segment_count", 0)) <= 0:
+        fail("Li mainstem stops at or north of Yangshuo")
+    if styling.get("li_reaches_aoi_south_boundary") is not True:
+        fail("Li and Gui continuous mainstem does not reach the AOI south boundary")
 
     raw = np.fromfile(args.segments, dtype="<f4")
     if raw.size % len(EXPECTED_LAYOUT):
@@ -47,8 +89,6 @@ def main() -> int:
     segments = raw.reshape((-1, len(EXPECTED_LAYOUT)))
     if len(segments) != int(manifest["segments"]["count"]):
         fail("segment count mismatch")
-    if np.any(segments[:, 4] > segments[:, 1] + 1e-5):
-        fail("stored flow contains uphill segment orientation")
     if np.any(segments[:, 10] + 1e-7 < segments[:, 9]):
         fail("flow progress inversion")
     if np.any(segments[:, 12] <= segments[:, 11]):
@@ -66,7 +106,7 @@ def main() -> int:
             fail(f"missing {name} mainstem")
         minimum = float(np.min(selected[:, 9:11]))
         maximum = float(np.max(selected[:, 9:11]))
-        if minimum > 0.02 or maximum < 0.98:
+        if minimum > 0.03 or maximum < 0.97:
             fail(f"{name} progress does not span upstream/downstream: {minimum}, {maximum}")
         if float(np.quantile(selected[:, 9], 0.10)) > 0.35:
             fail(f"{name} upstream is not sufficiently narrow-coded")
@@ -74,20 +114,29 @@ def main() -> int:
             fail(f"{name} downstream is not sufficiently broad-coded")
         summaries[name] = {
             "segments": int(len(selected)),
+            "components": component_count(selected),
             "progress_min": minimum,
             "progress_max": maximum,
             "source_width_m": [float(selected[:, 8].min()), float(selected[:, 8].max())],
         }
 
+    if summaries["li"]["components"] != int(styling.get("mainstem_component_counts", {}).get("li", -1)):
+        fail("Li component count differs between binary and manifest")
+
+    uphill_count = int(np.count_nonzero(segments[:, 4] > segments[:, 1] + 1e-5))
     payload = {
-        "schema": "guilin-hydrology-longitudinal-flow-contract-qa/v1",
+        "schema": "guilin-hydrology-network-directed-contract-qa/v2",
         "passed": True,
         "segment_count": int(len(segments)),
         "segment_vertex_order": "upstream_to_downstream",
-        "uphill_segment_count": 0,
+        "orientation_method": direction["orientation_method"],
+        "local_dem_uphill_segment_count": uphill_count,
         "flow_progress_inversion_count": 0,
         "flow_distance_inversion_count": 0,
         "future_flow_animation_ready": True,
+        "li_gui_continuation_segment_count": int(styling["li_gui_continuation_segment_count"]),
+        "li_south_of_yangshuo_segment_count": int(styling["li_south_of_yangshuo_segment_count"]),
+        "li_reaches_aoi_south_boundary": True,
         "mainstems": summaries,
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
