@@ -39,14 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for f in \
-            landscape-mother/kernel-core.js landscape-mother/kernel-cache.js \
-            landscape-mother/kernel-fields-evaluate.js landscape-mother/kernel-fields.js landscape-mother/kernel.js \
-            landscape-mother/renderer-terrain-shaders.js landscape-mother/renderer-water-shaders.js \
-            landscape-mother/renderer-core.js landscape-mother/renderer-mesh.js landscape-mother/renderer-camera.js \
-            landscape-mother/renderer-draw.js landscape-mother/renderer.js \
-            landscape-mother/app-core.js landscape-mother/app-ui.js landscape-mother/app.js \
-            tests/landscape_mother_browser_qa.mjs; do node --check "$f"; done
+          for f in landscape-mother/*.js tests/landscape_mother_browser_qa.mjs; do node --check "$f"; done
           python -m py_compile landscape-mother/tools/build_sample.py
           python - <<'PY'
           import json
@@ -55,8 +48,8 @@ jobs:
           ext={'.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff','.ktx','.ktx2','.dds','.exr','.hdr'}
           bad=[p.as_posix() for p in root.rglob('*') if p.is_file() and p.suffix.lower() in ext]
           assert not bad,bad
-          names=['index.html','style.css','kernel-core.js','kernel-cache.js','kernel-fields-evaluate.js','kernel-fields.js','kernel.js','renderer-terrain-shaders.js','renderer-water-shaders.js','renderer-core.js','renderer-mesh.js','renderer-camera.js','renderer-draw.js','renderer.js','app-core.js','app-ui.js','app.js']
-          text='\n'.join((root/n).read_text(encoding='utf-8') for n in names)
+          runtime=[root/'index.html',root/'style.css',*sorted(root.glob('*.js'))]
+          text='\n'.join(p.read_text(encoding='utf-8') for p in runtime)
           tokens=['<img','<picture','<svg','data:image/','background-image','sampler2D','texture2D(','new Image(','createImageBitmap(','toDataURL(','toBlob(']
           assert not [t for t in tokens if t in text]
           c=json.loads((root/'contract.json').read_text(encoding='utf-8'))
@@ -70,6 +63,7 @@ jobs:
           for k in ('materialTextureCount','terrainImageTextureCount','imageFileCount','screenshotArtifactCount','plantLayerCount','vegetationInstanceCount'): assert r[k]==0
           assert r['interactive3DRequired'] is True and r['numericQaOnly'] is True
           assert c['approvals']=={'visualAcceptance':False,'productionReady':False}
+          print({'runtime_js_files':len(list(root.glob('*.js'))),'image_files':0,'texture_files':0})
           PY
 
       - name: Fetch locked canonical numeric inputs
@@ -113,7 +107,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for f in README.md contract.json index.html style.css kernel-core.js kernel-cache.js kernel-fields-evaluate.js kernel-fields.js kernel.js renderer-terrain-shaders.js renderer-water-shaders.js renderer-core.js renderer-mesh.js renderer-camera.js renderer-draw.js renderer.js app-core.js app-ui.js app.js; do cp "landscape-mother/$f" "$SITE_DIR/$f"; done
+          cp landscape-mother/README.md landscape-mother/contract.json landscape-mother/index.html landscape-mother/style.css "$SITE_DIR/"
+          cp landscape-mother/*.js "$SITE_DIR/"
           touch "$SITE_DIR/.nojekyll"
           rm -rf "$INPUT_DIR"
           python - <<'PY'
