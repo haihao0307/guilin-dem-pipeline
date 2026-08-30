@@ -1,13 +1,16 @@
 {
   "schema": "guilin-dem-distilled-runtime-contract/v1",
   "status": "ACTIVE",
-  "revision": "2026-08-30-r2",
+  "revision": "2026-08-30-r3",
   "architecture": {
     "canonical_truth_store": "GitHub Release guilin-native-12p5m-single-truth-v001",
-    "distilled_knowledge_store": "guilin/data/guilin-distilled-knowledge.json",
+    "runtime_native_tile_store": "GitHub Pages /guilin-truth-data/native/",
+    "runtime_native_tile_store_authority": "read-only mirror of the canonical Release assets",
+    "distilled_knowledge_store": "GitHub Pages /guilin/data/guilin-distilled-knowledge.json",
     "online_viewer": "GitHub Pages /guilin/",
     "page_open_must_download_full_truth": false,
     "native_tiles_are_on_demand": true,
+    "native_tile_delivery": "same-origin-on-demand",
     "stale_public_assets_allowed": false
   },
   "truth_invariants": {
@@ -34,8 +37,9 @@
       "data/osm-waterway-nodes.f32.bin",
       "data/guilin-distilled-knowledge.json"
     ],
-    "maximum_public_site_bytes_excluding_remote_native_tiles": 6291456,
-    "full_native_tile_count_on_page_open": 0
+    "maximum_viewer_directory_bytes": 6291456,
+    "full_native_tile_count_on_page_open": 0,
+    "full_truth_downloaded_on_page_open": false
   },
   "hydrology": {
     "full_source_remains_authoritative": "truth/OSM_HYDROLOGY_IMMUTABLE.geojson",
@@ -50,8 +54,9 @@
     "future_flow_animation_ready": true
   },
   "publication": {
-    "guilin_destination_is_replaced_atomically": true,
+    "guilin_viewer_destination_is_replaced_atomically": true,
+    "guilin_truth_runtime_store_is_preserved_and_verified": true,
     "other_project_destinations_are_preserved": true,
-    "legacy_guilin_files_are_removed_before_publish": true
+    "legacy_guilin_viewer_files_are_removed_before_publish": true
   }
 }
