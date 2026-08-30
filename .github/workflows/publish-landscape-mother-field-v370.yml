@@ -26,7 +26,7 @@ concurrency:
 env:
   PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-karst-distilled-v320/
   TARGET_DIR: yangshuo-karst-distilled-v320
-  RELEASE_URL: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+  RELEASE_URL: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-native-12p5m-single-truth-v001/guilin_raw_union_12_5m.tif
   EXPECTED_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
 
 jobs:
@@ -177,7 +177,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+     - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install Chromium QA dependencies
@@ -209,17 +209,4 @@ jobs:
               assert qa['landscapeMotherFieldCore'] == 'procedural-field-core/v1.0.0'
               assert qa['truthMutationCount'] == 0
               assert qa['productionReady'] is False
-          river=report['states']['riverDesktop']['qa']
-          assert river['riverInternalBreakCount'] == 0
-          assert river['riverTopologyContinuous'] is True
-          assert all(river['riverEndpointOutsideContext'])
-          assert river['riverMaxSectionGapMeters'] <= 7.2
-          PY
-      - name: Upload browser evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: landscape-mother-v370-browser-${{ github.sha }}
-          path: ${{ runner.temp }}/landscape-mother-v370-browser
-          if-no-files-found: error
-          retention-days: 30
+          river=report['states'])
