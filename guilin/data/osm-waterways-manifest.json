@@ -1,0 +1,83 @@
+{
+  "schema": "guilin-osm-linear-waterways-render-asset/v1",
+  "status": "derived_from_immutable_osm_centerlines",
+  "source": {
+    "file": "OSM_HYDROLOGY_IMMUTABLE.geojson",
+    "bytes": 5832414,
+    "sha256": "be3e8e67f625fa87c843e2d7ea423c48b98e750c6912cae8cf3863df6ae6d4df",
+    "git_blob_sha1": "c00174242b68106cec9febcf24e0b94464b3727c",
+    "centerline_coordinates_mutated": false,
+    "manual_centerline_added": false,
+    "synthetic_gap_line_added": false
+  },
+  "filter": {
+    "allowed_waterways": [
+      "canal",
+      "river",
+      "stream"
+    ],
+    "lake_geometry_count": 0,
+    "lake_surface_asset_emitted": false,
+    "reservoir_geometry_count": 0,
+    "reservoir_surface_asset_emitted": false,
+    "synthetic_surface_asset_emitted": false,
+    "rejected_non_linear_or_waterbody_records": 0
+  },
+  "topology": {
+    "source_feature_count": 1426,
+    "aoi_clipped_linear_record_count": 931,
+    "record_counts": {
+      "river": 720,
+      "canal": 37,
+      "stream": 174
+    },
+    "source_segment_count_after_render_densification": 170520,
+    "emitted_segment_count": 170518,
+    "segment_counts": {
+      "river": 141004,
+      "canal": 3313,
+      "stream": 26201
+    },
+    "node_vertex_count": 171450,
+    "nodata_break_count": 2,
+    "render_densification_max_m": 100.0,
+    "route_continuity_contract": true
+  },
+  "segments": {
+    "file": "osm-waterway-segments-f32.bin",
+    "bytes": 5456576,
+    "sha256": "61232fa25b4bb80d4f65821e335b6187171002cafbf139104267ebb28e5b0673",
+    "float32_stride": 8,
+    "layout": [
+      "start_x_m_from_aoi_center",
+      "start_absolute_elevation_m",
+      "start_z_m_from_aoi_center",
+      "end_x_m_from_aoi_center",
+      "end_absolute_elevation_m",
+      "end_z_m_from_aoi_center",
+      "waterway_code",
+      "display_width_source_m"
+    ],
+    "compression": "none"
+  },
+  "nodes": {
+    "file": "osm-waterway-nodes-f32.bin",
+    "bytes": 3429000,
+    "sha256": "8c2367146e1ed00a6218844b2afc93c23fa1ee35fd9687ba2aa842f3b27a0ad3",
+    "float32_stride": 5,
+    "layout": [
+      "x_m_from_aoi_center",
+      "absolute_elevation_m",
+      "z_m_from_aoi_center",
+      "waterway_code",
+      "display_width_source_m"
+    ],
+    "compression": "none"
+  },
+  "terrain_relation": {
+    "elevation_source_sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+    "source_elevation_modified_m": 0.0,
+    "vertical_scale": 1.0,
+    "height_texture": false
+  }
+}
