@@ -1,7 +1,8 @@
 {
   "schema": "landscape-mother-kernel/v1",
-  "id": "landscape-mother-guilin-yangshuo-v001",
-  "title": "桂林阳朔一平方公里 Landscape Mother 内核样板",
+  "version": "2.0.0",
+  "id": "landscape-mother-guilin-yangshuo-v002",
+  "title": "桂林阳朔一平方公里 Landscape Mother 连续字段图样板 V2",
   "status": "experimental_visual_candidate",
   "renderMode": "interactive-webgl2-3d",
   "createdAt": "2026-08-30",
@@ -13,6 +14,24 @@
     "parentTileSha256": "5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215",
     "parentTileBytes": 8388608,
     "hydrologyManifest": "osm-waterways-manifest.json"
+  },
+  "knowledgeIntegration": {
+    "gaeaTerrainFieldGraph": {
+      "branch": "skill/xiaowang-gaea-terrain-field-v100",
+      "commit": "6ac47d984bfca8336a7c0f58d176ab8153db26cd",
+      "skill": "skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/SKILL.md",
+      "distilled": "knowledge/terrain-hydrology/shared/distilled/GAEA_TERRAIN_FIELD_GRAPH_V100.md"
+    },
+    "proceduralFieldMini": {
+      "intake": "2026-08-30_procedural-field-knowledge-mini-v100",
+      "archive": "PROCEDURAL_FIELD_KNOWLEDGE_MINI_V1.0_2026-08-30.zip",
+      "archiveBytes": 13456,
+      "archiveSha256": "d69ecd2677507db9342a1d66092a8d6cf4255141346b14cc4629303bf1c4f396",
+      "payloadFiles": 9,
+      "payloadHashFailures": 0,
+      "skill": "skills/dem-procedural-landscape/branches/procedural-field-core/SKILL.md",
+      "distilled": "knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_KNOWLEDGE_V100.md"
+    }
   },
   "sample": {
     "crs": "EPSG:32649",
@@ -31,6 +50,16 @@
     "parentTileWindow": [1330, 521, 81, 81],
     "sourcePixelWindowInteger": true
   },
+  "seedBank": {
+    "master": 326492026,
+    "shape": 1392767226,
+    "warp": 2315234716,
+    "structure": 994554951,
+    "damage": 2569072845,
+    "color": 2500332321,
+    "weather": 3771740976,
+    "micro": 1383831737
+  },
   "seeds": {
     "shape": 326492026,
     "fracture": 440923,
@@ -40,10 +69,32 @@
     "field": 20260830,
     "sediment": 913721
   },
+  "fieldGraph": {
+    "version": "1.0.0",
+    "pipeline": ["source", "shape", "data-and-mask", "color", "render", "qa"],
+    "scaleBands": ["macro", "meso", "micro", "subpixel"],
+    "lowStrengthPasses": 3,
+    "worldCoordinateSampling": true,
+    "sharedDomainWarp": true,
+    "independentSeedChannels": 8,
+    "settings": {
+      "worldScale": 0.001,
+      "warpStrength": 0.28,
+      "warpScale": 0.72,
+      "colorClarity": 0.8
+    },
+    "masks": ["truth", "parent", "process", "separation"],
+    "sharedEventChannels": ["geometry", "albedo", "roughness", "normal", "ao"],
+    "diagnostics": [
+      "final", "source", "shape-delta", "parent-mask", "cavity", "protrusion",
+      "separation", "color-driver", "albedo", "roughness", "normal", "ao"
+    ]
+  },
   "formationHierarchy": {
-    "macro": ["truth-elevation", "slope", "curvature", "tpi", "ridge-valley", "water-distance"],
-    "meso": ["profile-recurve", "fracture-branch", "strata-band", "rill", "sediment-shelf", "field-unit"],
-    "micro": ["grain", "pore", "micro-ridge", "roughness", "micro-normal", "ambient-occlusion"]
+    "macro": ["truth-elevation", "slope", "curvature", "tpi", "ridge-valley", "water-distance", "graph-macro"],
+    "meso": ["profile-recurve", "graph-structure", "fracture-branch", "strata-band", "rill", "sediment-shelf", "field-unit"],
+    "micro": ["graph-micro", "cavity", "protrusion", "separation", "grain", "pore", "micro-ridge", "roughness", "micro-normal", "ambient-occlusion"],
+    "subpixel": ["shader-grain", "shader-pore", "roughness-response", "normal-response"]
   },
   "displacementBudget": {
     "surfaceMaxAbsM": 1.25,
@@ -52,6 +103,33 @@
     "sourceCellMeanAbsDeltaM": 0.24,
     "macroBlurMaxAbsDeltaM": 0.40,
     "peakShiftMaxM": 25.0
+  },
+  "runtimeTiers": {
+    "preview": {
+      "triangleStep": 4,
+      "maxDpr": 0.88,
+      "materialDetail": 0.40,
+      "purpose": "camera interaction"
+    },
+    "review": {
+      "triangleStep": 2,
+      "maxDpr": 1.18,
+      "materialDetail": 0.74,
+      "purpose": "daily visual calibration"
+    },
+    "evidence": {
+      "triangleStep": 1,
+      "maxDpr": 1.50,
+      "materialDetail": 1.00,
+      "purpose": "fixed-camera QA"
+    }
+  },
+  "waterContinuity": {
+    "realCenterlineImmutable": true,
+    "planimetryChanged": false,
+    "joinMethod": "real-endpoint-fans",
+    "visualGapToleranceM": 0,
+    "syntheticCenterlines": false
   },
   "brickMotherTransfer": {
     "independentSeeds": true,
