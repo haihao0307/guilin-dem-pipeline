@@ -3,8 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.11.0/+esm';
 
 // Publisher compatibility marker retained until the workflow contract advances: v=3450.
-const partUrls = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38].map(index => `./app.part${index}.js?v=3660`);
-if (!partUrls.includes('./app.part24.js?v=3660') || !partUrls.at(-1)?.endsWith('app.part38.js?v=3660')) throw new Error('地貌运行时尾分片合同缺失');
+const partUrls = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39].map(index => `./app.part${index}.js?v=3670`);
+if (!partUrls.includes('./app.part24.js?v=3670') || !partUrls.at(-1)?.endsWith('app.part39.js?v=3670')) throw new Error('地貌运行时尾分片合同缺失');
 const sources = await Promise.all(partUrls.map(async url => {
   const response = await fetch(url, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`地貌运行时分片 ${url} HTTP ${response.status}`);
