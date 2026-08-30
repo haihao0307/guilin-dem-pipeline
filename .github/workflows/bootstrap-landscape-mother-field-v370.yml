@@ -26,7 +26,7 @@ jobs:
           ref: skill/xiaowang-gaea-terrain-field-v100
           fetch-depth: 0
 
-      - name: Stop cleanly after one-time bootstrap removal
+      - name: Detect one-time bundle
         id: bundle
         shell: bash
         run: |
@@ -98,8 +98,8 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -f .integration/landscape-mother-v370.bundle.b64.*
-          rm -f .github/workflows/bootstrap-landscape-mother-field-v370.yml
           rmdir .integration 2>/dev/null || true
+          rm -f .github/workflows/publish-landscape-mother-field-v370.yml
           git add -A
-          git commit -m 'feat(landscape-mother): integrate procedural field core and publish v3.7.0 candidate'
+          git commit -m 'feat(landscape-mother): integrate procedural field core v3.7.0 candidate'
           git push origin HEAD:skill/xiaowang-gaea-terrain-field-v100
