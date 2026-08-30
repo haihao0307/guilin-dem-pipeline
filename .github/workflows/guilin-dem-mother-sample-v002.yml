@@ -1,0 +1,309 @@
+name: Guilin DEM Mother Fine 3D Sample v002
+
+on:
+  push:
+    branches:
+      - feature/dem-procedural-surface-ecology-v001
+    paths:
+      - experiments/guilin-dem-mother-sample-v002/**
+      - tests/guilin_dem_mother_sample_v002_browser_test.mjs
+      - docs/DEM_MOTHER_3D_PRODUCTION_RULES.md
+      - .github/workflows/guilin-dem-mother-sample-v002.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-dem-mother-sample-v002
+  cancel-in-progress: true
+
+env:
+  SITE_DIR: build/guilin-mother-sample-v002
+  DESTINATION_DIR: guilin-mother-sample-v002
+  SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  TILE_FILE: native-r07-c02-2048x2048-i16.bin
+  TILE_SHA256: 5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215
+  TILE_BYTES: '8388608'
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out 3D experiment branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Assemble actual interactive 3D runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$SITE_DIR"
+          mkdir -p "$SITE_DIR/data" "$SITE_DIR/evidence"
+          cp -a experiments/guilin-dem-mother-sample-v002/. "$SITE_DIR/"
+          cat "$SITE_DIR"/src/app.part*.js > "$SITE_DIR/app.js"
+          rm -rf "$SITE_DIR/src"
+          touch "$SITE_DIR/.nojekyll"
+          node --check "$SITE_DIR/app.js"
+          grep -q "getContext('webgl2'" "$SITE_DIR/app.js"
+          grep -q "interactive-webgl2-3d" "$SITE_DIR/sample-contract.json"
+
+      - name: Enforce 3D-only and no-plant production contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          site = Path('build/guilin-mother-sample-v002')
+          contract = json.loads((site / 'sample-contract.json').read_text(encoding='utf-8'))
+          html = (site / 'index.html').read_text(encoding='utf-8')
+          css = (site / 'styles.css').read_text(encoding='utf-8')
+          app = (site / 'app.js').read_text(encoding='utf-8')
+          assert contract['schema'] == 'dem-mother-guilin-sample/v2'
+          assert contract['renderMode'] == 'interactive-webgl2-3d'
+          assert contract['sample']['truthGrid'] == [81, 81]
+          assert contract['sample']['renderGrid'] == [321, 321]
+          assert contract['sample']['truthSpacingM'] == 12.5
+          assert contract['sample']['renderSpacingM'] == 3.125
+          assert contract['sample']['subdivisionFactor'] == 4
+          assert contract['source']['sourceTiffSha256'] == '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert contract['source']['parentTileSha256'] == '5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215'
+          rules = contract['rules']
+          assert rules['truthOverwrite'] is False
+          assert rules['sourceResampling'] is False
+          assert rules['syntheticGapFill'] is False
+          assert rules['verticalScale'] == 1
+          assert rules['plantLayerCount'] == 0
+          assert rules['vegetationInstanceCount'] == 0
+          assert rules['conceptImageCount'] == 0
+          assert rules['aiGeneratedAcceptanceImageCount'] == 0
+          assert rules['terrainImageTextureCount'] == 0
+          assert rules['externalTerrainImageRequestCount'] == 0
+          assert rules['browserRenderedEvidenceRequired'] is True
+          assert rules['interactive3DRequired'] is True
+          assert contract['approvals'] == {'visualAcceptance': False, 'productionReady': False}
+          assert '<canvas' in html
+          assert '<img' not in html
+          assert 'background-image' not in css
+          assert 'sampler2D' not in app
+          assert 'terrain_image_texture_count:0' in app
+          assert 'plant_layer_count:0' in app
+          assert 'concept_image_count:0' in app
+          print('3D-only static contract passed')
+          PY
+
+      - name: Copy locked canonical DEM and OSM water assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+          git show origin/gh-pages:guilin/data/NATIVE_ELEVATION_MANIFEST.json > "$SITE_DIR/data/NATIVE_ELEVATION_MANIFEST.json"
+          git show "origin/gh-pages:guilin/data/$TILE_FILE" > "$SITE_DIR/data/$TILE_FILE"
+          git show origin/gh-pages:guilin/data/osm-waterways-manifest.json > "$SITE_DIR/data/osm-waterways-manifest.json"
+          SEGMENT_FILE="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('build/guilin-mother-sample-v002/data/osm-waterways-manifest.json')
+          print(json.loads(p.read_text(encoding='utf-8'))['segments']['file'])
+          PY
+          )"
+          git show "origin/gh-pages:guilin/data/$SEGMENT_FILE" > "$SITE_DIR/data/$SEGMENT_FILE"
+
+      - name: Verify canonical bytes and integer source window
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import struct
+          from pathlib import Path
+
+          site = Path(os.environ['SITE_DIR'])
+          contract = json.loads((site / 'sample-contract.json').read_text(encoding='utf-8'))
+          manifest = json.loads((site / 'data/NATIVE_ELEVATION_MANIFEST.json').read_text(encoding='utf-8'))
+          hydro = json.loads((site / 'data/osm-waterways-manifest.json').read_text(encoding='utf-8'))
+          tile = site / 'data' / os.environ['TILE_FILE']
+          segment = site / 'data' / hydro['segments']['file']
+
+          def sha(path):
+              h = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for block in iter(lambda: handle.read(1024 * 1024), b''):
+                      h.update(block)
+              return h.hexdigest()
+
+          assert manifest['schema'] == 'guilin-canonical-native-dem/v1'
+          assert manifest['status'] == 'sole_authoritative'
+          assert manifest['source']['sha256'] == os.environ['SOURCE_TIFF_SHA256']
+          assert manifest['source']['resolution_m'] == [12.5, 12.5]
+          assert manifest['source']['read_only'] is True
+          tile_meta = next(t for t in manifest['tiles'] if t['id'] == 'native-r07-c02')
+          assert tile_meta['sha256'] == os.environ['TILE_SHA256']
+          assert tile_meta['stored_bytes'] == int(os.environ['TILE_BYTES'])
+          assert tile_meta['resampling'] == 'none'
+          assert tile_meta['source_elevation_modified_m'] == 0.0
+          assert tile.stat().st_size == int(os.environ['TILE_BYTES'])
+          assert sha(tile) == os.environ['TILE_SHA256']
+          assert segment.stat().st_size == hydro['segments']['bytes']
+          assert sha(segment) == hydro['segments']['sha256']
+          assert hydro['source']['centerline_coordinates_mutated'] is False
+          assert hydro['source']['manual_centerline_added'] is False
+          assert hydro['source']['synthetic_gap_line_added'] is False
+          assert hydro['topology']['dropped_segment_count'] == 0
+
+          x, y, width, height = contract['sample']['parentTileWindow']
+          assert [width, height] == [81, 81]
+          with tile.open('rb') as handle:
+              values = []
+              for row in range(y, y + height):
+                  handle.seek((row * 2048 + x) * 2)
+                  values.extend(struct.unpack('<' + 'h' * width, handle.read(width * 2)))
+          assert len(values) == 81 * 81
+          assert all(value != 0 for value in values)
+          print(json.dumps({
+              'canonical_assets': 'passed',
+              'truth_grid': [81, 81],
+              'truth_elevation_range_m': [min(values), max(values)],
+              'source_resampling': False,
+              'truth_overwrite': False,
+              'vertical_scale': 1.0,
+          }, indent=2))
+          PY
+
+      - name: Install browser QA runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile actual 3D QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4174 --directory "$SITE_DIR" > /tmp/guilin-dem-mother-v002-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4174/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/guilin_dem_mother_sample_v002_browser_test.mjs \
+            http://127.0.0.1:4174/ \
+            "$SITE_DIR/evidence"
+          kill "$SERVER_PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Write release evidence and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          site = Path(os.environ['SITE_DIR'])
+          browser = json.loads((site / 'evidence/browser-qa.json').read_text(encoding='utf-8'))
+          files = {}
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name not in {'SHA256SUMS.txt', 'release-evidence.json'}):
+              relative = path.relative_to(site).as_posix()
+              files[relative] = {'bytes': path.stat().st_size, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+          qa = browser['results'][0]['finalQa']
+          evidence = {
+              'schema': 'guilin-dem-mother-sample-v002-release-evidence/v1',
+              'commit': os.environ['GITHUB_SHA'],
+              'branch': os.environ['GITHUB_REF_NAME'],
+              'destination_dir': os.environ['DESTINATION_DIR'],
+              'passed': browser['passed'],
+              'evidence_source': 'current-interactive-webgl2-runtime',
+              'render_mode': qa['render_mode'],
+              'truth_grid': qa['truth_grid'],
+              'render_grid': qa['render_grid'],
+              'source_node_preservation_max_error_m': qa['source_node_preservation_max_error_m'],
+              'karst_peak_count': qa['karst_peak_count'],
+              'karst_additive_range_m': qa['karst_additive_range_m'],
+              'field_microrelief_range_m': qa['field_microrelief_range_m'],
+              'terrain_vertex_count': qa['terrain_vertex_count'],
+              'terrain_triangle_count': qa['terrain_triangle_count'],
+              'plant_layer_count': 0,
+              'concept_image_count': 0,
+              'ai_generated_acceptance_image_count': 0,
+              'visualAcceptance': False,
+              'productionReady': False,
+              'source_tiff_sha256': os.environ['SOURCE_TIFF_SHA256'],
+              'parent_tile_sha256': os.environ['TILE_SHA256'],
+              'files': files,
+          }
+          (site / 'release-evidence.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          lines = []
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name != 'SHA256SUMS.txt'):
+              relative = path.relative_to(site).as_posix()
+              lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}")
+          (site / 'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+      - name: Upload actual 3D browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-dem-mother-sample-v002-3d-evidence
+          path: build/guilin-mother-sample-v002/evidence
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Publish isolated v0.2 interactive 3D page
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ${{ env.SITE_DIR }}
+          destination_dir: ${{ env.DESTINATION_DIR }}
+
+      - name: Verify published gh-pages identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
+          git show "origin/gh-pages:$DESTINATION_DIR/index.html" | grep -q 'INTERACTIVE 3D ONLY'
+          git show "origin/gh-pages:$DESTINATION_DIR/sample-contract.json" | grep -q 'interactive-webgl2-3d'
+          git show "origin/gh-pages:$DESTINATION_DIR/release-evidence.json" | grep -q "${GITHUB_SHA}"
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          print('# Guilin DEM Mother Fine 3D Sample v0.2.0')
+          evidence = Path('build/guilin-mother-sample-v002/release-evidence.json')
+          if evidence.exists():
+              data = json.loads(evidence.read_text(encoding='utf-8'))
+              print()
+              print(f"- passed: `{str(data['passed']).lower()}`")
+              print(f"- render mode: `{data['render_mode']}`")
+              print(f"- truth grid: `{data['truth_grid']}`")
+              print(f"- render grid: `{data['render_grid']}`")
+              print(f"- karst peaks: `{data['karst_peak_count']}`")
+              print(f"- karst range: `{data['karst_additive_range_m']} m`")
+              print(f"- field range: `{data['field_microrelief_range_m']} m`")
+              print(f"- concept images: `{data['concept_image_count']}`")
+              print(f"- plant layers: `{data['plant_layer_count']}`")
+              print('- visualAcceptance: `false`')
+              print('- productionReady: `false`')
+          else:
+              print('\nRelease evidence was not generated.')
+          PY
