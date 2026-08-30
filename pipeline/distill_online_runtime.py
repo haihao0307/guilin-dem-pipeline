@@ -124,7 +124,6 @@ def main() -> int:
     selected.update(int(index) for index in select_top(ordinary_river, end_progress, 12_000))
     selected.update(int(index) for index in select_top(streams, end_progress, 2_500))
     selected.update(int(index) for index in select_top(canals, end_progress, 500))
-    selected.update(int(index) for index in ordinary_river[source_width[ordinary_river] >= 40.0])
 
     selected_indices = np.asarray(sorted(selected), dtype=np.int64)
     runtime_segments = np.asarray(full_segments[selected_indices], dtype="<f4")
@@ -160,7 +159,7 @@ def main() -> int:
         "selected_class_counts": selected_class_counts,
         "selection_policy": {
             "named_mainstems": "all",
-            "ordinary_rivers": "top 12000 by downstream progress plus source width >= 40 m",
+            "ordinary_rivers": "top 12000 by downstream progress",
             "streams": "top 2500 by downstream progress",
             "canals": "top 500 by downstream progress",
             "geometry_mutated": False,
