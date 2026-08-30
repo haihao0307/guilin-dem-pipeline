@@ -112,6 +112,8 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
         "source_elevation_modified_m": 0,
         "vertical_scale": 1,
         "osm_linear_waterways_loaded": True,
+        "hydrology_dropped_segment_count": 0,
+        "hydrology_source_route_coverage": 1.0,
         "centerline_coordinates_mutated": False,
         "manual_centerline_added": False,
         "synthetic_gap_line_added": False,
@@ -129,6 +131,10 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
     ]
     if int(result.get("hydrology_segment_count", 0)) < 1_000:
         failures.append("hydrology_segment_count below 1000")
+    if int(result.get("hydrology_source_segment_count", 0)) != int(result.get("hydrology_segment_count", -1)):
+        failures.append(
+            f"source/render segment mismatch: {result.get('hydrology_source_segment_count')} / {result.get('hydrology_segment_count')}"
+        )
     if int(result.get("hydrology_node_count", 0)) < 1_000:
         failures.append("hydrology_node_count below 1000")
     if int(result.get("hydrology_render_node_count", 0)) <= 0:
@@ -164,6 +170,82 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
 def capture(cdp: CDP, path: Path) -> None:
     payload = cdp.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, 180)
     path.write_bytes(base64.b64decode(payload["data"]))
+
+
+
+def waterway_pixel_metrics(cdp: CDP) -> dict:
+    expression = r"""
+    (() => {
+      const canvas = document.getElementById('terrainCanvas');
+      const gl = canvas && canvas.getContext('webgl2');
+      if (!canvas || !gl) return {error:'missing canvas or WebGL2'};
+      const width = canvas.width;
+      const height = canvas.height;
+      const pixels = new Uint8Array(width * height * 4);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      let mask = new Uint8Array(width * height);
+      let waterPixelCount = 0;
+      for (let index = 0, pixel = 0; index < pixels.length; index += 4, pixel += 1) {
+        const red = pixels[index];
+        const green = pixels[index + 1];
+        const blue = pixels[index + 2];
+        const water = blue >= 145 && blue - green >= 22 && green - red >= 42;
+        if (water) {
+          mask[pixel] = 1;
+          waterPixelCount += 1;
+        }
+      }
+      const erode = input => {
+        const output = new Uint8Array(input.length);
+        let count = 0;
+        for (let y = 1; y < height - 1; y += 1) {
+          for (let x = 1; x < width - 1; x += 1) {
+            const index = y * width + x;
+            if (!input[index]) continue;
+            let keep = 1;
+            for (let dy = -1; dy <= 1 && keep; dy += 1) {
+              for (let dx = -1; dx <= 1; dx += 1) {
+                if (!input[index + dy * width + dx]) {
+                  keep = 0;
+                  break;
+                }
+              }
+            }
+            if (keep) {
+              output[index] = 1;
+              count += 1;
+            }
+          }
+        }
+        return {mask: output, count};
+      };
+      const eroded1 = erode(mask);
+      const eroded2 = erode(eroded1.mask);
+      return {
+        width,
+        height,
+        water_pixel_count: waterPixelCount,
+        eroded_one_pixel_count: eroded1.count,
+        eroded_two_pixel_count: eroded2.count,
+        core_after_two_fraction: waterPixelCount ? eroded2.count / waterPixelCount : 1,
+      };
+    })()
+    """
+    value = cdp.evaluate(expression)
+    if not isinstance(value, dict):
+        raise RuntimeError(f"invalid waterway pixel metrics: {value!r}")
+    return value
+
+
+def validate_waterway_pixels(metrics: dict) -> list[str]:
+    failures: list[str] = []
+    water_pixels = int(metrics.get("water_pixel_count", 0))
+    if water_pixels < 1_000:
+        failures.append(f"too few detected waterway pixels: {water_pixels}")
+    core_fraction = float(metrics.get("core_after_two_fraction", 1.0))
+    if core_fraction > 0.06:
+        failures.append(f"waterway two-pixel core fraction too large: {core_fraction:.4f}")
+    return failures
 
 
 def collect_errors(events: list[dict]) -> list[str]:
@@ -248,6 +330,8 @@ def main() -> int:
         }:
             overview_failures.append(f"DOM contract mismatch: {dom_contract}")
         capture(cdp, args.evidence_dir / "desktop-full-map.png")
+        overview_waterway_pixels = waterway_pixel_metrics(cdp)
+        overview_failures.extend(validate_waterway_pixels(overview_waterway_pixels))
 
         anchor_state = cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.focusAnchor('guilin')")
         time.sleep(0.5)
@@ -282,6 +366,7 @@ def main() -> int:
             "passed": not overview_failures and not detail_failures and not toggle_failures and not mobile_failures and not browser_errors,
             "url": args.url,
             "overview": overview,
+            "overview_waterway_pixels": overview_waterway_pixels,
             "anchor_state": anchor_state,
             "native_detail": detail,
             "mobile": mobile,

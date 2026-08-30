@@ -468,6 +468,23 @@ void main(){
     assert(hydrology.filter?.synthetic_surface_asset_emitted === false, '检测到合成水面');
     assert(hydrology.segments?.compression === 'none', '水系线段资产出现压缩');
     assert(hydrology.nodes?.compression === 'none', '水系节点资产出现压缩');
+    const sourceSegmentCount =
+      hydrology.topology?.source_segment_count ??
+      hydrology.topology?.source_segment_count_after_render_densification ??
+      hydrology.topology?.segment_count ??
+      hydrology.topology?.emitted_segment_count;
+    const emittedSegmentCount =
+      hydrology.segments?.count ??
+      hydrology.topology?.segment_count ??
+      hydrology.topology?.emitted_segment_count;
+    const droppedSegmentCount =
+      hydrology.topology?.dropped_segment_count ??
+      hydrology.topology?.nodata_break_count ??
+      0;
+    assert(Number.isInteger(sourceSegmentCount) && sourceSegmentCount > 0, '水系源线段数量无效');
+    assert(Number.isInteger(emittedSegmentCount) && emittedSegmentCount > 0, '水系渲染线段数量无效');
+    assert(sourceSegmentCount === emittedSegmentCount, '水系源线段未完整进入渲染资产');
+    assert(droppedSegmentCount === 0, '水系存在被丢弃的断段');
   }
 
   function setupWorld(manifest, overviewManifest) {
@@ -687,8 +704,28 @@ void main(){
     state.hydrologyNodes = nodeValues;
     state.hydrologySegmentCount = segmentValues.length / 8;
     state.hydrologySourceNodeCount = nodeValues.length / 5;
-    assert(state.hydrologySegmentCount === state.hydrologyManifest.segments.count, '水系线段数量与清单不一致');
-    assert(state.hydrologySourceNodeCount === state.hydrologyManifest.nodes.count, '水系源节点数量与清单不一致');
+    const expectedSegmentCount =
+      state.hydrologyManifest.segments?.count ??
+      state.hydrologyManifest.topology?.segment_count ??
+      state.hydrologyManifest.topology?.emitted_segment_count;
+    const expectedNodeCount =
+      state.hydrologyManifest.nodes?.count ??
+      state.hydrologyManifest.topology?.node_count ??
+      state.hydrologyManifest.topology?.node_vertex_count;
+    assert(Number.isInteger(expectedSegmentCount) && expectedSegmentCount > 0, '水系线段清单缺少有效数量');
+    assert(Number.isInteger(expectedNodeCount) && expectedNodeCount > 0, '水系节点清单缺少有效数量');
+    assert(state.hydrologySegmentCount === expectedSegmentCount, '水系线段数量与清单不一致');
+    assert(state.hydrologySourceNodeCount === expectedNodeCount, '水系源节点数量与清单不一致');
+    const sourceSegmentCount =
+      state.hydrologyManifest.topology?.source_segment_count ??
+      state.hydrologyManifest.topology?.source_segment_count_after_render_densification ??
+      expectedSegmentCount;
+    const droppedSegmentCount =
+      state.hydrologyManifest.topology?.dropped_segment_count ??
+      state.hydrologyManifest.topology?.nodata_break_count ??
+      0;
+    assert(sourceSegmentCount === expectedSegmentCount, '水系存在未进入渲染资产的源线段');
+    assert(droppedSegmentCount === 0, '水系存在高程缺失造成的断段');
 
     const topology = new Map();
     const registerNode = (x, elevation, z, classValue, width, directionX, directionZ) => {
@@ -1637,6 +1674,19 @@ void main(){
       vertical_scale: 1,
       osm_linear_waterways_loaded: state.hydrologyReady,
       hydrology_segment_count: state.hydrologySegmentCount,
+      hydrology_source_segment_count:
+        state.hydrologyManifest?.topology?.source_segment_count ??
+        state.hydrologyManifest?.topology?.source_segment_count_after_render_densification ??
+        state.hydrologySegmentCount,
+      hydrology_dropped_segment_count:
+        state.hydrologyManifest?.topology?.dropped_segment_count ??
+        state.hydrologyManifest?.topology?.nodata_break_count ??
+        0,
+      hydrology_display_elevation_fallback_node_count:
+        state.hydrologyManifest?.topology?.display_elevation_fallback_node_count ??
+        state.hydrologyManifest?.topology?.elevation_fallback_vertex_count ??
+        0,
+      hydrology_source_route_coverage: state.hydrologyManifest?.topology?.source_route_coverage ?? 1,
       hydrology_node_count: state.hydrologySourceNodeCount,
       hydrology_render_node_count: state.hydrologyRenderNodeCount,
       hydrology_endpoint_count: state.hydrologyEndpointCount,

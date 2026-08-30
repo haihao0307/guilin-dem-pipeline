@@ -195,6 +195,48 @@ def projected_line_parts(feature: dict[str, Any], transformer: Transformer, doma
     return list(iter_lines(clipped))
 
 
+
+def nearest_valid_native_elevation(
+    dataset: rasterio.io.DatasetReader,
+    easting: float,
+    northing: float,
+    maximum_radius_samples: int = 32,
+) -> tuple[float, float] | None:
+    """Return the nearest valid native DEM elevation without moving the x/y centerline."""
+    row, column = dataset.index(easting, northing)
+    row = int(np.clip(row, 0, dataset.height - 1))
+    column = int(np.clip(column, 0, dataset.width - 1))
+    for radius in (1, 2, 4, 8, 16, maximum_radius_samples):
+        row_start = max(0, row - radius)
+        row_stop = min(dataset.height, row + radius + 1)
+        column_start = max(0, column - radius)
+        column_stop = min(dataset.width, column + radius + 1)
+        values = dataset.read(
+            1,
+            window=Window(
+                column_start,
+                row_start,
+                column_stop - column_start,
+                row_stop - row_start,
+            ),
+            boundless=False,
+        )
+        valid = np.isfinite(values) & (values != SOURCE_NODATA)
+        if not np.any(valid):
+            continue
+        positions = np.argwhere(valid)
+        target_row = row - row_start
+        target_column = column - column_start
+        squared_distances = (
+            (positions[:, 0] - target_row) ** 2 +
+            (positions[:, 1] - target_column) ** 2
+        )
+        nearest_index = int(np.argmin(squared_distances))
+        local_row, local_column = [int(value) for value in positions[nearest_index]]
+        distance_m = float(math.sqrt(float(squared_distances[nearest_index])) * SOURCE_SPACING_M)
+        return float(values[local_row, local_column]), distance_m
+    return None
+
 def build_hydrology(
     dataset: rasterio.io.DatasetReader,
     native_manifest: dict[str, Any],
@@ -261,17 +303,41 @@ def build_hydrology(
     ordered_keys = list(node_records.keys())
     coordinates = [(node_records[key]["e"], node_records[key]["n"]) for key in ordered_keys]
     valid_node_data: dict[tuple[float, float], dict[str, Any]] = {}
+    missing_keys: list[tuple[float, float]] = []
     for key, sample in zip(ordered_keys, dataset.sample(coordinates, indexes=1, masked=True), strict=True):
         raw = sample[0]
         if np.ma.is_masked(raw):
+            missing_keys.append(key)
             continue
         elevation = float(raw)
         if not math.isfinite(elevation) or elevation == SOURCE_NODATA:
+            missing_keys.append(key)
             continue
         record = dict(node_records[key])
         record["elevation"] = elevation
         valid_node_data[key] = record
 
+    fallback_node_count = 0
+    fallback_max_distance_m = 0.0
+    unresolved_keys: list[tuple[float, float]] = []
+    for key in missing_keys:
+        fallback = nearest_valid_native_elevation(dataset, key[0], key[1])
+        if fallback is None:
+            unresolved_keys.append(key)
+            continue
+        elevation, distance_m = fallback
+        record = dict(node_records[key])
+        record["elevation"] = elevation
+        record["display_elevation_fallback"] = True
+        record["display_elevation_fallback_distance_m"] = distance_m
+        valid_node_data[key] = record
+        fallback_node_count += 1
+        fallback_max_distance_m = max(fallback_max_distance_m, distance_m)
+
+    if unresolved_keys:
+        raise RuntimeError(f"unable to drape {len(unresolved_keys)} waterway nodes onto the native DEM")
+
+    source_segment_count = len(raw_segments)
     segment_values: list[float] = []
     used_keys: set[tuple[float, float]] = set()
     valid_segment_count = 0
@@ -295,6 +361,11 @@ def build_hydrology(
         used_keys.add(start_key)
         used_keys.add(end_key)
         valid_segment_count += 1
+
+    if valid_segment_count != source_segment_count:
+        raise RuntimeError(
+            f"waterway segment loss: source={source_segment_count} emitted={valid_segment_count}"
+        )
 
     node_values: list[float] = []
     for key in sorted(used_keys):
@@ -333,6 +404,8 @@ def build_hydrology(
             "synthetic_gap_line_added": False,
             "projection_only": True,
             "aoi_boundary_clipping_only": True,
+            "display_elevation_fallback_changes_planimetry": False,
+            "display_elevation_fallback_changes_source_dem": False,
         },
         "filter": {
             "allowed_waterways": ["river", "stream", "canal"],
@@ -348,7 +421,13 @@ def build_hydrology(
             "source_feature_count": source_feature_count,
             "rendered_feature_count": rendered_feature_count,
             "clipped_part_count": clipped_part_count,
+            "source_segment_count": source_segment_count,
             "segment_count": valid_segment_count,
+            "dropped_segment_count": source_segment_count - valid_segment_count,
+            "unresolved_node_count": len(unresolved_keys),
+            "display_elevation_fallback_node_count": fallback_node_count,
+            "display_elevation_fallback_max_distance_m": fallback_max_distance_m,
+            "display_elevation_fallback_method": "nearest-valid-native-dem-cell",
             "node_count": len(node_values) // 5,
             "source_route_coverage": 1.0,
             "upstream_to_downstream_continuity_required": True,
@@ -413,7 +492,11 @@ def main() -> int:
         "hydrology": {
             "record_counts": hydrology["topology"]["record_counts"],
             "record_count_total": hydrology["topology"]["record_count_total"],
+            "source_segment_count": hydrology["topology"]["source_segment_count"],
             "segment_count": hydrology["topology"]["segment_count"],
+            "dropped_segment_count": hydrology["topology"]["dropped_segment_count"],
+            "display_elevation_fallback_node_count": hydrology["topology"]["display_elevation_fallback_node_count"],
+            "display_elevation_fallback_max_distance_m": hydrology["topology"]["display_elevation_fallback_max_distance_m"],
             "node_count": hydrology["topology"]["node_count"],
             "lake_surface_asset_count": 0,
             "reservoir_surface_asset_count": 0,
