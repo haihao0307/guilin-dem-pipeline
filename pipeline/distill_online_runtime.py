@@ -12,10 +12,11 @@ import numpy as np
 SEGMENT_STRIDE = 13
 NODE_STRIDE = 8
 RUNTIME_PROFILE = "knowledge-indexed-first-load-v1"
-TILE_RELEASE_BASE_URL = (
+CANONICAL_TILE_RELEASE_BASE_URL = (
     "https://github.com/haihao0307/guilin-dem-pipeline/releases/download/"
     "guilin-native-12p5m-single-truth-v001/"
 )
+RUNTIME_TILE_BASE_URL = "../guilin-truth-data/native/"
 
 
 def sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
@@ -248,8 +249,11 @@ def main() -> int:
             "initial_numeric_data_mib": round(initial_data_bytes / 1024 / 1024, 3),
             "distilled_hydrology_segment_count": int(len(runtime_segments)),
             "distilled_hydrology_node_count": int(len(runtime_nodes)),
-            "native_tile_delivery": "release-on-demand",
-            "native_tile_release_base_url": TILE_RELEASE_BASE_URL,
+            "native_tile_delivery": "same-origin-on-demand",
+            "canonical_native_tile_store": "GitHub Release guilin-native-12p5m-single-truth-v001",
+            "canonical_native_tile_release_base_url": CANONICAL_TILE_RELEASE_BASE_URL,
+            "runtime_native_tile_store": "GitHub Pages /guilin-truth-data/native/",
+            "native_tile_runtime_base_url": RUNTIME_TILE_BASE_URL,
             "native_tile_download_bytes_per_tile": native["tile_matrix"]["expected_tile_bytes"],
             "all_native_tiles_downloaded_on_page_open": False,
             "full_truth_downloaded_on_page_open": False,

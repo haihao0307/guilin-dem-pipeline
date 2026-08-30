@@ -102,7 +102,7 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
         "continuous_zoom": True,
         "tile_picker_required": False,
         "distilled_knowledge_runtime": True,
-        "native_tile_delivery": "release-on-demand",
+        "native_tile_delivery": "same-origin-on-demand",
         "full_truth_downloaded_on_page_open": False,
         "stale_public_assets_allowed": False,
         "overview_grid": [768, 768],
