@@ -69,7 +69,6 @@ Object.assign(LandscapeMotherRenderer.prototype, {
       this.drawViewport(0, this.canvas.width, this.mode, this.mode === 1 ? 0 : this.detailMix, now);
     }
     gl.disable(gl.SCISSOR_TEST);
-    gl.finish();
     if (this.lastFrameAt) {
       this.frameSamples.push(now - this.lastFrameAt);
       if (this.frameSamples.length > 120) this.frameSamples.shift();
@@ -84,6 +83,7 @@ Object.assign(LandscapeMotherRenderer.prototype, {
     const width = this.canvas.width;
     const height = this.canvas.height;
     const pixels = new Uint8Array(width * height * 4);
+    gl.finish();
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     const step = Math.max(1, Math.floor(Math.max(width, height) / 360));
     let count = 0;
