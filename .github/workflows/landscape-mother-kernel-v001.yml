@@ -1,0 +1,336 @@
+name: Landscape Mother Kernel V1
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-kernel-v001
+    paths:
+      - landscape-mother/**
+      - tests/landscape_mother_browser_qa.mjs
+      - .github/workflows/landscape-mother-kernel-v001.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-kernel-v001
+  cancel-in-progress: true
+
+env:
+  SITE_DIR: build/landscape-mother-v001
+  INPUT_DIR: build/landscape-mother-input
+  DESTINATION_DIR: landscape-mother-v001
+  SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  TILE_FILE: native-r07-c02-2048x2048-i16.bin
+  TILE_SHA256: 5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215
+  TILE_BYTES: '8388608'
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out clean Landscape Mother branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate modular kernel and image-free source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            landscape-mother/kernel-core.js \
+            landscape-mother/kernel-cache.js \
+            landscape-mother/kernel-fields-evaluate.js \
+            landscape-mother/kernel-fields.js \
+            landscape-mother/kernel.js \
+            landscape-mother/renderer-terrain-shaders.js \
+            landscape-mother/renderer-water-shaders.js \
+            landscape-mother/renderer-core.js \
+            landscape-mother/renderer-mesh.js \
+            landscape-mother/renderer-camera.js \
+            landscape-mother/renderer-draw.js \
+            landscape-mother/renderer.js \
+            landscape-mother/app-core.js \
+            landscape-mother/app-ui.js \
+            landscape-mother/app.js \
+            tests/landscape_mother_browser_qa.mjs; do
+            node --check "$file"
+          done
+          python -m py_compile landscape-mother/tools/build_sample.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('landscape-mother')
+          forbidden_extensions = {'.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff','.ktx','.ktx2','.dds','.exr','.hdr'}
+          forbidden_files = [p.as_posix() for p in root.rglob('*') if p.is_file() and p.suffix.lower() in forbidden_extensions]
+          assert not forbidden_files, forbidden_files
+          runtime_names = [
+              'index.html','style.css','kernel-core.js','kernel-cache.js',
+              'kernel-fields-evaluate.js','kernel-fields.js','kernel.js',
+              'renderer-terrain-shaders.js','renderer-water-shaders.js',
+              'renderer-core.js','renderer-mesh.js','renderer-camera.js',
+              'renderer-draw.js','renderer.js','app-core.js','app-ui.js','app.js',
+          ]
+          text = '\n'.join((root / name).read_text(encoding='utf-8') for name in runtime_names)
+          forbidden_tokens = ['<img','<picture','<svg','data:image/','background-image','sampler2D','texture2D(','new Image(','createImageBitmap(','toDataURL(','toBlob(']
+          assert not [token for token in forbidden_tokens if token in text]
+          contract = json.loads((root / 'contract.json').read_text(encoding='utf-8'))
+          assert contract['schema'] == 'landscape-mother-kernel/v1'
+          assert contract['renderMode'] == 'interactive-webgl2-3d'
+          assert contract['sample']['truthGrid'] == [81,81]
+          assert contract['sample']['truthSpacingM'] == 12.5
+          assert contract['sample']['desktopRenderGrid'] == [641,641]
+          assert contract['sample']['mobileRenderGrid'] == [321,321]
+          rules = contract['rules']
+          assert rules['truthOverwrite'] is False
+          assert rules['sourceResampling'] is False
+          assert rules['syntheticGapFill'] is False
+          assert rules['verticalScale'] == 1.0
+          assert rules['proceduralMacroMountains'] is False
+          for key in ('materialTextureCount','terrainImageTextureCount','imageFileCount','screenshotArtifactCount','plantLayerCount','vegetationInstanceCount'):
+              assert rules[key] == 0
+          assert rules['interactive3DRequired'] is True
+          assert rules['numericQaOnly'] is True
+          assert contract['approvals'] == {'visualAcceptance':False,'productionReady':False}
+          print('Static modular kernel contract passed')
+          PY
+
+      - name: Fetch locked canonical numeric inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$INPUT_DIR" "$SITE_DIR"
+          mkdir -p "$INPUT_DIR" "$SITE_DIR/data" "$SITE_DIR/qa"
+          git fetch --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+          git show origin/gh-pages:guilin/data/NATIVE_ELEVATION_MANIFEST.json > "$INPUT_DIR/NATIVE_ELEVATION_MANIFEST.json"
+          git show "origin/gh-pages:guilin/data/$TILE_FILE" > "$INPUT_DIR/$TILE_FILE"
+          git show origin/gh-pages:guilin/data/osm-waterways-manifest.json > "$INPUT_DIR/osm-waterways-manifest.json"
+          SEGMENT_FILE="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('build/landscape-mother-input/osm-waterways-manifest.json')
+          print(json.loads(path.read_text(encoding='utf-8'))['segments']['file'])
+          PY
+          )"
+          git show "origin/gh-pages:guilin/data/$SEGMENT_FILE" > "$INPUT_DIR/$SEGMENT_FILE"
+          printf '%s' "$SEGMENT_FILE" > "$INPUT_DIR/segment-file.txt"
+          test "$(stat -c '%s' "$INPUT_DIR/$TILE_FILE")" = "$TILE_BYTES"
+          test "$(sha256sum "$INPUT_DIR/$TILE_FILE" | cut -d' ' -f1)" = "$TILE_SHA256"
+
+      - name: Extract exact truth window and clipped immutable water
+        shell: bash
+        run: |
+          set -euo pipefail
+          SEGMENT_FILE="$(cat "$INPUT_DIR/segment-file.txt")"
+          python landscape-mother/tools/build_sample.py \
+            --contract landscape-mother/contract.json \
+            --dem-manifest "$INPUT_DIR/NATIVE_ELEVATION_MANIFEST.json" \
+            --parent-tile "$INPUT_DIR/$TILE_FILE" \
+            --hydrology-manifest "$INPUT_DIR/osm-waterways-manifest.json" \
+            --hydrology-segments "$INPUT_DIR/$SEGMENT_FILE" \
+            --output "$SITE_DIR/data"
+
+      - name: Assemble compact procedural-only runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            README.md contract.json index.html style.css \
+            kernel-core.js kernel-cache.js kernel-fields-evaluate.js kernel-fields.js kernel.js \
+            renderer-terrain-shaders.js renderer-water-shaders.js renderer-core.js \
+            renderer-mesh.js renderer-camera.js renderer-draw.js renderer.js \
+            app-core.js app-ui.js app.js; do
+            cp "landscape-mother/$file" "$SITE_DIR/$file"
+          done
+          touch "$SITE_DIR/.nojekyll"
+          rm -rf "$INPUT_DIR"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('build/landscape-mother-v001')
+          forbidden_extensions = {'.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff','.ktx','.ktx2','.dds','.exr','.hdr'}
+          forbidden = [p.as_posix() for p in root.rglob('*') if p.is_file() and p.suffix.lower() in forbidden_extensions]
+          assert not forbidden, forbidden
+          text = '\n'.join(p.read_text(encoding='utf-8') for p in root.rglob('*') if p.is_file() and p.suffix.lower() in {'.html','.css','.js'})
+          forbidden_tokens = ['<img','<picture','<svg','data:image/','background-image','sampler2D','texture2D(','new Image(','createImageBitmap(','toDataURL(','toBlob(']
+          assert not [token for token in forbidden_tokens if token in text]
+          data = json.loads((root / 'data/sample-manifest.json').read_text(encoding='utf-8'))
+          data_bytes = sum(p.stat().st_size for p in (root / 'data').iterdir() if p.is_file())
+          code_bytes = sum(p.stat().st_size for p in root.iterdir() if p.is_file() and p.name != 'SHA256SUMS.txt')
+          assert data_bytes < 131072, data_bytes
+          assert code_bytes < 240000, code_bytes
+          assert data['receipt']['materialTextureCount'] == 0
+          assert data['receipt']['imageFileCount'] == 0
+          assert data['receipt']['plantLayerCount'] == 0
+          print({'code_bytes':code_bytes,'data_bytes':data_bytes,'hydrology_records':data['hydrology']['recordCount'],'image_file_count':0,'material_texture_count':0})
+          PY
+
+      - name: Install browser QA runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile numeric WebGL QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4175 --directory "$SITE_DIR" > /tmp/landscape-mother-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4175/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/landscape_mother_browser_qa.mjs http://127.0.0.1:4175/ "$SITE_DIR/qa"
+          kill "$SERVER_PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Write numeric release evidence and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          site = Path(os.environ['SITE_DIR'])
+          browser = json.loads((site / 'qa/browser-qa.json').read_text(encoding='utf-8'))
+          sample = json.loads((site / 'data/sample-manifest.json').read_text(encoding='utf-8'))
+          desktop = browser['results'][0]['finalQa']
+          mobile = browser['results'][1]['finalQa']
+          files = {}
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name not in {'SHA256SUMS.txt','release-evidence.json'}):
+              relative = path.relative_to(site).as_posix()
+              files[relative] = {'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+          evidence = {
+              'schema':'landscape-mother-release-evidence/v1',
+              'commit':os.environ['GITHUB_SHA'],
+              'branch':os.environ['GITHUB_REF_NAME'],
+              'destinationDir':os.environ['DESTINATION_DIR'],
+              'passed':browser['passed'],
+              'renderMode':desktop['renderMode'],
+              'evidenceType':'numeric-webgl-frame-signatures',
+              'truthGrid':desktop['truthGrid'],
+              'desktopRenderGrid':desktop['renderGrid'],
+              'mobileRenderGrid':mobile['renderGrid'],
+              'sourceNodeMaxErrorM':desktop['sourceNodeMaxErrorM'],
+              'sourceCellMeanMaxAbsDeltaM':desktop['sourceCellMeanMaxAbsDeltaM'],
+              'macroBlurMaxAbsDeltaM':desktop['macroBlurMaxAbsDeltaM'],
+              'peakShiftM':desktop['peakShiftM'],
+              'surfaceRangeM':desktop['surfaceRangeM'],
+              'fieldRangeM':desktop['fieldRangeM'],
+              'paddyCoverage':desktop['paddyCoverage'],
+              'waterSegmentCount':desktop['waterSegmentCount'],
+              'terrainVertexCount':desktop['terrainVertexCount'],
+              'terrainTriangleCount':desktop['terrainTriangleCount'],
+              'publicNumericDataBytes':sample['truth']['bytes']+sample['hydrology']['bytes'],
+              'materialTextureCount':0,
+              'terrainImageTextureCount':0,
+              'imageFileCount':0,
+              'screenshotArtifactCount':0,
+              'plantLayerCount':0,
+              'vegetationInstanceCount':0,
+              'proceduralMacroMountains':False,
+              'visualAcceptance':False,
+              'productionReady':False,
+              'sourceTiffSha256':os.environ['SOURCE_TIFF_SHA256'],
+              'parentTileSha256':os.environ['TILE_SHA256'],
+              'files':files,
+          }
+          (site / 'qa/release-evidence.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          lines=[]
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name != 'SHA256SUMS.txt'):
+              relative=path.relative_to(site).as_posix()
+              lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}")
+          (site / 'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload JSON-only numeric QA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-kernel-v001-numeric-qa
+          path: build/landscape-mother-v001/qa/*.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish clean runtime and retire image-bearing predecessors
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
+          rm -rf /tmp/landscape-pages
+          git worktree add -B landscape-mother-pages /tmp/landscape-pages origin/gh-pages
+          rm -rf \
+            /tmp/landscape-pages/guilin-mother-sample-v001 \
+            /tmp/landscape-pages/guilin-mother-sample-v002 \
+            /tmp/landscape-pages/guilin-dem-m03-sample-v001 \
+            "/tmp/landscape-pages/$DESTINATION_DIR"
+          mkdir -p "/tmp/landscape-pages/$DESTINATION_DIR"
+          cp -a "$SITE_DIR"/. "/tmp/landscape-pages/$DESTINATION_DIR/"
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('/tmp/landscape-pages/landscape-mother-v001')
+          forbidden_extensions={'.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff','.ktx','.ktx2','.dds','.exr','.hdr'}
+          forbidden=[p.as_posix() for p in root.rglob('*') if p.is_file() and p.suffix.lower() in forbidden_extensions]
+          assert not forbidden, forbidden
+          assert not (root/'evidence').exists()
+          PY
+          cd /tmp/landscape-pages
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No gh-pages changes to publish'
+          else
+            git commit -m "publish: Landscape Mother compact image-free kernel ${GITHUB_SHA}"
+            if ! git push origin HEAD:gh-pages; then
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              git push origin HEAD:gh-pages
+            fi
+          fi
+
+      - name: Verify published identity and no-image gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
+          git show "origin/gh-pages:$DESTINATION_DIR/contract.json" | grep -q 'landscape-mother-kernel/v1'
+          git show "origin/gh-pages:$DESTINATION_DIR/qa/release-evidence.json" | grep -q "${GITHUB_SHA}"
+          if git ls-tree -r --name-only origin/gh-pages "$DESTINATION_DIR" | grep -E '\.(png|jpe?g|webp|gif|svg|bmp|tiff?|ktx2?|dds|exr|hdr)$'; then
+            echo 'Image or texture file found in Landscape Mother publication' >&2
+            exit 1
+          fi
+          if git ls-tree -r --name-only origin/gh-pages | grep -E '^guilin-mother-sample-v00[12]/'; then
+            echo 'Superseded image-bearing sample still exists' >&2
+            exit 1
+          fi
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          print('# Landscape Mother Kernel V1')
+          evidence=Path('build/landscape-mother-v001/qa/release-evidence.json')
+          if not evidence.exists():
+              print('\nRelease evidence was not generated.')
+          else:
+              data=json.loads(evidence.read_text(encoding='utf-8'))
+              for key in ('passed','renderMode','truthGrid','desktopRenderGrid','mobileRenderGrid','sourceNodeMaxErrorM','sourceCellMeanMaxAbsDeltaM','macroBlurMaxAbsDeltaM','peakShiftM','surfaceRangeM','fieldRangeM','waterSegmentCount','publicNumericDataBytes','materialTextureCount','imageFileCount','screenshotArtifactCount','plantLayerCount','proceduralMacroMountains','visualAcceptance','productionReady'):
+                  print(f"- {key}: `{data[key]}`")
+          PY
