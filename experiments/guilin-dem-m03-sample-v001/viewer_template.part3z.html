@@ -1,0 +1,21 @@
+// Preserve the immutable source-width field in the review ribbon. The first
+// prototype capped all waterways at 18 m for display, which made the selected
+// 58 m river look too narrow. Rebuild only the visual ribbon; the centerline,
+// source elevations and source-width values remain unchanged.
+waterVerts.length=0;
+for(const s of segments){
+  const [x0,y0,z0,x1,y1,z1,cls,widthRaw]=s;
+  const dx=x1-x0,dz=z1-z0,len=Math.hypot(dx,dz)||1,px=-dz/len,pz=dx/len;
+  const defaultWidth=cls===0?8:cls===1?3.2:2.2;
+  const w=clamp(widthRaw||defaultWidth,defaultWidth*.65,80)*.5;
+  waterVerts.push(
+    x0+px*w,y0-hmin+.42,z0+pz*w,cls,
+    x0-px*w,y0-hmin+.42,z0-pz*w,cls,
+    x1+px*w,y1-hmin+.42,z1+pz*w,cls,
+    x1+px*w,y1-hmin+.42,z1+pz*w,cls,
+    x0-px*w,y0-hmin+.42,z0-pz*w,cls,
+    x1-px*w,y1-hmin+.42,z1-pz*w,cls
+  );
+}
+gl.bindBuffer(gl.ARRAY_BUFFER,waterBuffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(waterVerts),gl.STATIC_DRAW);
