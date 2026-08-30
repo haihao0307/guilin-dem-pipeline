@@ -1,3 +1,8 @@
+---
+name: dem-procedural-landscape
+description: Build and govern truth-preserving procedural landscape production systems that combine real DEMs, hydrology, geomorphology, bounded terrain fields, ecology, historical reconstruction, Gaea processing, and Three.js or WebGPU delivery. Use for auditable multi-region terrain pipelines; do not use to replace missing truth data with synthetic terrain.
+---
+
 # DEM Procedural Landscape Production Skill v0.2
 
 ## 中文名称
@@ -56,6 +61,9 @@ branches/guilin-10km2-detail
 ```text
 branches/terrain-geomorphology
 地形导数、地貌分类、侵蚀、岩石和可逆微地形
+
+branches/gaea-terrain-field-graph
+GAEA 式连续字段图、确定性种子、受限高程增量、Data Maps、综合色彩和失败关闭 QA
 
 branches/water-system
 河流、河口、潮间带、近岸和外海
@@ -187,6 +195,18 @@ water_surface_visual_m
 ## GAEA 角色
 
 GAEA 是受控的程序化处理节点。真实 DEM、道路、水系、海岸、聚落、机场和历史证据保持只读。
+
+字段图的设计、区域配方、Three.js/WebGPU 映射和失败关闭合同由以下分支技能负责：
+
+```text
+skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/SKILL.md
+```
+
+真实 GAEA 2.x 工程、Build Swarm、DEM 预检和浏览器地形打包继续使用仓库内的执行技能：
+
+```text
+DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/skills/process-dem-with-gaea/SKILL.md
+```
 
 GAEA 节点必须：
 

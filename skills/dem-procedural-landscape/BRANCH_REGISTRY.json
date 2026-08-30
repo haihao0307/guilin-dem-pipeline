@@ -6,9 +6,11 @@
     "version": "0.2.0",
     "repository": "haihao0307/guilin-dem-pipeline",
     "branch": "skill/dem-procedural-landscape-v010",
-    "draftPr": 51,
-    "status": "foundation-validated",
-    "controllerAlias": "小华"
+    "currentIntegrationRef": "skill/xiaowang-gaea-terrain-field-v100",
+    "sourceClosedDraftPr": 51,
+    "status": "gaea-terrain-field-graph-integrated",
+    "controllerAlias": "小华",
+    "handoffTargetAlias": "小王"
   },
   "governance": {
     "doctrinePath": "skills/dem-procedural-landscape/PRODUCTION_DOCTRINE.md",
@@ -82,6 +84,22 @@
         "reversible-microrelief",
         "gaea-terrain-deltas"
       ]
+    },
+    {
+      "id": "gaea-terrain-field-graph",
+      "nameZh": "GAEA 式地形字段图分支",
+      "skillPath": "skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/SKILL.md",
+      "role": "cross-cutting-active-contract",
+      "owns": [
+        "continuous-field-graph",
+        "deterministic-seed-bank",
+        "bounded-height-delta",
+        "terrain-data-maps",
+        "structural-color-and-material",
+        "threejs-webgpu-field-contract",
+        "field-graph-fail-closed-qa"
+      ],
+      "sourceIntake": "knowledge/terrain-hydrology/shared/inbox/2026-08-30_xiaowang-gaea-terrain-minipack-v100/RECEIPT.json"
     },
     {
       "id": "water-system",

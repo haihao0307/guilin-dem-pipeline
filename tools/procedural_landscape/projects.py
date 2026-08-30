@@ -24,7 +24,8 @@ def validate_binding(validation: Any, relative: Path, branches: dict, version: s
     skill = document.get("skill") if isinstance(document.get("skill"), dict) else {}
     if (skill.get("id"), skill.get("version")) != ("dem-procedural-landscape", version):
         validation.add("BINDING_SKILL", relative, "Binding skill id or version differs from registry.")
-    if skill.get("ref") != "skill/dem-procedural-landscape-v010" or skill.get("registryPath") != str(REGISTRY):
+    registry_path = str(skill.get("registryPath", "")).replace("\\", "/")
+    if skill.get("ref") != "skill/dem-procedural-landscape-v010" or registry_path != REGISTRY.as_posix():
         validation.add("BINDING_REF", relative, "Binding ref or registry path is invalid.")
 
     active = document.get("activeBranches")

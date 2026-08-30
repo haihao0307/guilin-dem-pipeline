@@ -126,6 +126,12 @@ airport or engineered flat
 
 ## GAEA 转译合同
 
+字段图结构、种子隔离、综合色彩、WebGPU 映射和字段级 QA 先遵循：
+
+```text
+skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/SKILL.md
+```
+
 GAEA 可以执行：
 
 ```text
