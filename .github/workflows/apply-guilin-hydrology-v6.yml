@@ -1,0 +1,41 @@
+name: Apply Guilin hydrology v6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-guilin-hydrology-v6.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply network and viewer migrations
+        run: |
+          set -euo pipefail
+          python tools/apply_guilin_hydrology_network_v6.py
+          python tools/apply_guilin_hydrology_view_v6.py
+          python -m py_compile pipeline/build_online_assets.py pipeline/hydrology_network_v6.py pipeline/distill_online_runtime.py tests/validate_hydrology_flow_contract.py tests/browser_full_map_cdp.py
+          node --check viewer/app.js
+          grep -q 'network-directed-physical-width-v6' viewer/app.js
+          grep -q 'orient_network' pipeline/build_online_assets.py
+          grep -q 'complete headwater-to-mainstem-or-outlet routes' pipeline/distill_online_runtime.py
+      - name: Commit production implementation
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add pipeline/build_online_assets.py pipeline/hydrology_network_v6.py pipeline/distill_online_runtime.py viewer/app.js tests/validate_hydrology_flow_contract.py tests/browser_full_map_cdp.py .github/workflows/guilin-online-full-map.yml
+          git commit -m 'feat(guilin): correct Li direction continuity and physical river widths'
+          git push origin HEAD:main
