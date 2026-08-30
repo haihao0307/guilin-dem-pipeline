@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#d4dbd4" />
+  <title>小王 · Landscape Mother 桂林连续地貌 v1.0</title>
+  <link rel="stylesheet" href="./style.css?v=1000" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="terrain"></canvas>
+
+  <header class="brand panel">
+    <div class="eyebrow">XIAOWANG · LANDSCAPE MOTHER · CONTINUOUS FIELD GRAPH V1.0</div>
+    <h1>桂林连续峰林、谷地与漓江系统</h1>
+    <p>真实 12.5 米 DEM 只读 · 世界坐标连续字段 · 全局河网 · 米制候选增量 · 自适应误差网格 · 无植被实例</p>
+  </header>
+
+  <aside class="control panel" aria-label="地貌控制">
+    <section>
+      <h2>镜头</h2>
+      <div class="button-grid four">
+        <button data-view="overview" class="active">峰林全景</button>
+        <button data-view="river">连续漓江</button>
+        <button data-view="paddy">稻田谷地</button>
+        <button data-view="cliff">峰壁近景</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>结构数据图</h2>
+      <div class="button-grid four">
+        <button data-map="colour" class="active">综合色彩</button>
+        <button data-map="slope">坡度</button>
+        <button data-map="rock">岩石</button>
+        <button data-map="wetness">湿度</button>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <h2>连续字段指标</h2>
+      <dl>
+        <div><dt>真值网格</dt><dd id="sourceGrid">加载中</dd></div>
+        <div><dt>原生间距</dt><dd id="sourceSpacing">12.5 m</dd></div>
+        <div><dt>自适应顶点</dt><dd id="vertexCount">加载中</dd></div>
+        <div><dt>三角面</dt><dd id="triangleCount">加载中</dd></div>
+        <div><dt>形态增量</dt><dd id="deltaRange">加载中</dd></div>
+        <div><dt>连续河段</dt><dd id="riverSections">加载中</dd></div>
+        <div><dt>河道断点</dt><dd id="riverBreaks">加载中</dd></div>
+        <div><dt>渲染后端</dt><dd id="backend">WebGL2</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <h2>显示与回滚</h2>
+      <div class="button-grid three">
+        <button id="truthToggle">只看真值</button>
+        <button id="wireToggle">网格</button>
+        <button id="resetView">复位</button>
+      </div>
+      <p class="note">近景精度来自真实 12.5 米 DEM 与受限程序化候选字段。页面不宣称原生 1 米测绘精度。河流延伸到候选边界的闭合段仅用于视觉连续，不能冒充新增测绘水文。</p>
+    </section>
+
+    <section class="qa">
+      <h2>失败关闭状态</h2>
+      <ul>
+        <li><span>真值哈希</span><b id="qaTruth">等待</b></li>
+        <li><span>真值修改</span><b id="qaMutation">等待</b></li>
+        <li><span>字段相位重启</span><b id="qaSeed">等待</b></li>
+        <li><span>保护区违规</span><b id="qaProtect">等待</b></li>
+        <li><span>河流内部断点</span><b id="qaRiver">等待</b></li>
+      </ul>
+    </section>
+  </aside>
+
+  <div class="status panel" id="status">正在读取真实 DEM 与连续字段合同</div>
+  <div class="perf panel" id="perf">交互时动态降低像素密度，停止后恢复高清</div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <strong id="loadingTitle">编译 Landscape Mother 连续字段</strong>
+    <span id="loadingDetail">读取 2048 × 2048 原生高程</span>
+    <progress id="loadingProgress" max="100" value="0"></progress>
+  </div>
+
+  <script type="module" src="./app.js?v=1000"></script>
+</body>
+</html>
