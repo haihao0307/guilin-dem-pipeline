@@ -8,6 +8,7 @@ on:
       - viewer/**
       - pipeline/build_online_assets.py
       - tests/browser_full_map_cdp.py
+      - tests/validate_hydrology_flow_contract.py
       - truth/NATIVE_ELEVATION_MANIFEST.json
       - truth/OSM_HYDROLOGY_IMMUTABLE.geojson
       - contracts/**
@@ -63,12 +64,18 @@ jobs:
       - name: Verify the production contract and viewer architecture
         run: |
           set -euo pipefail
-          python -m py_compile pipeline/build_online_assets.py tests/browser_full_map_cdp.py
+          python -m py_compile \
+            pipeline/build_online_assets.py \
+            tests/browser_full_map_cdp.py \
+            tests/validate_hydrology_flow_contract.py
           node --check viewer/app.js
           grep -q 'guilin-continuous-full-map-v1' viewer/index.html
           grep -q 'one_continuous_map: true' viewer/app.js
           grep -q 'tile_picker_required: false' viewer/app.js
           grep -q 'osm_linear_waterways_loaded' viewer/app.js
+          grep -q 'longitudinal-flow-taper-v4' viewer/app.js
+          grep -q 'start_flow_distance_m' pipeline/build_online_assets.py
+          grep -q 'future_flow_animation_ready' viewer/app.js
           ! grep -E 'createTexture|texImage2D|sampler2D|heightmap' viewer/app.js
           python - <<'PY'
           import json
@@ -106,6 +113,10 @@ jobs:
             --output-dir "$ASSET_DIR" \
             | tee "$EVIDENCE_DIR/full-map-build.log"
           cp "$ASSET_DIR/FULL_MAP_BUILD_RECEIPT.json" "$EVIDENCE_DIR/"
+          python tests/validate_hydrology_flow_contract.py \
+            --manifest "$ASSET_DIR/osm-waterways-manifest.json" \
+            --segments "$ASSET_DIR/osm-waterway-segments.f32.bin" \
+            | tee "$EVIDENCE_DIR/hydrology-flow-contract.log"
           python - <<'PY'
           import json
           from pathlib import Path
@@ -124,6 +135,13 @@ jobs:
           assert hydro['source']['synthetic_gap_line_added'] is False
           assert hydro['topology']['segment_count'] > 1000
           assert hydro['topology']['node_count'] > 1000
+          assert hydro['styling']['profile']=='longitudinal-flow-taper-v4'
+          assert hydro['direction']['segment_vertex_order']=='upstream_to_downstream'
+          assert hydro['direction']['flow_progress_monotonic'] is True
+          assert hydro['direction']['flow_distance_monotonic'] is True
+          assert hydro['direction']['future_flow_animation_ready'] is True
+          assert len(hydro['segments']['layout'])==13
+          assert len(hydro['nodes']['layout'])==8
           assert sum(hydro['topology']['record_counts'].values()) > 500
           PY
 
@@ -182,6 +200,9 @@ jobs:
               'reservoir_surface_asset_count':0,
               'height_image_texture_used':False,
               'source_tile_compression':'none',
+              'hydrology_style_profile':'longitudinal-flow-taper-v4',
+              'hydrology_flow_direction':'upstream_to_downstream',
+              'future_flow_animation_ready':True,
           }
           (root/'version.json').write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
           PY
@@ -276,7 +297,9 @@ jobs:
             echo "* source SHA256: $SOURCE_SHA256"
             echo '* one continuous map: required'
             echo '* native detail: automatic 12.5 m'
-            echo '* OSM linear waterways: river, stream and canal'
+            echo '* waterway direction: upstream to downstream'
+            echo '* waterway longitudinal width and colour taper: required'
+            echo '* future animated-flow coordinate: present'
             echo '* lake surfaces: 0'
             echo '* reservoir surfaces: 0'
             echo '* height textures: 0'
