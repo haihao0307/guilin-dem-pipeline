@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050a09">
+<title>小王 · 桂林地貌母体三维样板 v0.2.0</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body data-ready="false" data-render-mode="interactive-3d">
+<main id="app">
+  <canvas id="terrain" aria-label="桂林阳朔真实12.5米DEM与可逆喀斯特地貌精细化三维样板"></canvas>
+  <div class="vignette"></div>
+
+  <section class="panel left-panel">
+    <p class="eyebrow">DEM MOTHER · INTERACTIVE 3D ONLY · V0.2.0</p>
+    <h1>桂林一平方公里<br>地貌母体精细样板</h1>
+    <p class="lead">原生 12.5 米真值保持只读。三维显示网格细分到 3.125 米，叠加可关闭的喀斯特形体、岩壁、田块、田埂、沟渠和多尺度程序材质。</p>
+    <div class="badges"><span class="good">真值只读</span><span class="good">交互三维</span><span>321 × 321</span><span class="warn">待人工验收</span></div>
+
+    <div class="section">
+      <div class="section-title"><b>三维分层</b><small>同一相机直接比较</small></div>
+      <div class="mode-grid" id="modeGrid">
+        <button class="active" data-mode="0">母体合成</button>
+        <button data-mode="1">真实高程</button>
+        <button data-mode="2">喀斯特形体</button>
+        <button data-mode="3">地块与田埂</button>
+        <button data-mode="4">湿度与水系</button>
+        <button data-mode="5">岩壁与裂隙</button>
+        <button class="wide" data-mode="6">原始 / 合成三维对照</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><b>三维增量</b><small>全部可关闭</small></div>
+      <label class="toggle"><span><b>喀斯特形体</b><small>峰冠、陡壁、短峰脚与坡面沟槽</small></span><input id="karstToggle" type="checkbox" checked></label>
+      <label class="toggle"><span><b>田块微地形</b><small>田面、田埂、灌排沟渠与湿地洼面</small></span><input id="fieldToggle" type="checkbox" checked></label>
+      <label class="toggle"><span><b>真实水系</b><small>只读 OSM river / stream / canal</small></span><input id="waterToggle" type="checkbox" checked></label>
+    </div>
+
+    <div class="section controls">
+      <div class="section-title"><b>程序材质</b><small>Brick Mother 多尺度形成场</small></div>
+      <label><span>喀斯特强度 <output id="karstOut">1.00</output></span><input id="karstStrength" type="range" min="0" max="1.35" step="0.01" value="1"></label>
+      <label><span>表面细腻度 <output id="detailOut">1.00</output></span><input id="detailStrength" type="range" min="0.25" max="1.60" step="0.01" value="1"></label>
+      <label><span>综合色域 <output id="colorOut">1.00</output></span><input id="colorStrength" type="range" min="0.35" max="1.50" step="0.01" value="1"></label>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><b>三维相机</b><small>旋转、平移、缩放</small></div>
+      <div class="camera-grid">
+        <button data-view="overview">全景</button><button data-view="karst">峰体近景</button>
+        <button data-view="field">田块近景</button><button data-view="top">俯视</button>
+      </div>
+      <p class="hint">左键拖动旋转，右键或 Shift 拖动平移，滚轮缩放，双击地面聚焦，R 键复位。</p>
+    </div>
+  </section>
+
+  <aside class="panel right-panel">
+    <p class="eyebrow">TRUTH, GEOMETRY AND MATERIAL RECEIPT</p>
+    <h2>样板身份</h2>
+    <div class="facts">
+      <div><span>真值网格</span><b>81 × 81 · 12.5 m</b></div>
+      <div><span>三维显示网格</span><b id="renderGrid">321 × 321</b></div>
+      <div><span>样板范围</span><b>1.000 km²</b></div>
+      <div><span>高程范围</span><b id="heightRange">读取中</b></div>
+      <div><span>喀斯特增量</span><b id="karstRange">读取中</b></div>
+      <div><span>田块增量</span><b id="fieldRange">读取中</b></div>
+      <div><span>真实水系</span><b id="waterCount">读取中</b></div>
+      <div><span>植物层</span><b class="closed">0 · 已删除</b></div>
+      <div><span>二维概念图</span><b class="closed">0 · 禁止交付</b></div>
+      <div><span>验收状态</span><b class="pending">visualAcceptance=false</b></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p class="note">12.5 米源像元身份保持不变。321 × 321 网格只承担三维显示细分和可逆程序层。程序增量不声明为原生测绘高程。</p>
+  </aside>
+
+  <div id="compareLabels" hidden><span class="compare-left">原始 12.5 米真值</span><span class="compare-right">精细地貌母体</span><i></i></div>
+  <div class="status" id="status">正在核对真实 DEM、真实水系与三维生产合同</div>
+  <div class="loading panel" id="loading"><i></i><b>构建精细三维地貌</b><span id="loadingText">读取原生数值瓦片</span></div>
+  <div class="error panel" id="error" hidden><b>三维样板构建失败</b><pre id="errorText"></pre></div>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
