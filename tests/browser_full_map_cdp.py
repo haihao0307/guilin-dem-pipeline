@@ -131,6 +131,23 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
         failures.append("hydrology_segment_count below 1000")
     if int(result.get("hydrology_node_count", 0)) < 1_000:
         failures.append("hydrology_node_count below 1000")
+    if int(result.get("hydrology_render_node_count", 0)) <= 0:
+        failures.append("hydrology render-node set is empty")
+    if int(result.get("hydrology_render_node_count", 0)) >= int(result.get("hydrology_node_count", 0)):
+        failures.append("hydrology still renders a round point at every source vertex")
+    if int(result.get("hydrology_junction_count", 0)) <= 0:
+        failures.append("hydrology junction set is empty")
+    if result.get("hydrology_visual_join_gap_px") != 0:
+        failures.append(f"hydrology join gap: {result.get('hydrology_visual_join_gap_px')}")
+    if result.get("hydrology_visual_join_policy") != "overlapped-segments-and-degree-caps":
+        failures.append(f"hydrology join policy: {result.get('hydrology_visual_join_policy')}")
+    style = result.get("waterway_style") or {}
+    if style.get("profile") != "thin-hierarchical-continuous-v2":
+        failures.append(f"waterway style profile: {style.get('profile')}")
+    maximum_width = float(style.get("max_full_width_css_px") or 999)
+    width_limit = 4.0 if require_detail else 1.8
+    if maximum_width > width_limit + 1e-6:
+        failures.append(f"waterway width {maximum_width:.3f}px exceeds {width_limit:.1f}px")
     counts = result.get("waterway_record_counts") or {}
     if sum(int(counts.get(key, 0)) for key in ("river", "stream", "canal")) < 500:
         failures.append(f"waterway record count too small: {counts}")

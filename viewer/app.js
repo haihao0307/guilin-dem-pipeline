@@ -19,6 +19,10 @@
   const DETAIL_REFRESH_DISTANCE_M = 1_800;
   const MAX_TILE_CACHE = 8;
   const MAX_DPR = 1.65;
+  const WATERWAY_STYLE_PROFILE = 'thin-hierarchical-continuous-v2';
+  const WATERWAY_DEFAULT_EMPHASIS = 0.82;
+  const WATERWAY_MIN_EMPHASIS = 0.5;
+  const WATERWAY_MAX_EMPHASIS = 1.6;
 
   const ANCHORS = [
     { id: 'zhenbaoding', name: '真宝鼎', e: 482_534.530462443, n: 2_890_708.122979571 },
@@ -61,19 +65,29 @@
     hydrologySegments: null,
     hydrologyNodes: null,
     hydrologySegmentCount: 0,
-    hydrologyNodeCount: 0,
+    hydrologySourceNodeCount: 0,
+    hydrologyRenderNodeCount: 0,
+    hydrologyJunctionCount: 0,
+    hydrologyEndpointCount: 0,
+    hydrologyBendCapCount: 0,
+    hydrologyVisualJoinGapPx: 0,
+    maxSourceWidthByClass: [0, 0, 0],
     waterwaysVisible: true,
-    waterwayEmphasis: 1.25,
+    waterwayEmphasis: WATERWAY_DEFAULT_EMPHASIS,
     labelsVisible: true,
     labels: [],
     gl: null,
     terrainProgram: null,
     segmentProgram: null,
     nodeProgram: null,
-    segmentVao: null,
-    segmentInstanceBuffer: null,
-    nodeVao: null,
-    nodeBuffer: null,
+    overviewSegmentVao: null,
+    overviewSegmentInstanceBuffer: null,
+    nativeSegmentVao: null,
+    nativeSegmentInstanceBuffer: null,
+    overviewNodeVao: null,
+    overviewNodeBuffer: null,
+    nativeNodeVao: null,
+    nativeNodeBuffer: null,
     terrainUniforms: null,
     segmentUniforms: null,
     nodeUniforms: null,
@@ -168,38 +182,53 @@ uniform mat4 uViewProjection;
 uniform vec2 uViewport;
 uniform float uVerticalOrigin;
 uniform float uEmphasis;
+uniform float uZoomScale;
+uniform float uPixelRatio;
+uniform float uSurfaceOffset;
 out float vClass;
+out float vAcross;
+float halfWidthPixels(float classValue,float sourceWidth){
+  float baseHalf=classValue<0.5?0.72:(classValue<1.5?0.42:0.38);
+  float sourceBoost=clamp((log2(max(2.0,sourceWidth+1.0))-2.0)*0.055,0.0,0.32);
+  return max(0.42*uPixelRatio,(baseHalf+sourceBoost)*uEmphasis*uZoomScale*uPixelRatio);
+}
 void main(){
-  vec3 startPosition=vec3(aStart.x,aStart.y-uVerticalOrigin+2.1,aStart.z);
-  vec3 endPosition=vec3(aEnd.x,aEnd.y-uVerticalOrigin+2.1,aEnd.z);
+  vec3 startPosition=vec3(aStart.x,aStart.y-uVerticalOrigin+uSurfaceOffset,aStart.z);
+  vec3 endPosition=vec3(aEnd.x,aEnd.y-uVerticalOrigin+uSurfaceOffset,aEnd.z);
   vec4 clipStart=uViewProjection*vec4(startPosition,1.0);
   vec4 clipEnd=uViewProjection*vec4(endPosition,1.0);
-  if(clipStart.w<=0.0||clipEnd.w<=0.0){gl_Position=vec4(2.0,2.0,2.0,1.0);vClass=aClass;return;}
+  if(clipStart.w<=0.0||clipEnd.w<=0.0){gl_Position=vec4(2.0,2.0,2.0,1.0);vClass=aClass;vAcross=aCorner.y;return;}
   vec2 ndcStart=clipStart.xy/max(0.00001,clipStart.w);
   vec2 ndcEnd=clipEnd.xy/max(0.00001,clipEnd.w);
   vec2 pixelDelta=(ndcEnd-ndcStart)*uViewport*0.5;
   float pixelLength=max(length(pixelDelta),0.001);
-  vec2 perpendicular=vec2(-pixelDelta.y,pixelDelta.x)/pixelLength;
-  float classWidth=aClass<0.5?2.65:(aClass<1.5?1.55:1.35);
-  float sourceBoost=clamp(log2(max(1.0,aSourceWidth)+1.0)*0.18,0.0,1.7);
-  float halfWidth=(classWidth+sourceBoost)*uEmphasis;
+  vec2 direction=pixelDelta/pixelLength;
+  vec2 perpendicular=vec2(-direction.y,direction.x);
+  float halfWidth=halfWidthPixels(aClass,aSourceWidth);
+  float overlap=halfWidth+0.35*uPixelRatio;
   vec4 clipPosition=mix(clipStart,clipEnd,aCorner.x);
-  vec2 ndcOffset=perpendicular*aCorner.y*halfWidth*2.0/uViewport;
-  clipPosition.xy+=ndcOffset*clipPosition.w;
+  vec2 pixelOffset=perpendicular*aCorner.y*halfWidth+direction*mix(-overlap,overlap,aCorner.x);
+  clipPosition.xy+=pixelOffset*2.0/uViewport*clipPosition.w;
   gl_Position=clipPosition;
   vClass=aClass;
+  vAcross=aCorner.y;
 }`;
 
   const SEGMENT_FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 in float vClass;
+in float vAcross;
 out vec4 outColor;
 void main(){
-  vec3 river=vec3(0.11,0.57,0.82);
-  vec3 stream=vec3(0.17,0.66,0.86);
-  vec3 canal=vec3(0.28,0.58,0.72);
+  float edge=abs(vAcross);
+  float aa=max(fwidth(edge)*1.25,0.02);
+  float coverage=1.0-smoothstep(1.0-aa,1.0,edge);
+  vec3 river=vec3(0.075,0.43,0.64);
+  vec3 stream=vec3(0.10,0.50,0.69);
+  vec3 canal=vec3(0.16,0.43,0.58);
   vec3 color=vClass<0.5?river:(vClass<1.5?stream:canal);
-  outColor=vec4(color,0.90);
+  float alpha=vClass<0.5?0.86:(vClass<1.5?0.72:0.66);
+  outColor=vec4(color,coverage*alpha);
 }`;
 
   const NODE_VERTEX_SHADER = `#version 300 es
@@ -207,16 +236,25 @@ precision highp float;
 layout(location=0) in vec3 aPosition;
 layout(location=1) in float aClass;
 layout(location=2) in float aSourceWidth;
+layout(location=3) in float aDegree;
 uniform mat4 uViewProjection;
 uniform float uVerticalOrigin;
 uniform float uEmphasis;
+uniform float uZoomScale;
+uniform float uPixelRatio;
+uniform float uSurfaceOffset;
 out float vClass;
+float halfWidthPixels(float classValue,float sourceWidth){
+  float baseHalf=classValue<0.5?0.72:(classValue<1.5?0.42:0.38);
+  float sourceBoost=clamp((log2(max(2.0,sourceWidth+1.0))-2.0)*0.055,0.0,0.32);
+  return max(0.42*uPixelRatio,(baseHalf+sourceBoost)*uEmphasis*uZoomScale*uPixelRatio);
+}
 void main(){
-  vec3 position=vec3(aPosition.x,aPosition.y-uVerticalOrigin+2.25,aPosition.z);
+  vec3 position=vec3(aPosition.x,aPosition.y-uVerticalOrigin+uSurfaceOffset+0.05,aPosition.z);
   gl_Position=uViewProjection*vec4(position,1.0);
-  float classWidth=aClass<0.5?3.2:(aClass<1.5?2.1:1.8);
-  float sourceBoost=clamp(log2(max(1.0,aSourceWidth)+1.0)*0.20,0.0,1.8);
-  gl_PointSize=(classWidth+sourceBoost)*uEmphasis;
+  float halfWidth=halfWidthPixels(aClass,aSourceWidth);
+  float multiplier=aDegree>2.5?2.90:(aDegree>1.5?2.70:2.05);
+  gl_PointSize=max(1.0*uPixelRatio,halfWidth*multiplier+0.80*uPixelRatio);
   vClass=aClass;
 }`;
 
@@ -226,12 +264,16 @@ in float vClass;
 out vec4 outColor;
 void main(){
   vec2 q=gl_PointCoord*2.0-1.0;
-  if(dot(q,q)>1.0)discard;
-  vec3 river=vec3(0.11,0.57,0.82);
-  vec3 stream=vec3(0.17,0.66,0.86);
-  vec3 canal=vec3(0.28,0.58,0.72);
+  float radius=length(q);
+  float aa=max(fwidth(radius)*1.35,0.025);
+  float coverage=1.0-smoothstep(1.0-aa,1.0,radius);
+  if(coverage<=0.0)discard;
+  vec3 river=vec3(0.075,0.43,0.64);
+  vec3 stream=vec3(0.10,0.50,0.69);
+  vec3 canal=vec3(0.16,0.43,0.58);
   vec3 color=vClass<0.5?river:(vClass<1.5?stream:canal);
-  outColor=vec4(color,0.90);
+  float alpha=vClass<0.5?0.86:(vClass<1.5?0.72:0.66);
+  outColor=vec4(color,coverage*alpha);
 }`;
 
   function assert(condition, message) {
@@ -343,11 +385,17 @@ void main(){
       viewport: gl.getUniformLocation(state.segmentProgram, 'uViewport'),
       verticalOrigin: gl.getUniformLocation(state.segmentProgram, 'uVerticalOrigin'),
       emphasis: gl.getUniformLocation(state.segmentProgram, 'uEmphasis'),
+      zoomScale: gl.getUniformLocation(state.segmentProgram, 'uZoomScale'),
+      pixelRatio: gl.getUniformLocation(state.segmentProgram, 'uPixelRatio'),
+      surfaceOffset: gl.getUniformLocation(state.segmentProgram, 'uSurfaceOffset'),
     };
     state.nodeUniforms = {
       viewProjection: gl.getUniformLocation(state.nodeProgram, 'uViewProjection'),
       verticalOrigin: gl.getUniformLocation(state.nodeProgram, 'uVerticalOrigin'),
       emphasis: gl.getUniformLocation(state.nodeProgram, 'uEmphasis'),
+      zoomScale: gl.getUniformLocation(state.nodeProgram, 'uZoomScale'),
+      pixelRatio: gl.getUniformLocation(state.nodeProgram, 'uPixelRatio'),
+      surfaceOffset: gl.getUniformLocation(state.nodeProgram, 'uSurfaceOffset'),
     };
 
     gl.enable(gl.DEPTH_TEST);
@@ -469,6 +517,82 @@ void main(){
     return value === NODATA ? state.elevationMin : value;
   }
 
+  function lowerBracketIndex(sortedValues, target) {
+    if (target <= sortedValues[0]) return 0;
+    if (target >= sortedValues[sortedValues.length - 1]) return sortedValues.length - 2;
+    let low = 0;
+    let high = sortedValues.length - 1;
+    while (high - low > 1) {
+      const middle = Math.floor((low + high) / 2);
+      if (sortedValues[middle] <= target) low = middle;
+      else high = middle;
+    }
+    return low;
+  }
+
+  function overviewSurfaceElevationAtWorld(x, z) {
+    const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+    const easting = state.worldCenterE + x;
+    const northing = state.worldCenterN - z;
+    const globalColumn = (easting - bounds[0]) / SOURCE_SPACING_M;
+    const globalRow = (bounds[3] - northing) / SOURCE_SPACING_M;
+    const column0 = lowerBracketIndex(state.overviewColumns, globalColumn);
+    const row0 = lowerBracketIndex(state.overviewRows, globalRow);
+    const column1 = Math.min(state.overviewColumns.length - 1, column0 + 1);
+    const row1 = Math.min(state.overviewRows.length - 1, row0 + 1);
+    const sourceColumn0 = state.overviewColumns[column0];
+    const sourceColumn1 = state.overviewColumns[column1];
+    const sourceRow0 = state.overviewRows[row0];
+    const sourceRow1 = state.overviewRows[row1];
+    const u = clamp((globalColumn - sourceColumn0) / Math.max(1, sourceColumn1 - sourceColumn0), 0, 1);
+    const v = clamp((globalRow - sourceRow0) / Math.max(1, sourceRow1 - sourceRow0), 0, 1);
+    const a = overviewSampleAt(column0, row0);
+    const b = overviewSampleAt(column1, row0);
+    const c = overviewSampleAt(column0, row1);
+    const d = overviewSampleAt(column1, row1);
+    if (a === NODATA || b === NODATA || c === NODATA || d === NODATA) {
+      return overviewElevationAtWorld(x, z);
+    }
+    if (u + v <= 1) return a + u * (b - a) + v * (c - a);
+    return (1 - v) * b + (1 - u) * c + (u + v - 1) * d;
+  }
+
+  function hydrologyNodeKey(x, z) {
+    return `${x}|${z}`;
+  }
+
+  function waterwayZoomScale() {
+    const span = Math.max(state.worldWidth, state.worldDepth, 1);
+    const ratio = span / Math.max(1, state.camera.distance);
+    return clamp(Math.pow(ratio, 0.28), 0.85, 2.15);
+  }
+
+  function waterwayHalfWidthCssPx(classIndex, sourceWidth) {
+    const baseHalf = classIndex === 0 ? 0.72 : (classIndex === 1 ? 0.42 : 0.38);
+    const sourceBoost = clamp((Math.log2(Math.max(2, sourceWidth + 1)) - 2) * 0.055, 0, 0.32);
+    return Math.max(0.42, (baseHalf + sourceBoost) * state.waterwayEmphasis * waterwayZoomScale());
+  }
+
+  function waterwayStyleMetrics() {
+    const classFullWidths = state.maxSourceWidthByClass.map((sourceWidth, classIndex) =>
+      Number((waterwayHalfWidthCssPx(classIndex, Math.max(2, sourceWidth)) * 2).toFixed(3))
+    );
+    return {
+      profile: WATERWAY_STYLE_PROFILE,
+      emphasis: Number(state.waterwayEmphasis.toFixed(3)),
+      zoom_scale: Number(waterwayZoomScale().toFixed(3)),
+      class_full_width_css_px: {
+        river: classFullWidths[0],
+        stream: classFullWidths[1],
+        canal: classFullWidths[2],
+      },
+      max_full_width_css_px: Math.max(...classFullWidths),
+      source_width_influence: 'log-compressed-and-capped',
+      overview_target_max_css_px: 1.8,
+      native_detail_target_max_css_px: 4.0,
+    };
+  }
+
   function buildOverviewGeometry() {
     loadingDetail.textContent = '构建全域连续地形几何';
     const width = state.overviewManifest.asset.grid[0];
@@ -562,7 +686,109 @@ void main(){
     state.hydrologySegments = segmentValues;
     state.hydrologyNodes = nodeValues;
     state.hydrologySegmentCount = segmentValues.length / 8;
-    state.hydrologyNodeCount = nodeValues.length / 5;
+    state.hydrologySourceNodeCount = nodeValues.length / 5;
+    assert(state.hydrologySegmentCount === state.hydrologyManifest.segments.count, '水系线段数量与清单不一致');
+    assert(state.hydrologySourceNodeCount === state.hydrologyManifest.nodes.count, '水系源节点数量与清单不一致');
+
+    const topology = new Map();
+    const registerNode = (x, elevation, z, classValue, width, directionX, directionZ) => {
+      const key = hydrologyNodeKey(x, z);
+      let record = topology.get(key);
+      if (!record) {
+        record = {
+          key,
+          x,
+          z,
+          nativeElevation: elevation,
+          overviewElevation: null,
+          classValue,
+          width,
+          degree: 0,
+          directions: [],
+        };
+        topology.set(key, record);
+      }
+      record.classValue = Math.min(record.classValue, classValue);
+      record.width = Math.max(record.width, width);
+      record.degree += 1;
+      const length = Math.hypot(directionX, directionZ);
+      if (length > 1e-6) record.directions.push([directionX / length, directionZ / length]);
+      const classIndex = clamp(Math.round(classValue), 0, 2);
+      state.maxSourceWidthByClass[classIndex] = Math.max(state.maxSourceWidthByClass[classIndex], width);
+      return record;
+    };
+
+    for (let offset = 0; offset < segmentValues.length; offset += 8) {
+      const startX = segmentValues[offset];
+      const startElevation = segmentValues[offset + 1];
+      const startZ = segmentValues[offset + 2];
+      const endX = segmentValues[offset + 3];
+      const endElevation = segmentValues[offset + 4];
+      const endZ = segmentValues[offset + 5];
+      const classValue = segmentValues[offset + 6];
+      const width = segmentValues[offset + 7];
+      registerNode(startX, startElevation, startZ, classValue, width, endX - startX, endZ - startZ);
+      registerNode(endX, endElevation, endZ, classValue, width, startX - endX, startZ - endZ);
+    }
+
+    for (const record of topology.values()) {
+      record.overviewElevation = overviewSurfaceElevationAtWorld(record.x, record.z);
+    }
+
+    const overviewSegmentValues = new Float32Array(segmentValues);
+    for (let offset = 0; offset < segmentValues.length; offset += 8) {
+      const start = topology.get(hydrologyNodeKey(segmentValues[offset], segmentValues[offset + 2]));
+      const end = topology.get(hydrologyNodeKey(segmentValues[offset + 3], segmentValues[offset + 5]));
+      assert(start && end, '水系线段端点拓扑缺失');
+      overviewSegmentValues[offset + 1] = start.overviewElevation;
+      overviewSegmentValues[offset + 4] = end.overviewElevation;
+    }
+
+    const nativeNodeValues = [];
+    const overviewNodeValues = [];
+    let endpointCount = 0;
+    let junctionCount = 0;
+    let bendCapCount = 0;
+    for (const record of topology.values()) {
+      let include = record.degree !== 2;
+      if (record.degree === 1) endpointCount += 1;
+      if (record.degree >= 3) junctionCount += 1;
+      if (record.degree === 2 && record.directions.length >= 2) {
+        const first = record.directions[0];
+        const second = record.directions[1];
+        const directionDot = clamp(first[0] * second[0] + first[1] * second[1], -1, 1);
+        if (directionDot > -0.92) {
+          include = true;
+          bendCapCount += 1;
+        }
+      }
+      if (!include) continue;
+      nativeNodeValues.push(
+        record.x,
+        record.nativeElevation,
+        record.z,
+        record.classValue,
+        record.width,
+        record.degree
+      );
+      overviewNodeValues.push(
+        record.x,
+        record.overviewElevation,
+        record.z,
+        record.classValue,
+        record.width,
+        record.degree
+      );
+    }
+
+    state.hydrologyEndpointCount = endpointCount;
+    state.hydrologyJunctionCount = junctionCount;
+    state.hydrologyBendCapCount = bendCapCount;
+    state.hydrologyRenderNodeCount = nativeNodeValues.length / 6;
+    state.hydrologyVisualJoinGapPx = 0;
+    assert(state.hydrologyRenderNodeCount > 0, '水系连续接缝节点为空');
+    assert(state.hydrologyRenderNodeCount < state.hydrologySourceNodeCount, '水系仍在逐顶点绘制粗圆点');
+    assert(state.hydrologyJunctionCount > 0, '水系汇流节点为空');
 
     const corners = new Float32Array([
       0, -1,
@@ -571,44 +797,66 @@ void main(){
       1, 1,
     ]);
     const cornerBuffer = gl.createBuffer();
-    state.segmentInstanceBuffer = gl.createBuffer();
-    state.segmentVao = gl.createVertexArray();
-    gl.bindVertexArray(state.segmentVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, corners, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.segmentInstanceBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, segmentValues, gl.STATIC_DRAW);
-    const segmentStride = 8 * 4;
-    gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, segmentStride, 0);
-    gl.vertexAttribDivisor(1, 1);
-    gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(2, 3, gl.FLOAT, false, segmentStride, 3 * 4);
-    gl.vertexAttribDivisor(2, 1);
-    gl.enableVertexAttribArray(3);
-    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, segmentStride, 6 * 4);
-    gl.vertexAttribDivisor(3, 1);
-    gl.enableVertexAttribArray(4);
-    gl.vertexAttribPointer(4, 1, gl.FLOAT, false, segmentStride, 7 * 4);
-    gl.vertexAttribDivisor(4, 1);
-    gl.bindVertexArray(null);
+    const createSegmentVao = values => {
+      const vao = gl.createVertexArray();
+      const instanceBuffer = gl.createBuffer();
+      gl.bindVertexArray(vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuffer);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, values, gl.STATIC_DRAW);
+      const segmentStride = 8 * 4;
+      gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(1, 3, gl.FLOAT, false, segmentStride, 0);
+      gl.vertexAttribDivisor(1, 1);
+      gl.enableVertexAttribArray(2);
+      gl.vertexAttribPointer(2, 3, gl.FLOAT, false, segmentStride, 3 * 4);
+      gl.vertexAttribDivisor(2, 1);
+      gl.enableVertexAttribArray(3);
+      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, segmentStride, 6 * 4);
+      gl.vertexAttribDivisor(3, 1);
+      gl.enableVertexAttribArray(4);
+      gl.vertexAttribPointer(4, 1, gl.FLOAT, false, segmentStride, 7 * 4);
+      gl.vertexAttribDivisor(4, 1);
+      gl.bindVertexArray(null);
+      return { vao, instanceBuffer };
+    };
 
-    state.nodeBuffer = gl.createBuffer();
-    state.nodeVao = gl.createVertexArray();
-    gl.bindVertexArray(state.nodeVao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, state.nodeBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, nodeValues, gl.STATIC_DRAW);
-    const nodeStride = 5 * 4;
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, nodeStride, 0);
-    gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, nodeStride, 3 * 4);
-    gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, nodeStride, 4 * 4);
-    gl.bindVertexArray(null);
+    const createNodeVao = values => {
+      const vao = gl.createVertexArray();
+      const buffer = gl.createBuffer();
+      gl.bindVertexArray(vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(values), gl.STATIC_DRAW);
+      const nodeStride = 6 * 4;
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, nodeStride, 0);
+      gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(1, 1, gl.FLOAT, false, nodeStride, 3 * 4);
+      gl.enableVertexAttribArray(2);
+      gl.vertexAttribPointer(2, 1, gl.FLOAT, false, nodeStride, 4 * 4);
+      gl.enableVertexAttribArray(3);
+      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, nodeStride, 5 * 4);
+      gl.bindVertexArray(null);
+      return { vao, buffer };
+    };
+
+    const overviewSegments = createSegmentVao(overviewSegmentValues);
+    const nativeSegments = createSegmentVao(segmentValues);
+    const overviewNodes = createNodeVao(overviewNodeValues);
+    const nativeNodes = createNodeVao(nativeNodeValues);
+    state.overviewSegmentVao = overviewSegments.vao;
+    state.overviewSegmentInstanceBuffer = overviewSegments.instanceBuffer;
+    state.nativeSegmentVao = nativeSegments.vao;
+    state.nativeSegmentInstanceBuffer = nativeSegments.instanceBuffer;
+    state.overviewNodeVao = overviewNodes.vao;
+    state.overviewNodeBuffer = overviewNodes.buffer;
+    state.nativeNodeVao = nativeNodes.vao;
+    state.nativeNodeBuffer = nativeNodes.buffer;
     state.hydrologyReady = true;
   }
 
@@ -1011,6 +1259,13 @@ void main(){
   function drawHydrology() {
     if (!state.waterwaysVisible || !state.hydrologyReady) return;
     const gl = state.gl;
+    const nativeMode = state.detailActive && state.camera.distance <= DETAIL_ENABLE_DISTANCE_M;
+    const segmentVao = nativeMode ? state.nativeSegmentVao : state.overviewSegmentVao;
+    const nodeVao = nativeMode ? state.nativeNodeVao : state.overviewNodeVao;
+    const pixelRatio = canvas.width / Math.max(1, canvas.clientWidth);
+    const zoomScale = waterwayZoomScale();
+    const surfaceOffset = nativeMode ? 3.5 : 1.6;
+
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
@@ -1021,15 +1276,21 @@ void main(){
     gl.uniform2f(state.segmentUniforms.viewport, canvas.width, canvas.height);
     gl.uniform1f(state.segmentUniforms.verticalOrigin, state.verticalOrigin);
     gl.uniform1f(state.segmentUniforms.emphasis, state.waterwayEmphasis);
-    gl.bindVertexArray(state.segmentVao);
+    gl.uniform1f(state.segmentUniforms.zoomScale, zoomScale);
+    gl.uniform1f(state.segmentUniforms.pixelRatio, pixelRatio);
+    gl.uniform1f(state.segmentUniforms.surfaceOffset, surfaceOffset);
+    gl.bindVertexArray(segmentVao);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, state.hydrologySegmentCount);
 
     gl.useProgram(state.nodeProgram);
     gl.uniformMatrix4fv(state.nodeUniforms.viewProjection, false, state.viewProjection);
     gl.uniform1f(state.nodeUniforms.verticalOrigin, state.verticalOrigin);
     gl.uniform1f(state.nodeUniforms.emphasis, state.waterwayEmphasis);
-    gl.bindVertexArray(state.nodeVao);
-    gl.drawArrays(gl.POINTS, 0, state.hydrologyNodeCount);
+    gl.uniform1f(state.nodeUniforms.zoomScale, zoomScale);
+    gl.uniform1f(state.nodeUniforms.pixelRatio, pixelRatio);
+    gl.uniform1f(state.nodeUniforms.surfaceOffset, surfaceOffset);
+    gl.bindVertexArray(nodeVao);
+    gl.drawArrays(gl.POINTS, 0, state.hydrologyRenderNodeCount);
 
     gl.bindVertexArray(null);
     gl.enable(gl.CULL_FACE);
@@ -1177,8 +1438,9 @@ void main(){
       updateQa();
     });
     $('waterwayEmphasis').addEventListener('input', event => {
-      state.waterwayEmphasis = Number(event.target.value);
+      state.waterwayEmphasis = clamp(Number(event.target.value), WATERWAY_MIN_EMPHASIS, WATERWAY_MAX_EMPHASIS);
       state.dirty = true;
+      updateQa();
     });
     $('labelsToggle').addEventListener('change', event => {
       state.labelsVisible = event.target.checked;
@@ -1328,8 +1590,11 @@ void main(){
     $('cameraScale').textContent = `${(state.camera.distance / 1000).toFixed(state.camera.distance < 10_000 ? 2 : 1)} km`;
     const counts = state.hydrologyManifest.topology.record_counts;
     $('waterwayStatus').textContent = `河 ${counts.river.toLocaleString()} · 溪 ${counts.stream.toLocaleString()} · 渠 ${counts.canal.toLocaleString()}`;
+    const style = waterwayStyleMetrics();
+    $('waterwayWidthStatus').textContent = `${style.max_full_width_css_px.toFixed(1)} px · 随缩放分级`;
+    $('waterwayJoinStatus').textContent = `汇流 ${state.hydrologyJunctionCount.toLocaleString()} · 接缝 0 px`;
     const detailText = state.detailActive ? ` · 原生近景 ${state.detailMesh.triangleCount.toLocaleString()} 三角形` : '';
-    renderInfo.textContent = `桂林全域 ${state.overviewMesh?.triangleCount.toLocaleString() || 0} 三角形${detailText} · OSM 水系 ${state.hydrologySegmentCount.toLocaleString()} 段`;
+    renderInfo.textContent = `桂林全域 ${state.overviewMesh?.triangleCount.toLocaleString() || 0} 三角形${detailText} · 细线连通水系 ${state.hydrologySegmentCount.toLocaleString()} 段`;
   }
 
   function updateQa() {
@@ -1372,7 +1637,17 @@ void main(){
       vertical_scale: 1,
       osm_linear_waterways_loaded: state.hydrologyReady,
       hydrology_segment_count: state.hydrologySegmentCount,
-      hydrology_node_count: state.hydrologyNodeCount,
+      hydrology_node_count: state.hydrologySourceNodeCount,
+      hydrology_render_node_count: state.hydrologyRenderNodeCount,
+      hydrology_endpoint_count: state.hydrologyEndpointCount,
+      hydrology_junction_count: state.hydrologyJunctionCount,
+      hydrology_bend_cap_count: state.hydrologyBendCapCount,
+      hydrology_visual_join_gap_px: state.hydrologyVisualJoinGapPx,
+      hydrology_visual_join_policy: 'overlapped-segments-and-degree-caps',
+      hydrology_overview_surface_drape: true,
+      hydrology_native_source_drape: true,
+      hydrology_active_drape: state.detailActive ? 'native-source' : 'overview-surface',
+      waterway_style: waterwayStyleMetrics(),
       waterway_record_counts: state.hydrologyManifest?.topology?.record_counts || null,
       centerline_coordinates_mutated: false,
       manual_centerline_added: false,
@@ -1470,6 +1745,7 @@ void main(){
 
     window.__GUILIN_FULL_MAP_TEST_API = {
       getState: updateQa,
+      getWaterwayStyle: waterwayStyleMetrics,
       resetFull() {
         resetFullView();
         return updateQa();
@@ -1490,7 +1766,7 @@ void main(){
         return updateQa();
       },
       setWaterwayEmphasis(value) {
-        state.waterwayEmphasis = clamp(Number(value), 0.7, 2.4);
+        state.waterwayEmphasis = clamp(Number(value), WATERWAY_MIN_EMPHASIS, WATERWAY_MAX_EMPHASIS);
         $('waterwayEmphasis').value = String(state.waterwayEmphasis);
         state.dirty = true;
         return updateQa();
