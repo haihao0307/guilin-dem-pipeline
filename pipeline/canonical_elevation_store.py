@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Iterable
 
 import numpy as np
+from affine import Affine
+from rasterio.windows import Window
 
 
 class CanonicalElevationStore:
-    """Read pixel-exact Guilin elevation values from the uncompressed canonical shard store."""
+    """Raster-like reader for the pixel-exact uncompressed Guilin elevation shards."""
 
     def __init__(self, manifest_path: Path):
         self.manifest_path = Path(manifest_path)
@@ -17,14 +19,29 @@ class CanonicalElevationStore:
         self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
         if self.manifest.get("schema") != "guilin-canonical-elevation-store/v1":
             raise ValueError("unsupported canonical elevation store")
-        self.aoi_column, self.aoi_row, self.width, self.height = [int(value) for value in self.manifest["aoi"]["source_window"]]
+        if self.manifest.get("status") not in {
+            "pixel_exact_verified_cutover_pending",
+            "authoritative_production_source",
+        }:
+            raise ValueError(f"canonical elevation store is not verified: {self.manifest.get('status')}")
+
+        self.aoi_column, self.aoi_row, self.aoi_width, self.aoi_height = [
+            int(value) for value in self.manifest["aoi"]["source_window"]
+        ]
         self.chunk_size = int(self.manifest["logical_chunks"]["chunk_grid_nominal"][0])
         self.chunk_rows = int(self.manifest["logical_chunks"]["matrix_rows"])
         self.chunk_columns = int(self.manifest["logical_chunks"]["matrix_columns"])
         self.nodata = int(self.manifest["spatial_reference"]["nodata"])
         self.spacing = float(self.manifest["spatial_reference"]["native_spacing_m"][0])
+        self.width, self.height = [int(value) for value in self.manifest["spatial_reference"]["source_grid"]]
+        self.count = 1
+        self.dtypes = ("int16",)
+        self.crs = self.manifest["spatial_reference"]["crs"]
         bounds = [float(value) for value in self.manifest["aoi"]["source_sample_center_bounds_epsg32649"]]
         self.west_center, self.south_center, self.east_center, self.north_center = bounds
+        source_west_edge = self.west_center - self.spacing * 0.5 - self.aoi_column * self.spacing
+        source_north_edge = self.north_center + self.spacing * 0.5 + self.aoi_row * self.spacing
+        self.transform = Affine(self.spacing, 0.0, source_west_edge, 0.0, -self.spacing, source_north_edge)
         self._chunks = {
             tuple(int(value) for value in chunk["matrix_index"]): chunk
             for chunk in self.manifest["chunks"]
@@ -37,7 +54,10 @@ class CanonicalElevationStore:
     def _shard(self, relative_path: str) -> np.memmap:
         result = self._memmaps.get(relative_path)
         if result is None:
-            result = np.memmap(self.root / relative_path, dtype=np.uint8, mode="r")
+            path = self.root / relative_path
+            if not path.is_file():
+                raise FileNotFoundError(path)
+            result = np.memmap(path, dtype=np.uint8, mode="r")
             self._memmaps[relative_path] = result
         return result
 
@@ -59,8 +79,8 @@ class CanonicalElevationStore:
         output = np.full((height, width), self.nodata, dtype="<i2")
         left = max(0, column)
         top = max(0, row)
-        right = min(self.width, column + width)
-        bottom = min(self.height, row + height)
+        right = min(self.aoi_width, column + width)
+        bottom = min(self.aoi_height, row + height)
         if left >= right or top >= bottom:
             return output
         first_chunk_column = left // self.chunk_size
@@ -87,12 +107,44 @@ class CanonicalElevationStore:
         return output
 
     def read_source_window(self, column: int, row: int, width: int, height: int) -> np.ndarray:
-        return self.read_aoi_window(column - self.aoi_column, row - self.aoi_row, width, height)
+        return self.read_aoi_window(
+            int(column) - self.aoi_column,
+            int(row) - self.aoi_row,
+            int(width),
+            int(height),
+        )
+
+    def read(
+        self,
+        indexes: int = 1,
+        window: Window | tuple[float, float, float, float] | None = None,
+        boundless: bool = False,
+        out_dtype: str | np.dtype | None = None,
+    ) -> np.ndarray:
+        if indexes != 1:
+            raise ValueError("canonical store has one band")
+        if window is None:
+            raise ValueError("full source-grid read is intentionally disabled; provide a window")
+        if isinstance(window, Window):
+            column, row, width, height = window.col_off, window.row_off, window.width, window.height
+        else:
+            column, row, width, height = window
+        values = (float(column), float(row), float(width), float(height))
+        if any(not value.is_integer() for value in values):
+            raise ValueError(f"fractional source window is unsupported: {values}")
+        column_i, row_i, width_i, height_i = [int(value) for value in values]
+        if not boundless:
+            if column_i < 0 or row_i < 0 or column_i + width_i > self.width or row_i + height_i > self.height:
+                raise ValueError("source window exceeds source grid")
+        result = self.read_source_window(column_i, row_i, width_i, height_i)
+        if out_dtype is not None:
+            result = result.astype(out_dtype, copy=False)
+        return result
 
     def index(self, easting: float, northing: float) -> tuple[int, int]:
-        column = int(math.floor((float(easting) - (self.west_center - self.spacing * 0.5)) / self.spacing))
-        row = int(math.floor(((self.north_center + self.spacing * 0.5) - float(northing)) / self.spacing))
-        return row + self.aoi_row, column + self.aoi_column
+        column = int(math.floor((float(easting) - self.transform.c) / self.spacing))
+        row = int(math.floor((self.transform.f - float(northing)) / self.spacing))
+        return row, column
 
     def sample(self, coordinates: Iterable[tuple[float, float]], indexes: int = 1, masked: bool = True):
         if indexes != 1:
