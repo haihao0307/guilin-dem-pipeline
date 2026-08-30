@@ -246,7 +246,7 @@ MAJOR_MAINSTEM_KEYS = {1: "li", 2: "xiang", 3: "zi"}
 MAJOR_MAINSTEM_MIN_METRIC = {1: 150.0, 2: 175.0, 3: 160.0}
 
 
-def feature_name_blob(properties: dict[str, Any]) -> str:
+def feature_name_values(properties: dict[str, Any]) -> list[str]:
     values: list[str] = []
     for key, value in properties.items():
         lowered = str(key).lower()
@@ -255,14 +255,23 @@ def feature_name_blob(properties: dict[str, Any]) -> str:
             "name_zh", "name_en", "river_name",
         }:
             if value not in (None, ""):
-                values.append(str(value))
-    return " | ".join(values).lower()
+                values.append(str(value).strip())
+    return values
+
+
+def normalize_river_name(value: str) -> str:
+    return " ".join(value.strip().lower().replace("_", " ").split())
+
+
+def feature_name_blob(properties: dict[str, Any]) -> str:
+    return " | ".join(feature_name_values(properties))
 
 
 def mainstem_code(properties: dict[str, Any]) -> int:
-    text = feature_name_blob(properties)
+    values = {normalize_river_name(value) for value in feature_name_values(properties)}
     for code, patterns in MAJOR_MAINSTEM_PATTERNS.items():
-        if any(pattern.lower() in text for pattern in patterns):
+        aliases = {normalize_river_name(pattern) for pattern in patterns}
+        if values.intersection(aliases):
             return code
     marker = str(properties.get("mainstem") or properties.get("is_mainstem") or "").strip().lower()
     system = str(properties.get("system") or "").strip().lower()
@@ -271,7 +280,7 @@ def mainstem_code(properties: dict[str, Any]) -> int:
             return 1
         if system in {"xiang", "xiangjiang", "xiang-jiang"}:
             return 2
-        if system in {"zi", "zijiang", "zi-jiang", "zishui"}:
+        if system in {"zi", "zijiang", "zi-jiang", "zishui", "fuyi"}:
             return 3
     return 0
 
@@ -404,7 +413,6 @@ def build_hydrology(
         raise RuntimeError(f"unable to drape {len(unresolved_keys)} waterway nodes onto the native DEM")
 
     outgoing: dict[tuple[float, float], list[int]] = {}
-    adjacent: dict[tuple[float, float], list[int]] = {}
     directed_edges: list[dict[str, Any]] = []
     for source in raw_segments:
         start_key = source["start"]
@@ -421,8 +429,6 @@ def build_hydrology(
         edge_index = len(directed_edges)
         directed_edges.append(edge)
         outgoing.setdefault(upstream, []).append(edge_index)
-        adjacent.setdefault(start_key, []).append(edge_index)
-        adjacent.setdefault(end_key, []).append(edge_index)
 
     accumulated = {key: 0.0 for key in valid_node_data}
     for key in sorted(valid_node_data, key=lambda item: node_rank(item, valid_node_data), reverse=True):
@@ -443,36 +449,9 @@ def build_hydrology(
     for edge, value in zip(directed_edges, log_flow, strict=True):
         edge["flow_quantile"] = float(np.clip((float(value) - low) / span, 0.0, 1.0))
 
-    # Extend named main-stem styling across short unnamed OSM way breaks. This changes style only.
-    # Centerline coordinates and segment membership remain untouched.
-    queue: list[int] = [index for index, edge in enumerate(directed_edges) if edge["major_code"]]
-    visited = set(queue)
-    while queue:
-        current_index = queue.pop(0)
-        current = directed_edges[current_index]
-        major_code = int(current["major_code"])
-        for node in (current["upstream"], current["downstream"]):
-            candidates = [
-                index for index in adjacent.get(node, [])
-                if index not in visited
-                and directed_edges[index]["waterway"] == "river"
-                and not directed_edges[index]["major_code"]
-            ]
-            if not candidates:
-                continue
-            candidates.sort(key=lambda index: (
-                directed_edges[index]["flow_quantile"],
-                directed_edges[index]["source_width_m"],
-                directed_edges[index]["length_m"],
-            ), reverse=True)
-            chosen = candidates[0]
-            candidate = directed_edges[chosen]
-            if candidate["flow_quantile"] < 0.72 and candidate["source_width_m"] < 30.0:
-                continue
-            candidate["major_code"] = major_code
-            candidate["mainstem_style_propagated"] = True
-            visited.add(chosen)
-            queue.append(chosen)
+    # Width and deep colour are reserved for explicitly named OSM main-stem features.
+    # Unnamed gaps remain visible as ordinary river segments, so no tributary can inherit
+    # main-stem styling through a branching graph. Source geometry stays unchanged.
 
     mainstem_segment_counts = {"li": 0, "xiang": 0, "zi": 0}
     segment_values: list[float] = []
@@ -512,6 +491,12 @@ def build_hydrology(
     if missing_mainstems:
         examples = sorted(named_rivers_seen)[:80]
         raise RuntimeError(f"missing named main-stem systems {missing_mainstems}; named rivers seen: {examples}")
+
+    explicit_mainstem_segment_count = sum(mainstem_segment_counts.values())
+    if not 1_000 <= explicit_mainstem_segment_count <= 10_000:
+        raise RuntimeError(
+            f"explicit main-stem segment count outside reviewed range: {explicit_mainstem_segment_count}"
+        )
 
     node_values: list[float] = []
     for key in sorted(used_keys):
@@ -587,7 +572,9 @@ def build_hydrology(
             "hierarchy_metric": "DEM-downhill accumulated upstream network length with source-width support",
             "gradient_direction": "lighter-and-thinner-upstream_to_darker-and-wider-downstream",
             "mainstem_minimum_metrics": {MAJOR_MAINSTEM_KEYS[key]: value for key, value in MAJOR_MAINSTEM_MIN_METRIC.items()},
-            "style_only_mainstem_gap_propagation": True,
+            "mainstem_classification": "exact-match-on-individual-OSM-name-values",
+            "style_only_mainstem_gap_propagation": False,
+            "explicit_mainstem_segment_count": explicit_mainstem_segment_count,
             "planimetry_unchanged": True,
         },
         "segments": {

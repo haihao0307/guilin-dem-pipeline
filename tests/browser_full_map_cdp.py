@@ -179,6 +179,9 @@ def validate(result: dict, require_detail: bool = False) -> list[str]:
     for name in ("li", "xiang", "zi"):
         if int(mainstem_counts.get(name, 0)) <= 0:
             failures.append(f"missing {name} mainstem segments")
+    explicit_mainstem_total = sum(int(mainstem_counts.get(name, 0)) for name in ("li", "xiang", "zi"))
+    if not 1_000 <= explicit_mainstem_total <= 10_000:
+        failures.append(f"explicit mainstem segment count outside reviewed range: {explicit_mainstem_total}")
     counts = result.get("waterway_record_counts") or {}
     if sum(int(counts.get(key, 0)) for key in ("river", "stream", "canal")) < 500:
         failures.append(f"waterway record count too small: {counts}")
@@ -214,7 +217,7 @@ def waterway_pixel_metrics(cdp: CDP) -> dict:
         const red = pixels[index];
         const green = pixels[index + 1];
         const blue = pixels[index + 2];
-        const water = blue >= 145 && blue - green >= 22 && green - red >= 42;
+        const water = blue >= 82 && blue - green >= 5 && green - red >= 16;
         if (water) {
           mask[pixel] = 1;
           waterPixelCount += 1;
