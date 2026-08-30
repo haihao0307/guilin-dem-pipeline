@@ -1,0 +1,121 @@
+(()=>{'use strict';const CONTRACT_URL='./sample-contract.json';const DATA_ROOT='./data/';const MANIFEST_FILE='NATIVE_ELEVATION_MANIFEST.json';const HYDROLOGY_MANIFEST_FILE='osm-waterways-manifest.json';const EXPECTED_SOURCE_SHA='9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';const EXPECTED_TILE_SHA='5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215';const EXPECTED_TILE_BYTES=8_388_608;const TILE_FILE='native-r07-c02-2048x2048-i16.bin';const TILE_GRID=2048;const WINDOW_X=1330;const WINDOW_Y=521;const SAMPLE_GRID=81;const SPACING_M=12.5;const SAMPLE_SIDE_M=1000;const SAMPLE_CENTER_E=448_643.75;const SAMPLE_CENTER_N=2_740_856.25;const SAMPLE_WEST=SAMPLE_CENTER_E-SAMPLE_SIDE_M*0.5;const SAMPLE_EAST=SAMPLE_CENTER_E+SAMPLE_SIDE_M*0.5;const SAMPLE_SOUTH=SAMPLE_CENTER_N-SAMPLE_SIDE_M*0.5;const SAMPLE_NORTH=SAMPLE_CENTER_N+SAMPLE_SIDE_M*0.5;const TILE_WEST=431_518.75;const TILE_NORTH=2_747_868.75;const SEED=20260830;const MAX_DPR=1.75;const $=id=>document.getElementById(id);const canvas=$('terrainCanvas');const loadingCard=$('loadingCard');const loadingDetail=$('loadingDetail');const errorCard=$('errorCard');const errorMessage=$('errorMessage');const runtimeErrors=[];const state={contract:null,manifest:null,hydrologyManifest:null,truth:null,fields:null,minimum:0,maximum:1,mean:0,microMinimum:0,microMaximum:0,hydrologySegments:[],gl:null,terrainProgram:null,waterProgram:null,ecologyProgram:null,terrainMesh:null,waterMesh:null,ecologyMesh:null,mode:0,showWater:true,showMicro:true,showEcology:true,camera:{target:[0,125,0],yaw:-0.76,pitch:0.53,distance:1450,minDistance:150,maxDistance:4800,},projection:new Float32Array(16),view:new Float32Array(16),viewProjection:new Float32Array(16),inverseViewProjection:new Float32Array(16),pointers:new Map(),pinch:null,ready:false,dirty:true,sourceShaVerified:false,tileShaVerified:false,hydrologyShaVerified:false,frameSamples:[],lastFrameAt:0,};window.addEventListener('error',event=>{runtimeErrors.push(String(event.error?.stack||event.message||'window error'));updateQa();});window.addEventListener('unhandledrejection',event=>{runtimeErrors.push(String(event.reason?.stack||event.reason||'unhandled rejection'));updateQa();});const TERRAIN_VERTEX_SHADER=`#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in float aTruth;
+layout(location=3) in float aSlope;
+layout(location=4) in float aCurvature;
+layout(location=5) in float aRock;
+layout(location=6) in float aPaddy;
+layout(location=7) in float aWet;
+layout(location=8) in float aForest;
+layout(location=9) in float aBamboo;
+layout(location=10) in float aBund;
+layout(location=11) in float aWater;
+layout(location=12) in float aFieldSeed;
+layout(location=13) in float aMicro;
+uniform mat4 uViewProjection;
+uniform float uMicroStrength;
+out vec3 vNormal;
+out vec3 vWorld;
+out float vTruth;
+out float vSlope;
+out float vCurvature;
+out float vRock;
+out float vPaddy;
+out float vWet;
+out float vForest;
+out float vBamboo;
+out float vBund;
+out float vWater;
+out float vFieldSeed;
+void main(){
+  vec3 position=aPosition;
+  position.y+=aMicro*uMicroStrength;
+  vNormal=aNormal;
+  vWorld=position;
+  vTruth=aTruth;
+  vSlope=aSlope;
+  vCurvature=aCurvature;
+  vRock=aRock;
+  vPaddy=aPaddy;
+  vWet=aWet;
+  vForest=aForest;
+  vBamboo=aBamboo;
+  vBund=aBund;
+  vWater=aWater;
+  vFieldSeed=aFieldSeed;
+  gl_Position=uViewProjection*vec4(position,1.0);
+}`;const TERRAIN_FRAGMENT_SHADER=`#version 300 es
+precision highp float;
+in vec3 vNormal;
+in vec3 vWorld;
+in float vTruth;
+in float vSlope;
+in float vCurvature;
+in float vRock;
+in float vPaddy;
+in float vWet;
+in float vForest;
+in float vBamboo;
+in float vBund;
+in float vWater;
+in float vFieldSeed;
+uniform int uMode;
+uniform float uMinElevation;
+uniform float uMaxElevation;
+uniform vec3 uEye;
+out vec4 outColor;
+float sat(float x){return clamp(x,0.0,1.0);}
+vec3 truthRamp(float t){
+  if(t<.20)return mix(vec3(.08,.17,.105),vec3(.14,.27,.14),t/.20);
+  if(t<.48)return mix(vec3(.14,.27,.14),vec3(.32,.38,.20),(t-.20)/.28);
+  if(t<.75)return mix(vec3(.32,.38,.20),vec3(.46,.45,.31),(t-.48)/.27);
+  return mix(vec3(.46,.45,.31),vec3(.72,.72,.65),(t-.75)/.25);
+}
+vec3 diagnostic(float value,vec3 low,vec3 high){return mix(low,high,sat(value));}
+void main(){
+  vec3 n=normalize(vNormal);
+  vec3 sun=normalize(vec3(-.42,.79,.38));
+  vec3 fill=normalize(vec3(.55,.36,-.49));
+  float light=.30+max(dot(n,sun),0.0)*.60+max(dot(n,fill),0.0)*.10;
+  float elev=sat((vTruth-uMinElevation)/max(1.0,uMaxElevation-uMinElevation));
+  vec3 color;
+  if(uMode==1){
+    color=truthRamp(elev);
+  }else if(uMode==2){
+    vec3 concave=vec3(.13,.28,.29);
+    vec3 neutral=vec3(.34,.37,.26);
+    vec3 convex=vec3(.70,.58,.36);
+    color=vCurvature<0.0?mix(neutral,concave,sat(-vCurvature)):mix(neutral,convex,sat(vCurvature));
+    color=mix(color,vec3(.76,.75,.70),vRock*.52);
+  }else if(uMode==3){
+    color=diagnostic(vPaddy,vec3(.08,.105,.075),vec3(.79,.83,.27));
+    color=mix(color,vec3(.25,.17,.08),vBund*.82);
+  }else if(uMode==4){
+    color=diagnostic(vWet,vec3(.20,.15,.10),vec3(.10,.56,.62));
+  }else if(uMode==5){
+    color=diagnostic(vRock,vec3(.10,.16,.10),vec3(.78,.78,.72));
+  }else{
+    vec3 soil=mix(vec3(.29,.25,.16),vec3(.42,.35,.20),vFieldSeed*.35);
+    vec3 paddy=mix(vec3(.48,.53,.19),vec3(.65,.64,.26),vFieldSeed*.55);
+    vec3 forest=mix(vec3(.075,.19,.09),vec3(.12,.27,.11),vWet*.42);
+    vec3 bamboo=vec3(.24,.42,.18);
+    vec3 rock=mix(vec3(.38,.39,.35),vec3(.59,.58,.52),sat(elev+.18));
+    color=soil;
+    color=mix(color,paddy,vPaddy*.90);
+    color=mix(color,forest,vForest*.90);
+    color=mix(color,bamboo,vBamboo*.76);
+    color=mix(color,rock,vRock*.92);
+    color=mix(color,vec3(.21,.16,.075),vBund*.84);
+    color=mix(color,vec3(.11,.31,.31),vWater*.55);
+    color*=mix(.92,1.07,sat(vCurvature*.5+.5));
+  }
+  float distanceToEye=length(vWorld-uEye);
+  float fog=smoothstep(1550.0,4200.0,distanceToEye);
+  vec3 lit=pow(max(color*light,vec3(0.0)),vec3(.90));
+  lit=mix(lit,vec3(.075,.115,.095),fog*.62);
+  outColor=vec4(lit,1.0);
+}`;const WATER_VERTEX_SHADER=`#version 300 es
+precision highp float;
+layout(location=0) in vec3
