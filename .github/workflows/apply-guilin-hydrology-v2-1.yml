@@ -40,17 +40,14 @@ jobs:
           grep -q 'hydrology_dropped_segment_count' viewer/app.js
           grep -q 'nearest-valid-native-dem-cell' pipeline/build_online_assets.py
           grep -q 'core_after_two_fraction' tests/browser_full_map_cdp.py
-          grep -q 'source_segment_count' .github/workflows/guilin-online-full-map.yml
           test ! -e .github/workflows/guilin-continuous-full-map.yml
           git diff --check
 
-      - name: Commit the corrected single publication pipeline
+      - name: Commit renderer, continuity builder and browser evidence checks
         run: |
           set -euo pipefail
           git config user.name "Haihao_Nature Grace HK"
           git config user.email "haihao0307@gmail.com"
-          git add viewer/app.js viewer/HYDROLOGY_RENDER_V2.json pipeline/build_online_assets.py tests/browser_full_map_cdp.py .github/workflows/guilin-online-full-map.yml
-          git rm .github/workflows/guilin-continuous-full-map.yml
-          git rm tools/apply_guilin_hydrology_v2_1.py.gz.b64 .github/workflows/apply-guilin-hydrology-v2-1.yml
+          git add viewer/app.js viewer/HYDROLOGY_RENDER_V2.json pipeline/build_online_assets.py tests/browser_full_map_cdp.py
           git commit -m "fix(guilin): preserve every waterway segment and enforce thin visual QA"
           git push origin HEAD:main
