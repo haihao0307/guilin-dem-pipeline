@@ -1,0 +1,51 @@
+name: Apply Guilin distilled runtime v5
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/apply_guilin_distilled_runtime_v5.py
+      - .github/workflows/apply-guilin-distilled-runtime-v5.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-guilin-distilled-runtime-v5
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply viewer and QA migration
+        run: |
+          set -euo pipefail
+          python tools/apply_guilin_distilled_runtime_v5.py
+          node --check viewer/app.js
+          python -m py_compile tests/browser_full_map_cdp.py pipeline/distill_online_runtime.py
+          grep -q 'release-on-demand' viewer/app.js
+          grep -q '知识索引 + 按需原生数据' viewer/index.html
+          grep -q 'distilled_knowledge_runtime' tests/browser_full_map_cdp.py
+
+      - name: Commit production source and QA
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add viewer/app.js viewer/index.html tests/browser_full_map_cdp.py
+          git diff --cached --check
+          git commit -m 'feat(guilin): use distilled knowledge and on-demand native tiles'
+          git push origin HEAD:main
