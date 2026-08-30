@@ -192,6 +192,75 @@ void main(){
   lit=mix(lit,vec3(.055,.085,.073),fog*.65);
   outColor=vec4(pow(clamp(lit,0.0,1.3),vec3(.90)),1.0);
 }`;
+const TERRAIN_FS_V21=`#version 300 es
+precision highp float;
+in vec3 vWorld;
+in vec3 vNormal;
+in vec4 vField0;
+in vec4 vField1;
+in vec4 vField2;
+in vec4 vField3;
+uniform int uMode;
+uniform float uMinElevation;
+uniform float uMaxElevation;
+uniform float uDetailStrength;
+uniform float uColorStrength;
+uniform vec3 uEye;
+out vec4 outColor;
+float sat(float v){return clamp(v,0.0,1.0);}
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}
+float fb2(vec2 p){float s=0.0,a=.56;mat2 r=mat2(.80,.60,-.60,.80);for(int i=0;i<3;i++){s+=(n2(p)-.5)*2.0*a;p=r*p*2.07+vec2(9.3,5.7);a*=.48;}return s*.5+.5;}
+float rg2(vec2 p){float s=0.0,a=.62;mat2 r=mat2(.72,.69,-.69,.72);for(int i=0;i<3;i++){float n=1.0-abs(n2(p)*2.0-1.0);s+=n*n*a;p=r*p*2.11+vec2(7.1,12.9);a*=.47;}return sat(s*.72);}
+vec2 wc2(vec2 p){vec2 id=floor(p),f=fract(p);float d1=8.0,d2=8.0;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(float(x),float(y)),j=vec2(h21(id+o),h21(id+o+19.7)),v=o+j-f;float d=dot(v,v);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}return sqrt(vec2(d1,d2));}
+float sharp(float v,float s){float w=mix(.28,.045,sat(s));return smoothstep(.5-w,.5+w,v);}
+float clearField(float v,float a){float t=sat(v),m=t*t*(3.0-2.0*t);return sat(t+(t-m)*a);}
+vec3 clut5(float t,vec3 a,vec3 b,vec3 c,vec3 d,vec3 e){float x=sat(t)*4.0;if(x<1.0)return mix(a,b,x);if(x<2.0)return mix(b,c,x-1.0);if(x<3.0)return mix(c,d,x-2.0);return mix(d,e,x-3.0);}
+vec3 truthRamp(float t){return clut5(t,vec3(.075,.15,.11),vec3(.16,.28,.13),vec3(.34,.37,.18),vec3(.49,.43,.25),vec3(.72,.70,.60));}
+void main(){
+ float truth=vField0.x,slope=sat(vField0.y),curv=clamp(vField0.z,-1.0,1.0),karst=sat(vField0.w);
+ float rock=sat(vField1.x),paddy=sat(vField1.y),wet=sat(vField1.z),bund=sat(vField1.w);
+ float channel=sat(vField2.x),kDelta=vField2.y,fDelta=vField2.z,seed=vField2.w;
+ float flow=sat(vField3.x),talus=sat(vField3.y),cliff=sat(vField3.z),terrace=sat(vField3.w);
+ float elev=sat((truth-uMinElevation)/max(1.0,uMaxElevation-uMinElevation));
+ vec2 p=vWorld.xz,warp=vec2(fb2(p*.0027+vec2(7.2,1.9)),fb2(p*.0027+vec2(2.3,11.7)))-.5;
+ vec2 q=p+warp*34.0;
+ float macro=fb2(q*.0017+vec2(3.7,9.1));
+ float meso=fb2(q*.0082+vec2(17.3,4.6));
+ float ridge=rg2(q*.0125+vec2(8.4,14.2));
+ vec2 cell=wc2(q*.018+vec2(4.1,7.8));
+ float plate=1.0-smoothstep(.035,.19,cell.y-cell.x);
+ float strata=pow(1.0-abs(sin(vWorld.y*.072+q.x*.008+q.y*.003+(macro-.5)*2.1)),3.0);
+ float streak=pow(1.0-abs(sin(vWorld.y*.18+q.x*.019+(meso-.5)*3.0)),5.0)*cliff;
+ float fracture=sharp(ridge*.57+plate*.43,.72)*cliff;
+ float micro=rg2(q*.085+vec2(21.1,3.2));
+ float separation=smoothstep(.10,.40,abs(macro-ridge));
+ float cavity=sat(fracture*.42+streak*.20+channel*.34+smoothstep(.82,.97,micro)*.22);
+ float relief=(ridge-.51)*1.25*rock+strata*.52*rock-fracture*.65*rock+(micro-.48)*.12+bund*.18-channel*.16;
+ vec3 baseN=normalize(vNormal),dp=vWorld+baseN*relief*uDetailStrength;
+ vec3 N=normalize(cross(dFdx(dp),dFdy(dp)));if(dot(N,baseN)<0.0)N=-N;N=normalize(mix(baseN,N,sat(.26+uDetailStrength*.48)));
+ vec3 soil=clut5(clearField(macro*.56+meso*.27+seed*.17,.62),vec3(.075,.055,.030),vec3(.18,.115,.050),vec3(.31,.215,.085),vec3(.43,.34,.14),vec3(.58,.49,.25));
+ vec3 field=clut5(clearField(meso*.42+seed*.38+wet*.20,.72),vec3(.10,.13,.035),vec3(.25,.31,.065),vec3(.45,.49,.10),vec3(.64,.58,.15),vec3(.79,.70,.27));
+ vec3 lime=clut5(clearField(ridge*.44+strata*.22+macro*.20+seed*.14,.84),vec3(.055,.057,.054),vec3(.17,.19,.19),vec3(.33,.35,.34),vec3(.52,.52,.47),vec3(.76,.74,.65));
+ lime=mix(lime,vec3(.43,.28,.13),sharp(meso*.55+flow*.20+separation*.25,.56)*rock*.34);
+ lime=mix(lime,vec3(.78,.72,.56),strata*rock*.22);
+ lime*=mix(1.0,.66,wet*.52);soil*=mix(1.0,.61,wet*.72);field*=mix(1.04,.67,wet*.74);
+ float fieldWeight=pow(paddy,.66),rockWeight=pow(rock,.70),soilWeight=sat(1.0-max(fieldWeight,rockWeight));
+ vec3 color=soil*soilWeight+field*fieldWeight*(1.0-rockWeight)+lime*rockWeight;
+ color=mix(color,mix(soil,lime,.52),talus*.44);color=mix(color,vec3(.13,.085,.038),bund*.72);color=mix(color,vec3(.045,.28,.34),channel*.78);color=mix(color,vec3(.045,.055,.047),cavity*rock*.38);color=mix(color,vec3(.69,.65,.51),separation*rock*.14);
+ if(uMode==1)color=truthRamp(elev);
+ else if(uMode==2){float pos=sat(kDelta/55.0),neg=sat(-kDelta/17.0);color=mix(vec3(.045,.065,.055),vec3(.87,.52,.13),karst);color=mix(color,vec3(.98,.84,.39),pos);color=mix(color,vec3(.18,.44,.71),neg*.85);}
+ else if(uMode==3){color=mix(vec3(.055,.068,.040),field,pow(paddy,.48));color=mix(color,vec3(.38,.19,.045),pow(bund,.48));color=mix(color,vec3(.035,.42,.52),pow(channel,.45));}
+ else if(uMode==4){color=clut5(pow(wet,.62),vec3(.13,.08,.04),vec3(.25,.18,.08),vec3(.12,.38,.32),vec3(.035,.53,.59),vec3(.17,.69,.72));color=mix(color,vec3(.035,.29,.51),channel*.76);}
+ else if(uMode==5){color=clut5(pow(rock,.56),vec3(.055,.08,.055),vec3(.16,.19,.16),vec3(.36,.37,.34),vec3(.61,.59,.52),vec3(.84,.81,.71));color=mix(color,vec3(.065,.045,.035),fracture*.54);color=mix(color,vec3(.77,.66,.43),strata*.23);}
+ float luma=dot(color,vec3(.2126,.7152,.0722));color=mix(vec3(luma),color,uColorStrength);
+ vec3 L=normalize(vec3(-.48,.80,.36)),V=normalize(uEye-vWorld),H=normalize(L+V);
+ float wrap=sat(dot(N,L)*.67+.33),sky=sat(N.y*.5+.5),ao=sat(1.0-cavity*.27-sat(-curv)*.10-fracture*.10-rock*.045);
+ float rough=sat(.48+rock*.28+paddy*.10+talus*.14-wet*.23+micro*.07),spec=pow(max(dot(N,H),0.0),mix(50.0,8.0,rough))*mix(.18,.045,rough),rim=pow(1.0-max(dot(N,V),0.0),3.0)*.10;
+ vec3 lit=color*(.23+.59*wrap+.18*sky)*mix(ao,1.0,.34)+vec3(.93,.88,.72)*spec+vec3(.13,.21,.18)*rim;
+ float fog=smoothstep(1800.0,4300.0,length(uEye-vWorld));lit=mix(lit,vec3(.05,.078,.066),fog*.60);
+ outColor=vec4(pow(clamp(lit,0.0,1.25),vec3(.90)),1.0);
+}`;
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const mix=(a,b,t)=>a+(b-a)*t;
 const smoothstep=(a,b,v)=>{const t=clamp((v-a)/Math.max(1e-9,b-a));return t*t*(3-2*t);};
@@ -246,6 +315,216 @@ function highestPeak(){if(!state.peaks.length)return{x:0,z:0,h:state.maximum};re
 function setView(name){const relief=state.maximum-state.minimum;if(name==='top'){state.camera.target=[0,relief*.20,0];state.camera.yaw=-.05;state.camera.pitch=1.485;state.camera.distance=1320;}else if(name==='karst'){const peak=highestPeak();state.camera.target=[peak.x,peak.h-state.minimum+peak.amplitude*.55,peak.z];state.camera.yaw=-1.02;state.camera.pitch=.30;state.camera.distance=430;}else if(name==='field'){const c=paddyCentroid();state.camera.target=[c[0],16,c[1]];state.camera.yaw=-.72;state.camera.pitch=.24;state.camera.distance=330;}else{state.camera.target=[0,relief*.24,0];state.camera.yaw=-.78;state.camera.pitch=.52;state.camera.distance=1380;}state.dirty=true;}
 function screenRay(clientX,clientY){resizeCanvas();updateMatrices();const rect=canvas.getBoundingClientRect(),x=((clientX-rect.left)/rect.width)*2-1,y=1-((clientY-rect.top)/rect.height)*2,near=transformVec4(state.inverseViewProjection,[x,y,-1,1]),far=transformVec4(state.inverseViewProjection,[x,y,1,1]);if(Math.abs(near[3])<1e-9||Math.abs(far[3])<1e-9)return null;const origin=[near[0]/near[3],near[1]/near[3],near[2]/near[3]],end=[far[0]/far[3],far[1]/far[3],far[2]/far[3]],direction=[end[0]-origin[0],end[1]-origin[1],end[2]-origin[2]],len=Math.hypot(...direction)||1;return{origin,direction:direction.map(v=>v/len)};}
 function focusAt(clientX,clientY){const ray=screenRay(clientX,clientY);if(!ray||Math.abs(ray.direction[1])<1e-6)return;const t=(state.camera.target[1]-ray.origin[1])/ray.direction[1];if(t<=0)return;state.camera.target[0]=clamp(ray.origin[0]+ray.direction[0]*t,-500,500);state.camera.target[2]=clamp(ray.origin[2]+ray.direction[2]*t,-500,500);state.camera.distance=clamp(state.camera.distance*.55,state.camera.minDistance,state.camera.maxDistance);state.dirty=true;}
+/* v0.2.1 visual convergence. All overrides stay inside the actual WebGL2 runtime. */
+setupWebGL=function(){
+  const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,depth:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+  assert(gl,'当前浏览器未提供 WebGL2');
+  state.gl=gl;
+  state.programs={
+    terrain:createProgram(gl,TERRAIN_VS,TERRAIN_FS_V21),
+    water:createProgram(gl,WATER_VS,WATER_FS),
+    skirt:createProgram(gl,SKIRT_VS,SKIRT_FS)
+  };
+  state.uniforms={
+    terrain:{
+      viewProjection:gl.getUniformLocation(state.programs.terrain,'uViewProjection'),
+      karst:gl.getUniformLocation(state.programs.terrain,'uKarstStrength'),
+      field:gl.getUniformLocation(state.programs.terrain,'uFieldStrength'),
+      mode:gl.getUniformLocation(state.programs.terrain,'uMode'),
+      minimum:gl.getUniformLocation(state.programs.terrain,'uMinElevation'),
+      maximum:gl.getUniformLocation(state.programs.terrain,'uMaxElevation'),
+      detail:gl.getUniformLocation(state.programs.terrain,'uDetailStrength'),
+      color:gl.getUniformLocation(state.programs.terrain,'uColorStrength'),
+      eye:gl.getUniformLocation(state.programs.terrain,'uEye')
+    },
+    water:{
+      viewProjection:gl.getUniformLocation(state.programs.water,'uViewProjection'),
+      eye:gl.getUniformLocation(state.programs.water,'uEye'),
+      time:gl.getUniformLocation(state.programs.water,'uTime')
+    },
+    skirt:{viewProjection:gl.getUniformLocation(state.programs.skirt,'uViewProjection')}
+  };
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);gl.clearColor(.018,.032,.028,1);
+};
+
+const deriveTerrainFieldsV20=deriveTerrainFields;
+deriveTerrainFields=function(dense,segments){
+  const fields=deriveTerrainFieldsV20(dense,segments);
+  const broad=boxBlur(dense,RENDER_GRID,RENDER_GRID,34);
+  const medium=boxBlur(dense,RENDER_GRID,RENDER_GRID,13);
+  const elevationRange=Math.max(1,state.maximum-state.minimum);
+  const ordered=state.peaks.slice().sort((a,b)=>{
+    const scoreA=a.score-Math.hypot(a.x,a.z)*.035;
+    const scoreB=b.score-Math.hypot(b.x,b.z)*.035;
+    return scoreB-scoreA;
+  });
+  const central=ordered.filter(peak=>Math.abs(peak.x)<430&&Math.abs(peak.z)<430);
+  state.peaks=(central.length>=6?central:ordered).slice(0,8);
+  let karstMinimum=Infinity,karstMaximum=-Infinity,fieldMinimum=Infinity,fieldMaximum=-Infinity;
+
+  for(let row=0;row<RENDER_GRID;row++){
+    for(let column=0;column<RENDER_GRID;column++){
+      const index=row*RENDER_GRID+column;
+      const truth=dense[index];
+      const x=column*RENDER_SPACING-SIDE_M*.5;
+      const z=row*RENDER_SPACING-SIDE_M*.5;
+      const easting=CENTER_E+x;
+      const northing=CENTER_N-z;
+      const relief=truth-broad[index];
+      const mediumRelief=truth-medium[index];
+      const slopeNorm=fields.slope[index];
+      const slopeDegrees=slopeNorm*62;
+      let strongest=-Infinity;
+      let second=-Infinity;
+      let towerInfluence=0;
+      let wallInfluence=0;
+      let footInfluence=0;
+
+      for(const peak of state.peaks){
+        const ca=Math.cos(peak.angle),sa=Math.sin(peak.angle);
+        const dx=x-peak.x,dz=z-peak.z;
+        const rx=(dx*ca+dz*sa)/peak.ellipse;
+        const rz=(-dx*sa+dz*ca)*peak.ellipse;
+        const theta=Math.atan2(rz,rx);
+        const worldWarp=fbm2((easting+peak.phase*239)*.0052,(northing-peak.phase*313)*.0052,SEEDS.shape+Math.round(peak.phase*15000),3);
+        const angularRadius=clamp(1+.17*Math.sin(theta*3+peak.phase*11)+.10*Math.sin(theta*5-peak.phase*17)+worldWarp*.13,.69,1.34);
+        const radius=peak.radius*(.86+.14*peak.phase);
+        const r=Math.hypot(rx,rz)/(radius*angularRadius);
+        const body=Math.pow(Math.max(0,1-smoothstep(.24,1.0,r)),.30);
+        const crown=Math.pow(Math.max(0,1-r/.30),.58);
+        const crownNotch=Math.pow(Math.abs(Math.sin(theta*3+peak.phase*19)),7)*crown;
+        const offsetA=Math.hypot(rx-radius*.10*Math.cos(peak.phase*23),rz-radius*.10*Math.sin(peak.phase*23))/radius;
+        const offsetB=Math.hypot(rx+radius*.12*Math.cos(peak.phase*31),rz+radius*.12*Math.sin(peak.phase*31))/radius;
+        const spireA=Math.pow(Math.max(0,1-offsetA/.24),.72);
+        const spireB=Math.pow(Math.max(0,1-offsetB/.21),.76);
+        const shoulderCut=Math.exp(-Math.pow((r-.58)/.15,2));
+        const footCut=Math.exp(-Math.pow((r-.88)/.105,2));
+        const grooves=Math.pow(Math.abs(Math.sin(theta*6+peak.phase*29+worldWarp*4.2)),8)*body;
+        const realGate=smoothstep(2.5,18,relief+body*18);
+        const amplitude=clamp(peak.amplitude*1.16,24,58);
+        const local=realGate*(amplitude*(body*.66+crown*.28+spireA*.12+spireB*.09-crownNotch*.10-shoulderCut*.16-footCut*.22)-grooves*(2.2+amplitude*.055));
+        if(local>strongest){second=strongest;strongest=local;}else if(local>second){second=local;}
+        towerInfluence=Math.max(towerInfluence,body);
+        wallInfluence=Math.max(wallInfluence,smoothstep(.27,.48,r)*(1-smoothstep(.76,1.03,r))*body*2.5);
+        footInfluence=Math.max(footInfluence,smoothstep(.70,.82,r)*(1-smoothstep(.96,1.15,r)));
+      }
+
+      const realHill=smoothstep(5,25,relief);
+      const profileCut=-9.5*Math.pow(Math.sin(clamp((relief+2)/Math.max(22,Math.abs(relief)+27),0,1)*Math.PI),2)*realHill*smoothstep(.08,.54,slopeNorm);
+      const wallGroove=(ridged2(easting*.031,northing*.031,SEEDS.weather+71,4)-.54)*5.2*wallInfluence;
+      const karstValue=clamp(Math.max(0,strongest)+Math.max(0,second)*.15+profileCut+wallGroove,-16,58);
+      const karstLikelihood=clamp(Math.max(towerInfluence,smoothstep(6,27,relief)*smoothstep(.06,.60,slopeNorm)),0,1);
+      const cliffValue=clamp(smoothstep(.25,.66,slopeNorm)*(.35+.65*karstLikelihood)+wallInfluence*.76+smoothstep(8,30,mediumRelief)*.16,0,1);
+      const talusValue=clamp(footInfluence*smoothstep(.07,.45,slopeNorm)*(1-cliffValue*.50),0,1);
+
+      const waterDistance=nearestWaterDistance(x,z,segments);
+      const waterCore=1-smoothstep(6,25,waterDistance);
+      const waterInfluence=Math.exp(-waterDistance/104);
+      const elev=(truth-state.minimum)/elevationRange;
+      const lowland=1-smoothstep(.10,.63,elev);
+      const flat=1-smoothstep(3.5,15.5,slopeDegrees);
+      const concavity=smoothstep(-.05,.55,-fields.curvature[index]);
+      const wetness=clamp(waterInfluence*.62+lowland*.20+concavity*.18+smoothstep(.43,.82,fbm2(easting*.0031,northing*.0031,SEEDS.water+7,4))*.09,0,1);
+      const parcel=parcelGrammar(easting,northing);
+      const patch=fbm2(easting*.0025,northing*.0025,SEEDS.field+401,4)*.5+.5;
+      const paddyBase=lowland*flat*(.54+.46*wetness)*(.72+.28*patch)*(1-waterCore*.94)*(1-cliffValue*.93)*(1-talusValue*.58);
+      const paddyValue=Math.pow(clamp(paddyBase,0,1),.58);
+      const bundValue=paddyValue*Math.pow(parcel.boundary,.70);
+      const channelValue=paddyValue*parcel.channel*(1-parcel.boundary*.38);
+      const terraceStep=.24+parcel.fieldSeed*.13;
+      const terraceTarget=Math.round(truth/terraceStep)*terraceStep;
+      const flatten=clamp((terraceTarget-truth)*.42,-.14,.14);
+      const fieldValue=clamp(paddyValue*flatten+bundValue*(.34+parcel.fieldSeed*.20)-channelValue*(.22+parcel.fieldSeed*.15),-.38,.58);
+      const rockValue=clamp(cliffValue*.83+karstLikelihood*.34+talusValue*.20,0,1);
+      const flowValue=clamp(waterInfluence*.52+wetness*.29+channelValue*.58,0,1);
+
+      fields.karst[index]=karstLikelihood;
+      fields.cliff[index]=cliffValue;
+      fields.talus[index]=talusValue;
+      fields.rock[index]=rockValue;
+      fields.paddy[index]=paddyValue;
+      fields.wet[index]=wetness;
+      fields.bund[index]=bundValue;
+      fields.channel[index]=channelValue;
+      fields.karstDelta[index]=karstValue;
+      fields.fieldDelta[index]=fieldValue;
+      fields.unitSeed[index]=parcel.fieldSeed;
+      fields.flow[index]=flowValue;
+      fields.terrace[index]=paddyValue*flat;
+      fields.enhanced[index]=truth+karstValue+fieldValue;
+      karstMinimum=Math.min(karstMinimum,karstValue);
+      karstMaximum=Math.max(karstMaximum,karstValue);
+      fieldMinimum=Math.min(fieldMinimum,fieldValue);
+      fieldMaximum=Math.max(fieldMaximum,fieldValue);
+    }
+  }
+  fields.enhancedNormals=buildNormalArray(fields.enhanced);
+  state.karstRange=[karstMinimum,karstMaximum];
+  state.fieldRange=[fieldMinimum,fieldMaximum];
+  return fields;
+};
+
+buildWaterMesh=function(){
+  const gl=state.gl,vertices=[],indices=[];
+  const add=(x,y,z,c)=>{vertices.push(x,y,z,c);return vertices.length/4-1;};
+  for(const segment of state.segments){
+    const dx=segment.x1-segment.x0,dz=segment.z1-segment.z0,length=Math.hypot(dx,dz);
+    if(length<.5)continue;
+    if(length<7&&segment.sourceWidth>length*1.45)continue;
+    const nx=-dz/length,nz=dx/length;
+    const base=segment.classValue===0?5.5:(segment.classValue===1?2.2:1.35);
+    const requestedHalf=Math.max(base,segment.sourceWidth*.50);
+    const lengthSafeHalf=Math.max(base,length*.38);
+    const halfWidth=clamp(Math.min(requestedHalf,lengthSafeHalf),base,28);
+    const y0=segment.y0-state.minimum+.42,y1=segment.y1-state.minimum+.42;
+    const a=add(segment.x0+nx*halfWidth,y0,segment.z0+nz*halfWidth,segment.classValue);
+    const b=add(segment.x0-nx*halfWidth,y0,segment.z0-nz*halfWidth,segment.classValue);
+    const c=add(segment.x1+nx*halfWidth,y1,segment.z1+nz*halfWidth,segment.classValue);
+    const d=add(segment.x1-nx*halfWidth,y1,segment.z1-nz*halfWidth,segment.classValue);
+    indices.push(a,b,c,c,b,d);
+  }
+  const vao=gl.createVertexArray(),vertexBuffer=gl.createBuffer(),indexBuffer=gl.createBuffer();
+  gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,16,0);
+  gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,1,gl.FLOAT,false,16,12);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  state.water={vao,vertexBuffer,indexBuffer,indexCount:indices.length};
+};
+
+highestPeak=function(){
+  const candidates=state.peaks.filter(peak=>Math.abs(peak.x)<350&&Math.abs(peak.z)<350);
+  const pool=candidates.length?candidates:state.peaks;
+  if(!pool.length)return{x:0,z:0,h:state.maximum,amplitude:0};
+  return pool.reduce((best,peak)=>{
+    const score=peak.h+peak.amplitude-Math.hypot(peak.x,peak.z)*.075;
+    const bestScore=best.h+best.amplitude-Math.hypot(best.x,best.z)*.075;
+    return score>bestScore?peak:best;
+  });
+};
+
+const drawSkirtV20=drawSkirt;
+drawSkirt=function(){if(state.camera.distance<760)return;drawSkirtV20();};
+
+setView=function(name){
+  const relief=state.maximum-state.minimum;
+  if(name==='top'){
+    state.camera.target=[0,relief*.18,0];state.camera.yaw=-.05;state.camera.pitch=1.485;state.camera.distance=1320;
+  }else if(name==='karst'){
+    const peak=highestPeak();
+    const localHeight=denseTruthAtWorld(peak.x,peak.z)-state.minimum;
+    state.camera.target=[peak.x,localHeight+peak.amplitude*.48,peak.z];state.camera.yaw=-1.00;state.camera.pitch=.37;state.camera.distance=520;
+  }else if(name==='field'){
+    const c=paddyCentroid();
+    const localHeight=denseTruthAtWorld(c[0],c[1])-state.minimum;
+    state.camera.target=[c[0],localHeight+8,c[1]];state.camera.yaw=-.78;state.camera.pitch=.48;state.camera.distance=500;
+  }else{
+    state.camera.target=[0,relief*.24,0];state.camera.yaw=-.78;state.camera.pitch=.55;state.camera.distance=1450;
+  }
+  state.dirty=true;
+};
+
+loop=function(now){if(state.dirty)render(now);requestAnimationFrame(loop);};
 const MODE_NAMES=['母体合成','真实高程','喀斯特形体','地块与田埂','湿度与水系','岩壁与裂隙','原始 / 合成三维对照'];
 const LEGENDS={0:[['#9a9d47','田块'],['#88714a','泥土'],['#aaa797','石灰岩'],['#2b8090','水系']],1:[['#29482d','低地'],['#6f7042','坡地'],['#aaa99b','高地']],2:[['#17221c','低响应'],['#dc9f2d','喀斯特'],['#f3dc79','正增量'],['#397cb2','切削区']],3:[['#1d2518','禁入'],['#a6ad3d','田面'],['#6f421c','田埂'],['#238395','沟渠']],4:[['#36271a','偏干'],['#35685e','湿润'],['#1f91a0','高湿'],['#216896','真实水系']],5:[['#1d2b1d','覆盖面'],['#73746d','裸岩'],['#332219','裂隙'],['#c1ad72','层理']],6:[['#69725b','左侧真值'],['#a0a34d','右侧母体'],['#2b8090','共享水系'] ]};
 function updateLegend(){const root=$('legend');root.innerHTML='';for(const[color,label]of LEGENDS[state.mode])root.insertAdjacentHTML('beforeend',`<div><i style="background:${color}"></i>${label}</div>`);}
