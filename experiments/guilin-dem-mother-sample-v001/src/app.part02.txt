@@ -1,0 +1,39 @@
+ aPosition;
+layout(location=1) in float aClass;
+uniform mat4 uViewProjection;
+out float vClass;
+void main(){vClass=aClass;gl_Position=uViewProjection*vec4(aPosition,1.0);}`;const WATER_FRAGMENT_SHADER=`#version 300 es
+precision highp float;
+in float vClass;
+out vec4 outColor;
+void main(){
+  vec3 river=vec3(.10,.52,.67);
+  vec3 stream=vec3(.19,.60,.69);
+  vec3 canal=vec3(.25,.51,.60);
+  vec3 color=vClass<.5?river:(vClass<1.5?stream:canal);
+  outColor=vec4(color,vClass<.5?.88:.76);
+}`;const ECOLOGY_VERTEX_SHADER=`#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPosition;
+layout(location=1) in float aType;
+uniform mat4 uViewProjection;
+uniform float uPixelRatio;
+out float vType;
+void main(){
+  vec4 clip=uViewProjection*vec4(aPosition,1.0);
+  gl_Position=clip;
+  gl_PointSize=clamp((aType<.5?7.5:6.0)*uPixelRatio*900.0/max(300.0,clip.w),2.2*uPixelRatio,9.0*uPixelRatio);
+  vType=aType;
+}`;const ECOLOGY_FRAGMENT_SHADER=`#version 300 es
+precision highp float;
+in float vType;
+out vec4 outColor;
+void main(){
+  vec2 p=gl_PointCoord*2.0-1.0;
+  float r=length(p);
+  float alpha=1.0-smoothstep(.66,1.0,r);
+  if(alpha<=0.0)discard;
+  vec3 forest=vec3(.12,.31,.12);
+  vec3 bamboo=vec3(.33,.55,.19);
+  outColor=vec4(vType<.5?forest:bamboo,alpha*.82);
+}`;function assert(condition,message){if(!condition)throw new Error(message);}function clamp(value,minimum,maximum){return Math.max(minimum,Math.min(maximum,value));}function mix(a,b,t){return a+(b-a)*t;}function smoothstep(edge0,edge1,value){const t=clamp((value-edge0)/Math.max(1e-9,edge1-edge0),0,1);return t*t*(3-2*t);}function fract(value){return value-Math.floor(value);}function hash2(x,y,seed=SEED){return fract(Math.sin(x*127.1+y*311.7+seed*0.000173)*43758.5453123);}function valueNoise(x,y,seed=SEED){const ix=Math.floor(x);const iy=Math.floor(y);const fx=fract(x);const fy=fract(y);const ux=fx*fx*(3-2*fx);const uy=fy*fy*(3-2*fy);const a=hash2(ix,iy,seed);const b=hash2(ix+1,iy,seed);const c=hash2(ix,iy+1,seed);const d=hash2(ix+1,iy+1,seed);return mix(mix(a,b,ux),mix(c,d,ux),uy);}function fbm(x,y,seed=SEED,octaves=4){let sum=0;let amplitude=0.5;let frequency=1;let normalization=0;for(let octave=0;octave<octaves;octave+=1){sum+=(valueNoise(x*frequency,y*frequency,seed+octave*101)*2-1)*amplitude;normalization+=amplitude;frequency*=2.03;amplitude*=0.5;}return sum/normalization;}async function fetchJson(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`${url} HTTP ${response.status}`);return response.json();}async function fetchBinary(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error(`${url} HTTP ${response.status}`);return response.arrayBuffer();}async function sha256Hex(buffer){const digest=await crypto.subtle.digest('SHA-256',buffer);return Array.from(new Uint8Array(digest),value=>value.toString(16).padStart(2,'0')).join('');}function littleEndian(){const test=new ArrayBuffer(2);new DataView(test).setUint16(0,0x00ff,true);return new Uint16Array(test)[0]===0x00ff;}function decodeInt16LE(buffer){if(littleEndian())return new Int16Array(buffer);const output=new Int16Array(buffer.byteLength/2);const view=new DataView(buffer);for(let i=0;i<output.length;i+=1)output[i]=view.getInt16(i*2,true);return output;}function decodeFloat32LE(buffer){if(littleEndian())return new Float32Array(buffer);const output=new Float32Array(buffer.byteLength/4);const view=new DataView(buffer);for(let i=0;i<output.length;i+=1)output[i]=view.getFloat32(i*4,true);return output;}function boxBlur(source,width,height,radius){const temporary=new Float32Array(source.length);const output=new Float32Array(source.length);for(let row=0;row<height;row+=1){let sum=0;for(let column=-radius;column<=radius;column+=1){sum+=source[row*width+clamp(column,0,width-1)];}for(let column=0;column<width;column+=1){temporary[row*width+column]=sum/(radius*2+1);sum-=source[row*width+clamp(column-radius,0,width-1)];sum+=source[row*width+clamp(column+radius+1,0,width-1)];}}for(let column=0;column<width;column+=1){let sum=0;for(let row=-radius;row<=radius;row+=1){sum+=temporary[clamp(row,0,height-1)*width+column];}for(let row=0;row<height;row+=1){output[row*width+column]=sum/(radius*2+1);sum-=temporary[clamp(row-radius,0,height-1)*width+column];sum+=temporary[clamp(row+radius+1,0,height-1)*width+column];}}return output;}function distancePointToSegment(px,pz,ax,az,bx,bz){const vx=bx-ax;const vz=bz-az;const denominator=vx*vx+vz*vz;if(denominator<=1e-9)return Math.hypot(px-ax,pz-az);const t=clamp(((px-ax)*vx+(pz-az)*vz)/denominator,0,1);return Math.hypot(px-(ax+vx*t),pz-(az+vz*t));}function clipSegmentToSquare(x0,z0,x1,z1,half=SAMPLE_SIDE_M*0.5){const dx=x1-x0;const dz=z1-z0;let t0=0;let t1=1;const checks=[[-dx,x0+half],[dx,half-x0],[-dz,z0+half],[dz,half-z0],];for(const[p,q]of checks){if(Math.abs(p)<1e-9){if(q<0)return null;continue;}const r=q/p;if(p<0)t0=Math.max(t0,r);else t1=Math.min(t1,r);if(t0>t1)return null;}return{t0,t1};}function extractTruth(tileValues){const truth=new Float32Array(SAMPLE_GRID*SAMPLE_GRID);let minimum=Infinity;let maximum=-Infinity;let sum=0;for(let row=0;row<SAMPLE_GRID;row+=1){for(let column=0;column<SAMPLE_GRID;column+=1){const value=tileValues[(WINDOW_Y+row)*TILE_GRID+WINDOW_X+column];assert(value!==0,`样板窗口出现 NoData，像元 ${column},${row}`);const index=row*SAMPLE_GRID+column;truth[index]=value;minimum=Math.min(minimum,value);maximum=Math.max(maximum,value);sum+=value;}}state.minimum=minimum;state.maximum=maximum;state.mean=sum/truth.length;return truth;}function parseHydrology(segmentValues){const bounds=state.manifest.aoi.native_sample_center_bounds_epsg32649;const fullCenterE=(bounds[0]+bounds[2])*0.5;const fullCenterN=(bounds[1]+bounds[3])*0.5;const segments=[];for(let offset=0;offset+7<segmentValues.length;offset+=8){const startX=segmentValues[offset]+fullCenterE-SAMPLE_CENTER_E;const startZ=segmentValues[offset+2]+SAMPLE_CENTER_N-fullCenterN;const endX=segmentValues[offset+3]+fullCenterE-SAMPLE_CENTER_E;const endZ=segmentValues[offset+5]+SAMPLE_CENTER_N-fullCenterN;const clipped=clipSegmentToSquare(startX,startZ,endX,endZ,SAMPLE_SIDE_M*0.5+2);if(!clipped)continue;const startElevation=segmentValues
