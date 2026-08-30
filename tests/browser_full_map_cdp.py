@@ -1,0 +1,305 @@
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+import shutil
+import socket
+import subprocess
+import time
+from pathlib import Path
+
+import requests
+import websocket
+
+EXPECTED_SOURCE_SHA = "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4"
+EXPECTED_AOI_SHA = "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80"
+
+
+class CDP:
+    def __init__(self, url: str):
+        self.ws = websocket.create_connection(url, timeout=30, origin="http://127.0.0.1")
+        self.counter = 0
+        self.events: list[dict] = []
+
+    def close(self) -> None:
+        self.ws.close()
+
+    def command(self, method: str, params: dict | None = None, timeout: float = 120) -> dict:
+        self.counter += 1
+        request_id = self.counter
+        self.ws.settimeout(timeout)
+        self.ws.send(json.dumps({"id": request_id, "method": method, "params": params or {}}))
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            payload = json.loads(self.ws.recv())
+            if payload.get("id") == request_id:
+                if "error" in payload:
+                    raise RuntimeError(f"{method}: {payload['error']}")
+                return payload.get("result", {})
+            self.events.append(payload)
+        raise TimeoutError(method)
+
+    def evaluate(self, expression: str, await_promise: bool = False, timeout: float = 120):
+        result = self.command(
+            "Runtime.evaluate",
+            {
+                "expression": expression,
+                "returnByValue": True,
+                "awaitPromise": await_promise,
+                "userGesture": True,
+            },
+            timeout,
+        )
+        remote = result.get("result", {})
+        if remote.get("subtype") == "error":
+            raise RuntimeError(remote.get("description", "Runtime error"))
+        return remote.get("value")
+
+
+def free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def wait_json(url: str, timeout: float = 45) -> dict:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            response = requests.get(url, timeout=3)
+            if response.ok:
+                return response.json()
+        except requests.RequestException:
+            pass
+        time.sleep(0.2)
+    raise TimeoutError(url)
+
+
+def wait_ready(cdp: CDP, timeout: float) -> dict:
+    deadline = time.time() + timeout
+    last = None
+    while time.time() < deadline:
+        last = cdp.evaluate("window.__GUILIN_FULL_MAP_QA_RESULT || null")
+        if isinstance(last, dict) and last.get("passed") is True:
+            return last
+        time.sleep(0.3)
+    body = cdp.evaluate("document.body ? document.body.innerText.slice(0,5000) : 'no body'")
+    raise TimeoutError(f"full-map viewer not ready: {last}; body={body}")
+
+
+def validate(result: dict, require_detail: bool = False) -> list[str]:
+    expected = {
+        "passed": True,
+        "data_ready": True,
+        "webgl2": True,
+        "source_sha256": EXPECTED_SOURCE_SHA,
+        "aoi_geometry_sha256": EXPECTED_AOI_SHA,
+        "native_spacing_m": 12.5,
+        "native_tile_count": 54,
+        "full_aoi_overview": True,
+        "one_continuous_map": True,
+        "continuous_zoom": True,
+        "tile_picker_required": False,
+        "overview_grid": [768, 768],
+        "overview_interpolation": "none",
+        "native_detail_available": True,
+        "direct_numeric_vertex_geometry": True,
+        "height_image_texture_used": False,
+        "texture_upload_count": 0,
+        "source_tile_compression": "none",
+        "source_resampling": "none",
+        "source_elevation_modified_m": 0,
+        "vertical_scale": 1,
+        "osm_linear_waterways_loaded": True,
+        "centerline_coordinates_mutated": False,
+        "manual_centerline_added": False,
+        "synthetic_gap_line_added": False,
+        "lake_surface_asset_count": 0,
+        "reservoir_surface_asset_count": 0,
+        "synthetic_surface_asset_count": 0,
+        "runtime_errors": [],
+        "loading_overlay_displayed": False,
+        "error_overlay_displayed": False,
+    }
+    failures = [
+        f"{key}: expected {value!r}, got {result.get(key)!r}"
+        for key, value in expected.items()
+        if result.get(key) != value
+    ]
+    if int(result.get("hydrology_segment_count", 0)) < 1_000:
+        failures.append("hydrology_segment_count below 1000")
+    if int(result.get("hydrology_node_count", 0)) < 1_000:
+        failures.append("hydrology_node_count below 1000")
+    counts = result.get("waterway_record_counts") or {}
+    if sum(int(counts.get(key, 0)) for key in ("river", "stream", "canal")) < 500:
+        failures.append(f"waterway record count too small: {counts}")
+    if require_detail:
+        if result.get("native_detail_active") is not True:
+            failures.append("native detail did not activate")
+        if result.get("native_detail_grid") != [640, 640]:
+            failures.append(f"native detail grid: {result.get('native_detail_grid')}")
+        if int(result.get("loaded_native_tile_count", 0)) < 1:
+            failures.append("no native tile loaded")
+    return failures
+
+
+def capture(cdp: CDP, path: Path) -> None:
+    payload = cdp.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, 180)
+    path.write_bytes(base64.b64decode(payload["data"]))
+
+
+def collect_errors(events: list[dict]) -> list[str]:
+    errors: list[str] = []
+    for event in events:
+        method = event.get("method")
+        params = event.get("params", {})
+        if method == "Runtime.exceptionThrown":
+            detail = params.get("exceptionDetails", {})
+            errors.append(str(detail.get("exception", {}).get("description") or detail.get("text") or "exception"))
+        elif method == "Log.entryAdded" and params.get("entry", {}).get("level") == "error":
+            errors.append(str(params["entry"].get("text", "log error")))
+        elif method == "Runtime.consoleAPICalled" and params.get("type") == "error":
+            values = [argument.get("value") or argument.get("description") for argument in params.get("args", [])]
+            errors.append(" ".join(str(value) for value in values if value))
+    return sorted(set(error for error in errors if error))
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", required=True)
+    parser.add_argument("--evidence-dir", type=Path, required=True)
+    parser.add_argument("--timeout", type=float, default=600)
+    parser.add_argument(
+        "--chromium",
+        default=(
+            shutil.which("google-chrome")
+            or shutil.which("google-chrome-stable")
+            or shutil.which("chromium")
+            or shutil.which("chromium-browser")
+        ),
+    )
+    args = parser.parse_args()
+    if not args.chromium:
+        raise SystemExit("Chromium or Google Chrome not found")
+
+    args.evidence_dir.mkdir(parents=True, exist_ok=True)
+    port = free_port()
+    profile = args.evidence_dir / "chrome-profile"
+    log_path = args.evidence_dir / "chromium.log"
+    command = [
+        args.chromium,
+        "--headless=new",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--hide-scrollbars",
+        "--disable-background-networking",
+        "--ignore-gpu-blocklist",
+        "--enable-webgl",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+        "--remote-allow-origins=*",
+        f"--remote-debugging-port={port}",
+        f"--user-data-dir={profile}",
+        "about:blank",
+    ]
+    with log_path.open("wb") as log_handle:
+        process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=log_handle)
+    cdp = None
+    try:
+        wait_json(f"http://127.0.0.1:{port}/json/version")
+        target = requests.put(f"http://127.0.0.1:{port}/json/new?about:blank", timeout=10).json()
+        cdp = CDP(target["webSocketDebuggerUrl"])
+        for domain in ("Page.enable", "Runtime.enable", "Log.enable", "Network.enable"):
+            cdp.command(domain)
+
+        cdp.command(
+            "Emulation.setDeviceMetricsOverride",
+            {"width": 1600, "height": 1000, "deviceScaleFactor": 1, "mobile": False},
+        )
+        cdp.command("Page.navigate", {"url": args.url})
+        overview = wait_ready(cdp, args.timeout)
+        overview_failures = validate(overview)
+        dom_contract = cdp.evaluate(
+            "({tileButtons:document.querySelectorAll('[data-tile]').length, title:document.title, fullButton:!!document.querySelector('[data-anchor=full]'), waterways:document.querySelector('#waterwaysToggle')?.checked})"
+        )
+        if dom_contract != {
+            "tileButtons": 0,
+            "title": "小桂林 · 桂林全域原生 12.5 米 DEM",
+            "fullButton": True,
+            "waterways": True,
+        }:
+            overview_failures.append(f"DOM contract mismatch: {dom_contract}")
+        capture(cdp, args.evidence_dir / "desktop-full-map.png")
+
+        anchor_state = cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.focusAnchor('guilin')")
+        time.sleep(0.5)
+        detail = cdp.evaluate(
+            "window.__GUILIN_FULL_MAP_TEST_API.activateNativeDetail()",
+            await_promise=True,
+            timeout=args.timeout,
+        )
+        detail_failures = validate(detail, require_detail=True)
+        capture(cdp, args.evidence_dir / "desktop-guilin-native-detail.png")
+
+        hidden = cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.toggleWaterways(false)")
+        shown = cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.toggleWaterways(true)")
+        toggle_failures: list[str] = []
+        if hidden.get("osm_linear_waterways_loaded") is not True or shown.get("osm_linear_waterways_loaded") is not True:
+            toggle_failures.append("waterway toggle damaged loaded hydrology state")
+
+        cdp.command(
+            "Emulation.setDeviceMetricsOverride",
+            {"width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": True},
+        )
+        cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.resetFull()")
+        cdp.evaluate("dispatchEvent(new Event('resize')); true")
+        time.sleep(1.0)
+        mobile = cdp.evaluate("window.__GUILIN_FULL_MAP_TEST_API.getState()")
+        mobile_failures = validate(mobile)
+        capture(cdp, args.evidence_dir / "mobile-full-map.png")
+
+        browser_errors = collect_errors(cdp.events)
+        payload = {
+            "schema": "guilin-continuous-full-map-public-browser-qa/v1",
+            "passed": not overview_failures and not detail_failures and not toggle_failures and not mobile_failures and not browser_errors,
+            "url": args.url,
+            "overview": overview,
+            "anchor_state": anchor_state,
+            "native_detail": detail,
+            "mobile": mobile,
+            "dom_contract": dom_contract,
+            "failures": overview_failures + detail_failures + toggle_failures + mobile_failures,
+            "browser_errors": browser_errors,
+        }
+        (args.evidence_dir / "browser-qa.json").write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        if not payload["passed"]:
+            raise SystemExit(json.dumps(payload, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "passed": True,
+                    "hydrology_segments": overview["hydrology_segment_count"],
+                    "hydrology_nodes": overview["hydrology_node_count"],
+                    "native_detail_grid": detail["native_detail_grid"],
+                },
+                ensure_ascii=False,
+            )
+        )
+    finally:
+        if cdp:
+            cdp.close()
+        process.terminate()
+        try:
+            process.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            process.kill()
+        shutil.rmtree(profile, ignore_errors=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
