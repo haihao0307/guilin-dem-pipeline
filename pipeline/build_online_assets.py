@@ -240,7 +240,7 @@ def nearest_valid_native_elevation(
 MAJOR_MAINSTEM_PATTERNS = {
     1: ("漓江", "漓水", "li river", "li jiang", "lijiang river", "li-jiang"),
     2: ("湘江", "湘水", "xiang river", "xiang jiang", "xiangjiang"),
-    3: ("资江", "資江", "资水", "資水", "zi river", "zi jiang", "zijiang", "zi shui", "zishui"),
+    3: ("资江", "資江", "资水", "資水", "夫夷水", "夫夷江", "zi river", "zi jiang", "zijiang", "zi shui", "zishui", "fuyi river", "fu yi river", "fuyi shui"),
 }
 MAJOR_MAINSTEM_KEYS = {1: "li", 2: "xiang", 3: "zi"}
 MAJOR_MAINSTEM_MIN_METRIC = {1: 150.0, 2: 175.0, 3: 160.0}
@@ -581,6 +581,7 @@ def build_hydrology(
         "styling": {
             "profile": "basin-hierarchy-mainstem-gradient-v3",
             "mainstem_names": ["漓江", "湘江", "资江"],
+            "mainstem_aliases": {"zi": ["夫夷水", "夫夷江", "Fuyi River"]},
             "mainstem_feature_counts": mainstem_feature_counts,
             "mainstem_segment_counts": mainstem_segment_counts,
             "hierarchy_metric": "DEM-downhill accumulated upstream network length with source-width support",
