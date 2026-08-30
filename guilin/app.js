@@ -19,7 +19,10 @@
   const DETAIL_REFRESH_DISTANCE_M = 1_800;
   const MAX_TILE_CACHE = 8;
   const MAX_DPR = 1.65;
-  const WATERWAY_STYLE_PROFILE = 'basin-hierarchy-mainstem-gradient-v3';
+  const WATERWAY_STYLE_PROFILE = 'longitudinal-flow-taper-v4';
+  const HYDROLOGY_SEGMENT_STRIDE = 13;
+  const HYDROLOGY_SOURCE_NODE_STRIDE = 8;
+  const HYDROLOGY_RENDER_NODE_STRIDE = 8;
   const WATERWAY_DEFAULT_EMPHASIS = 0.82;
   const WATERWAY_MIN_EMPHASIS = 0.5;
   const WATERWAY_MAX_EMPHASIS = 1.6;
@@ -71,7 +74,8 @@
     hydrologyEndpointCount: 0,
     hydrologyBendCapCount: 0,
     hydrologyVisualJoinGapPx: 0,
-    maxSourceWidthByClass: [0, 0, 0],
+    maxOrdinarySourceWidthByClass: [0, 0, 0],
+    maxMainstemSourceWidth: 0,
     waterwaysVisible: true,
     waterwayEmphasis: WATERWAY_DEFAULT_EMPHASIS,
     labelsVisible: true,
@@ -177,7 +181,12 @@ layout(location=0) in vec2 aCorner;
 layout(location=1) in vec3 aStart;
 layout(location=2) in vec3 aEnd;
 layout(location=3) in float aClass;
-layout(location=4) in float aHierarchy;
+layout(location=4) in float aMainstemCode;
+layout(location=5) in float aSourceWidth;
+layout(location=6) in float aStartProgress;
+layout(location=7) in float aEndProgress;
+layout(location=8) in float aStartFlowDistance;
+layout(location=9) in float aEndFlowDistance;
 uniform mat4 uViewProjection;
 uniform vec2 uViewport;
 uniform float uVerticalOrigin;
@@ -186,34 +195,39 @@ uniform float uZoomScale;
 uniform float uPixelRatio;
 uniform float uSurfaceOffset;
 out float vClass;
-out float vTone;
+out float vProgress;
 out float vMainstem;
 out float vAcross;
-float hierarchyTone(float classValue,float metric){
-  if(classValue<0.5)return smoothstep(5.0,92.0,metric);
-  if(classValue<1.5)return smoothstep(1.5,20.0,metric);
-  return smoothstep(2.0,22.0,metric);
+out float vFlowDistance;
+float ordinaryHalfWidth(float classValue,float sourceWidth,float progress){
+  float p=pow(clamp(progress,0.0,1.0),1.35);
+  float sourceTone=clamp(log2(max(2.0,sourceWidth)/2.0)/6.0,0.0,1.0);
+  float river=mix(0.17,0.58,p)*mix(0.92,1.08,sourceTone);
+  float stream=mix(0.08,0.25,p)*mix(0.94,1.05,sourceTone);
+  float canal=mix(0.09,0.28,p)*mix(0.94,1.05,sourceTone);
+  return classValue<0.5?river:(classValue<1.5?stream:canal);
 }
-float halfWidthPixels(float classValue,float metric){
-  float tone=hierarchyTone(classValue,metric);
-  float mainstem=step(120.0,metric);
-  float riverHalf=mix(0.25,0.72,tone);
-  float streamHalf=mix(0.11,0.34,tone);
-  float canalHalf=mix(0.13,0.38,tone);
-  float ordinary=classValue<0.5?riverHalf:(classValue<1.5?streamHalf:canalHalf);
-  float mainHalf=mix(1.80,2.18,smoothstep(145.0,220.0,metric));
-  float cssHalf=mix(ordinary,mainHalf,mainstem);
-  return max(0.10*uPixelRatio,cssHalf*uEmphasis*uZoomScale*uPixelRatio);
+float halfWidthPixels(float classValue,float mainstemCode,float sourceWidth,float progress){
+  float ordinary=ordinaryHalfWidth(classValue,sourceWidth,progress);
+  float sourceTone=clamp((sourceWidth-40.0)/140.0,0.0,1.0);
+  float downstreamHalf=mix(1.75,2.20,sourceTone);
+  float mainCurve=pow(clamp(progress,0.0,1.0),1.55);
+  float mainHalf=mix(0.28,downstreamHalf,mainCurve);
+  float isMain=step(0.5,mainstemCode);
+  return max(0.08*uPixelRatio,mix(ordinary,mainHalf,isMain)*uEmphasis*uZoomScale*uPixelRatio);
 }
 void main(){
   vec3 startPosition=vec3(aStart.x,aStart.y-uVerticalOrigin+uSurfaceOffset,aStart.z);
   vec3 endPosition=vec3(aEnd.x,aEnd.y-uVerticalOrigin+uSurfaceOffset,aEnd.z);
   vec4 clipStart=uViewProjection*vec4(startPosition,1.0);
   vec4 clipEnd=uViewProjection*vec4(endPosition,1.0);
+  float progress=mix(aStartProgress,aEndProgress,aCorner.x);
+  float halfWidth=halfWidthPixels(aClass,aMainstemCode,aSourceWidth,progress);
   vClass=aClass;
-  vTone=hierarchyTone(aClass,aHierarchy);
-  vMainstem=step(120.0,aHierarchy);
+  vProgress=progress;
+  vMainstem=step(0.5,aMainstemCode);
   vAcross=aCorner.y;
+  vFlowDistance=mix(aStartFlowDistance,aEndFlowDistance,aCorner.x);
   if(clipStart.w<=0.0||clipEnd.w<=0.0){gl_Position=vec4(2.0,2.0,2.0,1.0);return;}
   vec2 ndcStart=clipStart.xy/max(0.00001,clipStart.w);
   vec2 ndcEnd=clipEnd.xy/max(0.00001,clipEnd.w);
@@ -221,8 +235,7 @@ void main(){
   float pixelLength=max(length(pixelDelta),0.001);
   vec2 direction=pixelDelta/pixelLength;
   vec2 perpendicular=vec2(-direction.y,direction.x);
-  float halfWidth=halfWidthPixels(aClass,aHierarchy);
-  float overlap=halfWidth+0.28*uPixelRatio;
+  float overlap=halfWidth+0.22*uPixelRatio;
   vec4 clipPosition=mix(clipStart,clipEnd,aCorner.x);
   vec2 pixelOffset=perpendicular*aCorner.y*halfWidth+direction*mix(-overlap,overlap,aCorner.x);
   clipPosition.xy+=pixelOffset*2.0/uViewport*clipPosition.w;
@@ -232,34 +245,41 @@ void main(){
   const SEGMENT_FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 in float vClass;
-in float vTone;
+in float vProgress;
 in float vMainstem;
 in float vAcross;
+in float vFlowDistance;
 out vec4 outColor;
 void main(){
   float edge=abs(vAcross);
   float aa=max(fwidth(edge)*1.25,0.02);
   float coverage=1.0-smoothstep(1.0-aa,1.0,edge);
-  vec3 mainstem=vec3(0.025,0.245,0.43);
-  vec3 riverUp=vec3(0.30,0.66,0.72);
-  vec3 riverDown=vec3(0.055,0.35,0.57);
-  vec3 streamUp=vec3(0.50,0.76,0.79);
-  vec3 streamDown=vec3(0.16,0.52,0.65);
-  vec3 canalUp=vec3(0.36,0.61,0.66);
-  vec3 canalDown=vec3(0.12,0.42,0.55);
-  vec3 ordinary=vClass<0.5?mix(riverUp,riverDown,vTone):(vClass<1.5?mix(streamUp,streamDown,vTone):mix(canalUp,canalDown,vTone));
-  vec3 color=mix(ordinary,mainstem,vMainstem);
-  float ordinaryAlpha=vClass<0.5?mix(0.52,0.82,vTone):(vClass<1.5?mix(0.25,0.58,vTone):mix(0.34,0.62,vTone));
-  float alpha=mix(ordinaryAlpha,0.94,vMainstem);
-  outColor=vec4(color,coverage*alpha);
+  float p=clamp(vProgress,0.0,1.0);
+  vec3 mainUp=vec3(0.40,0.69,0.75);
+  vec3 mainDown=vec3(0.025,0.235,0.42);
+  vec3 riverUp=vec3(0.34,0.66,0.71);
+  vec3 riverDown=vec3(0.065,0.36,0.56);
+  vec3 streamUp=vec3(0.49,0.75,0.78);
+  vec3 streamDown=vec3(0.17,0.52,0.64);
+  vec3 canalUp=vec3(0.39,0.63,0.67);
+  vec3 canalDown=vec3(0.13,0.43,0.55);
+  vec3 ordinary=vClass<0.5?mix(riverUp,riverDown,p):(vClass<1.5?mix(streamUp,streamDown,p):mix(canalUp,canalDown,p));
+  vec3 mainColor=mix(mainUp,mainDown,pow(p,1.12));
+  vec3 color=mix(ordinary,mainColor,vMainstem);
+  float ordinaryAlpha=vClass<0.5?mix(0.43,0.79,p):(vClass<1.5?mix(0.22,0.54,p):mix(0.28,0.58,p));
+  float mainAlpha=mix(0.38,0.94,pow(p,0.88));
+  float flowReady=0.997+0.003*fract(vFlowDistance/5000.0);
+  outColor=vec4(color,coverage*mix(ordinaryAlpha,mainAlpha,vMainstem)*flowReady);
 }`;
 
   const NODE_VERTEX_SHADER = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPosition;
 layout(location=1) in float aClass;
-layout(location=2) in float aHierarchy;
-layout(location=3) in float aDegree;
+layout(location=2) in float aMainstemCode;
+layout(location=3) in float aSourceWidth;
+layout(location=4) in float aProgress;
+layout(location=5) in float aDegree;
 uniform mat4 uViewProjection;
 uniform float uVerticalOrigin;
 uniform float uEmphasis;
@@ -267,38 +287,39 @@ uniform float uZoomScale;
 uniform float uPixelRatio;
 uniform float uSurfaceOffset;
 out float vClass;
-out float vTone;
+out float vProgress;
 out float vMainstem;
-float hierarchyTone(float classValue,float metric){
-  if(classValue<0.5)return smoothstep(5.0,92.0,metric);
-  if(classValue<1.5)return smoothstep(1.5,20.0,metric);
-  return smoothstep(2.0,22.0,metric);
+float ordinaryHalfWidth(float classValue,float sourceWidth,float progress){
+  float p=pow(clamp(progress,0.0,1.0),1.35);
+  float sourceTone=clamp(log2(max(2.0,sourceWidth)/2.0)/6.0,0.0,1.0);
+  float river=mix(0.17,0.58,p)*mix(0.92,1.08,sourceTone);
+  float stream=mix(0.08,0.25,p)*mix(0.94,1.05,sourceTone);
+  float canal=mix(0.09,0.28,p)*mix(0.94,1.05,sourceTone);
+  return classValue<0.5?river:(classValue<1.5?stream:canal);
 }
-float halfWidthPixels(float classValue,float metric){
-  float tone=hierarchyTone(classValue,metric);
-  float mainstem=step(120.0,metric);
-  float riverHalf=mix(0.25,0.72,tone);
-  float streamHalf=mix(0.11,0.34,tone);
-  float canalHalf=mix(0.13,0.38,tone);
-  float ordinary=classValue<0.5?riverHalf:(classValue<1.5?streamHalf:canalHalf);
-  float mainHalf=mix(1.80,2.18,smoothstep(145.0,220.0,metric));
-  return max(0.10*uPixelRatio,mix(ordinary,mainHalf,mainstem)*uEmphasis*uZoomScale*uPixelRatio);
+float halfWidthPixels(float classValue,float mainstemCode,float sourceWidth,float progress){
+  float ordinary=ordinaryHalfWidth(classValue,sourceWidth,progress);
+  float sourceTone=clamp((sourceWidth-40.0)/140.0,0.0,1.0);
+  float downstreamHalf=mix(1.75,2.20,sourceTone);
+  float mainCurve=pow(clamp(progress,0.0,1.0),1.55);
+  float mainHalf=mix(0.28,downstreamHalf,mainCurve);
+  return max(0.08*uPixelRatio,mix(ordinary,mainHalf,step(0.5,mainstemCode))*uEmphasis*uZoomScale*uPixelRatio);
 }
 void main(){
   vec3 position=vec3(aPosition.x,aPosition.y-uVerticalOrigin+uSurfaceOffset+0.04,aPosition.z);
   gl_Position=uViewProjection*vec4(position,1.0);
-  float halfWidth=halfWidthPixels(aClass,aHierarchy);
-  float multiplier=aDegree>2.5?2.35:(aDegree>1.5?2.20:1.82);
-  gl_PointSize=max(0.72*uPixelRatio,halfWidth*multiplier+0.22*uPixelRatio);
+  float halfWidth=halfWidthPixels(aClass,aMainstemCode,aSourceWidth,aProgress);
+  float multiplier=aDegree>2.5?2.30:(aDegree>1.5?2.16:1.80);
+  gl_PointSize=max(0.68*uPixelRatio,halfWidth*multiplier+0.20*uPixelRatio);
   vClass=aClass;
-  vTone=hierarchyTone(aClass,aHierarchy);
-  vMainstem=step(120.0,aHierarchy);
+  vProgress=aProgress;
+  vMainstem=step(0.5,aMainstemCode);
 }`;
 
   const NODE_FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 in float vClass;
-in float vTone;
+in float vProgress;
 in float vMainstem;
 out vec4 outColor;
 void main(){
@@ -307,14 +328,15 @@ void main(){
   float aa=max(fwidth(radius)*1.35,0.025);
   float coverage=1.0-smoothstep(1.0-aa,1.0,radius);
   if(coverage<=0.0)discard;
-  vec3 mainstem=vec3(0.025,0.245,0.43);
-  vec3 river=mix(vec3(0.30,0.66,0.72),vec3(0.055,0.35,0.57),vTone);
-  vec3 stream=mix(vec3(0.50,0.76,0.79),vec3(0.16,0.52,0.65),vTone);
-  vec3 canal=mix(vec3(0.36,0.61,0.66),vec3(0.12,0.42,0.55),vTone);
+  float p=clamp(vProgress,0.0,1.0);
+  vec3 mainColor=mix(vec3(0.40,0.69,0.75),vec3(0.025,0.235,0.42),pow(p,1.12));
+  vec3 river=mix(vec3(0.34,0.66,0.71),vec3(0.065,0.36,0.56),p);
+  vec3 stream=mix(vec3(0.49,0.75,0.78),vec3(0.17,0.52,0.64),p);
+  vec3 canal=mix(vec3(0.39,0.63,0.67),vec3(0.13,0.43,0.55),p);
   vec3 ordinary=vClass<0.5?river:(vClass<1.5?stream:canal);
-  vec3 color=mix(ordinary,mainstem,vMainstem);
-  float ordinaryAlpha=vClass<0.5?mix(0.52,0.82,vTone):(vClass<1.5?mix(0.25,0.58,vTone):mix(0.34,0.62,vTone));
-  outColor=vec4(color,coverage*mix(ordinaryAlpha,0.94,vMainstem));
+  float ordinaryAlpha=vClass<0.5?mix(0.43,0.79,p):(vClass<1.5?mix(0.22,0.54,p):mix(0.28,0.58,p));
+  float mainAlpha=mix(0.38,0.94,pow(p,0.88));
+  outColor=vec4(mix(ordinary,mainColor,vMainstem),coverage*mix(ordinaryAlpha,mainAlpha,vMainstem));
 }`;
 
   function assert(condition, message) {
@@ -510,6 +532,12 @@ void main(){
     assert(hydrology.segments?.compression === 'none', '水系线段资产出现压缩');
     assert(hydrology.nodes?.compression === 'none', '水系节点资产出现压缩');
     assert(hydrology.styling?.profile === WATERWAY_STYLE_PROFILE, '水系层级样式版本不正确');
+    assert(hydrology.direction?.segment_vertex_order === 'upstream_to_downstream', '水系线段方向没有按上游到下游保存');
+    assert(hydrology.direction?.flow_progress_monotonic === true, '水系宽度进度没有沿下游增加');
+    assert(hydrology.direction?.flow_distance_monotonic === true, '水系流动距离没有沿下游增加');
+    assert(hydrology.direction?.future_flow_animation_ready === true, '水系缺少下一阶段流动动画方向合同');
+    assert(hydrology.segments?.layout?.length === HYDROLOGY_SEGMENT_STRIDE, '水系线段布局步长不正确');
+    assert(hydrology.nodes?.layout?.length === HYDROLOGY_SOURCE_NODE_STRIDE, '水系节点布局步长不正确');
     for (const name of ['li', 'xiang', 'zi']) {
       assert((hydrology.styling?.mainstem_segment_counts?.[name] || 0) > 0, `${name} 主河道样式为空`);
     }
@@ -629,52 +657,62 @@ void main(){
     return clamp(Math.pow(ratio, 0.28), 0.85, 2.15);
   }
 
-  function waterwayHierarchyTone(classIndex, hierarchyMetric) {
-    if (classIndex === 0) return smoothstep(5, 92, hierarchyMetric);
-    if (classIndex === 1) return smoothstep(1.5, 20, hierarchyMetric);
-    return smoothstep(2, 22, hierarchyMetric);
+  function waterwayOrdinaryHalfWidthCssPx(classIndex, sourceWidthM, progress) {
+    const p = Math.pow(clamp(progress, 0, 1), 1.35);
+    const sourceTone = clamp(Math.log2(Math.max(2, sourceWidthM) / 2) / 6, 0, 1);
+    if (classIndex === 0) return (0.17 + (0.58 - 0.17) * p) * (0.92 + (1.08 - 0.92) * sourceTone);
+    if (classIndex === 1) return (0.08 + (0.25 - 0.08) * p) * (0.94 + (1.05 - 0.94) * sourceTone);
+    return (0.09 + (0.28 - 0.09) * p) * (0.94 + (1.05 - 0.94) * sourceTone);
   }
 
-  function waterwayHalfWidthCssPx(classIndex, hierarchyMetric) {
-    const tone = waterwayHierarchyTone(classIndex, hierarchyMetric);
-    const mainstem = hierarchyMetric >= 120;
-    const ordinary = classIndex === 0
-      ? 0.25 + (0.72 - 0.25) * tone
-      : classIndex === 1
-        ? 0.11 + (0.34 - 0.11) * tone
-        : 0.13 + (0.38 - 0.13) * tone;
-    const main = 1.80 + (2.18 - 1.80) * smoothstep(145, 220, hierarchyMetric);
-    return Math.max(0.10, (mainstem ? main : ordinary) * state.waterwayEmphasis * waterwayZoomScale());
+  function waterwayHalfWidthCssPx(classIndex, mainstemCode, sourceWidthM, progress) {
+    const ordinary = waterwayOrdinaryHalfWidthCssPx(classIndex, sourceWidthM, progress);
+    const sourceTone = clamp((sourceWidthM - 40) / 140, 0, 1);
+    const downstreamHalf = 1.75 + (2.20 - 1.75) * sourceTone;
+    const mainCurve = Math.pow(clamp(progress, 0, 1), 1.55);
+    const mainHalf = 0.28 + (downstreamHalf - 0.28) * mainCurve;
+    const half = mainstemCode > 0 ? mainHalf : ordinary;
+    return Math.max(0.08, half * state.waterwayEmphasis * waterwayZoomScale());
   }
 
   function waterwayStyleMetrics() {
-    const riverMetric = Math.min(92, Math.max(5, state.maxSourceWidthByClass[0] || 5));
-    const streamMetric = Math.min(20, Math.max(1.5, state.maxSourceWidthByClass[1] || 1.5));
-    const canalMetric = Math.min(22, Math.max(2, state.maxSourceWidthByClass[2] || 2));
-    const mainstemMetric = Math.max(150, state.maxSourceWidthByClass[0] || 150);
-    const secondaryRiver = Number((waterwayHalfWidthCssPx(0, riverMetric) * 2).toFixed(3));
-    const stream = Number((waterwayHalfWidthCssPx(1, streamMetric) * 2).toFixed(3));
-    const canal = Number((waterwayHalfWidthCssPx(2, canalMetric) * 2).toFixed(3));
-    const mainstem = Number((waterwayHalfWidthCssPx(0, mainstemMetric) * 2).toFixed(3));
+    const ordinaryRiverWidth = state.maxOrdinarySourceWidthByClass[0] || 28;
+    const streamSourceWidth = state.maxOrdinarySourceWidthByClass[1] || 6;
+    const canalSourceWidth = state.maxOrdinarySourceWidthByClass[2] || 5;
+    const mainstemSourceWidth = state.maxMainstemSourceWidth || 180;
+    const secondaryRiver = Number((waterwayHalfWidthCssPx(0, 0, ordinaryRiverWidth, 1) * 2).toFixed(3));
+    const stream = Number((waterwayHalfWidthCssPx(1, 0, streamSourceWidth, 1) * 2).toFixed(3));
+    const canal = Number((waterwayHalfWidthCssPx(2, 0, canalSourceWidth, 1) * 2).toFixed(3));
+    const upstream = Number((waterwayHalfWidthCssPx(0, 1, mainstemSourceWidth, 0) * 2).toFixed(3));
+    const midstream = Number((waterwayHalfWidthCssPx(0, 1, mainstemSourceWidth, 0.5) * 2).toFixed(3));
+    const downstream = Number((waterwayHalfWidthCssPx(0, 1, mainstemSourceWidth, 1) * 2).toFixed(3));
     return {
       profile: WATERWAY_STYLE_PROFILE,
       emphasis: Number(state.waterwayEmphasis.toFixed(3)),
       zoom_scale: Number(waterwayZoomScale().toFixed(3)),
-      mainstem_full_width_css_px: mainstem,
+      mainstem_upstream_full_width_css_px: upstream,
+      mainstem_midstream_full_width_css_px: midstream,
+      mainstem_downstream_full_width_css_px: downstream,
+      mainstem_full_width_css_px: downstream,
+      mainstem_downstream_to_upstream_width_ratio: Number((downstream / Math.max(0.001, upstream)).toFixed(3)),
       secondary_river_max_full_width_css_px: secondaryRiver,
       stream_max_full_width_css_px: stream,
       canal_max_full_width_css_px: canal,
       max_full_width_css_px: Math.max(secondaryRiver, stream, canal),
       mainstem_names: ['漓江', '湘江', '资江'],
       mainstem_segment_counts: state.hydrologyManifest?.styling?.mainstem_segment_counts || null,
-      hierarchy_metric: state.hydrologyManifest?.styling?.hierarchy_metric || null,
-      color_gradient: 'lighter-and-thinner-upstream_to_darker-and-wider-downstream',
-      mainstem_color: 'deep-blue',
-      ordinary_stream_color: 'light-desaturated-blue',
-      source_width_influence: 'network-accumulation-with-source-width-support',
-      overview_secondary_target_max_css_px: 1.8,
-      overview_mainstem_target_css_px: [2.2, 4.2],
-      native_detail_mainstem_target_css_px: [4.2, 9.0],
+      mainstem_progress_ranges: state.hydrologyManifest?.styling?.mainstem_progress_ranges || null,
+      flow_direction: 'upstream_to_downstream',
+      flow_progress_monotonic: true,
+      future_flow_animation_ready: true,
+      color_gradient: 'upstream-light-and-thin_to_downstream-dark-and-wide',
+      upstream_mainstem_width_equivalent: 'minor-stream-scale',
+      downstream_mainstem_width_uses_source_width: true,
+      overview_secondary_target_max_css_px: 1.35,
+      overview_mainstem_upstream_target_css_px: [0.25, 0.75],
+      overview_mainstem_downstream_target_css_px: [2.5, 4.2],
+      native_detail_mainstem_upstream_target_css_px: [0.55, 1.5],
+      native_detail_mainstem_downstream_target_css_px: [4.8, 9.0],
     };
   }
 
@@ -770,8 +808,8 @@ void main(){
     const gl = state.gl;
     state.hydrologySegments = segmentValues;
     state.hydrologyNodes = nodeValues;
-    state.hydrologySegmentCount = segmentValues.length / 8;
-    state.hydrologySourceNodeCount = nodeValues.length / 5;
+    state.hydrologySegmentCount = segmentValues.length / HYDROLOGY_SEGMENT_STRIDE;
+    state.hydrologySourceNodeCount = nodeValues.length / HYDROLOGY_SOURCE_NODE_STRIDE;
     const expectedSegmentCount =
       state.hydrologyManifest.segments?.count ??
       state.hydrologyManifest.topology?.segment_count ??
@@ -780,6 +818,8 @@ void main(){
       state.hydrologyManifest.nodes?.count ??
       state.hydrologyManifest.topology?.node_count ??
       state.hydrologyManifest.topology?.node_vertex_count;
+    assert(Number.isInteger(state.hydrologySegmentCount), '水系线段缓冲区步长不正确');
+    assert(Number.isInteger(state.hydrologySourceNodeCount), '水系节点缓冲区步长不正确');
     assert(Number.isInteger(expectedSegmentCount) && expectedSegmentCount > 0, '水系线段清单缺少有效数量');
     assert(Number.isInteger(expectedNodeCount) && expectedNodeCount > 0, '水系节点清单缺少有效数量');
     assert(state.hydrologySegmentCount === expectedSegmentCount, '水系线段数量与清单不一致');
@@ -795,8 +835,13 @@ void main(){
     assert(sourceSegmentCount === expectedSegmentCount, '水系存在未进入渲染资产的源线段');
     assert(droppedSegmentCount === 0, '水系存在高程缺失造成的断段');
 
+    state.maxOrdinarySourceWidthByClass.fill(0);
+    state.maxMainstemSourceWidth = 0;
     const topology = new Map();
-    const registerNode = (x, elevation, z, classValue, width, directionX, directionZ) => {
+    const registerNode = (
+      x, elevation, z, classValue, mainstemCode, sourceWidth,
+      progress, flowDistance, directionX, directionZ
+    ) => {
       const key = hydrologyNodeKey(x, z);
       let record = topology.get(key);
       if (!record) {
@@ -807,23 +852,32 @@ void main(){
           nativeElevation: elevation,
           overviewElevation: null,
           classValue,
-          width,
+          mainstemCode,
+          sourceWidth,
+          progress,
+          flowDistance,
           degree: 0,
           directions: [],
         };
         topology.set(key, record);
       }
       record.classValue = Math.min(record.classValue, classValue);
-      record.width = Math.max(record.width, width);
+      record.sourceWidth = Math.max(record.sourceWidth, sourceWidth);
+      if (mainstemCode > 0 && (record.mainstemCode <= 0 || progress >= record.progress)) {
+        record.mainstemCode = mainstemCode;
+      }
+      record.progress = Math.max(record.progress, progress);
+      record.flowDistance = Math.max(record.flowDistance, flowDistance);
       record.degree += 1;
       const length = Math.hypot(directionX, directionZ);
       if (length > 1e-6) record.directions.push([directionX / length, directionZ / length]);
       const classIndex = clamp(Math.round(classValue), 0, 2);
-      state.maxSourceWidthByClass[classIndex] = Math.max(state.maxSourceWidthByClass[classIndex], width);
+      if (mainstemCode > 0) state.maxMainstemSourceWidth = Math.max(state.maxMainstemSourceWidth, sourceWidth);
+      else state.maxOrdinarySourceWidthByClass[classIndex] = Math.max(state.maxOrdinarySourceWidthByClass[classIndex], sourceWidth);
       return record;
     };
 
-    for (let offset = 0; offset < segmentValues.length; offset += 8) {
+    for (let offset = 0; offset < segmentValues.length; offset += HYDROLOGY_SEGMENT_STRIDE) {
       const startX = segmentValues[offset];
       const startElevation = segmentValues[offset + 1];
       const startZ = segmentValues[offset + 2];
@@ -831,9 +885,22 @@ void main(){
       const endElevation = segmentValues[offset + 4];
       const endZ = segmentValues[offset + 5];
       const classValue = segmentValues[offset + 6];
-      const width = segmentValues[offset + 7];
-      registerNode(startX, startElevation, startZ, classValue, width, endX - startX, endZ - startZ);
-      registerNode(endX, endElevation, endZ, classValue, width, startX - endX, startZ - endZ);
+      const mainstemCode = segmentValues[offset + 7];
+      const sourceWidth = segmentValues[offset + 8];
+      const startProgress = segmentValues[offset + 9];
+      const endProgress = segmentValues[offset + 10];
+      const startFlowDistance = segmentValues[offset + 11];
+      const endFlowDistance = segmentValues[offset + 12];
+      assert(endProgress + 1e-6 >= startProgress, '水系上下游宽度进度发生反转');
+      assert(endFlowDistance > startFlowDistance, '水系流动距离没有按下游增加');
+      registerNode(
+        startX, startElevation, startZ, classValue, mainstemCode, sourceWidth,
+        startProgress, startFlowDistance, endX - startX, endZ - startZ
+      );
+      registerNode(
+        endX, endElevation, endZ, classValue, mainstemCode, sourceWidth,
+        endProgress, endFlowDistance, startX - endX, startZ - endZ
+      );
     }
 
     for (const record of topology.values()) {
@@ -841,7 +908,7 @@ void main(){
     }
 
     const overviewSegmentValues = new Float32Array(segmentValues);
-    for (let offset = 0; offset < segmentValues.length; offset += 8) {
+    for (let offset = 0; offset < segmentValues.length; offset += HYDROLOGY_SEGMENT_STRIDE) {
       const start = topology.get(hydrologyNodeKey(segmentValues[offset], segmentValues[offset + 2]));
       const end = topology.get(hydrologyNodeKey(segmentValues[offset + 3], segmentValues[offset + 5]));
       assert(start && end, '水系线段端点拓扑缺失');
@@ -873,7 +940,9 @@ void main(){
         record.nativeElevation,
         record.z,
         record.classValue,
-        record.width,
+        record.mainstemCode,
+        record.sourceWidth,
+        record.progress,
         record.degree
       );
       overviewNodeValues.push(
@@ -881,7 +950,9 @@ void main(){
         record.overviewElevation,
         record.z,
         record.classValue,
-        record.width,
+        record.mainstemCode,
+        record.sourceWidth,
+        record.progress,
         record.degree
       );
     }
@@ -889,7 +960,7 @@ void main(){
     state.hydrologyEndpointCount = endpointCount;
     state.hydrologyJunctionCount = junctionCount;
     state.hydrologyBendCapCount = bendCapCount;
-    state.hydrologyRenderNodeCount = nativeNodeValues.length / 6;
+    state.hydrologyRenderNodeCount = nativeNodeValues.length / HYDROLOGY_RENDER_NODE_STRIDE;
     state.hydrologyVisualJoinGapPx = 0;
     assert(state.hydrologyRenderNodeCount > 0, '水系连续接缝节点为空');
     assert(state.hydrologyRenderNodeCount < state.hydrologySourceNodeCount, '水系仍在逐顶点绘制粗圆点');
@@ -914,19 +985,23 @@ void main(){
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, values, gl.STATIC_DRAW);
-      const segmentStride = 8 * 4;
-      gl.enableVertexAttribArray(1);
-      gl.vertexAttribPointer(1, 3, gl.FLOAT, false, segmentStride, 0);
-      gl.vertexAttribDivisor(1, 1);
-      gl.enableVertexAttribArray(2);
-      gl.vertexAttribPointer(2, 3, gl.FLOAT, false, segmentStride, 3 * 4);
-      gl.vertexAttribDivisor(2, 1);
-      gl.enableVertexAttribArray(3);
-      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, segmentStride, 6 * 4);
-      gl.vertexAttribDivisor(3, 1);
-      gl.enableVertexAttribArray(4);
-      gl.vertexAttribPointer(4, 1, gl.FLOAT, false, segmentStride, 7 * 4);
-      gl.vertexAttribDivisor(4, 1);
+      const segmentStride = HYDROLOGY_SEGMENT_STRIDE * 4;
+      const attributes = [
+        [1, 3, 0],
+        [2, 3, 3],
+        [3, 1, 6],
+        [4, 1, 7],
+        [5, 1, 8],
+        [6, 1, 9],
+        [7, 1, 10],
+        [8, 1, 11],
+        [9, 1, 12],
+      ];
+      for (const [location, size, floatOffset] of attributes) {
+        gl.enableVertexAttribArray(location);
+        gl.vertexAttribPointer(location, size, gl.FLOAT, false, segmentStride, floatOffset * 4);
+        gl.vertexAttribDivisor(location, 1);
+      }
       gl.bindVertexArray(null);
       return { vao, instanceBuffer };
     };
@@ -937,15 +1012,19 @@ void main(){
       gl.bindVertexArray(vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(values), gl.STATIC_DRAW);
-      const nodeStride = 6 * 4;
-      gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, nodeStride, 0);
-      gl.enableVertexAttribArray(1);
-      gl.vertexAttribPointer(1, 1, gl.FLOAT, false, nodeStride, 3 * 4);
-      gl.enableVertexAttribArray(2);
-      gl.vertexAttribPointer(2, 1, gl.FLOAT, false, nodeStride, 4 * 4);
-      gl.enableVertexAttribArray(3);
-      gl.vertexAttribPointer(3, 1, gl.FLOAT, false, nodeStride, 5 * 4);
+      const nodeStride = HYDROLOGY_RENDER_NODE_STRIDE * 4;
+      const attributes = [
+        [0, 3, 0],
+        [1, 1, 3],
+        [2, 1, 4],
+        [3, 1, 5],
+        [4, 1, 6],
+        [5, 1, 7],
+      ];
+      for (const [location, size, floatOffset] of attributes) {
+        gl.enableVertexAttribArray(location);
+        gl.vertexAttribPointer(location, size, gl.FLOAT, false, nodeStride, floatOffset * 4);
+      }
       gl.bindVertexArray(null);
       return { vao, buffer };
     };
@@ -1696,7 +1775,7 @@ void main(){
     const counts = state.hydrologyManifest.topology.record_counts;
     $('waterwayStatus').textContent = `河 ${counts.river.toLocaleString()} · 溪 ${counts.stream.toLocaleString()} · 渠 ${counts.canal.toLocaleString()}`;
     const style = waterwayStyleMetrics();
-    $('waterwayWidthStatus').textContent = `主河 ${style.mainstem_full_width_css_px.toFixed(1)} px · 支流 ${style.secondary_river_max_full_width_css_px.toFixed(1)} px · 小溪 ${style.stream_max_full_width_css_px.toFixed(1)} px`;
+    $('waterwayWidthStatus').textContent = `主河上游 ${style.mainstem_upstream_full_width_css_px.toFixed(1)} → 下游 ${style.mainstem_downstream_full_width_css_px.toFixed(1)} px · 支流 ${style.secondary_river_max_full_width_css_px.toFixed(1)} px · 小溪 ${style.stream_max_full_width_css_px.toFixed(1)} px`;
     $('waterwayJoinStatus').textContent = `汇流 ${state.hydrologyJunctionCount.toLocaleString()} · 接缝 0 px`;
     const detailText = state.detailActive ? ` · 原生近景 ${state.detailMesh.triangleCount.toLocaleString()} 三角形` : '';
     renderInfo.textContent = `桂林全域 ${state.overviewMesh?.triangleCount.toLocaleString() || 0} 三角形${detailText} · 细线连通水系 ${state.hydrologySegmentCount.toLocaleString()} 段`;
@@ -1755,6 +1834,10 @@ void main(){
         state.hydrologyManifest?.topology?.elevation_fallback_vertex_count ??
         0,
       hydrology_source_route_coverage: state.hydrologyManifest?.topology?.source_route_coverage ?? 1,
+      hydrology_segment_vertex_order: state.hydrologyManifest?.direction?.segment_vertex_order || null,
+      hydrology_flow_progress_monotonic: state.hydrologyManifest?.direction?.flow_progress_monotonic ?? false,
+      hydrology_flow_distance_monotonic: state.hydrologyManifest?.direction?.flow_distance_monotonic ?? false,
+      hydrology_future_flow_animation_ready: state.hydrologyManifest?.direction?.future_flow_animation_ready ?? false,
       hydrology_node_count: state.hydrologySourceNodeCount,
       hydrology_render_node_count: state.hydrologyRenderNodeCount,
       hydrology_endpoint_count: state.hydrologyEndpointCount,
