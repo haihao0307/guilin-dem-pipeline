@@ -1,0 +1,51 @@
+name: Inspect Guilin explicit mainstems
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-guilin-mainstems.yml
+      - tools/inspect_guilin_mainstems.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install geometry dependencies
+        run: python -m pip install --disable-pip-version-check pyproj==3.7.1 shapely==2.1.1
+
+      - name: Inspect exact named river features
+        run: |
+          set -euo pipefail
+          python tools/inspect_guilin_mainstems.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('qa/GUILIN_MAINSTEM_SOURCE_INSPECTION.json').read_text())
+          for name in ('li','xiang','zi'):
+              assert p['systems'][name]['feature_count'] > 0
+              assert p['systems'][name]['source_coordinate_segment_count'] > 0
+          assert p['total_explicit_segment_count'] < p['total_source_linear_segment_count_reference']
+          PY
+
+      - name: Commit inspection report
+        run: |
+          set -euo pipefail
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add qa/GUILIN_MAINSTEM_SOURCE_INSPECTION.json
+          git commit -m "docs(guilin): record explicit mainstem source coverage"
+          git push origin HEAD:main
