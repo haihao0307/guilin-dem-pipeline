@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cloud Mother v0.1</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#84b8e8;font:12px system-ui,sans-serif;color:#eef7ff}
+#ui{position:fixed;top:12px;left:12px;z-index:5;background:rgba(11,22,34,.5);backdrop-filter:blur(8px);padding:10px 12px;border-radius:12px;min-width:210px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+#ui h1{margin:0 0 8px;font-size:13px;font-weight:600}
+#ui .row{display:grid;grid-template-columns:74px 1fr 34px;gap:8px;align-items:center;margin:6px 0}
+#ui input{width:100%}
+#hint{opacity:.8;line-height:1.45;margin-top:8px}
+canvas{display:block}
+</style>
+</head>
+<body>
+<div id="ui">
+  <h1>Cloud Mother v0.1</h1>
+  <div class="row"><span>Density</span><input id="density" type="range" min="0.2" max="1.4" step="0.01" value="0.82"><span id="densityV">0.82</span></div>
+  <div class="row"><span>Coverage</span><input id="coverage" type="range" min="0.2" max="0.8" step="0.01" value="0.48"><span id="coverageV">0.48</span></div>
+  <div class="row"><span>Speed</span><input id="speed" type="range" min="0.0" max="1.2" step="0.01" value="0.18"><span id="speedV">0.18</span></div>
+  <div class="row"><span>Sun</span><input id="sun" type="range" min="0.1" max="1.2" step="0.01" value="0.72"><span id="sunV">0.72</span></div>
+  <div id="hint">Mouse drag rotates. Wheel zooms. Single HTML, no stored images, cloud state only.</div>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
+document.body.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x97c0e8,.0016);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,8000);
+camera.position.set(-160,80,150);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(0,70,0);
+controls.enableDamping=true;
+controls.maxPolarAngle=Math.PI*.49;
+controls.minDistance=60;
+controls.maxDistance=650;
+
+const sun=new THREE.DirectionalLight(0xfff4db,2.9);
+sun.position.set(-1,1.15,.45).normalize().multiplyScalar(700);
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0xd8ebff,1.15));
+
+const skyGeo=new THREE.SphereGeometry(4200,48,24);
+const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{uSun:{value:sun.position.clone().normalize()}},vertexShader:`varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
+fragmentShader:`varying vec3 vW;uniform vec3 uSun;vec3 srgb(vec3 c){return pow(c,vec3(.454545));}void main(){vec3 d=normalize(vW-cameraPosition);float h=max(d.y*.5+.5,0.);vec3 a=mix(vec3(.67,.78,.93),vec3(.14,.34,.64),pow(1.-h,2.2));float sd=max(dot(d,normalize(uSun)),0.);a+=vec3(1.,.72,.38)*pow(sd,128.)*.65;a+=vec3(1.,.88,.7)*pow(sd,18.)*.12;gl_FragColor=vec4(srgb(a),1.);}`});
+scene.add(new THREE.Mesh(skyGeo,skyMat));
+
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),new THREE.ShaderMaterial({transparent:false,uniforms:{uTime:{value:0},uSpeed:{value:.18},uSun:{value:sun.position.clone().normalize()},uDensity:{value:.82},uCoverage:{value:.48}},vertexShader:`varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
+fragmentShader:`varying vec3 vW;uniform float uTime,uSpeed,uDensity,uCoverage;uniform vec3 uSun;float h12(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=h12(i),b=h12(i+vec2(1,0)),c=h12(i+vec2(0,1)),d=h12(i+1.);return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=n2(p)*a;p=p*2.02+13.1;a*=.5;}return s;}void main(){vec2 uv=(vW.xz+uSun.xz*190.)*.003;uv+=vec2(uTime*uSpeed*.35,uTime*uSpeed*.08);float c=fbm(uv*.75);c=smoothstep(uCoverage-.08,uCoverage+.18,c);float sh=mix(1.,.62,c*uDensity);vec3 col=mix(vec3(.34,.45,.24),vec3(.53,.67,.36),smoothstep(-200.,120.,vW.z));col*=sh;col*=1.+max(dot(normalize(vec3(.2,1.,.1)),normalize(uSun)),0.)*.12;gl_FragColor=vec4(col,1.);}` }));
+ground.rotation.x=-Math.PI/2;ground.position.y=0;scene.add(ground);
+
+const cloudGeo=new THREE.BoxGeometry(900,220,900);
+const cloudMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.BackSide,uniforms:{uTime:{value:0},uSun:{value:sun.position.clone().normalize()},uDensity:{value:.82},uCoverage:{value:.48},uSpeed:{value:.18},uBoundsMin:{value:new THREE.Vector3(-450,-110,-450)},uBoundsMax:{value:new THREE.Vector3(450,110,450)}},vertexShader:`varying vec3 vOrigin;varying vec3 vDir;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vOrigin=(inverse(modelMatrix)*vec4(cameraPosition,1.)).xyz;vDir=position-vOrigin;gl_Position=projectionMatrix*mv;}`,
+fragmentShader:`precision highp float;varying vec3 vOrigin;varying vec3 vDir;uniform float uTime,uDensity,uCoverage,uSpeed;uniform vec3 uSun,uBoundsMin,uBoundsMax;#define PI 3.14159265359
+float h13(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453123);}float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float n000=h13(i),n100=h13(i+vec3(1,0,0)),n010=h13(i+vec3(0,1,0)),n110=h13(i+vec3(1,1,0)),n001=h13(i+vec3(0,0,1)),n101=h13(i+vec3(1,0,1)),n011=h13(i+vec3(0,1,1)),n111=h13(i+vec3(1,1,1));float nx00=mix(n000,n100,f.x),nx10=mix(n010,n110,f.x),nx01=mix(n001,n101,f.x),nx11=mix(n011,n111,f.x);return mix(mix(nx00,nx10,f.y),mix(nx01,nx11,f.y),f.z);}float fbm(vec3 p){float s=0.,a=.54;for(int i=0;i<5;i++){s+=n3(p)*a;p=p*2.02+11.17;a*=.52;}return s;}vec2 hitBox(vec3 o,vec3 d){vec3 inv=1./d;vec3 t0=(uBoundsMin-o)*inv,t1=(uBoundsMax-o)*inv;vec3 s=min(t0,t1),b=max(t0,t1);return vec2(max(s.x,max(s.y,s.z)),min(b.x,min(b.y,b.z)));}float hg(float g,float ct){float g2=g*g;return (1.-g2)/(4.*PI*pow(1.+g2-2.*g*ct,1.5));}float densityAt(vec3 p){vec3 lp=(p-uBoundsMin)/(uBoundsMax-uBoundsMin);float edge=smoothstep(.02,.18,lp.x)*smoothstep(.02,.18,lp.z)*smoothstep(.02,.28,lp.y);edge*=smoothstep(.98,.82,lp.x)*smoothstep(.98,.82,lp.z)*smoothstep(.98,.7,lp.y);float height=smoothstep(.15,.35,lp.y)*(1.-smoothstep(.72,.95,lp.y));vec3 q=p*.008+vec3(uTime*uSpeed*.9,0.,uTime*uSpeed*.24);vec3 w=p*.003;w.xz+=vec2(fbm(q*.35),fbm(q*.35+17.))*34.;float base=fbm(w+vec3(0.,2.,0.));float detail=fbm(q*1.5);float shaped=mix(base,detail,.42);float d=smoothstep(uCoverage-.09,uCoverage+.18,shaped);d*=height*edge;d*=mix(.7,1.3,smoothstep(.32,.62,lp.y));return d*uDensity;}float lightAt(vec3 p){float s=0.;vec3 ld=normalize(uSun);for(int i=0;i<6;i++){vec3 sp=p+ld*(18.+float(i)*16.);s+=densityAt(sp)*.14;}return exp(-s*1.65);}void main(){vec3 rayDir=normalize(vDir);vec2 bounds=hitBox(vOrigin,rayDir);if(bounds.x>bounds.y) discard;bounds.x=max(bounds.x,0.);float dist=bounds.x;float farT=bounds.y;float stepL=max((farT-dist)/48.,3.5);vec3 p=vOrigin+rayDir*(dist+stepL*fract(sin(gl_FragCoord.x*13.17+gl_FragCoord.y*7.31)*43758.5453));vec3 col=vec3(0.);float alpha=0.;float mu=dot(rayDir,normalize(uSun));for(int i=0;i<56;i++){if(dist>farT||alpha>.985) break;float d=densityAt(p);if(d>.01){float l=lightAt(p);float ph=mix(hg(.68,mu),hg(-.2,mu),.22);vec3 sunCol=vec3(1.,.93,.82)*(1.25*l*ph+0.14*l);vec3 ambCol=vec3(.56,.67,.8)*.55;vec3 scat=(sunCol+ambCol)*d;float a=(1.-alpha)*(d*.11);col+=scat*a*(1.15-.55*alpha);alpha+=a;}dist+=stepL;p+=rayDir*stepL;}col=mix(col,col+vec3(.26,.24,.18)*pow(max(mu,0.),8.)*(1.-alpha),.45);gl_FragColor=vec4(col,alpha);}`});
+const cloud=new THREE.Mesh(cloudGeo,cloudMat);cloud.position.set(0,120,0);scene.add(cloud);
+
+const ui=['density','coverage','speed','sun'];
+const el=Object.fromEntries(ui.map(id=>[id,document.getElementById(id)]));
+const val=id=>document.getElementById(id+'V');
+function sync(){for(const id of ui) val(id).textContent=(+el[id].value).toFixed(2);cloudMat.uniforms.uDensity.value=+el.density.value;cloudMat.uniforms.uCoverage.value=+el.coverage.value;cloudMat.uniforms.uSpeed.value=+el.speed.value;ground.material.uniforms.uDensity.value=+el.density.value;ground.material.uniforms.uCoverage.value=+el.coverage.value;ground.material.uniforms.uSpeed.value=+el.speed.value;const ang=+el.sun.value;sun.position.set(-Math.cos(ang),Math.sin(ang),.45).normalize().multiplyScalar(700);const s=sun.position.clone().normalize();cloudMat.uniforms.uSun.value.copy(s);skyMat.uniforms.uSun.value.copy(s);ground.material.uniforms.uSun.value.copy(s);}ui.forEach(id=>el[id].addEventListener('input',sync));sync();
+
+const clock=new THREE.Clock();
+function tick(){requestAnimationFrame(tick);const t=clock.getElapsedTime();controls.update();cloudMat.uniforms.uTime.value=t;ground.material.uniforms.uTime.value=t;renderer.render(scene,camera);}tick();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>
