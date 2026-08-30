@@ -4,6 +4,8 @@
   const MANIFEST_URL = 'data/NATIVE_ELEVATION_MANIFEST.json';
   const OVERVIEW_MANIFEST_URL = 'data/overview-direct-samples-manifest.json';
   const HYDROLOGY_MANIFEST_URL = 'data/osm-waterways-manifest.json';
+  const NATIVE_TILE_RUNTIME_BASE_URL = '../guilin-truth-data/native/';
+  const DISTILLED_KNOWLEDGE_RUNTIME = true;
 
   const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
   const EXPECTED_AOI_SHA = '36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80';
@@ -1067,7 +1069,7 @@ void main(){
     if (state.tileLoadPromises.has(tile.id)) return state.tileLoadPromises.get(tile.id);
 
     const promise = (async () => {
-      const buffer = await fetchBinary(`data/${tile.file}`);
+      const buffer = await fetchBinary(`${NATIVE_TILE_RUNTIME_BASE_URL}${tile.file}`);
       assert(buffer.byteLength === TILE_BYTES, `${tile.id} 字节数不正确`);
       const digest = await sha256Hex(buffer);
       assert(digest === tile.sha256, `${tile.id} SHA256 不正确`);
@@ -1805,6 +1807,10 @@ void main(){
       one_continuous_map: true,
       continuous_zoom: true,
       tile_picker_required: false,
+      distilled_knowledge_runtime: DISTILLED_KNOWLEDGE_RUNTIME,
+      native_tile_delivery: 'same-origin-on-demand',
+      full_truth_downloaded_on_page_open: false,
+      stale_public_assets_allowed: false,
       overview_grid: state.overviewManifest?.asset?.grid || null,
       overview_direct_source_selection: state.overviewManifest?.asset?.selection || null,
       overview_interpolation: state.overviewManifest?.asset?.interpolation || null,

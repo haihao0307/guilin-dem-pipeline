@@ -1,0 +1,96 @@
+{
+  "schema": "guilin-dem-distilled-knowledge-runtime/v1",
+  "status": "review_asset",
+  "truth": {
+    "source_file": "guilin_raw_union_12_5m.tif",
+    "source_bytes": 124348471,
+    "source_sha256": "9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4",
+    "aoi_geometry_sha256": "36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80",
+    "native_spacing_m": [
+      12.5,
+      12.5
+    ],
+    "native_grid": [
+      17408,
+      18867
+    ],
+    "native_tile_count": 54,
+    "native_tile_bytes_each": 8388608,
+    "compression": "none",
+    "resampling": "none",
+    "height_image_texture_used": false
+  },
+  "terrain_knowledge": {
+    "aoi_bounds_epsg32649": [
+      380343.75,
+      2705931.25,
+      530118.75,
+      2926981.25
+    ],
+    "native_sample_window": [
+      2438,
+      949,
+      11983,
+      17685
+    ],
+    "overview_grid": [
+      768,
+      768
+    ],
+    "overview_selection": "exact-native-sample-index-lattice",
+    "overview_interpolation": "none",
+    "elevation_range_m": [
+      56,
+      2048
+    ]
+  },
+  "hydrology_knowledge": {
+    "full_record_counts": {
+      "river": 707,
+      "stream": 174,
+      "canal": 37
+    },
+    "full_source_segment_count": 155429,
+    "full_source_node_count": 155446,
+    "mainstem_names": [
+      "漓江",
+      "湘江",
+      "资江"
+    ],
+    "mainstem_segment_counts": {
+      "li": 2259,
+      "xiang": 2032,
+      "zi": 1736
+    },
+    "segment_vertex_order": "upstream_to_downstream",
+    "flow_progress_monotonic": true,
+    "flow_distance_monotonic": true,
+    "future_flow_animation_ready": true,
+    "lake_surface_asset_count": 0,
+    "reservoir_surface_asset_count": 0,
+    "synthetic_surface_asset_count": 0
+  },
+  "runtime": {
+    "profile": "knowledge-indexed-first-load-v1",
+    "online_page_mode": "small viewer plus knowledge index plus on-demand data",
+    "initial_numeric_data_bytes": 3190597,
+    "initial_numeric_data_mib": 3.043,
+    "distilled_hydrology_segment_count": 21027,
+    "distilled_hydrology_node_count": 26023,
+    "native_tile_delivery": "same-origin-on-demand",
+    "canonical_native_tile_store": "GitHub Release guilin-native-12p5m-single-truth-v001",
+    "canonical_native_tile_release_base_url": "https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-native-12p5m-single-truth-v001/",
+    "runtime_native_tile_store": "GitHub Pages /guilin-truth-data/native/",
+    "native_tile_runtime_base_url": "../guilin-truth-data/native/",
+    "native_tile_download_bytes_per_tile": 8388608,
+    "all_native_tiles_downloaded_on_page_open": false,
+    "full_truth_downloaded_on_page_open": false,
+    "stale_public_assets_allowed": false
+  },
+  "lineage": {
+    "native_manifest_sha256": "7c06d0f7a6c082a97bdd4fb947038ec9ff81cb83e9782ccd991b3600c3a7068c",
+    "overview_manifest_sha256": "4b77efef0ba2116474c490274e18e8e0d8a3ab94fdca5cfe0c9b164091e463ab",
+    "full_hydrology_manifest_sha256": "aba618cd1b998e7410ed473e49d5088b7016e014fb48774c2616e236f57d7e9a",
+    "runtime_hydrology_manifest_sha256": "7d242c0e70f01a851cb08cd8b1d143a361779a11b2c5f5c022aedb9b35b02808"
+  }
+}
