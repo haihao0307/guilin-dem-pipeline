@@ -1,0 +1,105 @@
+name: Bootstrap Landscape Mother procedural field core v3.7.0
+
+on:
+  push:
+    branches:
+      - skill/xiaowang-gaea-terrain-field-v100
+    paths:
+      - .integration/landscape-mother-v370.bundle.b64.*
+      - .github/workflows/bootstrap-landscape-mother-field-v370.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bootstrap-landscape-mother-field-v370
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+        with:
+          ref: skill/xiaowang-gaea-terrain-field-v100
+          fetch-depth: 0
+
+      - name: Stop cleanly after one-time bootstrap removal
+        id: bundle
+        shell: bash
+        run: |
+          if ls .integration/landscape-mother-v370.bundle.b64.* >/dev/null 2>&1; then
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify and unpack integration bundle
+        if: steps.bundle.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .integration/landscape-mother-v370.bundle.b64.* | base64 --decode > "$RUNNER_TEMP/landscape-mother-v370-integration-bundle.zip"
+          test "$(sha256sum "$RUNNER_TEMP/landscape-mother-v370-integration-bundle.zip" | awk '{print $1}')" = "a698d2a0abddd42d6defce7cd9c03d03b90aed2bcf0da35800fe854d3188ded8"
+          unzip -o "$RUNNER_TEMP/landscape-mother-v370-integration-bundle.zip" -d .
+
+      - name: Restore latest approved source runtime parts 24 through 39
+        if: steps.bundle.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          mkdir -p web/yangshuo-karst-distilled-v320
+          for index in $(seq 24 39); do
+            git show "origin/gh-pages:yangshuo-karst-distilled-v320/app.part${index}.js" > "web/yangshuo-karst-distilled-v320/app.part${index}.js"
+            test -s "web/yangshuo-karst-distilled-v320/app.part${index}.js"
+          done
+
+      - name: Validate exact knowledge and runtime integration
+        if: steps.bundle.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node skills/dem-procedural-landscape/branches/procedural-field-core/scripts/test-field-reference.js
+          node --check web/yangshuo-karst-distilled-v320/app.js
+          cat web/yangshuo-karst-distilled-v320/app.part*.js > "$RUNNER_TEMP/landscape-mother-runtime.mjs"
+          node --check "$RUNNER_TEMP/landscape-mother-runtime.mjs"
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          intake=Path('knowledge/terrain-hydrology/shared/inbox/2026-08-30_procedural-field-knowledge-mini-v100')
+          assert hashlib.sha256((intake/'PROCEDURAL_FIELD_KNOWLEDGE_MINI_V1.0_2026-08-30.zip').read_bytes()).hexdigest() == 'd69ecd2677507db9342a1d66092a8d6cf4255141346b14cc4629303bf1c4f396'
+          manifest=json.loads((intake/'package/PACKAGE_MANIFEST_SHA256.json').read_text())
+          failures=[]
+          for entry in manifest['files']:
+              path=intake/'package'/entry['path']
+              if path.stat().st_size != entry['bytes'] or hashlib.sha256(path.read_bytes()).hexdigest() != entry['sha256']:
+                  failures.append(entry['path'])
+          assert not failures, failures
+          registry=json.loads(Path('skills/dem-procedural-landscape/BRANCH_REGISTRY.json').read_text())
+          ids=[item['id'] for item in registry['activeBranches']]
+          assert len(ids) == 7
+          assert 'gaea-terrain-field-graph' in ids
+          assert 'procedural-field-core' in ids
+          assert registry['globalRules']['continuousRiverTopologyRequired'] is True
+          assert registry['globalRules']['tileSeedRestartForbidden'] is True
+          PY
+          grep -Fq 'app.part40.js?v=3700' web/yangshuo-karst-distilled-v320/app.js
+          grep -Fq 'riverInternalBreakCount' web/yangshuo-karst-distilled-v320/app.part40.js
+          grep -Fq 'normalizedSplatV370' web/yangshuo-karst-distilled-v320/app.part40.js
+
+      - name: Commit integrated knowledge and v3.7.0 candidate
+        if: steps.bundle.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .integration/landscape-mother-v370.bundle.b64.*
+          rm -f .github/workflows/bootstrap-landscape-mother-field-v370.yml
+          rmdir .integration 2>/dev/null || true
+          git add -A
+          git commit -m 'feat(landscape-mother): integrate procedural field core and publish v3.7.0 candidate'
+          git push origin HEAD:skill/xiaowang-gaea-terrain-field-v100
