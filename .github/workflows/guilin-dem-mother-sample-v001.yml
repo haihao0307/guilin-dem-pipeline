@@ -1,0 +1,255 @@
+name: Guilin DEM Mother Sample v001
+
+on:
+  push:
+    branches:
+      - feature/dem-procedural-surface-ecology-v001
+    paths:
+      - experiments/guilin-dem-mother-sample-v001/**
+      - tests/guilin_dem_mother_sample_browser_test.mjs
+      - .github/workflows/guilin-dem-mother-sample-v001.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guilin-dem-mother-sample-v001
+  cancel-in-progress: true
+
+env:
+  SITE_DIR: build/guilin-mother-sample-v001
+  DESTINATION_DIR: guilin-mother-sample-v001
+  SOURCE_BRANCH: feature/dem-procedural-surface-ecology-v001
+  SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  TILE_FILE: native-r07-c02-2048x2048-i16.bin
+  TILE_SHA256: 5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215
+  TILE_BYTES: '8388608'
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out experiment branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate source contract and static runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat experiments/guilin-dem-mother-sample-v001/src/app.part*.txt > /tmp/guilin-dem-mother-app.js
+          node --check /tmp/guilin-dem-mother-app.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('experiments/guilin-dem-mother-sample-v001')
+          contract = json.loads((root / 'sample-contract.json').read_text(encoding='utf-8'))
+          assert contract['schema'] == 'dem-mother-guilin-sample/v1'
+          assert contract['skill'] == {
+              'id': 'dem-procedural-surface-ecology',
+              'version': '0.1.0',
+              'module': 'DEM-M03',
+          }
+          assert contract['sample']['grid'] == [81, 81]
+          assert contract['sample']['spacing_m'] == 12.5
+          assert contract['sample']['side_m'] == 1000.0
+          assert contract['sample']['area_km2'] == 1.0
+          assert contract['sample']['source_pixel_window_integer'] is True
+          assert contract['source']['source_tiff_sha256'] == '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert contract['source']['parent_tile_sha256'] == '5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215'
+          rules = contract['rules']
+          assert rules['truthOverwrite'] is False
+          assert rules['sourceResampling'] is False
+          assert rules['syntheticGapFill'] is False
+          assert rules['verticalScale'] == 1.0
+          assert rules['manualWaterway'] is False
+          assert rules['proceduralMountains'] is False
+          assert contract['approvals'] == {'visualAcceptance': False, 'productionReady': False}
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          app = Path('/tmp/guilin-dem-mother-app.js').read_text(encoding='utf-8')
+          assert 'http://' not in html and 'https://' not in html
+          assert 'sourceResampling: false' in app
+          assert 'truth_overwrite: false' in app
+          assert 'synthetic_gap_fill: false' in app
+          assert 'vertical_scale: 1' in app
+          print('Static contract QA passed')
+          PY
+
+      - name: Assemble self-contained review site from canonical gh-pages assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$SITE_DIR"
+          mkdir -p "$SITE_DIR/data" "$SITE_DIR/evidence"
+          cp -a experiments/guilin-dem-mother-sample-v001/. "$SITE_DIR/"
+          cat "$SITE_DIR"/src/app.part*.txt > "$SITE_DIR/app.js"
+          rm -rf "$SITE_DIR/src"
+          touch "$SITE_DIR/.nojekyll"
+
+          git fetch --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+          git show origin/gh-pages:guilin/data/NATIVE_ELEVATION_MANIFEST.json > "$SITE_DIR/data/NATIVE_ELEVATION_MANIFEST.json"
+          git show "origin/gh-pages:guilin/data/$TILE_FILE" > "$SITE_DIR/data/$TILE_FILE"
+          git show origin/gh-pages:guilin/data/osm-waterways-manifest.json > "$SITE_DIR/data/osm-waterways-manifest.json"
+          SEGMENT_FILE="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('build/guilin-mother-sample-v001/data/osm-waterways-manifest.json')
+          print(json.loads(p.read_text(encoding='utf-8'))['segments']['file'])
+          PY
+          )"
+          git show "origin/gh-pages:guilin/data/$SEGMENT_FILE" > "$SITE_DIR/data/$SEGMENT_FILE"
+
+      - name: Verify copied canonical assets and sample window
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import struct
+          from pathlib import Path
+
+          site = Path(os.environ['SITE_DIR'])
+          manifest = json.loads((site / 'data/NATIVE_ELEVATION_MANIFEST.json').read_text(encoding='utf-8'))
+          hydrology = json.loads((site / 'data/osm-waterways-manifest.json').read_text(encoding='utf-8'))
+          contract = json.loads((site / 'sample-contract.json').read_text(encoding='utf-8'))
+          tile = site / 'data' / os.environ['TILE_FILE']
+          segment = site / 'data' / hydrology['segments']['file']
+
+          def sha256(path):
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for block in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(block)
+              return h.hexdigest()
+
+          assert manifest['schema'] == 'guilin-canonical-native-dem/v1'
+          assert manifest['status'] == 'sole_authoritative'
+          assert manifest['source']['sha256'] == os.environ['SOURCE_TIFF_SHA256']
+          assert manifest['source']['resolution_m'] == [12.5, 12.5]
+          tile_meta = next(t for t in manifest['tiles'] if t['id'] == 'native-r07-c02')
+          assert tile_meta['file'] == os.environ['TILE_FILE']
+          assert tile_meta['sha256'] == os.environ['TILE_SHA256']
+          assert tile_meta['stored_bytes'] == int(os.environ['TILE_BYTES'])
+          assert tile_meta['resampling'] == 'none'
+          assert tile_meta['source_elevation_modified_m'] == 0.0
+          assert tile.stat().st_size == int(os.environ['TILE_BYTES'])
+          assert sha256(tile) == os.environ['TILE_SHA256']
+          assert segment.stat().st_size == hydrology['segments']['bytes']
+          assert sha256(segment) == hydrology['segments']['sha256']
+          assert hydrology['source']['centerline_coordinates_mutated'] is False
+          assert hydrology['source']['manual_centerline_added'] is False
+          assert hydrology['source']['synthetic_gap_line_added'] is False
+          assert hydrology['filter']['polygon_waterbodies_allowed'] is False
+          assert hydrology['topology']['dropped_segment_count'] == 0
+
+          window_x, window_y, width, height = contract['sample']['parent_tile_window']
+          assert [width, height] == [81, 81]
+          assert window_x + width <= tile_meta['valid_grid'][0]
+          assert window_y + height <= tile_meta['valid_grid'][1]
+          with tile.open('rb') as f:
+              values = []
+              for row in range(window_y, window_y + height):
+                  f.seek((row * 2048 + window_x) * 2)
+                  values.extend(struct.unpack('<' + 'h' * width, f.read(width * 2)))
+          assert len(values) == 81 * 81
+          assert all(value != 0 for value in values)
+          assert min(values) >= tile_meta['elevation_range_m'][0]
+          assert max(values) <= tile_meta['elevation_range_m'][1]
+          print(json.dumps({
+              'asset_validation': 'passed',
+              'sample_elevation_range_m': [min(values), max(values)],
+              'sample_grid': [81, 81],
+              'source_resampling': False,
+              'truth_overwrite': False,
+          }, indent=2))
+          PY
+
+      - name: Install browser QA runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4173 --directory "$SITE_DIR" > /tmp/guilin-dem-mother-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/guilin_dem_mother_sample_browser_test.mjs \
+            http://127.0.0.1:4173/ \
+            "$SITE_DIR/evidence"
+          kill "$SERVER_PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Write release evidence and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          site = Path(os.environ['SITE_DIR'])
+          qa = json.loads((site / 'evidence/browser-qa.json').read_text(encoding='utf-8'))
+          files = {}
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name != 'SHA256SUMS.txt'):
+              relative = path.relative_to(site).as_posix()
+              files[relative] = {
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              }
+          evidence = {
+              'schema': 'guilin-dem-mother-sample-release-evidence/v1',
+              'commit': os.environ['GITHUB_SHA'],
+              'branch': os.environ['GITHUB_REF_NAME'],
+              'destination_dir': os.environ['DESTINATION_DIR'],
+              'passed': qa['passed'],
+              'visualAcceptance': False,
+              'productionReady': False,
+              'source_tiff_sha256': os.environ['SOURCE_TIFF_SHA256'],
+              'parent_tile_sha256': os.environ['TILE_SHA256'],
+              'files': files,
+          }
+          (site / 'release-evidence.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          lines = []
+          for path in sorted(p for p in site.rglob('*') if p.is_file() and p.name != 'SHA256SUMS.txt'):
+              relative = path.relative_to(site).as_posix()
+              lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {relative}")
+          (site / 'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-dem-mother-sample-v001-evidence
+          path: build/guilin-mother-sample-v001/evidence
+          if-no-files-found: warn
+
+      - name: Publish isolated review page
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ${{ env.SITE_DIR }}
+          destination_dir: ${{ env.DESTINATION_DIR }}
