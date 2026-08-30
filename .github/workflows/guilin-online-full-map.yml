@@ -1,0 +1,284 @@
+name: Guilin continuous full map and OSM waterways
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - viewer/**
+      - pipeline/build_online_assets.py
+      - tests/browser_full_map_cdp.py
+      - truth/NATIVE_ELEVATION_MANIFEST.json
+      - truth/OSM_HYDROLOGY_IMMUTABLE.geojson
+      - contracts/**
+      - knowledge/**
+      - .github/workflows/guilin-online-full-map.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: guilin-continuous-full-map
+  cancel-in-progress: true
+
+env:
+  RELEASE_TAG: guilin-native-12p5m-single-truth-v001
+  SOURCE_FILE: guilin_raw_union_12_5m.tif
+  SOURCE_BYTES: '124348471'
+  SOURCE_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  SITE_DIR: out/site
+  ASSET_DIR: out/generated
+  EVIDENCE_DIR: out/evidence
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/guilin/
+
+jobs:
+  build-publish-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - name: Checkout the sole truth main line
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deterministic geospatial and browser QA dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check \
+            numpy==2.1.3 rasterio==1.4.3 pyproj==3.7.1 shapely==2.1.1 \
+            requests==2.32.4 websocket-client==1.8.0
+          if ! command -v google-chrome >/dev/null 2>&1 && \
+             ! command -v google-chrome-stable >/dev/null 2>&1 && \
+             ! command -v chromium >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y chromium
+          fi
+
+      - name: Verify the production contract and viewer architecture
+        run: |
+          set -euo pipefail
+          python -m py_compile pipeline/build_online_assets.py tests/browser_full_map_cdp.py
+          node --check viewer/app.js
+          grep -q 'guilin-continuous-full-map-v1' viewer/index.html
+          grep -q 'one_continuous_map: true' viewer/app.js
+          grep -q 'tile_picker_required: false' viewer/app.js
+          grep -q 'osm_linear_waterways_loaded' viewer/app.js
+          ! grep -E 'createTexture|texImage2D|sampler2D|heightmap' viewer/app.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path('truth/NATIVE_ELEVATION_MANIFEST.json').read_text())
+          assert manifest['schema']=='guilin-canonical-native-dem/v1'
+          assert manifest['status']=='sole_authoritative'
+          assert manifest['source']['sha256']=='9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert manifest['source']['resolution_m']==[12.5,12.5]
+          assert manifest['tile_matrix']['compression']=='none'
+          assert manifest['tile_matrix']['resampling']=='none'
+          assert len(manifest['tiles'])==54
+          assert manifest['rules']['height_image_texture_used'] is False
+          assert manifest['rules']['reservoir_surface_asset_emitted'] is False
+          assert manifest['rules']['lake_surface_asset_emitted'] is False
+          PY
+
+      - name: Download and verify the immutable source TIFF
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache "$ASSET_DIR" "$SITE_DIR/data" "$EVIDENCE_DIR"
+          gh release download "$RELEASE_TAG" --pattern "$SOURCE_FILE" --dir .cache --clobber
+          test "$(stat -c '%s' .cache/$SOURCE_FILE)" = "$SOURCE_BYTES"
+          echo "$SOURCE_SHA256  .cache/$SOURCE_FILE" | sha256sum -c -
+
+      - name: Build the full AOI direct-sample overview and OSM linear waterways
+        run: |
+          set -euo pipefail
+          python pipeline/build_online_assets.py \
+            --mosaic ".cache/$SOURCE_FILE" \
+            --native-manifest truth/NATIVE_ELEVATION_MANIFEST.json \
+            --hydrology truth/OSM_HYDROLOGY_IMMUTABLE.geojson \
+            --output-dir "$ASSET_DIR" \
+            | tee "$EVIDENCE_DIR/full-map-build.log"
+          cp "$ASSET_DIR/FULL_MAP_BUILD_RECEIPT.json" "$EVIDENCE_DIR/"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          overview=json.loads(Path('out/generated/overview-direct-samples-manifest.json').read_text())
+          hydro=json.loads(Path('out/generated/osm-waterways-manifest.json').read_text())
+          assert overview['asset']['grid']==[768,768]
+          assert overview['asset']['selection']=='exact-native-sample-index-lattice'
+          assert overview['asset']['interpolation']=='none'
+          assert overview['asset']['compression']=='none'
+          assert overview['asset']['height_texture'] is False
+          assert hydro['filter']['lake_surface_asset_emitted'] is False
+          assert hydro['filter']['reservoir_surface_asset_emitted'] is False
+          assert hydro['filter']['synthetic_surface_asset_emitted'] is False
+          assert hydro['source']['centerline_coordinates_mutated'] is False
+          assert hydro['source']['manual_centerline_added'] is False
+          assert hydro['source']['synthetic_gap_line_added'] is False
+          assert hydro['topology']['segment_count'] > 1000
+          assert hydro['topology']['node_count'] > 1000
+          assert sum(hydro['topology']['record_counts'].values()) > 500
+          PY
+
+      - name: Assemble one continuous online map with all 54 raw native tiles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp viewer/index.html viewer/styles.css viewer/app.js "$SITE_DIR/"
+          cp truth/NATIVE_ELEVATION_MANIFEST.json "$SITE_DIR/data/"
+          cp "$ASSET_DIR"/overview-direct-heights.i16.bin "$SITE_DIR/data/"
+          cp "$ASSET_DIR"/overview-direct-samples-manifest.json "$SITE_DIR/data/"
+          cp "$ASSET_DIR"/osm-waterway-segments.f32.bin "$SITE_DIR/data/"
+          cp "$ASSET_DIR"/osm-waterway-nodes.f32.bin "$SITE_DIR/data/"
+          cp "$ASSET_DIR"/osm-waterways-manifest.json "$SITE_DIR/data/"
+          cp -a contracts knowledge "$SITE_DIR/"
+          gh release download "$RELEASE_TAG" \
+            --pattern 'native-r*-c*-2048x2048-i16.bin' \
+            --dir "$SITE_DIR/data" --clobber
+          touch "$SITE_DIR/.nojekyll"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root=Path('out/site')
+          manifest=json.loads((root/'data/NATIVE_ELEVATION_MANIFEST.json').read_text())
+          assert len(manifest['tiles'])==54
+          for tile in manifest['tiles']:
+              path=root/'data'/tile['file']
+              assert path.is_file(), path
+              assert path.stat().st_size==8_388_608, path
+              h=hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+              assert h.hexdigest()==tile['sha256'], path
+          assert len(list((root/'data').glob('native-r*-c*-2048x2048-i16.bin')))==54
+          assert not list(root.rglob('*.zip'))
+          assert not list(root.rglob('*.gz'))
+          assert not list(root.rglob('*.xz'))
+          assert not list(root.rglob('*.png'))
+          assert not list(root.rglob('*.jpg'))
+          assert not list(root.rglob('*.jpeg'))
+          app=(root/'app.js').read_text()
+          for token in ('createTexture','texImage2D','sampler2D','heightmap'):
+              assert token not in app, token
+          version={
+              'schema':'guilin-continuous-full-map-online-version/v1',
+              'head':os.environ['GITHUB_SHA'],
+              'run_id':int(os.environ['GITHUB_RUN_ID']),
+              'source_sha256':'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4',
+              'native_spacing_m':12.5,
+              'native_tile_count':54,
+              'one_continuous_map':True,
+              'continuous_zoom':True,
+              'osm_linear_waterways':True,
+              'lake_surface_asset_count':0,
+              'reservoir_surface_asset_count':0,
+              'height_image_texture_used':False,
+              'source_tile_compression':'none',
+          }
+          (root/'version.json').write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
+          PY
+          (cd "$SITE_DIR" && find . -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+
+      - name: Run local desktop, native-detail and mobile browser QA
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --bind 127.0.0.1 --directory "$SITE_DIR" > "$EVIDENCE_DIR/local-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 80); do
+            curl --fail --silent http://127.0.0.1:8765/ >/dev/null && break
+            sleep .25
+          done
+          python tests/browser_full_map_cdp.py \
+            --url http://127.0.0.1:8765/?build="$GITHUB_SHA" \
+            --evidence-dir "$EVIDENCE_DIR/local" \
+            --timeout 600
+          kill "$SERVER_PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Publish the corrected full map to the sole Guilin URL
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ${{ env.SITE_DIR }}
+          destination_dir: guilin
+          keep_files: true
+          enable_jekyll: false
+          commit_message: "Publish Guilin continuous full map and OSM waterways ${{ github.sha }}"
+
+      - name: Wait for the exact public build
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 150); do
+            if curl --fail --silent "$PUBLIC_URL/version.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-version.json" && \
+               grep -q "$GITHUB_SHA" "$EVIDENCE_DIR/public-version.json"; then
+              break
+            fi
+            sleep 5
+          done
+          grep -q "$GITHUB_SHA" "$EVIDENCE_DIR/public-version.json"
+          curl --fail --silent "$PUBLIC_URL/data/overview-direct-samples-manifest.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-overview-manifest.json"
+          curl --fail --silent "$PUBLIC_URL/data/osm-waterways-manifest.json?sha=$GITHUB_SHA" > "$EVIDENCE_DIR/public-hydrology-manifest.json"
+
+      - name: Run public desktop, native-detail and mobile browser QA
+        run: |
+          set -euo pipefail
+          python tests/browser_full_map_cdp.py \
+            --url "$PUBLIC_URL?build=$GITHUB_SHA" \
+            --evidence-dir "$EVIDENCE_DIR/public" \
+            --timeout 600
+
+      - name: Retire the workflow that kept overwriting the sole Guilin page
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git push origin --delete skill/dem-procedural-landscape-v010 || true
+          gh pr close 51 --comment '桂林公开入口已经回到唯一 12.5 米 DEM 总图主线，旧程序化发布线退出生产。' || true
+          for branch in \
+            truth/guilin-dem-12p5m-single-source \
+            truth/guilin-dem-12p5m-unique \
+            truth/guilin-dem-12p5m-unique-clean \
+            truth/guilin-dem-12p5m-unique-v1 \
+            truth/guilin-dem-authoritative \
+            truth/guilin-dem-only \
+            truth/guilin-dem-unique \
+            truth/guilin-dem-v079-single-truth; do
+            git push origin --delete "$branch" || true
+          done
+          git push origin "$GITHUB_SHA":refs/heads/truth/guilin-dem-12p5m-canonical --force
+
+      - name: Upload QA receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-continuous-full-map-qa-${{ github.run_id }}
+          path: ${{ env.EVIDENCE_DIR }}
+          retention-days: 90
+
+      - name: Summarize the public result
+        if: always()
+        run: |
+          {
+            echo '## Guilin continuous full map'
+            echo
+            echo "* public URL: $PUBLIC_URL"
+            echo "* source SHA256: $SOURCE_SHA256"
+            echo '* one continuous map: required'
+            echo '* native detail: automatic 12.5 m'
+            echo '* OSM linear waterways: river, stream and canal'
+            echo '* lake surfaces: 0'
+            echo '* reservoir surfaces: 0'
+            echo '* height textures: 0'
+            echo '* source tile compression: none'
+          } >> "$GITHUB_STEP_SUMMARY"
