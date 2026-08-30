@@ -1,0 +1,225 @@
+name: Publish Landscape Mother procedural field core v3.7.0
+
+on:
+  push:
+    branches:
+      - skill/xiaowang-gaea-terrain-field-v100
+    paths:
+      - .github/workflows/publish-landscape-mother-field-v370.yml
+      - web/yangshuo-karst-distilled-v320/**
+      - projects/guilin/config/yangshuo_karst_distilled_v320.json
+      - skills/dem-procedural-landscape/branches/procedural-field-core/**
+      - skills/dem-procedural-landscape/branches/gaea-terrain-field-graph/**
+      - skills/dem-procedural-landscape/BRANCH_REGISTRY.json
+      - knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_CORE_V100.md
+      - tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py
+      - tools/procedural_landscape/compile_yangshuo_native_v320.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-landscape-mother-field-v370
+  cancel-in-progress: true
+
+env:
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/yangshuo-karst-distilled-v320/
+  TARGET_DIR: yangshuo-karst-distilled-v320
+  RELEASE_URL: https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-v070-raw-mosaic-v001/guilin_raw_union_12_5m.tif
+  EXPECTED_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+
+jobs:
+  publish:
+    name: Validate fields, compile native truth assets and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact integration head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install native raster compiler
+        run: python -m pip install --disable-pip-version-check numpy rasterio
+
+      - name: Validate knowledge, runtime and deterministic reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s skills/dem-procedural-landscape/branches/procedural-field-core/SKILL.md
+          test -s knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_CORE_V100.md
+          test -s skills/dem-procedural-landscape/branches/procedural-field-core/references/field-contract.schema.json
+          test -s skills/dem-procedural-landscape/branches/procedural-field-core/references/field-graph-recipes.json
+          node skills/dem-procedural-landscape/branches/procedural-field-core/scripts/test-field-reference.js
+          node --check web/yangshuo-karst-distilled-v320/app.js
+          cat web/yangshuo-karst-distilled-v320/app.part*.js > "$RUNNER_TEMP/landscape-mother-runtime.mjs"
+          node --check "$RUNNER_TEMP/landscape-mother-runtime.mjs"
+          grep -Fq 'app.part40.js?v=3700' web/yangshuo-karst-distilled-v320/app.js
+          grep -Fq 'Landscape Mother field-core integration' web/yangshuo-karst-distilled-v320/app.part40.js
+          grep -Fq 'riverInternalBreakCount' web/yangshuo-karst-distilled-v320/app.part40.js
+          grep -Fq 'normalizedSplat' web/yangshuo-karst-distilled-v320/app.part40.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('skills/dem-procedural-landscape/BRANCH_REGISTRY.json').read_text())
+          ids=[entry['id'] for entry in registry['activeBranches']]
+          assert ids.count('procedural-field-core') == 1
+          assert ids.count('gaea-terrain-field-graph') == 1
+          assert registry['globalRules']['continuousRiverTopologyRequired'] is True
+          assert registry['globalRules']['tileSeedRestartForbidden'] is True
+          PY
+
+      - name: Download and verify locked native 12.5 metre DEM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/landscape-mother-v370"
+          source="$RUNNER_TEMP/landscape-mother-v370/guilin_raw_union_12_5m.tif"
+          curl --fail --location --retry 5 --retry-all-errors --output "$source" "$RELEASE_URL"
+          test "$(stat -c '%s' "$source")" = "124348471"
+          test "$(sha256sum "$source" | awk '{print $1}')" = "$EXPECTED_SHA256"
+
+      - name: Compile self-contained native candidate assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/procedural_landscape/compile_yangshuo_native_v320.py \
+            --source "$RUNNER_TEMP/landscape-mother-v370/guilin_raw_union_12_5m.tif" \
+            --output "$RUNNER_TEMP/landscape-mother-v370/data"
+          cp DEM-Map-Pipeline/guilin-zhenbaoding-yangshuo-pingle/metadata/lijiang_osm.geojson \
+            "$RUNNER_TEMP/landscape-mother-v370/data/lijiang_osm.geojson"
+          test "$(stat -c '%s' "$RUNNER_TEMP/landscape-mother-v370/data/A/height_i16.bin")" = "8388608"
+          test "$(stat -c '%s' "$RUNNER_TEMP/landscape-mother-v370/data/C/height_i16.bin")" = "8388608"
+          test "$(stat -c '%s' "$RUNNER_TEMP/landscape-mother-v370/data/D/height_i16.bin")" = "8388608"
+          grep -Fq '"name": "漓江"' "$RUNNER_TEMP/landscape-mother-v370/data/lijiang_osm.geojson"
+
+      - name: Stage self-contained public website on gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf "$RUNNER_TEMP/pages"
+          git worktree add --detach "$RUNNER_TEMP/pages" origin/gh-pages
+          target="$RUNNER_TEMP/pages/$TARGET_DIR"
+          rm -rf "$target"
+          mkdir -p "$target/data"
+          cp -a web/yangshuo-karst-distilled-v320/. "$target/"
+          cp -a "$RUNNER_TEMP/landscape-mother-v370/data/." "$target/data/"
+          cp projects/guilin/config/yangshuo_karst_distilled_v320.json "$target/contract.json"
+          cp knowledge/terrain-hydrology/shared/distilled/PROCEDURAL_FIELD_CORE_V100.md "$target/field-core.md"
+          cp skills/dem-procedural-landscape/branches/procedural-field-core/SKILL.md "$target/field-skill.md"
+          cat > "$target/build.json" <<JSON
+          {
+            "schema": "landscape-mother-field-core-public-build/v3.7.0",
+            "sourceBranch": "skill/xiaowang-gaea-terrain-field-v100",
+            "sourceCommit": "${GITHUB_SHA}",
+            "truthSha256": "${EXPECTED_SHA256}",
+            "nativeCandidateAssetsSelfContained": true,
+            "regionalExtentMeters": 20480,
+            "contextExtentMeters": 6400,
+            "localExtentMeters": 512,
+            "desktopLocalSpacingMeters": 1.0,
+            "fieldCore": "procedural-field-core/v1.0.0",
+            "truthMutationCount": 0,
+            "vegetationInstances": 0,
+            "truthApproved": false,
+            "visualApproved": false,
+            "productionReady": false
+          }
+          JSON
+          touch "$RUNNER_TEMP/pages/.nojekyll"
+
+      - name: Commit and push public website
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/pages"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_DIR" .nojekyll
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Publish Landscape Mother procedural field core v3.7.0"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep $((attempt * 3))
+          done
+          exit 1
+
+      - name: Upload compiler evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: landscape-mother-v370-native-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/landscape-mother-v370/data/index.json
+            ${{ runner.temp }}/landscape-mother-v370/data/SHA256SUMS.txt
+            ${{ runner.temp }}/landscape-mother-v370/data/*/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+  browser-qa:
+    name: Online desktop and mobile field and morphology QA
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install Chromium QA dependencies
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+      - name: Wait for exact public build
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 180); do
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "${PUBLIC_URL}build.json?verify=${GITHUB_SHA}-${attempt}" -o "$RUNNER_TEMP/build.json" \
+              && grep -Fq "\"sourceCommit\": \"${GITHUB_SHA}\"" "$RUNNER_TEMP/build.json"; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Run online Chromium QA
+        run: |
+          python tools/procedural_landscape/yangshuo_karst_v320_browser_qa.py \
+            --url "$PUBLIC_URL" \
+            --output "$RUNNER_TEMP/landscape-mother-v370-browser"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report=json.loads((Path(os.environ['RUNNER_TEMP'])/'landscape-mother-v370-browser/report.json').read_text())
+          for key in ('atlasDesktop','paddyDesktop','cliffDesktop','riverDesktop','atlasMobile'):
+              qa=report['states'][key]['qa']
+              assert qa['richTerrainPass'] == 'v3.7.0'
+              assert qa['landscapeMotherFieldCore'] == 'procedural-field-core/v1.0.0'
+              assert qa['truthMutationCount'] == 0
+              assert qa['productionReady'] is False
+          river=report['states']['riverDesktop']['qa']
+          assert river['riverInternalBreakCount'] == 0
+          assert river['riverTopologyContinuous'] is True
+          assert all(river['riverEndpointOutsideContext'])
+          assert river['riverMaxSectionGapMeters'] <= 7.2
+          PY
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: landscape-mother-v370-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/landscape-mother-v370-browser
+          if-no-files-found: error
+          retention-days: 30
