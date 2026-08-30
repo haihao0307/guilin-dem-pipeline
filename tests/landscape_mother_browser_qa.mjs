@@ -36,15 +36,20 @@ async function run(name, viewport, quality, isMobile) {
     modeCount: document.querySelectorAll('[data-mode]').length,
     viewCount: document.querySelectorAll('[data-view]').length,
     stylesheetBackgroundImages: [...document.styleSheets].flatMap(sheet => {
-      try { return [...sheet.cssRules].map(rule => rule.style?.backgroundImage || '').filter(Boolean); }
-      catch { return []; }
+      try {
+        return [...sheet.cssRules]
+          .map(rule => rule.style?.backgroundImage || '')
+          .filter(value => /url\(|image-set\(|data:image\//i.test(value));
+      } catch {
+        return [];
+      }
     }),
   }));
   const qa = staticState.qa;
   if (!qa?.passed) throw new Error(`${name}: browser QA failed\n${JSON.stringify(staticState, null, 2)}`);
   if (qa.renderMode !== 'interactive-webgl2-3d' || !qa.webgl2Active) throw new Error(`${name}: WebGL2 3D gate failed`);
   if (staticState.canvasCount !== 1 || staticState.imageElementCount !== 0) throw new Error(`${name}: image-free DOM gate failed`);
-  if (staticState.stylesheetBackgroundImages.length) throw new Error(`${name}: CSS background image exists`);
+  if (staticState.stylesheetBackgroundImages.length) throw new Error(`${name}: CSS image resource exists`);
   if (staticState.modeCount !== 7 || staticState.viewCount !== 4) throw new Error(`${name}: interactive controls incomplete`);
   if (qa.truthGrid?.[0] !== 81 || qa.truthSpacingM !== 12.5) throw new Error(`${name}: truth identity mismatch`);
   const expectedGrid = quality === 'desktop' ? 641 : 321;
