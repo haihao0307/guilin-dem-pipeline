@@ -1,0 +1,286 @@
+name: Guilin canonical elevation store V1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - project/guilin-canonical-elevation-store-v1
+    paths:
+      - pipeline/build_canonical_elevation_store.py
+      - pipeline/canonical_elevation_store.py
+      - tests/validate_canonical_elevation_store.py
+      - contracts/GUILIN_CANONICAL_ELEVATION_STORE_V1.json
+      - .github/workflows/guilin-canonical-elevation-distill-v1.yml
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_RELEASE: guilin-native-12p5m-single-truth-v001
+  SOURCE_FILE: guilin_raw_union_12_5m.tif
+  SOURCE_BYTES: '124348471'
+  SOURCE_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  STORE_RELEASE: guilin-canonical-elevation-store-12p5m-v1
+  STORE_DIR: out/canonical-elevation-store
+  EVIDENCE_DIR: out/evidence
+  REDOWNLOAD_DIR: out/release-redownload
+  RECONSTRUCTION: /tmp/guilin-canonical-aoi-reconstructed.i16
+
+jobs:
+  distill-verify-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout the dedicated canonical-store branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deterministic raster dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check numpy==2.1.3 rasterio==1.4.3 requests==2.32.4
+
+      - name: Verify source code and immutable contract
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            pipeline/build_canonical_elevation_store.py \
+            pipeline/canonical_elevation_store.py \
+            tests/validate_canonical_elevation_store.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          contract=json.loads(Path('contracts/GUILIN_CANONICAL_ELEVATION_STORE_V1.json').read_text())
+          assert contract['schema']=='guilin-canonical-elevation-store-contract/v1'
+          assert contract['source_cold_backup']['sha256']=='9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4'
+          assert contract['aoi']['grid']==[11983,17685]
+          assert contract['aoi']['sample_count']==211919355
+          assert contract['canonical_stream']['bytes']==423838710
+          assert contract['logical_chunks']['chunk_count']==840
+          assert contract['logical_chunks']['overlap_samples']==0
+          assert contract['logical_chunks']['padding_samples']==0
+          assert contract['canonical_stream']['compression']=='none'
+          PY
+
+      - name: Read the locked TIFF for the one-time distillation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache "$STORE_DIR" "$EVIDENCE_DIR"
+          gh release download "$SOURCE_RELEASE" --pattern "$SOURCE_FILE" --dir .cache --clobber
+          test "$(stat -c '%s' .cache/$SOURCE_FILE)" = "$SOURCE_BYTES"
+          echo "$SOURCE_SHA256  .cache/$SOURCE_FILE" | sha256sum -c -
+
+      - name: Build the 100 percent pixel-exact non-overlapping elevation store
+        run: |
+          set -euo pipefail
+          rm -rf "$STORE_DIR"
+          mkdir -p "$STORE_DIR" "$EVIDENCE_DIR"
+          python pipeline/build_canonical_elevation_store.py \
+            --source ".cache/$SOURCE_FILE" \
+            --output-dir "$STORE_DIR" \
+            | tee "$EVIDENCE_DIR/build.log"
+          cp "$STORE_DIR/BUILD_RECEIPT.json" "$EVIDENCE_DIR/"
+
+      - name: Reconstruct every sample and compare every pixel with the TIFF
+        run: |
+          set -euo pipefail
+          rm -f "$RECONSTRUCTION"
+          python tests/validate_canonical_elevation_store.py \
+            --store-dir "$STORE_DIR" \
+            --source ".cache/$SOURCE_FILE" \
+            --reconstruction "$RECONSTRUCTION" \
+            --receipt "$EVIDENCE_DIR/VALIDATION_RECEIPT.json" \
+            | tee "$EVIDENCE_DIR/validation.log"
+          test "$(stat -c '%s' "$RECONSTRUCTION")" = 423838710
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt=json.loads(Path('out/evidence/VALIDATION_RECEIPT.json').read_text())
+          assert receipt['passed'] is True
+          assert receipt['sample_count']==211919355
+          assert receipt['data_bytes']==423838710
+          assert receipt['chunk_count']==840
+          assert receipt['pixel_mismatch_count']==0
+          assert receipt['maximum_absolute_elevation_difference_m']==0
+          assert receipt['source_canonical_stream_sha256']==receipt['store_reconstructed_stream_sha256']
+          assert receipt['overlap_samples']==0
+          assert receipt['padding_samples']==0
+          assert receipt['compression']=='none'
+          assert receipt['cutover_ready'] is True
+          PY
+
+      - name: Seal the verified manifest and authority receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path('out/canonical-elevation-store')
+          evidence=Path('out/evidence')
+          manifest_path=root/'CANONICAL_ELEVATION_MANIFEST.json'
+          manifest=json.loads(manifest_path.read_text())
+          validation=json.loads((evidence/'VALIDATION_RECEIPT.json').read_text())
+          manifest['status']='pixel_exact_verified_cutover_pending'
+          manifest['validation']={
+              'receipt_file':'VALIDATION_RECEIPT.json',
+              'pixel_mismatch_count':0,
+              'maximum_absolute_elevation_difference_m':0,
+              'source_and_store_canonical_sha256_equal':True,
+              'full_reconstruction_completed':True,
+              'all_chunk_sha256_verified':True,
+              'all_shard_sha256_verified':True,
+          }
+          manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+          authority={
+              'schema':'guilin-canonical-elevation-store-authority/v1',
+              'status':'PIXEL_EXACT_VERIFIED_CUTOVER_PENDING',
+              'release_tag':'guilin-canonical-elevation-store-12p5m-v1',
+              'source_cold_backup_sha256':'9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4',
+              'aoi_geometry_sha256':'36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80',
+              'canonical_stream_sha256':validation['store_reconstructed_stream_sha256'],
+              'sample_count':211919355,
+              'data_bytes':423838710,
+              'chunk_count':840,
+              'shard_count':validation['shard_count'],
+              'pixel_mismatch_count':0,
+              'maximum_absolute_elevation_difference_m':0,
+              'overlap_samples':0,
+              'padding_samples':0,
+              'compression':'none',
+              'resampling':'none',
+              'quantization':'none',
+              'source_elevation_modified_m':0.0,
+              'source_tiff_role_after_cutover':'cold_backup_only',
+              'normal_production_source_tiff_reads_allowed_after_cutover':False,
+              'visualAcceptance':False,
+              'productionReady':False,
+          }
+          (root/'STORE_AUTHORITY_RECEIPT.json').write_text(json.dumps(authority,ensure_ascii=False,indent=2)+'\n')
+          lines=[]
+          for shard in manifest['physical_shards']['shards']:
+              lines.append(f"{shard['sha256']}  {shard['file']}")
+          for name in ('CANONICAL_ELEVATION_MANIFEST.json','BUILD_RECEIPT.json','STORE_AUTHORITY_RECEIPT.json'):
+              p=root/name
+              lines.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {name}")
+          (root/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n')
+          PY
+          cp "$EVIDENCE_DIR/VALIDATION_RECEIPT.json" "$STORE_DIR/VALIDATION_RECEIPT.json"
+          cp contracts/GUILIN_CANONICAL_ELEVATION_STORE_V1.json "$STORE_DIR/"
+          (cd "$STORE_DIR" && sha256sum -c SHA256SUMS.txt)
+
+      - name: Publish the verified uncompressed canonical store release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release delete "$STORE_RELEASE" --cleanup-tag -y >/dev/null 2>&1 || true
+          gh release create "$STORE_RELEASE" \
+            --target "$GITHUB_SHA" \
+            --title "Guilin canonical pixel-exact 12.5 m elevation store V1" \
+            --notes "Pixel-exact AOI elevation store distilled once from the locked TIFF. 211,919,355 int16 samples, 423,838,710 bytes, zero overlap, zero padding, no compression, no resampling, zero elevation change. The TIFF remains cold backup only after cutover."
+          gh release upload "$STORE_RELEASE" \
+            "$STORE_DIR"/shards/*.i16pack \
+            "$STORE_DIR/CANONICAL_ELEVATION_MANIFEST.json" \
+            "$STORE_DIR/BUILD_RECEIPT.json" \
+            "$STORE_DIR/VALIDATION_RECEIPT.json" \
+            "$STORE_DIR/STORE_AUTHORITY_RECEIPT.json" \
+            "$STORE_DIR/SHA256SUMS.txt" \
+            "$STORE_DIR/GUILIN_CANONICAL_ELEVATION_STORE_V1.json"
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          manifest=json.loads(Path('out/canonical-elevation-store/CANONICAL_ELEVATION_MANIFEST.json').read_text())
+          raw=subprocess.check_output(['gh','release','view',os.environ['STORE_RELEASE'],'--json','assets'],text=True)
+          assets=json.loads(raw)['assets']
+          expected=len(manifest['physical_shards']['shards'])+6
+          assert len(assets)==expected,(len(assets),expected)
+          by_name={item['name']:item for item in assets}
+          for shard in manifest['physical_shards']['shards']:
+              name=Path(shard['file']).name
+              assert by_name[name]['size']==shard['bytes'],name
+          PY
+
+      - name: Redownload the release and verify it without the TIFF
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -rf "$REDOWNLOAD_DIR"
+          mkdir -p "$REDOWNLOAD_DIR/shards" "$EVIDENCE_DIR/release"
+          gh release download "$STORE_RELEASE" --dir "$REDOWNLOAD_DIR" --clobber
+          mv "$REDOWNLOAD_DIR"/elevation-shard-*.i16pack "$REDOWNLOAD_DIR/shards/"
+          python tests/validate_canonical_elevation_store.py \
+            --store-dir "$REDOWNLOAD_DIR" \
+            --receipt "$EVIDENCE_DIR/release/STORE_ONLY_VALIDATION.json" \
+            | tee "$EVIDENCE_DIR/release-validation.log"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt=json.loads(Path('out/evidence/release/STORE_ONLY_VALIDATION.json').read_text())
+          assert receipt['passed'] is True
+          assert receipt['source_pixel_comparison_performed'] is False
+          assert receipt['data_bytes']==423838710
+          assert receipt['chunk_count']==840
+          assert receipt['store_reconstructed_stream_sha256']==receipt['manifest_canonical_stream_sha256']
+          assert receipt['overlap_samples']==0
+          assert receipt['padding_samples']==0
+          PY
+
+      - name: Record the verified store pointer on the project branch
+        run: |
+          set -euo pipefail
+          cp "$STORE_DIR/CANONICAL_ELEVATION_MANIFEST.json" truth/CANONICAL_ELEVATION_MANIFEST_V1.json
+          cp "$EVIDENCE_DIR/VALIDATION_RECEIPT.json" truth/CANONICAL_ELEVATION_VALIDATION_V1.json
+          cp "$STORE_DIR/STORE_AUTHORITY_RECEIPT.json" truth/CANONICAL_ELEVATION_STORE_POINTER.json
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add truth/CANONICAL_ELEVATION_MANIFEST_V1.json truth/CANONICAL_ELEVATION_VALIDATION_V1.json truth/CANONICAL_ELEVATION_STORE_POINTER.json
+          git commit -m 'feat(guilin): record pixel-exact canonical elevation store V1'
+          git push origin HEAD:project/guilin-canonical-elevation-store-v1
+
+      - name: Upload compact build and validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-canonical-elevation-store-v1-receipts-${{ github.run_id }}
+          path: |
+            out/evidence
+            out/canonical-elevation-store/CANONICAL_ELEVATION_MANIFEST.json
+            out/canonical-elevation-store/BUILD_RECEIPT.json
+            out/canonical-elevation-store/VALIDATION_RECEIPT.json
+            out/canonical-elevation-store/STORE_AUTHORITY_RECEIPT.json
+            out/canonical-elevation-store/SHA256SUMS.txt
+          retention-days: 90
+          compression-level: 0
+
+      - name: Remove the temporary reconstructed raster and TIFF cache
+        if: always()
+        run: |
+          rm -f "$RECONSTRUCTION"
+          rm -rf .cache
+
+      - name: Summarize the one-time distillation
+        if: always()
+        run: |
+          {
+            echo '## Guilin canonical elevation store V1'
+            echo
+            echo '* source TIFF: read only for this one-time distillation and verification'
+            echo '* AOI samples: 211,919,355'
+            echo '* exact elevation bytes: 423,838,710'
+            echo '* logical chunks: 840 variable-edge 512 x 512 blocks'
+            echo '* overlap: 0 samples'
+            echo '* padding: 0 samples'
+            echo '* compression: none'
+            echo '* resampling: none'
+            echo '* pixel mismatch: 0 required'
+            echo "* release: $STORE_RELEASE"
+          } >> "$GITHUB_STEP_SUMMARY"
