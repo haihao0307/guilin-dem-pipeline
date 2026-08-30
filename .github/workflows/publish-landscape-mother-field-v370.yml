@@ -177,7 +177,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-     - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install Chromium QA dependencies
@@ -209,4 +209,17 @@ jobs:
               assert qa['landscapeMotherFieldCore'] == 'procedural-field-core/v1.0.0'
               assert qa['truthMutationCount'] == 0
               assert qa['productionReady'] is False
-          river=report['states'])
+          river=report['states']['riverDesktop']['qa']
+          assert river['riverInternalBreakCount'] == 0
+          assert river['riverTopologyContinuous'] is True
+          assert all(river['riverEndpointOutsideContext'])
+          assert river['riverMaxSectionGapMeters'] <= 7.2
+          PY
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: landscape-mother-v370-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/landscape-mother-v370-browser
+          if-no-files-found: error
+          retention-days: 30
