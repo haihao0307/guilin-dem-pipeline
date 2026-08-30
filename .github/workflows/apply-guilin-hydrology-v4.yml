@@ -46,7 +46,7 @@ jobs:
           grep -q 'mainstem_upstream_full_width_css_px' tests/browser_full_map_cdp.py
           grep -q 'validate_hydrology_flow_contract.py' .github/workflows/guilin-online-full-map.yml
 
-      - name: Commit the production implementation
+      - name: Commit production source and QA
         run: |
           set -euo pipefail
           git config user.name 'Haihao_Nature Grace HK'
@@ -55,8 +55,7 @@ jobs:
             pipeline/build_online_assets.py \
             viewer/app.js \
             tests/browser_full_map_cdp.py \
-            tests/validate_hydrology_flow_contract.py \
-            .github/workflows/guilin-online-full-map.yml
+            tests/validate_hydrology_flow_contract.py
           git diff --cached --check
           git commit -m 'feat(guilin): taper waterways from upstream to downstream'
           git push origin HEAD:main
