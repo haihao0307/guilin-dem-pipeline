@@ -185,7 +185,7 @@ jobs:
           }
           (root/'version.json').write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
           PY
-          (cd "$SITE_DIR" && find . -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          (cd "$SITE_DIR" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
 
       - name: Run local desktop, native-detail and mobile browser QA
         run: |
