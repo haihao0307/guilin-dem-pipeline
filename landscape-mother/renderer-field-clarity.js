@@ -3,6 +3,10 @@
 const base = window.LandscapeMotherTerrainShaders;
 let fragment = base.TERRAIN_FRAGMENT_SHADER;
 fragment = fragment.replace(
+  `vec3 truthRamp(float t){return clut5(t,vec3(.075,.13,.10),vec3(.16,.25,.14),vec3(.31,.34,.19),vec3(.47,.44,.29),vec3(.73,.72,.64));}`,
+  `vec3 truthRamp(float t){return clut5(t,vec3(.040,.075,.058),vec3(.11,.21,.105),vec3(.28,.34,.16),vec3(.52,.48,.30),vec3(.84,.82,.72));}`,
+);
+fragment = fragment.replace(
   `  paddyColor*=mix(1.04,.67,wet*.73);\n\n  float bare=max(0.0,1.0-rock-paddy*.75-alluvium*.55);\n  vec4 weights=splat(bare,paddy,rock,max(alluvium,sediment*.65),.74);`,
   `  paddyColor*=mix(1.04,.67,wet*.73);\n  float paddySharp=smoothstep(.10,.42,paddy);\n  float bundSharp=smoothstep(.025,.17,bund);\n  float ditchSharp=smoothstep(.018,.135,ditch);\n\n  float bare=max(0.0,1.0-rock-paddySharp*.78-alluvium*.55);\n  vec4 weights=splat(bare,paddySharp,rock,max(alluvium,sediment*.65),.74);`,
 );
@@ -16,6 +20,9 @@ fragment = fragment.replace(
 );
 if (!fragment.includes('float fieldEdge=sat(bundSharp+ditchSharp);')) {
   throw new Error('Landscape Mother field-clarity shader transfer failed');
+}
+if (!fragment.includes('vec3(.84,.82,.72)')) {
+  throw new Error('Landscape Mother truth-clarity shader transfer failed');
 }
 window.LandscapeMotherTerrainShaders = Object.freeze({
   TERRAIN_VERTEX_SHADER: base.TERRAIN_VERTEX_SHADER,
