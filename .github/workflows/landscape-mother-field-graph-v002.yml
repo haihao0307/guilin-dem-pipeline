@@ -1,0 +1,400 @@
+name: Landscape Mother Field Graph V2
+
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths:
+      - landscape-mother/**
+      - tests/landscape_mother_browser_qa_v2.mjs
+      - skills/dem-procedural-landscape/**
+      - knowledge/terrain-hydrology/shared/**
+      - .github/workflows/landscape-mother-field-graph-v002.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-field-graph-v002
+  cancel-in-progress: true
+
+env:
+  SITE_DIR: build/landscape-mother-v002
+  INPUT_DIR: build/landscape-mother-input-v002
+  DESTINATION_DIR: landscape-mother-v002
+  SOURCE_TIFF_SHA256: 9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4
+  TILE_FILE: native-r07-c02-2048x2048-i16.bin
+  TILE_SHA256: 5408050e693e4a4679dd39fe96b473067dec515c23a7f53954c707e74e303215
+  TILE_BYTES: '8388608'
+  FIELD_PACKAGE_SHA256: d69ecd2677507db9342a1d66092a8d6cf4255141346b14cc4629303bf1c4f396
+  FIELD_INTAKE_DIR: knowledge/terrain-hydrology/shared/inbox/2026-08-30_procedural-field-knowledge-mini-v100
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate knowledge receipts and field runtime source
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in landscape-mother/*.js tests/landscape_mother_browser_qa_v2.mjs; do
+            node --check "$file"
+          done
+          python -m py_compile landscape-mother/tools/build_sample.py
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          import zipfile
+
+          intake = Path('knowledge/terrain-hydrology/shared/inbox/2026-08-30_procedural-field-knowledge-mini-v100')
+          archive = intake / 'PROCEDURAL_FIELD_KNOWLEDGE_MINI_V1.0_2026-08-30.zip'
+          expected_archive = 'd69ecd2677507db9342a1d66092a8d6cf4255141346b14cc4629303bf1c4f396'
+          assert archive.stat().st_size == 13456
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == expected_archive
+
+          with zipfile.ZipFile(archive) as bundle:
+              root_name = 'PROCEDURAL_FIELD_KNOWLEDGE_MINI_V1.0_2026-08-30/'
+              manifest = json.loads(bundle.read(root_name + 'PACKAGE_MANIFEST_SHA256.json').decode('utf-8'))
+              assert manifest['fileCount'] == 9
+              failures = []
+              for item in manifest['files']:
+                  payload = bundle.read(root_name + item['path'])
+                  actual = hashlib.sha256(payload).hexdigest()
+                  if len(payload) != item['bytes'] or actual != item['sha256']:
+                      failures.append({'path': item['path'], 'actual': actual})
+              assert not failures, failures
+
+          receipt = json.loads((intake / 'RECEIPT.json').read_text(encoding='utf-8'))
+          assert receipt['archiveSha256'] == expected_archive
+          assert receipt['payloadHashFailures'] == 0
+          assert receipt['instructionHandling']['promptShareTreatedAsAuthorization'] is False
+
+          contract = json.loads(Path('landscape-mother/contract.json').read_text(encoding='utf-8'))
+          assert contract['schema'] == 'landscape-mother-kernel/v1'
+          assert contract['version'] == '2.0.0'
+          assert contract['renderMode'] == 'interactive-webgl2-3d'
+          assert contract['knowledgeIntegration']['gaeaTerrainFieldGraph']['commit'] == '6ac47d984bfca8336a7c0f58d176ab8153db26cd'
+          assert contract['knowledgeIntegration']['proceduralFieldMini']['archiveSha256'] == expected_archive
+          assert list(contract['seedBank']) == ['master','shape','warp','structure','damage','color','weather','micro']
+          assert contract['fieldGraph']['pipeline'] == ['source','shape','data-and-mask','color','render','qa']
+          assert len(contract['fieldGraph']['diagnostics']) >= 12
+          assert set(contract['runtimeTiers']) == {'preview','review','evidence'}
+          assert contract['waterContinuity']['realCenterlineImmutable'] is True
+          assert contract['waterContinuity']['syntheticCenterlines'] is False
+
+          rules = contract['rules']
+          assert rules['truthOverwrite'] is False
+          assert rules['sourceResampling'] is False
+          assert rules['syntheticGapFill'] is False
+          assert rules['verticalScale'] == 1.0
+          assert rules['proceduralMacroMountains'] is False
+          for key in (
+              'materialTextureCount','terrainImageTextureCount','imageFileCount',
+              'screenshotArtifactCount','plantLayerCount','vegetationInstanceCount'
+          ):
+              assert rules[key] == 0
+          assert contract['approvals'] == {'visualAcceptance': False, 'productionReady': False}
+
+          root = Path('landscape-mother')
+          forbidden_extensions = {
+              '.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff',
+              '.ktx','.ktx2','.dds','.exr','.hdr'
+          }
+          forbidden_files = [
+              path.as_posix() for path in root.rglob('*')
+              if path.is_file() and path.suffix.lower() in forbidden_extensions
+          ]
+          assert not forbidden_files, forbidden_files
+          runtime_text = '\n'.join(
+              path.read_text(encoding='utf-8')
+              for path in [root/'index.html', root/'style.css', *sorted(root.glob('*.js'))]
+          )
+          forbidden_tokens = [
+              '<img','<picture','<svg','data:image/','background-image',
+              'sampler2D','texture2D(','new Image(','createImageBitmap(',
+              'toDataURL(','toBlob('
+          ]
+          assert not [token for token in forbidden_tokens if token in runtime_text]
+          print({
+              'knowledge_payloads': manifest['fileCount'],
+              'runtime_js_files': len(list(root.glob('*.js'))),
+              'image_files': 0,
+              'texture_files': 0,
+          })
+          PY
+
+      - name: Fetch locked canonical numeric inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$INPUT_DIR" "$SITE_DIR"
+          mkdir -p "$INPUT_DIR" "$SITE_DIR/data" "$SITE_DIR/qa"
+          git fetch --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+          git show origin/gh-pages:guilin/data/NATIVE_ELEVATION_MANIFEST.json > "$INPUT_DIR/NATIVE_ELEVATION_MANIFEST.json"
+          curl --fail --location --retry 5 --retry-all-errors \
+            "https://github.com/haihao0307/guilin-dem-pipeline/releases/download/guilin-native-12p5m-single-truth-v001/$TILE_FILE" \
+            --output "$INPUT_DIR/$TILE_FILE"
+          git show origin/gh-pages:guilin/data/osm-waterways-manifest.json > "$INPUT_DIR/osm-waterways-manifest.json"
+          SEGMENT_FILE="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('build/landscape-mother-input-v002/osm-waterways-manifest.json')
+          print(json.loads(path.read_text(encoding='utf-8'))['segments']['file'])
+          PY
+          )"
+          git show "origin/gh-pages:guilin/data/$SEGMENT_FILE" > "$INPUT_DIR/$SEGMENT_FILE"
+          printf '%s' "$SEGMENT_FILE" > "$INPUT_DIR/segment-file.txt"
+          test "$(stat -c '%s' "$INPUT_DIR/$TILE_FILE")" = "$TILE_BYTES"
+          test "$(sha256sum "$INPUT_DIR/$TILE_FILE" | cut -d' ' -f1)" = "$TILE_SHA256"
+
+      - name: Extract compact exact sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          SEGMENT_FILE="$(cat "$INPUT_DIR/segment-file.txt")"
+          python landscape-mother/tools/build_sample.py \
+            --contract landscape-mother/contract.json \
+            --dem-manifest "$INPUT_DIR/NATIVE_ELEVATION_MANIFEST.json" \
+            --parent-tile "$INPUT_DIR/$TILE_FILE" \
+            --hydrology-manifest "$INPUT_DIR/osm-waterways-manifest.json" \
+            --hydrology-segments "$INPUT_DIR/$SEGMENT_FILE" \
+            --output "$SITE_DIR/data"
+
+      - name: Assemble compact field-graph runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp landscape-mother/README.md landscape-mother/contract.json landscape-mother/index.html landscape-mother/style.css "$SITE_DIR/"
+          cp landscape-mother/*.js "$SITE_DIR/"
+          touch "$SITE_DIR/.nojekyll"
+          rm -rf "$INPUT_DIR"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('build/landscape-mother-v002')
+          forbidden_extensions = {
+              '.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff',
+              '.ktx','.ktx2','.dds','.exr','.hdr'
+          }
+          bad = [
+              path.as_posix() for path in root.rglob('*')
+              if path.is_file() and path.suffix.lower() in forbidden_extensions
+          ]
+          assert not bad, bad
+          text = '\n'.join(
+              path.read_text(encoding='utf-8')
+              for path in root.rglob('*')
+              if path.is_file() and path.suffix.lower() in {'.html','.css','.js'}
+          )
+          forbidden_tokens = [
+              '<img','<picture','<svg','data:image/','background-image',
+              'sampler2D','texture2D(','new Image(','createImageBitmap(',
+              'toDataURL(','toBlob('
+          ]
+          assert not [token for token in forbidden_tokens if token in text]
+          data = json.loads((root/'data/sample-manifest.json').read_text(encoding='utf-8'))
+          data_bytes = sum(path.stat().st_size for path in (root/'data').iterdir() if path.is_file())
+          code_bytes = sum(path.stat().st_size for path in root.iterdir() if path.is_file())
+          assert data_bytes < 131072, data_bytes
+          assert code_bytes < 420000, code_bytes
+          assert data['receipt']['materialTextureCount'] == 0
+          assert data['receipt']['imageFileCount'] == 0
+          assert data['receipt']['plantLayerCount'] == 0
+          print({
+              'code_bytes': code_bytes,
+              'data_bytes': data_bytes,
+              'water_records': data['hydrology']['recordCount'],
+          })
+          PY
+
+      - name: Install browser QA runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile V2 numeric WebGL QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4176 --directory "$SITE_DIR" >/tmp/landscape-mother-v2-http.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 45); do
+            curl -fsS http://127.0.0.1:4176/ >/dev/null && break
+            sleep 1
+          done
+          node tests/landscape_mother_browser_qa_v2.mjs http://127.0.0.1:4176/ "$SITE_DIR/qa"
+          kill "$PID" 2>/dev/null || true
+          trap - EXIT
+
+      - name: Write V2 numeric release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          site = Path(os.environ['SITE_DIR'])
+          browser = json.loads((site/'qa/browser-qa.json').read_text(encoding='utf-8'))
+          sample = json.loads((site/'data/sample-manifest.json').read_text(encoding='utf-8'))
+          desktop = browser['results'][0]['finalQa']
+          mobile = browser['results'][1]['finalQa']
+          files = {}
+          for path in sorted(
+              item for item in site.rglob('*')
+              if item.is_file() and item.name not in {'SHA256SUMS.txt','release-evidence.json'}
+          ):
+              relative = path.relative_to(site).as_posix()
+              files[relative] = {
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              }
+          evidence = {
+              'schema': 'landscape-mother-field-graph-release-evidence/v2',
+              'commit': os.environ['GITHUB_SHA'],
+              'branch': os.environ['GITHUB_REF_NAME'],
+              'destinationDir': os.environ['DESTINATION_DIR'],
+              'passed': browser['passed'],
+              'renderMode': desktop['renderMode'],
+              'runtimeVersion': desktop['runtimeVersion'],
+              'fieldGraphVersion': desktop['fieldGraphVersion'],
+              'fieldGraphHashDesktop': desktop['fieldGraphHash'],
+              'fieldGraphHashMobile': mobile['fieldGraphHash'],
+              'knowledgeArchiveSha256': desktop['knowledgeArchiveSha256'],
+              'gaeaKnowledgeCommit': desktop['gaeaKnowledgeCommit'],
+              'seedChannelCount': desktop['seedChannelCount'],
+              'diagnosticFieldCount': desktop['diagnosticFieldCount'],
+              'runtimeTierCount': desktop['runtimeTierCount'],
+              'truthGrid': desktop['truthGrid'],
+              'desktopRenderGrid': desktop['renderGrid'],
+              'mobileRenderGrid': mobile['renderGrid'],
+              'sourceNodeMaxErrorM': desktop['sourceNodeMaxErrorM'],
+              'sourceCellMeanMaxAbsDeltaM': desktop['sourceCellMeanMaxAbsDeltaM'],
+              'macroBlurMaxAbsDeltaM': desktop['macroBlurMaxAbsDeltaM'],
+              'peakShiftM': desktop['peakShiftM'],
+              'surfaceRangeM': desktop['surfaceRangeM'],
+              'fieldRangeM': desktop['fieldRangeM'],
+              'eventDeltaRangeM': desktop['eventDeltaRangeM'],
+              'waterSegmentCount': desktop['waterSegmentCount'],
+              'waterJoinCount': desktop['waterJoinCount'],
+              'waterVisualGapCount': desktop['waterVisualGapCount'],
+              'riverContinuityPass': desktop['riverContinuityPass'],
+              'evidenceTriangleCount': desktop['evidenceTriangleCount'],
+              'publicNumericDataBytes': sample['truth']['bytes'] + sample['hydrology']['bytes'],
+              'materialTextureCount': 0,
+              'terrainImageTextureCount': 0,
+              'imageFileCount': 0,
+              'screenshotArtifactCount': 0,
+              'plantLayerCount': 0,
+              'vegetationInstanceCount': 0,
+              'proceduralMacroMountains': False,
+              'truthApproved': False,
+              'visualAcceptance': False,
+              'productionReady': False,
+              'sourceTiffSha256': os.environ['SOURCE_TIFF_SHA256'],
+              'parentTileSha256': os.environ['TILE_SHA256'],
+              'files': files,
+          }
+          (site/'qa/release-evidence.json').write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          lines = []
+          for path in sorted(item for item in site.rglob('*') if item.is_file() and item.name != 'SHA256SUMS.txt'):
+              lines.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(site).as_posix()}")
+          (site/'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+      - name: Upload JSON-only V2 numeric QA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-field-graph-v002-numeric-qa
+          path: build/landscape-mother-v002/qa/*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Publish V2 runtime while retaining V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
+          rm -rf /tmp/landscape-pages-v2
+          git worktree add -B landscape-mother-pages-v2 /tmp/landscape-pages-v2 origin/gh-pages
+          rm -rf "/tmp/landscape-pages-v2/$DESTINATION_DIR"
+          mkdir -p "/tmp/landscape-pages-v2/$DESTINATION_DIR"
+          cp -a "$SITE_DIR"/. "/tmp/landscape-pages-v2/$DESTINATION_DIR/"
+          python - <<'PY'
+          from pathlib import Path
+          root = Path('/tmp/landscape-pages-v2/landscape-mother-v002')
+          forbidden = {
+              '.png','.jpg','.jpeg','.webp','.gif','.svg','.bmp','.tif','.tiff',
+              '.ktx','.ktx2','.dds','.exr','.hdr'
+          }
+          assert not [
+              path.as_posix() for path in root.rglob('*')
+              if path.is_file() and path.suffix.lower() in forbidden
+          ]
+          PY
+          cd /tmp/landscape-pages-v2
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "publish: Landscape Mother field graph V2 ${GITHUB_SHA}"
+            if ! git push origin HEAD:gh-pages; then
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              git push origin HEAD:gh-pages
+            fi
+          fi
+
+      - name: Verify published V2 identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --force origin gh-pages:refs/remotes/origin/gh-pages
+          git show "origin/gh-pages:$DESTINATION_DIR/contract.json" | grep -q '"version": "2.0.0"'
+          git show "origin/gh-pages:$DESTINATION_DIR/qa/release-evidence.json" | grep -q "${GITHUB_SHA}"
+          git show "origin/gh-pages:$DESTINATION_DIR/qa/release-evidence.json" | grep -q '"riverContinuityPass": true'
+          ! git ls-tree -r --name-only origin/gh-pages "$DESTINATION_DIR" | grep -E '\.(png|jpe?g|webp|gif|svg|bmp|tiff?|ktx2?|dds|exr|hdr)$'
+          git cat-file -e origin/gh-pages:landscape-mother-v001/contract.json
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          print('# Landscape Mother Field Graph V2')
+          path = Path('build/landscape-mother-v002/qa/release-evidence.json')
+          if not path.exists():
+              print('\nRelease evidence was not generated.')
+          else:
+              data = json.loads(path.read_text(encoding='utf-8'))
+              for key in (
+                  'passed','runtimeVersion','fieldGraphVersion','knowledgeArchiveSha256',
+                  'seedChannelCount','diagnosticFieldCount','runtimeTierCount','truthGrid',
+                  'desktopRenderGrid','mobileRenderGrid','sourceNodeMaxErrorM',
+                  'sourceCellMeanMaxAbsDeltaM','macroBlurMaxAbsDeltaM','peakShiftM',
+                  'eventDeltaRangeM','waterSegmentCount','waterJoinCount',
+                  'waterVisualGapCount','riverContinuityPass','evidenceTriangleCount',
+                  'materialTextureCount','imageFileCount','screenshotArtifactCount',
+                  'plantLayerCount','truthApproved','visualAcceptance','productionReady'
+              ):
+                  print(f"- {key}: `{data[key]}`")
+          PY
