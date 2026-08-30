@@ -1,0 +1,75 @@
+/* Visual review refinement. Source truth and waterway coordinates remain immutable. */
+const setupWebGLV001Base=setupWebGL;
+setupWebGL=function(){
+  const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,depth:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+  assert(gl,'当前浏览器未提供 WebGL2');
+  const terrainFragmentRefined=TERRAIN_FRAGMENT_SHADER
+    .replace('float light=.30+max(dot(n,sun),0.0)*.60+max(dot(n,fill),0.0)*.10;','float light=.39+max(dot(n,sun),0.0)*.51+max(dot(n,fill),0.0)*.10;')
+    .replace('color=diagnostic(vPaddy,vec3(.08,.105,.075),vec3(.79,.83,.27));','color=diagnostic(pow(vPaddy,.58),vec3(.055,.075,.045),vec3(.92,.88,.24));')
+    .replace('color=diagnostic(vWet,vec3(.20,.15,.10),vec3(.10,.56,.62));','color=diagnostic(pow(vWet,.68),vec3(.16,.11,.07),vec3(.08,.68,.75));')
+    .replace('color=diagnostic(vRock,vec3(.10,.16,.10),vec3(.78,.78,.72));','color=diagnostic(pow(vRock,.62),vec3(.075,.11,.07),vec3(.88,.87,.80));')
+    .replace('lit=mix(lit,vec3(.075,.115,.095),fog*.62);','if(uMode>=2)lit=mix(color,lit,.28);\n  lit=mix(lit,vec3(.075,.115,.095),fog*.62);');
+  const ecologyVertexRefined=ECOLOGY_VERTEX_SHADER.replace('aType<.5?7.5:6.0','aType<.5?4.8:4.2');
+  const ecologyFragmentRefined=ECOLOGY_FRAGMENT_SHADER.replace('alpha*.82','alpha*.58');
+  state.gl=gl;
+  state.terrainProgram=createProgram(gl,TERRAIN_VERTEX_SHADER,terrainFragmentRefined);
+  state.waterProgram=createProgram(gl,WATER_VERTEX_SHADER,WATER_FRAGMENT_SHADER);
+  state.ecologyProgram=createProgram(gl,ecologyVertexRefined,ecologyFragmentRefined);
+  state.terrainUniforms={viewProjection:gl.getUniformLocation(state.terrainProgram,'uViewProjection'),microStrength:gl.getUniformLocation(state.terrainProgram,'uMicroStrength'),mode:gl.getUniformLocation(state.terrainProgram,'uMode'),minimum:gl.getUniformLocation(state.terrainProgram,'uMinElevation'),maximum:gl.getUniformLocation(state.terrainProgram,'uMaxElevation'),eye:gl.getUniformLocation(state.terrainProgram,'uEye')};
+  state.waterUniforms={viewProjection:gl.getUniformLocation(state.waterProgram,'uViewProjection')};
+  state.ecologyUniforms={viewProjection:gl.getUniformLocation(state.ecologyProgram,'uViewProjection'),pixelRatio:gl.getUniformLocation(state.ecologyProgram,'uPixelRatio')};
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);gl.clearColor(.025,.065,.052,1);
+};
+const deriveFieldsV001Base=deriveFields;
+deriveFields=function(truth,segments){
+  const fields=deriveFieldsV001Base(truth,segments);
+  const elevationRange=Math.max(1,state.maximum-state.minimum);
+  let microMinimum=Infinity,microMaximum=-Infinity;
+  for(let row=0;row<SAMPLE_GRID;row+=1){
+    for(let column=0;column<SAMPLE_GRID;column+=1){
+      const index=row*SAMPLE_GRID+column;
+      const x=column*SPACING_M-SAMPLE_SIDE_M*.5,z=row*SPACING_M-SAMPLE_SIDE_M*.5;
+      const easting=SAMPLE_CENTER_E+x,northing=SAMPLE_CENTER_N-z;
+      const elevationT=(truth[index]-state.minimum)/elevationRange;
+      const lowland=1-smoothstep(.12,.58,elevationT);
+      const flat=1-smoothstep(.055,.29,fields.slope[index]);
+      const parcel=parcelGrammar(easting,northing);
+      const texture=fbm(easting*.0021,northing*.0021,SEED+401,4)*.5+.5;
+      const paddyCandidate=clamp(lowland*flat*(.62+.38*texture)*(1-fields.water[index]),0,1);
+      const paddyValue=Math.max(fields.paddy[index],paddyCandidate);
+      const bundValue=paddyValue*parcel.boundary;
+      const channelValue=paddyValue*parcel.channel*(1-parcel.boundary*.55);
+      const terraceStep=.24+parcel.fieldSeed*.10;
+      const terraceTarget=Math.round(truth[index]/terraceStep)*terraceStep;
+      const terraceDelta=clamp((terraceTarget-truth[index])*.30,-.065,.065);
+      const microNoise=fbm(easting*.075,northing*.075,SEED+701,2)*.008;
+      const microDelta=clamp(paddyValue*terraceDelta+bundValue*(.11+parcel.fieldSeed*.07)-channelValue*.09+microNoise*paddyValue,-.14,.19);
+      fields.paddy[index]=paddyValue;fields.bund[index]=bundValue;fields.micro[index]=microDelta;
+      fields.forest[index]*=(1-paddyValue*.74);fields.bamboo[index]*=(1-paddyValue*.68);
+      microMinimum=Math.min(microMinimum,microDelta);microMaximum=Math.max(microMaximum,microDelta);
+    }
+  }
+  state.microMinimum=microMinimum;state.microMaximum=microMaximum;
+  return fields;
+};
+buildWaterMesh=function(){
+  const gl=state.gl,vertices=[],indices=[];
+  const add=(x,y,z,classValue)=>{vertices.push(x,y,z,classValue);return vertices.length/4-1;};
+  for(const segment of state.hydrologySegments){
+    const dx=segment.x1-segment.x0,dz=segment.z1-segment.z0,length=Math.hypot(dx,dz);if(length<.5)continue;
+    const nx=-dz/length,nz=dx/length;
+    const baseWidth=segment.classValue<.5?4.8:(segment.classValue<1.5?2.2:1.35);
+    const halfWidth=clamp(Math.max(baseWidth,segment.sourceWidth*.12),baseWidth,8.5);
+    const y0=segment.y0-state.minimum+.42,y1=segment.y1-state.minimum+.42;
+    const a=add(segment.x0+nx*halfWidth,y0,segment.z0+nz*halfWidth,segment.classValue);
+    const b=add(segment.x0-nx*halfWidth,y0,segment.z0-nz*halfWidth,segment.classValue);
+    const c=add(segment.x1+nx*halfWidth,y1,segment.z1+nz*halfWidth,segment.classValue);
+    const d=add(segment.x1-nx*halfWidth,y1,segment.z1-nz*halfWidth,segment.classValue);
+    indices.push(a,b,c,c,b,d);
+  }
+  const vao=gl.createVertexArray(),vertexBuffer=gl.createBuffer(),indexBuffer=gl.createBuffer();
+  gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,16,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,1,gl.FLOAT,false,16,12);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.STATIC_DRAW);gl.bindVertexArray(null);
+  state.waterMesh={vao,vertexBuffer,indexBuffer,indexCount:indices.length};
+};
