@@ -243,7 +243,9 @@ MAJOR_MAINSTEM_PATTERNS = {
     3: ("资江", "資江", "资水", "資水", "夫夷水", "夫夷江", "zi river", "zi jiang", "zijiang", "zi shui", "zishui", "fuyi river", "fu yi river", "fuyi shui"),
 }
 MAJOR_MAINSTEM_KEYS = {1: "li", 2: "xiang", 3: "zi"}
-MAJOR_MAINSTEM_MIN_METRIC = {1: 150.0, 2: 175.0, 3: 160.0}
+FLOW_STYLE_PROFILE = "longitudinal-flow-taper-v4"
+MAINSTEM_PROGRESS_ELEVATION_WEIGHT = 0.58
+MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT = 0.42
 
 
 def feature_name_values(properties: dict[str, Any]) -> list[str]:
@@ -290,16 +292,8 @@ def node_rank(key: tuple[float, float], nodes: dict[tuple[float, float], dict[st
     return float(record["elevation"]), float(key[1]), float(key[0])
 
 
-def style_metric(waterway: str, source_width_m: float, flow_quantile: float, major_code: int) -> float:
-    q = float(np.clip(flow_quantile, 0.0, 1.0))
-    if major_code:
-        minimum = MAJOR_MAINSTEM_MIN_METRIC[major_code]
-        return float(np.clip(max(minimum, 112.0 + 92.0 * q + 0.28 * source_width_m), minimum, 230.0))
-    if waterway == "river":
-        return float(np.clip(5.0 + 72.0 * q ** 1.55 + 0.16 * source_width_m, 5.0, 92.0))
-    if waterway == "stream":
-        return float(np.clip(1.5 + 15.5 * q ** 1.55 + 0.05 * source_width_m, 1.5, 20.0))
-    return float(np.clip(2.0 + 16.0 * q ** 1.35 + 0.07 * source_width_m, 2.0, 22.0))
+def unit_interval(value: float, minimum: float, maximum: float) -> float:
+    return float(np.clip((value - minimum) / max(1e-9, maximum - minimum), 0.0, 1.0))
 
 
 def build_hydrology(
@@ -425,33 +419,152 @@ def build_hydrology(
             upstream, downstream = end_key, start_key
         length_m = float(math.hypot(downstream[0] - upstream[0], downstream[1] - upstream[1]))
         edge = dict(source)
-        edge.update({"upstream": upstream, "downstream": downstream, "length_m": max(length_m, 0.01), "flow_length_m": 0.0})
+        edge.update({
+            "upstream": upstream,
+            "downstream": downstream,
+            "length_m": max(length_m, 0.01),
+            "flow_accumulation_start_m": 0.0,
+            "flow_accumulation_end_m": 0.0,
+            "flow_distance_start_m": 0.0,
+            "flow_distance_end_m": 0.0,
+            "start_flow_progress": 0.0,
+            "end_flow_progress": 0.0,
+        })
         edge_index = len(directed_edges)
         directed_edges.append(edge)
         outgoing.setdefault(upstream, []).append(edge_index)
 
-    accumulated = {key: 0.0 for key in valid_node_data}
+    # The graph order is strictly descending in native DEM rank. Accumulation controls
+    # hierarchy, while longest upstream route distance is retained for the next animated
+    # flow stage. Every stored segment is ordered upstream first and downstream second.
+    accumulation_at_node = {key: 0.0 for key in valid_node_data}
+    route_distance_at_node = {key: 0.0 for key in valid_node_data}
     for key in sorted(valid_node_data, key=lambda item: node_rank(item, valid_node_data), reverse=True):
         edge_indices = outgoing.get(key, [])
         if not edge_indices:
             continue
-        shared_upstream = accumulated[key] / max(1, len(edge_indices))
+        accumulation_start = accumulation_at_node[key] / max(1, len(edge_indices))
+        route_start = route_distance_at_node[key]
         for edge_index in edge_indices:
             edge = directed_edges[edge_index]
-            flow_length = shared_upstream + edge["length_m"]
-            edge["flow_length_m"] = flow_length
-            accumulated[edge["downstream"]] += flow_length
+            accumulation_end = accumulation_start + edge["length_m"]
+            route_end = route_start + edge["length_m"]
+            edge["flow_accumulation_start_m"] = accumulation_start
+            edge["flow_accumulation_end_m"] = accumulation_end
+            edge["flow_distance_start_m"] = route_start
+            edge["flow_distance_end_m"] = route_end
+            accumulation_at_node[edge["downstream"]] += accumulation_end
+            route_distance_at_node[edge["downstream"]] = max(
+                route_distance_at_node[edge["downstream"]], route_end
+            )
 
-    log_flow = np.log1p(np.asarray([edge["flow_length_m"] for edge in directed_edges], dtype=np.float64))
-    low = float(np.percentile(log_flow, 5.0))
-    high = float(np.percentile(log_flow, 99.5))
-    span = max(1e-9, high - low)
-    for edge, value in zip(directed_edges, log_flow, strict=True):
-        edge["flow_quantile"] = float(np.clip((float(value) - low) / span, 0.0, 1.0))
+    all_accumulation_logs = np.log1p(np.asarray([
+        value
+        for edge in directed_edges
+        for value in (edge["flow_accumulation_start_m"], edge["flow_accumulation_end_m"])
+    ], dtype=np.float64))
+    ordinary_low = float(np.percentile(all_accumulation_logs, 2.0))
+    ordinary_high = float(np.percentile(all_accumulation_logs, 99.5))
+    ordinary_span = max(1e-9, ordinary_high - ordinary_low)
+    for edge in directed_edges:
+        start_log = math.log1p(edge["flow_accumulation_start_m"])
+        end_log = math.log1p(edge["flow_accumulation_end_m"])
+        start_progress = unit_interval(start_log, ordinary_low, ordinary_high)
+        end_progress = max(start_progress, unit_interval(end_log, ordinary_low, ordinary_high))
+        edge["ordinary_start_progress"] = start_progress
+        edge["ordinary_end_progress"] = end_progress
 
-    # Width and deep colour are reserved for explicitly named OSM main-stem features.
-    # Unnamed gaps remain visible as ordinary river segments, so no tributary can inherit
-    # main-stem styling through a branching graph. Source geometry stays unchanged.
+    # Each explicit main river receives its own 0..1 longitudinal coordinate. Native DEM
+    # descent supplies the geographic upstream/downstream concept and network accumulation
+    # supplies confluence growth. A second normalization guarantees a narrow headwater end
+    # and a broad downstream end for every named main-stem system.
+    mainstem_progress_stats: dict[int, dict[str, float]] = {}
+    for code in MAJOR_MAINSTEM_KEYS:
+        selected = [edge for edge in directed_edges if int(edge["major_code"]) == code]
+        if not selected:
+            continue
+        elevations = [
+            valid_node_data[key]["elevation"]
+            for edge in selected
+            for key in (edge["upstream"], edge["downstream"])
+        ]
+        accumulation_logs = [
+            math.log1p(value)
+            for edge in selected
+            for value in (edge["flow_accumulation_start_m"], edge["flow_accumulation_end_m"])
+        ]
+        elevation_low = float(min(elevations))
+        elevation_high = float(max(elevations))
+        accumulation_low = float(min(accumulation_logs))
+        accumulation_high = float(max(accumulation_logs))
+        for edge in selected:
+            start_elevation = float(valid_node_data[edge["upstream"]]["elevation"])
+            end_elevation = float(valid_node_data[edge["downstream"]]["elevation"])
+            start_elevation_progress = 1.0 - unit_interval(start_elevation, elevation_low, elevation_high)
+            end_elevation_progress = 1.0 - unit_interval(end_elevation, elevation_low, elevation_high)
+            start_accumulation_progress = unit_interval(
+                math.log1p(edge["flow_accumulation_start_m"]), accumulation_low, accumulation_high
+            )
+            end_accumulation_progress = unit_interval(
+                math.log1p(edge["flow_accumulation_end_m"]), accumulation_low, accumulation_high
+            )
+            raw_start = (
+                MAINSTEM_PROGRESS_ELEVATION_WEIGHT * start_elevation_progress +
+                MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT * start_accumulation_progress
+            )
+            raw_end = (
+                MAINSTEM_PROGRESS_ELEVATION_WEIGHT * end_elevation_progress +
+                MAINSTEM_PROGRESS_ACCUMULATION_WEIGHT * end_accumulation_progress
+            )
+            edge["raw_mainstem_start_progress"] = raw_start
+            edge["raw_mainstem_end_progress"] = max(raw_start, raw_end)
+        raw_values = [
+            value
+            for edge in selected
+            for value in (edge["raw_mainstem_start_progress"], edge["raw_mainstem_end_progress"])
+        ]
+        raw_low = float(min(raw_values))
+        raw_high = float(max(raw_values))
+        for edge in selected:
+            start_progress = unit_interval(edge["raw_mainstem_start_progress"], raw_low, raw_high)
+            end_progress = max(
+                start_progress,
+                unit_interval(edge["raw_mainstem_end_progress"], raw_low, raw_high),
+            )
+            edge["start_flow_progress"] = start_progress
+            edge["end_flow_progress"] = end_progress
+        mainstem_progress_stats[code] = {
+            "raw_low": raw_low,
+            "raw_high": raw_high,
+            "elevation_low_m": elevation_low,
+            "elevation_high_m": elevation_high,
+            "source_width_min_m": float(min(edge["source_width_m"] for edge in selected)),
+            "source_width_max_m": float(max(edge["source_width_m"] for edge in selected)),
+        }
+
+    for edge in directed_edges:
+        if not int(edge["major_code"]):
+            edge["start_flow_progress"] = edge["ordinary_start_progress"]
+            edge["end_flow_progress"] = edge["ordinary_end_progress"]
+
+    uphill_segment_count = sum(
+        1 for edge in directed_edges
+        if valid_node_data[edge["upstream"]]["elevation"] + 1e-6 < valid_node_data[edge["downstream"]]["elevation"]
+    )
+    flow_progress_inversion_count = sum(
+        1 for edge in directed_edges
+        if edge["end_flow_progress"] + 1e-7 < edge["start_flow_progress"]
+    )
+    flow_distance_inversion_count = sum(
+        1 for edge in directed_edges
+        if edge["flow_distance_end_m"] <= edge["flow_distance_start_m"]
+    )
+    if uphill_segment_count or flow_progress_inversion_count or flow_distance_inversion_count:
+        raise RuntimeError(
+            "invalid upstream/downstream contract: "
+            f"uphill={uphill_segment_count}, progress={flow_progress_inversion_count}, "
+            f"distance={flow_distance_inversion_count}"
+        )
 
     mainstem_segment_counts = {"li": 0, "xiang": 0, "zi": 0}
     segment_values: list[float] = []
@@ -459,14 +572,17 @@ def build_hydrology(
     node_style: dict[tuple[float, float], dict[str, float]] = {}
     for edge in directed_edges:
         major_code = int(edge["major_code"])
-        metric = style_metric(edge["waterway"], float(edge["source_width_m"]), float(edge["flow_quantile"]), major_code)
-        edge["display_hierarchy_metric"] = metric
         if major_code:
             mainstem_segment_counts[MAJOR_MAINSTEM_KEYS[major_code]] += 1
         start_key = edge["upstream"]
         end_key = edge["downstream"]
         start = valid_node_data[start_key]
         end = valid_node_data[end_key]
+        start_progress = float(edge["start_flow_progress"])
+        end_progress = float(edge["end_flow_progress"])
+        start_distance = float(edge["flow_distance_start_m"])
+        end_distance = float(edge["flow_distance_end_m"])
+        source_width = float(edge["source_width_m"])
         segment_values.extend((
             float(start["e"] - world_center_e),
             float(start["elevation"]),
@@ -475,15 +591,33 @@ def build_hydrology(
             float(end["elevation"]),
             float(world_center_n - end["n"]),
             float(edge["class"]),
-            metric,
+            float(major_code),
+            source_width,
+            start_progress,
+            end_progress,
+            start_distance,
+            end_distance,
         ))
-        for key in (start_key, end_key):
+        for key, progress, distance in (
+            (start_key, start_progress, start_distance),
+            (end_key, end_progress, end_distance),
+        ):
             existing = node_style.get(key)
             if existing is None:
-                node_style[key] = {"class": float(edge["class"]), "metric": metric}
+                node_style[key] = {
+                    "class": float(edge["class"]),
+                    "mainstem_code": float(major_code),
+                    "source_width_m": source_width,
+                    "flow_progress": progress,
+                    "flow_distance_m": distance,
+                }
             else:
                 existing["class"] = min(existing["class"], float(edge["class"]))
-                existing["metric"] = max(existing["metric"], metric)
+                existing["source_width_m"] = max(existing["source_width_m"], source_width)
+                if major_code and (not existing["mainstem_code"] or progress >= existing["flow_progress"]):
+                    existing["mainstem_code"] = float(major_code)
+                existing["flow_progress"] = max(existing["flow_progress"], progress)
+                existing["flow_distance_m"] = max(existing["flow_distance_m"], distance)
         used_keys.add(start_key)
         used_keys.add(end_key)
 
@@ -498,6 +632,21 @@ def build_hydrology(
             f"explicit main-stem segment count outside reviewed range: {explicit_mainstem_segment_count}"
         )
 
+    mainstem_progress_ranges = {}
+    mainstem_source_width_ranges_m = {}
+    for code, key_name in MAJOR_MAINSTEM_KEYS.items():
+        selected = [edge for edge in directed_edges if int(edge["major_code"]) == code]
+        if not selected:
+            continue
+        mainstem_progress_ranges[key_name] = [
+            float(min(edge["start_flow_progress"] for edge in selected)),
+            float(max(edge["end_flow_progress"] for edge in selected)),
+        ]
+        mainstem_source_width_ranges_m[key_name] = [
+            float(min(edge["source_width_m"] for edge in selected)),
+            float(max(edge["source_width_m"] for edge in selected)),
+        ]
+
     node_values: list[float] = []
     for key in sorted(used_keys):
         record = valid_node_data[key]
@@ -507,7 +656,10 @@ def build_hydrology(
             float(record["elevation"]),
             float(world_center_n - record["n"]),
             float(style["class"]),
-            float(style["metric"]),
+            float(style["mainstem_code"]),
+            float(style["source_width_m"]),
+            float(style["flow_progress"]),
+            float(style["flow_distance_m"]),
         ))
 
     source_segment_count = len(raw_segments)
@@ -559,30 +711,44 @@ def build_hydrology(
             "display_elevation_fallback_node_count": fallback_node_count,
             "display_elevation_fallback_max_distance_m": fallback_max_distance_m,
             "display_elevation_fallback_method": "nearest-valid-native-dem-cell",
-            "node_count": len(node_values) // 5,
+            "node_count": len(node_values) // 8,
             "source_route_coverage": 1.0,
             "upstream_to_downstream_continuity_required": True,
+            "uphill_segment_count": uphill_segment_count,
+            "flow_progress_inversion_count": flow_progress_inversion_count,
+            "flow_distance_inversion_count": flow_distance_inversion_count,
+            "maximum_flow_distance_m": float(max(edge["flow_distance_end_m"] for edge in directed_edges)),
         },
         "styling": {
-            "profile": "basin-hierarchy-mainstem-gradient-v3",
+            "profile": FLOW_STYLE_PROFILE,
             "mainstem_names": ["漓江", "湘江", "资江"],
             "mainstem_aliases": {"zi": ["夫夷水", "夫夷江", "Fuyi River"]},
             "mainstem_feature_counts": mainstem_feature_counts,
             "mainstem_segment_counts": mainstem_segment_counts,
-            "hierarchy_metric": "DEM-downhill accumulated upstream network length with source-width support",
-            "gradient_direction": "lighter-and-thinner-upstream_to_darker-and-wider-downstream",
-            "mainstem_minimum_metrics": {MAJOR_MAINSTEM_KEYS[key]: value for key, value in MAJOR_MAINSTEM_MIN_METRIC.items()},
+            "mainstem_progress_ranges": mainstem_progress_ranges,
+            "mainstem_source_width_ranges_m": mainstem_source_width_ranges_m,
+            "progress_basis": "native-DEM descent blended with upstream network accumulation",
+            "gradient_direction": "upstream-light-and-thin_to_downstream-dark-and-wide",
+            "upstream_mainstem_width_equivalent": "minor-stream-scale",
+            "downstream_mainstem_width_uses_source_width": True,
             "mainstem_classification": "exact-match-on-individual-OSM-name-values",
             "style_only_mainstem_gap_propagation": False,
             "explicit_mainstem_segment_count": explicit_mainstem_segment_count,
             "planimetry_unchanged": True,
+        },
+        "direction": {
+            "segment_vertex_order": "upstream_to_downstream",
+            "orientation_method": "native-DEM-descending-rank",
+            "flow_progress_monotonic": True,
+            "flow_distance_monotonic": True,
+            "future_flow_animation_ready": True,
         },
         "segments": {
             "file": segment_output.name,
             "bytes": segment_output.stat().st_size,
             "sha256": sha256_file(segment_output),
             "dtype": "float32-little-endian",
-            "layout": ["start_x", "start_elevation", "start_z", "end_x", "end_elevation", "end_z", "class", "display_hierarchy_metric"],
+            "layout": ["start_x", "start_elevation", "start_z", "end_x", "end_elevation", "end_z", "class", "mainstem_code", "source_width_m", "start_flow_progress", "end_flow_progress", "start_flow_distance_m", "end_flow_distance_m"],
             "count": valid_segment_count,
             "compression": "none",
         },
@@ -591,8 +757,8 @@ def build_hydrology(
             "bytes": node_output.stat().st_size,
             "sha256": sha256_file(node_output),
             "dtype": "float32-little-endian",
-            "layout": ["x", "elevation", "z", "class", "display_hierarchy_metric"],
-            "count": len(node_values) // 5,
+            "layout": ["x", "elevation", "z", "class", "mainstem_code", "source_width_m", "flow_progress", "flow_distance_m"],
+            "count": len(node_values) // 8,
             "compression": "none",
         },
     }
