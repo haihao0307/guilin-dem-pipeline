@@ -6,7 +6,7 @@ const {
 } = window.LandscapeMotherAppCore;
 const { setupUi, setMode, setView } = window.LandscapeMotherAppUi;
 function loop(now) {
-  if (state.renderer && (state.renderer.dirty || state.renderer.showWater)) {
+  if (state.renderer && state.renderer.dirty) {
     state.renderer.render(now);
     updateStatus();
     updateQa();
