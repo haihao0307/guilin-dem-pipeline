@@ -19,7 +19,7 @@ try:
   page.goto(args.url,wait_until='load',timeout=90000)
   def capture(name):
    report['captureInProgress']=name
-   state=page.evaluate('''() => {const r=window.__LM.renderer;r.render();r.gl.finish();return {state:r.snapshot(),lost:r.gl.isContextLost(),error:r.gl.getError()}}''')
+   state=page.evaluate('() => window.__LM.renderer.waitForFrame()')
    report['lastCaptureState']=state
    assert not state['lost'] and state['error']==0,state
    page.screenshot(path=str(out/name),timeout=90000)
@@ -37,7 +37,7 @@ try:
     start=time.perf_counter();page.mouse.move(870+i*8,410+i*2);page.wait_for_timeout(40)
     s=page.evaluate('({state:window.__LM.snapshot(),uploads:window.__gpuProbe.uploads,textures:window.__gpuProbe.textures})')
     s['observedStepMs']=(time.perf_counter()-start)*1000;motion.append(s)
-   page.mouse.up();page.mouse.wheel(0,-110);page.wait_for_timeout(100)
+   page.mouse.up();page.mouse.wheel(0,-110);page.evaluate('() => window.__LM.renderer.waitForFrame()')
    after=page.evaluate('({state:window.__LM.snapshot(),uploads:window.__gpuProbe.uploads,textures:window.__gpuProbe.textures})')
    assert all(s['uploads']==before['uploads'] for s in motion+[after]),'camera rebuilt buffers'
    assert all(s['textures']==0 for s in motion+[after]),'texture allocation'
