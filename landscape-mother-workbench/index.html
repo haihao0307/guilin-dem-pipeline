@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#edece6"><title>Landscape Mother · 地貌工作台</title><link rel="stylesheet" href="./style.css"><link rel="icon" href="data:,"></head>
+<body>
+<canvas id="world" aria-label="可旋转缩放的程序化三维地貌"></canvas>
+<header class="topbar"><a class="wordmark" href="?case=karst">LANDSCAPE<span>MOTHER</span><i>小王 / 地貌工作台</i></a><div class="top-actions"><span class="edition">STUDIO 01</span><button id="inspect" title="打开数值信息">数值信息</button><button id="hideUI" title="H 隐藏或显示面板">收起面板</button><button id="fullscreen">全屏</button></div></header>
+<aside class="catalog" id="catalog"><div class="eyebrow">NUMERIC LANDSCAPE STUDIES</div><h1>地貌，从结构开始。</h1><p class="intro">三个独立创作案例。<br>同一套纯数值构成，连续的形体与表面。</p>
+<nav class="cases" aria-label="案例"><button data-case="karst" class="selected"><span class="case-no">01</span><span><strong>喀斯特岩谷</strong><small>石灰岩 · 塔峰 · 坡脚</small></span><b>↗</b></button><button data-case="river"><span class="case-no">02</span><span><strong>连续河谷</strong><small>主槽 · 岸坡 · 冲积地</small></span><b>↗</b></button><button data-case="paddy"><span class="case-no">03</span><span><strong>稻田台地</strong><small>空田 · 田埂 · 灌排</small></span><b>↗</b></button></nav>
+<div class="divider"></div><label class="seed-label" for="seed">形体种子 <span>可重复生成</span></label><form id="seedForm"><input id="seed" type="number" min="0" max="999999" step="1" value="31415" aria-label="形体种子"><button id="regenerate" type="submit">重新生成</button></form>
+<div class="surface-controls"><label>岩土色阶 <output id="colorValue">1.00</output><input id="color" type="range" min="0.2" max="1.5" step="0.05" value="1"></label><label>湿润对比 <output id="wetValue">1.00</output><input id="wet" type="range" min="0" max="1.8" step="0.05" value="1"></label></div>
+<div class="inline-actions"><button id="gray">灰模检查</button><button id="share">复制链接</button></div><p class="scope">程序化创作案例 · 无真实地区声明<br>无 DEM 绑定 · 无植物 · 水面为基础显示</p></aside>
+<aside class="inspector" id="inspector" hidden><div class="eyebrow">MEASURED BUILD RECEIPT</div><h2>这一帧，来自数据。</h2><dl id="facts"></dl><p>零 LOD · 零贴图采样。仅裁掉视锥外的同精度几何，旋转、缩放不改变网格。此处性能为当前浏览器实测。</p><p class="caution">技术检查与美术批准分开。<br>visualApproved = false<br>productionReady = false</p></aside>
+<footer class="bottom"><div class="scene-caption"><span id="caseEnglish">KARST / LIMESTONE</span><strong id="caseTitle">喀斯特岩谷</strong><small id="caseNote">塔峰、裸岩、坡脚与开阔谷地</small></div><div class="views"><button data-view="overview" class="active">整体</button><button data-view="close">近景</button><button data-view="water">河岸</button></div><div class="metrics"><b>1 m</b><span>固定几何 / 2.048 km × 2.048 km</span><small id="fps">准备生成</small></div></footer>
+<div class="hint">左键旋转 · 右键平移 · 滚轮缩放 · 双击定点 · WASD 移动 · R 复位 · H 隐藏界面</div>
+<div id="loading" class="loading"><div class="load-mark">LM</div><div class="eyebrow">COMPOSING NUMERIC FIELDS</div><h2 id="loadTitle">正在生成喀斯特岩谷</h2><p id="loadText">固定精度几何只生成一次，转动时无需重建。</p><div class="progress"><i id="progress"></i></div><small id="loadPercent">0%</small></div>
+<div id="toast" role="status"></div><script type="module" src="./app.mjs"></script>
+</body></html>
