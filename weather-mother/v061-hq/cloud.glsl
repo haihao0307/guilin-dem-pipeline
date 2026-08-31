@@ -19,11 +19,11 @@ float mountain(vec2 p){if(uEffects.x<.5)return 0.;vec2 a=(p-vec2(-6.,-2.))/vec2(
 vec3 planePos(){return vec3(mod(uTime*.25+9.,30.)-15.,2.7,-.35);}
 float shape(vec3 p){vec3 uv=(p-uMin)/(uMax-uMin);if(any(lessThan(uv,vec3(0)))||any(greaterThan(uv,vec3(1))))return 0.;float b=texture(uMacro,uv).r;if(uBlend<.999)b=mix(texture(uOld,uv).r,b,uBlend);return b;}
 vec3 flowPos(vec3 p){vec3 q=p-uWind;float h=sat((p.y-uCloudBase)/max(uCloudTop-uCloudBase,.5));q-=uWindDirection*uShear*h*h*.9;float turbulence=uFlow.w*min(uFlow.x/30.,2.)*.16;vec3 curl=vec3(sin(q.z*.9+uEvolution*.10)*cos(q.y*.6),sin(q.x*.8-uEvolution*.07)*cos(q.z*.5),sin(q.y*.7+uEvolution*.08)*cos(q.x*.6));q+=curl*turbulence;if(uEffects.x>.5){float m=mountain(p.xz),w=exp(-pow((p.y-m-.7)/1.6,2.));q.y-=m*w*.24*uWeather.w;q.x+=m*w*.10;}if(uEffects.y>.5){vec3 a=p-planePos();float wake=step(a.x,0.)*sat(-a.x/2.)*exp(min(a.x*.18,0.));q.yz+=vec2(-a.z,a.y)*wake*exp(-dot(a.yz,a.yz)*4.)*.45;}return q;}
-float densityAt(vec3 p,bool detail){vec3 q=flowPos(p);float b=shape(q);if(b<.002)return 0.;if(!detail){float n=fb(q*1.4);return smoothstep(.075,.39,b+(n-.5)*.23)*uOpt.x*.75;}
-vec3 w=vec3(nv(q*1.15+3.),nv(q*1.11+17.),nv(q*1.21+vec3(31.,7.,19.)))-.5;q+=w*(.33+.19*uOpt.y);b=shape(q);if(b<.002)return 0.;
-float broad=fb(q*1.8+vec3(0.,-uEvolution*.004,0.)),billow=texture(uNoise,q*5.1/8.+.17).g,fine=fb(q*15.7+3.),edge=1.-smoothstep(.20,.66,b);
-float d=b+(broad-.5)*.48-(1.-billow)*(.075+.085*uOpt.y)*edge-(1.-fine)*.055*uOpt.y*edge;
-d=smoothstep(.018,.185,d)*mix(.86,1.12,broad)*uOpt.x;
+float densityAt(vec3 p,bool detail){vec3 q=flowPos(p);float b;if(!detail){b=shape(q);if(b<.002)return 0.;float n=fb(q*1.4);return smoothstep(.075,.39,b+(n-.5)*.23)*uOpt.x*.75;}
+vec3 w=vec3(nv(q*1.15+3.),nv(q*1.11+17.),nv(q*1.21+vec3(31.,7.,19.)))-.5;vec3 wm=vec3(nv(q*3.9+9.),nv(q*4.1+23.),nv(q*3.7+37.))-.5;q+=w*(.55+.25*uOpt.y)+wm*(.18+.12*uOpt.y);b=shape(q);if(b<.002)return 0.;
+float broad=fb(q*2.2+vec3(0.,-uEvolution*.004,0.)),billow=.58*texture(uNoise,q*3.8/8.+.17).g+.28*texture(uNoise,q*8.2/8.+.53).g+.14*texture(uNoise,q*16.4/8.+.31).g,fine=fb(q*19.7+3.),edge=1.-smoothstep(.22,.76,b);
+float d=b+(broad-.5)*.94-(1.-billow)*(.13+.15*uOpt.y)*edge-(1.-fine)*.065*uOpt.y*edge;
+d=smoothstep(.012,.205,d)*mix(.65,1.18,broad)*uOpt.x;
 if(uEffects.y>.5){vec3 a=p-planePos();float wake=step(a.x,0.)*exp(min(a.x*.18,0.))*exp(-dot(a.yz,a.yz)*14.);d*=1.-wake*.55;}return max(d,0.);}
 float phaseHG(float g,float mu){return (1.-g*g)/pow(max(1.+g*g-2.*g*mu,.002),1.5);}
 vec3 sky(vec3 d){float h=max(d.y,0.),mu=dot(d,uSun),sunUp=uSun.y,tw=1.-smoothstep(.025,.35,sunUp);float mass=1./(h+.10),haze=uLight.w;
@@ -34,13 +34,13 @@ float aerosol=1.-exp(-haze*mass*.10);col=mix(col,vec3(.47,.55,.65)*uDay+vec3(.00
 col+=uSunColor*smoothstep(.999963,.999976,mu)*22.*smoothstep(-.012,.01,sunUp);
 col+=vec3(.22,.32,.52)*smoothstep(.999970,.999985,dot(d,uMoon))*(1.-uDay)*3.;float stars=pow(hash(floor(d*950.)),340.)*smoothstep(.12,.5,h)*(1.-uDay);return max(col+stars*.55,vec3(.0002));}
 vec2 shadowAt(vec3 p){vec3 q=flowPos(p),uv=(q-uMin)/(uMax-uMin);if(any(lessThan(uv,vec3(0)))||any(greaterThan(uv,vec3(1))))return vec2(0);vec2 s=texture(uShadow,uv).rg;if(uBlend<.999)s=mix(texture(uOldShadow,uv).rg,s,uBlend);return s*uOpt.x;}
-vec3 incident(vec3 p,vec3 rd,float d){vec3 l=uSun.y>=0.?uSun:uMoon;vec2 sh=shadowAt(p);float tau=max(0.,sh.x*1.18-.19*d)+densityAt(p+l*.07,true)*.12+densityAt(p+l*.20,true)*.25,mu=dot(rd,uSun),mm=dot(rd,uMoon),h=sat((p.y-uCloudBase)/max(uCloudTop-uCloudBase,.5));
+vec3 incident(vec3 p,vec3 rd,float d){vec3 l=uSun.y>=0.?uSun:uMoon;vec2 sh=shadowAt(p);float tau=max(0.,sh.x*1.35-.19*d)+densityAt(p+l*.07,true)*.12+densityAt(p+l*.20,true)*.25,mu=dot(rd,uSun),mm=dot(rd,uMoon),h=sat((p.y-uCloudBase)/max(uCloudTop-uCloudBase,.5));
 float ph=.78*min(phaseHG(.68,mu),16.)+.22*phaseHG(-.18,mu),pm=.78*min(phaseHG(.68,mm),16.)+.22*phaseHG(-.18,mm);
-float direct=exp(-tau),m1=.29*exp(-tau*.24),m2=.10*exp(-tau*.064),ao=exp(-sh.y*.8);
+float direct=exp(-tau),m1=.23*exp(-tau*.24),m2=.075*exp(-tau*.064),ao=exp(-sh.y*.8);
 vec3 ambient=mix(vec3(.048,.072,.12),sky(vec3(0,1,0))*.55,sqrt(h))*(.32+.68*ao)*uLight.y*(.06+.94*uDay);
 vec3 sunlight=uSunColor*uLight.x*smoothstep(-.01,.04,uSun.y),moonlight=vec3(.055,.085,.15)*uLight.x*(1.-uDay)*smoothstep(-.01,.04,uMoon.y);
 float powder=mix(.75,1.,1.-exp(-d*4.));
-vec3 L=ambient+powder*(sunlight*(direct*(.27+.46*ph)+uLight.z*(m1*(.48+.09*phaseHG(.30,mu))+m2*.62))+moonlight*(direct*(.27+.46*pm)+uLight.z*(m1*(.48+.09*phaseHG(.30,mm))+m2*.62)));
+vec3 L=ambient+powder*(sunlight*(direct*(.36+.58*ph)+uLight.z*(m1*(.48+.09*phaseHG(.30,mu))+m2*.62))+moonlight*(direct*(.27+.46*pm)+uLight.z*(m1*(.48+.09*phaseHG(.30,mm))+m2*.62)));
 L+=sunlight*direct*pow(sat(mu),7.)*(1.-exp(-d*3.))*uSurface.x*.08;L+=vec3(.035,.036,.027)*(1.-h)*uDay*uLight.y*uSurface.y;float flash=uEffects.w*exp(-pow(fract(uTime*.11)-.30,2.)/.00006);L+=vec3(.6,.76,1.2)*flash*exp(-dot(p-vec3(.7,4.8,0.),p-vec3(.7,4.8,0.))*.09);return L;}
 float sceneGround(vec3 ro,vec3 rd){if(rd.y>=-.0001)return 1e4;float t=max(0.,ro.y/-rd.y);if(uEffects.x<.5)return t;t=0.;for(int k=0;k<40;k++){vec3 p=ro+rd*t;float d=p.y-mountain(p.xz);if(d<.008)return t;t+=max(.035,d*.55);if(t>100.)break;}return 1e4;}
 float boxHit(vec3 ro,vec3 rd,vec3 c,vec3 r){vec2 b=bounds(ro-c,rd,-r,r);return b.x<b.y&&b.y>0.?max(b.x,0.):1e4;}
