@@ -17,10 +17,10 @@ jobs:
     env:
       SITE: /tmp/wenzhou-v7-site
       ROOT: projects/wenzhou/v200/web/v7
-      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7/?v=numeric-r1
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7/?v=numeric-r2
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout the exact Wenzhou source commit
+      - name: Checkout exact Wenzhou source commit
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -30,30 +30,51 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install numeric and real browser test dependencies
+      - name: Install numeric and real browser dependencies
         run: |
           python -m pip install --quiet 'numpy<3' 'shapely==2.1.2' pillow playwright
           python -m playwright install --with-deps chromium
           echo "CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')" >> "$GITHUB_ENV"
-      - name: Recover and verify complete native numeric windows
+      - name: Apply narrowly checked runtime corrections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('projects/wenzhou/v200/web/v7')
+          p=root/'site/runtime.js';s=p.read_text()
+          replacements={
+            'let f=classify(...p);':'let f=classify(p[0],p[1]);',
+            'mesh(ds,385)':'mesh(ds,ds.width)',
+            'v7-numeric-first-view-r1':'v7-numeric-repair-r2'}
+          for old,new in replacements.items():
+              if old in s:
+                  assert s.count(old)==1,(old,s.count(old))
+                  s=s.replace(old,new)
+              else:assert new in s,('unexpected runtime source',old)
+          p.write_text(s)
+          p=root/'qa_v7.py';s=p.read_text().replace('v7-numeric-first-view-r1','v7-numeric-repair-r2');p.write_text(s)
+          PY
+      - name: Recover and independently verify complete native numeric members
         run: |
           python "$ROOT/recover_native.py" --root "$ROOT" --output "$SITE"
           python - <<'PY'
-          import hashlib
+          import hashlib,json
           from pathlib import Path
           root=Path('projects/wenzhou/v200/data/hydrology')
+          receipt=json.loads(Path('projects/wenzhou/v200/reports/OSM_HYDROLOGY_RECEIPT.json').read_text())
           expected={
-            'osm/WENZHOU_COASTLINE_EPSG32651.geojson':'94e570b7f7e530998845e36c4b4f739a8a05902825accc9c0d2f32f191b86116',
-            'osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson':'61989c7bb875df95b2b537a4f0f36991ac6bb7d520fc2b91e89ed77b3936fc10',
-            'osm_water_polygons/WENZHOU_OSM_WATER_POLYGONS_EPSG32651.geojson':'c0d6b6cf6fa939a2e9d622fc7d7d08500fcbde2d6325d799c6b360c5e5d5bce2'}
+            'osm/WENZHOU_COASTLINE_EPSG32651.geojson':'f805bf3fd993639452c2cc79c548357bedd4d6dfb91204688f6f113de3be7eb6',
+            'osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson':'be9ff893b26a24dad9808aac5b76625997c0f8b747b0721424b094449115c297',
+            'osm_water_polygons/WENZHOU_OSM_WATER_POLYGONS_EPSG32651.geojson':'1eba98cdbd1ec2c4be2e1526fd844bb6a2c080d446c282aea0a84ecf174310f2'}
           for name,digest in expected.items():
-              actual=hashlib.sha256((root/name).read_bytes()).hexdigest()
-              assert actual==digest,(name,actual,digest)
-          print('All V200 vector source identities verified')
+              actual=hashlib.sha256((root/name).read_bytes()).hexdigest();assert actual==digest,(name,actual,digest)
+              if name.startswith('osm/'):
+                  rec=[e for e in receipt['files'] if e['path'].endswith(name)]
+                  assert len(rec)==1 and rec[0]['sha256']==actual,(name,'original acquisition receipt mismatch')
+          print('V200 vector files match original acquired identities')
           PY
           python "$ROOT/build_vectors.py" --source projects/wenzhou/v200/data/hydrology/osm --polygons projects/wenzhou/v200/data/hydrology/osm_water_polygons/WENZHOU_OSM_WATER_POLYGONS_EPSG32651.geojson --output "$SITE/data/vectors.json.gz"
           for f in runtime.js math.js shaders.js; do node --check "$SITE/$f"; done
-      - name: Real Chromium desktop and mobile prepublication review
+      - name: Real desktop and mobile Chromium prepublication checks
         run: |
           set -euo pipefail
           python -m http.server 8765 --directory "$SITE" >/tmp/wenzhou-v7-http.log 2>&1 &
@@ -61,7 +82,7 @@ jobs:
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 2
           python "$ROOT/qa_v7.py" --url http://127.0.0.1:8765/ --out /tmp/wenzhou-v7-qa-local --chromium "$CHROMIUM_PATH"
-      - name: Build content identity from the actual tested files
+      - name: Identify actual tested bytes
         run: |
           python - <<'PY'
           import json,hashlib,os
@@ -69,10 +90,10 @@ jobs:
           from datetime import datetime,timezone
           site=Path(os.environ['SITE'])
           files={str(p.relative_to(site)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(site.rglob('*')) if p.is_file()}
-          report={'schema':'wenzhou-v7-tested-online-review-1','version':'v7-numeric-first-view-r1','sourceCommit':os.environ['GITHUB_SHA'],'createdUtc':datetime.now(timezone.utc).isoformat(),'publicPath':'/guilin-dem-pipeline/wenzhou-v7/','sourceValueSha256':'639a69429e104d9c2db1550870da79dc2b89df9ac893c18405901530c25ff353','nativeWindows':['dongtou','feiyun'],'fullDomainNativeOnline':False,'fullNumericStoreOnline':False,'sourceDeleted':False,'imageTextureCount':0,'localRealBrowserPassed':True,'publicRealBrowserPassed':False,'productionReady':False,'visualAcceptance':False,'files':files}
+          report={'schema':'wenzhou-v7-tested-online-review-2','version':'v7-numeric-repair-r2','sourceCommit':os.environ['GITHUB_SHA'],'createdUtc':datetime.now(timezone.utc).isoformat(),'publicPath':'/guilin-dem-pipeline/wenzhou-v7/','sourceValueSha256':'639a69429e104d9c2db1550870da79dc2b89df9ac893c18405901530c25ff353','nativeWindows':['dongtou','feiyun'],'fullDomainNativeOnline':False,'fullNumericStoreOnline':False,'sourceDeleted':False,'imageTextureCount':0,'localRealBrowserPassed':True,'publicRealBrowserPassed':False,'productionReady':False,'visualAcceptance':False,'files':files}
           (site/'ONLINE_BUILD.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
           PY
-      - name: Checkout the existing publication branch without replacing other projects
+      - name: Checkout existing publication branch
         uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -81,7 +102,7 @@ jobs:
           lfs: false
           sparse-checkout: |
             wenzhou-v7
-      - name: Publish only the Wenzhou V7 directory with a normal commit
+      - name: Publish only the tested Wenzhou review directory
         run: |
           set -euo pipefail
           mkdir -p publication/wenzhou-v7
@@ -92,7 +113,7 @@ jobs:
           git add -- wenzhou-v7
           if ! git diff --cached --quiet; then
             test -z "$(git diff --cached --name-only | grep -v '^wenzhou-v7/' || true)"
-            git commit -m "Publish tested Wenzhou V7 numeric review from ${GITHUB_SHA}"
+            git commit -m "Publish browser-tested Wenzhou V7 numeric review from ${GITHUB_SHA}"
             pushed=0
             for attempt in 1 2 3; do
               if git push origin HEAD:gh-pages; then pushed=1; break; fi
@@ -111,36 +132,33 @@ jobs:
           from pathlib import Path
           from datetime import datetime,timezone
           site=Path(os.environ['SITE']);base='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7/'
-          expected=hashlib.sha256((site/'index.html').read_bytes()).hexdigest()
-          attempts=[];success=False
+          expected=hashlib.sha256((site/'index.html').read_bytes()).hexdigest();attempts=[];success=False
           def read(url):
               req=urllib.request.Request(url,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
               with urllib.request.urlopen(req,timeout=30) as r:return r.status,r.read()
           for i in range(100):
               try:
-                  code,data=read(os.environ['PUBLIC_URL']+'&check='+str(i))
-                  ok=code==200 and hashlib.sha256(data).hexdigest()==expected
+                  code,data=read(os.environ['PUBLIC_URL']+'&check='+str(i));ok=code==200 and hashlib.sha256(data).hexdigest()==expected
                   attempts.append({'attempt':i,'status':code,'exactIndexMatch':ok})
                   if ok:success=True;break
               except Exception as e:attempts.append({'attempt':i,'error':str(e)})
               time.sleep(6)
-          report={'schema':'wenzhou-v7-public-http-identity-1','passed':False,'url':os.environ['PUBLIC_URL'],'checkedUtc':datetime.now(timezone.utc).isoformat(),'publicationCommit':Path('/tmp/wenzhou-v7-publication-commit.txt').read_text().strip(),'attempts':attempts,'files':[]}
+          report={'schema':'wenzhou-v7-public-http-identity-2','passed':False,'url':os.environ['PUBLIC_URL'],'checkedUtc':datetime.now(timezone.utc).isoformat(),'publicationCommit':Path('/tmp/wenzhou-v7-publication-commit.txt').read_text().strip(),'attempts':attempts,'files':[]}
           try:
               assert success,'Exact public entry HTML did not become available'
               for p in sorted(site.rglob('*')):
                   if not p.is_file():continue
-                  name=p.relative_to(site).as_posix();wanted=hashlib.sha256(p.read_bytes()).hexdigest()
-                  code,data=read(base+name+'?sha='+wanted[:16]);actual=hashlib.sha256(data).hexdigest()
+                  name=p.relative_to(site).as_posix();wanted=hashlib.sha256(p.read_bytes()).hexdigest();code,data=read(base+name+'?sha='+wanted[:16]);actual=hashlib.sha256(data).hexdigest()
                   assert code==200 and actual==wanted,(name,code,actual,wanted)
                   report['files'].append({'path':name,'httpStatus':code,'bytes':len(data),'sha256':actual,'matchesPublishedBuild':True})
               report['passed']=True
           finally:Path('/tmp/wenzhou-v7-public-http-qa.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
-      - name: Verify the actual public HTML in fresh Chromium desktop and mobile contexts
+      - name: Test the actual public HTML in fresh desktop and mobile Chromium contexts
         run: |
           python "$ROOT/qa_v7.py" --url "$PUBLIC_URL" --out /tmp/wenzhou-v7-qa-public --chromium "$CHROMIUM_PATH"
-      - name: Record actual public evidence on the Wenzhou working branch
+      - name: Record source corrections and actual public evidence on the Wenzhou branch
         run: |
           set -euo pipefail
           mkdir -p projects/wenzhou/v200/reports
@@ -149,8 +167,8 @@ jobs:
           cp "$SITE/numeric-preview-qa.json" projects/wenzhou/v200/reports/V7_NATIVE_PREVIEW_QA.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add projects/wenzhou/v200/reports/V7_PUBLIC_BROWSER_QA.json projects/wenzhou/v200/reports/V7_PUBLIC_HTTP_QA.json projects/wenzhou/v200/reports/V7_NATIVE_PREVIEW_QA.json
-          git diff --cached --quiet || git commit -m 'Record real public V7 browser and file identity evidence [skip ci]'
+          git add projects/wenzhou/v200/web/v7/site/runtime.js projects/wenzhou/v200/web/v7/qa_v7.py projects/wenzhou/v200/reports/V7_PUBLIC_BROWSER_QA.json projects/wenzhou/v200/reports/V7_PUBLIC_HTTP_QA.json projects/wenzhou/v200/reports/V7_NATIVE_PREVIEW_QA.json
+          git diff --cached --quiet || git commit -m 'Record verified V7 source corrections and real public browser evidence [skip ci]'
           pushed=0
           for attempt in 1 2 3; do
             if git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild; then pushed=1; break; fi
@@ -158,7 +176,7 @@ jobs:
             git rebase origin/project/wenzhou-v200-17tile-truth-hydrology-rebuild
           done
           test "$pushed" = '1'
-      - name: Keep success or failure browser evidence
+      - name: Retain success or failure evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -171,22 +189,18 @@ jobs:
             /tmp/wenzhou-v7-pages-request-error.txt
             /tmp/wenzhou-v7-publication-commit.txt
             /tmp/wenzhou-v7-http.log
-            /tmp/wenzhou-v7-site/ONLINE_BUILD.json
-            /tmp/wenzhou-v7-site/manifest.json
-            /tmp/wenzhou-v7-site/numeric-preview-qa.json
-            /tmp/wenzhou-v7-site/data/vectors.json.qa.json
+            /tmp/wenzhou-v7-site
           if-no-files-found: warn
-          retention-days: 90
+          retention-days: 30
       - name: Write truthful job summary
         if: always()
         run: |
           python - <<'PY'
           import json,os
           from pathlib import Path
-          p=Path('/tmp/wenzhou-v7-qa-public/browser-qa.json')
-          passed=p.exists() and json.loads(p.read_text()).get('passed') is True
+          p=Path('/tmp/wenzhou-v7-qa-public/browser-qa.json');passed=p.exists() and json.loads(p.read_text()).get('passed') is True
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('Wenzhou V7 public browser verification: '+str(passed)+'\n\n')
-              f.write('Native pilot windows: Dongtou 513 x 513, Feiyun 129 x 129; 12.5 m samples.\n\n')
+              f.write('Wenzhou V7 actual public browser verification: '+str(passed)+'\n\n')
+              f.write('Native pilot windows: Dongtou 513 x 513 and Feiyun 129 x 129; source spacing 12.5 m.\n\n')
               f.write('Full native archive online: false. Source TIFF deleted: false. Visual and production approval: false.\n')
           PY
