@@ -1,0 +1,40 @@
+name: Wenzhou V7 preview transfer inspection
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-preview-inspect.yml]
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Decode and inspect existing transferred bytes
+        run: |
+          python - <<'PY'
+          import sys,json,zlib,hashlib,re
+          from pathlib import Path
+          root=Path('projects/wenzhou/v200/web/v7');sys.path.insert(0,str(root));from decode_transfer import decode_block
+          blocks=[];rep=[]
+          for p in sorted((root/'transfer').glob('block*.txt')):
+              b,q=decode_block(p.read_text());blocks.append(b);rep.append({'file':p.name,**q})
+          b=b''.join(blocks);d=zlib.decompressobj(31);raw=d.decompress(b)
+          report={'blocks':rep,'decodedBytes':len(raw),'gzipComplete':d.eof,'compressedBytesUsed':len(b)-len(d.unused_data),'prefix':raw[:4000].decode('utf-8','replace'),'suffix':raw[-2000:].decode('utf-8','replace'),'sha256':hashlib.sha256(raw).hexdigest()}
+          if d.eof:
+              try:
+                  x=json.loads(raw);report['keys']=list(x);report['structure']={k: {'type':type(v).__name__,'keys':list(v)[:20] if isinstance(v,dict) else None,'length':len(v) if hasattr(v,'__len__') else None} for k,v in x.items()}
+              except Exception as e:report['jsonError']=str(e)
+          p=Path('projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json');p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
+          print(json.dumps(report,indent=2,ensure_ascii=False))
+          PY
+      - name: Record inspection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json
+          git diff --cached --quiet || git commit -m 'Record actual V7 transfer integrity [skip ci]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
