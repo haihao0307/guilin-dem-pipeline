@@ -13,28 +13,39 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: false
-      - name: Decode and inspect existing transferred bytes
+      - name: Recover complete tar members, never claim the truncated archive complete
         run: |
           python - <<'PY'
-          import sys,json,zlib,hashlib,re
-          from pathlib import Path
+          import sys,json,zlib,hashlib
+          from pathlib import Path,PurePosixPath
           root=Path('projects/wenzhou/v200/web/v7');sys.path.insert(0,str(root));from decode_transfer import decode_block
           blocks=[];rep=[]
           for p in sorted((root/'transfer').glob('block*.txt')):
               b,q=decode_block(p.read_text());blocks.append(b);rep.append({'file':p.name,**q})
-          b=b''.join(blocks);d=zlib.decompressobj(31);raw=d.decompress(b)
-          report={'blocks':rep,'decodedBytes':len(raw),'gzipComplete':d.eof,'compressedBytesUsed':len(b)-len(d.unused_data),'prefix':raw[:4000].decode('utf-8','replace'),'suffix':raw[-2000:].decode('utf-8','replace'),'sha256':hashlib.sha256(raw).hexdigest()}
-          if d.eof:
-              try:
-                  x=json.loads(raw);report['keys']=list(x);report['structure']={k: {'type':type(v).__name__,'keys':list(v)[:20] if isinstance(v,dict) else None,'length':len(v) if hasattr(v,'__len__') else None} for k,v in x.items()}
-              except Exception as e:report['jsonError']=str(e)
-          p=Path('projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json');p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
-          print(json.dumps(report,indent=2,ensure_ascii=False))
+          data=b''.join(blocks);d=zlib.decompressobj(31);raw=d.decompress(data);pos=0;members=[]
+          while pos+512<=len(raw):
+              h=raw[pos:pos+512]
+              if not any(h):break
+              name=h[:100].split(b'\0')[0].decode();size=int(h[124:136].strip(b'\0 ') or b'0',8)
+              parts=PurePosixPath(name)
+              if parts.is_absolute() or '..' in parts.parts:raise ValueError('Unsafe archive path')
+              complete=pos+512+size<=len(raw)
+              entry={'path':name,'bytes':size,'complete':complete}
+              if complete and h[156:157] in (b'0',b'\0'):
+                  b=raw[pos+512:pos+512+size];entry['sha256']=hashlib.sha256(b).hexdigest()
+                  out=root/'site'/name;out.parent.mkdir(parents=True,exist_ok=True)
+                  if out.exists() and out.read_bytes()!=b:raise ValueError('Refuse overwrite '+str(out))
+                  out.write_bytes(b)
+              members.append(entry)
+              if not complete:break
+              pos+=512+((size+511)//512)*512
+          report={'blocks':rep,'decodedBytes':len(raw),'gzipComplete':d.eof,'members':members,'archiveAccepted':False,'deploymentPerformed':False}
+          out=Path('projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json');out.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n');print(json.dumps(report,indent=2,ensure_ascii=False))
           PY
-      - name: Record inspection
+      - name: Record recovered sources for review
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json
-          git diff --cached --quiet || git commit -m 'Record actual V7 transfer integrity [skip ci]'
+          git add projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json projects/wenzhou/v200/web/v7/site
+          git diff --cached --quiet || git commit -m 'Recover complete V7 source members for review, not deployment [skip ci]'
           git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
