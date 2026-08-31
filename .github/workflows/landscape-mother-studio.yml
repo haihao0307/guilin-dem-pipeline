@@ -1,0 +1,69 @@
+name: Landscape Mother Studio 01
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths:
+      - workbenches/landscape-mother/**
+      - .github/workflows/landscape-mother-studio.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: landscape-mother-studio
+  cancel-in-progress: false
+jobs:
+  check-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Protect the cleaned seven-file core
+        run: |
+          python3 landscape-mother/tools/validate.py
+          node --test landscape-mother/tests/policy.test.cjs
+          test "$(git rev-parse HEAD:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
+          test "$(git rev-parse HEAD:truth)" = ab778539b633ec4d361120a654f24fc2e8f127b7
+          test "$(git rev-parse HEAD:contracts)" = db754963ffda5fd7d5f16ca3a9a2f52a6fc6560b
+          test "$(git rev-parse HEAD:knowledge)" = e7e80f8e056f2184a722dc9341d5c9e71bf4e563
+      - name: Syntax and full-size numerical cases
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lm-evidence"
+          for file in workbenches/landscape-mother/*.mjs; do node --check "$file"; done
+          node --test workbenches/landscape-mother/test.mjs
+          node workbenches/landscape-mother/test.mjs --compile | tee "$RUNNER_TEMP/lm-evidence/numeric.txt"
+          python3 workbenches/landscape-mother/stage.py --output "$RUNNER_TEMP/lm-site" --commit "$GITHUB_SHA"
+      - name: Install browser QA dependency
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Real staging desktop and mobile checks
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory "$RUNNER_TEMP/lm-site" > "$RUNNER_TEMP/lm-evidence/server.log" 2>&1 &
+          python3 workbenches/landscape-mother/browser_qa.py --url http://127.0.0.1:8790/ --output "$RUNNER_TEMP/lm-evidence/stage"
+      - name: Publish only the new workbench and verify exact public bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LM_SITE: ${{ runner.temp }}/lm-site
+        run: python3 workbenches/landscape-mother/publish.py
+      - name: Real public desktop and mobile checks
+        run: |
+          python3 workbenches/landscape-mother/browser_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/public"
+      - name: Preserve evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-studio-${{ github.sha }}
+          path: ${{ runner.temp }}/lm-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Record candidate status
+        if: always()
+        run: |
+          echo '## Landscape Mother Studio 01' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Three procedural examples; zero regional DEM binding. Numeric and browser gates are distinct from artistic approval.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'visualApproved=false; productionReady=false' >> "$GITHUB_STEP_SUMMARY"
