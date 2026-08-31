@@ -1,0 +1,119 @@
+name: Weather Mother V063 Optics
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/v063-optics/build.py
+      - weather-mother/v063-optics/optics.js
+      - weather-mother/v063-optics/qa.py
+      - .github/workflows/weather-mother-v063-optics.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-v063-optics
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother/v062-loop
+            weather-mother/v063-optics
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build against exact immutable baseline
+        run: python weather-mother/v063-optics/build.py
+      - name: Install browser QA
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Real pixels all cases and equal-quality GPU A-B
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/weather-v063-http.log 2>&1 &
+          python weather-mother/v063-optics/qa.py
+      - name: Publish only tested candidate runtime
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path('weather-mother/v063-optics')
+          q=json.loads((r/'QA.json').read_text());assert q['status']=='AUTOMATIC_QA_PASS'
+          m=json.loads((r/'MANIFEST.json').read_text());m['status']='AUTOMATIC_QA_PASS';m['qaChecks']=len(q['checks'])
+          (r/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git config user.name 'Weather Mother optics QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/v063-optics/index.html weather-mother/v063-optics/engine.js weather-mother/v063-optics/cloud.glsl weather-mother/v063-optics/field-worker.js weather-mother/v063-optics/motion.js weather-mother/v063-optics/MANIFEST.json weather-mother/v063-optics/QA.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(weather-mother): publish tested volumetric iridescence and expanded weather cases'
+            for attempt in 1 2 3; do
+              git pull --rebase origin gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 3
+            done
+          fi
+      - name: Verify exact public bytes
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          r=Path('weather-mother/v063-optics');m=json.loads((r/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v063-optics/'
+          receipt={}
+          for attempt in range(36):
+            try:
+              for name,f in m['files'].items():
+                req=urllib.request.Request(base+name+'?verify='+f['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as response:
+                  data=response.read();sha=hashlib.sha256(data).hexdigest();assert response.status==200 and sha==f['sha256'],name
+                  receipt[name]={'status':200,'bytes':len(data),'sha256':sha,'matches':True}
+              break
+            except Exception as e:
+              print(attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          (r/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'version':'0.6.3-optics','url':base,'files':receipt,'exactPublicBytesVerified':True,'visualAcceptance':False,'aaaQualityApproved':False,'productionReady':False},indent=2)+'\n')
+          PY
+      - name: Real public browser regression
+        env:
+          WEATHER_URL: https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v063-optics/?verify=063-r1
+        run: python weather-mother/v063-optics/qa.py
+      - name: Record publication receipts
+        run: |
+          git add weather-mother/v063-optics/PUBLIC_QA.json weather-mother/v063-optics/PUBLICATION_RECEIPT.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(weather-mother): record live iridescence optics and weather verification'
+            git pull --rebase origin gh-pages
+            git push origin HEAD:gh-pages
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-mother-v063-code-and-numeric-qa
+          retention-days: 7
+          path: |
+            weather-mother/v063-optics/index.html
+            weather-mother/v063-optics/engine.js
+            weather-mother/v063-optics/cloud.glsl
+            weather-mother/v063-optics/field-worker.js
+            weather-mother/v063-optics/motion.js
+            weather-mother/v063-optics/optics.js
+            weather-mother/v063-optics/build.py
+            weather-mother/v063-optics/qa.py
+            weather-mother/v063-optics/MANIFEST.json
+            weather-mother/v063-optics/QA.json
+            weather-mother/v063-optics/PUBLIC_QA.json
+            weather-mother/v063-optics/PUBLICATION_RECEIPT.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother V063' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Pinned V062 baseline preserved. No image files. New iridescence and lightning remain graphical approximations; AAA visual approval stays false.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f weather-mother/v063-optics/QA.json ]; then python -c 'import json;d=json.load(open("weather-mother/v063-optics/QA.json"));print(d["status"],len(d["checks"]),"checks")' >> "$GITHUB_STEP_SUMMARY"; fi
