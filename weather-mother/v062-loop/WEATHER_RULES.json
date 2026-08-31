@@ -1,0 +1,33 @@
+{
+  "productionLine": "Weather Mother",
+  "schemaVersion": "1.0.0",
+  "date": "2026-08-31",
+  "scope": "Graphics production rules, not a numerical weather forecast or validated fluid solver",
+  "priority": ["preserve user-accepted V061 appearance", "stable fine detail", "measured frame performance", "complete workbench", "small source size when it does not reduce quality"],
+  "storedImages": 0,
+  "clocks": {
+    "shapeLoop": {"status": "implemented-candidate", "periodSeconds": [12, 300], "amplitude": [0, 1], "coordinates": "periodic sine/cosine harmonics in cloud material space", "continuity": "position and first derivative periodic; independent of seed identity", "fullSceneLoopClaim": false},
+    "advection": {"status": "preserved", "windForceMps": "local disturbance strength", "cloudSpeedMps": "translation speed", "linkOptional": true, "bearing": "meteorological wind-from; +X east, -Z north"},
+    "illumination": {"status": "preserved", "dayClockIndependentOfMorphology": true},
+    "lightning": {"status": "implemented-graphical-candidate", "parameters": ["event frequency", "intensity", "seed", "manual trigger"], "outputs": ["branched bolt", "localized cloud illumination", "history rejection around light changes"], "microphysicalChargeSolver": false}
+  },
+  "systems": {
+    "convective": {"clouds": ["Cu", "Cb"], "inputs": ["humidity", "convective growth", "shear", "wind"], "stages": ["growth", "maturity", "dissipation"], "status": "graphical presets and morphology implemented; microphysics absent"},
+    "stratiform": {"clouds": ["St", "Sc", "As", "Ns"], "status": "graphical presets preserved"},
+    "highIce": {"clouds": ["Ci", "Cc", "Cs"], "status": "graphical presets preserved"},
+    "midlevelCellular": {"clouds": ["Ac"], "status": "graphical preset preserved"},
+    "orographic": {"inputs": ["terrain", "moisture", "incoming wind"], "status": "analytical demonstration only; no real DEM altered"},
+    "tropicalCyclone": {"status": "rules-only-not-rendered", "components": ["circulation center", "eye", "convective eyewall", "spiral rainbands", "outer cloud shield", "upper outflow"], "coupledFields": ["radial wind", "tangential wind", "vertical motion", "moisture", "cloud water", "precipitation"], "stages": ["organization", "intensification", "maturity", "possible eyewall replacement", "decay"], "constraints": ["do not model a cyclone as one rotating cloud cylinder", "do not equate larger storm size with greater intensity", "eye and eyewall remain distinct regions", "rainbands may contain embedded convection"], "simulationImplemented": false},
+    "optics": {"status": "primary and secondary angular rainbow approximation preserved", "inputs": ["sun direction", "observer direction", "rain region", "occlusion"]}
+  },
+  "performance": {"implemented": ["dilated conservative occupied-cell mask", "early density rejection in proven-empty cells", "same ray count and resolution for A/B", "asynchronous disjoint GPU timer queries where supported", "completed-frame cadence", "P50 and P95 samples"], "claimsNotMade": ["an arbitrary GPU is fast because source files are small", "CPU submission time equals GPU time", "software rendering performance predicts the user's GPU", "the occupied mask is a signed distance solver"]},
+  "research": [
+    {"source": "Guerrilla Nubis cubed", "url": "https://www.guerrilla-games.com/read/nubis-cubed", "role": "volume traversal and lighting acceleration principles; no source assets copied"},
+    {"source": "MDN WebGL timer queries", "url": "https://developer.mozilla.org/en-US/docs/Web/API/EXT_disjoint_timer_query", "role": "asynchronous GPU timing, disjoint result rejection"},
+    {"source": "NVIDIA spatiotemporal blue noise", "url": "https://developer.nvidia.com/blog/rendering-in-real-time-with-spatiotemporal-blue-noise-textures-part-2/", "role": "temporal stability rationale; this build uses the existing procedural sampling sequence and does not claim to ship STBN masks"},
+    {"source": "NOAA NSSL lightning", "url": "https://www.nssl.noaa.gov/education/svrwx101/lightning/faq/", "role": "charge separation background; the graphical event rate is an artistic control, not a physical inference"},
+    {"source": "NOAA storm structure", "url": "https://www.aoml.noaa.gov/general/graphics/lib/storm.html", "role": "eye, eyewall, inflow and upper outflow distinctions"}
+  ],
+  "aaaQualityApproved": false,
+  "productionReady": false
+}
