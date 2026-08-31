@@ -8,6 +8,7 @@ import argparse,base64,gzip,hashlib,json,shutil,struct,sys,zlib
 import numpy as np
 p=argparse.ArgumentParser();p.add_argument('--root',required=True);p.add_argument('--output',required=True);args=p.parse_args();root=Path(args.root);out=Path(args.output);out.mkdir(parents=True,exist_ok=True);sys.path.insert(0,str(root));from decode_transfer import decode_block
 from repair_runtime import patch_site,patch_checks
+from feiyun_window_fix import apply as fix_feiyun_window
 reports=[];blocks=[]
 for i in range(5):
  name=f'block{i:02d}.txt';b,r=decode_block((root/'transfer'/name).read_text());blocks.append(b);reports.append({'block':name,**r})
@@ -17,6 +18,8 @@ assert len(text)==31472,len(text)
 assert hashlib.sha256(text).hexdigest()=='f776c70971566e8c0ea3fb648a84b425f3f44e6569ecee8f2c0203dee5795778'
 for name in ['index.html','runtime.js','math.js','shaders.js','manifest.json','distillation-qa.json','data/feiyun.wzn64']:
  src=root/'site'/name;dest=out/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest)
+ if name.endswith('.wzn64'):
+  dest.write_text(''.join(dest.read_text(encoding='ascii').split()),encoding='ascii')
 (out/'data/dongtou.wzn64').write_bytes(text)
 m=json.loads((out/'manifest.json').read_text());assert m['sourceValueSha256']=='639a69429e104d9c2db1550870da79dc2b89df9ac893c18405901530c25ff353';assert m['fullDomainNativeOnline'] is False
 checks=[]
@@ -27,7 +30,7 @@ for name in m['onlineNativeWindows']:
  q=np.frombuffer(gzip.decompress(b[8:]),dtype='<i2').reshape(ny,nx);a=q.astype(np.int64).cumsum(axis=0).cumsum(axis=1).astype('<i2')
  digest=hashlib.sha256(a.tobytes(order='C')).hexdigest();assert digest==w['valueSha256'],name+' decoded source values';assert w['spacingM']==12.5
  checks.append({'window':name,'grid':[nx,ny],'spacingM':12.5,'sourceStartRow':w['startRow'],'sourceStartCol':w['startCol'],'decodedValueSha256':digest,'compressedSha256':w['sha256'],'passed':True})
-patch_site(out);patch_checks(root/'qa_v7.py')
+patch_site(out);patch_checks(root/'qa_v7.py');fix_feiyun_window(root,out)
 for name in ['runtime.js','math.js','shaders.js','index.html']:
  s=(out/name).read_text()
  for forbidden in ['wenzhou-v111/','QINGJIANG','TextureLoader','sampler2D','data:image/']:
