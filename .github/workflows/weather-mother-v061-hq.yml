@@ -4,6 +4,7 @@ on:
     branches: [gh-pages]
     paths:
       - weather-mother/v061-hq/build.py
+      - weather-mother/v061-hq/polish.py
       - weather-mother/v061-hq/qa.py
       - weather-mother/v061-hq/public-verify.py
       - weather-mother/v061-hq/PUBLIC_CHECK.json
@@ -30,8 +31,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build from hash-locked v060
-        run: python weather-mother/v061-hq/build.py
+      - name: Build and apply the inspected visual refinement
+        run: |
+          python weather-mother/v061-hq/build.py
+          python weather-mother/v061-hq/polish.py
       - name: Install Chromium test dependencies
         run: |
           python -m pip install playwright pillow
@@ -42,11 +45,12 @@ jobs:
           python weather-mother/v061-hq/qa.py
       - name: Commit only tested HQ files
         run: |
+          python -c 'import json;from pathlib import Path;r=Path("weather-mother/v061-hq");q=json.loads((r/"QA.json").read_text());assert q["status"]=="AUTOMATIC_QA_PASS";m=json.loads((r/"MANIFEST.json").read_text());m["status"]="AUTOMATIC_QA_PASS";m["qaChecks"]=len(q["checks"]);(r/"MANIFEST.json").write_text(json.dumps(m,ensure_ascii=False,indent=2)+"\n")'
           git config user.name 'Weather Mother build'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add weather-mother/v061-hq/index.html weather-mother/v061-hq/engine.js weather-mother/v061-hq/cloud.glsl weather-mother/v061-hq/field-worker.js weather-mother/v061-hq/MANIFEST.json weather-mother/v061-hq/QA.json
           if ! git diff --cached --quiet; then
-            git commit -m 'feat(weather-mother): publish browser-tested v061 HQ wind and lighting workbench'
+            git commit -m 'feat(weather-mother): publish browser-tested HQ revision 2 with finer cloud structure'
             for attempt in 1 2 3; do
               git pull --rebase origin gh-pages
               if git push origin HEAD:gh-pages; then exit 0; fi
