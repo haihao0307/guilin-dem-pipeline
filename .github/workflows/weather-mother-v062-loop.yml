@@ -1,0 +1,118 @@
+name: Weather Mother V062 Loop
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/v062-loop/build.py
+      - weather-mother/v062-loop/motion.js
+      - weather-mother/v062-loop/qa.py
+      - weather-mother/v062-loop/WEATHER_RULES.json
+      - .github/workflows/weather-mother-v062-loop.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-v062-loop
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother/v061-hq
+            weather-mother/v062-loop
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce candidate from pinned accepted baseline
+        run: python weather-mother/v062-loop/build.py
+      - name: Install browser test dependencies
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Browser pixels, loop seam, all cloud genera and independent drift
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/weather-loop-http.log 2>&1 &
+          python weather-mother/v062-loop/qa.py
+      - name: Publish only automatically tested V062 runtime
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path('weather-mother/v062-loop')
+          q=json.loads((r/'QA.json').read_text());assert q['status']=='AUTOMATIC_QA_PASS'
+          m=json.loads((r/'MANIFEST.json').read_text());m['status']='AUTOMATIC_QA_PASS';m['qaChecks']=len(q['checks'])
+          (r/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git config user.name 'Weather Mother QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/v062-loop/index.html weather-mother/v062-loop/engine.js weather-mother/v062-loop/cloud.glsl weather-mother/v062-loop/field-worker.js weather-mother/v062-loop/MANIFEST.json weather-mother/v062-loop/QA.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(weather-mother): publish browser-tested periodic cloud evolution candidate'
+            for attempt in 1 2 3; do
+              git pull --rebase origin gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 3
+            done
+          fi
+      - name: Wait for exact public Pages bytes
+        run: |
+          python - <<'PY'
+          import json,hashlib,time,urllib.request
+          from pathlib import Path
+          r=Path('weather-mother/v062-loop');m=json.loads((r/'MANIFEST.json').read_text())
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v062-loop/'
+          receipt={}
+          for attempt in range(36):
+            try:
+              for name,expected in m['files'].items():
+                req=urllib.request.Request(base+name+'?verify='+expected['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as response:
+                  b=response.read();sha=hashlib.sha256(b).hexdigest();assert response.status==200 and sha==expected['sha256'],name
+                  receipt[name]={'status':response.status,'bytes':len(b),'sha256':sha,'matches':True}
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          (r/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'version':'0.6.2-loop','url':base,'files':receipt,'exactPublicBytesVerified':True,'manualVisualAcceptance':False,'aaaQualityApproved':False,'productionReady':False},indent=2)+'\n')
+          PY
+      - name: Verify actual public browser
+        env:
+          WEATHER_URL: https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v062-loop/?verified=062-r1
+        run: python weather-mother/v062-loop/qa.py
+      - name: Record public receipts
+        run: |
+          git add weather-mother/v062-loop/PUBLICATION_RECEIPT.json weather-mother/v062-loop/PUBLIC_QA.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(weather-mother): verify V062 public bytes and browser loop endpoint pixels'
+            git pull --rebase origin gh-pages
+            git push origin HEAD:gh-pages
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-mother-v062-code-and-numeric-qa
+          retention-days: 7
+          path: |
+            weather-mother/v062-loop/index.html
+            weather-mother/v062-loop/engine.js
+            weather-mother/v062-loop/cloud.glsl
+            weather-mother/v062-loop/field-worker.js
+            weather-mother/v062-loop/motion.js
+            weather-mother/v062-loop/MANIFEST.json
+            weather-mother/v062-loop/QA.json
+            weather-mother/v062-loop/PUBLIC_QA.json
+            weather-mother/v062-loop/PUBLICATION_RECEIPT.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother V062' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Preserved V061 baseline. No images stored. Graphical periodic morphology and lightning, not a fluid solver.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f weather-mother/v062-loop/QA.json ]; then python -c 'import json;d=json.load(open("weather-mother/v062-loop/QA.json"));print(d["status"],len(d["checks"]),"checks")' >> "$GITHUB_STEP_SUMMARY"; fi
