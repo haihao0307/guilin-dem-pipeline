@@ -1,0 +1,44 @@
+name: Landscape Mother clean core
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths:
+      - landscape-mother/**
+      - maintenance/landscape-mother-cleanup-20260831.json
+      - skills/dem-procedural-landscape/LANDSCAPE_MOTHER_KNOWLEDGE_INDEX.json
+      - AGENTS.md
+      - .github/workflows/landscape-mother-clean-check.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fixed numeric policy tests
+        run: node --test landscape-mother/tests/policy.test.cjs
+      - name: Minimal core inventory
+        run: python3 landscape-mother/tools/validate.py
+      - name: Protected assets and retired entry points
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          r=json.loads(Path('maintenance/landscape-mother-cleanup-20260831.json').read_text())
+          for p,s in r['protectedObjects'].items():
+              actual=subprocess.check_output(['git','rev-parse',f'HEAD:{p}'],text=True).strip()
+              assert actual==s, f'Protected object changed: {p}'
+          for item in r['removedFiles']:
+              assert not Path(item['path']).exists(), f'Retired file returned: {item["path"]}'
+          for item in r['activeCoreFiles']:
+              raw=(Path('landscape-mother')/item['path']).read_bytes()
+              assert len(raw)==item['bytes'] and hashlib.sha256(raw).hexdigest()==item['sha256'], item['path']
+          print('Preserved objects, core hashes and 34 retired files verified. No terrain approval or publication.')
+          PY
