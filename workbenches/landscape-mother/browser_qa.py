@@ -8,21 +8,29 @@ report={'method':'real Chromium module-worker and WebGL2 QA','sourceUrl':args.ur
 spy="""(()=>{const proto=WebGL2RenderingContext.prototype;window.__gpuProbe={textures:0,uploads:0,draws:0,indexCounts:new Set()};for(const [name,run]of [['createTexture',function(){window.__gpuProbe.textures++}],['bufferData',function(){window.__gpuProbe.uploads++}],['drawElements',function(mode,count){window.__gpuProbe.draws++;window.__gpuProbe.indexCounts.add(count)}]]){const original=proto[name];proto[name]=function(...a){run(...a);return original.apply(this,a)}}})();"""
 try:
  with sync_playwright() as pw:
-  kw={'headless':True,'args':['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}
-  if args.chromium:kw['executable_path']=args.chromium
+  kw={'headless':True,'channel':'chromium','args':['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']}
+  if args.chromium:kw['executable_path']=args.chromium;kw.pop('channel',None)
   browser=pw.chromium.launch(**kw)
   page=browser.new_page(viewport={'width':1440,'height':960},device_scale_factor=1)
+  page.set_default_timeout(90000)
   page.add_init_script(spy)
   page.on('pageerror',lambda e:report['errors'].append(str(e)))
   page.on('requestfailed',lambda r:report['errors'].append('request:'+r.url+':'+str(r.failure)))
   page.goto(args.url,wait_until='load',timeout=90000)
+  def capture(name):
+   report['captureInProgress']=name
+   state=page.evaluate('''() => {const r=window.__LM.renderer;r.render();r.gl.finish();return {state:r.snapshot(),lost:r.gl.isContextLost(),error:r.gl.getError()}}''')
+   report['lastCaptureState']=state
+   assert not state['lost'] and state['error']==0,state
+   page.screenshot(path=str(out/name),timeout=90000)
+   report['captureInProgress']=None
   for case in ['karst','river','paddy']:
    if case!='karst':page.evaluate('(id)=>window.__LM.select(id)',case)
    page.wait_for_function("window.__LM?.ready || window.__LM?.error",timeout=180000)
    error=page.evaluate('window.__LM.error');assert not error,error
    audit=page.evaluate('window.__LM.audit');assert audit['caseId']==case;assert audit['river']['technicalPass'];assert audit['seams']['passed'];assert audit['spacing']==1 and audit['grid']==2049
-   page.screenshot(path=str(out/f'{case}-overview.png'))
-   page.evaluate("window.__LM.bookmark('close')");page.wait_for_timeout(300);page.screenshot(path=str(out/f'{case}-close.png'))
+   capture(f'{case}-overview.png')
+   page.evaluate("window.__LM.bookmark('close')");page.wait_for_timeout(300);capture(f'{case}-close.png')
    before=page.evaluate('({state:window.__LM.snapshot(),uploads:window.__gpuProbe.uploads,textures:window.__gpuProbe.textures})')
    motion=[];page.mouse.move(870,410);page.mouse.down()
    for i in range(12):
@@ -38,7 +46,7 @@ try:
    assert page.evaluate('window.__LM.renderer.gl.getError()')==0
    report['cases'].append({'id':case,'audit':audit,'before':before,'after':after,'motion':motion,'textureAllocationsObserved':after['textures'],'bufferUploadsDuringMotion':after['uploads']-before['uploads']})
   page.set_viewport_size({'width':390,'height':844});page.evaluate("window.__LM.bookmark('overview')");page.wait_for_timeout(500)
-  page.screenshot(path=str(out/'mobile-paddy.png'))
+  capture('mobile-paddy.png')
   mobile=page.evaluate('window.__LM.snapshot()');assert mobile['grid']==2049 and mobile['spacingM']==1
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   report['mobile']=mobile;report['browserVersion']=browser.version;report['passed']=not report['errors']
