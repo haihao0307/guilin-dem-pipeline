@@ -1,4 +1,9 @@
-"""Recover complete, independently hashed numeric members into a deploy staging tree."""
+"""Recover only complete numeric members with independently verified source-value hashes.
+
+The archived outer transfer is incomplete. Its complete Dongtou member is usable
+only because its decoded values were compared to the frozen V200 TIFF payload.
+This builder never accepts the outer archive as complete and never deletes TIFFs.
+"""
 from pathlib import Path
 import argparse,base64,gzip,hashlib,json,shutil,struct,sys,zlib
 import numpy as np
@@ -9,7 +14,7 @@ for i in range(5):
 dec=zlib.decompressobj(31);partial=dec.decompress(b''.join(blocks));assert len(partial)==48467,len(partial)
 text=partial[17920:]+(root/'transfer/dongtou-tail.txt').read_bytes().strip()
 assert len(text)==31472,len(text)
-assert hashlib.sha256(text).hexdigest()=='f77672186539d6a1609eae55c1328d1f979d32c562d3b6b9dfd40eaf6df19a14'
+assert hashlib.sha256(text).hexdigest()=='f776c70971566e8c0ea3fb648a84b425f3f44e6569ecee8f2c0203dee5795778'
 for name in ['index.html','runtime.js','math.js','shaders.js','manifest.json','distillation-qa.json','data/feiyun.wzn64']:
  src=root/'site'/name;dest=out/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest)
 (out/'data/dongtou.wzn64').write_bytes(text)
@@ -27,5 +32,5 @@ for name in ['runtime.js','math.js','shaders.js','index.html']:
  for forbidden in ['wenzhou-v111/','QINGJIANG','TextureLoader','sampler2D','data:image/']:
   assert forbidden not in s,(name,forbidden)
 assert 'src="./runtime.js"' in (out/'index.html').read_text()
-report={'schema':'wenzhou-v7-native-preview-qa-1','passed':True,'nativeWindows':checks,'sourceValueSha256':m['sourceValueSha256'],'originalTransferArchiveComplete':dec.eof,'completeArchiveAccepted':False,'recoveredNativeMemberIndependentlyVerified':True,'transferRows':reports,'imageTextureCount':0,'fullNumericStoreOnline':False,'fullNumericStoreControllerVerified':True,'sourceDeleted':False,'productionReady':False,'visualAcceptance':False}
+report={'schema':'wenzhou-v7-native-preview-qa-2','passed':True,'nativeWindows':checks,'sourceValueSha256':m['sourceValueSha256'],'sourceContainerSha256':m['sourceContainerSha256'],'sourceHistoricalContainerMatched':False,'originalTransferArchiveComplete':dec.eof,'completeArchiveAccepted':False,'recoveredNativeMemberIndependentlyVerified':True,'transferRows':reports,'imageTextureCount':0,'fullNumericStoreOnline':False,'fullNumericStoreControllerVerified':True,'sourceDeleted':False,'tifDeletionAllowed':False,'productionReady':False,'visualAcceptance':False}
 (out/'numeric-preview-qa.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n');print(json.dumps(report,indent=2))
