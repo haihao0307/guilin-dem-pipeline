@@ -9,9 +9,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import numpy as np
-import rasterio
 from pyproj import Transformer
-from rasterio.windows import Window
+from raster_window import Window
 from shapely.geometry import GeometryCollection, LineString, MultiLineString, box, shape
 from shapely.ops import transform as shapely_transform
 
@@ -42,38 +41,6 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def validate_inputs(mosaic: Path, manifest: dict[str, Any], dataset: rasterio.io.DatasetReader) -> None:
-    if mosaic.name != SOURCE_NAME:
-        raise RuntimeError(f"unexpected source filename: {mosaic.name}")
-    if mosaic.stat().st_size != SOURCE_BYTES:
-        raise RuntimeError(f"source byte count mismatch: {mosaic.stat().st_size}")
-    digest = sha256_file(mosaic)
-    if digest != SOURCE_SHA256:
-        raise RuntimeError(f"source SHA256 mismatch: {digest}")
-    if str(dataset.crs) != SOURCE_CRS:
-        raise RuntimeError(f"source CRS mismatch: {dataset.crs}")
-    if [dataset.width, dataset.height] != SOURCE_GRID:
-        raise RuntimeError(f"source grid mismatch: {dataset.width} x {dataset.height}")
-    if dataset.count != 1 or dataset.dtypes[0] != "int16":
-        raise RuntimeError(f"source dtype mismatch: {dataset.dtypes}")
-    if dataset.nodata != SOURCE_NODATA:
-        raise RuntimeError(f"source NoData mismatch: {dataset.nodata}")
-    if not math.isclose(dataset.transform.a, SOURCE_SPACING_M, abs_tol=1e-9):
-        raise RuntimeError(f"source x spacing mismatch: {dataset.transform.a}")
-    if not math.isclose(dataset.transform.e, -SOURCE_SPACING_M, abs_tol=1e-9):
-        raise RuntimeError(f"source y spacing mismatch: {dataset.transform.e}")
-    if manifest.get("schema") != "guilin-canonical-native-dem/v1":
-        raise RuntimeError("native manifest schema mismatch")
-    if manifest.get("status") != "sole_authoritative":
-        raise RuntimeError("native manifest is not sole authoritative")
-    if manifest.get("source", {}).get("sha256") != SOURCE_SHA256:
-        raise RuntimeError("native manifest source identity mismatch")
-    if manifest.get("aoi", {}).get("geometry_sha256") != AOI_SHA256:
-        raise RuntimeError("native manifest AOI identity mismatch")
-    if manifest.get("tile_matrix", {}).get("compression") != "none":
-        raise RuntimeError("native manifest indicates compressed tiles")
-    if len(manifest.get("tiles", [])) != 54:
-        raise RuntimeError("native tile count mismatch")
 
 
 def exact_source_indices(length: int, output_count: int) -> np.ndarray:
@@ -88,7 +55,7 @@ def exact_source_indices(length: int, output_count: int) -> np.ndarray:
 
 
 def build_overview(
-    dataset: rasterio.io.DatasetReader,
+    dataset: Any,
     manifest: dict[str, Any],
     output_dir: Path,
 ) -> dict[str, Any]:
@@ -147,7 +114,7 @@ def build_overview(
             "source_rows": [int(value) for value in rows],
             "selection": "exact-native-sample-index-lattice",
             "interpolation": "none",
-            "resampling": "none",
+            "resampling": "exact_sample_subset_for_overview_only",
             "compression": "none",
             "quantization": "none",
             "height_texture": False,
@@ -199,7 +166,7 @@ def projected_line_parts(feature: dict[str, Any], transformer: Transformer, doma
 
 
 def nearest_valid_native_elevation(
-    dataset: rasterio.io.DatasetReader,
+    dataset: Any,
     easting: float,
     northing: float,
     maximum_radius_samples: int = 32,
@@ -303,7 +270,7 @@ def unit_interval(value: float, minimum: float, maximum: float) -> float:
 
 
 def build_hydrology(
-    dataset: rasterio.io.DatasetReader,
+    dataset: Any,
     native_manifest: dict[str, Any],
     hydrology_path: Path,
     output_dir: Path,
@@ -651,61 +618,4 @@ def build_hydrology(
         },
     }
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Build the continuous Guilin full-map and OSM linear-waterway assets")
-    parser.add_argument("--mosaic", type=Path, required=True)
-    parser.add_argument("--native-manifest", type=Path, required=True)
-    parser.add_argument("--hydrology", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    args = parser.parse_args()
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    native_manifest = json.loads(args.native_manifest.read_text(encoding="utf-8"))
-    with rasterio.open(args.mosaic) as dataset:
-        validate_inputs(args.mosaic, native_manifest, dataset)
-        overview = build_overview(dataset, native_manifest, args.output_dir)
-        hydrology = build_hydrology(dataset, native_manifest, args.hydrology, args.output_dir)
-
-    overview_manifest = args.output_dir / "overview-direct-samples-manifest.json"
-    hydrology_manifest = args.output_dir / "osm-waterways-manifest.json"
-    write_json(overview_manifest, overview)
-    write_json(hydrology_manifest, hydrology)
-
-    receipt = {
-        "schema": "guilin-continuous-full-map-build-receipt/v1",
-        "passed": True,
-        "source_sha256": SOURCE_SHA256,
-        "aoi_geometry_sha256": AOI_SHA256,
-        "native_spacing_m": SOURCE_SPACING_M,
-        "native_tile_count": 54,
-        "overview": {
-            "grid": overview["asset"]["grid"],
-            "bytes": overview["asset"]["bytes"],
-            "sha256": overview["asset"]["sha256"],
-            "selection": overview["asset"]["selection"],
-            "interpolation": overview["asset"]["interpolation"],
-            "compression": overview["asset"]["compression"],
-            "height_texture": overview["asset"]["height_texture"],
-        },
-        "hydrology": {
-            "record_counts": hydrology["topology"]["record_counts"],
-            "record_count_total": hydrology["topology"]["record_count_total"],
-            "source_segment_count": hydrology["topology"]["source_segment_count"],
-            "segment_count": hydrology["topology"]["segment_count"],
-            "dropped_segment_count": hydrology["topology"]["dropped_segment_count"],
-            "display_elevation_fallback_node_count": hydrology["topology"]["display_elevation_fallback_node_count"],
-            "display_elevation_fallback_max_distance_m": hydrology["topology"]["display_elevation_fallback_max_distance_m"],
-            "node_count": hydrology["topology"]["node_count"],
-            "lake_surface_asset_count": 0,
-            "reservoir_surface_asset_count": 0,
-            "manual_centerline_added": False,
-            "synthetic_gap_line_added": False,
-        },
-    }
-    write_json(args.output_dir / "FULL_MAP_BUILD_RECEIPT.json", receipt)
-    print(json.dumps(receipt, ensure_ascii=False, indent=2))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

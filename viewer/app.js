@@ -1,25 +1,25 @@
 (() => {
   'use strict';
 
-  const MANIFEST_URL = 'data/NATIVE_ELEVATION_MANIFEST.json';
+  const MANIFEST_URL = 'data/ELEVATION_INDEX.json';
   const OVERVIEW_MANIFEST_URL = 'data/overview-direct-samples-manifest.json';
   const HYDROLOGY_MANIFEST_URL = 'data/osm-waterways-manifest.json';
-  const NATIVE_TILE_RUNTIME_BASE_URL = '../guilin-truth-data/native/';
+  const CANONICAL_STORE_BASE_URL = '../guilin-elevation-store-v1/';
   const DISTILLED_KNOWLEDGE_RUNTIME = true;
 
   const EXPECTED_SOURCE_SHA = '9490b1bd34f67336352cf448729f763ae4e241637d821961efd0290e29d6c9d4';
   const EXPECTED_AOI_SHA = '36b750be56ae0dea906996258068eaf9aaa71e01667eb328b9ce6bd1b48cbe80';
   const SOURCE_SPACING_M = 12.5;
   const NODATA = 0;
-  const TILE_GRID = 2048;
-  const TILE_STRIDE = 2047;
-  const TILE_BYTES = 8_388_608;
-  const TILE_COUNT = 54;
+  const CHUNK_GRID = 512;
+  const CHUNK_STRIDE = 512;
+  const MAX_CHUNK_BYTES = 524_288;
+  const CHUNK_COUNT = 840;
   const DETAIL_GRID = 640;
   const DETAIL_EDGE_FADE = 72;
   const DETAIL_ENABLE_DISTANCE_M = 92_000;
   const DETAIL_REFRESH_DISTANCE_M = 1_800;
-  const MAX_TILE_CACHE = 8;
+  const MAX_CHUNK_CACHE = 36;
   const MAX_DPR = 1.65;
   const WATERWAY_STYLE_PROFILE = 'network-directed-physical-width-v6';
   const HYDROLOGY_SEGMENT_STRIDE = 13;
@@ -51,13 +51,15 @@
   const runtimeErrors = [];
 
   const state = {
+    canonicalRangeRequests: 0,
+    canonicalRangeBytes: 0,
     manifest: null,
     overviewManifest: null,
     hydrologyManifest: null,
-    tileById: new Map(),
-    tileByMatrix: new Map(),
-    tileCache: new Map(),
-    tileLoadPromises: new Map(),
+    chunkById: new Map(),
+    chunkByMatrix: new Map(),
+    chunkCache: new Map(),
+    chunkLoadPromises: new Map(),
     overviewValues: null,
     overviewColumns: null,
     overviewRows: null,
@@ -519,13 +521,13 @@ void main(){
   }
 
   function validateManifests(manifest, overview, hydrology) {
-    assert(manifest?.schema === 'guilin-canonical-native-dem/v1', '唯一真值清单版本不正确');
-    assert(manifest.status === 'sole_authoritative', '唯一真值状态不正确');
+    assert(manifest?.schema === 'guilin-canonical-render-index/v1', '唯一真值清单版本不正确');
+    assert(manifest.status === 'pixel_exact_verified', '唯一真值状态不正确');
     assert(manifest.source?.sha256 === EXPECTED_SOURCE_SHA, '源 TIFF SHA256 不正确');
     assert(manifest.aoi?.geometry_sha256 === EXPECTED_AOI_SHA, 'AOI SHA256 不正确');
     assert(manifest.source?.resolution_m?.[0] === SOURCE_SPACING_M, '源采样间距不正确');
-    assert(manifest.tiles?.length === TILE_COUNT, '原生瓦片数量不正确');
-    assert(manifest.tile_matrix?.compression === 'none', '原生瓦片出现压缩');
+    assert(manifest.chunks?.length === CHUNK_COUNT, '无损高程块数量不正确');
+    assert(manifest.chunk_matrix?.compression === 'none', '原生瓦片出现压缩');
     assert(manifest.rules?.height_image_texture_used === false, '检测到高度图片贴图');
     assert(manifest.rules?.reservoir_surface_asset_emitted === false, '检测到水库面');
     assert(manifest.rules?.lake_surface_asset_emitted === false, '检测到湖泊面');
@@ -1072,53 +1074,67 @@ void main(){
     state.hydrologyReady = true;
   }
 
-  function globalSampleToTile(globalRow, globalColumn) {
-    const rows = state.manifest.tile_matrix.rows;
-    const columns = state.manifest.tile_matrix.columns;
-    const tileRow = clamp(Math.floor(globalRow / TILE_STRIDE), 0, rows - 1);
-    const tileColumn = clamp(Math.floor(globalColumn / TILE_STRIDE), 0, columns - 1);
-    const tile = state.tileByMatrix.get(`${tileRow},${tileColumn}`);
+  function globalSampleToChunk(globalRow, globalColumn) {
+    const rows = state.manifest.chunk_matrix.rows;
+    const columns = state.manifest.chunk_matrix.columns;
+    const tileRow = clamp(Math.floor(globalRow / CHUNK_STRIDE), 0, rows - 1);
+    const tileColumn = clamp(Math.floor(globalColumn / CHUNK_STRIDE), 0, columns - 1);
+    const tile = state.chunkByMatrix.get(`${tileRow},${tileColumn}`);
     assert(tile, `找不到原生瓦片 ${tileRow},${tileColumn}`);
     return {
       tile,
-      localRow: globalRow - tileRow * TILE_STRIDE,
-      localColumn: globalColumn - tileColumn * TILE_STRIDE,
+      localRow: globalRow - tileRow * CHUNK_STRIDE,
+      localColumn: globalColumn - tileColumn * CHUNK_STRIDE,
     };
   }
 
-  async function loadNativeTile(tile) {
-    const existing = state.tileCache.get(tile.id);
+  async function loadCanonicalChunk(tile) {
+    const existing = state.chunkCache.get(tile.id);
     if (existing) {
       existing.lastUsed = performance.now();
       return existing.codes;
     }
-    if (state.tileLoadPromises.has(tile.id)) return state.tileLoadPromises.get(tile.id);
+    if (state.chunkLoadPromises.has(tile.id)) return state.chunkLoadPromises.get(tile.id);
 
     const promise = (async () => {
-      const buffer = await fetchBinary(`${NATIVE_TILE_RUNTIME_BASE_URL}${tile.file}`);
-      assert(buffer.byteLength === TILE_BYTES, `${tile.id} 字节数不正确`);
+      const start = tile.byte_offset;
+      const end = start + tile.bytes - 1;
+      const url = `${CANONICAL_STORE_BASE_URL}${tile.shard}`;
+      const response = await fetch(url, {cache: 'no-store', headers: {Range: `bytes=${start}-${end}`}});
+      if (response.status !== 206) {
+        if (response.body) await response.body.cancel();
+        throw new Error(`${tile.id} 需要 HTTP 206，实际 ${response.status}；已停止，避免读取整片`);
+      }
+      const range = response.headers.get('Content-Range');
+      assert(range === `bytes ${start}-${end}/${tile.shard_bytes}`, `${tile.id} Content-Range 错误`);
+      const encoding = response.headers.get('Content-Encoding');
+      assert(!encoding || encoding === 'identity', `${tile.id} 范围请求出现内容编码`);
+      const buffer = await response.arrayBuffer();
+      assert(buffer.byteLength === tile.bytes && buffer.byteLength <= MAX_CHUNK_BYTES, `${tile.id} 字节数不正确`);
+      state.canonicalRangeRequests += 1;
+      state.canonicalRangeBytes += buffer.byteLength;
       const digest = await sha256Hex(buffer);
       assert(digest === tile.sha256, `${tile.id} SHA256 不正确`);
       const codes = decodeInt16LE(buffer);
-      state.tileCache.set(tile.id, { codes, lastUsed: performance.now() });
-      state.tileLoadPromises.delete(tile.id);
+      state.chunkCache.set(tile.id, { codes, lastUsed: performance.now() });
+      state.chunkLoadPromises.delete(tile.id);
       return codes;
     })().catch(error => {
-      state.tileLoadPromises.delete(tile.id);
+      state.chunkLoadPromises.delete(tile.id);
       throw error;
     });
-    state.tileLoadPromises.set(tile.id, promise);
+    state.chunkLoadPromises.set(tile.id, promise);
     return promise;
   }
 
-  function evictTileCache(protectedIds) {
-    if (state.tileCache.size <= MAX_TILE_CACHE) return;
-    const candidates = [...state.tileCache.entries()]
+  function evictChunkCache(protectedIds) {
+    if (state.chunkCache.size <= MAX_CHUNK_CACHE) return;
+    const candidates = [...state.chunkCache.entries()]
       .filter(([id]) => !protectedIds.has(id))
       .sort((a, b) => a[1].lastUsed - b[1].lastUsed);
-    while (state.tileCache.size > MAX_TILE_CACHE && candidates.length) {
+    while (state.chunkCache.size > MAX_CHUNK_CACHE && candidates.length) {
       const [id] = candidates.shift();
-      state.tileCache.delete(id);
+      state.chunkCache.delete(id);
     }
   }
 
@@ -1127,10 +1143,10 @@ void main(){
     const height = state.manifest.aoi.native_sample_window[3];
     const row = clamp(globalRow, 0, height - 1);
     const column = clamp(globalColumn, 0, width - 1);
-    const mapping = globalSampleToTile(row, column);
-    const cached = state.tileCache.get(mapping.tile.id);
+    const mapping = globalSampleToChunk(row, column);
+    const cached = state.chunkCache.get(mapping.tile.id);
     if (!cached) throw new Error(`原生瓦片尚未读取 ${mapping.tile.id}`);
-    return cached.codes[mapping.localRow * TILE_GRID + mapping.localColumn];
+    return cached.codes[mapping.localRow * mapping.tile.grid[0] + mapping.localColumn];
   }
 
   function buildDetailGeometry(startColumn, startRow, width, height) {
@@ -1181,7 +1197,7 @@ void main(){
         const fade = smoothstep(0, DETAIL_EDGE_FADE, edgeDistance);
 
         vertices[cursor++] = easting - state.worldCenterE;
-        vertices[cursor++] = elevation - state.verticalOrigin + 0.35;
+        vertices[cursor++] = elevation - state.verticalOrigin;
         vertices[cursor++] = state.worldCenterN - northing;
         vertices[cursor++] = nx;
         vertices[cursor++] = ny;
@@ -1268,24 +1284,24 @@ void main(){
     detailLoading.hidden = false;
     detailLoadingText.textContent = '读取视野中心的原生 12.5 米高程';
     const requiredTiles = new Map();
-    const rowStart = Math.floor(startRow / TILE_STRIDE);
-    const rowStop = Math.floor((startRow + patchHeight - 1) / TILE_STRIDE);
-    const columnStart = Math.floor(startColumn / TILE_STRIDE);
-    const columnStop = Math.floor((startColumn + patchWidth - 1) / TILE_STRIDE);
+    const rowStart = Math.floor(startRow / CHUNK_STRIDE);
+    const rowStop = Math.floor((startRow + patchHeight - 1) / CHUNK_STRIDE);
+    const columnStart = Math.floor(startColumn / CHUNK_STRIDE);
+    const columnStop = Math.floor((startColumn + patchWidth - 1) / CHUNK_STRIDE);
     for (let tileRow = rowStart; tileRow <= rowStop; tileRow += 1) {
       for (let tileColumn = columnStart; tileColumn <= columnStop; tileColumn += 1) {
-        const tile = state.tileByMatrix.get(`${tileRow},${tileColumn}`);
+        const tile = state.chunkByMatrix.get(`${tileRow},${tileColumn}`);
         if (tile) requiredTiles.set(tile.id, tile);
       }
     }
 
-    await Promise.all([...requiredTiles.values()].map(tile => loadNativeTile(tile)));
+    await Promise.all([...requiredTiles.values()].map(tile => loadCanonicalChunk(tile)));
     if (token !== state.detailRequestToken) return;
     detailLoadingText.textContent = '建立无贴图原生顶点与法线';
     await nextFrame();
     buildDetailGeometry(startColumn, startRow, patchWidth, patchHeight);
     if (token !== state.detailRequestToken) return;
-    evictTileCache(new Set(requiredTiles.keys()));
+    evictChunkCache(new Set(requiredTiles.keys()));
     detailLoading.hidden = true;
     updateQa();
   }
@@ -1805,7 +1821,7 @@ void main(){
     $('waterwayStatus').textContent = `河 ${counts.river.toLocaleString()} · 溪 ${counts.stream.toLocaleString()} · 渠 ${counts.canal.toLocaleString()}`;
     const style = waterwayStyleMetrics();
     $('waterwayWidthStatus').textContent = `漓桂干流 ${style.mainstem_upstream_physical_width_m.toFixed(0)} → ${style.mainstem_downstream_physical_width_m.toFixed(0)} m · 当前屏幕 ${style.mainstem_upstream_full_width_css_px.toFixed(1)} → ${style.mainstem_downstream_full_width_css_px.toFixed(1)} px`;
-    $('waterwayJoinStatus').textContent = `汇流 ${state.hydrologyJunctionCount.toLocaleString()} · 接缝 0 px`;
+    $('waterwayJoinStatus').textContent = `汇流 ${state.hydrologyJunctionCount.toLocaleString()} · 连通状态待视觉验收`;
     const detailText = state.detailActive ? ` · 原生近景 ${state.detailMesh.triangleCount.toLocaleString()} 三角形` : '';
     renderInfo.textContent = `桂林全域 ${state.overviewMesh?.triangleCount.toLocaleString() || 0} 三角形${detailText} · 细线连通水系 ${state.hydrologySegmentCount.toLocaleString()} 段`;
   }
@@ -1829,13 +1845,13 @@ void main(){
       source_sha256: state.manifest?.source?.sha256 || null,
       aoi_geometry_sha256: state.manifest?.aoi?.geometry_sha256 || null,
       native_spacing_m: SOURCE_SPACING_M,
-      native_tile_count: state.manifest?.tiles?.length || 0,
+      native_chunk_count: state.manifest?.chunks?.length || 0,
       full_aoi_overview: Boolean(state.overviewReady),
       one_continuous_map: true,
       continuous_zoom: true,
       tile_picker_required: false,
       distilled_knowledge_runtime: DISTILLED_KNOWLEDGE_RUNTIME,
-      native_tile_delivery: 'same-origin-on-demand',
+      canonical_delivery: 'same-origin-http-range-206',
       full_truth_downloaded_on_page_open: false,
       stale_public_assets_allowed: false,
       overview_grid: state.overviewManifest?.asset?.grid || null,
@@ -1844,11 +1860,16 @@ void main(){
       native_detail_available: true,
       native_detail_active: state.detailActive,
       native_detail_grid: state.detailActive && state.detailPatch ? [state.detailPatch.width, state.detailPatch.height] : null,
-      loaded_native_tile_count: state.tileCache.size,
+      loaded_native_chunk_count: state.chunkCache.size,
+      canonical_range_request_count: state.canonicalRangeRequests,
+      canonical_range_bytes: state.canonicalRangeBytes,
+      canonical_stream_sha256: state.manifest?.canonical_stream_sha256 || null,
+      source_tiff_read: false,
+      legacy_tile_requests: 0,
       direct_numeric_vertex_geometry: true,
       height_image_texture_used: false,
       texture_upload_count: 0,
-      source_tile_compression: 'none',
+      canonical_chunk_compression: 'none',
       source_resampling: 'none',
       source_elevation_modified_m: 0,
       vertical_scale: 1,
@@ -1933,9 +1954,9 @@ void main(){
     state.manifest = manifest;
     state.overviewManifest = overviewManifest;
     state.hydrologyManifest = hydrologyManifest;
-    for (const tile of manifest.tiles) {
-      state.tileById.set(tile.id, tile);
-      state.tileByMatrix.set(`${tile.matrix_index[0]},${tile.matrix_index[1]}`, tile);
+    for (const tile of manifest.chunks) {
+      state.chunkById.set(tile.id, tile);
+      state.chunkByMatrix.set(`${tile.matrix_index[0]},${tile.matrix_index[1]}`, tile);
     }
     setupWorld(manifest, overviewManifest);
 
@@ -1984,6 +2005,17 @@ void main(){
 
     window.__GUILIN_FULL_MAP_TEST_API = {
       getState: updateQa,
+      sampleLoaded(row, column) { return sampleLoadedGlobal(row, column); },
+      detailWindow() { return state.detailPatch ? {...state.detailPatch} : null; },
+      focusAOIPixel(row, column) {
+        const bounds = state.manifest.aoi.native_sample_center_bounds_epsg32649;
+        const x = bounds[0] + column * SOURCE_SPACING_M - state.worldCenterE;
+        const z = state.worldCenterN - (bounds[3] - row * SOURCE_SPACING_M);
+        state.camera.target = [x, overviewElevationAtWorld(x,z)-state.verticalOrigin+120,z];
+        state.camera.distance = 24000;
+        state.dirty = true;
+        return updateDetailPatch(true).then(updateQa);
+      },
       getWaterwayStyle: waterwayStyleMetrics,
       resetFull() {
         resetFullView();

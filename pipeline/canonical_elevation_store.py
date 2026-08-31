@@ -7,7 +7,7 @@ from typing import Iterable
 
 import numpy as np
 from affine import Affine
-from rasterio.windows import Window
+from raster_window import Window
 
 
 class CanonicalElevationStore:

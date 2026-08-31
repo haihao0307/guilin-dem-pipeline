@@ -1,0 +1,63 @@
+name: Guilin clean canonical data and browser validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [handoff/guilin-canonical-clean-v1]
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - 'pipeline/**'
+      - 'truth/**'
+      - 'viewer/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'requirements*.txt'
+      - '.github/workflows/guilin-clean-canonical-v1.yml'
+permissions:
+  contents: read
+concurrency:
+  group: guilin-clean-validation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install fixed dependencies
+        run: |
+          python -m pip install -r requirements-test.txt
+          python -m playwright install --with-deps chromium
+      - uses: actions/cache@v4
+        id: canonical-cache
+        with:
+          path: out/payload/canonical
+          key: guilin-canonical-91154cbe7c29220c9da41efc98105f1d36b614a343636543f7dd230735da079a
+      - name: Fetch only existing canonical numeric assets on cache miss
+        if: steps.canonical-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p out/payload/canonical/shards
+          gh release download guilin-canonical-elevation-store-12p5m-v1 --repo "$GITHUB_REPOSITORY" --dir out/payload/canonical --pattern '*.i16pack' --pattern CANONICAL_ELEVATION_MANIFEST.json --pattern VALIDATION_RECEIPT.json
+          mv out/payload/canonical/elevation-shard-*.i16pack out/payload/canonical/shards/
+      - name: Verify all samples without TIFF
+        run: python tests/verify_store.py --store out/payload/canonical --receipt out/qa/STORE_VERIFY.json
+      - name: Build the one continuous map
+        run: python tools/build_site.py --payload out/payload --out out/site --receipt out/qa/BUILD.json
+      - name: Verify frontend numeric access independently
+        run: python tests/run_node_contract.py --site out/site --payload out/payload --evidence out/qa/node
+      - name: Run real Chromium desktop and mobile QA
+        run: python tests/browser_qa.py --site out/site --payload out/payload --evidence out/qa/browser
+      - name: Preserve actual results even when a gate fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guilin-clean-canonical-validation
+          path: out/qa
+          retention-days: 30
+          compression-level: 0
