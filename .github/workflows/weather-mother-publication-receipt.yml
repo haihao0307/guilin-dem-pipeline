@@ -1,0 +1,55 @@
+name: Weather Mother publication receipt
+on:
+  push:
+    branches: [gh-pages]
+    paths: ['.github/workflows/weather-mother-publication-receipt.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve authoritative Git identities and verify live files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import urllib.request,urllib.parse,json,base64,hashlib,os,time
+          API='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/'
+          BASE='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'}
+          def api(path,body=None):
+              req=urllib.request.Request(API+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method='GET' if body is None else 'PUT')
+              with urllib.request.urlopen(req,timeout=25) as r:return json.load(r)
+          hand=api('contents/weather-mother/HANDOFF.json?ref=gh-pages')
+          data=json.loads(base64.b64decode(hand['content']))
+          files={}
+          for name,key in [('index.html','entryCommit'),('cloud.glsl','kernelCommit'),('engine.js','runtimeCommit')]:
+              path='weather-mother/'+name
+              commits=api('commits?'+urllib.parse.urlencode({'sha':'gh-pages','path':path,'per_page':1}))
+              data[key]=commits[0]['sha']
+              blob=api('contents/'+path+'?ref=gh-pages')
+              source=base64.b64decode(blob['content'])
+              files[name]={'gitBlobSha':blob['sha'],'sourceBytes':len(source),'sha256':hashlib.sha256(source).hexdigest()}
+          data['provenance']='Commit identities resolved directly from GitHub per-file history by the publication-receipt workflow.'
+          api('contents/weather-mother/HANDOFF.json',{'message':'docs(weather-mother): resolve source identities from actual Git history','branch':'gh-pages','sha':hand['sha'],'content':base64.b64encode(json.dumps(data,ensure_ascii=False,indent=2).encode()).decode()})
+          receipt={'productionLine':'Weather Mother','version':'0.5.1','publicURL':BASE,'files':files,'visualAcceptance':False,'productionReady':False}
+          for name,record in files.items():
+              matched=False
+              for attempt in range(20):
+                  try:
+                      with urllib.request.urlopen(BASE+name+'?receipt='+data['entryCommit'],timeout=20) as r:
+                          raw=r.read();record['httpStatus']=r.status;record['publicSha256']=hashlib.sha256(raw).hexdigest()
+                      matched=record['httpStatus']==200 and record['publicSha256']==record['sha256']
+                      if matched:break
+                  except Exception as e:record['lastError']=str(e)
+                  time.sleep(4)
+              record['publicMatchesGit']=matched
+          receipt['publicSourceVerification']=all(x['publicMatchesGit'] for x in files.values())
+          receipt['finishedUTC']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
+          api('contents/weather-mother/PUBLICATION_RECEIPT.json',{'message':'test(weather-mother): record public HTTP and byte-identity verification','branch':'gh-pages','content':base64.b64encode(json.dumps(receipt,ensure_ascii=False,indent=2).encode()).decode()})
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          assert receipt['publicSourceVerification'],'Public files did not match Git source before the deadline'
+          PY
