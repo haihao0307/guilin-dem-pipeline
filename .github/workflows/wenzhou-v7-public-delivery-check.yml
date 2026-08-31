@@ -1,0 +1,136 @@
+name: Wenzhou V7 actual public delivery check
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-public-delivery-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: wenzhou-v7-scoped-publication
+  cancel-in-progress: false
+jobs:
+  verify-existing-public-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ROOT: projects/wenzhou/v200/web/v7
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7/?v=numeric-r2
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check current public bytes against the independently inspected build
+        run: |
+          python - <<'PY'
+          import base64,gzip,hashlib,json,os,struct,urllib.request
+          from datetime import datetime,timezone
+          from pathlib import Path
+          base='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7/'
+          report={'schema':'wenzhou-v7-fresh-public-delivery-1','checkedUtc':datetime.now(timezone.utc).isoformat(),'url':os.environ['URL'],'passed':False,'files':[],'nativeWindows':[],'sourceDeleted':False,'fullStoreOnlineVerified':False,'visualAcceptance':False,'productionReady':False}
+          root=Path('/tmp/wenzhou-v7-delivery');root.mkdir(exist_ok=True)
+          def get(url):
+              request=urllib.request.Request(url,headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+              with urllib.request.urlopen(request,timeout=40) as response:
+                  if response.status!=200:raise RuntimeError((url,response.status))
+                  return response.read()
+          try:
+              build=json.loads(get(base+'ONLINE_BUILD.json'))
+              assert build['sourceCommit']=='771ed6cfd85dbd2818ab88bb78c90e6a9623f52d'
+              assert build['sourceValueSha256']=='639a69429e104d9c2db1550870da79dc2b89df9ac893c18405901530c25ff353'
+              assert build['imageTextureCount']==0 and build['fullNumericStoreOnline'] is False
+              entry=get(os.environ['URL']);assert hashlib.sha256(entry).hexdigest()=='2c8cc39c6d6f08757af0c35717a9aaca3a5678ab119733d825792adb3b5ffff1'
+              assert '小温州 V7'.encode() in entry
+              files={}
+              for name,expected in build['files'].items():
+                  content=get(base+name+'?checked='+expected['sha256'][:12]);actual=hashlib.sha256(content).hexdigest()
+                  assert actual==expected['sha256'] and len(content)==expected['bytes'],name
+                  files[name]=content
+                  report['files'].append({'path':name,'httpStatus':200,'bytes':len(content),'sha256':actual,'exactMatch':True})
+              manifest=json.loads(files['manifest.json'])
+              native_expected={'dongtou':'25f2ad68043ee03f0e0a9b20380b03b6bef58c13ec17d96e8bb2802fcf3abf0c','feiyun':'3fe0478819b26f7e069be4ca21eb865cf9b911b63fdb5a288c93e4046e46a68f'}
+              for name in manifest['onlineNativeWindows']:
+                  item=manifest['windows'][name];packed=base64.b64decode(files[item['path']].strip(),validate=True)
+                  assert hashlib.sha256(packed).hexdigest()==item['sha256'] and packed[:4]==b'WZN7'
+                  w,h=struct.unpack('<HH',packed[4:8]);raw=gzip.decompress(packed[8:]);values=list(struct.unpack('<'+'h'*(w*h),raw))
+                  assert [w,h]==[item['width'],item['height']] and item['spacingM']==12.5
+                  for row in range(1,h):
+                      for col in range(w):
+                          i=row*w+col;values[i]=(values[i]+values[i-w]+32768)%65536-32768
+                  for row in range(h):
+                      for col in range(1,w):
+                          i=row*w+col;values[i]=(values[i]+values[i-1]+32768)%65536-32768
+                  decoded=struct.pack('<'+'h'*(w*h),*values);actual=hashlib.sha256(decoded).hexdigest();assert actual==native_expected[name]==item['valueSha256']
+                  report['nativeWindows'].append({'name':name,'grid':[w,h],'spacingM':12.5,'valueSha256':actual,'originalSourceWindowMatch':True})
+              report['httpStatus']=200;report['sourceCommit']=build['sourceCommit'];report['passed']=True
+          finally:(root/'public-http-numeric-check.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Install actual browser test dependencies
+        run: |
+          python -m pip install --quiet numpy pillow playwright
+          python -m playwright install --with-deps chromium
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CHROMIUM_PATH='+p.chromium.executable_path+'\n')
+          PY
+      - name: Open the exact public URL in clean desktop and mobile browsers
+        run: |
+          python "$ROOT/qa_v7.py" --url "$URL" --out /tmp/wenzhou-v7-delivery/browser --chromium "$CHROMIUM_PATH"
+      - name: Write checked delivery receipt
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          from datetime import datetime,timezone
+          p=Path('/tmp/wenzhou-v7-delivery');http=json.loads((p/'public-http-numeric-check.json').read_text());browser=json.loads((p/'browser/browser-qa.json').read_text())
+          assert http['passed'] is True and browser['passed'] is True
+          receipt={'schema':'wenzhou-v7-delivery-receipt-1','checkedUtc':datetime.now(timezone.utc).isoformat(),'url':os.environ['URL'],'httpAndNumericalPayloadsPassed':True,'desktopRealBrowserPassed':True,'mobileRealBrowserPassed':True,'shaderLinked':True,'imageRequests':0,'sourceCommit':http['sourceCommit'],'verificationRunId':os.environ['GITHUB_RUN_ID'],'nativeWindows':http['nativeWindows'],'fullDomainNativeOnline':False,'fullNumericStoreOnline':False,'sourceDeleted':False,'visualAcceptance':False,'productionReady':False}
+          (p/'DELIVERY_CHECK.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(json.dumps(receipt,indent=2))
+          PY
+      - name: Keep fresh evidence in the Wenzhou branch
+        run: |
+          set -euo pipefail
+          TARGET=projects/wenzhou/v200/reports/v7-delivery
+          mkdir -p "$TARGET"
+          cp /tmp/wenzhou-v7-delivery/DELIVERY_CHECK.json "$TARGET/"
+          cp /tmp/wenzhou-v7-delivery/public-http-numeric-check.json "$TARGET/"
+          cp /tmp/wenzhou-v7-delivery/browser/browser-qa.json "$TARGET/"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$TARGET"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record fresh public V7 HTML, native-number and desktop/mobile checks [skip ci]'
+            git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fi
+      - name: Retain actual screenshots and failure details
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v7-fresh-public-delivery-evidence
+          path: /tmp/wenzhou-v7-delivery
+          retention-days: 30
+          if-no-files-found: error
+      - name: Summarize actual state
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path('/tmp/wenzhou-v7-delivery/DELIVERY_CHECK.json')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('Fresh public delivery checks passed: '+str(p.exists())+'\n\n')
+              if p.exists():f.write(json.dumps(json.loads(p.read_text()),indent=2)+'\n')
+              f.write('Full numerical source archive is not yet online. No source TIFF was deleted.\n')
+          PY
