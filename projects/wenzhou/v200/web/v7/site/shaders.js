@@ -1,11 +1,13 @@
 export const vert=`#version 300 es
 precision highp float;
+precision highp int;
 layout(location=0) in vec3 aPosition;layout(location=1) in vec3 aNormal;layout(location=2) in vec4 aField;layout(location=3) in vec2 aExtra;
 uniform mat4 uVP;uniform float uTime,uTide,uLogFar;uniform int uWater;
 out vec3 vWorld,vNormal;out vec4 vField;out vec2 vExtra;out float vDepth;
 void main(){vec3 p=aPosition;float wave=.12*sin(p.x*.045+p.z*.027+uTime*.7)+.055*sin(-p.x*.071+p.z*.041+uTime*1.1);if(uWater==1){if(aField.x<1.5)p.y=uTide+wave*.9;else if(aField.x<2.5)p.y+=uTide*exp(-aField.y/22000.)+wave*.1;}vWorld=p;vNormal=aNormal;vField=aField;vExtra=aExtra;gl_Position=uVP*vec4(p,1.);vDepth=1.+gl_Position.w;gl_Position.z=(log2(max(.000001,vDepth))*uLogFar-1.)*gl_Position.w;}`;
 export const frag=`#version 300 es
 precision highp float;
+precision highp int;
 in vec3 vWorld,vNormal;in vec4 vField;in vec2 vExtra;in float vDepth;
 uniform float uTime,uTide,uMud,uMixStrength,uLogFar;uniform vec3 uEye;uniform int uWater,uCrop,uIslandsCount;uniform vec4 uBounds;uniform vec3 uIslands[24];out vec4 color;
 float hash21(vec2 p){p=fract(p*vec2(.1031,.11369));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}
