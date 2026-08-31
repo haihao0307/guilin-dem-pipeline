@@ -106,7 +106,12 @@ try:
   page.evaluate("WeatherMother.setTestTime(11);WeatherMother.setWeather('fair');WeatherMother.set('cloudSpeed',25);WeatherMother.set('wind',0);WeatherMother.set('gust',0);WeatherMother.set('direction',270);WeatherMother.set('timeScale',1);document.getElementById('follow').checked=true;window.__WEATHER_QA_SNAP__=true")
   page.wait_for_function("WeatherMother.qa.activeCloudKind==='Cu'&&WeatherMother.getState().blend>=.999",timeout=120000)
   settle();s0=page.evaluate('WeatherMother.getState()');t0=page.evaluate('WeatherMother.qa.simulationTimeS')
-  page.evaluate('WeatherMother.play()');page.wait_for_timeout(2200);page.evaluate('WeatherMother.pause()');settle()
+  page.bring_to_front()
+  f0=page.evaluate('WeatherMother.qa.frames');page.evaluate('WeatherMother.play()')
+  page.wait_for_function('(s)=>WeatherMother.qa.errors.length>0 || (WeatherMother.qa.simulationTimeS>s.time+.15 && WeatherMother.qa.frames>s.frames+3)',arg={'time':t0,'frames':f0},timeout=90000)
+  check('animation advances without runtime errors',not page.evaluate('WeatherMother.qa.errors'),page.evaluate('WeatherMother.qa.errors'))
+  report['livePerformance']=page.evaluate('WeatherMother.qa.performance')
+  page.evaluate('WeatherMother.pause()');settle()
   s1=page.evaluate('WeatherMother.getState()');t1=page.evaluate('WeatherMother.qa.simulationTimeS');dx=s1['windOffset'][0]-s0['windOffset'][0]
   check('independent cloud drift from west to east',dx>0 and abs(dx-.025*(t1-t0))<.003,{'dx':dx,'dt':t1-t0,'wind':s1['wind'],'speed':s1['cloudSpeed']})
   frozen=page.evaluate('WeatherMother.getState().loopPhase');page.wait_for_timeout(300)
@@ -120,6 +125,10 @@ try:
 except Exception as e:
  import traceback
  report['status']='QA_FAILED';report['errors'].append(traceback.format_exc());print(report['errors'][-1],flush=True)
-finally:save()
+finally:
+ if 'page' in globals():
+  try:report['diagnosticAtExit']=page.evaluate('({state:WeatherMother.getState(),qa:WeatherMother.qa,hidden:document.hidden})')
+  except Exception:pass
+ save()
 if report['status']!='AUTOMATIC_QA_PASS':sys.exit(1)
 print('FINISHED',len(report['checks']),'checks')
