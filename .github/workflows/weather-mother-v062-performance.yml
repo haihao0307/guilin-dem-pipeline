@@ -1,0 +1,55 @@
+name: Weather Mother V062 Measured A-B
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/v062-loop/benchmark.py
+      - .github/workflows/weather-mother-v062-performance.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-v062-performance
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          sparse-checkout: weather-mother/v062-loop
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Browser dependencies
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Six interleaved public GPU timing windows
+        run: python weather-mother/v062-loop/benchmark.py
+      - name: Record actual measurement without modifying runtime
+        if: always()
+        run: |
+          git config user.name 'Weather Mother performance QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ -f weather-mother/v062-loop/PERFORMANCE_AB.json ]; then
+            git add weather-mother/v062-loop/PERFORMANCE_AB.json
+            if ! git diff --cached --quiet; then
+              git commit -m 'perf(weather-mother): record equal-quality occupancy A-B measurements'
+              git pull --rebase origin gh-pages
+              git push origin HEAD:gh-pages
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-v062-numeric-performance
+          path: weather-mother/v062-loop/PERFORMANCE_AB.json
+          retention-days: 7
+      - name: Summary
+        if: always()
+        run: |
+          echo '### Weather Mother fixed-quality A/B' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Same scene, seed, phase, resolution and ray count. SwiftShader only. No user-GPU frame-rate claim.' >> "$GITHUB_STEP_SUMMARY"
