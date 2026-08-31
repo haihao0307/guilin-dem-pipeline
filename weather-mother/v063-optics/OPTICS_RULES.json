@@ -1,0 +1,44 @@
+{
+  "productionLine": "Weather Mother",
+  "version": "0.6.3-optics",
+  "sourcePolicy": "Code, seeds, scalar fields and numerical optical tables only. No photographs, HDR images, image atlases or imported cloud models.",
+  "userDirection": "Retain the accepted cloud and lighting direction, refine lightning without claiming AAA approval, add 七彩云 and more weather cases, and optimize at equal visual settings.",
+  "iridescence": {
+    "displayName": "七彩云 / 云体虹彩",
+    "phenomenon": "Solar irisation on optically thin cloud regions and edges",
+    "sourceSupportedFacts": ["Colours may be mixed or occur in bands nearly parallel to cloud margins", "Green and pink pastel shades are common", "Diffraction predominates within about ten degrees of the Sun; interference becomes important at larger angles"],
+    "implementation": "Nine wavelength bands, circular-aperture Airy intensity, three-size averaging, generated chromaticity lookup. Direct in-volume solar contribution is tinted using angle, local droplet-radius field, optical depth and concentration.",
+    "controls": ["enable", "colour strength", "droplet radius in micrometres", "size spread", "aim observation camera"],
+    "visibilityRules": ["disabled after the Sun falls below the horizon", "no effect at zero cloud density", "cloud occlusion and attenuation remain in the volume integration", "larger size spread reduces chromatic contrast", "angular contribution fades outside the configured solar neighbourhood"],
+    "limitations": ["This is a diffraction-inspired appearance model, not calibrated spectral radiometry", "Full Mie scattering and the larger-angle interference regime are not solved", "Droplet sizes are artistic inputs, not measured weather data", "No claim of physically validated rainbow-cloud microphysics"],
+    "source": "https://cloudatlas.wmo.int/en/irisation-or-iridescence.html"
+  },
+  "lightning": {
+    "implementation": "Seeded correlated midpoint-displacement channels: 64 trunk segments, connected tapered branches, 136 total segments per event. Cloud-internal and cloud-to-ground geometries differ. Return strokes reuse the same channel, with brief irregular pulses. Four local nodes illuminate the cloud.",
+    "comparisonWithV062": "Replaces fifteen coarse segments and one illumination centre. Dominant-channel coverage avoids additive bright beads at joints, with pixel-footprint antialiasing and weaker halo.",
+    "eventTiming": "Art-directed short return strokes and intervals inspired by observed repeated discharges. Typical fast leader propagation is not drawn as a slow visible travelling laser.",
+    "limitations": ["No electric-field, charge separation or dielectric-breakdown solver", "Ground contact and air density are not aerodynamically validated", "Dominant-channel foreground attenuation is a graphical approximation", "Thunder audio has not been implemented", "Lightning visual approval remains false pending user reference calibration"],
+    "sources": ["https://www.weather.gov/safety/lightning-science-types-flashes", "https://www.weather.gov/safety/lightning-science-dart-leaders", "https://www.weather.gov/safety/lightning-science-slow-motion-flashes"]
+  },
+  "weatherCases": {
+    "preserved": ["fair", "coast", "mountain", "rain", "storm", "rainbow", "snow", "high"],
+    "added": ["iridescent", "irisEdge", "lenticular", "mackerel", "dawn", "sunset", "fogbank", "nightstorm"],
+    "cloudGeneraPreserved": ["Cu", "Cb", "Sc", "St", "Ns", "Ac", "As", "Ci", "Cc", "Cs"],
+    "geometryVariants": ["iridescent thin uneven layer", "stacked lenticular ellipsoids", "wave-organized small cirrocumulus cells"],
+    "cycloneStatus": "Eye, eyewall, spiral rainbands and upper outflow remain rules only. This version adds no cyclone solver."
+  },
+  "traversal": {
+    "method": "Multi-source 26-neighbour breadth-first chessboard distance from the conservatively dilated occupied mask. Distance minus one cell, times the smallest cell spacing, is a lower bound to occupied support.",
+    "flowBound": "The distance is divided by a conservative Jacobian bound for shear plus periodic or nonperiodic analytic displacement. Only then may fixed-lattice samples in proven-empty space be skipped.",
+    "safetyFallback": "Distance jumps are disabled during volume transitions and when demonstration mountains or aircraft deformation are active. Existing occupied-cell rejection and full density sampling remain available.",
+    "qualityContract": "A/B uses the same source density, seed, phase, ray lattice, ray-step budget, framebuffer size and lighting. No automatic resolution or lighting reductions.",
+    "performanceReporting": "Fresh completed-frame windows and asynchronous disjoint GPU timing; queued samples from previous measurement epochs are discarded. Software-renderer results do not establish user-GPU frame rates.",
+    "researchContext": "https://www.guerrilla-games.com/read/nubis-cubed"
+  },
+  "liveWeatherConnected": false,
+  "fullFluidSolverImplemented": false,
+  "largeWorldStreamingImplemented": false,
+  "manualVisualAcceptance": false,
+  "aaaQualityApproved": false,
+  "productionReady": false
+}
