@@ -9,7 +9,7 @@ def api(method,path,data=None):
  with urllib.request.urlopen(req,timeout=90) as r:return json.load(r)
 assert os.environ['GITHUB_REF']=='refs/heads/feature/landscape-mother-field-graph-v002'
 files=sorted(p for p in SITE.iterdir() if p.is_file())
-expected={'index.html','style.css','fields.mjs','checks.mjs','worker.mjs','shaders.mjs','renderer.mjs','app.mjs','manifest.json','build.json'}
+expected={'index.html','style.css','fields.mjs','checks.mjs','worker.mjs','shaders.mjs','renderer.mjs','app.mjs','manifest.json','build.json','reference.html','reference.mjs','glb-reader.mjs','reference-intake-b.json'}
 assert {p.name for p in files}==expected
 build=json.loads((SITE/'build.json').read_text());assert build['sourceCommit']==SOURCE
 entries=[{'path':PREFIX+p.name,'mode':'100644','type':'blob','content':p.read_text()} for p in files]

@@ -35,6 +35,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/lm-evidence"
           for file in workbenches/landscape-mother/*.mjs; do node --check "$file"; done
           node --test workbenches/landscape-mother/test.mjs
+          node --test workbenches/landscape-mother/reference.test.mjs
           node workbenches/landscape-mother/test.mjs --compile | tee "$RUNNER_TEMP/lm-evidence/numeric.txt"
           python3 workbenches/landscape-mother/stage.py --output "$RUNNER_TEMP/lm-site" --commit "$GITHUB_SHA"
       - name: Install browser QA dependency
@@ -44,6 +45,7 @@ jobs:
       - name: Real staging desktop and mobile checks
         run: |
           python3 -m http.server 8790 --bind 127.0.0.1 --directory "$RUNNER_TEMP/lm-site" > "$RUNNER_TEMP/lm-evidence/server.log" 2>&1 &
+          python3 workbenches/landscape-mother/reference_qa.py --url http://127.0.0.1:8790/reference.html --output "$RUNNER_TEMP/lm-evidence/reference-stage"
           python3 workbenches/landscape-mother/browser_qa.py --url http://127.0.0.1:8790/ --output "$RUNNER_TEMP/lm-evidence/stage"
       - name: Publish only the new workbench and verify exact public bytes
         env:
@@ -52,6 +54,7 @@ jobs:
         run: python3 workbenches/landscape-mother/publish.py
       - name: Real public desktop and mobile checks
         run: |
+          python3 workbenches/landscape-mother/reference_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/reference.html?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/reference-public"
           python3 workbenches/landscape-mother/browser_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/public"
       - name: Preserve evidence even on failure
         if: always()
@@ -65,5 +68,6 @@ jobs:
         if: always()
         run: |
           echo '## Landscape Mother Studio 01' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Read-only local GLB reference inspector; no user-source binary publication. Reference CI uses labelled synthetic fixtures.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Three procedural examples; zero regional DEM binding. Numeric and browser gates are distinct from artistic approval.' >> "$GITHUB_STEP_SUMMARY"
           echo 'visualApproved=false; productionReady=false' >> "$GITHUB_STEP_SUMMARY"
