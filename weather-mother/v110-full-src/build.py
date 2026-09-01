@@ -30,8 +30,6 @@ def append_before(path,anchor,text):patch(path,anchor,text+anchor)
 for n in ['index.html','engine.js','cloud.glsl','field-worker.js','motion.js','optics.js']:
     p=OUT/n;p.write_text(p.read_text().replace('0.6.3','1.1.0').replace('063optics-r1','110world-r1'))
 
-# Primary UI remains a weather workbench. The neutral and diagnostic evidence pages
-# continue at method-v100 and are intentionally absent from this operator console.
 patch('index.html','<option value="nightstorm">夜间雷暴</option>',
 '''<option value="nightstorm">夜间雷暴</option><option value="warmfront">暖锋云幕</option><option value="coldfront">冷锋过境</option><option value="squall">飑线雷暴</option><option value="typhoon">台风云系 · 组织预览</option>''')
 patch('index.html','<details><summary>大气与光照</summary>',
@@ -45,10 +43,9 @@ append_before('index.html','<details open id="irisSection">',
 <p class="hint">风眼、眼墙和螺旋雨带由同一旋转场组织。当前是可操作的体积外观模型，没有气压、海温、科氏力或数值天气求解。</p></details>''')
 patch('index.html','<p class="hint">程序化天气案例。山地与尾流采用解析近似，雨雪采用屏幕空间效果，尚未接入实况天气或完整流体求解。</p>',
 '''<p class="hint">程序化天气案例。山地、飞机、台风和降水仍有明确的近似边界，尚未接入实况天气或完整流体求解。</p><p class="hint"><a href="../method-v100/lighting/?lighting=silver&quality=fine" target="_blank" rel="noopener">打开独立云体光影检查页 ↗</a></p>''')
-patch('index.html','CLOUD MOTHER', 'WEATHER MOTHER') if 'CLOUD MOTHER' in (OUT/'index.html').read_text() else None
-patch('index.html','V063 虹彩候选','V1.1 全天气候选') if 'V063 虹彩候选' in (OUT/'index.html').read_text() else None
+if 'CLOUD MOTHER' in (OUT/'index.html').read_text():patch('index.html','CLOUD MOTHER','WEATHER MOTHER')
+if 'V063 虹彩候选' in (OUT/'index.html').read_text():patch('index.html','V063 虹彩候选','V1.1 全天气候选')
 
-# Full case state. Existing 16 cases from V063 remain, four organized systems follow.
 patch('engine.js',"'dropletSpread'];","'dropletSpread','cycloneSpin','eyeRadius','rainbandCurl','stormRadius'];")
 patch('engine.js','iriStrength:0,dropletRadius:6,dropletSpread:.12},target=',
 '''iriStrength:0,dropletRadius:6,dropletSpread:.12,cycloneSpin:1,eyeRadius:2.2,rainbandCurl:1,stormRadius:10},target=''')
@@ -67,7 +64,7 @@ patch('engine.js',"function fitView(){if(weather==='iridescent'||weather==='iris
 patch('engine.js',"$('lightningEnabled').checked=id==='storm'||id==='nightstorm';", "$('lightningEnabled').checked=['storm','nightstorm','squall','typhoon'].includes(id);")
 patch('engine.js',"$('lightningEnabled').checked=weather==='storm'||weather==='nightstorm';", "$('lightningEnabled').checked=['storm','nightstorm','squall','typhoon'].includes(weather);")
 patch('engine.js',"$('iridescence').checked=target.iriStrength>0;channelKey='';", "$('iridescence').checked=target.iriStrength>0;$('cycloneSection').open=id==='typhoon';channelKey='';")
-patch('engine.js','v4(prog,\'uIris\',[$(\'iridescence\').checked?state.iriStrength:0,state.dropletRadius,state.dropletSpread,seed%10000]);',
+patch('engine.js',"v4(prog,'uIris',[$('iridescence').checked?state.iriStrength:0,state.dropletRadius,state.dropletSpread,seed%10000]);",
 '''v4(prog,'uIris',[$('iridescence').checked?state.iriStrength:0,state.dropletRadius,state.dropletSpread,seed%10000]);f(prog,'uSolarDay',Math.max(0,Math.cos((state.hour-12)/12*Math.PI)));v4(prog,'uCyclone',[weather==='typhoon'?1:0,state.cycloneSpin,state.eyeRadius,state.rainbandCurl]);''')
 patch('engine.js',"$('lightningEnabled').onchange=invalidate;",'''const lightScenes={natural:{exposure:1,sunlight:1,skylight:1,scatter:1,silver:1,groundLight:1,haze:.16},daylight:{hour:14.5,exposure:1,sunlight:1.18,skylight:.82,scatter:1.12,silver:1.18,groundLight:.82,haze:.12},dawn:{hour:6.6,exposure:1.05,sunlight:1.08,skylight:.72,scatter:1.18,silver:1.12,groundLight:.62,haze:.28},sunset:{hour:17.5,exposure:1.03,sunlight:1.22,skylight:.58,scatter:1.24,silver:1.38,groundLight:.55,haze:.34},silver:{hour:17.1,exposure:.94,sunlight:1.35,skylight:.38,scatter:1.02,silver:2.35,groundLight:.35,haze:.18},moon:{hour:22,exposure:1.12,sunlight:.72,skylight:.42,scatter:.72,silver:.72,groundLight:.18,haze:.12}};
 $('lightScene').onchange=e=>{Object.assign(target,lightScenes[e.target.value]);outputs();invalidate();};
@@ -75,10 +72,8 @@ $('lightningEnabled').onchange=invalidate;''')
 patch('engine.js','qa.weatherCase=weather;qa.weatherCaseCount=Object.keys(presets).length;',
 '''qa.weatherCase=weather;qa.weatherCaseCount=Object.keys(presets).length;qa.cyclone={active:weather==='typhoon',spin:state.cycloneSpin,eyeRadiusKm:state.eyeRadius,rainbandCurl:state.rainbandCurl,stormRadiusKm:state.stormRadius,model:'procedural organized volume; no NWP or fluid solver'};qa.primaryWorkbenchModes=['weather','cloud genus','wind','time','optics','events'];''')
 
-# Organized 3D sources. Typhoon has a hollow eye, elevated eyewall, spiral rainbands
-# and high cloud shield; squall has a line of connected deep-convective cells.
 patch('field-worker.js',"if(c.case==='iridescent'){",r'''if(c.case==='typhoon'){
-const startAll=lobes.length,eye=Math.max(1.2,Math.min(3.8,c.eyeRadius||2.2)),outer=Math.max(7,Math.min(11,c.stormRadius||10)),curl=Math.max(.4,Math.min(2,c.rainbandCurl||1));
+const eye=Math.max(1.2,Math.min(3.8,c.eyeRadius||2.2)),outer=Math.max(7,Math.min(11,c.stormRadius||10)),curl=Math.max(.4,Math.min(2,c.rainbandCurl||1));
 const wallStart=lobes.length,wallN=22;for(let j=0;j<wallN;j++){let a=6.2831853*j/wallN+(random()-.5)*.08,r=eye+1.05+random()*.52,x=Math.cos(a)*r,z=Math.sin(a)*r;for(let h=0;h<6;h++){let y=1.25+h*.92+random()*.18,rad=.52+.18*(1-h/6)+random()*.14;lobe(x+(random()-.5)*.22,y,z+(random()-.5)*.22,rad,.50+random()*.18,rad*.92,a+.35);}for(let b=0;b<3;b++){let aa=a+(b-1)*.16,rr=r+.42+random()*.38;lobe(Math.cos(aa)*rr,2.0+random()*3.6,Math.sin(aa)*rr,.42,.38,.55,aa+.25);}}group(wallStart);
 for(let arm=0;arm<3;arm++){const start=lobes.length;for(let j=0;j<26;j++){let u=(j+.35)/26,r=eye+1.8+u*(outer-eye-2.0),a=arm*2.094395+curl*u*5.6+(random()-.5)*.10,x=Math.cos(a)*r,z=Math.sin(a)*r,rad=.42+.36*(1-u)+random()*.18;lobe(x,1.45+random()*.7,z,rad,.28+random()*.20,rad*1.55,a+.50);if(j%3===0)lobe(x*.98,2.25+random()*1.5,z*.98,rad*.72,.42,rad*.90,a+.35);}group(start);}
 const shield=lobes.length;for(let j=0;j<42;j++){let a=random()*6.2831853,r=eye+1.9+Math.sqrt(random())*(outer-eye-2.1),x=Math.cos(a)*r,z=Math.sin(a)*r;lobe(x,5.8+random()*.55,z,1.15+random()*.65,.18+random()*.18,.95+random()*.55,a+.45);}group(shield);
@@ -86,21 +81,17 @@ const shield=lobes.length;for(let j=0;j<42;j++){let a=random()*6.2831853,r=eye+1
 for(let j=0;j<6;j++){let x=(j-2.5)*3.55,z=(j%2-.5)*1.2+(random()-.5)*.5;cumulus(x,z,.58+random()*.10,true);}
 }else if(c.case==='iridescent'){''')
 
-# Cyclone rotation operates in the object's material space and leaves the source
-# generator reproducible. Iridescence uses a separate true-day gate because the
-# inherited uSun is deliberately flipped to moon direction after sunset.
 patch('cloud.glsl','uniform vec3 uLoop,uOccupancySize;uniform float uFastEmpty,uMicroFilter;',
 '''uniform vec3 uLoop,uOccupancySize;uniform float uFastEmpty,uMicroFilter,uSolarDay;uniform vec4 uCyclone;''')
 patch('cloud.glsl','vec3 flowPos(vec3 p){vec3 q=p-uWind;',
 '''vec3 flowPos(vec3 p){vec3 q=p-uWind;if(uCyclone.x>.5){float r=length(q.xz),gate=smoothstep(uCyclone.z*.58,uCyclone.z*1.18,r)*(1.-smoothstep(11.8,15.2,r)),ang=gate*(uCyclone.y*uTime*.035+uCyclone.w*log(1.+r)*.78);float ca=cos(ang),sa=sin(ang);q.xz=mat2(ca,-sa,sa,ca)*q.xz;}''')
 patch('cloud.glsl','if(uIris.x<=0.||uSun.y<=0.)return vec3(1);','if(uIris.x<=0.||uSolarDay<=0.)return vec3(1);')
 
-# Documentation and machine-readable status.
 README='''# Weather Mother 1.1 Full Weather Candidate
 
 在线入口：https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v110-full/
 
-这是完整天气主工作台。主界面以天气案例、十种云属、种子、风、时间、云体演化、光学、降水、闪电和性能为核心。中性检查与体积诊断仍作为方法论证据保留在 method-v100，避免占用日常天气生产界面。
+这是完整天气主工作台。主界面以天气案例、十种云属、种子、风、时间、云体演化、光学、降水、闪电和性能为核心。中性检查与体积诊断继续作为方法论证据保留在 method-v100，不占用日常天气生产界面。
 
 本版从已公开验证的 V0.6.2 循环内核和 V0.6.3 光学研究源重新构建。原 Clean V1.0、V0.6.2、独立光影工作室、Ocean Mother、地形和权威数据均未改动。五个光影场景通过现有自然光参数进入主工作台，独立三灯检查页继续保留链接。
 
