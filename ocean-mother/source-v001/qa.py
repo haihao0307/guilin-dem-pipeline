@@ -3,7 +3,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 from PIL import Image,ImageChops,ImageStat
 ROOT=Path(sys.argv[1]);URL=sys.argv[2];PUBLIC=os.environ.get('PUBLIC_CHECK')=='1'
-report={'productionLine':'Ocean Mother','version':'0.1.0','url':URL,'checks':[],'errors':[],'status':'RUNNING','visualAcceptance':False,'aaaQualityApproved':False,'productionReady':False,'userHardwarePerformanceVerified':False,'runtimeImageAssets':0}
+report={'productionLine':'Ocean Mother','version':'0.1.0','url':URL,'checks':[],'errors':[],'status':'RUNNING','visualAcceptance':False,'aaaQualityApproved':False,'productionReady':False,'userHardwarePerformanceVerified':False,'runtimeImageAssets':0,'pixelComparisonExcludesUI':True}
 def check(n,ok,d=None):
  report['checks'].append({'name':n,'pass':bool(ok),'details':d});print(('PASS ' if ok else 'FAIL ')+n,flush=True)
  if not ok:raise AssertionError(n+': '+repr(d))
@@ -24,13 +24,17 @@ try:
   r=page.goto(URL+'?still',wait_until='domcontentloaded',timeout=60000);check('document 200',r.status==200)
   page.wait_for_function('window.OceanMother?.qa?.errors?.length || window.OceanMother?.qa?.ready',timeout=240000)
   check('real first frame and shader compile',page.evaluate('OceanMother.qa.ready&&!OceanMother.qa.errors.length'),page.evaluate('OceanMother.qa.errors'))
+  page.add_style_tag(content='body.qaClean #mast,body.qaClean #panel,body.qaClean #titleCard,body.qaClean footer,body.qaClean #loading{visibility:hidden!important}')
   def settle():
    page.wait_for_function('OceanMother.qa.errors.length || (!OceanMother.getReadiness().baking&&!OceanMother.getReadiness().envForce&&!OceanMother.getReadiness().lightBusy&&OceanMother.getReadiness().envMix>=1)',timeout=200000)
    assert not page.evaluate('OceanMother.qa.errors')
-  def img():return Image.open(io.BytesIO(page.locator('canvas').screenshot(timeout=90000))).convert('RGB')
+  def img():
+   page.evaluate("document.body.classList.add('qaClean')")
+   try:return Image.open(io.BytesIO(page.locator('canvas').screenshot(timeout=90000))).convert('RGB')
+   finally:page.evaluate("document.body.classList.remove('qaClean')")
   def render_after(js,arg=None):
    n=page.evaluate('OceanMother.qa.frames');page.evaluate(js,arg);page.wait_for_function('(n)=>OceanMother.qa.errors.length||OceanMother.qa.frames>n',arg=n,timeout=90000);settle()
-  settle();base=img();stat=ImageStat.Stat(base);check('nonblank varied real image',sum(stat.stddev)>20,stat.stddev)
+  settle();base=img();stat=ImageStat.Stat(base);check('nonblank varied real image without UI',sum(stat.stddev)>20,stat.stddev)
   check('one shared canvas',page.locator('canvas').count()==1)
   check('six sea cases',page.locator('[data-preset]').count()==6)
   check('ten cloud genera retained',page.locator('#kind option').count()==10)
@@ -51,8 +55,11 @@ try:
    page.wait_for_function('(n)=>OceanMother.qa.errors.length||OceanMother.qa.cloudAtlasFrames>n',arg=n,timeout=200000);settle()
    q=page.evaluate('OceanMother.qa');check('sea preset '+key,q['lastGLerror']==0 and not q['errors'],{'atlasHour':q.get('atlasHour'),'cloud':q['cloudKind']})
    if not PUBLIC and key in ['golden','lagoon']:page.screenshot(path='/tmp/ocean-preview/'+key+'.png',timeout=90000)
-  frozen=img();render_after('()=>OceanMother.play()');n=page.evaluate('OceanMother.qa.frames');page.wait_for_function('(n)=>OceanMother.qa.frames>=n+6',arg=n,timeout=200000);page.evaluate('OceanMother.pause()');settle();moving=img();d=delta(frozen,moving);check('water actually animates',d['rms']>.2,d)
-  t=page.evaluate('OceanMother.qa.waveTime');page.wait_for_timeout(250);check('pause freezes wave clock',page.evaluate('OceanMother.qa.waveTime')==t)
+  frozen=img();n=page.evaluate('OceanMother.qa.frames');t0=page.evaluate('OceanMother.qa.waveTime');page.evaluate('OceanMother.play()')
+  page.wait_for_function('(n)=>OceanMother.qa.errors.length||OceanMother.qa.frames>=n+8',arg=n,timeout=200000)
+  check('animation runs without errors',not page.evaluate('OceanMother.qa.errors'),page.evaluate('OceanMother.qa.errors'))
+  report['activePerformance']=page.evaluate('OceanMother.qa.performance');page.evaluate('OceanMother.pause()');settle();moving=img();d=delta(frozen,moving);check('water actually animates',d['rms']>.2,d)
+  t=page.evaluate('OceanMother.qa.waveTime');check('wave clock advanced',t>t0);page.wait_for_timeout(250);check('pause freezes wave clock',page.evaluate('OceanMother.qa.waveTime')==t)
   render_after('()=>OceanMother.setView(-1.0,-.24,4)');changed=img();check('camera view changes image',delta(moving,changed)['rms']>.5)
   check('camera stays above surface',page.evaluate('OceanMother.qa.camera.cam[1]')>=1.6)
   check('configuration is JSON data',page.evaluate('OceanMother.getConfiguration().format')=='ocean-mother-scene')
