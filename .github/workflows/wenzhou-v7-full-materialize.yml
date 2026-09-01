@@ -1,0 +1,69 @@
+name: Wenzhou V7 materialize checked full-domain numbers
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-full-materialize.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: wenzhou-v7-full-source-materialize
+  cancel-in-progress: false
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200/web/v7-full
+      - name: Verify existing blobs and reconstruct lossless overview numbers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import base64,gzip,hashlib,json,lzma,os,struct,urllib.request
+          from pathlib import Path
+          from datetime import datetime,timezone
+          ids=['de40305976757d35521f4347625c4321b4312672','9f128983cb70ae761f728c43bb2cdcdf5351f5ca','db6c223bedfedcdf432cde6f97cf8dcf46170d4e','f084b1a0c865c8bb399092434943c7f2edfe4948','42ecd0684a15623638c4fdf837ac745edefb8518','d2832efae04678158d1d8cb8bca62c1689b8037f']
+          root=Path('projects/wenzhou/v200/web/v7-full/data');root.mkdir(parents=True,exist_ok=True)
+          report={'schema':'wenzhou-v7-full-data-materialization-1','passed':False,'checkedUtc':datetime.now(timezone.utc).isoformat(),'sourceCommit':os.environ['GITHUB_SHA'],'sourceDeleted':False,'fullNativeOnline':False,'parts':[]}
+          try:
+              parts=[]
+              for sha in ids:
+                  req=urllib.request.Request('https://api.github.com/repos/haihao0307/guilin-dem-pipeline/git/blobs/'+sha,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+                  with urllib.request.urlopen(req,timeout=40) as r:obj=json.load(r)
+                  text=base64.b64decode(obj['content']);actual=hashlib.sha1(b'blob '+str(len(text)).encode()+b'\x00'+text).hexdigest();assert actual==sha,(sha,actual)
+                  parts.append(text);report['parts'].append({'sha':sha,'bytes':len(text),'verified':True})
+              packed=base64.b64decode(b''.join(parts),validate=True)
+              assert len(packed)==66928 and hashlib.sha256(packed).hexdigest()=='aa1b3643bb53597bbc7276dd2044b1384f298f91e7289d50ba2ddffd07d8e744'
+              raw=lzma.decompress(packed);assert len(raw)==155112 and hashlib.sha256(raw).hexdigest()=='fd45294da32b5c0069647b848eb44478755d9da73a308ac60cc2b21e493e882a'
+              out=gzip.compress(raw,compresslevel=9,mtime=0);(root/'overview800.i16.gz').write_bytes(out)
+              rows=list(range(0,17918,64))+[17917];cols=list(range(0,17555,64))+[17554]
+              assert len(raw)==2*len(rows)*len(cols)
+              manifest={'schema':'wenzhou-v7-full-numeric-preview-data-1','grid':[276,281],'sourceGrid':[17555,17918],'sourceSpacingM':12.5,'displayNominalSpacingM':800,'sourceRows':rows,'sourceCols':cols,'transform':[12.5,0,187912.5,0,-12.5,3243587.5],'bounds':[187912.5,3019612.5,407350,3243587.5],'crs':'EPSG:32651','dtype':'int16','byteOrder':'little-endian','nodata':-32768,'heightPath':'data/overview800.i16.gz','heightSha256':hashlib.sha256(out).hexdigest(),'heightValuesSha256':hashlib.sha256(raw).hexdigest(),'sourceValueSha256':'639a69429e104d9c2db1550870da79dc2b89df9ac893c18405901530c25ff353','sourceContainerSha256':'6a87afe84c7f4d53fe9f38c1ac3c18fcf0c89d327cd90cd7817f29d65f1796c8','historicalContainerMatched':False,'sourceNodeSelection':'exact source[rows,cols]; no interpolated source values','fullNativeOnline':False,'sourceDeleted':False,'deletionAllowed':False,'visualApproved':False,'productionApproved':False}
+              (root/'SOURCE_OVERVIEW.json').write_text(json.dumps(manifest,indent=2)+'\n');report.update({'passed':True,'rawSha256':manifest['heightValuesSha256'],'packedSha256':manifest['heightSha256'],'grid':manifest['grid'],'displayNominalSpacingM':800})
+          finally:(root/'MATERIALIZATION_QA.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Persist verified numbers only on the Wenzhou working branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- projects/wenzhou/v200/web/v7-full/data
+          git diff --cached --quiet || git commit -m 'Materialize checked V200 full-domain overview numbers with source identity [skip ci]'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild; then exit 0; fi
+            git fetch origin project/wenzhou-v200-17tile-truth-hydrology-rebuild --depth=30
+            git rebase origin/project/wenzhou-v200-17tile-truth-hydrology-rebuild || exit 1
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v7-full-materialized-numbers
+          path: projects/wenzhou/v200/web/v7-full/data
+          retention-days: 30
