@@ -1,0 +1,59 @@
+name: Ocean Mother Coast V011 candidate
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-v011.yml]
+permissions:
+  contents: write
+concurrency:
+  group: ocean-coast-v011-candidate
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Read exact source materializer
+        run: |
+          python3 - <<'PY'
+          import os,urllib.request,pathlib
+          assert os.environ['GITHUB_REPOSITORY']=='haihao0307/guilin-dem-pipeline'
+          url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+os.environ['GITHUB_SHA']+'/ocean-mother/coast-build-v011/materialize.py'
+          with urllib.request.urlopen(url,timeout=60) as r:
+              assert r.status==200;pathlib.Path('materialize.py').write_bytes(r.read())
+          PY
+      - name: Verify exact new files, run 28 numeric checks and preserve source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -B materialize.py
+      - name: Install browser environment
+        run: |
+          python3 -m pip install playwright==1.62.0 pillow==12.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Real browser candidate inspection
+        run: |
+          set -o pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory stage >/tmp/coast-http.log 2>&1 &
+          python3 stage/ocean-mother/coast-tools-v011/browser_qa.py http://127.0.0.1:8765/ocean-mother/coast-v011/ browser-evidence | tee evidence/BROWSER_TESTS.txt
+      - name: Preserve exact results
+        if: always()
+        run: |
+          mkdir -p evidence
+          if [ -f browser-evidence/QA.json ]; then cp browser-evidence/QA.json evidence/QA.json; fi
+          if [ -f /tmp/coast-http.log ]; then cp /tmp/coast-http.log evidence/HTTP_LOG.txt; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-v011-candidate
+          path: |
+            evidence/
+            stage/ocean-mother/coast-v011/
+            stage/ocean-mother/coast-tools-v011/
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-v011-internal-inspection
+          path: browser-evidence/*.png
+          retention-days: 1
+          if-no-files-found: ignore
