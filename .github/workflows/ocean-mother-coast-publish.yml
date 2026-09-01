@@ -1,0 +1,67 @@
+name: Ocean Mother Coast scoped publication
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-publish.yml]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: ocean-coast-scoped-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Read exact bounded publisher
+        run: |
+          python3 - <<'PY'
+          import os,hashlib,urllib.request,pathlib
+          repo='haihao0307/guilin-dem-pipeline'
+          assert os.environ['GITHUB_REPOSITORY']==repo
+          url='https://raw.githubusercontent.com/'+repo+'/'+os.environ['GITHUB_SHA']+'/ocean-mother/tools/publish_coast_candidate.py'
+          with urllib.request.urlopen(url,timeout=60) as r:
+              assert r.status==200;b=r.read()
+          assert hashlib.sha256(b).hexdigest()=='d8493d540a3c48acace922d2c81335f55fd02046155bf3ffeff2cb79797ba914'
+          pathlib.Path('publish_coast.py').write_bytes(b)
+          PY
+      - name: Publish exact tested Coast files and verify public hashes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -B publish_coast.py
+      - name: Install real public browser verification
+        run: |
+          python3 -m pip install playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Verify public browser controls, history and three inspection modes
+        run: |
+          set -o pipefail
+          python3 public_qa.py https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v010/ public-browser-evidence | tee evidence/PUBLIC_BROWSER_TESTS.txt
+          python3 - <<'PY'
+          import json,pathlib,shutil
+          root=pathlib.Path('evidence');q=json.loads(pathlib.Path('public-browser-evidence/QA.json').read_text())
+          assert q['status']=='BROWSER_QA_PASS' and len(q['checks'])==36 and all(x['passed'] for x in q['checks']) and not q['errors']
+          shutil.copyfile('public-browser-evidence/QA.json',root/'PUBLIC_QA.json')
+          r=json.loads((root/'PUBLICATION.json').read_text());r.update(status='PUBLIC_BROWSER_VERIFIED_RESEARCH_PREVIEW',publicChecksPassed=len(q['checks']),publicChecksFailed=0,publicBrowserVersion=q.get('browserVersion'),visualApproved=False,productionApproved=False)
+          (root/'PUBLICATION.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Keep any real failure report
+        if: always()
+        run: |
+          mkdir -p evidence
+          if [ -f public-browser-evidence/QA.json ]; then cp public-browser-evidence/QA.json evidence/PUBLIC_QA.json; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-publication-evidence
+          path: evidence/
+          retention-days: 90
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-public-internal-inspection
+          path: public-browser-evidence/*.png
+          retention-days: 1
+          if-no-files-found: ignore
