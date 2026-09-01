@@ -1,10 +1,8 @@
-name: Landscape Mother Studio 01
+name: Landscape Mother source-driven cliff B1
 on:
   push:
     branches: [feature/landscape-mother-field-graph-v002]
-    paths:
-      - workbenches/landscape-mother/**
-      - .github/workflows/landscape-mother-studio.yml
+    paths: [workbenches/landscape-mother/**, .github/workflows/landscape-mother-studio.yml]
   workflow_dispatch:
 permissions:
   contents: write
@@ -21,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Protect the cleaned seven-file core
+      - name: Preserve core and all geographic truth
         run: |
           python3 landscape-mother/tools/validate.py
           node --test landscape-mother/tests/policy.test.cjs
@@ -29,45 +27,39 @@ jobs:
           test "$(git rev-parse HEAD:truth)" = ab778539b633ec4d361120a654f24fc2e8f127b7
           test "$(git rev-parse HEAD:contracts)" = db754963ffda5fd7d5f16ca3a9a2f52a6fc6560b
           test "$(git rev-parse HEAD:knowledge)" = e7e80f8e056f2184a722dc9341d5c9e71bf4e563
-      - name: Syntax and full-size numerical cases
+      - name: Source fitting tests and independent rule reconstruction
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/lm-evidence"
-          for file in workbenches/landscape-mother/*.mjs; do node --check "$file"; done
+          for f in workbenches/landscape-mother/*.mjs; do node --check "$f"; done
           node --test workbenches/landscape-mother/test.mjs
-          node --test workbenches/landscape-mother/reference.test.mjs
-          node workbenches/landscape-mother/test.mjs --compile | tee "$RUNNER_TEMP/lm-evidence/numeric.txt"
+          node workbenches/landscape-mother/test.mjs --compile "$RUNNER_TEMP/lm-evidence/numeric" | tee "$RUNNER_TEMP/lm-evidence/numeric.txt"
           python3 workbenches/landscape-mother/stage.py --output "$RUNNER_TEMP/lm-site" --commit "$GITHUB_SHA"
-      - name: Install browser QA dependency
+      - name: Install browser QA
         run: |
           python3 -m pip install playwright
           python3 -m playwright install --with-deps chromium
-      - name: Real staging desktop and mobile checks
+      - name: Actual staged source-to-fit browser workflow
         run: |
           python3 -m http.server 8790 --bind 127.0.0.1 --directory "$RUNNER_TEMP/lm-site" > "$RUNNER_TEMP/lm-evidence/server.log" 2>&1 &
-          python3 workbenches/landscape-mother/reference_qa.py --url http://127.0.0.1:8790/reference.html --output "$RUNNER_TEMP/lm-evidence/reference-stage"
           python3 workbenches/landscape-mother/browser_qa.py --url http://127.0.0.1:8790/ --output "$RUNNER_TEMP/lm-evidence/stage"
-      - name: Publish only the new workbench and verify exact public bytes
+      - name: Publish only the source-driven workbench
         env:
           GH_TOKEN: ${{ github.token }}
           LM_SITE: ${{ runner.temp }}/lm-site
         run: python3 workbenches/landscape-mother/publish.py
-      - name: Real public desktop and mobile checks
-        run: |
-          python3 workbenches/landscape-mother/reference_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/reference.html?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/reference-public"
-          python3 workbenches/landscape-mother/browser_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/public"
-      - name: Preserve evidence even on failure
+      - name: Actual public source-to-fit browser workflow
+        run: python3 workbenches/landscape-mother/browser_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/?verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/public"
+      - name: Preserve labelled evidence on every outcome
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: landscape-mother-studio-${{ github.sha }}
+          name: landscape-mother-cliff-fit-${{ github.sha }}
           path: ${{ runner.temp }}/lm-evidence/
-          if-no-files-found: warn
           retention-days: 14
-      - name: Record candidate status
+      - name: Record honest candidate status
         if: always()
         run: |
-          echo '## Landscape Mother Studio 01' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Read-only local GLB reference inspector; no user-source binary publication. Reference CI uses labelled synthetic fixtures.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Three procedural examples; zero regional DEM binding. Numeric and browser gates are distinct from artistic approval.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'visualApproved=false; productionReady=false' >> "$GITHUB_STEP_SUMMARY"
+          echo '## Source-driven cliff fitting B1' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CI uses a labelled artificial fixture. No new test of the original user GLB in CI; the local-file runtime performs the actual user-source fit.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No source binary upload; no generic rock recipe; visualApproved=false; productionReady=false.' >> "$GITHUB_STEP_SUMMARY"

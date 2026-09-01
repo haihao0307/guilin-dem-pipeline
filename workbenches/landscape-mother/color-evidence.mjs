@@ -1,0 +1,9 @@
+// CPU-only measurement of source image evidence. Nothing is applied as a render texture.
+import {gate} from './source.mjs';
+const linear=v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4};
+export async function readColorEvidence(raw,mesh){const result=new Float32Array(mesh.indices.length).fill(-1),notes=[],images=new Map();let count=0;
+ for(const part of mesh.parts){if(part.image===null||part.image===undefined)continue;if(!part.uv||part.texCoord!==0||part.transform){notes.push('色彩信息需要未变换的 TEXCOORD_0，本材质未纳入');continue}let image=images.get(part.image);if(!image){const im=mesh.images[part.image];if(!im){notes.push('缺少内嵌颜色图');continue}const bitmap=await createImageBitmap(new Blob([raw.slice(im.offset,im.offset+im.bytes)],{type:im.type}));gate(bitmap.width*bitmap.height<=33554432,'来源图像超出分析预算');const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);image={pixels:pixels.data,width:canvas.width,height:canvas.height};images.set(part.image,image);bitmap.close();canvas.width=canvas.height=0}
+  for(let f=part.faceStart;f<part.faceStart+part.faces;f++){let u=0,v=0;for(let k=0;k<3;k++){const i=mesh.indices[f*3+k]-part.off;u+=part.uv[i*2]/3;v+=part.uv[i*2+1]/3}const x=Math.min(image.width-1,Math.max(0,Math.floor((u-Math.floor(u))*image.width))),y=Math.min(image.height-1,Math.max(0,Math.floor((v-Math.floor(v))*image.height))),off=(y*image.width+x)*4;if(image.pixels[off+3]<128)continue;for(let k=0;k<3;k++)result[f*3+k]=linear(image.pixels[off+k])*part.factor[k];count++}
+ }
+ images.clear();return {colors:count?result:null,report:{sampledFaceColors:count,method:'one UV-centroid sample per source triangle; region-area means compiled to numeric colors',sourceImagePublished:false,renderTextureUsed:false,highFrequencyAppearanceRecovered:false,notes}};
+}
