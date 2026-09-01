@@ -1,0 +1,65 @@
+name: Ocean Mother bridge contract tests
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths:
+      - ocean-mother/**
+      - .github/workflows/ocean-mother-bridge-tests.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch exact committed bridge and locked original engine
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, urllib.request
+          ref = os.environ['GITHUB_SHA']
+          repo = os.environ['GITHUB_REPOSITORY']
+          base = pathlib.Path('evidence')
+          files = ['ocean-mother/bridge-v1/environment-bridge.js', 'ocean-mother/bridge-v1/tests/bridge.test.cjs', 'ocean-mother/bridge-v1/tests/source-api.test.cjs', 'ocean-mother/bridge-v1/UPSTREAM_LOCK.json', 'ocean-mother/bridge-v1/README.md', 'ocean-mother/HANDOFF_ACCEPTANCE.json']
+          report = {'commit':ref, 'runId':os.environ['GITHUB_RUN_ID'], 'files':{}, 'browserQA':False, 'visualAcceptance':False, 'productionReady':False}
+          def download(path, commit):
+              url = f'https://raw.githubusercontent.com/{repo}/{commit}/{path}'
+              with urllib.request.urlopen(url, timeout=30) as r:
+                  assert r.status == 200
+                  data = r.read()
+              target = base / path
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              report['files'][path] = {'bytes':len(data), 'sha256':hashlib.sha256(data).hexdigest()}
+              return data
+          for path in files:
+              download(path, ref)
+          lock = json.loads((base/'ocean-mother/bridge-v1/UPSTREAM_LOCK.json').read_text())
+          engine = download('weather-mother/clean-v1/engine.js', lock['publicationRef'])
+          assert hashlib.sha256(engine).hexdigest() == lock['runtime']['engine.js']['sha256']
+          (base/'BRIDGE_SOURCE_IDENTITIES.json').write_text(json.dumps(report, indent=2)+'\n')
+          PY
+      - name: Execute adapter and exact-source unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          node --version
+          node --test evidence/ocean-mother/bridge-v1/tests/*.cjs | tee evidence/unit-tests.tap
+          {
+            echo '# Ocean Mother bridge contract tests'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo
+            tail -9 evidence/unit-tests.tap
+            echo
+            echo 'Unit tests only. Full renderer, browser, public deployment and visual approval remain unverified.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve source and test evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-mother-bridge-contract-evidence
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 30
