@@ -1,0 +1,146 @@
+name: Weather Mother Method V100
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/method-v100/policy.json
+      - weather-mother/method-v100/guard.js
+      - weather-mother/method-v100/state.js
+      - weather-mother/method-v100/view.glsl
+      - weather-mother/method-v100/runtime.js
+      - weather-mother/method-v100/viewer.template.html
+      - weather-mother/method-v100/prepare.py
+      - weather-mother/method-v100/validate.py
+      - weather-mother/method-v100/test.js
+      - weather-mother/method-v100/browser.py
+      - weather-mother/method-v100/finalize.py
+      - .github/workflows/weather-mother-method-v100.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-method-v100
+  cancel-in-progress: true
+jobs:
+  adoption:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother/method-v100
+            weather-mother/clean-v1
+            weather-mother/distributions
+            .github/workflows/weather-mother-method-v100.yml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare local mirrors without changing original common rules
+        run: |
+          python weather-mother/method-v100/prepare.py
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('weather-mother/method-v100/index.html');s=p.read_text();head=os.environ['GITHUB_SHA']
+          s=s.replace('研究预览 · 验收阻断','研究预览 · 验收阻断 · source '+head[:12])
+          p.write_text(s)
+          PY
+          for f in guard.js state.js runtime.js; do node --check "weather-mother/method-v100/$f"; done
+      - name: Validate local schema mirrors and runtime semantics
+        run: |
+          python -m pip install 'jsonschema==4.26.0'
+          python weather-mother/method-v100/validate.py
+          node weather-mother/method-v100/test.js
+      - name: Install independent browser test environment
+        run: |
+          python -m pip install 'playwright==1.57.0' 'pillow==11.3.0'
+          python -m playwright install --with-deps chromium
+      - name: Real neutral studio diagnostic and causal checks
+        run: |
+          python -m http.server 8810 --bind 127.0.0.1 >/tmp/weather-method-http.log 2>&1 &
+          python weather-mother/method-v100/browser.py
+      - name: Verify protected inputs and write allowlist
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          root=Path('weather-mother');b=json.loads((root/'method-v100/BUILD.json').read_text())
+          z=root/'distributions/Weather_Mother_Clean_V1.0.0.zip';assert hashlib.sha256(z.read_bytes()).hexdigest()==b['protectedZIPsha256']
+          for name in subprocess.check_output(['git','diff','--name-only'],text=True).splitlines():
+              assert name.startswith('weather-mother/method-v100/'),name
+          assert not subprocess.check_output(['git','diff','--name-only','--','weather-mother/clean-v1','weather-mother/distributions'],text=True).strip()
+          PY
+          python weather-mother/method-v100/finalize.py
+      - name: Publish only the checked research preview
+        run: |
+          git config user.name 'Weather Mother adoption QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/method-v100
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(weather-mother): publish guarded three-mode minimal evolution preview'
+            for attempt in 1 2 3; do
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 3
+            done
+          fi
+          echo "METHOD_DEPLOYMENT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify exact public runtime identities
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request,os
+          from pathlib import Path
+          r=Path('weather-mother/method-v100');m=json.loads((r/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/method-v100/'
+          receipt={}
+          for attempt in range(36):
+            try:
+              for name,expected in m['files'].items():
+                req=urllib.request.Request(base+name+'?verify='+expected['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as response:
+                  raw=response.read();actual=hashlib.sha256(raw).hexdigest();assert response.status==200 and actual==expected['sha256'],name
+                  receipt[name]={'status':200,'sha256':actual,'bytes':len(raw)}
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          (r/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'sourceHead':m['sourceHead'],'deploymentHead':os.environ['METHOD_DEPLOYMENT_SHA'],'url':base,'files':receipt,'publicBytesVerified':True,'visualApproved':False,'productionApproved':False},indent=2)+'\n')
+          PY
+      - name: Verify real public browser not just uploaded files
+        env:
+          WEATHER_URL: https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/method-v100/
+        run: python weather-mother/method-v100/browser.py
+      - name: Record exact partial adoption and missing evidence
+        env:
+          FINALIZE_PUBLIC: '1'
+        run: |
+          python weather-mother/method-v100/finalize.py
+          git add weather-mother/method-v100/ADOPTION_RECEIPT.json weather-mother/method-v100/MANIFEST.json weather-mother/method-v100/PUBLIC_TESTS.json weather-mother/method-v100/PUBLICATION_RECEIPT.json
+          git commit -m 'test(weather-mother): record public adoption evidence and unresolved provenance'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-method-numeric-adoption-evidence
+          retention-days: 7
+          path: |
+            weather-mother/method-v100/POLICY_TESTS.json
+            weather-mother/method-v100/RUNTIME_TESTS.json
+            weather-mother/method-v100/BROWSER_TESTS.json
+            weather-mother/method-v100/PUBLIC_TESTS.json
+            weather-mother/method-v100/PUBLICATION_RECEIPT.json
+            weather-mother/method-v100/ADOPTION_RECEIPT.json
+            weather-mother/method-v100/BUILD.json
+            weather-mother/method-v100/MANIFEST.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother methodology adoption' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Only isolated Weather Mother paths. Frozen Clean V1 and ZIP unchanged. Original companion Schema/validator provenance missing. Three-mode research specimen only; full-line integration and user approvals remain blocked.' >> "$GITHUB_STEP_SUMMARY"
+          for f in POLICY_TESTS RUNTIME_TESTS BROWSER_TESTS PUBLIC_TESTS; do if [ -f "weather-mother/method-v100/$f.json" ]; then python -c "import json;d=json.load(open('weather-mother/method-v100/$f.json'));print('$f',d['status'],len(d['checks']))" >> "$GITHUB_STEP_SUMMARY"; fi; done
