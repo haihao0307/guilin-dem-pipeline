@@ -1,0 +1,85 @@
+name: Wenzhou Weather workbench fresh-frame visual check
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-weather-workbench-visual-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect-public-frames:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real browser
+        run: |
+          python -m pip install --quiet playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify exact served version and capture completed home frames
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,traceback,urllib.request
+          from playwright.sync_api import sync_playwright
+          from datetime import datetime,timezone
+          out=Path('/tmp/wenzhou-weather-visual');out.mkdir()
+          url='https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=weather110-r1'
+          base=url.split('?')[0]
+          with urllib.request.urlopen(base+'BUILD.json',timeout=40) as r:
+              assert r.status==200;data=r.read()
+          assert hashlib.sha256(data).hexdigest()=='4b0744d37227383ba40bd6ae2885c22bc359316aa8de73f583c0e516e06d4fc2'
+          result={'schema':'wenzhou-workbench-completed-frame-capture-1','url':url,'sourceCommit':'240ea195c698864d3e01eeb411691b9c69faa169','passed':False,'cases':[],'runtimeModified':False,'publicationPerformed':False,'visualApproved':False,'productionApproved':False}
+          def save():
+              (out/'VISUAL_FRAME_CHECK.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+              result['browserVersion']=browser.version
+              try:
+                  for name,w,h,mobile in [('desktop',1500,900,False),('mobile',390,844,True)]:
+                      case={'name':name,'viewport':[w,h],'errors':[],'passed':False};result['cases'].append(case)
+                      ctx=browser.new_context(viewport={'width':w,'height':h},device_scale_factor=1,is_mobile=mobile,has_touch=mobile);page=ctx.new_page();page.set_default_timeout(120000)
+                      page.on('pageerror',lambda e:case['errors'].append(str(e)))
+                      page.on('console',lambda m:case['errors'].append(m.text) if m.type=='error' else None)
+                      try:
+                          response=page.goto(url,wait_until='domcontentloaded');assert response.status==200
+                          page.wait_for_function('window.__WZ_WORKBENCH__?.ready',timeout=180000)
+                          page.evaluate("WenzhouWorkbench.bridge.control('quality','balanced');WenzhouWorkbench.bridge.pause()")
+                          page.wait_for_function("document.querySelector('#weather').contentWindow.WeatherMother.qa.steps===112")
+                          page.locator('[data-layout="map-only"]').click()
+                          frame=page.locator('#terrain').element_handle().content_frame()
+                          if mobile:frame.locator('#menu').click()
+                          frame.locator('#ground').click()
+                          frame.wait_for_function('window.__WZ_FULL__.ground && window.__WZ_FULL__.clearance>=1.6 && window.__WZ_FULL__.clearance<2')
+                          case['groundState']=frame.evaluate('window.__WZ_FULL__')
+                          source=frame.evaluate('window.__WZ_API__.sourceHash()')
+                          start=frame.evaluate('window.__WZ_FULL__.frames')
+                          frame.locator('#home').click()
+                          if mobile:frame.locator('#menu').click()
+                          frame.wait_for_function('(n)=>{const q=window.__WZ_FULL__;return !q.ground && q.eye[1]>100000 && q.frames>=n+2}',arg=start)
+                          case['homeState']=frame.evaluate('window.__WZ_FULL__')
+                          assert frame.evaluate('window.__WZ_API__.sourceHash()')==source
+                          page.screenshot(path=str(out/(name+'-full-map-confirmed.png')),timeout=120000)
+                          assert not case['errors'],case['errors']
+                          case['passed']=True
+                      except Exception as e:
+                          case['error']=str(e);case['traceback']=traceback.format_exc()
+                          try:page.screenshot(path=str(out/(name+'-failure.png')))
+                          except Exception:pass
+                          raise
+                      finally:ctx.close();save()
+                  result['passed']=True
+              except Exception as e:result['error']=str(e)
+              finally:browser.close();result['checkedUtc']=datetime.now(timezone.utc).isoformat();save()
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          if not result['passed']:raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-weather-completed-public-frames
+          path: /tmp/wenzhou-weather-visual
+          retention-days: 30
+          if-no-files-found: error
