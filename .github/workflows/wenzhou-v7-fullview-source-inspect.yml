@@ -1,0 +1,42 @@
+name: Wenzhou V7 full-domain source inspect
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-fullview-source-inspect.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            projects/wenzhou/v200/numeric_migration/fullview_source
+      - name: Inspect complete transfer
+        run: |
+          set -euo pipefail
+          ls -l projects/wenzhou/v200/numeric_migration/fullview_source
+          cat projects/wenzhou/v200/numeric_migration/fullview_source/*.txt | tr -d '\r\n\t ' | base64 -d > /tmp/fullview.xz
+          sha256sum /tmp/fullview.xz
+          xz --list --verbose /tmp/fullview.xz
+          xz -dc /tmp/fullview.xz > /tmp/fullview.payload
+          file /tmp/fullview.payload
+          stat -c 'decoded_bytes=%s' /tmp/fullview.payload
+          sha256sum /tmp/fullview.payload
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/fullview.payload').read_bytes()
+          print('prefix_hex',p[:64].hex())
+          print('prefix_text',repr(p[:200]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v7-fullview-source-inspection
+          path: |
+            /tmp/fullview.xz
+            /tmp/fullview.payload
+          retention-days: 3
