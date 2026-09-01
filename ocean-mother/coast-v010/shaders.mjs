@@ -24,7 +24,7 @@ __COMMON__
 in vec3 P,N;in vec4 D;out vec4 O;
 void main(){float tag=D.y,wet=D.x;vec3 n=normalize(N);float b=fb(P*.85),grain=noise3(P*58.);vec3 albedo;
 if(tag<.5){float ripple=sin(P.z*10.+sin(P.x*1.4)*1.8);albedo=mix(vec3(.48,.34,.17),vec3(.73,.61,.39),b);albedo*=.96+.07*grain+.035*ripple;n=normalize(n+vec3(.008*cos(P.x*12.),0,.025*cos(P.z*10.)));albedo*=mix(1.,.52,wet);}
-else if(tag<1.5){float layer=sin(P.y*11.+sin(P.x*1.7)+sin(P.z*1.4));float crack=1.-smoothstep(.012,.07,abs(sin(P.x*.82+P.y*.7+sin(P.z*1.3))));albedo=mix(vec3(.14,.155,.16),vec3(.36,.34,.29),b);albedo*=.93+.12*layer;albedo*=1.-crack*.28;n=normalize(n+vec3((noise3(P*7.)-.5)*.12,(grain-.5)*.055,(noise3(P*7.+31.)-.5)*.12));albedo*=mix(1.,.56,wet);}
+else if(tag<1.5){float layer=sin(P.y*6.3+fb(P*1.3)*8.+P.x*.9);float crack=1.-smoothstep(.012,.07,abs(sin(P.x*.82+P.y*.7+sin(P.z*1.3))));albedo=mix(vec3(.055,.060,.064),vec3(.20,.19,.17),b);albedo*=.96+.035*layer;albedo*=1.-crack*.28;n=normalize(n+vec3((noise3(P*7.)-.5)*.12,(grain-.5)*.055,(noise3(P*7.+31.)-.5)*.12));albedo*=mix(1.,.56,wet);}
 else if(tag<2.5){albedo=vec3(.07,.085,.10)*(.78+.18*sin(P.y*15.+sin(P.z*.7)));}
 else {float charred=fb(P*9.);albedo=mix(vec3(.018,.014,.012),vec3(.12,.06,.025),charred);}
 if(uMode==3.){albedo=tag<.5?mix(vec3(.5,.34,.16),vec3(.04,.50,.58),wet):tag<1.5?vec3(.35,.4,.45):vec3(.11);O=vec4(albedo,1);return;}
@@ -33,15 +33,15 @@ export const waterFS=`#version 300 es
 __COMMON__
 in vec3 P,N;in vec4 D;out vec4 O;
 void main(){if(D.y<.006)discard;float shallow=sat(D.y/.3),a=uMicro*shallow;vec2 p=P.xz;vec2 slope=vec2(0.);for(int k=0;k<7;k++){float j=float(k),f=1.4*pow(1.67,j),ang=j*2.399;vec2 d=vec2(cos(ang),sin(ang));float amp=.058*pow(.57,j);slope+=d*amp*f*cos(dot(p,d)*f-uTime*sqrt(9.81*f)+j*4.7);}
-vec3 n=normalize(N+vec3(slope.x,0,slope.y)*a*2.);vec3 v=normalize(uEye-P);if(dot(n,v)<0.)n=-n;float fres=.02+.98*pow(1.-max(dot(n,v),0.),5.);vec3 reflected=skyLight(reflect(-v,n));float path=min(25.,D.y/max(abs(v.y),.17));vec3 tr=exp(-vec3(.62,.115,.069)*path);float sandNoise=fb(vec3(p*.75,2.));vec3 bottom=mix(vec3(.43,.34,.20),vec3(.61,.51,.32),sandNoise);vec3 body=mix(vec3(.012,.155,.18),bottom,tr);body*=.55+.45*uDay;
+vec3 n=normalize(N+vec3(slope.x,0,slope.y)*a*2.);vec3 v=normalize(uEye-P);if(dot(n,v)<0.)n=-n;float fres=.02+.98*pow(1.-max(dot(n,v),0.),5.);vec3 reflected=skyLight(reflect(-v,n));float path=min(25.,D.y/max(abs(v.y),.17));vec3 tr=exp(-vec3(.72,.18,.10)*path);float sandNoise=fb(vec3(p*.75,2.));vec3 bottom=mix(vec3(.27,.21,.12),vec3(.45,.37,.23),sandNoise);vec3 body=mix(vec3(.004,.065,.092),bottom,tr);body*=.55+.45*uDay;
 vec3 col=mix(body,reflected,fres);vec3 h=normalize(v+uSun);float shin=pow(max(dot(n,h),0.),150.);col+=uSunColor*shin*.85*step(0.,uSun.y);
 if(uMode==2.)for(int k=0;k<3;k++){vec3 h2=normalize(v+uLightDir[k]);col+=uLightColor[k]*uLightPower[k]*pow(max(dot(n,h2),0.),85.)*.5;}
-float foamState=D.x*uFoamGain;float f1=fb(vec3(p*.83,uTime*.12)),f2=noise3(vec3(p*8.,uTime*.24)),lace=1.-smoothstep(.03,.19,abs(f1-.50));float coverage=sat(foamState*(.5+1.5*lace));coverage*=.74+.26*f2;coverage=max(coverage,(1.-smoothstep(.012,.065,D.y))*smoothstep(.006,.018,D.y)*min(1.,foamState*3.));
+float foamState=D.x*uFoamGain;float f1=fb(vec3(p*.83,uTime*.12)),f2=noise3(vec3(p*8.,uTime*.24)),lace=1.-smoothstep(.03,.19,abs(f1-.50));float coverage=sat(foamState)*(.12+.78*lace);coverage*=.38+.62*smoothstep(.18,.75,f2);coverage=max(coverage,(1.-smoothstep(.012,.065,D.y))*smoothstep(.006,.018,D.y)*min(1.,foamState*3.));
 vec3 foamColor=direct(P,n,vec3(.9,.95,.96));col=mix(col,foamColor,coverage);vec3 flame=uFire+vec3(0,1,0)-P;col+=vec3(1.5,.22,.015)*uHeat*.7/(1.+dot(flame,flame))*(.3+fres);
 if(uMode==3.)col=mix(mix(vec3(.02,.12,.45),vec3(.02,.78,.62),sat(D.y/2.)),vec3(1,.9,.6),sat(foamState));O=vec4(col,1.);}`;
 export const skyFS=`#version 300 es
 __COMMON__
-out vec4 O;void main(){vec3 rd=ray();vec3 c=skyLight(rd);if(rd.y<0.){float t=(-5.1-uEye.y)/rd.y;vec3 p=uEye+rd*t;float grid=(1.-smoothstep(.015,.04,abs(fract(p.x/5.)-.5)))+(1.-smoothstep(.015,.04,abs(fract(p.z/5.)-.5)));if(uMode>0.)c=vec3(.07,.085,.10)+grid*.015;}O=vec4(c,1.);}`;
+out vec4 O;void main(){vec3 rd=ray();vec3 c=skyLight(rd);if(rd.y<0.){float t=(-5.1-uEye.y)/rd.y;vec3 p=uEye+rd*t;float grid=(1.-smoothstep(.015,.04,abs(fract(p.x/5.)-.5)))+(1.-smoothstep(.015,.04,abs(fract(p.z/5.)-.5)));c=vec3(.047,.067,.083)+grid*.009;float mist=1.-exp(-t*.0015);c=mix(c,skyLight(rd),mist*.35);}O=vec4(c,1.);}`;
 export const particleVS=`#version 300 es
 precision highp float;layout(location=0)in vec4 aPos;uniform mat4 uVP;uniform float uPointScale;out float alpha;void main(){vec4 p=uVP*vec4(aPos.xyz,1);gl_Position=p;gl_PointSize=clamp(uPointScale*aPos.w/p.w,1.,12.);alpha=.65;}`;
 export const particleFS=`#version 300 es

@@ -28,7 +28,7 @@ export class CoastState{
  volume(){let s=0;for(const h of this.h)s+=h;return s*this.dx*this.dz}
  change(key,value,record=true){const p=validateProfile({...this.profile,[key]:value});if(key==='seed'&&p.seed!==this.profile.seed)throw Error('Seed changes require a new scene');this.profile=p;if(record)this.events.push({step:this.steps,key,value});}
  sample(a,x,z){const fx=clamp((x-this.bounds[0])/this.dx-.5,0,this.nx-1),fz=clamp((z-this.bounds[2])/this.dz-.5,0,this.nz-1),i=Math.min(this.nx-2,Math.floor(fx)),j=Math.min(this.nz-2,Math.floor(fz)),u=fx-i,v=fz-j,k=j*this.nx+i;return mix(mix(a[k],a[k+1],u),mix(a[k+this.nx],a[k+this.nx+1],u),v);}
- surface(x,z){return this.sample(this.b,x,z)+this.sample(this.h,x,z)}
+ surface(x,z){const fx=clamp((x-this.bounds[0])/this.dx-.5,0,this.nx-1),fz=clamp((z-this.bounds[2])/this.dz-.5,0,this.nz-1),i=Math.min(this.nx-2,Math.floor(fx)),j=Math.min(this.nz-2,Math.floor(fz)),u=fx-i,v=fz-j,k=j*this.nx+i;let total=0,eta=0;for(const [id,w]of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+this.nx,(1-u)*v],[k+this.nx+1,u*v]])if(this.h[id]>.003){total+=w;eta+=w*(this.b[id]+this.h[id]);}return total>1e-9?eta/total:this.bedFn(x,z)}
  // Hydrostatic reconstruction, Rusanov flux, matched one-sided bed corrections.
  flux(l,r,axis){const g=9.81,hl=this.h[l],hr=this.h[r],bl=this.b[l],br=this.b[r],bmax=Math.max(bl,br),a=Math.max(0,hl+bl-bmax),b=Math.max(0,hr+br-bmax),ul=hl>1e-7?this.qx[l]/hl:0,vl=hl>1e-7?this.qz[l]/hl:0,ur=hr>1e-7?this.qx[r]/hr:0,vr=hr>1e-7?this.qz[r]/hr:0;
  const un=axis?vl:ul,unr=axis?vr:ur,s=Math.max(Math.abs(un)+Math.sqrt(g*a),Math.abs(unr)+Math.sqrt(g*b)),f=.5*(a*un+b*unr)-.5*s*(b-a),fx=.5*(a*un*ul+b*unr*ur+(axis?0:.5*g*(a*a+b*b)))-.5*s*(b*ur-a*ul),fz=.5*(a*un*vl+b*unr*vr+(axis?.5*g*(a*a+b*b):0))-.5*s*(b*vr-a*vl),inv=1/(axis?this.dz:this.dx),cl=.5*g*(hl*hl-a*a),cr=.5*g*(hr*hr-b*b);
@@ -55,9 +55,9 @@ export class CoastState{
   [this.foam,this.nextFoam]=[this.nextFoam,this.foam];
   for(const s of this.spray){s.age+=dt;s.vy-=9.81*dt;s.vx+=wind[0]*dt*.1;s.vz+=wind[2]*dt*.1;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;}
   this.spray=this.spray.filter(s=>s.age<s.life&&s.y>this.surface(s.x,s.z)+.015);
-  this.heat+=(p.fire-this.heat)*(1-Math.exp(-dt/.7));this.emitterCredit+=dt*Math.min(1.6,this.heat*1.6);
-  while(this.emitterCredit>=1){this.emitterCredit--;const n=this.smokeOrdinal++,s=derive(p.seed,'smoke'),r=hash(s+n*137);if(p.smoke>0)this.smokeParticles.push({x:FIRE[0]+(r-.5)*.6,y:FIRE[1]+.7,z:FIRE[2]+(hash(s+n*313)-.5)*.6,vx:0,vy:2.1+r*.8,vz:0,age:0,life:16,radius:.55,heat:this.heat,load:p.smoke*this.heat,id:n});this.emitCount++;}
-  for(const s of this.smokeParticles){s.age+=dt;s.radius=.5+.19*s.age;s.heat*=Math.exp(-dt/5);const drag=1-Math.exp(-dt/2.4);s.vx+=(wind[0]*.65-s.vx)*drag;s.vz+=(wind[2]*.65-s.vz)*drag;s.vy+=(.45+1.1*s.heat-s.vy)*dt*.22;s.x+=(s.vx+.3*Math.sin(s.id*3.1+this.t*.7))*dt;s.y+=s.vy*dt;s.z+=(s.vz+.3*Math.cos(s.id*1.7+this.t*.6))*dt;}
+  this.heat+=(p.fire-this.heat)*(1-Math.exp(-dt/.7));this.emitterCredit+=dt*Math.min(3.2,this.heat*3.2);
+  while(this.emitterCredit>=1){this.emitterCredit--;const n=this.smokeOrdinal++,s=derive(p.seed,'smoke'),r=hash(s+n*137);if(p.smoke>0)this.smokeParticles.push({x:FIRE[0]+(r-.5)*.6,y:FIRE[1]+.7,z:FIRE[2]+(hash(s+n*313)-.5)*.6,vx:0,vy:2.1+r*.8,vz:0,age:0,life:8,radius:.85,heat:this.heat,load:p.smoke*this.heat*2.2,id:n});this.emitCount++;}
+  for(const s of this.smokeParticles){s.age+=dt;s.radius=.85+.23*s.age;s.heat*=Math.exp(-dt/5);const drag=1-Math.exp(-dt/2.4);s.vx+=(wind[0]*.65-s.vx)*drag;s.vz+=(wind[2]*.65-s.vz)*drag;s.vy+=(.45+1.1*s.heat-s.vy)*dt*.22;s.x+=(s.vx+.3*Math.sin(s.id*3.1+this.t*.7))*dt;s.y+=s.vy*dt;s.z+=(s.vz+.3*Math.cos(s.id*1.7+this.t*.6))*dt;}
   this.smokeParticles=this.smokeParticles.filter(s=>s.age<s.life).slice(-this.maxParticles);
   this.steps++;this.t=this.steps*dt;
  }
