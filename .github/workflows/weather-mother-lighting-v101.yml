@@ -1,0 +1,127 @@
+name: Weather Mother Lighting V101
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/method-v100/lighting-src/**
+      - .github/workflows/weather-mother-lighting-v101.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-lighting-v101
+  cancel-in-progress: true
+jobs:
+  lighting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother/method-v100
+            weather-mother/clean-v1
+            weather-mother/distributions
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce presentation from pinned runtime
+        run: |
+          python weather-mother/method-v100/lighting-src/build.py
+          node --check weather-mother/method-v100/lighting/runtime.js
+          node --check weather-mother/method-v100/lighting/studio.js
+      - name: Install real browser environment
+        run: |
+          python -m pip install 'playwright==1.57.0' 'pillow==11.3.0'
+          python -m playwright install --with-deps chromium
+      - name: Actual neutral comparison and lighting browser tests
+        run: |
+          python -m http.server 8830 --bind 127.0.0.1 >/tmp/weather-lighting-http.log 2>&1 &
+          python weather-mother/method-v100/lighting-src/qa.py weather-mother/method-v100/lighting http://127.0.0.1:8830/weather-mother/method-v100/lighting/ http://127.0.0.1:8830/weather-mother/method-v100/
+      - name: Preserve original policy weather and portable package
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,subprocess,json
+          p=Path('weather-mother/method-v100/lighting');m=json.loads((p/'MANIFEST.json').read_text())
+          for n,h in m['parentRuntime'].items():assert hashlib.sha256((p.parent/n).read_bytes()).hexdigest()==h,n
+          z=Path('weather-mother/distributions/Weather_Mother_Clean_V1.0.0.zip');assert hashlib.sha256(z.read_bytes()).hexdigest()=='596b963fef0cc2eafe7855178ae9f93c3e2aef2b78bdf98dd5e9e49c1a443bae'
+          assert not subprocess.check_output(['git','diff','--name-only','--','weather-mother/clean-v1','weather-mother/distributions'],text=True).strip()
+          t=json.loads((p/'TESTS.json').read_text());assert t['status']=='BROWSER_QA_PASS'
+          m['status']='BROWSER_QA_PASS';m['checks']=len(t['checks']);(p/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Publish only tested lighting candidate
+        run: |
+          git config user.name 'Weather Mother lighting QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/method-v100/lighting
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(weather-mother): publish tested five-preset volumetric lighting studio'
+            for attempt in 1 2 3; do
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 3
+            done
+          fi
+          echo "LIGHTING_DEPLOYMENT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify exact public bytes and pinned parent rules
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request,os
+          from pathlib import Path
+          p=Path('weather-mother/method-v100/lighting');m=json.loads((p/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/method-v100/lighting/'
+          from urllib.parse import urljoin
+          items={**m['files'],**m['dependencies']};receipt={}
+          for attempt in range(36):
+            try:
+              for name,expected in items.items():
+                req=urllib.request.Request(urljoin(base,name)+'?verify='+expected['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                  data=r.read();h=hashlib.sha256(data).hexdigest();assert r.status==200 and h==expected['sha256'],name
+                  receipt[name]={'status':200,'bytes':len(data),'sha256':h}
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          (p/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'version':'wm-lighting-0.1.1','sourceHead':m['sourceHead'],'deploymentHead':os.environ['LIGHTING_DEPLOYMENT_SHA'],'url':base,'files':receipt,'publicBytesVerified':True,'visualApproved':False,'productionApproved':False},indent=2)+'\n')
+          PY
+      - name: Actual public browser checks
+        env:
+          PUBLIC_CHECK: '1'
+        run: python weather-mother/method-v100/lighting-src/qa.py weather-mother/method-v100/lighting https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/method-v100/lighting/ https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/method-v100/
+      - name: Record public evidence without granting visual approval
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          p=Path('weather-mother/method-v100/lighting');q=json.loads((p/'PUBLIC_TESTS.json').read_text());assert q['status']=='BROWSER_QA_PASS'
+          m=json.loads((p/'MANIFEST.json').read_text());m['status']='PUBLIC_BROWSER_VERIFIED';m['publicChecks']=len(q['checks']);m['deploymentHead']=os.environ['LIGHTING_DEPLOYMENT_SHA'];(p/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add weather-mother/method-v100/lighting/PUBLIC_TESTS.json weather-mother/method-v100/lighting/PUBLICATION_RECEIPT.json weather-mother/method-v100/lighting/MANIFEST.json
+          git commit -m 'test(weather-mother): verify public lighting pixels and unchanged object identity'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-lighting-code-and-numeric-tests
+          retention-days: 7
+          path: weather-mother/method-v100/lighting
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-lighting-temporary-inspection
+          retention-days: 1
+          path: /tmp/weather-lighting-inspection
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother lighting-only preview' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Density, history, common rules, frozen Clean V1 and Ocean Mother remain unchanged. Five art-directed lighting presets. No Kelvin/lux/spectral calibration or AAA quality approval claimed.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f weather-mother/method-v100/lighting/TESTS.json ]; then python -c 'import json;d=json.load(open("weather-mother/method-v100/lighting/TESTS.json"));print(d["status"],len(d["checks"]),"checks")' >> "$GITHUB_STEP_SUMMARY"; fi
