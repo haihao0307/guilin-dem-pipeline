@@ -1,4 +1,7 @@
-"""Actual Chromium checks, without mocked requests or substituted renderers."""
+"""Actual Chromium checks, without mocked requests or substituted renderers.
+The initial screenshot uses the unchanged 192-step default. Interaction checks
+explicitly select native balanced quality for the software CI GPU.
+"""
 from pathlib import Path
 import argparse,json,traceback
 import numpy as np
@@ -20,7 +23,7 @@ with sync_playwright() as pw:
  report['browserVersion']=b.version
  try:
   for kind,w,h,mobile in [('desktop',1500,900,False),('mobile',390,844,True)]:
-   ctx=b.new_context(viewport={'width':w,'height':h},device_scale_factor=1,is_mobile=mobile,has_touch=mobile);page=ctx.new_page();page.set_default_timeout(30000)
+   ctx=b.new_context(viewport={'width':w,'height':h},device_scale_factor=1,is_mobile=mobile,has_touch=mobile);page=ctx.new_page();page.set_default_timeout(90000)
    case={'name':kind,'viewport':[w,h],'consoleErrors':[],'pageErrors':[],'failedRequests':[],'badResponses':[],'imageRequests':[],'passed':False};report['cases'].append(case)
    page.on('console',lambda m:case['consoleErrors'].append(m.text) if m.type=='error' else None)
    page.on('pageerror',lambda e:case['pageErrors'].append(str(e)))
@@ -37,15 +40,19 @@ with sync_playwright() as pw:
     check(kind+' twenty cases ten genera',q['weatherCases']==20 and q['cloudGenera']==10)
     wait(page,"window.__WZ_WORKBENCH__.terrain?.weather.active===true")
     check(kind+' real shader linked',t.evaluate('window.__WZ_FULL__.shaderLinked'))
-    page.screenshot(path=str(a.out/f'{kind}-workbench.png'))
+    page.screenshot(path=str(a.out/f'{kind}-workbench.png'),timeout=90000)
+    case['initialQuality']='fine: 192 steps, unchanged package default'
+    page.evaluate("WenzhouWorkbench.bridge.control('quality','balanced')")
+    case['interactionQuality']='balanced: 112 steps, selected via real native control for tests only'
+    wait(page,"document.querySelector('#weather').contentWindow.WeatherMother.qa.steps===112")
     page.locator('#pause').click();page.wait_for_timeout(1500)
     t0=wpage.evaluate('WeatherMother.qa.simulationTimeS');page.wait_for_timeout(500);t1=wpage.evaluate('WeatherMother.qa.simulationTimeS');check(kind+' pause',t0==t1,[t0,t1])
     source_hash=t.evaluate('window.__WZ_API__.sourceHash()');case['sourceHashBefore']=source_hash
     if not mobile:
-     t.locator('#gl').screenshot(path=str(a.out/'map-water-on.png'))
+     page.screenshot(path=str(a.out/'map-water-on.png'),clip=page.locator('#terrain').bounding_box(),timeout=90000)
      t.evaluate("document.querySelector('#waterOn').checked=false")
      t.wait_for_function('window.__WZ_FULL__.renderedWater===false')
-     t.locator('#gl').screenshot(path=str(a.out/'map-water-off.png'))
+     page.screenshot(path=str(a.out/'map-water-off.png'),clip=page.locator('#terrain').bounding_box(),timeout=90000)
      aa=np.asarray(Image.open(a.out/'map-water-on.png').convert('RGB')).astype('int16');bb=np.asarray(Image.open(a.out/'map-water-off.png').convert('RGB')).astype('int16')
      count=int((np.max(np.abs(aa-bb),axis=2)>12).sum());check('actual sea pixels visible',count>2000,count)
      t.evaluate("document.querySelector('#waterOn').checked=true")
