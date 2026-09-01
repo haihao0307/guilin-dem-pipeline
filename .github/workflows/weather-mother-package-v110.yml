@@ -1,0 +1,159 @@
+name: Weather Mother Clean Package V110
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/packaging/v110/**
+      - .github/workflows/weather-mother-package-v110.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-package-v110
+  cancel-in-progress: true
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assemble pinned renderer with portable handoff
+        run: |
+          python -m py_compile weather-mother/packaging/v110/*.py
+          python weather-mother/packaging/v110/build_package.py build weather-mother/v110-full weather-mother/method-v100/policy.json _package_stage
+          for file in engine.js field-worker.js motion.js optics.js; do node --check "_package_stage/$file"; done
+      - name: Prepare real browser
+        run: |
+          python -m pip install 'playwright==1.57.0' 'pillow==11.3.0'
+          python -m playwright install chromium
+      - name: Test extracted relocation and compare exact renderer pixels
+        run: python weather-mother/packaging/v110/qa_package.py _package_stage weather-mother/v110-full
+      - name: Package only the allowed files and verify ZIP
+        run: |
+          mkdir -p _deliverables
+          python weather-mother/packaging/v110/build_package.py archive _package_stage _deliverables/Weather_Mother_Full_Clean_V1.1.0.zip
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile,json,hashlib
+          p=Path('_deliverables/Weather_Mother_Full_Clean_V1.1.0.zip')
+          with zipfile.ZipFile(p) as z:
+            assert z.testzip() is None
+            names=z.namelist();assert len(names)==12 and all(n.startswith('Weather_Mother_Full_Clean_V1.1.0/') for n in names)
+            m=json.loads(z.read('Weather_Mother_Full_Clean_V1.1.0/MANIFEST.json'))
+            for n,f in m['files'].items():
+              b=z.read('Weather_Mother_Full_Clean_V1.1.0/'+n);assert len(b)==f['bytes'] and hashlib.sha256(b).hexdigest()==f['sha256'],n
+            assert m['status']=='PACKAGE_BROWSER_VERIFIED'
+          PY
+      - name: Publish only the clean package and online mirror
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,subprocess
+          assert not subprocess.check_output(['git','diff','--name-only'],text=True).strip()
+          d=Path('weather-mother/clean-v110')
+          assert not d.exists(), 'Existing immutable package requires a new package revision'
+          shutil.copytree('_package_stage',d)
+          p=Path('weather-mother/distributions');p.mkdir(exist_ok=True)
+          for f in Path('_deliverables').iterdir():
+            assert not (p/f.name).exists(), 'Existing distribution must not be replaced'
+            shutil.copyfile(f,p/f.name)
+          PY
+          git config user.name 'Weather Mother package QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/clean-v110 weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.receipt.json
+          git commit -m 'release(weather-mother): publish clean full-weather V1.1.0 reuse package'
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 3
+          done
+          echo "PACKAGE_DEPLOYMENT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify published ZIP and mirror bytes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,urllib.request,time,os
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          d=Path('_package_stage');z=Path('_deliverables/Weather_Mother_Full_Clean_V1.1.0.zip')
+          items={base+'clean-v110/'+p.name:p for p in d.iterdir()}
+          items[base+'distributions/'+z.name]=z
+          verified={}
+          for attempt in range(36):
+            try:
+              for url,p in items.items():
+                expected=hashlib.sha256(p.read_bytes()).hexdigest()
+                req=urllib.request.Request(url+'?verify='+expected[:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                  b=r.read();assert r.status==200 and hashlib.sha256(b).hexdigest()==expected,p.name
+                verified[p.name]={'status':200,'sha256':expected,'bytes':len(b)}
+              break
+            except Exception as e:
+              print('Publication check',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          rp=Path('_deliverables/Weather_Mother_Full_Clean_V1.1.0.receipt.json');r=json.loads(rp.read_text());r.update({'packageRuntimeCommit':os.environ['PACKAGE_DEPLOYMENT'],'packageDirectory':'weather-mother/clean-v110','onlineEntry':base+'clean-v110/','onlineZip':base+'distributions/'+z.name,'publicByteChecks':verified,'publicBytesVerified':True});rp.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Verify published viewer in a real browser
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from playwright.sync_api import sync_playwright
+          rp=Path('_deliverables/Weather_Mother_Full_Clean_V1.1.0.receipt.json');r=json.loads(rp.read_text())
+          with sync_playwright() as p:
+            b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            page=b.new_page(viewport={'width':640,'height':480});errors=[];failures=[]
+            page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda e:errors.append(e.text) if e.type=='error' else None);page.on('requestfailed',lambda e:failures.append(e.url))
+            page.add_init_script("window.WeatherMotherBoot={still:true,weather:'iridescent',quality:'balanced'};")
+            response=page.goto(r['onlineEntry'],wait_until='domcontentloaded',timeout=60000);assert response.status==200
+            page.wait_for_function('window.WeatherMother?.qa.errors.length||(window.WeatherMother?.qa.ready&&WeatherMother.qa.frames>0)',timeout=180000)
+            q=page.evaluate('WeatherMother.qa');assert q['ready'] and not q['errors'] and q['lastGLerror']==0
+            assert page.locator('#weather option').count()==20 and page.locator('#kind option').count()==10
+            assert not errors and not failures
+            r['publicBrowser']={'version':b.version,'ready':True,'case':'iridescent','weatherCases':20,'cloudGenera':10,'nativeRenderSize':q['renderSize'],'displayViewport':[640,480],'errors':errors,'failedRequests':failures,'visualApproved':False}
+            b.close()
+          rp.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Record verified archive read-ref without changing the stable version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,shutil
+          rp=Path('_deliverables/Weather_Mother_Full_Clean_V1.1.0.receipt.json');r=json.loads(rp.read_text())
+          assert r['publicBytesVerified'] and r['publicBrowser']['ready']
+          shutil.copyfile(rp,'weather-mother/distributions/'+rp.name)
+          p=Path('weather-mother/HANDOFF.json');h=json.loads(p.read_text());h['portableFullWeatherPackage']={'version':'1.1.0-clean','zip':'distributions/Weather_Mother_Full_Clean_V1.1.0.zip','sha256':r['zipSHA256'],'bytes':r['zipBytes'],'files':r['files'],'directory':'weather-mother/clean-v110','readRef':r['packageRuntimeCommit'],'startFile':'START_HERE.md','receipt':'distributions/'+rp.name,'visualApproved':False,'productionApproved':False};p.write_text(json.dumps(h,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add weather-mother/HANDOFF.json weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.receipt.json
+          git commit -m 'test(weather-mother): record exact clean package publication and handoff'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Weather-Mother-Full-Clean-V110-delivery
+          retention-days: 7
+          path: _deliverables
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Weather-Mother-package-check-failure
+          retention-days: 2
+          path: _package_stage/QA.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother clean reusable package' >> "$GITHUB_STEP_SUMMARY"
+          echo 'One full weather runtime. No renderer rewrite, images, old runtimes, or cross-line asset edits. Approval flags remain false.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f _package_stage/QA.json ]; then python -c 'import json;d=json.load(open("_package_stage/QA.json"));print(d["status"],len(d["checks"]),"package checks")' >> "$GITHUB_STEP_SUMMARY"; fi
