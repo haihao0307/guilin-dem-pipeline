@@ -1,0 +1,99 @@
+name: Ocean Mother clean full-package source export
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-full-clean-package.yml]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Export and verify only pinned Ocean sources
+        env:
+          GH_READ_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import concurrent.futures, hashlib, json, os, pathlib, re, subprocess, time, urllib.request
+          repo='haihao0307/guilin-dem-pipeline'
+          published='970aa25814e5d5f98cf10091da69666f62dbcd28'
+          knowledge='af82d42fa76333d75abfa1e0a2dea4cffdfb9ca4'
+          ktree='4d96b8eb6c33c47ee55ec023a1e5205596d099eb'
+          root=pathlib.Path('clean-export');root.mkdir()
+          def sha(b):return hashlib.sha256(b).hexdigest()
+          def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          def get(url):
+              headers={'User-Agent':'Ocean-Mother-Clean-Export'}
+              if url.startswith('https://api.github.com/'):
+                  headers['Authorization']='Bearer '+os.environ['GH_READ_TOKEN']
+              for attempt in range(3):
+                  try:
+                      with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=30) as r:
+                          assert r.status==200
+                          return r.read()
+                  except Exception:
+                      if attempt==2:raise
+                      time.sleep(2)
+          def raw(ref,path):return get(f'https://raw.githubusercontent.com/{repo}/{ref}/{path}')
+          identities={}
+          def save(dst,b,ref,path):
+              assert not dst.startswith('/') and '..' not in pathlib.PurePosixPath(dst).parts
+              p=root/dst;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+              identities[dst]={'repository':repo,'ref':ref,'path':path,'bytes':len(b),'sha256':sha(b),'gitBlobSha':blob(b)}
+          mbytes=raw(published,'ocean-mother/v001/MANIFEST.json')
+          assert blob(mbytes)=='a0cae11498bc7dbdcdb0d0ed598db2496cfffc7a','Published candidate changed'
+          m=json.loads(mbytes);assert len(m['files'])==21
+          save('workbench/MANIFEST.json',mbytes,published,'ocean-mother/v001/MANIFEST.json')
+          def download_runtime(item):
+              name,expected=item;path='ocean-mother/v001/'+name;b=raw(published,path)
+              assert len(b)==expected['bytes'] and sha(b)==expected['sha256'],name
+              return name,b,path
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+              for name,b,path in pool.map(download_runtime,m['files'].items()):save('workbench/'+name,b,published,path)
+          tree=json.loads(get(f'https://api.github.com/repos/{repo}/git/trees/{ktree}?recursive=1'))
+          assert tree['truncated'] is False
+          entries={x['path']:x for x in tree['tree'] if x['type']=='blob'}
+          chosen=[
+              'skills/ocean-math-physics/SKILL.md',
+              'contracts/OCEAN_KNOWLEDGE_CONTRACT.json',
+              'research/R001_WATER_SKY_DISTILLATION.md',
+              'research/R002_SOURCE_BOUNDARIES.json',
+              'research/R003_SURFACE_CONTINUITY.md',
+              'references/mother-v1/METHODOLOGY_RECEIVED_TEXT.md',
+              'references/mother-v1/MOTHER_UNIFIED_POLICY_V1.0.0.json',
+              'bridge-v1/README.md','bridge-v1/UPSTREAM_LOCK.json',
+              'bridge-v1/environment-bridge.js','bridge-v1/tests/bridge.test.cjs',
+              'bridge-v1/tests/source-api.test.cjs',
+              'adoption/SOURCE_RECEPTION_0.2.0.json',
+              'adoption/LIVE_WORKBENCH_RECEIPT.json',
+              'AGENTS.md','WORKING_STATE.md']
+          def download_knowledge(name):
+              e=entries[name];path='ocean-mother/'+name;b=raw(knowledge,path)
+              assert len(b)==e['size'] and blob(b)==e['sha'],name
+              return name,b,path
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+              for name,b,path in pool.map(download_knowledge,chosen):save('knowledge/'+name,b,knowledge,path)
+          wb=root/'workbench';wm=json.loads((wb/'weather/MANIFEST.json').read_text())
+          for name,e in wm['files'].items():
+              b=(wb/'weather'/name).read_bytes();assert len(b)==e['bytes'] and sha(b)==e['sha256'],name
+          for f in root.rglob('*'):
+              if f.is_file():
+                  assert f.suffix.lower() in {'.md','.json','.js','.cjs','.html','.css','.vert','.frag','.glsl'},str(f)
+                  s=f.read_text('utf-8');assert not re.search(r'data\s*:\s*image/',s,re.I),str(f)
+          for f in wb.rglob('*.js'):subprocess.run(['node','--check',str(f)],check=True)
+          env={**os.environ,'WEATHER_ENGINE_PATH':str((wb/'weather/engine.js').resolve())}
+          tests=subprocess.run(['node','--test',str(root/'knowledge/bridge-v1/tests/bridge.test.cjs'),str(root/'knowledge/bridge-v1/tests/source-api.test.cjs')],env=env,text=True,capture_output=True)
+          assert tests.returncode==0,tests.stdout+tests.stderr
+          assert '# pass 48' in tests.stdout and '# fail 0' in tests.stdout
+          report={'status':'EXPORTED_SOURCE_IDENTITIES_VERIFIED','exportCommit':os.environ['GITHUB_SHA'],'exportRun':os.environ['GITHUB_RUN_ID'],'publishedRef':published,'knowledgeRef':knowledge,'runtimeManifestEntriesPassed':21,'weatherManifestEntriesPassed':11,'sourceFilesExported':len(identities),'nodeSyntaxPassed':True,'bridgeTestsPassed':48,'bridgeTestsFailed':0,'browserRerunThisExport':False,'imageAssets':0,'runtimeModified':False,'visualApproved':False,'productionApproved':False,'files':identities}
+          (root/'SOURCE_EXPORT_RECEIPT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocean-mother-clean-full-sources
+          path: clean-export/
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 9
