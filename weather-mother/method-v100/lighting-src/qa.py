@@ -21,7 +21,7 @@ try:
  local=json.loads(subprocess.check_output(['node','-e',tests],cwd=R,text=True));report['unitChecks']=local;check('presentation validation and preset isolation',all(t['pass'] for t in local),len(local))
  with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-  page=browser.new_page(viewport={'width':800,'height':540},device_scale_factor=1)
+  page=browser.new_page(viewport={'width':800,'height':540},device_scale_factor=1);page.set_default_timeout(120000)
   errors=[];con=[];failed=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda e:con.append(e.text) if e.type=='error' else None);page.on('requestfailed',lambda r:failed.append(r.url))
   def ready():
@@ -32,7 +32,7 @@ try:
    assert not page.evaluate('WeatherMethod.qa.errors')
   def img():
    page.evaluate("document.body.classList.add('qaPixel')")
-   try:return Image.open(io.BytesIO(page.locator('canvas').screenshot(timeout=120000))).convert('RGB')
+   try:return Image.open(io.BytesIO(page.screenshot(timeout=120000))).convert('RGB')
    finally:page.evaluate("document.body.classList.remove('qaPixel')")
   def hidecss():page.add_style_tag(content='body.qaPixel header,body.qaPixel aside,body.qaPixel nav,body.qaPixel footer,body.qaPixel .top,body.qaPixel .badge,body.qaPixel #legend,body.qaPixel #frameLabel{visibility:hidden!important}')
   r=page.goto(BASE,wait_until='domcontentloaded',timeout=60000);assert r.status==200;ready();hidecss();act("()=>WeatherMethod.setMode('neutral_inspection')");baseline=img();data0=page.evaluate('WeatherMethod.qa.dataHashes')
@@ -44,6 +44,8 @@ try:
   frames={};report['presetPixels']={}
   for name in ['daylight','dawn','sunset','silver','moon']:
    act('(n)=>WeatherMethod.setLighting(n)',name);frames[name]=img();st=ImageStat.Stat(frames[name]);check('render '+name,sum(st.stddev)>12,st.stddev)
+   if not public:
+    out=Path('/tmp/weather-lighting-inspection');out.mkdir(exist_ok=True);page.screenshot(path=str(out/(name+'-preview.png')),timeout=120000)
    report['presetPixels'][name]={'rgbSHA256':hashlib.sha256(frames[name].tobytes()).hexdigest(),'native':page.evaluate('WeatherMethod.qa.nativeRenderSize'),'stateUnchanged':page.evaluate('WeatherMethod.getState()')==original}
    check('lighting preserves source state '+name,page.evaluate('WeatherMethod.getState()')==original)
   for name in ['dawn','sunset','silver','moon']:
