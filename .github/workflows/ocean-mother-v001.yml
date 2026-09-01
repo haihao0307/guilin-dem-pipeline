@@ -1,0 +1,123 @@
+name: Ocean Mother V001
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - ocean-mother/source-v001/**
+      - .github/workflows/ocean-mother-v001.yml
+permissions:
+  contents: write
+concurrency:
+  group: ocean-mother-v001
+  cancel-in-progress: true
+jobs:
+  ocean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            ocean-mother
+            weather-mother/distributions
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate frozen weather and build isolated ocean files
+        run: |
+          python ocean-mother/source-v001/build.py _ocean_stage
+          node --check _ocean_stage/ocean.js
+          node --check _ocean_stage/weather-contract.js
+      - name: Install Chromium for real browser testing
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Render and test six sea states and controls
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/ocean-http.log 2>&1 &
+          python ocean-mother/source-v001/qa.py _ocean_stage http://127.0.0.1:8765/_ocean_stage/
+      - name: Publish only the tested marine candidate
+        run: |
+          python - <<'PY'
+          import json,shutil
+          from pathlib import Path
+          s=Path('_ocean_stage');d=Path('ocean-mother/v001');q=json.loads((s/'QA.json').read_text());assert q['status']=='BROWSER_QA_PASS'
+          m=json.loads((s/'MANIFEST.json').read_text());m['status']='BROWSER_QA_PASS';m['qaChecks']=len(q['checks']);(s/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          if d.exists():shutil.rmtree(d)
+          shutil.copytree(s,d)
+          PY
+          git config user.name 'Ocean Mother QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ocean-mother/v001
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(ocean-mother): publish browser-tested procedural marine workbench'
+            for attempt in 1 2 3; do
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 3
+            done
+          fi
+      - name: Verify public byte identities
+        run: |
+          python - <<'PY'
+          import json,hashlib,urllib.request,time
+          from pathlib import Path
+          d=Path('ocean-mother/v001');m=json.loads((d/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/v001/'
+          receipt={}
+          for attempt in range(36):
+            try:
+              for n,f in m['files'].items():
+                req=urllib.request.Request(base+n+'?verify='+f['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                  b=r.read();h=hashlib.sha256(b).hexdigest();assert r.status==200 and h==f['sha256'],n
+                  receipt[n]={'status':200,'bytes':len(b),'sha256':h}
+              break
+            except Exception as e:
+              print('Pages',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          (d/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'version':'0.1.0','url':base,'files':receipt,'publicBytesVerified':True,'aaaQualityApproved':False,'productionReady':False},indent=2)+'\n')
+          PY
+      - name: Real public browser verification
+        env:
+          PUBLIC_CHECK: '1'
+        run: python ocean-mother/source-v001/qa.py ocean-mother/v001 https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/v001/
+      - name: Record public QA and stable ocean entry only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          d=Path('ocean-mother/v001');q=json.loads((d/'PUBLIC_QA.json').read_text());assert q['status']=='BROWSER_QA_PASS'
+          Path('ocean-mother/index.html').write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./v001/"><title>Ocean Mother</title><a href="./v001/">打开 Ocean Mother 海洋工作台</a><script>const u=new URL("./v001/",location.href);u.search=location.search;location.replace(u.href);</script></html>\n')
+          PY
+          git add ocean-mother/v001/PUBLICATION_RECEIPT.json ocean-mother/v001/PUBLIC_QA.json ocean-mother/index.html
+          git commit -m 'test(ocean-mother): record verified public marine entry'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-code-and-qa
+          retention-days: 7
+          path: |
+            _ocean_stage
+            ocean-mother/v001/PUBLIC_QA.json
+            ocean-mother/v001/PUBLICATION_RECEIPT.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-temporary-browser-inspection
+          retention-days: 1
+          path: /tmp/ocean-preview
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Ocean Mother V001' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No unrelated production files changed. Weather ZIP remains frozen. Runtime includes no image assets; temporary browser captures are inspection evidence only.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f _ocean_stage/QA.json ]; then python -c 'import json;d=json.load(open("_ocean_stage/QA.json"));print(d["status"],len(d["checks"]),"checks")' >> "$GITHUB_STEP_SUMMARY"; fi
