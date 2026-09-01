@@ -1,12 +1,15 @@
-"""Rendered evidence and source isolation. No source images are used by runtime."""
+"""Functional pixel tests use 480x320; native 1280x800 beauty inspection stays separate.
+Runtime default resolution and sampling quality are not reduced by this harness."""
 from pathlib import Path
 import os,sys,json,hashlib,io,math,subprocess,traceback
 from PIL import Image,ImageChops,ImageStat
 from playwright.sync_api import sync_playwright
 R=Path(sys.argv[1]);URL=sys.argv[2];BASE=sys.argv[3];public=os.environ.get('PUBLIC_CHECK')=='1'
-report={'version':'wm-lighting-0.1.1','status':'RUNNING','url':URL,'checks':[],'errors':[],'runtimeImageAssets':0,'visualApproved':False,'productionApproved':False,'aaaQualityApproved':False,'userHardwarePerformanceVerified':False}
+report={'version':'wm-lighting-0.1.1','status':'RUNNING','url':URL,'checks':[],'errors':[],'functionalViewport':[480,320],'nativeBeautyInspection':[1280,800],'runtimeImageAssets':0,'visualApproved':False,'productionApproved':False,'aaaQualityApproved':False,'userHardwarePerformanceVerified':False}
+def save():
+ (R/('PUBLIC_TESTS.json' if public else 'TESTS.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
 def check(n,v,d=None):
- report['checks'].append({'name':n,'pass':bool(v),'details':d});print(('PASS ' if v else 'FAIL ')+n,flush=True)
+ report['checks'].append({'name':n,'pass':bool(v),'details':d});print(('PASS ' if v else 'FAIL ')+n,flush=True);save()
  if not v:raise AssertionError(n+': '+str(d))
 def diff(a,b):
  v=ImageStat.Stat(ImageChops.difference(a,b));return {'max':max(x[1] for x in v.extrema),'rms':math.sqrt(sum(x*x for x in v.rms)/3)}
@@ -21,7 +24,7 @@ try:
  local=json.loads(subprocess.check_output(['node','-e',tests],cwd=R,text=True));report['unitChecks']=local;check('presentation validation and preset isolation',all(t['pass'] for t in local),len(local))
  with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-  page=browser.new_page(viewport={'width':800,'height':540},device_scale_factor=1);page.set_default_timeout(120000)
+  page=browser.new_page(viewport={'width':480,'height':320},device_scale_factor=1);page.set_default_timeout(120000)
   errors=[];con=[];failed=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda e:con.append(e.text) if e.type=='error' else None);page.on('requestfailed',lambda r:failed.append(r.url))
   def ready():
@@ -67,13 +70,14 @@ try:
   act("()=>WeatherMethod.setQuality('balanced')");export=page.evaluate('WeatherMethod.exportState()');check('export includes presentation and effective source hash',len(export['effectiveParametersSha256'])==64 and export['presentation']['version']=='wm-studio-0.1.1' and 'rotationDegrees' in export['presentation'])
   rejected=page.evaluate("(()=>{const old=JSON.stringify(WeatherMethod.getPresentation());try{WeatherMethod.setLight(0,{size:99});return false}catch(e){return old===JSON.stringify(WeatherMethod.getPresentation())}})()");check('invalid light update is atomic and rejected',rejected)
   check('production approval remains blocked',page.evaluate("(()=>{try{WeatherMethod.attemptProduction();return false}catch(e){return true}})()"))
-  act("()=>WeatherMethod.setMode('diagnostic')");act('()=>WeatherMethod.setDiagnostic(1)');act("()=>WeatherMethod.setDriver('humidity',0)");act('()=>WeatherMethod.seek(60)');dry=img();check('same humidity history still drives cloud removal',page.evaluate('WeatherMethod.getState().concentration')<.01)
+  act("()=>WeatherMethod.setMode('diagnostic')");act('()=>WeatherMethod.setDiagnostic(1)');act("()=>WeatherMethod.setDriver('humidity',0)");act('()=>WeatherMethod.seek(60)');check('same humidity history still drives cloud removal',page.evaluate('WeatherMethod.getState().concentration')<.01)
   act('()=>WeatherMethod.seek(0)');check('history replay remains available',page.evaluate('WeatherMethod.getState().concentration')==original['concentration'])
   if not public:
    out=Path('/tmp/weather-lighting-inspection');out.mkdir(exist_ok=True);page.set_viewport_size({'width':1280,'height':800});act("()=>WeatherMethod.setQuality('fine')")
    for name in ['daylight','sunset','silver']:
     act('(n)=>WeatherMethod.setLighting(n)',name);page.screenshot(path=str(out/(name+'.png')),timeout=120000)
    report['inspectionCapture']={'native':page.evaluate('WeatherMethod.qa.nativeRenderSize'),'display':[1280,800],'runtimeImages':0,'temporaryOnly':True}
+   check('beauty capture is native 1280 by 800',report['inspectionCapture']['native']==[1280,800])
   report['desktop']={'browser':browser.version,'state':page.evaluate('WeatherMethod.getState()'),'qa':page.evaluate('WeatherMethod.qa'),'errors':errors,'consoleErrors':con,'failedRequests':failed}
   check('zero desktop page errors',not errors,errors);check('zero desktop console errors',not con,con);check('zero desktop failed requests',not failed,failed)
   page.close();mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=1);mobile.goto(URL+'?lighting=sunset&quality=balanced',wait_until='domcontentloaded',timeout=60000);mobile.wait_for_function('window.WeatherMethod?.qa?.errors.length||window.WeatherMethod?.qa?.ready&&WeatherMethod.qa.frames>0',timeout=180000)
@@ -85,6 +89,5 @@ try:
 except Exception:
  report['status']='QA_FAILED';report['errors'].append(traceback.format_exc());print(report['errors'][-1],flush=True)
 finally:
- (R/('PUBLIC_TESTS.json' if public else 'TESTS.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
- print(report['status'],len(report['checks']),flush=True)
+ save();print(report['status'],len(report['checks']),flush=True)
 if report['status']!='BROWSER_QA_PASS':raise SystemExit(1)
