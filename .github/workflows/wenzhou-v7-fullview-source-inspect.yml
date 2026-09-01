@@ -16,27 +16,46 @@ jobs:
           fetch-depth: 1
           sparse-checkout: |
             projects/wenzhou/v200/numeric_migration/fullview_source
-      - name: Inspect complete transfer
+      - name: Diagnose transfer text and payload
         run: |
           set -euo pipefail
-          ls -l projects/wenzhou/v200/numeric_migration/fullview_source
-          cat projects/wenzhou/v200/numeric_migration/fullview_source/*.txt | tr -d '\r\n\t ' | base64 -d > /tmp/fullview.xz
-          sha256sum /tmp/fullview.xz
-          xz --list --verbose /tmp/fullview.xz
-          xz -dc /tmp/fullview.xz > /tmp/fullview.payload
-          file /tmp/fullview.payload
-          stat -c 'decoded_bytes=%s' /tmp/fullview.payload
-          sha256sum /tmp/fullview.payload
           python - <<'PY'
           from pathlib import Path
-          p=Path('/tmp/fullview.payload').read_bytes()
-          print('prefix_hex',p[:64].hex())
-          print('prefix_text',repr(p[:200]))
+          import base64,hashlib,lzma,re,string
+          root=Path('projects/wenzhou/v200/numeric_migration/fullview_source')
+          allowed=set(string.ascii_letters+string.digits+'+/=\r\n\t ')
+          parts=[]
+          for p in sorted(root.glob('*.txt')):
+              s=p.read_text(encoding='utf-8')
+              bad=[(i,repr(c)) for i,c in enumerate(s) if c not in allowed]
+              compact=''.join(s.split())
+              print(p.name,'chars',len(s),'compact',len(compact),'mod4',len(compact)%4,'bad',bad[:8],'head',repr(compact[:24]),'tail',repr(compact[-24:]))
+              parts.append(compact)
+          text=''.join(parts)
+          print('total_chars',len(text),'mod4',len(text)%4,'text_sha256',hashlib.sha256(text.encode()).hexdigest())
+          try:
+              packed=base64.b64decode(text,validate=True)
+              print('strict_base64',True,'packed_bytes',len(packed),'packed_sha256',hashlib.sha256(packed).hexdigest(),'magic',packed[:12].hex())
+          except Exception as e:
+              print('strict_base64',False,'error',repr(e))
+              filtered=''.join(c for c in text if c in string.ascii_letters+string.digits+'+/=')
+              print('filtered_chars',len(filtered),'mod4',len(filtered)%4)
+              packed=base64.b64decode(filtered+'='*((-len(filtered))%4),validate=False)
+              print('lenient_packed_bytes',len(packed),'sha256',hashlib.sha256(packed).hexdigest(),'magic',packed[:12].hex())
+          Path('/tmp/fullview.xz').write_bytes(packed)
+          try:
+              raw=lzma.decompress(packed)
+              Path('/tmp/fullview.payload').write_bytes(raw)
+              print('xz_ok',True,'decoded_bytes',len(raw),'decoded_sha256',hashlib.sha256(raw).hexdigest(),'prefix',repr(raw[:160]))
+          except Exception as e:
+              print('xz_ok',False,'error',repr(e))
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: wenzhou-v7-fullview-source-inspection
           path: |
             /tmp/fullview.xz
             /tmp/fullview.payload
+          if-no-files-found: warn
           retention-days: 3
