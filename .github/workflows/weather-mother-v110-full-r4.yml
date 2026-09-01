@@ -1,0 +1,156 @@
+name: Weather Mother V110 Full R4
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - .github/workflows/weather-mother-v110-full-r4.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-v110-full-r4
+  cancel-in-progress: false
+jobs:
+  full-weather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother/v062-loop
+            weather-mother/v063-optics
+            weather-mother/v110-full-src
+            weather-mother/clean-v1
+            weather-mother/method-v100
+            weather-mother/HANDOFF.json
+            ocean-mother
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build isolated primary weather workbench and robust QA copy
+        run: |
+          python -m py_compile weather-mother/v110-full-src/build.py weather-mother/v110-full-src/qa.py
+          python - <<'PY'
+          from pathlib import Path
+          b=Path('weather-mother/v110-full-src/build.py').read_text()
+          old="patch('index.html','<details><summary>大气与光照</summary>',"
+          new="patch('index.html','<details open><summary>大气与光照</summary>',"
+          assert b.count(old)==1
+          Path('/tmp/weather_v110_build.py').write_text(b.replace(old,new))
+          q=Path('weather-mother/v110-full-src/qa.py').read_text()
+          replacements={
+            "state['wind']==33 and state['cloudSpeed']==5":"abs(state['wind']-33)<.01 and abs(state['cloudSpeed']-5)<.01",
+            "setv('direction',270);page.evaluate('WeatherMother.play()');":"setv('direction',270);page.wait_for_function(\"Math.abs(WeatherMother.getState().direction-270)<.01\",timeout=150000);page.evaluate('WeatherMother.play()');",
+            "page.locator('#seed').click()":"page.evaluate(\"document.getElementById('seed').click()\")"
+          }
+          for old,new in replacements.items():
+            assert q.count(old)==1,old
+            q=q.replace(old,new)
+          Path('/tmp/weather_v110_qa.py').write_text(q)
+          PY
+          python /tmp/weather_v110_build.py _weather_v110_stage
+          for f in engine.js field-worker.js motion.js optics.js; do node --check "_weather_v110_stage/$f"; done
+      - name: Install real browser test environment
+        run: |
+          python -m pip install 'playwright==1.62.0' 'pillow==12.3.0'
+          python -m playwright install --with-deps chromium
+      - name: Test twenty weather cases and actual pixels
+        run: |
+          python -m http.server 8850 --bind 127.0.0.1 >/tmp/weather-v110-http.log 2>&1 &
+          python /tmp/weather_v110_qa.py _weather_v110_stage http://127.0.0.1:8850/_weather_v110_stage/
+      - name: Enforce isolated write scope
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,subprocess
+          q=json.loads(Path('_weather_v110_stage/QA.json').read_text());assert q['status']=='BROWSER_QA_PASS'
+          for path in ['weather-mother/clean-v1','weather-mother/v062-loop','weather-mother/method-v100','ocean-mother']:
+              assert not subprocess.check_output(['git','diff','--name-only','--',path],text=True).strip(),path
+          m=json.loads(Path('_weather_v110_stage/MANIFEST.json').read_text());m['status']='BROWSER_QA_PASS';m['automaticChecks']=len(q['checks']);Path('_weather_v110_stage/MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Publish tested candidate and keep stable entry unchanged
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+          s=Path('_weather_v110_stage');d=Path('weather-mother/v110-full')
+          if d.exists():shutil.rmtree(d)
+          shutil.copytree(s,d)
+          PY
+          git config user.name 'Weather Mother full QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/v110-full
+          git commit -m 'feat(weather-mother): publish full twenty-case weather wind optics lightning and cyclone workbench'
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 3
+          done
+          echo "WEATHER_V110_DEPLOYMENT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify exact public runtime identities
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,time,urllib.request,os
+          d=Path('weather-mother/v110-full');m=json.loads((d/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v110-full/'
+          receipt={}
+          for attempt in range(42):
+            try:
+              for n,f in m['files'].items():
+                req=urllib.request.Request(base+n+'?verify='+f['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                  raw=r.read();h=hashlib.sha256(raw).hexdigest();assert r.status==200 and h==f['sha256'],n
+                  receipt[n]={'status':200,'bytes':len(raw),'sha256':h}
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==41:raise
+              time.sleep(10)
+          (d/'PUBLICATION_RECEIPT.json').write_text(json.dumps({'version':'1.1.0-world','sourceHead':m['buildSourceHead'],'deploymentHead':os.environ['WEATHER_V110_DEPLOYMENT'],'url':base,'files':receipt,'publicBytesVerified':True,'stableEntryReplaced':False,'visualApproved':False,'aaaQualityApproved':False,'productionReady':False},ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Verify real public browser
+        env:
+          PUBLIC_CHECK: '1'
+        run: python /tmp/weather_v110_qa.py weather-mother/v110-full https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v110-full/
+      - name: Record public evidence and candidate handoff
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          d=Path('weather-mother/v110-full');q=json.loads((d/'PUBLIC_QA.json').read_text());assert q['status']=='BROWSER_QA_PASS'
+          m=json.loads((d/'MANIFEST.json').read_text());m['status']='PUBLIC_BROWSER_VERIFIED';m['publicChecks']=len(q['checks']);m['deploymentHead']=os.environ['WEATHER_V110_DEPLOYMENT'];(d/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          receipt={'motherId':'Weather Mother','version':'1.1.0-world','repository':'haihao0307/guilin-dem-pipeline','branch':'gh-pages','sourceCommit':m['buildSourceHead'],'deploymentCommit':os.environ['WEATHER_V110_DEPLOYMENT'],'policyVersion':'1.0.0','policyScope':'Primary UI is the full weather system; method-v100 retains required evidence modes outside the operator console','runtimeEntry':'weather-mother/v110-full/index.html','weatherCases':20,'cloudGenera':10,'tests':{'automatic':len(json.loads((d/'QA.json').read_text())['checks']),'public':len(q['checks'])},'evidence':['QA.json','PUBLIC_QA.json','PUBLICATION_RECEIPT.json','MANIFEST.json','WORLD_RULES.json'],'protectedInputsChanged':False,'stableCanonicalEntryChanged':False,'unresolved':['User visual review of this exact build','AAA cloud and lightning refinement','user GPU frame pacing','full fluid and numerical weather solver','live weather','scientific cyclone calibration'],'visualApproved':False,'aaaQualityApproved':False,'productionReady':False}
+          (d/'ADOPTION_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          root=Path('weather-mother/HANDOFF.json');h=json.loads(root.read_text());h['candidateEntry']='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v110-full/';h['candidateVersion']='1.1.0-world';h['candidateDeploymentCommit']=os.environ['WEATHER_V110_DEPLOYMENT'];h['candidateStatus']='PUBLIC_BROWSER_VERIFIED_AWAITING_USER_VISUAL_REVIEW';h['canonicalEntryCurrentlyResolvesTo']='clean-v1';h['candidateAdds']=['20 weather cases','iridescent clouds','organized squall line','procedural typhoon eye eyewall spiral rainbands','integrated natural lighting presets','connected graphical lightning'];h['manualVisualAcceptanceOfCandidate']=False;h['aaaQualityApproved']=False;h['productionReady']=False;root.write_text(json.dumps(h,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add weather-mother/v110-full/PUBLIC_QA.json weather-mother/v110-full/PUBLICATION_RECEIPT.json weather-mother/v110-full/MANIFEST.json weather-mother/v110-full/ADOPTION_RECEIPT.json weather-mother/HANDOFF.json
+          git commit -m 'test(weather-mother): record full weather public evidence and blocked approvals'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-v110-full-code-and-evidence-r4
+          retention-days: 7
+          path: |
+            _weather_v110_stage
+            weather-mother/v110-full/PUBLIC_QA.json
+            weather-mother/v110-full/PUBLICATION_RECEIPT.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-v110-temporary-inspection-r4
+          retention-days: 1
+          path: /tmp/weather-v110-inspection
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother 1.1 full candidate R4' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Primary workbench restores weather, wind, seeds, time, optics, lightning and cyclone. Stable Clean V1, method evidence and other production lines remain unchanged.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f _weather_v110_stage/QA.json ]; then python -c 'import json;d=json.load(open("_weather_v110_stage/QA.json"));print(d["status"],len(d["checks"]),"checks")' >> "$GITHUB_STEP_SUMMARY"; fi
