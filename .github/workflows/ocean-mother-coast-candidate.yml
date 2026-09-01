@@ -1,0 +1,121 @@
+name: Ocean Mother Coast candidate
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-candidate.yml]
+permissions:
+  contents: write
+concurrency:
+  group: ocean-coast-candidate
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Restore and commit byte-checked Coast source only
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os,json,hashlib,base64,zlib,pathlib,urllib.request
+          repo='haihao0307/guilin-dem-pipeline';branch='work/ocean-mother-handoff-20260901';head=os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_REPOSITORY']==repo and os.environ['GITHUB_REF']=='refs/heads/'+branch
+          base='https://api.github.com/repos/'+repo
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          chunks=['d8841791c029a6daa1fefabea938a0224b1b999f','206bd995baed1eba02f52866002d991409a90321','06a7130ac193a6fc03abb4340a4321ba00730a61','298166864ae44763d4cb24f63759f10d21d88fbc']
+          parts=[]
+          for bid in chunks:
+              b=base64.b64decode(api('/git/blobs/'+bid)['content'])
+              assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()==bid
+              parts.append(b)
+          packed=b''.join(parts)
+          assert hashlib.sha256(packed).hexdigest()=='d4cf1e916d0522895536f805dcac7764b36d66596d6ebb36a9a96a4a508a8fb9'
+          raw=zlib.decompress(packed)
+          assert hashlib.sha256(raw).hexdigest()=='db2f169a03e642a4cc2d646ea2d49ed7b9138e3b66ffc407e72d5a61db4ca4ec'
+          data=json.loads(raw);assert data['format']=='coast-source-transfer-v1';files=data['files'];assert len(files)==10
+          required={'ocean-mother/coast-v010/'+n for n in ['coast-core.mjs','coast-app.mjs','shaders.mjs','index.html','coast.css','policy.json','README.md','BUILD_TEMPLATE.json']}|{'ocean-mother/coast-tools/core.test.mjs','ocean-mother/coast-tools/browser_qa.py'}
+          assert set(files)==required
+          policy=files['ocean-mother/coast-v010/policy.json'].encode()
+          assert hashlib.sha256(policy).hexdigest()=='fe69ea88c05d9b8c74e79e21c2c2c719dc096b677848eb40305575f08b5b8fdf'
+          assert api('/git/ref/heads/'+branch)['object']['sha']==head,'Concurrent work; stop safely'
+          existing=api('/contents/ocean-mother?ref='+head)
+          assert not any(x['name']=='coast-v010' for x in existing),'Inspect existing Coast source instead of replacing'
+          tree=[]
+          for name,text in files.items():
+              assert '..' not in pathlib.PurePosixPath(name).parts
+              p=pathlib.Path('stage')/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(text.encode())
+              bid=api('/git/blobs',{'content':text,'encoding':'utf-8'})['sha']
+              assert bid==hashlib.sha1(b'blob '+str(len(text.encode())).encode()+b'\0'+text.encode()).hexdigest()
+              tree.append({'path':name,'mode':'100644','type':'blob','sha':bid})
+          newtree=api('/git/trees',{'base_tree':api('/git/commits/'+head)['tree']['sha'],'tree':tree})['sha']
+          commit=api('/git/commits',{'message':'feat(ocean): add Coast numerical surf, wet sand, rocks and wind-driven fire smoke preview','tree':newtree,'parents':[head]})['sha']
+          changed=api('/compare/'+head+'...'+commit)['files']
+          assert len(changed)==10 and all(f['status']=='added' and f['filename'] in required for f in changed)
+          assert api('/git/ref/heads/'+branch)['object']['sha']==head
+          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH')
+          assert api('/git/ref/heads/'+branch)['object']['sha']==commit
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          identities={n:{'bytes':len(t.encode()),'sha256':hashlib.sha256(t.encode()).hexdigest()} for n,t in files.items()}
+          pathlib.Path('evidence/SOURCE.json').write_text(json.dumps({'sourceCommit':commit,'workflowCommit':head,'branch':branch,'files':identities,'scope':'new Coast paths only','visualApproved':False,'productionApproved':False},indent=2))
+          build=json.loads(files['ocean-mother/coast-v010/BUILD_TEMPLATE.json']);build.update(sourceCommit=commit,workflowRunId=int(os.environ['GITHUB_RUN_ID']))
+          pathlib.Path('stage/ocean-mother/coast-v010/build.json').write_text(json.dumps(build,indent=2))
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('COAST_SOURCE_COMMIT='+commit+'\n')
+          print('SOURCE_COMMIT',commit)
+          PY
+      - name: Stage the frozen existing deep workbench without changes
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,urllib.request,pathlib,concurrent.futures
+          ref='970aa25814e5d5f98cf10091da69666f62dbcd28'
+          base='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+ref+'/ocean-mother/v001/'
+          root=pathlib.Path('stage/ocean-mother/v001');root.mkdir(parents=True,exist_ok=True)
+          def get(n):
+              with urllib.request.urlopen(base+n,timeout=60) as r:
+                  assert r.status==200;return r.read()
+          raw=get('MANIFEST.json');m=json.loads(raw);(root/'MANIFEST.json').write_bytes(raw)
+          def one(item):
+              n,v=item;b=get(n);assert len(b)==v['bytes'] and hashlib.sha256(b).hexdigest()==v['sha256'],n
+              p=root/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+          list(concurrent.futures.ThreadPoolExecutor(max_workers=6).map(one,m['files'].items()))
+          assert len(m['files'])==21
+          pathlib.Path('evidence/DEEP_LOCK.json').write_text(json.dumps({'ref':ref,'filesVerified':21,'runtimeModified':False,'manifestSha256':hashlib.sha256(raw).hexdigest()},indent=2))
+          PY
+      - name: Numerical and source syntax tests
+        run: |
+          set -o pipefail
+          node --check stage/ocean-mother/coast-v010/coast-app.mjs
+          node --check stage/ocean-mother/coast-v010/coast-core.mjs
+          node --check stage/ocean-mother/coast-v010/shaders.mjs
+          node --test stage/ocean-mother/coast-tools/core.test.mjs | tee evidence/CORE_TESTS.tap
+      - name: Install browser test environment
+        run: |
+          python3 -m pip install playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Real candidate browser and three presentation modes
+        run: |
+          set -o pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory stage >/tmp/coast-http.log 2>&1 &
+          python3 stage/ocean-mother/coast-tools/browser_qa.py http://127.0.0.1:8765/ocean-mother/coast-v010/ browser-evidence | tee evidence/BROWSER_TESTS.txt
+      - name: Copy machine QA and build metadata
+        if: always()
+        run: |
+          mkdir -p evidence
+          if [ -f browser-evidence/QA.json ]; then cp browser-evidence/QA.json evidence/QA.json; fi
+          if [ -f stage/ocean-mother/coast-v010/build.json ]; then cp stage/ocean-mother/coast-v010/build.json evidence/build.json; fi
+          echo "Source: $COAST_SOURCE_COMMIT. Candidate checks only; public publication and user acceptance are separate." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-candidate-evidence
+          path: evidence/
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-internal-inspection
+          path: browser-evidence/*.png
+          retention-days: 1
+          if-no-files-found: ignore
