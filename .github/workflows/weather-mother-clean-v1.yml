@@ -1,0 +1,142 @@
+name: Weather Mother Clean V1
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/release-clean-v1/build.py
+      - weather-mother/release-clean-v1/qa.py
+      - .github/workflows/weather-mother-clean-v1.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-clean-v1
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build a standalone folder from the exact verified source
+        run: |
+          python weather-mother/release-clean-v1/build.py weather-mother/v062-loop _weather_clean_stage/Weather_Mother_Clean_V1.0.0
+          for f in engine.js field-worker.js motion.js reuse.js; do node --check "_weather_clean_stage/Weather_Mother_Clean_V1.0.0/$f"; done
+      - name: Install browser testing dependencies
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Compare baseline pixels and verify the entire clean workbench
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/weather-clean-http.log 2>&1 &
+          python weather-mother/release-clean-v1/qa.py _weather_clean_stage/Weather_Mother_Clean_V1.0.0 http://127.0.0.1:8765/_weather_clean_stage/Weather_Mother_Clean_V1.0.0/ http://127.0.0.1:8765/weather-mother/v062-loop/
+      - name: Publish only the tested clean folder
+        run: |
+          python - <<'PY'
+          import json,hashlib,shutil
+          from pathlib import Path
+          s=Path('_weather_clean_stage/Weather_Mother_Clean_V1.0.0');d=Path('weather-mother/clean-v1')
+          q=json.loads((s/'QA.json').read_text());assert q['status']=='AUTOMATIC_QA_PASS'
+          h=json.loads((s/'HANDOFF.json').read_text());h['claims']['archiveReady']=True;h['automaticChecksPassed']=len(q['checks']);h['cleanupValidatedAgainstBaseline']=True;(s/'HANDOFF.json').write_text(json.dumps(h,ensure_ascii=False,indent=2)+'\n')
+          m=json.loads((s/'MANIFEST.json').read_text());m['status']='AUTOMATIC_QA_PASS';m['checks']=len(q['checks'])
+          for p in sorted(s.iterdir()):
+            if p.name=='MANIFEST.json':continue
+            b=p.read_bytes();m['files'][p.name]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+          (s/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          if d.exists():
+            assert d.resolve().as_posix().endswith('/weather-mother/clean-v1');shutil.rmtree(d)
+          shutil.copytree(s,d)
+          PY
+          git config user.name 'Weather Mother clean release'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/clean-v1
+          git commit -m 'release(weather-mother): publish tested clean V1 runtime and ocean data contract'
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 3
+          done
+      - name: Verify public file identities
+        run: |
+          python - <<'PY'
+          import json,hashlib,time,urllib.request
+          from pathlib import Path
+          d=Path('weather-mother/clean-v1');m=json.loads((d/'MANIFEST.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/clean-v1/'
+          receipt={}
+          for attempt in range(36):
+            try:
+              for n,f in m['files'].items():
+                req=urllib.request.Request(base+n+'?check='+f['sha256'][:16],headers={'Cache-Control':'no-cache'})
+                with urllib.request.urlopen(req,timeout=20) as r:
+                  b=r.read();sha=hashlib.sha256(b).hexdigest();assert r.status==200 and sha==f['sha256'],n
+                  receipt[n]={'status':200,'bytes':len(b),'sha256':sha}
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==35:raise
+              time.sleep(10)
+          Path('/tmp/weather-clean-public-bytes.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - name: Test the real public clean workbench
+        env:
+          WEATHER_QA_REPORT: /tmp/weather-clean-public-browser.json
+        run: python weather-mother/release-clean-v1/qa.py weather-mother/clean-v1 https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/clean-v1/ https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v062-loop/
+      - name: Finalize one portable ZIP and verify its extracted content
+        run: |
+          python - <<'PY'
+          import json,hashlib,zipfile,shutil
+          from pathlib import Path
+          d=Path('weather-mother/clean-v1');m=json.loads((d/'MANIFEST.json').read_text());q=json.loads(Path('/tmp/weather-clean-public-browser.json').read_text());assert q['status']=='AUTOMATIC_QA_PASS'
+          receipt={'packageVersion':'1.0.0-clean','publicURL':'https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/clean-v1/','runtimeFilesVerified':json.loads(Path('/tmp/weather-clean-public-bytes.json').read_text()),'publicBrowserChecks':len(q['checks']),'publicBrowserStatus':q['status'],'baselinePixelDifference':q.get('acceptedBaselinePixelDifference'),'browser':q['browser']['version'],'renderer':q['browser']['renderer'],'userHardwarePerformanceVerified':False,'aaaQualityApproved':False,'productionReady':False}
+          (d/'PUBLICATION_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          h=json.loads((d/'HANDOFF.json').read_text());h['publicBrowserVerified']=True;h['publicChecksPassed']=len(q['checks']);(d/'HANDOFF.json').write_text(json.dumps(h,ensure_ascii=False,indent=2)+'\n')
+          m['status']='PUBLIC_BROWSER_VERIFIED'
+          for p in sorted(d.iterdir()):
+            if p.name=='MANIFEST.json':continue
+            b=p.read_bytes();m['files'][p.name]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+          (d/'MANIFEST.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          dest=Path('weather-mother/distributions');dest.mkdir(exist_ok=True);zpath=dest/'Weather_Mother_Clean_V1.0.0.zip'
+          with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for p in sorted(d.iterdir()):
+              assert p.is_file() and p.suffix.lower() not in ['.png','.jpg','.jpeg','.hdr','.webp','.exr','.zip']
+              info=zipfile.ZipInfo('Weather_Mother_Clean_V1.0.0/'+p.name,date_time=(2026,9,1,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.external_attr=0o100644<<16;z.writestr(info,p.read_bytes())
+          with zipfile.ZipFile(zpath) as z:
+            assert z.testzip() is None
+            for n,f in m['files'].items():assert hashlib.sha256(z.read('Weather_Mother_Clean_V1.0.0/'+n)).hexdigest()==f['sha256'],n
+            assert len(z.namelist())==len(m['files'])+1
+          summary={'packageVersion':'1.0.0-clean','zipBytes':zpath.stat().st_size,'zipSHA256':hashlib.sha256(zpath.read_bytes()).hexdigest(),'runtimeBytes':m['runtimeBytes'],'fileCount':len(list(d.iterdir())),'uncompressedBytes':sum(p.stat().st_size for p in d.iterdir()),'publicChecksPassed':len(q['checks']),'kernelIdentity':m['kernelIdentity'],'archiveIntegrity':True,'zipRoot':'Weather_Mother_Clean_V1.0.0','experimentalVersionsIncluded':False,'imagesIncluded':False}
+          (dest/'Weather_Mother_Clean_V1.0.0.receipt.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n');print(json.dumps(summary),flush=True)
+          # Replace only the Weather Mother entry and handoff, keeping old refs recoverable.
+          Path('weather-mother/index.html').write_text('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./clean-v1/"><title>Weather Mother Clean V1</title><p><a href="./clean-v1/">打开 Weather Mother 干净工作台</a></p><script>const u=new URL("./clean-v1/",location.href);u.search=location.search;u.hash=location.hash;location.replace(u.href);</script></html>\n')
+          root=json.loads(Path('weather-mother/HANDOFF.json').read_text());root.update({'version':'1.0.0-clean','canonicalEntryCurrentlyResolvesTo':'clean-v1','candidateEntry':h['onlineEntry'],'runtimeDirectory':'weather-mother/clean-v1','runtimeFiles':h['runtimeFiles'],'totalRuntimeSourceBytes':m['runtimeBytes'],'cleanReleaseReceipt':'distributions/Weather_Mother_Clean_V1.0.0.receipt.json','portablePackage':'distributions/Weather_Mother_Clean_V1.0.0.zip','publicationStatus':'PUBLIC_BROWSER_VERIFIED','pendingResearchDeferred':True,'cleanReleaseHandoff':'clean-v1/HANDOFF.json','retainedHistory':'V061 and V062 remain recoverable; no experimental versions in clean ZIP; unrelated production lines untouched.'});Path('weather-mother/HANDOFF.json').write_text(json.dumps(root,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add weather-mother/clean-v1 weather-mother/distributions/Weather_Mother_Clean_V1.0.0.zip weather-mother/distributions/Weather_Mother_Clean_V1.0.0.receipt.json weather-mother/index.html weather-mother/HANDOFF.json
+          git commit -m 'release(weather-mother): close verified clean package and route canonical entry'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Weather-Mother-Clean-V1.0.0
+          retention-days: 30
+          path: |
+            weather-mother/distributions/Weather_Mother_Clean_V1.0.0.zip
+            weather-mother/distributions/Weather_Mother_Clean_V1.0.0.receipt.json
+            _weather_clean_stage/Weather_Mother_Clean_V1.0.0/QA.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother clean release' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Single runtime. Accepted density and optical kernels unchanged. No image assets or unfinished V063 experiments in ZIP. Ocean environment data interface only; no ocean renderer claimed.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f weather-mother/distributions/Weather_Mother_Clean_V1.0.0.receipt.json ]; then cat weather-mother/distributions/Weather_Mother_Clean_V1.0.0.receipt.json >> "$GITHUB_STEP_SUMMARY"; fi
