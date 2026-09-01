@@ -1,0 +1,38 @@
+name: Ocean Mother store exact clean full package
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-store-clean-package.yml]
+permissions:
+  contents: write
+concurrency:
+  group: ocean-mother-store-clean-package
+  cancel-in-progress: false
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Restore exact delivered text sources, verify and store archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, base64, zlib, hashlib, zipfile, urllib.request, concurrent.futures, subprocess, pathlib, sys
+          REPO = 'haihao0307/guilin-dem-pipeline'
+          BRANCH = 'work/ocean-mother-handoff-20260901'
+          assert os.environ['GITHUB_REPOSITORY'] == REPO
+          assert os.environ['GITHUB_REF'] == 'refs/heads/' + BRANCH
+          HEAD = os.environ['GITHUB_SHA']
+          NAME = 'Ocean_Mother_Full_Clean_V0.1.0_2026-09-01'
+          EXPECTED = '4719ed2f4cba56fa7795eae052cc6d809cc620e970f72620d095b23b5308306b'
+          ARCHIVE_BLOB = '95e8a95062ce645a8c71181b40c58f1081dd1281'
+          SOURCE_PATH = 'ocean-mother/clean-full-v010'
+          ZIP_PATH = 'ocean-mother/distributions/' + NAME + '.zip'
+          # Losslessly encoded copies of the ten packaging-only text files.
+          # The other 36 files are fetched by their existing, locked Git blob IDs.
+          PAYLOAD = '''eNrVfXt3E8eW71fpyay7ZJ8j2/1+kJB1HTAJEx6+2EnuuSHLU91VbWsiSxpJBjyZ3AVJeIZXHkAIJEACgZOERxJCwIbwYcaS7b/OV5jfrmpJLdsSDhAvT846WOqurtq1n79dVer93guDrw7tGB3pn+QvbHjhn7WdkWAFbXuxOiHKWu3gjcXDp2rHD9ZPXpufvbnw+4P5M8d3F3YXagePLNyeNjr02tGsIj//X/gOvDe7YvHPLlv5/qxQL+Dqy841dm4bGa3c9Lq89I+Hx2uHTtSPH52bna0du4IeaqfOau8Winvzgo+Lgcq7uXy+MlAkEvomWXWirzQxXclFlYGR17du26bGaDWPioVqmUXVysDOTUODO8Ze37HzrW1Dm18dGtuGsIj//X/gOvDe7YvHPLlv5/qxQL+Dqy841dm4bGa3c9Lq89I+Hx2uHTtSPH52bna0du4IeaqfOau8Winvzgo+Lgcq7uXy+MlAkEvomWXWirzQxXclFlYGR17du26bGaDWPioVqmUXVysDOTUODO8Ze37HzrW1Dm18dGtu''' 
+          # A missing or corrupted transport payload must stop before any write.
+          raw = zlib.decompress(base64.b64decode(PAYLOAD))
+          assert hashlib.sha256(raw).hexdigest() == 'eded98b9c6dc11c2c9859c45435e373cc67c0032c3f60845863fb3d6f1f20cca'
+          PY
