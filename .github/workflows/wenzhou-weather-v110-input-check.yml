@@ -1,0 +1,66 @@
+name: Wenzhou Weather V110 pinned input check
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-weather-v110-input-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200
+      - name: Acquire exact version without modifying upstream
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import hashlib, json, shutil, stat, urllib.request, zipfile
+          from datetime import datetime, timezone
+          out=Path('/tmp/wenzhou-weather-inputs');out.mkdir()
+          ref='fa69b5c7fed1a71339127776d0f3e44f9152c5a0'
+          prefix='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+ref+'/'
+          name='Weather_Mother_Full_Clean_V1.1.0.zip'
+          url=prefix+'weather-mother/distributions/'+name
+          with urllib.request.urlopen(url,timeout=60) as r:data=r.read()
+          digest=hashlib.sha256(data).hexdigest()
+          assert len(data)==46075 and digest=='ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e'
+          archive=out/name;archive.write_bytes(data)
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None
+              for i in z.infolist():
+                  p=PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts and not stat.S_ISLNK(i.external_attr>>16)
+              z.extractall(out/'weather')
+          manifests=list((out/'weather').rglob('MANIFEST.json'));assert len(manifests)==1
+          manifest=manifests[0];base=manifest.parent
+          assert hashlib.sha256(manifest.read_bytes()).hexdigest()=='a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b'
+          rows=[]
+          for f in sorted(base.rglob('*')):
+              if f.is_file():rows.append({'path':f.relative_to(base).as_posix(),'bytes':f.stat().st_size,'sha256':hashlib.sha256(f.read_bytes()).hexdigest()})
+          shutil.copytree('projects/wenzhou/v200/web/v7-full',out/'wenzhou-full-source')
+          for f in ['site/runtime.js','site/math.js','build_vectors.py']:
+              src=Path('projects/wenzhou/v200/web/v7')/f
+              if src.is_file():
+                  dst=out/'wenzhou-v7-source'/f;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dst)
+          # Existing vector result, pinned to a verified published build. Do not reacquire different water topology.
+          vector_url=prefix+'wenzhou-v7/data/vectors.json.gz'
+          with urllib.request.urlopen(vector_url,timeout=90) as r:vec=r.read()
+          (out/'wenzhou-vectors.json.gz').write_bytes(vec)
+          report={'schema':'wenzhou-weather-v110-input-check-1','checkedUtc':datetime.now(timezone.utc).isoformat(),'sourceCommit':__import__('os').environ['GITHUB_SHA'],'upstreamReadRef':ref,'zipUrl':url,'zipBytes':len(data),'zipSha256':digest,'zipCrcPassed':True,'manifestSha256':hashlib.sha256(manifest.read_bytes()).hexdigest(),'files':rows,'vectorBytes':len(vec),'vectorSha256':hashlib.sha256(vec).hexdigest(),'attachmentBytesCompared':False,'weatherSourceModified':False,'demModified':False,'deploymentPerformed':False,'visualApproved':False,'productionApproved':False}
+          (out/'INPUT_CHECK.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
+          print(json.dumps(report,indent=2,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-weather-v110-pinned-inputs
+          path: /tmp/wenzhou-weather-inputs
+          retention-days: 30
+          if-no-files-found: error
