@@ -1,0 +1,7 @@
+uniform float encodedEnv;
+void main(){vec2 uv=gl_FragCoord.xy/uRes;float a=(uv.x-.5)*6.28318530718,e=uv.y*uv.y*1.57079632679;vec3 rd=vec3(sin(a)*cos(e),sin(e),-cos(a)*cos(e)),ro=uCamera;float opaque=100.;
+vec2 seg[9];int ns=0;for(int k=0;k<9;k++){if(k>=uGroups)break;vec2 b=bounds(ro,rd,uLo[k]+uWind,uHi[k]+uWind);b=vec2(max(b.x,0.),min(b.y,opaque));if(b.y>b.x){seg[ns]=b;ns++;}}
+for(int k=1;k<9;k++){if(k>=ns)break;vec2 s=seg[k];int j=k-1;for(int z=0;z<9;z++){if(j<0)break;if(seg[j].x<=s.x)break;seg[j+1]=seg[j];j--;}seg[j+1]=s;}
+int nc=0;vec2 merged[9];for(int k=0;k<9;k++){if(k>=ns)break;if(nc==0){merged[0]=seg[k];nc=1;}else if(seg[k].x<=merged[nc-1].y)merged[nc-1].y=max(merged[nc-1].y,seg[k].y);else{merged[nc]=seg[k];nc++;}}
+float total=0.;for(int k=0;k<9;k++){if(k>=nc)break;total+=merged[k].y-merged[k].x;}vec3 light=vec3(0);float tr=1.;if(nc>0){float ds=total/float(uSteps);int span=0;float edge=merged[0].x;for(int j=0;j<400;j++){if(span>=nc||tr<.004)break;float len=min(ds,merged[span].y-edge);if(len<=1e-6){span++;if(span<nc)edge=merged[span].x;continue;}float t=edge+len*.5;vec3 p=ro+rd*t;sampleFootprint=max(t*6.28318/uRes.x,len*.35);float d=densityAt(p,true);if(d>.001){float alpha=1.-exp(-d*len*2.4);vec3 li=incident(p,rd,d);li=mix(li,sky(rd),1.-exp(-t*.006*(.6+uLight.w)));light+=tr*alpha*li;tr*=1.-alpha;}edge+=len;if(edge>=merged[span].y-1e-5){span++;if(span<nc)edge=merged[span].x;}}}
+if(encodedEnv>.5)light/=1.+light;fragColor=vec4(light,tr);}

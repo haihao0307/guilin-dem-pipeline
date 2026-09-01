@@ -1,0 +1,5 @@
+/* Configuration-only UI. No external services, image exports or scene assets. */
+(()=>{'use strict';const $=id=>document.getElementById(id),status=$('configStatus');function api(){const a=window.WeatherMother;if(!a?.getConfiguration||!a.qa.ready)throw Error('云场仍在初始化，请稍后操作');return a;}
+$('saveConfig').onclick=()=>{try{const value=api().getConfiguration(),blob=new Blob([JSON.stringify(value,null,2)+'\n'],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='weather-mother-'+value.seed+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);status.textContent='已保存天气参数，未保存任何图像。';}catch(e){status.textContent=e.message;}};
+$('loadConfig').onclick=()=>$('configFile').click();$('configFile').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>131072)throw Error('参数文件超过 128 KB，已拒绝。');const value=JSON.parse(await file.text());api().applyConfiguration(value);status.textContent='参数已通过校验，正在重新生成同种子云场。';}catch(e){status.textContent='载入未完成：'+e.message;}finally{e.target.value='';}};
+})();
