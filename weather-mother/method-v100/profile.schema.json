@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "motherId": {
+      "const": "Weather Mother"
+    },
+    "entityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-zA-Z0-9_:-]+$"
+    },
+    "profileVersion": {
+      "const": "wm-method-profile-0.1.0"
+    },
+    "generatorVersion": {
+      "const": "clean-1.0.0-worker+wm-method-0.1.0"
+    },
+    "masterSeed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "humidity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "cloudSpeedMps": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 80
+    },
+    "windFromDegrees": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360
+    },
+    "relaxationSeconds": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "initialConcentration": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1.2
+    },
+    "physicalTime": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 86400
+    },
+    "visualApproved": {
+      "const": false
+    },
+    "productionApproved": {
+      "const": false
+    }
+  },
+  "required": [
+    "motherId",
+    "entityId",
+    "profileVersion",
+    "generatorVersion",
+    "masterSeed",
+    "humidity",
+    "cloudSpeedMps",
+    "windFromDegrees",
+    "relaxationSeconds",
+    "initialConcentration",
+    "physicalTime",
+    "visualApproved",
+    "productionApproved"
+  ],
+  "additionalProperties": false
+}

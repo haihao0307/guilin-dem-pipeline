@@ -1,0 +1,703 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:weather-mother:local-policy-mirror:1.0.0-local.1",
+  "type": "object",
+  "properties": {
+    "policyId": {
+      "const": "MOTHER_UNIFIED_EVOLUTION_POLICY",
+      "type": "string"
+    },
+    "version": {
+      "const": "1.0.0",
+      "type": "string"
+    },
+    "policyState": {
+      "const": "candidate_for_user_review",
+      "type": "string"
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "coreChangeRequiresUserApproval": {
+          "const": true,
+          "type": "boolean"
+        },
+        "localProfileMayOverrideCore": {
+          "const": false,
+          "type": "boolean"
+        },
+        "unknownKeys": {
+          "const": "reject",
+          "type": "string"
+        },
+        "ruleConflict": {
+          "const": "block_and_report",
+          "type": "string"
+        },
+        "repositoryReadBeforeWrite": {
+          "const": true,
+          "type": "boolean"
+        },
+        "repositoryWriteScope": {
+          "const": "explicit_task_allowlist",
+          "type": "string"
+        },
+        "crossMotherWriteWithoutAuthorization": {
+          "const": false,
+          "type": "boolean"
+        },
+        "knowledgeSync": {
+          "const": "versioned_files_with_adoption_receipts",
+          "type": "string"
+        }
+      },
+      "required": [
+        "coreChangeRequiresUserApproval",
+        "localProfileMayOverrideCore",
+        "unknownKeys",
+        "ruleConflict",
+        "repositoryReadBeforeWrite",
+        "repositoryWriteScope",
+        "crossMotherWriteWithoutAuthorization",
+        "knowledgeSync"
+      ],
+      "additionalProperties": false
+    },
+    "worldModel": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "const": [
+            "shape",
+            "structure",
+            "material",
+            "surface",
+            "environment",
+            "history",
+            "presentation"
+          ],
+          "type": "array"
+        },
+        "objectIsTimeIndexedState": {
+          "const": true,
+          "type": "boolean"
+        },
+        "causalModelRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "allChangeMustBeModeledAsWave": {
+          "const": false,
+          "type": "boolean"
+        },
+        "noiseMayReplaceAllDynamics": {
+          "const": false,
+          "type": "boolean"
+        },
+        "physicalClaimsRequireEvidence": {
+          "const": true,
+          "type": "boolean"
+        },
+        "unresolvedCausesMustBeLabeled": {
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scope",
+        "objectIsTimeIndexedState",
+        "causalModelRequired",
+        "allChangeMustBeModeledAsWave",
+        "noiseMayReplaceAllDynamics",
+        "physicalClaimsRequireEvidence",
+        "unresolvedCausesMustBeLabeled"
+      ],
+      "additionalProperties": false
+    },
+    "causality": {
+      "type": "object",
+      "properties": {
+        "initialStateRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "driverHistoryRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "boundaryConditionsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "effectToCauseLinksRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "sharedCauseStateAcrossOutputs": {
+          "const": true,
+          "type": "boolean"
+        },
+        "fieldMetadataRequired": {
+          "const": [
+            "quantity",
+            "unit",
+            "coordinateSpace",
+            "spatialScale",
+            "temporalCorrelation",
+            "bounds",
+            "source",
+            "uncertainty"
+          ],
+          "type": "array"
+        },
+        "processMetadataRequired": {
+          "const": [
+            "inputs",
+            "outputs",
+            "units",
+            "validScale",
+            "updateRule",
+            "boundaryConditions",
+            "calibrationStatus"
+          ],
+          "type": "array"
+        },
+        "conservationChecks": {
+          "const": "required_where_applicable_with_reasoned_exemptions",
+          "type": "string"
+        }
+      },
+      "required": [
+        "initialStateRequired",
+        "driverHistoryRequired",
+        "boundaryConditionsRequired",
+        "effectToCauseLinksRequired",
+        "sharedCauseStateAcrossOutputs",
+        "fieldMetadataRequired",
+        "processMetadataRequired",
+        "conservationChecks"
+      ],
+      "additionalProperties": false
+    },
+    "time": {
+      "type": "object",
+      "properties": {
+        "distinctClocks": {
+          "const": [
+            "physicalTime",
+            "solverStep",
+            "displayTime"
+          ],
+          "type": "array"
+        },
+        "playbackSpeedMayChangePhysics": {
+          "const": false,
+          "type": "boolean"
+        },
+        "ageRequiresHistoryEvaluation": {
+          "const": true,
+          "type": "boolean"
+        },
+        "rewindRequiresReplayOrCheckpoint": {
+          "const": true,
+          "type": "boolean"
+        },
+        "irreversibleDamageMayResetByDrying": {
+          "const": false,
+          "type": "boolean"
+        },
+        "uncalibratedAgingLabel": {
+          "const": "illustrative_not_calibrated",
+          "type": "string"
+        },
+        "solveFullHistoryEveryRenderFrame": {
+          "const": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "distinctClocks",
+        "playbackSpeedMayChangePhysics",
+        "ageRequiresHistoryEvaluation",
+        "rewindRequiresReplayOrCheckpoint",
+        "irreversibleDamageMayResetByDrying",
+        "uncalibratedAgingLabel",
+        "solveFullHistoryEveryRenderFrame"
+      ],
+      "additionalProperties": false
+    },
+    "noise": {
+      "type": "object",
+      "properties": {
+        "masterSeedRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "stableEntityAndProcessNamespaces": {
+          "const": true,
+          "type": "boolean"
+        },
+        "hashPrngAndGeneratorVersionsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "independentRandomStreamsPerProcess": {
+          "const": true,
+          "type": "boolean"
+        },
+        "reseedingEveryFrame": {
+          "const": false,
+          "type": "boolean"
+        },
+        "noiseMayOverrideMeasuredTruth": {
+          "const": false,
+          "type": "boolean"
+        },
+        "sharedCoordinatesAtTileBoundaries": {
+          "const": true,
+          "type": "boolean"
+        },
+        "spatialAndTemporalFrequencyBudgetsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "reproducibility": {
+          "const": "same_inputs_versions_history_and_solver_settings",
+          "type": "string"
+        },
+        "crossGpuBitwiseIdentityAssumed": {
+          "const": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "masterSeedRequired",
+        "stableEntityAndProcessNamespaces",
+        "hashPrngAndGeneratorVersionsRequired",
+        "independentRandomStreamsPerProcess",
+        "reseedingEveryFrame",
+        "noiseMayOverrideMeasuredTruth",
+        "sharedCoordinatesAtTileBoundaries",
+        "spatialAndTemporalFrequencyBudgetsRequired",
+        "reproducibility",
+        "crossGpuBitwiseIdentityAssumed"
+      ],
+      "additionalProperties": false
+    },
+    "truth": {
+      "type": "object",
+      "properties": {
+        "measuredSourceImmutable": {
+          "const": true,
+          "type": "boolean"
+        },
+        "sourceIdentityAndUnitsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "inventMissingMeasuredData": {
+          "const": false,
+          "type": "boolean"
+        },
+        "syntheticDetailMustBeLabeled": {
+          "const": true,
+          "type": "boolean"
+        },
+        "measuredAndGeneratedLayersSeparate": {
+          "const": true,
+          "type": "boolean"
+        },
+        "subdivisionMayClaimNewMeasuredResolution": {
+          "const": false,
+          "type": "boolean"
+        },
+        "domainFrozenConstraintsRemainBinding": {
+          "const": true,
+          "type": "boolean"
+        },
+        "externalAssetsRequireExplicitDomainAuthorization": {
+          "const": true,
+          "type": "boolean"
+        },
+        "sourceFilesMayBeDeletedByThisPolicy": {
+          "const": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "measuredSourceImmutable",
+        "sourceIdentityAndUnitsRequired",
+        "inventMissingMeasuredData",
+        "syntheticDetailMustBeLabeled",
+        "measuredAndGeneratedLayersSeparate",
+        "subdivisionMayClaimNewMeasuredResolution",
+        "domainFrozenConstraintsRemainBinding",
+        "externalAssetsRequireExplicitDomainAuthorization",
+        "sourceFilesMayBeDeletedByThisPolicy"
+      ],
+      "additionalProperties": false
+    },
+    "domains": {
+      "type": "object",
+      "properties": {
+        "sharedInterfacesNotSharedDomainPhysics": {
+          "const": true,
+          "type": "boolean"
+        },
+        "familyDefaultsMustRemainIsolated": {
+          "const": true,
+          "type": "boolean"
+        },
+        "explicitUnitConversionsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "crossDomainSourceOverwrite": {
+          "const": false,
+          "type": "boolean"
+        },
+        "proceduralSourceRemainsAuthoritative": {
+          "const": true,
+          "type": "boolean"
+        },
+        "derivedCachesRequireVersionAndHash": {
+          "const": true,
+          "type": "boolean"
+        },
+        "rendererAdapterMustDeclareCapabilities": {
+          "const": true,
+          "type": "boolean"
+        },
+        "unsupportedCapability": {
+          "const": "block_or_explicitly_labeled_preview",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sharedInterfacesNotSharedDomainPhysics",
+        "familyDefaultsMustRemainIsolated",
+        "explicitUnitConversionsRequired",
+        "crossDomainSourceOverwrite",
+        "proceduralSourceRemainsAuthoritative",
+        "derivedCachesRequireVersionAndHash",
+        "rendererAdapterMustDeclareCapabilities",
+        "unsupportedCapability"
+      ],
+      "additionalProperties": false
+    },
+    "presentation": {
+      "type": "object",
+      "properties": {
+        "requiredModes": {
+          "const": [
+            "neutral_inspection",
+            "studio_beauty",
+            "diagnostic"
+          ],
+          "type": "array"
+        },
+        "contextModeWhenApplicable": {
+          "const": true,
+          "type": "boolean"
+        },
+        "studioLightRoles": {
+          "const": [
+            "key",
+            "fill",
+            "rim"
+          ],
+          "type": "array"
+        },
+        "keyFillRimControlsIndependent": {
+          "const": true,
+          "type": "boolean"
+        },
+        "lightTemperatureKelvinWhenSupported": {
+          "const": true,
+          "type": "boolean"
+        },
+        "lightUnitAndColorConversionMustBeDeclared": {
+          "const": true,
+          "type": "boolean"
+        },
+        "neutralInspection": {
+          "type": "object",
+          "properties": {
+            "autoExposure": {
+              "const": false,
+              "type": "boolean"
+            },
+            "fixedWhiteBalance": {
+              "const": true,
+              "type": "boolean"
+            },
+            "fixedToneMapping": {
+              "const": true,
+              "type": "boolean"
+            },
+            "fixedComparisonCamera": {
+              "const": true,
+              "type": "boolean"
+            },
+            "beautificationFilters": {
+              "const": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "autoExposure",
+            "fixedWhiteBalance",
+            "fixedToneMapping",
+            "fixedComparisonCamera",
+            "beautificationFilters"
+          ],
+          "additionalProperties": false
+        },
+        "beautyMayModifyGeometryOrMaterialSource": {
+          "const": false,
+          "type": "boolean"
+        },
+        "beautyAloneMayPassAcceptance": {
+          "const": false,
+          "type": "boolean"
+        },
+        "renderSettingsAndNativePixelSizeRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "imageUpscalingMayClaimNativeResolution": {
+          "const": false,
+          "type": "boolean"
+        },
+        "onlineViewerRequiresRealAccessCheck": {
+          "const": true,
+          "type": "boolean"
+        },
+        "runtimeAndDeploymentHeadMustBeReported": {
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "requiredModes",
+        "contextModeWhenApplicable",
+        "studioLightRoles",
+        "keyFillRimControlsIndependent",
+        "lightTemperatureKelvinWhenSupported",
+        "lightUnitAndColorConversionMustBeDeclared",
+        "neutralInspection",
+        "beautyMayModifyGeometryOrMaterialSource",
+        "beautyAloneMayPassAcceptance",
+        "renderSettingsAndNativePixelSizeRequired",
+        "imageUpscalingMayClaimNativeResolution",
+        "onlineViewerRequiresRealAccessCheck",
+        "runtimeAndDeploymentHeadMustBeReported"
+      ],
+      "additionalProperties": false
+    },
+    "knowledge": {
+      "type": "object",
+      "properties": {
+        "sourceProvenanceRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "mechanismAndLimitationsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "minimalReproductionBeforeAdoption": {
+          "const": true,
+          "type": "boolean"
+        },
+        "distilledOperatorRequiresVersionAndTests": {
+          "const": true,
+          "type": "boolean"
+        },
+        "tutorialAppearanceEqualsValidation": {
+          "const": false,
+          "type": "boolean"
+        },
+        "documentReadEqualsRuntimeIntegration": {
+          "const": false,
+          "type": "boolean"
+        },
+        "chatPromiseEqualsCrossWindowSync": {
+          "const": false,
+          "type": "boolean"
+        },
+        "substanceNodeMethodMayOverrideDomainTruth": {
+          "const": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sourceProvenanceRequired",
+        "mechanismAndLimitationsRequired",
+        "minimalReproductionBeforeAdoption",
+        "distilledOperatorRequiresVersionAndTests",
+        "tutorialAppearanceEqualsValidation",
+        "documentReadEqualsRuntimeIntegration",
+        "chatPromiseEqualsCrossWindowSync",
+        "substanceNodeMethodMayOverrideDomainTruth"
+      ],
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "loadPolicyBeforeGenerationParameterMutationExportAndRelease": {
+          "const": true,
+          "type": "boolean"
+        },
+        "schemaValidationRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "runtimeSemanticTestsRequired": {
+          "const": true,
+          "type": "boolean"
+        },
+        "missingRequiredEvidence": {
+          "const": "block_acceptance",
+          "type": "string"
+        },
+        "skippedEqualsPassed": {
+          "const": false,
+          "type": "boolean"
+        },
+        "previewAllowedWhenAcceptanceBlocked": {
+          "const": true,
+          "type": "boolean"
+        },
+        "previewMustShowBlockedStatus": {
+          "const": true,
+          "type": "boolean"
+        },
+        "requiredEvidence": {
+          "const": [
+            "source_identity",
+            "effective_parameters",
+            "seed_lineage",
+            "causal_outputs",
+            "time_history",
+            "neutral_view",
+            "beauty_view",
+            "diagnostic_view",
+            "browser_log",
+            "build_identity"
+          ],
+          "type": "array"
+        },
+        "automatedPassEqualsVisualApproval": {
+          "const": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "loadPolicyBeforeGenerationParameterMutationExportAndRelease",
+        "schemaValidationRequired",
+        "runtimeSemanticTestsRequired",
+        "missingRequiredEvidence",
+        "skippedEqualsPassed",
+        "previewAllowedWhenAcceptanceBlocked",
+        "previewMustShowBlockedStatus",
+        "requiredEvidence",
+        "automatedPassEqualsVisualApproval"
+      ],
+      "additionalProperties": false
+    },
+    "approvals": {
+      "type": "object",
+      "properties": {
+        "defaultVisualApproved": {
+          "const": false,
+          "type": "boolean"
+        },
+        "defaultProductionApproved": {
+          "const": false,
+          "type": "boolean"
+        },
+        "assistantMaySelfGrantHumanApproval": {
+          "const": false,
+          "type": "boolean"
+        },
+        "approvalRequiresUserRecordAndExactBuild": {
+          "const": true,
+          "type": "boolean"
+        },
+        "materialChangesInvalidateAffectedApproval": {
+          "const": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "defaultVisualApproved",
+        "defaultProductionApproved",
+        "assistantMaySelfGrantHumanApproval",
+        "approvalRequiresUserRecordAndExactBuild",
+        "materialChangesInvalidateAffectedApproval"
+      ],
+      "additionalProperties": false
+    },
+    "adoption": {
+      "type": "object",
+      "properties": {
+        "requiredReceipt": {
+          "const": [
+            "motherId",
+            "repository",
+            "branch",
+            "commit",
+            "policyVersion",
+            "policySha256",
+            "schemaSha256",
+            "validatorSha256",
+            "runtimeEntryPoints",
+            "tests",
+            "evidence",
+            "unresolvedItems"
+          ],
+          "type": "array"
+        },
+        "claimIntegratedWithoutReceipt": {
+          "const": false,
+          "type": "boolean"
+        },
+        "existingApprovedAssetsMayBeRegeneratedAutomatically": {
+          "const": false,
+          "type": "boolean"
+        },
+        "coreVersionMismatch": {
+          "const": "block_and_report",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requiredReceipt",
+        "claimIntegratedWithoutReceipt",
+        "existingApprovedAssetsMayBeRegeneratedAutomatically",
+        "coreVersionMismatch"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "policyId",
+    "version",
+    "policyState",
+    "authority",
+    "worldModel",
+    "causality",
+    "time",
+    "noise",
+    "truth",
+    "domains",
+    "presentation",
+    "knowledge",
+    "validation",
+    "approvals",
+    "adoption"
+  ],
+  "additionalProperties": false
+}
