@@ -1,19 +1,21 @@
 # Ocean Mother 工作边界
 
-当前接续入口为 WORKING_STATE.md。此前阶段状态以各自提交为历史记录；本次资料接收更新见 adoption/SOURCE_RECEPTION_0.2.0.json。
+当前接续入口为 WORKING_STATE.md。此前阶段状态以各自提交为历史记录；资料接收更新见 adoption/SOURCE_RECEPTION_0.2.0.json，公开候选核验见 adoption/LIVE_WORKBENCH_RECEIPT.json。
 
-每次开工先读 README.md、adoption/UNIFIED_METHOD_V1_INTAKE.json、adoption/UNIFIED_METHOD_V1_MAPPING.md、skills/ocean-math-physics/SKILL.md、contracts/OCEAN_KNOWLEDGE_CONTRACT.json、bridge-v1/UPSTREAM_LOCK.json 和本轮任务。
+用户交付只使用可打开、可交互的在线 HTML 工作台。不得交付概念图、截图、图片式看板或离线 HTML。不得把生成图片中的网址、提交、功能、测试和性能描述当作事实或证据。内部自动化像素对比可用于测试，不向用户展示截图作为成果。未来提供链接前检查实际公开页面、关键资源及浏览器交互，并记录精确候选身份。
 
-只在 work/ocean-mother-handoff-20260901 延续，先核对远端。main、gh-pages、冻结天气、权威真值和其他生产线不改，不强推、不改历史、不自动合并旧 Ocean 分支。
+每次开工先读 README.md、adoption/UNIFIED_METHOD_V1_INTAKE.json、adoption/UNIFIED_METHOD_V1_MAPPING.md、skills/ocean-math-physics/SKILL.md、contracts/OCEAN_KNOWLEDGE_CONTRACT.json、bridge-v1/UPSTREAM_LOCK.json 和本轮任务。旧接收回执不覆盖较新的来源记录。
 
-共同方法论目标版本 1.0.0；17 节全文与嵌入 JSON 已读并归档为接收文本副本，原附件字节身份、严格 Schema 与脚本仍未核验，正式接入阻断。不得自行重写、简化或覆盖共同核心。保留原候选状态，不把资料接收改成已运行。
+只在 work/ocean-mother-handoff-20260901 延续，先核对远端。main、gh-pages、冻结天气、权威真值和其他生产线不手工改，不强推、不改历史、不自动合并旧 Ocean 分支。当前公开候选仅完成只读复核，没有自动合并到本分支。
 
-当前已归档知识和资料接收证据，尚未执行海面、船只或刚体求解器。外部资料只保留数学、物理、数据流与验证方法。生产文件不保留外部产品、课程、演示名称，不复制演示代码。共同核心原字段及引用不受本线名称清理改写。
+共同方法论目标版本 1.0.0；17 节全文与嵌入 JSON 已读并归档为接收文本副本，原附件字节身份、严格 Schema 与脚本仍未核验，正式接入阻断。不得自行重写、简化或覆盖共同核心。保留原候选状态，不把资料接收改成已运行。可按共同规则展示明确未获批准的研究预览。
+
+本分支已归档知识和只读天气桥接。已发现并重新核验的公开海洋候选与本分支运行接入的进度分开记录。外部资料只保留数学、物理、数据流与验证方法。生产文件不保留外部产品、课程、演示名称，不复制演示代码。共同核心原字段及引用不受本线名称清理改写。
 
 禁止加载、生成、保存、内嵌图片贴图、法线图、噪声图、图集与预烘焙环境图。临时 GPU 缓冲不作为资产或物理真值，冻结天气不改。来源中性编号和定位哈希仍依赖研究对话，完整独立来源回溯列为待补。
 
-中性检查、工作室打光、诊断三模式都必须验证，目前均未实现。固定中性对照条件，展示不回写物体或共享环境。无作用的控件不得伪装完成功能。
+中性检查、工作室打光、诊断三模式都必须验证，完整接入仍待完成。固定中性对照条件，展示不回写物体或共享环境。无作用的控件不得伪装完成功能。
 
-提交前运行 tools/validate_knowledge.py、tools/validate_intake.py 与 tests/ 中的测试。前两者只做静态知识和回执检查，未接入远端 CI、发布入口或运行时。原共同 Schema 与原校验器不可被这些脚本冒充。
+涉及知识或接收记录的修改，运行 tools/validate_knowledge.py、tools/validate_intake.py 与对应测试；它们只做静态知识和历史回执检查，不代表运行或发布验收。原共同 Schema 与原校验器不可被这些脚本冒充。公开浏览器复核由 .github/workflows/ocean-mother-live-link-check.yml 只读执行。
 
 历史测试、当前静态测试、数学验证、真实浏览器、公开部署和用户批准分别记录。所有视觉与生产批准继续 false，直到有用户记录及精确构建。
