@@ -1,0 +1,80 @@
+name: Ocean Mother R006 reference operators
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths:
+      - ocean-mother/labs/r006-reference-v010/**
+      - ocean-mother/research/R006_*.json
+      - ocean-mother/research/R006_*.md
+      - .github/workflows/ocean-mother-r006-reference.yml
+permissions:
+  contents: read
+concurrency:
+  group: ocean-r006-reference
+  cancel-in-progress: true
+jobs:
+  reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Read this exact commit and validate executable identities
+        run: |
+          python3 - <<'PY'
+          import os,json,hashlib,pathlib,urllib.request
+          repo='haihao0307/guilin-dem-pipeline';head=os.environ['GITHUB_SHA']
+          assert os.environ['GITHUB_REPOSITORY']==repo
+          assert os.environ['GITHUB_REF']=='refs/heads/work/ocean-mother-handoff-20260901'
+          prefix='ocean-mother/labs/r006-reference-v010/'
+          def read(path):
+              with urllib.request.urlopen('https://raw.githubusercontent.com/'+repo+'/'+head+'/'+path,timeout=45) as r:
+                  assert r.status==200;return r.read()
+          def store(path):
+              b=read(path);p=pathlib.Path(path);p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b);return b
+          v=json.loads(store(prefix+'evidence/VERIFICATION.json'))
+          names={'pressure-projection.mjs','particle-transfer.mjs','boundary-geometry.mjs','fracture-solid.mjs','reference.test.mjs','audit-baseline.mjs'}
+          assert set(v['files'])==names
+          for n in sorted(names):
+              b=store(prefix+n);e=v['files'][n]
+              assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],n
+              assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()==e['gitBlobSha'],n
+          for field in ('testLog','auditLog'):
+              e=v[field];b=store(prefix+e['path']);assert hashlib.sha256(b).hexdigest()==e['sha256']
+          for n in ['coast-core.mjs','coast-app.mjs','shaders.mjs','policy.json']:
+              store('ocean-mother/coast-v010/'+n)
+          for n in ['R006_READING_LEDGER.json','R006_MANUAL_TO_REPLICATION.md']:
+              store('ocean-mother/research/'+n)
+          ledger=json.loads(pathlib.Path('ocean-mother/research/R006_READING_LEDGER.json').read_text())
+          assert ledger['allProductManualsReadCompletely'] is False and ledger['thirdPartyProgramExecuted'] is False
+          for s in ledger['sources']:assert hashlib.sha256(s['url'].encode()).hexdigest()==s['locatorSha256']
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/IDENTITY.json').write_text(json.dumps({'head':head,'executableFilesChecked':len(names),'localEvidenceHashesVerified':2,'writeScope':'local runner only','publicRuntimeChanged':False,'visualApproved':False,'productionApproved':False},indent=2))
+          PY
+      - name: Run independent operators and reproduce the old boundary defects
+        run: |
+          set -o pipefail
+          node --version | tee evidence/NODE_VERSION.txt
+          node --test ocean-mother/labs/r006-reference-v010/reference.test.mjs | tee evidence/REFERENCE_TESTS.tap
+          node ocean-mother/labs/r006-reference-v010/audit-baseline.mjs ocean-mother/coast-v010 evidence/BASELINE_AND_REFERENCE.json
+          python3 - <<'PY'
+          import json,pathlib,os
+          text=pathlib.Path('evidence/REFERENCE_TESTS.tap').read_text()
+          assert '# tests 23' in text and '# pass 23' in text and '# fail 0' in text and '# skipped 0' in text
+          r=json.loads(pathlib.Path('evidence/BASELINE_AND_REFERENCE.json').read_text())
+          assert r['baselineFindings']['waterSurface']['openEdges']==704
+          assert abs(max(x['maxAbsGapM'] for x in r['baselineFindings']['slab']['perimeterErrors'])-.29296964406967163)<1e-9
+          assert r['baselineFindings']['spray']['remainingAfterOneStep']==1
+          assert r['referenceResults']['closedBedPrototype']['closed'] is True
+          p=r['referenceResults']['macProjection'];assert p['accepted'] and p['afterMaxDivergence']<1e-8 and p['blockedNormalFluxM3s']==0
+          assert r['referenceResults']['enlargementProbe']['physicalTimeS']==2
+          out={'status':'REFERENCE_OPERATORS_PASS_BASELINE_DEFECTS_REPRODUCED','head':os.environ['GITHUB_SHA'],'runId':int(os.environ['GITHUB_RUN_ID']),'passed':23,'failed':0,'skipped':0,'sourceIdentityChecks':6,'baselineDefectsFixedInLiveRuntime':False,'fullReplication':False,'newBrowserTest':False,'newPublicDeployment':False,'visualApproved':False,'productionApproved':False}
+          pathlib.Path('evidence/RESULT.json').write_text(json.dumps(out,indent=2)+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(json.dumps(out,indent=2)+'\n')
+          PY
+      - name: Preserve reference evidence without image assets
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ocean-r006-reference-evidence
+          path: evidence/
+          retention-days: 90
+          if-no-files-found: warn
