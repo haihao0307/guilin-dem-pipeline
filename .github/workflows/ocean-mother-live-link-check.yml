@@ -1,0 +1,84 @@
+name: Ocean Mother live HTML delivery check
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths:
+      - .github/workflows/ocean-mother-live-link-check.yml
+permissions:
+  contents: read
+concurrency:
+  group: ocean-mother-live-delivery-check
+  cancel-in-progress: false
+jobs:
+  public-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Read exact candidate and check live byte identities
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,urllib.request,datetime
+          ref='8098af8d034d9df9fbeee75d1fb2f36727e15678'
+          raw=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{ref}/'
+          live='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/v001/'
+          root=pathlib.Path('candidate');root.mkdir()
+          evidence=pathlib.Path('evidence');evidence.mkdir()
+          report={'status':'RUNNING','candidateSnapshotRef':ref,'auditCommit':os.environ['GITHUB_SHA'],'runId':os.environ['GITHUB_RUN_ID'],'url':live,'checkedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'files':{},'runtimeModified':False,'deploymentModified':False,'visualApproved':False,'productionApproved':False}
+          def get(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'Ocean-Mother-Delivery-Check'})
+              with urllib.request.urlopen(req,timeout=40) as r:
+                  assert r.status==200,(url,r.status)
+                  return r.read()
+          try:
+              m=get(raw+'ocean-mother/v001/MANIFEST.json');(root/'MANIFEST.json').write_bytes(m)
+              manifest=json.loads(m)
+              for name,identity in manifest['files'].items():
+                  path=pathlib.PurePosixPath(name)
+                  assert not path.is_absolute() and '..' not in path.parts
+                  data=get(raw+'ocean-mother/v001/'+name)
+                  assert len(data)==identity['bytes'] and hashlib.sha256(data).hexdigest()==identity['sha256'],name
+                  target=root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+                  online=get(live+name+'?delivery='+os.environ['GITHUB_RUN_ID'])
+                  assert online==data,('LIVE_IDENTITY_MISMATCH',name)
+                  report['files'][name]={'httpStatus':200,'bytes':len(online),'sha256':hashlib.sha256(online).hexdigest()}
+              q=get(raw+'ocean-mother/source-v001/qa.py')
+              assert hashlib.sha1(b'blob '+str(len(q)).encode()+b'\0'+q).hexdigest()=='588198e8b8a70be7d71fadfcd6348d0a72172b3d'
+              pathlib.Path('qa.py').write_bytes(q)
+              report['qaScriptGitBlob']='588198e8b8a70be7d71fadfcd6348d0a72172b3d'
+              report['status']='PUBLIC_BYTES_PASS'
+          except Exception as e:
+              report['status']='FAILED';report['error']=repr(e);raise
+          finally:
+              (evidence/'LIVE_BYTES.json').write_text(json.dumps(report,indent=2)+'\n')
+          PY
+      - name: Install browser test dependencies
+        run: |
+          python3 -m pip install playwright==1.55.0 pillow==11.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Test real public WebGL canvas and controls
+        env:
+          PUBLIC_CHECK: '1'
+        run: |
+          set -o pipefail
+          python3 qa.py candidate https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/v001/ | tee evidence/PUBLIC_TESTS.txt
+      - name: Keep machine-readable evidence only
+        if: always()
+        run: |
+          if [ -f candidate/PUBLIC_QA.json ]; then cp candidate/PUBLIC_QA.json evidence/PUBLIC_QA.json; fi
+          python3 - <<'PY'
+          import pathlib,json,os
+          p=pathlib.Path('evidence/PUBLIC_QA.json')
+          report=json.loads(p.read_text()) if p.exists() else {'status':'NOT_RUN'}
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('# Ocean Mother live HTML check\n\n')
+              f.write('Status: '+report['status']+'\n\n')
+              f.write('Runtime and deployment are read-only. User delivery is the live interactive HTML URL, never a concept image or screenshot.\n\n')
+              f.write('Checks: '+str(len(report.get('checks',[])))+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-live-html-check
+          path: evidence/
+          retention-days: 30
+          if-no-files-found: error
