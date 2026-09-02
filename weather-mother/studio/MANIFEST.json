@@ -1,6 +1,6 @@
 {
   "productionLine": "Weather Mother",
-  "version": "0.3.0-unified-studio",
+  "version": "0.4.0-unified-studio",
   "canonicalEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
   "runtimeEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio/",
   "platformRule": "Weather Mother is the sole public workbench shell. Rain, Snow, Fog, Cloud, Storm and World are modules selected inside that shell.",
@@ -13,16 +13,17 @@
   "firstViewRule": "Opening the canonical Weather Mother URL always starts on World unless an explicit module query is present.",
   "moduleRoutes": {
     "world": "../v110-full/?embedded=1",
-    "rain": "../rain-v030/?embedded=1",
+    "rain": "../rain-v030/?embedded=1 forwards to ../rain-v040/?embedded=1",
     "snow": "../v110-full/?weather=snow&embedded=1",
     "fog": "../v110-full/?weather=fogbank&embedded=1",
     "cloud": "../v110-full/?weather=fair&embedded=1",
     "storm": "../v110-full/?weather=nightstorm&embedded=1"
   },
   "rainCandidate": {
-    "version": "0.3.4-candidate",
-    "runtimeDirectory": "weather-mother/rain-v030",
+    "version": "0.4.0-visual-truth-candidate",
+    "runtimeDirectory": "weather-mother/rain-v040",
     "technicalQa": "PASS",
+    "publicPixelVerification": "PENDING",
     "visualApproved": false,
     "aaaQualityApproved": false,
     "productionReady": false
