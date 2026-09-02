@@ -1,0 +1,39 @@
+name: Wenzhou V0.5.5 QA race correction once
+
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths:
+      - .github/workflows/wenzhou-v055-qa-hotfix-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 30
+      - name: Disable seasonal auto selection during manual ten-cloud QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path=Path('.github/workflows/wenzhou-v055-seasonal-climatology-20260903.yml')
+          text=path.read_text(encoding='utf-8')
+          needle="              for cloud,expected in layers.items():\n"
+          insert="              page.locator('#wzClimateAuto').uncheck()\n              page.wait_for_timeout(150)\n\n              for cloud,expected in layers.items():\n"
+          if insert not in text:
+              assert needle in text
+              text=text.replace(needle,insert,1)
+              path.write_text(text,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/wenzhou-v055-seasonal-climatology-20260903.yml
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(wenzhou): isolate manual cloud QA from seasonal auto selection'
+            git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fi
