@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>B-24 Weather Mother 全任务循环工作台 V1</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="app">
+    <section id="viewport" aria-label="B-24 全任务循环三维工作台">
+      <canvas id="sky-canvas"></canvas>
+      <div id="three-host"></div>
+      <canvas id="weather-fx"></canvas>
+      <div id="cloud-veil"></div>
+
+      <div class="topbar">
+        <div>
+          <p class="eyebrow">B24 SECOND PRODUCTION LINE · WEATHER MOTHER</p>
+          <h1>B-24 全任务循环工作台 <span>V1</span></h1>
+        </div>
+        <div class="status-pill" id="model-status" data-state="loading">
+          <i></i>
+          <div><strong id="model-status-title">正在载入权威 B-24</strong><small id="model-status-detail">23,085,972 bytes · SHA256 锁定</small></div>
+        </div>
+      </div>
+
+      <div id="phase-callout">停机坪待命</div>
+
+      <div id="loading-card">
+        <div class="loading-head">
+          <div class="spinner"></div>
+          <div><strong id="loading-title">正在建立跑道与天气场</strong><p id="loading-detail">随后读取权威 B-24，并启动完整任务循环。</p></div>
+        </div>
+        <div class="progress"><i id="loading-progress"></i></div>
+        <div id="error-card"></div>
+      </div>
+
+      <div class="mission-strip">
+        <div class="mission-progress"><i id="mission-progress"></i></div>
+        <div class="hud">
+          <div class="metric"><span>任务阶段</span><strong id="hud-phase">待命</strong></div>
+          <div class="metric"><span>高度</span><strong id="hud-altitude">0 m</strong></div>
+          <div class="metric"><span>速度</span><strong id="hud-speed">0 km/h</strong></div>
+          <div class="metric"><span>天气</span><strong id="hud-weather">晴日积云</strong></div>
+          <div class="metric"><span>穿云接触</span><strong id="hud-cloud">0%</strong></div>
+          <div class="metric"><span>投弹与命中</span><strong id="hud-bomb">4 / 0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <aside id="panel">
+      <header>
+        <p class="eyebrow">MISSION CONTROL</p>
+        <h2>任务与天气</h2>
+        <p>同一场景完成滑行、起飞、穿云、投弹、爆炸、返航和降落。主界面只保留任务与天气控制。</p>
+      </header>
+
+      <section class="panel-section">
+        <div class="section-head"><h3>完整循环</h3><span class="badge" id="mission-badge">待命</span></div>
+        <div class="primary-actions">
+          <button type="button" class="primary" id="mission-start">开始循环</button>
+          <button type="button" id="mission-pause">暂停</button>
+          <button type="button" class="danger" id="mission-reset">复位</button>
+        </div>
+        <div class="action-grid">
+          <button type="button" id="drop-bomb">立即投弹</button>
+          <button type="button" id="weather-next">切换下一天气</button>
+        </div>
+        <label class="range-row" for="mission-speed">
+          <div class="range-label"><strong>演示速度</strong><span>完整循环约 96 秒</span></div>
+          <input id="mission-speed" type="range" min="0.5" max="8" step="0.25" value="1">
+          <output id="mission-speed-output">1.00×</output>
+        </label>
+        <label class="toggle-row"><div><strong>自动循环</strong><span>降落后重新执行下一圈</span></div><input id="mission-loop" type="checkbox" checked></label>
+        <label class="toggle-row"><div><strong>自动投弹</strong><span>进入目标区后依次释放四枚炸弹</span></div><input id="auto-bomb" type="checkbox" checked></label>
+        <label class="toggle-row"><div><strong>自动天气演化</strong><span>起飞、目标区、返航与进近使用不同天气</span></div><input id="auto-weather" type="checkbox" checked></label>
+        <div class="phase-list" id="phase-list" aria-label="任务阶段进度"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </section>
+
+      <section class="panel-section">
+        <div class="section-head"><h3>镜头</h3><span class="badge pass">同场景</span></div>
+        <div class="camera-grid">
+          <button type="button" data-camera="follow" class="active">跟随</button>
+          <button type="button" data-camera="runway">跑道</button>
+          <button type="button" data-camera="orbit">自由</button>
+        </div>
+      </section>
+
+      <section class="panel-section weather-section">
+        <div class="section-head"><h3>Weather Mother</h3><span class="badge weather" id="weather-badge">晴日积云</span></div>
+        <div class="select-row"><label for="weather-preset">天气案例</label><select id="weather-preset">
+          <option value="fair">晴日积云</option>
+          <option value="layered">多层厚云</option>
+          <option value="storm">雷暴云墙</option>
+          <option value="rain">阴雨层云</option>
+          <option value="fog">低云湿雾</option>
+          <option value="snow">雪与冰云</option>
+          <option value="sunset">雨后黄昏</option>
+        </select></div>
+        <div class="weather-times">
+          <button type="button" data-hour="6.5">清晨</button>
+          <button type="button" data-hour="12">正午</button>
+          <button type="button" data-hour="17.5" class="active">黄昏</button>
+          <button type="button" data-hour="22">夜间</button>
+        </div>
+        <label class="range-row" for="weather-hour"><div class="range-label"><strong>时刻</strong><span>太阳、曝光与云层受光</span></div><input id="weather-hour" type="range" min="0" max="24" step="0.05" value="17.5"><output id="weather-hour-output">17:30</output></label>
+        <label class="range-row" for="weather-wind"><div class="range-label"><strong>风速</strong><span>云漂移、降水和机体扰动</span></div><input id="weather-wind" type="range" min="0" max="38" step="1" value="9"><output id="weather-wind-output">9 m/s</output></label>
+        <label class="range-row" for="cloud-density"><div class="range-label"><strong>云层密度</strong><span>低云、中云和高空厚云共同调整</span></div><input id="cloud-density" type="range" min="0.35" max="1.35" step="0.01" value="1"><output id="cloud-density-output">1.00</output></label>
+        <label class="toggle-row"><div><strong>穿云互动</strong><span>局部拨云、尾流、凝结和湍流反馈</span></div><input id="cloud-interaction" type="checkbox" checked></label>
+        <label class="toggle-row"><div><strong>天气影响飞机</strong><span>风、阵风、降雨和云内扰动</span></div><input id="aircraft-weather" type="checkbox" checked></label>
+        <div class="source-note">天气参数与云型结构沿用 Weather Mother 方法。云体已经进入飞机三维场景，飞机穿越时会形成局部空洞、尾流和能见度变化。</div>
+      </section>
+
+      <section class="panel-section" id="debug">
+        <div class="section-head"><h3>开发信息</h3><span class="badge" id="debug-badge">隐藏</span></div>
+        <pre id="debug-text" style="margin:0;color:#91a2ac;font-size:8px;white-space:pre-wrap"></pre>
+      </section>
+
+      <footer><p>跑道、完整飞行循环、投弹、爆炸、返航、降落和多层云互动均在这一页内运行。人工视觉批准与 productionReady 继续保持 false。</p></footer>
+    </aside>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
