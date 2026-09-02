@@ -1,5 +1,25 @@
 # Weather Mother 新窗口启动入口
 
+## 当前续接优先级
+
+继续工作时先读取：
+
+1. `UNIFIED_STUDIO_POLICY.json`
+2. `studio/MANIFEST.json`
+3. `rain-v020/MANIFEST.json`
+4. `rain-v020/QA.json`
+5. 本文件下面保存的 V1.1.0 全量包记录
+
+当前公开入口只有 Weather Mother：
+
+`https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/`
+
+Rain、Snow、Fog、Cloud、Storm 和 World 都是 Weather Mother 壳层下的模块。左侧常驻小拉块负责返回模块列表。不得再次把 Rain、Snow、Fog 或其他天气案例包装成独立 Mother 或独立公开工作平台。
+
+当前新增 Rain V0.2 为视觉候选，包含雨幕破云光照、银灰阴天、冷锋暴雨、黄昏阵雨，接入 Brick Mother 烧结砖响应候选和 Tiles Mother 板瓦、筒瓦排水候选。人工视觉批准、3A 批准与生产批准继续为 false。
+
+## V1.1.0 全量重启包记录
+
 最新全量重启包：`weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip`
 
 首次发布提交：`3e3d0867963f24391a5f8c064226722616958850`
