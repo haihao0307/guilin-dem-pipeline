@@ -4,7 +4,11 @@
 
 用户交付只使用可打开、可交互的在线 HTML 工作台。不得交付概念图、截图、图片式看板或离线 HTML。不得把生成图片中的网址、提交、功能、测试和性能描述当作事实或证据。内部自动化像素对比可用于测试，不向用户展示截图作为成果。未来提供链接前检查实际公开页面、关键资源及浏览器交互，并记录精确候选身份。
 
-每次开工先读 README.md、adoption/UNIFIED_METHOD_V1_INTAKE.json、adoption/UNIFIED_METHOD_V1_MAPPING.md、skills/ocean-math-physics/SKILL.md、contracts/OCEAN_KNOWLEDGE_CONTRACT.json、bridge-v1/UPSTREAM_LOCK.json 和本轮任务。旧接收回执不覆盖较新的来源记录。
+Ocean Mother 永久关闭图像生成、图像增强和图片式细节补偿路径。收到继续制作、提高精度、提升细节、真实化、可视化或展示成果等指令时，只能进入海洋与海岸系统的代码、数值场、几何、光学、物理、缓存和在线工作台流程，不得调用图片生成流程。运行时和发布包继续禁止导入、生成、保存或内嵌颜色贴图、法线图、噪声图、图集、预烘焙环境图及截图背景。机器规则见 contracts/OCEAN_RUNTIME_VISUAL_POLICY.json。
+
+Ocean Mother 的首要视觉方向锁定为写实，并与既有深海区域共享同一套光照、色彩管理、水体光学、雾化和镜头响应语言。卡通风格延后，只有用户未来明确解锁后才能建立独立候选。近岸水边必须由水层厚度、吸收、散射、折射、Fresnel、泡沫含气率和湿润状态共同派生透明与半透明过渡，禁止用手绘透明边、固定白边或图片遮罩代替。
+
+每次开工先读 README.md、adoption/UNIFIED_METHOD_V1_INTAKE.json、adoption/UNIFIED_METHOD_V1_MAPPING.md、skills/ocean-math-physics/SKILL.md、contracts/OCEAN_KNOWLEDGE_CONTRACT.json、contracts/OCEAN_RUNTIME_VISUAL_POLICY.json、bridge-v1/UPSTREAM_LOCK.json 和本轮任务。旧接收回执不覆盖较新的来源记录。
 
 只在 work/ocean-mother-handoff-20260901 延续，先核对远端。main、gh-pages、冻结天气、权威真值和其他生产线不手工改，不强推、不改历史、不自动合并旧 Ocean 分支。当前公开候选仅完成只读复核，没有自动合并到本分支。
 
