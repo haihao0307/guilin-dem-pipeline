@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#8ec8dc">
+  <meta name="color-scheme" content="dark">
+  <title>Ocean Mother · Coast 0.2.2 完整日光海岸</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="coast.css?v=0.2.2-r012">
+</head>
+<body>
+  <main id="stage">
+    <canvas id="scene" aria-label="日光海岸、透明浅水、岩石、烟火、浪与泡沫三维工作台"></canvas>
+    <iframe id="deepFrame" title="保留的深海工作台" data-src="../v001/" hidden></iframe>
+  </main>
+
+  <header class="topbar">
+    <div class="brand"><span class="brandMark">O</span><span><b>OCEAN MOTHER</b><small>COAST 0.2.2 · COMPLETE DAYLIGHT</small></span></div>
+    <nav class="tabs" aria-label="水域切换"><button id="coastTab" class="selected">近岸 Coast</button><button id="deepTab">深海</button></nav>
+    <div class="topActions"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle">参数</button></div>
+  </header>
+
+  <aside id="panel" class="closed">
+    <div class="panelHead"><span class="eyebrow">COMPLETE COAST SCENE</span><h1>海岸、岩石、火光与浪</h1><p>完整日光构图。近岸水体沿用深海的线性色彩与空气透视，浅水透明度由水层厚度派生。</p></div>
+
+    <section><h2>海况</h2><div class="presetRow"><button data-sea="calm">平静</button><button data-sea="swell" class="active">涌浪</button><button data-sea="storm">强风浪</button></div><div id="waveControls"></div></section>
+    <section><h2>光学与日光</h2><div id="lightControls"></div><label class="selectRow">检查模式<select id="mode"><option value="environment">环境写实</option><option value="neutral">中性检查</option><option value="studio">工作室检查</option><option value="diagnostic">诊断</option></select></label></section>
+    <section><h2>烟火</h2><div id="fireControls"></div><div class="buttonRow"><button id="fireToggle">停止添火</button><button id="smokeToggle">隐藏烟雾</button></div></section>
+    <section><h2>镜头</h2><div class="viewRow"><button data-view="overview">完整海岸</button><button data-view="shore">透明水边</button><button data-view="breaker">破浪带</button><button data-view="fire">烟火</button><button data-view="rocks">岩石水线</button><button data-view="top">俯视检查</button></div></section>
+    <section><h2>运行状态</h2><div class="metricGrid"><span>岩石</span><b id="rockCount">0</b><span>火圈石</span><b id="ringCount">0</b><span>泡沫单元</span><b id="foamCount">0</b><span>烟雾</span><b id="smokeCount">0</b><span>火焰</span><b id="flameCount">0</b><span>帧率</span><b id="panelFps">0</b></div></section>
+    <details><summary>构建身份与能力边界</summary><pre id="metrics">初始化中</pre><p class="limitText">当前主水体仍为解析远场与近岸状态场。局部三维压力自由表面仍在后续物理阶段，页面不会把显示几何申报成完整三维流体。</p><code id="build">coast-0.2.2-r012-complete-daylight-scene</code></details>
+  </aside>
+
+  <div id="sceneTitle"><span class="eyebrow">R012 · COMPLETE COAST COMPOSITION</span><h2>海岸重新回到画面里。</h2><p>日光天空 · 透明浅水 · 岩石 · 火光 · 烟雾 · 破浪泡沫</p></div>
+  <div id="legend" hidden><b>诊断图例</b><span><i class="water"></i>水深</span><span><i class="foam"></i>泡沫</span><span><i class="wet"></i>湿润</span><span><i class="solid"></i>岩石与木料</span><span><i class="fire"></i>热源</span></div>
+
+  <footer><span id="status">正在构建完整海岸</span><span id="clock">0.00 s</span><span id="fps">帧率待测</span><span id="resolution">分辨率待测</span><span class="review">研究候选 · 零图片资产 · 待视觉批准</span></footer>
+  <div id="loading"><div class="loadingMark">O</div><b>构建日光海岸</b><span id="progress">准备海床、岩石、水体、火光与烟雾</span></div>
+  <pre id="error" hidden></pre>
+  <pre id="qaProbe" hidden></pre>
+  <script type="module" src="app.mjs?v=0.2.2-r012"></script>
+</body>
+</html>
