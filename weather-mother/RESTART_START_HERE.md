@@ -6,17 +6,23 @@
 
 1. `UNIFIED_STUDIO_POLICY.json`
 2. `studio/MANIFEST.json`
-3. `rain-v020/MANIFEST.json`
-4. `rain-v020/QA.json`
-5. 本文件下面保存的 V1.1.0 全量包记录
+3. `research/EASY_RAIN_DISTILLATION_V1.md`
+4. `rain-v030/MANIFEST.json`
+5. `rain-v030/QA.json`
+6. `rain-v030/PUBLICATION_RECEIPT.json`
+7. 本文件下面保存的 V1.1.0 全量包记录
 
 当前公开入口只有 Weather Mother：
 
 `https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/`
 
-Rain、Snow、Fog、Cloud、Storm 和 World 都是 Weather Mother 壳层下的模块。左侧常驻小拉块负责返回模块列表。不得再次把 Rain、Snow、Fog 或其他天气案例包装成独立 Mother 或独立公开工作平台。
+Rain、Snow、Fog、Cloud、Storm 和 World 都是 Weather Mother 壳层下的模块。根入口默认进入 World，左侧常驻小拉块负责返回模块列表。不得再次把 Rain、Snow、Fog 或其他天气案例包装成独立 Mother 或独立公开工作平台。
 
-当前新增 Rain V0.2 为视觉候选，包含雨幕破云光照、银灰阴天、冷锋暴雨、黄昏阵雨，接入 Brick Mother 烧结砖响应候选和 Tiles Mother 板瓦、筒瓦排水候选。人工视觉批准、3A 批准与生产批准继续为 false。
+当前 Rain V0.3.4 为 Easy Rain 官方公开资料蒸馏后的独立程序化候选。它包含世界空间雨带、快门时间拖尾、近中远降雨层、三层远景雨幕、瓦面沟槽汇水与檐滴、烧结砖吸水和水路、地面积水与涟漪，以及四套冷暖光照候选。商业 Easy Rain 资产没有复制进入运行时。
+
+Rain V0.2 已登记为 rejected draft，只保留失败对照。后续不得从 V0.2 回退，也不得用满屏高亮长线代替雨滴和雨幕层次。
+
+Rain V0.3.4 已通过真实 Chromium WebGL2 的压缩载荷、着色器、连续帧、六镜头和五诊断自动检查。公开页面像素验收、用户显卡 2K 与 4K 性能、人工视觉批准、3A 批准和生产批准继续为 false。
 
 ## V1.1.0 全量重启包记录
 
