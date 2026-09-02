@@ -13,7 +13,7 @@ BASE_RUNTIME='ocean-mother/coast-v011'
 BASE_TOOLS='ocean-mother/coast-tools-v011'
 POLICY_SHA='fe69ea88c05d9b8c74e79e21c2c2c719dc096b677848eb40305575f08b5b8fdf'
 BASE_HASHES={
- 'coast-app.mjs':'36abb8b172fb7ecd5e2d5a13f5551902894537fee71c4dc090f20287bfbb0053',
+ 'coast-app.mjs':'1177a960eef76783a49513d418616b26fca71af848570971d43cf42cb793df74',
  'coast-core.mjs':'4e2f910c55d3e5cb4aff4ed016d87c435708a8e199ae4e0d49f32376c7ac4872',
  'shaders.mjs':'9a81eb33c2252a4e6beef7698fa0860bc28fc856a65c5838cd5633f44694690e',
  'rock-domain.mjs':'449fbdcbdab1ee58bc04030da638ae83300828068ba625e8edd78772f98c8b18',
@@ -24,8 +24,8 @@ BASE_HASHES={
  'BUILD_TEMPLATE.json':'d1de3e8090f72bf55e6361b49a3a7e7640fc909a26652e73f8f2fa53b8f060fe',
 }
 BASE_TOOL_HASHES={
- 'browser_qa.py':'a02d690347734d2d83999a7f1f56dfa5806aaaba',
- 'core.test.mjs':'4a14f192439be589008dd67b312449b26bc753dd6dfd19fb4388f1ba693b38b2',
+ 'browser_qa.py':'c01cd0140bf3a350b367e781422155849edc0089a4485546b52989b55e830dbc',
+ 'core.test.mjs':'000b4ff04031d5d70c27543bc23770c67862fb3a8f55dbb690e65f5e6bc0a535',
  'mesh.test.mjs':'ae1e3bf4fa24d87a8d2883b16e08230faff5183e24fd5195666e5ebca7592088',
 }
 FINAL_HASHES={
