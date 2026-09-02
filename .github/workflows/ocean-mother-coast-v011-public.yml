@@ -1,0 +1,79 @@
+name: Ocean Mother Coast V011 public verification
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-v011-public.yml]
+permissions:
+  contents: read
+concurrency:
+  group: ocean-coast-v011-public
+  cancel-in-progress: false
+jobs:
+  public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Wait for Pages and verify all public V011 bytes
+        run: |
+          python3 - <<'PY'
+          import urllib.request,time,json,hashlib,pathlib
+          base='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v011/'
+          expected={
+            'README.md':(2418,'1a7767ac2e0611a9aa3c8b7252480677d713d95c4937648a490a2cd2d2a62ed8'),
+            'coast-app.mjs':(28493,'1177a960eef76783a49513d418616b26fca71af848570971d43cf42cb793df74'),
+            'coast-core.mjs':(11459,'4e2f910c55d3e5cb4aff4ed016d87c435708a8e199ae4e0d49f32376c7ac4872'),
+            'coast.css':(4771,'f20405b6d0e7d15ffa3d65deaf8a676291d50e2affc396d3af3f3921dcd143b3'),
+            'index.html':(4224,'51e73241f968ee790922b26566557479df41e742425f70a203dd5fc52a31720f'),
+            'policy.json':(6022,'fe69ea88c05d9b8c74e79e21c2c2c719dc096b677848eb40305575f08b5b8fdf'),
+            'rock-domain.mjs':(3638,'449fbdcbdab1ee58bc04030da638ae83300828068ba625e8edd78772f98c8b18'),
+            'shaders.mjs':(8689,'9a81eb33c2252a4e6beef7698fa0860bc28fc856a65c5838cd5633f44694690e'),
+            'build.json':(330,'34849463db107bc31515eca256ac3dbc7be0b8a48dd51a384c5952999e42fd15'),
+            'MANIFEST.json':(1554,'7d7523dc04cf872c8c345ea689bb1fddd880ad8c2f696b3584ec987ad710f0ff')}
+          receipt={}
+          for attempt in range(48):
+              try:
+                  for name,(size,digest) in expected.items():
+                      req=urllib.request.Request(base+name+'?verify='+digest[:16],headers={'Cache-Control':'no-cache'})
+                      with urllib.request.urlopen(req,timeout=30) as r:b=r.read();status=r.status
+                      h=hashlib.sha256(b).hexdigest();assert status==200 and len(b)==size and h==digest,(name,status,len(b),h)
+                      receipt[name]={'status':status,'bytes':len(b),'sha256':h}
+                  break
+              except Exception as e:
+                  print('Pages wait',attempt,type(e).__name__,str(e),flush=True)
+                  if attempt==47:raise
+                  time.sleep(10)
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/PUBLIC_BYTES.json').write_text(json.dumps({'status':'PUBLIC_BYTES_VERIFIED','url':base,'sourceCommit':'879c7015d3f7086ffcbc39025602b66db752d829','deploymentCommit':'9d5dc1b59fc73eadddf7e6b0adf0bc3f2160a690','files':receipt,'allByteIdentical':True,'visualApproved':False,'productionApproved':False},indent=2)+'\n')
+          PY
+      - name: Fetch exact V011 browser QA source
+        run: |
+          python3 - <<'PY'
+          import urllib.request,pathlib,hashlib
+          url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/879c7015d3f7086ffcbc39025602b66db752d829/ocean-mother/coast-tools-v011/browser_qa.py'
+          with urllib.request.urlopen(url,timeout=60) as r:b=r.read()
+          assert hashlib.sha256(b).hexdigest()=='c01cd0140bf3a350b367e781422155849edc0089a4485546b52989b55e830dbc'
+          pathlib.Path('browser_qa.py').write_bytes(b)
+          PY
+      - name: Install real browser environment
+        run: |
+          python3 -m pip install playwright==1.62.0 pillow==12.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Run public V011 browser checks
+        run: |
+          set -o pipefail
+          python3 browser_qa.py https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v011/ public-browser | tee evidence/PUBLIC_BROWSER_TESTS.txt
+          cp public-browser/QA.json evidence/PUBLIC_QA.json
+          python3 - <<'PY'
+          import json
+          q=json.load(open('evidence/PUBLIC_QA.json'))
+          assert q['status']=='BROWSER_QA_PASS' and len(q['checks'])==42 and all(x['passed'] for x in q['checks']) and not q['errors']
+          print('PUBLIC_BROWSER_QA_PASS',len(q['checks']))
+          PY
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ocean-coast-v011-public-evidence
+          path: evidence/
+          retention-days: 90
+          if-no-files-found: warn
