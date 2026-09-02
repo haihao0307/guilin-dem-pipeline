@@ -1,0 +1,72 @@
+name: Ocean Mother Coast V012 public verification
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-v012-public-verify.yml]
+permissions:
+  contents: read
+concurrency:
+  group: ocean-coast-v012-public-verification
+  cancel-in-progress: true
+jobs:
+  public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Verify public manifest and every Coast V012 byte
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v012/'
+          expected='f0e8e93c9351a76fb70ac0b573ae0b9365c688b8'
+          def get(name):
+            with urllib.request.urlopen(base+name+'?verify='+str(time.time_ns()),timeout=45) as r:
+              assert r.status==200;return r.read()
+          for attempt in range(24):
+            try:
+              raw=get('MANIFEST.json');m=json.loads(raw)
+              assert m['version']=='0.1.2-coast' and m['sourceCommit']==expected
+              checked={}
+              for name,e in m['files'].items():
+                b=get(name);assert len(b)==e['bytes'] and hashlib.sha256(b).hexdigest()==e['sha256'],name
+                checked[name]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+              break
+            except Exception:
+              if attempt==23:raise
+              time.sleep(10)
+          pathlib.Path('evidence').mkdir(exist_ok=True)
+          pathlib.Path('evidence/PUBLIC_BYTES.json').write_text(json.dumps({'url':base,'sourceCommit':expected,'manifestSha256':hashlib.sha256(raw).hexdigest(),'files':checked,'allHTTP200':True,'allByteIdentical':True},indent=2)+'\n')
+          PY
+      - name: Fetch exact browser QA source
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,urllib.request
+          url='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/f0e8e93c9351a76fb70ac0b573ae0b9365c688b8/ocean-mother/coast-tools-v012/browser_qa.py'
+          with urllib.request.urlopen(url,timeout=60) as r:b=r.read()
+          assert hashlib.sha256(b).hexdigest()=='31c5cf35d835b0d867b1b46d86dda1ac5a77646c02b6a3ca065217ef84a7d8d9'
+          pathlib.Path('browser_qa.py').write_bytes(b)
+          PY
+      - name: Install real browser environment
+        run: |
+          python3 -m pip install playwright==1.62.0 pillow==12.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Run public browser and continue-button regression
+        run: |
+          set -o pipefail
+          python3 browser_qa.py https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v012/ public-browser | tee evidence/PUBLIC_BROWSER.txt
+          python3 - <<'PY'
+          import json,pathlib
+          q=json.load(open('public-browser/QA.json'));names={x['name']:x['passed'] for x in q['checks']}
+          required=['long interaction frame keeps simulation running','display lag is explicitly accounted','pause button stops at current state','manual pause preserves physical time','continue button resumes without new seed']
+          assert q['status']=='BROWSER_QA_PASS' and len(q['checks'])==47 and not q['errors']
+          assert all(names.get(x) for x in required)
+          pathlib.Path('evidence/PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          pathlib.Path('evidence/RESULT.json').write_text(json.dumps({'status':'PUBLIC_BROWSER_VERIFIED','sourceCommit':'f0e8e93c9351a76fb70ac0b573ae0b9365c688b8','checksPassed':47,'checksFailed':0,'continueWithoutNewSeed':True,'longFrameStillRunning':True,'visualApproved':False,'productionApproved':False},indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-v012-public-verification
+          path: evidence/
+          retention-days: 90
+          if-no-files-found: warn
