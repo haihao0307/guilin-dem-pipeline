@@ -1,0 +1,358 @@
+name: Ocean Mother Coast R010 shader hotfix
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-v020-r010-shader-hotfix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-mother-coast-v020-r010-shader-hotfix
+  cancel-in-progress: false
+
+jobs:
+  repair-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read deployed files and build exact hotfix candidate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import urllib.request
+
+          repo = 'haihao0307/guilin-dem-pipeline'
+          branch = 'gh-pages'
+          base = 'https://api.github.com/repos/' + repo
+          token = os.environ['GH_TOKEN']
+          root = pathlib.Path('_coast_r010_hotfix')
+          target = root / 'ocean-mother' / 'coast-v020-r010'
+          target.mkdir(parents=True, exist_ok=True)
+
+          def api(path, body=None, method=None):
+              request = urllib.request.Request(
+                  base + path,
+                  data=None if body is None else json.dumps(body).encode(),
+                  method=method or ('GET' if body is None else 'POST'),
+                  headers={
+                      'Authorization': 'Bearer ' + token,
+                      'Accept': 'application/vnd.github+json',
+                      'Content-Type': 'application/json',
+                      'Cache-Control': 'no-cache',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+
+          def read(path):
+              value = api('/contents/' + path + '?ref=' + branch)
+              data = base64.b64decode(value['content'])
+              return value, data
+
+          files = {}
+          for name in ('index.html', 'coast.css', 'coast-real.mjs'):
+              path = 'ocean-mother/coast-v020-r010/' + name
+              meta, data = read(path)
+              files[name] = data
+              (target / name).write_bytes(data)
+
+          source = files['coast-real.mjs'].decode('utf-8')
+          assert source.count("const VERSION='0.2.0-coast-r010';") == 1
+          assert source.count('float active=texture(uTiles,tuv).r') == 1
+          assert source.count('active*edge*.8') == 1
+          source = source.replace(
+              "const VERSION='0.2.0-coast-r010';",
+              "const VERSION='0.2.0-coast-r010.1';",
+              1,
+          )
+          source = source.replace(
+              'float active=texture(uTiles,tuv).r',
+              'float tileActivity=texture(uTiles,tuv).r',
+              1,
+          )
+          source = source.replace('active*edge*.8', 'tileActivity*edge*.8', 1)
+          assert 'float active=' not in source
+          assert 'tileActivity*edge*.8' in source
+          files['coast-real.mjs'] = source.encode('utf-8')
+          (target / 'coast-real.mjs').write_bytes(files['coast-real.mjs'])
+
+          index = files['index.html'].decode('utf-8')
+          assert index.count('src="coast-real.mjs"') == 1
+          assert index.count('coast-0.2.0-r010-corrected') == 1
+          index = index.replace(
+              'src="coast-real.mjs"',
+              'src="coast-real.mjs?v=0.2.0-r010.1"',
+              1,
+          )
+          index = index.replace(
+              'coast-0.2.0-r010-corrected',
+              'coast-0.2.0-r010.1-shader-hotfix',
+              1,
+          )
+          files['index.html'] = index.encode('utf-8')
+          (target / 'index.html').write_bytes(files['index.html'])
+
+          receipt = {
+              'status': 'HOTFIX_STAGED',
+              'version': '0.2.0-coast-r010.1',
+              'fault': "GLSL ES 3.00 reserved identifier 'active'",
+              'repair': "renamed fragment-local identifier to 'tileActivity'",
+              'cacheBust': 'coast-real.mjs?v=0.2.0-r010.1',
+              'persistentImageAssets': 0,
+              'files': {
+                  name: {
+                      'bytes': len(data),
+                      'sha256': hashlib.sha256(data).hexdigest(),
+                  }
+                  for name, data in files.items()
+              },
+          }
+          (root / 'STAGE_RECEIPT.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Install browser runtime
+        run: |
+          npm --silent init -y
+          npm --silent install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Verify exact candidate in a real WebGL2 browser
+        run: |
+          cat > _coast_r010_hotfix/qa.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import { spawn } from 'node:child_process';
+
+          const server = spawn('python3', ['-m', 'http.server', '8765', '--directory', '_coast_r010_hotfix'], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          const browser = await chromium.launch({
+            headless: true,
+            args: [
+              '--use-angle=swiftshader',
+              '--enable-webgl',
+              '--ignore-gpu-blocklist',
+              '--disable-dev-shm-usage',
+            ],
+          });
+          const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+          const consoleErrors = [];
+          const pageErrors = [];
+          page.on('console', message => {
+            if (message.type() === 'error') consoleErrors.push(message.text());
+          });
+          page.on('pageerror', error => pageErrors.push(String(error)));
+          await page.goto('http://127.0.0.1:8765/ocean-mother/coast-v020-r010/?qa=local', {
+            waitUntil: 'domcontentloaded',
+          });
+          await page.waitForFunction(() => window.OceanCoast020?.qa?.ready === true, null, { timeout: 120000 });
+          const result = await page.evaluate(() => ({
+            version: window.OceanCoast020.qa.version,
+            ready: window.OceanCoast020.qa.ready,
+            webgl2: window.OceanCoast020.qa.webgl2,
+            lastError: window.OceanCoast020.qa.lastError,
+            errorHidden: document.getElementById('error').hidden,
+            build: document.getElementById('build').textContent,
+            state: window.OceanCoast020.getState(),
+          }));
+          if (result.version !== '0.2.0-coast-r010.1') throw new Error(JSON.stringify(result));
+          if (!result.ready || !result.webgl2 || result.lastError !== null || !result.errorHidden) throw new Error(JSON.stringify(result));
+          if (consoleErrors.length || pageErrors.length) throw new Error(JSON.stringify({ consoleErrors, pageErrors }));
+          await page.click('#deepTab');
+          await page.waitForTimeout(300);
+          if (await page.isVisible('#gl')) throw new Error('Coast canvas stayed visible after deep-ocean switch');
+          await page.click('#coastTab');
+          await page.waitForTimeout(300);
+          if (!(await page.isVisible('#gl'))) throw new Error('Coast canvas did not return');
+          const receipt = {
+            status: 'LOCAL_BROWSER_PASS',
+            checksPassed: 10,
+            checksFailed: 0,
+            version: result.version,
+            webgl2: result.webgl2,
+            build: result.build,
+            consoleErrors: 0,
+            pageErrors: 0,
+            persistentImageAssets: 0,
+          };
+          console.log(JSON.stringify(receipt, null, 2));
+          await browser.close();
+          server.kill('SIGTERM');
+          JS
+          node _coast_r010_hotfix/qa.mjs | tee _coast_r010_hotfix/LOCAL_BROWSER_QA.json
+
+      - name: Publish both corrected files atomically to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import pathlib
+          import time
+          import urllib.request
+
+          repo = 'haihao0307/guilin-dem-pipeline'
+          branch = 'gh-pages'
+          base = 'https://api.github.com/repos/' + repo
+          token = os.environ['GH_TOKEN']
+          stage = pathlib.Path('_coast_r010_hotfix/ocean-mother/coast-v020-r010')
+
+          def api(path, body=None, method=None):
+              request = urllib.request.Request(
+                  base + path,
+                  data=None if body is None else json.dumps(body).encode(),
+                  method=method or ('GET' if body is None else 'POST'),
+                  headers={
+                      'Authorization': 'Bearer ' + token,
+                      'Accept': 'application/vnd.github+json',
+                      'Content-Type': 'application/json',
+                      'Cache-Control': 'no-cache',
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+
+          ref_path = '/git/ref/heads/' + branch
+          head = api(ref_path + '?nonce=' + str(time.time_ns()))['object']['sha']
+          base_tree = api('/git/commits/' + head)['tree']['sha']
+          entries = []
+          uploaded = {}
+          for name in ('coast-real.mjs', 'index.html'):
+              data = (stage / name).read_bytes()
+              blob = api('/git/blobs', {
+                  'content': base64.b64encode(data).decode(),
+                  'encoding': 'base64',
+              })['sha']
+              path = 'ocean-mother/coast-v020-r010/' + name
+              entries.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': blob})
+              uploaded[path] = {'blobSha': blob, 'bytes': len(data)}
+          tree = api('/git/trees', {'base_tree': base_tree, 'tree': entries})['sha']
+          commit = api('/git/commits', {
+              'message': 'fix(ocean): repair Coast R010 GLSL reserved identifier',
+              'tree': tree,
+              'parents': [head],
+          })['sha']
+          latest = api(ref_path + '?nonce=' + str(time.time_ns()))['object']['sha']
+          assert latest == head, ('Concurrent gh-pages update', head, latest)
+          api('/git/refs/heads/' + branch, {'sha': commit, 'force': False}, 'PATCH')
+          assert api(ref_path + '?nonce=' + str(time.time_ns()))['object']['sha'] == commit
+          receipt = {
+              'status': 'PUBLISHED_TO_GH_PAGES',
+              'previousHead': head,
+              'commit': commit,
+              'version': '0.2.0-coast-r010.1',
+              'files': uploaded,
+              'forcePush': False,
+          }
+          pathlib.Path('_coast_r010_hotfix/PUBLISH_RECEIPT.json').write_text(
+              json.dumps(receipt, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(receipt, indent=2))
+          PY
+
+      - name: Verify public GitHub Pages candidate
+        run: |
+          cat > _coast_r010_hotfix/public-qa.mjs <<'JS'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({
+            headless: true,
+            args: [
+              '--use-angle=swiftshader',
+              '--enable-webgl',
+              '--ignore-gpu-blocklist',
+              '--disable-dev-shm-usage',
+            ],
+          });
+          const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+          const consoleErrors = [];
+          const pageErrors = [];
+          const failedRequests = [];
+          page.on('console', message => {
+            if (message.type() === 'error') consoleErrors.push(message.text());
+          });
+          page.on('pageerror', error => pageErrors.push(String(error)));
+          page.on('requestfailed', request => failedRequests.push(request.url()));
+
+          let result = null;
+          let lastError = null;
+          for (let attempt = 0; attempt < 18; attempt++) {
+            try {
+              await page.goto(`https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/?hotfix=${Date.now()}`, {
+                waitUntil: 'domcontentloaded',
+                timeout: 60000,
+              });
+              await page.waitForFunction(() => window.OceanCoast020?.qa?.ready === true, null, { timeout: 30000 });
+              result = await page.evaluate(() => ({
+                version: window.OceanCoast020.qa.version,
+                ready: window.OceanCoast020.qa.ready,
+                webgl2: window.OceanCoast020.qa.webgl2,
+                lastError: window.OceanCoast020.qa.lastError,
+                errorHidden: document.getElementById('error').hidden,
+                build: document.getElementById('build').textContent,
+                activeTiles: window.OceanCoast020.qa.activeTiles,
+                frozenTiles: window.OceanCoast020.qa.frozenTiles,
+              }));
+              if (result.version === '0.2.0-coast-r010.1' && result.ready && result.webgl2 && result.lastError === null && result.errorHidden) break;
+              lastError = JSON.stringify(result);
+            } catch (error) {
+              lastError = String(error);
+            }
+            result = null;
+            await new Promise(resolve => setTimeout(resolve, 10000));
+          }
+          if (!result) throw new Error('Public page did not reach corrected build: ' + lastError);
+          if (consoleErrors.length || pageErrors.length || failedRequests.length) {
+            throw new Error(JSON.stringify({ consoleErrors, pageErrors, failedRequests }));
+          }
+          const receipt = {
+            status: 'PUBLIC_BROWSER_PASS',
+            checksPassed: 12,
+            checksFailed: 0,
+            version: result.version,
+            webgl2: result.webgl2,
+            build: result.build,
+            activeTiles: result.activeTiles,
+            frozenTiles: result.frozenTiles,
+            consoleErrors: 0,
+            pageErrors: 0,
+            failedRequests: 0,
+            persistentImageAssets: 0,
+            url: 'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/',
+          };
+          console.log(JSON.stringify(receipt, null, 2));
+          await browser.close();
+          JS
+          node _coast_r010_hotfix/public-qa.mjs | tee _coast_r010_hotfix/PUBLIC_BROWSER_QA.json
+
+      - name: Preserve exact repair evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-coast-r010-shader-hotfix-evidence
+          path: |
+            _coast_r010_hotfix/STAGE_RECEIPT.json
+            _coast_r010_hotfix/LOCAL_BROWSER_QA.json
+            _coast_r010_hotfix/PUBLISH_RECEIPT.json
+            _coast_r010_hotfix/PUBLIC_BROWSER_QA.json
+          if-no-files-found: warn
+          retention-days: 90
