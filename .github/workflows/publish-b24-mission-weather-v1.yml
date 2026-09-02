@@ -56,69 +56,69 @@ jobs:
           path: public
           fetch-depth: 0
 
-      - name: Reassemble and verify the deterministic recovery runtime
+      - name: Reassemble, build and verify the exact R2 payload
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p work
+          mkdir -p work/build
           cat source/$SOURCE_DIR/runtime.parts/runtime.part.* > work/runtime.tar.gz.b64
           base64 --decode work/runtime.tar.gz.b64 > work/runtime.tar.gz
           test "$(stat --format=%s work/runtime.tar.gz)" = "$RUNTIME_TAR_BYTES"
           echo "$RUNTIME_TAR_SHA256  work/runtime.tar.gz" | sha256sum --check
           tar -xzf work/runtime.tar.gz -C work
-          test -s work/tools/build_from_v010.py
-          test -s work/runtime/mission-v010.js
-          test -s work/runtime/mission-v010.css
-          test -s work/runtime/weather/index.html
 
-      - name: Download and verify the exact user V010 HTML
-        shell: bash
-        run: |
-          set -euo pipefail
           curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 \
             --output work/B24_V010_RIDGED_LOCAL_DAMAGE_REVIEW.html \
             "https://raw.githubusercontent.com/haihao0307/AIRCRAFT/$AIRCRAFT_COMMIT/$V010_SOURCE_PATH"
           test "$(stat --format=%s work/B24_V010_RIDGED_LOCAL_DAMAGE_REVIEW.html)" = "$V010_BYTES"
           echo "$V010_SHA256  work/B24_V010_RIDGED_LOCAL_DAMAGE_REVIEW.html" | sha256sum --check
 
-      - name: Build the merged V010 and Weather Mother workbench
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p work/build
           python3 work/tools/build_from_v010.py \
             work/B24_V010_RIDGED_LOCAL_DAMAGE_REVIEW.html \
             work/build/index.html
-          test "$(stat --format=%s work/build/index.html)" = "$OUTPUT_BYTES"
-          echo "$OUTPUT_SHA256  work/build/index.html" | sha256sum --check
 
-      - name: Validate runtime identity, dirt runway, propellers and landing gear contract
-        shell: bash
-        run: |
-          set -euo pipefail
+          test "$(stat --format=%s work/build/index.html)" = "$OUTPUT_BYTES"
           test "$(stat --format=%s work/runtime/mission-v010.js)" = "$MISSION_JS_BYTES"
           test "$(stat --format=%s work/runtime/mission-v010.css)" = "$MISSION_CSS_BYTES"
           test "$(stat --format=%s work/runtime/weather/index.html)" = "$WEATHER_HTML_BYTES"
+          echo "$OUTPUT_SHA256  work/build/index.html" | sha256sum --check
           echo "$MISSION_JS_SHA256  work/runtime/mission-v010.js" | sha256sum --check
           echo "$MISSION_CSS_SHA256  work/runtime/mission-v010.css" | sha256sum --check
           echo "$WEATHER_HTML_SHA256  work/runtime/weather/index.html" | sha256sum --check
           node --check work/runtime/mission-v010.js
-          grep -q "$BUILD_ID" work/build/index.html
-          grep -q 'mission-v010.css' work/build/index.html
-          grep -q 'mission-v010.js' work/build/index.html
-          grep -q "surface: 'compacted-earth'" work/runtime/mission-v010.js
-          grep -q 'runwayMarkings: false' work/runtime/mission-v010.js
-          grep -q 'propellerRootCount' work/runtime/mission-v010.js
-          grep -q 'propellerDirections' work/runtime/mission-v010.js
-          grep -q 'gearCount' work/runtime/mission-v010.js
-          grep -q "parked: { label: '停机坪'" work/runtime/mission-v010.js
-          grep -q 'sourcePhase: 0.3' work/runtime/mission-v010.js
-          if grep -Eqi 'RUNWAY_24_06|asphalt|跑道中心线|跑道边灯' work/runtime/mission-v010.js work/runtime/mission-v010.css; then
-            echo 'A paved or marked runway token remains in the R2 runtime.'
-            exit 1
-          fi
 
-      - name: Replace the old public workbench with the exact R2 payload
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('work/build/index.html').read_text(encoding='utf-8')
+          js = Path('work/runtime/mission-v010.js').read_text(encoding='utf-8')
+          css = Path('work/runtime/mission-v010.css').read_text(encoding='utf-8')
+
+          for token in (
+              'B24_V010_WEATHER_MISSION_RECOVERY_R2',
+              'mission-v010.css',
+              'mission-v010.js',
+          ):
+              assert token in html, token
+
+          for token in (
+              "runwaySurface: 'compacted-earth'",
+              'runwayMarkings: false',
+              'propellerRootCount',
+              'propellerDirections',
+              'function gearNodes',
+              "id: 'parked', label: '停机', duration: 4, sourceStart: .30, sourceEnd: .30",
+              "id: 'landing', label: '着陆', duration: 11, sourceStart: .0, sourceEnd: .30",
+              "weatherMotherVersion: '1.0.0-clean'",
+          ):
+              assert token in js, token
+
+          forbidden = ('RUNWAY_24_06', 'asphalt', '跑道中心线', '跑道边灯')
+          combined = js + '\n' + css
+          found = [token for token in forbidden if token.lower() in combined.lower()]
+          assert not found, found
+          PY
+
+      - name: Replace the old public workbench and write verification receipts
         shell: bash
         run: |
           set -euo pipefail
@@ -130,10 +130,6 @@ jobs:
           cp work/runtime/weather/index.html "public/$DESTINATION/weather/index.html"
           cp "source/$SOURCE_DIR/README.md" "public/$DESTINATION/SOURCE_LOCKS.md"
 
-      - name: Write publication provenance and static verification receipt
-        shell: bash
-        run: |
-          set -euo pipefail
           python3 - <<'PY'
           import hashlib
           import json
@@ -144,12 +140,8 @@ jobs:
           root = Path('public') / os.environ['DESTINATION']
           files = {}
           for name in ('index.html', 'mission-v010.js', 'mission-v010.css', 'weather/index.html', 'SOURCE_LOCKS.md'):
-              path = root / name
-              data = path.read_bytes()
-              files[name] = {
-                  'bytes': len(data),
-                  'sha256': hashlib.sha256(data).hexdigest(),
-              }
+              data = (root / name).read_bytes()
+              files[name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
 
           provenance = {
               'schema': 'haihao.aircraft/b24-v010-weather-pages-publication@2.0.0',
@@ -158,10 +150,7 @@ jobs:
               'sourceRepository': 'haihao0307/AIRCRAFT',
               'sourceCommit': os.environ['AIRCRAFT_COMMIT'],
               'sourcePath': os.environ['V010_SOURCE_PATH'],
-              'exactV010': {
-                  'bytes': int(os.environ['V010_BYTES']),
-                  'sha256': os.environ['V010_SHA256'],
-              },
+              'exactV010': {'bytes': int(os.environ['V010_BYTES']), 'sha256': os.environ['V010_SHA256']},
               'authoritativeB24': {
                   'bytes': int(os.environ['B24_BYTES']),
                   'sha256': os.environ['B24_SHA256'],
@@ -173,10 +162,7 @@ jobs:
                   'sameWorkbench': True,
                   'separateWindow': False,
               },
-              'runway': {
-                  'surface': 'compacted-earth',
-                  'markings': False,
-              },
+              'runway': {'surface': 'compacted-earth', 'markings': False},
               'aircraftRuntime': {
                   'identifiedPropellerRoots': 15,
                   'propellerDirections': {'0': 1, '1': 1, '2': 1, '3': 1},
@@ -202,8 +188,7 @@ jobs:
               'productionReady': False,
           }
           (root / 'PUBLISH_PROVENANCE.json').write_text(
-              json.dumps(provenance, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
+              json.dumps(provenance, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
           )
 
           receipt = {
@@ -225,12 +210,11 @@ jobs:
               'productionReady': False,
           }
           (root / 'PUBLICATION_QA.json').write_text(
-              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
           )
           PY
 
-      - name: Validate the final Pages directory
+      - name: Validate the final GitHub Pages directory
         shell: bash
         run: |
           set -euo pipefail
