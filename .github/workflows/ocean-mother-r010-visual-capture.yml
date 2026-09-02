@@ -1,0 +1,47 @@
+name: Ocean Mother R010 visual capture
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-r010-visual-capture.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - name: Capture current public Coast in Chrome WebGL2
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          URL="https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/?capture=$(date +%s%N)"
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --enable-webgl \
+            --ignore-gpu-blocklist \
+            --use-gl=angle \
+            --use-angle=swiftshader \
+            --disable-gpu-sandbox \
+            --hide-scrollbars \
+            --window-size=1728,1000 \
+            --force-device-scale-factor=1 \
+            --virtual-time-budget=18000 \
+            --screenshot=current-coast.png \
+            "$URL" 2> chrome.log
+          test -s current-coast.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocean-r010-current-visual
+          path: |
+            current-coast.png
+            chrome.log
+          retention-days: 7
+          if-no-files-found: error
