@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07141c">
+  <meta name="color-scheme" content="dark">
+  <title>Ocean Mother · Coast 0.2.0 写实近岸</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="coast.css">
+</head>
+<body>
+  <main id="stage"><canvas id="gl" aria-label="写实近岸海洋、透明浅水、状态泡沫与数值缓存三维工作台"></canvas><iframe id="deepFrame" title="保留的深海工作台" data-src="../v001/" hidden></iframe></main>
+  <header class="topbar"><div class="brand"><span class="brandMark">O</span><span><b>OCEAN MOTHER</b><small>COAST 0.2.0 · REAL OPTICS</small></span></div><nav class="tabs"><button id="coastTab" class="selected">近岸 Coast</button><button id="deepTab">深海</button></nav><div class="topActions"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle">参数</button></div></header>
+  <aside id="panel"><div class="panelHead"><span class="eyebrow">PHOTOREAL COAST</span><h1>水层、浪、泡沫与岸</h1><p>深海与近岸共用线性光照和色彩管理。浅水透明度来自真实水层光程，泡沫来自持续数值状态。</p></div><section><h2>海况</h2><div class="presetRow"><button data-sea="calm">平静</button><button data-sea="swell" class="active">涌浪</button><button data-sea="storm">强风浪</button></div><div id="waveControls"></div></section><section><h2>光学</h2><div id="opticsControls"></div><label class="selectRow">观察模式<select id="mode"><option value="environment">环境写实</option><option value="neutral">中性检查</option><option value="studio">工作室检查</option><option value="diagnostic">诊断</option></select></label></section><section><h2>数值缓存</h2><div class="cacheGrid"><span>静态海床</span><b id="bedCache">已编译</b><span>活动瓦片</span><b id="activeTiles">0</b><span>冻结瓦片</span><b id="frozenTiles">0</b><span>缓存复用</span><b id="cacheReuse">0%</b><span>泡沫更新</span><b id="foamRate">0 Hz</b><span>水雾粒子</span><b id="sprayCount">0</b></div><label class="selectRow">质量<select id="quality"><option value="auto" selected>自动 · 保留近景</option><option value="high">高</option><option value="ultra">超高</option></select></label></section><section><h2>镜头</h2><div class="viewRow"><button data-view="wide">全景</button><button data-view="shore">透明水边</button><button data-view="break">破浪带</button><button data-view="rocks">岩石水线</button><button data-view="top">俯视诊断</button></div></section><details><summary>运行身份与边界</summary><pre id="metrics">初始化中</pre><p class="limitText">当前候选使用解析远场波、二维近岸状态场、状态化泡沫和稀疏水雾。局部三维压力自由表面仍以独立研发任务推进，当前页面不会把显示几何申报成完整三维流体。</p><code id="build">coast-0.2.0-r010</code></details></aside>
+  <div id="sceneTitle"><span class="eyebrow">R010 · UNIFIED WATER OPTICS</span><h2>水层变薄，海岸自然显露。</h2><p>Beer Lambert 光程 · Fresnel 反射 · 状态泡沫 · 活动瓦片</p></div>
+  <div id="diagnosticLegend" hidden><b>诊断图例</b><span><i class="deep"></i>深水</span><span><i class="shallow"></i>浅水</span><span><i class="foam"></i>泡沫状态</span><span><i class="wet"></i>湿润历史</span><span><i class="activeTile"></i>活动瓦片</span></div>
+  <footer><span id="status">正在编译数值海岸</span><span id="clock">0.00 s</span><span id="fps">帧率待测</span><span id="resolution">分辨率待测</span><span class="review">研究候选 · 零图片资产 · 待视觉批准</span></footer>
+  <div id="loading"><div class="loadingMark">O</div><b>构建写实近岸状态</b><span id="progress">编译海床、岸线、泡沫与光学</span></div><pre id="error" hidden></pre>
+  <script type="module" src="coast-real.mjs"></script>
+</body>
+</html>
