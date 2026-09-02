@@ -72,7 +72,7 @@ def validate_sources(source: Path) -> None:
     assert "<iframe" not in html.lower()
     assert "小温州 V0.5.5" in html
     assert "真实大气循环" in html
-    assert "高度偏移 0 m" in html
+    assert "云高偏移 0 m" in html
     assert "四季云系自动编排" in html
     assert "calendarRate" in html and "autoWeather" in html
     assert "cloudBase" not in html and "cloudTop" not in html
