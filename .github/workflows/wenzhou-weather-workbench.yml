@@ -40,7 +40,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cat projects/wenzhou/v200/web/workbench/v054-deploy-bundle/part*.txt > /tmp/wz054-deploy.b64
+          mkdir -p /tmp/wenzhou-v054-evidence
+          cat projects/wenzhou/v200/web/workbench/v054-deploy-bundle/part*.txt | tr -cd 'A-Za-z0-9+/=' > /tmp/wz054-deploy.b64
           base64 -d /tmp/wz054-deploy.b64 > /tmp/wz054-deploy.sh
           echo '5c95c38210245ba127741dc9cb06ca73683c3d35557e3d5fdb7f16a27c0d82c7  /tmp/wz054-deploy.sh' | sha256sum -c -
           chmod +x /tmp/wz054-deploy.sh
