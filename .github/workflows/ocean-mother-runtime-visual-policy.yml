@@ -1,0 +1,25 @@
+name: Ocean Mother runtime visual policy
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths:
+      - ocean-mother/**
+      - .github/workflows/ocean-mother-runtime-visual-policy.yml
+  pull_request:
+    paths:
+      - ocean-mother/**
+      - .github/workflows/ocean-mother-runtime-visual-policy.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ocean-mother-runtime-visual-policy-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -B ocean-mother/tools/validate_runtime_visual_policy.py
+      - run: node --check ocean-mother/coast-v020/coast-real.mjs
