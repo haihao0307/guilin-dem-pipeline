@@ -1,34 +1,119 @@
 {
-  "version": "wenzhou-workbench-0.2.0-compact-weather110",
-  "sourceCommit": "02de26eaf90dd7e20c63e43604d0803e72dc9f73",
+  "schema": "wenzhou-real-cloud-units-build-1",
+  "version": "wenzhou-workbench-0.5.4-real-cloud-units",
+  "sourceCommit": "ec0f4d1d8c53cef256841ca5ecfc9f914871b115",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "project/wenzhou-v200-17tile-truth-hydrology-rebuild",
   "weatherReadRef": "fa69b5c7fed1a71339127776d0f3e44f9152c5a0",
   "weatherZipSha256": "ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e",
-  "attachmentBytesCompared": false,
+  "weatherManifestSha256": "a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b",
+  "weatherFieldWorkerSha256": "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d",
   "weatherKernelModified": false,
-  "mapOverviewSpacingM": 800,
-  "sourceNativeSpacingM": 12.5,
-  "wholeDomain": true,
-  "fullNativeOnline": false,
-  "sourceDeleted": false,
-  "noPersistedImageAssets": true,
-  "sharedWebGLDepth": false,
-  "visibleWeatherViewport": false,
-  "compactMapFirstUi": true,
-  "uiTopBarPx": 42,
-  "uiTerrainPanelPx": 214,
-  "weatherCoupling": [
-    "base-wind-direction",
-    "base-wind-speed",
-    "upstream-demonstration-clock",
-    "derived-renderer-daylight"
+  "fieldWorkerReusedByteIdentically": true,
+  "renderArchitecture": {
+    "mainCanvasCount": 1,
+    "mainCameraCount": 1,
+    "rendererCount": 1,
+    "iframeCount": 0,
+    "sameWebGL2Context": true,
+    "sharedWebGLDepth": true,
+    "sameWorldCoordinates": true,
+    "visibleWeatherViewport": true,
+    "hiddenWeatherIframe": false,
+    "mountainOcclusionCandidate": true,
+    "terrainCloudShadowCandidate": true,
+    "seaCloudReflectionCandidate": true
+  },
+  "weatherCases": [
+    "ci",
+    "cc",
+    "cs",
+    "ac",
+    "as",
+    "ns",
+    "sc",
+    "st",
+    "cu",
+    "cb",
+    "typhoon"
   ],
+  "explicitUnits": {
+    "worldLength": "metre",
+    "cloudSourceLength": "kilometre",
+    "cloudBaseTop": "metre",
+    "windDirection": "meteorological degree from north",
+    "windSpeed": "metre per second",
+    "cloudSpeed": "metre per second",
+    "simulationClock": "second"
+  },
+  "truth": {
+    "authoritativeCogName": "WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "authoritativeCogBytes": 136760745,
+    "authoritativeCogSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "authoritativeGrid": [
+      17555,
+      17918
+    ],
+    "sourceNativeSpacingM": 12.5,
+    "mapOverviewSpacingM": 800,
+    "overviewGrid": [
+      276,
+      281
+    ],
+    "wholeDomain": true,
+    "fullNativeOnline": false,
+    "authoritativeCogIncluded": false,
+    "sourceDeleted": false,
+    "oldQingjiangTruthUsed": false,
+    "syntheticGapFill": false,
+    "manualRivers": false,
+    "manualCoastline": false
+  },
+  "noPersistedImageAssets": true,
   "calibratedWeatherOrHydrodynamics": false,
+  "physicalTargetMachineVerified": false,
   "visualApproved": false,
   "productionApproved": false,
   "files": {
+    "ADOPTION.json": {
+      "bytes": 4567,
+      "sha256": "1fb176f5b910e5bac029c6cf68265066507441fbee9b90479a3b0ab814f9a331"
+    },
+    "DATA_QA.json": {
+      "bytes": 741,
+      "sha256": "be8c56de5cc751139e7b1c89c8eee46c4933128f33c7dbce9bbd9593849ffb87"
+    },
+    "SINGLE_SCENE_ARCHITECTURE.md": {
+      "bytes": 1775,
+      "sha256": "b39984d2a16a46d7154aa53e68076dc99de505d0caaad498b0d5747d1b646c9b"
+    },
+    "data/classes.u8.gz": {
+      "bytes": 2127,
+      "sha256": "8f74e4d4d887ae2669bf1948a70f4639a69a09390ce3bcd69af13ef45f9e38dc"
+    },
+    "data/overview800.i16.gz": {
+      "bytes": 73902,
+      "sha256": "984ed27388756432154e5d66acbac82355e06a15a19c9acb7e31bad33e4acdc1"
+    },
+    "data/shore.u16.gz": {
+      "bytes": 118412,
+      "sha256": "ecd3b7b97f6998bc02655b3ffaf53ae31d3991e0fe40295168fcfe28f721ccbc"
+    },
+    "data/vectors.json.gz": {
+      "bytes": 6044961,
+      "sha256": "30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39"
+    },
     "index.html": {
-      "bytes": 5305,
-      "sha256": "fc083229cf4ebbeabd03adb99f07c5905f5267a62d86c1f157675a826ee81504"
+      "bytes": 11805,
+      "sha256": "6fd383a60b9502787e31158cfbe047aa6fed1da692e8eb431a916664945abf7f"
+    },
+    "manifest.json": {
+      "bytes": 9005,
+      "sha256": "e462392b9f8f88888a064d6f2b35469ba844ca58e028c4b09b4ae4d58a71bce7"
+    },
+    "math.js": {
+      "bytes": 1286,
+      "sha256": "1b8008d1ef7b1a3c5333a1219f5df460f6b254f51e8384d00a681320fe413e7e"
     },
     "modules/weather-mother/HANDOFF.json": {
       "bytes": 3957,
@@ -37,10 +122,6 @@
     "modules/weather-mother/INTEGRATION.md": {
       "bytes": 5355,
       "sha256": "82a2b0ec653d0e5bce70e62578eb3d945f94d02c51378d57fe868fd0ef13c1cf"
-    },
-    "modules/weather-mother/MANIFEST.json": {
-      "bytes": 2447,
-      "sha256": "a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b"
     },
     "modules/weather-mother/POLICY.json": {
       "bytes": 5656,
@@ -78,53 +159,56 @@
       "bytes": 5009,
       "sha256": "e27a0b56c6f6c2c3bf2b55f4494ef421e6eaedc9676dc3dabaeaf73817af53e8"
     },
-    "terrain/DATA_QA.json": {
-      "bytes": 741,
-      "sha256": "be8c56de5cc751139e7b1c89c8eee46c4933128f33c7dbce9bbd9593849ffb87"
+    "runtime.js": {
+      "bytes": 22618,
+      "sha256": "8c1d058864d4cc15d846f822d3ad3c89f650bef38ae5599c6103dccfb7efe74d"
     },
-    "terrain/data/classes.u8.gz": {
-      "bytes": 2127,
-      "sha256": "8f74e4d4d887ae2669bf1948a70f4639a69a09390ce3bcd69af13ef45f9e38dc"
+    "shaders.js": {
+      "bytes": 6953,
+      "sha256": "28e3f8390c7944e4ad2606e5464e51b968f4669276a62325eb594955506943b6"
     },
-    "terrain/data/overview800.i16.gz": {
-      "bytes": 73902,
-      "sha256": "984ed27388756432154e5d66acbac82355e06a15a19c9acb7e31bad33e4acdc1"
-    },
-    "terrain/data/shore.u16.gz": {
-      "bytes": 118412,
-      "sha256": "ecd3b7b97f6998bc02655b3ffaf53ae31d3991e0fe40295168fcfe28f721ccbc"
-    },
-    "terrain/data/vectors.json.gz": {
-      "bytes": 6044961,
-      "sha256": "30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39"
-    },
-    "terrain/index.html": {
-      "bytes": 7539,
-      "sha256": "f4a8e8b679c9346c7c365e384aa6a8dbd91defee237b23bfc5a26bab7deaeb6c"
-    },
-    "terrain/manifest.json": {
-      "bytes": 9005,
-      "sha256": "682f7a39020980028b619de359ec2c92f4c777f03e9ee19146533f3a8ab92e9a"
-    },
-    "terrain/math.js": {
-      "bytes": 1286,
-      "sha256": "1b8008d1ef7b1a3c5333a1219f5df460f6b254f51e8384d00a681320fe413e7e"
-    },
-    "terrain/runtime.js": {
-      "bytes": 17423,
-      "sha256": "d3acf3e921d001cf2a905667f61df1fb58a5c10df5b8b5672e09092f7dfcf597"
-    },
-    "terrain/shaders.js": {
-      "bytes": 4477,
-      "sha256": "66999eb285a9500cdb1a1c618b9aedcd3a05f4ce282f6646e6bae8d6c6908fc9"
-    },
-    "weather-bridge.mjs": {
-      "bytes": 4673,
-      "sha256": "30903fb940afa2c593ae79a572e171d84ab9bb2d107b7e0ba041c73131556c8e"
-    },
-    "workbench.js": {
-      "bytes": 6426,
-      "sha256": "8570c2ff16f217edf53224c79df9a2c6868818c5d69bf9b4d898c5216a61d633"
+    "weather-scene.mjs": {
+      "bytes": 29928,
+      "sha256": "55413aa6ef3d53c87381e48a2d38d79c2be3dc4309c9ffc9861f3e94d932b0ee"
     }
+  },
+  "cloudGenera": [
+    "ci",
+    "cc",
+    "cs",
+    "ac",
+    "as",
+    "ns",
+    "sc",
+    "st",
+    "cu",
+    "cb"
+  ],
+  "cloudVerticalContract": {
+    "worldVerticalScale": 1,
+    "terrainVerticalScale": 1,
+    "altitudeOffsetM": 0,
+    "baseTopUnit": "metre AMSL",
+    "manualBaseTopControls": false,
+    "sourceDensityRemappedInsidePhysicalLayer": true,
+    "visualLift": false,
+    "visualVerticalCompression": false
+  },
+  "displayContract": {
+    "controllerViewport": [
+      2560,
+      1600
+    ],
+    "devicePixelRatio": 1,
+    "drawingBuffer": [
+      2560,
+      1600
+    ]
+  },
+  "scientificStatus": {
+    "wmoTemperateAltitudeLevelsApplied": true,
+    "liveRadiosondeConnected": false,
+    "historicalWeatherReanalysisConnected": false,
+    "calibrated": false
   }
 }
