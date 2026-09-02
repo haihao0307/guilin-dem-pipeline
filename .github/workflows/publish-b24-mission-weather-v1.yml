@@ -1,4 +1,4 @@
-name: Publish B24 mission weather workbench V1
+name: Restore authoritative B24 mission weather workbench
 
 on:
   workflow_dispatch:
@@ -12,16 +12,19 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-b24-mission-weather-v1
+  group: restore-authoritative-b24-mission-weather
   cancel-in-progress: false
 
 jobs:
-  publish:
+  restore:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       AIRCRAFT_COMMIT: 590a720df91557c6bfd0430a2612ebf94582cfb1
       DESTINATION: aircraft/b24-weather-mission-v1
+      B24_BYTES: 23085972
+      B24_SHA256: 541c3dcfb98ab590cdb1bc90d6ddcdfe80bce2a4b937f3bccefab0c7efe8be0d
+      V010_BASELINE_SHA256: 1b5b860ca78a7d55ea25d0d972a1d323125a57982d09452e7f7e0cb55d64a949
     steps:
       - name: Check out active gh-pages branch
         uses: actions/checkout@v4
@@ -29,7 +32,7 @@ jobs:
           ref: gh-pages
           fetch-depth: 0
 
-      - name: Download the browser-verified B24 workbench
+      - name: Restore the verified mission workbench source
         shell: bash
         run: |
           set -euo pipefail
@@ -41,66 +44,185 @@ jobs:
               "$base/$name"
           done
 
-      - name: Verify publication payload
+      - name: Mount the exact authoritative B24 beside the workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 3 \
+            --output "$DESTINATION/b24.glb" \
+            https://github.com/haihao0307/AIRCRAFT/releases/download/80-days-source-v1/b-24_liberator.glb
+          test "$(stat --format=%s "$DESTINATION/b24.glb")" = "$B24_BYTES"
+          echo "$B24_SHA256  $DESTINATION/b24.glb" | sha256sum --check
+
+      - name: Remove the substitute aircraft route and lock the restored V010 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          destination = Path('aircraft/b24-weather-mission-v1')
+          app_path = destination / 'app.js'
+          index_path = destination / 'index.html'
+          provenance_path = destination / 'PUBLISH_PROVENANCE.json'
+
+          app = app_path.read_text(encoding='utf-8')
+          original = app
+
+          release_url = "https://github.com/haihao0307/AIRCRAFT/releases/download/80-days-source-v1/b-24_liberator.glb"
+          app = app.replace(f"url:'{release_url}'", "url:'./b24.glb'")
+          app = app.replace("const url=new URLSearchParams(location.search).get('model')||LOCK.url;", "const url=LOCK.url;")
+
+          lines = app.splitlines()
+          lines = [line for line in lines if not line.startswith('function fallback(){')]
+          app = '\n'.join(lines) + '\n'
+
+          marker = "async function loadModel(){"
+          line_index = next((i for i, line in enumerate(app.splitlines()) if line.startswith(marker)), None)
+          if line_index is None:
+              raise SystemExit('loadModel function was not found')
+          lines = app.splitlines()
+          line = lines[line_index]
+          catch_marker = "}catch(e){"
+          if catch_marker not in line:
+              raise SystemExit('loadModel catch block was not found')
+          prefix = line.split(catch_marker, 1)[0]
+          fail_closed = (
+              "}catch(e){console.error(e);st.modelLoaded=false;st.running=false;st.paused=true;"
+              "ui.ms.dataset.state='fail';ui.mst.textContent='权威 B-24 载入失败';"
+              "ui.msd.textContent='已停止运行，禁止生成任何替代飞机';"
+              "ui.err.style.display='block';"
+              "ui.err.textContent='权威 B-24 未能载入。系统已经停止，当前页面不会生成替代机体。\\n'+e.message;"
+              "throw e}}"
+          )
+          lines[line_index] = prefix + fail_closed
+          app = '\n'.join(lines) + '\n'
+
+          app = app.replace(
+              "fair:{label:'晴日积云',low:.55,mid:.45,high:.30,storm:.08,fog:.0005,",
+              "fair:{label:'晴日积云',low:.22,mid:.16,high:.12,storm:0,fog:.00012,"
+          )
+          app = app.replace(
+              "ui.msd.textContent='23,085,972 bytes · SHA256 已通过'",
+              "ui.msd.textContent='V010 恢复基线 · 23,085,972 bytes · SHA256 已通过';ui.err.style.display='none'"
+          )
+          app = app.replace(
+              "contract:Object.freeze({singleWorkbench:true,onlineEntry:true,runway:true,fullLoop:true,bombing:true,explosion:true,returnAndLanding:true,multiLayerClouds:true,cloudInteraction:true,propellerDirections:[1,1,1,1],diagnosticsHidden:true,visualAcceptance:false,productionReady:false})",
+              "contract:Object.freeze({singleWorkbench:true,onlineEntry:true,authoritativeAircraftOnly:true,restoredBaseline:'B24_V010_RESTORED_CLEAN_BASELINE',proceduralAircraftFallback:false,runway:true,fullLoop:true,bombing:true,explosion:true,returnAndLanding:true,multiLayerClouds:true,cloudInteraction:true,propellerDirections:[1,1,1,1],diagnosticsHidden:true,visualAcceptance:false,productionReady:false})"
+          )
+
+          forbidden = ('img2threejs', 'image2three', 'function fallback(){', 'aircraft=fallback()', '程序化占位机继续演示')
+          lowered = app.lower()
+          found = [token for token in forbidden if token.lower() in lowered]
+          if found:
+              raise SystemExit(f'forbidden substitute route remains: {found}')
+          if "url:'./b24.glb'" not in app:
+              raise SystemExit('same-origin authoritative B24 URL lock was not applied')
+          if "proceduralAircraftFallback:false" not in app:
+              raise SystemExit('fail-closed aircraft contract was not added')
+          if app == original:
+              raise SystemExit('authoritative restoration made no change')
+
+          app_path.write_text(app, encoding='utf-8')
+
+          index = index_path.read_text(encoding='utf-8')
+          index = index.replace(
+              '<title>B-24 Weather Mother 全任务循环工作台 V1</title>',
+              '<title>B-24 V010 权威机体 · Weather Mother 全任务循环工作台</title>'
+          )
+          index = index.replace(
+              '<h1>B-24 全任务循环工作台 <span>V1</span></h1>',
+              '<h1>B-24 全任务循环工作台 <span>V010 RESTORED</span></h1>'
+          )
+          index = index.replace(
+              '<small id="model-status-detail">23,085,972 bytes · SHA256 锁定</small>',
+              '<small id="model-status-detail">V010 恢复基线 · 23,085,972 bytes · SHA256 锁定</small>'
+          )
+          if any(token in index.lower() for token in ('img2threejs', 'image2three')):
+              raise SystemExit('forbidden aircraft pipeline reference remains in index')
+          index_path.write_text(index, encoding='utf-8')
+
+          provenance = {
+              'schema': 'haihao.aircraft/b24-weather-mission-pages-publication@1.1.0',
+              'sourceRepository': 'haihao0307/AIRCRAFT',
+              'sourceCommit': '590a720df91557c6bfd0430a2612ebf94582cfb1',
+              'sourcePath': 'b24-weather-mission-v1',
+              'destinationRepository': 'haihao0307/guilin-dem-pipeline',
+              'destinationBranch': 'gh-pages',
+              'destinationPath': 'aircraft/b24-weather-mission-v1',
+              'singleWorkbench': True,
+              'separateWeatherWindow': False,
+              'aircraftSourceMode': 'authoritative-locked-only',
+              'restoredBaseline': {
+                  'name': 'B24_V010_RESTORED_CLEAN_BASELINE',
+                  'htmlSha256': '1b5b860ca78a7d55ea25d0d972a1d323125a57982d09452e7f7e0cb55d64a949',
+                  'recoveryCommit': '51929b3dc0a55c34315c2e822f6e0e13eaafb87a'
+              },
+              'authoritativeB24File': 'b24.glb',
+              'authoritativeB24Bytes': 23085972,
+              'authoritativeB24Sha256': '541c3dcfb98ab590cdb1bc90d6ddcdfe80bce2a4b937f3bccefab0c7efe8be0d',
+              'proceduralAircraftFallback': False,
+              'alternateAircraftGenerationRoute': False,
+              'runway': True,
+              'fullMissionLoop': True,
+              'cloudInteraction': True,
+              'visualAcceptance': False,
+              'productionReady': False
+          }
+          provenance_path.write_text(json.dumps(provenance, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Validate the restored public payload
         shell: bash
         run: |
           set -euo pipefail
           test -s "$DESTINATION/index.html"
           test -s "$DESTINATION/styles.css"
           test -s "$DESTINATION/app.js"
+          test "$(stat --format=%s "$DESTINATION/b24.glb")" = "$B24_BYTES"
+          echo "$B24_SHA256  $DESTINATION/b24.glb" | sha256sum --check
           grep -q 'B-24 全任务循环工作台' "$DESTINATION/index.html"
-          grep -q '开始循环' "$DESTINATION/index.html"
-          grep -q '立即投弹' "$DESTINATION/index.html"
-          grep -q '穿云互动' "$DESTINATION/index.html"
+          grep -q 'V010 RESTORED' "$DESTINATION/index.html"
+          grep -q "url:'./b24.glb'" "$DESTINATION/app.js"
+          grep -q 'proceduralAircraftFallback:false' "$DESTINATION/app.js"
           grep -q 'RUNWAY_24_06' "$DESTINATION/app.js"
           grep -q 'contactEvents' "$DESTINATION/app.js"
+          grep -q 'drop(false' "$DESTINATION/app.js"
+          if grep -Eqi 'img2threejs|image2three|function fallback\(|aircraft=fallback\(|程序化占位机继续演示' "$DESTINATION/index.html" "$DESTINATION/app.js" "$DESTINATION/PUBLISH_PROVENANCE.json"; then
+            echo 'Forbidden substitute aircraft route remains.'
+            exit 1
+          fi
           if grep -q '<iframe' "$DESTINATION/index.html"; then
             echo 'Unexpected separate weather frame found.'
             exit 1
           fi
-          cat > "$DESTINATION/PUBLISH_PROVENANCE.json" <<JSON
-          {
-            "schema": "haihao.aircraft/b24-weather-mission-pages-publication@1.0.0",
-            "sourceRepository": "haihao0307/AIRCRAFT",
-            "sourceCommit": "${AIRCRAFT_COMMIT}",
-            "sourcePath": "b24-weather-mission-v1",
-            "destinationRepository": "haihao0307/guilin-dem-pipeline",
-            "destinationBranch": "gh-pages",
-            "destinationPath": "${DESTINATION}",
-            "singleWorkbench": true,
-            "separateWeatherWindow": false,
-            "authoritativeB24Bytes": 23085972,
-            "authoritativeB24Sha256": "541c3dcfb98ab590cdb1bc90d6ddcdfe80bce2a4b937f3bccefab0c7efe8be0d",
-            "browserQaRun": 33590099504,
-            "browserQaStatus": "success",
-            "visualAcceptance": false,
-            "productionReady": false
-          }
-          JSON
 
-      - name: Commit the public workbench to gh-pages
+      - name: Commit the restored workbench to gh-pages
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'B24 mission workbench publisher'
+          git config user.name 'B24 authoritative workbench restorer'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$DESTINATION"
           if git diff --cached --quiet; then
-            echo 'Public workbench already matches the verified source.'
+            echo 'Public workbench already matches the authoritative restored payload.'
             exit 0
           fi
-          git commit -m 'publish(b24): add full mission Weather Mother workbench V1'
+          git commit -m 'fix(b24): restore authoritative V010 aircraft and remove substitute route'
           git push origin HEAD:gh-pages
 
-      - name: Publication summary
+      - name: Summary
+        if: always()
         shell: bash
         run: |
           {
-            echo '## B24 mission weather workbench V1'
+            echo '## Authoritative B24 public workbench restoration'
             echo
-            echo "Source commit: ${AIRCRAFT_COMMIT}"
-            echo "Public path: ${DESTINATION}/"
-            echo 'Full mission browser QA: passed before publication'
+            echo 'Restored baseline: B24_V010_RESTORED_CLEAN_BASELINE'
+            echo 'Exact B24 mounted same-origin: 23,085,972 bytes'
+            echo 'Substitute aircraft route: removed'
+            echo 'Runway, mission loop and Weather Mother: preserved'
             echo 'visualAcceptance=false'
             echo 'productionReady=false'
           } >> "$GITHUB_STEP_SUMMARY"
