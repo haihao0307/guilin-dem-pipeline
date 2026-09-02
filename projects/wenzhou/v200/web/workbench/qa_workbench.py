@@ -160,9 +160,11 @@ with sync_playwright() as pw:
                 page.locator('#case').select_option('coast')
                 native_ready(page, 'coast')
 
-                page.locator('#panelToggle').click()
                 if mobile:
+                    page.locator('#panelToggle').click()
                     wait(page, "document.querySelector('#terrain').contentWindow.document.querySelector('#panel').classList.contains('open')")
+                else:
+                    check('ultrawide ground control remains visible', t.locator('#ground').is_visible())
                 t.locator('#ground').click()
                 t.wait_for_function('window.__WZ_FULL__.ground && window.__WZ_FULL__.clearance>=1.6 && window.__WZ_FULL__.clearance<2')
                 ground = t.evaluate('window.__WZ_FULL__')
