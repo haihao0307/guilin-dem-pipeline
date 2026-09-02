@@ -21,7 +21,7 @@ jobs:
       INPUTS: /tmp/wenzhou-weather-inputs
       SITE: /tmp/wenzhou-weather-site
       EVIDENCE: /tmp/wenzhou-weather-evidence
-      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=weather110-single-scene-r1
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=weather110-single-scene-r2
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -97,7 +97,40 @@ jobs:
           assert build['truth']['sourceDeleted'] is False
           assert build['visualApproved'] is False and build['productionApproved'] is False
           PY
-      - name: Actual desktop and mobile Chromium prepublication tests
+      - name: Stabilize the browser QA clock boundary and enforce the controller viewport
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          path=Path(os.environ['ROOT'])/'qa_workbench.py'
+          text=path.read_text(encoding='utf-8')
+          old_view='            ("ultrawide", 2560, 1080, False),'
+          new_view='            ("ultrawide", 2560, 1600, False),'
+          assert old_view in text or new_view in text
+          text=text.replace(old_view,new_view)
+          old='''                before_pause = state(page)["weather"]["clock"]["simulationSeconds"]
+                page.locator("#playPause").click()
+                page.wait_for_timeout(700)
+                after_pause = state(page)["weather"]["clock"]["simulationSeconds"]
+                check(f"{name} real pause", abs(after_pause - before_pause) < 0.08, [before_pause, after_pause])
+                page.locator("#playPause").click()
+                wait(page, f"window.__WZ_FULL__.weather.clock.simulationSeconds>{after_pause + 0.08}")
+'''
+          new='''                page.locator("#playPause").click()
+                wait(page, "window.__WZ_FULL__.weather.clock.playing===false")
+                paused_at = state(page)["weather"]["clock"]["simulationSeconds"]
+                page.wait_for_timeout(700)
+                after_pause = state(page)["weather"]["clock"]["simulationSeconds"]
+                check(f"{name} real pause", abs(after_pause - paused_at) < 0.08, [paused_at, after_pause])
+                page.locator("#playPause").click()
+                wait(page, "window.__WZ_FULL__.weather.clock.playing===true")
+                wait(page, f"window.__WZ_FULL__.weather.clock.simulationSeconds>{after_pause + 0.08}")
+'''
+          assert old in text or new in text
+          text=text.replace(old,new)
+          path.write_text(text,encoding='utf-8')
+          PY
+      - name: Actual 2560 by 1600 and mobile Chromium prepublication tests
         run: |
           set -euo pipefail
           python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/local-http.log" 2>&1 &
@@ -182,9 +215,9 @@ jobs:
               (out/'PUBLIC_HTTP.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
-      - name: Fresh actual public desktop and mobile Chromium verification
+      - name: Fresh actual public 2560 by 1600 and mobile Chromium verification
         run: python "$ROOT/qa_workbench.py" --url "$URL" --out "$EVIDENCE/public"
-      - name: Record exact-build public receipt on the Wenzhou branch
+      - name: Record exact-build public receipt and permanent QA correction on the Wenzhou branch
         run: |
           set -euo pipefail
           target=projects/wenzhou/v200/reports/weather-workbench
@@ -194,8 +227,8 @@ jobs:
           cp "$SITE/BUILD.json" "$target/"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- "$target"
-          git diff --cached --quiet || git commit -m 'Record actual public Wenzhou single-scene Weather verification [skip ci]'
+          git add -- "$target" "$ROOT/qa_workbench.py"
+          git diff --cached --quiet || git commit -m 'Record actual public Wenzhou single-scene Weather verification and stabilize QA [skip ci]'
           git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
       - name: Retain actual success or failure evidence
         if: always()
@@ -219,6 +252,7 @@ jobs:
               summary.write('Actual public single-scene browser check passed: '+str(passed)+'\n\n')
               summary.write('One renderer, one canvas, one camera and shared WebGL depth candidate. ')
               summary.write('Weather Mother field worker remains byte-identical. ')
+              summary.write('Controller viewport is 2560 by 1600. ')
               summary.write('800 m whole-domain overview. Full native 12.5 m LOD remains incomplete. ')
               summary.write('Scientific calibration, human visual approval and production approval remain false.\n')
           PY
