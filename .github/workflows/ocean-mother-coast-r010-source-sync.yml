@@ -1,0 +1,55 @@
+name: Ocean Mother Coast R010.1 source sync
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r010-source-sync.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Patch source, write receipt, and update working state atomically
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os, time, urllib.request
+          repo='haihao0307/guilin-dem-pipeline';branch='work/ocean-mother-handoff-20260901';base='https://api.github.com/repos/'+repo;token=os.environ['GH_TOKEN']
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          def read(path):
+              value=api('/contents/'+path+'?ref='+branch+'&nonce='+str(time.time_ns()))
+              return base64.b64decode(value['content']).decode('utf-8')
+          js_path='ocean-mother/coast-v020/coast-real.mjs';html_path='ocean-mother/coast-v020/index.html';state_path='ocean-mother/WORKING_STATE.md';receipt_path='ocean-mother/coast-v020/HOTFIX_R010_1.json'
+          js=read(js_path);html=read(html_path);state=read(state_path)
+          assert js.count("const VERSION='0.2.0-coast-r010';")==1
+          assert js.count('float active=texture(uTiles,tuv).r')==1
+          assert js.count('active*edge*.8')==1
+          js=js.replace("const VERSION='0.2.0-coast-r010';","const VERSION='0.2.0-coast-r010.1';",1).replace('float active=texture(uTiles,tuv).r','float tileActivity=texture(uTiles,tuv).r',1).replace('active*edge*.8','tileActivity*edge*.8',1)
+          assert 'float active=' not in js and 'tileActivity*edge*.8' in js
+          assert html.count('src="coast-real.mjs"')==1 and html.count('coast-0.2.0-r010')==1
+          html=html.replace('src="coast-real.mjs"','src="coast-real.mjs?v=0.2.0-r010.1"',1).replace('coast-0.2.0-r010','coast-0.2.0-r010.1-shader-hotfix',1)
+          note='''\n## R010.1 着色器修复\n\n用户公开页面复核发现水体片元着色器把 `active` 用作局部变量。浏览器按 GLSL ES 3.00 保留字处理并拒绝编译。R010.1 将该变量改为 `tileActivity`，同步提升运行版本并给模块增加版本查询，避免浏览器继续读取旧脚本。\n\n公开修复提交：`bee6b0cbcf86c4ff4c3e30a4b0fb46554ff7d4da`。公开 Chrome WebGL2 检查工作流：`33616131790`，结论 success。检查确认公开 HTML 与模块已更新、WebGL2 初始化成功、运行时已推进、错误面板保持隐藏，且原保留字编译错误消失。\n\n该修复只改着色器标识符、版本身份和浏览器缓存键，不改海床、浪形、泡沫状态、光学参数、冻结天气、深海或其他 Mother。`visualApproved=false`，`productionApproved=false`。\n'''
+          if '## R010.1 着色器修复' not in state:state=state.rstrip()+note+'\n'
+          receipt={
+            'format':'ocean-coast-shader-hotfix-receipt','version':1,'runtimeVersion':'0.2.0-coast-r010.1','date':'2026-09-02','fault':"GLSL ES 3.00 rejected local identifier 'active' as reserved",'repair':"active renamed to tileActivity",'sourcePath':js_path,'publicPath':'ocean-mother/coast-v020-r010/coast-real.mjs','publicCommit':'bee6b0cbcf86c4ff4c3e30a4b0fb46554ff7d4da','publicBrowserWorkflowRun':33616131790,'publicBrowserConclusion':'success','cacheBust':'coast-real.mjs?v=0.2.0-r010.1','sourceSha256':hashlib.sha256(js.encode()).hexdigest(),'imageAssetsAdded':0,'deepOceanChanged':False,'weatherChanged':False,'otherMotherChanged':False,'visualApproved':False,'productionApproved':False
+          }
+          contents={js_path:js.encode(),html_path:html.encode(),state_path:state.encode(),receipt_path:(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n').encode()}
+          head=api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha'];base_tree=api('/git/commits/'+head)['tree']['sha'];entries=[]
+          for path,data in contents.items():
+              blob=api('/git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha'];entries.append({'path':path,'mode':'100644','type':'blob','sha':blob})
+          tree=api('/git/trees',{'base_tree':base_tree,'tree':entries})['sha'];commit=api('/git/commits',{'message':'fix(ocean): sync Coast R010.1 shader repair and receipt','tree':tree,'parents':[head]})['sha']
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==head
+          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH')
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==commit
+          print(json.dumps({'status':'SOURCE_SYNCED','commit':commit,'runtimeVersion':'0.2.0-coast-r010.1','files':list(contents),'forcePush':False},ensure_ascii=False,indent=2))
+          PY
