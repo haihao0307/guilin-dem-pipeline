@@ -1,0 +1,50 @@
+name: Ocean Mother full restart V012
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-full-restart-v012.yml]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: ocean-mother-full-restart-v012
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Reconstruct exact package publisher
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,os,pathlib,urllib.request,zlib
+          repo='haihao0307/guilin-dem-pipeline'
+          assert os.environ['GITHUB_REPOSITORY']==repo
+          parts=[]
+          for i in range(1,5):
+              url=f'https://raw.githubusercontent.com/{repo}/{os.environ["GITHUB_SHA"]}/ocean-mother/package-v012/chunks/part{i:02d}.b64'
+              with urllib.request.urlopen(url,timeout=60) as r:
+                  assert r.status==200
+                  parts.append(r.read().decode().strip())
+          packed=base64.b64decode(''.join(parts))
+          assert hashlib.sha256(packed).hexdigest()=='c6b7a6cc275a67a2e738418a2904ead6ecf835a5384ddfca8a37385f193c1698'
+          script=zlib.decompress(packed)
+          assert hashlib.sha256(script).hexdigest()=='5d595aa17d8e24dae8e2cf45a2a20d90a6fef85297d3f7d4cf6d54b10580b629'
+          pathlib.Path('build_package.py').write_bytes(script)
+          PY
+      - name: Build exact ZIP, rerun tests, push package and freeze restart pointer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -B build_package.py
+      - name: Preserve package publication evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Ocean-Mother-Full-Restart-V0.1.2
+          path: |
+            _ocean_restart/Ocean_Mother_Full_Restart_Handoff_2026-09-02_V0.1.2.zip
+            _publication_evidence/
+          retention-days: 90
+          if-no-files-found: warn
