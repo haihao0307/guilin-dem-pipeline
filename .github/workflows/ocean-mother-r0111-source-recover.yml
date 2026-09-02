@@ -1,0 +1,41 @@
+name: Ocean Mother R011.1 source recover
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-r0111-source-recover.yml
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/ocean-mother-handoff-20260901
+      - name: Reconstruct and verify staged source
+        run: |
+          set -euo pipefail
+          cat ocean-mother/package-v021-r0111/part{01,02,03,04,05,06}.b64 > payload.b64
+          test "$(wc -c < payload.b64)" = 35052
+          base64 -d payload.b64 > payload.zip
+          echo '3f1bc436e86f996c630ad26ed1a3573c50c34265e1c9b92a5560325d85082fbd  payload.zip' | sha256sum -c -
+          unzip -t payload.zip
+          mkdir recovered
+          unzip -q payload.zip -d recovered
+          node --check recovered/core.mjs
+          node --check recovered/shaders.mjs
+          node --check recovered/app.mjs
+          find recovered -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocean-r0111-recovered-source
+          path: recovered/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
