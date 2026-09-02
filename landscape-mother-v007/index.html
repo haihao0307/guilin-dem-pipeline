@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07131b">
+<title>Landscape Mother · 喀斯特清晰彩色近景 V007</title>
+<link rel="stylesheet" href="styles.css?v=20260903-3">
+</head>
+<body>
+<canvas id="gl" aria-label="Landscape Mother 喀斯特三维工作台"></canvas>
+<header class="top"><div class="brand"><div class="mark"></div><div><b>LANDSCAPE MOTHER</b><span>FUNCTIONAL TERRAIN SYSTEM</span></div></div><button class="active current">喀斯特近景</button><div class="spacer"></div><div class="status"><i></i><span id="statusText">移动端渐进编译</span></div><button id="panelBtn">控制</button><button id="customBtn">CUSTOM</button></header>
+<aside id="panel" class="panel hidden"><div class="tabs"><button class="active" data-tab="shape">形态</button><button data-tab="material">材质</button><button data-tab="light">光照</button><button data-tab="diag">诊断</button></div>
+<section id="shape" class="page active"><div class="section"><h3>确定性种子</h3><div class="seedrow"><button id="prevSeed">‹</button><button id="nextSeed">›</button><input id="seedInput" value="28117" inputmode="numeric"><button id="randomSeed">随机</button></div><div id="seedChips" class="seedchips"></div></div><div class="section"><h3>硬质峰体</h3>
+<div class="row"><label>垂直性</label><span class="value" id="hardnessV"></span><input id="hardness" type="range" min="0.76" max="1.18" step="0.01" value="1.00"></div>
+<div class="row"><label>峰体高度</label><span class="value" id="reliefV"></span><input id="relief" type="range" min="0.76" max="1.24" step="0.01" value="1.02"></div>
+<div class="row"><label>溶沟深度</label><span class="value" id="groovesV"></span><input id="grooves" type="range" min="0" max="1" step="0.01" value="0.47"></div>
+<div class="row"><label>顶部溶坑</label><span class="value" id="sinkholesV"></span><input id="sinkholes" type="range" min="0" max="1" step="0.01" value="0.38"></div></div><div class="section"><p>连续共享网格负责轮廓。细颗粒、风化和水迹进入材质层，不切碎宏观形体。</p></div></section>
+<section id="material" class="page"><div class="section"><h3>石灰岩材料状态</h3>
+<div class="row"><label>灰白方解石</label><span class="value" id="calciteV"></span><input id="calcite" type="range" min="0.72" max="1.25" step="0.01" value="1.04"></div>
+<div class="row"><label>黄褐矿物沉积</label><span class="value" id="ochreV"></span><input id="ochre" type="range" min="0" max="1" step="0.01" value="0.68"></div>
+<div class="row"><label>苔藓地衣</label><span class="value" id="mossV"></span><input id="moss" type="range" min="0" max="1" step="0.01" value="0.43"></div>
+<div class="row"><label>湿润水迹</label><span class="value" id="wetnessV"></span><input id="wetness" type="range" min="0" max="1" step="0.01" value="0.21"></div>
+<div class="row"><label>微表面强度</label><span class="value" id="microV"></span><input id="micro" type="range" min="0" max="1" step="0.01" value="0.50"></div></div><div class="section"><p>介质反射率固定在安全范围。基础色不包含大尺度阴影，遮蔽只作用于环境漫反射。</p></div></section>
+<section id="light" class="page"><div class="section"><h3>清晰近景光照</h3>
+<div class="grid2"><button class="active" data-light="clear">强日光</button><button data-light="golden">黄金时刻</button><button data-light="neutral">中性检查</button><button data-light="wet">雨后清光</button></div>
+<div class="row"><label>太阳强度</label><span class="value" id="sunV"></span><input id="sun" type="range" min="1.8" max="6" step="0.05" value="4.65"></div>
+<div class="row"><label>环境补光</label><span class="value" id="ambientV"></span><input id="ambient" type="range" min="0.2" max="1.6" step="0.02" value="0.96"></div>
+<div class="row"><label>曝光</label><span class="value" id="exposureV"></span><input id="exposure" type="range" min="0.72" max="1.55" step="0.01" value="1.14"></div></div></section>
+<section id="diag" class="page"><div class="section"><h3>过程诊断</h3><div class="grid2"><button class="active" data-diag="0">最终材质</button><button data-diag="1">坡度</button><button data-diag="2">汇流</button><button data-diag="3">表面年龄</button><button data-diag="4">凹凸场</button><button data-diag="5">岩体掩膜</button></div></div><div class="section"><p>诊断只改变显示方式，地貌几何和种子保持不变。</p></div></section>
+</aside>
+<div class="views"><button class="active" data-view="hero">整体</button><button data-view="cliff">岩壁</button><button data-view="top">山顶</button><button data-view="surface">近景</button></div>
+<div class="info"><b>喀斯特清晰彩色近景 V007</b><p>没有远山、雾层、云层和外部贴图。移动端自动降低像素负担，保留三维交互。</p><div class="stats"><span>网格<strong id="gridStat">准备中</strong></span><span>三角面<strong id="triStat">准备中</strong></span><span>远景几何<strong>0</strong></span><span>雾层<strong>0</strong></span></div></div>
+<div id="rebuild" class="rebuild"><i class="spinner"></i><span id="rebuildText">正在更新地貌</span></div>
+<div id="loading" class="loading"><div class="loadbox"><b>Landscape Mother</b><span id="loadText">正在启动移动端三维内核</span><div class="bar"><i id="loadBar"></i></div><span id="loadPct" class="loadpct">0%</span><button id="retry" class="retry">重新启动</button></div></div>
+<script src="loader.js?v=20260903-3"></script>
+</body>
+</html>
