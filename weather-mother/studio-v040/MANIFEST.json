@@ -1,26 +1,37 @@
 {
   "productionLine": "Weather Mother",
-  "version": "0.4.0-unified-studio",
+  "version": "0.4.1-unified-mobile-studio",
   "canonicalEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
   "runtimeEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio-v040/",
   "defaultModule": "world",
   "drawer": {
     "label": "WEATHER MOTHER",
     "persistent": true,
-    "availableModules": ["world", "rain", "snow", "fog", "cloud", "storm"]
+    "availableModules": ["world", "rain", "snow", "fog", "cloud", "storm"],
+    "portraitWidth": "min(76vw, 286px)",
+    "mobilePullWidthPx": 28
+  },
+  "mobileShell": {
+    "visualViewportHeight": true,
+    "iosSafeAreaInsets": true,
+    "compactTopIdentity": true,
+    "rainControlsDefaultCollapsed": true,
+    "rainControlsPresentation": "portrait bottom sheet and landscape right-side sheet"
   },
   "moduleRoutes": {
-    "world": "../v110-full/?embedded=1&studio=040",
-    "rain": "../rain-v040/?embedded=1&studio=040",
-    "snow": "../v110-full/?weather=snow&embedded=1&studio=040",
-    "fog": "../v110-full/?weather=fogbank&embedded=1&studio=040",
-    "cloud": "../v110-full/?weather=fair&embedded=1&studio=040",
-    "storm": "../v110-full/?weather=nightstorm&embedded=1&studio=040"
+    "world": "../v110-full/?embedded=1&studio=041",
+    "rain": "../rain-v040/?embedded=1&studio=041&mobile=041",
+    "snow": "../v110-full/?weather=snow&embedded=1&studio=041",
+    "fog": "../v110-full/?weather=fogbank&embedded=1&studio=041",
+    "cloud": "../v110-full/?weather=fair&embedded=1&studio=041",
+    "storm": "../v110-full/?weather=nightstorm&embedded=1&studio=041"
   },
   "rainCandidate": {
-    "version": "0.4.0-visual-truth-candidate",
+    "version": "0.4.1-mobile-review-candidate",
     "runtimeDirectory": "weather-mother/rain-v040",
     "technicalQa": "PASS",
+    "mobileLayoutPatched": true,
+    "mobileVisualApproved": false,
     "visualApproved": false,
     "aaaQualityApproved": false,
     "productionReady": false
