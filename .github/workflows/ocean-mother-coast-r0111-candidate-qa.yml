@@ -1,0 +1,186 @@
+name: Ocean Mother Coast R011.1 candidate QA
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r0111-candidate-qa.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-mother-coast-r0111-candidate-qa
+  cancel-in-progress: false
+
+jobs:
+  candidate-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/ocean-mother-handoff-20260901
+          fetch-depth: 1
+
+      - name: Reconstruct exact standalone candidate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib, json, re, zlib
+          payload_dir = Path('ocean-mother/coast-r011-payload')
+          chunks = [payload_dir / f'part{i:02d}.b64' for i in range(1, 6)]
+          assert all(path.is_file() for path in chunks), chunks
+          encoded = ''.join(path.read_text('ascii').strip() for path in chunks)
+          assert len(encoded) == 32156, len(encoded)
+          packed = base64.b64decode(encoded, validate=True)
+          assert len(packed) == 24115, len(packed)
+          assert hashlib.sha256(packed).hexdigest() == 'fa65eb23367bf792f0708f78cada38c89a97063352f745ba3bbb36ba300599ce'
+          html = zlib.decompress(packed)
+          assert len(html) == 78062, len(html)
+          assert hashlib.sha256(html).hexdigest() == '73ab8cae453fb824774a734fd14f0f7ac98ff66106b4cce9460a2ad12c9b7486'
+          text = html.decode('utf-8')
+          required = [
+              '0.2.1-coast-r011.1',
+              'coast-0.2.1-r011.1-daylight-complete',
+              '完整海岸', '透明水边', '破浪带', '烟火', '岩石水线',
+              'qaProbe', 'rockCount', 'smokeParticles', 'flameParticles',
+              'persistentImageAssets: 0',
+          ]
+          for marker in required:
+              assert marker in text, marker
+          lowered = text.lower()
+          forbidden = ['data:image/', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.hdr', '.exr', '.ktx', '.dds', 'image_gen', 'text2im']
+          for token in forbidden:
+              assert token not in lowered, token
+          candidate = Path('candidate')
+          candidate.mkdir()
+          (candidate / 'index.html').write_bytes(html)
+          scripts = re.findall(r'<script type="module">(.*?)</script>', text, flags=re.S)
+          assert len(scripts) == 1, len(scripts)
+          (candidate / 'runtime.mjs').write_text(scripts[0], encoding='utf-8')
+          receipt = {
+              'status': 'RECONSTRUCTED_EXACTLY',
+              'runtimeVersion': '0.2.1-coast-r011.1',
+              'standaloneBytes': len(html),
+              'standaloneSha256': hashlib.sha256(html).hexdigest(),
+              'packedBytes': len(packed),
+              'packedSha256': hashlib.sha256(packed).hexdigest(),
+              'payloadCharacters': len(encoded),
+              'payloadChunks': len(chunks),
+              'persistentImageAssets': 0,
+              'externalModels': 0,
+              'externalCdn': 0,
+          }
+          Path('candidate/RECONSTRUCTION.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          PY
+          node --check candidate/runtime.mjs
+
+      - name: Run five real Chrome WebGL2 visual gates
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 -m http.server 8123 --bind 127.0.0.1 > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --hide-scrollbars --window-size=1600,900 --virtual-time-budget=20000)
+          BASE='http://127.0.0.1:8123/candidate/'
+          for VIEW in overview fire shore breaker rocks; do
+            "$CHROME" "${COMMON[@]}" --dump-dom "${BASE}?qa=1&view=${VIEW}" > "evidence/${VIEW}-dom.html" 2> "evidence/${VIEW}-chrome.log"
+            "$CHROME" "${COMMON[@]}" --screenshot="evidence/${VIEW}.png" "${BASE}?qa=1&view=${VIEW}" >> "evidence/${VIEW}-chrome.log" 2>&1
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import html, json, re
+          evidence = Path('evidence')
+          views = ('overview', 'fire', 'shore', 'breaker', 'rocks')
+          probes = {}
+          errors = []
+          for view in views:
+              dom = (evidence / f'{view}-dom.html').read_text(errors='replace')
+              log = (evidence / f'{view}-chrome.log').read_text(errors='replace')
+              bad = re.search(r'illegal use of reserved word|ERROR: 0:|shader.{0,80}compile|当前浏览器未提供 WebGL2|uncaught|unhandled', dom + '\n' + log, re.I)
+              if bad:
+                  errors.append({'view': view, 'error': bad.group(0), 'tail': (dom + '\n' + log)[-3000:]})
+              match = re.search(r'<pre id="qaProbe" hidden>(.*?)</pre>', dom, re.S)
+              if not match:
+                  errors.append({'view': view, 'error': 'qaProbe missing'})
+                  continue
+              try:
+                  probes[view] = json.loads(html.unescape(match.group(1)))
+              except Exception as exc:
+                  errors.append({'view': view, 'error': f'qaProbe parse failed: {exc}'})
+              shot = evidence / f'{view}.png'
+              if not shot.is_file() or shot.stat().st_size < 30000:
+                  errors.append({'view': view, 'error': 'visual capture missing or too small'})
+          overview = probes.get('overview', {})
+          fire = probes.get('fire', {})
+          shore = probes.get('shore', {})
+          breaker = probes.get('breaker', {})
+          rocks = probes.get('rocks', {})
+          visual = overview.get('visualProbe') or {}
+          fire_visual = fire.get('visualProbe') or {}
+          shore_visual = shore.get('visualProbe') or {}
+          composition = overview.get('composition') or {}
+          checks = {
+              'fiveViewsLoaded': len(probes) == 5,
+              'allViewsReady': all(probes.get(v, {}).get('ready') is True for v in views),
+              'allViewsWebGL2': all(probes.get(v, {}).get('webgl2') is True for v in views),
+              'allViewsErrorFree': all(not probes.get(v, {}).get('error') for v in views),
+              'runtimeAdvanced': overview.get('physicalTime', 0) > 1.5,
+              'daylightAverage': visual.get('averageLuminance', 0) > 0.18,
+              'daylightSky': visual.get('topLuminance', 0) > 0.22,
+              'sceneNotBlack': visual.get('nonDarkRatio', 0) > 0.82,
+              'waterSkyVisible': visual.get('blueWaterSkyRatio', 0) > 0.035,
+              'earthSandRockVisible': visual.get('earthSandRockRatio', 0) > 0.012,
+              'overviewFireVisible': visual.get('warmFireRatio', 0) > 0.000015,
+              'fireCloseupVisible': fire_visual.get('warmFireRatio', 0) > 0.00010,
+              'shoreDaylight': shore_visual.get('averageLuminance', 0) > 0.16,
+              'rocksPresent': composition.get('rockCount', 0) >= 18,
+              'fireRingPresent': composition.get('fireRingRockCount', 0) >= 12,
+              'logsPresent': composition.get('logCount', 0) >= 4,
+              'smokePresent': composition.get('smokeParticles', 0) >= 25,
+              'flamePresent': composition.get('flameParticles', 0) >= 15,
+              'foamPresent': composition.get('foamActiveCells', 0) >= 80,
+              'breakerViewReady': breaker.get('currentView') == 'breaker',
+              'rocksViewReady': rocks.get('currentView') == 'rocks',
+              'zeroPersistentImages': overview.get('persistentImageAssets') == 0,
+              'zeroExternalModels': overview.get('externalModels') == 0,
+              'zeroExternalCdn': overview.get('externalCdn') == 0,
+              'logsClean': len(errors) == 0,
+          }
+          report = {
+              'status': 'CANDIDATE_BROWSER_PASS' if all(checks.values()) else 'CANDIDATE_BROWSER_FAIL',
+              'checksPassed': sum(bool(v) for v in checks.values()),
+              'checksFailed': sum(not bool(v) for v in checks.values()),
+              'checks': checks,
+              'probes': probes,
+              'errors': errors,
+              'screenshotsInternalEvidenceOnly': True,
+              'persistentImageAssets': 0,
+              'visualApproved': False,
+              'productionApproved': False,
+          }
+          (evidence / 'CANDIDATE_BROWSER_QA.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+          print(json.dumps({k: v for k, v in report.items() if k != 'probes'}, ensure_ascii=False, indent=2))
+          if report['status'] != 'CANDIDATE_BROWSER_PASS':
+              raise SystemExit(1)
+          PY
+
+      - name: Preserve candidate and internal QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-coast-r0111-candidate-qa
+          path: |
+            candidate/
+            evidence/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
