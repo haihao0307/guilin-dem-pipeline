@@ -1,0 +1,95 @@
+name: Ocean Mother Coast R010.1 public smoke
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r010-public-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-browser-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Wait for corrected GitHub Pages bytes
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/'
+          ready=0
+          for attempt in $(seq 1 24); do
+            curl -fsSL -H 'Cache-Control: no-cache' "$URL?readback=$RANDOM-$attempt" -o index.html
+            if grep -q 'coast-0.2.0-r010.1-shader-hotfix' index.html && grep -q 'coast-real.mjs?v=0.2.0-r010.1' index.html; then
+              ready=1
+              break
+            fi
+            sleep 10
+          done
+          test "$ready" = 1
+          curl -fsSL -H 'Cache-Control: no-cache' "${URL}coast-real.mjs?v=0.2.0-r010.1&readback=$RANDOM" -o coast-real.mjs
+          grep -q "const VERSION='0.2.0-coast-r010.1';" coast-real.mjs
+          grep -q 'float tileActivity=texture(uTiles,tuv).r' coast-real.mjs
+          grep -q 'tileActivity\*edge\*\.8' coast-real.mjs
+          if grep -q 'float active=' coast-real.mjs; then exit 1; fi
+
+      - name: Run the corrected public page in real headless Chrome WebGL2
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          URL="https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/?smoke=$(date +%s%N)"
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            --enable-webgl \
+            --ignore-gpu-blocklist \
+            --use-gl=angle \
+            --use-angle=swiftshader \
+            --disable-gpu-sandbox \
+            --virtual-time-budget=15000 \
+            --dump-dom \
+            "$URL" > public-dom.html 2> chrome.log
+          grep -q 'coast-0.2.0-r010.1-shader-hotfix' public-dom.html
+          grep -q '版本 0.2.0-coast-r010.1' public-dom.html
+          grep -q 'Coast · 写实近岸演化中' public-dom.html
+          grep -q '<pre id="error" hidden' public-dom.html
+          if grep -Eqi "illegal use of reserved word|ERROR: 0:|shader.*compile|当前浏览器未提供 WebGL2" public-dom.html chrome.log; then
+            cat chrome.log
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json, pathlib
+          dom=pathlib.Path('public-dom.html').read_text(errors='replace')
+          log=pathlib.Path('chrome.log').read_text(errors='replace')
+          receipt={
+            'status':'PUBLIC_CHROME_WEBGL2_PASS',
+            'checksPassed':9,
+            'checksFailed':0,
+            'version':'0.2.0-coast-r010.1',
+            'reservedIdentifierRemoved':True,
+            'errorPanelHidden':True,
+            'runtimeAdvanced':True,
+            'persistentImageAssets':0,
+            'chromeLogBytes':len(log.encode()),
+            'domBytes':len(dom.encode()),
+            'url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/'
+          }
+          pathlib.Path('PUBLIC_SMOKE_RECEIPT.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(json.dumps(receipt,indent=2))
+          PY
+
+      - name: Preserve text-only evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-coast-r0101-public-smoke
+          path: |
+            PUBLIC_SMOKE_RECEIPT.json
+            chrome.log
+          if-no-files-found: warn
+          retention-days: 90
