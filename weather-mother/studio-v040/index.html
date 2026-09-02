@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Weather Mother</title>
 <style>
-:root{color-scheme:dark;--bg:#05080b;--panel:rgba(7,11,15,.92);--panel2:rgba(12,17,22,.97);--line:rgba(255,255,255,.12);--line2:rgba(205,231,244,.27);--text:#f0f5f7;--muted:#91a0a9;--active:#d8edf7;--good:#8fd1ad}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
+:root{color-scheme:dark;--bg:#05080b;--panel:rgba(7,11,15,.92);--panel2:rgba(12,17,22,.97);--line:rgba(255,255,255,.12);--line2:rgba(205,231,244,.27);--text:#f0f5f7;--muted:#91a0a9;--active:#d8edf7;--good:#8fd1ad;--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);--studio-height:100dvh}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:var(--studio-height);overflow:hidden;overscroll-behavior:none;background:var(--bg);font-family:Inter,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
 #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#05080b}
 .top{position:fixed;z-index:14;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 17px;background:linear-gradient(180deg,rgba(4,7,10,.78),rgba(4,7,10,.18),transparent);pointer-events:none;text-shadow:0 1px 12px rgba(0,0,0,.66)}
 .brand{font-size:13px;font-weight:690;letter-spacing:.035em}.slash{color:rgba(255,255,255,.26)}.module{font-size:12px;color:#d7e2e7}.version{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px}.gate{margin-left:auto;color:var(--good);font-size:8px;letter-spacing:.03em}
@@ -18,13 +18,19 @@ nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12p
 .foot{padding:9px 12px 12px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px}.foot button{min-height:29px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.045);color:#dce7eb;font-size:8px;cursor:pointer}.foot button:hover{background:rgba(255,255,255,.08)}
 .loading{position:fixed;z-index:18;inset:0;display:grid;place-items:center;background:#05080b;color:#a9b6bd;font-size:11px;letter-spacing:.04em;transition:opacity .28s}.loading.hide{opacity:0;pointer-events:none}.loading span:after{content:'';display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4,end) infinite}@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%,100%{content:'...'}}
 .notice{position:fixed;z-index:16;left:50%;bottom:14px;transform:translateX(-50%);padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(6,9,12,.54);backdrop-filter:blur(9px);font-size:8px;color:rgba(225,235,240,.65);pointer-events:none;transition:opacity .8s}.notice.hide{opacity:0}
-@media(max-width:720px){.top{height:46px;padding:0 10px}.gate,.version{display:none}.dock{left:6px}.pull{width:32px;min-height:120px}.dock.open .drawer{width:194px}.notice{display:none}}
+@media(max-width:760px){
+.top{top:var(--safe-top);height:38px;padding:0 calc(10px + var(--safe-right)) 0 calc(10px + var(--safe-left));gap:7px;background:linear-gradient(180deg,rgba(4,7,10,.70),rgba(4,7,10,.08),transparent)}.brand{font-size:11px}.slash{font-size:10px}.module{font-size:11px}.gate,.version{display:none}
+.dock{left:calc(4px + var(--safe-left));top:60%}.pull{width:28px;min-height:108px;border-radius:10px 0 0 10px;font-size:7.5px;letter-spacing:.10em;background:rgba(7,11,15,.78)}.dock.open .drawer{width:min(76vw,286px)}
+.head{padding:12px 11px 9px}.head strong{font-size:12px}.head small{font-size:8px}nav{padding:7px}.item{grid-template-columns:28px 1fr 10px;padding:9px 8px}.name{font-size:12px}.desc{font-size:8px}.foot{padding:8px 10px calc(10px + var(--safe-bottom))}.foot button{min-height:36px;font-size:10px}
+.notice{display:none}
+}
+@media(max-width:760px) and (orientation:landscape){.dock{top:55%}.dock.open .drawer{width:min(44vw,300px)}.item{padding:6px 8px}.head{padding:9px 11px 7px}}
 </style>
 </head>
 <body>
 <div class="loading" id="loading"><span>Weather Mother 正在载入</span></div>
 <iframe id="stage" title="Weather Mother 工作平台" allow="fullscreen; autoplay"></iframe>
-<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.4</div><div class="gate">visualApproved=false · productionReady=false</div></div>
+<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.4.1</div><div class="gate">visualApproved=false · productionReady=false</div></div>
 <div class="dock" id="dock">
   <button class="pull" id="toggle" aria-label="展开 Weather Mother">WEATHER MOTHER</button>
   <div class="drawer">
@@ -45,17 +51,18 @@ nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12p
 (()=>{'use strict';
 const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading'),moduleTitle=document.getElementById('moduleTitle'),notice=document.getElementById('notice');
 const modules={
- world:{title:'World',src:'../v110-full/?embedded=1&studio=040'},
- rain:{title:'Rain',src:'../rain-v040/?embedded=1&studio=040'},
- snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1&studio=040'},
- fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1&studio=040'},
- cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1&studio=040'},
- storm:{title:'Storm',src:'../v110-full/?weather=nightstorm&embedded=1&studio=040'}
+ world:{title:'World',src:'../v110-full/?embedded=1&studio=041'},
+ rain:{title:'Rain',src:'../rain-v040/?embedded=1&studio=041&mobile=041'},
+ snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1&studio=041'},
+ fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1&studio=041'},
+ cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1&studio=041'},
+ storm:{title:'Storm',src:'../v110-full/?weather=nightstorm&embedded=1&studio=041'}
 };
 function current(){const id=new URLSearchParams(location.search).get('module');return modules[id]?id:'world'}
 function openModule(id,push=true){const resolved=modules[id]?id:'world',m=modules[resolved];loading.classList.remove('hide');moduleTitle.textContent=m.title;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===resolved));stage.src=m.src;if(push){const u=new URL(location.href);u.searchParams.set('module',resolved);history.pushState({module:resolved},'',u)}setTimeout(()=>dock.classList.remove('open'),170)}
+const syncHeight=()=>document.documentElement.style.setProperty('--studio-height',(window.visualViewport?window.visualViewport.height:innerHeight)+'px');syncHeight();window.visualViewport&&window.visualViewport.addEventListener('resize',syncHeight);addEventListener('orientationchange',syncHeight);
 document.getElementById('toggle').onclick=()=>{dock.classList.toggle('open');notice.classList.add('hide')};document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));document.getElementById('home').onclick=()=>openModule('world');document.getElementById('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('keydown',e=>{if(e.key==='Escape')dock.classList.remove('open');if(e.altKey&&e.key.toLowerCase()==='w')dock.classList.toggle('open')});setTimeout(()=>notice.classList.add('hide'),5500);openModule(current(),false);
-window.__WEATHER_MOTHER_STUDIO__={version:'0.4.0',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule};
+window.__WEATHER_MOTHER_STUDIO__={version:'0.4.1',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule};
 })();
 </script>
 </body>
