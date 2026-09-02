@@ -97,38 +97,36 @@ jobs:
           assert build['truth']['sourceDeleted'] is False
           assert build['visualApproved'] is False and build['productionApproved'] is False
           PY
-      - name: Stabilize the browser QA clock boundary and enforce the controller viewport
+      - name: Prepare 2560 by 1600 browser QA and stable pause sampling
         run: |
           python - <<'PY'
           import os
           from pathlib import Path
           path=Path(os.environ['ROOT'])/'qa_workbench.py'
-          text=path.read_text(encoding='utf-8')
-          old_view='            ("ultrawide", 2560, 1080, False),'
-          new_view='            ("ultrawide", 2560, 1600, False),'
-          assert old_view in text or new_view in text
-          text=text.replace(old_view,new_view)
-          old='''                before_pause = state(page)["weather"]["clock"]["simulationSeconds"]
-                page.locator("#playPause").click()
-                page.wait_for_timeout(700)
-                after_pause = state(page)["weather"]["clock"]["simulationSeconds"]
-                check(f"{name} real pause", abs(after_pause - before_pause) < 0.08, [before_pause, after_pause])
-                page.locator("#playPause").click()
-                wait(page, f"window.__WZ_FULL__.weather.clock.simulationSeconds>{after_pause + 0.08}")
-'''
-          new='''                page.locator("#playPause").click()
-                wait(page, "window.__WZ_FULL__.weather.clock.playing===false")
-                paused_at = state(page)["weather"]["clock"]["simulationSeconds"]
-                page.wait_for_timeout(700)
-                after_pause = state(page)["weather"]["clock"]["simulationSeconds"]
-                check(f"{name} real pause", abs(after_pause - paused_at) < 0.08, [paused_at, after_pause])
-                page.locator("#playPause").click()
-                wait(page, "window.__WZ_FULL__.weather.clock.playing===true")
-                wait(page, f"window.__WZ_FULL__.weather.clock.simulationSeconds>{after_pause + 0.08}")
-'''
-          assert old in text or new in text
-          text=text.replace(old,new)
-          path.write_text(text,encoding='utf-8')
+          lines=path.read_text(encoding='utf-8').splitlines()
+          lines=[
+              line.replace('("ultrawide", 2560, 1080, False)', '("ultrawide", 2560, 1600, False)')
+              for line in lines
+          ]
+          start=next(i for i,line in enumerate(lines) if 'before_pause = state(page)' in line)
+          end=start
+          while end < len(lines) and 'simulationSeconds>{after_pause + 0.08}' not in lines[end]:
+              end+=1
+          assert end < len(lines)
+          indent='                '
+          replacement=[
+              indent+'page.locator("#playPause").click()',
+              indent+'wait(page, "window.__WZ_FULL__.weather.clock.playing===false")',
+              indent+'paused_at = state(page)["weather"]["clock"]["simulationSeconds"]',
+              indent+'page.wait_for_timeout(700)',
+              indent+'after_pause = state(page)["weather"]["clock"]["simulationSeconds"]',
+              indent+'check(f"{name} real pause", abs(after_pause - paused_at) < 0.08, [paused_at, after_pause])',
+              indent+'page.locator("#playPause").click()',
+              indent+'wait(page, "window.__WZ_FULL__.weather.clock.playing===true")',
+              indent+'wait(page, f"window.__WZ_FULL__.weather.clock.simulationSeconds>{after_pause + 0.08}")',
+          ]
+          lines[start:end+1]=replacement
+          path.write_text('\n'.join(lines)+'\n',encoding='utf-8')
           PY
       - name: Actual 2560 by 1600 and mobile Chromium prepublication tests
         run: |
