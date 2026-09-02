@@ -62,6 +62,10 @@ def copy_sources(implementation: Path, out: Path) -> None:
         "workerUrl:'../modules/weather-mother/field-worker.js'",
         "workerUrl:'./modules/weather-mother/field-worker.js'",
     )
+    old_coast = "$('coast').onclick=()=>{S.ground=false;S.targetHeight=null;S.cur=[25000,8000];S.theta=.78;S.phi=.43;S.r=118000;S.lastEye=null;record('camera','coast');};"
+    new_coast = "$('coast').onclick=()=>{let w=weather(),m=w?.fieldMetrics;S.ground=false;S.cur=[25000,8000];S.targetHeight=m?m.baseM+m.verticalExtentM*.45:null;S.theta=.78;S.phi=.12;S.r=18000;S.lastEye=null;record('camera','coast-cloud-layer');};"
+    assert runtime.count(old_coast) == 1
+    runtime = runtime.replace(old_coast, new_coast)
     (out / "runtime.js").write_text(runtime, encoding="utf-8")
     shutil.copyfile(implementation / "terrain-shaders.js", out / "shaders.js")
     shutil.copyfile(implementation / "weather-scene.mjs", out / "weather-scene.mjs")
@@ -95,6 +99,7 @@ def validate(out: Path) -> None:
     assert "dpr=1" in runtime
     assert "altitudeOffsetM" in runtime
     assert "verticalScale" in runtime
+    assert "coast-cloud-layer" in runtime
 
     assert "precision highp sampler3D" in shaders
     assert "uCloudSourceVerticalKm" in shaders
