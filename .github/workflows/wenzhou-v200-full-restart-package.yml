@@ -1,0 +1,351 @@
+name: Wenzhou V200 full restart handoff package
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v200-full-restart-package.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: wenzhou-v200-full-restart-package
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      REPO: haihao0307/guilin-dem-pipeline
+      BRANCH: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+      PR_NUMBER: '55'
+      PACKAGE_VERSION: V0.4.0
+      PACKAGE_STEM: WENZHOU_DEM_FULL_RESTART_HANDOFF_2026-09-02_V0.4.0
+      RELEASE_TAG: wenzhou-v200-full-restart-2026-09-02-v0.4.0
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact Wenzhou branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          lfs: false
+          sparse-checkout: |
+            .github/workflows
+            ops/tasks
+            projects/wenzhou/v200
+            weather-mother/clean-v110
+            weather-mother/distributions
+      - name: Checkout current published workbench checkpoint
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: published
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            wenzhou-v7-full/workbench
+      - name: Assemble self-explaining restart package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/$PACKAGE_STEM"
+          EVIDENCE="$ROOT/06_EVIDENCE"
+          mkdir -p "$ROOT"/{00_READ_FIRST,01_WENZHOU_V200_SOURCE,02_CURRENT_WORKBENCH_SOURCE,03_PUBLISHED_CHECKPOINT,04_WEATHER_MOTHER_REFERENCE,05_RULES_AND_CONTRACTS,06_EVIDENCE,07_GIT_STATE,08_HEAVY_ASSET_IDENTITIES}
+
+          cat > "$ROOT/00_READ_FIRST/START_HERE.md" <<'EOF'
+          # 小温州 V200 全量重启交接包
+
+          先阅读本目录中的 `01_USER_CORRECTION_AND_TARGET.md`、`02_CURRENT_STATE.md`、`03_NEXT_CHAT_MASTER_INSTRUCTION.md` 与 `HANDOFF.json`。
+
+          本包用于新对话继续温州 DEM、海岸、海洋、天气与在线工作台。当前可运行的紧凑工作台被保留为检查点，但其 Weather Mother 采用隐藏计算视窗，已经被用户明确否定为最终架构。
+
+          新方向只有一个：完整温州必须在一个可见三维世界中运行。云体需要使用同一相机和空间坐标，真实显示在陆地、城市、海岸、河口、岛屿与海洋上空。禁止把独立 Weather 页面放在旁边，也禁止把隐藏 iframe 当作完成的天气集成。
+
+          继续工作前必须核对本包 MANIFEST、CHECKSUMS、PR #55、当前远端 HEAD 和公开页面。人工视觉批准与生产批准保持 false。
+          EOF
+
+          cat > "$ROOT/00_READ_FIRST/01_USER_CORRECTION_AND_TARGET.md" <<'EOF'
+          # 用户纠正后的唯一目标
+
+          ## 已确认的思维错误
+
+          之前为了扩大地图画面，把 Weather Mother 的可见窗口移到后台，只抽取风和日光驱动海面。这样虽然保留了部分参数交换，却把天气从世界中分离了。用户要求看到的是真实空间关系：云要飘在温州城市、山地、海岸、岛屿和海面上空，天气要与同一场景中的地形和海洋发生关系。
+
+          当前紧凑版只能作为可运行检查点和反例证据，不能沿它的双 iframe 或隐藏 iframe 架构继续冒充最终工作台。
+
+          ## 下一版必须满足
+
+          1. 一个主画布、一个主相机、一个世界坐标系、共享深度。
+          2. Weather Mother 的体积云或其经过声明的适配实现，直接进入温州主场景。
+          3. 云层具有真实高度层、厚度、范围、风向平移和随时间演化。
+          4. 云被山体遮挡，地形和海面接收云影；海面能够获得云与天空反射候选。
+          5. 雨、雾和台风等天气在主场景中可见，并通过显式单位与接口影响海面和能见度。
+          6. Weather Mother 原包继续只读保存；温州适配器在本线目录中实现，禁止改写其他生产线。
+          7. 34 英寸工作台继续地图优先：顶部和侧栏紧凑，画面尽可能大，功能可读、可点、可收起。
+          8. 全域 800 米概览继续只负责总览；缩放后必须接入原生 12.5 米数值 LOD，禁止用平滑或图片放大伪装精度。
+          9. 在线 HTML 是视觉交付入口。每次发给用户前必须检查真实公开 URL、资源、WebGL、控制台和画面。
+          10. 源 TIF 和冻结真值不得因本交接包删除。完整数字存储经过公开回读验证后，再按用户和现行治理规则决定清理。
+          EOF
+
+          cat > "$ROOT/00_READ_FIRST/02_CURRENT_STATE.md" <<EOF
+          # 当前实际状态
+
+          * 仓库：\`$REPO\`
+          * 分支：\`$BRANCH\`
+          * 打包源提交：\`$GITHUB_SHA\`
+          * PR：#55，保持 open、Draft、未合并
+          * 当前公开检查点：\`https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=weather110-r1\`
+          * 当前工作台版本：\`wenzhou-workbench-0.2.0-compact-weather110\`
+          * 地图：完整 V200 全域概览，276 × 281，显示节点约 800 米
+          * 源高程身份：17,555 × 17,918，原生间距 12.5 米
+          * 当前天气：Weather Mother V1.1.0 内核文件只读，后台运行，向地图交换风向、风速、演示时间和解析日光
+          * 当前架构判定：可运行检查点，用户已否定其隐藏 Weather 视窗作为最终路线
+          * 当前批准：visualApproved=false；productionApproved=false
+          * 当前源文件：sourceDeleted=false
+
+          ## 已有可复用成果
+
+          * V200 AOI、真值身份、OSM 河网和海岸相关数据与回执
+          * 完整温州数值概览和程序化地形、海面 Shader
+          * 中性检查、工作室、诊断、环境联动模式
+          * 34 英寸紧凑 UI、面板收起、全图/俯视/沿海/缩放入口
+          * Weather Mother 20 个天气案例、10 类云属和只读包身份校验
+          * 桌面 2560 × 1080 与移动端浏览器 QA
+          * 1.6 米显示表面相机净空检查
+
+          ## 仍未完成
+
+          * 云体进入温州同一主场景并共享深度
+          * 云对山体、城市、海岸和海面的遮挡、投影及反射
+          * 主场景中的雨、雾、台风可视化和环境作用
+          * 完整温州 12.5 米原生 LOD 流式加载
+          * 海底、绝对潮位基准和经标定的潮汐入侵
+          * 实体 34 英寸目标机器性能验证
+          * 用户视觉批准与生产批准
+          EOF
+
+          cat > "$ROOT/00_READ_FIRST/03_NEXT_CHAT_MASTER_INSTRUCTION.md" <<'EOF'
+          # 新对话直接执行指令
+
+          你现在接管“小温州”生产线。先完整读取本包，不要重新猜方向，不要让用户转去另开 Codex 读取散乱文件。
+
+          继续 `haihao0307/guilin-dem-pipeline` 的 Draft PR #55，只在 `project/wenzhou-v200-17tile-truth-hydrology-rebuild` 和本包声明的温州路径工作。保持 PR open、Draft、未合并，禁止强推，禁止改写 main、受保护分支、其他 Mother 或冻结真值。
+
+          当前紧凑在线工作台是可运行检查点，同时也是被用户否定的最终架构。立即停止把 Weather Mother 放在旁边或隐藏在后台作为最终表现。保留其原包和证据，重新构造单场景集成：一个主画布、一个相机、一个空间、共享深度，体积云真实位于完整温州城市、山地、海岸、岛屿和海洋上空。
+
+          第一阶段先做可看闭环：
+
+          1. 将 Weather Mother 云密度场、光学参数、风场与时间状态转译到温州主渲染器。
+          2. 在主相机中渲染至少海岸层积云、降雨云和台风云三类体积天气。
+          3. 建立云高、云底、云顶、覆盖范围、风向和漂移的显式单位。
+          4. 完成山体遮挡、云影、海面受风和能见度联动的最小闭环。
+          5. 保留中性检查、工作室、诊断和环境模式，切换展示不得改写 DEM、河网、水体分类或天气源状态。
+          6. UI 继续采用 34 英寸地图优先布局，顶部不超过约 40 px，侧面板紧凑并可收起，云和地图都在同一个大画面中。
+          7. 同时规划 12.5 米 LOD，不得用 800 米概览证明近景精度。
+          8. 发布在线 HTML 前，真实浏览器检查 HTTP 200、所有关键资源、Shader、控制台、桌面超宽屏、移动端和同一版本截图。
+
+          每次汇报只陈述实际完成项。保存或阅读资料不能写成运行时接入。人工视觉批准和生产批准继续为 false，等待用户对精确构建确认。
+          EOF
+
+          cat > "$ROOT/00_READ_FIRST/MOTHER_METHOD_SOURCE_STATUS.md" <<'EOF'
+          # Mother 统一方法论来源状态
+
+          用户在原对话提供了《Mother 统一世界演化与生产方法论 V1.0.0》完整正文及嵌入 JSON。
+
+          本包包含 Weather Mother V1.1.0 中与该体系对应的 `POLICY.json`、`INTEGRATION.md`、`START_HERE.md` 和运行文件。原对话附件的完整 MD 字节没有作为可下载文件挂载到本次 GitHub 打包运行，因此本包没有伪造一份“逐字节相同”的 MD 副本。新对话必须继续读取用户提供的原始文件，并将其记录为资料已接收；运行时接入只能由实际代码和验证证据证明。
+          EOF
+
+          # Copy the entire current Wenzhou line, excluding prior distribution outputs to prevent recursion.
+          rsync -a --delete-excluded \
+            --exclude 'distributions/' \
+            --exclude '*.zip' \
+            projects/wenzhou/v200/ "$ROOT/01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/"
+          cp -a projects/wenzhou/v200/web/workbench/. "$ROOT/02_CURRENT_WORKBENCH_SOURCE/"
+          cp -a published/wenzhou-v7-full/workbench/. "$ROOT/03_PUBLISHED_CHECKPOINT/"
+          cp -a weather-mother/clean-v110/. "$ROOT/04_WEATHER_MOTHER_REFERENCE/clean-v110/"
+          if [ -f weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip ]; then
+            cp weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip "$ROOT/04_WEATHER_MOTHER_REFERENCE/"
+          fi
+          find weather-mother/distributions -maxdepth 1 -type f -name '*V1.1.0*receipt*.json' -exec cp {} "$ROOT/04_WEATHER_MOTHER_REFERENCE/" \; || true
+          cp ops/tasks/WENZHOU_V200_17TILE_TRUTH_HYDROLOGY_REBUILD.md "$ROOT/05_RULES_AND_CONTRACTS/"
+          cp .github/workflows/wenzhou-weather-workbench.yml "$ROOT/05_RULES_AND_CONTRACTS/"
+          cp .github/workflows/wenzhou-v7-full-deliver.yml "$ROOT/05_RULES_AND_CONTRACTS/" 2>/dev/null || true
+          cp .github/workflows/wenzhou-v200-osm-hydrology.yml "$ROOT/05_RULES_AND_CONTRACTS/"
+          cp .github/workflows/wenzhou-v200-truth-lfs-verify.yml "$ROOT/05_RULES_AND_CONTRACTS/"
+
+          gh api "repos/$REPO/pulls/$PR_NUMBER" > "$ROOT/07_GIT_STATE/PR_55.json"
+          git log --oneline --decorate -50 > "$ROOT/07_GIT_STATE/RECENT_COMMITS.txt"
+          git status --short --branch > "$ROOT/07_GIT_STATE/GIT_STATUS.txt"
+          git rev-parse HEAD > "$ROOT/07_GIT_STATE/SOURCE_COMMIT.txt"
+          git show -s --format=fuller HEAD > "$ROOT/07_GIT_STATE/SOURCE_COMMIT_FULL.txt"
+
+          # Pull the latest successful real-browser evidence when available.
+          RUN_ID=$(gh run list --repo "$REPO" --workflow wenzhou-weather-workbench.yml --branch "$BRANCH" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -n "$RUN_ID" ]; then
+            echo "$RUN_ID" > "$EVIDENCE/LATEST_SUCCESSFUL_WORKBENCH_RUN.txt"
+            gh run download "$RUN_ID" --repo "$REPO" -n wenzhou-weather-workbench-evidence -D "$EVIDENCE/latest-workbench" || true
+          fi
+          cp -a projects/wenzhou/v200/reports/weather-workbench "$EVIDENCE/branch-reports" 2>/dev/null || true
+
+          cat > "$ROOT/08_HEAVY_ASSET_IDENTITIES/NOT_INCLUDED_HEAVY_ASSETS.md" <<'EOF'
+          # 未直接装入 ZIP 的重资产
+
+          权威温州 12.5 米 COG 不在当前 GitHub checkout 中，本包没有用候选文件冒充它，也没有删除任何源文件。
+
+          冻结身份：
+
+          * 文件：WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif
+          * 字节：136,760,745
+          * SHA-256：c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43
+          * CRS：EPSG:32651
+          * 网格：17,555 × 17,918
+          * 间距：12.5 m
+          * bounds：[187912.5, 3019612.5, 407350.0, 3243587.5]
+
+          完整数值存储与源 TIF 的在线全量回读门槛仍未关闭。用户持有原图不等于当前仓库已经具备删除真值的证据。
+          EOF
+
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          root=Path(os.environ['RUNNER_TEMP'])/os.environ['PACKAGE_STEM']
+          files=[]
+          for p in sorted(root.rglob('*')):
+              if not p.is_file() or p.name in {'MANIFEST.json','CHECKSUMS.sha256'}:
+                  continue
+              b=p.read_bytes()
+              files.append({'path':p.relative_to(root).as_posix(),'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+          manifest={
+              'schema':'wenzhou-v200-full-restart-handoff-1',
+              'packageVersion':os.environ['PACKAGE_VERSION'],
+              'packageStem':os.environ['PACKAGE_STEM'],
+              'repository':os.environ['REPO'],
+              'branch':os.environ['BRANCH'],
+              'sourceCommit':os.environ['GITHUB_SHA'],
+              'prNumber':55,
+              'correctedTarget':'single visible 3D scene with Weather Mother clouds above complete Wenzhou terrain, coast, cities and ocean',
+              'currentCheckpointArchitectureAccepted':False,
+              'currentCheckpointPreserved':True,
+              'authoritativeTifIncluded':False,
+              'sourceDeleted':False,
+              'visualApproved':False,
+              'productionApproved':False,
+              'files':files,
+          }
+          (root/'MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          lines=[f"{x['sha256']}  {x['path']}" for x in files]
+          lines.append(f"{hashlib.sha256((root/'MANIFEST.json').read_bytes()).hexdigest()}  MANIFEST.json")
+          (root/'CHECKSUMS.sha256').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          print(json.dumps({'fileCount':len(files)+2,'bytes':sum(x['bytes'] for x in files)},indent=2))
+          PY
+
+          cd "$RUNNER_TEMP"
+          zip -q -9 -r "$PACKAGE_STEM.zip" "$PACKAGE_STEM"
+          unzip -t "$PACKAGE_STEM.zip" > "$RUNNER_TEMP/ZIP_TEST.txt"
+          sha256sum "$PACKAGE_STEM.zip" > "$RUNNER_TEMP/$PACKAGE_STEM.zip.sha256"
+          stat -c '%s' "$PACKAGE_STEM.zip" > "$RUNNER_TEMP/PACKAGE_BYTES.txt"
+
+      - name: Publish persistent prerelease asset on GitHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          NOTES="$RUNNER_TEMP/RELEASE_NOTES.md"
+          cat > "$NOTES" <<EOF
+          # 小温州 V200 全量重启交接包 $PACKAGE_VERSION
+
+          本包冻结当前温州生产线的源码、公开工作台检查点、Weather Mother V1.1.0 参考、验证证据、仓库状态和下一对话指令。
+
+          关键纠正：后续必须把云体渲染进完整温州同一个可见三维场景，使用同一相机、空间和深度。当前隐藏 Weather iframe 只保留为检查点，不属于最终架构。
+
+          源提交：$GITHUB_SHA
+          PR：#$PR_NUMBER，继续保持 Draft、未合并。
+          权威 TIF 未包含、未删除。visualApproved=false，productionApproved=false。
+          EOF
+          if gh release view "$RELEASE_TAG" --repo "$REPO" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" --repo "$REPO" \
+              "$RUNNER_TEMP/$PACKAGE_STEM.zip" \
+              "$RUNNER_TEMP/$PACKAGE_STEM.zip.sha256" \
+              "$RUNNER_TEMP/ZIP_TEST.txt" \
+              --clobber
+            gh release edit "$RELEASE_TAG" --repo "$REPO" --target "$GITHUB_SHA" --title "$PACKAGE_STEM" --notes-file "$NOTES" --prerelease
+          else
+            gh release create "$RELEASE_TAG" --repo "$REPO" --target "$GITHUB_SHA" \
+              --title "$PACKAGE_STEM" --notes-file "$NOTES" --prerelease \
+              "$RUNNER_TEMP/$PACKAGE_STEM.zip" \
+              "$RUNNER_TEMP/$PACKAGE_STEM.zip.sha256" \
+              "$RUNNER_TEMP/ZIP_TEST.txt"
+          fi
+          gh release view "$RELEASE_TAG" --repo "$REPO" --json url,tagName,isPrerelease,assets > "$RUNNER_TEMP/RELEASE.json"
+
+      - name: Commit durable package receipt and restart entry to branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="projects/wenzhou/v200/distributions/$PACKAGE_STEM"
+          mkdir -p "$TARGET"
+          cp "$RUNNER_TEMP/$PACKAGE_STEM/00_READ_FIRST/START_HERE.md" "$TARGET/START_HERE.md"
+          cp "$RUNNER_TEMP/$PACKAGE_STEM/00_READ_FIRST/01_USER_CORRECTION_AND_TARGET.md" "$TARGET/01_USER_CORRECTION_AND_TARGET.md"
+          cp "$RUNNER_TEMP/$PACKAGE_STEM/00_READ_FIRST/03_NEXT_CHAT_MASTER_INSTRUCTION.md" "$TARGET/03_NEXT_CHAT_MASTER_INSTRUCTION.md"
+          cp "$RUNNER_TEMP/$PACKAGE_STEM/MANIFEST.json" "$TARGET/MANIFEST.json"
+          cp "$RUNNER_TEMP/$PACKAGE_STEM.zip.sha256" "$TARGET/"
+          cp "$RUNNER_TEMP/RELEASE.json" "$TARGET/RELEASE.json"
+          cp "$RUNNER_TEMP/ZIP_TEST.txt" "$TARGET/ZIP_TEST.txt"
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          t=Path('projects/wenzhou/v200/distributions')/os.environ['PACKAGE_STEM']
+          release=json.loads((t/'RELEASE.json').read_text())
+          receipt={
+            'schema':'wenzhou-v200-full-restart-package-receipt-1',
+            'packageVersion':os.environ['PACKAGE_VERSION'],
+            'sourceCommit':os.environ['GITHUB_SHA'],
+            'releaseTag':os.environ['RELEASE_TAG'],
+            'releaseUrl':release['url'],
+            'packageSha256':(t/(os.environ['PACKAGE_STEM']+'.zip.sha256')).read_text().split()[0],
+            'packageBytes':int((Path(os.environ['RUNNER_TEMP'])/'PACKAGE_BYTES.txt').read_text()),
+            'zipTestPassed':True,
+            'correctedTargetRecorded':True,
+            'singleSceneWeatherRuntimeImplemented':False,
+            'currentCheckpointPreserved':True,
+            'sourceDeleted':False,
+            'visualApproved':False,
+            'productionApproved':False,
+          }
+          (t/'PACKAGE_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$TARGET"
+          git commit -m "Publish Wenzhou V200 full restart handoff $PACKAGE_VERSION [skip ci]"
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin HEAD:"$BRANCH"; then pushed=1; break; fi
+            git fetch origin "$BRANCH" --depth=50
+            git rebase "origin/$BRANCH"
+          done
+          test "$pushed" = 1
+
+      - name: Retain workflow copy of package and receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_STEM }}
+          path: |
+            ${{ runner.temp }}/${{ env.PACKAGE_STEM }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_STEM }}.zip.sha256
+            ${{ runner.temp }}/ZIP_TEST.txt
+            ${{ runner.temp }}/RELEASE.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Write truthful summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "Wenzhou full restart package version: $PACKAGE_VERSION"
+            echo
+            echo "Corrected target: visible Weather Mother clouds inside the same complete-Wenzhou 3D scene."
+            echo
+            echo "The current hidden-weather checkpoint is preserved as evidence and explicitly rejected as the final architecture."
+            echo
+            echo "Source TIF deleted: false. Human visual approval: false. Production approval: false."
+          } >> "$GITHUB_STEP_SUMMARY"
