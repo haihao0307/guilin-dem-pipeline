@@ -1,0 +1,219 @@
+name: Ocean Mother Coast R012 publish after 404 v3
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r012-publish-after-404-v3.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-mother-coast-r012-publish-after-404-v3
+  cancel-in-progress: false
+
+jobs:
+  render-publish-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/ocean-mother-handoff-20260901
+          fetch-depth: 1
+
+      - name: Apply stable default-framebuffer and mobile mesh repair
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('ocean-mother/coast-v022-r012/app.mjs')
+          text=path.read_text(encoding='utf-8')
+          text=text.replace("antialias:true,alpha:false","antialias:false,alpha:false",1)
+          old="function blitOpaque(){gl.bindFramebuffer(gl.READ_FRAMEBUFFER,sceneFbo);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,null);gl.blitFramebuffer(0,0,fboW,fboH,0,0,canvas.width,canvas.height,gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,null)}"
+          new="function blitOpaque(){gl.bindFramebuffer(gl.READ_FRAMEBUFFER,sceneFbo);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,null);gl.blitFramebuffer(0,0,fboW,fboH,0,0,canvas.width,canvas.height,gl.COLOR_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.depthMask(true);gl.clearDepth(1);gl.clear(gl.DEPTH_BUFFER_BIT)}\nfunction rebuildOpaqueDepth(sun){gl.colorMask(false,false,false,false);drawSolid(terrainGeo,sun);drawSolid(rocksGeo,sun);drawSolid(ringGeo,sun);drawSolid(logsGeo,sun);gl.colorMask(true,true,true,true)}"
+          if old in text:
+              text=text.replace(old,new,1)
+          elif 'function rebuildOpaqueDepth(sun)' not in text:
+              raise SystemExit('expected blit source missing')
+          old_frame="gl.viewport(0,0,canvas.width,canvas.height);blitOpaque();const sun=sunDirection();drawWater(sun);drawMedia();"
+          new_frame="gl.viewport(0,0,canvas.width,canvas.height);blitOpaque();const sun=sunDirection();rebuildOpaqueDepth(sun);drawWater(sun);drawMedia();"
+          if old_frame in text:
+              text=text.replace(old_frame,new_frame,1)
+          elif 'rebuildOpaqueDepth(sun);drawWater(sun)' not in text:
+              raise SystemExit('expected frame source missing')
+          old_mesh="terrainGeo=gridMesh(gl,224,196,DOMAIN.minX,DOMAIN.maxX,DOMAIN.minZ,DOMAIN.maxZ,bedHeight,0);rocksGeo=rockMesh(gl,COAST_ROCKS);ringGeo=rockMesh(gl,FIRE_RING);logsGeo=logMesh(gl);waterGeo=waterMesh(gl,252,216);"
+          new_mesh="const mobileMesh=innerWidth<760;terrainGeo=gridMesh(gl,mobileMesh?144:224,mobileMesh?126:196,DOMAIN.minX,DOMAIN.maxX,DOMAIN.minZ,DOMAIN.maxZ,bedHeight,0);rocksGeo=rockMesh(gl,COAST_ROCKS);ringGeo=rockMesh(gl,FIRE_RING);logsGeo=logMesh(gl);waterGeo=waterMesh(gl,mobileMesh?160:252,mobileMesh?138:216);"
+          if old_mesh in text:
+              text=text.replace(old_mesh,new_mesh,1)
+          elif 'const mobileMesh=innerWidth<760' not in text:
+              raise SystemExit('expected mesh source missing')
+          path.write_text(text,encoding='utf-8')
+          PY
+          node --check ocean-mother/coast-v022-r012/core.mjs
+          node --check ocean-mother/coast-v022-r012/shaders.mjs
+          node --check ocean-mother/coast-v022-r012/app.mjs
+          grep -q "export const VERSION='0.2.2-coast-r012'" ocean-mother/coast-v022-r012/core.mjs
+          grep -q 'coast-0.2.2-r012-complete-daylight-scene' ocean-mother/coast-v022-r012/index.html
+          grep -q 'antialias:false' ocean-mother/coast-v022-r012/app.mjs
+          grep -q 'rebuildOpaqueDepth' ocean-mother/coast-v022-r012/app.mjs
+          grep -q 'const mobileMesh=innerWidth<760' ocean-mother/coast-v022-r012/app.mjs
+          if find ocean-mother/coast-v022-r012 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.hdr' -o -iname '*.exr' -o -iname '*.ktx' -o -iname '*.ktx2' -o -iname '*.dds' -o -iname '*.avif' \) | grep -q .; then
+            echo 'Persistent image asset found'; exit 1
+          fi
+
+      - name: Render five desktop views and one mobile view
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8128 --bind 127.0.0.1 > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          BASE='http://127.0.0.1:8128/ocean-mother/coast-v022-r012/'
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --hide-scrollbars --virtual-time-budget=12000)
+          for VIEW in overview shore breaker fire rocks; do
+            "$CHROME" "${COMMON[@]}" --window-size=1600,900 --dump-dom "${BASE}?view=${VIEW}&rendercheck=1" > "evidence/${VIEW}.dom.html" 2> "evidence/${VIEW}.chrome.log"
+            "$CHROME" "${COMMON[@]}" --window-size=1600,900 --screenshot="evidence/${VIEW}.png" "${BASE}?view=${VIEW}&rendercheck=1" >> "evidence/${VIEW}.chrome.log" 2>&1
+          done
+          "$CHROME" "${COMMON[@]}" --window-size=390,844 --dump-dom "${BASE}?view=overview&mobile=1&rendercheck=1" > evidence/mobile.dom.html 2> evidence/mobile.chrome.log
+          "$CHROME" "${COMMON[@]}" --window-size=390,844 --screenshot=evidence/mobile.png "${BASE}?view=overview&mobile=1&rendercheck=1" >> evidence/mobile.chrome.log 2>&1
+
+      - name: Gate rendered composition without fragile hidden probe timing
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,struct
+          root=Path('evidence'); views=('overview','shore','breaker','fire','rocks'); errors=[]; reports={}
+          bad_pattern=re.compile(r'illegal use of reserved word|ERROR:\s*0:|shader.{0,30}compile|当前浏览器未提供 WebGL2|Uncaught\s+(?:TypeError|ReferenceError|Error)|GL_INVALID_OPERATION:\s*glBlitFramebuffer',re.I)
+          def png_size(path):
+              b=path.read_bytes()
+              if len(b)<24 or b[:8]!=b'\x89PNG\r\n\x1a\n': return (0,0)
+              return struct.unpack('>II',b[16:24])
+          for view in views:
+              dom=(root/f'{view}.dom.html').read_text(errors='replace'); log=(root/f'{view}.chrome.log').read_text(errors='replace'); shot=root/f'{view}.png'; width,height=png_size(shot) if shot.exists() else (0,0)
+              checks={
+                'buildIdentity':'coast-0.2.2-r012-complete-daylight-scene' in dom,
+                'loadingDismissed':'id="loading" class="done"' in dom or 'class="done" id="loading"' in dom,
+                'runtimeStatus':'完整日光海岸演化中' in dom,
+                'errorPanelEmpty':bool(re.search(r'<pre id="error"[^>]*>\s*</pre>',dom,re.S)),
+                'rockCount':bool(re.search(r'id="rockCount">2[0-9]<',dom)),
+                'ringCount':'id="ringCount">12<' in dom,
+                'smokeCount':bool(re.search(r'id="smokeCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)),
+                'flameCount':bool(re.search(r'id="flameCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)),
+                'foamCount':bool(re.search(r'id="foamCount">(?:[5-9][0-9]|[1-9][0-9]{2,})<',dom)),
+                'runtimeClock':bool(re.search(r'id="clock">0\.[1-9][0-9] s<',dom)),
+                'screenshotBytes':shot.exists() and shot.stat().st_size>100000,
+                'screenshotDimensions':width>=1500 and height>=800,
+                'logsClean':bad_pattern.search(dom+'\n'+log) is None,
+              }
+              reports[view]={'checks':checks,'bytes':shot.stat().st_size if shot.exists() else 0,'width':width,'height':height}
+              if not all(checks.values()): errors.append({'view':view,'failed':[k for k,v in checks.items() if not v]})
+          dom=(root/'mobile.dom.html').read_text(errors='replace'); log=(root/'mobile.chrome.log').read_text(errors='replace'); shot=root/'mobile.png'; width,height=png_size(shot) if shot.exists() else (0,0)
+          mobileChecks={
+            'buildIdentity':'coast-0.2.2-r012-complete-daylight-scene' in dom,
+            'loadingDismissed':'id="loading" class="done"' in dom or 'class="done" id="loading"' in dom,
+            'runtimeStatus':'完整日光海岸演化中' in dom,
+            'errorPanelEmpty':bool(re.search(r'<pre id="error"[^>]*>\s*</pre>',dom,re.S)),
+            'compositionCounts':'id="rockCount">22<' in dom and 'id="ringCount">12<' in dom,
+            'mediaCounts':bool(re.search(r'id="smokeCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)) and bool(re.search(r'id="flameCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)),
+            'screenshotBytes':shot.exists() and shot.stat().st_size>70000,
+            'screenshotDimensions':width>=390 and height>=800,
+            'logsClean':bad_pattern.search(dom+'\n'+log) is None,
+          }
+          reports['mobile']={'checks':mobileChecks,'bytes':shot.stat().st_size if shot.exists() else 0,'width':width,'height':height}
+          if not all(mobileChecks.values()): errors.append({'view':'mobile','failed':[k for k,v in mobileChecks.items() if not v]})
+          report={'status':'RENDER_GATE_PASS' if not errors else 'RENDER_GATE_FAIL','views':reports,'errors':errors,'persistentImageAssets':0,'screenshotsInternalEvidenceOnly':True}
+          (root/'RENDER_GATE.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if errors: raise SystemExit(1)
+          PY
+
+      - name: Persist repaired runtime on work branch
+        run: |
+          set -euo pipefail
+          git config user.name 'Ocean Mother CI'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ocean-mother/coast-v022-r012/app.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(ocean): stabilize R012 cache and mobile mesh'
+            git push origin HEAD:work/ocean-mother-handoff-20260901
+          fi
+
+      - name: Publish all R012 files to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,os,time,urllib.request
+          from pathlib import Path
+          repo='haihao0307/guilin-dem-pipeline'; branch='gh-pages'; source=Path('ocean-mother/coast-v022-r012'); target='ocean-mother/coast-v022-r012'; base='https://api.github.com/repos/'+repo; token=os.environ['GH_TOKEN']
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
+          head=api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']; base_tree=api('/git/commits/'+head)['tree']['sha']; entries=[]; files={}
+          for p in sorted(source.iterdir()):
+              if not p.is_file(): continue
+              data=p.read_bytes(); blob=api('/git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha']; entries.append({'path':target+'/'+p.name,'mode':'100644','type':'blob','sha':blob}); files[p.name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'gitBlobSha':blob}
+          tree=api('/git/trees',{'base_tree':base_tree,'tree':entries})['sha']; commit=api('/git/commits',{'message':'fix(ocean): publish working Coast R012 after verified render','tree':tree,'parents':[head]})['sha']
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==head
+          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH'); assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==commit
+          receipt={'status':'PUBLISHED','runtimeVersion':'0.2.2-coast-r012','publicCommit':commit,'targetPath':target,'files':files,'forcePush':False,'persistentImageAssets':0,'visualApproved':False,'productionApproved':False}
+          Path('evidence/PUBLISH.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n'); print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Verify public HTTP files and public rendered page
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v022-r012/'
+          ready=0
+          for attempt in $(seq 1 42); do
+            curl -fsSL -H 'Cache-Control: no-cache' "${URL}?readback=$RANDOM-$attempt" -o evidence/public-index.html || true
+            if grep -q 'coast-0.2.2-r012-complete-daylight-scene' evidence/public-index.html 2>/dev/null; then ready=1; break; fi
+            sleep 10
+          done
+          test "$ready" = 1
+          for file in index.html coast.css core.mjs shaders.mjs app.mjs BUILD.json README.md; do
+            curl -fsSL -H 'Cache-Control: no-cache' "${URL}${file}?readback=$RANDOM" -o "evidence/public-${file//\//_}"
+          done
+          grep -q "export const VERSION='0.2.2-coast-r012'" evidence/public-core.mjs
+          grep -q 'antialias:false' evidence/public-app.mjs
+          grep -q 'rebuildOpaqueDepth' evidence/public-app.mjs
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --hide-scrollbars --virtual-time-budget=12000 --window-size=1600,900)
+          "$CHROME" "${COMMON[@]}" --dump-dom "${URL}?view=overview&public=$RANDOM" > evidence/public.dom.html 2> evidence/public.chrome.log
+          "$CHROME" "${COMMON[@]}" --screenshot=evidence/public.png "${URL}?view=overview&public=$RANDOM" >> evidence/public.chrome.log 2>&1
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,struct
+          dom=Path('evidence/public.dom.html').read_text(errors='replace'); log=Path('evidence/public.chrome.log').read_text(errors='replace'); shot=Path('evidence/public.png'); b=shot.read_bytes() if shot.exists() else b''; size=struct.unpack('>II',b[16:24]) if len(b)>=24 and b[:8]==b'\x89PNG\r\n\x1a\n' else (0,0); bad=re.search(r'illegal use of reserved word|ERROR:\s*0:|shader.{0,30}compile|当前浏览器未提供 WebGL2|Uncaught\s+(?:TypeError|ReferenceError|Error)|GL_INVALID_OPERATION:\s*glBlitFramebuffer',dom+'\n'+log,re.I)
+          checks={
+            'buildIdentity':'coast-0.2.2-r012-complete-daylight-scene' in dom,
+            'loadingDismissed':'id="loading" class="done"' in dom or 'class="done" id="loading"' in dom,
+            'runtimeStatus':'完整日光海岸演化中' in dom,
+            'errorPanelEmpty':bool(re.search(r'<pre id="error"[^>]*>\s*</pre>',dom,re.S)),
+            'compositionCounts':'id="rockCount">22<' in dom and 'id="ringCount">12<' in dom,
+            'mediaCounts':bool(re.search(r'id="smokeCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)) and bool(re.search(r'id="flameCount">(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})<',dom)),
+            'screenshot':shot.exists() and shot.stat().st_size>100000 and size[0]>=1500 and size[1]>=800,
+            'logsClean':bad is None,
+          }
+          report={'status':'PUBLIC_RENDER_PASS' if all(checks.values()) else 'PUBLIC_RENDER_FAIL','checks':checks,'screenshotBytes':shot.stat().st_size if shot.exists() else 0,'dimensions':size,'errorMatch':bad.group(0) if bad else None,'url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v022-r012/','persistentImageAssets':0}
+          Path('evidence/PUBLIC_RENDER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n'); print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report['status']!='PUBLIC_RENDER_PASS': raise SystemExit(1)
+          PY
+
+      - name: Preserve QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-coast-r012-publish-after-404-v3-evidence
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
