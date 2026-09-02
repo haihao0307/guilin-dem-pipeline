@@ -1,0 +1,38 @@
+name: Ocean Mother R010 source export
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-r010-source-export.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/ocean-mother-handoff-20260901
+          path: source
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+      - name: Prepare exact source snapshot
+        run: |
+          mkdir -p export/source export/public export/deep
+          cp -a source/ocean-mother/coast-v020/. export/source/
+          cp -a pages/ocean-mother/coast-v020-r010/. export/public/
+          cp -a pages/ocean-mother/v001/. export/deep/
+          printf '%s\n' '${{ github.sha }}' > export/WORKFLOW_COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocean-r010-source-snapshot
+          path: export/
+          retention-days: 7
+          if-no-files-found: error
