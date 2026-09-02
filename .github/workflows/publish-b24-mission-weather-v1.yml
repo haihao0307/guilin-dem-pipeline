@@ -1,0 +1,109 @@
+name: Publish B24 mission weather workbench V1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-b24-mission-weather-v1.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-b24-mission-weather-v1
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AIRCRAFT_COMMIT: 590a720df91557c6bfd0430a2612ebf94582cfb1
+      DESTINATION: aircraft/b24-weather-mission-v1
+    steps:
+      - name: Check out active gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download the browser-verified B24 workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$DESTINATION"
+          base="https://raw.githubusercontent.com/haihao0307/AIRCRAFT/${AIRCRAFT_COMMIT}/b24-weather-mission-v1"
+          for name in index.html styles.css app.js; do
+            curl --fail --location --retry 6 --retry-all-errors --retry-delay 2 \
+              --output "$DESTINATION/$name" \
+              "$base/$name"
+          done
+
+      - name: Verify the full mission and same-scene weather contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$DESTINATION/index.html"
+          test -s "$DESTINATION/styles.css"
+          test -s "$DESTINATION/app.js"
+          grep -q 'B-24 全任务循环工作台' "$DESTINATION/index.html"
+          grep -q '开始循环' "$DESTINATION/index.html"
+          grep -q '立即投弹' "$DESTINATION/index.html"
+          grep -q '穿云互动' "$DESTINATION/index.html"
+          grep -q 'RUNWAY_24_06' "$DESTINATION/app.js"
+          grep -q "all-source-animation-tracks-positive-y" "$DESTINATION/app.js"
+          grep -q "explosion" "$DESTINATION/app.js"
+          grep -q "landings" "$DESTINATION/app.js"
+          grep -q "contactEvents" "$DESTINATION/app.js"
+          if grep -q '<iframe' "$DESTINATION/index.html"; then
+            echo 'Unexpected separate weather frame found.'
+            exit 1
+          fi
+          cat > "$DESTINATION/PUBLISH_PROVENANCE.json" <<JSON
+          {
+            "schema": "haihao.aircraft/b24-weather-mission-pages-publication@1.0.0",
+            "sourceRepository": "haihao0307/AIRCRAFT",
+            "sourceCommit": "${AIRCRAFT_COMMIT}",
+            "sourcePath": "b24-weather-mission-v1",
+            "destinationRepository": "haihao0307/guilin-dem-pipeline",
+            "destinationBranch": "gh-pages",
+            "destinationPath": "${DESTINATION}",
+            "singleWorkbench": true,
+            "separateWeatherWindow": false,
+            "authoritativeB24Bytes": 23085972,
+            "authoritativeB24Sha256": "541c3dcfb98ab590cdb1bc90d6ddcdfe80bce2a4b937f3bccefab0c7efe8be0d",
+            "browserQaRun": 33590099504,
+            "browserQaStatus": "success",
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+
+      - name: Commit the public workbench to gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'B24 mission workbench publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$DESTINATION"
+          if git diff --cached --quiet; then
+            echo 'Public workbench already matches the verified source.'
+            exit 0
+          fi
+          git commit -m 'publish(b24): add full mission Weather Mother workbench V1'
+          git push origin HEAD:gh-pages
+
+      - name: Publication summary
+        shell: bash
+        run: |
+          {
+            echo '## B24 mission weather workbench V1'
+            echo
+            echo "Source commit: ${AIRCRAFT_COMMIT}"
+            echo "Public path: ${DESTINATION}/"
+            echo 'Full mission browser QA: passed before publication'
+            echo 'visualAcceptance=false'
+            echo 'productionReady=false'
+          } >> "$GITHUB_STEP_SUMMARY"
