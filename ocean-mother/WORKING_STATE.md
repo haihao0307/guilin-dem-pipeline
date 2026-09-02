@@ -1,22 +1,15 @@
 # Ocean Mother 最小工作状态
 
-日期：2026-09-02。仓库 haihao0307/guilin-dem-pipeline，分支 work/ocean-mother-handoff-20260901。开工先读远端 HEAD，禁止自动整分支合并。
+日期：2026-09-02。仓库 `haihao0307/guilin-dem-pipeline`，分支 `work/ocean-mother-handoff-20260901`。
 
-当前在线工作台：https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v011/
-顶部保留 Coast 与原深海切换。Coast 归属 Ocean Mother。
-V011 源码提交：879c7015d3f7086ffcbc39025602b66db752d829。
-V011 发布提交：9d5dc1b59fc73eadddf7e6b0adf0bc3f2160a690。
-公开验证提交：f0ea5b9c4d80eb8c378bf2657a7c244f5b868bf0。
-完整回执：adoption/COAST_V011_RECEIPT.json。
+当前在线工作台：`https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v012/`
 
-本版完成 96 × 84 m 场域，面积 8064 m²，为 V010 的 2.25 倍；数值网格 216 × 168，保持约 0.444 × 0.5 m 间距。沙滩显示网格 384 × 336，水面显示网格 288 × 240。
-侧边水体已有与水面共用高度的剖切几何，实测接缝最大约 2.33e-7 m，2112 个边界顶点全部对应。南北使用明确的零梯度外推近似开放边界，流入与流出分开记账；有限剖切面不充当隐藏碰撞墙。
-岩石改为十个独立封闭三维断面实体，共 600 个三角面；渲染面、点内外判断和垂向床面共享同一组平面约束。已加入 2048 × 2048 固体阴影缓冲。
-原深海、Weather 1.0.0-clean / 0.6.2-loop、V010、全量归档、其他 Mother 与权威真值保持原样。运行图片贴图、外部模型和 CDN 为零。
+当前 Coast 运行版：`0.1.2-coast`。源码提交：`f0e8e93c9351a76fb70ac0b573ae0b9365c688b8`。公开发布来源提交：`e488b7a02e980ccc535a1385e24430eba0781ced`。公开验证工作流：`33576399854`，47 项通过。
 
-验证：28 项数值与几何检查通过；候选真实浏览器 42 项通过，run 33572969264；公开页面 10 个文件全部 HTTP 200 且字节一致，公开真实浏览器 42 项通过，run 33573676515。页面错误、控制台错误和失败请求均为零。测试浏览器为 Chromium 151 软件渲染，用户显卡与真实手机性能仍待验证。
+V0.1.2 已修复参数交互后暂停且无法继续的问题。顶部“继续运行”从当前物理状态恢复，保留参数和历史，无需生成新种子。物理步长维持 `1/120 s`，显示延迟单独记账。
 
-当前水体仍为深度平均模型，无法形成真正悬空翻卷的浪唇。R006 粒网传递与三维压力投影仍是独立研究算子，尚未接入在线水体。烟与火仍为未标定外观模型，缺少气体压力、燃烧化学和绕障碍体积流动。岩石轮廓和材质已改善，参考相似性等待用户检查。
-下一轮先依据用户视觉意见收敛水边结构、岩石形态、白沫、浪花、烟火和整体风格；再推进局部三维液体和体积烟火。共同政策 1.0.0 保持，原严格 Schema 和 validator 尚未齐。
+最新干净全量包：`ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-02_V0.1.2.zip`，固定提交 `9f8453b07f7dc18ef49aa828907a3d087bcf7297`，SHA256 `221cebcb9b14349f875102ac70a3259698b4c8e7d5f2333c518a6202f2c1f96d`，143130 字节，61 个文件。新研发窗口先读 `ocean-mother/RESTART_START_HERE.md`。
 
-交付以在线 HTML 为主，用户明确要求时制作干净 ZIP。概念图、截图和图片看板不作交付。visualApproved=false；productionApproved=false；fullReplication=false。不强推、不改历史，不擅自修改 main 或已有发布版本。
+场域、侧界、岩石和现有烟火状态保持 V0.1.2。真正三维翻卷浪、完整自由表面液体、体积烟流与燃烧化学、深海物理耦合、潮汐、渗透、泥沙、海水灭火、刚体浮力和双向流固耦合仍待研发。
+
+保护范围：原深海、Weather Mother `1.0.0-clean / 0.6.2-loop`、其他 Mother、权威真值和共同核心不改。运行图片贴图、外部模型与 CDN 为零。`visualApproved=false`，`productionApproved=false`，`fullReplication=false`。
