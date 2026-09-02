@@ -1,7 +1,7 @@
 {
   "productionLine": "Weather Mother",
   "module": "Rain",
-  "version": "0.2.0-candidate",
+  "version": "0.2.0-rejected-draft",
   "publicPlatform": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
   "moduleEntryInsidePlatform": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio/?module=rain",
   "runtime": "self-contained procedural WebGL2 fragment workbench",
@@ -12,19 +12,34 @@
       "repository": "haihao0307/HOUSE",
       "branch": "feature/brick-mother-v2.0-composite-material-dna",
       "readHead": "1cce9d601347f7930718fd3e474db0f23e4794fc",
-      "adoptedRole": "fired-clay color, porosity, wet darkening and runoff response reference"
+      "actualAdoption": "parameter and visual-response reference only; the Brick Mother runtime geometry was not imported into Rain V0.2"
     },
     "tilesMother": {
       "repository": "haihao0307/HOUSE",
       "branch": "feature/tiles-mother-v0.1-workbench",
       "readHead": "41232fedf53f9e07b40756c7aedfc97c1afcfde7",
-      "adoptedRole": "pan and cover tile topology, hand forming scale order, channels, lap and eave drainage reference"
+      "actualAdoption": "profile and topology reference only; the Tiles Mother V0.5 runtime geometry was not imported into Rain V0.2"
+    },
+    "easyRain": {
+      "officialFabListing": "https://www.fab.com/listings/274c81ae-3554-4801-8ec0-04f93212da06",
+      "officialTutorial": "https://youtu.be/SHLCj1SwSSU",
+      "officialChangeLog": "https://docs.google.com/document/d/1SDxztZKled2rSgKw4_H74oa35KmEbSNiYdEJbsO_ZfQ/edit?usp=drive_link",
+      "fullTutorialReviewed": false,
+      "fullChangeLogReviewed": false
     }
   },
-  "lightingPresets": ["rain break", "silver overcast", "cold front", "dusk shower"],
-  "cameraViews": ["cinematic", "roof", "brick", "puddle", "water beads"],
-  "weatherPresets": ["drizzle", "steady rain", "heavy rain", "rain stop observation"],
-  "stateCoupling": ["rain flux", "surface wetness", "puddle storage", "ripples", "drainage", "evaporation"],
+  "userVisualReview": {
+    "date": "2026-09-02",
+    "status": "REJECTED",
+    "reasons": [
+      "rain streaks are oversized and read like lightning",
+      "near, middle and far rain layers are too coarse",
+      "lighting lacks attractive cinematic hierarchy",
+      "brick and tile specimens are simplified stand-ins",
+      "water droplets, wetness and runoff do not reach AAA quality"
+    ]
+  },
+  "nextGate": "Do not iterate by cosmetic tuning. Complete EasyRain source review, then rebuild the precipitation renderer and adopt real Brick Mother and Tiles Mother adapters.",
   "visualApproved": false,
   "aaaQualityApproved": false,
   "productionReady": false
