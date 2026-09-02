@@ -1,0 +1,89 @@
+name: Ocean Mother Coast V020 R010 corrected publish
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths:
+      - ocean-mother/coast-v020/**
+      - ocean-mother/coast-v020-r010/**
+      - .github/workflows/ocean-mother-coast-v020-r010.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ocean-mother-coast-v020-r010-publish
+  cancel-in-progress: false
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build corrected exact stage
+        run: |
+          rm -rf /tmp/coast-v020-r010-stage
+          mkdir -p /tmp/coast-v020-r010-stage
+          cp ocean-mother/coast-v020-r010/index.html ocean-mother/coast-v020-r010/coast.css /tmp/coast-v020-r010-stage/
+          cp ocean-mother/coast-v020/coast-real.mjs /tmp/coast-v020-r010-stage/coast-real.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/coast-v020-r010-stage/coast-real.mjs')
+          s=p.read_text('utf-8')
+          s=s.replace('Math.exp(-((s-13)/5.5)**2)','Math.exp(-Math.pow((s-13)/5.5,2))')
+          s=s.replace('Math.exp(-((s-5)/2.7)**2)','Math.exp(-Math.pow((s-5)/2.7,2))')
+          p.write_text(s,'utf-8')
+          PY
+          node --check /tmp/coast-v020-r010-stage/coast-real.mjs
+          python3 - <<'PY'
+          import pathlib,re
+          root=pathlib.Path('/tmp/coast-v020-r010-stage')
+          text='\n'.join(p.read_text('utf-8') for p in root.iterdir())
+          assert not re.search(r'data\s*:\s*image/',text,re.I)
+          assert not re.search(r'https?://',text,re.I)
+          assert '0.2.0-coast-r010' in text
+          assert 'exp(-sigma*opticalPath)' in text
+          assert 'gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA)' in text
+          assert 'updateFoamFields' in text
+          assert 'sceneCacheReuses' in text
+          PY
+      - name: Prepare public tree
+        run: |
+          rm -rf /tmp/ocean-gh-pages
+          git worktree add /tmp/ocean-gh-pages origin/gh-pages
+          mkdir -p /tmp/ocean-gh-pages/ocean-mother/coast-v020-r010
+          cp /tmp/coast-v020-r010-stage/index.html /tmp/coast-v020-r010-stage/coast.css /tmp/coast-v020-r010-stage/coast-real.mjs /tmp/ocean-gh-pages/ocean-mother/coast-v020-r010/
+          SOURCE_SHA="$GITHUB_SHA" python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path('/tmp/ocean-gh-pages/ocean-mother/coast-v020-r010')
+          files={}
+          for name in ('index.html','coast.css','coast-real.mjs'):
+              b=(root/name).read_bytes();files[name]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+          manifest={'format':'ocean-coast-runtime-manifest','version':'0.2.0-coast-r010','sourceCommit':os.environ['SOURCE_SHA'],'files':files,'persistentImageAssets':0,'externalModels':0,'externalCDN':0,'waterOptics':'beer-lambert-fresnel-premultiplied','statefulFoam':True,'activeTileCache':True,'opaqueSceneCache':True,'fixedStepS':1/120,'visualApproved':False,'productionApproved':False,'fullReplication':False}
+          (root/'MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n','utf-8')
+          PY
+      - name: Publish through gh-pages branch
+        run: |
+          cd /tmp/ocean-gh-pages
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add ocean-mother/coast-v020-r010
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "publish(ocean): corrected Coast 0.2.0 R010 candidate"
+          git push origin HEAD:gh-pages
+      - name: Verify public objects
+        run: |
+          python3 - <<'PY'
+          import time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v020-r010/'
+          for name in ('index.html','coast.css','coast-real.mjs','MANIFEST.json'):
+              for attempt in range(30):
+                  try:
+                      req=urllib.request.Request(base+name+'?r='+str(time.time_ns()),headers={'Cache-Control':'no-cache','User-Agent':'Ocean-Mother-R010-Verify'})
+                      with urllib.request.urlopen(req,timeout=20) as r:
+                          body=r.read();assert r.status==200 and len(body)>100
+                      break
+                  except Exception:
+                      if attempt==29: raise
+                      time.sleep(4)
+          PY
