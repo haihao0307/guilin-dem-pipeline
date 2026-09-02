@@ -1,0 +1,114 @@
+name: Ocean Mother Coast R011.1 materialize
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r0111-materialize.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-mother-coast-r0111-materialize
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Reconstruct, inspect, and commit exact source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os, pathlib, re, time, urllib.request, zlib
+
+          repo = 'haihao0307/guilin-dem-pipeline'
+          branch = 'work/ocean-mother-handoff-20260901'
+          base = 'https://api.github.com/repos/' + repo
+          token = os.environ['GH_TOKEN']
+
+          def api(path, body=None, method=None):
+              req = urllib.request.Request(
+                  base + path,
+                  data=None if body is None else json.dumps(body).encode(),
+                  method=method or ('GET' if body is None else 'POST'),
+                  headers={
+                      'Authorization': 'Bearer ' + token,
+                      'Accept': 'application/vnd.github+json',
+                      'Content-Type': 'application/json',
+                      'Cache-Control': 'no-cache',
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.load(response)
+
+          def read_text(path, ref):
+              value = api('/contents/' + path + '?ref=' + ref + '&nonce=' + str(time.time_ns()))
+              return base64.b64decode(value['content']).decode('utf-8')
+
+          pieces = []
+          for i in range(1, 6):
+              pieces.append(read_text(f'ocean-mother/coast-r011-payload/part{i:02d}.b64', branch).strip())
+          encoded = ''.join(pieces)
+          assert len(encoded) == 32156
+          packed = base64.b64decode(encoded, validate=True)
+          assert len(packed) == 24115
+          assert hashlib.sha256(packed).hexdigest() == 'fa65eb23367bf792f0708f78cada38c89a97063352f745ba3bbb36ba300599ce'
+          html = zlib.decompress(packed)
+          assert len(html) == 78062
+          assert hashlib.sha256(html).hexdigest() == '73ab8cae453fb824774a734fd14f0f7ac98ff66106b4cce9460a2ad12c9b7486'
+          text = html.decode('utf-8')
+
+          contexts = {}
+          for label, pattern in {
+              'blitFramebuffer': r'.{0,500}blitFramebuffer.{0,1000}',
+              'qaProbe': r'.{0,800}qaProbe.{0,1600}',
+              'framebuffer': r'.{0,500}createFramebuffer.{0,1800}',
+              'renderLoop': r'.{0,600}requestAnimationFrame.{0,1800}',
+              'visualProbe': r'.{0,700}visualProbe.{0,1800}',
+          }.items():
+              match = re.search(pattern, text, re.S)
+              contexts[label] = match.group(0) if match else None
+
+          report = {
+              'format': 'ocean-coast-r0111-materialized-source',
+              'version': 1,
+              'runtimeVersion': '0.2.1-coast-r011.1',
+              'standaloneBytes': len(html),
+              'standaloneSha256': hashlib.sha256(html).hexdigest(),
+              'packedBytes': len(packed),
+              'packedSha256': hashlib.sha256(packed).hexdigest(),
+              'payloadCharacters': len(encoded),
+              'persistentImageAssets': 0,
+              'knownBrowserFailure': 'depth/stencil blit rejected and qaProbe absent from dumped DOM',
+              'contexts': contexts,
+              'visualApproved': False,
+              'productionApproved': False,
+          }
+          outputs = {
+              'ocean-mother/coast-v021-r0111/index.html': html,
+              'ocean-mother/coast-v021-r0111/MATERIALIZATION.json': (json.dumps(report, ensure_ascii=False, indent=2) + '\n').encode(),
+          }
+
+          head = api('/git/ref/heads/' + branch + '?nonce=' + str(time.time_ns()))['object']['sha']
+          base_tree = api('/git/commits/' + head)['tree']['sha']
+          entries = []
+          for path, data in outputs.items():
+              blob = api('/git/blobs', {'content': base64.b64encode(data).decode(), 'encoding': 'base64'})['sha']
+              entries.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': blob})
+          tree = api('/git/trees', {'base_tree': base_tree, 'tree': entries})['sha']
+          commit = api('/git/commits', {
+              'message': 'chore(ocean): materialize exact Coast R011.1 standalone source',
+              'tree': tree,
+              'parents': [head],
+          })['sha']
+          assert api('/git/ref/heads/' + branch + '?nonce=' + str(time.time_ns()))['object']['sha'] == head
+          api('/git/refs/heads/' + branch, {'sha': commit, 'force': False}, 'PATCH')
+          assert api('/git/ref/heads/' + branch + '?nonce=' + str(time.time_ns()))['object']['sha'] == commit
+          print(json.dumps({'status': 'MATERIALIZED', 'commit': commit, 'files': list(outputs)}, ensure_ascii=False, indent=2))
+          PY
