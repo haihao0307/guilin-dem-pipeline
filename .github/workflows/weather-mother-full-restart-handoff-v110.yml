@@ -1,0 +1,153 @@
+name: Weather Mother Full Restart Handoff V110
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - weather-mother/restart-v110/build.py
+      - .github/workflows/weather-mother-full-restart-handoff-v110.yml
+permissions:
+  contents: write
+concurrency:
+  group: weather-mother-full-restart-handoff-v110
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          sparse-checkout: |
+            weather-mother
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assemble one restart package from the verified clean runtime
+        run: |
+          python -m py_compile weather-mother/restart-v110/build.py
+          python weather-mother/restart-v110/build.py _weather_restart_stage
+          unzip -t _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip
+          rm -rf _weather_restart_extract
+          mkdir _weather_restart_extract
+          unzip -q _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip -d _weather_restart_extract
+          for f in engine.js field-worker.js motion.js optics.js; do node --check "_weather_restart_extract/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0/$f"; done
+      - name: Install Chromium for an extracted-package boot check
+        run: |
+          python -m pip install 'playwright==1.62.0'
+          python -m playwright install --with-deps chromium
+      - name: Run the extracted package over HTTP
+        run: |
+          python -m http.server 8860 --directory _weather_restart_extract --bind 127.0.0.1 >/tmp/weather-restart-http.log 2>&1 &
+          python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          import json
+          url='http://127.0.0.1:8860/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0/index.html?weather=iridescent'
+          evidence={'url':url,'checks':[],'errors':[],'visualApproved':False,'aaaQualityApproved':False,'productionReady':False}
+          with sync_playwright() as p:
+            b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+            page=b.new_page(viewport={'width':640,'height':480},device_scale_factor=1)
+            page_errors=[];failed=[]
+            page.on('pageerror',lambda e: page_errors.append(str(e)))
+            page.on('requestfailed',lambda r: failed.append(r.url))
+            r=page.goto(url,wait_until='domcontentloaded',timeout=60000)
+            assert r.status==200
+            page.wait_for_function('window.WeatherMother?.qa?.errors?.length || (window.WeatherMother?.qa?.ready&&WeatherMother.qa.frames>0)',timeout=180000)
+            assert not page.evaluate('WeatherMother.qa.errors'),page.evaluate('WeatherMother.qa.errors')
+            assert page.locator('#weather option').count()==20
+            assert page.locator('#kind option').count()==10
+            page.evaluate("WeatherMother.setWeather('typhoon')")
+            page.wait_for_function("WeatherMother.qa.errors.length || (WeatherMother.qa.weatherCase==='typhoon'&&WeatherMother.getState().blend>.999)",timeout=200000)
+            assert not page.evaluate('WeatherMother.qa.errors')
+            evidence.update({'status':'PASS','browser':b.version,'weatherCases':20,'cloudGenera':10,'typhoonReady':True,'pageErrors':page_errors,'failedRequests':failed,'nativeRenderSize':page.evaluate('WeatherMother.qa.renderSize')})
+            assert not page_errors and not failed
+            b.close()
+          open('_weather_restart_stage/EXTRACTED_BROWSER_QA.json','w').write(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Publish the ZIP, receipt and restart pointer
+        run: |
+          mkdir -p weather-mother/handoffs
+          cp _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip weather-mother/handoffs/
+          cp _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json weather-mother/handoffs/
+          cp _weather_restart_stage/EXTRACTED_BROWSER_QA.json weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.browser-qa.json
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          r=json.loads(Path('weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json').read_text())
+          Path('weather-mother/RESTART_START_HERE.md').write_text(f'''# Weather Mother 新窗口启动入口
+
+最新全量重启包：`weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip`
+
+ZIP SHA256：`{r['zipSHA256']}`
+
+ZIP 字节数：`{r['zipBytes']}`
+
+下载并解压后，先读包内 `START_HERE.md`。这套包含全天气运行代码、当前状态、共同规则快照、接入说明、测试记录和下一窗口指令。没有图片、模型、旧运行版、构建缓存或其他生产线资产。
+
+Weather Mother 运行版仍为 `1.1.0-world`，运行提交 `fa75a338f406bebfefa3ea0458366831fef7de48`，公开证据提交 `970aa25814e5d5f98cf10091da69666f62dbcd28`。人工视觉、3A 与生产批准保持 false。
+''',encoding='utf-8')
+          PY
+          git config user.name 'Weather Mother restart handoff'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add weather-mother/handoffs weather-mother/RESTART_START_HERE.md
+          git commit -m 'release(weather-mother): publish full restart handoff V1.1.0'
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            if git push origin HEAD:gh-pages; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 3
+          done
+          echo "PACKAGE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify the public ZIP bytes and archive contents
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,time,urllib.request,zipfile,io,os
+          p=Path('weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json')
+          r=json.loads(p.read_text())
+          url='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip'
+          raw=None
+          for attempt in range(42):
+            try:
+              req=urllib.request.Request(url+'?verify='+r['zipSHA256'][:16],headers={'Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=25) as response:
+                raw=response.read()
+              assert len(raw)==r['zipBytes'] and hashlib.sha256(raw).hexdigest()==r['zipSHA256']
+              with zipfile.ZipFile(io.BytesIO(raw)) as z:
+                assert z.testzip() is None
+                assert 'Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0/START_HERE.md' in z.namelist()
+                assert 'Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0/index.html' in z.namelist()
+              break
+            except Exception as e:
+              print('Pages propagation',attempt,str(e),flush=True)
+              if attempt==41: raise
+              time.sleep(10)
+          r.update({'githubPublicationPending':False,'publicationCommit':os.environ['PACKAGE_COMMIT'],'publicURL':url,'publicBytesVerified':True})
+          p.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n')
+          Path('weather-mother/RESTART_START_HERE.md').write_text(Path('weather-mother/RESTART_START_HERE.md').read_text()+f'\n首次发布提交：`{os.environ["PACKAGE_COMMIT"]}`\n\n公开下载：`{url}`\n')
+          hpath=Path('weather-mother/HANDOFF.json');h=json.loads(hpath.read_text());h.update({'latestRestartPackage':'weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip','latestRestartPackageSHA256':r['zipSHA256'],'latestRestartPackageBytes':r['zipBytes'],'latestRestartStart':'weather-mother/RESTART_START_HERE.md','latestRestartPublicationCommit':os.environ['PACKAGE_COMMIT'],'latestRestartStatus':'PUBLIC_BYTES_AND_EXTRACTED_BROWSER_VERIFIED'});hpath.write_text(json.dumps(h,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json weather-mother/RESTART_START_HERE.md weather-mother/HANDOFF.json
+          git commit -m 'test(weather-mother): record verified restart ZIP and exact publication commit'
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+          git push origin HEAD:gh-pages
+          echo "FINAL_HANDOFF_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Weather-Mother-Full-Restart-Handoff-V1.1.0
+          retention-days: 30
+          path: |
+            _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip
+            _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json
+            _weather_restart_stage/EXTRACTED_BROWSER_QA.json
+      - name: Summary
+        if: always()
+        run: |
+          echo '## Weather Mother full restart handoff' >> "$GITHUB_STEP_SUMMARY"
+          echo 'One runtime, 20 weather cases, 10 cloud genera, current state, policy snapshot and next-window prompt. No images, old runtimes or other Mother assets.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -f _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json ]; then cat _weather_restart_stage/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.receipt.json >> "$GITHUB_STEP_SUMMARY"; fi
