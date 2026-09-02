@@ -52,9 +52,9 @@ jobs:
           test "$(grep -o '<canvas' "$root/terrain-index.html" | wc -l)" -eq 1
           test "$(grep -oi '<iframe' "$root/terrain-index.html" | wc -l)" -eq 0
           grep -F 'wenzhou-workbench-0.3.0-single-scene-weather110' "$root/assemble.py"
-          grep -F 'oneCanvas' "$root/ADOPTION.json"
-          grep -F 'sharedWebGLDepth' "$root/ADOPTION.json"
-          grep -F 'fullNativeOnline' "$root/ADOPTION.json"
+          grep -F '"mainCanvasCount": 1' "$root/ADOPTION.json"
+          grep -F '"sharedDepthBuffer": true' "$root/ADOPTION.json"
+          grep -F '"fullNativeOnline": false' "$root/ADOPTION.json"
       - name: Commit only authorized Wenzhou paths
         run: |
           set -euo pipefail
