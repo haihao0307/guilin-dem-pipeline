@@ -23,3 +23,11 @@ R010 源码位于 `ocean-mother/coast-v020`，修正发布入口位于 `ocean-mo
 R010 继续把局部三维压力自由表面列为待研发能力。它不会把解析波面或显示几何申报成完整三维流体。下一阶段继续接入局部稀疏三维自由表面、二维与三维质量动量交换、撞岩压力、卷气、气泡及水雾分层。
 
 保护范围：原深海、Weather Mother `1.0.0-clean / 0.6.2-loop`、其他 Mother、权威真值和共同核心不改。`visualApproved=false`，`productionApproved=false`，`fullReplication=false`。
+## R010.1 着色器修复
+
+用户公开页面复核发现水体片元着色器把 `active` 用作局部变量。浏览器按 GLSL ES 3.00 保留字处理并拒绝编译。R010.1 将该变量改为 `tileActivity`，同步提升运行版本并给模块增加版本查询，避免浏览器继续读取旧脚本。
+
+公开修复提交：`bee6b0cbcf86c4ff4c3e30a4b0fb46554ff7d4da`。公开 Chrome WebGL2 检查工作流：`33616131790`，结论 success。检查确认公开 HTML 与模块已更新、WebGL2 初始化成功、运行时已推进、错误面板保持隐藏，且原保留字编译错误消失。
+
+该修复只改着色器标识符、版本身份和浏览器缓存键，不改海床、浪形、泡沫状态、光学参数、冻结天气、深海或其他 Mother。`visualApproved=false`，`productionApproved=false`。
+
