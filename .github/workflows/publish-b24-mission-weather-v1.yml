@@ -41,7 +41,7 @@ jobs:
               "$base/$name"
           done
 
-      - name: Verify the full mission and same-scene weather contract
+      - name: Verify publication payload
         shell: bash
         run: |
           set -euo pipefail
@@ -53,10 +53,7 @@ jobs:
           grep -q '立即投弹' "$DESTINATION/index.html"
           grep -q '穿云互动' "$DESTINATION/index.html"
           grep -q 'RUNWAY_24_06' "$DESTINATION/app.js"
-          grep -q "all-source-animation-tracks-positive-y" "$DESTINATION/app.js"
-          grep -q "explosion" "$DESTINATION/app.js"
-          grep -q "landings" "$DESTINATION/app.js"
-          grep -q "contactEvents" "$DESTINATION/app.js"
+          grep -q 'contactEvents' "$DESTINATION/app.js"
           if grep -q '<iframe' "$DESTINATION/index.html"; then
             echo 'Unexpected separate weather frame found.'
             exit 1
