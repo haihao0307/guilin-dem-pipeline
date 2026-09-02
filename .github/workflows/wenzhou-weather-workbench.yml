@@ -1,73 +1,224 @@
-name: Install Wenzhou single scene payload
+name: Wenzhou single-scene Weather workbench build and public verification
 on:
   push:
     branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
     paths:
       - .github/workflows/wenzhou-weather-workbench.yml
+      - projects/wenzhou/v200/web/workbench/**
   workflow_dispatch:
 permissions:
   contents: write
+  pages: write
 concurrency:
-  group: wenzhou-single-scene-bootstrap
+  group: wenzhou-weather-workbench-publication
   cancel-in-progress: false
 jobs:
-  install-exact-payload:
+  verified-single-scene-workbench:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 60
+    env:
+      ROOT: projects/wenzhou/v200/web/workbench
+      INPUTS: /tmp/wenzhou-weather-inputs
+      SITE: /tmp/wenzhou-weather-site
+      EVIDENCE: /tmp/wenzhou-weather-evidence
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=weather110-single-scene-r1
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
-          fetch-depth: 0
+          fetch-depth: 1
           lfs: false
-      - name: Verify and install exact prepared payload
+          sparse-checkout: |
+            projects/wenzhou/v200
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Acquire exact pinned Weather package and source-backed Wenzhou numeric baseline
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,shutil,stat,urllib.request,zipfile
+          from pathlib import Path,PurePosixPath
+          root=Path(os.environ['INPUTS']);root.mkdir()
+          evidence=Path(os.environ['EVIDENCE']);evidence.mkdir()
+          ref='fa69b5c7fed1a71339127776d0f3e44f9152c5a0'
+          base='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+ref+'/'
+          def get(path):
+              with urllib.request.urlopen(base+path,timeout=90) as response:return response.read()
+          data=get('weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip')
+          assert len(data)==46075
+          assert hashlib.sha256(data).hexdigest()=='ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e'
+          package=root/'Weather_Mother_Full_Clean_V1.1.0.zip';package.write_bytes(data)
+          with zipfile.ZipFile(package) as archive:
+              assert archive.testzip() is None
+              for item in archive.infolist():
+                  name=PurePosixPath(item.filename)
+                  assert not name.is_absolute() and '..' not in name.parts and not stat.S_ISLNK(item.external_attr>>16)
+              archive.extractall(root/'weather')
+          vectors=get('wenzhou-v7/data/vectors.json.gz')
+          assert len(vectors)==6044961
+          assert hashlib.sha256(vectors).hexdigest()=='30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39'
+          (root/'wenzhou-vectors.json.gz').write_bytes(vectors)
+          shutil.copytree('projects/wenzhou/v200/web/v7-full',root/'wenzhou-full-source')
+          shutil.copyfile('projects/wenzhou/v200/web/workbench/ADOPTION.json',evidence/'ADOPTION.json')
+          receipt={
+              'upstreamReadRef':ref,
+              'zipSha256':hashlib.sha256(data).hexdigest(),
+              'vectorSha256':hashlib.sha256(vectors).hexdigest(),
+              'attachmentCompared':False,
+              'sourceDeleted':False,
+              'upstreamModified':False,
+              'targetArchitecture':'one canvas, one camera, one renderer, shared WebGL depth'
+          }
+          (evidence/'INPUTS.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - name: Install pinned numeric and browser dependencies
+        run: |
+          python -m pip install --quiet 'numpy<3' 'shapely==2.1.2' pillow playwright
+          python -m playwright install --with-deps chromium
+      - name: Build and statically validate the exact single-scene site
         run: |
           set -euo pipefail
-          parts=(projects/wenzhou/v200/bootstrap/single-scene-v030.part*.b64)
-          test "${#parts[@]}" -eq 6
-          cat "${parts[@]}" | base64 --decode > /tmp/wenzhou-single-scene-v030.tar.gz
-          echo "06dbd1c338a4b89ebe1b75a63273f4a746fdce1d6ba9855c548c334aefbc4387  /tmp/wenzhou-single-scene-v030.tar.gz" | sha256sum --check --strict
-          tar -tzf /tmp/wenzhou-single-scene-v030.tar.gz > /tmp/payload-files.txt
-          test "$(wc -l < /tmp/payload-files.txt)" -eq 9
-          grep -Fx '.github/workflows/wenzhou-weather-workbench.yml' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/terrain-index.html' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/terrain-runtime.js' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/terrain-shaders.js' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/weather-scene.mjs' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/ADOPTION.json' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/assemble.py' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/qa_workbench.py' /tmp/payload-files.txt
-          grep -Fx 'projects/wenzhou/v200/web/workbench/SINGLE_SCENE_ARCHITECTURE.md' /tmp/payload-files.txt
-          tar -xzf /tmp/wenzhou-single-scene-v030.tar.gz -C .
-          git checkout -- .github/workflows/wenzhou-weather-workbench.yml
-          rm -- "${parts[@]}"
-      - name: Check installed source without changing truth assets
-        env:
-          PYTHONDONTWRITEBYTECODE: '1'
+          python "$ROOT/assemble.py" "$INPUTS" "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
+          for file in "$SITE"/*.js "$SITE"/*.mjs; do node --check "$file"; done
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['SITE'])
+          build=json.loads((root/'BUILD.json').read_text())
+          assert build['version']=='wenzhou-workbench-0.3.0-single-scene-weather110'
+          assert build['renderArchitecture']['mainCanvasCount']==1
+          assert build['renderArchitecture']['mainCameraCount']==1
+          assert build['renderArchitecture']['rendererCount']==1
+          assert build['renderArchitecture']['iframeCount']==0
+          assert build['renderArchitecture']['sharedWebGLDepth'] is True
+          assert build['weatherKernelModified'] is False
+          assert build['fieldWorkerReusedByteIdentically'] is True
+          assert build['truth']['fullNativeOnline'] is False
+          assert build['truth']['sourceDeleted'] is False
+          assert build['visualApproved'] is False and build['productionApproved'] is False
+          PY
+      - name: Actual desktop and mobile Chromium prepublication tests
         run: |
           set -euo pipefail
-          root=projects/wenzhou/v200/web/workbench
-          python -m py_compile "$root/assemble.py" "$root/qa_workbench.py"
-          rm -rf "$root/__pycache__"
-          node --check "$root/terrain-runtime.js"
-          node --check "$root/terrain-shaders.js"
-          node --check "$root/weather-scene.mjs"
-          python -m json.tool "$root/ADOPTION.json" > /dev/null
-          test "$(grep -o '<canvas' "$root/terrain-index.html" | wc -l)" -eq 1
-          test "$(grep -oi '<iframe' "$root/terrain-index.html" | wc -l)" -eq 0
-          grep -F 'wenzhou-workbench-0.3.0-single-scene-weather110' "$root/assemble.py"
-          grep -F '"mainCanvasCount": 1' "$root/ADOPTION.json"
-          grep -F '"sharedDepthBuffer": true' "$root/ADOPTION.json"
-          grep -F '"fullNativeOnline": false' "$root/ADOPTION.json"
-      - name: Commit only authorized Wenzhou source paths
+          python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/local-http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 2
+          python "$ROOT/qa_workbench.py" --url http://127.0.0.1:8765/ --out "$EVIDENCE/local"
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: publication
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            wenzhou-v7-full/workbench
+      - name: Publish only the checked Wenzhou workbench subtree
         run: |
           set -euo pipefail
+          mkdir -p publication/wenzhou-v7-full/workbench
+          rsync -a --delete "$SITE/" publication/wenzhou-v7-full/workbench/
+          cd publication
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          rm -rf projects/wenzhou/v200/web/workbench/__pycache__
-          git add -A -- projects/wenzhou/v200/web/workbench projects/wenzhou/v200/bootstrap
-          unexpected="$(git diff --cached --name-only | grep -vE '^projects/wenzhou/v200/(web/workbench/|bootstrap/)' || true)"
-          test -z "$unexpected"
-          test -n "$(git diff --cached --name-only)"
-          git commit -m 'Build Wenzhou single scene Weather workbench V0.3.0 source'
+          git add -- wenzhou-v7-full/workbench
+          test -z "$(git diff --cached --name-only | grep -v '^wenzhou-v7-full/workbench/' || true)"
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Wenzhou single-scene Weather workbench from ${GITHUB_SHA}"
+            pushed=0
+            for attempt in 1 2 3; do
+              if git push origin HEAD:gh-pages; then pushed=1; break; fi
+              git fetch origin gh-pages --depth=30
+              git rebase origin/gh-pages
+            done
+            test "$pushed" = '1'
+          fi
+          git rev-parse HEAD > "$EVIDENCE/publication-commit.txt"
+      - name: Verify exact public HTML and every required asset
+        run: |
+          gh api --method POST repos/haihao0307/guilin-dem-pipeline/pages/builds > "$EVIDENCE/pages-request.json" 2> "$EVIDENCE/pages-request-error.txt" || true
+          python - <<'PY'
+          import json,hashlib,os,time,urllib.request
+          from pathlib import Path
+          from datetime import datetime,timezone
+          root=Path(os.environ['SITE']);out=Path(os.environ['EVIDENCE']);base=os.environ['URL'].split('?')[0]
+          expected=hashlib.sha256((root/'BUILD.json').read_bytes()).hexdigest()
+          report={
+              'url':os.environ['URL'],
+              'checkedUtc':datetime.now(timezone.utc).isoformat(),
+              'passed':False,
+              'files':[],
+              'attempts':[],
+              'sourceCommit':os.environ['GITHUB_SHA'],
+              'publicationCommit':(out/'publication-commit.txt').read_text().strip()
+          }
+          def get(url):
+              request=urllib.request.Request(url,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=45) as response:return response.status,response.read()
+          try:
+              ready=False
+              for attempt in range(80):
+                  try:
+                      status,data=get(base+'BUILD.json?check='+str(attempt))
+                      actual=hashlib.sha256(data).hexdigest()
+                      ready=status==200 and actual==expected
+                      report['attempts'].append({'attempt':attempt,'status':status,'exactBuildMatch':ready})
+                      if ready:break
+                  except Exception as error:
+                      report['attempts'].append({'attempt':attempt,'error':str(error)})
+                  time.sleep(6)
+              assert ready,'Exact build did not become public'
+              status,entry=get(os.environ['URL'])
+              assert status==200 and entry==(root/'index.html').read_bytes()
+              for path in sorted(root.rglob('*')):
+                  if not path.is_file():continue
+                  name=path.relative_to(root).as_posix()
+                  wanted=hashlib.sha256(path.read_bytes()).hexdigest()
+                  status,data=get(base+name+'?sha='+wanted[:16])
+                  assert status==200 and hashlib.sha256(data).hexdigest()==wanted,(name,status)
+                  report['files'].append({'path':name,'httpStatus':status,'sha256':wanted,'bytes':len(data),'exactMatch':True})
+              report['passed']=True
+          finally:
+              (out/'PUBLIC_HTTP.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Fresh actual public desktop and mobile Chromium verification
+        run: python "$ROOT/qa_workbench.py" --url "$URL" --out "$EVIDENCE/public"
+      - name: Record exact-build public receipt on the Wenzhou branch
+        run: |
+          set -euo pipefail
+          target=projects/wenzhou/v200/reports/weather-workbench
+          mkdir -p "$target"
+          cp "$EVIDENCE/PUBLIC_HTTP.json" "$target/"
+          cp "$EVIDENCE/public/browser-qa.json" "$target/"
+          cp "$SITE/BUILD.json" "$target/"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$target"
+          git diff --cached --quiet || git commit -m 'Record actual public Wenzhou single-scene Weather verification [skip ci]'
           git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+      - name: Retain actual success or failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-single-scene-weather-workbench-evidence
+          path: |
+            /tmp/wenzhou-weather-evidence
+            /tmp/wenzhou-weather-site
+          retention-days: 30
+          if-no-files-found: error
+      - name: Summarize only observed readiness
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          path=Path(os.environ['EVIDENCE'])/'public/browser-qa.json'
+          passed=path.exists() and json.loads(path.read_text()).get('passed') is True
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as summary:
+              summary.write('Actual public single-scene browser check passed: '+str(passed)+'\n\n')
+              summary.write('One renderer, one canvas, one camera and shared WebGL depth candidate. ')
+              summary.write('Weather Mother field worker remains byte-identical. ')
+              summary.write('800 m whole-domain overview. Full native 12.5 m LOD remains incomplete. ')
+              summary.write('Scientific calibration, human visual approval and production approval remain false.\n')
+          PY
