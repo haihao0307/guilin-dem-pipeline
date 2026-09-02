@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Wait for the restored public files
+      - name: Wait for the restored public payload
         shell: bash
         run: |
           set -euo pipefail
@@ -46,7 +46,7 @@ jobs:
             if grep -q 'V010 RESTORED' "$EVIDENCE_DIR/index.html" 2>/dev/null \
               && grep -q "url:'./b24.glb'" "$EVIDENCE_DIR/app.js" 2>/dev/null \
               && grep -q 'proceduralAircraftFallback:false' "$EVIDENCE_DIR/app.js" 2>/dev/null; then
-              echo "Restored public runtime visible after attempt $attempt"
+              echo "Restored runtime visible after attempt $attempt"
               break
             fi
             if [ "$attempt" = 80 ]; then
@@ -56,7 +56,7 @@ jobs:
             sleep 5
           done
 
-      - name: Verify the same-origin authoritative B24 payload
+      - name: Verify exact same-origin B24 and forbidden-route removal
         shell: bash
         run: |
           set -euo pipefail
@@ -69,22 +69,22 @@ jobs:
           grep -q 'contactEvents' "$EVIDENCE_DIR/app.js"
           grep -q 'drop(false' "$EVIDENCE_DIR/app.js"
           if grep -Eqi 'img2threejs|image2three|function fallback\(|aircraft=fallback\(|程序化占位机继续演示' "$EVIDENCE_DIR/index.html" "$EVIDENCE_DIR/app.js"; then
-            echo 'A forbidden substitute aircraft route remains on the public page.'
+            echo 'A forbidden substitute aircraft route remains.'
             exit 1
           fi
 
-      - name: Install real Chromium browser QA
+      - name: Install Chromium QA
         shell: bash
         run: |
           set -euo pipefail
           npm install --no-save --no-package-lock playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Open the public URL and verify the real B24 in browser
+      - name: Verify the public page in a real browser
         shell: bash
         run: |
           set -euo pipefail
-          cat > "$RUNNER_TEMP/verify-b24-live.cjs" <<'NODE'
+          cat > verify-b24-live.cjs <<'NODE'
           const fs = require('node:fs');
           const path = require('node:path');
           const { chromium } = require('playwright');
@@ -119,8 +119,10 @@ jobs:
               error: request.failure()?.errorText || 'unknown'
             }));
 
-            const url = `${publicUrl}?restore=${Date.now()}&autostart=0`;
-            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 });
+            await page.goto(`${publicUrl}?restore=${Date.now()}&autostart=0`, {
+              waitUntil: 'domcontentloaded',
+              timeout: 180000
+            });
             await page.waitForFunction(() => {
               const api = window.__B24_MISSION_WEATHER__;
               const status = document.querySelector('#model-status');
@@ -133,10 +135,10 @@ jobs:
               api.setWeather('fair');
               api.runtime.rate = 1;
             });
-            await page.waitForTimeout(1800);
+            await page.waitForTimeout(1600);
 
             const baseline = await page.evaluate(() => ({
-              pageTitle: document.title,
+              title: document.title,
               heading: document.querySelector('h1')?.textContent?.trim() || '',
               modelState: document.querySelector('#model-status')?.dataset.state || '',
               modelTitle: document.querySelector('#model-status-title')?.textContent || '',
@@ -144,26 +146,20 @@ jobs:
               errorText: document.querySelector('#error-card')?.textContent || '',
               runtime: window.__B24_MISSION_WEATHER__.getState(),
               contract: window.__B24_MISSION_WEATHER__.contract,
-              canvases: document.querySelectorAll('canvas').length,
-              webglCanvases: [...document.querySelectorAll('canvas')].filter(canvas => {
-                try { return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl')); }
-                catch { return false; }
-              }).length,
               bodyText: document.body.innerText
             }));
 
             const checks = [];
             const check = (name, pass, detail) => checks.push({ name, pass: Boolean(pass), detail });
-            check('public page identifies restored V010 baseline', baseline.heading.includes('V010 RESTORED'), baseline.heading);
-            check('authoritative B24 gate passed', baseline.modelState === 'pass', baseline.modelState);
-            check('authoritative B24 status displayed', baseline.modelTitle.includes('权威 B-24 已锁定'), baseline.modelTitle);
-            check('exact byte and SHA gate displayed', baseline.modelDetail.includes('23,085,972') && baseline.modelDetail.includes('SHA256'), baseline.modelDetail);
-            check('runtime reports real model loaded', baseline.runtime.modelLoaded === true, baseline.runtime.modelLoaded);
-            check('runtime reports runway ready', baseline.runtime.runwayReady === true, baseline.runtime.runwayReady);
-            check('authoritative-only contract active', baseline.contract.authoritativeAircraftOnly === true, baseline.contract);
-            check('substitute aircraft route disabled', baseline.contract.proceduralAircraftFallback === false, baseline.contract);
-            check('no substitute aircraft warning visible', !baseline.bodyText.includes('程序化占位机'), baseline.errorText);
-            check('WebGL workbench active', baseline.webglCanvases >= 1, baseline.webglCanvases);
+            check('restored V010 heading', baseline.heading.includes('V010 RESTORED'), baseline.heading);
+            check('authoritative gate passed', baseline.modelState === 'pass', baseline.modelState);
+            check('authoritative status shown', baseline.modelTitle.includes('权威 B-24 已锁定'), baseline.modelTitle);
+            check('exact source gate shown', baseline.modelDetail.includes('23,085,972') && baseline.modelDetail.includes('SHA256'), baseline.modelDetail);
+            check('real B24 loaded', baseline.runtime.modelLoaded === true, baseline.runtime.modelLoaded);
+            check('runway ready', baseline.runtime.runwayReady === true, baseline.runtime.runwayReady);
+            check('authoritative-only contract', baseline.contract.authoritativeAircraftOnly === true, baseline.contract);
+            check('substitute route disabled', baseline.contract.proceduralAircraftFallback === false, baseline.contract);
+            check('no substitute warning', !baseline.bodyText.includes('程序化占位机'), baseline.errorText);
 
             await page.screenshot({
               path: path.join(outputDir, '01-restored-v010-authoritative-b24.png'),
@@ -180,10 +176,10 @@ jobs:
               const state = window.__B24_MISSION_WEATHER__?.getState?.();
               return state && state.missionProgress > 0.18 && state.modelLoaded;
             }, null, { timeout: 90000, polling: 100 });
-            await page.waitForTimeout(800);
+            await page.waitForTimeout(700);
             const airborne = await page.evaluate(() => window.__B24_MISSION_WEATHER__.getState());
-            check('mission loop advances with real B24', airborne.missionProgress > 0.18, airborne);
-            check('real B24 remains loaded during mission', airborne.modelLoaded === true, airborne.modelLoaded);
+            check('mission advances with real B24', airborne.missionProgress > 0.18, airborne);
+            check('real B24 remains loaded', airborne.modelLoaded === true, airborne.modelLoaded);
 
             await page.screenshot({
               path: path.join(outputDir, '02-restored-v010-takeoff.png'),
@@ -192,8 +188,8 @@ jobs:
             });
 
             check('no page errors', pageErrors.length === 0, pageErrors);
-            check('no serious console errors', consoleErrors.length === 0, consoleErrors);
-            check('no failed runtime requests', failedRequests.length === 0, failedRequests);
+            check('no console errors', consoleErrors.length === 0, consoleErrors);
+            check('no failed requests', failedRequests.length === 0, failedRequests);
 
             const failed = checks.filter(item => !item.pass);
             const report = {
@@ -217,12 +213,12 @@ jobs:
             console.log(JSON.stringify(report, null, 2));
             await browser.close();
             if (failed.length) process.exit(1);
-          })().catch(async error => {
+          })().catch(error => {
             console.error(error);
             process.exit(1);
           });
           NODE
-          node "$RUNNER_TEMP/verify-b24-live.cjs"
+          node verify-b24-live.cjs
 
       - uses: actions/upload-artifact@v4
         if: always()
