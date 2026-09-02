@@ -1,130 +1,263 @@
-"""Build the compact complete-Wenzhou workbench without changing Weather Mother.
+"""Build the first single-scene Wenzhou and Weather Mother research workbench.
 
-The original Weather 1.1 package remains byte-identical and runs offscreen as a
-state producer. The visible page contains one large terrain/ocean viewport.
+The complete Wenzhou numerical overview, the Weather Mother V1.1.0 field
+worker, the Wenzhou adapter, terrain, sea, cloud pass and controls are shipped
+in one public directory. Weather Mother source files are copied byte for byte.
 """
+from __future__ import annotations
+
 from pathlib import Path
-import argparse, hashlib, json, shutil, subprocess, sys, zipfile
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
 
-VERSION = 'wenzhou-workbench-0.2.0-compact-weather110'
+VERSION = "wenzhou-workbench-0.3.0-single-scene-weather110"
+WEATHER_ZIP_SHA256 = "ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e"
+WEATHER_MANIFEST_SHA256 = "a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b"
+WEATHER_FIELD_WORKER_SHA256 = "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d"
+AUTHORITATIVE_COG_SHA256 = "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43"
+VECTOR_GZIP_SHA256 = "30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39"
 
 
-def sha(data):
+def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def replace(text, old, new):
-    if text.count(old) != 1:
-        raise ValueError(('patch source mismatch', old, text.count(old)))
-    return text.replace(old, new)
+def read_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def replace_count(text, old, new, count):
-    if text.count(old) != count:
-        raise ValueError(('patch count mismatch', old, text.count(old), count))
-    return text.replace(old, new)
+def verify_weather_package(weather: Path, archive: Path) -> dict:
+    archive_data = archive.read_bytes()
+    assert len(archive_data) == 46075, len(archive_data)
+    assert sha(archive_data) == WEATHER_ZIP_SHA256
+    with zipfile.ZipFile(archive) as package:
+        assert package.testzip() is None
 
-
-def patch(root):
-    p = root / 'runtime.js'
-    s = p.read_text(encoding='utf-8')
-    s = replace(s, "function wave(x,z){return .14*Math.sin(x*.023+z*.019-S.physicalTime*.9)+.06*Math.sin(-x*.037+z*.031-S.physicalTime*.6);}", """function env(){return S.mode===3&&S.weatherFrame?S.weatherFrame:null;}
-function seaParams(){let e=env();if(!e)return{dir:[1,0],amplitude:1,time:S.physicalTime};return{dir:[e.wind.directionENU[0],e.wind.directionENU[2]],amplitude:.18+Math.min(e.wind.speedMps,40)/12,time:e.clock.simulationSeconds};}
-function wave(x,z){let p=seaParams(),X=x*p.dir[0]+z*p.dir[1],Z=-x*p.dir[1]+z*p.dir[0];return p.amplitude*(.14*Math.sin(X*.023+Z*.019-p.time*.9)+.06*Math.sin(-X*.037+Z*.031-p.time*.6));}
-function applyWeatherFrame(frame){if(!frame){if(S.weatherFrame)record('weatherDisconnected',true);S.weatherFrame=null;return;}
-if(frame.schema!=='wenzhou-weather-frame-1'||frame.sourceRuntimeVersion!=='1.1.0-hq'||!Number.isFinite(frame.clock?.simulationSeconds)||!Number.isFinite(frame.wind?.speedMps)||frame.wind.speedMps<0||frame.wind.speedMps>80)throw Error('WEATHER_FRAME_CONTRACT');
-for(let a of[frame.wind.directionENU,frame.solar?.directionENU,frame.solar?.colorLinear])if(!Array.isArray(a)||a.length!==3||a.some(x=>!Number.isFinite(x)))throw Error('WEATHER_VECTOR_CONTRACT');
-if(Math.abs(Math.hypot(...frame.wind.directionENU)-1)>1e-5)throw Error('WEATHER_WIND_NORMALIZATION');
-if(!S.weatherFrame||frame.clock.discontinuity||Math.abs(frame.wind.speedMps-S.weatherFrame.wind.speedMps)>1||frame.identity.weather!==S.weatherFrame.identity.weather)record('weatherExchange',{source:frame.identity,clock:frame.clock.simulationSeconds,windMps:frame.wind.speedMps});
-S.weatherFrame=structuredClone(frame);S.weatherExchanges=(S.weatherExchanges||0)+1;
-if(S.history.length>4096)S.history.shift();}
-""")
-    s = replace(s, "g.uniform3fv(S.u.uLights,S.lights);", """g.uniform3fv(S.u.uLights,S.lights);let sea=seaParams(),e=env();g.uniform2fv(S.u.uWaveDir,sea.dir);g.uniform1f(S.u.uWaveAmplitude,sea.amplitude);g.uniform1f(S.u.uWaveTime,sea.time);g.uniform3fv(S.u.uSun,e?.solar.directionENU||[-.6,.35,-.7]);g.uniform3fv(S.u.uSunColor,e?.solar.colorLinear||[1,1,1]);g.uniform3fv(S.u.uAtmosphere,[e?.solar.day??1,e?.solar.directMultiplier??1,e?.solar.skyMultiplier??1]);""")
-    s = replace(s, "['neutral','studio','diagnostic'][S.mode]", "['neutral','studio','diagnostic','environment'][S.mode]")
-    s = replace(s, "historyCount:S.history.length,imageRequests:", "historyCount:S.history.length,weather:{connected:!!S.weatherFrame,active:!!env(),exchangeCount:S.weatherExchanges||0,upstreamTimeS:S.weatherFrame?.clock.simulationSeconds??null,windMps:S.weatherFrame?.wind.speedMps??null,windDirection:S.weatherFrame?.wind.directionENU??null,sharedDepth:false,calibrated:false},waveState:seaParams(),ui:{compact:true,panelWidthPx:214,innerHeaderVisible:false},imageRequests:")
-    s = replace(s, "'uEye','uLights','uMud']", "'uEye','uLights','uMud','uWaveDir','uWaveAmplitude','uWaveTime','uSun','uSunColor','uAtmosphere']")
-    s = replace(s, "history:()=>structuredClone(S.history),surface}", "history:()=>structuredClone(S.history),surface,applyWeatherFrame,setMode:id=>{let button=document.querySelector(`[data-mode=\"${id}\"]`);if(!button)throw Error('Unknown mode');button.click();},getWindWaveAt:(x,z)=>wave(x,z)}")
-    s = replace(s, 'Math.round(288*dpr)', 'Math.round(224*dpr)')
-    s = replace_count(s, 'innerWidth-288', 'innerWidth-224', 2)
-    p.write_text(s, encoding='utf-8')
-
-    p = root / 'shaders.js'
-    s = p.read_text(encoding='utf-8')
-    s = replace(s, "uniform mat4 uVP;uniform float uTime,uTide,uLogFar;", "uniform mat4 uVP;uniform float uTime,uTide,uLogFar,uWaveAmplitude,uWaveTime;uniform vec2 uWaveDir;")
-    s = replace(s, "float w=.14*sin(p.x*.023+p.z*.019-uTime*.9)+.06*sin(-p.x*.037+p.z*.031-uTime*.6);", "vec2 q=vec2(dot(p.xz,uWaveDir),dot(p.xz,vec2(-uWaveDir.y,uWaveDir.x)));float w=uWaveAmplitude*(.14*sin(q.x*.023+q.y*.019-uWaveTime*.9)+.06*sin(-q.x*.037+q.y*.031-uWaveTime*.6));")
-    s = replace(s, "uniform int uLayer,uMode,uIslandCount;", "uniform vec2 uWaveDir;uniform float uWaveAmplitude,uWaveTime;uniform vec3 uSun,uSunColor,uAtmosphere;uniform int uLayer,uMode,uIslandCount;")
-    s = replace(s, "c*=lit*(.92+.13*b);", "if(uMode==3)lit=vec3(.13+.30*uAtmosphere.z*uAtmosphere.x)+uSunColor*uAtmosphere.y*uAtmosphere.x*max(dot(n,normalize(uSun)),0.);c*=lit*(.92+.13*b);")
-    s = replace(s, "c=mix(c,vec3(.49,.66,.70),fres*.2);", """c=mix(c,vec3(.49,.66,.70),fres*.2);if(uMode==3){vec2 wdir=vec2(-uWaveDir.y,uWaveDir.x);vec2 aq=vec2(dot(p,uWaveDir),dot(p,wdir));float r1=aq.x*.023+aq.y*.019-uWaveTime*.9,r2=-aq.x*.037+aq.y*.031-uWaveTime*.6;vec2 grad=uWaveAmplitude*(.14*cos(r1)*vec2(.023,.019)+.06*cos(r2)*vec2(-.037,.031));vec3 wn=normalize(vec3(-(uWaveDir.x*grad.x+wdir.x*grad.y),1.,-(uWaveDir.y*grad.x+wdir.y*grad.y)));float sunGlow=pow(max(dot(reflect(-normalize(uSun),wn),normalize(uEye-vP)),0.),96.);c*=.32+.68*uAtmosphere.x;c+=uSunColor*uAtmosphere.x*min(.45,sunGlow*.35)*uAtmosphere.y;float drift=fbm(vec2(aq.x*.0006-uWaveTime*.0009,aq.y*.0018));c*=.94+.12*drift*min(uWaveAmplitude,2.);}""")
-    p.write_text(s, encoding='utf-8')
-
-    p = root / 'index.html'
-    s = p.read_text(encoding='utf-8')
-    s = replace(s, '<button data-mode="diagnostic">诊断</button>', '<button data-mode="diagnostic">诊断</button><button data-mode="environment">天气联动</button>')
-    s = s.replace('Mother V1.0.0：部分展示与状态接口；完整规则接入仍待验证。', '天气联动：风向、风力、演示时间与解析日光接入；云影与深度合成尚未实现。Mother V1.0.0 完整规则接入待验证。')
-    compact = """<style id="compact-workbench-terrain">
-header{display:none!important}aside{top:6px!important;left:6px!important;bottom:26px!important;width:214px!important;padding:8px!important;border-radius:6px!important;box-shadow:0 3px 14px #00192022!important}aside section{padding-bottom:6px!important;margin-bottom:6px!important}aside h2{font-size:11px!important;margin:4px 0!important}aside button{padding:4px 7px!important;margin:2px 1px!important;font-size:10px!important;border-radius:5px!important}aside label,aside .row{padding:3px 0!important;font-size:10px!important}.note{font-size:9px!important;line-height:1.4!important}.grid{gap:3px!important}.grid div{padding:4px!important}.grid span{font-size:8px!important}.grid b{font-size:10px!important;margin-top:2px!important}footer{bottom:3px!important;left:6px!important;right:6px!important;padding:3px 8px!important;min-height:20px!important;border-radius:5px!important;font-size:9px!important}.lights label input[type=range]{width:86px!important}@media(max-width:700px){aside{top:4px!important;left:4px!important;bottom:25px!important;width:210px!important;padding:7px!important;transform:translateX(-220px)!important}aside.open{transform:none!important}footer{left:4px!important;right:4px!important;font-size:8px!important}}
-</style>"""
-    if '</head>' not in s:
-        raise ValueError('terrain head not found')
-    s = s.replace('</head>', compact + '</head>', 1)
-    p.write_text(s, encoding='utf-8')
-
-
-def main(inputs, implementation, out):
-    weather = inputs / 'weather/Weather_Mother_Full_Clean_V1.1.0'
-    archive = inputs / 'Weather_Mother_Full_Clean_V1.1.0.zip'
-    assert sha(archive.read_bytes()) == 'ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e'
-    with zipfile.ZipFile(archive) as z:
-        assert z.testzip() is None
-    manifest = json.loads((weather / 'MANIFEST.json').read_text(encoding='utf-8'))
-    assert sha((weather / 'MANIFEST.json').read_bytes()) == 'a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b'
-    for name, item in manifest['files'].items():
+    manifest_path = weather / "MANIFEST.json"
+    assert sha(manifest_path.read_bytes()) == WEATHER_MANIFEST_SHA256
+    manifest = read_json(manifest_path)
+    assert manifest["version"] == "1.1.0-clean"
+    assert manifest["fileCount"] == 12
+    for name, identity in manifest["files"].items():
         data = (weather / name).read_bytes()
-        assert sha(data) == item['sha256'] and len(data) == item['bytes'], name
-    src = inputs / 'wenzhou-full-source'
-    shutil.copyfile(inputs / 'wenzhou-vectors.json.gz', src / 'data/vectors.json.gz')
-    subprocess.run([sys.executable, str(src / 'build.py'), str(src), str(out / 'terrain')], check=True)
-    patch(out / 'terrain')
-    dest = out / 'modules/weather-mother'
-    dest.mkdir(parents=True, exist_ok=True)
-    for item in weather.iterdir():
-        if item.is_file():
-            shutil.copyfile(item, dest / item.name)
-    for name in ['index.html', 'workbench.js', 'weather-bridge.mjs']:
-        shutil.copyfile(implementation / name, out / name)
-    files = {p.relative_to(out).as_posix(): {'bytes': p.stat().st_size, 'sha256': sha(p.read_bytes())} for p in sorted(out.rglob('*')) if p.is_file() and p.name not in ['BUILD.json', 'PUBLIC_QA.json']}
-    build = {
-        'version': VERSION,
-        'sourceCommit': __import__('os').environ.get('GITHUB_SHA', 'local-unpublished'),
-        'weatherReadRef': 'fa69b5c7fed1a71339127776d0f3e44f9152c5a0',
-        'weatherZipSha256': sha(archive.read_bytes()),
-        'attachmentBytesCompared': False,
-        'weatherKernelModified': False,
-        'mapOverviewSpacingM': 800,
-        'sourceNativeSpacingM': 12.5,
-        'wholeDomain': True,
-        'fullNativeOnline': False,
-        'sourceDeleted': False,
-        'noPersistedImageAssets': True,
-        'sharedWebGLDepth': False,
-        'visibleWeatherViewport': False,
-        'compactMapFirstUi': True,
-        'uiTopBarPx': 42,
-        'uiTerrainPanelPx': 214,
-        'weatherCoupling': ['base-wind-direction', 'base-wind-speed', 'upstream-demonstration-clock', 'derived-renderer-daylight'],
-        'calibratedWeatherOrHydrodynamics': False,
-        'visualApproved': False,
-        'productionApproved': False,
-        'files': files,
+        assert len(data) == identity["bytes"], name
+        assert sha(data) == identity["sha256"], name
+    assert sha((weather / "field-worker.js").read_bytes()) == WEATHER_FIELD_WORKER_SHA256
+    return manifest
+
+
+def verify_single_scene_sources(implementation: Path) -> None:
+    required = [
+        "terrain-index.html",
+        "terrain-runtime.js",
+        "terrain-shaders.js",
+        "weather-scene.mjs",
+        "ADOPTION.json",
+        "qa_workbench.py",
+        "SINGLE_SCENE_ARCHITECTURE.md",
+    ]
+    for name in required:
+        assert (implementation / name).is_file(), name
+
+    html = (implementation / "terrain-index.html").read_text(encoding="utf-8")
+    runtime = (implementation / "terrain-runtime.js").read_text(encoding="utf-8")
+    shaders = (implementation / "terrain-shaders.js").read_text(encoding="utf-8")
+    adapter = (implementation / "weather-scene.mjs").read_text(encoding="utf-8")
+    adoption = read_json(implementation / "ADOPTION.json")
+
+    assert html.lower().count("<canvas") == 1
+    assert "<iframe" not in html.lower()
+    assert "sameWebGLContext" in runtime and "sharedDepth" in runtime
+    assert "getContext('webgl2'" in runtime
+    assert "createWeatherScene(g" in runtime
+    assert "sampler3D" in shaders and "cloudShadow" in shaders
+    assert "sea cloud-reflection candidate" in json.dumps(adoption)
+    assert "new Worker(workerUrl)" in adapter
+    assert "gl.texImage3D" in adapter
+    assert "field-worker.js" in adapter
+    assert "coast" in adapter and "rain" in adapter and "typhoon" in adapter
+    assert adoption["renderArchitecture"]["mainCanvasCount"] == 1
+    assert adoption["renderArchitecture"]["sharedDepthBuffer"] is True
+    assert adoption["truthInvariants"]["fullNativeOnline"] is False
+    assert adoption["visualApproved"] is False
+    assert adoption["productionApproved"] is False
+
+
+def build_wenzhou(inputs: Path, out: Path) -> dict:
+    original_source = inputs / "wenzhou-full-source"
+    vectors = inputs / "wenzhou-vectors.json.gz"
+    assert sha(vectors.read_bytes()) == VECTOR_GZIP_SHA256
+    with tempfile.TemporaryDirectory(prefix="wenzhou-single-scene-") as temporary:
+        source = Path(temporary) / "source"
+        shutil.copytree(original_source, source)
+        shutil.copyfile(vectors, source / "data/vectors.json.gz")
+        subprocess.run([sys.executable, str(source / "build.py"), str(source), str(out)], check=True)
+    manifest = read_json(out / "manifest.json")
+    assert manifest["version"] == "v7-full-review-r3"
+    assert manifest["grid"] == [276, 281]
+    assert manifest["sourceGrid"] == [17555, 17918]
+    assert manifest["visualApproved"] is False
+    assert manifest["productionApproved"] is False
+    return manifest
+
+
+def copy_single_scene_sources(implementation: Path, out: Path) -> None:
+    mapping = {
+        "terrain-index.html": "index.html",
+        "terrain-runtime.js": "runtime.js",
+        "terrain-shaders.js": "shaders.js",
+        "weather-scene.mjs": "weather-scene.mjs",
+        "ADOPTION.json": "ADOPTION.json",
+        "SINGLE_SCENE_ARCHITECTURE.md": "SINGLE_SCENE_ARCHITECTURE.md",
     }
-    (out / 'BUILD.json').write_text(json.dumps(build, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(json.dumps({'version': VERSION, 'fileCount': len(files), 'runtimeWeatherUnchanged': True, 'visibleWeatherViewport': False, 'wholeMapGrid': [276, 281]}, indent=2))
+    for source, target in mapping.items():
+        shutil.copyfile(implementation / source, out / target)
 
 
-if __name__ == '__main__':
+def copy_weather_read_only(weather: Path, out: Path, manifest: dict) -> None:
+    destination = out / "modules/weather-mother"
+    destination.mkdir(parents=True, exist_ok=True)
+    for name, identity in manifest["files"].items():
+        shutil.copyfile(weather / name, destination / name)
+        copied = (destination / name).read_bytes()
+        assert len(copied) == identity["bytes"], name
+        assert sha(copied) == identity["sha256"], name
+    assert sha((destination / "field-worker.js").read_bytes()) == WEATHER_FIELD_WORKER_SHA256
+
+
+def verify_output(out: Path) -> None:
+    html = (out / "index.html").read_text(encoding="utf-8")
+    runtime = (out / "runtime.js").read_text(encoding="utf-8")
+    shaders = (out / "shaders.js").read_text(encoding="utf-8")
+    adapter = (out / "weather-scene.mjs").read_text(encoding="utf-8")
+    assert html.lower().count("<canvas") == 1
+    assert "<iframe" not in html.lower()
+    assert "wenzhou-workbench-0.3.0-single-scene-weather110" in runtime
+    assert "oneCanvas" in runtime and "iframeCount" in runtime
+    assert "sampler3D" in shaders and "cloudShadow" in shaders
+    assert "TEXTURE_3D" in adapter and "field-worker.js" in adapter
+
+    image_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ktx", ".ktx2", ".dds"}
+    image_files = [path for path in out.rglob("*") if path.is_file() and path.suffix.lower() in image_extensions]
+    assert not image_files, image_files
+
+    for path in [out / "runtime.js", out / "shaders.js", out / "weather-scene.mjs"]:
+        subprocess.run(["node", "--check", str(path)], check=True)
+
+
+def build_receipt(out: Path, weather_zip: Path, terrain_manifest: dict) -> dict:
+    files = {}
+    for path in sorted(out.rglob("*")):
+        if not path.is_file() or path.name in {"BUILD.json", "PUBLIC_QA.json"}:
+            continue
+        data = path.read_bytes()
+        files[path.relative_to(out).as_posix()] = {"bytes": len(data), "sha256": sha(data)}
+
+    return {
+        "schema": "wenzhou-single-scene-weather-build-1",
+        "version": VERSION,
+        "sourceCommit": os.environ.get("GITHUB_SHA", "local-unpublished"),
+        "repository": "haihao0307/guilin-dem-pipeline",
+        "branch": "project/wenzhou-v200-17tile-truth-hydrology-rebuild",
+        "weatherReadRef": "fa69b5c7fed1a71339127776d0f3e44f9152c5a0",
+        "weatherZipSha256": sha(weather_zip.read_bytes()),
+        "weatherManifestSha256": WEATHER_MANIFEST_SHA256,
+        "weatherFieldWorkerSha256": WEATHER_FIELD_WORKER_SHA256,
+        "weatherKernelModified": False,
+        "fieldWorkerReusedByteIdentically": True,
+        "renderArchitecture": {
+            "mainCanvasCount": 1,
+            "mainCameraCount": 1,
+            "rendererCount": 1,
+            "iframeCount": 0,
+            "sameWebGL2Context": True,
+            "sharedWebGLDepth": True,
+            "sameWorldCoordinates": True,
+            "visibleWeatherViewport": True,
+            "hiddenWeatherIframe": False,
+            "mountainOcclusionCandidate": True,
+            "terrainCloudShadowCandidate": True,
+            "seaCloudReflectionCandidate": True,
+        },
+        "weatherCases": ["coast", "rain", "typhoon"],
+        "explicitUnits": {
+            "worldLength": "metre",
+            "cloudSourceLength": "kilometre",
+            "cloudBaseTop": "metre",
+            "windDirection": "meteorological degree from north",
+            "windSpeed": "metre per second",
+            "cloudSpeed": "metre per second",
+            "simulationClock": "second",
+        },
+        "truth": {
+            "authoritativeCogName": "WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+            "authoritativeCogBytes": 136760745,
+            "authoritativeCogSha256": AUTHORITATIVE_COG_SHA256,
+            "authoritativeGrid": [17555, 17918],
+            "sourceNativeSpacingM": 12.5,
+            "mapOverviewSpacingM": 800,
+            "overviewGrid": terrain_manifest["grid"],
+            "wholeDomain": True,
+            "fullNativeOnline": False,
+            "authoritativeCogIncluded": False,
+            "sourceDeleted": False,
+            "oldQingjiangTruthUsed": False,
+            "syntheticGapFill": False,
+            "manualRivers": False,
+            "manualCoastline": False,
+        },
+        "noPersistedImageAssets": True,
+        "calibratedWeatherOrHydrodynamics": False,
+        "physicalTargetMachineVerified": False,
+        "visualApproved": False,
+        "productionApproved": False,
+        "files": files,
+    }
+
+
+def main(inputs: Path, implementation: Path, out: Path) -> None:
+    weather = inputs / "weather/Weather_Mother_Full_Clean_V1.1.0"
+    archive = inputs / "Weather_Mother_Full_Clean_V1.1.0.zip"
+    verify_single_scene_sources(implementation)
+    weather_manifest = verify_weather_package(weather, archive)
+
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    terrain_manifest = build_wenzhou(inputs, out)
+    copy_single_scene_sources(implementation, out)
+    copy_weather_read_only(weather, out, weather_manifest)
+    verify_output(out)
+
+    receipt = build_receipt(out, archive, terrain_manifest)
+    (out / "BUILD.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({
+        "version": VERSION,
+        "fileCount": len(receipt["files"]),
+        "oneCanvas": True,
+        "oneCamera": True,
+        "rendererCount": 1,
+        "sharedWebGLDepth": True,
+        "weatherKernelModified": False,
+        "visibleCases": receipt["weatherCases"],
+        "overviewGrid": terrain_manifest["grid"],
+        "fullNativeOnline": False,
+        "visualApproved": False,
+        "productionApproved": False,
+    }, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('inputs', type=Path)
-    parser.add_argument('implementation', type=Path)
-    parser.add_argument('out', type=Path)
+    parser.add_argument("inputs", type=Path)
+    parser.add_argument("implementation", type=Path)
+    parser.add_argument("out", type=Path)
     args = parser.parse_args()
     main(args.inputs, args.implementation, args.out)
