@@ -3,52 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Weather Mother Studio</title>
+<title>Weather Mother</title>
 <style>
-:root{color-scheme:dark;--bg:#05080b;--panel:rgba(8,12,16,.90);--line:rgba(255,255,255,.14);--text:#f1f5f7;--muted:#9aa7af;--active:#d9eef9}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
+:root{color-scheme:dark;--bg:#05080b;--panel:rgba(8,12,16,.91);--panel2:rgba(13,18,23,.96);--line:rgba(255,255,255,.12);--line2:rgba(205,231,244,.24);--text:#f0f5f7;--muted:#91a0a9;--active:#d8edf7;--good:#8fd1ad}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
 #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#05080b}
-.dock{position:fixed;z-index:20;left:14px;top:50%;transform:translateY(-50%);display:flex;align-items:stretch;filter:drop-shadow(0 16px 34px rgba(0,0,0,.45))}
-.tab{width:42px;min-height:132px;border:1px solid var(--line);border-radius:13px 0 0 13px;background:var(--panel);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);writing-mode:vertical-rl;letter-spacing:.08em;font-size:11px;user-select:none}
-.drawer{width:0;overflow:hidden;opacity:0;background:var(--panel);backdrop-filter:blur(18px);border:1px solid transparent;border-left:0;border-radius:0 15px 15px 0;transition:width .22s ease,opacity .18s ease,border-color .18s ease}
-.dock.open .drawer{width:188px;opacity:1;border-color:var(--line)}
-.head{padding:13px 12px 10px;border-bottom:1px solid var(--line)}.head strong{display:block;font-size:13px}.head small{display:block;color:var(--muted);font-size:9px;margin-top:4px;line-height:1.35}
-nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:34px 1fr;align-items:center;gap:7px;border:0;border-radius:9px;background:transparent;color:var(--text);padding:8px;text-align:left;cursor:pointer}.item:hover{background:rgba(255,255,255,.07)}.item.active{background:rgba(217,238,249,.13);box-shadow:inset 0 0 0 1px rgba(217,238,249,.20)}.code{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}.name{font-size:12px}.status{font-size:8px;color:var(--muted);margin-top:2px}
-.foot{padding:9px 12px 12px;border-top:1px solid var(--line);font-size:8px;line-height:1.5;color:var(--muted)}
-.loading{position:fixed;z-index:10;inset:0;display:grid;place-items:center;background:#06090c;color:#a9b6be;font-size:12px;transition:opacity .25s}.loading.hide{opacity:0;pointer-events:none}
-@media(max-width:700px){.dock{left:7px}.tab{width:36px;min-height:112px}.dock.open .drawer{width:172px}}
+.top{position:fixed;z-index:14;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 17px;background:linear-gradient(180deg,rgba(5,8,11,.74),rgba(5,8,11,.18),transparent);pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.55)}
+.top .brand{font-size:13px;font-weight:680;letter-spacing:.03em}.top .slash{color:rgba(255,255,255,.26)}.top .module{font-size:12px;color:#d6e1e6}.top .version{margin-left:2px;font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px}.top .gate{margin-left:auto;color:var(--good);font-size:8px;letter-spacing:.03em}
+.dock{position:fixed;z-index:24;left:10px;top:50%;transform:translateY(-50%);display:flex;align-items:stretch;filter:drop-shadow(0 18px 46px rgba(0,0,0,.50))}
+.pull{width:36px;min-height:142px;border:1px solid var(--line);border-radius:12px 0 0 12px;background:rgba(8,12,16,.84);backdrop-filter:blur(18px) saturate(1.12);color:#eaf2f5;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:.11em;font-size:9px;cursor:pointer;user-select:none;transition:background .18s,border-color .18s}.pull:hover{background:rgba(17,23,29,.94);border-color:var(--line2)}
+.drawer{width:0;overflow:hidden;opacity:0;border:1px solid transparent;border-left:0;border-radius:0 15px 15px 0;background:var(--panel);backdrop-filter:blur(22px) saturate(1.14);transition:width .23s ease,opacity .17s ease,border-color .18s ease}.dock.open .drawer{width:212px;opacity:1;border-color:var(--line)}
+.head{padding:14px 13px 11px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.025),transparent)}.head strong{display:block;font-size:13px;letter-spacing:.02em}.head small{display:block;margin-top:5px;color:var(--muted);font-size:8px;line-height:1.55}
+nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12px;gap:7px;align-items:center;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--text);text-align:left;cursor:pointer}.item:hover{background:rgba(255,255,255,.06)}.item.active{background:rgba(214,237,248,.12);box-shadow:inset 0 0 0 1px rgba(214,237,248,.20)}.index{font-size:8px;color:var(--muted);font-variant-numeric:tabular-nums}.name{display:block;font-size:11px}.desc{display:block;margin-top:2px;font-size:7.5px;color:var(--muted);line-height:1.35}.arrow{color:rgba(255,255,255,.25);font-size:10px}.item.active .arrow{color:var(--active)}
+.foot{padding:9px 12px 12px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px}.foot button{min-height:29px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.045);color:#dce7eb;font-size:8px;cursor:pointer}.foot button:hover{background:rgba(255,255,255,.08)}
+.loading{position:fixed;z-index:18;inset:0;display:grid;place-items:center;background:#05080b;color:#a9b6bd;font-size:11px;letter-spacing:.04em;transition:opacity .28s}.loading.hide{opacity:0;pointer-events:none}.loading span:after{content:'';display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4,end) infinite}@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%,100%{content:'...'}}
+.notice{position:fixed;z-index:16;left:50%;bottom:14px;transform:translateX(-50%);padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(6,9,12,.52);backdrop-filter:blur(9px);font-size:8px;color:rgba(225,235,240,.62);pointer-events:none;transition:opacity .8s}.notice.hide{opacity:0}
+@media(max-width:720px){.top{height:46px;padding:0 10px}.top .gate,.top .version{display:none}.dock{left:6px}.pull{width:32px;min-height:120px}.dock.open .drawer{width:190px}.notice{display:none}}
 </style>
 </head>
 <body>
-<div class="loading" id="loading">Weather Mother 正在载入</div>
-<iframe id="stage" title="Weather Mother 模块工作台" allow="fullscreen; autoplay"></iframe>
+<div class="loading" id="loading"><span>Weather Mother 正在载入</span></div>
+<iframe id="stage" title="Weather Mother 工作平台" allow="fullscreen; autoplay"></iframe>
+<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">Rain</div><div class="version">Unified Studio V0.2</div><div class="gate">visualApproved=false · productionReady=false</div></div>
 <div class="dock" id="dock">
-  <button class="tab" id="toggle" aria-label="展开 Weather Mother 模块">Weather Mother</button>
+  <button class="pull" id="toggle" aria-label="展开 Weather Mother">WEATHER MOTHER</button>
   <div class="drawer">
-    <div class="head"><strong>Weather Mother</strong><small>所有天气案例共用一个入口<br>Rain · Snow · Fog</small></div>
+    <div class="head"><strong>Weather Mother</strong><small>唯一工作平台<br>天气案例在同一壳层内切换</small></div>
     <nav>
-      <button class="item" data-module="world"><span class="code">00</span><span><span class="name">World</span><span class="status">天气总控与云系统</span></span></button>
-      <button class="item" data-module="rain"><span class="code">01</span><span><span class="name">Rain</span><span class="status">雨滴、湿润、积水</span></span></button>
-      <button class="item" data-module="snow"><span class="code">02</span><span><span class="name">Snow</span><span class="status">现有候选，待独立升级</span></span></button>
-      <button class="item" data-module="fog"><span class="code">03</span><span><span class="name">Fog</span><span class="status">现有候选，待独立升级</span></span></button>
-      <button class="item" data-module="storm"><span class="code">04</span><span><span class="name">Storm</span><span class="status">云、闪电与降水联动</span></span></button>
+      <button class="item" data-module="world"><span class="index">00</span><span><span class="name">World</span><span class="desc">天气总控与统一环境状态</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="rain"><span class="index">01</span><span><span class="name">Rain</span><span class="desc">雨滴、砖瓦响应、积水与排水</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="snow"><span class="index">02</span><span><span class="name">Snow</span><span class="desc">飘雪、沉积、风搬运与融雪</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="fog"><span class="index">03</span><span><span class="name">Fog</span><span class="desc">地形雾、局部雾团与流动细丝</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="cloud"><span class="index">04</span><span><span class="name">Cloud</span><span class="desc">云属、形态、光照与连续演化</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="storm"><span class="index">05</span><span><span class="name">Storm</span><span class="desc">深对流、闪电、雷声与强降水</span></span><span class="arrow">›</span></button>
     </nav>
-    <div class="foot">统一壳层只负责导航和模块切换。各模块保持独立状态、质量门与版本记录。</div>
+    <div class="foot"><button id="home">回到 World</button><button id="fullscreen">全屏工作</button></div>
   </div>
 </div>
+<div class="notice" id="notice">左侧小拉块始终返回 Weather Mother 模块列表</div>
 <script>
 (()=>{'use strict';
-const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading');
+const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading'),moduleTitle=document.getElementById('moduleTitle'),notice=document.getElementById('notice');
 const modules={
  world:{title:'World',src:'../v110-full/?embedded=1'},
- rain:{title:'Rain',src:'../easy-rain-lab-v010/?embedded=1'},
+ rain:{title:'Rain',src:'../rain-v020/?embedded=1'},
  snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1'},
  fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1'},
- storm:{title:'Storm',src:'../v110-full/?weather=storm&embedded=1'}
+ cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1'},
+ storm:{title:'Storm',src:'../v110-full/?weather=nightstorm&embedded=1'}
 };
-function current(){const q=new URLSearchParams(location.search).get('module');return modules[q]?q:'rain'}
-function openModule(id,push=true){const m=modules[id]||modules.rain;loading.classList.remove('hide');stage.src=m.src;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===id));if(push){const u=new URL(location.href);u.searchParams.set('module',id);history.pushState({module:id},'',u)}setTimeout(()=>dock.classList.remove('open'),180)}
-document.getElementById('toggle').onclick=()=>dock.classList.toggle('open');document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('keydown',e=>{if(e.key==='Escape')dock.classList.remove('open');if(e.key.toLowerCase()==='w'&&e.altKey)dock.classList.toggle('open')});openModule(current(),false);
+function current(){const id=new URLSearchParams(location.search).get('module');return modules[id]?id:'rain'}
+function openModule(id,push=true){const m=modules[id]||modules.rain;loading.classList.remove('hide');moduleTitle.textContent=m.title;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===id));stage.src=m.src;if(push){const u=new URL(location.href);u.searchParams.set('module',id);history.pushState({module:id},'',u)}setTimeout(()=>dock.classList.remove('open'),170)}
+document.getElementById('toggle').onclick=()=>{dock.classList.toggle('open');notice.classList.add('hide')};document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));document.getElementById('home').onclick=()=>openModule('world');document.getElementById('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('keydown',e=>{if(e.key==='Escape')dock.classList.remove('open');if(e.altKey&&e.key.toLowerCase()==='w')dock.classList.toggle('open')});setTimeout(()=>notice.classList.add('hide'),5500);openModule(current(),false);
+window.__WEATHER_MOTHER_STUDIO__={version:'0.2.0',canonicalPlatform:true,modules:Object.keys(modules),openModule};
 })();
 </script>
 </body>
