@@ -1,0 +1,96 @@
+:root{
+  --mission-panel-width:372px;
+  --mission-bg:#0d171a;
+  --mission-panel:#142024f2;
+  --mission-panel-soft:#1a292df2;
+  --mission-line:#52656a;
+  --mission-text:#f1eee3;
+  --mission-muted:#aab8b6;
+  --mission-accent:#d2b16b;
+  --mission-good:#8fc89c;
+  --mission-warn:#e3b868;
+  --mission-bad:#df8181;
+}
+html,body{background:#728891!important;color:var(--mission-text)!important}
+body{display:block!important;overflow:hidden!important}
+body>header{display:none!important}
+main{position:fixed!important;inset:0!important;display:block!important;min-height:0!important;background:transparent!important;z-index:2!important}
+.viewport{position:fixed!important;inset:0 var(--mission-panel-width) 0 0!important;min-width:0!important;min-height:0!important;background:transparent!important;overflow:hidden!important;z-index:3!important}
+.viewport>canvas#canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:3!important;background:transparent!important;transform-origin:50% 54%!important;will-change:transform,filter!important}
+body>.mission-weather-host,body>.mission-runway,body>.mission-fx{position:fixed;left:0;top:0;right:var(--mission-panel-width);bottom:0;border:0}
+body>.mission-weather-host{z-index:0;overflow:hidden;background:#8399a2}
+body>.mission-weather-host iframe{display:block;width:50%;height:50%;border:0;background:#8399a2;pointer-events:none;transform:scale(2);transform-origin:0 0}
+body>.mission-runway{z-index:1;pointer-events:none;width:calc(100% - var(--mission-panel-width));height:100%}
+body>.mission-fx{z-index:4;pointer-events:none;width:calc(100% - var(--mission-panel-width));height:100%}
+body>.mission-ui{position:fixed;z-index:20;right:0;top:0;bottom:0;width:var(--mission-panel-width);overflow:auto;background:linear-gradient(180deg,var(--mission-panel),#0e181bf7);border-left:1px solid var(--mission-line);box-shadow:-18px 0 45px #0007;padding:13px 13px 24px;font-family:Inter,"Noto Sans SC","Microsoft YaHei",sans-serif;color:var(--mission-text)}
+body>.mission-ui *{box-sizing:border-box}
+.mission-brand{padding:3px 3px 11px;border-bottom:1px solid #ffffff21;margin-bottom:10px}
+.mission-brand .kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mission-accent);font-weight:800}
+.mission-brand h1{font-size:18px;line-height:1.25;margin:5px 0 4px;color:#fff7df}
+.mission-brand p{font-size:11px;line-height:1.55;margin:0;color:var(--mission-muted)}
+.mission-locks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:9px 0 10px}
+.mission-lock{border:1px solid #6a7c7f;background:#1a292dcc;border-radius:8px;padding:7px 8px;min-height:52px}
+.mission-lock span{display:block;font-size:9px;letter-spacing:.08em;color:var(--mission-muted)}
+.mission-lock b{display:block;font-size:11px;margin-top:3px;color:#f6f2e6;line-height:1.35}
+.mission-lock[data-state="pass"]{border-color:#5d9068;background:#1c3326cc}
+.mission-lock[data-state="warn"]{border-color:#987947;background:#32291acc}
+.mission-lock[data-state="fail"]{border-color:#9f5c5c;background:#351e1ecc}
+.mission-section{border:1px solid #52656a;background:var(--mission-panel-soft);border-radius:10px;padding:10px;margin:0 0 9px}
+.mission-section h2{font-size:11px;letter-spacing:.08em;color:#e7d5a9;margin:0 0 8px;text-transform:uppercase}
+.mission-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.mission-grid button,.mission-button{appearance:none;border:1px solid #60757a;background:#223337;color:#f0eee7;border-radius:7px;padding:7px 4px;font-size:10px;line-height:1.25;cursor:pointer}
+.mission-grid button:hover,.mission-button:hover{border-color:#d2b16b;background:#2b4145}
+.mission-grid button.active,.mission-button.active{border-color:#d2b16b;background:#5b4928;color:#fff8df;box-shadow:inset 0 0 0 1px #d2b16b66}
+.mission-grid button.wide{grid-column:span 2}
+.mission-row{display:grid;grid-template-columns:105px 1fr 48px;gap:8px;align-items:center;margin:8px 0}
+.mission-row label{margin:0;color:var(--mission-muted);font-size:10px;line-height:1.3}
+.mission-row output{font-size:10px;text-align:right;color:#f1dba8}
+.mission-row input[type="range"]{width:100%;accent-color:#c7a35e}
+.mission-row select{width:100%;border:1px solid #60757a;background:#223337;color:#f0eee7;border-radius:7px;padding:7px;font-size:10px}
+.mission-progress{height:7px;background:#0d1518;border:1px solid #415156;border-radius:999px;overflow:hidden;margin-top:8px}
+.mission-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8c713f,#e2c47c);transition:width .12s linear}
+.mission-readout{display:grid;grid-template-columns:1fr auto;gap:6px;border-bottom:1px solid #ffffff12;padding:5px 0;font-size:10px}
+.mission-readout:last-child{border-bottom:0}
+.mission-readout span{color:var(--mission-muted)}
+.mission-readout b{color:#f0ead9;text-align:right;font-weight:650}
+.mission-note{font-size:10px;line-height:1.55;color:var(--mission-muted);margin-top:7px}
+.mission-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mission-hud{position:fixed;z-index:18;left:14px;bottom:13px;right:calc(var(--mission-panel-width) + 14px);display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;font-family:Inter,"Noto Sans SC","Microsoft YaHei",sans-serif}
+.mission-hud span{font-size:10px;line-height:1.35;padding:6px 8px;border:1px solid #9aa8a5aa;border-radius:7px;background:#0a1315c9;color:#f6f1e5;backdrop-filter:blur(8px);box-shadow:0 5px 18px #0005}
+.mission-hud span strong{color:#e5c77e}
+.mission-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;padding:4px 7px;border-radius:999px;border:1px solid #60757a;background:#223337;color:#d7dfdd}
+.mission-badge:before{content:"";width:6px;height:6px;border-radius:50%;background:#8a9798}
+.mission-badge.pass:before{background:var(--mission-good);box-shadow:0 0 8px #8fc89c}
+.mission-badge.warn:before{background:var(--mission-warn)}
+.mission-badge.fail:before{background:var(--mission-bad)}
+.mission-top-status{position:fixed;z-index:18;left:14px;top:13px;right:calc(var(--mission-panel-width) + 14px);display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none;font-family:Inter,"Noto Sans SC","Microsoft YaHei",sans-serif}
+.mission-top-status .title{padding:8px 10px;border:1px solid #c2b18199;border-radius:8px;background:#101a1dcc;color:#fff5d8;font-weight:800;font-size:12px;letter-spacing:.05em;backdrop-filter:blur(8px)}
+.mission-top-status .status-group{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.loading{z-index:30!important;background:#0c1518e8!important;backdrop-filter:blur(10px)}
+.loadingBox{background:#162326!important;border-color:#65787c!important;color:#f5f1e6!important}
+.loading .status{color:#b9c4c1!important}
+.error{color:#ff9c9c!important}
+.quickDock,.reviewStamp,.versionCurrent,.buildCurrent,.hud,.v009FlightHud,.v010QuickViews,.v010ReviewStamp{display:none!important}
+.panel{display:none!important}
+body.mission-native-inspect .mission-ui{display:none!important}
+body.mission-native-inspect .panel{display:block!important;position:fixed!important;right:0!important;top:0!important;bottom:0!important;width:var(--mission-panel-width)!important;z-index:23!important;background:#f6fbfdf8!important;color:#16323b!important;border-left:1px solid #b7ccd6!important;border-radius:0!important}
+body.mission-native-inspect .panel .section h2{color:#285665!important}
+body.mission-native-inspect .mission-native-return{display:block!important}
+.mission-native-return{display:none;position:fixed;z-index:30;right:13px;top:10px;width:170px;border:1px solid #7a5f2d;background:#5b4928;color:#fff8df;border-radius:8px;padding:8px;font-size:10px;cursor:pointer}
+@media(max-width:960px){
+  :root{--mission-panel-width:318px}
+  .mission-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mission-grid button.wide{grid-column:span 3}
+  .mission-row{grid-template-columns:86px 1fr 42px}
+}
+@media(max-width:720px){
+  :root{--mission-panel-width:0px}
+  .viewport{inset:0!important}
+  body>.mission-weather-host,body>.mission-runway,body>.mission-fx{right:0;width:100%}
+  body>.mission-ui{width:min(330px,92vw);right:6px;top:58px;bottom:8px;border:1px solid var(--mission-line);border-radius:10px;transform:translateX(calc(100% + 16px));transition:transform .2s ease}
+  body.mission-mobile-panel .mission-ui{transform:translateX(0)}
+  .mission-mobile-toggle{display:block!important}
+  .mission-top-status{right:12px}
+  .mission-hud{right:12px}
+}
+.mission-mobile-toggle{display:none;position:fixed;right:9px;top:9px;z-index:31;border:1px solid #907544;background:#4b3b20;color:#fff5d8;border-radius:8px;padding:8px 10px;font-size:11px}
