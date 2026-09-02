@@ -33,7 +33,7 @@ in vec4 vF;
 in float vD;
 out vec4 color;
 uniform sampler3D uCloudDensity;
-uniform vec2 uWaveDir,uCloudCenterM,uCloudDriftSourceKm,uCloudVerticalM;
+uniform vec2 uWaveDir,uCloudCenterM,uCloudDriftSourceKm,uCloudVerticalM,uCloudSourceVerticalKm;
 uniform float uWaveAmplitude,uWaveTime,uWeatherEnabled,uCloudHorizontalScale,uCloudDensityScale,uFogDensity,uWeatherKind,uCycloneSpin,uCloudTime;
 uniform vec3 uSun,uSunColor,uAtmosphere,uCloudFieldMin,uCloudFieldMax;
 uniform int uLayer,uMode,uIslandCount;
@@ -46,18 +46,19 @@ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(ha
 float fbm(vec2 p){float f=0.,a=.5;for(int i=0;i<4;i++){f+=a*noise(p);p=mat2(1.72,-1.03,1.03,1.72)*p+5.37;a*=.5;}return f;}
 vec2 rotate2(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
 vec3 cloudSource(vec3 worldP){
-  vec3 q=vec3((worldP.x-uCloudCenterM.x)/(1000.*uCloudHorizontalScale),worldP.y/1000.,(worldP.z-uCloudCenterM.y)/(1000.*uCloudHorizontalScale));
+  float verticalT=clamp((worldP.y-uCloudVerticalM.x)/max(1.,uCloudVerticalM.y-uCloudVerticalM.x),0.,1.);
+  float sourceY=mix(uCloudSourceVerticalKm.x,uCloudSourceVerticalKm.y,verticalT);
+  vec3 q=vec3((worldP.x-uCloudCenterM.x)/(1000.*uCloudHorizontalScale),sourceY,(worldP.z-uCloudCenterM.y)/(1000.*uCloudHorizontalScale));
   q.xz-=uCloudDriftSourceKm;
-  if(uWeatherKind>1.5)q.xz=rotate2(q.xz,-uCloudTime*.00055*uCycloneSpin);
+  if(abs(uCycloneSpin)>.01)q.xz=rotate2(q.xz,-uCloudTime*.00055*uCycloneSpin);
   vec3 ext=uCloudFieldMax-uCloudFieldMin;
   q.x=uCloudFieldMin.x+mod(q.x-uCloudFieldMin.x,ext.x);
   q.z=uCloudFieldMin.z+mod(q.z-uCloudFieldMin.z,ext.z);
   return q;
 }
 float cloudMacro(vec3 worldP){
-  if(uWeatherEnabled<.5)return 0.;
+  if(uWeatherEnabled<.5||worldP.y<uCloudVerticalM.x||worldP.y>uCloudVerticalM.y)return 0.;
   vec3 q=cloudSource(worldP);
-  if(q.y<uCloudFieldMin.y||q.y>uCloudFieldMax.y)return 0.;
   return texture(uCloudDensity,(q-uCloudFieldMin)/(uCloudFieldMax-uCloudFieldMin)).r*uCloudDensityScale;
 }
 float cloudShadow(vec3 groundP){

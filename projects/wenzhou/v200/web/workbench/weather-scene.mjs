@@ -3,60 +3,110 @@ const VOLUME_MAX_KM = Object.freeze([19, 13, 16]);
 const WEATHER_SOURCE_VERSION = '1.1.0-hq';
 const WORKER_SEED_DEFAULT = 4217;
 
+export const WMO_TEMPERATE_LEVELS_M = Object.freeze({
+  high: Object.freeze([5000, 13000]),
+  middle: Object.freeze([2000, 7000]),
+  low: Object.freeze([0, 2000])
+});
+
+const profile = (config) => Object.freeze({
+  centerM: Object.freeze([25000, 0]),
+  horizontalScale: 6,
+  windFromDeg: 260,
+  windSpeedMps: 12,
+  cloudSpeedMps: 12,
+  densityScale: 0.9,
+  fogDensityPerM: 0.0000007,
+  opticalClass: 0,
+  cycloneSpin: 0,
+  eyeRadius: 2.2,
+  rainbandCurl: 1,
+  stormRadius: 10,
+  ...config,
+  source: Object.freeze(config.source),
+  centerM: Object.freeze(config.centerM || [25000, 0]),
+  altitudeEnvelopeM: Object.freeze(config.altitudeEnvelopeM),
+  physicalLayerM: Object.freeze(config.physicalLayerM)
+});
+
 export const WEATHER_PROFILES = Object.freeze({
-  coast: Object.freeze({
-    id: 'coast',
-    label: '海岸层积云',
-    kind: 'Sc',
-    source: Object.freeze({ density: 0.70, count: 6, rain: 0.04, fog: 0.12, humidity: 83, instability: 0.22 }),
-    windFromDeg: 270,
-    windSpeedMps: 12,
-    cloudSpeedMps: 12,
-    hour: 16,
-    horizontalScale: 7,
-    centerM: Object.freeze([25000, 0]),
-    densityScale: 0.92,
-    fogDensityPerM: 0.0000013,
-    cycloneSpin: 0,
-    eyeRadius: 2.2,
-    rainbandCurl: 1,
-    stormRadius: 10
+  ci: profile({
+    id: 'ci', label: '卷云', latin: 'Cirrus', kind: 'Ci', level: 'high',
+    physicalLayerM: [8000, 12000], altitudeEnvelopeM: [5000, 13000],
+    source: { density: 0.38, count: 4, rain: 0, fog: 0.01, humidity: 42, instability: 0.08 },
+    windFromDeg: 255, windSpeedMps: 30, cloudSpeedMps: 28, horizontalScale: 8,
+    densityScale: 0.56, fogDensityPerM: 0.00000015
   }),
-  rain: Object.freeze({
-    id: 'rain',
-    label: '阴天降雨云',
-    kind: 'Ns',
-    source: Object.freeze({ density: 1.12, count: 7, rain: 0.70, fog: 0.20, humidity: 97, instability: 0.18 }),
-    windFromDeg: 270,
-    windSpeedMps: 12,
-    cloudSpeedMps: 12,
-    hour: 16,
-    horizontalScale: 7,
-    centerM: Object.freeze([25000, 0]),
-    densityScale: 1.08,
-    fogDensityPerM: 0.0000038,
-    cycloneSpin: 0,
-    eyeRadius: 2.2,
-    rainbandCurl: 1,
-    stormRadius: 10
+  cc: profile({
+    id: 'cc', label: '卷积云', latin: 'Cirrocumulus', kind: 'Cc', level: 'high',
+    physicalLayerM: [7000, 11000], altitudeEnvelopeM: [5000, 13000],
+    source: { density: 0.52, count: 5, rain: 0, fog: 0.01, humidity: 48, instability: 0.18 },
+    windFromDeg: 250, windSpeedMps: 26, cloudSpeedMps: 24, horizontalScale: 7,
+    densityScale: 0.70, fogDensityPerM: 0.00000018
   }),
-  typhoon: Object.freeze({
-    id: 'typhoon',
-    label: '台风组织云系',
-    kind: 'Cb',
-    source: Object.freeze({ density: 1.04, count: 7, rain: 0.88, fog: 0.18, humidity: 98, instability: 0.88 }),
-    windFromDeg: 115,
-    windSpeedMps: 32,
-    cloudSpeedMps: 4,
-    hour: 13.8,
-    horizontalScale: 7,
-    centerM: Object.freeze([65000, 15000]),
-    densityScale: 1.06,
-    fogDensityPerM: 0.0000032,
-    cycloneSpin: 1.25,
-    eyeRadius: 2.2,
-    rainbandCurl: 1.15,
-    stormRadius: 10.2
+  cs: profile({
+    id: 'cs', label: '卷层云', latin: 'Cirrostratus', kind: 'Cs', level: 'high',
+    physicalLayerM: [6000, 12000], altitudeEnvelopeM: [5000, 13000],
+    source: { density: 0.48, count: 6, rain: 0, fog: 0.02, humidity: 55, instability: 0.05 },
+    windFromDeg: 245, windSpeedMps: 24, cloudSpeedMps: 22, horizontalScale: 9,
+    densityScale: 0.56, fogDensityPerM: 0.00000025
+  }),
+  ac: profile({
+    id: 'ac', label: '高积云', latin: 'Altocumulus', kind: 'Ac', level: 'middle',
+    physicalLayerM: [3000, 6000], altitudeEnvelopeM: [2000, 7000],
+    source: { density: 0.64, count: 5, rain: 0.02, fog: 0.03, humidity: 66, instability: 0.34 },
+    windFromDeg: 255, windSpeedMps: 18, cloudSpeedMps: 17, horizontalScale: 6,
+    densityScale: 0.86, fogDensityPerM: 0.00000055
+  }),
+  as: profile({
+    id: 'as', label: '高层云', latin: 'Altostratus', kind: 'As', level: 'middle',
+    physicalLayerM: [2500, 7000], altitudeEnvelopeM: [2000, 9000],
+    source: { density: 0.82, count: 6, rain: 0.10, fog: 0.08, humidity: 80, instability: 0.12 },
+    windFromDeg: 250, windSpeedMps: 16, cloudSpeedMps: 15, horizontalScale: 8,
+    densityScale: 0.90, fogDensityPerM: 0.0000012, opticalClass: 1
+  }),
+  ns: profile({
+    id: 'ns', label: '雨层云', latin: 'Nimbostratus', kind: 'Ns', level: 'middle-extended',
+    physicalLayerM: [600, 6000], altitudeEnvelopeM: [0, 9000],
+    source: { density: 1.12, count: 7, rain: 0.78, fog: 0.22, humidity: 97, instability: 0.15 },
+    windFromDeg: 270, windSpeedMps: 13, cloudSpeedMps: 12, horizontalScale: 8,
+    densityScale: 1.06, fogDensityPerM: 0.0000040, opticalClass: 1
+  }),
+  sc: profile({
+    id: 'sc', label: '层积云', latin: 'Stratocumulus', kind: 'Sc', level: 'low',
+    physicalLayerM: [600, 2200], altitudeEnvelopeM: [0, 3000],
+    source: { density: 0.72, count: 6, rain: 0.04, fog: 0.12, humidity: 83, instability: 0.22 },
+    windFromDeg: 270, windSpeedMps: 12, cloudSpeedMps: 12, horizontalScale: 6,
+    densityScale: 0.94, fogDensityPerM: 0.0000013
+  }),
+  st: profile({
+    id: 'st', label: '层云', latin: 'Stratus', kind: 'St', level: 'low',
+    physicalLayerM: [80, 900], altitudeEnvelopeM: [0, 2000],
+    source: { density: 0.72, count: 7, rain: 0.05, fog: 0.30, humidity: 96, instability: 0.03 },
+    windFromDeg: 285, windSpeedMps: 6, cloudSpeedMps: 5, horizontalScale: 7,
+    densityScale: 0.90, fogDensityPerM: 0.0000060, opticalClass: 1
+  }),
+  cu: profile({
+    id: 'cu', label: '积云', latin: 'Cumulus', kind: 'Cu', level: 'low-vertical',
+    physicalLayerM: [700, 3500], altitudeEnvelopeM: [0, 7000],
+    source: { density: 0.80, count: 7, rain: 0.04, fog: 0.04, humidity: 72, instability: 0.56 },
+    windFromDeg: 220, windSpeedMps: 9, cloudSpeedMps: 9, horizontalScale: 5,
+    densityScale: 0.98, fogDensityPerM: 0.0000007
+  }),
+  cb: profile({
+    id: 'cb', label: '积雨云', latin: 'Cumulonimbus', kind: 'Cb', level: 'low-to-high',
+    physicalLayerM: [600, 14000], altitudeEnvelopeM: [0, 18000],
+    source: { density: 1.06, count: 7, rain: 0.90, fog: 0.18, humidity: 96, instability: 0.92 },
+    windFromDeg: 205, windSpeedMps: 22, cloudSpeedMps: 16, horizontalScale: 5,
+    densityScale: 1.04, fogDensityPerM: 0.0000028, opticalClass: 2
+  }),
+  typhoon: profile({
+    id: 'typhoon', label: '台风组织云系', latin: 'Tropical cyclone cloud system', kind: 'Cb', level: 'low-to-high', workerCase: 'typhoon',
+    physicalLayerM: [400, 15500], altitudeEnvelopeM: [0, 18000],
+    source: { density: 1.04, count: 7, rain: 0.92, fog: 0.20, humidity: 98, instability: 0.90 },
+    windFromDeg: 115, windSpeedMps: 32, cloudSpeedMps: 16, horizontalScale: 7,
+    centerM: [65000, 15000], densityScale: 1.08, fogDensityPerM: 0.0000032,
+    opticalClass: 2, cycloneSpin: 1.25, eyeRadius: 2.2, rainbandCurl: 1.15, stormRadius: 10.2
   })
 });
 
@@ -76,7 +126,7 @@ uniform mat4 uVP;
 uniform vec4 uViewport;
 uniform vec3 uEye,uForward,uRight,uUp,uSun,uSunColor;
 uniform vec3 uFieldMin,uFieldMax;
-uniform vec2 uCenterM,uDriftSourceKm,uCloudVerticalM;
+uniform vec2 uCenterM,uDriftSourceKm,uCloudVerticalM,uSourceVerticalKm;
 uniform float uHorizontalScale,uDensityScale,uTime,uRain,uFog,uLogFar,uCycloneSpin,uWeatherKind,uTanHalfFov,uAspect,uStepCount;
 
 float hash31(vec3 p){
@@ -107,22 +157,24 @@ vec2 boxHit(vec3 ro,vec3 rd,vec3 b0,vec3 b1){
 }
 vec2 rotate2(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
 vec3 sourcePosition(vec3 worldP){
-  vec3 q=vec3((worldP.x-uCenterM.x)/(1000.0*uHorizontalScale),worldP.y/1000.0,(worldP.z-uCenterM.y)/(1000.0*uHorizontalScale));
+  float verticalT=clamp((worldP.y-uCloudVerticalM.x)/max(1.0,uCloudVerticalM.y-uCloudVerticalM.x),0.0,1.0);
+  float sourceY=mix(uSourceVerticalKm.x,uSourceVerticalKm.y,verticalT);
+  vec3 q=vec3((worldP.x-uCenterM.x)/(1000.0*uHorizontalScale),sourceY,(worldP.z-uCenterM.y)/(1000.0*uHorizontalScale));
   q.xz-=uDriftSourceKm;
-  if(uWeatherKind>1.5)q.xz=rotate2(q.xz,-uTime*0.00055*uCycloneSpin);
+  if(abs(uCycloneSpin)>0.01)q.xz=rotate2(q.xz,-uTime*0.00055*uCycloneSpin);
   vec3 extent=uFieldMax-uFieldMin;
   q.x=uFieldMin.x+mod(q.x-uFieldMin.x,extent.x);
   q.z=uFieldMin.z+mod(q.z-uFieldMin.z,extent.z);
   return q;
 }
 float rawDensityAt(vec3 worldP){
+  if(worldP.y<uCloudVerticalM.x||worldP.y>uCloudVerticalM.y)return 0.0;
   vec3 q=sourcePosition(worldP);
-  if(q.y<uFieldMin.y||q.y>uFieldMax.y)return 0.0;
   return texture(uDensity,(q-uFieldMin)/(uFieldMax-uFieldMin)).r*uDensityScale;
 }
 float densityAt(vec3 worldP){
+  if(worldP.y<uCloudVerticalM.x||worldP.y>uCloudVerticalM.y)return 0.0;
   vec3 q=sourcePosition(worldP);
-  if(q.y<uFieldMin.y||q.y>uFieldMax.y)return 0.0;
   vec3 uv=(q-uFieldMin)/(uFieldMax-uFieldMin);
   float base=texture(uDensity,uv).r;
   if(base<0.008)return 0.0;
@@ -154,12 +206,12 @@ void main(){
   if(any(lessThan(uv,vec2(0.0)))||any(greaterThan(uv,vec2(1.0))))discard;
   vec2 ndc=uv*2.0-1.0;
   vec3 rd=normalize(uForward+uRight*(ndc.x*uAspect*uTanHalfFov)+uUp*(ndc.y*uTanHalfFov));
-  vec3 b0=vec3(uCenterM.x+uFieldMin.x*uHorizontalScale*1000.0,uFieldMin.y*1000.0,uCenterM.y+uFieldMin.z*uHorizontalScale*1000.0);
-  vec3 b1=vec3(uCenterM.x+uFieldMax.x*uHorizontalScale*1000.0,uFieldMax.y*1000.0,uCenterM.y+uFieldMax.z*uHorizontalScale*1000.0);
+  vec3 b0=vec3(uCenterM.x+uFieldMin.x*uHorizontalScale*1000.0,uCloudVerticalM.x,uCenterM.y+uFieldMin.z*uHorizontalScale*1000.0);
+  vec3 b1=vec3(uCenterM.x+uFieldMax.x*uHorizontalScale*1000.0,uCloudVerticalM.y,uCenterM.y+uFieldMax.z*uHorizontalScale*1000.0);
   vec2 hit=boxHit(uEye,rd,b0,b1);
   float begin=max(hit.x,0.0),end=hit.y;
   if(end<=begin)discard;
-  float steps=max(12.0,uStepCount),ds=(end-begin)/steps;
+  float steps=max(5.0,uStepCount),ds=(end-begin)/steps;
   float jitter=hash31(vec3(gl_FragCoord.xy,fract(uTime*0.113)));
   float trans=1.0,first=-1.0,moment=0.0;
   vec3 accum=vec3(0.0);
@@ -227,15 +279,28 @@ function cross(a, b) {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }
 
-function solarAt(hour) {
-  const day = Math.max(0, Math.sin(Math.PI * (hour - 6) / 12));
-  const elevation = Math.max(-0.08, day * 0.92);
-  const azimuth = Math.PI * (hour - 6) / 12;
-  const horizontal = Math.sqrt(Math.max(0, 1 - elevation * elevation));
-  const direction = normalize3([Math.sin(azimuth) * horizontal, elevation, -Math.cos(azimuth) * horizontal]);
-  const warm = 1 - Math.min(1, Math.max(0, elevation) * 1.8);
-  const color = [1.0, 0.92 - warm * 0.16, 0.78 - warm * 0.24];
-  return { direction, color, day };
+function dayOfYear(dateIso) {
+  const date = new Date(`${dateIso}T12:00:00Z`);
+  if (!Number.isFinite(date.getTime())) return 245;
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  return Math.floor((date.getTime() - start) / 86400000);
+}
+
+function solarAt(hour, dateIso) {
+  const latitude = 27.99 * Math.PI / 180;
+  const n = dayOfYear(dateIso);
+  const declination = 23.44 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + n) / 365);
+  const hourAngle = (hour - 12) * 15 * Math.PI / 180;
+  const sinElevation = Math.sin(latitude) * Math.sin(declination) + Math.cos(latitude) * Math.cos(declination) * Math.cos(hourAngle);
+  const elevation = Math.asin(Math.max(-1, Math.min(1, sinElevation)));
+  const east = -Math.cos(declination) * Math.sin(hourAngle);
+  const north = Math.sin(declination) * Math.cos(latitude) - Math.cos(declination) * Math.sin(latitude) * Math.cos(hourAngle);
+  const up = sinElevation;
+  const direction = normalize3([east, up, -north]);
+  const day = Math.max(0, Math.min(1, (Math.sin(elevation) + 0.03) / 0.35));
+  const warm = 1 - Math.min(1, Math.max(0, Math.sin(elevation)) * 3.2);
+  const color = [1.0, 0.94 - warm * 0.18, 0.84 - warm * 0.30];
+  return { direction, color, day, elevationDegrees: elevation * 180 / Math.PI, dateIso, hour };
 }
 
 function cloneProfile(id) {
@@ -244,7 +309,9 @@ function cloneProfile(id) {
   return {
     ...base,
     source: { ...base.source },
-    centerM: [...base.centerM]
+    centerM: [...base.centerM],
+    physicalLayerM: [...base.physicalLayerM],
+    altitudeEnvelopeM: [...base.altitudeEnvelopeM]
   };
 }
 
@@ -254,7 +321,7 @@ function dimensions(quality) {
   return mobile ? [96, 64, 80] : [160, 96, 128];
 }
 
-function scanField(data, dims, horizontalScale) {
+function scanField(data, dims, profile) {
   const [nx, ny, nz] = dims;
   let minX = nx, minY = ny, minZ = nz, maxX = -1, maxY = -1, maxZ = -1, occupied = 0;
   for (let z = 0; z < nz; z++) {
@@ -283,10 +350,14 @@ function scanField(data, dims, horizontalScale) {
   return {
     occupiedVoxels: occupied,
     occupiedFraction: occupied / data.length,
-    baseM: Math.round(y0 * 1000),
-    topM: Math.round(y1 * 1000),
-    eastWestKm: Number(((x1 - x0) * horizontalScale).toFixed(2)),
-    northSouthKm: Number(((z1 - z0) * horizontalScale).toFixed(2)),
+    baseM: profile.physicalLayerM[0],
+    topM: profile.physicalLayerM[1],
+    verticalExtentM: profile.physicalLayerM[1] - profile.physicalLayerM[0],
+    verticalScale: 1,
+    altitudeOffsetM: 0,
+    eastWestKm: Number(((x1 - x0) * profile.horizontalScale).toFixed(2)),
+    northSouthKm: Number(((z1 - z0) * profile.horizontalScale).toFixed(2)),
+    sourceVerticalKm: [y0, y1],
     sourceBoundsKm: [x0, y0, z0, x1, y1, z1]
   };
 }
@@ -314,11 +385,11 @@ export function createWeatherScene(gl, options = {}) {
   let job = 0;
   let resolver = null;
   let rejecter = null;
-  let profile = cloneProfile('coast');
+  let profile = cloneProfile('sc');
   const state = {
     schema: 'wenzhou-single-scene-weather-state-1',
     sourceRuntimeVersion: WEATHER_SOURCE_VERSION,
-    caseId: 'coast',
+    caseId: 'sc',
     seed: WORKER_SEED_DEFAULT,
     quality: 'balanced',
     dimensions: dimensions('balanced'),
@@ -327,6 +398,10 @@ export function createWeatherScene(gl, options = {}) {
     playing: true,
     simulationSeconds: 0,
     timeScale: 1,
+    dateIso: '2026-09-02',
+    hour: 16,
+    calendarPlaying: true,
+    calendarHoursPerSecond: 0.04,
     frameCount: 0,
     loadMilliseconds: null,
     fieldMetrics: null,
@@ -381,7 +456,7 @@ export function createWeatherScene(gl, options = {}) {
       resolver = rejecter = null;
       return;
     }
-    state.fieldMetrics = scanField(field, dims, profile.horizontalScale);
+    state.fieldMetrics = scanField(field, dims, profile);
     state.workerReceipt = {
       id: message.id,
       kind: message.kind,
@@ -409,10 +484,10 @@ export function createWeatherScene(gl, options = {}) {
     state.loading = true;
     state.loadStartedAt = performance.now();
     state.dimensions = dimensions(state.quality);
-    const solar = solarAt(profile.hour);
+    const solar = solarAt(state.hour, state.dateIso);
     worker.postMessage({
       id: job,
-      case: profile.id,
+      case: profile.workerCase || profile.id,
       kind: profile.kind,
       density: profile.source.density,
       count: profile.source.count,
@@ -465,9 +540,35 @@ export function createWeatherScene(gl, options = {}) {
     else throw new Error(`unsupported weather control ${key}`);
   }
 
-  function update(deltaSeconds) {
-    if (state.playing && Number.isFinite(deltaSeconds) && deltaSeconds > 0) state.simulationSeconds += Math.min(deltaSeconds, 0.25) * state.timeScale;
+  function addDays(iso, days) {
+    const date = new Date(`${iso}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
   }
+
+  function update(deltaSeconds) {
+    if (!state.playing || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
+    const dt = Math.min(deltaSeconds, 0.25) * state.timeScale;
+    state.simulationSeconds += dt;
+    if (state.calendarPlaying) {
+      state.hour += dt * state.calendarHoursPerSecond;
+      while (state.hour >= 24) { state.hour -= 24; state.dateIso = addDays(state.dateIso, 1); }
+      while (state.hour < 0) { state.hour += 24; state.dateIso = addDays(state.dateIso, -1); }
+    }
+  }
+
+  function setDate(dateIso) {
+    const date = new Date(`${dateIso}T12:00:00Z`);
+    if (!Number.isFinite(date.getTime())) throw new RangeError('date must use YYYY-MM-DD');
+    state.dateIso = date.toISOString().slice(0, 10);
+  }
+
+  function setHour(hour) {
+    if (!Number.isFinite(hour)) throw new TypeError('hour must be finite');
+    state.hour = ((hour % 24) + 24) % 24;
+  }
+
+  function setCalendarPlaying(value) { state.calendarPlaying = Boolean(value); }
 
   function values() {
     const angle = profile.windFromDeg * Math.PI / 180;
@@ -476,8 +577,8 @@ export function createWeatherScene(gl, options = {}) {
       travelXZ[0] * profile.cloudSpeedMps * state.simulationSeconds / (1000 * profile.horizontalScale),
       travelXZ[1] * profile.cloudSpeedMps * state.simulationSeconds / (1000 * profile.horizontalScale)
     ];
-    const solar = solarAt(profile.hour);
-    const fieldMetrics = state.fieldMetrics || { baseM: 1000, topM: 7000, eastWestKm: 0, northSouthKm: 0, occupiedVoxels: 0, occupiedFraction: 0 };
+    const solar = solarAt(state.hour, state.dateIso);
+    const fieldMetrics = state.fieldMetrics || { baseM: profile.physicalLayerM[0], topM: profile.physicalLayerM[1], verticalExtentM: profile.physicalLayerM[1]-profile.physicalLayerM[0], verticalScale: 1, altitudeOffsetM: 0, sourceVerticalKm: [VOLUME_MIN_KM[1], VOLUME_MAX_KM[1]], eastWestKm: 0, northSouthKm: 0, occupiedVoxels: 0, occupiedFraction: 0 };
     return { travelXZ, driftSourceKm, solar, fieldMetrics };
   }
 
@@ -498,9 +599,10 @@ export function createWeatherScene(gl, options = {}) {
     call('uniform3fv', 'uCloudFieldMax', VOLUME_MAX_KM);
     call('uniform2fv', 'uCloudDriftSourceKm', current.driftSourceKm);
     call('uniform2fv', 'uCloudVerticalM', [current.fieldMetrics.baseM, current.fieldMetrics.topM]);
+    call('uniform2fv', 'uCloudSourceVerticalKm', current.fieldMetrics.sourceVerticalKm || [VOLUME_MIN_KM[1], VOLUME_MAX_KM[1]]);
     call('uniform1f', 'uCloudDensityScale', profile.densityScale);
     call('uniform1f', 'uFogDensity', active ? profile.fogDensityPerM : 0);
-    call('uniform1f', 'uWeatherKind', profile.id === 'coast' ? 0 : profile.id === 'rain' ? 1 : 2);
+    call('uniform1f', 'uWeatherKind', profile.opticalClass);
     call('uniform1f', 'uCycloneSpin', profile.cycloneSpin);
     call('uniform1f', 'uCloudTime', state.simulationSeconds);
     return current;
@@ -531,6 +633,7 @@ export function createWeatherScene(gl, options = {}) {
     gl.uniform2fv(uniform('uCenterM'), profile.centerM);
     gl.uniform2fv(uniform('uDriftSourceKm'), current.driftSourceKm);
     gl.uniform2fv(uniform('uCloudVerticalM'), [current.fieldMetrics.baseM, current.fieldMetrics.topM]);
+    gl.uniform2fv(uniform('uSourceVerticalKm'), current.fieldMetrics.sourceVerticalKm || [VOLUME_MIN_KM[1], VOLUME_MAX_KM[1]]);
     gl.uniform1f(uniform('uHorizontalScale'), profile.horizontalScale);
     gl.uniform1f(uniform('uDensityScale'), profile.densityScale);
     gl.uniform1f(uniform('uTime'), state.simulationSeconds);
@@ -538,10 +641,10 @@ export function createWeatherScene(gl, options = {}) {
     gl.uniform1f(uniform('uFog'), profile.fogDensityPerM);
     gl.uniform1f(uniform('uLogFar'), logFar);
     gl.uniform1f(uniform('uCycloneSpin'), profile.cycloneSpin);
-    gl.uniform1f(uniform('uWeatherKind'), profile.id === 'coast' ? 0 : profile.id === 'rain' ? 1 : 2);
+    gl.uniform1f(uniform('uWeatherKind'), profile.opticalClass);
     gl.uniform1f(uniform('uTanHalfFov'), Math.tan(Math.PI / 8));
     gl.uniform1f(uniform('uAspect'), viewport[2] / viewport[3]);
-    gl.uniform1f(uniform('uStepCount'), state.quality === 'high' ? (innerWidth < 700 ? 20 : 28) : innerWidth < 700 ? 14 : 20);
+    gl.uniform1f(uniform('uStepCount'), state.quality === 'high' ? (innerWidth < 700 ? 10 : innerWidth >= 2200 ? 12 : 16) : innerWidth < 700 ? 7 : innerWidth >= 2200 ? 6 : 10);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(false);
@@ -572,9 +675,15 @@ export function createWeatherScene(gl, options = {}) {
         centerM: [...profile.centerM],
         densityScale: profile.densityScale,
         fogDensityPerM: profile.fogDensityPerM,
-        cycloneSpin: profile.cycloneSpin
+        cycloneSpin: profile.cycloneSpin,
+        level: profile.level,
+        latin: profile.latin,
+        physicalLayerM: [...profile.physicalLayerM],
+        altitudeEnvelopeM: [...profile.altitudeEnvelopeM],
+        verticalScale: 1,
+        altitudeOffsetM: 0
       },
-      clock: { simulationSeconds: state.simulationSeconds, timeScale: state.timeScale, playing: state.playing },
+      clock: { simulationSeconds: state.simulationSeconds, timeScale: state.timeScale, playing: state.playing, dateIso: state.dateIso, hour: state.hour, calendarPlaying: state.calendarPlaying, calendarHoursPerSecond: state.calendarHoursPerSecond },
       wind: { fromDegrees: profile.windFromDeg, speedMps: profile.windSpeedMps, cloudSpeedMps: profile.cloudSpeedMps, travelXZ: current.travelXZ },
       solar: current.solar,
       fieldMetrics: state.fieldMetrics ? { ...state.fieldMetrics } : null,
@@ -594,6 +703,9 @@ export function createWeatherScene(gl, options = {}) {
     setSeed,
     setQuality,
     set,
+    setDate,
+    setHour,
+    setCalendarPlaying,
     update,
     applyTerrainUniforms,
     draw,
