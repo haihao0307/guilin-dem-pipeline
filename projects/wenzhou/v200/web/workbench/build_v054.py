@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 import argparse
 import json
-import os
 import shutil
 import subprocess
 
@@ -13,6 +12,46 @@ import assemble
 VERSION = "wenzhou-workbench-0.5.4-real-cloud-units"
 CLOUD_GENERA = ["ci", "cc", "cs", "ac", "as", "ns", "sc", "st", "cu", "cb"]
 WEATHER_CASES = CLOUD_GENERA + ["typhoon"]
+SOURCE_FILES = [
+    "terrain-index.html",
+    "terrain-runtime.js",
+    "terrain-shaders.js",
+    "weather-scene.mjs",
+    "ADOPTION.json",
+    "SINGLE_SCENE_ARCHITECTURE.md",
+]
+
+
+def verify_v054_sources(implementation: Path) -> None:
+    for name in SOURCE_FILES:
+        path = implementation / name
+        assert path.is_file(), f"missing V0.5.4 source: {name}"
+
+    html = (implementation / "terrain-index.html").read_text(encoding="utf-8")
+    runtime = (implementation / "terrain-runtime.js").read_text(encoding="utf-8")
+    shaders = (implementation / "terrain-shaders.js").read_text(encoding="utf-8")
+    weather = (implementation / "weather-scene.mjs").read_text(encoding="utf-8")
+
+    assert html.lower().count("<canvas") == 1
+    assert "<iframe" not in html.lower()
+    assert "2560 × 1600" in html
+    assert "高度偏移 0 m" in html
+    assert "云底至云顶 AMSL" in html
+    for genus in CLOUD_GENERA:
+        assert f'data-weather="{genus}"' in html
+        assert f'value="{genus}"' in html
+        assert f"{genus}: profile" in weather
+
+    assert VERSION in runtime
+    assert "from'../weather-bridge.mjs'" in runtime
+    assert "workerUrl:'../modules/weather-mother/field-worker.js'" in runtime
+    assert "uCloudSourceVerticalKm" in runtime
+    assert "dpr=1" in runtime
+    assert "uCloudSourceVerticalKm" in shaders
+    assert "cloudShadow" in shaders
+    assert "verticalScale: 1" in weather
+    assert "altitudeOffsetM: 0" in weather
+    assert "new Worker(workerUrl)" in weather
 
 
 def copy_sources(implementation: Path, out: Path) -> None:
@@ -77,7 +116,7 @@ def validate(out: Path) -> None:
 def build(inputs: Path, implementation: Path, out: Path) -> dict:
     weather_dir = inputs / "weather/Weather_Mother_Full_Clean_V1.1.0"
     weather_zip = inputs / "Weather_Mother_Full_Clean_V1.1.0.zip"
-    assemble.verify_single_scene_sources(implementation)
+    verify_v054_sources(implementation)
     weather_manifest = assemble.verify_weather_package(weather_dir, weather_zip)
 
     if out.exists():
