@@ -1,0 +1,54 @@
+name: Ocean Mother Coast R010 immediate repair
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r010-immediate-repair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Patch the deployed GLSL and cache-bust the module atomically
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64, json, os, time, urllib.request
+          repo='haihao0307/guilin-dem-pipeline';branch='gh-pages';base='https://api.github.com/repos/'+repo;token=os.environ['GH_TOKEN']
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          def read(path):
+              value=api('/contents/'+path+'?ref='+branch+'&nonce='+str(time.time_ns()))
+              return base64.b64decode(value['content']).decode('utf-8')
+          js_path='ocean-mother/coast-v020-r010/coast-real.mjs';html_path='ocean-mother/coast-v020-r010/index.html'
+          js=read(js_path);html=read(html_path)
+          if "const VERSION='0.2.0-coast-r010';" in js:
+              assert js.count("const VERSION='0.2.0-coast-r010';")==1
+              js=js.replace("const VERSION='0.2.0-coast-r010';","const VERSION='0.2.0-coast-r010.1';",1)
+          assert js.count('float active=texture(uTiles,tuv).r') in (0,1)
+          if 'float active=texture(uTiles,tuv).r' in js:
+              js=js.replace('float active=texture(uTiles,tuv).r','float tileActivity=texture(uTiles,tuv).r',1)
+              assert js.count('active*edge*.8')==1
+              js=js.replace('active*edge*.8','tileActivity*edge*.8',1)
+          assert 'float active=' not in js and 'tileActivity*edge*.8' in js
+          if 'src="coast-real.mjs"' in html:html=html.replace('src="coast-real.mjs"','src="coast-real.mjs?v=0.2.0-r010.1"',1)
+          if 'coast-0.2.0-r010-corrected' in html:html=html.replace('coast-0.2.0-r010-corrected','coast-0.2.0-r010.1-shader-hotfix',1)
+          assert 'coast-real.mjs?v=0.2.0-r010.1' in html and 'r010.1-shader-hotfix' in html
+          head=api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha'];base_tree=api('/git/commits/'+head)['tree']['sha'];entries=[]
+          for path,text in ((js_path,js),(html_path,html)):
+              blob=api('/git/blobs',{'content':base64.b64encode(text.encode()).decode(),'encoding':'base64'})['sha'];entries.append({'path':path,'mode':'100644','type':'blob','sha':blob})
+          tree=api('/git/trees',{'base_tree':base_tree,'tree':entries})['sha'];commit=api('/git/commits',{'message':'fix(ocean): repair Coast R010 reserved GLSL identifier','tree':tree,'parents':[head]})['sha']
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==head
+          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH')
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==commit
+          print(json.dumps({'status':'PUBLISHED','commit':commit,'version':'0.2.0-coast-r010.1','repairedIdentifier':'active -> tileActivity','forcePush':False},indent=2))
+          PY
