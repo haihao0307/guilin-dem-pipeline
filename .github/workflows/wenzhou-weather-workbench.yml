@@ -1,4 +1,4 @@
-name: Wenzhou visible Weather single-scene publication
+name: Wenzhou visible Weather emergency publication
 on:
   push:
     branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
@@ -6,88 +6,60 @@ on:
       - .github/workflows/wenzhou-weather-workbench.yml
   workflow_dispatch:
 permissions:
+  actions: read
   contents: write
   pages: write
 concurrency:
   group: wenzhou-visible-weather-publication
   cancel-in-progress: false
 jobs:
-  publish-visible-weather:
+  publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     env:
-      ROOT: projects/wenzhou/v200/web/workbench
-      INPUTS: /tmp/wenzhou-weather-inputs
-      SITE: /tmp/wenzhou-weather-site
       EVIDENCE: /tmp/wenzhou-visible-weather-evidence
-      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=visible-weather-r3
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=visible-weather-r4
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 10
-          lfs: false
-          sparse-checkout: |
-            projects/wenzhou/v200
-            .github/workflows/wenzhou-weather-workbench.yml
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build exact one-canvas Wenzhou and Weather site
+      - name: Recover the already built one-canvas site from verified run 11
         run: |
           set -euo pipefail
-          mkdir -p "$INPUTS" "$EVIDENCE"
-          python - <<'PY'
-          import hashlib,os,shutil,stat,urllib.request,zipfile
-          from pathlib import Path,PurePosixPath
-          root=Path(os.environ['INPUTS'])
-          ref='fa69b5c7fed1a71339127776d0f3e44f9152c5a0'
-          base='https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/'+ref+'/'
-          def get(path):
-              with urllib.request.urlopen(base+path,timeout=90) as response:
-                  return response.read()
-          weather=get('weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip')
-          assert len(weather)==46075
-          assert hashlib.sha256(weather).hexdigest()=='ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e'
-          package=root/'Weather_Mother_Full_Clean_V1.1.0.zip'
-          package.write_bytes(weather)
-          with zipfile.ZipFile(package) as archive:
-              assert archive.testzip() is None
-              for item in archive.infolist():
-                  name=PurePosixPath(item.filename)
-                  assert not name.is_absolute() and '..' not in name.parts and not stat.S_ISLNK(item.external_attr>>16)
-              archive.extractall(root/'weather')
-          vectors=get('wenzhou-v7/data/vectors.json.gz')
-          assert len(vectors)==6044961
-          assert hashlib.sha256(vectors).hexdigest()=='30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39'
-          (root/'wenzhou-vectors.json.gz').write_bytes(vectors)
-          shutil.copytree('projects/wenzhou/v200/web/v7-full',root/'wenzhou-full-source')
-          PY
-          python "$ROOT/assemble.py" "$INPUTS" "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
-      - name: Remove the stale GPU fence that freezes the 2560 by 1600 weather pass
+          mkdir -p /tmp/wenzhou-recovery "$EVIDENCE"
+          gh run download 33636189112 \
+            --repo haihao0307/guilin-dem-pipeline \
+            --name wenzhou-single-scene-weather-workbench-evidence \
+            --dir /tmp/wenzhou-recovery
+          site="$(find /tmp/wenzhou-recovery -type f -path '*/wenzhou-weather-site/BUILD.json' -printf '%h\n' | head -n 1)"
+          test -n "$site"
+          test -f "$site/index.html"
+          test -f "$site/runtime.js"
+          test -f "$site/weather-scene.mjs"
+          echo "SITE=$site" >> "$GITHUB_ENV"
+          cp "$site/BUILD.json" "$EVIDENCE/source-BUILD.json"
+      - name: Remove the GPU fence that froze weather animation at 2560 by 1600
         run: |
           python - <<'PY'
           import os
           from pathlib import Path
-          paths=[
-              Path(os.environ['ROOT'])/'terrain-runtime.js',
-              Path(os.environ['SITE'])/'runtime.js',
-          ]
+          path=Path(os.environ['SITE'])/'runtime.js'
+          text=path.read_text(encoding='utf-8')
           old="if(S.fence){let r=g.clientWaitSync(S.fence,0,0);if(r===g.TIMEOUT_EXPIRED)return false;g.deleteSync(S.fence);S.fence=null;if(r===g.WAIT_FAILED)throw Error('GPU同步失败');}"
           old_tail="S.fence=g.fenceSync(g.SYNC_GPU_COMMANDS_COMPLETE,0);g.flush();"
-          for path in paths:
-              text=path.read_text(encoding='utf-8')
-              assert text.count(old)==1,(path,'fence-head')
-              assert text.count(old_tail)==1,(path,'fence-tail')
-              text=text.replace(old,'').replace(old_tail,'g.flush();')
-              path.write_text(text,encoding='utf-8')
+          assert text.count(old)==1
+          assert text.count(old_tail)==1
+          text=text.replace(old,'').replace(old_tail,'g.flush();')
+          path.write_text(text,encoding='utf-8')
           PY
-          for file in "$SITE"/*.js "$SITE"/*.mjs; do node --check "$file"; done
-      - name: Install browser QA
+          node --check "$SITE/runtime.js"
+          node --check "$SITE/weather-scene.mjs"
+      - name: Install Chromium QA
         run: |
           python -m pip install --quiet playwright
           python -m playwright install --with-deps chromium
-      - name: Verify visible clouds and live animation at 2560 by 1600 before publication
+      - name: Prove visible weather and moving frames before publication
         run: |
           set -euo pipefail
           python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/local-http.log" 2>&1 &
@@ -99,9 +71,9 @@ jobs:
           from pathlib import Path
           from playwright.sync_api import sync_playwright
           out=Path(os.environ['EVIDENCE'])
-          report={'passed':False,'url':'http://127.0.0.1:8765/','viewport':[2560,1600],'cases':[]}
-          with sync_playwright() as playwright:
-              browser=playwright.chromium.launch(
+          report={'passed':False,'viewport':[2560,1600],'cases':[]}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(
                   headless=True,
                   args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']
               )
@@ -111,7 +83,7 @@ jobs:
               errors=[]
               page.on('console',lambda m: errors.append(m.text) if m.type=='error' else None)
               page.on('pageerror',lambda e: errors.append(str(e)))
-              response=page.goto(report['url'],wait_until='domcontentloaded',timeout=120000)
+              response=page.goto('http://127.0.0.1:8765/',wait_until='domcontentloaded',timeout=120000)
               assert response and response.status==200
               page.wait_for_function("window.__WZ_FULL__?.ready && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",timeout=240000)
               page.locator('#coast').click()
@@ -119,41 +91,30 @@ jobs:
                   page.locator('#weatherCase').select_option(case_id)
                   page.wait_for_function(
                       "(id)=>window.__WZ_FULL__?.weather?.caseId===id && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
-                      case_id,
+                      arg=case_id,
                       timeout=240000
                   )
-                  page.wait_for_timeout(700)
+                  page.wait_for_timeout(900)
                   state=page.evaluate("window.__WZ_FULL__")
                   metrics=state['weather']['fieldMetrics']
                   assert metrics and metrics['baseM']>0 and metrics['topM']>metrics['baseM']
                   assert state['oneCanvas'] and state['oneCamera'] and state['iframeCount']==0
                   assert state['sameWebGLContext'] and state['sharedDepth']
                   assert state['errors']==[]
-                  shot=out/f'prepublish-2560x1600-{case_id}.png'
-                  page.screenshot(path=str(shot),timeout=120000)
-                  report['cases'].append({'id':case_id,'cloudBaseM':metrics['baseM'],'cloudTopM':metrics['topM'],'frames':state['frames']})
+                  page.screenshot(path=str(out/f'prepublish-{case_id}-2560x1600.png'),timeout=120000)
+                  report['cases'].append({'id':case_id,'baseM':metrics['baseM'],'topM':metrics['topM'],'frames':state['frames']})
               before=page.evaluate("window.__WZ_FULL__.frames")
               page.wait_for_timeout(3000)
               after=page.evaluate("window.__WZ_FULL__.frames")
               assert after-before>=3,(before,after)
               assert errors==[],errors
-              report['animationFrames']=[before,after]
+              report['frames']=[before,after]
               report['passed']=True
               context.close()
               browser.close()
-          (out/'prepublish-browser-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          (out/'prepublish-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps(report,ensure_ascii=False,indent=2))
           PY
-      - name: Preserve the runtime freeze repair on the Wenzhou branch
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- "$ROOT/terrain-runtime.js"
-          if ! git diff --cached --quiet; then
-            git commit -m 'fix(wenzhou): keep visible weather animation live at 2560x1600 [skip ci]'
-            git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
-          fi
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -162,7 +123,7 @@ jobs:
           lfs: false
           sparse-checkout: |
             wenzhou-v7-full/workbench
-      - name: Publish the verified one-canvas site
+      - name: Publish only the proven Wenzhou workbench
         run: |
           set -euo pipefail
           mkdir -p publication/wenzhou-v7-full/workbench
@@ -183,24 +144,25 @@ jobs:
             test "$pushed" = '1'
           fi
           git rev-parse HEAD > "$EVIDENCE/publication-commit.txt"
-      - name: Verify exact public files
+      - name: Verify the exact public build and visible weather
         run: |
           python - <<'PY'
-          import hashlib,json,os,time,urllib.request
+          import json,os,time,urllib.request
           from pathlib import Path
-          root=Path(os.environ['SITE'])
+          from playwright.sync_api import sync_playwright
+          site=Path(os.environ['SITE'])
           out=Path(os.environ['EVIDENCE'])
-          base=os.environ['URL'].split('?')[0]
-          expected=hashlib.sha256((root/'BUILD.json').read_bytes()).hexdigest()
-          report={'passed':False,'url':os.environ['URL'],'files':[],'publicationCommit':(out/'publication-commit.txt').read_text().strip()}
-          def get(url):
-              req=urllib.request.Request(url,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
-              with urllib.request.urlopen(req,timeout=45) as response:
+          url=os.environ['URL']
+          base=url.split('?')[0]
+          expected=(site/'BUILD.json').read_bytes()
+          def get(target):
+              request=urllib.request.Request(target,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=45) as response:
                   return response.status,response.read()
           for attempt in range(80):
               try:
                   status,data=get(base+'BUILD.json?attempt='+str(attempt))
-                  if status==200 and hashlib.sha256(data).hexdigest()==expected:
+                  if status==200 and data==expected:
                       break
               except Exception:
                   pass
@@ -209,23 +171,11 @@ jobs:
               raise RuntimeError('exact public build did not appear')
           for name in ['index.html','runtime.js','weather-scene.mjs','BUILD.json','modules/weather-mother/field-worker.js']:
               status,data=get(base+name+'?proof='+str(time.time_ns()))
-              wanted=(root/name).read_bytes()
+              wanted=(site/name).read_bytes()
               assert status==200 and data==wanted,(name,status,len(data),len(wanted))
-              report['files'].append({'path':name,'status':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
-          report['passed']=True
-          (out/'public-http.json').write_text(json.dumps(report,indent=2)+'\n')
-          print(json.dumps(report,indent=2))
-          PY
-      - name: Verify visible public weather at 2560 by 1600
-        run: |
-          python - <<'PY'
-          import json,os
-          from pathlib import Path
-          from playwright.sync_api import sync_playwright
-          out=Path(os.environ['EVIDENCE'])
-          report={'passed':False,'url':os.environ['URL'],'viewport':[2560,1600]}
-          with sync_playwright() as playwright:
-              browser=playwright.chromium.launch(
+          report={'passed':False,'url':url,'viewport':[2560,1600]}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(
                   headless=True,
                   args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']
               )
@@ -235,7 +185,7 @@ jobs:
               errors=[]
               page.on('console',lambda m: errors.append(m.text) if m.type=='error' else None)
               page.on('pageerror',lambda e: errors.append(str(e)))
-              response=page.goto(os.environ['URL'],wait_until='domcontentloaded',timeout=120000)
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
               assert response and response.status==200
               page.wait_for_function("window.__WZ_FULL__?.ready && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",timeout=240000)
               page.locator('#coast').click()
@@ -245,14 +195,23 @@ jobs:
               after=page.evaluate("window.__WZ_FULL__.frames")
               state=page.evaluate("window.__WZ_FULL__")
               assert after-before>=3,(before,after)
-              assert state['oneCanvas'] and state['iframeCount']==0 and state['sameWebGLContext'] and state['sharedDepth']
+              assert state['oneCanvas'] and state['iframeCount']==0
+              assert state['sameWebGLContext'] and state['sharedDepth']
               assert state['weather']['fieldMetrics']['baseM']>0
               assert errors==[],errors
               page.screenshot(path=str(out/'public-visible-weather-2560x1600.png'),timeout=120000)
-              report.update({'passed':True,'frames':[before,after],'caseId':state['weather']['caseId'],'cloudBaseM':state['weather']['fieldMetrics']['baseM'],'cloudTopM':state['weather']['fieldMetrics']['topM'],'errors':errors})
+              report.update({
+                  'passed':True,
+                  'frames':[before,after],
+                  'caseId':state['weather']['caseId'],
+                  'cloudBaseM':state['weather']['fieldMetrics']['baseM'],
+                  'cloudTopM':state['weather']['fieldMetrics']['topM'],
+                  'publicationCommit':(out/'publication-commit.txt').read_text().strip(),
+                  'errors':errors
+              })
               context.close()
               browser.close()
-          (out/'public-browser-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          (out/'public-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps(report,ensure_ascii=False,indent=2))
           PY
       - uses: actions/upload-artifact@v4
@@ -261,6 +220,6 @@ jobs:
           name: wenzhou-visible-weather-publication-evidence
           path: |
             /tmp/wenzhou-visible-weather-evidence
-            /tmp/wenzhou-weather-site
+            /tmp/wenzhou-recovery
           retention-days: 30
           if-no-files-found: error
