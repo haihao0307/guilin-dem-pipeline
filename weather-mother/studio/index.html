@@ -24,7 +24,7 @@ nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12p
 <body>
 <div class="loading" id="loading"><span>Weather Mother 正在载入</span></div>
 <iframe id="stage" title="Weather Mother 工作平台" allow="fullscreen; autoplay"></iframe>
-<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.2</div><div class="gate">visualApproved=false · productionReady=false</div></div>
+<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.3</div><div class="gate">visualApproved=false · productionReady=false</div></div>
 <div class="dock" id="dock">
   <button class="pull" id="toggle" aria-label="展开 Weather Mother">WEATHER MOTHER</button>
   <div class="drawer">
@@ -46,7 +46,7 @@ nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12p
 const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading'),moduleTitle=document.getElementById('moduleTitle'),notice=document.getElementById('notice');
 const modules={
  world:{title:'World',src:'../v110-full/?embedded=1'},
- rain:{title:'Rain',src:'../rain-v020/?embedded=1'},
+ rain:{title:'Rain',src:'../rain-v030/?embedded=1'},
  snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1'},
  fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1'},
  cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1'},
@@ -55,7 +55,7 @@ const modules={
 function current(){const id=new URLSearchParams(location.search).get('module');return modules[id]?id:'world'}
 function openModule(id,push=true){const resolved=modules[id]?id:'world',m=modules[resolved];loading.classList.remove('hide');moduleTitle.textContent=m.title;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===resolved));stage.src=m.src;if(push){const u=new URL(location.href);u.searchParams.set('module',resolved);history.pushState({module:resolved},'',u)}setTimeout(()=>dock.classList.remove('open'),170)}
 document.getElementById('toggle').onclick=()=>{dock.classList.toggle('open');notice.classList.add('hide')};document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));document.getElementById('home').onclick=()=>openModule('world');document.getElementById('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('keydown',e=>{if(e.key==='Escape')dock.classList.remove('open');if(e.altKey&&e.key.toLowerCase()==='w')dock.classList.toggle('open')});setTimeout(()=>notice.classList.add('hide'),5500);openModule(current(),false);
-window.__WEATHER_MOTHER_STUDIO__={version:'0.2.1',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule};
+window.__WEATHER_MOTHER_STUDIO__={version:'0.3.0',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule};
 })();
 </script>
 </body>
