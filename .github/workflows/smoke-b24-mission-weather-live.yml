@@ -1,0 +1,63 @@
+name: Smoke B24 mission weather public URL
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/smoke-b24-mission-weather-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-weather-mission-v1/
+    steps:
+      - name: Wait for the public page and verify all runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 40); do
+            if curl --fail --location --silent --show-error --output /tmp/b24-index.html "$PUBLIC_URL"; then
+              if grep -q 'B-24 全任务循环工作台' /tmp/b24-index.html; then
+                break
+              fi
+            fi
+            if [ "$attempt" = 40 ]; then
+              echo 'Public B24 workbench did not become readable.'
+              exit 1
+            fi
+            sleep 5
+          done
+          curl --fail --location --silent --show-error --output /tmp/b24-styles.css "${PUBLIC_URL}styles.css"
+          curl --fail --location --silent --show-error --output /tmp/b24-app.js "${PUBLIC_URL}app.js"
+          test -s /tmp/b24-index.html
+          test -s /tmp/b24-styles.css
+          test -s /tmp/b24-app.js
+          grep -q '开始循环' /tmp/b24-index.html
+          grep -q '立即投弹' /tmp/b24-index.html
+          grep -q '穿云互动' /tmp/b24-index.html
+          grep -q 'RUNWAY_24_06' /tmp/b24-app.js
+          grep -q 'contactEvents' /tmp/b24-app.js
+          if grep -q '<iframe' /tmp/b24-index.html; then
+            echo 'Unexpected separate weather frame found in public page.'
+            exit 1
+          fi
+          echo "Public URL verified: $PUBLIC_URL"
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## B24 mission weather public URL'
+            echo
+            echo "Verified: $PUBLIC_URL"
+            echo 'Direct HTTP opening: PASS'
+            echo 'Runway and mission controls: PRESENT'
+            echo 'Same-scene cloud interaction: PRESENT'
+          } >> "$GITHUB_STEP_SUMMARY"
