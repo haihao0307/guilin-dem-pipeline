@@ -39,12 +39,16 @@ jobs:
           grep -Fx 'projects/wenzhou/v200/web/workbench/qa_workbench.py' /tmp/payload-files.txt
           grep -Fx 'projects/wenzhou/v200/web/workbench/SINGLE_SCENE_ARCHITECTURE.md' /tmp/payload-files.txt
           tar -xzf /tmp/wenzhou-single-scene-v030.tar.gz -C .
+          git checkout -- .github/workflows/wenzhou-weather-workbench.yml
           rm -- "${parts[@]}"
       - name: Check installed source without changing truth assets
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
           root=projects/wenzhou/v200/web/workbench
           python -m py_compile "$root/assemble.py" "$root/qa_workbench.py"
+          rm -rf "$root/__pycache__"
           node --check "$root/terrain-runtime.js"
           node --check "$root/terrain-shaders.js"
           node --check "$root/weather-scene.mjs"
@@ -55,14 +59,15 @@ jobs:
           grep -F '"mainCanvasCount": 1' "$root/ADOPTION.json"
           grep -F '"sharedDepthBuffer": true' "$root/ADOPTION.json"
           grep -F '"fullNativeOnline": false' "$root/ADOPTION.json"
-      - name: Commit only authorized Wenzhou paths
+      - name: Commit only authorized Wenzhou source paths
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A -- .github/workflows/wenzhou-weather-workbench.yml projects/wenzhou/v200/web/workbench projects/wenzhou/v200/bootstrap
-          unexpected="$(git diff --cached --name-only | grep -vE '^(\.github/workflows/wenzhou-weather-workbench\.yml|projects/wenzhou/v200/web/workbench/|projects/wenzhou/v200/bootstrap/)' || true)"
+          rm -rf projects/wenzhou/v200/web/workbench/__pycache__
+          git add -A -- projects/wenzhou/v200/web/workbench projects/wenzhou/v200/bootstrap
+          unexpected="$(git diff --cached --name-only | grep -vE '^projects/wenzhou/v200/(web/workbench/|bootstrap/)' || true)"
           test -z "$unexpected"
           test -n "$(git diff --cached --name-only)"
-          git commit -m 'Build Wenzhou single scene Weather workbench V0.3.0'
+          git commit -m 'Build Wenzhou single scene Weather workbench V0.3.0 source'
           git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
