@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Ocean Mother Coast R011.1 Online</title>
+  <style>
+    html,body,#stage{width:100%;height:100%;margin:0;overflow:hidden;background:#07131d}
+    body{color:#eaf7ff;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    iframe{display:block;width:100%;height:100%;border:0;background:#07131d}
+    #status{position:fixed;z-index:20;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,84vw);padding:17px 20px;border:1px solid rgba(169,224,255,.3);border-radius:14px;background:rgba(4,16,25,.9);box-shadow:0 18px 60px rgba(0,0,0,.45);text-align:center;white-space:pre-wrap;backdrop-filter:blur(12px)}
+    #status strong{display:block;margin-bottom:7px;font-size:17px}
+    #status small{display:block;margin-top:7px;color:#9fc0d2}
+    #status.error{color:#ffd9d9;border-color:rgba(255,132,132,.55)}
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="Ocean Mother Coast R011.1"></main>
+  <div id="status"><strong>Ocean Mother Coast R011.1</strong>正在校验并重建完整海岸工作台…<small>纯程序化运行，持久图片资产 0，外部模型 0</small></div>
+  <script type="module">
+    const stage = document.querySelector('#stage');
+    const status = document.querySelector('#status');
+    const payloads = Array.from({length:5},(_,i)=>`../coast-r011-payload/part${String(i+1).padStart(2,'0')}.b64`);
+    const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
+
+    function showError(error){
+      console.error(error);
+      status.classList.add('error');
+      status.innerHTML = `<strong>工作台载入失败</strong>${String(error?.message || error)}<small>请刷新页面重试；若仍失败，请保留浏览器控制台信息。</small>`;
+    }
+
+    try{
+      if(typeof DecompressionStream !== 'function') throw new Error('浏览器缺少 DecompressionStream，请使用最新版 Chrome、Edge、Safari 或 Firefox。');
+      const chunks = await Promise.all(payloads.map(async url=>{
+        const response = await fetch(url,{cache:'no-store'});
+        if(!response.ok) throw new Error(`${url} 返回 HTTP ${response.status}`);
+        return (await response.text()).trim();
+      }));
+      const encoded = chunks.join('').replace(/\s+/g,'');
+      if(encoded.length !== 32156) throw new Error(`载荷长度异常：${encoded.length}`);
+      const packedText = atob(encoded);
+      const packed = Uint8Array.from(packedText,ch=>ch.charCodeAt(0));
+      if(packed.byteLength !== 24115) throw new Error(`压缩载荷大小异常：${packed.byteLength}`);
+      const decompressed = new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate'));
+      const html = await new Response(decompressed).text();
+      if(html.length !== 78062) throw new Error(`独立工作台大小异常：${html.length}`);
+      for(const marker of ['0.2.1-coast-r011.1','coast-0.2.1-r011.1-daylight-complete','qaProbe']){
+        if(!html.includes(marker)) throw new Error(`缺少运行标记：${marker}`);
+      }
+      const frame = document.createElement('iframe');
+      frame.title = 'Ocean Mother Coast R011.1 完整海岸工作台';
+      frame.allow = 'fullscreen; autoplay';
+      stage.append(frame);
+      frame.srcdoc = html;
+      await new Promise((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(new Error('工作台文档载入超时')),15000);
+        frame.addEventListener('load',()=>{clearTimeout(timer);resolve();},{once:true});
+      });
+      let lastProbe = null;
+      for(let i=0;i<80;i++){
+        await sleep(250);
+        const probeNode = frame.contentDocument?.getElementById('qaProbe');
+        const raw = probeNode?.textContent?.trim();
+        if(!raw) continue;
+        try{ lastProbe = JSON.parse(raw); }catch{ continue; }
+        if(lastProbe.error) throw new Error(`候选运行错误：${lastProbe.error}`);
+        if(lastProbe.ready === true && lastProbe.webgl2 === true && Number(lastProbe.physicalTime || 0) > 0.35){
+          window.__OCEAN_COAST_PREVIEW__ = {ready:true,runtimeVersion:lastProbe.runtimeVersion || '0.2.1-coast-r011.1',persistentImageAssets:lastProbe.persistentImageAssets,externalModels:lastProbe.externalModels,externalCdn:lastProbe.externalCdn,probe:lastProbe};
+          status.remove();
+          break;
+        }
+      }
+      if(document.body.contains(status)) throw new Error(`WebGL2 工作台未在时限内进入 ready 状态${lastProbe ? `，physicalTime=${lastProbe.physicalTime ?? '未知'}` : ''}`);
+    }catch(error){ showError(error); }
+  </script>
+</body>
+</html>
