@@ -1,0 +1,51 @@
+name: Ocean Mother Coast R012 freeze receipt
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-handoff-20260901
+    paths:
+      - .github/workflows/ocean-mother-coast-r012-freeze-receipt.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Verify latest R012 publication and record exact receipt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64,hashlib,json,os,time,urllib.parse,urllib.request
+          repo='haihao0307/guilin-dem-pipeline';branch='work/ocean-mother-handoff-20260901';base='https://api.github.com/repos/'+repo;token=os.environ['GH_TOKEN']
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json','Cache-Control':'no-cache','User-Agent':'Ocean-R012-Freeze'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          runs=api('/actions/workflows/ocean-mother-coast-r012-stage-repair-publish.yml/runs?branch='+urllib.parse.quote(branch,safe='')+'&per_page=10')['workflow_runs']
+          successful=[r for r in runs if r.get('status')=='completed' and r.get('conclusion')=='success']
+          assert successful,runs
+          run=successful[0]
+          public_branch=api('/branches/gh-pages');public_commit=public_branch['commit']['sha']
+          target='ocean-mother/coast-v022-r012'
+          files={}
+          for name in ['index.html','coast.css','core.mjs','shaders.mjs','app.mjs','BUILD.json','README.md']:
+              value=api('/contents/'+target+'/'+name+'?ref=gh-pages&nonce='+str(time.time_ns()))
+              data=base64.b64decode(value['content']) if value.get('encoding')=='base64' else b''
+              if not data:
+                  raw=urllib.request.Request(value['download_url'],headers={'Cache-Control':'no-cache','User-Agent':'Ocean-R012-Freeze'})
+                  with urllib.request.urlopen(raw,timeout=60) as r:data=r.read()
+              files[name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'gitBlobSha':value['sha']}
+          assert b'coast-0.2.2-r012-complete-daylight-scene' in base64.b64decode(api('/contents/'+target+'/index.html?ref=gh-pages')['content'])
+          receipt={'format':'ocean-coast-public-receipt','version':1,'runtimeVersion':'0.2.2-coast-r012','date':'2026-09-02','publicUrl':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v022-r012/','publicationWorkflowRun':run['id'],'publicationWorkflowConclusion':run['conclusion'],'publicationWorkflowHead':run['head_sha'],'publicCommit':public_commit,'publicPath':target,'files':files,'requiredScene':['daylight sky','coast','transparent shallow water','rocks','fire','smoke','foam','breaking waves','wet sand history'],'persistentImageAssets':0,'externalModels':0,'externalCdn':0,'visualApproved':False,'productionApproved':False,'fullReplication':False}
+          data=(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n').encode();path=target+'/PUBLIC_RECEIPT.json'
+          head=api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha'];base_tree=api('/git/commits/'+head)['tree']['sha'];blob=api('/git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha'];tree=api('/git/trees',{'base_tree':base_tree,'tree':[{'path':path,'mode':'100644','type':'blob','sha':blob}]})['sha'];commit=api('/git/commits',{'message':'docs(ocean): freeze verified Coast R012 public receipt','tree':tree,'parents':[head]})['sha']
+          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==head
+          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH');assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==commit
+          print(json.dumps({'status':'R012_PUBLIC_RECEIPT_FROZEN','commit':commit,'receiptPath':path,'publicationWorkflowRun':run['id'],'publicCommit':public_commit},indent=2))
+          PY
