@@ -1,0 +1,444 @@
+name: Wenzhou V0.5.4 real-unit cloud workbench publication
+
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths:
+      - .github/workflows/wenzhou-v054-real-cloud-publish.yml
+      - projects/wenzhou/v200/web/workbench/build_v054.py
+      - projects/wenzhou/v200/web/workbench/terrain-index.html
+      - projects/wenzhou/v200/web/workbench/terrain-runtime.js
+      - projects/wenzhou/v200/web/workbench/terrain-shaders.js
+      - projects/wenzhou/v200/web/workbench/weather-scene.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: wenzhou-v054-real-cloud-publication
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ROOT: projects/wenzhou/v200/web/workbench
+      INPUTS: /tmp/wenzhou-v054-inputs
+      SITE: /tmp/wenzhou-v054-site
+      EVIDENCE: /tmp/wenzhou-v054-evidence
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench/?v=wz054-real-cloud-units
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200
+            .github/workflows/wenzhou-v054-real-cloud-publish.yml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Acquire pinned Weather Mother and Wenzhou numeric inputs
+        run: |
+          set -euo pipefail
+          mkdir -p "$INPUTS" "$EVIDENCE"
+          python - <<'PY'
+          import hashlib, os, shutil, stat, urllib.request, zipfile
+          from pathlib import Path, PurePosixPath
+
+          root = Path(os.environ['INPUTS'])
+          ref = 'fa69b5c7fed1a71339127776d0f3e44f9152c5a0'
+          base = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/' + ref + '/'
+
+          def get(path: str) -> bytes:
+              request = urllib.request.Request(base + path, headers={'Accept-Encoding': 'identity'})
+              with urllib.request.urlopen(request, timeout=90) as response:
+                  return response.read()
+
+          weather = get('weather-mother/distributions/Weather_Mother_Full_Clean_V1.1.0.zip')
+          assert len(weather) == 46075
+          assert hashlib.sha256(weather).hexdigest() == 'ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e'
+          archive = root / 'Weather_Mother_Full_Clean_V1.1.0.zip'
+          archive.write_bytes(weather)
+          with zipfile.ZipFile(archive) as package:
+              assert package.testzip() is None
+              for item in package.infolist():
+                  name = PurePosixPath(item.filename)
+                  assert not name.is_absolute()
+                  assert '..' not in name.parts
+                  assert not stat.S_ISLNK(item.external_attr >> 16)
+              package.extractall(root / 'weather')
+
+          vectors = get('wenzhou-v7/data/vectors.json.gz')
+          assert len(vectors) == 6044961
+          assert hashlib.sha256(vectors).hexdigest() == '30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39'
+          (root / 'wenzhou-vectors.json.gz').write_bytes(vectors)
+          shutil.copytree('projects/wenzhou/v200/web/v7-full', root / 'wenzhou-full-source')
+          PY
+
+      - name: Install numeric and browser QA dependencies
+        run: |
+          python -m pip install --quiet 'numpy<3' 'shapely==2.1.2' pillow playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Build V0.5.4 with real metre cloud layers
+        run: |
+          set -euo pipefail
+          python "$ROOT/build_v054.py" "$INPUTS" "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          root = Path(os.environ['SITE'])
+          build = json.loads((root / 'BUILD.json').read_text(encoding='utf-8'))
+          assert build['version'] == 'wenzhou-workbench-0.5.4-real-cloud-units'
+          assert build['cloudGenera'] == ['ci', 'cc', 'cs', 'ac', 'as', 'ns', 'sc', 'st', 'cu', 'cb']
+          assert build['cloudVerticalContract']['worldVerticalScale'] == 1
+          assert build['cloudVerticalContract']['terrainVerticalScale'] == 1
+          assert build['cloudVerticalContract']['altitudeOffsetM'] == 0
+          assert build['cloudVerticalContract']['manualBaseTopControls'] is False
+          assert build['cloudVerticalContract']['visualLift'] is False
+          assert build['cloudVerticalContract']['visualVerticalCompression'] is False
+          assert build['displayContract']['drawingBuffer'] == [2560, 1600]
+          assert build['truth']['fullNativeOnline'] is False
+          assert build['visualApproved'] is False
+          assert build['productionApproved'] is False
+          PY
+
+      - name: Browser QA for ten cloud genera and exact physical layers
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/local-http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 2
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import os
+
+          import numpy as np
+          from PIL import Image
+          from playwright.sync_api import sync_playwright
+
+          out = Path(os.environ['EVIDENCE'])
+          expected = {
+              'ci': [8000, 12000],
+              'cc': [7000, 11000],
+              'cs': [6000, 12000],
+              'ac': [3000, 6000],
+              'as': [2500, 7000],
+              'ns': [600, 6000],
+              'sc': [600, 2200],
+              'st': [80, 900],
+              'cu': [700, 3500],
+              'cb': [600, 14000],
+          }
+          report = {
+              'schema': 'wenzhou-v054-browser-qa-1',
+              'passed': False,
+              'clouds': [],
+              'viewports': [],
+              'visualApproved': False,
+              'productionApproved': False,
+          }
+
+          def changed_pixels(a: Path, b: Path) -> int:
+              aa = np.asarray(Image.open(a).convert('RGB')).astype('int16')
+              bb = np.asarray(Image.open(b).convert('RGB')).astype('int16')
+              return int((np.max(np.abs(aa - bb), axis=2) > 10).sum())
+
+          with sync_playwright() as playwright:
+              browser = playwright.chromium.launch(
+                  headless=True,
+                  args=[
+                      '--no-sandbox',
+                      '--use-gl=angle',
+                      '--use-angle=swiftshader',
+                      '--enable-unsafe-swiftshader',
+                      '--disable-dev-shm-usage',
+                  ],
+              )
+
+              context = browser.new_context(viewport={'width': 1280, 'height': 800}, device_scale_factor=1)
+              page = context.new_page()
+              page.set_default_timeout(300000)
+              console_errors = []
+              page_errors = []
+              failed_requests = []
+              page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
+              page.on('pageerror', lambda error: page_errors.append(str(error)))
+              page.on('requestfailed', lambda request: failed_requests.append({'url': request.url, 'error': request.failure}))
+              response = page.goto('http://127.0.0.1:8765/', wait_until='domcontentloaded', timeout=120000)
+              assert response is not None and response.status == 200
+              page.wait_for_function(
+                  "window.__WZ_FULL__?.ready && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
+                  timeout=300000,
+              )
+              state = page.evaluate('window.__WZ_FULL__')
+              assert state['version'] == 'wenzhou-workbench-0.5.4-real-cloud-units'
+              assert state['oneCanvas'] and state['oneCamera'] and state['iframeCount'] == 0
+              assert state['sameWebGLContext'] and state['sharedDepth']
+              assert state['nativeRenderPixels'] == [1280, 800]
+              assert page.locator('canvas').count() == 1
+              assert page.locator('iframe').count() == 0
+              manual_altitude_controls = page.evaluate("""Array.from(document.querySelectorAll('input,select')).filter(e=>/(cloud.*(base|top|height)|altitude)/i.test(e.id)).map(e=>e.id)""")
+              assert manual_altitude_controls == []
+
+              for genus, layer in expected.items():
+                  page.locator('#weatherCase').select_option(genus)
+                  page.wait_for_function(
+                      "(id)=>window.__WZ_FULL__?.weather?.caseId===id && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
+                      arg=genus,
+                      timeout=300000,
+                  )
+                  page.locator('#cloudView').click()
+                  page.wait_for_timeout(500)
+                  current = page.evaluate('window.__WZ_FULL__')
+                  metrics = current['weather']['fieldMetrics']
+                  profile = current['weather']['profile']
+                  assert [metrics['baseM'], metrics['topM']] == layer
+                  assert metrics['verticalExtentM'] == layer[1] - layer[0]
+                  assert metrics['verticalScale'] == 1
+                  assert metrics['altitudeOffsetM'] == 0
+                  assert profile['physicalLayerM'] == layer
+                  assert profile['verticalScale'] == 1
+                  assert profile['altitudeOffsetM'] == 0
+                  assert current['errors'] == []
+                  report['clouds'].append({
+                      'id': genus,
+                      'kind': profile['kind'],
+                      'baseM': metrics['baseM'],
+                      'topM': metrics['topM'],
+                      'thicknessM': metrics['verticalExtentM'],
+                      'verticalScale': metrics['verticalScale'],
+                      'altitudeOffsetM': metrics['altitudeOffsetM'],
+                  })
+                  if genus in {'ci', 'ac', 'sc', 'cb'}:
+                      page.screenshot(path=str(out / f'cloud-{genus}-1280x800.png'), timeout=120000)
+
+              page.locator('#weatherCase').select_option('sc')
+              page.wait_for_function(
+                  "window.__WZ_FULL__?.weather?.caseId==='sc' && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
+                  timeout=300000,
+              )
+              page.locator('#coast').click()
+              page.wait_for_timeout(800)
+              environment = out / 'visible-environment-1280x800.png'
+              neutral = out / 'neutral-1280x800.png'
+              page.screenshot(path=str(environment), timeout=120000)
+              page.locator('[data-mode="neutral"]').click()
+              page.wait_for_function("window.__WZ_FULL__?.renderedMode===0", timeout=300000)
+              page.wait_for_timeout(500)
+              page.screenshot(path=str(neutral), timeout=120000)
+              visible_change = changed_pixels(environment, neutral)
+              assert visible_change > 5000, visible_change
+              page.locator('[data-mode="environment"]').click()
+              page.wait_for_function("window.__WZ_FULL__?.renderedMode===3", timeout=300000)
+              before_time = page.evaluate('window.__WZ_FULL__.weather.clock.simulationSeconds')
+              page.wait_for_timeout(1800)
+              after_time = page.evaluate('window.__WZ_FULL__.weather.clock.simulationSeconds')
+              assert after_time > before_time
+              assert console_errors == []
+              assert page_errors == []
+              assert failed_requests == []
+              report['viewports'].append({
+                  'size': [1280, 800],
+                  'drawingBuffer': state['nativeRenderPixels'],
+                  'visibleWeatherChangedPixels': visible_change,
+                  'clockAdvanced': [before_time, after_time],
+              })
+              context.close()
+
+              context = browser.new_context(viewport={'width': 2560, 'height': 1600}, device_scale_factor=1)
+              page = context.new_page()
+              page.set_default_timeout(360000)
+              console_errors = []
+              page_errors = []
+              failed_requests = []
+              page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' else None)
+              page.on('pageerror', lambda error: page_errors.append(str(error)))
+              page.on('requestfailed', lambda request: failed_requests.append({'url': request.url, 'error': request.failure}))
+              response = page.goto('http://127.0.0.1:8765/', wait_until='domcontentloaded', timeout=120000)
+              assert response is not None and response.status == 200
+              page.wait_for_function(
+                  "window.__WZ_FULL__?.ready && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
+                  timeout=360000,
+              )
+              page.locator('#coast').click()
+              page.wait_for_timeout(1000)
+              current = page.evaluate('window.__WZ_FULL__')
+              assert current['nativeRenderPixels'] == [2560, 1600]
+              assert current['weather']['fieldMetrics']['baseM'] == 600
+              assert current['weather']['fieldMetrics']['topM'] == 2200
+              assert current['weather']['fieldMetrics']['verticalScale'] == 1
+              assert current['weather']['fieldMetrics']['altitudeOffsetM'] == 0
+              assert current['errors'] == []
+              page.screenshot(path=str(out / 'visible-sc-2560x1600.png'), timeout=180000)
+              assert console_errors == []
+              assert page_errors == []
+              assert failed_requests == []
+              report['viewports'].append({
+                  'size': [2560, 1600],
+                  'drawingBuffer': current['nativeRenderPixels'],
+                  'cloudBaseM': 600,
+                  'cloudTopM': 2200,
+                  'verticalScale': 1,
+                  'altitudeOffsetM': 0,
+              })
+              context.close()
+              browser.close()
+
+          report['passed'] = True
+          (out / 'browser-qa.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: publication
+          fetch-depth: 30
+          lfs: false
+          sparse-checkout: |
+            wenzhou-v7-full/workbench
+
+      - name: Publish only the verified Wenzhou workbench subtree
+        run: |
+          set -euo pipefail
+          mkdir -p publication/wenzhou-v7-full/workbench
+          rsync -a --delete "$SITE/" publication/wenzhou-v7-full/workbench/
+          cd publication
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- wenzhou-v7-full/workbench
+          test -z "$(git diff --cached --name-only | grep -v '^wenzhou-v7-full/workbench/' || true)"
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Wenzhou V0.5.4 real-unit cloud workbench from ${GITHUB_SHA}"
+            pushed=0
+            for attempt in 1 2 3; do
+              if git push origin HEAD:gh-pages; then
+                pushed=1
+                break
+              fi
+              git fetch origin gh-pages --depth=30
+              git rebase origin/gh-pages
+            done
+            test "$pushed" = '1'
+          fi
+          git rev-parse HEAD > "$EVIDENCE/publication-commit.txt"
+
+      - name: Verify exact public files and public browser startup
+        run: |
+          set -euo pipefail
+          gh api --method POST repos/haihao0307/guilin-dem-pipeline/pages/builds > "$EVIDENCE/pages-request.json" 2> "$EVIDENCE/pages-request-error.txt" || true
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import os
+          import time
+          import urllib.request
+
+          from playwright.sync_api import sync_playwright
+
+          site = Path(os.environ['SITE'])
+          out = Path(os.environ['EVIDENCE'])
+          url = os.environ['URL']
+          base = url.split('?')[0]
+          expected_build = (site / 'BUILD.json').read_bytes()
+
+          def get(target: str):
+              request = urllib.request.Request(target, headers={'Accept-Encoding': 'identity', 'Cache-Control': 'no-cache'})
+              with urllib.request.urlopen(request, timeout=45) as response:
+                  return response.status, response.read()
+
+          attempts = []
+          for attempt in range(80):
+              try:
+                  status, data = get(base + 'BUILD.json?attempt=' + str(attempt))
+                  exact = status == 200 and data == expected_build
+                  attempts.append({'attempt': attempt, 'status': status, 'exact': exact})
+                  if exact:
+                      break
+              except Exception as error:
+                  attempts.append({'attempt': attempt, 'error': str(error)})
+              time.sleep(6)
+          else:
+              raise RuntimeError('exact public build did not appear')
+
+          files = []
+          for name in ['index.html', 'runtime.js', 'shaders.js', 'weather-scene.mjs', 'BUILD.json', 'modules/weather-mother/field-worker.js']:
+              status, data = get(base + name + '?proof=' + str(time.time_ns()))
+              wanted = (site / name).read_bytes()
+              assert status == 200 and data == wanted, (name, status, len(data), len(wanted))
+              files.append({'path': name, 'status': status, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
+
+          browser_report = {'passed': False, 'viewport': [1280, 800]}
+          with sync_playwright() as playwright:
+              browser = playwright.chromium.launch(
+                  headless=True,
+                  args=['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
+              )
+              context = browser.new_context(viewport={'width': 1280, 'height': 800}, device_scale_factor=1)
+              page = context.new_page()
+              page.set_default_timeout(300000)
+              errors = []
+              page.on('console', lambda message: errors.append(message.text) if message.type == 'error' else None)
+              page.on('pageerror', lambda error: errors.append(str(error)))
+              response = page.goto(url, wait_until='domcontentloaded', timeout=120000)
+              assert response is not None and response.status == 200
+              page.wait_for_function(
+                  "window.__WZ_FULL__?.ready && window.__WZ_FULL__?.weather?.ready && window.__WZ_FULL__?.cloudRendered",
+                  timeout=300000,
+              )
+              state = page.evaluate('window.__WZ_FULL__')
+              assert state['version'] == 'wenzhou-workbench-0.5.4-real-cloud-units'
+              assert state['oneCanvas'] and state['iframeCount'] == 0
+              assert state['weather']['fieldMetrics']['verticalScale'] == 1
+              assert state['weather']['fieldMetrics']['altitudeOffsetM'] == 0
+              assert errors == []
+              page.screenshot(path=str(out / 'public-visible-weather-1280x800.png'), timeout=120000)
+              browser_report.update({
+                  'passed': True,
+                  'caseId': state['weather']['caseId'],
+                  'cloudBaseM': state['weather']['fieldMetrics']['baseM'],
+                  'cloudTopM': state['weather']['fieldMetrics']['topM'],
+                  'drawingBuffer': state['nativeRenderPixels'],
+                  'errors': errors,
+              })
+              context.close()
+              browser.close()
+
+          report = {
+              'schema': 'wenzhou-v054-public-qa-1',
+              'passed': True,
+              'url': url,
+              'sourceCommit': os.environ['GITHUB_SHA'],
+              'publicationCommit': (out / 'publication-commit.txt').read_text().strip(),
+              'attempts': attempts,
+              'files': files,
+              'browser': browser_report,
+              'visualApproved': False,
+              'productionApproved': False,
+          }
+          (out / 'public-qa.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v054-real-cloud-publication-evidence
+          path: |
+            /tmp/wenzhou-v054-evidence
+            /tmp/wenzhou-v054-site
+          retention-days: 30
+          if-no-files-found: error
