@@ -1,0 +1,89 @@
+name: Ocean Mother Coast V012 continuous run
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-coast-v012.yml]
+permissions:
+  contents: write
+concurrency:
+  group: ocean-coast-v012-continuous-run
+  cancel-in-progress: false
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Read exact Coast V012 builder
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os,json,base64,urllib.request,pathlib
+          repo='haihao0307/guilin-dem-pipeline'
+          url='https://api.github.com/repos/'+repo+'/contents/ocean-mother/coast-build-v012/build_and_publish.py?ref='+os.environ['GITHUB_SHA']
+          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(req,timeout=60) as r:value=json.load(r)
+          assert value['sha']=='42338f2fa816dae93f61641612cfa23a992ebd1c'
+          pathlib.Path('build_and_publish.py').write_bytes(base64.b64decode(value['content']))
+          PY
+      - name: Materialize exact V012 source and run 28 numerical checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -B build_and_publish.py stage
+      - name: Install real browser environment
+        run: |
+          python3 -m pip install playwright==1.62.0 pillow==12.3.0
+          python3 -m playwright install --with-deps chromium
+      - name: Candidate browser regression including long-frame recovery
+        run: |
+          set -o pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory stage >/tmp/coast-v012-http.log 2>&1 &
+          python3 stage/ocean-mother/coast-tools-v012/browser_qa.py http://127.0.0.1:8765/ocean-mother/coast-v012/ candidate-browser | tee evidence/CANDIDATE_BROWSER.txt
+          python3 - <<'PY'
+          import json
+          q=json.load(open('candidate-browser/QA.json'))
+          names={x['name']:x['passed'] for x in q['checks']}
+          required=['long interaction frame keeps simulation running','display lag is explicitly accounted','pause button stops at current state','manual pause preserves physical time','continue button resumes without new seed']
+          assert q['status']=='BROWSER_QA_PASS' and len(q['checks'])>=47 and not q['errors']
+          assert all(names.get(x) for x in required)
+          PY
+      - name: Publish only the tested V012 directory and verify public bytes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -B build_and_publish.py publish
+      - name: Public browser regression
+        run: |
+          set -o pipefail
+          python3 stage/ocean-mother/coast-tools-v012/browser_qa.py "$COAST_V012_URL" public-browser | tee evidence/PUBLIC_BROWSER.txt
+          python3 - <<'PY'
+          import json,pathlib,os
+          q=json.load(open('public-browser/QA.json'));names={x['name']:x['passed'] for x in q['checks']}
+          required=['long interaction frame keeps simulation running','display lag is explicitly accounted','pause button stops at current state','manual pause preserves physical time','continue button resumes without new seed']
+          assert q['status']=='BROWSER_QA_PASS' and len(q['checks'])>=47 and not q['errors'] and all(names.get(x) for x in required)
+          pathlib.Path('evidence/PUBLIC_QA.json').write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          p=json.load(open('evidence/PUBLICATION.json'));p.update(status='PUBLIC_BROWSER_VERIFIED',publicChecks=len(q['checks']),publicErrors=q['errors'],sourceCommit=os.environ['COAST_V012_SOURCE'],deploymentCommit=os.environ['COAST_V012_DEPLOY'],visualApproved=False,productionApproved=False)
+          pathlib.Path('evidence/PUBLICATION.json').write_text(json.dumps(p,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Preserve exact evidence
+        if: always()
+        run: |
+          mkdir -p evidence
+          cp /tmp/coast-v012-http.log evidence/HTTP_LOG.txt 2>/dev/null || true
+          cp candidate-browser/QA.json evidence/CANDIDATE_QA.json 2>/dev/null || true
+          cp public-browser/QA.json evidence/PUBLIC_QA.json 2>/dev/null || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-v012-continuous-run-evidence
+          path: evidence/
+          retention-days: 90
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ocean-coast-v012-internal-inspection
+          path: |
+            candidate-browser/*.png
+            public-browser/*.png
+          retention-days: 1
+          if-no-files-found: ignore
