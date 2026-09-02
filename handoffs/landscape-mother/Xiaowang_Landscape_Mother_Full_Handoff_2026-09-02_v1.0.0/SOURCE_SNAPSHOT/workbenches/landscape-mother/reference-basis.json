@@ -1,0 +1,28 @@
+{
+ "schema":"landscape-mother/photo-observation-contract/1",
+ "date":"2026-09-01",
+ "version":"B3.1",
+ "userGoal":"Directly view a colored, fully volumetric 3D karst sample; no generated flat images or visible reconstruction workflow.",
+ "photos":[
+  {"id":"PHOTO_A","filename":"阳朔野攀-鸡蛋山 & 酒瓶山_1_阿田_来自小红书网页版.jpg","bytes":813864,"sha256":"88001c92b44fc7917be1322251aa1c94e5f86b3f64cea4cfcbc6688a8c13ebfa","basis":"User attachment; no external site used","observed":"Layered face, uneven horizontal incisions, narrow vertical separations, clustered irregular cavities, pale and dark-gray surface regions, plants at crown and local openings."},
+  {"id":"PHOTO_B","filename":"39e06c21-6778-4e80-ab96-c5e0f2c666ac.jpg","bytes":263239,"sha256":"b09c4c7690a12967f3e73affc02d54920f795828694ec0898871106a4ba50b11","observed":"Large-volume peaks, exposed wall regions surrounded by vegetation, warm illumination and atmospheric depth; not used as intrinsic rock albedo or measured height."},
+  {"id":"PHOTO_C","filename":"cf1dfc3f-b1d0-433a-a5a4-b42cd087ec4c.jpg","bytes":680915,"sha256":"92c4bf632209d42d75939e12484f594a6b5e490be878650d4e06a321ca7342fb","observed":"Substantial cliff volume, pale exposed faces with dark vertical markings, angular weathered foreground rocks, soil and vegetation between rock exposures."}
+ ],
+ "observationToImplementation":[
+  {"feature":"Thick irregular rock mass","implementation":"sdPlan + macroRock + crown; full closed 3D isosurface","inferred":"Unseen back, underside, absolute scale and exact plan are authored, not recovered measurements."},
+  {"feature":"Layered planes with local terminations","implementation":"layerYs with bounded local support in solid; weak fine lamination in numeric material","inferred":"Fifteen authored bed elevations; no age, dip or geologic material identification claim."},
+  {"feature":"Irregular cavities and incisions","implementation":"bounded lobed cavity subtraction, finite-depth front/side/rear joint volumes","inferred":"Cavity positions, widths and depths are design parameters, not image-derived measurements."},
+  {"feature":"Soil at crown and upward ledges","implementation":"Separate closed soil solids plus final-triangle intersection growth anchors","inferred":"Soil depths and waterRetention values are authored parameters; plants are not added in this release."},
+  {"feature":"Angular related fragments","implementation":"Oblique fracture-plane solids with small pockets; independent tilt, ground contact checks, rest-space numeric rock color","inferred":"No physical fall-history simulation or exact matching of original fragments."},
+  {"feature":"Pale gray, charcoal marks, limited warm regions","implementation":"Shared numerical albedo, roughness and micro-normal functions","inferred":"Artist-selected palette guided by visible photos; lighting and intrinsic albedo have not been separated by calibration."}
+ ],
+ "rejectedSources":["AI-generated golden karst image","old synthetic mountain recipes","B1 synthetic QA fixture"],
+ "sourceImagesBundled":false,
+ "sourceMeshImported":false,
+ "regionalDemBinding":null,
+ "lod":false,
+ "renderTextureSampling":false,
+ "originalGlbRetested":false,
+ "visualApproved":false,
+ "productionReady":false
+}

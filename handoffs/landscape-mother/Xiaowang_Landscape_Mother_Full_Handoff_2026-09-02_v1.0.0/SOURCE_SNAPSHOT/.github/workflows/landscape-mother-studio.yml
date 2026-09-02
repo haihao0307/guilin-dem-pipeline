@@ -1,0 +1,72 @@
+name: Landscape Mother volumetric sample B3.1
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths: [workbenches/landscape-mother/**, .github/workflows/landscape-mother-studio.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: landscape-mother-studio
+  cancel-in-progress: true
+jobs:
+  check-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preserve independent core and geographic truth
+        run: |
+          set -euo pipefail
+          python3 landscape-mother/tools/validate.py
+          node --test landscape-mother/tests/policy.test.cjs
+          test "$(git rev-parse HEAD:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
+          test "$(git rev-parse HEAD:truth)" = ab778539b633ec4d361120a654f24fc2e8f127b7
+          test "$(git rev-parse HEAD:contracts)" = db754963ffda5fd7d5f16ca3a9a2f52a6fc6560b
+          test "$(git rev-parse HEAD:knowledge)" = e7e80f8e056f2184a722dc9341d5c9e71bf4e563
+          test "$(git rev-parse HEAD:pipeline)" = 89fed23c8b07647c7dbc9c65f82e59191079b756
+          test "$(git rev-parse HEAD:viewer)" = f5b61c424aad511137caee97512721385694ca1d
+          test "$(git rev-parse HEAD:workbenches/landscape-mother/reference-intake-b.json)" = 6e24adef211f2c07d056e13287fb2b733994a64e
+      - name: Actual solid geometry, contacts and fixed-buffer checks
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/lm-evidence"
+          node --check workbenches/landscape-mother/generator.js
+          node --check workbenches/landscape-mother/viewer.js
+          node workbenches/landscape-mother/test.cjs "$RUNNER_TEMP/lm-evidence/numeric" | tee "$RUNNER_TEMP/lm-evidence/numeric.txt"
+          python3 workbenches/landscape-mother/stage.py --output "$RUNNER_TEMP/lm-site" --commit "$GITHUB_SHA"
+      - name: Install real browser QA dependencies
+        run: |
+          python3 -m pip install playwright pillow numpy
+          python3 -m playwright install --with-deps chromium
+      - name: Actual staged 3D sample and seven views
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory "$RUNNER_TEMP/lm-site" > "$RUNNER_TEMP/lm-evidence/server.log" 2>&1 &
+          python3 workbenches/landscape-mother/browser_qa.py --url http://127.0.0.1:8790/ --output "$RUNNER_TEMP/lm-evidence/stage"
+      - name: Publish only the interactive sample namespace
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LM_SITE: ${{ runner.temp }}/lm-site
+        run: python3 workbenches/landscape-mother/publish.py
+      - name: Actual public sample and fixed-geometry interaction
+        run: python3 workbenches/landscape-mother/browser_qa.py --url "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/?v=B31&verify=$GITHUB_SHA" --output "$RUNNER_TEMP/lm-evidence/public"
+      - name: Preserve actual runtime evidence on every outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-mother-solid-${{ github.sha }}
+          path: ${{ runner.temp }}/lm-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Record candidate scope
+        if: always()
+        run: |
+          echo '## Landscape Mother B3.1 volumetric sample' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Actual numerical solid sample, no 2D generated-image substitute. Browser captures are internal evidence only.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Photo-observed features and explicitly authored scale, back, cavities and materials. No original mesh or DEM import, no texture sampling, no LOD.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Real soil and rooted growth interfaces; no placeholder vegetation. CI software rendering does not measure user hardware.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'visualApproved=false; productionReady=false' >> "$GITHUB_STEP_SUMMARY"
