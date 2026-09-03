@@ -1,0 +1,197 @@
+name: QA Wenzhou V0.5.8 public browser
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/qa-wenzhou-v058-public-browser.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qa-wenzhou-v058-public-browser
+  cancel-in-progress: false
+
+jobs:
+  browser-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Check out Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa
+          cd qa
+          npm init -y >/dev/null
+          npm install --silent playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile browser proof
+        shell: bash
+        env:
+          QA_URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench-v058/?qa=${{ github.run_id }}
+          QA_OUT: ${{ github.workspace }}/site/wenzhou-v7-full/workbench-v058
+        run: |
+          set -euo pipefail
+          cat > qa/check.mjs <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { chromium } from 'playwright';
+
+          const url = process.env.QA_URL;
+          const out = process.env.QA_OUT;
+          fs.mkdirSync(out, { recursive: true });
+          const report = {
+            schema: 'public_browser_delivery_gate@1',
+            url,
+            runId: process.env.GITHUB_RUN_ID,
+            checkedAtUtc: new Date().toISOString(),
+            desktop: {},
+            mobile: {},
+            pageErrors: [],
+            consoleErrors: [],
+            requestFailures: [],
+            passed: false,
+            shareAllowed: false
+          };
+
+          function bind(page, label) {
+            page.on('pageerror', error => report.pageErrors.push(`${label}: ${error.message}`));
+            page.on('console', msg => {
+              if (msg.type() === 'error') report.consoleErrors.push(`${label}: ${msg.text()}`);
+            });
+            page.on('requestfailed', req => {
+              const failure = req.failure();
+              report.requestFailures.push(`${label}: ${req.url()} :: ${failure?.errorText || 'failed'}`);
+            });
+          }
+
+          async function waitReady(page) {
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 });
+            await page.waitForFunction(() => document.title.includes('V0.5.8'), null, { timeout: 30000 });
+            await page.waitForFunction(() => document.querySelector('#loading')?.classList.contains('done'), null, { timeout: 90000 });
+            await page.waitForTimeout(1800);
+          }
+
+          const browser = await chromium.launch({ headless: true });
+          try {
+            const desktop = await browser.newContext({ viewport: { width: 2560, height: 1600 }, deviceScaleFactor: 1 });
+            const page = await desktop.newPage();
+            bind(page, 'desktop');
+            await waitReady(page);
+            const desktopState = await page.evaluate(() => {
+              const canvas = document.querySelector('#world');
+              const panel = document.querySelector('#panel');
+              return {
+                title: document.title,
+                canvasCount: document.querySelectorAll('canvas').length,
+                canvasWidth: canvas?.width || 0,
+                canvasHeight: canvas?.height || 0,
+                loadingDone: document.querySelector('#loading')?.classList.contains('done') || false,
+                panelHidden: panel?.getAttribute('aria-hidden')
+              };
+            });
+            report.desktop.initial = desktopState;
+            await page.screenshot({ path: path.join(out, 'QA_DESKTOP_2560x1600.png'), fullPage: true });
+            await page.click('#menuBtn');
+            await page.waitForSelector('#panel.open', { timeout: 10000 });
+            await page.screenshot({ path: path.join(out, 'QA_DESKTOP_MENU_2560x1600.png'), fullPage: true });
+            await page.click('[data-view="flight"]');
+            await page.waitForTimeout(3000);
+            report.desktop.flight = await page.evaluate(() => ({
+              currentView: document.querySelector('#viewRead')?.textContent || '',
+              canvasWidth: document.querySelector('#world')?.width || 0,
+              canvasHeight: document.querySelector('#world')?.height || 0
+            }));
+            await page.screenshot({ path: path.join(out, 'QA_DESKTOP_FLIGHT_2560x1600.png'), fullPage: true });
+            await desktop.close();
+
+            const mobile = await browser.newContext({
+              viewport: { width: 390, height: 844 },
+              deviceScaleFactor: 2,
+              isMobile: true,
+              hasTouch: true
+            });
+            const mpage = await mobile.newPage();
+            bind(mpage, 'mobile');
+            await waitReady(mpage);
+            report.mobile.initial = await mpage.evaluate(() => ({
+              title: document.title,
+              canvasCount: document.querySelectorAll('canvas').length,
+              canvasWidth: document.querySelector('#world')?.width || 0,
+              canvasHeight: document.querySelector('#world')?.height || 0,
+              loadingDone: document.querySelector('#loading')?.classList.contains('done') || false
+            }));
+            await mpage.screenshot({ path: path.join(out, 'QA_PHONE_390x844.png'), fullPage: true });
+            await mpage.tap('#menuBtn');
+            await mpage.waitForSelector('#panel.open', { timeout: 10000 });
+            await mpage.screenshot({ path: path.join(out, 'QA_PHONE_MENU_390x844.png'), fullPage: true });
+            await mobile.close();
+
+            const d = report.desktop.initial;
+            const m = report.mobile.initial;
+            report.passed = Boolean(
+              d?.title?.includes('V0.5.8') && d.canvasCount === 1 && d.canvasWidth >= 2000 && d.canvasHeight >= 1200 && d.loadingDone &&
+              report.desktop.flight?.currentView === '1200 米飞行' &&
+              m?.title?.includes('V0.5.8') && m.canvasCount === 1 && m.canvasWidth >= 700 && m.canvasHeight >= 1500 && m.loadingDone &&
+              report.pageErrors.length === 0 && report.consoleErrors.length === 0 && report.requestFailures.length === 0
+            );
+            report.shareAllowed = report.passed;
+          } finally {
+            await browser.close();
+            fs.writeFileSync(path.join(out, 'BROWSER_QA.json'), JSON.stringify(report, null, 2));
+          }
+          if (!report.passed) {
+            console.error(JSON.stringify(report, null, 2));
+            process.exit(1);
+          }
+          console.log(JSON.stringify(report, null, 2));
+          JS
+          node qa/check.mjs
+
+      - name: Upload browser proof artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v058-public-browser-proof
+          path: site/wenzhou-v7-full/workbench-v058/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit passed browser proof
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git pull --ff-only origin gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wenzhou-v7-full/workbench-v058/BROWSER_QA.json \
+                  wenzhou-v7-full/workbench-v058/QA_DESKTOP_2560x1600.png \
+                  wenzhou-v7-full/workbench-v058/QA_DESKTOP_MENU_2560x1600.png \
+                  wenzhou-v7-full/workbench-v058/QA_DESKTOP_FLIGHT_2560x1600.png \
+                  wenzhou-v7-full/workbench-v058/QA_PHONE_390x844.png \
+                  wenzhou-v7-full/workbench-v058/QA_PHONE_MENU_390x844.png
+          git commit -m 'qa: record Wenzhou V0.5.8 desktop and mobile browser proof'
+          git push origin gh-pages
