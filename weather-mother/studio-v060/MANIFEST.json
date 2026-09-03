@@ -1,10 +1,10 @@
 {
   "productionLine": "Weather Mother",
-  "version": "0.6.0-unified-immersive-studio",
+  "version": "0.6.1-unified-immersive-studio",
   "canonicalEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
   "runtimeEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio-v060/",
   "defaultModule": "world",
-  "rainRoute": "../rain-puddle-study-v030/?embedded=1&studio=060",
+  "rainRoute": "../liquid-rain-v100/?embedded=1&studio=061&v=100",
   "modules": ["world", "rain", "snow", "fog", "cloud", "storm"],
   "mobile": {
     "safeArea": true,
@@ -13,17 +13,22 @@
     "restoreTab": "WM"
   },
   "rainCandidate": {
-    "version": "0.3.0-village-liquid-glass-demo",
-    "runtimeDirectory": "weather-mother/rain-puddle-study-v030",
-    "modernCitySkyline": false,
+    "version": "1.0.0-liquid-core-candidate",
+    "runtimeDirectory": "weather-mother/liquid-rain-v100",
     "historicalScene": "1940s rural village",
+    "liquidCore": true,
     "proceduralAudio": true,
     "compactGzipRuntime": true,
     "visualApproved": false,
     "aaaQualityApproved": false,
     "productionReady": false
   },
-  "platformRule": "Weather Mother remains the sole public weather workbench. All weather systems remain modules inside this persistent shell.",
+  "cleanup": {
+    "obsoleteRainRuntime": "weather-mother/rain-puddle-study-v030",
+    "obsoleteRuntimeDeleted": true,
+    "legacyRainRouteCount": 0
+  },
+  "platformRule": "Weather Mother remains the sole public weather workbench. Each module routes only to its current candidate.",
   "visualApproved": false,
   "aaaQualityApproved": false,
   "productionReady": false
