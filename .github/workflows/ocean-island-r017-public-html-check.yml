@@ -1,0 +1,104 @@
+name: Ocean Island R017 public HTML check
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-island-r017-public-html-check.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-island-r017-public-html-check
+  cancel-in-progress: false
+
+jobs:
+  public-html:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Wait for public HTML and all runtime files
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/'
+          ready=0
+          for attempt in $(seq 1 48); do
+            code=$(curl -L -sS -o evidence/index.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${URL}?readback=$RANDOM-$attempt" || true)
+            if [ "$code" = 200 ] && grep -q 'island-r017-additive-controls' evidence/index.html; then ready=1;break;fi
+            sleep 5
+          done
+          test "$ready" = 1
+          for file in index.html coast.css app.mjs core.mjs shaders.mjs params.mjs geometry.mjs BUILD.json PARAMETER_CATALOG.json; do
+            code=$(curl -L -sS -o "evidence/${file//\//_}" -w '%{http_code}' -H 'Cache-Control: no-cache' "${URL}${file}?readback=$RANDOM")
+            test "$code" = 200
+          done
+          grep -q 'verified online HTML only' evidence/BUILD.json
+
+      - name: Open public HTML in desktop and mobile Chrome
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/'
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --hide-scrollbars --virtual-time-budget=30000)
+          "$CHROME" "${COMMON[@]}" --window-size=1200,800 --dump-dom "${URL}?qa=1&public=$RANDOM" > evidence/desktop.dom.html 2> evidence/desktop.chrome.log
+          "$CHROME" "${COMMON[@]}" --window-size=1200,800 --screenshot=evidence/desktop.png "${URL}?qa=1&public=$RANDOM" >> evidence/desktop.chrome.log 2>&1
+          "$CHROME" "${COMMON[@]}" --window-size=390,844 --dump-dom "${URL}?qa=1&mobile=1&public=$RANDOM" > evidence/mobile.dom.html 2> evidence/mobile.chrome.log
+          "$CHROME" "${COMMON[@]}" --window-size=390,844 --screenshot=evidence/mobile.png "${URL}?qa=1&mobile=1&public=$RANDOM" >> evidence/mobile.chrome.log 2>&1
+          python3 - <<'PY'
+          from pathlib import Path
+          import html,json,re
+          root=Path('evidence')
+          results={}
+          errors=[]
+          for name in ('desktop','mobile'):
+              dom=(root/f'{name}.dom.html').read_text(errors='replace')
+              log=(root/f'{name}.chrome.log').read_text(errors='replace')
+              match=re.search(r'<pre id="qaProbe"[^>]*>(.*?)</pre>',dom,re.S)
+              if not match or not match.group(1).strip():
+                  errors.append(name+' qaProbe missing')
+                  continue
+              probe=json.loads(html.unescape(match.group(1)))
+              results[name]=probe
+              if probe.get('version')!='0.3.0-island-r017' or probe.get('ready') is not True or probe.get('error'):
+                  errors.append(name+' runtime identity or readiness failed')
+              if probe.get('physicalTime',0)<=0:
+                  errors.append(name+' physical time did not advance')
+              if 'type="range"' not in dom or dom.count('type="range"')<100:
+                  errors.append(name+' parameter controls missing')
+              if re.search(r'illegal use of reserved word|ERROR:\s*0:|shader.{0,30}compile|Uncaught\s+(?:TypeError|ReferenceError|Error)|GL_INVALID_OPERATION',dom+'\n'+log,re.I):
+                  errors.append(name+' browser or WebGL error')
+              shot=root/f'{name}.png'
+              if not shot.is_file() or shot.stat().st_size<25000:
+                  errors.append(name+' rendered screenshot missing')
+          checks={
+              'publicHttp200':True,
+              'desktopReady':'desktop' in results,
+              'mobileReady':'mobile' in results,
+              'desktopControls':results.get('desktop',{}).get('ready') is True,
+              'mobileControls':results.get('mobile',{}).get('ready') is True,
+              'desktopRendered':(root/'desktop.png').stat().st_size>=25000,
+              'mobileRendered':(root/'mobile.png').stat().st_size>=25000,
+              'noErrors':not errors,
+          }
+          report={'status':'ONLINE_HTML_VERIFIED' if all(checks.values()) else 'ONLINE_HTML_FAILED','url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/','checks':checks,'probes':results,'errors':errors,'persistentImageAssets':0,'visualApproved':False,'productionApproved':False}
+          (root/'ONLINE_HTML_VERIFIED.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({k:v for k,v in report.items() if k!='probes'},ensure_ascii=False,indent=2))
+          if report['status']!='ONLINE_HTML_VERIFIED':raise SystemExit(1)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r017-public-html-check
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
