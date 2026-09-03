@@ -1,0 +1,55 @@
+name: Landscape Mother Guilin Putao Fenglin V014 R3
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - "workbenches/landscape-mother-v014/run_v014_r3.sh"
+      - "workbenches/landscape-mother-v014/patch_strict_scale_r3.py"
+      - ".github/workflows/landscape-mother-putao-v014-publish-r3.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-putao-v014-publish-r3
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install fixed numeric and browser toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            numpy==2.3.5 \
+            scipy==1.17.0 \
+            scikit-image==0.26.0 \
+            trimesh==4.11.1 \
+            playwright==1.55.0
+
+      - name: Build test publish and verify public V014 R3
+        shell: bash
+        run: bash workbenches/landscape-mother-v014/run_v014_r3.sh
+
+      - name: Upload deterministic runtime and QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_Guilin_Putao_Fenglin_V014_R3
+          path: ${{ runner.temp }}/landscape-mother-v014
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
