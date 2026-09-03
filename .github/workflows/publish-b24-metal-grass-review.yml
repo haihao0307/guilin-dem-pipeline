@@ -1,0 +1,234 @@
+name: Publish B24 metal grass online HTML review
+
+on:
+  push:
+    branches:
+      - release/b24-metal-grass-review-20260903
+    paths:
+      - .github/workflows/publish-b24-metal-grass-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-b24-metal-grass-review
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      AIRCRAFT_COMMIT: 8ea0a34d016c46570e3916e37f587b2c7fb14ccf
+      AIRCRAFT_QA_RUN: 33733439863
+      SOURCE_PATH: preview/b24-metal-grass-mission-r1
+      TARGET_PATH: aircraft/b24-metal-grass-mission-r1
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-metal-grass-mission-r1/
+      REVIEW_HTML_BYTES: 12557938
+      REVIEW_HTML_SHA256: 7cf4c78cea99f9bf3aed5507cbcb2bdb49a71465b3c4aabc29563214f3da2fde
+      PAYLOAD_BYTES: 16647376
+      PAYLOAD_SHA256: 7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2
+
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          path: release
+
+      - name: Check out active Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Require the full AIRCRAFT browser gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 240); do
+            payload="$(curl -fsSL --retry 3 https://api.github.com/repos/haihao0307/AIRCRAFT/actions/runs/$AIRCRAFT_QA_RUN)"
+            status="$(printf '%s' "$payload" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status"))')"
+            conclusion="$(printf '%s' "$payload" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("conclusion"))')"
+            if [ "$status" = completed ]; then
+              test "$conclusion" = success
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'AIRCRAFT browser gate did not finish in time.'
+          exit 1
+
+      - name: Assemble the same-origin review site
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$site/assets" "$site/vendor"
+          base="https://raw.githubusercontent.com/haihao0307/AIRCRAFT/$AIRCRAFT_COMMIT/$SOURCE_PATH"
+          for file in index.html style.css app.js native-aircraft.js world.js mission.js audio.js effects.js README.md; do
+            curl -fsSL --retry 5 --retry-all-errors -o "$site/$file" "$base/$file"
+          done
+
+          curl -fsSL --retry 5 --retry-all-errors \
+            -o "$RUNNER_TEMP/inherited-review.html" \
+            https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/aircraft/b24-v016-recovery-review/index.html
+
+          SITE="$site" python3 - <<'PY'
+          import base64, gzip, hashlib, json, os, re
+          from pathlib import Path
+
+          page = Path(os.environ['RUNNER_TEMP']) / 'inherited-review.html'
+          data = page.read_bytes()
+          assert len(data) == int(os.environ['REVIEW_HTML_BYTES'])
+          assert hashlib.sha256(data).hexdigest() == os.environ['REVIEW_HTML_SHA256']
+          root = Path(os.environ['SITE'])
+          for token, name in (
+              ('manifestGzipBase64', 'native.json.gz'),
+              ('payloadGzipBase64', 'native.bin.gz'),
+          ):
+              match = re.search(token.encode() + rb':"([A-Za-z0-9+/=]+)"', data)
+              assert match, token
+              (root / 'assets' / name).write_bytes(base64.b64decode(match.group(1)))
+          payload = gzip.decompress((root / 'assets' / 'native.bin.gz').read_bytes())
+          assert len(payload) == int(os.environ['PAYLOAD_BYTES'])
+          assert hashlib.sha256(payload).hexdigest() == os.environ['PAYLOAD_SHA256']
+          manifest = json.loads(gzip.decompress((root / 'assets' / 'native.json.gz').read_bytes()))
+          assert len(manifest['components']) == 1784
+          assert len(manifest['meshes']) == 348
+          PY
+
+          npm install --no-save --no-package-lock three@0.180.0 playwright@1.55.0
+          cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js "$site/vendor/"
+          cp node_modules/three/examples/jsm/controls/OrbitControls.js "$site/vendor/"
+          cp node_modules/three/LICENSE "$site/vendor/THREE-LICENSE.txt"
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+
+          for file in "$site"/*.js; do node --check "$file"; done
+          if grep -Eqi 'img2threejs|image2three|weapons mother|mountain' "$site/index.html" "$site"/*.js; then
+            echo 'A forbidden route or extra mountain token entered the review site.'
+            exit 1
+          fi
+          if grep -qi '<iframe' "$site/index.html"; then
+            echo 'A separate frame entered the unified review page.'
+            exit 1
+          fi
+
+      - name: Run local real-browser publication smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$RUNNER_TEMP/local-evidence"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$site" >"$RUNNER_TEMP/server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 1
+          cat > "$RUNNER_TEMP/smoke.cjs" <<'NODE'
+          const fs=require('fs'),path=require('path');
+          const {chromium}=require('playwright');
+          const url=process.env.SMOKE_URL, out=process.env.SMOKE_OUT;
+          (async()=>{
+            const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader','--disable-gpu-sandbox']});
+            const page=await browser.newPage({viewport:{width:1440,height:900}});
+            const errors=[],failed=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+            page.on('requestfailed',r=>failed.push(r.url()));
+            const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+            await page.waitForFunction(()=>window.__B24_WORKBENCH__?.ready,null,{timeout:120000});
+            const base=await page.evaluate(()=>{const a=window.__B24_WORKBENCH__;return {state:a.getState(),stats:a.captureState(),names:a.scene.children.map(x=>x.name),iframes:document.querySelectorAll('iframe').length,play:!document.querySelector('#play').disabled};});
+            await page.click('#play');
+            await page.waitForFunction(()=>window.__B24_WORKBENCH__.mission.time>6,null,{timeout:90000});
+            await page.evaluate(()=>window.__B24_WORKBENCH__.seek(136));
+            await page.waitForTimeout(500);
+            const action=await page.evaluate(()=>window.__B24_WORKBENCH__.getState());
+            await page.screenshot({path:path.join(out,'local-review.png')});
+            const checks={http:response.status()===200,payload:base.state.sourcePayloadSha256==='7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2',hierarchy:base.stats.components===1784&&base.stats.meshes===348,spindles:base.stats.spindles.length===4,grass:base.names.includes('GRASS_AIRFIELD_SHARED_WORLD'),mountains:!base.names.some(n=>/mountain/i.test(n)),singleScene:base.iframes===0,controls:base.play,explosions:action.impacts===4,errors:errors.length===0,requests:failed.length===0};
+            const report={status:Object.values(checks).every(Boolean)?'PASS':'FAIL',checks,errors,failed,base,action};
+            fs.writeFileSync(path.join(out,'local-smoke.json'),JSON.stringify(report,null,2));
+            await browser.close();
+            if(report.status!=='PASS')process.exit(1);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+          SMOKE_URL=http://127.0.0.1:8765/ SMOKE_OUT="$RUNNER_TEMP/local-evidence" node "$RUNNER_TEMP/smoke.cjs"
+
+      - name: Create receipts and publish only the new review directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          target="public/$TARGET_PATH"
+          rm -rf "$target"
+          mkdir -p "$(dirname "$target")"
+          cp -a "$site" "$target"
+          cp "$RUNNER_TEMP/local-evidence/local-smoke.json" "$target/BROWSER_QA.json"
+
+          TARGET="$target" python3 - <<'PY'
+          import hashlib, json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          root=Path(os.environ['TARGET'])
+          files={str(p.relative_to(root)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in root.rglob('*') if p.is_file()}
+          receipt={
+            'schema':'haihao.aircraft/b24-metal-grass-online-review@1.0.0',
+            'build':'B24_METAL_GRASS_MISSION_R1',
+            'generatedAt':datetime.now(timezone.utc).isoformat(),
+            'sourceCommit':os.environ['AIRCRAFT_COMMIT'],
+            'sourceQaRun':int(os.environ['AIRCRAFT_QA_RUN']),
+            'publicUrl':os.environ['PUBLIC_URL'],
+            'primaryDeliverable':'direct-online-html',
+            'inheritedPayloadSha256':os.environ['PAYLOAD_SHA256'],
+            'exactV016Recovered':False,
+            'weatherIntegrated':False,
+            'mountainsAdded':False,
+            'existingPublicEntriesChanged':False,
+            'files':files,
+            'visualAcceptance':False,
+            'productionReady':False,
+          }
+          (root/'PUBLICATION_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          cd public
+          git config user.name 'B24 online HTML publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET_PATH"
+          git commit -m 'review(b24): publish metal grass mission R1 online HTML'
+          git push origin HEAD:gh-pages
+
+      - name: Wait for Pages and verify the direct online HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/live-evidence"
+          for attempt in $(seq 1 180); do
+            if curl -fsSL --retry 2 -o "$RUNNER_TEMP/live-index.html" "${PUBLIC_URL}?build=${GITHUB_SHA}-${attempt}" \
+              && grep -q 'B24 · 金属与草地机场 · R1' "$RUNNER_TEMP/live-index.html"; then
+              break
+            fi
+            if [ "$attempt" = 180 ]; then
+              echo 'The direct HTML did not become visible on GitHub Pages.'
+              exit 1
+            fi
+            sleep 5
+          done
+          SMOKE_URL="${PUBLIC_URL}?build=${GITHUB_SHA}" SMOKE_OUT="$RUNNER_TEMP/live-evidence" node "$RUNNER_TEMP/smoke.cjs"
+          cp "$RUNNER_TEMP/live-evidence/local-smoke.json" "$RUNNER_TEMP/live-evidence/live-browser-qa.json"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-metal-grass-online-html-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/local-evidence/
+            ${{ runner.temp }}/live-evidence/
+            public/aircraft/b24-metal-grass-mission-r1/PUBLICATION_RECEIPT.json
