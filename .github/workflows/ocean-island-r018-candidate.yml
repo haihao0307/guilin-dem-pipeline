@@ -1,0 +1,83 @@
+name: Ocean Island R018 candidate
+
+on:
+  push:
+    branches: [work/ocean-mother-r018]
+    paths:
+      - ocean-mother/island-r018/**
+      - ocean-mother/island-r018-tools/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-island-r018-candidate
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Validate source identity and numeric contracts
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          for f in ocean-mother/island-r018/*.mjs; do node --check "$f"; done
+          node ocean-mother/island-r018/core.test.mjs | tee evidence/NODE_TESTS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('ocean-mother/island-r018')
+          banned={'.png','.jpg','.jpeg','.webp','.gif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
+          files=[p for p in root.rglob('*') if p.is_file()]
+          assert not [p for p in files if p.suffix.lower() in banned]
+          for p in files:
+              text=p.read_text(encoding='utf-8')
+              assert not re.search(r'data\s*:\s*image/',text,re.I),p
+              assert not re.search(r'https?://[^\s"\']+\.(?:png|jpe?g|webp|gif|hdr|exr|ktx2?)\b',text,re.I),p
+          build=json.loads((root/'BUILD.json').read_text(encoding='utf-8'))
+          assert build['version']=='0.3.0-island-r018'
+          assert build['numericParameters']==102
+          assert build['runtimeImageAssets']==0
+          assert build['externalModels']==0
+          assert build['visualApproved'] is False
+          assert build['productionApproved'] is False
+          identity={str(p.relative_to(root)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(files)}
+          Path('evidence/SOURCE_IDENTITY.json').write_text(json.dumps({'status':'PASS','version':build['version'],'files':identity,'persistentImageAssets':0,'visualApproved':False,'productionApproved':False},ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Install browser QA dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Real Chromium WebGL2 desktop and mobile QA
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8180 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 -u ocean-mother/island-r018-tools/qa_runner.py http://127.0.0.1:8180/ocean-mother/island-r018/ evidence/browser | tee evidence/BROWSER_QA_LOG.txt
+
+      - name: Preserve candidate runtime and evidence
+        if: always()
+        run: |
+          cp -r ocean-mother/island-r018 evidence/runtime
+          cp ocean-mother/island-r018-tools/qa_runner.py evidence/qa_runner.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r018-candidate
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
