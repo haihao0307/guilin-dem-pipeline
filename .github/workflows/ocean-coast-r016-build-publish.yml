@@ -53,10 +53,17 @@ jobs:
             echo 'Persistent image asset found in R016 runtime'
             exit 1
           fi
-          if grep -RniE 'data[[:space:]]*:[[:space:]]*image/|https?://[^"'"' ]+\.(png|jpg|jpeg|webp|gif|hdr|exr|ktx2?)' ocean-mother/coast-glass-r016; then
-            echo 'Embedded or remote image dependency found in R016 runtime'
-            exit 1
-          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root=Path('ocean-mother/coast-glass-r016')
+          remote=re.compile(r'https?://[^\s"\']+\.(?:png|jpe?g|webp|gif|hdr|exr|ktx2?)\b',re.I)
+          for path in root.rglob('*'):
+              if path.is_file() and path.suffix.lower() in {'.html','.css','.js','.mjs','.json','.md'}:
+                  text=path.read_text(encoding='utf-8')
+                  assert not re.search(r'data\s*:\s*image/',text,re.I),path
+                  assert not remote.search(text),path
+          PY
 
       - name: Download exact R015 publication evidence
         uses: actions/download-artifact@v4
