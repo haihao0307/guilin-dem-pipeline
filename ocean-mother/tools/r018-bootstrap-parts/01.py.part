@@ -1,0 +1,40 @@
+)
+s = s.replace("while(smokeEmit>=1){spawnSmoke();smokeEmit--}", "while(smokeEmit>=1){spawnSmoke(time);smokeEmit--}")
+s = s.replace(
+" if(p.type===0){\n  const drag=1-Math.exp(-config.smokeDrag*dt);p.vx+=(wind[0]-p.vx)*drag;p.vz+=(wind[2]-p.vz)*drag;\n  p.vx+=Math.sin(p.z*.2+time*.83+p.seed)*config.smokeTurb*dt;p.vz+=Math.cos(p.x*.17-time*.7+p.seed)*config.smokeTurb*dt;\n  p.vy+=(config.smokeRise+Math.sin(p.x*.2+time+p.seed)*config.smokeTurb*.32-p.vy)*dt*.6;\n  p.size+=config.smokeSpread*dt;",
+" if(p.type===0){\n  const age01=clamp(p.age/Math.max(.001,p.maxLife),0,1),drag=1-Math.exp(-config.smokeDrag*dt*(.72+.48*age01));\n  p.vx+=(wind[0]-p.vx)*drag;p.vz+=(wind[2]-p.vz)*drag;\n  const eddy=config.smokeTurb*(.45+.55*Math.sqrt(age01));\n  p.vx+=Math.sin(p.z*.2+time*.83+p.seed)*eddy*dt;p.vz+=Math.cos(p.x*.17-time*.7+p.seed)*eddy*dt;\n  const buoyancy=config.smokeRise*(1-.58*smooth(.08,.92,age01));\n  p.vy+=(buoyancy+Math.sin(p.x*.2+time+p.seed)*config.smokeTurb*.25-p.vy)*dt*(.75-.25*age01);\n  p.size+=config.smokeSpread*dt*(.65+1.35*Math.sqrt(age01));"
+)
+# Insert shared fire uniform uploader before drawSolid.
+s = s.replace(
+"function drawSky(sun){gl.useProgram(skyProgram);",
+"const fireUniformData=new Float32Array(15);\nfunction sendFireUniforms(loc){fireUniformData.fill(0);FIRE_SOURCES.forEach((p,i)=>fireUniformData.set(p,i*3));gl.uniform3fv(loc['uFirePositions[0]'],fireUniformData);u1i(gl,loc.uFireCount,FIRE_SOURCES.length);u1f(gl,loc.uFireIntensity,config.fireEnabled?config.fire:0);}\nfunction drawSky(sun){gl.useProgram(skyProgram);"
+)
+s = s.replace(
+"u3fv(gl,solidLoc.uFirePos,[FIRE_CENTER[0],fireY,FIRE_CENTER[2]]);u1f(gl,solidLoc.uFireIntensity,config.fireEnabled?config.fire:0);const firePositions=new Float32Array(15);FIRE_SOURCES.forEach((p,i)=>firePositions.set(p,i*3));gl.uniform3fv(solidLoc['uFirePositions[0]'],firePositions);u1i(gl,solidLoc.uFireCount,FIRE_SOURCES.length);",
+"u3fv(gl,solidLoc.uFirePos,[FIRE_CENTER[0],fireY,FIRE_CENTER[2]]);sendFireUniforms(solidLoc);"
+)
+s = s.replace(
+"u1f(gl,waterLoc.uExposure,config.exposure);u1i(gl,waterLoc.uMode,modeInt());",
+"u1f(gl,waterLoc.uExposure,config.exposure);sendFireUniforms(waterLoc);u1i(gl,waterLoc.uMode,modeInt());"
+)
+s = s.replace(
+"waterLoc=locations(gl,waterProgram,[...common,'uView','uProj','uCamera','uSunDir','uResolution','uScene','uFoam','uSceneDepth','uRockHeight','uDomain','uClarity','uFoamGain','uRefraction','uExposure','uMode']);",
+"waterLoc=locations(gl,waterProgram,[...common,'uView','uProj','uCamera','uSunDir','uFirePositions[0]','uFireCount','uFireIntensity','uResolution','uScene','uFoam','uSceneDepth','uRockHeight','uDomain','uClarity','uFoamGain','uRefraction','uExposure','uMode']);"
+)
+s = s.replace("window.OceanIsland=window.OceanCoast=window.OceanCoastR012=api;", "window.OceanIsland=window.OceanCoast=window.OceanCoastR012=window.OceanMotherR018=api;")
+s = s.replace("doc.documentElement.dataset.oceanGlassSkin='r017'", "doc.documentElement.dataset.oceanGlassSkin='r018'")
+p.write_text(s)
+
+# shaders.mjs
+p = root/'shaders.mjs'
+s = p.read_text()
+s = s.replace(
+"  float radiusOffset=(3.0-float(i))*5.6-travel*5.6,dist=(s-radiusOffset)/p_breakWidth;\n  float strength=exp(-dist*dist*1.8)*gain*incidence;",
+"  float radiusOffset=(3.0-float(i))*5.6-travel*5.6,widthScale=i==0?1.12:(i==1?1.0:.88);\n  float dist=(s-radiusOffset)/(p_breakWidth*widthScale),shoreDissipation=smoothstep(-.75,1.35,radiusOffset);\n  float strength=exp(-dist*dist*1.8)*gain*incidence*shoreDissipation;"
+)
+# Dynamic wet line and tidal band in solid shader.
+s = s.replace(
+"void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);float wetState=texture(uWet,fieldUv(vWorld.xz)).r,waterWet=1.0-smoothstep(-.28,.18,vWorld.y-uSeaLevel),wet=sat(max(wetState*.92,waterWet));",
+"void main(){vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);float wetState=texture(uWet,fieldUv(vWorld.xz)).r,shoreDistance=length(vWorld.xz)-islandR(vWorld.xz);float runupLine=uSeaLevel+p_runup*.10*sin(uTime*2.0*PI/p_period-length(vWorld.xz)*.60)*exp(-shoreDistance*shoreDistance/10.0);float tidalReach=1.0-smoothstep(1.2,5.0,abs(shoreDistance));float waterWet=1.0-smoothstep(-.28,.18,vWorld.y-runupLine),tidalBand=exp(-abs(vWorld.y-uSeaLevel)*3.4)*tidalReach,wet=sat(max(wetState*.92,waterWet*tidalReach));"
+)
+s = s.replace(
