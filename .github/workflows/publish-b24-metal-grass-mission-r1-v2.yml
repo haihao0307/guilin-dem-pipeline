@@ -1,0 +1,204 @@
+name: Publish B24 metal grass mission R1 direct HTML v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-b24-metal-grass-mission-r1-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-b24-metal-grass-mission-r1-v2
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AIRCRAFT_COMMIT: 8ea0a34d016c46570e3916e37f587b2c7fb14ccf
+      AIRCRAFT_ROOT: preview/b24-metal-grass-mission-r1
+      DESTINATION: aircraft/b24-metal-grass-mission-r1
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-metal-grass-mission-r1/
+      REVIEW_HTML_BYTES: 12557938
+      REVIEW_HTML_SHA256: 7cf4c78cea99f9bf3aed5507cbcb2bdb49a71465b3c4aabc29563214f3da2fde
+      PAYLOAD_BYTES: 16647376
+      PAYLOAD_SHA256: 7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: public
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Assemble exact reviewed site
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work/site/assets work/site/vendor evidence
+          base="https://raw.githubusercontent.com/haihao0307/AIRCRAFT/${AIRCRAFT_COMMIT}/${AIRCRAFT_ROOT}"
+          for name in index.html style.css app.js native-aircraft.js world.js mission.js effects.js audio.js README.md; do
+            curl --fail --location --retry 6 --retry-all-errors --retry-delay 2 \
+              --output "work/site/$name" "$base/$name"
+          done
+
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 2 \
+            --output work/current-review.html \
+            https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/aircraft/b24-v016-recovery-review/index.html
+
+          python3 - <<'PY'
+          import base64, gzip, hashlib, json, os, re
+          from pathlib import Path
+          source=Path('work/current-review.html').read_bytes()
+          assert len(source)==int(os.environ['REVIEW_HTML_BYTES'])
+          assert hashlib.sha256(source).hexdigest()==os.environ['REVIEW_HTML_SHA256']
+          out=Path('work/site/assets')
+          for token,name in [('manifestGzipBase64','native.json.gz'),('payloadGzipBase64','native.bin.gz')]:
+              match=re.search(token.encode()+rb':"([A-Za-z0-9+/=]+)"',source)
+              assert match,token
+              (out/name).write_bytes(base64.b64decode(match.group(1)))
+          payload=gzip.decompress((out/'native.bin.gz').read_bytes())
+          assert len(payload)==int(os.environ['PAYLOAD_BYTES'])
+          assert hashlib.sha256(payload).hexdigest()==os.environ['PAYLOAD_SHA256']
+          manifest=json.loads(gzip.decompress((out/'native.json.gz').read_bytes()))
+          assert len(manifest['components'])==1784
+          assert len(manifest['meshes'])==348
+          PY
+
+          npm install --no-save --no-package-lock three@0.180.0 playwright-core@1.55.0
+          cp node_modules/three/build/three.module.js work/site/vendor/
+          cp node_modules/three/build/three.core.js work/site/vendor/
+          cp node_modules/three/examples/jsm/controls/OrbitControls.js work/site/vendor/
+          cp node_modules/three/LICENSE work/site/vendor/THREE-LICENSE.txt
+
+      - name: Validate the direct HTML entry and runtime source
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in work/site/*.js; do node --check "$file"; done
+          grep -q '金属机身 · 草地机场' work/site/index.html
+          grep -q '开始完整流程' work/site/index.html
+          grep -q '声音开启' work/site/index.html
+          grep -q 'GRASS_AIRFIELD_SHARED_WORLD' work/site/world.js
+          grep -q '四发顺序启动' work/site/mission.js
+          grep -q '依次投放' work/site/mission.js
+          grep -q '拉平着陆' work/site/mission.js
+          if grep -Eqi 'img2threejs|image2three|weapons mother|<iframe' work/site/index.html work/site/*.js; then
+            echo 'Forbidden pipeline or separate frame found.'
+            exit 1
+          fi
+
+      - name: Verify the assembled HTML in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory work/site >/tmp/b24-r1-server.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          sleep 1
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          cat > work/smoke.cjs <<'NODE'
+          const fs=require('node:fs');
+          const {chromium}=require('playwright-core');
+          (async()=>{
+            const browser=await chromium.launch({executablePath:process.env.CHROME,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader']});
+            const page=await browser.newPage({viewport:{width:1440,height:900}});
+            const errors=[];
+            page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+            page.on('pageerror',e=>errors.push(String(e)));
+            page.on('requestfailed',r=>errors.push(r.url()));
+            const response=await page.goto('http://127.0.0.1:8765/',{waitUntil:'domcontentloaded',timeout:90000});
+            await page.waitForFunction(()=>window.__B24_WORKBENCH__?.ready,null,{timeout:120000});
+            const ready=await page.evaluate(()=>{const a=window.__B24_WORKBENCH__;return {build:a.build,payload:a.getState().sourcePayloadSha256,parts:a.captureState(),iframes:document.querySelectorAll('iframe').length,play:!document.querySelector('#play').disabled,scene:a.scene.children.map(n=>n.name)}});
+            await page.click('#play');
+            await page.evaluate(()=>window.__B24_WORKBENCH__.mission.rate=28);
+            await page.waitForFunction(()=>window.__B24_WORKBENCH__.mission.time>8,null,{timeout:45000});
+            const running=await page.evaluate(()=>window.__B24_WORKBENCH__.getState());
+            const pass=response.status()===200&&ready.build==='B24_METAL_GRASS_MISSION_R1'&&ready.payload==='7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2'&&ready.parts.components===1784&&ready.parts.meshes===348&&ready.parts.spindles.map(s=>s.id).join(',')==='1454,1385,1431,1408'&&ready.iframes===0&&ready.play&&ready.scene.includes('GRASS_AIRFIELD_SHARED_WORLD')&&!ready.scene.some(n=>/mountain/i.test(n))&&running.running&&running.time>8&&errors.length===0;
+            const report={status:pass?'PASS':'FAIL',ready,running,errors};
+            fs.writeFileSync('evidence/local-browser.json',JSON.stringify(report,null,2));
+            await browser.close();
+            if(!pass)process.exit(1);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+          CHROME="$CHROME" node work/smoke.cjs
+
+      - name: Record the page identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os
+          from datetime import datetime,timezone
+          from pathlib import Path
+          root=Path('work/site')
+          files={str(p.relative_to(root)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.rglob('*')) if p.is_file()}
+          manifest={'schema':'haihao.aircraft/b24-metal-grass-online-review@1.0.1','build':'B24_METAL_GRASS_MISSION_R1','aircraftSourceCommit':os.environ['AIRCRAFT_COMMIT'],'nativePayloadSHA256':os.environ['PAYLOAD_SHA256'],'aircraftBrowserEvidenceRun':33733439863,'aircraftBrowserEvidence':'PASS 30/30','primaryUserDeliverable':'directly-clickable-online-html','weatherIntegrated':False,'newMountains':False,'weaponsMotherIncluded':False,'img2threejsIncluded':False,'exactV016Recovered':False,'visualAcceptance':False,'productionReady':False,'generatedAt':datetime.now(timezone.utc).isoformat(),'files':files}
+          (root/'ONLINE_REVIEW_MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Publish the separate review directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "public/$DESTINATION"
+          mkdir -p "public/$DESTINATION"
+          cp -a work/site/. "public/$DESTINATION/"
+          cd public
+          git config user.name 'B24 direct HTML publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$DESTINATION"
+          if git diff --cached --quiet; then
+            echo 'Direct HTML review directory already matches.'
+          else
+            git commit -m 'publish(b24): direct HTML metal grass mission R1'
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Verify the live HTML and all same-origin assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 80); do
+            if curl --fail --location --silent --show-error "${PUBLIC_URL}?build=${AIRCRAFT_COMMIT}-${attempt}" --output evidence/live-index.html && grep -q '金属机身 · 草地机场' evidence/live-index.html; then
+              break
+            fi
+            if [ "$attempt" = 80 ]; then exit 1; fi
+            sleep 5
+          done
+          for asset in app.js native-aircraft.js world.js mission.js effects.js audio.js style.css assets/native.json.gz assets/native.bin.gz vendor/three.module.js vendor/three.core.js vendor/OrbitControls.js ONLINE_REVIEW_MANIFEST.json; do
+            curl --fail --location --silent --show-error "${PUBLIC_URL}${asset}?build=${AIRCRAFT_COMMIT}" --output /dev/null
+          done
+
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          cat > work/live.cjs <<'NODE'
+          const fs=require('node:fs');const{chromium}=require('playwright-core');
+          (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:900}});const errors=[];page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});page.on('pageerror',e=>errors.push(String(e)));page.on('requestfailed',r=>errors.push(r.url()));const response=await page.goto(process.env.PUBLIC_URL+'?review='+Date.now(),{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.__B24_WORKBENCH__?.ready,null,{timeout:120000});const state=await page.evaluate(()=>{const a=window.__B24_WORKBENCH__;return{build:a.build,payload:a.getState().sourcePayloadSha256,play:!document.querySelector('#play').disabled,iframes:document.querySelectorAll('iframe').length,scene:a.scene.children.map(n=>n.name),errors:a.errors}});const pass=response.status()===200&&state.build==='B24_METAL_GRASS_MISSION_R1'&&state.payload==='7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2'&&state.play&&state.iframes===0&&state.scene.includes('GRASS_AIRFIELD_SHARED_WORLD')&&!state.scene.some(n=>/mountain/i.test(n))&&state.errors.length===0&&errors.length===0;const report={status:pass?'PASS':'FAIL',publicUrl:process.env.PUBLIC_URL,state,errors,visualAcceptance:false,productionReady:false};fs.writeFileSync('evidence/live-browser.json',JSON.stringify(report,null,2));await browser.close();if(!pass)process.exit(1)})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+          CHROME="$CHROME" PUBLIC_URL="$PUBLIC_URL" node work/live.cjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-metal-grass-live-html-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: evidence/
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "Public HTML: $PUBLIC_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo 'User delivery: direct online HTML' >> "$GITHUB_STEP_SUMMARY"
+          echo 'AIRCRAFT QA: PASS 30/30' >> "$GITHUB_STEP_SUMMARY"
+          echo 'visualAcceptance=false' >> "$GITHUB_STEP_SUMMARY"
+          echo 'productionReady=false' >> "$GITHUB_STEP_SUMMARY"
