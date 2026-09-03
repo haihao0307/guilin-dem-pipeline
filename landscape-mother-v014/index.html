@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#6ea7c5">
+  <title>Landscape Mother · 桂林葡萄峰林 V014</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="gl" aria-label="桂林葡萄峰林三维场景"></canvas>
+
+  <header class="topbar liquid" aria-label="Landscape Mother 工具栏">
+    <button id="home" class="glass-button square" aria-label="返回 Landscape Mother 总台">总台</button>
+    <div class="identity">
+      <b>LANDSCAPE MOTHER</b>
+      <span id="subtitle">正在读取葡萄峰林数值场</span>
+    </div>
+    <button id="tour" class="glass-button on">暂停</button>
+    <button id="settings" class="glass-button accent">调节</button>
+  </header>
+
+  <button id="scaleOpen" class="scale-chip liquid" aria-label="查看真实尺度">
+    <span>真实尺度</span><b id="scaleChipValue">4.0 km</b>
+  </button>
+
+  <nav class="view-dock liquid" aria-label="观察视角">
+    <button class="view-button on" data-view="hero">全景</button>
+    <button class="view-button" data-view="forest">峰林</button>
+    <button class="view-button" data-view="cliff">崖壁</button>
+    <button class="view-button" data-view="cave">洞口</button>
+    <button class="view-button" data-view="top">俯视</button>
+  </nav>
+
+  <div id="toast" class="toast liquid hidden"></div>
+
+  <section id="scalePanel" class="modal hidden" aria-label="真实尺度与来源">
+    <div class="modal-card liquid-heavy">
+      <div class="modal-head">
+        <div><small>METRIC TRUTH</small><h2>葡萄峰林尺度</h2></div>
+        <button id="scaleClose" class="glass-button square">关闭</button>
+      </div>
+      <div class="metric-grid">
+        <article><span>场景范围</span><b id="metricDomain">4,000 × 4,000 m</b></article>
+        <article><span>原生采样</span><b>12.5 m</b></article>
+        <article><span>文献峰高</span><b>60 至 200 m</b></article>
+        <article><span>文献坡度</span><b>大于 45°</b></article>
+        <article><span>本版平均坡度</span><b id="metricMeanSlope">读取中</b></article>
+        <article><span>近垂直岩壁</span><b id="metricVertical">读取中</b></article>
+      </div>
+      <p>宏观位置、高程、相对峰高与基底关系来自桂林 12.5 米数值高程真值。垂直岩壁、溶沟和洞口为依据地貌约束独立生成的三维结构。</p>
+    </div>
+  </section>
+
+  <section id="hub" class="hub hidden" aria-label="Landscape Mother 总工作台">
+    <div class="hub-card liquid-heavy">
+      <small>FUNCTION WORLD · LANDSCAPE MOTHER</small>
+      <h1>完全由数值和函数形成的地貌世界</h1>
+      <p>当前只推进桂林塔状峰林。先固定真实尺度、平原和孤立峰体，再逐层完成洞穴、水蚀、植被和石灰岩材质。</p>
+      <article class="module-card">
+        <div>
+          <span>ACTIVE STUDY</span>
+          <h2>阳朔葡萄型峰林</h2>
+          <p>4 公里真实尺度 · 12.5 米高程真值 · 孤立塔峰 · 垂直崖壁</p>
+        </div>
+        <button id="enterScene" class="primary">进入三维场景</button>
+      </article>
+      <p class="paused">其他地貌继续暂停。</p>
+    </div>
+  </section>
+
+  <section id="sheet" class="sheet hidden" aria-label="地貌材质和展示调节">
+    <div class="sheet-card liquid-heavy">
+      <div class="grabber"></div>
+      <div class="sheet-head">
+        <div><b>葡萄峰林 · 实时检查</b><span>调节只改变材质和展示，真实几何保持固定</span></div>
+        <button id="closeSheet" class="glass-button square">关闭</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="look">综合色彩</button>
+        <button class="tab" data-tab="rock">石灰岩</button>
+        <button class="tab" data-tab="bio">植被</button>
+        <button class="tab" data-tab="water">水蚀</button>
+        <button class="tab" data-tab="light">光线</button>
+        <button class="tab" data-tab="diagnostic">诊断</button>
+      </div>
+      <div class="panels">
+        <div class="panel on" data-panel="look">
+          <label>综合色彩 <output id="vividV">1.08</output><input id="vivid" type="range" min="0.72" max="1.32" step="0.01" value="1.08"></label>
+          <label>整体清晰度 <output id="clarityV">1.04</output><input id="clarity" type="range" min="0.72" max="1.28" step="0.01" value="1.04"></label>
+          <label>岩石亮度 <output id="rockLightV">1.02</output><input id="rockLight" type="range" min="0.72" max="1.28" step="0.01" value="1.02"></label>
+          <label>平原亮度 <output id="plainLightV">1.00</output><input id="plainLight" type="range" min="0.72" max="1.28" step="0.01" value="1.00"></label>
+        </div>
+        <div class="panel" data-panel="rock">
+          <label>灰白石灰岩 <output id="limestoneV">1.00</output><input id="limestone" type="range" min="0.65" max="1.30" step="0.01" value="1.00"></label>
+          <label>冷暖矿物差异 <output id="warmthV">0.52</output><input id="warmth" type="range" min="0" max="1" step="0.01" value="0.52"></label>
+          <label>断面浅色 <output id="freshV">0.70</output><input id="fresh" type="range" min="0" max="1.20" step="0.01" value="0.70"></label>
+          <label>微表面 <output id="microV">0.44</output><input id="micro" type="range" min="0" max="1" step="0.01" value="0.44"></label>
+        </div>
+        <div class="panel" data-panel="bio">
+          <label>峰顶植被 <output id="vegetationV">1.02</output><input id="vegetation" type="range" min="0" max="1.35" step="0.01" value="1.02"></label>
+          <label>青苔 <output id="mossV">0.72</output><input id="moss" type="range" min="0" max="1.30" step="0.01" value="0.72"></label>
+          <label>地衣 <output id="lichenV">0.60</output><input id="lichen" type="range" min="0" max="1.20" step="0.01" value="0.60"></label>
+          <label>平原绿度 <output id="plainGreenV">1.06</output><input id="plainGreen" type="range" min="0.55" max="1.35" step="0.01" value="1.06"></label>
+        </div>
+        <div class="panel" data-panel="water">
+          <label>黑色水蚀线 <output id="waterStainV">0.92</output><input id="waterStain" type="range" min="0" max="1.30" step="0.01" value="0.92"></label>
+          <label>铁质沉积 <output id="ironV">0.62</output><input id="iron" type="range" min="0" max="1.20" step="0.01" value="0.62"></label>
+          <label>雨后湿润 <output id="wetV">0.24</output><input id="wet" type="range" min="0" max="1.10" step="0.01" value="0.24"></label>
+          <label>洞口深度 <output id="cavityV">0.78</output><input id="cavity" type="range" min="0.25" max="1.20" step="0.01" value="0.78"></label>
+        </div>
+        <div class="panel" data-panel="light">
+          <label>太阳强度 <output id="sunV">3.80</output><input id="sun" type="range" min="1.30" max="5.50" step="0.05" value="3.80"></label>
+          <label>天空补光 <output id="skyV">0.72</output><input id="sky" type="range" min="0.20" max="1.40" step="0.01" value="0.72"></label>
+          <label>近景检查光 <output id="inspectV">0.34</output><input id="inspect" type="range" min="0" max="1.00" step="0.01" value="0.34"></label>
+          <label>曝光 <output id="exposureV">1.00</output><input id="exposure" type="range" min="0.62" max="1.42" step="0.01" value="1.00"></label>
+        </div>
+        <div class="panel diagnostic" data-panel="diagnostic">
+          <button class="diagnostic-button on" data-mode="0">最终材质</button>
+          <button class="diagnostic-button" data-mode="1">基础颜色</button>
+          <button class="diagnostic-button" data-mode="2">真实高程</button>
+          <button class="diagnostic-button" data-mode="3">坡度</button>
+          <button class="diagnostic-button" data-mode="4">近垂直面</button>
+          <button class="diagnostic-button" data-mode="5">植被覆盖</button>
+          <button class="diagnostic-button" data-mode="6">黑色水蚀</button>
+          <button class="diagnostic-button" data-mode="7">洞口凹部</button>
+          <button class="diagnostic-button" data-mode="8">表面法线</button>
+          <button class="diagnostic-button" data-mode="9">来源置信度</button>
+        </div>
+      </div>
+      <footer><button id="reset" class="secondary">恢复推荐状态</button></footer>
+    </div>
+  </section>
+
+  <section id="error" class="error hidden">
+    <div class="liquid-heavy"><h2>三维场景没有启动</h2><p id="errorText"></p><button onclick="location.reload()">重新载入</button></div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
