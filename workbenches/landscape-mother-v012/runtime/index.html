@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#789dad">
+<title>Landscape Mother · 喀斯特峰林 V012</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="gl" aria-label="Landscape Mother 喀斯特三维峰林"></canvas>
+<div class="top"><div class="brand"><b>LANDSCAPE MOTHER · 喀斯特峰林</b><span id="sub">正在读取数值岩体</span></div><button id="tour" class="on">暂停</button><button id="focus">近景</button><button id="settings">调节</button></div>
+<div class="views"><button class="on" data-view="hero">全景</button><button data-view="forest">峰林</button><button data-view="side">侧面</button><button data-view="cliff">岩壁</button><button data-view="top">俯视</button></div>
+<div id="toast" class="toast"><b>正在启动</b> · 同一片峰林将在旋转中保持形体与材料稳定</div>
+<aside id="sheet" class="sheet hidden"><div class="sheetHead"><b>形成状态与展示</b><button id="close">×</button></div>
+<div class="section"><div class="row"><span>石灰岩明度</span><output id="colorV">1.00</output><input id="color" type="range" min="0.76" max="1.24" step="0.01" value="1"></div><div class="row"><span>雨后湿润</span><output id="wetV">0.46</output><input id="wet" type="range" min="0" max="1" step="0.01" value="0.46"></div><div class="row"><span>青苔地衣</span><output id="bioV">0.88</output><input id="bio" type="range" min="0" max="1.2" step="0.01" value="0.88"></div><div class="row"><span>微表面</span><output id="microV">0.78</output><input id="micro" type="range" min="0.18" max="1.15" step="0.01" value="0.78"></div></div>
+<div class="section"><div class="row"><span>太阳强度</span><output id="sunV">3.95</output><input id="sun" type="range" min="2" max="5" step="0.05" value="3.95"></div><div class="row"><span>天空补光</span><output id="skyV">0.68</output><input id="sky" type="range" min="0.3" max="1.35" step="0.01" value="0.68"></div><div class="row"><span>曝光</span><output id="exposureV">1.06</output><input id="exposure" type="range" min="0.72" max="1.42" step="0.01" value="1.06"></div></div>
+<div class="section"><div class="modes"><button class="on" data-mode="0">最终</button><button data-mode="1">基色</button><button data-mode="2">水蚀</button><button data-mode="3">湿润</button><button data-mode="4">法线</button><button data-mode="5">遮蔽</button></div></div></aside>
+<div id="error" class="error"><div><b>三维工作台启动失败</b><p id="errorText"></p></div></div>
+<script src="app.js"></script>
+</body></html>
