@@ -28,7 +28,8 @@ try:
         page.on('requestfailed',lambda r:report['failedRequests'].append({'url':r.url,'failure':r.failure}))
         page.goto(url,wait_until='load');page.wait_for_function('window.OceanCoast?.qa.frames>=4',timeout=60000)
         checks['correctVersion']=page.evaluate('OceanCoast.qa.version')=='0.2.5-coast-r015'
-        checks['correctBuild']=page.locator('#build').inner_text()=='coast-r015-daylight-glass'
+        report['buildIdentityRead']=page.locator('#build').evaluate('(e)=>({textContent:e.textContent.trim(),innerText:e.innerText})')
+        checks['correctBuild']=report['buildIdentityRead']['textContent']=='coast-r015-daylight-glass'
         checks['clockAdvancing']=page.evaluate('OceanCoast.qa.physicalTime')>0
         page.screenshot(path=str(root/'public-overview.png'))
         page.click('#panelToggle');page.wait_for_timeout(450);page.screenshot(path=str(root/'public-glass.png'));checks['glassControlsVisible']=page.locator('#panel').is_visible()
