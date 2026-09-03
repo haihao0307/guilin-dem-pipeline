@@ -1,0 +1,63 @@
+name: Ocean R016 shoreline visible glass candidate
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r016-camera-candidate.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: ocean-coast-r016-camera-candidate
+  cancel-in-progress: false
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Rebuild exact R016 candidate and apply shoreline composition repair
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 ocean-mother/coast-r016-build/finish_candidate.py "$GITHUB_WORKSPACE" | tee evidence/STATIC_QA.json
+
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Run desktop and mobile WebGL2 visual acceptance
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8161 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 ocean-mother/coast-r016-build/candidate_qa.py \
+            http://127.0.0.1:8161/ocean-mother/coast-glass-r016/ evidence
+
+      - name: Preserve exact runtime and evidence
+        if: always()
+        run: |
+          if [ -d ocean-mother/coast-glass-r016 ]; then
+            rm -rf evidence/runtime
+            cp -a ocean-mother/coast-glass-r016 evidence/runtime
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r016-shoreline-visible-candidate
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
