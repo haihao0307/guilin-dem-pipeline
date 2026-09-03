@@ -7,6 +7,7 @@ p=o/'runtime.js';text=p.read_text()
 text=replace(text,'function draw(){let g=S.gl,now=performance.now();',"function draw(){let g=S.gl,now=performance.now();if(S.gpuFence){let status=g.clientWaitSync(S.gpuFence,0,0);if(status===g.TIMEOUT_EXPIRED)return false;g.deleteSync(S.gpuFence);S.gpuFence=null;if(status===g.WAIT_FAILED)throw Error('GPU frame completion failed');}")
 text=replace(text,'g.flush();S.lastDraw=now;',"S.gpuFence=g.fenceSync(g.SYNC_GPU_COMMANDS_COMPLETE,0);g.flush();S.lastDraw=now;")
 text=replace(text,'installMobileShell(S,surface,record);',"installMobileShell(S,surface,record);const firstWeather=S.weather.getState();document.querySelectorAll('[data-weather]').forEach(e=>e.classList.toggle('active',e.dataset.weather===firstWeather.caseId));$('weatherCase').value=firstWeather.caseId;")
+text=replace(text,'S.targetHeight=m.baseM+m.verticalExtentM*.38;S.theta=.58;S.phi=.16;S.r=Math.max(10000,Math.min(32000,m.verticalExtentM*1.2));','S.targetHeight=m.baseM+m.verticalExtentM*.5;S.theta=.58;S.phi=.28;S.r=Math.max(20000,Math.min(42000,m.verticalExtentM*2));')
 text="import{createRenderTargets}from'./render-targets.mjs';\n"+text
 text=replace(text,'S.gl=g;S.sky=createSky(g);','S.gl=g;S.sky=createSky(g);S.targets=createRenderTargets(g);')
 text=replace(text,'let left=0;g.viewport(0,0,w,h);','S.targets.begin(w,h);let left=0;g.viewport(0,0,w,h);')
@@ -27,6 +28,7 @@ h=o/'index.html';html=h.read_text().replace('</style>','@media(hover:none){#pane
 m=json.loads((o/'BUILD.json').read_text());m['gpuSubmission']={'maxFramesInFlight':1,'blockingFinish':False,'clientWaitTimeoutNs':0}
 m['scientificStatus']['seasonalSelection']='deterministic rule scenarios; tropical cyclones require manual selection'
 m['cloudSampling']={'balancedScale':0.5,'gestureScale':0.35,'highScale':1,'sceneDepthClipsRay':True,'composite':'depth-aware bilinear','terrainAndSkyFullResolution':True}
+m['performanceApproved']=False
 m['schema']='wenzhou-mobile-view-stream-build-1'
 m['baselineSourceFiles']=m.pop('sourceFiles',{})
 m['baselineSourcePayloadSha256']=m.pop('sourcePayloadSha256',None)
