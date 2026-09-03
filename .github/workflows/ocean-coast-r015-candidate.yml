@@ -1,0 +1,113 @@
+name: Ocean R015 daylight glass candidate
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r015-candidate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Rebuild exact migration and test geometry
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,shutil,subprocess
+          from pathlib import Path
+          root=Path('ocean-mother/coast-r015-build')
+          data=base64.b64decode(''.join((root/f'part{i}.b64').read_text().strip() for i in [1,2]),validate=True)
+          assert hashlib.sha256(data).hexdigest()=='0ca203caeb7c805925fa489ca7f5e1d745c0a1c03e43e8ef5f54bae6cd0c220f','migration hash mismatch'
+          work=Path('_r015');work.mkdir()
+          shutil.copytree('ocean-mother/coast-v022-r012',work/'base')
+          for name,text in json.loads(gzip.decompress(data)).items():
+              p=work/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text)
+          subprocess.run(['python3',str(work/'build_repair.py')],check=True)
+          subprocess.run(['python3',str(work/'ui.py')],check=True)
+          target=Path('ocean-mother/coast-glass-r015')
+          shutil.copytree(work/'site',target)
+          for p in target.glob('*.mjs'):subprocess.run(['node','--check',str(p)],check=True)
+          result=subprocess.run(['node',str(target/'core.test.mjs')],check=True,capture_output=True,text=True)
+          Path('evidence/NODE_QA.json').write_text(result.stdout)
+          runtime={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in target.iterdir() if p.is_file()}
+          Path('evidence/SOURCE.json').write_text(json.dumps(runtime,indent=2))
+          shutil.copytree(target,'evidence/runtime')
+          print(result.stdout)
+          PY
+      - name: Install browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Exercise real browser and record actual frames
+        run: |
+          python3 -m http.server 8140 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          python3 - <<'PY'
+          import json,shutil,time,hashlib
+          from pathlib import Path
+          from PIL import Image,ImageStat
+          from playwright.sync_api import sync_playwright
+          root=Path('evidence');report={'checks':{},'views':{},'errors':[],'mobileSafariHardwareTested':False,'visualApproved':False}
+          def save(): (root/'BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          try:
+            with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=shutil.which('google-chrome'),headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+              page=browser.new_page(viewport={'width':1440,'height':900})
+              page.on('pageerror',lambda e:report['errors'].append(str(e)))
+              page.on('console',lambda m:report['errors'].append(m.text) if m.type=='error' else None)
+              url='http://127.0.0.1:8140/ocean-mother/coast-glass-r015/'
+              response=page.goto(url,wait_until='load')
+              page.wait_for_function('window.OceanCoast?.qa.ready',timeout=60000)
+              report['checks']['http200']=response.status==200
+              for view in ['overview','shore','rocks','fire','top','breaker']:
+                page.evaluate('(v)=>OceanCoast.setView(v)',view)
+                initial=page.evaluate('OceanCoast.qa.frames')
+                page.wait_for_function('(n)=>OceanCoast.qa.frames>=n+3',arg=initial,timeout=60000)
+                page.screenshot(path=str(root/(view+'.png')))
+                state=page.evaluate('OceanCoast.getState()');qa=page.evaluate('OceanCoast.qa')
+                im=Image.open(root/(view+'.png')).convert('RGB');crop=im.crop((20,210,im.width-20,im.height-90)).resize((280,160));pixels=list(crop.getdata())
+                mean=sum(.2126*r+.7152*g+.0722*b for r,g,b in pixels)/len(pixels)/255
+                black=sum(max(c)<15 for c in pixels)/len(pixels)
+                report['views'][view]={'state':state,'qa':qa,'meanLuminance':mean,'blackRatio':black}
+                report['checks'][view+'Daylight']=mean>.27
+                report['checks'][view+'NoBlackField']=black<.02
+                report['checks'][view+'NoGlError']=qa.get('glError')==0
+                save()
+              page.evaluate('OceanCoast.setView("overview")')
+              page.click('#panelToggle');page.wait_for_timeout(400)
+              page.screenshot(path=str(root/'glass-panel.png'))
+              report['checks']['glassPanelOpens']=page.locator('#panel').is_visible()
+              report['checks']['textNotBlurred']=page.locator('.panelHead h1').evaluate('(e)=>getComputedStyle(e).filter')=='none'
+              page.click('#pause');t0=page.evaluate('OceanCoast.getState().physicalTime');page.wait_for_timeout(700);t1=page.evaluate('OceanCoast.getState().physicalTime')
+              report['checks']['pausePreservesClock']=t0==t1
+              page.click('#pause');page.wait_for_function('(t)=>OceanCoast.getState().physicalTime>t',arg=t1,timeout=20000)
+              report['checks']['resumeAdvances']=True
+              page.click('#panelToggle')
+              report['checks']['glassPanelCloses']=page.locator('#panel').get_attribute('class').find('closed')>=0
+              # A portrait viewport is an emulation check, never iPhone hardware approval.
+              mobile=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
+              mobile.on('pageerror',lambda e:report['errors'].append('mobile: '+str(e)))
+              mobile.goto(url,wait_until='load');mobile.wait_for_function('window.OceanCoast?.qa.frames>3',timeout=60000)
+              mobile.screenshot(path=str(root/'mobile.png'))
+              mobile.click('#panelToggle');mobile.wait_for_timeout(400);mobile.screenshot(path=str(root/'mobile-panel.png'))
+              report['checks']['mobilePanelVisible']=mobile.locator('#panel').is_visible()
+              report['checks']['mobileFits']=mobile.evaluate('document.documentElement.scrollWidth<=innerWidth')
+              report['mobileState']=mobile.evaluate('OceanCoast.getState()')
+              report['checks']['runtimeErrorsAbsent']=not report['errors']
+              browser.close()
+          except Exception as e:
+            report['errors'].append(str(e));report['checks']['completed']=False
+          report['passed']=sum(report['checks'].values());report['failed']=sum(not x for x in report['checks'].values());report['status']='PASS' if report['failed']==0 and not report['errors'] else 'FAIL';save();print(json.dumps(report,ensure_ascii=False))
+          if report['status']!='PASS':raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r015-candidate
+          path: evidence/
+          retention-days: 30
