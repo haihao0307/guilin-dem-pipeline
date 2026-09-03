@@ -1,168 +1,50 @@
 {
   "productionLine": "Weather Mother",
   "parentProject": "DEM地图生产线",
-  "version": "1.0.0-clean",
-  "revision": 1,
+  "version": "0.6.1-studio-with-liquid-rain-v1",
   "canonicalEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
-  "stableEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/clean-v1/",
-  "canonicalEntryCurrentlyResolvesTo": "clean-v1",
   "repository": "haihao0307/guilin-dem-pipeline",
   "publicationBranch": "gh-pages",
-  "runtimeDirectory": "weather-mother/clean-v1",
-  "runtimeCommit": "b5dd480efef00a05b1030ad723b402fe634025c3",
-  "baseline": {
-    "version": "0.6.2-loop",
-    "commit": "bf2aaa5d853af4f114c68d5bbafb99ea47134ef5",
-    "directory": "weather-mother/v062-loop",
-    "filesUnmodified": true,
-    "role": "Recovery and pixel-comparison reference only. Not a second runtime dependency."
+  "studio": {
+    "runtimeDirectory": "weather-mother/studio-v060",
+    "defaultModule": "world",
+    "modules": ["world", "rain", "snow", "fog", "cloud", "storm"],
+    "rainRoute": "weather-mother/liquid-rain-v100",
+    "singlePublicWorkbench": true
   },
-  "delivery": "Online interactive preview plus the explicitly requested reusable ZIP",
-  "portablePackage": "distributions/Weather_Mother_Clean_V1.0.0.zip",
-  "packageReceipt": "distributions/Weather_Mother_Clean_V1.0.0.receipt.json",
-  "zipSHA256": "596b963fef0cc2eafe7855178ae9f93c3e2aef2b78bdf98dd5e9e49c1a443bae",
-  "zipBytes": 37906,
-  "uncompressedBytes": 92160,
-  "packageFiles": 12,
-  "runtimeFiles": [
-    "index.html",
-    "engine.js",
-    "field-worker.js",
-    "cloud.glsl",
-    "motion.js",
-    "reuse.js"
-  ],
-  "totalRuntimeSourceBytes": 72337,
-  "sourceSizeLimitBytes": null,
-  "storedImageAssets": 0,
-  "cleanupScope": "A single standalone distribution. No failed V063 experiments, obsolete pages, build scripts, caches, screenshot files, imported assets or duplicate runtimes in the package. Existing Git history and unrelated production lines remain untouched.",
-  "pendingResearchDeferred": true,
-  "deferredWork": [
-    "iridescence",
-    "replacement lightning",
-    "tropical cyclone",
-    "new visual or performance research"
-  ],
-  "preservation": {
-    "cloudShaderByteIdenticalToBaseline": true,
-    "densityWorkerByteIdenticalToBaseline": true,
-    "motionKernelByteIdenticalToBaseline": true,
-    "samplingReduced": false,
-    "renderingFormulaChanged": false,
-    "allExistingWorkbenchControlsRetained": true
+  "rainLiquidCandidate": {
+    "version": "1.0.0-liquid-core-candidate",
+    "runtimeDirectory": "weather-mother/liquid-rain-v100",
+    "scene": "1940s rural village rain courtyard",
+    "state": [
+      "rain flux",
+      "receiver wetness",
+      "absorption",
+      "puddle storage",
+      "eave transfer",
+      "drainage",
+      "evaporation",
+      "impact-linked ripple splash and sound",
+      "temperature freeze and melt experiment"
+    ],
+    "storedImageAssets": 0,
+    "externalModels": 0,
+    "externalAudio": 0,
+    "externalLibraries": 0
   },
-  "cloudGenera": [
-    "Cu",
-    "Cb",
-    "Sc",
-    "St",
-    "Ns",
-    "Ac",
-    "As",
-    "Ci",
-    "Cc",
-    "Cs"
-  ],
-  "weatherCases": [
-    "fair",
-    "coast",
-    "mountain",
-    "rain",
-    "storm",
-    "rainbow",
-    "snow",
-    "high"
-  ],
-  "qualitySteps": {
-    "balanced": 112,
-    "fine": 192,
-    "ultra": 320,
-    "cinema": 480
+  "cleanup": {
+    "deletedRejectedRuntime": "weather-mother/rain-puddle-study-v030",
+    "deletedFromPublicationBranch": true,
+    "legacyRainRoutes": 0,
+    "rule": "Only the current Rain candidate may remain routable. Rejected executable candidates are deleted after knowledge consolidation."
   },
-  "densityDimensionsDesktop": [
-    320,
-    192,
-    256
-  ],
-  "densityDimensionsMobile": [
-    192,
-    112,
-    160
-  ],
-  "noiseDimensions": [
-    96,
-    96,
-    96
-  ],
-  "configurationAPI": [
-    "getConfiguration",
-    "applyConfiguration",
-    "getEnvironment"
-  ],
-  "configurationBehavior": "JSON-only seed, parameters, switches, camera and clocks. Full validation precedes state updates. Loading regenerates volumes and does not restore previous temporal accumulation or an active lightning event.",
-  "oceanHandoff": "clean-v1/OCEAN_HANDOFF.md",
-  "cleanReleaseHandoff": "clean-v1/HANDOFF.json",
-  "environmentContract": "Shared time, sun direction and linear colour, independent wind and cloud velocities. Exported length is metres; internal volume length is kilometres. +X east, +Y up, -Z north. Wind is a meteorological wind-from bearing.",
-  "oceanIntegrationStatus": "Weather-side data contract implemented and tested. No ocean surface, wave spectrum, foam, water optics, shared depth or reflection integration included.",
-  "buildWorkflow": ".github/workflows/weather-mother-clean-v1.yml",
-  "buildAndPublicVerificationRun": 33455998598,
-  "automaticChecksPassed": 59,
-  "publicChecksPassed": 60,
-  "automaticQAFile": "clean-v1/QA.json",
-  "publicationReceipt": "clean-v1/PUBLICATION_RECEIPT.json",
-  "manifest": "clean-v1/MANIFEST.json",
-  "publicationStatus": "PUBLIC_BROWSER_VERIFIED",
-  "archiveIntegrityVerified": true,
-  "testedBaselinePixelMaxDifference": 0,
-  "testedPausedConfigurationRoundTripPixelMaxDifference": 0,
-  "loopScope": "Fixed-seed material-space morphology. Wind translation, illumination and precipitation clocks are independent; not a full-scene looping video guarantee.",
-  "graphicalLimitations": {
-    "lightning": "Retained V062 graphical draft; user rejected its final visual quality. Do not label as approved AAA lightning.",
-    "terrainAndAircraft": "Analytical demonstration hills and schematic wake; no real DEM modification or aerodynamic solver.",
-    "rainSnow": "Screen-space graphical effects.",
-    "rainbow": "Primary and secondary angular optical approximation."
+  "historicalArchive": {
+    "weatherWorldVersion": "1.1.0-world",
+    "restartPackage": "weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip",
+    "role": "archive and research reference only"
   },
-  "archiveReady": true,
-  "manualVisualAcceptanceOfCleanup": false,
+  "visualApproved": false,
   "aaaQualityApproved": false,
   "productionReady": false,
-  "userHardwarePerformanceVerified": false,
-  "liveWeatherConnected": false,
-  "fullFluidSolverImplemented": false,
-  "largeWorldStreamingImplemented": false,
-  "candidateEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/v110-full/",
-  "candidateVersion": "1.1.0-world",
-  "candidateDeploymentCommit": "fa75a338f406bebfefa3ea0458366831fef7de48",
-  "candidateStatus": "PUBLIC_BROWSER_VERIFIED_AWAITING_USER_VISUAL_REVIEW",
-  "candidateAdds": [
-    "20 weather cases",
-    "iridescent clouds",
-    "organized squall line",
-    "procedural typhoon eye eyewall spiral rainbands",
-    "integrated natural lighting presets",
-    "connected graphical lightning"
-  ],
-  "manualVisualAcceptanceOfCandidate": false,
-  "portableFullWeatherPackage": {
-    "version": "1.1.0-clean",
-    "zip": "distributions/Weather_Mother_Full_Clean_V1.1.0.zip",
-    "sha256": "ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e",
-    "bytes": 46075,
-    "files": 12,
-    "directory": "weather-mother/clean-v110",
-    "readRef": "0303d499ebba7e7ddcfa105124c29087b9e421b2",
-    "startFile": "START_HERE.md",
-    "receipt": "distributions/Weather_Mother_Full_Clean_V1.1.0.receipt.json",
-    "visualApproved": false,
-    "productionApproved": false
-  },
-  "latestRestartPackage": "weather-mother/handoffs/Weather_Mother_Full_Restart_Handoff_2026-09-02_V1.1.0.zip",
-  "latestRestartPackageSHA256": "9ea41a888fe8e0bd39fe03152602a66b4e98dc3a396ae704c8b1894b0702c7b8",
-  "latestRestartPackageBytes": 55652,
-  "latestRestartStart": "weather-mother/RESTART_START_HERE.md",
-  "latestRestartPublicationCommit": "3e3d0867963f24391a5f8c064226722616958850",
-  "latestRestartStatus": "PUBLIC_BYTES_AND_ARCHIVE_VERIFIED",
-  "latestRestartVisualApproved": false,
-  "latestRestartAAAQualityApproved": false,
-  "latestRestartProductionReady": false
+  "userHardwarePerformanceVerified": false
 }
