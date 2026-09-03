@@ -1,0 +1,26 @@
+
+# Mobile overview camera domain guard. Keep the eye and view frustum looking inward so the finite numeric terrain does not expose a rectangular edge.
+p = root/'app.mjs'
+s = p.read_text()
+old = "if(innerWidth<760&&['overview','top'].includes(name)){v.distance*=1.50;v.fov=58*Math.PI/180;}"
+new = "if(innerWidth<760&&name==='overview'){v.distance*=.96;v.yaw=2.35;v.fov=62*Math.PI/180;}else if(innerWidth<760&&name==='top'){v.distance*=1.35;v.fov=60*Math.PI/180;}"
+if old not in s:
+    raise SystemExit('mobile overview camera insertion point changed')
+s = s.replace(old, new, 1)
+old = "getState:()=>({version:VERSION,physicalTime,config:{...config},composition:"
+new = "getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:"
+if old not in s:
+    raise SystemExit('getState camera insertion point changed')
+s = s.replace(old, new, 1)
+p.write_text(s)
+
+# Extend browser QA with a numeric guard against the mobile camera leaving the 200 m simulation domain.
+p = tools_root/'qa_runner.py'
+runner = p.read_text(encoding='utf-8')
+needle = "  check('mobile_no_horizontal_overflow',mobile.evaluate('document.documentElement.scrollWidth<=innerWidth'))\n"
+extra = "  mobile_camera=mobile.evaluate('OceanIsland.getState().camera');details['mobileCamera']=mobile_camera\n  check('mobile_camera_inside_domain',max(abs(mobile_camera['eye'][0]),abs(mobile_camera['eye'][2]))<95)\n"
+if needle not in runner:
+    raise SystemExit('mobile QA insertion point changed')
+runner = runner.replace(needle, needle + extra, 1)
+p.write_text(runner, encoding='utf-8')
+print(json.dumps({'status':'R018_MOBILE_DOMAIN_GUARD_ADDED'}, ensure_ascii=False))
