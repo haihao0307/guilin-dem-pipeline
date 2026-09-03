@@ -1,0 +1,69 @@
+name: Ocean glass references and baseline inspection
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-glass-reference-review.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Install browser inspection dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Inspect references and reproduce moving-camera failure
+        run: |
+          mkdir -p evidence
+          python3 -m http.server 8139 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          python3 - <<'PY'
+          import json, shutil, time
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          out=Path('evidence')
+          with sync_playwright() as p:
+            b=p.chromium.launch(executable_path=shutil.which('google-chrome'),headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+            page=b.new_page(viewport={'width':1440,'height':900})
+            records=[]
+            for name,url in [('threeui','https://threeui.com/hero/advanced-glass-material'),('liquid-metal','https://discourse.threejs.org/t/i-am-stuck-building-a-liquid-metal-audio-visualizer-can-you-help-me-out/69144')]:
+              rec={'name':name,'url':url}
+              try:
+                response=page.goto(url,wait_until='domcontentloaded',timeout=45000)
+                page.wait_for_timeout(7000)
+                rec.update(status=response.status,title=page.title(),text=page.locator('body').inner_text(),iframes=page.locator('iframe').evaluate_all('(els)=>els.map(e=>({src:e.src,title:e.title}))'))
+                page.screenshot(path=str(out/(name+'.png')),full_page=False)
+                (out/(name+'.html')).write_text(page.content())
+                for i,frame in enumerate(page.frames[1:]):
+                  try:
+                    (out/(name+'-frame-'+str(i)+'.txt')).write_text(frame.locator('body').inner_text(timeout=5000))
+                    rec.setdefault('frames',[]).append({'url':frame.url,'text':frame.locator('body').inner_text(timeout=5000)})
+                  except Exception as e: rec.setdefault('frameErrors',[]).append(str(e))
+              except Exception as e:rec['error']=str(e)
+              records.append(rec)
+            (out/'references.json').write_text(json.dumps(records,ensure_ascii=False,indent=2))
+            errors=[]
+            page.on('pageerror',lambda e:errors.append(str(e)))
+            page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+            page.goto('http://127.0.0.1:8139/ocean-mother/coast-v022-r012/',wait_until='load')
+            page.wait_for_function('window.OceanCoastR012?.qa.ready',timeout=45000)
+            probes={}
+            for view in ['overview','top','shore','rocks','fire']:
+              page.evaluate('(v)=>window.OceanCoastR012.setView(v)',view)
+              page.wait_for_timeout(2000)
+              page.screenshot(path=str(out/('baseline-'+view+'.png')))
+              probes[view]=page.evaluate('window.OceanCoastR012.qa')
+            (out/'baseline.json').write_text(json.dumps({'probes':probes,'errors':errors},indent=2))
+            b.close()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-glass-reference-review
+          path: evidence/
+          retention-days: 30
