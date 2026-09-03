@@ -5,11 +5,11 @@
 继续工作时依次读取：
 
 1. `UNIFIED_STUDIO_POLICY.json`
-2. `studio-v040/MANIFEST.json`
-3. `research/WEATHER_MOTHER_OFFICIAL_SOURCE_REGISTRY_V1.json`
-4. `rain-puddle-study-v010/FARAZ_RAIN_PUDDLE_DISTILLATION_V1.md`
-5. `rain-puddle-study-v010/MANIFEST.json`
-6. `rain-puddle-study-v010/QA.json`
+2. `studio-v060/MANIFEST.json`
+3. `rain-puddle-study-v030/FARAZ_RAIN_PUDDLE_DISTILLATION_V3.md`
+4. `rain-puddle-study-v030/MANIFEST.json`
+5. `rain-puddle-study-v030/QA.json`
+6. `research/WEATHER_MOTHER_OFFICIAL_SOURCE_REGISTRY_V1.json`
 7. 本文件下面保存的 V1.1.0 全量包记录
 
 当前唯一公开工作平台：
@@ -18,22 +18,19 @@
 
 根入口默认进入 World。左侧 `WEATHER MOTHER` 拉块用于进入 Rain、Snow、Fog、Cloud、Storm 和 World。所有天气系统均为 Weather Mother 壳层中的模块。
 
-当前 Rain 研究候选为 `0.1.0-distilled-candidate`，运行目录为 `weather-mother/rain-puddle-study-v010`。它固定读取 `Faraz-Portfolio/demo-2023-rain-puddle` 的 `main` 分支提交 `257066b63d08b227df8f982377e60f91752ddc81`，并完成雨滴、水洼、涟漪、飞溅、环境闪光与声音组织的清洁蒸馏。
+当前 Rain 演示为 `0.3.0-village-liquid-glass-demo`，运行目录为 `weather-mother/rain-puddle-study-v030`。它固定研究 `Faraz-Portfolio/demo-2023-rain-puddle` 的提交 `257066b63d08b227df8f982377e60f91752ddc81`，并将雨滴、水洼、涟漪、飞溅、环境闪光与声音组织转化到 Weather Mother 的独立程序化实现中。
 
-许可证边界：仓库根 `LICENSE` 为 GNU GPL v3.0，作者项目页页脚当前写 GNU AGPL v3.0。道路贴图、HDR、贴花和音频没有独立来源收据。Weather Mother 运行时没有复制该仓库的源码、纹理、HDR、模型、翻页图、音频或二进制资产。
+当前场景明确采用 1940 年代村落语境，现代城市天际线已经移除。远景由低矮土墙房、坡瓦屋顶、木构、树木、围栏和暖色窗光组成。道路采用泥石地表与不规则积水。
 
-当前演示包含：
+当前水面增加 Liquid Glass 光学转化，包括环境反射、涟漪折射、Fresnel 视角响应、底色透射、动态镜面高光与轻微光谱边缘。雨滴使用渐缩胶囊形状，水花由冠状环、上冲水柱和次级小滴组成，涟漪使用多中心双频传播。
 
-1. 五秒共享降雨状态渐入。
-2. 世界空间近景与中景雨带，以及三层远景雨幕。
-3. 终端速度与快门时间控制的可见雨线。
-4. 连续水洼场、多中心涟漪和程序化飞溅。
-5. 湿润、积水和涟漪的阶段演化。
-6. 程序化雨声、积水击打、夜间底噪、风声和雷声。
-7. 环境闪光与按距离和声速延迟的雷声事件。
-8. 手机控制面板默认关闭，观景后 Weather Mother 顶栏和抽屉离开画面，只留下低透明度 WM 返回入口。
+声音全部由 Web Audio 程序化生成，包含雨声、村落夜间底噪、风、积水击打和延迟雷声。闪光与雷声共用同一事件。
 
-Rain V0.2、V0.3 与 V0.4 只保留为阶段对照。当前演示已通过本地 Chromium WebGL2、着色器、连续帧、程序化声音和移动端沉浸界面检查。公开页面像素验收、用户硬件性能、人工视觉批准、3A 批准和生产批准继续为 false。
+运行采用小型 gzip 载荷，零图片、零外部模型、零外部音频、零 HDR。手机端降低内部渲染比例并限制像素数量，控制面板默认关闭，数秒后自动进入纯画面模式。
+
+许可证边界：Faraz 仓库根 `LICENSE` 为 GNU GPL v3.0。Weather Mother V0.3 采用清洁蒸馏，没有复制该仓库源码、纹理、HDR、模型、翻页图、音频或二进制资产。
+
+当前演示已通过 Chromium WebGL2、着色器、连续帧、程序化声音、村落背景、Liquid Glass 水面、水花和移动端沉浸界面检查。公开页面像素验收、用户硬件性能、人工视觉批准、3A 批准和生产批准继续为 false。
 
 ## V1.1.0 全量重启包记录
 
