@@ -1,4 +1,4 @@
-"""Exercise the rendered candidate using the same touch and menu paths as a user."""
+"""Functional browser QA. Software-renderer timing is recorded, never treated as real phone approval."""
 from pathlib import Path
 import argparse,json,time,traceback,hashlib
 import numpy as np
@@ -10,7 +10,7 @@ VERSION='wenzhou-workbench-0.5.6-mobile-view-stream'
 
 def run(url,out,public=False):
     out.mkdir(parents=True,exist_ok=True)
-    report={'version':VERSION,'url':url,'passed':False,'public':public,'checks':[],'screenshots':[],'visualApproved':False,'productionApproved':False,'realPhoneTested':False}
+    report={'version':VERSION,'url':url,'passed':False,'public':public,'checks':[],'screenshots':[],'visualApproved':False,'productionApproved':False,'performanceApproved':False,'realPhoneTested':False,'scope':'functional checks; physical-device frame-rate approval remains pending'}
     def check(name,value,detail=None):
         report['checks'].append({'name':name,'passed':bool(value),'detail':detail})
         print(name,bool(value),flush=True)
@@ -37,9 +37,14 @@ def run(url,out,public=False):
                 check(label+' daylight stable',initial['weather']['clock']['hour']==12 and initial['weather']['clock']['calendarPlaying'] is False,initial['weather']['clock'])
                 check(label+' no eager vectors',not any('/data/vectors.json.gz' in u for u in requests))
                 frame=initial['frames'];page.wait_for_function('(n)=>window.__WZ_FULL__.frames>n+2',arg=frame,timeout=120000)
-                before=page.evaluate('window.__WZ_FULL__.frames');t0=time.monotonic();page.wait_for_timeout(6000);after=page.evaluate('window.__WZ_FULL__.frames');elapsed=time.monotonic()-t0
-                report[label+'FrameSample']={'frames':after-before,'elapsedSeconds':elapsed,'fps':(after-before)/elapsed,'renderer':'Chromium SwiftShader software; not physical phone'}
-                check(label+' moving frames',after>before,report[label+'FrameSample'])
+                before=page.evaluate('window.__WZ_FULL__.frames');t0=time.monotonic()
+                page.wait_for_timeout(6000)
+                # At least three new submissions imply two fences actually completed.
+                # A fixed six-second window can contain no completion on a slow software GPU.
+                page.wait_for_function('(n)=>window.__WZ_FULL__.frames>=n+3',arg=before,timeout=120000)
+                after=page.evaluate('window.__WZ_FULL__.frames');elapsed=time.monotonic()-t0
+                report[label+'FrameSample']={'frames':after-before,'elapsedSeconds':elapsed,'fps':(after-before)/elapsed,'renderer':'Chromium SwiftShader software; not physical phone','physicalDevicePerformanceApproved':False}
+                check(label+' continuously completing frames',after>=before+3,report[label+'FrameSample'])
                 def shot(name):
                     path=out/(name+'.png');page.screenshot(path=str(path),timeout=120000)
                     a=np.asarray(Image.open(path).convert('RGB'))
@@ -83,10 +88,15 @@ def run(url,out,public=False):
                 else:
                     page.evaluate('window.__WZ_API__.setHour(0)')
                     page.wait_for_function('window.__WZ_FULL__.weather.clock.hour===0')
+                    start_frame=page.evaluate('window.__WZ_FULL__.frames')
+                    page.wait_for_function('(f)=>window.__WZ_FULL__.frames>f+1',arg=start_frame,timeout=120000)
                     night=shot('desktop-night')
                     check('night is explicit time change',night.mean()<image.mean(),{'dayMean':float(image.mean()),'nightMean':float(night.mean())})
-                    page.evaluate('document.getElementById("dayReview").click()')
+                    page.locator('#menuButton').click()
+                    page.locator('[data-tab-button="view"]').click()
+                    page.locator('#dayReview').click()
                     page.wait_for_function('window.__WZ_FULL__.weather.clock.hour===12')
+                    page.locator('#sheetClose').click()
                 check(label+' no runtime errors',not errors,errors)
                 check(label+' no failed resources',not failed,failed)
                 report[label+'State']=page.evaluate('window.__WZ_FULL__')
