@@ -20,7 +20,8 @@ try:
         page.on('requestfailed',lambda r:report['failedRequests'].append({'url':r.url,'failure':r.failure}))
         response=page.goto(url,wait_until='load');page.wait_for_function('window.OceanCoast?.qa.ready',timeout=60000)
         report['checks']['http200']=response.status==200
-        report['checks']['buildIdentity']=page.locator('#build').inner_text()=='coast-r015-daylight-glass'
+        report['buildIdentityRead']=page.locator('#build').evaluate('(e)=>({textContent:e.textContent.trim(),innerText:e.innerText,visibility:getComputedStyle(e).visibility})')
+        report['checks']['buildIdentity']=report['buildIdentityRead']['textContent']=='coast-r015-daylight-glass'
         for view in ['overview','shore','rocks','fire','top','breaker']:
             page.evaluate('(v)=>OceanCoast.setView(v)',view)
             initial=page.evaluate('OceanCoast.qa.frames')
@@ -45,7 +46,6 @@ try:
         report['checks']['pausePreservesClock']=t0==t1
         page.click('#pause');page.wait_for_function('(t)=>OceanCoast.getState().physicalTime>t',arg=t1,timeout=20000);report['checks']['resumeAdvances']=True
         page.click('#panelToggle');report['checks']['glassPanelCloses']='closed' in page.locator('#panel').get_attribute('class')
-        # Isolated portrait emulation; no physical iPhone/Safari claim.
         mobile=b.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=1)
         mobile.on('pageerror',lambda e:report['errors'].append('mobile: '+str(e)))
         mobile.goto(url,wait_until='load');mobile.wait_for_function('window.OceanCoast?.qa.frames>3',timeout=60000)
