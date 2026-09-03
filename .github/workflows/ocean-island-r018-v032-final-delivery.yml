@@ -1,0 +1,220 @@
+name: Ocean Island R018 V0.3.2 final delivery
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r018
+    paths:
+      - .github/workflows/ocean-island-r018-v032-final-delivery.yml
+      - ocean-mother/tools/finalize_r018_v032_20260903.py
+      - ocean-mother/island-r018-build/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-island-r018-v032-final-delivery
+  cancel-in-progress: false
+
+jobs:
+  verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Materialize exact source and build both delivery forms
+        run: |
+          set -euo pipefail
+          python3 ocean-mother/tools/finalize_r018_v032_20260903.py \
+            --repo . \
+            --dist dist/ocean-r018-v032 \
+            | tee dist/R018_BUILD_LOG.json
+
+      - name: Verify module syntax, numeric contracts and zero-asset policy
+        run: |
+          set -euo pipefail
+          for file in dist/ocean-r018-v032/runtime/*.mjs; do node --check "$file"; done
+          node dist/ocean-r018-v032/runtime/core.test.mjs | tee dist/R018_NODE_TESTS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('dist/ocean-r018-v032')
+          receipt=json.loads((root/'BUILD_RECEIPT.json').read_text())
+          assert receipt['version']=='0.3.2-island-r018'
+          assert receipt['buildId']=='island-r018-delivery-polish'
+          assert receipt['directOpen']['bytes']>50000
+          direct=root/'direct/index.html'
+          text=direct.read_text(encoding='utf-8')
+          assert 'OCEAN_MOTHER_R018_DIRECT_OPEN' in text
+          assert not re.findall(r'(?:src|href)=["\']https?://',text,re.I)
+          assert hashlib.sha256(direct.read_bytes()).hexdigest()==receipt['directOpen']['sha256']
+          assert not [p for p in (root/'runtime').rglob('*') if p.suffix.lower() in {'.png','.jpg','.jpeg','.webp','.gif','.avif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}]
+          PY
+
+      - name: Install browser verification dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check -q playwright pillow
+          google-chrome --version
+
+      - name: Verify online-form and direct-open HTML in real Chromium
+        run: |
+          set -euo pipefail
+          mkdir -p dist/evidence
+          python3 -m http.server 8123 --directory dist/ocean-r018-v032 > dist/evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          python3 - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          from PIL import Image,ImageStat
+          import hashlib,json,re
+          root=Path('dist/ocean-r018-v032').resolve()
+          report={'version':'0.3.2-island-r018','buildId':'island-r018-delivery-polish','cases':{},'passed':False}
+          def pixels(path):
+              im=Image.open(path).convert('RGB');s=ImageStat.Stat(im);spread=sum(b-a for a,b in s.extrema);mean=sum(s.mean)/3
+              return {'size':im.size,'mean':mean,'spread':spread,'nonBlank':spread>90 and 18<mean<245}
+          def one(browser,name,url,width,height,require_zero_network):
+              context=browser.new_context(viewport={'width':width,'height':height},device_scale_factor=1)
+              page=context.new_page();errors=[];failed=[]
+              page.on('pageerror',lambda e: errors.append(str(e)))
+              page.on('console',lambda m: errors.append('console: '+m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r: failed.append(r.url))
+              page.goto(url,wait_until='domcontentloaded',timeout=90000)
+              page.wait_for_function("""() => {const c=document.querySelector('canvas');return c&&c.width>300&&c.height>200&&document.querySelectorAll('button').length>=10;}""",timeout=90000)
+              page.wait_for_timeout(10000)
+              if page.locator('#error').count() and page.locator('#error').is_visible(): errors.append(page.locator('#error').inner_text())
+              pause=page.locator('#pause');assert pause.count()==1
+              pause.click();page.wait_for_timeout(700);paused=pause.inner_text();assert ('继续' in paused or '恢复' in paused or 'Resume' in paused)
+              c1=page.locator('#clock').inner_text();page.wait_for_timeout(800);c2=page.locator('#clock').inner_text();assert c1==c2,(c1,c2)
+              pause.click();page.wait_for_timeout(1200);c3=page.locator('#clock').inner_text();assert c3!=c2,(c2,c3)
+              if page.locator('#panelToggle').count(): page.locator('#panelToggle').click();page.wait_for_timeout(400)
+              ranges=page.locator('input[type=range]');assert ranges.count()>=50,ranges.count()
+              slider=ranges.nth(min(10,ranges.count()-1));lo=float(slider.get_attribute('min') or 0);hi=float(slider.get_attribute('max') or 1);slider.fill(str(lo+(hi-lo)*.67));slider.dispatch_event('input');page.wait_for_timeout(900)
+              if page.locator('#restart').count(): page.locator('#restart').click();page.wait_for_timeout(1200)
+              elif page.locator('#resetAll').count(): page.locator('#resetAll').click();page.wait_for_timeout(700)
+              for i in range(min(6,page.locator('[data-view]').count())): page.locator('[data-view]').nth(i).click();page.wait_for_timeout(220)
+              shot=Path('dist/evidence')/f'{name}.png';page.screenshot(path=str(shot),full_page=True)
+              metric=pixels(shot);assert metric['nonBlank'],metric
+              if page.locator('#deepTab').count():
+                  page.locator('#deepTab').click();page.wait_for_timeout(1500)
+                  iframe=page.locator('#deepFrame');assert iframe.count()==1 and not iframe.is_hidden()
+                  deep=Path('dist/evidence')/f'{name}-deep.png';page.screenshot(path=str(deep),full_page=True);deep_metric=pixels(deep);assert deep_metric['nonBlank'],deep_metric
+              else: deep_metric=None
+              fatal=[e for e in errors if 'favicon' not in e.lower() and 'ResizeObserver' not in e]
+              assert not fatal,fatal
+              if require_zero_network: assert not [u for u in failed if u.startswith(('http://','https://'))],failed
+              state=page.evaluate("""() => ({title:document.title,build:document.getElementById('build')?.textContent||'',status:document.getElementById('status')?.textContent||'',canvas:{width:document.querySelector('canvas')?.width||0,height:document.querySelector('canvas')?.height||0},ranges:document.querySelectorAll('input[type=range]').length})""")
+              report['cases'][name]={'urlKind':'file' if url.startswith('file:') else 'http','viewport':[width,height],'state':state,'clockPaused':c2,'clockResumed':c3,'errors':errors,'requestFailures':failed,'pixelMetrics':metric,'deepPixelMetrics':deep_metric}
+              context.close()
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--allow-file-access-from-files','--no-sandbox','--disable-dev-shm-usage'])
+              one(browser,'online-desktop','http://127.0.0.1:8123/runtime/',1440,1000,False)
+              one(browser,'online-mobile','http://127.0.0.1:8123/runtime/',390,844,False)
+              one(browser,'direct-desktop',(root/'direct/index.html').as_uri(),1440,1000,True)
+              one(browser,'direct-mobile',(root/'direct/index.html').as_uri(),390,844,True)
+              browser.close()
+          report['passed']=True
+          Path('dist/evidence/R018_BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Assemble clean full delivery
+        run: |
+          set -euo pipefail
+          mkdir -p package/Ocean_Mother_R018_V0.3.2
+          cp -R dist/ocean-r018-v032/runtime package/Ocean_Mother_R018_V0.3.2/online-runtime
+          cp dist/ocean-r018-v032/direct/index.html package/Ocean_Mother_R018_V0.3.2/Ocean_Mother_R018_V0.3.2_Direct_Open.html
+          cp dist/ocean-r018-v032/direct/SHA256.txt package/Ocean_Mother_R018_V0.3.2/
+          cp dist/ocean-r018-v032/BUILD_RECEIPT.json package/Ocean_Mother_R018_V0.3.2/
+          cp dist/R018_NODE_TESTS.txt package/Ocean_Mother_R018_V0.3.2/
+          cp -R dist/evidence package/Ocean_Mother_R018_V0.3.2/evidence
+          cd package
+          zip -qr ../Ocean_Mother_R018_V0.3.2_Delivery.zip Ocean_Mother_R018_V0.3.2
+
+      - name: Publish isolated R018 V0.3.2 routes to gh-pages
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages || true
+          rm -rf /tmp/ocean-r018-pages
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add --detach /tmp/ocean-r018-pages origin/gh-pages
+          else
+            git worktree add --detach /tmp/ocean-r018-pages HEAD
+            cd /tmp/ocean-r018-pages
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            cd "$GITHUB_WORKSPACE"
+          fi
+          cd /tmp/ocean-r018-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/r018-v032 ocean-mother/island-r018
+          mkdir -p ocean-mother/r018-v032/direct ocean-mother/island-r018/direct ocean-mother/r018-v032/evidence
+          cp -R "$GITHUB_WORKSPACE/dist/ocean-r018-v032/runtime/." ocean-mother/r018-v032/
+          cp "$GITHUB_WORKSPACE/dist/ocean-r018-v032/direct/index.html" ocean-mother/r018-v032/direct/index.html
+          cp "$GITHUB_WORKSPACE/dist/ocean-r018-v032/direct/SHA256.txt" ocean-mother/r018-v032/direct/SHA256.txt
+          cp "$GITHUB_WORKSPACE/dist/ocean-r018-v032/BUILD_RECEIPT.json" ocean-mother/r018-v032/BUILD_RECEIPT.json
+          cp "$GITHUB_WORKSPACE/dist/evidence/R018_BROWSER_QA.json" ocean-mother/r018-v032/evidence/R018_BROWSER_QA.json
+          cp -R ocean-mother/r018-v032/. ocean-mother/island-r018/
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/r018-v032 ocean-mother/island-r018
+          git commit -m "publish(ocean): R018 V0.3.2 verified workbench" || true
+          git push origin HEAD:gh-pages
+
+      - name: Verify public bytes and public browser runtime
+        run: |
+          set -euo pipefail
+          BASE=https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/r018-v032
+          for n in $(seq 1 45); do
+            if curl -fsSL "$BASE/direct/index.html?build=${GITHUB_SHA}-${n}" -o /tmp/public-direct.html; then
+              if cmp -s dist/ocean-r018-v032/direct/index.html /tmp/public-direct.html; then break; fi
+            fi
+            sleep 8
+          done
+          cmp dist/ocean-r018-v032/direct/index.html /tmp/public-direct.html
+          curl -fsSL "$BASE/index.html?build=${GITHUB_SHA}" -o /tmp/public-index.html
+          grep -q 'R018' /tmp/public-index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import hashlib,json
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/r018-v032/'
+          direct=url+'direct/index.html'
+          result={'onlineUrl':url,'directUrl':direct,'pages':{}}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox'])
+              for name,target in [('online',url),('direct',direct)]:
+                  page=browser.new_page(viewport={'width':1280,'height':860});errors=[]
+                  page.on('pageerror',lambda e: errors.append(str(e)))
+                  page.goto(target,wait_until='domcontentloaded',timeout=90000)
+                  page.wait_for_function("""() => {const c=document.querySelector('canvas');return c&&c.width>300&&c.height>200&&document.querySelectorAll('button').length>=10;}""",timeout=90000)
+                  page.wait_for_timeout(5000)
+                  page.screenshot(path=f'dist/evidence/public-{name}.png',full_page=True)
+                  result['pages'][name]={'title':page.title(),'errors':errors,'canvas':page.evaluate("""() => ({w:document.querySelector('canvas').width,h:document.querySelector('canvas').height})""")}
+                  assert not errors,errors
+                  page.close()
+              browser.close()
+          local=Path('dist/ocean-r018-v032/direct/index.html').read_bytes();public=Path('/tmp/public-direct.html').read_bytes()
+          result['directBytesEqual']=local==public
+          result['directSha256']=hashlib.sha256(local).hexdigest()
+          Path('dist/evidence/PUBLIC_RECEIPT.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Upload complete R018 V0.3.2 delivery artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018_V0.3.2_Delivery
+          path: |
+            Ocean_Mother_R018_V0.3.2_Delivery.zip
+            dist/ocean-r018-v032/direct/index.html
+            dist/ocean-r018-v032/BUILD_RECEIPT.json
+            dist/evidence
+          if-no-files-found: error
+          retention-days: 90
