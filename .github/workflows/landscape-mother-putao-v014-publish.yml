@@ -18,10 +18,6 @@ concurrency:
 
 env:
   PAYLOAD_ROOT: workbenches/landscape-mother-v014/payload
-  SRC: ${{ runner.temp }}/landscape-mother-v014-src
-  OUT_A: ${{ runner.temp }}/landscape-mother-v014
-  OUT_B: ${{ runner.temp }}/landscape-mother-v014-repeat
-  CHUNKS: ${{ runner.temp }}/putao-chunks
   STORE: https://haihao0307.github.io/guilin-dem-pipeline/guilin-elevation-store-v1/shards
 
 jobs:
@@ -33,6 +29,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Define runner-local paths
+        shell: bash
+        run: |
+          echo "SRC=$RUNNER_TEMP/landscape-mother-v014-src" >> "$GITHUB_ENV"
+          echo "OUT_A=$RUNNER_TEMP/landscape-mother-v014" >> "$GITHUB_ENV"
+          echo "OUT_B=$RUNNER_TEMP/landscape-mother-v014-repeat" >> "$GITHUB_ENV"
+          echo "CHUNKS=$RUNNER_TEMP/putao-chunks" >> "$GITHUB_ENV"
 
       - uses: actions/setup-python@v5
         with:
