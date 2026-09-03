@@ -192,12 +192,41 @@ jobs:
           }
           JSON
 
-      - name: Publish final public evidence
+      - name: Publish final public evidence with retry
         shell: bash
         run: |
           set -euo pipefail
           cd site
-          git pull --rebase origin gh-pages
-          git add wenzhou-v7-full/workbench-v059
-          git commit -m 'qa: prove Wenzhou V0.5.9 public HTML on desktop and phone'
-          git push origin gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          evidence_dir="$(mktemp -d)"
+          cp wenzhou-v7-full/workbench-v059/PUBLIC_* "$evidence_dir"/
+          cp wenzhou-v7-full/workbench-v059/PUBLICATION_PROOF.json "$evidence_dir"/
+          test -s "$evidence_dir/PUBLIC_BROWSER_QA.json"
+          test -s "$evidence_dir/PUBLICATION_PROOF.json"
+
+          for attempt in $(seq 1 8); do
+            echo "final evidence publish attempt=$attempt"
+            git fetch origin gh-pages
+            git reset --hard origin/gh-pages
+            git clean -fd -- wenzhou-v7-full/workbench-v059
+            mkdir -p wenzhou-v7-full/workbench-v059
+            cp "$evidence_dir"/* wenzhou-v7-full/workbench-v059/
+            git add wenzhou-v7-full/workbench-v059/PUBLIC_* wenzhou-v7-full/workbench-v059/PUBLICATION_PROOF.json
+
+            if git diff --cached --quiet; then
+              echo 'Final public evidence already present on gh-pages.'
+              exit 0
+            fi
+
+            git commit -m 'qa: prove Wenzhou V0.5.9 public HTML on desktop and phone'
+            if git push origin HEAD:gh-pages; then
+              echo 'Final public evidence published.'
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo 'Unable to publish final public evidence after retries.' >&2
+          exit 1
