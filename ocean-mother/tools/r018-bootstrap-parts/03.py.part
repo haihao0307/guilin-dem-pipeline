@@ -1,0 +1,40 @@
+
+# BUILD.json
+build = json.loads((root/'BUILD.json').read_text())
+build.update({
+    'version':'0.3.0-island-r018',
+    'buildId':'island-r018-relationship-convergence',
+    'parentCandidate':'0.3.0-island-r017',
+    'parentSourceCommit':'74ff2fb67de0aa52d41c3ee1e6e9d93fd9fbb8ad',
+    'stage':'relationship-convergence-foundation',
+    'shallowWaterLayering':True,
+    'foamBandCoupling':True,
+    'rockWaterlineCoupling':True,
+    'fireWaterReflection':True,
+    'smokeCoolingCurve':True,
+    'browserAcceptance':'pending',
+    'visualApproved':False,
+    'productionApproved':False,
+    'fullReplication':False,
+})
+(root/'BUILD.json').write_text(json.dumps(build, ensure_ascii=False, indent=2)+'\n')
+
+# parameter catalog identity only
+cat = json.loads((root/'PARAMETER_CATALOG.json').read_text())
+cat['version']='0.3.0-island-r018'
+(root/'PARAMETER_CATALOG.json').write_text(json.dumps(cat, ensure_ascii=False, indent=2)+'\n')
+
+# README
+(root/'README.md').write_text("""# Ocean Mother Island R018
+
+R018 从锁定的 `0.3.0-island-r017` 原样继承，并启动第一阶段“画面与物理关系收敛”。本阶段仍保留圆形无树程序化沙岛、三层破浪、多源火焰、多股长烟、统一风场、三页 102 项真实参数、动态液态玻璃界面和深海往返。
+
+首批运行改动集中在四条关系链：浅海透明度随实际水厚连续变化；泡沫源强与三层破浪的分层强度共同决定；岩石和沙面的湿润线随潮位与回洗相位变化；海面直接接收各火源的方向性暖色反光。烟雾继续由统一风场输运，同时加入随寿命增长的冷却、扩散和浮升衰减，长烟长度仍由风、阻力、寿命和扩散共同产生。
+
+所有修改继续使用程序化 WebGL2、数值场、几何和着色器。运行时图片贴图、截图背景、外部模型和 CDN 均为 0。三层卷浪仍是受水深约束的运动学曲面与悬卷水片；泡沫、飞沫、火焰和烟雾仍属于数值输运与粒子近似。完整三维守恒流体和体积燃烧尚未接入。
+
+当前阶段为 R018 基础候选。`visualApproved=false`、`productionApproved=false`、`fullReplication=false`，需通过浏览器门禁并由用户进行视觉判断后才可改变批准状态。
+""")
+
+# Append R018 source note to reference study.
+p = root/'REFERENCE_STUDY.md'
