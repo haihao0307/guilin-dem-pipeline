@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111a1d">
+  <title>Landscape Mother V013 · 在线三维工作台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css?v=v013-online-20260903-r1">
+<noscript><style>#hub,#sheet,.top,.dock{display:none!important}#error{display:grid!important}</style></noscript>
+</head>
+<body>
+  <canvas id="gl" aria-label="喀斯特三维场景"></canvas>
+  <header class="top glass" aria-label="场景工具栏">
+    <button id="home" class="icon-button" aria-label="返回 Landscape Mother 总台">总台</button>
+    <div class="identity"><b>LANDSCAPE MOTHER</b><span id="sub">正在读取三维函数岩体</span></div>
+    <button id="tour" class="compact-button on">暂停</button>
+    <button id="settings" class="compact-button accent">调节</button>
+  </header>
+  <nav class="dock glass" aria-label="观察视角">
+    <button class="dock-button on" data-view="hero"><span>全景</span></button>
+    <button class="dock-button" data-view="side"><span>侧面</span></button>
+    <button class="dock-button" data-view="cliff"><span>岩壁</span></button>
+    <button class="dock-button" data-view="cave"><span>洞腔</span></button>
+    <button class="dock-button" data-view="top"><span>俯视</span></button>
+  </nav>
+  <div id="toast" class="toast glass hide"></div>
+  <section id="hub" class="hub" aria-label="Landscape Mother 总工作台">
+    <div class="hub-panel glass-heavy">
+      <div class="hub-kicker">FUNCTION WORLD · LANDSCAPE MOTHER</div>
+      <h1>Landscape Mother</h1>
+      <p>当前集中打磨喀斯特。岩体、洞腔、水蚀、矿物沉积与生物附着共享同一组形成事件。</p>
+      <article class="module-card active-module">
+        <div><small>ACTIVE MOTHER</small><h2>喀斯特峰林</h2><p>闭合岩体 · 随机溶蚀洞群 · 彩色石灰岩 · 手机环绕检查</p></div>
+        <button id="enterKarst" class="primary-action">进入三维场景</button>
+      </article>
+      <div class="paused-row"><span>高山</span><span>峡谷</span><span>冰川谷</span><span>海岸岩崖</span></div>
+      <p class="paused-note">其他地貌暂停，先把喀斯特做到视觉合格。</p>
+    </div>
+  </section>
+  <section id="sheet" class="sheet hidden" aria-label="材质与展示调节">
+    <div class="sheet-panel glass-heavy">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-head"><div><b>喀斯特形成与材质</b><span>材料与展示独立调节，当前岩体几何保持固定</span></div><button id="close" class="icon-button">关闭</button></div>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="stone">岩性</button><button class="tab" data-tab="water">水蚀</button><button class="tab" data-tab="bio">附着</button><button class="tab" data-tab="surface">表面</button><button class="tab" data-tab="light">光照</button><button class="tab" data-tab="diagnostic">诊断</button>
+      </div>
+      <div class="panel-scroll">
+        <div class="tab-panel on" data-panel="stone">
+          <label>石灰岩明度 <output id="stoneLightV">1.10</output><input id="stoneLight" type="range" min="0.72" max="1.38" step="0.01" value="1.10"></label>
+          <label>冷暖变化 <output id="warmthV">0.56</output><input id="warmth" type="range" min="0" max="1" step="0.01" value="0.56"></label>
+          <label>色彩清晰度 <output id="clarityV">1.08</output><input id="clarity" type="range" min="0.55" max="1.35" step="0.01" value="1.08"></label>
+          <label>新鲜断面 <output id="freshV">0.82</output><input id="fresh" type="range" min="0" max="1.35" step="0.01" value="0.82"></label>
+          <label>矿物变化 <output id="mineralV">0.92</output><input id="mineral" type="range" min="0" max="1.45" step="0.01" value="0.92"></label>
+        </div>
+        <div class="tab-panel" data-panel="water">
+          <label>雨后湿润 <output id="wetV">0.54</output><input id="wet" type="range" min="0" max="1.35" step="0.01" value="0.54"></label>
+          <label>径流痕迹 <output id="runoffV">0.92</output><input id="runoff" type="range" min="0" max="1.50" step="0.01" value="0.92"></label>
+          <label>铁质沉积 <output id="ironV">0.78</output><input id="iron" type="range" min="0" max="1.50" step="0.01" value="0.78"></label>
+          <label>锰质暗线 <output id="manganeseV">0.64</output><input id="manganese" type="range" min="0" max="1.25" step="0.01" value="0.64"></label>
+          <label>洞腔深度 <output id="cavityV">0.76</output><input id="cavity" type="range" min="0.25" max="1.15" step="0.01" value="0.76"></label>
+        </div>
+        <div class="tab-panel" data-panel="bio">
+          <label>青苔覆盖 <output id="mossV">0.72</output><input id="moss" type="range" min="0" max="1.45" step="0.01" value="0.72"></label>
+          <label>地衣覆盖 <output id="lichenV">0.86</output><input id="lichen" type="range" min="0" max="1.45" step="0.01" value="0.86"></label>
+          <label>湿区聚集 <output id="bioClusterV">0.82</output><input id="bioCluster" type="range" min="0.2" max="1.35" step="0.01" value="0.82"></label>
+        </div>
+        <div class="tab-panel" data-panel="surface">
+          <label>宏观色差 <output id="macroV">1.00</output><input id="macro" type="range" min="0.55" max="1.35" step="0.01" value="1.00"></label>
+          <label>中观粗糙变化 <output id="mesoV">1.04</output><input id="meso" type="range" min="0.45" max="1.45" step="0.01" value="1.04"></label>
+          <label>微表面 <output id="microV">0.58</output><input id="micro" type="range" min="0" max="1.15" step="0.01" value="0.58"></label>
+          <label>粗糙度偏移 <output id="roughV">0.00</output><input id="rough" type="range" min="-0.22" max="0.20" step="0.01" value="0"></label>
+        </div>
+        <div class="tab-panel" data-panel="light">
+          <label>太阳强度 <output id="sunV">4.10</output><input id="sun" type="range" min="1.50" max="6.00" step="0.05" value="4.10"></label>
+          <label>天空补光 <output id="skyV">0.86</output><input id="sky" type="range" min="0.25" max="1.60" step="0.01" value="0.86"></label>
+          <label>近景检查光 <output id="inspectV">0.62</output><input id="inspect" type="range" min="0" max="1.20" step="0.01" value="0.62"></label>
+          <label>曝光 <output id="exposureV">1.08</output><input id="exposure" type="range" min="0.62" max="1.55" step="0.01" value="1.08"></label>
+        </div>
+        <div class="tab-panel diagnostic-grid" data-panel="diagnostic">
+          <button class="diagnostic on" data-mode="0">最终材质</button><button class="diagnostic" data-mode="1">基础颜色</button><button class="diagnostic" data-mode="2">径流分布</button><button class="diagnostic" data-mode="3">湿润状态</button><button class="diagnostic" data-mode="4">青苔与地衣</button><button class="diagnostic" data-mode="5">洞腔与锰线</button><button class="diagnostic" data-mode="6">粗糙度</button><button class="diagnostic" data-mode="7">表面法线</button><button class="diagnostic" data-mode="8">遮蔽关系</button><button class="diagnostic" data-mode="9">材料事件</button>
+        </div>
+      </div>
+      <div class="sheet-foot"><button id="resetMaterial" class="secondary-action">恢复推荐状态</button></div>
+    </div>
+  </section>
+  <section id="error" class="error hidden"><div class="glass-heavy"><h2>三维场景没有启动</h2><p id="errorText">此工作台需要启用 JavaScript 和 WebGL。请通过在线地址打开。</p><button onclick="location.reload()">重新载入</button></div></section>
+  <script src="app.js?v=v013-online-20260903-r1"></script>
+</body>
+</html>
