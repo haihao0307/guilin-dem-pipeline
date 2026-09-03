@@ -107,23 +107,43 @@ async function testCloudProfiles(page, scope) {
     assert(await button.count() === 1, `${scope}: cloud button missing`, profile);
     if (await button.count() !== 1) continue;
     await button.click();
+    let settled = true;
+    try {
+      await page.waitForFunction((expected) => {
+        const full = window.__WZ_FULL__;
+        return Boolean(
+          full &&
+          full.ready &&
+          full.cloudRendered &&
+          full.weather &&
+          full.weather.ready &&
+          full.weather.caseId === expected
+        );
+      }, profile, { timeout: 30_000 });
+    } catch {
+      settled = false;
+    }
     await page.waitForTimeout(180);
     const state = await page.evaluate((expected) => ({
       expected,
       selected: document.getElementById('weatherCase')?.value || '',
+      runtimeCase: window.__WZ_FULL__?.weather?.caseId || '',
       bounds: document.getElementById('cloudBounds')?.textContent?.trim() || '',
       thickness: document.getElementById('cloudThickness')?.textContent?.trim() || '',
       envelope: document.getElementById('cloudEnvelope')?.textContent?.trim() || '',
       verticalScale: document.getElementById('verticalScale')?.textContent?.trim() || '',
       runtimeReady: Boolean(window.__WZ_FULL__?.ready),
+      weatherReady: Boolean(window.__WZ_FULL__?.weather?.ready),
       cloudRendered: Boolean(window.__WZ_FULL__?.cloudRendered),
     }), profile);
-    assert(state.selected === profile, `${scope}: cloud selector did not follow button`, state);
+    state.settled = settled;
+    assert(settled, `${scope}: cloud generation did not settle`, state);
+    assert(state.selected === profile && state.runtimeCase === profile, `${scope}: cloud selector did not follow button`, state);
     assert(state.bounds && !/读取中|生成中/.test(state.bounds), `${scope}: cloud bounds unresolved`, state);
     assert(state.thickness && !/读取中|生成中/.test(state.thickness), `${scope}: cloud thickness unresolved`, state);
     assert(state.envelope && !/读取中|生成中/.test(state.envelope), `${scope}: cloud envelope unresolved`, state);
     assert(state.verticalScale.includes('1:1') && state.verticalScale.includes('0 m'), `${scope}: cloud metre lock lost`, state);
-    assert(state.runtimeReady && state.cloudRendered, `${scope}: cloud pass stopped`, state);
+    assert(state.runtimeReady && state.weatherReady && state.cloudRendered, `${scope}: cloud pass stopped`, state);
     results.push(state);
   }
   return results;
