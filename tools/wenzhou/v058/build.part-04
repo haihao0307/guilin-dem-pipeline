@@ -1,0 +1,46 @@
+ flight:{{name:'1200 米飞行',target:new THREE.Vector3(DATA.detail.center[0]+1100,90,DATA.detail.center[1]-700),pos:new THREE.Vector3(DATA.detail.center[0]-7500,1290,DATA.detail.center[1]+10300)}},
+ coast:{{name:'海岸低空',target:new THREE.Vector3(DATA.detail.center[0]+450,62,DATA.detail.center[1]-350),pos:new THREE.Vector3(DATA.detail.center[0]-1550,320,DATA.detail.center[1]+2600)}}
+}};
+camera.position.copy(views.all.pos);controls.target.copy(views.all.target);controls.update();
+let flight=null;
+function flyTo(key){{const v=views[key];if(!v)return;WORLD.view.mode=key;flight={{t:0,d:1.75,aPos:camera.position.clone(),bPos:v.pos.clone(),aTar:controls.target.clone(),bTar:v.target.clone()}};document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===key));$('#viewRead').textContent=v.name;markMoving();}}
+function ease(x){{return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2}}
+
+// Ray focus keeps one world and one camera
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let lastTap=0;
+canvas.addEventListener('pointerup',e=>{{const now=performance.now();if(now-lastTap<330){{const r=canvas.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);const hits=ray.intersectObjects([detailMesh,overviewMesh],false);if(hits[0]){{const p=hits[0].point;flight={{t:0,d:1.0,aPos:camera.position.clone(),bPos:camera.position.clone().lerp(p.clone().add(new THREE.Vector3(0,2500,3600)),.48),aTar:controls.target.clone(),bTar:p}};markMoving();}}}}lastTap=now}},{{passive:true}});
+
+// Liquid glass follows pointer and world motion
+addEventListener('pointermove',e=>{{document.documentElement.style.setProperty('--glass-x',(e.clientX/innerWidth*100).toFixed(1)+'%');document.documentElement.style.setProperty('--glass-y',(e.clientY/innerHeight*100).toFixed(1)+'%')}},{{passive:true}});
+const menuBtn=$('#menuBtn'),panel=$('#panel');menuBtn.addEventListener('click',()=>{{const open=!panel.classList.contains('open');panel.classList.toggle('open',open);menuBtn.classList.toggle('open',open);panel.setAttribute('aria-hidden',String(!open));}});
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>flyTo(b.dataset.view)));
+document.querySelectorAll('[data-cloud]').forEach(b=>b.addEventListener('click',()=>{{WORLD.state.cloud=b.dataset.cloud;document.querySelectorAll('[data-cloud]').forEach(x=>x.classList.toggle('active',x===b));}}));
+document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>{{WORLD.state.time=b.dataset.time;document.querySelectorAll('[data-time]').forEach(x=>x.classList.toggle('active',x===b));skyMat.uniforms.uMorning.value=WORLD.state.time==='morning'?1:0;oceanMat.uniforms.uSun.value.set(WORLD.state.time==='morning'?-.65:.42,WORLD.state.time==='morning'?.32:.82,.36).normalize();terrainMaterial;}}));
+
+progress(.94,'校准全景到近景的连续关系');
+let prev=performance.now(),elapsed=0,lastRender=0;
+function animate(now){{requestAnimationFrame(animate);const dt=Math.min(.05,(now-prev)/1000);prev=now;elapsed+=dt;
+  if(flight){{flight.t+=dt/flight.d;const q=ease(clamp(flight.t,0,1));camera.position.lerpVectors(flight.aPos,flight.bPos,q);controls.target.lerpVectors(flight.aTar,flight.bTar,q);if(flight.t>=1){{flight=null;WORLD.view.moving=false;WORLD.view.settled=true;applyResolution('settled');}}}}
+  controls.update();
+  const cx=DATA.detail.center[0],cz=DATA.detail.center[1];const hd=Math.hypot(controls.target.x-cx,controls.target.z-cz);const total=hd+camera.position.y*.43;const act=1-smooth(28000,73000,total);detailMesh.visible=act>.006;detailMesh.material.uniforms.uDetail.value=act;
+  overviewMesh.material.uniforms.uCam.value.copy(camera.position);detailMesh.material.uniforms.uCam.value.copy(camera.position);oceanMat.uniforms.uCam.value.copy(camera.position);
+  overviewMesh.material.uniforms.uTime.value=elapsed;detailMesh.material.uniforms.uTime.value=elapsed;oceanMat.uniforms.uTime.value=elapsed;
+  cloudGroup.visible=WORLD.state.cloud!=='clear';const cov=WORLD.state.cloud==='clear'?.18:1;for(let i=0;i<cloudItems.length;i++){{const o=cloudItems[i],speed=o.band===2?12:o.band===1?8:5;o.sp.position.x=o.baseX+((elapsed*speed+i*37)%(DATA.world.width*1.18))-DATA.world.width*.59;o.sp.position.z=o.baseZ+Math.sin(elapsed*.018+i)*190;o.sp.material.opacity=(o.band===2?.16:.38)*cov*(camera.position.y>90000?.58:1);}}
+  document.documentElement.style.setProperty('--glass-flow',((elapsed*7+camera.rotation.y*40)%360).toFixed(1)+'deg');document.documentElement.style.setProperty('--flow-x',(Math.sin(elapsed*.55)*4).toFixed(1)+'px');document.documentElement.style.setProperty('--flow-y',(Math.cos(elapsed*.43)*3).toFixed(1)+'px');
+  const cap=qualityMode==='settled'?30:45;if(now-lastRender<1000/cap)return;lastRender=now;renderer.render(scene,camera);
+}}
+requestAnimationFrame(animate);
+setTimeout(()=>{{loading.classList.add('done');progress(1,'完成');setTimeout(()=>$('#hint').classList.add('hide'),5600)}},420);
+</script>
+</body></html>'''
+OUT.write_text(html,encoding='utf-8')
+report={
+ 'schema':'wenzhou_continuous_world_v058_build@1',
+ 'output':str(OUT),'bytes':OUT.stat().st_size,'sha256':hashlib.sha256(OUT.read_bytes()).hexdigest(),
+ 'overview':{'source':str(overview_path),'marine':str(marine_path) if marine_path else None,'metadata':str(meta_path) if meta_path else None,'grid':[rows,cols],'spacingMeters':spacing,'min':min(over_vals),'max':max(over_vals),'endian':over_endian,'wgs84Bounds':wgs},
+ 'detail':{'source':detail_source,'grid':[drows,dcols],'spacingMeters':12.5,'min':detail_min,'max':detail_max,'endian':detail_endian,'centerLonLat':[detail_lon,detail_lat],'centerWorld':[detail_cx,detail_cz],'selectionScore':score},
+ 'rules':{'oneVisibleCanvas':True,'overviewAlwaysPresent':True,'noRectangularTerrainCutout':True,'detailFeather':'rounded-organic superellipse plus height morph plus dither','settledLongEdgePixels':2048,'desktopTargetPixels':'native up to 2560 long edge','cloudHeightsMeters':True,'worldStateSeparatedFromViewState':True},
+ 'truthWarning':'V058 only uses discovered project overview and the previously delivered V057 detail payload. It does not fabricate missing elevation samples.'
+}
+REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps(report,ensure_ascii=False))
