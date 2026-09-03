@@ -1,0 +1,87 @@
+name: Ocean R015 verified daylight glass publication
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r015-publish.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+  pages: write
+concurrency:
+  group: ocean-coast-r015-publication
+  cancel-in-progress: false
+jobs:
+  verified-publication:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 33708253525
+          name: ocean-coast-r015-finalqa
+          path: _input
+      - name: Final portrait framing and fire ground contact
+        run: |
+          set -euo pipefail
+          mkdir -p evidence _verified
+          python3 - <<'PY'
+          import json,hashlib,shutil,subprocess
+          from pathlib import Path
+          original=Path('_input');identity=json.loads((original/'SOURCE.json').read_text())
+          assert json.loads((original/'BROWSER_QA.json').read_text())['status']=='PASS'
+          for name,meta in identity.items():assert hashlib.sha256((original/'runtime'/name).read_bytes()).hexdigest()==meta['sha256']
+          target=Path('ocean-mother/coast-glass-r015');shutil.copytree(original/'runtime',target)
+          p=target/'app.mjs';s=p.read_text()
+          s=s.replace("camera.pitch=.37;camera.distance=84", "camera.pitch=.30;camera.distance=54;camera.fov=68*Math.PI/180")
+          s=s.replace('cy=bedHeight(cx,cz)+.63','cy=bedHeight(cx,cz)+h*.5+.025')
+          s=s.replace('fireY=bedHeight(FIRE_CENTER[0],FIRE_CENTER[2])+.52','fireY=bedHeight(FIRE_CENTER[0],FIRE_CENTER[2])+.05')
+          p.write_text(s)
+          for f in target.glob('*.mjs'):subprocess.run(['node','--check',str(f)],check=True)
+          result=subprocess.run(['node',str(target/'core.test.mjs')],check=True,capture_output=True,text=True)
+          Path('evidence/NODE_QA.json').write_text(result.stdout)
+          for f in target.iterdir():assert f.suffix in {'.html','.css','.js','.mjs','.md','.json'}
+          identity={f.name:{'bytes':f.stat().st_size,'sha256':hashlib.sha256(f.read_bytes()).hexdigest()} for f in target.iterdir() if f.is_file()}
+          Path('evidence/SOURCE.json').write_text(json.dumps(identity,indent=2))
+          shutil.copytree(target,'evidence/runtime');shutil.copytree(target,'_verified/runtime')
+          Path('evidence/FINAL_ADJUSTMENTS.json').write_text(json.dumps({'inputRun':33708253525,'inputArtifactId':9876086998,'changes':['Keep portrait camera inside terrain footprint using wider vertical field of view','Lower wood to actual local sand elevation','Lower flame emitter to wood level'],'allChecksRerunBeforePublish':True},indent=2))
+          print(result.stdout)
+          PY
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Full local browser acceptance on final exact bytes
+        run: |
+          python3 -m http.server 8143 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          python3 ocean-mother/coast-r015-build/browser_qa.py http://127.0.0.1:8143/ocean-mother/coast-glass-r015/ evidence
+          cp evidence/BROWSER_QA.json evidence/NODE_QA.json evidence/SOURCE.json _verified/
+      - name: Publish exact tested files without replacing unrelated sites
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERIFIED_RUN_ID: ${{ github.run_id }}
+          VERIFIED_SOURCE_SHA: ${{ github.sha }}
+          VERIFIED_ARTIFACT_ID: '9876086998'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ocean-mother/coast-r015-build/publish_verified.py')
+          text=p.read_text()
+          old="'artifactId':int(os.environ['VERIFIED_ARTIFACT_ID']),"
+          new="'inputArtifactId':int(os.environ['VERIFIED_ARTIFACT_ID']),'artifactProducedByRun':int(os.environ['VERIFIED_RUN_ID']),"
+          assert old in text
+          Path('evidence/PUBLISH_DRIVER.py').write_text(text.replace(old,new,1))
+          PY
+          python3 evidence/PUBLISH_DRIVER.py
+      - name: Verify every public file and public desktop portrait browser
+        run: python3 ocean-mother/coast-r015-build/public_verify.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r015-publication
+          path: evidence/
+          retention-days: 90
