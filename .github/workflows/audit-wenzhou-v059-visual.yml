@@ -1,0 +1,52 @@
+name: Audit Wenzhou V0.5.9 visual evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/audit-wenzhou-v059-visual.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-public-visual-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out published site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Verify the public visual proof set
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="wenzhou-v7-full/workbench-v059"
+          test -s "$root/PUBLIC_DESKTOP_2560x1600.png"
+          test -s "$root/PUBLIC_DESKTOP_MENU_2560x1600.png"
+          test -s "$root/PUBLIC_PHONE_390x844.png"
+          test -s "$root/PUBLIC_PHONE_MENU_390x844.png"
+          test -s "$root/PUBLIC_BROWSER_QA.json"
+          test -s "$root/PUBLICATION_PROOF.json"
+          grep -q '"passed": true' "$root/PUBLIC_BROWSER_QA.json"
+          grep -q '"shareAllowed": true' "$root/PUBLIC_BROWSER_QA.json"
+          grep -q '"shareAllowed": true' "$root/PUBLICATION_PROOF.json"
+
+      - name: Upload public visual proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v059-public-visual-proof
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
+          path: |
+            wenzhou-v7-full/workbench-v059/PUBLIC_DESKTOP_2560x1600.png
+            wenzhou-v7-full/workbench-v059/PUBLIC_DESKTOP_MENU_2560x1600.png
+            wenzhou-v7-full/workbench-v059/PUBLIC_PHONE_390x844.png
+            wenzhou-v7-full/workbench-v059/PUBLIC_PHONE_MENU_390x844.png
+            wenzhou-v7-full/workbench-v059/PUBLIC_BROWSER_QA.json
+            wenzhou-v7-full/workbench-v059/PUBLICATION_PROOF.json
+            wenzhou-v7-full/workbench-v059/RECOVERY_BUILD.json
