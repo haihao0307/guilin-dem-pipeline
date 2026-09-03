@@ -77,6 +77,16 @@ def main() -> None:
     html = html.replace("aria-label=\"打开温州控制菜单\"", "aria-label=\"打开温州完整控制菜单\"")
     html = html.replace("./runtime.js?v=056", "./runtime.js?v=059-full-recovery")
 
+    # Public delivery must not depend on a third-party font request. The existing system-font
+    # fallbacks already preserve a clear interface on desktop and mobile.
+    font_link_pattern = re.compile(
+        r"\s*<link\b[^>]*href=[\"'][^\"']*fonts\.(?:googleapis|gstatic)\.com[^\"']*[\"'][^>]*>\s*",
+        flags=re.IGNORECASE,
+    )
+    html, removed_font_links = font_link_pattern.subn("\n", html)
+    if "fonts.googleapis.com" in html or "fonts.gstatic.com" in html:
+        raise SystemExit("external Google font dependency remains in recovered HTML")
+
     # Keep the user's requested single persistent button. The full feature set stays inside the sheet.
     recovery_css = "\n/* V0.5.9 recovery shell: one persistent menu button, full controls inside. */\n#touchToolbar,.minimal-brand{display:none!important}\n#menuButton{display:block!important}\n"
     html = html.replace("</style>", recovery_css + "</style>", 1)
@@ -89,6 +99,7 @@ window.__WZ_RELEASE__ = Object.freeze({
   recoveryPolicy: 'restore-first-then-integrate-one-system-at-a-time',
   singlePersistentMenuButton: true,
   fullControlPanelPreserved: true,
+  externalFontDependency: false,
   visualAcceptance: false,
   productionReady: false
 });
@@ -164,6 +175,8 @@ window.__WZ_RELEASE__ = Object.freeze({
             "touchToolbarHidden": True,
             "persistentBrandHidden": True,
             "fullPanelPreserved": True,
+            "externalGoogleFontLinksRemoved": removed_font_links,
+            "externalFontDependency": False,
             "counts": counts,
         },
         "truth": {
@@ -186,6 +199,8 @@ window.__WZ_RELEASE__ = Object.freeze({
 本版从 V0.5.6 稳定工作台完整恢复。地形、真实海域掩膜、水文、天气、十个云属、共享深度、相机安全、手机手势与全部数值资产保持字节级一致。
 
 界面只做一项明确调整：画面长期只保留一个“菜单”按钮。原有完整按钮群全部保留在菜单面板内。V0.5.8 的矩形海面、随机 Sprite 云片、散碎局部补丁和大标题栏均未进入本版。
+
+网页字体使用设备系统字体，取消外部 Google Fonts 网络依赖，避免公开页面因为第三方资源波动而触发加载失败。
 
 后续技术改进必须一次只接入一个系统，并通过视觉回归以后才可进入下一版。
 """
