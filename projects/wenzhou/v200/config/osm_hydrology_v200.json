@@ -1,0 +1,114 @@
+{
+  "schema": "wenzhou_osm_hydrology@2.1.0",
+  "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "source": {
+    "project": "OpenStreetMap",
+    "license": "ODbL 1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "primaryEndpoint": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "fallbackEndpoints": [
+      "https://overpass.private.coffee/api/interpreter",
+      "https://overpass-api.de/api/interpreter"
+    ],
+    "endpointPolicy": "sequential small-tile requests, rotate endpoints on failure, preserve every attempt in the tile receipt"
+  },
+  "domain": {
+    "wgs84Bounds": [
+      119.84414553534705,
+      27.293797468756548,
+      122.04907102781185,
+      29.286519694859074
+    ],
+    "projectedCrs": "EPSG:32651",
+    "projectedClipBounds": [
+      187912.5,
+      3019612.5,
+      407350.0,
+      3243587.5
+    ],
+    "truthCogSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43"
+  },
+  "seed": {
+    "policy": "reuse verified PR49 source geometry inside its original domain and reacquire only the new V200 fringe",
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "branch": "project/wenzhou-v100-bathymetry-tides-hydrology",
+    "commit": "df14b6dfe35a32350c0d762287d633029c8a4f1a",
+    "sourceDomainWgs84": [120.15, 27.4, 122.25, 29.15],
+    "coastline": {
+      "path": "projects/wenzhou/coastal/data/hydrology/osm/OSM_COASTLINE_SOURCE_WGS84.geojson",
+      "bytes": 6166123,
+      "sha256": "5f8c952a65cc2e01dafbfe9c17a1461cb5c2a732cdab37988e1e5dc8b099c466"
+    },
+    "waterways": {
+      "path": "projects/wenzhou/coastal/data/hydrology/osm/OSM_WATERWAYS_SOURCE_WGS84.geojson",
+      "bytes": 11146763,
+      "sha256": "f895cc2606a676da16430a9c4445cdf6298b51c6dc136618f657f0112c60d072"
+    }
+  },
+  "fringePlan": {
+    "overlapDegrees": 0.003,
+    "regions": [
+      {
+        "id": "west",
+        "bounds": [119.84414553534705, 27.293797468756548, 120.153, 29.286519694859074],
+        "columns": 1,
+        "rows": 6
+      },
+      {
+        "id": "south",
+        "bounds": [120.147, 27.293797468756548, 122.04907102781185, 27.403],
+        "columns": 6,
+        "rows": 1
+      },
+      {
+        "id": "north",
+        "bounds": [120.147, 29.147, 122.04907102781185, 29.286519694859074],
+        "columns": 6,
+        "rows": 1
+      }
+    ]
+  },
+  "query": {
+    "coastline": {
+      "element": "way",
+      "filter": "natural=coastline"
+    },
+    "waterways": {
+      "element": "way",
+      "filterRegex": "waterway=^(river|stream|canal|tidal_channel)$"
+    },
+    "timeoutSeconds": 180,
+    "output": "way tags and inline geometry",
+    "overpassQlOutputStatement": "out tags geom qt",
+    "nodeReferenceStatus": "not_evaluable_when_overpass_inline_geometry_omits_node_ids"
+  },
+  "retry": {
+    "attemptsPerEndpoint": 2,
+    "http429PauseSeconds": 60,
+    "otherRetryPauseSeconds": 15,
+    "secondsBetweenSuccessfulTiles": 5,
+    "rotateEndpointBeforeRetry": true
+  },
+  "derived": {
+    "preserveSourceCoordinates": true,
+    "preserveSourceWayIds": true,
+    "clipProjectedGeometry": true,
+    "mutateSourceGeometry": false,
+    "newerFringeSnapshotWinsOnDuplicateWayId": true,
+    "recordChangedDuplicateWays": true,
+    "riverWidthMayModifyCenterline": false,
+    "minimumWayVertexCount": 2,
+    "outputRoot": "projects/wenzhou/v200/data/hydrology/osm",
+    "reportRoot": "projects/wenzhou/v200/reports"
+  },
+  "qa": {
+    "maximumOutOfBoundsVertices": 0,
+    "maximumDuplicatePartIds": 0,
+    "maximumMissingWayGeometry": 0,
+    "maximumIntroducedSelfIntersections": 0,
+    "requireCoastlineFeatures": true,
+    "requireWaterwayFeatures": true,
+    "estuaryConnectivityStatus": "pending_named_network_and_coastline_topology_stage",
+    "manualGeometryAllowed": false
+  }
+}

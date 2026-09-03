@@ -1,0 +1,127 @@
+name: Wenzhou V200 truth COG Git LFS verification
+
+on:
+  push:
+    branches:
+      - project/wenzhou-v200-17tile-truth-hydrology-rebuild
+    paths:
+      - projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif
+      - projects/wenzhou/v200/truth/upload-receipt.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v200-truth-lfs-verify
+  cancel-in-progress: false
+
+jobs:
+  verify-truth-cog:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[skip v200 truth verify]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout exact V200 branch with Git LFS
+        uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+          lfs: true
+
+      - name: Verify checked-out LFS object
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif'
+          git lfs install --local
+          git lfs pull --include="$TARGET"
+          test "$(stat -c '%s' "$TARGET")" = '136760745'
+          echo 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43  '"$TARGET" | sha256sum --check --strict
+          git lfs fsck
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json').read_text())
+          receipt = json.loads(Path('projects/wenzhou/v200/truth/upload-receipt.json').read_text(encoding='utf-8-sig'))
+          assert manifest['truthCog']['expectedBytes'] == 136760745
+          assert manifest['truthCog']['expectedSha256'] == 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43'
+          assert receipt['bytes'] == 136760745
+          assert receipt['sha256'] == 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43'
+          assert receipt['sourceHashVerified'] is True
+          assert receipt['copiedHashVerified'] is True
+          PY
+
+      - name: Verify exact object from a second fresh clone
+        id: fresh_verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wenzhou-v200-truth-fresh
+          git clone --depth 1 --branch project/wenzhou-v200-17tile-truth-hydrology-rebuild \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-v200-truth-fresh
+          cd /tmp/wenzhou-v200-truth-fresh
+          git lfs install --local
+          TARGET='projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif'
+          git lfs pull --include="$TARGET"
+          test "$(stat -c '%s' "$TARGET")" = '136760745'
+          echo 'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43  '"$TARGET" | sha256sum --check --strict
+          git lfs fsck
+          echo "verified_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Promote manifest only after round-trip verification
+        shell: bash
+        env:
+          VERIFIED_COMMIT: ${{ steps.fresh_verify.outputs.verified_commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          now = datetime.now(timezone.utc).isoformat()
+          manifest_path = Path('projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json')
+          receipt_path = Path('projects/wenzhou/v200/truth/upload-receipt.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8-sig'))
+
+          manifest['status'] = 'archived_verified'
+          manifest['truthCog']['binaryObjectPresent'] = True
+          manifest['truthCog']['freshDownloadVerified'] = True
+          manifest['truthCog']['verifiedCommit'] = os.environ['VERIFIED_COMMIT']
+          manifest['truthCog']['verifiedAtUtc'] = now
+          manifest['blocker'] = None
+
+          receipt['remotePushVerified'] = True
+          receipt['freshCloneVerified'] = True
+          receipt['verifiedCommit'] = os.environ['VERIFIED_COMMIT']
+          receipt['verifiedAtUtc'] = now
+          receipt['verificationWorkflowRunId'] = os.environ['GITHUB_RUN_ID']
+
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json \
+            projects/wenzhou/v200/truth/upload-receipt.json
+          git commit -m 'Record verified V200 truth COG round trip [skip v200 truth verify]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+
+      - name: Preserve V200 truth verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v200-truth-lfs-verification
+          path: |
+            projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json
+            projects/wenzhou/v200/truth/upload-receipt.json
+          if-no-files-found: warn
+          retention-days: 90

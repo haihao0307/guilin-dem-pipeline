@@ -1,0 +1,64 @@
+name: Wenzhou V7 full-domain source inspect
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-fullview-source-inspect.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            projects/wenzhou/v200/numeric_migration/fullview_source
+      - name: Recover and inspect transfer with XZ checksum validation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import base64,hashlib,lzma,string
+          root=Path('projects/wenzhou/v200/numeric_migration/fullview_source')
+          text=''.join(''.join(p.read_text().split()) for p in sorted(root.glob('*.txt')))
+          assert len(text)%4==1,(len(text),len(text)%4)
+          hits=[]
+          for c in string.ascii_uppercase+string.ascii_lowercase+string.digits+'+/':
+              candidate=text+c+'=='
+              try:
+                  packed=base64.b64decode(candidate,validate=True)
+                  raw=lzma.decompress(packed)
+                  hits.append((c,packed,raw))
+              except Exception:
+                  pass
+          assert len(hits)==1,('valid tail candidates',len(hits),[x[0] for x in hits])
+          c,packed,raw=hits[0]
+          Path('/tmp/fullview.xz').write_bytes(packed)
+          Path('/tmp/fullview.payload').write_bytes(raw)
+          print('recovered_tail',repr(c+'=='))
+          print('base64_chars',len(text)+3)
+          print('packed_bytes',len(packed),'packed_sha256',hashlib.sha256(packed).hexdigest())
+          print('decoded_bytes',len(raw),'decoded_sha256',hashlib.sha256(raw).hexdigest())
+          print('prefix_hex',raw[:64].hex())
+          print('prefix_text',repr(raw[:240]))
+          PY
+          file /tmp/fullview.payload
+          if tar -tf /tmp/fullview.payload >/tmp/fullview-list.txt 2>/dev/null; then
+            echo 'payload_is_tar=true'
+            cat /tmp/fullview-list.txt
+          else
+            echo 'payload_is_tar=false'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v7-fullview-source-inspection
+          path: |
+            /tmp/fullview.xz
+            /tmp/fullview.payload
+            /tmp/fullview-list.txt
+          if-no-files-found: warn
+          retention-days: 3

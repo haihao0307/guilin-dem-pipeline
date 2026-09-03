@@ -1,0 +1,434 @@
+name: Wenzhou V0.5.5 seasonal climatology workbench
+
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths:
+      - .github/workflows/wenzhou-v055-seasonal-climatology-20260903.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: wenzhou-v055-seasonal-climatology
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SITE: /tmp/wenzhou-v055-site
+      EVIDENCE: /tmp/wenzhou-v055-evidence
+      BASE_PATH: wenzhou-v7-full/workbench
+      PUBLIC_PATH: wenzhou-v7-full/workbench-v055
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench-v055/?v=wz055-seasonal-climatology
+      SOURCE_BRANCH: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out Wenzhou source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 30
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200/web/workbench-v055
+            .github/workflows/wenzhou-v055-seasonal-climatology-20260903.yml
+
+      - name: Check out verified V0.5.4 public baseline
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: publication
+          fetch-depth: 30
+          lfs: false
+          sparse-checkout: |
+            wenzhou-v7-full/workbench
+            wenzhou-v7-full/workbench-v055
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Assemble source-backed V0.5.5 seasonal workbench
+        run: |
+          set -euo pipefail
+          mkdir -p "$SITE" "$EVIDENCE"
+          rsync -a --delete "publication/$BASE_PATH/" "$SITE/"
+          cp projects/wenzhou/v200/web/workbench-v055/seasonal-controller.mjs "$SITE/seasonal-controller.mjs"
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          site = Path(os.environ['SITE'])
+          evidence = Path(os.environ['EVIDENCE'])
+          parameters = ['T2M', 'RH2M', 'PRECTOTCORR', 'WS10M']
+          query = urllib.parse.urlencode({
+              'parameters': ','.join(parameters),
+              'community': 'AG',
+              'longitude': '120.70',
+              'latitude': '28.00',
+              'format': 'JSON',
+          })
+          url = 'https://power.larc.nasa.gov/api/temporal/climatology/point?' + query
+          request = urllib.request.Request(url, headers={
+              'User-Agent': 'Wenzhou-DEM-Pipeline/0.5.5',
+              'Accept': 'application/json',
+              'Accept-Encoding': 'identity',
+          })
+          with urllib.request.urlopen(request, timeout=120) as response:
+              assert response.status == 200
+              raw = response.read()
+          source_sha = hashlib.sha256(raw).hexdigest()
+          source = json.loads(raw.decode('utf-8'))
+          values = source['properties']['parameter']
+          month_codes = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+          months = []
+          for index, code in enumerate(month_codes, 1):
+              item = {
+                  'month': index,
+                  'code': code,
+                  't2m': float(values['T2M'][code]),
+                  'rh2m': float(values['RH2M'][code]),
+                  'prectotcorr': float(values['PRECTOTCORR'][code]),
+                  'ws10m': float(values['WS10M'][code]),
+              }
+              assert -40 < item['t2m'] < 60
+              assert 0 <= item['rh2m'] <= 100
+              assert 0 <= item['prectotcorr'] < 100
+              assert 0 <= item['ws10m'] < 50
+              months.append(item)
+          archive = {
+              'schema': 'wenzhou-seasonal-climatology-1',
+              'version': '0.5.5',
+              'location': {'name': 'Wenzhou reference point', 'latitude': 28.0, 'longitude': 120.7},
+              'source': {
+                  'provider': 'NASA POWER',
+                  'endpoint': url,
+                  'retrievedUtc': datetime.now(timezone.utc).isoformat(),
+                  'responseMetadata': source.get('header', {}),
+                  'parameterMetadata': source.get('parameters', {}),
+              },
+              'sourceSha256': source_sha,
+              'units': {'t2m': 'degC', 'rh2m': 'percent', 'prectotcorr': 'mm/day', 'ws10m': 'm/s'},
+              'months': months,
+              'interpretation': {
+                  'monthlyValues': 'source climatology background',
+                  'automaticCloudChoice': 'deterministic explicit rule model',
+                  'historicalObservation': False,
+                  'liveObservation': False,
+                  'radiosondeConnected': False,
+                  'reanalysisConnected': False,
+                  'extremeEventsSynthesizedFromMonthlyMean': False,
+              },
+          }
+          (site / 'nasa-power-climatology-response.json').write_bytes(raw)
+          (site / 'seasonal-climatology.json').write_text(json.dumps(archive, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          (evidence / 'NASA_POWER_SOURCE.json').write_text(json.dumps(archive, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          html_path = site / 'index.html'
+          html = html_path.read_text(encoding='utf-8')
+          assert 'seasonal-controller.mjs' not in html
+          html = html.replace('V0.5.4', 'V0.5.5')
+          html = html.replace('真实高度云谱', '真实高度云谱与四季循环')
+          html = html.replace('</body>', '<script type="module" src="./seasonal-controller.mjs"></script>\n</body>')
+          html_path.write_text(html, encoding='utf-8')
+
+          runtime_path = site / 'runtime.js'
+          runtime = runtime_path.read_text(encoding='utf-8')
+          old = 'wenzhou-workbench-0.5.4-real-cloud-units'
+          new = 'wenzhou-workbench-0.5.5-seasonal-climatology'
+          assert old in runtime
+          runtime_path.write_text(runtime.replace(old, new), encoding='utf-8')
+
+          build_path = site / 'BUILD.json'
+          build = json.loads(build_path.read_text(encoding='utf-8'))
+          build['terrainWeatherBaselineVersion'] = build['version']
+          build['version'] = 'wenzhou-workbench-0.5.5-seasonal-climatology'
+          build['sourceCommit'] = os.environ['GITHUB_SHA']
+          build['seasonalClimatology'] = archive['source'] | {
+              'sourceSha256': source_sha,
+              'monthCount': 12,
+              'automaticCloudChoice': 'deterministic explicit rule model',
+              'historicalObservation': False,
+              'liveObservation': False,
+              'radiosondeConnected': False,
+              'reanalysisConnected': False,
+          }
+          build['annualCycle'] = {
+              'monthCount': 12,
+              'localSolarDayCycle': True,
+              'automaticCloudSelection': True,
+              'manualCloudSelectionRetained': True,
+              'extremeEventsRequireEventData': True,
+          }
+          build['cloudVerticalContract'] = {
+              'worldVerticalScale': 1,
+              'terrainVerticalScale': 1,
+              'altitudeOffsetM': 0,
+              'baseTopUnit': 'metre AMSL',
+              'manualBaseTopControls': False,
+              'sourceDensityRemappedInsidePhysicalLayer': True,
+              'visualLift': False,
+              'visualVerticalCompression': False,
+          }
+          build['visualApproved'] = False
+          build['productionApproved'] = False
+          for name in ['index.html','runtime.js','seasonal-controller.mjs','seasonal-climatology.json','nasa-power-climatology-response.json']:
+              data = (site / name).read_bytes()
+              build.setdefault('files', {})[name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+          build_path.write_text(json.dumps(build, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          node --check "$SITE/runtime.js"
+          node --check "$SITE/weather-scene.mjs"
+          node --check "$SITE/seasonal-controller.mjs"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          site=Path(os.environ['SITE'])
+          build=json.loads((site/'BUILD.json').read_text())
+          climate=json.loads((site/'seasonal-climatology.json').read_text())
+          assert build['version']=='wenzhou-workbench-0.5.5-seasonal-climatology'
+          assert len(climate['months'])==12
+          contract=build['cloudVerticalContract']
+          assert contract['worldVerticalScale']==1
+          assert contract['terrainVerticalScale']==1
+          assert contract['altitudeOffsetM']==0
+          assert contract['manualBaseTopControls'] is False
+          assert contract['visualLift'] is False
+          assert contract['visualVerticalCompression'] is False
+          assert build['visualApproved'] is False
+          assert build['productionApproved'] is False
+          html=(site/'index.html').read_text()
+          assert html.count('<canvas')==1
+          assert '<iframe' not in html.lower()
+          assert 'seasonal-controller.mjs' in html
+          PY
+
+      - name: Install Chromium QA
+        run: |
+          python -m pip install --quiet playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Browser QA for twelve months, day cycle and immutable cloud heights
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/local-http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 2
+          python - <<'PY'
+          from __future__ import annotations
+          import json
+          import os
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          out=Path(os.environ['EVIDENCE'])
+          layers={
+              'ci':[8000,12000],'cc':[7000,11000],'cs':[6000,12000],'ac':[3000,6000],'as':[2500,7000],
+              'ns':[600,6000],'sc':[600,2200],'st':[80,900],'cu':[700,3500],'cb':[600,14000],
+          }
+          report={'schema':'wenzhou-v055-seasonal-browser-qa-1','passed':False,'months':[],'clouds':[],
+                  'visualApproved':False,'productionApproved':False}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+              context=browser.new_context(viewport={'width':1280,'height':800},device_scale_factor=1)
+              page=context.new_page();page.set_default_timeout(360000)
+              console_errors=[];page_errors=[];failed=[]
+              page.on('console',lambda m: console_errors.append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: page_errors.append(str(e)))
+              page.on('requestfailed',lambda r: failed.append({'url':r.url,'error':r.failure}))
+              response=page.goto('http://127.0.0.1:8765/',wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__WZ_FULL__?.ready && window.__WZ_SEASONAL__?.ready",timeout=360000)
+              assert page.locator('canvas').count()==1
+              assert page.locator('iframe').count()==0
+              assert page.locator('#wzSeasonal').count()==1
+              assert page.locator('#wzSeasonal input[id*=height i],#wzSeasonal input[id*=base i],#wzSeasonal input[id*=top i]').count()==0
+
+              for cloud,expected in layers.items():
+                  page.evaluate("id=>window.__WZ_API__.setWeather(id)",cloud)
+                  page.wait_for_function("id=>window.__WZ_FULL__?.weather?.caseId===id && window.__WZ_FULL__?.weather?.ready",arg=cloud,timeout=360000)
+                  state=page.evaluate('window.__WZ_FULL__')
+                  metrics=state['weather']['fieldMetrics']
+                  assert [metrics['baseM'],metrics['topM']]==expected
+                  assert metrics['verticalScale']==1
+                  assert metrics['altitudeOffsetM']==0
+                  assert state['errors']==[]
+                  report['clouds'].append({'id':cloud,'baseM':metrics['baseM'],'topM':metrics['topM'],'verticalScale':1,'altitudeOffsetM':0})
+
+              page.locator('#wzClimateAuto').check()
+              for month in range(1,13):
+                  date=f'2026-{month:02d}-15'
+                  page.evaluate("d=>window.__WZ_API__.setDate(d)",date)
+                  page.evaluate("h=>window.__WZ_API__.setHour(h)",15)
+                  page.wait_for_function("m=>window.__WZ_SEASONAL__?.ready && window.__WZ_SEASONAL__?.month===m && window.__WZ_SEASONAL__?.physicalHeightLock===true",arg=month,timeout=360000)
+                  page.wait_for_function("window.__WZ_SEASONAL__?.target?.id===window.__WZ_FULL__?.weather?.caseId",timeout=360000)
+                  seasonal=page.evaluate('window.__WZ_SEASONAL__')
+                  state=page.evaluate('window.__WZ_FULL__')
+                  expected=layers[seasonal['target']['id']]
+                  metrics=state['weather']['fieldMetrics']
+                  assert [metrics['baseM'],metrics['topM']]==expected
+                  assert seasonal['altitudeOffsetM']==0
+                  assert seasonal['verticalScale']==1
+                  assert seasonal['visualLift'] is False
+                  assert seasonal['verticalCompression'] is False
+                  report['months'].append({'month':month,'climate':seasonal['climate'],'target':seasonal['target'],'activeCloud':seasonal['activeCloud'],'layerM':expected})
+
+              before=page.evaluate('window.__WZ_FULL__.weather.clock.dateIso')
+              page.locator('#wzAnnualSpeed').select_option('15')
+              page.locator('#wzAnnualPlay').check()
+              page.wait_for_timeout(2500)
+              after=page.evaluate('window.__WZ_FULL__.weather.clock.dateIso')
+              assert before!=after,(before,after)
+              page.locator('#wzAnnualPlay').uncheck()
+              page.locator('#coast').click();page.wait_for_timeout(1200)
+              page.screenshot(path=str(out/'seasonal-1280x800.png'),timeout=180000)
+              assert console_errors==[],console_errors
+              assert page_errors==[],page_errors
+              assert failed==[],failed
+              context.close()
+
+              context=browser.new_context(viewport={'width':2560,'height':1600},device_scale_factor=1)
+              page=context.new_page();page.set_default_timeout(360000)
+              response=page.goto('http://127.0.0.1:8765/',wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__WZ_FULL__?.ready && window.__WZ_SEASONAL__?.ready && window.__WZ_SEASONAL__?.physicalHeightLock===true",timeout=360000)
+              page.locator('#coast').click();page.wait_for_timeout(1200)
+              state=page.evaluate('window.__WZ_FULL__');seasonal=page.evaluate('window.__WZ_SEASONAL__')
+              assert state['nativeRenderPixels']==[2560,1600]
+              assert seasonal['verticalScale']==1 and seasonal['altitudeOffsetM']==0
+              assert seasonal['visualLift'] is False and seasonal['verticalCompression'] is False
+              page.screenshot(path=str(out/'seasonal-2560x1600.png'),timeout=180000)
+              context.close();browser.close()
+          report['annualCycleDateChanged']=[before,after]
+          report['passed']=True
+          (out/'browser-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Publish only verified V0.5.5 subtree
+        run: |
+          set -euo pipefail
+          mkdir -p "publication/$PUBLIC_PATH"
+          rsync -a --delete "$SITE/" "publication/$PUBLIC_PATH/"
+          cd publication
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$PUBLIC_PATH"
+          test -z "$(git diff --cached --name-only | grep -v "^$PUBLIC_PATH/" || true)"
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Wenzhou V0.5.5 seasonal climatology from ${GITHUB_SHA}"
+            pushed=0
+            for attempt in 1 2 3 4; do
+              if git push origin HEAD:gh-pages; then pushed=1;break;fi
+              git fetch origin gh-pages --depth=50
+              git rebase origin/gh-pages
+            done
+            test "$pushed" = 1
+          fi
+          git rev-parse HEAD > "$EVIDENCE/publication-commit.txt"
+
+      - name: Verify exact public files and public browser startup
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          import os
+          import time
+          import urllib.request
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          site=Path(os.environ['SITE']);out=Path(os.environ['EVIDENCE']);url=os.environ['PUBLIC_URL'];base=url.split('?')[0]
+          def get(target):
+              request=urllib.request.Request(target,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=60) as response:return response.status,response.read()
+          expected=(site/'BUILD.json').read_bytes()
+          for attempt in range(100):
+              try:
+                  status,data=get(base+'BUILD.json?attempt='+str(attempt))
+                  if status==200 and data==expected:break
+              except Exception:pass
+              time.sleep(6)
+          else:raise RuntimeError('V0.5.5 exact public build did not appear')
+          files=[]
+          for name in ['index.html','runtime.js','weather-scene.mjs','seasonal-controller.mjs','seasonal-climatology.json','BUILD.json']:
+              status,data=get(base+name+'?proof='+str(time.time_ns()))
+              wanted=(site/name).read_bytes()
+              assert status==200 and data==wanted,(name,status,len(data),len(wanted))
+              files.append({'path':name,'status':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+              context=browser.new_context(viewport={'width':1280,'height':800},device_scale_factor=1)
+              page=context.new_page();page.set_default_timeout(360000)
+              console_errors=[];page_errors=[];failed=[]
+              page.on('console',lambda m: console_errors.append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: page_errors.append(str(e)))
+              page.on('requestfailed',lambda r: failed.append({'url':r.url,'error':r.failure}))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__WZ_FULL__?.ready && window.__WZ_SEASONAL__?.ready && window.__WZ_SEASONAL__?.physicalHeightLock===true",timeout=360000)
+              state=page.evaluate('window.__WZ_FULL__');seasonal=page.evaluate('window.__WZ_SEASONAL__')
+              assert state['version']=='wenzhou-workbench-0.5.5-seasonal-climatology'
+              assert seasonal['version']=='wenzhou-seasonal-controller-0.5.5'
+              assert seasonal['verticalScale']==1 and seasonal['altitudeOffsetM']==0
+              assert seasonal['visualLift'] is False and seasonal['verticalCompression'] is False
+              assert console_errors==[] and page_errors==[] and failed==[]
+              page.locator('#coast').click();page.wait_for_timeout(1200)
+              page.screenshot(path=str(out/'public-seasonal-1280x800.png'),timeout=180000)
+              context.close();browser.close()
+          report={'schema':'wenzhou-v055-public-qa-1','passed':True,'url':url,'files':files,
+                  'publicationCommit':(out/'publication-commit.txt').read_text().strip(),
+                  'verticalScale':1,'altitudeOffsetM':0,'visualLift':False,'verticalCompression':False,
+                  'visualApproved':False,'productionApproved':False}
+          (out/'public-qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Archive climatology and QA receipts on Wenzhou branch
+        run: |
+          set -euo pipefail
+          target=projects/wenzhou/v200/reports/v055-seasonal-climatology
+          mkdir -p "$target"
+          cp "$SITE/seasonal-climatology.json" "$target/"
+          cp "$SITE/nasa-power-climatology-response.json" "$target/"
+          cp "$SITE/BUILD.json" "$target/"
+          cp "$EVIDENCE/browser-qa.json" "$target/"
+          cp "$EVIDENCE/public-qa.json" "$target/"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$target"
+          if ! git diff --cached --quiet; then
+            git commit -m 'test(wenzhou): archive V0.5.5 seasonal and public evidence [skip ci]'
+            pushed=0
+            for attempt in 1 2 3 4; do
+              if git push origin HEAD:"$SOURCE_BRANCH"; then pushed=1;break;fi
+              git fetch origin "$SOURCE_BRANCH" --depth=50
+              git rebase "origin/$SOURCE_BRANCH"
+            done
+            test "$pushed" = 1
+          fi
+
+      - name: Upload complete V0.5.5 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v055-seasonal-climatology-evidence
+          path: |
+            /tmp/wenzhou-v055-evidence
+            /tmp/wenzhou-v055-site
+          retention-days: 30
+          if-no-files-found: error

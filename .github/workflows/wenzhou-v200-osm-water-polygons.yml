@@ -1,0 +1,113 @@
+name: Wenzhou V200 OSM water polygons
+
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths:
+      - .github/workflows/wenzhou-v200-osm-water-polygons.yml
+      - projects/wenzhou/v200/config/osm_water_polygons_v200.json
+      - projects/wenzhou/v200/scripts/acquire_osm_water_polygons_v200.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-v200-osm-water-polygons
+  cancel-in-progress: false
+
+jobs:
+  acquire-water-polygons:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip v200 water polygons]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: project/wenzhou-v200-17tile-truth-hydrology-rebuild
+          fetch-depth: 0
+          lfs: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Acquire and verify source polygons
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'pyproj>=3.7,<4' 'shapely>=2.0,<3'
+          python -m py_compile projects/wenzhou/v200/scripts/acquire_osm_water_polygons_v200.py
+          python -m json.tool projects/wenzhou/v200/config/osm_water_polygons_v200.json >/dev/null
+          python projects/wenzhou/v200/scripts/acquire_osm_water_polygons_v200.py
+          python - <<'PY'
+          import gzip, hashlib, json
+          from pathlib import Path
+          root=Path('.')
+          acq=json.loads((root/'projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_ACQUISITION.json').read_text())
+          qa=json.loads((root/'projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_QA.json').read_text())
+          assert acq['passed'] is True and qa['passed'] is True
+          assert acq['domain']['projectedCrs']=='EPSG:32651'
+          assert acq['domain']['projectedClipBounds']==[187912.5,3019612.5,407350.0,3243587.5]
+          assert acq['license']=='ODbL 1.0' and len(acq['tiles'])==9
+          assert qa['projectedPolygonPartCount']>0 and qa['outOfBoundsVertexCount']==0
+          assert qa['manualGeometryCount']==0 and qa['topologyGapBridgeCount']==0
+          for item in acq['rawFiles']+acq['outputFiles']:
+              p=root/item['path']; assert p.stat().st_size==item['bytes']; assert hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
+          for tile in acq['tiles']:
+              raw=gzip.decompress((root/tile['rawCompressed']['path']).read_bytes())
+              assert len(raw)==tile['rawUncompressedBytes'] and hashlib.sha256(raw).hexdigest()==tile['rawUncompressedSha256']
+          print(json.dumps(qa,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Commit verified source and QA
+        id: polygon_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH='project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- projects/wenzhou/v200/data/hydrology/osm_water_polygons projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_ACQUISITION.json projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_QA.json
+          git commit -m 'Add verified V200 OSM water polygons [skip v200 water polygons]'
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git push origin "HEAD:$BRANCH"
+
+      - name: Fresh-clone verification and receipt
+        shell: bash
+        env:
+          POLYGON_COMMIT: ${{ steps.polygon_commit.outputs.commit }}
+        run: |
+          set -euo pipefail
+          BRANCH='project/wenzhou-v200-17tile-truth-hydrology-rebuild'
+          rm -rf /tmp/wenzhou-v200-water-polygons-fresh
+          git clone --depth 1 --branch "$BRANCH" "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/wenzhou-v200-water-polygons-fresh
+          python - <<'PY'
+          import hashlib, json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          fresh=Path('/tmp/wenzhou-v200-water-polygons-fresh')
+          acq=json.loads((fresh/'projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_ACQUISITION.json').read_text())
+          qa=json.loads((fresh/'projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_QA.json').read_text())
+          files=[]
+          for item in acq['rawFiles']+acq['outputFiles']:
+              p=fresh/item['path']; actual=hashlib.sha256(p.read_bytes()).hexdigest(); assert p.stat().st_size==item['bytes'] and actual==item['sha256']; files.append({'path':item['path'],'bytes':item['bytes'],'sha256':actual})
+          assert qa['passed'] is True
+          receipt={'schema':'wenzhou_v200_osm_water_polygons_receipt@1.0.0','completedAtUtc':datetime.now(timezone.utc).isoformat(),'repository':os.environ['GITHUB_REPOSITORY'],'branch':'project/wenzhou-v200-17tile-truth-hydrology-rebuild','outputCommit':os.environ['POLYGON_COMMIT'],'truthCogSha256':acq['domain']['truthCogSha256'],'license':acq['license'],'attribution':acq['attribution'],'sourceElementCount':acq['sourceElementCount'],'projectedPolygonPartCount':qa['projectedPolygonPartCount'],'projectedAreaKm2':qa['projectedAreaKm2'],'manualGeometryCount':0,'topologyGapBridgeCount':0,'freshCloneVerified':True,'files':files}
+          Path('projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          git add -- projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_RECEIPT.json
+          git commit -m 'Record V200 OSM water polygon receipt [skip v200 water polygons]'
+          git push origin "HEAD:$BRANCH"
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v200-osm-water-polygons-evidence
+          path: |
+            projects/wenzhou/v200/data/hydrology/osm_water_polygons/**
+            projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_*.json
+          if-no-files-found: warn
+          retention-days: 90

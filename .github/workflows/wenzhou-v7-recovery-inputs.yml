@@ -1,0 +1,53 @@
+name: Wenzhou V7 recovery inputs
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-recovery-inputs.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200
+      - name: Inventory retained Wenzhou artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          from pathlib import Path
+          found=[]
+          for page in range(1,16):
+              url=f'https://api.github.com/repos/haihao0307/guilin-dem-pipeline/actions/artifacts?per_page=100&page={page}'
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=40) as r:data=json.load(r)
+              for a in data.get('artifacts',[]):
+                  if any(x in a['name'].lower() for x in ['wenzhou','17tile']):found.append({k:a.get(k) for k in ['id','name','size_in_bytes','expired','created_at','workflow_run']})
+              if len(data.get('artifacts',[]))<100:break
+          Path('/tmp/v7-artifact-inventory.json').write_text(json.dumps(found,indent=2)+'\n')
+          print(json.dumps(found,indent=2))
+          PY
+      - name: Prepare only actual V200 sources
+        run: |
+          mkdir -p /tmp/v7-inputs
+          cp -a projects/wenzhou/v200/web/v7 /tmp/v7-inputs/runtime
+          cp -a projects/wenzhou/v200/data/hydrology /tmp/v7-inputs/hydrology
+          cp -a projects/wenzhou/v200/truth /tmp/v7-inputs/truth
+          cp /tmp/v7-artifact-inventory.json /tmp/v7-inputs/
+          printf '%s\n' "$GITHUB_SHA" > /tmp/v7-inputs/SOURCE_COMMIT.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v7-recovery-inputs
+          path: /tmp/v7-inputs
+          retention-days: 14
+          if-no-files-found: error

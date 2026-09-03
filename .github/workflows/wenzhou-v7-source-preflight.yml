@@ -1,0 +1,54 @@
+name: Wenzhou V7 source availability preflight
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-source-preflight.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+      - name: Inspect archive metadata without using retired terrain
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from pathlib import Path
+          repo='haihao0307/guilin-dem-pipeline'
+          def get(path):
+              req=urllib.request.Request('https://api.github.com/repos/'+repo+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=45) as r:return json.load(r)
+          releases=get('/releases?per_page=100')
+          assets=[]
+          for rel in releases:
+              for a in rel.get('assets',[]):
+                  text=(rel.get('name','')+' '+a['name']).lower()
+                  if 'wenzhou' in text or '17tile' in text or '温州' in text:
+                      assets.append({'releaseId':rel['id'],'draft':rel['draft'],'assetId':a['id'],'name':a['name'],'bytes':a['size'],'digest':a.get('digest'),'url':a['browser_download_url']})
+          tree=get('/git/trees/project%2Fwenzhou-v200-17tile-truth-hydrology-rebuild?recursive=1')
+          paths=[{'path':e['path'],'bytes':e.get('size')} for e in tree.get('tree',[]) if e['type']=='blob' and ('17tile' in e['path'].lower() or '温州' in e['path']) and e['path'].lower().endswith(('.tif','.zip','.wzn','.bin'))]
+          report={'schema':'wenzhou-v7-source-preflight-1','earthdataTokenAvailable':bool(os.environ.get('EARTHDATA_TOKEN')),'matchingReleaseAssets':assets,'matchingRepositoryObjects':paths,'sourceDeletionPerformed':False,'deploymentPerformed':False}
+          out=Path('projects/wenzhou/v200/reports/V7_SOURCE_AVAILABILITY.json');out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
+          print(json.dumps(report,indent=2,ensure_ascii=False))
+          PY
+      - name: Record preflight result only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/wenzhou/v200/reports/V7_SOURCE_AVAILABILITY.json
+          git diff --cached --quiet || git commit -m 'Record V7 numeric migration source availability [skip ci]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v7-source-preflight
+          path: projects/wenzhou/v200/reports/V7_SOURCE_AVAILABILITY.json

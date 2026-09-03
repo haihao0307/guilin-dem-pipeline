@@ -1,0 +1,95 @@
+{
+  "schema": "wenzhou_coastal_domain@2.0.0",
+  "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "truthDem": {
+    "path": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "expectedBytes": 136760745,
+    "expectedSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "crs": "EPSG:32651",
+    "grid": [17555, 17918],
+    "pixelSpacingMeters": [12.5, 12.5],
+    "transform": [12.5, 0.0, 187912.5, 0.0, -12.5, 3243587.5],
+    "bounds": [187912.5, 3019612.5, 407350.0, 3243587.5],
+    "immutable": true,
+    "binaryStatusSource": "projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json",
+    "requiredStatus": "archived_verified"
+  },
+  "domains": {
+    "truthAoiProjected": {
+      "crs": "EPSG:32651",
+      "bounds": [187912.5, 3019612.5, 407350.0, 3243587.5]
+    },
+    "truthAoiWgs84Corners": {
+      "crs": "EPSG:4326",
+      "northWest": [119.84414553534705, 29.283957626923918],
+      "northEast": [122.04605568821894, 29.286519694859074],
+      "southEast": [122.04907102781185, 27.296407891083906],
+      "southWest": [119.84716087493995, 27.293797468756548]
+    },
+    "coastalBufferPolicy": {
+      "distanceMeters": 25000.0,
+      "alignmentMeters": 100.0,
+      "purpose": "open coastal bathymetry boundary around the full V200 truth AOI"
+    },
+    "bathymetryAndTideBoundaryProjected": {
+      "crs": "EPSG:32651",
+      "bounds": [162900.0, 2994600.0, 432400.0, 3268600.0]
+    },
+    "bathymetryAndTideBoundaryWgs84Envelope": {
+      "crs": "EPSG:4326",
+      "bounds": [119.52319549963902, 27.0326724011727, 122.31822706436994, 29.545249291509077],
+      "cornerCoordinates": [
+        [119.60252891327298, 27.0326724011727],
+        [122.31822706436994, 27.07206325910282],
+        [122.30227003129531, 29.545249291509077],
+        [119.52319549963902, 29.50158810974713]
+      ]
+    },
+    "coastalModelGrid": {
+      "crs": "EPSG:32651",
+      "pixelSpacingMeters": [100.0, 100.0],
+      "width": 2695,
+      "height": 2740,
+      "cellCount": 7384300,
+      "sourceResolutionLabel": "GEBCO 2026 15 arc-second source, independently reacquired and reprojected for V200 model alignment",
+      "native12_5mBathymetryClaim": false
+    }
+  },
+  "bathymetry": {
+    "primary": {
+      "dataset": "GEBCO 2026 Grid",
+      "resolution": "15 arc-second",
+      "requiredCompanion": "GEBCO 2026 Type Identifier Grid",
+      "verticalReference": "assumed mean sea level with documented shallow-water datum caveats",
+      "sourceReusePolicy": "reacquire for V200 domain; do not stretch or translate PR49 raster outputs",
+      "license": "public domain under GEBCO terms"
+    },
+    "outputs": {
+      "bathymetryCog": "projects/wenzhou/v200/data/bathymetry/WENZHOU_V200_COASTAL_BATHY_100M_EPSG32651_COG.tif",
+      "typeIdentifierCog": "projects/wenzhou/v200/data/bathymetry/WENZHOU_V200_COASTAL_TID_100M_EPSG32651_COG.tif",
+      "verticalDatumUncertaintyCog": "projects/wenzhou/v200/data/bathymetry/WENZHOU_V200_VERTICAL_DATUM_UNCERTAINTY_100M_COG.tif",
+      "landSeaConflictCog": "projects/wenzhou/v200/data/bathymetry/WENZHOU_V200_LAND_SEA_CONFLICT_100M_COG.tif"
+    }
+  },
+  "gates": {
+    "truthBinaryPresentRequired": true,
+    "truthFreshDownloadVerifiedRequired": true,
+    "truthStatusRequired": "archived_verified",
+    "osmProjectedSkeletonRequired": true,
+    "gebcoAcquisitionAllowedNow": false,
+    "truthDependentMaskingAllowedNow": false,
+    "browserRuntimeAllowedNow": false
+  },
+  "forbidden": [
+    "old_qingjiang_elevation_reuse",
+    "old_qingjiang_crop_geometry_reuse",
+    "stretch_or_translate_pr49_bathymetry",
+    "interpret_dem_nodata_as_ocean",
+    "manual_coastline_geometry",
+    "manual_river_geometry",
+    "manual_label_coordinates",
+    "synthetic_gap_filling",
+    "30m_land_dem_fallback",
+    "public_release_before_controller_approval"
+  ]
+}

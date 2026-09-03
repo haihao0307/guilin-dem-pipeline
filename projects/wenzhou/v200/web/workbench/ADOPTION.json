@@ -1,0 +1,106 @@
+{
+  "schema": "wenzhou-weather-workbench-adoption-2",
+  "version": "0.3.0",
+  "motherId": "Wenzhou V200",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "project/wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "authorizedTask": "Build the first visible single-scene Weather Mother adaptation inside the complete Wenzhou research workbench. Research preview only.",
+  "sourceAllowlist": [
+    "projects/wenzhou/v200/web/workbench/",
+    ".github/workflows/wenzhou-weather-workbench.yml",
+    "projects/wenzhou/v200/reports/weather-workbench/"
+  ],
+  "publicationAllowlist": ["wenzhou-v7-full/workbench/"],
+  "weatherPackage": {
+    "version": "1.1.0-clean",
+    "declaredRuntimeVersion": "1.1.0-world",
+    "observedRuntimeQaVersion": "1.1.0-hq",
+    "zipSha256": "ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e",
+    "manifestSha256": "a4a09dc8096b93f940381efcad2bddd021ed73010e268c24b563bf9f3a721a5b",
+    "fieldWorkerSha256": "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d",
+    "readOnly": true,
+    "fieldWorkerReusedByteIdentically": true,
+    "upstreamModified": false
+  },
+  "renderArchitecture": {
+    "mainCanvasCount": 1,
+    "mainCameraCount": 1,
+    "rendererCount": 1,
+    "iframeCount": 0,
+    "sameWebGL2Context": true,
+    "sharedDepthBuffer": true,
+    "sameWorldCoordinates": true,
+    "worldAxes": "+X east, +Y up, +Z south",
+    "lengthUnit": "metre",
+    "cloudFieldSourceUnit": "kilometre",
+    "sourceToWorldConversion": "Weather kilometre coordinates are converted to Wenzhou metres exactly once in the Wenzhou adapter",
+    "terrainOccludesCloud": true,
+    "cloudShadowCandidate": true,
+    "seaCloudReflectionCandidate": true
+  },
+  "adaptation": {
+    "sourceDensityGenerator": "modules/weather-mother/field-worker.js",
+    "wenzhouAdapter": "weather-scene.mjs",
+    "terrainWeatherConsumer": "shaders.js",
+    "runtimeEntry": "runtime.js",
+    "cases": [
+      {"id": "coast", "weatherKind": "Sc", "label": "coastal stratocumulus"},
+      {"id": "rain", "weatherKind": "Ns", "label": "overcast rain"},
+      {"id": "typhoon", "weatherKind": "Cb", "label": "organized typhoon cloud field"}
+    ],
+    "explicitUnits": {
+      "cloudBase": "metre above the Wenzhou world reference plane",
+      "cloudTop": "metre above the Wenzhou world reference plane",
+      "cloudHorizontalExtent": "kilometre",
+      "windDirection": "meteorological degrees from north",
+      "windSpeed": "metres per second",
+      "cloudAdvectionSpeed": "metres per second",
+      "simulationClock": "seconds",
+      "timeScale": "dimensionless"
+    },
+    "weatherEffects": [
+      "visible volumetric cloud pass in the main Wenzhou canvas",
+      "terrain and water depth occlusion through the shared depth buffer",
+      "terrain cloud-shadow candidate from the same density texture",
+      "sea cloud-reflection candidate",
+      "wind-linked procedural sea waves",
+      "weather-linked visibility",
+      "visible precipitation streak candidate"
+    ]
+  },
+  "truthInvariants": {
+    "authoritativeDemName": "WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "authoritativeDemBytes": 136760745,
+    "authoritativeDemSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "authoritativeDemGrid": [17555, 17918],
+    "nativeSpacingM": 12.5,
+    "overviewSpacingM": 800,
+    "fullNativeOnline": false,
+    "oldQingjiangTruthUsed": false,
+    "syntheticGapFill": false,
+    "manualRivers": false,
+    "manualCoastline": false,
+    "sourceDeleted": false
+  },
+  "displayModes": {
+    "neutral": "source inspection",
+    "studio": "controlled presentation lighting",
+    "diagnostic": "class and source diagnostic",
+    "environment": "single-scene Weather Mother adaptation"
+  },
+  "tests": {
+    "buildValidation": "assemble.py",
+    "realBrowserValidation": "qa_workbench.py",
+    "results": "Stored separately as exact-build workflow receipts. This adoption record is not a passed test."
+  },
+  "unresolvedItems": [
+    "The exact authoritative COG is not included in this handoff package or current runner checkout",
+    "Full native 12.5 metre LOD is not online",
+    "Cloud optics, rainfall, fog, wind waves and cyclone motion are first-stage visual candidates and are not measurement calibrated",
+    "Bathymetry, absolute tidal datum and calibrated tidal ingress remain open",
+    "Physical 34-inch target-machine performance and controller visual review remain open"
+  ],
+  "calibratedWeatherOrHydrodynamics": false,
+  "visualApproved": false,
+  "productionApproved": false
+}

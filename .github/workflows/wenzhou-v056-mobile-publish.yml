@@ -1,0 +1,144 @@
+name: Wenzhou V0.5.6 mobile view-stream verification
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths:
+      - .github/workflows/wenzhou-v056-mobile-publish.yml
+      - projects/wenzhou/v200/web/workbench-v056/**
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+  pages: write
+concurrency:
+  group: wenzhou-v056-mobile-publication
+  cancel-in-progress: true
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ROOT: projects/wenzhou/v200/web/workbench-v056
+      SITE: /tmp/wz056-site
+      EVIDENCE: /tmp/wz056-evidence
+      URL: https://haihao0307.github.io/guilin-dem-pipeline/wenzhou-v7-full/workbench-v056/?v=mobile-view-stream-1
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            projects/wenzhou/v200/web/workbench-v056
+            projects/wenzhou/v200/PROJECT_IDENTITY_AND_SCOPE.md
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recover exact successful V0.5.5 baseline without rebuilding other projects
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wz055-baseline "$EVIDENCE"
+          gh run download 33685272836 --repo haihao0307/guilin-dem-pipeline --name wenzhou-v055-seasonal-real-unit-publication --dir /tmp/wz055-baseline
+          test -f /tmp/wz055-baseline/wenzhou-v055-site/BUILD.json
+          python "$ROOT/prepare_v056.py" /tmp/wz055-baseline/wenzhou-v055-site "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
+          for file in "$SITE"/*.js "$SITE"/*.mjs; do node --check "$file"; done
+          python -m py_compile "$ROOT"/*.py
+      - name: Independently verify unchanged terrain and lossless river partition
+        run: |
+          python - <<'PY'
+          import collections,gzip,hashlib,json,os
+          from pathlib import Path
+          root=Path(os.environ['SITE']);base=Path('/tmp/wz055-baseline/wenzhou-v055-site')
+          def sh(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+          for name in ['data/overview800.i16.gz','data/classes.u8.gz','data/shore.u16.gz','modules/weather-mother/field-worker.js']:
+              assert sh(root/name)==sh(base/name),name
+          def segments(rows):
+              return collections.Counter(json.dumps([r.get('id'),r.get('kind'),r.get('widthM'),a,b],sort_keys=True) for r in rows for a,b in zip(r['coords'],r['coords'][1:]))
+          original=json.loads(gzip.decompress((base/'data/vectors.json.gz').read_bytes()))['rivers']
+          index=json.loads((root/'view-index.json').read_text());parts=[]
+          for tile in index['tiles']:
+              p=root/tile['path'];assert sh(p)==tile['sha256'];parts.extend(json.loads(gzip.decompress(p.read_bytes()))['rivers'])
+          assert segments(original)==segments(parts)
+          receipt={'terrainAndMotherWorkerUnchanged':True,'sourceSegmentsPreserved':sum(segments(parts).values()),'tileCount':len(index['tiles']),'fullNativeOnline':False}
+          (Path(os.environ['EVIDENCE'])/'data-qa.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          print(receipt)
+          PY
+      - name: Install actual Chromium test environment
+        run: |
+          python -m pip install --quiet playwright pillow numpy
+          python -m playwright install --with-deps chromium
+      - name: Test touch controls visibility view requests and physical layers
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 2
+          python "$ROOT/qa_v056.py" --url http://127.0.0.1:8765/ --out "$EVIDENCE/local"
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: publication
+          fetch-depth: 30
+          lfs: false
+          sparse-checkout: |
+            wenzhou-v7-full/workbench-v056
+      - name: Publish only the new Wenzhou candidate; retain previous versions
+        run: |
+          set -euo pipefail
+          mkdir -p publication/wenzhou-v7-full/workbench-v056
+          rsync -a --delete "$SITE/" publication/wenzhou-v7-full/workbench-v056/
+          cd publication
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- wenzhou-v7-full/workbench-v056
+          test -z "$(git diff --cached --name-only | grep -v '^wenzhou-v7-full/workbench-v056/' || true)"
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Wenzhou mobile candidate from ${GITHUB_SHA}"
+            pushed=0
+            for attempt in 1 2 3; do
+              if git push origin HEAD:gh-pages; then pushed=1; break; fi
+              git fetch origin gh-pages --depth=50
+              git rebase origin/gh-pages
+            done
+            test "$pushed" = '1'
+          fi
+          git rev-parse HEAD > "$EVIDENCE/publication-commit.txt"
+      - name: Verify exact public build and every published file
+        run: |
+          gh api --method POST repos/haihao0307/guilin-dem-pipeline/pages/builds > "$EVIDENCE/pages-request.json" 2> "$EVIDENCE/pages-request-error.txt" || true
+          python - <<'PY'
+          import concurrent.futures,hashlib,json,os,time,urllib.request
+          from pathlib import Path
+          root=Path(os.environ['SITE']);out=Path(os.environ['EVIDENCE']);base=os.environ['URL'].split('?')[0]
+          expected=(root/'BUILD.json').read_bytes();manifest=json.loads(expected)
+          def get(name):
+              request=urllib.request.Request(base+name,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(request,timeout=45) as response:return response.status,response.read()
+          for attempt in range(80):
+              try:
+                  status,data=get('BUILD.json?attempt='+str(attempt))
+                  if status==200 and data==expected:break
+              except Exception:pass
+              time.sleep(6)
+          else:raise RuntimeError('Exact V0.5.6 build did not become public')
+          def verify(pair):
+              name,identity=pair;status,data=get(name+'?sha='+identity['sha256'][:16]);actual=hashlib.sha256(data).hexdigest()
+              assert status==200 and len(data)==identity['bytes'] and actual==identity['sha256'],name
+              return {'path':name,'status':status,'sha256':actual,'bytes':len(data),'exactMatch':True}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:files=list(pool.map(verify,manifest['files'].items()))
+          (out/'public-http.json').write_text(json.dumps({'passed':True,'url':os.environ['URL'],'sourceCommit':os.environ['GITHUB_SHA'],'publicationCommit':(out/'publication-commit.txt').read_text().strip(),'files':files},indent=2)+'\n')
+          PY
+      - name: Repeat actual browser checks on public HTTPS
+        timeout-minutes: 12
+        run: python "$ROOT/qa_v056.py" --url "$URL" --out "$EVIDENCE/public" --public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v056-mobile-publication-evidence
+          path: |
+            /tmp/wz056-evidence
+            /tmp/wz056-site
+          retention-days: 30
+          if-no-files-found: error

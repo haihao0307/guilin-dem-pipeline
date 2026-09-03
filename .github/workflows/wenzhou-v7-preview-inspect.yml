@@ -1,0 +1,59 @@
+name: Wenzhou V7 preview transfer inspection
+on:
+  push:
+    branches: [project/wenzhou-v200-17tile-truth-hydrology-rebuild]
+    paths: [.github/workflows/wenzhou-v7-preview-inspect.yml]
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Recover verified members and retain partial transfer evidence
+        run: |
+          python - <<'PY'
+          import sys,json,zlib,hashlib
+          from pathlib import Path,PurePosixPath
+          root=Path('projects/wenzhou/v200/web/v7');sys.path.insert(0,str(root));from decode_transfer import decode_block
+          blocks=[];rep=[]
+          for p in sorted((root/'transfer').glob('block*.txt')):
+              b,q=decode_block(p.read_text());blocks.append(b);rep.append({'file':p.name,**q})
+          data=b''.join(blocks);d=zlib.decompressobj(31);raw=d.decompress(data);pos=0;members=[]
+          evidence=Path('/tmp/wenzhou-v7-recovered');evidence.mkdir(exist_ok=True)
+          (evidence/'partial.tar').write_bytes(raw)
+          while pos+512<=len(raw):
+              h=raw[pos:pos+512]
+              if not any(h):break
+              name=h[:100].split(b'\0')[0].decode();size=int(h[124:136].strip(b'\0 ') or b'0',8)
+              parts=PurePosixPath(name)
+              if parts.is_absolute() or '..' in parts.parts:raise ValueError('Unsafe archive path')
+              complete=pos+512+size<=len(raw);b=raw[pos+512:min(pos+512+size,len(raw))]
+              entry={'path':name,'bytes':size,'complete':complete,'availableBytes':len(b),'availableSha256':hashlib.sha256(b).hexdigest(),'startOffset':pos+512}
+              out=evidence/name;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(b)
+              if complete and h[156:157] in (b'0',b'\0'):
+                  target=root/'site'/name;target.parent.mkdir(parents=True,exist_ok=True)
+                  if target.exists() and target.read_bytes()!=b:raise ValueError('Refuse overwrite '+str(target))
+                  target.write_bytes(b)
+              members.append(entry)
+              if not complete:break
+              pos+=512+((size+511)//512)*512
+          report={'blocks':rep,'decodedBytes':len(raw),'gzipComplete':d.eof,'members':members,'archiveAccepted':False,'deploymentPerformed':False}
+          out=Path('projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json');out.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n');(evidence/'inspection.json').write_text(out.read_text());print(out.read_text())
+          PY
+      - name: Record recovered sources
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json projects/wenzhou/v200/web/v7/site
+          git diff --cached --quiet || git commit -m 'Record exact V7 member recovery and remaining data bytes [skip ci]'
+          git push origin HEAD:project/wenzhou-v200-17tile-truth-hydrology-rebuild
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-v7-recovered-members
+          path: /tmp/wenzhou-v7-recovered
+          retention-days: 30

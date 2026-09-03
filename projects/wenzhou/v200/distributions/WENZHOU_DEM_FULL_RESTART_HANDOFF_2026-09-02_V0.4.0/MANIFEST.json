@@ -1,0 +1,1578 @@
+{
+  "schema": "wenzhou-v200-full-restart-handoff-1",
+  "packageVersion": "V0.4.0",
+  "packageStem": "WENZHOU_DEM_FULL_RESTART_HANDOFF_2026-09-02_V0.4.0",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "project/wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "sourceCommit": "7d3d2b56ffa3de300a60ced7a78123c0b3b1e3a2",
+  "prNumber": 55,
+  "correctedTarget": "single visible 3D scene with Weather Mother clouds above complete Wenzhou terrain, coast, cities and ocean",
+  "currentCheckpointArchitectureAccepted": false,
+  "currentCheckpointPreserved": true,
+  "authoritativeTifIncluded": false,
+  "sourceDeleted": false,
+  "visualApproved": false,
+  "productionApproved": false,
+  "files": [
+    {
+      "path": "00_READ_FIRST/01_USER_CORRECTION_AND_TARGET.md",
+      "bytes": 1617,
+      "sha256": "98e49fb7233f0b3e508e010c777fe453f7add3af314fdbccb747eeeac435bc9c"
+    },
+    {
+      "path": "00_READ_FIRST/02_CURRENT_STATE.md",
+      "bytes": 1595,
+      "sha256": "f2394c2634b7623de72b250f49e0125a9501d37afa1073a723f52f097a5df6bf"
+    },
+    {
+      "path": "00_READ_FIRST/03_NEXT_CHAT_MASTER_INSTRUCTION.md",
+      "bytes": 1903,
+      "sha256": "f8a3e404e1df7f03800e66499fd2ce7b1a678e21e746cf2d879378a11578f6bd"
+    },
+    {
+      "path": "00_READ_FIRST/HANDOFF.json",
+      "bytes": 1033,
+      "sha256": "045477ade540e3ef3c118a9ed451a2073d802df3c2f1f2018cf9e285241d045d"
+    },
+    {
+      "path": "00_READ_FIRST/MOTHER_METHOD_SOURCE_STATUS.md",
+      "bytes": 525,
+      "sha256": "8533954c798c71e5da2d3c757080059bec3a37afc5223fb42ec6cf660e3dd3b9"
+    },
+    {
+      "path": "00_READ_FIRST/START_HERE.md",
+      "bytes": 828,
+      "sha256": "3d60e30230a4713ec2e26280493a684073d98aaee1d950f27f43465b9c3fe13c"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/README.md",
+      "bytes": 2594,
+      "sha256": "4443892fdcbe507f867f193ec36c8311e95b6c202957164b8bb3c47d9ff4a5b9"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/aoi/WENZHOU_17TILE_AOI_EPSG32651.geojson",
+      "bytes": 1333,
+      "sha256": "23b2557dc075fef09e995f6859b11b7209ac04cb04bf633509868c52f1d29b97"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/config/coastal_domain_v200.json",
+      "bytes": 3867,
+      "sha256": "6dcf042bb1ff7ebe32d68f9d43ecd030d0820fde91a475f6c5ea288e2aabc87b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/config/numeric_field_pipeline_v200.json",
+      "bytes": 3123,
+      "sha256": "f71645fb49ee2c82899396cffe17258e0354c2ea2154fdfa4da0d394453f9acc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/config/osm_hydrology_v200.json",
+      "bytes": 3776,
+      "sha256": "234f9bf6715c736f1e7e48f33360e670b324724da93b63269463aa4e7426bc48"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/config/osm_places_v200.json",
+      "bytes": 3233,
+      "sha256": "8d9a9be09ee7629b55e8b75f7e463b7a59090758befd3dbff8818812ab9bd0a7"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/config/osm_water_polygons_v200.json",
+      "bytes": 1851,
+      "sha256": "e60b6f99ed9a0f9bc4705b7619df378cf604201abe360fd4936cd9ce274c3b0c"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/OSM_COASTLINE_SOURCE_WGS84.geojson",
+      "bytes": 7884183,
+      "sha256": "4a2fb99726adf9717daf5a8ec0efe163c9c8ee89b5477add461c7a8f56221cab"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/OSM_WATERWAYS_SOURCE_WGS84.geojson",
+      "bytes": 17476781,
+      "sha256": "2ca865bad34936e296cce5b940f626ae90d510fc26fb22c90cf9707002026262"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/WENZHOU_COASTLINE_EPSG32651.geojson",
+      "bytes": 8699726,
+      "sha256": "f805bf3fd993639452c2cc79c548357bedd4d6dfb91204688f6f113de3be7eb6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson",
+      "bytes": 16890175,
+      "sha256": "be9ff893b26a24dad9808aac5b76625997c0f8b747b0721424b094449115c297"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c0.json.gz",
+      "bytes": 12864,
+      "sha256": "e7e27a8ef365c5cfefb44eb45f45eda5b7a9849e4a2f39b0aa41c187438407e8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "dc73957da9cba60b2e582000fa89a0a1025624670ab243fef744c5d752a95aaf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c1.json.gz",
+      "bytes": 19939,
+      "sha256": "d551fb3acbff2ec35229e0ba1cb3e1e64723b2912875c4543463ef8b092387d1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c1.query.overpassql",
+      "bytes": 238,
+      "sha256": "f41e4a5e769b435c2f6165f25cecb3cf24aac3cd1fb618d29994b828c1ea812e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c2.json.gz",
+      "bytes": 56713,
+      "sha256": "43aeb807fedb7419a19050a4851c0ca42d98bb05ad9e7a85ecf713c7b697c908"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c2.query.overpassql",
+      "bytes": 238,
+      "sha256": "662d39ca506d362c5e0e0fdaf577044ecd8ea2ba43367ead56bec37061fc81b1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c3.json.gz",
+      "bytes": 46609,
+      "sha256": "f6db5829a9d441b5f99e4873b917bb28de1a2a7274f5f64172701fa30004ca99"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c3.query.overpassql",
+      "bytes": 238,
+      "sha256": "59909a31721038f027978b7ead43bcd36a21a9664434b9a7b4e45a381425bf68"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c4.json.gz",
+      "bytes": 39552,
+      "sha256": "30203a49a71632854230f316f2c7f6a1e8ee03e8c72e4b5fdde38897cfc839de"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c4.query.overpassql",
+      "bytes": 238,
+      "sha256": "3a166d2aa8f1d62130fe4961936363886fd05286a3799743df2985f465d66f10"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c5.json.gz",
+      "bytes": 112393,
+      "sha256": "057556f7301e27020def1a39efd04f7715d02316a72fbf241d78760429cc62c0"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_north_r0_c5.query.overpassql",
+      "bytes": 238,
+      "sha256": "7e8fe291b66f901422ca5c2a936c2746789581fa709a07ea994f943b8c4042cd"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c0.json.gz",
+      "bytes": 23344,
+      "sha256": "a68a63a8ec1be646749b756f64cf8febc894da1ea9015cc1819d21fa5ec942f6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "776646e9e7f834cc1c3f4c977558f7f26a714ac0921ebcd3048045caa7ed641b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c1.json.gz",
+      "bytes": 47558,
+      "sha256": "4037fbeb0ec84dce992c664941de035f7c681cda2e5e59da925e5e20d63a5607"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c1.query.overpassql",
+      "bytes": 238,
+      "sha256": "a996a9c2df18dcfe5e254d3983c44b4460fcdf4db605afc6a146af03f380a1d6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c2.json.gz",
+      "bytes": 979,
+      "sha256": "ca22057e1770cd12149aa9b4229bfa09e500cb523c5b5241d18b6008b61eb6eb"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c2.query.overpassql",
+      "bytes": 238,
+      "sha256": "0dfee11ad9bd4ae3a6eca93d75413e7b5e2532d11c83b649608a9200f6a4b66e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c3.json.gz",
+      "bytes": 234,
+      "sha256": "467616a2b349a4c63b875c0ed189aa1b9f3e93a2745dc6e4d74c9c108cbd3c65"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c3.query.overpassql",
+      "bytes": 238,
+      "sha256": "8de5929960d4fa8cde68c06c3d920e50ac175144464315713a46cd7da22ec5b6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c4.json.gz",
+      "bytes": 234,
+      "sha256": "467616a2b349a4c63b875c0ed189aa1b9f3e93a2745dc6e4d74c9c108cbd3c65"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c4.query.overpassql",
+      "bytes": 238,
+      "sha256": "c7f68a753164c6c31de281a4591a034ff13c16bcbf6d2f85eb49a523dd8d9727"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c5.json.gz",
+      "bytes": 235,
+      "sha256": "8d8ed24717d02cac6eb97fac17fe8907baee1aa8e8b588cf470533d2a7eebcb0"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_south_r0_c5.query.overpassql",
+      "bytes": 238,
+      "sha256": "af9c0bff63086098eeac7c38b6ac6ca17dc6357014c81c83e6121866f95b3436"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r0_c0.json.gz",
+      "bytes": 43444,
+      "sha256": "59aee3f21acf08da0b07b5eea54cf2737e3e95f0ef3cf3a52b2f6f50608bd5f1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r0_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "25a886e9b2e7c470b5c0bf6a46b4382dbb0bd69c0cbaf80a13102b954ce04cb5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r1_c0.json.gz",
+      "bytes": 49827,
+      "sha256": "04e40626bcef36e7531effb9394611018825e7ddfd480271582727fd659de99e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r1_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "a660a6f59be4ba97bb7ffb925082ca532944f26d1000b2bdf2c443268b3f1145"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r2_c0.json.gz",
+      "bytes": 19786,
+      "sha256": "db9e04fd18c05ac5ed49c8ac471c7d9a9cf3a5f32d063f08c8d3e2e169b6c56f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r2_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "356f8fa8ef47dd43f9e99c4f984405f2f9a982685bce90f9d77859f6ee1a6203"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r3_c0.json.gz",
+      "bytes": 37622,
+      "sha256": "7f987cf9ba413bedd470fcaab8576613925ad6a9846d47aed70869ae60b11c99"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r3_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "35e7f1e41fb2ce44e61763f8eba83b3a14d129420a2641542d864429daa3fae1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r4_c0.json.gz",
+      "bytes": 55246,
+      "sha256": "f7b9ac894f55961475f083d4bbe8ccfe00186415f2e8b517955c43037e838243"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r4_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "9c648858037cdb617eacaba7bcc7c7cc31d6dfa62b58f15da389d0aea4656db3"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r5_c0.json.gz",
+      "bytes": 52076,
+      "sha256": "0a1da2bf32a859249353b99c4a1c56cf52a6d9662e9424799333f920133fcb02"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm/raw/overpass_west_r5_c0.query.overpassql",
+      "bytes": 238,
+      "sha256": "0657afb11eacc804f71e0aaddf77d295fe30b053609aa486315cccbfd7c5a69d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/WENZHOU_OSM_WATER_POLYGONS_EPSG32651.geojson",
+      "bytes": 35012447,
+      "sha256": "1eba98cdbd1ec2c4be2e1526fd844bb6a2c080d446c282aea0a84ecf174310f2"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/WENZHOU_OSM_WATER_POLYGONS_WGS84.geojson",
+      "bytes": 30078532,
+      "sha256": "321cf5a1af7856b6bbf09f7a10970823dcbd69a0ae5d4a42843d46e3195c1f8e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c0.json.gz",
+      "bytes": 607465,
+      "sha256": "7463aee22050372b8190be1cc122c8a993a34e2782a71f088175fa81e7a84aa5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c0.query.overpassql",
+      "bytes": 692,
+      "sha256": "3bbb08bb5c7166253dac26d9374d527a4e7b67c776614d76be61b39f13f5b031"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c1.json.gz",
+      "bytes": 543489,
+      "sha256": "50bb62f35a49dea1937e625dcf1c88485c984061312270d8932e15e77603d45d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c1.query.overpassql",
+      "bytes": 692,
+      "sha256": "da7255325ffaf57050eb8aeecbab62c1f57fa89cd3e65e8382f62aa396616fe6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c2.json.gz",
+      "bytes": 645,
+      "sha256": "bf180d55c1402b39f83ca903589cd95a456afa8c95912d8c101ca05958825c5b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r0_c2.query.overpassql",
+      "bytes": 692,
+      "sha256": "dc03cdc415777986fd6172dc860ad80f890324c33402945cc683bb7ecb36e2d8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c0.json.gz",
+      "bytes": 258140,
+      "sha256": "8d32208ac6f5a4638a70e1c0e0920c195bddcc4548c1c7d760d83798661b9eb0"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c0.query.overpassql",
+      "bytes": 692,
+      "sha256": "3511072e7a4d1cd163f55a6a417302372e88528185e603ed3998d9e14e185c71"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c1.json.gz",
+      "bytes": 748562,
+      "sha256": "e48066072a0a5e2d79f5dd65f5091a7cae56acc9299a445c77df1f0c598f523a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c1.query.overpassql",
+      "bytes": 692,
+      "sha256": "86f999f981cb0c09e11aa17834c3e967923d5650e41f4fe4e721eefd8fb83e9d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c2.json.gz",
+      "bytes": 213747,
+      "sha256": "6194a461d70404399979973716443c991f12fb63bb1b2b623b6718886336e037"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r1_c2.query.overpassql",
+      "bytes": 692,
+      "sha256": "2208dbf6213c9f06fbf9709c29027eca63790e860c504cebba16e61ef7d13d9d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c0.json.gz",
+      "bytes": 466152,
+      "sha256": "e1155a0ee81865769e23d5449d93a26a26bd388cffa8be8068407d0a0c56c08f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c0.query.overpassql",
+      "bytes": 692,
+      "sha256": "a86eb572a4c821557492fcf52daec6e533129f310a522b7c8ad995016427e109"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c1.json.gz",
+      "bytes": 284813,
+      "sha256": "8fb955f25d1b33b01a7b861d9e77972826e9b527b818b34e69cfd5bfcfe904e7"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c1.query.overpassql",
+      "bytes": 692,
+      "sha256": "fcd26e90d182a10e05f412c3d34346f5dad000e64f2da7f6284c0f4c10eec213"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c2.json.gz",
+      "bytes": 477131,
+      "sha256": "7c3b4b0b9200c1e0abbe5bd46eaee2f6b73d6c827d1f94addde28405b5bf3ea8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/hydrology/osm_water_polygons/raw/overpass_r2_c2.query.overpassql",
+      "bytes": 692,
+      "sha256": "560102854405386d4eff86589fcd8cedf7c0fa2a305aceb2d4d93f9dc7c2b9b3"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/WENZHOU_PLACE_CANDIDATES_WGS84.geojson",
+      "bytes": 29087,
+      "sha256": "57a2aa703c478c4dbd5406a72361d0d5a1cff9ed382b6f2caa01e03c398dbe14"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_LABELS_RESOLUTION.json",
+      "bytes": 55559,
+      "sha256": "a456ac19ee7e94de718c78172700f0ec78be5a1cdd97152b730fa5e6a3e9b9b2"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_PLACES_EPSG32651.geojson",
+      "bytes": 9843,
+      "sha256": "d16da6b25ac9748a117d8c51c0138d03d041e69e74349e32c1862aa30ef0a94d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/WENZHOU_REQUESTED_PLACES_WGS84.geojson",
+      "bytes": 9667,
+      "sha256": "8faee4836ea2133f22978b782699949c507080e3c6ae83582e39bdc104251824"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_haimen.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_haimen.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_natural_island.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_natural_island.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_qingtian.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_qingtian.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_wengyang.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_wengyang.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_wenzhou.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_wenzhou.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_xianxi.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_xianxi.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_yuhu.json.gz",
+      "bytes": 46530,
+      "sha256": "b8f5bdc51c11dd7804ef6a0ccd267b971bbecfd996c2099dda9e59ad0e3c5365"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/places/osm/raw/overpass_yuhu.query.overpassql",
+      "bytes": 7823,
+      "sha256": "30ec89543ed2ffdd65757e27286b2305562df05db04278769aebcbe80d0e60cf"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/tides/kanmen/KANMEN_RELATIVE_TIDE_COMPACT.json",
+      "bytes": 3117,
+      "sha256": "b415ffa58b7a8a70b9f34186efa88f6efe7a91452eaad4e7e87bbc261ad4a732"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/tides/kanmen/KANMEN_RELATIVE_TIDE_HOURLY.csv",
+      "bytes": 50515,
+      "sha256": "4ad10db03314cecd3946aa9428b694c4e3430808005e949dd8e9b6adfb177850"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/tides/kanmen/KANMEN_RELATIVE_TIDE_HOURLY_I16MM.bin",
+      "bytes": 1680,
+      "sha256": "13dce394b4d95b46ae08c3eee230c4383b07d7f229e12421947a3ba588f7e18f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/tides/kanmen/KANMEN_RELATIVE_TIDE_MANIFEST.json",
+      "bytes": 2204,
+      "sha256": "a87175d8fbb9287651b26b1996155252177260c5dc5832e2343a9f5f031d9f7b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/data/tides/kanmen/KANMEN_RELATIVE_TIDE_TURNING_POINTS.csv",
+      "bytes": 4783,
+      "sha256": "4337f710e2046bc1e1cc57b872b8c4c0a59f0eaf8d9cbf341dd662ee7b95984b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/docs/NUMERIC_FIELD_PIPELINE_V200.md",
+      "bytes": 2144,
+      "sha256": "f7dc886352562b60a58b4815ddf12d86d0fa83a0f86f3705cd3afcb4478e56e5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/FULL_NUMERIC_ROUNDTRIP_20260831.json",
+      "bytes": 1909,
+      "sha256": "a5eaff1ee1f4c893891312a4ed67e92e246c2ae70eee419c8bb241461c5a6838"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/distill_full.py",
+      "bytes": 4767,
+      "sha256": "f957929231fdadfc1d6de2060ebf675720100faadc226df8b870f91e10be4920"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_compact/height/00.b64",
+      "bytes": 10000,
+      "sha256": "7681e2b8e43398ff1fc41ef2ddbe3b2ed79ad852428d2960a41678953ad0b05d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/00.txt",
+      "bytes": 6000,
+      "sha256": "517dd443f71b941f3ac49dfc02e702b229449d41d48f7bda833ef72ae8b2f151"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/01.txt",
+      "bytes": 6000,
+      "sha256": "f25c0a1b2a8188fb2155ff274808721148fa562646c806917c0bc0981007cb5c"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/02.txt",
+      "bytes": 6000,
+      "sha256": "8fb11d3992ebedb3bd48dd731b1cb6df8bb19d59c1c176f13e3e2e1818ff57dc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/03.txt",
+      "bytes": 6000,
+      "sha256": "31e3006c8ca4a4f9401b8a8a057d58facc47e36868d12fa8b13b578b21cb42b1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/04.txt",
+      "bytes": 6000,
+      "sha256": "76c5fc8387130dc23013c3bed9e0e7f06b801a419112927792b96eb31d6cb09a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/05.txt",
+      "bytes": 6000,
+      "sha256": "a7a7c33edf48878c3ea7cb7449a4b69cfe0bf5d7e2796fba5c8f948d9d41defc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/06.txt",
+      "bytes": 5884,
+      "sha256": "3476f1ecefeafa10d7675afc7e2c570870f6b03de897167c508cbb7d069fa704"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/07.txt",
+      "bytes": 6190,
+      "sha256": "9569e1aaa3b2d43621a2c780f5e4c0e2301a9ce20be68e7edc6bb42188a4fd5d"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/08.txt",
+      "bytes": 6480,
+      "sha256": "cf8d2249cff0d760879ef6380015005a4aef7cfecc42a7bf3ae90300cec400b1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/09.txt",
+      "bytes": 6129,
+      "sha256": "b5afce2f25eef4c3a4e319fbfcf72587972eb922b6b98ad9d2829619ebc47345"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/10.txt",
+      "bytes": 6476,
+      "sha256": "7e568f9060a1c78dd7db6d776e2a26edbe0692fd59ae991cec4b27f826d27efc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/11.txt",
+      "bytes": 6451,
+      "sha256": "c3e5786d32c408c926644744aeb9cb18e639dc8faceb7adadfe6d1eb8efb428b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/12.txt",
+      "bytes": 6308,
+      "sha256": "7c405c5f8f2241ec6517b40433814640f199061240530600283aa3f43de87a9a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/numeric_migration/fullview_source/13.txt",
+      "bytes": 6647,
+      "sha256": "e90e5411a194457de4d946bc7abb5651f6e7a614b980161a25b4161288d9fe89"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/HYDROLOGY_TOPOLOGY_QA.json",
+      "bytes": 2879,
+      "sha256": "fb3130d8bfac590d741c3e625ee6328e49cf01e7772e28175cb305afd111a7c6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_35D_QA.svg",
+      "bytes": 28161,
+      "sha256": "8ea2dee703e2de31d6e0a83ceafcd965d7925b3b37e6e60b5975dc9654f2fc10"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/KANMEN_RELATIVE_TIDE_NUMERIC_QA.json",
+      "bytes": 2752,
+      "sha256": "b641666cafe01aaedd94894e37addc90f577f1772cdddaafdb7912528e46ead2"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_HYDROLOGY_ACQUISITION.json",
+      "bytes": 49567,
+      "sha256": "911f70c560c51b3e350e2ba9f11cc2d84cd0fcb37f85eb948df903036674da77"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_HYDROLOGY_RECEIPT.json",
+      "bytes": 11254,
+      "sha256": "bcc6f051bae7becf6efe5b09599bb3fa8a3f4b27e12d6d73111d0144b04d4441"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_PLACES_ACQUISITION.json",
+      "bytes": 60807,
+      "sha256": "f514995b514511623693b9e325cd576aacbb84282819eb6a2fc14de53885ef5a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_PLACES_QA.json",
+      "bytes": 1808,
+      "sha256": "17eb0c249d6f502b125bb66d11eaf25d61c49b6c24550059724fe94a3420725b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_PLACES_RECEIPT.json",
+      "bytes": 6879,
+      "sha256": "249485d8919f09344aa4e5deda0ea9f03ac0c28cf69ba853a3fde1ca819e2f66"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_ACQUISITION.json",
+      "bytes": 26306,
+      "sha256": "173a67e3a4428afca780b92f4357b13eea2055bb3db6a3be28e80a4a8a7458c8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_QA.json",
+      "bytes": 1185,
+      "sha256": "3d56d6e074c453e0863330c5e87ccc86c33e316eeb24c260698f45601798e713"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/OSM_WATER_POLYGONS_RECEIPT.json",
+      "bytes": 5143,
+      "sha256": "addae01da65df05f99114d40c53188db96b46de4462045feecb1362b5c06b444"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/V7_NATIVE_PREVIEW_QA.json",
+      "bytes": 2128,
+      "sha256": "5e001176f8affe163bbb3c43d15a033288c04f7c1f8da13a03741b32759818ae"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/V7_PUBLIC_BROWSER_QA.json",
+      "bytes": 8078,
+      "sha256": "9cb98212b85f9f2b86045e483059526b41a058efe53c625970db5f242f6e68ed"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/V7_PUBLIC_HTTP_QA.json",
+      "bytes": 5267,
+      "sha256": "ae889f41f7bd04c05c24f014654d8d0e769925af1a67f9f748a3cc2fa51fb9e5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/V7_SOURCE_AVAILABILITY.json",
+      "bytes": 218,
+      "sha256": "ea1555eb392658d76ff6066ab077bab180c2b7d0cebb1748a86dc6737156980a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/V7_TRANSFER_INSPECTION.json",
+      "bytes": 1164,
+      "sha256": "338cacd73c79f215a3094be1361ba3e9ff17a6942e9a55ac3b937b316fe1c3c2"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/WENZHOU_V200_NUMERIC_PIPELINE_STATE.json",
+      "bytes": 744,
+      "sha256": "332e3868899b962ccd98028cdf34ef7445b45a22f741d170ac798143c0650fba"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/WENZHOU_V200_OSM_REACQUISITION_STATE.json",
+      "bytes": 715,
+      "sha256": "1c33301824aeaf4bba2426504240806300c3b541e93380f01a7b504a317d8754"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/WENZHOU_V700_PUBLIC_HTTP_QA.json",
+      "bytes": 566,
+      "sha256": "88e372cac8439dc639a4951d0422eccd0884dd5cac3ef392ac89143f5f36256e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-delivery/DELIVERY_CHECK.json",
+      "bytes": 1104,
+      "sha256": "230b1f46eaa5b1dde8aae1f46de3f2765ce53a6a07aab85ac95b5435b6216b71"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-delivery/browser-qa.json",
+      "bytes": 8117,
+      "sha256": "709e59048ad85d1adc9a8f24a53544cd64c94c196503b3d6f752da5e5dfe6b34"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-delivery/public-http-numeric-check.json",
+      "bytes": 3157,
+      "sha256": "530db370bf64dbb44604fe628c8b0c06a6e5dcea8c09f8e882306a9dc08fc498"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-full-r3/DATA_QA.json",
+      "bytes": 741,
+      "sha256": "be8c56de5cc751139e7b1c89c8eee46c4933128f33c7dbce9bbd9593849ffb87"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-full-r3/PUBLIC_BROWSER_QA.json",
+      "bytes": 9511,
+      "sha256": "1bb6983bade00b2eeff6795c088d32809e2c633d0f7785f8e7641a6dc1d69594"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/v7-full-r3/PUBLIC_HTTP_QA.json",
+      "bytes": 3628,
+      "sha256": "2a1defbdb9300e5d18e2da161b0a29852f4dfb2917a3d7d2419f26ddb9c90c6e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/weather-workbench/BUILD.json",
+      "bytes": 4631,
+      "sha256": "f8c6f6f337aadbee87edaa1e9d85a8aaf120da5f5eb9bd82e257c678e5dc52f1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/weather-workbench/COMPACT_UI_DELIVERY.json",
+      "bytes": 2215,
+      "sha256": "ff13442a39e218a8bd4828875cc79d911d5c2cf38bf2d346eb19f75afa0f31a1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/weather-workbench/DELIVERY_RECEIPT.json",
+      "bytes": 5529,
+      "sha256": "8d33a7e4c7665de20f97ac79dd39062ab9a47cf09ea519b512e1225f3f0d53e9"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/weather-workbench/PUBLIC_HTTP.json",
+      "bytes": 7404,
+      "sha256": "0edd78e624e6a22580d6b56167dd2bacfa2c07fbeb31762efe84ef1a3361db8a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/reports/weather-workbench/browser-qa.json",
+      "bytes": 27778,
+      "sha256": "460ccee5132b14e9e470dcabfa298d5297b71388cda3ac60e820f76f89213567"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/acquire_osm_places_v200.py",
+      "bytes": 24946,
+      "sha256": "0a1f53fa81b505072338cac6d26d6c6604d2f9ba9ade8b9b5e063599944daca8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/acquire_osm_seed_and_fringe_v200.py",
+      "bytes": 36137,
+      "sha256": "46678c02b5e2be90747c9691515a0398d2be767f574e33a6ba26fd9def967d13"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/acquire_osm_water_polygons_v200.py",
+      "bytes": 20250,
+      "sha256": "4e7b2a86515e2c88351829d2ba3305fe20a82fb3c878eb26a4e7dc1a66b0910e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/build_kanmen_relative_tide_v200.py",
+      "bytes": 23342,
+      "sha256": "a7b565794b24da822c2d66ad4079fcc731406f8dc09d5c15a296ede22bc2cb93"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/run_osm_places_v200.py",
+      "bytes": 3176,
+      "sha256": "4a4ca8d814b9d1ffe503872939b84561acc94bab228e6861b4685ed9e567ee87"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/scripts/run_osm_reacquisition_v200.py",
+      "bytes": 10434,
+      "sha256": "773cb2acc3ed28585f147fe946424ab1be8ef2f6c76f2ddf21164a95d7b25f52"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/truth/README.md",
+      "bytes": 1247,
+      "sha256": "c58e37442bb233dcce98fb69e58187bf5218cef54c357935cbaf0e8b1b3cec54"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/truth/WENZHOU_17TILE_TRUTH_MANIFEST.json",
+      "bytes": 2840,
+      "sha256": "533ec8d8fdbfb5a60824e75e1dcb717f8f597562bdb506e1a798d0130564fff6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/build_vectors.py",
+      "bytes": 5830,
+      "sha256": "7ce944ad3117de6cfe0edfc2b9b135decedbeca17df7c1070090461beb01928c"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/decode_transfer.py",
+      "bytes": 3175,
+      "sha256": "cd77237453fae3bbd8359da0ffc21f9ac6bdea8445c9eeedf567f8b78ba8da11"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/feiyun_window_fix.py",
+      "bytes": 940,
+      "sha256": "9671e358d468de763d5bfef6e68c93144637d109ea5d599cedf0e9dacac4ef42"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/qa_v7.py",
+      "bytes": 6280,
+      "sha256": "3083a370f888d78ad1df90a16baa1df4d6f86d6b3b7ae2658dafcf431233bed5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/recover_native.py",
+      "bytes": 3757,
+      "sha256": "81fd5472da53811a0d1a63dc650c5718d6cf611713069481a8f28056345ab69a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/repair_runtime.py",
+      "bytes": 4088,
+      "sha256": "fef2ba880a5b713c198522ba6924031fee73e960871e16b57fc1e20137e45d22"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/app.js",
+      "bytes": 16421,
+      "sha256": "77cae4e1b9aa34fe6795adb85d28e3a7413b25e4b3e10d1f2225f4217fa58b02"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/data/feiyun.wzn64",
+      "bytes": 5064,
+      "sha256": "eb7c29d251bcaee322bf76b2d6698a747fcd6cbffe939364e55b696b86a2a2fc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/distillation-qa.json",
+      "bytes": 1601,
+      "sha256": "b3e7c21d55f779d18156a7db5aee89155e698386486f9562622db54cc368a929"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/index.html",
+      "bytes": 6692,
+      "sha256": "2c8cc39c6d6f08757af0c35717a9aaca3a5678ab119733d825792adb3b5ffff1"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/manifest.json",
+      "bytes": 1957,
+      "sha256": "008b48c5217192a7523575d0185c306844c8997044aec5c865049f4f0ddef4d5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/math.js",
+      "bytes": 4651,
+      "sha256": "475d031e76b516cab6c8baf7359dfaaf8391bb0f389c5aadb2bd32849aba56f0"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/runtime.js",
+      "bytes": 19390,
+      "sha256": "7a41376542d8fb39a791feef956662b2ff8e7004930a8e241c82066c7360cb8b"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/site/shaders.js",
+      "bytes": 3574,
+      "sha256": "2b46ef9e618ead502524e4ad368ea5b2751b7b67bf8af5fd8bc061dadb76d845"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/block00.txt",
+      "bytes": 10760,
+      "sha256": "6ca0bbb7ac95f471d06d5f23a7c4278157fc32fcf2a1ef678ee80609afd1f362"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/block01.txt",
+      "bytes": 10760,
+      "sha256": "8f972f0c913aedebbe98f527bd2ab60bbed2ed7d3eb5b004023f563e991261dc"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/block02.txt",
+      "bytes": 10760,
+      "sha256": "8b0fcac28165a79de2d0e914e53057f0b93a5bba83de0c92838163b66decb204"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/block03.txt",
+      "bytes": 10760,
+      "sha256": "050278a71613219d7f6e3d20efd06ca392fe395e66c1d611d632ed1eb4c7876a"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/block04.txt",
+      "bytes": 10759,
+      "sha256": "e17fb9e935df199ce595c31c0ada4016c03023cc8560e512c4df6c65636d8e1e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/dongtou-tail.txt",
+      "bytes": 925,
+      "sha256": "ab658ee8048e3a998761df1d219172b557ba34afc4e304b5f5e51c25a696af84"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/dongtou_tail.txt",
+      "bytes": 925,
+      "sha256": "ab658ee8048e3a998761df1d219172b557ba34afc4e304b5f5e51c25a696af84"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/feiyun_00.txt",
+      "bytes": 9684,
+      "sha256": "6de6f7b9bebea034f98c38eba80050d41c9de99f28f3bc95447ca6d080f63d12"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/feiyun_01.txt",
+      "bytes": 9898,
+      "sha256": "47808b4a3951b04843d0268e4314732a51cffaccddd6c1eb7ac61d7bdbfbbd5f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/feiyun_02.txt",
+      "bytes": 5054,
+      "sha256": "db0dfc8a639daa29bf04349f69799e55d2286ef4df160b0b957c4c9931677ae7"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/overview_00.txt",
+      "bytes": 10760,
+      "sha256": "e18f1d5c382432a5bea9fe40e15d11f35105c11f3cd7ca13a895fe01a3115027"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/overview_01.txt",
+      "bytes": 10760,
+      "sha256": "30c904a9f7c2e9f717c969d634e60972823111aafe40fa88d3d48274a9793e1f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/overview_02.txt",
+      "bytes": 10341,
+      "sha256": "2480e217761291fa68288da5bdc671b5e16dfb2b6ed4a4370104d00dc8fc8970"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/transfer/overview_03.txt",
+      "bytes": 5549,
+      "sha256": "e31f085b00a4eaa5deda5d714e3ff0f6bf38e98e48b3a45ea81a6b64d5508c06"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7/upload/part00.b64",
+      "bytes": 16003,
+      "sha256": "d6874d759782c46d0687b2ec78b19f73da3bd98dd173dd6047da1a1d7704ba49"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/SCOPE.md",
+      "bytes": 1777,
+      "sha256": "5f4fb3c520db657c65aa24712dabfa6209c452dc6e4028600be1ea2e682e964f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/build.py",
+      "bytes": 5738,
+      "sha256": "bff3933dd36926f5e9af8b87f3a9c55fdd51307b22721d649e8bd39b13225fea"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/data/MATERIALIZATION_QA.json",
+      "bytes": 1187,
+      "sha256": "3b68439eb27e0f6ced5992d5743807886b385ff851b60fb9fe9b408ae8c114b5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/data/SOURCE_OVERVIEW.json",
+      "bytes": 6937,
+      "sha256": "4759fd0f92c2361ef249a17322f1c8b9b38ae4fd6869a64104ad14b993d6167c"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/data/marine800.u8.gz",
+      "bytes": 1629,
+      "sha256": "a5e34d3e2e09b704a76b415222a44f3ef02294de3fb59efc3433827197c7fbcd"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/data/overview800.i16.gz",
+      "bytes": 75868,
+      "sha256": "4761261bf6583f62916727dcb2f36d8924c34ceb8910e9293a08046b26598577"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/index.html",
+      "bytes": 6134,
+      "sha256": "3d4245ad836cede14e03809c2c80fa64d9423e0c09af89413bd5463725107b97"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/math.js",
+      "bytes": 1286,
+      "sha256": "1b8008d1ef7b1a3c5333a1219f5df460f6b254f51e8384d00a681320fe413e7e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/qa.py",
+      "bytes": 8084,
+      "sha256": "3e6ccca9b7cd7003b5822dfc198b325fca150058e234535a30bf47f48bb37be8"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/runtime.js",
+      "bytes": 14971,
+      "sha256": "a2f393d19fe9f06ca5a4b104070ce2bcb0fbdf3f402209f490e8fc518f4c590e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v7-full/shaders.js",
+      "bytes": 3478,
+      "sha256": "40346ac68448539689116550b2303e5c2973e5e32c35bf531d116ab2f3d3040e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v711/data/manifest.json",
+      "bytes": 1847,
+      "sha256": "947b7bcecb2f4fb2e55f86070a1b84cda2f44e0ed6180b3439b3cd0a1b14c663"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v711/data/rivers_dongtou.part000.txt",
+      "bytes": 1035,
+      "sha256": "089d61f374eee869dd68af00d26d1397829b2ca39a10a6df0aa54b9a307d7503"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v712/data/manifest.json",
+      "bytes": 1402,
+      "sha256": "3b1cec2a45b4e617cbd526a521844373e28b87c6df31a004cc1d361e738709d5"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/v713/archive/site.part000.b64",
+      "bytes": 18000,
+      "sha256": "2c46d568fa0124201b7d2850ddb133d6428d1230864565ede3c9aeae314fdfc6"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/ADOPTION.json",
+      "bytes": 3358,
+      "sha256": "5360d636fc9451cfae504ebefdeef16c460e1ad8ec091c4570cf13df81bb7b1f"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/assemble.py",
+      "bytes": 11062,
+      "sha256": "860a8b9e8f0108b8054b5acf89c62af1e097c5989da6162ec3abd77a6c30c370"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/bridge.test.mjs",
+      "bytes": 3054,
+      "sha256": "d6cd2f40e20a9228f8905563710e2dd9fde38db1a48bd04206cf20bc3fa3bd56"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/index.html",
+      "bytes": 5305,
+      "sha256": "fc083229cf4ebbeabd03adb99f07c5905f5267a62d86c1f157675a826ee81504"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/qa_workbench.py",
+      "bytes": 13650,
+      "sha256": "d80c8bcae42b174f03e21cc7b74b8c52722783f0b2ce4edf9f5e6dd5fc85b64e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/weather-bridge.mjs",
+      "bytes": 4673,
+      "sha256": "30903fb940afa2c593ae79a572e171d84ab9bb2d107b7e0ba041c73131556c8e"
+    },
+    {
+      "path": "01_WENZHOU_V200_SOURCE/projects/wenzhou/v200/web/workbench/workbench.js",
+      "bytes": 6426,
+      "sha256": "8570c2ff16f217edf53224c79df9a2c6868818c5d69bf9b4d898c5216a61d633"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/ADOPTION.json",
+      "bytes": 3358,
+      "sha256": "5360d636fc9451cfae504ebefdeef16c460e1ad8ec091c4570cf13df81bb7b1f"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/assemble.py",
+      "bytes": 11062,
+      "sha256": "860a8b9e8f0108b8054b5acf89c62af1e097c5989da6162ec3abd77a6c30c370"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/bridge.test.mjs",
+      "bytes": 3054,
+      "sha256": "d6cd2f40e20a9228f8905563710e2dd9fde38db1a48bd04206cf20bc3fa3bd56"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/index.html",
+      "bytes": 5305,
+      "sha256": "fc083229cf4ebbeabd03adb99f07c5905f5267a62d86c1f157675a826ee81504"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/qa_workbench.py",
+      "bytes": 13650,
+      "sha256": "d80c8bcae42b174f03e21cc7b74b8c52722783f0b2ce4edf9f5e6dd5fc85b64e"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/weather-bridge.mjs",
+      "bytes": 4673,
+      "sha256": "30903fb940afa2c593ae79a572e171d84ab9bb2d107b7e0ba041c73131556c8e"
+    },
+    {
+      "path": "02_CURRENT_WORKBENCH_SOURCE/workbench.js",
+      "bytes": 6426,
+      "sha256": "8570c2ff16f217edf53224c79df9a2c6868818c5d69bf9b4d898c5216a61d633"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/BUILD.json",
+      "bytes": 4631,
+      "sha256": "f8c6f6f337aadbee87edaa1e9d85a8aaf120da5f5eb9bd82e257c678e5dc52f1"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/index.html",
+      "bytes": 5305,
+      "sha256": "fc083229cf4ebbeabd03adb99f07c5905f5267a62d86c1f157675a826ee81504"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/HANDOFF.json",
+      "bytes": 3957,
+      "sha256": "31d18518728c5c6abe370ddd83c15e0772cf027b6415ed8bc7e89e667c87cf33"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/INTEGRATION.md",
+      "bytes": 5355,
+      "sha256": "82a2b0ec653d0e5bce70e62578eb3d945f94d02c51378d57fe868fd0ef13c1cf"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/POLICY.json",
+      "bytes": 5656,
+      "sha256": "80aef698e30a6378e25d6eeb7c6ee67c1df24e6ae96faef5f4df4ef62d19c8d3"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/QA.json",
+      "bytes": 7081,
+      "sha256": "783465b659cf7594660f2507bf276a2c572c2f2cddd9df0ba4a4963b79bf65a3"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/START_HERE.md",
+      "bytes": 1772,
+      "sha256": "d295ca7a8904a00110d39a23910e734d6bfce8a727e72e43b46ae6fc50377927"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/cloud.glsl",
+      "bytes": 13871,
+      "sha256": "5f1f66eaa0b9ef17b8353f453c34c5f976882f4f208033e3d497d0a073b00051"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/engine.js",
+      "bytes": 35951,
+      "sha256": "1fd7329544e849ebf3ed4ba95c97c538c8ebdfb7fe367a02d96c46bafea3e0e5"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/field-worker.js",
+      "bytes": 12259,
+      "sha256": "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/index.html",
+      "bytes": 15908,
+      "sha256": "03fb742ee0810110844dedd28abf1e2e82c6d8c2cac6e823f0087b1566e59635"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/motion.js",
+      "bytes": 4272,
+      "sha256": "ad111fe1280e15a33981589c75af9e9bfb38f5b89bde735980129852e392622c"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/modules/weather-mother/optics.js",
+      "bytes": 5009,
+      "sha256": "e27a0b56c6f6c2c3bf2b55f4494ef421e6eaedc9676dc3dabaeaf73817af53e8"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/DATA_QA.json",
+      "bytes": 741,
+      "sha256": "be8c56de5cc751139e7b1c89c8eee46c4933128f33c7dbce9bbd9593849ffb87"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/data/classes.u8.gz",
+      "bytes": 2127,
+      "sha256": "8f74e4d4d887ae2669bf1948a70f4639a69a09390ce3bcd69af13ef45f9e38dc"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/data/overview800.i16.gz",
+      "bytes": 73902,
+      "sha256": "984ed27388756432154e5d66acbac82355e06a15a19c9acb7e31bad33e4acdc1"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/data/shore.u16.gz",
+      "bytes": 118412,
+      "sha256": "ecd3b7b97f6998bc02655b3ffaf53ae31d3991e0fe40295168fcfe28f721ccbc"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/data/vectors.json.gz",
+      "bytes": 6044961,
+      "sha256": "30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/index.html",
+      "bytes": 7539,
+      "sha256": "f4a8e8b679c9346c7c365e384aa6a8dbd91defee237b23bfc5a26bab7deaeb6c"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/manifest.json",
+      "bytes": 9005,
+      "sha256": "682f7a39020980028b619de359ec2c92f4c777f03e9ee19146533f3a8ab92e9a"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/math.js",
+      "bytes": 1286,
+      "sha256": "1b8008d1ef7b1a3c5333a1219f5df460f6b254f51e8384d00a681320fe413e7e"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/runtime.js",
+      "bytes": 17423,
+      "sha256": "d3acf3e921d001cf2a905667f61df1fb58a5c10df5b8b5672e09092f7dfcf597"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/terrain/shaders.js",
+      "bytes": 4477,
+      "sha256": "66999eb285a9500cdb1a1c618b9aedcd3a05f4ce282f6646e6bae8d6c6908fc9"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/weather-bridge.mjs",
+      "bytes": 4673,
+      "sha256": "30903fb940afa2c593ae79a572e171d84ab9bb2d107b7e0ba041c73131556c8e"
+    },
+    {
+      "path": "03_PUBLISHED_CHECKPOINT/workbench.js",
+      "bytes": 6426,
+      "sha256": "8570c2ff16f217edf53224c79df9a2c6868818c5d69bf9b4d898c5216a61d633"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/Weather_Mother_Full_Clean_V1.1.0.receipt.json",
+      "bytes": 3327,
+      "sha256": "ac3c1c2a26be7fdc098cde4bde03ca87f7ba341d7c66111c23a848d788390f34"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/Weather_Mother_Full_Clean_V1.1.0.zip",
+      "bytes": 46075,
+      "sha256": "ac1cd919b007eff60f2288106ca32cb8ff7f96ea8e02e52cec16d8045bb6ae6e"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/HANDOFF.json",
+      "bytes": 3957,
+      "sha256": "31d18518728c5c6abe370ddd83c15e0772cf027b6415ed8bc7e89e667c87cf33"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/INTEGRATION.md",
+      "bytes": 5355,
+      "sha256": "82a2b0ec653d0e5bce70e62578eb3d945f94d02c51378d57fe868fd0ef13c1cf"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/POLICY.json",
+      "bytes": 5656,
+      "sha256": "80aef698e30a6378e25d6eeb7c6ee67c1df24e6ae96faef5f4df4ef62d19c8d3"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/QA.json",
+      "bytes": 7081,
+      "sha256": "783465b659cf7594660f2507bf276a2c572c2f2cddd9df0ba4a4963b79bf65a3"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/START_HERE.md",
+      "bytes": 1772,
+      "sha256": "d295ca7a8904a00110d39a23910e734d6bfce8a727e72e43b46ae6fc50377927"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/cloud.glsl",
+      "bytes": 13871,
+      "sha256": "5f1f66eaa0b9ef17b8353f453c34c5f976882f4f208033e3d497d0a073b00051"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/engine.js",
+      "bytes": 35951,
+      "sha256": "1fd7329544e849ebf3ed4ba95c97c538c8ebdfb7fe367a02d96c46bafea3e0e5"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/field-worker.js",
+      "bytes": 12259,
+      "sha256": "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/index.html",
+      "bytes": 15908,
+      "sha256": "03fb742ee0810110844dedd28abf1e2e82c6d8c2cac6e823f0087b1566e59635"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/motion.js",
+      "bytes": 4272,
+      "sha256": "ad111fe1280e15a33981589c75af9e9bfb38f5b89bde735980129852e392622c"
+    },
+    {
+      "path": "04_WEATHER_MOTHER_REFERENCE/clean-v110/optics.js",
+      "bytes": 5009,
+      "sha256": "e27a0b56c6f6c2c3bf2b55f4494ef421e6eaedc9676dc3dabaeaf73817af53e8"
+    },
+    {
+      "path": "05_RULES_AND_CONTRACTS/WENZHOU_V200_17TILE_TRUTH_HYDROLOGY_REBUILD.md",
+      "bytes": 3991,
+      "sha256": "0425afbca6d7b89f7080927ab1fab86b73d581ce92c6ea9b4acc3f399b7c03e6"
+    },
+    {
+      "path": "05_RULES_AND_CONTRACTS/wenzhou-v200-osm-hydrology.yml",
+      "bytes": 14306,
+      "sha256": "cd7eef27f44357f09cb18310fc3a346dc079eb71ba72928c1adc457d872a52bf"
+    },
+    {
+      "path": "05_RULES_AND_CONTRACTS/wenzhou-v200-truth-lfs-verify.yml",
+      "bytes": 5498,
+      "sha256": "8030df7e6c85a4c782f15445e2e82715d14f1b508a6256c90933c82d3d494752"
+    },
+    {
+      "path": "05_RULES_AND_CONTRACTS/wenzhou-v7-full-deliver.yml",
+      "bytes": 9281,
+      "sha256": "ab3db3b30e4287616e0004c95709f78c363a8323040f0b2cafa2f2a15246b472"
+    },
+    {
+      "path": "05_RULES_AND_CONTRACTS/wenzhou-weather-workbench.yml",
+      "bytes": 9520,
+      "sha256": "0188466637a6caaa27d82456380a19d77ca27f049994a2745d4d5b35df34e595"
+    },
+    {
+      "path": "06_EVIDENCE/LATEST_SUCCESSFUL_WORKBENCH_RUN.txt",
+      "bytes": 12,
+      "sha256": "767358644c72c569771c7c6be785eaa8bc0be7bce8fa7dee16449b97c126d8b4"
+    },
+    {
+      "path": "06_EVIDENCE/branch-reports/BUILD.json",
+      "bytes": 4631,
+      "sha256": "f8c6f6f337aadbee87edaa1e9d85a8aaf120da5f5eb9bd82e257c678e5dc52f1"
+    },
+    {
+      "path": "06_EVIDENCE/branch-reports/COMPACT_UI_DELIVERY.json",
+      "bytes": 2215,
+      "sha256": "ff13442a39e218a8bd4828875cc79d911d5c2cf38bf2d346eb19f75afa0f31a1"
+    },
+    {
+      "path": "06_EVIDENCE/branch-reports/DELIVERY_RECEIPT.json",
+      "bytes": 5529,
+      "sha256": "8d33a7e4c7665de20f97ac79dd39062ab9a47cf09ea519b512e1225f3f0d53e9"
+    },
+    {
+      "path": "06_EVIDENCE/branch-reports/PUBLIC_HTTP.json",
+      "bytes": 7404,
+      "sha256": "0edd78e624e6a22580d6b56167dd2bacfa2c07fbeb31762efe84ef1a3361db8a"
+    },
+    {
+      "path": "06_EVIDENCE/branch-reports/browser-qa.json",
+      "bytes": 27778,
+      "sha256": "460ccee5132b14e9e470dcabfa298d5297b71388cda3ac60e820f76f89213567"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/ADOPTION.json",
+      "bytes": 3358,
+      "sha256": "5360d636fc9451cfae504ebefdeef16c460e1ad8ec091c4570cf13df81bb7b1f"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/INPUTS.json",
+      "bytes": 323,
+      "sha256": "a165c6736e47fa2afe76eac2233a119774fa0fc4d96ad4b8621bda790eee0bca"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/PUBLIC_HTTP.json",
+      "bytes": 7404,
+      "sha256": "0edd78e624e6a22580d6b56167dd2bacfa2c07fbeb31762efe84ef1a3361db8a"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/bridge-fixture-tests.tap",
+      "bytes": 3056,
+      "sha256": "ca3dcb43ff207d84feeb5d103588eb0719d0880ceeaa3808321e446ec907051b"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/browser-qa.json",
+      "bytes": 27758,
+      "sha256": "cc6b64a00d1a9d46eadd5298e76fd252251d80edf8cc3702c9fa62f397aa1700"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/map-water-off.png",
+      "bytes": 319142,
+      "sha256": "f7da4697274f2b53eecb6443b9bd149658a68bbd830cdff2e87aa2b466165c14"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/map-water-on.png",
+      "bytes": 468638,
+      "sha256": "872b2142a75b9cbc0e9a316b8f147c16e0a326475066197f57548f975685c78e"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/mobile-compact-full-map.png",
+      "bytes": 89411,
+      "sha256": "fd32039ef2d50184367cd2a0282337b59f9b4fc60f5c91adef64991bf171883c"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/mobile-compact-workbench.png",
+      "bytes": 89072,
+      "sha256": "6d9932acf9d7bc96f48a8284bf62b7f3b18ebfbd839e7122fa6afa6813847666"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/ultrawide-compact-full-map.png",
+      "bytes": 501140,
+      "sha256": "7acdd813ae0e279db1ef133efd6298e88978e5451da66f8726494bd831db9e44"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local/ultrawide-compact-workbench.png",
+      "bytes": 488554,
+      "sha256": "b778881781aaa5c579bba50fed237d9ff893d185c3b899fa233a98a463a0ce95"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/local-http.log",
+      "bytes": 5774,
+      "sha256": "a51235a6dea92afde03f9799c0a25bd902d1d8fd1228eebe8b0569bdfa99460c"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/pages-request-error.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/pages-request.json",
+      "bytes": 94,
+      "sha256": "9764d18f8f5e1c13f7222a053c60bfb9750fde6bab090d42ed9bc5e289048bdb"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/browser-qa.json",
+      "bytes": 27778,
+      "sha256": "460ccee5132b14e9e470dcabfa298d5297b71388cda3ac60e820f76f89213567"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/map-water-off.png",
+      "bytes": 319140,
+      "sha256": "2c9056e9fc86dadec186f6f026a64d54c8015693e7f2f3e94df3ceba8ef8f777"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/map-water-on.png",
+      "bytes": 468404,
+      "sha256": "f3fa30bce2d1112bfc066f774f451c4b233a30e23d18bf4b0bf6130a4f61fe5e"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/mobile-compact-full-map.png",
+      "bytes": 89408,
+      "sha256": "0affa410784ef58cc4d0b69beb151c9428e034aa4e64dac9b74df49742d5192c"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/mobile-compact-workbench.png",
+      "bytes": 89046,
+      "sha256": "4f5444ba7f5af8125eb59c3dc2c8838d9f0b4132dc97df8c98d30c8956c09663"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/ultrawide-compact-full-map.png",
+      "bytes": 501018,
+      "sha256": "12a145584a4ee22ca9e4e7ed6bd6ea5cca1fc7688b32b02d02e14ebeef0728da"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/public/ultrawide-compact-workbench.png",
+      "bytes": 488514,
+      "sha256": "3f58857e13c5f6c68b6a884806e40ad59b8af2ac0a2cc022c58595fc3ab2deda"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-evidence/publication-commit.txt",
+      "bytes": 41,
+      "sha256": "3d9e4bf341a59c5976b8d0e9e76cfaffebd2bab2eaa4263a0b92bc06850adc09"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/BUILD.json",
+      "bytes": 4631,
+      "sha256": "f8c6f6f337aadbee87edaa1e9d85a8aaf120da5f5eb9bd82e257c678e5dc52f1"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/index.html",
+      "bytes": 5305,
+      "sha256": "fc083229cf4ebbeabd03adb99f07c5905f5267a62d86c1f157675a826ee81504"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/HANDOFF.json",
+      "bytes": 3957,
+      "sha256": "31d18518728c5c6abe370ddd83c15e0772cf027b6415ed8bc7e89e667c87cf33"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/INTEGRATION.md",
+      "bytes": 5355,
+      "sha256": "82a2b0ec653d0e5bce70e62578eb3d945f94d02c51378d57fe868fd0ef13c1cf"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/POLICY.json",
+      "bytes": 5656,
+      "sha256": "80aef698e30a6378e25d6eeb7c6ee67c1df24e6ae96faef5f4df4ef62d19c8d3"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/QA.json",
+      "bytes": 7081,
+      "sha256": "783465b659cf7594660f2507bf276a2c572c2f2cddd9df0ba4a4963b79bf65a3"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/START_HERE.md",
+      "bytes": 1772,
+      "sha256": "d295ca7a8904a00110d39a23910e734d6bfce8a727e72e43b46ae6fc50377927"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/cloud.glsl",
+      "bytes": 13871,
+      "sha256": "5f1f66eaa0b9ef17b8353f453c34c5f976882f4f208033e3d497d0a073b00051"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/engine.js",
+      "bytes": 35951,
+      "sha256": "1fd7329544e849ebf3ed4ba95c97c538c8ebdfb7fe367a02d96c46bafea3e0e5"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/field-worker.js",
+      "bytes": 12259,
+      "sha256": "a93ed87ddda5e656e377b95719571cd334a167047931bcfe2e584f068227ce2d"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/index.html",
+      "bytes": 15908,
+      "sha256": "03fb742ee0810110844dedd28abf1e2e82c6d8c2cac6e823f0087b1566e59635"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/motion.js",
+      "bytes": 4272,
+      "sha256": "ad111fe1280e15a33981589c75af9e9bfb38f5b89bde735980129852e392622c"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/modules/weather-mother/optics.js",
+      "bytes": 5009,
+      "sha256": "e27a0b56c6f6c2c3bf2b55f4494ef421e6eaedc9676dc3dabaeaf73817af53e8"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/DATA_QA.json",
+      "bytes": 741,
+      "sha256": "be8c56de5cc751139e7b1c89c8eee46c4933128f33c7dbce9bbd9593849ffb87"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/data/classes.u8.gz",
+      "bytes": 2127,
+      "sha256": "8f74e4d4d887ae2669bf1948a70f4639a69a09390ce3bcd69af13ef45f9e38dc"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/data/overview800.i16.gz",
+      "bytes": 73902,
+      "sha256": "984ed27388756432154e5d66acbac82355e06a15a19c9acb7e31bad33e4acdc1"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/data/shore.u16.gz",
+      "bytes": 118412,
+      "sha256": "ecd3b7b97f6998bc02655b3ffaf53ae31d3991e0fe40295168fcfe28f721ccbc"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/data/vectors.json.gz",
+      "bytes": 6044961,
+      "sha256": "30c3411dea02dfa85482772a1f3afdcd8fff487907786310c5415476370cad39"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/index.html",
+      "bytes": 7539,
+      "sha256": "f4a8e8b679c9346c7c365e384aa6a8dbd91defee237b23bfc5a26bab7deaeb6c"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/manifest.json",
+      "bytes": 9005,
+      "sha256": "682f7a39020980028b619de359ec2c92f4c777f03e9ee19146533f3a8ab92e9a"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/math.js",
+      "bytes": 1286,
+      "sha256": "1b8008d1ef7b1a3c5333a1219f5df460f6b254f51e8384d00a681320fe413e7e"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/runtime.js",
+      "bytes": 17423,
+      "sha256": "d3acf3e921d001cf2a905667f61df1fb58a5c10df5b8b5672e09092f7dfcf597"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/terrain/shaders.js",
+      "bytes": 4477,
+      "sha256": "66999eb285a9500cdb1a1c618b9aedcd3a05f4ce282f6646e6bae8d6c6908fc9"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/weather-bridge.mjs",
+      "bytes": 4673,
+      "sha256": "30903fb940afa2c593ae79a572e171d84ab9bb2d107b7e0ba041c73131556c8e"
+    },
+    {
+      "path": "06_EVIDENCE/latest-workbench/wenzhou-weather-site/workbench.js",
+      "bytes": 6426,
+      "sha256": "8570c2ff16f217edf53224c79df9a2c6868818c5d69bf9b4d898c5216a61d633"
+    },
+    {
+      "path": "07_GIT_STATE/GIT_STATUS.txt",
+      "bytes": 149,
+      "sha256": "1afd8790bd14a1807b4ba59ca63b052220e76f74b3903bd9da61d69057513e4d"
+    },
+    {
+      "path": "07_GIT_STATE/PR_55.json",
+      "bytes": 18969,
+      "sha256": "7fd520fdee7440523fe13677b556c9ea71ece4c5f42ec67e3d82c287defc9589"
+    },
+    {
+      "path": "07_GIT_STATE/RECENT_COMMITS.txt",
+      "bytes": 4963,
+      "sha256": "c192a4f3c724e003fe753d6ca33d8974d9b9e1ba72dd4c2a1067c5c6f8fc0d31"
+    },
+    {
+      "path": "07_GIT_STATE/SOURCE_COMMIT.txt",
+      "bytes": 41,
+      "sha256": "76638300bc30bb463eb88545ef97683efe25ce09d48364d1bc3f1a714c2fa13c"
+    },
+    {
+      "path": "07_GIT_STATE/SOURCE_COMMIT_FULL.txt",
+      "bytes": 353,
+      "sha256": "a95ac62a2dd6c349f4a25a21431ef0f136647aedd7938f95810a2912b6e70ea2"
+    },
+    {
+      "path": "08_HEAVY_ASSET_IDENTITIES/NOT_INCLUDED_HEAVY_ASSETS.md",
+      "bytes": 594,
+      "sha256": "29ee30c7bbbe511fd2d00bb07f01309457f938e4da6ddd5c95018bbd94d51f7f"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "wenzhou_v200_numeric_field_pipeline@1.0.0",
+  "project": "wenzhou-v200-17tile-truth-hydrology-rebuild",
+  "status": "foundation_active_xiaowang_alignment_pending",
+  "truth": {
+    "sourceZipSha256": "ba0baedb7e1bc11810a44066e97291745443621ff473d7a31d0fce0298f591c0",
+    "targetCogSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "crs": "EPSG:32651",
+    "grid": [17555, 17918],
+    "pixelSpacingMeters": [12.5, 12.5],
+    "bounds": [187912.5, 3019612.5, 407350.0, 3243587.5],
+    "policy": "freeze_original_truth_read_only"
+  },
+  "persistentStorage": {
+    "allowed": [
+      "immutable source truth and receipts",
+      "numeric height fields",
+      "numeric masks and classifications",
+      "compact numeric time series",
+      "source-traceable vector truth",
+      "deterministic schemas and build rules",
+      "QA reports and hashes"
+    ],
+    "forbidden": [
+      "mesh files",
+      "baked render geometry",
+      "temporary triangulations",
+      "preview-only geometry caches",
+      "synthetic gap fills",
+      "manually drawn rivers",
+      "manually drawn coastlines",
+      "manually placed labels"
+    ],
+    "intermediatePolicy": "rebuild_then_delete_unless_explicitly_promoted_as_numeric_truth"
+  },
+  "runtime": {
+    "persistedMeshAllowed": false,
+    "intermediateMeshAllowedInArchive": false,
+    "transientRuntimeSurfacePolicy": "pending_xiaowang_full_pipeline_alignment",
+    "oceanMaterialInput": [
+      "coastline-derived numeric ocean mask",
+      "bathymetry numeric field",
+      "relative tide series",
+      "verified vertical datum transform"
+    ],
+    "publicDeploymentAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "kanmenTide": {
+    "station": "Kanmen",
+    "uhslcId": 632,
+    "recordId": 6321,
+    "glossId": 94,
+    "sscId": "kanm",
+    "wgs84": [121.2817, 28.088301],
+    "sourceBranch": "project/wenzhou-v100-bathymetry-tides-hydrology",
+    "sourceCsvPath": "projects/wenzhou/coastal/data/gauges/kanmen/KANMEN_UHSLC_RQDS_19971126T160000Z_19971231T160000Z_MEAN_REMOVED.csv",
+    "sourceCsvBytes": 57661,
+    "sourceCsvSha256": "ee0ed6d2d230ab81d0551643719e91219af776fcbada4f3f799e238ba6d16ffd",
+    "windowStartUtc": "1997-11-26T16:00:00Z",
+    "windowEndExclusiveUtc": "1997-12-31T16:00:00Z",
+    "sampleCount": 840,
+    "cadenceSeconds": 3600,
+    "referenceDatum": "station zero",
+    "absoluteDatumTransformApplied": false,
+    "relativePhaseAndRangeUseAllowed": true,
+    "absoluteWaterLevelUseAllowed": false,
+    "currentDailyPredictionReady": false,
+    "absoluteWaterLevelUnlock": "verified transform between FES mean sea level and the selected Kanmen benchmark or Yellow Sea datum",
+    "currentPredictionUnlock": "materialized and verified FES2022b prediction output for the requested dates"
+  },
+  "hardGates": {
+    "noAbsoluteShorelineMotionWithoutDatumTransform": true,
+    "noCurrentDateClaimFromHistoricalObservationWindow": true,
+    "noMeshPersistence": true,
+    "noOceanPlaneFallback": true,
+    "noDemNodataAsOcean": true,
+    "noVisualApprovalAutomation": true
+  }
+}
