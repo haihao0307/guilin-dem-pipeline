@@ -3,41 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05080b">
 <title>Weather Mother</title>
 <style>
-:root{color-scheme:dark;--bg:#05080b;--panel:rgba(7,11,15,.92);--panel2:rgba(12,17,22,.97);--line:rgba(255,255,255,.12);--line2:rgba(205,231,244,.27);--text:#f0f5f7;--muted:#91a0a9;--active:#d8edf7;--good:#8fd1ad;--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);--studio-height:100dvh}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:var(--studio-height);overflow:hidden;overscroll-behavior:none;background:var(--bg);font-family:Inter,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
+:root{color-scheme:dark;--bg:#05080b;--panel:rgba(7,11,15,.92);--line:rgba(255,255,255,.12);--text:#f0f5f7;--muted:#92a0a9;--safe-t:calc(env(safe-area-inset-top,0px) + 8px);--safe-r:calc(env(safe-area-inset-right,0px) + 8px);--safe-b:calc(env(safe-area-inset-bottom,0px) + 8px);--safe-l:calc(env(safe-area-inset-left,0px) + 8px);--vh:100dvh}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:var(--vh);overflow:hidden;overscroll-behavior:none;background:var(--bg);font-family:Inter,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
 #stage{position:fixed;inset:0;width:100%;height:100%;border:0;background:#05080b}
-.top{position:fixed;z-index:14;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:10px;padding:0 17px;background:linear-gradient(180deg,rgba(4,7,10,.78),rgba(4,7,10,.18),transparent);pointer-events:none;text-shadow:0 1px 12px rgba(0,0,0,.66)}
-.brand{font-size:13px;font-weight:690;letter-spacing:.035em}.slash{color:rgba(255,255,255,.26)}.module{font-size:12px;color:#d7e2e7}.version{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px}.gate{margin-left:auto;color:var(--good);font-size:8px;letter-spacing:.03em}
-.dock{position:fixed;z-index:24;left:10px;top:50%;transform:translateY(-50%);display:flex;align-items:stretch;filter:drop-shadow(0 18px 48px rgba(0,0,0,.56))}
-.pull{width:36px;min-height:142px;border:1px solid var(--line);border-radius:12px 0 0 12px;background:rgba(7,11,15,.86);backdrop-filter:blur(18px) saturate(1.12);color:#edf4f7;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;letter-spacing:.12em;font-size:9px;cursor:pointer;user-select:none;transition:background .18s,border-color .18s}.pull:hover{background:rgba(17,23,29,.96);border-color:var(--line2)}
-.drawer{width:0;overflow:hidden;opacity:0;border:1px solid transparent;border-left:0;border-radius:0 15px 15px 0;background:var(--panel);backdrop-filter:blur(22px) saturate(1.14);transition:width .23s ease,opacity .17s ease,border-color .18s ease}.dock.open .drawer{width:218px;opacity:1;border-color:var(--line)}
-.head{padding:14px 13px 11px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.025),transparent)}.head strong{display:block;font-size:13px;letter-spacing:.02em}.head small{display:block;margin-top:5px;color:var(--muted);font-size:8px;line-height:1.55}
-nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12px;gap:7px;align-items:center;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--text);text-align:left;cursor:pointer}.item:hover{background:rgba(255,255,255,.06)}.item.active{background:rgba(214,237,248,.12);box-shadow:inset 0 0 0 1px rgba(214,237,248,.21)}.index{font-size:8px;color:var(--muted);font-variant-numeric:tabular-nums}.name{display:block;font-size:11px}.desc{display:block;margin-top:2px;font-size:7.5px;color:var(--muted);line-height:1.35}.arrow{color:rgba(255,255,255,.25);font-size:10px}.item.active .arrow{color:var(--active)}
-.foot{padding:9px 12px 12px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px}.foot button{min-height:29px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.045);color:#dce7eb;font-size:8px;cursor:pointer}.foot button:hover{background:rgba(255,255,255,.08)}
-.loading{position:fixed;z-index:18;inset:0;display:grid;place-items:center;background:#05080b;color:#a9b6bd;font-size:11px;letter-spacing:.04em;transition:opacity .28s}.loading.hide{opacity:0;pointer-events:none}.loading span:after{content:'';display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4,end) infinite}@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%,100%{content:'...'}}
-.notice{position:fixed;z-index:16;left:50%;bottom:14px;transform:translateX(-50%);padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(6,9,12,.54);backdrop-filter:blur(9px);font-size:8px;color:rgba(225,235,240,.65);pointer-events:none;transition:opacity .8s}.notice.hide{opacity:0}
-@media(max-width:760px){
-.top{top:var(--safe-top);height:38px;padding:0 calc(10px + var(--safe-right)) 0 calc(10px + var(--safe-left));gap:7px;background:linear-gradient(180deg,rgba(4,7,10,.70),rgba(4,7,10,.08),transparent)}.brand{font-size:11px}.slash{font-size:10px}.module{font-size:11px}.gate,.version{display:none}
-.dock{left:calc(4px + var(--safe-left));top:60%}.pull{width:28px;min-height:108px;border-radius:10px 0 0 10px;font-size:7.5px;letter-spacing:.10em;background:rgba(7,11,15,.78)}.dock.open .drawer{width:min(76vw,286px)}
-.head{padding:12px 11px 9px}.head strong{font-size:12px}.head small{font-size:8px}nav{padding:7px}.item{grid-template-columns:28px 1fr 10px;padding:9px 8px}.name{font-size:12px}.desc{font-size:8px}.foot{padding:8px 10px calc(10px + var(--safe-bottom))}.foot button{min-height:36px;font-size:10px}
-.notice{display:none}
-}
+.top{position:fixed;z-index:14;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:9px;padding:0 17px;background:linear-gradient(180deg,rgba(3,6,9,.82),rgba(3,6,9,.18),transparent);text-shadow:0 1px 12px #000;pointer-events:none;transition:opacity .32s,transform .32s}.brand{font-size:13px;font-weight:700;letter-spacing:.035em}.slash{color:#ffffff42}.module{font-size:12px;color:#d7e2e7}.version{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px}.gate{margin-left:auto;color:#8fd1ad;font-size:8px}
+.dock{position:fixed;z-index:24;left:10px;top:50%;transform:translateY(-50%);display:flex;align-items:stretch;filter:drop-shadow(0 18px 48px #0009);transition:opacity .32s,transform .32s}.pull{width:34px;min-height:136px;border:1px solid var(--line);border-radius:12px 0 0 12px;background:rgba(7,11,15,.84);backdrop-filter:blur(18px);color:#edf4f7;display:grid;place-items:center;writing-mode:vertical-rl;letter-spacing:.11em;font-size:8px;cursor:pointer}.drawer{width:0;overflow:hidden;opacity:0;border:1px solid transparent;border-left:0;border-radius:0 15px 15px 0;background:var(--panel);backdrop-filter:blur(22px);transition:width .22s,opacity .16s,border-color .16s}.dock.open .drawer{width:222px;opacity:1;border-color:var(--line)}.head{padding:14px 13px 11px;border-bottom:1px solid var(--line)}.head strong{display:block;font-size:13px}.head small{display:block;margin-top:5px;color:var(--muted);font-size:8px;line-height:1.5}nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:30px 1fr 10px;gap:7px;align-items:center;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--text);text-align:left;cursor:pointer}.item:hover{background:#ffffff0e}.item.active{background:#d6edf81f;box-shadow:inset 0 0 0 1px #d6edf833}.index{font-size:8px;color:var(--muted)}.name{display:block;font-size:11px}.desc{display:block;margin-top:2px;font-size:7.5px;color:var(--muted);line-height:1.35}.arrow{color:#ffffff42}.foot{padding:9px 12px 12px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px}.foot button{min-height:31px;border:1px solid var(--line);border-radius:8px;background:#ffffff0b;color:#dce7eb;font-size:8px;cursor:pointer}
+.loading{position:fixed;z-index:18;inset:0;display:grid;place-items:center;background:#05080b;color:#a9b6bd;font-size:11px;transition:opacity .25s}.loading.hide{opacity:0;pointer-events:none}
+.restore{position:fixed;z-index:30;left:var(--safe-l);top:50%;transform:translateY(-50%);width:27px;height:46px;padding:0;border:1px solid #ffffff18;border-radius:10px;background:rgba(5,9,13,.26);backdrop-filter:blur(8px);color:#eef5f7;font-size:8px;letter-spacing:.04em;opacity:0;pointer-events:none;transition:opacity .35s,background .2s;cursor:pointer}.restore:hover{background:rgba(7,12,17,.72)}
+body.immersive .top{opacity:0;transform:translateY(-100%)}body.immersive .dock{opacity:0;transform:translate(-120%,-50%);pointer-events:none}body.immersive .restore{opacity:.30;pointer-events:auto}body.immersive .restore:active,body.immersive .restore:focus{opacity:.9}
+@media(max-width:760px){.top{top:env(safe-area-inset-top,0px);height:38px;padding:0 var(--safe-r) 0 var(--safe-l);gap:6px}.brand,.module{font-size:10px}.gate,.version{display:none}.dock{left:calc(env(safe-area-inset-left,0px) + 4px);top:60%}.pull{width:27px;min-height:104px;font-size:7px}.dock.open .drawer{width:min(78vw,286px)}.item{padding:9px 8px}.name{font-size:12px}.desc{font-size:8px}.foot{padding-bottom:var(--safe-b)}.foot button{min-height:38px;font-size:10px}.restore{left:calc(env(safe-area-inset-left,0px) + 3px);width:24px;height:42px;font-size:7px}}
 @media(max-width:760px) and (orientation:landscape){.dock{top:55%}.dock.open .drawer{width:min(44vw,300px)}.item{padding:6px 8px}.head{padding:9px 11px 7px}}
 </style>
 </head>
 <body>
-<div class="loading" id="loading"><span>Weather Mother 正在载入</span></div>
+<div class="loading" id="loading">Weather Mother 正在载入</div>
 <iframe id="stage" title="Weather Mother 工作平台" allow="fullscreen; autoplay"></iframe>
-<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.4.1</div><div class="gate">visualApproved=false · productionReady=false</div></div>
+<div class="top"><div class="brand">Weather Mother</div><div class="slash">/</div><div class="module" id="moduleTitle">World</div><div class="version">Unified Studio V0.5</div><div class="gate">visualApproved=false · productionReady=false</div></div>
 <div class="dock" id="dock">
   <button class="pull" id="toggle" aria-label="展开 Weather Mother">WEATHER MOTHER</button>
   <div class="drawer">
     <div class="head"><strong>Weather Mother</strong><small>唯一工作平台<br>天气案例在同一壳层内切换</small></div>
     <nav>
       <button class="item" data-module="world"><span class="index">00</span><span><span class="name">World</span><span class="desc">天气总控与统一环境状态</span></span><span class="arrow">›</span></button>
-      <button class="item" data-module="rain"><span class="index">01</span><span><span class="name">Rain</span><span class="desc">雨滴、砖瓦、水珠、积水与排水</span></span><span class="arrow">›</span></button>
+      <button class="item" data-module="rain"><span class="index">01</span><span><span class="name">Rain</span><span class="desc">雨、水洼、飞溅、闪光与声音蒸馏演示</span></span><span class="arrow">›</span></button>
       <button class="item" data-module="snow"><span class="index">02</span><span><span class="name">Snow</span><span class="desc">飘雪、沉积、风搬运与融雪</span></span><span class="arrow">›</span></button>
       <button class="item" data-module="fog"><span class="index">03</span><span><span class="name">Fog</span><span class="desc">地形雾、局部雾团与流动细丝</span></span><span class="arrow">›</span></button>
       <button class="item" data-module="cloud"><span class="index">04</span><span><span class="name">Cloud</span><span class="desc">云属、形态、光照与连续演化</span></span><span class="arrow">›</span></button>
@@ -46,23 +37,25 @@ nav{padding:8px}.item{width:100%;display:grid;grid-template-columns:32px 1fr 12p
     <div class="foot"><button id="home">回到 World</button><button id="fullscreen">全屏工作</button></div>
   </div>
 </div>
-<div class="notice" id="notice">左侧小拉块始终返回 Weather Mother 模块列表</div>
+<button class="restore" id="restore" aria-label="打开 Weather Mother">WM</button>
 <script>
 (()=>{'use strict';
-const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading'),moduleTitle=document.getElementById('moduleTitle'),notice=document.getElementById('notice');
+const stage=document.getElementById('stage'),dock=document.getElementById('dock'),loading=document.getElementById('loading'),title=document.getElementById('moduleTitle');
 const modules={
- world:{title:'World',src:'../v110-full/?embedded=1&studio=041'},
- rain:{title:'Rain',src:'../rain-v040/?embedded=1&studio=041&mobile=041'},
- snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1&studio=041'},
- fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1&studio=041'},
- cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1&studio=041'},
- storm:{title:'Storm',src:'../v110-full/?weather=nightstorm&embedded=1&studio=041'}
+ world:{title:'World',src:'../v110-full/?embedded=1&studio=050'},
+ rain:{title:'Rain',src:'../rain-puddle-study-v010/?embedded=1&studio=050'},
+ snow:{title:'Snow',src:'../v110-full/?weather=snow&embedded=1&studio=050'},
+ fog:{title:'Fog',src:'../v110-full/?weather=fogbank&embedded=1&studio=050'},
+ cloud:{title:'Cloud',src:'../v110-full/?weather=fair&embedded=1&studio=050'},
+ storm:{title:'Storm',src:'../v110-full/?weather=nightstorm&embedded=1&studio=050'}
 };
-function current(){const id=new URLSearchParams(location.search).get('module');return modules[id]?id:'world'}
-function openModule(id,push=true){const resolved=modules[id]?id:'world',m=modules[resolved];loading.classList.remove('hide');moduleTitle.textContent=m.title;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===resolved));stage.src=m.src;if(push){const u=new URL(location.href);u.searchParams.set('module',resolved);history.pushState({module:resolved},'',u)}setTimeout(()=>dock.classList.remove('open'),170)}
-const syncHeight=()=>document.documentElement.style.setProperty('--studio-height',(window.visualViewport?window.visualViewport.height:innerHeight)+'px');syncHeight();window.visualViewport&&window.visualViewport.addEventListener('resize',syncHeight);addEventListener('orientationchange',syncHeight);
-document.getElementById('toggle').onclick=()=>{dock.classList.toggle('open');notice.classList.add('hide')};document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));document.getElementById('home').onclick=()=>openModule('world');document.getElementById('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('keydown',e=>{if(e.key==='Escape')dock.classList.remove('open');if(e.altKey&&e.key.toLowerCase()==='w')dock.classList.toggle('open')});setTimeout(()=>notice.classList.add('hide'),5500);openModule(current(),false);
-window.__WEATHER_MOTHER_STUDIO__={version:'0.4.1',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule};
+const current=()=>{const id=new URLSearchParams(location.search).get('module');return modules[id]?id:'world'};
+function setImmersive(on){document.body.classList.toggle('immersive',!!on);if(on)dock.classList.remove('open')}
+function openModule(id,push=true){const key=modules[id]?id:'world',m=modules[key];setImmersive(false);loading.classList.remove('hide');title.textContent=m.title;document.title='Weather Mother · '+m.title;document.querySelectorAll('.item').forEach(b=>b.classList.toggle('active',b.dataset.module===key));stage.src=m.src;if(push){const u=new URL(location.href);u.searchParams.set('module',key);history.pushState({module:key},'',u)}setTimeout(()=>dock.classList.remove('open'),160)}
+const syncHeight=()=>document.documentElement.style.setProperty('--vh',(visualViewport?visualViewport.height:innerHeight)+'px');syncHeight();visualViewport&&visualViewport.addEventListener('resize',syncHeight);addEventListener('orientationchange',syncHeight);
+document.getElementById('toggle').onclick=()=>dock.classList.toggle('open');document.querySelectorAll('.item').forEach(b=>b.onclick=()=>openModule(b.dataset.module));document.getElementById('home').onclick=()=>openModule('world');document.getElementById('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();document.getElementById('restore').onclick=()=>{setImmersive(false);dock.classList.add('open')};
+stage.onload=()=>loading.classList.add('hide');addEventListener('popstate',()=>openModule(current(),false));addEventListener('message',e=>{if(e.source!==stage.contentWindow||!e.data||e.data.type!=='WEATHER_MOTHER_IMMERSIVE')return;setImmersive(e.data.value)});addEventListener('keydown',e=>{if(e.key==='Escape')setImmersive(false);if(e.altKey&&e.key.toLowerCase()==='w')dock.classList.toggle('open')});openModule(current(),false);
+window.__WEATHER_MOTHER_STUDIO__={version:'0.5.0',canonicalPlatform:true,defaultModule:'world',modules:Object.keys(modules),openModule,setImmersive};
 })();
 </script>
 </body>
