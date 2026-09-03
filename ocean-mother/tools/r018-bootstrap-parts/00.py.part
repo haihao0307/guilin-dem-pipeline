@@ -1,0 +1,40 @@
+from pathlib import Path
+import json
+import shutil
+
+repo = Path.cwd()
+source = repo / 'ocean-mother' / 'island-r017'
+root = repo / 'ocean-mother' / 'island-r018'
+if not source.is_dir():
+    raise SystemExit(f'missing source baseline: {source}')
+if root.exists():
+    shutil.rmtree(root)
+shutil.copytree(source, root)
+
+# core.mjs
+p = root/'core.mjs'
+s = p.read_text()
+s = s.replace("export const VERSION='0.3.0-island-r017';", "export const VERSION='0.3.0-island-r018';")
+s = s.replace(
+"export function waveAt(x,z,time,c=SURFACE){\n const bed=bedHeight(x,z),level=waterLevel(time,c),depth0=level-bed,r=Math.hypot(x,z),s=r-islandRadius(Math.atan2(z,x),c);",
+"export function surfBandOffsets(time,c=SURFACE){\n const travel=fract(time/Math.max(.001,c.period)),spacing=5.6;\n return [3,2,1].map(order=>order*spacing-travel*spacing);\n}\nexport function waveAt(x,z,time,c=SURFACE){\n const bed=bedHeight(x,z),level=waterLevel(time,c),depth0=level-bed,r=Math.hypot(x,z),s=r-islandRadius(Math.atan2(z,x),c);"
+)
+s = s.replace(
+" eta+=run;const phase=time/c.period,travel=phase-Math.floor(phase),gains=[c.curlOuter,c.curlMiddle,c.curlInner];\n let bands=0;\n for(let i=0;i<3;i++){\n  const radiusOffset=(3-i)*5.6-travel*5.6,dist=(s-radiusOffset)/c.breakWidth;\n  const strength=Math.exp(-dist*dist*1.8)*gains[i]*incidence;\n  bands+=strength;eta+=.14*c.swell*strength*wet;\n }\n const depth=eta-bed,breaker=clamp((bands*.68+smooth(c.breakThreshold,.99,primary)*slopeEnergy*2.8)*smooth(.03,.22,depth),0,1.5);\n return {eta,bed,depth0,depth,breaker,slopeEnergy,normal:[0,1,0],bands,level};",
+" eta+=run;const gains=[c.curlOuter,c.curlMiddle,c.curlInner],offsets=surfBandOffsets(time,c),bandStrengths=[];\n let bands=0;\n for(let i=0;i<3;i++){\n  const radiusOffset=offsets[i],widthScale=i===0?1.12:i===1?1:.88;\n  const dist=(s-radiusOffset)/(c.breakWidth*widthScale),shoreDissipation=smooth(-.75,1.35,radiusOffset);\n  const strength=Math.exp(-dist*dist*1.8)*gains[i]*incidence*shoreDissipation;\n  bandStrengths.push(strength);bands+=strength;eta+=.14*c.swell*strength*wet;\n }\n const depth=eta-bed,breaker=clamp((bands*.68+smooth(c.breakThreshold,.99,primary)*slopeEnergy*2.8)*smooth(.03,.22,depth),0,1.5);\n return {eta,bed,depth0,depth,breaker,slopeEnergy,normal:[0,1,0],bands,bandStrengths,bandOffsets:offsets,level};"
+)
+p.write_text(s)
+
+# app.mjs
+p = root/'app.mjs'
+s = p.read_text()
+s = s.replace("const qa={version:VERSION,ready:false", "const qa={version:VERSION,ready:false,relationshipPass:'r018-foundation',shallowWaterLayering:true,foamBandCoupling:true,waterFireReflection:true,smokeCoolingCurve:true")
+s = s.replace("window.OceanCoastR012={qa};", "window.OceanCoastR012={qa};window.OceanMotherR018=window.OceanCoastR012;")
+s = s.replace("doc.documentElement.dataset.oceanGlassSkin='r017';", "doc.documentElement.dataset.oceanGlassSkin='r018';")
+s = s.replace(
+" const source=w.depth>0?clamp((w.breaker*.55+shoreBand*.26*config.shoreFoam+contact.edge*w.breaker*config.rockFoam)*config.foam,0,3):0;",
+" const bandPulse=clamp((w.bandStrengths||[]).reduce((sum,value)=>sum+value,0),0,1.5);\n const source=w.depth>0?clamp((bandPulse*.44+w.breaker*.20+shoreBand*.18*config.shoreFoam+contact.edge*Math.max(w.breaker,bandPulse)*config.rockFoam*.55)*config.foam,0,3):0;"
+)
+s = s.replace(
+"function spawnSmoke(){\n if(!config.fireEnabled||config.smoke===0)return;const s=sourceFor(config.smokeStrands),p=takeParticle();\n Object.assign(p,{x:s.x+(rng.next()-.5)*.12,y:s.y+.45,z:s.z+(rng.next()-.5)*.12,vx:0,vy:config.smokeRise,vz:0,size:config.smokeWidth*(.7+rng.next()*.6),type:0,age:0,seed:rng.next()*100,source:s.index});",
+"function spawnSmoke(time){\n if(!config.fireEnabled||config.smoke===0)return;const s=sourceFor(config.smokeStrands),p=takeParticle(),wind=windAt(s.x,.45,s.z,time,config);\n Object.assign(p,{x:s.x+(rng.next()-.5)*.12,y:s.y+.45,z:s.z+(rng.next()-.5)*.12,vx:wind[0]*.035,vy:config.smokeRise*(.88+rng.next()*.18),vz:wind[2]*.035,size:config.smokeWidth*(.7+rng.next()*.6),type:0,age:0,seed:rng.next()*100,source:s.index});"
