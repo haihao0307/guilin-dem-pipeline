@@ -1,0 +1,97 @@
+name: Ocean Island R018 bootstrap
+
+on:
+  push:
+    branches: [work/ocean-mother-r018]
+    paths:
+      - ocean-mother/tools/r018-bootstrap-parts/**
+      - ocean-mother/R018_START_HERE.md
+      - ocean-mother/R018_WORKING_STATE.md
+      - .github/workflows/ocean-island-r018-bootstrap.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-island-r018-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Generate R018 from the locked R017 runtime
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          cat ocean-mother/tools/r018-bootstrap-parts/*.py.part > /tmp/bootstrap_r018.py
+          python3 /tmp/bootstrap_r018.py | tee evidence/BOOTSTRAP.txt
+          for f in ocean-mother/island-r018/*.mjs; do node --check "$f"; done
+          node ocean-mother/island-r018/core.test.mjs | tee evidence/NODE_TESTS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('ocean-mother/island-r018')
+          banned={'.png','.jpg','.jpeg','.webp','.gif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
+          files=[p for p in root.rglob('*') if p.is_file()]
+          assert not [p for p in files if p.suffix.lower() in banned]
+          for p in files:
+              text=p.read_text(encoding='utf-8')
+              assert not re.search(r'data\s*:\s*image/',text,re.I),p
+          build=json.loads((root/'BUILD.json').read_text(encoding='utf-8'))
+          assert build['version']=='0.3.0-island-r018'
+          assert build['numericParameters']==102
+          assert build['runtimeImageAssets']==0 and build['externalModels']==0
+          assert build['visualApproved'] is False and build['productionApproved'] is False
+          files_id={str(p.relative_to(root)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(files)}
+          Path('evidence/SOURCE_IDENTITY.json').write_text(json.dumps({'status':'PASS','version':build['version'],'files':files_id,'persistentImageAssets':0,'visualApproved':False,'productionApproved':False},ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Install browser QA dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Real Chromium WebGL2 desktop and mobile gate
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8180 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 -u ocean-mother/island-r018-tools/qa_runner.py http://127.0.0.1:8180/ocean-mother/island-r018/ evidence/browser | tee evidence/BROWSER_QA_LOG.txt
+
+      - name: Commit verified R018 candidate source
+        run: |
+          set -euo pipefail
+          git config user.name 'Ocean Mother Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ocean-mother/island-r018 ocean-mother/island-r018-tools/qa_runner.py
+          if git diff --cached --quiet; then
+            echo 'R018 source already matches the generated candidate.'
+          else
+            git commit -m 'feat(ocean): start R018 relationship convergence'
+            git push origin HEAD:work/ocean-mother-r018
+          fi
+
+      - name: Preserve bootstrap evidence
+        if: always()
+        run: |
+          if [ -d ocean-mother/island-r018 ]; then cp -r ocean-mother/island-r018 evidence/runtime; fi
+          if [ -f ocean-mother/island-r018-tools/qa_runner.py ]; then cp ocean-mother/island-r018-tools/qa_runner.py evidence/qa_runner.py; fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r018-bootstrap
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
