@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/weather-mother-full-clean-package-v120.yml
       - .github/scripts/weather_mother_full_clean_package_v120.py
+      - .github/scripts/weather_mother_finalize_clean_package_v120.py
   workflow_dispatch:
 
 permissions:
@@ -35,6 +36,9 @@ jobs:
       - name: Build clean package
         run: python controller/.github/scripts/weather_mother_full_clean_package_v120.py site
 
+      - name: Synchronize clean documentation and archive
+        run: python controller/.github/scripts/weather_mother_finalize_clean_package_v120.py site
+
       - name: Verify clean result
         shell: bash
         run: |
@@ -45,6 +49,7 @@ jobs:
           test -f site/weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.zip
           test -f site/weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.receipt.json
           grep -q '../liquid-rain-v100/' site/weather-mother/studio-v060/index.html
+          grep -q 'liquid-rain-v100' site/weather-mother/README.md
           for path in \
             site/weather-mother/easy-rain-lab-v010 \
             site/weather-mother/rain-puddle-study-v010 \
@@ -61,8 +66,9 @@ jobs:
           import zipfile
           from pathlib import Path
 
-          archive = Path('site/weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.zip')
-          receipt = Path('site/weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.receipt.json')
+          package_name = 'Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0'
+          archive = Path('site/weather-mother/handoffs') / f'{package_name}.zip'
+          receipt = Path('site/weather-mother/handoffs') / f'{package_name}.receipt.json'
           with zipfile.ZipFile(archive) as package:
               assert package.testzip() is None
               names = package.namelist()
@@ -77,10 +83,14 @@ jobs:
                   'studio-v040',
               )
               assert not [name for name in names if any(token in name for token in forbidden)]
+              internal_readme = package.read(f'{package_name}/web/weather-mother/README.md').decode('utf-8')
+              assert 'liquid-rain-v100' in internal_readme
+              assert '旧平面村落' in internal_readme
           data = json.loads(receipt.read_text(encoding='utf-8'))
           assert data['archiveIntegrityVerified'] is True
           assert data['cleanupApplied'] is True
           assert data['legacyRainRouteCount'] == 0
+          assert data['documentationSynchronized'] is True
           print(json.dumps(data, ensure_ascii=False, indent=2))
           PY
 
@@ -96,7 +106,7 @@ jobs:
             echo 'No Weather Mother changes to publish.'
             exit 0
           fi
-          git commit -m 'release(weather-mother): publish full clean handoff V1.2.0'
+          git commit -m 'release(weather-mother): publish synchronized full clean handoff V1.2.0'
           for attempt in 1 2 3; do
             git fetch origin gh-pages
             if git rebase origin/gh-pages && git push origin HEAD:gh-pages; then
