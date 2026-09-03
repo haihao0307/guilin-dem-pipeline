@@ -1,0 +1,214 @@
+from pathlib import Path
+import json, gzip, struct, base64, re, math, zlib, sys, hashlib, os
+
+ROOT=Path(os.environ.get('WZ_BUILD_ROOT', '/mnt/data')).resolve()
+REPO=Path(os.environ.get('WZ_REPO_ROOT', str(ROOT/'guilin-dem-pipeline'))).resolve()
+OUT=Path(os.environ.get('WZ_OUTPUT', str(ROOT/'WENZHOU_V058_CONTINUOUS_WORLD_STANDALONE.html'))).resolve()
+REPORT=Path(os.environ.get('WZ_REPORT', str(ROOT/'WENZHOU_V058_BUILD_REPORT.json'))).resolve()
+ROOT.mkdir(parents=True, exist_ok=True)
+OUT.parent.mkdir(parents=True, exist_ok=True)
+REPORT.parent.mkdir(parents=True, exist_ok=True)
+
+# ---------- helpers ----------
+def choose(paths, contains=()):
+    paths=list(paths)
+    if not paths:
+        return None
+    def score(p):
+        s=str(p).lower(); val=0
+        for c in contains:
+            if c.lower() in s: val+=100
+        val-=len(s)/10000
+        return val
+    return max(paths,key=score)
+
+def recursive_find(obj, key_terms):
+    hits=[]
+    def walk(x,path=()):
+        if isinstance(x,dict):
+            for k,v in x.items():
+                kp=path+(k,)
+                if any(t.lower() in k.lower() for t in key_terms):
+                    hits.append((kp,v))
+                walk(v,kp)
+        elif isinstance(x,list):
+            for i,v in enumerate(x): walk(v,path+(str(i),))
+    walk(obj)
+    return hits
+
+def factor_dims(n, preferred=(281,276)):
+    cand=[]
+    for a in range(2,int(math.sqrt(n))+1):
+        if n%a==0:
+            b=n//a
+            cand.append((a,b))
+            cand.append((b,a))
+    if not cand: raise ValueError(f'cannot factor {n}')
+    pr,pc=preferred
+    return min(cand,key=lambda ab:abs(ab[0]-pr)+abs(ab[1]-pc)+abs((ab[1]/ab[0])-(pc/pr))*10)
+
+def decode_i16(b):
+    n=len(b)//2
+    le=list(struct.unpack('<%dh'%n,b[:n*2]))
+    be=list(struct.unpack('>%dh'%n,b[:n*2]))
+    def plaus(a):
+        mn,mx=min(a),max(a)
+        return (mx-mn<10000) and (-12000<mn<5000) and (-1000<mx<9000)
+    if plaus(le) and not plaus(be): return le,'little'
+    if plaus(be) and not plaus(le): return be,'big'
+    # Prefer the one with Wenzhou-like height range
+    def score(a):
+        mn,mx=min(a),max(a)
+        return abs(max(0,mx-2500))+abs(min(0,mn+500))+max(0,(mx-mn)-5000)
+    return (le,'little') if score(le)<=score(be) else (be,'big')
+
+def try_decompress(raw):
+    outs=[raw]
+    for fn in (gzip.decompress,zlib.decompress):
+        try: outs.append(fn(raw))
+        except Exception: pass
+    return outs
+
+def find_v057_detail():
+    # First use prior extractor outputs
+    candidates=[]
+    for p in ROOT.glob('v057_candidate_*.bin'):
+        candidates.append((p.read_bytes(),str(p)))
+    # Generic extraction from HTML
+    src=ROOT/'WENZHOU_V057_DONGTOU_FLIGHT_CLIPMAP_STANDALONE.html'
+    if src.exists():
+        txt=src.read_text('utf-8',errors='replace')
+        # Exact quoted strings and data URIs
+        for m in re.finditer(r"(?:base64,|['\"])([A-Za-z0-9+/=]{3000,})(?:['\"])?",txt):
+            s=m.group(1)
+            if len(s)%4: continue
+            try: raw=base64.b64decode(s,validate=False)
+            except Exception: continue
+            for b in try_decompress(raw):
+                if len(b) in (513*513*2,513*513,257*257*2,257*257,1025*1025*2):
+                    candidates.append((b,f'html@{m.start()}'))
+    # Search exact-sized local binary files, favor v057/dongtou
+    for p in REPO.rglob('*') if REPO.exists() else []:
+        try:
+            if p.is_file() and p.stat().st_size in (513*513*2,513*513):
+                candidates.append((p.read_bytes(),str(p)))
+        except OSError:
+            pass
+    ranked=[]
+    for b,srcname in candidates:
+        if len(b)==513*513*2:
+            vals,endian=decode_i16(b)
+            mn,mx=min(vals),max(vals)
+            # Ideal V057 reported range is around 9..241m
+            score=abs(mn-9)+abs(mx-241)
+            if 'v057' in srcname.lower() or 'dongtou' in srcname.lower(): score-=200
+            ranked.append((score,vals,b,srcname,endian,513,513))
+        elif len(b)==513*513:
+            # uint8 is unlikely terrain, skip
+            continue
+    if not ranked:
+        return None
+    ranked.sort(key=lambda x:x[0])
+    return ranked[0]
+
+# ---------- discover overview ----------
+overview_path=choose(REPO.rglob('overview800.i16.gz') if REPO.exists() else [],('wenzhou-v7-full','data'))
+marine_path=choose(REPO.rglob('marine800.u8.gz') if REPO.exists() else [],('wenzhou-v7-full','data'))
+meta_path=choose(REPO.rglob('SOURCE_OVERVIEW.json') if REPO.exists() else [],('wenzhou-v7-full','data'))
+if overview_path is None:
+    # allow the source tree layout
+    overview_path=choose(REPO.rglob('*overview*.i16.gz') if REPO.exists() else [],('wenzhou','v7'))
+if overview_path is None:
+    raise FileNotFoundError('overview800.i16.gz not found in gh-pages clone')
+over_raw=gzip.decompress(overview_path.read_bytes())
+over_vals,over_endian=decode_i16(over_raw)
+N=len(over_vals)
+meta={}
+if meta_path and meta_path.exists():
+    try: meta=json.loads(meta_path.read_text('utf-8'))
+    except Exception: meta={}
+
+# dimensions
+rows=cols=None
+for path,v in recursive_find(meta,('grid','shape','dimensions','size')):
+    if isinstance(v,list) and len(v)==2 and all(isinstance(q,(int,float)) for q in v):
+        a,b=int(v[0]),int(v[1])
+        if a*b==N:
+            rows,cols=a,b; break
+if rows is None:
+    rows,cols=factor_dims(N,(281,276))
+# marine
+if marine_path and marine_path.exists():
+    marine_raw=gzip.decompress(marine_path.read_bytes())
+    if len(marine_raw)!=N:
+        marine_raw=bytes(1 if v<=0 else 0 for v in over_vals)
+else:
+    marine_raw=bytes(1 if v<=0 else 0 for v in over_vals)
+
+# projected/world size, default 800m overview spacing
+spacing=800.0
+for path,v in recursive_find(meta,('spacing','resolution','pixel')):
+    if isinstance(v,(int,float)) and 50<=float(v)<=2000:
+        spacing=float(v); break
+    if isinstance(v,list) and len(v)>=1 and isinstance(v[0],(int,float)) and 50<=float(v[0])<=2000:
+        spacing=float(v[0]); break
+world_w=(cols-1)*spacing
+world_d=(rows-1)*spacing
+# WGS84 bounds
+wgs=[120.32924313432964,27.593630306851292,121.86465539742724,28.952707073382708]
+for path,v in recursive_find(meta,('wgs84bounds','geographicbounds','lonlatbounds','bounds')):
+    if isinstance(v,list) and len(v)==4 and all(isinstance(q,(int,float)) for q in v):
+        vv=[float(q) for q in v]
+        if 100<vv[0]<140 and 10<vv[1]<50 and 100<vv[2]<140 and 10<vv[3]<50:
+            wgs=vv; break
+
+# ---------- detail ----------
+detail=find_v057_detail()
+if detail is None:
+    raise RuntimeError('No 513x513 V057 detail terrain could be extracted without fabricating data')
+score,detail_vals,detail_bytes,detail_source,detail_endian,drows,dcols=detail
+# Determine orientation and range; keep values exactly as decoded
+detail_min=min(detail_vals); detail_max=max(detail_vals)
+
+# Compress arrays for browser
+# Repack little-endian for deterministic JS decode
+over_le=struct.pack('<%dh'%len(over_vals),*over_vals)
+detail_le=struct.pack('<%dh'%len(detail_vals),*detail_vals)
+over_b64=base64.b64encode(gzip.compress(over_le,9)).decode('ascii')
+marine_b64=base64.b64encode(gzip.compress(marine_raw,9)).decode('ascii')
+detail_b64=base64.b64encode(gzip.compress(detail_le,9)).decode('ascii')
+
+# Detail center. Extract from prior report if coordinates are present, else authoritative known Dongtou center.
+detail_lon,detail_lat=121.1573,27.8368
+rep=ROOT/'WENZHOU_V057_EXECUTION_REPORT.md'
+if rep.exists():
+    rt=rep.read_text('utf-8',errors='replace')
+    pairs=re.findall(r'(12[0-2](?:\.\d+)?)[^\d-]{1,20}(2[6-9](?:\.\d+)?)',rt)
+    if pairs:
+        # choose a Dongtou-like pair
+        cand=[(float(a),float(b)) for a,b in pairs if 120.7<float(a)<121.6 and 27.4<float(b)<28.2]
+        if cand: detail_lon,detail_lat=cand[0]
+# map to world coordinates
+minlon,minlat,maxlon,maxlat=wgs
+def lon_to_x(lon): return ((lon-minlon)/(maxlon-minlon)-0.5)*world_w
+def lat_to_z(lat): return ((maxlat-lat)/(maxlat-minlat)-0.5)*world_d
+detail_cx=lon_to_x(detail_lon); detail_cz=lat_to_z(detail_lat)
+detail_size=(dcols-1)*12.5
+
+# ---------- HTML ----------
+html=f'''<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>小温州 V0.5.8 连续世界样板</title>
+<style>
+:root{{--glass-x:50%;--glass-y:20%;--glass-flow:0deg;--safe-t:max(12px,env(safe-area-inset-top));--safe-r:max(12px,env(safe-area-inset-right));--safe-b:max(12px,env(safe-area-inset-bottom));--safe-l:max(12px,env(safe-area-inset-left));}}
+*{{box-sizing:border-box;-webkit-tap-highlight-color:transparent}}
+html,body{{margin:0;width:100%;height:100%;overflow:hidden;background:#91bad2;color:#f7fbff;font-family:Inter,"SF Pro Display","PingFang SC",system-ui,sans-serif}}
+#app,#world{{position:fixed;inset:0;width:100%;height:100%}}
+#world{{display:block;touch-action:none;outline:none}}
+.ui{{position:fixed;z-index:20;pointer-events:none}}
+.glass{{position:relative;overflow:hidden;background:linear-gradient(140deg,rgba(255,255,255,.24),rgba(255,255,255,.075) 42%,rgba(116,178,211,.10));border:1px solid rgba(255,255,255,.40);box-shadow:inset 0 1px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(68,118,148,.16),0 16px 44px rgba(14,44,61,.20);backdrop-filter:blur(17px) saturate(1.28);-webkit-backdrop-filter:blur(17px) saturate(1.28);transform:translateZ(0)}}
+.glass::before{{content:"";position:absolute;inset:-45%;pointer-events:none;background:radial-gradient(circle at var(--glass-x) var(--glass-y),rgba(255,255,255,.48),rgba(255,255,255,.10) 17%,transparent 38%),conic-gradient(from var(--glass-flow),transparent 0 32%,rgba(255,255,255,.16) 39%,transparent 47% 100%);mix-blend-mode:screen;transform:translate3d(var(--flow-x,0),var(--flow-y,0),0) rotate(var(--glass-flow));transition:transform .28s cubic-bezier(.2,.8,.2,1)}}
+#identity{{left:var(--safe-l);top:var(--safe-t);padding:10px 13px 9px;border-radius:18px;min-width:154px;opacity:.97}}
