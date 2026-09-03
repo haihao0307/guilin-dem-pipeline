@@ -1,9 +1,10 @@
-name: Ocean Island R017 verified online HTML
+name: Ocean Island R018 verified online HTML
 
 on:
   push:
-    branches: [work/ocean-mother-handoff-20260901]
-    paths: [.github/workflows/ocean-island-r017-publish-online-html.yml]
+    branches: [feature/ocean-mother-r018]
+    paths:
+      - .github/workflows/ocean-island-r017-publish-online-html.yml
   workflow_dispatch:
 
 permissions:
@@ -11,76 +12,78 @@ permissions:
   actions: read
 
 concurrency:
-  group: ocean-island-r017-verified-online-html
+  group: ocean-island-r018-verified-online-html
   cancel-in-progress: false
 
 jobs:
   verify-publish:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: true
 
-      - name: Reconstruct R017 and repair paused geometry controls
+      - name: Materialize and verify exact R018 payload
         run: |
           set -euo pipefail
-          mkdir -p evidence
+          mkdir -p evidence/static
+          printf 'R018 verification started\n' > evidence/START.txt
           python3 - <<'PY'
           from pathlib import Path
-          import base64,lzma,json,hashlib
-          source=Path('ocean-mother/island-r017-build')
-          b64=''.join((source/f'source.{i:02d}.b64').read_text().strip() for i in range(1,6))
-          assert len(b64)==50496,len(b64)
-          payload=base64.b64decode(b64,validate=True)
-          assert len(payload)==37872,len(payload)
-          digest=hashlib.sha256(payload).hexdigest()
-          assert digest=='67c6dca047dbd17c1253ce55843f458dc80b3889a2f2f566a00ffb8fc9749092',digest
-          data=json.loads(lzma.decompress(payload))
-          root=Path('ocean-mother/island-r017');root.mkdir(parents=True,exist_ok=True)
-          for name,content in data['runtime'].items():
-              assert Path(name).name==name
-              (root/name).write_text(content,encoding='utf-8')
-          runner=data['qa_runner.py']
-          app=(root/'app.mjs').read_text(encoding='utf-8')
-          old="syncParams();if(m.kind==='geometry'){clearTimeout(geometryTimer);geometryTimer=setTimeout(()=>{geometryDirty=true;opaqueDirty=true},130)}"
-          new="syncParams();if(m.kind==='geometry'){clearTimeout(geometryTimer);geometryDirty=true;opaqueDirty=true;geometryTimer=setTimeout(()=>{if(geometryDirty&&config.paused&&gl)rebuildWorld()},130)}"
-          assert old in app
-          app=app.replace(old,new,1)
-          (root/'app.mjs').write_text(app,encoding='utf-8')
-          old_test='page.evaluate("OceanIsland.setConfig(\'fireCount\',4);OceanIsland.setConfig(\'radius\',31)");page.wait_for_timeout(600)'
-          new_test='page.evaluate("OceanIsland.setConfig(\'fireCount\',4);OceanIsland.setConfig(\'radius\',31)");page.wait_for_function("OceanIsland.getSources().length===4",timeout=20000)'
-          assert old_test in runner
-          runner=runner.replace(old_test,new_test,1)
-          (source/'qa_runner.py').write_text(runner,encoding='utf-8')
-          build=json.loads((root/'BUILD.json').read_text(encoding='utf-8'))
-          build['runtimeRepair']='paused geometry controls commit synchronously before inspection'
-          build['deliveryPolicy']='verified online HTML only'
-          (root/'BUILD.json').write_text(json.dumps(build,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
-          Path('evidence/SOURCE.json').write_text(json.dumps({'status':'RECONSTRUCTED','payloadSha256':digest,'version':'0.3.0-island-r017','files':files,'published':False,'visualApproved':False},ensure_ascii=False,indent=2)+'\n')
+          import base64,hashlib,json,lzma
+          source=Path('ocean-mother/island-r018-build')
+          manifest=json.loads((source/'PAYLOAD.json').read_text(encoding='utf-8'))
+          assert manifest['version']=='0.3.1-island-r018'
+          assert manifest['buildId']=='island-r018-causal-polish'
+          assert [x['name'] for x in manifest['parts']]==[f'source.{i:02d}.b64' for i in range(1,7)]
+          chunks=[];verified=[]
+          for item in manifest['parts']:
+              path=source/item['name'];raw=path.read_bytes();digest=hashlib.sha256(raw).hexdigest()
+              assert len(raw)==item['bytes'],(path,len(raw),item['bytes'])
+              assert digest==item['sha256'],(path,digest,item['sha256'])
+              text=raw.decode('ascii');assert text==text.strip(),path
+              chunks.append(text);verified.append({'name':path.name,'bytes':len(raw),'sha256':digest})
+          encoded=''.join(chunks);assert len(encoded)==manifest['encodedChars']
+          compressed=base64.b64decode(encoded,validate=True)
+          assert len(compressed)==manifest['compressedBytes']
+          digest=hashlib.sha256(compressed).hexdigest();assert digest==manifest['compressedSha256'],digest
+          data=json.loads(lzma.decompress(compressed));runtime=data['runtime']
+          expected={'BUILD.json','PARAMETER_CATALOG.json','README.md','REFERENCE_STUDY.md','app.mjs','coast.css','core.mjs','core.test.mjs','geometry.mjs','index.html','params.mjs','shaders.mjs'}
+          assert set(runtime)==expected,(set(runtime),expected)
+          root=Path('ocean-mother/island-r018');root.mkdir(parents=True,exist_ok=True)
+          for name,content in runtime.items():
+              assert Path(name).name==name;(root/name).write_text(content,encoding='utf-8')
+          tools=Path('ocean-mother/island-r018-tools');tools.mkdir(parents=True,exist_ok=True)
+          (tools/'qa_runner.py').write_text(data['qa_runner.py'],encoding='utf-8')
+          result={'status':'MATERIALIZED','parts':verified,'encodedChars':len(encoded),'compressedBytes':len(compressed),'compressedSha256':digest,'runtimeFiles':len(runtime)}
+          Path('evidence/static/PAYLOAD.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PY
-          for f in ocean-mother/island-r017/*.mjs; do node --check "$f"; done
-          node ocean-mother/island-r017/core.test.mjs | tee evidence/NODE_TESTS.txt
-          node --input-type=module - <<'JS'
-          import {PARAMS,GROUPS} from './ocean-mother/island-r017/params.mjs';
-          import {writeFileSync} from 'node:fs';
-          writeFileSync('ocean-mother/island-r017/PARAMETER_CATALOG.json',JSON.stringify({version:'0.3.0-island-r017',count:PARAMS.length,groups:GROUPS,parameters:PARAMS},null,2));
-          JS
+
+      - name: Verify syntax, numeric core and asset policy
+        run: |
+          set -euo pipefail
+          for f in ocean-mother/island-r018/*.mjs; do node --check "$f"; done
+          node ocean-mother/island-r018/core.test.mjs | tee evidence/static/NODE_TESTS.txt
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          root=Path('ocean-mother/island-r017')
-          banned={'.png','.jpg','.jpeg','.webp','.gif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
+          import hashlib,json,re
+          root=Path('ocean-mother/island-r018')
+          build=json.loads((root/'BUILD.json').read_text());catalog=json.loads((root/'PARAMETER_CATALOG.json').read_text())
+          assert build['version']=='0.3.1-island-r018' and build['buildId']=='island-r018-causal-polish'
+          assert build['deliveryPolicy']=='verified online HTML only'
+          assert build['runtimeImageAssets']==build['externalModels']==build['externalCdn']==0
+          assert catalog['count']==102 and catalog['pages']==3
+          banned={'.png','.jpg','.jpeg','.webp','.gif','.avif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
           assert not [p for p in root.rglob('*') if p.suffix.lower() in banned]
-          for p in root.iterdir():
-              if p.is_file():
-                  text=p.read_text(encoding='utf-8')
-                  assert not re.search(r'data\s*:\s*image/',text,re.I),p
-                  assert not re.search(r'https?://[^\s"\']+\.(?:png|jpe?g|webp|gif|hdr|exr|ktx2?)\b',text,re.I),p
-          assert 'verified online HTML only' in (root/'BUILD.json').read_text(encoding='utf-8')
+          for path in root.iterdir():
+              if path.is_file():
+                  text=path.read_text(encoding='utf-8')
+                  assert not re.search(r'data\s*:\s*image/|https?://',text,re.I),path
+          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
+          Path('evidence/static/SOURCE.json').write_text(json.dumps({'status':'PASS','files':files,'visualApproved':False,'productionApproved':False},indent=2)+'\n')
           PY
 
       - name: Install browser QA dependencies
@@ -89,93 +92,64 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq fonts-noto-cjk
 
-      - name: Verify local desktop mobile controls and rendering
+      - name: Verify local desktop, mobile, controls and restart
         run: |
           set -euo pipefail
           python3 -m http.server 8172 --bind 127.0.0.1 > evidence/local-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
-          python3 -u ocean-mother/island-r017-build/qa_runner.py http://127.0.0.1:8172/ocean-mother/island-r017/ evidence/local | tee evidence/LOCAL_QA_LOG.txt
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          python3 -u ocean-mother/island-r018-tools/qa_runner.py http://127.0.0.1:8172/ocean-mother/island-r018/ evidence/local | tee evidence/LOCAL_QA_LOG.txt
           python3 - <<'PY'
           import json
           from pathlib import Path
           q=json.loads(Path('evidence/local/BROWSER_QA.json').read_text())
-          assert q['status']=='PASS',q
-          assert q['checks']['geometry_control_applies'] is True
-          assert q['checks']['mobile_http_ready'] is True
-          assert q['checks']['glass_flows_when_world_paused'] is True
+          required=['correct_identity','continuous_runtime','geometry_control_applies_paused','geometry_change_while_running_continues','restart_auto_resumes','restart_preserves_parameters','mobile_restart_works','no_GL_errors','no_js_or_console_errors']
+          assert q['status']=='PASS' and all(q['checks'].get(k) for k in required),q
           PY
 
-      - name: Persist verified runtime on work branch
+      - name: Persist verified R018 runtime
         run: |
           set -euo pipefail
           git config user.name 'Ocean Mother Automation'
           git config user.email 'actions@users.noreply.github.com'
-          git add ocean-mother/island-r017 ocean-mother/island-r017-build/qa_runner.py
-          git commit -m 'feat(ocean): add verified R017 island online runtime'
-          git push origin HEAD:work/ocean-mother-handoff-20260901
+          git add ocean-mother/island-r018 ocean-mother/island-r018-tools/qa_runner.py
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(ocean): materialize verified R018 runtime [skip ci]'
+            git push origin HEAD:feature/ocean-mother-r018
+          fi
 
-      - name: Publish R017 atomically to gh-pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python3 - <<'PY'
-          import base64,hashlib,json,os,time,urllib.request
-          from pathlib import Path
-          repo='haihao0307/guilin-dem-pipeline';branch='gh-pages'
-          source=Path('ocean-mother/island-r017');target='ocean-mother/island-r017'
-          base='https://api.github.com/repos/'+repo;token=os.environ['GH_TOKEN']
-          def api(path,body=None,method=None):
-              req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'),headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json','Cache-Control':'no-cache'})
-              with urllib.request.urlopen(req,timeout=90) as response:return json.load(response)
-          head=api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']
-          base_tree=api('/git/commits/'+head)['tree']['sha'];entries=[];files={}
-          for p in sorted(source.iterdir()):
-              if not p.is_file():continue
-              data=p.read_bytes();blob=api('/git/blobs',{'content':base64.b64encode(data).decode(),'encoding':'base64'})['sha']
-              entries.append({'path':target+'/'+p.name,'mode':'100644','type':'blob','sha':blob})
-              files[p.name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'gitBlobSha':blob}
-          tree=api('/git/trees',{'base_tree':base_tree,'tree':entries})['sha']
-          commit=api('/git/commits',{'message':'feat(ocean): publish verified R017 island HTML','tree':tree,'parents':[head]})['sha']
-          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==head
-          api('/git/refs/heads/'+branch,{'sha':commit,'force':False},'PATCH')
-          assert api('/git/ref/heads/'+branch+'?nonce='+str(time.time_ns()))['object']['sha']==commit
-          receipt={'status':'PUBLISHED','version':'0.3.0-island-r017','publicCommit':commit,'url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/','files':files,'forcePush':False,'persistentImageAssets':0,'visualApproved':False,'productionApproved':False}
-          Path('evidence/PUBLISH.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps(receipt,ensure_ascii=False,indent=2))
-          PY
-
-      - name: Verify public online HTML and interactions
+      - name: Publish verified runtime to gh-pages
         run: |
           set -euo pipefail
-          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/'
-          ready=0
-          for attempt in $(seq 1 36); do
-            code=$(curl -L -sS -o evidence/public-index.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${URL}?readback=$RANDOM-$attempt" || true)
-            if [ "$code" = 200 ] && grep -q 'island-r017-additive-controls' evidence/public-index.html; then ready=1;break;fi
-            sleep 10
-          done
-          test "$ready" = 1
-          for file in index.html coast.css app.mjs core.mjs shaders.mjs params.mjs geometry.mjs BUILD.json PARAMETER_CATALOG.json; do
-            test "$(curl -L -sS -o /dev/null -w '%{http_code}' -H 'Cache-Control: no-cache' "${URL}${file}?readback=$RANDOM")" = 200
-          done
-          python3 -u ocean-mother/island-r017-build/qa_runner.py "$URL" evidence/public | tee evidence/PUBLIC_QA_LOG.txt
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          q=json.loads(Path('evidence/public/BROWSER_QA.json').read_text())
-          assert q['status']=='PASS',q
-          required=['http_200','ready','correct_identity','geometry_control_applies','mobile_http_ready','mobile_tabs_usable','deep_controls_present','deep_glass_skin_applied','return_to_island','no_request_failures','no_js_or_console_errors']
-          assert all(q['checks'].get(k) for k in required),{k:q['checks'].get(k) for k in required}
-          Path('evidence/ONLINE_HTML_VERIFIED.json').write_text(json.dumps({'status':'ONLINE_HTML_VERIFIED','url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/','desktop':True,'mobileViewport':True,'http200':True,'indexHtml':True,'interactive':True,'persistentImageAssets':0},ensure_ascii=False,indent=2)+'\n')
-          PY
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r018-pages
+          git worktree add /tmp/ocean-r018-pages origin/gh-pages
+          target=/tmp/ocean-r018-pages/ocean-mother/island-r018
+          rm -rf "$target";mkdir -p "$target"
+         ÜXHØÙX[‹[[Ý\‹Ú\Û[™\ŒNËˆ‰\™Ù]È‚ˆÙÝ\ÛØÙX[‹\ŒN\YÙ\ÂˆÚ]ÛÛ™šYÈ\Ù\‹›˜[YH	ÓØÙX[ˆ[Ý\ˆ]]ÛX][Û‰ÂˆÚ]ÛÛ™šYÈ\Ù\‹™[XZ[	ØXÝ[ÛœÐ\Ù\œË››Ü™\K™Ú]X‹˜ÛÛIÂˆÚ]YØÙX[‹[[Ý\‹Ú\Û[™\ŒNˆYˆHÚ]Y™ˆKXØXÚYK\]ZY]È[ˆÚ]ÛÛ[Z][H	Ù™X]
+ØÙX[ŠNˆX›\Ú™\šYšYYŒN\Û[™S	ÎÙšBˆÚ]\ÚÜšYÚ[ˆPQ™Ú\YÙ\ÂˆX›X×ØÛÛ[Z]I
+Ú]™]‹\\œÙHPQ
+BˆÙ‰ÒUP—ÕÓÔ’ÔÔPÑH‚ˆ]ÛŒÈH‰X›X×ØÛÛ[Z]ˆ	ÔIÂˆœ›ÛH]Xˆ[\Ü]ˆ[\Ü\ÚX‹œÛÛ‹Þ\Âˆ›ÛÝT]
+	ÛØÙX[‹[[Ý\‹Ú\Û[™\ŒN	ÊBˆš[\Ï^Ü›˜[YNžÉØž]\ÉÎœœÝ]
 
-      - name: Preserve internal evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ocean-island-r017-verified-online-html
-          path: evidence/
-          if-no-files-found: error
-          retention-days: 90
-          compression-level: 9
+KœÝÜÚ^™K	ÜÚLM‰Îš\ÚX‹œÚLMŠœ™XYØž]\Ê
+JKš^YÙ\Ý
+
+_H›Üˆ[ˆÛÜY
+›ÛÝš]\™\Š
+JHYˆš\×Ùš[J
+_BˆÝ]^ÉÜÝ]\ÉÎ‰ÔP“TÒQ	Ë	Ý™\œÚ[Û‰Î‰ÌŒËŒKZ\Û[™\ŒN	Ë	ØZ[Y	Î‰Ú\Û[™\ŒNXØ]\Ø[\Û\Ú	Ë	ÜX›XÐÛÛ[Z]	ÎœÞ\Ë˜\™Ý–ÌWK	Ý\›	Î‰ÚÎ‹ËÚZZ[ÌÌË™Ú]X‹š[ËÙÝZ[[‹Y[K\\[[™KÛØÙX[‹[[Ý\‹Ú\Û[™\ŒNÉË	Ùš[\ÉÎ™š[\Ë	Ù›Ü˜ÙT\Ú	Î‘˜[ÙK	Ü\œÚ\Ý[[XYÙP\ÜÙ]ÉÎŒ	Ýš\ÝX[\›Ý™Y	Î‘˜[ÙK	Ü›ÙXÝ[Û\›Ý™Y	Î‘˜[Ù_Bˆ]
+	Ù]šY[˜ÙKÔP“TÒšœÛÛ‰ÊKÜš]WÝ^
+œÛÛ‹™[\ÊÝ][œÝ\™WØ\ØÚZOQ˜[ÙK[™[LŠJÉ×‰ÊBˆB‚ˆH˜[YNˆ™\šYžHX›XÈž]\È[™œ›ÝÜÙ\ˆ[\˜XÝ[ÛœÂˆ[ŽˆˆÙ]Y][È\Y˜Z[ˆT“IÚÎ‹ËÚZZ[ÌÌË™Ú]X‹š[ËÙÝZ[[‹Y[K\\[[™KÛØÙX[‹[[Ý\‹Ú\Û[™\ŒNÉÂˆ™XYOLˆ›Üˆ][\[ˆ	
+Ù\HHŠNÈÂˆÛÙOI
+Ý\›S\ÔÈ[È]šY[˜ÙKÜX›XËZ[™^š[]È	É^ÚØÛÙ_IÈR	ÐØXÚKPÛÛ›Ûˆ›ËXØXÚIÈ‰ÕT“OÜ™XY˜XÚÏIS‘ÓKI][\ˆYJBˆYˆÈ‰ÛÙHˆHŒH	‰ˆÜ™\\H	Ú\Û[™\ŒNXØ]\Ø[\Û\Ú	È]šY[˜ÙKÜX›XËZ[™^š[È[ˆ™XYOLNØœ™XZÎÙšBˆÛY\LˆÛ™Bˆ\Ý‰™XYHˆHBˆ›Üˆš[H[ˆ[™^š[ÛØ\Ý˜ÜÜÈ\›ZœÈÛÜ™K›ZœÈÚY\œË›ZœÈ\˜[\Ë›ZœÈÙ[ÛY]žK›ZœÈ•RSšœÛÛˆTSQUT—ÐÐUSÑËšœÛÛˆ‘PQQK›Y‘Q‘T‘SÑWÔÕQK›YÈÂˆ\Ý‰
+Ý\›S\ÔÈ[È™]šY[˜ÙKÜX›XËIš[Hˆ]È	É^ÚØÛÙ_IÈR	ÐØXÚKPÛÛ›Ûˆ›ËXØXÚIÈ‰ÕT“IÙš[_OÜ™XY˜XÚÏIS‘ÓHŠHˆHŒˆÛ\›ØÙX[‹[[Ý\‹Ú\Û[™\ŒNÉš[Hˆ™]šY[˜ÙKÜX›XËIš[H‚ˆÛ™Bˆ]ÛŒÈ]HØÙX[‹[[Ý\‹Ú\Û[™\ŒN]ÛÛËÜXWÜ[›™\‹œH‰T“ˆ]šY[˜ÙKÜX›XÈYH]šY[˜ÙKÔP“P×ÔPWÓÑËˆ]ÛŒÈH	ÔIÂˆ[\ÜœÛÛ‚ˆœ›ÛH]Xˆ[\Ü]ˆOZœÛÛ‹›ØYÊ]
+	Ù]šY[˜ÙKÜX›XËÐ”“ÕÔÑT—ÔPKšœÛÛ‰ÊKœ™XYÝ^
+
+JBˆ™\]Z\™YVÉÚÌŒ	Ë	Ü™XYIË	ØÛÜœ™XÝÚY[]IË	Ü™\Ý\Ø]]×Ü™\Ý[Y\ÉË	ÙÙ[ÛY]žWØÚ[™ÙWÝÚ[WÜ[›š[™×ØÛÛ[Y\ÉË	Û[Øš[WÚÜ™XYIË	Û[Øš[WÜ™\Ý\ÝÛÜšÜÉË	ÙY\ØÛÛ›Û×Ü™\Ù[	Ë	ÙY\ÙÛ\Ü×ÜÚÚ[—Ø\YY	Ë	Ü™]\›—Ý×Ú\Û[™	Ë	Û›×Ü™\]Y\ÝÙ˜Z[\™\ÉË	Û›×Úœ×ÛÜ—ØÛÛœÛÛWÙ\œ›ÜœÉ×Bˆ\ÜÙ\VÉÜÝ]\É×OOIÔTÔÉÈ[™[
+VÉØÚXÚÜÉ×K™Ù]
+ÊH›ÜˆÈ[ˆ™\]Z\™Y
+KBˆ™\Ý[^ÉÜÝ]\ÉÎ‰ÓÓ“S‘WÒSÕ‘T’Q’QQ	Ë	Ý™\œÚ[Û‰Î‰ÌŒËŒKZ\Û[™\ŒN	Ë	Ý\›	Î‰ÚÎ‹ËÚZZ[ÌÌË™Ú]X‹š[ËÙÝZ[[‹Y[K\\[[™KÛØÙX[‹[[Ý\‹Ú\Û[™\ŒNÉË	Ù\ÚÝÜ	Î•YK	Û[Øš[UšY]ÜÜ	Î•YK	ÚŒ	Î•YK	Øž]Q^XÝ	Î•YK	Ú[\˜XÝ]™IÎ•YK	Ü™\Ý\™\šYšYY	Î•YK	Ü\œÚ\Ý[[XYÙP\ÜÙ]ÉÎŒ	Ýš\ÝX[\›Ý™Y	Î‘˜[ÙK	Ü›ÙXÝ[Û\›Ý™Y	Î‘˜[Ù_Bˆ]
+	Ù]šY[˜ÙKÓÓ“S‘WÒSÕ‘T’Q’QQšœÛÛ‰ÊKÜš]WÝ^
+œÛÛ‹™[\Ê™\Ý[[œÝ\™WØ\ØÚZOQ˜[ÙK[™[LŠJÉ×‰ÊBˆB‚ˆH˜[YNˆ™\Ù\™H[\›˜[]šY[˜ÙBˆYŽˆ[Ø^\Ê
+Bˆ\Ù\ÎˆXÝ[ÛœËÝ\ØYX\Y˜XÝˆÚ]‚ˆ˜[YNˆØÙX[‹Z\Û[™\ŒN]™\šYšYY[Û›[™KZ[ˆ]ˆ]šY[˜ÙKÂˆY‹[›ËYš[\ËY›Ý[™ˆ\œ›Ü‚ˆ™][[Û‹Y^\ÎˆLˆÛÛ\™\ÜÚ[Û‹[]™[ˆB
