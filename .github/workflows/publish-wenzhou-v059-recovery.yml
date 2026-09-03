@@ -1,0 +1,181 @@
+name: Publish Wenzhou V0.5.9 full-feature recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-wenzhou-v059-recovery.yml"
+      - "tools/wenzhou/v059/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-wenzhou-v059-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover-publish-and-prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out production source
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Check out GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+          fetch-depth: 0
+
+      - name: Sync Pages baseline before recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git pull --ff-only origin gh-pages
+
+      - name: Restore the last stable full-feature workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          python source/tools/wenzhou/v059/prepare_recovery.py site
+          test -s site/wenzhou-v7-full/workbench-v059/index.html
+          grep -q '小温州 V0.5.9' site/wenzhou-v7-full/workbench-v059/index.html
+          grep -q '十个云属' site/wenzhou-v7-full/workbench-v059/index.html
+          grep -q 'id="menuButton"' site/wenzhou-v7-full/workbench-v059/index.html
+          test -s site/wenzhou-v7-full/workbench-v059/RECOVERY_BUILD.json
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Chromium browser harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix source/tools/wenzhou/v059 init -y >/dev/null 2>&1 || true
+          npm --prefix source/tools/wenzhou/v059 install --no-save playwright@1.55.0
+          cd source/tools/wenzhou/v059
+          npx playwright install --with-deps chromium
+
+      - name: Run local desktop and phone recovery gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4173 --directory site >/tmp/wenzhou-v059-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/wenzhou-v7-full/workbench-v059/ >/tmp/wenzhou-v059-local.html; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = '1'
+          NODE_PATH="${GITHUB_WORKSPACE}/source/tools/wenzhou/v059/node_modules" \
+            node source/tools/wenzhou/v059/qa_public_browser.mjs \
+              --url http://127.0.0.1:4173/wenzhou-v7-full/workbench-v059/ \
+              --out site/wenzhou-v7-full/workbench-v059 \
+              --prefix LOCAL
+          test -s site/wenzhou-v7-full/workbench-v059/LOCAL_BROWSER_QA.json
+          grep -q '"passed": true' site/wenzhou-v7-full/workbench-v059/LOCAL_BROWSER_QA.json
+          test "$(stat -c '%s' site/wenzhou-v7-full/workbench-v059/LOCAL_DESKTOP_2560x1600.png)" -gt 100000
+          test "$(stat -c '%s' site/wenzhou-v7-full/workbench-v059/LOCAL_PHONE_390x844.png)" -gt 50000
+
+      - name: Publish recovered HTML and local browser proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wenzhou-v7-full/workbench-v059
+          git commit -m 'publish: Wenzhou V0.5.9 full-feature recovery'
+          git push origin gh-pages
+
+      - name: Public HTTP delivery gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/wenzhou-v7-full/workbench-v059/?build=${GITHUB_RUN_ID}"
+          echo "Checking $url"
+          ok=0
+          for attempt in $(seq 1 60); do
+            status="$(curl -L -sS -o /tmp/wenzhou-v059-public.html -w '%{http_code}' --connect-timeout 10 --max-time 45 "$url" || true)"
+            if [ "$status" = '200' ] \
+               && grep -qi '<!doctype html' /tmp/wenzhou-v059-public.html \
+               && grep -q '小温州 V0.5.9' /tmp/wenzhou-v059-public.html \
+               && grep -q '十个云属' /tmp/wenzhou-v059-public.html \
+               && ! grep -qi 'File not found' /tmp/wenzhou-v059-public.html; then
+              ok=1
+              break
+            fi
+            echo "attempt=$attempt status=$status waiting for Pages propagation"
+            sleep 10
+          done
+          if [ "$ok" != '1' ]; then
+            echo 'Public Wenzhou V0.5.9 page did not pass the HTTP gate.' >&2
+            sed -n '1,40p' /tmp/wenzhou-v059-public.html 2>/dev/null || true
+            exit 1
+          fi
+          bytes="$(wc -c </tmp/wenzhou-v059-public.html | tr -d ' ')"
+          sha="$(sha256sum /tmp/wenzhou-v059-public.html | awk '{print $1}')"
+          echo "PUBLIC_URL=$url" >> "$GITHUB_ENV"
+          echo "PUBLIC_BYTES=$bytes" >> "$GITHUB_ENV"
+          echo "PUBLIC_SHA256=$sha" >> "$GITHUB_ENV"
+          echo "public HTTP gate passed: status=200 bytes=$bytes sha256=$sha"
+
+      - name: Run public desktop and phone browser gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH="${GITHUB_WORKSPACE}/source/tools/wenzhou/v059/node_modules" \
+            node source/tools/wenzhou/v059/qa_public_browser.mjs \
+              --url "$PUBLIC_URL" \
+              --out site/wenzhou-v7-full/workbench-v059 \
+              --prefix PUBLIC
+          test -s site/wenzhou-v7-full/workbench-v059/PUBLIC_BROWSER_QA.json
+          grep -q '"passed": true' site/wenzhou-v7-full/workbench-v059/PUBLIC_BROWSER_QA.json
+          grep -q '"shareAllowed": true' site/wenzhou-v7-full/workbench-v059/PUBLIC_BROWSER_QA.json
+
+      - name: Record publication proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > site/wenzhou-v7-full/workbench-v059/PUBLICATION_PROOF.json <<JSON
+          {
+            "schema": "public_web_delivery_gate@1",
+            "url": "${PUBLIC_URL}",
+            "httpStatus": 200,
+            "bytes": ${PUBLIC_BYTES},
+            "sha256": "${PUBLIC_SHA256}",
+            "workflowRunId": "${GITHUB_RUN_ID}",
+            "sourceCommit": "${GITHUB_SHA}",
+            "verifiedAtUtc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "stableBaseline": "wenzhou-v7-full/workbench-v056",
+            "singlePersistentMenuButton": true,
+            "fullFeaturePanel": true,
+            "publicBrowserPassed": true,
+            "shareAllowed": true,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+
+      - name: Publish final public evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git pull --rebase origin gh-pages
+          git add wenzhou-v7-full/workbench-v059
+          git commit -m 'qa: prove Wenzhou V0.5.9 public HTML on desktop and phone'
+          git push origin gh-pages
