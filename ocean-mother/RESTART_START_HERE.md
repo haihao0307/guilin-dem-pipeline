@@ -1,19 +1,23 @@
 # Ocean Mother 新研发窗口启动入口
 
-最新干净全量包：`ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-02_V0.1.2.zip`
+最新干净全量包：`ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.zip`
 
-包发布提交：`9f8453b07f7dc18ef49aa828907a3d087bcf7297`
+ZIP SHA256：`3db114c056f5aa232cbe99151f9385e7b3a4483a6a14a9ad620de8b827ab24fe`
 
-ZIP SHA256：`221cebcb9b14349f875102ac70a3259698b4c8e7d5f2333c518a6202f2c1f96d`
+ZIP 字节数：`332070`
 
-ZIP 字节数：`143130`
+包内文件数：`114`
 
-文件数：`61`
+当前运行版：`0.3.0-island-r017`
 
-在线工作台：`https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-v012/`
+当前在线工作台：`https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/`
 
-新窗口先用 GitHub `fetch_file` 读取本文件，再从上面的固定提交读取压缩包信息。下载并解压后，依次阅读 `START_HERE.md`、`OCEAN_HANDOFF.md`、`HANDOFF.json` 和 `WORKING_STATE.md`。
+当前源快照：`74ff2fb67de0aa52d41c3ee1e6e9d93fd9fbb8ad`
 
-当前运行版为 `0.1.2-coast`，源码提交 `f0e8e93c9351a76fb70ac0b573ae0b9365c688b8`。公开验证工作流 `33576399854` 已通过 47 项浏览器检查，包含长帧后继续运行、暂停保持物理时间以及无需新种子恢复。
+公开发布提交：`28d9206d5cb17a0e1400bf2f5cfa3d3ba9d6e2dc`
 
-全量包内运行图片贴图、截图、外部模型和外部 CDN 均为零。原深海、冻结天气、其他 Mother 与权威真值未改。人工视觉批准、生产批准和完整复刻继续为 false。
+公开 Playwright 工作流：`33732650013`，44 项通过，0 项失败。
+
+新窗口先读取本文件和 `WORKING_STATE.md`。需要完整接管时下载并解压上面的包，依次阅读 `START_HERE.md`、`AGENTS.md`、`WORKING_STATE.md`、`OCEAN_HANDOFF.md`、`HANDOFF.json`、`SOURCE_LOCK.json` 和 `NEXT_ROUND_START_HERE.md`。
+
+下一轮代号 R018，直接继承 R017，不回退旧黑场、破碎岸线或静态玻璃方向。默认交付继续只使用经过公开浏览器验证的在线 HTML。

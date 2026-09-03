@@ -17,7 +17,7 @@ RUNTIME_VERSION = "0.3.0-island-r017"
 RUNTIME_DIR = "ocean-mother/island-r017"
 PUBLIC_URL = "https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/"
 SOURCE_BRANCH = "work/ocean-mother-handoff-20260901"
-RUNTIME_INTRO_COMMIT = "e8faa14"
+RUNTIME_INTRO_COMMIT = "e8faa14d429ea9cab3b83ebb5b995e84a6a690e3"
 PUBLIC_COMMIT = "28d9206d5cb17a0e1400bf2f5cfa3d3ba9d6e2dc"
 LOCAL_QA_RUN = 33731239195
 PUBLIC_QA_RUN = 33732650013
@@ -30,7 +30,7 @@ BANNED_SUFFIXES = {
     ".exr", ".ktx", ".ktx2", ".dds", ".avif", ".glb", ".gltf", ".obj", ".fbx",
     ".zip", ".tar", ".gz", ".7z", ".rar", ".mp4", ".mov", ".webm",
 }
-SKIP_PARTS = {"__pycache__", ".git", ".github", "node_modules", "handoffs", "payload"}
+SKIP_PARTS = {"__pycache__", ".git", "node_modules", "handoffs", "payload"}
 
 
 def sha256_file(path: Path) -> str:
