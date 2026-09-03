@@ -1,0 +1,6 @@
+extra = "  check('r018_relationship_flags',page.evaluate(\"OceanIsland.qa.shallowWaterLayering&&OceanIsland.qa.foamBandCoupling&&OceanIsland.qa.waterFireReflection&&OceanIsland.qa.smokeCoolingCurve\"))\n  check('three_band_state_exposed',page.evaluate(\"OceanIsland.sampleWater(36,0,0).bandStrengths.length===3&&OceanIsland.sampleWater(36,0,0).bandOffsets.length===3\"))\n"
+if needle not in runner:
+    raise SystemExit('R017 QA insertion point changed')
+runner = runner.replace(needle, needle + extra, 1)
+(tools_root / 'qa_runner.py').write_text(runner, encoding='utf-8')
+print(json.dumps({'status':'R018_GENERATED','runtime':str(root),'tools':str(tools_root)}, ensure_ascii=False))
