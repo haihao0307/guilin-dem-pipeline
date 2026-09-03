@@ -1,0 +1,170 @@
+name: Publish browser-verified B24 metal grass R1
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-b24-metal-grass-r1-reviewed.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build-review-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      SOURCE_COMMIT: 6c3671536f8de91166362705ab442a0bb8ed10cc
+      TARGET: aircraft/b24-metal-grass-mission-r1
+    steps:
+      - name: Read existing public site without changing other production lines
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 1
+      - name: Reuse the existing aircraft implementation
+        uses: actions/checkout@v4
+        with:
+          repository: haihao0307/AIRCRAFT
+          ref: 6c3671536f8de91166362705ab442a0bb8ed10cc
+          path: engineering
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Extract the unchanged native aircraft buffers
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,re
+          from pathlib import Path
+          source=Path('public/aircraft/b24-v016-recovery-review/index.html').read_bytes()
+          assert len(source)==12557938
+          assert hashlib.sha256(source).hexdigest()=='7cf4c78cea99f9bf3aed5507cbcb2bdb49a71465b3c4aabc29563214f3da2fde'
+          root=Path('engineering/preview/b24-metal-grass-mission-r1/assets')
+          root.mkdir(parents=True,exist_ok=True)
+          for token,name in [('manifestGzipBase64','native.json.gz'),('payloadGzipBase64','native.bin.gz')]:
+              match=re.search(token.encode()+rb':"([A-Za-z0-9+/=]+)"',source)
+              assert match,token
+              (root/name).write_bytes(base64.b64decode(match.group(1),validate=True))
+          payload=gzip.decompress((root/'native.bin.gz').read_bytes())
+          assert len(payload)==16647376
+          assert hashlib.sha256(payload).hexdigest()=='7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2'
+          manifest=json.loads(gzip.decompress((root/'native.json.gz').read_bytes()))
+          assert len(manifest['components'])==1784 and len(manifest['meshes'])==348
+          PY
+      - name: Install pinned same-origin dependencies and browser
+        working-directory: engineering
+        run: |
+          npm install --no-save --no-package-lock three@0.180.0 playwright@1.55.0
+          root=preview/b24-metal-grass-mission-r1
+          mkdir -p "$root/vendor"
+          cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js "$root/vendor/"
+          cp node_modules/three/examples/jsm/controls/OrbitControls.js "$root/vendor/"
+          cp node_modules/three/LICENSE "$root/vendor/THREE-LICENSE.txt"
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+      - name: Run the existing complete real-browser mission test without weakening gates
+        working-directory: engineering
+        run: |
+          set -euo pipefail
+          for f in preview/b24-metal-grass-mission-r1/*.js; do node --check "$f"; done
+          mkdir -p evidence
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory preview/b24-metal-grass-mission-r1 >evidence/server.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          sleep 1
+          TEST_URL=http://127.0.0.1:8765/ EVIDENCE_DIR=evidence node tools/qa-b24-metal-grass-r1.cjs
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('evidence/browser-report.json').read_text())
+          assert q['status']=='PASS',q
+          assert q['checks'] and all(c['pass'] for c in q['checks'])
+          assert not q['pageErrors'] and not q['consoleErrors'] and not q['failedRequests']
+          assert len(q['captures'])>=8
+          for p in Path('evidence').glob('*.png'):assert p.stat().st_size>1000
+          PY
+      - name: Prepare one verified review directory and exact manifest
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,shutil
+          from pathlib import Path
+          source=Path('engineering/preview/b24-metal-grass-mission-r1')
+          target=Path('public')/os.environ['TARGET']
+          target.mkdir(parents=True,exist_ok=True)
+          for p in source.rglob('*'):
+              if p.is_file():
+                  dest=target/p.relative_to(source);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dest)
+          qa=json.loads(Path('engineering/evidence/browser-report.json').read_text())
+          assert qa['status']=='PASS'
+          evidence=target/'evidence';evidence.mkdir(exist_ok=True)
+          for p in Path('engineering/evidence').glob('*'):
+              if p.suffix in ('.png','.json'):shutil.copy2(p,evidence/p.name)
+          files={str(p.relative_to(target)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in target.rglob('*') if p.is_file() and p.name!='BUILD_MANIFEST.json'}
+          manifest={'build':'B24_METAL_GRASS_MISSION_R1','sourceCommit':os.environ['SOURCE_COMMIT'],'sourceReviewFile':'B24_V012_PROPELLER_INTERFACE_REVIEW.html','sourcePayloadSHA256':'7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2','exactV016Recovered':False,'weatherIntegrated':False,'newMountains':False,'browserStatus':qa['status'],'files':files,'visualAcceptance':False,'productionReady':False}
+          (target/'BUILD_MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Preserve all other published directories and commit only this candidate
+        working-directory: public
+        run: |
+          set -euo pipefail
+          git config user.name 'B24 reviewed candidate publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET"
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat(b24): publish browser-verified metal grass mission R1 candidate'
+            for attempt in 1 2 3; do
+              git fetch origin gh-pages
+              git rebase origin/gh-pages
+              if git push origin HEAD:gh-pages; then break; fi
+              test "$attempt" -lt 3
+              sleep 2
+            done
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy the verified site snapshot
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Verify public HTML and every runtime asset after deployment
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          root=Path('public/aircraft/b24-metal-grass-mission-r1')
+          manifest=json.loads((root/'BUILD_MANIFEST.json').read_text())
+          base='https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-metal-grass-mission-r1/'
+          results=[]
+          for name,expected in manifest['files'].items():
+              if name.startswith('evidence/'):continue
+              for attempt in range(6):
+                  try:
+                      request=urllib.request.Request(base+name+'?verify='+manifest['sourceCommit'],headers={'Cache-Control':'no-cache'})
+                      with urllib.request.urlopen(request,timeout=45) as response:
+                          data=response.read();code=response.status
+                      assert code==200
+                      assert len(data)==expected['bytes'] and hashlib.sha256(data).hexdigest()==expected['sha256'],name
+                      results.append({'file':name,'passed':True});break
+                  except Exception:
+                      if attempt==5:raise
+                      time.sleep(10)
+          report={'status':'PASS','publicUrl':base,'sourceCommit':manifest['sourceCommit'],'runtimeFilesVerified':results,'browserStatus':manifest['browserStatus'],'visualAcceptance':False,'productionReady':False}
+          Path('engineering/evidence/public-verification.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Keep real evidence even when a gate fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b24-metal-grass-r1-publication-evidence
+          path: engineering/evidence/
+          retention-days: 30
+          if-no-files-found: error
