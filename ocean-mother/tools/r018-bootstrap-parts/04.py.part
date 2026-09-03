@@ -1,0 +1,40 @@
+s = p.read_text()
+s += """
+
+## R018 启动说明
+
+R018 首批调整完全依据 V0.3.0 交接包中明确列出的下一轮目标实施，未引入新的外部图片、模型或不可核验模板。浅水分层、破浪泡沫耦合、岩石水线、烟雾冷却与海面火光均为当前程序化运行时的独立实现。它们用于收敛可见关系，不代表已完成守恒自由表面、完整气液耦合或体积燃烧。
+"""
+p.write_text(s)
+
+# core.test.mjs
+p = root/'core.test.mjs'
+s = p.read_text()
+s = s.replace("import {bindConfig,rebuildDefinitions,FIRE_SOURCES,COAST_ROCKS,FIRE_RING,LOGS,bedHeight,waveAt,windAt,islandRadius,waterLevel} from './core.mjs';",
+              "import {VERSION,bindConfig,rebuildDefinitions,FIRE_SOURCES,COAST_ROCKS,FIRE_RING,LOGS,bedHeight,waveAt,windAt,islandRadius,waterLevel,surfBandOffsets} from './core.mjs';")
+s = s.replace("check('102 unique bounded controls across 3 pages'", "check('R018 identity is explicit',()=>assert.equal(VERSION,'0.3.0-island-r018'));\ncheck('102 unique bounded controls across 3 pages'")
+s = s.replace("check('waves finite for parameter extrema and paused time'", "check('three surf bands keep ordered spacing',()=>{for(const t of [0,c.period*.25,c.period*.75,c.period-.001]){const o=surfBandOffsets(t,c);assert.equal(o.length,3);assert(o[0]>o[1]&&o[1]>o[2]);assert(Math.abs((o[0]-o[1])-5.6)<1e-8);assert(Math.abs((o[1]-o[2])-5.6)<1e-8)}});\ncheck('waves finite for parameter extrema and paused time'")
+s = s.replace("check('no persistent image files'", "check('R018 relationship hooks are compiled',()=>{const app=readFileSync(new URL('app.mjs',import.meta.url),'utf8'),shader=readFileSync(new URL('shaders.mjs',import.meta.url),'utf8');for(const token of ['foamBandCoupling','waterFireReflection','smokeCoolingCurve'])assert(app.includes(token),token);for(const token of ['fireReflection','shallowReveal','tidalBand'])assert(shader.includes(token),token)});\ncheck('no persistent image files'")
+p.write_text(s)
+
+# Startup state file
+(root/'R018_START_STATE.json').write_text(json.dumps({
+    'format':'ocean-mother-r018-start-state',
+    'version':'0.3.0-island-r018',
+    'date':'2026-09-03',
+    'sourcePackage':'Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0',
+    'sourceCommit':'74ff2fb67de0aa52d41c3ee1e6e9d93fd9fbb8ad',
+    'parent':'0.3.0-island-r017',
+    'stage':'relationship-convergence-foundation',
+    'implemented':['shallow-water optical layering','foam coupling to three breaker bands','dynamic wet sand and rock waterline','multi-source fire reflection on water','age-dependent smoke cooling and expansion','R018 UI identity and interaction polish'],
+    'inherited':{'parameterPages':3,'parameterCount':102,'persistentImageAssets':0,'externalModels':0,'externalCdn':0},
+    'approvals':{'visualApproved':False,'productionApproved':False,'fullReplication':False}
+}, ensure_ascii=False, indent=2)+'\n')
+
+tools_source = repo / 'ocean-mother' / 'island-r017-tools' / 'qa_runner.py'
+tools_root = repo / 'ocean-mother' / 'island-r018-tools'
+tools_root.mkdir(parents=True, exist_ok=True)
+runner = tools_source.read_text(encoding='utf-8')
+runner = runner.replace('0.3.0-island-r017', '0.3.0-island-r018')
+runner = runner.replace("dataset.oceanGlassSkin==='r017'", "dataset.oceanGlassSkin==='r018'")
+needle = "  check('no_trees',page.evaluate('OceanIsland.qa.treeCount')==0)\n"
