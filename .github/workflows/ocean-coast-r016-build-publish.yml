@@ -1,0 +1,209 @@
+name: Ocean R016 clear shore glass build and publication
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r016-build-publish.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  pages: write
+
+concurrency:
+  group: ocean-coast-r016-publication
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Rebuild R016 from exact verified R015 bytes
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          cat ocean-mother/coast-r016-build/payload00.b64 \
+              ocean-mother/coast-r016-build/payload01.b64 \
+              ocean-mother/coast-r016-build/payload02.b64 \
+              ocean-mother/coast-r016-build/payload03.b64 > /tmp/r016-build.zb64
+          test "$(sha256sum /tmp/r016-build.zb64 | cut -d' ' -f1)" = "5a795d0eaf4627aac0954f773a0e400e74e0ed520d71884891e7be7c612b618a"
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,hashlib,zlib
+          packed=base64.b64decode(Path('/tmp/r016-build.zb64').read_bytes())
+          source=zlib.decompress(packed)
+          assert hashlib.sha256(source).hexdigest()=='727654e88debea7c60909bcdba17b83be85c9355a192ddbdaa9635e4ea1bb9d1'
+          Path('/tmp/r016-build.py').write_bytes(source)
+          PY
+          python3 /tmp/r016-build.py ocean-mother/coast-glass-r015 ocean-mother/coast-glass-r016 | tee evidence/BUILD_LOG.json
+          for file in ocean-mother/coast-glass-r016/*.mjs; do node --check "$file"; done
+          node ocean-mother/coast-glass-r016/core.test.mjs | tee evidence/NODE_QA.json
+          grep -q "0.2.6-coast-r016" ocean-mother/coast-glass-r016/core.mjs
+          grep -q "coast-r016-clear-shore-glass" ocean-mother/coast-glass-r016/index.html
+          grep -q "岩岸浪花响应" ocean-mother/coast-glass-r016/index.html
+          if find ocean-mother/coast-glass-r016 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.hdr' -o -iname '*.exr' -o -iname '*.ktx' -o -iname '*.ktx2' -o -iname '*.dds' -o -iname '*.avif' \) | grep -q .; then
+            echo 'Persistent image asset found in R016 runtime'
+            exit 1
+          fi
+          if grep -RniE 'data[[:space:]]*:[[:space:]]*image/|https?://[^"'"' ]+\.(png|jpg|jpeg|webp|gif|hdr|exr|ktx2?)' ocean-mother/coast-glass-r016; then
+            echo 'Embedded or remote image dependency found in R016 runtime'
+            exit 1
+          fi
+
+      - name: Download exact R015 publication evidence
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 33708715561
+          name: ocean-coast-r015-publication
+          path: _baseline
+
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Full local WebGL2 acceptance on exact R016 bytes
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8160 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          cp ocean-mother/coast-r015-build/browser_qa.py /tmp/browser_qa_r016.py
+          sed -i 's/coast-r015-daylight-glass/coast-r016-clear-shore-glass/g' /tmp/browser_qa_r016.py
+          python3 /tmp/browser_qa_r016.py http://127.0.0.1:8160/ocean-mother/coast-glass-r016/ evidence
+
+      - name: Coast relation and visual hierarchy gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import json
+          root=Path('evidence');base=Path('_baseline')
+          def metrics(path):
+              im=Image.open(path).convert('RGB').resize((320,200))
+              px=list(im.getdata());lum=[];sat=[];earth=blue=warm=0
+              for r,g,b in px:
+                  y=(.2126*r+.7152*g+.0722*b)/255;lum.append(y)
+                  mx=max(r,g,b);mn=min(r,g,b);sat.append((mx-mn)/max(1,mx))
+                  earth+=r>g*1.045 and g>b*1.015 and r>58
+                  blue+=b>r*1.045 and g>r*.88 and b>52
+                  warm+=r>150 and g>38 and g<r*.86 and b<g*.72
+              mean=sum(lum)/len(lum);std=(sum((x-mean)**2 for x in lum)/len(lum))**.5
+              return {'mean':mean,'std':std,'saturation':sum(sat)/len(sat),'earthRatio':earth/len(px),'blueRatio':blue/len(px),'warmPixels':warm}
+          names=['overview','shore','rocks','fire','breaker']
+          new={n:metrics(root/f'{n}.png') for n in names};old={n:metrics(base/f'{n}.png') for n in names}
+          browser=json.loads((root/'BROWSER_QA.json').read_text())
+          overview=browser['views']['overview']['qa'];fire=browser['views']['fire']['qa']
+          checks={
+            'allExistingBrowserChecksPass':browser['status']=='PASS',
+            'clearDaylight':.24<new['overview']['mean']<.72,
+            'daylightContrast':new['overview']['std']>.095,
+            'colorSeparation':new['overview']['saturation']>.105,
+            'sandReadable':new['overview']['earthRatio']>.008,
+            'waterReadable':new['overview']['blueRatio']>.018,
+            'shoreReadable':new['shore']['std']>.085,
+            'rockMaterialVariation':new['rocks']['std']>.085,
+            'fireVisible':new['fire']['warmPixels']>14 and fire.get('flameParticles',0)>20,
+            'lessWashedThanR015':new['overview']['std']>old['overview']['std']*1.01,
+            'moreChromaticThanR015':new['overview']['saturation']>old['overview']['saturation']*1.01,
+            'rockBoundaryCompiled':overview.get('rockHeightCompiled')==1 and overview.get('rockDegenerateTriangles')==0,
+            'foamAndSprayActive':overview.get('foamActiveCells',0)>100 and overview.get('sprayParticles',0)>0,
+            'obstacleContract':overview.get('obstacleResponse')=='mesh-height boundary / shallow blocking / contact foam transport',
+          }
+          report={'status':'PASS' if all(checks.values()) else 'FAIL','checks':checks,'r016':new,'r015':old,'runtime':{'overview':overview,'fire':fire}}
+          (root/'VISUAL_HIERARCHY_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report['status']!='PASS':raise SystemExit(1)
+          PY
+
+      - name: Record exact source identity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('ocean-mother/coast-glass-r016')
+          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
+          report={'status':'VERIFIED','version':'0.2.6-coast-r016','buildId':'coast-r016-clear-shore-glass','files':files,'persistentImageAssets':0,'externalModels':0,'externalCdn':0,'visualApproved':False,'productionApproved':False}
+          Path('evidence/SOURCE.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Persist exact verified R016 runtime on work branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ocean-mother/coast-glass-r016
+          git commit -m 'feat(ocean): retain verified R016 clear daylight shore and liquid glass'
+          git push origin HEAD:work/ocean-mother-handoff-20260901
+          git rev-parse HEAD | tee evidence/WORK_BRANCH_COMMIT.txt
+
+      - name: Publish exact tested files without touching unrelated pages
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-gh-pages
+          git worktree add --detach /tmp/ocean-gh-pages origin/gh-pages
+          rm -rf /tmp/ocean-gh-pages/ocean-mother/coast-glass-r016
+          mkdir -p /tmp/ocean-gh-pages/ocean-mother
+          cp -a ocean-mother/coast-glass-r016 /tmp/ocean-gh-pages/ocean-mother/coast-glass-r016
+          cd /tmp/ocean-gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ocean-mother/coast-glass-r016
+          git commit -m 'feat(ocean): publish verified R016 clear daylight shore glass'
+          git push origin HEAD:gh-pages
+          git rev-parse HEAD | tee "$GITHUB_WORKSPACE/evidence/PUBLIC_COMMIT.txt"
+
+      - name: Verify public HTTP bytes and rendered desktop mobile pages
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-glass-r016/'
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl -fsSL -H 'Cache-Control: no-cache' "${URL}?readback=$RANDOM-$attempt" -o evidence/public-index.html && grep -q 'coast-r016-clear-shore-glass' evidence/public-index.html; then ready=1;break;fi
+            sleep 10
+          done
+          test "$ready" = 1
+          python3 - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json,shutil
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/coast-glass-r016/?public=1'
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=shutil.which('google-chrome'),headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+              report={'url':url,'errors':[],'failedRequests':[],'checks':{}}
+              page=browser.new_page(viewport={'width':1440,'height':900})
+              page.on('pageerror',lambda e:report['errors'].append(str(e)))
+              page.on('console',lambda m:report['errors'].append(m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r:report['failedRequests'].append({'url':r.url,'failure':r.failure}))
+              response=page.goto(url,wait_until='load',timeout=90000);page.wait_for_function('window.OceanCoast?.qa.frames>4',timeout=90000);page.screenshot(path='evidence/public-overview.png')
+              report['checks']['http200']=response.status==200
+              report['checks']['identity']=page.locator('#build').evaluate('(e)=>e.textContent.trim()')=='coast-r016-clear-shore-glass'
+              report['checks']['runtimeReady']=page.evaluate('OceanCoast.qa.ready===true && OceanCoast.qa.glError===0 && !(OceanCoast.qa.glErrors||[]).length')
+              report['checks']['composition']=page.evaluate('OceanCoast.getState().composition.rockCount>=20 && OceanCoast.getState().composition.foamActiveCells>100')
+              page.click('#panelToggle');page.wait_for_timeout(350);page.screenshot(path='evidence/public-glass.png');report['checks']['glassPanel']=page.locator('#panel').is_visible()
+              mobile=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True);mobile.goto(url+'&mobile=1',wait_until='load',timeout=90000);mobile.wait_for_function('window.OceanCoast?.qa.frames>3',timeout=90000);mobile.screenshot(path='evidence/public-mobile.png')
+              report['checks']['mobile']=mobile.evaluate('document.documentElement.scrollWidth<=innerWidth && OceanCoast.qa.glError===0')
+              report['checks']['noErrors']=not report['errors'];report['checks']['noFailedRequests']=not report['failedRequests'];browser.close()
+          report['status']='PASS' if all(report['checks'].values()) else 'FAIL'
+          Path('evidence/PUBLIC_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2));print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report['status']!='PASS':raise SystemExit(1)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r016-publication
+          path: evidence/
+          retention-days: 90
+          compression-level: 9
