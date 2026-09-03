@@ -12,7 +12,7 @@ permissions:
   pages: write
 concurrency:
   group: wenzhou-v056-mobile-publication
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
           mkdir -p /tmp/wz055-baseline "$EVIDENCE"
           gh run download 33685272836 --repo haihao0307/guilin-dem-pipeline --name wenzhou-v055-seasonal-real-unit-publication --dir /tmp/wz055-baseline
           test -f /tmp/wz055-baseline/wenzhou-v055-site/BUILD.json
-          python "$ROOT/build_v056.py" /tmp/wz055-baseline/wenzhou-v055-site "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
+          python "$ROOT/prepare_v056.py" /tmp/wz055-baseline/wenzhou-v055-site "$ROOT" "$SITE" | tee "$EVIDENCE/build.log"
           for file in "$SITE"/*.js "$SITE"/*.mjs; do node --check "$file"; done
           python -m py_compile "$ROOT"/*.py
       - name: Independently verify unchanged terrain and lossless river partition
@@ -68,6 +68,7 @@ jobs:
           python -m pip install --quiet playwright pillow numpy
           python -m playwright install --with-deps chromium
       - name: Test touch controls visibility view requests and physical layers
+        timeout-minutes: 12
         run: |
           set -euo pipefail
           python -m http.server 8765 --directory "$SITE" > "$EVIDENCE/http.log" 2>&1 &
@@ -130,6 +131,7 @@ jobs:
           (out/'public-http.json').write_text(json.dumps({'passed':True,'url':os.environ['URL'],'sourceCommit':os.environ['GITHUB_SHA'],'publicationCommit':(out/'publication-commit.txt').read_text().strip(),'files':files},indent=2)+'\n')
           PY
       - name: Repeat actual browser checks on public HTTPS
+        timeout-minutes: 12
         run: python "$ROOT/qa_v056.py" --url "$URL" --out "$EVIDENCE/public" --public
       - uses: actions/upload-artifact@v4
         if: always()
