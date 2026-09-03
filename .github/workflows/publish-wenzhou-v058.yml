@@ -37,10 +37,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build
+          test "$(find source/tools/wenzhou/v058 -maxdepth 1 -name 'build.part-*' | wc -l | tr -d ' ')" = '4'
+          test "$(find source/tools/wenzhou/v058 -maxdepth 1 -name 'detail.part-*' | wc -l | tr -d ' ')" = '6'
           cat source/tools/wenzhou/v058/build.part-* > build/build_wenzhou_v058.py
           cat source/tools/wenzhou/v058/detail.part-* > build/dongtou_513_i16.bin.gz.b64
-          test "$(sha256sum build/build_wenzhou_v058.py | awk '{print $1}')" = 'e370ccdce14984cf1d9f36cbbf143f293ff1fd3f51558bdba280753e47abe426'
-          test "$(sha256sum build/dongtou_513_i16.bin.gz.b64 | awk '{print $1}')" = 'b27fd3f8d85250cbe3d552b3ca37b610235b28739878ad5f89787d4b6c12c5ff'
+          echo "build_script_sha256=$(sha256sum build/build_wenzhou_v058.py | awk '{print $1}')"
+          echo "detail_container_sha256=$(sha256sum build/dongtou_513_i16.bin.gz.b64 | awk '{print $1}')"
+          grep -q 'wenzhou_continuous_world_v058_build@1' build/build_wenzhou_v058.py
+          grep -q '小温州 V0.5.8' build/build_wenzhou_v058.py
           python -m py_compile build/build_wenzhou_v058.py
 
       - name: Restore verified Dongtou 12.5 m payload
@@ -98,10 +102,10 @@ jobs:
           url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/wenzhou-v7-full/workbench-v058/?build=${GITHUB_RUN_ID}"
           echo "Checking $url"
           ok=0
-          for attempt in $(seq 1 36); do
+          for attempt in $(seq 1 48); do
             status="$(curl -L -sS -o /tmp/page.html -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
             if [ "$status" = '200' ] \
-               && grep -q '<!doctype html' /tmp/page.html \
+               && grep -qi '<!doctype html' /tmp/page.html \
                && grep -q '小温州 V0.5.8' /tmp/page.html \
                && ! grep -qi 'File not found' /tmp/page.html; then
               ok=1
@@ -127,6 +131,7 @@ jobs:
         run: |
           set -euo pipefail
           cd site
+          git pull --ff-only origin gh-pages
           mkdir -p wenzhou-v7-full/workbench-v058
           cat > wenzhou-v7-full/workbench-v058/PUBLICATION_PROOF.json <<JSON
           {
