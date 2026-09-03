@@ -1,0 +1,79 @@
+  uniform vec3 uSun; uniform vec3 uFog; uniform vec3 uCam; uniform float uDetail; uniform float uIsDetail; uniform float uTime;
+  float h21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
+  float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}
+  void main(){
+    if(uIsDetail>.5){float a=vFeather*uDetail;float d=h21(gl_FragCoord.xy+floor(uTime*3.));if(d>a)discard;}
+    float y=vWorld.y; float slope=1.-clamp(vN.y,0.,1.);
+    float wet=1.-smoothstep(4.,34.,y); float alpine=smoothstep(650.,1150.,y);
+    vec3 low=vec3(.255,.335,.190), mid=vec3(.315,.410,.225), rock=vec3(.38,.37,.31), high=vec3(.43,.45,.39);
+    vec3 col=mix(low,mid,smoothstep(20.,360.,y)); col=mix(col,rock,smoothstep(.25,.72,slope)); col=mix(col,high,alpine*.65);
+    float micro=(n2(vWorld.xz*.013)+.55*n2(vWorld.xz*.041)-.78); col*=.91+micro*.12; col=mix(col,vec3(.18,.30,.21),wet*.28);
+    float ndl=max(dot(normalize(vN),normalize(uSun)),0.); float hemi=.36+.64*clamp(vN.y*.72+.28,0.,1.); col*=.48+ndl*.58+hemi*.24;
+    float dist=distance(vWorld,uCam); float fog=1.-exp(-dist*dist*0.000000000095); col=mix(col,uFog,clamp(fog,0.,.78));
+    gl_FragColor=vec4(col,1.);
+  }`;
+function terrainMaterial(isDetail){{return new THREE.ShaderMaterial({{vertexShader:terrainVertex,fragmentShader:terrainFragment,uniforms:{{uSun:{{value:new THREE.Vector3(.42,.82,.36).normalize()}},uFog:{{value:new THREE.Color(0xb8d2dc)}},uCam:{{value:camera.position}},uDetail:{{value:isDetail?0:1}},uIsDetail:{{value:isDetail?1:0}},uTime:{{value:0}}}},side:THREE.FrontSide}})}}
+
+function buildOverview(){{
+  const r=DATA.overview.rows,c=DATA.overview.cols,w=DATA.world.width,d=DATA.world.depth;
+  const pos=new Float32Array(r*c*3), feather=new Float32Array(r*c); let k=0;
+  for(let z=0;z<r;z++)for(let x=0;x<c;x++){{const i=z*c+x;const wx=(x/(c-1)-.5)*w,wz=(z/(r-1)-.5)*d;let y=overview[i];if(marine[i])y=Math.min(-3,y);else y=Math.max(.35,y);pos[k++]=wx;pos[k++]=y;pos[k++]=wz;feather[i]=1;}}
+  const idx=new Uint32Array((r-1)*(c-1)*6);k=0;
+  for(let z=0;z<r-1;z++)for(let x=0;x<c-1;x++){{const a=z*c+x,b=a+1,dd=(z+1)*c+x,e=dd+1;idx[k++]=a;idx[k++]=dd;idx[k++]=b;idx[k++]=b;idx[k++]=dd;idx[k++]=e;}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('feather',new THREE.BufferAttribute(feather,1));g.setIndex(new THREE.BufferAttribute(idx,1));g.computeVertexNormals();g.computeBoundingSphere();
+  const m=terrainMaterial(false);const mesh=new THREE.Mesh(g,m);mesh.frustumCulled=true;scene.add(mesh);return mesh;
+}}
+const overviewMesh=buildOverview();
+progress(.56,'衔接洞头 12.5 米近域');
+
+function buildDetail(){{
+  const r=DATA.detail.rows,c=DATA.detail.cols,s=DATA.detail.spacing,size=(c-1)*s,cx=DATA.detail.center[0],cz=DATA.detail.center[1];
+  const pos=new Float32Array(r*c*3),feather=new Float32Array(r*c);let k=0;
+  for(let z=0;z<r;z++)for(let x=0;x<c;x++){{
+    const i=z*c+x, u=x/(c-1)*2-1,v=z/(r-1)*2-1,wx=cx+u*size*.5,wz=cz+v*size*.5;
+    const rr=Math.pow(Math.pow(Math.abs(u),4)+Math.pow(Math.abs(v),4),.25); const organic=.965+.018*Math.sin(u*13.7+v*7.1)+.012*Math.sin(u*29.2-v*17.4);
+    const f=1-smooth(.76,organic,rr); const coarse=sampleOverview(wx,wz); const fine=detail[i]; const y=THREE.MathUtils.lerp(coarse,fine,f);
+    pos[k++]=wx;pos[k++]=Math.max(.38,y);pos[k++]=wz;feather[i]=f;
+  }}
+  const arr=[];
+  for(let z=0;z<r-1;z++)for(let x=0;x<c-1;x++){{const a=z*c+x,b=a+1,dd=(z+1)*c+x,e=dd+1;const av=(feather[a]+feather[b]+feather[dd]+feather[e])*.25;if(av>.004)arr.push(a,dd,b,b,dd,e);}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('feather',new THREE.BufferAttribute(feather,1));g.setIndex(arr);g.computeVertexNormals();g.computeBoundingSphere();
+  const m=terrainMaterial(true);m.polygonOffset=true;m.polygonOffsetFactor=-1;m.polygonOffsetUnits=-1;
+  const mesh=new THREE.Mesh(g,m);mesh.visible=false;mesh.frustumCulled=true;scene.add(mesh);return mesh;
+}}
+const detailMesh=buildDetail();
+
+// Physical sky
+const skyGeo=new THREE.SphereGeometry(420000,32,16);
+const skyMat=new THREE.ShaderMaterial({{side:THREE.BackSide,depthWrite:false,uniforms:{{uSunY:{{value:.82}},uMorning:{{value:0}}}},vertexShader:`varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vD;uniform float uMorning;void main(){float h=clamp(vD.y*.5+.5,0.,1.);vec3 zen=mix(vec3(.24,.45,.67),vec3(.17,.38,.65),h);vec3 hor=mix(vec3(.88,.76,.61),vec3(.68,.82,.89),1.-uMorning);float band=pow(1.-abs(vD.y),5.);vec3 c=mix(hor,zen,smoothstep(0.,.72,h));c+=vec3(1.,.56,.28)*band*uMorning*.22;gl_FragColor=vec4(c,1.);}`}});
+const sky=new THREE.Mesh(skyGeo,skyMat);sky.frustumCulled=false;scene.add(sky);
+
+// Flowing ocean, one continuous surface under terrain
+const oceanGeo=new THREE.PlaneGeometry(DATA.world.width*1.28,DATA.world.depth*1.28,160,160);oceanGeo.rotateX(-Math.PI/2);
+const oceanMat=new THREE.ShaderMaterial({{transparent:false,depthWrite:true,uniforms:{{uTime:{{value:0}},uCam:{{value:camera.position}},uSun:{{value:new THREE.Vector3(.42,.82,.36).normalize()}}}},vertexShader:`uniform float uTime;varying vec3 vW;varying vec3 vN;void main(){vec3 p=position;float a=sin((p.x+p.z*.37)*.00145+uTime*.66);float b=sin((p.x*.34-p.z)*.0025-uTime*.82);float c=sin((p.x*.71+p.z)*.0041+uTime*1.07);p.y=-1.6+a*.55+b*.28+c*.12;float dx=cos((p.x+p.z*.37)*.00145+uTime*.66)*.0008+cos((p.x*.34-p.z)*.0025-uTime*.82)*.00024;float dz=cos((p.x+p.z*.37)*.00145+uTime*.66)*.0003-cos((p.x*.34-p.z)*.0025-uTime*.82)*.0007;vN=normalize(vec3(-dx,1.,-dz));vW=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}`,fragmentShader:`uniform vec3 uCam;uniform vec3 uSun;varying vec3 vW;varying vec3 vN;void main(){vec3 V=normalize(uCam-vW),N=normalize(vN);float fr=pow(1.-max(dot(V,N),0.),3.);float gl=pow(max(dot(reflect(-uSun,N),V),0.),90.);float d=clamp(length(uCam.xz-vW.xz)/180000.,0.,1.);vec3 c=mix(vec3(.025,.235,.325),vec3(.30,.58,.70),fr);c+=gl*vec3(1.,.91,.70)*.9;c=mix(c,vec3(.49,.69,.75),d*.26);gl_FragColor=vec4(c,1.);}`}});
+const ocean=new THREE.Mesh(oceanGeo,oceanMat);ocean.renderOrder=-1;scene.add(ocean);
+
+// Clouds are world objects with fixed metre heights
+function cloudTexture(){{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.clearRect(0,0,256,256);for(let i=0;i<44;i++){{const px=52+Math.random()*152,py=82+Math.random()*94,rr=18+Math.random()*42;const g=x.createRadialGradient(px-rr*.18,py-rr*.22,2,px,py,rr);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.42,'rgba(246,250,251,.66)');g.addColorStop(1,'rgba(230,240,243,0)');x.fillStyle=g;x.beginPath();x.arc(px,py,rr,0,Math.PI*2);x.fill();}}return new THREE.CanvasTexture(c)}}
+const cloudTex=cloudTexture(),cloudGroup=new THREE.Group();scene.add(cloudGroup);const cloudItems=[];
+const rng=(i)=>((Math.sin(i*127.1)*43758.5453)%1+1)%1;
+for(let i=0;i<86;i++){{const band=i%10<6?0:i%10<9?1:2;const h=band===0?900+rng(i+2)*1800:band===1?3200+rng(i+4)*3000:7600+rng(i+8)*2500;const mat=new THREE.SpriteMaterial({{map:cloudTex,transparent:true,depthWrite:false,opacity:band===2?.18:.42,color:band===2?0xe9f0f5:0xffffff,fog:true}});const sp=new THREE.Sprite(mat);const sx=(rng(i+13)-.5)*DATA.world.width*1.05,sz=(rng(i+31)-.5)*DATA.world.depth*1.02;sp.position.set(sx,h,sz);const sc=band===0?3600+rng(i+9)*6200:band===1?7000+rng(i+11)*10000:15000+rng(i+17)*17000;sp.scale.set(sc,sc*(.36+rng(i+3)*.18),1);sp.material.rotation=(rng(i+5)-.5)*.18;cloudGroup.add(sp);cloudItems.push({{sp,band,baseX:sx,baseZ:sz}})}}
+
+progress(.78,'配置移动端清晰画幅');
+let qualityTimer=0,qualityMode='settled',lastCssW=0,lastCssH=0;
+function applyResolution(mode,force=false){{
+  qualityMode=mode;const w=innerWidth,h=innerHeight,long=Math.max(w,h);let target=mode==='settled'?2048:1280;
+  if(w>=1800&&h>=1000)target=Math.min(2560,long);const ratio=clamp(target/long,.72,2.75);
+  if(force||w!==lastCssW||h!==lastCssH){{renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();lastCssW=w;lastCssH=h;}}
+  else renderer.setPixelRatio(ratio),renderer.setSize(w,h,false);
+  $('#bufferRead').textContent=renderer.domElement.width+' × '+renderer.domElement.height;
+  $('#quality').textContent=mode==='settled'?'近景 '+Math.max(renderer.domElement.width,renderer.domElement.height)+' px 收敛':'交互响应模式';
+  $('#quality').classList.add('show');clearTimeout(applyResolution.hide);applyResolution.hide=setTimeout(()=>$('#quality').classList.remove('show'),1300);
+}}
+function markMoving(){{WORLD.view.moving=true;WORLD.view.settled=false;applyResolution('interactive');clearTimeout(qualityTimer);qualityTimer=setTimeout(()=>{{WORLD.view.moving=false;WORLD.view.settled=true;applyResolution('settled');}},310)}}
+controls.addEventListener('start',markMoving);controls.addEventListener('change',()=>{{clearTimeout(qualityTimer);qualityTimer=setTimeout(()=>{{WORLD.view.moving=false;WORLD.view.settled=true;applyResolution('settled');}},330)}});controls.addEventListener('end',()=>{{clearTimeout(qualityTimer);qualityTimer=setTimeout(()=>{{WORLD.view.moving=false;WORLD.view.settled=true;applyResolution('settled');}},180)}});
+addEventListener('resize',()=>applyResolution(qualityMode,true),{{passive:true}});applyResolution('settled',true);
+
+const views={{
+ all:{{name:'整个温州',target:new THREE.Vector3(0,120,0),pos:new THREE.Vector3(-DATA.world.width*.40,Math.max(DATA.world.width,DATA.world.depth)*.93,DATA.world.depth*.58)}},
+ approach:{{name:'洞头接近',target:new THREE.Vector3(DATA.detail.center[0],80,DATA.detail.center[1]),pos:new THREE.Vector3(DATA.detail.center[0]-23500,17800,DATA.detail.center[1]+29800)}},
