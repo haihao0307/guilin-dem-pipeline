@@ -67,6 +67,8 @@ with sync_playwright() as p:
   mr=mobile.goto(URL+'?qa=1&mobile=1',wait_until='networkidle',timeout=60000);mobile.wait_for_function('window.OceanIsland?.qa.ready === true',timeout=60000);mobile.wait_for_timeout(800);grab(mobile,'mobile')
   check('mobile_http_ready',mr.status==200 and not mobile_errors)
   check('mobile_no_horizontal_overflow',mobile.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+  mobile_camera=mobile.evaluate('OceanIsland.getState().camera');details['mobileCamera']=mobile_camera
+  check('mobile_camera_inside_domain',max(abs(mobile_camera['eye'][0]),abs(mobile_camera['eye'][2]))<95)
   mobile.locator('#panelToggle').tap();mobile.wait_for_timeout(500);mobile.locator('[data-page="2"]').tap();grab(mobile,'mobile-page2')
   check('mobile_tabs_usable',mobile.locator('#page-2').is_visible());check('mobile_parameters_present',mobile.locator('input[type=range]').count()==102)
   details['mobileQA']=mobile.evaluate('OceanIsland.qa');check('mobile_no_GL_errors',not details['mobileQA'].get('glErrors'))

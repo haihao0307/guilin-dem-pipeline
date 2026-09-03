@@ -27,7 +27,7 @@ const views={overview:1,shore:1,breaker:1,fire:1,rocks:1,top:1};
 function setView(name,instant=false){
  const r=config.radius,source=FIRE_SOURCES[0]||[r*.46,2,0],rock=COAST_ROCKS[2]||[r,0];
  const v={overview:{target:[0,1,0],yaw:2.6,pitch:.48,distance:r*4.9},shore:{target:[r*.64,.1,-r*.83],yaw:2.5,pitch:.26,distance:25},breaker:{target:[r*.8,.2,-r*.9],yaw:2.3,pitch:.21,distance:35},fire:{target:[source[0]+6,3,source[2]],yaw:2.8,pitch:.25,distance:27},rocks:{target:[rock[0],1,rock[1]],yaw:2.8,pitch:.25,distance:22},top:{target:[0,0,0],yaw:0,pitch:1.49,distance:r*4.6}}[name]||{target:[0,0,0],yaw:2.6,pitch:.48,distance:r*4.9};
- v.fov=50*Math.PI/180;if(innerWidth<760&&['overview','top'].includes(name)){v.distance*=1.50;v.fov=58*Math.PI/180;}
+ v.fov=50*Math.PI/180;if(innerWidth<760&&name==='overview'){v.distance*=.96;v.yaw=2.35;v.fov=62*Math.PI/180;}else if(innerWidth<760&&name==='top'){v.distance*=1.35;v.fov=60*Math.PI/180;}
  while(v.yaw-camera.yaw>Math.PI)v.yaw-=TAU;while(v.yaw-camera.yaw<-Math.PI)v.yaw+=TAU;
  if(instant||!qa.ready){Object.assign(camera,v);camera.target=[...v.target];cameraTween=null;}else cameraTween={start:performance.now(),a:{...camera,target:[...camera.target]},b:v};
  camera.dirty=true;opaqueDirty=true;qa.view=name;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
@@ -364,7 +364,7 @@ async function init(){
  for(let t=-16;t<0;t+=.16)updateParticles(.16,t);qa.mediaWarmupSeconds=16;
  for(let t=-3;t<0;t+=.25)updateFields(.25,t);qa.foamWarmupSeconds=3;
  updateCurl(0);qa.ready=true;qa.parameterCount=PARAMS.length;qa.parameterPages=3;
- const api={qa,getState:()=>({version:VERSION,physicalTime,config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'kinematic surface and overhang sheets; transported coverage and particles; no 3D conservative solver'}),setConfig:applyParam,setView,setPage,setWaterMode,
+ const api={qa,getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'kinematic surface and overhang sheets; transported coverage and particles; no 3D conservative solver'}),setConfig:applyParam,setView,setPage,setWaterMode,
  pause:()=>{config.paused=true;$('pause').textContent='继续运行'},play:()=>{config.paused=false;$('pause').textContent='暂停';lastFrame=performance.now()},
  captureVisualProbe,sampleRock:(x,z)=>rockField.sample(x,z),sampleWater:(x,z,t=physicalTime)=>waveAt(x,z,t,config),sampleWind:(x,y,z,t=physicalTime)=>windAt(x,y,z,t,config),getSources:()=>FIRE_SOURCES.map(s=>[...s]),
  policy:{imageGenerationMode:false,persistentImageAssets:0,treeCount:0,full3DFluid:false},params:PARAMS};
