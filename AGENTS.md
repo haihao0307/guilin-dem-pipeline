@@ -11,3 +11,13 @@
 用户只通过在线三维网页验收。构建通过、Node 模拟测试通过和真实浏览器通过要分别记录。人工 visualAcceptance 与 productionReady 不能自动置 true。
 
 本交接包不含原始 TIFF。用户自行保管源文件，缺少 TIFF 不构成接管阻断。仅使用已有 canonical 数值文件，不下载或重新导入 TIFF，不把冷备份打回交接包。
+
+## 所有 Mother 共用在线交付门禁
+
+本仓库中的 DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother 及后续在线工作台，开工和交付前必须读取并执行 `knowledge/PUBLIC_WEB_DELIVERY_GATE.md`。
+
+任何公开链接发给用户以前，必须完成实际发布、最终公网地址 HTTP 200 回读、版本标识正文匹配、关键资源检查和真实浏览器启动检查。仓库中有文件、构建成功、本地截图成功，均不能代替公网回读。
+
+遇到 404、403、空白页、托管平台错误页、资源丢失或页面启动失败，立即视为发布失败，修复并重新执行完整发布闭环。不得先让用户代为测试，也不得沿用未回读的猜测地址。
+
+每次成功发布都要保存 `PUBLICATION_PROOF.json`。只有其中 `shareAllowed=true` 时才允许分享链接。新版公开验证通过以前保留旧版可用入口。
