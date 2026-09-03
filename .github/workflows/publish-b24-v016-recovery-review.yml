@@ -1,0 +1,278 @@
+name: Publish B24 V016 recovery review page
+
+on:
+  push:
+    branches:
+      - audit/b24-v016-original-source-20260903
+    paths:
+      - '.github/workflows/publish-b24-v016-recovery-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-b24-v016-recovery-review-page
+  cancel-in-progress: false
+
+jobs:
+  publish-and-live-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RELEASE_TAG: b24-v016-recovery-review-v1
+      RELEASE_BASE: https://github.com/haihao0307/AIRCRAFT/releases/download/b24-v016-recovery-review-v1
+      DESTINATION: aircraft/b24-v016-recovery-review
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-v016-recovery-review/
+    steps:
+      - name: Check out source branch
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Check out active Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 0
+
+      - name: Wait for the browser-verified AIRCRAFT recovery release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          files=(
+            B24_V016_COMPLETE_WORKBENCH.html
+            B24_V016_RECOVERY_MANIFEST.json
+            B24_V016_RECOVERY_BROWSER_QA.json
+            B24_V016_RECOVERY_RELEASE_RECEIPT.json
+          )
+          for attempt in $(seq 1 120); do
+            ready=1
+            for name in "${files[@]}"; do
+              if ! curl --fail --location --silent --show-error \
+                --output "work/$name.part" \
+                "$RELEASE_BASE/$name?attempt=$attempt"; then
+                ready=0
+                break
+              fi
+            done
+            if [ "$ready" = 1 ]; then
+              for name in "${files[@]}"; do mv "work/$name.part" "work/$name"; done
+              echo "Recovery release available after attempt $attempt"
+              exit 0
+            fi
+            rm -f work/*.part
+            if [ "$attempt" = 120 ]; then
+              echo 'Recovery release did not become available within the publication window.'
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Verify the recovery candidate and its browser QA receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          work = Path('work')
+          html = work / 'B24_V016_COMPLETE_WORKBENCH.html'
+          manifest = json.loads((work / 'B24_V016_RECOVERY_MANIFEST.json').read_text(encoding='utf-8'))
+          qa = json.loads((work / 'B24_V016_RECOVERY_BROWSER_QA.json').read_text(encoding='utf-8'))
+          receipt = json.loads((work / 'B24_V016_RECOVERY_RELEASE_RECEIPT.json').read_text(encoding='utf-8'))
+          data = html.read_bytes()
+          digest = hashlib.sha256(data).hexdigest()
+          selected = manifest['selected']
+
+          assert len(data) == selected['bytes'], (len(data), selected['bytes'])
+          assert digest == selected['sha256'], (digest, selected['sha256'])
+          assert selected['publishedUnchanged'] is True
+          assert qa['status'] == 'PASS'
+          assert receipt['status'] == 'PASS_BROWSER_VERIFIED_RECOVERY_CANDIDATE'
+          assert receipt['publishedUnchanged'] is True
+          assert receipt['weatherIntegrated'] is False
+          assert receipt['newSceneryAdded'] is False
+          assert receipt['weaponsMotherIncluded'] is False
+          assert receipt['img2threejsIncluded'] is False
+
+          lowered = data.lower()
+          forbidden = (b'img2threejs', b'image2three', b'weapons mother', b'b24-m2-aircraft-v016', b'weather mother')
+          found = [token.decode('ascii') for token in forbidden if token in lowered]
+          assert not found, found
+
+          publication = {
+              'schema': 'haihao.aircraft/b24-v016-recovery-review-publication@1.0.0',
+              'status': 'PUBLISHED_BROWSER_VERIFIED_RECOVERY_CANDIDATE',
+              'sourceReleaseTag': 'b24-v016-recovery-review-v1',
+              'candidate': selected,
+              'publishedHtml': {
+                  'file': 'index.html',
+                  'bytes': len(data),
+                  'sha256': digest,
+                  'unchangedFromRecoveredCandidate': True,
+              },
+              'scope': {
+                  'weatherIntegrated': False,
+                  'newSceneryAdded': False,
+                  'weaponsMotherIncluded': False,
+                  'img2threejsIncluded': False,
+                  'existingProductionEntryOverwritten': False,
+              },
+              'browserQa': {
+                  'status': qa['status'],
+                  'checks': qa['checks'],
+                  'passed': qa['passed'],
+                  'failed': qa['failed'],
+              },
+              'exactExpectedOriginal': receipt['exactExpectedOriginal'],
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          (work / 'PUBLICATION_RECEIPT.json').write_text(
+              json.dumps(publication, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(publication, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Install the candidate at a separate review path
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "public/$DESTINATION"
+          mkdir -p "public/$DESTINATION"
+          cp work/B24_V016_COMPLETE_WORKBENCH.html "public/$DESTINATION/index.html"
+          cp work/B24_V016_RECOVERY_MANIFEST.json "public/$DESTINATION/RECOVERY_MANIFEST.json"
+          cp work/B24_V016_RECOVERY_BROWSER_QA.json "public/$DESTINATION/BROWSER_QA.json"
+          cp work/B24_V016_RECOVERY_RELEASE_RECEIPT.json "public/$DESTINATION/RELEASE_RECEIPT.json"
+          cp work/PUBLICATION_RECEIPT.json "public/$DESTINATION/PUBLICATION_RECEIPT.json"
+
+      - name: Commit the separate review page to GitHub Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd public
+          git config user.name 'B24 V016 recovery review publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$DESTINATION"
+          if git diff --cached --quiet; then
+            echo 'Review path already contains this exact candidate.'
+          else
+            git commit -m 'review(b24): publish browser-verified V016 recovery candidate'
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Wait for the exact candidate to become live
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(python3 -c "import json;print(json.load(open('work/PUBLICATION_RECEIPT.json'))['publishedHtml']['sha256'])")"
+          for attempt in $(seq 1 120); do
+            if curl --fail --location --silent --show-error \
+              --output work/live-index.html \
+              "${PUBLIC_URL}?candidate=${GITHUB_SHA}-${attempt}"; then
+              actual="$(sha256sum work/live-index.html | cut -d' ' -f1)"
+              if [ "$actual" = "$expected" ]; then
+                echo "Exact recovery candidate is live after attempt $attempt"
+                exit 0
+              fi
+            fi
+            if [ "$attempt" = 120 ]; then
+              echo 'Pages did not expose the exact candidate within the verification window.'
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Verify direct browser opening on the public URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cat > work/live-smoke.cjs <<'NODE'
+          const fs = require('node:fs');
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              args: [
+                '--disable-dev-shm-usage', '--enable-webgl', '--ignore-gpu-blocklist',
+                '--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader'
+              ]
+            });
+            const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+            const errors = [];
+            page.on('pageerror', error => errors.push(error.message || String(error)));
+            await page.goto(`${process.env.PUBLIC_URL}?live=${Date.now()}`, {
+              waitUntil: 'domcontentloaded', timeout: 180000
+            });
+            await page.waitForTimeout(8000);
+            const state = await page.evaluate(() => ({
+              title: document.title,
+              canvasCount: document.querySelectorAll('canvas').length,
+              visibleButtons: [...document.querySelectorAll('button')].filter(button =>
+                !button.disabled && (button.offsetWidth || button.offsetHeight || button.getClientRects().length)
+              ).length,
+              bodyText: (document.body?.innerText || '').slice(0, 12000),
+            }));
+            if (!/B-?24/i.test(state.title + ' ' + state.bodyText)) throw new Error('Public page does not identify B24');
+            if (state.canvasCount < 1) throw new Error('Public page has no 3D canvas');
+            if (state.visibleButtons < 1) throw new Error('Public page has no visible controls');
+            if (/Weapons? Mother|img2threejs|image2three/i.test(state.bodyText)) throw new Error('Forbidden route is visible');
+            if (errors.length) throw new Error(`Public page errors: ${JSON.stringify(errors)}`);
+            fs.writeFileSync('work/LIVE_SMOKE.json', JSON.stringify({
+              schema: 'haihao.aircraft/b24-v016-recovery-live-smoke@1.0.0',
+              status: 'PASS', publicUrl: process.env.PUBLIC_URL, state, errors,
+              visualAcceptance: false, productionReady: false
+            }, null, 2) + '\n');
+            await page.screenshot({ path: 'work/B24_V016_RECOVERY_LIVE.png', fullPage: false, timeout: 120000 });
+            await browser.close();
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          node work/live-smoke.cjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-v016-recovery-review-publication-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            work/PUBLICATION_RECEIPT.json
+            work/LIVE_SMOKE.json
+            work/B24_V016_RECOVERY_LIVE.png
+            public/aircraft/b24-v016-recovery-review/RECOVERY_MANIFEST.json
+            public/aircraft/b24-v016-recovery-review/BROWSER_QA.json
+            public/aircraft/b24-v016-recovery-review/RELEASE_RECEIPT.json
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## B24 V016 recovery review page'
+            echo
+            echo "Public URL: $PUBLIC_URL"
+            if [ -f work/PUBLICATION_RECEIPT.json ]; then
+              python3 - <<'PY'
+          import json
+          r=json.load(open('work/PUBLICATION_RECEIPT.json'))
+          print('Candidate: '+r['candidate']['filename'])
+          print('Bytes: '+str(r['publishedHtml']['bytes']))
+          print('SHA-256: '+r['publishedHtml']['sha256'])
+          print('Published unchanged: '+str(r['publishedHtml']['unchangedFromRecoveredCandidate']).lower())
+          print('Exact historical V016 match: '+str(r['exactExpectedOriginal']).lower())
+          PY
+            fi
+            echo 'Weather integration: paused'
+            echo 'visualAcceptance=false'
+            echo 'productionReady=false'
+          } >> "$GITHUB_STEP_SUMMARY"
