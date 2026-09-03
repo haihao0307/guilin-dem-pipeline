@@ -35,7 +35,7 @@ def commit_files(branch,contents,message):
             if e.code not in [409,422] or attempt==2:raise
     raise RuntimeError('Branch advanced concurrently; no force push attempted')
 
-provenance={'candidateRun':33707658983,'candidateSourceCommit':'f9d0aac1e8fc4beec87c13631545d7fee74edcad','artifactId':int(os.environ['VERIFIED_ARTIFACT_ID']),'checksPassed':qa['passed'],'numericalGeometryChecks':tests['checkCount'],'visualApproved':False,'productionApproved':False,'mobileSafariHardwareTested':False,'files':manifest}
+provenance={'candidateRun':int(os.environ['VERIFIED_RUN_ID']),'candidateSourceCommit':os.environ['VERIFIED_SOURCE_SHA'],'artifactId':int(os.environ['VERIFIED_ARTIFACT_ID']),'checksPassed':qa['passed'],'numericalGeometryChecks':tests['checkCount'],'visualApproved':False,'productionApproved':False,'mobileSafariHardwareTested':False,'files':manifest}
 source=dict(files)
 source['ocean-mother/knowledge/R015_GLASS_REFERENCE_STUDY.md']=(candidate/'runtime/REFERENCE_STUDY.md').read_text()
 source['ocean-mother/qa/r015/SOURCE_MANIFEST.json']=json.dumps(provenance,ensure_ascii=False,indent=2)+'\n'
@@ -44,7 +44,6 @@ source['ocean-mother/qa/r015/NODE_QA.json']=(candidate/'NODE_QA.json').read_text
 source_commit=commit_files('work/ocean-mother-handoff-20260901',source,'feat(ocean): retain tested R015 daylight glass runtime and reference study')
 public_commit=commit_files('gh-pages',files,'feat(ocean): publish tested R015 daylight glass coast without altering other sites')
 receipt={'status':'GIT_WRITTEN_PUBLIC_HTTP_NOT_YET_VERIFIED','sourceCommit':source_commit,'publicCommit':public_commit,**provenance}
-# A bot commit alone may not trigger branch-based Pages builds. Request one explicitly.
 try:
     result=api('/pages/builds',{})
     receipt['pagesBuildRequest']={'status':result.get('status'),'url':result.get('url')}
