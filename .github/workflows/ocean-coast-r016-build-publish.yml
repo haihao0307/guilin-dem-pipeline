@@ -48,7 +48,7 @@ jobs:
           node ocean-mother/coast-glass-r016/core.test.mjs | tee evidence/NODE_QA.json
           grep -q "0.2.6-coast-r016" ocean-mother/coast-glass-r016/core.mjs
           grep -q "coast-r016-clear-shore-glass" ocean-mother/coast-glass-r016/index.html
-          grep -q "岩岸浪花响应" ocean-mother/coast-glass-r016/index.html
+          grep -q "岩岸浪花响应" ocean-mother/coast-glass-r016/app.mjs
           if find ocean-mother/coast-glass-r016 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.tif' -o -iname '*.tiff' -o -iname '*.hdr' -o -iname '*.exr' -o -iname '*.ktx' -o -iname '*.ktx2' -o -iname '*.dds' -o -iname '*.avif' \) | grep -q .; then
             echo 'Persistent image asset found in R016 runtime'
             exit 1
