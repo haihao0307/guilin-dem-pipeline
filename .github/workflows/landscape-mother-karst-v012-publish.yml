@@ -1,0 +1,132 @@
+name: Landscape Mother karst grand scene V012
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - workbenches/landscape-mother-v012/**
+      - .github/workflows/landscape-mother-karst-v012-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-karst-v012-publish
+  cancel-in-progress: false
+
+jobs:
+  build-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install deterministic numeric toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            numpy==2.3.5 \
+            scipy==1.17.0 \
+            scikit-image==0.26.0 \
+            trimesh==4.11.1
+
+      - name: Build fixed karst scene
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v012
+        run: |
+          set -euo pipefail
+          python workbenches/landscape-mother-v012/build_scene.py
+          cp workbenches/landscape-mother-v012/runtime/index.html "$LANDSCAPE_OUT/index.html"
+          cp workbenches/landscape-mother-v012/runtime/styles.css "$LANDSCAPE_OUT/styles.css"
+          cp workbenches/landscape-mother-v012/runtime/app.js "$LANDSCAPE_OUT/app.js"
+
+      - name: Verify numeric, topology and publication gates
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v012
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,re,struct
+          from pathlib import Path
+          root=Path(os.environ['LANDSCAPE_OUT'])
+          meta=json.loads((root/'SCENE_META.json').read_text())
+          data=(root/'scene.bin').read_bytes()
+          assert data[:4] == b'LMK3'
+          assert struct.unpack_from('<I',data,4)[0] == 3
+          assert meta['vertices'] == 124615
+          assert meta['triangles'] == 249002
+          assert meta['watertight'] is True
+          assert meta['windingConsistent'] is True
+          assert meta['components'] == 65
+          assert meta['tinyFaceCountLt1e9'] == 0
+          assert meta['textureSampling'] is False
+          assert meta['runtimeLOD'] is False
+          assert meta['deviceDependentGeometry'] is False
+          assert meta['externalModels'] is False
+          assert meta['images'] is False
+          assert meta['fog'] is False
+          assert meta['distantMountains'] is False
+          assert hashlib.sha256(data).hexdigest() == meta['binarySha256']
+          html=(root/'index.html').read_text()
+          js=(root/'app.js').read_text()
+          assert '<img' not in html.lower()
+          assert not re.search(r'https?://',html+js)
+          assert not re.search(r'createTexture|sampler2D|texture2D|texImage',js)
+          assert 'side:{yaw:1.50' in js
+          assert 'min-width:44px;height:44px' in (root/'styles.css').read_text()
+          print(json.dumps(meta,indent=2))
+          PY
+
+      - name: Publish scoped online workbench
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v012
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add "$RUNNER_TEMP/site" origin/gh-pages
+          cd "$RUNNER_TEMP/site"
+          rm -rf landscape-mother-v012
+          mkdir -p landscape-mother-v012 landscape-mother
+          cp "$LANDSCAPE_OUT/index.html" landscape-mother-v012/index.html
+          cp "$LANDSCAPE_OUT/styles.css" landscape-mother-v012/styles.css
+          cp "$LANDSCAPE_OUT/app.js" landscape-mother-v012/app.js
+          cp "$LANDSCAPE_OUT/scene.bin" landscape-mother-v012/scene.bin
+          cp "$LANDSCAPE_OUT/SCENE_META.json" landscape-mother-v012/SCENE_META.json
+          cat > landscape-mother/index.html <<'HTML'
+          <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=../landscape-mother-v012/?v=20260903-1"><title>Landscape Mother</title><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#071015;color:#eaf0ed;font:14px system-ui}</style></head><body>正在打开 Landscape Mother 喀斯特峰林三维工作台<script>location.replace('../landscape-mother-v012/?v=20260903-1')</script></body></html>
+          HTML
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add landscape-mother-v012 landscape-mother/index.html
+          git commit -m "feat(landscape-mother): publish karst grand scene V012"
+          if ! git push origin HEAD:gh-pages; then
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Record summary
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v012
+        run: |
+          echo '## Landscape Mother Karst V012' >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json,os
+          from pathlib import Path
+          m=json.loads((Path(os.environ['LANDSCAPE_OUT'])/'SCENE_META.json').read_text())
+          print(f"Vertices: {m['vertices']:,}")
+          print(f"Triangles: {m['triangles']:,}")
+          print(f"Watertight: {m['watertight']}")
+          print(f"Binary SHA256: {m['binarySha256']}")
+          print('visualApproved=false; productionReady=false')
+          PY
