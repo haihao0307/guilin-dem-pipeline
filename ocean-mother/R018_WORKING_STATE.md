@@ -6,6 +6,8 @@ R018 已从 V0.3.0 全量重启包中的 R017 权威源码启动。R017 在线�
 
 已完成的第一批代码工作包括浅水光学分层、破浪到泡沫的源强传递、动态湿沙与岩石水线、多火源海面反光、烟柱冷却扩散曲线和交互焦点状态。Node 语法、数值合同、参数消费者、几何闭合和零图片资产检查已在本地通过 18 项。
 
+首次 GitHub 门禁确认当前分支缺少 V0.3.0 全量包中的权威浏览器验收器。该文件已经从全量包原样恢复到 `ocean-mother/island-r017-tools/qa_runner.py`，第二次门禁由同一 R018 生成脚本重新执行。
+
 下一门禁由 GitHub Actions 在真实 Chromium WebGL2 中执行，覆盖桌面、移动端、暂停继续、三层破浪、多源长烟、参数热更新、玻璃流动和全部观察镜头。门禁通过后才进入在线发布候选。
 
 批准状态：`visualApproved=false`、`productionApproved=false`、`fullReplication=false`。
