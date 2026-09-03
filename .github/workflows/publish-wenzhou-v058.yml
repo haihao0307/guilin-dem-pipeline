@@ -1,0 +1,146 @@
+name: Publish Wenzhou V0.5.8 continuous world
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-wenzhou-v058.yml"
+      - "tools/wenzhou/v058/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-wenzhou-v058
+  cancel-in-progress: false
+
+jobs:
+  build-publish-and-prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out production source
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Check out GitHub Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+          fetch-depth: 0
+
+      - name: Reassemble verified build inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          cat source/tools/wenzhou/v058/build.part-* > build/build_wenzhou_v058.py
+          cat source/tools/wenzhou/v058/detail.part-* > build/dongtou_513_i16.bin.gz.b64
+          test "$(sha256sum build/build_wenzhou_v058.py | awk '{print $1}')" = 'e370ccdce14984cf1d9f36cbbf143f293ff1fd3f51558bdba280753e47abe426'
+          test "$(sha256sum build/dongtou_513_i16.bin.gz.b64 | awk '{print $1}')" = 'b27fd3f8d85250cbe3d552b3ca37b610235b28739878ad5f89787d4b6c12c5ff'
+          python -m py_compile build/build_wenzhou_v058.py
+
+      - name: Restore verified Dongtou 12.5 m payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib
+          src = Path('build/dongtou_513_i16.bin.gz.b64')
+          out = Path('build/v057_candidate_0_526338.bin')
+          raw = gzip.decompress(base64.b64decode(src.read_text('ascii').strip()))
+          expected = '25f2ad68043ee03f0e0a9b20380b03b6bef58c13ec17d96e8bb2802fcf3abf0c'
+          actual = hashlib.sha256(raw).hexdigest()
+          if len(raw) != 526338 or actual != expected:
+              raise SystemExit(f'Verified detail payload mismatch: bytes={len(raw)} sha256={actual}')
+          out.write_bytes(raw)
+          print(f'restored {out} bytes={len(raw)} sha256={actual}')
+          PY
+
+      - name: Build the continuous-world page
+        shell: bash
+        env:
+          WZ_BUILD_ROOT: ${{ github.workspace }}/build
+          WZ_REPO_ROOT: ${{ github.workspace }}/site
+          WZ_OUTPUT: ${{ github.workspace }}/site/wenzhou-v7-full/workbench-v058/index.html
+          WZ_REPORT: ${{ github.workspace }}/site/wenzhou-v7-full/workbench-v058/BUILD_REPORT.json
+        run: |
+          set -euo pipefail
+          python build/build_wenzhou_v058.py
+          test -s site/wenzhou-v7-full/workbench-v058/index.html
+          grep -q '小温州 V0.5.8' site/wenzhou-v7-full/workbench-v058/index.html
+
+      - name: Commit the published page
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wenzhou-v7-full/workbench-v058/index.html wenzhou-v7-full/workbench-v058/BUILD_REPORT.json
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git commit -m 'publish: Wenzhou V0.5.8 continuous-world workbench'
+            git push origin gh-pages
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Public HTTP deployment gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/wenzhou-v7-full/workbench-v058/?build=${GITHUB_RUN_ID}"
+          echo "Checking $url"
+          ok=0
+          for attempt in $(seq 1 36); do
+            status="$(curl -L -sS -o /tmp/page.html -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
+            if [ "$status" = '200' ] \
+               && grep -q '<!doctype html' /tmp/page.html \
+               && grep -q '小温州 V0.5.8' /tmp/page.html \
+               && ! grep -qi 'File not found' /tmp/page.html; then
+              ok=1
+              break
+            fi
+            echo "attempt=$attempt status=$status waiting for Pages propagation"
+            sleep 10
+          done
+          if [ "$ok" != '1' ]; then
+            echo 'Public page did not pass the HTTP gate.' >&2
+            sed -n '1,40p' /tmp/page.html 2>/dev/null || true
+            exit 1
+          fi
+          bytes="$(wc -c </tmp/page.html | tr -d ' ')"
+          sha="$(sha256sum /tmp/page.html | awk '{print $1}')"
+          echo "PUBLIC_URL=$url" >> "$GITHUB_ENV"
+          echo "PUBLIC_BYTES=$bytes" >> "$GITHUB_ENV"
+          echo "PUBLIC_SHA256=$sha" >> "$GITHUB_ENV"
+          echo "public HTTP gate passed: status=200 bytes=$bytes sha256=$sha"
+
+      - name: Write deployment proof to the branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd site
+          mkdir -p wenzhou-v7-full/workbench-v058
+          cat > wenzhou-v7-full/workbench-v058/PUBLICATION_PROOF.json <<JSON
+          {
+            "schema": "public_web_delivery_gate@1",
+            "url": "${PUBLIC_URL}",
+            "httpStatus": 200,
+            "bytes": ${PUBLIC_BYTES},
+            "sha256": "${PUBLIC_SHA256}",
+            "workflowRunId": "${GITHUB_RUN_ID}",
+            "commit": "${GITHUB_SHA}",
+            "verifiedAtUtc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "shareAllowed": true
+          }
+          JSON
+          git add wenzhou-v7-full/workbench-v058/PUBLICATION_PROOF.json
+          git commit -m 'qa: record Wenzhou V0.5.8 public HTTP proof' || true
+          git push origin gh-pages
