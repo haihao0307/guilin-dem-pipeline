@@ -1,19 +1,13 @@
 # Weather Mother
 
-Start this production line at `weather-mother/index.html` on the existing `gh-pages` branch.
+公开工作平台只有 `weather-mother/index.html`。
 
-Public entry: https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/
+根入口默认进入 World。Rain、Snow、Fog、Cloud、Storm 都在统一壳层内切换。
 
-Current candidate: **V0.5.1**. The user's upgrade from Cloud Mother to Weather Mother is authoritative. Cloud generation and atmospheric lighting are subsystems of this weather production line. The rejected Cloud Mother V0.3.2 is not a production baseline or a new deliverable.
+当前 World 运行目录为 `v110-full`。当前 Rain 运行目录为 `liquid-rain-v100`，视觉基线是用户确认可以继续发展的 1940 年代三维村院。旧平面村落、旧 Rain 实验、旧壳层和旧分发包已经退出公开目录，历史只保留在 Git 提交记录中。
 
-Read `HANDOFF.json`, `PUBLICATION_RECEIPT.json` and `qa-v051.json` when present. Resolve current source commits through GitHub file history before resuming work. An absent QA file means verification is pending; it never means passed. Public HTTP verification, automatic browser verification and human visual approval are distinct.
+继续工作先读 `RESTART_START_HERE.md`、`HANDOFF.json`、`CLEANUP_RECEIPT.json`、`UNIFIED_STUDIO_POLICY.json`，再读 `liquid-rain-v100/LIQUID_CORE_V1.md`。
 
-The runtime consists of `index.html`, `engine.js` and `cloud.glsl`. It stores no cloud photographs, image texture files, HDR environment files or imported cloud meshes. Scalar density and noise buffers are generated in a worker at runtime. Browser test images are processed in memory only; only numerical and textual evidence is retained.
+当前 Rain 与 Liquid 范围包括雨滴、受湿、积水、涟漪、水花、檐口转移、表面液体表现、程序化声音，以及后续人物汗液和外来沾水接口。
 
-The default visual review scene is a group of daylight cumulus clouds. Review the same clouds under dawn, noon, dusk and moonlight. Retain independent density, cloud count, seeded generation, wind speed and meteorological wind-from direction controls. Ten cloud genera and eight illustrative weather cases remain in one workbench.
-
-The implementation uses a finite local volume, empty-margin validation, merged cloud-group ray intervals, midpoint integration, approximate cloud self-shadow and multiple scattering, and alpha-aware spatial reconstruction. It does not yet implement infinite-world weather streaming, real-time observed weather ingestion, a full fluid solver or temporal reprojection. Terrain updraft and aircraft wake are explicitly graphical approximations. Rain and snow are screen-space approximations. Rainbow optics are a fast angular approximation.
-
-Do not claim AAA quality, real-world meteorological accuracy, full terrain/aircraft fluid coupling or measured user-device performance. `visualAcceptance` and `productionReady` remain false until the required review.
-
-Do not modify unrelated DEM truth assets, other project entry pages, `main`, or GitHub Pages settings as part of weather work. Preserve this stable online entry and record actual changes rather than reintroducing an older Cloud Mother page.
+人工视觉批准、3A 批准和生产批准继续保持 `false`。
