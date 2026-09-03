@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 25
     env:
       PACKAGE_NAME: Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0
-      TAG_NAME: ocean-mother-v0.3.0-r017-handoff-20260903
+      TAG_NAME: ocean-mother-v0.3.0-r017-handoff-20260903-v2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +30,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p evidence
+          if [ ! -f ocean-mother/v001/index.html ]; then
+            LEGACY='ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-02_V0.1.2.zip'
+            test -f "$LEGACY"
+            rm -rf /tmp/ocean-v012-restore
+            mkdir -p /tmp/ocean-v012-restore
+            unzip -q "$LEGACY" -d /tmp/ocean-v012-restore
+            OLD_ROOT='/tmp/ocean-v012-restore/Ocean_Mother_Full_Restart_Handoff_2026-09-02_V0.1.2'
+            cp -a "$OLD_ROOT/ocean-mother/v001" ocean-mother/v001
+            if [ ! -d ocean-mother/coast-v012 ]; then
+              cp -a "$OLD_ROOT/ocean-mother/coast-v012" ocean-mother/coast-v012
+            fi
+          fi
+          test -f ocean-mother/v001/index.html
+          test -f ocean-mother/island-r017/index.html
           python3 - <<'PY'
           from pathlib import Path
           p=Path('ocean-mother/tools/build_full_handoff_v030.py')
@@ -96,7 +110,7 @@ jobs:
 
           Current online HTML: https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/
 
-          The package contains the current R017 island runtime, deep-ocean dependency, selected clean history, governance, knowledge, weather bridge, verification tools and the R018 next-round entry. Persistent image assets and external models remain zero. Visual and production approvals remain false.
+          The package contains the current R017 island runtime, restored frozen deep-ocean dependency, selected clean history, governance, knowledge, weather bridge, verification tools and the R018 next-round entry. Persistent image assets and external models remain zero. Visual and production approvals remain false.
           EOF
           if gh release view "$TAG_NAME" --repo haihao0307/guilin-dem-pipeline >/dev/null 2>&1; then
             gh release upload "$TAG_NAME" "$ZIP" "$MANIFEST" "$SHA" --clobber --repo haihao0307/guilin-dem-pipeline
@@ -129,7 +143,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ocean-mother-full-r017-handoff-v030
+          name: ocean-mother-full-r017-handoff-v030-v2
           path: |
             evidence/
             ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.zip
