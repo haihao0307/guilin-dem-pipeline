@@ -1,0 +1,59 @@
+name: Ocean R015 refined daylight glass acceptance
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r015-refined.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 33707197313
+          name: ocean-coast-r015-candidate
+          path: _original
+      - name: Verify original identity and apply reviewed refinements
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil,subprocess
+          original=Path('_original');identity=json.loads((original/'SOURCE.json').read_text())
+          assert json.loads((original/'BROWSER_QA.json').read_text())['status']=='PASS'
+          for name,meta in identity.items():
+              assert hashlib.sha256((original/'runtime'/name).read_bytes()).hexdigest()==meta['sha256']
+          target=Path('ocean-mother/coast-glass-r015');shutil.copytree(original/'runtime',target)
+          for script in ['refine.py','visual_refine.py']:
+              subprocess.run(['python3','ocean-mother/coast-r015-build/'+script,str(target)],check=True)
+          for f in target.glob('*.mjs'):subprocess.run(['node','--check',str(f)],check=True)
+          tests=subprocess.run(['node',str(target/'core.test.mjs')],check=True,capture_output=True,text=True)
+          Path('evidence/NODE_QA.json').write_text(tests.stdout)
+          shutil.copytree(target,'evidence/runtime')
+          identity={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in target.iterdir() if p.is_file()}
+          Path('evidence/SOURCE.json').write_text(json.dumps(identity,indent=2))
+          print(tests.stdout)
+          PY
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Six rendered views and desktop portrait interaction
+        run: |
+          python3 -m http.server 8141 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          python3 ocean-mother/coast-r015-build/browser_qa.py http://127.0.0.1:8141/ocean-mother/coast-glass-r015/ evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r015-refined
+          path: evidence/
+          retention-days: 30
