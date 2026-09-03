@@ -1,0 +1,214 @@
+name: Landscape Mother karst material V013
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - workbenches/landscape-mother-v013/**
+      - .github/workflows/landscape-mother-karst-v013-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-karst-v013-publish
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install deterministic numeric and browser toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            numpy==2.3.5 \
+            scipy==1.17.0 \
+            scikit-image==0.26.0 \
+            trimesh==4.11.1 \
+            playwright==1.55.0
+
+      - name: Assemble and build V013 twice
+        env:
+          OUT_A: ${{ runner.temp }}/landscape-mother-v013
+          OUT_B: ${{ runner.temp }}/landscape-mother-v013-repeat
+        run: |
+          set -euo pipefail
+          cp workbenches/landscape-mother-v012/build_scene.py "$RUNNER_TEMP/build_scene_v013.py"
+          python workbenches/landscape-mother-v013/patch_build.py "$RUNNER_TEMP/build_scene_v013.py"
+          LANDSCAPE_OUT="$OUT_A" python "$RUNNER_TEMP/build_scene_v013.py"
+          LANDSCAPE_OUT="$OUT_B" python "$RUNNER_TEMP/build_scene_v013.py"
+          cp workbenches/landscape-mother-v013/runtime/index.html "$OUT_A/index.html"
+          cp workbenches/landscape-mother-v013/runtime/styles.css "$OUT_A/styles.css"
+          cp workbenches/landscape-mother-v013/runtime/app.js "$OUT_A/app.js"
+
+      - name: Verify deterministic geometry and publication gates
+        env:
+          OUT_A: ${{ runner.temp }}/landscape-mother-v013
+          OUT_B: ${{ runner.temp }}/landscape-mother-v013-repeat
+        run: |
+          set -euo pipefail
+          node --check "$OUT_A/app.js"
+          python - <<'PY'
+          import hashlib,json,os,re,struct
+          from pathlib import Path
+          a=Path(os.environ['OUT_A']); b=Path(os.environ['OUT_B'])
+          meta=json.loads((a/'SCENE_META.json').read_text())
+          data=(a/'scene.bin').read_bytes(); repeat=(b/'scene.bin').read_bytes()
+          sha=lambda x: hashlib.sha256(x).hexdigest()
+          assert data[:4] == b'LMK3'
+          assert struct.unpack_from('<I',data,4)[0] == 3
+          assert len(data) == meta['binaryBytes']
+          assert sha(data) == sha(repeat) == meta['binarySha256']
+          assert meta['schema'] == 'landscape-mother-karst-v013/1'
+          assert meta['vertices'] > 100000
+          assert meta['triangles'] > 200000
+          assert meta['watertight'] is True
+          assert meta['windingConsistent'] is True
+          assert meta['tinyFaceCountLt1e9'] == 0
+          assert meta['dissolutionEventCount'] >= 20
+          assert meta['fields'][-2:] == ['cavity','manganeseDeposit']
+          assert meta['formationHierarchy'] == {'macro':.46,'meso':.36,'micro':.18}
+          assert meta['approvals'] == {'visualApproved':False,'visualAcceptance':False,'productionReady':False}
+          for k in ['textureSampling','runtimeLOD','deviceDependentGeometry','distantMountains','fog','externalModels','images']:
+              assert meta[k] is False
+          html=(a/'index.html').read_text(); js=(a/'app.js').read_text(); css=(a/'styles.css').read_text()
+          text=html+js+css
+          assert '<img' not in html.lower()
+          assert not re.search(r'https?://',text)
+          assert not re.search(r'sampler2D|texture2D|texImage|createTexture',js)
+          assert 'min-width:44px' in css and 'backdrop-filter:blur(32px)' in css
+          assert 'manganeseWeight' in js and 'event-field-splat' in js
+          assert 'pointerSnapshot' in js and 'items.length>=2' in js
+          assert 'id="home"' in html and 'id="hub"' in html
+          print(json.dumps(meta,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Real Chromium mobile interaction and framebuffer QA
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v013
+        run: |
+          set -euo pipefail
+          python -m http.server 4173 --directory "$LANDSCAPE_OUT" >"$RUNNER_TEMP/v013-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          python - <<'PY'
+          import json,os,shutil,time
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          root=Path(os.environ['LANDSCAPE_OUT'])
+          chrome=shutil.which('google-chrome') or shutil.which('chromium') or shutil.which('chromium-browser')
+          errors=[]
+          with sync_playwright() as p:
+              opts={'headless':True,'args':['--ignore-gpu-blocklist','--enable-webgl','--use-angle=swiftshader','--disable-dev-shm-usage']}
+              if chrome: opts['executable_path']=chrome
+              browser=p.chromium.launch(**opts)
+              context=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True)
+              page=context.new_page()
+              page.on('console',lambda m: errors.append('console:'+m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: errors.append('page:'+str(e)))
+              response=page.goto('http://127.0.0.1:4173/',wait_until='domcontentloaded',timeout=60000)
+              assert response and response.ok
+              page.wait_for_function('window.__LANDSCAPE_READY__===true',timeout=90000)
+              page.wait_for_timeout(1000)
+              base=page.evaluate('window.__requestLandscapeFrameMetrics__()')
+              assert base['glError']==0
+              assert base['stats']['watertight'] is True
+              assert base['stats']['textureSampling'] is False
+              assert base['samples']>400
+              assert .10<base['meanLuminance']<.86
+              assert base['meanChroma']>.018
+              assert base['darkRatio']<.55
+              page.locator('#settings').click()
+              assert page.locator('#sheet').evaluate("e=>!e.classList.contains('hidden')")
+              page.locator('[data-tab="water"]').click()
+              page.locator('#manganese').evaluate("e=>{e.value='0.9';e.dispatchEvent(new Event('input',{bubbles:true}))}")
+              page.locator('[data-tab="diagnostic"]').click()
+              page.locator('[data-mode="5"]').click()
+              page.wait_for_timeout(100)
+              diag=page.evaluate('window.__requestLandscapeFrameMetrics__()')
+              assert diag['glError']==0 and diag['state']['mode']==5
+              page.locator('#close').click()
+              page.locator('#home').click()
+              assert page.locator('#hub').evaluate("e=>!e.classList.contains('hidden')")
+              page.locator('#enterKarst').click()
+              assert page.locator('#hub').evaluate("e=>e.classList.contains('hidden')")
+              page.evaluate("window.__setLandscapeMode__(0);window.__setLandscapeView__('cave')")
+              page.wait_for_timeout(100)
+              cave=page.evaluate('window.__requestLandscapeFrameMetrics__()')
+              assert cave['glError']==0 and cave['activeView']=='cave'
+              assert not errors, errors
+              report={'schema':'landscape-mother-v013-browser-qa/1','viewport':[390,844],'deviceScaleFactor':3,'base':base,'cavityView':cave,'consoleOrPageErrors':errors,'passed':True}
+              (root/'BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+              browser.close()
+          PY
+
+      - name: Upload complete deterministic evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_Karst_Material_V013
+          path: ${{ runner.temp }}/landscape-mother-v013
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Publish scoped online workbench
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v013
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add "$RUNNER_TEMP/site" origin/gh-pages
+          cd "$RUNNER_TEMP/site"
+          rm -rf landscape-mother-v013
+          mkdir -p landscape-mother-v013 landscape-mother
+          cp "$LANDSCAPE_OUT/index.html" landscape-mother-v013/index.html
+          cp "$LANDSCAPE_OUT/styles.css" landscape-mother-v013/styles.css
+          cp "$LANDSCAPE_OUT/app.js" landscape-mother-v013/app.js
+          cp "$LANDSCAPE_OUT/scene.bin" landscape-mother-v013/scene.bin
+          cp "$LANDSCAPE_OUT/SCENE_META.json" landscape-mother-v013/SCENE_META.json
+          cp "$LANDSCAPE_OUT/BROWSER_QA.json" landscape-mother-v013/BROWSER_QA.json
+          cat > landscape-mother/index.html <<'HTML'
+          <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=../landscape-mother-v013/?v=20260903-1"><title>Landscape Mother</title><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#111a1d;color:#eef1ec;font:14px system-ui}</style></head><body>正在打开 Landscape Mother 喀斯特材质工作台<script>location.replace('../landscape-mother-v013/?v=20260903-1')</script></body></html>
+          HTML
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add landscape-mother-v013 landscape-mother/index.html
+          git commit -m "feat(landscape-mother): publish karst material V013"
+          if ! git push origin HEAD:gh-pages; then
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Record summary
+        env:
+          LANDSCAPE_OUT: ${{ runner.temp }}/landscape-mother-v013
+        run: |
+          echo '## Landscape Mother Karst Material V013' >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['LANDSCAPE_OUT'])
+          m=json.loads((root/'SCENE_META.json').read_text())
+          q=json.loads((root/'BROWSER_QA.json').read_text())
+          print(f"Vertices: {m['vertices']:,}")
+          print(f"Triangles: {m['triangles']:,}")
+          print(f"Dissolution events: {m['dissolutionEventCount']}")
+          print(f"Binary SHA256: {m['binarySha256']}")
+          print(f"Mobile mean luminance: {q['base']['meanLuminance']:.6f}")
+          print(f"Mobile mean chroma: {q['base']['meanChroma']:.6f}")
+          print('visualApproved=false; visualAcceptance=false; productionReady=false')
+          PY
