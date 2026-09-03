@@ -1,0 +1,243 @@
+name: Scan retained deployment artifacts for exact B24 V016
+
+on:
+  push:
+    branches:
+      - audit/b24-v016-original-source-20260903
+    paths:
+      - '.github/workflows/audit-b24-v016-artifacts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  artifact-byte-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download and inspect retained artifacts around the V016 build window
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence work
+          cat > /tmp/scan_deployment_artifacts.py <<'PY'
+          import hashlib
+          import io
+          import json
+          import subprocess
+          import zipfile
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          REPO = 'haihao0307/guilin-dem-pipeline'
+          OUT = Path('evidence')
+          WORK = Path('work')
+          TARGET = {
+              'file': 'B24_V016_COMPLETE_WORKBENCH.html',
+              'bytes': 12141929,
+              'sha256': 'c8806aafcf9f32936aff1206d9b7a83545c547e842071b8b02a910ec6c9f69e4',
+          }
+          PACKAGE = {
+              'file': 'AIRCRAFT_B24_V016_WORKBENCH_REPAIR_R1.zip',
+              'bytes': 27611090,
+              'sha256': 'f991c9c9d06adaf3004f796c8be7b13c76c3b4c93971c018e0afbff7f9def8af',
+          }
+          report = {
+              'schema': 'haihao.aircraft/b24-v016-deployment-artifact-byte-audit@1.0.0',
+              'generatedAt': datetime.now(timezone.utc).isoformat(),
+              'target': TARGET,
+              'package': PACKAGE,
+              'period': '2026-08-30T00:00:00Z..2026-09-03T00:00:00Z',
+              'artifactMetadataEnumerated': 0,
+              'artifactsInPeriod': 0,
+              'artifactsSelected': 0,
+              'artifactsDownloaded': 0,
+              'compressedBytesDownloaded': 0,
+              'membersInspected': 0,
+              'nestedArchivesInspected': 0,
+              'records': [],
+              'exactMatches': [],
+              'errors': [],
+              'limits': [],
+              'runtimeChanged': False,
+              'publicDeploymentChanged': False,
+              'auditBranchOnly': True,
+          }
+
+          def gh_json(endpoint):
+              process = subprocess.run(
+                  ['gh', 'api', '--method', 'GET', endpoint],
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE,
+                  timeout=180,
+              )
+              if process.returncode:
+                  raise RuntimeError(process.stderr.decode('utf-8', 'replace')[-3000:])
+              return json.loads(process.stdout)
+
+          def digest(data):
+              return hashlib.sha256(data).hexdigest()
+
+          def exact_check(data, origin):
+              sha = digest(data)
+              info = {'origin': origin, 'bytes': len(data), 'sha256': sha}
+              if len(data) == TARGET['bytes'] and sha == TARGET['sha256']:
+                  (OUT / TARGET['file']).write_bytes(data)
+                  report['exactMatches'].append({**info, 'kind': 'html'})
+              if len(data) == PACKAGE['bytes'] and sha == PACKAGE['sha256']:
+                  (OUT / PACKAGE['file']).write_bytes(data)
+                  report['exactMatches'].append({**info, 'kind': 'package'})
+              return info
+
+          def relevant_name(name):
+              lowered = name.lower()
+              return (
+                  'weapon' not in lowered
+                  and ('b24' in lowered or 'b-24' in lowered or 'aircraft' in lowered)
+                  and any(word in lowered for word in (
+                      'v016', 'v16', 'workbench', 'handoff', 'repair', 'complete',
+                      'current', 'one_click', 'package', 'mother', 'full'
+                  ))
+              )
+
+          def inspect_archive(data, origin, depth=0):
+              exact_check(data, origin)
+              if depth >= 5 or not zipfile.is_zipfile(io.BytesIO(data)):
+                  return
+              report['nestedArchivesInspected'] += 1
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  for member in archive.infolist():
+                      if member.is_dir() or member.file_size > 300_000_000:
+                          continue
+                      report['membersInspected'] += 1
+                      should_read = (
+                          member.file_size in (TARGET['bytes'], PACKAGE['bytes'])
+                          or relevant_name(member.filename)
+                      )
+                      if not should_read:
+                          continue
+                      child = archive.read(member)
+                      exact_check(child, f'{origin}!{member.filename}')
+                      if zipfile.is_zipfile(io.BytesIO(child)):
+                          inspect_archive(child, f'{origin}!{member.filename}', depth + 1)
+
+          artifacts = []
+          for page in range(1, 60):
+              payload = gh_json(f'repos/{REPO}/actions/artifacts?per_page=100&page={page}')
+              batch = payload.get('artifacts', [])
+              artifacts.extend(batch)
+              if len(batch) < 100:
+                  break
+          else:
+              report['limits'].append({'collection': 'actions/artifacts', 'pages': 59})
+
+          report['artifactMetadataEnumerated'] = len(artifacts)
+          period = [
+              artifact for artifact in artifacts
+              if not artifact.get('expired')
+              and '2026-08-30T00:00:00Z' <= artifact['created_at'] < '2026-09-03T00:00:00Z'
+          ]
+          report['artifactsInPeriod'] = len(period)
+
+          selected = []
+          for artifact in period:
+              size = artifact['size_in_bytes']
+              if relevant_name(artifact['name']) or 1_000_000 <= size <= 45_000_000:
+                  selected.append(artifact)
+          target_timestamp = datetime.fromisoformat('2026-08-31T11:26:18+00:00')
+          selected.sort(key=lambda artifact: (
+              0 if relevant_name(artifact['name']) else 1,
+              abs((datetime.fromisoformat(artifact['created_at'].replace('Z', '+00:00')) - target_timestamp).total_seconds()),
+              abs(artifact['size_in_bytes'] - TARGET['bytes']),
+          ))
+          report['artifactsSelected'] = len(selected)
+
+          total_budget = 6_000_000_000
+          for index, artifact in enumerate(selected, start=1):
+              if report['compressedBytesDownloaded'] >= total_budget:
+                  report['limits'].append({'reason': 'compressed-download-budget', 'bytes': total_budget})
+                  break
+              record = {
+                  'sequence': index,
+                  'id': artifact['id'],
+                  'name': artifact['name'],
+                  'createdAt': artifact['created_at'],
+                  'metadataCompressedBytes': artifact['size_in_bytes'],
+                  'headBranch': artifact.get('workflow_run', {}).get('head_branch'),
+                  'headSha': artifact.get('workflow_run', {}).get('head_sha'),
+                  'downloaded': False,
+                  'exactMatch': False,
+              }
+              archive_path = WORK / f'artifact-{artifact["id"]}.zip'
+              try:
+                  with archive_path.open('wb') as output:
+                      process = subprocess.run(
+                          [
+                              'gh', 'api', '--method', 'GET',
+                              '-H', 'Accept: application/vnd.github+json',
+                              f'repos/{REPO}/actions/artifacts/{artifact["id"]}/zip',
+                          ],
+                          stdout=output,
+                          stderr=subprocess.PIPE,
+                          timeout=360,
+                      )
+                  if process.returncode:
+                      raise RuntimeError(process.stderr.decode('utf-8', 'replace')[-3000:])
+                  data = archive_path.read_bytes()
+                  record['downloaded'] = True
+                  record['downloadedBytes'] = len(data)
+                  record['archiveSha256'] = digest(data)
+                  report['artifactsDownloaded'] += 1
+                  report['compressedBytesDownloaded'] += len(data)
+                  before = len(report['exactMatches'])
+                  inspect_archive(data, f'artifact:{artifact["id"]}:{artifact["name"]}')
+                  record['exactMatch'] = len(report['exactMatches']) > before
+                  report['records'].append(record)
+                  if any(match['kind'] == 'html' for match in report['exactMatches']):
+                      print(f'Exact full-aircraft V016 found in artifact {artifact["id"]}', flush=True)
+                      break
+              except Exception as error:
+                  record['error'] = str(error)
+                  report['errors'].append({**record})
+                  report['records'].append(record)
+              finally:
+                  archive_path.unlink(missing_ok=True)
+              if index % 25 == 0:
+                  print(f'Inspected {index}/{len(selected)} selected deployment artifacts', flush=True)
+
+          report['status'] = (
+              'EXACT_ORIGINAL_BYTES_VERIFIED'
+              if any(match['kind'] == 'html' for match in report['exactMatches'])
+              else 'EXACT_ORIGINAL_BYTES_NOT_FOUND_IN_SELECTED_RETAINED_DEPLOYMENT_ARTIFACTS'
+          )
+          (OUT / 'deployment-artifacts-audit.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps({
+              'status': report['status'],
+              'artifactMetadataEnumerated': report['artifactMetadataEnumerated'],
+              'artifactsInPeriod': report['artifactsInPeriod'],
+              'artifactsSelected': report['artifactsSelected'],
+              'artifactsDownloaded': report['artifactsDownloaded'],
+              'compressedBytesDownloaded': report['compressedBytesDownloaded'],
+              'membersInspected': report['membersInspected'],
+              'nestedArchivesInspected': report['nestedArchivesInspected'],
+              'exactMatches': report['exactMatches'],
+              'errorCount': len(report['errors']),
+              'limits': report['limits'],
+          }, ensure_ascii=False, indent=2))
+          PY
+          python3 /tmp/scan_deployment_artifacts.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-v016-deployment-artifact-byte-audit
+          path: evidence/
+          retention-days: 30
+          if-no-files-found: error
