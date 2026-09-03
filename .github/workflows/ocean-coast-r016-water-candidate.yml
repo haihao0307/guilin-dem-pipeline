@@ -1,0 +1,74 @@
+name: Ocean R016 visible water daylight glass candidate
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r016-water-candidate.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: ocean-coast-r016-visible-water-candidate
+  cancel-in-progress: false
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Rebuild exact R016 and apply shoreline water revision
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 ocean-mother/coast-r016-build/finish_candidate.py "$GITHUB_WORKSPACE" | tee evidence/STATIC_BASE.json
+          python3 ocean-mother/coast-r016-build/enhance_water.py ocean-mother/coast-glass-r016 | tee evidence/WATER_REVISION.json
+          node ocean-mother/coast-glass-r016/core.test.mjs | tee evidence/NODE_QA.json
+          grep -q "waterVisible:true" ocean-mother/coast-glass-r016/app.mjs
+          grep -q "depthMix=smoothstep(.16,3.8,thickness)" ocean-mother/coast-glass-r016/shaders.mjs
+
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Render frozen water on off evidence and all interaction gates
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8162 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 ocean-mother/coast-r016-build/candidate_qa_v2.py \
+            http://127.0.0.1:8162/ocean-mother/coast-glass-r016/ evidence
+
+      - name: Record exact candidate identity
+        if: always()
+        run: |
+          if [ -d ocean-mother/coast-glass-r016 ]; then
+            python3 - <<'PY'
+            from pathlib import Path
+            import hashlib,json,shutil
+            root=Path('ocean-mother/coast-glass-r016')
+            files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
+            report={'status':'CANDIDATE','version':'0.2.6-coast-r016','buildId':'coast-r016-clear-shore-glass','files':files,'persistentImageAssets':0,'externalModels':0,'externalCdn':0,'visualApproved':False,'productionApproved':False}
+            Path('evidence/SOURCE.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+            shutil.copytree(root,'evidence/runtime',dirs_exist_ok=True)
+            PY
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r016-visible-water-candidate
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
