@@ -1,41 +1,13 @@
-name: Ocean Island R018 verified online HTML
+name: Ocean Island R017 legacy publisher held for R018 maintenance
 
 "on":
-  push:
-    branches:
-      - "feature/ocean-mother-r018"
-    paths:
-      - ".github/workflows/ocean-island-r017-publish-online-html.yml"
-      - "ocean-mother/island-r018-build/ci_pipeline.py.xz.b64"
   workflow_dispatch: {}
 
 permissions:
-  contents: write
-  actions: read
-
-concurrency:
-  group: ocean-island-r018-verified-online-html
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  verify-publish:
+  holding:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-      - name: Execute R018 verification and publication pipeline
-        run: |
-          base64 --decode ocean-mother/island-r018-build/ci_pipeline.py.xz.b64 | xz --decompress > /tmp/ocean-r018-ci.py
-          python3 /tmp/ocean-r018-ci.py
-      - name: Preserve internal evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ocean-island-r018-verified-online-html
-          path: evidence/
-          if-no-files-found: warn
-          retention-days: 90
-          compression-level: 9
+      - run: echo "R017 publisher intentionally held while R018 is released"
