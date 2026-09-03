@@ -49,7 +49,7 @@ fs.mkdirSync(output, { recursive: true });
     };
   });
 
-  await page.click('#play');
+  await page.evaluate(() => document.querySelector('#play').click());
   await page.waitForFunction(() => window.__B24_WORKBENCH__.mission.time > 6, null, { timeout: 90000 });
   const playing = await page.evaluate(() => window.__B24_WORKBENCH__.getState());
 
