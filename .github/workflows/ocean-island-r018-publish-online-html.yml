@@ -1,13 +1,208 @@
-name: Ocean Island R018 publisher maintenance gate
+name: Ocean Island R018 final verified HTML
 
 "on":
+  push:
+    branches:
+      - "feature/ocean-mother-r018"
+    paths:
+      - ".github/workflows/ocean-island-r018-publish-online-html.yml"
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-island-r018-final-verified-html
+  cancel-in-progress: false
+
+env:
+  RUNTIME: ocean-mother/island-r018
+  QA_RUNNER: ocean-mother/island-r018-tools/qa_runner.py
+  PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018/
 
 jobs:
-  holding:
+  verify-publish:
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
-      - run: echo "R018 payload update in progress"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify committed R018 runtime and build direct-open HTML
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/static
+          python3 tools/build_standalone_r018.py | tee evidence/static/STANDALONE_BUILD.txt
+          for file in "$RUNTIME"/*.mjs; do node --check "$file"; done
+          node "$RUNTIME/core.test.mjs" | tee evidence/static/NODE_TESTS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('ocean-mother/island-r018')
+          build=json.loads((root/'BUILD.json').read_text())
+          catalog=json.loads((root/'PARAMETER_CATALOG.json').read_text())
+          assert build['version']=='0.3.3-island-r018',build
+          assert build['buildId']=='island-r018-final-direct-delivery',build
+          assert build['directOpenArtifact']=='Ocean_Mother_R018_Direct_Open.html',build
+          assert build['deliveryPolicy']=='direct-open single HTML plus verified online HTML',build
+          assert build['runtimeImageAssets']==build['externalModels']==build['externalCdn']==0,build
+          assert build['visualApproved'] is False and build['productionApproved'] is False,build
+          assert catalog['count']==102 and catalog['pages']==3,catalog
+          required={'BUILD.json','PARAMETER_CATALOG.json','README.md','REFERENCE_STUDY.md','app.mjs','coast.css','core.mjs','core.test.mjs','geometry.mjs','index.html','params.mjs','shaders.mjs','Ocean_Mother_R018_Direct_Open.html'}
+          actual={p.name for p in root.iterdir() if p.is_file()}
+          assert required<=actual,sorted(required-actual)
+          banned={'.png','.jpg','.jpeg','.webp','.gif','.avif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
+          assert not [str(p) for p in root.rglob('*') if p.suffix.lower() in banned]
+          for path in root.iterdir():
+              if path.is_file():
+                  text=path.read_text(encoding='utf-8')
+                  assert not re.search(r'data\s*:\s*image/|https?://',text,re.I),path
+          direct=root/'Ocean_Mother_R018_Direct_Open.html'
+          text=direct.read_text(encoding='utf-8')
+          assert direct.stat().st_size<5*1024*1024
+          assert '<style>' in text and 'OceanIsland' in text and 'srcdoc' in text
+          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
+          out={'status':'PASS','version':build['version'],'buildId':build['buildId'],'parameterCount':102,'parameterPages':3,'directOpenArtifact':direct.name,'directOpenBytes':direct.stat().st_size,'files':files,'runtimeImageAssets':0,'externalModels':0,'externalCdn':0,'visualApproved':False,'productionApproved':False}
+          Path('evidence/static/SOURCE.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Install browser QA dependencies
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Create reusable direct-open browser gate
+        run: |
+          cat > /tmp/r018_direct_qa.py <<'PY'
+          from pathlib import Path
+          import json,os,shutil,sys
+          from playwright.sync_api import sync_playwright
+          url,out=sys.argv[1],Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
+          version='0.3.3-island-r018';errors=[];failed=[]
+          chrome=next((p for p in [os.getenv('CHROME_PATH'),shutil.which('google-chrome-stable'),shutil.which('google-chrome'),shutil.which('chromium'),shutil.which('chromium-browser'),'/usr/bin/google-chrome-stable','/usr/bin/google-chrome','/usr/bin/chromium'] if p and Path(p).is_file()),None)
+          assert chrome,'Chrome or Chromium unavailable'
+          checks={}
+          with sync_playwright() as pw:
+              browser=pw.chromium.launch(executable_path=chrome,headless=True,args=['--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'])
+              page=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
+              page.on('console',lambda m: errors.append(f'console {m.type}: {m.text}') if m.type=='error' else None)
+              page.on('pageerror',lambda e: errors.append(f'pageerror: {e}'))
+              page.on('requestfailed',lambda r: failed.append(f'{r.url}: {r.failure}'))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              checks['http_or_file_ready']=response is None or response.status==200
+              page.wait_for_function("document.body.dataset.qaReady==='true'&&window.OceanIsland&&OceanIsland.getState().ready===true",timeout=120000)
+              state=page.evaluate('OceanIsland.getState()');checks['correct_identity']=state.get('version')==version
+              start=float(state.get('physicalTime',0));page.wait_for_function('goal=>OceanIsland.getState().physicalTime>goal',arg=start+.05,timeout=60000);checks['continuous_runtime']=True
+              radius=float(page.evaluate('OceanIsland.getConfig().radius'))
+              page.locator('#restart').click(timeout=30000)
+              page.wait_for_function("OceanIsland.getState().runtime.restarts>=1&&OceanIsland.getState().physicalTime>.04",timeout=60000)
+              checks['restart_auto_resumes']=True
+              checks['restart_preserves_parameters']=abs(float(page.evaluate('OceanIsland.getConfig().radius'))-radius)<1e-6
+              page.locator('#deepTab').click(timeout=30000)
+              page.wait_for_function("document.getElementById('deepFrame')&&!document.getElementById('deepFrame').hidden",timeout=30000)
+              frame=page.frame_locator('#deepFrame');frame.locator('body').wait_for(state='visible',timeout=30000)
+              checks['deep_fallback_present']=frame.locator('#panel').count()==1 and frame.locator('#restart').count()==1
+              page.locator('#coastTab').click(timeout=30000)
+              page.wait_for_function("document.getElementById('scene')&&!document.getElementById('scene').hidden",timeout=30000)
+              checks['return_to_island']=True
+              page.screenshot(path=str(out/'direct-open-desktop.png'),full_page=True)
+              checks['no_request_failures']=not failed;checks['no_js_or_console_errors']=not errors
+              browser.close()
+          result={'status':'PASS' if all(checks.values()) else 'FAIL','version':version,'url':url,'checks':checks,'errors':errors,'failedRequests':failed,'visualApproved':False,'productionApproved':False}
+          (out/'DIRECT_OPEN_QA.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          assert result['status']=='PASS',result
+          PY
+          python3 -m py_compile /tmp/r018_direct_qa.py
+
+      - name: Verify local desktop, mobile, controls, restart and direct file open
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/local evidence/direct-local
+          python3 -m http.server 8172 --bind 127.0.0.1 > evidence/local-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do curl -fsS http://127.0.0.1:8172/ >/dev/null && break || sleep .25; done
+          python3 -u "$QA_RUNNER" http://127.0.0.1:8172/ocean-mother/island-r018/ evidence/local | tee evidence/LOCAL_QA_LOG.txt
+          python3 /tmp/r018_direct_qa.py "file://$GITHUB_WORKSPACE/$RUNTIME/Ocean_Mother_R018_Direct_Open.html" evidence/direct-local
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          q=json.loads(Path('evidence/local/BROWSER_QA.json').read_text())
+          required=['correct_identity','continuous_runtime','geometry_control_applies_paused','geometry_change_while_running_continues','restart_auto_resumes','restart_preserves_parameters','mobile_restart_works','no_GL_errors','no_js_or_console_errors']
+          assert q['status']=='PASS' and all(q['checks'].get(k) for k in required),{k:q['checks'].get(k) for k in required}
+          d=json.loads(Path('evidence/direct-local/DIRECT_OPEN_QA.json').read_text())
+          assert d['status']=='PASS',d
+          Path('evidence/LOCAL_BROWSER_GATE.json').write_text(json.dumps({'status':'PASS','normal':q,'direct':d},ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Publish verified runtime to gh-pages
+        run: |
+          set -euo pipefail
+          git config user.name 'Ocean Mother Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r018-pages
+          git worktree add --detach /tmp/ocean-r018-pages origin/gh-pages
+          target=/tmp/ocean-r018-pages/ocean-mother/island-r018
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -a "$RUNTIME"/. "$target"/
+          cd /tmp/ocean-r018-pages
+          git config user.name 'Ocean Mother Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ocean-mother/island-r018
+          if ! git diff --cached --quiet; then git commit -m 'feat(ocean): publish verified R018 final direct delivery'; fi
+          git push origin HEAD:gh-pages
+          public_commit=$(git rev-parse HEAD)
+          cd "$GITHUB_WORKSPACE"
+          printf '%s\n' "$public_commit" > evidence/PUBLIC_COMMIT.txt
+          git worktree remove --force /tmp/ocean-r018-pages
+
+      - name: Verify public bytes, normal page and direct-open page
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/public-bytes evidence/public evidence/direct-public
+          ready=0
+          for attempt in $(seq 1 60); do
+            code=$(curl -L -sS -o evidence/public-index.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${PUBLIC_URL}?readback=$RANDOM-$attempt" || true)
+            if [ "$code" = 200 ] && grep -q 'island-r018-final-direct-delivery' evidence/public-index.html; then ready=1; break; fi
+            sleep 10
+          done
+          test "$ready" = 1
+          for path in "$RUNTIME"/*; do
+            test -f "$path" || continue
+            file=$(basename "$path")
+            code=$(curl -L -sS -o "evidence/public-bytes/$file" -w '%{http_code}' -H 'Cache-Control: no-cache' "${PUBLIC_URL}${file}?readback=$RANDOM")
+            test "$code" = 200
+            cmp "$path" "evidence/public-bytes/$file"
+          done
+          python3 -u "$QA_RUNNER" "$PUBLIC_URL" evidence/public | tee evidence/PUBLIC_QA_LOG.txt
+          python3 /tmp/r018_direct_qa.py "${PUBLIC_URL}Ocean_Mother_R018_Direct_Open.html" evidence/direct-public
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          q=json.loads(Path('evidence/public/BROWSER_QA.json').read_text())
+          required=['http_200','ready','correct_identity','restart_auto_resumes','geometry_change_while_running_continues','mobile_http_ready','mobile_restart_works','deep_controls_present','deep_glass_skin_applied','return_to_island','no_request_failures','no_js_or_console_errors']
+          assert q['status']=='PASS' and all(q['checks'].get(k) for k in required),{k:q['checks'].get(k) for k in required}
+          d=json.loads(Path('evidence/direct-public/DIRECT_OPEN_QA.json').read_text());assert d['status']=='PASS',d
+          root=Path('ocean-mother/island-r018')
+          files={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(root.iterdir()) if p.is_file()}
+          result={'status':'ONLINE_HTML_VERIFIED','version':'0.3.3-island-r018','buildId':'island-r018-final-direct-delivery','url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018/','directOpenUrl':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018/Ocean_Mother_R018_Direct_Open.html','publicCommit':Path('evidence/PUBLIC_COMMIT.txt').read_text().strip(),'desktop':True,'mobileViewport':True,'http200':True,'byteExact':True,'interactive':True,'restartVerified':True,'directFileOpenVerified':True,'runtimeImageAssets':0,'externalModels':0,'externalCdn':0,'files':files,'visualApproved':False,'productionApproved':False}
+          Path('evidence/ONLINE_HTML_VERIFIED.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Preserve R018 verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocean-island-r018-final-verified-html
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
