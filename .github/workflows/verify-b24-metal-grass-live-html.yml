@@ -1,0 +1,159 @@
+name: Verify B24 metal grass live HTML
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-b24-metal-grass-live-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-html:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-metal-grass-mission-r1/
+      EXPECTED_PAYLOAD_SHA256: 7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Wait for every public runtime asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          assets=(
+            index.html app.js native-aircraft.js world.js mission.js effects.js audio.js style.css
+            assets/native.json.gz assets/native.bin.gz
+            vendor/three.module.js vendor/three.core.js vendor/OrbitControls.js
+            ONLINE_REVIEW_MANIFEST.json
+          )
+          for asset in "${assets[@]}"; do
+            ready=0
+            for attempt in $(seq 1 90); do
+              code="$(curl --location --silent --output /dev/null --write-out '%{http_code}' "${PUBLIC_URL}${asset}?verify=${GITHUB_SHA}-${attempt}")"
+              if [ "$code" = 200 ]; then ready=1; break; fi
+              sleep 4
+            done
+            if [ "$ready" != 1 ]; then
+              echo "Missing public asset: $asset"
+              exit 1
+            fi
+          done
+
+      - name: Verify direct HTML interaction in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright-core@1.55.0
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          cat > verify-live.cjs <<'NODE'
+          const fs = require('node:fs');
+          const { chromium } = require('playwright-core');
+
+          (async () => {
+            const browser = await chromium.launch({
+              executablePath: process.env.CHROME,
+              headless: true,
+              args: ['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader']
+            });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+            const consoleErrors = [];
+            const pageErrors = [];
+            const failedRequests = [];
+            page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+            page.on('pageerror', error => pageErrors.push(String(error)));
+            page.on('requestfailed', request => failedRequests.push(`${request.url()}: ${request.failure()?.errorText || 'failed'}`));
+
+            const response = await page.goto(`${process.env.PUBLIC_URL}?direct=${Date.now()}`, {
+              waitUntil: 'domcontentloaded',
+              timeout: 90000
+            });
+            await page.waitForFunction(() => window.__B24_WORKBENCH__?.ready, null, {
+              timeout: 120000,
+              polling: 250
+            });
+            const ready = await page.evaluate(() => {
+              const api = window.__B24_WORKBENCH__;
+              return {
+                title: document.title,
+                build: api.build,
+                payloadSha256: api.getState().sourcePayloadSha256,
+                playEnabled: !document.querySelector('#play').disabled,
+                iframeCount: document.querySelectorAll('iframe').length,
+                sceneNames: api.scene.children.map(node => node.name),
+                componentCount: api.captureState().components,
+                meshCount: api.captureState().meshes,
+                spindleIds: api.captureState().spindles.map(item => item.id),
+                runtimeErrors: api.errors
+              };
+            });
+
+            await page.locator('#play').click({ noWaitAfter: true, timeout: 60000 });
+            await page.evaluate(() => { window.__B24_WORKBENCH__.mission.rate = 28; });
+            await page.waitForFunction(() => window.__B24_WORKBENCH__.mission.time > 8, null, {
+              timeout: 45000,
+              polling: 100
+            });
+            const running = await page.evaluate(() => window.__B24_WORKBENCH__.getState());
+
+            const pass = response.status() === 200
+              && ready.title.includes('B24')
+              && ready.build === 'B24_METAL_GRASS_MISSION_R1'
+              && ready.payloadSha256 === process.env.EXPECTED_PAYLOAD_SHA256
+              && ready.playEnabled
+              && ready.iframeCount === 0
+              && ready.sceneNames.includes('GRASS_AIRFIELD_SHARED_WORLD')
+              && !ready.sceneNames.some(name => /mountain/i.test(name))
+              && ready.componentCount === 1784
+              && ready.meshCount === 348
+              && ready.spindleIds.join(',') === '1454,1385,1431,1408'
+              && ready.runtimeErrors.length === 0
+              && running.running
+              && running.time > 8
+              && consoleErrors.length === 0
+              && pageErrors.length === 0
+              && failedRequests.length === 0;
+
+            const report = {
+              schema: 'haihao.aircraft/b24-metal-grass-live-html-check@1.0.0',
+              status: pass ? 'PASS' : 'FAIL',
+              publicUrl: process.env.PUBLIC_URL,
+              ready,
+              running,
+              consoleErrors,
+              pageErrors,
+              failedRequests,
+              primaryUserDeliverable: 'direct-online-html',
+              visualAcceptance: false,
+              productionReady: false
+            };
+            fs.writeFileSync('evidence/live-html-check.json', JSON.stringify(report, null, 2));
+            console.log(JSON.stringify(report, null, 2));
+            await browser.close();
+            if (!pass) process.exit(1);
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+          CHROME="$CHROME" node verify-live.cjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-live-html-check-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: evidence/live-html-check.json
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "Direct HTML: $PUBLIC_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Primary delivery: clickable online workbench' >> "$GITHUB_STEP_SUMMARY"
+          echo 'visualAcceptance=false' >> "$GITHUB_STEP_SUMMARY"
+          echo 'productionReady=false' >> "$GITHUB_STEP_SUMMARY"
