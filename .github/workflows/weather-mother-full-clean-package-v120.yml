@@ -1,0 +1,340 @@
+name: Weather Mother full clean package V1.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/weather-mother-full-clean-package-v120.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-mother-full-clean-package-v120
+  cancel-in-progress: false
+
+jobs:
+  clean-package-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publication branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Clean obsolete Weather Mother files and build package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import base64
+          import gzip
+          import hashlib
+          import json
+          import os
+          import shutil
+          import stat
+          import zipfile
+          from pathlib import Path
+
+          repo = Path.cwd()
+          wm = repo / 'weather-mother'
+          package_name = 'Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0'
+          stage = repo / '.weather-mother-package-stage' / package_name
+          zip_path = wm / 'handoffs' / f'{package_name}.zip'
+          receipt_path = wm / 'handoffs' / f'{package_name}.receipt.json'
+
+          obsolete = [
+              'clean-v1', 'clean-v110', 'easy-rain-lab-v010',
+              'rain-puddle-study-v010', 'rain-puddle-study-v020', 'rain-puddle-study-v030',
+              'rain-v020', 'rain-v030', 'rain-v040',
+              'release-clean-v1', 'restart-v110', 'studio', 'studio-v040',
+              'v060', 'v061-hq', 'v062-loop', 'v063-optics', 'v110-full-src',
+              'packaging', 'distributions', 'handoffs'
+          ]
+          obsolete_files = [
+              'qa-v051.json', 'cloud.glsl', 'engine.js', 'field-worker.js',
+              'motion.js', 'optics.js', 'reuse.js'
+          ]
+          for rel in obsolete:
+              p = wm / rel
+              if p.exists():
+                  shutil.rmtree(p)
+          for rel in obsolete_files:
+              p = wm / rel
+              if p.exists():
+                  p.unlink()
+
+          required = [
+              wm / 'index.html', wm / 'studio-v060' / 'index.html',
+              wm / 'v110-full' / 'index.html', wm / 'liquid-rain-v100' / 'index.html'
+          ]
+          missing = [str(p.relative_to(repo)) for p in required if not p.exists()]
+          if missing:
+              raise SystemExit(f'missing current runtime: {missing}')
+
+          shell = (wm / 'studio-v060' / 'index.html').read_text(encoding='utf-8')
+          forbidden_tokens = [
+              'rain-puddle-study-v010', 'rain-puddle-study-v020', 'rain-puddle-study-v030',
+              'easy-rain-lab-v010', 'rain-v020', 'rain-v030', 'rain-v040', 'studio-v040'
+          ]
+          if '../liquid-rain-v100/' not in shell:
+              raise SystemExit('current shell does not route Rain to liquid-rain-v100')
+          found = [token for token in forbidden_tokens if token in shell]
+          if found:
+              raise SystemExit(f'legacy Rain token remains in shell: {found}')
+
+          if stage.parent.exists():
+              shutil.rmtree(stage.parent)
+          stage.mkdir(parents=True)
+
+          def copy_path(src: Path, dst: Path) -> None:
+              if not src.exists():
+                  return
+              if src.is_dir():
+                  shutil.copytree(src, dst, dirs_exist_ok=True)
+              else:
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(src, dst)
+
+          include = [
+              'index.html', 'UNIFIED_STUDIO_POLICY.json', 'QUALITY_GATES.json',
+              'README.md', 'RESTART_START_HERE.md', 'HANDOFF.json',
+              'OCEAN_START_HERE.md', 'WEATHER_REUSE_START.md',
+              'studio-v060', 'v110-full', 'liquid-rain-v100',
+              'rain', 'snow', 'fog', 'research', 'method-v100'
+          ]
+          for rel in include:
+              copy_path(wm / rel, stage / 'web' / 'weather-mother' / rel)
+
+          liquid = wm / 'liquid-rain-v100'
+          payload_files = [liquid / f'payload-{i:02d}.txt' for i in range(6)]
+          if not all(p.exists() for p in payload_files):
+              raise SystemExit('Liquid Rain six-part payload is incomplete')
+          encoded = ''.join(p.read_text(encoding='utf-8') for p in payload_files)
+          source_html = gzip.decompress(base64.b64decode(''.join(encoded.split())))
+          source_dir = stage / 'source' / 'liquid-rain-v100'
+          source_dir.mkdir(parents=True)
+          (source_dir / 'index.html').write_bytes(source_html)
+          copy_path(liquid / 'LIQUID_CORE_V1.md', stage / 'research' / 'LIQUID_CORE_V1.md')
+          copy_path(liquid / 'QA.json', stage / 'qa' / 'LIQUID_RAIN_V1_QA.json')
+          copy_path(wm / 'v110-full' / 'QA.json', stage / 'qa' / 'WORLD_V110_QA.json')
+
+          readme = '''# Weather Mother Full Clean Handoff V1.2.0
+
+这是 Weather Mother 当前干净全量交接包。
+
+公开入口只有 Weather Mother。根入口默认进入 World。Rain、Snow、Fog、Cloud、Storm 都在统一壳层中切换。
+
+当前 Rain 使用 liquid-rain-v100，保留用户确认可以继续发展的三维村院方向。旧平面村落、旧 Rain 实验、旧壳层和旧发布包均不进入当前路由与本包。
+
+运行方式：在本目录执行 python3 serve.py，然后打开终端显示的地址。
+
+当前质量状态：visualApproved=false，aaaQualityApproved=false，productionReady=false。
+'''
+          (stage / 'README.md').write_text(readme, encoding='utf-8')
+          start = '''# START HERE
+
+1. 阅读 HANDOFF.json。
+2. 阅读 CLEANUP_RECEIPT.json。
+3. 阅读 research/LIQUID_CORE_V1.md。
+4. 从 source/liquid-rain-v100/index.html 继续 Liquid 与 Rain 开发。
+5. 从 web/weather-mother/index.html 检查统一平台。
+6. 保持根入口默认 World。
+7. 每个模块只保留一个当前候选。
+
+后续真实环境验证：
+https://guilin-dem-terrain.sunhaihao.chatgpt.site
+https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof
+'''
+          (stage / 'START_HERE.md').write_text(start, encoding='utf-8')
+          serve = '''from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
+import os, webbrowser
+root = Path(__file__).resolve().parent / "web"
+os.chdir(root)
+url = "http://127.0.0.1:8000/weather-mother/"
+print(url)
+try: webbrowser.open(url)
+except Exception: pass
+ThreadingHTTPServer(("127.0.0.1", 8000), SimpleHTTPRequestHandler).serve_forever()
+'''
+          (stage / 'serve.py').write_text(serve, encoding='utf-8')
+          (stage / 'START_WINDOWS.bat').write_text('@echo off\r\npy -3 serve.py\r\npause\r\n', encoding='utf-8')
+          mac = stage / 'START_MAC_LINUX.command'
+          mac.write_text('#!/bin/sh\ncd "$(dirname "$0")"\npython3 serve.py\n', encoding='utf-8')
+          mac.chmod(0o755)
+
+          cleanup_receipt = {
+              'packageVersion': '1.2.0-full-clean-handoff',
+              'date': '2026-09-03',
+              'removedRuntimeDirectories': obsolete,
+              'removedDuplicateRootFiles': obsolete_files,
+              'preservedCurrentRuntimes': ['studio-v060', 'v110-full', 'liquid-rain-v100'],
+              'preservedKnowledge': ['research', 'method-v100'],
+              'legacyRainRouteCount': 0,
+              'oldExecutableCandidatesIncludedInPackage': [],
+              'historyPolicy': 'Superseded work remains only in Git history.'
+          }
+          (stage / 'CLEANUP_RECEIPT.json').write_text(json.dumps(cleanup_receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          handoff = {
+              'productionLine': 'Weather Mother',
+              'packageVersion': '1.2.0-full-clean-handoff',
+              'date': '2026-09-03',
+              'canonicalOnlineEntry': 'https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/',
+              'defaultModule': 'world',
+              'currentStudio': {'version': '0.6.1-unified-immersive-studio', 'directory': 'web/weather-mother/studio-v060'},
+              'currentWorld': {'version': '1.1.0-world', 'directory': 'web/weather-mother/v110-full'},
+              'currentRain': {'version': '1.0.0-liquid-core-candidate', 'directory': 'web/weather-mother/liquid-rain-v100', 'forwardVisualBaseline': '3D 1940s village courtyard'},
+              'liquidScope': ['rain', 'wetness', 'puddles', 'ripples', 'splashes', 'eave drainage', 'surface liquid appearance', 'procedural audio', 'future sweat and external wetting'],
+              'nextPriorities': ['light and atmosphere', 'raindrop size speed and direction distributions', 'cloud precipitation source coupling', 'roof eave and receiver water transfer', 'human sweat and wet-surface receiver interfaces', 'Guilin and GAEA integration'],
+              'validationEntrypoints': ['https://guilin-dem-terrain.sunhaihao.chatgpt.site', 'https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof'],
+              'visualApproved': False,
+              'aaaQualityApproved': False,
+              'productionReady': False
+          }
+          (stage / 'HANDOFF.json').write_text(json.dumps(handoff, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          def sha256(path: Path) -> str:
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          files = []
+          for p in sorted(x for x in stage.rglob('*') if x.is_file()):
+              files.append({'path': p.relative_to(stage).as_posix(), 'bytes': p.stat().st_size, 'sha256': sha256(p)})
+          manifest = {
+              'package': package_name,
+              'version': '1.2.0',
+              'fileCountBeforeManifest': len(files),
+              'totalBytesBeforeManifest': sum(x['bytes'] for x in files),
+              'files': files
+          }
+          (stage / 'MANIFEST.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          checks = []
+          for p in sorted(x for x in stage.rglob('*') if x.is_file()):
+              checks.append(f'{sha256(p)}  {p.relative_to(stage).as_posix()}')
+          (stage / 'CHECKSUMS.sha256').write_text('\n'.join(checks) + '\n', encoding='utf-8')
+
+          zip_path.parent.mkdir(parents=True, exist_ok=True)
+          fixed = (2026, 9, 3, 0, 0, 0)
+          with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+              for p in sorted(x for x in stage.rglob('*') if x.is_file()):
+                  arc = f'{package_name}/{p.relative_to(stage).as_posix()}'
+                  zi = zipfile.ZipInfo(arc, fixed)
+                  mode = 0o755 if os.access(p, os.X_OK) else 0o644
+                  zi.external_attr = (stat.S_IFREG | mode) << 16
+                  zi.compress_type = zipfile.ZIP_DEFLATED
+                  zf.writestr(zi, p.read_bytes())
+          with zipfile.ZipFile(zip_path) as zf:
+              bad = zf.testzip()
+              if bad:
+                  raise SystemExit(f'corrupt package member: {bad}')
+              forbidden = [n for n in zf.namelist() if any(t in n for t in forbidden_tokens)]
+              if forbidden:
+                  raise SystemExit(f'obsolete runtime entered package: {forbidden[:10]}')
+
+          package_sha = sha256(zip_path)
+          receipt = {
+              'package': zip_path.name,
+              'bytes': zip_path.stat().st_size,
+              'sha256': package_sha,
+              'fileCount': len([p for p in stage.rglob('*') if p.is_file()]),
+              'sourceBranch': 'gh-pages',
+              'cleanupApplied': True,
+              'legacyRainRouteCount': 0,
+              'archiveIntegrityVerified': True,
+              'visualApproved': False,
+              'aaaQualityApproved': False,
+              'productionReady': False
+          }
+          receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          root_cleanup = dict(cleanup_receipt)
+          root_cleanup.update({'fullPackage': f'handoffs/{zip_path.name}', 'fullPackageSHA256': package_sha, 'fullPackageBytes': zip_path.stat().st_size})
+          (wm / 'CLEANUP_RECEIPT.json').write_text(json.dumps(root_cleanup, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          root_handoff = dict(handoff)
+          root_handoff.update({'packagePath': f'weather-mother/handoffs/{zip_path.name}', 'packageSHA256': package_sha, 'packageBytes': zip_path.stat().st_size, 'archiveIntegrityVerified': True})
+          (wm / 'HANDOFF.json').write_text(json.dumps(root_handoff, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          (wm / 'RESTART_START_HERE.md').write_text(start.replace('web/weather-mother/', '').replace('source/liquid-rain-v100/index.html', 'liquid-rain-v100/ and the full package source directory'), encoding='utf-8')
+          publication = {
+              'productionLine': 'Weather Mother',
+              'version': '1.2.0-full-clean-handoff',
+              'date': '2026-09-03',
+              'canonicalEntry': 'https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/',
+              'package': f'weather-mother/handoffs/{zip_path.name}',
+              'packageSHA256': package_sha,
+              'packageBytes': zip_path.stat().st_size,
+              'cleanupApplied': True,
+              'archiveIntegrityVerified': True,
+              'visualApproved': False,
+              'aaaQualityApproved': False,
+              'productionReady': False
+          }
+          (wm / 'PUBLICATION_RECEIPT.json').write_text(json.dumps(publication, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          shutil.rmtree(stage.parent)
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Verify current routes and clean tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f weather-mother/liquid-rain-v100/index.html
+          test -f weather-mother/v110-full/index.html
+          test -f weather-mother/studio-v060/index.html
+          test -f weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.zip
+          grep -q '../liquid-rain-v100/' weather-mother/studio-v060/index.html
+          for p in \
+            weather-mother/easy-rain-lab-v010 \
+            weather-mother/rain-puddle-study-v010 \
+            weather-mother/rain-puddle-study-v020 \
+            weather-mother/rain-puddle-study-v030 \
+            weather-mother/rain-v020 \
+            weather-mother/rain-v030 \
+            weather-mother/rain-v040 \
+            weather-mother/studio-v040; do
+              test ! -e "$p"
+          done
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          p = Path('weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.zip')
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+          receipt = json.loads(Path(str(p) + '.receipt.json').read_text())
+          assert receipt['archiveIntegrityVerified'] is True
+          assert receipt['legacyRainRouteCount'] == 0
+          print(receipt)
+          PY
+
+      - name: Commit and push publication branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother clean packager'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A weather-mother
+          if git diff --cached --quiet; then
+            echo 'No Weather Mother changes to publish.'
+            exit 0
+          fi
+          git commit -m 'release(weather-mother): publish full clean handoff V1.2.0'
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            if git rebase origin/gh-pages && git push origin HEAD:gh-pages; then
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep $((attempt * 4))
+          done
+          echo 'Failed to push gh-pages after three attempts.' >&2
+          exit 1
