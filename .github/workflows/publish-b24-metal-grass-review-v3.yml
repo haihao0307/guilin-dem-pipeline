@@ -1,0 +1,231 @@
+name: Publish B24 metal grass direct HTML review V3
+
+on:
+  push:
+    branches:
+      - release/b24-metal-grass-review-20260903
+    paths:
+      - .github/workflows/publish-b24-metal-grass-review-v3.yml
+      - tools/b24-online-smoke.cjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-b24-metal-grass-direct-html-v3
+  cancel-in-progress: false
+
+jobs:
+  publish-and-live-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      AIRCRAFT_COMMIT: 8ea0a34d016c46570e3916e37f587b2c7fb14ccf
+      AIRCRAFT_QA_RUN: 33733439863
+      SOURCE_PATH: preview/b24-metal-grass-mission-r1
+      TARGET_PATH: aircraft/b24-metal-grass-mission-r1
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-metal-grass-mission-r1/
+      REVIEW_HTML_BYTES: 12557938
+      REVIEW_HTML_SHA256: 7cf4c78cea99f9bf3aed5507cbcb2bdb49a71465b3c4aabc29563214f3da2fde
+      PAYLOAD_BYTES: 16647376
+      PAYLOAD_SHA256: 7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2
+
+    steps:
+      - name: Check out publication controls
+        uses: actions/checkout@v4
+        with:
+          path: release
+
+      - name: Check out active Pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Confirm the passed AIRCRAFT source browser gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="$(curl -fsSL --retry 4 https://api.github.com/repos/haihao0307/AIRCRAFT/actions/runs/$AIRCRAFT_QA_RUN)"
+          status="$(printf '%s' "$result" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
+          conclusion="$(printf '%s' "$result" | python3 -c 'import json,sys; print(json.load(sys.stdin)["conclusion"])')"
+          head_sha="$(printf '%s' "$result" | python3 -c 'import json,sys; print(json.load(sys.stdin)["head_sha"])')"
+          test "$status" = completed
+          test "$conclusion" = success
+          test "$head_sha" = "$AIRCRAFT_COMMIT"
+
+      - name: Assemble the same-origin online review site
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$site/assets" "$site/vendor"
+          base="https://raw.githubusercontent.com/haihao0307/AIRCRAFT/$AIRCRAFT_COMMIT/$SOURCE_PATH"
+          for file in index.html style.css app.js native-aircraft.js world.js mission.js audio.js effects.js README.md; do
+            curl -fsSL --retry 5 --retry-all-errors -o "$site/$file" "$base/$file"
+          done
+
+          curl -fsSL --retry 5 --retry-all-errors \
+            -o "$RUNNER_TEMP/inherited-review.html" \
+            https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/gh-pages/aircraft/b24-v016-recovery-review/index.html
+
+          SITE="$site" python3 - <<'PY'
+          import base64
+          import gzip
+          import hashlib
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          data = (Path(os.environ['RUNNER_TEMP']) / 'inherited-review.html').read_bytes()
+          assert len(data) == int(os.environ['REVIEW_HTML_BYTES'])
+          assert hashlib.sha256(data).hexdigest() == os.environ['REVIEW_HTML_SHA256']
+          root = Path(os.environ['SITE'])
+          for token, name in (
+              ('manifestGzipBase64', 'native.json.gz'),
+              ('payloadGzipBase64', 'native.bin.gz'),
+          ):
+              match = re.search(token.encode() + rb':"([A-Za-z0-9+/=]+)"', data)
+              assert match, token
+              (root / 'assets' / name).write_bytes(base64.b64decode(match.group(1)))
+          payload = gzip.decompress((root / 'assets' / 'native.bin.gz').read_bytes())
+          assert len(payload) == int(os.environ['PAYLOAD_BYTES'])
+          assert hashlib.sha256(payload).hexdigest() == os.environ['PAYLOAD_SHA256']
+          manifest = json.loads(gzip.decompress((root / 'assets' / 'native.json.gz').read_bytes()))
+          assert len(manifest['components']) == 1784
+          assert len(manifest['meshes']) == 348
+          PY
+
+          npm install --prefix release --no-save --no-package-lock three@0.180.0 playwright@1.55.0
+          cp release/node_modules/three/build/three.module.js release/node_modules/three/build/three.core.js "$site/vendor/"
+          cp release/node_modules/three/examples/jsm/controls/OrbitControls.js "$site/vendor/"
+          cp release/node_modules/three/LICENSE "$site/vendor/THREE-LICENSE.txt"
+
+          for file in "$site"/*.js; do node --check "$file"; done
+          node --check release/tools/b24-online-smoke.cjs
+          if grep -Eqi 'img2threejs|image2three|weapons mother' "$site/index.html" "$site"/*.js; then
+            echo 'A forbidden aircraft route entered the online review site.'
+            exit 1
+          fi
+          if grep -qi '<iframe' "$site/index.html"; then
+            echo 'The review page must remain one Three.js scene without an iframe.'
+            exit 1
+          fi
+
+          release/node_modules/.bin/playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+
+      - name: Open the assembled HTML in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          evidence="$RUNNER_TEMP/local-evidence"
+          mkdir -p "$evidence"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$site" >"$RUNNER_TEMP/server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" || true' EXIT
+          sleep 1
+          URL_TO_TEST=http://127.0.0.1:8765/ \
+            EVIDENCE="$evidence" \
+            node release/tools/b24-online-smoke.cjs
+
+      - name: Publish only the new review directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="$RUNNER_TEMP/site"
+          target="public/$TARGET_PATH"
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -a "$site"/. "$target"/
+          cp "$RUNNER_TEMP/local-evidence/browser-qa.json" "$target/BROWSER_QA.json"
+
+          TARGET="$target" python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          root = Path(os.environ['TARGET'])
+          files = {
+              str(path.relative_to(root)): {
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              }
+              for path in root.rglob('*') if path.is_file()
+          }
+          receipt = {
+              'schema': 'haihao.aircraft/b24-metal-grass-online-review@1.0.0',
+              'build': 'B24_METAL_GRASS_MISSION_R1',
+              'generatedAt': datetime.now(timezone.utc).isoformat(),
+              'sourceCommit': os.environ['AIRCRAFT_COMMIT'],
+              'sourceQaRun': int(os.environ['AIRCRAFT_QA_RUN']),
+              'publicUrl': os.environ['PUBLIC_URL'],
+              'primaryDeliverable': 'direct-online-html',
+              'inheritedPayloadSha256': os.environ['PAYLOAD_SHA256'],
+              'exactV016Recovered': False,
+              'weatherIntegrated': False,
+              'mountainsAdded': False,
+              'existingPublicEntriesChanged': False,
+              'files': files,
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          (root / 'PUBLICATION_RECEIPT.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+          cd public
+          git config user.name 'B24 online HTML publisher'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin gh-pages
+          git add "$TARGET_PATH"
+          if git diff --cached --quiet; then
+            echo 'The online review directory already has this exact payload.'
+          else
+            git commit -m 'review(b24): publish metal grass mission R1 direct HTML'
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Wait for Pages and open the public URL in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 180); do
+            if curl -fsSL --retry 2 -o "$RUNNER_TEMP/live-index.html" "${PUBLIC_URL}?build=${GITHUB_SHA}-${attempt}" \
+              && grep -q 'B24 · 金属与草地机场 · R1' "$RUNNER_TEMP/live-index.html"; then
+              echo "Public HTML visible after attempt $attempt"
+              break
+            fi
+            if [ "$attempt" = 180 ]; then
+              echo 'The direct online HTML did not become visible in time.'
+              exit 1
+            fi
+            sleep 5
+          done
+          mkdir -p "$RUNNER_TEMP/live-evidence"
+          URL_TO_TEST="${PUBLIC_URL}?build=${GITHUB_SHA}" \
+            EVIDENCE="$RUNNER_TEMP/live-evidence" \
+            node release/tools/b24-online-smoke.cjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-metal-grass-direct-html-v3-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/local-evidence/
+            ${{ runner.temp }}/live-evidence/
+            public/aircraft/b24-metal-grass-mission-r1/PUBLICATION_RECEIPT.json
