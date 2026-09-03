@@ -1,0 +1,59 @@
+name: Ocean R015 final prepublication acceptance
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-coast-r015-finalqa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 33707658983
+          name: ocean-coast-r015-refined
+          path: _original
+      - name: Verify exact input, finish camera and rerun all numerical checks
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil,subprocess
+          original=Path('_original');identity=json.loads((original/'SOURCE.json').read_text())
+          prior=json.loads((original/'BROWSER_QA.json').read_text())
+          assert prior['failed']==1 and prior['checks']['buildIdentity'] is False and not prior['errors']
+          for name,meta in identity.items():assert hashlib.sha256((original/'runtime'/name).read_bytes()).hexdigest()==meta['sha256']
+          target=Path('ocean-mother/coast-glass-r015');shutil.copytree(original/'runtime',target)
+          subprocess.run(['python3','ocean-mother/coast-r015-build/finish.py',str(target)],check=True)
+          for f in target.glob('*.mjs'):subprocess.run(['node','--check',str(f)],check=True)
+          result=subprocess.run(['node',str(target/'core.test.mjs')],check=True,capture_output=True,text=True)
+          Path('evidence/NODE_QA.json').write_text(result.stdout)
+          shutil.copytree(target,'evidence/runtime')
+          identity={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in target.iterdir() if p.is_file()}
+          Path('evidence/SOURCE.json').write_text(json.dumps(identity,indent=2))
+          Path('evidence/TEST_REPAIR_NOTE.json').write_text(json.dumps({'previousRun':33707658983,'previousFailure':'innerText is empty under visibility:hidden; actual source build identity was correct','correction':'read and record DOM textContent independently of collapsed panel visibility','allChecksRerun':True},indent=2))
+          print(result.stdout)
+          PY
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Run full rendered scene and glass interaction acceptance
+        run: |
+          python3 -m http.server 8142 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          python3 ocean-mother/coast-r015-build/browser_qa.py http://127.0.0.1:8142/ocean-mother/coast-glass-r015/ evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-coast-r015-finalqa
+          path: evidence/
+          retention-days: 30
