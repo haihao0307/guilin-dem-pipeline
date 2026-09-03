@@ -1,0 +1,246 @@
+name: Landscape Mother Guilin Putao Fenglin V014
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - "workbenches/landscape-mother-v014/**"
+      - ".github/workflows/landscape-mother-putao-v014-publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-putao-v014-publish
+  cancel-in-progress: false
+
+env:
+  PAYLOAD_ROOT: workbenches/landscape-mother-v014/payload
+  SRC: ${{ runner.temp }}/landscape-mother-v014-src
+  OUT_A: ${{ runner.temp }}/landscape-mother-v014
+  OUT_B: ${{ runner.temp }}/landscape-mother-v014-repeat
+  CHUNKS: ${{ runner.temp }}/putao-chunks
+  STORE: https://haihao0307.github.io/guilin-dem-pipeline/guilin-elevation-store-v1/shards
+
+jobs:
+  build-test-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Materialize the reviewed V014 source payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$SRC"
+          cat "$PAYLOAD_ROOT"/source.*.b64 | base64 -d > "$RUNNER_TEMP/landscape-mother-v014-source.tar.gz"
+          echo "efeec1f7ff2ece2fbabffa016e6849e9a145d6e3787c343a1ac044999ca95a74  $RUNNER_TEMP/landscape-mother-v014-source.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/landscape-mother-v014-source.tar.gz" -C "$SRC"
+          test -s "$SRC/build_putao.py"
+          test -s "$SRC/runtime/index.html"
+          test -s "$SRC/runtime/styles.css"
+          test -s "$SRC/runtime/app.js"
+          python -m py_compile "$SRC/build_putao.py" "$SRC/browser_qa.py" "$SRC/verify_v014.py"
+          node --check "$SRC/runtime/app.js"
+
+      - name: Install fixed numeric and browser toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            numpy==2.3.5 \
+            scipy==1.17.0 \
+            scikit-image==0.26.0 \
+            trimesh==4.11.1 \
+            playwright==1.55.0
+
+      - name: Fetch exact canonical 12.5 m Putao source ranges
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$CHUNKS"
+          fetch_range() {
+            local url="$1" start="$2" end="$3" out="$4"
+            for attempt in 1 2 3 4 5 6; do
+              rm -f "$out"
+              if curl -L --fail --silent --show-error \
+                -H 'Accept-Encoding: identity' \
+                -H "Range: bytes=${start}-${end}" \
+                "${url}?source=v014-${GITHUB_RUN_ID}-${attempt}" \
+                -o "$out"; then
+                if [ "$(stat -c %s "$out")" = "524288" ]; then
+                  return 0
+                fi
+              fi
+              sleep $((attempt * 2))
+            done
+            echo "range fetch failed: $url $start-$end" >&2
+            exit 1
+          }
+          fetch_range "$STORE/elevation-shard-004.i16pack" 56634368 57158655 "$CHUNKS/r026-c008.i16"
+          fetch_range "$STORE/elevation-shard-004.i16pack" 57158656 57682943 "$CHUNKS/r026-c009.i16"
+          fetch_range "$STORE/elevation-shard-005.i16pack" 2097152 2621439 "$CHUNKS/r027-c008.i16"
+          fetch_range "$STORE/elevation-shard-005.i16pack" 2621440 3145727 "$CHUNKS/r027-c009.i16"
+          cat > "$CHUNKS/SHA256SUMS" <<'SUMS'
+          8619dde4b9d1752e77d87ebd129b057bea31d4ef750c8dc5fc952024485ba889  r026-c008.i16
+          259d37d9e5cbc40648593a9a88e6dd27e5a6d0a8c80fc351c9f9a6b71b074f83  r026-c009.i16
+          a409fedc4e6bd2a2f9fe149b578549c5ad23ed55a581cccfdca92f1c0b83ba63  r027-c008.i16
+          67f388f87a0dbbe1da07707a33bf26e6b7023a529ee8b90ed1e25a7275d7415f  r027-c009.i16
+          SUMS
+          (cd "$CHUNKS" && sha256sum -c SHA256SUMS)
+
+      - name: Build the source-driven peak forest twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          PUTAO_CHUNK_DIR="$CHUNKS" LANDSCAPE_OUT="$OUT_A" python "$SRC/build_putao.py"
+          PUTAO_CHUNK_DIR="$CHUNKS" LANDSCAPE_OUT="$OUT_B" python "$SRC/build_putao.py"
+          cp "$SRC/runtime/index.html" "$OUT_A/index.html"
+          cp "$SRC/runtime/styles.css" "$OUT_A/styles.css"
+          cp "$SRC/runtime/app.js" "$OUT_A/app.js"
+          cp "$SRC/README.md" "$OUT_A/README.md"
+          cp "$SRC/SCALE_VERTICALITY_KNOWLEDGE_R015.md" "$OUT_A/SCALE_VERTICALITY_KNOWLEDGE_R015.md"
+          cmp "$OUT_A/scene.bin" "$OUT_B/scene.bin"
+          cmp "$OUT_A/SCENE_META.json" "$OUT_B/SCENE_META.json"
+          node --check "$OUT_A/app.js"
+
+      - name: Verify scale, topology, vertical walls and publication policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          LANDSCAPE_OUT="$OUT_A" python "$SRC/verify_v014.py"
+
+      - name: Run real mobile and desktop WebGL QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 4173 --directory "$OUT_A" >"$RUNNER_TEMP/v014-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          LANDSCAPE_OUT="$OUT_A" LANDSCAPE_URL="http://127.0.0.1:4173/?scene=fenglin" python "$SRC/browser_qa.py"
+
+      - name: Prepare verified release receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path(os.environ["OUT_A"])
+          h=lambda p: hashlib.sha256((root/p).read_bytes()).hexdigest()
+          meta=json.loads((root/"SCENE_META.json").read_text())
+          browser=json.loads((root/"BROWSER_QA.json").read_text())
+          release={
+            "schema":"landscape-mother-v014-online-release/1",
+            "release":"guilin-putao-fenglin-v014-20260903-r1",
+            "sourceCommit":os.environ["GITHUB_SHA"],
+            "directQuery":"scene=fenglin",
+            "files":{p:h(p) for p in ["index.html","styles.css","app.js","scene.bin","SCENE_META.json","SOURCE_RECEIPT.json","STATIC_QA.json","BROWSER_QA.json"]},
+            "sourceSpacingM":12.5,
+            "cropSizeM":meta["source"]["cropSizeM"],
+            "towerCount":meta["scene"]["towerCount"],
+            "heightRangeM":meta["scene"]["sourceRelativeHeightRangeM"],
+            "meanSlopeDeg":meta["scene"]["areaWeightedMeanSlopeDeg"],
+            "meanSlope45PlusDeg":meta["scene"]["areaWeightedMeanSlope45PlusDeg"],
+            "slope87PlusRatio":meta["scene"]["areaRatioSlope87Plus"],
+            "mobileBrowserPassed":browser["profiles"][0]["passed"],
+            "desktopBrowserPassed":browser["profiles"][1]["passed"],
+            "realIPhoneVerified":False,
+            "visualApproved":False,
+            "visualAcceptance":False,
+            "productionReady":False
+          }
+          (root/"ONLINE_RELEASE.json").write_text(json.dumps(release,ensure_ascii=False,indent=2)+"\n")
+          print(json.dumps(release,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Publish versioned one-click HTML and stable entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git worktree add "$RUNNER_TEMP/site" origin/gh-pages
+          cd "$RUNNER_TEMP/site"
+          rm -rf landscape-mother-v014
+          mkdir -p landscape-mother-v014 landscape-mother
+          for f in index.html styles.css app.js scene.bin SCENE_META.json SOURCE_RECEIPT.json STATIC_QA.json BROWSER_QA.json ONLINE_RELEASE.json README.md SCALE_VERTICALITY_KNOWLEDGE_R015.md; do
+            cp "$OUT_A/$f" "landscape-mother-v014/$f"
+          done
+          cat > landscape-mother/index.html <<'HTML'
+          <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="refresh" content="0;url=../landscape-mother-v014/?scene=fenglin&v=guilin-putao-fenglin-v014-20260903-r1"><title>Landscape Mother</title><style>html,body{margin:0;height:100%;display:grid;place-items:center;background:#6ea7c5;color:#fff;font:14px system-ui}</style></head><body>正在打开桂林葡萄峰林三维工作台<script>location.replace('../landscape-mother-v014/?scene=fenglin&v=guilin-putao-fenglin-v014-20260903-r1')</script></body></html>
+          HTML
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add landscape-mother-v014 landscape-mother/index.html
+          git commit -m "feat(landscape-mother): publish source-driven Guilin Putao fenglin V014"
+          if ! git push origin HEAD:gh-pages; then
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Verify actual public HTTPS bytes and one-click navigation
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-v014"
+          EXPECTED_SCENE="$(sha256sum "$OUT_A/scene.bin" | awk '{print $1}')"
+          EXPECTED_JS="$(sha256sum "$OUT_A/app.js" | awk '{print $1}')"
+          ok=0
+          for attempt in $(seq 1 36); do
+            cb="${GITHUB_RUN_ID}-${attempt}"
+            if curl -fsSL "$BASE/scene.bin?cb=$cb" -o "$RUNNER_TEMP/public-scene.bin" \
+              && curl -fsSL "$BASE/app.js?cb=$cb" -o "$RUNNER_TEMP/public-app.js" \
+              && [ "$(sha256sum "$RUNNER_TEMP/public-scene.bin" | awk '{print $1}')" = "$EXPECTED_SCENE" ] \
+              && [ "$(sha256sum "$RUNNER_TEMP/public-app.js" | awk '{print $1}')" = "$EXPECTED_JS" ] \
+              && curl -fsSL "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother/?cb=$cb" | grep -q 'landscape-mother-v014'; then
+                ok=1
+                break
+            fi
+            sleep 10
+          done
+          test "$ok" = 1
+          cp "$OUT_A/BROWSER_QA.json" "$OUT_A/LOCAL_BROWSER_QA.json"
+          LANDSCAPE_OUT="$OUT_A" LANDSCAPE_URL="$BASE/?scene=fenglin&public=${GITHUB_RUN_ID}" python "$SRC/browser_qa.py"
+          mv "$OUT_A/BROWSER_QA.json" "$OUT_A/PUBLIC_BROWSER_QA.json"
+          cp "$OUT_A/LOCAL_BROWSER_QA.json" "$OUT_A/BROWSER_QA.json"
+
+      - name: Upload deterministic runtime and internal QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_Guilin_Putao_Fenglin_V014
+          path: ${{ runner.temp }}/landscape-mother-v014
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Record final receipt
+        shell: bash
+        run: |
+          echo '## Landscape Mother Guilin Putao Fenglin V014' >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["OUT_A"])
+          m=json.loads((root/"SCENE_META.json").read_text())
+          q=json.loads((root/"PUBLIC_BROWSER_QA.json").read_text())
+          print(f"Canonical source spacing: {m['source']['nativeSpacingM'][0]} m")
+          print(f"Domain: {m['source']['cropSizeM'][0]:.0f} x {m['source']['cropSizeM'][1]:.0f} m")
+          print(f"Towers: {m['scene']['towerCount']}")
+          print(f"Source relative height: {m['scene']['sourceRelativeHeightRangeM'][0]:.1f} to {m['scene']['sourceRelativeHeightRangeM'][1]:.1f} m")
+          print(f"Mean exposed slope: {m['scene']['areaWeightedMeanSlopeDeg']:.2f} deg")
+          print(f"Mean 45+ slope: {m['scene']['areaWeightedMeanSlope45PlusDeg']:.2f} deg")
+          print(f"Area >=87 deg: {m['scene']['areaRatioSlope87Plus']*100:.2f}%")
+          print(f"Public mobile browser passed: {q['profiles'][0]['passed']}")
+          print(f"Public desktop browser passed: {q['profiles'][1]['passed']}")
+          print("visualApproved=false; visualAcceptance=false; productionReady=false")
+          PY
