@@ -41,7 +41,30 @@ jobs:
           test "$(find source/tools/wenzhou/v058 -maxdepth 1 -name 'detail.part-*' | wc -l | tr -d ' ')" = '6'
           cat source/tools/wenzhou/v058/build.part-* > build/build_wenzhou_v058.py
           cat source/tools/wenzhou/v058/detail.part-* > build/dongtou_513_i16.bin.gz.b64
-          echo "build_script_sha256=$(sha256sum build/build_wenzhou_v058.py | awk '{print $1}')"
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('build/build_wenzhou_v058.py')
+          text = path.read_text('utf-8')
+          replacements = {
+              "  void main(){vWorld=(modelMatrix*vec4(position,1.)).xyz;vN=normalize(mat3(modelMatrix)*normal);vFeather=feather;gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);}`;": "  void main(){{vWorld=(modelMatrix*vec4(position,1.)).xyz;vN=normalize(mat3(modelMatrix)*normal);vFeather=feather;gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);}}`;",
+              "  float h21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}": "  float h21(vec2 p){{p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}}",
+              "  float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}": "  float n2(vec2 p){{vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}}",
+              "  void main(){\n    if(uIsDetail>.5){float a=vFeather*uDetail;float d=h21(gl_FragCoord.xy+floor(uTime*3.));if(d>a)discard;}": "  void main(){{\n    if(uIsDetail>.5){{float a=vFeather*uDetail;float d=h21(gl_FragCoord.xy+floor(uTime*3.));if(d>a)discard;}}",
+              "  }`;\nfunction terrainMaterial": "  }}`;\nfunction terrainMaterial",
+              "vertexShader:`varying vec3 vD;void main(){vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vD;uniform float uMorning;void main(){float h=clamp(vD.y*.5+.5,0.,1.);": "vertexShader:`varying vec3 vD;void main(){{vD=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}}`,fragmentShader:`varying vec3 vD;uniform float uMorning;void main(){{float h=clamp(vD.y*.5+.5,0.,1.);",
+              ";gl_FragColor=vec4(c,1.);}`}});\nconst sky=": ";gl_FragColor=vec4(c,1.);}}`}});\nconst sky=",
+              "vertexShader:`uniform float uTime;varying vec3 vW;varying vec3 vN;void main(){vec3 p=position;": "vertexShader:`uniform float uTime;varying vec3 vW;varying vec3 vN;void main(){{vec3 p=position;",
+              "vW=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}`,fragmentShader:`uniform vec3 uCam;uniform vec3 uSun;varying vec3 vW;varying vec3 vN;void main(){vec3 V=normalize(uCam-vW),N=normalize(vN);": "vW=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}}`,fragmentShader:`uniform vec3 uCam;uniform vec3 uSun;varying vec3 vW;varying vec3 vN;void main(){{vec3 V=normalize(uCam-vW),N=normalize(vN);",
+              ";gl_FragColor=vec4(c,1.);}`}});\nconst ocean=": ";gl_FragColor=vec4(c,1.);}}`}});\nconst ocean=",
+          }
+          missing = [old for old in replacements if old not in text]
+          if missing:
+              raise SystemExit(f'build source patch anchors missing: {len(missing)}')
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8')
+          PY
+          echo "patched_build_script_sha256=$(sha256sum build/build_wenzhou_v058.py | awk '{print $1}')"
           echo "detail_container_sha256=$(sha256sum build/dongtou_513_i16.bin.gz.b64 | awk '{print $1}')"
           grep -q 'wenzhou_continuous_world_v058_build@1' build/build_wenzhou_v058.py
           grep -q '小温州 V0.5.8' build/build_wenzhou_v058.py
@@ -105,7 +128,7 @@ jobs:
           for attempt in $(seq 1 48); do
             status="$(curl -L -sS -o /tmp/page.html -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
             if [ "$status" = '200' ] \
-               && grep -qi '<!doctype html' /tmp/page.html \
+               && grep -q '<!doctype html' /tmp/page.html \
                && grep -q '小温州 V0.5.8' /tmp/page.html \
                && ! grep -qi 'File not found' /tmp/page.html; then
               ok=1
