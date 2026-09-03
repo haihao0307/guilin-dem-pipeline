@@ -1,0 +1,362 @@
+name: Tar-aware recovery of exact B24 V016
+
+on:
+  push:
+    branches:
+      - audit/b24-v016-original-source-20260903
+    paths:
+      - '.github/workflows/audit-b24-v016-tar-aware-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Scan ZIP TAR GZIP and Pages payloads from the V016 production window
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence work
+          cat > /tmp/recover_b24_v016.py <<'PY'
+          import gzip
+          import hashlib
+          import io
+          import json
+          import os
+          import re
+          import shutil
+          import subprocess
+          import tarfile
+          import tempfile
+          import zipfile
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          REPO = 'haihao0307/guilin-dem-pipeline'
+          OUT = Path('evidence')
+          WORK = Path('work')
+          TARGET_NAME = 'B24_V016_COMPLETE_WORKBENCH.html'
+          TARGET_SIZE = 12141929
+          TARGET_SHA = 'c8806aafcf9f32936aff1206d9b7a83545c547e842071b8b02a910ec6c9f69e4'
+          TARGET_TIME = datetime.fromisoformat('2026-08-31T11:26:18+00:00')
+          START = '2026-08-31T00:00:00Z'
+          END = '2026-09-02T00:00:00Z'
+          MARKERS = [
+              b'B24_V016_COMPLETE_WORKBENCH',
+              b'B24_CURRENT_REVIEW_V016',
+              b'B24_V016_WORKBENCH',
+              b'B24_ONE_CLICK_CURRENT',
+              b'7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2',
+              b'1a8a64cd20d19ed0be6d8f10043944c6b3b717bedd183dd713be7cb72f4b73c7',
+              b'604653e7a40231875e0c8aff502faf24ef0d7cb048383c24bc0fe1c5f33e540a',
+              b'propellerHoldFramesRemoved',
+              b'spinSourceNodes',
+              b'bayTrackCount',
+          ]
+          ARCHIVE_SUFFIXES = (
+              '.zip', '.tar', '.tgz', '.tar.gz', '.gz', '.tar.bz2', '.tbz2',
+              '.tar.xz', '.txz'
+          )
+          report = {
+              'schema': 'b24-v016-tar-aware-artifact-recovery/1',
+              'generatedAt': datetime.now(timezone.utc).isoformat(),
+              'repository': REPO,
+              'window': {'start': START, 'end': END, 'targetTime': TARGET_TIME.isoformat()},
+              'target': {'file': TARGET_NAME, 'bytes': TARGET_SIZE, 'sha256': TARGET_SHA},
+              'artifactMetadataEnumerated': 0,
+              'artifactsSelected': 0,
+              'artifactsDownloaded': 0,
+              'downloadedBytes': 0,
+              'containersInspected': 0,
+              'regularMembersInspected': 0,
+              'htmlMembersInspected': 0,
+              'exactMatches': [],
+              'candidateHtml': [],
+              'artifactRecords': [],
+              'errors': [],
+              'limits': [],
+              'runtimeChanged': False,
+              'publicPageChanged': False,
+              'auditBranchOnly': True,
+          }
+          stop = False
+          candidate_counter = 0
+          seen_container_hashes = set()
+
+          def run_bytes(args, timeout=420):
+              process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+              if process.returncode:
+                  raise RuntimeError(process.stderr.decode('utf-8', 'replace')[-4000:])
+              return process.stdout
+
+          def gh_json(endpoint):
+              return json.loads(run_bytes(['gh', 'api', '--method', 'GET', endpoint], timeout=180))
+
+          def digest(data):
+              return hashlib.sha256(data).hexdigest()
+
+          def safe_name(value):
+              cleaned = re.sub(r'[^A-Za-z0-9._-]+', '_', value).strip('._')
+              return cleaned[-160:] or 'candidate.html'
+
+          def record_exact(data, origin, artifact):
+              global stop
+              sha = digest(data)
+              if len(data) == TARGET_SIZE and sha == TARGET_SHA:
+                  out = OUT / TARGET_NAME
+                  out.write_bytes(data)
+                  match = {
+                      'origin': origin,
+                      'artifactId': artifact['id'],
+                      'artifactName': artifact['name'],
+                      'artifactCreatedAt': artifact['created_at'],
+                      'bytes': len(data),
+                      'sha256': sha,
+                  }
+                  report['exactMatches'].append(match)
+                  stop = True
+                  return True
+              return False
+
+          def inspect_html(data, origin, artifact):
+              global candidate_counter
+              report['htmlMembersInspected'] += 1
+              if record_exact(data, origin, artifact):
+                  return
+              hits = [marker.decode('ascii') for marker in MARKERS if marker in data]
+              if not hits:
+                  return
+              sha = digest(data)
+              record = {
+                  'origin': origin,
+                  'artifactId': artifact['id'],
+                  'artifactName': artifact['name'],
+                  'artifactCreatedAt': artifact['created_at'],
+                  'bytes': len(data),
+                  'sha256': sha,
+                  'markers': hits,
+              }
+              report['candidateHtml'].append(record)
+              if candidate_counter < 40 and len(data) <= 80_000_000:
+                  candidate_counter += 1
+                  name = f'candidate-{candidate_counter:02d}-{safe_name(Path(origin).name)}'
+                  if not name.lower().endswith(('.html', '.htm')):
+                      name += '.html'
+                  (OUT / name).write_bytes(data)
+                  record['savedAs'] = name
+
+          def looks_like_archive_name(name):
+              lower = name.lower()
+              return lower.endswith(ARCHIVE_SUFFIXES) or lower.endswith('artifact')
+
+          def scan_path(path, origin, artifact, depth=0):
+              global stop
+              if stop or depth > 8:
+                  return
+              try:
+                  size = path.stat().st_size
+              except FileNotFoundError:
+                  return
+              if size > 800_000_000:
+                  report['limits'].append({'origin': origin, 'reason': 'container-over-800MB', 'bytes': size})
+                  return
+              with path.open('rb') as handle:
+                  prefix = handle.read(16)
+              container_sha = None
+              if size <= 250_000_000:
+                  container_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+                  if container_sha in seen_container_hashes:
+                      return
+                  seen_container_hashes.add(container_sha)
+              if zipfile.is_zipfile(path):
+                  report['containersInspected'] += 1
+                  with zipfile.ZipFile(path) as archive:
+                      for member in archive.infolist():
+                          if stop:
+                              break
+                          if member.is_dir() or member.file_size > 800_000_000:
+                              continue
+                          report['regularMembersInspected'] += 1
+                          lower = member.filename.lower()
+                          is_html = lower.endswith(('.html', '.htm'))
+                          is_archive = looks_like_archive_name(member.filename)
+                          is_target_size = member.file_size == TARGET_SIZE
+                          if not (is_html or is_archive or is_target_size):
+                              continue
+                          with archive.open(member) as source:
+                              data = source.read(800_000_001)
+                          if len(data) > 800_000_000:
+                              report['limits'].append({'origin': f'{origin}!{member.filename}', 'reason': 'member-over-800MB'})
+                              continue
+                          child_origin = f'{origin}!{member.filename}'
+                          if is_target_size and record_exact(data, child_origin, artifact):
+                              break
+                          if is_html or data.lstrip()[:32].lower().startswith((b'<!doctype html', b'<html')):
+                              inspect_html(data, child_origin, artifact)
+                          if stop:
+                              break
+                          if is_archive or data.startswith((b'PK\x03\x04', b'\x1f\x8b')) or (len(data) > 265 and data[257:262] == b'ustar'):
+                              with tempfile.NamedTemporaryFile(dir=WORK, delete=False) as tmp:
+                                  tmp.write(data)
+                                  child_path = Path(tmp.name)
+                              try:
+                                  scan_path(child_path, child_origin, artifact, depth + 1)
+                              finally:
+                                  child_path.unlink(missing_ok=True)
+                  return
+              try:
+                  if tarfile.is_tarfile(path):
+                      report['containersInspected'] += 1
+                      with tarfile.open(path, 'r:*') as archive:
+                          for member in archive:
+                              if stop:
+                                  break
+                              if not member.isfile() or member.size > 800_000_000:
+                                  continue
+                              report['regularMembersInspected'] += 1
+                              lower = member.name.lower()
+                              is_html = lower.endswith(('.html', '.htm'))
+                              is_archive = looks_like_archive_name(member.name)
+                              is_target_size = member.size == TARGET_SIZE
+                              if not (is_html or is_archive or is_target_size):
+                                  continue
+                              source = archive.extractfile(member)
+                              if source is None:
+                                  continue
+                              data = source.read(800_000_001)
+                              child_origin = f'{origin}!{member.name}'
+                              if is_target_size and record_exact(data, child_origin, artifact):
+                                  break
+                              if is_html or data.lstrip()[:32].lower().startswith((b'<!doctype html', b'<html')):
+                                  inspect_html(data, child_origin, artifact)
+                              if stop:
+                                  break
+                              if is_archive or data.startswith((b'PK\x03\x04', b'\x1f\x8b')) or (len(data) > 265 and data[257:262] == b'ustar'):
+                                  with tempfile.NamedTemporaryFile(dir=WORK, delete=False) as tmp:
+                                      tmp.write(data)
+                                      child_path = Path(tmp.name)
+                                  try:
+                                      scan_path(child_path, child_origin, artifact, depth + 1)
+                                  finally:
+                                      child_path.unlink(missing_ok=True)
+                      return
+              except (tarfile.TarError, EOFError):
+                  pass
+              if prefix.startswith(b'\x1f\x8b'):
+                  report['containersInspected'] += 1
+                  try:
+                      with gzip.open(path, 'rb') as source:
+                          data = source.read(800_000_001)
+                      child_origin = origin + '!gunzip'
+                      if len(data) == TARGET_SIZE and record_exact(data, child_origin, artifact):
+                          return
+                      if data.lstrip()[:32].lower().startswith((b'<!doctype html', b'<html')):
+                          inspect_html(data, child_origin, artifact)
+                      with tempfile.NamedTemporaryFile(dir=WORK, delete=False) as tmp:
+                          tmp.write(data)
+                          child_path = Path(tmp.name)
+                      try:
+                          scan_path(child_path, child_origin, artifact, depth + 1)
+                      finally:
+                          child_path.unlink(missing_ok=True)
+                  except (OSError, EOFError):
+                      pass
+
+          artifacts = []
+          for page in range(1, 30):
+              payload = gh_json(f'repos/{REPO}/actions/artifacts?per_page=100&page={page}')
+              batch = payload.get('artifacts', [])
+              artifacts.extend(batch)
+              if len(batch) < 100:
+                  break
+          report['artifactMetadataEnumerated'] = len(artifacts)
+          selected = [
+              item for item in artifacts
+              if not item.get('expired') and START <= item['created_at'] < END
+          ]
+          selected.sort(key=lambda item: (
+              0 if any(token in item['name'].lower() for token in ('b24', 'aircraft', 'pages', 'deploy', 'artifact')) else 1,
+              abs((datetime.fromisoformat(item['created_at'].replace('Z', '+00:00')) - TARGET_TIME).total_seconds()),
+              item['size_in_bytes'],
+          ))
+          report['artifactsSelected'] = len(selected)
+
+          for index, artifact in enumerate(selected, start=1):
+              if stop:
+                  break
+              record = {
+                  'sequence': index,
+                  'id': artifact['id'],
+                  'name': artifact['name'],
+                  'createdAt': artifact['created_at'],
+                  'metadataCompressedBytes': artifact['size_in_bytes'],
+                  'headBranch': artifact.get('workflow_run', {}).get('head_branch'),
+                  'headSha': artifact.get('workflow_run', {}).get('head_sha'),
+                  'downloaded': False,
+              }
+              archive_path = WORK / f'artifact-{artifact["id"]}.zip'
+              try:
+                  with archive_path.open('wb') as output:
+                      process = subprocess.run(
+                          ['gh', 'api', '--method', 'GET', '-H', 'Accept: application/vnd.github+json',
+                           f'repos/{REPO}/actions/artifacts/{artifact["id"]}/zip'],
+                          stdout=output,
+                          stderr=subprocess.PIPE,
+                          timeout=600,
+                      )
+                  if process.returncode:
+                      raise RuntimeError(process.stderr.decode('utf-8', 'replace')[-4000:])
+                  record['downloaded'] = True
+                  record['downloadedBytes'] = archive_path.stat().st_size
+                  report['artifactsDownloaded'] += 1
+                  report['downloadedBytes'] += archive_path.stat().st_size
+                  before_candidates = len(report['candidateHtml'])
+                  before_matches = len(report['exactMatches'])
+                  scan_path(archive_path, f'artifact:{artifact["id"]}:{artifact["name"]}', artifact)
+                  record['candidateHtmlFound'] = len(report['candidateHtml']) - before_candidates
+                  record['exactMatchesFound'] = len(report['exactMatches']) - before_matches
+              except Exception as error:
+                  record['error'] = f'{type(error).__name__}: {error}'
+                  report['errors'].append(record.copy())
+              finally:
+                  archive_path.unlink(missing_ok=True)
+              report['artifactRecords'].append(record)
+              if index % 20 == 0:
+                  print(f'Inspected {index}/{len(selected)} artifacts; candidates={len(report["candidateHtml"])}; exact={len(report["exactMatches"])}', flush=True)
+
+          report['status'] = 'EXACT_V016_RECOVERED' if report['exactMatches'] else (
+              'V016_HTML_CANDIDATES_RECOVERED' if report['candidateHtml'] else 'NO_V016_HTML_FOUND_IN_TAR_AWARE_SCAN'
+          )
+          (OUT / 'tar-aware-recovery-report.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps({
+              'status': report['status'],
+              'artifactMetadataEnumerated': report['artifactMetadataEnumerated'],
+              'artifactsSelected': report['artifactsSelected'],
+              'artifactsDownloaded': report['artifactsDownloaded'],
+              'downloadedBytes': report['downloadedBytes'],
+              'containersInspected': report['containersInspected'],
+              'regularMembersInspected': report['regularMembersInspected'],
+              'htmlMembersInspected': report['htmlMembersInspected'],
+              'candidateHtmlCount': len(report['candidateHtml']),
+              'exactMatchCount': len(report['exactMatches']),
+              'errorCount': len(report['errors']),
+          }, ensure_ascii=False, indent=2))
+          PY
+          python3 /tmp/recover_b24_v016.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b24-v016-tar-aware-recovery
+          path: evidence/
+          retention-days: 30
+          if-no-files-found: error
