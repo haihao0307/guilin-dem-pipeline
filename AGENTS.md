@@ -12,6 +12,16 @@
 
 本交接包不含原始 TIFF。用户自行保管源文件，缺少 TIFF 不构成接管阻断。仅使用已有 canonical 数值文件，不下载或重新导入 TIFF，不把冷备份打回交接包。
 
+## 所有 Mother 共用视觉产出规则
+
+DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother 及本仓库后续全部 Mother，默认禁止调用图像生成或图像编辑工具。禁止生成概念图、效果图、预览图、参考图、海报、缩略图，也禁止用图片代替真实三维成果。
+
+只有用户在当前对话中明确要求生成图片或修改图片时，才允许进入图片工具流程。用户提出“做一版看看”“展示创意”“做个样子”时，默认交付真实可交互三维 HTML、Three.js 或 WebGPU 页面、程序化几何、函数代码、在线工作台及全量包。
+
+浏览器自动化可以在内部保存 QA 截图，仅作为运行与视觉检查证据。未经用户明确要求，不把 QA 截图作为创作成果发送。
+
+默认交付优先级为：一次打开的在线三维网页，其次是干净全量包，再其次是文档与数据。任何 Mother 不得自行切换到图片生成模式。
+
 ## 所有 Mother 共用在线交付门禁
 
 本仓库中的 DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother 及后续在线工作台，开工和交付前必须读取并执行 `knowledge/PUBLIC_WEB_DELIVERY_GATE.md`。
