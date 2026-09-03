@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>小温州 V0.5.9 · 温州完整功能恢复工作台</title>
+<link rel="icon" href="data:,">
+<style>
+:root{color-scheme:dark;--bg:#78939e;--panel:#102d36ed;--line:#9ebabb4d;--ink:#ecf5f2;--muted:#a8c0c0;--accent:#9bd0c6;--warn:#e4c98d}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:12px/1.42 system-ui,"Microsoft YaHei",sans-serif}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}button,input,select{font:inherit}button,select,input[type=date]{border:1px solid var(--line);border-radius:5px;background:#173740e6;color:inherit;padding:4px 7px}button{cursor:pointer}button:hover,button.active,select:focus,input:focus{background:#35646c;outline:0}input{accent-color:var(--accent)}input[type=range]{width:100%}#topbar{position:fixed;z-index:5;left:5px;right:5px;top:4px;height:40px;border:1px solid var(--line);border-radius:6px;background:var(--panel);display:flex;align-items:center;gap:5px;padding:4px 6px;box-shadow:0 4px 18px #00151c2d;backdrop-filter:blur(10px)}#topbar strong{font-size:12px;letter-spacing:.3px;white-space:nowrap}#topbar .sub{font-size:9px;color:var(--muted);white-space:nowrap}#topbar .spacer{flex:1}#topbar button{font-size:10px;white-space:nowrap}aside{position:fixed;z-index:4;top:49px;left:6px;bottom:28px;width:250px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px;box-shadow:0 4px 18px #00151c2d;backdrop-filter:blur(10px);scrollbar-width:thin}aside.hidden{display:none}section{padding:0 0 8px;margin:0 0 8px;border-bottom:1px solid #a8c0bf28}section:last-child{border:0;margin:0}h2{font-size:10px;letter-spacing:.5px;color:#c2d9d6;margin:3px 0 6px}.row,label{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 0;font-size:9px}.row b,label b{font-size:9px;font-weight:650;color:#f0f7f4}.pair{display:grid;grid-template-columns:1fr 1fr;gap:3px}.triple{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.cloud-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3px}.pair button,.triple button,.cloud-grid button{padding:4px 3px;font-size:9px}.note{margin:4px 0 0;color:var(--muted);font-size:8px;line-height:1.5}.warning{color:var(--warn)}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:3px}.metric{background:#6f9b9a12;border:1px solid #8daaa82e;border-radius:4px;padding:4px;min-height:36px}.metric span{display:block;color:#9fb8b8;font-size:7px}.metric b{display:block;font-size:9px;margin-top:1px;word-break:break-word}.lock{margin:5px 0;padding:6px;border:1px solid #8bc2b84a;border-radius:5px;background:#5f9a8f16;color:#cce1dc;font-size:8px}.lights{display:none}#diagnosticLegend{display:none;border:1px solid #9fb6be38;border-radius:4px;padding:5px;font-size:8px;line-height:1.6}.key{display:inline-block;width:7px;height:7px;margin-right:4px}footer{position:fixed;z-index:5;left:5px;right:5px;bottom:3px;min-height:22px;border:1px solid var(--line);border-radius:5px;background:var(--panel);padding:3px 7px;display:flex;align-items:center;gap:10px;font-size:8px;color:#bed1d0;backdrop-filter:blur(8px)}#status{flex:1}#error{display:none;position:fixed;z-index:20;left:12%;right:12%;top:18%;max-height:64%;overflow:auto;white-space:pre-wrap;background:#392629f6;border:1px solid #f0b98a;border-radius:8px;padding:15px;color:#ffe9d5;font-size:11px}select,input[type=date]{min-width:112px;font-size:9px;padding:3px 5px}label input[type=range]{width:112px}@media(max-width:1100px){#topbar .sub{display:none}}@media(max-width:700px){#topbar{left:3px;right:3px;top:3px;height:41px;overflow:hidden}#topbar strong{font-size:10px}#topbar button[data-weather]{display:none}aside{top:47px;left:4px;bottom:27px;width:236px;transform:translateX(-248px);transition:transform .16s ease}aside.open{transform:none}footer{left:3px;right:3px;font-size:7px}#error{left:4%;right:4%}}
+
+:root{--panel:#10272fec;--ink:#edf5f4;--muted:#aac0c4}
+html,body{overscroll-behavior:none}#gl{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+#topbar,footer{display:none!important}#panel{display:none;transform:none;transition:none;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));top:auto;bottom:calc(12px + env(safe-area-inset-bottom));width:auto;max-width:660px;max-height:66dvh;border-radius:20px;padding:16px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;backdrop-filter:none;box-shadow:0 15px 70px #03131c66}
+#panel.open{display:block}#panel section[hidden]{display:none!important}#panel section{margin-top:12px}#panel button,#panel select,#panel input[type=date]{min-height:44px;font-size:13px;border-radius:10px;padding:8px}
+#panel label,.row{font-size:13px;min-height:36px}#panel h2{font-size:13px;margin:6px 0 12px}.note,.lock{font-size:11px;line-height:1.65}.metric{padding:8px;min-height:50px}.metric span{font-size:10px}.metric b,label b{font-size:12px}.cloud-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pair,.triple{gap:6px}#panel input[type=range]{min-height:32px}.sheet-head{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-16px;background:#10272f;z-index:2;margin:-16px -16px 12px;padding:12px 16px}.sheet-tabs{display:flex;gap:6px;overflow:auto}.sheet-tabs button{flex:1;white-space:nowrap}.minimal-brand{position:fixed;left:18px;top:calc(16px + env(safe-area-inset-top));z-index:5;color:white;text-shadow:0 1px 8px #143644;font:600 18px system-ui;pointer-events:none}.minimal-brand small{font-size:10px;font-weight:400;letter-spacing:2px;display:block;margin-top:4px}.round-button{position:fixed;right:16px;top:calc(14px + env(safe-area-inset-top));z-index:6;min-width:48px;min-height:48px;border-radius:24px;background:#10272fdb;border:1px solid #cee0df60;color:white;font-size:14px}#touchToolbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:5px;padding:7px;background:#10272fe8;border:1px solid #a8c4ca50;border-radius:18px;white-space:nowrap}#touchToolbar[hidden]{display:none}#touchToolbar button{min-width:52px;min-height:44px;font-size:12px;border:0;border-radius:11px}#gestureHint{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:3;padding:8px 13px;background:#152f38a8;border-radius:20px;font-size:11px;color:white;white-space:nowrap;pointer-events:none}#dataBadge{position:fixed;bottom:calc(7px + env(safe-area-inset-bottom));right:12px;font-size:10px;color:#f1f7f7;text-shadow:0 1px 4px #122d36;pointer-events:none}#loadingNote{font-size:11px;color:#afc5c9;margin-top:8px}#error{z-index:20}
+@media(min-width:900px){#panel{right:16px;left:auto;width:540px;bottom:20px;max-height:78dvh}}@media(max-height:500px){#panel{max-height:82dvh}#gestureHint{bottom:68px}} 
+
+@media(hover:none){#panel button:hover:not(.active){background:#173740e6}}
+
+/* V0.5.9 recovery shell: one persistent menu button, full controls inside. */
+#touchToolbar,.minimal-brand{display:none!important}
+#menuButton{display:block!important}
+</style>
+</head>
+<body><div class="minimal-brand">小温州<small>WENZHOU · 0.5.9</small></div><button id="menuButton" class="round-button" aria-expanded="false" aria-label="打开温州完整控制菜单">菜单</button><nav id="touchToolbar" hidden><button data-action="home">全域</button><button data-action="coast">沿海</button><button data-action="cloudView">云中</button><button data-action="weather">天气</button></nav><div id="gestureHint">单指旋转 · 双指缩放与平移 · 点屏幕显示工具</div><div id="dataBadge">800 m 概览 · 云高 1:1</div>
+<canvas id="gl" aria-label="温州地貌、海洋与真实高度云谱共用三维画布"></canvas>
+<header id="topbar">
+  <strong>小温州 · 真实大气循环</strong>
+  <span class="sub">2560 × 1600 主验收 · 米制垂直比例 1:1 · 云高偏移 0 m · 四季与昼夜自动编排</span>
+  <button id="viewHome">全域</button><button id="autoTop">季节自动</button>
+  <button data-weather="sc" class="active">层积云</button>
+  <button data-weather="ac">高积云</button>
+  <button data-weather="cu">积云</button>
+  <button data-weather="cb">积雨云</button>
+  <span class="spacer"></span>
+  <button id="playPause">暂停</button>
+  <button id="panelToggle">控制</button>
+</header>
+<aside id="panel" aria-hidden="true" inert><div class="sheet-head"><strong>温州 · 场景控制</strong><button id="sheetClose" aria-label="收起菜单">收起</button></div><nav class="sheet-tabs"><button data-tab-button="view">视角</button><button data-tab-button="weather">天气</button><button data-tab-button="world">地表</button><button data-tab-button="info">状态</button></nav>
+<section data-tab="view">
+  <h2>温州观察位置</h2><button id="dayReview">回到白天 12:00</button>
+  <div class="pair"><button id="home">完整范围</button><button id="top">正上方</button><button id="coast">沿海近景</button><button id="stormView">台风海域</button><button id="ground">地面 1.61 m</button><button id="cloudView">进入云层</button><button id="flightView">飞机高度</button><button id="orbit">旋转观察</button></div>
+  <p class="note">全域地形当前仍为约 800 米数字概览。原始真值身份为 12.5 米，完整原生流式层仍待接入。</p>
+</section>
+<section data-tab="weather">
+  <h2>十个云属</h2>
+  <div class="cloud-grid">
+    <button data-weather="ci">卷云 Ci</button><button data-weather="cc">卷积云 Cc</button>
+    <button data-weather="cs">卷层云 Cs</button><button data-weather="ac">高积云 Ac</button>
+    <button data-weather="as">高层云 As</button><button data-weather="ns">雨层云 Ns</button>
+    <button data-weather="sc" class="active">层积云 Sc</button><button data-weather="st">层云 St</button>
+    <button data-weather="cu">积云 Cu</button><button data-weather="cb">积雨云 Cb</button>
+  </div>
+  <p class="note">云属采用 WMO 十属体系。当前选择只改变云属与天气过程，高度由系统配置锁定。</p>
+</section>
+<section data-tab="weather">
+  <h2>天气、四季与时间</h2>
+  <label>云属或天气过程<select id="weatherCase">
+    <optgroup label="高云"><option value="ci">卷云 Ci</option><option value="cc">卷积云 Cc</option><option value="cs">卷层云 Cs</option></optgroup>
+    <optgroup label="中云"><option value="ac">高积云 Ac</option><option value="as">高层云 As</option><option value="ns">雨层云 Ns</option></optgroup>
+    <optgroup label="低云与直展云"><option value="sc" selected>层积云 Sc</option><option value="st">层云 St</option><option value="cu">积云 Cu</option><option value="cb">积雨云 Cb</option></optgroup>
+    <optgroup label="天气过程"><option value="typhoon">台风组织云系</option></optgroup>
+  </select></label>
+  <label>日期<input id="dateInput" type="date" value="2026-09-03"></label>
+  <label>当地太阳时 <b id="hourText">15:30</b></label><input id="hour" type="range" min="0" max="23.95" step="0.05" value="15.5">
+  <label>四季云系自动编排<input id="autoWeather" type="checkbox"></label>
+  <label>日历自动运行<input id="calendarToggle" type="checkbox"></label>
+  <label>日历推进速度<select id="calendarRate"><option value="0.04">缓慢</option><option value="0.2" selected>观察</option><option value="1">快速</option></select></label>
+  <div class="triple"><button data-season-date="2026-01-15">冬季</button><button data-season-date="2026-04-15">春季</button><button data-season-date="2026-06-15">梅雨</button><button data-season-date="2026-08-15">盛夏</button><button data-season-date="2026-09-03">台风季</button><button data-season-date="2026-10-20">秋季</button></div>
+  <label>云场质量<select id="quality"><option value="balanced">平衡</option><option value="high">高质量</option></select></label>
+  <label>来风方向<input id="direction" type="range" min="0" max="360" step="1" value="270"></label>
+  <label>风速 m/s<input id="wind" type="range" min="0" max="80" step="1" value="12"></label>
+  <label>云速 m/s<input id="cloudSpeed" type="range" min="0" max="250" step="1" value="12"></label>
+  <label>光学密度倍率<input id="density" type="range" min="0.25" max="2.2" step="0.01" value="0.94"></label>
+  <label>过程时间倍率<input id="timeScale" type="range" min="0" max="4" step="0.1" value="1"></label>
+  <div class="row"><span>形态随机种子</span><b id="seedText">4217</b><button id="newSeed">新形态</button></div>
+  <div class="lock">云底、云顶、垂直厚度、垂直比例和高度偏移没有人工调节器。自动编排只切换符合月份与时段的云属。形态随机种子只改变云团水平组织，不改变物理高度。</div>
+  <div class="metrics">
+    <div class="metric"><span>当前云属</span><b id="weatherState">生成中</b></div>
+    <div class="metric"><span>季节与时段</span><b id="seasonState">读取中</b></div>
+    <div class="metric"><span>WMO 高度层</span><b id="cloudEnvelope">读取中</b></div>
+    <div class="metric"><span>云底至云顶 AMSL</span><b id="cloudBounds">读取中</b></div>
+    <div class="metric"><span>垂直厚度</span><b id="cloudThickness">读取中</b></div>
+    <div class="metric"><span>垂直比例与偏移</span><b id="verticalScale">1:1 · 0 m</b></div>
+    <div class="metric"><span>水平占据范围</span><b id="cloudCoverage">读取中</b></div>
+    <div class="metric"><span>降水</span><b id="precipState">无</b></div>
+    <div class="metric"><span>能见度</span><b id="visibilityState">读取中</b></div>
+    <div class="metric"><span>雷电频率</span><b id="lightningState">0 次/分钟</b></div>
+    <div class="metric"><span>来风与风速</span><b id="windText">读取中</b></div>
+    <div class="metric"><span>太阳位置</span><b id="solarState">读取中</b></div>
+    <div class="metric"><span>天气过程时间</span><b id="weatherTime">0 s</b></div>
+    <div class="metric"><span>深度关系</span><b>同一 WebGL</b></div>
+  </div>
+  <p class="note warning">高度单位统一为海拔米。温带高云常见层约 5 至 13 km，中云约 2 至 7 km，低云云底常在地表至 2 km。雨层云、高层云、积云和积雨云可以跨越多个高度层。当前为 WMO 高度约束与季节规则候选，仍未接入温州实时探空或 ERA5 逐时剖面。</p>
+</section>
+<section data-tab="world">
+  <h2>检查与打光</h2>
+  <div class="pair"><button data-mode="neutral">中性检查</button><button data-mode="studio">工作室</button><button data-mode="diagnostic">诊断</button><button data-mode="environment" class="active">天气环境</button></div>
+  <div class="lights"><label>主光<input id="key" type="range" min="0" max="2" step=".05" value="1"></label><label>辅光<input id="fill" type="range" min="0" max="2" step=".05" value=".5"></label><label>轮廓光<input id="rim" type="range" min="0" max="2" step=".05" value=".35"></label></div>
+  <div id="diagnosticLegend"><span class="key" style="background:#c3a852"></span>陆地高程与坡度<br><span class="key" style="background:#267bbc"></span>海面审阅候选<br><span class="key" style="background:#aa7735"></span>河口水面<br><span class="key" style="background:#48b6bc"></span>OSM 河道<br><span class="key" style="background:#887c94"></span>缺少高程区域</div>
+</section>
+<section data-tab="world">
+  <h2>数字图层</h2>
+  <label>陆地<input id="terrainOn" type="checkbox" checked></label><label>海面与河口<input id="waterOn" type="checkbox" checked></label><label>河网<input id="riversOn" type="checkbox" checked></label>
+</section>
+<section data-tab="world">
+  <h2>潮位与海岸环境</h2>
+  <div class="triple"><button data-tide="-1.15">低潮</button><button data-tide="0">平均</button><button data-tide="1.36">高潮</button></div>
+  <div class="row">相对演示潮位<b id="tideText">0.00 m</b></div><input id="tide" type="range" min="-1.4" max="1.4" step=".01" value="0">
+  <div class="row">近岸浑浊度<b id="mudText">0.72</b></div><input id="mud" type="range" min="0" max="1" step=".01" value=".72">
+</section>
+<section data-tab="info">
+  <h2>运行与真值</h2><p class="note">小温州负责温州地区。天气由独立 Weather Mother 提供只读模块，温州负责本地集成。</p><div id="loadingNote">按视野请求河道数据</div><p class="note">当前地形为 800 m 数字概览。原生 12.5 m 数据尚未接入。云高为米制场景参数，尚非实测探空。</p>
+  <div class="metrics"><div class="metric"><span>概览网格</span><b id="grid">读取中</b></div><div class="metric"><span>源河道部分</span><b id="rivers">读取中</b></div><div class="metric"><span>相机净空</span><b id="clearance">域外</b></div><div class="metric"><span>图像请求</span><b id="images">0</b></div></div>
+  <p id="identity" class="note"></p>
+  <p class="note">terrainVerticalScale=1<br>cloudVerticalScale=1<br>cloudAltitudeOffsetM=0<br>seasonalAuto=optional<br>sourceDeleted=false<br>fullNativeOnline=false<br>visualApproved=false<br>productionApproved=false</p>
+</section>
+</aside>
+<footer><span id="status">读取温州数值、真实高度云谱与四季天气编排</span><span id="clock">过程 0 s</span><span id="fps"></span></footer>
+<div id="error"></div>
+
+<script>
+window.__WZ_RELEASE__ = Object.freeze({
+  version: 'wenzhou-workbench-0.5.9-full-feature-recovery',
+  baseline: 'wenzhou-workbench-0.5.6-mobile-view-stream',
+  recoveryPolicy: 'restore-first-then-integrate-one-system-at-a-time',
+  singlePersistentMenuButton: true,
+  fullControlPanelPreserved: true,
+  visualAcceptance: false,
+  productionReady: false
+});
+</script>
+<script type="module" src="./runtime.js?v=059-full-recovery"></script>
+</body>
+</html>
