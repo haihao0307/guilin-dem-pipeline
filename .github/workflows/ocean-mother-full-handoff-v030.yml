@@ -1,0 +1,140 @@
+name: Ocean Mother full R017 restart package
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-mother-full-handoff-v030.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-mother-full-handoff-v030
+  cancel-in-progress: false
+
+jobs:
+  package-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      PACKAGE_NAME: Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0
+      TAG_NAME: ocean-mother-v0.3.0-r017-handoff-20260903
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Build clean full package and verify extracted runtime
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ocean-mother/tools/build_full_handoff_v030.py')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace('RUNTIME_INTRO_COMMIT = "e8faa14"','RUNTIME_INTRO_COMMIT = "e8faa14d429ea9cab3b83ebb5b995e84a6a690e3"')
+          text=text.replace('SKIP_PARTS = {"__pycache__", ".git", ".github", "node_modules", "handoffs", "payload"}','SKIP_PARTS = {"__pycache__", ".git", "node_modules", "handoffs", "payload"}')
+          p.write_text(text,encoding='utf-8')
+          PY
+          python3 -m py_compile ocean-mother/tools/build_full_handoff_v030.py
+          python3 ocean-mother/tools/build_full_handoff_v030.py "$GITHUB_WORKSPACE" | tee evidence/PACKAGE_BUILD.json
+          test -f "ocean-mother/handoffs/${PACKAGE_NAME}.zip"
+          test -f "ocean-mother/handoffs/${PACKAGE_NAME}.manifest.json"
+          test -f "ocean-mother/handoffs/${PACKAGE_NAME}.sha256"
+          unzip -t "ocean-mother/handoffs/${PACKAGE_NAME}.zip" | tee evidence/ZIP_TEST.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          name='Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0'
+          meta=json.loads(Path(f'ocean-mother/handoffs/{name}.manifest.json').read_text())
+          assert meta['verification']['status']=='PASS'
+          assert meta['verification']['zipCrc']=='PASS'
+          assert meta['verification']['runtimeTests']=='PASS'
+          assert meta['verification']['persistentImageAssets']==0
+          assert meta['bytes']>0 and len(meta['sha256'])==64
+          Path('evidence/PACKAGE_METADATA.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Commit package and current restart state to GitHub
+        run: |
+          set -euo pipefail
+          git config user.name 'Ocean Mother Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add \
+            ocean-mother/WORKING_STATE.md \
+            ocean-mother/NEXT_ROUND_START_HERE.md \
+            ocean-mother/RESTART_START_HERE.md \
+            ocean-mother/tools/build_full_handoff_v030.py \
+            "ocean-mother/handoffs/${PACKAGE_NAME}.zip" \
+            "ocean-mother/handoffs/${PACKAGE_NAME}.manifest.json" \
+            "ocean-mother/handoffs/${PACKAGE_NAME}.sha256"
+          git commit -m 'release(ocean): add full R017 restart handoff V0.3.0'
+          pushed=0
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:work/ocean-mother-handoff-20260901; then pushed=1; break; fi
+            git fetch origin work/ocean-mother-handoff-20260901
+            git rebase origin/work/ocean-mother-handoff-20260901
+            sleep $((attempt*2))
+          done
+          test "$pushed" = 1
+          git rev-parse HEAD | tee evidence/PACKAGE_COMMIT.txt
+
+      - name: Tag package and publish GitHub Release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ZIP="ocean-mother/handoffs/${PACKAGE_NAME}.zip"
+          MANIFEST="ocean-mother/handoffs/${PACKAGE_NAME}.manifest.json"
+          SHA="ocean-mother/handoffs/${PACKAGE_NAME}.sha256"
+          git tag -a "$TAG_NAME" -m 'Ocean Mother R017 full restart handoff V0.3.0'
+          git push origin "$TAG_NAME"
+          cat > evidence/RELEASE_NOTES.md <<'EOF'
+          Ocean Mother R017 clean full restart handoff.
+
+          Current online HTML: https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/
+
+          The package contains the current R017 island runtime, deep-ocean dependency, selected clean history, governance, knowledge, weather bridge, verification tools and the R018 next-round entry. Persistent image assets and external models remain zero. Visual and production approvals remain false.
+          EOF
+          if gh release view "$TAG_NAME" --repo haihao0307/guilin-dem-pipeline >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "$ZIP" "$MANIFEST" "$SHA" --clobber --repo haihao0307/guilin-dem-pipeline
+          else
+            gh release create "$TAG_NAME" "$ZIP" "$MANIFEST" "$SHA" \
+              --repo haihao0307/guilin-dem-pipeline \
+              --title 'Ocean Mother R017 Full Restart Handoff V0.3.0' \
+              --notes-file evidence/RELEASE_NOTES.md
+          fi
+          gh release view "$TAG_NAME" --repo haihao0307/guilin-dem-pipeline --json url,tagName,assets > evidence/GITHUB_RELEASE.json
+
+      - name: Verify immutable GitHub tag download
+        run: |
+          set -euo pipefail
+          EXPECTED=$(cut -d' ' -f1 "ocean-mother/handoffs/${PACKAGE_NAME}.sha256")
+          URL="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${TAG_NAME}/ocean-mother/handoffs/${PACKAGE_NAME}.zip"
+          for attempt in $(seq 1 20); do
+            if curl -LfsS -H 'Cache-Control: no-cache' "${URL}?v=$RANDOM-$attempt" -o /tmp/ocean-handoff.zip; then
+              ACTUAL=$(sha256sum /tmp/ocean-handoff.zip | cut -d' ' -f1)
+              if [ "$ACTUAL" = "$EXPECTED" ]; then break; fi
+            fi
+            sleep 5
+          done
+          test "$(sha256sum /tmp/ocean-handoff.zip | cut -d' ' -f1)" = "$EXPECTED"
+          unzip -t /tmp/ocean-handoff.zip > evidence/TAG_DOWNLOAD_ZIP_TEST.txt
+          printf '%s\n' "$URL" > evidence/IMMUTABLE_DOWNLOAD_URL.txt
+          printf '{"status":"PASS","tag":"%s","sha256":"%s","url":"%s"}\n' "$TAG_NAME" "$EXPECTED" "$URL" > evidence/GITHUB_TAG_VERIFY.json
+
+      - name: Preserve package build evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-full-r017-handoff-v030
+          path: |
+            evidence/
+            ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.zip
+            ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.manifest.json
+            ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.sha256
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
