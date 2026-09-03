@@ -1,0 +1,40 @@
+" base*=mix(1.0,1.0-p_rockWet*.5,wet);rough=mix(p_rockRough,max(.18,p_rockRough*.5),wet);}",
+" base*=mix(1.0,1.0-p_rockWet*.5,wet);base=mix(base,base*vec3(.58,.67,.69),tidalBand*.24);rough=mix(p_rockRough,max(.18,p_rockRough*.5),wet);rough=mix(rough,.24,tidalBand*.32);}" 
+)
+# Water uniforms and body.
+s = s.replace("uniform vec3 uCamera,uSunDir;", "uniform vec3 uCamera,uSunDir;\nuniform vec3 uFirePositions[5];uniform int uFireCount;uniform float uFireIntensity;", 1)
+# The first occurrence is SOLID? Wait replace first after WATER? We used count=1 could hit SKY? exact string occurs WATER only? solid has uCamera,uSunDir,uFirePos. good.
+s = s.replace(
+" vec3 behind=texture(uScene,refrUv).rgb,sigma=vec3(.32,.13,.075)*p_absorption/max(.5,uClarity),trans=exp(-sigma*opticalPath);",
+" vec3 behind=texture(uScene,refrUv).rgb,sigma=vec3(.32,.13,.075)*p_absorption/max(.5,uClarity);float depthBlend=smoothstep(.025,.90,thickness),opticalScale=mix(.48,1.0,depthBlend);vec3 trans=exp(-sigma*opticalPath*opticalScale);"
+)
+s = s.replace(
+" float low=fbm(fp*.32),lace=mix(smoothstep(.39,.70,noise2(fp*1.7)+low*.22),smoothstep(.45,.72,noise2(fp*5.4)+low*.2),p_fineFoam);\n float foamState=texture(uFoam,fieldUv(vWorld.xz)).r;\n float foam=sat((foamState*(.28+.68*lace)+vBreaker*.14)*p_foamThickness);",
+" float low=fbm(fp*.32),macro=smoothstep(.42,.72,noise2(fp*1.45)+low*.20),micro=smoothstep(.48,.74,noise2(fp*6.4)+low*.18);\n float lace=mix(macro,micro,p_fineFoam),foamState=texture(uFoam,fieldUv(vWorld.xz)).r;\n float carried=foamState*(.16+.76*lace),crest=smoothstep(.24,.95,vBreaker)*(.12+.28*lace);\n float foam=sat((carried+crest)*p_foamThickness)*smoothstep(.018,.11,thickness);"
+)
+s = s.replace(
+" vec3 water=(behind*trans+vec3(.035,.23,.26)*(1.0-trans))*(1.0-F)+reflected*F+spec*.65;",
+" vec3 water=(behind*trans+vec3(.035,.23,.26)*(1.0-trans))*(1.0-F)+reflected*F+spec*.65;\n float shallowReveal=mix(.40,1.0,smoothstep(.035,.72,thickness));water=mix(behind,water,shallowReveal);\n vec3 mirrorRay=reflect(-V,N);float fireReflection=0.0;\n for(int k=0;k<5;k++){if(k>=uFireCount)break;vec3 toFire=uFirePositions[k]-vWorld;float horizontal=length(toFire.xz),alignment=pow(max(dot(mirrorRay,normalize(toFire+vec3(0.0,.65,0.0))),0.0),24.0);float broken=.55+.45*noise2(vec2(vWorld.x*1.7+vWorld.z*.21,uTime*.72+float(k)*1.7));fireReflection+=alignment*exp(-horizontal*.10)*broken;}\n water+=vec3(1.65,.34,.035)*fireReflection*uFireIntensity*(.42+.58*(1.0-foam));"
+)
+s = s.replace(" float coverage=smoothstep(.004,.045,thickness);", " float coverage=smoothstep(.002,.14,thickness);")
+# Smoke maturation.
+s = s.replace(
+"  float density=feather*feather*smoothstep(.23,.92,n)*pow(max(.001,vLife),p_smokeFade)*smoothstep(0.0,.7,vAge);\n  float alpha=(1.0-exp(-density*.32));\n  float light=.5+.35*(q.y*.5+.5)+.15*n;\n  vec3 c=mix(vec3(.13,.145,.16),vec3(.38,.40,.42),light);",
+"  float maturity=1.0-vLife,density=feather*feather*smoothstep(.23,.92,n)*pow(max(.001,vLife),p_smokeFade)*smoothstep(0.0,.7,vAge);\n  float alpha=(1.0-exp(-density*.31))*(1.0-smoothstep(.90,1.0,maturity)*.30);\n  float light=.46+.34*(q.y*.5+.5)+.16*n;\n  vec3 young=vec3(.20,.165,.135),mature=mix(vec3(.13,.145,.16),vec3(.40,.42,.43),light);\n  vec3 c=mix(young,mature,smoothstep(.15,1.4,vAge));c=mix(c,vec3(.48,.49,.49),maturity*maturity*.34);"
+)
+p.write_text(s)
+
+# index.html
+p = root/'index.html'
+s = p.read_text()
+s = s.replace('R017', 'R018').replace('r017', 'r018')
+s = s.replace('圆形无树海岛 · 三层破浪 · 多源长烟', '圆形无树海岛 · 水线透明分层 · 三层破浪 · 多源长烟')
+s = s.replace('水深与泡沫诊断', '水深、泡沫与水线诊断')
+s = s.replace('island-r018-additive-controls', 'island-r018-relationship-convergence')
+p.write_text(s)
+
+# coast.css append interaction/accessibility polish.
+p = root/'coast.css'
+s = p.read_text()
+s += "\n/* R018 relationship-convergence interaction layer */\nbutton:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #d9fbff;outline-offset:2px;box-shadow:0 0 0 4px #1a7f9638,inset 0 1px #fff}\nbutton{transform-origin:50% 55%}\nbutton:active{transform:translateY(1px) scale(.985)}\n#cameraBar button.active,.tabs button.selected,#parameterTabs button.selected{box-shadow:inset 0 1px #fff,0 4px 16px #1d74833b}\n#panel:not(.closed){will-change:transform,opacity}\n@media(prefers-contrast:more){.glass{border-color:#fff!important;background:#dff6f0e8!important}button{border-color:#245a68!important}}\n"
+p.write_text(s)
