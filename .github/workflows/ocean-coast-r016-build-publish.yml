@@ -30,7 +30,8 @@ jobs:
           set -euo pipefail
           mkdir -p evidence
           cat ocean-mother/coast-r016-build/payload00.b64 \
-              ocean-mother/coast-r016-build/payload01.b64 \
+              ocean-mother/coast-r016-build/payload01a.b64 \
+              ocean-mother/coast-r016-build/payload01b.b64 \
               ocean-mother/coast-r016-build/payload02.b64 \
               ocean-mother/coast-r016-build/payload03.b64 > /tmp/r016-build.zb64
           test "$(sha256sum /tmp/r016-build.zb64 | cut -d' ' -f1)" = "5a795d0eaf4627aac0954f773a0e400e74e0ed520d71884891e7be7c612b618a"
