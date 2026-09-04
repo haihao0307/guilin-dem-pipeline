@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#7fb7cf" />
+  <title>Landscape Mother · 阳朔葡萄峰林 V016</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main id="app" aria-label="阳朔葡萄峰林三维工作台">
+    <div id="sky"></div>
+    <div id="canvas-wrap"></div>
+
+    <header class="topbar glass">
+      <div class="brand">
+        <span class="eyebrow">LANDSCAPE MOTHER</span>
+        <strong>阳朔葡萄峰林</strong>
+        <span class="version">V016 · 主画面验证</span>
+      </div>
+      <div class="top-actions">
+        <a class="icon-button" href="../landscape-mother/" aria-label="返回总台">总台</a>
+        <button class="icon-button" id="fullscreen" type="button" aria-label="全屏">全屏</button>
+        <button class="icon-button accent" id="panel-toggle" type="button" aria-expanded="false">调节</button>
+      </div>
+    </header>
+
+    <section class="facts glass" aria-live="polite">
+      <div><span>主峰</span><strong>186 m</strong></div>
+      <div><span>峰体</span><strong>5 座</strong></div>
+      <div><span>岩壁</span><strong>局部 87°+</strong></div>
+      <div><span>类型</span><strong>孤立塔峰</strong></div>
+    </section>
+
+    <div id="selection" class="selection glass hidden">
+      <span id="selection-name">主峰</span>
+      <strong id="selection-value">186 m</strong>
+    </div>
+
+    <nav class="camera-bar glass" aria-label="观察视角">
+      <button type="button" data-view="ground" class="active">贴地</button>
+      <button type="button" data-view="cliff">岩壁</button>
+      <button type="button" data-view="side">侧面</button>
+      <button type="button" data-view="aerial">俯视</button>
+      <button type="button" id="tour">巡览</button>
+      <button type="button" id="reset">复位</button>
+    </nav>
+
+    <aside id="panel" class="control-panel glass" aria-hidden="true">
+      <div class="panel-head">
+        <div>
+          <span class="eyebrow">现场调节</span>
+          <strong>只改变展示，不重建峰体</strong>
+        </div>
+        <button id="panel-close" class="close-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <label><span>石灰岩亮度</span><output id="rock-light-output">100%</output><input id="rock-light" type="range" min="75" max="130" value="100" /></label>
+      <label><span>植被浓度</span><output id="green-output">100%</output><input id="green" type="range" min="45" max="135" value="100" /></label>
+      <label><span>黑色水蚀</span><output id="stain-output">100%</output><input id="stain" type="range" min="0" max="150" value="100" /></label>
+      <label><span>太阳强度</span><output id="sun-output">100%</output><input id="sun" type="range" min="45" max="145" value="100" /></label>
+      <label><span>岩面细节</span><output id="detail-output">100%</output><input id="detail" type="range" min="35" max="150" value="100" /></label>
+      <div class="preset-row">
+        <button type="button" data-light="clear" class="active">晴朗</button>
+        <button type="button" data-light="neutral">中性</button>
+        <button type="button" data-light="wet">雨后</button>
+      </div>
+    </aside>
+
+    <div id="loading" class="loading">
+      <div class="loading-card glass">
+        <span class="eyebrow">Landscape Mother</span>
+        <strong>正在生成葡萄乡塔状峰林</strong>
+        <div class="progress"><i></i></div>
+        <small id="loading-state">建立孤立峰脚与连续陡壁</small>
+      </div>
+    </div>
+
+    <div id="error" class="error-card glass hidden" role="alert"></div>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

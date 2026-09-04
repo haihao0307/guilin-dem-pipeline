@@ -1,0 +1,147 @@
+{
+  "schema": "landscape-mother-karst-generation-contract-r014/1",
+  "status": {
+    "sourceDistilled": true,
+    "runtimeImplemented": false,
+    "grayboxApproved": false,
+    "materialApproved": false,
+    "visualApproved": false,
+    "productionReady": false
+  },
+  "sourceClasses": {
+    "A": [
+      "Wei et al. 2022, Guilin karst geomorphology and geological process, uploaded excerpt pages 208-209 only",
+      "Liu et al. 2014, Huanjiang Karst Extension, complete uploaded paper",
+      "UNESCO South China Karst official records"
+    ],
+    "B": [
+      "User-supplied tower fengcong and tower fenglin article screenshots, observation and hypothesis only"
+    ],
+    "C": [
+      "The PBR Guide third edition, material and optical channel discipline only"
+    ]
+  },
+  "identityLayers": [
+    {
+      "id": "morphology",
+      "fields": ["family", "peakHeightM", "peakWidthM", "heightWidthRatio", "slopeDistributionDeg", "summitProfile", "footProfile"]
+    },
+    {
+      "id": "topology",
+      "fields": ["baseConnectivity", "negativeReliefType", "plainContinuity", "positiveNegativeAreaRatio", "peakSpacingDistribution", "depressionClosure"]
+    },
+    {
+      "id": "hydrology",
+      "fields": ["autogenicRecharge", "allogenicRecharge", "surfaceRiver", "undergroundRiver", "springs", "shafts", "sinkholes", "waterTableLevels", "regionalBaseLevel"]
+    },
+    {
+      "id": "history",
+      "fields": ["lithology", "carbonateThicknessM", "folds", "faultDirections", "upliftHistory", "fractureExpansion", "dissolution", "collapse", "transport", "deposition", "inheritance"]
+    }
+  ],
+  "prototypes": {
+    "guilinFengcong": {
+      "baseConnectivity": "connected",
+      "negativeRelief": ["closedDepression", "fengcongValley", "polje", "subsurfaceDrainage"],
+      "sourceRanges": {
+        "mappedAreaKm2": 1226.3,
+        "reportedPeakCount": 8000,
+        "peakElevationOrHeightM": [270, 800]
+      },
+      "notes": "The uploaded excerpt reports these values but does not expose all methodological details."
+    },
+    "guilinFenglin": {
+      "baseConnectivity": "separated",
+      "negativeRelief": ["alluvialKarstPlain", "openValley"],
+      "sourceRanges": {
+        "mappedAreaKm2": 1202.5,
+        "reportedPeakCount": 3500,
+        "relativePeakHeightM": [60, 200],
+        "slopeMinimumDeg": 45
+      },
+      "caveStatement": "Highly cave-developed; the uploaded excerpt says nearly every peak has caves.",
+      "firstStudyTarget": "Yangshuo Putao dense fenglin plain type"
+    },
+    "huanjiangConeFengcong": {
+      "baseConnectivity": "connected",
+      "negativeRelief": ["fengcongDepression", "fengcongValley", "fenglinDepression", "fenglinValley"],
+      "sourceRanges": {
+        "averageSlopeDeg": [43, 48],
+        "relativeHeightM": [100, 500],
+        "annualRainfallMm": 1675,
+        "forestCoveragePercent": 96.6
+      },
+      "hydrology": {
+        "allogenicInput": false,
+        "primaryRecharge": "autogenic infiltrating rainfall",
+        "fractureDirections": ["E-W", "NW", "NE"],
+        "knownCaveLevelsM_ASL": [500, 800, 1100]
+      }
+    }
+  },
+  "firstImplementation": {
+    "id": "guilin-fenglin-putao-graybox-r014",
+    "stage": "specified_not_implemented",
+    "allowed": [
+      "metric basin and karst plain",
+      "isolated tower peaks",
+      "measured family variation",
+      "foot caves as structural placeholders",
+      "fixed camera inspection",
+      "full rotation review"
+    ],
+    "forbidden": [
+      "fog",
+      "distant mountains",
+      "clouds",
+      "golden sunrise",
+      "image textures",
+      "external models",
+      "liquid glass panel work",
+      "moss",
+      "black water stains",
+      "complex PBR material",
+      "other landforms"
+    ]
+  },
+  "pipeline": [
+    "selectPrototype",
+    "freezeMetricDomain",
+    "constructRegionalBaseAndNegativeRelief",
+    "solvePositiveNegativeTopology",
+    "applyStructureAndDrainageBaseLevel",
+    "formPeakSilhouetteAndFoot",
+    "formFractureControlledCaveNetwork",
+    "deriveHydrologyAndWeatheringState",
+    "projectLimestoneMaterial",
+    "buildInspectionAndMobilePresentation"
+  ],
+  "grayboxGates": [
+    "separatedPeakBases",
+    "continuousPlain",
+    "sourceBoundHeightWidthSlopeRanges",
+    "nonUniformButCoherentPeakSpacing",
+    "largeShapeReadsBeforeDetail",
+    "noUniformConeFamily",
+    "stableFullRotationSilhouette",
+    "noVisualConcealmentByFogOrLighting",
+    "manualVisualReviewRequired"
+  ],
+  "materialRules": {
+    "metalness": 0,
+    "baseColorContainsLargeScaleLighting": false,
+    "ambientOcclusionAffects": "ambientDiffuseOnly",
+    "wetnessSeparatedFromCaveDarkness": true,
+    "mineralFilmSeparatedFromBiologicalFilm": true,
+    "geometryOwns": ["silhouette", "trueCavities", "overhangs", "majorFractures"],
+    "mesoFieldOwns": ["shallowSolutionGrooves", "surfaceShelves", "weatheringRelief"],
+    "microNormalOwns": ["grain", "tinyPits", "hairlineEtching"]
+  },
+  "unverifiedScreenshotClaims": [
+    "5.5 Ma turning point",
+    "3.6 Ma switching event",
+    "Lingshan overflow outlet as a total paleodrainage outlet",
+    "specific uplift rates quoted in screenshots",
+    "Q and V coupled model values and regional assignments"
+  ]
+}
