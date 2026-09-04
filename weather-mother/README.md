@@ -1,21 +1,11 @@
-# Weather Mother V1.5.0
+# Weather Mother Full Clean Handoff V1.6.0
 
-公开总入口只有 `weather-mother/index.html`，默认进入 Weather Mother 母板首页。
+本包从 Weather Mother V1.2.0 的已确认基础重新恢复。
 
-Weather Mother 是长期主板。左侧导航持续保留以下入口：
+打开 Weather Mother 后，默认进入原来的 World 与原云系统。左侧 Weather Mother 抽屉负责进入 Rain、Snow、Fog、Cloud 和 Storm。Rain 使用 Liquid V1.2，保留村院、砖瓦受湿、檐口排水、积水、水花、玻璃亭与湿玻璃折射。
 
-- Weather Mother 首页
-- World
-- Rain
-- Fog
-- Snow
-- Cloud
-- Storm
+Fog、Snow、Cloud 和 Storm 继续使用原 `v110-full` Weather Mother 内已有的天气案例。本轮没有制作任何新的云、雾、雪或风暴渲染器。
 
-子模块通过 `?module=<id>` 在同一母板内切换。根入口禁止跳转到子模块，禁止 iframe 壳层，禁止任何子模块覆盖 Weather Mother 品牌与返回路径。
+错误替代母板、简化天气动画、对应载荷和相关 QA 已从当前包、当前路由和当前文档中清除。它们只留在 Git 历史中。
 
-Rain 当前运行 Liquid Rain V1.2，包含程序化降雨、板瓦与筒瓦汇水、檐口转移、砖墙受湿、积水、涟漪、水花、程序化声音、玻璃亭、玻璃表面水膜与湿玻璃折射。研发直达页保留为 `direct-rain-v120.html`，它不承担总入口职责。
-
-Fog、Snow、Cloud 与 Storm 已接入母板并提供可运行候选场景。它们的视觉批准、3A 批准与生产批准仍保持 `false`。
-
-继续工作依次阅读 `RESTART_START_HERE.md`、`HANDOFF.json`、`MASTER_SHELL_POLICY.json`、`UNIFIED_STUDIO_POLICY.json` 与各模块研究文件。
+当前质量状态：`visualApproved=false`，`aaaQualityApproved=false`，`productionReady=false`。
