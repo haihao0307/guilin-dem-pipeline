@@ -1,0 +1,85 @@
+name: Weather Mother V1.6 public Pages QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/weather-mother-v160-public-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Wait for restored public root
+        env:
+          QA_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,time,urllib.request
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          token=os.environ['QA_SHA']
+          last=''
+          for attempt in range(30):
+              try:
+                  with urllib.request.urlopen(base+'?qa='+token,timeout=25) as r:
+                      body=r.read().decode('utf-8','replace')
+                      last=f'{r.status} {len(body)}'
+                      if r.status==200 and 'original-cloud-system' in body:
+                          print('public root ready',attempt+1,last)
+                          break
+              except Exception as e:
+                  last=str(e)
+              time.sleep(6)
+          else:
+              raise SystemExit('public root unavailable: '+last)
+          for path in ['studio-v060/','v110-full/','liquid-rain-v120/MANIFEST.json','CANONICAL_BASELINE_LOCK.json','REJECTED_ROUTE_GUARD.json']:
+              with urllib.request.urlopen(base+path+'?qa='+token,timeout=25) as r:
+                  assert r.status==200,(path,r.status)
+          for path in ['master-v150/','liquid-rain-v100/','qa-master-v150.json','MASTER_SHELL_POLICY.json']:
+              try:
+                  urllib.request.urlopen(base+path+'?qa='+token,timeout=20)
+              except urllib.error.HTTPError as e:
+                  assert e.code==404,(path,e.code)
+              else:
+                  raise AssertionError('rejected path remains public: '+path)
+          PY
+      - name: Install browser tools
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify public World and Rain child
+        env:
+          QA_SHA: ${{ github.sha }}
+        run: |
+          cat > /tmp/public-weather.py <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':720,'height':480})
+              errors=[];failed=[]
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r:failed.append(r.url))
+              page.add_init_script("window.WeatherMotherBoot={quality:'balanced',still:true,weather:'fair'}")
+              page.goto(base+'?qa='+os.environ['QA_SHA'],wait_until='domcontentloaded',timeout=50000)
+              page.wait_for_url('**/studio-v060/**',timeout=30000)
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=80000)
+              world=page.evaluate("document.querySelector('#stage').contentWindow.WeatherMother.qa")
+              assert world['ready'] and world['frames']>=1 and not world['errors']
+              assert page.locator('.brand').inner_text().strip()=='Weather Mother'
+              assert page.locator('#title').inner_text().strip()=='World'
+              assert page.locator('.item').count()==6
+              page.evaluate("window.__WEATHER_MOTHER_STUDIO__.open('rain')")
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=90000)
+              rain=page.evaluate("""async()=>{const app=document.querySelector('#stage').contentWindow.WeatherLiquid;const b=app.getReceiverState('glass-pavilion-front');const ok=app.injectExternalWater('glass-pavilion-front',.018,{producer:'public-v160',revision:160007});await new Promise(r=>setTimeout(r,400));const a=app.getReceiverState('glass-pavilion-front'),s=app.getState();return{ok,film:a.filmKg-b.filmKg,frames:s.frames,residual:s.residualKg,error:app.debug().error}}""")
+              assert page.locator('#title').inner_text().strip()=='Rain'
+              assert rain['ok'] and rain['film']>0 and rain['frames']>0 and abs(rain['residual'])<1e-8 and rain['error']==0
+              assert not errors and not failed,(errors,failed)
+              print({'worldVersion':world.get('version'),'worldFrames':world['frames'],'rain':rain})
+              browser.close()
+          PY
+          xvfb-run -a python3 /tmp/public-weather.py
