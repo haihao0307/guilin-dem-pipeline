@@ -1,0 +1,141 @@
+name: Ocean Island R018.7 public visual capture
+
+"on":
+  push:
+    branches:
+      - work/ocean-mother-r018
+    paths:
+      - ".github/workflows/ocean-island-r018-v7-visual-capture.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Chromium and image tools
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Capture and inspect six verified public views
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018/index.html'
+          expected='5d33c18b107ec641548fea7a7604e0bf01a7653200dfd2cac8bbf88090f71fa7'
+          for attempt in $(seq 1 90); do
+            code=$(curl -L -sS -o /tmp/r018-v7.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${url}?visual=${GITHUB_RUN_ID}-${attempt}" || true)
+            digest=$(sha256sum /tmp/r018-v7.html 2>/dev/null | cut -d' ' -f1 || true)
+            echo "attempt=$attempt http=$code sha=$digest"
+            if [ "$code" = 200 ] && [ "$digest" = "$expected" ]; then break; fi
+            sleep 5
+          done
+          test "$code" = 200
+          test "$digest" = "$expected"
+          PUBLIC_URL="${url}?visual=${GITHUB_RUN_ID}" python3 - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          url = os.environ['PUBLIC_URL']
+          report = {'status': 'PASS', 'url': url.split('?')[0], 'views': {}, 'errors': []}
+          order = ['overview', 'top', 'shore', 'breaker', 'rocks', 'fire']
+          labels = {
+              'overview': 'OVERVIEW',
+              'top': 'TOP ISLAND',
+              'shore': 'IRREGULAR SHORE',
+              'breaker': 'WAVE WALLS',
+              'rocks': 'ROCK REALISM',
+              'fire': 'DENSE SMOKE'
+          }
+
+          def metrics(path):
+              image = Image.open(path).convert('RGB')
+              sample = image.resize((180, 120))
+              stat = ImageStat.Stat(sample)
+              return {
+                  'size': list(image.size),
+                  'mean': [round(value, 2) for value in stat.mean],
+                  'stddev': [round(value, 2) for value in stat.stddev],
+                  'uniqueSampleColors': len(set(sample.getdata()))
+              }
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True, args=[
+                  '--enable-webgl',
+                  '--ignore-gpu-blocklist',
+                  '--enable-unsafe-swiftshader',
+                  '--use-angle=swiftshader'
+              ])
+              context = browser.new_context(viewport={'width': 900, 'height': 600}, device_scale_factor=1)
+              page = context.new_page()
+              page.on('pageerror', lambda exc: report['errors'].append(str(exc)))
+              response = page.goto(url, wait_until='domcontentloaded', timeout=120000)
+              assert response and response.status == 200
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true", timeout=120000)
+              page.wait_for_function("document.getElementById('loading').classList.contains('done')", timeout=120000)
+              page.wait_for_function("window.__OCEAN_QA__.time > 0.06", timeout=120000)
+              page.locator('#panelClose').evaluate('e => e.click()')
+              page.wait_for_timeout(180)
+              session = context.new_cdp_session(page)
+
+              for view in order:
+                  before = page.evaluate('window.__OCEAN_QA__.time')
+                  page.locator(f'[data-view="{view}"]').evaluate('e => e.click()')
+                  page.locator('#pause').evaluate("e => { if (e.textContent === '继续运行') e.click(); }")
+                  page.wait_for_function("target => window.__OCEAN_QA__.time > target", before + 0.015, timeout=120000)
+                  page.locator('#pause').evaluate("e => { if (e.textContent === '暂停') e.click(); }")
+                  page.wait_for_timeout(160)
+                  result = session.send('Page.captureScreenshot', {
+                      'format': 'png',
+                      'fromSurface': True,
+                      'captureBeyondViewport': False
+                  })
+                  path = Path('evidence', f'R018_V7_{view.upper()}.png')
+                  path.write_bytes(base64.b64decode(result['data']))
+                  view_metrics = metrics(path)
+                  assert min(view_metrics['stddev']) > 4, (view, view_metrics)
+                  assert view_metrics['uniqueSampleColors'] > 1200, (view, view_metrics)
+                  report['views'][view] = view_metrics
+
+              report['qa'] = page.evaluate('window.__OCEAN_QA__')
+              context.close()
+              browser.close()
+
+          assert not report['errors'], report['errors']
+
+          thumbs = []
+          for view in order:
+              image = Image.open(Path('evidence', f'R018_V7_{view.upper()}.png')).convert('RGB')
+              image.thumbnail((440, 290))
+              card = Image.new('RGB', (450, 330), (8, 23, 31))
+              x = (450 - image.width) // 2
+              card.paste(image, (x, 30))
+              draw = ImageDraw.Draw(card)
+              draw.text((14, 8), labels[view], fill=(225, 247, 251))
+              thumbs.append(card)
+
+          sheet = Image.new('RGB', (900, 990), (5, 17, 23))
+          for index, card in enumerate(thumbs):
+              sheet.paste(card, ((index % 2) * 450, (index // 2) * 330))
+          sheet.save('evidence/R018_V7_CONTACT_SHEET.jpg', quality=92)
+          report['contactSheet'] = metrics('evidence/R018_V7_CONTACT_SHEET.jpg')
+          Path('evidence/VISUAL_CAPTURE.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r018-v7-public-visual-capture
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
