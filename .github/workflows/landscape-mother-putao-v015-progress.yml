@@ -1,0 +1,49 @@
+name: Landscape Mother Guilin Putao Fenglin V015 Progress
+
+on:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - "workbenches/landscape-mother-v015/**"
+      - ".github/workflows/landscape-mother-putao-v015-progress.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: landscape-mother-putao-v015-progress
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install numeric and browser toolchain
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.3.5 playwright==1.55.0
+
+      - name: Build test publish and verify V015 progress
+        shell: bash
+        run: bash workbenches/landscape-mother-v015/run_v015_progress.sh
+
+      - name: Upload V015 runtime and QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_Guilin_Putao_Fenglin_V015_Progress
+          path: ${{ runner.temp }}/landscape-mother-v015-progress
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
