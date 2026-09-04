@@ -1,0 +1,296 @@
+name: Ocean Island R018.8 wave foam curl repair and deep rollback
+
+"on":
+  push:
+    branches:
+      - work/ocean-mother-r018
+    paths:
+      - "ocean-mother/island-r018-v8-build/**"
+      - ".github/workflows/ocean-island-r018-v8-wave-foam-deep-rollback.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-island-r018-v8-wave-foam-deep-rollback
+  cancel-in-progress: true
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout R018 production branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          path: source
+
+      - name: Checkout current published Ocean Mother tree
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: site
+          persist-credentials: true
+
+      - name: Reconstruct and verify exact R018.8 build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0188-tools
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import lzma
+          from pathlib import Path
+
+          root = Path('source/ocean-mother/island-r018-v8-build')
+          manifest = json.loads((root / 'PAYLOAD.json').read_text(encoding='utf-8'))
+          assert manifest['format'] == 'ocean-mother-r0188-tool-payload'
+          assert manifest['encoding'] == 'base64+xz'
+          for asset in manifest['assets']:
+              chunks = []
+              for part in asset['parts']:
+                  raw = (root / part['name']).read_bytes()
+                  assert len(raw) == part['bytes'], (part['name'], len(raw), part['bytes'])
+                  assert hashlib.sha256(raw).hexdigest() == part['sha256'], part['name']
+                  chunks.append(raw.decode('ascii'))
+              encoded = ''.join(chunks)
+              assert len(encoded) == asset['encodedChars'], asset['name']
+              compressed = base64.b64decode(encoded, validate=True)
+              assert len(compressed) == asset['compressedBytes'], asset['name']
+              assert hashlib.sha256(compressed).hexdigest() == asset['compressedSha256'], asset['name']
+              source = lzma.decompress(compressed)
+              assert len(source) == asset['sourceBytes'], asset['name']
+              assert hashlib.sha256(source).hexdigest() == asset['sourceSha256'], asset['name']
+              out = Path('/tmp/ocean-r0188-tools') / asset['output']
+              out.write_bytes(source)
+              print(asset['name'], out, len(source), asset['sourceSha256'])
+          PY
+          python3 -m py_compile /tmp/ocean-r0188-tools/ocean_r0188_patch.py /tmp/ocean-r0188-tools/ocean_r0188_qa.py
+
+      - name: Build R018.8 from R018.7 and restore the previous deep sea
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build evidence
+          python3 /tmp/ocean-r0188-tools/ocean_r0188_patch.py site build/ocean-mother/island-r018-v4 \
+            | tee evidence/BUILD_MANIFEST_STDOUT.json
+          cp build/ocean-mother/island-r018-v4/MANIFEST.json evidence/MANIFEST.json
+
+      - name: Verify scope lock, standalone identity and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import re
+          from pathlib import Path
+
+          root = Path('build/ocean-mother/island-r018-v4')
+          manifest = json.loads((root / 'MANIFEST.json').read_text(encoding='utf-8'))
+          assert manifest['version'] == '0.3.8-island-r018'
+          assert manifest['buildId'] == 'island-r018-wave-foam-curl-deep-rollback'
+          assert manifest['singleFileDirectOpen'] is True
+          assert manifest['externalRuntimeRequests'] == 0
+          assert manifest['visualApproved'] is False
+          assert manifest['productionApproved'] is False
+          assert manifest['deepSea']['source'] == 'ocean-mother/v001'
+          assert manifest['deepSea']['sourceFileCount'] >= 20
+          assert manifest['deepSea']['mode'].startswith('previous rendering and parameter logic restored')
+          assert manifest['protectedSystems'] == [
+              'island terrain', 'sand', 'rocks', 'fire', 'smoke', 'camera', 'island default parameters'
+          ]
+
+          direct = root / 'Ocean_Mother_R018.8_Direct_Open.html'
+          online = root / 'index.html'
+          island = root / 'island/index.html'
+          deep = root / 'deep-inline.html'
+          assert direct.read_bytes() == online.read_bytes()
+          assert direct.stat().st_size < 300_000
+          direct_text = direct.read_text(encoding='utf-8')
+          assert '<script src=' not in direct_text.lower()
+          assert '<link rel="stylesheet"' not in direct_text.lower()
+          assert 'http://' not in direct_text.lower()
+          assert 'https://' not in direct_text.lower()
+          assert "const pages={island:'" in direct_text
+          assert "deep:'" in direct_text
+
+          island_text = island.read_text(encoding='utf-8')
+          required = [
+              'float foamLace(vec2 p,float t)',
+              'ridgeFbm',
+              'tube*hollow',
+              'crestRibbon',
+              'island-r018-wave-foam-curl-deep-rollback',
+              "location.href='../deep-inline.html'",
+          ]
+          for token in required:
+              assert token in island_text, token
+          forbidden = [
+              'float segment=.18+.82*smoothstep(.40,.72',
+              "params.waveHeight=1.1;params.breakerPower=.15;params.curlPower=0",
+              'deep-sea fallback workbench',
+          ]
+          for token in forbidden:
+              assert token not in island_text, token
+          for token in ['taperedSpit', 'rockField', 'smokeDensityAt', 'shadeTerrain', 'const params={']:
+              assert token in island_text
+
+          deep_text = deep.read_text(encoding='utf-8')
+          assert "qa={version:'0.1.0'" in deep_text
+          assert '24 directionally distributed Gerstner components plus 12 filtered micro-slope harmonics' in deep_text
+          assert 'd0d28a6321d26cf83e2380dac032aee1741bdd87a58cda4883110dab642b0626' in deep_text
+          assert '8c4402977790dc2e9c6116f6f4ac8d75b88bda967183f2df077970663a44aa4e' in deep_text
+          assert 'window.__OCEAN_DEEP_ASSETS__' in deep_text
+
+          scripts = re.findall(r'<script>([\s\S]*?)</script>', island_text)
+          assert len(scripts) == 1
+          Path('/tmp/r0188-island.js').write_text(scripts[0], encoding='utf-8')
+          deep_scripts = re.findall(r'<script>([\s\S]*?)</script>', deep_text)
+          assert len(deep_scripts) == 3
+          for index, script in enumerate(deep_scripts):
+              Path(f'/tmp/r0188-deep-{index}.js').write_text(script, encoding='utf-8')
+
+          receipt = {
+              'directBytes': direct.stat().st_size,
+              'directSha256': hashlib.sha256(direct.read_bytes()).hexdigest(),
+              'islandBytes': island.stat().st_size,
+              'islandSha256': hashlib.sha256(island.read_bytes()).hexdigest(),
+              'deepInlineBytes': deep.stat().st_size,
+              'deepInlineSha256': hashlib.sha256(deep.read_bytes()).hexdigest(),
+              'protectedRangeSha256': manifest['protectedRangeSha256'],
+              'deepSourceFiles': manifest['deepSea']['sourceFileCount'],
+          }
+          Path('evidence/STATIC_QA.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PY
+          node --check /tmp/r0188-island.js
+          for file in /tmp/r0188-deep-*.js; do node --check "$file"; done
+
+      - name: Install Chromium QA dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run desktop, mobile, scene switching and previous deep sea QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --directory build >/tmp/ocean-r0188-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          python3 /tmp/ocean-r0188-tools/ocean_r0188_qa.py \
+            http://127.0.0.1:8765/ocean-mother/island-r018-v4/index.html \
+            evidence
+
+      - name: Build clean review package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp evidence/BROWSER_QA.json build/ocean-mother/island-r018-v4/BROWSER_QA.json
+          cp evidence/STATIC_QA.json build/ocean-mother/island-r018-v4/STATIC_QA.json
+          cp evidence/R0188_ISLAND_BREAKER.png build/ocean-mother/island-r018-v4/R0188_ISLAND_BREAKER.png
+          cp evidence/R0188_DEEP_PREVIOUS.png build/ocean-mother/island-r018-v4/R0188_DEEP_PREVIOUS.png
+          cp evidence/R0188_MOBILE_ISLAND.png build/ocean-mother/island-r018-v4/R0188_MOBILE_ISLAND.png
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path('build/ocean-mother/island-r018-v4')
+          rows=[]
+          for path in sorted(root.rglob('*')):
+              if path.is_file():
+                  rows.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(root).as_posix()}")
+          (root/'SHA256SUMS.txt').write_text('\n'.join(rows)+'\n', encoding='utf-8')
+          receipt={
+              'format':'ocean-mother-r0188-release-receipt',
+              'version':'0.3.8-island-r018',
+              'buildId':'island-r018-wave-foam-curl-deep-rollback',
+              'sourceCommit':'${{ github.sha }}',
+              'workflowRun':'${{ github.run_id }}',
+              'onlinePath':'ocean-mother/island-r018-v4/',
+              'canonicalReplaced':False,
+              'visualApproved':False,
+              'productionApproved':False,
+          }
+          (root/'RELEASE_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          rm -f Ocean_Mother_R018.8_Wave_Foam_Deep_Rollback.zip
+          (cd build/ocean-mother/island-r018-v4 && zip -q -r ../../../Ocean_Mother_R018.8_Wave_Foam_Deep_Rollback.zip .)
+
+      - name: Publish versioned review without replacing the current canonical page
+        shell: bash
+        env:
+          GIT_AUTHOR_NAME: Haihao_Nature Grace HK
+          GIT_AUTHOR_EMAIL: haihao0307@gmail.com
+          GIT_COMMITTER_NAME: Haihao_Nature Grace HK
+          GIT_COMMITTER_EMAIL: haihao0307@gmail.com
+        run: |
+          set -euo pipefail
+          target=site/ocean-mother/island-r018-v4
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -a build/ocean-mother/island-r018-v4/. "$target/"
+          touch site/.nojekyll
+          cd site
+          git add -A .nojekyll ocean-mother/island-r018-v4
+          if git diff --cached --quiet; then
+            echo 'Exact R018.8 review bytes are already published'
+            exit 0
+          fi
+          git commit -m "feat(ocean): publish R018.8 wave foam curl repair and deep rollback"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+          done
+          exit 1
+
+      - name: Verify public exact bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-v4/Ocean_Mother_R018.8_Direct_Open.html'
+          expected=$(sha256sum build/ocean-mother/island-r018-v4/Ocean_Mother_R018.8_Direct_Open.html | cut -d' ' -f1)
+          code=000
+          digest=''
+          for attempt in $(seq 1 100); do
+            code=$(curl -L -sS -o evidence/PUBLIC_DIRECT.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${url}?r=${GITHUB_RUN_ID}-${attempt}" || true)
+            digest=$(sha256sum evidence/PUBLIC_DIRECT.html 2>/dev/null | cut -d' ' -f1 || true)
+            echo "attempt=$attempt http=$code sha=$digest"
+            if [ "$code" = 200 ] && [ "$digest" = "$expected" ]; then break; fi
+            sleep 3
+          done
+          test "$code" = 200
+          test "$digest" = "$expected"
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('evidence/PUBLIC_DIRECT.html')
+          Path('evidence/PUBLIC_VERIFIED.json').write_text(json.dumps({
+              'status':'PASS',
+              'url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-v4/Ocean_Mother_R018.8_Direct_Open.html',
+              'bytes':p.stat().st_size,
+              'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+              'canonicalReplaced':False,
+          },ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload complete R018.8 review delivery
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-r0188-wave-foam-deep-rollback
+          path: |
+            build/ocean-mother/island-r018-v4/
+            evidence/
+            Ocean_Mother_R018.8_Wave_Foam_Deep_Rollback.zip
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
