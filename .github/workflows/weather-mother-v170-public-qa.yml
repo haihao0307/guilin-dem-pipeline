@@ -1,0 +1,155 @@
+name: Weather Mother V1.7 public QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'weather-mother/index.html'
+      - 'weather-mother/studio-v070/**'
+      - 'weather-mother/liquid-rain-v130/**'
+      - 'weather-mother/liquid-rain-v120/**'
+      - 'weather-mother/HANDOFF.json'
+      - 'weather-mother/CANONICAL_BASELINE_LOCK.json'
+      - 'weather-mother/REJECTED_ROUTE_GUARD.json'
+      - '.github/workflows/weather-mother-v170-public-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: weather-mother-v170-public-qa
+  cancel-in-progress: true
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Verify canonical files, protected World and packaged runtimes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip,hashlib,json
+          root=Path('weather-mother')
+          forbidden=[root/'master-v150',root/'qa-master-v150.json',root/'MASTER_SHELL_POLICY.json']
+          assert all(not p.exists() for p in forbidden),forbidden
+          lock=json.loads((root/'CANONICAL_BASELINE_LOCK.json').read_text())
+          for item in lock['files']:
+              p=Path(item['path'].replace('web/','',1))
+              assert p.stat().st_size==item['bytes'],p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256'],p
+          entry=(root/'index.html').read_text()
+          assert "studio-v070" in entry and "module','world'" in entry
+          sm=json.loads((root/'studio-v070/MANIFEST.json').read_text())
+          assert sm['version']=='0.7.0-liquid-glass-hierarchy-v3'
+          se=''.join((root/'studio-v070'/x['file']).read_text() for x in sm['chunks'])
+          shell=gzip.decompress(base64.b64decode(se)).decode()
+          assert len(shell.encode())==sm['sourceBytes']
+          assert hashlib.sha256(shell.encode()).hexdigest()==sm['sourceSHA256']
+          assert shell.count('id="rootPage"')==1 and shell.count('id="rainPage"')==1 and shell.count('id="liquidPage"')==1
+          assert shell.count('data-open=')==5
+          assert shell.count('data-child="rain"')==1 and shell.count('data-child="liquid"')==1
+          assert shell.count('data-rain-section=')==6
+          assert 'class="top"' not in shell
+          assert '44px' in shell and 'liquid-glass' in shell and 'glass-flow' in shell
+          assert "../v110-full/?embedded=1&studio=070" in shell
+          assert "../liquid-rain-v130/?embedded=1&studio=070&v=130" in shell
+          bm=json.loads((root/'liquid-rain-v120/MANIFEST.json').read_text())
+          be=''.join((root/'liquid-rain-v120'/x['file']).read_text() for x in bm['chunks'])
+          base=gzip.decompress(base64.b64decode(be))
+          rm=json.loads((root/'liquid-rain-v130/MANIFEST.json').read_text())
+          assert len(base)==rm['baseSourceBytes'] and hashlib.sha256(base).hexdigest()==rm['baseSourceSHA256']
+          pe=''.join((root/'liquid-rain-v130'/x['file']).read_text() for x in rm['patchChunks'])
+          patch=json.loads(gzip.decompress(base64.b64decode(pe)))
+          lines=base.decode().splitlines(keepends=True)
+          out=[]
+          for op in patch['ops']:
+              if op[0]=='c': out.append(''.join(lines[op[1]:op[2]]))
+              else: out.append(op[1])
+          rain=''.join(out).encode()
+          assert len(rain)==rm['sourceBytes'] and hashlib.sha256(rain).hexdigest()==rm['sourceSHA256']
+          text=rain.decode()
+          assert "1.3.0-liquid-glass-ground-material-candidate" in text
+          assert text.count('class="group" data-section=')==6
+          assert text.count('type="range"')==38
+          for token in ['glassIor','glassClarity','glassRoughness','glassDistortion','glassDispersion','glassDroplets','glassRivuletSpeed','glassSparkle','infiltrationScale','flowScale','evaporationScale','puddleThreshold','groundSpecular','roofFlowScale','brickAbsorptionScale']:
+              assert token in text,token
+          print('static identity and hierarchy checks passed')
+          PY
+      - name: Install browser tools
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify public Weather Mother hierarchy, World and Liquid Rain
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          cat > /tmp/weather_v170_public.py <<'PY'
+          import json,os,time,urllib.request
+          from playwright.sync_api import sync_playwright
+          BASE='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          sha=os.environ['SOURCE_SHA']
+          html=b''
+          for _ in range(36):
+              try:
+                  with urllib.request.urlopen(BASE+'?v170='+sha,timeout=25) as r:
+                      html=r.read()
+                  if b'studio-v070' in html: break
+              except Exception: pass
+              time.sleep(5)
+          assert b'studio-v070' in html,'public root did not propagate'
+          result={'productionLine':'Weather Mother','version':'1.7.0-liquid-glass-ui-ground-refinement','sourceCommit':sha,'publicURL':BASE,'desktop':{},'mobile':{},'errors':[]}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':720,'height':480})
+              errors=[];failed=[]
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r:failed.append(r.url))
+              page.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+              page.goto(BASE+'?v170='+sha,wait_until='domcontentloaded',timeout=50000)
+              page.wait_for_url('**/studio-v070/**',timeout=30000)
+              page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.0-liquid-glass-hierarchy-v3'",timeout=30000)
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=90000)
+              world=page.evaluate("document.querySelector('#stage').contentWindow.WeatherMother.qa")
+              shell=page.evaluate("__WEATHER_MOTHER_STUDIO__.getState()")
+              assert shell['module']=='world' and not shell['menuOpen'] and shell['level']=='root'
+              assert world['ready'] and world['lastGLerror']==0 and not world['errors']
+              assert page.locator('.top').count()==0 and page.locator('#launcher').is_visible()
+              page.locator('#launcher').click();page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().menuOpen")
+              assert page.locator('#rootPage .menu-item').count()==6
+              page.locator('[data-child="rain"]').click();page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().level==='rain'")
+              assert page.locator('#rainPage .menu-item').count()==1 and page.locator('#path').inner_text().strip()=='Weather Mother / Rain'
+              page.locator('[data-child="liquid"]').click();page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().level==='liquid'")
+              assert page.locator('#liquidPage .menu-item').count()==6 and page.locator('#path').inner_text().strip()=='Weather Mother / Rain / Liquid Rain'
+              page.locator('#liquidPage [data-rain-section="glass"]').click()
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+              page.evaluate("document.querySelector('#stage').contentWindow.WeatherLiquid.stop()")
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000)
+              rain=page.evaluate("""()=>{const w=document.querySelector('#stage').contentWindow,d=document.querySelector('#stage').contentDocument,a=w.WeatherLiquid;for(const [id,v] of [['glassIor','1.57'],['flowScale','1.45'],['roofFlowScale','1.30'],['brickAbsorptionScale','1.40'],['puddleThreshold','0.80']]){const e=d.getElementById(id);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))}const b=a.getReceiverState('glass-pavilion-front'),ok=a.injectExternalWater('glass-pavilion-front',.02,{producer:'actions-v170',revision:170700}),c=a.getReceiverState('glass-pavilion-front'),s=a.getState();return{version:a.version,groups:d.querySelectorAll('.group').length,sliders:d.querySelectorAll('input[type=range]').length,overflow:d.documentElement.scrollWidth-d.documentElement.clientWidth,section:w.WeatherLiquidUI.getSection(),ok,filmDelta:c.filmKg-b.filmKg,residual:s.residualKg,error:a.debug().error,controls:{glassIor:a.state.glassIor,flowScale:a.state.flowScale,roofFlowScale:a.state.roofFlowScale,brickAbsorptionScale:a.state.brickAbsorptionScale,puddleThreshold:a.state.puddleThreshold}}}""")
+              assert rain['version']=='1.3.0-liquid-glass-ground-material-candidate'
+              assert rain['groups']==6 and rain['sliders']==38 and rain['overflow']==0 and rain['section']=='glass'
+              assert rain['ok'] and rain['filmDelta']>0 and abs(rain['residual'])<1e-8 and rain['error']==0
+              assert not errors and not failed,(errors,failed)
+              result['desktop']={'worldVersion':world['version'],'defaultWorld':True,'topBarCount':0,'rootItems':6,'rainItems':1,'liquidItems':6,'rain':rain,'pageErrors':errors,'failedRequests':failed}
+              mobile=browser.new_page(viewport={'width':390,'height':844})
+              merr=[];mfail=[]
+              mobile.on('pageerror',lambda e:merr.append(str(e)))
+              mobile.on('console',lambda m:merr.append(m.text) if m.type=='error' else None)
+              mobile.on('requestfailed',lambda r:mfail.append(r.url))
+              mobile.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+              mobile.goto(BASE+'?mobile='+sha,wait_until='domcontentloaded',timeout=50000)
+              mobile.wait_for_url('**/studio-v070/**',timeout=30000)
+              mobile.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.getState?.().module==='world'",timeout=30000)
+              closed=mobile.evaluate("__WEATHER_MOTHER_STUDIO__.getState()")
+              box=mobile.locator('#launcher').bounding_box()
+              assert closed['module']=='world' and not closed['menuOpen'] and box['width']==44 and box['height']==44
+              mobile.locator('#launcher').click();mobile.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().menuOpen")
+              menu=mobile.locator('#menu').bounding_box()
+              assert menu['width']<=374 and mobile.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")==0
+              assert not merr and not mfail,(merr,mfail)
+              result['mobile']={'launcher':box,'menu':menu,'closedByDefault':True,'pageErrors':merr,'failedRequests':mfail}
+              browser.close()
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+          xvfb-run -a python3 -u /tmp/weather_v170_public.py
