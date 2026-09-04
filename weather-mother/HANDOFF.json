@@ -1,51 +1,73 @@
 {
   "productionLine": "Weather Mother",
-  "packageVersion": "1.2.0-full-clean-handoff",
-  "date": "2026-09-03",
+  "packageVersion": "1.5.0-master-shell",
+  "date": "2026-09-04",
   "canonicalOnlineEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
-  "defaultModule": "world",
+  "defaultModule": "home",
   "currentStudio": {
-    "version": "0.6.1-unified-immersive-studio",
-    "directory": "web/weather-mother/studio-v060"
+    "version": "0.6.4-master-shell",
+    "directory": "weather-mother/index.html"
   },
   "currentWorld": {
     "version": "1.1.0-world",
-    "directory": "web/weather-mother/v110-full"
+    "directory": "weather-mother/v110-full"
   },
   "currentRain": {
-    "version": "1.0.0-liquid-core-candidate",
-    "directory": "web/weather-mother/liquid-rain-v100",
-    "forwardVisualBaseline": "3D 1940s village courtyard"
+    "version": "1.2.0-wet-glass-liquid",
+    "moduleRoute": "?module=rain",
+    "directResearchEntry": "weather-mother/direct-rain-v120.html",
+    "glassPavilion": true,
+    "wetGlassRefraction": true
   },
-  "liquidScope": [
-    "rain",
-    "wetness",
-    "puddles",
-    "ripples",
-    "splashes",
-    "eave drainage",
-    "surface liquid appearance",
-    "procedural audio",
-    "future sweat and external wetting"
+  "modules": [
+    {
+      "id": "home",
+      "role": "Weather Mother root",
+      "status": "implemented"
+    },
+    {
+      "id": "world",
+      "role": "shared atmospheric forcing",
+      "status": "implemented candidate"
+    },
+    {
+      "id": "rain",
+      "role": "liquid precipitation",
+      "status": "implemented V1.2"
+    },
+    {
+      "id": "fog",
+      "role": "visibility and ground fog",
+      "status": "implemented candidate"
+    },
+    {
+      "id": "snow",
+      "role": "solid precipitation and accumulation",
+      "status": "implemented candidate"
+    },
+    {
+      "id": "cloud",
+      "role": "meter-based cloud vertical bounds",
+      "status": "implemented candidate"
+    },
+    {
+      "id": "storm",
+      "role": "convective forcing and lightning",
+      "status": "implemented candidate"
+    }
   ],
-  "nextPriorities": [
-    "light and atmosphere",
-    "raindrop size speed and direction distributions",
-    "cloud precipitation source coupling",
-    "roof eave and receiver water transfer",
-    "human sweat and wet-surface receiver interfaces",
-    "Guilin and GAEA integration"
-  ],
+  "navigationContract": {
+    "rootAlwaysWeatherMother": true,
+    "persistentSideNavigation": true,
+    "noIframe": true,
+    "childModulesNeverReplaceRoot": true,
+    "queryRouting": "?module=<id>"
+  },
   "validationEntrypoints": [
     "https://guilin-dem-terrain.sunhaihao.chatgpt.site",
     "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof"
   ],
   "visualApproved": false,
   "aaaQualityApproved": false,
-  "productionReady": false,
-  "packagePath": "weather-mother/handoffs/Weather_Mother_Full_Clean_Handoff_2026-09-03_V1.2.0.zip",
-  "packageSHA256": "a6cdbd0fa977465a30a2d1eee0343c605d4f7f04e36b1fa28e00923e1bb57872",
-  "packageBytes": 247083,
-  "archiveIntegrityVerified": true,
-  "documentationSynchronized": true
+  "productionReady": false
 }
