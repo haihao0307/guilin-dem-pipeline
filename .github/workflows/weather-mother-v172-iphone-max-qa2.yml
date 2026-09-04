@@ -55,8 +55,9 @@ jobs:
                   launcher=page.locator('#launcher').bounding_box()
                   assert round(launcher['width'])==48 and round(launcher['height'])==48
                   assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
-                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen')
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(650)
                   sheet=page.locator('#sheet').bounding_box()
+                  print(name,'weatherSheet',sheet)
                   assert page.locator('[data-module]').count()==6
                   if orientation=='portrait':
                       assert sheet['width']>=w-20 and sheet['height']<h*.55 and sheet['y']+sheet['height']<=h+1
@@ -67,11 +68,12 @@ jobs:
                       page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().sheetOpen",timeout=30000)
                       page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
                       page.locator('#launcher').click()
-                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000)
+                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000);page.wait_for_timeout(650)
                       assert page.locator('[data-rain-section]').count()==6
                       page.locator('[data-rain-section="glass"]').click()
-                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000)
+                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000);page.wait_for_timeout(500)
                       panel=page.evaluate("""()=>{const f=document.querySelector('#stage'),d=f.contentDocument,p=d.querySelector('#panel'),b=p.getBoundingClientRect(),ui=f.contentWindow.WeatherLiquidUI;return{x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom,open:ui.isOpen(),section:ui.getSection(),launcher:getComputedStyle(document.querySelector('#launcher')).pointerEvents}}""")
+                      print(name,'glassPanel',panel)
                       assert panel['open'] and panel['section']=='glass' and panel['launcher']=='none'
                       assert panel['x']>=0 and panel['y']>=0 and panel['right']<=w+1 and panel['bottom']<=h+1
                       if orientation=='portrait': assert panel['width']>=w-24 and panel['height']<=h*.62
@@ -92,8 +94,9 @@ jobs:
                   page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.2-iphone-max-adaptive'",timeout=60000)
                   state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
                   assert state['orientation']==orientation and not state['sheetOpen']
-                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen')
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(650)
                   sheet=page.locator('#sheet').bounding_box()
+                  print(name,'weatherSheet',sheet)
                   if orientation=='portrait': assert sheet['width']>=w-20 and sheet['height']<h*.55
                   else: assert sheet['width']<=391 and sheet['height']>=h-20
                   assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
