@@ -1,0 +1,83 @@
+name: Ocean Island R018.2 visual capture lite
+
+"on":
+  push:
+    branches:
+      - work/ocean-mother-r018
+    paths:
+      - ".github/workflows/ocean-island-r018-v2-visual-capture-lite.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 -m pip install --quiet playwright pillow
+          python3 -m playwright install --with-deps chromium
+      - name: Capture overview and top at inspection scale
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          import base64
+          import json
+          from pathlib import Path
+          from PIL import Image, ImageStat
+          from playwright.sync_api import sync_playwright
+
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-v2/index.html?capture=lite'
+          report={'status':'PASS','url':url.split('?')[0],'images':{},'errors':[]}
+
+          def capture(session,path):
+              data=session.send('Page.captureScreenshot',{'format':'png','fromSurface':True,'captureBeyondViewport':False})['data']
+              Path(path).write_bytes(base64.b64decode(data))
+              image=Image.open(path).convert('RGB')
+              sample=image.resize((160,100))
+              stat=ImageStat.Stat(sample)
+              return {'size':list(image.size),'stddev':[round(v,2) for v in stat.stddev],'uniqueSampleColors':len(set(sample.getdata()))}
+
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+              context=browser.new_context(viewport={'width':720,'height':480},device_scale_factor=1)
+              page=context.new_page()
+              page.on('pageerror',lambda exc:report['errors'].append(str(exc)))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              page.wait_for_function("window.__OCEAN_QA__.time>0.05",timeout=120000)
+              page.locator('#panelClose').evaluate('e=>e.click()')
+              page.locator('#pause').evaluate("e=>{if(e.textContent==='暂停')e.click()}")
+              page.wait_for_timeout(180)
+              session=context.new_cdp_session(page)
+              report['images']['overview']=capture(session,'evidence/R018_V2_OVERVIEW.png')
+              page.locator('[data-view="top"]').evaluate('e=>e.click()')
+              page.locator('#pause').evaluate("e=>{if(e.textContent==='继续运行')e.click()}")
+              page.wait_for_function("window.__OCEAN_QA__.time>0.08",timeout=120000)
+              page.locator('#pause').evaluate("e=>{if(e.textContent==='暂停')e.click()}")
+              page.wait_for_timeout(180)
+              report['images']['top']=capture(session,'evidence/R018_V2_TOP.png')
+              report['qa']=page.evaluate('window.__OCEAN_QA__')
+              context.close(); browser.close()
+
+          assert not report['errors'],report['errors']
+          for name,metrics in report['images'].items():
+              assert min(metrics['stddev'])>3,(name,metrics)
+              assert metrics['uniqueSampleColors']>500,(name,metrics)
+          Path('evidence/VISUAL_CAPTURE.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r018-v2-visual-capture-lite
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
