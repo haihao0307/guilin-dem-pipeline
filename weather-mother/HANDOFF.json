@@ -1,12 +1,12 @@
 {
   "productionLine": "Weather Mother",
-  "packageVersion": "1.7.1-direct-rain",
+  "packageVersion": "1.7.3-iphone-max-adaptive",
   "date": "2026-09-04",
   "canonicalOnlineEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
   "defaultModule": "world",
   "currentStudio": {
-    "version": "0.7.1-direct-rain",
-    "directory": "weather-mother/studio-v071"
+    "version": "0.7.3-iphone-max-adaptive",
+    "directory": "weather-mother/studio-v073"
   },
   "currentWorld": {
     "version": "1.1.0-world",
@@ -16,17 +16,20 @@
   "currentRain": {
     "version": "1.3.0-liquid-glass-ground-material-candidate",
     "directory": "weather-mother/liquid-rain-v130",
-    "role": "direct child module under Weather Mother Rain button"
+    "oneClickFromRootMenu": true
   },
-  "rootMenu": [
-    "World",
-    "Rain",
-    "Fog",
-    "Snow",
-    "Cloud",
-    "Storm"
-  ],
-  "rainClickBehavior": "One click on Rain directly opens Liquid Rain V1.3. No Rain submenu and no separate Liquid Rain selection layer.",
+  "rootMenu": ["World","Rain","Fog","Snow","Cloud","Storm"],
+  "phoneUI": {
+    "target": "iPhone Max",
+    "closedState": "48 px Liquid Glass WM launcher",
+    "portrait": "safe-area-aware bottom sheet with compact, medium and full heights",
+    "landscape": "safe-area-aware right panel",
+    "portraitCSSViewport": [430,932],
+    "portraitLargeCSSViewport": [440,956],
+    "landscapeCSSViewport": [932,430],
+    "landscapeLargeCSSViewport": [956,440],
+    "rainControls": ["Rain","Cloud Source","Ground Water","Wet Glass","Roof and Masonry","View"]
+  },
   "moduleRoutes": {
     "world": "v110-full default workbench",
     "rain": "liquid-rain-v130 direct",
@@ -35,21 +38,15 @@
     "cloud": "v110-full weather=fair",
     "storm": "v110-full weather=nightstorm"
   },
-  "ui": {
-    "persistentTopStrip": false,
-    "launcherOnlyWhenClosed": true,
-    "mobileLauncherPx": 44,
-    "liquidGlass": true,
-    "movingLight": true,
-    "rainIntermediateMenu": false,
-    "liquidIntermediateMenu": false
-  },
-  "removedCurrentRuntime": "weather-mother/studio-v070",
+  "validationEntrypoints": [
+    "https://guilin-dem-terrain.sunhaihao.chatgpt.site",
+    "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof"
+  ],
   "deliveryRule": "Routine user-facing delivery is one verified directly clickable public URL only.",
   "publicQA": {
-    "workflow": "Weather Mother V1.7.1 direct Rain public QA",
-    "runId": 33847704126,
-    "conclusion": "success",
+    "candidateRunId": 33856833624,
+    "chromiumRunId": 33858008158,
+    "webkitRunId": 33857701611,
     "shareAllowed": true
   },
   "visualApproved": false,
