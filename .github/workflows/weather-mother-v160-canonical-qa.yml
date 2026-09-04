@@ -1,0 +1,88 @@
+name: Weather Mother V1.6 canonical restore QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'weather-mother/index.html'
+      - 'weather-mother/studio-v060/**'
+      - 'weather-mother/liquid-rain-v120/**'
+      - 'weather-mother/v110-full/**'
+      - 'weather-mother/HANDOFF.json'
+      - 'weather-mother/CANONICAL_BASELINE_LOCK.json'
+      - 'weather-mother/REJECTED_ROUTE_GUARD.json'
+      - '.github/workflows/weather-mother-v160-canonical-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: weather-mother-v160-canonical-qa
+  cancel-in-progress: true
+jobs:
+  canonical-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Verify canonical files and protected cloud hashes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,gzip,base64
+          root=Path('weather-mother')
+          forbidden=[root/'master-v150',root/'qa-master-v150.json',root/'MASTER_SHELL_POLICY.json',root/'liquid-rain-v100']
+          assert all(not p.exists() for p in forbidden),forbidden
+          lock=json.loads((root/'CANONICAL_BASELINE_LOCK.json').read_text())
+          for item in lock['files']:
+              p=Path(item['path'].replace('web/','',1))
+              assert p.stat().st_size==item['bytes'],p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256'],p
+          shell=(root/'studio-v060/index.html').read_text()
+          assert shell.count('class="item" data-module=')==6
+          assert "../v110-full/?embedded=1&studio=062" in shell
+          assert "../liquid-rain-v120/?embedded=1&studio=062&v=120" in shell
+          assert "weather=fogbank" in shell and "weather=snow" in shell and "weather=nightstorm" in shell
+          manifest=json.loads((root/'liquid-rain-v120/MANIFEST.json').read_text())
+          encoded=''.join((root/'liquid-rain-v120'/x['file']).read_text() for x in manifest['chunks'])
+          source=gzip.decompress(base64.b64decode(encoded))
+          assert len(source)==manifest['sourceBytes']
+          assert hashlib.sha256(source).hexdigest()==manifest['sourceSHA256']
+          assert b'WeatherLiquid' in source and b'glass-pavilion-front' in source
+          print('canonical static checks passed')
+          PY
+      - name: Install browser tools
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify original World and Rain child in Chromium
+        run: |
+          python3 -m http.server 8765 >/tmp/weather-http.log 2>&1 &
+          cat > /tmp/weather-browser.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':720,'height':480})
+              errors=[];failed=[]
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r:failed.append(r.url))
+              page.add_init_script("window.WeatherMotherBoot={quality:'balanced',still:true,weather:'fair'}")
+              page.goto('http://127.0.0.1:8765/weather-mother/',wait_until='domcontentloaded',timeout=40000)
+              page.wait_for_url('**/studio-v060/**',timeout=20000)
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=70000)
+              world=page.evaluate("document.querySelector('#stage').contentWindow.WeatherMother.qa")
+              assert world['ready'] and world['frames']>=1 and not world['errors']
+              assert page.locator('.brand').inner_text().strip()=='Weather Mother'
+              assert page.locator('#title').inner_text().strip()=='World'
+              assert page.locator('.item').count()==6
+              page.evaluate("window.__WEATHER_MOTHER_STUDIO__.open('rain')")
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=80000)
+              rain=page.evaluate("""async()=>{const app=document.querySelector('#stage').contentWindow.WeatherLiquid;const b=app.getReceiverState('glass-pavilion-front');const ok=app.injectExternalWater('glass-pavilion-front',.018,{producer:'github-actions-v160',revision:160006});await new Promise(r=>setTimeout(r,350));const a=app.getReceiverState('glass-pavilion-front'),s=app.getState();return{ok,film:a.filmKg-b.filmKg,frames:s.frames,residual:s.residualKg,error:app.debug().error}}""")
+              assert page.locator('#title').inner_text().strip()=='Rain'
+              assert rain['ok'] and rain['film']>0 and rain['frames']>0 and abs(rain['residual'])<1e-8 and rain['error']==0
+              assert not errors and not failed,(errors,failed)
+              print({'worldVersion':world.get('version'),'worldFrames':world['frames'],'rain':rain})
+              browser.close()
+          PY
+          xvfb-run -a python3 /tmp/weather-browser.py
