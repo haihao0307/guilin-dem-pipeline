@@ -1,0 +1,228 @@
+name: Ocean Island R018.2 release v5
+
+"on":
+  push:
+    branches:
+      - work/ocean-mother-r018
+    paths:
+      - "ocean-mother/island-r018-v2-build/**"
+      - ".github/workflows/ocean-island-r018-v2-release-v5.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-island-r018-v2-release-v5
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Reconstruct exact single file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ocean-mother/island-r018-v2 evidence
+          cat ocean-mother/island-r018-v2-build/payload.*.b64 \
+            | tr -d '\r\n' \
+            | base64 -d \
+            | xz -d \
+            > ocean-mother/island-r018-v2/index.html
+          f=ocean-mother/island-r018-v2/index.html
+          test "$(wc -c < "$f")" = "45236"
+          test "$(sha256sum "$f" | cut -d' ' -f1)" = "45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba"
+          for token in island-r018-gold-coast-refined 泡沫墙 浪墙卷浪 岸线异形度 无限海面 浓烟火源; do
+            grep -q "$token" "$f"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('ocean-mother/island-r018-v2/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>([\s\S]*?)</script>',html)
+          assert len(scripts)==1
+          Path('/tmp/runtime.js').write_text(scripts[0],encoding='utf-8')
+          assert '<img' not in html.lower()
+          assert 'http://' not in html.lower()
+          assert 'https://' not in html.lower()
+          PY
+          node --check /tmp/runtime.js
+          sha256sum "$f" | tee evidence/SHA256.txt
+
+      - name: Install Chromium
+        run: |
+          python3 -m pip install --quiet playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: Local desktop and mobile runtime QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --directory . >/tmp/http.log 2>&1 &
+          pid=$!
+          trap 'kill $pid 2>/dev/null || true' EXIT
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+
+          url='http://127.0.0.1:8765/ocean-mother/island-r018-v2/'
+          report={'status':'PASS','checks':{},'errors':[]}
+
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+              ctx=browser.new_context(viewport={'width':900,'height':650})
+              page=ctx.new_page()
+              page.on('pageerror',lambda exc:report['errors'].append(str(exc)))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              page.wait_for_timeout(1800)
+              q=page.evaluate('window.__OCEAN_QA__')
+              report['desktop']=q
+              report['checks'].update({
+                  'desktopHttp200':True,
+                  'webglReady':q['ready'] is True,
+                  'timeAdvances':q['time']>.7,
+                  'allEffectsOn':q['flags']==127,
+                  'sixViews':page.locator('[data-view]').count()==6,
+                  'sevenEffectTypes':page.locator('[data-effect]').evaluate_all("els=>new Set(els.map(e=>e.dataset.effect)).size")==7,
+                  'noFallback':not page.locator('#fallback').evaluate("e=>e.classList.contains('show')"),
+                  'glassAnimation':page.locator('.glass').first.evaluate("e=>getComputedStyle(e,'::before').animationName") not in ('','none')
+              })
+              x1=page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--mx')")
+              page.mouse.move(120,100)
+              page.wait_for_timeout(100)
+              x2=page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--mx')")
+              report['checks']['glassPointerLight']=x1!=x2
+
+              page.locator('#pause').evaluate('e=>e.click()')
+              page.wait_for_timeout(200)
+              p1=page.evaluate('window.__OCEAN_QA__')
+              page.wait_for_timeout(350)
+              p2=page.evaluate('window.__OCEAN_QA__')
+              report['checks']['pauseFreezes']=p1['paused'] and abs(p2['time']-p1['time'])<.08
+              page.locator('#pause').evaluate('e=>e.click()')
+              page.wait_for_timeout(550)
+              p3=page.evaluate('window.__OCEAN_QA__')
+              report['checks']['resumeAdvances']=not p3['paused'] and p3['time']>p2['time']+.1
+
+              page.locator('[data-effect="curl"]').first.evaluate('e=>e.click()')
+              page.wait_for_timeout(150)
+              report['checks']['curlToggle']=(page.evaluate('window.__OCEAN_QA__.flags')&4)==0
+              page.locator('[data-view="top"]').evaluate('e=>e.click()')
+              report['checks']['topView']='active' in (page.locator('[data-view="top"]').get_attribute('class') or '')
+              slider=page.locator('[data-param="islandIrregularity"]')
+              old=float(slider.input_value())
+              slider.evaluate("(e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))}",str(old+.25))
+              report['checks']['islandControl']=float(slider.input_value())>old+.2
+              page.locator('#panelClose').evaluate('e=>e.click()')
+              report['checks']['panelClose']=page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
+              page.locator('#panelToggle').evaluate('e=>e.click()')
+              report['checks']['panelOpen']=not page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
+              ctx.close()
+
+              mctx=browser.new_context(viewport={'width':390,'height':720},is_mobile=True,has_touch=True)
+              mobile=mctx.new_page()
+              mobile.on('pageerror',lambda exc:report['errors'].append('mobile: '+str(exc)))
+              response=mobile.goto(url,wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              mobile.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              mobile.wait_for_timeout(1200)
+              mq=mobile.evaluate('window.__OCEAN_QA__')
+              report['mobile']=mq
+              report['checks']['mobileHttp200']=True
+              report['checks']['mobileTimeAdvances']=mq['time']>.4
+              report['checks']['mobilePanelVisible']=mobile.locator('#panel').is_visible()
+              mctx.close()
+              browser.close()
+
+          report['checks']['noPageErrors']=not report['errors']
+          report['failed']=[name for name,value in report['checks'].items() if value is not True]
+          if report['failed']:
+              report['status']='FAIL'
+          Path('evidence/BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          assert not report['failed'],report['failed']
+          PY
+
+      - name: Publish exact verified HTML to gh-pages
+        shell: bash
+        env:
+          GIT_AUTHOR_NAME: Haihao_Nature Grace HK
+          GIT_AUTHOR_EMAIL: haihao0307@gmail.com
+          GIT_COMMITTER_NAME: Haihao_Nature Grace HK
+          GIT_COMMITTER_EMAIL: haihao0307@gmail.com
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/pages
+          git worktree add /tmp/pages origin/gh-pages
+          mkdir -p /tmp/pages/ocean-mother/island-r018-v2
+          cp ocean-mother/island-r018-v2/index.html /tmp/pages/ocean-mother/island-r018-v2/index.html
+          touch /tmp/pages/.nojekyll
+          cd /tmp/pages
+          git add .nojekyll ocean-mother/island-r018-v2/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "feat(ocean): publish R018.2 refined island workbench"
+          for attempt in 1 2 3 4 5; do
+            git push origin HEAD:gh-pages && exit 0
+            git fetch origin gh-pages
+            git rebase origin/gh-pages
+          done
+          exit 1
+
+      - name: Public HTTP byte and runtime verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-v2/index.html'
+          code=000
+          digest=''
+          for i in $(seq 1 90); do
+            code=$(curl -L -sS -o evidence/PUBLIC_INDEX.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${url}?r=${GITHUB_RUN_ID}-${i}" || true)
+            digest=$(sha256sum evidence/PUBLIC_INDEX.html 2>/dev/null | cut -d' ' -f1 || true)
+            echo "attempt=$i http=$code sha=$digest"
+            if [ "$code" = 200 ] && [ "$digest" = "45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba" ]; then break; fi
+            sleep 5
+          done
+          test "$code" = 200
+          test "$digest" = "45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba"
+          PUBLIC_URL="${url}?verified=${GITHUB_RUN_ID}" python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          errors=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+              page=browser.new_page(viewport={'width':760,'height':520})
+              page.on('pageerror',lambda exc:errors.append(str(exc)))
+              response=page.goto(os.environ['PUBLIC_URL'],wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              page.wait_for_timeout(800)
+              qa=page.evaluate('window.__OCEAN_QA__')
+              assert qa['time']>.2 and qa['flags']==127 and not errors,(qa,errors)
+              browser.close()
+          receipt={'status':'ONLINE_HTML_VERIFIED','url':os.environ['PUBLIC_URL'].split('?')[0],'http':200,'sha256':'45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba','singleFile':True,'externalAssets':0,'localBrowserQA':'PASS','publicRuntimeQA':'PASS','visualApproved':False,'productionApproved':False}
+          Path('evidence/ONLINE_VERIFIED.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r018-v2-release-v5-evidence
+          path: |
+            ocean-mother/island-r018-v2/index.html
+            evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
