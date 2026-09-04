@@ -1,0 +1,310 @@
+name: Ocean Mother R018.8 wave refinement and original deep restore
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r0188-wave-deep-restore
+    paths:
+      - .github/workflows/ocean-r0188-wave-deep-restore.yml
+      - tools/build_ocean_r0188.py.xz.b64
+      - tools/ocean_v001_source.*.b64
+      - ocean-mother/AGENTS.md
+      - ocean-mother/OCEAN_OUTPUT_POLICY.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-r0188-wave-deep-restore
+  cancel-in-progress: false
+
+jobs:
+  verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Decode locked builder and frozen V001 source
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0188/v001 dist/ocean-mother/island-r018-r0188 evidence
+          base64 -d tools/build_ocean_r0188.py.xz.b64 | xz -d > /tmp/ocean-r0188/build_ocean_r0188.py
+          python3 -m py_compile /tmp/ocean-r0188/build_ocean_r0188.py
+          cat tools/ocean_v001_source.01.b64 tools/ocean_v001_source.02.b64 tools/ocean_v001_source.03.b64 tools/ocean_v001_source.04.b64 | base64 -d > /tmp/ocean-r0188/ocean_v001_source.tar.xz
+          echo '01b987c9d6764562f6fce9a21ddf5aaef5540cc14e0853031a519e442a8b570c  /tmp/ocean-r0188/ocean_v001_source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/ocean-r0188/ocean_v001_source.tar.xz -C /tmp/ocean-r0188/v001
+
+      - name: Materialize exact R018.7 baseline and build R018.8 single HTML
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git show origin/gh-pages:ocean-mother/island-r018/index.html > /tmp/ocean-r0188/R018.7.html
+          test "$(git hash-object /tmp/ocean-r0188/R018.7.html)" = '674fb6ffb85b70e0950035a357a1a3e0b7e3a3e3'
+          python3 /tmp/ocean-r0188/build_ocean_r0188.py \
+            --baseline /tmp/ocean-r0188/R018.7.html \
+            --v001 /tmp/ocean-r0188/v001 \
+            --output dist/ocean-mother/island-r018-r0188/index.html \
+            --report evidence/R0188_BUILD_IDENTITY.json
+          cp dist/ocean-mother/island-r018-r0188/index.html dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+
+      - name: Verify source locks and zero asset policy
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          page=Path('dist/ocean-mother/island-r018-r0188/index.html')
+          text=page.read_text(encoding='utf-8')
+          identity=json.loads(Path('evidence/R0188_BUILD_IDENTITY.json').read_text(encoding='utf-8'))
+          policy=json.loads(Path('ocean-mother/OCEAN_OUTPUT_POLICY.json').read_text(encoding='utf-8'))
+          assert identity['version']=='0.3.8-island-r018-wave-refinement'
+          assert identity['buildId']=='island-r018-wave-refinement-deep-restore'
+          assert identity['deepRestore']['version']=='0.1.0'
+          assert identity['deepRestore']['source']=='ocean-mother/v001'
+          assert identity['deepRestore']['manifestHashesPreserved'] is True
+          assert len(identity['preservedNearshoreFunctions'])==4
+          assert identity['generatedImagesUsed'] is False
+          assert policy['defaultDeliverable']=='interactive-3d-html-webgl'
+          assert policy['imageGenerationAllowedOnlyWhenExplicitlyRequestedByUser'] is True
+          assert page.stat().st_size>100000,page.stat().st_size
+          assert hashlib.sha256(page.read_bytes()).hexdigest()==identity['outputSha256']
+          required=[
+            'antialiased advected filament field',
+            'three-layer crest lip and falling sheet',
+            'frozen Ocean Mother V001',
+            'Ocean Mother · 原始深海工作台 V001',
+            'window.__OCEAN_DEEP_RESTORED__',
+            'window.__OCEAN_DELIVERY_POLICY__',
+          ]
+          for marker in required: assert marker in text,marker
+          forbidden=re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
+          assert not forbidden,forbidden[:8]
+          assert 'EMBEDDED DEEP FIELD' not in text
+          assert "getContext('2d'" not in text and 'getContext("2d"' not in text
+          assert page.read_bytes()==Path('dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html').read_bytes()
+          PY
+
+      - name: Install Chromium verification dependencies
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          google-chrome --version
+
+      - name: Verify nearshore continuity and exact original deep runtime
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8128 --directory dist > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          python3 - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json
+
+          URL='http://127.0.0.1:8128/ocean-mother/island-r018-r0188/'
+          report={
+            'format':'ocean-r0188-browser-qa',
+            'version':'0.3.8-island-r018-wave-refinement',
+            'buildId':'island-r018-wave-refinement-deep-restore',
+            'cases':{},
+            'passed':False,
+            'visualApproved':False,
+            'productionApproved':False,
+          }
+
+          def run_case(browser,name,width,height):
+            context=browser.new_context(viewport={'width':width,'height':height},device_scale_factor=1)
+            page=context.new_page()
+            errors=[];failed=[]
+            page.on('pageerror',lambda e: errors.append(str(e)))
+            page.on('console',lambda m: errors.append('console: '+m.text) if m.type=='error' else None)
+            page.on('requestfailed',lambda r: failed.append(r.url))
+            page.goto(URL,wait_until='domcontentloaded',timeout=90000)
+            page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=90000)
+            page.wait_for_timeout(2200)
+            island0=page.evaluate("window.__OCEAN_QA__")
+            page.wait_for_timeout(1300)
+            island1=page.evaluate("window.__OCEAN_QA__")
+            assert island1['time']>island0['time']+.35,(island0,island1)
+            assert island1['version']=='0.3.8-island-r018-wave-refinement'
+            assert island1['buildId']=='island-r018-wave-refinement-deep-restore'
+            assert island1['foamModel']=='antialiased advected filament field'
+            assert island1['curlModel']=='three-layer crest lip and falling sheet'
+            assert island1['deepModel']=='frozen Ocean Mother V001'
+            assert island1['zone']=='island'
+            assert island1['canvas'][0]>300 and island1['canvas'][1]>200,island1['canvas']
+            assert page.locator('#error').count()==0 or page.locator('#error').is_hidden()
+
+            deep_button=page.locator('[data-zone="deep"]')
+            assert deep_button.count()==1
+            deep_button.click()
+            page.wait_for_function("document.body.classList.contains('deep-mode') && window.__OCEAN_ZONE__==='deep'",timeout=20000)
+            page.wait_for_function("""() => {
+              const f=document.getElementById('deepFrame');
+              return f && f.contentWindow && f.contentWindow.OceanMother && f.contentWindow.OceanMother.qa;
+            }""",timeout=60000)
+            page.evaluate("""() => {
+              const d=document.getElementById('deepFrame').contentDocument;
+              const q=d && d.getElementById('quality');
+              if(q){q.value='balanced';q.dispatchEvent(new Event('change',{bubbles:true}));}
+            }""")
+            page.wait_for_function("""() => {
+              const f=document.getElementById('deepFrame');
+              return !!(f?.contentWindow?.OceanMother?.qa?.ready);
+            }""",timeout=240000)
+            page.wait_for_timeout(1600)
+            deep0=page.evaluate("""() => {
+              const w=document.getElementById('deepFrame').contentWindow;
+              return {qa:{...w.OceanMother.qa},restore:{...w.__OCEAN_DEEP_RESTORED__}};
+            }""")
+            page.wait_for_timeout(1400)
+            deep1=page.evaluate("""() => {
+              const w=document.getElementById('deepFrame').contentWindow;
+              return {qa:{...w.OceanMother.qa},restore:{...w.__OCEAN_DEEP_RESTORED__}};
+            }""")
+            assert deep1['qa']['version']=='0.1.0',deep1
+            assert deep1['restore']['source']=='frozen-ocean-mother-v001',deep1
+            assert deep1['restore']['imageAssets']==0 and deep1['restore']['externalModels']==0
+            assert deep1['qa']['baselineVerified'] is True
+            assert deep1['qa']['frames']>deep0['qa']['frames'],(deep0,deep1)
+            assert deep1['qa'].get('lastGLerror',0)==0,deep1['qa']
+            assert not deep1['qa']['errors'],deep1['qa']['errors']
+
+            child_panel_before=page.evaluate("document.getElementById('deepFrame').contentDocument.getElementById('panel').classList.contains('closed')")
+            page.locator('#panelToggle').click()
+            page.wait_for_timeout(350)
+            child_panel_after=page.evaluate("document.getElementById('deepFrame').contentDocument.getElementById('panel').classList.contains('closed')")
+            assert child_panel_after!=child_panel_before
+
+            page.locator('#pause').click()
+            page.wait_for_timeout(400)
+            pause_text=page.evaluate("document.getElementById('deepFrame').contentDocument.getElementById('pause').textContent")
+            assert '继续' in pause_text,pause_text
+            wave0=page.evaluate("document.getElementById('deepFrame').contentWindow.OceanMother.qa.waveTime")
+            page.wait_for_timeout(1000)
+            wave1=page.evaluate("document.getElementById('deepFrame').contentWindow.OceanMother.qa.waveTime")
+            assert abs(wave1-wave0)<.02,(wave0,wave1)
+            page.locator('#pause').click()
+            page.wait_for_timeout(1200)
+            wave2=page.evaluate("document.getElementById('deepFrame').contentWindow.OceanMother.qa.waveTime")
+            assert wave2>wave1+.15,(wave1,wave2)
+            page.locator('#resetCamera').click()
+            page.wait_for_timeout(250)
+
+            page.locator('[data-zone="island"]').click()
+            page.wait_for_function("window.__OCEAN_ZONE__==='island' && !document.body.classList.contains('deep-mode')",timeout=20000)
+            back0=page.evaluate("window.__OCEAN_QA__.time")
+            page.wait_for_timeout(1100)
+            back1=page.evaluate("window.__OCEAN_QA__.time")
+            assert back1>back0+.25,(back0,back1)
+
+            fatal=[e for e in errors if 'favicon' not in e.lower() and 'resizeobserver' not in e.lower()]
+            external_failed=[u for u in failed if u.startswith(('http://','https://')) and '127.0.0.1' not in u]
+            assert not fatal,fatal
+            assert not external_failed,external_failed
+            state={
+              'viewport':[width,height],
+              'islandStart':island0,
+              'islandAdvanced':island1,
+              'deepStart':deep0,
+              'deepAdvanced':deep1,
+              'pauseText':pause_text,
+              'islandResumed':[back0,back1],
+              'errors':errors,
+              'requestFailures':failed,
+            }
+            report['cases'][name]=state
+            context.close()
+
+          with sync_playwright() as p:
+            browser=p.chromium.launch(
+              executable_path='/usr/bin/google-chrome',
+              headless=True,
+              args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--disable-dev-shm-usage']
+            )
+            run_case(browser,'desktop',1440,1000)
+            run_case(browser,'mobile',390,844)
+            browser.close()
+          report['passed']=True
+          Path('evidence/R0188_BROWSER_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Publish isolated R018.8 candidate to gh-pages
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r0188-pages
+          git worktree add --detach /tmp/ocean-r0188-pages origin/gh-pages
+          cd /tmp/ocean-r0188-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/island-r018-r0188
+          mkdir -p ocean-mother/island-r018-r0188
+          cp -R "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0188/." ocean-mother/island-r018-r0188/
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BUILD_IDENTITY.json" ocean-mother/island-r018-r0188/R0188_BUILD_IDENTITY.json
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BROWSER_QA.json" ocean-mother/island-r018-r0188/R0188_BROWSER_QA.json
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/island-r018-r0188
+          git commit -m "publish(ocean): R018.8 wave refinement and original deep restore" || true
+          git push origin HEAD:gh-pages
+
+      - name: Verify public candidate and byte identity
+        run: |
+          set -euo pipefail
+          BASE='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0188'
+          matched=0
+          for n in $(seq 1 50); do
+            if curl -fsSL "$BASE/index.html?build=${GITHUB_SHA}-${n}" -o /tmp/ocean-r0188-public.html; then
+              if cmp -s dist/ocean-mother/island-r018-r0188/index.html /tmp/ocean-r0188-public.html; then matched=1; break; fi
+            fi
+            sleep 7
+          done
+          test "$matched" = 1
+          cmp dist/ocean-mother/island-r018-r0188/index.html /tmp/ocean-r0188-public.html
+          python3 - <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import hashlib,json
+          url='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0188/'
+          result={'url':url,'passed':False,'visualApproved':False,'productionApproved':False}
+          with sync_playwright() as p:
+            browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--disable-dev-shm-usage'])
+            page=browser.new_page(viewport={'width':1280,'height':860})
+            errors=[]
+            page.on('pageerror',lambda e: errors.append(str(e)))
+            page.goto(url,wait_until='domcontentloaded',timeout=90000)
+            page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=90000)
+            page.locator('[data-zone="deep"]').click()
+            page.wait_for_function("document.body.classList.contains('deep-mode') && document.getElementById('deepFrame').contentWindow.__OCEAN_DEEP_RESTORED__",timeout=90000)
+            restore=page.evaluate("document.getElementById('deepFrame').contentWindow.__OCEAN_DEEP_RESTORED__")
+            assert restore['source']=='frozen-ocean-mother-v001',restore
+            assert not errors,errors
+            result.update({'passed':True,'title':page.title(),'deepRestore':restore,'errors':errors})
+            browser.close()
+          local=Path('dist/ocean-mother/island-r018-r0188/index.html').read_bytes()
+          public=Path('/tmp/ocean-r0188-public.html').read_bytes()
+          result['bytesEqual']=local==public
+          result['sha256']=hashlib.sha256(local).hexdigest()
+          Path('evidence/R0188_PUBLIC_RECEIPT.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload direct-open HTML and machine receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.8_Wave_Deep_Restore
+          path: |
+            dist/ocean-mother/island-r018-r0188/index.html
+            dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+            evidence/R0188_BUILD_IDENTITY.json
+            evidence/R0188_BROWSER_QA.json
+            evidence/R0188_PUBLIC_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 90
