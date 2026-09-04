@@ -1,0 +1,105 @@
+name: Weather Mother V1.7.1 direct Rain public QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'weather-mother/index.html'
+      - 'weather-mother/rain/index.html'
+      - 'weather-mother/studio-v071/**'
+      - '.github/workflows/weather-mother-v171-direct-rain-public-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install browser tools
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify one-click Rain route on public Weather Mother
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          cat > /tmp/qa.py <<'PY'
+          import json,os,time,urllib.request
+          from playwright.sync_api import sync_playwright
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          sha=os.environ['SOURCE_SHA']
+          def read(path):
+              sep='&' if '?' in path else '?'
+              req=urllib.request.Request(base+path+sep+'qa='+sha+'&t='+str(time.time_ns()),headers={'Cache-Control':'no-cache','Pragma':'no-cache'})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  assert r.status==200,(path,r.status)
+                  return r.read()
+          ready=False;last=''
+          for _ in range(48):
+              try:
+                  root=read('')
+                  loader=read('studio-v071/index.html')
+                  manifest=json.loads(read('studio-v071/MANIFEST.json'))
+                  payload=read('studio-v071/payload-00.txt')
+                  shortcut=read('rain/index.html')
+                  ready=(b'studio-v071' in root and b'for(const c of m.chunks)' in loader and manifest.get('version')=='0.7.1-direct-rain' and len(payload)==4608 and b'../?module=rain' in shortcut)
+                  if ready: break
+                  last=str((len(root),len(loader),manifest.get('version'),len(payload),len(shortcut)))
+              except Exception as e: last=repr(e)
+              time.sleep(5)
+          assert ready,'public resources did not converge: '+last
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':720,'height':480})
+              errors=[];failed=[]
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
+              page.on('requestfailed',lambda r:failed.append(r.url))
+              page.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+              page.goto(base+'?qa='+sha+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=50000)
+              page.wait_for_url('**/studio-v071/**',timeout=30000)
+              page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.1-direct-rain'",timeout=60000)
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=90000)
+              state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+              assert state=={'module':'world','menuOpen':False,'directRain':True}
+              assert page.locator('[data-module]').count()==6
+              assert page.locator('#rainPage').count()==0 and page.locator('#liquidPage').count()==0 and page.locator('[data-child]').count()==0
+              page.locator('#launcher').click()
+              page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().menuOpen')
+              page.locator('[data-module="rain"]').click()
+              page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().menuOpen",timeout=30000)
+              page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+              rain=page.evaluate("document.querySelector('#stage').contentWindow.WeatherLiquid.getState()")
+              assert rain['frames']>0
+              assert not errors and not failed,(errors,failed)
+              direct=browser.new_page(viewport={'width':720,'height':480})
+              derr=[];dfail=[]
+              direct.on('pageerror',lambda e:derr.append(str(e)))
+              direct.on('console',lambda m:derr.append(m.text) if m.type=='error' else None)
+              direct.on('requestfailed',lambda r:dfail.append(r.url))
+              direct.goto(base+'?module=rain&qa='+sha+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=50000)
+              direct.wait_for_url('**/studio-v071/**',timeout=30000)
+              direct.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.getState?.().module==='rain'",timeout=60000)
+              direct.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+              assert not derr and not dfail,(derr,dfail)
+              mobile=browser.new_page(viewport={'width':390,'height':844})
+              merr=[];mfail=[]
+              mobile.on('pageerror',lambda e:merr.append(str(e)))
+              mobile.on('console',lambda m:merr.append(m.text) if m.type=='error' else None)
+              mobile.on('requestfailed',lambda r:mfail.append(r.url))
+              mobile.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+              mobile.goto(base+'?mobile='+sha+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=50000)
+              mobile.wait_for_url('**/studio-v071/**',timeout=30000)
+              mobile.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.getState?.().module==='world'",timeout=60000)
+              box=mobile.locator('#launcher').bounding_box()
+              assert round(box['width'])==44 and round(box['height'])==44
+              mobile.locator('#launcher').click();mobile.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().menuOpen')
+              mobile.locator('[data-module="rain"]').click()
+              mobile.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().menuOpen",timeout=30000)
+              mobile.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+              assert mobile.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+              assert not merr and not mfail,(merr,mfail)
+              browser.close()
+          print('Weather Mother V1.7.1 direct Rain public QA passed')
+          PY
+          xvfb-run -a python3 -u /tmp/qa.py
