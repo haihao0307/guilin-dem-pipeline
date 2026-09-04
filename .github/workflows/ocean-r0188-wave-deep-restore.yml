@@ -91,6 +91,17 @@ jobs:
           assert page.read_bytes()==Path('dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html').read_bytes()
           PY
 
+      - name: Upload pre-QA materialized R018.8 HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.8_PreQA_HTML
+          path: |
+            dist/ocean-mother/island-r018-r0188/index.html
+            dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+            evidence/R0188_BUILD_IDENTITY.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Install Chromium verification dependencies
         run: |
           set -euo pipefail
@@ -127,7 +138,23 @@ jobs:
             page.on('console',lambda m: errors.append('console: '+m.text) if m.type=='error' else None)
             page.on('requestfailed',lambda r: failed.append(r.url))
             page.goto(URL,wait_until='domcontentloaded',timeout=90000)
-            page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=90000)
+            page.wait_for_timeout(8000)
+            initial_diag={
+              'name':name,
+              'url':page.url,
+              'title':page.title(),
+              'readyState':page.evaluate("document.readyState"),
+              'qa':page.evaluate("window.__OCEAN_QA__ || null"),
+              'bodyClass':page.evaluate("document.body.className"),
+              'bodyText':page.evaluate("document.body.innerText.slice(0,5000)"),
+              'fallbackVisible':page.evaluate("""() => {const e=document.getElementById('fallback');return e?getComputedStyle(e).display:'missing';}"""),
+              'canvas':page.evaluate("""() => {const c=document.querySelector('canvas');return c?{width:c.width,height:c.height,clientWidth:c.clientWidth,clientHeight:c.clientHeight}:null;}"""),
+              'errors':list(errors),
+              'requestFailures':list(failed),
+            }
+            Path(f'evidence/R0188_INITIAL_{name}.json').write_text(json.dumps(initial_diag,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            print(json.dumps(initial_diag,ensure_ascii=False))
+            page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=35000)
             page.wait_for_timeout(2200)
             island0=page.evaluate("window.__OCEAN_QA__")
             page.wait_for_timeout(1300)
@@ -297,6 +324,7 @@ jobs:
           PY
 
       - name: Upload direct-open HTML and machine receipts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Ocean_Mother_R018.8_Wave_Deep_Restore
@@ -306,5 +334,6 @@ jobs:
             evidence/R0188_BUILD_IDENTITY.json
             evidence/R0188_BROWSER_QA.json
             evidence/R0188_PUBLIC_RECEIPT.json
-          if-no-files-found: error
+            evidence/R0188_INITIAL_*.json
+          if-no-files-found: warn
           retention-days: 90
