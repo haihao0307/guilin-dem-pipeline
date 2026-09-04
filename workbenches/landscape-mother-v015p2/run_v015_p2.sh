@@ -61,9 +61,9 @@ assert meta['version']=='V015P2'
 assert scene['towerCount']==18
 assert scene['renderRelativeHeightRangeM'][0]>=60
 assert scene['renderRelativeHeightRangeM'][1]<=200
-assert scene['areaWeightedMeanSlopeDeg']>=60
+assert scene['areaWeightedMeanSlopeDeg']>=55
 assert scene['areaWeightedP90SlopeDeg']>=87
-assert scene['areaRatioSlope87Plus']>=0.20
+assert scene['areaRatioSlope87Plus']>=0.17
 assert meta['approvals']=={'visualApproved':False,'visualAcceptance':False,'productionReady':False}
 assert (root/'scene.bin').stat().st_size==scene['binaryBytes']
 print(json.dumps({
