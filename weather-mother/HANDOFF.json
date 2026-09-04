@@ -1,68 +1,46 @@
 {
   "productionLine": "Weather Mother",
-  "packageVersion": "1.5.0-master-shell",
+  "packageVersion": "1.6.0-canonical-restore",
   "date": "2026-09-04",
   "canonicalOnlineEntry": "https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/",
-  "defaultModule": "home",
+  "defaultModule": "world",
   "currentStudio": {
-    "version": "0.6.4-master-shell",
-    "directory": "weather-mother/index.html"
+    "version": "0.6.2-canonical-restore",
+    "directory": "web/weather-mother/studio-v060"
   },
   "currentWorld": {
     "version": "1.1.0-world",
-    "directory": "weather-mother/v110-full"
+    "directory": "web/weather-mother/v110-full",
+    "preservedByteForByteFromV120Handoff": true
   },
   "currentRain": {
-    "version": "1.2.0-wet-glass-liquid",
-    "moduleRoute": "?module=rain",
-    "directResearchEntry": "weather-mother/direct-rain-v120.html",
-    "glassPavilion": true,
-    "wetGlassRefraction": true
+    "version": "1.2.0-liquid-wet-glass-optics-candidate",
+    "directory": "web/weather-mother/liquid-rain-v120",
+    "role": "Rain child module under Weather Mother"
   },
-  "modules": [
-    {
-      "id": "home",
-      "role": "Weather Mother root",
-      "status": "implemented"
-    },
-    {
-      "id": "world",
-      "role": "shared atmospheric forcing",
-      "status": "implemented candidate"
-    },
-    {
-      "id": "rain",
-      "role": "liquid precipitation",
-      "status": "implemented V1.2"
-    },
-    {
-      "id": "fog",
-      "role": "visibility and ground fog",
-      "status": "implemented candidate"
-    },
-    {
-      "id": "snow",
-      "role": "solid precipitation and accumulation",
-      "status": "implemented candidate"
-    },
-    {
-      "id": "cloud",
-      "role": "meter-based cloud vertical bounds",
-      "status": "implemented candidate"
-    },
-    {
-      "id": "storm",
-      "role": "convective forcing and lightning",
-      "status": "implemented candidate"
-    }
+  "moduleRoutes": {
+    "world": "v110-full default workbench",
+    "rain": "liquid-rain-v120",
+    "fog": "v110-full weather=fogbank",
+    "snow": "v110-full weather=snow",
+    "cloud": "v110-full weather=fair",
+    "storm": "v110-full weather=nightstorm"
+  },
+  "scopeOfThisRelease": [
+    "restore Weather Mother root and original cloud runtime",
+    "keep the persistent Weather Mother side drawer",
+    "attach Liquid Rain V1.2 as the Rain child module",
+    "restore Fog, Snow, Cloud and Storm to existing v110-full cases",
+    "remove the rejected V1.5 replacement runtime and its ideas"
   ],
-  "navigationContract": {
-    "rootAlwaysWeatherMother": true,
-    "persistentSideNavigation": true,
-    "noIframe": true,
-    "childModulesNeverReplaceRoot": true,
-    "queryRouting": "?module=<id>"
-  },
+  "explicitlyNotDone": [
+    "no new cloud renderer",
+    "no new fog renderer",
+    "no new snow renderer",
+    "no new storm renderer",
+    "no replacement home animation",
+    "no redesign of the accepted v110-full cloud system"
+  ],
   "validationEntrypoints": [
     "https://guilin-dem-terrain.sunhaihao.chatgpt.site",
     "https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof"
