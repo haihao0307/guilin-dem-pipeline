@@ -1,0 +1,33 @@
+name: Landscape Mother V014 Source Extract
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/landscape-mother-field-graph-v002
+    paths:
+      - ".github/workflows/landscape-mother-v014-source-extract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v014-source"
+          cat workbenches/landscape-mother-v014/payload/source.*.b64 | base64 -d > "$RUNNER_TEMP/source.tar.gz"
+          echo "efeec1f7ff2ece2fbabffa016e6849e9a145d6e3787c343a1ac044999ca95a74  $RUNNER_TEMP/source.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/source.tar.gz" -C "$RUNNER_TEMP/v014-source"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_V014_Internal_Source
+          path: ${{ runner.temp }}/v014-source
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
