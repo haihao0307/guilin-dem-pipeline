@@ -1,11 +1,9 @@
-# Weather Mother Full Clean Handoff V1.6.0
+# Weather Mother
 
-本包从 Weather Mother V1.2.0 的已确认基础重新恢复。
+公开入口只有 `https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/`。
 
-打开 Weather Mother 后，默认进入原来的 World 与原云系统。左侧 Weather Mother 抽屉负责进入 Rain、Snow、Fog、Cloud 和 Storm。Rain 使用 Liquid V1.2，保留村院、砖瓦受湿、檐口排水、积水、水花、玻璃亭与湿玻璃折射。
+默认进入 World，并运行受保护的 `v110-full` 原云与天气系统。界面关闭时只保留一个 WM 按钮；点击后显示 Liquid Glass 分层菜单。菜单路径为 Weather Mother → Rain → Liquid Rain → 参数分组。
 
-Fog、Snow、Cloud 和 Storm 继续使用原 `v110-full` Weather Mother 内已有的天气案例。本轮没有制作任何新的云、雾、雪或风暴渲染器。
+Rain 当前运行 `liquid-rain-v130`。Fog、Snow、Cloud、Storm 继续使用 `v110-full` 已有天气案例。
 
-错误替代母板、简化天气动画、对应载荷和相关 QA 已从当前包、当前路由和当前文档中清除。它们只留在 Git 历史中。
-
-当前质量状态：`visualApproved=false`，`aaaQualityApproved=false`，`productionReady=false`。
+常规交付只向用户发送一个已完成公网与浏览器验证的直接网址。只有用户明确索要时才发送包、附件、截图、哈希或 QA 资料。
