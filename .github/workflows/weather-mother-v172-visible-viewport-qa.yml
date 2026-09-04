@@ -1,0 +1,72 @@
+name: Weather Mother V1.7.2 visible viewport QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/weather-mother-v172-visible-viewport-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  viewport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - run: |
+          cat > /tmp/qa.py <<'PY'
+          import time,urllib.request
+          from playwright.sync_api import sync_playwright
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio-v072/'
+          ready=False
+          for _ in range(48):
+              try:
+                  req=urllib.request.Request(base+'index.html?t='+str(time.time_ns()),headers={'Cache-Control':'no-cache','Pragma':'no-cache'})
+                  with urllib.request.urlopen(req,timeout=25) as r: data=r.read()
+                  ready=b'--viewport-gap' in data and b'wm-fixed-viewport-probe' in data and b'v=0722' in data
+                  if ready: break
+              except Exception: pass
+              time.sleep(5)
+          assert ready,'patched loader did not propagate'
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              for name,w,h,ori in [('portrait',430,932,'portrait'),('landscape',932,430,'landscape')]:
+                  ctx=browser.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=ctx.new_page();errors=[];failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+                  page.goto(base+'?module=world&case='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.2-iphone-max-adaptive'",timeout=60000)
+                  vars=page.evaluate("""()=>({app:getComputedStyle(document.documentElement).getPropertyValue('--app-h').trim(),gap:getComputedStyle(document.documentElement).getPropertyValue('--viewport-gap').trim(),inner:innerHeight,visual:visualViewport?.height,screen:screen.height})""")
+                  launcher=page.locator('#launcher').bounding_box()
+                  print(name,'closed',launcher,vars)
+                  assert vars['app']==str(h)+'px' and vars['gap']!=''
+                  assert launcher['x']>=0 and launcher['y']>=0 and launcher['x']+launcher['width']<=w+1 and launcher['y']+launcher['height']<=h+1
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(650)
+                  sheet=page.locator('#sheet').bounding_box();print(name,'sheet',sheet)
+                  assert sheet['x']>=0 and sheet['y']>=0 and sheet['x']+sheet['width']<=w+1 and sheet['y']+sheet['height']<=h+1
+                  if ori=='portrait': assert sheet['width']>=w-20 and sheet['height']<h*.55
+                  else: assert sheet['width']<=391 and sheet['height']>=h-20
+                  page.locator('[data-module="rain"]').click()
+                  page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().sheetOpen",timeout=30000)
+                  page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+                  page.locator('#launcher').click();page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000);page.wait_for_timeout(650)
+                  page.locator('[data-rain-section="glass"]').click()
+                  page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000);page.wait_for_timeout(500)
+                  panel=page.evaluate("""()=>{const f=document.querySelector('#stage'),d=f.contentDocument,p=d.querySelector('#panel'),b=p.getBoundingClientRect();return{x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom,gap:getComputedStyle(d.documentElement).getPropertyValue('--wm-viewport-gap').trim()}}""")
+                  print(name,'panel',panel)
+                  assert panel['gap']!=''
+                  assert panel['x']>=0 and panel['y']>=0 and panel['right']<=w+1 and panel['bottom']<=h+1
+                  if ori=='portrait': assert panel['width']>=w-24 and panel['height']<=h*.62
+                  else: assert panel['width']<=391 and panel['x']>w*.5
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  assert not errors and not failed,(name,errors,failed)
+                  ctx.close()
+              browser.close()
+          print('visible viewport QA passed')
+          PY
+          xvfb-run -a python3 -u /tmp/qa.py
