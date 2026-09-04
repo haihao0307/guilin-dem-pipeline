@@ -1,0 +1,64 @@
+name: Ocean R018 public URL probe
+
+"on":
+  push:
+    branches:
+      - feature/ocean-mother-r018
+    paths:
+      - .github/workflows/ocean-r018-public-url-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Wait for the public directory and verify every runtime dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018"
+          code="000"
+          for i in $(seq 1 90); do
+            code=$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "$base/index.html?cb=${GITHUB_RUN_ID}-${i}" || true)
+            if [ "$code" = "200" ] && grep -qi 'Ocean' /tmp/index.html && grep -q 'app.mjs' /tmp/index.html; then
+              echo "index ready on attempt $i"
+              break
+            fi
+            echo "attempt $i returned $code"
+            sleep 5
+          done
+          test "$code" = "200"
+          grep -qi 'Ocean' /tmp/index.html
+          grep -q 'app.mjs' /tmp/index.html
+
+          directory_code=$(curl -L -sS -o /tmp/directory.html -w '%{http_code}' "$base/?cb=${GITHUB_RUN_ID}")
+          test "$directory_code" = "200"
+          cmp /tmp/index.html /tmp/directory.html || grep -qi 'Ocean' /tmp/directory.html
+
+          for path in coast.css app.mjs params.mjs shaders.mjs geometry.mjs core.mjs BUILD.json PARAMETER_CATALOG.json; do
+            output="/tmp/${path//\//_}"
+            asset_code=$(curl -L -sS -o "$output" -w '%{http_code}' "$base/$path?cb=${GITHUB_RUN_ID}")
+            echo "$path $asset_code $(wc -c < "$output") bytes"
+            test "$asset_code" = "200"
+            test -s "$output"
+          done
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          build=json.loads(Path('/tmp/BUILD.json').read_text(encoding='utf-8'))
+          assert build['version']=='0.3.0-island-r018', build
+          assert build['buildId']=='island-r018-bootstrap', build
+          assert build['runtimeImageAssets']==0, build
+          assert build['externalModels']==0, build
+          assert build['externalCdn']==0, build
+          catalog=json.loads(Path('/tmp/PARAMETER_CATALOG.json').read_text(encoding='utf-8'))
+          assert catalog['count']>0, catalog
+          print({'publicDirectory': 'HTTP 200', 'version': build['version'], 'buildId': build['buildId'], 'parameterCount': catalog['count']})
+          PY
+
+          sha256sum /tmp/index.html /tmp/coast.css /tmp/app.mjs /tmp/params.mjs /tmp/shaders.mjs /tmp/geometry.mjs /tmp/core.mjs /tmp/BUILD.json /tmp/PARAMETER_CATALOG.json
