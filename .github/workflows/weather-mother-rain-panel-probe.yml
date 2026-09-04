@@ -16,10 +16,10 @@ jobs:
           python3 -m pip install playwright==1.51.0
           python3 -m playwright install --with-deps chromium
       - run: |
-          cat > /tmp/wm_panel_probe.py <<'PY'
+          cat > /tmp/wm_panel_probe2.py <<'PY'
           import json
           from playwright.sync_api import sync_playwright
-          URL='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/?module=rain&panelprobe=1'
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/?module=rain&panelprobe=2'
           with sync_playwright() as p:
             b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
             out={}
@@ -27,10 +27,10 @@ jobs:
               page=b.new_page(viewport={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
               page.goto(URL+'&case='+name,wait_until='domcontentloaded',timeout=60000)
               page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
-              data=page.evaluate("""async()=>{const f=document.querySelector('#stage'),w=f.contentWindow,d=f.contentDocument,p=d.querySelector('#panel');const before={panelClass:p.className,bodyClass:d.body.className,box:p.getBoundingClientRect().toJSON(),display:getComputedStyle(p).display,transform:getComputedStyle(p).transform};w.WeatherLiquidUI.openSection('glass');await new Promise(r=>setTimeout(r,500));const after={panelClass:p.className,bodyClass:d.body.className,box:p.getBoundingClientRect().toJSON(),display:getComputedStyle(p).display,transform:getComputedStyle(p).transform,position:getComputedStyle(p).position,overflow:getComputedStyle(p).overflowY,section:w.WeatherLiquidUI.getSection(),isOpen:w.WeatherLiquidUI.isOpen()};return{before,after}}""")
+              data=page.evaluate("""async()=>{const f=document.querySelector('#stage'),w=f.contentWindow,d=f.contentDocument,p=d.querySelector('#panel'),ui=w.WeatherLiquidUI;ui.openSection('glass');ui.open();await new Promise(r=>setTimeout(r,500));return{panelClass:p.className,bodyClass:d.body.className,box:p.getBoundingClientRect().toJSON(),display:getComputedStyle(p).display,transform:getComputedStyle(p).transform,position:getComputedStyle(p).position,overflow:getComputedStyle(p).overflowY,section:ui.getSection(),isOpen:ui.isOpen()}}""")
               out[name]=data
               page.close()
             print(json.dumps(out,ensure_ascii=False,indent=2))
             b.close()
           PY
-          xvfb-run -a python3 -u /tmp/wm_panel_probe.py
+          xvfb-run -a python3 -u /tmp/wm_panel_probe2.py
