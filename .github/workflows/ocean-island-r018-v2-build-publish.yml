@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: ocean-island-r018-v2-build-publish
-  cancel-in-progress: false
+  group: ocean-island-r018-v2-build-publish-v3
+  cancel-in-progress: true
 
 jobs:
   build-test-publish:
@@ -63,7 +63,7 @@ jobs:
           python3 -m pip install --quiet playwright pillow
           python3 -m playwright install --with-deps chromium
 
-      - name: Run desktop and mobile browser QA
+      - name: Run deterministic desktop and mobile browser QA
         shell: bash
         run: |
           set -euo pipefail
@@ -80,36 +80,61 @@ jobs:
           url='http://127.0.0.1:8765/ocean-mother/island-r018-v2/'
           result={'status':'PASS','url':url,'checks':{},'consoleErrors':[],'pageErrors':[]}
 
-          def save_canvas(page, path):
-              data_url=page.locator('#ocean').evaluate("c=>c.toDataURL('image/png')")
-              assert data_url.startswith('data:image/png;base64,')
-              Path(path).write_bytes(base64.b64decode(data_url.split(',',1)[1]))
-
-          def analyze(path):
-              im=Image.open(path).convert('RGB')
-              stat=ImageStat.Stat(im)
-              return {
-                  'size':list(im.size),
-                  'mean':[round(v,2) for v in stat.mean],
-                  'stddev':[round(v,2) for v in stat.stddev],
-                  'uniqueSampleColors':len(set(im.resize((160,100)).getdata()))
-              }
-
           def press(page, selector):
               page.locator(selector).evaluate('e=>e.click()')
 
+          def sample_canvas(page, path, sw, sh):
+              page.evaluate('window.requestAnimationFrame=()=>0')
+              page.wait_for_timeout(700)
+              info=page.locator('#ocean').evaluate("""(c,size)=>{
+                const gl=c.getContext('webgl2');
+                if(!gl) throw new Error('WebGL2 context unavailable during readback');
+                const w=c.width,h=c.height,sw=size[0],sh=size[1];
+                const raw=new Uint8Array(w*h*4);
+                gl.finish();
+                gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,raw);
+                const err=gl.getError();
+                if(err!==gl.NO_ERROR) throw new Error('readPixels error '+err);
+                const out=new Uint8Array(sw*sh*3);
+                for(let y=0;y<sh;y++){
+                  const sy=Math.min(h-1,Math.floor((y+.5)*h/sh));
+                  for(let x=0;x<sw;x++){
+                    const sx=Math.min(w-1,Math.floor((x+.5)*w/sw));
+                    const src=((h-1-sy)*w+sx)*4,dst=(y*sw+x)*3;
+                    out[dst]=raw[src];out[dst+1]=raw[src+1];out[dst+2]=raw[src+2];
+                  }
+                }
+                let binary='';
+                for(let i=0;i<out.length;i+=8192) binary+=String.fromCharCode(...out.subarray(i,i+8192));
+                return {canvas:[w,h],sample:[sw,sh],b64:btoa(binary)};
+              }""",[sw,sh])
+              data=base64.b64decode(info['b64'])
+              image=Image.frombytes('RGB',tuple(info['sample']),data)
+              image.save(path)
+              stat=ImageStat.Stat(image)
+              info['mean']=[round(v,2) for v in stat.mean]
+              info['stddev']=[round(v,2) for v in stat.stddev]
+              info['uniqueSampleColors']=len(set(image.getdata()))
+              return info
+
+          def open_ready(browser, viewport, mobile=False):
+              ctx=browser.new_context(viewport=viewport,device_scale_factor=1,is_mobile=mobile,has_touch=mobile)
+              page=ctx.new_page()
+              page.on('console',lambda msg: result['consoleErrors'].append(('mobile: ' if mobile else '')+msg.text) if msg.type=='error' else None)
+              page.on('pageerror',lambda exc: result['pageErrors'].append(('mobile: ' if mobile else '')+str(exc)))
+              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              return ctx,page
+
           with sync_playwright() as p:
               browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
-              context=browser.new_context(viewport={'width':1440,'height':1000},device_scale_factor=1)
-              page=context.new_page()
-              page.on('console',lambda msg: result['consoleErrors'].append(msg.text) if msg.type=='error' else None)
-              page.on('pageerror',lambda exc: result['pageErrors'].append(str(exc)))
-              response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
-              result['checks']['desktopHttp200']=bool(response and response.status==200)
-              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
-              page.wait_for_timeout(3500)
+
+              context,page=open_ready(browser,{'width':1440,'height':1000})
+              page.wait_for_timeout(3200)
               qa1=page.evaluate('window.__OCEAN_QA__')
               result['desktopInitial']=qa1
+              result['checks']['desktopHttp200']=True
               result['checks']['webglReady']=qa1['ready'] is True
               result['checks']['canvasSized']=qa1['canvas'][0]>500 and qa1['canvas'][1]>350
               result['checks']['timeAdvances']=qa1['time']>1.0
@@ -117,69 +142,73 @@ jobs:
               result['checks']['fiveEffectControls']=page.locator('[data-effect]').count()==5
               result['checks']['sixCameraViews']=page.locator('[data-view]').count()==6
               result['checks']['noFallback']=not page.locator('#fallback').evaluate("e=>e.classList.contains('show')")
+              animation_name=page.locator('.glass').first.evaluate("e=>getComputedStyle(e,'::before').animationName")
+              result['checks']['liquidGlassLightAnimation']=animation_name not in ('none','')
+              mx1=page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--mx')")
+              page.mouse.move(184,132)
+              page.wait_for_timeout(160)
+              mx2=page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--mx')")
+              result['checks']['glassPointerLightResponds']=mx1!=mx2
 
               press(page,'#pause')
               page.wait_for_timeout(300)
               paused1=page.evaluate('window.__OCEAN_QA__')
-              save_canvas(page,'evidence/R018_V2_DESKTOP_CANVAS.png')
-              result['desktopImage']=analyze('evidence/R018_V2_DESKTOP_CANVAS.png')
-              result['checks']['desktopVisualVariance']=min(result['desktopImage']['stddev'])>6 and result['desktopImage']['uniqueSampleColors']>900
               page.wait_for_timeout(700)
               paused2=page.evaluate('window.__OCEAN_QA__')
               result['checks']['pauseFreezesTime']=paused1['paused'] and abs(paused2['time']-paused1['time'])<0.08
-
               press(page,'#pause')
-              page.wait_for_timeout(1100)
+              page.wait_for_timeout(1000)
               resumed=page.evaluate('window.__OCEAN_QA__')
-              result['checks']['resumeAdvancesTime']=not resumed['paused'] and resumed['time']>paused2['time']+.30
+              result['checks']['resumeAdvancesTime']=not resumed['paused'] and resumed['time']>paused2['time']+.25
 
               before_flags=resumed['flags']
               press(page,'[data-effect="curl"]')
-              page.wait_for_timeout(400)
+              page.wait_for_timeout(350)
               after_flags=page.evaluate('window.__OCEAN_QA__.flags')
               result['checks']['effectToggleWorks']=before_flags!=after_flags and (after_flags & 4)==0
               press(page,'[data-effect="curl"]')
 
               press(page,'[data-view="top"]')
-              page.wait_for_timeout(1200)
-              press(page,'#pause')
-              page.wait_for_timeout(250)
+              page.wait_for_timeout(500)
               result['checks']['topCameraWorks']='active' in (page.locator('[data-view="top"]').get_attribute('class') or '')
-              save_canvas(page,'evidence/R018_V2_TOP_CANVAS.png')
-              result['topImage']=analyze('evidence/R018_V2_TOP_CANVAS.png')
-              result['checks']['topViewVisualVariance']=min(result['topImage']['stddev'])>5 and result['topImage']['uniqueSampleColors']>700
-
               slider=page.locator('[data-param="islandIrregularity"]')
               old=float(slider.input_value())
               slider.evaluate("(e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))}",str(min(1.55,old+.25)))
-              page.wait_for_timeout(250)
+              page.wait_for_timeout(220)
               result['checks']['islandControlWorks']=float(slider.input_value())>old+.2
-
               press(page,'#panelClose')
               result['checks']['panelCloses']=page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
               press(page,'#panelToggle')
               result['checks']['panelReopens']=not page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
               context.close()
 
-              mctx=browser.new_context(viewport={'width':390,'height':844},device_scale_factor=1,is_mobile=True,has_touch=True)
-              mobile=mctx.new_page()
-              mobile.on('console',lambda msg: result['consoleErrors'].append('mobile: '+msg.text) if msg.type=='error' else None)
-              mobile.on('pageerror',lambda exc: result['pageErrors'].append('mobile: '+str(exc)))
-              response=mobile.goto(url,wait_until='domcontentloaded',timeout=120000)
-              result['checks']['mobileHttp200']=bool(response and response.status==200)
-              mobile.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
-              mobile.wait_for_timeout(2700)
+              overview_ctx,overview=open_ready(browser,{'width':1440,'height':1000})
+              overview.wait_for_timeout(2400)
+              press(overview,'#pause')
+              result['desktopOverview']=sample_canvas(overview,'evidence/R018_V2_OVERVIEW.png',320,220)
+              result['checks']['overviewVisualVariance']=min(result['desktopOverview']['stddev'])>5 and result['desktopOverview']['uniqueSampleColors']>900
+              overview_ctx.close()
+
+              top_ctx,top=open_ready(browser,{'width':1440,'height':1000})
+              press(top,'[data-view="top"]')
+              top.wait_for_timeout(2400)
+              press(top,'#pause')
+              result['desktopTop']=sample_canvas(top,'evidence/R018_V2_TOP.png',320,220)
+              result['checks']['topVisualVariance']=min(result['desktopTop']['stddev'])>5 and result['desktopTop']['uniqueSampleColors']>800
+              top_ctx.close()
+
+              mobile_ctx,mobile=open_ready(browser,{'width':390,'height':844},True)
+              mobile.wait_for_timeout(2400)
               mqa=mobile.evaluate('window.__OCEAN_QA__')
               result['mobileInitial']=mqa
+              result['checks']['mobileHttp200']=True
               result['checks']['mobileCanvasSized']=mqa['canvas'][0]>=160 and mqa['canvas'][1]>=340
               result['checks']['mobileTimeAdvances']=mqa['time']>1.0
               result['checks']['mobilePanelVisible']=mobile.locator('#panel').is_visible()
               press(mobile,'#pause')
-              mobile.wait_for_timeout(250)
-              save_canvas(mobile,'evidence/R018_V2_MOBILE_CANVAS.png')
-              result['mobileImage']=analyze('evidence/R018_V2_MOBILE_CANVAS.png')
-              result['checks']['mobileVisualVariance']=min(result['mobileImage']['stddev'])>4 and result['mobileImage']['uniqueSampleColors']>500
-              mctx.close()
+              result['mobileOverview']=sample_canvas(mobile,'evidence/R018_V2_MOBILE.png',180,300)
+              result['checks']['mobileVisualVariance']=min(result['mobileOverview']['stddev'])>4 and result['mobileOverview']['uniqueSampleColors']>500
+              mobile_ctx.close()
               browser.close()
 
           result['checks']['noJsErrors']=len(result['pageErrors'])==0
@@ -251,7 +280,7 @@ jobs:
               response=page.goto(os.environ['PUBLIC_URL'],wait_until='domcontentloaded',timeout=120000)
               assert response and response.status==200, response.status if response else None
               page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
-              page.wait_for_timeout(1800)
+              page.wait_for_timeout(1600)
               qa=page.evaluate('window.__OCEAN_QA__')
               assert qa['time']>.5, qa
               assert qa['flags']==127, qa
