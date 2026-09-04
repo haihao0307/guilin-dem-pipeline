@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>小温州 V0.6.0 地形与云层质量实验 R19</title>
+<link rel="icon" href="data:,">
+<style>
+:root{color-scheme:dark;--glass:rgba(10,28,34,.58);--line:rgba(255,255,255,.16);--muted:rgba(235,246,244,.68);--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#8ab6cf;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:0}
+button{font:inherit;color:#f5fbfa;background:rgba(5,20,27,.48);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.16);backdrop-filter:blur(18px) saturate(1.12);-webkit-backdrop-filter:blur(18px) saturate(1.12);cursor:pointer}button:active{transform:scale(.96)}
+#menuButton{position:fixed;right:14px;top:calc(14px + var(--safe-t));z-index:7;width:46px;height:46px;border-radius:50%;font-size:18px;display:grid;place-items:center}
+#sheet{position:fixed;right:14px;top:calc(70px + var(--safe-t));z-index:8;width:310px;max-height:calc(100vh - 90px - var(--safe-t) - var(--safe-b));overflow:auto;padding:15px;border:1px solid var(--line);border-radius:20px;background:var(--glass);box-shadow:0 22px 75px rgba(0,0,0,.28);backdrop-filter:blur(24px) saturate(1.18);-webkit-backdrop-filter:blur(24px) saturate(1.18);transform:translateX(calc(100% + 30px));opacity:0;pointer-events:none;transition:transform .24s ease,opacity .2s ease}
+#sheet.open{transform:none;opacity:1;pointer-events:auto}h1{font-size:15px;margin:0 0 5px}p{font-size:10px;line-height:1.55;color:var(--muted);margin:0 0 12px}.section{border-top:1px solid rgba(255,255,255,.12);padding-top:12px;margin-top:12px}.section:first-of-type{border:0;margin-top:0;padding-top:0}.label{font-size:10px;color:var(--muted);margin:0 1px 7px;display:flex;justify-content:space-between;gap:8px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.grid button{min-height:41px;border-radius:11px;padding:6px 8px;font-size:10px;text-align:left}.grid button.active{background:rgba(139,218,197,.24);border-color:rgba(191,244,228,.52)}.metrics{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:9px;color:var(--muted)}.metrics b{font-weight:650;color:#fff;text-align:right}.check{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#eef8f6;margin-top:8px}.check input{accent-color:#a7ded0}.range{width:100%;accent-color:#a7ded0}
+#badge{position:fixed;left:12px;bottom:calc(12px + var(--safe-b));z-index:5;padding:7px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(7,22,29,.48);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:rgba(255,255,255,.78);font-size:9px;line-height:1.35;pointer-events:none;max-width:min(420px,calc(100vw - 70px))}#badge strong{color:#fff}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:linear-gradient(#92bfd5,#bdd2d0);transition:opacity .35s ease}.loader{width:min(410px,calc(100vw - 36px));padding:22px;border-radius:20px;background:rgba(8,25,31,.77);border:1px solid rgba(255,255,255,.17);color:#f5fbfa;box-shadow:0 22px 80px rgba(0,0,0,.22)}.loader h2{font-size:17px;margin:0 0 7px}.loader small{display:block;margin-top:9px;color:rgba(255,255,255,.72);font-size:9px}.bar{height:5px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}.bar i{display:block;width:10%;height:100%;background:#b1eadc;transition:width .2s ease}.hidden{opacity:0;pointer-events:none}#error{display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:30;max-width:min(800px,calc(100vw - 28px));padding:12px 15px;border-radius:13px;background:rgba(90,15,20,.92);border:1px solid rgba(255,150,160,.55);color:#fff;font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap}
+@media(max-width:700px){#menuButton{right:10px;top:calc(10px + var(--safe-t));width:44px;height:44px}#sheet{left:7px;right:7px;top:auto;bottom:calc(7px + var(--safe-b));width:auto;max-height:min(76vh,690px);border-radius:24px 24px 16px 16px;transform:translateY(calc(100% + 20px))}#sheet.open{transform:none}#badge{left:9px;bottom:calc(9px + var(--safe-b));font-size:8px;padding:6px 8px}.sheet-open #badge{opacity:0}.grid button{min-height:43px}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="温州全域与洞头原生十二点五米高程连续显示实验"></canvas>
+<button id="menuButton" aria-label="打开菜单">☰</button>
+<aside id="sheet">
+  <div class="section"><h1>小温州 · 地形与云层质量实验</h1><p>全域远景持续存在，靠近洞头后自动启用原生 12.5 米数字高程。R14 增加远景平滑显示、真实米制云层、云影、动态海面和近景多尺度材质。V0.5.9 稳定工作台继续冻结。</p></div>
+  <div class="section"><div class="label"><span>观察位置</span><span id="viewLabel">整个温州</span></div><div class="grid">
+    <button data-view="overview" class="active">整个温州<br><small>连续全域</small></button>
+    <button data-view="approach">洞头接近<br><small>远近衔接</small></button>
+    <button data-view="fighter">1200 米飞行<br><small>近景 12.5 m</small></button>
+    <button data-view="coast">海岸低空<br><small>岸线观察</small></button>
+  </div></div>
+  <div class="section"><div class="label"><span>显示检查</span><span id="qualityText">自动</span></div>
+    <label class="check">流动海面<input id="waterToggle" type="checkbox" checked></label>
+    <label class="check">地表多尺度微细节<input id="microToggle" type="checkbox" checked></label>
+    <label class="check">云影联动<input id="shadowToggle" type="checkbox" checked></label>
+    <label class="check">自动飞行演示<input id="demoToggle" type="checkbox"></label>
+    <div style="margin-top:10px"><div class="label"><span>远景大气</span><span id="hazeText">清透</span></div><input id="haze" class="range" type="range" min="0.05" max="0.95" value="0.34" step="0.01"></div>
+  </div>
+  <div class="section"><div class="label"><span>十个云属</span><span id="cloudLabel">高积云 3000–6000 m</span></div><div class="grid">
+    <button data-cloud="0">晴空<br><small>0</small></button>
+    <button data-cloud="1">卷云<br><small>8000–12000 m</small></button>
+    <button data-cloud="2">卷积云<br><small>7000–11000 m</small></button>
+    <button data-cloud="3">卷层云<br><small>6000–12000 m</small></button>
+    <button data-cloud="4" class="active">高积云<br><small>3000–6000 m</small></button>
+    <button data-cloud="5">高层云<br><small>2500–7000 m</small></button>
+    <button data-cloud="6">雨层云<br><small>600–6000 m</small></button>
+    <button data-cloud="7">层积云<br><small>600–2200 m</small></button>
+    <button data-cloud="8">层云<br><small>80–900 m</small></button>
+    <button data-cloud="9">积云<br><small>700–3500 m</small></button>
+    <button data-cloud="10">积雨云<br><small>600–14000 m</small></button>
+  </div></div>
+  <div class="section"><div class="metrics">
+    <span>全域真值采样</span><b>800 m</b>
+    <span>远景显示网格</span><b id="overviewDisplay">800 m</b>
+    <span>近域源间距</span><b>12.5 m</b>
+    <span>近域网格</span><b id="detailGrid">未启用</b>
+    <span>云层高度</span><b id="cloudBounds">3000–6000 m</b>
+    <span>活动三角形</span><b id="triangles">读取中</b>
+    <span>绘图缓冲</span><b id="pixels">读取中</b>
+    <span>帧率</span><b id="fps">读取中</b>
+    <span>相机净空</span><b id="clearance">读取中</b>
+  </div></div>
+  <div class="section"><p>约束：地形垂直比例 1:1；源高程不改写；无合成填洞；远景加密仅做显示插值；程序化微细节只作用于颜色与法线；局部样板不晋升为全温州真值。</p></div>
+</aside>
+<div id="badge"><strong>R19 地形与云层质量实验</strong> · 远景保留 · 近景原生 12.5 m · 米制云高</div>
+<div id="loading"><div class="loader"><h2>建立温州地形与云层</h2><p>解码数字高程、海陆分类、岸距和程序化云场</p><div class="bar"><i id="bar"></i></div><small id="loadText">初始化 WebGL2</small></div></div>
+<div id="error"></div>
+<script type="module">
+const DATA={"schema":"wenzhou-v060-terrain-cloud-quality-lab-19","overview":{"id":"overview","label":"温州全域连续概览","width":276,"height":281,"spacingM":800.0,"bbox":[-109712.5,-111981.25,109712.5,111981.25],"terrainMinM":-1,"terrainMaxM":1486,"heightGzip":"@@R19_PAYLOAD_00@@","classGzip":"@@R19_PAYLOAD_01@@","shoreGzip":"@@R19_PAYLOAD_02@@","featuresGzip":"@@R19_PAYLOAD_03@@","heightValuesSha256":"c24a874e8adb1d076cc863e7d84b6964111fe27174c096fca7b9e3223a999746","classValuesSha256":"ecc9bdc6ba5386acb7acd68967bdc64f5310ef477d1934e5049e8c94dcf47ef5","shoreValuesSha256":"62619108bd77c47737248aac3c728789150caa6707df5fc9edf7a6a145c7d654","featuresValuesSha256":"9bd8dfb70a2c076f3f8c5a3b13bbd9067a37f82309b15a947704aa791d9e9435","sourceHeightValuesSha256":"c24a874e8adb1d076cc863e7d84b6964111fe27174c096fca7b9e3223a999746","sourceKind":"exact source-node overview from authoritative 12.5 m source identity"},"detail":{"id":"dongtou","label":"洞头岛屿 · 6.4 km 视窗","width":513,"height":513,"spacingM":12.5,"bbox":[13387.5,44718.75,19787.5,51118.75],"terrainMinM":9,"terrainMaxM":241,"heightGzip":"@@R19_PAYLOAD_04@@","classGzip":"@@R19_PAYLOAD_05@@","shoreGzip":"@@R19_PAYLOAD_06@@","featuresGzip":"@@R19_PAYLOAD_07@@","heightValuesSha256":"25f2ad68043ee03f0e0a9b20380b03b6bef58c13ec17d96e8bb2802fcf3abf0c","classValuesSha256":"dbbcb4973f482404e215b0d2f7932cf3c061d4727de99950fcde8eaaf55fec8e","shoreValuesSha256":"ee068bcd25c6ce3650461b92710371ca3d1ad292d3510a8700e4c165c659f6e3","featur
