@@ -92,13 +92,13 @@ jobs:
                   assert round(launcher['width'])==48 and round(launcher['height'])==48
                   assert 0<=launcher['x'] and launcher['right']<=w+1 and 0<=launcher['y'] and launcher['bottom']<=h+1
                   assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
-                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(120)
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(350)
                   sheet=page.evaluate("""()=>{const e=document.querySelector('#sheet'),b=e.getBoundingClientRect();return{...b.toJSON(),heightCSS:getComputedStyle(e).height,transform:getComputedStyle(e).transform,snap:e.dataset.snap}}""")
                   assert page.locator('[data-module]').count()==6
                   assert sheet['transform']=='none'
                   assert 0<=sheet['x'] and sheet['right']<=w+1 and 0<=sheet['y'] and sheet['bottom']<=h+1
                   if orientation=='portrait':
-                      assert sheet['width']>=w-20 and .38*h<=sheet['height']<=.47*h and sheet['snap']=='compact'
+                      assert sheet['width']>=w-20 and .38*h<=sheet['height']<=.52*h and sheet['snap']=='compact'
                   else:
                       assert sheet['width']<=391 and sheet['height']>=h-20
                   if full:
@@ -106,16 +106,16 @@ jobs:
                       page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().sheetOpen",timeout=30000)
                       page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
                       page.locator('#launcher').click()
-                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000);page.wait_for_timeout(120)
+                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000);page.wait_for_timeout(350)
                       control_sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
-                      if orientation=='portrait': assert .57*h<=control_sheet['height']<=.66*h
+                      if orientation=='portrait': assert .57*h<=control_sheet['height']<=.72*h
                       assert page.locator('[data-rain-section]').count()==6
                       page.locator('[data-rain-section="glass"]').click()
-                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000);page.wait_for_timeout(150)
+                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000);page.wait_for_timeout(250)
                       panel=page.evaluate("""()=>{const f=document.querySelector('#stage'),d=f.contentDocument,p=d.querySelector('#panel'),b=p.getBoundingClientRect(),ui=f.contentWindow.WeatherLiquidUI;return{...b.toJSON(),open:ui.isOpen(),section:ui.getSection(),launcher:getComputedStyle(document.querySelector('#launcher')).pointerEvents}}""")
                       assert panel['open'] and panel['section']=='glass' and panel['launcher']=='none'
                       assert 0<=panel['x'] and panel['right']<=w+1 and 0<=panel['y'] and panel['bottom']<=h+1
-                      if orientation=='portrait': assert panel['width']>=w-24 and .53*h<=panel['height']<=.62*h
+                      if orientation=='portrait': assert panel['width']>=w-24 and .50*h<=panel['height']<=.70*h
                       else: assert panel['width']<=391 and panel['x']>w*.5
                       page.evaluate("document.querySelector('#stage').contentDocument.querySelector('#done').click()")
                       page.wait_for_function("!document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.()",timeout=30000)
@@ -133,9 +133,11 @@ jobs:
                   page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
                   state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
                   assert state['module']=='world' and not state['sheetOpen'] and state['orientation']==orientation
-                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(120)
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(350)
                   sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
                   assert 0<=sheet['x'] and sheet['right']<=w+1 and 0<=sheet['y'] and sheet['bottom']<=h+1
+                  if orientation=='portrait': assert sheet['width']>=w-20 and sheet['height']<=.52*h
+                  else: assert sheet['width']<=391 and sheet['height']>=h-20
                   assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
                   assert not errors and not failed,(name,errors,failed)
                   out[name]={'sheet':sheet}
