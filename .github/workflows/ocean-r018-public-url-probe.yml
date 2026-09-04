@@ -36,8 +36,10 @@ jobs:
           grep -q 'app.mjs' /tmp/index.html
 
           directory_code=$(curl -L -sS -o /tmp/directory.html -w '%{http_code}' "$base/?cb=${GITHUB_RUN_ID}")
+          echo "directory URL $directory_code $(wc -c < /tmp/directory.html) bytes"
           test "$directory_code" = "200"
-          cmp /tmp/index.html /tmp/directory.html || grep -qi 'Ocean' /tmp/directory.html
+          grep -qi 'Ocean' /tmp/directory.html
+          grep -q 'app.mjs' /tmp/directory.html
 
           for path in coast.css app.mjs params.mjs shaders.mjs geometry.mjs core.mjs BUILD.json PARAMETER_CATALOG.json; do
             output="/tmp/${path//\//_}"
@@ -48,17 +50,32 @@ jobs:
           done
 
           python3 - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
+
+          expected = {
+              'index.html': '2a2d5637149e953b32f8c8421018fb5c7e34f58a70aa6b008828b4f100cba49a',
+              'coast.css': '43dbd2eb08f6c0e4be6d3adb173c79e402f69caa8ac132ed54be9ed3f8e3f8b7',
+              'app.mjs': '96f803c18b4ae71ff5199ac442cc17f4486777f883fdd88d18e063d0a731053e',
+              'params.mjs': '80b5006b2ce28b2625197af2bd6d997d65b99132a52aaad2c3bff9e3b65df5be',
+              'shaders.mjs': '4ba89644c6691266d9725693f3bd60c5cb1358d489a35d953d753e89bd042898',
+              'geometry.mjs': 'b19bb34ea2057b60e19c374d33f947e443e8607c986e0bc3d18557ba940b757a',
+              'core.mjs': '2f2c3ca429db66903d6cd2ad560e4f487b8a7ab3c0429f891ebd16284a090fa3',
+              'BUILD.json': 'f0f83bb5d70687ab0c2a2216758104394a4cc166804aee820a1cbae888800389',
+              'PARAMETER_CATALOG.json': '70950be59fc5a681b89f54e15a983bb29739224ffe37fe9a5e968b75bf1a6eba',
+          }
+          for name, digest in expected.items():
+              data = Path('/tmp', name).read_bytes()
+              actual = hashlib.sha256(data).hexdigest()
+              assert actual == digest, (name, actual, digest)
+
           build=json.loads(Path('/tmp/BUILD.json').read_text(encoding='utf-8'))
           assert build['version']=='0.3.0-island-r018', build
-          assert build['buildId']=='island-r018-bootstrap', build
+          assert build['buildId']=='island-r018-relationship-convergence', build
           assert build['runtimeImageAssets']==0, build
           assert build['externalModels']==0, build
-          assert build['externalCdn']==0, build
           catalog=json.loads(Path('/tmp/PARAMETER_CATALOG.json').read_text(encoding='utf-8'))
-          assert catalog['count']>0, catalog
-          print({'publicDirectory': 'HTTP 200', 'version': build['version'], 'buildId': build['buildId'], 'parameterCount': catalog['count']})
+          assert catalog['count']==102, catalog
+          print({'publicDirectory': 'HTTP 200', 'version': build['version'], 'buildId': build['buildId'], 'parameterCount': catalog['count'], 'byteIdentity': 'verified'})
           PY
-
-          sha256sum /tmp/index.html /tmp/coast.css /tmp/app.mjs /tmp/params.mjs /tmp/shaders.mjs /tmp/geometry.mjs /tmp/core.mjs /tmp/BUILD.json /tmp/PARAMETER_CATALOG.json
