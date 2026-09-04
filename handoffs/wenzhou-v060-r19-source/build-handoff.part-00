@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, base64, gzip, hashlib, json, re, shutil, subprocess, zipfile
+from pathlib import Path
+
+PACKAGE_NAME = 'WENZHOU_V060_R19_TERRAIN_CLOUD_FULL_HANDOFF_2026-09-04'
+R19_HTML_SHA256 = '30ab08ea95b112a30421e3042ca9dcb837ca26b5920528635b3305fb1ff6aa94'
+EXPECTED_RAW_PAYLOADS = [
+    'c24a874e8adb1d076cc863e7d84b6964111fe27174c096fca7b9e3223a999746',
+    'ecc9bdc6ba5386acb7acd68967bdc64f5310ef477d1934e5049e8c94dcf47ef5',
+    '62619108bd77c47737248aac3c728789150caa6707df5fc9edf7a6a145c7d654',
+    '9bd8dfb70a2c076f3f8c5a3b13bbd9067a37f82309b15a947704aa791d9e9435',
+    '25f2ad68043ee03f0e0a9b20380b03b6bef58c13ec17d96e8bb2802fcf3abf0c',
+    'dbbcb4973f482404e215b0d2f7932cf3c061d4727de99950fcde8eaaf55fec8e',
+    'ee068bcd25c6ce3650461b92710371ca3d1ad292d3510a8700e4c165c659f6e3',
+    'a3fa39d86fa5af86d14c3ac36486aa08120b3585986033c8cba58739cb19ca18',
+]
+CLOUDS = [
+    {'code':'Ci','label':'卷云','baseM':8000,'topM':12000},
+    {'code':'Cc','label':'卷积云','baseM':7000,'topM':11000},
+    {'code':'Cs','label':'卷层云','baseM':6000,'topM':12000},
+    {'code':'Ac','label':'高积云','baseM':3000,'topM':6000},
+    {'code':'As','label':'高层云','baseM':2500,'topM':7000},
+    {'code':'Ns','label':'雨层云','baseM':600,'topM':6000},
+    {'code':'Sc','label':'层积云','baseM':600,'topM':2200},
+    {'code':'St','label':'层云','baseM':80,'topM':900},
+    {'code':'Cu','label':'积云','baseM':700,'topM':3500},
+    {'code':'Cb','label':'积雨云','baseM':600,'topM':14000},
+]
+
+def sha(b: bytes) -> str:
+    return hashlib.sha256(b).hexdigest()
+
+def extract_payloads(text: str) -> dict[str, bytes]:
+    found: dict[str, bytes] = {}
+    for m in re.finditer(r'[A-Za-z0-9+/=]{2000,}', text):
+        token = m.group(0)
+        if len(token) % 4:
+            continue
+        try:
+            raw = gzip.decompress(base64.b64decode(token))
+        except Exception:
+            continue
+        found[sha(raw)] = raw
+    return found
+
+def reconstruct_html(v058: Path, shell_path: Path) -> bytes:
+    payload_map = extract_payloads(v058.read_text('utf-8', errors='strict'))
+    missing = [h for h in EXPECTED_RAW_PAYLOADS if h not in payload_map]
+    if missing:
+        raise SystemExit('V0.5.8 payload source is incomplete: ' + ','.join(missing))
+    text = shell_path.read_text('utf-8')
+    for i, raw_hash in enumerate(EXPECTED_RAW_PAYLOADS):
+        # mtime=0 makes the browser payload bit-for-bit reproducible.
+        token = base64.b64encode(gzip.compress(payload_map[raw_hash], 9, mtime=0)).decode('ascii')
+        marker = f'@@R19_PAYLOAD_{i:02d}@@'
+        if text.count(marker) != 1:
+            raise SystemExit(f'invalid shell marker {marker}: {text.count(marker)}')
+        text = text.replace(marker, token)
+    data = text.encode('utf-8')
+    actual = sha(data)
+    if actual != R19_HTML_SHA256:
+        raise SystemExit(f'R19 reconstruction mismatch: {actual}')
+    return data
+
+def write_json(path: Path, obj) -> None:
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', 'utf-8')
+
+def build_package(html: bytes, out_root: Path, zip_path: Path, shell_path: Path, v058_path: Path) -> dict:
+    pkg = out_root / PACKAGE_NAME
+    if pkg.exists():
+        shutil.rmtree(pkg)
+    for d in ('app','docs','qa','reference','provenance'):
+        (pkg/d).mkdir(parents=True, exist_ok=True)
+    (pkg/'app/index.html').write_bytes(html)
+
+    clouds_obj = {'schema':'wenzhou-cloud-profiles-r19@1.0.0','verticalScale':1.0,'altitudeOffsetM':0,'profiles':CLOUDS}
+    write_json(pkg/'docs/CLOUD_PROFILES.json', clouds_obj)
+
+    scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html.decode('utf-8'), flags=re.S|re.I)
+    node = shutil.which('node')
+    js_check = {'exitCode':None,'stdout':'','stderr':'node unavailable'}
+    if node:
+        tmp = out_root/'_r19_inline_check.js'
+        tmp.write_text('\n'.join(scripts), 'utf-8')
+        cp = subprocess.run([node,'--check',str(tmp)], text=True, capture_output=True)
+        js_check = {'exitCode':cp.returncode,'stdout':cp.stdout.strip(),'stderr':cp.stderr.strip()}
+        tmp.unlink(missing_ok=True)
+    html_text = html.decode('utf-8')
+    markers = {
+        'title':'小温州 V0.6.0 地形与云层质量实验 R19' in html_text,
+        'runtimeMarker':'window.__WZ_V060_LAB__' in html_text,
+        'oneCanvasTag':len(re.findall(r'<canvas\b',html_text,re.I)) == 1,
+        'noExternalHttpDependencies':not bool(re.search(r'(?:src|href)=["\']https?://',html_text,re.I)),
+        'full17TileCogMountedFalse':'full17TileCogMounted:false' in html_text,
+        'stableWorkbenchTouchedFalse':'stableWorkbenchTouched:false' in html_text,
+        'overviewSpacing800':'overviewSpacingM:800' in html_text,
+        'detailSpacing12_5':'detailSourceSpacingM:12.5' in html_text,
+        'visualAcceptanceFalse':'visualAcceptance:false' in html_text,
+        'productionReadyFalse':'productionReady:false' in html_text,
+    }
+    cloud_labels = {c['label']:(c['label'] in html_text) for c in CLOUDS}
+    static_pass = all(markers.values()) and all(cloud_labels.values()) and js_check.get('exitCode') == 0
+    static_qa = {
+        'schema':'wenzhou-v060-r19-static-qa@1.0.0',
+        'generatedAtUtc':'2026-09-04T09:20:00Z',
+        'sourceHtml':'app/index.html',
+        'bytes':len(html),
+        'sha256':sha(html),
+        'markers':markers,
+        'cloudLabels':cloud_labels,
+        'inlineScriptCount':len(scripts),
+        'nodeSyntaxCheck':js_check,
+        'browserQa':{
+            'freshRerunInPackagingSession':False,
+            'reason':'The package preserves the latest R19 runtime but does not promote static checks to visual approval. A fresh public browser QA is required after resume.'
+        },
+        'pass':static_pass,
+    }
+    write_json(pkg/'qa/HTML_STATIC_QA.json', static_qa)
+
+    status = {
+        'schema':'wenzhou-v060-r19-handoff-status@1.0.0',
+        'projectIdentity':'小温州，负责温州地区地理地貌与全部生产',
+        'package':PACKAGE_NAME,
+        'version':'V0.6.0 R19',
+        'stage':'terrain-and-cloud-runtime-lab',
+        'stableBaseline':{
+            'version':'V0.5.9',
+            'publicFreezeBranch':'freeze/wenzhou-v059-stable-20260903',
+            'publicFreezeCommit':'f91f830c0f649dbc4229ed009cb7898847e3f075',
+            'sourceFreezeBranch':'freeze/wenzhou-v059-source-20260903',
+            'sourceFreezeCommit':'3f5884707fd019b95891b3ee667782331805749c',
+            'touchedByR19':False,
+        },
+        'truth':{
+            'full17TileCogMounted':False,
+            'expectedName':'WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif',
+            'expectedBytes':136760745,
+            'expectedSha256':'c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43',
+            'nativeSpacingM':12.5,
+            'overviewSpacingM':800,
+            'oldQingjiangAllowed':False,
+            'syntheticGapFill':False,
+            'manualTerrain':False,
+        },
+        'runtime':{
+            'singleFileHtml':True,'singleCanvas':True,'externalNetworkDependencies':False,
+            'terrainNearDetailSpacingM':12.5,'terrainFarOverviewSpacingM':800,
+            'cloudProfileCount':10,'cloudVerticalScale':1.0,'cloudAltitudeOffsetM':0,
+        },
+        'acceptance':{
+            'staticQaPassed':static_pass,'freshBrowserQaRun':False,
+            'visualAcceptance':False,'productionReady':False,'shareAsProduction':False,
+        },
+        'resumeRule':'Read START_HERE.md and STATUS.json first. Keep V0.5.9 frozen. Do not claim full-area native 12.5 m until the exact 17-tile COG is mounted and verified.',
+    }
+    write_json(pkg/'STATUS.json', status)
+
+    (pkg/'START_HERE.md').write_text('''# 小温州 V0.6.0 R19 全量续接包
+
+## 开始顺序
+
+1. 先读 `STATUS.json`。
+2. 再读 `docs/RESTART_HANDOFF.md`。
+3. 用浏览器直接打开 `app/index.html`。
+4. 检查 `qa/HTML_STATIC_QA.json` 与 `CHECKSUMS.sha256`。
+5. 继续工作时保持 V0.5.9 双冻结基线不动。
+
+## 当前性质
+
+R19 是地形与云层运行时实验交付，用于验证近域 12.5 米高程、全域 800 米概览、十个云属、单 Canvas 和移动端预算。它还没有获得视觉验收，也没有进入正式生产状态。
+
+完整温州 17 图 COG 二进制尚未挂载。全域原生 12.5 米不成立，任何续接者都不能把局部 12.5 米窗口描述成全温州原生精度。
+
+## 入口
+
+`app/index.html`
+
+## 冻结底座
+
+V0.5.9 必须保持完整，可随时回退。R19 及其后续实验只能在独立分支和独立目录工作。
+''','utf-8')
+
+    (pkg/'docs/RESTART_HANDOFF.md').write_text('''# 小温州 V0.6.0 R19 续接说明
+
+## 已完成
+
+R19 将全域概览和局部原生高程放在同一个连续场景里。局部详细窗口采用 12.5 米数字高程，全域背景采用 800 米概览。页面为单文件 HTML，使用一个 Canvas，无外部网络资源依赖。
+
+云系
