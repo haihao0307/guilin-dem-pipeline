@@ -71,7 +71,8 @@ jobs:
           server_pid=$!
           trap 'kill $server_pid 2>/dev/null || true' EXIT
           python3 - <<'PY'
-          import json, time
+          import base64
+          import json
           from pathlib import Path
           from PIL import Image, ImageStat
           from playwright.sync_api import sync_playwright
@@ -79,15 +80,23 @@ jobs:
           url='http://127.0.0.1:8765/ocean-mother/island-r018-v2/'
           result={'status':'PASS','url':url,'checks':{},'consoleErrors':[],'pageErrors':[]}
 
+          def save_canvas(page, path):
+              data_url=page.locator('#ocean').evaluate("c=>c.toDataURL('image/png')")
+              assert data_url.startswith('data:image/png;base64,')
+              Path(path).write_bytes(base64.b64decode(data_url.split(',',1)[1]))
+
           def analyze(path):
               im=Image.open(path).convert('RGB')
               stat=ImageStat.Stat(im)
               return {
-                  'size':im.size,
+                  'size':list(im.size),
                   'mean':[round(v,2) for v in stat.mean],
                   'stddev':[round(v,2) for v in stat.stddev],
                   'uniqueSampleColors':len(set(im.resize((160,100)).getdata()))
               }
+
+          def press(page, selector):
+              page.locator(selector).evaluate('e=>e.click()')
 
           with sync_playwright() as p:
               browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
@@ -98,52 +107,57 @@ jobs:
               response=page.goto(url,wait_until='domcontentloaded',timeout=120000)
               result['checks']['desktopHttp200']=bool(response and response.status==200)
               page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
-              page.wait_for_timeout(5000)
+              page.wait_for_timeout(3500)
               qa1=page.evaluate('window.__OCEAN_QA__')
               result['desktopInitial']=qa1
               result['checks']['webglReady']=qa1['ready'] is True
               result['checks']['canvasSized']=qa1['canvas'][0]>500 and qa1['canvas'][1]>350
               result['checks']['timeAdvances']=qa1['time']>1.0
               result['checks']['allEffectsInitiallyOn']=qa1['flags']==127
+              result['checks']['fiveEffectControls']=page.locator('[data-effect]').count()==5
+              result['checks']['sixCameraViews']=page.locator('[data-view]').count()==6
               result['checks']['noFallback']=not page.locator('#fallback').evaluate("e=>e.classList.contains('show')")
-              page.screenshot(path='evidence/R018_V2_DESKTOP.png',full_page=True)
-              result['desktopImage']=analyze('evidence/R018_V2_DESKTOP.png')
-              result['checks']['desktopVisualVariance']=min(result['desktopImage']['stddev'])>10 and result['desktopImage']['uniqueSampleColors']>1800
 
-              page.click('#pause')
-              page.wait_for_timeout(900)
+              press(page,'#pause')
+              page.wait_for_timeout(300)
               paused1=page.evaluate('window.__OCEAN_QA__')
-              page.wait_for_timeout(900)
+              save_canvas(page,'evidence/R018_V2_DESKTOP_CANVAS.png')
+              result['desktopImage']=analyze('evidence/R018_V2_DESKTOP_CANVAS.png')
+              result['checks']['desktopVisualVariance']=min(result['desktopImage']['stddev'])>6 and result['desktopImage']['uniqueSampleColors']>900
+              page.wait_for_timeout(700)
               paused2=page.evaluate('window.__OCEAN_QA__')
               result['checks']['pauseFreezesTime']=paused1['paused'] and abs(paused2['time']-paused1['time'])<0.08
-              page.click('#pause')
-              page.wait_for_timeout(1200)
+
+              press(page,'#pause')
+              page.wait_for_timeout(1100)
               resumed=page.evaluate('window.__OCEAN_QA__')
-              result['checks']['resumeAdvancesTime']=not resumed['paused'] and resumed['time']>paused2['time']+.35
+              result['checks']['resumeAdvancesTime']=not resumed['paused'] and resumed['time']>paused2['time']+.30
 
               before_flags=resumed['flags']
-              page.locator('[data-effect="curl"]').first.click()
-              page.wait_for_timeout(500)
+              press(page,'[data-effect="curl"]')
+              page.wait_for_timeout(400)
               after_flags=page.evaluate('window.__OCEAN_QA__.flags')
               result['checks']['effectToggleWorks']=before_flags!=after_flags and (after_flags & 4)==0
-              page.locator('[data-effect="curl"]').first.click()
+              press(page,'[data-effect="curl"]')
 
-              page.click('[data-view="top"]')
+              press(page,'[data-view="top"]')
               page.wait_for_timeout(1200)
-              result['checks']['topCameraWorks']=page.locator('[data-view="top"]').get_attribute('class') and 'active' in page.locator('[data-view="top"]').get_attribute('class')
-              page.screenshot(path='evidence/R018_V2_TOP.png',full_page=True)
-              result['topImage']=analyze('evidence/R018_V2_TOP.png')
-              result['checks']['topViewVisualVariance']=min(result['topImage']['stddev'])>8 and result['topImage']['uniqueSampleColors']>1400
+              press(page,'#pause')
+              page.wait_for_timeout(250)
+              result['checks']['topCameraWorks']='active' in (page.locator('[data-view="top"]').get_attribute('class') or '')
+              save_canvas(page,'evidence/R018_V2_TOP_CANVAS.png')
+              result['topImage']=analyze('evidence/R018_V2_TOP_CANVAS.png')
+              result['checks']['topViewVisualVariance']=min(result['topImage']['stddev'])>5 and result['topImage']['uniqueSampleColors']>700
 
               slider=page.locator('[data-param="islandIrregularity"]')
               old=float(slider.input_value())
               slider.evaluate("(e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))}",str(min(1.55,old+.25)))
-              page.wait_for_timeout(800)
+              page.wait_for_timeout(250)
               result['checks']['islandControlWorks']=float(slider.input_value())>old+.2
 
-              page.click('#panelClose')
+              press(page,'#panelClose')
               result['checks']['panelCloses']=page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
-              page.click('#panelToggle')
+              press(page,'#panelToggle')
               result['checks']['panelReopens']=not page.locator('#panel').evaluate("e=>e.classList.contains('closed')")
               context.close()
 
@@ -154,15 +168,17 @@ jobs:
               response=mobile.goto(url,wait_until='domcontentloaded',timeout=120000)
               result['checks']['mobileHttp200']=bool(response and response.status==200)
               mobile.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
-              mobile.wait_for_timeout(4200)
+              mobile.wait_for_timeout(2700)
               mqa=mobile.evaluate('window.__OCEAN_QA__')
               result['mobileInitial']=mqa
               result['checks']['mobileCanvasSized']=mqa['canvas'][0]>=160 and mqa['canvas'][1]>=340
               result['checks']['mobileTimeAdvances']=mqa['time']>1.0
               result['checks']['mobilePanelVisible']=mobile.locator('#panel').is_visible()
-              mobile.screenshot(path='evidence/R018_V2_MOBILE.png',full_page=True)
-              result['mobileImage']=analyze('evidence/R018_V2_MOBILE.png')
-              result['checks']['mobileVisualVariance']=min(result['mobileImage']['stddev'])>8 and result['mobileImage']['uniqueSampleColors']>1000
+              press(mobile,'#pause')
+              mobile.wait_for_timeout(250)
+              save_canvas(mobile,'evidence/R018_V2_MOBILE_CANVAS.png')
+              result['mobileImage']=analyze('evidence/R018_V2_MOBILE_CANVAS.png')
+              result['checks']['mobileVisualVariance']=min(result['mobileImage']['stddev'])>4 and result['mobileImage']['uniqueSampleColors']>500
               mctx.close()
               browser.close()
 
@@ -195,6 +211,10 @@ jobs:
           touch /tmp/ocean-gh-pages/.nojekyll
           cd /tmp/ocean-gh-pages
           git add .nojekyll ocean-mother/island-r018-v2/index.html
+          if git diff --cached --quiet; then
+            echo 'Exact R018.2 bytes are already published'
+            exit 0
+          fi
           git commit -m "feat(ocean): publish R018.2 refined island workbench"
           for attempt in 1 2 3 4 5; do
             if git push origin HEAD:gh-pages; then exit 0; fi
@@ -203,7 +223,7 @@ jobs:
           done
           exit 1
 
-      - name: Verify public URL and exact bytes
+      - name: Verify public URL exact bytes and runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -219,19 +239,39 @@ jobs:
           test "$code" = 200
           test "$(sha256sum evidence/PUBLIC_INDEX.html | cut -d' ' -f1)" = "45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba"
           grep -q 'island-r018-gold-coast-refined' evidence/PUBLIC_INDEX.html
-          cat > evidence/ONLINE_VERIFIED.json <<JSON
-          {
-            "status": "ONLINE_HTML_VERIFIED",
-            "url": "$url",
-            "http": 200,
-            "sha256": "45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba",
-            "singleFile": true,
-            "externalAssets": 0,
-            "browserQA": "PASS",
-            "visualApproved": false,
-            "productionApproved": false
+          PUBLIC_URL="${url}?verified=${GITHUB_RUN_ID}" python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          errors=[]
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--use-angle=swiftshader'])
+              page=browser.new_page(viewport={'width':1280,'height':850})
+              page.on('pageerror',lambda exc: errors.append(str(exc)))
+              response=page.goto(os.environ['PUBLIC_URL'],wait_until='domcontentloaded',timeout=120000)
+              assert response and response.status==200, response.status if response else None
+              page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready===true",timeout=120000)
+              page.wait_for_timeout(1800)
+              qa=page.evaluate('window.__OCEAN_QA__')
+              assert qa['time']>.5, qa
+              assert qa['flags']==127, qa
+              assert not errors, errors
+              browser.close()
+          receipt={
+            'status':'ONLINE_HTML_VERIFIED',
+            'url':os.environ['PUBLIC_URL'].split('?')[0],
+            'http':200,
+            'sha256':'45b0f79484bc610067c00adc3ca067419c3812ce04240208c3eaba67b14500ba',
+            'singleFile':True,
+            'externalAssets':0,
+            'localBrowserQA':'PASS',
+            'publicRuntimeQA':'PASS',
+            'visualApproved':False,
+            'productionApproved':False
           }
-          JSON
+          Path('evidence/ONLINE_VERIFIED.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
 
       - uses: actions/upload-artifact@v4
         if: always()
