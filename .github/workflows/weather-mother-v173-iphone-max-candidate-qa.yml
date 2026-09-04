@@ -1,0 +1,146 @@
+name: Weather Mother V1.7.3 iPhone Max candidate QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'weather-mother/studio-v073/**'
+      - '.github/workflows/weather-mother-v173-iphone-max-candidate-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  iphone-max:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Verify packaged candidate identity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,gzip,hashlib,json
+          root=Path('weather-mother')
+          base=root/'studio-v072'; target=root/'studio-v073'
+          bm=json.loads((base/'MANIFEST.json').read_text())
+          encoded=''.join((base/c['file']).read_text() for c in bm['chunks'])
+          source=gzip.decompress(base64.b64decode(encoded))
+          tm=json.loads((target/'MANIFEST.json').read_text())
+          assert len(source)==tm['baseSourceBytes']
+          assert hashlib.sha256(source).hexdigest()==tm['baseSourceSHA256']
+          patch_encoded=''.join((target/c['file']).read_text() for c in tm['patchChunks'])
+          for c in tm['patchChunks']:
+              b=(target/c['file']).read_bytes()
+              assert len(b)==c['bytes'] and hashlib.sha256(b).hexdigest()==c['sha256']
+          patch=json.loads(gzip.decompress(base64.b64decode(patch_encoded)))
+          lines=source.decode().splitlines(keepends=True)
+          final=''.join(''.join(lines[o[1]:o[2]]) if o[0]=='c' else o[1] for o in patch['ops']).encode()
+          assert tm['version']=='0.7.3-iphone-max-adaptive'
+          assert len(final)==tm['sourceBytes']
+          assert hashlib.sha256(final).hexdigest()==tm['sourceSHA256']
+          text=final.decode()
+          for token in ['0.7.3-iphone-max-adaptive','applySheetHeight','snapRatio','--wm-panel-h','transition:none!important','visualViewport','safe-area-inset-bottom','data-tab="controls"','data-rain-section="glass"']:
+              assert token in text,token
+          assert text.count('data-module=')==6 and text.count('data-rain-section=')==6
+          assert '../v110-full/?embedded=1&studio=073' in text
+          assert '../liquid-rain-v130/?embedded=1&studio=073&v=130' in text
+          print('static identity passed')
+          PY
+      - name: Install browsers
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium webkit
+      - name: Verify portrait, landscape and Rain controls
+        run: |
+          cat > /tmp/v173.py <<'PY'
+          import json,time,urllib.request
+          from playwright.sync_api import sync_playwright
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio-v073/'
+          def read(path):
+              sep='&' if '?' in path else '?'
+              req=urllib.request.Request(base+path+sep+'t='+str(time.time_ns()),headers={'Cache-Control':'no-cache','Pragma':'no-cache'})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  assert r.status==200
+                  return r.read()
+          converged=False
+          for _ in range(48):
+              try:
+                  loader=read('index.html');m=json.loads(read('MANIFEST.json'));patch=read('patch-00.txt')
+                  converged=(b'patchChunks' in loader and m.get('version')=='0.7.3-iphone-max-adaptive' and len(patch)==1724)
+                  if converged: break
+              except Exception: pass
+              time.sleep(5)
+          assert converged
+          out={}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              cases=[('p430',430,932,'portrait',True),('p440',440,956,'portrait',False),('l932',932,430,'landscape',True),('l956',956,440,'landscape',False)]
+              for name,w,h,orientation,full in cases:
+                  ctx=browser.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=ctx.new_page();errors=[];failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+                  page.goto(base+'?module=world&case='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
+                  page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=120000)
+                  state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+                  assert state['module']=='world' and not state['sheetOpen'] and state['orientation']==orientation
+                  launcher=page.evaluate("document.querySelector('#launcher').getBoundingClientRect().toJSON()")
+                  assert round(launcher['width'])==48 and round(launcher['height'])==48
+                  assert 0<=launcher['x'] and launcher['right']<=w+1 and 0<=launcher['y'] and launcher['bottom']<=h+1
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(120)
+                  sheet=page.evaluate("""()=>{const e=document.querySelector('#sheet'),b=e.getBoundingClientRect();return{...b.toJSON(),heightCSS:getComputedStyle(e).height,transform:getComputedStyle(e).transform,snap:e.dataset.snap}}""")
+                  assert page.locator('[data-module]').count()==6
+                  assert sheet['transform']=='none'
+                  assert 0<=sheet['x'] and sheet['right']<=w+1 and 0<=sheet['y'] and sheet['bottom']<=h+1
+                  if orientation=='portrait':
+                      assert sheet['width']>=w-20 and .38*h<=sheet['height']<=.47*h and sheet['snap']=='compact'
+                  else:
+                      assert sheet['width']<=391 and sheet['height']>=h-20
+                  if full:
+                      page.locator('[data-module="rain"]').click()
+                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().sheetOpen",timeout=30000)
+                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+                      page.locator('#launcher').click()
+                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000);page.wait_for_timeout(120)
+                      control_sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
+                      if orientation=='portrait': assert .57*h<=control_sheet['height']<=.66*h
+                      assert page.locator('[data-rain-section]').count()==6
+                      page.locator('[data-rain-section="glass"]').click()
+                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000);page.wait_for_timeout(150)
+                      panel=page.evaluate("""()=>{const f=document.querySelector('#stage'),d=f.contentDocument,p=d.querySelector('#panel'),b=p.getBoundingClientRect(),ui=f.contentWindow.WeatherLiquidUI;return{...b.toJSON(),open:ui.isOpen(),section:ui.getSection(),launcher:getComputedStyle(document.querySelector('#launcher')).pointerEvents}}""")
+                      assert panel['open'] and panel['section']=='glass' and panel['launcher']=='none'
+                      assert 0<=panel['x'] and panel['right']<=w+1 and 0<=panel['y'] and panel['bottom']<=h+1
+                      if orientation=='portrait': assert panel['width']>=w-24 and .53*h<=panel['height']<=.62*h
+                      else: assert panel['width']<=391 and panel['x']>w*.5
+                      page.evaluate("document.querySelector('#stage').contentDocument.querySelector('#done').click()")
+                      page.wait_for_function("!document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.()",timeout=30000)
+                  assert not errors and not failed,(name,errors,failed)
+                  out[name]={'launcher':launcher,'sheet':sheet}
+                  ctx.close()
+              browser.close()
+              wk=p.webkit.launch(headless=True)
+              for name,w,h,orientation in [('wkp',430,932,'portrait'),('wkl',932,430,'landscape')]:
+                  ctx=wk.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=ctx.new_page();errors=[];failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.goto(base+'?module=world&case='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
+                  state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+                  assert state['module']=='world' and not state['sheetOpen'] and state['orientation']==orientation
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(120)
+                  sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
+                  assert 0<=sheet['x'] and sheet['right']<=w+1 and 0<=sheet['y'] and sheet['bottom']<=h+1
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  assert not errors and not failed,(name,errors,failed)
+                  out[name]={'sheet':sheet}
+                  ctx.close()
+              wk.close()
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+          xvfb-run -a python3 -u /tmp/v173.py
