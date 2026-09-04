@@ -1,13 +1,14 @@
 {
-  "schema": "wenzhou_v060_current_state@1.0.0",
-  "updatedAtUtc": "2026-09-04T00:00:00Z",
+  "schema": "wenzhou_v060_current_state@1.1.0",
+  "updatedAtUtc": "2026-09-04T03:10:00Z",
   "branch": "feature/wenzhou-v060-terrain-truth-stream",
   "baseline": {
     "publicCommit": "f91f830c0f649dbc4229ed009cb7898847e3f075",
     "sourceCommit": "3f5884707fd019b95891b3ee667782331805749c",
     "publicFreezeBranch": "freeze/wenzhou-v059-stable-20260903",
     "sourceFreezeBranch": "freeze/wenzhou-v059-source-20260903",
-    "baselinePreserved": true
+    "baselinePreserved": true,
+    "stableWorkbenchTouched": false
   },
   "completed": [
     "V0.5.9 public and source baselines frozen",
@@ -15,8 +16,40 @@
     "terrain-only change contract committed",
     "exact 17 tile COG preflight implemented",
     "deterministic seven-level exact-node pyramid builder implemented",
-    "full source-value and shared-edge pyramid QA implemented"
+    "full source-value and shared-edge pyramid QA implemented",
+    "R12 single-file continuity laboratory built from the verified local 12.5 metre window",
+    "R13 terrain and cloud integration laboratory built without changing source elevation",
+    "R13 terrain shader upgraded with height-derived geometric normals, multiscale form shading, ridge and hollow response, and distance-bounded micro-normal detail",
+    "R13 depth-aware low-resolution volumetric cloud compositor implemented",
+    "ten cloud genera restored with fixed metre cloud-base and cloud-top profiles",
+    "cloud motion and terrain cloud-shadow controls implemented without changing cloud altitude",
+    "R13 standalone JavaScript syntax and embedded numeric payload checks passed"
   ],
+  "r13Laboratory": {
+    "version": "wenzhou-v060-terrain-cloud-lab-13",
+    "artifactName": "WENZHOU_V060_TERRAIN_CLOUD_R13_STANDALONE.html",
+    "artifactBytes": 1051202,
+    "artifactSha256": "767acfafefdd07cc234102529c2fe596833402d213a9d7f8df746c68bdd7728d",
+    "singleFile": true,
+    "singleCanvas": true,
+    "externalRuntimeDependencies": 0,
+    "overviewGrid": [276, 281],
+    "overviewSpacingM": 800,
+    "detailGrid": [513, 513],
+    "detailSpacingM": 12.5,
+    "detailHeightRangeM": [9, 241],
+    "verticalScale": 1.0,
+    "cloudGenera": ["ci", "cc", "cs", "ac", "as", "ns", "sc", "st", "cu", "cb"],
+    "cloudAltitudeOffsetM": 0,
+    "cloudVerticalScale": 1.0,
+    "sceneDepthAwareCloudComposite": true,
+    "separateCloudRenderBudget": true,
+    "terrainCloudShadow": true,
+    "javascriptSyntaxPass": true,
+    "embeddedDataIntegrityPass": true,
+    "browserWebGLPass": null,
+    "publicShareAllowed": false
+  },
   "sourceAudit": {
     "targetPath": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
     "expectedBytes": 136760745,
@@ -28,7 +61,7 @@
   },
   "blocked": {
     "code": "EXACT_17TILE_COG_BINARY_NOT_MOUNTED",
-    "effect": "The builder cannot produce verified 12.5 metre terrain tiles until the exact COG is present and passes byte, SHA256 and raster metadata checks."
+    "effect": "The full-domain builder cannot produce verified 12.5 metre terrain tiles until the exact COG is present and passes byte, SHA256 and raster metadata checks. The isolated local laboratory can continue."
   },
   "rejectedInputs": {
     "oldQingjiangTruth": true,
@@ -36,12 +69,12 @@
     "syntheticGapFill": true,
     "interpolatedElevationNodes": true
   },
-  "nextAfterBinaryVerification": [
-    "build 12.5 to 800 metre exact-node pyramid",
-    "run full source-value and shared-edge QA",
-    "build isolated terrain stream laboratory",
-    "measure desktop and mobile memory and frame time",
-    "integrate terrain provider into a copy of V0.5.9 while preserving every frozen function"
+  "activeNextSteps": [
+    "run R13 WebGL2 browser compilation and visual proof in GitHub Actions",
+    "tune cloud transmittance, scattering and mobile cloud-buffer scale from browser evidence",
+    "compare R12 and R13 fixed flight views for coarse-facet reduction",
+    "keep V0.5.9 frozen until the terrain and cloud laboratory passes visual regression",
+    "after exact COG mount, build the 12.5 to 800 metre exact-node full-domain pyramid"
   ],
   "visualAcceptance": false,
   "productionReady": false
