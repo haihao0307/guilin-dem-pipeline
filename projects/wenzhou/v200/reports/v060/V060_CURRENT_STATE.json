@@ -1,0 +1,48 @@
+{
+  "schema": "wenzhou_v060_current_state@1.0.0",
+  "updatedAtUtc": "2026-09-04T00:00:00Z",
+  "branch": "feature/wenzhou-v060-terrain-truth-stream",
+  "baseline": {
+    "publicCommit": "f91f830c0f649dbc4229ed009cb7898847e3f075",
+    "sourceCommit": "3f5884707fd019b95891b3ee667782331805749c",
+    "publicFreezeBranch": "freeze/wenzhou-v059-stable-20260903",
+    "sourceFreezeBranch": "freeze/wenzhou-v059-source-20260903",
+    "baselinePreserved": true
+  },
+  "completed": [
+    "V0.5.9 public and source baselines frozen",
+    "V0.6.0 isolated development branch created",
+    "terrain-only change contract committed",
+    "exact 17 tile COG preflight implemented",
+    "deterministic seven-level exact-node pyramid builder implemented",
+    "full source-value and shared-edge pyramid QA implemented"
+  ],
+  "sourceAudit": {
+    "targetPath": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "expectedBytes": 136760745,
+    "expectedSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "grid": [17555, 17918],
+    "spacingMeters": [12.5, 12.5],
+    "binaryPresentInBranch": false,
+    "readyForPyramid": false
+  },
+  "blocked": {
+    "code": "EXACT_17TILE_COG_BINARY_NOT_MOUNTED",
+    "effect": "The builder cannot produce verified 12.5 metre terrain tiles until the exact COG is present and passes byte, SHA256 and raster metadata checks."
+  },
+  "rejectedInputs": {
+    "oldQingjiangTruth": true,
+    "thirtyMetreFallback": true,
+    "syntheticGapFill": true,
+    "interpolatedElevationNodes": true
+  },
+  "nextAfterBinaryVerification": [
+    "build 12.5 to 800 metre exact-node pyramid",
+    "run full source-value and shared-edge QA",
+    "build isolated terrain stream laboratory",
+    "measure desktop and mobile memory and frame time",
+    "integrate terrain provider into a copy of V0.5.9 while preserving every frozen function"
+  ],
+  "visualAcceptance": false,
+  "productionReady": false
+}
