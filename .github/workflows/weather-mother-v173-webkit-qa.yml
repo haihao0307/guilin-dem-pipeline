@@ -1,0 +1,56 @@
+name: Weather Mother V1.7.3 current WebKit QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/weather-mother-v173-webkit-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Install current Playwright WebKit
+        run: |
+          python3 -m pip install --upgrade playwright
+          python3 -m playwright install --with-deps webkit
+      - name: Verify iPhone Max portrait and landscape shell
+        run: |
+          cat > /tmp/wm_webkit.py <<'PY'
+          import json,time
+          from playwright.sync_api import sync_playwright
+          base='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/studio-v073/'
+          out={}
+          with sync_playwright() as p:
+              browser=p.webkit.launch(headless=True)
+              for name,w,h,orientation in [('portrait',430,932,'portrait'),('landscape',932,430,'landscape')]:
+                  context=browser.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=context.new_page();errors=[];failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.goto(base+'?module=world&webkit='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
+                  state=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+                  assert state['module']=='world' and not state['sheetOpen'] and state['orientation']==orientation
+                  launcher=page.evaluate("document.querySelector('#launcher').getBoundingClientRect().toJSON()")
+                  assert round(launcher['width'])==48 and round(launcher['height'])==48
+                  assert 0<=launcher['x'] and launcher['right']<=w+1 and 0<=launcher['y'] and launcher['bottom']<=h+1
+                  page.locator('#launcher').click();page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen');page.wait_for_timeout(400)
+                  sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
+                  assert page.locator('[data-module]').count()==6
+                  assert 0<=sheet['x'] and sheet['right']<=w+1 and 0<=sheet['y'] and sheet['bottom']<=h+1
+                  if orientation=='portrait':
+                      assert sheet['width']>=w-20 and .38*h<=sheet['height']<=.52*h
+                  else:
+                      assert sheet['width']<=391 and sheet['height']>=h-20
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  assert not errors and not failed,(name,errors,failed)
+                  out[name]={'launcher':launcher,'sheet':sheet}
+                  context.close()
+              browser.close()
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+          xvfb-run -a python3 -u /tmp/wm_webkit.py
