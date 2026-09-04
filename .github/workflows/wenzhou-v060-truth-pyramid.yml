@@ -1,0 +1,62 @@
+name: Wenzhou V0.6.0 exact terrain pyramid
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wenzhou-v060-terrain-pyramid
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact source with Git LFS
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install deterministic raster toolchain
+        run: python -m pip install --disable-pip-version-check numpy==2.1.1 rasterio==1.4.3
+
+      - name: Verify exact 17 tile COG identity
+        run: >-
+          python tools/wenzhou/v060/preflight_truth.py
+          --report projects/wenzhou/v200/reports/v060/V060_TRUTH_PREFLIGHT.json
+
+      - name: Build seven exact-node levels
+        run: >-
+          python tools/wenzhou/v060/build_truth_pyramid.py
+          --clean
+          --output projects/wenzhou/v200/web/workbench-v060/terrain-pyramid
+
+      - name: Verify every tile value and shared edge
+        run: >-
+          python tools/wenzhou/v060/qa_truth_pyramid.py
+          --pyramid projects/wenzhou/v200/web/workbench-v060/terrain-pyramid
+          --report projects/wenzhou/v200/reports/v060/V060_PYRAMID_QA.json
+
+      - name: Upload verified pyramid laboratory artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-v060-exact-terrain-pyramid
+          path: |
+            projects/wenzhou/v200/web/workbench-v060/terrain-pyramid
+            projects/wenzhou/v200/reports/v060/V060_TRUTH_PREFLIGHT.json
+            projects/wenzhou/v200/reports/v060/V060_PYRAMID_QA.json
+          if-no-files-found: error
+          retention-days: 7
