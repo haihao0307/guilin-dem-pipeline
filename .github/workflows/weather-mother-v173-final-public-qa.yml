@@ -1,0 +1,111 @@
+name: Weather Mother V1.7.3 final public QA
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/weather-mother-v173-final-public-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - run: |
+          cat >/tmp/chromium.py <<'PY'
+          import time,urllib.request
+          from playwright.sync_api import sync_playwright
+          U='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          for _ in range(48):
+              try:
+                  with urllib.request.urlopen(U+'?t='+str(time.time_ns()),timeout=25) as r: body=r.read()
+                  if r.status==200 and b'studio-v073' in body: break
+              except Exception: pass
+              time.sleep(5)
+          else: raise AssertionError('public root')
+          def inside(b,w,h): return b and b['x']>=-1 and b['y']>=-1 and b['right']<=w+1 and b['bottom']<=h+1
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              for name,w,h,ori,deep in [('portrait',430,932,'portrait',True),('landscape',932,430,'landscape',False)]:
+                  c=b.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=c.new_page(); errors=[]; failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.add_init_script("window.WeatherMotherBoot={quality:'low',still:true,weather:'fair'}")
+                  page.goto(U+'?qa='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_url('**/studio-v073/**',timeout=30000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
+                  page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherMother?.qa?.ready",timeout=120000)
+                  s=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+                  assert s['module']=='world' and not s['sheetOpen'] and s['orientation']==ori
+                  launch=page.evaluate("document.querySelector('#launcher').getBoundingClientRect().toJSON()")
+                  assert inside(launch,w,h) and round(launch['width'])==48 and round(launch['height'])==48
+                  page.evaluate("document.querySelector('#launcher').click()")
+                  page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen'); page.wait_for_timeout(400)
+                  sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
+                  assert inside(sheet,w,h) and page.locator('[data-module]').count()==6
+                  page.evaluate("document.querySelector('[data-module=rain]').click()")
+                  page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().module==='rain' && !__WEATHER_MOTHER_STUDIO__.getState().sheetOpen",timeout=30000)
+                  page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquid?.getState()?.frames>0",timeout=120000)
+                  if deep:
+                      page.evaluate("document.querySelector('#launcher').click()")
+                      page.wait_for_function("__WEATHER_MOTHER_STUDIO__.getState().sheetOpen && __WEATHER_MOTHER_STUDIO__.getState().tab==='controls'",timeout=30000)
+                      page.wait_for_timeout(400); assert page.locator('[data-rain-section]').count()==6
+                      page.evaluate("document.querySelector('[data-rain-section=glass]').click()")
+                      page.wait_for_function("document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.() && document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.getSection?.()==='glass'",timeout=30000)
+                      page.wait_for_timeout(300)
+                      panel=page.evaluate("""()=>{const f=document.querySelector('#stage'),p=f.contentDocument.querySelector('#panel'),x=p.getBoundingClientRect(),ui=f.contentWindow.WeatherLiquidUI;return{...x.toJSON(),open:ui.isOpen(),section:ui.getSection(),launcher:getComputedStyle(document.querySelector('#launcher')).pointerEvents}}""")
+                      assert inside(panel,w,h) and panel['open'] and panel['section']=='glass' and panel['launcher']=='none'
+                      page.evaluate("document.querySelector('#stage').contentWindow.WeatherLiquidUI.close()")
+                      page.wait_for_function("!document.querySelector('#stage')?.contentWindow?.WeatherLiquidUI?.isOpen?.()",timeout=30000)
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  assert not errors and not failed,(name,errors,failed)
+                  c.close()
+              b.close()
+          print('Chromium iPhone Max flow passed')
+          PY
+          xvfb-run -a python3 -u /tmp/chromium.py
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - run: |
+          python3 -m pip install --upgrade playwright
+          python3 -m playwright install --with-deps webkit
+      - run: |
+          cat >/tmp/webkit.py <<'PY'
+          import time
+          from playwright.sync_api import sync_playwright
+          U='https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/'
+          def inside(b,w,h): return b and b['x']>=-1 and b['y']>=-1 and b['right']<=w+1 and b['bottom']<=h+1
+          with sync_playwright() as p:
+              b=p.webkit.launch(headless=True)
+              for name,w,h,ori in [('portrait',430,932,'portrait'),('landscape',932,430,'landscape')]:
+                  c=b.new_context(viewport={'width':w,'height':h},screen={'width':w,'height':h},is_mobile=True,has_touch=True,device_scale_factor=3)
+                  page=c.new_page(); errors=[]; failed=[]
+                  page.on('pageerror',lambda e,errors=errors:errors.append(str(e)))
+                  page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.on('requestfailed',lambda r,failed=failed:failed.append(r.url))
+                  page.goto(U+'?webkit='+name+'&t='+str(time.time_ns()),wait_until='domcontentloaded',timeout=60000)
+                  page.wait_for_url('**/studio-v073/**',timeout=30000)
+                  page.wait_for_function("window.__WEATHER_MOTHER_STUDIO__?.version==='0.7.3-iphone-max-adaptive'",timeout=60000)
+                  s=page.evaluate('__WEATHER_MOTHER_STUDIO__.getState()')
+                  assert s['module']=='world' and not s['sheetOpen'] and s['orientation']==ori
+                  launch=page.evaluate("document.querySelector('#launcher').getBoundingClientRect().toJSON()")
+                  assert inside(launch,w,h) and round(launch['width'])==48 and round(launch['height'])==48
+                  page.evaluate("document.querySelector('#launcher').click()")
+                  page.wait_for_function('__WEATHER_MOTHER_STUDIO__.getState().sheetOpen'); page.wait_for_timeout(400)
+                  sheet=page.evaluate("document.querySelector('#sheet').getBoundingClientRect().toJSON()")
+                  assert inside(sheet,w,h) and page.locator('[data-module]').count()==6
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')==0
+                  assert not errors and not failed,(name,errors,failed)
+                  c.close()
+              b.close()
+          print('WebKit iPhone Max shell passed')
+          PY
+          xvfb-run -a python3 -u /tmp/webkit.py
