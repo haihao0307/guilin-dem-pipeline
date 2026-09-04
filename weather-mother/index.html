@@ -1,1 +1,53 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080b"><title>Weather Mother</title><style>html,body{margin:0;width:100%;height:100%;display:grid;place-items:center;background:#05080b;color:#dce7ec;font:13px system-ui}small{color:#91a0a9}</style></head><body><div>正在进入 Weather Mother<br><small>统一工作平台 V0.6.1</small></div><script>const q=new URLSearchParams(location.search);if(!q.has('module'))q.set('module','world');q.set('shell','061');const u=new URL('./studio-v060/',location.href);u.search=q.toString();u.hash=location.hash;location.replace(u.href);</script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#132426">
+<link rel="icon" href="data:,">
+<title>Weather Mother V1.5.0 · 总天气母板</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#132426;color:#edf4f0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.stage{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#456769 0,#263f42 34%,#132426 72%,#0a1416 100%)}.card{width:min(540px,calc(100% - 36px));padding:30px 28px;border:1px solid rgba(231,245,238,.18);border-radius:20px;background:rgba(8,20,22,.66);backdrop-filter:blur(18px);box-shadow:0 28px 80px rgba(0,0,0,.38);text-align:center}.mark{width:46px;height:46px;margin:0 auto 18px;border:1px solid rgba(230,245,238,.38);border-radius:50%;display:grid;place-items:center;font:700 13px ui-monospace;letter-spacing:.08em}.title{font-size:20px;font-weight:650;letter-spacing:.03em}.sub{margin-top:8px;color:#b8c9c3;font-size:12px;line-height:1.7}.bar{height:2px;margin:24px 0 12px;background:rgba(255,255,255,.1);overflow:hidden}.fill{height:100%;width:7%;background:#dcece5;transition:width .2s ease}.status{font:10px ui-monospace;color:#aebfb9;letter-spacing:.05em}.error{color:#ffd4c9;white-space:pre-wrap;text-align:left;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="stage"><div class="card"><div class="mark">WM</div><div class="title">Weather Mother</div><div class="sub">总天气母板 V1.5.0<br>World · Rain · Fog · Snow · Cloud · Storm</div><div class="bar"><div class="fill" id="fill"></div></div><div class="status" id="status">正在装载母板运行时</div></div></div>
+<script>
+(async()=>{
+'use strict';
+const status=document.getElementById('status'),fill=document.getElementById('fill');
+const set=(text,p)=>{status.textContent=text;fill.style.width=p+'%'};
+const hex=buffer=>[...new Uint8Array(buffer)].map(v=>v.toString(16).padStart(2,'0')).join('');
+try{
+  if(typeof DecompressionStream!=='function')throw new Error('当前浏览器缺少 gzip 解压能力');
+  set('读取 Weather Mother 母板清单',12);
+  const base='./master-v150/';
+  const manifest=await fetch(base+'MANIFEST.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('清单 '+r.status);return r.json()});
+  const parts=[];
+  for(let i=0;i<manifest.chunks.length;i++){
+    const item=manifest.chunks[i];
+    const text=await fetch(base+item.file+'?v=150',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(item.file+' '+r.status);return r.text()});
+    if(text.length!==item.bytes)throw new Error(item.file+' 长度校验失败');
+    const digest=hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)));
+    if(digest!==item.sha256)throw new Error(item.file+' 哈希校验失败');
+    parts.push(text);
+    set('装载 Weather Mother 母板 '+(i+1)+' / '+manifest.chunks.length,18+Math.round((i+1)/manifest.chunks.length*55));
+  }
+  const binary=atob(parts.join(''));
+  const packed=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)packed[i]=binary.charCodeAt(i);
+  set('启动天气模块',82);
+  const html=await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  const sourceHash=hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html)));
+  if(sourceHash!==manifest.sourceSHA256)throw new Error('母板源文件哈希校验失败');
+  set('Weather Mother 已就绪',100);
+  document.open();document.write(html);document.close();
+}catch(error){
+  status.className='status error';
+  status.textContent='Weather Mother 启动失败\n'+String(error&&error.message?error.message:error)+'\n请强制刷新页面后重试';
+  fill.style.width='100%';
+}
+})();
+</script>
+</body>
+</html>
