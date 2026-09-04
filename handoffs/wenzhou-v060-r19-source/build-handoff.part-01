@@ -1,0 +1,90 @@
+统提供十个云属的程序化体积表达，云底、云顶均以米记录，垂直比例固定为 1:1，高度偏移为 0 米。移动期间减少体积采样，停止后恢复更高质量采样。\n\n## 已冻结\n\nV0.5.9 公开成品和源码各自保留冻结分支。R19 没有修改稳定版。后续工作不得覆盖稳定入口，不得删除稳定功能。\n\n## 真实数据边界\n\n完整 17 图 COG 的预期身份为：\n\n* 文件名：`WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif`\n* 字节数：`136760745`\n* SHA256：`c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43`\n* 网格：`17555 × 17918`\n* 像元：`12.5 m`\n* CRS：`EPSG:32651`\n* 类型：`Int16`\n* NoData：`-32768`\n\n精确二进制尚未挂载，所以全域真实高程金字塔仍处于阻塞状态。旧 Qingjiang 高程、30 米替代数据、合成填洞和手工地形继续禁止。\n\n## 当前欠账\n\n1. 全域远景仍为 800 米概览，近看会丢失真实地貌频率。\n2. R19 的云与地形仍需实体手机和真实浏览器的完整视觉回归。\n3. 海洋、海岸、水文、菜单与 Weather Mother 的完整工作台功能尚未合入 R19 实验页。\n4. R19 保持 `visualAcceptance=false` 与 `productionReady=false`。\n\n## 下一次恢复顺序\n\n1. 校验本包哈希。\n2. 直接打开 `app/index.html`，确认页面能够启动。\n3. 挂载并校验精确 17 图 COG。\n4. 离线生成 12.5、25、50、100、200、400、800 米七级真值金字塔。\n5. 在独立地形实验页完成无缝流送、接缝、内存和手机帧时间检查。\n6. 复制 V0.5.9 到新目录，只替换地形提供器和统一高度查询器。\n7. 逐项恢复 Weather Mother、海洋、海岸、水文和完整菜单，禁止整套推倒重做。\n\n## 发布门禁\n\n公开链接必须完成 HTTP 200 回读、版本标识核对、桌面与手机实际启动、控制台错误检查、关键资源检查和视觉回归。任何一个环节缺失时，链接不可作为正式交付。\n''','utf-8')
+
+    (pkg/'docs/BASELINE_AND_BOUNDARIES.md').write_text('''# 稳定底座与研发边界
+
+V0.5.9 是当前功能完整的安全基线。它的公开成品与复现源码分别冻结。任何地形、云、海洋和界面实验都只能进入新分支和新目录。
+
+R19 可继续研究真值地形金字塔、相机视野驱动调度、近域 12.5 米几何、远近层级无缝过渡、体积云采样与移动端预算。
+
+禁止覆盖 V0.5.9，禁止用局部窗口宣称全温州 12.5 米，禁止旧 Qingjiang 高程、30 米替代数据、合成填洞、手工河流、手工海岸和手工地形。性能调度不得修改云底、云顶或地形高度。
+
+固定状态：`visualAcceptance=false`，`productionReady=false`，`stableV059Touched=false`。
+''','utf-8')
+    (pkg/'docs/R19_RUNTIME_ARCHITECTURE.md').write_text('''# R19 运行架构摘要
+
+R19 采用一个连续世界和一个主画布。全域概览负责地理关系与远景轮廓，局部详细层负责观察者附近的真实高程。父层在子层准备完成前保持显示，避免空洞。
+
+地形细节层使用 12.5 米高程身份，远景概览使用 800 米采样。当前为运行架构实验，完整七级真值流送尚未建立。
+
+云以程序化三维密度场表达。性能调度只改变内部采样步数、分辨率和更新频率，云的米制高度、覆盖位置和地形高度不参与性能降级。
+''','utf-8')
+
+    limitations = {'schema':'wenzhou-v060-r19-known-limitations@1.0.0','items':[
+        {'code':'FULL_COG_MISSING','severity':'blocker','detail':'Exact 136760745-byte 17-tile COG is not mounted.'},
+        {'code':'FAR_TERRAIN_800M','severity':'high','detail':'Full-area far terrain remains an 800 m overview.'},
+        {'code':'VISUAL_ACCEPTANCE_FALSE','severity':'high','detail':'R19 has no user visual approval.'},
+        {'code':'FRESH_BROWSER_QA_REQUIRED','severity':'medium','detail':'Fresh public desktop and phone browser QA is required after resume.'},
+        {'code':'INTEGRATION_INCOMPLETE','severity':'high','detail':'Full V0.5.9 weather, ocean, hydrology and menu systems are not integrated into the R19 lab page.'},
+    ]}
+    write_json(pkg/'qa/KNOWN_LIMITATIONS.json', limitations)
+    (pkg/'reference/VISUAL_REFERENCE_LINKS.md').write_text('''# 已指定的视觉对照入口
+
+* https://guilin-dem-terrain.sunhaihao.chatgpt.site
+* https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof
+
+这些入口用于比较远近层级连续性、近景清晰度、地貌结构和整体画面质量。温州的真实地貌、海岸和水文仍按温州数据生产。
+''','utf-8')
+
+    provenance = {
+        'schema':'wenzhou-v060-r19-provenance@1.0.0',
+        'html':{'bytes':len(html),'sha256':sha(html)},
+        'shell':{'bytes':shell_path.stat().st_size,'sha256':sha(shell_path.read_bytes())},
+        'payloadSourceV058':{'bytes':v058_path.stat().st_size,'sha256':sha(v058_path.read_bytes())},
+        'payloadRawSha256':EXPECTED_RAW_PAYLOADS,
+        'developmentBranch':'feature/wenzhou-v060-terrain-truth-stream',
+        'handoffBranch':'handoff/wenzhou-v060-r19-full-package-20260904',
+    }
+    write_json(pkg/'provenance/SOURCE_PROVENANCE.json', provenance)
+
+    def payload_entries():
+        out=[]
+        for p in sorted(pkg.rglob('*')):
+            if p.is_file() and p.name not in {'MANIFEST.json','CHECKSUMS.sha256'}:
+                b=p.read_bytes(); out.append({'path':p.relative_to(pkg).as_posix(),'bytes':len(b),'sha256':sha(b)})
+        return out
+    entries=payload_entries()
+    manifest={'schema':'wenzhou-v060-r19-full-handoff-manifest@1.0.0','package':PACKAGE_NAME,'generatedAtUtc':'2026-09-04T09:20:00Z','entryPoint':'app/index.html','fileCountWithoutManifestAndChecksums':len(entries),'files':entries,'acceptance':status['acceptance']}
+    write_json(pkg/'MANIFEST.json',manifest)
+    lines=[]
+    for p in sorted(pkg.rglob('*')):
+        if p.is_file() and p.name!='CHECKSUMS.sha256':
+            lines.append(f'{sha(p.read_bytes())}  {p.relative_to(pkg).as_posix()}')
+    (pkg/'CHECKSUMS.sha256').write_text('\n'.join(lines)+'\n','utf-8')
+
+    if zip_path.exists(): zip_path.unlink()
+    fixed=(2026,9,4,9,20,0)
+    with zipfile.ZipFile(zip_path,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+        for p in sorted(pkg.rglob('*')):
+            if not p.is_file(): continue
+            info=zipfile.ZipInfo(f'{PACKAGE_NAME}/{p.relative_to(pkg).as_posix()}',fixed)
+            info.compress_type=zipfile.ZIP_DEFLATED
+            info.external_attr=(0o644 & 0xFFFF)<<16
+            z.writestr(info,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+    receipt={'schema':'wenzhou-v060-r19-package-receipt@1.0.0','package':zip_path.name,'bytes':zip_path.stat().st_size,'sha256':sha(zip_path.read_bytes()),'htmlSha256':sha(html),'fileCount':sum(1 for p in pkg.rglob('*') if p.is_file()),'staticQaPassed':static_pass,'visualAcceptance':False,'productionReady':False}
+    write_json(out_root/'WENZHOU_V060_R19_FULL_HANDOFF_BUILD_RECEIPT.json',receipt)
+    return receipt
+
+def main() -> None:
+    ap=argparse.ArgumentParser()
+    ap.add_argument('--v058-html',type=Path,required=True)
+    ap.add_argument('--shell',type=Path,required=True)
+    ap.add_argument('--output-root',type=Path,required=True)
+    ap.add_argument('--zip',dest='zip_path',type=Path,required=True)
+    ns=ap.parse_args()
+    ns.output_root.mkdir(parents=True,exist_ok=True)
+    html=reconstruct_html(ns.v058_html,ns.shell)
+    receipt=build_package(html,ns.output_root,ns.zip_path,ns.shell,ns.v058_html)
+    print(json.dumps(receipt,ensure_ascii=False,indent=2))
+
+if __name__=='__main__':
+    main()
