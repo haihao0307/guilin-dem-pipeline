@@ -1,0 +1,122 @@
+name: Xiaoma full handoff import V1.1.1
+
+on:
+  push:
+    branches: ['handoff/xiaoma-mentor-v1.1-20260905']
+    paths: ['.github/workflows/xiaoma-full-handoff-import.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xiaoma-full-handoff-import-v1-1-1
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+      - name: Copy and verify immutable HOUSE archive without executing its contents
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, json, stat, urllib.request, zipfile
+          from pathlib import Path, PurePosixPath
+          from datetime import datetime, timezone
+
+          name = 'Mother_System_Xiaoma_Full_Handoff_V1.1.1_2026-09-05.zip'
+          source_commit = 'b1cb5e57899cbf80dee7aa22bac84a82d6182540'
+          url = 'https://raw.githubusercontent.com/haihao0307/HOUSE/' + source_commit + '/' + name
+          request = urllib.request.Request(url, headers={'User-Agent': 'Xiaoma-Handoff-Import/1.0'})
+          with urllib.request.urlopen(request, timeout=60) as response:
+              data = response.read(1642049)
+          blob = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+          if len(data) != 1642048 or blob != 'f3fd21d92ebf66cdb92144d5d476e8334e873f2a':
+              raise RuntimeError('Source archive does not match pinned GitHub blob and byte size')
+          root = Path('docs/mother_coordination/mentor-v1.1/full-handoff-v1.1.1')
+          if root.exists():
+              raise RuntimeError('Refusing to overwrite an existing import')
+          root.mkdir(parents=True)
+          (root / name).write_bytes(data)
+          destination = root / 'source'
+          manifest = []
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              entries = z.infolist()
+              if len(entries) > 10000 or sum(i.file_size for i in entries) > 128 * 1024 * 1024:
+                  raise RuntimeError('Archive exceeds intake limits')
+              seen = set()
+              for info in entries:
+                  p = PurePosixPath(info.filename)
+                  if p.is_absolute() or '..' in p.parts or '\\' in info.filename or not p.parts or ':' in p.parts[0]:
+                      raise RuntimeError('Unsafe archive path')
+                  if stat.S_ISLNK(info.external_attr >> 16):
+                      raise RuntimeError('Archive symlinks are forbidden')
+                  if info.is_dir():
+                      continue
+                  if p.as_posix() in seen:
+                      raise RuntimeError('Duplicate archive path')
+                  seen.add(p.as_posix())
+                  payload = z.read(info)
+                  target = destination.joinpath(*p.parts)
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(payload)
+                  manifest.append({'path': target.relative_to(root).as_posix(), 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()})
+          package_root = destination / 'Mother_System_Xiaoma_Full_Handoff_V1.1.1_2026-09-05'
+          checksums = package_root / 'SHA256SUMS'
+          checked = 0
+          for line in checksums.read_text(encoding='utf-8').splitlines():
+              if not line.strip():
+                  continue
+              expected, relative = line.split(maxsplit=1)
+              relative = relative.lstrip('*')
+              p = PurePosixPath(relative)
+              if p.is_absolute() or '..' in p.parts:
+                  raise RuntimeError('Unsafe checksum path')
+              target = package_root.joinpath(*p.parts)
+              if hashlib.sha256(target.read_bytes()).hexdigest() != expected:
+                  raise RuntimeError('Internal SHA256 mismatch: ' + relative)
+              checked += 1
+          receipt = {
+              'schemaVersion': 1,
+              'importedAt': datetime.now(timezone.utc).isoformat(),
+              'sourceRepository': 'haihao0307/HOUSE',
+              'sourceCommit': source_commit,
+              'sourceArchive': name,
+              'archiveBytes': len(data),
+              'archiveGitBlobSha': blob,
+              'archiveSha256': hashlib.sha256(data).hexdigest(),
+              'targetRepository': 'haihao0307/guilin-dem-pipeline',
+              'targetBranch': 'handoff/xiaoma-mentor-v1.1-20260905',
+              'archiveStoredAt': (root / name).as_posix(),
+              'sourcePreserved': True,
+              'archiveCopiedByteForByte': True,
+              'allArchiveMembersExtracted': True,
+              'extractedFileCount': len(manifest),
+              'internalSha256ChecksPassed': checked,
+              'productionCodeChanged': False,
+              'canonicalDataChanged': False,
+              'mainBranchChanged': False,
+              'contentReviewComplete': False,
+              'individualMotherAcknowledgements': 'not_asserted_by_import',
+              'productionExperimentsStartedByImport': False,
+              'historicalPublicationStatusInsideArchivePreserved': True,
+              'files': manifest
+          }
+          (root / 'IMPORT_RECEIPT.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print('Verified archive import:', len(manifest), 'files;', checked, 'internal SHA256 checks passed.')
+          PY
+      - name: Commit only full handoff documentation and source records
+        shell: bash
+        run: |
+          git config user.name 'Xiaoma handoff import'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/mother_coordination/mentor-v1.1/full-handoff-v1.1.1/
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'docs(xiaoma): import complete V1.1.1 archive and original sources from HOUSE [skip ci]'
+          git push origin HEAD:refs/heads/handoff/xiaoma-mentor-v1.1-20260905
