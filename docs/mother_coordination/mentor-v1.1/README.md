@@ -2,11 +2,17 @@
 
 日期：2026-09-05。包号：XIAOMA-MENTOR-V1.1-DIST-20260905。导师原文 V1.1；分发包装 V1.1.1。
 
+## 小妈自主社区学习
+
+每次实际接续先看新增回执和卡点，没有更高优先级任务时自主选题。执行 [社区自学与知识更新制度](../learning-r1-20260905/SELF_LEARNING_PROTOCOL.md)：每3天到期巡查，每7天专题复现与技能复盘，每30天检查过期知识和实际收益。Houdini、Blender、UE的社区与官方更新渠道已做首轮核对，Gaea等原有来源继续按专题展开。
+
+周期属于接续时的到期检查规则，本次没有创建后台自动调度、定时唤醒或其他会话启动器。资料、候选方法、软件实测、团队采用分别登记，原有生产与人工验收边界保持。
+
 ## 当前学习轮次 R1
 
-用户已要求各 Mother 分层阅读、独立回复并整理 Houdini、Blender、Unreal Engine、Gaea 技能。先进入 [分层学习与理解回执 R1](../learning-r1-20260905/START_HERE.md)，再读 [技能目录](../learning-r1-20260905/SKILL_INDEX.md)、[各 Mother 作业](../learning-r1-20260905/ASSIGNMENTS.md) 和 [实际状态快照](../learning-r1-20260905/STATUS.md)。总控回执索引位于 [Issue 62](https://github.com/haihao0307/guilin-dem-pipeline/issues/62)。
+用户已要求各 Mother 分层阅读、独立回复并整理 Houdini、Blender、Unreal Engine、Gaea 技能。先进入 [分层学习与理解回执 R1](../learning-r1-20260905/START_HERE.md)，再读 [技能目录](../learning-r1-20260905/SKILL_INDEX.md)、[各 Mother 作业](../learning-r1-20260905/ASSIGNMENTS.md) 和 [首轮状态快照](../learning-r1-20260905/STATUS.md)。总控回执索引位于 [Issue 62](https://github.com/haihao0307/guilin-dem-pipeline/issues/62)。
 
-本轮八份教材已发布，五组仓库通知已回读确认。当前快照未发现任何 Mother 的独立答卷，理解复核与技能试验尚未完成。Cloud 覆盖方式、Animal、Plant、Brain/Jarvis 的独立入口仍须核实，不能由发布文档推定它们已收件。原始交接载荷继续保持原字节。
+首轮八份教材和当时的通知状态已发布。后续收到的答卷与初审见总控 Issue 62 及 [小妈自学与复核记录01](../learning-r1-20260905/COORDINATOR_STUDY_01.md)。旧快照只对应其检查时点，不应当作当前回执数量；当前状态须重新读取执行者原始回复。Cloud 覆盖方式、Animal、Plant、Brain/Jarvis 的实际入口也需依据真实回执确认。原始交接载荷继续保持原字节。
 
 用户授权把导师交接、小妈审阅及意见打包并传递给各 Mother，并将 Codex 上传到 HOUSE 的全量包接回小妈总控目录。本目录继续作为本次协作入口。生产代码、真值数据、已接受资产和人工验收状态均未改动。
 
