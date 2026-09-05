@@ -1,0 +1,100 @@
+name: Ocean R018.10 actual runtime verification
+
+on:
+  push:
+    branches: [feature/ocean-mother-r0188-wave-deep-restore]
+    paths:
+      - .github/workflows/ocean-r01810-runtime-repair.yml
+      - tools/repair_ocean_r01810_runtime.py
+      - tools/qa_ocean_r01810_runtime.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r01810-runtime-repair
+  cancel-in-progress: true
+
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          sparse-checkout: |
+            tools
+            ocean-mother/AGENTS.md
+            ocean-mother/OCEAN_OUTPUT_POLICY.json
+      - name: Retrieve exact existing R018.9 and apply bounded repair
+        run: |
+          set -euo pipefail
+          mkdir -p dist/ocean-mother/island-r018-r01810 evidence
+          curl --fail --retry 3 --max-time 60 -L 'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0189/index.html' -o /tmp/R0189.html
+          python tools/repair_ocean_r01810_runtime.py --source /tmp/R0189.html --output dist/ocean-mother/island-r018-r01810/index.html --report evidence/BUILD.json
+          cp dist/ocean-mother/island-r018-r01810/index.html dist/ocean-mother/island-r018-r01810/Ocean_Mother_R018.10_Direct_Open.html
+          python - <<'PY'
+          from pathlib import Path
+          import re,subprocess
+          s=Path('dist/ocean-mother/island-r018-r01810/index.html').read_text()
+          for i,code in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)):
+              p=Path(f'/tmp/ocean-script-{i}.js');p.write_text(code);subprocess.run(['node','--check',str(p)],check=True)
+          assert not re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',s,re.I)
+          PY
+      - name: Verify real offline file URL, completed frames, controls and original deep
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q playwright
+          python tools/qa_ocean_r01810_runtime.py dist/ocean-mother/island-r018-r01810/index.html evidence
+      - name: Publish only the verified isolated candidate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          assert json.loads(Path('evidence/BROWSER_QA.json').read_text())['passed'] is True
+          PY
+          git fetch --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+          git worktree add --detach /tmp/ocean-r01810-pages origin/gh-pages
+          cd /tmp/ocean-r01810-pages
+          git sparse-checkout disable || true
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          mkdir -p ocean-mother/island-r018-r01810
+          cp -R "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r01810/." ocean-mother/island-r018-r01810/
+          cp "$GITHUB_WORKSPACE/evidence/BUILD.json" "$GITHUB_WORKSPACE/evidence/BROWSER_QA.json" ocean-mother/island-r018-r01810/
+          git add ocean-mother/island-r018-r01810
+          git diff --cached --quiet || git commit -m 'publish(ocean): R018.10 verified runtime repair, original deep unchanged'
+          git push origin HEAD:gh-pages
+      - name: Read public HTML back and compare exact bytes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,time,urllib.request
+          expected=Path('dist/ocean-mother/island-r018-r01810/index.html').read_bytes()
+          root='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r01810/'
+          receipt={'passed':False,'urls':{},'expectedSha256':hashlib.sha256(expected).hexdigest()}
+          for name in ['', 'Ocean_Mother_R018.10_Direct_Open.html']:
+              for attempt in range(24):
+                  try:
+                      with urllib.request.urlopen(root+name+'?build=r01810',timeout=25) as r:
+                          data=r.read();status=r.status
+                      if status==200 and data==expected:
+                          receipt['urls'][root+name]={'http':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()};break
+                  except Exception: pass
+                  time.sleep(8)
+              else: raise RuntimeError('Public candidate byte verification failed: '+name)
+          receipt['passed']=True;Path('evidence/PUBLIC_RECEIPT.json').write_text(json.dumps(receipt,indent=2))
+          PY
+      - name: Preserve exact candidate and verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R01810_Runtime_Candidate
+          path: |
+            dist/ocean-mother/island-r018-r01810
+            evidence
+          retention-days: 30
+          if-no-files-found: error
