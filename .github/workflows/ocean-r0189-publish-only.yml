@@ -1,0 +1,160 @@
+name: Ocean Mother R018.9 publish exact single HTML
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r0188-wave-deep-restore
+    paths:
+      - .github/workflows/ocean-r0189-publish-only.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-r0189-publish-exact-html
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reconstruct and build exact R018.9 single HTML
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0189/v001 dist/ocean-mother/island-r018-r0189 evidence
+          base64 -d tools/build_ocean_r0188.py.xz.b64 | xz -d > /tmp/ocean-r0189/build_ocean_r0188.py
+          python3 -m py_compile /tmp/ocean-r0189/build_ocean_r0188.py tools/build_ocean_r0189.py
+          cat tools/ocean_v001_source.01.b64 tools/ocean_v001_source.02.b64 tools/ocean_v001_source.03.b64 tools/ocean_v001_source.04.b64 | base64 -d > /tmp/ocean-r0189/ocean_v001_source.tar.xz
+          echo '01b987c9d6764562f6fce9a21ddf5aaef5540cc14e0853031a519e442a8b570c  /tmp/ocean-r0189/ocean_v001_source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/ocean-r0189/ocean_v001_source.tar.xz -C /tmp/ocean-r0189/v001
+          git fetch origin gh-pages
+          git show origin/gh-pages:ocean-mother/island-r018/index.html > /tmp/ocean-r0189/R018.7.html
+          test "$(git hash-object /tmp/ocean-r0189/R018.7.html)" = '674fb6ffb85b70e0950035a357a1a3e0b7e3a3e3'
+          python3 /tmp/ocean-r0189/build_ocean_r0188.py \
+            --baseline /tmp/ocean-r0189/R018.7.html \
+            --v001 /tmp/ocean-r0189/v001 \
+            --output /tmp/ocean-r0189/R018.8.html \
+            --report /tmp/ocean-r0189/R0188_BUILD_IDENTITY.json
+          python3 tools/build_ocean_r0189.py \
+            --r0188 /tmp/ocean-r0189/R018.8.html \
+            --output dist/ocean-mother/island-r018-r0189/index.html \
+            --report evidence/R0189_BUILD_IDENTITY.json
+          cp dist/ocean-mother/island-r018-r0189/index.html dist/ocean-mother/island-r018-r0189/Ocean_Mother_R018.9_Direct_Open.html
+
+      - name: Static delivery gates
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('dist/ocean-mother/island-r018-r0189')
+          page=root/'index.html'; direct=root/'Ocean_Mother_R018.9_Direct_Open.html'
+          text=page.read_text(encoding='utf-8')
+          identity=json.loads(Path('evidence/R0189_BUILD_IDENTITY.json').read_text(encoding='utf-8'))
+          assert page.read_bytes()==direct.read_bytes()
+          assert page.stat().st_size>100000
+          assert hashlib.sha256(page.read_bytes()).hexdigest()==identity['outputSha256']
+          assert identity['startupZone']=='island'
+          assert identity['runtimeImageAssets']==0 and identity['externalModels']==0 and identity['externalCdn']==0
+          assert identity['generatedImagesUsed'] is False
+          for marker in [
+            '<title>Ocean Mother | R018.9 海岛近岸水体修正版</title>',
+            "window.__OCEAN_ZONE__=activeZone",
+            "deepStartup:'lazy-original-v001'",
+            'antialiased advected filament field',
+            'three-layer crest lip and falling sheet',
+            'Ocean Mother · 原始深海工作台 V001',
+            '#loading{pointer-events:none!important}',
+          ]:
+              assert marker in text,marker
+          assert text.count('deepFrame.srcdoc=ORIGINAL_DEEP_HTML;')==1
+          assert not re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(blocks)==2
+          for i,block in enumerate(blocks): Path(f'/tmp/r0189-publish-script-{i}.js').write_text(block,encoding='utf-8')
+          PY
+          node --check /tmp/r0189-publish-script-0.js
+          node --check /tmp/r0189-publish-script-1.js
+          python3 -m http.server 8130 --directory dist > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for attempt in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8130/ocean-mother/island-r018-r0189/ > /tmp/r0189-served.html && break
+            sleep 1
+          done
+          cmp dist/ocean-mother/island-r018-r0189/index.html /tmp/r0189-served.html
+          grep -q 'Ocean Mother | R018.9 海岛近岸水体修正版' /tmp/r0189-served.html
+
+      - name: Publish isolated R018.9 page
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r0189-pages
+          git worktree add --detach /tmp/ocean-r0189-pages origin/gh-pages
+          cd /tmp/ocean-r0189-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/island-r018-r0189
+          mkdir -p ocean-mother/island-r018-r0189
+          cp -R "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0189/." ocean-mother/island-r018-r0189/
+          cp "$GITHUB_WORKSPACE/evidence/R0189_BUILD_IDENTITY.json" ocean-mother/island-r018-r0189/
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/island-r018-r0189
+          git commit -m "publish(ocean): R018.9 exact openable single HTML" || true
+          for attempt in 1 2 3; do
+            git push origin HEAD:gh-pages && exit 0
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+
+      - name: Verify public byte identity
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,time,urllib.request
+          local=Path('dist/ocean-mother/island-r018-r0189/index.html').read_bytes()
+          urls=[
+            'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0189/',
+            'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0189/Ocean_Mother_R018.9_Direct_Open.html',
+          ]
+          files=[]
+          for url in urls:
+              remote=None
+              error=None
+              for _ in range(36):
+                  try:
+                      with urllib.request.urlopen(url+'?v='+str(int(time.time())),timeout=30) as response:
+                          remote=response.read()
+                      if remote==local: break
+                  except Exception as exc:
+                      error=str(exc)
+                  time.sleep(5)
+              assert remote==local,(url,len(remote or b''),len(local),error)
+              files.append({'url':url,'bytes':len(remote),'sha256':hashlib.sha256(remote).hexdigest()})
+          Path('evidence/R0189_PUBLIC_RECEIPT.json').write_text(json.dumps({'passed':True,'files':files},indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload exact direct-open delivery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.9_Published_Direct_Open
+          path: |
+            dist/ocean-mother/island-r018-r0189/index.html
+            dist/ocean-mother/island-r018-r0189/Ocean_Mother_R018.9_Direct_Open.html
+            evidence/R0189_BUILD_IDENTITY.json
+            evidence/R0189_PUBLIC_RECEIPT.json
+            evidence/server.log
+          if-no-files-found: warn
+          retention-days: 90
