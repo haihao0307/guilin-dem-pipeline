@@ -1,0 +1,80 @@
+name: B24 native data staging and public verification
+on:
+  push:
+    branches: [ops/b24-native-r1-20260905]
+    paths: ['.github/workflows/b24-native-stage.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/AIRCRAFT
+          ref: f3a8e9edc3c2dc542d680aee469467e95211a31f
+          path: buildsource
+      - name: Stage exact tested subtree only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,shutil
+          src=Path('buildsource');report=json.loads((src/'reports/DISTILLATION.json').read_text())
+          assert json.loads((src/'reports/COMPACT_BROWSER_QA.json').read_text())['passed']
+          assert json.loads((src/'reports/MOTION_EQUIVALENCE.json').read_text())['passed']
+          assert report['geometryNumericEqualityPassed'] and report['outputImages']==0 and report['outputUVBlocks']==0
+          target=Path('aircraft/b24-native-data')
+          if target.exists():raise RuntimeError('New entry unexpectedly exists; stop instead of overwriting')
+          shutil.copytree(src/'runtime',target)
+          for name,sha in report['runtimeBlobs'].items():
+              data=(target/name).read_bytes();assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==sha
+          print('STAGED_FILES',len(report['runtimeBlobs']))
+          PY
+          git config user.name 'B24 native staging'
+          git config user.email 'b24-verification@users.noreply.github.com'
+          git add aircraft/b24-native-data
+          git commit -m 'stage(b24): add exact tested native-data subtree only'
+          git push origin HEAD:ops/b24-native-r1-20260905
+          git rev-parse HEAD:aircraft/b24-native-data
+      - name: Browser prerequisites
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Wait for matching public bytes and verify every runtime file
+        run: |
+          python - <<'PY'
+          import json,time,urllib.request,hashlib,concurrent.futures
+          from pathlib import Path
+          r=json.loads(Path('buildsource/reports/DISTILLATION.json').read_text());base='https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-native-data/'
+          def get(name):
+              req=urllib.request.Request(base+name+'?native-r1='+r['runtimeBlobs'][name],headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'})
+              with urllib.request.urlopen(req,timeout=30) as f:return f.read()
+          def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          deadline=time.monotonic()+600
+          while True:
+              try:
+                  if blob(get('index.html'))==r['runtimeBlobs']['index.html']:break
+              except Exception:
+                  pass
+              if time.monotonic()>deadline:raise TimeoutError('Matching public index not served')
+              time.sleep(5)
+          def verify(name):
+              data=get(name);return {'path':name,'bytes':len(data),'passed':blob(data)==r['runtimeBlobs'][name]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:files=list(pool.map(verify,r['runtimeBlobs']))
+          result={'url':base,'runtimeFileCount':len(files),'files':files,'passed':all(x['passed'] for x in files)}
+          Path('buildsource/reports/PUBLIC_BYTES.json').write_text(json.dumps(result,indent=2));assert result['passed']
+          PY
+      - name: Actual public desktop and mobile browser controls
+        run: python buildsource/tools/browser_qa.py --root buildsource --url https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-native-data/
+      - name: Preserve public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: B24-native-public-checks
+          path: |
+            buildsource/reports/PUBLIC_BYTES.json
+            buildsource/reports/COMPACT_BROWSER_QA.json
+            buildsource/reports/compact-ready-*.png
