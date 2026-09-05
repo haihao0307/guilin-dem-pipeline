@@ -75,7 +75,8 @@ jobs:
           let deepDocumentReady=false;
           function ensureDeepLoaded(){if(deepLoaded)return;deepLoaded=true;document.body.classList.remove('deep-ready');deepFrame.srcdoc=ORIGINAL_DEEP_HTML;}
           function innerDeepPause(wantPaused){try{const b=deepFrame.contentDocument?.getElementById('pause');if(!b)return;const isPaused=(b.textContent||'').includes('继续');if(isPaused!==wantPaused)b.click();}catch(_e){}}
-          let activeZone='island';"""
+          let activeZone='island';
+          window.__OCEAN_ZONE__=activeZone;"""
           assert old2 in s;s=s.replace(old2,new2,1)
           pattern=re.compile(r"function setZone\(zone\)\{.*?\n\}\ndocument\.querySelectorAll\('\[data-zone\]'\)\.forEach\(b=>b\.onclick=\(\)=>setZone\(b\.dataset\.zone\)\);\ndeepFrame\.addEventListener\('load',\(\)=>\{window\.__OCEAN_DEEP_READY__=!!deepFrame\.contentWindow\?\.OceanMother;\}\);",re.S)
           m=pattern.search(s);assert m
@@ -96,6 +97,7 @@ jobs:
           s=s.replace("preserveDrawingBuffer:true,powerPreference:'high-performance'","preserveDrawingBuffer:false,powerPreference:'high-performance'",1)
           assert s.count('deepFrame.srcdoc=ORIGINAL_DEEP_HTML;')==1
           assert 'deepFrame.srcdoc=ORIGINAL_DEEP_HTML;\nlet activeZone' not in s
+          assert "window.__OCEAN_ZONE__=activeZone" in s
           assert '0.3.9-island-r018-wave-refinement-lazy-deep' in s
           assert 'Ocean Mother · 原始深海工作台 V001' in s
           assert 'antialiased advected filament field' in s
@@ -104,7 +106,7 @@ jobs:
           out.write_text(s,encoding='utf-8')
           direct=out.with_name('Ocean_Mother_R018.9_Direct_Open.html');direct.write_bytes(out.read_bytes())
           identity={
-            'format':'ocean-mother-r0189-direct-open-build','version':'0.3.9-island-r018-wave-refinement-lazy-deep','buildId':'island-r018-wave-refinement-lazy-v001-deep','sourceBytes':src.stat().st_size,'outputBytes':out.stat().st_size,'outputSha256':hashlib.sha256(out.read_bytes()).hexdigest(),'deepRestore':'frozen Ocean Mother V001, lazy startup only','nearshoreLocked':['terrain','island','sand','rocks','fire','smoke','camera presets','UI layout'],'changed':['foam field','water crest shaping','curling-wave lip','deep runtime startup timing'],'runtimeImageAssets':0,'externalModels':0,'externalCdn':0,'generatedImagesUsed':False,'visualApproved':False,'productionApproved':False
+            'format':'ocean-mother-r0189-direct-open-build','version':'0.3.9-island-r018-wave-refinement-lazy-deep','buildId':'island-r018-wave-refinement-lazy-v001-deep','sourceBytes':src.stat().st_size,'outputBytes':out.stat().st_size,'outputSha256':hashlib.sha256(out.read_bytes()).hexdigest(),'startupZone':'island','deepRestore':'frozen Ocean Mother V001, lazy startup only','nearshoreLocked':['terrain','island','sand','rocks','fire','smoke','camera presets','UI layout'],'changed':['foam field','water crest shaping','curling-wave lip','deep runtime startup timing'],'runtimeImageAssets':0,'externalModels':0,'externalCdn':0,'generatedImagesUsed':False,'visualApproved':False,'productionApproved':False
           }
           Path('evidence/R0189_BUILD_IDENTITY.json').write_text(json.dumps(identity,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           print(json.dumps(identity,ensure_ascii=False))
@@ -124,6 +126,7 @@ jobs:
           assert page.stat().st_size>100000
           assert 'deepStartup:\'lazy-original-v001\'' in text
           assert "let deepLoaded=false" in text
+          assert "window.__OCEAN_ZONE__=activeZone" in text
           assert text.count('deepFrame.srcdoc=ORIGINAL_DEEP_HTML;')==1
           assert 'deepFrame.srcdoc=ORIGINAL_DEEP_HTML;\nlet activeZone' not in text
           assert not re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
@@ -149,10 +152,10 @@ jobs:
           report={'format':'ocean-r0189-browser-smoke','passed':False,'visualApproved':False,'productionApproved':False}
           with sync_playwright() as p:
             browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--disable-dev-shm-usage'])
-            page=browser.new_page(viewport={'width':800,'height':560})
+            page=browser.new_page(viewport={'width':640,'height':420})
             errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
             page.goto(url,wait_until='domcontentloaded',timeout=90000)
-            page.wait_for_function("document.querySelector('canvas') && document.getElementById('deepFrame') && !document.getElementById('deepFrame').srcdoc",timeout=30000)
+            page.wait_for_function("window.__OCEAN_ZONE__==='island' && document.querySelector('canvas') && document.getElementById('deepFrame') && !document.getElementById('deepFrame').srcdoc",timeout=30000)
             initial=page.evaluate("""() => ({title:document.title,zone:window.__OCEAN_ZONE__,deepSrcdoc:document.getElementById('deepFrame').srcdoc.length,canvas:[document.querySelector('canvas').clientWidth,document.querySelector('canvas').clientHeight],fallback:document.getElementById('fallback').classList.contains('show')})""")
             assert initial['zone']=='island' and initial['deepSrcdoc']==0 and initial['canvas'][0]>300 and not initial['fallback'],initial
             page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=240000)
