@@ -1,0 +1,37 @@
+name: Ocean R01812 offline renderer dependency
+on:
+  push:
+    branches: [work/ocean-mother-r01812-depth-materials-20260905]
+    paths: [.github/workflows/ocean-r01812-vendor.yml]
+permissions:
+  contents: read
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch pinned official source and bundle offline subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-three/source /tmp/ocean-three/delivery
+          base=https://raw.githubusercontent.com/mrdoob/three.js/r185
+          for file in three.module.js three.core.js; do
+            curl --fail --location --retry 2 "$base/build/$file" -o "/tmp/ocean-three/source/$file"
+          done
+          curl --fail --location --retry 2 "$base/LICENSE" -o /tmp/ocean-three/delivery/THREE_LICENSE.txt
+          cat > /tmp/ocean-three/source/entry.js <<'JS'
+          export { WebGLRenderer, RawShaderMaterial, BufferGeometry, InterleavedBuffer, InterleavedBufferAttribute, BufferAttribute, Float32BufferAttribute, Uint32BufferAttribute, Mesh, Points, Scene, Camera, PerspectiveCamera, OrthographicCamera, WebGLRenderTarget, DepthTexture, DataTexture, Vector2, Vector3, Vector4, Matrix4, Color, GLSL3, RGBAFormat, FloatType, HalfFloatType, UnsignedByteType, UnsignedIntType, DepthFormat, NearestFilter, LinearFilter, ClampToEdgeWrapping, DoubleSide, NormalBlending, NoBlending, AlwaysDepth, LessEqualDepth, NoToneMapping, LinearSRGBColorSpace, NoColorSpace, REVISION } from './three.module.js';
+          JS
+          npx --yes esbuild@0.25.10 /tmp/ocean-three/source/entry.js --bundle --minify --format=iife --global-name=THREE --legal-comments=inline --outfile=/tmp/ocean-three/delivery/three-r185-ocean.min.js
+          sha256sum /tmp/ocean-three/source/*.js /tmp/ocean-three/delivery/* > /tmp/ocean-three/delivery/SHA256SUMS.txt
+          node -e "const fs=require('fs');fs.writeFileSync('/tmp/ocean-three/delivery/PROVENANCE.json',JSON.stringify({source:'mrdoob/three.js',ref:'r185',bundler:'esbuild@0.25.10',runtimeNetworkDependencies:false,scope:'Offline library subset only; no visual or performance approval'},null,2))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocean-r01812-offline-three-r185
+          path: /tmp/ocean-three/delivery/
+          retention-days: 7
