@@ -1,0 +1,236 @@
+name: Ocean Mother R018.9 direct-open publish
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r0188-wave-deep-restore
+    paths:
+      - .github/workflows/ocean-r0189-direct-open-publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-r0189-direct-open-publish
+  cancel-in-progress: true
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reconstruct R018.8 source inputs
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0189/v001 dist/ocean-mother/island-r018-r0189 evidence
+          base64 -d tools/build_ocean_r0188.py.xz.b64 | xz -d > /tmp/ocean-r0189/build_ocean_r0188.py
+          python3 -m py_compile /tmp/ocean-r0189/build_ocean_r0188.py
+          cat tools/ocean_v001_source.01.b64 tools/ocean_v001_source.02.b64 tools/ocean_v001_source.03.b64 tools/ocean_v001_source.04.b64 | base64 -d > /tmp/ocean-r0189/ocean_v001_source.tar.xz
+          echo '01b987c9d6764562f6fce9a21ddf5aaef5540cc14e0853031a519e442a8b570c  /tmp/ocean-r0189/ocean_v001_source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/ocean-r0189/ocean_v001_source.tar.xz -C /tmp/ocean-r0189/v001
+
+      - name: Build R018.9 lazy-deep single HTML
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          git show origin/gh-pages:ocean-mother/island-r018/index.html > /tmp/ocean-r0189/R018.7.html
+          test "$(git hash-object /tmp/ocean-r0189/R018.7.html)" = '674fb6ffb85b70e0950035a357a1a3e0b7e3a3e3'
+          python3 /tmp/ocean-r0189/build_ocean_r0188.py \
+            --baseline /tmp/ocean-r0189/R018.7.html \
+            --v001 /tmp/ocean-r0189/v001 \
+            --output /tmp/ocean-r0189/R018.8.html \
+            --report /tmp/ocean-r0189/R0188_BUILD_IDENTITY.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          src=Path('/tmp/ocean-r0189/R018.8.html')
+          out=Path('dist/ocean-mother/island-r018-r0189/index.html')
+          s=src.read_text(encoding='utf-8')
+          s=s.replace('<title>Ocean Mother | R018.8 海岛金岸真实感工作台</title>','<title>Ocean Mother | R018.9 海岛近岸水体修正版</title>',1)
+          s=s.replace('ISLAND GOLD COAST / R018.8','ISLAND GOLD COAST / R018.9')
+          s=s.replace('R018.8 · 真实感候选','R018.9 · 近岸水体修正版')
+          s=s.replace("version:'0.3.8-island-r018-wave-refinement'","version:'0.3.9-island-r018-wave-refinement-lazy-deep'",1)
+          s=s.replace("buildId:'island-r018-wave-refinement-deep-restore'","buildId:'island-r018-wave-refinement-lazy-v001-deep'",1)
+          css="""
+          /* R018.9 startup guard: original deep V001 starts only after the Deep button is pressed. */
+          #deepLoading{position:fixed;inset:0;z-index:6;display:none;place-items:center;background:linear-gradient(180deg,#071a25 0%,#0a2b3b 58%,#0a4250 100%);color:#eafcff;text-align:center;padding:24px}
+          #deepLoading .deepLoadCard{width:min(420px,calc(100vw - 36px));padding:26px 28px;border:1px solid rgba(220,248,255,.28);border-radius:26px;background:rgba(8,31,42,.62);box-shadow:0 24px 80px rgba(0,0,0,.32);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+          #deepLoading strong{display:block;font-size:20px;letter-spacing:.05em;margin-bottom:8px}#deepLoading span{display:block;color:#bad8e1;font-size:12px;line-height:1.7}#deepLoading i{display:block;width:132px;height:3px;margin:18px auto 0;border-radius:99px;overflow:hidden;background:rgba(230,250,255,.12)}#deepLoading i::after{content:'';display:block;width:48%;height:100%;border-radius:inherit;background:#8eeeff;animation:deepLoadFlow 1.25s ease-in-out infinite alternate}@keyframes deepLoadFlow{from{transform:translateX(-12%)}to{transform:translateX(120%)}}body.deep-mode:not(.deep-ready) #deepLoading{display:grid}body.deep-ready #deepLoading{display:none}
+          """
+          i=s.find('</style>');assert i>0;s=s[:i]+css+s[i:]
+          old='<main id="stage"><canvas id="ocean" aria-label="异形海岛、无限海面、浪墙、卷浪、泡沫墙和浓烟的程序化三维工作台"></canvas><iframe id="deepFrame" title="Ocean Mother 原始深海工作台 V001" hidden></iframe></main>'
+          assert old in s
+          s=s.replace(old,old+'<div id="deepLoading" aria-live="polite"><div class="deepLoadCard"><strong>正在恢复原始深海 V001</strong><span>深海保持上一版源码，只在进入深海时启动。海岛近岸不会再被深海初始化拖慢。</span><i></i></div></div>',1)
+          old2="const deepFrame=document.getElementById('deepFrame');\ndeepFrame.srcdoc=ORIGINAL_DEEP_HTML;\nlet activeZone='island';"
+          new2="""const deepFrame=document.getElementById('deepFrame');
+          let deepLoaded=false;
+          let deepDocumentReady=false;
+          function ensureDeepLoaded(){if(deepLoaded)return;deepLoaded=true;document.body.classList.remove('deep-ready');deepFrame.srcdoc=ORIGINAL_DEEP_HTML;}
+          function innerDeepPause(wantPaused){try{const b=deepFrame.contentDocument?.getElementById('pause');if(!b)return;const isPaused=(b.textContent||'').includes('继续');if(isPaused!==wantPaused)b.click();}catch(_e){}}
+          let activeZone='island';"""
+          assert old2 in s;s=s.replace(old2,new2,1)
+          pattern=re.compile(r"function setZone\(zone\)\{.*?\n\}\ndocument\.querySelectorAll\('\[data-zone\]'\)\.forEach\(b=>b\.onclick=\(\)=>setZone\(b\.dataset\.zone\)\);\ndeepFrame\.addEventListener\('load',\(\)=>\{window\.__OCEAN_DEEP_READY__=!!deepFrame\.contentWindow\?\.OceanMother;\}\);",re.S)
+          m=pattern.search(s);assert m
+          repl="""function setZone(zone){
+            activeZone=zone==='deep'?'deep':'island';
+            const deep=activeZone==='deep';
+            if(deep){ensureDeepLoaded();document.body.classList.toggle('deep-ready',deepDocumentReady);}
+            document.body.classList.toggle('deep-mode',deep);deepFrame.hidden=!deep;
+            if(deep)innerDeepPause(false);else if(deepLoaded)innerDeepPause(true);
+            document.querySelectorAll('[data-zone]').forEach(b=>b.classList.toggle('selected',b.dataset.zone===activeZone));
+            document.getElementById('pause').textContent=deep?(deepFrame.contentDocument?.getElementById('pause')?.textContent||'暂停'):(paused?'继续运行':'暂停');
+            if(!deep){last=performance.now();setView('overview');}window.__OCEAN_ZONE__=activeZone;
+          }
+          document.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>setZone(b.dataset.zone));
+          deepFrame.addEventListener('load',()=>{deepDocumentReady=true;window.__OCEAN_DEEP_READY__=!!deepFrame.contentWindow?.OceanMother;if(activeZone==='deep')document.body.classList.add('deep-ready');});"""
+          s=s[:m.start()]+repl+s[m.end():]
+          s=s.replace("window.__OCEAN_DELIVERY_POLICY__={defaultDeliverable:'interactive-3d-html-webgl',imageGeneration:false,imageAllowedOnlyByExplicitUserRequest:true,visualApproved:false,productionApproved:false};","window.__OCEAN_DELIVERY_POLICY__={defaultDeliverable:'interactive-3d-html-webgl',imageGeneration:false,imageAllowedOnlyByExplicitUserRequest:true,deepStartup:'lazy-original-v001',nearshoreLocked:true,visualApproved:false,productionApproved:false};",1)
+          s=s.replace("preserveDrawingBuffer:true,powerPreference:'high-performance'","preserveDrawingBuffer:false,powerPreference:'high-performance'",1)
+          assert s.count('deepFrame.srcdoc=ORIGINAL_DEEP_HTML;')==1
+          assert 'deepFrame.srcdoc=ORIGINAL_DEEP_HTML;\nlet activeZone' not in s
+          assert '0.3.9-island-r018-wave-refinement-lazy-deep' in s
+          assert 'Ocean Mother · 原始深海工作台 V001' in s
+          assert 'antialiased advected filament field' in s
+          assert 'three-layer crest lip and falling sheet' in s
+          assert 'data:image/' not in s.lower()
+          out.write_text(s,encoding='utf-8')
+          direct=out.with_name('Ocean_Mother_R018.9_Direct_Open.html');direct.write_bytes(out.read_bytes())
+          identity={
+            'format':'ocean-mother-r0189-direct-open-build','version':'0.3.9-island-r018-wave-refinement-lazy-deep','buildId':'island-r018-wave-refinement-lazy-v001-deep','sourceBytes':src.stat().st_size,'outputBytes':out.stat().st_size,'outputSha256':hashlib.sha256(out.read_bytes()).hexdigest(),'deepRestore':'frozen Ocean Mother V001, lazy startup only','nearshoreLocked':['terrain','island','sand','rocks','fire','smoke','camera presets','UI layout'],'changed':['foam field','water crest shaping','curling-wave lip','deep runtime startup timing'],'runtimeImageAssets':0,'externalModels':0,'externalCdn':0,'generatedImagesUsed':False,'visualApproved':False,'productionApproved':False
+          }
+          Path('evidence/R0189_BUILD_IDENTITY.json').write_text(json.dumps(identity,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(identity,ensure_ascii=False))
+          PY
+
+      - name: Verify single-file structure and JavaScript syntax
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('dist/ocean-mother/island-r018-r0189')
+          page=root/'index.html';direct=root/'Ocean_Mother_R018.9_Direct_Open.html'
+          text=page.read_text(encoding='utf-8');identity=json.loads(Path('evidence/R0189_BUILD_IDENTITY.json').read_text())
+          assert page.read_bytes()==direct.read_bytes()
+          assert hashlib.sha256(page.read_bytes()).hexdigest()==identity['outputSha256']
+          assert page.stat().st_size>100000
+          assert 'deepStartup:\'lazy-original-v001\'' in text
+          assert "let deepLoaded=false" in text
+          assert text.count('deepFrame.srcdoc=ORIGINAL_DEEP_HTML;')==1
+          assert 'deepFrame.srcdoc=ORIGINAL_DEEP_HTML;\nlet activeZone' not in text
+          assert not re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)
+          assert len(blocks)==2
+          for i,b in enumerate(blocks):Path(f'/tmp/r0189-script-{i}.js').write_text(b,encoding='utf-8')
+          PY
+          node --check /tmp/r0189-script-0.js
+          node --check /tmp/r0189-script-1.js
+
+      - name: Browser smoke test fast nearshore and lazy original deep
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          python3 -m http.server 8129 --directory dist > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          python3 - <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json
+          url='http://127.0.0.1:8129/ocean-mother/island-r018-r0189/'
+          report={'format':'ocean-r0189-browser-smoke','passed':False,'visualApproved':False,'productionApproved':False}
+          with sync_playwright() as p:
+            browser=p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox','--disable-dev-shm-usage'])
+            page=browser.new_page(viewport={'width':800,'height':560})
+            errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+            page.goto(url,wait_until='domcontentloaded',timeout=90000)
+            page.wait_for_function("document.querySelector('canvas') && document.getElementById('deepFrame') && !document.getElementById('deepFrame').srcdoc",timeout=30000)
+            initial=page.evaluate("""() => ({title:document.title,zone:window.__OCEAN_ZONE__,deepSrcdoc:document.getElementById('deepFrame').srcdoc.length,canvas:[document.querySelector('canvas').clientWidth,document.querySelector('canvas').clientHeight],fallback:document.getElementById('fallback').classList.contains('show')})""")
+            assert initial['zone']=='island' and initial['deepSrcdoc']==0 and initial['canvas'][0]>300 and not initial['fallback'],initial
+            page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready",timeout=240000)
+            island=page.evaluate("({...window.__OCEAN_QA__})")
+            assert island['version']=='0.3.9-island-r018-wave-refinement-lazy-deep'
+            page.locator('[data-zone="deep"]').click()
+            page.wait_for_function("window.__OCEAN_ZONE__==='deep' && document.getElementById('deepFrame').srcdoc.length>50000",timeout=30000)
+            page.wait_for_function("document.getElementById('deepFrame').contentDocument?.readyState==='complete'",timeout=180000)
+            deep=page.evaluate("""() => ({title:document.getElementById('deepFrame').contentDocument.title,hasCanvas:!!document.getElementById('deepFrame').contentDocument.querySelector('canvas'),restore:document.getElementById('deepFrame').contentWindow.__OCEAN_DEEP_RESTORED__||null})""")
+            assert deep['hasCanvas'] and deep['restore']['source']=='frozen-ocean-mother-v001',deep
+            page.locator('[data-zone="island"]').click()
+            page.wait_for_function("window.__OCEAN_ZONE__==='island' && !document.body.classList.contains('deep-mode')",timeout=30000)
+            assert not errors,errors
+            report.update({'passed':True,'initial':initial,'island':island,'deep':deep,'errors':errors})
+            browser.close()
+          Path('evidence/R0189_BROWSER_SMOKE.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Publish isolated R018.9 candidate
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r0189-pages
+          git worktree add --detach /tmp/ocean-r0189-pages origin/gh-pages
+          cd /tmp/ocean-r0189-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/island-r018-r0189
+          mkdir -p ocean-mother/island-r018-r0189
+          cp -R "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0189/." ocean-mother/island-r018-r0189/
+          cp "$GITHUB_WORKSPACE/evidence/R0189_BUILD_IDENTITY.json" ocean-mother/island-r018-r0189/
+          cp "$GITHUB_WORKSPACE/evidence/R0189_BROWSER_SMOKE.json" ocean-mother/island-r018-r0189/
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/island-r018-r0189
+          git commit -m "publish(ocean): R018.9 fast nearshore and lazy original deep" || true
+          for attempt in 1 2 3; do
+            git push origin HEAD:gh-pages && exit 0
+            git pull --rebase origin gh-pages
+          done
+          exit 1
+
+      - name: Verify public file availability and bytes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,time,urllib.request,json
+          local=Path('dist/ocean-mother/island-r018-r0189/index.html').read_bytes()
+          urls=[
+            'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0189/',
+            'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0189/Ocean_Mother_R018.9_Direct_Open.html'
+          ]
+          states=[]
+          for url in urls:
+            data=None;error=None
+            for _ in range(24):
+              try:
+                with urllib.request.urlopen(url+'?v='+str(int(time.time())),timeout=30) as r:data=r.read()
+                if data==local:break
+              except Exception as e:error=str(e)
+              time.sleep(5)
+            assert data==local,(url,len(data or b''),len(local),error)
+            states.append({'url':url,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
+          Path('evidence/R0189_PUBLIC_RECEIPT.json').write_text(json.dumps({'passed':True,'files':states},indent=2)+'\n')
+          PY
+
+      - name: Upload R018.9 direct-open delivery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.9_Direct_Open
+          path: |
+            dist/ocean-mother/island-r018-r0189/index.html
+            dist/ocean-mother/island-r018-r0189/Ocean_Mother_R018.9_Direct_Open.html
+            evidence/R0189_BUILD_IDENTITY.json
+            evidence/R0189_BROWSER_SMOKE.json
+            evidence/R0189_PUBLIC_RECEIPT.json
+            evidence/server.log
+          if-no-files-found: warn
+          retention-days: 90
