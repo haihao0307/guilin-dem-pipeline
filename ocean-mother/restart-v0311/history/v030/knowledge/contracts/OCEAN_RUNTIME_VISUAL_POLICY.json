@@ -1,0 +1,52 @@
+{
+  "format": "ocean-mother-runtime-visual-policy",
+  "version": "1.0.0",
+  "status": "USER_LOCKED",
+  "effectiveDate": "2026-09-02",
+  "productionLine": "Ocean Mother",
+  "scope": ["ocean-mother/**"],
+  "runtimeOutput": {
+    "interactiveOnlineWorkbenchRequired": true,
+    "imageGenerationMode": false,
+    "imageDetailEnhancementMode": false,
+    "imageBasedDeliverable": false,
+    "screenshotAsProduct": false
+  },
+  "persistentImageAssets": {
+    "importedRasterImages": 0,
+    "generatedRasterImages": 0,
+    "textureImages": 0,
+    "normalMaps": 0,
+    "noiseMaps": 0,
+    "environmentMaps": 0,
+    "animationAtlases": 0
+  },
+  "allowedNumericResources": [
+    "typed numeric arrays",
+    "binary scalar and vector fields",
+    "procedural coefficients",
+    "mesh vertex and index buffers",
+    "signed distance fields stored as numeric data",
+    "ephemeral GPU render and simulation buffers"
+  ],
+  "ephemeralBufferRule": "Runtime GPU buffers may hold numeric fields for simulation and rendering. They are never exported, presented, or governed as image assets or physical truth.",
+  "visualDirection": {
+    "primary": "photorealistic",
+    "referenceContinuity": "match the established deep-ocean rendering language",
+    "cartoonStyle": "deferred_until_explicit_future_user_approval",
+    "coastEdge": "depth-aware transparent and semitransparent optical transition"
+  },
+  "releaseRule": "No Ocean Mother candidate may be presented as a user-facing result while it retains a cartoon-like wave, foam, shoreline, rock, smoke, or lighting treatment.",
+  "forbiddenSubstitutions": [
+    "generated pictures used as water detail",
+    "baked pictures renamed as numeric assets",
+    "screen captures used as runtime backgrounds",
+    "painted alpha masks used as shoreline physics",
+    "static foam pictures used instead of stateful foam",
+    "normal or noise pictures used to imitate unresolved geometry"
+  ],
+  "approvals": {
+    "visualApproved": false,
+    "productionApproved": false
+  }
+}

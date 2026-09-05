@@ -1,23 +1,19 @@
-# Ocean Mother 新研发窗口启动入口
+# Ocean Mother V0.3.11 全量重启入口
 
-最新干净全量包：`ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-03_V0.3.0.zip`
+归档分支：`handoff/ocean-mother-full-20260905-v0.3.11`。
 
-ZIP SHA256：`3db114c056f5aa232cbe99151f9385e7b3a4483a6a14a9ad620de8b827ab24fe`
+固定标签：`ocean-mother-full-restart-v0.3.11-20260905`。
 
-ZIP 字节数：`332070`
+完整包：`ocean-mother/handoffs/Ocean_Mother_Full_Restart_Handoff_2026-09-05_V0.3.11.zip`。
 
-包内文件数：`114`
+ZIP SHA-256：`1570d28721887b05cdc403bee75ff4e7fad3aeb620c12a9a0ad6ff3bd56f549f`。
 
-当前运行版：`0.3.0-island-r017`
+ZIP 字节数：954565；文件总数：174。
 
-当前在线工作台：`https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/`
+先读 `ocean-mother/restart-v0311/START_HERE.md`，再读同目录 AGENTS.md、WORKING_STATE.md、OCEAN_HANDOFF.md、HANDOFF.json、SOURCE_LOCK.json 和 NEXT_ROUND_START_HERE.md。
 
-当前源快照：`74ff2fb67de0aa52d41c3ee1e6e9d93fd9fbb8ad`
+当前唯一接续候选为 R018.11 故障修复版，入口 `ocean-mother/restart-v0311/index.html`，完整可编辑源码在同目录 source/。
 
-公开发布提交：`28d9206d5cb17a0e1400bf2f5cfa3d3ba9d6e2dc`
+打包保持运行文件原件、冻结深海、岛体、沙滩、石头、火焰、烟雾和镜头。历史 V0.3.0 全量包及 117 个原文件保留于 history/，历史入口不覆盖本入口。
 
-公开 Playwright 工作流：`33732650013`，44 项通过，0 项失败。
-
-新窗口先读取本文件和 `WORKING_STATE.md`。需要完整接管时下载并解压上面的包，依次阅读 `START_HERE.md`、`AGENTS.md`、`WORKING_STATE.md`、`OCEAN_HANDOFF.md`、`HANDOFF.json`、`SOURCE_LOCK.json` 和 `NEXT_ROUND_START_HERE.md`。
-
-下一轮代号 R018，直接继承 R017，不回退旧黑场、破碎岸线或静态玻璃方向。默认交付继续只使用经过公开浏览器验证的在线 HTML。
+本轮完成归档，不部署网站。继承的 R018.11 恢复报告采用内存 HTML 加载；URL 与真实硬件稳定性、帧率、泡沫和卷浪视觉仍待验证。visualApproved=false，productionApproved=false。

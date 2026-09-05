@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071c25">
+<link rel="icon" href="data:,">
+<title>Ocean Mother | R018.11 海岛近岸运行修正版</title>
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#eefbff;
+  --muted:#b8d4dc;
+  --hair:rgba(222,249,255,.25);
+  --panel:rgba(9,31,40,.34);
+  --panel2:rgba(18,56,68,.22);
+  --glow:rgba(132,239,255,.42);
+  --warm:rgba(255,223,158,.46);
+  --mx:50%;
+  --my:20%;
+  --flow-x:20%;
+  --flow-y:30%;
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#061922;color:var(--ink);font:13px/1.45 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{border:0;cursor:pointer}
+[hidden]{display:none!important}
+#stage,#ocean{position:fixed;inset:0;width:100%;height:100%}
+#ocean{display:block;touch-action:none;background:linear-gradient(#9fc9d2,#123f50)}
+#fallback{position:fixed;inset:0;display:none;place-items:center;padding:28px;background:radial-gradient(circle at 50% 25%,#19495a,#06161e 72%);z-index:99;text-align:center}
+#fallback.show{display:grid}
+.glass{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid var(--hair);
+  background:
+    radial-gradient(160px 110px at var(--mx) var(--my),rgba(255,255,255,.22),transparent 62%),
+    linear-gradient(145deg,rgba(195,240,249,.12),rgba(9,36,46,.34) 45%,rgba(7,24,32,.46));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(98,187,205,.13),0 15px 42px rgba(0,8,13,.28);
+  backdrop-filter:blur(18px) saturate(1.28);
+  -webkit-backdrop-filter:blur(18px) saturate(1.28);
+}
+.glass::before{
+  content:"";
+  position:absolute;
+  inset:-60%;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    conic-gradient(from 220deg at 52% 46%,transparent 0 24%,rgba(143,235,255,.18) 29%,rgba(255,247,217,.30) 34%,transparent 40% 68%,rgba(114,221,244,.18) 74%,transparent 82%),
+    linear-gradient(116deg,transparent 35%,rgba(255,255,255,.18) 43%,rgba(155,232,247,.25) 48%,transparent 56%);
+  transform:translate3d(calc(var(--flow-x) - 50%),calc(var(--flow-y) - 50%),0) rotate(0deg);
+  animation:glassFlow 13s ease-in-out infinite alternate;
+  opacity:.72;
+}
+.glass::after{
+  content:"";
+  position:absolute;
+  inset:2px;
+  border-radius:inherit;
+  border:1px solid rgba(255,255,255,.08);
+  z-index:-1;
+  pointer-events:none;
+}
+@keyframes glassFlow{
+  0%{transform:translate3d(-13%,-8%,0) rotate(-8deg);filter:hue-rotate(0deg)}
+  48%{transform:translate3d(9%,5%,0) rotate(7deg);filter:hue-rotate(8deg)}
+  100%{transform:translate3d(18%,-3%,0) rotate(15deg);filter:hue-rotate(-5deg)}
+}
+.topbar{position:fixed;z-index:30;top:max(14px,env(safe-area-inset-top));left:18px;right:18px;display:flex;align-items:center;gap:12px;pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:11px;border-radius:22px;padding:9px 15px;min-width:236px}
+.brandMark{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.45);font:22px/1 Georgia,serif;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.86),rgba(91,193,214,.18) 42%,rgba(1,16,24,.34) 78%);box-shadow:inset -4px -5px 10px rgba(0,25,34,.28),0 0 24px rgba(133,231,252,.14)}
+.brandText{display:flex;flex-direction:column}.brandText b{font-size:12px;letter-spacing:.14em}.brandText small{font-size:9px;letter-spacing:.17em;color:var(--muted)}
+.tabs{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:999px}
+.actions{margin-left:auto;display:flex;gap:4px;padding:4px;border-radius:999px}
+button,.pill{position:relative;overflow:hidden;border-radius:999px;min-height:38px;padding:8px 13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);transition:transform .18s ease,background .25s ease,border-color .25s ease,box-shadow .25s ease,color .25s ease}
+button::before{
+  content:"";position:absolute;inset:-1px;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.15) 36%,rgba(121,225,245,.28) 43%,rgba(255,243,209,.16) 51%,transparent 66%);
+  background-size:260% 100%;background-position:160% 0;transition:background-position .55s ease,opacity .25s;opacity:.54
+}
+button:hover::before,button.active::before,button.selected::before{background-position:-20% 0;opacity:1}
+button.active::before,button.selected::before{animation:buttonLightSweep 6.2s ease-in-out infinite}
+@keyframes buttonLightSweep{0%,100%{background-position:155% 0;filter:brightness(.92)}46%{background-position:-24% 0;filter:brightness(1.18)}68%{background-position:20% 0;filter:brightness(1.02)}}
+button:hover{background:rgba(200,245,252,.11);border-color:rgba(193,241,250,.24);box-shadow:0 5px 18px rgba(0,25,34,.18),inset 0 1px 0 rgba(255,255,255,.2)}
+button:active{transform:scale(.96)}
+button.selected,button.active{background:linear-gradient(145deg,rgba(221,252,255,.22),rgba(72,165,184,.12));border-color:rgba(211,250,255,.46);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 0 22px rgba(96,216,239,.12);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid rgba(136,235,255,.95);outline-offset:2px}
+#sceneTitle{position:fixed;z-index:10;left:28px;top:100px;pointer-events:none;text-shadow:0 2px 12px rgba(0,14,20,.7)}
+.eyebrow{font-size:9px;font-weight:750;letter-spacing:.22em;color:#b9e8f1}
+#sceneTitle h1{margin:7px 0 3px;font-weight:350;letter-spacing:.08em;font-size:34px}
+#sceneTitle p{margin:0;font-size:11px;letter-spacing:.1em;color:#d0e7eb}
+#cameraBar{position:fixed;z-index:25;top:96px;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:4px;border-radius:999px;max-width:calc(100vw - 520px)}
+#cameraBar button{font-size:10px;min-height:34px;padding:6px 11px}
+#effectRail{position:fixed;z-index:22;left:20px;bottom:72px;display:flex;gap:6px;padding:5px;border-radius:999px}
+#effectRail button{font-size:10px;min-height:34px;padding:6px 11px}
+#panel{position:fixed;z-index:28;right:18px;top:90px;bottom:67px;width:354px;border-radius:26px;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.2,.85,.22,1),opacity .25s ease}
+#panel.closed{transform:translateX(calc(100% + 32px));opacity:0;pointer-events:none}
+.panelHead{padding:17px 17px 11px;border-bottom:1px solid rgba(255,255,255,.1);flex:none}
+.panelTop{display:flex;align-items:center;justify-content:space-between}.panelHead h2{margin:4px 0 1px;font-weight:450;font-size:20px}.panelHead p{margin:0;color:var(--muted);font-size:10px;letter-spacing:.06em}
+#panelClose{min-height:30px;padding:4px 10px;font-size:10px}
+#panelTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:12px;padding:3px;border-radius:14px;background:rgba(0,20,28,.22)}
+#panelTabs button{min-height:34px;padding:5px 4px;font-size:10px;border-radius:11px}
+.panelScroll{overflow:auto;min-height:0;padding:11px 17px 24px;scrollbar-width:thin;scrollbar-color:rgba(136,220,236,.3) transparent}
+.presetRow{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}.presetRow button{font-size:10px;min-height:34px;padding:6px 4px}
+.controlGroup{position:relative;border-top:1px solid rgba(255,255,255,.11);padding-top:13px;margin-top:12px}
+.controlGroup h3{font-size:10px;letter-spacing:.16em;margin:0 0 11px;color:#d9f6fb}
+.control{display:grid;grid-template-columns:1fr auto;gap:5px 9px;margin:12px 0}
+.control label{font-size:11px;color:#e7f6f8}.control output{font-size:10px;color:#bce5ed;font-variant-numeric:tabular-nums}
+.control input[type=range]{grid-column:1/-1;width:100%;height:18px;margin:0;appearance:none;background:transparent;cursor:pointer}
+.control input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:999px;background:linear-gradient(90deg,rgba(100,216,238,.78) var(--fill,50%),rgba(226,248,252,.15) var(--fill,50%));box-shadow:inset 0 1px 2px rgba(0,0,0,.32)}
+.control input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;margin-top:-5.5px;border-radius:50%;background:radial-gradient(circle at 30% 24%,#fff,#9bd8e5 58%,#33778a);border:1px solid rgba(255,255,255,.75);box-shadow:0 2px 8px rgba(0,18,25,.5)}
+.toggleGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.toggleGrid button{min-height:34px;padding:6px 7px;font-size:10px;border-radius:12px;text-align:left}.toggleGrid button.active::after{content:"ON";float:right;font-size:8px;color:#aef1ff;letter-spacing:.1em}
+.selectRow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;margin:12px 0}.selectRow select{min-height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(5,24,32,.46);padding:4px 8px}
+.metrics{display:grid;grid-template-columns:1fr auto;gap:5px;font-size:10px;color:#c1dee4}.metrics b{font-variant-numeric:tabular-nums;color:#fff}
+.note{font-size:9px;color:#a9c8cf;line-height:1.62;margin:10px 0 0}
+footer{position:fixed;z-index:24;left:18px;right:18px;bottom:max(14px,env(safe-area-inset-bottom));height:42px;border-radius:999px;display:flex;align-items:center;gap:15px;padding:0 16px;font-size:10px;color:#d2e9ed;font-variant-numeric:tabular-nums;pointer-events:none}
+footer span:last-child{margin-left:auto;color:#a9dce6}
+#statusDot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7af1c6;box-shadow:0 0 12px #7af1c6;margin-right:5px}
+#loading{position:fixed;z-index:60;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#17495a,#06161e 72%);transition:opacity .55s ease,visibility .55s ease}
+#loading.done{opacity:0;visibility:hidden}.loadCard{text-align:center}.loadOrb{width:64px;height:64px;margin:0 auto 16px;border-radius:50%;border:1px solid rgba(255,255,255,.38);background:radial-gradient(circle at 33% 24%,#f5ffff,rgba(120,222,242,.35) 34%,rgba(6,31,42,.2) 64%);box-shadow:inset -8px -9px 20px rgba(0,15,22,.45),0 0 42px rgba(119,224,245,.22);animation:orb 1.7s ease-in-out infinite alternate}.loadCard b{display:block;letter-spacing:.15em}.loadCard span{display:block;margin-top:7px;color:#a9cbd2;font-size:10px;letter-spacing:.08em}@keyframes orb{to{transform:translateY(-6px) rotate(12deg);filter:brightness(1.12)}}
+#qaProbe{display:none}
+@media(max-width:980px){#cameraBar{max-width:calc(100vw - 380px);overflow:auto;justify-content:flex-start}.brand{min-width:190px}.brandText small{display:none}#sceneTitle{top:145px}}
+@media(max-width:760px){
+  .topbar{left:9px;right:9px;top:max(8px,env(safe-area-inset-top));align-items:flex-start;gap:5px}.brand{min-width:0;padding:7px 9px;border-radius:18px}.brandMark{width:29px;height:29px;font-size:18px}.brandText b{font-size:9px;letter-spacing:.07em}.tabs{left:9px;top:52px;transform:none}.tabs button{min-height:31px;padding:4px 10px;font-size:10px}.actions{gap:2px}.actions button{min-height:34px;padding:5px 8px;font-size:10px}#sceneTitle{left:16px;top:102px}#sceneTitle h1{font-size:23px}#sceneTitle p{font-size:9px;max-width:260px}#cameraBar{left:9px;right:9px;top:auto;bottom:62px;transform:none;max-width:none;overflow:auto;border-radius:18px}#cameraBar button{min-width:max-content;min-height:34px;padding:5px 9px}#effectRail{display:none}#panel{right:9px;top:98px;bottom:112px;width:calc(100vw - 18px);border-radius:22px}.panelHead{padding:13px 14px 9px}.panelScroll{padding:9px 14px 20px}footer{left:9px;right:9px;bottom:max(8px,env(safe-area-inset-bottom));height:40px;gap:8px;padding:0 11px}footer .hideMobile{display:none}}
+@media(prefers-reduced-motion:reduce){.glass::before,.loadOrb{animation:none}*{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(9,32,42,.78)}}
+/* R018.8 locked output policy and restored original deep-ocean module. */
+#deepFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#061521;z-index:5;display:none}
+body.deep-mode #deepFrame{display:block}
+body.deep-mode #ocean{visibility:hidden;pointer-events:none}
+body.deep-mode #sceneTitle,body.deep-mode #cameraBar,body.deep-mode #effectRail,body.deep-mode #panel,body.deep-mode footer{display:none!important}
+body.deep-mode .brandText small{font-size:0}
+body.deep-mode .brandText small::after{content:'ORIGINAL DEEP OCEAN / V001';font-size:9px;letter-spacing:.15em}
+
+/* R018.9 startup guard. The original V001 deep runtime starts only after Deep is selected. */
+#loading{pointer-events:none!important}
+#loading.done{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#deepLoading{position:fixed;inset:0;z-index:6;display:none;place-items:center;background:linear-gradient(180deg,#071a25 0%,#0a2b3b 58%,#0a4250 100%);color:#eafcff;text-align:center;padding:24px}
+#deepLoading .deepLoadCard{width:min(420px,calc(100vw - 36px));padding:26px 28px;border:1px solid rgba(220,248,255,.28);border-radius:26px;background:rgba(8,31,42,.62);box-shadow:0 24px 80px rgba(0,0,0,.32);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#deepLoading strong{display:block;font-size:20px;letter-spacing:.05em;margin-bottom:8px}#deepLoading span{display:block;color:#bad8e1;font-size:12px;line-height:1.7}#deepLoading i{display:block;width:132px;height:3px;margin:18px auto 0;border-radius:99px;overflow:hidden;background:rgba(230,250,255,.12)}#deepLoading i::after{content:'';display:block;width:48%;height:100%;border-radius:inherit;background:#8eeeff;animation:deepLoadFlow 1.25s ease-in-out infinite alternate}@keyframes deepLoadFlow{from{transform:translateX(-12%)}to{transform:translateX(120%)}}body.deep-mode:not(.deep-ready) #deepLoading{display:grid}body.deep-ready #deepLoading{display:none}
+
+/* Bounded repair: .glass must not override fixed footer positioning. */
+footer.glass{position:fixed}
+#gpuNotice{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:70;background:rgba(5,24,32,.93);border:1px solid rgba(205,244,248,.28);border-radius:14px;padding:11px 14px;color:#eefbff;max-width:calc(100vw - 24px);font-size:12px;display:flex;gap:12px;align-items:center}
+#gpuRetry{display:none;min-width:118px}#gpuNotice[data-kind="retry"] #gpuRetry{display:block}
+#fallback{pointer-events:auto}
+@media(max-width:760px){#gpuNotice{bottom:108px;width:calc(100vw - 24px)}footer.glass{gap:7px;padding:0 10px;font-size:9px}.brandText b{font-size:8px}}
+</style>
+</head>
+<body>
+<main id="stage"><canvas id="ocean" aria-label="异形海岛、无限海面、浪墙、卷浪、泡沫墙和浓烟的程序化三维工作台"></canvas><iframe id="deepFrame" title="Ocean Mother 原始深海工作台 V001" hidden></iframe></main><div id="deepLoading" aria-live="polite"><div class="deepLoadCard"><strong>正在恢复原始深海 V001</strong><span>深海保持上一版源码，只在进入深海时启动。海岛近岸不会再被深海初始化拖慢。</span><i></i></div></div>
+<div id="fallback"><div><h1>当前浏览器无法启动 WebGL2</h1><p>请在支持 WebGL2 的桌面或移动浏览器中打开这个工作台。</p></div></div>
+<header class="topbar">
+  <div class="brand glass"><span class="brandMark">O</span><span class="brandText"><b>OCEAN MOTHER</b><small>ISLAND GOLD COAST / R018.11</small></span></div>
+  <nav class="tabs glass" aria-label="水域"><button class="selected" data-zone="island">海岛金岸</button><button data-zone="deep">深海</button></nav>
+  <div class="actions glass"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle" aria-expanded="true">参数工作台</button></div>
+</header>
+<section id="sceneTitle"><span class="eyebrow">WIND · WATER · ISLAND · LIGHT</span><h1>风越礁岸，浪入沙湾。</h1><p>无限海面 · 非对称岛体 · 分段破浪 · 湿岩水线 · 体积浓烟</p></section>
+<nav id="cameraBar" class="glass" aria-label="观察镜头">
+  <button class="active" data-view="overview">海岛全景</button><button data-view="top">俯视全岛</button><button data-view="shore">异形沙滩</button><button data-view="breaker">浪墙卷浪</button><button data-view="rocks">岩石水线</button><button data-view="fire">浓烟火源</button>
+</nav>
+<nav id="effectRail" class="glass" aria-label="效果快速开关">
+  <button class="active" data-effect="foamWall">泡沫墙</button><button class="active" data-effect="waveWall">浪墙</button><button class="active" data-effect="curl">卷浪</button><button class="active" data-effect="runup">拍岸回流</button><button class="active" data-effect="spray">浪花喷雾</button><button class="active" data-effect="smoke">浓烟</button><button class="active" data-effect="fire">火源</button>
+</nav>
+<aside id="panel" class="glass" aria-label="Ocean Mother 海岛参数">
+  <div class="panelHead"><div class="panelTop"><div><span class="eyebrow">EXPERIMENT CONTROLS</span><h2>海岛金岸实验室</h2><p>所有效果均为程序化实时生成</p></div><button id="panelClose">收起</button></div>
+  <nav id="panelTabs"><button class="selected" data-page="1">1 海岛与海浪</button><button data-page="2">2 泡沫与烟火</button><button data-page="3">3 光学与材质</button></nav></div>
+  <div class="panelScroll">
+    <div class="presetRow"><button data-preset="calm">平静海面</button><button class="selected" data-preset="swell">海风涌浪</button><button data-preset="storm">强风浓烟</button></div>
+    <div class="page" data-page-content="1">
+      <section class="controlGroup"><h3>异形岛体</h3>
+        <div class="control"><label for="islandHeight">岛体高度</label><output data-out="islandHeight"></output><input id="islandHeight" data-param="islandHeight" type="range" min="7" max="22" step="0.1"></div>
+        <div class="control"><label for="islandIrregularity">岸线异形度</label><output data-out="islandIrregularity"></output><input id="islandIrregularity" data-param="islandIrregularity" type="range" min="0.25" max="1.65" step="0.01"></div>
+        <div class="control"><label for="beachWidth">白沙带宽度</label><output data-out="beachWidth"></output><input id="beachWidth" data-param="beachWidth" type="range" min="4" max="15" step="0.1"></div>
+        <div class="control"><label for="shoreBias">沙嘴与湾口</label><output data-out="shoreBias"></output><input id="shoreBias" data-param="shoreBias" type="range" min="0" max="1.5" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>外海与破浪</h3>
+        <div class="control"><label for="waveHeight">外海浪高</label><output data-out="waveHeight"></output><input id="waveHeight" data-param="waveHeight" type="range" min="0.15" max="2.4" step="0.01"></div>
+        <div class="control"><label for="waveSpeed">波速</label><output data-out="waveSpeed"></output><input id="waveSpeed" data-param="waveSpeed" type="range" min="0.2" max="2.2" step="0.01"></div>
+        <div class="control"><label for="breakerPower">三层浪墙强度</label><output data-out="breakerPower"></output><input id="breakerPower" data-param="breakerPower" type="range" min="0" max="2.2" step="0.01"></div>
+        <div class="control"><label for="curlPower">卷浪水唇强度</label><output data-out="curlPower"></output><input id="curlPower" data-param="curlPower" type="range" min="0" max="2" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>效果开关</h3><div class="toggleGrid">
+        <button class="active" data-effect="waveWall">三层浪墙</button><button class="active" data-effect="curl">卷浪水唇</button><button class="active" data-effect="runup">拍岸回流</button><button class="active" data-effect="spray">浪花喷雾</button>
+      </div></section>
+    </div>
+    <div class="page" data-page-content="2" hidden>
+      <section class="controlGroup"><h3>泡沫输运</h3>
+        <div class="control"><label for="foamWall">泡沫墙厚度</label><output data-out="foamWall"></output><input id="foamWall" data-param="foamWall" type="range" min="0" max="2.4" step="0.01"></div>
+        <div class="control"><label for="foamNoise">泡沫破碎度</label><output data-out="foamNoise"></output><input id="foamNoise" data-param="foamNoise" type="range" min="0.1" max="2.2" step="0.01"></div>
+        <div class="control"><label for="runup">沙滩回流距离</label><output data-out="runup"></output><input id="runup" data-param="runup" type="range" min="0" max="2" step="0.01"></div>
+        <div class="control"><label for="spray">浪花雾强度</label><output data-out="spray"></output><input id="spray" data-param="spray" type="range" min="0" max="2.2" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>烟火与风</h3>
+        <div class="control"><label for="smokeDensity">烟雾浓度</label><output data-out="smokeDensity"></output><input id="smokeDensity" data-param="smokeDensity" type="range" min="0" max="2.8" step="0.01"></div>
+        <div class="control"><label for="smokeHeight">烟柱高度</label><output data-out="smokeHeight"></output><input id="smokeHeight" data-param="smokeHeight" type="range" min="10" max="55" step="0.1"></div>
+        <div class="control"><label for="wind">风力输运</label><output data-out="wind"></output><input id="wind" data-param="wind" type="range" min="0" max="2.2" step="0.01"></div>
+        <div class="control"><label for="fire">火源亮度</label><output data-out="fire"></output><input id="fire" data-param="fire" type="range" min="0" max="2.2" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>效果开关</h3><div class="toggleGrid"><button class="active" data-effect="foamWall">泡沫墙</button><button class="active" data-effect="smoke">浓烟</button><button class="active" data-effect="fire">火源</button><button class="active" data-effect="spray">喷雾</button></div></section>
+    </div>
+    <div class="page" data-page-content="3" hidden>
+      <section class="controlGroup"><h3>海水光学</h3>
+        <div class="control"><label for="waterClarity">浅水透明度</label><output data-out="waterClarity"></output><input id="waterClarity" data-param="waterClarity" type="range" min="0.05" max="1.5" step="0.01"></div>
+        <div class="control"><label for="sunAngle">日光方向</label><output data-out="sunAngle"></output><input id="sunAngle" data-param="sunAngle" type="range" min="-3.14" max="3.14" step="0.01"></div>
+        <div class="control"><label for="exposure">画面对比与曝光</label><output data-out="exposure"></output><input id="exposure" data-param="exposure" type="range" min="0.65" max="1.65" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>岩石材质</h3>
+        <div class="control"><label for="rockSharpness">岩石锐利度</label><output data-out="rockSharpness"></output><input id="rockSharpness" data-param="rockSharpness" type="range" min="0.2" max="1.6" step="0.01"></div>
+        <div class="control"><label for="rockContrast">岩石明暗对比</label><output data-out="rockContrast"></output><input id="rockContrast" data-param="rockContrast" type="range" min="0.4" max="2" step="0.01"></div>
+      </section>
+      <section class="controlGroup"><h3>检查模式</h3><label class="selectRow">显示模式<select id="renderMode"><option value="0">环境日光</option><option value="1">中性材质</option><option value="2">水深与泡沫诊断</option><option value="3">岩石与岸线诊断</option></select></label><p class="note">液态玻璃界面的高光会随指针、场景日光和时间缓慢流动。界面没有贴图。</p></section>
+      <section class="controlGroup"><h3>运行记录</h3><div class="metrics"><span>渲染比例</span><b id="renderScale">0.00</b><span>显示帧率</span><b id="fpsPanel">0</b><span>效果数量</span><b id="effectCount">8</b><span>构建身份</span><b>R018.8</b></div></section>
+    </div>
+  </div>
+</aside>
+<footer class="glass"><span><i id="statusDot"></i><span id="status">实时运行</span></span><span id="clock">0.0 s</span><span id="fps">0 FPS</span><span class="hideMobile" id="resolution"></span><span class="hideMobile" id="windReadout"></span><span>R018.11 · 运行修正版</span></footer>
+<div id="loading"><div class="loadCard"><div class="loadOrb"></div><b>构建海岛金岸实验室</b><span>准备非对称岛体、方向性破浪、岩石湿面与烟流</span></div></div>
+<pre id="qaProbe"></pre>
+<div id="gpuNotice" hidden role="status"><span id="gpuMessage"></span><button id="gpuRetry">重新启动渲染</button></div>
+<script>{{OCEAN_INLINE_BLOCK_0}}</script>
+<script>{{OCEAN_INLINE_BLOCK_1}}</script>
+</body>
+</html>

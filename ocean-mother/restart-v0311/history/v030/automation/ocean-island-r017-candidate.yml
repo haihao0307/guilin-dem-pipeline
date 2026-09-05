@@ -1,0 +1,85 @@
+name: Ocean Island R017 candidate
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-island-r017-candidate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ocean-island-r017-candidate
+  cancel-in-progress: false
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Reconstruct exact source and validate
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,lzma,json,hashlib
+          source=Path('ocean-mother/island-r017-build')
+          parts=[(source/f'source.{i:02d}.b64').read_text().strip() for i in range(1,6)]
+          b64=''.join(parts)
+          assert len(b64)==50496, len(b64)
+          payload=base64.b64decode(b64,validate=True)
+          assert len(payload)==37872, len(payload)
+          digest=hashlib.sha256(payload).hexdigest()
+          assert digest=='67c6dca047dbd17c1253ce55843f458dc80b3889a2f2f566a00ffb8fc9749092',digest
+          data=json.loads(lzma.decompress(payload))
+          root=Path('ocean-mother/island-r017');root.mkdir(parents=True,exist_ok=True)
+          for name,content in data['runtime'].items():
+              assert Path(name).name==name
+              (root/name).write_text(content,encoding='utf-8')
+          (source/'qa_runner.py').write_text(data['qa_runner.py'],encoding='utf-8')
+          identities={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in root.iterdir() if p.is_file()}
+          Path('evidence/SOURCE.json').write_text(json.dumps({'payloadSha256':digest,'version':'0.3.0-island-r017','files':identities,'published':False,'visualApproved':False},indent=2))
+          PY
+          for f in ocean-mother/island-r017/*.mjs; do node --check "$f"; done
+          node ocean-mother/island-r017/core.test.mjs | tee evidence/NODE_TESTS.txt
+          node --input-type=module - <<'JS'
+          import {PARAMS,GROUPS} from './ocean-mother/island-r017/params.mjs';
+          import {writeFileSync} from 'node:fs';
+          writeFileSync('ocean-mother/island-r017/PARAMETER_CATALOG.json',JSON.stringify({version:'0.3.0-island-r017',count:PARAMS.length,groups:GROUPS,parameters:PARAMS},null,2));
+          JS
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root=Path('ocean-mother/island-r017')
+          banned={'.png','.jpg','.jpeg','.webp','.gif','.hdr','.exr','.ktx','.ktx2','.glb','.gltf','.obj'}
+          assert not [p for p in root.rglob('*') if p.suffix.lower() in banned]
+          for p in root.iterdir():
+              if p.is_file(): assert not re.search(r'data\s*:\s*image/',p.read_text(),re.I),p
+          PY
+      - name: Browser dependencies
+        run: |
+          python3 -m pip install --quiet playwright pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Real Chromium WebGL2 interactions and views
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8170 --bind 127.0.0.1 > evidence/http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          python3 -u ocean-mother/island-r017-build/qa_runner.py http://127.0.0.1:8170/ocean-mother/island-r017/ evidence | tee evidence/QA_LOG.txt
+      - name: Preserve exact source and evidence
+        if: always()
+        run: |
+          if [ -d ocean-mother/island-r017 ]; then cp -r ocean-mother/island-r017 evidence/runtime; fi
+          if [ -f ocean-mother/island-r017-build/qa_runner.py ]; then cp ocean-mother/island-r017-build/qa_runner.py evidence/qa_runner.py; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r017-candidate
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9

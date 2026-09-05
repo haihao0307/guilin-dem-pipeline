@@ -1,0 +1,77 @@
+name: Ocean Island R017 public Playwright check
+
+on:
+  push:
+    branches: [work/ocean-mother-handoff-20260901]
+    paths: [.github/workflows/ocean-island-r017-public-playwright-check.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-island-r017-public-playwright-check
+  cancel-in-progress: false
+
+jobs:
+  public-playwright:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Install verification dependencies
+        run: python3 -m pip install --quiet playwright pillow
+
+      - name: Operate the public HTML in desktop and mobile Chromium
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/'
+          code=$(curl -L -sS -o evidence/public-index.html -w '%{http_code}' -H 'Cache-Control: no-cache' "${URL}?readback=$RANDOM")
+          test "$code" = 200
+          grep -q 'island-r017-additive-controls' evidence/public-index.html
+          python3 -u ocean-mother/island-r017-build/qa_runner.py "$URL" evidence | tee evidence/PUBLIC_PLAYWRIGHT_LOG.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('evidence/BROWSER_QA.json').read_text())
+          assert q['status']=='PASS',q
+          required=[
+            'http_200','ready','correct_identity','102_controls','three_pages',
+            'three_fire_sources','multiple_smoke_sources','long_smoke','no_trees',
+            'all_three_curl_layers_drawn','daylight_average','sand_visible','water_visible',
+            'glass_flows_when_world_paused','geometry_control_applies','mobile_http_ready',
+            'mobile_tabs_usable','mobile_parameters_present','deep_controls_present',
+            'deep_glass_skin_applied','return_to_island','no_request_failures',
+            'no_js_or_console_errors','no_GL_errors'
+          ]
+          missing={name:q['checks'].get(name) for name in required if q['checks'].get(name) is not True}
+          assert not missing,missing
+          receipt={
+            'status':'ONLINE_HTML_VERIFIED',
+            'url':'https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r017/',
+            'checksPassed':q['checksPassed'],
+            'checksFailed':q['checksFailed'],
+            'desktopInteractive':True,
+            'mobileViewportInteractive':True,
+            'deepOceanRoundTrip':True,
+            'persistentImageAssets':0,
+            'visualApproved':False,
+            'productionApproved':False
+          }
+          Path('evidence/ONLINE_HTML_VERIFIED.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-island-r017-public-playwright-check
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9

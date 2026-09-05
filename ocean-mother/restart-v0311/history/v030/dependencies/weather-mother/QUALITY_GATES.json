@@ -1,0 +1,66 @@
+{
+  "productionLine": "Weather Mother",
+  "contractVersion": "1.0.0",
+  "reviewDate": "2026-08-31",
+  "target": "AAA real-time game volumetric weather system",
+  "targetIsNotAnApproval": true,
+  "delivery": "online-interactive-only",
+  "reviewedRuntimeVersion": "0.5.1",
+  "reviewedRepositoryHead": "091d6baddaf97f9339dd2f4c70964e23d67e0ee7",
+  "reviewedFiles": {
+    "engine.js": "88f9b7a5f06fa299f02fe347246d60e9a0c5bf89",
+    "cloud.glsl": "5834b1190b159d58b8fb4374a19c3e6666c5d2fc",
+    "index.html": "d7c8429dbf897bbf92e972f822c6d9e576a716ff"
+  },
+  "runtimeModifiedInThisReview": false,
+  "principles": [
+    "Preserve all existing cloud genera, weather cases, lighting, wind and interaction controls.",
+    "Do not regain compatibility or speed by removing the lighting system or silently reducing functionality.",
+    "Source byte count is a delivery metric; measure GPU time, frame pacing, memory and visual stability separately.",
+    "Store source code, seeds, parameters, provenance and numeric QA; no photographic skies, HDR images, generated artwork or imported cloud assets.",
+    "Keep graphical approximations explicitly distinct from validated fluid simulation and observed weather.",
+    "A successful build, shader compilation or first frame does not establish visual acceptance."
+  ],
+  "visualGates": {
+    "morphology": "No repeated mushroom columns or disc caps; distinct cloud families, hierarchical billows and connected masses.",
+    "boundaries": "No nonzero density on a sampling boundary, visible straight truncation, tile seam or split-colour plane. Check seeds and close views.",
+    "sampling": "No objectionable grain, banding, temporal flicker, ghosting or blurred silhouettes at the declared quality setting.",
+    "lighting": "Same cloud identity across dawn, noon, sunset and moonlight; preserve internal shadow detail, atmospheric colour, transmission and coherent light direction.",
+    "motion": "World-space advection with stated wind-from convention; smooth speed and direction changes; preserve cloud positions during parameter updates.",
+    "performance": "Record viewport, render resolution, hardware, browser, frame-time distribution and memory. Do not label software-renderer or single-frame checks as user-device performance approval."
+  },
+  "codeReviewFindings": [
+    {
+      "id": "WM-CONTINUITY-01",
+      "file": "engine.js",
+      "status": "code-inspected-unfixed",
+      "finding": "hour and direction use ordinary target-minus-state interpolation despite periodic domains.",
+      "requiredTest": "Verify 23.95 to 0.05 hours and 359 to 1 degrees without an unintended full-cycle reversal."
+    },
+    {
+      "id": "WM-CONTINUITY-02",
+      "file": "engine.js",
+      "status": "code-inspected-unfixed",
+      "finding": "The accepted volume-worker response calls windOffset.fill(0), including count and instability rebuilds.",
+      "requiredTest": "After measurable advection, change cloud count and convective strength; existing cloud positions must not snap to the origin."
+    },
+    {
+      "id": "WM-LIGHT-01",
+      "file": "cloud.glsl",
+      "status": "code-inspected-risk-unfixed",
+      "finding": "incident() interpolates antiparallel sun and moon direction vectors before normalization. Near the transition midpoint the vector nearly cancels.",
+      "requiredTest": "Sweep dusk and dawn with fixed geometry. Inspect light direction and frame-to-frame radiance; blend light contributions without a near-zero direction."
+    },
+    {
+      "id": "WM-TIME-01",
+      "file": "engine.js",
+      "status": "code-inspected-unfixed",
+      "finding": "Simulation time advances only after the GPU fence and caps each accepted elapsed interval at 0.1 seconds.",
+      "requiredTest": "Verify declared wind speed over equal wall-clock intervals under different GPU frame times; treat tab suspension separately."
+    }
+  ],
+  "releaseGate": "Before presenting a new runtime, compare against the current baseline, check real-browser interaction and animation, verify public file identities and keep the previous working version recoverable.",
+  "manualVisualAcceptance": false,
+  "productionReady": false,
+  "aaaQualityApproved": false
+}

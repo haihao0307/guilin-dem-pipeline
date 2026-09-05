@@ -1,0 +1,113 @@
+{
+  "format": "ocean-r006-reference-adoption-receipt",
+  "version": "0.1.0",
+  "date": "2026-09-01",
+  "motherId": "Ocean Mother",
+  "subsystem": "Coast",
+  "status": "REFERENCE_OPERATORS_VERIFIED_LIVE_REPLICATION_PENDING",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "work/ocean-mother-handoff-20260901",
+  "sourceCommit": "e9813ac976a65943f404bee9ae786c8e16668f8e",
+  "auditedLiveSourceCommit": "aeeafa124d79f9cb3df2345b0563929ef9f1b47f",
+  "policyVersion": "1.0.0",
+  "policySha256": "fe69ea88c05d9b8c74e79e21c2c2c719dc096b677848eb40305575f08b5b8fdf",
+  "schemaSha256": null,
+  "validatorSha256": null,
+  "coreOverrides": {},
+  "sourceReading": {
+    "ledger": "research/R006_READING_LEDGER.json",
+    "distillation": "research/R006_MANUAL_TO_REPLICATION.md",
+    "sourceEntries": 10,
+    "readScope": "specified public manual chapters and developer explanation; exact scope and unviewed media in ledger",
+    "allManualsReadCompletely": false,
+    "desktopProgramsExecuted": false,
+    "privateSolverSourceObtained": false,
+    "originalReferenceSceneProjectObtained": false
+  },
+  "implementedReferenceOperators": [
+    "labs/r006-reference-v010/particle-transfer.mjs",
+    "labs/r006-reference-v010/pressure-projection.mjs",
+    "labs/r006-reference-v010/boundary-geometry.mjs",
+    "labs/r006-reference-v010/fracture-solid.mjs"
+  ],
+  "liveRuntimeEntryPoints": [],
+  "tests": {
+    "local": {"passed": 23, "failed": 0, "skipped": 0, "nodeVersion": "v22.16.0"},
+    "remote": {
+      "workflow": ".github/workflows/ocean-mother-r006-reference.yml",
+      "runId": 33492787361,
+      "jobId": 99807945408,
+      "sourceCommit": "e9813ac976a65943f404bee9ae786c8e16668f8e",
+      "conclusion": "success",
+      "passed": 23,
+      "failed": 0,
+      "skipped": 0,
+      "executableIdentitiesChecked": 6,
+      "localEvidenceHashesChecked": 2,
+      "baselineDefectsReproduced": true
+    },
+    "scope": "isolated CPU operators, exact baseline geometry capture and short numerical probes",
+    "newBrowserTests": 0,
+    "fullSharedSchemaTestsRun": false,
+    "legacyFullKnowledgeGateRun": false
+  },
+  "evidence": {
+    "localVerification": "labs/r006-reference-v010/evidence/VERIFICATION.json",
+    "baselineAndReference": "labs/r006-reference-v010/evidence/BASELINE_AND_REFERENCE.json",
+    "localTestLog": "labs/r006-reference-v010/evidence/REFERENCE_TESTS.tap",
+    "remoteArtifactId": 9794445560,
+    "remoteArtifactName": "ocean-r006-reference-evidence",
+    "remoteArtifactBytes": 5233,
+    "remoteArtifactSha256": "dd13bac92483d025fb15d5afcba1ccf562e5a7b30fe7b522f35cea0ac64d48ce"
+  },
+  "findings": {
+    "oldWaterTopMeshOpenEdges": 704,
+    "oldSlabMaximumEdgeGapM": 0.29296964406967163,
+    "oldLateralBoundary": "periodic water, clamped foam, finite cutaway display",
+    "oldInjectedOutsideSprayProbeSurvivesOneStep": true,
+    "globalMassBalanceAloneProvesNoLeak": false,
+    "newClosedBedReferenceOpenEdges": 0,
+    "newClosedBedReferenceIsLiveRepair": false,
+    "newPressureExample": {
+      "cells": [16, 12, 10],
+      "beforeMaxDivergencePerSecond": 29.412883677298232,
+      "afterMaxDivergencePerSecond": 7.977360105826392e-9,
+      "blockedNormalFluxM3PerSecond": 0,
+      "scope": "constant-density closed domain with stationary voxel solids"
+    },
+    "enlargementProbe": {
+      "domainMetres": [96, 84],
+      "cells": [216, 168],
+      "spacingMetres": [0.4444444444444444, 0.5],
+      "areaMultiplier": 2.25,
+      "physicalTimeSeconds": 2,
+      "liveAreaChanged": false
+    }
+  },
+  "unresolvedItems": [
+    "Full source manuals, embedded demonstrations and reference scene projects have not all been acquired or executed.",
+    "Live sidewall geometry and boundary semantics remain unchanged; defects are diagnosed, not repaired in the public viewer.",
+    "PIC/FLIP transfers and closed-domain pressure are isolated references, not a complete free-surface liquid solver.",
+    "Free-surface pressure boundaries, particle advection, collider handling and interface reconstruction still require implementation and validation.",
+    "Smoke temperature, fuel, gas transport, pressure and combustion have no new integrated runtime implementation.",
+    "Closed faceted rock geometry is a shape study, without reference similarity or geological calibration approval.",
+    "The larger numerical-domain probe has no browser, performance or visual evidence.",
+    "Original common strict Schema, validator and full runtime acceptance gate remain missing."
+  ],
+  "protection": {
+    "liveCoastRuntimeChanged": false,
+    "deepSeaChanged": false,
+    "frozenWeatherChanged": false,
+    "commonPolicyChanged": false,
+    "archiveChanged": false,
+    "otherMotherChanged": false,
+    "authoritativeTruthChanged": false,
+    "newDeployment": false,
+    "importedImages": 0,
+    "importedModels": 0,
+    "forcePush": false
+  },
+  "fullReplication": false,
+  "visualApproved": false,
+  "productionApproved": false
+}

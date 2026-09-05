@@ -1,0 +1,1 @@
+window.__OCEAN_DELIVERY_POLICY__={defaultDeliverable:'interactive-3d-html-webgl',imageGeneration:false,imageAllowedOnlyByExplicitUserRequest:true,deepStartup:'lazy-original-v001',nearshoreLocked:true,visualApproved:false,productionApproved:false};
