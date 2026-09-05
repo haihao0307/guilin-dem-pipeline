@@ -2,6 +2,12 @@
 
 日期：2026-09-05。包号：XIAOMA-MENTOR-V1.1-DIST-20260905。导师原文 V1.1；分发包装 V1.1.1。
 
+## 当前学习轮次 R1
+
+用户已要求各 Mother 分层阅读、独立回复并整理 Houdini、Blender、Unreal Engine、Gaea 技能。先进入 [分层学习与理解回执 R1](../learning-r1-20260905/START_HERE.md)，再读 [技能目录](../learning-r1-20260905/SKILL_INDEX.md)、[各 Mother 作业](../learning-r1-20260905/ASSIGNMENTS.md) 和 [实际状态快照](../learning-r1-20260905/STATUS.md)。总控回执索引位于 [Issue 62](https://github.com/haihao0307/guilin-dem-pipeline/issues/62)。
+
+本轮八份教材已发布，五组仓库通知已回读确认。当前快照未发现任何 Mother 的独立答卷，理解复核与技能试验尚未完成。Cloud 覆盖方式、Animal、Plant、Brain/Jarvis 的独立入口仍须核实，不能由发布文档推定它们已收件。原始交接载荷继续保持原字节。
+
 用户授权把导师交接、小妈审阅及意见打包并传递给各 Mother，并将 Codex 上传到 HOUSE 的全量包接回小妈总控目录。本目录继续作为本次协作入口。生产代码、真值数据、已接受资产和人工验收状态均未改动。
 
 ## 完整原件现已归位
