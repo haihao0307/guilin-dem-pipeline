@@ -1,0 +1,90 @@
+name: B24 startup staging and public verification
+on:
+  push:
+    branches: [ops/b24-startup-fix-20260905]
+    paths: ['.github/workflows/b24-startup-stage.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            aircraft/b24-v0171-clean-effects
+            ops
+            .github/workflows
+      - name: Resolve exact verified child of the requested source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,time,urllib.request
+          parent='48b72879a6f9c3f7a21adb702f954416b3b57aa3'
+          api='https://api.github.com/repos/haihao0307/AIRCRAFT/'
+          def read(url):
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'User-Agent':'B24-startup-stage','Cache-Control':'no-cache'})
+              return json.load(urllib.request.urlopen(req,timeout=30))
+          deadline=time.monotonic()+660
+          while True:
+              try:
+                  sha=read(api+'git/ref/heads/feature/b24-v017-clean-restart-workbench')['object']['sha']
+                  commit=read(api+'git/commits/'+sha)
+                  if commit['parents'][0]['sha']==parent:
+                      base='https://raw.githubusercontent.com/haihao0307/AIRCRAFT/'+sha+'/'
+                      build=read(base+'reports/BUILD.json');startup=read(base+'reports/STARTUP_QA.json');behavior=read(base+'reports/BROWSER_QA.json')
+                      if build.get('source_commit')==parent and build.get('loader_revision')=='20260905-loader-r1' and startup['passed'] and behavior['passed']:
+                          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('sha='+sha+'\n')
+                          print('VERIFIED_SOURCE',sha);break
+              except Exception as error:print('Waiting for verified source:',type(error).__name__,flush=True)
+              if time.monotonic()>=deadline:raise TimeoutError('No verified child; staging stopped')
+              time.sleep(10)
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: haihao0307/AIRCRAFT
+          ref: ${{ steps.source.outputs.sha }}
+          path: source
+          persist-credentials: false
+      - name: Stage only matching candidate files
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,shutil,os
+          src=Path('source');dst=Path('aircraft/b24-v0171-clean-effects')
+          report=json.loads((src/'reports/BUILD.json').read_text())
+          for name,want in report['files'].items():
+              data=(src/'runtime'/name).read_bytes()
+              got=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              assert got==want,name
+              target=dst/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+          assert len(report['files'])==37
+          print('STAGED_VERIFIED_SOURCE',os.environ['SOURCE_SHA'])
+          PY
+          git config user.name 'B24 startup staging'
+          git config user.email 'b24-verification@users.noreply.github.com'
+          git add aircraft/b24-v0171-clean-effects
+          git diff --cached --name-only | grep -v '^aircraft/b24-v0171-clean-effects/' && exit 1 || true
+          git diff --cached --quiet || git commit -m 'stage(b24): verified startup subtree; accepted V017 untouched'
+          git push origin HEAD:ops/b24-startup-fix-20260905
+          echo STAGED_RUNTIME_TREE=$(git rev-parse HEAD:aircraft/b24-v0171-clean-effects)
+      - name: Browser prerequisites
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Verify live page when matching release is served
+        env:
+          B24_SOURCE: source
+        run: python ops/b24_startup_public.py
+      - name: Save public checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: B24-startup-public-checks
+          path: verification/
