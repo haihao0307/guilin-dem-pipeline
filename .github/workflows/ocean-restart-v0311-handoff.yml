@@ -1,0 +1,126 @@
+name: Ocean Mother V0.3.11 full restart archive
+
+on:
+  push:
+    branches:
+      - handoff/ocean-mother-full-20260905-v0.3.11
+    paths:
+      - tools/ocean-restart-v0311/**
+      - .github/workflows/ocean-restart-v0311-handoff.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-restart-v0311-handoff
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      HANDOFF_BRANCH: handoff/ocean-mother-full-20260905-v0.3.11
+      HANDOFF_TAG: ocean-mother-full-restart-v0.3.11-20260905
+      PACKAGE: Ocean_Mother_Full_Restart_Handoff_2026-09-05_V0.3.11
+      SOURCE_BASE: 00329cd78bfeb5bc8b5a1061a1ad6f5154dcdab5
+      SOURCE_PAGES: 5cbef6aa5469de6dd729cae3b89a4694c5a39d62
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Read immutable source commits and verify the supplied inputs
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "$HANDOFF_BRANCH"
+          git fetch --no-tags --depth=1 origin "$SOURCE_BASE" "$SOURCE_PAGES"
+          cat tools/ocean-restart-v0311/inputs.part01.b64 tools/ocean-restart-v0311/inputs.part02.b64 | base64 -d > tools/ocean-restart-v0311/r01811_inputs.tar.xz
+          echo '60d85ccf34f8dcf9843782060d21654ecb7dce60907047c86a858cb9b3e5ed44  tools/ocean-restart-v0311/r01811_inputs.tar.xz' | sha256sum -c -
+          python3 -m py_compile tools/ocean-restart-v0311/build_restart_package.py
+
+      - name: Build the complete archive without changing runtime bytes
+        run: |
+          set -euo pipefail
+          python3 tools/ocean-restart-v0311/build_restart_package.py --repo . --output dist
+          python3 "dist/$PACKAGE/tools/verify_package.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,zipfile,json,hashlib
+          n=os.environ['PACKAGE']
+          p=Path('dist')/(n+'.zip')
+          receipt=json.loads((Path('dist')/(n+'.manifest.json')).read_text())
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==receipt['zipSha256']
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+              assert len(z.namelist())==receipt['fileCountIncludingManifest']
+              assert hashlib.sha256(z.read(n+'/index.html')).hexdigest()=='2c689e15c1be7dfd4cd14c83ad3353e63868baee006cd04f3aee3a5f653842e3'
+          assert receipt['websiteDeployed'] is False
+          assert receipt['packageValidation']['browserRerunPerformed'] is False
+          PY
+
+      - name: Commit the archive and readable restart snapshot to the handoff branch only
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin "refs/heads/$HANDOFF_BRANCH" | cut -f1)" = "$GITHUB_SHA"
+          test ! -e ocean-mother/restart-v0311
+          cp -R "dist/$PACKAGE" ocean-mother/restart-v0311
+          find ocean-mother/restart-v0311 -type d -name __pycache__ -prune -exec rm -rf {} +
+          cp "dist/$PACKAGE.zip" "dist/$PACKAGE.sha256" "dist/$PACKAGE.manifest.json" ocean-mother/handoffs/
+          cp "dist/$PACKAGE.manifest.json" ocean-mother/R01811_FULL_HANDOFF_RECEIPT.json
+          for name in WORKING_STATE.md NEXT_ROUND_START_HERE.md AGENTS.md OCEAN_OUTPUT_POLICY.json; do
+            cp "dist/$PACKAGE/$name" "ocean-mother/$name"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json
+          name=os.environ['PACKAGE']
+          receipt=json.loads((Path('dist')/(name+'.manifest.json')).read_text())
+          text=(
+            '# Ocean Mother V0.3.11 全量重启入口\n\n'
+            '归档分支：`'+os.environ['HANDOFF_BRANCH']+'`。\n\n'
+            '固定标签：`'+os.environ['HANDOFF_TAG']+'`。\n\n'
+            '完整包：`ocean-mother/handoffs/'+name+'.zip`。\n\n'
+            'ZIP SHA-256：`'+receipt['zipSha256']+'`。\n\n'
+            'ZIP 字节数：'+str(receipt['zipBytes'])+'；文件总数：'+str(receipt['fileCountIncludingManifest'])+'。\n\n'
+            '先读 `ocean-mother/restart-v0311/START_HERE.md`，再读同目录 AGENTS.md、WORKING_STATE.md、OCEAN_HANDOFF.md、HANDOFF.json、SOURCE_LOCK.json 和 NEXT_ROUND_START_HERE.md。\n\n'
+            '当前唯一接续候选为 R018.11 故障修复版，入口 `ocean-mother/restart-v0311/index.html`，完整可编辑源码在同目录 source/。\n\n'
+            '打包保持运行文件原件、冻结深海、岛体、沙滩、石头、火焰、烟雾和镜头。历史 V0.3.0 全量包及 117 个原文件保留于 history/，历史入口不覆盖本入口。\n\n'
+            '本轮完成归档，不部署网站。继承的 R018.11 恢复报告采用内存 HTML 加载；URL 与真实硬件稳定性、帧率、泡沫和卷浪视觉仍待验证。visualApproved=false，productionApproved=false。\n'
+          )
+          Path('ocean-mother/RESTART_START_HERE.md').write_text(text,encoding='utf-8')
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/restart-v0311 "ocean-mother/handoffs/$PACKAGE.zip" "ocean-mother/handoffs/$PACKAGE.sha256" "ocean-mother/handoffs/$PACKAGE.manifest.json" ocean-mother/R01811_FULL_HANDOFF_RECEIPT.json ocean-mother/RESTART_START_HERE.md ocean-mother/WORKING_STATE.md ocean-mother/NEXT_ROUND_START_HERE.md ocean-mother/AGENTS.md ocean-mother/OCEAN_OUTPUT_POLICY.json
+          git commit -m 'handoff(ocean): preserve full R018.11 restart package and exact source [skip ci]'
+          git push origin "HEAD:refs/heads/$HANDOFF_BRANCH"
+          git tag -a "$HANDOFF_TAG" -m 'Ocean Mother full restart archive V0.3.11; repair candidate, not visually approved'
+          git push origin "refs/tags/$HANDOFF_TAG"
+          COMMIT="$(git rev-parse HEAD)"
+          test "$(git ls-remote origin "refs/heads/$HANDOFF_BRANCH" | cut -f1)" = "$COMMIT"
+          test "$(git ls-remote origin "refs/tags/$HANDOFF_TAG^{}" | cut -f1)" = "$COMMIT"
+          export COMMIT
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json
+          r={'archiveBranch':os.environ['HANDOFF_BRANCH'],'tag':os.environ['HANDOFF_TAG'],'commit':os.environ['COMMIT'],'branchAndTagReadBackMatched':True,'workflowRun':os.environ['GITHUB_RUN_ID'],'websiteDeployed':False}
+          Path('dist/GITHUB_PUBLISH_RECEIPT.json').write_text(json.dumps(r,indent=2)+'\n')
+          print(json.dumps(r))
+          PY
+
+      - name: Upload exact full archive and publication receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_Full_Restart_V0.3.11
+          path: |
+            dist/Ocean_Mother_Full_Restart_Handoff_2026-09-05_V0.3.11.zip
+            dist/Ocean_Mother_Full_Restart_Handoff_2026-09-05_V0.3.11.sha256
+            dist/Ocean_Mother_Full_Restart_Handoff_2026-09-05_V0.3.11.manifest.json
+            dist/GITHUB_PUBLISH_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 90
