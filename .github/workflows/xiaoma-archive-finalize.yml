@@ -1,0 +1,87 @@
+name: Xiaoma complete archive tracking verification
+
+on:
+  push:
+    branches: ['handoff/xiaoma-mentor-v1.1-20260905']
+    paths: ['.github/workflows/xiaoma-archive-finalize.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+      - name: Restore ignored payloads and verify exact Git index contents
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, io, json, stat, subprocess, urllib.request, zipfile
+          from pathlib import Path, PurePosixPath
+          from datetime import datetime, timezone
+
+          root = Path('docs/mother_coordination/mentor-v1.1/full-handoff-v1.1.1')
+          name = 'Mother_System_Xiaoma_Full_Handoff_V1.1.1_2026-09-05.zip'
+          url = 'https://raw.githubusercontent.com/haihao0307/HOUSE/b1cb5e57899cbf80dee7aa22bac84a82d6182540/' + name
+          with urllib.request.urlopen(url, timeout=60) as response:
+              data = response.read(1642049)
+          def git_blob(payload):
+              return hashlib.sha1(b'blob ' + str(len(payload)).encode() + b'\0' + payload).hexdigest()
+          if len(data) != 1642048 or git_blob(data) != 'f3fd21d92ebf66cdb92144d5d476e8334e873f2a':
+              raise RuntimeError('Source archive identity mismatch')
+          receipt_path = root / 'IMPORT_RECEIPT.json'
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+          if receipt['archiveSha256'] != hashlib.sha256(data).hexdigest():
+              raise RuntimeError('Previous import receipt identity mismatch')
+          payloads = {name: data}
+          with zipfile.ZipFile(io.BytesIO(data)) as archive:
+              entries = archive.infolist()
+              if len(entries) > 10000 or sum(i.file_size for i in entries) > 128 * 1024 * 1024:
+                  raise RuntimeError('Archive exceeds limits')
+              for info in entries:
+                  p = PurePosixPath(info.filename)
+                  if p.is_absolute() or '..' in p.parts or '\\' in info.filename or not p.parts or ':' in p.parts[0] or stat.S_ISLNK(info.external_attr >> 16):
+                      raise RuntimeError('Unsafe archive path')
+                  if info.is_dir():
+                      continue
+                  relative = 'source/' + p.as_posix()
+                  if relative in payloads:
+                      raise RuntimeError('Duplicate archive path')
+                  payloads[relative] = archive.read(info)
+          for relative, payload in payloads.items():
+              target = root / relative
+              if target.exists() and target.read_bytes() != payload:
+                  raise RuntimeError('Refusing to replace changed content: ' + relative)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(payload)
+          if len(payloads) != 70:
+              raise RuntimeError('Unexpected complete payload count')
+          for item in receipt['files']:
+              if hashlib.sha256(payloads[item['path']]).hexdigest() != item['sha256']:
+                  raise RuntimeError('Receipt payload hash mismatch')
+          subprocess.run(['git', 'add', '-f', '--', str(root)], check=True)
+          for relative, payload in payloads.items():
+              path = (root / relative).as_posix()
+              staged = subprocess.check_output(['git', 'rev-parse', ':' + path], text=True).strip()
+              if staged != git_blob(payload):
+                  raise RuntimeError('Staged Git blob differs from original bytes: ' + path)
+          receipt['gitTrackingVerifiedAt'] = datetime.now(timezone.utc).isoformat()
+          receipt['gitTrackedPayloadFiles'] = len(payloads)
+          receipt['allPayloadGitBlobIdentitiesVerified'] = True
+          receipt['ignoreRuleOmissionCorrected'] = True
+          receipt['remoteReadbackStillRequired'] = True
+          receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          subprocess.run(['git', 'add', '-f', '--', str(receipt_path)], check=True)
+          print('All 70 payload files staged with exact original Git blob identities.')
+          PY
+      - name: Commit and push only repaired handoff payload
+        shell: bash
+        run: |
+          git config user.name 'Xiaoma handoff verification'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(xiaoma): track every archive and verify all 70 original payload blobs [skip ci]'
+          git push origin HEAD:refs/heads/handoff/xiaoma-mentor-v1.1-20260905
