@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {NativeAircraft,SOURCE} from './native-aircraft.js';
+import {NativeAircraft,SOURCE} from './native-aircraft.js?boot=20260905-loader-r1';
 import {Airfield} from './world.js';
 import {Mission,PHASES,DUR} from './mission.js';
 import {Effects} from './effects.js';
@@ -53,8 +53,8 @@ async function main(){
  $('scene').addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;mission.running=false;fail(new Error('显卡上下文中断，请刷新页面。当前任务已经停止。'));});
  Object.assign(api,{ready:true,scene,renderer,camera,plane,field,mission,effects:fx,audio,setCamera,getState:()=>({...mission.state(),cameraMode,fps,frameCount:api.frameCount,audioState:audio.ctx?.state||'not-started',audioRms:audio.rms(),audioEvents:[...audio.events],sourcePayloadSha256:plane.digest,rendererCount:document.querySelectorAll('canvas#scene').length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),seek:t=>{mission.seek(t);lookSmooth.copy(mission.position);lastPlanePosition.copy(mission.position);if(cameraMode==='orbit'){camera.position.copy(mission.position).add(cameraOffset);controls.target.copy(mission.position);}syncUI();},start:()=>{mission.running=true;},pause:()=>{mission.running=false;},reset:()=>$('reset').click(),captureState:()=>plane.stats});
  progress(.92,'建立完整起降任务、投放爆炸、声音与镜头控制');
- field.update(0,plane.group,camera);renderer.render(scene,camera);progress(1,'整机工作台就绪');$('loading').classList.add('hidden');$('play').disabled=false;$('reset').disabled=false;syncUI();
+ field.update(0,plane.group,camera);renderer.render(scene,camera);progress(1,'整机工作台就绪');syncUI();
  function frame(now){if(contextLost)return;requestAnimationFrame(frame);const elapsed=clamp((now-lastTime)/1000,0,4);lastTime=now;try{mission.tick(elapsed);fx.update(mission.time);cameraStep(Math.min(elapsed,.25));field.update(mission.time,plane.group,camera);audio.update(mission.rpm,mission.velocity.length(),mission.grounded,!mission.running);renderer.render(scene,camera);api.frameCount++;fpsFrames++;if(now-fpsTime>1000){fps=fpsFrames*1000/(now-fpsTime);fpsFrames=0;fpsTime=now;}if(now-lastUI>120){syncUI();lastUI=now;}}catch(e){mission.running=false;fail(e);contextLost=true;}}
  lastTime=performance.now();requestAnimationFrame(frame);
 }
-main().catch(fail);
+export {main};

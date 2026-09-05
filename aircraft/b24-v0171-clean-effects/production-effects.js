@@ -106,7 +106,7 @@ export function install(api){
  api.renderer.render=(scene,camera)=>{if(scene===api.scene&&camera===api.camera)update();return originalRender(scene,camera);};
  return state;
 }
-if(typeof window!=='undefined'){
+if(typeof window!=='undefined'&&!window.__B24_BOOTSTRAP_MANAGED__){
  const deadline=performance.now()+120000;
  const timer=setInterval(()=>{const api=window.__B24_WORKBENCH__;if(api?.ready){clearInterval(timer);try{install(api);}catch(error){api.errors.push(String(error));document.getElementById('fatal').hidden=false;document.getElementById('fatal').textContent='效果候选未通过载入检查：'+error.message;}}
  else if(performance.now()>deadline||api?.errors.length){clearInterval(timer);}},50);
