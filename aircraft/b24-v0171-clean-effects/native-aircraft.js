@@ -1,19 +1,26 @@
 import * as T from 'three';
+import {createAssetLoader} from './asset-loader.js?boot=20260905-loader-r1';
+import {LAYOUT} from './asset-layout.js?boot=20260905-loader-r1';
 export const SOURCE = Object.freeze({reviewFile:'B24_V012_PROPELLER_INTERFACE_REVIEW.html',reviewSha256:'7cf4c78cea99f9bf3aed5507cbcb2bdb49a71465b3c4aabc29563214f3da2fde',payloadBytes:16647376,payloadSha256:'7ba1b923844f5161911e9aa63b18191e0d08ff8de4b3750204aa544320bd34c2',exactV016Recovered:false});
 const tireIds=new Set([598,613,1189,1200,681,689,698]);
 const spindleIds=[1454,1385,1431,1408];
 const clamp=T.MathUtils.clamp;
-async function decompressed(url){const r=await fetch(url);if(!r.ok)throw new Error(`${url}: HTTP ${r.status}`);const bytes=await r.arrayBuffer();return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();}
 export class NativeAircraft {
   static async load(progress){
-    progress(.12,'解压当前审查页的整机几何和原始机械动画');
-    const [manifestBytes,payload]=await Promise.all([decompressed('./assets/native.json.gz'),decompressed('./assets/native.bin.gz')]);
+    progress(.05,'连接整机数据分段');
+    const loader=createAssetLoader(LAYOUT,{baseURL:import.meta.url,signal:window.__B24_STARTUP__?.signal,
+      onProgress:s=>{window.__B24_STARTUP__?.report(s);
+        const label={download:'下载整机数据',retry:'连接中断，正在重试当前分段','verify-compressed':'校验已下载的完整数据',decompress:'解压原始几何与机械动画','verify-decoded':'核对原始载荷身份',complete:'整机数据校验完成'}[s.stage];
+        if(label)progress(s.stage==='download'||s.stage==='retry'?.05+.45*s.receivedBytes/s.totalBytes:s.stage==='complete'?.67:.57,label);
+      }});
+    const {json:manifestBytes,bin:payload}=await loader.load();
     const m=JSON.parse(new TextDecoder().decode(manifestBytes));
     if(!globalThis.crypto?.subtle)throw new Error('请通过 HTTPS 在线地址打开工作台。');
     const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',payload))].map(v=>v.toString(16).padStart(2,'0')).join('');
     if(payload.byteLength!==SOURCE.payloadBytes||digest!==SOURCE.payloadSha256)throw new Error('整机数字载荷校验失败，已停止载入。');
     if(m.components.length!==1784||m.meshes.length!==348)throw new Error('当前审查资产结构与已锁定版本不符。');
-    progress(.50,'保留源节点层级，建立金属、玻璃和机械分区');
+    progress(.70,'保留源节点层级，建立金属、玻璃和机械分区');
+    await new Promise(resolve=>requestAnimationFrame(resolve));
     return new NativeAircraft(m,payload,digest);
   }
   constructor(m,payload,digest){
