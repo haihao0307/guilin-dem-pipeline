@@ -1,0 +1,167 @@
+{
+  "date": "2026-09-06",
+  "base_commit": "1fc23df1dd253d4785e05b19154cf443b4636ced",
+  "executed_at_utc": "2026-09-06T09:17:48.648655+00:00",
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+  },
+  "existing_probe_suites": [
+    {
+      "path": "curl-warp-composition/composition_probe.py",
+      "git_blob": "f4e8033c4a65ad545f747eb28a94ef23f91fb3cf",
+      "sha256": "4927e8ab3abbfe2cffbd334aca667dfbe7e32c5505f9efc09ca979b6964ed43d",
+      "passed": true,
+      "named_check_count": null,
+      "group_count": 4,
+      "stderr": ""
+    },
+    {
+      "path": "procedural-noise-audit/noise_contract_probe.py",
+      "git_blob": "98bdb212a7fdab40b3f717d0bad441867ce14a58",
+      "sha256": "9822fbb4bcc58d5ae1f01788a0233f7795a6d0c7e66a7383d205fe786f56af4b",
+      "passed": true,
+      "named_check_count": null,
+      "group_count": 7,
+      "stderr": ""
+    },
+    {
+      "path": "realtime-stream-time/temporal_probe.py",
+      "git_blob": "a684270c5c20c31e0615cdae6bfeae807f6aaf8c",
+      "sha256": "436c8cf859000c83cd60db400ed2067b842a8ad848a3968fbbb5ff453bf0834f",
+      "passed": true,
+      "named_check_count": null,
+      "group_count": null,
+      "stderr": ""
+    },
+    {
+      "path": "ocean-function-source-review/ocean_contract_probe.py",
+      "git_blob": "d796a4ff7d5fa770ad672e158a15ed219688ccad",
+      "sha256": "3f00b5a825682b4fa663adfc382afcb925253e70034f2ff6eff1debf27f47288",
+      "passed": true,
+      "named_check_count": null,
+      "group_count": null,
+      "stderr": ""
+    },
+    {
+      "path": "local-collective-motion/probe.py",
+      "git_blob": "b0e27cf09ffeaea9439c7fc5fa976b852f66823c",
+      "sha256": "e036a00c35e0fd75ccb11945feb96b5142a1d9c30583ff62c5456674de8e0bb4",
+      "passed": true,
+      "named_check_count": 18,
+      "group_count": null,
+      "stderr": ""
+    },
+    {
+      "path": "gaze-and-bounded-micro-motion/probe.py",
+      "git_blob": "b5faad7568caed1df1d9c581092fde9f1881b129",
+      "sha256": "1b0e78597242f024a5df71ff3aa191748fc1d5e1153da3b66229a652d41f6f7d",
+      "passed": true,
+      "named_check_count": 23,
+      "group_count": null,
+      "stderr": ""
+    },
+    {
+      "path": "surface-and-volume-optics/probe.py",
+      "git_blob": "c1f73d3bd67f9c76eab60bafc6fc6d05216cc526",
+      "sha256": "a4d06e8491304dd272244f5e7767d12a13a34e07b7ce423217cb21ae5896bfe4",
+      "passed": true,
+      "named_check_count": 15,
+      "group_count": null,
+      "stderr": ""
+    }
+  ],
+  "existing_probe_suites_passed": 7,
+  "named_checks_in_three_recent_suites": 56,
+  "other_existing_suites_count": 4,
+  "counting_note": "The other four suites use groups and numerical cases; no inflated total assertion count is claimed.",
+  "existing_ocean_control": {
+    "invertible_world_query_cases": 99,
+    "max_naive_query_error_m_in_this_synthetic_example": 0.34470018810477404,
+    "zero_horizontal_displacement_error": 0.0,
+    "same_recipe_same_absolute_time_replay": true
+  },
+  "additional_field_probe": {
+    "status": "passed",
+    "checks": 22,
+    "names": [
+      "periodic_projection_reduces_compatible_divergence",
+      "projection_preserves_mean_flow",
+      "projection_does_not_increase_l2_energy",
+      "projection_is_idempotent_within_tolerance",
+      "projection_has_no_input_mutation",
+      "projection_time_factor_is_consistent",
+      "uniform_flow_is_preserved",
+      "pressure_equation_residual_is_small",
+      "constant_wind_transport_preserves_mass_in_periodic_control",
+      "constant_wind_transport_remains_nonnegative",
+      "linear_transport_does_not_increase_maximum",
+      "zero_wind_preserves_density",
+      "transport_does_not_mutate_source_snapshot",
+      "checkpoint_and_same_steps_replay_exactly",
+      "limited_higher_order_transport_stays_finite_and_bounded",
+      "limited_higher_order_transport_retains_more_peak_in_this_case",
+      "limited_higher_order_transport_zero_wind_is_identity",
+      "grid_ray_transmittance_has_legal_range",
+      "denser_smoke_has_lower_beam_transmission",
+      "subdividing_same_density_path_preserves_optical_depth",
+      "optical_queries_leave_simulation_state_unchanged",
+      "divergence_free_uniform_wind_still_crosses_a_wall"
+    ],
+    "grid": [24, 24, 24],
+    "component_scope": ["compatible periodic pressure projection", "constant prescribed wind transport", "absorption-only grid-ray queries"],
+    "projection_divergence_rms_before": 1.4786935092457894,
+    "projection_divergence_rms_after": 6.5964381453802275e-16,
+    "periodic_transport_relative_mass_error": 2.0301724002888935e-15,
+    "transport_peak_before": 1.0,
+    "transport_peak_after": 0.7568514630656262,
+    "visible_numerical_diffusion": true,
+    "limited_maccormack_peak_after": 0.9002197509492814,
+    "limited_maccormack_relative_mass_error": -0.0011615895731878344,
+    "elapsed_ms": 32.988,
+    "environment": {"python": "3.13.5", "numpy": "2.3.5"},
+    "limits": [
+      "Three components are separate regression controls, not a full Navier-Stokes time step.",
+      "Constant-wind mass result does not prove arbitrary semi-Lagrangian flow is conservative.",
+      "Periodic boundaries are a test fixture, forbidden as a silent Coast outflow substitute.",
+      "Peak preservation of limited MacCormack is measured only for this Gaussian control; it does not guarantee exact mass conservation.",
+      "No solid obstacle solver, real cloud/smoke scene, buoyancy, combustion or free-surface tested.",
+      "No rendering quality, target-device performance or aircraft aerodynamics evidence."
+    ],
+    "productionIntegration": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "browser_probe": {
+    "status": "blocked",
+    "checks": 0,
+    "error": "Page.evaluate: Error: WebGL2 unavailable\n    at eval (eval at evaluate (:290:30), <anonymous>:4:14)\n    at UtilityScript.evaluate (<anonymous>:297:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+    "scope": "Browser launched; no WebGL2 context obtained, so shader compile/run/readback not reached.",
+    "nativeGPUPerformanceValidated": false,
+    "productionIntegration": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "browserVersion": "144.0.7559.96",
+    "pageErrors": [],
+    "python": "3.13.5",
+    "script_sha256": "7ab47716c0cc3b6bb5f039b3b43f0d8ed6c8b4ab732e0bc37f127708b308e59b",
+    "additional_capability_probes": [
+      {"flags": ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"], "webgl2": false, "webgl": false},
+      {"flags": ["--enable-webgl", "--ignore-gpu-blocklist"], "webgl2": false, "webgl": false}
+    ]
+  },
+  "source_provenance_note": "Original scripts matched freshly fetched fixed-commit Git blobs before execution. Archived npm-attempt text in the eye probe is historical; this rerun did not attempt npm installation. Direct container access to raw.githubusercontent.com failed DNS; text fetched via GitHub connector and archive bytes were verified.",
+  "production_code_modified": false,
+  "automation_started": false,
+  "new_production_instructions_dispatched": false,
+  "recipient_reading_status_refreshed": false,
+  "vizier_model_alias": "Unresolved; Weather Mother interpretation is a provisional contextual possibility only.",
+  "productionIntegration": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "script_sha256": {
+    "rerun.py": "108c83d268fbbcfad14064f2b89bcfb8761a689002295b954be20c2366cf4d40",
+    "field_pipeline_probe.py": "265a9b956056db8214dc3ca514393eb291a77dbbe476191ebb54a1634e9a4858",
+    "webgl_probe.py": "7ab47716c0cc3b6bb5f039b3b43f0d8ed6c8b4ab732e0bc37f127708b308e59b"
+  }
+}
