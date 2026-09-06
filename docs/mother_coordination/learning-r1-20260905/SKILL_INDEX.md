@@ -92,3 +92,11 @@ Human/Animal 另读 Control Rig 的骨骼、控制器、求解与调试概念；
 检索主题包括鸟群、鱼群、羊群、Boids、separation、alignment、cohesion、捕食者/猎物、牧羊犬、局部人群避让、空间网格和Worker。保留物种感知、地表/水体约束与身体执行差异；最近七邻居不作为跨物种常数。Brain/Jarvis仍只负责既有高层意图，群体转向不得覆盖骨骼与finalPose。
 
 本轮18项有限CPU检查通过，含源码表达式反例；未运行上游完整应用、真实浏览器、GPU或物种标定，未接入任何生产线。未来获得对应生产任务时再读该线当前HEAD，选小群体和一个变量验证。本次没有新建全组任务、自动化或人工批准，不推定任何其他Mother已经阅读。
+
+## 新增：眼球朝向、注视节奏与有界微动
+
+2026-09-06用户授权小妈深入学习并向人物线发送知识。[眼球技能卡](skills/gaze-and-bounded-micro-motion/SKILL.md)分别登记Nervous Twitch公开源码、用户截图中的FloatyObject和官方技术文档，附[23项独立CPU算例](skills/gaze-and-bounded-micro-motion/probe.py)、[结果](skills/gaze-and-bounded-micro-motion/PROBE_RESULTS.json)及[来源身份](skills/gaze-and-bounded-micro-motion/SOURCES.json)。
+
+复用现有坐标、共同时间、四元数、有界函数和状态接口；区分目标选择、朝向执行、节奏和微动。双眼各自计算同一目标的方向，保持头部内枢轴与前向轴校准。微动归零不改变主朝向；禁止显示噪声覆盖物理或finalPose，禁止导入参考GLB或覆盖其他创作者的身体工作。
+
+眼球转向与空间漂浮分别处理。源码审查补充帧率依赖、旧回调失效和力对象别名清零反例。CPU算例不等于依赖、浏览器、碰撞或生理验证；固定版本依赖安装超时，未完成原作运行和生产接入。向Human既有Issue #1投递，实际消息与回执状态见同目录DELIVERY.json；不能代独立Jarvis会话签收。
