@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      SOURCE: ff2edb8ed49e37c497bc6123ce7843bf47a3d0d0
-      REVIEW_RUN: '34001682325'
+      SOURCE: 8eeefdb3b9762c21474794527e80570956c75efa
+      REVIEW_RUN: '34001909666'
     steps:
       - name: Require successful source browser review
         shell: bash
         run: |
           set -euo pipefail
-          for i in $(seq 1 24); do
+          for i in $(seq 1 30); do
             curl -fLsS "https://api.github.com/repos/haihao0307/AIRCRAFT/actions/runs/$REVIEW_RUN" > /tmp/source-run.json
             status=$(python3 -c "import json;d=json.load(open('/tmp/source-run.json'));print(d['status'])")
             conclusion=$(python3 -c "import json;d=json.load(open('/tmp/source-run.json'));print(d.get('conclusion'))")
