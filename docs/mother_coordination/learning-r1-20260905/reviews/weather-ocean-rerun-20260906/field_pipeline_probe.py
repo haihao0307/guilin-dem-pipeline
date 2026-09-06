@@ -42,7 +42,6 @@ def constant_wind_transport(c: np.ndarray, wind: tuple[float,float,float], h: fl
     return out
 
 
-
 def limited_maccormack(c: np.ndarray, wind: tuple[float,float,float], h: float, dt: float) -> np.ndarray:
     forward=constant_wind_transport(c,wind,h,dt)
     backward=constant_wind_transport(forward,tuple(-v for v in wind),h,dt)
