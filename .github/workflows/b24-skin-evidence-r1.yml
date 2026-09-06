@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/b24-skin-evidence-r1.yml'
       - 'aircraft/b24-skin-review/tools/build_evidence.py'
+      - 'aircraft/b24-skin-review/tools/verify_public.py'
 permissions:
   contents: write
 concurrency:
@@ -13,7 +14,7 @@ concurrency:
 jobs:
   publish-evidence:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,3 +40,17 @@ jobs:
             sleep 3
           done
           exit 1
+      - name: Install browser test driver
+        run: |
+          python -m pip install playwright==1.55.0
+          if ! command -v google-chrome && ! command -v chromium; then python -m playwright install --with-deps chromium; fi
+      - name: Verify actual public page and original image hashes
+        run: python aircraft/b24-skin-review/tools/verify_public.py
+      - name: Preserve browser results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b24-skin-public-browser-qa
+          path: ${{ runner.temp }}/b24-evidence-qa
+          if-no-files-found: error
+          retention-days: 14
