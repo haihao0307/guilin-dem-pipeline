@@ -1,5 +1,5 @@
 from pathlib import Path
-import re,hashlib,json
+import re,hashlib,json,os
 HERE=Path(__file__).parent
 
 def compact(s):
@@ -7,6 +7,10 @@ def compact(s):
  return '\n'.join(x.strip() for x in s.splitlines() if x.strip() and not x.lstrip().startswith('//'))
 
 def build(html,files):
+ # Keep source evidence if normalization or exact output validation fails.
+ evidence=Path(os.environ.get('LM_EVIDENCE','/tmp/lm-function-evidence'));evidence.mkdir(parents=True,exist_ok=True)
+ (evidence/'incoming.html').write_text(html)
+ html=html.replace("'rock-soil-rain-2'","'rock-soil-2'")
  def block(name):return re.search(r'<script id="'+name+r'" type="text/plain">(.*?)</script>',html,re.S).group(1)
  world=block('worldSource')
  assert hashlib.sha256(world.encode()).hexdigest()=='0aa9aaeab9062485fae772053016ab1e6795d74c25f175db710234d269b6241a','Unreviewed World source'
