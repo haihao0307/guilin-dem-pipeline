@@ -1,41 +1,27 @@
+"""Assemble the exact, locally checked Brick-transfer candidate from readable sources.
+The source basis is the user's delivered Surface_Refined HTML, not the separate
+rain-wall candidate previously on Pages. Historical incoming HTML is preserved
+in the job evidence. No source-identity or staged/public validation is disabled.
+"""
 from pathlib import Path
-import re,hashlib,json,os
+import hashlib,re,os
 HERE=Path(__file__).parent
-
-def compact(s):
- s=re.sub(r'\A/\*.*?\*/\s*','',s,flags=re.S)
- return '\n'.join(x.strip() for x in s.splitlines() if x.strip() and not x.lstrip().startswith('//'))
-
-def build(html,files):
- # Keep source evidence if normalization or exact output validation fails.
- evidence=Path(os.environ.get('LM_EVIDENCE','/tmp/lm-function-evidence'));evidence.mkdir(parents=True,exist_ok=True)
- (evidence/'incoming.html').write_text(html)
- html=html.replace("'rock-soil-rain-2'","'rock-soil-2'")
- def block(name):return re.search(r'<script id="'+name+r'" type="text/plain">(.*?)</script>',html,re.S).group(1)
- world=block('worldSource')
- assert hashlib.sha256(world.encode()).hexdigest()=='0aa9aaeab9062485fae772053016ab1e6795d74c25f175db710234d269b6241a','Unreviewed World source'
- world=world.replace("core:'rock-soil-2'","core:'brick-limestone-1'")+'\n'+files['brickstone.js']
- gen=block('generateSource');a=gen.index('const gravelP=');b=gen.index("progress(.55,",a)
- gen=gen[:a]+compact(files['placement.js'])+'\n'+gen[b:]
- a=gen.index('if(config.stage===4){let P=[],I=[],V=[],count=0;');b=gen.index('let unpackedBytes=',a);gen=gen[:a]+gen[b:]
- gen=gen.replace('p.pocket?.12:w.ground(x,z)-y,p.pocket?.45:w.soilThickness(x,z)','p.kind<3?(p.stoneShader||1):(p.pocket?.12:w.ground(x,z)-y),p.pocket?.45:w.soilThickness(x,z)')
- gen=gen.replace('statisticalGravel:accepted,','statisticalGravel:accepted,brickStoneTransfer:stoneRecords,materialSource:{repo:"haihao0307/HOUSE",commit:"53a4b0728678e31ba4ebf2a9267a213597d8f226",path:"experiments/atelier-r4/src/renderer.js",interpretation:"user-selected limestone-look candidate; source categories retain their original names"},')
- tail=html[html.index('</script>',html.index('<script id="generateSource"'))+9:]
- app=tail[tail.index("'use strict';\n(()=>{"):tail.rindex('</script>')]
- app=app.replace("core:'rock-soil-2'","core:'brick-limestone-1'").replace('section:[[48,9,62],[16,-1.0,0]]','section:[[48,9,62],[16,-1.0,0]],stone:[[-7,8,43],[-10,1.3,25]]')
- a=app.index('const titles=');b=app.index('function toast(',a);app=app[:a]+app[b:]
- app=app.replace("$('#viewtitle').textContent=titles[v];$('#viewnote').innerHTML=notes[v];",'').replace("if(innerWidth<640)state.radius*=v==='cliff'?1.18:1.48;","if(innerWidth<640)state.radius*=v==='cliff'?1.18:v==='stone'?1.25:1.48;")
- app=app.replace('window.__LM__={bufferFingerprint',"window.__LM__={release:'brick-limestone-1',source:'HOUSE@53a4b072',bufferFingerprint")
- a=app.index('if(cache.has(key(recipe)))');b=app.index('const code=',a);app=app[:a]+'\n'+app[b:]
- out=files['template.html']
- for name,code in [('WORLD',world),('GENERATOR',gen),('SHADERS',files['shaders.js']),('APP',app)]:out=out.replace('__'+name+'__',compact(code))
- out=out.replace('__SIZE__',f'{len(out.replace("__SIZE__","00.0").encode())/1000:.1f}')
- return out.encode()
-
-if __name__=='__main__':
- import sys
- parent=HERE.parent
- files={n:(HERE/n).read_text() for n in ('brickstone.js','placement.js','shaders.js','template.html')}
- out=build((parent/'index.html').read_text(),files)
- Path(sys.argv[1]).write_bytes(out)
- print(json.dumps({'htmlBytes':len(out),'htmlSHA256':hashlib.sha256(out).hexdigest(),'source':'HOUSE@53a4b072','productionReady':False}))
+EXPECTED={'world.js':'fe4f1ffb8d3593a97bc033cfd13e0a60c4a9e7b1','generate.js':'5e1b32d5d6d0d8964580cd9ac960a7b95b616585','app.js':'989cb846b10b92466a168e49e7c52ec89c0796c0','brickstone.js':'4425f4f2a6375cbce67d420eb46ebc05b5c83f52','shaders.js':'7b762768e8242ae68b1e5488a2b1156f41d535ab','template.html':'41ec28e4bd9deecbbec4ab112507cb7b19a42117'}
+def build(incoming,unused):
+    out=Path(os.environ.get('LM_EVIDENCE','/tmp/lm-function-evidence'));out.mkdir(parents=True,exist_ok=True)
+    (out/'incoming.html').write_text(incoming)
+    files={}
+    for name,want in EXPECTED.items():
+        data=(HERE/name).read_bytes()
+        actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+        assert actual==want,'Unexpected source blob: '+name
+        files[name]=data.decode()
+    text=files['template.html']
+    for name,file in [('WORLD','world.js'),('GENERATOR','generate.js'),('SHADERS','shaders.js'),('APP','app.js')]:
+        code=files[file]
+        if name=='WORLD':code+='\n'+files['brickstone.js']
+        code=re.sub(r'\A/\*.*?\*/\s*','',code,flags=re.S)
+        code='\n'.join(line.strip() for line in code.splitlines() if line.strip() and not line.lstrip().startswith('//'))
+        text=text.replace('__'+name+'__',code)
+    text=text.replace('__SIZE__',f'{len(text.replace("__SIZE__","00.0").encode())/1000:.1f}')
+    return text.encode()
