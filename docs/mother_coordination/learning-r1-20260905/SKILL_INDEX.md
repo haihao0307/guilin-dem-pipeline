@@ -100,3 +100,11 @@ Human/Animal 另读 Control Rig 的骨骼、控制器、求解与调试概念；
 复用现有坐标、共同时间、四元数、有界函数和状态接口；区分目标选择、朝向执行、节奏和微动。双眼各自计算同一目标的方向，保持头部内枢轴与前向轴校准。微动归零不改变主朝向；禁止显示噪声覆盖物理或finalPose，禁止导入参考GLB或覆盖其他创作者的身体工作。
 
 眼球转向与空间漂浮分别处理。源码审查补充帧率依赖、旧回调失效和力对象别名清零反例。CPU算例不等于依赖、浏览器、碰撞或生理验证；固定版本依赖安装超时，未完成原作运行和生产接入。向Human既有Issue #1投递，实际消息与回执状态见同目录DELIVERY.json；不能代独立Jarvis会话签收。
+
+## 新增：材质光学与连续体积浓烟
+
+[材质光学技能卡](skills/surface-and-volume-optics/SKILL.md)接续Adobe Substance 3D Designer PBR、OpenPBR规范和体积光学，区分玻璃、金属、水、油漆、云烟火的表面/内部介质与动力学。附[独立算例](skills/surface-and-volume-optics/probe.py)及[15项检查结果](skills/surface-and-volume-optics/PROBE_RESULTS.json)。共用函数，保留各物质的属性、单位、参考坐标和必要历史。
+
+2026-09-06用户明确要求Coast改进浓烟，排除粒子烟和Niagara生产路线。本条在该范围内优先于上面旧Niagara学习入口；历史教材保留但不构成实施授权。选择连续速度/浓度/温度场和体积光照，是否省资源单独实测。B24风洞式观察仅登记后续研究构想，不改变飞机几何、动画或生产任务。
+
+本轮已读列明官方章节，核对Transmission Depth文字与规范公式差异，15项标量检查通过。未运行Adobe、流体求解器、GPU/浏览器或飞机实验；未改生产源码。Ocean/Coast消息及阅读状态见同目录DELIVERY.json，不以仓库通知替代执行者接收。
