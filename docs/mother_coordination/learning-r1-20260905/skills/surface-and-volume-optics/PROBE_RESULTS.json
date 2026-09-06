@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "checks": 15,
+  "names": [
+    "water_f0_from_illustrative_ior",
+    "plate_glass_f0_from_illustrative_ior",
+    "interface_uses_both_media",
+    "matched_indices_have_zero_f0",
+    "vacuum_and_zero_distance_transmit_fully",
+    "transmission_multiplies_across_segments",
+    "doubling_density_squares_beam_transmission",
+    "homogeneous_ray_step_count_does_not_change_optical_thickness",
+    "changing_path_length_changes_tint",
+    "larger_reference_depth_reduces_absorption_at_fixed_path",
+    "consistent_centimeters_and_meters",
+    "equal_extinction_does_not_fix_scattering_albedo",
+    "small_segment_alpha_is_finite_and_positive",
+    "doubling_grid_dimension_multiplies_storage_by_eight",
+    "invalid_optical_inputs_rejected"
+  ],
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+  },
+  "probe_sha256": "a4d06e8491304dd272244f5e7767d12a13a34e07b7ce423217cb21ae5896bfe4",
+  "examples": {
+    "water_F0": 0.020059312199524774,
+    "plate_glass_F0": 0.042579994960947345,
+    "optical_depth_3_transmission": 0.049787068367863944,
+    "optical_depth_5_transmission": 0.006737946999085467,
+    "one_float32_scalar_double_buffer_MiB": {
+      "64": 2.0,
+      "128": 16.0,
+      "256": 128.0
+    }
+  },
+  "scope": "Independent scalar identities and unpadded one-field storage arithmetic only.",
+  "limitations": [
+    "No shader, BRDF integration, actual GPU allocation, or fluid runtime.",
+    "No smoke quality, frame rate, device performance, or aerodynamics validation.",
+    "Illustrative IOR values are not calibration for every water/glass composition."
+  ],
+  "adobe_designer_run": false,
+  "browser_gpu_run": false,
+  "productionIntegration": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}
