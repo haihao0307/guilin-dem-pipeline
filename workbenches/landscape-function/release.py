@@ -1,11 +1,12 @@
 """Scoped source materialization and Pages publishing. No other namespace writes."""
 from pathlib import Path
-import gzip,hashlib,json,os,time,urllib.request,urllib.error,sys
+import hashlib,json,os,time,urllib.request,urllib.error,sys,runpy
 ROOT=Path(__file__).parent
 REPO='haihao0307/guilin-dem-pipeline'
 BRANCH='feature/landscape-mother-field-graph-v002'
 PREFIX='landscape-mother-workbench'
-EXPECTED='77763f0a1df532324bf49c58a94c088af238d73b87800e38a6491874ea51647b'
+EXPECTED='5725b36f3b271d721597a83d8952ea2a96fbb821756594893d5249724d575526'
+EXPECTED_BYTES=65860
 SITE=Path(os.environ.get('LM_SITE','/tmp/lm-function-site'))
 EVIDENCE=Path(os.environ.get('LM_EVIDENCE','/tmp/lm-function-evidence'))
 EVIDENCE.mkdir(parents=True,exist_ok=True)
@@ -14,10 +15,17 @@ def api(method,path,data=None):
     req=urllib.request.Request('https://api.github.com/repos/'+REPO+'/'+path,data=None if data is None else json.dumps(data).encode(),method=method,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json','User-Agent':'Landscape-function-release','X-GitHub-Api-Version':'2022-11-28'})
     with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
 def source_bytes():
-    f=ROOT/'index.html'
-    if f.exists():return f.read_bytes()
-    raw=gzip.decompress(b''.join(f.read_bytes() for f in sorted((ROOT/'.transfer').iterdir())))
-    assert len(raw)==58570 and digest(raw)==EXPECTED,'Transfer integrity failed'
+    transfer=ROOT/'.transfer'
+    if (transfer/'patch.py').exists():
+        patch=runpy.run_path(str(transfer/'patch.py'))
+        files={n:(transfer/n).read_text() for n in ('brickstone.js','placement.js','shaders.js','template.html')}
+        raw=patch['build']((ROOT/'index.html').read_text(),files)
+    else:
+        raw=(ROOT/'index.html').read_bytes()
+    actual={'bytes':len(raw),'sha256':digest(raw),'expected':EXPECTED}
+    print(json.dumps(actual),flush=True)
+    (EVIDENCE/'materialized.html').write_bytes(raw)
+    assert len(raw)==EXPECTED_BYTES and digest(raw)==EXPECTED,'Materialized source differs from tested candidate'
     return raw
 
 def stage():
@@ -27,7 +35,7 @@ def stage():
     manifest(os.environ['GITHUB_SHA'])
     print('Staged',len(raw),digest(raw))
 def manifest(source):
-    d={'version':'rock-soil-rain-2','sourceCommit':source,'files':[{'path':n,'bytes':(SITE/n).stat().st_size,'sha256':digest((SITE/n).read_bytes())} for n in ('index.html','reference.html')],'sourceBasis':'User-authorized procedural Putao study; geography and kinetics uncalibrated','lod':False,'textures':False,'visualApproved':False,'productionReady':False}
+    d={'version':'brick-limestone-1','sourceCommit':source,'files':[{'path':n,'bytes':(SITE/n).stat().st_size,'sha256':digest((SITE/n).read_bytes())} for n in ('index.html','reference.html')],'sourceBasis':'User-authorized procedural Putao study; donor stone-only functions from HOUSE@53a4b0728678e31ba4ebf2a9267a213597d8f226; geography and kinetics uncalibrated','lod':False,'textures':False,'visualApproved':False,'productionReady':False}
     (SITE/'build.json').write_text(json.dumps(d,ensure_ascii=False,indent=2))
 def freeze():
     head=os.environ['GITHUB_SHA'];parts=sorted((ROOT/'.transfer').glob('*'))
@@ -36,7 +44,7 @@ def freeze():
         tree=api('GET','git/commits/'+head)['tree']['sha']
         entries=[{'path':'workbenches/landscape-function/index.html','mode':'100644','type':'blob','content':(SITE/'index.html').read_text()}]+[{'path':'workbenches/landscape-function/.transfer/'+p.name,'mode':'100644','type':'blob','sha':None} for p in parts]
         newtree=api('POST','git/trees',{'base_tree':tree,'tree':entries})['sha']
-        commit=api('POST','git/commits',{'parents':[head],'tree':newtree,'message':'build(landscape): retain verified plain HTML, remove one-time transfer chunks [skip ci]'})['sha']
+        commit=api('POST','git/commits',{'parents':[head],'tree':newtree,'message':'build(landscape): retain checked Brick stone HTML and remove transfer files [skip ci]'})['sha']
         api('PATCH','git/refs/heads/'+BRANCH,{'sha':commit,'force':False});head=commit
     manifest(head)
     with open(os.environ['GITHUB_ENV'],'a') as f:f.write('LM_SOURCE='+head+'\n')
@@ -58,7 +66,7 @@ def publish():
         tree=api('POST','git/trees',{'base_tree':base,'tree':[{'path':PREFIX,'mode':'040000','type':'tree','sha':subtree}]})['sha']
         after=api('GET','git/trees/'+tree)['tree'];keep=lambda rows:{x['path']:x['sha'] for x in rows if x['path']!=PREFIX}
         assert keep(before)==keep(after),'Unrelated public directory changed'
-        commit=api('POST','git/commits',{'tree':tree,'parents':[head],'message':'Publish Landscape rain-wall functional candidate from '+source})['sha']
+        commit=api('POST','git/commits',{'tree':tree,'parents':[head],'message':'Publish Landscape Brick limestone candidate from '+source})['sha']
         try:api('PATCH','git/refs/heads/gh-pages',{'sha':commit,'force':False});published=commit;break
         except urllib.error.HTTPError as e:
             if e.code not in (409,422):raise
