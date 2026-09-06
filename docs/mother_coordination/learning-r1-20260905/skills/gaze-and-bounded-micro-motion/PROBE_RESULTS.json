@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "checks": 23,
+  "names": [
+    "rigid_world_local_roundtrip",
+    "declared_positive_z_forward_aims_at_target",
+    "two_eye_origins_share_target_but_not_direction",
+    "rotating_about_fixed_eye_origin_preserves_anchor",
+    "coincident_target_returns_explicit_hold_signal",
+    "candidate_yaw_pitch_ellipse_respects_budget",
+    "angular_step_bounded_and_non_overshooting",
+    "large_step_stops_at_target",
+    "shortest_arc_crosses_180_without_full_turn",
+    "fixed_target_angular_result_matches_30_and_120_steps",
+    "fixed_target_exponential_damping_composes",
+    "invalid_dt_rejected",
+    "zero_offset_amplitude_restores_reference_exactly",
+    "query_order_and_intermediate_queries_do_not_accumulate_drift",
+    "stable_identity_phase_is_creation_order_independent",
+    "bounded_sampler_has_declared_per_axis_amplitude",
+    "screenshot_axis_permutation_can_repeat_same_signal",
+    "milliseconds_and_seconds_contract_matches",
+    "per_frame_probability_is_rate_dependent_and_time_hazard_is_not",
+    "generation_token_blocks_stale_callback",
+    "force_reference_alias_is_cleared_but_copy_preserves_controller_state",
+    "source_frame_gap_clamp_is_explicit_time_loss",
+    "render_only_position_offsets_can_defeat_sphere_clearance"
+  ],
+  "environment": {
+    "python": "3.13.5",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+  },
+  "elapsed_ms": 2.909,
+  "scope": "Independent standard-library CPU formulas and source-expression counterexamples.",
+  "noise_sampler": "analytic sine injection, NOT Simplex Noise",
+  "npm_dependency_attempt": "40 second timeout; no dependency runtime claimed",
+  "node_dependency_runtime": false,
+  "upstream_full_application_run": false,
+  "browser_run": false,
+  "gpu_run": false,
+  "physiology_calibrated": false,
+  "production_integration": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "probability_one_second": {
+    "per_frame_0_01_at_30_fps": 0.2602996266117198,
+    "per_frame_0_01_at_120_fps": 0.7006196086876687
+  },
+  "source_force_alias_example": "copying persistent controller state into body.force prevents clearForces from erasing that separate state"
+}
