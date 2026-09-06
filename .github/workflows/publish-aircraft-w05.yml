@@ -1,0 +1,116 @@
+name: Aircraft W05 public material review
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/publish-aircraft-w05.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: aircraft-w05-public
+  cancel-in-progress: false
+jobs:
+  publish-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      SOURCE: 449cfb67b97c12c2c67d4f85a0e6876a1f5e4460
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-anm2-w05/
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: |
+            aircraft/b24-anm2-w05
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch fixed new source and rendering library
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/w05/source /tmp/w05/vendor /tmp/w05/reports aircraft/b24-anm2-w05
+          base=https://raw.githubusercontent.com/haihao0307/AIRCRAFT/$SOURCE/production/aircraft-anm2/workbench/w05
+          for f in build.py page.py frame-baseline.html sideplate.js reference-reader.js context.js surface.js workbench.js test_recipe.mjs public_check.py README.md; do
+            curl -fLsS --retry 2 "$base/$f" -o /tmp/w05/source/$f
+          done
+          renderer=https://raw.githubusercontent.com/mrdoob/three.js/r170
+          curl -fLsS --retry 2 "$renderer/build/three.module.js" -o /tmp/w05/vendor/three.module.js
+          curl -fLsS --retry 2 "$renderer/examples/jsm/controls/OrbitControls.js" -o /tmp/w05/vendor/OrbitControls.js
+          curl -fLsS --retry 2 "$renderer/LICENSE" -o /tmp/w05/vendor/THREE_LICENSE.txt
+          printf '{"type":"module"}\n' > /tmp/w05/vendor/package.json
+          printf '%s\n' "$SOURCE" > /tmp/w05/SOURCE_COMMIT.txt
+      - name: Build and unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/w05/source/build.py --vendor /tmp/w05/vendor --output /tmp/w05/index.html
+          THREE_MODULE=/tmp/w05/vendor/three.module.js node --test /tmp/w05/source/test_recipe.mjs 2>&1 | tee /tmp/w05/reports/unit-tests.txt
+          node --check /tmp/w05/source/context.js
+          node --check /tmp/w05/source/surface.js
+          node --check /tmp/w05/source/workbench.js
+      - name: Install browser for actual document checks
+        run: |
+          python -m pip install playwright==1.55.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Actual offline-file browser checks before publication
+        run: python /tmp/w05/source/public_check.py file:///tmp/w05/index.html --out /tmp/w05/reports/offline
+      - name: Commit only the new W05 page
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/w05/index.html aircraft/b24-anm2-w05/index.html
+          cp /tmp/w05/index.receipt.json aircraft/b24-anm2-w05/index.receipt.json
+          cp /tmp/w05/SOURCE_COMMIT.txt aircraft/b24-anm2-w05/SOURCE_COMMIT.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aircraft/b24-anm2-w05/index.html aircraft/b24-anm2-w05/index.receipt.json aircraft/b24-anm2-w05/SOURCE_COMMIT.txt
+          git diff --cached --name-only > /tmp/w05/reports/changed-public-paths.txt
+          python -c "from pathlib import Path;p=Path('/tmp/w05/reports/changed-public-paths.txt').read_text().splitlines();assert all(x.startswith('aircraft/b24-anm2-w05/') for x in p)"
+          git diff --cached --quiet || git commit -m "publish(aircraft): W05 from source $SOURCE"
+          for i in 1 2 3; do
+            git pull --rebase origin gh-pages
+            git push origin HEAD:gh-pages && break
+            test "$i" != 3
+          done
+          git rev-parse HEAD > /tmp/w05/reports/published-commit.txt
+      - name: Wait for Pages and check public bytes
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,json,time,hashlib,urllib.request
+          from pathlib import Path
+          base=os.environ['PUBLIC_URL'];expected=hashlib.sha256(Path('/tmp/w05/index.html').read_bytes()).hexdigest()
+          error='not checked'
+          for i in range(60):
+              try:
+                  with urllib.request.urlopen(base+'SOURCE_COMMIT.txt?check='+str(i),timeout=15) as r:marker=r.read().decode().strip()
+                  if marker!=os.environ['SOURCE']:raise ValueError('Pages source marker is stale')
+                  with urllib.request.urlopen(base+'?check='+str(i),timeout=20) as r:data=r.read();status=r.status
+                  actual=hashlib.sha256(data).hexdigest()
+                  if actual!=expected:raise ValueError('Published bytes differ from tested source')
+                  Path('/tmp/w05/reports/public-byte-check.json').write_text(json.dumps({'url':base,'httpStatus':status,'sourceCommit':marker,'sha256':actual,'bytes':len(data),'matchesBuiltHTML':True},indent=2)+'\n')
+                  break
+              except Exception as e:
+                  error=str(e);print(i,error,flush=True);time.sleep(5)
+          else:raise RuntimeError(error)
+          PY
+      - name: Actual public desktop and mobile interaction
+        shell: bash
+        run: |
+          expected=$(python -c "import json;print(json.load(open('/tmp/w05/index.receipt.json'))['sha256'])")
+          python /tmp/w05/source/public_check.py "$PUBLIC_URL" --out /tmp/w05/reports/public --sha256 "$expected"
+      - name: Upload exact source HTML and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIRCRAFT_W05_PUBLIC_${{ env.SOURCE }}
+          path: /tmp/w05/
+          retention-days: 30
+          if-no-files-found: error
