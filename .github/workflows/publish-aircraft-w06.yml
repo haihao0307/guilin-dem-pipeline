@@ -1,0 +1,135 @@
+name: Aircraft B24 ANM2 W06 whole-gun public review
+on:
+  push:
+    branches: [gh-pages]
+    paths: [.github/workflows/publish-aircraft-w06.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: aircraft-b24-anm2-w06-public
+  cancel-in-progress: false
+jobs:
+  publish-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      SOURCE: d58fb6547cee4dd3d0559cfb1ab7fb841f26f238
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/aircraft/b24-anm2-w06/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          sparse-checkout: |
+            aircraft/b24-anm2-w06
+            .github/workflows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch fixed W06 source and renderer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/w06/source /tmp/w06/vendor /tmp/w06/reports aircraft/b24-anm2-w06
+          base=https://raw.githubusercontent.com/haihao0307/AIRCRAFT/$SOURCE/production/aircraft-anm2/workbench/w06
+          for f in fullgun.js surface.js public-workbench.js public-template.html build.py; do
+            curl -fLsS --retry 2 "$base/$f" -o /tmp/w06/source/$f
+          done
+          renderer=https://raw.githubusercontent.com/mrdoob/three.js/r170
+          curl -fLsS --retry 2 "$renderer/build/three.module.js" -o /tmp/w06/vendor/three.module.js
+          curl -fLsS --retry 2 "$renderer/examples/jsm/controls/OrbitControls.js" -o /tmp/w06/vendor/OrbitControls.js
+          curl -fLsS --retry 2 "$renderer/LICENSE" -o /tmp/w06/vendor/THREE_LICENSE.txt
+          python /tmp/w06/source/build.py --vendor /tmp/w06/vendor --output /tmp/w06/index.html
+          node --check /tmp/w06/source/fullgun.js
+          node --check /tmp/w06/source/surface.js
+          node --check /tmp/w06/source/public-workbench.js
+          printf '%s\n' "$SOURCE" > /tmp/w06/SOURCE_COMMIT.txt
+      - name: Install actual browser checks
+        run: |
+          python -m pip install playwright==1.55.0 Pillow==11.3.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
+      - name: Check built page before publication
+        shell: bash
+        run: |
+          python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json
+          html=Path('/tmp/w06/index.html').resolve().as_uri(); result={'viewports':[]}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader','--disable-dev-shm-usage'])
+              for label,w,h in [('desktop',1500,950),('mobile',390,844)]:
+                  page=browser.new_page(viewport={'width':w,'height':h}); errors=[]; page.on('pageerror',lambda e,errors=errors:errors.append(str(e)));page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
+                  page.goto(html,wait_until='load',timeout=90000);page.wait_for_function('window.W06PUBLIC?.ready===true',timeout=90000)
+                  a=page.evaluate('W06PUBLIC.audit()');assert a['parts']==7 and a['meshes']>100 and a['triangles']>20000;assert a['geometryUnchanged'] and not a['errors'];assert a['productMeshFiles']==0 and a['productRasterTextures']==0
+                  page.locator('[data-preset="heavy"]').click();assert page.evaluate('W06PUBLIC.materials().wear>.4')
+                  page.evaluate('W06PUBLIC.fit("reverse");W06PUBLIC.channel("roughness")');assert page.evaluate('W06PUBLIC.state().view==="reverse"&&W06PUBLIC.state().channel==="roughness"')
+                  sig=page.evaluate('W06PUBLIC.signature()');page.evaluate('(()=>{for(let i=0;i<30;i++){W06PUBLIC.setSpread(1);W06PUBLIC.setSpread(0)}})()');assert page.evaluate('W06PUBLIC.signature()')==sig
+                  if w<900:
+                      page.locator('#open-parts').click();assert page.evaluate('document.body.classList.contains("parts-open")');page.locator('[data-close]').first.click();page.locator('#open-surface').click();assert page.evaluate('document.body.classList.contains("surface-open")')
+                  assert not errors;page.screenshot(path=f'/tmp/w06/reports/offline-{label}.png',full_page=True);result['viewports'].append({'label':label,'checks':'passed','errors':errors});page.close()
+              browser.close()
+          Path('/tmp/w06/reports/offline-check.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
+      - name: Publish only W06 isolated page
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/w06/index.html aircraft/b24-anm2-w06/index.html
+          cp /tmp/w06/index.receipt.json aircraft/b24-anm2-w06/index.receipt.json
+          cp /tmp/w06/SOURCE_COMMIT.txt aircraft/b24-anm2-w06/SOURCE_COMMIT.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aircraft/b24-anm2-w06/index.html aircraft/b24-anm2-w06/index.receipt.json aircraft/b24-anm2-w06/SOURCE_COMMIT.txt
+          git diff --cached --name-only > /tmp/w06/reports/changed-paths.txt
+          python -c "from pathlib import Path;p=Path('/tmp/w06/reports/changed-paths.txt').read_text().splitlines();assert all(x.startswith('aircraft/b24-anm2-w06/') for x in p)"
+          git diff --cached --quiet || git commit -m "publish(aircraft): B24 ANM2 W06 from $SOURCE"
+          for i in 1 2 3; do git pull --rebase origin gh-pages; git push origin HEAD:gh-pages && break; test "$i" != 3; done
+          git rev-parse HEAD > /tmp/w06/reports/pages-commit.txt
+      - name: Wait for Pages bytes
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,time,urllib.request,hashlib,json
+          from pathlib import Path
+          base=os.environ['PUBLIC_URL'];expected=hashlib.sha256(Path('/tmp/w06/index.html').read_bytes()).hexdigest();last='not checked'
+          for i in range(60):
+              try:
+                  marker=urllib.request.urlopen(base+'SOURCE_COMMIT.txt?check='+str(i),timeout=15).read().decode().strip()
+                  if marker!=os.environ['SOURCE']:raise ValueError('source marker stale')
+                  data=urllib.request.urlopen(base+'?check='+str(i),timeout=20).read();actual=hashlib.sha256(data).hexdigest()
+                  if actual!=expected:raise ValueError('public bytes mismatch')
+                  Path('/tmp/w06/reports/public-bytes.json').write_text(json.dumps({'url':base,'sourceCommit':marker,'bytes':len(data),'sha256':actual,'matchesBuiltHTML':True},indent=2)+'\n');break
+              except Exception as e:last=str(e);print(i,last,flush=True);time.sleep(5)
+          else:raise RuntimeError(last)
+          PY
+      - name: Exercise actual public page
+        shell: bash
+        run: |
+          python - <<'PY'
+          from playwright.sync_api import sync_playwright
+          import os,json
+          from pathlib import Path
+          base=os.environ['PUBLIC_URL'];result={'url':base,'viewports':[]}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader','--disable-dev-shm-usage'])
+              for label,w,h in [('desktop',1500,950),('mobile',390,844)]:
+                  page=browser.new_page(viewport={'width':w,'height':h});errors=[];requests=[];page.on('pageerror',lambda e,errors=errors:errors.append(str(e)));page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None);page.on('request',lambda r,requests=requests:requests.append(r.url))
+                  response=page.goto(base,wait_until='load',timeout=90000);page.wait_for_function('W06PUBLIC?.ready===true',timeout=90000);assert response.status==200
+                  a=page.evaluate('W06PUBLIC.audit()');assert a['parts']==7 and a['geometryUnchanged'] and not a['errors'];assert len(requests)==1
+                  page.locator('[data-preset="service"]').click();page.evaluate('W06PUBLIC.fit("side");W06PUBLIC.channel("pbr")');assert page.evaluate('W06PUBLIC.state().view==="side"')
+                  page.screenshot(path=f'/tmp/w06/reports/public-{label}.png',full_page=True);assert not errors;result['viewports'].append({'label':label,'status':response.status,'requests':len(requests),'errors':errors});page.close()
+              browser.close()
+          Path('/tmp/w06/reports/public-check.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AIRCRAFT_B24_ANM2_W06_PUBLIC_${{ env.SOURCE }}
+          path: /tmp/w06/
+          retention-days: 30
+          if-no-files-found: error
