@@ -1,0 +1,62 @@
+name: Landscape functional rain-wall checked release
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths: ['workbenches/landscape-function/**', '.github/workflows/landscape-function.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: landscape-functional-release
+  cancel-in-progress: false
+jobs:
+  validate-publish:
+    if: github.ref == 'refs/heads/feature/landscape-mother-field-graph-v002'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LM_SITE: ${{ runner.temp }}/lm-function-site
+      LM_EVIDENCE: ${{ runner.temp }}/lm-function-evidence
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify protected core and truth
+        run: |
+          set -euo pipefail
+          python3 landscape-mother/tools/validate.py
+          node --test landscape-mother/tests/policy.test.cjs
+          test "$(git rev-parse HEAD:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
+          test "$(git rev-parse HEAD:truth)" = ab778539b633ec4d361120a654f24fc2e8f127b7
+          test "$(git rev-parse HEAD:contracts)" = db754963ffda5fd7d5f16ca3a9a2f52a6fc6560b
+          test "$(git rev-parse HEAD:knowledge)" = e7e80f8e056f2184a722dc9341d5c9e71bf4e563
+          test "$(git rev-parse HEAD:pipeline)" = 89fed23c8b07647c7dbc9c65f82e59191079b756
+          test "$(git rev-parse HEAD:viewer)" = f5b61c424aad511137caee97512721385694ca1d
+      - name: Stage exact functional HTML
+        run: python3 workbenches/landscape-function/release.py stage
+      - name: Install isolated browser tools
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Actual HTTP desktop and mobile checks
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory "$LM_SITE" > "$LM_EVIDENCE/http.log" 2>&1 &
+          python3 workbenches/landscape-function/browser_check.py http://127.0.0.1:8790/index.html stage
+      - name: Keep verified readable source and remove transfer chunks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 workbenches/landscape-function/release.py freeze
+      - name: Publish only existing Landscape workbench namespace
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 workbenches/landscape-function/release.py publish
+      - name: Verify actual public workbench interaction
+        run: python3 workbenches/landscape-function/browser_check.py "https://haihao0307.github.io/guilin-dem-pipeline/landscape-mother-workbench/index.html?verify=$LM_SOURCE" public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: landscape-rain-wall-${{ github.sha }}
+          path: ${{ runner.temp }}/lm-function-evidence/
+          if-no-files-found: warn
+          retention-days: 14

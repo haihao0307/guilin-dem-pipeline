@@ -1,0 +1,11 @@
+# Landscape Mother: rain-wall functional candidate
+
+User-directed continuation of the 59.5 KB functional workbench, preserving its macro envelope. Changes: varied finite joint orientations, extents and taper; explicit downhill reference-surface rain routing; bounded runoff carving and material traces; irregular fine detail and restrained patchy moss. No external runtime, models, textures, LOD or camera-dependent geometry. The scene remains an authored study named 葡萄峰丛区域样板区; geographic binding, dissolution rates, motion and soil mass balance are uncalibrated. Visual acceptance remains false.
+
+Current core: rock-soil-rain-2. Self-contained index.html: 58,570 bytes; SHA256 77763f0a1df532324bf49c58a94c088af238d73b87800e38a6491874ea51647b. Functions expand into fixed geometry at startup. Render buffer bytes for the default recipe: 27,469,452, excluding transient construction allocations and browser overhead. Position/normal precision and sampling are unchanged; redundant per-vertex draw constants and duplicate rest coordinates were removed. This is not a 27 MB download.
+
+The one-time compressed transfer is checked byte-for-byte, then replaced by plain index.html on this source branch. No original mesh is embedded. Source is inside named worldSource and generateSource script blocks plus renderer/app scripts. Past rejected workbenches are not runtime dependencies.
+
+Local tests on the exact HTML: numerical mesh/partition/contact sampling and repeat builds; desktop/mobile document rendering, camera, display modes, material isolation, actual JSON file export/import and native touch. These are not phone hardware or artistic approval. Local HTTP/file navigation is blocked by the host policy; it was not bypassed. The scoped GitHub workflow independently performs actual HTTP and public navigation before reporting those checks.
+
+release.py only writes this source namespace and the existing gh-pages/landscape-mother-workbench/ subtree. It compares unrelated public trees and uses non-force updates. It does not edit main, seven-file core, truth, shared contracts or Pages settings. No Make or recurrent overnight job. Browser and publishing evidence are in the workflow artifact; consult them for actual success rather than infer deployment from this source file.
