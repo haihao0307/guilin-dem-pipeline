@@ -66,11 +66,12 @@ jobs:
                   page=browser.new_page(viewport={'width':w,'height':h}); errors=[]; page.on('pageerror',lambda e,errors=errors:errors.append(str(e)));page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None)
                   page.goto(html,wait_until='load',timeout=90000);page.wait_for_function('window.W06PUBLIC?.ready===true',timeout=90000)
                   a=page.evaluate('W06PUBLIC.audit()');assert a['parts']==7 and a['meshes']>100 and a['triangles']>20000;assert a['geometryUnchanged'] and not a['errors'];assert a['productMeshFiles']==0 and a['productRasterTextures']==0
-                  page.locator('[data-preset="heavy"]').click();assert page.evaluate('W06PUBLIC.materials().wear>.4')
+                  # Exercise the preset handler without forcing an off-canvas desktop control on mobile.
+                  page.evaluate("document.querySelector('[data-preset=\"heavy\"]').click()");assert page.evaluate('W06PUBLIC.materials().wear>.4')
                   page.evaluate('W06PUBLIC.fit("reverse");W06PUBLIC.channel("roughness")');assert page.evaluate('W06PUBLIC.state().view==="reverse"&&W06PUBLIC.state().channel==="roughness"')
                   sig=page.evaluate('W06PUBLIC.signature()');page.evaluate('(()=>{for(let i=0;i<30;i++){W06PUBLIC.setSpread(1);W06PUBLIC.setSpread(0)}})()');assert page.evaluate('W06PUBLIC.signature()')==sig
                   if w<900:
-                      page.locator('#open-parts').click();assert page.evaluate('document.body.classList.contains("parts-open")');page.locator('[data-close]').first.click();page.locator('#open-surface').click();assert page.evaluate('document.body.classList.contains("surface-open")')
+                      page.locator('#open-parts').click();assert page.evaluate('document.body.classList.contains("parts-open")');page.locator('[data-close]').first.click();page.locator('#open-surface').click();assert page.evaluate('document.body.classList.contains("surface-open")');page.locator('[data-close]').last.click()
                   assert not errors;page.screenshot(path=f'/tmp/w06/reports/offline-{label}.png',full_page=True);result['viewports'].append({'label':label,'checks':'passed','errors':errors});page.close()
               browser.close()
           Path('/tmp/w06/reports/offline-check.json').write_text(json.dumps(result,indent=2)+'\n')
@@ -121,7 +122,9 @@ jobs:
                   page=browser.new_page(viewport={'width':w,'height':h});errors=[];requests=[];page.on('pageerror',lambda e,errors=errors:errors.append(str(e)));page.on('console',lambda m,errors=errors:errors.append(m.text) if m.type=='error' else None);page.on('request',lambda r,requests=requests:requests.append(r.url))
                   response=page.goto(base,wait_until='load',timeout=90000);page.wait_for_function('W06PUBLIC?.ready===true',timeout=90000);assert response.status==200
                   a=page.evaluate('W06PUBLIC.audit()');assert a['parts']==7 and a['geometryUnchanged'] and not a['errors'];assert len(requests)==1
-                  page.locator('[data-preset="service"]').click();page.evaluate('W06PUBLIC.fit("side");W06PUBLIC.channel("pbr")');assert page.evaluate('W06PUBLIC.state().view==="side"')
+                  page.evaluate("document.querySelector('[data-preset=\"service\"]').click();W06PUBLIC.fit('side');W06PUBLIC.channel('pbr')");assert page.evaluate('W06PUBLIC.state().view==="side"&&W06PUBLIC.materials().wear>.1')
+                  if w<900:
+                      page.locator('#open-surface').click();assert page.evaluate('document.body.classList.contains("surface-open")');page.locator('[data-close]').last.click()
                   page.screenshot(path=f'/tmp/w06/reports/public-{label}.png',full_page=True);assert not errors;result['viewports'].append({'label':label,'status':response.status,'requests':len(requests),'errors':errors});page.close()
               browser.close()
           Path('/tmp/w06/reports/public-check.json').write_text(json.dumps(result,indent=2)+'\n')
