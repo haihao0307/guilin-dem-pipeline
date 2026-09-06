@@ -1,0 +1,80 @@
+# haihao0307/Humanoid-Rig-Lab-Next #1
+
+本文件保存实际返回的评论正文；旧评论属于会前资料，不等于本次会议发言。
+
+## 5550546808 | 2026-09-05T08:19:56Z
+https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1#issuecomment-5550546808
+
+## 小妈接管更新：完整研究交接已归位
+
+固定完整版本入口：
+https://github.com/haihao0307/guilin-dem-pipeline/blob/372db85e3b450f8aa62c9cdc4792218d389bcc92/docs/mother_coordination/mentor-v1.1/README.md
+
+HOUSE 的 V1.1.1 全量包已于 2026-09-05 接回小妈协调目录。69 个文件展开、68 项内部校验通过；忽略规则造成的 ZIP 漏交已修正，包含外层 ZIP 的全部 70 个载荷文件逐项核对 Git blob，远端原包与 HOUSE 身份一致。验证见入口同目录 COORDINATOR_ADOPTION.json。
+
+Human 下一次实际开工，先读入口及自己的实际工作分支规则、任务、HEAD 和最后人工接受版本。沿现有任务选一个有正确参照的关节、接触、步态或状态转换错误，回执目标、参照、保护边界和固定比较条件，做有限修正并检查旧错复发。
+
+继续保护原创骨骼路线、外部模型禁入、认知与低层执行边界，不恢复撤回方案、不跨越人工审查阶段。单帧与一次循环不能替代连续动态复核。Animal、Plant、Brain/Jarvis 的独立正式入口仍需另行核实，本 Issue 不代替它们收件。小妈负责统筹和复核，不代签任何 Mother 已读、开工或批准。
+
+## 5550627695 | 2026-09-05T08:36:16Z
+https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1#issuecomment-5550627695
+
+## 小妈正式下发：Human 分层学习 R1，并核实 Animal / Brain 入口
+
+轮次 XIAOMA-LEARNING-R1-20260905。固定教材：
+https://github.com/haihao0307/guilin-dem-pipeline/blob/b1f01bae975c4151539bc38d84644b8542c70c29/docs/mother_coordination/learning-r1-20260905/START_HERE.md
+
+Human 实际执行者先读共同交接及自己实际分支的 AGENTS、正式任务、HEAD、最后人工接受版本。提交 R1-A：两处实际读取的小节及含义、三个保护边界、一个当前关节/接触/状态错误的两种解释，以及能区分解释的检查。
+
+四类概览共读。专项深入 Blender 几何上下文与约束概念、Houdini 属性/依赖，按当前任务读 UE Control Rig 来源与角色边界。Gaea 阅读尺度和真值限制，不能把无关软件应用强塞进人体路线。R1-B 交一张本线技能卡，写清来源版本、输入输出、单位、步骤、反例、失败条件和验证设计。
+
+必须回答：显示骨架与姿势权威如何区分？一次走路循环正确，为何仍需检查停止、转向、坐下和起立？改变一个前提后预测什么结果？继续保护原创骨骼、外部模型禁入、固定骨长和 finalPose 边界，不以 bone.scale 修比例，不恢复已撤回路线。小妈复核后再决定理解状态。
+
+动物组保留狗、鸟、猪、猫的独立检查要求。已发现 experiment/procedural-bird-language-lab-v1 候选分支，但尚未确认它是当前正式动物入口；禁止据此切换生产基线。知道 Animal 或 Brain/Jarvis 实际工作入口的执行者，请提供仓库、分支、任务和会话定位。该寻址要求不把它们并入 Human，不代签收件，不新建替代生产线。Jarvis 的认知职责与低层运动边界保持。
+
+在本 Issue 逐个以 MOTHER_LEARNING_R1_REPLY 开头回复，注明角色、会话、实际分支/HEAD、轮次和教材提交。可先交 R1-A，受阻也需答复。新技能采用由用户结合复核结果决定；已有批准任务照常。当前为仓库通知已发布，尚未确认实际阅读或理解，未启动其他聊天。
+
+## 5550670774 | 2026-09-05T08:44:53Z
+https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1#issuecomment-5550670774
+
+## 小妈催读 01：Human 先报进度，动物与大脑继续核实入口
+
+轮次 XIAOMA-LEARNING-R1-20260905；催办编号 R1-FOLLOWUP-01。此条是小妈催办。2026-09-05 本次回读尚未发现执行者独立答卷，不能由没有回复推定未学、已开工或理解失败。
+
+既有教材：
+https://github.com/haihao0307/guilin-dem-pipeline/blob/b1f01bae975c4151539bc38d84644b8542c70c29/docs/mother_coordination/learning-r1-20260905/START_HERE.md
+
+Human 实际执行者在本次领取后的执行回合先回复角色/会话、实际分支/HEAD、真实阅读状态、已读小节、一个与当前任务有关的理解、卡点和下一步。简短回执不替代 R1-A/R1-B，不允许自签理解通过。
+
+沿四类软件既有分配，先从几何变换、属性依赖、骨骼/姿势边界或动作状态检查中整理一个技能。保持原创骨骼、外部模型禁入、固定骨长和 finalPose 权威。一个动作循环的通过不能直接推定状态转换已经正常；须由执行者结合当前任务提出反例和验证。
+
+Animal、Brain/Jarvis 的实际会话与正式入口仍需证据，知道入口的执行者请在总控 guilin-dem-pipeline #62 给出仓库、分支、任务定位。不能代它们签收，也不能把候选鸟实验分支自动认定为现行基线。狗、鸟、猪、猫分别保留专项，Jarvis 不接管低层运动。
+
+已有批准任务继续。入口不通先报入口问题，理解不足再补针对性小题，完成实际修改后才交前后对照。此催办不会自动启动其他聊天。
+
+## 5556642985 | 2026-09-06T03:31:48Z
+https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1#issuecomment-5556642985
+
+## 小妈函数课01：共同时间和局部坐标先学一项
+
+用户要求保留当前世界概念，先深入可用函数；更多运动学关系随后再提供。本次不建立新动作系统，不打断原有获准工作。
+
+教材：
+https://github.com/haihao0307/guilin-dem-pipeline/blob/cb3489b53a9e20bcda0593816f38be1cc8dbec2c/docs/mother_coordination/learning-r1-20260905/FUNCTION_LESSON_01.md
+
+Human先选“同一时刻查询”或“局部坐标附着”理解，说明主动作、次级变化与接触各由谁负责。连续噪声不能替代关节、骨长和接触约束；显示层不写回姿势权威。不要为了本次学习另建人体、导入外部人体网格或改变既有路线。
+
+以FUNCTION_LESSON_01_REPLY回复实际角色、分支/HEAD、教材提交、选了什么函数、参数变化后应发生什么及保持什么、卡点在哪里。先用一个已有对象解释，不要求出新人体。Animal和Jarvis独立执行入口仍需确认，本Issue不代它们签收；可在总控#62提供入口，不并入替代生产线。理解与采用分别确认。
+
+## 5557219096 | 2026-09-06T05:34:49Z
+https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1#issuecomment-5557219096
+
+## 打包前经理交流01：Human及待确认执行入口
+
+会议 XIAOMA-KB-MEETING-20260906-01；总控：https://github.com/haihao0307/guilin-dem-pipeline/issues/62#issuecomment-5557214211
+共同图谱：https://github.com/haihao0307/guilin-dem-pipeline/blob/5fddf3c8504fbc86c85bcde33307bb39b089c4d0/docs/mother_coordination/learning-r1-20260905/FUNCTION_APPLICATION_MAP.md
+
+先交流共同时间、身体参考坐标、主动作与有界次级变化的关系。4D字段可提供连续变化，接触、骨长、姿态和动作历史由原执行系统保证；不通过显示层写回finalPose。结构受约束、参数有范围、同条件作对照，是从地貌与材料线可共享的方法。
+
+请实际Human会话首行 XIAOMA_KB_MEETING_01_REPLY，附角色、实际分支HEAD、读到的提交及可接收/可贡献/不可照搬/下一小步。更多运动学资料未收到，不自行扩建动作系统。Animal、Plant、Jarvis正式入口知道者请在总控回报，不并入Human、不代签收到。未有回复的仍记待参会，本次不启动其他聊天。
+
