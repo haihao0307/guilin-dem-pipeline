@@ -1,0 +1,41 @@
+name: B24 skin evidence R1
+on:
+  push:
+    branches: [gh-pages]
+    paths:
+      - '.github/workflows/b24-skin-evidence-r1.yml'
+      - 'aircraft/b24-skin-review/tools/build_evidence.py'
+permissions:
+  contents: write
+concurrency:
+  group: b24-skin-evidence-r1
+  cancel-in-progress: false
+jobs:
+  publish-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+      - name: Extract checksum-locked source evidence
+        run: python aircraft/b24-skin-review/tools/build_evidence.py
+      - name: Publish scoped assets without replacing existing site
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add aircraft/b24-skin-review/assets
+          if git diff --cached --quiet; then exit 0; fi
+          git diff --cached --name-only | while read -r path; do
+            case "$path" in aircraft/b24-skin-review/assets/*) ;; *) exit 1 ;; esac
+          done
+          git commit -m 'Publish byte-exact B24 original atlas evidence only'
+          for attempt in 1 2 3; do
+            git pull --rebase origin gh-pages
+            if git push origin HEAD:gh-pages; then exit 0; fi
+            sleep 3
+          done
+          exit 1
