@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      LM_SITE: ${{ runner.temp }}/lm-function-site
-      LM_EVIDENCE: ${{ runner.temp }}/lm-function-evidence
+      LM_SITE: /tmp/lm-function-site
+      LM_EVIDENCE: /tmp/lm-function-evidence
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,6 +57,6 @@ jobs:
         if: always()
         with:
           name: landscape-rain-wall-${{ github.sha }}
-          path: ${{ runner.temp }}/lm-function-evidence/
+          path: /tmp/lm-function-evidence/
           if-no-files-found: warn
           retention-days: 14
