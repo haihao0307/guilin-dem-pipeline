@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Macroscopic microscope teaching lab</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#090b0e;color:#e8edf3}*{box-sizing:border-box}body{margin:0;padding:18px;max-width:1100px;margin:auto}h1{font-size:20px;margin:0 0 6px}p{color:#aab4c0;margin:4px 0 14px;line-height:1.45}.controls{display:flex;gap:14px;flex-wrap:wrap;background:#11161c;padding:12px;border-radius:12px;margin-bottom:14px}.control{display:grid;gap:4px;min-width:190px}.control label{font-size:12px;color:#9da8b4}.readout{font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:#11161c;border:1px solid #232c36;border-radius:12px;padding:10px}.card h2{font-size:14px;margin:0 0 6px}.card p{font-size:12px;margin-bottom:8px}.row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}canvas{width:240px;height:240px;image-rendering:auto;border-radius:8px;background:#050607;max-width:100%}.facts{font-size:12px;color:#b7c4d0;line-height:1.5;max-width:260px}.fault{color:#ffba7a}.ok{color:#8ce6bb}@media(max-width:680px){body{padding:10px}.grid{grid-template-columns:1fr}.row{justify-content:center}.facts{max-width:240px}}
+</style>
+</head>
+<body>
+<h1>Macroscopic microscope: one field, different roles</h1>
+<p>This deterministic lab separates a shared multiscale coordinate idea from its rock and cloud meanings. It is a teaching aid, not the artist's shader or a production renderer.</p>
+<div class="controls">
+<div class="control"><label for="layers">Octaves <span id="layersOut" class="readout"></span></label><input id="layers" type="range" min="1" max="17" value="9"></div>
+<div class="control"><label for="time">Mapped time <span id="timeOut" class="readout"></span></label><input id="time" type="range" min="0" max="8" step="0.05" value="0"></div>
+<div class="control"><label for="strength">Role strength <span id="strengthOut" class="readout"></span></label><input id="strength" type="range" min="0" max="1.4" step="0.01" value="0.7"></div>
+<div class="control"><label><input id="moveTerrain" type="checkbox"> Fault demo: animate static rock</label><span id="faultState" class="ok">static material time frozen</span></div>
+</div>
+<div class="grid">
+<section class="card"><h2>1. Shared multiscale field</h2><p>Coarse terms organise masses; fine terms tighten nested boundaries.</p><div class="row"><canvas id="field" width="240" height="240"></canvas><div class="facts" id="fieldFacts"></div></div></section>
+<section class="card"><h2>2. Log-radius mapping</h2><p>Multiplicative physical scale becomes additive phase. Doubling radius plus 10/3 time preserves the map.</p><div class="row"><canvas id="mapped" width="240" height="240"></canvas><div class="facts" id="mapFacts"></div></div></section>
+<section class="card"><h2>3. Landscape role</h2><p>The field becomes bounded displacement only inside a declared gate. The protected ridge and boundary remain fixed.</p><div class="row"><canvas id="rock" width="240" height="240"></canvas><div class="facts">This panel changes a synthetic height derivative. Colour alone would not create silhouette, section or contact. Static rock uses frozen material time unless the fault is deliberately enabled.</div></div></section>
+<section class="card"><h2>4. Cloud role</h2><p>The field becomes nonnegative density inside an envelope, then contributes to optical depth.</p><div class="row"><canvas id="cloud" width="240" height="240"></canvas><div class="facts" id="cloudFacts"></div></div></section>
+</div>
+<script>
+'use strict';
+const TAU=Math.PI*2;
+const $=id=>document.getElementById(id);
+const contexts={};for(const id of ['field','mapped','rock','cloud'])contexts[id]=$(id).getContext('2d',{alpha:false});
+const hashCanvas=id=>{const d=contexts[id].getImageData(0,0,240,240).data;let h=2166136261>>>0;for(let i=0;i<d.length;i+=17){h^=d[i];h=Math.imul(h,16777619)}return(h>>>0).toString(16).padStart(8,'0')};
+function kernel(u,v,w){return Math.cos(Math.cos(w)*Math.cos(u)+Math.cos(v)*Math.cos(v)+Math.cos(v)*Math.cos(u))}
+function detail(u,v,w,n){let s=0,f=1;for(let j=0;j<n;j++,f*=2)s+=kernel(u*f,v*f,w*f)/f;return s}
+function map(qx,qy,qz,t){const r=Math.hypot(qx,qy,qz);return [Math.log2(r)-2-.3*t,-qz/r-1,Math.atan2(qx,qy)]}
+function pixel(ctx,x,y,r,g,b){ctx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;ctx.fillRect(x,y,1,1)}
+function draw(){const n=+$('layers').value,t=+$('time').value,k=+$('strength').value,move=$('moveTerrain').checked;
+ $('layersOut').textContent=n;$('timeOut').textContent=t.toFixed(2);$('strengthOut').textContent=k.toFixed(2);$('faultState').textContent=move?'fault active: rock material time moves':'static material time frozen';$('faultState').className=move?'fault':'ok';
+ let min=1e9,max=-1e9;
+ for(let y=0;y<240;y++)for(let x=0;x<240;x++){const u=(x-120)/24,v=(y-120)/24,z=detail(u,v,.5,n);min=Math.min(min,z);max=Math.max(max,z);const c=128+92*Math.tanh(z*.9);pixel(contexts.field,x,y,c,c,c)}
+ const ratios=[];for(let j=0;j<6;j++)ratios.push(Math.pow(2,TAU/Math.pow(2,j)));
+ $('fieldFacts').innerHTML=`value range ${min.toFixed(3)} .. ${max.toFixed(3)}<br>first shell ratios ${ratios.map(x=>x.toFixed(3)).join(', ')}`;
+ let mapErr=0;
+ for(let y=0;y<240;y++)for(let x=0;x<240;x++){const qx=(x-120)/46,qy=(y-120)/46,qz=.42;const p=map(qx||1e-4,qy||1e-4,qz,t),z=detail(p[0],p[1],p[2],n);const c=128+110*Math.tanh(z*.95);pixel(contexts.mapped,x,y,c*.78,c*.9,c);if((x%47===0)&&(y%47===0)){const b=map((qx||1e-4)*2,(qy||1e-4)*2,qz*2,t+10/3);mapErr=Math.max(mapErr,...p.map((v,i)=>Math.abs(v-b[i])))}}
+ $('mapFacts').innerHTML=`max map identity error ${mapErr.toExponential(2)}<br>time moves the scale coordinate here`;
+ const rockT=move?t:0;
+ for(let y=0;y<240;y++)for(let x=0;x<240;x++){const X=(x-120)/110,Z=(y-120)/110,gate=Math.max(0,(1-X*X)*(1-Z*Z)*X*X),p=map(.9+X,.8+Z,.55,rockT),d=.18*k*gate*detail(p[0],p[1],p[2],n),h=.42*X+.2*Math.sin(2.1*Z)+d;const dx=.42+.18*k*gate*(detail(p[0]+.02,p[1],p[2],n)-detail(p[0]-.02,p[1],p[2],n))/.04;const dz=.42*Math.cos(2.1*Z)+.18*k*gate*(detail(p[0],p[1]+.02,p[2],n)-detail(p[0],p[1]-.02,p[2],n))/.04;const light=Math.max(0.06,(.55-.35*dx-.3*dz)/Math.hypot(1,dx,dz));const c=32+205*light+8*h;pixel(contexts.rock,x,y,c,c,c)}
+ let sumT=0;
+ for(let y=0;y<240;y++)for(let x=0;x<240;x++){const X=(x-120)/82,Y=(y-120)/72,r2=(X/1.45)**2+(Y/.95)**2,env=Math.max(0,1-r2)**2,p=map(.9+X,.8+Y,.6,t),rho=env*Math.max(0,.24+k*.17*(detail(p[0],p[1],p[2],n)-.55)),T=Math.exp(-4.2*rho),edge=Math.min(1,1-T),sun=.42+.58*Math.max(0,(x+y-120)/360),c=255*(T*.68+edge*sun);pixel(contexts.cloud,x,y,c*.83,c*.91,c);sumT+=T}
+ $('cloudFacts').innerHTML=`mean beam transmittance ${(sumT/57600).toFixed(4)}<br>empty space comes from the envelope; density stays nonnegative`;
+ window.__LAB__={hashes:Object.fromEntries(['field','mapped','rock','cloud'].map(id=>[id,hashCanvas(id)])),mapErr,ratios,settings:{n,t,k,move}};
+}
+for(const id of ['layers','time','strength','moveTerrain'])$(id).addEventListener('input',draw);draw();
+</script>
+</body></html>
