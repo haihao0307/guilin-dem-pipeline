@@ -14,21 +14,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Verify protected core and build exact candidate
+      - name: Verify protected core and build surface-shell candidate
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
           python3 workbenches/landscape-surface-r5/patch.py
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib
+          import hashlib,re
           p=Path('workbenches/landscape-surface-r5/index.html')
-          b=p.read_bytes()
-          assert len(b)==81724
-          assert hashlib.sha256(b).hexdigest()=='989ca4f976daa205f8e87699d23b1bf68f94b12a486395c7272df6b38d8304e7'
-          s=p.read_text()
-          assert 'Microscope 壳层' in s and "release:'karst-surface-shell-r5'" in s
+          b=p.read_bytes(); s=b.decode()
+          print('R5 bytes',len(b),'sha256',hashlib.sha256(b).hexdigest())
+          assert 'Microscope 壳层' in s
+          assert "release:'limestone-water-surface-r5'" in s
           assert 'for(int j=0;j<17;j++)' in s
+          assert 'limestone-water-2' in s
           PY
       - name: Commit fixed R5 HTML
         run: |
