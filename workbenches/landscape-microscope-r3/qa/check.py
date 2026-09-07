@@ -22,8 +22,11 @@ def png_bytes(page):
     return base64.b64decode(data.split(",", 1)[1])
 
 def wait_draw(page):
+    # UI actions schedule a render after 140 ms. Waiting only for ready=true can
+    # accidentally observe the previous frame before the scheduled draw starts.
+    page.wait_for_timeout(260)
     page.wait_for_function("window.__MM_READY__===true", timeout=180000)
-    page.wait_for_timeout(100)
+    page.wait_for_timeout(80)
 
 def canvas_hash(page):
     return hashlib.sha256(png_bytes(page)).hexdigest()
