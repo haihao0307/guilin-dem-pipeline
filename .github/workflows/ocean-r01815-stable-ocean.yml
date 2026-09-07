@@ -1,0 +1,170 @@
+name: Ocean R018.15 stable ocean delivery
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r01815-stable-ocean-20260907
+    paths:
+      - .github/workflows/ocean-r01815-stable-ocean.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r01815-stable-ocean
+  cancel-in-progress: false
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare final single HTML and run static checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p candidate evidence
+          src=ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_Direct_Open.html
+          out=candidate/index.html
+          cp "$src" "$out"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('candidate/index.html')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace('precision highp float;varying vec3 vWorld;varying vec3 vNormal;uniform vec3 uCamera;', 'precision mediump float;varying vec3 vWorld;varying vec3 vNormal;uniform vec3 uCamera;')
+          text=text.replace('uFoam*float(uFoamEnabled)', 'uFoam*(uFoamEnabled?1.0:0.0)')
+          p.write_text(text,encoding='utf-8')
+          PY
+          test -s "$out"
+          grep -q "0.3.15-island-stable-waterbody" "$out"
+          grep -q "canvas2d-fallback" "$out"
+          grep -q "webgl1-grid" "$out"
+          grep -q "queryVerified" "$out"
+          if grep -qE '<script[^>]+src=|<img[^>]+src=|https://cdn\.|https://unpkg\.|https://jsdelivr\.' "$out"; then
+            echo "External runtime asset detected" >&2
+            exit 1
+          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('candidate/index.html').read_text(encoding='utf-8')
+          match=re.search(r'<script id="oceanApp">(.*?)</script>',text,re.S)
+          assert match
+          Path('candidate/runtime.js').write_text(match.group(1),encoding='utf-8')
+          PY
+          node --check candidate/runtime.js
+          wc -c "$out" | tee evidence/HTML_BYTES.txt
+          sha256sum "$out" | tee evidence/HTML_SHA256.txt
+
+      - name: Run ordinary-entry desktop and mobile gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          python3 -m http.server 8123 --bind 127.0.0.1 > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --disable-background-networking --no-first-run --hide-scrollbars --run-all-compositor-stages-before-draw --virtual-time-budget=16000)
+          for CASE in desktop mobile; do
+            if [ "$CASE" = desktop ]; then SIZE=1536,1024; else SIZE=390,844; fi
+            URL="http://127.0.0.1:8123/candidate/index.html"
+            "$CHROME" "${COMMON[@]}" --window-size="$SIZE" --user-data-dir="evidence/profile-${CASE}-dom" --dump-dom "$URL" > "evidence/${CASE}-dom.html" 2> "evidence/${CASE}-dom.log"
+            "$CHROME" "${COMMON[@]}" --window-size="$SIZE" --user-data-dir="evidence/profile-${CASE}-shot" --screenshot="evidence/${CASE}.png" "$URL" > "evidence/${CASE}-shot.out" 2> "evidence/${CASE}-shot.log"
+            test -s "evidence/${CASE}.png"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import html,json,re,hashlib
+          reports={}
+          for case in ('desktop','mobile'):
+              dom=Path(f'evidence/{case}-dom.html').read_text(encoding='utf-8',errors='replace')
+              m=re.search(r'<pre[^>]*id="qaProbe"[^>]*>(.*?)</pre>',dom,re.S)
+              assert m and m.group(1).strip(), f'{case} qaProbe missing'
+              q=json.loads(html.unescape(m.group(1)).strip())
+              errors=[]
+              if q.get('version')!='0.3.15-island-stable-waterbody': errors.append('version')
+              if q.get('ready') is not True: errors.append('ready')
+              if q.get('sceneReady') is not True: errors.append('sceneReady')
+              if q.get('bootFrameDrawn') is not True: errors.append('bootFrameDrawn')
+              if q.get('webgl') is not True: errors.append('webgl')
+              if q.get('glFrameDrawn') is not True: errors.append('glFrameDrawn')
+              if q.get('renderer')!='webgl1-grid': errors.append('renderer')
+              if q.get('startupStage')!='running': errors.append('startupStage')
+              if int(q.get('completedFrames') or 0)<2: errors.append('completedFrames')
+              if q.get('queryAvailable') is not True: errors.append('queryAvailable')
+              if q.get('queryVerified') is not True: errors.append('queryVerified')
+              if q.get('contextLost') is True: errors.append('contextLost')
+              if q.get('error'): errors.append('runtimeError')
+              if not isinstance(q.get('firstFrameMs'),(int,float)) or q.get('firstFrameMs')<=0 or q.get('firstFrameMs')>12000: errors.append('firstFrameMs')
+              vp=q.get('visualProbe') or {}
+              if float(vp.get('meanLuminance') or 0)<=.02: errors.append('meanLuminance')
+              if float(vp.get('nonDarkRatio') or 0)<=.60: errors.append('nonDarkRatio')
+              if case=='mobile' and q.get('panelClosed') is not True: errors.append('mobilePanelClosed')
+              shot=Path(f'evidence/{case}.png')
+              if shot.stat().st_size < (14000 if case=='mobile' else 28000): errors.append('screenshotSize')
+              reports[case]={'qa':q,'screenshotBytes':shot.stat().st_size,'screenshotSha256':hashlib.sha256(shot.read_bytes()).hexdigest(),'errors':errors,'passed':not errors}
+              if errors: raise SystemExit(f'{case} failed: {errors}\n{json.dumps(q,ensure_ascii=False,indent=2)}')
+          Path('evidence/QA.json').write_text(json.dumps({'status':'PASS','reports':reports,'hardwareGpuVerified':False,'visualAcceptance':False},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps({'status':'PASS','desktop':reports['desktop']['qa'],'mobile':reports['mobile']['qa']},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Commit immutable delivery and receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_Direct_Open.html
+          cp candidate/index.html "$target"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          p=Path('ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_Direct_Open.html')
+          qa=json.loads(Path('evidence/QA.json').read_text(encoding='utf-8'))
+          receipt={'schema':'ocean-fixed-single-html-receipt/3','version':'0.3.15','runtimeIdentity':'0.3.15-island-stable-waterbody','htmlPath':str(p),'htmlBytes':p.stat().st_size,'htmlSha256':hashlib.sha256(p.read_bytes()).hexdigest(),'singleFileHtml':True,'externalRuntimeAssets':False,'ordinaryEntryDesktopChecked':True,'ordinaryEntryMobile390x844Checked':True,'canvasFallbackVisibleBeforeGpu':True,'webglStableGridVerified':True,'surfaceQueryNinePointEnabled':True,'desktopRenderer':qa['reports']['desktop']['qa'].get('renderer'),'desktopFirstFrameMs':qa['reports']['desktop']['qa'].get('firstFrameMs'),'mobileRenderer':qa['reports']['mobile']['qa'].get('renderer'),'mobileFirstFrameMs':qa['reports']['mobile']['qa'].get('firstFrameMs'),'mobilePanelClosed':qa['reports']['mobile']['qa'].get('panelClosed'),'hardwareGpuVerified':False,'visualAcceptance':False,'productionReady':False}
+          Path('ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$target" ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_RECEIPT.json
+          git commit -m "release(ocean): publish R018.15 stable ocean single HTML [skip ci]"
+          git rev-parse HEAD | tee evidence/FINAL_COMMIT.txt
+          git push origin HEAD
+
+      - name: Verify fixed raw.githack URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA="$(cat evidence/FINAL_COMMIT.txt)"
+          PATH_IN_REPO=ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_Direct_Open.html
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/${PATH_IN_REPO}"
+          printf '%s\n' "$URL" | tee evidence/RAW_GITHACK_URL.txt
+          EXPECTED="$(cut -d' ' -f1 evidence/HTML_SHA256.txt)"
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl --fail --location --silent --show-error --connect-timeout 10 --max-time 45 "$URL" -o evidence/raw.githack.html; then
+              ACTUAL="$(sha256sum evidence/raw.githack.html | cut -d' ' -f1)"
+              if [ "$ACTUAL" = "$EXPECTED" ]; then ok=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$ok" -eq 1
+          grep -q "0.3.15-island-stable-waterbody" evidence/raw.githack.html
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R01815_Stable_Ocean
+          path: |
+            candidate/index.html
+            ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_Direct_Open.html
+            ocean-mother/releases/Ocean_Mother_R01815_Stable_Ocean_RECEIPT.json
+            evidence/
+          if-no-files-found: warn
+          retention-days: 30
