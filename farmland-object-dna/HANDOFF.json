@@ -1,32 +1,31 @@
 {
   "system": "Farmland Object DNA",
-  "version": "0.1.1",
+  "version": "0.2.0-clean-restart",
   "date": "2026-09-07",
   "repository": "haihao0307/guilin-dem-pipeline",
-  "branch": "feature/farmland-object-dna-v001",
-  "base": {
-    "ref": "main",
-    "sha": "301c9c75f765cd6581695025897528c7f1ebe5bd"
+  "activeBranch": "restart/farmland-object-dna-v020-20260907",
+  "restartBaseline": {
+    "branch": "feature/farmland-object-dna-v001",
+    "sha": "309695a43dadec8b967c9ec543136dfc1e84addd"
   },
-  "coordinationSource": {
-    "branch": "handoff/xiaoma-mentor-v1.1-20260905",
-    "startup": "docs/mother_coordination/mentor-v1.1/MOTHER_STARTUP.md",
-    "worldConsensus": "docs/mother_coordination/learning-r1-20260905/WORLD_CONSENSUS.md"
+  "entry": "farmland-object-dna/RESTART_START_HERE.md",
+  "mandatoryRules": "farmland-object-dna/FARMLAND_PRODUCTION_RULES.md",
+  "failureRegister": "farmland-object-dna/V001_FAILURE_REGISTER.md",
+  "workOrder": "farmland-object-dna/PRODUCTION_RESTART_TASKS.md",
+  "package": {
+    "name": "Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip",
+    "path": "farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip",
+    "receipt": "farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json",
+    "status": "build_pending"
   },
-  "mandatoryReading": [
-    "AGENTS.md",
-    "farmland-object-dna/FARMLAND_PRODUCTION_RULES.md",
-    "farmland-object-dna/V001_FAILURE_REGISTER.md",
-    "farmland-object-dna/RESTART_START_HERE.md",
-    "farmland-object-dna/OBJECT_DNA_CONTRACT.md",
-    "farmland-object-dna/QUALITY_GATES.json"
-  ],
   "scope": {
     "primary": "traditional low-mechanization farmland object system",
     "firstObject": "traditional irrigated rice paddy",
-    "firstRegionalSystemStudy": "Yuanyang and Honghe Hani rice terraces",
-    "supportedFamilies": [
-      "paddy",
+    "firstSamples": [
+      "flatland_manual_paddy",
+      "mountain_terrace_paddy"
+    ],
+    "futureFamilies": [
       "dry_field",
       "vegetable_garden",
       "orchard",
@@ -34,53 +33,54 @@
       "fallow"
     ]
   },
+  "rejectedPredecessor": {
+    "id": "FARMLAND_DNA_WB_V0.1.0_20260907",
+    "status": "rejected",
+    "visualAcceptance": false,
+    "productionReady": false,
+    "shareAllowed": false,
+    "allowedUse": "negative_reference_only"
+  },
   "authorityBoundaries": {
     "terrainTruth": "DEM or Landscape authority",
     "weather": "Weather Mother",
     "oceanTideAndCoastalWater": "Ocean Mother",
-    "farmlandTopologyHydraulicsLifecycleAndRepresentation": "Farmland Object DNA",
+    "farmlandTopologyLifecycleHydraulics": "Farmland Object DNA",
     "humanPopulationAndLabor": "external population or settlement authority",
-    "humanVisualAcceptance": "user"
+    "buildingAndVillage": "Building or Settlement authority",
+    "animalBehavior": "Animal authority"
   },
-  "rejectedBaseline": {
-    "id": "FARMLAND_DNA_WB_V0.1.0_20260907",
-    "status": "rejected",
-    "allowedUse": "negative_reference_only",
-    "failureRegister": "farmland-object-dna/V001_FAILURE_REGISTER.md",
-    "forbiddenContinuation": [
-      "round_tube_channels",
-      "round_tube_bunds",
-      "fake_water_depth",
-      "isolated_hydraulic_nodes",
-      "mechanical_grid_parcels",
-      "repeated_band_terraces",
-      "cone_rice_stage_scaling",
-      "visual_polish_over_structural_error"
-    ]
+  "mandatoryResearch": {
+    "componentSourceCards": "required_before_geometry",
+    "channelPlanLongitudinalCrossSections": "required",
+    "bundTerraceFieldSections": "required",
+    "sourceToReceiverHydraulicGraph": "required",
+    "waterMassBalance": "required",
+    "riceEstablishmentAndStageMorphology": "required",
+    "yuanyangForestWaterVillageTerraceSystem": "required_for_yuanyang_profile",
+    "traditionalWoodenWaterDivider": "research_target_until_evidenced"
   },
-  "nextCandidate": {
-    "name": "Farmland structural truth and hydraulic workbench",
-    "phase": "research_and_structural_truth",
-    "requiredBeforePublicCandidate": [
-      "object_source_cards",
-      "Yuanyang_integrated_system_research",
-      "channel_bund_terrace_inlet_outlet_divider_sections",
-      "flat_paddy_closed_hydraulic_graph",
-      "terrace_closed_hydraulic_graph",
-      "water_depth_and_mass_balance",
-      "stage_specific_rice_models",
-      "human_tool_animal_labor_scale_modulus",
-      "AAA_internal_precheck"
-    ]
-  },
+  "productionOrder": [
+    "evidence",
+    "system_relationships",
+    "plans_and_sections",
+    "dimensions_and_human_scale",
+    "hydraulic_graph_and_mass_balance",
+    "rice_lifecycle",
+    "structural_truth_workbench",
+    "aaa_material_light_motion",
+    "microscope_microdetail",
+    "internal_multi_view_qa",
+    "public_candidate"
+  ],
   "status": {
+    "cleanRestart": true,
+    "researchGate": "in_progress",
     "schemaReady": true,
-    "runtimeImplementation": true,
-    "publicWorkbench": true,
-    "browserQA": "pass_for_rejected_v001_only",
-    "sourceResearch": "in_progress",
+    "strictValidator": "pass_on_restart_baseline",
     "structuralTruthWorkbench": "not_started",
-    "v001Rejected": true,
+    "activePublicCandidate": null,
+    "browserQA": "not_run_for_v020",
     "visualAcceptance": false,
     "productionReady": false
   }
