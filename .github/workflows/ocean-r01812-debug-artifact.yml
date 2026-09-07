@@ -5,7 +5,6 @@ on:
       - debug/ocean-r01812-black-screen-20260907
     paths:
       - .github/workflows/ocean-r01812-debug-artifact.yml
-      - ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
 permissions:
   contents: read
 jobs:
@@ -14,16 +13,18 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Verify source file
+      - name: Assemble debugging sources
         shell: bash
         run: |
           set -euo pipefail
-          test -s ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
-          wc -c ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
-          sha256sum ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
+          mkdir -p /tmp/ocean-r01812-debug
+          cp -a ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html /tmp/ocean-r01812-debug/
+          cp -a ocean-mother/releases/r01812-build /tmp/ocean-r01812-debug/
+          cp -a ocean-mother/restart-v0311 /tmp/ocean-r01812-debug/
+          find /tmp/ocean-r01812-debug -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/ocean-r01812-debug/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: ocean-r01812-debug-html
-          path: ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
+          name: ocean-r01812-debug-source
+          path: /tmp/ocean-r01812-debug/
           if-no-files-found: error
           retention-days: 3
