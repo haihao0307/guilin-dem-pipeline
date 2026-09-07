@@ -1,0 +1,64 @@
+name: Wenzhou DEM Kernel R1 Full Package
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-dem-clean-kernel-r1
+    paths:
+      - projects/wenzhou/dem-kernel/tools/build_full_package.py
+      - .github/workflows/wenzhou-dem-kernel-r1-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-full-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the full repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build deterministic restart package
+        run: python projects/wenzhou/dem-kernel/tools/build_full_package.py
+
+      - name: Verify package sidecar
+        shell: bash
+        run: |
+          cd projects/wenzhou/dem-kernel/packages
+          sha256sum -c WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip.sha256
+          unzip -t WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip
+
+      - name: Upload full package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07
+          path: |
+            projects/wenzhou/dem-kernel/packages/WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip
+            projects/wenzhou/dem-kernel/packages/WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip.sha256
+            projects/wenzhou/dem-kernel/packages/PACKAGE_BUILD_REPORT.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Commit fixed package checkpoint
+        shell: bash
+        run: |
+          git config user.name "Haihao_Nature Grace HK"
+          git config user.email "haihao0307@gmail.com"
+          git add \
+            projects/wenzhou/dem-kernel/packages/WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip \
+            projects/wenzhou/dem-kernel/packages/WENZHOU_DEM_KERNEL_R1_FULL_PACKAGE_2026-09-07.zip.sha256 \
+            projects/wenzhou/dem-kernel/packages/PACKAGE_BUILD_REPORT.json
+          if git diff --cached --quiet; then
+            echo "Package checkpoint already matches this source commit."
+          else
+            git commit -m "package(wenzhou): publish DEM Kernel R1 full restart bundle [skip ci]"
+            git push origin HEAD:feature/wenzhou-dem-clean-kernel-r1
+          fi
