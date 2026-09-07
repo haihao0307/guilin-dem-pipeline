@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent / "evidence"
 OUT.mkdir(parents=True, exist_ok=True)
 HTML = ROOT / "workbenches/landscape-full-r4/index.html"
-EXPECTED_BYTES = 24971
-EXPECTED_SHA = "7ce88e1265d625c6197f8d023ee0abb0a15908f6877a9a0a1a317b74453279eb"
+EXPECTED_BYTES = 25431
+EXPECTED_SHA = "5cabdb7d1921d9666915f7a140ce2a3c7bf53f978ed9f72fac35a1c1d19f67b3"
 
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *_):
@@ -30,6 +30,13 @@ def static_checks():
     assert "for(int j=0;j<17;j++)" in text
     assert all(label in text for label in ["区域", "贴地", "岩壁", "微观", "亮白灰岩", "深灰灰岩", "暖灰白云质", "混合灰岩"])
     return {"bytes": len(raw), "sha256": EXPECTED_SHA, "externalRuntimeRequests": 0}
+
+
+def wait_redraw(page, script: str):
+    page.evaluate(script)
+    page.wait_for_timeout(180)
+    page.wait_for_function("window.__LM_READY__===false", timeout=10000)
+    page.wait_for_function("window.__LM_READY__===true", timeout=480000)
 
 
 def main():
@@ -53,22 +60,20 @@ def main():
             checks.append({"name": "HTTP document", "passed": response.status == 200})
             page.wait_for_function("window.__LM_READY__===true", timeout=480000)
             first = page.evaluate("window.__LM__.audit()")
-            checks.append({"name": "default field rendered", "passed": first["glError"] == 0 and first["mean"] > 2 and first["hash"]})
+            checks.append({"name": "default field rendered", "passed": bool(first["glError"] == 0 and first["mean"] > 2 and first["hash"])})
             page.screenshot(path=str(OUT / "mobile-region.png"))
-            page.evaluate("window.__LM__.setView('cliff')")
-            page.wait_for_function("window.__LM_READY__===false", timeout=10000)
-            page.wait_for_function("window.__LM_READY__===true", timeout=480000)
+            wait_redraw(page, "window.__LM__.setView('cliff')")
             cliff = page.evaluate("window.__LM__.audit()")
             checks.append({"name": "cliff view differs", "passed": cliff["glError"] == 0 and cliff["hash"] != first["hash"]})
             page.screenshot(path=str(OUT / "mobile-cliff.png"))
-            page.evaluate("window.__LM__.setRock(0)")
-            page.wait_for_function("window.__LM_READY__===true", timeout=480000)
+            wait_redraw(page, "window.__LM__.setRock(0)")
             white = page.evaluate("window.__LM__.audit()")
             checks.append({"name": "rock appearance changes", "passed": white["hash"] != cliff["hash"]})
-            page.evaluate("window.__LM__.setSeed(137)")
-            page.wait_for_function("window.__LM_READY__===true", timeout=480000)
+            page.screenshot(path=str(OUT / "mobile-white-rock.png"))
+            wait_redraw(page, "window.__LM__.setSeed(137)")
             seeded = page.evaluate("window.__LM__.audit()")
             checks.append({"name": "seed changes world", "passed": seeded["hash"] != white["hash"]})
+            page.screenshot(path=str(OUT / "mobile-seed137.png"))
             checks.append({"name": "no horizontal overflow", "passed": page.evaluate("document.documentElement.scrollWidth<=innerWidth")})
             outside = [u for u in requests if not u.startswith(base)]
             checks.append({"name": "no external runtime requests", "passed": not outside})
