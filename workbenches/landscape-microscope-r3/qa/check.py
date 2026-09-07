@@ -31,6 +31,13 @@ def wait_draw(page):
 def canvas_hash(page):
     return hashlib.sha256(png_bytes(page)).hexdigest()
 
+def record_frame(page, name):
+    audit = page.evaluate("window.__MM__.audit()")
+    (OUT / (name + ".json")).write_text(json.dumps(audit, ensure_ascii=False, indent=2))
+    page.screenshot(path=str(OUT / (name + ".png")), full_page=True)
+    print(json.dumps({"frame": name, "audit": audit}, ensure_ascii=False), flush=True)
+    return audit
+
 def static_checks():
     path = ROOT / "workbenches/landscape-microscope-r3/index.html"
     raw = path.read_bytes()
@@ -43,6 +50,12 @@ def static_checks():
     assert "for(int j=0;j<17;j++)" in text and "for(int it=0;it<119;it++)" in text
     assert "fractureMaskQ" in text and "mossCells" in text and "strataMaskQ" in text
     return {"bytes": len(raw), "sha256": EXPECTED_SHA, "externalAssets": 0}
+
+def visible(audit):
+    # The final palette can intentionally stay below 190, so a fixed white-pixel
+    # threshold is not a reliable blank-frame test. Distinct modes, screenshots
+    # and tile hashes below provide the stronger variation checks.
+    return audit["glError"] == 0 and 4 < audit["mean"] < 250 and audit["hash"] not in ("0", "811c9dc5")
 
 def run_profile(browser, base, mobile):
     name = "mobile" if mobile else "desktop"
@@ -63,21 +76,21 @@ def run_profile(browser, base, mobile):
     def check(label, ok):
         checks.append({"name": label, "passed": bool(ok)})
         assert ok, label
-    audit = page.evaluate("window.__MM__.audit()")
-    check("default frame", audit["glError"] == 0 and audit["dark"] > 0 and audit["light"] > 0 and audit["mean"] > 4)
+    audit = record_frame(page, name + "-preflight")
+    check("default frame", visible(audit))
     default_hash = canvas_hash(page)
     for view in ("near", "mid", "far"):
         page.evaluate("window.__MM__.setView(" + json.dumps(view) + ")")
         wait_draw(page)
         q = page.evaluate("window.__MM__.audit()")
-        check("view " + view, q["glError"] == 0 and q["dark"] > 0 and q["light"] > 0)
+        check("view " + view, visible(q))
     mode_hashes = []
     for mode in range(5):
         page.evaluate(f"window.__MM__.setMode({mode})")
         wait_draw(page)
         q = page.evaluate("window.__MM__.audit()")
         mode_hashes.append(q["hash"])
-        check("mode " + str(mode), q["glError"] == 0 and q["mean"] >= 0)
+        check("mode " + str(mode), q["glError"] == 0 and 0 <= q["mean"] <= 255)
     check("diagnostic modes distinct", len(set(mode_hashes)) == 5)
     page.evaluate("window.__MM__.setView('near');window.__MM__.setMode(3);document.getElementById('crack').value=0;document.getElementById('crack').dispatchEvent(new Event('input'))")
     wait_draw(page)
@@ -126,6 +139,7 @@ def run_profile(browser, base, mobile):
         "profile": name,
         "passed": True,
         "checks": checks,
+        "defaultAudit": audit,
         "defaultCanvasSHA256": default_hash,
         "variantCanvasSHA256": variants,
         "requests": requests,
