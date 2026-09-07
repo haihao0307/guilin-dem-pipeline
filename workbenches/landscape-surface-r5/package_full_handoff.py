@@ -5,7 +5,6 @@ import hashlib, json, shutil, subprocess, tarfile, zipfile
 
 SOURCE_COMMIT = '039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90'
 R4_REJECTED = 'c8d31fc1de3b75dbd6da8877cf65d90dadfde918'
-R5_SHA256 = '989ca4f976daa205f8e87699d23b1bf68f94b12a486395c7272df6b38d8304e7'
 PACKAGE_DIRNAME = 'Landscape_Mother_Full_Handoff_R5_2026-09-07'
 OUT_ROOT = Path('handoffs/landscape-mother/full-r5-20260907')
 BUILD = Path('/tmp') / PACKAGE_DIRNAME
@@ -42,8 +41,14 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def source_r5_sha256() -> str:
+    raw = run('git', 'show', f'{SOURCE_COMMIT}:workbenches/landscape-surface-r5/index.html', stdout=subprocess.PIPE).stdout
+    return hashlib.sha256(raw).hexdigest()
+
+
 def write_docs(root: Path) -> None:
-    restart = f'''# Landscape Mother — RESTART START HERE\n\n日期：2026-09-07\n\n## 当前唯一继续入口\n\n当前候选：`workbenches/landscape-surface-r5/index.html`\n\n固定 R5 来源提交：`{SOURCE_COMMIT}`\n\n固定直开地址：\n`https://raw.githack.com/haihao0307/guilin-dem-pipeline/{SOURCE_COMMIT}/workbenches/landscape-surface-r5/index.html`\n\nR5 的生产原则已经冻结：Macroscopic microscope 只在现有岩石表面的薄壳层工作。它可以影响微法线、粗糙度和极小尺度表面响应；它不得重造峰体、主洞口、峰脚、土体或落石位置。\n\n## 重新启动时先读\n\n1. `CURRENT_STATE.json`\n2. `SYSTEM_LAYER_CONTRACT.md`\n3. `handoffs/landscape-mother/LEARNING_CURRENT.md`\n4. `workbenches/landscape-function/README.md` 与源码\n5. `workbenches/landscape-microscope-r2/` 与 `workbenches/landscape-microscope-r3/`\n6. `landscape-mother/` 七文件干净核心\n\n## 当前视觉状态\n\n用户已经明确退回 R4 的整峰重塑路线。R4 的错误是让 microscope 进入宏观隐式体积并重新造山，造成鼓腹、束腰、瓶状峰体。这个方向不得复活。\n\n用户对水蚀石灰岩基线的大形给予有限正向反馈，要求沿该大形继续细化表面。R5 以这份基线为宏观形体来源，把 microscope 限制回表面层。R5 自身尚未获得最终视觉批准。\n\n`visualApproved=false`\n`productionReady=false`\n\n## 下一轮优先事项\n\n1. R5 `Microscope 壳层=0` 与默认值同镜头对照，顶点与索引必须完全不变。\n2. 显微细节继续消除可见重复，同时守住大洞、大裂缝、水蚀沟的既有位置。\n3. 黑色水痕必须读取来水、遮蔽和湿润代理，避免喷黑。\n4. 苔藓保持团簇/块状附着，避免喷绿。\n5. 坡脚石块继续检查真实支承，禁止悬空。\n6. 色彩追求高对比和丰富石灰岩变化，颜色不能冒充几何。\n7. 用户每轮只需要固定 GitHub 提交的 raw.githack 直开入口，聊天中不要塞下载包。\n'''
+    r5_sha = source_r5_sha256()
+    restart = f'''# Landscape Mother — RESTART START HERE\n\n日期：2026-09-07\n\n## 当前唯一继续入口\n\n当前候选：`workbenches/landscape-surface-r5/index.html`\n\n固定 R5 来源提交：`{SOURCE_COMMIT}`\n固定 R5 SHA256：`{r5_sha}`\n\n固定直开地址：\n`https://raw.githack.com/haihao0307/guilin-dem-pipeline/{SOURCE_COMMIT}/workbenches/landscape-surface-r5/index.html`\n\nR5 的生产原则已经冻结：Macroscopic microscope 只在现有岩石表面的薄壳层工作。它可以影响微法线、粗糙度和极小尺度表面响应；它不得重造峰体、主洞口、峰脚、土体或落石位置。\n\n## 重新启动时先读\n\n1. `CURRENT_STATE.json`\n2. `SYSTEM_LAYER_CONTRACT.md`\n3. `handoffs/landscape-mother/LEARNING_CURRENT.md`\n4. `workbenches/landscape-function/README.md` 与源码\n5. `workbenches/landscape-microscope-r2/` 与 `workbenches/landscape-microscope-r3/`\n6. `landscape-mother/` 七文件干净核心\n\n## 当前视觉状态\n\n用户已经明确退回 R4 的整峰重塑路线。R4 的错误是让 microscope 进入宏观隐式体积并重新造山，造成鼓腹、束腰、瓶状峰体。这个方向不得复活。\n\n用户对水蚀石灰岩基线的大形给予有限正向反馈，要求沿该大形继续细化表面。R5 以这份基线为宏观形体来源，把 microscope 限制回表面层。R5 自身尚未获得最终视觉批准。\n\n`visualApproved=false`\n`productionReady=false`\n\n## 下一轮优先事项\n\n1. R5 `Microscope 壳层=0` 与默认值同镜头对照，顶点与索引必须完全不变。\n2. 显微细节继续消除可见重复，同时守住大洞、大裂缝、水蚀沟的既有位置。\n3. 黑色水痕必须读取来水、遮蔽和湿润代理，避免喷黑。\n4. 苔藓保持团簇/块状附着，避免喷绿。\n5. 坡脚石块继续检查真实支承，禁止悬空。\n6. 色彩追求高对比和丰富石灰岩变化，颜色不能冒充几何。\n7. 用户每轮只需要固定 GitHub 提交的 raw.githack 直开入口，聊天中不要塞下载包。\n'''
     (root / 'RESTART_START_HERE.md').write_text(restart)
 
     state = {
@@ -54,7 +59,7 @@ def write_docs(root: Path) -> None:
         'currentCandidate': {
             'id': 'R5-surface-shell',
             'path': 'workbenches/landscape-surface-r5/index.html',
-            'sha256': R5_SHA256,
+            'sha256': r5_sha,
             'macroGeometrySource': 'workbenches/landscape-function/index.html',
             'microscopeScope': 'surface-only',
             'visualApproved': False,
@@ -101,7 +106,7 @@ def verify(root: Path, data: dict) -> None:
         assert len(b) == item['bytes'], item['path']
         assert hashlib.sha256(b).hexdigest() == item['sha256'], item['path']
     current = root / 'workbenches/landscape-surface-r5/index.html'
-    assert sha256(current) == R5_SHA256
+    assert sha256(current) == source_r5_sha256()
     assert 'Microscope 壳层' in current.read_text()
     assert "release:'karst-surface-shell-r5'" in current.read_text()
 
@@ -134,7 +139,7 @@ def main() -> None:
     (OUT_ROOT / 'RESTART_START_HERE.md').write_text((BUILD / 'RESTART_START_HERE.md').read_text())
     (OUT_ROOT / 'CURRENT_STATE.json').write_text((BUILD / 'CURRENT_STATE.json').read_text())
     (OUT_ROOT / 'PACKAGE_SHA256.txt').write_text(f'{zip_sha}  {zip_path.name}\n')
-    result = {'sourceCommit': SOURCE_COMMIT, 'package': str(zip_path), 'bytes': zip_path.stat().st_size, 'sha256': zip_sha, 'files': data['fileCount']}
+    result = {'sourceCommit': SOURCE_COMMIT, 'r5SHA256': source_r5_sha256(), 'package': str(zip_path), 'bytes': zip_path.stat().st_size, 'sha256': zip_sha, 'files': data['fileCount']}
     print(json.dumps(result, ensure_ascii=False))
 
 if __name__ == '__main__':
