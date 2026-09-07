@@ -23,8 +23,8 @@
       "id": "unreal_lumen",
       "title": "Unreal Engine Lumen 与场景光照反馈",
       "source_status": "identity_pending_deeper_read",
-      "distillation_status": "queued",
-      "next_question": "哪些实时全局光照思想能迁移到网页体积和海洋而不复制引擎成本",
+      "distillation_status": "active_question_only",
+      "next_question": "哪些实时全局光照思想能迁移到网页体积和海洋，同时避免把运行时反馈当成材料真值",
       "productionIntegration": false
     },
     {
@@ -68,11 +68,32 @@
       "productionIntegration": false
     },
     {
+      "id": "weather_ocean_light_interface",
+      "title": "Weather 与 Ocean 只读光照接口",
+      "source_status": "derived_from_existing_volume_optics_and_two_reviewed_make_drafts",
+      "distillation_status": "reviewed_candidate",
+      "knowledge_path": "docs/mother_coordination/world_knowledge_lab_v1/reviews/2026-09-07-weather-ocean-light-interface-r1.md",
+      "accepted_relations": [
+        "Weather provides sun and sky illumination queries",
+        "cloud optical depth changes incident light at the ocean surface",
+        "Ocean retains independent geometry, normals, roughness and water state",
+        "cloud, water and smoke share interfaces but not domain parameters"
+      ],
+      "rejected_draft_relations": [
+        "volume density copied directly into PBR surface channels",
+        "all physical fields normalized to zero through one without calibration",
+        "cloud density directly changing ocean normals",
+        "underwater medium conflated with wet solid surface"
+      ],
+      "next_question": "一块固定海面能否在几何与材料逐值不变时正确响应云光学厚度 A",
+      "productionIntegration": false
+    },
+    {
       "id": "weather_cloud_adapter",
       "title": "Weather 与 Cloud 适配",
       "source_status": "knowledge_ready_for_isolated_test",
       "distillation_status": "priority",
-      "next_question": "先选哪一团现有云做包络、密度、光学和输运四层对照",
+      "next_question": "先在一团固定云上建立太阳透射率查询，再分离包络、密度、光学和输运",
       "productionIntegration": false
     },
     {
@@ -80,7 +101,7 @@
       "title": "Ocean 与 Coast 适配",
       "source_status": "knowledge_ready_for_isolated_test",
       "distillation_status": "priority",
-      "next_question": "怎样先在一个烟源上验证浓烟、长尾、风向、绕岛和资源预算",
+      "next_question": "先用固定海面小区域验证 Weather 光照接口，再在一个烟源上验证浓烟、长尾、风向、绕岛和资源预算",
       "productionIntegration": false
     },
     {
@@ -94,7 +115,10 @@
   ],
   "global_status": {
     "automation_required": false,
-    "external_ai_scheduler_active": false,
+    "external_ai_scheduler_active": true,
+    "automation_role": "bounded raw draft generation only",
+    "active_make_scenario_id": 6177373,
+    "human_review_required_before_github_adoption": true,
     "production_code_modified": false,
     "visualAcceptance": false,
     "productionReady": false
