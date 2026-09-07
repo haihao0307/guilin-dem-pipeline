@@ -1,0 +1,85 @@
+name: Ocean R018.12 fixed single HTML
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r01812-surface-query-20260907
+    paths:
+      - .github/workflows/ocean-r01812-fixed-single-html.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r01812-fixed-single-html
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out fixed release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact R018.12 source and build one HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html"
+          cat ocean-mother/releases/r01812-build/patch.part-*.b64 > /tmp/r01812.patch.gz.b64
+          echo "9fc71f4eb0d619cae7a553bfb72220f1e3592096190207d35a7dde85221a1b4c  /tmp/r01812.patch.gz.b64" | sha256sum -c -
+          base64 -d /tmp/r01812.patch.gz.b64 | gzip -dc > /tmp/r01812.patch
+          rm -rf /tmp/ocean-r01812
+          cp -a ocean-mother/restart-v0311 /tmp/ocean-r01812
+          cd /tmp/ocean-r01812
+          patch -p1 < /tmp/r01812.patch
+          node --check source/inline-0.js
+          python tools/build_single_html.py --output "$out"
+          test "$(wc -c < "$out")" -eq 163032
+          echo "5b66f11021da480441922eb657da071d12ac929faee0f38e0a90f70895fdc69d  $out" | sha256sum -c -
+          grep -q "0.3.12-island-r018-surface-query" "$out"
+          grep -q "gpu-transform-feedback-shared-glsl" "$out"
+          grep -q "Ocean Mother | R018.12 海面同源查询版" "$out"
+          if grep -qE '<script[^>]+src=|<img[^>]+src=|https://cdn\.|https://unpkg\.|https://jsdelivr\.' "$out"; then
+            echo "External runtime asset detected" >&2
+            exit 1
+          fi
+
+      - name: Record reproducible release receipt
+        shell: bash
+        run: |
+          cat > ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_RECEIPT.json <<'JSON'
+          {
+            "schema": "ocean-fixed-single-html-receipt/1",
+            "version": "0.3.12",
+            "runtimeIdentity": "0.3.12-island-r018-surface-query",
+            "sourceBaselineCommit": "7b6bba5f9affb9cfcfea5dabfafa5e7931bb492d",
+            "learningBaselineCommit": "db6f63572dec97a688f32f98b2ad5b945418e731",
+            "htmlPath": "ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html",
+            "htmlBytes": 163032,
+            "htmlSha256": "5b66f11021da480441922eb657da071d12ac929faee0f38e0a90f70895fdc69d",
+            "singleFileHtml": true,
+            "externalRuntimeAssets": false,
+            "frozenDeepModified": false,
+            "browserDesktopChecked": true,
+            "browserMobile390x844Checked": true,
+            "gpuSurfaceQueryNinePointPass": true,
+            "hardwareGpuVerified": false,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+
+      - name: Commit immutable delivery candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html
+          git add ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_RECEIPT.json
+          git commit -m "release(ocean): publish R018.12 fixed single-file workbench [skip ci]"
+          git push origin HEAD
