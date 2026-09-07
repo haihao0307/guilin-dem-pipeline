@@ -1,0 +1,45 @@
+{
+  "source": "weather-mother/deliveries/wm-r11-cloud-base-optics-v001.html",
+  "chunkCount": 5,
+  "chunkLengths": [
+    4000,
+    3383,
+    4000,
+    4000,
+    1840
+  ],
+  "payloadLength": 17223,
+  "payloadLengthMod4": 3,
+  "invalidCharacters": [],
+  "paddingCount": 2,
+  "firstPaddingPosition": 17221,
+  "lastPaddingPositions": [
+    17221,
+    17222
+  ],
+  "payloadSHA256": "251e56f398be4cf4f8f82404f2a157d3bd828ba109e0f3d785434599a9b2d874",
+  "attempts": [
+    {
+      "label": "exact",
+      "length": 17223,
+      "mod4": 3,
+      "success": false,
+      "error": "Error: Invalid base64-encoded string: number of data characters (17221) cannot be 1 more than a multiple of 4"
+    },
+    {
+      "label": "repad-core",
+      "length": 17224,
+      "mod4": 0,
+      "success": false,
+      "error": "Error: Invalid base64-encoded string: number of data characters (17221) cannot be 1 more than a multiple of 4"
+    },
+    {
+      "label": "lenient-bitstream",
+      "decodedBytes": 12915,
+      "gzipMagic": "1f8b0800",
+      "success": false,
+      "error": "error: Error -3 while decompressing data: invalid distance too far back"
+    }
+  ],
+  "recovered": false
+}
