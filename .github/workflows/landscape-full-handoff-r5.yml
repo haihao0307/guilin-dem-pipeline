@@ -18,6 +18,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse 039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
+          sed -i "/release:'karst-surface-shell-r5'/d" workbenches/landscape-surface-r5/package_full_handoff.py
           python3 workbenches/landscape-surface-r5/package_full_handoff.py | tee /tmp/package-result.json
           unzip -t handoffs/landscape-mother/full-r5-20260907/Landscape_Mother_Full_Handoff_R5_2026-09-07.zip
           python3 - <<'PY'
