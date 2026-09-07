@@ -23,11 +23,16 @@ Farmland Object DNA 负责传统农田对象的身份、结构、关系、状态
 5. 读取 `OBJECT_DNA_CONTRACT.md`。
 6. 读取 `INTERFACE_CONTRACT.md`。
 7. 读取 `QUALITY_GATES.json`。
-8. 读取 `schema/farmland-object-dna.schema.json`。
-9. 读取 `examples/traditional-paddy-v001.json`。
-10. 开工前重新核对当前分支 HEAD、最后人工接受状态、失败对照和本轮目标。
+8. 读取 `research/OBJECT_SOURCE_CARD_TEMPLATE.md`。
+9. 读取 `research/YUANYANG_SYSTEM_RESEARCH_PLAN.md`。
+10. 读取 `schema/farmland-object-dna.schema.json`。
+11. 读取 `examples/README.md`。
+12. 读取 `examples/traditional-paddy-v002-research.json`。
+13. 开工前重新核对当前分支 HEAD、最后人工接受状态、失败对照和本轮目标。
 
-任何执行者未完成前四项读取时，不得开始程序化几何、材质或公开工作台生产。
+`examples/traditional-paddy-v001.json` 只保留为格式历史和失败对照，不得作为生产基线。
+
+任何执行者未完成前九项读取时，不得开始程序化几何、材质或公开工作台生产。
 
 ## 小妈启动规则来源
 
