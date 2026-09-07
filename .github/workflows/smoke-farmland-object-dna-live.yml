@@ -57,7 +57,7 @@ jobs:
           run_browser () {
             local size="$1"
             local out="$2"
-            timeout 45s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=swiftshader --window-size="$size" --virtual-time-budget=8000 --dump-dom "$PUBLIC_URL" > "$out"
+            timeout 45s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --window-size="$size" --virtual-time-budget=10000 --dump-dom "$PUBLIC_URL" > "$out"
             grep -q 'data-runtime-ready="true"' "$out"
             grep -q '<canvas' "$out"
             grep -q "$VERSION_MARKER" "$out"
