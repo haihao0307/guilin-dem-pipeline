@@ -1,0 +1,49 @@
+name: Wenzhou R3 OSM Adaptive Retry
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-osm-parallel-20260907
+    paths:
+      - '.github/workflows/wenzhou-r3-osm-adaptive-retry.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wenzhou-r3-osm-adaptive-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  osm-subtile:
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        parent_tile: [12, 15]
+        sub_index: [0, 1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install request runtime
+        run: python -m pip install requests==2.32.5
+      - name: Acquire adaptive source subtile
+        run: |
+          python projects/wenzhou/r3-data/bootstrap/acquire_osm_subtile.py \
+            --tile '${{ matrix.parent_tile }}' \
+            --sub-index '${{ matrix.sub_index }}' \
+            --output dist
+      - name: Upload immutable subtile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_R3_OSM_TILE_${{ matrix.parent_tile }}_SUB_${{ matrix.sub_index }}
+          path: dist
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
