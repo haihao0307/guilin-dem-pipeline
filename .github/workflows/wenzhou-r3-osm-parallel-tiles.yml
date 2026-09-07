@@ -1,0 +1,47 @@
+name: Wenzhou R3 OSM Parallel Tiles
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-osm-parallel-20260907
+    paths:
+      - '.github/workflows/wenzhou-r3-osm-parallel-tiles.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wenzhou-r3-osm-parallel-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  osm-tile:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        tile: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install request runtime
+        run: python -m pip install requests==2.32.5
+      - name: Acquire exact source tile
+        run: |
+          python projects/wenzhou/r3-data/bootstrap/acquire_osm_tile.py \
+            --tile '${{ matrix.tile }}' \
+            --output dist
+      - name: Upload immutable tile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_R3_OSM_TILE_${{ matrix.tile }}
+          path: dist
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
