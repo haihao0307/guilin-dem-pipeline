@@ -1,0 +1,256 @@
+name: Ocean R018.15 reliable visible workbench
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r01815-reliable-visible-20260907
+    paths:
+      - .github/workflows/ocean-r01815-reliable-visible.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r01815-reliable-visible
+  cancel-in-progress: false
+
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct deterministic single HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p candidate evidence
+          cat ocean-mother/releases/r01815-build/payload.part-*.b64 > /tmp/ocean-r01815.html.gz.b64
+          test "$(wc -c < /tmp/ocean-r01815.html.gz.b64)" -eq 16296
+          echo "e1889807fad53e2801fe1efbb445e8ad45cb2f3b22c3db3d855bea4b6a8ee291  /tmp/ocean-r01815.html.gz.b64" | sha256sum -c -
+          base64 -d /tmp/ocean-r01815.html.gz.b64 | gzip -dc > candidate/index.html
+          test "$(wc -c < candidate/index.html)" -eq 33676
+          echo "3ab39f01707da58006938ab65ad699fb9e981fc50d8de489ef013bbb21428411  candidate/index.html" | sha256sum -c -
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('candidate/index.html')
+          s = p.read_text(encoding='utf-8')
+          replacements = {
+              "const dpr=Math.min(devicePixelRatio||1,1.35),scale=innerWidth<760?.72:.86": "const dpr=Math.min(devicePixelRatio||1,1.25),scale=innerWidth<760?.68:.64",
+              "for(int i=0;i<46;i++)": "for(int i=0;i<34;i++)",
+              "for(int i=0;i<14;i++){float ft=(float(i)+.5)/14.;": "for(int i=0;i<10;i++){float ft=(float(i)+.5)/10.;",
+              "float foam=clamp((shoreFoam+breaker*.45+crest*.15*micro)*float((uFlags&1)!=0),0.,1.);": "float foamEnabled=((uFlags&1)!=0)?1.0:0.0;float foam=clamp((shoreFoam+breaker*.45+crest*.15*micro)*foamEnabled,0.,1.);",
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'missing deterministic replacement: {old[:70]}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          grep -q "0.3.15-island-reliable-visible" candidate/index.html
+          grep -q "r01815-direct-default-framebuffer" candidate/index.html
+          grep -q "canvas2d-fallback" candidate/index.html
+          grep -q "shared-wave-uniforms-cpu-evaluator" candidate/index.html
+          if grep -qE '<script[^>]+src=|<img[^>]+src=|https://cdn\.|https://unpkg\.|https://jsdelivr\.' candidate/index.html; then
+            echo "External runtime asset detected" >&2
+            exit 1
+          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path('candidate/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', s, re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'expected one inline script, got {len(scripts)}')
+          Path('/tmp/ocean-r01815-runtime.mjs').write_text(scripts[0], encoding='utf-8')
+          PY
+          node --check /tmp/ocean-r01815-runtime.mjs
+          wc -c candidate/index.html | tee evidence/HTML_BYTES.txt
+          sha256sum candidate/index.html | tee evidence/HTML_SHA256.txt
+
+      - name: Run normal entry desktop and mobile gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          python3 -m http.server 8123 --bind 127.0.0.1 > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          COMMON=(--headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --disable-gpu-sandbox --disable-background-networking --no-first-run --hide-scrollbars --run-all-compositor-stages-before-draw --virtual-time-budget=9000)
+          timeout 75s "$CHROME" "${COMMON[@]}" --user-data-dir=/tmp/ocean-r01815-desktop --window-size=1536,1024 --screenshot=evidence/desktop.png --dump-dom http://127.0.0.1:8123/candidate/index.html > evidence/desktop-dom.html 2> evidence/desktop-chrome.log
+          timeout 75s "$CHROME" "${COMMON[@]}" --user-data-dir=/tmp/ocean-r01815-mobile --window-size=390,844 --screenshot=evidence/mobile.png --dump-dom http://127.0.0.1:8123/candidate/index.html > evidence/mobile-dom.html 2> evidence/mobile-chrome.log
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import html, json, math, re, struct, zlib
+
+          def qa_from_dom(path):
+              s = Path(path).read_text(errors='replace')
+              m = re.search(r'<pre[^>]*id="qaProbe"[^>]*>(.*?)</pre>', s, re.S | re.I)
+              if not m or not m.group(1).strip():
+                  raise AssertionError(f'qaProbe missing in {path}')
+              return json.loads(html.unescape(m.group(1)).strip()), s
+
+          def read_png(path):
+              data = Path(path).read_bytes()
+              assert data.startswith(b'\x89PNG\r\n\x1a\n')
+              pos = 8; compressed = bytearray(); w = h = ct = None
+              while pos < len(data):
+                  n = struct.unpack('>I', data[pos:pos+4])[0]
+                  kind = data[pos+4:pos+8]
+                  payload = data[pos+8:pos+8+n]
+                  pos += n + 12
+                  if kind == b'IHDR':
+                      w, h, depth, ct, comp, flt, inter = struct.unpack('>IIBBBBB', payload)
+                      assert depth == 8 and inter == 0 and ct in (2, 6)
+                  elif kind == b'IDAT': compressed.extend(payload)
+                  elif kind == b'IEND': break
+              channels = 3 if ct == 2 else 4
+              stride = w * channels
+              raw = zlib.decompress(bytes(compressed))
+              rows = []; off = 0
+              for _ in range(h):
+                  ft = raw[off]; off += 1
+                  row = bytearray(raw[off:off+stride]); off += stride
+                  prev = rows[-1] if rows else bytearray(stride)
+                  for x in range(stride):
+                      a = row[x-channels] if x >= channels else 0
+                      b = prev[x]
+                      c = prev[x-channels] if x >= channels else 0
+                      if ft == 1: row[x] = (row[x] + a) & 255
+                      elif ft == 2: row[x] = (row[x] + b) & 255
+                      elif ft == 3: row[x] = (row[x] + ((a+b)//2)) & 255
+                      elif ft == 4:
+                          p = a+b-c; pa=abs(p-a); pb=abs(p-b); pc=abs(p-c)
+                          row[x] = (row[x] + (a if pa<=pb and pa<=pc else b if pb<=pc else c)) & 255
+                      elif ft != 0: raise AssertionError(f'PNG filter {ft}')
+                  rows.append(row)
+              return w, h, channels, b''.join(rows)
+
+          def visual(path, mobile=False):
+              w,h,ch,pix = read_png(path)
+              x0=int(w*(.18 if mobile else .20)); x1=int(w*(.82 if mobile else .70))
+              y0=int(h*.20); y1=int(h*.80)
+              vals=[]; colored=0; non_dark=0; colors=set()
+              step=max(1,int(math.sqrt(max(1,(x1-x0)*(y1-y0)/160000))))
+              for y in range(y0,y1,step):
+                  base=y*w*ch
+                  for x in range(x0,x1,step):
+                      i=base+x*ch; r,g,b=pix[i],pix[i+1],pix[i+2]
+                      l=(.2126*r+.7152*g+.0722*b)/255
+                      vals.append(l)
+                      non_dark += l>.035
+                      colored += max(r,g,b)-min(r,g,b)>8
+                      colors.add((r//16,g//16,b//16))
+              mean=sum(vals)/len(vals); std=math.sqrt(sum((v-mean)**2 for v in vals)/len(vals))
+              return {'width':w,'height':h,'meanLuminance':mean,'stdDev':std,'nonDarkRatio':non_dark/len(vals),'coloredRatio':colored/len(vals),'quantizedColors':len(colors)}
+
+          report={'status':'PASS','cases':{}}
+          for name,mobile in [('desktop',False),('mobile',True)]:
+              q,dom=qa_from_dom(f'evidence/{name}-dom.html')
+              v=visual(f'evidence/{name}.png',mobile)
+              errors=[]
+              if q.get('version')!='0.3.15-island-reliable-visible': errors.append('version mismatch')
+              if q.get('ready') is not True or q.get('sceneReady') is not True: errors.append('scene not ready')
+              if int(q.get('frames') or 0)<1: errors.append('no rendered frame')
+              if q.get('queryAvailable') is not True or q.get('queryVerified') is not True: errors.append('surface query failed')
+              if q.get('error'): errors.append('runtime error: '+str(q.get('error')))
+              if q.get('renderer') not in ('webgl2','canvas2d-fallback'): errors.append('unknown renderer')
+              if v['meanLuminance']<=.06: errors.append('central scene too dark')
+              if v['stdDev']<=.025: errors.append('central scene lacks structure')
+              if v['nonDarkRatio']<=.70: errors.append('central non-dark ratio too low')
+              if v['coloredRatio']<=.30: errors.append('central color ratio too low')
+              if v['quantizedColors']<=30: errors.append('central color diversity too low')
+              if mobile:
+                  m=re.search(r'<aside[^>]*id="panel"[^>]*class="([^"]*)"',dom,re.I)
+                  if not m or 'closed' not in m.group(1).split(): errors.append('mobile panel not closed')
+              report['cases'][name]={'qa':q,'visual':v,'errors':errors,'passed':not errors}
+              if errors: report['status']='FAIL'
+          Path('evidence/QA_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if report['status']!='PASS': raise SystemExit(1)
+          PY
+
+      - name: Commit fixed single HTML and receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_Direct_Open.html
+          cp candidate/index.html "$target"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          html = Path('ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_Direct_Open.html')
+          qa = json.loads(Path('evidence/QA_REPORT.json').read_text())
+          receipt = {
+            'schema':'ocean-fixed-single-html-receipt/4',
+            'version':'0.3.15',
+            'runtimeIdentity':'0.3.15-island-reliable-visible',
+            'htmlPath':str(html),
+            'htmlBytes':html.stat().st_size,
+            'htmlSha256':hashlib.sha256(html.read_bytes()).hexdigest(),
+            'singleFileHtml':True,
+            'externalRuntimeAssets':False,
+            'normalEntryDesktopChecked':True,
+            'normalEntryMobile390x844Checked':True,
+            'desktopRenderer':qa['cases']['desktop']['qa']['renderer'],
+            'desktopFrames':qa['cases']['desktop']['qa']['frames'],
+            'desktopQueryVerified':qa['cases']['desktop']['qa']['queryVerified'],
+            'mobileRenderer':qa['cases']['mobile']['qa']['renderer'],
+            'mobileFrames':qa['cases']['mobile']['qa']['frames'],
+            'mobilePanelClosed':qa['cases']['mobile']['qa']['mobilePanelClosed'],
+            'centralCanvasNonBlack':True,
+            'canvas2DFallbackIncluded':True,
+            'hardwareGpuVerified':False,
+            'visualAcceptance':False,
+            'productionReady':False
+          }
+          Path('ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$target" ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_RECEIPT.json
+          git commit -m "release(ocean): publish R018.15 reliable visible single HTML [skip ci]"
+          git push origin HEAD
+          git rev-parse HEAD | tee evidence/FINAL_COMMIT.txt
+
+      - name: Verify immutable raw.githack bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          FINAL_SHA="$(cat evidence/FINAL_COMMIT.txt)"
+          PATH_IN_REPO=ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_Direct_Open.html
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FINAL_SHA}/${PATH_IN_REPO}"
+          printf '%s\n' "$URL" | tee evidence/RAW_GITHACK_URL.txt
+          expected="$(sha256sum candidate/index.html | awk '{print $1}')"
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl --fail --location --silent --show-error --connect-timeout 10 --max-time 45 "$URL" -o evidence/raw.githack.html; then
+              actual="$(sha256sum evidence/raw.githack.html | awk '{print $1}')"
+              if [ "$actual" = "$expected" ]; then ok=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$ok" -eq 1
+          grep -q "0.3.15-island-reliable-visible" evidence/raw.githack.html
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R01815_Reliable_Visible
+          path: |
+            candidate/index.html
+            ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_Direct_Open.html
+            ocean-mother/releases/Ocean_Mother_R01815_Reliable_Visible_RECEIPT.json
+            evidence/
+          if-no-files-found: warn
+          retention-days: 30
