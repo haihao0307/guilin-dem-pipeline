@@ -1,0 +1,35 @@
+name: Landscape Macroscopic Karst R3 QA
+on:
+  push:
+    branches: [feature/landscape-mother-field-graph-v002]
+    paths:
+      - 'workbenches/landscape-microscope-r3/**'
+      - '.github/workflows/landscape-microscope-r3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify protected Landscape core
+        run: |
+          set -euo pipefail
+          python3 landscape-mother/tools/validate.py
+          node --test landscape-mother/tests/policy.test.cjs
+          test "$(git rev-parse HEAD:landscape-mother)" = 468aacd827f72eec3c245ad9e85abfa42a4ff097
+      - name: Install browser tools
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Run exact principle, desktop and mobile checks
+        run: python3 workbenches/landscape-microscope-r3/qa/check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: landscape-microscope-r3-${{ github.sha }}
+          path: workbenches/landscape-microscope-r3/qa/evidence/
+          if-no-files-found: warn
+          retention-days: 14
