@@ -1,0 +1,117 @@
+name: Wenzhou R3 OSM Geofabrik PBF
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-osm-parallel-20260907
+    paths:
+      - '.github/workflows/wenzhou-r3-osm-geofabrik-pbf.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wenzhou-r3-osm-geofabrik-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  extract-water-truth:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Osmium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osmium-tool
+          osmium --version
+      - name: Download current regional PBF snapshots and checksums
+        run: |
+          mkdir -p source work dist
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output source/zhejiang-latest.osm.pbf \
+            https://download.geofabrik.de/asia/china/zhejiang-latest.osm.pbf
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output source/zhejiang-latest.osm.pbf.md5 \
+            https://download.geofabrik.de/asia/china/zhejiang-latest.osm.pbf.md5
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output source/fujian-latest.osm.pbf \
+            https://download.geofabrik.de/asia/china/fujian-latest.osm.pbf
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output source/fujian-latest.osm.pbf.md5 \
+            https://download.geofabrik.de/asia/china/fujian-latest.osm.pbf.md5
+          (cd source && md5sum --check zhejiang-latest.osm.pbf.md5)
+          (cd source && md5sum --check fujian-latest.osm.pbf.md5)
+      - name: Filter complete OSM water objects
+        run: |
+          FILTERS=(
+            'nwr/waterway'
+            'nwr/natural=coastline'
+            'nwr/natural=water'
+            'nwr/water'
+            'nwr/waterway=riverbank'
+            'nwr/landuse=reservoir'
+            'nwr/landuse=basin'
+            'nwr/natural=wetland'
+            'nwr/natural=bay'
+            'nwr/place=sea'
+          )
+          osmium tags-filter source/zhejiang-latest.osm.pbf "${FILTERS[@]}" \
+            --output work/zhejiang-water.osm.pbf --overwrite
+          osmium tags-filter source/fujian-latest.osm.pbf "${FILTERS[@]}" \
+            --output work/fujian-water.osm.pbf --overwrite
+          osmium merge --simplify \
+            work/zhejiang-water.osm.pbf work/fujian-water.osm.pbf \
+            --output work/zhejiang-fujian-water.osm.pbf --overwrite
+          osmium export work/zhejiang-fujian-water.osm.pbf \
+            --output-format geojsonseq \
+            --output work/zhejiang-fujian-water.geojsonseq --overwrite
+          gzip -9 -n -c work/zhejiang-fujian-water.geojsonseq \
+            > dist/zhejiang-fujian-water.geojsonseq.gz
+          cp work/zhejiang-fujian-water.osm.pbf dist/
+      - name: Write source receipt
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+          def ident(path):
+              p=Path(path); h=hashlib.sha256()
+              with p.open('rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''): h.update(b)
+              return {'path':str(p),'bytes':p.stat().st_size,'sha256':h.hexdigest()}
+          def md5_text(path): return Path(path).read_text().strip()
+          receipt={
+            'schema':'wenzhou-osm-geofabrik-pbf/r3.1',
+            'createdAtUtc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+            'provider':'Geofabrik GmbH',
+            'dataSource':'OpenStreetMap contributors',
+            'license':'ODbL 1.0',
+            'sourceUrls':[
+              'https://download.geofabrik.de/asia/china/zhejiang-latest.osm.pbf',
+              'https://download.geofabrik.de/asia/china/fujian-latest.osm.pbf'
+            ],
+            'sourceMd5Sidecars':{
+              'zhejiang':md5_text('source/zhejiang-latest.osm.pbf.md5'),
+              'fujian':md5_text('source/fujian-latest.osm.pbf.md5')
+            },
+            'sourceFiles':[ident('source/zhejiang-latest.osm.pbf'),ident('source/fujian-latest.osm.pbf')],
+            'outputs':[ident('dist/zhejiang-fujian-water.osm.pbf'),ident('dist/zhejiang-fujian-water.geojsonseq.gz')],
+            'filters':['waterway','natural=coastline','natural=water','water','waterway=riverbank','landuse=reservoir','landuse=basin','natural=wetland','natural=bay','place=sea'],
+            'fullSourcePbfEmbeddedInArtifact':False,
+            'fallbackUsed':False,
+            'manualGeometryAdded':False,
+            'passed':True
+          }
+          Path('dist/GEOFABRIK_PBF_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload source-traceable water extract
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_R3_OSM_GEOFABRIK_PBF_2026-09-07
+          path: dist
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
