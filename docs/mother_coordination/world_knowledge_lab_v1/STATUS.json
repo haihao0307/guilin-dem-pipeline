@@ -3,16 +3,34 @@
   "make": {
     "platform_connection": "available",
     "scenario_create_and_schedule": "available",
-    "ai_research_execution": "not_working_reliably",
-    "observed_failures": [
+    "ai_research_execution": "working_as_unreviewed_draft_generator",
+    "scenario_id": 6177373,
+    "scenario_name": "小妈 | 世界生成长期蒸馏 V2 | 6小时有界 | Weather-Ocean",
+    "scenario_status": "active",
+    "interval_seconds": 21600,
+    "next_schedule_managed_by_make": true,
+    "successful_executions": [
+      "eeaee0f4756740cc9e238a1c56005e14",
+      "c46be1d8c7ec42b7beb5638cbbab6df6"
+    ],
+    "successful_execution_count_verified": 2,
+    "draft_model": "gpt-5-nano",
+    "raw_output_location": "Make execution history",
+    "manual_review_required": true,
+    "automatic_github_write": false,
+    "production_access": false,
+    "observed_setup_failures_retained": [
       "Make AI Toolkit Ask lacked an available connection ID",
       "Make AI Agent runs failed module parameter validation",
       "one code-trigger design encountered a plan restriction",
-      "later edits encountered temporary request throttling"
+      "temporary request throttling occurred during setup"
     ],
-    "failed_scenario_id": 6177373,
-    "failed_scenario_status": "deactivated",
-    "active_long_term_research_scenario": false
+    "current_working_route": [
+      "util BasicTrigger",
+      "util FunctionIncrement",
+      "openai-gpt-3 askAnything using textPrompt"
+    ],
+    "review_note": "docs/mother_coordination/world_knowledge_lab_v1/reviews/2026-09-07-weather-ocean-light-interface-r1.md"
   },
   "github": {
     "primary_knowledge_store": true,
@@ -21,7 +39,8 @@
     "path": "docs/mother_coordination/world_knowledge_lab_v1",
     "storage_policy": "text_first",
     "binary_policy": "store links, metadata and hashes; keep large binaries outside this knowledge directory",
-    "automation_policy": "no external AI automation; optional future GitHub checks limited to integrity and schema validation"
+    "automation_policy": "Make may generate bounded raw drafts; only manually reviewed conclusions enter stable GitHub knowledge",
+    "issue_ledger": 63
   },
   "production": {
     "production_code_modified": false,
@@ -33,6 +52,8 @@
   },
   "evidence": {
     "source_reading": "varies by topic and is recorded in TOPIC_LEDGER.json",
+    "make_draft_generation": "two successful runs verified",
+    "human_review": "first two drafts reviewed; invalid cross-domain mappings explicitly rejected",
     "productionIntegration": false,
     "visualAcceptance": false,
     "productionReady": false
