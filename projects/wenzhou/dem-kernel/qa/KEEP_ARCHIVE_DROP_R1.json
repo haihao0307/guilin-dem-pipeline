@@ -1,0 +1,164 @@
+{
+  "schema": "wenzhou-dem-kernel-asset-disposition/v1",
+  "createdAtUtc": "2026-09-07T05:35:00Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "workingBranch": "feature/wenzhou-dem-clean-kernel-r1",
+  "baseCommit": "df58a6413a8615b47214602fa482f0a88befcbb6",
+  "policy": "Disposition controls the new active dependency graph. No historical file or frozen branch is deleted by this ledger.",
+  "keepActiveOrRequired": [
+    {
+      "asset": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+      "role": "canonical_land_dem",
+      "status": "required_missing_from_branch_runtime",
+      "identity": {
+        "bytes": 136760745,
+        "sha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+        "grid": [17555, 17918],
+        "spacingMeters": [12.5, 12.5],
+        "crs": "EPSG:32651",
+        "dtype": "int16",
+        "nodata": -32768
+      }
+    },
+    {
+      "assetClass": "source_traceable_wenzhou_marine_truth",
+      "role": "seabed_and_bathymetry",
+      "status": "blocked_inventory_not_confirmed",
+      "requirements": [
+        "source name and license",
+        "resolution and quality class",
+        "horizontal and vertical reference",
+        "payload hash",
+        "land seam policy"
+      ]
+    },
+    {
+      "assetClass": "source_traceable_wenzhou_hydrology_truth",
+      "role": "coast_island_river_stream_canal_tidal_channel_identity",
+      "status": "blocked_inventory_not_confirmed",
+      "requirements": [
+        "original query or source file",
+        "OSM way IDs where applicable",
+        "license and retrieval date",
+        "coordinate reference",
+        "payload hash"
+      ]
+    },
+    {
+      "assetClass": "verified_wenzhou_12p5m_integer_window",
+      "role": "first_real_source_probe",
+      "status": "required_not_mounted",
+      "manifestSchema": "wenzhou-dem-real-window/v1"
+    }
+  ],
+  "keepReadOnlyComparators": [
+    {
+      "asset": "tools/wenzhou/v060/preflight_truth.py",
+      "role": "truth_identity_preflight_reference"
+    },
+    {
+      "asset": "tools/wenzhou/v060/build_truth_pyramid.py",
+      "role": "seven_level_exact_node_baseline"
+    },
+    {
+      "asset": "tools/wenzhou/v060/qa_truth_pyramid.py",
+      "role": "shared_edge_and_source_value_qa_reference"
+    },
+    {
+      "asset": ".github/workflows/wenzhou-v060-truth-pyramid.yml",
+      "role": "historical_baseline_workflow"
+    },
+    {
+      "asset": "projects/wenzhou/v200/web/workbench-v060/V060_TERRAIN_CONTRACT.md",
+      "role": "frozen_v060_contract_reference"
+    },
+    {
+      "asset": "projects/wenzhou/v200/reports/v060/V060_CURRENT_STATE.json",
+      "role": "base_state_and_blocker_record"
+    },
+    {
+      "asset": "projects/wenzhou/v200/reports/v060/WENZHOU_V060_R13_STATIC_QA.json",
+      "role": "historical_static_qa_reference"
+    }
+  ],
+  "archiveOnly": [
+    {
+      "assetClass": "V0.5.9_and_V0.6.0_public_or_source_freezes",
+      "role": "recovery_and_visual_history",
+      "activeRuntimeDependency": false
+    },
+    {
+      "assetClass": "R12_R13_single_file_laboratories",
+      "role": "historical_local_window_and_visual_experiment_evidence",
+      "activeRuntimeDependency": false
+    },
+    {
+      "assetClass": "tools/wenzhou/v058_and_v059",
+      "role": "recovery_history",
+      "activeRuntimeDependency": false
+    },
+    {
+      "assetClass": "old_visual_shaders_color_grading_atmosphere_and_generated_microdetail",
+      "role": "visual_history_only",
+      "activeRuntimeDependency": false
+    }
+  ],
+  "dropFromNewActiveRuntime": [
+    {
+      "assetClass": "old_R13_weather_cloud_runtime",
+      "includes": [
+        "ten cloud genera renderer",
+        "old cloud compositing",
+        "old cloud shadow controls",
+        "weather color grading"
+      ],
+      "reason": "Weather Mother will reconnect later through a read-only environment interface."
+    },
+    {
+      "assetClass": "old_ocean_surface_and_static_sea_plane",
+      "includes": [
+        "synthetic water surface",
+        "static sea level mesh",
+        "visual wetness masks",
+        "geometry retained only to hide old rendering gaps"
+      ],
+      "reason": "Ocean will later provide time-dependent water state; DEM stores land and seabed truth only."
+    },
+    {
+      "assetClass": "non_wenzhou_root_truth_and_pipeline_defaults",
+      "includes": [
+        "contracts/PRODUCTION_CONTRACT.json as Wenzhou truth",
+        "truth/AOI_ACCEPTED.geojson",
+        "truth/AOI_ACCEPTED_EPSG32649.wkt",
+        "truth/OSM_HYDROLOGY_IMMUTABLE.geojson",
+        "pipeline/canonical_elevation_store.py as an implicit Wenzhou store"
+      ],
+      "reason": "These paths are bound to the Guilin EPSG:32649 production identity and must not leak into Wenzhou."
+    },
+    {
+      "assetClass": "forbidden_elevation_substitutes",
+      "includes": [
+        "old Qingjiang elevation",
+        "30 metre fallback elevation",
+        "interpolated nodes",
+        "synthetic gap fill",
+        "manual rivers",
+        "manual coastlines",
+        "geometry noise used to hide faceting"
+      ],
+      "reason": "They break source identity or add unmeasured terrain information."
+    }
+  ],
+  "hardBlockers": [
+    "full 17-tile COG binary is not mounted in the branch runtime",
+    "verified real 12.5 metre Wenzhou window payload and manifest are not mounted",
+    "Wenzhou marine truth inventory is not confirmed in the target branch",
+    "Wenzhou hydrology truth inventory is not confirmed in the target branch",
+    "land DEM, bathymetry and tide vertical reference relationship is not independently confirmed"
+  ],
+  "deletionExecuted": false,
+  "productionFilesModified": false,
+  "publicWorkbenchModified": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}
