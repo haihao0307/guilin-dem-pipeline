@@ -1,0 +1,130 @@
+name: Validate Farmland Object DNA strict rules
+
+on:
+  push:
+    branches:
+      - feature/farmland-object-dna-v001
+    paths:
+      - 'farmland-object-dna/**'
+      - 'AGENTS.md'
+      - '.github/workflows/validate-farmland-object-dna-rules.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Parse machine-readable contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool farmland-object-dna/HANDOFF.json >/dev/null
+          python -m json.tool farmland-object-dna/QUALITY_GATES.json >/dev/null
+          python -m json.tool farmland-object-dna/schema/farmland-object-dna.schema.json >/dev/null
+          python -m json.tool farmland-object-dna/examples/traditional-paddy-v002-research.json >/dev/null
+          python -m json.tool farmland-object-dna/PUBLICATION_PROOF.json >/dev/null
+
+      - name: Validate strict research record
+        shell: bash
+        run: |
+          set -euo pipefail
+          python farmland-object-dna/tools/validate_farmland_dna.py \
+            farmland-object-dna/examples/traditional-paddy-v002-research.json \
+            | tee /tmp/farmland-validation.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/farmland-validation.json').read_text())
+          assert data['ok'] is True
+          assert data['mode'] == 'research'
+          assert data['public_candidate'] is False
+          assert data['hydraulic_graph']['cell_count'] >= 1
+          assert data['hydraulic_graph']['edge_count'] >= 1
+          assert data['visualAcceptance'] is False
+          assert data['productionReady'] is False
+          PY
+
+      - name: Confirm rejected V0.1 cannot pass current validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python farmland-object-dna/tools/validate_farmland_dna.py \
+            farmland-object-dna/examples/traditional-paddy-v001.json; then
+            echo 'Rejected V0.1 unexpectedly passed the strict validator.'
+            exit 1
+          fi
+
+      - name: Verify mandatory rules and failed gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          gates = json.loads(Path('farmland-object-dna/QUALITY_GATES.json').read_text())
+          by_id = {item['id']: item for item in gates['gates']}
+          required_failed = {
+              'shared_boundary_topology',
+              'channel_plan_and_sections',
+              'bund_and_terrace_sections',
+              'hydraulic_closed_graph',
+              'hydraulic_elevation_legality',
+              'water_depth_truth',
+              'water_mass_balance',
+              'rice_stage_morphology',
+              'no_proxy_in_public_candidate',
+              'material_identity',
+              'aaa_visual_precheck',
+          }
+          missing = sorted(required_failed - set(by_id))
+          assert not missing, missing
+          for gate_id in required_failed:
+              assert by_id[gate_id]['v001Status'] == 'fail', gate_id
+
+          handoff = json.loads(Path('farmland-object-dna/HANDOFF.json').read_text())
+          assert handoff['rejectedBaseline']['status'] == 'rejected'
+          assert handoff['rejectedBaseline']['allowedUse'] == 'negative_reference_only'
+          assert handoff['status']['visualAcceptance'] is False
+          assert handoff['status']['productionReady'] is False
+
+          proof = json.loads(Path('farmland-object-dna/PUBLICATION_PROOF.json').read_text())
+          assert proof['userReview']['status'] == 'rejected'
+          assert proof['shareAllowed'] is False
+          assert proof['allowedUse'] == 'negative_reference_only'
+          PY
+
+      - name: Verify startup reading order
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'FARMLAND_PRODUCTION_RULES.md' AGENTS.md
+          grep -q 'V001_FAILURE_REGISTER.md' AGENTS.md
+          grep -q 'FARMLAND_PRODUCTION_RULES.md' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'YUANYANG_SYSTEM_RESEARCH_PLAN.md' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'traditional-paddy-v002-research.json' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'Microscope' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+          grep -q '水量守恒' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+          grep -q '3A' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## Farmland Object DNA strict rule validation'
+            echo
+            echo 'JSON contracts: PASS'
+            echo 'Research-only V0.2 record: PASS'
+            echo 'Rejected V0.1 blocked by current validator: PASS'
+            echo 'Hydraulic and visual failure gates: PRESENT'
+            echo 'Public share status for rejected V0.1: FALSE'
+            echo 'Human visual acceptance: FALSE'
+            echo 'Production ready: FALSE'
+          } >> "$GITHUB_STEP_SUMMARY"
