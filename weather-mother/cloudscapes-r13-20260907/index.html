@@ -1,0 +1,171 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) Yohei Nishitsuji (original cloud shaders)
+Copyright (c) 2026 Weather Mother contributors (interactive adaptation)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#253d58"><title>Weather Mother · 大面积云景 R13</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#263d55;color:#f4f7fc;font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif;overflow:hidden}canvas{display:block;width:100vw;height:100dvh;touch-action:none;cursor:grab}canvas.dragging{cursor:grabbing}button,a{ -webkit-tap-highlight-color:transparent}button{font:inherit;color:inherit;border:0;cursor:pointer;background:transparent;border-radius:24px;padding:10px 17px;white-space:nowrap}button:hover{background:#ffffff20}button:focus-visible,a:focus-visible,canvas:focus-visible{outline:2px solid #efcf98;outline-offset:4px}button[aria-pressed="true"]{background:#edf4fb;color:#263b53}header{position:fixed;top:28px;left:32px;pointer-events:none;padding:12px 16px;border-radius:14px;background:#18344bb8;backdrop-filter:blur(14px);text-shadow:0 1px 5px #172d4780}.brand{font-size:11px;letter-spacing:.24em;font-weight:650}h1{font-size:28px;font-weight:450;letter-spacing:.12em;margin:9px 0 5px}header p{margin:0;font-size:12px;opacity:.9;max-width:320px}nav{position:fixed;top:24px;right:28px;display:flex;gap:5px;padding:6px;border:1px solid #ffffff25;border-radius:32px;background:#1c344ace;box-shadow:0 5px 30px #17304d30;backdrop-filter:blur(18px)}.controls{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;background:#1c344ad9;border:1px solid #ffffff24;border-radius:32px;padding:7px;backdrop-filter:blur(18px);box-shadow:0 7px 35px #152c4740}.sep{width:1px;height:20px;background:#ffffff25;margin:0 5px}#zoomValue{font-size:11px;font-variant-numeric:tabular-nums;min-width:38px;text-align:center;color:#d1dfeb}#closer,#farther{padding:9px 12px;font-size:18px}footer{position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:#e6eff6;text-shadow:0 1px 8px #123}footer a{color:inherit;text-decoration:none}footer a:hover{text-decoration:underline}.hint{position:fixed;bottom:96px;left:0;right:0;text-align:center;font-size:11px;text-shadow:0 1px 8px #123;pointer-events:none}#status{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:20px 26px;background:#1c344aed;border-radius:12px;max-width:90vw}details{position:fixed;left:24px;bottom:40px;font-size:11px}summary{cursor:pointer;opacity:.85;text-shadow:0 1px 8px #123}details .about{position:absolute;bottom:26px;left:0;width:min(400px,85vw);padding:20px;background:#183047f5;border:1px solid #ffffff25;border-radius:16px;font-size:12px;line-height:1.8;box-shadow:0 5px 35px #10243d55}details a{color:#b9d9f4}details p{margin:0 0 10px}details p:last-child{margin:0}
+@media(max-width:650px){header{top:20px;left:20px}.brand{font-size:9px}h1{font-size:24px;margin-top:6px}header p{font-size:11px;max-width:240px}nav{top:132px;right:auto;left:18px;padding:4px}nav button{padding:8px 15px;font-size:12px}.controls{bottom:40px;gap:0;padding:5px;max-width:96vw}button{padding:10px 11px;font-size:12px}.hint{bottom:101px;font-size:10px}details{left:auto;right:18px;bottom:111px}details .about{left:auto;right:0}footer{bottom:14px;font-size:9px}.sep{margin:0 3px}}
+@media(max-height:480px){header{top:15px;left:20px}h1{font-size:22px;margin:2px 0}header p{display:none}nav{top:14px;left:auto;right:18px}.controls{bottom:25px;padding:4px}.hint{display:none}footer{bottom:5px}details{bottom:35px;left:16px;right:auto}details .about{left:0;right:auto;max-height:65vh;overflow:auto}}
+</style></head><body>
+<canvas tabindex="0" aria-label="实时云景。拖动取景，滚轮缩放；方向键移动取景，空格播放或暂停，Home 恢复视角。"></canvas>
+<header><div class="brand">WEATHER MOTHER / R13</div><h1 id="sceneTitle">云隙之间</h1><p id="sceneDescription"></p></header>
+<nav aria-label="选择云景"><button data-mode="1" aria-pressed="true">银边积云</button><button data-mode="0" aria-pressed="false">层叠云海</button></nav>
+<div class="hint">拖动取景 · 滚轮拉近 · 静看，或缓慢播放</div>
+<div class="controls" aria-label="云景控制"><button id="play" aria-pressed="false">缓慢播放</button><span class="sep"></span><button id="farther" aria-label="拉远">−</button><span id="zoomValue">100%</span><button id="closer" aria-label="拉近">+</button><span class="sep"></span><button id="reset">恢复视角</button></div>
+<details><summary>关于云景</summary><div class="about"><p>这两种云景依据 Yohei Nishitsuji 的公开短着色器展开，实时计算，支持取景和缩放。原来的 Weather Mother 完整保留。</p><p>当前是原作方法的视觉复现：层叠云海使用空间折叠与缩放，银边积云使用多尺度干涉与射线累积。播放呈现程序化变化；尚未接入真实风场输运和独立太阳散射。</p><p>原作：<a href="https://x.com/YoheiNishitsuji/status/1999814369925046474" target="_blank" rel="noopener">Sky</a> · <a href="https://x.com/YoheiNishitsuji/status/1880399305196073072" target="_blank" rel="noopener">Clouds</a> · <a href="https://yoheinishitsuji.com/" target="_blank" rel="noopener">作者</a></p></div></details>
+<footer>云景原理与原始着色器 © Yohei Nishitsuji · Weather Mother 交互复现</footer><div id="status" role="status">正在计算云景…</div>
+<script id="cloudShader" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+uniform vec2 uResolution;
+uniform vec2 uPan;
+uniform float uTime;
+uniform float uZoom;
+uniform int uMode;
+out vec4 outColor;
+vec3 hsv(float h,float s,float v){
+ vec3 p=abs(fract(vec3(h)+vec3(1.,2./3.,1./3.))*6.-3.);
+ return v*mix(vec3(1.),clamp(p-1.,0.,1.),s);
+}
+mat3 axisRotation(float a,vec3 v){
+ v=normalize(v);float c=cos(a),s=sin(a),k=1.-c;
+ return mat3(c+v.x*v.x*k,v.y*v.x*k+v.z*s,v.z*v.x*k-v.y*s,
+ v.x*v.y*k-v.z*s,c+v.y*v.y*k,v.z*v.y*k+v.x*s,
+ v.x*v.z*k+v.y*s,v.y*v.z*k-v.x*s,c+v.z*v.z*k);
+}
+// Expanded study of Yohei Nishitsuji's shared GLSL; artistic ray accumulation.
+// Source references and scope are recorded in RESEARCH.md. No physical transport claim.
+vec3 backlit(vec2 uv){
+ vec3 sum=vec3(0),q=vec3(0,-1,-1),p=vec3(0);
+ vec3 d=vec3(uv-vec2(.6),1.);
+ float e=0.,g=0.,R=0.,s=0.;
+ for(int j=1;j<=99;j++){
+  float i=float(j);e+=i/800000.;
+  sum+=hsv(.6,R+g*.3,e*i/40.);
+  s=4.;q+=d*e*R*.2;p=q;g+=p.y/s;
+  R=max(length(p),1e-6);
+  p=vec3(R-.5+sin(uTime)*.02,exp2(mod(-p.z,s)/R)-.2,p.x);
+  e=--p.y;
+  for(int k=0;k<8;k++){
+   e+=.03-abs(dot(sin(p.yzx*s),cos(p.xzz*s))/s*.6);s*=2.;
+  }
+ }
+ return sum;
+}
+vec3 sea(vec2 uv){
+ vec3 sum=vec3(0);float g=0.,e=0.,s=0.;
+ mat3 rot=axisRotation(-1.1-cos(uTime*.15)*.1,vec3(1.,11.+sin(uTime)*.15,-1.5));
+ for(int j=1;j<99;j++){
+
+  vec3 p=vec3((uv-.5)*vec2(16./9.,1.)*5.+vec2(0,9),g)*rot;
+  s=2.;
+  for(int k=0;k<19;k++){
+   e=7.1/max(dot(p,p*.51),1e-6);s*=e;
+   p=vec3(.08,4.,-1.)-abs(abs(p)*e-vec3(3,4,3));
+  }
+  g+=p.y/max(s,1e-12);
+  s=log2(max(s,1e-12))/exp(clamp(e,-40.,40.));
+  sum+=.01-hsv(.1,g*.016-e*.3,s/200.);
+ }
+ return sum;
+}
+void main(){
+ vec2 uv=(gl_FragCoord.xy/uResolution-.5)/uZoom+.5+uPan;
+ // Maintain reference aspect while revealing more horizontally on widescreen.
+ uv.x=(uv.x-.5)*(uResolution.x/uResolution.y)/(16./9.)+.5;
+ vec3 c=uMode==0?sea(uv):backlit(uv);
+ if(any(isnan(c))||any(isinf(c))){outColor=vec4(1,0,1,1);return;}
+ outColor=vec4(clamp(c,0.,1.),1.);
+}
+
+</script><script>(()=>{'use strict';
+const canvas=document.querySelector('canvas'),status=document.querySelector('#status');
+const $=s=>document.querySelector(s),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const state={mode:1,time:4,zoom:1,pan:[0,0],playing:false};
+const qa={version:'WM-R13-CLOUDSCAPES-20260907',frames:0,completedFrames:0,errors:[],frameTimes:[],ready:false,contextLosses:0};
+let gl,program,vao,locations={},fence=null,inFlightAt=0,last=performance.now(),dirty=true,lost=false,scale=1,slow=0,pointer=null;
+function fail(e){const msg=String(e);qa.errors.push(msg);status.hidden=false;status.textContent='云景暂时无法显示：'+msg+'。请刷新页面重试。';}
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+function init(){
+ gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,preserveDrawingBuffer:true});
+ if(!gl)throw Error('此浏览器没有可用的 WebGL2');
+ const vs=shader(gl.VERTEX_SHADER,'#version 300 es\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0,1);}');
+ const fs=shader(gl.FRAGMENT_SHADER,document.querySelector('#cloudShader').textContent);
+ program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);
+ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
+ gl.deleteShader(vs);gl.deleteShader(fs);gl.useProgram(program);vao=gl.createVertexArray();gl.bindVertexArray(vao);
+ for(const n of ['uResolution','uPan','uTime','uZoom','uMode'])locations[n]=gl.getUniformLocation(program,n);
+ const ext=gl.getExtension('WEBGL_debug_renderer_info');qa.gpu=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
+ fence=null;dirty=true;lost=false;resize();
+}
+function resize(){if(!gl||lost)return;const w=innerWidth,h=innerHeight;const d=Math.min(devicePixelRatio||1,1.3,Math.sqrt(1600000/(w*h)))*scale;
+ canvas.width=Math.max(1,Math.round(w*d));canvas.height=Math.max(1,Math.round(h*d));gl.viewport(0,0,canvas.width,canvas.height);qa.renderSize=[canvas.width,canvas.height];dirty=true;}
+function update(){
+ document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.mode===state.mode)));
+ $('#sceneTitle').textContent=state.mode===0?'层叠云海':'云隙之间';
+ $('#sceneDescription').textContent=state.mode===0?'云层向远处展开，细碎云群穿过大片留白。':'深蓝云腹、透光裂隙与层层展开的银色边缘。';
+ $('#play').textContent=state.playing?'暂停':'缓慢播放';$('#play').setAttribute('aria-pressed',String(state.playing));
+ $('#zoomValue').textContent=Math.round(state.zoom*100)+'%';dirty=true;
+}
+function reset(){state.time=4;state.zoom=1;state.pan=[0,0];update();}
+function toggle(){state.playing=!state.playing;last=performance.now();update();}
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=+b.dataset.mode;reset();}));
+$('#play').addEventListener('click',toggle);$('#reset').addEventListener('click',reset);
+function zoom(f){state.zoom=clamp(state.zoom*f,.8,2.8);update();}
+$('#closer').addEventListener('click',()=>zoom(1.15));$('#farther').addEventListener('click',()=>zoom(1/1.15));
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*.001));},{passive:false});
+canvas.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.classList.add('dragging');});
+canvas.addEventListener('pointermove',e=>{if(!pointer||e.pointerId!==pointer.id)return;
+ state.pan[0]=clamp(state.pan[0]-(e.clientX-pointer.x)/innerWidth/state.zoom,-.32,.32);
+ state.pan[1]=clamp(state.pan[1]+(e.clientY-pointer.y)/innerHeight/state.zoom,-.25,.25);
+ pointer.x=e.clientX;pointer.y=e.clientY;dirty=true;});
+function release(){pointer=null;canvas.classList.remove('dragging');}
+canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);window.addEventListener('blur',release);
+canvas.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();toggle();}else if(e.key==='Home'){e.preventDefault();reset();}else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+ e.preventDefault();let a=e.key.includes('Left')||e.key.includes('Right')?0:1;state.pan[a]=clamp(state.pan[a]+({ArrowLeft:-.025,ArrowRight:.025,ArrowUp:.025,ArrowDown:-.025}[e.key]),a===0?-.32:-.25,a===0?.32:.25);dirty=true;
+ }else if(e.key==='+'||e.key==='=')zoom(1.15);else if(e.key==='-')zoom(1/1.15);});
+window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{last=performance.now();release();});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;fence=null;qa.contextLosses++;status.hidden=false;status.textContent='正在恢复云景…';});
+canvas.addEventListener('webglcontextrestored',()=>{try{init();}catch(e){fail(e);}});
+function draw(now){
+ gl.uniform2f(locations.uResolution,canvas.width,canvas.height);gl.uniform2f(locations.uPan,...state.pan);gl.uniform1f(locations.uTime,state.time);gl.uniform1f(locations.uZoom,state.zoom);gl.uniform1i(locations.uMode,state.mode);
+ gl.drawArrays(gl.TRIANGLES,0,3);fence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);gl.flush();inFlightAt=now;qa.frames++;dirty=false;
+}
+function frame(now){requestAnimationFrame(frame);let dt=(now-last)/1000;last=now;if(lost||!gl||document.hidden)return;
+ if(state.playing){state.time+=dt*.13;dirty=true;}
+ if(fence){const ready=gl.clientWaitSync(fence,0,0);if(ready===gl.TIMEOUT_EXPIRED)return;if(ready===gl.WAIT_FAILED){fail('GPU 同步失败');lost=true;return;}
+ gl.deleteSync(fence);fence=null;qa.completedFrames++;qa.ready=true;status.hidden=true;
+ const elapsed=now-inFlightAt;qa.frameTimes.push(elapsed);if(qa.frameTimes.length>120)qa.frameTimes.shift();
+ if(state.playing&&elapsed>45)slow++;else slow=Math.max(0,slow-1);
+ if(slow>=12&&scale>.6){scale=Math.max(.6,scale*.85);slow=0;resize();}
+ }
+ if(dirty)draw(now);
+}
+window.Cloudscape={qa,getState:()=>structuredClone(state),setState:s=>{if(s.mode!==undefined)state.mode=clamp(Math.round(s.mode),0,1);if(s.time!==undefined)state.time=Number(s.time);if(s.zoom!==undefined)state.zoom=clamp(Number(s.zoom),.8,2.8);if(s.pan)state.pan=[clamp(s.pan[0],-.32,.32),clamp(s.pan[1],-.25,.25)];if(s.playing!==undefined)state.playing=!!s.playing;update();},reset,
+ sample:()=>{const a=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,a);let min=255,max=0,sum=0,white=0,black=0,magenta=0;for(let i=0;i<a.length;i+=4){let v=(a[i]+a[i+1]+a[i+2])/3;min=Math.min(min,v);max=Math.max(max,v);sum+=v;if(v>250)white++;if(v<3)black++;if(a[i]===255&&a[i+1]===0&&a[i+2]===255)magenta++;}return{min,max,mean:sum/(a.length/4),whiteFraction:white/(a.length/4),blackFraction:black/(a.length/4),nonfinitePixels:magenta,glError:gl.getError()};},
+ contextTest:()=>gl.getExtension('WEBGL_lose_context')};
+window.addEventListener('pagehide',()=>{if(fence)gl?.deleteSync(fence);gl?.deleteVertexArray(vao);gl?.deleteProgram(program);});
+update();try{init();requestAnimationFrame(frame);}catch(e){fail(e);}
+})();
+</script></body></html>
