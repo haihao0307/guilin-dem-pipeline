@@ -1,0 +1,81 @@
+name: Wenzhou R3 Truth Parallel Sources
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-world-truth-extract-20260907
+    paths:
+      - '.github/workflows/wenzhou-r3-truth-parallel.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-stage:
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [gebco, kanmen, currents]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch V100 evidence branch
+        if: matrix.stage == 'kanmen'
+        run: |
+          git fetch --no-tags origin \
+            project/wenzhou-v100-bathymetry-tides-hydrology:refs/remotes/origin/project/wenzhou-v100-bathymetry-tides-hydrology
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install runtime
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.2.6 requests==2.32.5 rasterio==1.4.3 affine==2.4.0 pyproj==3.7.2 shapely==2.1.1 xarray==2025.6.1 h5netcdf==1.6.3 netCDF4==1.7.2 scipy==1.16.1
+      - name: Restore acquisition source
+        run: |
+          mkdir -p /tmp/wenzhou-r3
+          cat \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part00 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part01 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part02 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part03 \
+            | base64 --decode | gzip --decompress > /tmp/wenzhou-r3/acquire_r3_truth.py
+          echo '6b5a72e1d0d3d732bf41c70fede0f573c10da3b97f77804227bc15bf14f076e2  /tmp/wenzhou-r3/acquire_r3_truth.py' | sha256sum --check
+      - name: Extract ${{ matrix.stage }} source
+        run: |
+          python - '${{ matrix.stage }}' <<'PY'
+          import importlib.util, json, shutil, sys
+          from pathlib import Path
+          stage=sys.argv[1]
+          spec=importlib.util.spec_from_file_location('r3','/tmp/wenzhou-r3/acquire_r3_truth.py')
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          root=Path('dist')/f'WENZHOU_R3_{stage.upper()}_2026-09-07'
+          if root.exists(): shutil.rmtree(root)
+          root.mkdir(parents=True)
+          domain=m.write_domain_contract(root)
+          if stage=='gebco': result=m.acquire_gebco(root,domain)
+          elif stage=='currents': result=m.acquire_currents(root,domain)
+          elif stage=='kanmen':
+              m.recover_old_evidence(root)
+              result=m.analyze_kanmen(root)
+          else: raise SystemExit(stage)
+          m.build_manifest(root)
+          (root/'STAGE_RESULT.json').write_text(json.dumps({'stage':stage,'passed':bool(result.get('passed')),'result':result},ensure_ascii=False,indent=2)+'\n')
+          m.build_manifest(root)
+          print(json.dumps({'stage':stage,'passed':result.get('passed')},indent=2))
+          raise SystemExit(0 if result.get('passed') else 2)
+          PY
+      - name: Upload stage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_R3_${{ matrix.stage }}_2026-09-07
+          path: dist
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
