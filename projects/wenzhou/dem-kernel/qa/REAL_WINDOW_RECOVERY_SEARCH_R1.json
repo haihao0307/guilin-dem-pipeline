@@ -1,0 +1,116 @@
+{
+  "schema": "wenzhou-dem-kernel-real-window-recovery-search/v1",
+  "checkedAtUtc": "2026-09-07T06:02:00Z",
+  "status": "searched_not_recovered",
+  "fixedTruth": {
+    "path": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "bytes": 136760745,
+    "sha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "grid": [17555, 17918],
+    "spacingMeters": [12.5, 12.5],
+    "crs": "EPSG:32651",
+    "dtype": "int16",
+    "nodata": -32768
+  },
+  "searches": [
+    {
+      "location": "GitHub active branch and commit history",
+      "result": "metadata_only",
+      "evidence": {
+        "stateCommit": "da31ecec8eeb4c79e04fb9a2fb3f4bbf87db09d7",
+        "artifactName": "WENZHOU_V060_TERRAIN_CLOUD_R13_STANDALONE.html",
+        "artifactBytes": 1051202,
+        "artifactSha256": "767acfafefdd07cc234102529c2fe596833402d213a9d7f8df746c68bdd7728d",
+        "detailGrid": [513, 513],
+        "detailSpacingMeters": 12.5,
+        "detailHeightRangeMeters": [9, 241]
+      },
+      "missing": [
+        "standalone artifact binary in the active Git tree",
+        "raw Int16 detail payload",
+        "integer source window row and column",
+        "payload byte length and SHA256",
+        "independent source extraction report"
+      ]
+    },
+    {
+      "location": "File Library exact-name and semantic searches",
+      "result": "exact_r13_artifact_not_found",
+      "queries": [
+        "WENZHOU_V060_TERRAIN_CLOUD_R13_STANDALONE",
+        "verified local 12.5 metre window",
+        "Wenzhou V060 R12 R13 513 513"
+      ]
+    }
+  ],
+  "reviewedCandidates": [
+    {
+      "title": "WENZHOU_V200_WATER_COAST_BATHY_TIDE_REVIEW_V6_2.html",
+      "disposition": "rejected_as_real_12p5m_window",
+      "observedMetadata": {
+        "schema": "wenzhou_v200_water_coast_bathy_tide_viewer@6.2.0",
+        "status": "candidate-review",
+        "displayTexture": [1348, 1370],
+        "lockedTruthTargetSha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+        "embeddedHeightAsset": "v6_2_buffer_height.png",
+        "embeddedHeightBytes": 402664,
+        "embeddedHeightSha256": "37370a6f5176e42305e14320532976c090dd5c6a572babb40ca1adbf8d0565cf",
+        "productionReady": false
+      },
+      "reasons": [
+        "the page is a water, coast, bathymetry and tide review artifact",
+        "its embedded height asset is a display PNG rather than a raw verified Int16 513 by 513 window",
+        "no wenzhou-dem-real-window/v1 manifest is present",
+        "no integer source window and payload hash pair is present",
+        "a matching parent truth hash alone does not prove sample-exact recoverability"
+      ]
+    },
+    {
+      "title": "WENZHOU_QINGJIANG_QA_REPORT.json",
+      "disposition": "permanently_rejected",
+      "reasons": [
+        "old Qingjiang elevation is forbidden by the clean task package and Wenzhou V0.6.0 contract",
+        "the target geometry and truth identity differ from the fixed 17-tile COG",
+        "the report records inferred marine fill and cannot enter the new canonical truth path"
+      ]
+    },
+    {
+      "title": "WENZHOU_AP05405_SOURCE_CHECK_2026-08-27.txt",
+      "disposition": "historical_blocker_note_only",
+      "reasons": [
+        "it records missing original source TIFFs and provides no current 513 by 513 payload",
+        "it cannot substitute for the fixed 17-tile COG or a verified extracted window"
+      ]
+    }
+  ],
+  "acceptedRecoveryPaths": [
+    {
+      "path": "recover the exact R13 standalone artifact",
+      "requiredChecks": [
+        "bytes equal 1051202",
+        "SHA256 equal 767acfafefdd07cc234102529c2fe596833402d213a9d7f8df746c68bdd7728d",
+        "extract a 513 by 513 Int16 payload without resampling",
+        "recover and verify the integer source window",
+        "record payload bytes and SHA256 in wenzhou-dem-real-window/v1"
+      ]
+    },
+    {
+      "path": "mount the exact fixed COG and extract a new window",
+      "requiredChecks": [
+        "COG bytes, SHA256, grid, CRS, dtype and NoData all pass preflight",
+        "window row, column, width and height are integer aligned",
+        "no resampling, interpolation or gap fill",
+        "raw Int16 payload bytes and SHA256 are recorded"
+      ]
+    }
+  ],
+  "currentDecision": {
+    "realWenzhouWindowRecovered": false,
+    "realSourceProbeAllowed": false,
+    "syntheticFallbackAllowed": false,
+    "mathProbeMayContinue": true,
+    "productionIntegrationAllowed": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}

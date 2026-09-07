@@ -33,6 +33,7 @@ jobs:
           python -m json.tool projects/wenzhou/dem-kernel/CONTRACT.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/qa/KEEP_ARCHIVE_DROP_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_STATUS_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/qa/MATH_PROBE_RESULTS_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/truth/REAL_WINDOW_MANIFEST_TEMPLATE.json >/dev/null
       - name: Run reversible transform tests
@@ -59,7 +60,11 @@ jobs:
           import json
           from pathlib import Path
           status = json.loads(Path('projects/wenzhou/dem-kernel/qa/REAL_WINDOW_STATUS_R1.json').read_text())
-          assert status['status'] == 'blocked'
+          search = json.loads(Path('projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json').read_text())
+          assert status['status'] == 'blocked_after_recovery_search'
           assert status['realWenzhouWindowUsed'] is False
           assert status['syntheticFallbackAllowed'] is False
+          assert search['status'] == 'searched_not_recovered'
+          assert search['currentDecision']['realSourceProbeAllowed'] is False
+          assert search['currentDecision']['syntheticFallbackAllowed'] is False
           PY
