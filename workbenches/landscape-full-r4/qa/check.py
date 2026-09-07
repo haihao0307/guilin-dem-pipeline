@@ -34,8 +34,9 @@ def static_checks():
 
 def wait_redraw(page, script: str):
     page.evaluate(script)
-    page.wait_for_timeout(180)
-    page.wait_for_function("window.__LM_READY__===false", timeout=10000)
+    # Product rendering is scheduled 120 ms later. Waiting here lets that task start;
+    # a blocking SwiftShader draw delays this timeout until the completed frame.
+    page.wait_for_timeout(600)
     page.wait_for_function("window.__LM_READY__===true", timeout=480000)
 
 
