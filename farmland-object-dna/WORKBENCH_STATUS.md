@@ -1,26 +1,85 @@
-# Farmland Object DNA Workbench V0.1 Status
+# Farmland Object DNA 工作台状态
 
-Date: 2026-09-07.
+日期：2026-09-07
 
-First implementation now combines theory and executable geometry. The workbench contains two procedural paddy samples under one DNA parameter set:
+当前生产线：`restart/farmland-object-dna-v020-20260907`
 
-1. flat traditional paddy sample;
-2. mountain terrace sample.
+当前版本：`0.2.0-clean-restart`
 
-Implemented controls: terrain slope, parcel scale, bund width, water depth, household labor count, boundary organicity, crop stage, water route visibility, inlet/outlet nodes, crop visibility and diagnostic grid.
+## V0.1 状态
 
-The current implementation deliberately keeps latitude and longitude as region identity only. Satellite imagery, canonical DEM, soil truth and historical land-use evidence are not connected in V0.1, so geographic coordinates do not silently manufacture terrain or crop truth.
+`FARMLAND_DNA_WB_V0.1.0_20260907` 已被用户明确否决。
 
-The current geometry uses procedural field surfaces, earth volume, bund curves, irrigation routes, small access roads, huts for scale and procedural rice instances. Labor household count constrains the number of generated parcels. Terrace mode increases tier height and contour-following structure with slope.
+它只保留为失败对照，供自动检查确认以下错误没有回归：
 
-Known limits for the next iteration:
+1. 浮在地表的圆管水渠。
+2. 圆管田埂。
+3. 重复生成的共享边界。
+4. 没有真实高程合同的假水深。
+5. 没有上游和下游连接的进排水节点。
+6. 固定格网平坝田。
+7. 等距重复带状梯田。
+8. 单一尺度滑杆替代真实模数关系。
+9. 单一锥体缩放换色替代水稻生命周期。
+10. 用材质、雾和灯光掩盖结构错误。
 
-- flat parcel topology still begins from a coarse shared control lattice and needs stronger historical subdivision logic;
-- terrace interruption by ridges, gullies, rock, woodland and settlement is not yet driven by canonical DEM;
-- canal capacity, per-field inlet/outlet elevations, seepage and water balance are visual/structural approximations in this first sample;
-- settlement-to-field walking cost and household labor calendar are not yet solved as a network;
-- regional DNA inference from satellite imagery is not implemented;
-- Houdini execution/export is not connected yet;
-- visualAcceptance=false and productionReady=false until user review.
+旧页面的技术发布与浏览器启动曾经通过，这不构成视觉接受。其当前状态为：
 
-Public gate status is recorded separately in PUBLICATION_PROOF.json.
+`userReview=rejected`
+
+`shareAllowed=false`
+
+`visualAcceptance=false`
+
+`productionReady=false`
+
+## V0.2 当前状态
+
+当前没有公开视觉候选。生产线已经回到资料、整体系统、截面、水力和作物结构阶段。
+
+`researchGate=in_progress`
+
+`componentSourceCards=in_progress`
+
+`yuanyangSystemResearch=in_progress`
+
+`channelSections=not_ready`
+
+`bundAndTerraceSections=not_ready`
+
+`traditionalDividerGeometry=unknown`
+
+`flatlandHydraulicGraph=not_ready`
+
+`terraceHydraulicGraph=not_ready`
+
+`waterMassBalance=not_run`
+
+`riceStageMorphology=not_ready`
+
+`structuralTruthWorkbench=not_started`
+
+`aaaVisualPrecheck=not_run`
+
+`activePublicCandidate=none`
+
+`visualAcceptance=false`
+
+`productionReady=false`
+
+## 下一工作台准入条件
+
+新的内部结构真值台至少要包含：
+
+1. 真实土渠平面、纵断面和横断面。
+2. 共享田埂横断面和人体通行尺度。
+3. 梯田田面、田埂、田坎、坡脚和排水剖面。
+4. 进水口、出水口、溢流口和有依据的分水设施。
+5. 田面、泥化层、耕作层、低渗层和下伏土体。
+6. 真实水深与高程标尺。
+7. 水从来源到下游受体的可追踪有向图。
+8. 插秧到收割后各阶段的独立水稻结构。
+9. 人、挑担工具和水牛尺度参照。
+10. 剖面观察与结构通过后的 Microscope 入口。
+
+内部真值台完成并通过结构检查以后，才能进入 3A 材质、色彩、光照、空气、风和微观细化。新的公开网页还需通过多视角预检、桌面与 390×844 手机浏览器验证和用户人工验收。
