@@ -1,0 +1,268 @@
+{
+  "schema": "world-kernel.object-dna.farmland/seed-r1",
+  "date": "2026-09-07",
+  "status": "startup_seed_not_final_schema",
+  "parent": "world-kernel.object-dna",
+  "identity": {
+    "agroSystemId": null,
+    "fieldParcelIds": [],
+    "placeBinding": null,
+    "timeRange": null,
+    "agriculturalTradition": null,
+    "regionalProfile": null,
+    "historicalProfile": null,
+    "culturalProfile": null,
+    "sourceVersion": null
+  },
+  "timeBinding": {
+    "t_world": true,
+    "farmHistoryState": true,
+    "cropCycleState": true,
+    "managementEvents": true,
+    "culturalCalendarOptional": true,
+    "viewTimeChangesIdentity": false,
+    "artPhaseChangesStaticIdentity": false
+  },
+  "terrain": {
+    "baseTerrainTruth": null,
+    "agriculturalEarthworkOverlay": null,
+    "currentManagedSurface": null,
+    "slope": null,
+    "localRelief": null,
+    "curvature": null,
+    "flowDirection": null,
+    "floodRisk": null,
+    "constructionCostProxy": null
+  },
+  "waterNetwork": {
+    "sources": [],
+    "intakes": [],
+    "supplyRoutes": [],
+    "drainageRoutes": [],
+    "fieldInlets": [],
+    "fieldOutlets": [],
+    "pondsOrStorage": [],
+    "gravityFirst": null,
+    "liftDevices": [],
+    "oceanConnection": {
+      "active": false,
+      "type": null,
+      "salinityInfluence": null,
+      "tidalInfluence": null,
+      "surgeInfluence": null
+    }
+  },
+  "fieldParcel": {
+    "parcelId": null,
+    "boundary": null,
+    "targetSurfaceElevation": null,
+    "surfaceLevelTolerance": null,
+    "area": null,
+    "shapeClass": null,
+    "slopeRelation": null,
+    "inletId": null,
+    "outletId": null,
+    "bundIds": [],
+    "pathIds": [],
+    "ownershipId": null,
+    "waterRightId": null,
+    "fieldAge": null,
+    "maintenanceScore": null,
+    "activeCropPopulationId": null
+  },
+  "soilBody": {
+    "soilTypeOrProfile": null,
+    "surfaceMudState": null,
+    "permeabilityProxy": null,
+    "organicMatterState": null,
+    "compaction": null,
+    "puddlingHistory": null,
+    "hardpanStrength": null,
+    "crackState": null,
+    "erosionDeposition": null,
+    "nutrientState": null,
+    "lossComponents": {
+      "deepPercolation": null,
+      "bundSeepage": null,
+      "holeLeak": null,
+      "outletLoss": null,
+      "overflow": null
+    }
+  },
+  "cropPopulation": {
+    "cropType": null,
+    "cultivarOrLandrace": null,
+    "seedSource": null,
+    "nurseryOrDirectSeed": null,
+    "plantingDate": null,
+    "transplantDate": null,
+    "phenologyStage": null,
+    "plantHeight": null,
+    "density": null,
+    "rowPattern": null,
+    "healthState": null,
+    "weedPressure": null,
+    "pestPressure": null,
+    "diseaseState": null,
+    "lodgingState": null,
+    "waterRequirement": null,
+    "harvestDate": null,
+    "seedReserveRelation": null,
+    "residueState": null
+  },
+  "agroecology": {
+    "associatedPlants": [],
+    "bundStabilizingPlants": [],
+    "waterConservationPlants": [],
+    "foodPlants": [],
+    "medicinalPlants": [],
+    "fodderPlants": [],
+    "materialPlants": [],
+    "pests": [],
+    "predatorsOrNaturalEnemies": [],
+    "draftAnimals": [],
+    "domesticAnimals": [],
+    "soilBiotaProxy": null,
+    "habitatConnections": []
+  },
+  "humanSystem": {
+    "settlements": [],
+    "households": [],
+    "availableLabor": null,
+    "peakLaborWindows": [],
+    "draftAnimalCapacity": null,
+    "toolCapacity": null,
+    "transportCapacity": null,
+    "laborExchangeRules": [],
+    "maintenanceRules": [],
+    "knowledgeHolders": [],
+    "knowledgeTransmissionState": null
+  },
+  "socialInstitutions": {
+    "ownership": [],
+    "tenancy": [],
+    "inheritancePartition": [],
+    "waterRights": [],
+    "sharedIrrigationRules": [],
+    "accessRules": [],
+    "taxOrTributeRelations": [],
+    "collectiveWorkRules": []
+  },
+  "culture": {
+    "rituals": [],
+    "seasonalFestivals": [],
+    "taboosOrAccessRules": [],
+    "seedSelectionPractices": [],
+    "storagePractices": [],
+    "sacredEcology": [],
+    "physicalEffectDirect": false,
+    "behavioralAndInstitutionalEffectAllowed": true,
+    "requiresPlaceEthnicityDateBinding": true
+  },
+  "settlementAndMaterialCycles": {
+    "fieldToHomeRoutes": [],
+    "dryingOrThreshingSpaces": [],
+    "storageSpaces": [],
+    "animalPens": [],
+    "manureRoutes": [],
+    "strawOrResidueRoutes": [],
+    "ashOrCompostRoutes": [],
+    "waterAccessRoutes": []
+  },
+  "environmentInterfaces": {
+    "weatherInputs": [
+      "precipitation",
+      "temperature",
+      "solar_radiation",
+      "humidity",
+      "wind",
+      "cloud_optical_state",
+      "storm_event"
+    ],
+    "landscapeInputs": [
+      "terrain_truth",
+      "slope",
+      "curvature",
+      "flow_direction",
+      "geomorphology",
+      "construction_suitability"
+    ],
+    "oceanInputsConditional": [
+      "tide",
+      "storm_surge",
+      "salinity",
+      "coastal_groundwater_boundary"
+    ]
+  },
+  "capacity": {
+    "candidateFormula": "min(water_capacity, labor_capacity, animal_power_capacity, transport_capacity, suitable_land_capacity)",
+    "distanceDecay": true,
+    "calibrationRequired": true
+  },
+  "history": {
+    "creation": null,
+    "maintenance": [],
+    "floods": [],
+    "droughts": [],
+    "warOrMigration": [],
+    "cropChanges": [],
+    "abandonment": null,
+    "reclamation": null,
+    "modernization": []
+  },
+  "evidencePolicy": {
+    "levels": {
+      "A": "same place and same period direct evidence",
+      "B": "same region and nearby period",
+      "C": "cross-region but mechanism evidence",
+      "D": "analogy or hypothesis only"
+    },
+    "requiredFields": [
+      "source",
+      "place",
+      "date_range",
+      "evidence_level",
+      "supports",
+      "does_not_support",
+      "confidence",
+      "valid_range",
+      "local_calibration_required",
+      "production_adopted"
+    ],
+    "culturalRulesRequireEthnicScope": true,
+    "analogyCanBecomeLocalTruthAutomatically": false
+  },
+  "precisionPolicy": {
+    "space": null,
+    "time": null,
+    "geometry": null,
+    "physics": null,
+    "optics": null,
+    "semantic": null,
+    "interaction": null,
+    "observation": null,
+    "sameObjectAcrossPrecision": true
+  },
+  "candidateQueries": [
+    "describeFarmland",
+    "queryParcel",
+    "queryCrop",
+    "queryWaterDemand",
+    "queryWaterPath",
+    "queryLaborDemand",
+    "queryMaintainableArea",
+    "queryEcologicalContext",
+    "queryCulturalEvent",
+    "queryHistoricalEvidence",
+    "advanceFarmland"
+  ],
+  "gates": {
+    "sourceRead": true,
+    "genericFrameworkSeeded": true,
+    "regionalCalibration": false,
+    "isolatedImplementation": false,
+    "productEvidence": false,
+    "userVisualAcceptance": false,
+    "productionReady": false
+  }
+}
