@@ -1,0 +1,147 @@
+name: Weather Mother R1.1 single-file repair
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-cloud-base-r11-single-file
+    paths:
+      - .github/workflows/weather-mother-r11-repair.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decode, diagnose and materialize the single-file workbench
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip, json, re, hashlib
+
+          src = Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v001.html')
+          out = Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html')
+          diag_path = Path('weather-mother/deliveries/wm-r11-payload-diagnostic.json')
+          text = src.read_text(encoding='utf-8')
+          match = re.search(r"const\s+p\s*=\s*\[(.*?)\]\.join\(''\)", text, re.S)
+          if not match:
+              raise SystemExit('payload array not found')
+          chunks = re.findall(r"'([A-Za-z0-9+/=]*)'", match.group(1))
+          payload = ''.join(chunks)
+          invalid = sorted(set(re.sub(r'[A-Za-z0-9+/=]', '', payload)))
+          eq_positions = [i for i, c in enumerate(payload) if c == '=']
+          diagnostics = {
+              'source': str(src),
+              'chunkCount': len(chunks),
+              'chunkLengths': [len(x) for x in chunks],
+              'payloadLength': len(payload),
+              'payloadLengthMod4': len(payload) % 4,
+              'invalidCharacters': invalid,
+              'paddingCount': payload.count('='),
+              'firstPaddingPosition': eq_positions[0] if eq_positions else None,
+              'lastPaddingPositions': eq_positions[-8:],
+              'payloadSHA256': hashlib.sha256(payload.encode('ascii', 'ignore')).hexdigest(),
+              'attempts': []
+          }
+
+          candidates = []
+          candidates.append(('exact', payload))
+          stripped = re.sub(r'[^A-Za-z0-9+/=]', '', payload)
+          candidates.append(('stripped', stripped))
+          core = stripped.rstrip('=')
+          candidates.append(('repad-core', core + '=' * ((4 - len(core) % 4) % 4)))
+          if len(stripped) % 4:
+              candidates.append(('pad-whole', stripped + '=' * (4 - len(stripped) % 4)))
+
+          html = None
+          seen = set()
+          for label, candidate in candidates:
+              if candidate in seen:
+                  continue
+              seen.add(candidate)
+              item = {'label': label, 'length': len(candidate), 'mod4': len(candidate) % 4}
+              try:
+                  raw = base64.b64decode(candidate, validate=True)
+                  item['decodedBytes'] = len(raw)
+                  item['gzipMagic'] = raw[:4].hex()
+                  decoded = gzip.decompress(raw)
+                  item['gzipBytes'] = len(decoded)
+                  item['decodedSHA256'] = hashlib.sha256(decoded).hexdigest()
+                  html = decoded.decode('utf-8')
+                  item['success'] = True
+                  diagnostics['attempts'].append(item)
+                  diagnostics['successfulAttempt'] = label
+                  break
+              except Exception as exc:
+                  item['success'] = False
+                  item['error'] = f'{type(exc).__name__}: {exc}'
+                  diagnostics['attempts'].append(item)
+
+          if html is None:
+              alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+              table = {c:i for i,c in enumerate(alphabet)}
+              bits = 0
+              nbits = 0
+              raw = bytearray()
+              for c in core:
+                  if c not in table:
+                      continue
+                  bits = (bits << 6) | table[c]
+                  nbits += 6
+                  while nbits >= 8:
+                      nbits -= 8
+                      raw.append((bits >> nbits) & 255)
+                      bits &= (1 << nbits) - 1 if nbits else 0
+              item = {'label':'lenient-bitstream','decodedBytes':len(raw),'gzipMagic':bytes(raw[:4]).hex()}
+              try:
+                  decoded = gzip.decompress(bytes(raw))
+                  html = decoded.decode('utf-8')
+                  item['gzipBytes'] = len(decoded)
+                  item['decodedSHA256'] = hashlib.sha256(decoded).hexdigest()
+                  item['success'] = True
+                  diagnostics['successfulAttempt'] = 'lenient-bitstream'
+              except Exception as exc:
+                  item['success'] = False
+                  item['error'] = f'{type(exc).__name__}: {exc}'
+              diagnostics['attempts'].append(item)
+
+          diagnostics['recovered'] = html is not None
+          diag_path.write_text(json.dumps(diagnostics, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          if html is not None:
+              marker = "<!-- WM_R11_SINGLE_FILE_V002: uncompressed, no atob, fixed-commit delivery -->\n"
+              if not html.lstrip().startswith('<!doctype'):
+                  raise SystemExit('decoded payload is not HTML')
+              out.write_text(marker + html, encoding='utf-8')
+              print('Recovered HTML bytes:', out.stat().st_size)
+          else:
+              print(json.dumps(diagnostics, indent=2))
+          PY
+      - name: Validate generated HTML when recovered
+        run: |
+          if [ -f weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          p=Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<!doctype' in s.lower()
+          assert 'atob(' not in s
+          assert 'Weather Mother' in s
+          assert len(s) > 10000
+          print('static checks passed', len(s))
+          PY
+          fi
+      - name: Commit repair outputs
+        run: |
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add weather-mother/deliveries/wm-r11-payload-diagnostic.json
+          if [ -f weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html ]; then
+            git add weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html
+          fi
+          git commit -m "fix(weather-mother): repair R1.1 fixed-commit HTML payload [skip ci]"
+          git push origin HEAD:${GITHUB_REF_NAME}
