@@ -1,0 +1,177 @@
+name: Ocean R018.13 startup recovery
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r01813-startup-recovery-20260907
+    paths:
+      - .github/workflows/ocean-r01813-startup-recovery.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r01813-startup-recovery
+  cancel-in-progress: false
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact R018.13 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GITHUB_WORKSPACE"
+          work=/tmp/ocean-r01813
+          out="$root/candidate/index.html"
+          mkdir -p "$root/candidate" "$root/evidence"
+
+          cat ocean-mother/releases/r01812-build/patch.part-*.b64 > /tmp/r01812.patch.gz.b64
+          echo "9fc71f4eb0d619cae7a553bfb72220f1e3592096190207d35a7dde85221a1b4c  /tmp/r01812.patch.gz.b64" | sha256sum -c -
+          base64 -d /tmp/r01812.patch.gz.b64 | gzip -dc > /tmp/r01812.patch
+
+          rm -rf "$work"
+          cp -a ocean-mother/restart-v0311 "$work"
+          cd "$work"
+          patch -p1 < /tmp/r01812.patch
+          cp source/inline-0.js /tmp/r01812-inline-0.js
+
+          cat "$root"/ocean-mother/releases/r01813-build/patch.part-*.b64 > /tmp/r01813.patch.gz.b64
+          test "$(wc -c < /tmp/r01813.patch.gz.b64)" -eq 20320
+          echo "c0a6269951570b655bbe97b71faed1bb8b4a844bb5983bc9ba2c0bd189f50fd7  /tmp/r01813.patch.gz.b64" | sha256sum -c -
+          base64 -d /tmp/r01813.patch.gz.b64 | gzip -dc > /tmp/r01813.patch
+          echo "581b0b148c247089863efe32e115323d78b0413f1526256783d5ceb3c27cc617  /tmp/r01813.patch" | sha256sum -c -
+          patch -p1 < /tmp/r01813.patch
+
+          node --check source/inline-0.js
+          python tools/build_single_html.py --output "$out"
+          test "$(wc -c < "$out")" -eq 173729
+          echo "8ad71fa0c54ae0aa48110fd922fd4b45e1d2c8df7c93040c7574939ecec1914d  $out" | sha256sum -c -
+          echo "3498800d4bb287eadf448f01fb8fa8cf1b1f07eb3eab57f1428d824a62b55fd1  frozen-deep/Original_Deep_V001.html" | sha256sum -c -
+
+          python3 - <<'PY'
+          from pathlib import Path
+          old = Path('/tmp/r01812-inline-0.js').read_text(encoding='utf-8')
+          new = Path('/tmp/ocean-r01813/source/inline-0.js').read_text(encoding='utf-8')
+          def frozen_literal(text):
+              start = text.index('const ORIGINAL_DEEP_HTML=')
+              end = text.index(';\n', start)
+              return text[start:end + 1]
+          assert frozen_literal(old) == frozen_literal(new), 'embedded frozen deep document changed'
+          PY
+
+          grep -q "0.3.13-island-r018-startup-recovery" "$out"
+          grep -q "r01813-staged-startup-and-surface-query" "$out"
+          grep -q "const BOOT_FRAG=" "$out"
+          grep -q "MAIN_COMPILE_LIMIT_MS=12000" "$out"
+          grep -q "queryAvailable" "$out"
+          if grep -qE '<script[^>]+src=|<img[^>]+src=|https://cdn\.|https://unpkg\.|https://jsdelivr\.' "$out"; then
+            echo "External runtime asset detected" >&2
+            exit 1
+          fi
+          python3 -m py_compile "$root/ocean-mother/releases/r01813-build/qa_startup.py"
+
+      - name: Run normal-entry browser startup gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          python3 -m http.server 8123 --bind 127.0.0.1 > evidence/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          python3 ocean-mother/releases/r01813-build/qa_startup.py \
+            --chrome "$CHROME" \
+            --url "http://127.0.0.1:8123/candidate/index.html" \
+            --output evidence
+
+      - name: Record and commit fixed single HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_Direct_Open.html
+          cp candidate/index.html "$target"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          html = Path('ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_Direct_Open.html')
+          qa = json.loads(Path('evidence/STARTUP_QA.json').read_text(encoding='utf-8'))
+          receipt = {
+              'schema': 'ocean-fixed-single-html-receipt/2',
+              'version': '0.3.13',
+              'runtimeIdentity': '0.3.13-island-r018-startup-recovery',
+              'sourceBaselineCommit': 'd9623857edb4006d8f17477e408643f59f59a5c9',
+              'htmlPath': str(html),
+              'htmlBytes': html.stat().st_size,
+              'htmlSha256': hashlib.sha256(html.read_bytes()).hexdigest(),
+              'singleFileHtml': True,
+              'externalRuntimeAssets': False,
+              'frozenDeepModified': False,
+              'normalEntryDesktopChecked': True,
+              'normalEntryMobile390x844Checked': True,
+              'bootPreviewVerified': True,
+              'boundedMainCompile': True,
+              'boundedDeferredQueryCompile': True,
+              'safeOceanFallback': True,
+              'desktopStartupStage': qa['desktop']['qa'].get('startupStage'),
+              'desktopSafeMode': qa['desktop']['qa'].get('safeMode'),
+              'desktopQueryVerified': qa['desktop']['qa'].get('queryVerified'),
+              'mobileStartupStage': qa['mobile']['qa'].get('startupStage'),
+              'mobileSafeMode': qa['mobile']['qa'].get('safeMode'),
+              'mobilePanelClosed': qa['mobile']['panelClosed'],
+              'hardwareGpuVerified': False,
+              'visualAcceptance': False,
+              'productionReady': False,
+          }
+          Path('ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_RECEIPT.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$target" ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_RECEIPT.json
+          git commit -m "release(ocean): publish R018.13 startup recovery single HTML [skip ci]"
+          FINAL_SHA="$(git rev-parse HEAD)"
+          printf '%s\n' "$FINAL_SHA" > evidence/FINAL_COMMIT.txt
+          git push origin HEAD
+
+      - name: Verify immutable raw.githack delivery
+        shell: bash
+        run: |
+          set -euo pipefail
+          FINAL_SHA="$(cat evidence/FINAL_COMMIT.txt)"
+          PATH_IN_REPO=ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_Direct_Open.html
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FINAL_SHA}/${PATH_IN_REPO}"
+          printf '%s\n' "$URL" > evidence/RAW_GITHACK_URL.txt
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl --fail --location --silent --show-error --connect-timeout 10 --max-time 45 "$URL" -o evidence/raw.githack.html; then
+              if test "$(wc -c < evidence/raw.githack.html)" -eq 173729 && echo "8ad71fa0c54ae0aa48110fd922fd4b45e1d2c8df7c93040c7574939ecec1914d  evidence/raw.githack.html" | sha256sum -c -; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ok" -eq 1
+          grep -q "0.3.13-island-r018-startup-recovery" evidence/raw.githack.html
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R01813_Startup_Recovery
+          path: |
+            candidate/index.html
+            ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_Direct_Open.html
+            ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_RECEIPT.json
+            evidence/
+          if-no-files-found: warn
+          retention-days: 30
