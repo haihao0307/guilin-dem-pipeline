@@ -35,6 +35,8 @@ jobs:
           python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_STATUS_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/qa/MATH_PROBE_RESULTS_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/runtime/OBSERVATION_POLICY_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/OBSERVATION_POLICY_PROBE_R1.json >/dev/null
           python -m json.tool projects/wenzhou/dem-kernel/truth/REAL_WINDOW_MANIFEST_TEMPLATE.json >/dev/null
       - name: Run reversible transform tests
         run: |
@@ -52,6 +54,22 @@ jobs:
           assert report['status'] == 'math_probe_passed'
           assert report['sourceDataUsed'] is False
           assert report['realWenzhouWindowUsed'] is False
+          assert report['gates']['realSourceProbe'] is False
+          PY
+      - name: Run candidate observation-band policy probe
+        run: |
+          python projects/wenzhou/dem-kernel/runtime/observation_policy_probe.py \
+            --output /tmp/WENZHOU_DEM_OBSERVATION_POLICY_R1.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/WENZHOU_DEM_OBSERVATION_POLICY_R1.json').read_text())
+          assert report['passed'] is True
+          assert report['sourceDataUsed'] is False
+          assert report['realWenzhouWindowUsed'] is False
+          assert report['gates']['farVisualDropsFineBands'] is True
+          assert report['gates']['physicsOverridesFarVisual'] is True
+          assert report['gates']['maskedTileForcesTruthUntilMaskAwareFiltering'] is True
           assert report['gates']['realSourceProbe'] is False
           PY
       - name: Enforce real-window blocker honesty

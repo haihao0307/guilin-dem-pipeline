@@ -61,3 +61,20 @@ python projects/wenzhou/dem-kernel/transform/probe_real_window.py \
 随后补点、线、掩膜约束包，测峰顶、鞍部、山脊、谷线、河岸、海岸与共享边。任何一项结构门禁失败，当前候选编码停止升级。
 
 当前状态：`mathProbePassed=true`，`realSourceProbePassed=false`，`productionIntegration=false`，`visualAcceptance=false`，`productionReady=false`。
+
+## 全量包检查点以后重新开工
+
+全量重启包已经在提交 `c3ff8622b2e7ae753e0a1b519cc302505e1e16c2` 固定。该包保存本轮重新开工以前的完整代码、合同、任务知识、测试、QA、清单与校验文件。
+
+重新开工后的第一项实现是 `runtime/observation_policy.py`。它把视觉、交互、物理、故事和安全需求统一换算成最大允许采样间距，始终由最严格需求决定可关闭的细节频带。`forceTruth=true` 时保留全部频带，相机只改变观察请求。
+
+生成夹具检查暴露了一个必须保护的问题。当前无损容器在变换前将 NoData 位置填零，并用独立位掩膜恢复语义。完整往返安全，关闭细节频带时，零填充值可能影响相邻有效高程。因此 R1 对任何含 NoData 的变换瓦片启用 `nodata_guard`，直接保留全部频带。只有真实温州窗口上的掩膜感知方法通过以后，才允许解除该保护。
+
+重新执行观察策略检查：
+
+```bash
+python projects/wenzhou/dem-kernel/runtime/observation_policy_probe.py \
+  --output projects/wenzhou/dem-kernel/qa/OBSERVATION_POLICY_PROBE_R1.json
+```
+
+当前这项证据只来自生成整数夹具。视觉阈值、真实压缩收益、岸线与脊谷保持、浏览器和 GPU 成本仍等待真实温州窗口。

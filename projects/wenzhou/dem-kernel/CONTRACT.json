@@ -13,8 +13,14 @@
     "path": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
     "bytes": 136760745,
     "sha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
-    "grid": [17555, 17918],
-    "spacingMeters": [12.5, 12.5],
+    "grid": [
+      17555,
+      17918
+    ],
+    "spacingMeters": [
+      12.5,
+      12.5
+    ],
     "crs": "EPSG:32651",
     "dtype": "int16",
     "nodata": -32768,
@@ -45,7 +51,10 @@
     "heightRuntime": "heightRuntime(x, y, precisionRequest)",
     "selectVisibleBands": "selectVisibleBands(camera, footprint, task)",
     "heightRender": "heightRender(x, y, precisionRequest, microStrength)",
-    "microStrengthZeroInvariant": "microStrength=0 must return the runtime DEM reconstruction exactly"
+    "microStrengthZeroInvariant": "microStrength=0 must return the runtime DEM reconstruction exactly",
+    "observationPolicyImplementation": "runtime/observation_policy.py",
+    "observationPolicyContract": "runtime/OBSERVATION_POLICY_R1.json",
+    "nodataBandRemovalGuard": "Any transformed tile containing NoData retains all detail bands in R1."
   },
   "runtimeComposition": {
     "weatherRuntimeIncluded": false,
@@ -61,9 +70,12 @@
     "marineLandFusionAsSingleDatumTruthAllowed": false
   },
   "currentPhase": {
-    "name": "isolated_scaffold_and_math_probe",
+    "name": "candidate_observation_band_policy_generated_fixture_probe",
+    "fullPackageCheckpointCommit": "c3ff8622b2e7ae753e0a1b519cc302505e1e16c2",
     "keepArchiveDropLedgerComplete": true,
     "mathProbePassed": true,
+    "observationPolicyProbePassed": true,
+    "nodataPartialBandRiskGuarded": true,
     "realWenzhouWindowMounted": false,
     "realWenzhouWindowProbePassed": false,
     "productionIntegration": false
@@ -84,6 +96,8 @@
     "browserEvidence": false,
     "productEvidence": false,
     "visualAcceptance": false,
-    "productionReady": false
+    "productionReady": false,
+    "observationPolicyProbePassed": true,
+    "realWenzhouCalibrationPassed": false
   }
 }
