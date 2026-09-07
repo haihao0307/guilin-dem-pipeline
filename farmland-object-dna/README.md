@@ -1,71 +1,119 @@
 # Farmland Object DNA
 
-Farmland Object DNA 是 guilin-dem-pipeline 中面向传统农业对象的独立领域系统。它与 Weather Mother、Ocean Mother、Landscape Mother、DEM 等并列协作，负责农田对象自身的结构、关系、生命周期、水力、劳动约束和可重建参数。
+Farmland Object DNA 是 `guilin-dem-pipeline` 中面向传统农业对象的独立领域系统。它与 Weather Mother、Ocean Mother、Landscape Mother、DEM、Settlement、Human、Animal 和 Building 等领域协作，负责农田对象自身的身份、结构、水力关系、生命周期、劳动关系、维护、退化与可重建参数。
 
-## 当前状态
+## 当前生产线
 
-当前规则版本：V0.1.1
+当前版本：`0.2.0-clean-restart`
 
-当前生产阶段：研究与结构真值重启
+当前分支：`restart/farmland-object-dna-v020-20260907`
 
-人工视觉接受：false
+入口：`RESTART_START_HERE.md`
 
-生产批准：false
+工作单：`PRODUCTION_RESTART_TASKS.md`
 
-公开工作台 `FARMLAND_DNA_WB_V0.1.0_20260907` 已被用户明确否决，只保留为失败对照。它的圆管渠道、圆管田埂、假水深、孤立进排水节点、机械格网和圆锥水稻禁止回归。
+全量包：`distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip`
 
-## 强制入口
+V0.1 公开工作台已被用户否决，只保留为失败对照。当前没有可分享的视觉候选，也没有人工视觉接受或生产批准。
 
-每次开工按顺序读取：
+## 严谨生产路线
 
-1. 仓库根目录 `AGENTS.md`
-2. `FARMLAND_PRODUCTION_RULES.md`
-3. `V001_FAILURE_REGISTER.md`
-4. `RESTART_START_HERE.md`
-5. `HANDOFF.json`
-6. `OBJECT_DNA_CONTRACT.md`
-7. `INTERFACE_CONTRACT.md`
-8. `QUALITY_GATES.json`
+每个对象必须依次完成：
 
-## 已建立
+1. 来源与证据。
+2. 系统关系。
+3. 平面、纵断面和横断面。
+4. 真实尺寸与人体尺度。
+5. 水力拓扑、高程合法性和水量守恒。
+6. 作物种植和生命周期。
+7. 内部结构真值台。
+8. 3A 材质、色彩、光照、空气和运动。
+9. Microscope 微观变化。
+10. 多视角、剖面、桌面和手机预检。
+11. 公开候选与用户人工验收。
 
-1. 独立工作分支 `feature/farmland-object-dna-v001`。
-2. 强制严谨生产规则与失败基线登记。
-3. 十二层 Object DNA 合同。
-4. 跨 Mother 输入输出合同。
-5. 机器可读 schema 与传统人工水田候选样例。
-6. 证据、截面、水力、生命周期、Microscope 和 3A 质量门禁。
-7. V0.1 技术发布与浏览器验证记录，明确限定为已否决样板的技术状态。
+前一阶段没有通过时，后一阶段不得开工。简单圆管、锥体、平面贴片、机械格网和孤立图标只能作为带 `debug_proxy` 标识的内部代理体。
 
 ## 第一对象族
 
-水田是第一重点。基础构件已经扩展为：
+水田是首个重点对象。基础构件包括：
 
-watershed_forest、spring_or_stream_source、intake、main_channel、branch_channel、divider、field_cell、bund、terrace_step、inlet、outlet、spillway、drainage_channel、water_surface、crop_stand、footpath、settlement_link 和 downstream_receiver。
+`field_cell`
 
-水田对象需要同时回答：
+`shared_bund`
 
-1. 它在哪里，为什么适合形成水田。
-2. 森林、水源、村落、道路和田块怎样组织。
-3. 水从哪里来，经过哪些渠道、分水点、田块和出水口，最终到哪里。
-4. 田埂、田坎、渠道、田面和进排水构件的真实截面是什么。
-5. 谁在什么时候以什么工具和劳动强度维护它。
-6. 当前田面水深、土壤和水稻处于什么状态。
-7. 插秧、分蘖、孕穗、抽穗、灌浆、成熟、收割和残茬怎样形成不同结构。
-8. 哪些事实有来源，哪些属于推断、程序生成、未知或冲突。
+`terrace_step`
+
+`terrace_riser`
+
+`intake`
+
+`trunk_channel`
+
+`branch_channel`
+
+`field_channel`
+
+`divider`
+
+`field_inlet`
+
+`field_outlet`
+
+`spillway`
+
+`drainage_channel`
+
+`downstream_receiver`
+
+`water_surface`
+
+`crop_stand`
+
+`footpath`
+
+`maintenance_group`
+
+`water_right_holder`
+
+水田对象必须回答：在哪里，为什么能形成这个形状，水从哪里来，怎样进入每块田，怎样蓄水，怎样离开，最终流向哪里，谁在什么时候维护，当前作物与土水状态是什么。
+
+## 平坝水田与山地梯田
+
+平坝水田和山地梯田共用对象、证据、水深和守恒合同。二者使用不同的地形适配和水路拓扑。
+
+平坝水田重点研究微地形、主支渠、田间分水、共享田埂、汇水沟、道路、人体和劳动模数。
+
+山地梯田重点研究等高关系、沟谷和脊线、平台宽度、田坎稳定、干支渠、逐级供排水、坡脚受体以及森林、水源、村落和共同维护。
 
 ## 元阳专项
 
-第一项区域系统研究为元阳和红河哈尼梯田。研究对象覆盖山顶及上部森林、水源保护、泉水、溪流、干渠、支渠、传统分水、村落高程带、梯田序列、下游河谷、共同维护和综合稻作系统。
+元阳和红河哈尼梯田属于专门地区配置。必须把上部水源林、泉水和溪流、取水、干渠、支渠、村落、分水制度、梯田、坡脚排水和河谷受体作为一个完整文明系统研究。
 
-传统木刻、木柱或木棍分水的构造、比例和管理制度仍需继续核验。证据不足的部分只登记为 research_target，不进入正式装置生成。
+木刻、木柱或木棍分水装置的名称、结构、插设方式、比例、水权和维护在证据充足以前保持 `research_target`。
 
-## 下一候选
+## 水稻生命周期
 
-下一候选从水田结构真值台开始，先完成渠道、田埂、田坎、田面、进水口、出水口和分水设施的平面、横断面、纵断面与真实尺寸，再完成平坝和梯田的闭合水力图、水深、水量守恒和独立水稻阶段模型。
+水稻至少区分育秧、起秧、插秧、返青、分蘖、拔节、孕穗、抽穗、开花、灌浆、成熟、收割和残茬。插秧配置保存秧龄、每穴苗数、株距、行距、插植深度、角度、田面水深、缺株率、补苗率和作业方式。
 
-Microscope 在宏观系统、中观拓扑和截面通过后使用，负责土块、石头、草根、裂缝、湿润线、淤积、泥浆、叶片、分蘖、稻穗和籽粒等微观细节。
+每个阶段必须使用独立形态模型。禁止通过同一个简单几何缩放和换色冒充完整生命周期。
+
+## Microscope
+
+Microscope 只在宏观系统、中观拓扑、截面、尺寸和水力通过以后启用，用于田埂土块、石头、草根、湿润线、踩踏、淤积、冲刷、泥浆、叶片、分蘖节点、稻穗和籽粒等微观变化。
 
 ## 后续扩展
 
-水田通过结构、水力、生命周期和 3A 门禁以后，再依次扩展旱地、菜地、果园、苗圃和休耕地，并建立田块组合到聚落农业系统的聚合规则。
+水田基础通过以后，沿用共同的地形、水、土壤、气候、道路、村落、人口、劳动、边界和维护层，依次扩展旱地、菜地、果园、苗圃和休耕地。
+
+## 当前状态
+
+`researchGate=in_progress`
+
+`structuralTruthWorkbench=not_started`
+
+`activePublicCandidate=none`
+
+`visualAcceptance=false`
+
+`productionReady=false`
