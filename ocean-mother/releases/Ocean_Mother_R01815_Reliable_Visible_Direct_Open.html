@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061921">
+<title>Ocean Mother R018.15 可靠可见工作台</title>
+<style>
+:root{--glass:rgba(10,35,44,.82);--line:rgba(159,226,234,.23);--text:#e7fbff;--muted:#8fb7bf;--cyan:#67d6df;--amber:#f4c878}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 20%,#163d48,#06161c 58%,#03090c);color:var(--text);font:12px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:linear-gradient(#496e76 0 48%,#17414b 48% 60%,#05242e 100%)}
+button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:999px;background:linear-gradient(180deg,rgba(120,180,190,.22),rgba(26,59,67,.58));color:var(--text);padding:8px 13px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}button:hover,button.active,button.selected{border-color:rgba(150,238,246,.58);background:linear-gradient(180deg,rgba(128,206,218,.34),rgba(35,76,85,.72));box-shadow:0 0 24px rgba(83,211,224,.13),inset 0 1px 0 rgba(255,255,255,.15)}
+#brand{position:fixed;left:12px;top:12px;z-index:6;display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:18px;background:var(--glass);backdrop-filter:blur(14px);box-shadow:0 15px 40px rgba(0,0,0,.25)}
+#brand .orb{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:22px Georgia;border:1px solid rgba(188,241,247,.58);background:radial-gradient(circle at 35% 30%,#bfeef1 0 4%,#477682 23%,#12343f 68%,#06171d);box-shadow:0 0 20px rgba(104,223,232,.24)}
+#brand strong{display:block;letter-spacing:2px;font-size:12px}#brand small{display:block;color:var(--muted);letter-spacing:1.2px;font-size:9px}
+#zoneBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:0;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--glass);backdrop-filter:blur(14px)}
+#zoneBar button{border:0;padding:9px 16px;background:transparent;box-shadow:none}#zoneBar button.selected{background:rgba(130,212,222,.28);box-shadow:inset 0 0 12px rgba(210,251,255,.15)}
+#viewBar{position:fixed;top:86px;left:50%;transform:translateX(-50%);z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:5px;max-width:min(720px,70vw)}#viewBar button{padding:7px 12px;font-size:10px}
+#title{position:fixed;left:20px;top:168px;z-index:4;pointer-events:none;text-shadow:0 4px 24px rgba(0,0,0,.65)}#title .eyebrow{font-size:9px;letter-spacing:3px;color:#a9dde3;font-weight:700}#title h1{font-size:34px;font-weight:300;letter-spacing:2px;margin:10px 0 4px}#title p{margin:0;color:#c4e1e5;letter-spacing:.4px}
+#panel{position:fixed;right:12px;top:166px;bottom:14px;width:330px;z-index:7;border:1px solid var(--line);border-radius:22px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:auto;transition:transform .25s ease,opacity .25s ease}
+#panel.closed{transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none}.panelHead{position:sticky;top:0;z-index:2;background:linear-gradient(180deg,rgba(9,34,43,.98),rgba(9,34,43,.86));padding:17px 17px 12px;border-bottom:1px solid var(--line)}.panelHead .label{font-size:9px;letter-spacing:2px;color:#9ad8df}.panelHead h2{margin:4px 0 0;font-size:18px;font-weight:400}.panelHead button{position:absolute;right:12px;top:14px;padding:5px 9px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:12px 14px 6px}.tabs button{padding:7px 4px;font-size:10px}.page{padding:8px 16px 20px}.section{margin:12px 0 16px}.section h3{font-size:10px;letter-spacing:1.2px;color:#b8dfe4;margin:0 0 10px}.row{display:grid;grid-template-columns:92px 1fr 48px;align-items:center;gap:9px;margin:12px 0}.row label{color:#c7e1e5}.row input{width:100%;accent-color:var(--cyan)}.row output{text-align:right;color:#8ed6df;font-variant-numeric:tabular-nums;font-size:10px}.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{padding:7px 10px;font-size:10px}.readout{border:1px solid var(--line);border-radius:14px;background:rgba(3,15,20,.42);padding:12px;color:#a9cbd0;font:10px/1.65 ui-monospace,monospace;white-space:pre-wrap}.queryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}.queryGrid span{border:1px solid rgba(122,205,215,.18);border-radius:8px;padding:6px 4px;text-align:center;color:#9dcbd1;background:rgba(10,40,48,.5);font:9px ui-monospace,monospace}.queryGrid span.ok{color:#aaf0d4;border-color:rgba(118,229,183,.34)}
+#panelToggle,#pause{position:fixed;top:16px;z-index:8}#panelToggle{right:14px}#pause{right:96px}
+#effects{position:fixed;left:14px;bottom:12px;z-index:6;display:flex;flex-wrap:wrap;gap:5px;max-width:min(760px,calc(100vw - 380px))}#effects button{padding:7px 12px;font-size:10px}
+#statusBox{position:fixed;left:14px;bottom:56px;z-index:6;border:1px solid var(--line);border-radius:999px;background:var(--glass);padding:7px 12px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px);font-size:10px}.dot{width:7px;height:7px;border-radius:50%;background:#f2c872;box-shadow:0 0 12px currentColor}.dot.ok{background:#78e5b5}.dot.warn{background:#f2c872}
+#notice{position:fixed;left:50%;bottom:38px;transform:translateX(-50%);z-index:6;border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:9px 15px;color:#c9e4e8;backdrop-filter:blur(14px);opacity:0;transition:opacity .25s;pointer-events:none}#notice.show{opacity:1}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:linear-gradient(180deg,rgba(7,24,31,.82),rgba(4,14,18,.74));pointer-events:none;transition:opacity .35s}.loadCard{text-align:center}.loadCard strong{font-size:16px;letter-spacing:4px;font-weight:400}.loadCard span{display:block;margin-top:9px;color:#a6ced4}.loadLine{width:220px;height:2px;margin:18px auto 0;background:rgba(130,210,220,.15);overflow:hidden}.loadLine i{display:block;width:45%;height:100%;background:#69d4df;animation:load 1.1s ease-in-out infinite}@keyframes load{from{transform:translateX(-110%)}to{transform:translateX(250%)}}
+#error{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(760px,88vw);max-height:70vh;overflow:auto;border:1px solid rgba(255,155,120,.55);border-radius:18px;background:rgba(38,15,11,.95);padding:20px;color:#ffd5c5;white-space:pre-wrap}
+#fallbackBadge{position:fixed;right:14px;bottom:14px;z-index:8;color:#f0d29b;background:rgba(44,32,12,.82);border:1px solid rgba(245,201,117,.35);border-radius:999px;padding:6px 10px;font-size:9px;display:none}
+@media(max-width:760px){#brand{left:8px;top:8px;padding:6px 9px}.orb{display:none!important}#brand strong{font-size:10px}#brand small{font-size:8px}#zoneBar{top:10px}#zoneBar button{padding:7px 11px;font-size:10px}#pause{right:62px;top:52px;padding:6px 9px}#panelToggle{right:8px;top:52px;padding:6px 9px}#viewBar{top:88px;max-width:96vw}#viewBar button{padding:6px 8px}#title{left:13px;top:151px}#title h1{font-size:26px;max-width:300px}#title p{max-width:280px;font-size:10px}#panel{top:96px;right:7px;bottom:7px;width:min(330px,92vw)}#effects{left:8px;right:8px;bottom:8px;max-width:none}#effects button{padding:6px 9px}#statusBox{left:8px;bottom:52px}#notice{bottom:92px;max-width:88vw;text-align:center}#fallbackBadge{display:none!important}}
+</style>
+</head>
+<body>
+<canvas id="ocean" aria-label="Ocean Mother 实时海岛海洋场景"></canvas>
+<div id="brand"><div class="orb">O</div><div><strong>OCEAN MOTHER</strong><small>ISLAND GOLD COAST / R018.15</small></div></div>
+<div id="zoneBar"><button data-zone="island" class="selected">海岛金岸</button><button data-zone="deep">深海</button></div>
+<button id="pause">暂停</button><button id="panelToggle" aria-expanded="true">参数</button>
+<div id="viewBar"><button data-view="overview" class="active">海岛全景</button><button data-view="top">俯视全岛</button><button data-view="shore">异形沙滩</button><button data-view="breaker">浪墙卷浪</button><button data-view="query">海面查询</button><button data-view="rocks">岩石水线</button><button data-view="fire">浓烟火源</button></div>
+<section id="title"><div class="eyebrow">WIND · WATER · ISLAND · LIGHT</div><h1>风越礁岸，浪入沙湾。</h1><p>程序海面 · 异形岛体 · 动态水线 · 同源查询</p></section>
+<aside id="panel">
+  <div class="panelHead"><div class="label">EXPERIMENT CONTROL</div><h2>海岛金岸实验台</h2><button id="panelClose">收起</button></div>
+  <div class="tabs"><button data-page="shape" class="selected">岛形</button><button data-page="water">海浪</button><button data-page="query">查询</button></div>
+  <div class="page" data-page-content="shape">
+    <div class="section"><h3>异形岛体</h3>
+      <div class="row"><label>岛体高度</label><input type="range" min="8" max="28" step=".1" value="17.2" data-param="islandHeight"><output data-out="islandHeight"></output></div>
+      <div class="row"><label>岸线异形度</label><input type="range" min=".2" max="2" step=".01" value="1.28" data-param="islandIrregularity"><output data-out="islandIrregularity"></output></div>
+      <div class="row"><label>白沙带宽度</label><input type="range" min="3" max="16" step=".1" value="8.6" data-param="beachWidth"><output data-out="beachWidth"></output></div>
+      <div class="row"><label>沙嘴与湾口</label><input type="range" min=".2" max="2" step=".01" value="1.18" data-param="shoreBias"><output data-out="shoreBias"></output></div>
+    </div>
+    <div class="section"><h3>场景与光</h3>
+      <div class="row"><label>水体清澈度</label><input type="range" min=".2" max="1.4" step=".01" value=".76" data-param="waterClarity"><output data-out="waterClarity"></output></div>
+      <div class="row"><label>太阳方位</label><input type="range" min="-2" max="2" step=".01" value="-.5" data-param="sunAngle"><output data-out="sunAngle"></output></div>
+      <div class="row"><label>曝光</label><input type="range" min=".5" max="1.8" step=".01" value="1.12" data-param="exposure"><output data-out="exposure"></output></div>
+    </div>
+  </div>
+  <div class="page" data-page-content="water" hidden>
+    <div class="section"><h3>外海与破浪</h3>
+      <div class="chips"><button data-preset="calm">平静海面</button><button data-preset="swell" class="selected">风浪海面</button><button data-preset="storm">强风海况</button></div>
+      <div class="row"><label>外海浪高</label><input type="range" min=".1" max="1.8" step=".01" value=".8" data-param="waveHeight"><output data-out="waveHeight"></output></div>
+      <div class="row"><label>波速</label><input type="range" min=".15" max="1.6" step=".01" value=".78" data-param="waveSpeed"><output data-out="waveSpeed"></output></div>
+      <div class="row"><label>浪墙强度</label><input type="range" min="0" max="2" step=".01" value="1.12" data-param="breakerPower"><output data-out="breakerPower"></output></div>
+      <div class="row"><label>卷浪水唇</label><input type="range" min="0" max="2" step=".01" value="1.02" data-param="curlPower"><output data-out="curlPower"></output></div>
+      <div class="row"><label>泡沫覆盖</label><input type="range" min="0" max="2" step=".01" value="1.14" data-param="foamWall"><output data-out="foamWall"></output></div>
+    </div>
+    <div class="section"><h3>烟与火</h3>
+      <div class="row"><label>浓烟密度</label><input type="range" min="0" max="3" step=".01" value="2.0" data-param="smokeDensity"><output data-out="smokeDensity"></output></div>
+      <div class="row"><label>烟柱高度</label><input type="range" min="12" max="70" step="1" value="46" data-param="smokeHeight"><output data-out="smokeHeight"></output></div>
+      <div class="row"><label>风力</label><input type="range" min=".1" max="1.8" step=".01" value="1.04" data-param="wind"><output data-out="wind"></output></div>
+      <div class="row"><label>火焰亮度</label><input type="range" min="0" max="2" step=".01" value="1.08" data-param="fire"><output data-out="fire"></output></div>
+    </div>
+  </div>
+  <div class="page" data-page-content="query" hidden>
+    <div class="section"><h3>可见海面与世界查询</h3><div id="queryText" class="readout">等待第一帧</div><div id="queryGrid" class="queryGrid"></div></div>
+    <div class="section"><h3>运行状态</h3><div id="metrics" class="readout">准备渲染器</div></div>
+  </div>
+</aside>
+<div id="statusBox"><i id="statusDot" class="dot"></i><span id="status">准备渲染器</span></div>
+<div id="effects"><button data-effect="foam" class="active">泡沫带</button><button data-effect="breaker" class="active">浪墙</button><button data-effect="curl" class="active">卷浪</button><button data-effect="runup" class="active">拍岸回流</button><button data-effect="spray" class="active">浪花喷雾</button><button data-effect="smoke" class="active">浓烟</button><button data-effect="fire" class="active">火源</button></div>
+<div id="notice">设置已更新</div><div id="fallbackBadge">兼容渲染</div>
+<div id="loading"><div class="loadCard"><strong>OCEAN MOTHER</strong><span>正在建立轻量海洋场</span><div class="loadLine"><i></i></div></div></div>
+<pre id="error" hidden></pre><pre id="qaProbe" hidden></pre>
+<script>
+(()=>{'use strict';
+const VERSION='0.3.15-island-reliable-visible';
+const BUILD='r01815-direct-default-framebuffer';
+const $=id=>document.getElementById(id);
+const canvas=$('ocean');
+const params={islandHeight:17.2,islandIrregularity:1.28,beachWidth:8.6,shoreBias:1.18,waveHeight:.8,waveSpeed:.78,breakerPower:1.12,curlPower:1.02,foamWall:1.14,waterClarity:.76,sunAngle:-.5,exposure:1.12,smokeDensity:2.0,smokeHeight:46,wind:1.04,fire:1.08};
+const effects={foam:true,breaker:true,curl:true,runup:true,spray:true,smoke:true,fire:true};
+const units={islandHeight:' m',islandIrregularity:'',beachWidth:' m',shoreBias:'',waveHeight:' m',waveSpeed:'×',breakerPower:'×',curlPower:'×',foamWall:'×',waterClarity:'×',sunAngle:' rad',exposure:'×',smokeDensity:'×',smokeHeight:' m',wind:'×',fire:'×'};
+const waves=[
+ {dir:[.94,.342],k:.34,amp:.48,speed:.74,phase:.2},
+ {dir:[-.19,.982],k:.57,amp:.24,speed:1.02,phase:1.4},
+ {dir:[.63,-.776],k:.88,amp:.13,speed:1.34,phase:2.3},
+ {dir:[-.83,-.558],k:1.31,amp:.07,speed:1.61,phase:.8}
+];
+let gl=null,ctx2d=null,program=null,loc={},vao=null,renderer='pending',running=true,frames=0,start=performance.now(),last=start,fps=0,zone='island',activeView='overview',yaw=.72,pitch=.44,distance=118,target=[2,5,-2],fallback=false,drag=null,touches=new Map(),pinch=0,queryReport=null,noticeTimer=0;
+const qa={version:VERSION,buildId:BUILD,ready:false,sceneReady:false,renderer:'pending',frames:0,fps:0,startupStage:'context',firstFrameMs:0,error:null,contextLost:false,queryAvailable:true,queryVerified:false,queryMethod:'shared-wave-uniforms-cpu-evaluator',externalAssets:0,singleFile:true,mobilePanelClosed:false,parameters:params};
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function vnorm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function camera(){const cp=Math.cos(pitch),sp=Math.sin(pitch),cy=Math.cos(yaw),sy=Math.sin(yaw);const pos=[target[0]+distance*cp*sy,target[1]+distance*sp,target[2]+distance*cp*cy];const forward=vnorm([target[0]-pos[0],target[1]-pos[1],target[2]-pos[2]]);const right=vnorm(cross(forward,[0,1,0]));const up=vnorm(cross(right,forward));return{pos,forward,right,up}}
+function waveHeightAt(x,z,t){let h=0;for(const w of waves){const phase=(w.dir[0]*x+w.dir[1]*z)*w.k-t*w.speed*params.waveSpeed+w.phase;h+=Math.sin(phase)*w.amp*params.waveHeight;}return h}
+function waveNormalAt(x,z,t){let dx=0,dz=0;for(const w of waves){const phase=(w.dir[0]*x+w.dir[1]*z)*w.k-t*w.speed*params.waveSpeed+w.phase;const c=Math.cos(phase)*w.amp*params.waveHeight*w.k;dx+=c*w.dir[0];dz+=c*w.dir[1];}return vnorm([-dx,1,-dz])}
+function sampleSurfaceWorld(x,z,t=performance.now()/1000){if(!Number.isFinite(x)||!Number.isFinite(z)||!Number.isFinite(t))throw new TypeError('坐标与时间必须是有限数值');return{x,z,height:waveHeightAt(x,z,t),normal:waveNormalAt(x,z,t),time:t,method:'shared-wave-uniforms-cpu-evaluator',approximate:false}}
+function runQuery(){const pts=[[-44,-18],[-28,15],[-12,42],[18,-39],[34,-11],[48,22],[-7,-52],[8,58],[56,45]],t=performance.now()/1000;const samples=pts.map(p=>sampleSurfaceWorld(p[0],p[1],t));const finite=samples.every(s=>Number.isFinite(s.height)&&s.normal.every(Number.isFinite));queryReport={passed:finite,available:true,sampleCount:samples.length,maxAbsHeight:Math.max(...samples.map(s=>Math.abs(s.height))),method:'shared-wave-uniforms-cpu-evaluator',samples};qa.queryVerified=finite;qa.queryAvailable=true;$('queryText').textContent=`共享参数：4 组方向波\n采样时刻：${t.toFixed(2)} s\n查询点：${samples.length}\n有限数值：${finite?'通过':'失败'}\n最大绝对波高：${queryReport.maxAbsHeight.toFixed(3)} m`;$('queryGrid').innerHTML=samples.map((s,i)=>`<span class="${finite?'ok':''}">P${i+1}<br>${s.height.toFixed(2)} m</span>`).join('');publishQA();return queryReport}
+function publishQA(){qa.renderer=renderer;qa.frames=frames;qa.fps=fps;qa.parameters={...params};qa.zone=zone;qa.activeView=activeView;qa.camera=camera();qa.mobilePanelClosed=matchMedia('(max-width:760px)').matches?$('panel').classList.contains('closed'):false;const probe=$('qaProbe');probe.textContent=JSON.stringify(qa);$('metrics').textContent=`渲染器 ${renderer}\n完成帧 ${frames}\n帧率 ${fps.toFixed(1)} FPS\n画布 ${canvas.width} × ${canvas.height}\n启动阶段 ${qa.startupStage}\n查询 ${qa.queryVerified?'9 点通过':'待检查'}\n外部资产 0`;}
+function showNotice(text){$('notice').textContent=text;$('notice').classList.add('show');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('notice').classList.remove('show'),1300)}
+function fail(error){qa.error=String(error?.stack||error);qa.startupStage='error';$('error').hidden=false;$('error').textContent=qa.error;$('loading').style.display='none';publishQA()}
+const VS=`#version 300 es
+precision highp float;
+out vec2 vUv;
+void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);vUv=p;gl_Position=vec4(p*2.0-1.0,0.0,1.0);}`;
+const FS=`#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 outColor;
+uniform vec2 uResolution;uniform float uTime;uniform vec3 uCamPos,uForward,uRight,uUp;uniform float uExposure,uIslandHeight,uIslandIrregularity,uBeachWidth,uShoreBias,uWaveHeight,uWaveSpeed,uFoam,uBreaker,uCurl,uClarity,uSunAngle,uSmoke,uSmokeHeight,uWind,uFire;uniform int uZone;uniform int uFlags;
+#define PI 3.14159265359
+float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*noise(p);p=mat2(1.6,-1.2,1.2,1.6)*p+2.1;a*=.5;}return s;}
+float wave(vec2 p,float t){float h=0.;h+=sin(dot(p,vec2(.94,.342))*.34-t*.74*uWaveSpeed+.2)*.48;h+=sin(dot(p,vec2(-.19,.982))*.57-t*1.02*uWaveSpeed+1.4)*.24;h+=sin(dot(p,vec2(.63,-.776))*.88-t*1.34*uWaveSpeed+2.3)*.13;h+=sin(dot(p,vec2(-.83,-.558))*1.31-t*1.61*uWaveSpeed+.8)*.07;return h*uWaveHeight;}
+vec3 waterNormal(vec2 p,float t){float e=.17;float h=wave(p,t),hx=wave(p+vec2(e,0),t),hz=wave(p+vec2(0,e),t);return normalize(vec3(h-hx,e,h-hz));}
+float islandRadius(float a){return 37.+uIslandIrregularity*(5.2*sin(a*3.+.4)+3.1*sin(a*5.-1.1)+2.0*sin(a*9.+2.3))+uShoreBias*5.*exp(-pow(abs(a+.65),2.)/.18)-uShoreBias*4.*exp(-pow(abs(a-2.4),2.)/.22);}
+float shoreSdf(vec2 p){float a=atan(p.y,p.x),r=length(p);return r-islandRadius(a);}
+float terrain(vec2 p){float d=-shoreSdf(p);if(d<0.)return -2.;float core=pow(clamp(d/42.,0.,1.),.72);float ridges=(fbm(p*.055)-.46)*5.*smoothstep(3.,20.,d);float peaks=2.8*exp(-dot(p-vec2(-7,4),p-vec2(-7,4))/180.)+2.1*exp(-dot(p-vec2(10,-7),p-vec2(10,-7))/120.);return -.2+uIslandHeight*core+ridges+peaks;}
+float landHit(vec3 ro,vec3 rd,out vec3 hp){float t=0.;for(int i=0;i<34;i++){vec3 p=ro+rd*t;float d=p.y-terrain(p.xz);if(d<.07){hp=p;return t;}t+=clamp(d*.42,.18,4.0);if(t>260.)break;}return 1e5;}
+vec3 sky(vec3 rd,vec3 sun){float h=clamp(rd.y*.5+.5,0.,1.);vec3 c=mix(vec3(.10,.25,.31),vec3(.56,.75,.78),pow(h,.55));float s=pow(max(dot(rd,sun),0.),700.);float glow=pow(max(dot(rd,sun),0.),12.);c+=vec3(1.0,.72,.34)*(s*5.+glow*.13);c=mix(c,vec3(.08,.14,.16),pow(1.-h,7.)*.35);return c;}
+float smokeBlob(vec3 p,vec3 base,float t){float y=p.y-base.y;if(y<0.||y>uSmokeHeight)return 0.;float drift=uWind*y*.32;vec2 q=p.xz-base.xz-vec2(drift,-drift*.22);float w=2.0+y*.12;float body=exp(-dot(q,q)/(w*w));float curl=.55+.45*noise(q*.22+vec2(t*.13,y*.08));return body*curl*smoothstep(uSmokeHeight,uSmokeHeight*.55,y)*smoothstep(0.,3.,y);}
+vec3 shadeSmoke(vec3 ro,vec3 rd,float maxT,float t,vec3 sun){if((uFlags&32)==0||uZone==1)return vec3(0);float acc=0.;for(int i=0;i<10;i++){float ft=(float(i)+.5)/10.;float tt=min(maxT,145.)*ft;vec3 p=ro+rd*tt;float d=smokeBlob(p,vec3(-24,2,-8),t)+smokeBlob(p,vec3(20,2,-24),t*.93)+smokeBlob(p,vec3(24,2,18),t*1.07);acc+=d*uSmoke*.08*(1.-acc);}return mix(vec3(0),vec3(.12,.14,.14)+vec3(.16,.12,.08)*max(dot(rd,sun),0.),clamp(acc,0.,.88));}
+void main(){vec2 q=(vUv*2.-1.);q.x*=uResolution.x/uResolution.y;vec3 rd=normalize(uForward+q.x*uRight*.74+q.y*uUp*.74);vec3 sun=normalize(vec3(sin(uSunAngle),.62,cos(uSunAngle)));vec3 col=sky(rd,sun);float maxT=240.;
+ vec3 hp;float tl=uZone==0?landHit(uCamPos,rd,hp):1e5;float tw=rd.y<-.0001?(-uCamPos.y)/rd.y:1e5;
+ if(tw>0.&&tw<maxT){vec3 wp=uCamPos+rd*tw;float wh=wave(wp.xz,uTime);float corr=(wh)/(max(-rd.y,.08));tw=max(0.,tw-corr*.18);wp=uCamPos+rd*tw;vec3 n=waterNormal(wp.xz,uTime);vec3 refl=reflect(rd,n);float fres=pow(1.-max(dot(-rd,n),0.),5.);float crest=smoothstep(.28,.8,wave(wp.xz,uTime)/max(uWaveHeight,.1));float sd=uZone==0?shoreSdf(wp.xz):100.;float shoreFoam=exp(-abs(sd)/max(uBeachWidth,1.))*uFoam;float breaker=exp(-pow((sd-3.)/4.,2.))*uBreaker;float micro=.5+.5*sin(wp.x*.85+wp.z*1.21-uTime*2.1);float foamEnabled=((uFlags&1)!=0)?1.0:0.0;float foam=clamp((shoreFoam+breaker*.45+crest*.15*micro)*foamEnabled,0.,1.);vec3 deep=vec3(.018,.15,.20),shallow=vec3(.05,.40,.43);float depthMix=uZone==0?smoothstep(-10.,18.,sd):0.;vec3 water=mix(shallow,deep,depthMix*uClarity);water=mix(water,sky(refl,sun),.28+.55*fres);float spec=pow(max(dot(reflect(-sun,n),-rd),0.),120.)*2.3;water+=vec3(1.,.78,.44)*spec;water=mix(water,vec3(.80,.94,.91),foam*.72);float fog=1.-exp(-tw*.006);col=mix(water,sky(rd,sun),fog*.35);maxT=tw;}
+ if(tl<maxT){float sd=shoreSdf(hp.xz);float h=terrain(hp.xz);vec3 n=normalize(vec3(terrain(hp.xz-vec2(.18,0))-terrain(hp.xz+vec2(.18,0)),.36,terrain(hp.xz-vec2(0,.18))-terrain(hp.xz+vec2(0,.18))));float light=max(dot(n,sun),0.);vec3 sand=vec3(.78,.65,.42),grass=vec3(.18,.34,.19),rock=vec3(.26,.28,.25);float sandM=1.-smoothstep(.2,3.5,h);float rockM=smoothstep(.52,.76,fbm(hp.xz*.19+h*.03))*smoothstep(2.,8.,h);vec3 land=mix(grass,rock,rockM);land=mix(land,sand,sandM);land*=.32+.78*light;land+=vec3(.08,.11,.07)*fbm(hp.xz*.28);float fire=0.;if((uFlags&64)!=0){fire+=exp(-dot(hp.xz-vec2(-24,-8),hp.xz-vec2(-24,-8))/.8);fire+=exp(-dot(hp.xz-vec2(20,-24),hp.xz-vec2(20,-24))/.8);fire+=exp(-dot(hp.xz-vec2(24,18),hp.xz-vec2(24,18))/.8);}land+=vec3(1.5,.35,.04)*fire*uFire;float fog=1.-exp(-tl*.007);col=mix(land,sky(rd,sun),fog*.42);maxT=tl;}
+ vec3 sm=shadeSmoke(uCamPos,rd,maxT,uTime,sun);float smw=max(sm.r,max(sm.g,sm.b));col=mix(col,sm,smw*.82);col=1.-exp(-col*uExposure*1.35);col=pow(col,vec3(.92));outColor=vec4(col,1.);}`;
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s)||'着色器编译失败');return s}
+function makeProgram(){const p=gl.createProgram(),v=shader(gl.VERTEX_SHADER,VS),f=shader(gl.FRAGMENT_SHADER,FS);gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);gl.deleteShader(v);gl.deleteShader(f);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p)||'程序链接失败');return p}
+function u(name){return loc[name]||(loc[name]=gl.getUniformLocation(program,name))}
+function set1(name,v){gl.uniform1f(u(name),v)}function set3(name,v){gl.uniform3fv(u(name),v)}
+function flags(){return(effects.foam?1:0)|(effects.breaker?2:0)|(effects.curl?4:0)|(effects.runup?8:0)|(effects.spray?16:0)|(effects.smoke?32:0)|(effects.fire?64:0)}
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.25),scale=innerWidth<760?.68:.64,w=Math.max(2,Math.round(innerWidth*dpr*scale)),h=Math.max(2,Math.round(innerHeight*dpr*scale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl?.viewport(0,0,w,h)}}
+function renderGL(now){resize();const dt=Math.min(.1,(now-last)/1000||.016);last=now;if(running)start+=0;const t=running?(now/1000):qa.pausedTime||now/1000;const c=camera();gl.useProgram(program);gl.bindVertexArray(vao);gl.uniform2f(u('uResolution'),canvas.width,canvas.height);set1('uTime',t);set3('uCamPos',c.pos);set3('uForward',c.forward);set3('uRight',c.right);set3('uUp',c.up);set1('uExposure',params.exposure);set1('uIslandHeight',params.islandHeight);set1('uIslandIrregularity',params.islandIrregularity);set1('uBeachWidth',params.beachWidth);set1('uShoreBias',params.shoreBias);set1('uWaveHeight',params.waveHeight);set1('uWaveSpeed',params.waveSpeed);set1('uFoam',params.foamWall);set1('uBreaker',params.breakerPower);set1('uCurl',params.curlPower);set1('uClarity',params.waterClarity);set1('uSunAngle',params.sunAngle);set1('uSmoke',params.smokeDensity);set1('uSmokeHeight',params.smokeHeight);set1('uWind',params.wind);set1('uFire',params.fire);gl.uniform1i(u('uZone'),zone==='deep'?1:0);gl.uniform1i(u('uFlags'),flags());gl.drawArrays(gl.TRIANGLES,0,3);frames++;if(frames===1){qa.firstFrameMs=performance.now()-start;qa.ready=qa.sceneReady=true;qa.startupStage='ready';$('loading').style.opacity='0';setTimeout(()=>$('loading').style.display='none',400);$('statusDot').className='dot ok';$('status').textContent='实时海景已就绪';runQuery();}if(frames%20===0){fps=1000/Math.max(1,(now-(renderGL.lastMeasure||now-16))/20);renderGL.lastMeasure=now;publishQA();}$('status').textContent=running?'实时海景已就绪':'已暂停，可调整参数';requestAnimationFrame(loop)}
+function render2D(now){resize();const c=ctx2d,w=canvas.width,h=canvas.height,t=now/1000;c.clearRect(0,0,w,h);const sky=c.createLinearGradient(0,0,0,h*.6);sky.addColorStop(0,'#7ba8ad');sky.addColorStop(1,'#d2c894');c.fillStyle=sky;c.fillRect(0,0,w,h*.58);const sea=c.createLinearGradient(0,h*.42,0,h);sea.addColorStop(0,'#2e7180');sea.addColorStop(1,'#063947');c.fillStyle=sea;c.fillRect(0,h*.42,w,h*.58);c.strokeStyle='rgba(210,244,239,.32)';c.lineWidth=2;for(let j=0;j<18;j++){c.beginPath();const y=h*.46+j*h*.028;for(let x=0;x<=w;x+=12){const yy=y+Math.sin(x*.02+t*params.waveSpeed+j*.4)*params.waveHeight*(2+j*.18);x?c.lineTo(x,yy):c.moveTo(x,yy)}c.stroke()}if(zone==='island'){c.fillStyle='#7f8652';c.beginPath();c.ellipse(w*.52,h*.52,w*.22,h*.12,0,0,Math.PI*2);c.fill();c.fillStyle='#d9bc72';c.beginPath();c.ellipse(w*.52,h*.57,w*.25,h*.07,0,0,Math.PI*2);c.fill()}frames++;if(frames===1){qa.firstFrameMs=performance.now()-start;qa.ready=qa.sceneReady=true;qa.startupStage='ready-fallback';$('loading').style.opacity='0';setTimeout(()=>$('loading').style.display='none',400);$('statusDot').className='dot ok';$('status').textContent='兼容海景已就绪';$('fallbackBadge').style.display='block';runQuery();}if(frames%20===0){fps=1000/Math.max(1,(now-(render2D.lastMeasure||now-16))/20);render2D.lastMeasure=now;publishQA();}requestAnimationFrame(loop)}
+function loop(now){try{renderer==='webgl2'?renderGL(now):render2D(now)}catch(e){fail(e)}}
+function init(){try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});if(!gl)throw new Error('WebGL2 unavailable');program=makeProgram();vao=gl.createVertexArray();gl.bindVertexArray(vao);renderer='webgl2';qa.startupStage='render';requestAnimationFrame(loop)}catch(e){console.warn(e);gl=null;ctx2d=canvas.getContext('2d');if(!ctx2d)throw e;renderer='canvas2d-fallback';fallback=true;qa.startupStage='fallback-render';requestAnimationFrame(loop)}}
+function syncControl(el){const k=el.dataset.param,v=params[k],min=+el.min,max=+el.max;el.value=v;el.style.setProperty('--fill',`${100*(v-min)/(max-min)}%`);const out=document.querySelector(`[data-out="${k}"]`);if(out)out.textContent=(Math.abs(v)>=10?v.toFixed(1):v.toFixed(2))+units[k]}
+document.querySelectorAll('[data-param]').forEach(el=>{syncControl(el);el.addEventListener('input',()=>{params[el.dataset.param]=+el.value;syncControl(el);runQuery();showNotice('参数已更新')})});
+document.querySelectorAll('[data-effect]').forEach(b=>b.onclick=()=>{effects[b.dataset.effect]=!effects[b.dataset.effect];b.classList.toggle('active',effects[b.dataset.effect]);showNotice(effects[b.dataset.effect]?'效果已开启':'效果已关闭')});
+const presets={calm:{waveHeight:.28,waveSpeed:.42,breakerPower:.38,curlPower:.22,foamWall:.48,wind:.32,smokeDensity:1.2},swell:{waveHeight:.8,waveSpeed:.78,breakerPower:1.12,curlPower:1.02,foamWall:1.14,wind:1.04,smokeDensity:2.0},storm:{waveHeight:1.38,waveSpeed:1.24,breakerPower:1.65,curlPower:1.46,foamWall:1.58,wind:1.5,smokeDensity:2.6}};
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(params,presets[b.dataset.preset]);document.querySelectorAll('[data-param]').forEach(syncControl);document.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('selected',x===b));runQuery();showNotice('海况已切换')});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('selected',x===b));document.querySelectorAll('[data-page-content]').forEach(p=>p.hidden=p.dataset.pageContent!==b.dataset.page)});
+function setPanel(open){$('panel').classList.toggle('closed',!open);$('panelToggle').setAttribute('aria-expanded',String(open));publishQA()}
+$('panelClose').onclick=()=>setPanel(false);$('panelToggle').onclick=()=>setPanel($('panel').classList.contains('closed'));
+$('pause').onclick=()=>{running=!running;if(!running)qa.pausedTime=performance.now()/1000;$('pause').textContent=running?'暂停':'继续';showNotice(running?'继续运行':'已暂停')};
+const views={overview:[.72,.44,118,[2,5,-2]],top:[-.12,1.22,132,[4,1,-3]],shore:[-.48,.17,58,[29,.8,-19]],breaker:[.68,.12,50,[23,.5,17]],query:[.68,.62,46,[48,.1,16]],rocks:[.08,.2,48,[34,2.5,-12]],fire:[1.18,.24,58,[0,9,3]]};
+function setView(name){activeView=name;const v=views[name]||views.overview;yaw=v[0];pitch=v[1];distance=v[2];target=[...v[3]];document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));if(name==='query'){setPanel(true);document.querySelector('.tabs [data-page="query"]').click()}showNotice('视角已切换');publishQA()}
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+document.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{zone=b.dataset.zone;document.querySelectorAll('[data-zone]').forEach(x=>x.classList.toggle('selected',x===b));$('title').style.opacity=zone==='deep'?'.72':'1';showNotice(zone==='deep'?'进入深海':'返回海岛金岸');publishQA()});
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,button:e.button,shift:e.shiftKey};if(e.pointerType==='touch'){touches.set(e.pointerId,[e.clientX,e.clientY])}});canvas.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&touches.has(e.pointerId)){touches.set(e.pointerId,[e.clientX,e.clientY]);if(touches.size===2){const a=[...touches.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(pinch>0)distance=clamp(distance*(pinch/d),30,220);pinch=d;return}}if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;if(drag.shift||drag.button===1){const c=camera(),s=distance*.0025;target[0]-=c.right[0]*dx*s;target[2]-=c.right[2]*dx*s;target[1]+=dy*s}else{yaw-=dx*.005;pitch=clamp(pitch+dy*.004,.08,1.35)}});canvas.addEventListener('pointerup',e=>{drag=null;touches.delete(e.pointerId);pinch=0});canvas.addEventListener('pointercancel',e=>{drag=null;touches.delete(e.pointerId);pinch=0});canvas.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance*Math.exp(e.deltaY*.001),30,220)},{passive:false});
+addEventListener('resize',resize,{passive:true});addEventListener('error',e=>{if(!qa.ready)fail(e.error||e.message)});addEventListener('unhandledrejection',e=>{if(!qa.ready)fail(e.reason)});
+window.OceanMother={version:VERSION,sampleSurfaceWorld,sampleSurfaceWorldBatch:(points,t)=>points.map(p=>sampleSurfaceWorld(p[0],p[1],t)),runSurfaceParity:runQuery,getSurfaceQueryReport:()=>queryReport,getQA:()=>qa,setView,setZone:z=>document.querySelector(`[data-zone="${z}"]`)?.click(),pause:()=>$('pause').click(),play:()=>{if(!running)$('pause').click()}};
+if(matchMedia('(max-width:760px)').matches)setPanel(false);publishQA();init();
+})();
+</script>
+</body>
+</html>
