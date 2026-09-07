@@ -1,0 +1,98 @@
+name: Weather Mother R1.1 V002 fixed-commit QA
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r11-v002-fixed
+    paths:
+      - .github/workflows/weather-mother-r11-v002-fixed-qa.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  raw-githack-browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Install Chromium browser harness
+        run: |
+          python3 -m pip install playwright==1.51.0
+          python3 -m playwright install --with-deps chromium
+      - name: Verify immutable raw.githack workbench
+        env:
+          TARGET_URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/5cbfd58d8ad930d99388e80b3d283af141dc1f3f/weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html
+        run: |
+          cat >/tmp/qa.py <<'PY'
+          import os, time, urllib.request
+          from playwright.sync_api import sync_playwright
+
+          url = os.environ['TARGET_URL']
+          body = None
+          for attempt in range(30):
+              try:
+                  with urllib.request.urlopen(url + '?probe=' + str(time.time_ns()), timeout=30) as response:
+                      body = response.read()
+                  if response.status == 200 and b'Weather Mother R1.1' in body:
+                      break
+              except Exception:
+                  pass
+              time.sleep(8)
+          else:
+              raise AssertionError('raw.githack fixed URL did not become available')
+
+          text = body.decode('utf-8')
+          assert "atob(" not in text
+          assert "DecompressionStream('gzip')" in text
+          assert 'data:application/gzip;base64,' in text
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(
+                  headless=True,
+                  args=[
+                      '--no-sandbox',
+                      '--enable-webgl',
+                      '--use-gl=angle',
+                      '--use-angle=swiftshader-webgl',
+                      '--enable-unsafe-swiftshader',
+                      '--ignore-gpu-blocklist',
+                      '--disable-dev-shm-usage'
+                  ]
+              )
+              for name, width, height in [('desktop', 1000, 650), ('portrait', 390, 844), ('landscape', 932, 430)]:
+                  context = browser.new_context(viewport={'width': width, 'height': height})
+                  page = context.new_page()
+                  page_errors = []
+                  console_errors = []
+                  failed = []
+                  page.on('pageerror', lambda error, bag=page_errors: bag.append(str(error)))
+                  page.on('console', lambda message, bag=console_errors: bag.append(message.text) if message.type == 'error' else None)
+                  page.on('requestfailed', lambda request, bag=failed: bag.append(request.url))
+                  page.goto(url + '?qa=' + name + '&t=' + str(time.time_ns()), wait_until='domcontentloaded', timeout=90000)
+                  page.wait_for_function('window.WeatherMotherR11', timeout=90000)
+                  page.evaluate("WeatherMotherR11.set('scale', .28); WeatherMotherR11.set('steps', 20)")
+                  page.wait_for_function('WeatherMotherR11.qa.ready && WeatherMotherR11.qa.frames >= 2', timeout=120000)
+                  qa = page.evaluate('WeatherMotherR11.qa')
+                  assert qa['errors'] == [], (name, qa)
+                  assert qa['glError'] == 0, (name, qa)
+                  assert qa['externalAssets'] == 0, (name, qa)
+                  assert page.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth') == 0
+                  assert page.evaluate('document.documentElement.scrollHeight-document.documentElement.clientHeight') == 0
+                  panel = page.locator('#panel').bounding_box()
+                  assert panel and panel['x'] >= -1 and panel['y'] >= -1
+                  assert panel['x'] + panel['width'] <= width + 1
+                  assert panel['y'] + panel['height'] <= height + 1
+                  page.evaluate('WeatherMotherR11.setSplit(true)')
+                  assert page.evaluate('WeatherMotherR11.getState().split') == 1
+                  page.evaluate('WeatherMotherR11.setDiagnostic(7)')
+                  assert page.evaluate('WeatherMotherR11.getState().diag') == 7
+                  page.evaluate('WeatherMotherR11.setDiagnostic(0); WeatherMotherR11.setSplit(false)')
+                  assert not page_errors, (name, page_errors)
+                  assert not console_errors, (name, console_errors)
+                  assert not failed, (name, failed)
+                  context.close()
+              browser.close()
+          print('Weather Mother R1.1 V002 immutable raw.githack QA passed')
+          PY
+          xvfb-run -a python3 -u /tmp/qa.py
