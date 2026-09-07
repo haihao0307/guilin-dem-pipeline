@@ -88,9 +88,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          archive='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip'
+          receipt='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json'
+          checksum='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.sha256'
+          latest='farmland-object-dna/distributions/LATEST.json'
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add farmland-object-dna/distributions/
+          git add "$receipt" "$checksum" "$latest"
+          git add -f "$archive"
+          git ls-files --error-unmatch "$archive"
           if git diff --cached --quiet; then
             echo 'Package is already current.'
           else
@@ -128,6 +135,7 @@ jobs:
           print(f"Files: `{receipt['payloadFileCount']}`")
           print(f"Bytes: `{receipt['archiveBytes']}`")
           print(f"SHA256: `{receipt['archiveSha256']}`")
+          print('ZIP tracked in Git: **YES**')
           print('Validation: **PASS**')
           print('V0.1 rejected baseline preserved: **YES**')
           print('Visual acceptance: **FALSE**')
