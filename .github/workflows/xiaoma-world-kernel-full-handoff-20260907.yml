@@ -1,0 +1,102 @@
+name: Xiaoma World Kernel Full Handoff 20260907
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - handoff/xiaoma-mentor-v1.1-20260905
+    paths:
+      - docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907/PACKAGE_REQUEST.txt
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout coordination branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Build full coordination handoff ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG_NAME='Xiaoma_World_Kernel_Full_Handoff_V1.0_2026-09-07'
+          OUT_DIR='docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907'
+          ROOT="/tmp/${PKG_NAME}"
+          ZIP_PATH="${OUT_DIR}/${PKG_NAME}.zip"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT/docs"
+          cp -a docs/mother_coordination "$ROOT/docs/"
+          rm -f "$ROOT/docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907/${PKG_NAME}.zip"
+          rm -f "$ROOT/docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907/ZIP_SHA256.txt"
+          rm -f "$ROOT/docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907/PACKAGE_BUILD_REPORT.json"
+
+          python - <<'PY'
+          from pathlib import Path
+          import json, hashlib, os
+          root = Path('/tmp/Xiaoma_World_Kernel_Full_Handoff_V1.0_2026-09-07')
+          files = sorted(p for p in root.rglob('*') if p.is_file())
+          payload_bytes = sum(p.stat().st_size for p in files)
+          manifest = {
+              'schema': 'xiaoma-world-kernel-full-handoff-package/1.0',
+              'date': '2026-09-07',
+              'repository': os.environ.get('GITHUB_REPOSITORY'),
+              'sourceCommit': os.environ.get('GITHUB_SHA'),
+              'sourceRef': os.environ.get('GITHUB_REF_NAME'),
+              'scope': 'complete docs/mother_coordination tree; Git LFS large production binaries are not materialized by checkout',
+              'payloadFileCountBeforeManifestAndChecksums': len(files),
+              'payloadBytesBeforeManifestAndChecksums': payload_bytes,
+              'productionIntegration': False,
+              'visualAcceptance': False,
+              'productionReady': False
+          }
+          (root / 'PACKAGE_MANIFEST.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          files = sorted(p for p in root.rglob('*') if p.is_file() and p.name != 'SHA256SUMS.txt')
+          lines=[]
+          for p in files:
+              h=hashlib.sha256(p.read_bytes()).hexdigest()
+              lines.append(f"{h}  {p.relative_to(root).as_posix()}")
+          (root / 'SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          rm -f "$ZIP_PATH"
+          cd /tmp
+          zip -q -r "$GITHUB_WORKSPACE/$ZIP_PATH" "$PKG_NAME"
+          cd "$GITHUB_WORKSPACE"
+          ZIP_SHA=$(sha256sum "$ZIP_PATH" | awk '{print $1}')
+          ZIP_BYTES=$(stat -c '%s' "$ZIP_PATH")
+          printf '%s  %s\n' "$ZIP_SHA" "$PKG_NAME.zip" > "${OUT_DIR}/ZIP_SHA256.txt"
+          python - <<PY
+          import json
+          from pathlib import Path
+          report={
+            'schema':'xiaoma-world-kernel-full-handoff-build/1.0',
+            'sourceCommit':'${GITHUB_SHA}',
+            'sourceRef':'${GITHUB_REF_NAME}',
+            'zip':'${PKG_NAME}.zip',
+            'zipBytes':int('${ZIP_BYTES}'),
+            'zipSha256':'${ZIP_SHA}',
+            'lfsMaterialized':False,
+            'status':'built_and_ready_to_commit'
+          }
+          Path('${OUT_DIR}/PACKAGE_BUILD_REPORT.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          PY
+
+      - name: Commit package to coordination branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'xiaoma-handoff-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add docs/mother_coordination/handoffs/xiaoma-world-kernel-full-20260907/
+          if git diff --cached --quiet; then
+            echo 'No package changes to commit.'
+            exit 0
+          fi
+          git commit -m 'handoff(xiaoma): publish World Kernel full package 2026-09-07 [skip ci]'
+          git push origin HEAD:handoff/xiaoma-mentor-v1.1-20260905
