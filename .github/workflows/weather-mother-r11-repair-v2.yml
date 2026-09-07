@@ -1,0 +1,155 @@
+name: Weather Mother R1.1 payload recovery v2
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-cloud-base-r11-single-file
+    paths:
+      - .github/workflows/weather-mother-r11-repair-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Locate and restore one missing base64 symbol
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, gzip, hashlib, json, re, zlib, time
+
+          src = Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v001.html')
+          out = Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html')
+          report_path = Path('weather-mother/deliveries/wm-r11-recovery-report.json')
+          text = src.read_text(encoding='utf-8')
+          match = re.search(r"const\s+p\s*=\s*\[(.*?)\]\.join\(''\)", text, re.S)
+          chunks = re.findall(r"'([A-Za-z0-9+/=]*)'", match.group(1))
+          payload = ''.join(chunks)
+          core = payload.rstrip('=')
+          alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+          def lenient_decode(s):
+              table = {c:i for i,c in enumerate(alphabet)}
+              acc = 0; nbits = 0; raw = bytearray()
+              for c in s:
+                  acc = (acc << 6) | table[c]
+                  nbits += 6
+                  while nbits >= 8:
+                      nbits -= 8
+                      raw.append((acc >> nbits) & 255)
+                      acc &= (1 << nbits) - 1 if nbits else 0
+              return bytes(raw)
+
+          malformed = lenient_decode(core)
+          fail_offset = None
+          produced = 0
+          dec = zlib.decompressobj(31)
+          for i, byte in enumerate(malformed):
+              try:
+                  produced += len(dec.decompress(bytes((byte,))))
+              except zlib.error:
+                  fail_offset = i
+                  break
+          estimated = int((fail_offset or 0) * 4 / 3)
+
+          report = {
+              'source': str(src),
+              'chunkLengths': [len(x) for x in chunks],
+              'coreLength': len(core),
+              'malformedDecodedBytes': len(malformed),
+              'zlibFirstFailureByte': fail_offset,
+              'decompressedBytesBeforeFailure': produced,
+              'estimatedBase64Position': estimated,
+              'searchedCandidates': 0,
+              'found': False
+          }
+
+          started = time.time()
+          found = None
+          tried_positions = set()
+
+          def search_positions(positions, label):
+              global_found = None
+              for pos in positions:
+                  if pos < 0 or pos > len(core) or pos in tried_positions:
+                      continue
+                  tried_positions.add(pos)
+                  prefix, suffix = core[:pos], core[pos:]
+                  for ch in alphabet:
+                      candidate_core = prefix + ch + suffix
+                      candidate = candidate_core + '=' * ((4 - len(candidate_core) % 4) % 4)
+                      report['searchedCandidates'] += 1
+                      try:
+                          raw = base64.b64decode(candidate, validate=True)
+                          decoded = gzip.decompress(raw)
+                      except Exception:
+                          continue
+                      if not decoded.lstrip().lower().startswith(b'<!doctype'):
+                          continue
+                      global_found = (pos, ch, decoded, label, hashlib.sha256(raw).hexdigest())
+                      return global_found
+              return None
+
+          windows = []
+          windows.append(('failure-window', range(max(0, estimated-1400), min(len(core)+1, estimated+700))))
+          boundaries = []
+          total = 0
+          for n in [len(x.rstrip('=')) for x in chunks]:
+              total += n
+              boundaries.append(total)
+          for idx, b in enumerate(boundaries[:-1]):
+              windows.append((f'boundary-{idx+1}', range(max(0,b-800), min(len(core)+1,b+801))))
+          windows.append(('second-chunk', range(len(chunks[0]), len(chunks[0])+len(chunks[1])+1)))
+          windows.append(('full', range(0, len(core)+1)))
+
+          for label, positions in windows:
+              found = search_positions(positions, label)
+              if found:
+                  break
+
+          report['elapsedSeconds'] = round(time.time() - started, 3)
+          report['searchedPositions'] = len(tried_positions)
+          if found:
+              pos, ch, decoded, label, compressed_sha = found
+              marker = '<!-- WM_R11_SINGLE_FILE_V002: recovered uncompressed HTML, no atob -->\n'
+              out.write_bytes(marker.encode('utf-8') + decoded)
+              report.update({
+                  'found': True,
+                  'insertPosition': pos,
+                  'insertCharacter': ch,
+                  'searchPhase': label,
+                  'outputBytes': out.stat().st_size,
+                  'outputSHA256': hashlib.sha256(out.read_bytes()).hexdigest(),
+                  'compressedSHA256': compressed_sha
+              })
+          report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          if not found:
+              raise SystemExit('single-character recovery failed')
+          PY
+      - name: Static validation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html')
+          s=p.read_text(encoding='utf-8')
+          assert '<!doctype' in s.lower()
+          assert 'atob(' not in s
+          assert 'Weather Mother' in s
+          assert '云底悬垂' in s
+          assert len(s) > 30000
+          print('validated', len(s))
+          PY
+      - name: Commit recovered workbench
+        run: |
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add weather-mother/deliveries/wm-r11-cloud-base-optics-v002.html weather-mother/deliveries/wm-r11-recovery-report.json
+          git commit -m "fix(weather-mother): recover R1.1 single-file workbench [skip ci]"
+          git push origin HEAD:${GITHUB_REF_NAME}
