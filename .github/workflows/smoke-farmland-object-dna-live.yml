@@ -1,0 +1,82 @@
+name: Smoke Farmland Object DNA public workbench
+
+on:
+  push:
+    branches:
+      - feature/farmland-object-dna-v001
+    paths:
+      - '.github/workflows/smoke-farmland-object-dna-live.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/farmland-object-dna/
+      VERSION_MARKER: FARMLAND_DNA_WB_V0.1.0_20260907
+    steps:
+      - name: HTTP readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 40); do
+            if curl --fail --location --silent --show-error --output /tmp/farmland-index.html "$PUBLIC_URL"; then
+              if grep -q "$VERSION_MARKER" /tmp/farmland-index.html; then
+                break
+              fi
+            fi
+            if [ "$attempt" = 40 ]; then
+              echo 'Public workbench did not become readable with the expected version.'
+              exit 1
+            fi
+            sleep 5
+          done
+          test -s /tmp/farmland-index.html
+          grep -q '平坝水田' /tmp/farmland-index.html
+          grep -q '山地梯田' /tmp/farmland-index.html
+          grep -q 'three@0.179.1' /tmp/farmland-index.html
+          curl --fail --location --silent --show-error --output /tmp/three.module.js 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js'
+          test -s /tmp/three.module.js
+          grep -q 'REVISION' /tmp/three.module.js
+          echo "HTTP_BYTES=$(wc -c < /tmp/farmland-index.html)"
+          echo "HTTP_SHA256=$(sha256sum /tmp/farmland-index.html | awk '{print $1}')"
+
+      - name: Browser desktop and mobile startup
+        shell: bash
+        run: |
+          set -euo pipefail
+          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER" ]; then
+            echo 'No Chrome or Chromium executable is available on the runner.'
+            exit 1
+          fi
+          run_browser () {
+            local size="$1"
+            local out="$2"
+            timeout 45s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=swiftshader --window-size="$size" --virtual-time-budget=8000 --dump-dom "$PUBLIC_URL" > "$out"
+            grep -q 'data-runtime-ready="true"' "$out"
+            grep -q '<canvas' "$out"
+            grep -q "$VERSION_MARKER" "$out"
+          }
+          run_browser '1440,960' /tmp/farmland-desktop-dom.html
+          run_browser '390,844' /tmp/farmland-mobile-dom.html
+          echo 'Desktop browser startup: PASS'
+          echo 'Mobile browser startup: PASS'
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## Farmland Object DNA public gate'
+            echo
+            echo "URL: $PUBLIC_URL"
+            echo 'HTTP readback: PASS'
+            echo 'Version marker: PASS'
+            echo 'Three.js runtime dependency: PASS'
+            echo 'Desktop browser startup: PASS'
+            echo 'Mobile browser startup: PASS'
+          } >> "$GITHUB_STEP_SUMMARY"
