@@ -1,0 +1,103 @@
+{
+  "schema": "wenzhou-dem-clean-kernel-contract/v1",
+  "version": "R1",
+  "createdAtUtc": "2026-09-07T05:35:00Z",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "workingBranch": "feature/wenzhou-dem-clean-kernel-r1",
+  "baseBranch": "feature/wenzhou-v060-terrain-truth-stream",
+  "baseCommit": "df58a6413a8615b47214602fa482f0a88befcbb6",
+  "xiaomaPackageCommit": "3eb58693235505b9bb35dbb340c1cfd3007b8e01",
+  "xiaomaPackagePath": "docs/mother_coordination/world_knowledge_lab_v1/mother_packages/WENZHOU_DEM_CLEAN_SYSTEM_R1.md",
+  "purpose": "Build an isolated, reversible, source-auditable Wenzhou DEM kernel without changing frozen production truth or public workbenches.",
+  "truthIdentity": {
+    "path": "projects/wenzhou/v200/truth/WENZHOU_17TILE_SCREENSHOT_CROP_12_5M_COG.tif",
+    "bytes": 136760745,
+    "sha256": "c1da93dca81abc2ee9edaa47496d80c6fa36155e11c9b61464f4f2b547659b43",
+    "grid": [
+      17555,
+      17918
+    ],
+    "spacingMeters": [
+      12.5,
+      12.5
+    ],
+    "crs": "EPSG:32651",
+    "dtype": "int16",
+    "nodata": -32768,
+    "binaryPresentInBaseBranch": false,
+    "fullDomainProbeReady": false
+  },
+  "sourceSeparation": {
+    "wenzhouProjectRoot": "projects/wenzhou/",
+    "rootGuilinContractAllowedAsWenzhouTruth": false,
+    "rootEpsg32649AoiAllowedAsWenzhouTruth": false,
+    "rootGuilinHydrologyAllowedAsWenzhouTruth": false,
+    "oldQingjiangElevationAllowed": false,
+    "fallback30mAllowed": false,
+    "interpolatedElevationNodesAllowed": false,
+    "syntheticGapFillAllowed": false,
+    "manualRiverAllowed": false,
+    "manualCoastlineAllowed": false,
+    "geometryNoiseToHideFacetingAllowed": false
+  },
+  "kernelLayers": [
+    "canonical_truth",
+    "constraint_anchors",
+    "reversible_multiscale_store",
+    "observation_reconstruction"
+  ],
+  "runtimeInterfaces": {
+    "heightTruth": "heightTruth(x, y)",
+    "heightRuntime": "heightRuntime(x, y, precisionRequest)",
+    "selectVisibleBands": "selectVisibleBands(camera, footprint, task)",
+    "heightRender": "heightRender(x, y, precisionRequest, microStrength)",
+    "microStrengthZeroInvariant": "microStrength=0 must return the runtime DEM reconstruction exactly",
+    "observationPolicyImplementation": "runtime/observation_policy.py",
+    "observationPolicyContract": "runtime/OBSERVATION_POLICY_R1.json",
+    "nodataBandRemovalGuard": "Any transformed tile containing NoData retains all detail bands in R1."
+  },
+  "runtimeComposition": {
+    "weatherRuntimeIncluded": false,
+    "cloudRuntimeIncluded": false,
+    "oceanSurfaceRuntimeIncluded": false,
+    "canonicalLandDemIncluded": true,
+    "marineTruthIncludedWhenSourceAndDatumAreVerified": true,
+    "hydrologyTruthIncludedWhenSourceIsTraceable": true
+  },
+  "verticalDatumGate": {
+    "status": "blocked_not_independently_confirmed",
+    "tideDemIntersectionAllowed": false,
+    "marineLandFusionAsSingleDatumTruthAllowed": false
+  },
+  "currentPhase": {
+    "name": "candidate_observation_band_policy_generated_fixture_probe",
+    "fullPackageCheckpointCommit": "c3ff8622b2e7ae753e0a1b519cc302505e1e16c2",
+    "keepArchiveDropLedgerComplete": true,
+    "mathProbePassed": true,
+    "observationPolicyProbePassed": true,
+    "nodataPartialBandRiskGuarded": true,
+    "realWenzhouWindowMounted": false,
+    "realWenzhouWindowProbePassed": false,
+    "productionIntegration": false
+  },
+  "stopConditions": [
+    "any exact sample round-trip failure",
+    "any NoData identity change",
+    "any coordinate or source-window drift",
+    "any shared-edge mismatch",
+    "any protected ridge, valley, river bank or coastline failure",
+    "higher total storage and runtime cost without a measured operational benefit"
+  ],
+  "evidenceState": {
+    "sourceRead": true,
+    "derived": true,
+    "mathProbePassed": true,
+    "realSourceProbePassed": false,
+    "browserEvidence": false,
+    "productEvidence": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "observationPolicyProbePassed": true,
+    "realWenzhouCalibrationPassed": false
+  }
+}

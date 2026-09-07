@@ -1,0 +1,53 @@
+{
+  "schema": "wenzhou-dem-observation-policy/v1",
+  "version": "R1-candidate",
+  "status": "generated_fixture_probe_passed_real_wenzhou_calibration_pending",
+  "baseSpacingM": 12.5,
+  "visualErrorFraction": 0.5,
+  "units": {
+    "pixelFootprint": "metres_per_pixel_at_ground_query",
+    "domainSpacingRequests": "maximum_allowed_sample_spacing_metres"
+  },
+  "domains": [
+    "visual",
+    "interaction",
+    "physics",
+    "story",
+    "safety"
+  ],
+  "selectionRule": {
+    "governingRequest": "smallest_positive_spacing_across_active_domains",
+    "bandOrder": "level_0_is_finest_detail",
+    "removalShape": "contiguous_prefix_of_finest_detail_levels_only",
+    "dyadicCondition": "remove_next_level_only_when_baseSpacingM_times_2_power_next_is_not_greater_than_governing_spacing",
+    "cameraChangesTerrainIdentity": false
+  },
+  "truthOverrides": {
+    "forceTruth": "retain_all_detail_levels",
+    "protectedControlPoint": "caller_must_set_forceTruth",
+    "containsNoData": "retain_all_detail_levels_until_mask_aware_observation_filter_is_validated"
+  },
+  "nodataFinding": {
+    "currentCanonicalPolicy": "separate_bit_mask_and_zero_fill_before_transform",
+    "losslessRoundTripSafe": true,
+    "partialBandRisk": "zero_filled_masked_samples_can_pull_artificial_low_values_into_neighbouring_valid_heights",
+    "r1Decision": "guard_the_entire_masked_transform_tile_and_keep_full_truth",
+    "futureResearch": "test_source_audited_mask_aware_fill_or_partitioning_on_real_wenzhou_windows"
+  },
+  "generatedFixtureEvidence": {
+    "probe": "../qa/OBSERVATION_POLICY_PROBE_R1.json",
+    "tests": "../tests/test_observation_policy.py",
+    "passed": true,
+    "realWenzhouWindowUsed": false
+  },
+  "forbiddenClaims": [
+    "the_visual_fraction_is_calibrated_for_wenzhou",
+    "partial_band_errors_are_accepted_for_wenzhou",
+    "shoreline_ridge_valley_or_shared_edge_gates_have_passed",
+    "runtime_memory_or_gpu_benefit_has_been_measured",
+    "production_integration_is_complete"
+  ],
+  "productionIntegration": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "wenzhou-dem-kernel-real-window-status/v1",
+  "checkedAtUtc": "2026-09-07T06:02:00Z",
+  "status": "blocked_after_recovery_search",
+  "expectedManifest": "projects/wenzhou/dem-kernel/truth/REAL_WINDOW_MANIFEST.json",
+  "recoverySearchReport": "projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json",
+  "manifestPresent": false,
+  "payloadPresent": false,
+  "realWenzhouWindowUsed": false,
+  "reason": "The fixed COG is not mounted. R13 history preserves artifact metadata for a 513 by 513, 12.5 metre detail grid, while the artifact binary, raw Int16 payload, integer source window and payload hash are absent from the active tree and exact File Library searches.",
+  "knownR13Metadata": {
+    "artifactName": "WENZHOU_V060_TERRAIN_CLOUD_R13_STANDALONE.html",
+    "artifactBytes": 1051202,
+    "artifactSha256": "767acfafefdd07cc234102529c2fe596833402d213a9d7f8df746c68bdd7728d",
+    "detailGrid": [513, 513],
+    "detailSpacingMeters": 12.5,
+    "detailHeightRangeMeters": [9, 241]
+  },
+  "rejectedSubstitutes": [
+    "WENZHOU_V200_WATER_COAST_BATHY_TIDE_REVIEW_V6_2.html display buffers",
+    "WENZHOU_QINGJIANG_QA_REPORT.json and all old Qingjiang elevation",
+    "AP05405 source-check notes without source TIFF payloads",
+    "generic or generated arrays",
+    "30 metre fallback elevation",
+    "interpolated nodes and synthetic gap fill"
+  ],
+  "nextAcceptedInputs": [
+    "the exact R13 standalone artifact with matching bytes and SHA256 plus recoverable integer source-window provenance",
+    "a newly extracted integer-aligned window after the exact fixed COG is mounted and passes identity preflight"
+  ],
+  "syntheticFallbackAllowed": false,
+  "losslessCompressionRatio": null,
+  "productionIntegration": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

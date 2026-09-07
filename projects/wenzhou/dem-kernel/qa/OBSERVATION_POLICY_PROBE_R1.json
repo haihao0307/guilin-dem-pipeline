@@ -1,0 +1,93 @@
+{
+  "schema": "wenzhou-dem-observation-policy-probe/v1",
+  "status": "candidate_generated_fixture_probe_passed",
+  "passed": true,
+  "sourceDataUsed": false,
+  "realWenzhouWindowUsed": false,
+  "fixture": {
+    "grid": [129, 131],
+    "spacingM": 12.5,
+    "dtype": "int16",
+    "maskedNoDataSamples": 49,
+    "purpose": "policy_math_and_state_contract_only"
+  },
+  "caseSummary": [
+    {
+      "case": "near_visual_truth",
+      "governingDomain": "visual",
+      "selectedNominalSpacingM": 12.5,
+      "zeroDetailLevels": [],
+      "maxAbsErrorM": 0.0,
+      "rmseM": 0.0,
+      "exactGridEqual": true
+    },
+    {
+      "case": "far_visual",
+      "governingDomain": "visual",
+      "selectedNominalSpacingM": 50.0,
+      "zeroDetailLevels": [0, 1],
+      "maxAbsErrorM": 5.0,
+      "rmseM": 0.8698349368279416,
+      "exactGridEqual": false
+    },
+    {
+      "case": "far_with_physics_override",
+      "governingDomain": "physics",
+      "selectedNominalSpacingM": 25.0,
+      "zeroDetailLevels": [0],
+      "maxAbsErrorM": 2.0,
+      "rmseM": 0.4849958958539823,
+      "exactGridEqual": false
+    },
+    {
+      "case": "far_with_interaction_truth",
+      "governingDomain": "interaction",
+      "selectedNominalSpacingM": 12.5,
+      "zeroDetailLevels": [],
+      "maxAbsErrorM": 0.0,
+      "rmseM": 0.0,
+      "exactGridEqual": true
+    },
+    {
+      "case": "forced_truth",
+      "governingDomain": "force_truth",
+      "selectedNominalSpacingM": 12.5,
+      "zeroDetailLevels": [],
+      "maxAbsErrorM": 0.0,
+      "rmseM": 0.0,
+      "exactGridEqual": true
+    },
+    {
+      "case": "far_visual_masked_guard",
+      "governingDomain": "nodata_guard",
+      "selectedNominalSpacingM": 12.5,
+      "zeroDetailLevels": [],
+      "nodataGuarded": true,
+      "maxAbsErrorM": 0.0,
+      "rmseM": 0.0,
+      "exactGridEqual": true
+    }
+  ],
+  "gates": {
+    "canonicalRoundTripExact": true,
+    "maskedCanonicalRoundTripExact": true,
+    "allNoDataMasksExact": true,
+    "nearVisualRetainsTruth": true,
+    "farVisualDropsFineBands": true,
+    "physicsOverridesFarVisual": true,
+    "interactionCanRequireTruth": true,
+    "forceTruthRestoresExactGrid": true,
+    "maskedTileForcesTruthUntilMaskAwareFiltering": true,
+    "realSourceProbe": false
+  },
+  "limits": [
+    "The 0.5 pixel visual fraction is a candidate policy value.",
+    "No real Wenzhou elevation sample was used.",
+    "Masked transform tiles keep all bands until a validated mask-aware observation filter exists.",
+    "No shoreline, ridge, valley or shared-edge production gate was evaluated.",
+    "No browser, GPU, memory or visual acceptance evidence was produced."
+  ],
+  "productionIntegration": false,
+  "visualAcceptance": false,
+  "productionReady": false
+}

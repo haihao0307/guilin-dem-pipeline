@@ -1,0 +1,88 @@
+name: Wenzhou DEM Kernel R1
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-dem-clean-kernel-r1
+    paths:
+      - projects/wenzhou/dem-kernel/**
+      - .github/workflows/wenzhou-dem-kernel-r1.yml
+  pull_request:
+    paths:
+      - projects/wenzhou/dem-kernel/**
+      - .github/workflows/wenzhou-dem-kernel-r1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reversible-math-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install numerical dependency
+        run: python -m pip install numpy==2.3.5
+      - name: Validate committed JSON contracts
+        run: |
+          python -m json.tool projects/wenzhou/dem-kernel/CONTRACT.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/KEEP_ARCHIVE_DROP_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_STATUS_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/MATH_PROBE_RESULTS_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/runtime/OBSERVATION_POLICY_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/qa/OBSERVATION_POLICY_PROBE_R1.json >/dev/null
+          python -m json.tool projects/wenzhou/dem-kernel/truth/REAL_WINDOW_MANIFEST_TEMPLATE.json >/dev/null
+      - name: Run reversible transform tests
+        run: |
+          python -m unittest discover \
+            -s projects/wenzhou/dem-kernel/tests \
+            -p 'test_*.py' -v
+      - name: Run generated-fixture math probe
+        run: |
+          python projects/wenzhou/dem-kernel/transform/math_probe.py \
+            --output /tmp/WENZHOU_DEM_MATH_PROBE_R1.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/WENZHOU_DEM_MATH_PROBE_R1.json').read_text())
+          assert report['status'] == 'math_probe_passed'
+          assert report['sourceDataUsed'] is False
+          assert report['realWenzhouWindowUsed'] is False
+          assert report['gates']['realSourceProbe'] is False
+          PY
+      - name: Run candidate observation-band policy probe
+        run: |
+          python projects/wenzhou/dem-kernel/runtime/observation_policy_probe.py \
+            --output /tmp/WENZHOU_DEM_OBSERVATION_POLICY_R1.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/WENZHOU_DEM_OBSERVATION_POLICY_R1.json').read_text())
+          assert report['passed'] is True
+          assert report['sourceDataUsed'] is False
+          assert report['realWenzhouWindowUsed'] is False
+          assert report['gates']['farVisualDropsFineBands'] is True
+          assert report['gates']['physicsOverridesFarVisual'] is True
+          assert report['gates']['maskedTileForcesTruthUntilMaskAwareFiltering'] is True
+          assert report['gates']['realSourceProbe'] is False
+          PY
+      - name: Enforce real-window blocker honesty
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          status = json.loads(Path('projects/wenzhou/dem-kernel/qa/REAL_WINDOW_STATUS_R1.json').read_text())
+          search = json.loads(Path('projects/wenzhou/dem-kernel/qa/REAL_WINDOW_RECOVERY_SEARCH_R1.json').read_text())
+          assert status['status'] == 'blocked_after_recovery_search'
+          assert status['realWenzhouWindowUsed'] is False
+          assert status['syntheticFallbackAllowed'] is False
+          assert search['status'] == 'searched_not_recovered'
+          assert search['currentDecision']['realSourceProbeAllowed'] is False
+          assert search['currentDecision']['syntheticFallbackAllowed'] is False
+          PY

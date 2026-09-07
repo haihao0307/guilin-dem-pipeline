@@ -1,0 +1,49 @@
+{
+  "schema": "wenzhou-dem-kernel-math-probe/v1",
+  "generatedAtUtc": "2026-09-07T05:41:09.822741+00:00",
+  "status": "math_probe_passed",
+  "sourceDataUsed": false,
+  "realWenzhouWindowUsed": false,
+  "syntheticFixtureUsed": true,
+  "claimsAllowed": [
+    "integer transform round-trip on the listed generated fixtures",
+    "NoData-mask round-trip through the tested container path",
+    "container corruption detection for the tested byte mutation"
+  ],
+  "claimsForbidden": [
+    "Wenzhou compression ratio",
+    "full-domain performance",
+    "feature preservation",
+    "production integration",
+    "visual acceptance"
+  ],
+  "environment": {
+    "python": "3.13.5",
+    "numpy": "2.3.5",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+  },
+  "oneDimensionalRoundTripCases": 1040,
+  "twoDimensionalRoundTripCases": 9,
+  "containerCorruptionDetected": true,
+  "representativeGeneratedBenchmark": {
+    "shape": [
+      513,
+      513
+    ],
+    "rawInt16Bytes": 526338,
+    "containerBytes": 472467,
+    "containerToRawRatio": 0.89764941919451,
+    "encodeSeconds": 0.037834330000009686,
+    "decodeSeconds": 0.02589624699999149,
+    "interpretation": "generated_math_fixture_only"
+  },
+  "elapsedSeconds": 0.12226693999991767,
+  "failures": [],
+  "gates": {
+    "mathRoundTrip": true,
+    "realSourceProbe": false,
+    "productionIntegration": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
