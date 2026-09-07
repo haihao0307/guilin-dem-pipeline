@@ -1,0 +1,66 @@
+{
+  "format": "ocean-mother-learning-adoption",
+  "version": "1.0.0",
+  "date": "2026-09-07",
+  "sourceRepository": "haihao0307/guilin-dem-pipeline",
+  "sourceMentorBranch": "handoff/xiaoma-mentor-v1.1-20260905",
+  "sourceMentorCommit": "b49112dc39b4904d225aac5b921e9a6f060e4c97",
+  "sourcePackage": "docs/mother_coordination/world_knowledge_lab_v1/mother_packages/ocean-coast-r1",
+  "oceanBaseBranch": "work/ocean-mother-r01812-depth-materials-20260905",
+  "oceanBaseCommit": "6f07e94069ad4833eda6204ec0d5cd45f8ebf5a4",
+  "fullRestartPackage": {
+    "version": "0.3.11",
+    "archiveCommit": "7b6bba5f9affb9cfcfea5dabfafa5e7931bb492d",
+    "filesIncludingManifest": 174,
+    "runtimeBytes": 138544,
+    "runtimeSha256": "2c689e15c1be7dfd4cd14c83ad3353e63868baee006cd04f3aee3a5f653842e3",
+    "verified": true
+  },
+  "acceptedKnowledge": [
+    "shared world time with separate tide, wave, local-fluid and view semantics",
+    "bathymetry truth separated from dynamic free surface",
+    "render, normal, velocity and world query derived from one parametric surface",
+    "horizontal-displacement inverse query with residual reporting",
+    "surface optics separated from water-volume optics and foam state",
+    "read-only Weather lighting and wind interface",
+    "finite Coast smoke state with solid and open boundaries",
+    "observation bandwidth and demand-driven local computation",
+    "explicit recovery paths and target-device evidence gates"
+  ],
+  "implementedInLearningLayer": [
+    "ten-question audit of the current R018.11 nearshore implementation",
+    "parametric directional-wave reference kernel",
+    "world XZ to parameter-coordinate Newton inversion",
+    "same-source position, normal and velocity query",
+    "tide, water-depth and wet-state reference functions",
+    "homogeneous water-volume beam transmittance reference function",
+    "24 isolated JavaScript tests"
+  ],
+  "deferredRuntime": [
+    "R018.11 JavaScript and GLSL query parity",
+    "public sampleSurfaceWorld API",
+    "tide and dynamic wet shoreline",
+    "real bathymetry or DEM coupling",
+    "horizontal displacement in the nearshore production surface",
+    "separate WaterSurfaceOptics and WaterVolumeOptics runtime objects",
+    "stateful foam transport and decay",
+    "continuous Coast smoke with island and open boundaries",
+    "browser GPU and target-device performance validation"
+  ],
+  "tests": {
+    "command": "node ocean-mother/learning/ocean-coast-r1/test-kernels.mjs",
+    "passed": 24,
+    "failed": 0,
+    "total": 24,
+    "scope": "isolated JavaScript reference kernels"
+  },
+  "productionRuntimeModified": false,
+  "frozenDeepModified": false,
+  "islandAndSmokeModified": false,
+  "publicDeploymentModified": false,
+  "runtimeIntegrated": false,
+  "browserGPUValidated": false,
+  "visualAcceptance": false,
+  "productionReady": false,
+  "ackMarker": "OCEAN_MOTHER_PACKAGE_R1_REPLY"
+}
