@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
+"""Validate Farmland Object DNA records with standard-library-only checks.
+
+This validator checks machine-readable identity, topology and state contracts.
+It does not grant visual acceptance or production readiness. Those remain subject
+ to FARMLAND_PRODUCTION_RULES.md, QUALITY_GATES.json and user review.
+"""
+
+from __future__ import annotations
+
 import json
+import math
 import sys
+from collections import defaultdict, deque
 from pathlib import Path
+from typing import Any
 
 ALLOWED_TYPES = {
     "paddy",
@@ -11,7 +23,23 @@ ALLOWED_TYPES = {
     "nursery",
     "fallow",
 }
-ALLOWED_EVIDENCE = {"observed", "inferred", "generated", "unknown", "conflicted"}
+ALLOWED_EVIDENCE = {
+    "observed",
+    "measured",
+    "documented",
+    "inferred",
+    "generated",
+    "unknown",
+    "conflicted",
+}
+ALLOWED_REVIEW = {"candidate", "checked", "accepted", "conflicted", "rejected"}
+ALLOWED_MODES = {
+    "research",
+    "structural_prototype",
+    "internal_visual_candidate",
+    "public_candidate",
+    "failure_reference",
+}
 REQUIRED_TOP = {
     "identity",
     "spatial",
@@ -26,65 +54,395 @@ REQUIRED_TOP = {
     "coupling",
     "representation",
 }
+FORBIDDEN_PUBLIC_PROXIES = {
+    "round_tube_channel",
+    "round_tube_bund",
+    "flat_fake_water",
+    "isolated_hydraulic_icon",
+    "mechanical_grid_parcel",
+    "repeated_band_terrace",
+    "cone_rice_stage_scaling",
+}
+REQUIRED_WATER_STATE = {
+    "bed_elevation_m",
+    "mud_surface_elevation_m",
+    "water_surface_elevation_m",
+    "average_depth_m",
+    "storage_area_m2",
+    "storage_volume_m3",
+    "bund_crest_minimum_m",
+    "inflow_m3",
+    "rainfall_m3",
+    "outflow_m3",
+    "overflow_m3",
+    "evaporation_m3",
+    "seepage_m3",
+    "storage_change_m3",
+    "mass_balance_error_m3",
+}
+REQUIRED_RICE_STAGE_MODELS = {
+    "nursery",
+    "transplanted",
+    "establishment",
+    "tillering",
+    "stem_elongation",
+    "booting",
+    "heading",
+    "flowering",
+    "grain_filling",
+    "maturity",
+    "harvest",
+    "stubble",
+}
 
 
-def fail(message):
+def fail(message: str) -> None:
     raise ValueError(message)
 
 
-def validate(data):
+def require_mapping(value: Any, label: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        fail(f"{label} must be an object")
+    return value
+
+
+def require_list(value: Any, label: str, *, nonempty: bool = False) -> list[Any]:
+    if not isinstance(value, list):
+        fail(f"{label} must be an array")
+    if nonempty and not value:
+        fail(f"{label} must not be empty")
+    return value
+
+
+def require_keys(mapping: dict[str, Any], keys: set[str] | tuple[str, ...], label: str) -> None:
+    missing = sorted(set(keys) - set(mapping))
+    if missing:
+        fail(f"{label} missing keys: {missing}")
+
+
+def is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def is_unresolved(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() in {
+            "unknown",
+            "missing",
+            "incomplete",
+            "research_target",
+            "not_run",
+            "unsupported",
+        }
+    return False
+
+
+def iter_component_ids(items: list[Any], label: str) -> set[str]:
+    ids: set[str] = set()
+    for index, item in enumerate(items):
+        mapping = require_mapping(item, f"{label}[{index}]")
+        object_id = mapping.get("id")
+        if not isinstance(object_id, str) or not object_id:
+            fail(f"{label}[{index}] requires a non-empty id")
+        if object_id in ids:
+            fail(f"duplicate id in {label}: {object_id}")
+        ids.add(object_id)
+    return ids
+
+
+def has_path(adjacency: dict[str, set[str]], start: str, target: str) -> bool:
+    queue: deque[str] = deque([start])
+    seen = {start}
+    while queue:
+        current = queue.popleft()
+        if current == target:
+            return True
+        for nxt in adjacency.get(current, set()):
+            if nxt not in seen:
+                seen.add(nxt)
+                queue.append(nxt)
+    return False
+
+
+def validate_hydraulic_graph(
+    hydraulics: dict[str, Any],
+    parcel: dict[str, Any],
+) -> dict[str, Any]:
+    source = require_mapping(hydraulics.get("water_source"), "hydraulics.water_source")
+    source_id = source.get("id")
+    if not isinstance(source_id, str) or not source_id:
+        fail("hydraulics.water_source requires id")
+
+    inlets = require_list(hydraulics.get("inlets"), "hydraulics.inlets", nonempty=True)
+    outlets = require_list(hydraulics.get("outlets"), "hydraulics.outlets", nonempty=True)
+    channels = require_list(hydraulics.get("channels"), "hydraulics.channels", nonempty=True)
+    dividers = require_list(hydraulics.get("dividers", []), "hydraulics.dividers")
+    cells = require_list(parcel.get("cells"), "parcel.cells", nonempty=True)
+    receiver = require_mapping(hydraulics.get("downstream_receiver"), "hydraulics.downstream_receiver")
+    receiver_id = receiver.get("id")
+    if not isinstance(receiver_id, str) or not receiver_id:
+        fail("hydraulics.downstream_receiver requires id")
+
+    groups = {
+        "hydraulics.inlets": inlets,
+        "hydraulics.outlets": outlets,
+        "hydraulics.channels": channels,
+        "hydraulics.dividers": dividers,
+        "parcel.cells": cells,
+    }
+    ids = {source_id, receiver_id}
+    for label, items in groups.items():
+        group_ids = iter_component_ids(items, label)
+        overlap = ids.intersection(group_ids)
+        if overlap:
+            fail(f"component ids must be globally unique, duplicates: {sorted(overlap)}")
+        ids.update(group_ids)
+
+    graph = require_list(hydraulics.get("graph"), "hydraulics.graph", nonempty=True)
+    adjacency: dict[str, set[str]] = defaultdict(set)
+    for index, edge in enumerate(graph):
+        mapping = require_mapping(edge, f"hydraulics.graph[{index}]")
+        require_keys(mapping, ("from", "to", "kind"), f"hydraulics.graph[{index}]")
+        start = mapping["from"]
+        end = mapping["to"]
+        if start not in ids:
+            fail(f"hydraulics.graph[{index}] references unknown from id: {start}")
+        if end not in ids:
+            fail(f"hydraulics.graph[{index}] references unknown to id: {end}")
+        if start == end:
+            fail(f"hydraulics.graph[{index}] cannot be a self-loop")
+        adjacency[start].add(end)
+
+    cell_ids = {item["id"] for item in cells}
+    disconnected_from_source = sorted(cell_id for cell_id in cell_ids if not has_path(adjacency, source_id, cell_id))
+    disconnected_from_receiver = sorted(cell_id for cell_id in cell_ids if not has_path(adjacency, cell_id, receiver_id))
+    if disconnected_from_source:
+        fail(f"paddy cells lack source path: {disconnected_from_source}")
+    if disconnected_from_receiver:
+        fail(f"paddy cells lack downstream receiver path: {disconnected_from_receiver}")
+
+    return {
+        "source_id": source_id,
+        "receiver_id": receiver_id,
+        "node_count": len(ids),
+        "edge_count": len(graph),
+        "cell_count": len(cell_ids),
+    }
+
+
+def validate_public_paddy(
+    data: dict[str, Any],
+    graph_result: dict[str, Any],
+    warnings: list[str],
+) -> None:
+    identity = data["identity"]
+    representation = data["representation"]
+    hydraulics = data["hydraulics"]
+    parcel = data["parcel"]
+    crop = data["crop"]
+
+    if identity.get("review_status") not in {"checked", "accepted"}:
+        fail("public candidate identity.review_status must be checked or accepted")
+    sources = identity.get("evidence", {}).get("sources")
+    if not isinstance(sources, list) or not sources:
+        fail("public candidate requires at least one evidence source")
+
+    if representation.get("mode") != "public_candidate":
+        fail("public candidate requires representation.mode=public_candidate")
+    if representation.get("debug_only") is not False:
+        fail("public candidate requires representation.debug_only=false")
+    if representation.get("microscope_allowed") is not True:
+        fail("public candidate requires representation.microscope_allowed=true after prior gates pass")
+
+    visible_proxies = set(representation.get("visible_proxy_types", []))
+    forbidden_visible = sorted(visible_proxies.intersection(FORBIDDEN_PUBLIC_PROXIES))
+    if forbidden_visible:
+        fail(f"public candidate contains forbidden visible proxies: {forbidden_visible}")
+
+    for check_name in ("closed_graph_check", "elevation_check", "mass_balance_check"):
+        if hydraulics.get(check_name) is not True:
+            fail(f"public candidate requires hydraulics.{check_name}=true")
+
+    water_state = require_mapping(hydraulics.get("water_state"), "hydraulics.water_state")
+    require_keys(water_state, REQUIRED_WATER_STATE, "hydraulics.water_state")
+    numeric_required = {
+        "bed_elevation_m",
+        "mud_surface_elevation_m",
+        "water_surface_elevation_m",
+        "average_depth_m",
+        "storage_area_m2",
+        "storage_volume_m3",
+        "bund_crest_minimum_m",
+        "mass_balance_error_m3",
+    }
+    for key in numeric_required:
+        if not is_number(water_state.get(key)):
+            fail(f"public candidate requires numeric hydraulics.water_state.{key}")
+
+    bed = float(water_state["bed_elevation_m"])
+    mud = float(water_state["mud_surface_elevation_m"])
+    water = float(water_state["water_surface_elevation_m"])
+    depth = float(water_state["average_depth_m"])
+    crest = float(water_state["bund_crest_minimum_m"])
+    if mud < bed:
+        fail("mud surface elevation cannot be below field bed elevation")
+    if water < mud:
+        fail("water surface elevation cannot be below mud surface for a flooded state")
+    if crest <= water:
+        fail("minimum bund crest must remain above water surface")
+    if abs((water - mud) - depth) > max(0.005, depth * 0.1):
+        fail("average water depth does not match water and mud surface elevations")
+
+    for label in ("channels", "inlets", "outlets"):
+        for index, item in enumerate(require_list(hydraulics.get(label), f"hydraulics.{label}")):
+            component = require_mapping(item, f"hydraulics.{label}[{index}]")
+            if component.get("cross_section_status") not in {"checked", "accepted"}:
+                fail(f"public candidate requires checked cross section for {label}[{index}]")
+            if component.get("ready_for_geometry") is not True:
+                fail(f"public candidate requires ready_for_geometry=true for {label}[{index}]")
+
+    for index, bund in enumerate(require_list(parcel.get("bunds"), "parcel.bunds")):
+        component = require_mapping(bund, f"parcel.bunds[{index}]")
+        if component.get("cross_section_status") not in {"checked", "accepted"}:
+            fail(f"public candidate requires checked bund cross section at index {index}")
+        if component.get("ready_for_geometry") is not True:
+            fail(f"public candidate requires ready_for_geometry=true for bund index {index}")
+        served_fields = component.get("served_fields")
+        if not isinstance(served_fields, list) or not served_fields:
+            fail(f"bund index {index} requires served_fields")
+
+    stage_models = require_mapping(crop.get("stage_models"), "crop.stage_models")
+    missing_stages = sorted(REQUIRED_RICE_STAGE_MODELS - set(stage_models))
+    if missing_stages:
+        fail(f"public candidate missing rice stage models: {missing_stages}")
+    unresolved_stages = sorted(key for key in REQUIRED_RICE_STAGE_MODELS if is_unresolved(stage_models.get(key)))
+    if unresolved_stages:
+        fail(f"public candidate has unresolved rice stage models: {unresolved_stages}")
+    if crop.get("ready_for_geometry") is not True:
+        fail("public candidate requires crop.ready_for_geometry=true")
+
+    if graph_result["cell_count"] < 1:
+        fail("public paddy requires at least one connected field cell")
+
+    warnings.append("machine validation does not replace section drawing, AAA visual review, browser QA or user acceptance")
+
+
+def validate(data: dict[str, Any]) -> dict[str, Any]:
     missing = sorted(REQUIRED_TOP - set(data))
     if missing:
         fail(f"missing top-level sections: {missing}")
 
-    identity = data["identity"]
-    for key in ("world_id", "object_id", "type_id", "revision", "evidence", "review_status"):
-        if key not in identity:
-            fail(f"identity missing {key}")
+    identity = require_mapping(data["identity"], "identity")
+    require_keys(
+        identity,
+        ("world_id", "object_id", "type_id", "revision", "evidence", "review_status"),
+        "identity",
+    )
     if identity["type_id"] not in ALLOWED_TYPES:
         fail(f"unsupported type_id: {identity['type_id']}")
-    if identity["evidence"].get("kind") not in ALLOWED_EVIDENCE:
-        fail("invalid evidence kind")
+    evidence = require_mapping(identity["evidence"], "identity.evidence")
+    if evidence.get("kind") not in ALLOWED_EVIDENCE:
+        fail("invalid identity evidence kind")
+    if not isinstance(evidence.get("sources"), list):
+        fail("identity.evidence.sources must be an array")
+    if identity.get("review_status") not in ALLOWED_REVIEW:
+        fail("invalid identity.review_status")
 
-    spatial = data["spatial"]
-    if not isinstance(spatial.get("area_m2"), (int, float)) or spatial["area_m2"] <= 0:
+    spatial = require_mapping(data["spatial"], "spatial")
+    if not is_number(spatial.get("area_m2")) or spatial["area_m2"] <= 0:
         fail("spatial.area_m2 must be positive")
-    boundary = spatial.get("boundary")
-    if not isinstance(boundary, list) or len(boundary) < 3:
+    boundary = require_list(spatial.get("boundary"), "spatial.boundary", nonempty=True)
+    if len(boundary) < 3:
         fail("spatial.boundary requires at least three points")
+    if spatial.get("units") != "m":
+        fail("spatial.units must be m")
+    if "terrain_ref" not in spatial:
+        fail("spatial requires terrain_ref")
 
-    representation = data["representation"]
-    if "seed" not in representation or not representation.get("method_version"):
-        fail("representation requires seed and method_version")
+    parcel = require_mapping(data["parcel"], "parcel")
+    require_list(parcel.get("cells"), "parcel.cells", nonempty=True)
+    require_list(parcel.get("bunds"), "parcel.bunds")
+    require_list(parcel.get("paths"), "parcel.paths")
+    require_list(parcel.get("relations"), "parcel.relations")
 
-    coupling = data["coupling"]
-    if not isinstance(coupling.get("inputs"), list) or not isinstance(coupling.get("outputs"), list):
-        fail("coupling inputs and outputs must be arrays")
+    representation = require_mapping(data["representation"], "representation")
+    require_keys(
+        representation,
+        ("seed", "method_version", "mode", "debug_only", "public_candidate"),
+        "representation",
+    )
+    if representation.get("mode") not in ALLOWED_MODES:
+        fail("invalid representation.mode")
+    if not isinstance(representation.get("debug_only"), bool):
+        fail("representation.debug_only must be boolean")
+    if not isinstance(representation.get("public_candidate"), bool):
+        fail("representation.public_candidate must be boolean")
+    if representation.get("public_candidate") and representation.get("mode") != "public_candidate":
+        fail("representation.public_candidate=true requires mode=public_candidate")
+    if representation.get("mode") == "research" and representation.get("debug_only") is not True:
+        fail("research mode must remain debug_only=true")
+
+    coupling = require_mapping(data["coupling"], "coupling")
+    require_list(coupling.get("inputs"), "coupling.inputs")
+    require_list(coupling.get("outputs"), "coupling.outputs")
+
+    warnings: list[str] = []
+    graph_result: dict[str, Any] | None = None
 
     if identity["type_id"] == "paddy":
-        hydraulics = data["hydraulics"]
-        if hydraulics.get("water_source") is None:
-            fail("paddy requires a declared water_source, including unknown external source")
-        if not hydraulics.get("inlets"):
-            fail("paddy requires at least one inlet")
-        if not hydraulics.get("outlets"):
-            fail("paddy requires at least one outlet")
-        if not hydraulics.get("channels"):
-            fail("paddy requires at least one channel or drain")
+        hydraulics = require_mapping(data["hydraulics"], "hydraulics")
+        parcel_scale = parcel.get("scale_modulus")
+        if not isinstance(parcel_scale, dict):
+            fail("paddy requires parcel.scale_modulus")
+        graph_result = validate_hydraulic_graph(hydraulics, parcel)
 
-        labor = data["laborSettlement"]
+        water_state = require_mapping(hydraulics.get("water_state"), "hydraulics.water_state")
+        require_keys(water_state, REQUIRED_WATER_STATE, "hydraulics.water_state")
+
+        crop = require_mapping(data["crop"], "crop")
+        require_mapping(crop.get("establishment"), "crop.establishment")
+        stage_models = require_mapping(crop.get("stage_models"), "crop.stage_models")
+        missing_stage_keys = sorted(REQUIRED_RICE_STAGE_MODELS - set(stage_models))
+        if missing_stage_keys:
+            fail(f"crop.stage_models missing keys: {missing_stage_keys}")
+        if "ready_for_geometry" not in crop:
+            fail("paddy crop requires ready_for_geometry")
+
+        labor = require_mapping(data["laborSettlement"], "laborSettlement")
         if "maintenance_capacity_state" not in labor:
-            fail("traditional paddy requires maintenance capacity state")
+            fail("traditional paddy requires maintenance_capacity_state")
 
-    return {
+        if representation.get("public_candidate"):
+            validate_public_paddy(data, graph_result, warnings)
+        else:
+            unresolved = sum(1 for value in water_state.values() if is_unresolved(value))
+            if unresolved:
+                warnings.append(f"research or prototype record retains {unresolved} unresolved water-state values")
+            unresolved_stage_count = sum(
+                1 for key in REQUIRED_RICE_STAGE_MODELS if is_unresolved(stage_models.get(key))
+            )
+            if unresolved_stage_count:
+                warnings.append(f"research or prototype record retains {unresolved_stage_count} unresolved rice stage models")
+
+    result: dict[str, Any] = {
         "ok": True,
         "object_id": identity["object_id"],
         "type_id": identity["type_id"],
         "revision": identity["revision"],
+        "mode": representation["mode"],
+        "public_candidate": representation["public_candidate"],
+        "visualAcceptance": False,
+        "productionReady": False,
+        "warnings": warnings,
     }
+    if graph_result is not None:
+        result["hydraulic_graph"] = graph_result
+    return result
 
 
-def main():
+def main() -> int:
     if len(sys.argv) != 2:
         print("usage: validate_farmland_dna.py <object.json>", file=sys.stderr)
         return 2
