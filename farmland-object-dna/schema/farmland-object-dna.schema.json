@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haihao0307.github.io/guilin-dem-pipeline/farmland-object-dna/schema/farmland-object-dna.schema.json",
+  "title": "Farmland Object DNA",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "spatial",
+    "parcel",
+    "hydraulics",
+    "soil",
+    "crop",
+    "laborSettlement",
+    "calendar",
+    "maintenance",
+    "degradation",
+    "coupling",
+    "representation"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world_id", "object_id", "type_id", "revision", "evidence", "review_status"],
+      "properties": {
+        "world_id": {"type": "string", "minLength": 1},
+        "object_id": {"type": "string", "minLength": 1},
+        "type_id": {"enum": ["paddy", "dry_field", "vegetable_garden", "orchard", "nursery", "fallow"]},
+        "variant_id": {"type": ["string", "null"]},
+        "configuration_id": {"type": ["string", "null"]},
+        "revision": {"type": "string", "minLength": 1},
+        "valid_time": {"type": ["object", "null"]},
+        "recorded_at": {"type": ["string", "null"]},
+        "evidence": {"$ref": "#/$defs/evidence"},
+        "review_status": {"enum": ["candidate", "checked", "accepted", "conflicted"]}
+      }
+    },
+    "spatial": {
+      "type": "object",
+      "required": ["crs", "units", "boundary", "area_m2"],
+      "properties": {
+        "crs": {"type": ["string", "null"]},
+        "frame": {"type": ["string", "null"]},
+        "units": {"type": "string"},
+        "vertical_datum": {"type": ["string", "null"]},
+        "boundary": {"type": "array", "minItems": 3, "items": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "number"}}},
+        "area_m2": {"type": "number", "exclusiveMinimum": 0},
+        "elevation_range_m": {"type": ["array", "null"], "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+        "slope_mean_deg": {"type": ["number", "null"], "minimum": 0, "maximum": 90},
+        "terrain_ref": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "parcel": {
+      "type": "object",
+      "required": ["cells", "bunds", "paths", "relations"],
+      "properties": {
+        "cells": {"type": "array", "items": {"type": "object"}},
+        "bunds": {"type": "array", "items": {"type": "object"}},
+        "paths": {"type": "array", "items": {"type": "object"}},
+        "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}}
+      },
+      "additionalProperties": true
+    },
+    "hydraulics": {
+      "type": "object",
+      "required": ["water_source", "inlets", "outlets", "channels", "surface_water_depth_m"],
+      "properties": {
+        "water_source": {"type": ["object", "null"]},
+        "inlets": {"type": "array", "items": {"type": "object"}},
+        "outlets": {"type": "array", "items": {"type": "object"}},
+        "channels": {"type": "array", "items": {"type": "object"}},
+        "surface_water_depth_m": {"type": ["number", "null"], "minimum": 0},
+        "irrigation_demand_m3_per_day": {"type": ["number", "null"], "minimum": 0},
+        "drainage_state": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "soil": {"type": "object", "additionalProperties": true},
+    "crop": {
+      "type": "object",
+      "required": ["species", "stage"],
+      "properties": {
+        "species": {"type": ["string", "null"]},
+        "variety": {"type": ["string", "null"]},
+        "stage": {"type": "string"},
+        "canopy_cover": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "planting_method": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "laborSettlement": {
+      "type": "object",
+      "required": ["settlement_ref", "household_ref", "available_labor_person_days", "maintenance_capacity_state"],
+      "properties": {
+        "settlement_ref": {"type": ["string", "null"]},
+        "household_ref": {"type": ["string", "null"]},
+        "available_labor_person_days": {"type": ["number", "null"], "minimum": 0},
+        "maintenance_capacity_state": {"enum": ["unknown", "adequate", "strained", "insufficient"]}
+      },
+      "additionalProperties": true
+    },
+    "calendar": {"type": "object", "additionalProperties": true},
+    "maintenance": {"type": "object", "additionalProperties": true},
+    "degradation": {"type": "object", "additionalProperties": true},
+    "coupling": {
+      "type": "object",
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": {"type": "array", "items": {"type": "object"}},
+        "outputs": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    },
+    "representation": {
+      "type": "object",
+      "required": ["seed", "method_version"],
+      "properties": {
+        "seed": {"type": ["integer", "string"]},
+        "method_version": {"type": "string"},
+        "runtime_budget": {"type": ["object", "null"]}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "sources"],
+      "properties": {
+        "kind": {"enum": ["observed", "inferred", "generated", "unknown", "conflicted"]},
+        "sources": {"type": "array", "items": {"type": "string"}},
+        "method_version": {"type": ["string", "null"]},
+        "uncertainty": {"type": ["string", "number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "relation": {
+      "type": "object",
+      "required": ["kind", "target_id"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "adjacent_to",
+            "upstream_of",
+            "downstream_of",
+            "feeds",
+            "drains_to",
+            "contains",
+            "belongs_to_household",
+            "belongs_to_settlement",
+            "served_by_path",
+            "bounded_by",
+            "occupies_terrain",
+            "affected_by_weather"
+          ]
+        },
+        "target_id": {"type": "string"},
+        "valid_time": {"type": ["object", "null"]},
+        "evidence": {"$ref": "#/$defs/evidence"}
+      },
+      "additionalProperties": true
+    }
+  }
+}
