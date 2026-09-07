@@ -1,6 +1,6 @@
 {
   "system": "Farmland Object DNA",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "date": "2026-09-07",
   "repository": "haihao0307/guilin-dem-pipeline",
   "branch": "feature/farmland-object-dna-v001",
@@ -13,9 +13,18 @@
     "startup": "docs/mother_coordination/mentor-v1.1/MOTHER_STARTUP.md",
     "worldConsensus": "docs/mother_coordination/learning-r1-20260905/WORLD_CONSENSUS.md"
   },
+  "mandatoryReading": [
+    "AGENTS.md",
+    "farmland-object-dna/FARMLAND_PRODUCTION_RULES.md",
+    "farmland-object-dna/V001_FAILURE_REGISTER.md",
+    "farmland-object-dna/RESTART_START_HERE.md",
+    "farmland-object-dna/OBJECT_DNA_CONTRACT.md",
+    "farmland-object-dna/QUALITY_GATES.json"
+  ],
   "scope": {
     "primary": "traditional low-mechanization farmland object system",
     "firstObject": "traditional irrigated rice paddy",
+    "firstRegionalSystemStudy": "Yuanyang and Honghe Hani rice terraces",
     "supportedFamilies": [
       "paddy",
       "dry_field",
@@ -29,14 +38,49 @@
     "terrainTruth": "DEM or Landscape authority",
     "weather": "Weather Mother",
     "oceanTideAndCoastalWater": "Ocean Mother",
-    "farmlandTopologyAndLifecycle": "Farmland Object DNA",
-    "humanPopulationAndLabor": "external population or settlement authority"
+    "farmlandTopologyHydraulicsLifecycleAndRepresentation": "Farmland Object DNA",
+    "humanPopulationAndLabor": "external population or settlement authority",
+    "humanVisualAcceptance": "user"
+  },
+  "rejectedBaseline": {
+    "id": "FARMLAND_DNA_WB_V0.1.0_20260907",
+    "status": "rejected",
+    "allowedUse": "negative_reference_only",
+    "failureRegister": "farmland-object-dna/V001_FAILURE_REGISTER.md",
+    "forbiddenContinuation": [
+      "round_tube_channels",
+      "round_tube_bunds",
+      "fake_water_depth",
+      "isolated_hydraulic_nodes",
+      "mechanical_grid_parcels",
+      "repeated_band_terraces",
+      "cone_rice_stage_scaling",
+      "visual_polish_over_structural_error"
+    ]
+  },
+  "nextCandidate": {
+    "name": "Farmland structural truth and hydraulic workbench",
+    "phase": "research_and_structural_truth",
+    "requiredBeforePublicCandidate": [
+      "object_source_cards",
+      "Yuanyang_integrated_system_research",
+      "channel_bund_terrace_inlet_outlet_divider_sections",
+      "flat_paddy_closed_hydraulic_graph",
+      "terrace_closed_hydraulic_graph",
+      "water_depth_and_mass_balance",
+      "stage_specific_rice_models",
+      "human_tool_animal_labor_scale_modulus",
+      "AAA_internal_precheck"
+    ]
   },
   "status": {
     "schemaReady": true,
-    "runtimeImplementation": false,
-    "publicWorkbench": false,
-    "browserQA": "not_run",
+    "runtimeImplementation": true,
+    "publicWorkbench": true,
+    "browserQA": "pass_for_rejected_v001_only",
+    "sourceResearch": "in_progress",
+    "structuralTruthWorkbench": "not_started",
+    "v001Rejected": true,
     "visualAcceptance": false,
     "productionReady": false
   }
