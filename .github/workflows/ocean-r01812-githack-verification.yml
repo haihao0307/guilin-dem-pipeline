@@ -1,0 +1,41 @@
+name: Ocean R018.12 raw.githack verification
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r01812-surface-query-20260907
+    paths:
+      - .github/workflows/ocean-r01812-githack-verification.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-r01812-githack-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch the immutable raw.githack URL and verify exact HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${GITHUB_SHA}/ocean-mother/releases/Ocean_Mother_R01812_Surface_Query_Direct_Open.html"
+          rm -f /tmp/r01812.html /tmp/headers.txt
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl --fail --location --silent --show-error --connect-timeout 20 --max-time 90 -D /tmp/headers.txt "$url" -o /tmp/r01812.html; then
+              break
+            fi
+            sleep 6
+          done
+          test -s /tmp/r01812.html
+          test "$(wc -c < /tmp/r01812.html)" -eq 163032
+          echo "5b66f11021da480441922eb657da071d12ac929faee0f38e0a90f70895fdc69d  /tmp/r01812.html" | sha256sum -c -
+          grep -qiE '^content-type:[[:space:]]*text/html' /tmp/headers.txt
+          grep -q "0.3.12-island-r018-surface-query" /tmp/r01812.html
+          grep -q "gpu-transform-feedback-shared-glsl" /tmp/r01812.html
+          printf 'verified_url=%s\n' "$url"
+          sed -n '1,30p' /tmp/headers.txt
