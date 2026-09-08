@@ -1,0 +1,73 @@
+name: Wenzhou Full Score Multi-Conductor V0.1
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-full-score-multiconductor-v001-20260908
+    paths:
+      - bootstrap/wenzhou-full-score-v001/**
+      - .github/workflows/wenzhou-full-score-v001.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install numerical dependency
+        run: python -m pip install numpy==2.3.5
+
+      - name: Build score, conductors, QA, demo and full package
+        run: python bootstrap/wenzhou-full-score-v001/materialize_v001.py
+
+      - name: Verify generated checkpoint
+        run: |
+          python projects/wenzhou/full-score-v001/05_QA/verify.py
+          python - <<'PY'
+          import json
+          import zipfile
+          from pathlib import Path
+          root = Path('projects/wenzhou/full-score-v001')
+          qa = json.loads((root / '05_QA/QA.json').read_text())
+          assert qa['passed']
+          assert qa['exactTruthRoundtrip']
+          assert qa['addressRoundtripSamples'] == 20000
+          assert qa['nodataGuardPassed']
+          package = root / '07_PACKAGE/WENZHOU_FULL_SCORE_MULTICONDUCTOR_GITHUB_V0_1_0_FULL_PACKAGE.zip'
+          with zipfile.ZipFile(package) as archive:
+              assert archive.testzip() is None
+          PY
+
+      - name: Commit fixed checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'wenzhou-full-score-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add projects/wenzhou/full-score-v001
+          if git diff --cached --quiet; then
+            echo 'Generated checkpoint already matches the branch.'
+            exit 0
+          fi
+          git commit -m 'package(wenzhou): publish full-score multi-conductor V0.1 [skip ci]'
+          git push origin HEAD:feature/wenzhou-full-score-multiconductor-v001-20260908
+
+      - name: Upload independently recoverable checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_FULL_SCORE_MULTICONDUCTOR_GITHUB_V0_1_0
+          path: projects/wenzhou/full-score-v001
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
