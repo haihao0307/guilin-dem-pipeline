@@ -1,0 +1,56 @@
+{
+  "schema": "wenzhou-soilgrids-intake/r3.3",
+  "createdAt": "2026-09-08",
+  "status": "acquisition_probe",
+  "lockedDomain": {
+    "crs": "EPSG:32651",
+    "bounds": [190475.0, 2991275.0, 411250.0, 3241862.5],
+    "canonicalResolutionMeters": 12.5,
+    "canonicalRowsCols": [20047, 17662]
+  },
+  "source": {
+    "name": "SoilGrids 2.0",
+    "provider": "ISRIC World Soil Information",
+    "access": "OGC WCS",
+    "nativeResolutionMeters": 250,
+    "sourceProjection": "+proj=igh +lat_0=0 +lon_0=0 +datum=WGS84 +units=m +no_defs",
+    "license": "CC BY 4.0",
+    "standardDepthsCm": [[0,5],[5,15],[15,30],[30,60],[60,100],[100,200]],
+    "quantiles": ["Q0.05", "mean", "Q0.5", "Q0.95"],
+    "uncertaintyMeaning": "Q0.05 and Q0.95 bound the published 90 percent prediction interval"
+  },
+  "sourceSubset": {
+    "crsUri": "http://www.opengis.net/def/crs/EPSG/0/152160",
+    "xBoundsMeters": [12060000, 12473000],
+    "yBoundsMeters": [3006000, 3263000],
+    "coverageRule": "expanded envelope around the locked domain after dense reprojection"
+  },
+  "alignedContextGrid": {
+    "crs": "EPSG:32651",
+    "resolutionMeters": 250,
+    "bounds": [190250, 2991250, 411250, 3242000],
+    "rowsCols": [1003, 884],
+    "coversLockedDomain": true,
+    "exactCanonicalAlignment": false,
+    "role": "regional environmental covariate"
+  },
+  "smokeProbe": {
+    "property": "clay",
+    "depth": "0-5cm",
+    "statistic": "mean",
+    "coverageId": "clay_0-5cm_mean",
+    "mappedUnit": "g/kg",
+    "conversionFactor": 10,
+    "conventionalUnit": "percent by mass"
+  },
+  "hardRules": {
+    "mayOverrideCanonicalDem": false,
+    "mayClaim12p5mSoilTruth": false,
+    "sourceNativePayloadRetained": true,
+    "requestParametersRetained": true,
+    "hashesRequired": true,
+    "uncertaintyRetainedForProductionUse": true,
+    "fieldScaleUseWithoutLocalCalibration": false,
+    "silentGapFillForbidden": true
+  }
+}
