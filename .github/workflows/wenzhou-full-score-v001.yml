@@ -56,13 +56,14 @@ jobs:
               assert archive.testzip() is None
           PY
 
-      - name: Commit fixed checkpoint
+      - name: Commit fixed checkpoint and verified recovery package
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'wenzhou-full-score-bot'
           git config user.email 'actions@users.noreply.github.com'
           git add projects/wenzhou/full-score-v001
+          git add -f projects/wenzhou/full-score-v001/07_PACKAGE/WENZHOU_FULL_SCORE_MULTICONDUCTOR_GITHUB_V0_1_0_FULL_PACKAGE.zip
           if git diff --cached --quiet; then
             echo 'Generated checkpoint already matches the branch.'
             exit 0
