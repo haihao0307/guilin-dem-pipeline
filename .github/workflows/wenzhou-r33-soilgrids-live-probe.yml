@@ -1,0 +1,69 @@
+name: Wenzhou R3.3 SoilGrids live acquisition probe
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r33-environmental-data-intake-20260908
+    paths:
+      - .github/workflows/wenzhou-r33-soilgrids-live-probe.yml
+      - experiments/wenzhou-r33-environmental-data-intake/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire-soilgrids:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Install acquisition tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal
+          python3 -m pip install --disable-pip-version-check requests
+          gdalinfo --version
+
+      - name: Run live WCS probe and alignment QA
+        env:
+          WENZHOU_R33_OUTPUT: ${{ github.workspace }}/artifacts/wenzhou-r33-soilgrids-live-probe
+        run: |
+          set -euo pipefail
+          python3 experiments/wenzhou-r33-environmental-data-intake/scripts/acquire_soilgrids_smoke.py
+
+      - name: Verify payload manifest
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root = Path('artifacts/wenzhou-r33-soilgrids-live-probe')
+          manifest = json.loads((root / 'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+          errors = []
+          for item in manifest['payloads']:
+              path = root / item['path']
+              if not path.is_file():
+                  errors.append([item['path'], 'missing'])
+                  continue
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if digest != item['sha256']:
+                  errors.append([item['path'], 'sha256'])
+          result = {'passed': not errors, 'checked': len(manifest['payloads']), 'errors': errors}
+          (root / 'reports' / 'MANIFEST_VERIFICATION.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(result, indent=2))
+          if errors:
+              raise SystemExit(2)
+          PY
+
+      - name: Upload verified evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r33-soilgrids-live-probe
+          path: artifacts/wenzhou-r33-soilgrids-live-probe
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
