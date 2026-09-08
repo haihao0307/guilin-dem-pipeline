@@ -204,7 +204,7 @@ def main() -> int:
         "alignedGridSizeMatches": [actual_rows, actual_cols] == [expected_rows, expected_cols],
         "canonicalDemUntouched": True,
         "sourceNativeResolutionRetainedAsIdentity": True,
-        "mayClaim12p5mSoilTruth": False,
+        "doesNotClaim12p5mSoilTruth": True,
     }
     passed = all(checks.values())
 
