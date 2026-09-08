@@ -1,0 +1,93 @@
+{
+  "schema": "wenzhou-world-layer-coverage-audit/r3.2",
+  "generatedAtUtc": "2026-09-08T00:00:00Z",
+  "branch": "feature/wenzhou-r3-world-truth-extract-20260907",
+  "domain": {
+    "crs": "EPSG:32651",
+    "bounds": [190475.0, 2991275.0, 411250.0, 3241862.5],
+    "gridRowsCols": [20047, 17662],
+    "resolutionMeters": 12.5,
+    "wgs84Envelope": [119.8147394082622, 27.009129943046574, 122.10517761161395, 29.30263813887454],
+    "areaSquareKilometres": 55323.4553125,
+    "status": "human_locked"
+  },
+  "readinessRule": "payload && sourceIdentity && fullCoverage && qaPassed",
+  "layers": {
+    "canonicalLand": {
+      "status": "ready_exact",
+      "coverageFraction": 1.0,
+      "coldStoreSha256": "8800c053608c5fa74eeebd2ce0d06c1bed54fd65274ed059d6e84fc2ec82a1dc"
+    },
+    "landProvenance": {
+      "status": "ready_exact",
+      "coverageFraction": 1.0
+    },
+    "explicitLandSeaTopology": {
+      "status": "missing"
+    },
+    "osmCoastlineAndIslands": {
+      "status": "missing_current_domain",
+      "currentPackageFeatureCount": 0,
+      "legacyDomainWgs84": [120.15, 27.4, 122.25, 29.15],
+      "legacyCoverageFraction": 0.6690206038856685,
+      "legacyUncoveredAreaKm2": 18310.923830289474
+    },
+    "osmWaterways": {
+      "status": "missing_current_domain",
+      "currentPackageFeatureCount": 0,
+      "legacyQueryOmittedDrainAndDitch": true
+    },
+    "osmWaterAreasWetlandsMudflats": {
+      "status": "missing",
+      "currentPackageFeatureCount": 0
+    },
+    "demDerivedHydrology": {
+      "status": "present_provisional",
+      "coverageFraction": 1.0,
+      "resolutionMeters": 100.0,
+      "maxUpstreamAreaKm2": 14.6899995803833,
+      "limitations": ["no sink filling", "incomplete flat routing", "no OSM topology comparison"]
+    },
+    "gebco2026Bathymetry": {
+      "status": "missing_current_domain",
+      "legacySubsetWgs84": [120.09166666666665, 27.362499999999986, 122.27499999999999, 29.187499999999986],
+      "legacyCoverageFraction": 0.718635909994786,
+      "legacyUncoveredAreaKm2": 15566.033659945679
+    },
+    "gebco2026Tid": {
+      "status": "missing_current_domain"
+    },
+    "kanmenUhslc632a": {
+      "status": "recoverable_legacy_not_embedded",
+      "insideFinalDomain": true,
+      "coordinatesWgs84": [121.28170013427734, 28.088300704956055],
+      "coordinatesEPSG32651": [331176.13741580653, 3108176.0246877475],
+      "referenceDatum": "station zero",
+      "sampleCount": 840,
+      "legacyCommit": "6fda4068c9930bbe2ba7b8d73905b59e241226a5"
+    },
+    "fes2022bRegionalTide": {
+      "status": "blocked_payload_not_mounted"
+    },
+    "eot20Comparator": {
+      "status": "failed_discovery_no_payload"
+    },
+    "oceanCurrents": {
+      "status": "missing",
+      "previousAcquisitionPassed": false,
+      "persistentTimePresentForbidden": true
+    },
+    "verticalDatumBridge": {
+      "status": "blocked"
+    }
+  },
+  "nextOrder": [
+    "reacquire_full_domain_osm",
+    "reacquire_full_domain_gebco_and_tid",
+    "migrate_and_verify_kanmen_uhslc",
+    "acquire_fes2022b_subset",
+    "acquire_fixed_time_current_fields",
+    "rebuild_hydrology_with_outlets_and_topology"
+  ],
+  "productionReady": false
+}

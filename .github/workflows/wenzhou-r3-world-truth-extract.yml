@@ -1,0 +1,131 @@
+name: Wenzhou R3 World Truth Extract
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-world-truth-extract-20260907
+    paths:
+      - '.github/workflows/wenzhou-r3-world-truth-extract.yml'
+      - 'projects/wenzhou/r3-data/bootstrap/**'
+  pull_request:
+    branches:
+      - feature/wenzhou-dem-clean-kernel-r1
+    paths:
+      - '.github/workflows/wenzhou-r3-world-truth-extract.yml'
+      - 'projects/wenzhou/r3-data/bootstrap/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wenzhou-r3-world-truth-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  acquire-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout isolated R3 branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch verified V100 comparator branch
+        run: |
+          git fetch --no-tags origin \
+            project/wenzhou-v100-bathymetry-tides-hydrology:refs/remotes/origin/project/wenzhou-v100-bathymetry-tides-hydrology
+          git rev-parse refs/remotes/origin/project/wenzhou-v100-bathymetry-tides-hydrology
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install geospatial and scientific runtime
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            numpy==2.2.6 \
+            requests==2.32.5 \
+            rasterio==1.4.3 \
+            affine==2.4.0 \
+            pyproj==3.7.2 \
+            shapely==2.1.1 \
+            xarray==2025.6.1 \
+            h5netcdf==1.6.3 \
+            netCDF4==1.7.2 \
+            scipy==1.16.1
+
+      - name: Restore audited acquisition programs
+        run: |
+          mkdir -p /tmp/wenzhou-r3
+          cat \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part00 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part01 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part02 \
+            projects/wenzhou/r3-data/bootstrap/acquire_r3_truth.py.gz.b64.part03 \
+            | base64 --decode | gzip --decompress > /tmp/wenzhou-r3/acquire_r3_truth.py
+          cat projects/wenzhou/r3-data/bootstrap/verify_r3_truth.py.gz.b64 \
+            | base64 --decode | gzip --decompress > /tmp/wenzhou-r3/verify_r3_truth.py
+          echo '6b5a72e1d0d3d732bf41c70fede0f573c10da3b97f77804227bc15bf14f076e2  /tmp/wenzhou-r3/acquire_r3_truth.py' | sha256sum --check
+          echo 'd0462dad9ee76d87eb4229b373dc175ac4a3aaba182fd680a32b73af52328e39  /tmp/wenzhou-r3/verify_r3_truth.py' | sha256sum --check
+          python -m py_compile /tmp/wenzhou-r3/acquire_r3_truth.py /tmp/wenzhou-r3/verify_r3_truth.py
+
+      - name: Acquire and distill source-traceable world truth
+        id: acquire
+        continue-on-error: true
+        run: |
+          mkdir -p dist logs
+          set -o pipefail
+          python /tmp/wenzhou-r3/acquire_r3_truth.py \
+            --output dist/WENZHOU_WORLD_TRUTH_R3_2026-09-07 \
+            2>&1 | tee logs/acquire-r3.log
+
+      - name: Verify package payloads and hard gates
+        id: verify
+        if: always()
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python /tmp/wenzhou-r3/verify_r3_truth.py \
+            --root dist/WENZHOU_WORLD_TRUTH_R3_2026-09-07 \
+            2>&1 | tee logs/verify-r3.log
+
+      - name: Record workflow result
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload = {
+              'schema': 'wenzhou-r3-workflow-result/v1',
+              'commit': os.environ.get('GITHUB_SHA'),
+              'ref': os.environ.get('GITHUB_REF'),
+              'acquireOutcome': '${{ steps.acquire.outcome }}',
+              'verifyOutcome': '${{ steps.verify.outcome }}',
+          }
+          Path('logs').mkdir(exist_ok=True)
+          Path('logs/WORKFLOW_RESULT.json').write_text(json.dumps(payload, indent=2) + '\n')
+          print(json.dumps(payload, indent=2))
+          PY
+
+      - name: Upload R3 extraction artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_WORLD_TRUTH_R3_2026-09-07
+          path: |
+            dist/WENZHOU_WORLD_TRUTH_R3_2026-09-07
+            logs
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Enforce final success
+        if: always()
+        run: |
+          test '${{ steps.acquire.outcome }}' = 'success'
+          test '${{ steps.verify.outcome }}' = 'success'
