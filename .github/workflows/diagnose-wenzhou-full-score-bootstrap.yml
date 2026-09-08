@@ -1,0 +1,27 @@
+name: Diagnose Wenzhou V0.1 bootstrap blob
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-full-score-multiconductor-v001-20260908
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and inspect bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s bootstrap/WENZHOU_FULL_SCORE_V001_BOOTSTRAP.zip.b64
+          tr -d '\r\n ' < bootstrap/WENZHOU_FULL_SCORE_V001_BOOTSTRAP.zip.b64 | base64 -d > /tmp/bootstrap.zip
+          echo "bytes=$(stat -c%s /tmp/bootstrap.zip)"
+          sha256sum /tmp/bootstrap.zip
+          unzip -t /tmp/bootstrap.zip
+          unzip -l /tmp/bootstrap.zip | head -80
