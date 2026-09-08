@@ -1,0 +1,69 @@
+name: Wenzhou R3.3 ESA WorldCover
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r33-environmental-data-intake-20260908
+    paths:
+      - .github/workflows/wenzhou-r33-esa-worldcover.yml
+      - experiments/wenzhou-r33-environmental-data-intake/scripts/acquire_worldcover_r33.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install geospatial tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal
+          python3 -m pip install --disable-pip-version-check requests
+          gdalinfo --version
+
+      - name: Download official source COG tiles and align them to the locked domain
+        run: |
+          set -euo pipefail
+          python3 experiments/wenzhou-r33-environmental-data-intake/scripts/acquire_worldcover_r33.py \
+            --output "${{ github.workspace }}/artifacts/wenzhou-r33-esa-worldcover"
+
+      - name: Verify payload hashes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root = Path('artifacts/wenzhou-r33-esa-worldcover')
+          manifest = json.loads((root / 'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+          errors = []
+          for item in manifest['payloads']:
+              path = root / item['path']
+              if not path.is_file():
+                  errors.append([item['path'], 'missing'])
+                  continue
+              if path.stat().st_size != item['bytes']:
+                  errors.append([item['path'], 'size'])
+                  continue
+              if hashlib.sha256(path.read_bytes()).hexdigest() != item['sha256']:
+                  errors.append([item['path'], 'sha256'])
+          result = {'passed': bool(manifest.get('passed')) and not errors, 'checked': len(manifest['payloads']), 'errors': errors}
+          (root / 'reports' / 'MANIFEST_VERIFICATION.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(result, indent=2))
+          if not result['passed']:
+              raise SystemExit(2)
+          PY
+
+      - name: Upload source and aligned context package
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r33-esa-worldcover-2020-2021
+          path: artifacts/wenzhou-r33-esa-worldcover
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 2
