@@ -1,0 +1,35 @@
+name: Wenzhou R3.3 WoSIS measured-profile discovery
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r33-environmental-data-intake-20260908
+    paths:
+      - .github/workflows/wenzhou-r33-wosis-discovery.yml
+      - experiments/wenzhou-r33-environmental-data-intake/scripts/discover_wosis_r33.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install request client
+        run: python3 -m pip install --disable-pip-version-check requests
+      - name: Discover WFS layers and count exact-domain hits
+        run: |
+          set -euo pipefail
+          python3 experiments/wenzhou-r33-environmental-data-intake/scripts/discover_wosis_r33.py \
+            --output "${{ github.workspace }}/artifacts/wenzhou-r33-wosis-discovery"
+      - name: Upload discovery evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r33-wosis-discovery
+          path: artifacts/wenzhou-r33-wosis-discovery
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
