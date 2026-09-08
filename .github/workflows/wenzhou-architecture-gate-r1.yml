@@ -1,0 +1,61 @@
+name: Wenzhou architecture evidence and expansion gate R1
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-full-score-multiconductor-v001-20260908
+    paths:
+      - projects/wenzhou/architecture-gate-r1/**
+      - projects/wenzhou/full-score-v001/03_SCORE/**
+      - projects/wenzhou/full-score-v001/04_CONDUCTORS/**
+      - bootstrap/wenzhou-full-score-v001/**
+      - .github/workflows/wenzhou-architecture-gate-r1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recompute-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install numpy==2.3.5
+      - name: Reject corrupt or misleading evidence
+        run: python -m unittest discover -s projects/wenzhou/architecture-gate-r1 -p 'test_*.py' -v
+      - name: Recompute the independent seed audit
+        run: python projects/wenzhou/architecture-gate-r1/gate.py --check-evidence --report projects/wenzhou/architecture-gate-r1/REPORT.json
+      - name: Recompute full-size mixed-conductor boundaries
+        run: python projects/wenzhou/architecture-gate-r1/fullpage_probe.py --check-evidence --write-report
+      - name: Preserve evidence even while expansion is blocked
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WENZHOU_ARCHITECTURE_GATE_R1
+          path: |
+            projects/wenzhou/architecture-gate-r1/REPORT.json
+            projects/wenzhou/architecture-gate-r1/FULLPAGE_REPORT.json
+            projects/wenzhou/architecture-gate-r1/SOURCE_RECEIPT.json
+          if-no-files-found: error
+  expansion-gate:
+    needs: recompute-evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Expansion remains blocked pending architecture acceptance
+        run: |
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          report = json.loads(Path('projects/wenzhou/architecture-gate-r1/REPORT.json').read_text())
+          for blocker in report['blockers']:
+              print('BLOCKED:', blocker)
+          # R1 is an audit checkpoint, not a promotion authority. Later closure
+          # requires a reviewed executable gate, not editing a stored JSON flag.
+          sys.exit(2)
+          PY
