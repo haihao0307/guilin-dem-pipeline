@@ -28,8 +28,15 @@ jobs:
       - name: Install numerical dependency
         run: python -m pip install numpy==2.3.5
 
-      - name: Build score, conductors, QA, demo and full package
-        run: python bootstrap/wenzhou-full-score-v001/materialize_v001.py
+      - name: Build in bootstrap staging and promote the fixed checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python bootstrap/wenzhou-full-score-v001/materialize_v001.py
+          rm -rf projects/wenzhou/full-score-v001
+          mkdir -p projects/wenzhou
+          mv bootstrap/projects/wenzhou/full-score-v001 projects/wenzhou/full-score-v001
+          rm -rf bootstrap/projects
 
       - name: Verify generated checkpoint
         run: |
