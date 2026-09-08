@@ -1,0 +1,43 @@
+{
+  "schema": "TLO-DNA-R0.1-CANDIDATE",
+  "status": "discussion_draft_not_frozen",
+  "dimensionSemantics": {
+    "world": "4D",
+    "coordinates": ["t", "x", "y", "z"],
+    "objectIsNotFifthGeometricDimension": true
+  },
+  "T": {
+    "meaning": "Time",
+    "candidateFields": ["worldTime", "validFrom", "validTo", "dt", "eventTime", "historyRef"]
+  },
+  "L": {
+    "meaning": "Location",
+    "candidateFields": ["referenceFrame", "crs", "position", "orientation", "container", "uncertainty"]
+  },
+  "O": {
+    "meaning": "Object",
+    "candidateFields": ["objectId", "objectType", "objectDNARef", "stateRef", "relations", "evidenceRef"]
+  },
+  "communication": {
+    "goal": "efficient_accurate_human_machine_transfer_with_minimal_information_loss",
+    "requireStatusLabels": true,
+    "requireSource": true,
+    "requireExplicitUnknowns": true,
+    "checkpointProtocol": "conversation -> markdown checkpoint -> reread -> continue"
+  },
+  "runtime": {
+    "worldKernel": "query/advance/precision/strategy scheduler",
+    "objectDNA": "identity/state/structure/material/behavior/evidence",
+    "backend": "replaceable, WebGPU is a current candidate"
+  },
+  "notFrozen": [
+    "file extension",
+    "binary/text container",
+    "index/chunk layout",
+    "compression codec",
+    "streaming protocol",
+    "global location contract",
+    "event encoding",
+    "relation ontology"
+  ]
+}
