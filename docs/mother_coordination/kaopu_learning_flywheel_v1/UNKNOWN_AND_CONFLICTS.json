@@ -36,6 +36,31 @@
       "question": "How much agreement between multiple external AIs is informative when their training/source overlap is unknown?",
       "currentBestView": "Treat agreement as a search signal only, not independent evidence.",
       "promotionBlock": false
+    },
+    {
+      "id": "U-NOISE-001",
+      "status": "Unknown",
+      "question": "How much measurable cross-resolution error reduction will footprint-aware field evaluation produce in current KAOPU and Mother implementations?",
+      "known": "Primary sources strongly support filtering/sampling-footprint control as an anti-aliasing requirement, and a KAOPU-compatible plane-wave footprint probe has been authored.",
+      "remainingUnknown": "The new probe has not yet produced a promoted runtime result and no Mother-domain fixture has compared current versus footprint-aware evaluation.",
+      "currentBestView": "Keep evaluationFootprint/filterPolicy as Candidate contract fields; require an executed probe and Mother fixture before candidate-complete or Frozen promotion.",
+      "promotionBlock": true
+    },
+    {
+      "id": "U-NOISE-002",
+      "status": "Conflict-risk",
+      "question": "Can unified output normalization improve interchangeability without corrupting amplitude or energy semantics?",
+      "reason": "Mature tools expose normalization for convenience, but normalization changes value range and can erase physically meaningful amplitude relationships if applied silently.",
+      "currentBestView": "Normalization must be explicit, typed, versioned, and downstream-aware. Never normalize a physical or evidence-bearing quantity merely to make operator outputs look interchangeable.",
+      "promotionBlock": false
+    },
+    {
+      "id": "U-NOISE-003",
+      "status": "Parked",
+      "question": "Should stochastic procedural-noise evaluation be adopted as a general KAOPU acceleration method?",
+      "reason": "NVIDIA 2023 research demonstrates value in Monte Carlo rendering, but that estimator context does not automatically transfer to deterministic world state, simulation, collision, hydrology, or evidence reconstruction.",
+      "currentBestView": "Keep renderer-specific only until a relevant Mother proves unbiasedness, temporal stability, deterministic replay requirements, and task error under its own contract.",
+      "promotionBlock": false
     }
   ]
 }
