@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="theme-color" content="#101b27"><meta name="description" content="小温州真实 DEM 三维地形 R3.2：离显示曲面 1.6 米的人眼相机与路径安全近地移动。">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州真实 DEM 三维地形 R3.2：离显示曲面 1.6 米的人眼相机、路径安全近地移动与独立演示海面。">
  <title>小温州 · 三维地形 R3.2</title>
  <link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css">
@@ -30,7 +30,7 @@
      <label for="exaggeration">地形比例</label>
      <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
      <div id="eye-card" class="eye-card" hidden><strong>1.6 米人眼视角</strong><span id="eye-status">相机锚定到显示曲面。</span><small>1.6 米是相机与显示曲面的关系，不是地形测绘精度。移动路径逐段检查有效支撑。</small></div>
-     <div class="hydro-options"><label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><small>青：河流 · 蓝：沟渠/溪流<br>地图线位，非水面高度</small></div>
+     <div class="hydro-options"><label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><label><input id="show-sea" type="checkbox" checked> 演示海面</label><small>河流/海岸来自地图资料；海面为独立显示声部，不代表潮位或测绘高程。</small></div>
      <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
    </section>
    <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
@@ -44,10 +44,11 @@
    <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>
    <aside id="info" class="info-panel" hidden aria-label="资料说明">
       <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>这片地形来自哪里</h2>
-      <p>R3.2 继续读取 R3.1 已固定的测量与地图资料，只新增相机与交互关系，不改写源 DEM、海岸或河流证据。</p>
-      <dl><dt>位置</dt><dd>EPSG:32651，东向与北向以米表示；画面统一换算成千米。真实比例指投影水平与高程使用同一尺度，不是地球曲率模型。</dd><dt>高程与误差</dt><dd>沿用归档中的高程数值。归档格距 12.5 米，来源信息尺度约 30 米；高程基准、独立实测误差和统一观测时间尚未确定。</dd><dt>1.6 米人眼视角</dt><dd>相机在 1× 显示比例下锚定到当前有效显示三角面上方 1.6 米。这个 1.6 米只约束视点与显示曲面的几何关系，不增加新的地形测量，也不能推出米级地物、河床或地表细节。人眼模式采用 0.1 米近裁剪和受限远裁剪以改善近地深度精度。</dd><dt>近地移动</dt><dd>WASD、滚轮和加减号按人行尺度移动。每次移动沿整段路径重新检查显示曲面与陆地区域；路径中途遇到缺测或裁除海域即停止，不允许只检查终点后跨越空洞。</dd><dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网的双线性曲面；显示误差与实测误差分别记录。</dd><dt>空白区域</dt><dd>缺测或当前范围之外，不能据此判断为海水或零高程。边缘采取保守裁切，不跨缺测区连面。海域按 OSM 预处理陆地区域裁除，未创建假水面。陆地区域包含内陆水域，不等于处处干地。</dd><dt>海岸与河流</dt><dd>海岸使用 2026-09-09 下载的 FOSSGIS/OSM 预处理陆地面；不是即时潮位线。河流使用 2026-08 的混合归档地图线位，未确认完整覆盖全域。河宽、水位、河床与物理连接未知。</dd><dt>起伏增强</dt><dd>仅放大显示高度，不改变原始数据；人眼 1.6 米模式只在 1× 下工作，进入人眼模式会恢复 1×。</dd><dt>继承关系</dt><dd>R3 和 R3.1 固定历史文件不改。R3.2 的地形、海岸和河流数据继续引用 R3.1 锁定资料，仅新增相机控制代码。</dd></dl>
+      <p>R3.2 继续读取 R3.1 已固定的测量与地图资料；新增的是相机、交互和独立演示海面，不改写源 DEM、海岸或河流证据。</p>
+      <dl><dt>位置</dt><dd>EPSG:32651，东向与北向以米表示；画面统一换算成千米。真实比例指投影水平与高程使用同一尺度，不是地球曲率模型。</dd><dt>高程与误差</dt><dd>沿用归档中的高程数值。归档格距 12.5 米，来源信息尺度约 30 米；高程基准、独立实测误差和统一观测时间尚未确定。</dd><dt>1.6 米人眼视角</dt><dd>相机在 1× 显示比例下锚定到当前有效显示三角面上方 1.6 米。这个 1.6 米只约束视点与显示曲面的几何关系，不增加新的地形测量，也不能推出米级地物、河床或地表细节。人眼模式采用 0.1 米近裁剪和受限远裁剪以改善近地深度精度。</dd><dt>近地移动</dt><dd>WASD、滚轮和加减号按人行尺度移动。每次移动沿整段路径重新检查显示曲面与陆地区域；路径中途遇到缺测或裁除海域即停止，不允许只检查终点后跨越空洞。</dd><dt>演示海面</dt><dd>海面作为独立环境显示声部，用现有陆地遮罩的反区域限定海域，并用轻量程序化波动显示。当前显示基准固定为演示坐标 0 米、波幅约 0.22 米，仅用于观察海陆空间关系；它不是即时潮位、平均海平面、垂直基准、海床高度或 Ocean Mother 物理结果。</dd><dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网的双线性曲面；显示误差与实测误差分别记录。</dd><dt>空白区域</dt><dd>缺测或当前范围之外，不能据此判断为海水或零高程。边缘采取保守裁切，不跨缺测区连面。R3.1 的 DEM 海域裁除保持不变；R3.2 只在陆地遮罩之外另加可关闭的演示海面，不能反推源 DEM 或真实潮位。</dd><dt>海岸与河流</dt><dd>海岸使用 2026-09-09 下载的 FOSSGIS/OSM 预处理陆地面；不是即时潮位线。河流使用 2026-08 的混合归档地图线位，未确认完整覆盖全域。河宽、水位、河床与物理连接未知。</dd><dt>起伏增强</dt><dd>仅放大显示高度，不改变原始数据；人眼 1.6 米模式只在 1× 下工作，进入人眼模式会恢复 1×。</dd><dt>继承关系</dt><dd>R3 和 R3.1 固定历史文件不改。R3.2 的地形、海岸和河流数据继续引用 R3.1 锁定资料；海面是独立显示层，可随时关闭。</dd></dl>
       <a href="../r3-1/data/terrain.json" target="_blank" rel="noreferrer">查看锁定测量与曲面规则</a>
    </aside>
  </main>
+ <script type="module" src="./sea-demo.js"></script>
  <script type="module" src="./app.js"></script>
 </body></html>
