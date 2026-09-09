@@ -1,12 +1,14 @@
 {
   "schema": "kaopu-tool-routing/r1",
-  "updatedAt": "2026-09-09",
+  "updatedAt": "2026-09-10",
   "policy": {
     "preferPrimaryOfficial": true,
     "toolOutputDoesNotCreateObservationRootByItself": true,
     "externalAIIsCandidateOnly": true,
     "mirrorsAreTransportNotIndependentEvidence": true,
-    "recordBlockedAuthoritativeExecutionAsUnknown": true
+    "recordBlockedAuthoritativeExecutionAsUnknown": true,
+    "sourceIdentityDoesNotImplyEvidenceIndependence": true,
+    "preserveRetrievalDependencies": true
   },
   "routes": [
     {
@@ -37,6 +39,8 @@
         "authoritative hosted numerical confirmation",
         "time/location/solar/geomagnetic-conditioned neutral state"
       ],
+      "currentSourceCheck": "NASA CCMC page last updated 2026-09-03 still identifies version 2.1 as the current hosted model.",
+      "evidenceClass": "empirical-model-host",
       "nextAction": "Reproduce selected 500 km reference cases through CCMC or official package before promoting mirrored vectors."
     },
     {
@@ -50,8 +54,8 @@
         "compiler reproducibility",
         "official release-vector confirmation"
       ],
-      "currentExecutionStatus": "blocked-in-r04-environment",
-      "blockedReason": "Official archive could be inspected on the NRL public directory but not materialized into the bounded execution environment for compilation in R04.",
+      "currentExecutionStatus": "blocked-in-r04-r05-environment",
+      "blockedReason": "The official NRL release and authoritative Wiley supporting archives are discoverable, but their binary packages could not be materialized into the bounded execution environment in R04/R05.",
       "status": "Unknown-until-executed"
     },
     {
@@ -65,8 +69,8 @@
         "molecular transition provenance",
         "line-shape/property reference checkpoints"
       ],
-      "currentExecutionStatus": "schema-only-r04",
-      "constraint": "Authenticated HAPI data download requires API key; no numeric line checkpoint may be invented when retrieval is unavailable."
+      "currentExecutionStatus": "schema-only-r04-r05",
+      "constraint": "Current official HAPI documentation requires an API key for line-data download; no numeric line checkpoint may be invented when retrieval is unavailable."
     },
     {
       "id": "TOOL-ATMOS-NRLMSIS-MIRROR",
@@ -92,6 +96,65 @@
         "assert unit/coordinate invariants",
         "measure same-altitude Candidate NRL vector variation",
         "preserve explicit Unknown states"
+      ],
+      "productionMutationAllowed": false
+    },
+    {
+      "id": "TOOL-ATMOS-NRLMSIS-DEVELOPMENT-PAPERS",
+      "domain": "empirical-model-provenance",
+      "toolOrSource": "Emmert et al. 2021 NRLMSIS 2.0 + Emmert et al. 2022 NRLMSIS 2.1 primary model-development papers",
+      "authority": "primary-peer-reviewed-model-team",
+      "observationRootEligible": false,
+      "useFor": [
+        "fit/assimilation provenance",
+        "physical constraints versus fitted quantities",
+        "holdout/external validation distinctions",
+        "documented observational coverage limits",
+        "model-output evidence class"
+      ],
+      "doNotUseFor": [
+        "reclassifying model output as raw observation",
+        "claiming holdout samples are independent sensor roots"
+      ]
+    },
+    {
+      "id": "TOOL-ATMOS-NRL-DATA-SAMPLE-PROVENANCE",
+      "domain": "atmosphere-measurement-sample-provenance",
+      "toolOrSource": "NRL public NRLMSIS 2.1 data-sample README and sample directory",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "useFor": [
+        "instrument IDs",
+        "sample field/unit semantics",
+        "tuning-versus-validation sample provenance"
+      ],
+      "conflict": "README text overlaps NO.15 between tuning and validation ranges while the 2022 paper describes first 15 versus second 15 ensembles; exact file-15 membership remains Unknown."
+    },
+    {
+      "id": "TOOL-ATMOS-SABER-NO-2025",
+      "domain": "atmosphere-independent-coverage-and-dependency-study",
+      "toolOrSource": "Wang et al. 2025 SABER NO validation study",
+      "authority": "primary-peer-reviewed",
+      "observationRootEligible": true,
+      "evidenceClass": "retrieved-measurement-with-model-dependency",
+      "useFor": [
+        "full-local-time NO coverage evidence",
+        "local-time limitation of current NRLMSIS 2.1 NO",
+        "retrieval-dependency example for evidence-independence semantics"
+      ],
+      "dependencyWarning": "SABER NO concentration retrieval uses NRLMSIS 2.1 temperature, O and O2 plus a non-LTE model. Treat new SABER sensor/time-coverage information as valuable but do not count the product as fully independent confirmation of NRLMSIS 2.1.",
+      "promotionRule": "Preserve a provenance dependency edge to NRLMSIS 2.1; do not reduce independence to a boolean."
+    },
+    {
+      "id": "TOOL-KAOPU-EVIDENCE-INDEPENDENCE-PROBE",
+      "domain": "coordinator-evidence-semantics",
+      "toolOrSource": "PROBES/evidence_independence_vector_r05.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "assert conservative independence semantics",
+        "keep sample/source/retrieval/prior dependency dimensions distinct",
+        "preserve Unknown dependency edges"
       ],
       "productionMutationAllowed": false
     }
