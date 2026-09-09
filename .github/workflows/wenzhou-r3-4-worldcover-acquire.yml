@@ -1,0 +1,103 @@
+name: Wenzhou R3.4 WorldCover Evidence Acquisition
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-4-worldcover-acquire-20260910
+    paths:
+      - .github/workflows/wenzhou-r3-4-worldcover-acquire.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recover and lock reviewed acquisition script
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_REF='origin/feature/wenzhou-r33-environmental-data-intake-20260908'
+          SOURCE_PATH='experiments/wenzhou-r33-environmental-data-intake/scripts/acquire_worldcover_r33.py'
+          mkdir -p /tmp/wenzhou-r34
+          git show "${SOURCE_REF}:${SOURCE_PATH}" > /tmp/wenzhou-r34/acquire_worldcover_r33.py
+          ACTUAL=$(git hash-object /tmp/wenzhou-r34/acquire_worldcover_r33.py)
+          EXPECTED='4e1a789b4338d12cf882a237e9b84abead3c063c'
+          echo "script blob ${ACTUAL}"
+          test "$ACTUAL" = "$EXPECTED"
+          printf '%s\n' "$SOURCE_REF" > /tmp/wenzhou-r34/SOURCE_REF.txt
+          printf '%s\n' "$SOURCE_PATH" > /tmp/wenzhou-r34/SOURCE_PATH.txt
+          printf '%s\n' "$ACTUAL" > /tmp/wenzhou-r34/SOURCE_BLOB_SHA.txt
+
+      - name: Install geospatial tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal
+          python3 -m pip install --disable-pip-version-check requests
+          gdalinfo --version
+
+      - name: Acquire official ESA WorldCover source and aligned context
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 /tmp/wenzhou-r34/acquire_worldcover_r33.py \
+            --output "${GITHUB_WORKSPACE}/artifacts/wenzhou-r34-worldcover"
+
+      - name: Verify every payload and evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('artifacts/wenzhou-r34-worldcover')
+          manifest=json.loads((root/'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+          report=json.loads((root/'reports'/'ESA_WORLDCOVER_ACQUISITION.json').read_text(encoding='utf-8'))
+          errors=[]
+          for item in manifest['payloads']:
+              p=root/item['path']
+              if not p.is_file(): errors.append([item['path'],'missing']); continue
+              if p.stat().st_size!=item['bytes']: errors.append([item['path'],'size']); continue
+              h=hashlib.sha256()
+              with p.open('rb') as f:
+                  for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+              if h.hexdigest()!=item['sha256']: errors.append([item['path'],'sha256'])
+          checks={
+              'manifestPassed': manifest.get('passed') is True,
+              'reportPassed': report.get('passed') is True,
+              'providerESA': report.get('source',{}).get('provider')=='European Space Agency WorldCover consortium',
+              'nativeResolution10m': report.get('source',{}).get('nativeResolutionMetersApprox')==10,
+              'alignedCrs32651': report.get('alignedContextGrid',{}).get('crs')=='EPSG:32651',
+              'alignedResolution10m': report.get('alignedContextGrid',{}).get('resolutionMeters')==10.0,
+              'notCanonicalTruth': report.get('alignedContextGrid',{}).get('canonicalTruth') is False,
+              'productionReadyFalse': report.get('interpretation',{}).get('productionReady') is False,
+              'noDirect2020To2021Change': report.get('hardCaveats',{}).get('direct2020To2021ChangeDetectionAllowed') is False,
+              'payloadHashes': not errors,
+          }
+          result={'passed':all(checks.values()),'checks':checks,'payloadCount':manifest.get('payloadCount'),'totalBytes':manifest.get('totalBytes'),'errors':errors,'boundary':'WorldCover is an external 10 m land-cover observation/context layer, not canonical DEM truth and not individual object truth.'}
+          (root/'reports'/'R34_ACCEPTANCE_GATE.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(result,indent=2))
+          if not result['passed']: raise SystemExit(2)
+          PY
+
+      - name: Upload immutable acquisition evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-4-worldcover-evidence-${{ github.sha }}
+          path: |
+            artifacts/wenzhou-r34-worldcover
+            /tmp/wenzhou-r34/SOURCE_REF.txt
+            /tmp/wenzhou-r34/SOURCE_PATH.txt
+            /tmp/wenzhou-r34/SOURCE_BLOB_SHA.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 2
