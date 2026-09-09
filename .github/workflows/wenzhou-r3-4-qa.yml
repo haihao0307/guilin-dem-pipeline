@@ -1,0 +1,92 @@
+name: Wenzhou R3.4 QA
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-4-landcover-context-20260910
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Frozen R3.2 and R3.3 boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=65594e3f1fb5bc2214747d7301a6e0326519d68c
+          git diff --exit-code "$BASE" HEAD -- site/dist/r3-2 site/dist/r3-3 records/R3_2 records/R3_3 tools/r3-2 tools/r3-3 inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json
+
+      - name: Static WorldCover bundle and syntax gate
+        run: |
+          python tools/r3-4/validate_landcover_static.py
+          node --check site/dist/r3-4/bootstrap.js
+          node --check site/dist/r3-4/landcover-evidence.js
+          node --check tools/r3-4/browser_qa.mjs
+
+      - name: Install browser runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Repo-root serving is required because inherited R3.3 intentionally
+          # consumes the single locked object-evidence file under inputs/.
+          python -m http.server 8765 --directory . >/tmp/wenzhou-r34-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-4/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R34_URL=http://127.0.0.1:8765/site/dist/r3-4/ node tools/r3-4/browser_qa.mjs | tee /tmp/r34-local-qa.json
+          grep -q '"passed": true' /tmp/r34-local-qa.json
+
+      - name: Fixed-commit public raw.githack QA
+        shell: bash
+        env:
+          R34_SHA: ${{ github.sha }}
+          R34_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${R34_REPO}/${R34_SHA}/site/dist/r3-4/index.html"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.4'; then ready=1; break; fi
+            sleep 4
+          done
+          test "$ready" = 1
+          R34_URL="$URL" node tools/r3-4/browser_qa.mjs | tee /tmp/r34-public-qa.json
+          grep -q '"passed": true' /tmp/r34-public-qa.json
+          echo "$URL" > /tmp/r34-preview.txt
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-4-qa-${{ github.sha }}
+          path: |
+            /tmp/r34-local-qa.json
+            /tmp/r34-public-qa.json
+            /tmp/r34-preview.txt
+            /tmp/wenzhou-r34-http.log
+          if-no-files-found: warn
