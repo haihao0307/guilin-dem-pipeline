@@ -4,10 +4,16 @@
   "items": [
     {
       "id": "U-GAEA-001",
-      "status": "Unknown",
+      "status": "PartiallyResolved",
       "question": "Which older documented Erosion and TileGate behaviors remain exact in GAEA 2.3.0.1?",
-      "reason": "Some official detailed documentation is older than the current 2.3 release.",
-      "promotionBlock": true
+      "resolvedParts": [
+        "Current official Erosion2 documentation explicitly describes deterministic results.",
+        "Current official tiled-build documentation confirms that some operations require nonlocal context and some current node pages explicitly require baking for Hybrid/Tiled builds.",
+        "Current official non-determinism documentation shows that deterministic operation does not imply cross-resolution identity."
+      ],
+      "remainingUnknown": "A current official TileGate reference or exact current legacy TileGate semantics was not found in the bounded R02 search.",
+      "currentBestView": "Use the current-doc-backed abstraction of an operator context/locality signature. Do not depend on the legacy TileGate node name or claim its exact behavior survives in 2.3.",
+      "promotionBlock": "Blocks only claims about exact legacy TileGate implementation; does not block the general operator-context transfer."
     },
     {
       "id": "U-GAEA-002",
@@ -15,6 +21,13 @@
       "question": "Can seam blending ever be used in KAOPU runtime presentation without being mistaken for truth continuity?",
       "reason": "GAEA uses blending as an engineering workaround for tiled processing, while KAOPU requires explicit shared-edge truth contracts.",
       "currentBestView": "Presentation-only blending may be allowed later, but never as evidence that shared truth is continuous.",
+      "promotionBlock": false
+    },
+    {
+      "id": "U-GAEA-003",
+      "status": "Clarified",
+      "question": "Does a deterministic operator imply identical output across different resolutions?",
+      "answer": "No. Current GAEA documentation separately documents deterministic Erosion2 behavior and resolution-dependent procedural differences. KAOPU determinism must therefore be scoped to an evaluation contract, while cross-resolution equivalence is a separate property requiring separate evidence.",
       "promotionBlock": false
     },
     {
