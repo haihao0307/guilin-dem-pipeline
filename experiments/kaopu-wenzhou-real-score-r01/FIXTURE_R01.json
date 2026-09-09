@@ -1,0 +1,138 @@
+{
+  "schema": "kaopu-wenzhou-real-score-fixture/r0.1-candidate",
+  "status": "candidate-not-formal-r2",
+  "name": "靠谱 / KAOPU — Wenzhou Real Score R01 — Longwan Tide Gauge",
+  "semanticIdentity": {
+    "officialName": "靠谱",
+    "machineId": "KAOPU",
+    "worldModel": "ongoing-chorus",
+    "judgmentRole": "xiaoma",
+    "semanticFreezeR1": "cd9160ce90cd1c6c6a49f4fbb2ae1f2c55470330",
+    "appendOnly": true
+  },
+  "rollback": {
+    "kind": "git-commit",
+    "commit": "f254721b7e3e23cb35b7b660fa9441dc6cef9796",
+    "meaning": "verified KAOPU full-handoff V1.0 branch head before this experiment"
+  },
+  "scope": {
+    "region": "Wenzhou, Zhejiang",
+    "seedKind": "real-discrete-object",
+    "seedId": "KAOPU:WENZHOU:LONGWAN:TIDE_GAUGE:LW",
+    "spatialPrecision": "partial",
+    "exactStationCoordinates": "Unknown",
+    "coordinateNote": "No exact station coordinate is promoted until an independently source-audited station metadata record is pinned."
+  },
+  "discreteObject": {
+    "objectId": "KAOPU:WENZHOU:LONGWAN:TIDE_GAUGE:LW",
+    "kind": "tide-gauge-station",
+    "name": "Longwan (LW)",
+    "identityStatus": "observed-by-published-station-record",
+    "objectGraphEligible": true
+  },
+  "continuousField": {
+    "fieldId": "KAOPU:WENZHOU:LONGWAN:RELATIVE_MEAN_SEA_LEVEL",
+    "quantityKind": "relative-mean-sea-level",
+    "unit": "cm",
+    "verticalReference": "1985 National Height Datum",
+    "spatialSupport": "Longwan tide-gauge station",
+    "observedTimeSpan": [1960, 2020],
+    "sampleSemantics": "annual/monthly means derived from tide-gauge record after calibration and harmonic-tide treatment as described by the cited study",
+    "noSpatialInterpolation": true
+  },
+  "observationRoots": [
+    {
+      "rootId": "OBSROOT-LW-TIDE-GAUGE",
+      "modality": "in-situ-tide-gauge",
+      "physicalObservationFamily": "tide-gauge",
+      "reportedSourceLineage": [
+        "Hydrology Bureau of Zhejiang province",
+        "National Marine Data Center"
+      ],
+      "evidenceAsset": "https://doi.org/10.3389/fmars.2026.1898828",
+      "rootStatus": "independent-physical-root-secondary-public-evidence-pinned"
+    },
+    {
+      "rootId": "OBSROOT-LW-COPERNICUS-ALTIMETRY",
+      "modality": "satellite-altimetry",
+      "physicalObservationFamily": "satellite-radar-altimetry",
+      "reportedSourceLineage": [
+        "European Copernicus Oceanographic Center"
+      ],
+      "spatialResolutionDegrees": [0.125, 0.125],
+      "observedTimeSpan": [1993, 2020],
+      "samplingRule": "nearest altimetry grid point to tide gauge in cited study",
+      "evidenceAsset": "https://doi.org/10.3389/fmars.2026.1898828",
+      "rootStatus": "independent-physical-root-secondary-public-evidence-pinned"
+    }
+  ],
+  "timeChange": {
+    "quantityKind": "relative-mean-sea-level",
+    "unit": "cm",
+    "t0": {"year": 1963, "value": 28.3, "role": "reported-lowest-annual-mean"},
+    "t1": {"year": 2016, "value": 47.7, "role": "reported-highest-annual-mean"},
+    "delta": 19.4,
+    "interpretation": "observed temporal difference; not a monotonic-trend claim"
+  },
+  "conflictOrUnknown": {
+    "kind": "cross-root-trend-discrepancy-plus-unknown-location",
+    "overlapPeriod": [1993, 2020],
+    "tideGaugeTrendMmPerYr": {"value": 0.75, "ci95": 1.72},
+    "satelliteAltimetryTrendMmPerYr": {"value": 4.04, "ci95": 1.16},
+    "derivedVlmMmPerYr": {"value": 3.29, "ci95": 2.07},
+    "judgment": "preserve both claims; do not label one false. Reference-frame/VLM and nearshore-altimetry uncertainty are material explanations.",
+    "exactStationCoordinates": "Unknown"
+  },
+  "typedWave": {
+    "waveId": "KAOPU-WAVE-LW-RMSL-R01",
+    "operatorFamily": "trend-plus-periodic-components-plus-residual",
+    "quantityKind": "relative-mean-sea-level",
+    "unit": "cm",
+    "domain": "time",
+    "timeUnit": "year",
+    "verticalReference": "1985 National Height Datum",
+    "components": [
+      {"periodYears": 12.8, "amplitudeCm": 2.73, "significance": "pass", "phase": "Unknown"},
+      {"periodYears": 25.6, "amplitudeCm": 2.21, "significance": "pass", "phase": "Unknown"}
+    ],
+    "residualRequired": true,
+    "boundaryCondition": "observed support only; no extrapolation beyond evidence window",
+    "reconstructibleFromPublishedNumbersAlone": false,
+    "status": "typed-wave-node-attached-with-explicit-unknown-phase"
+  },
+  "currentBestView": {
+    "policyId": "KAOPU-CBV-WENZHOU-LW-R01-PUBLIC",
+    "policyVisibility": "public",
+    "transactionDate": "2026-09-09",
+    "query": "What can we currently assert about Longwan station sea-level change without mixing incompatible evidence semantics?",
+    "view": {
+      "object": "Longwan (LW) tide-gauge station is retained as a discrete observed identity; exact coordinate remains Unknown pending a pinned station-metadata source.",
+      "field": "Relative mean sea level is represented in cm against the 1985 National Height Datum over the published 1960-2020 gauge record.",
+      "time": "Published annual extremes are 28.3 cm in 1963 and 47.7 cm in 2016; delta 19.4 cm.",
+      "crossRoot": "For 1993-2020 the cited analysis reports 0.75±1.72 mm/yr from tide gauge versus 4.04±1.16 mm/yr from Copernicus altimetry, yielding a derived VLM estimate of +3.29±2.07 mm/yr.",
+      "prohibition": "Do not convert these values into a terrain/water intersection or overwrite DEM heights until horizontal placement and vertical-datum compatibility are independently gated."
+    }
+  },
+  "publicEvidence": [
+    {
+      "kind": "peer-reviewed-public-article",
+      "url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2026.1898828/full",
+      "supports": ["station identity", "1960-2020 gauge span", "1985 datum", "1963/2016 values", "Copernicus altimetry root", "root discrepancy", "periodic components"]
+    },
+    {
+      "kind": "peer-reviewed-public-article",
+      "url": "https://www.mdpi.com/2077-1312/11/2/378",
+      "supports": ["Longwan station estuary/tide context", "strong semidiurnal tide", "2017 observed tide-level process context"]
+    }
+  ],
+  "boundaries": {
+    "anthropicCalled": false,
+    "claudeCodeCalled": false,
+    "makeUsedAsLongTermLearningBase": false,
+    "productionMotherModified": false,
+    "formalKaopuR2Frozen": false,
+    "productionReady": false,
+    "visualAcceptance": false,
+    "candidate": true
+  }
+}
