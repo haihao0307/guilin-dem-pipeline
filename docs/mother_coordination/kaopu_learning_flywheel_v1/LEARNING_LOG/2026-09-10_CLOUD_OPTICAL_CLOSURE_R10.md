@@ -33,7 +33,7 @@ This is independent retrieval/product evidence, not ECMWF model-code duplication
 
 ### Root C — NOAA/NCEP operational model-product semantics
 
-NCEP GFS/HRRR inventories expose cloud condensate and cloud cover as separate fields. HRRR native/model-coordinate inventories additionally expose cloud droplet/ice number concentrations and thermodynamic/height fields useful for a stronger experimental microphysical closure. HRRR is regional and must not be promoted as a Wenzhou/global source.
+NCEP GFS/HRRR inventories expose cloud condensate and cloud cover as separate fields. HRRR native/model-coordinate inventories additionally expose cloud droplet/ice number concentrations and thermodynamic/height fields useful for a stronger experimental microphysical closure. NOAA documents operational HRRR sectors for CONUS and Alaska. HRRR is therefore a regional source and must not be promoted as Wenzhou/global truth.
 
 ### Root D — NASA GMAO MERRA-2 global reanalysis semantics
 
@@ -64,7 +64,7 @@ Karma represents absorption/scattering as wavelength/color-dependent medium rate
 8. Direct/path optical depth is not yet a 3-D extinction field. Converting `tau` to `beta_ext [m^-1]` requires path length/distribution assumptions and must retain their lineage.
 9. Renderer density/global-density controls remain evaluator/material parameters. They may encode an optical packet for a renderer, but they may not overwrite Weather state.
 10. Missing effective radius, phase, condensate semantics, geometry or subgrid contract returns typed `Missing/Unsupported` for any route that requires them; a source-native path-optics route may be valid without re-deriving its hidden microphysics, but its source-model identity must remain explicit.
-11. Source selection is use-case specific. MERRA-2 cloud diagnostics are a plausible global `model_native_optics` experimental fixture; HRRR native is useful for richer CONUS microphysical experiments; neither automatically becomes production Weather truth.
+11. Source selection is use-case specific. MERRA-2 cloud diagnostics are a plausible global `model_native_optics` experimental fixture; HRRR native is useful for richer regional CONUS/Alaska microphysical experiments; neither automatically becomes production Weather truth.
 
 ## Executable evidence
 
@@ -86,7 +86,7 @@ These are dependency/semantics tests, not validation of real-world cloud microph
 ### Observation
 - ECMWF ecRad/OpenIFS separates cloud condensate, effective particle size, cloud fraction/subgrid structure, cloud optics and radiative-transfer solver concerns.
 - C3S treats COT, effective radius, water path and cloud fraction as separate physical/retrieval quantities; water path and optical depth are linked through particle-size/optical assumptions rather than by mass alone.
-- NOAA operational model products expose condensate and cloud-cover fields separately; richer HRRR native fields can support a stronger regional experimental closure.
+- NOAA operational model products expose condensate and cloud-cover fields separately; richer HRRR native fields can support regional microphysical closure experiments over its operational sectors.
 - NASA MERRA-2 provides global model-level cloud state and a separate cloud-diagnostics collection containing in-cloud QL/QI semantics plus source-native in-cloud liquid/ice optical thickness.
 - Karma and UE keep medium optical parameters downstream from evaluator sampling/performance budgets.
 
@@ -95,7 +95,7 @@ These are dependency/semantics tests, not validation of real-world cloud microph
 - `MixingRatioSemantics = grid_mean | in_cloud | unknown`.
 - `OpticalClosureMethod = direct_retrieval | microphysical | model_native_optics | synthetic_test`.
 - `SubgridCloudContract` carrying fraction, overlap, heterogeneity/homogenization semantics.
-- MERRA-2 `tavg3_3d_cld_Nv` as the preferred first global `model_native_optics` experimental fixture candidate; HRRR native as a richer CONUS microphysics fixture candidate.
+- MERRA-2 `tavg3_3d_cld_Nv` as the preferred first global `model_native_optics` experimental fixture candidate; HRRR native as a richer regional CONUS/Alaska microphysics fixture candidate.
 
 ### Current Best View
 Cloud placement and cloud optics remain independent contracts. Optical closure is not equivalent to a renderer density value. For a microphysical route, condensate mass must be accompanied by quantity semantics, vertical/path geometry and air state, effective particle size/phase optical assumptions, spectral identity and an explicit subgrid cloud treatment. When a source provides a documented native optical-depth diagnostic, preserving that diagnostic with source-model provenance is preferable to reconstructing it with arbitrary hidden microphysical defaults. Path optics can be valid before a local 3-D extinction field; additional distribution geometry and phase/subgrid semantics are still needed for volume rendering and lighting.
@@ -110,7 +110,7 @@ None.
 - Treating pressure-level condensate as layer-integrated water path without vertical geometry/density semantics.
 - A hidden fixed effective radius promoted as Weather truth.
 - Treating UE/Karma density or extinction controls as meteorological cloud state.
-- Treating HRRR as a global/Wenzhou production source.
+- Treating HRRR as Wenzhou/global production truth.
 - Recomputing a source-native optical diagnostic from QL/QI with an invented fixed radius and then treating the recomputation as more truthful than the documented source optical packet.
 
 ### Unknown
@@ -123,7 +123,7 @@ None.
 
 ## Practical constraints for ordinary implementation today
 
-A normal developer cannot obtain a defensible global 3-D cloud renderer merely by downloading a free forecast field and mapping it to density. The free ECMWF Open Data pressure-level subset does not expose the complete 3-D liquid/ice condensate packet needed for a microphysical route. HRRR has richer cloud microphysics but is CONUS-only. MERRA-2 is global and its cloud-diagnostics collection reduces assumptions by exposing in-cloud QL/QI plus native optical thickness, but a documented global model-level granule is still roughly 691 MB, requires Earthdata/subsetting/NetCDF handling in normal workflows, is reanalysis rather than realtime weather, and path optical depth still needs a spatial/phase/subgrid adapter before it becomes a realtime 3-D light-transport field. GRIB/NetCDF decoding, vertical-coordinate reconstruction, unit/quantity semantics and subgrid-cloud interpretation remain substantive engineering dependencies, not UI work.
+A normal developer cannot obtain a defensible global 3-D cloud renderer merely by downloading a free forecast field and mapping it to density. HRRR has richer cloud microphysics but is regional, with operational CONUS and Alaska sectors, so it cannot supply Wenzhou/global truth. MERRA-2 is global and its cloud-diagnostics collection reduces assumptions by exposing in-cloud QL/QI plus native optical thickness, but a documented global model-level granule is still roughly 691 MB, requires Earthdata/subsetting/NetCDF handling in normal workflows, is reanalysis rather than realtime weather, and path optical depth still needs a spatial/phase/subgrid adapter before it becomes a realtime 3-D light-transport field. GRIB/NetCDF decoding, vertical-coordinate reconstruction, unit/quantity semantics and subgrid-cloud interpretation remain substantive engineering dependencies, not UI work.
 
 ## Routing
 
