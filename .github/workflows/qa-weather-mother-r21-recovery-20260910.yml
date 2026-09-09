@@ -60,7 +60,8 @@ jobs:
                   context = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1)
                   context.add_cookies([{
                       'name': '__Http-phish', 'value': '1',
-                      'domain': 'raw.githack.com', 'path': '/'
+                      'url': 'https://raw.githack.com/',
+                      'secure': True, 'httpOnly': True, 'sameSite': 'Lax'
                   }])
                   page = context.new_page()
                   errors, console_errors, failed = [], [], []
