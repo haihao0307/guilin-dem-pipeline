@@ -1,0 +1,42 @@
+name: Landscape Karst KAOPU R6 materialize
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-kaopu-r6-20260910
+    paths:
+      - .github/workflows/landscape-karst-kaopu-r6-materialize.yml
+      - workbenches/landscape-karst-kaopu-r6/build_from_r5.py
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-karst-kaopu-r6-20260910
+          fetch-depth: 1
+          sparse-checkout: |
+            workbenches/landscape-karst-kaopu-r5/index.html
+            workbenches/landscape-karst-kaopu-r6/build_from_r5.py
+            .github/workflows/landscape-karst-kaopu-r6-materialize.yml
+          sparse-checkout-cone-mode: false
+      - name: Build exact R6
+        run: |
+          set -euo pipefail
+          python workbenches/landscape-karst-kaopu-r6/build_from_r5.py
+          test "$(sha256sum workbenches/landscape-karst-kaopu-r6/index.html | awk '{print $1}')" = "4f9ad02eff6f909548f1b6ef1aa8b0c28c2af0f044d539cf53944d7d1964c756"
+          test "$(stat -c%s workbenches/landscape-karst-kaopu-r6/index.html)" -eq 30337
+          grep -q 'R6 已就绪 · R2/R3/R5 保留 · 岩壁结构推进' workbenches/landscape-karst-kaopu-r6/index.html
+      - name: Commit generated R6
+        run: |
+          set -euo pipefail
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add --sparse -f workbenches/landscape-karst-kaopu-r6/index.html workbenches/landscape-karst-kaopu-r6/QA.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "build(landscape): materialize KAOPU karst R6 wall-detail candidate"
+          git push origin HEAD:feature/landscape-karst-kaopu-r6-20260910
