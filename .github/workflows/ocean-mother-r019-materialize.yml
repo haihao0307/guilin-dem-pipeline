@@ -1,0 +1,55 @@
+name: Ocean Mother R019 materialize and verify
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r019-kaopu-coast-20260909
+    paths:
+      - .github/workflows/ocean-mother-r019-materialize.yml
+      - ocean-mother/r019-build/**
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-mother-r019-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fixed branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize deterministic single-file HTML
+        run: python ocean-mother/r019-build/materialize.py
+
+      - name: Verify embedded JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ocean-mother/releases/Ocean_Mother_R019_KAOPU_Coast_Direct_Open.html')
+          m = re.search(r'<script>(.*)</script>', p.read_text(encoding='utf-8'), re.S)
+          if not m:
+              raise SystemExit('embedded script not found')
+          Path('/tmp/ocean-r019.js').write_text(m.group(1), encoding='utf-8')
+          PY
+          node --check /tmp/ocean-r019.js
+
+      - name: Commit verified release artifact
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            ocean-mother/releases/Ocean_Mother_R019_KAOPU_Coast_Direct_Open.html \
+            ocean-mother/releases/Ocean_Mother_R019_KAOPU_Coast_RECEIPT.json
+          if git diff --cached --quiet; then
+            echo "R019 release artifact already materialized"
+          else
+            git commit -m "release(ocean): materialize verified R019 KAOPU Coast [skip ci]"
+            git push origin HEAD:feature/ocean-mother-r019-kaopu-coast-20260909
+          fi
