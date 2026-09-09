@@ -106,12 +106,10 @@ evidence.mkdir(parents=True, exist_ok=True)
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True, args=["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-dev-shm-usage"])
     desktop_context = browser.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
-    desktop_context.add_cookies([{"name": "__Http-phish", "value": "1", "url": "https://raw.githack.com"}])
     desktop = exercise(desktop_context.new_page(), mobile=False, evidence=evidence)
     desktop_context.close()
 
     mobile_context = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=1, is_mobile=True, has_touch=True)
-    mobile_context.add_cookies([{"name": "__Http-phish", "value": "1", "url": "https://raw.githack.com"}])
     mobile = exercise(mobile_context.new_page(), mobile=True, evidence=evidence)
     mobile_context.close()
     browser.close()
