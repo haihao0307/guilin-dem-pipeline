@@ -8,7 +8,10 @@
     "mirrorsAreTransportNotIndependentEvidence": true,
     "recordBlockedAuthoritativeExecutionAsUnknown": true,
     "sourceIdentityDoesNotImplyEvidenceIndependence": true,
-    "preserveRetrievalDependencies": true
+    "preserveRetrievalDependencies": true,
+    "modelDomainDoesNotImplyQuantityValidity": true,
+    "parseSourceMissingBeforeNumericTransforms": true,
+    "validationLabelDoesNotImplySampleDisjointness": true
   },
   "routes": [
     {
@@ -35,13 +38,14 @@
       "authority": "primary-official-host",
       "observationRootEligible": true,
       "useFor": [
-        "current model interface and validity domain",
+        "current model interface and global query domain",
         "authoritative hosted numerical confirmation",
-        "time/location/solar/geomagnetic-conditioned neutral state"
+        "time/location/solar/geomagnetic-conditioned neutral state",
+        "output-field inventory"
       ],
-      "currentSourceCheck": "NASA CCMC page last updated 2026-09-03 still identifies version 2.1 as the current hosted model.",
+      "currentSourceCheck": "NASA CCMC current page identifies version 2.1, geodetic altitude input 0-1000 km, and NO as an output while describing the NO component as approximately 73 km to the exobase.",
       "evidenceClass": "empirical-model-host",
-      "nextAction": "Reproduce selected 500 km reference cases through CCMC or official package before promoting mirrored vectors."
+      "nextAction": "Reproduce selected locked reference cases through CCMC or the official package before promoting mirrored vectors; keep global modelDomain separate from per-output QuantityValidityEnvelope."
     },
     {
       "id": "TOOL-ATMOS-NRLMSIS-NRL-PACKAGE",
@@ -52,10 +56,11 @@
       "useFor": [
         "source-code interface verification",
         "compiler reproducibility",
-        "official release-vector confirmation"
+        "official release-vector confirmation",
+        "authoritative source-specific missing-value behavior"
       ],
-      "currentExecutionStatus": "blocked-in-r04-r05-environment",
-      "blockedReason": "The official NRL release and authoritative Wiley supporting archives are discoverable, but their binary packages could not be materialized into the bounded execution environment in R04/R05.",
+      "currentExecutionStatus": "blocked-in-r04-r06-environment",
+      "blockedReason": "The official NRL tar/zip and Wiley S2/S3 supporting archives are discoverable and have matching nominal published sizes, but their binary contents could not be materialized into the bounded execution environment. Matching size is not artifact identity and does not promote mirror vectors.",
       "status": "Unknown-until-executed"
     },
     {
@@ -69,8 +74,8 @@
         "molecular transition provenance",
         "line-shape/property reference checkpoints"
       ],
-      "currentExecutionStatus": "schema-only-r04-r05",
-      "constraint": "Current official HAPI documentation requires an API key for line-data download; no numeric line checkpoint may be invented when retrieval is unavailable."
+      "currentExecutionStatus": "schema-only-r04-r06",
+      "constraint": "Current official HAPI documentation requires authenticated access for line-data download; no numeric line checkpoint may be invented when retrieval is unavailable."
     },
     {
       "id": "TOOL-ATMOS-NRLMSIS-MIRROR",
@@ -81,9 +86,16 @@
       "useFor": [
         "Candidate inspection of release package structure",
         "Candidate test-vector transport",
-        "Candidate legacy-interface unit inspection"
+        "Candidate legacy/interface unit inspection",
+        "Candidate mapping of the primary-paper 72.5 km NO cutoff to implementation behavior",
+        "Candidate exact missing-density sentinel inspection"
       ],
-      "promotionRule": "Must be confirmed against official NRL package or NASA CCMC. Mirror agreement is not independent evidence."
+      "doNotUseFor": [
+        "authoritative numeric promotion",
+        "creating an independent Observation Root",
+        "proving official-package byte identity"
+      ],
+      "promotionRule": "Must be confirmed against official NRL package or NASA CCMC. Mirror agreement is not independent evidence; exact source sentinels remain Candidate until authoritative source confirmation is captured."
     },
     {
       "id": "TOOL-ATMOS-PYTHON-PROBE",
@@ -110,11 +122,15 @@
         "physical constraints versus fitted quantities",
         "holdout/external validation distinctions",
         "documented observational coverage limits",
-        "model-output evidence class"
+        "model-output evidence class",
+        "per-quantity validity cutoff and artifact rationale",
+        "sampling-with-replacement and cross-ensemble overlap semantics",
+        "parameter-aggregation lineage"
       ],
       "doNotUseFor": [
         "reclassifying model output as raw observation",
-        "claiming holdout samples are independent sensor roots"
+        "claiming holdout samples are independent sensor roots",
+        "claiming validation ensemble labels guarantee observation-level disjointness"
       ]
     },
     {
@@ -128,7 +144,7 @@
         "sample field/unit semantics",
         "tuning-versus-validation sample provenance"
       ],
-      "conflict": "README text overlaps NO.15 between tuning and validation ranges while the 2022 paper describes first 15 versus second 15 ensembles; exact file-15 membership remains Unknown."
+      "conflict": "README text overlaps NO.15 between tuning and validation ranges while the 2022 paper describes first 15 versus second 15 ensembles; exact file-15 membership remains Unknown. The paper independently establishes that ensemble sampling permits duplicates within and across ensembles."
     },
     {
       "id": "TOOL-ATMOS-SABER-NO-2025",
@@ -156,6 +172,21 @@
         "keep sample/source/retrieval/prior dependency dimensions distinct",
         "preserve Unknown dependency edges"
       ],
+      "productionMutationAllowed": false
+    },
+    {
+      "id": "TOOL-KAOPU-ATMOS-QUANTITY-VALIDITY-R06",
+      "domain": "coordinator-atmosphere-validity-semantics",
+      "toolOrSource": "PROBES/atmosphere_quantity_validity_probe_r06.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "assert modelDomain versus QuantityValidityEnvelope separation",
+        "assert typed missing before numeric transforms",
+        "demonstrate finite-log corruption risk when a numeric sentinel is unmasked",
+        "assert that sampling-with-replacement plus possible cross-ensemble duplicates does not guarantee validation-set sample disjointness"
+      ],
+      "evidenceBoundary": "The 72.5 km NO threshold is Observation from the primary paper; the exact 9.999e-38 sentinel used by the probe is Candidate from the non-authoritative mirror and must not be promoted by the probe itself.",
       "productionMutationAllowed": false
     }
   ]
