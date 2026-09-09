@@ -1,0 +1,90 @@
+name: Build KAOPU World Chorus Full Handoff V1
+
+on:
+  push:
+    branches:
+      - handoff/kaopu-world-chorus-full-v1.0-20260909
+    paths:
+      - docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/**
+      - .github/workflows/build-kaopu-world-chorus-full-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kaopu-world-chorus-full-v1
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip package]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out handoff branch
+        uses: actions/checkout@v4
+        with:
+          ref: handoff/kaopu-world-chorus-full-v1.0-20260909
+          fetch-depth: 0
+
+      - name: Fetch locked experiment branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin \
+            refs/heads/experiment/kaopu-world-chorus-ago-dialogue-r1-20260909:refs/remotes/origin/kaopu-world-chorus-ago-dialogue-r1-20260909 \
+            refs/heads/experiment/world-score-tlo-openai-round-01-20260909:refs/remotes/origin/world-score-tlo-openai-round-01-20260909
+          git cat-file -e 65cb81d8f66ac2d2a08151d128bb52bd36f72da4^{commit}
+          git cat-file -e db985c179fafc50fb5bba9a88712f2194a9c9e49^{commit}
+          git cat-file -e cd9160ce90cd1c6c6a49f4fbb2ae1f2c55470330^{commit}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile package tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/build_full_package.py \
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/verify_package.py
+
+      - name: Build and fully verify package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/build_full_package.py | tee /tmp/kaopu-build-console.txt
+          grep -F 'RESULT KAOPU package build and full extraction verification passed' /tmp/kaopu-build-console.txt
+
+      - name: Upload verified package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KAOPU_WORLD_CHORUS_FULL_HANDOFF_V1.0_2026-09-09
+          path: |
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases/KAOPU_WORLD_CHORUS_FULL_HANDOFF_V1.0_2026-09-09.zip
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases/KAOPU_WORLD_CHORUS_FULL_HANDOFF_V1.0_2026-09-09.zip.sha256
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases/PACKAGE_RECEIPT.json
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases/BUILD_LOG.txt
+            docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Commit verified ZIP and receipts to handoff branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          RELEASE_DIR='docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases'
+          git add "$RELEASE_DIR"
+          git add -f "$RELEASE_DIR/KAOPU_WORLD_CHORUS_FULL_HANDOFF_V1.0_2026-09-09.zip"
+          if git diff --cached --quiet; then
+            echo 'Verified release files are already current.'
+            exit 0
+          fi
+          git commit -m 'package: publish verified KAOPU full handoff V1.0 [skip ci]'
+          git push origin HEAD:handoff/kaopu-world-chorus-full-v1.0-20260909
