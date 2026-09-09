@@ -1,0 +1,50 @@
+{
+  "fixture": "synthetic-contract-only",
+  "notEarthTruth": true,
+  "state": {
+    "planetRadius_m": 6371000.0,
+    "top_m": 100000.0,
+    "scaleHeight_m": 8000.0,
+    "betaExt0_per_m": 0.0000125,
+    "singleScatteringAlbedo": 0.9
+  },
+  "queries": [
+    {
+      "observer_m": 0.0,
+      "view_zenith_deg": 0.0,
+      "sun_zenith_deg": 45.0,
+      "sphericalReference": {"T": 0.9048383443199377, "L1": 0.006348534339199421, "tau": 0.09999897629840947},
+      "planeParallelCandidate": {"T": 0.9048377552375458, "L1": 0.006348018462629424, "tau": 0.0999996273346828},
+      "relativeErrorT": 0.0000006510360613741853,
+      "relativeErrorL1": 0.00008125916037208386
+    },
+    {
+      "observer_m": 0.0,
+      "view_zenith_deg": 80.0,
+      "sun_zenith_deg": 45.0,
+      "sphericalReference": {"T": 0.5740447450565203, "L1": 0.02823796947646941, "tau": 0.5550479326406128},
+      "planeParallelCandidate": {"T": 0.5622127723673671, "L1": 0.02904102915869566, "tau": 0.5758749022203343},
+      "relativeErrorT": 0.020611586102034913,
+      "relativeErrorL1": 0.028439002418195684
+    },
+    {
+      "observer_m": 0.0,
+      "view_zenith_deg": 89.0,
+      "sun_zenith_deg": 45.0,
+      "sphericalReference": {"T": 0.08318931470426259, "L1": 0.058800456828693316, "tau": 2.486636368437994},
+      "planeParallelCandidate": {"T": 0.003247572461621387, "L1": 0.06350910376545855, "tau": 5.7298474966210655},
+      "relativeErrorT": 0.9609616634880755,
+      "relativeErrorL1": 0.08007840739202426
+    },
+    {
+      "observer_m": 80000.0,
+      "view_zenith_deg": 80.0,
+      "sun_zenith_deg": 45.0,
+      "sphericalReference": {"T": 0.9999766917794386, "L1": 0.0000016693221562214286, "tau": 0.000023308492202192474},
+      "planeParallelCandidate": {"T": 0.9999760016044497, "L1": 0.000001718753392493515, "tau": 0.000023998683516471158},
+      "relativeErrorT": 0.0000006901910760634722,
+      "relativeErrorL1": 0.02961156184734035
+    }
+  ],
+  "interpretation": "Architecture-only evidence: one AtmosphereState can be queried by different evaluator families, but evaluator authority must be query-scoped. Near-horizon planetary-curvature error can dominate. These coefficients are synthetic and must never be promoted as Earth atmosphere truth."
+}
