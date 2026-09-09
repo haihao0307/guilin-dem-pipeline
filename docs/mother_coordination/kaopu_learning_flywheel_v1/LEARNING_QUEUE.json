@@ -24,7 +24,7 @@
         "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked and distilled Takram three-geospatial reference-frame/evaluator architecture. R08 defined typed Weather vertical-coordinate semantics and rejected a universal cloud-altitude scalar. R09 exercised a bounded real radiosonde-derived Salt Lake City column fixture and found a more important operation boundary: coordinate conversion must preserve the same physical atmospheric state, while preserving AGL after moving a weather pattern to different terrain is a spatial retarget that needs DerivedSyntheticRetarget lineage. The R09 probe passed 7/7. It also confirmed that thermodynamic sounding data can make placement valid while cloud fraction, condensate and optical extinction remain Missing; ECMWF model-level documentation independently keeps humidity, cloud liquid water and cloud ice water as separate quantities. Candidate runtime contracts now split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. The Weather-coupling gate is only partially closed because the exact fixture was transported through a UCAR mirror rather than byte-authenticated against NCEI in this bounded runtime, geoid-to-ellipsoid provenance remains open, and physically grounded cloud optical closure is still missing. No production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 tested the minimum evidence for cloud optical closure. Primary ECMWF ecRad/OpenIFS sources keep cloud condensate, effective particle size, cloud fraction/subgrid state, cloud optics and radiative-transfer solvers distinct. Copernicus C3S documentation independently shows water path, optical thickness and effective radius are separate and quantitatively coupled. The R10 probe passed 6/6 and rejects hasCondensate=>opticalClosureReady, hidden fixed-radius closure, generic cloud-fraction scaling of extinction, and path-optics=>local-extinction equivalence. A new lower-assumption global candidate route was found in NASA MERRA-2: model-level cloud diagnostics include CLOUD, INCLOUDQI/INCLOUDQL and source-native in-cloud optical thickness TAUCLI/TAUCLW, so KAOPU can preserve model-native path optics rather than reconstructing them from invented microphysics. Those diagnostics still require local-volume/phase/subgrid adapters and are reanalysis, not realtime Weather truth. HRRR native remains a richer CONUS-only microphysics experiment source. Status stays candidate-partial; no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -34,11 +34,13 @@
         "LEARNING_LOG/2026-09-10_ATMOSPHERE_R06_QUANTITY_VALIDITY_AND_SPLIT_OVERLAP.md",
         "LEARNING_LOG/2026-09-10_TAKRAM_THREE_GEOSPATIAL_R07.md",
         "LEARNING_LOG/2026-09-10_WEATHER_VERTICAL_COORDINATE_R08.md",
-        "LEARNING_LOG/2026-09-10_WEATHER_REAL_COLUMN_R09.md"
+        "LEARNING_LOG/2026-09-10_WEATHER_REAL_COLUMN_R09.md",
+        "LEARNING_LOG/2026-09-10_CLOUD_OPTICAL_CLOSURE_R10.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
-        "references/weather-column-r09/SOURCE_LOCK.json"
+        "references/weather-column-r09/SOURCE_LOCK.json",
+        "references/cloud-optical-r10/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -47,19 +49,23 @@
       "referenceFrameProbe": "PROBES/reference_frame_contract_r07.py",
       "verticalCoordinateProbe": "PROBES/weather_vertical_coordinate_contract_r08.py",
       "realWeatherColumnProbe": "PROBES/weather_column_real_fixture_r09.py",
+      "cloudOpticalClosureProbe": "PROBES/cloud_optical_closure_probe_r10.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
-        "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md"
+        "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
+        "CURRENT_BEST_VIEW_R10_CLOUD_OPTICAL_CLOSURE.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
-        "TOOL_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json"
+        "TOOL_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
+        "TOOL_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
-        "MOTHER_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json"
+        "MOTHER_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
+        "MOTHER_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R09 partially closes vertical placement/operation semantics; next obtain one authenticated source packet that includes or can be paired with cloud fraction/condensate or another justified physical optical closure, preserve native vertical coordinates and geodetic provenance, produce RuntimeCloudPlacement + CloudOpticalClosure, and consume them through at least two evaluator adapters with numerical/visual/performance error measured separately. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R10 defines optical-closure sufficiency and identifies NASA MERRA-2 model-level cloud diagnostics as a lower-assumption global model_native_optics fixture candidate. Next authenticate and ingest one packet preserving CLOUD/INCLOUDQI/INCLOUDQL/TAUCLI/TAUCLW plus native vertical provenance, derive only the missing local-volume/phase/subgrid adapter state, then consume the same RuntimeCloudPlacement + CloudOpticalClosure through at least two evaluator adapters with source/model uncertainty reported separately from numerical, visual and performance error. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
