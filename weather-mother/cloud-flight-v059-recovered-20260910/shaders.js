@@ -1,0 +1,156 @@
+export const vertex=`#version 300 es
+precision highp float;
+precision highp int;
+layout(location=0)in vec3 aPosition;
+layout(location=1)in vec3 aNormal;
+layout(location=2)in vec4 aField;
+uniform mat4 uVP;
+uniform float uTime,uTide,uLogFar,uWaveAmplitude,uWaveTime;
+uniform vec2 uWaveDir;
+out vec3 vP,vN;
+out vec4 vF;
+out float vD;
+void main(){
+  vec3 p=aPosition;
+  vec2 q=vec2(dot(p.xz,uWaveDir),dot(p.xz,vec2(-uWaveDir.y,uWaveDir.x)));
+  float w=uWaveAmplitude*(.14*sin(q.x*.023+q.y*.019-uWaveTime*.9)+.06*sin(-q.x*.037+q.y*.031-uWaveTime*.6));
+  if(aField.x>.5&&aField.x<1.5)p.y=uTide+w;
+  else if(aField.x>=1.5&&aField.x<2.5)p.y+=uTide*exp(-aField.y/24000.);
+  vP=p;
+  vN=aNormal;
+  vF=aField;
+  gl_Position=uVP*vec4(p,1.);
+  vD=1.+gl_Position.w;
+  gl_Position.z=(log2(max(.000001,vD))*uLogFar-1.)*gl_Position.w;
+}`;
+
+export const fragment=`#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler3D;
+in vec3 vP,vN;
+in vec4 vF;
+in float vD;
+out vec4 color;
+uniform sampler3D uCloudDensity;
+uniform vec2 uWaveDir,uCloudCenterM,uCloudDriftSourceKm,uCloudVerticalM,uCloudSourceVerticalKm;
+uniform float uWaveAmplitude,uWaveTime,uWeatherEnabled,uCloudHorizontalScale,uCloudDensityScale,uFogDensity,uWeatherKind,uCycloneSpin,uCloudTime;
+uniform vec3 uSun,uSunColor,uAtmosphere,uCloudFieldMin,uCloudFieldMax;
+uniform int uLayer,uMode,uIslandCount;
+uniform vec3 uEye,uLights;
+uniform vec3 uIslands[24];
+uniform float uTime,uTide,uMud,uLogFar;
+
+float hash21(vec2 p){p=fract(p*vec2(.1031,.11369));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+1.),f.x),f.y);}
+float fbm(vec2 p){float f=0.,a=.5;for(int i=0;i<4;i++){f+=a*noise(p);p=mat2(1.72,-1.03,1.03,1.72)*p+5.37;a*=.5;}return f;}
+vec2 rotate2(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
+vec3 cloudSource(vec3 worldP){
+  float verticalT=clamp((worldP.y-uCloudVerticalM.x)/max(1.,uCloudVerticalM.y-uCloudVerticalM.x),0.,1.);
+  float sourceY=mix(uCloudSourceVerticalKm.x,uCloudSourceVerticalKm.y,verticalT);
+  vec3 q=vec3((worldP.x-uCloudCenterM.x)/(1000.*uCloudHorizontalScale),sourceY,(worldP.z-uCloudCenterM.y)/(1000.*uCloudHorizontalScale));
+  q.xz-=uCloudDriftSourceKm;
+  if(abs(uCycloneSpin)>.01)q.xz=rotate2(q.xz,-uCloudTime*.00055*uCycloneSpin);
+  vec3 ext=uCloudFieldMax-uCloudFieldMin;
+  q.x=uCloudFieldMin.x+mod(q.x-uCloudFieldMin.x,ext.x);
+  q.z=uCloudFieldMin.z+mod(q.z-uCloudFieldMin.z,ext.z);
+  return q;
+}
+float cloudMacro(vec3 worldP){
+  if(uWeatherEnabled<.5||worldP.y<uCloudVerticalM.x||worldP.y>uCloudVerticalM.y)return 0.;
+  vec3 q=cloudSource(worldP);
+  return texture(uCloudDensity,(q-uCloudFieldMin)/(uCloudFieldMax-uCloudFieldMin)).r*uCloudDensityScale;
+}
+float cloudShadow(vec3 groundP){
+  if(uWeatherEnabled<.5||uSun.y<.05)return 1.;
+  float optical=0.;
+  for(int i=0;i<5;i++){
+    float y=mix(uCloudVerticalM.x,uCloudVerticalM.y,(float(i)+.5)/5.);
+    float rise=max(0.,y-groundP.y);
+    vec3 p=groundP+vec3(uSun.x/uSun.y*rise,rise,uSun.z/uSun.y*rise);
+    optical+=cloudMacro(p);
+  }
+  return exp(-optical*.64);
+}
+
+void main(){
+  float k=vF.x;
+  bool unknown=vF.w<.999;
+  if(uLayer==0&&(k>.5||unknown))discard;
+  if(uLayer==1&&(k<.5||k>=2.5||unknown))discard;
+  if(uLayer==3&&!unknown)discard;
+  vec3 n=normalize(vN),c;
+  float weatherShadow=cloudShadow(vP);
+  if(uLayer==3){
+    float line=step(.72,fract((vP.x+vP.z)/3200.));
+    c=mix(vec3(.38,.36,.43),vec3(.52,.50,.56),line);
+  }
+  else if(uMode==2){
+    if(uLayer==0)c=mix(vec3(.12,.23,.25),vec3(.8,.67,.32),clamp(vP.y/1500.,0.,1.))*(.7+.3*n.y);
+    else if(uLayer==1)c=k<1.5?vec3(.055,.34,.69):vec3(.64,.43,.17);
+    else c=vec3(.14,.68,.70);
+  }
+  else if(uLayer==0){
+    float a=fbm(vP.xz*.0006),b=fbm(vP.xz*.008),slope=1.-clamp(n.y,0.,1.);
+    c=mix(vec3(.027,.083,.041),vec3(.115,.195,.065),a);
+    c=mix(c,vec3(.43,.40,.32),clamp(slope*1.15+smoothstep(900.,1500.,vP.y)*.3,0.,.85));
+    vec3 lit=vec3(.32+1.15*max(dot(n,normalize(vec3(-.6,.35,-.7))),0.));
+    if(uMode==1)lit=vec3(.28)+uLights.x*max(dot(n,normalize(vec3(-.52,.72,-.33))),0.)*vec3(.85,.78,.65)+uLights.y*max(dot(n,normalize(vec3(.6,.4,.2))),0.)*vec3(.45,.60,.75)+uLights.z*max(dot(n,normalize(vec3(.1,.25,.96))),0.)*vec3(.70,.79,.83);
+    if(uMode==3){
+      vec3 ambient=vec3(.08+.30*uAtmosphere.z*uAtmosphere.x);
+      vec3 direct=uSunColor*uAtmosphere.y*uAtmosphere.x*max(dot(n,normalize(uSun)),0.)*weatherShadow;
+      lit=ambient+direct;
+      c=mix(c,c*vec3(.72,.78,.82),1.-weatherShadow);
+    }
+    c*=lit*(.92+.13*b);
+  }
+  else if(uLayer==1){
+    vec2 p=vP.xz,U=normalize(vec2(.8,-.5)),Q=vec2(-U.y,U.x),w=p;
+    float island=0.;
+    for(int i=0;i<24;i++){
+      if(i>=uIslandCount)break;
+      vec2 r=p-uIslands[i].xy;
+      float rad=uIslands[i].z,f=clamp(rad*rad/max(dot(r,r),rad*rad),0.,.9);
+      w-=Q*dot(Q,r)*f*.8;
+      w+=U*dot(U,r)*f*.25;
+      island+=f;
+    }
+    vec2 q=w*.00038-U*uTime*.001;
+    vec2 warp=vec2(fbm(q+2.1),fbm(q+13.7))-.5;
+    float f=fbm(q+warp*2.5),near=exp(-max(vF.y,0.)/10000.);
+    float ribbon=.5+.5*sin(dot(Q,w)*.001+f*6.);
+    float sediment=clamp(uMud*near*(.80+.2*f+.28*(ribbon-.5)*min(island,1.)),0.,.92);
+    if(k>1.5)sediment=max(sediment,.42);
+    c=mix(mix(vec3(.022,.14,.24),vec3(.035,.26,.32),f*.45),mix(vec3(.33,.35,.23),vec3(.48,.42,.26),f),sediment);
+    float fres=.02+.98*pow(1.-clamp(normalize(uEye-vP).y,0.,1.),5.);
+    c=mix(c,vec3(.49,.66,.70),fres*.2);
+    if(uMode==3){
+      vec2 wdir=vec2(-uWaveDir.y,uWaveDir.x);
+      vec2 aq=vec2(dot(p,uWaveDir),dot(p,wdir));
+      float r1=aq.x*.023+aq.y*.019-uWaveTime*.9,r2=-aq.x*.037+aq.y*.031-uWaveTime*.6;
+      vec2 grad=uWaveAmplitude*(.14*cos(r1)*vec2(.023,.019)+.06*cos(r2)*vec2(-.037,.031));
+      vec3 wn=normalize(vec3(-(uWaveDir.x*grad.x+wdir.x*grad.y),1.,-(uWaveDir.y*grad.x+wdir.y*grad.y)));
+      float sunGlow=pow(max(dot(reflect(-normalize(uSun),wn),normalize(uEye-vP)),0.),96.);
+      c*=.32+.68*uAtmosphere.x;
+      c+=uSunColor*uAtmosphere.x*min(.45,sunGlow*.35)*uAtmosphere.y*weatherShadow;
+      float cover=1.-weatherShadow;
+      c=mix(c,vec3(.31,.39,.45),cover*(.16+.34*fres));
+      float drift=fbm(vec2(aq.x*.0006-uWaveTime*.0009,aq.y*.0018));
+      c*=.94+.12*drift*min(uWaveAmplitude,2.);
+    }
+  }
+  else{
+    float reach=mix(7000.,28000.,clamp((uTide+1.4)/2.8,0.,1.)),intrusion=1.-smoothstep(reach*.75,reach,vF.z);
+    c=mix(vec3(.10,.25,.27),vec3(.40,.35,.22),uMud*intrusion*.8);
+    if(uMode==3)c*=.48+.52*weatherShadow;
+  }
+  float dist=length(uEye-vP);
+  float broadFog=smoothstep(180000.,600000.,dist);
+  c=mix(c,vec3(.72,.81,.83),broadFog*.18);
+  if(uMode==3&&uWeatherEnabled>.5){
+    float weatherFog=1.-exp(-max(0.,dist)*uFogDensity);
+    c=mix(c,mix(vec3(.01,.02,.04),vec3(.38,.56,.70),uAtmosphere.x),clamp(weatherFog,0.,.78));
+  }
+  color=vec4(pow(clamp(c,0.,1.),vec3(1./2.2)),1.);
+  gl_FragDepth=log2(max(.000001,vD))*uLogFar*.5;
+}`;
