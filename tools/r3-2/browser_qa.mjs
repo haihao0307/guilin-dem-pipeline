@@ -41,10 +41,17 @@ assert(seaInitial.kind === 'demonstration', `sea kind ${JSON.stringify(seaInitia
 assert(seaInitial.visible === 'true' && seaInitial.checkbox === true, `sea not initially visible ${JSON.stringify(seaInitial)}`);
 assert(seaInitial.datumM === 0, `sea display datum changed ${JSON.stringify(seaInitial)}`);
 assert(Math.abs(seaInitial.amplitudeM - 0.22) < 1e-6, `sea wave amplitude changed ${JSON.stringify(seaInitial)}`);
+const seaOnPixels = await page.locator('#terrain').screenshot();
 await page.uncheck('#show-sea');
 await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaVisible === 'false');
+await page.waitForTimeout(100);
+const seaOffPixels = await page.locator('#terrain').screenshot();
+assert(!seaOnPixels.equals(seaOffPixels), 'sea toggle changed state but did not change rendered WebGL pixels');
 await page.check('#show-sea');
 await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaVisible === 'true');
+await page.waitForTimeout(100);
+const seaRestoredPixels = await page.locator('#terrain').screenshot();
+assert(!seaRestoredPixels.equals(seaOffPixels), 'restored sea did not change rendered WebGL pixels');
 
 const contract = await page.evaluate(async () => {
   const r = await fetch(new URL('../r3-1/data/terrain.json', location.href));
@@ -125,7 +132,7 @@ assert(mobileLayout.eyeInside && mobileLayout.controlsInside && mobileLayout.sea
 assert(mobileLayout.seaKind === 'demonstration' && mobileLayout.seaVisible === 'true', `mobile sea missing ${JSON.stringify(mobileLayout)}`);
 assert(mobileErrors.length === 0, `mobile runtime errors: ${mobileErrors.join(' | ')}`);
 
-console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, seaInitial, notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
+console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, seaInitial, seaPixelToggleVerified: !seaOnPixels.equals(seaOffPixels) && !seaRestoredPixels.equals(seaOffPixels), notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
 await mobileContext.close();
 await context.close();
 await browser.close();
