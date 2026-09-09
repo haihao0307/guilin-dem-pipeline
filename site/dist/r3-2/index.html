@@ -7,6 +7,13 @@
  <link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css">
  <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script>
+  // R3.1's locked terrain contract intentionally retains site-root paths such
+  // as /r3/data/*. R3.2 resolves those paths relative to this versioned page
+  // so the same unchanged evidence works both on the normal site and on a
+  // fixed-commit raw.githack URL. Only request routing changes; bytes do not.
+  (()=>{const nativeFetch=window.fetch.bind(window);window.fetch=(input,init)=>{if(typeof input==='string'){if(input.startsWith('/r3/data/'))input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;else if(input.startsWith('/r3-1/data/'))input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;}return nativeFetch(input,init);};})();
+ </script>
 </head>
 <body>
  <main id="stage" aria-label="可旋转缩放并切换 1.6 米人眼视角的温州三维地形">
