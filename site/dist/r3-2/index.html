@@ -5,8 +5,8 @@
  <meta name="theme-color" content="#101b27"><meta name="description" content="小温州真实 DEM 三维地形 R3.2：加入离显示曲面 1.6 米的人眼相机。">
  <title>小温州 · 三维地形 R3.2</title>
  <link rel="icon" href="data:,">
- <link rel="stylesheet" href="/r3-2/style.css">
- <script type="importmap">{"imports":{"three":"/vendor/three.module.js"}}</script>
+ <link rel="stylesheet" href="./style.css">
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
 </head>
 <body>
  <main id="stage" aria-label="可旋转缩放并切换 1.6 米人眼视角的温州三维地形">
@@ -39,8 +39,8 @@
       <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>这片地形来自哪里</h2>
       <p>R3.2 继续读取 R3.1 已固定的测量与地图资料，只新增相机与交互关系，不改写源 DEM、海岸或河流证据。</p>
       <dl><dt>位置</dt><dd>EPSG:32651，东向与北向以米表示；画面统一换算成千米。真实比例指投影水平与高程使用同一尺度，不是地球曲率模型。</dd><dt>高程与误差</dt><dd>沿用归档中的高程数值。归档格距 12.5 米，来源信息尺度约 30 米；高程基准、独立实测误差和统一观测时间尚未确定。</dd><dt>1.6 米人眼视角</dt><dd>相机在 1× 显示比例下锚定到当前有效显示三角面上方 1.6 米。这个 1.6 米只约束视点与显示曲面的几何关系，不增加新的地形测量，也不能推出米级地物、河床或地表细节。人眼模式的前后移动会重新求当前显示曲面高度；前方缺少有效支撑或落入裁除海域时拒绝移动。</dd><dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网的双线性曲面；显示误差与实测误差分别记录。</dd><dt>空白区域</dt><dd>缺测或当前范围之外，不能据此判断为海水或零高程。边缘采取保守裁切，不跨缺测区连面。海域按 OSM 预处理陆地区域裁除，未创建假水面。陆地区域包含内陆水域，不等于处处干地。</dd><dt>海岸与河流</dt><dd>海岸使用 2026-09-09 下载的 FOSSGIS/OSM 预处理陆地面；不是即时潮位线。河流使用 2026-08 的混合归档地图线位，未确认完整覆盖全域。河宽、水位、河床与物理连接未知。</dd><dt>起伏增强</dt><dd>仅放大显示高度，不改变原始数据；人眼 1.6 米模式只在 1× 下工作，进入人眼模式会恢复 1×。</dd><dt>查询位置</dt><dd>是数据查询点，不是地形上的物理构件。点号不代表地名，标记的显示落点不等于实测连接。</dd><dt>继承关系</dt><dd>R3 和 R3.1 固定历史文件不改。R3.2 的地形、海岸和河流数据继续引用 R3.1 锁定资料，仅新增相机控制代码。</dd></dl>
-      <a href="/r3-1/data/terrain.json" target="_blank" rel="noreferrer">查看锁定测量与曲面规则</a>
+      <a href="../r3-1/data/terrain.json" target="_blank" rel="noreferrer">查看锁定测量与曲面规则</a>
    </aside>
  </main>
- <script type="module" src="/r3-2/app.js"></script>
+ <script type="module" src="./app.js"></script>
 </body></html>
