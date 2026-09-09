@@ -1,0 +1,147 @@
+name: Publish and verify Weather Mother silver cloud flight R0.3 Pages
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-silver-cloud-flight-r03-20260910
+    paths:
+      - .github/workflows/publish-verify-weather-mother-silver-cloud-flight-r03-pages.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-weather-mother-silver-cloud-flight-r03-pages
+  cancel-in-progress: false
+
+jobs:
+  publish-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SOURCE_COMMIT: 9028536b12942b2c45c9585ba539c3c45c69923e
+      SOURCE_FILE: weather-mother/deliveries/weather-mother-cloud-flight-r03.html
+      TARGET_DIR: weather-mother/cloud-flight-r03-silver-20260909
+      EXPECTED_SHA256: 6124541be1c6d72e09afbe92797ebb80e3607f8cca66fffd323755fd64e45c44
+      PUBLIC_URL: https://haihao0307.github.io/guilin-dem-pipeline/weather-mother/cloud-flight-r03-silver-20260909/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lock exact Sep 9 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$SOURCE_FILE"
+          actual=$(sha256sum "$SOURCE_FILE" | awk '{print $1}')
+          test "$actual" = "$EXPECTED_SHA256"
+          grep -q 'silver' "$SOURCE_FILE"
+          grep -q 'flightPos' "$SOURCE_FILE"
+          grep -q 'flightAuto' "$SOURCE_FILE"
+          grep -q 'KeyW' "$SOURCE_FILE"
+          echo "source locked sha256=$actual"
+      - name: Publish byte-identical HTML to versioned Pages path
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wm-ghpages
+          git worktree add /tmp/wm-ghpages origin/gh-pages
+          cd /tmp/wm-ghpages
+          mkdir -p "$TARGET_DIR"
+          cp "$GITHUB_WORKSPACE/$SOURCE_FILE" "$TARGET_DIR/index.html"
+          actual=$(sha256sum "$TARGET_DIR/index.html" | awk '{print $1}')
+          test "$actual" = "$EXPECTED_SHA256"
+          cat > "$TARGET_DIR/RECOVERY_SOURCE.json" <<JSON
+          {
+            "schema": "weather-mother-silver-cloud-flight-r03-recovery@1",
+            "sourceCommit": "$SOURCE_COMMIT",
+            "sourceFile": "$SOURCE_FILE",
+            "sourceSHA256": "$EXPECTED_SHA256",
+            "publishedAs": "$TARGET_DIR/index.html",
+            "byteIdenticalHTML": true,
+            "target": "silver lining + in-cloud flight R0.3",
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "$TARGET_DIR"
+          if ! git diff --cached --quiet; then
+            git commit -m 'recover(weather-mother): publish Sep 9 silver cloud-flight R0.3 [skip ci]'
+          fi
+          for attempt in 1 2 3 4; do
+            git fetch origin gh-pages
+            if git rebase origin/gh-pages && git push origin HEAD:gh-pages; then
+              git rev-parse HEAD > /tmp/wm-pages-commit.txt
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep 3
+          done
+          exit 1
+      - name: Wait for exact public HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 50); do
+            status=$(curl -L -sS -o /tmp/wm-r03-public.html -w '%{http_code}' --connect-timeout 10 --max-time 45 "$PUBLIC_URL" || true)
+            if [ "$status" = 200 ]; then
+              sha=$(sha256sum /tmp/wm-r03-public.html | awk '{print $1}')
+              if [ "$sha" = "$EXPECTED_SHA256" ]; then ok=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "public byte-identical HTML is live"
+      - name: Install Chromium harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wm-r03-pages-qa && cd /tmp/wm-r03-pages-qa
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Run public browser flight gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/wm-r03-pages-qa/run.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url=process.env.PUBLIC_URL;
+          const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
+          const errors=[];
+          async function run(viewport,mobile=false){
+            const context=await browser.newContext({viewport,deviceScaleFactor:mobile?2:1,isMobile:mobile,hasTouch:mobile});
+            const page=await context.newPage(); page.setDefaultTimeout(120000);
+            page.on('pageerror',e=>errors.push({scope:mobile?'phone':'desktop',type:'pageerror',message:String(e?.stack||e)}));
+            page.on('console',m=>{if(m.type()==='error')errors.push({scope:mobile?'phone':'desktop',type:'console',message:m.text()})});
+            page.on('requestfailed',r=>errors.push({scope:mobile?'phone':'desktop',type:'request',url:r.url(),message:r.failure()?.errorText||''}));
+            const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
+            if(response?.status()!==200)throw new Error('HTTP '+response?.status());
+            await page.waitForFunction(()=>typeof window.__WM_R03==='object',null,{timeout:120000});
+            const initial=await page.evaluate(()=>({title:document.title,error:document.getElementById('errText')?.textContent||'',state:structuredClone(__WM_R03.state)}));
+            if(initial.error)throw new Error(initial.error);
+            await page.evaluate(()=>{__WM_R03.setCamMode(1);__WM_R03.resetFlight();__WM_R03.state.paused=false;});
+            await page.waitForTimeout(300);
+            const before=await page.evaluate(()=>[...__WM_R03.state.flightPos]);
+            await page.keyboard.down('KeyW'); await page.waitForTimeout(350); await page.keyboard.up('KeyW'); await page.waitForTimeout(120);
+            const after=await page.evaluate(()=>[...__WM_R03.state.flightPos]);
+            if(!(after[2] < before[2]-0.05))throw new Error('manual forward flight failed');
+            const ui=await page.evaluate(()=>{const c=document.getElementById('c').getBoundingClientRect();return{camMode:__WM_R03.state.camMode,canvas:[c.width,c.height],padOn:document.getElementById('flightPad')?.classList.contains('on'),hudOn:document.getElementById('flightHud')?.classList.contains('on')}});
+            if(ui.camMode!==1)throw new Error('flight mode failed');
+            if(mobile && !(ui.padOn&&ui.hudOn&&Math.round(ui.canvas[0])===390&&Math.round(ui.canvas[1])===844))throw new Error('phone flight UI failed '+JSON.stringify(ui));
+            await context.close();
+            return{title:initial.title,initialCamMode:initial.state.camMode,before,after,ui};
+          }
+          try{
+            const desktop=await run({width:1280,height:800},false);
+            const phone=await run({width:390,height:844},true);
+            if(errors.length)throw new Error(JSON.stringify(errors));
+            console.log(JSON.stringify({passed:true,url,sourceCommit:process.env.SOURCE_COMMIT,sourceSHA256:process.env.EXPECTED_SHA256,pagesCommit:process.env.PAGES_COMMIT||'',desktop,phone,errors},null,2));
+          }finally{await browser.close();}
+          JS
+          export PAGES_COMMIT=$(cat /tmp/wm-pages-commit.txt)
+          cd /tmp/wm-r03-pages-qa
+          NODE_PATH=/tmp/wm-r03-pages-qa/node_modules node run.mjs
