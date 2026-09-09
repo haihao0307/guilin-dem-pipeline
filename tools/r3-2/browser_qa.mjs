@@ -15,7 +15,10 @@ async function allowGithack(context) {
 }
 
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+// Freeze only the optional sea animation during deterministic visual QA. The
+// real page remains animated for normal users; reduced-motion is an explicit
+// supported rendering mode, not a different sea implementation.
+const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
 await allowGithack(context);
 const page = await context.newPage();
 const runtimeErrors = [];
@@ -104,7 +107,7 @@ for (const id of patches) await enterEyeAndCheck(id);
 assert(successfulMoves > 0, 'no tested patch allowed a valid near-ground move');
 assert(runtimeErrors.length === 0, `runtime errors: ${runtimeErrors.join(' | ')}`);
 
-const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
 await allowGithack(mobileContext);
 const mobile = await mobileContext.newPage();
 const mobileErrors = [];
@@ -132,7 +135,7 @@ assert(mobileLayout.eyeInside && mobileLayout.controlsInside && mobileLayout.sea
 assert(mobileLayout.seaKind === 'demonstration' && mobileLayout.seaVisible === 'true', `mobile sea missing ${JSON.stringify(mobileLayout)}`);
 assert(mobileErrors.length === 0, `mobile runtime errors: ${mobileErrors.join(' | ')}`);
 
-console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, seaInitial, seaPixelToggleVerified: !seaOnPixels.equals(seaOffPixels) && !seaRestoredPixels.equals(seaOffPixels), notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
+console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, reducedMotionQA: true, seaInitial, seaPixelToggleVerified: !seaOnPixels.equals(seaOffPixels) && !seaRestoredPixels.equals(seaOffPixels), notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
 await mobileContext.close();
 await context.close();
 await browser.close();
