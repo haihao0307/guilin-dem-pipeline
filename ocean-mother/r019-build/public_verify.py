@@ -26,7 +26,9 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     if notice_seen:
         with page.expect_navigation(wait_until="domcontentloaded", timeout=120_000):
             page.locator("button.url-action-button").click()
-    page.wait_for_function("window.__OCEAN_READY__ === true", timeout=120_000)
+    page.wait_for_function("window.__OCEAN_READY__ === true || (window.__OCEAN_QA__ && window.__OCEAN_QA__.error)", timeout=120_000)
+    if not page.evaluate("window.__OCEAN_READY__ === true"):
+        raise RuntimeError("R019 startup failed: " + json.dumps(page.evaluate("window.__OCEAN_QA__"), ensure_ascii=False))
     page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.gpuQuery === true", timeout=120_000)
 
     title = page.title()
@@ -110,7 +112,7 @@ evidence = Path(sys.argv[2])
 evidence.mkdir(parents=True, exist_ok=True)
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True, args=["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-dev-shm-usage"])
+    browser = p.chromium.launch(headless=False, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-dev-shm-usage"])
     desktop_context = browser.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
     desktop = exercise(desktop_context.new_page(), mobile=False, evidence=evidence)
     desktop_context.close()
@@ -129,7 +131,7 @@ receipt = {
     "status": "PASS" if desktop["pass"] and mobile["pass"] else "FAIL",
     "visualAcceptance": False,
     "productionReady": False,
-    "note": "This confirms the raw.githack notice flow, fixed public URL, WebGL2 startup and required interactions in GitHub-hosted Chromium/SwiftShader; it is not target iPhone/Mac performance evidence.",
+    "note": "This confirms the raw.githack notice flow, fixed public URL, WebGL2 startup and required interactions in GitHub-hosted Chromium/ANGLE SwiftShader under Xvfb; it is not target iPhone/Mac performance evidence.",
 }
 (evidence / "PUBLIC_BROWSER_QA.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(receipt, ensure_ascii=False, indent=2))
