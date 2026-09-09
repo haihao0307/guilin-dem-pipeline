@@ -1,0 +1,45 @@
+{
+  "version": "R3.3",
+  "date": "2026-09-10",
+  "status": "evidence-surface-candidate-awaiting-browser-qa",
+  "baseCommit": "4068b0d3a802a0a0d5f17922479bbfb03a727994",
+  "baseVersion": "R3.2 final full release",
+  "implementationBranch": "feature/wenzhou-r3-3-evidence-surface-20260910",
+  "scope": "Evidence-driven near-ground surface appearance at the 12 locked query locations without adding terrain height truth",
+  "inheritance": {
+    "r32CameraAndNavigation": "reused in place",
+    "r32Sea": "reused in place",
+    "r32FilesModified": false,
+    "r31MeasurementEvidenceModified": false
+  },
+  "surfaceEvidence": {
+    "source": "inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json",
+    "expectedSha256": "642290d1076bd700634c1c719c890819b5035a3841e24f9c86f5a171b1875482",
+    "records": 12,
+    "support": "SoilGrids model-prediction grid",
+    "spacingM": 250,
+    "depth": "0-5cm",
+    "usedProperties": ["clay", "sand", "silt", "soc"]
+  },
+  "displayLayer": {
+    "kind": "soil-model-appearance-demo",
+    "radiusM": 48,
+    "visualLiftM": 0.02,
+    "changesTerrainHeight": false,
+    "createsRoadTruth": false,
+    "createsBuildingTruth": false,
+    "createsVegetationTruth": false,
+    "microdetail": "deterministic procedural appearance only"
+  },
+  "precisionBoundary": "SoilGrids predictions parameterize display appearance only and do not establish local soil color, texture, geometry, road/building/vegetation truth, terrain height, or measurement accuracy.",
+  "checks": {
+    "staticEvidenceGate": "pending CI",
+    "localChromium": "pending CI",
+    "fixedCommitPublicChromium": "pending CI",
+    "mobile390x844": "pending CI",
+    "surfacePixelToggle": "pending CI"
+  },
+  "visualApprovedByUser": false,
+  "productionReady": false,
+  "taskMode": "one-off continuation, not recurring"
+}
