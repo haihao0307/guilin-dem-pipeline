@@ -1,6 +1,7 @@
 {
-  "version": "R3.2-candidate",
+  "version": "R3.2",
   "date": "2026-09-09",
+  "status": "r3.2-scope-complete-public-verified-packaging",
   "baseArchiveCommit": "0b1a88a252e219607a19c0d7a2bac84e95241078",
   "baseReleaseTag": "wenzhou-r3.1-full-20260909",
   "baseReleaseAsset": "Wenzhou_R3_1_FULL_RESTART_20260909.zip",
@@ -17,42 +18,49 @@
     "farClipKm": "5 to 60 depending on current patch extent",
     "groundRelation": "current valid display triangle surface only",
     "defaultHumanMoveStepM": 2,
-    "movement": "WASD/wheel/buttons and tool movement validate the full requested path in substeps; movement stops before missing support or clipped-marine display"
+    "movement": "WASD/wheel/buttons and tool movement validate the full requested path in 0.5-2 m substeps; movement stops before missing support or clipped-marine display"
   },
   "precisionClaim": "none beyond inherited source; 1.6 m is a camera/display relationship, not terrain accuracy",
+  "verifiedPublicCommit": "d949b2f0c980f303cd4d306e1d7de379d5bbe238",
+  "verifiedPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/d949b2f0c980f303cd4d306e1d7de379d5bbe238/site/dist/r3-2/index.html",
+  "browserQaRun": 34363981103,
+  "browserQa": {
+    "localPassed": true,
+    "fixedCommitPublicPassed": true,
+    "patches": ["overview", "mountains", "river-oujiang", "river-feiyun", "river-aojiang"],
+    "eyeHeightBeforeMovementM": 1.6,
+    "eyeHeightAfterMovementM": 1.6,
+    "successfulMoveChecks": 5,
+    "mobileViewport": "390x844",
+    "mobileHorizontalOverflow": false,
+    "runtimeErrors": [],
+    "mobileErrors": []
+  },
   "fixedPreviewPortability": {
     "relativeStyleAndApp": true,
     "relativeThreeAndOrbitControls": true,
     "relativeR3_1DataRoot": true,
-    "fixedCommitPublicBrowserVerified": false
-  },
-  "soilSourceReview": {
-    "source": "ISRIC SoilGrids 2.0",
-    "license": "CC BY 4.0",
-    "intakeArrays": 33,
-    "qaPassed": true,
-    "classification": "model prediction, not local field observation",
-    "allowedUse": "regional soil-property evidence/conductor with explicit uncertainty",
-    "notAllowedAs": "direct local 3A ground-material truth or field-validated surface texture"
+    "runtimeResolutionOfInheritedR3RootPaths": true,
+    "fixedCommitPublicBrowserVerified": true
   },
   "checks": {
-    "authoredJavascriptNodeSyntaxCheck": true,
-    "staticValidatorAdded": true,
-    "staticValidatorRunOnFullCheckout": false,
-    "baseR3AndR3_1Modified": false,
-    "publicBrowserVerified": false,
-    "fullReleaseZipLocallyRestored": false
+    "javascriptSyntax": true,
+    "staticValidatorOnFullCheckout": true,
+    "allLockedR3AndR3_1DisplayDataSha256": true,
+    "localChromium": true,
+    "fixedCommitPublicChromium": true,
+    "mobile390x844": true,
+    "baseR3AndR3_1Modified": false
   },
-  "fullReleaseRestoreBlocker": "Current runtime can read the GitHub archive branch and Release metadata but cannot download the 1.03 GB Release binary asset. No GitHub Actions workflow run/artifact exists on the archive branch as an alternate download path.",
-  "nextQA": [
-    "Run tools/r3-2/validate_eye_static.py on a complete checkout or restored package",
-    "Open fixed-commit public preview and confirm all module/data requests resolve",
-    "Test human-eye entry on overview, mountains and each river near-view",
-    "Verify camera-to-display-surface delta reports 1.600 m before and after forward/back/strafe movement",
-    "Verify path-substep movement stops before invalid support and clipped marine domain",
-    "Verify reset exits eye mode and restores 1x fitted camera",
-    "Verify 390x844 controls without horizontal overflow"
-  ],
-  "visualApproved": false,
-  "productionReady": false
+  "fullPackagePlan": {
+    "method": "download verified R3.1 full release, verify base SHA and base MANIFEST, overlay R3.2, regenerate complete MANIFEST, verify again, publish new R3.2 full release",
+    "releaseTag": "wenzhou-r3.2-full-20260909",
+    "releaseAsset": "Wenzhou_R3_2_FULL_RESTART_20260909.zip"
+  },
+  "scopeComplete": true,
+  "fullWorld3AContentComplete": false,
+  "fullWorld3AConstraint": "12.5 m DEM with ~30 m source information scale cannot by itself establish meter-scale roads, rocks, buildings, vegetation or riverbed truth; those require independent sourced object/environment layers",
+  "recurringAutomation": false,
+  "visualApprovedByUser": false,
+  "taskMode": "one-off completion, not recurring"
 }
