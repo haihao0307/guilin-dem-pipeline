@@ -1,0 +1,264 @@
+name: Wenzhou R3.5 OSM Object Evidence Permanent Release
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-5-osm-object-evidence-20260910
+    paths:
+      - .github/workflows/wenzhou-r3-5-osm-evidence-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate preliminary evidence ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('records/R3_5/OSM_OBJECT_EVIDENCE_LEDGER.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['status']=='acquired-awaiting-identity-and-timestamp-correction-before-permanent-release'
+          assert d['acquisition']['artifactId']==10124305485
+          assert d['acquisition']['artifactSha256']=='f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101'
+          assert d['hardSemanticBoundary']['canonicalTruth'] is False
+          assert d['hardSemanticBoundary']['productionReady'] is False
+          print(json.dumps({'passed':True,'ledger':str(p)},indent=2))
+          PY
+
+      - name: Download the exact successful acquisition artifact and verify archive SHA
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r35-release /tmp/r35-unpack
+          curl -fL --retry 4 --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/10124305485/zip" \
+            -o /tmp/r35-release/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip
+          echo 'f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101  /tmp/r35-release/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip' | sha256sum -c -
+          unzip -q /tmp/r35-release/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip -d /tmp/r35-unpack
+          test -f /tmp/r35-unpack/PAYLOAD_MANIFEST.json
+          test -f /tmp/r35-unpack/WENZHOU_OSM_ROADS.geojsonseq.gz
+          test -f /tmp/r35-unpack/WENZHOU_OSM_BUILDINGS.geojsonseq.gz
+
+      - name: Reverify the original acquisition payload byte-for-byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('/tmp/r35-unpack')
+          m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+          errors=[]
+          for item in m['payloads']:
+              p=root/item['path']
+              if not p.is_file(): errors.append([item['path'],'missing']); continue
+              if p.stat().st_size!=item['bytes']: errors.append([item['path'],'bytes']); continue
+              h=hashlib.sha256()
+              with p.open('rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
+              if h.hexdigest()!=item['sha256']:errors.append([item['path'],'sha256'])
+          report={'passed':not errors,'originalPayloadCount':m['payloadCount'],'originalPayloadTotalBytes':m['totalBytes'],'errors':errors,'originalManifestSchema':m['schema']}
+          Path('/tmp/r35-release/ORIGINAL_PAYLOAD_REVERIFICATION.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,indent=2))
+          if errors:raise SystemExit(2)
+          PY
+
+      - name: Correct timestamp interpretation and audit OSM identity across geometry representations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime,timezone
+          import collections,gzip,hashlib,json,math
+
+          root=Path('/tmp/r35-unpack');out=Path('/tmp/r35-release')
+          original=json.loads((root/'OSM_OBJECT_EVIDENCE_REPORT.json').read_text(encoding='utf-8'))
+
+          def parse_timestamp(value):
+              if value in (None,''):return None
+              if isinstance(value,(int,float)) or (isinstance(value,str) and value.strip().lstrip('-').replace('.','',1).isdigit()):
+                  try:
+                      seconds=float(value)
+                      if not math.isfinite(seconds) or seconds<0:return None
+                      return datetime.fromtimestamp(seconds,tz=timezone.utc)
+                  except Exception:return None
+              try:
+                  s=str(value).strip().replace('Z','+00:00')
+                  dt=datetime.fromisoformat(s)
+                  if dt.tzinfo is None:dt=dt.replace(tzinfo=timezone.utc)
+                  return dt.astimezone(timezone.utc)
+              except Exception:return None
+
+          def audit(filename,kind):
+              path=root/filename
+              features=[];bad=0;years=collections.Counter();timestamps=[];geom_counts=collections.Counter();tagged_counts=collections.Counter();identity={}
+              with gzip.open(path,'rt',encoding='utf-8') as f:
+                  for line_no,line in enumerate(f,1):
+                      line=line.strip()
+                      if not line:continue
+                      try:feat=json.loads(line)
+                      except Exception:bad+=1;continue
+                      p=feat.get('properties') or {};g=feat.get('geometry') or {};gt=g.get('type','null')
+                      geom_counts[gt]+=1
+                      dt=parse_timestamp(p.get('@timestamp'))
+                      if dt:
+                          years[str(dt.year)]+=1;timestamps.append(dt)
+                      key=(str(p.get('@type')),str(p.get('@id')))
+                      rec=identity.setdefault(key,{'geometryTypes':set(),'count':0,'features':[]})
+                      rec['geometryTypes'].add(gt);rec['count']+=1;rec['features'].append(feat)
+                      if kind=='road' and p.get('highway') not in (None,''):tagged_counts['highway']+=1
+                      if kind=='building' and (p.get('building') not in (None,'') or p.get('building:part') not in (None,'')):tagged_counts['buildingOrPart']+=1
+                      features.append(feat)
+              multi_rep={k:v for k,v in identity.items() if len(v['geometryTypes'])>1 or v['count']>1}
+              rep_patterns=collections.Counter('+'.join(sorted(v['geometryTypes'])) for v in multi_rep.values())
+              if kind=='road':
+                  centerline=[]
+                  for feat in features:
+                      p=feat.get('properties') or {};g=feat.get('geometry') or {}
+                      if g.get('type')=='LineString' and p.get('highway') not in (None,''):centerline.append(feat)
+                  visual={'centerlineCandidateCount':len(centerline),'policy':'Only LineString features with explicit highway tags are eligible as mapped centerline-style evidence. Visual line width is screen styling, never physical road width.'}
+              else:
+                  footprint_identities=set();footprint_features=0;line_only_identities=0;point_only_identities=0;multi_geometry_identities=0
+                  for key,rec in identity.items():
+                      geoms=rec['geometryTypes']
+                      if 'MultiPolygon' in geoms:
+                          footprint_identities.add(key)
+                          footprint_features+=sum(1 for f in rec['features'] if (f.get('geometry') or {}).get('type')=='MultiPolygon')
+                      elif 'LineString' in geoms:line_only_identities+=1
+                      elif 'Point' in geoms:point_only_identities+=1
+                      if len(geoms)>1:multi_geometry_identities+=1
+                  visual={'uniqueFootprintIdentityCount':len(footprint_identities),'multiPolygonFeatureCount':footprint_features,'lineOnlyIdentityCount':line_only_identities,'pointOnlyIdentityCount':point_only_identities,'multiGeometryIdentityCount':multi_geometry_identities,'policy':'Only MultiPolygon building/building:part observations are eligible as flat footprint evidence. LineString-only/Point-only records remain evidence but are not promoted to footprint polygons. No default extrusion.'}
+              return {
+                'exportedGeometryFeatureCount':len(features),'uniqueOsmIdentityCount':len(identity),'geometryTypes':dict(geom_counts),'multiRepresentationIdentityCount':len(multi_rep),'multiRepresentationPatterns':dict(rep_patterns),'invalidJsonLines':bad,
+                'timestampInterpretation':'@timestamp numeric values are Unix seconds; ISO timestamps are parsed as ISO when present. The original acquisition report first-four-digit pseudo-year counts are superseded.',
+                'timestampParsedCount':len(timestamps),'timestampMissingOrInvalidCount':len(features)-len(timestamps),'editYearCountsCorrected':dict(sorted(years.items())),'earliestEditUtc':(min(timestamps).isoformat().replace('+00:00','Z') if timestamps else None),'latestEditUtc':(max(timestamps).isoformat().replace('+00:00','Z') if timestamps else None),
+                'visualCandidateSubset':visual
+              }
+
+          roads=audit('WENZHOU_OSM_ROADS.geojsonseq.gz','road')
+          buildings=audit('WENZHOU_OSM_BUILDINGS.geojsonseq.gz','building')
+          checks={
+            'roadsJsonValid':roads['invalidJsonLines']==0,
+            'buildingsJsonValid':buildings['invalidJsonLines']==0,
+            'roadTimestampsPlausible':all(2004<=int(y)<=2030 for y in roads['editYearCountsCorrected']),
+            'buildingTimestampsPlausible':all(2004<=int(y)<=2030 for y in buildings['editYearCountsCorrected']),
+            'roadCenterlinesPresent':roads['visualCandidateSubset']['centerlineCandidateCount']>0,
+            'buildingFootprintsPresent':buildings['visualCandidateSubset']['uniqueFootprintIdentityCount']>0,
+            'originalCanonicalFalse':original['semantics']['canonicalTruth'] is False,
+            'originalProductionReadyFalse':original['semantics']['productionReady'] is False,
+          }
+          corrected={
+            'schema':'wenzhou-r3.5-osm-object-evidence-corrected/r1','passed':all(checks.values()),'sourceArtifactId':10124305485,'sourceArtifactSha256':'f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101','sourceAcquisitionRun':34403173646,'sourceAcquisitionCommit':'a9fd37888b461773eb1bc4b34687c836169cdb4e',
+            'provider':original['provider'],'dataSource':original['dataSource'],'license':original['license'],'attribution':original['attribution'],'boundsWgs84':original['boundsWgs84'],'regionalSources':original['regionalSources'],'crossRegionDeduplication':original['crossRegionDeduplication'],
+            'roads':roads,'buildings':buildings,
+            'tagCompleteness':{'roads':original['roads']['tagPresence'],'buildings':original['buildings']['tagPresence']},
+            'semantics':original['semantics'],
+            'corrections':{
+              'timestamp':'Supersedes original editYearCounts. Osmium export numeric @timestamp attributes are interpreted as Unix seconds, not by taking the first four digits.',
+              'identity':'Adds OSM type+id audit across geometry representations. Exported geometry feature counts are not treated as counts of unique physical roads/buildings.',
+              'buildingFootprints':'Only unique OSM identities with MultiPolygon building/building:part geometry are eligible as flat footprint evidence; alternate LineString/Point geometry is not counted as another building.'
+            },
+            'checks':checks
+          }
+          (out/'OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json').write_text(json.dumps(corrected,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          note='''# R3.5 OSM 元数据纠正说明\n\n原始采集 artifact 完整保留，未修改其任何字节。\n\n永久归档新增 `OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json`，修正两项解释层问题：\n\n1. 原报告把 osmium export 的数值 `@timestamp` 前四位误当年份，产生 1192、1740 等伪年份。纠正版把数值解释为 Unix seconds，并重新计算 UTC 编辑时间分布。\n2. 原去重键包含 geometry type，所以同一 OSM `type+id` 的 LineString/MultiPolygon 双表示会被当成两条 geometry feature。纠正版增加跨 geometry 的 OSM 身份审计。道路只把显式 highway 的 LineString 作为中心线式显示候选；建筑只把拥有 MultiPolygon 的唯一 OSM 身份作为平面 footprint 候选。\n\n这些纠正不提升 OSM 为测绘真值：`canonicalTruth=false`、`surveyGradeGeometry=false`、`individualPhysicalTruth=false`、`productionReady=false` 继续生效。\n'''
+          (out/'METADATA_CORRECTION_NOTE.md').write_text(note,encoding='utf-8')
+          print(json.dumps({'passed':corrected['passed'],'roads':roads,'buildings':buildings,'checks':checks},ensure_ascii=False,indent=2))
+          if not corrected['passed']:raise SystemExit(2)
+          PY
+
+      - name: Build permanent release index and checksums
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cp records/R3_5/OSM_OBJECT_EVIDENCE_LEDGER.json /tmp/r35-release/OSM_OBJECT_EVIDENCE_LEDGER.json
+          cp /tmp/r35-unpack/PAYLOAD_MANIFEST.json /tmp/r35-release/ORIGINAL_PAYLOAD_MANIFEST.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          root=Path('/tmp/r35-release')
+          names=['Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip','ORIGINAL_PAYLOAD_MANIFEST.json','ORIGINAL_PAYLOAD_REVERIFICATION.json','OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json','METADATA_CORRECTION_NOTE.md','OSM_OBJECT_EVIDENCE_LEDGER.json']
+          assets=[]
+          for name in names:
+              p=root/name;assets.append({'name':name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          corrected=json.loads((root/'OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json').read_text(encoding='utf-8'))
+          index={
+            'schema':'wenzhou-r3.5-osm-object-evidence-release/r1','sourceCommit':os.environ['SOURCE_SHA'],'sourceArtifactId':10124305485,'sourceArtifactSha256':'f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101','sourceAcquisitionRun':34403173646,'sourceAcquisitionCommit':'a9fd37888b461773eb1bc4b34687c836169cdb4e','productionBaseline':False,'visualIntegration':False,'assets':assets,
+            'roadCenterlineCandidateCount':corrected['roads']['visualCandidateSubset']['centerlineCandidateCount'],'buildingUniqueFootprintIdentityCount':corrected['buildings']['visualCandidateSubset']['uniqueFootprintIdentityCount'],
+            'canonicalTruth':False,'surveyGradeGeometry':False,'individualPhysicalTruth':False,'productionReady':False,
+            'promotionRule':'Road LineStrings may constrain centerline-style display but line width is not physical width. Building MultiPolygon identities may constrain flat footprint display but no height/levels/roof/material may be invented. Missing tags remain unknown.'
+          }
+          (root/'EVIDENCE_RELEASE_INDEX.json').write_text(json.dumps(index,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          lines=[]
+          for p in sorted(root.iterdir()):
+              if p.is_file() and p.name!='SHA256SUMS.txt':lines.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}")
+          (root/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          PY
+          cat > /tmp/r35-release/README.md <<'EOF'
+          # 小温州 R3.5 OSM 道路/建筑外部证据归档
+
+          这是外部地图证据归档，不是测绘生产基线，也不自动改变 R3.4 画面。
+
+          - 道路：只有显式 `highway` 的 LineString 才可作为中心线式显示候选；屏幕线宽不代表物理道路宽度。
+          - 建筑：只有拥有 MultiPolygon 几何的唯一 OSM 身份才可作为平面 footprint 候选；缺少 `height`/`building:levels` 时高度保持未知，禁止默认拉高。
+          - 原采集 artifact 原字节永久保留；永久归档另带纠正版报告，修正原报告的 timestamp 年份解释与跨 geometry 身份统计。
+          - OSM 对象编辑时间不统一；几何不是 survey-grade physical truth。
+          EOF
+
+      - name: Publish permanent OSM evidence release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          TAG='wenzhou-r3.5-osm-object-evidence-20260910'
+          cat > /tmp/r35-release-notes.md <<EOF
+          # 小温州 R3.5 OSM 道路/建筑外部证据归档
+
+          源提交：\`${SOURCE_SHA}\`
+
+          原采集 artifact SHA：\`f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101\`
+
+          永久归档保留原始采集 artifact，并新增纠正版身份/时间戳审计报告。道路只允许作为中心线式外部地图证据；建筑只允许以实际 MultiPolygon 身份作为平面 footprint 证据。缺失 width/lanes/height/levels/roof/material 全部保持 unknown。
+
+          这不是生产真值：\`canonicalTruth=false\`、\`surveyGradeGeometry=false\`、\`individualPhysicalTruth=false\`、\`productionReady=false\`。
+          EOF
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" /tmp/r35-release/* --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --notes-file /tmp/r35-release-notes.md
+          else
+            gh release create "$TAG" /tmp/r35-release/* --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --title '小温州 R3.5 OSM 道路建筑外部证据 · 2026-09-10' --notes-file /tmp/r35-release-notes.md
+          fi
+
+      - name: Upload audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-5-osm-release-audit-${{ github.sha }}
+          path: |
+            /tmp/r35-release/OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json
+            /tmp/r35-release/ORIGINAL_PAYLOAD_REVERIFICATION.json
+            /tmp/r35-release/EVIDENCE_RELEASE_INDEX.json
+            /tmp/r35-release/SHA256SUMS.txt
+          if-no-files-found: error
