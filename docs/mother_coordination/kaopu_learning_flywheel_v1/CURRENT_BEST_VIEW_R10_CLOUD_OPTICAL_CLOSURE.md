@@ -12,7 +12,7 @@ Status: Candidate extension to `CURRENT_BEST_VIEW.md`; no Frozen change.
 81. Legitimate closure routes remain distinct: direct optical retrieval, microphysical closure, source-native model optics, and explicitly synthetic evaluator tests. Results from one route do not silently inherit the evidence status of another.
 82. Renderer density/extinction/albedo/phase controls are adapter/evaluator representations. Their defaults may never be promoted into Weather truth because a renderer requires a value.
 83. When a weather/reanalysis source already exposes a documented optical diagnostic, preserving that source-native optical packet is lower-assumption than reconstructing the same quantity using a hidden fixed particle radius. MERRA-2 `tavg3_3d_cld_Nv` is a candidate global experimental route because it exposes cloud fraction, in-cloud QL/QI and in-cloud liquid/ice optical thickness on model levels. Those optical depths remain source-model diagnostics, not universal truth or local 3-D extinction.
-84. HRRR native fields remain useful for richer CONUS-only microphysical experiments. Source geography, latency, resolution and field semantics are part of validity and prevent HRRR from serving as Wenzhou/global Weather truth.
+84. HRRR native fields remain useful for richer **regional** microphysical experiments over its operational CONUS and Alaska sectors. Source geography, latency, resolution and field semantics are part of validity and prevent HRRR from serving as Wenzhou/global Weather truth.
 85. A physically meaningful cloud/light integration reports source/model or retrieval uncertainty separately from numerical integration error, visual approximation error and performance budget.
 
 R10 evidence status:
