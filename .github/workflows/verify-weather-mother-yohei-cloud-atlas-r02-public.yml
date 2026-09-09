@@ -1,0 +1,78 @@
+name: Verify Weather Mother YOHEI Cloud Atlas R0.2 public URL
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-yohei-cloud-family-r02
+    paths:
+      - .github/workflows/verify-weather-mother-yohei-cloud-atlas-r02-public.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FIXED_COMMIT: 029d2e564b65a0874af439232ca8856c42981a14
+      PUBLIC_URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/029d2e564b65a0874af439232ca8856c42981a14/weather-mother/deliveries/weather-mother-yohei-cloud-atlas-r02.html
+      EXPECTED_SHA256: a32f4fd5a3a419df6026e13c5296913e1e1250dba284151206d8113a6f00be67
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch and verify the immutable public HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=''
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            status=$(curl -L --silent --show-error --connect-timeout 15 --max-time 45 \
+              -w '%{http_code}' -o /tmp/weather-r02-public.html "$PUBLIC_URL" || true)
+            if [ "$status" = '200' ]; then break; fi
+            sleep 8
+          done
+          test "$status" = '200'
+          actual_sha=$(sha256sum /tmp/weather-r02-public.html | awk '{print $1}')
+          actual_bytes=$(wc -c < /tmp/weather-r02-public.html | tr -d ' ')
+          test "$actual_sha" = "$EXPECTED_SHA256"
+          test "$actual_bytes" = '38436'
+          grep -Fq 'Weather Mother · YOHEI Cloud Atlas R0.2' /tmp/weather-r02-public.html
+          grep -Fq 'Cumulonimbus' /tmp/weather-r02-public.html
+          grep -Fq 'Cirrostratus' /tmp/weather-r02-public.html
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          proof = {
+            'schema': 'weather-mother-public-web-proof/r0.2',
+            'version': 'Weather Mother · YOHEI Cloud Atlas R0.2',
+            'fixedCommit': os.environ['FIXED_COMMIT'],
+            'publicURL': os.environ['PUBLIC_URL'],
+            'httpStatus': 200,
+            'artifactBytes': Path('/tmp/weather-r02-public.html').stat().st_size,
+            'artifactSHA256': os.environ['EXPECTED_SHA256'],
+            'singleFile': True,
+            'externalRuntimeDependencies': 0,
+            'requiredMarkers': ['Weather Mother · YOHEI Cloud Atlas R0.2', 'Cumulonimbus', 'Cirrostratus'],
+            'publicHTTPVerified': True,
+            'browserQAArtifactSHA256Matched': True,
+            'visualAcceptance': False,
+            'productionReady': False,
+            'verifiedBy': 'GitHub Actions public-network fetch'
+          }
+          out = Path('weather-mother/deliveries/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_PUBLIC_WEB_PROOF.json')
+          out.write_text(json.dumps(proof, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(proof, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit public proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/deliveries/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_PUBLIC_WEB_PROOF.json
+          git commit -m 'qa(weather-mother): prove fixed R0.2 public URL [skip ci]'
+          git push origin HEAD:feature/weather-mother-yohei-cloud-family-r02
