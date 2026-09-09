@@ -1,0 +1,628 @@
+{
+  "schema": "world-score-tlo-pilot/0.1",
+  "fixture": {
+    "id": "fixture:cuihu-historical-building-a",
+    "title": "Synthetic Cuihu historical-building microcase",
+    "synthetic": true,
+    "purpose": "Test semantics only. No record is asserted as real Kunming history.",
+    "createdAt": "2026-09-09T10:20:00+08:00"
+  },
+  "freeze": {
+    "charter": {
+      "path": "docs/mother_coordination/world_knowledge_lab_v1/core/WORLD_SCORE_TLO_SEMANTIC_CHARTER_R1_20260909.md",
+      "commit": "cd9160ce90cd1c6c6a49f4fbb2ae1f2c55470330",
+      "policy": "append-only"
+    },
+    "redTeam": {
+      "path": "docs/mother_coordination/world_knowledge_lab_v1/reviews/WORLD_SCORE_TLO_R1_OPENAI_REDTEAM_R1_20260909.md",
+      "commit": "12bf33ab3c0ecdb576cdb6b608c1e8e9f6748bb0"
+    }
+  },
+  "worldObjects": [
+    {
+      "id": "world:building-historical-a",
+      "type": "building",
+      "identityStatus": "hypothesized-continuant",
+      "site": "world:site-cuihu-test-01"
+    },
+    {
+      "id": "world:building-modern-b",
+      "type": "building",
+      "identityStatus": "separate-object",
+      "site": "world:site-cuihu-test-01",
+      "relations": [
+        {
+          "type": "occupiesSameSiteAs",
+          "target": "world:building-historical-a",
+          "validTime": {
+            "start": "2025-01-01",
+            "end": null
+          }
+        },
+        {
+          "type": "reconstructionStyleReferences",
+          "target": "world:building-historical-a",
+          "validTime": {
+            "start": "2025-01-01",
+            "end": null
+          },
+          "epistemic": "fixture-assumption"
+        }
+      ]
+    },
+    {
+      "id": "world:person-zhang-uncle",
+      "type": "person",
+      "identityStatus": "fixture-entity"
+    },
+    {
+      "id": "world:restaurant-x",
+      "type": "business",
+      "identityStatus": "fixture-entity"
+    },
+    {
+      "id": "world:site-cuihu-test-01",
+      "type": "site",
+      "identityStatus": "fixture-site"
+    }
+  ],
+  "sourceEvents": [
+    {
+      "id": "sourceevent:shutter-aerial-1944",
+      "type": "image-capture",
+      "worldTime": {
+        "start": "1944-05-10T09:00:00+08:00",
+        "end": "1944-05-10T09:00:01+08:00"
+      },
+      "observerOrSensor": "sensor:aerial-camera-01"
+    },
+    {
+      "id": "sourceevent:shutter-ground-1944",
+      "type": "image-capture",
+      "worldTime": {
+        "start": "1944-05-01",
+        "end": "1944-05-31"
+      },
+      "observerOrSensor": "sensor:ground-camera-01"
+    },
+    {
+      "id": "sourceevent:memory-map-1978",
+      "type": "recollection-recording",
+      "worldTime": {
+        "start": "1978-06-01",
+        "end": "1978-06-01"
+      },
+      "representedTime": {
+        "start": "1944-01-01",
+        "end": "1945-12-31"
+      },
+      "observerOrSensor": "observer:former-resident-01"
+    },
+    {
+      "id": "sourceevent:satellite-1967",
+      "type": "image-capture",
+      "worldTime": {
+        "start": "1967-11-03",
+        "end": "1967-11-03"
+      },
+      "observerOrSensor": "sensor:satellite-camera-01"
+    },
+    {
+      "id": "sourceevent:construction-record-2025",
+      "type": "administrative-record-creation",
+      "worldTime": {
+        "start": "2025-02-15",
+        "end": "2025-02-15"
+      },
+      "observerOrSensor": "agent:construction-authority-test"
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset:aerial-negative-1944",
+      "type": "physical-negative",
+      "createdBy": "sourceevent:shutter-aerial-1944",
+      "assetCreatedTime": "1944-05-10T09:00:01+08:00",
+      "authenticityStatus": "fixture-unverified",
+      "lineageRoot": "root:aerial-sortie-1944-01"
+    },
+    {
+      "id": "asset:aerial-scan-2026",
+      "type": "digital-scan",
+      "assetCreatedTime": "2026-08-01T10:00:00+08:00",
+      "lineage": [
+        {
+          "relation": "transformedFrom",
+          "target": "asset:aerial-negative-1944"
+        }
+      ],
+      "lineageRoot": "root:aerial-sortie-1944-01",
+      "authenticityStatus": "fixture-unverified"
+    },
+    {
+      "id": "asset:aerial-web-copy-1",
+      "type": "digital-copy",
+      "assetCreatedTime": "2026-08-02T10:00:00+08:00",
+      "lineage": [
+        {
+          "relation": "copiedFrom",
+          "target": "asset:aerial-scan-2026"
+        }
+      ],
+      "lineageRoot": "root:aerial-sortie-1944-01",
+      "authenticityStatus": "fixture-unverified"
+    },
+    {
+      "id": "asset:ground-negative-1944",
+      "type": "physical-negative",
+      "createdBy": "sourceevent:shutter-ground-1944",
+      "assetCreatedTime": "1944-05-31",
+      "authenticityStatus": "fixture-unverified",
+      "lineageRoot": "root:ground-photographer-1944-01"
+    },
+    {
+      "id": "asset:memory-map-1978",
+      "type": "hand-drawn-map",
+      "createdBy": "sourceevent:memory-map-1978",
+      "assetCreatedTime": "1978-06-01",
+      "authenticityStatus": "fixture-unverified",
+      "lineageRoot": "root:resident-memory-1978-01"
+    },
+    {
+      "id": "asset:satellite-frame-1967",
+      "type": "satellite-image",
+      "createdBy": "sourceevent:satellite-1967",
+      "assetCreatedTime": "1967-11-03",
+      "authenticityStatus": "fixture-unverified",
+      "lineageRoot": "root:satellite-mission-1967-01"
+    },
+    {
+      "id": "asset:construction-record-2025",
+      "type": "administrative-record",
+      "createdBy": "sourceevent:construction-record-2025",
+      "assetCreatedTime": "2025-02-15",
+      "authenticityStatus": "fixture-unverified",
+      "lineageRoot": "root:construction-record-2025-01"
+    },
+    {
+      "id": "asset:ai-reconstruction-2026",
+      "type": "synthetic-reconstruction",
+      "assetCreatedTime": "2026-09-09T10:25:00+08:00",
+      "representedTime": {
+        "start": "1944-01-01",
+        "end": "1944-12-31"
+      },
+      "lineage": [
+        {
+          "relation": "derivedFrom",
+          "target": "asset:aerial-scan-2026"
+        },
+        {
+          "relation": "derivedFrom",
+          "target": "asset:ground-negative-1944"
+        },
+        {
+          "relation": "derivedFrom",
+          "target": "asset:memory-map-1978"
+        }
+      ],
+      "lineageRoot": "root:ai-reconstruction-run-2026-01",
+      "authenticityStatus": "synthetic-declared"
+    }
+  ],
+  "observations": [
+    {
+      "id": "obs:aerial-footprint-1944",
+      "sourceEvent": "sourceevent:shutter-aerial-1944",
+      "asset": "asset:aerial-scan-2026",
+      "observationTime": {
+        "start": "1944-05-10T09:00:00+08:00",
+        "end": "1944-05-10T09:00:01+08:00"
+      },
+      "processingTime": "2026-09-09T10:30:00+08:00",
+      "featureOfInterest": "world:building-historical-a",
+      "observedProperty": "roof-footprint",
+      "coverage": {
+        "type": "view-footprint",
+        "detectability": "roof-outline-visible"
+      },
+      "independence": {
+        "observationRoot": "root:aerial-sortie-1944-01",
+        "sharedCalibrationGroup": "cal:aerial-camera-01"
+      }
+    },
+    {
+      "id": "obs:aerial-web-copy-duplicate",
+      "sourceEvent": "sourceevent:shutter-aerial-1944",
+      "asset": "asset:aerial-web-copy-1",
+      "observationTime": {
+        "start": "1944-05-10T09:00:00+08:00",
+        "end": "1944-05-10T09:00:01+08:00"
+      },
+      "processingTime": "2026-09-09T10:31:00+08:00",
+      "featureOfInterest": "world:building-historical-a",
+      "observedProperty": "roof-footprint",
+      "coverage": {
+        "type": "view-footprint",
+        "detectability": "roof-outline-visible"
+      },
+      "independence": {
+        "observationRoot": "root:aerial-sortie-1944-01",
+        "sharedCalibrationGroup": "cal:aerial-camera-01"
+      }
+    },
+    {
+      "id": "obs:ground-east-facade-1944",
+      "sourceEvent": "sourceevent:shutter-ground-1944",
+      "asset": "asset:ground-negative-1944",
+      "observationTime": {
+        "start": "1944-05-01",
+        "end": "1944-05-31"
+      },
+      "processingTime": "2026-09-09T10:32:00+08:00",
+      "featureOfInterest": "world:building-historical-a",
+      "observedProperty": "east-facade",
+      "coverage": {
+        "type": "view-cone",
+        "detectability": "east-facade-openings-visible"
+      },
+      "independence": {
+        "observationRoot": "root:ground-photographer-1944-01",
+        "sharedCalibrationGroup": null
+      }
+    },
+    {
+      "id": "obs:memory-social-1978",
+      "sourceEvent": "sourceevent:memory-map-1978",
+      "asset": "asset:memory-map-1978",
+      "observationTime": {
+        "start": "1978-06-01",
+        "end": "1978-06-01"
+      },
+      "representedTime": {
+        "start": "1944-01-01",
+        "end": "1945-12-31"
+      },
+      "processingTime": "2026-09-09T10:33:00+08:00",
+      "featureOfInterest": "world:building-historical-a",
+      "observedProperty": "remembered-social-relations-and-layout",
+      "coverage": {
+        "type": "recollection",
+        "detectability": "observer-memory"
+      },
+      "independence": {
+        "observationRoot": "root:resident-memory-1978-01",
+        "sharedCalibrationGroup": null
+      }
+    },
+    {
+      "id": "obs:satellite-presence-1967",
+      "sourceEvent": "sourceevent:satellite-1967",
+      "asset": "asset:satellite-frame-1967",
+      "observationTime": {
+        "start": "1967-11-03",
+        "end": "1967-11-03"
+      },
+      "processingTime": "2026-09-09T10:34:00+08:00",
+      "featureOfInterest": "world:building-historical-a",
+      "observedProperty": "building-presence-and-coarse-footprint",
+      "coverage": {
+        "type": "ground-footprint",
+        "detectability": "building-scale"
+      },
+      "independence": {
+        "observationRoot": "root:satellite-mission-1967-01",
+        "sharedCalibrationGroup": "cal:satellite-camera-01"
+      }
+    },
+    {
+      "id": "obs:modern-construction-2025",
+      "sourceEvent": "sourceevent:construction-record-2025",
+      "asset": "asset:construction-record-2025",
+      "observationTime": {
+        "start": "2025-02-15",
+        "end": "2025-02-15"
+      },
+      "processingTime": "2026-09-09T10:35:00+08:00",
+      "featureOfInterest": "world:building-modern-b",
+      "observedProperty": "construction-event",
+      "coverage": {
+        "type": "administrative-record",
+        "detectability": "recorded-construction"
+      },
+      "independence": {
+        "observationRoot": "root:construction-record-2025-01",
+        "sharedCalibrationGroup": null
+      }
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim:historical-building-present-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "exists",
+      "value": true,
+      "validTime": {
+        "start": "1944-05-10",
+        "end": "1944-05-10"
+      },
+      "claimType": "inference-from-observation",
+      "support": [
+        "obs:aerial-footprint-1944",
+        "obs:aerial-web-copy-duplicate",
+        "obs:ground-east-facade-1944"
+      ],
+      "oppose": [],
+      "method": "cross-modal-presence-inference",
+      "assumptions": [
+        "visible roof and facade belong to the same hypothesized building"
+      ],
+      "uncertainty": {
+        "type": "categorical-with-support",
+        "status": "supported",
+        "independentObservationRoots": 2,
+        "systematicBiases": [
+          "possible aerial georeferencing bias",
+          "identity-linkage assumption"
+        ]
+      }
+    },
+    {
+      "id": "claim:historical-building-position-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "centroid-position",
+      "value": {
+        "x": 1000.0,
+        "y": 2000.0,
+        "z": null,
+        "unit": "m",
+        "referenceFrame": "frame:test-local-01"
+      },
+      "validTime": {
+        "start": "1944-05-10",
+        "end": "1944-05-10"
+      },
+      "claimType": "measurement-derived",
+      "support": [
+        "obs:aerial-footprint-1944"
+      ],
+      "oppose": [
+        "claim:memory-map-position-1944"
+      ],
+      "method": "fixture-georeferencing",
+      "assumptions": [
+        "test control points are valid"
+      ],
+      "uncertainty": {
+        "type": "elliptical-position",
+        "semiMajor": 8.0,
+        "semiMinor": 5.0,
+        "unit": "m",
+        "systematicBiases": [
+          "shared map datum uncertainty"
+        ]
+      }
+    },
+    {
+      "id": "claim:memory-map-position-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "remembered-position",
+      "value": {
+        "x": 1023.0,
+        "y": 2000.0,
+        "z": null,
+        "unit": "m",
+        "referenceFrame": "frame:test-local-01"
+      },
+      "validTime": {
+        "start": "1944-01-01",
+        "end": "1945-12-31"
+      },
+      "claimType": "observer-recollection",
+      "support": [
+        "obs:memory-social-1978"
+      ],
+      "oppose": [
+        "claim:historical-building-position-1944"
+      ],
+      "method": "direct-transcription-of-memory-map",
+      "assumptions": [],
+      "uncertainty": {
+        "type": "observer-recollection",
+        "status": "conflicts-with-geometric-evidence",
+        "systematicBiases": [
+          "retrospective spatial distortion"
+        ]
+      }
+    },
+    {
+      "id": "claim:east-facade-five-openings-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "east-facade-opening-count",
+      "value": 5,
+      "validTime": {
+        "start": "1944-05-01",
+        "end": "1944-05-31"
+      },
+      "claimType": "image-interpretation",
+      "support": [
+        "obs:ground-east-facade-1944"
+      ],
+      "oppose": [],
+      "method": "manual-feature-count",
+      "assumptions": [
+        "all visible dark openings are architectural openings"
+      ],
+      "uncertainty": {
+        "type": "discrete-candidate-set",
+        "candidates": [
+          {
+            "value": 5,
+            "weight": 0.75
+          },
+          {
+            "value": 4,
+            "weight": 0.25
+          }
+        ],
+        "systematicBiases": [
+          "occlusion",
+          "image damage"
+        ]
+      }
+    },
+    {
+      "id": "claim:zhang-next-door-1944",
+      "subject": "world:person-zhang-uncle",
+      "predicate": "livedNextDoorTo",
+      "value": "world:building-historical-a",
+      "validTime": {
+        "start": "1944-01-01",
+        "end": "1945-12-31"
+      },
+      "claimType": "observer-recollection",
+      "support": [
+        "obs:memory-social-1978"
+      ],
+      "oppose": [],
+      "method": "direct-transcription-of-recollection",
+      "assumptions": [
+        "the remembered name resolves to this fixture person"
+      ],
+      "uncertainty": {
+        "type": "qualitative",
+        "status": "single-independent-recollection",
+        "systematicBiases": [
+          "name-resolution ambiguity"
+        ]
+      }
+    },
+    {
+      "id": "claim:restaurant-use-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "containedBusiness",
+      "value": "world:restaurant-x",
+      "validTime": {
+        "start": "1944-01-01",
+        "end": "1945-12-31"
+      },
+      "claimType": "observer-recollection",
+      "support": [
+        "obs:memory-social-1978"
+      ],
+      "oppose": [],
+      "method": "direct-transcription-of-recollection",
+      "assumptions": [],
+      "uncertainty": {
+        "type": "qualitative",
+        "status": "single-independent-recollection",
+        "systematicBiases": [
+          "retrospective memory"
+        ]
+      }
+    },
+    {
+      "id": "claim:west-facade-unknown-1944",
+      "subject": "world:building-historical-a",
+      "predicate": "west-facade-geometry",
+      "value": null,
+      "validTime": {
+        "start": "1944-01-01",
+        "end": "1944-12-31"
+      },
+      "claimType": "knowledge-status",
+      "support": [],
+      "oppose": [],
+      "method": "coverage-audit",
+      "assumptions": [],
+      "uncertainty": {
+        "type": "knowledge-state",
+        "status": "unknown",
+        "reason": "no observation covers west facade"
+      }
+    },
+    {
+      "id": "claim:modern-building-created-2025",
+      "subject": "world:building-modern-b",
+      "predicate": "constructionCompleted",
+      "value": true,
+      "validTime": {
+        "start": "2025-02-15",
+        "end": "2025-02-15"
+      },
+      "claimType": "recorded-event",
+      "support": [
+        "obs:modern-construction-2025"
+      ],
+      "oppose": [],
+      "method": "record-transcription",
+      "assumptions": [
+        "fixture construction record refers to modern building B"
+      ],
+      "uncertainty": {
+        "type": "qualitative",
+        "status": "supported-by-one-record",
+        "systematicBiases": [
+          "record authenticity unverified in fixture"
+        ]
+      }
+    },
+    {
+      "id": "claim:modern-building-not-historical-a",
+      "subject": "world:building-modern-b",
+      "predicate": "samePhysicalContinuant",
+      "value": false,
+      "validTime": {
+        "start": "2025-02-15",
+        "end": null
+      },
+      "claimType": "identity-judgment",
+      "support": [
+        "obs:modern-construction-2025",
+        "obs:satellite-presence-1967"
+      ],
+      "oppose": [],
+      "method": "temporal-and-construction-identity-analysis",
+      "assumptions": [
+        "construction record indicates a new physical structure"
+      ],
+      "uncertainty": {
+        "type": "qualitative",
+        "status": "candidate-judgment",
+        "systematicBiases": [
+          "fixture simplification"
+        ]
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "view:current-best-1944-r01",
+      "type": "current-best-view",
+      "representedTime": {
+        "start": "1944-01-01",
+        "end": "1944-12-31"
+      },
+      "asOfTransactionTime": "2026-09-09T10:40:00+08:00",
+      "generatedBy": {
+        "policy": "judge-policy-r01",
+        "version": "0.1",
+        "processingTime": "2026-09-09T10:40:00+08:00"
+      },
+      "acceptedClaims": [
+        "claim:historical-building-present-1944",
+        "claim:historical-building-position-1944",
+        "claim:east-facade-five-openings-1944",
+        "claim:zhang-next-door-1944",
+        "claim:restaurant-use-1944",
+        "claim:west-facade-unknown-1944"
+      ],
+      "retainedConflicts": [
+        "claim:memory-map-position-1944"
+      ],
+      "excludedAssetsAsDirectHistoricalEvidence": [
+        "asset:ai-reconstruction-2026"
+      ]
+    }
+  ]
+}
