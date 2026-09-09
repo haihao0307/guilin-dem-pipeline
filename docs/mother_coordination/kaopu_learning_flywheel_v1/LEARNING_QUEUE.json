@@ -15,16 +15,9 @@
       "priority": 1,
       "status": "candidate-partial",
       "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
-      "targetSystems": [
-        "KAOPU",
-        "Weather",
-        "Ocean",
-        "Landscape",
-        "Lighting",
-        "Future-Space"
-      ],
+      "targetSystems": ["KAOPU","Weather","Ocean","Landscape","Lighting","Future-Space"],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 tested the minimum evidence for cloud optical closure. Primary ECMWF ecRad/OpenIFS sources keep cloud condensate, effective particle size, cloud fraction/subgrid state, cloud optics and radiative-transfer solvers distinct. Copernicus C3S documentation independently shows water path, optical thickness and effective radius are separate and quantitatively coupled. The R10 probe passed 6/6 and rejects hasCondensate=>opticalClosureReady, hidden fixed-radius closure, generic cloud-fraction scaling of extinction, and path-optics=>local-extinction equivalence. A new lower-assumption global candidate route was found in NASA MERRA-2: model-level cloud diagnostics include CLOUD, INCLOUDQI/INCLOUDQL and source-native in-cloud optical thickness TAUCLI/TAUCLW, so KAOPU can preserve model-native path optics rather than reconstructing them from invented microphysics. Those diagnostics still require local-volume/phase/subgrid adapters and are reanalysis, not realtime Weather truth. HRRR native remains a richer CONUS-only microphysics experiment source. Status stays candidate-partial; no production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 tested the minimum evidence for cloud optical closure. Primary ECMWF ecRad/OpenIFS sources keep cloud condensate, effective particle size, cloud fraction/subgrid state, cloud optics and radiative-transfer solvers distinct. Copernicus C3S documentation independently shows water path, optical thickness and effective radius are separate and quantitatively coupled. The R10 probe passed 6/6 and rejects hasCondensate=>opticalClosureReady, hidden fixed-radius closure, generic cloud-fraction scaling of extinction, and path-optics=>local-extinction equivalence. A lower-assumption global candidate route was found in NASA MERRA-2: model-level cloud diagnostics include CLOUD, INCLOUDQI/INCLOUDQL and source-native in-cloud optical thickness TAUCLI/TAUCLW, so KAOPU can preserve model-native path optics rather than reconstructing them from invented microphysics. Those diagnostics still require local-volume/phase/subgrid adapters and are reanalysis, not realtime Weather truth. HRRR native remains a richer regional microphysics experiment source over NOAA's operational CONUS and Alaska sectors, not Wenzhou/global truth. Status stays candidate-partial; no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -50,21 +43,9 @@
       "verticalCoordinateProbe": "PROBES/weather_vertical_coordinate_contract_r08.py",
       "realWeatherColumnProbe": "PROBES/weather_column_real_fixture_r09.py",
       "cloudOpticalClosureProbe": "PROBES/cloud_optical_closure_probe_r10.py",
-      "currentBestViewExtensions": [
-        "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
-        "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
-        "CURRENT_BEST_VIEW_R10_CLOUD_OPTICAL_CLOSURE.md"
-      ],
-      "toolRoutingExtensions": [
-        "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
-        "TOOL_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
-        "TOOL_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"
-      ],
-      "motherRoutingExtensions": [
-        "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
-        "MOTHER_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
-        "MOTHER_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"
-      ],
+      "currentBestViewExtensions": ["CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md","CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md","CURRENT_BEST_VIEW_R10_CLOUD_OPTICAL_CLOSURE.md"],
+      "toolRoutingExtensions": ["TOOL_ROUTING_R08_VERTICAL_COORDINATES.json","TOOL_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json","TOOL_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"],
+      "motherRoutingExtensions": ["MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json","MOTHER_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json","MOTHER_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json"],
       "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R10 defines optical-closure sufficiency and identifies NASA MERRA-2 model-level cloud diagnostics as a lower-assumption global model_native_optics fixture candidate. Next authenticate and ingest one packet preserving CLOUD/INCLOUDQI/INCLOUDQL/TAUCLI/TAUCLW plus native vertical provenance, derive only the missing local-volume/phase/subgrid adapter state, then consume the same RuntimeCloudPlacement + CloudOpticalClosure through at least two evaluator adapters with source/model uncertainty reported separately from numerical, visual and performance error. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
@@ -72,40 +53,19 @@
       "priority": 2,
       "status": "candidate-complete",
       "question": "Which GAEA 2.3 workflow mechanisms can improve KAOPU continuous learning and world generation without contaminating Canonical Truth?",
-      "targetSystems": [
-        "KAOPU",
-        "Wenzhou",
-        "Landscape",
-        "Terrain"
-      ],
-      "requiredOutputs": [
-        "transferable-methods",
-        "constraints",
-        "failure-modes",
-        "routing"
-      ],
+      "targetSystems": ["KAOPU","Wenzhou","Landscape","Terrain"],
+      "requiredOutputs": ["transferable-methods","constraints","failure-modes","routing"],
       "progress": "R01 identified candidate mechanisms. R02 rechecked current official GAEA 2.3 documentation: Erosion2 determinism, tiled-build context failure classes, same-graph Regions, and migration testing are current-source-backed. Exact legacy TileGate semantics remain separately Unknown.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_GAEA_R01.md",
-        "LEARNING_LOG/2026-09-09_GAEA_R02.md"
-      ]
+      "resultLogs": ["LEARNING_LOG/2026-09-09_GAEA_R01.md","LEARNING_LOG/2026-09-09_GAEA_R02.md"]
     },
     {
       "id": "LQ-NOISE-001",
       "priority": 3,
       "status": "candidate-partial",
       "question": "Which modern procedural noise and field-composition methods are measurably better than current KAOPU typed-wave primitives for multiscale natural structure?",
-      "targetSystems": [
-        "KAOPU",
-        "Landscape",
-        "Weather",
-        "Ocean",
-        "Material"
-      ],
+      "targetSystems": ["KAOPU","Landscape","Weather","Ocean","Material"],
       "progress": "R01 primary-source review across Unreal Engine 5.8, current SideFX Houdini documentation, Blender 5.2 LTS, Pixar Wavelet Noise, and NVIDIA 2023 found no universal superior noise basis. Stronger transferable candidates are evaluation-footprint/filter policy, native differential outputs, explicit spectral/fractal composition law, explicit normalization, and evaluation-mode/bake provenance. A standard-library footprint probe was authored; no new runtime result is promoted yet.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_NOISE_R01.md"
-      ],
+      "resultLogs": ["LEARNING_LOG/2026-09-09_NOISE_R01.md"],
       "candidateProbe": "PROBES/footprint_filter_probe.py",
       "nextGate": "Execute the footprint probe and run at least one Mother-domain cross-resolution fixture before candidate-complete promotion."
     },
@@ -114,27 +74,14 @@
       "priority": 4,
       "status": "queued",
       "question": "Which Substance 3D Designer material-graph practices are transferable as data-generating functions rather than texture assets?",
-      "targetSystems": [
-        "Brick",
-        "Tiles",
-        "Aircraft",
-        "Weapons",
-        "Vegetation",
-        "Character"
-      ]
+      "targetSystems": ["Brick","Tiles","Aircraft","Weapons","Vegetation","Character"]
     },
     {
       "id": "LQ-HOUDINI-001",
       "priority": 5,
       "status": "queued",
       "question": "Which Houdini SOP/COP/VEX workflow patterns best support reusable Object DNA and field operators with explicit provenance and deterministic regeneration?",
-      "targetSystems": [
-        "KAOPU",
-        "House",
-        "Aircraft",
-        "Animals",
-        "Terrain"
-      ]
+      "targetSystems": ["KAOPU","House","Aircraft","Animals","Terrain"]
     }
   ]
 }
