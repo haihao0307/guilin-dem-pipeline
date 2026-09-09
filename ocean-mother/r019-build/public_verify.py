@@ -8,6 +8,8 @@ from typing import Any
 
 from playwright.sync_api import sync_playwright
 
+ONE_FRAME_RAF = """(()=>{let n=0;window.requestAnimationFrame=(cb)=>{if(n++<1){return setTimeout(()=>cb(performance.now()),0)}return 0};window.cancelAnimationFrame=(id)=>clearTimeout(id);})()"""
+
 
 def rect(page, selector: str) -> dict[str, float]:
     return page.eval_on_selector(selector, "e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,top:r.top,right:r.right,bottom:r.bottom,left:r.left,width:r.width,height:r.height}}")
@@ -30,6 +32,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     if not page.evaluate("window.__OCEAN_READY__ === true"):
         raise RuntimeError("R019 startup failed: " + json.dumps(page.evaluate("window.__OCEAN_QA__"), ensure_ascii=False))
     page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.gpuQuery === true", timeout=120_000)
+    page.wait_for_timeout(650)
 
     title = page.title()
     identity = page.locator(".brand small").text_content() or ""
@@ -40,7 +43,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     page.locator('[data-view="fire"]').click()
     page.locator('[data-page="query"]').click()
     page.locator('#queryDeep').click()
-    page.wait_for_timeout(250)
+    page.wait_for_timeout(100)
     readout = page.locator('#queryReadout').inner_text()
     qa1 = page.evaluate("window.__OCEAN_QA__")
 
@@ -58,7 +61,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     views = rect(page, '#views')
     dims1 = page.evaluate("(()=>{const c=document.getElementById('ocean'),q=document.getElementById('quality');return {iw:innerWidth,ih:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight,cw:c.width,ch:c.height,q:q.value}})()")
     shot = evidence / ("mobile-390x844.png" if mobile else "desktop-1440x900.png")
-    page.screenshot(path=str(shot), full_page=True)
+    page.screenshot(path=str(shot), full_page=True, timeout=120_000)
 
     checks = {
         "raw_githack_notice_handled": notice_seen,
@@ -92,6 +95,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
         "canvas": [dims1["cw"], dims1["ch"]],
         "quality": dims1["q"],
         "noticeSeen": notice_seen,
+        "renderCaptureMode": "full-shader-single-frame",
         "qaInitial": qa0,
         "qaAfterInteraction": qa1,
         "panelRect": panel,
@@ -114,10 +118,12 @@ evidence.mkdir(parents=True, exist_ok=True)
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--disable-dev-shm-usage"])
     desktop_context = browser.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+    desktop_context.add_init_script(script=ONE_FRAME_RAF)
     desktop = exercise(desktop_context.new_page(), mobile=False, evidence=evidence)
     desktop_context.close()
 
     mobile_context = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=1, is_mobile=True, has_touch=True)
+    mobile_context.add_init_script(script=ONE_FRAME_RAF)
     mobile = exercise(mobile_context.new_page(), mobile=True, evidence=evidence)
     mobile_context.close()
     browser.close()
@@ -131,7 +137,7 @@ receipt = {
     "status": "PASS" if desktop["pass"] and mobile["pass"] else "FAIL",
     "visualAcceptance": False,
     "productionReady": False,
-    "note": "This confirms the raw.githack notice flow, fixed public URL, WebGL2 startup and required interactions in GitHub-hosted Chromium/ANGLE SwiftShader under Xvfb; it is not target iPhone/Mac performance evidence.",
+    "note": "This confirms the raw.githack notice flow, fixed public URL, full WebGL2 shader startup, one rendered frame and required interactions in GitHub-hosted Chromium/ANGLE SwiftShader under Xvfb. Continuous software-rendered frame rate is intentionally excluded and target iPhone/Mac performance is still unmeasured.",
 }
 (evidence / "PUBLIC_BROWSER_QA.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(receipt, ensure_ascii=False, indent=2))
