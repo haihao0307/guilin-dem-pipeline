@@ -1,0 +1,73 @@
+name: Ocean Mother R019 fixed public browser QA
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r019-kaopu-coast-20260909
+    paths:
+      - .github/workflows/ocean-mother-r019-public-verify.yml
+      - ocean-mother/r019-build/public_verify.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ocean-mother-r019-public-browser-qa
+  cancel-in-progress: false
+
+jobs:
+  fixed-public-browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      FIXED_COMMIT: 0f94007bbc55463e74c5ebbf42fcf2f3b1e75f82
+      EXPECTED_SHA256: aca58d13aadefdce7029edb11f241f4bf18a1ddc89ed333738409a6b62da05d9
+      EXPECTED_BYTES: '50620'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install browser verification dependencies
+        run: |
+          python3 -m pip install --quiet playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: Fetch and verify exact fixed public HTML
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FIXED_COMMIT}/ocean-mother/releases/Ocean_Mother_R019_KAOPU_Coast_Direct_Open.html"
+          code=$(curl -L -sS --retry 6 --retry-all-errors --retry-delay 4 -D evidence/public-headers.txt -o evidence/public-r019.html -w '%{http_code}' "$URL")
+          test "$code" = 200
+          test "$(wc -c < evidence/public-r019.html | tr -d ' ')" = "$EXPECTED_BYTES"
+          echo "$EXPECTED_SHA256  evidence/public-r019.html" | sha256sum -c -
+          grep -q 'Ocean Mother R019 · KAOPU Coast' evidence/public-r019.html
+          grep -q 'window.__OCEAN_READY__=true' evidence/public-r019.html
+          printf '%s\n' "$URL" > evidence/FIXED_PUBLIC_URL.txt
+
+      - name: Open and operate fixed public URL in desktop and mobile Chromium
+        run: |
+          URL=$(cat evidence/FIXED_PUBLIC_URL.txt)
+          python3 -u ocean-mother/r019-build/public_verify.py "$URL" evidence | tee evidence/PUBLIC_BROWSER_QA.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('evidence/PUBLIC_BROWSER_QA.json').read_text(encoding='utf-8'))
+          assert q['status']=='PASS', q
+          assert q['desktop']['qaAfterInteraction']['heightResidual'] < 0.002
+          assert q['desktop']['qaAfterInteraction']['gradientResidual'] < 0.003
+          assert q['mobile']['checks']['mobile_default_quality'] is True
+          assert q['mobile']['checks']['mobile_panel_view_non_overlap'] is True
+          print('fixed public browser QA PASS')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ocean-mother-r019-fixed-public-browser-qa
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
