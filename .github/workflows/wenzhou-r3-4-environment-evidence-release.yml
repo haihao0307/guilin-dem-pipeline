@@ -1,0 +1,187 @@
+name: Wenzhou R3.4 Environment Evidence Release
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-4-worldcover-acquire-20260910
+    paths:
+      - .github/workflows/wenzhou-r3-4-environment-evidence-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate evidence ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('records/R3_4/ENVIRONMENT_EVIDENCE_LEDGER.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['productionBaseline'] is False
+          assert d['visualIntegration'] is False
+          assert d['worldCover']['status']=='accepted-acquisition-awaiting-permanent-release'
+          assert d['worldCover']['artifactId']==10123213648
+          assert d['worldCover']['artifactSha256']=='f558037e82ce38fac604291c6dc0327c931488c5167c7015e0dbdeae5a9ba0ad'
+          assert d['jrcGlobalSurfaceWater']['status']=='accepted-acquisition-awaiting-permanent-release'
+          assert d['jrcGlobalSurfaceWater']['artifactId']==10123310617
+          assert d['jrcGlobalSurfaceWater']['artifactSha256']=='2d060ddca6c012152429c134d039e834438eade5b10bdde77a83e567aa547c1c'
+          print(json.dumps({'passed':True,'ledger':str(p),'baseR33Candidate':d['baseR33Candidate']},indent=2))
+          PY
+
+      - name: Download exact verified Actions artifact archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r34-release
+          curl -fL --retry 4 --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/10123213648/zip" \
+            -o /tmp/r34-release/Wenzhou_R3_4_ESA_WorldCover_Evidence_20260910.zip
+          curl -fL --retry 4 --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/10123310617/zip" \
+            -o /tmp/r34-release/Wenzhou_R3_4_JRC_GSW_Evidence_20260910.zip
+          echo 'f558037e82ce38fac604291c6dc0327c931488c5167c7015e0dbdeae5a9ba0ad  /tmp/r34-release/Wenzhou_R3_4_ESA_WorldCover_Evidence_20260910.zip' | sha256sum -c -
+          echo '2d060ddca6c012152429c134d039e834438eade5b10bdde77a83e567aa547c1c  /tmp/r34-release/Wenzhou_R3_4_JRC_GSW_Evidence_20260910.zip' | sha256sum -c -
+
+      - name: Independently reverify embedded payload manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/r34-wc /tmp/r34-jrc
+          mkdir -p /tmp/r34-wc /tmp/r34-jrc
+          unzip -q /tmp/r34-release/Wenzhou_R3_4_ESA_WorldCover_Evidence_20260910.zip -d /tmp/r34-wc
+          unzip -q /tmp/r34-release/Wenzhou_R3_4_JRC_GSW_Evidence_20260910.zip -d /tmp/r34-jrc
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          def one(base:Path, gate_name:str):
+              manifests=list(base.rglob('PAYLOAD_MANIFEST.json'))
+              gates=list(base.rglob(gate_name))
+              assert len(manifests)==1,(base,manifests)
+              assert len(gates)==1,(base,gates)
+              manifest=json.loads(manifests[0].read_text(encoding='utf-8'))
+              gate=json.loads(gates[0].read_text(encoding='utf-8'))
+              assert manifest.get('passed') is True
+              assert gate.get('passed') is True
+              root=manifests[0].parent
+              errors=[]
+              for item in manifest['payloads']:
+                  p=root/item['path']
+                  if not p.is_file(): errors.append([item['path'],'missing']); continue
+                  if p.stat().st_size!=item['bytes']: errors.append([item['path'],'size']); continue
+                  h=hashlib.sha256()
+                  with p.open('rb') as f:
+                      for chunk in iter(lambda:f.read(8*1024*1024),b''):h.update(chunk)
+                  if h.hexdigest()!=item['sha256']:errors.append([item['path'],'sha256'])
+              assert not errors,errors
+              return {'payloadCount':manifest['payloadCount'],'totalBytes':manifest['totalBytes'],'gate':gate_name}
+          out={'worldCover':one(Path('/tmp/r34-wc'),'R34_ACCEPTANCE_GATE.json'),'jrc':one(Path('/tmp/r34-jrc'),'R34_JRC_ACCEPTANCE_GATE.json')}
+          Path('/tmp/r34-release/REVERIFICATION.json').write_text(json.dumps({'passed':True,**out},indent=2)+'\n',encoding='utf-8')
+          print(json.dumps({'passed':True,**out},indent=2))
+          PY
+
+      - name: Build permanent evidence index and checksums
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cp records/R3_4/ENVIRONMENT_EVIDENCE_LEDGER.json /tmp/r34-release/ENVIRONMENT_EVIDENCE_LEDGER.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          root=Path('/tmp/r34-release')
+          assets=[]
+          for name in ['Wenzhou_R3_4_ESA_WorldCover_Evidence_20260910.zip','Wenzhou_R3_4_JRC_GSW_Evidence_20260910.zip','ENVIRONMENT_EVIDENCE_LEDGER.json','REVERIFICATION.json']:
+              p=root/name
+              h=hashlib.sha256(p.read_bytes()).hexdigest()
+              assets.append({'name':name,'bytes':p.stat().st_size,'sha256':h})
+          index={
+            'schema':'wenzhou-r3.4-environment-evidence-release/r1',
+            'sourceCommit':os.environ['SOURCE_SHA'],
+            'baseR33Candidate':'65594e3f1fb5bc2214747d7301a6e0326519d68c',
+            'productionBaseline':False,
+            'visualIntegration':False,
+            'assets':assets,
+            'worldCover':{'identity':'external_observation','nativeResolutionM':10,'canonicalTruth':False,'individualObjectTruth':False,'productionReady':False},
+            'jrcGlobalSurfaceWater':{'identity':'external_observation_and_historical_evidence','alignedResolutionM':30,'canonicalTruth':False,'instantaneousWaterSurfaceTruth':False,'landSeaTopologyReplacement':False,'riverNetworkReplacement':False,'productionReady':False},
+            'promotionRule':'These archived observations may constrain later R3.4 display/object work, but cannot be promoted to canonical terrain, individual object truth, instantaneous water surface, tide, or production truth without independent validation.'
+          }
+          (root/'EVIDENCE_RELEASE_INDEX.json').write_text(json.dumps(index,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          lines=[]
+          for p in sorted(root.iterdir()):
+              if p.is_file() and p.name!='SHA256SUMS.txt':
+                  lines.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}")
+          (root/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          PY
+          cat > /tmp/r34-release/README.md <<'EOF'
+          # 小温州 R3.4 外部环境证据归档
+
+          这是证据归档，不是新的温州生产基线，也不自动改变 R3.3 画面。
+
+          - ESA WorldCover：10 m 土地覆盖外部观察，可用于林地/耕地/建成区/水体等类别约束；不是单棵树、单栋建筑、田块边界或个体 Object Truth。
+          - JRC Global Surface Water V1.5：30 m 对齐的长期历史水体证据；不是即时河面、海面、潮位、海陆拓扑或河网替代。
+          - 两份数据都保持 canonicalTruth=false、productionReady=false。
+          - 2020 WorldCover v100 与 2021 v200 不允许直接差分为纯现实变化，因为算法版本不同。
+
+          发布前已再次核对 Actions artifact ZIP SHA，并解包重新验证每个 payload 的 bytes + SHA-256 与内部 acceptance gate。
+          EOF
+
+      - name: Publish permanent evidence release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          TAG='wenzhou-r3.4-environment-evidence-20260910'
+          cat > /tmp/r34-release-notes.md <<EOF
+          # 小温州 R3.4 外部环境证据归档
+
+          源提交：\`${SOURCE_SHA}\`
+
+          这不是新的生产基线，不改变 R3.3 候选画面。
+
+          已永久归档两套通过全域采集与哈希 QA 的外部证据：
+          - ESA WorldCover 2020 v100 + 2021 v200，10 m 类别观察；
+          - EC JRC Global Surface Water V1.5，1984–2024 历史水体证据，30 m 对齐。
+
+          两者均保持 \`canonicalTruth=false\` 与 \`productionReady=false\`。WorldCover 不是个体 Object Truth；JRC 不是即时水面、潮位、海陆拓扑或河网替代。
+          EOF
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" /tmp/r34-release/* --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --notes-file /tmp/r34-release-notes.md
+          else
+            gh release create "$TAG" /tmp/r34-release/* --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --title '小温州 R3.4 外部环境证据归档 · 2026-09-10' --notes-file /tmp/r34-release-notes.md
+          fi
+
+      - name: Upload release verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-4-environment-release-qa-${{ github.sha }}
+          path: |
+            /tmp/r34-release/EVIDENCE_RELEASE_INDEX.json
+            /tmp/r34-release/ENVIRONMENT_EVIDENCE_LEDGER.json
+            /tmp/r34-release/REVERIFICATION.json
+            /tmp/r34-release/SHA256SUMS.txt
+          if-no-files-found: error
