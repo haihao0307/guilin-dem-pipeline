@@ -1,0 +1,106 @@
+{
+  "version": "R3.5-osm-object-evidence",
+  "date": "2026-09-10",
+  "status": "acquired-awaiting-identity-and-timestamp-correction-before-permanent-release",
+  "visualIntegration": false,
+  "productionBaseline": false,
+  "baseR34VisualCandidate": "21da8276032717e089fbe70ee46a17c3e0da5c12",
+  "acquisition": {
+    "workflowRun": 34403173646,
+    "workflowCommit": "a9fd37888b461773eb1bc4b34687c836169cdb4e",
+    "artifactId": 10124305485,
+    "artifactName": "wenzhou-r3-5-osm-object-evidence-a9fd37888b461773eb1bc4b34687c836169cdb4e",
+    "artifactBytes": 55328108,
+    "artifactSha256": "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101",
+    "payloadCount": 10,
+    "payloadTotalBytes": 55531159,
+    "boundsWgs84": [119.53652775317141, 26.768974131802604, 122.92078622479278, 29.675418483082204]
+  },
+  "regionalSources": {
+    "zhejiang": {
+      "provider": "Geofabrik GmbH",
+      "url": "https://download.geofabrik.de/asia/china/zhejiang-latest.osm.pbf",
+      "providerMd5": "ded4e45abef0d32abe4ce703d8cedfe5",
+      "sourceBytes": 89952506,
+      "sourceSha256": "51756eb4d2cdccd6a489ac3e15ff5c15fab1e1ff379c95bcec5259f2b3bcf8ef",
+      "archivedCropBytes": 29163795,
+      "archivedCropSha256": "921593d385ab275d7cfef4256044b1c98f099a43a2353381ff4f3256aa96d65d"
+    },
+    "fujian": {
+      "provider": "Geofabrik GmbH",
+      "url": "https://download.geofabrik.de/asia/china/fujian-latest.osm.pbf",
+      "providerMd5": "6142994401a00e50af341f75c806e1bc",
+      "sourceBytes": 41726036,
+      "sourceSha256": "1a322adc85f4415060469fadbcf3749044297697866f7e07efed205cd4fd1441",
+      "archivedCropBytes": 2452217,
+      "archivedCropSha256": "b014988077059b065eda9cc4b4e75c29dae1d8143bc97c9ee23bb8b3a6c9dfa7"
+    }
+  },
+  "crossRegionDeduplication": {
+    "roads": {
+      "duplicateIdentityGeometryKeys": 533,
+      "sameVersionConflicts": 0,
+      "dedupedGeometryFeatures": 190658,
+      "geojsonSeqSha256": "66d49283c079737e0184bf78ffca0edada84ebcd71540abd85bf007086b39862"
+    },
+    "buildings": {
+      "duplicateIdentityGeometryKeys": 8,
+      "sameVersionConflicts": 0,
+      "dedupedGeometryFeatures": 136573,
+      "geojsonSeqSha256": "6ebb1a6fef146331820c7da17f0cf082f503ff273f3b69d4444a412263624263"
+    }
+  },
+  "preliminaryGeometryCounts": {
+    "roads": {
+      "totalExportedFeatures": 190658,
+      "LineString": 177578,
+      "Point": 12164,
+      "MultiPolygon": 916
+    },
+    "buildings": {
+      "totalExportedFeatures": 136573,
+      "MultiPolygon": 68359,
+      "LineString": 68065,
+      "Point": 149
+    }
+  },
+  "tagCompleteness": {
+    "roads": {
+      "nameFraction": 0.23822761174458978,
+      "surfaceFraction": 0.0699000304209632,
+      "lanesFraction": 0.0912156846290216,
+      "widthFraction": 0.0002465147017172109,
+      "maxspeedFraction": 0.006650651952711137,
+      "bridgeFraction": 0.13199026529177899,
+      "tunnelFraction": 0.016191295408532556,
+      "layerFraction": 0.14631434295964502
+    },
+    "buildings": {
+      "nameFraction": 0.0404179449818046,
+      "heightFraction": 0.09247801542032466,
+      "levelsFraction": 0.036559202770679415,
+      "roofShapeFraction": 0.00019037437853748545,
+      "materialFraction": 0.003543892277390114,
+      "buildingPartFraction": 0.000702920782292254
+    }
+  },
+  "hardSemanticBoundary": {
+    "roadGeometry": "OSM highway LineStrings are external mapped road/path observations, generally centerline-like. They are not surveyed road-edge polygons and do not imply physical width.",
+    "buildingGeometry": "OSM building/building:part geometry is external mapped footprint/part evidence. A polygon does not imply known height, levels, roof or material.",
+    "missingRoadWidth": "unknown",
+    "missingRoadLanes": "unknown",
+    "missingBuildingHeight": "unknown",
+    "missingBuildingLevels": "unknown",
+    "canonicalTruth": false,
+    "surveyGradeGeometry": false,
+    "individualPhysicalTruth": false,
+    "uniformObservationTime": false,
+    "productionReady": false
+  },
+  "requiredCorrectionsBeforePermanentRelease": {
+    "timestamp": "The acquisition report incorrectly grouped numeric OSM timestamp attributes by their first four digits, producing impossible pseudo-years. Permanent release must recompute timestamps as Unix seconds or supported ISO values and preserve the original report only as superseded evidence.",
+    "buildingIdentity": "The acquisition dedupe key included geometry type. Permanent release must audit unique OSM type+id identities across geometry representations and report how many LineString/MultiPolygon records are alternate representations of the same mapped object.",
+    "visualCandidatePolicy": "Road visualization may use highway LineStrings as styled centerlines only; style width is not physical width. Building visualization may use polygon footprint observations only; no default extrusion. Explicit height/levels may be displayed only as separately tagged evidence, never filled by defaults."
+  },
+  "promotionRule": "Do not create R3.5 visual road widths or building volumes until the permanent source-locked evidence archive has passed timestamp correction, identity audit, payload re-verification, and explicit missing-tag semantics."
+}
