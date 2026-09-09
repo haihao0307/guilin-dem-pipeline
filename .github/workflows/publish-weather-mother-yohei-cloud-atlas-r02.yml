@@ -1,0 +1,90 @@
+name: Publish Weather Mother YOHEI Cloud Atlas R0.2
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-yohei-cloud-family-r02
+    paths:
+      - .github/workflows/publish-weather-mother-yohei-cloud-atlas-r02.yml
+
+permissions:
+  contents: write
+
+jobs:
+  assemble-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble immutable single-file workbench and evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          parts='weather-mother/deliveries/r02-parts'
+          out='weather-mother/deliveries'
+
+          cat "$parts"/html.part-* | base64 -d | gzip -d > "$out/weather-mother-yohei-cloud-atlas-r02.html"
+          cat "$parts/qa.b64" | base64 -d | gzip -d > "$out/weather-mother-yohei-cloud-atlas-r02-qa.json"
+          cat "$parts/readme.b64" | base64 -d | gzip -d > "$out/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_README.md"
+
+          printf '%s  %s\n' \
+            'a32f4fd5a3a419df6026e13c5296913e1e1250dba284151206d8113a6f00be67' \
+            "$out/weather-mother-yohei-cloud-atlas-r02.html" > /tmp/r02.sha256
+          printf '%s  %s\n' \
+            'e7617aaa7c652dc002712cac3bc2d38a8ac3989fe92227a4143db93124901d45' \
+            "$out/weather-mother-yohei-cloud-atlas-r02-qa.json" >> /tmp/r02.sha256
+          printf '%s  %s\n' \
+            '17d3e508b881ebd2fd3c046efcc536debef9f4d28618f6cd04a3146d96bfbf7b' \
+            "$out/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_README.md" >> /tmp/r02.sha256
+          sha256sum -c /tmp/r02.sha256
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          root = Path('weather-mother/deliveries')
+          html = root / 'weather-mother-yohei-cloud-atlas-r02.html'
+          qa = root / 'weather-mother-yohei-cloud-atlas-r02-qa.json'
+          text = html.read_text(encoding='utf-8')
+          report = json.loads(qa.read_text(encoding='utf-8'))
+          assert '<!doctype html>' in text.lower()
+          assert 'Weather Mother · YOHEI Cloud Atlas R0.2' in text
+          assert 'Cumulonimbus' in text and 'Cirrostratus' in text
+          assert report['overallPass'] is True
+          assert report['tests']['tenCloudGenera']['uniqueHashes'] == 10
+          assert report['tests']['detailZeroRoundTrip']['pass'] is True
+          assert report['tests']['mobile390x844']['pass'] is True
+          receipt = {
+              'schema': 'weather-mother-publication/r0.2',
+              'version': 'Weather Mother · YOHEI Cloud Atlas R0.2',
+              'artifact': html.name,
+              'artifactBytes': html.stat().st_size,
+              'artifactSHA256': 'a32f4fd5a3a419df6026e13c5296913e1e1250dba284151206d8113a6f00be67',
+              'browserQA': True,
+              'tenCloudGenera': True,
+              'visualAcceptance': False,
+              'productionReady': False,
+              'sourceBranch': 'feature/weather-mother-yohei-cloud-family-r02',
+              'builtBy': 'GitHub Actions'
+          }
+          (root / 'WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_PUBLICATION.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit fixed publication payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add \
+            weather-mother/deliveries/weather-mother-yohei-cloud-atlas-r02.html \
+            weather-mother/deliveries/weather-mother-yohei-cloud-atlas-r02-qa.json \
+            weather-mother/deliveries/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_README.md \
+            weather-mother/deliveries/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_PUBLICATION.json
+          git rm -r weather-mother/deliveries/r02-parts
+          git commit -m 'publish(weather-mother): YOHEI Cloud Atlas R0.2 [skip ci]'
+          git push origin HEAD:feature/weather-mother-yohei-cloud-family-r02
