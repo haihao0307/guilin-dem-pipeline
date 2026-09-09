@@ -107,6 +107,49 @@
       "productionMutationAllowed": false,
       "requiresMotherExperiment": true,
       "promotionAuthority": "Xiaoma Judgment after executed probe and Mother evidence"
+    },
+    {
+      "fromLearning": "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
+      "status": "candidate-route",
+      "targets": [
+        {
+          "mother": "Weather",
+          "items": [
+            "separate AtmosphereState from AtmosphereEvaluatorPolicy",
+            "keep molecular/aerosol/absorber density and transport semantics typed rather than bundling them into a sky material",
+            "treat clouds as a separate coupled participating-medium field",
+            "preserve time-varying sun/aerosol/weather state without changing world identity",
+            "keep camera exposure and tone mapping downstream from physical radiance"
+          ]
+        },
+        {
+          "mother": "Ocean",
+          "items": [
+            "consume incident sky/atmosphere radiance as a coupling input rather than copying atmosphere implementation",
+            "keep ocean reflection/refraction semantics separate from atmospheric scattering semantics",
+            "preserve atmosphere-to-ocean and ocean-to-atmosphere boundary coupling as explicit relations"
+          ]
+        },
+        {
+          "mother": "Landscape",
+          "items": [
+            "treat aerial perspective as a path-dependent atmosphere query rather than distance-colored fog",
+            "keep terrain truth separate from atmosphere/view attenuation and in-scattering"
+          ]
+        },
+        {
+          "mother": "KAOPU semantic core",
+          "items": [
+            "candidate planet-frame/emitter/medium/surface-coupling/path-query decomposition",
+            "multiple-scattering phenomenon separated from numerical approximation policy",
+            "unit/dimensional checks and locked reference queries as candidate promotion gates",
+            "engine agreement is method convergence, not independent Observation evidence"
+          ]
+        }
+      ],
+      "productionMutationAllowed": false,
+      "requiresMotherExperiment": true,
+      "promotionAuthority": "Xiaoma Judgment after unit-typed reference fixture and Mother evidence"
     }
   ]
 }
