@@ -1,0 +1,36 @@
+{
+  "version": "R3.2-candidate",
+  "date": "2026-09-09",
+  "baseArchiveCommit": "0b1a88a252e219607a19c0d7a2bac84e95241078",
+  "baseReleaseTag": "wenzhou-r3.1-full-20260909",
+  "baseReleaseAsset": "Wenzhou_R3_1_FULL_RESTART_20260909.zip",
+  "baseReleaseSha256": "89474650d4cc968465b8d2b9919512bbaa5f90c6f826566c2f948dd1e2df0ab0",
+  "implementationBranch": "feature/wenzhou-r3-2-human-eye-20260909",
+  "scope": "1.6 m above current valid display surface human-eye camera and near-ground navigation",
+  "sourceData": "R3.1 locked DEM/coast/river files are referenced in place; no measurement bytes are modified or duplicated",
+  "cameraContract": {
+    "heightAboveDisplaySurfaceM": 1.6,
+    "allowedExaggeration": 1,
+    "nearClipM": 0.1,
+    "groundRelation": "display triangle surface only",
+    "movement": "re-evaluate display surface height at each forward/back step and reject missing-support or clipped-marine destinations"
+  },
+  "precisionClaim": "none beyond inherited source; 1.6 m is a camera/display relationship, not terrain accuracy",
+  "checks": {
+    "javascriptNodeSyntaxCheck": true,
+    "baseR3AndR3_1Modified": false,
+    "publicBrowserVerified": false,
+    "fullReleaseZipLocallyRestored": false
+  },
+  "fullReleaseRestoreBlocker": "Current runtime can read the GitHub archive branch and Release metadata but cannot download the 1.03 GB Release binary asset. No GitHub Actions workflow run/artifact exists on the archive branch as an alternate download path.",
+  "nextQA": [
+    "Open fixed-commit public preview and confirm all module/data requests resolve",
+    "Test human-eye entry on overview, mountains and each river near-view",
+    "Verify camera-to-display-surface delta reports 1.600 m before and after movement",
+    "Verify movement stops at invalid support and clipped marine domain",
+    "Verify reset exits eye mode and restores 1x fitted camera",
+    "Verify 390x844 controls without horizontal overflow"
+  ],
+  "visualApproved": false,
+  "productionReady": false
+}
