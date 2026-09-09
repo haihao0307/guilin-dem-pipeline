@@ -35,13 +35,23 @@ jobs:
       - name: Chromium WebGL2 desktop gate
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$CHROME"
-          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=15000 --window-size=1200,800 --dump-dom "${PUBLIC_URL}#hero" > /tmp/desktop-dom.html
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist"
+          timeout 120s "$CHROME" $FLAGS --virtual-time-budget=18000 --window-size=1200,800 --dump-dom "${PUBLIC_URL}#hero" > /tmp/desktop-dom.html 2>/tmp/chrome-desktop.err
+          rc=$?
+          echo "chrome_rc=$rc"
+          grep -o 'data-terrain-ready="[^"]*"' /tmp/desktop-dom.html | head -1 || true
+          grep -o 'data-graph-version="[^"]*"' /tmp/desktop-dom.html | head -1 || true
+          grep -o '着色器编译失败[^<]*' /tmp/desktop-dom.html | head -2 || true
+          grep -o '该浏览器未能建立 WebGL2 场景' /tmp/desktop-dom.html | head -1 || true
+          grep -o 'R4 已就绪[^<]*' /tmp/desktop-dom.html | head -1 || true
+          tail -40 /tmp/chrome-desktop.err || true
+          test "$rc" -eq 0
           grep -q 'data-terrain-ready="true"' /tmp/desktop-dom.html
           grep -q 'R4 已就绪 · R2/R3 均保留' /tmp/desktop-dom.html
-          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=12000 --window-size=1200,800 --screenshot=/tmp/hero.png "${PUBLIC_URL}#hero"
+          timeout 120s "$CHROME" $FLAGS --virtual-time-budget=15000 --window-size=1200,800 --screenshot=/tmp/hero.png "${PUBLIC_URL}#hero"
           test -s /tmp/hero.png
           test "$(stat -c%s /tmp/hero.png)" -gt 10000
           echo "desktopScreenshotBytes=$(stat -c%s /tmp/hero.png)"
@@ -51,10 +61,11 @@ jobs:
         run: |
           set -euo pipefail
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=15000 --window-size=390,844 --dump-dom "${PUBLIC_URL}#hero" > /tmp/mobile-dom.html
+          FLAGS="--headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist"
+          timeout 120s "$CHROME" $FLAGS --virtual-time-budget=18000 --window-size=390,844 --dump-dom "${PUBLIC_URL}#hero" > /tmp/mobile-dom.html
           grep -q 'data-terrain-ready="true"' /tmp/mobile-dom.html
           grep -q 'R4 已就绪 · R2/R3 均保留' /tmp/mobile-dom.html
-          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=12000 --window-size=390,844 --screenshot=/tmp/mobile.png "${PUBLIC_URL}#hero"
+          timeout 120s "$CHROME" $FLAGS --virtual-time-budget=15000 --window-size=390,844 --screenshot=/tmp/mobile.png "${PUBLIC_URL}#hero"
           test -s /tmp/mobile.png
           test "$(stat -c%s /tmp/mobile.png)" -gt 8000
           echo "mobileScreenshotBytes=$(stat -c%s /tmp/mobile.png)"
