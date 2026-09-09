@@ -76,7 +76,7 @@ if all((R34/x).is_file() for x in ['index.html','bootstrap.js','landcover-eviden
     require('bootstrap-inherits-r33',"await import('../r3-3/bootstrap.js')" in boot)
     require('release-sha-lock',SOURCE_RELEASE_SHA in js)
     require('landcover-visual-lift-3p5cm','const VISUAL_LIFT_M=0.035' in js)
-    require('height-claim-none',"landcoverHeightClaim:'none'" in js and "heightClaim='none'" not in js)
+    require('height-claim-none',"mesh.userData.heightClaim='none'" in js and "landcoverHeightClaim:'none'" in js)
     require('data-texture-byte-class','new THREE.DataTexture' in js and 'THREE.RedFormat' in js and 'THREE.UnsignedByteType' in js)
     require('nearest-texture-filter','THREE.NearestFilter' in js)
     require('row-orientation-explicit','flippedForGpu' in js and 'source-row0-north-reversed-to-gpu-row0-south' in js)
