@@ -24,10 +24,9 @@ Constraint: the ZIP bytes could not be materialized in the bounded execution env
 
 ### Observation Root B — NOAA/NWS operational upper-air identity/coding
 
-NWS documentation identifies WMO station `72572` as Salt Lake City, UT / KSLC. NWS upper-air transition documentation also identifies `72572 / KSLC` and points to WMO 306 for coded upper-air message requirements.
+NWS Service Change Notice 21-98 identifies Salt Lake City, UT as WMO station `72572` / KSLC and points to WMO 306 for coded upper-air message requirements.
 
-Primary sources:
-- https://www.weather.gov/media/directives/010_pdfs/pd01010002curr.pdf
+Primary source:
 - https://www.weather.gov/media/notification/pdf2/scn21-98rrs_to_mros_upper_air_sites.pdf
 
 ### Observation Root C — ECMWF model/data quantity semantics
