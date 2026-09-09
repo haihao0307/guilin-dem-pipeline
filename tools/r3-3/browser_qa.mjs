@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 
-const target=process.env.R33_URL||'http://127.0.0.1:8765/r3-3/';
+const target=process.env.R33_URL||'http://127.0.0.1:8765/site/dist/r3-3/';
 const failures=[];
 const notes=[];
 function assert(cond,message){if(!cond)failures.push(message);}
