@@ -150,6 +150,79 @@
       "productionMutationAllowed": false,
       "requiresMotherExperiment": true,
       "promotionAuthority": "Xiaoma Judgment after unit-typed reference fixture and Mother evidence"
+    },
+    {
+      "fromLearning": "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
+      "status": "candidate-route",
+      "targets": [
+        {
+          "mother": "Weather",
+          "items": [
+            "do not hard-cut physical atmosphere state at Karman line or renderer atmosphere height",
+            "preserve model validity domain separately from visual integration cutoff",
+            "allow lower-atmosphere weather state to couple to, but not impersonate, upper-atmosphere state"
+          ]
+        },
+        {
+          "mother": "Lighting",
+          "items": [
+            "treat spectral reference semantics as upstream truth/evidence and RGB/few-band coefficients as validated runtime compression",
+            "keep solar spectral state and surface/atmosphere transport provenance explicit"
+          ]
+        },
+        {
+          "mother": "Future-Space",
+          "items": [
+            "use NRLMSIS-style neutral species/temperature state as a reference family rather than extrapolating sea-level composition",
+            "keep ionosphere/plasma/space-weather state as a separate coupled domain rather than extending a clear-air renderer"
+          ]
+        },
+        {
+          "mother": "KAOPU semantic core",
+          "items": [
+            "separate physical state validity domain, evaluator domain, and conventional Karman-line metadata",
+            "Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator pattern for ground-to-space systems"
+          ]
+        }
+      ],
+      "productionMutationAllowed": false,
+      "requiresMotherExperiment": true,
+      "promotionAuthority": "Xiaoma Judgment after Earth multi-altitude reference fixture"
+    },
+    {
+      "fromLearning": "LEARNING_LOG/2026-09-09_ATMOSPHERE_R03_EVALUATOR_VALIDITY.md",
+      "status": "candidate-route",
+      "targets": [
+        {
+          "mother": "Weather",
+          "items": [
+            "attach measured observer-altitude/view-geometry validity envelope to any cheap atmosphere evaluator",
+            "do not let a fast plane-parallel or local approximation retain authority outside its tested domain"
+          ]
+        },
+        {
+          "mother": "Landscape",
+          "items": [
+            "aerial-perspective evaluator must declare horizon/curvature error envelope rather than assuming distance-only fog remains valid"
+          ]
+        },
+        {
+          "mother": "Lighting",
+          "items": [
+            "store evaluator approximation mode and measured error alongside reduced runtime atmosphere packets"
+          ]
+        },
+        {
+          "mother": "KAOPU semantic core",
+          "items": [
+            "evaluator authority is query-scoped",
+            "candidate validity dimensions: observer altitude, view geometry, spectral domain, scattering approximation, state source/version, integration cutoff, measured reference error"
+          ]
+        }
+      ],
+      "productionMutationAllowed": false,
+      "requiresMotherExperiment": true,
+      "promotionAuthority": "Xiaoma Judgment after Earth-reference cross-validation"
     }
   ]
 }
