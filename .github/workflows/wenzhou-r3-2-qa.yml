@@ -36,20 +36,28 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Local browser QA
+        shell: bash
         run: |
+          set -euo pipefail
           python -m http.server 8765 --directory site/dist >/tmp/wenzhou-r32-http.log 2>&1 &
           echo $! >/tmp/wenzhou-r32-http.pid
+          ready=0
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8765/r3-2/ >/dev/null; then break; fi
+            if curl -fsS http://127.0.0.1:8765/r3-2/ >/dev/null; then ready=1; break; fi
             sleep 1
           done
+          test "$ready" = 1
           R32_URL=http://127.0.0.1:8765/r3-2/ node tools/r3-2/browser_qa.mjs | tee /tmp/r32-local-qa.json
+          test -s /tmp/r32-local-qa.json
+          grep -q '"passed": true' /tmp/r32-local-qa.json
 
       - name: Fixed-commit public raw.githack QA
+        shell: bash
         env:
           R32_SHA: ${{ github.sha }}
           R32_REPO: ${{ github.repository }}
         run: |
+          set -euo pipefail
           URL="https://raw.githack.com/${R32_REPO}/${R32_SHA}/site/dist/r3-2/index.html"
           echo "$URL"
           ready=0
@@ -62,6 +70,8 @@ jobs:
           done
           test "$ready" = 1
           R32_URL="$URL" node tools/r3-2/browser_qa.mjs | tee /tmp/r32-public-qa.json
+          test -s /tmp/r32-public-qa.json
+          grep -q '"passed": true' /tmp/r32-public-qa.json
 
       - name: Upload QA evidence
         if: always()
