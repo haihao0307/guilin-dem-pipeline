@@ -133,8 +133,8 @@ def verify_semantic_fixture(root: Path) -> None:
         / "kaopu-world-chorus-ago-dialogue-r1-20260909"
         / "KAOPU_INVARIANTS_R1.json"
     )
-    serialized = json.dumps(invariants, ensure_ascii=False)
-    require("靠谱" in serialized or "KAOPU" in serialized, "KAOPU invariant registry has no KAOPU identity")
+    serialized = json.dumps(invariants, ensure_ascii=False).lower()
+    require("靠谱" in serialized or "kaopu" in serialized, "KAOPU invariant registry has no KAOPU identity")
 
 
 def run_verifier(script: Path, expected_fragment: str) -> str:
