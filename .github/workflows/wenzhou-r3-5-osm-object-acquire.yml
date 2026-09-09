@@ -39,131 +39,148 @@ jobs:
               --output "/tmp/r35-osm/source/${REGION}-latest.osm.pbf.md5" \
               "https://download.geofabrik.de/asia/china/${REGION}-latest.osm.pbf.md5"
             (cd /tmp/r35-osm/source && md5sum --check "${REGION}-latest.osm.pbf.md5")
+            cp "/tmp/r35-osm/source/${REGION}-latest.osm.pbf.md5" \
+              "artifacts/wenzhou-r35-osm/SOURCE_${REGION^^}_PBF.md5.txt"
           done
 
-      - name: Crop one complete Wenzhou-area OSM snapshot
+      - name: Crop source-identified Wenzhou-area regional snapshots
         shell: bash
         run: |
           set -euo pipefail
           BBOX='119.53652775317141,26.768974131802604,122.92078622479278,29.675418483082204'
+          ROOT=artifacts/wenzhou-r35-osm
           for REGION in zhejiang fujian; do
+            OUT="$ROOT/WENZHOU_OSM_${REGION^^}_BBOX.osm.pbf"
             osmium extract -b "$BBOX" -s complete_ways --set-bounds \
               "/tmp/r35-osm/source/${REGION}-latest.osm.pbf" \
-              -o "/tmp/r35-osm/work/${REGION}-wenzhou.osm.pbf" --overwrite
+              -o "$OUT" --overwrite
+            osmium check-refs "$OUT"
+            osmium fileinfo -e -j "$OUT" > "$ROOT/WENZHOU_OSM_${REGION^^}_BBOX_FILEINFO.json"
           done
-          osmium merge --simplify \
-            /tmp/r35-osm/work/zhejiang-wenzhou.osm.pbf \
-            /tmp/r35-osm/work/fujian-wenzhou.osm.pbf \
-            -o artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf --overwrite
-          osmium check-refs artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf
-          osmium fileinfo -e -j artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf \
-            > artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_FILEINFO.json
 
-      - name: Derive roads and building observations from the same locked snapshot
+      - name: Derive regional roads and buildings without collapsing source identity
         shell: bash
         run: |
           set -euo pipefail
           ROOT=artifacts/wenzhou-r35-osm
-          SNAP="$ROOT/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf"
-          osmium tags-filter "$SNAP" w/highway \
-            -o "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" --overwrite
-          osmium tags-filter "$SNAP" wr/building wr/building:part \
-            -o "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" --overwrite
-          osmium check-refs "$ROOT/WENZHOU_OSM_ROADS.osm.pbf"
-          osmium check-refs "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf"
-          osmium export "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" \
-            -f geojsonseq -o /tmp/r35-osm/work/roads.geojsonseq --overwrite
-          osmium export "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" \
-            -f geojsonseq -o /tmp/r35-osm/work/buildings.geojsonseq --overwrite
-          gzip -9 -n -c /tmp/r35-osm/work/roads.geojsonseq > "$ROOT/WENZHOU_OSM_ROADS.geojsonseq.gz"
-          gzip -9 -n -c /tmp/r35-osm/work/buildings.geojsonseq > "$ROOT/WENZHOU_OSM_BUILDINGS.geojsonseq.gz"
-          osmium fileinfo -e -j "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" > "$ROOT/WENZHOU_OSM_ROADS_FILEINFO.json"
-          osmium fileinfo -e -j "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" > "$ROOT/WENZHOU_OSM_BUILDINGS_FILEINFO.json"
+          for REGION in ZHEJIANG FUJIAN; do
+            SNAP="$ROOT/WENZHOU_OSM_${REGION}_BBOX.osm.pbf"
+            osmium tags-filter "$SNAP" w/highway \
+              -o "/tmp/r35-osm/work/${REGION,,}-roads.osm.pbf" --overwrite
+            osmium tags-filter "$SNAP" wr/building wr/building:part \
+              -o "/tmp/r35-osm/work/${REGION,,}-buildings.osm.pbf" --overwrite
+            osmium check-refs "/tmp/r35-osm/work/${REGION,,}-roads.osm.pbf"
+            osmium check-refs "/tmp/r35-osm/work/${REGION,,}-buildings.osm.pbf"
+            osmium export "/tmp/r35-osm/work/${REGION,,}-roads.osm.pbf" \
+              -f geojsonseq -a type,id,version,timestamp,changeset \
+              -x print_record_separator=false \
+              -o "/tmp/r35-osm/work/${REGION,,}-roads.geojsonseq" --overwrite
+            osmium export "/tmp/r35-osm/work/${REGION,,}-buildings.osm.pbf" \
+              -f geojsonseq -a type,id,version,timestamp,changeset \
+              -x print_record_separator=false \
+              -o "/tmp/r35-osm/work/${REGION,,}-buildings.geojsonseq" --overwrite
+          done
 
-      - name: Measure map-object coverage and tag completeness without inventing defaults
+      - name: Deduplicate cross-region exported geometry by OSM object identity
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import collections, hashlib, json
-          from datetime import datetime, timezone
+          import hashlib,json
+          root=Path('/tmp/r35-osm/work')
+          report={}
+          def canonical(feat):
+              return json.dumps(feat,ensure_ascii=False,sort_keys=True,separators=(',',':'))
+          def merge(kind):
+              chosen={}; duplicate=0; newer=0; conflicts=[]; invalid=0
+              for region in ('zhejiang','fujian'):
+                  path=root/f'{region}-{kind}.geojsonseq'
+                  with path.open('r',encoding='utf-8') as f:
+                      for line_no,line in enumerate(f,1):
+                          line=line.strip()
+                          if not line:continue
+                          try:feat=json.loads(line)
+                          except Exception as exc:
+                              invalid+=1;continue
+                          p=feat.get('properties') or {};g=feat.get('geometry') or {}
+                          key=(str(p.get('@type')),str(p.get('@id')),str(g.get('type')))
+                          version=int(p.get('@version') or 0);stamp=str(p.get('@timestamp') or '')
+                          if key not in chosen:
+                              chosen[key]=(version,stamp,feat,region);continue
+                          duplicate+=1
+                          old_v,old_t,old_feat,old_region=chosen[key]
+                          if (version,stamp)>(old_v,old_t):
+                              chosen[key]=(version,stamp,feat,region);newer+=1;continue
+                          if (version,stamp)<(old_v,old_t):continue
+                          if canonical(feat)!=canonical(old_feat):
+                              conflicts.append({'key':key,'version':version,'timestamp':stamp,'regions':[old_region,region]})
+              if conflicts:
+                  raise RuntimeError(f'{kind}: same-version cross-region conflicts: {conflicts[:10]}')
+              out=root/f'{kind}-deduped.geojsonseq'
+              with out.open('w',encoding='utf-8',newline='\n') as f:
+                  for key in sorted(chosen,key=lambda k:(k[0],int(k[1]) if k[1].lstrip('-').isdigit() else k[1],k[2])):
+                      f.write(canonical(chosen[key][2])+'\n')
+              return {'inputDuplicateKeys':duplicate,'newerCrossRegionVersionChosen':newer,'sameVersionConflicts':len(conflicts),'invalidJsonLines':invalid,'dedupedFeatureCount':len(chosen),'sha256':hashlib.sha256(out.read_bytes()).hexdigest()}
+          report['roads']=merge('roads');report['buildings']=merge('buildings')
+          Path('/tmp/r35-osm/work/DEDUPLICATION_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps({'passed':True,**report},ensure_ascii=False,indent=2))
+          PY
+          ROOT=artifacts/wenzhou-r35-osm
+          gzip -9 -n -c /tmp/r35-osm/work/roads-deduped.geojsonseq > "$ROOT/WENZHOU_OSM_ROADS.geojsonseq.gz"
+          gzip -9 -n -c /tmp/r35-osm/work/buildings-deduped.geojsonseq > "$ROOT/WENZHOU_OSM_BUILDINGS.geojsonseq.gz"
+          cp /tmp/r35-osm/work/DEDUPLICATION_REPORT.json "$ROOT/"
 
-          root=Path('artifacts/wenzhou-r35-osm')
-          work=Path('/tmp/r35-osm/work')
+      - name: Measure object coverage and tag completeness without inventing defaults
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import collections,hashlib,json
+          from datetime import datetime,timezone
+          root=Path('artifacts/wenzhou-r35-osm');work=Path('/tmp/r35-osm/work');source_root=Path('/tmp/r35-osm/source')
           bounds=[119.53652775317141,26.768974131802604,122.92078622479278,29.675418483082204]
-
           def sha256(path):
               h=hashlib.sha256()
               with path.open('rb') as f:
-                  for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+                  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
               return h.hexdigest()
-
           def scan(path,kind):
-              total=0; geom=collections.Counter(); values=collections.Counter(); tags=collections.Counter(); bad=0
-              minx=miny=float('inf'); maxx=maxy=float('-inf')
+              total=0;geom=collections.Counter();values=collections.Counter();tags=collections.Counter();types=collections.Counter();years=collections.Counter();bad=0;minx=miny=float('inf');maxx=maxy=float('-inf')
               tag_names=(['name','surface','lanes','width','maxspeed','bridge','tunnel','layer'] if kind=='road' else ['name','height','building:levels','roof:shape','building:material','building:part'])
               def coords(v):
                   nonlocal minx,miny,maxx,maxy
                   if isinstance(v,list) and len(v)>=2 and isinstance(v[0],(int,float)) and isinstance(v[1],(int,float)):
                       x,y=float(v[0]),float(v[1]);minx=min(minx,x);miny=min(miny,y);maxx=max(maxx,x);maxy=max(maxy,y);return
                   if isinstance(v,list):
-                      for q in v: coords(q)
+                      for q in v:coords(q)
               with path.open('r',encoding='utf-8') as f:
                   for line in f:
                       line=line.strip()
-                      if not line: continue
-                      try: feat=json.loads(line)
-                      except Exception: bad+=1;continue
-                      total+=1; g=feat.get('geometry') or {}; geom[g.get('type','null')]+=1; coords(g.get('coordinates'))
-                      p=feat.get('properties') or {}
+                      if not line:continue
+                      try:feat=json.loads(line)
+                      except Exception:bad+=1;continue
+                      total+=1;g=feat.get('geometry') or {};geom[g.get('type','null')]+=1;coords(g.get('coordinates'));p=feat.get('properties') or {};types[str(p.get('@type'))]+=1
+                      stamp=str(p.get('@timestamp') or '');
+                      if len(stamp)>=4 and stamp[:4].isdigit():years[stamp[:4]]+=1
                       key='highway' if kind=='road' else 'building'
-                      if key in p: values[str(p[key])]+=1
+                      if p.get(key) not in (None,''):values[str(p[key])]+=1
                       for t in tag_names:
-                          if p.get(t) not in (None,''): tags[t]+=1
-              return {
-                'featureCount':total,'geometryTypes':dict(geom),'primaryTagValues':dict(values.most_common(100)),
-                'tagPresence':{k:{'count':tags[k],'fraction':(tags[k]/total if total else 0)} for k in tag_names},
-                'coordinateBoundsWgs84':([minx,miny,maxx,maxy] if total and minx!=float('inf') else None),'invalidJsonLines':bad
-              }
-
-          roads=scan(work/'roads.geojsonseq','road')
-          buildings=scan(work/'buildings.geojsonseq','building')
-          source=[]
-          for region in ['zhejiang','fujian']:
-              p=Path('/tmp/r35-osm/source')/f'{region}-latest.osm.pbf'
-              source.append({'region':region,'url':f'https://download.geofabrik.de/asia/china/{region}-latest.osm.pbf','bytes':p.stat().st_size,'sha256':sha256(p),'providerMd5Sidecar':(p.with_suffix(p.suffix+'.md5')).read_text().strip()})
-          snapshot=root/'WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf'
-          report={
-            'schema':'wenzhou-r3.5-osm-object-evidence/r1','createdAtUtc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
-            'boundsWgs84':bounds,'provider':'Geofabrik GmbH','dataSource':'OpenStreetMap contributors','license':'ODbL 1.0','attribution':'© OpenStreetMap contributors',
-            'sourceRegionalPbf':source,
-            'snapshot':{'path':snapshot.name,'bytes':snapshot.stat().st_size,'sha256':sha256(snapshot),'selection':'bbox extract with complete_ways from current Zhejiang + Fujian regional PBFs, merged with --simplify'},
-            'roads':roads,'buildings':buildings,
-            'semantics':{
-              'roads':'OSM highway ways are mapped linear road/path observations, generally centerline-like; they are not surveyed road-edge polygons or guaranteed lane geometry.',
-              'buildings':'OSM building/building:part ways and relations are mapped footprint/part observations; height and levels are only known when explicitly tagged.',
-              'missingRoadWidthMeans':'unknown','missingBuildingHeightMeans':'unknown','missingBuildingLevelsMeans':'unknown',
-              'uniformObservationTime':False,'canonicalTruth':False,'surveyGradeGeometry':False,'productionReady':False,
-              'allowedUse':'external mapped-object evidence and spatial constraints','forbiddenPromotion':'Do not invent road width, lanes, building height, levels, roof, material, or physical accuracy when tags are absent.'
-            }
-          }
-          checks={
-            'snapshotNonEmpty':snapshot.stat().st_size>0,
-            'roadsPresent':roads['featureCount']>0,
-            'buildingsPresent':buildings['featureCount']>0,
-            'roadsJsonValid':roads['invalidJsonLines']==0,
-            'buildingsJsonValid':buildings['invalidJsonLines']==0,
-            'missingWidthUnknown':report['semantics']['missingRoadWidthMeans']=='unknown',
-            'missingHeightUnknown':report['semantics']['missingBuildingHeightMeans']=='unknown',
-            'notCanonical':report['semantics']['canonicalTruth'] is False,
-            'notSurveyGrade':report['semantics']['surveyGradeGeometry'] is False,
-            'notProductionReady':report['semantics']['productionReady'] is False,
-          }
+                          if p.get(t) not in (None,''):tags[t]+=1
+              return {'featureCount':total,'geometryTypes':dict(geom),'osmObjectTypes':dict(types),'primaryTagValues':dict(values.most_common(100)),'tagPresence':{k:{'count':tags[k],'fraction':(tags[k]/total if total else 0)} for k in tag_names},'editYearCounts':dict(sorted(years.items())),'coordinateBoundsWgs84':([minx,miny,maxx,maxy] if total and minx!=float('inf') else None),'invalidJsonLines':bad}
+          roads=scan(work/'roads-deduped.geojsonseq','road');buildings=scan(work/'buildings-deduped.geojsonseq','building')
+          regional=[]
+          for region in ('zhejiang','fujian'):
+              src=source_root/f'{region}-latest.osm.pbf';crop=root/f'WENZHOU_OSM_{region.upper()}_BBOX.osm.pbf'
+              regional.append({'region':region,'sourceUrl':f'https://download.geofabrik.de/asia/china/{region}-latest.osm.pbf','providerMd5Sidecar':(source_root/f'{region}-latest.osm.pbf.md5').read_text().strip(),'sourceBytes':src.stat().st_size,'sourceSha256':sha256(src),'archivedCrop':crop.name,'archivedCropBytes':crop.stat().st_size,'archivedCropSha256':sha256(crop)})
+          dedup=json.loads((work/'DEDUPLICATION_REPORT.json').read_text(encoding='utf-8'))
+          report={'schema':'wenzhou-r3.5-osm-object-evidence/r2','createdAtUtc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'boundsWgs84':bounds,'provider':'Geofabrik GmbH','dataSource':'OpenStreetMap contributors','license':'ODbL 1.0','attribution':'© OpenStreetMap contributors','regionalSources':regional,'crossRegionDeduplication':dedup,'roads':roads,'buildings':buildings,'semantics':{'roads':'OSM highway ways are mapped road/path line observations, generally centerline-like; they are not surveyed road-edge polygons, guaranteed lane geometry, or physical road width.','buildings':'OSM building/building:part ways and relations are mapped footprint/part observations; height, levels, roof and material are only known when explicitly tagged.','missingRoadWidthMeans':'unknown','missingRoadLanesMeans':'unknown','missingBuildingHeightMeans':'unknown','missingBuildingLevelsMeans':'unknown','uniformObservationTime':False,'canonicalTruth':False,'surveyGradeGeometry':False,'productionReady':False,'individualPhysicalTruth':False,'allowedUse':'external mapped-object observations and spatial constraints','forbiddenPromotion':'Do not invent road width/lanes/surface or building height/levels/roof/material when tags are absent; do not treat volunteer map geometry as survey-grade physical truth.'}}
+          checks={'regionalCropsPresent':all((root/f'WENZHOU_OSM_{r.upper()}_BBOX.osm.pbf').is_file() for r in ('zhejiang','fujian')),'roadsPresent':roads['featureCount']>0,'buildingsPresent':buildings['featureCount']>0,'roadsJsonValid':roads['invalidJsonLines']==0,'buildingsJsonValid':buildings['invalidJsonLines']==0,'crossRegionConflictsZero':dedup['roads']['sameVersionConflicts']==0 and dedup['buildings']['sameVersionConflicts']==0,'missingWidthUnknown':report['semantics']['missingRoadWidthMeans']=='unknown','missingHeightUnknown':report['semantics']['missingBuildingHeightMeans']=='unknown','notCanonical':report['semantics']['canonicalTruth'] is False,'notSurveyGrade':report['semantics']['surveyGradeGeometry'] is False,'notPhysicalTruth':report['semantics']['individualPhysicalTruth'] is False,'notProductionReady':report['semantics']['productionReady'] is False}
           report['checks']=checks;report['passed']=all(checks.values())
           (root/'OSM_OBJECT_EVIDENCE_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          print(json.dumps({'passed':report['passed'],'roads':roads,'buildings':buildings,'snapshotBytes':snapshot.stat().st_size},ensure_ascii=False,indent=2))
-          if not report['passed']: raise SystemExit(2)
+          print(json.dumps({'passed':report['passed'],'roads':roads,'buildings':buildings,'deduplication':dedup,'regionalCrops':regional},ensure_ascii=False,indent=2))
+          if not report['passed']:raise SystemExit(2)
           PY
 
       - name: Build payload manifest and reverify every archived byte
@@ -173,24 +190,21 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,json
-          root=Path('artifacts/wenzhou-r35-osm')
-          files=[];total=0
+          root=Path('artifacts/wenzhou-r35-osm');files=[];total=0
           for p in sorted(root.iterdir()):
-              if not p.is_file() or p.name=='PAYLOAD_MANIFEST.json': continue
-              h=hashlib.sha256();
+              if not p.is_file() or p.name=='PAYLOAD_MANIFEST.json':continue
+              h=hashlib.sha256()
               with p.open('rb') as f:
                   for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
               files.append({'path':p.name,'bytes':p.stat().st_size,'sha256':h.hexdigest()});total+=p.stat().st_size
-          manifest={'schema':'wenzhou-r3.5-osm-object-payload-manifest/r1','passed':True,'payloadCount':len(files),'totalBytes':total,'payloads':files}
-          (root/'PAYLOAD_MANIFEST.json').write_text(json.dumps(manifest,indent=2)+'\n')
-          # Read it back and verify identities once more.
-          m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text())
-          errors=[]
+          manifest={'schema':'wenzhou-r3.5-osm-object-payload-manifest/r2','passed':True,'payloadCount':len(files),'totalBytes':total,'payloads':files}
+          (root/'PAYLOAD_MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text());errors=[]
           for item in m['payloads']:
               p=root/item['path'];h=hashlib.sha256()
               with p.open('rb') as f:
                   for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
-              if p.stat().st_size!=item['bytes'] or h.hexdigest()!=item['sha256']: errors.append(item['path'])
+              if p.stat().st_size!=item['bytes'] or h.hexdigest()!=item['sha256']:errors.append(item['path'])
           assert not errors,errors
           print(json.dumps({'passed':True,'payloadCount':m['payloadCount'],'totalBytes':m['totalBytes'],'errors':errors},indent=2))
           PY
