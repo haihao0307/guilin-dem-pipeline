@@ -1,0 +1,117 @@
+{
+  "schema": "kaopu-source-lock/cloud-optical-r10",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "independentRoots": [
+    {
+      "id": "ECMWF-ECRAD-CLOUD-OPTICS",
+      "role": "primary-official-radiation-and-model-semantics",
+      "independentRoot": true,
+      "urls": [
+        "https://github.com/ecmwf-ifs/ecrad",
+        "https://github.com/ecmwf-ifs/openifs/blob/master/ifs-source/arpifs/phys_ec/radiation_cloud.F90",
+        "https://github.com/ecmwf-ifs/openifs/blob/master/ifs-source/arpifs/phys_ec/ac_cloud_model.F90",
+        "https://confluence.ecmwf.int/display/ECRAD"
+      ],
+      "lockedFacts": [
+        "ecRad separates gas optics, cloud optics and radiative-transfer solver concerns",
+        "OpenIFS cloud-radiation interfaces carry liquid/ice condensate, liquid/ice effective radius and cloud fraction as distinct quantities",
+        "OpenIFS cloud model code distinguishes cloud fraction from liquid/ice specific mass inside cloud and computes optical coefficients downstream",
+        "ecRad cloud optical properties are parameterized with particle effective size rather than condensate mass alone"
+      ],
+      "limits": [
+        "these sources define model/radiation semantics, not direct observations of a specific real cloud",
+        "KAOPU must not copy ECMWF defaults as universal physical truth"
+      ]
+    },
+    {
+      "id": "C3S-CLOUD-PROPERTIES",
+      "role": "primary-official-retrieval-product-semantics",
+      "independentRoot": true,
+      "urls": [
+        "https://datastore.copernicus-climate.eu/documents/satellite-cloud-properties/D2.3_ATBD_CFC_CTH_CTP_CTT_CPH_COT_CER_CWP_GCC_edition2_v2.1.pdf",
+        "https://datastore.copernicus-climate.eu/documents/satellite-cloud-properties/D2.1_Target_Requirements_and_Gap_Analysis_CFC_CTH_CTP_CTT_CPH_COT_CER_CWP_GCC_v2.0.pdf"
+      ],
+      "lockedFacts": [
+        "cloud fraction, cloud optical thickness, cloud effective radius, liquid water path and ice water path are separate retrieved quantities",
+        "the documented cloud-water-path relation depends on optical thickness, particle effective radius, particle density and extinction efficiency",
+        "therefore the same condensate path can correspond to different optical depth when effective radius differs"
+      ],
+      "limits": [
+        "retrieval equations and uncertainties belong to that product/method and are not universal renderer defaults",
+        "path-integrated optical thickness does not by itself specify local three-dimensional extinction"
+      ]
+    },
+    {
+      "id": "NOAA-NCEP-CLOUD-FIELDS",
+      "role": "primary-official-operational-model-product-semantics",
+      "independentRoot": true,
+      "urls": [
+        "https://www.nco.ncep.noaa.gov/pmb/products/gfs/",
+        "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/",
+        "https://nomads.ncep.noaa.gov/cgi-bin/filter_hrrr_2d.pl"
+      ],
+      "lockedFacts": [
+        "operational NCEP products expose cloud condensate and cloud-cover fields separately",
+        "HRRR native inventories additionally expose cloud liquid/ice-related mixing ratios, cloud fraction, number concentrations, pressure/height/temperature and mass-density-related fields on model coordinates"
+      ],
+      "limits": [
+        "HRRR is regional/CONUS and is not a production source for Wenzhou or a global world",
+        "the exact grid-mean-versus-in-cloud semantics of each operational condensate field must be source-verified before numerical optical closure",
+        "this cycle did not ingest authenticated GRIB bytes"
+      ]
+    },
+    {
+      "id": "NASA-GMAO-MERRA2-CLOUD-STATE",
+      "role": "primary-official-global-reanalysis-data-semantics",
+      "independentRoot": true,
+      "urls": [
+        "https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/docs/",
+        "https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/"
+      ],
+      "lockedFacts": [
+        "MERRA-2 model-level atmospheric collections include cloud fraction, cloud liquid/ice mixing ratios, pressure-thickness/pressure, height, humidity and temperature-related state on a global grid",
+        "this makes MERRA-2 a plausible global experimental source for placement plus condensate/fraction semantics"
+      ],
+      "limits": [
+        "the model-level cloud-state packet does not by itself supply every optical-microphysics quantity such as a universally valid effective radius",
+        "full model-level granules are large and ordinary use generally requires Earthdata access/subsetting and NetCDF handling",
+        "reanalysis is not the same as realtime Weather truth"
+      ]
+    }
+  ],
+  "engineeringRoots": [
+    {
+      "id": "SIDEFX-KARMA-VOLUME",
+      "role": "primary-vendor-renderer-semantics",
+      "independentRoot": false,
+      "urls": [
+        "https://www.sidefx.com/docs/houdini/nodes/vop/kma_volume.html",
+        "https://www.sidefx.com/docs/houdini/nodes/vop/kma_material_properties.html"
+      ],
+      "lockedUse": [
+        "absorption and scattering are medium coefficients/rates per distance",
+        "sampling and bounce/ray limits are evaluator budgets rather than weather state"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-VOLUME-CLOUD",
+      "role": "primary-vendor-renderer-semantics",
+      "independentRoot": false,
+      "urls": [
+        "https://dev.epicgames.com/documentation/en-us/unreal-engine/volumetric-clouds-in-unreal-engine",
+        "https://dev.epicgames.com/documentation/en-us/unreal-engine/volumetric-fog-in-unreal-engine"
+      ],
+      "lockedUse": [
+        "renderer density/extinction/albedo/phase-style controls are downstream evaluator/material semantics",
+        "ray-march/tracing quality remains separate from physical state"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an independent evidence root"
+  }
+}
