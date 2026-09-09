@@ -66,17 +66,17 @@
       "id": "U-ATMOS-001",
       "status": "PartiallyResolved",
       "question": "What is the minimum physically meaningful atmosphere state that KAOPU should preserve without overfitting UE or Karma parameter interfaces?",
-      "known": "R01-R02 primary-source review supports explicit planet/reference frame, neutral thermodynamic/species state, separate aerosol/cloud media, emitter/surface coupling, spectral-property semantics, path query, evaluator policy, and camera/display separation. R03 executable evidence shows that one state can support multiple evaluators whose authority differs by query geometry; evaluator validity must therefore be explicit rather than global.",
-      "remainingUnknown": "The exact canonical Earth schema, state-source hierarchy, required unit types, and which quantities are observed versus inferred/fitted have not yet been tested across independent Earth reference profiles.",
-      "currentBestView": "Keep the layered Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator architecture Candidate. Require independent Earth state roots and measured evaluator validity envelopes before candidate-complete promotion.",
+      "known": "R01-R02 primary-source review supports explicit planet/reference frame, neutral thermodynamic/species state, separate aerosol/cloud media, emitter/surface coupling, spectral-property semantics, path query, evaluator policy, and camera/display separation. R03 executable evidence shows that one state can support multiple evaluators whose authority differs by query geometry; evaluator validity must therefore be explicit rather than global. R04 adds a multi-root Earth fixture architecture and shows that ReferenceSampleKey must preserve source-required context dimensions through reduction.",
+      "remainingUnknown": "The exact canonical Earth schema, state-source hierarchy above 86 km, required unit types, and which quantities are observed versus inferred/fitted still need authoritative cross-root numerical fixtures.",
+      "currentBestView": "Keep the layered Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator architecture Candidate. Preserve independent Observation Root IDs and a first-class ReferenceSampleKey. Require authoritative NRL numerical confirmation and authenticated spectral checkpoints before candidate-complete promotion.",
       "promotionBlock": true
     },
     {
       "id": "U-ATMOS-002",
       "status": "PartiallyResolved",
       "question": "Does KAOPU need a spectral reference layer for atmosphere, or is typed RGB coefficient storage sufficient for its intended world reconstruction and rendering tasks?",
-      "known": "HITRAN provides wavelength-resolved molecular spectroscopy used for atmospheric transmission/emission, while modern atmosphere literature validates cheaper realtime approximations against higher-fidelity spectral references. NASA solar-irradiance material also shows strongly wavelength-dependent source and absorber behavior. This is sufficient to reject vendor RGB coefficients as the canonical definition of atmosphere spectrum.",
-      "remainingUnknown": "The wavelength domains, sampling/basis resolution, reference spectroscopy subset, and task-specific RGB/few-band compression error budgets are not yet fixed.",
+      "known": "HITRAN provides wavelength-resolved molecular spectroscopy used for atmospheric transmission/emission, while modern atmosphere literature validates cheaper realtime approximations against higher-fidelity spectral references. NASA solar-irradiance material also shows strongly wavelength-dependent source and absorber behavior. This is sufficient to reject vendor RGB coefficients as the canonical definition of atmosphere spectrum. R04 further defines the minimum checkpoint metadata: spectral-coordinate convention, molecule/isotopologue, spectroscopy provenance, T/P, line-shape model, column/path state, units, and tolerance.",
+      "remainingUnknown": "The wavelength domains, sampling/basis resolution, authenticated reference line subset, and task-specific RGB/few-band compression error budgets are not yet fixed.",
       "currentBestView": "Preserve spectral-reference capability and allow validated task-specific compression to RGB/few-band runtime packets. Do not require full spectral realtime evaluation by every Mother.",
       "promotionBlock": false
     },
@@ -95,6 +95,24 @@
       "remainingUnknown": "The smallest query contract that can couple neutral state to ionosphere/plasma effects without turning the first atmosphere core into a full space-weather simulator has not been defined or tested.",
       "currentBestView": "Keep ionosphere/plasma as a separate optional coupled state domain. Do not fake aurora, plasma or charged-particle physics by extending a neutral Rayleigh/Mie renderer.",
       "promotionBlock": false
+    },
+    {
+      "id": "U-ATMOS-005",
+      "status": "Unknown",
+      "question": "Do the selected NRLMSIS 2.1 packaged test vectors reproduce exactly when executed from an authoritative NRL package or NASA CCMC host?",
+      "known": "R04 inspected a non-authoritative mirror of the public NRL package. Its README identifies the same release structure and its legacy interface documents units and missing-value semantics. The mirrored expected-output file provides same-altitude 500 km vectors whose temperature spans 777.86-1116.07 K and total density spans 1.339e-16-1.034e-15 g/cm3 across different context tuples.",
+      "remainingUnknown": "The official NRL archive could not be materialized into the bounded execution environment, so no authoritative execution comparison was completed.",
+      "currentBestView": "Keep those numerical vectors Candidate. Use them as a reproducibility target only; do not count the mirror as an independent Observation Root or promote the values until official-package or CCMC confirmation.",
+      "promotionBlock": true
+    },
+    {
+      "id": "U-ATMOS-006",
+      "status": "Unknown",
+      "question": "Which tiny authenticated HITRAN transition subset should become the first KAOPU optical regression fixture?",
+      "known": "Official HITRAN documentation fixes spectral-coordinate and line-intensity semantics and shows that line shape depends on thermodynamic regime. R04 defines the checkpoint schema without inventing line values.",
+      "remainingUnknown": "HAPI line-data download requires authenticated access in the current service; no authoritative transition tuple was retrieved in R04.",
+      "currentBestView": "Do not synthesize or copy unverified line constants. Retrieve two or three authenticated lines later and bind molecule/isotopologue, line provenance, temperature, pressure, line-shape model, column/path state, units, and tolerance.",
+      "promotionBlock": true
     }
   ]
 }
