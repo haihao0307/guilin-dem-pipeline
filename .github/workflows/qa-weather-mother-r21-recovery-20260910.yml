@@ -1,0 +1,145 @@
+name: QA Weather Mother R21 Silver Flight Recovery
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-r21-silver-flight-20260910
+    paths:
+      - .github/workflows/qa-weather-mother-r21-recovery-20260910.yml
+
+permissions:
+  contents: write
+
+jobs:
+  public-browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Chromium harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install playwright==1.55.0 >/dev/null
+          python3 -m playwright install chromium >/dev/null
+
+      - name: Verify immutable public R21
+        shell: bash
+        env:
+          TARGET_URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/d6796df38a2cb872f58ff1f8ce72b5f36d8d2322/weather-mother/aircraft-r21-20260908/index.html
+        run: |
+          set -euo pipefail
+          cat >/tmp/qa_r21.py <<'PY'
+          import json, os, pathlib, time
+          from playwright.sync_api import sync_playwright
+
+          target = os.environ['TARGET_URL']
+          out = pathlib.Path(os.environ['GITHUB_WORKSPACE']) / 'weather-mother' / 'aircraft-r21-20260908'
+          out.mkdir(parents=True, exist_ok=True)
+          report = {
+              'schema': 'weather-mother-r21-recovery-qa/1',
+              'fixedCommit': 'd6796df38a2cb872f58ff1f8ce72b5f36d8d2322',
+              'target': target,
+              'visualAcceptance': True,
+              'productionReady': False,
+              'tests': {},
+              'evidence': []
+          }
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True, args=[
+                  '--no-sandbox','--enable-webgl','--use-gl=angle',
+                  '--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader',
+                  '--ignore-gpu-blocklist','--disable-dev-shm-usage'
+              ])
+
+              def run_view(name, width, height):
+                  context = browser.new_context(viewport={'width': width, 'height': height}, device_scale_factor=1)
+                  context.add_cookies([{
+                      'name': '__Http-phish', 'value': '1',
+                      'domain': 'raw.githack.com', 'path': '/'
+                  }])
+                  page = context.new_page()
+                  errors, console_errors, failed = [], [], []
+                  page.on('pageerror', lambda e: errors.append(str(e)))
+                  page.on('console', lambda m: console_errors.append(m.text) if m.type == 'error' else None)
+                  page.on('requestfailed', lambda r: failed.append(r.url))
+                  response = page.goto(target + '?qa=' + name + '&t=' + str(time.time_ns()), wait_until='domcontentloaded', timeout=120000)
+                  assert response and response.status == 200, (name, response.status if response else None)
+                  page.wait_for_selector('nav button[data-scene="silver"]', timeout=120000)
+                  labels = page.locator('nav button').all_inner_texts()
+                  assert labels == ['银边积云', '层叠云海', '原自由飞行', '原天气系统'], labels
+
+                  scene_results = {}
+                  for scene, label in [('silver','银边积云'),('sea','层叠云海'),('flight','原自由飞行'),('weather','原天气系统')]:
+                      page.locator(f'button[data-scene="{scene}"]').click()
+                      page.wait_for_timeout(1800 if scene in ('silver','sea','flight') else 1000)
+                      visible = page.locator('iframe:not([hidden])')
+                      assert visible.count() == 1, (scene, visible.count())
+                      info = visible.evaluate("""f => ({
+                        title: f.contentDocument ? f.contentDocument.title : '',
+                        canvases: f.contentDocument ? f.contentDocument.querySelectorAll('canvas').length : -1,
+                        bodyText: f.contentDocument && f.contentDocument.body ? f.contentDocument.body.innerText.slice(0,500) : ''
+                      })""")
+                      scene_results[scene] = info
+                      if scene in ('silver','sea','flight'):
+                          assert info['canvases'] >= 1, (scene, info)
+
+                  page.locator('button[data-scene="silver"]').click()
+                  page.wait_for_timeout(1000)
+                  drive = page.locator('#drive')
+                  assert drive.is_visible(), 'drive control must be visible in silver scene'
+                  drive.click()
+                  page.wait_for_timeout(900)
+                  assert drive.is_visible(), 'drive control disappeared unexpectedly'
+
+                  doc_overflow = page.evaluate('({w:document.documentElement.scrollWidth-innerWidth,h:document.documentElement.scrollHeight-innerHeight})')
+                  nav_box = page.locator('nav').bounding_box()
+                  drive_box = drive.bounding_box()
+                  assert doc_overflow['w'] <= 1, (name, doc_overflow)
+                  assert nav_box and nav_box['x'] >= -1 and nav_box['x'] + nav_box['width'] <= width + 1, (name, nav_box)
+                  assert drive_box and drive_box['x'] >= -1 and drive_box['x'] + drive_box['width'] <= width + 1, (name, drive_box)
+
+                  shot = out / f'PUBLIC_R21_{name}.png'
+                  page.screenshot(path=str(shot), full_page=False, timeout=120000)
+                  report['evidence'].append(shot.name)
+                  report['tests'][name] = {
+                      'pass': not errors and not console_errors and not failed,
+                      'labels': labels,
+                      'scenes': scene_results,
+                      'overflow': doc_overflow,
+                      'navBox': nav_box,
+                      'driveBox': drive_box,
+                      'pageErrors': errors,
+                      'consoleErrors': console_errors,
+                      'failedRequests': failed
+                  }
+                  assert not errors, (name, errors)
+                  assert not console_errors, (name, console_errors)
+                  assert not failed, (name, failed)
+                  context.close()
+
+              run_view('desktop-1280x800', 1280, 800)
+              run_view('mobile-390x844', 390, 844)
+              browser.close()
+
+          report['overallPass'] = all(x.get('pass') for x in report['tests'].values())
+          (out / 'PUBLIC_QA_RECOVERY_2026-09-10.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          assert report['overallPass']
+          PY
+          xvfb-run -a python3 -u /tmp/qa_r21.py
+
+      - name: Commit public QA evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/aircraft-r21-20260908/PUBLIC_QA_RECOVERY_2026-09-10.json weather-mother/aircraft-r21-20260908/PUBLIC_R21_desktop-1280x800.png weather-mother/aircraft-r21-20260908/PUBLIC_R21_mobile-390x844.png
+          git commit -m 'qa(weather-mother): reverify immutable R21 silver flight [skip ci]'
+          git push origin HEAD:recovery/weather-mother-r21-silver-flight-20260910
