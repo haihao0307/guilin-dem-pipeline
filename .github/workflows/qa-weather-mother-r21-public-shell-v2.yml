@@ -1,0 +1,112 @@
+name: QA Weather Mother R21 public shell v2
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-r21-silver-flight-20260910
+    paths:
+      - .github/workflows/qa-weather-mother-r21-public-shell-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  public-shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify public bytes and historical identity
+        shell: bash
+        env:
+          URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/d6796df38a2cb872f58ff1f8ce72b5f36d8d2322/weather-mother/aircraft-r21-20260908/index.html
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --connect-timeout 10 --max-time 45 "$URL" -o /tmp/r21.html
+          test -s /tmp/r21.html
+          grep -q 'Weather Mother · 云间驾驶 R21' /tmp/r21.html
+          grep -q '银边积云' /tmp/r21.html
+          grep -q '层叠云海' /tmp/r21.html
+          grep -q '原自由飞行' /tmp/r21.html
+          grep -q '原天气系统' /tmp/r21.html
+          grep -q '驾驶飞机' /tmp/r21.html
+          echo "R21 public HTML identity verified"
+
+      - name: Install browser harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install playwright==1.55.0 >/dev/null
+          python3 -m playwright install chromium >/dev/null
+
+      - name: Open fixed public R21 and exercise shell
+        shell: bash
+        env:
+          URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/d6796df38a2cb872f58ff1f8ce72b5f36d8d2322/weather-mother/aircraft-r21-20260908/index.html
+        run: |
+          set -euo pipefail
+          cat >/tmp/r21_shell.py <<'PY'
+          import json, os, pathlib
+          from playwright.sync_api import sync_playwright
+
+          url=os.environ['URL']
+          out=pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'weather-mother'/'aircraft-r21-20260908'
+          report={'schema':'weather-mother-r21-public-shell/2','fixedCommit':'d6796df38a2cb872f58ff1f8ce72b5f36d8d2322','url':url,'tests':{},'productionReady':False}
+
+          with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True,args=['--no-sandbox','--ignore-gpu-blocklist','--disable-dev-shm-usage'])
+            for name,w,h in [('desktop-1280x800',1280,800),('mobile-390x844',390,844)]:
+              ctx=browser.new_context(viewport={'width':w,'height':h},device_scale_factor=1)
+              ctx.add_cookies([{'name':'__Http-phish','value':'1','url':'https://raw.githack.com/','secure':True,'httpOnly':True,'sameSite':'Lax'}])
+              # Keep embedded real-time cloud pages from monopolizing headless CI; this gate validates the public R21 shell and controls.
+              ctx.add_init_script("""
+                (()=>{let n=0;const now=performance.now.bind(performance);window.requestAnimationFrame=(cb)=>{if(n++<2)return setTimeout(()=>cb(now()),16);return 0;};})();
+              """)
+              page=ctx.new_page(); errors=[]; failed=[]
+              page.on('pageerror',lambda e: errors.append(str(e)))
+              page.on('requestfailed',lambda r: failed.append(r.url))
+              resp=page.goto(url,wait_until='domcontentloaded',timeout=60000)
+              assert resp and resp.status==200, resp.status if resp else None
+              page.wait_for_selector('nav button[data-scene="silver"]',timeout=30000)
+              labels=page.locator('nav button').all_inner_texts()
+              assert labels==['银边积云','层叠云海','原自由飞行','原天气系统'],labels
+              states={}
+              for scene in ('silver','sea','flight','weather'):
+                page.locator(f'button[data-scene="{scene}"]').click(timeout=10000)
+                page.wait_for_timeout(80)
+                states[scene]=page.evaluate("""scene=>({pressed:[...document.querySelectorAll('nav button')].find(b=>b.dataset.scene===scene)?.getAttribute('aria-pressed'),visible:[...document.querySelectorAll('iframe')].filter(f=>!f.hidden).length,driveHidden:document.getElementById('drive').hidden})""",scene)
+                assert states[scene]['pressed']=='true',states[scene]
+                assert states[scene]['visible']==1,states[scene]
+              page.locator('button[data-scene="silver"]').click(); page.wait_for_timeout(80)
+              drive=page.locator('#drive'); assert drive.is_visible()
+              drive.click(timeout=10000); page.wait_for_timeout(80)
+              nav=page.locator('nav').bounding_box(); db=drive.bounding_box()
+              overflow=page.evaluate('({x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight})')
+              assert overflow['x']<=1,(name,overflow)
+              assert nav and nav['x']>=-1 and nav['x']+nav['width']<=w+1,(name,nav)
+              assert db and db['x']>=-1 and db['x']+db['width']<=w+1,(name,db)
+              shot=out/f'PUBLIC_R21_SHELL_{name}.png'; page.screenshot(path=str(shot),timeout=30000)
+              report['tests'][name]={'pass':not failed,'labels':labels,'sceneStates':states,'overflow':overflow,'navBox':nav,'driveBox':db,'pageErrors':errors,'failedRequests':failed,'screenshot':shot.name}
+              assert not failed,(name,failed)
+              ctx.close()
+            browser.close()
+          report['overallPass']=all(v['pass'] for v in report['tests'].values())
+          (out/'PUBLIC_QA_SHELL_2026-09-10.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          assert report['overallPass']
+          PY
+          xvfb-run -a python3 -u /tmp/r21_shell.py
+
+      - name: Commit recovery evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/aircraft-r21-20260908/PUBLIC_QA_SHELL_2026-09-10.json weather-mother/aircraft-r21-20260908/PUBLIC_R21_SHELL_desktop-1280x800.png weather-mother/aircraft-r21-20260908/PUBLIC_R21_SHELL_mobile-390x844.png
+          git commit -m 'qa(weather-mother): lock R21 public silver-flight shell [skip ci]'
+          git push origin HEAD:recovery/weather-mother-r21-silver-flight-20260910
