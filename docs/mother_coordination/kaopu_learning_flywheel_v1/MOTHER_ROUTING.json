@@ -223,6 +223,45 @@
       "productionMutationAllowed": false,
       "requiresMotherExperiment": true,
       "promotionAuthority": "Xiaoma Judgment after Earth-reference cross-validation"
+    },
+    {
+      "fromLearning": "LEARNING_LOG/2026-09-09_ATMOSPHERE_R04_REFERENCE_ROOTS.md",
+      "status": "candidate-route",
+      "targets": [
+        {
+          "mother": "Weather",
+          "items": [
+            "preserve ReferenceSampleKey with source/version, coordinate kind, units, altitude, time/location and source-required solar/geomagnetic drivers before reduction",
+            "do not use U.S. Standard Atmosphere 1976 as live weather truth; keep it as a static regression root",
+            "any altitude-only runtime atmosphere packet must declare which context dimensions were fixed, averaged, or ignored and retain an error/Unknown contract"
+          ]
+        },
+        {
+          "mother": "Lighting",
+          "items": [
+            "optical reference checkpoints must bind spectral-coordinate convention, spectroscopy provenance, molecule/isotopologue, temperature, pressure, line-shape model, column/path state, units and tolerance",
+            "do not promote RGB/few-band coefficients to reference-spectrum identity"
+          ]
+        },
+        {
+          "mother": "Future-Space",
+          "items": [
+            "treat high-altitude neutral atmosphere as driver-conditioned state, not altitude-only state",
+            "use official NRLMSIS/authoritative hosted output for numerical promotion; mirror-transported release vectors remain Candidate"
+          ]
+        },
+        {
+          "mother": "KAOPU semantic core",
+          "items": [
+            "make ReferenceSampleKey first-class and retain Observation Root IDs through State Reducer boundaries",
+            "independent roots such as USSA1976, NRLMSIS2.1 and HITRAN must not be averaged into a synthetic canonical truth profile",
+            "prohibit silent driver-dimension deletion and prohibit invented evidence values when authenticated data are unavailable"
+          ]
+        }
+      ],
+      "productionMutationAllowed": false,
+      "requiresMotherExperiment": true,
+      "promotionAuthority": "Xiaoma Judgment after authoritative NRL numerical confirmation and authenticated HITRAN checkpoints"
     }
   ]
 }
