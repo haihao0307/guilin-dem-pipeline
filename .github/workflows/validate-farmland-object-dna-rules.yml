@@ -67,7 +67,10 @@ jobs:
           fi
 
       - name: Water accounting and adversarial contract tests
-        run: python -m unittest discover -s farmland-object-dna/tools -p test_water_contracts.py -v
+        run: python -m unittest discover -s farmland-object-dna/tools -p 'test_*.py' -v
+
+      - name: Six ideal hydraulic scenarios and step refinement
+        run: python farmland-object-dna/tools/probe_hydraulic_r022.py > /tmp/farmland-r022-probe.json
 
       - name: Verify mandatory rules and failed gates
         shell: bash

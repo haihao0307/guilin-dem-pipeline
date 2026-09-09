@@ -8,6 +8,7 @@ No terrain, crop, weather, water-right or renderer state is created here.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 from math import fsum, isfinite
 from typing import Mapping, Sequence
 
@@ -17,7 +18,7 @@ class SnapshotKey:
     world_id: str
     frame: str
     revision: str
-    time_s: int
+    time_s: int | Fraction
 
 
 @dataclass(frozen=True)
@@ -34,7 +35,7 @@ def _volume(value: float, name: str) -> None:
 
 
 def advance(
-    *, snapshot: SnapshotKey, expected_snapshot: SnapshotKey, end_time_s: int,
+    *, snapshot: SnapshotKey, expected_snapshot: SnapshotKey, end_time_s: int | Fraction,
     storage_m3: Mapping[str, float], source_budgets_m3: Mapping[str, float],
     receivers: Sequence[str], allowed_edges: Sequence[tuple[str, str]],
     transfers: Sequence[Transfer],
@@ -52,8 +53,8 @@ def advance(
         snapshot.world_id, snapshot.frame, snapshot.revision
     )):
         raise ValueError("world/frame/revision required")
-    if type(snapshot.time_s) is not int or type(end_time_s) is not int or end_time_s <= snapshot.time_s:
-        raise ValueError("integer seconds and strictly increasing interval required")
+    if type(snapshot.time_s) not in (int, Fraction) or type(end_time_s) not in (int, Fraction) or end_time_s <= snapshot.time_s:
+        raise ValueError("exact integer/rational seconds and strictly increasing interval required")
     field_ids, source_ids, sink_ids = set(storage_m3), set(source_budgets_m3), set(receivers)
     if not field_ids or len(sink_ids) != len(receivers):
         raise ValueError("storage required; receiver ids must be unique")
@@ -104,7 +105,8 @@ def advance(
         raise ValueError("global water budget failed")
     return {
         "world_id": snapshot.world_id, "frame": snapshot.frame,
-        "base_revision": snapshot.revision, "interval_s": [snapshot.time_s, end_time_s],
+        "base_revision": snapshot.revision, "interval_s": [float(snapshot.time_s), float(end_time_s)],
+        "interval_rational_s": [[Fraction(t).numerator, Fraction(t).denominator] for t in (snapshot.time_s, end_time_s)],
         "storage_m3": next_storage,
         "accounts": {i: {"in_m3": total_in[i], "out_m3": total_out[i]} for i in sorted(all_ids)},
         "source_unused_m3": {i: source_budgets_m3[i] - total_out[i] for i in sorted(source_ids)},
