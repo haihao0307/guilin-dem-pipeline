@@ -28,7 +28,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p workbenches/landscape-karst-kaopu-r5
-          cat workbenches/landscape-karst-kaopu-r5/payload/part.*.b64 | base64 -d | gzip -dc > workbenches/landscape-karst-kaopu-r5/index.html
+          cat \
+            workbenches/landscape-karst-kaopu-r5/payload/part.00.b64 \
+            workbenches/landscape-karst-kaopu-r5/payload/part.01a.b64 \
+            workbenches/landscape-karst-kaopu-r5/payload/part.01b.b64 \
+            workbenches/landscape-karst-kaopu-r5/payload/part.01c.b64 \
+            workbenches/landscape-karst-kaopu-r5/payload/part.01d.b64 \
+            workbenches/landscape-karst-kaopu-r5/payload/part.02.b64 \
+            | base64 -d | gzip -dc > workbenches/landscape-karst-kaopu-r5/index.html
           test "$(sha256sum workbenches/landscape-karst-kaopu-r5/index.html | awk '{print $1}')" = "dc8ff6f1a00810e577ebd90c32aa177fe85051b59dbfcced4d69f35069a4393f"
           test "$(stat -c%s workbenches/landscape-karst-kaopu-r5/index.html)" -eq 28990
           grep -q 'R5 已就绪 · R2/R3 保留 · R4 技术对照保留 · 主形重构' workbenches/landscape-karst-kaopu-r5/index.html
