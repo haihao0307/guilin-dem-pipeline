@@ -49,14 +49,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m http.server 8765 --directory site/dist >/tmp/wenzhou-r33-http.log 2>&1 &
+          # Serve the repository root, not site/dist, because R3.3 intentionally
+          # consumes the single locked object-evidence file from repo-root inputs/.
+          # This keeps local QA and raw.githack on the same source identity.
+          python -m http.server 8765 --directory . >/tmp/wenzhou-r33-http.log 2>&1 &
           ready=0
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8765/r3-3/ >/dev/null; then ready=1; break; fi
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-3/ >/dev/null; then ready=1; break; fi
             sleep 1
           done
           test "$ready" = 1
-          R33_URL=http://127.0.0.1:8765/r3-3/ node tools/r3-3/browser_qa.mjs | tee /tmp/r33-local-qa.json
+          R33_URL=http://127.0.0.1:8765/site/dist/r3-3/ node tools/r3-3/browser_qa.mjs | tee /tmp/r33-local-qa.json
           grep -q '"passed": true' /tmp/r33-local-qa.json
 
       - name: Fixed-commit public raw.githack QA
