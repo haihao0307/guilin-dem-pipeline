@@ -1,0 +1,56 @@
+{
+  "schema": "kaopu-mother-routing-supplement/r07",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_TAKRAM_THREE_GEOSPATIAL_R07.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "keep CloudState independent from cloud raymarch/temporal quality budget",
+        "make cloud vertical reference explicit; do not assume constant ellipsoid-relative cloud base is truth",
+        "treat temporal cloud history as derived cache with ghosting/disocclusion failure ledger"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume explicit AtmosphereState + ephemeris state + frame adapter",
+        "keep Bruneton/Hillaire LUT choices in evaluator policy",
+        "preserve camera/display downstream from radiance"
+      ]
+    },
+    {
+      "mother": "Wenzhou/Terrain",
+      "items": [
+        "study rigid world-origin rebasing for meter-scale ECEF/large-world rendering without changing canonical truth",
+        "keep reference surface and altitude convention explicit at renderer boundaries",
+        "evaluate CPU model-view computation for precision-sensitive motion/velocity buffers"
+      ]
+    },
+    {
+      "mother": "Landscape",
+      "items": [
+        "aerial perspective consumes a typed path query; terrain truth must remain independent",
+        "local/rebased rendering coordinates must not become world truth coordinates"
+      ]
+    },
+    {
+      "mother": "Future-Space",
+      "items": [
+        "retain ECI/ECEF/moon-fixed frame identities and ephemeris provenance separately from atmosphere evaluator state",
+        "do not hardwire Earth-only Bruneton defaults into general planetary atmosphere semantics"
+      ]
+    },
+    {
+      "mother": "All Three.js/WebGPU Mothers",
+      "items": [
+        "treat Takram node/context architecture as Candidate pattern only because upstream API is actively breaking/changing",
+        "lock exact upstream commit before adopting any runtime code and run project-specific regression fixtures"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after Mother-specific experiment evidence"
+}

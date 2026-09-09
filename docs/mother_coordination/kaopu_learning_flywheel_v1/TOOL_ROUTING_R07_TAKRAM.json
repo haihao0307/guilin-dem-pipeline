@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-tool-routing-supplement/r07",
+  "updatedAt": "2026-09-10",
+  "sourceLock": "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
+  "routes": [
+    {
+      "id": "TOOL-TAKRAM-THREE-GEOSPATIAL-R07",
+      "toolOrSource": "takram-design-engineering/three-geospatial@b012ad06d858fc035d88aacfd73f092f93c994e4",
+      "authority": "primary-upstream-engineering-source",
+      "evidenceClass": "engineering-implementation",
+      "observationRootEligible": false,
+      "productionImportAllowed": false,
+      "useFor": [
+        "reference-frame and world-origin-rebasing patterns",
+        "ellipsoid/spherical-atmosphere adapter study",
+        "WebGPU node/context dependency architecture",
+        "atmosphere/cloud evaluator decomposition",
+        "large-coordinate rendering precision techniques",
+        "documented cloud approximation and performance failure modes"
+      ],
+      "doNotUseFor": [
+        "physical atmosphere truth",
+        "canonical KAOPU coordinates",
+        "freezing vendor defaults or quality presets",
+        "claiming production readiness from visual demos"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-REFERENCE-FRAME-PROBE-R07",
+      "toolOrSource": "PROBES/reference_frame_contract_r07.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "assert rigid world-to-reference transform",
+        "reject hidden scale in runtime frame adapters",
+        "require altitude-reference and state/evaluator identity in runtime packets"
+      ],
+      "result": "2/2 PASS",
+      "productionMutationAllowed": false
+    }
+  ]
+}

@@ -15,69 +15,44 @@
       "priority": 1,
       "status": "candidate-partial",
       "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
-      "targetSystems": [
-        "KAOPU",
-        "Weather",
-        "Ocean",
-        "Landscape",
-        "Lighting",
-        "Future-Space"
-      ],
+      "targetSystems": ["KAOPU", "Weather", "Ocean", "Landscape", "Lighting", "Future-Space"],
       "userPriorityOverride": true,
-      "progress": "R01 separated atmosphere truth/state from evaluator policy using current UE 5.8, SideFX Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. R02 extended the candidate from lower-atmosphere rendering to continuous ground-to-space semantics using NASA layer references, current NASA CCMC NRLMSIS whole-atmosphere references, thermosphere/ionosphere model boundaries, and HITRAN-backed spectral semantics. R03 added executable evaluator evidence: one synthetic unit-explicit AtmosphereState was queried by spherical-reference and plane-parallel evaluators. The plane-parallel approximation was nearly exact for a vertical ground query but reached ~96% relative transmittance error at 89-degree view zenith, proving that evaluator authority must carry a measured validity envelope. R04 converted the Earth next gate into a multi-root reference suite rather than one blended profile: official U.S. Standard Atmosphere 1976 lower-atmosphere constants/equations were implemented and executed as a static regression root; official NASA CCMC NRLMSIS 2.1 remains a separate driver-conditioned root; packaged 500 km NRLMSIS test vectors transported through a non-authoritative mirror show a Candidate 338.21 K temperature span and ~7.72x total-density range across different context tuples at identical altitude, reinforcing that altitude alone is not a sample identity. R05 used current NASA CCMC plus the primary NRLMSIS 2.0/2.1 and 2025 SABER validation literature to separate measurement, retrieval, empirical-model output, holdout validation, external-sensor validation, and model-dependent retrievals. It found that evidence independence is multidimensional: different assets or sensors are not automatically independent if they share fit data, retrieval models, or upstream priors. The 2025 SABER NO retrieval uses NRLMSIS 2.1 temperature/O/O2 while adding full-local-time sensor information and exposes NO local-time structure not represented by current MSIS 2.1; therefore a provenance dependency DAG and per-variable coverage envelope are Candidate first-class semantics. R06 used current NASA CCMC, the primary 2022 NRLMSIS 2.1 model paper, and the official NRL release directory to separate global model domain from per-quantity validity and to refine validation-split independence. NASA accepts 0-1000 km model queries, while the primary paper says NO is missing below 72.5 km because of a fitted-profile edge artifact; therefore QuantityValidityEnvelope and typed Missing/Unsupported are Candidate first-class semantics. The same paper states the fitting/validation ensembles were sampled with repetition and observations may repeat across ensembles, so a holdout label does not guarantee sample disjointness. A semantic probe verified safe missing parsing and the overlap contract. Official NRL executable confirmation and authenticated HITRAN numeric checkpoints remain Unknown.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 directly studied the user-supplied Takram three-geospatial repository at signed commit b012ad06d858fc035d88aacfd73f092f93c994e4. The high-value transfer is reference-frame/evaluator architecture rather than vendor code: explicit world/ECEF/ECI transforms, rigid origin rebasing, ellipsoid-to-spherical-atmosphere correction as an evaluator adapter, state/ephemeris/evaluator separation, runtime quality budgets that do not mutate CloudState/AtmosphereState, and explicit failure ledgers for temporal upscaling, mean-depth cloud aerial perspective, seams and API instability. A reference-frame contract probe passed 2/2. No production Mother code was imported.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R03_EVALUATOR_VALIDITY.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R04_REFERENCE_ROOTS.md",
         "LEARNING_LOG/2026-09-10_ATMOSPHERE_R05_EVIDENCE_INDEPENDENCE.md",
-        "LEARNING_LOG/2026-09-10_ATMOSPHERE_R06_QUANTITY_VALIDITY_AND_SPLIT_OVERLAP.md"
+        "LEARNING_LOG/2026-09-10_ATMOSPHERE_R06_QUANTITY_VALIDITY_AND_SPLIT_OVERLAP.md",
+        "LEARNING_LOG/2026-09-10_TAKRAM_THREE_GEOSPATIAL_R07.md"
       ],
+      "sourceLocks": ["references/takram-three-geospatial-r01/SOURCE_LOCK.json"],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
       "evidenceIndependenceProbe": "PROBES/evidence_independence_vector_r05.py",
       "quantityValidityProbe": "PROBES/atmosphere_quantity_validity_probe_r06.py",
-      "nextGate": "Execute selected NRLMSIS 2.1 cases from the authoritative NRL package or NASA CCMC and compare them against the Candidate release vectors. The locked fixture must record modelDomain separately from per-output QuantityValidityEnvelope, parse source-specific missing/unsupported values before transforms, and preserve EvidenceClass plus dependency/overlap metadata. Then retrieve a tiny authenticated HITRAN line subset and create two or three optical checkpoints with explicit molecule/isotopologue, spectroscopy provenance, temperature, pressure, line-shape model, path/column state, units, and tolerances. Candidate-complete promotion still requires authoritative NRL numerical confirmation plus authenticated spectral checkpoints; Frozen promotion remains a separate Judgment event."
+      "referenceFrameProbe": "PROBES/reference_frame_contract_r07.py",
+      "nextGate": "Keep the physical-reference gate separate from the runtime-architecture gate. Physical gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime gate: build one tiny KAOPU ReferenceFrame + RuntimeAtmospherePacket fixture and make at least two evaluator adapters consume the identical state, measuring coordinate/altitude consistency and approximation validity. Candidate-complete promotion requires both gates to close; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
       "priority": 2,
       "status": "candidate-complete",
       "question": "Which GAEA 2.3 workflow mechanisms can improve KAOPU continuous learning and world generation without contaminating Canonical Truth?",
-      "targetSystems": [
-        "KAOPU",
-        "Wenzhou",
-        "Landscape",
-        "Terrain"
-      ],
-      "requiredOutputs": [
-        "transferable-methods",
-        "constraints",
-        "failure-modes",
-        "routing"
-      ],
+      "targetSystems": ["KAOPU", "Wenzhou", "Landscape", "Terrain"],
+      "requiredOutputs": ["transferable-methods", "constraints", "failure-modes", "routing"],
       "progress": "R01 identified candidate mechanisms. R02 rechecked current official GAEA 2.3 documentation: Erosion2 determinism, tiled-build context failure classes, same-graph Regions, and migration testing are current-source-backed. Exact legacy TileGate semantics remain separately Unknown.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_GAEA_R01.md",
-        "LEARNING_LOG/2026-09-09_GAEA_R02.md"
-      ]
+      "resultLogs": ["LEARNING_LOG/2026-09-09_GAEA_R01.md", "LEARNING_LOG/2026-09-09_GAEA_R02.md"]
     },
     {
       "id": "LQ-NOISE-001",
       "priority": 3,
       "status": "candidate-partial",
       "question": "Which modern procedural noise and field-composition methods are measurably better than current KAOPU typed-wave primitives for multiscale natural structure?",
-      "targetSystems": [
-        "KAOPU",
-        "Landscape",
-        "Weather",
-        "Ocean",
-        "Material"
-      ],
+      "targetSystems": ["KAOPU", "Landscape", "Weather", "Ocean", "Material"],
       "progress": "R01 primary-source review across Unreal Engine 5.8, current SideFX Houdini documentation, Blender 5.2 LTS, Pixar Wavelet Noise, and NVIDIA 2023 found no universal superior noise basis. Stronger transferable candidates are evaluation-footprint/filter policy, native differential outputs, explicit spectral/fractal composition law, explicit normalization, and evaluation-mode/bake provenance. A standard-library footprint probe was authored; no new runtime result is promoted yet.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_NOISE_R01.md"
-      ],
+      "resultLogs": ["LEARNING_LOG/2026-09-09_NOISE_R01.md"],
       "candidateProbe": "PROBES/footprint_filter_probe.py",
       "nextGate": "Execute the footprint probe and run at least one Mother-domain cross-resolution fixture before candidate-complete promotion."
     },
@@ -86,27 +61,14 @@
       "priority": 4,
       "status": "queued",
       "question": "Which Substance 3D Designer material-graph practices are transferable as data-generating functions rather than texture assets?",
-      "targetSystems": [
-        "Brick",
-        "Tiles",
-        "Aircraft",
-        "Weapons",
-        "Vegetation",
-        "Character"
-      ]
+      "targetSystems": ["Brick", "Tiles", "Aircraft", "Weapons", "Vegetation", "Character"]
     },
     {
       "id": "LQ-HOUDINI-001",
       "priority": 5,
       "status": "queued",
       "question": "Which Houdini SOP/COP/VEX workflow patterns best support reusable Object DNA and field operators with explicit provenance and deterministic regeneration?",
-      "targetSystems": [
-        "KAOPU",
-        "House",
-        "Aircraft",
-        "Animals",
-        "Terrain"
-      ]
+      "targetSystems": ["KAOPU", "House", "Aircraft", "Animals", "Terrain"]
     }
   ]
 }
