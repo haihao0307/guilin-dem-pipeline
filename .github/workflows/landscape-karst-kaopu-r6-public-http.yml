@@ -1,0 +1,30 @@
+name: Landscape Karst KAOPU R6 public HTTP proof
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-kaopu-r6-20260910
+    paths:
+      - .github/workflows/landscape-karst-kaopu-r6-public-http.yml
+
+permissions:
+  contents: read
+
+jobs:
+  public-http:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify immutable raw.githack R6
+        run: |
+          set -euo pipefail
+          FIXED=ac4aab35085c8c91e507e1c94537def31b553a78
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FIXED}/workbenches/landscape-karst-kaopu-r6/index.html"
+          curl --fail --location --retry 12 --retry-delay 2 --connect-timeout 10 --max-time 60 -D /tmp/headers.txt "$URL" -o /tmp/public.html
+          test "$(sha256sum /tmp/public.html | awk '{print $1}')" = "4f9ad02eff6f909548f1b6ef1aa8b0c28c2af0f044d539cf53944d7d1964c756"
+          test "$(stat -c%s /tmp/public.html)" -eq 30337
+          grep -qi 'content-type: text/html' /tmp/headers.txt
+          grep -q 'KAOPU R6' /tmp/public.html
+          grep -q 'R6 已就绪 · R2/R3/R5 保留 · 岩壁结构推进' /tmp/public.html
+          grep -q '0 外部模型' /tmp/public.html
+          grep -q '0 贴图' /tmp/public.html
+          echo "PUBLIC_URL=$URL"
