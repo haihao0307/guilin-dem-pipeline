@@ -1,0 +1,61 @@
+name: Landscape Karst KAOPU R4 public QA
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-kaopu-r4-final
+    paths:
+      - .github/workflows/landscape-karst-kaopu-r4-public-qa.yml
+
+permissions:
+  contents: read
+
+jobs:
+  public-browser-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-karst-kaopu-r4-final
+          fetch-depth: 1
+          sparse-checkout: |
+            workbenches/landscape-karst-kaopu-r4/index.html
+            .github/workflows/landscape-karst-kaopu-r4-public-qa.yml
+          sparse-checkout-cone-mode: false
+      - name: Verify fixed public bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          FIXED=f34d6bba0b6844ca31c0e347679ae91efc9f6451
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FIXED}/workbenches/landscape-karst-kaopu-r4/index.html"
+          curl --fail --location --retry 12 --retry-delay 2 --connect-timeout 10 --max-time 60 "$URL" -o /tmp/public.html
+          test "$(sha256sum /tmp/public.html | awk '{print $1}')" = "8b9b85b6a6a7d699abe49043e531ad0911cfac263672f102e8b614f18e09e66a"
+          grep -qi 'content-type: text/html' <(curl -sSIL "$URL")
+          echo "PUBLIC_URL=$URL" >> "$GITHUB_ENV"
+      - name: Chromium WebGL2 desktop gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=15000 --window-size=1200,800 --dump-dom "${PUBLIC_URL}#hero" > /tmp/desktop-dom.html
+          grep -q 'data-terrain-ready="true"' /tmp/desktop-dom.html
+          grep -q 'R4 已就绪 · R2/R3 均保留' /tmp/desktop-dom.html
+          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=12000 --window-size=1200,800 --screenshot=/tmp/hero.png "${PUBLIC_URL}#hero"
+          test -s /tmp/hero.png
+          test "$(stat -c%s /tmp/hero.png)" -gt 10000
+          echo "desktopScreenshotBytes=$(stat -c%s /tmp/hero.png)"
+          echo "desktopScreenshotSHA256=$(sha256sum /tmp/hero.png | awk '{print $1}')"
+      - name: Chromium 390x844 mobile gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=15000 --window-size=390,844 --dump-dom "${PUBLIC_URL}#hero" > /tmp/mobile-dom.html
+          grep -q 'data-terrain-ready="true"' /tmp/mobile-dom.html
+          grep -q 'R4 已就绪 · R2/R3 均保留' /tmp/mobile-dom.html
+          timeout 120s "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --virtual-time-budget=12000 --window-size=390,844 --screenshot=/tmp/mobile.png "${PUBLIC_URL}#hero"
+          test -s /tmp/mobile.png
+          test "$(stat -c%s /tmp/mobile.png)" -gt 8000
+          echo "mobileScreenshotBytes=$(stat -c%s /tmp/mobile.png)"
+          echo "mobileScreenshotSHA256=$(sha256sum /tmp/mobile.png | awk '{print $1}')"
