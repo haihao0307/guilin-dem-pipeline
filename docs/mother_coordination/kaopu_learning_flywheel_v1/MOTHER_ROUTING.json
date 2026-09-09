@@ -302,6 +302,55 @@
       "productionMutationAllowed": false,
       "requiresMotherExperiment": true,
       "promotionAuthority": "Xiaoma Judgment after provenance-aware reference fixtures"
+    },
+    {
+      "fromLearning": "LEARNING_LOG/2026-09-10_ATMOSPHERE_R06_QUANTITY_VALIDITY_AND_SPLIT_OVERLAP.md",
+      "status": "candidate-route",
+      "targets": [
+        {
+          "mother": "Weather",
+          "items": [
+            "store modelDomain separately from per-quantity QuantityValidityEnvelope",
+            "parse unsupported constituent values to typed Missing/Unsupported before unit conversion, log transforms, interpolation or State Reducer execution",
+            "do not render or simulate a model-artifact cutoff such as the NRLMSIS NO 72.5 km boundary as a physical atmospheric layer",
+            "source changes used to cover an unsupported altitude range must carry explicit provenance and reconciliation status"
+          ]
+        },
+        {
+          "mother": "Lighting",
+          "items": [
+            "reject or explicitly branch on missing/unsupported constituent state before extinction, absorption, interpolation or optical-depth calculations",
+            "source-specific numeric sentinels must never be allowed to become optical coefficients through numerical transforms"
+          ]
+        },
+        {
+          "mother": "Future-Space",
+          "items": [
+            "preserve per-species/per-quantity validity boundaries in neutral-atmosphere packets",
+            "do not extrapolate a source across an unsupported species range merely because the parent model accepts the altitude query"
+          ]
+        },
+        {
+          "mother": "KAOPU semantic core",
+          "items": [
+            "make QuantityValidityEnvelope and typed Missing/Unsupported first-class and distinct from modelDomain/evaluatorDomain/conventional boundaries",
+            "extend validation provenance with samplingScheme, samplingWithReplacement, sampleOverlapStatus and parameterAggregationLineage",
+            "validation/holdout labels do not prove observation-level disjointness",
+            "artifact identity requires authoritative hash/provenance/execution rather than matching filename or nominal size"
+          ]
+        },
+        {
+          "mother": "All evidence-bearing Mothers",
+          "items": [
+            "do not infer independent validation from folder labels or split names; record sampling and overlap semantics",
+            "treat source missing/unsupported values as typed absence before transformations",
+            "apply the same overlap logic to historical photographs, surveys, scans, maps, benchmark slices and derived AI assets"
+          ]
+        }
+      ],
+      "productionMutationAllowed": false,
+      "requiresMotherExperiment": true,
+      "promotionAuthority": "Xiaoma Judgment after authoritative NRL numeric fixture and Mother-safe missing/validity handling evidence"
     }
   ]
 }
