@@ -1,0 +1,111 @@
+{
+  "schema": "ocean-mother-release-receipt-v1",
+  "release": "R019",
+  "title": "Ocean Mother R019 · KAOPU Coast",
+  "status": "candidate-awaiting-user-review",
+  "artifact": {
+    "path": "ocean-mother/releases/Ocean_Mother_R019_KAOPU_Coast_Direct_Open.html",
+    "bytes": 50620,
+    "sha256": "aca58d13aadefdce7029edb11f241f4bf18a1ddc89ed333738409a6b62da05d9",
+    "singleFileHtml": true,
+    "externalRuntimeAssets": false
+  },
+  "sourceLocks": {
+    "reliableReleaseBaseline": {
+      "branch": "release/ocean-mother-r01815-reliable-visible-20260907",
+      "commit": "a6a534aba2a9ef7442238b09dc223d0e961688c6"
+    },
+    "completeRuntimeReference": "ocean-mother/restart-v0311/index.html",
+    "oceanLearning": {
+      "branch": "work/ocean-mother-ocean-coast-r1-20260907",
+      "commit": "db6f63572dec97a688f32f98b2ad5b945418e731"
+    },
+    "kaopuKnowledge": {
+      "branch": "handoff/kaopu-world-chorus-full-v1.0-20260909",
+      "commit": "f254721b7e3e23cb35b7b660fa9441dc6cef9796"
+    }
+  },
+  "implemented": [
+    "infinite analytic ocean without a finite square mesh edge",
+    "shared CPU and GPU OceanSurfaceState recipe",
+    "tide, terrain depth, shoaling, breaker lip and foam coupling",
+    "separate water-surface Fresnel and water-volume attenuation",
+    "procedural irregular island, seabed and 18-sector rock family",
+    "three non-particle continuous volumetric smoke/fire sources",
+    "shared wind control for waves, smoke and fire",
+    "terrain rejection and terrain-following lift for smoke",
+    "desktop and 390x844 mobile responsive controls",
+    "mobile-first low quality plus adaptive resolution floor"
+  ],
+  "staticChecks": {
+    "utf8_decodes": true,
+    "standalone_no_script_src": true,
+    "standalone_no_external_asset_url": true,
+    "webgl2_context": true,
+    "shared_surface_query": true,
+    "gpu_float_query": true,
+    "infinite_ocean_no_finite_ocean_mesh": true,
+    "three_continuous_smoke_sources": true,
+    "terrain_solid_rejection": true,
+    "mobile_default_quality": true,
+    "adaptive_resolution_floor": true,
+    "mobile_non_overlap_layout": true
+  },
+  "localBrowserEvidence": {
+    "environment": "Chromium 144.0.7559.96, WebGL2 through ANGLE SwiftShader, Xvfb",
+    "shaderCompile": "pass",
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "cpuGpuQuery": {
+      "pass": true,
+      "heightResidualMeters": 7.152557379708213e-09,
+      "gradientResidual": 0.0,
+      "thresholdHeightMeters": 0.002,
+      "thresholdGradient": 0.003
+    },
+    "desktopLayout": {
+      "viewport": [
+        1440,
+        900
+      ],
+      "scrollExtent": [
+        1440,
+        900
+      ],
+      "controlsExercised": [
+        "coast tab",
+        "panel close/open",
+        "fire camera"
+      ],
+      "pass": true
+    },
+    "mobileLayout": {
+      "viewport": [
+        390,
+        844
+      ],
+      "scrollExtent": [
+        390,
+        844
+      ],
+      "panelBottom": 744,
+      "viewBarTop": 746,
+      "controlsExercised": [
+        "coast tab",
+        "panel close/open",
+        "fire camera"
+      ],
+      "defaultQuality": "mobile",
+      "pass": true
+    },
+    "note": "SwiftShader validates browser execution and layout, not target-device GPU performance."
+  },
+  "limitations": {
+    "realBathymetryOrDEMIntegrated": false,
+    "smokeIsConservativePersistentCFD": false,
+    "targetMacOSIOSHardwarePerformanceMeasured": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "aaaClaimed": false
+  }
+}

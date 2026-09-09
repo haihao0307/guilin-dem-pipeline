@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061820">
+<link rel="icon" href="data:,">
+<title>Ocean Mother R019 · KAOPU Coast</title>
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#edfaff;--muted:#9ebfc8;--hair:rgba(193,236,244,.22);
+  --panel:rgba(5,24,32,.68);--panel2:rgba(12,43,53,.55);--cyan:#78dce7;
+  --gold:#e9c989;--ok:#7fe1bc;--warn:#f0c979;
+}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#05151c;color:var(--ink);font:12px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}button,input{touch-action:manipulation}
+#ocean{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:linear-gradient(#8bb0ba 0 46%,#123842 46% 63%,#061922)}
+.glass{border:1px solid var(--hair);background:linear-gradient(145deg,rgba(188,235,243,.10),rgba(8,30,39,.56) 42%,rgba(4,18,25,.76));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 18px 55px rgba(0,8,12,.28);backdrop-filter:blur(16px) saturate(1.18);-webkit-backdrop-filter:blur(16px) saturate(1.18)}
+#top{position:fixed;z-index:20;left:14px;right:14px;top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:9px;pointer-events:none}
+#top>*{pointer-events:auto}.brand{display:flex;align-items:center;gap:10px;border-radius:19px;padding:8px 12px;min-width:246px}.orb{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:21px Georgia;border:1px solid rgba(220,251,255,.52);background:radial-gradient(circle at 32% 25%,#f0ffff 0 5%,#5d9fac 20%,#123844 62%,#06171d);box-shadow:0 0 25px rgba(92,213,225,.19)}.brand b{display:block;font-size:11px;letter-spacing:.16em}.brand small{display:block;font-size:8px;letter-spacing:.13em;color:var(--muted);margin-top:1px}
+.modebar{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:3px;border-radius:999px}.actions{margin-left:auto;display:flex;gap:4px;padding:3px;border-radius:999px}
+button{position:relative;overflow:hidden;min-height:35px;padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);transition:.2s ease;white-space:nowrap}button:hover{background:rgba(174,232,241,.12);border-color:rgba(185,239,248,.24)}button:active{transform:scale(.97)}button.selected,button.active{background:linear-gradient(145deg,rgba(196,245,251,.24),rgba(66,151,169,.12));border-color:rgba(202,244,250,.42);box-shadow:0 0 22px rgba(90,213,228,.11),inset 0 1px rgba(255,255,255,.2)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #9debf3;outline-offset:2px}
+#sceneTitle{position:fixed;z-index:8;left:22px;top:94px;pointer-events:none;text-shadow:0 3px 22px rgba(0,8,12,.92);padding:10px 14px 12px;border-radius:14px;background:linear-gradient(90deg,rgba(3,18,24,.34),transparent)}#sceneTitle .eyebrow{font-size:8px;letter-spacing:.25em;color:#b8e7ed;font-weight:800}#sceneTitle h1{font-size:31px;font-weight:330;letter-spacing:.08em;margin:8px 0 3px}#sceneTitle p{margin:0;color:#c7e0e5;font-size:10px;letter-spacing:.07em;max-width:560px}
+#views{position:fixed;z-index:14;left:50%;top:82px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:999px;max-width:calc(100vw - 520px);overflow:auto;scrollbar-width:none}#views::-webkit-scrollbar{display:none}#views button{font-size:9px;min-height:32px;padding:5px 10px}
+#panel{position:fixed;z-index:18;right:14px;top:132px;bottom:62px;width:346px;border-radius:24px;display:flex;flex-direction:column;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}#panel.closed{transform:translateX(calc(100% + 28px));opacity:0;pointer-events:none}.panelHead{padding:15px 16px 10px;border-bottom:1px solid rgba(255,255,255,.10);flex:none}.panelHead .row0{display:flex;align-items:center;justify-content:space-between}.panelHead .label{font-size:8px;letter-spacing:.2em;color:#a9d8df}.panelHead h2{font-size:18px;font-weight:420;margin:4px 0 0}.panelHead #closePanel{min-height:29px;padding:4px 9px;font-size:9px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:11px;padding:3px;border-radius:13px;background:rgba(0,13,19,.25)}.tabs button{min-height:32px;padding:4px;font-size:9px;border-radius:10px}.scroll{overflow:auto;min-height:0;padding:10px 16px 21px;scrollbar-width:thin;scrollbar-color:rgba(130,211,223,.3) transparent}.page[hidden]{display:none}
+.group{border-top:1px solid rgba(255,255,255,.10);padding-top:12px;margin-top:12px}.group:first-child{border-top:0;margin-top:0}.group h3{margin:0 0 10px;font-size:9px;letter-spacing:.16em;color:#d7f2f6}.control{display:grid;grid-template-columns:1fr auto;gap:4px 8px;margin:11px 0}.control label{font-size:10px;color:#e4f4f7}.control output{font-size:9px;color:#a8dbe4;font-variant-numeric:tabular-nums}.control input[type=range]{grid-column:1/-1;width:100%;height:17px;margin:0;appearance:none;background:transparent;cursor:pointer}.control input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:99px;background:linear-gradient(90deg,rgba(91,211,226,.85) var(--fill,50%),rgba(231,249,252,.14) var(--fill,50%))}.control input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;margin-top:-5.5px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff,#9bdce6 55%,#2a7183);border:1px solid rgba(255,255,255,.65);box-shadow:0 2px 8px rgba(0,12,18,.45)}
+.preset,.toggleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.toggleGrid{grid-template-columns:1fr 1fr}.preset button,.toggleGrid button{min-height:32px;padding:5px;font-size:9px;border-radius:11px}.toggleGrid button{text-align:left}.toggleGrid button.active::after{content:"ON";float:right;color:#a6eff7;font-size:7px;letter-spacing:.1em}.selectRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;font-size:10px}.selectRow select{min-height:32px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:rgba(3,19,26,.72);padding:4px 8px}
+.readout{border:1px solid rgba(170,231,240,.18);border-radius:14px;background:rgba(1,12,17,.42);padding:11px;color:#b3d2d8;font:9px/1.62 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}.qaGrid{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font:9px/1.5 ui-monospace,monospace;color:#a9cbd1;margin-top:10px}.qaGrid b{color:#eafcff}.qaGrid b.ok{color:#89e6c3}.qaGrid b.warn{color:#efd08e}.note{font-size:8px;line-height:1.6;color:#9ebdc5;margin:9px 0 0}
+#footer{position:fixed;z-index:16;left:14px;right:14px;bottom:max(12px,env(safe-area-inset-bottom));height:39px;border-radius:999px;display:flex;align-items:center;gap:14px;padding:0 14px;font-size:9px;color:#cde4e8;font-variant-numeric:tabular-nums;pointer-events:none}#footer span:last-child{margin-left:auto;color:#a9d7df}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px currentColor;margin-right:5px}.dot.warn{background:var(--warn)}
+#hint{position:fixed;z-index:12;left:16px;bottom:60px;border-radius:999px;padding:7px 11px;color:#bdd8dd;font-size:9px;pointer-events:none;transition:opacity .4s}.cross{position:fixed;z-index:7;left:50%;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);pointer-events:none;opacity:.55}.cross:before,.cross:after{content:"";position:absolute;background:rgba(225,250,252,.8);box-shadow:0 0 4px rgba(0,0,0,.5)}.cross:before{left:5px;top:0;width:1px;height:12px}.cross:after{left:0;top:5px;width:12px;height:1px}
+#loading,#error{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#174652,#06171e 70%)}#loading.done{opacity:0;visibility:hidden;transition:.45s}.loadCard{text-align:center}.loadOrb{width:60px;height:60px;margin:0 auto 15px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:radial-gradient(circle at 33% 25%,#f2ffff,#69b7c5 23%,#123744 62%,#06171d);box-shadow:0 0 36px rgba(93,218,231,.22);animation:bob 1.5s ease-in-out infinite alternate}.loadCard b{display:block;letter-spacing:.2em}.loadCard small{display:block;color:#a7c8cf;margin-top:6px}@keyframes bob{to{transform:translateY(-5px);filter:brightness(1.12)}}#error{display:none;padding:25px;text-align:left;background:rgba(26,9,7,.96)}#error.show{display:grid}#error pre{max-width:min(900px,90vw);max-height:70vh;overflow:auto;white-space:pre-wrap;color:#ffd5c8;font:11px/1.55 ui-monospace,monospace}
+@media(max-width:900px){.brand{min-width:190px}.brand small{display:none}#views{max-width:calc(100vw - 390px)}}
+@media(max-width:700px){#top{left:7px;right:7px;top:max(7px,env(safe-area-inset-top));align-items:flex-start}.brand{min-width:0;padding:6px 8px;border-radius:16px}.orb{display:none}.brand b{font-size:9px;letter-spacing:.08em}.modebar{left:7px;top:45px;transform:none}.modebar button{min-height:29px;padding:4px 9px;font-size:9px}.actions{gap:2px}.actions button{min-height:31px;padding:4px 8px;font-size:9px}#sceneTitle{left:12px;top:87px}#sceneTitle h1{font-size:22px}#sceneTitle p{font-size:8px;max-width:260px}#views{left:7px;right:7px;top:auto;bottom:56px;transform:none;max-width:none;border-radius:15px}#views button{min-width:max-content}#panel{right:6px;top:80px;bottom:100px;width:min(344px,94vw)}#footer{left:7px;right:7px;bottom:max(7px,env(safe-area-inset-bottom));height:36px;padding:0 9px;gap:8px}#footer span:nth-child(3),#footer span:last-child{display:none}#hint{display:none}.cross{opacity:.35}}
+</style>
+</head>
+<body>
+<canvas id="ocean" aria-label="Ocean Mother R019 程序化海岛与海洋"></canvas>
+<div id="loading"><div class="loadCard"><div class="loadOrb"></div><b>OCEAN MOTHER</b><small>R019 · KAOPU Coast 正在建立同源海面</small></div></div>
+<div id="error"><pre></pre></div>
+<header id="top">
+  <div class="brand glass"><div class="orb">O</div><div><b>OCEAN MOTHER</b><small>R019 · KAOPU COAST · 2026-09-09</small></div></div>
+  <nav class="modebar glass"><button data-zone="coast" class="selected">海岛近岸</button><button data-zone="deep">外海风浪</button></nav>
+  <div class="actions glass"><button id="pause">暂停</button><button id="panelToggle" aria-expanded="true">参数</button></div>
+</header>
+<section id="sceneTitle"><div class="eyebrow">OCEAN SURFACE · COAST BOUNDARY · VOLUME OPTICS</div><h1>风推长浪，浪沿海床破碎。</h1><p>无限海域 · 同源水位查询 · 水深驱动破浪 · 三处连续浓烟与岛体约束</p></section>
+<nav id="views" class="glass">
+  <button data-view="overview" class="selected">海岛全景</button><button data-view="aerial">高空无边界</button><button data-view="shore">沙湾近景</button><button data-view="breaker">破浪水唇</button><button data-view="rocks">礁石水线</button><button data-view="fire">三处烟火</button>
+</nav>
+<aside id="panel" class="glass">
+  <div class="panelHead"><div class="row0"><div><div class="label">R019 CAUSAL WORKBENCH</div><h2>海洋—海岸统一状态</h2></div><button id="closePanel">收起</button></div>
+    <div class="tabs"><button data-page="ocean" class="selected">海洋</button><button data-page="coast">海岸</button><button data-page="query">查询</button></div>
+  </div>
+  <div class="scroll">
+    <section class="page" data-page-content="ocean">
+      <div class="group"><h3>海况预设</h3><div class="preset"><button data-preset="calm">平静</button><button data-preset="swell" class="selected">大风浪</button><button data-preset="storm">暴风</button></div></div>
+      <div class="group"><h3>OceanSurfaceState</h3>
+        <div class="control"><label>外海有效浪高</label><output data-out="waveHeight"></output><input data-param="waveHeight" type="range" min="0.15" max="2.4" step="0.01" value="0.92"></div>
+        <div class="control"><label>波速倍率</label><output data-out="waveSpeed"></output><input data-param="waveSpeed" type="range" min="0.25" max="1.8" step="0.01" value="0.88"></div>
+        <div class="control"><label>潮位</label><output data-out="tide"></output><input data-param="tide" type="range" min="-1.2" max="1.8" step="0.01" value="0.18"></div>
+        <div class="control"><label>破浪强度</label><output data-out="breaker"></output><input data-param="breaker" type="range" min="0" max="2.1" step="0.01" value="1.18"></div>
+        <div class="control"><label>泡沫覆盖</label><output data-out="foam"></output><input data-param="foam" type="range" min="0" max="1.8" step="0.01" value="0.88"></div>
+      </div>
+      <div class="group"><h3>Water Optics</h3>
+        <div class="control"><label>水体清澈度</label><output data-out="clarity"></output><input data-param="clarity" type="range" min="0.25" max="1.5" step="0.01" value="0.83"></div>
+        <div class="control"><label>太阳方位</label><output data-out="sunAngle"></output><input data-param="sunAngle" type="range" min="-3.14" max="3.14" step="0.01" value="-0.72"></div>
+        <div class="control"><label>曝光</label><output data-out="exposure"></output><input data-param="exposure" type="range" min="0.55" max="1.65" step="0.01" value="0.94"></div>
+      </div>
+      <div class="group"><h3>显示</h3><div class="toggleGrid"><button data-debug="0" class="active">电影画面</button><button data-debug="1">水深诊断</button><button data-debug="2">泡沫诊断</button><button data-debug="3">法线诊断</button></div></div>
+    </section>
+    <section class="page" data-page-content="coast" hidden>
+      <div class="group"><h3>共享风场</h3>
+        <div class="control"><label>风速 m/s</label><output data-out="windSpeed"></output><input data-param="windSpeed" type="range" min="2" max="24" step="0.1" value="14.5"></div>
+        <div class="control"><label>风向</label><output data-out="windAngle"></output><input data-param="windAngle" type="range" min="-3.14" max="3.14" step="0.01" value="0.62"></div>
+      </div>
+      <div class="group"><h3>CoastSmokeState</h3>
+        <div class="control"><label>烟体浓度</label><output data-out="smoke"></output><input data-param="smoke" type="range" min="0" max="2.1" step="0.01" value="1.32"></div>
+        <div class="control"><label>火焰强度</label><output data-out="fire"></output><input data-param="fire" type="range" min="0" max="2" step="0.01" value="0.88"></div>
+        <div class="control"><label>卷曲细节 A</label><output data-out="smokeDetail"></output><input data-param="smokeDetail" type="range" min="0" max="1.5" step="0.01" value="0.72"></div>
+        <p class="note">三处源点分布在岛的不同方向并避开山顶。默认西南源的烟带会越过岛体，密度在固体内部归零并随地形抬升。</p>
+      </div>
+      <div class="group"><h3>渲染预算</h3>
+        <div class="selectRow"><label>质量档位</label><select id="quality"><option value="0">移动</option><option value="1" selected>平衡</option><option value="2">高画质</option></select></div>
+        <div class="toggleGrid"><button id="autoQuality" class="active">动态分辨率</button><button id="smokeToggle" class="active">连续烟场</button><button id="fireToggle" class="active">火焰辐射</button><button id="foamToggle" class="active">破浪泡沫</button></div>
+      </div>
+    </section>
+    <section class="page" data-page-content="query" hidden>
+      <div class="group"><h3>sampleSurfaceWorld(x,z,t,recipeVersion)</h3><div id="queryReadout" class="readout">等待海面查询…</div></div>
+      <div class="group"><h3>CPU ↔ GPU 同源校验</h3><div class="qaGrid"><span>GPU 浮点查询</span><b id="gpuQueryState" class="warn">初始化</b><span>高度残差</span><b id="heightResidual">—</b><span>坡度残差</span><b id="gradResidual">—</b><span>查询配方</span><b>KAOPU-WATER-R1</b></div><p class="note">主渲染与 1×1 GPU 查询程序由同一段波面 GLSL 生成；CPU 使用相同波分量与海床/潮位公式。误差只在浏览器实际读回后标记。</p></div>
+      <div class="group"><h3>查询点</h3><div class="control"><label>X</label><output data-out="queryX"></output><input data-param="queryX" type="range" min="-95" max="95" step="0.1" value="28"></div><div class="control"><label>Z</label><output data-out="queryZ"></output><input data-param="queryZ" type="range" min="-95" max="95" step="0.1" value="34"></div><div class="preset"><button id="queryBreaker">破浪带</button><button id="queryDeep">外海</button><button id="queryUpwind">迎风岸</button></div></div>
+    </section>
+  </div>
+</aside>
+<div class="cross"></div><div id="hint" class="glass">拖动旋转 · 滚轮缩放 · 点击海面移动查询点</div>
+<footer id="footer" class="glass"><span><i id="statusDot" class="dot"></i><b id="statusText">初始化</b></span><span id="fps">— FPS</span><span id="resolution">—</span><span id="recipe">KAOPU-WATER-R1</span></footer>
+<script>
+(() => {
+'use strict';
+const canvas = document.getElementById('ocean');
+const loading = document.getElementById('loading');
+const errorBox = document.getElementById('error');
+const errorPre = errorBox.querySelector('pre');
+const gl = canvas.getContext('webgl2', {antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'high-performance', preserveDrawingBuffer:false});
+if(!gl){ fail('当前浏览器没有可用的 WebGL2。R019 不会用黑屏冒充运行成功。'); return; }
+
+const WAVE_COMPONENTS = [
+  {a:0.00,l:34.0,w:0.34,p:0.20},
+  {a:0.24,l:21.0,w:0.22,p:1.35},
+  {a:-0.38,l:15.5,w:0.16,p:2.70},
+  {a:0.62,l:10.2,w:0.12,p:4.10},
+  {a:-0.78,l:7.1,w:0.09,p:5.30},
+  {a:1.08,l:4.6,w:0.07,p:0.90}
+];
+const waveLiteral = WAVE_COMPONENTS.map(v=>`vec4(${v.a.toFixed(6)},${v.l.toFixed(6)},${v.w.toFixed(6)},${v.p.toFixed(6)})`).join(',');
+const SHARED_GLSL = `
+#define PI 3.141592653589793
+#define TAU 6.283185307179586
+const float G = 9.81;
+const int WAVE_COUNT = ${WAVE_COMPONENTS.length};
+const vec4 WAVES[WAVE_COUNT] = vec4[](${waveLiteral});
+uniform float uTime,uWaveHeight,uWaveSpeed,uTide,uBreaker,uWindAngle;
+float hash11(float p){return fract(sin(p*127.1+311.7)*43758.5453123);}
+float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
+float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1)),f.x),f.y);}
+float fbm2(vec2 p){float f=0.0,a=.5;for(int i=0;i<4;i++){f+=a*noise2(p);p=mat2(1.6,1.2,-1.2,1.6)*p+3.17;a*=.5;}return f;}
+float coastRadius(float a){return 61.5 + 6.8*sin(3.0*a+.55)+4.2*sin(5.0*a-1.18)+2.3*sin(8.0*a+2.3)+1.5*sin(13.0*a-.4);}
+float coastDistance(vec2 p){float a=atan(p.y,p.x);return length(p)-coastRadius(a);}
+float rockHeightAt(vec2 p){
+  float a=atan(p.y,p.x);float s=(a+PI)/TAU*18.0;float id=floor(s+.5);float aa=(id+.5)/18.0*TAU-PI;
+  float enabledRock=step(.26,hash11(id*9.37+2.1));float rr=coastRadius(aa)+1.0+hash11(id*4.13)*7.0;
+  vec2 c=vec2(cos(aa),sin(aa))*rr;float rot=aa+hash11(id*5.71)*1.8;
+  mat2 R=mat2(cos(rot),-sin(rot),sin(rot),cos(rot));vec2 q=R*(p-c);
+  vec2 sc=vec2(1.6+hash11(id*3.3)*4.9,1.4+hash11(id*8.2)*3.7);float e=1.0-dot(q/sc,q/sc);
+  return enabledRock*pow(max(e,0.0),.58)*(1.2+hash11(id*6.17)*6.1);
+}
+float terrainHeight(vec2 p){
+  float d=coastDistance(p);float seaD=max(d,0.0);
+  float seabed=-.48-.145*seaD-2.2*smoothstep(12.0,58.0,seaD)+(.35*noise2(p*.075)-.18);
+  seabed=max(seabed,-18.5);
+  float inland=max(-d,0.0);float beach=.10+.052*inland;
+  float core=1.0-smoothstep(-30.0,-5.0,d);
+  float p1=13.5*exp(-dot(p-vec2(-15,5),p-vec2(-15,5))/245.0);
+  float p2=11.2*exp(-dot(p-vec2(17,-10),p-vec2(17,-10))/190.0);
+  float p3=8.8*exp(-dot(p-vec2(5,21),p-vec2(5,21))/145.0);
+  float p4=7.4*exp(-dot(p-vec2(-25,-17),p-vec2(-25,-17))/125.0);
+  float ridgeN=pow(abs(noise2(p*.070)*2.0-1.0),1.45);
+  float strata=.8*sin(p.x*.23+p.y*.08)+.55*sin(p.y*.31-p.x*.11);
+  float gullies=2.3*pow(abs(sin(p.x*.095+p.y*.074+noise2(p*.035)*3.0)),7.0)*core;
+  float ridge=(2.2+5.7*ridgeN+max(strata,0.0))*core;
+  vec2 qa=p-vec2(-4.0,1.0);float spineA=6.2*exp(-abs(dot(qa,normalize(vec2(.72,-.69))))*.16)*exp(-pow(abs(dot(qa,normalize(vec2(.69,.72))))/36.0,4.0));
+  vec2 qb=p-vec2(13.0,-7.0);float spineB=4.9*exp(-abs(dot(qb,normalize(vec2(.48,.88))))*.20)*exp(-pow(abs(dot(qb,normalize(vec2(-.88,.48))))/25.0,4.0));
+  vec2 qv=p-vec2(-2.0,4.0);float valley=2.7*exp(-abs(dot(qv,normalize(vec2(.32,.95))))*.32)*exp(-pow(abs(dot(qv,normalize(vec2(-.95,.32))))/31.0,4.0));
+  float land=max(beach,beach+core*(p1+p2+p3+p4+ridge+spineA+spineB-gullies-valley));
+  float mask=1.0-smoothstep(-1.0,3.0,d);
+  return mix(seabed,land,mask)+rockHeightAt(p);
+}
+float baseDepthAt(vec2 p){return uTide-terrainHeight(p);}
+float waterHeightOnly(vec2 p){
+  float baseDepth=baseDepthAt(p);
+  float wet=smoothstep(.10,1.15,baseDepth);
+  float shallow=1.0-smoothstep(2.0,15.0,baseDepth);
+  float shoal=1.0+.52*shallow;
+  float eta=uTide;float ca=cos(uWindAngle),sa=sin(uWindAngle);
+  mat2 WR=mat2(ca,-sa,sa,ca);
+  for(int i=0;i<WAVE_COUNT;i++){
+    vec4 c=WAVES[i];vec2 dir=WR*vec2(cos(c.x),sin(c.x));
+    float k=TAU/c.y;float omega=sqrt(G*k);
+    float amp=uWaveHeight*c.z*shoal*wet;
+    eta+=amp*sin(dot(p,dir)*k-uTime*uWaveSpeed*omega+c.w);
+  }
+  float d=coastDistance(p);
+  float shorePhase=-d*.48-uTime*uWaveSpeed*1.72+.35*sin(atan(p.y,p.x)*3.0);
+  float lip=pow(max(sin(shorePhase),0.0),5.0);
+  eta+=uBreaker*.64*shallow*wet*lip;
+  return eta;
+}
+vec2 waterGradient(vec2 p){float e=.12;return vec2(waterHeightOnly(p+vec2(e,0))-waterHeightOnly(p-vec2(e,0)),waterHeightOnly(p+vec2(0,e))-waterHeightOnly(p-vec2(0,e)))/(2.0*e);}
+vec4 waterState(vec2 p){float h=waterHeightOnly(p);vec2 g=waterGradient(p);float depth=max(h-terrainHeight(p),0.0);return vec4(h,g,depth);}
+`;
+const VS = `#version 300 es
+precision highp float;
+out vec2 vUv;
+void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);vUv=p;gl_Position=vec4(p*2.0-1.0,0,1);}`;
+const FS = `#version 300 es
+precision highp float;
+precision highp int;
+in vec2 vUv;out vec4 fragColor;
+uniform vec2 uResolution;
+uniform vec3 uCamPos,uCamRight,uCamUp,uCamForward;
+uniform float uFov,uClarity,uFoam,uSmoke,uFire,uSmokeDetail,uWindSpeed,uSunAngle,uExposure;
+uniform int uQuality,uDebug,uZone,uSmokeOn,uFireOn,uFoamOn;
+uniform vec2 uQueryPoint;
+${SHARED_GLSL}
+float hash31(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453123);}
+float noise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);float n=i.x+i.y*57.0+i.z*113.0;return mix(mix(mix(hash11(n),hash11(n+1.0),f.x),mix(hash11(n+57.0),hash11(n+58.0),f.x),f.y),mix(mix(hash11(n+113.0),hash11(n+114.0),f.x),mix(hash11(n+170.0),hash11(n+171.0),f.x),f.y),f.z);}
+float fbm3(vec3 p){float f=0.0,a=.55;for(int i=0;i<3;i++){f+=a*noise3(p);p=p*2.03+vec3(17.1,7.7,11.3);a*=.48;}return f;}
+vec3 sunDir(){float a=uSunAngle;return normalize(vec3(cos(a)*.68,.62,sin(a)*.68));}
+vec3 skyColor(vec3 rd){
+  float y=max(rd.y,-.12);float h=smoothstep(-.12,.75,y);
+  vec3 horizon=vec3(.20,.36,.43),zenith=vec3(.018,.072,.125);
+  vec3 col=mix(horizon,zenith,pow(h,.62));
+  vec3 sd=sunDir();float sun=max(dot(rd,sd),0.0);col+=vec3(1.0,.72,.42)*pow(sun,900.0)*5.2+vec3(1.0,.66,.36)*pow(sun,24.0)*.16;
+  if(uQuality>0&&rd.y>.02){vec2 cp=rd.xz/max(rd.y+.18,.12);float cloud=fbm2(cp*.32+vec2(uTime*.008,-uTime*.004));cloud=smoothstep(.57,.78,cloud);col=mix(col,col*.74+vec3(.22,.24,.24),cloud*.42);}
+  col+=vec3(.10,.19,.23)*pow(1.0-max(rd.y,0.0),8.0)*.28;
+  return col;
+}
+vec3 terrainNormal(vec2 p){float e=.22;float h=terrainHeight(p);return normalize(vec3(terrainHeight(p-vec2(e,0))-terrainHeight(p+vec2(e,0)),2.0*e,terrainHeight(p-vec2(0,e))-terrainHeight(p+vec2(0,e))));}
+float terrainShadow(vec3 p,vec3 ld){float sh=1.0,t=.8;for(int i=0;i<9;i++){vec3 q=p+ld*t;float h=q.y-terrainHeight(q.xz);sh=min(sh,8.0*h/t);t+=clamp(h,.6,5.0);if(h<.05) return .08;if(t>85.0)break;}return clamp(sh,.08,1.0);}
+float rayCircle(vec2 ro,vec2 rd,float r,out float t0,out float t1){float b=dot(ro,rd),c=dot(ro,ro)-r*r,d=b*b-c;if(d<0.0)return 0.0;d=sqrt(d);t0=-b-d;t1=-b+d;return 1.0;}
+float traceTerrain(vec3 ro,vec3 rd,float maxT){
+  float t0,t1;if(rayCircle(ro.xz,rd.xz,103.0,t0,t1)<.5)return 1e5;
+  float begin=max(t0,0.0),end=min(t1,maxT);if(end<=begin)return 1e5;
+  int steps=uQuality==2?96:(uQuality==1?80:64);float span=(end-begin)/float(steps);
+  float prevT=begin,prevD=(ro+rd*begin).y-terrainHeight((ro+rd*begin).xz);
+  for(int i=0;i<96;i++){if(i>=steps)break;float t=begin+float(i+1)*span;vec3 p=ro+rd*t;float d=p.y-terrainHeight(p.xz);
+    if(d<=0.0&&prevD>0.0){float a=prevT,b=t;for(int k=0;k<7;k++){float m=.5*(a+b);vec3 q=ro+rd*m;float md=q.y-terrainHeight(q.xz);if(md>0.0)a=m;else b=m;}return .5*(a+b);}
+    if(abs(d)<.028&&t>0.0)return t;prevT=t;prevD=d;
+  }return 1e5;
+}
+float traceWater(vec3 ro,vec3 rd){
+  if(rd.y>-.002)return 1e5;float t=(uTide-ro.y)/rd.y;if(t<=0.0)return 1e5;
+  for(int i=0;i<3;i++){vec3 p=ro+rd*t;float f=p.y-waterHeightOnly(p.xz);float denom=rd.y;denom=sign(denom)*max(abs(denom),.045);t-=f/denom;}
+  vec3 p=ro+rd*t;if(t<=0.0||t>900.0||waterHeightOnly(p.xz)-terrainHeight(p.xz)<.055)return 1e5;return t;
+}
+vec3 seabedColor(vec2 p,float depth){float d=coastDistance(p);float n=noise2(p*.18);vec3 sand=mix(vec3(.43,.35,.22),vec3(.62,.52,.33),n);vec3 rock=mix(vec3(.075,.10,.105),vec3(.24,.22,.18),n);float rocky=clamp(smoothstep(.55,3.2,rockHeightAt(p))+smoothstep(7.0,20.0,-d)*.16,0.0,1.0);return mix(sand,rock,rocky)*(.72+.28*exp(-depth*.08));}
+float foamCoverage(vec2 p){
+  vec4 st=waterState(p);float shallow=1.0-smoothstep(2.0,10.0,st.w);float steep=clamp(length(st.yz)*1.25,0.0,1.0);
+  float adv=fbm2((p-vec2(cos(uWindAngle),sin(uWindAngle))*uTime*uWaveSpeed*1.6)*.23);
+  float filament=smoothstep(.49,.70,adv+.22*steep);
+  float shore=1.0-smoothstep(.22,2.25,st.w);
+  return clamp(uFoam*(.56*steep*shallow+.46*shore)*(.46+.62*filament),0.0,1.0);
+}
+vec3 shadeTerrain(vec3 p,vec3 rd){
+  vec3 n=terrainNormal(p.xz);vec2 micro=vec2(noise2(p.xz*1.37)-.5,noise2(p.xz*1.37+vec2(17.2,5.4))-.5);n=normalize(n+vec3(micro.x,0.0,micro.y)*.22);vec3 ld=sunDir();float ndl=max(dot(n,ld),0.0);float sh=uQuality==0?1.0:terrainShadow(p+n*.12,ld);
+  float d=coastDistance(p.xz),slope=1.0-n.y;float rock=clamp(smoothstep(.25,1.2,rockHeightAt(p.xz))+smoothstep(.14,.52,slope)+smoothstep(5.5,17.0,p.y)*.68,0.0,1.0);
+  float sector=floor((atan(p.z,p.x)+PI)/TAU*18.0);float rv=hash11(sector*7.13+3.0);
+  vec3 sand=mix(vec3(.30,.225,.125),vec3(.58,.455,.245),noise2(p.xz*.22));
+  vec3 soil=mix(vec3(.052,.095,.050),vec3(.17,.235,.095),fbm2(p.xz*.08));
+  float strataC=.5+.5*sin(p.y*1.55+noise2(p.xz*.42)*4.0);vec3 rockC=mix(vec3(.030,.038,.043),vec3(.235,.185,.125),clamp(rv*.48+noise2(p.xz*.35)*.30+strataC*.22,0.0,1.0));
+  float beach=smoothstep(-18.0,-4.0,d)*(1.0-smoothstep(1.0,7.0,d));vec3 base=mix(soil,sand,beach);base=mix(base,rockC,rock);
+  float waterLine=waterHeightOnly(p.xz);float wet=1.0-smoothstep(.15,2.1,abs(p.y-waterLine));base*=mix(1.0,.46,wet);
+  float ao=mix(.46,1.0,n.y);vec3 amb=skyColor(n)*(.13+.17*n.y);vec3 col=base*(amb+vec3(1.0,.76,.50)*ndl*sh*1.48)*ao;
+  vec3 h=normalize(ld-rd);float spec=pow(max(dot(n,h),0.0),mix(18.0,70.0,wet))*mix(.08,.48,wet);col+=vec3(1.0,.82,.58)*spec*sh;
+  float qd=length(p.xz-uQueryPoint);col+=vec3(.25,1.0,.85)*smoothstep(.9,.18,qd)*smoothstep(.0,.9,abs(p.y-waterLine-.15));
+  if(uFireOn==1){float glow=exp(-dot(p.xz-vec2(-42,-30),p.xz-vec2(-42,-30))/.42/42.0)+exp(-dot(p.xz-vec2(46,-8),p.xz-vec2(46,-8))/.42/42.0)+exp(-dot(p.xz-vec2(-7,47),p.xz-vec2(-7,47))/.42/42.0);col+=vec3(1.55,.20,.018)*glow*uFire*.32;}
+  return col;
+}
+vec3 shadeWater(vec3 p,vec3 rd){
+  vec4 st=waterState(p.xz);vec3 n=normalize(vec3(-st.y,1.0,-st.z));vec3 ld=sunDir();float NoV=max(dot(n,-rd),0.0);
+  float fres=.0204+(1.0-.0204)*pow(1.0-NoV,5.0);float foam=uFoamOn==1?foamCoverage(p.xz):0.0;
+  vec3 refl=skyColor(reflect(rd,n))*.72;float path=st.w/max(NoV,.18);vec3 sigmaA=mix(vec3(.055,.027,.013),vec3(.22,.085,.035),1.0-clamp(uClarity/1.5,0.0,1.0));vec3 Tr=exp(-sigmaA*path);
+  vec3 refrDir=refract(rd,n,1.0/1.333);vec2 bottomP=p.xz+refrDir.xz*min(path*.22,8.0);vec3 bottom=seabedColor(bottomP,st.w);
+  vec3 scatter=vec3(.012,.072,.102)*(1.0-Tr);vec3 transmit=bottom*Tr+scatter;
+  vec3 col=mix(transmit,refl,clamp(fres+.085*smoothstep(7.0,28.0,st.w),0.0,1.0));
+  vec3 h=normalize(ld-rd);float sunSpec=pow(max(dot(n,h),0.0),mix(190.0,52.0,foam))*2.05;col+=vec3(1.0,.76,.48)*sunSpec*(1.0-foam*.72);
+  float crest=smoothstep(.24,.72,length(st.yz))*(1.0-smoothstep(5.0,15.0,st.w));col+=vec3(.018,.105,.115)*crest;vec3 foamC=vec3(.69,.77,.76)*(1.0+.20*max(dot(n,ld),0.0));col=mix(col,foamC,foam*.74);
+  float qd=length(p.xz-uQueryPoint);col+=vec3(.12,1.0,.78)*smoothstep(1.1,.12,qd)*1.8;
+  if(uDebug==1){float d=clamp(st.w/18.0,0.0,1.0);col=mix(vec3(.88,.61,.22),vec3(.03,.12,.35),d);}else if(uDebug==2){col=vec3(foam);}else if(uDebug==3){col=n*.5+.5;}
+  return col;
+}
+void plumeSample(vec3 p,vec2 src,float id,out float smokeD,out float fireD){
+  smokeD=0.0;fireD=0.0;vec2 w=vec2(cos(uWindAngle),sin(uWindAngle)),side=vec2(-w.y,w.x);vec2 rel=p.xz-src;float along=dot(rel,w);float maxLen=46.0+uWindSpeed*6.25;
+  if(along<-.8||along>maxLen)return;float age=max(along,0.0)/max(uWindSpeed*.72,2.0);float bend=sin(age*1.25+id*2.1)*(1.0+age*.18)+sin(age*.37+id)*.7;
+  vec2 centerXZ=src+w*max(along,0.0)+side*bend;float sourceY=terrainHeight(src)+1.1;float pathY=max(sourceY+1.2+age*.92+1.15*sin(age*1.34+id*1.9)+.55*sin(age*.47+id),terrainHeight(centerXZ)+2.15+age*.12);
+  float rad=1.85+age*.52+.46*sin(age*1.7+id);float crossV=dot(p.xz-centerXZ,side)/rad;float vert=(p.y-pathY)/(rad*.84);float core=exp(-1.24*(crossV*crossV+vert*vert));
+  float fade=smoothstep(-.4,2.0,along)*(1.0-smoothstep(maxLen*.68,maxLen,along));float billow=.62+.38*sin(along*.29-uTime*1.8+id*2.2);smokeD=core*fade*(.76+.62*billow);
+  vec2 fireXZ=(p.xz-src)/vec2(4.3,3.7);float fy=(p.y-sourceY)/6.8;fireD=exp(-2.15*(dot(fireXZ,fireXZ)+fy*fy))*smoothstep(-.35,1.4,p.y-sourceY)*(1.0-smoothstep(7.0,12.0,p.y-sourceY));
+}
+bool plumeBounds(vec3 ro,vec3 rd,vec2 src,out float enterT,out float exitT){
+  vec2 w=vec2(cos(uWindAngle),sin(uWindAngle)),side=vec2(-w.y,w.x);float maxLen=46.0+uWindSpeed*6.25;float sy=terrainHeight(src)+14.0;
+  vec2 centerXZ=src+w*maxLen*.48;vec3 q=vec3(dot(ro.xz-centerXZ,w),ro.y-sy,dot(ro.xz-centerXZ,side));vec3 d=vec3(dot(rd.xz,w),rd.y,dot(rd.xz,side));
+  vec3 halfB=vec3(maxLen*.54,28.0,19.0);vec3 inv=1.0/(d+vec3(1e-6));vec3 ta=(-halfB-q)*inv,tb=(halfB-q)*inv;vec3 lo=min(ta,tb),hi=max(ta,tb);
+  enterT=max(max(lo.x,lo.y),lo.z);exitT=min(min(hi.x,hi.y),hi.z);return exitT>max(enterT,0.0);
+}
+vec4 integrateOnePlume(vec3 ro,vec3 rd,float maxT,vec2 src,float id,out float entry){
+  float a,b;if(!plumeBounds(ro,rd,src,a,b)){entry=1e5;return vec4(0,0,0,1);}a=max(a,0.0);b=min(b,maxT);if(b<=a){entry=1e5;return vec4(0,0,0,1);}entry=a;
+  int steps=uQuality==2?24:(uQuality==1?17:11);float dt=(b-a)/float(steps);vec3 acc=vec3(0);float T=1.0;vec3 ld=sunDir();
+  for(int i=0;i<24;i++){if(i>=steps)break;float t=a+(float(i)+.43)*dt;vec3 p=ro+rd*t;float sd,fd;plumeSample(p,src,id,sd,fd);float clear=smoothstep(.05,1.8,p.y-terrainHeight(p.xz));sd*=clear;fd*=clear;
+    if(sd>.0005&&uSmokeOn==1){float detail=1.0;if(uSmokeDetail>.005){float nv=fbm3(p*.15-vec3(cos(uWindAngle),-.10,sin(uWindAngle))*uTime*.28);detail=mix(1.0,smoothstep(.18,.86,nv)*1.55+.12,uSmokeDetail);}float dens=sd*detail*uSmoke*.255;float alpha=1.0-exp(-dens*dt);float phase=.24+.76*pow(max(dot(rd,ld),0.0),2.0);float coreDark=smoothstep(.10,.72,sd*detail);vec3 lit=mix(vec3(.31,.315,.31),vec3(.032,.035,.035),coreDark*.88);vec3 smokeCol=mix(lit,lit+vec3(.10,.075,.045),phase*.32);acc+=T*alpha*smokeCol;T*=1.0-alpha;}
+    if(fd>.0005&&uFireOn==1){float flick=.55+.95*noise3(p*1.3+vec3(0,-uTime*4.7,0));float hot=clamp((p.y-terrainHeight(src))/6.0,0.0,1.0);vec3 emit=mix(vec3(2.3,.12,.012),vec3(1.8,1.15,.20),hot);acc+=T*fd*flick*uFire*dt*.16*emit;}
+    if(T<.02)break;
+  }return vec4(acc,T);
+}
+vec4 integrateVolume(vec3 ro,vec3 rd,float maxT){
+  float e0,e1,e2;vec4 v0=integrateOnePlume(ro,rd,maxT,vec2(-42,-30),0.0,e0),v1=integrateOnePlume(ro,rd,maxT,vec2(46,-8),1.0,e1),v2=integrateOnePlume(ro,rd,maxT,vec2(-7,47),2.0,e2);
+  if(e0>e1){float te=e0;e0=e1;e1=te;vec4 tv=v0;v0=v1;v1=tv;}if(e1>e2){float te=e1;e1=e2;e2=te;vec4 tv=v1;v1=v2;v2=tv;}if(e0>e1){float te=e0;e0=e1;e1=te;vec4 tv=v0;v0=v1;v1=tv;}
+  vec4 outV=v0;outV.rgb+=outV.a*v1.rgb;outV.a*=v1.a;outV.rgb+=outV.a*v2.rgb;outV.a*=v2.a;return outV;
+}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uResolution)/uResolution.y;vec3 rd=normalize(uCamForward+uv.x*uCamRight*uFov+uv.y*uCamUp*uFov);
+  float tw=traceWater(uCamPos,rd);float tl=traceTerrain(uCamPos,rd,tw);float hit=min(tw,tl);vec3 col;
+  if(tl<tw){vec3 p=uCamPos+rd*tl;col=shadeTerrain(p,rd);}else if(tw<1e4){vec3 p=uCamPos+rd*tw;col=shadeWater(p,rd);}else col=skyColor(rd);
+  if(hit<1e4)col=mix(col,skyColor(rd),1.0-exp(-hit*.00078));
+  if(uSmokeOn==1||uFireOn==1){vec4 vol=integrateVolume(uCamPos,rd,min(hit,340.0));col=vol.rgb+vol.a*col;}
+  col*=uExposure;col=(col*(2.51*col+.03))/(col*(2.43*col+.59)+.14);col=pow(clamp(col,0.0,1.0),vec3(1.0/2.2));fragColor=vec4(col,1);
+}`;
+const QUERY_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;uniform vec2 uQueryPoint;
+${SHARED_GLSL}
+void main(){vec4 st=waterState(uQueryPoint);fragColor=vec4(st.x,st.y,st.z,st.w);}`;
+
+function shader(type, source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){throw new Error(gl.getShaderInfoLog(s)+'\n\n'+source.split('\n').map((l,i)=>String(i+1).padStart(4)+' '+l).join('\n'));}return s;}
+function program(vs,fs){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,vs));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p;}
+let mainProgram, queryProgram;
+try{mainProgram=program(VS,FS);queryProgram=program(VS,QUERY_FS);}catch(e){fail('着色器编译失败：\n'+e.message);return;}
+const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+const U={};for(const n of ['uResolution','uCamPos','uCamRight','uCamUp','uCamForward','uFov','uTime','uWaveHeight','uWaveSpeed','uTide','uBreaker','uWindAngle','uClarity','uFoam','uSmoke','uFire','uSmokeDetail','uWindSpeed','uSunAngle','uExposure','uQuality','uDebug','uZone','uSmokeOn','uFireOn','uFoamOn','uQueryPoint'])U[n]=gl.getUniformLocation(mainProgram,n);
+const Q={};for(const n of ['uTime','uWaveHeight','uWaveSpeed','uTide','uBreaker','uWindAngle','uQueryPoint'])Q[n]=gl.getUniformLocation(queryProgram,n);
+
+const mobileMode=matchMedia('(max-width:700px)').matches;
+const state={waveHeight:.92,waveSpeed:.88,tide:.18,breaker:1.18,foam:.88,clarity:.83,windSpeed:14.5,windAngle:.62,smoke:1.32,fire:1.05,smokeDetail:.72,sunAngle:-.72,exposure:.94,queryX:28,queryZ:34,quality:mobileMode?0:1,debug:0,zone:0,smokeOn:1,fireOn:1,foamOn:1,autoQuality:true,paused:false};
+let resolutionBias=1.0;
+const camera={yaw:2.10,pitch:.18,distance:158,target:[0,8,0],goal:null};
+const views={
+ overview:{yaw:2.10,pitch:.18,distance:158,target:[0,8,0]},aerial:{yaw:2.02,pitch:.72,distance:245,target:[0,1,0]},shore:{yaw:-1.22,pitch:.09,distance:63,target:[-38,2,21]},breaker:{yaw:.96,pitch:.055,distance:54,target:[34,1,30]},rocks:{yaw:-.33,pitch:.05,distance:48,target:[-47,1,-5]},fire:{yaw:2.34,pitch:.24,distance:132,target:[-4,12,-2]}
+};
+const presets={calm:{waveHeight:.28,waveSpeed:.56,breaker:.32,foam:.42,windSpeed:5.2,smoke:.85},swell:{waveHeight:.92,waveSpeed:.88,breaker:1.18,foam:.88,windSpeed:14.5,smoke:1.32},storm:{waveHeight:1.62,waveSpeed:1.18,breaker:1.72,foam:1.42,windSpeed:21.0,smoke:1.62}};
+
+function setUniforms(p,map,time){gl.useProgram(p);const f=(n,v)=>{if(map[n])gl.uniform1f(map[n],v)},i=(n,v)=>{if(map[n])gl.uniform1i(map[n],v)};f('uTime',time);f('uWaveHeight',state.waveHeight*(state.zone?1.12:1));f('uWaveSpeed',state.waveSpeed);f('uTide',state.tide);f('uBreaker',state.breaker*(state.zone?.25:1));f('uWindAngle',state.windAngle);if(p===mainProgram){f('uClarity',state.clarity);f('uFoam',state.foam);f('uSmoke',state.smoke);f('uFire',state.fire);f('uSmokeDetail',state.smokeDetail);f('uWindSpeed',state.windSpeed);f('uSunAngle',state.sunAngle);f('uExposure',state.exposure);i('uQuality',state.quality);i('uDebug',state.debug);i('uZone',state.zone);i('uSmokeOn',state.smokeOn);i('uFireOn',state.fireOn);i('uFoamOn',state.foamOn);}gl.uniform2f(map.uQueryPoint,state.queryX,state.queryZ);}
+function resize(){const base=[.48,.62,.78][state.quality]*resolutionBias;const dpr=Math.min(devicePixelRatio||1,1.6);const s=base*dpr;const w=Math.max(2,Math.floor(innerWidth*s)),h=Math.max(2,Math.floor(innerHeight*s));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);document.getElementById('resolution').textContent=`${w}×${h} · ${Math.round(base*100)}%`;}
+function cameraBasis(){const cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch),cy=Math.cos(camera.yaw),sy=Math.sin(camera.yaw);const forward=[-cp*sy,-sp,-cp*cy];const pos=[camera.target[0]-forward[0]*camera.distance,camera.target[1]-forward[1]*camera.distance,camera.target[2]-forward[2]*camera.distance];let right=norm(cross(forward,[0,1,0]));let up=norm(cross(right,forward));return{pos,forward:norm(forward),right,up};}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}function norm(a){const l=Math.hypot(...a)||1;return a.map(v=>v/l)}function mix(a,b,t){return a+(b-a)*t}
+function updateCamera(dt){if(!camera.goal)return;const k=1-Math.exp(-dt*4.2);camera.yaw=mixAngle(camera.yaw,camera.goal.yaw,k);camera.pitch=mix(camera.pitch,camera.goal.pitch,k);camera.distance=mix(camera.distance,camera.goal.distance,k);for(let j=0;j<3;j++)camera.target[j]=mix(camera.target[j],camera.goal.target[j],k);if(Math.abs(camera.distance-camera.goal.distance)<.05)camera.goal=null;}
+function mixAngle(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t;}
+
+let start=performance.now(),last=start,simTime=0,frames=0,fpsTime=start,fps=0,qualityCooldown=0;
+function draw(now){let dt=Math.min((now-last)/1000,.05);last=now;if(!state.paused)simTime+=dt;updateCamera(dt);resize();const b=cameraBasis();gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);setUniforms(mainProgram,U,simTime);gl.uniform2f(U.uResolution,canvas.width,canvas.height);gl.uniform3fv(U.uCamPos,b.pos);gl.uniform3fv(U.uCamRight,b.right);gl.uniform3fv(U.uCamUp,b.up);gl.uniform3fv(U.uCamForward,b.forward);gl.uniform1f(U.uFov,Math.tan(48*Math.PI/360)*2);gl.drawArrays(gl.TRIANGLES,0,3);
+ frames++;if(now-fpsTime>700){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now;document.getElementById('fps').textContent=`${fps.toFixed(0)} FPS`;if(state.autoQuality&&now>qualityCooldown){if(fps<18&&state.quality>0){state.quality--;resolutionBias=1;document.getElementById('quality').value=String(state.quality);qualityCooldown=now+4500;}else if(fps<14&&state.quality===0&&resolutionBias>.70){resolutionBias=Math.max(.70,resolutionBias-.08);qualityCooldown=now+3500;}else if(fps>48&&resolutionBias<.99){resolutionBias=Math.min(1,resolutionBias+.05);qualityCooldown=now+4500;}else if(fps>48&&state.quality<2){state.quality++;document.getElementById('quality').value=String(state.quality);qualityCooldown=now+6500;}}runGpuQuery();updateReadout();}
+ requestAnimationFrame(draw);
+}
+
+const extFloat=gl.getExtension('EXT_color_buffer_float');let qFbo=null,qTex=null,qPixels=new Float32Array(4);
+if(extFloat){qFbo=gl.createFramebuffer();qTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,qTex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,1,1,0,gl.RGBA,gl.FLOAT,null);gl.bindFramebuffer(gl.FRAMEBUFFER,qFbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,qTex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE){qFbo=null;}gl.bindFramebuffer(gl.FRAMEBUFFER,null);}
+function runGpuQuery(){const badge=document.getElementById('gpuQueryState');if(!qFbo){badge.textContent='设备不支持读回';badge.className='warn';return;}gl.bindFramebuffer(gl.FRAMEBUFFER,qFbo);gl.viewport(0,0,1,1);setUniforms(queryProgram,Q,simTime);gl.drawArrays(gl.TRIANGLES,0,3);gl.readPixels(0,0,1,1,gl.RGBA,gl.FLOAT,qPixels);gl.bindFramebuffer(gl.FRAMEBUFFER,null);const c=sampleSurfaceWorld(state.queryX,state.queryZ,simTime);const hr=Math.abs(qPixels[0]-c.height),gr=Math.hypot(qPixels[1]-c.grad[0],qPixels[2]-c.grad[1]);document.getElementById('heightResidual').textContent=hr.toExponential(2)+' m';document.getElementById('gradResidual').textContent=gr.toExponential(2);const ok=hr<2e-3&&gr<3e-3;badge.textContent=ok?'通过':'超阈值';badge.className=ok?'ok':'warn';document.getElementById('heightResidual').className=ok?'ok':'warn';document.getElementById('gradResidual').className=ok?'ok':'warn';window.__OCEAN_QA__={gpuQuery:true,heightResidual:hr,gradientResidual:gr,pass:ok,recipe:'KAOPU-WATER-R1',version:'R019'};}
+
+function fract(x){return x-Math.floor(x)}function hash11(p){return fract(Math.sin(p*127.1+311.7)*43758.5453123)}function hash21(x,y){return fract(Math.sin(x*127.1+y*311.7)*43758.5453123)}function smooth(a,b,x){let t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)}function noise2j(x,y){let ix=Math.floor(x),iy=Math.floor(y),fx=fract(x),fy=fract(y);fx=fx*fx*(3-2*fx);fy=fy*fy*(3-2*fy);return mix(mix(hash21(ix,iy),hash21(ix+1,iy),fx),mix(hash21(ix,iy+1),hash21(ix+1,iy+1),fx),fy)}
+function coastRadiusJ(a){return 61.5+6.8*Math.sin(3*a+.55)+4.2*Math.sin(5*a-1.18)+2.3*Math.sin(8*a+2.3)+1.5*Math.sin(13*a-.4)}function coastDistanceJ(x,z){return Math.hypot(x,z)-coastRadiusJ(Math.atan2(z,x))}
+function rockHeightJ(x,z){let a=Math.atan2(z,x),s=(a+Math.PI)/(Math.PI*2)*18,id=Math.floor(s+.5),aa=(id+.5)/18*Math.PI*2-Math.PI,enabled=hash11(id*9.37+2.1)>=.26?1:0,rr=coastRadiusJ(aa)+1+hash11(id*4.13)*7,cx=Math.cos(aa)*rr,cz=Math.sin(aa)*rr,rot=aa+hash11(id*5.71)*1.8,cr=Math.cos(rot),sr=Math.sin(rot),dx=x-cx,dz=z-cz,qx=cr*dx-sr*dz,qz=sr*dx+cr*dz,sx=1.6+hash11(id*3.3)*4.9,sz=1.4+hash11(id*8.2)*3.7,e=1-(qx/sx)**2-(qz/sz)**2;return enabled*Math.pow(Math.max(e,0),.58)*(1.2+hash11(id*6.17)*6.1)}
+function terrainHeightJ(x,z){let d=coastDistanceJ(x,z),seaD=Math.max(d,0),seabed=-.48-.145*seaD-2.2*smooth(12,58,seaD)+(.35*noise2j(x*.075,z*.075)-.18);seabed=Math.max(seabed,-18.5);let inland=Math.max(-d,0),beach=.10+.052*inland,core=1-smooth(-30,-5,d),p1=13.5*Math.exp(-((x+15)**2+(z-5)**2)/245),p2=11.2*Math.exp(-((x-17)**2+(z+10)**2)/190),p3=8.8*Math.exp(-((x-5)**2+(z-21)**2)/145),p4=7.4*Math.exp(-((x+25)**2+(z+17)**2)/125),ridgeN=Math.pow(Math.abs(noise2j(x*.070,z*.070)*2-1),1.45),strata=.8*Math.sin(x*.23+z*.08)+.55*Math.sin(z*.31-x*.11),gullies=2.3*Math.pow(Math.abs(Math.sin(x*.095+z*.074+noise2j(x*.035,z*.035)*3)),7)*core,ridge=(2.2+5.7*ridgeN+Math.max(strata,0))*core,qax=x+4,qaz=z-1,spineA=6.2*Math.exp(-Math.abs(qax*.72+qaz*(-.69))*.16)*Math.exp(-Math.pow(Math.abs(qax*.69+qaz*.72)/36,4)),qbx=x-13,qbz=z+7,spineB=4.9*Math.exp(-Math.abs(qbx*.48+qbz*.88)*.20)*Math.exp(-Math.pow(Math.abs(qbx*(-.88)+qbz*.48)/25,4)),qvx=x+2,qvz=z-4,valley=2.7*Math.exp(-Math.abs(qvx*.32+qvz*.95)*.32)*Math.exp(-Math.pow(Math.abs(qvx*(-.95)+qvz*.32)/31,4)),land=Math.max(beach,beach+core*(p1+p2+p3+p4+ridge+spineA+spineB-gullies-valley)),mask=1-smooth(-1,3,d);return mix(seabed,land,mask)+rockHeightJ(x,z)}
+function waterHeightJ(x,z,t){let baseDepth=state.tide-terrainHeightJ(x,z),wet=smooth(.10,1.15,baseDepth),shallow=1-smooth(2,15,baseDepth),shoal=1+.52*shallow,eta=state.tide,ca=Math.cos(state.windAngle),sa=Math.sin(state.windAngle);for(const c of WAVE_COMPONENTS){let dx=ca*Math.cos(c.a)-sa*Math.sin(c.a),dz=sa*Math.cos(c.a)+ca*Math.sin(c.a),k=Math.PI*2/c.l,omega=Math.sqrt(9.81*k),amp=state.waveHeight*(state.zone?1.12:1)*c.w*shoal*wet;eta+=amp*Math.sin((x*dx+z*dz)*k-t*state.waveSpeed*omega+c.p)}let d=coastDistanceJ(x,z),phase=-d*.48-t*state.waveSpeed*1.72+.35*Math.sin(Math.atan2(z,x)*3),lip=Math.pow(Math.max(Math.sin(phase),0),5);eta+=state.breaker*(state.zone?.25:1)*.64*shallow*wet*lip;return eta}
+function sampleSurfaceWorld(x,z,t){let e=.12,h=waterHeightJ(x,z,t),gx=(waterHeightJ(x+e,z,t)-waterHeightJ(x-e,z,t))/(2*e),gz=(waterHeightJ(x,z+e,t)-waterHeightJ(x,z-e,t))/(2*e),depth=Math.max(h-terrainHeightJ(x,z),0),n=norm([-gx,1,-gz]),dt=.02,vy=(waterHeightJ(x,z,t+dt)-waterHeightJ(x,z,t-dt))/(2*dt);return{recipeVersion:'KAOPU-WATER-R1',x,z,time:t,height:h,grad:[gx,gz],normal:n,velocity:[0,vy,0],depth,approximate:false}}
+function updateReadout(){const q=sampleSurfaceWorld(state.queryX,state.queryZ,simTime);document.getElementById('queryReadout').textContent=`recipe  ${q.recipeVersion}\npoint   ${q.x.toFixed(2)}, ${q.z.toFixed(2)} m\ntime    ${q.time.toFixed(2)} s\nheight  ${q.height.toFixed(4)} m\ndepth   ${q.depth.toFixed(3)} m\nnormal  ${q.normal.map(v=>v.toFixed(4)).join(', ')}\nvelocity ${q.velocity.map(v=>v.toFixed(3)).join(', ')} m/s\nstatus  exact shared recipe`;}
+
+function bindUI(){
+ document.getElementById('quality').value=String(state.quality);
+ document.querySelectorAll('[data-param]').forEach(el=>{const k=el.dataset.param;el.addEventListener('input',()=>{state[k]=+el.value;paintRange(el);updateOutputs();});paintRange(el)});updateOutputs();
+ document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-page]').forEach(x=>x.classList.toggle('selected',x===b));document.querySelectorAll('[data-page-content]').forEach(p=>p.hidden=p.dataset.pageContent!==b.dataset.page)});
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('selected',x===b));camera.goal=JSON.parse(JSON.stringify(views[b.dataset.view]));});
+ document.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{state.zone=b.dataset.zone==='deep'?1:0;document.querySelectorAll('[data-zone]').forEach(x=>x.classList.toggle('selected',x===b));});
+ document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{Object.assign(state,presets[b.dataset.preset]);document.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('selected',x===b));syncControls();});
+ document.querySelectorAll('[data-debug]').forEach(b=>b.onclick=()=>{state.debug=+b.dataset.debug;document.querySelectorAll('[data-debug]').forEach(x=>x.classList.toggle('active',x===b));});
+ const panel=document.getElementById('panel');const toggle=()=>{panel.classList.toggle('closed');document.getElementById('panelToggle').setAttribute('aria-expanded',String(!panel.classList.contains('closed')))};document.getElementById('panelToggle').onclick=toggle;document.getElementById('closePanel').onclick=toggle;
+ document.getElementById('pause').onclick=e=>{state.paused=!state.paused;e.currentTarget.textContent=state.paused?'继续':'暂停';e.currentTarget.classList.toggle('active',state.paused)};
+ document.getElementById('quality').onchange=e=>{state.quality=+e.target.value;resolutionBias=1;state.autoQuality=false;document.getElementById('autoQuality').classList.remove('active')};
+ toggleState('autoQuality','autoQuality');toggleState('smokeToggle','smokeOn');toggleState('fireToggle','fireOn');toggleState('foamToggle','foamOn');
+ document.getElementById('queryBreaker').onclick=()=>setQuery(31,35);document.getElementById('queryDeep').onclick=()=>setQuery(91,-64);document.getElementById('queryUpwind').onclick=()=>setQuery(-58,-37);
+}
+function toggleState(id,key){const b=document.getElementById(id);b.onclick=()=>{if(key==='autoQuality')state[key]=!state[key];else state[key]=state[key]?0:1;b.classList.toggle('active',!!state[key])}}
+function syncControls(){document.querySelectorAll('[data-param]').forEach(el=>{const k=el.dataset.param;if(k in state){el.value=state[k];paintRange(el)}});updateOutputs()}
+function paintRange(el){const min=+el.min,max=+el.max,v=+el.value;el.style.setProperty('--fill',`${(v-min)/(max-min)*100}%`)}
+function updateOutputs(){document.querySelectorAll('[data-out]').forEach(o=>{const k=o.dataset.out,v=state[k];if(v==null)return;let suffix='';if(k==='windSpeed')suffix=' m/s';if(k==='tide'||k==='waveHeight'||k==='queryX'||k==='queryZ')suffix=' m';if(k==='windAngle'||k==='sunAngle')suffix=' rad';o.textContent=(Math.abs(v)>=10?v.toFixed(1):v.toFixed(2))+suffix})}
+function setQuery(x,z){state.queryX=x;state.queryZ=z;syncControls();runGpuQuery();updateReadout()}
+
+let dragging=false,lastPointer=null;
+canvas.addEventListener('pointerdown',e=>{dragging=true;lastPointer=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!dragging)return;let dx=e.clientX-lastPointer[0],dy=e.clientY-lastPointer[1];camera.yaw-=dx*.005;camera.pitch=Math.max(-.05,Math.min(1.18,camera.pitch+dy*.004));lastPointer=[e.clientX,e.clientY];camera.goal=null});
+canvas.addEventListener('pointerup',e=>{if(lastPointer&&Math.hypot(e.clientX-lastPointer[0],e.clientY-lastPointer[1])<3)pickQuery(e.clientX,e.clientY);dragging=false;lastPointer=null});
+canvas.addEventListener('wheel',e=>{e.preventDefault();camera.distance=Math.max(18,Math.min(360,camera.distance*Math.exp(e.deltaY*.001)));camera.goal=null},{passive:false});
+function pickQuery(cx,cy){const b=cameraBasis(),x=(cx/innerWidth*2-1)*(innerWidth/innerHeight),y=1-cy/innerHeight*2,f=Math.tan(48*Math.PI/360)*2,rd=norm([b.forward[0]+x*b.right[0]*f+y*b.up[0]*f,b.forward[1]+x*b.right[1]*f+y*b.up[1]*f,b.forward[2]+x*b.right[2]*f+y*b.up[2]*f]);let t=(state.tide-b.pos[1])/rd[1];if(t>0){let qx=b.pos[0]+rd[0]*t,qz=b.pos[2]+rd[2]*t;if(Math.hypot(qx,qz)<180)setQuery(qx,qz)}}
+
+function fail(msg){errorPre.textContent=msg;errorBox.classList.add('show');loading.classList.add('done');document.getElementById('statusText').textContent='启动失败';document.getElementById('statusDot').classList.add('warn');window.__OCEAN_QA__={pass:false,error:msg,version:'R019'}}
+function ready(){loading.classList.add('done');document.getElementById('statusText').textContent='同源海面运行中';window.__OCEAN_READY__=true;window.sampleSurfaceWorld=sampleSurfaceWorld;runGpuQuery();updateReadout();requestAnimationFrame(draw)}
+window.addEventListener('error',e=>fail(e.message||'运行错误'));window.addEventListener('resize',resize);bindUI();ready();
+})();
+</script>
+</body>
+</html>
