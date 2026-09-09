@@ -1,0 +1,99 @@
+{
+  "schema": "kaopu-tool-routing/r1",
+  "updatedAt": "2026-09-09",
+  "policy": {
+    "preferPrimaryOfficial": true,
+    "toolOutputDoesNotCreateObservationRootByItself": true,
+    "externalAIIsCandidateOnly": true,
+    "mirrorsAreTransportNotIndependentEvidence": true,
+    "recordBlockedAuthoritativeExecutionAsUnknown": true
+  },
+  "routes": [
+    {
+      "id": "TOOL-ATMOS-USSA-NTRS",
+      "domain": "atmosphere-static-regression",
+      "toolOrSource": "NASA Technical Reports Server / U.S. Standard Atmosphere 1976",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "useFor": [
+        "defining constants",
+        "geopotential/geometric coordinate semantics",
+        "0-86 km lower-atmosphere equations",
+        "static 0-1000 km regression-reference provenance"
+      ],
+      "doNotUseFor": [
+        "current weather truth",
+        "time/location-specific upper-atmosphere state"
+      ]
+    },
+    {
+      "id": "TOOL-ATMOS-NRLMSIS-CCMC",
+      "domain": "atmosphere-driver-conditioned-reference",
+      "toolOrSource": "NASA CCMC NRLMSIS 2.1",
+      "authority": "primary-official-host",
+      "observationRootEligible": true,
+      "useFor": [
+        "current model interface and validity domain",
+        "authoritative hosted numerical confirmation",
+        "time/location/solar/geomagnetic-conditioned neutral state"
+      ],
+      "nextAction": "Reproduce selected 500 km reference cases through CCMC or official package before promoting mirrored vectors."
+    },
+    {
+      "id": "TOOL-ATMOS-NRLMSIS-NRL-PACKAGE",
+      "domain": "atmosphere-executable-reference",
+      "toolOrSource": "NRL public NRLMSIS 2.1 package",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "useFor": [
+        "source-code interface verification",
+        "compiler reproducibility",
+        "official release-vector confirmation"
+      ],
+      "currentExecutionStatus": "blocked-in-r04-environment",
+      "blockedReason": "Official archive could be inspected on the NRL public directory but not materialized into the bounded execution environment for compilation in R04.",
+      "status": "Unknown-until-executed"
+    },
+    {
+      "id": "TOOL-ATMOS-HITRAN",
+      "domain": "molecular-spectroscopy",
+      "toolOrSource": "HITRANonline + HAPI",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "useFor": [
+        "spectral-coordinate and unit semantics",
+        "molecular transition provenance",
+        "line-shape/property reference checkpoints"
+      ],
+      "currentExecutionStatus": "schema-only-r04",
+      "constraint": "Authenticated HAPI data download requires API key; no numeric line checkpoint may be invented when retrieval is unavailable."
+    },
+    {
+      "id": "TOOL-ATMOS-NRLMSIS-MIRROR",
+      "domain": "candidate-release-vector-transport",
+      "toolOrSource": "github.com/jacobwilliams/NRLMSIS2.1",
+      "authority": "non-authoritative-mirror",
+      "observationRootEligible": false,
+      "useFor": [
+        "Candidate inspection of release package structure",
+        "Candidate test-vector transport",
+        "Candidate legacy-interface unit inspection"
+      ],
+      "promotionRule": "Must be confirmed against official NRL package or NASA CCMC. Mirror agreement is not independent evidence."
+    },
+    {
+      "id": "TOOL-ATMOS-PYTHON-PROBE",
+      "domain": "coordinator-reproducible-evidence",
+      "toolOrSource": "PROBES/atmosphere_earth_reference_fixture_r04.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "execute official lower-atmosphere equations",
+        "assert unit/coordinate invariants",
+        "measure same-altitude Candidate NRL vector variation",
+        "preserve explicit Unknown states"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
