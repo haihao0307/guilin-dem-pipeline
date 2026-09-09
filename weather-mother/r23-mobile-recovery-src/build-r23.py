@@ -15,12 +15,15 @@ safe64 = base64.b64encode(safe.encode("utf-8")).decode("ascii")
 
 patch = f'''\n<script id="weather-mother-r23-mobile-cloud-first">\n(()=>{{'use strict';\nconst isAppleMobile=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);\nconst compactTouch=innerWidth<=700&&navigator.maxTouchPoints>0;\nif(!(isAppleMobile||compactTouch))return;\ndocument.documentElement.dataset.weatherMobileCloudFirst='r23';\nconst safe=decodeURIComponent(escape(atob('{safe64}')));\nlet timer=0;\nfunction patchAircraft(){{\n  for(const f of document.querySelectorAll('iframe[data-key="aircraft"]')){{\n    if(f.dataset.mobileCloudFirst==='r23')continue;\n    f.dataset.mobileCloudFirst='r23';\n    f.srcdoc=safe;\n  }}\n  clearTimeout(timer);timer=setTimeout(patchAircraft,120);\n}}\nnew MutationObserver(patchAircraft).observe(document.documentElement,{{childList:true,subtree:true}});\naddEventListener('resize',patchAircraft);patchAircraft();\n}})();\n</script>\n'''
 
-marker = "</body>"
-if marker in base:
-    out = base.replace(marker, patch + marker, 1)
-else:
+# R22 is a giant single file containing many embedded HTML strings.  The first
+# </body> belongs to one of those embedded documents.  Inject only before the
+# final outer </html>, otherwise the mobile patch never executes in the shell.
+idx = base.rfind("</html>")
+if idx < 0:
     out = base + patch
+else:
+    out = base[:idx] + patch + base[idx:]
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(out, encoding="utf-8")
 print(OUT)
-print(f"base_bytes={len(base.encode('utf-8'))} fallback_bytes={len(safe.encode('utf-8'))} out_bytes={len(out.encode('utf-8'))}")
+print(f"outer_html_index={idx} base_bytes={len(base.encode('utf-8'))} fallback_bytes={len(safe.encode('utf-8'))} out_bytes={len(out.encode('utf-8'))}")
