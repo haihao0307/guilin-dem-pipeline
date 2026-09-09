@@ -66,9 +66,9 @@
       "id": "U-ATMOS-001",
       "status": "PartiallyResolved",
       "question": "What is the minimum physically meaningful atmosphere state that KAOPU should preserve without overfitting UE or Karma parameter interfaces?",
-      "known": "R01-R02 primary-source review supports explicit planet/reference frame, neutral thermodynamic/species state, separate aerosol/cloud media, emitter/surface coupling, spectral-property semantics, path query, evaluator policy, and camera/display separation. R03 executable evidence shows that one state can support multiple evaluators whose authority differs by query geometry; evaluator validity must therefore be explicit rather than global. R04 adds a multi-root Earth fixture architecture and shows that ReferenceSampleKey must preserve source-required context dimensions through reduction. R05 clarifies evidence class: NRLMSIS output is empirical inferred model state built from measurements plus constraints, not a raw Observation measurement. R05 also adds provenance-dependency and coverage semantics so fit/validation/retrieval status survives reduction.",
-      "remainingUnknown": "The exact canonical Earth schema, state-source hierarchy above 86 km, required unit types, authoritative cross-root numerical fixtures, and the complete dependency/coverage graph for all candidate atmosphere data products remain unresolved.",
-      "currentBestView": "Keep the layered Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator architecture Candidate. Preserve independent Observation Root IDs, EvidenceClass, EvidenceDependencyDAG, per-variable coverage/support metadata, and a first-class ReferenceSampleKey. Require authoritative NRL numerical confirmation and authenticated spectral checkpoints before candidate-complete promotion.",
+      "known": "R01-R02 primary-source review supports explicit planet/reference frame, neutral thermodynamic/species state, separate aerosol/cloud media, emitter/surface coupling, spectral-property semantics, path query, evaluator policy, and camera/display separation. R03 executable evidence shows that one state can support multiple evaluators whose authority differs by query geometry; evaluator validity must therefore be explicit rather than global. R04 adds a multi-root Earth fixture architecture and shows that ReferenceSampleKey must preserve source-required context dimensions through reduction. R05 clarifies evidence class and adds provenance-dependency/coverage semantics. R06 establishes that global modelDomain and per-output QuantityValidityEnvelope must remain distinct, and that unsupported values must be represented as typed Missing/Unsupported rather than ordinary numerics.",
+      "remainingUnknown": "The exact canonical Earth schema, state-source hierarchy above 86 km, required unit types, authoritative cross-root numerical fixtures, and the complete dependency/coverage/quantity-validity graph for all candidate atmosphere products remain unresolved.",
+      "currentBestView": "Keep the layered Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator architecture Candidate. Preserve independent Observation Root IDs, EvidenceClass, EvidenceDependencyDAG, per-variable coverage/support metadata, modelDomain, QuantityValidityEnvelope, typed Missing/Unsupported, and a first-class ReferenceSampleKey. Require authoritative NRL numerical confirmation and authenticated spectral checkpoints before candidate-complete promotion.",
       "promotionBlock": true
     },
     {
@@ -100,17 +100,17 @@
       "id": "U-ATMOS-005",
       "status": "Unknown",
       "question": "Do the selected NRLMSIS 2.1 packaged test vectors reproduce exactly when executed from an authoritative NRL package or NASA CCMC host?",
-      "known": "R04 inspected a non-authoritative mirror of the public NRL package. Its README identifies the same release structure and its legacy interface documents units and missing-value semantics. The mirrored expected-output file provides same-altitude 500 km vectors whose temperature spans 777.86-1116.07 K and total density spans 1.339e-16-1.034e-15 g/cm3 across different context tuples. R05 re-confirmed the official NRL release location and current NASA CCMC 2.1 host, but did not obtain an authoritative executable result.",
-      "remainingUnknown": "The official NRL/Wiley binary release could not be materialized into the bounded R05 execution environment and the web-only CCMC interface could not be submitted programmatically, so no authoritative execution comparison was completed.",
-      "currentBestView": "Keep those numerical vectors Candidate. Use them as a reproducibility target only; do not count the mirror as an independent Observation Root or promote the values until official-package or CCMC confirmation.",
+      "known": "R04 inspected a non-authoritative mirror of the public NRL package and preserved its expected vectors only as Candidate. R05 re-confirmed the official NRL release location and current NASA CCMC 2.1 host. R06 confirmed that the official NRL tar/zip and Wiley S2/S3 supporting archives are discoverable and have matching nominal published sizes, but size equality is not artifact identity and no authoritative execution was obtained.",
+      "remainingUnknown": "The official NRL/Wiley binary release still could not be materialized into the bounded R06 execution environment and the browser-hosted CCMC service was not converted into an unattended authoritative run, so no authoritative execution comparison was completed.",
+      "currentBestView": "Keep mirrored numerical vectors Candidate. Matching filename/size is only a transport clue. Promotion requires authoritative package identity/execution or an authoritative hosted result for the locked query.",
       "promotionBlock": true
     },
     {
       "id": "U-ATMOS-006",
       "status": "Unknown",
       "question": "Which tiny authenticated HITRAN transition subset should become the first KAOPU optical regression fixture?",
-      "known": "Official HITRAN documentation fixes spectral-coordinate and line-intensity semantics and shows that line shape depends on thermodynamic regime. R04 defines the checkpoint schema without inventing line values. R05 rechecked current HAPI documentation, which still requires an API key for data download.",
-      "remainingUnknown": "No authenticated transition tuple was retrieved in R05.",
+      "known": "Official HITRAN documentation fixes spectral-coordinate and line-intensity semantics and shows that line shape depends on thermodynamic regime. R04 defines the checkpoint schema without inventing line values. R05-R06 retain the requirement for authenticated line retrieval before numerical promotion.",
+      "remainingUnknown": "No authenticated transition tuple was retrieved in R06.",
       "currentBestView": "Do not synthesize or copy unverified line constants. Retrieve two or three authenticated lines later and bind molecule/isotopologue, line provenance, temperature, pressure, line-shape model, column/path state, units, tolerance, EvidenceClass and dependency provenance.",
       "promotionBlock": true
     },
@@ -118,10 +118,19 @@
       "id": "U-ATMOS-007",
       "status": "PartiallyResolved",
       "question": "How should KAOPU represent evidence independence when measurements, holdouts, empirical models and retrieval products share instruments, fitted data, retrieval models or upstream priors?",
-      "known": "R05 primary sources show three distinct cases: holdout samples can remain in the same fitting instrument family; SCIAMACHY is external to the six NRLMSIS 2.1 NO fitting instrument families but its complete upstream retrieval dependency graph was not assessed; SABER NO adds a new sensor and full-local-time coverage but its concentration retrieval explicitly consumes NRLMSIS 2.1 temperature, O and O2. A four-axis executable probe demonstrates that a single independence boolean loses these distinctions.",
+      "known": "R05 primary sources established that root identity and evidence independence are multidimensional. R06 adds a concrete sample-split result from the primary NRLMSIS 2.1 paper: 30 ensembles were divided into first-15 fitting and second-15 validation roles, but random sampling did not exclude duplicates, so observations may repeat within or across ensembles. Therefore validation labels do not guarantee observation-level disjointness. The paper also states final parameters were averaged from fitting ensembles 6-15 after five spin-up ensembles.",
       "remainingUnknown": "Complete transitive dependency graphs, shared calibration/prior dependencies and quantitative correlation among all candidate atmosphere products are not yet mapped. The official NRL sample README also overlaps NO.15 between tuning and validation ranges, while the 2022 paper describes first 15 versus second 15 ensembles; exact file-15 membership remains unresolved.",
-      "currentBestView": "Use EvidenceDependencyDAG plus multidimensional independence metadata. Keep sample-split, instrument/source, retrieval-model and shared-prior dependence distinct; Unknown edges stay Unknown. Root identity and independence must never be aliased.",
-      "promotionBlock": "Blocks claims of independent corroboration where dependencies are unresolved; does not by itself block using a model as a clearly labeled empirical reference state."
+      "currentBestView": "Use EvidenceDependencyDAG plus multidimensional independence metadata. Keep sample-split, instrument/source, retrieval-model and shared-prior dependence distinct; add samplingScheme, samplingWithReplacement, sampleOverlapStatus and parameterAggregationLineage. Unknown edges stay Unknown. Root identity and split labels must never be aliased to independence.",
+      "promotionBlock": "Blocks claims of independent corroboration where dependencies/overlap are unresolved; does not by itself block using a model as a clearly labeled empirical reference state."
+    },
+    {
+      "id": "U-ATMOS-008",
+      "status": "PartiallyResolved",
+      "question": "How should source-specific missing or unsupported atmosphere quantities propagate through KAOPU reducers and evaluators?",
+      "known": "The primary NRLMSIS 2.1 paper states that NO output is missing below 72.5 km because of a fitted baseline-profile edge artifact even though the parent model accepts lower-altitude queries. A non-authoritative mirror exposes an exact numeric missing-density sentinel of 9.999e-38; that exact value remains Candidate. The R06 semantic probe shows that the sentinel has a finite logarithm, so an unmasked sentinel can survive numerical transforms and masquerade as physical structure.",
+      "remainingUnknown": "Authoritative confirmation of the exact source sentinel and a generalized missing-value mapping across all selected atmosphere property providers are still unresolved.",
+      "currentBestView": "Convert source-specific sentinels/unsupported outputs to typed Missing/Unsupported at ingestion, before units, logarithms, interpolation, normalization, reduction or optical calculations. Artifact-driven cutoffs are validity boundaries, not physical layers; source substitution across them must be explicit and provenance-bearing.",
+      "promotionBlock": "Blocks any fixture that numerically transforms an unmasked missing sentinel; does not block other independently valid atmosphere observations."
     }
   ]
 }
