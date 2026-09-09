@@ -1,0 +1,63 @@
+name: Landscape Karst KAOPU R5 materialize
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-kaopu-r5-20260910
+    paths:
+      - .github/workflows/landscape-karst-kaopu-r5-materialize.yml
+      - workbenches/landscape-karst-kaopu-r5/payload/**
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-karst-kaopu-r5-20260910
+          fetch-depth: 1
+          sparse-checkout: |
+            workbenches/landscape-karst-kaopu-r5/payload
+            .github/workflows/landscape-karst-kaopu-r5-materialize.yml
+          sparse-checkout-cone-mode: false
+      - name: Rebuild fixed single-file R5
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workbenches/landscape-karst-kaopu-r5
+          cat workbenches/landscape-karst-kaopu-r5/payload/part.*.b64 | base64 -d | gzip -dc > workbenches/landscape-karst-kaopu-r5/index.html
+          test "$(sha256sum workbenches/landscape-karst-kaopu-r5/index.html | awk '{print $1}')" = "dc8ff6f1a00810e577ebd90c32aa177fe85051b59dbfcced4d69f35069a4393f"
+          test "$(stat -c%s workbenches/landscape-karst-kaopu-r5/index.html)" -eq 28990
+          grep -q 'R5 已就绪 · R2/R3 保留 · R4 技术对照保留 · 主形重构' workbenches/landscape-karst-kaopu-r5/index.html
+          python - <<'PY'
+          import json,hashlib,pathlib
+          p=pathlib.Path('workbenches/landscape-karst-kaopu-r5/index.html')
+          qa={
+            'version':'R5',
+            'htmlBytes':p.stat().st_size,
+            'htmlSHA256':hashlib.sha256(p.read_bytes()).hexdigest(),
+            'runtimeAssets':0,
+            'textures':0,
+            'externalModels':0,
+            'synthetic':True,
+            'visualApproved':False,
+            'productionReady':False,
+            'truthApproved':False,
+            'preserved':['R2','R3'],
+            'technicalComparison':['R4'],
+            'notes':['integrated sloped asymmetric summits replace separate cap look','phase-dependent upper taper and bend reduce repeated-column silhouette','three low foundation pedestals improve foot/saddle continuity','two true implicit tunnel subtractions','stable stone/mineral/local Rodrigues orientation retained','geometry/structure precedes albedo; roughness remains independent']
+          }
+          pathlib.Path('workbenches/landscape-karst-kaopu-r5/QA.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Commit generated R5
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add --sparse -f workbenches/landscape-karst-kaopu-r5/index.html workbenches/landscape-karst-kaopu-r5/QA.json
+          git commit -m "build(landscape): materialize KAOPU karst R5 review candidate"
+          git push origin HEAD:feature/landscape-karst-kaopu-r5-20260910
