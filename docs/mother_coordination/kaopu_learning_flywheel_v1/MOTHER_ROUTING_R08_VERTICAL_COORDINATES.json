@@ -1,0 +1,58 @@
+{
+  "schema": "kaopu-mother-routing-extension/r08",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_WEATHER_VERTICAL_COORDINATE_R08.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "preserve source-native vertical coordinate, units, datum/model definition and dependencies",
+        "separate WeatherColumnState from CloudDiagnosticAGL and RuntimeCloudPlacement",
+        "derive renderer placement only through explicit VerticalCoordinateAdapter",
+        "keep lighting/raymarch quality changes out of Weather truth"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "provide terrain surface height plus vertical datum as AGL conversion input",
+        "never rewrite weather-source altitude because terrain/DEM uses a different datum",
+        "surface/geoid/ellipsoid conversion must retain provenance"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "consume runtime vertical placement through explicit reference-frame adapter",
+        "keep atmosphere state validity separate from weather vertical-coordinate conversion"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume cloud/fog optical state through participating-medium queries",
+        "support local/spot/laser-like light transmittance/scattering as evaluator behavior",
+        "do not let light intensity or per-sample transmittance settings mutate humidity/cloud density"
+      ]
+    },
+    {
+      "mother": "Ocean",
+      "items": [
+        "sea-surface height may provide a local surface reference near coasts",
+        "ocean rendering is not the weather vertical datum"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make VerticalCoordinateContract and VerticalCoordinateAdapter first-class",
+        "typed Unknown when conversion context is missing",
+        "renderer-space cloud placement remains a derived packet/cache with lineage"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after one real weather-column + terrain + renderer + lighting fixture"
+}

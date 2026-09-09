@@ -1,0 +1,90 @@
+{
+  "schema": "kaopu-tool-routing-extension/r08",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-WEATHER-ECMWF-OPENIFS-VERTICAL",
+      "domain": "weather-native-vertical-coordinate",
+      "toolOrSource": "ECMWF OpenIFS vertical coordinate documentation",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "model-coordinate-semantics",
+      "useFor": [
+        "hybrid sigma-pressure definition",
+        "surface-pressure dependence",
+        "terrain-following lower-level semantics",
+        "A/B coefficient provenance"
+      ],
+      "doNotUseFor": [
+        "fixed model-level-to-metre lookup",
+        "direct cloud observation truth"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-ECMWF-ERA5-HEIGHTS",
+      "domain": "weather-height-reference-semantics",
+      "toolOrSource": "ECMWF/Copernicus ERA5 geopotential/geometric height documentation",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "model/data-coordinate-semantics",
+      "useFor": [
+        "geopotential vs geopotential-height semantics",
+        "geoid reference",
+        "explicit geometric-height approximation"
+      ],
+      "doNotUseFor": [
+        "ellipsoid height without datum conversion",
+        "assuming geometric and geopotential height are interchangeable"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NWS-METAR-AGL",
+      "domain": "cloud-observation-reporting-coordinate",
+      "toolOrSource": "NOAA/NWS ASOS METAR documentation",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "operational-observation-reporting-semantics",
+      "useFor": [
+        "AGL cloud-base reporting semantics",
+        "ceiling interpretation"
+      ],
+      "doNotUseFor": [
+        "global absolute cloud placement without station terrain reference"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-UE58-VOLUMETRIC-CLOUD",
+      "domain": "cloud-renderer-adapter",
+      "toolOrSource": "Epic Unreal Engine 5.8 Volumetric Cloud + Environment Lighting documentation",
+      "authority": "primary-vendor",
+      "observationRootEligible": false,
+      "evidenceClass": "renderer-interface-semantics",
+      "useFor": [
+        "cloud-shell placement controls",
+        "ray-march quality separation",
+        "per-sample atmospheric-light transmittance",
+        "cloud-atmosphere-light coupling patterns"
+      ],
+      "doNotUseFor": [
+        "meteorological cloud truth",
+        "defining KAOPU canonical cloud altitude",
+        "assuming public 'above ground' wording proves terrain-following physical semantics"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-WEATHER-VERTICAL-R08-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/weather_vertical_coordinate_contract_r08.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "AGL/surface dependency invariant",
+        "geopotential/geometric type separation",
+        "rejecting context-free model-level conversion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
