@@ -11,12 +11,13 @@ Status: Candidate extension to `CURRENT_BEST_VIEW.md`; no Frozen change.
 80. Path optical depth and local volume extinction are different typed quantities. `tau` becomes `beta_ext [m^-1]` only through an explicit path-length/distribution model with lineage.
 81. Legitimate closure routes remain distinct: direct optical retrieval, microphysical closure, source-native model optics, and explicitly synthetic evaluator tests. Results from one route do not silently inherit the evidence status of another.
 82. Renderer density/extinction/albedo/phase controls are adapter/evaluator representations. Their defaults may never be promoted into Weather truth because a renderer requires a value.
-83. MERRA-2 model-level state is a candidate global experimental provider for cloud fraction + liquid/ice mass + vertical state, while HRRR native fields are a richer CONUS-only experimental provider. Source geography, latency, resolution and field semantics remain part of validity.
-84. A physically meaningful cloud/light integration reports physical-input uncertainty separately from numerical integration error, visual approximation error and performance budget.
+83. When a weather/reanalysis source already exposes a documented optical diagnostic, preserving that source-native optical packet is lower-assumption than reconstructing the same quantity using a hidden fixed particle radius. MERRA-2 `tavg3_3d_cld_Nv` is a candidate global experimental route because it exposes cloud fraction, in-cloud QL/QI and in-cloud liquid/ice optical thickness on model levels. Those optical depths remain source-model diagnostics, not universal truth or local 3-D extinction.
+84. HRRR native fields remain useful for richer CONUS-only microphysical experiments. Source geography, latency, resolution and field semantics are part of validity and prevent HRRR from serving as Wenzhou/global Weather truth.
+85. A physically meaningful cloud/light integration reports source/model or retrieval uncertainty separately from numerical integration error, visual approximation error and performance budget.
 
 R10 evidence status:
 - Independent roots remain distinct: ECMWF ecRad/OpenIFS radiation/model semantics; Copernicus C3S retrieval/product semantics; NOAA/NCEP operational model-product semantics; NASA GMAO MERRA-2 global reanalysis semantics.
 - SideFX Karma and UE 5.8 remain engineering renderer roots, not meteorological truth.
 - Executable semantic probe: `PROBES/cloud_optical_closure_probe_r10.py`, result `6/6 PASS` in the bounded cycle.
-- Weather-coupling gate: advanced on sufficiency semantics only; authenticated cloud-state ingestion, source-verified condensate meaning, particle optics and dual-evaluator consumption remain open.
+- Weather-coupling gate: advanced on sufficiency semantics and identified a lower-assumption global source-native-optics route; authenticated cloud packet ingestion and dual-evaluator consumption remain open.
 - Frozen: none.
