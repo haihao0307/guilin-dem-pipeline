@@ -10,7 +10,7 @@ function assert(cond, message) {
 
 async function allowGithack(context) {
   if (target.includes('raw.githack.com')) {
-    await context.addCookies([{ name: '__Http-phish', value: '1', domain: 'raw.githack.com', path: '/' }]);
+    await context.addCookies([{ name: '__Http-phish', value: '1', url: 'https://raw.githack.com/' }]);
   }
 }
 
@@ -49,8 +49,9 @@ async function enterEyeAndCheck(id) {
   await page.click('#eye-view');
   await page.waitForFunction(() => document.querySelector('#eye-view')?.getAttribute('aria-pressed') === 'true');
   await page.waitForFunction(() => {
-    const v = Number(document.querySelector('#terrain')?.dataset.eyeHeightM);
-    return Number.isFinite(v);
+    const raw = document.querySelector('#terrain')?.dataset.eyeHeightM;
+    if (raw === undefined || raw === '') return false;
+    return Number.isFinite(Number(raw));
   });
   const h0 = Number(await page.getAttribute('#terrain', 'data-eye-height-m'));
   assert(Math.abs(h0 - 1.6) <= 0.002, `${id}: eye height before movement = ${h0}`);
