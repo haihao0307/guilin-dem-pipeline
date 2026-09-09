@@ -1,0 +1,29 @@
+name: Landscape Karst R2.1 Restore Public HTTP
+
+on:
+  push:
+    branches:
+      - feature/landscape-karst-r2-restore-20260910
+    paths:
+      - .github/workflows/landscape-karst-r2-restore-public-http.yml
+
+permissions:
+  contents: read
+
+jobs:
+  public-http:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify immutable raw.githack R2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          FIXED=c756eee6a395c827a59dbd4146ad8f94b11cbb6a
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${FIXED}/workbenches/landscape-karst-kaopu-r2-1-restore/index.html"
+          curl --fail --location --retry 12 --retry-delay 2 --connect-timeout 10 --max-time 60 -D /tmp/h "$URL" -o /tmp/r21.html
+          test "$(sha256sum /tmp/r21.html | awk '{print $1}')" = "9e16d0c2c3390a261db899ea4fc8bbf3e7c789a5c9ce2940b76a5ce16d136938"
+          test "$(stat -c%s /tmp/r21.html)" -eq 22988
+          grep -qi 'content-type: text/html' /tmp/h
+          grep -q 'R2.1 回退续作' /tmp/r21.html
+          grep -q 'R2 主形/洞拱/几何字段锁定不变' /tmp/r21.html
+          echo "PUBLIC_URL=$URL"
