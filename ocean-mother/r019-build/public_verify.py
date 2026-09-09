@@ -22,6 +22,10 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     page.on("requestfailed", lambda r: request_failures.append(f"{r.url}: {r.failure}"))
 
     page.goto(URL, wait_until="domcontentloaded", timeout=120_000)
+    notice_seen = page.locator("button.url-action-button").count() > 0
+    if notice_seen:
+        with page.expect_navigation(wait_until="domcontentloaded", timeout=120_000):
+            page.locator("button.url-action-button").click()
     page.wait_for_function("window.__OCEAN_READY__ === true", timeout=120_000)
     page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.gpuQuery === true", timeout=120_000)
 
@@ -55,6 +59,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
     page.screenshot(path=str(shot), full_page=True)
 
     checks = {
+        "raw_githack_notice_handled": notice_seen,
         "ready": page.evaluate("window.__OCEAN_READY__ === true"),
         "identity": "R019" in title and "R019" in identity and "KAOPU" in identity,
         "gpu_query_initial": bool(qa0 and qa0.get("pass")),
@@ -84,6 +89,7 @@ def exercise(page, *, mobile: bool, evidence: Path) -> dict[str, Any]:
         "viewport": [dims1["iw"], dims1["ih"]],
         "canvas": [dims1["cw"], dims1["ch"]],
         "quality": dims1["q"],
+        "noticeSeen": notice_seen,
         "qaInitial": qa0,
         "qaAfterInteraction": qa1,
         "panelRect": panel,
@@ -123,7 +129,7 @@ receipt = {
     "status": "PASS" if desktop["pass"] and mobile["pass"] else "FAIL",
     "visualAcceptance": False,
     "productionReady": False,
-    "note": "This confirms the fixed public URL, WebGL2 startup and required interactions in GitHub-hosted Chromium/SwiftShader; it is not target iPhone/Mac performance evidence.",
+    "note": "This confirms the raw.githack notice flow, fixed public URL, WebGL2 startup and required interactions in GitHub-hosted Chromium/SwiftShader; it is not target iPhone/Mac performance evidence.",
 }
 (evidence / "PUBLIC_BROWSER_QA.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(receipt, ensure_ascii=False, indent=2))
