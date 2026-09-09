@@ -79,7 +79,9 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases
+          RELEASE_DIR='docs/mother_coordination/handoffs/kaopu-world-chorus-full-v1.0-20260909/releases'
+          git add "$RELEASE_DIR"
+          git add -f "$RELEASE_DIR/KAOPU_WORLD_CHORUS_FULL_HANDOFF_V1.0_2026-09-09.zip"
           if git diff --cached --quiet; then
             echo 'Verified release files are already current.'
             exit 0
