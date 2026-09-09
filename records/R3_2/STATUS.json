@@ -1,14 +1,14 @@
 {
   "version": "R3.2",
-  "date": "2026-09-09",
-  "status": "r3.2-scope-complete-public-verified-packaging",
+  "date": "2026-09-10",
+  "status": "release-candidate-public-verified-ready-for-full-package",
   "baseArchiveCommit": "0b1a88a252e219607a19c0d7a2bac84e95241078",
   "baseReleaseTag": "wenzhou-r3.1-full-20260909",
   "baseReleaseAsset": "Wenzhou_R3_1_FULL_RESTART_20260909.zip",
   "baseReleaseSha256": "89474650d4cc968465b8d2b9919512bbaa5f90c6f826566c2f948dd1e2df0ab0",
   "implementationBranch": "feature/wenzhou-r3-2-human-eye-20260909",
   "draftPullRequest": 74,
-  "scope": "1.6 m above current valid display surface human-eye camera and path-safe near-ground navigation",
+  "scope": "1.6 m above current valid display surface human-eye camera, path-safe near-ground navigation, and independent demonstration sea display layer",
   "sourceData": "R3.1 locked DEM/coast/river files are referenced in place; no measurement bytes are modified or duplicated",
   "cameraContract": {
     "heightAboveDisplaySurfaceM": 1.6,
@@ -20,10 +20,30 @@
     "defaultHumanMoveStepM": 2,
     "movement": "WASD/wheel/buttons and tool movement validate the full requested path in 0.5-2 m substeps; movement stops before missing support or clipped-marine display"
   },
-  "precisionClaim": "none beyond inherited source; 1.6 m is a camera/display relationship, not terrain accuracy",
-  "verifiedPublicCommit": "d949b2f0c980f303cd4d306e1d7de379d5bbe238",
-  "verifiedPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/d949b2f0c980f303cd4d306e1d7de379d5bbe238/site/dist/r3-2/index.html",
-  "browserQaRun": 34363981103,
+  "seaDisplayContract": {
+    "enabledByDefault": true,
+    "kind": "demonstration-environment-layer",
+    "displayDatumM": 0,
+    "waveAmplitudeM": 0.22,
+    "domain": "inverse of the existing temporary land display alpha mask for the current terrain patch",
+    "normalAnimation": true,
+    "reducedMotion": "static phase for deterministic/accessibility rendering",
+    "toggle": "independent show-sea control",
+    "physicalSeaSurfaceCreated": false,
+    "truthClaims": {
+      "instantaneousTide": false,
+      "meanSeaLevel": false,
+      "verticalDatum": false,
+      "bathymetry": false,
+      "measuredSeaState": false,
+      "oceanMotherPhysicalResult": false
+    },
+    "purpose": "make the current sea/land spatial relationship visibly readable without altering DEM, coastline or river evidence"
+  },
+  "precisionClaim": "none beyond inherited source; 1.6 m is a camera/display relationship and the demonstration sea is a display layer, not terrain, tide or bathymetry accuracy",
+  "verifiedSeaPublicCommit": "793194d60a403a403ec2c51b7d192ff9d4d2c02e",
+  "verifiedSeaPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/793194d60a403a403ec2c51b7d192ff9d4d2c02e/site/dist/r3-2/index.html",
+  "browserQaRun": 34397386435,
   "browserQa": {
     "localPassed": true,
     "fixedCommitPublicPassed": true,
@@ -31,13 +51,21 @@
     "eyeHeightBeforeMovementM": 1.6,
     "eyeHeightAfterMovementM": 1.6,
     "successfulMoveChecks": 5,
+    "seaKind": "demonstration",
+    "seaInitialVisible": true,
+    "seaDisplayDatumM": 0,
+    "seaWaveAmplitudeM": 0.22,
+    "seaPixelToggleVerified": true,
+    "seaSurvivesAllPatchChanges": true,
     "mobileViewport": "390x844",
     "mobileHorizontalOverflow": false,
+    "mobileSeaControlInsideViewport": true,
     "runtimeErrors": [],
-    "mobileErrors": []
+    "mobileErrors": [],
+    "failures": []
   },
   "fixedPreviewPortability": {
-    "relativeStyleAndApp": true,
+    "relativeStyleAndBootstrap": true,
     "relativeThreeAndOrbitControls": true,
     "relativeR3_1DataRoot": true,
     "runtimeResolutionOfInheritedR3RootPaths": true,
@@ -49,11 +77,13 @@
     "allLockedR3AndR3_1DisplayDataSha256": true,
     "localChromium": true,
     "fixedCommitPublicChromium": true,
+    "seaRenderedPixelDifference": true,
     "mobile390x844": true,
     "baseR3AndR3_1Modified": false
   },
   "fullPackagePlan": {
-    "method": "download verified R3.1 full release, verify base SHA and base MANIFEST, overlay R3.2, regenerate complete MANIFEST, verify again, publish new R3.2 full release",
+    "state": "ready-to-trigger",
+    "method": "on the final source commit rerun fixed-public Chromium QA, download verified R3.1 full release, verify base SHA and base MANIFEST, overlay R3.2, regenerate complete MANIFEST, verify again, test ZIP integrity, publish new R3.2 full release",
     "releaseTag": "wenzhou-r3.2-full-20260909",
     "releaseAsset": "Wenzhou_R3_2_FULL_RESTART_20260909.zip"
   },
