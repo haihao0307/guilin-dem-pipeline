@@ -1,0 +1,212 @@
+name: Verify recovered Weather cloud flight V0.5.9
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-cloud-flight-v059-20260910
+    paths:
+      - .github/workflows/verify-recovered-weather-cloud-flight-v059.yml
+
+permissions:
+  contents: write
+
+jobs:
+  browser-recovery-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      FIXED_COMMIT: f91f830c0f649dbc4229ed009cb7898847e3f075
+      PUBLIC_URL: https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/f91f830c0f649dbc4229ed009cb7898847e3f075/wenzhou-v7-full/workbench-v059/index.html
+      OUT_DIR: weather-mother/handoffs/recovered-cloud-flight-v059
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify immutable HTML delivery
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT_DIR"
+          status=''
+          for attempt in $(seq 1 8); do
+            status=$(curl -L --silent --show-error --connect-timeout 15 --max-time 60 \
+              -w '%{http_code}' -o /tmp/cloud-flight-v059.html "$PUBLIC_URL" || true)
+            [ "$status" = '200' ] && break
+            sleep 6
+          done
+          test "$status" = '200'
+          grep -Fq '小温州 V0.5.9' /tmp/cloud-flight-v059.html
+          grep -Fq 'id="cloudView"' /tmp/cloud-flight-v059.html
+          grep -Fq 'id="flightView"' /tmp/cloud-flight-v059.html
+          echo "PUBLIC_HTTP_STATUS=$status" >> "$GITHUB_ENV"
+          echo "PUBLIC_BYTES=$(wc -c </tmp/cloud-flight-v059.html | tr -d ' ')" >> "$GITHUB_ENV"
+          echo "PUBLIC_SHA256=$(sha256sum /tmp/cloud-flight-v059.html | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install browser harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wm-cloud-flight-qa
+          cd /tmp/wm-cloud-flight-qa
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Re-run cloudView and flightView in real browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/wm-cloud-flight-qa/run.mjs <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { chromium } from 'playwright';
+
+          const url = process.env.PUBLIC_URL;
+          const outDir = process.env.OUT_DIR;
+          const fixedCommit = process.env.FIXED_COMMIT;
+          fs.mkdirSync(outDir, { recursive: true });
+          const errors = [];
+          const observations = {};
+
+          const browser = await chromium.launch({
+            headless: true,
+            args: ['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']
+          });
+
+          function wire(page, scope) {
+            page.on('pageerror', e => errors.push({scope, type:'pageerror', message:String(e?.stack || e)}));
+            page.on('console', m => { if (m.type()==='error') errors.push({scope,type:'console',message:m.text()}); });
+            page.on('requestfailed', r => {
+              const t = r.failure()?.errorText || '';
+              if (!/ERR_ABORTED|NS_BINDING_ABORTED/i.test(t)) errors.push({scope,type:'requestfailed',url:r.url(),message:t});
+            });
+          }
+
+          async function waitReady(page) {
+            await page.waitForFunction(() => {
+              const s = window.__WZ_FULL__;
+              return Boolean(s && s.ready && s.frames > 0 && s.cloudRendered && s.oneCanvas && s.sameWebGLContext && s.sharedDepth);
+            }, null, {timeout:180000});
+            await page.waitForTimeout(1200);
+          }
+
+          async function openViewPanel(page) {
+            const menu = page.locator('#menuButton');
+            if (!(await page.locator('#panel').evaluate(el => el.classList.contains('open')))) await menu.click();
+            await page.waitForFunction(() => document.getElementById('panel')?.classList.contains('open'));
+            const tab = page.locator('[data-tab-button="view"]');
+            if (await tab.count()) await tab.click();
+            await page.waitForTimeout(180);
+          }
+
+          async function state(page, viewId) {
+            return await page.evaluate((viewId) => {
+              const s = window.__WZ_FULL__ || {};
+              return {
+                viewId,
+                ready:Boolean(s.ready),
+                eye:Array.isArray(s.eye)?[...s.eye]:null,
+                target:Array.isArray(s.target)?[...s.target]:null,
+                clearance:s.clearance ?? null,
+                minClearance:s.minClearance ?? null,
+                oneCanvas:Boolean(s.oneCanvas),
+                oneCamera:Boolean(s.oneCamera),
+                sameWebGLContext:Boolean(s.sameWebGLContext),
+                sharedDepth:Boolean(s.sharedDepth),
+                cloudRendered:Boolean(s.cloudRendered),
+                cloudPassUsesLogDepth:Boolean(s.cloudPassUsesLogDepth),
+                verticalScale:document.getElementById('verticalScale')?.textContent?.trim() || '',
+                weatherCase:s.weather?.caseId || null,
+                weatherReady:Boolean(s.weather?.ready),
+                canvas:[document.querySelector('canvas')?.width||0, document.querySelector('canvas')?.height||0]
+              };
+            }, viewId);
+          }
+
+          function validate(st, scope) {
+            const bad = [];
+            for (const key of ['ready','oneCanvas','oneCamera','sameWebGLContext','sharedDepth','cloudRendered','weatherReady']) if (!st[key]) bad.push(key);
+            if (st.clearance !== null && st.clearance < 1.55) bad.push('clearance');
+            if (st.minClearance !== null && st.minClearance < 1.5) bad.push('minClearance');
+            if (!st.verticalScale.includes('1:1') || !st.verticalScale.includes('0 m')) bad.push('verticalScale');
+            if (bad.length) throw new Error(`${scope} failed: ${bad.join(', ')} ${JSON.stringify(st)}`);
+          }
+
+          async function runDesktop() {
+            const context = await browser.newContext({viewport:{width:2560,height:1600},deviceScaleFactor:1});
+            const page = await context.newPage(); wire(page,'desktop');
+            await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000}); await waitReady(page);
+            const initial = await state(page,'initial'); validate(initial,'desktop initial');
+            await openViewPanel(page); await page.locator('#cloudView').click(); await page.waitForTimeout(800);
+            const cloud = await state(page,'cloudView'); validate(cloud,'desktop cloudView');
+            await page.screenshot({path:path.join(outDir,'RECOVERED_CLOUDVIEW_DESKTOP_2560x1600.png')});
+            await openViewPanel(page); await page.locator('#flightView').click(); await page.waitForTimeout(800);
+            const flight = await state(page,'flightView'); validate(flight,'desktop flightView');
+            await page.screenshot({path:path.join(outDir,'RECOVERED_FLIGHTVIEW_DESKTOP_2560x1600.png')});
+            if (!cloud.eye || !flight.eye || Math.hypot(...cloud.eye.map((v,i)=>v-flight.eye[i])) < 1) throw new Error('desktop cloudView and flightView did not resolve to distinct camera states');
+            await context.close(); return {initial,cloud,flight};
+          }
+
+          async function runMobile() {
+            const context = await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+            const page = await context.newPage(); wire(page,'mobile');
+            await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000}); await waitReady(page);
+            const initial = await state(page,'initial'); validate(initial,'mobile initial');
+            if (initial.canvas[0] !== 780 || initial.canvas[1] !== 1688) throw new Error(`mobile draw buffer mismatch ${initial.canvas}`);
+            await openViewPanel(page); await page.locator('#cloudView').click(); await page.waitForTimeout(900);
+            const cloud = await state(page,'cloudView'); validate(cloud,'mobile cloudView');
+            await page.screenshot({path:path.join(outDir,'RECOVERED_CLOUDVIEW_PHONE_390x844.png')});
+            await openViewPanel(page); await page.locator('#flightView').click(); await page.waitForTimeout(900);
+            const flight = await state(page,'flightView'); validate(flight,'mobile flightView');
+            await page.screenshot({path:path.join(outDir,'RECOVERED_FLIGHTVIEW_PHONE_390x844.png')});
+            await context.close(); return {initial,cloud,flight};
+          }
+
+          let passed = false;
+          try {
+            observations.desktop = await runDesktop();
+            observations.mobile = await runMobile();
+            passed = errors.length === 0;
+          } finally {
+            await browser.close();
+          }
+          const report = {
+            schema:'weather-mother-recovered-cloud-flight-v059/browser-qa@1',
+            checkedAtUtc:new Date().toISOString(),
+            fixedCommit,
+            publicURL:url,
+            httpStatus:Number(process.env.PUBLIC_HTTP_STATUS||0),
+            bytes:Number(process.env.PUBLIC_BYTES||0),
+            sha256:process.env.PUBLIC_SHA256||'',
+            observations,
+            errors,
+            passed,
+            recoveredHistoricalFeature:true,
+            historicalBaseline:'Wenzhou V0.5.9',
+            visualAcceptance:'historical-user-accepted-feature-presence; current-restoration-visual-review-pending',
+            productionReady:false
+          };
+          fs.writeFileSync(path.join(outDir,'RECOVERY_BROWSER_QA.json'),JSON.stringify(report,null,2)+'\n');
+          if (!passed) { console.error(JSON.stringify(report,null,2)); process.exit(1); }
+          console.log(JSON.stringify(report,null,2));
+          JS
+          cd /tmp/wm-cloud-flight-qa
+          NODE_PATH=/tmp/wm-cloud-flight-qa/node_modules \
+            PUBLIC_URL="$PUBLIC_URL" FIXED_COMMIT="$FIXED_COMMIT" OUT_DIR="$GITHUB_WORKSPACE/$OUT_DIR" \
+            PUBLIC_HTTP_STATUS="$PUBLIC_HTTP_STATUS" PUBLIC_BYTES="$PUBLIC_BYTES" PUBLIC_SHA256="$PUBLIC_SHA256" \
+            node run.mjs
+
+      - name: Commit restoration evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "$OUT_DIR"
+          git commit -m 'qa(weather-mother): re-prove recovered cloud flight V0.5.9 [skip ci]'
+          git push origin HEAD:recovery/weather-mother-cloud-flight-v059-20260910
