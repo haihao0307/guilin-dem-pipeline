@@ -1,0 +1,75 @@
+name: Wenzhou R3.2 QA
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-2-human-eye-20260909
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Static contract and syntax
+        run: |
+          python tools/r3-2/validate_eye_static.py
+          node --check site/dist/r3-2/app.js
+          node --check tools/r3-2/browser_qa.mjs
+
+      - name: Install browser runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local browser QA
+        run: |
+          python -m http.server 8765 --directory site/dist >/tmp/wenzhou-r32-http.log 2>&1 &
+          echo $! >/tmp/wenzhou-r32-http.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/r3-2/ >/dev/null; then break; fi
+            sleep 1
+          done
+          R32_URL=http://127.0.0.1:8765/r3-2/ node tools/r3-2/browser_qa.mjs | tee /tmp/r32-local-qa.json
+
+      - name: Fixed-commit public raw.githack QA
+        env:
+          R32_SHA: ${{ github.sha }}
+          R32_REPO: ${{ github.repository }}
+        run: |
+          URL="https://raw.githack.com/${R32_REPO}/${R32_SHA}/site/dist/r3-2/index.html"
+          echo "$URL"
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.2'; then
+              ready=1
+              break
+            fi
+            sleep 4
+          done
+          test "$ready" = 1
+          R32_URL="$URL" node tools/r3-2/browser_qa.mjs | tee /tmp/r32-public-qa.json
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-2-qa-${{ github.sha }}
+          path: |
+            /tmp/r32-local-qa.json
+            /tmp/r32-public-qa.json
+            /tmp/wenzhou-r32-http.log
+          if-no-files-found: warn
