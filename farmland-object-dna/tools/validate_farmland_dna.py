@@ -40,6 +40,7 @@ ALLOWED_MODES = {
     "public_candidate",
     "failure_reference",
 }
+HYDRAULIC_EDGE_KINDS = {"feeds", "divides_to", "spills_to", "drains_to", "returns_to"}
 REQUIRED_TOP = {
     "identity",
     "spatial",
@@ -184,6 +185,8 @@ def validate_hydraulic_graph(
     receiver_id = receiver.get("id")
     if not isinstance(receiver_id, str) or not receiver_id:
         fail("hydraulics.downstream_receiver requires id")
+    if source_id == receiver_id:
+        fail("water source and downstream receiver must have distinct ids")
 
     groups = {
         "hydraulics.inlets": inlets,
@@ -202,17 +205,25 @@ def validate_hydraulic_graph(
 
     graph = require_list(hydraulics.get("graph"), "hydraulics.graph", nonempty=True)
     adjacency: dict[str, set[str]] = defaultdict(set)
+    seen_edges: set[tuple[str, str]] = set()
     for index, edge in enumerate(graph):
         mapping = require_mapping(edge, f"hydraulics.graph[{index}]")
         require_keys(mapping, ("from", "to", "kind"), f"hydraulics.graph[{index}]")
         start = mapping["from"]
         end = mapping["to"]
+        if not isinstance(start, str) or not isinstance(end, str):
+            fail(f"hydraulics.graph[{index}] endpoints must be strings")
+        if mapping["kind"] not in HYDRAULIC_EDGE_KINDS:
+            fail(f"hydraulics.graph[{index}] kind is not a hydraulic transfer relation")
         if start not in ids:
             fail(f"hydraulics.graph[{index}] references unknown from id: {start}")
         if end not in ids:
             fail(f"hydraulics.graph[{index}] references unknown to id: {end}")
         if start == end:
             fail(f"hydraulics.graph[{index}] cannot be a self-loop")
+        if (start, end) in seen_edges:
+            fail("duplicate hydraulic endpoint pair; parallel facilities need distinct component ids")
+        seen_edges.add((start, end))
         adjacency[start].add(end)
 
     cell_ids = {item["id"] for item in cells}
@@ -223,13 +234,79 @@ def validate_hydraulic_graph(
     if disconnected_from_receiver:
         fail(f"paddy cells lack downstream receiver path: {disconnected_from_receiver}")
 
+    # A declared inlet/outlet/channel is not evidence of a functioning path if
+    # it is orphaned beside a shortcut. Research graphs keep unresolved geometry,
+    # but their intended component connectivity must already be meaningful.
+    for node_id in sorted(ids - {source_id, receiver_id}):
+        if not has_path(adjacency, source_id, node_id) or not has_path(adjacency, node_id, receiver_id):
+            fail(f"hydraulic component lacks source-to-receiver path: {node_id}")
+    inlet_ids = {item["id"] for item in inlets}
+    outlet_ids = {item["id"] for item in outlets}
+    for cell_id in sorted(cell_ids):
+        if not any(cell_id in adjacency[inlet] for inlet in inlet_ids):
+            fail(f"field requires a directly connected inlet: {cell_id}")
+        if not adjacency[cell_id].intersection(outlet_ids):
+            fail(f"field requires a directly connected outlet: {cell_id}")
+
     return {
         "source_id": source_id,
         "receiver_id": receiver_id,
         "node_count": len(ids),
         "edge_count": len(graph),
         "cell_count": len(cell_ids),
+        "scope": "declared_connectivity_only_not_flow_feasibility",
     }
+
+
+def validate_water_budget(state: dict[str, Any], label: str = "water_state") -> dict[str, float]:
+    """Check one level field's interval budget; never accept self-reported PASS.
+
+    SI volumes are integrated over [start_time_s, end_time_s). This is an
+    accounting check, not a discharge, infiltration or crop-demand solver.
+    Nonplanar storage requires a separate, validated hypsometric model.
+    """
+    require_keys(state, REQUIRED_WATER_STATE | {
+        "initial_storage_volume_m3", "start_time_s", "end_time_s", "storage_model"
+    }, label)
+    if state["storage_model"] != "level_planar_field":
+        fail(f"{label}: unsupported storage_model")
+    for key in REQUIRED_WATER_STATE | {"initial_storage_volume_m3", "start_time_s", "end_time_s"}:
+        if not is_number(state[key]):
+            fail(f"{label}.{key} must be finite numeric")
+    nonnegative = {
+        "average_depth_m", "storage_volume_m3", "initial_storage_volume_m3",
+        "inflow_m3", "rainfall_m3", "outflow_m3", "overflow_m3",
+        "evaporation_m3", "seepage_m3",
+    }
+    for key in nonnegative:
+        if state[key] < 0:
+            fail(f"{label}.{key} cannot be negative")
+    if state["storage_area_m2"] <= 0 or state["end_time_s"] <= state["start_time_s"]:
+        fail(f"{label}: positive area and increasing time interval required")
+    bed, mud, water, crest = (state[k] for k in (
+        "bed_elevation_m", "mud_surface_elevation_m", "water_surface_elevation_m", "bund_crest_minimum_m"
+    ))
+    if not bed <= mud <= water < crest:
+        fail(f"{label}: invalid bed/mud/water/crest ordering")
+    # Fixed numeric tolerances cannot be enlarged by the input record. These
+    # tolerances are solver accounting precision, not a claim of survey accuracy.
+    if not math.isclose(water - mud, state["average_depth_m"], rel_tol=1e-9, abs_tol=1e-7):
+        fail(f"{label}: water depth differs from world-coordinate elevations")
+    expected_volume = state["storage_area_m2"] * state["average_depth_m"]
+    if not is_number(expected_volume) or not math.isclose(expected_volume, state["storage_volume_m3"], rel_tol=1e-9, abs_tol=1e-6):
+        fail(f"{label}: storage volume differs from area times depth")
+    delta = state["storage_volume_m3"] - state["initial_storage_volume_m3"]
+    net = math.fsum([state["inflow_m3"], state["rainfall_m3"], -state["outflow_m3"],
+                     -state["overflow_m3"], -state["evaporation_m3"], -state["seepage_m3"]])
+    error = delta - net
+    tolerance = 1e-6 + 1e-9 * max(abs(delta), abs(net))
+    if not all(is_number(x) for x in (delta, net, error, tolerance)):
+        fail(f"{label}: non-finite budget arithmetic")
+    if abs(delta - state["storage_change_m3"]) > tolerance:
+        fail(f"{label}: storage_change differs from final minus initial storage")
+    if abs(error - state["mass_balance_error_m3"]) > tolerance or abs(error) > tolerance:
+        fail(f"{label}: recomputed water mass balance failed")
+    return {"storage_change_m3": delta, "recomputed_error_m3": error, "tolerance_m3": tolerance}
 
 
 def validate_public_paddy(
@@ -265,35 +342,23 @@ def validate_public_paddy(
         if hydraulics.get(check_name) is not True:
             fail(f"public candidate requires hydraulics.{check_name}=true")
 
-    water_state = require_mapping(hydraulics.get("water_state"), "hydraulics.water_state")
-    require_keys(water_state, REQUIRED_WATER_STATE, "hydraulics.water_state")
-    numeric_required = {
-        "bed_elevation_m",
-        "mud_surface_elevation_m",
-        "water_surface_elevation_m",
-        "average_depth_m",
-        "storage_area_m2",
-        "storage_volume_m3",
-        "bund_crest_minimum_m",
-        "mass_balance_error_m3",
-    }
-    for key in numeric_required:
-        if not is_number(water_state.get(key)):
-            fail(f"public candidate requires numeric hydraulics.water_state.{key}")
-
-    bed = float(water_state["bed_elevation_m"])
-    mud = float(water_state["mud_surface_elevation_m"])
-    water = float(water_state["water_surface_elevation_m"])
-    depth = float(water_state["average_depth_m"])
-    crest = float(water_state["bund_crest_minimum_m"])
-    if mud < bed:
-        fail("mud surface elevation cannot be below field bed elevation")
-    if water < mud:
-        fail("water surface elevation cannot be below mud surface for a flooded state")
-    if crest <= water:
-        fail("minimum bund crest must remain above water surface")
-    if abs((water - mud) - depth) > max(0.005, depth * 0.1):
-        fail("average water depth does not match water and mud surface elevations")
+    cells = parcel["cells"]
+    states = hydraulics.get("cell_water_states")
+    if states is None:
+        if len(cells) != 1:
+            fail("multiple fields require cell_water_states; one aggregate cannot prove each field")
+        states = {cells[0]["id"]: hydraulics["water_state"]}
+    states = require_mapping(states, "hydraulics.cell_water_states")
+    if set(states) != {c["id"] for c in cells}:
+        fail("cell_water_states must cover exactly the declared fields")
+    intervals = set()
+    for cell_id, state in states.items():
+        state = require_mapping(state, f"cell_water_states.{cell_id}")
+        validate_water_budget(state, f"cell_water_states.{cell_id}")
+        intervals.add((state["start_time_s"], state["end_time_s"]))
+    if len(intervals) != 1:
+        fail("cell water budgets must use the same time interval")
+    warnings.append("per-cell budgets checked; inter-cell transfer reciprocity and hydraulic feasibility remain separate gates")
 
     for label in ("channels", "inlets", "outlets"):
         for index, item in enumerate(require_list(hydraulics.get(label), f"hydraulics.{label}")):
@@ -379,8 +444,8 @@ def validate(data: dict[str, Any]) -> dict[str, Any]:
         fail("representation.debug_only must be boolean")
     if not isinstance(representation.get("public_candidate"), bool):
         fail("representation.public_candidate must be boolean")
-    if representation.get("public_candidate") and representation.get("mode") != "public_candidate":
-        fail("representation.public_candidate=true requires mode=public_candidate")
+    if representation["public_candidate"] != (representation["mode"] == "public_candidate"):
+        fail("representation.public_candidate and mode must agree in both directions")
     if representation.get("mode") == "research" and representation.get("debug_only") is not True:
         fail("research mode must remain debug_only=true")
 

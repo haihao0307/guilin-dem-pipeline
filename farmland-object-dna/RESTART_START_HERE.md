@@ -1,5 +1,13 @@
 # Farmland Object DNA 干净重启入口 V0.2.0
 
+## R021 续接（2026-09-09）
+
+小妈专项资料接收回执与首轮数值修复见
+`research/r021-water-contracts/SOURCE_NOTE.md`、`RULE_CARD.md`、`COUNTEREXAMPLE.md`。
+运行 `python farmland-object-dna/tools/probe_water_contracts.py` 重现验证。
+本轮新增地表水量账本并修复验证器，不代表水力六情形、截面或视觉验收通过。
+下述 V0.2.0 全量包保留原样，不包含 R021 修改；恢复当前工作需使用本分支当前提交。
+
 日期：2026-09-07
 
 仓库：`haihao0307/guilin-dem-pipeline`

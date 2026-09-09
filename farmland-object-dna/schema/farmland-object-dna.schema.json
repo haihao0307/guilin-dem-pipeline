@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://haihao0307.github.io/guilin-dem-pipeline/farmland-object-dna/schema/farmland-object-dna.schema.json",
-  "title": "Farmland Object DNA V0.1.1",
+  "title": "Farmland Object DNA V0.1.2 — research water accounting",
   "$comment": "Must be used with FARMLAND_PRODUCTION_RULES.md, V001_FAILURE_REGISTER.md and QUALITY_GATES.json. Schema conformance alone does not grant visual acceptance or production readiness.",
   "type": "object",
   "additionalProperties": false,
@@ -95,6 +95,7 @@
         "graph": {"type": "array", "items": {"$ref": "#/$defs/hydraulicEdge"}},
         "surface_water_depth_m": {"type": ["number", "null"], "minimum": 0},
         "water_state": {"type": ["object", "null"], "additionalProperties": true},
+        "cell_water_states": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/waterBudget"}},
         "irrigation_demand_m3_per_day": {"type": ["number", "null"], "minimum": 0},
         "drainage_state": {"type": ["string", "null"]},
         "closed_graph_check": {"type": ["boolean", "null"]},
@@ -187,6 +188,8 @@
     }
   },
   "allOf": [
+    {"if": {"properties": {"representation": {"properties": {"mode": {"const": "public_candidate"}}, "required": ["mode"]}}}, "then": {"properties": {"representation": {"properties": {"public_candidate": {"const": true}}}}}},
+    {"if": {"properties": {"identity": {"properties": {"type_id": {"const": "paddy"}}}, "representation": {"properties": {"public_candidate": {"const": true}}}}}, "then": {"anyOf": [{"properties": {"hydraulics": {"required": ["cell_water_states"]}}}, {"properties": {"parcel": {"properties": {"cells": {"maxItems": 1}}}, "hydraulics": {"properties": {"water_state": {"$ref": "#/$defs/waterBudget"}}}}}]}},
     {
       "if": {
         "properties": {
@@ -253,6 +256,7 @@
     }
   ],
   "$defs": {
+    "waterBudget": {"type": "object", "required": ["bed_elevation_m", "mud_surface_elevation_m", "water_surface_elevation_m", "average_depth_m", "storage_area_m2", "storage_volume_m3", "bund_crest_minimum_m", "inflow_m3", "rainfall_m3", "outflow_m3", "overflow_m3", "evaporation_m3", "seepage_m3", "storage_change_m3", "mass_balance_error_m3", "initial_storage_volume_m3", "start_time_s", "end_time_s", "storage_model"], "properties": {"bed_elevation_m": {"type": "number"}, "mud_surface_elevation_m": {"type": "number"}, "water_surface_elevation_m": {"type": "number"}, "average_depth_m": {"type": "number", "minimum": 0}, "storage_area_m2": {"type": "number", "exclusiveMinimum": 0}, "storage_volume_m3": {"type": "number", "minimum": 0}, "bund_crest_minimum_m": {"type": "number"}, "inflow_m3": {"type": "number", "minimum": 0}, "rainfall_m3": {"type": "number", "minimum": 0}, "outflow_m3": {"type": "number", "minimum": 0}, "overflow_m3": {"type": "number", "minimum": 0}, "evaporation_m3": {"type": "number", "minimum": 0}, "seepage_m3": {"type": "number", "minimum": 0}, "storage_change_m3": {"type": "number"}, "mass_balance_error_m3": {"type": "number"}, "initial_storage_volume_m3": {"type": "number", "minimum": 0}, "start_time_s": {"type": "number"}, "end_time_s": {"type": "number"}, "storage_model": {"const": "level_planar_field"}}, "$comment": "Per-field SI interval volumes. Arithmetic consistency and per-cell coverage are checked by validate_farmland_dna.py."},
     "evidence": {
       "type": "object",
       "required": ["kind", "sources"],

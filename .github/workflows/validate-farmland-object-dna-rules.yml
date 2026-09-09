@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - feature/farmland-object-dna-v001
+      - restart/farmland-object-dna-v020-20260907
     paths:
       - 'farmland-object-dna/**'
       - 'AGENTS.md'
+      - '.github/workflows/validate-farmland-object-dna-rules.yml'
+  pull_request:
+    paths:
+      - 'farmland-object-dna/**'
       - '.github/workflows/validate-farmland-object-dna-rules.yml'
   workflow_dispatch:
 
@@ -61,6 +66,9 @@ jobs:
             exit 1
           fi
 
+      - name: Water accounting and adversarial contract tests
+        run: python -m unittest discover -s farmland-object-dna/tools -p test_water_contracts.py -v
+
       - name: Verify mandatory rules and failed gates
         shell: bash
         run: |
@@ -90,8 +98,8 @@ jobs:
               assert by_id[gate_id]['v001Status'] == 'fail', gate_id
 
           handoff = json.loads(Path('farmland-object-dna/HANDOFF.json').read_text())
-          assert handoff['rejectedBaseline']['status'] == 'rejected'
-          assert handoff['rejectedBaseline']['allowedUse'] == 'negative_reference_only'
+          assert handoff['rejectedPredecessor']['status'] == 'rejected'
+          assert handoff['rejectedPredecessor']['allowedUse'] == 'negative_reference_only'
           assert handoff['status']['visualAcceptance'] is False
           assert handoff['status']['productionReady'] is False
 
