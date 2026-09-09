@@ -61,6 +61,31 @@
       "reason": "NVIDIA 2023 research demonstrates value in Monte Carlo rendering, but that estimator context does not automatically transfer to deterministic world state, simulation, collision, hydrology, or evidence reconstruction.",
       "currentBestView": "Keep renderer-specific only until a relevant Mother proves unbiasedness, temporal stability, deterministic replay requirements, and task error under its own contract.",
       "promotionBlock": false
+    },
+    {
+      "id": "U-ATMOS-001",
+      "status": "Unknown",
+      "question": "What is the minimum physically meaningful atmosphere state that KAOPU should preserve without overfitting UE or Karma parameter interfaces?",
+      "known": "Current UE 5.8, Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021 all support explicit planet/view geometry and participating-medium radiative transport as important structure.",
+      "remainingUnknown": "The smallest interoperable parameterization, its unit types, and the boundary between observed physical state and inferred/fitted coefficients have not yet been tested against a reference fixture.",
+      "currentBestView": "Keep the R01 decomposition Candidate and require identical state queries across at least two evaluator families before promotion.",
+      "promotionBlock": true
+    },
+    {
+      "id": "U-ATMOS-002",
+      "status": "Unknown",
+      "question": "Does KAOPU need a spectral reference layer for atmosphere, or is typed RGB coefficient storage sufficient for its intended world reconstruction and rendering tasks?",
+      "known": "Bruneton validates realtime RGB/luminance approximations against full spectral CPU references, while Wilkie et al. provide spectral/measurement-informed atmosphere models with additional capabilities.",
+      "remainingUnknown": "No KAOPU task/error budget has yet established when RGB approximation becomes materially wrong for rendering, sensing, historical reconstruction, or cross-engine interchange.",
+      "currentBestView": "Do not force all runtime Mothers to spectral evaluation; preserve the question at the reference-semantic layer until measured task errors justify a decision.",
+      "promotionBlock": false
+    },
+    {
+      "id": "U-ATMOS-003",
+      "status": "Clarified",
+      "question": "Should atmospheric refraction be included in the first KAOPU atmosphere core merely because it is an optical phenomenon?",
+      "answer": "No. The reviewed current UE/Karma atmosphere cores are organized around participating-media scattering, absorption, extinction, transmittance, phase behavior, multiple scattering, and surface coupling. Refraction remains a real but separate process and should be added only when a concrete observable/process requires refractive-index gradients.",
+      "promotionBlock": false
     }
   ]
 }
