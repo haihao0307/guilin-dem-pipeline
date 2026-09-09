@@ -6,7 +6,13 @@
  <title>小温州 · 三维地形 R3.2</title>
  <link rel="icon" href="data:,">
  <link rel="stylesheet" href="./style.css">
- <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js","/vendor/OrbitControls.js":"../vendor/OrbitControls.js"}}</script>
+ <script>
+  // R3.2 deliberately reuses the byte-locked R3.1 data. Rewrite only that
+  // versioned data root so the same build works both under /r3-2/ hosting and
+  // under a fixed GitHub-commit raw.githack path. No measurement is altered.
+  (()=>{const nativeFetch=window.fetch.bind(window);window.fetch=(input,init)=>{if(typeof input==='string'&&input.startsWith('/r3-1/data/'))input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;return nativeFetch(input,init);};})();
+ </script>
 </head>
 <body>
  <main id="stage" aria-label="可旋转缩放并切换 1.6 米人眼视角的温州三维地形">
