@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#07111c" />
+<title>Weather Mother · YOHEI Cloud Atlas R0.2</title>
+<style>
+  :root{color-scheme:dark;--panel:rgba(6,12,20,.76);--line:rgba(255,255,255,.115);--text:#edf5fa;--muted:#9aadb8;--accent:#bedff0;--soft:#7fa4bb}
+  *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06101a;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:#081521}
+  button,input{font:inherit}.top{position:fixed;left:max(16px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));max-width:min(570px,calc(100vw - 330px));pointer-events:none;text-shadow:0 2px 20px rgba(0,0,0,.58)}
+  .eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#bdd5e1}.title{margin-top:6px;font-weight:660;font-size:clamp(22px,3.1vw,39px);letter-spacing:-.04em;line-height:1.02}.sub{margin-top:9px;max-width:53ch;color:#c5d2da;font-size:12px;line-height:1.58}
+  .type-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.badge{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(255,255,255,.15);border-radius:99px;background:rgba(4,10,17,.44);font-size:9px;color:#c8d8e1;backdrop-filter:blur(12px)}.dot{width:6px;height:6px;border-radius:50%;background:#c6e5f4;box-shadow:0 0 13px #a9d8ed}
+  .panel{position:fixed;right:max(14px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));width:304px;max-height:calc(100vh - 28px - env(safe-area-inset-bottom));overflow:auto;padding:13px;border:1px solid var(--line);border-radius:17px;background:var(--panel);box-shadow:0 24px 70px rgba(0,0,0,.31);backdrop-filter:blur(18px) saturate(1.12)}
+  .panel::-webkit-scrollbar{width:5px}.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:9px}.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.ph strong{font-size:12px;letter-spacing:.035em}.mini{font-size:9px;color:#91a5b0}
+  .atlas{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px}.atlas button{min-height:42px;text-align:left;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.038);color:#aebec7;border-radius:9px;padding:7px 8px;cursor:pointer;line-height:1.15}.atlas button b{display:block;font-size:10px;font-weight:600;color:#d5e2e9}.atlas button span{display:block;margin-top:3px;font-size:8px;color:#80939f}.atlas button.on{background:rgba(190,223,240,.15);border-color:rgba(190,223,240,.44);box-shadow:inset 0 0 0 1px rgba(190,223,240,.05)}.atlas button.on b{color:#f2fbff}.atlas button.on span{color:#b5ccd8}
+  .section{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#8fa4b0}.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.065)}.row:first-of-type{border-top:0}.lab{font-size:10px;color:#d8e3e9}.hint{display:block;margin-top:2px;font-size:8px;color:#82949f;line-height:1.35}.val{font-variant-numeric:tabular-nums;font-size:9px;color:#c2d6e0;min-width:44px;text-align:right}input[type=range]{grid-column:1/-1;width:100%;height:3px;accent-color:#bfdff0;margin:2px 0 0}
+  .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;grid-column:1/-1}.seg button,.buttons button,.nav button{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#aebdc6;border-radius:8px;padding:7px 5px;font:inherit;font-size:8px;cursor:pointer}.seg button.on,.buttons button.on,.nav button.on{background:rgba(190,223,240,.16);border-color:rgba(190,223,240,.44);color:#eef9fe}.quality{grid-template-columns:repeat(3,1fr)}.buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px}.buttons button{font-size:9px;padding:8px 4px}.legend{margin-top:10px;padding:9px;border:1px solid rgba(255,255,255,.075);border-radius:10px;background:rgba(0,0,0,.13);font-size:8px;line-height:1.55;color:#8fa2ad}.legend b{color:#c7dae4;font-weight:600}
+  .stats{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}.stat{padding:6px 8px;border:1px solid rgba(255,255,255,.11);border-radius:8px;background:rgba(5,10,16,.48);backdrop-filter:blur(10px);font-size:8px;color:#a6b7c1}.stat b{color:#e8f1f5;font-weight:550}
+  .nav{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:rgba(5,10,16,.46);backdrop-filter:blur(12px)}.nav button{min-width:70px;font-size:9px}.nav .now{min-width:152px;text-align:center;font-size:9px;color:#d8e6ed}.nav .now b{display:block;font-size:11px;color:#f1f8fb}.mobile-toggle{display:none;position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:4;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(5,12,20,.76);color:#e2edf3;padding:10px 14px;font-size:10px;backdrop-filter:blur(15px)}
+  .error{display:none;position:fixed;inset:0;z-index:9;place-items:center;padding:24px;background:#07111c}.error div{max-width:760px}.error h2{font-size:18px}.error pre{white-space:pre-wrap;color:#f1a7a7;font-size:11px;line-height:1.5}
+  @media(max-width:760px){.top{max-width:calc(100vw - 28px);top:12px;left:14px}.title{font-size:23px}.sub{font-size:10px;max-width:34ch}.type-meta{margin-top:7px}.badge:nth-child(n+3){display:none}.panel{display:none;left:10px;right:10px;top:auto;bottom:66px;width:auto;max-height:72vh;border-radius:16px}.panel.open{display:block}.mobile-toggle{display:block}.stats{bottom:12px;max-width:210px}.nav{left:14px;bottom:60px;transform:none;padding:5px}.nav .now{min-width:122px}.nav button{min-width:46px}.nav #tour{display:none}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Weather Mother YOHEI cloud atlas volumetric workbench"></canvas>
+<div class="top">
+  <div class="eyebrow">WEATHER MOTHER / TEN CLOUD GENERA</div>
+  <div class="title" id="heroTitle">积云 · Cumulus</div>
+  <div class="sub" id="heroSub">低层对流团块：平整云底、湿润薄缘、内部厚薄与向上发展的云塔保持同一对象身份。</div>
+  <div class="type-meta"><span class="badge"><span class="dot"></span><span id="cloudId">CLOUD-WM-CU-001</span></span><span class="badge" id="levelBadge">低云 · 常见云底 0–2 km</span><span class="badge">R0.2 · MORPHOLOGY PREVIEW</span></div>
+</div>
+<div class="panel" id="panel">
+  <div class="ph"><strong>完整云族工作台</strong><span class="mini">R0.2 / WebGL2</span></div>
+  <div class="atlas" id="atlas"></div>
+  <div class="section">
+    <div class="section-title"><span>观察</span><span>同一密度，不同诊断</span></div>
+    <div class="seg" id="views"><button class="on" data-v="0">BEAUTY</button><button data-v="1">DENSITY</button><button data-v="2">ENVELOPE</button><button data-v="3">FIELD</button></div>
+  </div>
+  <div class="section">
+    <div class="section-title"><span>结构</span><span id="typeHint">Cumulus</span></div>
+    <div class="row"><div class="lab">湿润边缘<span class="hint">扩大低密度肩部，减少硬切与干毛边</span></div><div class="val" id="wetV">0.78</div><input id="wet" type="range" min="0" max="1" step="0.01" value="0.78"></div>
+    <div class="row"><div class="lab">形态速度<span class="hint">加快可见变化；仍不冒充真实平流</span></div><div class="val" id="speedV">1.65×</div><input id="speed" type="range" min="0" max="3.2" step="0.05" value="1.65"></div>
+    <div class="row"><div class="lab">细节强度 A<span class="hint">A=0 精确关闭动态高频尾部</span></div><div class="val" id="detailV">0.64</div><input id="detail" type="range" min="0" max="1" step="0.01" value="0.64"></div>
+    <div class="row"><div class="lab">跨尺度层数<span class="hint">保持低频前缀，不重归一化</span></div><div class="val" id="octV">7</div><input id="oct" type="range" min="3" max="9" step="1" value="7"></div>
+    <div class="row"><div class="lab">结构尺度<span class="hint">稳定云局部坐标，不随镜头游泳</span></div><div class="val" id="scaleV">1.00</div><input id="scale" type="range" min="0.65" max="1.55" step="0.01" value="1"></div>
+    <div class="row"><div class="lab">覆盖率阈值<span class="hint">控制厚区、薄区与明确空区</span></div><div class="val" id="coverV">0.48</div><input id="cover" type="range" min="0.28" max="0.70" step="0.01" value="0.48"></div>
+  </div>
+  <div class="section">
+    <div class="section-title"><span>光学</span><span>体积，不是表面 PBR</span></div>
+    <div class="row"><div class="lab">太阳方位<span class="hint">只改变光路，不改密度</span></div><div class="val" id="sunV">0°</div><input id="sun" type="range" min="-40" max="160" step="1" value="0"></div>
+    <div class="row"><div class="lab">光学厚度<span class="hint">Beer–Lambert 消光尺度</span></div><div class="val" id="extV">1.55</div><input id="ext" type="range" min="0.55" max="3.2" step="0.01" value="1.55"></div>
+    <div class="row"><div class="lab">渲染质量<span class="hint">射线步数与太阳内部采样</span></div><span></span><div class="seg quality" id="quality"><button data-v="0">MOBILE</button><button class="on" data-v="1">BALANCED</button><button data-v="2">HIGH</button></div></div>
+  </div>
+  <div class="buttons"><button id="pause">暂停变化</button><button id="tour">云族巡览</button><button id="reset">复位镜头</button></div>
+  <div class="legend"><b>当前边界：</b>十类云属已经拥有独立包络、密度分布与光学倾向；YOHEI 相关场只组织相关尺度细节。当前变化属于确定性的形态预览，不等同于湿度—凝结—浮力—降水求解或经验证的 CloudTransport。</div>
+</div>
+<div class="nav"><button id="prev">‹ 上一类</button><div class="now"><b id="navCN">积云</b><span id="navLatin">Cumulus · 01/10</span></div><button id="next">下一类 ›</button></div>
+<button class="mobile-toggle" id="mobileToggle">云族与参数</button>
+<div class="stats"><div class="stat">FPS <b id="fps">--</b></div><div class="stat">FRAME <b id="ms">--</b> ms</div><div class="stat">RAY <b id="ray">94</b></div><div class="stat">DPR <b id="dpr">--</b></div><div class="stat">TYPE <b id="typeStat">CU</b></div></div>
+<div class="error" id="error"><div><h2>WebGL2 初始化失败</h2><pre id="errText"></pre></div></div>
+<script>
+/*
+ Weather Mother · YOHEI Cloud Atlas R0.2
+ Independent implementation. No original Yohei shader is embedded.
+ Transferable ideas used here: stable log-spherical coordinates, correlated trigonometric bands,
+ prefix-preserving frequency doubling / amplitude halving, and restrained coordinate folding.
+ These functions only organize cloud detail; cloud identity, genus envelope and volume optics are authored separately.
+*/
+(() => {
+  'use strict';
+  const canvas=document.getElementById('c');
+  const qaCapture=new URLSearchParams(location.search).get('qa')==='1';
+  const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:qaCapture,powerPreference:'high-performance'});
+  const error=document.getElementById('error'),errText=document.getElementById('errText');
+  if(!gl){error.style.display='grid';errText.textContent='此设备或浏览器未提供 WebGL2。';return;}
+
+  const cloudTypes=[
+    {code:'CU',cn:'积云',latin:'Cumulus',id:'CLOUD-WM-CU-001',level:'低云 · 常见云底 0–2 km',sub:'低层对流团块：平整云底、湿润薄缘、内部厚薄与向上发展的云塔保持同一对象身份。',target:.95,radius:8.7,pitch:.10,yaw:-.20,cover:.48,ext:1.55,wet:.78,speed:1.65},
+    {code:'CB',cn:'积雨云',latin:'Cumulonimbus',id:'CLOUD-WM-CB-001',level:'低云底 · 可贯穿中高层',sub:'深厚对流体：暗厚云底、垂直塔体、纤维化砧状顶部与下风向展开保持清晰层级。',target:2.12,radius:11.4,pitch:.08,yaw:-.20,cover:.38,ext:2.05,wet:.67,speed:1.45},
+    {code:'SC',cn:'层积云',latin:'Stratocumulus',id:'CLOUD-WM-SC-001',level:'低云 · 常见云底 0–2 km',sub:'连续层与大型圆钝云块共存；厚薄区相连，但保留清楚的云间空隙。',target:.55,radius:8.2,pitch:.20,yaw:-.48,cover:.46,ext:1.48,wet:.82,speed:1.80},
+    {code:'ST',cn:'层云',latin:'Stratus',id:'CLOUD-WM-ST-001',level:'低云 · 地表至约 2 km',sub:'低而平缓的连续云层：边缘弥散、垂直厚度小、横向尺度远大于厚度。',target:.25,radius:6.7,pitch:.13,yaw:-.46,cover:.42,ext:1.32,wet:.92,speed:1.45},
+    {code:'AC',cn:'高积云',latin:'Altocumulus',id:'CLOUD-WM-AC-001',level:'中云 · 温带约 2–7 km',sub:'中层斑块与成列云元：单元比卷积云更大、更厚，行列间保留下降气流式空带。',target:.78,radius:8.1,pitch:.28,yaw:-.58,cover:.46,ext:1.28,wet:.76,speed:2.05},
+    {code:'AS',cn:'高层云',latin:'Altostratus',id:'CLOUD-WM-AS-001',level:'中云 · 温带约 2–7 km',sub:'宽广灰色云幕：厚薄缓慢变化，太阳可由薄区透出，避免积云式花椰菜轮廓。',target:.70,radius:6.9,pitch:.14,yaw:-.46,cover:.40,ext:1.66,wet:.90,speed:1.25},
+    {code:'NS',cn:'雨层云',latin:'Nimbostratus',id:'CLOUD-WM-NS-001',level:'以中层为主 · 常延伸至其他层',sub:'深厚降水云层：暗底、低垂碎片与大范围连续遮蔽并存，避免伪装成积雨云塔。',target:.45,radius:7.2,pitch:.16,yaw:-.48,cover:.39,ext:2.35,wet:.86,speed:1.55},
+    {code:'CI',cn:'卷云',latin:'Cirrus',id:'CLOUD-WM-CI-001',level:'高云 · 温带约 5–13 km',sub:'冰晶纤维和钩状长丝：细、薄、方向性强，边缘保持透明而不是棉花团。',target:1.25,radius:7.15,pitch:.05,yaw:-.04,cover:.39,ext:.86,wet:.60,speed:2.35},
+    {code:'CC',cn:'卷积云',latin:'Cirrocumulus',id:'CLOUD-WM-CC-001',level:'高云 · 温带约 5–13 km',sub:'高层细小波纹与微型云元：单元小、层薄、成排组织，空带具有节奏。',target:.92,radius:8.0,pitch:.31,yaw:-.58,cover:.47,ext:.92,wet:.70,speed:2.45},
+    {code:'CS',cn:'卷层云',latin:'Cirrostratus',id:'CLOUD-WM-CS-001',level:'高云 · 温带约 5–13 km',sub:'高层透明云幕：覆盖广、密度低、轮廓克制，主要通过透射变化而非厚重体积被看见。',target:.85,radius:6.8,pitch:.14,yaw:-.46,cover:.38,ext:.72,wet:.96,speed:1.10}
+  ];
+
+  const vert=`#version 300 es
+  precision highp float;
+  const vec2 P[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));
+  out vec2 vUv;
+  void main(){vec2 p=P[gl_VertexID];vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+
+  const frag=`#version 300 es
+  precision highp float;
+  precision highp int;
+  out vec4 outColor;
+  in vec2 vUv;
+  uniform vec2 uRes;
+  uniform float uTime,uDetail,uScale,uCover,uExt,uSunAz,uYaw,uPitch,uRadius,uTargetY,uWet,uSpeed;
+  uniform int uView,uOctaves,uSteps,uLightSteps,uType;
+  #define PI 3.14159265359
+  float sat(float x){return clamp(x,0.,1.);} vec3 sat3(vec3 x){return clamp(x,0.,1.);} 
+  mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);} 
+  float hash13(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);} 
+  float hash12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);} 
+  float valueNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+    float a=hash13(i),b=hash13(i+vec3(1,0,0)),c=hash13(i+vec3(0,1,0)),d=hash13(i+vec3(1,1,0));
+    float e=hash13(i+vec3(0,0,1)),g=hash13(i+vec3(1,0,1)),h=hash13(i+vec3(0,1,1)),j=hash13(i+vec3(1,1,1));
+    return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+  float smin(float a,float b,float k){float h=sat(.5+.5*(b-a)/k);return mix(b,a,h)-k*h*(1.-h);} 
+  float sdEllipsoid(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-4);} 
+  float sdRoundBox(vec3 p,vec3 b,float r){vec3 q=abs(p)-b;return length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.)-r;} 
+
+  void yoheiBandsPair(vec3 q,int bands,out float coarse,out float total){float r=max(length(q),1e-3);vec3 p=vec3(log2(r)-.18,-q.z/r-.95,atan(q.x,q.y));float sum=0.,amp=.5,freq=1.;coarse=0.;
+    for(int j=0;j<9;j++){if(j>=bands)break;float cu=cos(p.x*freq),cv=cos(p.y*freq),cw=cos(p.z*freq);float c=cos(cw*cu+cv*cv+cv*cu+.18*sin((p.x+p.z)*freq*.5));sum+=amp*c;if(j==2)coarse=sum;freq*=2.;amp*=.5;}if(bands<=3)coarse=sum;total=sum;}
+  void yoheiInterferencePair(vec3 p,int bands,out float coarse,out float total){float sum=0.,freq=1.,amp=.5;coarse=0.;for(int j=0;j<9;j++){if(j>=bands)break;vec3 a=sin(p.yzx*freq+vec3(0.,1.7,3.1));vec3 b=cos(p.xzz*freq+vec3(2.2,.4,4.6));sum+=dot(a,b)*amp/3.;if(j==2)coarse=sum;freq*=2.;amp*=.5;}if(bands<=3)coarse=sum;total=sum;}
+  vec3 foldCoord(vec3 p){p.xz*=rot(.49);p.yz*=rot(-.31);for(int i=0;i<3;i++){p=abs(p*1.72)-vec3(1.15,1.02,1.12);p.xy*=rot(.52+float(i)*.17);p.yz*=rot(-.36+float(i)*.11);}return p;}
+
+  float dCumulus(vec3 p){float d=sdEllipsoid(p-vec3(-1.15,.02,.10),vec3(2.02,.86,1.32));d=smin(d,sdEllipsoid(p-vec3(.28,.20,-.14),vec3(2.35,1.02,1.48)),.46);d=smin(d,sdEllipsoid(p-vec3(1.68,.02,.16),vec3(1.46,.78,1.08)),.23);d=smin(d,sdEllipsoid(p-vec3(-1.42,.82,.18),vec3(1.18,1.02,.92)),.31);d=smin(d,sdEllipsoid(p-vec3(-.34,1.10,.02),vec3(1.40,1.28,1.06)),.39);d=smin(d,sdEllipsoid(p-vec3(.88,1.06,-.12),vec3(1.30,1.20,1.00)),.35);d=smin(d,sdEllipsoid(p-vec3(1.72,.76,.20),vec3(.92,.88,.78)),.25);d=smin(d,sdEllipsoid(p-vec3(-.78,2.04,.24),vec3(.80,.88,.72)),.14);d=smin(d,sdEllipsoid(p-vec3(.34,1.78,-.16),vec3(.88,.94,.78)),.15);d=smin(d,sdEllipsoid(p-vec3(1.18,1.50,-.20),vec3(.76,.80,.68)),.14);d=max(d,-(p.y+.62));d=max(d,(length(p.xz/vec2(3.92,2.48))-1.)*.82);return d;}
+  float dCumulonimbus(vec3 p){
+    float d=sdEllipsoid(p-vec3(-.10,-.08,.02),vec3(2.95,1.00,1.62));
+    d=smin(d,sdEllipsoid(p-vec3(-1.35,.78,.08),vec3(1.58,1.18,1.06)),.20);
+    d=smin(d,sdEllipsoid(p-vec3(.95,.92,-.10),vec3(1.78,1.30,1.14)),.22);
+    d=smin(d,sdEllipsoid(p-vec3(-.42,1.70,.04),vec3(1.72,1.36,1.16)),.24);
+    d=smin(d,sdEllipsoid(p-vec3(-1.48,2.20,.16),vec3(1.38,1.12,1.00)),.17);
+    d=smin(d,sdEllipsoid(p-vec3(1.18,2.36,-.16),vec3(1.46,1.18,1.02)),.18);
+    d=smin(d,sdEllipsoid(p-vec3(-.18,2.78,-.02),vec3(1.88,1.46,1.22)),.24);
+    d=smin(d,sdEllipsoid(p-vec3(-1.18,3.42,.12),vec3(1.26,1.02,.94)),.16);
+    d=smin(d,sdEllipsoid(p-vec3(1.06,3.56,-.12),vec3(1.34,1.08,.96)),.17);
+    d=smin(d,sdEllipsoid(p-vec3(.05,3.98,-.03),vec3(1.72,1.25,1.10)),.22);
+    d=smin(d,sdEllipsoid(p-vec3(.72,4.52,-.03),vec3(2.12,.88,1.15)),.25);
+    d=smin(d,sdEllipsoid(p-vec3(2.42,4.91,.00),vec3(3.12,.70,1.36)),.30);
+    d=smin(d,sdEllipsoid(p-vec3(4.48,4.86,.06),vec3(1.80,.42,.94)),.20);
+    d=max(d,-(p.y+.76));
+    d=max(d,(length(p.xz/vec2(5.45,2.82))-1.)*.66);
+    return d;
+  }
+  float dStratocumulus(vec3 p){
+    float d=sdEllipsoid(p-vec3(-1.85,.25,.12),vec3(2.75,.50,1.62));
+    d=smin(d,sdEllipsoid(p-vec3(.65,.31,-.08),vec3(3.05,.56,1.92)),.48);
+    d=smin(d,sdEllipsoid(p-vec3(2.65,.22,.16),vec3(2.25,.46,1.52)),.38);
+    vec2 cs=vec2(1.72,1.48);vec2 id=floor((p.xz+cs*.5)/cs);vec2 c=mod(p.xz+cs*.5,cs)-cs*.5;float h=hash12(id);
+    c+=(vec2(hash12(id+3.7),hash12(id+8.2))-.5)*.25;
+    float cell=sdEllipsoid(vec3(c.x,p.y-(.50+.18*h),c.y),vec3(.84,.48,.72)*(.84+.24*h));
+    d=smin(d,cell,.23);
+    float bound=sdEllipsoid(p-vec3(.10,.36,0.),vec3(4.78,1.05,2.58));
+    return max(d,bound);
+  }
+  float dStratus(vec3 p){
+    float wave=.10*sin(p.x*.52)+.07*sin(p.z*.74+1.4)+.035*sin((p.x+p.z)*1.10);
+    vec3 q=p-vec3(0.,wave,0.);
+    float d=sdEllipsoid(q-vec3(-1.95,.15,.08),vec3(3.10,.39,1.72));
+    d=smin(d,sdEllipsoid(q-vec3(.85,.13,-.10),vec3(3.25,.42,1.92)),.46);
+    d=smin(d,sdEllipsoid(q-vec3(2.95,.18,.12),vec3(2.25,.36,1.44)),.34);
+    return d;
+  }
+  float dAltocumulus(vec3 p){
+    vec2 cs=vec2(1.46,1.13);vec2 id=floor((p.xz+cs*.5)/cs);vec2 c=mod(p.xz+cs*.5,cs)-cs*.5;float h=hash12(id);
+    c+=(vec2(hash12(id+2.1),hash12(id+5.6))-.5)*.25;
+    float row=.11*sin(id.x*.85+id.y*.42);
+    float d=sdEllipsoid(vec3(c.x,p.y-(.76+row+.12*h),c.y),vec3(.58,.29,.48)*(.84+.25*h));
+    float bound=sdEllipsoid(p-vec3(.05,.78,0.),vec3(4.62,.88,2.48));
+    return max(d,bound);
+  }
+  float dAltostratus(vec3 p){
+    float wave=.13*sin(p.x*.31+p.z*.18)+.075*sin(p.z*.49-1.1);vec3 q=p-vec3(0.,wave,0.);
+    float d=sdEllipsoid(q-vec3(-1.75,.63,.10),vec3(3.25,.62,1.80));
+    d=smin(d,sdEllipsoid(q-vec3(1.05,.60,-.12),vec3(3.55,.66,2.03)),.52);
+    d=smin(d,sdEllipsoid(q-vec3(3.10,.66,.12),vec3(2.20,.56,1.48)),.36);
+    return d;
+  }
+  float dNimbostratus(vec3 p){
+    float wave=.17*sin(p.x*.28)+.13*sin(p.z*.45+1.7);vec3 q=p-vec3(0.,wave,0.);
+    float d=sdEllipsoid(q-vec3(-1.65,.52,.12),vec3(3.35,.94,1.86));
+    d=smin(d,sdEllipsoid(q-vec3(1.20,.48,-.12),vec3(3.65,1.02,2.08)),.58);
+    d=smin(d,sdEllipsoid(q-vec3(3.20,.55,.12),vec3(2.15,.84,1.50)),.38);
+    d=smin(d,sdEllipsoid(q-vec3(-2.10,-.34,.28),vec3(1.35,.28,.82)),.18);
+    d=smin(d,sdEllipsoid(q-vec3(.35,-.42,-.18),vec3(1.65,.30,1.02)),.20);
+    d=smin(d,sdEllipsoid(q-vec3(2.55,-.30,.22),vec3(1.25,.25,.76)),.16);
+    return d;
+  }
+  float dCirrocumulus(vec3 p){
+    vec2 cs=vec2(.74,.59);vec2 id=floor((p.xz+cs*.5)/cs);vec2 c=mod(p.xz+cs*.5,cs)-cs*.5;float h=hash12(id);
+    c.x+=.10*sin(id.y*.82);c+=(vec2(hash12(id+1.2),hash12(id+4.4))-.5)*.08;
+    float row=.075*sin(id.x*.72+id.y*.38);
+    float d=sdEllipsoid(vec3(c.x,p.y-(.93+row),c.y),vec3(.28,.125,.23)*(.82+.24*h));
+    float bound=sdEllipsoid(p-vec3(.05,.94,0.),vec3(4.68,.50,2.50));
+    return max(d,bound);
+  }
+  float dCirrostratus(vec3 p){
+    float wave=.065*sin(p.x*.24)+.045*sin(p.z*.36);vec3 q=p-vec3(0.,wave,0.);
+    float d=sdEllipsoid(q-vec3(-1.50,.87,.08),vec3(3.70,.23,2.03));
+    d=smin(d,sdEllipsoid(q-vec3(1.65,.84,-.10),vec3(3.85,.25,2.18)),.42);
+    return d;
+  }
+  float cirrusStrands(vec3 p){
+    float f=0.;
+    for(int i=0;i<6;i++){
+      float fi=float(i);float phase=fi*1.19;
+      float y=.42+.29*fi+.34*sin(p.x*.25+phase)+.10*sin(p.x*.78+phase*.7);
+      float z=-.20+.13*sin(fi*2.1)+.15*sin(p.x*.39+phase*1.17);
+      float d=length(vec2((p.y-y)*1.95,(p.z-z)*1.48));
+      float left=smoothstep(-5.15+fi*.30,-3.55+fi*.24,p.x);
+      float right=1.-smoothstep(2.45+fi*.30,4.85+fi*.12,p.x);
+      float taper=left*right;
+      f+=exp(-d*d*(9.2+fi*.78))*taper*(.96-.070*fi);
+      float hook=smoothstep(-1.7,2.7,p.x);
+      float branchY=y+.20+.14*sin((p.x+1.5)*.62+phase);
+      float branchZ=z+.16*sin(max(p.x+2.5,0.)*.58+phase);
+      float bd=length(vec2((p.y-branchY)*2.25,(p.z-branchZ)*1.65));
+      f+=exp(-bd*bd*(12.0+fi*.82))*hook*taper*.28;
+    }
+    float spineY=1.10+.38*sin(p.x*.22-.8)+.08*sin(p.x*.70);
+    float spineZ=.02+.14*sin(p.x*.40+.7);
+    float sd=length(vec2((p.y-spineY)*1.78,(p.z-spineZ)*1.34));
+    float spineT=smoothstep(-5.0,-3.4,p.x)*(1.-smoothstep(2.9,5.1,p.x));
+    f+=exp(-sd*sd*8.4)*spineT*.43;
+    return f;
+  }
+  vec4 profile(vec3 p){float d=0.,outer=0.,core=0.,rim=0.;
+    if(uType==7){float f=cirrusStrands(p);outer=smoothstep(.018,.22,f);core=smoothstep(.16,.66,f);rim=sat(outer-core);return vec4(outer,core,f,rim);} 
+    if(uType==0)d=dCumulus(p);else if(uType==1)d=dCumulonimbus(p);else if(uType==2)d=dStratocumulus(p);else if(uType==3)d=dStratus(p);else if(uType==4)d=dAltocumulus(p);else if(uType==5)d=dAltostratus(p);else if(uType==6)d=dNimbostratus(p);else if(uType==8)d=dCirrocumulus(p);else d=dCirrostratus(p);
+    float outWidth=(uType==3||uType==5||uType==9)?.40:.28;float inWidth=(uType==3||uType==5||uType==9)?.12:.04;outer=1.-smoothstep(-.08,outWidth,d);core=1.-smoothstep(-.44,inWidth,d);rim=sat(outer-core);return vec4(outer,core,-d,rim);}
+
+  vec3 typeWind(){if(uType==7)return normalize(vec3(.96,.02,.28));if(uType==8||uType==9)return normalize(vec3(.86,.01,.50));if(uType==1)return normalize(vec3(.35,.12,.92));if(uType==3||uType==5||uType==6)return normalize(vec3(.76,.01,.65));return normalize(vec3(.62,.04,.78));}
+  float densityScale(){if(uType==1)return 1.18;if(uType==6)return 1.24;if(uType==7)return .58;if(uType==8)return .58;if(uType==9)return .34;if(uType==3)return .72;if(uType==5)return .76;return 1.;}
+  float edgeErode(){if(uType==7)return .18;if(uType==9)return .10;if(uType==3||uType==5)return .20;if(uType==6)return .24;return .43;}
+  float opticalDark(){if(uType==6)return .58;if(uType==1)return .72;if(uType==5)return .88;if(uType==7||uType==9)return 1.10;return 1.;}
+
+  vec4 densityField(vec3 p){vec4 pr=profile(p);float outer=pr.x,core=pr.y,rim=pr.w;if(outer<.0005)return vec4(0.);
+    vec3 stable=p*uScale;vec3 sw=vec3(valueNoise(stable*.31+vec3(3.1,1.7,6.2)),valueNoise(stable*.29+vec3(8.2,4.5,1.3)),valueNoise(stable*.34+vec3(2.4,7.8,4.1)))-.5;vec3 q0=stable+sw*.52;
+    float ca,ta,cb,tb,ci,ti;yoheiBandsPair(q0*.72+vec3(.31,-.18,.12),3,ca,ta);yoheiBandsPair(foldCoord(q0*.91)+vec3(-.7,.2,.4),3,cb,tb);yoheiInterferencePair(q0*.82+vec3(.4,-.8,1.3),3,ci,ti);float macro=sat(.5+.5*(.55*ca+.22*cb+.70*ci));
+    float tt=uTime*uSpeed;vec3 wind=typeWind();vec3 qd=q0+wind*tt*.13;qd+=vec3(sin(tt*.46+p.y*.72),cos(tt*.37+p.z*.61),sin(tt*.31+p.x*.48))*.12;vec3 qf=foldCoord(qd*1.08)+vec3(-.7,.2,.4);
+    float dca,dta,dcb,dtb,dci,dti;yoheiBandsPair(qd*.72+vec3(.31,-.18,.12),uOctaves,dca,dta);yoheiBandsPair(qf,uOctaves,dcb,dtb);yoheiInterferencePair(qd*.82+vec3(.4,-.8,1.3),uOctaves,dci,dti);float classic=valueNoise(qd*2.05+vec3(4.7,9.1,2.6))-.5;float detailSignal=clamp((dta-dca)*2.36+(dtb-dcb)*1.52+(dti-dci)*2.15+classic*.16,-.82,.82);
+    float shapeRelief=0.;if(uType==0)shapeRelief=.46;else if(uType==1)shapeRelief=.72;else if(uType==2)shapeRelief=.34;else if(uType==4)shapeRelief=.28;else if(uType==8)shapeRelief=.22;outer=sat(outer+rim*(macro-.5)*shapeRelief+uDetail*rim*detailSignal*shapeRelief*.24);rim=sat(outer-core);
+    float shoulder=mix(pow(max(outer,0.),1.18),pow(max(outer,0.),.82),uWet);float structural=macro+uDetail*detailSignal*.46;float cell=smoothstep(uCover-.18,uCover+.18,structural);float fine=detailSignal*.5+.5;
+    float body=shoulder*(.07+.46*cell+.49*core);body+=rim*uWet*(.035+.075*macro);float erosion=uDetail*rim*(1.-fine)*edgeErode()*mix(1.02,.46,uWet);float rho=max(0.,body-erosion);
+    if(uType==1){float anvil=smoothstep(3.95,5.35,p.y);float cbErode=rim*(1.-fine)*uDetail*mix(.34,.58,anvil);rho=max(0.,rho-cbErode);rho*=mix(.98,1.10,anvil*macro);}
+    if(uType==2){rho=max(0.,shoulder*(.16+.26*cell+.46*core+.15*macro)-erosion*.72);}
+    if(uType==3){rho=max(0.,shoulder*(.14+.10*cell+.48*core+.10*macro)-erosion*.36);}
+    if(uType==5){rho=max(0.,shoulder*(.15+.12*cell+.49*core+.12*macro)-erosion*.40);}
+    if(uType==6){rho=max(0.,shoulder*(.20+.14*cell+.56*core+.14*macro)-erosion*.48);float rag=smoothstep(.10,-.72,p.y)*(valueNoise(q0*1.25+vec3(6.2,2.1,4.4))-.42);rho+=outer*max(rag,0.)*.12;}
+
+    if(uType==7){rho=shoulder*(.12+.52*core+.24*macro)+uDetail*outer*(detailSignal*.18);rho=max(0.,rho);} 
+    if(uType==9){rho=shoulder*(.10+.20*core+.11*macro)+uDetail*rim*detailSignal*.035;rho=max(0.,rho);} 
+    if(uType==3||uType==5){rho*=mix(.82,1.08,macro*.6+.2);} 
+    if(uType==6){rho*=mix(.94,1.22,macro);rho+=rim*.035;} 
+    rho*=densityScale();return vec4(rho,outer,structural,rim);}
+
+  float densityShadow(vec3 p){vec4 pr=profile(p);float outer=pr.x,core=pr.y;if(outer<.001)return 0.;float shoulder=mix(pow(max(outer,0.),1.16),pow(max(outer,0.),.86),uWet);float rho=shoulder*(.10+.68*core)*densityScale();if(uType==7)rho*=.72;if(uType==9)rho*=.62;return rho;}
+
+  bool hitBox(vec3 ro,vec3 rd,out float tn,out float tf){vec3 b0=vec3(-5.25,-1.35,-3.05),b1=vec3(5.25,5.75,3.05);vec3 inv=1./rd;vec3 t0=(b0-ro)*inv,t1=(b1-ro)*inv;vec3 mn=min(t0,t1),mx=max(t0,t1);tn=max(max(mn.x,mn.y),mn.z);tf=min(min(mx.x,mx.y),mx.z);return tf>max(tn,0.);} 
+  float phaseHG(float mu,float g){float g2=g*g;return (1.-g2)/(4.*PI*pow(max(1.+g2-2.*g*mu,.01),1.5));}
+  float lightTrans(vec3 p,vec3 sunDir){float dist=0.,tr=1.;float stepL=6.2/float(max(uLightSteps,1));for(int i=0;i<12;i++){if(i>=uLightSteps)break;dist+=stepL*(.74+.26*float(i)/float(max(uLightSteps-1,1)));float d=densityShadow(p+sunDir*dist);tr*=exp(-d*stepL*uExt*.68);if(tr<.028)break;}return tr;}
+  vec3 sky(vec3 rd,vec3 sunDir){float h=sat(rd.y*.5+.5);vec3 zen=vec3(.070,.17,.30),hor=vec3(.56,.69,.78);vec3 col=mix(hor,zen,pow(h,.58));float mu=max(dot(rd,sunDir),0.);col+=vec3(1.0,.70,.38)*pow(mu,420.)*5.2;col+=vec3(.95,.53,.28)*pow(mu,18.)*.18;float lower=smoothstep(.08,-.30,rd.y);col=mix(col,vec3(.34,.47,.57),lower*.30);col+=vec3(.16,.12,.09)*pow(1.-abs(rd.y),8.)*.15;return col;}
+
+  void main(){vec2 uv=(gl_FragCoord.xy*2.-uRes)/uRes.y;vec3 target=vec3(0.,uTargetY,0.);vec3 ro=target+uRadius*vec3(cos(uPitch)*sin(uYaw),sin(uPitch),cos(uPitch)*cos(uYaw));vec3 fw=normalize(target-ro),rt=normalize(cross(fw,vec3(0,1,0))),up=cross(rt,fw);vec3 rd=normalize(fw+uv.x*rt*.82+uv.y*up*.82);float saz=radians(uSunAz);vec3 sunDir=normalize(vec3(cos(saz)*.82,.53,sin(saz)*.82));vec3 bg=sky(rd,sunDir);
+    float tn,tf;bool hasVolume=hitBox(ro,rd,tn,tf);if(!hasVolume){tn=0.;tf=0.;}tn=max(tn,0.);float len=max(tf-tn,1e-4),ds=len/float(max(uSteps,1));float jitter=hash13(vec3(gl_FragCoord.xy,fract(uTime*.37)))-.5;float t=tn+ds*(.5+jitter*.62);vec3 acc=vec3(0.);float trans=1.,avgEnv=0.,tauRho=0.,fieldIntegral=0.;
+    for(int i=0;i<176;i++){if(!hasVolume||i>=uSteps||t>tf||trans<.010)break;vec3 p=ro+rd*t;vec4 f=densityField(p);float rho=f.x;avgEnv+=f.y/float(max(uSteps,1));tauRho+=rho*ds;fieldIntegral+=sat(f.z*.5+.5)*f.y*ds;if(rho>.0025){float ltr=lightTrans(p,sunDir);float mu=dot(rd,sunDir);float phase=phaseHG(mu,.62)*5.35+phaseHG(mu,-.22)*1.02;float powder=1.-exp(-rho*ds*uExt*2.25);float silver=f.w*uWet*pow(ltr,.28);vec3 sunCol=vec3(1.0,.86,.72)*(.24+2.24*ltr*phase+silver*.68);vec3 skyCol=vec3(.42,.55,.70)*(.52+.48*sat(p.y/4.8));vec3 baseCol=mix(vec3(.44,.50,.58),vec3(.99,.995,1.0),pow(ltr,.40))*opticalDark();vec3 light=(sunCol+skyCol)*baseCol*(.60+.62*powder);float alpha=1.-exp(-rho*ds*uExt*1.34);acc+=trans*alpha*light;trans*=1.-alpha;}t+=ds;}
+    vec3 col;if(uView==1){float d=sat(1.-exp(-tauRho*uExt*.72));col=mix(vec3(.014,.020,.026),vec3(.93,.96,.98),pow(d,.70));}else if(uView==2){float e=sat(avgEnv*5.6);col=mix(vec3(.018,.027,.033),vec3(.34,.78,.92),e);}else if(uView==3){float f=sat(fieldIntegral*.31);col=mix(vec3(.07,.18,.39),vec3(1.0,.48,.13),smoothstep(.07,.62,f));}else{col=acc+trans*bg;float sunGlow=pow(max(dot(rd,sunDir),0.),48.)*(1.-trans);col+=vec3(1.,.57,.28)*sunGlow*.075;col=col/(1.+col*.22);col=pow(max(col,0.),vec3(.86));col*=1.-.14*dot(uv,uv);}float grain=(hash13(vec3(gl_FragCoord.xy,floor(uTime*18.)))-.5)/255.;outColor=vec4(sat3(col+grain),1.);}
+  `;
+
+  function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s)+'\n\n'+src.split('\n').map((x,i)=>`${i+1}: ${x}`).join('\n'));return s;}
+  let prog;try{prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vert));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));}catch(e){error.style.display='grid';errText.textContent=String(e);return;}
+  gl.useProgram(prog);gl.bindVertexArray(gl.createVertexArray());
+  const U={};['uRes','uTime','uDetail','uScale','uCover','uExt','uSunAz','uYaw','uPitch','uRadius','uTargetY','uWet','uSpeed','uView','uOctaves','uSteps','uLightSteps','uType'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+  const QA=qaCapture;
+  const state={type:0,detail:.64,oct:7,scale:1,cover:.48,sun:0,ext:1.55,wet:.78,speed:1.65,view:0,quality:QA?0:1,paused:false,tour:false,yaw:-.20,pitch:.10,radius:8.7,target:.95,time:0};
+  const qPresets=QA?[{steps:18,light:2,dpr:.30},{steps:32,light:3,dpr:.42},{steps:48,light:4,dpr:.55}]:[{steps:52,light:3,dpr:.68},{steps:78,light:5,dpr:.84},{steps:112,light:7,dpr:1.0}];
+  window.__WM_R02={state,version:'R0.2',cloudTypes,selectType};
+  let dragging=false,px=0,py=0,last=performance.now(),accTime=0,frames=0,lastStat=last,tourAt=0;
+
+  const atlas=document.getElementById('atlas');cloudTypes.forEach((t,i)=>{const b=document.createElement('button');b.dataset.v=i;b.innerHTML=`<b>${String(i+1).padStart(2,'0')} · ${t.cn}</b><span>${t.latin}</span>`;atlas.appendChild(b);});
+  function syncRange(id,key,fmt){const el=document.getElementById(id);el.value=state[key];document.getElementById(id+'V').textContent=fmt(state[key]);}
+  function selectType(i,resetCamera=true){i=(i+cloudTypes.length)%cloudTypes.length;state.type=i;const t=cloudTypes[i];state.cover=t.cover;state.ext=t.ext;state.wet=t.wet;state.speed=t.speed;state.target=t.target;if(resetCamera){state.radius=t.radius;state.pitch=t.pitch;state.yaw=t.yaw;}syncRange('cover','cover',v=>v.toFixed(2));syncRange('ext','ext',v=>v.toFixed(2));syncRange('wet','wet',v=>v.toFixed(2));syncRange('speed','speed',v=>v.toFixed(2)+'×');document.getElementById('heroTitle').textContent=`${t.cn} · ${t.latin}`;document.getElementById('heroSub').textContent=t.sub;document.getElementById('cloudId').textContent=t.id;document.getElementById('levelBadge').textContent=t.level;document.getElementById('typeHint').textContent=t.latin;document.getElementById('navCN').textContent=t.cn;document.getElementById('navLatin').textContent=`${t.latin} · ${String(i+1).padStart(2,'0')}/10`;document.getElementById('typeStat').textContent=t.code;[...atlas.children].forEach((x,j)=>x.classList.toggle('on',j===i));tourAt=state.time;}
+
+  function resize(){const q=qPresets[state.quality];const d=Math.min(devicePixelRatio||1,1.65)*q.dpr;const w=Math.max(2,Math.round(innerWidth*d)),h=Math.max(2,Math.round(innerHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}document.getElementById('dpr').textContent=d.toFixed(2);document.getElementById('ray').textContent=q.steps;}
+  addEventListener('resize',resize,{passive:true});resize();
+  canvas.addEventListener('pointerdown',e=>{dragging=true;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;state.yaw-=dx*.0052;state.pitch=Math.max(-.38,Math.min(.58,state.pitch+dy*.0044));});canvas.addEventListener('pointerup',e=>{dragging=false;canvas.releasePointerCapture(e.pointerId)});canvas.addEventListener('pointercancel',()=>dragging=false);canvas.addEventListener('wheel',e=>{e.preventDefault();state.radius=Math.max(6.3,Math.min(15.5,state.radius*Math.exp(e.deltaY*.00072)));},{passive:false});
+  function bindRange(id,key,fmt){const el=document.getElementById(id),o=document.getElementById(id+'V');el.addEventListener('input',()=>{state[key]=+el.value;o.textContent=fmt(state[key]);});}
+  bindRange('wet','wet',v=>v.toFixed(2));bindRange('speed','speed',v=>v.toFixed(2)+'×');bindRange('detail','detail',v=>v.toFixed(2));bindRange('oct','oct',v=>String(v|0));bindRange('scale','scale',v=>v.toFixed(2));bindRange('cover','cover',v=>v.toFixed(2));bindRange('sun','sun',v=>`${v|0}°`);bindRange('ext','ext',v=>v.toFixed(2));
+  atlas.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.tour=false;document.getElementById('tour').classList.remove('on');selectType(+b.dataset.v);});document.getElementById('views').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.view=+b.dataset.v;[...e.currentTarget.children].forEach(x=>x.classList.toggle('on',x===b));});document.getElementById('quality').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.quality=+b.dataset.v;[...e.currentTarget.children].forEach(x=>x.classList.toggle('on',x===b));resize();});
+  document.getElementById('pause').addEventListener('click',e=>{state.paused=!state.paused;e.currentTarget.classList.toggle('on',state.paused);e.currentTarget.textContent=state.paused?'继续变化':'暂停变化';});document.getElementById('tour').addEventListener('click',e=>{state.tour=!state.tour;e.currentTarget.classList.toggle('on',state.tour);e.currentTarget.textContent=state.tour?'停止巡览':'云族巡览';tourAt=state.time;});document.getElementById('reset').addEventListener('click',()=>selectType(state.type,true));document.getElementById('prev').addEventListener('click',()=>{state.tour=false;selectType(state.type-1);});document.getElementById('next').addEventListener('click',()=>{state.tour=false;selectType(state.type+1);});document.getElementById('mobileToggle').addEventListener('click',()=>document.getElementById('panel').classList.toggle('open'));
+
+  function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!state.paused)state.time+=dt;if(state.tour&&state.time-tourAt>5.5)selectType(state.type+1,true);const q=qPresets[state.quality];gl.uniform2f(U.uRes,canvas.width,canvas.height);gl.uniform1f(U.uTime,state.time);gl.uniform1f(U.uDetail,state.detail);gl.uniform1f(U.uScale,state.scale);gl.uniform1f(U.uCover,state.cover);gl.uniform1f(U.uExt,state.ext);gl.uniform1f(U.uSunAz,state.sun);gl.uniform1f(U.uYaw,state.yaw);gl.uniform1f(U.uPitch,state.pitch);gl.uniform1f(U.uRadius,state.radius);gl.uniform1f(U.uTargetY,state.target);gl.uniform1f(U.uWet,state.wet);gl.uniform1f(U.uSpeed,state.speed);gl.uniform1i(U.uView,state.view);gl.uniform1i(U.uOctaves,state.oct|0);gl.uniform1i(U.uSteps,q.steps);gl.uniform1i(U.uLightSteps,q.light);gl.uniform1i(U.uType,state.type);gl.drawArrays(gl.TRIANGLES,0,3);frames++;accTime+=dt;if(now-lastStat>550){const fps=frames/Math.max(accTime,.001);document.getElementById('fps').textContent=fps.toFixed(0);document.getElementById('ms').textContent=(1000/Math.max(fps,.01)).toFixed(1);frames=0;accTime=0;lastStat=now;}requestAnimationFrame(frame);}
+  selectType(0,true);requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
