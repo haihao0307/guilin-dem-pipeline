@@ -24,12 +24,14 @@
         "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01 separated atmosphere truth/state from evaluator policy using current UE 5.8, SideFX Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. R02 extended the candidate from lower-atmosphere rendering to a continuous ground-to-space semantics: NASA layer references and Karman-line clarification, current NASA CCMC NRLMSIS 2.0/2.1 whole-atmosphere state references, thermosphere/ionosphere physics-model boundaries, and HITRAN-backed spectral-reference semantics. The Karman line and UE Atmospheric Height are now explicitly non-truth cutoffs. Runtime RGB remains a possible evaluator compression, not the canonical definition of a complete spectrum.",
+      "progress": "R01 separated atmosphere truth/state from evaluator policy using current UE 5.8, SideFX Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. R02 extended the candidate from lower-atmosphere rendering to continuous ground-to-space semantics using NASA layer references, current NASA CCMC NRLMSIS whole-atmosphere references, thermosphere/ionosphere model boundaries, and HITRAN-backed spectral semantics. R03 added executable evaluator evidence: one synthetic unit-explicit AtmosphereState was queried by spherical-reference and plane-parallel evaluators. The plane-parallel approximation was nearly exact for a vertical ground query but reached ~96% relative transmittance error at 89-degree view zenith, proving that evaluator authority must carry a measured validity envelope. The Karman line, physical-state validity domain, and evaluator integration domain remain distinct.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
-        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md"
+        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
+        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R03_EVALUATOR_VALIDITY.md"
       ],
-      "nextGate": "Create a tiny unit-typed multi-altitude AtmosphereState fixture spanning ground, stratosphere, mesosphere, ~100 km, thermosphere, and exosphere reference points; compare a lower-atmosphere radiative evaluator, a current NRLMSIS whole-atmosphere state query, and one locked spectral absorption reference path. Promotion requires explicit valid domains, coordinate/unit identity, provenance, and Unknown handling—not merely visual similarity."
+      "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
+      "nextGate": "Create a tiny Earth multi-altitude AtmosphereState fixture spanning ground, stratosphere, mesosphere, ~100 km, thermosphere, and exosphere reference points using two independent roots: U.S. Standard Atmosphere 1976 as a static regression reference and NRLMSIS 2.1 as a time/location/space-weather-dependent reference. Add a wavelength-limited optical checkpoint set with explicit spectroscopy provenance. Promotion requires explicit valid domains, coordinate/unit identity, provenance, evaluator error budgets, and Unknown handling—not visual similarity."
     },
     {
       "id": "LQ-GAEA-001",
