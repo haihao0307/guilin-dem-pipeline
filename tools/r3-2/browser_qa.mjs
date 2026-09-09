@@ -8,11 +8,15 @@ function assert(cond, message) {
   if (!cond) failures.push(message);
 }
 
+async function allowGithack(context) {
+  if (target.includes('raw.githack.com')) {
+    await context.addCookies([{ name: '__Http-phish', value: '1', domain: 'raw.githack.com', path: '/' }]);
+  }
+}
+
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-if (target.includes('raw.githack.com')) {
-  await context.addCookies([{ name: '__Http-phish', value: '1', domain: 'raw.githack.com', path: '/' }]);
-}
+await allowGithack(context);
 const page = await context.newPage();
 const runtimeErrors = [];
 page.on('pageerror', e => runtimeErrors.push(`pageerror: ${e.message}`));
@@ -70,9 +74,12 @@ for (const id of patches) await enterEyeAndCheck(id);
 assert(successfulMoves > 0, 'no tested patch allowed a valid near-ground move');
 assert(runtimeErrors.length === 0, `runtime errors: ${runtimeErrors.join(' | ')}`);
 
-const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+await allowGithack(mobileContext);
+const mobile = await mobileContext.newPage();
 const mobileErrors = [];
 mobile.on('pageerror', e => mobileErrors.push(e.message));
+mobile.on('console', m => { if (m.type() === 'error') mobileErrors.push(m.text()); });
 await mobile.goto(target, { waitUntil: 'domcontentloaded', timeout: 120000 });
 await mobile.waitForFunction(() => document.querySelector('#terrain')?.dataset.ready === 'true', null, { timeout: 120000 });
 const mobileLayout = await mobile.evaluate(() => {
@@ -90,5 +97,7 @@ assert(mobileLayout.eyeInside && mobileLayout.controlsInside, `mobile controls o
 assert(mobileErrors.length === 0, `mobile runtime errors: ${mobileErrors.join(' | ')}`);
 
 console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
+await mobileContext.close();
+await context.close();
 await browser.close();
 if (failures.length) process.exit(1);
