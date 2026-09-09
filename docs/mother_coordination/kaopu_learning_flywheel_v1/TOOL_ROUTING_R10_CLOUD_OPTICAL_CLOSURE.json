@@ -1,0 +1,118 @@
+{
+  "schema": "kaopu-tool-routing-extension/r10",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-ECMWF-ECRAD-CLOUD-OPTICS",
+      "domain": "cloud-optical-architecture-and-subgrid-semantics",
+      "toolOrSource": "ECMWF ecRad + OpenIFS radiation cloud source",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "separation of cloud optics from radiative-transfer solver",
+        "condensate/effective-radius/cloud-fraction type separation",
+        "in-cloud condensate semantics",
+        "subgrid cloud solver patterns"
+      ],
+      "doNotUseFor": [
+        "copying ECMWF defaults as KAOPU universal truth",
+        "claiming model optics are direct cloud observations"
+      ]
+    },
+    {
+      "id": "TOOL-C3S-CLOUD-PROPERTIES",
+      "domain": "direct-retrieval-optical-closure",
+      "toolOrSource": "Copernicus C3S Cloud Properties ATBD and requirements/gap documentation",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "COT/CER/CWP/CFC quantity separation",
+        "water-path versus optical-depth dependency on effective radius",
+        "spectral and retrieval uncertainty semantics"
+      ],
+      "doNotUseFor": [
+        "turning column COT directly into a local 3-D extinction field",
+        "using retrieval-specific constants as renderer defaults without provenance"
+      ]
+    },
+    {
+      "id": "TOOL-NASA-MERRA2-CLOUD-DIAGNOSTICS",
+      "domain": "global-model-native-cloud-optics-fixture",
+      "toolOrSource": "NASA GMAO MERRA-2 model-level cloud diagnostics",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "global 72-level cloud fraction and in-cloud/grid condensate semantics",
+        "pressure-thickness/vertical context",
+        "source-native TAUCLI/TAUCLW path optics",
+        "first global model_native_optics experiment candidate"
+      ],
+      "doNotUseFor": [
+        "realtime forecast truth",
+        "assuming path optical thickness is already local extinction",
+        "discarding MERRA-2 model provenance"
+      ]
+    },
+    {
+      "id": "TOOL-NOAA-HRRR-NATIVE-CLOUD-MICROPHYSICS",
+      "domain": "regional-microphysical-cloud-closure-fixture",
+      "toolOrSource": "NOAA/NCEP HRRR native GRIB inventory",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "CONUS-only microphysical experiments using liquid/ice mixing ratios, cloud fraction and particle number concentrations",
+        "cross-checking microphysical closure against model fields"
+      ],
+      "doNotUseFor": [
+        "Wenzhou/global production truth",
+        "numerical ingestion before exact field semantics are verified"
+      ]
+    },
+    {
+      "id": "TOOL-SIDEFX-KARMA-VOLUME-R10",
+      "domain": "participating-medium-evaluator-adapter",
+      "toolOrSource": "SideFX Karma Volume",
+      "authority": "primary-vendor",
+      "independentRoot": false,
+      "useFor": [
+        "spectral/color absorption and scattering coefficient adapter semantics",
+        "separating medium coefficients from evaluator budgets"
+      ],
+      "doNotUseFor": [
+        "weather/cloud physical truth",
+        "inventing missing cloud microphysics"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-VOLUME-R10",
+      "domain": "realtime-volume-evaluator-adapter",
+      "toolOrSource": "Unreal Engine 5.8 Volumetric Fog/Cloud documentation",
+      "authority": "primary-vendor",
+      "independentRoot": false,
+      "useFor": [
+        "downstream world-space extinction/albedo/emissive representation",
+        "renderer budget/state separation"
+      ],
+      "doNotUseFor": [
+        "meteorological cloud state",
+        "promoting artist density controls into Weather truth"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-CLOUD-OPTICS-R10-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/cloud_optical_closure_probe_r10.py",
+      "authority": "derived-executable-evidence",
+      "independentRoot": false,
+      "useFor": [
+        "closure dependency invariants",
+        "mixing-ratio semantic sensitivity",
+        "cloud-fraction/subgrid non-equivalence",
+        "path-optics versus local-extinction distinction"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
