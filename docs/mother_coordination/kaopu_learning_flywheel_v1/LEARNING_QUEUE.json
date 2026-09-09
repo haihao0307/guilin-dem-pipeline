@@ -14,20 +14,22 @@
       "id": "LQ-ATMOSPHERE-001",
       "priority": 1,
       "status": "candidate-partial",
-      "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere-rendering ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
+      "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
       "targetSystems": [
         "KAOPU",
         "Weather",
         "Ocean",
         "Landscape",
-        "Lighting"
+        "Lighting",
+        "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01 reviewed current UE 5.8 Sky Atmosphere/Volumetric Cloud, current SideFX Karma Sky Atmosphere, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. Candidate decomposition now separates planet frame, emitter, atmospheric medium, surface coupling, radiative path query, cloud medium, evaluator policy, and camera/display policy. Multiple scattering is treated as a physical requirement whose numerical approximation remains evaluator policy. Dimensional checking and reference-query tests are candidate gates.",
+      "progress": "R01 separated atmosphere truth/state from evaluator policy using current UE 5.8, SideFX Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. R02 extended the candidate from lower-atmosphere rendering to a continuous ground-to-space semantics: NASA layer references and Karman-line clarification, current NASA CCMC NRLMSIS 2.0/2.1 whole-atmosphere state references, thermosphere/ionosphere physics-model boundaries, and HITRAN-backed spectral-reference semantics. The Karman line and UE Atmospheric Height are now explicitly non-truth cutoffs. Runtime RGB remains a possible evaluator compression, not the canonical definition of a complete spectrum.",
       "resultLogs": [
-        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md"
+        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
+        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md"
       ],
-      "nextGate": "Define a tiny unit-typed atmosphere reference fixture and compare at least two evaluator families on identical AtmosphereState queries for transmittance and in-scattered radiance before candidate-complete promotion."
+      "nextGate": "Create a tiny unit-typed multi-altitude AtmosphereState fixture spanning ground, stratosphere, mesosphere, ~100 km, thermosphere, and exosphere reference points; compare a lower-atmosphere radiative evaluator, a current NRLMSIS whole-atmosphere state query, and one locked spectral absorption reference path. Promotion requires explicit valid domains, coordinate/unit identity, provenance, and Unknown handling—not merely visual similarity."
     },
     {
       "id": "LQ-GAEA-001",
