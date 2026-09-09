@@ -1,0 +1,149 @@
+name: Wenzhou R3.2 Full Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-2-human-eye-20260909
+    paths:
+      - records/R3_2/PACKAGE_TRIGGER
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Static contracts and syntax
+        run: |
+          python tools/r3-2/validate_eye_static.py
+          node --check site/dist/r3-2/bootstrap.js
+          node --check site/dist/r3-2/app.js
+          node --check site/dist/r3-2/sea-demo.js
+          node --check tools/r3-2/browser_qa.mjs
+
+      - name: Install Chromium QA runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Final fixed-commit public browser gate
+        shell: bash
+        env:
+          R32_SHA: ${{ github.sha }}
+          R32_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${R32_REPO}/${R32_SHA}/site/dist/r3-2/index.html"
+          echo "$URL"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.2'; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ready" = 1
+          R32_URL="$URL" node tools/r3-2/browser_qa.mjs | tee /tmp/r32-final-public-qa.json
+          grep -q '"passed": true' /tmp/r32-final-public-qa.json
+          echo "$URL" > /tmp/r32-final-preview.txt
+
+      - name: Download and verify frozen R3.1 full base
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r32-base
+          gh release download wenzhou-r3.1-full-20260909 \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'Wenzhou_R3_1_FULL_RESTART_20260909.zip' \
+            --dir /tmp/r32-base
+          echo '89474650d4cc968465b8d2b9919512bbaa5f90c6f826566c2f948dd1e2df0ab0  /tmp/r32-base/Wenzhou_R3_1_FULL_RESTART_20260909.zip' | sha256sum -c -
+
+      - name: Build and double-verify full R3.2 package
+        shell: bash
+        env:
+          R32_SHA: ${{ github.sha }}
+          R32_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r32-output
+          PREVIEW="https://raw.githack.com/${R32_REPO}/${R32_SHA}/site/dist/r3-2/index.html"
+          python tools/r3-2/build_full_package.py \
+            --base-zip /tmp/r32-base/Wenzhou_R3_1_FULL_RESTART_20260909.zip \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --work-dir /tmp/r32-build \
+            --output-zip /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip \
+            --source-commit "$R32_SHA" \
+            --preview "$PREVIEW" | tee /tmp/r32-build-report.log
+          python -m zipfile -t /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip
+          test -s /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.sha256
+          test -s /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.report.json
+
+      - name: Publish immutable-source R3.2 full release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R32_SHA: ${{ github.sha }}
+          R32_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TAG='wenzhou-r3.2-full-20260909'
+          PREVIEW="https://raw.githack.com/${R32_REPO}/${R32_SHA}/site/dist/r3-2/index.html"
+          cat > /tmp/r32-release-notes.md <<EOF
+          # 小温州 R3.2 全量重启包
+
+          源提交：\`${R32_SHA}\`
+
+          固定公网预览：${PREVIEW}
+
+          本版在冻结 R3.1 全量底座之上增加：1.6 m 相对显示曲面人眼相机、2 m 人行尺度路径安全移动、0.1 m 近裁剪，以及独立可关闭的演示海面。
+
+          精度边界：1.6 m 只表示相机与显示曲面的关系；演示海面 0 m 显示基准与约 0.22 m 程序化波幅不是潮位、平均海平面、垂直基准、海况测量、海床或 Ocean Mother 完整物理结果。R3.1 DEM/海岸/河流证据保持原 SHA-256。
+
+          发布流程在此提交上先通过固定公网 Chromium QA，再核验 R3.1 1.03 GB 底包 SHA 和底包 MANIFEST；叠加 R3.2 后重建完整 MANIFEST 并再次运行 verify_package.py，最后测试 ZIP 完整性。
+          EOF
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.sha256 \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.report.json \
+              --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file /tmp/r32-release-notes.md
+          else
+            gh release create "$TAG" \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.sha256 \
+              /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.report.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$R32_SHA" \
+              --title '小温州 R3.2 全量重启包 · 2026-09-10' \
+              --notes-file /tmp/r32-release-notes.md
+          fi
+
+      - name: Upload final QA and package report evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-2-final-${{ github.sha }}
+          path: |
+            /tmp/r32-final-public-qa.json
+            /tmp/r32-final-preview.txt
+            /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.sha256
+            /tmp/r32-output/Wenzhou_R3_2_FULL_RESTART_20260909.zip.report.json
+            /tmp/r32-build-report.log
+          if-no-files-found: warn
