@@ -1,0 +1,61 @@
+{
+  "schema": "kaopu-mother-routing-extension/r09",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_WEATHER_REAL_COLUMN_R09.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "add an explicit operation kind distinguishing coordinate_conversion from spatial_retarget",
+        "preserve the native observed/modelled column when deriving AGL or renderer placement",
+        "classify preserve-AGL relocation to a different terrain context as DerivedSyntheticRetarget",
+        "expose placementReady, opticalClosureReady and rendererReady independently",
+        "keep humidity/dewpoint diagnostics distinct from cloud fraction, condensate and extinction"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "provide local surface height/datum for AGL diagnostics without automatically translating absolute weather layers",
+        "treat moving weather to another terrain elevation as a retarget request, not a coordinate conversion",
+        "keep geoid/ellipsoid transform provenance explicit"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "consume RuntimeCloudPlacement separately from CloudOpticalClosure",
+        "allow placement-valid/optics-missing packets to remain typed incomplete instead of fabricating density",
+        "preserve optical-closure source and approximation lineage"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume CloudOpticalClosure rather than humidity directly",
+        "keep sample count, volume bounce limits and temporal quality in EvaluatorBudget",
+        "allow synthetic optical-depth fixtures only for evaluator wiring tests and label them non-physical"
+      ]
+    },
+    {
+      "mother": "Ocean",
+      "items": [
+        "apply the same conversion-versus-retarget distinction for sea-surface-relative weather layers",
+        "do not use rendered ocean displacement as an implicit canonical weather datum"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make OperationKind and same-physical-state invariants first-class",
+        "introduce DerivedSyntheticRetarget lineage for deliberate weather relocation",
+        "represent RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget as separate typed contracts",
+        "retain per-quantity Missing/Unsupported instead of one renderReady Boolean"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after authenticated cloud-state/optical closure plus dual-evaluator evidence; R09 remains Candidate"
+}
