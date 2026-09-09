@@ -30,6 +30,16 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def resolve_locked_path(rel: str) -> Path:
+    # terrain.json contains two intentional path forms:
+    # - /r3/data/... points at byte-locked R3 files from the site root;
+    # - bare names point at R3.1 data files beside terrain.json.
+    # Preserve that distinction instead of rewriting either evidence path.
+    if rel.startswith("/"):
+        return SITE / rel.lstrip("/")
+    return DATA / rel
+
+
 index_path = R32 / "index.html"
 app_path = R32 / "app.js"
 style_path = R32 / "style.css"
@@ -80,13 +90,13 @@ if terrain_path.is_file():
         if rel in seen:
             continue
         seen.add(rel)
-        p = DATA / rel
+        p = resolve_locked_path(rel)
         require(f"locked-data-exists:{rel}", p.is_file())
         if p.is_file():
             require(f"locked-data-sha256:{rel}", sha256(p) == expected)
 
 output = {
-    "schema": "wenzhou-r3.2-eye-static-qa/r1",
+    "schema": "wenzhou-r3.2-eye-static-qa/r2",
     "passed": not errors,
     "checks": checks,
     "errors": errors,
