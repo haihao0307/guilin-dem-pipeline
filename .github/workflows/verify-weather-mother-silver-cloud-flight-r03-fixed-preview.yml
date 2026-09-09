@@ -1,0 +1,81 @@
+name: Verify Weather Mother silver cloud flight R0.3 fixed preview
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-silver-cloud-flight-r03-20260910
+    paths:
+      - .github/workflows/verify-weather-mother-silver-cloud-flight-r03-fixed-preview.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_COMMIT: 9028536b12942b2c45c9585ba539c3c45c69923e
+      PUBLIC_URL: https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/9028536b12942b2c45c9585ba539c3c45c69923e/weather-mother/deliveries/weather-mother-cloud-flight-r03.html
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm exact silver + flight source
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=weather-mother/deliveries/weather-mother-cloud-flight-r03.html
+          test -s "$file"
+          grep -q 'silver' "$file"
+          grep -q 'flightPos' "$file"
+          grep -q 'flightAuto' "$file"
+          grep -q 'KeyW' "$file"
+          sha256sum "$file"
+      - name: Install Chromium harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wm-r03-public && cd /tmp/wm-r03-public
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Open immutable public preview and exercise flight
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/wm-r03-public/run.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url=process.env.PUBLIC_URL;
+          const browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--disable-dev-shm-usage']});
+          const errors=[];
+          async function run(viewport, mobile=false){
+            const context=await browser.newContext({viewport,deviceScaleFactor:mobile?2:1,isMobile:mobile,hasTouch:mobile});
+            const page=await context.newPage();
+            page.on('pageerror',e=>errors.push('page:'+String(e)));
+            page.on('console',m=>{if(m.type()==='error')errors.push('console:'+m.text())});
+            page.on('requestfailed',r=>errors.push('request:'+r.url()+':'+(r.failure()?.errorText||'')));
+            const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
+            if(response?.status()!==200)throw new Error('HTTP '+response?.status());
+            await page.waitForFunction(()=>typeof window.__WM_R03==='object',{timeout:120000});
+            const initial=await page.evaluate(()=>({title:document.title,state:structuredClone(__WM_R03.state),error:document.getElementById('errText')?.textContent||''}));
+            if(initial.error)throw new Error(initial.error);
+            await page.evaluate(()=>{__WM_R03.setCamMode(1);__WM_R03.resetFlight();__WM_R03.state.paused=false;});
+            await page.waitForTimeout(350);
+            const before=await page.evaluate(()=>[...__WM_R03.state.flightPos]);
+            await page.keyboard.down('KeyW'); await page.waitForTimeout(350); await page.keyboard.up('KeyW'); await page.waitForTimeout(100);
+            const after=await page.evaluate(()=>[...__WM_R03.state.flightPos]);
+            if(!(after[2] < before[2]-0.05))throw new Error('manual flight did not move forward');
+            const ui=await page.evaluate(()=>({canvas:[document.getElementById('c').getBoundingClientRect().width,document.getElementById('c').getBoundingClientRect().height],padOn:document.getElementById('flightPad')?.classList.contains('on'),hudOn:document.getElementById('flightHud')?.classList.contains('on'),camMode:__WM_R03.state.camMode}));
+            if(ui.camMode!==1)throw new Error('flight mode not engaged');
+            if(mobile && !(ui.padOn&&ui.hudOn&&Math.round(ui.canvas[0])===390&&Math.round(ui.canvas[1])===844))throw new Error('mobile flight UI mismatch '+JSON.stringify(ui));
+            await context.close();
+            return {initial:{title:initial.title,type:initial.state.type,camMode:initial.state.camMode},before,after,ui};
+          }
+          try{
+            const desktop=await run({width:1280,height:800},false);
+            const phone=await run({width:390,height:844},true);
+            if(errors.length)throw new Error('browser errors '+JSON.stringify(errors));
+            console.log(JSON.stringify({passed:true,url,sourceCommit:process.env.SOURCE_COMMIT,desktop,phone,errors},null,2));
+          }finally{await browser.close();}
+          JS
+          cd /tmp/wm-r03-public
+          NODE_PATH=/tmp/wm-r03-public/node_modules node run.mjs
