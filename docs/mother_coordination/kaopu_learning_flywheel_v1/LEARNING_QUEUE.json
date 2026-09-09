@@ -11,12 +11,41 @@
   },
   "queue": [
     {
-      "id": "LQ-GAEA-001",
+      "id": "LQ-ATMOSPHERE-001",
       "priority": 1,
+      "status": "candidate-partial",
+      "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere-rendering ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
+      "targetSystems": [
+        "KAOPU",
+        "Weather",
+        "Ocean",
+        "Landscape",
+        "Lighting"
+      ],
+      "userPriorityOverride": true,
+      "progress": "R01 reviewed current UE 5.8 Sky Atmosphere/Volumetric Cloud, current SideFX Karma Sky Atmosphere, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021. Candidate decomposition now separates planet frame, emitter, atmospheric medium, surface coupling, radiative path query, cloud medium, evaluator policy, and camera/display policy. Multiple scattering is treated as a physical requirement whose numerical approximation remains evaluator policy. Dimensional checking and reference-query tests are candidate gates.",
+      "resultLogs": [
+        "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md"
+      ],
+      "nextGate": "Define a tiny unit-typed atmosphere reference fixture and compare at least two evaluator families on identical AtmosphereState queries for transmittance and in-scattered radiance before candidate-complete promotion."
+    },
+    {
+      "id": "LQ-GAEA-001",
+      "priority": 2,
       "status": "candidate-complete",
       "question": "Which GAEA 2.3 workflow mechanisms can improve KAOPU continuous learning and world generation without contaminating Canonical Truth?",
-      "targetSystems": ["KAOPU", "Wenzhou", "Landscape", "Terrain"],
-      "requiredOutputs": ["transferable-methods", "constraints", "failure-modes", "routing"],
+      "targetSystems": [
+        "KAOPU",
+        "Wenzhou",
+        "Landscape",
+        "Terrain"
+      ],
+      "requiredOutputs": [
+        "transferable-methods",
+        "constraints",
+        "failure-modes",
+        "routing"
+      ],
       "progress": "R01 identified candidate mechanisms. R02 rechecked current official GAEA 2.3 documentation: Erosion2 determinism, tiled-build context failure classes, same-graph Regions, and migration testing are current-source-backed. Exact legacy TileGate semantics remain separately Unknown.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_GAEA_R01.md",
@@ -25,10 +54,16 @@
     },
     {
       "id": "LQ-NOISE-001",
-      "priority": 2,
+      "priority": 3,
       "status": "candidate-partial",
       "question": "Which modern procedural noise and field-composition methods are measurably better than current KAOPU typed-wave primitives for multiscale natural structure?",
-      "targetSystems": ["KAOPU", "Landscape", "Weather", "Ocean", "Material"],
+      "targetSystems": [
+        "KAOPU",
+        "Landscape",
+        "Weather",
+        "Ocean",
+        "Material"
+      ],
       "progress": "R01 primary-source review across Unreal Engine 5.8, current SideFX Houdini documentation, Blender 5.2 LTS, Pixar Wavelet Noise, and NVIDIA 2023 found no universal superior noise basis. Stronger transferable candidates are evaluation-footprint/filter policy, native differential outputs, explicit spectral/fractal composition law, explicit normalization, and evaluation-mode/bake provenance. A standard-library footprint probe was authored; no new runtime result is promoted yet.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_NOISE_R01.md"
@@ -38,17 +73,30 @@
     },
     {
       "id": "LQ-SUBSTANCE-001",
-      "priority": 3,
+      "priority": 4,
       "status": "queued",
       "question": "Which Substance 3D Designer material-graph practices are transferable as data-generating functions rather than texture assets?",
-      "targetSystems": ["Brick", "Tiles", "Aircraft", "Weapons", "Vegetation", "Character"]
+      "targetSystems": [
+        "Brick",
+        "Tiles",
+        "Aircraft",
+        "Weapons",
+        "Vegetation",
+        "Character"
+      ]
     },
     {
       "id": "LQ-HOUDINI-001",
-      "priority": 4,
+      "priority": 5,
       "status": "queued",
       "question": "Which Houdini SOP/COP/VEX workflow patterns best support reusable Object DNA and field operators with explicit provenance and deterministic regeneration?",
-      "targetSystems": ["KAOPU", "House", "Aircraft", "Animals", "Terrain"]
+      "targetSystems": [
+        "KAOPU",
+        "House",
+        "Aircraft",
+        "Animals",
+        "Terrain"
+      ]
     }
   ]
 }
