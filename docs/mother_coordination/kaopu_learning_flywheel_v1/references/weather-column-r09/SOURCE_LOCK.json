@@ -1,0 +1,100 @@
+{
+  "schema": "kaopu-source-lock/weather-column-r09",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "observationRoots": [
+    {
+      "id": "NOAA-NCEI-IGRA-SEMANTICS",
+      "role": "primary-official-observation-archive-semantics",
+      "independentObservationRoot": true,
+      "urls": [
+        "https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive",
+        "https://www.ncei.noaa.gov/data/integrated-global-radiosonde-archive/doc/igra2-station-list.txt",
+        "https://www.ncei.noaa.gov/data/integrated-global-radiosonde-archive/access/data-y2d/"
+      ],
+      "lockedFacts": [
+        "IGRA 2.2 contains radiosonde observations at pressure and height levels including pressure, temperature, geopotential height, relative humidity and dewpoint depression",
+        "USM00072572 is Salt Lake City/International, latitude 40.7722, longitude -111.9552, station elevation 1289.0 m",
+        "the current NCEI data-y2d index lists USM00072572-data-beg2026.txt.zip and showed update time 2026-09-08 21:37 when checked"
+      ],
+      "limits": [
+        "station elevation metadata does not by itself establish the exact geoid realization needed for an ellipsoid-height transform",
+        "the binary ZIP could not be materialized in the bounded tool runtime, so the executable fixture below is not claimed as byte-authenticated against that NCEI archive file"
+      ]
+    },
+    {
+      "id": "NOAA-NWS-KSLC-UPPER-AIR",
+      "role": "primary-official-operational-semantics",
+      "independentObservationRoot": true,
+      "urls": [
+        "https://www.weather.gov/media/directives/010_pdfs/pd01010002curr.pdf",
+        "https://www.weather.gov/media/notification/pdf2/scn21-98rrs_to_mros_upper_air_sites.pdf"
+      ],
+      "lockedFacts": [
+        "NWS identifies WMO station 72572 as Salt Lake City, UT / KSLC",
+        "NWS identifies the operational upper-air station transition for Salt Lake City 72572 / KSLC and points to WMO 306 for coded message requirements"
+      ]
+    },
+    {
+      "id": "ECMWF-ERA5-CLOUD-STATE-SEPARATION",
+      "role": "primary-official-model-data-semantics",
+      "independentObservationRoot": true,
+      "urls": [
+        "https://confluence.ecmwf.int/pages/viewpage.action?pageId=155332201"
+      ],
+      "lockedFacts": [
+        "ERA5 model-level parameters archive specific humidity separately from specific cloud liquid water and specific cloud ice water",
+        "geopotential and log surface pressure are separate native model-level quantities"
+      ],
+      "limits": [
+        "ERA5 variable design is model/data semantics, not independent evidence for the state of the Salt Lake City sounding fixture"
+      ]
+    }
+  ],
+  "engineeringSources": [
+    {
+      "id": "UCAR-RAP-CURRENT-RAWINS",
+      "role": "data-transport-mirror",
+      "independentObservationRoot": false,
+      "url": "https://weather.rap.ucar.edu/data/upper/Current.rawins",
+      "lockedExcerpt": {
+        "TTAA": "72572 TTAA 80001 72572 99871 23460 17003 00062 ///// ///// 92758 ///// ///// 85500 20461 09010 70146 09059 27012 50584 09542 24052 40753 19740 23537 30960 33927 22568 25085 44750 23587 20231 56533 22070 15414 56159 24047 10665 63368 23030",
+        "TTBB": "72572 TTBB 80008 72572 00871 23460 11859 21461 22856 21061 33828 19060 44795 17661 55723 11058 66709 10059 77680 07057 88674 07056 99668 06656 11639 03849 22596 00435 33586 00339 44567 02530 55558 03536 66541 05728 77507 08561"
+      },
+      "limits": [
+        "this relay is not counted as an independent meteorological Observation Root",
+        "the short TEMP bulletin encodes day/time but the exact month/year of this relay snapshot was not independently authenticated in this bounded cycle",
+        "future promotion should replace or cross-check this transport fixture with an authenticated NCEI/NWS downloadable observation"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-VOLUMETRIC-CLOUD",
+      "role": "primary-vendor-renderer-semantics",
+      "independentObservationRoot": false,
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/volumetric-cloud-component-properties-in-unreal-engine",
+      "lockedUse": [
+        "separate renderer cloud placement from tracing/evaluator quality",
+        "per-sample atmospheric-light transmittance as evaluator behavior"
+      ]
+    },
+    {
+      "id": "SIDEFX-KARMA-VOLUME",
+      "role": "primary-vendor-renderer-semantics",
+      "independentObservationRoot": false,
+      "urls": [
+        "https://www.sidefx.com/docs/houdini/nodes/vop/kma_volume.html",
+        "https://www.sidefx.com/docs/houdini/nodes/vop/kma_material_properties.html"
+      ],
+      "lockedUse": [
+        "absorption and scattering are medium rates per distance",
+        "volume sampling/ray-bounce controls are evaluator settings rather than weather observations"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
