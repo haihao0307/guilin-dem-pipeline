@@ -64,20 +64,20 @@
     },
     {
       "id": "U-ATMOS-001",
-      "status": "Unknown",
+      "status": "PartiallyResolved",
       "question": "What is the minimum physically meaningful atmosphere state that KAOPU should preserve without overfitting UE or Karma parameter interfaces?",
-      "known": "Current UE 5.8, Karma, Hillaire 2020, Bruneton 2017, and Wilkie et al. 2021 all support explicit planet/view geometry and participating-medium radiative transport as important structure.",
-      "remainingUnknown": "The smallest interoperable parameterization, its unit types, and the boundary between observed physical state and inferred/fitted coefficients have not yet been tested against a reference fixture.",
-      "currentBestView": "Keep the R01 decomposition Candidate and require identical state queries across at least two evaluator families before promotion.",
+      "known": "R01-R02 primary-source review supports explicit planet/reference frame, neutral thermodynamic/species state, separate aerosol/cloud media, emitter/surface coupling, spectral-property semantics, path query, evaluator policy, and camera/display separation. R03 executable evidence shows that one state can support multiple evaluators whose authority differs by query geometry; evaluator validity must therefore be explicit rather than global.",
+      "remainingUnknown": "The exact canonical Earth schema, state-source hierarchy, required unit types, and which quantities are observed versus inferred/fitted have not yet been tested across independent Earth reference profiles.",
+      "currentBestView": "Keep the layered Reference-State -> State-Reducer -> Runtime-Packet -> Evaluator architecture Candidate. Require independent Earth state roots and measured evaluator validity envelopes before candidate-complete promotion.",
       "promotionBlock": true
     },
     {
       "id": "U-ATMOS-002",
-      "status": "Unknown",
+      "status": "PartiallyResolved",
       "question": "Does KAOPU need a spectral reference layer for atmosphere, or is typed RGB coefficient storage sufficient for its intended world reconstruction and rendering tasks?",
-      "known": "Bruneton validates realtime RGB/luminance approximations against full spectral CPU references, while Wilkie et al. provide spectral/measurement-informed atmosphere models with additional capabilities.",
-      "remainingUnknown": "No KAOPU task/error budget has yet established when RGB approximation becomes materially wrong for rendering, sensing, historical reconstruction, or cross-engine interchange.",
-      "currentBestView": "Do not force all runtime Mothers to spectral evaluation; preserve the question at the reference-semantic layer until measured task errors justify a decision.",
+      "known": "HITRAN provides wavelength-resolved molecular spectroscopy used for atmospheric transmission/emission, while modern atmosphere literature validates cheaper realtime approximations against higher-fidelity spectral references. NASA solar-irradiance material also shows strongly wavelength-dependent source and absorber behavior. This is sufficient to reject vendor RGB coefficients as the canonical definition of atmosphere spectrum.",
+      "remainingUnknown": "The wavelength domains, sampling/basis resolution, reference spectroscopy subset, and task-specific RGB/few-band compression error budgets are not yet fixed.",
+      "currentBestView": "Preserve spectral-reference capability and allow validated task-specific compression to RGB/few-band runtime packets. Do not require full spectral realtime evaluation by every Mother.",
       "promotionBlock": false
     },
     {
@@ -85,6 +85,15 @@
       "status": "Clarified",
       "question": "Should atmospheric refraction be included in the first KAOPU atmosphere core merely because it is an optical phenomenon?",
       "answer": "No. The reviewed current UE/Karma atmosphere cores are organized around participating-media scattering, absorption, extinction, transmittance, phase behavior, multiple scattering, and surface coupling. Refraction remains a real but separate process and should be added only when a concrete observable/process requires refractive-index gradients.",
+      "promotionBlock": false
+    },
+    {
+      "id": "U-ATMOS-004",
+      "status": "Unknown",
+      "question": "Where should KAOPU place the semantic boundary between neutral-atmosphere state and ionosphere/plasma/space-weather state for ground-to-space queries?",
+      "known": "Current NRLMSIS is a neutral whole-atmosphere empirical model, while current NASA CCMC physics models such as GITM/TIE-GCM introduce ion/electron species, electrodynamics, winds and solar/geomagnetic forcing. NASA also notes there is no sharp atmosphere-to-space density boundary.",
+      "remainingUnknown": "The smallest query contract that can couple neutral state to ionosphere/plasma effects without turning the first atmosphere core into a full space-weather simulator has not been defined or tested.",
+      "currentBestView": "Keep ionosphere/plasma as a separate optional coupled state domain. Do not fake aurora, plasma or charged-particle physics by extending a neutral Rayleigh/Mie renderer.",
       "promotionBlock": false
     }
   ]
