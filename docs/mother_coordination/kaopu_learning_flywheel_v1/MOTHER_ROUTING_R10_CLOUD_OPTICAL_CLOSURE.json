@@ -1,0 +1,59 @@
+{
+  "schema": "kaopu-mother-routing-extension/r10",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_CLOUD_OPTICAL_CLOSURE_R10.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "preserve cloud fraction, condensate semantics and source-native optical diagnostics as separate typed quantities",
+        "expose CloudOpticalClosure capability flags instead of one rendererReady boolean",
+        "prefer source-native optical depth when documented rather than reconstructing it with hidden fixed particle-size assumptions",
+        "never publish renderer density/extinction controls as Weather truth"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "consume RuntimeCloudPlacement and CloudOpticalClosure separately",
+        "distinguish path optical depth from local 3-D extinction",
+        "return typed Missing for phase/local distribution/subgrid capabilities that are absent"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume wavelength/color-dependent extinction/scattering/phase through participating-medium queries",
+        "keep source/model uncertainty separate from ray-march and performance error",
+        "do not tune Weather microphysics to make beams or laser-like lights visually stronger"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "provide geometric/reference-frame context only",
+        "do not alter condensate, particle or optical quantities when resolving cloud placement"
+      ]
+    },
+    {
+      "mother": "Ocean",
+      "items": [
+        "apply the same path-optics/local-extinction/subgrid separation to fog and sea-spray overlap",
+        "prevent double-counting extinction where cloud/fog/spray participating media overlap"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add MixingRatioSemantics, OpticalClosureMethod and SubgridCloudContract",
+        "make pathOpticsReady/localExtinctionReady/phaseReady/subgridReady independently queryable",
+        "retain model_native_optics provenance and never upgrade it to universal Observation truth"
+      ]
+    }
+  ],
+  "recommendedNextExperiment": "Authenticate one NASA MERRA-2 tavg3_3d_cld_Nv packet, preserve CLOUD/INCLOUDQI/INCLOUDQL/TAUCLI/TAUCLW plus vertical lineage, derive only the missing local-volume/phase/subgrid adapter state, and feed the same packet to two evaluator adapters.",
+  "promotionAuthority": "Xiaoma Judgment after authenticated packet + dual-evaluator evidence; no automatic Frozen promotion"
+}
