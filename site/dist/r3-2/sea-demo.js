@@ -4,16 +4,6 @@ const SEA_DISPLAY_DATUM_M = 0;
 const SEA_WAVE_AMPLITUDE_M = 0.22;
 const FLAG = Symbol.for('wenzhou.r3.2.sea-demo-installed');
 
-function findTerrain(scene) {
-  let found = null;
-  scene.traverse(object => {
-    if (found || !object?.isMesh || object.userData?.wenzhouSeaDemo) return;
-    const material = object.material;
-    if (material?.alphaMap && object.geometry?.attributes?.uv && object.geometry?.attributes?.position) found = object;
-  });
-  return found;
-}
-
 function buildSeaGeometry(box, segments) {
   const minX = box.min.x, maxX = box.max.x, minZ = box.min.z, maxZ = box.max.z;
   const nx = segments, nz = segments;
@@ -96,86 +86,117 @@ function buildSeaMaterial(landMask) {
   });
 }
 
-export function installSeaDemo() {
-  if (THREE.WebGLRenderer.prototype[FLAG]) return;
-  THREE.WebGLRenderer.prototype[FLAG] = true;
-  const originalRender = THREE.WebGLRenderer.prototype.render;
-  let sea = null;
-  let terrainUuid = null;
-  let loopStarted = false;
-  let activeRenderer = null, activeScene = null, activeCamera = null;
-  let lastFrame = 0;
-  const reducedMotion = matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
-
-  function ensureSea(scene) {
-    const terrain = findTerrain(scene);
-    if (!terrain) return null;
-    if (sea && terrainUuid === terrain.uuid) return sea;
-    if (sea) {
-      scene.remove(sea);
-      sea.geometry?.dispose();
-      sea.material?.dispose();
-    }
-    terrain.geometry.computeBoundingBox();
-    const segments = window.innerWidth < 760 ? 40 : 72;
-    const geometry = buildSeaGeometry(terrain.geometry.boundingBox, segments);
-    const material = buildSeaMaterial(terrain.material.alphaMap);
-    sea = new THREE.Mesh(geometry, material);
-    sea.userData.wenzhouSeaDemo = true;
-    sea.userData.kind = 'demonstration-environment-layer';
-    sea.userData.displayDatumM = SEA_DISPLAY_DATUM_M;
-    sea.userData.waveAmplitudeM = SEA_WAVE_AMPLITUDE_M;
-    sea.renderOrder = 1;
-    terrainUuid = terrain.uuid;
-    scene.add(sea);
-    const checkbox = document.getElementById('show-sea');
-    sea.visible = checkbox ? checkbox.checked : true;
-    const canvas = document.getElementById('terrain');
-    if (canvas) {
-      canvas.dataset.seaSurfaceKind = 'demonstration';
-      canvas.dataset.seaDisplayDatumM = String(SEA_DISPLAY_DATUM_M);
-      canvas.dataset.seaWaveAmplitudeM = String(SEA_WAVE_AMPLITUDE_M);
-      canvas.dataset.seaVisible = String(sea.visible);
-    }
-    return sea;
-  }
-
-  function updateToggle() {
-    const checkbox = document.getElementById('show-sea');
-    if (!checkbox) return;
-    if (!checkbox.dataset.boundSeaDemo) {
-      checkbox.dataset.boundSeaDemo = 'true';
-      checkbox.addEventListener('change', () => {
-        if (sea) sea.visible = checkbox.checked;
-        const canvas = document.getElementById('terrain');
-        if (canvas) canvas.dataset.seaVisible = String(checkbox.checked);
-        if (activeRenderer && activeScene && activeCamera) originalRender.call(activeRenderer, activeScene, activeCamera);
-      });
-    }
-  }
-
-  function startLoop() {
-    if (loopStarted) return;
-    loopStarted = true;
-    const tick = time => {
-      if (activeRenderer && activeScene && activeCamera && sea?.visible && !reducedMotion && time - lastFrame >= 33) {
-        sea.material.uniforms.uTime.value = time * 0.001;
-        originalRender.call(activeRenderer, activeScene, activeCamera);
-        lastFrame = time;
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }
-
-  THREE.WebGLRenderer.prototype.render = function(scene, camera) {
-    activeRenderer = this; activeScene = scene; activeCamera = camera;
-    updateToggle();
-    const current = ensureSea(scene);
-    if (current && reducedMotion) current.material.uniforms.uTime.value = 0;
-    startLoop();
-    return originalRender.call(this, scene, camera);
-  };
+function isTerrainCandidate(object) {
+  return !!(
+    object?.isMesh &&
+    !object.userData?.wenzhouSeaDemo &&
+    object.material?.alphaMap &&
+    object.geometry?.attributes?.uv &&
+    object.geometry?.attributes?.position
+  );
 }
 
-installSeaDemo();
+export function installSeaDemo() {
+  if (THREE.Object3D.prototype[FLAG]) return;
+  THREE.Object3D.prototype[FLAG] = true;
+
+  const originalAdd = THREE.Object3D.prototype.add;
+  const reducedMotion = matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+  let active = null;
+
+  function writeCanvasState(visible) {
+    const canvas = document.getElementById('terrain');
+    if (!canvas) return;
+    canvas.dataset.seaSurfaceKind = 'demonstration';
+    canvas.dataset.seaDisplayDatumM = String(SEA_DISPLAY_DATUM_M);
+    canvas.dataset.seaWaveAmplitudeM = String(SEA_WAVE_AMPLITUDE_M);
+    canvas.dataset.seaVisible = String(visible);
+  }
+
+  function disposeActive() {
+    if (!active) return;
+    active.disposed = true;
+    active.scene.remove(active.mesh);
+    active.mesh.geometry?.dispose();
+    active.mesh.material?.dispose();
+    active = null;
+  }
+
+  function createForTerrain(scene, terrain) {
+    if (active?.terrainUuid === terrain.uuid) return;
+    disposeActive();
+    terrain.geometry.computeBoundingBox();
+    const geometry = buildSeaGeometry(terrain.geometry.boundingBox, window.innerWidth < 760 ? 40 : 72);
+    const material = buildSeaMaterial(terrain.material.alphaMap);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.wenzhouSeaDemo = true;
+    mesh.userData.kind = 'demonstration-environment-layer';
+    mesh.userData.displayDatumM = SEA_DISPLAY_DATUM_M;
+    mesh.userData.waveAmplitudeM = SEA_WAVE_AMPLITUDE_M;
+    mesh.renderOrder = 1;
+
+    const checkbox = document.getElementById('show-sea');
+    mesh.visible = checkbox ? checkbox.checked : true;
+    const layer = {
+      scene,
+      mesh,
+      material,
+      terrainUuid: terrain.uuid,
+      disposed: false,
+      loopStarted: false,
+      renderer: null,
+      camera: null,
+      lastFrame: 0
+    };
+    active = layer;
+    originalAdd.call(scene, mesh);
+    writeCanvasState(mesh.visible);
+
+    mesh.onBeforeRender = (renderer, renderScene, camera) => {
+      if (layer.disposed) return;
+      layer.renderer = renderer;
+      layer.scene = renderScene;
+      layer.camera = camera;
+      material.uniforms.uTime.value = reducedMotion ? 0 : performance.now() * 0.001;
+      if (layer.loopStarted || reducedMotion) return;
+      layer.loopStarted = true;
+      const tick = time => {
+        if (layer.disposed) return;
+        if (layer.mesh.visible && layer.renderer && layer.camera && time - layer.lastFrame >= 33) {
+          layer.material.uniforms.uTime.value = time * 0.001;
+          layer.renderer.render(layer.scene, layer.camera);
+          layer.lastFrame = time;
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+  }
+
+  THREE.Object3D.prototype.add = function(...objects) {
+    const result = originalAdd.apply(this, objects);
+    if (this.isScene) {
+      for (const object of objects) {
+        if (isTerrainCandidate(object)) {
+          createForTerrain(this, object);
+          break;
+        }
+      }
+    }
+    return result;
+  };
+
+  const checkbox = document.getElementById('show-sea');
+  if (checkbox && !checkbox.dataset.boundSeaDemo) {
+    checkbox.dataset.boundSeaDemo = 'true';
+    checkbox.addEventListener('change', () => {
+      if (active) {
+        active.mesh.visible = checkbox.checked;
+        writeCanvasState(checkbox.checked);
+        if (active.renderer && active.camera) active.renderer.render(active.scene, active.camera);
+      } else {
+        writeCanvasState(checkbox.checked);
+      }
+    });
+  }
+}
