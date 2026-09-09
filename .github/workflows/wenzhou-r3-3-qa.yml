@@ -1,0 +1,90 @@
+name: Wenzhou R3.3 QA
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-3-evidence-surface-20260910
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Frozen R3.2 and evidence source boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=4068b0d3a802a0a0d5f17922479bbfb03a727994
+          git diff --exit-code "$BASE" HEAD -- site/dist/r3-2 records/R3_2 tools/r3-2 inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json
+
+      - name: Static evidence and syntax gate
+        run: |
+          python tools/r3-3/validate_surface_static.py
+          node --check site/dist/r3-3/bootstrap.js
+          node --check site/dist/r3-3/surface-evidence.js
+          node --check tools/r3-3/browser_qa.mjs
+
+      - name: Install browser runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory site/dist >/tmp/wenzhou-r33-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/r3-3/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R33_URL=http://127.0.0.1:8765/r3-3/ node tools/r3-3/browser_qa.mjs | tee /tmp/r33-local-qa.json
+          grep -q '"passed": true' /tmp/r33-local-qa.json
+
+      - name: Fixed-commit public raw.githack QA
+        shell: bash
+        env:
+          R33_SHA: ${{ github.sha }}
+          R33_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${R33_REPO}/${R33_SHA}/site/dist/r3-3/index.html"
+          ready=0
+          for i in $(seq 1 35); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.3'; then ready=1; break; fi
+            sleep 4
+          done
+          test "$ready" = 1
+          R33_URL="$URL" node tools/r3-3/browser_qa.mjs | tee /tmp/r33-public-qa.json
+          grep -q '"passed": true' /tmp/r33-public-qa.json
+          echo "$URL" > /tmp/r33-preview.txt
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-3-qa-${{ github.sha }}
+          path: |
+            /tmp/r33-local-qa.json
+            /tmp/r33-public-qa.json
+            /tmp/r33-preview.txt
+            /tmp/wenzhou-r33-http.log
+          if-no-files-found: warn
