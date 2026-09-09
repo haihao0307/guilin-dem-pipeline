@@ -10,7 +10,11 @@ function assert(cond, message) {
 
 async function allowGithack(context) {
   if (target.includes('raw.githack.com')) {
-    await context.addCookies([{ name: '__Http-phish', value: '1', url: 'https://raw.githack.com/' }]);
+    // raw.githack uses a cookie-shaped acknowledgement named __Http-phish.
+    // Chromium enforces the reserved __Http- cookie prefix when writing Cookie
+    // Store entries, so send the acknowledgement as an HTTP request header
+    // instead of forging a browser cookie. This applies to page subresources too.
+    await context.setExtraHTTPHeaders({ Cookie: '__Http-phish=1' });
   }
 }
 
