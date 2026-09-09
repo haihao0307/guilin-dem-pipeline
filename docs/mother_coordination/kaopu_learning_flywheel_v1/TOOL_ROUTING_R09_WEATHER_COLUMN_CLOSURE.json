@@ -1,0 +1,119 @@
+{
+  "schema": "kaopu-tool-routing-extension/r09",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-WEATHER-NOAA-NCEI-IGRA",
+      "domain": "observed-weather-column",
+      "toolOrSource": "NOAA/NCEI Integrated Global Radiosonde Archive 2.2",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "radiosonde-observation-and-station-semantics",
+      "useFor": [
+        "real pressure/temperature/geopotential/humidity profile semantics",
+        "station identity/location/elevation metadata",
+        "authenticated sounding archive when bytes are accessible"
+      ],
+      "doNotUseFor": [
+        "assuming station elevation alone defines a WGS84 ellipsoid height",
+        "deriving cloud condensate/extinction from humidity without another closure"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NWS-UPPER-AIR-KSLC",
+      "domain": "operational-upper-air-identity",
+      "toolOrSource": "NOAA/NWS upper-air station and coded-message documentation",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "operational-station-and-code-semantics",
+      "useFor": [
+        "WMO station 72572 / KSLC identity",
+        "operational TEMP/WMO code lineage"
+      ],
+      "doNotUseFor": [
+        "treating a different-time NWS report as authentication of the exact UCAR relay sample"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-UCAR-CURRENT-RAWINS",
+      "domain": "bounded-real-data-transport",
+      "toolOrSource": "UCAR RAP Current.rawins",
+      "authority": "engineering-data-mirror",
+      "observationRootEligible": false,
+      "evidenceClass": "transport-mirror-of-coded-upper-air-data",
+      "useFor": [
+        "bounded executable TTAA/TTBB fixture",
+        "testing parser/conversion/retarget invariants"
+      ],
+      "doNotUseFor": [
+        "independent meteorological corroboration",
+        "exact month/year provenance without external authentication",
+        "production source lock without NCEI/NWS cross-check"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-ECMWF-CLOUD-QUANTITIES",
+      "domain": "cloud-state-capability-semantics",
+      "toolOrSource": "ECMWF ERA5 model-level parameter documentation",
+      "authority": "primary-official",
+      "observationRootEligible": true,
+      "evidenceClass": "model-data-quantity-semantics",
+      "useFor": [
+        "separating specific humidity from cloud liquid water and cloud ice water",
+        "designing per-quantity Weather capability contracts"
+      ],
+      "doNotUseFor": [
+        "claiming ERA5 variables prove the state of the Salt Lake radiosonde fixture",
+        "equating model condensate directly with renderer extinction without optical closure"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-UE58-CLOUD-EVALUATOR",
+      "domain": "realtime-cloud-evaluator",
+      "toolOrSource": "Epic Unreal Engine 5.8 Volumetric Cloud documentation",
+      "authority": "primary-vendor",
+      "observationRootEligible": false,
+      "evidenceClass": "renderer-interface-semantics",
+      "useFor": [
+        "separating layer placement from trace/sample budgets",
+        "atmospheric-light transmittance evaluation patterns"
+      ],
+      "doNotUseFor": [
+        "meteorological cloud truth",
+        "filling missing Weather optical state with UE defaults"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-SIDEFX-KARMA-VOLUME",
+      "domain": "participating-medium-evaluator",
+      "toolOrSource": "SideFX Karma Volume and Material Properties documentation",
+      "authority": "primary-vendor",
+      "observationRootEligible": false,
+      "evidenceClass": "renderer-optical-and-budget-semantics",
+      "useFor": [
+        "absorption/scattering rates as optical-medium quantities",
+        "keeping volume sampling and bounce limits in EvaluatorBudget"
+      ],
+      "doNotUseFor": [
+        "deriving physical cloud extinction from radiosonde humidity",
+        "copying renderer defaults into KAOPU truth"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-WEATHER-REAL-COLUMN-R09-PROBE",
+      "domain": "coordinator-executable-test",
+      "toolOrSource": "PROBES/weather_column_real_fixture_r09.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "same-physical-state invariant for coordinate conversion",
+        "explicit synthetic-retarget classification",
+        "typed missing optical closure",
+        "synthetic transmittance wiring/immutability test"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
