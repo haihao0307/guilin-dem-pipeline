@@ -10,10 +10,6 @@ function assert(cond, message) {
 
 async function allowGithack(context) {
   if (target.includes('raw.githack.com')) {
-    // raw.githack uses a cookie-shaped acknowledgement named __Http-phish.
-    // Chromium enforces the reserved __Http- cookie prefix when writing Cookie
-    // Store entries, so send the acknowledgement as an HTTP request header
-    // instead of forging a browser cookie. This applies to page subresources too.
     await context.setExtraHTTPHeaders({ Cookie: '__Http-phish=1' });
   }
 }
@@ -30,6 +26,26 @@ await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120000 });
 await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.ready === 'true', null, { timeout: 120000 });
 assert((await page.title()).includes('R3.2'), 'page title is not R3.2');
 
+await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaSurfaceKind === 'demonstration', null, { timeout: 30000 });
+const seaInitial = await page.evaluate(() => {
+  const c = document.querySelector('#terrain');
+  return {
+    kind: c?.dataset.seaSurfaceKind,
+    visible: c?.dataset.seaVisible,
+    datumM: Number(c?.dataset.seaDisplayDatumM),
+    amplitudeM: Number(c?.dataset.seaWaveAmplitudeM),
+    checkbox: document.querySelector('#show-sea')?.checked
+  };
+});
+assert(seaInitial.kind === 'demonstration', `sea kind ${JSON.stringify(seaInitial)}`);
+assert(seaInitial.visible === 'true' && seaInitial.checkbox === true, `sea not initially visible ${JSON.stringify(seaInitial)}`);
+assert(seaInitial.datumM === 0, `sea display datum changed ${JSON.stringify(seaInitial)}`);
+assert(Math.abs(seaInitial.amplitudeM - 0.22) < 1e-6, `sea wave amplitude changed ${JSON.stringify(seaInitial)}`);
+await page.uncheck('#show-sea');
+await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaVisible === 'false');
+await page.check('#show-sea');
+await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaVisible === 'true');
+
 const contract = await page.evaluate(async () => {
   const r = await fetch(new URL('../r3-1/data/terrain.json', location.href));
   if (!r.ok) throw new Error(`terrain.json ${r.status}`);
@@ -45,6 +61,8 @@ async function selectPatch(id) {
     const c = document.querySelector('#terrain');
     return c?.dataset.ready === 'true' && c?.dataset.patch === expected;
   }, id, { timeout: 120000 });
+  await page.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaSurfaceKind === 'demonstration');
+  assert((await page.getAttribute('#terrain', 'data-sea-visible')) === 'true', `${id}: sea layer disappeared after patch change`);
 }
 
 async function enterEyeAndCheck(id) {
@@ -87,21 +105,27 @@ mobile.on('pageerror', e => mobileErrors.push(e.message));
 mobile.on('console', m => { if (m.type() === 'error') mobileErrors.push(m.text()); });
 await mobile.goto(target, { waitUntil: 'domcontentloaded', timeout: 120000 });
 await mobile.waitForFunction(() => document.querySelector('#terrain')?.dataset.ready === 'true', null, { timeout: 120000 });
+await mobile.waitForFunction(() => document.querySelector('#terrain')?.dataset.seaSurfaceKind === 'demonstration', null, { timeout: 30000 });
 const mobileLayout = await mobile.evaluate(() => {
   const eye = document.querySelector('#eye-view')?.getBoundingClientRect();
   const controls = document.querySelector('.camera-controls')?.getBoundingClientRect();
+  const sea = document.querySelector('#show-sea')?.getBoundingClientRect();
   return {
     innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
     eyeInside: !!eye && eye.left >= 0 && eye.right <= innerWidth,
-    controlsInside: !!controls && controls.left >= 0 && controls.right <= innerWidth
+    controlsInside: !!controls && controls.left >= 0 && controls.right <= innerWidth,
+    seaControlInside: !!sea && sea.left >= 0 && sea.right <= innerWidth,
+    seaKind: document.querySelector('#terrain')?.dataset.seaSurfaceKind,
+    seaVisible: document.querySelector('#terrain')?.dataset.seaVisible
   };
 });
 assert(mobileLayout.scrollWidth <= mobileLayout.innerWidth, `mobile horizontal overflow ${JSON.stringify(mobileLayout)}`);
-assert(mobileLayout.eyeInside && mobileLayout.controlsInside, `mobile controls outside viewport ${JSON.stringify(mobileLayout)}`);
+assert(mobileLayout.eyeInside && mobileLayout.controlsInside && mobileLayout.seaControlInside, `mobile controls outside viewport ${JSON.stringify(mobileLayout)}`);
+assert(mobileLayout.seaKind === 'demonstration' && mobileLayout.seaVisible === 'true', `mobile sea missing ${JSON.stringify(mobileLayout)}`);
 assert(mobileErrors.length === 0, `mobile runtime errors: ${mobileErrors.join(' | ')}`);
 
-console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
+console.log(JSON.stringify({ passed: failures.length === 0, target, patches, successfulMoves, seaInitial, notes, mobileLayout, runtimeErrors, mobileErrors, failures }, null, 2));
 await mobileContext.close();
 await context.close();
 await browser.close();
