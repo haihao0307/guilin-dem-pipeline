@@ -1,0 +1,3389 @@
+{
+  "schema": "wenzhou-object-evidence/0.2.2-draft",
+  "version": "R2.2",
+  "recordedAtUtc": "2026-09-09T06:32:14.255155+00:00",
+  "scope": "Evidence records and query locations; not reconstructed physical objects",
+  "referenceFrames": [
+    {
+      "id": "EPSG:32651",
+      "axisOrder": [
+        "easting",
+        "northing"
+      ],
+      "unit": "m",
+      "verticalDatum": null,
+      "fieldStates": {
+        "verticalDatum": {
+          "status": "not-applicable",
+          "reason": "This reference frame describes horizontal 2D coordinates only; elevation datum is independently unknown"
+        }
+      }
+    },
+    {
+      "id": "EPSG:4326",
+      "axisOrder": [
+        "longitude",
+        "latitude"
+      ],
+      "unit": "degree",
+      "verticalDatum": null,
+      "fieldStates": {
+        "verticalDatum": {
+          "status": "not-applicable",
+          "reason": "This reference frame describes horizontal 2D coordinates only; elevation datum is independently unknown"
+        }
+      }
+    },
+    {
+      "id": "SoilGrids-IGH-WGS84-R1",
+      "axisOrder": [
+        "x",
+        "y"
+      ],
+      "unit": "m",
+      "crsWkt": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+      "definitionSource": "soilNative",
+      "verticalDatum": null,
+      "fieldStates": {
+        "verticalDatum": {
+          "status": "not-applicable",
+          "reason": "Horizontal prediction grid; soil depth is measured relative to surface, not an absolute elevation datum"
+        }
+      }
+    }
+  ],
+  "sourceLocks": {
+    "queries": {
+      "path": "JOINT_QUERY_EXAMPLES.json",
+      "revision": "R1",
+      "sha256": "21e7f97ae599cd9f4142827dd9198b6e6b6080bb4574bf80871202fa3bc59f9e",
+      "bytes": 33157
+    },
+    "knowledge": {
+      "path": "KNOWLEDGE_GRAPH.json",
+      "revision": "R1",
+      "sha256": "97cf08eadaa8b106ba6c28f31ef563c94ebaf7d3bc2565c0cac3396e8241bfbc",
+      "bytes": 96940
+    },
+    "demQa": {
+      "path": "DEM_FULL_GRID_QA.json",
+      "revision": "R1",
+      "sha256": "91e0fb88071b02d87cc89831a39f5bc279fcc9bdb86198c5fc6c892c2ccca915",
+      "bytes": 1664
+    },
+    "soilQa": {
+      "path": "SOIL_QA.json",
+      "revision": "R1",
+      "sha256": "db278fcd9556273644506b2a43b7657410cd46a48dc78b22e76633610abc0031",
+      "bytes": 9304
+    },
+    "receipt": {
+      "path": "XIAOMA_RECEIPT_R1.md",
+      "revision": "R1",
+      "sha256": "aa5f7b7da4edfd46d650718ca5dce935317a83937b6133e459255f2c1ac871b2",
+      "bytes": 1915
+    },
+    "soilNative": {
+      "path": "SOIL_NATIVE_MANIFEST_R1.json",
+      "revision": "R1",
+      "sha256": "5af3b2c9222f89104e8a3e71b1ad6b11d4ef2790f5c7c772280e677ac6726c80",
+      "bytes": 379948
+    },
+    "xiaomaReview": {
+      "path": "XIAOMA_REVIEW_R2.md",
+      "revision": "R2-review",
+      "sha256": "39472ede2394cf55928dd21c30ad463b788b0f60b8eae1404819f76bef9f56dc",
+      "bytes": 3553
+    },
+    "xiaomaReviewR21": {
+      "path": "XIAOMA_REVIEW_R2_1.md",
+      "revision": "R2.1-review",
+      "bytes": 2982,
+      "sha256": "a5c7f58c107bdf53c95db76db38316398cac6c932d5c700cde040ef60e1d80c7"
+    }
+  },
+  "objects": [
+    {
+      "id": "WZ-R1-COLOCATION-01",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 01",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          307388.76146435435,
+          3241574.6337800696
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            121.01714779125035,
+            29.28844694461183
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 1.862645149230957e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 801,
+          "unit": "m",
+          "row": 23,
+          "col": 9353,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.6,
+                "Q0.05": 4.4,
+                "Q0.95": 7.1
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 23.6,
+                "Q0.05": 2.4,
+                "Q0.95": 71.0
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 31.6,
+                "Q0.05": 6.9,
+                "Q0.95": 59.7
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 44.8,
+                "Q0.05": 8.9,
+                "Q0.95": 89.8
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 56.8,
+                "Q0.05": 10.0,
+                "Q0.95": 161.2
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.09,
+                "Q0.05": 0.64,
+                "Q0.95": 1.52
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                6,
+                460
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/0/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/0/soilNativeXY",
+            "value": [
+              12176375.0,
+              3260375.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/0",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-01"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-02",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 02",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          339219.24918302416,
+          3239586.5177833126
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            121.34499397728275,
+            29.274972215350054
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 0.0
+      },
+      "measurements": {
+        "elevation": {
+          "value": 151,
+          "unit": "m",
+          "row": 182,
+          "col": 11899,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.8,
+                "Q0.05": 4.5,
+                "Q0.95": 7.7
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 36.1,
+                "Q0.05": 1.9,
+                "Q0.95": 88.0
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 16.2,
+                "Q0.05": 1.7,
+                "Q0.95": 40.6
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 47.7,
+                "Q0.05": 6.9,
+                "Q0.95": 93.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 47.5,
+                "Q0.05": 8.6,
+                "Q0.95": 162.4
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.04,
+                "Q0.05": 0.56,
+                "Q0.95": 1.49
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                12,
+                592
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/1/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/1/soilNativeXY",
+            "value": [
+              12209375.0,
+              3258875.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/1",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-02"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-03",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 03",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          313762.3130358642,
+          3238480.902036785
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            121.0832508521683,
+            29.261497486088253
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 2.08250058582033e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 800,
+          "unit": "m",
+          "row": 270,
+          "col": 9862,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.5,
+                "Q0.05": 4.1,
+                "Q0.95": 7.7
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 25.1,
+                "Q0.05": 3.1,
+                "Q0.95": 67.3
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 30.9,
+                "Q0.05": 7.0,
+                "Q0.95": 60.8
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 44.0,
+                "Q0.05": 10.0,
+                "Q0.95": 85.0
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 68.4,
+                "Q0.05": 17.0,
+                "Q0.95": 181.4
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.04,
+                "Q0.05": 0.52,
+                "Q0.95": 1.43
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                18,
+                495
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/2/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/2/soilNativeXY",
+            "value": [
+              12185125.0,
+              3257375.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/2",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-03"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-04",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 04",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          258779.19805775594,
+          3238018.842213036
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            120.517857836657,
+            29.24802275682647
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 1.862645149230957e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 524,
+          "unit": "m",
+          "row": 307,
+          "col": 5464,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.5,
+                "Q0.05": 4.2,
+                "Q0.95": 6.9
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 27.4,
+                "Q0.05": 3.4,
+                "Q0.95": 74.3
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 35.2,
+                "Q0.05": 12.8,
+                "Q0.95": 63.7
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 37.4,
+                "Q0.05": 6.9,
+                "Q0.95": 76.3
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 55.7,
+                "Q0.05": 10.0,
+                "Q0.95": 149.0
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.08,
+                "Q0.05": 0.62,
+                "Q0.95": 1.46
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                24,
+                280
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/3/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/3/soilNativeXY",
+            "value": [
+              12131375.0,
+              3255875.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/3",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-04"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-05",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 05",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          194022.85662114387,
+          3238079.4920828445
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            119.8522486203892,
+            29.234548027564674
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 4.656612873077393e-10
+      },
+      "measurements": {
+        "elevation": {
+          "value": 70,
+          "unit": "m",
+          "row": 302,
+          "col": 283,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 6.0,
+                "Q0.05": 4.6,
+                "Q0.95": 7.7
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 24.4,
+                "Q0.05": 3.0,
+                "Q0.95": 58.7
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 27.4,
+                "Q0.05": 9.3,
+                "Q0.95": 49.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 48.2,
+                "Q0.05": 11.9,
+                "Q0.95": 76.3
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 18.9,
+                "Q0.05": 4.0,
+                "Q0.95": 55.2
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.14,
+                "Q0.05": 0.73,
+                "Q0.95": 1.48
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                30,
+                26
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/4/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/4/soilNativeXY",
+            "value": [
+              12067875.0,
+              3254375.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/4",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-05"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-06",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 06",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          340910.4287637033,
+          3233837.4657939263
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            121.36322228110885,
+            29.223319086513182
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 1.862645149230957e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 70,
+          "unit": "m",
+          "row": 642,
+          "col": 12034,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.7,
+                "Q0.05": 4.3,
+                "Q0.95": 7.8
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 37.8,
+                "Q0.05": 1.3,
+                "Q0.95": 93.7
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 11.8,
+                "Q0.05": 1.6,
+                "Q0.95": 34.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 50.5,
+                "Q0.05": 3.5,
+                "Q0.95": 95.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 45.5,
+                "Q0.05": 6.4,
+                "Q0.95": 158.5
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.12,
+                "Q0.05": 0.62,
+                "Q0.95": 1.54
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                35,
+                617
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/5/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/5/soilNativeXY",
+            "value": [
+              12215625.0,
+              3253125.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/5",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-06"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-07",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 07",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          293189.4823601332,
+          3233109.1451686397
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            120.87263366267092,
+            29.209844357251388
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 1.9199706733309015e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 166,
+          "unit": "m",
+          "row": 700,
+          "col": 8217,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 6.0,
+                "Q0.05": 4.7,
+                "Q0.95": 7.8
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 30.0,
+                "Q0.05": 3.4,
+                "Q0.95": 81.5
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 23.5,
+                "Q0.05": 4.1,
+                "Q0.95": 42.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 46.5,
+                "Q0.05": 10.6,
+                "Q0.95": 78.5
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 25.6,
+                "Q0.05": 5.0,
+                "Q0.95": 79.2
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.07,
+                "Q0.05": 0.56,
+                "Q0.95": 1.46
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                41,
+                431
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/6/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/6/soilNativeXY",
+            "value": [
+              12169125.0,
+              3251625.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/6",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-07"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-08",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 08",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          271484.3212236727,
+          3232029.088217671
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            120.64973296473632,
+            29.196369627989583
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 2.3283064365386963e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 581,
+          "unit": "m",
+          "row": 786,
+          "col": 6480,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.4,
+                "Q0.05": 4.0,
+                "Q0.95": 6.9
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 27.2,
+                "Q0.05": 4.5,
+                "Q0.95": 76.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 35.4,
+                "Q0.05": 8.3,
+                "Q0.95": 64.6
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 37.4,
+                "Q0.05": 6.2,
+                "Q0.95": 75.9
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 47.8,
+                "Q0.05": 9.3,
+                "Q0.95": 112.3
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.07,
+                "Q0.05": 0.59,
+                "Q0.95": 1.52
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                47,
+                349
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/7/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/7/soilNativeXY",
+            "value": [
+              12148625.0,
+              3250125.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/7",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-08"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-09",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 09",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          297567.6809472416,
+          3230042.7810640186
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            120.91820432822172,
+            29.1828948987278
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 4.656612873077393e-10
+      },
+      "measurements": {
+        "elevation": {
+          "value": 104,
+          "unit": "m",
+          "row": 945,
+          "col": 8567,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 6.1,
+                "Q0.05": 4.7,
+                "Q0.95": 7.8
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 29.5,
+                "Q0.05": 2.0,
+                "Q0.95": 80.5
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 21.2,
+                "Q0.05": 2.7,
+                "Q0.95": 43.6
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 49.3,
+                "Q0.05": 8.3,
+                "Q0.95": 88.8
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 24.5,
+                "Q0.05": 4.1,
+                "Q0.95": 81.3
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.13,
+                "Q0.05": 0.64,
+                "Q0.95": 1.46
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                53,
+                458
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/8/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/8/soilNativeXY",
+            "value": [
+              12175875.0,
+              3248625.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/8",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-09"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-10",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 10",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          345663.01088901685,
+          3227798.1395532894
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            121.41294250069343,
+            29.169420169466004
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 9.313225746154785e-10
+      },
+      "measurements": {
+        "elevation": {
+          "value": 32,
+          "unit": "m",
+          "row": 1125,
+          "col": 12415,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 6.1,
+                "Q0.05": 4.3,
+                "Q0.95": 8.0
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 34.4,
+                "Q0.05": 0.8,
+                "Q0.95": 93.6
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 12.1,
+                "Q0.05": 1.3,
+                "Q0.95": 42.3
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 53.5,
+                "Q0.05": 3.5,
+                "Q0.95": 95.7
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 39.1,
+                "Q0.05": 5.5,
+                "Q0.95": 170.4
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.15,
+                "Q0.05": 0.62,
+                "Q0.95": 1.57
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                59,
+                655
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/9/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/9/soilNativeXY",
+            "value": [
+              12225125.0,
+              3247125.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/9",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-10"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-11",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 11",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          284737.0807440245,
+          3227040.318983645
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            120.78691584919112,
+            29.153699651993914
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 4.656612873077393e-10
+      },
+      "measurements": {
+        "elevation": {
+          "value": 592,
+          "unit": "m",
+          "row": 1185,
+          "col": 7540,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.5,
+                "Q0.05": 4.0,
+                "Q0.95": 7.4
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 29.7,
+                "Q0.05": 3.6,
+                "Q0.95": 73.0
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 26.8,
+                "Q0.05": 5.9,
+                "Q0.95": 54.9
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 43.5,
+                "Q0.05": 7.5,
+                "Q0.95": 80.9
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 52.5,
+                "Q0.05": 13.4,
+                "Q0.95": 134.8
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.08,
+                "Q0.05": 0.62,
+                "Q0.95": 1.46
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                66,
+                417
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/10/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/10/soilNativeXY",
+            "value": [
+              12165625.0,
+              3245375.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/10",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-11"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    },
+    {
+      "id": "WZ-R1-COLOCATION-12",
+      "revision": 2,
+      "kind": "query-location",
+      "label": "查询点 12",
+      "coordinateParentFrame": "EPSG:32651",
+      "compositionParent": null,
+      "position": {
+        "coordinates": [
+          203025.57346182928,
+          3227126.6768238028
+        ],
+        "unit": "m",
+        "frame": "EPSG:32651",
+        "geographicDisplay": {
+          "coordinates": [
+            119.94768045924292,
+            29.137979134521828
+          ],
+          "axisOrder": [
+            "longitude",
+            "latitude"
+          ],
+          "frame": "EPSG:4326"
+        },
+        "physicalUncertaintyM": null,
+        "unknownReason": "No independent field-position validation",
+        "numericRoundTripErrorM": 1.862645149230957e-09
+      },
+      "measurements": {
+        "elevation": {
+          "value": 440,
+          "unit": "m",
+          "row": 1178,
+          "col": 1004,
+          "method": "containing-cell lookup, no interpolation",
+          "verticalDatum": null,
+          "support": {
+            "kind": "archived-grid-cell",
+            "spacingM": 12.5
+          },
+          "physicalUncertaintyM": null,
+          "unknownReason": "Vertical datum and independent physical error are not closed",
+          "source": "queries"
+        },
+        "soil": {
+          "properties": {
+            "phh2o": {
+              "values": {
+                "mean": 5.3,
+                "Q0.05": 3.6,
+                "Q0.95": 7.1
+              },
+              "unit": "pH",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            },
+            "clay": {
+              "values": {
+                "mean": 29.1,
+                "Q0.05": 3.9,
+                "Q0.95": 71.0
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            },
+            "sand": {
+              "values": {
+                "mean": 29.8,
+                "Q0.05": 9.2,
+                "Q0.95": 61.1
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            },
+            "silt": {
+              "values": {
+                "mean": 41.1,
+                "Q0.05": 6.7,
+                "Q0.95": 79.8
+              },
+              "unit": "mass percent",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            },
+            "soc": {
+              "values": {
+                "mean": 50.6,
+                "Q0.05": 10.0,
+                "Q0.95": 128.6
+              },
+              "unit": "g/kg",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            },
+            "bdod": {
+              "values": {
+                "mean": 1.11,
+                "Q0.05": 0.59,
+                "Q0.95": 1.46
+              },
+              "unit": "kg/dm3",
+              "status": "model-prediction",
+              "nativeCell": [
+                73,
+                96
+              ],
+              "depth": "0-5cm"
+            }
+          },
+          "support": {
+            "kind": "model-prediction-grid",
+            "spacingM": 250
+          },
+          "source": "queries",
+          "measurementError": null,
+          "unknownReason": "Prediction quantiles do not establish local measurement accuracy",
+          "sourceItemRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/11/soil"
+          },
+          "nativeCoordinatesRef": {
+            "source": "queries",
+            "jsonPointer": "/queries/11/soilNativeXY",
+            "value": [
+              12085375.0,
+              3243625.0
+            ],
+            "frame": "SoilGrids-IGH-WGS84-R1",
+            "unit": "m"
+          },
+          "nativeCellContract": {
+            "indexOrder": [
+              "row",
+              "column"
+            ],
+            "indexBase": 0,
+            "coordinates": "cell centres",
+            "affineOrder": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              "f"
+            ],
+            "centreFormula": [
+              "x=a*(col+0.5)+b*(row+0.5)+c",
+              "y=d*(col+0.5)+e*(row+0.5)+f"
+            ],
+            "metadataSource": "soilNative",
+            "layerSelector": "layers.id == property + _ + depth + _ + statistic",
+            "statistics": [
+              "mean",
+              "Q0.05",
+              "Q0.95"
+            ],
+            "fields": [
+              "crsWkt",
+              "transform",
+              "gridRowsCols",
+              "nativeWindowSha256",
+              "semantics"
+            ],
+            "nativeWindowPayloadBundled": false
+          }
+        }
+      },
+      "connections": {
+        "status": "unknown",
+        "items": [],
+        "reason": "Co-location is not a physical connection"
+      },
+      "shapeRules": {
+        "status": "unknown",
+        "items": [],
+        "reason": "No validated terrain-generating curve or surface rule in R1"
+      },
+      "time": {
+        "observationTime": null,
+        "worldTime": null,
+        "knowledgeTime": "2026-09-09",
+        "fieldStates": {
+          "observationTime": {
+            "status": "unknown",
+            "reason": "No single observation date established for co-located source products"
+          },
+          "worldTime": {
+            "status": "not-established",
+            "reason": "No compatible common physical instant validated"
+          }
+        }
+      },
+      "physicalCouplingAccepted": false,
+      "dependencies": [
+        "queries@R1",
+        "demQa@R1",
+        "soilQa@R1",
+        "soilNative@R1"
+      ],
+      "sourceItemRef": {
+        "source": "queries",
+        "jsonPointer": "/queries/11",
+        "identityField": "queryId",
+        "identityValue": "WZ-R1-COLOCATION-12"
+      },
+      "fieldStates": {
+        "compositionParent": {
+          "status": "not-applicable",
+          "reason": "Query location is a data observation support, not a physical component"
+        }
+      }
+    }
+  ],
+  "r1KnowledgeRecordCount": 52,
+  "productionGate": {
+    "cleanupComplete": false,
+    "productionResumed": false,
+    "reason": "No shared cleanup-complete evidence yet"
+  },
+  "displayContract": {
+    "kind": "read-only-evidence-explorer",
+    "durableGeometry": false,
+    "demPayloadBytes": 62412887,
+    "temporaryBuffersAreFacts": false
+  },
+  "supersedes": {
+    "version": "R2.1",
+    "path": "/data-r2-1/OBJECT_EVIDENCE_R2_1.json",
+    "sha256": "597624e88e5027d45bb91bbb22736b4bdf7e69f8f848f76d927df2e1da884e00",
+    "retained": true
+  },
+  "externalDependencies": {
+    "knowledgeGraphRelativeReferences": [
+      {
+        "reference": "evidence/DECODE_COST.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "845b122f9e6af30e49def498539dbc40ff10ced2663e1bdf386025de50b88fb5",
+        "bytes": 782
+      },
+      {
+        "reference": "evidence/DEM_FULL_GRID_QA.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "same-content-bundled-under-source-lock",
+        "localAvailability": "present",
+        "sha256": "91e0fb88071b02d87cc89831a39f5bc279fcc9bdb86198c5fc6c892c2ccca915",
+        "bytes": 1664,
+        "bundledSourceRef": "demQa",
+        "publicPath": "DEM_FULL_GRID_QA.json"
+      },
+      {
+        "reference": "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "29b291ac07b5908c82c24e02d53c2b41671232af428172844a29826eacde698b",
+        "bytes": 28876
+      },
+      {
+        "reference": "evidence/HYDROLOGY_QA.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "6c2871b2739b7406569000e20ec8f2f8a5dae1602148a38ee225db9e1ed4dc01",
+        "bytes": 16005
+      },
+      {
+        "reference": "evidence/SOIL_QA.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "same-content-bundled-under-source-lock",
+        "localAvailability": "present",
+        "sha256": "db278fcd9556273644506b2a43b7657410cd46a48dc78b22e76633610abc0031",
+        "bytes": 9304,
+        "bundledSourceRef": "soilQa",
+        "publicPath": "SOIL_QA.json"
+      },
+      {
+        "reference": "evidence/SOURCE_DEM_QA.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "b30d758774683d33f43a5992e959afc85bf80d1bd5ff28ada932d1a3af9cde85",
+        "bytes": 29232
+      },
+      {
+        "reference": "evidence/TIDE_QA.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "192e58f476bb8924407ffe1b79a497a8ceec5ddeee9c895ba5943715e450bb44",
+        "bytes": 3690
+      },
+      {
+        "reference": "evidence/recovery/00_START_HERE/LOCKED_CROP_CONTRACT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "f4e51363ce0810d9ae208448f9ac00e7c9fc56443e23e281d93af165dcffd1ad",
+        "bytes": 819
+      },
+      {
+        "reference": "evidence/recovery/04_TOOLS/wzdem2_query.py",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "68b1eddb6d7f6f02848b8dac3fb83221b1327a365722991bc18d2bca0b737b3f",
+        "bytes": 4041
+      },
+      {
+        "reference": "evidence/recovery/HISTORICAL_MOSAIC_QA/UNCROPPED_CANONICAL_BUILD_REPORT_R2.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "47345b1db78ea66e249e233d05cd230d375ba811055ae89ee4d68671888bcdd8",
+        "bytes": 9327
+      },
+      {
+        "reference": "evidence/reproduce_numeric_audit.py",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "42e70f1e5dc374c4a885848af9d64aae08bfe19bb2207d9b6c70e0634e7451ac",
+        "bytes": 11677
+      },
+      {
+        "reference": "evidence/soil/native/bdod_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "47fbf072888f3827b14d6b5a9e92ef26da50fb260f0449cd63d6fc8c555ca9f7",
+        "bytes": 10707
+      },
+      {
+        "reference": "evidence/soil/native/bdod_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "fad62aa77b8419dff2ae96b5698dd00ec8bdb8c5c4b3aa40d6da0544892ba3fe",
+        "bytes": 10709
+      },
+      {
+        "reference": "evidence/soil/native/bdod_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "40f4e9f1683f2c2b68be69ce2c2ad0dcb7bbafce33796f3ade708d5a2a001955",
+        "bytes": 10688
+      },
+      {
+        "reference": "evidence/soil/native/clay_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "5eed395a246343b937a10c18cb8a19d8cc09381750a411c8164c6157f29d5d87",
+        "bytes": 10905
+      },
+      {
+        "reference": "evidence/soil/native/clay_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "11e942f13fba1061404431c306b3741bdbe3c909fb63c38abc8b1dc7308faab2",
+        "bytes": 10540
+      },
+      {
+        "reference": "evidence/soil/native/clay_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "3eb6f5a3f8dc18b1512e924b8634b4138a3aec348da64b090a59d0af863c3bde",
+        "bytes": 10403
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "7f6b2c09eaa935d266db8487d18aef7e66ad4a3c32cbac0c060c5b61ab2700bd",
+        "bytes": 10105
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "0354231860d79a182163bcf6b045a04d99f834100607a30f99d5afc3b7681700",
+        "bytes": 10105
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "3c4af43f0ee413e78b0b84f262a2be48a365f3f2dc9e20ef27360e91cd793bd6",
+        "bytes": 8852
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_100-200cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "90e4a9528162ad4577aa4cba727cfb4eb504835f84b964a8766f4061097f271f",
+        "bytes": 10329
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_100-200cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "73cef7bcd8c92042698e547ba91fbeec6242e06cc92c426669a22b0629ab97a0",
+        "bytes": 10329
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_100-200cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "48193759379ae40f195d69f611b9c97c345e2b497e257005f0145dc697875a1e",
+        "bytes": 10308
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_15-30cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "1e84ff377a9ac8a8206faca29eaa2b193e4982e06eaeea7b3526e8e4de7935a3",
+        "bytes": 10147
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_15-30cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "eae08abdbf1e4573fea218335768ed449e666b8cf703f51c1886aa6ae6c4c6c0",
+        "bytes": 10147
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_15-30cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "a2b0f87d93b5758e98067392aa6435313836dacd7f556b8fc14e27f5f1581d74",
+        "bytes": 10126
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_30-60cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "25f09bf333ee898c85d73a7a7c684db0c645c28b72d857f244fff93631b92ed0",
+        "bytes": 10148
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_30-60cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "b84a1f027cd42e26436aa138a252db428609e106bcfb3232e800150f44987ff0",
+        "bytes": 10147
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_30-60cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "dd0343518c5c39bb104f0c5856a34da0c57dc476dfd4d3602f3751361837ed0d",
+        "bytes": 10126
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_5-15cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "28e00cdb00cec0c7a6b05f605d3568580b669711975901bd63565149afc8bc2d",
+        "bytes": 10127
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_5-15cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "6506ca7d6898dbcf98b99fb6191267b924278d2641e7f0dd1cf6875470869098",
+        "bytes": 10126
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_5-15cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "9476a841dca062e60c7a152d1cd7b4a2207c53690ec1ace0a9dbb29f370e203e",
+        "bytes": 10106
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_60-100cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "0efc38a6025f79fc0a859e4bb4366097bcaeeba2a832e95b5f6bab1c5001f693",
+        "bytes": 10309
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_60-100cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "e6fa2cddb28a8cb52afb639e6495a95588361909534663bd174d321a41f11657",
+        "bytes": 10676
+      },
+      {
+        "reference": "evidence/soil/native/phh2o_60-100cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "5b653dc477f11a773f3fff7d829230c402b2865e60cd1567f8e697a5f1792618",
+        "bytes": 10287
+      },
+      {
+        "reference": "evidence/soil/native/sand_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "9c20c3cd85be7c0ce8e8b63ba2b16ca9fa5f71c9eee0fc0618a8ea5e9644a3d6",
+        "bytes": 10537
+      },
+      {
+        "reference": "evidence/soil/native/sand_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "6967fbc987f61fa49326183f45809780aafa2d77e31deeaf29900ff45a112d19",
+        "bytes": 10539
+      },
+      {
+        "reference": "evidence/soil/native/sand_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "88a3d1d208a525377e4904e29424996725877d07472de9360943e3c28dada279",
+        "bytes": 10518
+      },
+      {
+        "reference": "evidence/soil/native/silt_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "3ac0fa2372c248cd077a1d96e5c412303b61b846afd3db26036f7d08d6576444",
+        "bytes": 10905
+      },
+      {
+        "reference": "evidence/soil/native/silt_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "3e747b070abb0438bcaf1ffdcb0c5314e80db16e6688983e686537c1f1fad863",
+        "bytes": 10539
+      },
+      {
+        "reference": "evidence/soil/native/silt_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "2c9c03ab38f673f718bce3856110649107a013e536f235e4d9e304e1c2dc79f4",
+        "bytes": 10518
+      },
+      {
+        "reference": "evidence/soil/native/soc_0-5cm_Q0.05/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "f95af71abe1057b7d6c72781e5c3cf8ef06d69b8d7006a301b454ed8df3e5b7a",
+        "bytes": 10354
+      },
+      {
+        "reference": "evidence/soil/native/soc_0-5cm_Q0.95/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "8d4257bb0dbdd883f3de827a80d3087e3df0492d370f5b74dc75105bbeca7c20",
+        "bytes": 10356
+      },
+      {
+        "reference": "evidence/soil/native/soc_0-5cm_mean/RECEIPT.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "17470e0ae9bdb676473067e9ccc3bc4bb368c8465e19b1de5a93c4ed921a6928",
+        "bytes": 10227
+      },
+      {
+        "reference": "knowledge/JOINT_QUERY_EXAMPLES.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "same-content-bundled-under-source-lock",
+        "localAvailability": "present",
+        "sha256": "21e7f97ae599cd9f4142827dd9198b6e6b6080bb4574bf80871202fa3bc59f9e",
+        "bytes": 33157,
+        "bundledSourceRef": "queries",
+        "publicPath": "JOINT_QUERY_EXAMPLES.json"
+      },
+      {
+        "reference": "knowledge/XIAOMA_KNOWLEDGE_INDEX.json",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "9a25024ba36285babbe9cc74744c24f4994fe5ba8a8ee25f569a009f4375d2bc",
+        "bytes": 19712
+      },
+      {
+        "reference": "knowledge/XIAOMA_REPLY.md",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "333eed98133f9378aeb3efefbec11a88b59e3fcdad9bb8e7507bd8fe0856e97b",
+        "bytes": 30592
+      },
+      {
+        "reference": "rules/MOTHER_OBJECT_DEFINITION_RULE_2026-09-09.md",
+        "originSnapshot": "Wenzhou_Knowledge_Lab_R1_20260909",
+        "resolutionBase": "G:/DEM/Wenzhou_Knowledge_Lab_R1_20260909/",
+        "publicAvailability": "not-bundled-in-this-version",
+        "localAvailability": "present",
+        "sha256": "497f64e0ebae7e98b2a40638cff808ee646ec60759b2c2fd0d2d733bc436ace8",
+        "bytes": 2405
+      }
+    ],
+    "warning": "R1 graph contains 48 relative evidence references. Three identical contents are bundled under source locks demQa, soilQa and queries; their original relative paths are not preserved. The other 45 underlying files are not bundled and resolve only at the declared R1 source root.",
+    "soilNativePayloads": "Source TIFF/VRT/native arrays are not bundled; source URLs and locked hashes are in soilNative. Latest upstream URLs are not immutable replacements."
+  }
+}

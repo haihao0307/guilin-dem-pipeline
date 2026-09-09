@@ -1,0 +1,2725 @@
+{
+  "schema": "wenzhou-evidence-knowledge/r1",
+  "version": "R1",
+  "createdAtUtc": "2026-09-09T05:10:28Z",
+  "declaration": "实验知识记录；不是冻结的通用TLO/WSD标准或已实现的物理世界。",
+  "records": [
+    {
+      "id": "wz.policy.evidence",
+      "revision": 1,
+      "kind": "policy",
+      "title": "有条件的事实与修订",
+      "statement": "身份、测量、坐标、关系、曲线曲面规则优先；显示输出临时；未知与冲突保留；源字节不因认识修订被覆盖。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "有条件的事实与修订",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [],
+      "evidence": [
+        "rules/MOTHER_OBJECT_DEFINITION_RULE_2026-09-09.md",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "adopted-user-rule",
+        "physicalValidation": "not-applicable",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": []
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.knowledge.xiaoma",
+      "revision": 1,
+      "kind": "source",
+      "title": "小妈知识交接",
+      "statement": "已接收正式交接与42份现行知识文档快照；索引完整不代表全部理论和接口已运行。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "小妈知识交接",
+      "context": {},
+      "value": 42,
+      "unit": "documents",
+      "dependsOn": [
+        "wz.policy.evidence"
+      ],
+      "evidence": [
+        "knowledge/XIAOMA_REPLY.md",
+        "knowledge/XIAOMA_KNOWLEDGE_INDEX.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "hash-indexed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": []
+      },
+      "limitations": [
+        "多数文档仅索引，不冒称逐页审阅或已实现全部内容。"
+      ]
+    },
+    {
+      "id": "wz.world.scope",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "锁定温州资料域",
+      "statement": "固定资料范围与空间参考；记录的是资料快照，不承诺所有领域同一物理时刻。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "锁定温州资料域",
+      "context": {
+        "worldId": "earth",
+        "referenceFrame": "EPSG:32651",
+        "bounds": [
+          190475,
+          2991275,
+          411250,
+          3241862.5
+        ],
+        "worldTime": null,
+        "observationTime": null,
+        "knowledgeTime": "2026-09-09T05:10:28Z"
+      },
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.policy.evidence"
+      ],
+      "evidence": [
+        "evidence/recovery/00_START_HERE/LOCKED_CROP_CONTRACT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "统一物理时刻未建立",
+          "各来源原始测量误差需进一步核定"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.source.dem17",
+      "revision": 1,
+      "kind": "source",
+      "title": "17片原 DEM 与元数据",
+      "statement": "17片文件及17份ISO元数据哈希匹配冻结账本，全部源像元已读取；10片EPSG:32651、7片EPSG:32650。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "17片原 DEM 与元数据",
+      "context": {},
+      "value": {
+        "matched": 17,
+        "metadataMatched": 17,
+        "storedSpacingM": 12.5,
+        "sourceInformationScaleM": 30,
+        "sourceNodata": 0
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope"
+      ],
+      "evidence": [
+        "evidence/SOURCE_DEM_QA.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "passed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "source measurement uncertainty",
+          "vertical datum chain"
+        ]
+      },
+      "limitations": [
+        "12.5米网格不能当成12.5米测量精度；源0为NoData不能按海拔0拼接。"
+      ]
+    },
+    {
+      "id": "wz.dem.canonical",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "温州R2.2.1固定高程资料",
+      "statement": "当前冻结裁切高程可从压缩载荷恢复，完整对应母档案整数窗口；是已存在的派生资料场。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "温州R2.2.1固定高程资料",
+      "context": {
+        "referenceFrame": "EPSG:32651",
+        "verticalDatum": null,
+        "gridRowsCols": [
+          20047,
+          17662
+        ],
+        "transform": [
+          12.5,
+          0,
+          190475,
+          0,
+          -12.5,
+          3241862.5
+        ],
+        "worldTime": null,
+        "observationTime": null
+      },
+      "value": {
+        "validPixels": 309716176,
+        "nodataPixels": 44353938,
+        "nodata": -32768,
+        "validZeroHeightPixels": 336
+      },
+      "unit": "m",
+      "dependsOn": [
+        "wz.source.dem17",
+        "wz.world.scope"
+      ],
+      "evidence": [
+        "evidence/DEM_FULL_GRID_QA.json",
+        "evidence/recovery/HISTORICAL_MOSAIC_QA/UNCROPPED_CANONICAL_BUILD_REPORT_R2.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "full-grid-crop-and-independent-decoder-passed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "垂直基准转换未闭合",
+          "原始拼接的全部规则尚未独立重建复验"
+        ]
+      },
+      "limitations": [
+        "历史拼接记录采用bilinear及half-away-from-zero取整；本轮整数裁切未再次重采样。",
+        "压缩无损不代表原始17片拼接本身无损，也不消除测量误差。"
+      ]
+    },
+    {
+      "id": "wz.method.lorenzo",
+      "revision": 1,
+      "kind": "method",
+      "title": "现有Lorenzo数值解码",
+      "statement": "使用原恢复包解码器，另以二维累加独立核对模65536的逆差分；掩膜独立保全。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "现有Lorenzo数值解码",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.dem.canonical"
+      ],
+      "evidence": [
+        "evidence/recovery/04_TOOLS/wzdem2_query.py",
+        "evidence/reproduce_numeric_audit.py"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "passed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": []
+      },
+      "limitations": [
+        "不是CDF5/3运行证明，不是地貌规律学习或最优压缩证明。"
+      ]
+    },
+    {
+      "id": "wz.claim.lossless",
+      "revision": 1,
+      "kind": "claim",
+      "title": "全域保存链复验",
+      "statement": "354070114个像元对应母档案窗口零差异，掩膜零差异，独立解码零差异，4200次查询一致。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "全域保存链复验",
+      "context": {},
+      "value": {
+        "schema": "wenzhou-lab-dem-audit/r1",
+        "executedAtUtc": "2026-09-09T04:37:00Z",
+        "archiveSha256": "8800c053608c5fa74eeebd2ce0d06c1bed54fd65274ed059d6e84fc2ec82a1dc",
+        "indexSha256": "44a1713aac3e8800d801d6d0984e92e56df537fe37012fd9975fcf595130ef9b",
+        "parentArchiveSha256": "540833f25532faa9d9d8f18dce6d738f710dd239e28bec64dcf5e2382db132f8",
+        "archiveBytes": 61977346,
+        "indexBytes": 435541,
+        "archivePlusIndexBytes": 62412887,
+        "fullGridInt16Bytes": 708140228,
+        "validInt16Bytes": 619432352,
+        "compressionRatioFullGridIncludingIndex": 11.34605787423357,
+        "compressionRatioValidValuesIncludingIndex": 9.924750829103612,
+        "tileSlots": 1400,
+        "encodedTiles": 1219,
+        "checkedPixels": 354070114,
+        "validPixels": 309716176,
+        "nodataPixels": 44353938,
+        "validZeroHeightPixels": 336,
+        "heightRangeM": [
+          -14,
+          1509
+        ],
+        "cropMismatchPixels": 0,
+        "maskMismatchPixels": 0,
+        "independentDecoderMismatchPixels": 0,
+        "heightQueries": 4200,
+        "queryMismatches": 0,
+        "recoveredRowMajorInt16Sha256": "23b5bc71624b65889fb72cf353f74286652147b159d7aa774896f05058e52c19",
+        "decoderSecondsIncludingJit": 2.9537253999860695,
+        "independentDecoderSeconds": 12.186999099974855,
+        "parentWindowSeconds": 2.469569099959699,
+        "elapsedSeconds": 19.105841200000214,
+        "passed": true,
+        "scope": "Full archived cropped grid versus integer window of archived parent; independent decoder; internal stored tile hashes. Does not independently prove original mosaic method, terrain accuracy, vertical datum, or external truth.",
+        "runtime": {
+          "python": "3.12.10",
+          "numpy": "2.5.3",
+          "rasterio": "1.5.1"
+        }
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.dem.canonical",
+        "wz.method.lorenzo"
+      ],
+      "evidence": [
+        "evidence/DEM_FULL_GRID_QA.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "passed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": []
+      },
+      "limitations": [
+        "独立的是数值解码和窗口比较；不是独立外业高程真值。"
+      ]
+    },
+    {
+      "id": "wz.claim.cost",
+      "revision": 1,
+      "kind": "claim",
+      "title": "数据保存与读取成本",
+      "statement": "压缩载荷与索引合计62412887字节；完整Int16网格708140228字节。运行时与实验依赖另列账。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "数据保存与读取成本",
+      "context": {},
+      "value": {
+        "encodedBytes": 62412887,
+        "fullGridRatio": 11.34605787423357,
+        "validValuesRatio": 9.924750829103612
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.claim.lossless"
+      ],
+      "evidence": [
+        "evidence/DEM_FULL_GRID_QA.json",
+        "evidence/DECODE_COST.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "measured",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": []
+      },
+      "limitations": [
+        "不同网格、原文件、运行环境不可共用一个压缩率；本机时延不是手机性能。"
+      ]
+    },
+    {
+      "id": "wz.hydro.coast",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "OSM海岸线",
+      "statement": "来源文件哈希和全部派生顶点的独立投影/源线段对应复验通过；河口连接仍待验。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "OSM海岸线",
+      "context": {
+        "referenceFrame": "EPSG:32651",
+        "observationTime": "2026-08-28T08:44:56.133161+00:00",
+        "fullFreshSnapshot": false
+      },
+      "value": {
+        "name": "WENZHOU_COASTLINE_EPSG32651.geojson",
+        "featureCount": 1064,
+        "vertexCount": 92719,
+        "verticesMatchingReprojectedSourceRounded1e5": 92702,
+        "otherVerticesComparedToSourceSegments": 17,
+        "maxOtherVertexDistanceM": 1.1641532182693481e-10,
+        "verticesOutsideCurrentLockedDemRectangle": 81,
+        "missingSourceWayIds": [],
+        "invalidFeatureIndices": [],
+        "duplicatePartIds": 0,
+        "reprojectionConsistencyPassed": true,
+        "scope": "Every derived vertex checked against separately reprojected source way or its clipped segment. No bank, hydrologic direction, estuary topology, or full new-AOI coverage certification."
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope"
+      ],
+      "evidence": [
+        "evidence/HYDROLOGY_QA.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "hash-and-coordinate-consistency-passed",
+        "semanticVerification": "source-way-linked",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "current DEM alignment",
+          "new AOI completeness",
+          "bank boundaries",
+          "estuary topology"
+        ]
+      },
+      "limitations": [
+        "绑定旧truth哈希，不能直接宣布新范围水文完备；中心线不等于河岸。"
+      ]
+    },
+    {
+      "id": "wz.hydro.river",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "OSM河流中心线",
+      "statement": "来源文件哈希和全部派生顶点的独立投影/源线段对应复验通过；河口连接仍待验。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "OSM河流中心线",
+      "context": {
+        "referenceFrame": "EPSG:32651",
+        "observationTime": "2026-08-28T08:44:56.133161+00:00",
+        "fullFreshSnapshot": false
+      },
+      "value": {
+        "name": "WENZHOU_RIVER_CENTERLINES_EPSG32651.geojson",
+        "featureCount": 6797,
+        "vertexCount": 146345,
+        "verticesMatchingReprojectedSourceRounded1e5": 146318,
+        "otherVerticesComparedToSourceSegments": 27,
+        "maxOtherVertexDistanceM": 6.382968334790002e-10,
+        "verticesOutsideCurrentLockedDemRectangle": 1666,
+        "missingSourceWayIds": [],
+        "invalidFeatureIndices": [],
+        "duplicatePartIds": 0,
+        "reprojectionConsistencyPassed": true,
+        "scope": "Every derived vertex checked against separately reprojected source way or its clipped segment. No bank, hydrologic direction, estuary topology, or full new-AOI coverage certification."
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope"
+      ],
+      "evidence": [
+        "evidence/HYDROLOGY_QA.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "hash-and-coordinate-consistency-passed",
+        "semanticVerification": "source-way-linked",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "current DEM alignment",
+          "new AOI completeness",
+          "bank boundaries",
+          "estuary topology"
+        ]
+      },
+      "limitations": [
+        "绑定旧truth哈希，不能直接宣布新范围水文完备；中心线不等于河岸。"
+      ]
+    },
+    {
+      "id": "wz.tide.kanmen1997",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "坎门1997年固定相对潮位",
+      "statement": "840个逐小时样本，数值文件哈希通过，二进制与CSV一致；原始浮点观测到毫米整数量化另有误差。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "坎门1997年固定相对潮位",
+      "context": {
+        "referenceFrame": "EPSG:4326",
+        "location": [
+          121.2817,
+          28.088301
+        ],
+        "validTime": [
+          "1997-11-26T16:00:00Z",
+          "1997-12-31T16:00:00Z"
+        ],
+        "verticalDatum": "window-mean-removed station observation; conversion to DEM unavailable"
+      },
+      "value": {
+        "samples": 840,
+        "maxQuantizationErrorMm": 0.26547619000029954
+      },
+      "unit": "mm",
+      "dependsOn": [
+        "wz.world.scope"
+      ],
+      "evidence": [
+        "evidence/TIDE_QA.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "passed",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "相对窗口零点与DEM垂直基准的转换"
+        ]
+      },
+      "limitations": [
+        "不是当前预测；不能直接相减得水深。"
+      ]
+    },
+    {
+      "id": "wz.soil.phh2o_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:49:32Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          48,
+          67
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:49:32Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          35,
+          51
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:49:33Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          59,
+          84
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_5-15cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_5-15cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_5-15cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "5-15cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:50:12Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          49,
+          67
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_5-15cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_5-15cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_5-15cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_5-15cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "5-15cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:50:20Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          35,
+          53
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_5-15cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_5-15cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_5-15cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_5-15cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "5-15cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:50:52Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          58,
+          84
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_5-15cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_15-30cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_15-30cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_15-30cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "15-30cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:51:01Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          49,
+          69
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_15-30cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_15-30cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_15-30cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_15-30cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "15-30cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:51:38Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          35,
+          54
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_15-30cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_15-30cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_15-30cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_15-30cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "15-30cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:51:41Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          58,
+          84
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_15-30cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_30-60cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_30-60cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_30-60cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "30-60cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:52:21Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          49,
+          70
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_30-60cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_30-60cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_30-60cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_30-60cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "30-60cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:52:24Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          35,
+          53
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_30-60cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_30-60cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_30-60cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_30-60cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "30-60cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:53:01Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          56,
+          84
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_30-60cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_60-100cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_60-100cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_60-100cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "60-100cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:53:05Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          51,
+          70
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_60-100cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_60-100cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_60-100cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_60-100cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "60-100cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:53:45Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          35,
+          51
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_60-100cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_60-100cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_60-100cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_60-100cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "60-100cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:03:19Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          60,
+          88
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_60-100cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_100-200cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_100-200cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_100-200cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "100-200cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:54:24Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          51,
+          69
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_100-200cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_100-200cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_100-200cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_100-200cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "100-200cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:54:44Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          37,
+          50
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_100-200cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.phh2o_100-200cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 phh2o_100-200cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 phh2o_100-200cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "100-200cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:55:18Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          65,
+          87
+        ],
+        "nodata": -32768
+      },
+      "unit": "pH x 10",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/phh2o_100-200cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "pH"
+      }
+    },
+    {
+      "id": "wz.soil.clay_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 clay_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 clay_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:55:55Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          164,
+          460
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/clay_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.clay_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 clay_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 clay_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:03:19Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          1,
+          139
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/clay_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.clay_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 clay_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 clay_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:56:34Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          397,
+          992
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/clay_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.sand_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 sand_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 sand_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:56:51Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          31,
+          600
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/sand_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.sand_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 sand_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 sand_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:57:32Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          2,
+          233
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/sand_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.sand_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 sand_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 sand_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:57:45Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          60,
+          816
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/sand_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.silt_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 silt_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 silt_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:58:26Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          194,
+          666
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/silt_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.silt_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 silt_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 silt_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:04:18Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          4,
+          300
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/silt_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.silt_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 silt_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 silt_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:59:01Z"
+      },
+      "value": {
+        "aoiValidCells": 468112,
+        "aoiMissingCells": 420126,
+        "storedRange": [
+          359,
+          995
+        ],
+        "nodata": -32768
+      },
+      "unit": "g/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/silt_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "mass percent"
+      }
+    },
+    {
+      "id": "wz.soil.soc_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 soc_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 soc_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:59:27Z"
+      },
+      "value": {
+        "aoiValidCells": 468054,
+        "aoiMissingCells": 420184,
+        "storedRange": [
+          157,
+          1262
+        ],
+        "nodata": -32768
+      },
+      "unit": "dg/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/soc_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "g/kg"
+      }
+    },
+    {
+      "id": "wz.soil.soc_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 soc_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 soc_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T04:59:57Z"
+      },
+      "value": {
+        "aoiValidCells": 468054,
+        "aoiMissingCells": 420184,
+        "storedRange": [
+          10,
+          284
+        ],
+        "nodata": -32768
+      },
+      "unit": "dg/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/soc_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "g/kg"
+      }
+    },
+    {
+      "id": "wz.soil.soc_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 soc_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 soc_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:00:18Z"
+      },
+      "value": {
+        "aoiValidCells": 468054,
+        "aoiMissingCells": 420184,
+        "storedRange": [
+          353,
+          5200
+        ],
+        "nodata": -32768
+      },
+      "unit": "dg/kg",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/soc_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 10,
+        "outputUnit": "g/kg"
+      }
+    },
+    {
+      "id": "wz.soil.bdod_0-5cm_mean",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 bdod_0-5cm_mean",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 bdod_0-5cm_mean",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "mean",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:05:09Z"
+      },
+      "value": {
+        "aoiValidCells": 468050,
+        "aoiMissingCells": 420188,
+        "storedRange": [
+          85,
+          127
+        ],
+        "nodata": -32768
+      },
+      "unit": "cg/cm3",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/bdod_0-5cm_mean/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 100,
+        "outputUnit": "kg/dm3"
+      }
+    },
+    {
+      "id": "wz.soil.bdod_0-5cm_Q0.05",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 bdod_0-5cm_Q0.05",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 bdod_0-5cm_Q0.05",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.05",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:05:10Z"
+      },
+      "value": {
+        "aoiValidCells": 468050,
+        "aoiMissingCells": 420188,
+        "storedRange": [
+          29,
+          90
+        ],
+        "nodata": -32768
+      },
+      "unit": "cg/cm3",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/bdod_0-5cm_Q0.05/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 100,
+        "outputUnit": "kg/dm3"
+      }
+    },
+    {
+      "id": "wz.soil.bdod_0-5cm_Q0.95",
+      "revision": 1,
+      "kind": "dataset",
+      "title": "土壤 bdod_0-5cm_Q0.95",
+      "statement": "从官方原生源瓦片取得并按整数窗口整理的模型预测，原字节保留。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土壤 bdod_0-5cm_Q0.95",
+      "context": {
+        "referenceFrame": "PROJCS[\"Interrupted_Goode_Homolosine\",GEOGCS[\"GCS_WGS_1984 ellipse\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Interrupted_Goode_Homolosine\"],UNIT[\"Meter\",1]]",
+        "nativeSpacingM": 250,
+        "depthInterval": "0-5cm",
+        "statistic": "Q0.95",
+        "observationTime": null,
+        "worldTime": null,
+        "acquiredAt": "2026-09-09T05:06:03Z"
+      },
+      "value": {
+        "aoiValidCells": 468050,
+        "aoiMissingCells": 420188,
+        "storedRange": [
+          135,
+          186
+        ],
+        "nodata": -32768
+      },
+      "unit": "cg/cm3",
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/soil/native/bdod_0-5cm_Q0.95/RECEIPT.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "native-grid-source-checked",
+        "semanticVerification": "model-prediction",
+        "physicalValidation": "not-locally-validated",
+        "adoption": "prediction-use-with-uncertainty"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地实测验证",
+          "数据覆盖外/掩膜内土壤状态",
+          "当前或历史时刻的实际变化"
+        ]
+      },
+      "limitations": [
+        "不把下载时间当观测时间，不补生成土壤细节，不把250米提升为12.5米精度。"
+      ],
+      "conversion": {
+        "operation": "divide",
+        "divisor": 100,
+        "outputUnit": "kg/dm3"
+      }
+    },
+    {
+      "id": "wz.claim.colocation",
+      "revision": 1,
+      "kind": "claim",
+      "title": "DEM与土壤同点查询回执",
+      "statement": "12个分布于资料域内的检验位置分别查询原生土壤单元和对应DEM单元，保留原生精度、单位与预测区间。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "DEM与土壤同点查询回执",
+      "context": {},
+      "value": {
+        "queryCount": 12,
+        "maxCoordinateArithmeticRoundTripErrorM": 2.3283064365386963e-09
+      },
+      "unit": null,
+      "dependsOn": [
+        "wz.dem.canonical",
+        "wz.soil.phh2o_0-5cm_mean",
+        "wz.soil.phh2o_0-5cm_Q0.05",
+        "wz.soil.phh2o_0-5cm_Q0.95",
+        "wz.soil.clay_0-5cm_mean",
+        "wz.soil.clay_0-5cm_Q0.05",
+        "wz.soil.clay_0-5cm_Q0.95",
+        "wz.soil.sand_0-5cm_mean",
+        "wz.soil.sand_0-5cm_Q0.05",
+        "wz.soil.sand_0-5cm_Q0.95",
+        "wz.soil.silt_0-5cm_mean",
+        "wz.soil.silt_0-5cm_Q0.05",
+        "wz.soil.silt_0-5cm_Q0.95",
+        "wz.soil.soc_0-5cm_mean",
+        "wz.soil.soc_0-5cm_Q0.05",
+        "wz.soil.soc_0-5cm_Q0.95",
+        "wz.soil.bdod_0-5cm_mean",
+        "wz.soil.bdod_0-5cm_Q0.05",
+        "wz.soil.bdod_0-5cm_Q0.95"
+      ],
+      "evidence": [
+        "evidence/SOIL_QA.json",
+        "knowledge/JOINT_QUERY_EXAMPLES.json"
+      ],
+      "status": {
+        "availability": "present",
+        "numericVerification": "passed",
+        "semanticVerification": "co-location-only",
+        "physicalValidation": "not-validated",
+        "adoption": "limited-use"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "共同物理时刻",
+          "本地土壤预测误差",
+          "水力和生态本构"
+        ]
+      },
+      "limitations": [
+        "算术回投误差不是地理精度；同点查询不证明物理耦合。"
+      ]
+    },
+    {
+      "id": "wz.topic.marine",
+      "revision": 1,
+      "kind": "gap",
+      "title": "海床与TID",
+      "statement": "本地海床相关7个TIFF仅为Git LFS指针，尚未拿到对应载荷。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "海床与TID",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "missing-payload",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地海床相关7个TIFF仅为Git LFS指针，尚未拿到对应载荷。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.landcover",
+      "revision": 1,
+      "kind": "gap",
+      "title": "土地覆盖",
+      "statement": "本轮未取得绑定锁定全域和明确年份的已验收分类图。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "土地覆盖",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "missing",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本轮未取得绑定锁定全域和明确年份的已验收分类图。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.vegetation",
+      "revision": 1,
+      "kind": "gap",
+      "title": "植被生态",
+      "statement": "已取得小妈领域知识，尚无本区域实测群落、季节序列与已标定生长模型。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "植被生态",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "knowledge-only",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "已取得小妈领域知识，尚无本区域实测群落、季节序列与已标定生长模型。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.agriculture",
+      "revision": 1,
+      "kind": "gap",
+      "title": "农业与田块",
+      "statement": "已有假设田块方法，真实田界、作物批次和灌排史仍需来源。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "农业与田块",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "knowledge-only",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "已有假设田块方法，真实田界、作物批次和灌排史仍需来源。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.settlements",
+      "revision": 1,
+      "kind": "gap",
+      "title": "居民地",
+      "statement": "本地有OSM地名相关文件；未将地名当建筑范围或历史居民地完整证明。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "居民地",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "candidate-files",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "本地有OSM地名相关文件；未将地名当建筑范围或历史居民地完整证明。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.currents",
+      "revision": 1,
+      "kind": "gap",
+      "title": "洋流与区域潮汐",
+      "statement": "坎门单站固定潮位不能替代区域潮汐场或固定时刻洋流。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "洋流与区域潮汐",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "missing",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "坎门单站固定潮位不能替代区域潮汐场或固定时刻洋流。"
+        ]
+      },
+      "limitations": []
+    },
+    {
+      "id": "wz.topic.weather",
+      "revision": 1,
+      "kind": "gap",
+      "title": "天气与土体水状态",
+      "statement": "共同状态接口已有知识提案，实际驱动、初态、含水史和本构未闭合。",
+      "recordedAtUtc": "2026-09-09T05:10:28Z",
+      "subject": "天气与土体水状态",
+      "context": {},
+      "value": null,
+      "unit": null,
+      "dependsOn": [
+        "wz.world.scope",
+        "wz.knowledge.xiaoma"
+      ],
+      "evidence": [
+        "evidence/ENVIRONMENT_FILE_LEDGER.json",
+        "knowledge/XIAOMA_REPLY.md"
+      ],
+      "status": {
+        "availability": "knowledge-only",
+        "numericVerification": "not-applicable",
+        "semanticVerification": "limited",
+        "physicalValidation": "not-validated",
+        "adoption": "pending"
+      },
+      "uncertainty": {
+        "numericMeasurementUncertainty": null,
+        "unknownReasons": [
+          "共同状态接口已有知识提案，实际驱动、初态、含水史和本构未闭合。"
+        ]
+      },
+      "limitations": []
+    }
+  ]
+}

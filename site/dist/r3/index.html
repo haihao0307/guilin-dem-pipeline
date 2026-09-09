@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州真实 DEM 三维地形：旋转、缩放、查看山地与全域。">
+ <title>小温州 · 三维地形 R3</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="/r3/style.css">
+ <script type="importmap">{"imports":{"three":"/vendor/three.module.js"}}</script>
+</head>
+<body>
+ <main id="stage" aria-label="可旋转缩放的温州三维地形">
+   <canvas id="terrain" tabindex="0" aria-label="三维地形；方向键旋转，加减号缩放，R键复位"></canvas>
+   <header class="topbar">
+     <div class="brand"><span class="brand-mark" aria-hidden="true">山</span><div><h1>小温州<span>三维地形</span></h1><p>真实 DEM · R3</p></div></div>
+     <div class="view-switch" role="group" aria-label="地形范围"><button id="mountains" class="active" aria-pressed="true">山地近景</button><button id="overview" aria-pressed="false">全域</button></div>
+     <button id="info-button" class="quiet" aria-expanded="false" aria-controls="info">资料说明</button>
+   </header>
+   <section class="focus-panel" aria-label="位置与显示设置">
+     <label for="location">查看位置</label>
+     <select id="location"><option value="mountains">山地近景</option><option value="overview">全域</option></select>
+     <label for="exaggeration">地形比例</label>
+     <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
+     <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
+   </section>
+   <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
+   <div class="compass" aria-label="北方向"><span id="north-arrow">↑</span><b>北</b></div>
+   <nav class="camera-controls" aria-label="相机控制">
+     <button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="zoom-out" title="缩小" aria-label="缩小">−</button>
+     <span class="separator"></span><button id="turn-left" title="向左旋转" aria-label="向左旋转">↶</button><button id="turn-right" title="向右旋转" aria-label="向右旋转">↷</button>
+     <span class="separator"></span><button id="top-view">俯视</button><button id="reset">复位</button>
+   </nav>
+   <footer><div class="caption"><strong id="view-title">山地近景</strong><span id="render-status" role="status" aria-live="polite">准备地形</span></div><p class="gesture-hint">拖动旋转 · 滚轮缩放 · 双指平移</p><div class="height-legend"><span>低</span><i></i><span>高</span></div></footer>
+   <aside id="info" class="info-panel" hidden aria-label="资料说明">
+      <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>这片地形来自哪里</h2>
+      <p>使用已核验的温州 DEM 整幅格网，归档格距为 12.5 米。来源信息尺度约 30 米，更密的格距不代表新增实测细节。当前画面按浏览范围选取样本，在有效边界内显示地形。</p>
+      <dl><dt>位置</dt><dd>EPSG:32651，东向与北向以米表示；画面统一换算成千米。真实比例指投影水平与高程使用同一尺度，不是地球曲率模型。</dd><dt>高程与误差</dt><dd>沿用归档中的高程数值。高程基准、独立实测误差和统一观测时间尚未确定。</dd><dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网的双线性曲面；显示误差与实测误差分别记录。</dd><dt>空白区域</dt><dd>缺测或当前范围之外，不能据此判断为海水或零高程。边缘采取保守裁切，不跨缺测区连面。虚线是选取范围，不是崖壁或海岸。</dd><dt>起伏增强</dt><dd>仅放大显示高度，不改变原始数据；默认真实比例，复位恢复 1×。</dd><dt>查询位置</dt><dd>是数据查询点，不是地形上的物理构件。点号不代表地名，标记的显示落点不等于实测连接。12 个点只覆盖北部部分位置，不能代表全域。</dd><dt>小妈知识应用</dt><dd>格心与像元边缘分开；原像元值与曲面求值分开；粗网格不跨缺测；双线性曲面与三角显示误差分开；显示关系不冒充物理连接。</dd></dl>
+      <a href="/r3/data/terrain.json" target="_blank" rel="noreferrer">查看测量与曲面规则</a>
+   </aside>
+ </main>
+ <script type="module" src="/r3/app.js"></script>
+</body></html>
