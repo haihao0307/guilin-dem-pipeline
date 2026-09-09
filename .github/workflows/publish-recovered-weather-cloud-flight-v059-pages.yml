@@ -1,0 +1,118 @@
+name: Publish recovered Weather cloud flight V0.5.9 to Pages
+
+on:
+  push:
+    branches:
+      - recovery/weather-mother-cloud-flight-v059-20260910
+    paths:
+      - .github/workflows/publish-recovered-weather-cloud-flight-v059-pages.yml
+
+permissions:
+  contents: write
+
+jobs:
+  recover-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HISTORICAL_COMMIT: f91f830c0f649dbc4229ed009cb7898847e3f075
+      HISTORICAL_DIR: wenzhou-v7-full/workbench-v059
+      TARGET_DIR: weather-mother/cloud-flight-v059-recovered-20260910
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract exact historical runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$HISTORICAL_COMMIT^{commit}"
+          rm -rf /tmp/recovered-v059
+          mkdir -p /tmp/recovered-v059
+          git archive "$HISTORICAL_COMMIT" "$HISTORICAL_DIR" | tar -x -C /tmp/recovered-v059
+          test -f "/tmp/recovered-v059/$HISTORICAL_DIR/index.html"
+          test -f "/tmp/recovered-v059/$HISTORICAL_DIR/runtime.js"
+          test -f "/tmp/recovered-v059/$HISTORICAL_DIR/weather-scene.mjs"
+          test -d "/tmp/recovered-v059/$HISTORICAL_DIR/data"
+          test -d "/tmp/recovered-v059/$HISTORICAL_DIR/modules"
+          grep -Fq 'id="cloudView"' "/tmp/recovered-v059/$HISTORICAL_DIR/index.html"
+          grep -Fq 'id="flightView"' "/tmp/recovered-v059/$HISTORICAL_DIR/index.html"
+          find "/tmp/recovered-v059/$HISTORICAL_DIR" -type f | sort > /tmp/recovered-files.txt
+          echo "Recovered files: $(wc -l </tmp/recovered-files.txt)"
+          du -sh "/tmp/recovered-v059/$HISTORICAL_DIR"
+      - name: Publish versioned immutable directory on gh-pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/ghpages
+          git worktree add -b tmp-recover-cloud-flight /tmp/ghpages origin/gh-pages
+          cd /tmp/ghpages
+          rm -rf "$TARGET_DIR"
+          mkdir -p "$TARGET_DIR"
+          cp -a "/tmp/recovered-v059/$HISTORICAL_DIR/." "$TARGET_DIR/"
+          python3 - <<'PY'
+          import json, os, hashlib
+          from pathlib import Path
+          root=Path('/tmp/ghpages')/os.environ['TARGET_DIR']
+          index=root/'index.html'
+          receipt={
+            'schema':'weather-mother-cloud-flight-recovery/1',
+            'historicalCommit':os.environ['HISTORICAL_COMMIT'],
+            'historicalPath':os.environ['HISTORICAL_DIR'],
+            'recoveredPath':os.environ['TARGET_DIR'],
+            'indexBytes':index.stat().st_size,
+            'indexSHA256':hashlib.sha256(index.read_bytes()).hexdigest(),
+            'copyPolicy':'byte-identical historical runtime files plus this receipt',
+            'cloudViewRestored':True,
+            'flightViewRestored':True,
+            'yoheiUpgradeApplied':False,
+            'visualAcceptance':'historical feature provenance recovered; current browser revalidation pending',
+            'productionReady':False
+          }
+          (root/'WEATHER_MOTHER_RECOVERY_SOURCE.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "$TARGET_DIR"
+          if git diff --cached --quiet; then
+            echo 'Recovery directory already published.'
+          else
+            git commit -m 'recover(weather-mother): restore Wenzhou V0.5.9 cloud flight runtime [skip ci]'
+          fi
+          for attempt in 1 2 3; do
+            git fetch origin gh-pages
+            if git rebase origin/gh-pages && git push origin HEAD:gh-pages; then
+              git rev-parse HEAD > /tmp/recovered-pages-commit.txt
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep 3
+          done
+          exit 1
+      - name: Record publication pointer on recovery branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          PAGES_COMMIT=$(cat /tmp/recovered-pages-commit.txt)
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path('weather-mother/handoffs/RECOVERED_CLOUD_FLIGHT_PAGES_PUBLICATION.json')
+          data={
+            'schema':'weather-mother-cloud-flight-pages-publication/1',
+            'historicalCommit':os.environ['HISTORICAL_COMMIT'],
+            'historicalPath':os.environ['HISTORICAL_DIR'],
+            'pagesCommit':Path('/tmp/recovered-pages-commit.txt').read_text().strip(),
+            'pagesPath':os.environ['TARGET_DIR'],
+            'publicURL':'https://haihao0307.github.io/guilin-dem-pipeline/'+os.environ['TARGET_DIR']+'/',
+            'browserRevalidationPending':True
+          }
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(data,ensure_ascii=False,indent=2))
+          PY
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/handoffs/RECOVERED_CLOUD_FLIGHT_PAGES_PUBLICATION.json
+          git commit -m 'docs(weather-mother): record recovered cloud-flight Pages publication [skip ci]'
+          git push origin HEAD:recovery/weather-mother-cloud-flight-v059-20260910
