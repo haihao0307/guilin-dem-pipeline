@@ -1,0 +1,205 @@
+name: Wenzhou R3.5 OSM Object Evidence Acquisition
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-5-osm-object-evidence-20260910
+    paths:
+      - .github/workflows/wenzhou-r3-5-osm-object-acquire.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OSM and geometry tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y osmium-tool jq
+          osmium --version
+
+      - name: Download current Geofabrik regional sources and verify provider checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r35-osm/source /tmp/r35-osm/work artifacts/wenzhou-r35-osm
+          for REGION in zhejiang fujian; do
+            curl --fail --location --retry 5 --retry-all-errors \
+              --output "/tmp/r35-osm/source/${REGION}-latest.osm.pbf" \
+              "https://download.geofabrik.de/asia/china/${REGION}-latest.osm.pbf"
+            curl --fail --location --retry 5 --retry-all-errors \
+              --output "/tmp/r35-osm/source/${REGION}-latest.osm.pbf.md5" \
+              "https://download.geofabrik.de/asia/china/${REGION}-latest.osm.pbf.md5"
+            (cd /tmp/r35-osm/source && md5sum --check "${REGION}-latest.osm.pbf.md5")
+          done
+
+      - name: Crop one complete Wenzhou-area OSM snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          BBOX='119.53652775317141,26.768974131802604,122.92078622479278,29.675418483082204'
+          for REGION in zhejiang fujian; do
+            osmium extract -b "$BBOX" -s complete_ways --set-bounds \
+              "/tmp/r35-osm/source/${REGION}-latest.osm.pbf" \
+              -o "/tmp/r35-osm/work/${REGION}-wenzhou.osm.pbf" --overwrite
+          done
+          osmium merge --simplify \
+            /tmp/r35-osm/work/zhejiang-wenzhou.osm.pbf \
+            /tmp/r35-osm/work/fujian-wenzhou.osm.pbf \
+            -o artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf --overwrite
+          osmium check-refs artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf
+          osmium fileinfo -e -j artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf \
+            > artifacts/wenzhou-r35-osm/WENZHOU_OSM_BBOX_FILEINFO.json
+
+      - name: Derive roads and building observations from the same locked snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=artifacts/wenzhou-r35-osm
+          SNAP="$ROOT/WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf"
+          osmium tags-filter "$SNAP" w/highway \
+            -o "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" --overwrite
+          osmium tags-filter "$SNAP" wr/building wr/building:part \
+            -o "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" --overwrite
+          osmium check-refs "$ROOT/WENZHOU_OSM_ROADS.osm.pbf"
+          osmium check-refs "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf"
+          osmium export "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" \
+            -f geojsonseq -o /tmp/r35-osm/work/roads.geojsonseq --overwrite
+          osmium export "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" \
+            -f geojsonseq -o /tmp/r35-osm/work/buildings.geojsonseq --overwrite
+          gzip -9 -n -c /tmp/r35-osm/work/roads.geojsonseq > "$ROOT/WENZHOU_OSM_ROADS.geojsonseq.gz"
+          gzip -9 -n -c /tmp/r35-osm/work/buildings.geojsonseq > "$ROOT/WENZHOU_OSM_BUILDINGS.geojsonseq.gz"
+          osmium fileinfo -e -j "$ROOT/WENZHOU_OSM_ROADS.osm.pbf" > "$ROOT/WENZHOU_OSM_ROADS_FILEINFO.json"
+          osmium fileinfo -e -j "$ROOT/WENZHOU_OSM_BUILDINGS.osm.pbf" > "$ROOT/WENZHOU_OSM_BUILDINGS_FILEINFO.json"
+
+      - name: Measure map-object coverage and tag completeness without inventing defaults
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import collections, hashlib, json
+          from datetime import datetime, timezone
+
+          root=Path('artifacts/wenzhou-r35-osm')
+          work=Path('/tmp/r35-osm/work')
+          bounds=[119.53652775317141,26.768974131802604,122.92078622479278,29.675418483082204]
+
+          def sha256(path):
+              h=hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+              return h.hexdigest()
+
+          def scan(path,kind):
+              total=0; geom=collections.Counter(); values=collections.Counter(); tags=collections.Counter(); bad=0
+              minx=miny=float('inf'); maxx=maxy=float('-inf')
+              tag_names=(['name','surface','lanes','width','maxspeed','bridge','tunnel','layer'] if kind=='road' else ['name','height','building:levels','roof:shape','building:material','building:part'])
+              def coords(v):
+                  nonlocal minx,miny,maxx,maxy
+                  if isinstance(v,list) and len(v)>=2 and isinstance(v[0],(int,float)) and isinstance(v[1],(int,float)):
+                      x,y=float(v[0]),float(v[1]);minx=min(minx,x);miny=min(miny,y);maxx=max(maxx,x);maxy=max(maxy,y);return
+                  if isinstance(v,list):
+                      for q in v: coords(q)
+              with path.open('r',encoding='utf-8') as f:
+                  for line in f:
+                      line=line.strip()
+                      if not line: continue
+                      try: feat=json.loads(line)
+                      except Exception: bad+=1;continue
+                      total+=1; g=feat.get('geometry') or {}; geom[g.get('type','null')]+=1; coords(g.get('coordinates'))
+                      p=feat.get('properties') or {}
+                      key='highway' if kind=='road' else 'building'
+                      if key in p: values[str(p[key])]+=1
+                      for t in tag_names:
+                          if p.get(t) not in (None,''): tags[t]+=1
+              return {
+                'featureCount':total,'geometryTypes':dict(geom),'primaryTagValues':dict(values.most_common(100)),
+                'tagPresence':{k:{'count':tags[k],'fraction':(tags[k]/total if total else 0)} for k in tag_names},
+                'coordinateBoundsWgs84':([minx,miny,maxx,maxy] if total and minx!=float('inf') else None),'invalidJsonLines':bad
+              }
+
+          roads=scan(work/'roads.geojsonseq','road')
+          buildings=scan(work/'buildings.geojsonseq','building')
+          source=[]
+          for region in ['zhejiang','fujian']:
+              p=Path('/tmp/r35-osm/source')/f'{region}-latest.osm.pbf'
+              source.append({'region':region,'url':f'https://download.geofabrik.de/asia/china/{region}-latest.osm.pbf','bytes':p.stat().st_size,'sha256':sha256(p),'providerMd5Sidecar':(p.with_suffix(p.suffix+'.md5')).read_text().strip()})
+          snapshot=root/'WENZHOU_OSM_BBOX_SNAPSHOT.osm.pbf'
+          report={
+            'schema':'wenzhou-r3.5-osm-object-evidence/r1','createdAtUtc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+            'boundsWgs84':bounds,'provider':'Geofabrik GmbH','dataSource':'OpenStreetMap contributors','license':'ODbL 1.0','attribution':'© OpenStreetMap contributors',
+            'sourceRegionalPbf':source,
+            'snapshot':{'path':snapshot.name,'bytes':snapshot.stat().st_size,'sha256':sha256(snapshot),'selection':'bbox extract with complete_ways from current Zhejiang + Fujian regional PBFs, merged with --simplify'},
+            'roads':roads,'buildings':buildings,
+            'semantics':{
+              'roads':'OSM highway ways are mapped linear road/path observations, generally centerline-like; they are not surveyed road-edge polygons or guaranteed lane geometry.',
+              'buildings':'OSM building/building:part ways and relations are mapped footprint/part observations; height and levels are only known when explicitly tagged.',
+              'missingRoadWidthMeans':'unknown','missingBuildingHeightMeans':'unknown','missingBuildingLevelsMeans':'unknown',
+              'uniformObservationTime':False,'canonicalTruth':False,'surveyGradeGeometry':False,'productionReady':False,
+              'allowedUse':'external mapped-object evidence and spatial constraints','forbiddenPromotion':'Do not invent road width, lanes, building height, levels, roof, material, or physical accuracy when tags are absent.'
+            }
+          }
+          checks={
+            'snapshotNonEmpty':snapshot.stat().st_size>0,
+            'roadsPresent':roads['featureCount']>0,
+            'buildingsPresent':buildings['featureCount']>0,
+            'roadsJsonValid':roads['invalidJsonLines']==0,
+            'buildingsJsonValid':buildings['invalidJsonLines']==0,
+            'missingWidthUnknown':report['semantics']['missingRoadWidthMeans']=='unknown',
+            'missingHeightUnknown':report['semantics']['missingBuildingHeightMeans']=='unknown',
+            'notCanonical':report['semantics']['canonicalTruth'] is False,
+            'notSurveyGrade':report['semantics']['surveyGradeGeometry'] is False,
+            'notProductionReady':report['semantics']['productionReady'] is False,
+          }
+          report['checks']=checks;report['passed']=all(checks.values())
+          (root/'OSM_OBJECT_EVIDENCE_REPORT.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps({'passed':report['passed'],'roads':roads,'buildings':buildings,'snapshotBytes':snapshot.stat().st_size},ensure_ascii=False,indent=2))
+          if not report['passed']: raise SystemExit(2)
+          PY
+
+      - name: Build payload manifest and reverify every archived byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('artifacts/wenzhou-r35-osm')
+          files=[];total=0
+          for p in sorted(root.iterdir()):
+              if not p.is_file() or p.name=='PAYLOAD_MANIFEST.json': continue
+              h=hashlib.sha256();
+              with p.open('rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
+              files.append({'path':p.name,'bytes':p.stat().st_size,'sha256':h.hexdigest()});total+=p.stat().st_size
+          manifest={'schema':'wenzhou-r3.5-osm-object-payload-manifest/r1','passed':True,'payloadCount':len(files),'totalBytes':total,'payloads':files}
+          (root/'PAYLOAD_MANIFEST.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          # Read it back and verify identities once more.
+          m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text())
+          errors=[]
+          for item in m['payloads']:
+              p=root/item['path'];h=hashlib.sha256()
+              with p.open('rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
+              if p.stat().st_size!=item['bytes'] or h.hexdigest()!=item['sha256']: errors.append(item['path'])
+          assert not errors,errors
+          print(json.dumps({'passed':True,'payloadCount':m['payloadCount'],'totalBytes':m['totalBytes'],'errors':errors},indent=2))
+          PY
+
+      - name: Upload temporary source-locked evidence archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-5-osm-object-evidence-${{ github.sha }}
+          path: artifacts/wenzhou-r35-osm
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 1
