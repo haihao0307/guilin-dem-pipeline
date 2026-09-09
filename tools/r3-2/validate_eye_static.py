@@ -31,10 +31,6 @@ def sha256(path: Path) -> str:
 
 
 def resolve_locked_path(rel: str) -> Path:
-    # terrain.json contains two intentional path forms:
-    # - /r3/data/... points at byte-locked R3 files from the site root;
-    # - bare names point at R3.1 data files beside terrain.json.
-    # Preserve that distinction instead of rewriting either evidence path.
     if rel.startswith("/"):
         return SITE / rel.lstrip("/")
     return DATA / rel
@@ -42,17 +38,22 @@ def resolve_locked_path(rel: str) -> Path:
 
 index_path = R32 / "index.html"
 app_path = R32 / "app.js"
+sea_path = R32 / "sea-demo.js"
 style_path = R32 / "style.css"
-for p in (index_path, app_path, style_path):
+for p in (index_path, app_path, sea_path, style_path):
     require(f"exists:{p.relative_to(ROOT)}", p.is_file())
 
-if index_path.is_file() and app_path.is_file():
+if index_path.is_file() and app_path.is_file() and sea_path.is_file():
     index = index_path.read_text(encoding="utf-8")
     app = app_path.read_text(encoding="utf-8")
+    sea = sea_path.read_text(encoding="utf-8")
 
     require("index-relative-style", 'href="./style.css"' in index)
     require("index-relative-app", 'src="./app.js"' in index)
+    require("index-relative-sea", 'src="./sea-demo.js"' in index)
     require("index-relative-three", '"three":"../vendor/three.module.js"' in index)
+    require("index-sea-toggle", 'id="show-sea"' in index)
+    require("index-sea-precision-boundary", "不代表潮位或测绘高程" in index)
     require("app-relative-orbit-controls", "from '../vendor/OrbitControls.js'" in app)
     require("app-relative-r31-data", "const DATA_ROOT='../r3-1/data/'" in app)
     require("no-root-vendor-import", "from '/vendor/" not in app)
@@ -64,13 +65,21 @@ if index_path.is_file() and app_path.is_file():
     require("path-checks-surface", "h===null||!onDisplayedLand(e,n)" in app)
     require("wasd-forward", "w:()=>eyeMode&&moveEyeVector(EYE_MOVE_M)" in app)
     require("wasd-strafe", "d:()=>eyeMode&&moveEyeVector(0,EYE_MOVE_M)" in app)
+    require("sea-independent-module", "demonstration-environment-layer" in sea)
+    require("sea-display-datum-explicit", "const SEA_DISPLAY_DATUM_M = 0" in sea)
+    require("sea-wave-amplitude-explicit", "const SEA_WAVE_AMPLITUDE_M = 0.22" in sea)
+    require("sea-reuses-land-mask", "uLandMask: { value: landMask }" in sea and "1.0 - land" in sea)
+    require("sea-does-not-modify-dem", "terrain.material.alphaMap" in sea)
+    require("sea-dataset-contract", "seaSurfaceKind = 'demonstration'" in sea)
 
     node = shutil.which("node")
     if node:
-        result = subprocess.run([node, "--check", str(app_path)], capture_output=True, text=True)
-        require("node-js-syntax", result.returncode == 0, (result.stderr or result.stdout).strip())
+        for name, path in (("node-app-js-syntax", app_path), ("node-sea-js-syntax", sea_path)):
+            result = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
+            require(name, result.returncode == 0, (result.stderr or result.stdout).strip())
     else:
-        checks["node-js-syntax"] = "not-run: node unavailable"
+        checks["node-app-js-syntax"] = "not-run: node unavailable"
+        checks["node-sea-js-syntax"] = "not-run: node unavailable"
 
 terrain_path = DATA / "terrain.json"
 require("r31-terrain-contract-exists", terrain_path.is_file())
@@ -96,11 +105,11 @@ if terrain_path.is_file():
             require(f"locked-data-sha256:{rel}", sha256(p) == expected)
 
 output = {
-    "schema": "wenzhou-r3.2-eye-static-qa/r2",
+    "schema": "wenzhou-r3.2-static-qa/r3",
     "passed": not errors,
     "checks": checks,
     "errors": errors,
-    "precisionBoundary": "1.6 m is a camera-to-display-surface relation only; it is not terrain accuracy",
+    "precisionBoundary": "1.6 m is a camera-to-display-surface relation only; demonstration sea is not tide, vertical datum, bathymetry or terrain accuracy",
 }
 print(json.dumps(output, ensure_ascii=False, indent=2))
 sys.exit(0 if not errors else 1)
