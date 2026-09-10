@@ -1,0 +1,67 @@
+{
+  "schema": "kaopu-mother-routing-extension/r13",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRR_MICROPHYSICS_OPTICAL_BRIDGE_R13.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "retain source-model/version identity plus TMP/PRES/SPFH/CLWMR/NCONCD/CIMIXR/NCCICE/SNMR and MASSDEN or equivalent density context for optical-bridge experiments",
+        "expose MicrophysicsDiagnosticReplay as derived capability rather than publishing raw mixing ratio as renderer extinction",
+        "keep FRACCC/overlap/support semantics distinct from local optical coefficients",
+        "do not call a current WRF Thompson implementation HRRRv4-exact until the operational version is authenticated or numerically cross-validated"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "insert MomentClosureContract and SpectralOpticalClosureContract between Weather microphysics and renderer-neutral optical state",
+        "treat liquid and ice optical readiness separately",
+        "allow typed Missing/Unsupported when spectral/habit/PSD context is absent",
+        "retain per-layer uncertainty and support lineage"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume renderer-neutral alpha_ext/alpha_sca/alpha_abs/albedo/phase data rather than HRRR hydrometeor fields directly",
+        "test local/spot/laser-like transmittance and in-scattering against the same optical packet across evaluator adapters",
+        "keep light intensity, sample budget, temporal filtering and shadow approximations out of Weather and optical closure state"
+      ]
+    },
+    {
+      "mother": "Noise/Field",
+      "items": [
+        "local cloud shape below source support remains DerivedSyntheticDisaggregation",
+        "preserve declared mass/column/optical constraints when adding subgrid detail rather than changing them through arbitrary noise",
+        "do not use noise to compensate for a missing ice/liquid optical model"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "preserve placement/reference-frame and support lineage only; no new optical truth responsibility",
+        "keep vertical-coordinate conversion separate from microphysics and spectral optical closure"
+      ]
+    },
+    {
+      "mother": "Ocean/Coast",
+      "items": [
+        "reuse the same Weather-to-optical contracts for coastal participating media without making ocean state the cloud optical datum",
+        "keep sea-surface-relative placement separate from spectral cloud closure"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make MicrophysicsDiagnosticReplay, SourceModelDerivedReplay, MomentClosureContract and SpectralOpticalClosureContract first-class typed operations",
+        "track source/model, replay/version, PSD/moment, spectral/scattering, support/disaggregation and evaluator uncertainty separately",
+        "prevent source-native, source-model-derived and renderer-derived states from collapsing into one truth class"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after version-matched HRRRv4 diagnostic replay + decoded official packet + visible liquid/ice optical closure + dual-evaluator experiment; no Frozen promotion in R13"
+}
