@@ -1,0 +1,82 @@
+{
+  "schema": "kaopu-source-lock/r22",
+  "date": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "title": "HRRRv4 effective-radius producer liveness and demand coupling",
+  "status": "candidate-source-lock",
+  "noChineseWebSources": true,
+  "productionMotherMutationAllowed": false,
+  "roots": [
+    {
+      "id": "ROOT-HRRRV4-SCM-NAMELIST",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/namelist.input",
+      "blob": "50571a305625bdf5ddecb91c7493a8acb5eb3dd9",
+      "use": "locked shipped SCM baseline; mp_physics=2, ra_lw_physics=1, ra_sw_physics=1"
+    },
+    {
+      "id": "ROOT-HRRRV4-PHYSICS-INIT",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_physics_init.F",
+      "blob": "2a6dac7d3c0c2b9c87ff3a2dfdbcf9e635aa6e6d",
+      "use": "request-flag gate and initial effective-radius values"
+    },
+    {
+      "id": "ROOT-HRRRV4-THOMPSON",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F",
+      "blob": "1e6cdb1e718473ee1a031e16b1c00c96113f19f8",
+      "use": "calc_effectRad liveness guard and aerosol-aware CCN table dependency"
+    },
+    {
+      "id": "ROOT-HRRRV4-REGISTRY",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/Registry.EM_COMMON",
+      "blob": "f3e86038a161c18d2644e6276110a01fc13839f3",
+      "use": "use_mp_re default=1 and existing effective-radius state identity"
+    },
+    {
+      "id": "ROOT-HRRRV4-CONUS-NAMELIST",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "parm/conus/hrrr_wrf.nl",
+      "blob": "7b9b8ccb34d00bf03558e6abb4915202b1e50860",
+      "use": "operational CONUS uses mp_physics=28 with RRTMG LW/SW=4 and external RAP aerosol IC/BC"
+    },
+    {
+      "id": "ROOT-HRRRV4-FCST-STAGING",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "scripts/conus/exhrrr_fcst.sh",
+      "blob": "3347f3fef7395dd30837607911c211fdbaffd56b",
+      "use": "operational run stages hrrr_run_CCN_ACTIVATE.BIN among runtime files"
+    },
+    {
+      "id": "ROOT-WRF-CURRENT-COMPILE-DOC",
+      "type": "primary-official-documentation",
+      "source": "UCAR/NCAR WRF Users Guide compiling documentation",
+      "use": "current build-prerequisite corroboration only; not a locked HRRR runtime identity"
+    }
+  ],
+  "independence": {
+    "physicalObservationRootAdded": false,
+    "note": "All NOAA/WRF items are engineering/source/configuration evidence. Multiple files from the same HRRR source tree are distinct evidence surfaces but not independent physical Observation Roots."
+  },
+  "probe": {
+    "path": "PROBES/hrrrv4_effective_radius_liveness_probe_r22.py",
+    "sha256": "444bac92b42325e54f630ffb963bde1f172567070ba22c1be0effda77c87475f",
+    "result": "14/14 PASS",
+    "evidenceClass": "derived-executable-source-semantic-evidence",
+    "ceiling": "No WRF/HRRR execution; no ReplayStatus promotion."
+  }
+}
