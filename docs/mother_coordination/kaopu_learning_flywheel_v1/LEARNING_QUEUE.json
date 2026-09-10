@@ -24,7 +24,7 @@
         "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 closes the remaining source-callpath ambiguity at source/configuration level: the locked CONUS configuration uses mp_physics=28, Registry maps it to THOMPSONAERO, the driver supplies NWFA/NIFA/NWFA2D, and the Thompson presence rule therefore selects is_aerosol_aware=.TRUE. The current official HRRR native inventory exposes the field categories required by calc_effectRad after a typed SPFH specific-humidity -> Qv mixing-ratio adapter, but it does not publish effective-radius outputs even though NCEP GRIB2 can represent EFRCWAT/EFRCICE/EFRSNOW. Therefore real-input replay and independent numerical authentication are distinct: comparing our replay only with itself is not an operational checkpoint. A ReplayAuthenticationLadder and IndependentNumericalCheckpoint contract were added. The R15 semantic probe passed 8/8 with synthetic numerical values. No physical Observation Root was added and no production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 refines that checkpoint gate: producer independence and diagnostic semantic equivalence are orthogonal. The locked HRRR post stack contains a separate EFFR effective-radius implementation useful as a DifferentialComparator, but its materially different input signature means equivalence to Thompson calc_effectRad is Unknown and it cannot automatically authenticate the replay. ARW source carries re_cloud/re_ice/re_snow internally, but NMM Registry/NEMS reader evidence does not prove operational CONUS ARW files emit those fields. Current UPP/RRFS explicitly carries cleffr/cieffr/cseffr, establishing producer-diagnostic carry-through as a transferable pattern but not an HRRRv4 checkpoint. A CheckpointValidityVector and comparator classes were added; the R16 probe passed 8/8. Current NOMADS lists a 2026-09-10 00Z 667 MB native HRRR analysis, but GRIB bytes were not decoded in this bounded runtime, so replay status remains source_callpath_authenticated. No physical Observation Root was added and no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -40,7 +40,8 @@
         "LEARNING_LOG/2026-09-10_HRRR_SOURCE_CAPABILITY_R12.md",
         "LEARNING_LOG/2026-09-10_HRRR_MICROPHYSICS_OPTICAL_BRIDGE_R13.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_THOMPSON_EFFECTIVE_RADIUS_R14.md",
-        "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_INPUT_AUTH_R15.md"
+        "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_INPUT_AUTH_R15.md",
+        "LEARNING_LOG/2026-09-10_HRRRV4_CHECKPOINT_EQUIVALENCE_R16.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
@@ -50,7 +51,8 @@
         "references/hrrr-source-r12/SOURCE_LOCK.json",
         "references/hrrr-optical-r13/SOURCE_LOCK.json",
         "references/hrrrv4-thompson-r14/SOURCE_LOCK.json",
-        "references/hrrrv4-runtime-r15/SOURCE_LOCK.json"
+        "references/hrrrv4-runtime-r15/SOURCE_LOCK.json",
+        "references/hrrrv4-checkpoint-r16/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -65,6 +67,7 @@
       "hrrrMicrophysicsOpticalBridgeProbe": "PROBES/hrrr_microphysics_optical_bridge_probe_r13.py",
       "hrrrV4ThompsonReplayProbe": "PROBES/hrrrv4_thompson_effective_radius_replay_r14.py",
       "hrrrV4RuntimeInputAuthProbe": "PROBES/hrrrv4_runtime_input_auth_probe_r15.py",
+      "hrrrV4CheckpointEquivalenceProbe": "PROBES/hrrrv4_checkpoint_equivalence_probe_r16.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
@@ -73,7 +76,8 @@
         "CURRENT_BEST_VIEW_R12_SOURCE_CAPABILITY.md",
         "CURRENT_BEST_VIEW_R13_MICROPHYSICS_OPTICS.md",
         "CURRENT_BEST_VIEW_R14_HRRRV4_THOMPSON_REPLAY.md",
-        "CURRENT_BEST_VIEW_R15_HRRRV4_RUNTIME_AUTH.md"
+        "CURRENT_BEST_VIEW_R15_HRRRV4_RUNTIME_AUTH.md",
+        "CURRENT_BEST_VIEW_R16_CHECKPOINT_EQUIVALENCE.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -83,7 +87,8 @@
         "TOOL_ROUTING_R12_SOURCE_CAPABILITY.json",
         "TOOL_ROUTING_R13_MICROPHYSICS_OPTICS.json",
         "TOOL_ROUTING_R14_HRRRV4_THOMPSON.json",
-        "TOOL_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json"
+        "TOOL_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json",
+        "TOOL_ROUTING_R16_CHECKPOINT_EQUIVALENCE.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -93,49 +98,29 @@
         "MOTHER_ROUTING_R12_SOURCE_CAPABILITY.json",
         "MOTHER_ROUTING_R13_MICROPHYSICS_OPTICS.json",
         "MOTHER_ROUTING_R14_HRRRV4_THOMPSON.json",
-        "MOTHER_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json"
+        "MOTHER_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json",
+        "MOTHER_ROUTING_R16_CHECKPOINT_EQUIVALENCE.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R15 authenticates the locked HRRR v4.1.20 Thompson source/configuration call path as aerosol-aware and defines the typed public-native input adapter, but does not yet execute actual native GRIB values or match an independent effective-radius checkpoint. Next materialize one tiny official HRRR native subset for a fixed cycle/gridpoint or small window, preserving GRIB record identity, hybrid level, cycle/time and field support metadata; execute the source-locked liquid/ice/snow replay on actual values. In parallel, obtain an independent official effective-radius checkpoint or create a reproducible exact-HRRR executable checkpoint with matching configuration/support identity. Only after real_input_executed plus independent_checkpoint_matched may ReplayStatus advance to runtime_authenticated. Then attach versioned visible-band liquid scattering and separately justified ice scattering closures, produce one renderer-neutral spectral optical packet, and feed it to two evaluator adapters with source/model, replay/version, PSD/moment, spectral/scattering, support/disaggregation and evaluator errors reported separately. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R16 refines independent_checkpoint_matched so producer independence and proven semantic/support equivalence are both required. First test whether a fixed HRRRv4 CONUS ARW history/restart or operational intermediate artifact exposes re_cloud/re_ice/re_snow; if available, lock exact cycle/configuration/support and use it as the preferred source-model-state checkpoint while decoding the matching public/native input subset. If unavailable, execute the locked HRRR post EFFR as a DifferentialComparator on the same real inputs and measure the semantic/numerical equivalence gap to Thompson calc_effectRad without promoting it automatically. Only after real_input_executed plus an eligible semantically equivalent independent checkpoint may ReplayStatus advance to runtime_authenticated. Then attach versioned visible-band liquid scattering and separately justified ice scattering closures, produce a renderer-neutral spectral optical packet, and feed it to two evaluator adapters with errors separated by source/model, replay/version, PSD/moment, spectral/scattering, support/disaggregation and evaluator layers. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
       "priority": 2,
       "status": "candidate-complete",
       "question": "Which GAEA 2.3 workflow mechanisms can improve KAOPU continuous learning and world generation without contaminating Canonical Truth?",
-      "targetSystems": [
-        "KAOPU",
-        "Wenzhou",
-        "Landscape",
-        "Terrain"
-      ],
-      "requiredOutputs": [
-        "transferable-methods",
-        "constraints",
-        "failure-modes",
-        "routing"
-      ],
+      "targetSystems": ["KAOPU", "Wenzhou", "Landscape", "Terrain"],
+      "requiredOutputs": ["transferable-methods", "constraints", "failure-modes", "routing"],
       "progress": "R01 identified candidate mechanisms. R02 rechecked current official GAEA 2.3 documentation: Erosion2 determinism, tiled-build context failure classes, same-graph Regions, and migration testing are current-source-backed. Exact legacy TileGate semantics remain separately Unknown.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_GAEA_R01.md",
-        "LEARNING_LOG/2026-09-09_GAEA_R02.md"
-      ]
+      "resultLogs": ["LEARNING_LOG/2026-09-09_GAEA_R01.md", "LEARNING_LOG/2026-09-09_GAEA_R02.md"]
     },
     {
       "id": "LQ-NOISE-001",
       "priority": 3,
       "status": "candidate-partial",
       "question": "Which modern procedural noise and field-composition methods are measurably better than current KAOPU typed-wave primitives for multiscale natural structure?",
-      "targetSystems": [
-        "KAOPU",
-        "Landscape",
-        "Weather",
-        "Ocean",
-        "Material"
-      ],
+      "targetSystems": ["KAOPU", "Landscape", "Weather", "Ocean", "Material"],
       "progress": "R01 primary-source review across Unreal Engine 5.8, current SideFX Houdini documentation, Blender 5.2 LTS, Pixar Wavelet Noise, and NVIDIA 2023 found no universal superior noise basis. Stronger transferable candidates are evaluation-footprint/filter policy, native differential outputs, explicit spectral/fractal composition law, explicit normalization, and evaluation-mode/bake provenance. A standard-library footprint probe was authored; no new runtime result is promoted yet.",
-      "resultLogs": [
-        "LEARNING_LOG/2026-09-09_NOISE_R01.md"
-      ],
+      "resultLogs": ["LEARNING_LOG/2026-09-09_NOISE_R01.md"],
       "candidateProbe": "PROBES/footprint_filter_probe.py",
       "nextGate": "Execute the footprint probe and run at least one Mother-domain cross-resolution fixture before candidate-complete promotion."
     },
@@ -144,27 +129,14 @@
       "priority": 4,
       "status": "queued",
       "question": "Which Substance 3D Designer material-graph practices are transferable as data-generating functions rather than texture assets?",
-      "targetSystems": [
-        "Brick",
-        "Tiles",
-        "Aircraft",
-        "Weapons",
-        "Vegetation",
-        "Character"
-      ]
+      "targetSystems": ["Brick", "Tiles", "Aircraft", "Weapons", "Vegetation", "Character"]
     },
     {
       "id": "LQ-HOUDINI-001",
       "priority": 5,
       "status": "queued",
       "question": "Which Houdini SOP/COP/VEX workflow patterns best support reusable Object DNA and field operators with explicit provenance and deterministic regeneration?",
-      "targetSystems": [
-        "KAOPU",
-        "House",
-        "Aircraft",
-        "Animals",
-        "Terrain"
-      ]
+      "targetSystems": ["KAOPU", "House", "Aircraft", "Animals", "Terrain"]
     }
   ]
 }
