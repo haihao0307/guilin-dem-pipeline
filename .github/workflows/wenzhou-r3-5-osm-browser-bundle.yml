@@ -1,0 +1,112 @@
+name: Wenzhou R3.5 OSM Browser Bundle
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-5-osm-context-20260911
+    paths:
+      - 'tools/r3-5/build_osm_browser_bundle.py'
+      - '.github/workflows/wenzhou-r3-5-osm-browser-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wenzhou-r3-5-osm-browser-bundle-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install projection and geometry dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir pyproj==3.7.2 shapely==2.1.2
+
+      - name: Download exact permanent R3.5 OSM evidence archive
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r35-source
+          URL='https://github.com/haihao0307/guilin-dem-pipeline/releases/download/wenzhou-r3.5-osm-object-evidence-20260910/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip'
+          curl --fail --location --retry 5 --retry-all-errors "$URL" -o /tmp/r35-source/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip
+          echo 'f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101  /tmp/r35-source/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip' | sha256sum -c -
+
+      - name: Build 17-view quantized OSM display bundle
+        run: |
+          set -euo pipefail
+          rm -rf site/dist/r3-5/data/osm
+          python tools/r3-5/build_osm_browser_bundle.py \
+            --release-zip /tmp/r35-source/Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip \
+            --patch-manifest site/dist/r3-4/data/worldcover/worldcover-2021-context.json \
+            --out site/dist/r3-5/data/osm \
+            | tee /tmp/r35-bundle-build.json
+          grep -q '"passed": true' /tmp/r35-bundle-build.json
+
+      - name: Static boundary gate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('site/dist/r3-5/data/osm/osm-context.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['schema']=='wenzhou-r3.5-osm-browser-bundle/r1'
+          assert d['patchCount']==17
+          assert d['sourceReleaseAssetSha256']=='f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101'
+          assert d['canonicalTruth'] is False
+          assert d['surveyGradeGeometry'] is False
+          assert d['individualPhysicalTruth'] is False
+          assert d['productionReady'] is False
+          assert d['totalBytes'] < 48*1024*1024
+          assert d['sourceCandidateCounts']['roadLineStringHighway']==177578
+          assert d['sourceCandidateCounts']['buildingMultiPolygonUniqueIdentity']==68359
+          ids={x['id'] for x in d['patches']}
+          assert ids=={'overview','mountains','river-oujiang','river-feiyun','river-aojiang',*[f'query-{i:02d}' for i in range(1,13)]}
+          ov=next(x for x in d['patches'] if x['id']=='overview')
+          assert ov['buildings']['ringCount']==0
+          assert 'heightClaim' in ov['buildings'] and ov['buildings']['heightClaim']=='unknown-not-generated'
+          for rec in d['patches']:
+              assert rec['quantization']['maxStepM'] < 4.0
+              assert rec['roads']['physicalWidthKnown'] is False
+              assert rec['roads']['screenLineWidthOnly'] is True
+              assert rec['buildings']['heightClaim']=='unknown-not-generated'
+              for item in rec['files'].values():
+                  q=Path('site/dist/r3-5/data/osm')/Path(item['path']).name
+                  assert q.stat().st_size==item['bytes']
+                  assert hashlib.sha256(q.read_bytes()).hexdigest()==item['sha256']
+          print(json.dumps({'passed':True,'totalBytes':d['totalBytes'],'patchCount':d['patchCount']},indent=2))
+          PY
+
+      - name: Commit generated browser evidence bundle
+        env:
+          BRANCH: feature/wenzhou-r3-5-osm-context-20260911
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-5/data/osm
+          if git diff --cached --quiet; then
+            echo 'No generated changes.'
+            exit 0
+          fi
+          git commit -m 'data(wenzhou): derive R3.5 patch-scoped OSM display bundle [skip ci]'
+          git push origin "HEAD:${BRANCH}"
+
+      - name: Upload build report
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-5-osm-browser-bundle-${{ github.sha }}
+          path: /tmp/r35-bundle-build.json
+          if-no-files-found: error
+          retention-days: 14
