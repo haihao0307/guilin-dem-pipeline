@@ -1,0 +1,63 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-runtime-r15",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRR-V4.1.20-CALLPATH",
+      "authority": "primary-official-operational-source",
+      "repo": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "parm/conus/hrrr_wrf.nl",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/registry.var",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_microphysics_driver.F",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_physics_init.F",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F"
+      ],
+      "lockedFacts": [
+        "CONUS operational configuration at the locked source snapshot uses mp_physics=28",
+        "Registry maps mp_physics=28 to THOMPSONAERO and carries qnc, qnwfa and qnifa state",
+        "THOMPSONAERO driver requires and passes NWFA, NIFA and NWFA2D to mp_gt_driver",
+        "Thompson source sets is_aerosol_aware true when NWFA2D, NWFA and NIFA are all present",
+        "therefore the locked source/configuration call path is authenticated as aerosol-aware, while cycle-specific binary execution remains a separate gate"
+      ]
+    },
+    {
+      "id": "NOAA-NCO-HRRR-NATIVE-INVENTORY",
+      "authority": "primary-official-operational-product-schema",
+      "url": "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/hrrr.t00z.wrfnatf00.grib2.shtml",
+      "lockedFacts": [
+        "current HRRR native analysis inventory publishes PRES, TMP, SPFH, CLWMR, NCONCD, CIMIXR, NCCICE and SNMR on hybrid levels",
+        "MASSDEN is also published but is not an input of the locked calc_effectRad routine",
+        "the inspected public native inventory does not publish Effective Radius, EFRCWAT, EFRCICE or EFRSNOW fields"
+      ],
+      "limits": [
+        "this is product-schema evidence, not a physical atmospheric Observation Root",
+        "the bounded runtime did not materialize GRIB body bytes or decode actual gridpoint values"
+      ]
+    },
+    {
+      "id": "NCEP-GRIB2-MOISTURE-TABLE",
+      "authority": "primary-official-format-semantics",
+      "url": "https://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_doc/grib2_table4-2-0-1.shtml",
+      "lockedFacts": [
+        "NCEP GRIB2 table defines EFRCWAT, EFRCICE and EFRSNOW effective-radius parameters",
+        "format representability does not imply that a specific HRRR public product publishes those parameters"
+      ]
+    }
+  ],
+  "typedInputContract": {
+    "nativeSpecificHumidity": "SPFH",
+    "sourceRoutineRequires": "water-vapor mixing ratio",
+    "adapter": "qv_mixing_ratio = specific_humidity / (1 - specific_humidity)",
+    "rule": "same unit string kg/kg does not make different physical quantity types interchangeable"
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
