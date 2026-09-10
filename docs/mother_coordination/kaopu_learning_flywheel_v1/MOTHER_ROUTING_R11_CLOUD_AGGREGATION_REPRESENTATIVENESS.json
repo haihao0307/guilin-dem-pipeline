@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu-mother-routing-extension/r11",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_CLOUD_AGGREGATION_REPRESENTATIVENESS_R11.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "preserve temporal support/interval, timestamp convention, horizontal grid/remap lineage, vertical/path support and in-cloud/grid-mean semantics for every source field",
+        "separate pathOpticsReady from instantaneousLocalVolumeReady",
+        "mark MERRA-2 packets as delayed reanalysis support rather than realtime current Weather truth",
+        "never overwrite a coarse/time-mean source packet with generated local cloud detail"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept coarse/path optical constraints without assuming voxel-local extinction",
+        "require explicit spatiotemporal disaggregation lineage before producing local extinction/scattering fields",
+        "track aggregation/representativeness error separately from optical closure and numerical evaluator error"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "do not treat exp(-mean_tau) as equivalent to mean transmittance for intermittent clouds",
+        "consume local extinction only after distribution/disaggregation has been declared",
+        "keep beam/laser visibility tuning in evaluator space rather than altering Weather aggregation semantics"
+      ]
+    },
+    {
+      "mother": "Noise/Field",
+      "items": [
+        "use procedural/noise fields only as conditional disaggregation tools constrained by source state",
+        "attach DerivedSyntheticDisaggregation identity, seed/state, target scale and constraint provenance",
+        "never label generated subgrid detail as recovered Observation truth"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "provide reference-frame/geometric context only",
+        "do not use terrain detail to imply unresolved cloud geometry is known"
+      ]
+    },
+    {
+      "mother": "Ocean",
+      "items": [
+        "apply the same aggregation/support contract to fog and sea-spray fields",
+        "avoid promoting coarse/time-mean spray/fog diagnostics directly to local extinction without lineage"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add AggregationSupportContract and RepresentativenessState",
+        "add OperationKind.spatiotemporal_disaggregation and DerivedSyntheticDisaggregation",
+        "make instantaneousLocalVolumeReady independently queryable from pathOpticsReady",
+        "separate source/model, aggregation, disaggregation, optical-closure, evaluator and performance uncertainty/error"
+      ]
+    }
+  ],
+  "recommendedNextExperiment": "Authenticate a small MERRA-2 model-level cloud packet and keep its 3-hour/coarse support explicit. Then run one declared synthetic disaggregation adapter that preserves coarse CLOUD/TAU constraints and compare the same derived local optical field through two evaluator adapters; do not treat that experiment as recovered source truth.",
+  "promotionAuthority": "Xiaoma Judgment after authenticated packet + aggregation-aware disaggregation + dual-evaluator evidence; no automatic Frozen promotion"
+}
