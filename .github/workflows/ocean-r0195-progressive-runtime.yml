@@ -1,0 +1,74 @@
+name: Ocean R019.5 progressive runtime
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-r0195-progressive-runtime-20260910
+    paths:
+      - 'ocean-mother/r0195-payload/**'
+      - '.github/workflows/ocean-r0195-progressive-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble fixed single HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html'
+          mkdir -p "$(dirname "$OUT")"
+          COUNT=$(find ocean-mother/r0195-payload -maxdepth 1 -name 'part-*.b64' | wc -l)
+          test "$COUNT" -eq 8
+          cat ocean-mother/r0195-payload/part-*.b64 > /tmp/ocean-r0195.html.xz.b64
+          base64 -d /tmp/ocean-r0195.html.xz.b64 > /tmp/ocean-r0195.html.xz
+          xz -dc /tmp/ocean-r0195.html.xz > "$OUT"
+          test "$(sha256sum "$OUT" | awk '{print $1}')" = '4200790ab47a4f98d9cb5e4ab5fffe5d8bfc733c7defc8039f855091313c52da'
+          grep -Fq 'R019.5 · PROGRESSIVE RUNTIME' "$OUT"
+          grep -Fq 'const LITE_FRAG=' "$OUT"
+          grep -Fq 'function promoteLitePipeline()' "$OUT"
+          grep -Fq 'if(isMobileViewport&&!force)' "$OUT"
+
+      - name: JavaScript and startup contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html')
+          s=p.read_text(encoding='utf-8')
+          m=re.search(r'<script>\s*(.*?)\s*</script>',s,re.S)
+          assert m, 'inline script missing'
+          Path('/tmp/ocean-r0195.js').write_text(m.group(1),encoding='utf-8')
+          assert s.count('readPixels(')==1, 'readPixels must remain manual-probe only'
+          assert 'oceanLoadingFailsafe' in s
+          assert 'css-safe-fallback' in s
+          assert 'enableDetail' in s
+          assert 'promoteCorePipeline(true)' in s
+          print('STATIC_CONTRACT_PASS')
+          PY
+          node --check /tmp/ocean-r0195.js
+
+      - name: Publish fixed direct-open artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html
+          if git diff --cached --quiet; then
+            echo 'Release file already current.'
+            exit 0
+          fi
+          git commit -m 'release(ocean): publish R019.5 progressive runtime direct-open [skip ci]'
+          git push
