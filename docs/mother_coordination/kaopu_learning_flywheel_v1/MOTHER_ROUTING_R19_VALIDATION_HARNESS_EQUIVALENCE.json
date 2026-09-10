@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu-mother-routing-extension/r19",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRRV4_VALIDATION_HARNESS_EQUIVALENCE_R19.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "attach ValidationHarnessIdentity and EvidenceCeiling to every reduced weather-model experiment",
+        "use SCM only as L1 instrumentation preflight unless higher equivalence is explicitly established",
+        "do not promote ReplayStatus from SCM or other reduced-harness results"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept SCM-exposed re_cloud/re_ice/re_snow only as instrumentation or physics-harness evidence",
+        "require eligible locked HRRRv4 real-input checkpoint before treating re_* as replay-authentication evidence"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make ValidationHarnessIdentity, HarnessEquivalenceVector and EvidenceCeiling first-class provenance",
+        "prevent evidence from a lower-equivalence harness from promoting a higher-equivalence state"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R19; effective radius remains upstream of spectral optical closure"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after eligible locked HRRRv4 real-input ControlInstrumentedPair evidence"
+}
