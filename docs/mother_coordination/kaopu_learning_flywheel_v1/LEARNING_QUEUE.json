@@ -17,7 +17,7 @@
       "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
       "targetSystems": ["KAOPU", "Weather", "Ocean", "Landscape", "Lighting", "Future-Space"],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 separated checkpoint producer independence from semantic equivalence. R17 established restart-only default effective-radius state and runtime-I/O as the least invasive exposure path. R18 bounded public restart hunting and defined ControlInstrumentedPair plus InstrumentationValidityVector. R19 established ValidationHarnessIdentity, HarnessEquivalenceVector, EvidenceCeiling and a L0-L3 ValidationScaleLadder. R20 defined the TwoLayerInstrumentationComparator and exact instrumentation-manifest comparison semantics. R21 closed the source-level runtime-I/O preflight gap for RE_CLOUD/RE_ICE/RE_SNOW and established fail-fast runtime-I/O evidence semantics. R22 closes a second pre-execution gap: stream exposure is not producer liveness. In locked HRRR v4.1.20 the effective-radius request flags depend on use_mp_re plus compatible RRTMG LW/SW and Thompson-family microphysics, while Thompson calc_effectRad is guarded by all three request flags being nonzero. The shipped SCM uses radiation 1/1, so changing only mp_physics to 28 can expose plausible re_* values without requesting a fresh effective-radius calculation. Physics initialization itself seeds plausible nonzero radii (2.51/5.01/10.01 micrometres), so value plausibility is not freshness evidence. The corrected L1 source-path contract is explicit 28/4/4/1, the R21 fail-fast manifest, producer-freshness lineage, and locked auxiliary-table identity including the CCN activation table. The R22 source-semantic probe passed 14/14. No WRF/HRRR pair was executed; ReplayStatus remains source_callpath_authenticated; no physical Observation Root was added and no production Mother branch was modified.",
+      "progress": "R01-R13 established state/evaluator separation, ground-to-space semantics, evidence and quantity validity, typed Weather vertical/spatial contracts, cloud optical/aggregation boundaries, source-capability routing, and a versioned microphysics-to-optics bridge. R14-R16 source-locked HRRR v4.1.20 Thompson effective-radius logic, separated source lock from runtime authentication, authenticated the source/configuration call path, and separated checkpoint independence from semantic equivalence. R17-R21 established restart/default stream semantics, bounded public checkpoint hunting, ControlInstrumentedPair, ValidationHarnessIdentity/EvidenceCeiling, TwoLayerInstrumentationComparator, and fail-fast runtime-I/O exposure for RE_CLOUD/RE_ICE/RE_SNOW. R22 proved that stream exposure is not producer liveness and corrected the L1 source-path contract to explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1 plus locked auxiliary-table identity. R23 closes the temporal-freshness gap: locked HRRR writes history before the next solve, initialization occurs before integrate, and Thompson effective radii are refreshed inside the eligible per-timestep microphysics path. Initial-time and restart-start history frames therefore cannot be called producer-refreshed in the current execution segment. Value-change heuristics are invalid because locked cloud/ice initialization values equal valid calc_effectRad lower clamps. R23 adds ProducerRefreshEpoch and CheckpointTemporalEligibility; its source-semantic probe passed 12/12. No WRF/HRRR model pair was executed, ReplayStatus remains source_callpath_authenticated, no physical Observation Root was added, and no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -40,7 +40,8 @@
         "LEARNING_LOG/2026-09-10_HRRRV4_VALIDATION_HARNESS_EQUIVALENCE_R19.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_INSTRUMENTATION_COMPARATOR_R20.md",
         "LEARNING_LOG/2026-09-11_HRRRV4_RUNTIME_IO_PREFLIGHT_R21.md",
-        "LEARNING_LOG/2026-09-11_HRRRV4_EFFECTIVE_RADIUS_LIVENESS_R22.md"
+        "LEARNING_LOG/2026-09-11_HRRRV4_EFFECTIVE_RADIUS_LIVENESS_R22.md",
+        "LEARNING_LOG/2026-09-11_HRRRV4_TEMPORAL_FRESHNESS_R23.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
@@ -57,7 +58,8 @@
         "references/hrrrv4-validation-harness-r19/SOURCE_LOCK.json",
         "references/hrrrv4-instrumentation-comparator-r20/SOURCE_LOCK.json",
         "references/hrrrv4-runtime-io-preflight-r21/SOURCE_LOCK.json",
-        "references/hrrrv4-effective-radius-liveness-r22/SOURCE_LOCK.json"
+        "references/hrrrv4-effective-radius-liveness-r22/SOURCE_LOCK.json",
+        "references/hrrrv4-temporal-freshness-r23/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -79,6 +81,7 @@
       "hrrrV4InstrumentationComparatorProbe": "PROBES/hrrrv4_instrumentation_comparator_probe_r20.py",
       "hrrrV4RuntimeIOPreflightProbe": "PROBES/hrrrv4_runtime_io_preflight_probe_r21.py",
       "hrrrV4EffectiveRadiusLivenessProbe": "PROBES/hrrrv4_effective_radius_liveness_probe_r22.py",
+      "hrrrV4TemporalFreshnessProbe": "PROBES/hrrrv4_effective_radius_temporal_freshness_probe_r23.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
@@ -94,7 +97,8 @@
         "CURRENT_BEST_VIEW_R19_VALIDATION_HARNESS_EQUIVALENCE.md",
         "CURRENT_BEST_VIEW_R20_INSTRUMENTATION_COMPARATOR.md",
         "CURRENT_BEST_VIEW_R21_RUNTIME_IO_PREFLIGHT.md",
-        "CURRENT_BEST_VIEW_R22_EFFECTIVE_RADIUS_LIVENESS.md"
+        "CURRENT_BEST_VIEW_R22_EFFECTIVE_RADIUS_LIVENESS.md",
+        "CURRENT_BEST_VIEW_R23_TEMPORAL_FRESHNESS.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -111,7 +115,8 @@
         "TOOL_ROUTING_R19_VALIDATION_HARNESS_EQUIVALENCE.json",
         "TOOL_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json",
         "TOOL_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json",
-        "TOOL_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json"
+        "TOOL_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json",
+        "TOOL_ROUTING_R23_TEMPORAL_FRESHNESS.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -128,9 +133,10 @@
         "MOTHER_ROUTING_R19_VALIDATION_HARNESS_EQUIVALENCE.json",
         "MOTHER_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json",
         "MOTHER_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json",
-        "MOTHER_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json"
+        "MOTHER_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json",
+        "MOTHER_ROUTING_R23_TEMPORAL_FRESHNESS.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R22 establishes that stream exposure is orthogonal to effective-radius producer liveness. Next, when execution dependencies are available, run the locked-source L1 SCM ControlInstrumentedPair with explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4 and use_mp_re=1; exact manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW; iofields_filename enabled; ignore_iofields_warning=.false.; locked Thompson/CCN auxiliary-table identity; and an explicit producer-freshness check. Require zero runtime-I/O resolution warnings and producer-liveness evidence before treating re_* as checkpoints; then apply the R20 TwoLayerInstrumentationComparator and measure runtime/I/O cost separately. L1 must not advance ReplayStatus. ReplayStatus may advance only after the same preflight/liveness/comparison contracts are applied to an eligible L3 locked HRRRv4 real-input pair and its source-model re_* checkpoint matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep the physical-reference, runtime-atmosphere, and Weather-coupling gates distinct. Weather-coupling: R23 adds temporal checkpoint eligibility to the R22 producer-liveness gate. When execution dependencies are available, run the locked-source L1 SCM ControlInstrumentedPair with explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1; exact manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW; iofields_filename enabled; ignore_iofields_warning=.false.; locked Thompson/CCN auxiliary-table identity; and explicit ProducerRefreshEpoch evidence. Do not use the initial-time history frame or restart-start t0 as a fresh replay checkpoint. Sample only after at least one completed eligible microphysics step in the current execution segment, require zero runtime-I/O resolution warnings and producer-liveness evidence, then apply the R20 TwoLayerInstrumentationComparator and measure runtime/I/O cost separately. L1 must not advance ReplayStatus. ReplayStatus may advance only after the same contracts are applied to an eligible L3 locked HRRRv4 real-input pair and its temporally eligible source-model re_* checkpoint matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
