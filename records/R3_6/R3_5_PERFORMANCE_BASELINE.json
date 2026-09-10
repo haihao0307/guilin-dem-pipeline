@@ -1,0 +1,76 @@
+{
+  "schema": "wenzhou-r3.6-r3.5-performance-baseline/r1",
+  "date": "2026-09-11",
+  "sourceVisualCandidate": "58ae114d61442d5f5f86d00f29d0e34fdf95f15e",
+  "probeBranch": "experiment/wenzhou-r3-6-osm-performance-baseline-20260911",
+  "probeCommit": "ad6a9aa4397524648dfa20c10ba286c28bcfe6d4",
+  "workflowRun": 34541184000,
+  "artifactId": 10177420935,
+  "artifactSha256": "ce9b733a73452f5ba68ec4f87dfda1faef07f7e0fbe3388171f300c2653da41d",
+  "environment": {
+    "engine": "Playwright Chromium",
+    "viewport": [390, 844],
+    "deviceScaleFactor": 3,
+    "isMobile": true,
+    "hasTouch": true,
+    "realIphoneVerified": false,
+    "use": "relative CI baseline only; not a real-device production SLA or Safari/GPU benchmark"
+  },
+  "r3_5": {
+    "initialTerrainReadyMs": 695.253984,
+    "query01": {
+      "terrainReadyMs": 8808.077021000001,
+      "osmReadyMs": 12703.345597,
+      "osmAfterTerrainReadyMs": 3895.268576,
+      "roadSegments": 11007,
+      "buildingSegments": 906,
+      "jsHeapUsedBytes": 48863980,
+      "jsHeapTotalBytes": 105721856,
+      "raf": {
+        "frames": 90,
+        "meanMs": 179.88333333333293,
+        "p50Ms": 183.20000000000073,
+        "p95Ms": 233.29999999999927,
+        "maxMs": 250
+      }
+    },
+    "overview": {
+      "terrainReadyMs": 2647.7420189999975,
+      "osmReadyMs": 4763.942264999998,
+      "osmAfterTerrainReadyMs": 2116.200246,
+      "roadSegments": 508201,
+      "buildingSegments": 0,
+      "jsHeapUsedBytes": 213818212,
+      "jsHeapTotalBytes": 263651328,
+      "raf": {
+        "frames": 120,
+        "meanMs": 675.3641666666663,
+        "p50Ms": 683.3000000000029,
+        "p95Ms": 699.9000000000015,
+        "maxMs": 700
+      }
+    },
+    "staleRequestStress": {
+      "artificialOsmPayloadDelayMs": 350,
+      "sequence": ["query-01", "query-02", "query-03"],
+      "startedXYRequests": 7,
+      "finishedXYRequests": 7,
+      "failedOrAbortedXYRequests": 0,
+      "conclusion": "R3.5 ignores stale completed results by token but does not abort superseded OSM payload transfers."
+    }
+  },
+  "interpretationRules": {
+    "doNotAttributeTerrainTimeToOsm": true,
+    "primaryOsmTimingComparison": "osmReadyMs - terrainReadyMs, plus R3.6 internal buildMs",
+    "rafAbsoluteValuesAreNotIphoneFps": true,
+    "heapAndTimingMayVaryAcrossRunners": true,
+    "preferPairedSameRunnerComparison": true,
+    "hardR36StructuralGoals": [
+      "same visible R3.5 segment sets and semantic claims",
+      "indexed GPU representation with one sampled/uploaded source vertex per source vertex",
+      "superseded OSM payload fetches are actually aborted",
+      "no evidence simplification in first runtime-only pass"
+    ]
+  },
+  "productionReady": false
+}
