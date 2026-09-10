@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib,json,re,sys
+import hashlib,json,re
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -15,7 +15,7 @@ if errors:
 
 d=json.loads(manifest_path.read_text(encoding='utf-8'))
 checks.update({
- 'schema':d.get('schema')=='wenzhou-r3.5-osm-browser-bundle/r1',
+ 'schema':d.get('schema')=='wenzhou-r3.5-osm-browser-bundle/r2',
  'source-release-sha':d.get('sourceReleaseAssetSha256')=='f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101',
  'source-corrected-report-sha':d.get('sourceCorrectedReportSha256')=='d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364',
  'external-mapped-observation':d.get('sourceIdentity')=='external_mapped_observation',
@@ -25,6 +25,8 @@ checks.update({
  'not-production-ready':d.get('productionReady') is False,
  'source-road-candidates':d.get('sourceCandidateCounts',{}).get('roadLineStringHighway')==177578,
  'source-building-candidates':d.get('sourceCandidateCounts',{}).get('buildingMultiPolygonUniqueIdentity')==68359,
+ 'building-boundary-before-clip':'before clipping' in d.get('buildingPolicy',''),
+ 'no-synthetic-patch-closure':'synthetic closure' in d.get('buildingPolicy',''),
  'patch-count-17':d.get('patchCount')==17 and len(d.get('patches',[]))==17,
  'bundle-under-48MiB':0<d.get('totalBytes',0)<48*1024*1024,
 })
@@ -32,11 +34,12 @@ expected={'overview','mountains','river-oujiang','river-feiyun','river-aojiang',
 checks['patch-id-set']={p.get('id') for p in d.get('patches',[])}==expected
 recalc_total=0
 for rec in d.get('patches',[]):
-    pid=rec['id'];q=rec.get('quantization',{})
+    pid=rec['id'];q=rec.get('quantization',{});b=rec.get('buildings',{})
     checks[f'{pid}-quantization']=q.get('type')=='uint16-bounds-relative' and 0<q.get('maxStepM',99)<4
     checks[f'{pid}-road-width-boundary']=rec.get('roads',{}).get('physicalWidthKnown') is False and rec.get('roads',{}).get('screenLineWidthOnly') is True
-    checks[f'{pid}-building-height-boundary']=rec.get('buildings',{}).get('heightClaim')=='unknown-not-generated'
-    if pid=='overview':checks['overview-no-buildings']=rec.get('buildings',{}).get('ringCount')==0 and 'buildingXY' not in rec.get('files',{})
+    checks[f'{pid}-building-source-boundary']=b.get('sourceMultiPolygonBoundaryOnly') is True and b.get('clippingCreatesPatchClosure') is False
+    checks[f'{pid}-building-height-boundary']=b.get('heightClaim')=='unknown-not-generated'
+    if pid=='overview':checks['overview-no-buildings']=b.get('boundaryPartCount')==0 and 'buildingXY' not in rec.get('files',{})
     for key,item in rec.get('files',{}).items():
         p=ROOT/'site/dist/r3-5/data/osm'/Path(item['path']).name
         ok=p.is_file() and p.stat().st_size==item['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256']
@@ -63,10 +66,11 @@ checks.update({
  'display-surface-anchor':"display-surface-anchor-only" in js and "current-display-triangles" in js,
  'road-width-claim-none':"physicalWidthClaim='none'" in js and "osmRoadWidthClaim:'none-screen-style-only'" in js,
  'building-height-unknown':"heightClaim='unknown-not-generated'" in js and "osmBuildingHeightClaim:'unknown-not-generated'" in js,
+ 'runtime-no-synthetic-closure':"syntheticPatchClosure=false" in js and "osmBuildingSyntheticPatchClosure:false" in js,
  'no-extrusion-geometry':not re.search(r'ExtrudeGeometry|BoxGeometry|CylinderGeometry',js),
  'no-terrain-height-write':not re.search(r'\.setY\(|position\.setY|attributes\.position\.setY',js),
 })
 for k,v in checks.items():
     if not v:errors.append(k)
-print(json.dumps({'schema':'wenzhou-r3.5-static-qa/r1','passed':not errors,'checks':checks,'errors':errors,'boundary':'OSM roads remain centerline-style mapped observations with no physical-width claim; building MultiPolygons remain flat footprint-boundary observations with no generated height.'},ensure_ascii=False,indent=2))
+print(json.dumps({'schema':'wenzhou-r3.5-static-qa/r2','passed':not errors,'checks':checks,'errors':errors,'boundary':'OSM roads remain centerline-style mapped observations with no physical-width claim; building evidence is the source MultiPolygon boundary clipped as lines, never a patch-closure polygon, and no height is generated.'},ensure_ascii=False,indent=2))
 raise SystemExit(1 if errors else 0)
