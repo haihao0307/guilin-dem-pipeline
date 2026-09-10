@@ -24,7 +24,7 @@
         "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 separated checkpoint producer independence from semantic equivalence. R17 closes the default-output-semantics ambiguity: in the locked HRRRv4 ARW Registry, re_cloud/re_ice/re_snow are state variables associated with restart (r) but not default history (h), while thompsonaero carries them. The locked CONUS template uses restart=false and restart_interval=5000 minutes for a 12-hour template run, so that template alone provides no useful restart checkpoint. Locked HRRR workflow proves hrrrges_sfc is carried wrfout/history model output, not a restart artifact. WRF/HRRR runtime I/O can add existing state to history without recompiling; +:h:0:re_cloud,re_ice,re_snow is therefore a candidate minimal diagnostic instrumentation path. R17 adds OutputStreamIdentity, InstrumentationLineage and InstrumentedSourceModelCheckpoint distinct from untouched OperationalSourceModelStateCheckpoint. The semantic probe passed 11/11. No actual compiled HRRR execution or byte-level 15-GB nwges inspection occurred, so ReplayStatus remains source_callpath_authenticated. No physical Observation Root was added and no production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 separated checkpoint producer independence from semantic equivalence. R17 established that re_cloud/re_ice/re_snow are restart-only by default, current hrrrges_sfc is carried wrfout history, and runtime-I/O is the least invasive candidate exposure path. R18 bounded the search for an untouched public restart: NCO's public product inventory, GSL's official HRRR archive description and current NOMADS nwges surfaces expose no restart product class; locked NOAA-EMC workflow additionally traces both current nwges candidate families (hrrrges_sfc and hrrrdasges) to wrfout/reduced-wrfout history. This is scoped negative evidence, not proof that no internal/offline restart exists. R18 therefore adds NegativeEvidenceScope, ArchiveSurfaceCoverage and a SearchStopRule, and pivots the preferred gate to one isolated ControlInstrumentedPair. Official WRF documentation warns runtime-I/O can cause a performance hit, so no-recompile cannot be treated as no-perturbation. InstrumentationValidityVector now requires pre-existing-field non-interference, separate performance measurement, complete checkpoint identity and source-replay match. The R18 semantic probe passed 11/11. ReplayStatus remains source_callpath_authenticated. No physical Observation Root was added and no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -42,7 +42,8 @@
         "LEARNING_LOG/2026-09-10_HRRRV4_THOMPSON_EFFECTIVE_RADIUS_R14.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_INPUT_AUTH_R15.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_CHECKPOINT_EQUIVALENCE_R16.md",
-        "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_IO_CHECKPOINT_R17.md"
+        "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_IO_CHECKPOINT_R17.md",
+        "LEARNING_LOG/2026-09-10_HRRRV4_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY_R18.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
@@ -54,7 +55,8 @@
         "references/hrrrv4-thompson-r14/SOURCE_LOCK.json",
         "references/hrrrv4-runtime-r15/SOURCE_LOCK.json",
         "references/hrrrv4-checkpoint-r16/SOURCE_LOCK.json",
-        "references/hrrrv4-runtime-io-r17/SOURCE_LOCK.json"
+        "references/hrrrv4-runtime-io-r17/SOURCE_LOCK.json",
+        "references/hrrrv4-checkpoint-surface-r18/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -71,6 +73,7 @@
       "hrrrV4RuntimeInputAuthProbe": "PROBES/hrrrv4_runtime_input_auth_probe_r15.py",
       "hrrrV4CheckpointEquivalenceProbe": "PROBES/hrrrv4_checkpoint_equivalence_probe_r16.py",
       "hrrrV4RuntimeIOCheckpointProbe": "PROBES/hrrrv4_runtime_io_checkpoint_probe_r17.py",
+      "hrrrV4CheckpointSurfaceProbe": "PROBES/hrrrv4_checkpoint_surface_probe_r18.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
@@ -81,7 +84,8 @@
         "CURRENT_BEST_VIEW_R14_HRRRV4_THOMPSON_REPLAY.md",
         "CURRENT_BEST_VIEW_R15_HRRRV4_RUNTIME_AUTH.md",
         "CURRENT_BEST_VIEW_R16_CHECKPOINT_EQUIVALENCE.md",
-        "CURRENT_BEST_VIEW_R17_RUNTIME_IO_CHECKPOINT.md"
+        "CURRENT_BEST_VIEW_R17_RUNTIME_IO_CHECKPOINT.md",
+        "CURRENT_BEST_VIEW_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -93,7 +97,8 @@
         "TOOL_ROUTING_R14_HRRRV4_THOMPSON.json",
         "TOOL_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json",
         "TOOL_ROUTING_R16_CHECKPOINT_EQUIVALENCE.json",
-        "TOOL_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json"
+        "TOOL_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json",
+        "TOOL_ROUTING_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -105,9 +110,10 @@
         "MOTHER_ROUTING_R14_HRRRV4_THOMPSON.json",
         "MOTHER_ROUTING_R15_HRRRV4_RUNTIME_AUTH.json",
         "MOTHER_ROUTING_R16_CHECKPOINT_EQUIVALENCE.json",
-        "MOTHER_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json"
+        "MOTHER_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json",
+        "MOTHER_ROUTING_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R17 proves the locked HRRRv4 ARW effective-radius states are restart-only by default and identifies runtime-I/O as a lower-perturbation checkpoint instrumentation route. First search for an already-existing fixed-cycle untouched operational restart artifact with re_cloud/re_ice/re_snow. If none can be proven, run an isolated non-production HRRRv4 source-model execution with exact locked source/build/input and only runtime-I/O output instrumentation (+ : h : 0 : re_cloud,re_ice,re_snow without spaces) to emit an InstrumentedSourceModelCheckpoint. Decode a small subset with cycle/time/horizontal/vertical/output-stream/instrumentation identity, run the external source-locked Thompson replay on the matching real inputs, and measure the numerical gap. Instrumented output must never be relabeled operational. Only after actual real_input_executed plus an eligible source-model checkpoint match may ReplayStatus advance toward runtime_authenticated. Then attach visible-band liquid and separately justified ice optical closures and feed a renderer-neutral spectral packet to two evaluators. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R18 closes repeated bounded public-restart hunting as the preferred path unless a new official pointer appears. Prepare and run one isolated non-production HRRRv4 ControlInstrumentedPair with exact locked source/build/initial-and-boundary inputs/namelist/MPI-OpenMP decomposition/output times, with the only declared difference being runtime-I/O exposure +:h:0:re_cloud,re_ice,re_snow. Predeclare bit-wise equality where feasible or a tolerance policy before execution, compare every pre-existing output field at matching times, measure runtime/I/O cost separately, then compare the new re_* source-model checkpoint against the external source-locked Thompson replay on matching real inputs. Instrumented output must remain labeled InstrumentedSourceModelCheckpoint. ReplayStatus may advance only after actual real_input_executed plus non-interference-valid and checkpoint-match-valid evidence. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
