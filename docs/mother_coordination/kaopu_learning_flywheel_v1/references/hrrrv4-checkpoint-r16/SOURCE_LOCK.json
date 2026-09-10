@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-checkpoint-r16",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRR-V4-THOMPSON",
+      "role": "primary-official-source-model-diagnostic",
+      "independentObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F",
+      "blobSha": "1e6cdb1e718473ee1a031e16b1c00c96113f19f8",
+      "lockedFacts": [
+        "calc_effectRad signature is t1d,p1d,qv1d,qc1d,nc1d,qi1d,ni1d,qs1d -> re_qc1d,re_qi1d,re_qs1d",
+        "this remains the source-locked HRRRv4 Thompson replay target from R14-R15"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRR-V4-WRFPOST-EFFR",
+      "role": "primary-official-independent-postprocessor-implementation",
+      "independentObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfpost.fd/CALRAD_WCLOUD_newcrtm.f",
+      "blobSha": "ae63de2b906d5cba475b1140181ddcdb8155e0f6",
+      "lockedFacts": [
+        "the HRRR post source contains a separate REAL FUNCTION EFFR for effective particle radii used by CRTM",
+        "EFFR accepts pmid,t,q, multiple hydrometeor fields, riming/number fields, mp_opt and species",
+        "its input signature is materially different from Thompson calc_effectRad"
+      ],
+      "limits": [
+        "implementation independence does not prove semantic equivalence to calc_effectRad",
+        "postprocessor EFFR cannot be promoted to an expected Thompson checkpoint until derivation/branch/support equivalence is demonstrated"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRR-V4-INTERNAL-RE-STATE",
+      "role": "primary-official-model-state-routing",
+      "independentObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "lockedFacts": [
+        "ARW dyn_em source carries grid re_cloud/re_ice/re_snow through the physics/radiation call path",
+        "the repository also contains a NEMS post reader path requesting re_cloud on mid layers",
+        "Registry.NMM defines re_cloud/re_ice/re_snow as effective radii in metres"
+      ],
+      "limits": [
+        "NMM Registry and NEMS reader evidence does not prove HRRR CONUS ARW operational history files emit those fields",
+        "variable existence in source is not file-availability evidence"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-UPP-RRFS-EFFECTIVE-RADIUS",
+      "role": "primary-official-later-generation-post-interface",
+      "independentObservationRoot": false,
+      "repository": "NOAA-EMC/UPP",
+      "lockedFacts": [
+        "current UPP has Thompson effective-radius arrays EFFRL/EFFRI/EFFRS for RRFS",
+        "current UPP reads cleffr/cieffr/cseffr and documents them as Thompson cloud-water/cloud-ice/snow effective radius"
+      ],
+      "limits": [
+        "RRFS/modern UPP lifecycle evidence is not an HRRRv4 numerical checkpoint",
+        "it is transferable evidence for carrying producer diagnostics rather than forcing downstream recomputation"
+      ]
+    },
+    {
+      "id": "NOAA-NOMADS-HRRR-20260910",
+      "role": "primary-official-current-product-availability",
+      "independentObservationRoot": false,
+      "url": "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.20260910/conus/",
+      "checkedAt": "2026-09-10",
+      "lockedFacts": [
+        "current HRRR CONUS 00Z native analysis hrrr.t00z.wrfnatf00.grib2 is listed at 667 MB with a 59 KB index"
+      ],
+      "limits": [
+        "the bounded execution environment could inspect official availability but could not materialize/decode GRIB bytes",
+        "therefore ReplayStatus does not advance to real_input_executed in R16"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "external AI outputs are candidate interpretations only and are not Observation Roots"
+  }
+}
