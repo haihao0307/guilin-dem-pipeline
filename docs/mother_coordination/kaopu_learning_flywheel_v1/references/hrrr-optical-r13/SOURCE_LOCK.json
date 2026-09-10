@@ -1,0 +1,113 @@
+{
+  "schema": "kaopu-source-lock/hrrr-optical-r13",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRoots": [],
+  "evidenceRoots": [
+    {
+      "id": "NOAA-HRRRV4-SYSTEM-MICROPHYSICS",
+      "authority": "primary-official/model-system",
+      "independentEvidenceRoot": true,
+      "urls": [
+        "https://doi.org/10.1175/WAF-D-21-0151.1",
+        "https://repository.library.noaa.gov/view/noaa/72271"
+      ],
+      "lockedFacts": [
+        "HRRRv4 uses the Thompson bulk microphysics scheme; as of HRRRv4 snow is one-moment while cloud water, cloud ice, rain and graupel/hail are two-moment",
+        "NOAA 2026 diagnostics documentation treats HRRRv4 as a specific historical operational configuration and distinguishes it from newer RRFS Thompson-Eidhammer implementations"
+      ],
+      "limits": [
+        "model-system documentation is not an atmospheric Observation Root",
+        "the exact HRRRv4 executable source hash for Thompson calc_effectRad was not authenticated in this bounded cycle"
+      ]
+    },
+    {
+      "id": "NOAA-NOMADS-HRRR-NATIVE-INDEX-2026090900",
+      "authority": "primary-official/live-product-schema",
+      "independentEvidenceRoot": true,
+      "url": "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.20260909/conus/hrrr.t00z.wrfnatf00.grib2.idx",
+      "lockedFacts": [
+        "the native analysis exposes PRES, CLWMR, CIMIXR, RWMR, SNMR, GRLE, NCONCD, NCCICE, SPNCR, FRACCC, HGT, TMP, SPFH and MASSDEN on hybrid levels",
+        "the selected source is analysis valid 2026-09-09 00 UTC",
+        "byte offsets are exposed in the .idx and can support field/range acquisition planning"
+      ],
+      "limits": [
+        "the index is schema/transport evidence, not decoded atmospheric values",
+        "the GRIB2 body was not materialized in the bounded execution environment"
+      ]
+    },
+    {
+      "id": "DTC-THOMPSON-CALC-EFFECTRAD",
+      "authority": "primary-community-physics-documentation",
+      "independentEvidenceRoot": true,
+      "urls": [
+        "https://dtcenter.ucar.edu/GMTB/UFS_SRW_HSD/scidoc/group__aathompson.html",
+        "https://github.com/wrf-model/WRF/blob/06d4240ae989cc3e50af412bb472df3d9048783c/phys/module_mp_thompson.F"
+      ],
+      "lockedFacts": [
+        "calc_effectRad consumes temperature, pressure, water vapor, cloud water and cloud-droplet number, cloud ice and ice number, and snow mixing ratio to derive radiation effective radii for cloud water, ice and snow",
+        "the documented effective radii are intended to be consistent with Thompson microphysics assumptions rather than arbitrary constants",
+        "the Thompson source contains explicit particle-size-distribution and mass-size assumptions"
+      ],
+      "limits": [
+        "the current/community WRF source is engineering evidence for the method and interface, not proof that its exact numerical implementation matches the operational HRRRv4 build",
+        "source-version lock is required before a replay can be called HRRRv4-consistent"
+      ]
+    },
+    {
+      "id": "DTC-RRTMG-CLOUD-RADIATION-INPUTS",
+      "authority": "primary-community-physics-documentation",
+      "independentEvidenceRoot": true,
+      "url": "https://dtcenter.ucar.edu/gmtb/users/ccpp/docs/sci_doc/group__module__radiation__clouds.html",
+      "lockedFacts": [
+        "radiation cloud properties require cloud liquid/ice water path, cloud fraction, and effective radius rather than condensate alone",
+        "cloud overlap and sub-grid treatment are separate radiation assumptions"
+      ]
+    },
+    {
+      "id": "NASA-LIQUID-CLOUD-MIE-LUT",
+      "authority": "primary-government-research",
+      "independentEvidenceRoot": true,
+      "url": "https://ntrs.nasa.gov/citations/20220011134",
+      "lockedFacts": [
+        "liquid-water cloud inherent optical properties can be computed with Lorenz-Mie calculations for homogeneous spherical water droplets",
+        "optical properties depend on wavelength/refractive index and particle-size-distribution descriptors including effective radius and effective variance"
+      ],
+      "limits": [
+        "spherical liquid-water Mie optics do not define ice-cloud habit/roughness optics"
+      ]
+    },
+    {
+      "id": "SIDEFX-KARMA-VOLUME-OPTICAL-CONTRACT",
+      "authority": "primary-vendor-renderer",
+      "independentEvidenceRoot": true,
+      "url": "https://www.sidefx.com/docs/houdini/nodes/vop/kma_volume.html",
+      "lockedFacts": [
+        "Karma Volume consumes wavelength/color-dependent absorption and scattering rates in m^-1 plus anisotropy",
+        "renderer bounce/extinction modifiers are evaluator controls, not weather state"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-VOLUME-OPTICAL-CONTRACT",
+      "authority": "primary-vendor-renderer",
+      "independentEvidenceRoot": true,
+      "urls": [
+        "https://dev.epicgames.com/documentation/unreal-engine/volumetric-fog-in-unreal-engine",
+        "https://dev.epicgames.com/documentation/unreal-engine/local-fog-volumes-in-unreal-engine"
+      ],
+      "lockedFacts": [
+        "UE 5.8 volume media expose extinction, albedo and scattering-direction controls separately from light contribution and sampling/performance controls",
+        "local fog documents its scattering-distribution control as a phase-G parameter"
+      ],
+      "limits": [
+        "UE renderer parameters are evaluator semantics, not meteorological truth"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretations only; no external AI output is an Observation Root"
+  }
+}
