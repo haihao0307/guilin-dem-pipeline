@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-mother-routing-extension/r23",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_HRRRV4_TEMPORAL_FRESHNESS_R23.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "record ProducerRefreshEpoch and execution-segment identity for any exposed re_cloud/re_ice/re_snow checkpoint",
+        "exclude cold-start t0 and restart-start t0 history frames from producer-refreshed replay checkpoints",
+        "do not use value change from initialization as freshness evidence",
+        "for L1/L3 sample only after at least one completed eligible Thompson microphysics step in the current execution segment"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept effective-radius replay checkpoints only when source-path liveness and temporal producer lineage both pass",
+        "keep carried/restarted and producer-refreshed checkpoint classes distinct",
+        "keep ReplayStatus unchanged after R23 and any L1-only success"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add ProducerRefreshEpoch and CheckpointTemporalEligibility as typed provenance",
+        "preserve segmentKind, stepsSinceSegmentStart and lastProducerStep/event evidence",
+        "treat numerical value identity and execution freshness as orthogonal"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R23; effective radius remains upstream of the spectral optical packet"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after eligible locked HRRRv4 L3 real-input ControlInstrumentedPair plus independent source-model checkpoint and downstream optical/evaluator gates"
+}
