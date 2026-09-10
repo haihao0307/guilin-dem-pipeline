@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu-mother-routing-extension/r15",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_INPUT_AUTH_R15.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "adopt ReplayAuthenticationLadder and keep source_callpath_authenticated distinct from runtime_authenticated",
+        "add ReplayInputAdapter with explicit SPFH specific-humidity to Qv mixing-ratio conversion",
+        "preserve cycle, hybrid level, grid/support, source parameter identity and transform lineage",
+        "use MASSDEN only as a cross-check unless source-equivalence of a substitution is separately proven"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept re_cloud/re_ice/re_snow only with replay authentication state and lineage",
+        "do not treat effective radius as visible-light optical closure",
+        "retain liquid/ice spectral-scattering closure as a separate gate"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no promotion from R15 alone",
+        "continue consuming renderer-neutral spectral extinction/scattering rather than HRRR fields or effective radius"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make replay authentication stages first-class",
+        "make same-unit/different-quantity typing explicit",
+        "require independent expected-output provenance for numerical authentication"
+      ]
+    },
+    {
+      "mother": "Noise/Field",
+      "items": [
+        "remain downstream of source support/disaggregation",
+        "procedural refinement cannot increase replay-authentication status"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after fixed real HRRR input execution plus an independent matched effective-radius checkpoint"
+}
