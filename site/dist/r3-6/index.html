@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州 R3.6：继承 R3.5 完整 OSM 证据，优化索引绘制、显示曲面采样与过时请求取消。">
+ <title>小温州 · 三维地形 R3.6</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="../r3-2/style.css">
+ <link rel="stylesheet" href="../r3-3/style.css">
+ <link rel="stylesheet" href="../r3-4/style.css">
+ <link rel="stylesheet" href="../r3-5/style.css">
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script>
+  (()=>{
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=(input,init)=>{
+      if(typeof input==='string'){
+        if(input.startsWith('./data/worldcover/')){
+          input=new URL('../r3-4/data/worldcover/'+input.slice('./data/worldcover/'.length),location.href).href;
+        }else if(input.startsWith('/r3/data/')){
+          input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;
+        }else if(input.startsWith('/r3-1/data/')){
+          input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;
+        }
+      }
+      return nativeFetch(input,init);
+    };
+  })();
+ </script>
+</head>
+<body>
+ <main id="stage" aria-label="温州 R3.6 三维地形、环境外观与优化后的道路建筑外部地图证据">
+   <canvas id="terrain" tabindex="0" aria-label="三维地形；普通模式方向键旋转、加减号缩放；人眼模式拖动环视，WASD 行走，方向键转头，加减号前后移动，R键复位"></canvas>
+   <svg id="river-leaders" aria-hidden="true"></svg>
+   <header class="topbar">
+     <div class="brand"><span class="brand-mark" aria-hidden="true">山</span><div><h1>小温州<span>三维地形</span></h1><p>真实 DEM · R3.6</p></div></div>
+     <div class="view-switch" role="group" aria-label="地形范围"><button id="mountains" class="active" aria-pressed="true">山地近景</button><button id="overview" aria-pressed="false">全域</button></div>
+     <button id="info-button" class="quiet" aria-expanded="false" aria-controls="info">资料说明</button>
+   </header>
+   <section class="focus-panel" aria-label="位置与显示设置">
+     <label for="location">查看位置</label>
+     <select id="location"><option value="mountains">山地近景</option><option value="overview">全域</option></select>
+     <label for="exaggeration">地形比例</label>
+     <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
+     <div id="eye-card" class="eye-card" hidden><strong>1.6 米人眼视角</strong><span id="eye-status">相机锚定到显示曲面。</span><small>1.6 米只描述相机与显示曲面的关系，不是测绘精度。</small></div>
+     <div class="hydro-options">
+       <label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><label><input id="show-sea" type="checkbox" checked> 演示海面</label>
+       <label><input id="show-surface" type="checkbox" checked> 土壤外观演示</label><label><input id="show-landcover" type="checkbox"> 土地覆盖证据</label>
+       <label><input id="show-osm-roads" type="checkbox" checked> OSM 道路中心线</label><label><input id="show-osm-buildings" type="checkbox" checked> OSM 建筑 footprint</label>
+       <small>R3.6 不删证据：只把同一 R3.5 线段改为索引化运行时，并取消过时请求。</small>
+     </div>
+     <div id="osm-card" class="osm-card" hidden>
+       <strong id="osm-title">OpenStreetMap · R3.6 索引化映射证据</strong>
+       <span id="osm-status">读取证据…</span>
+       <div class="osm-metrics"><b id="osm-road-count">道路顶点 —</b><b id="osm-building-count">建筑顶点 —</b></div>
+       <small id="osm-source">证据语义与 R3.5 完全相同。</small>
+     </div>
+     <div id="landcover-card" class="landcover-card" hidden>
+       <strong id="landcover-title">ESA WorldCover 2021 · 土地覆盖证据</strong><span id="landcover-status">读取证据…</span><div id="landcover-metrics" class="landcover-metrics"></div><small id="landcover-source">类别不是个体 Object Truth。</small>
+     </div>
+     <div id="surface-card" class="surface-card" hidden>
+       <strong id="surface-title">土壤外观演示</strong><span id="surface-status">读取证据…</span><div class="surface-metrics"><b id="surface-clay">黏土 —</b><b id="surface-sand">砂 —</b><b id="surface-silt">粉砂 —</b><b id="surface-soc">SOC —</b></div><small id="surface-source">模型预测只用于外观演示。</small>
+     </div>
+     <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
+   </section>
+   <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
+   <div class="compass" aria-label="北方向"><span id="north-arrow">↑</span><b>北</b></div>
+   <nav class="camera-controls" aria-label="相机控制"><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="zoom-out" title="缩小" aria-label="缩小">−</button><span class="separator"></span><button id="turn-left" title="向左旋转" aria-label="向左旋转">↶</button><button id="turn-right" title="向右旋转" aria-label="向右旋转">↷</button><span class="separator"></span><button id="eye-view" aria-pressed="false">人眼 1.6m</button><button id="top-view">俯视</button><button id="reset">复位</button></nav>
+   <footer><div class="caption"><strong id="view-title">山地近景</strong><span id="render-status" role="status" aria-live="polite">准备地形</span></div><p id="gesture-hint" class="gesture-hint">拖动旋转 · 滚轮缩放 · 双指平移</p><div class="height-legend"><span>低</span><i></i><span>高</span></div></footer>
+   <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>
+   <aside id="info" class="info-panel" hidden aria-label="资料说明">
+      <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>R3.6 只改运行时，不改证据</h2>
+      <p>R3.6 直接复用 R3.5 已永久锁定、已通过固定公网 QA 的 OSM r2 浏览器证据包，不重采样、不简化、不删除道路或建筑边界。</p>
+      <dl>
+        <dt>索引化线段</dt><dd>R3.5 为每条可见线段重复写入两个端点。R3.6 每个源顶点只计算一次显示位置、只上传一次，再用 GPU index 连接相邻顶点。目标是降低 CPU 地形采样次数和 GPU 顶点内存，不改变可见线段集合。</dd>
+        <dt>过时请求取消</dt><dd>切换视域时，上一视域尚未完成的 OSM 二进制请求会由 AbortController 取消；CPU 构建也分块检查取消信号。取消只节省过时工作，不改变最终当前视域内容。</dd>
+        <dt>主线程分块</dt><dd>大范围对象构建按时间预算主动让出主线程，并记录 build、最大连续 CPU chunk 和 yield 次数。这个机制用于降低长任务阻塞；CI 数值只可做同 runner 相对对比，不代表真实 iPhone 帧率。</dd>
+        <dt>小缓存</dt><dd>只保留最近两个视域的已校验二进制 payload，便于同一视域 1×/3×/6× 重建时避免重复下载和 SHA；缓存不跳过首次证据校验。</dd>
+        <dt>证据边界</dt><dd>道路仍是 centerline-style mapped observation，屏幕线宽不是物理宽度；建筑仍只画源 MultiPolygon boundary，不生成高度，也不生成视域边缘假闭合线。</dd>
+        <dt>真机约束</dt><dd>390×844 Chromium 移动仿真只能用于回归和相对性能比较。除非在真实 iPhone/Safari/GPU 上完成测试，`realIphoneVerified` 必须保持 false，不能用桌面模拟替代生产验收。</dd>
+      </dl>
+      <a href="../r3-5/data/osm/osm-context.json" target="_blank" rel="noreferrer">查看冻结 R3.5 OSM 浏览器证据索引</a><br>
+      <a href="https://github.com/haihao0307/guilin-dem-pipeline/releases/tag/wenzhou-r3.5-osm-object-evidence-20260910" target="_blank" rel="noreferrer">查看永久 OSM 证据归档</a>
+   </aside>
+ </main>
+ <script type="module" src="./bootstrap.js"></script>
+</body></html>
