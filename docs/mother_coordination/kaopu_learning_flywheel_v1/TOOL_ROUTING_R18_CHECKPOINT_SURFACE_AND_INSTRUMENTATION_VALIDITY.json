@@ -1,0 +1,117 @@
+{
+  "schema": "kaopu-tool-routing-extension/r18",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRR-NCO-PUBLIC-PRODUCT-SURFACE",
+      "domain": "checkpoint-discovery-public-products",
+      "toolOrSource": "NOAA/NCO HRRR product inventory",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "evidenceClass": "public-product-surface",
+      "useFor": [
+        "enumerating documented public HRRR product families",
+        "scoping negative evidence about restart publication"
+      ],
+      "doNotUseFor": [
+        "claiming no internal NOAA restart exists",
+        "atmospheric physical truth"
+      ]
+    },
+    {
+      "id": "TOOL-HRRR-GSL-ARCHIVE-SURFACE",
+      "domain": "checkpoint-discovery-cloud-archives",
+      "toolOrSource": "NOAA/GSL HRRR archive description",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "evidenceClass": "archive-category-semantics",
+      "useFor": [
+        "documented Google/AWS/Azure HRRR archive categories",
+        "bounding public archive search coverage"
+      ],
+      "doNotUseFor": [
+        "universal absence claims about historical/internal files"
+      ]
+    },
+    {
+      "id": "TOOL-HRRR-NOMADS-NWGES-LIVE",
+      "domain": "checkpoint-discovery-live-distribution",
+      "toolOrSource": "NOAA/NCEP NOMADS HRRR nwges live index",
+      "authority": "primary-official-live",
+      "observationRootEligible": false,
+      "evidenceClass": "live-distribution-surface",
+      "useFor": [
+        "current publicly exposed nwges candidate stores",
+        "current negative-evidence coverage"
+      ],
+      "doNotUseFor": [
+        "classifying stream identity from names alone",
+        "complete historical archive claims"
+      ]
+    },
+    {
+      "id": "TOOL-HRRR-LOCKED-WORKFLOW-ORIGIN",
+      "domain": "output-stream-provenance",
+      "toolOrSource": "NOAA-EMC/HRRR commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-source-locked",
+      "observationRootEligible": false,
+      "evidenceClass": "producer-workflow-identity",
+      "useFor": [
+        "proving hrrrges_sfc originates from wrfout_d01",
+        "proving hrrrdasges originates from wrfout/reduced-wrfout",
+        "distinguishing history output from restart state"
+      ],
+      "doNotUseFor": [
+        "proving absence of unpublished artifacts outside the locked workflow paths"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-RUNTIME-IO",
+      "domain": "diagnostic-instrumentation",
+      "toolOrSource": "wrf-model/Users_Guide output.rst at cc8dc53ef00a466adf5c20fa230a704c1e3f12f8",
+      "authority": "primary-upstream-documentation",
+      "observationRootEligible": false,
+      "evidenceClass": "runtime-io-semantics",
+      "useFor": [
+        "adding already-declared state to a history stream without Registry recompilation",
+        "runtime-I/O syntax and constraints",
+        "documented performance-hit warning"
+      ],
+      "doNotUseFor": [
+        "assuming bit-wise numerical non-interference",
+        "relabeling instrumented output as untouched operational output"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-PAIRED-BITWISE-METHOD",
+      "domain": "instrumentation-noninterference-test-design",
+      "toolOrSource": "WRF bit-for-bit restart reproducibility procedure and diffwrf",
+      "authority": "primary-upstream-method",
+      "observationRootEligible": false,
+      "evidenceClass": "reproducibility-method",
+      "useFor": [
+        "paired control/run comparison pattern",
+        "same-output-time bit-wise comparison design"
+      ],
+      "doNotUseFor": [
+        "claiming runtime-I/O non-interference before the HRRRv4 pair is actually run"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-CHECKPOINT-SURFACE-R18-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_checkpoint_surface_probe_r18.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "negative-evidence-scope invariant",
+        "history-versus-restart candidate classification",
+        "control/instrumented non-interference gate logic",
+        "ReplayStatus advancement guard"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
