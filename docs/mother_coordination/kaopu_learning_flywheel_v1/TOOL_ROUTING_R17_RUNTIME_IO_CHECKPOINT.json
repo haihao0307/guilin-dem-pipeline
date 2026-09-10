@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-tool-routing-extension/r17",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-ARW-REGISTRY",
+      "domain": "source-model-state-and-default-io",
+      "toolOrSource": "NOAA-EMC HRRR v4.1.20 Registry.EM + Registry.EM_COMMON",
+      "authority": "primary-official-source",
+      "useFor": ["state membership", "restart-vs-history association", "thompsonaero state routing"],
+      "doNotUseFor": ["claiming a variable exists in every operational file"]
+    },
+    {
+      "id": "TOOL-WRF-RUNTIME-IO",
+      "domain": "instrumented-source-model-checkpoint",
+      "toolOrSource": "locked HRRR README.io_config + WRF Registry I/O documentation",
+      "authority": "primary-official-documentation",
+      "useFor": ["adding existing state to history without recompiling", "minimal diagnostic instrumentation"],
+      "candidateRequest": "+:h:0:re_cloud,re_ice,re_snow",
+      "doNotUseFor": ["relabeling instrumented output as untouched operational output"]
+    },
+    {
+      "id": "TOOL-HRRRV4-NWGES-HISTORY",
+      "domain": "operational-model-output-carry",
+      "toolOrSource": "NOAA-EMC exhrrr_post/exhrrr_wrfbufr + v4.1.20 release notes + NOMADS nwges",
+      "authority": "primary-official-workflow-and-live-distribution",
+      "useFor": ["identifying hrrrges_sfc as carried wrfout/history model output", "availability and scale constraints"],
+      "doNotUseFor": ["assuming huge history files are restart checkpoints", "claiming re_* fields without byte inspection"]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-R17-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_runtime_io_checkpoint_probe_r17.py",
+      "authority": "derived-executable-evidence",
+      "useFor": ["default history vs restart-only distinction", "runtime-I/O request syntax", "checkpoint-classification invariant"],
+      "productionMutationAllowed": false
+    }
+  ]
+}
