@@ -1,0 +1,98 @@
+{
+  "schema": "kaopu-source-lock/cloud-aggregation-r11",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "observationRoots": [
+    {
+      "id": "NASA-GMAO-MERRA2-FILESPEC",
+      "role": "primary-official-product-semantics",
+      "independentObservationRoot": true,
+      "urls": [
+        "https://gmao.gsfc.nasa.gov/gmao-products/merra-2/documentation_merra-2/",
+        "https://gmao.gsfc.nasa.gov/pubs/docs/Bosilovich785.pdf"
+      ],
+      "lockedFacts": [
+        "MERRA-2 time-averaged collections are continuous averages over the stated interval and are timestamped at the interval center",
+        "three-hourly time-averaged products are centered at 01:30, 04:30, 07:30 UTC and so on",
+        "tavg3_3d_cld_Nv (M2T3NVCLD) is 3-hourly time-averaged, model-level, 72 levels, 576x361 horizontal grid, with eight time samples per daily file",
+        "M2T3NVCLD carries CLOUD, INCLOUDQI, INCLOUDQL, QI, QL, RH, TAUCLI and TAUCLW as separate variables",
+        "TAUCLI and TAUCLW are described as in-cloud optical thickness for ice and liquid clouds",
+        "tavg3_3d_nav_Ne separately carries time-averaged model-level edge pressure PLE and edge height ZLE",
+        "distributed MERRA-2 output is postprocessed from the model cubed-sphere grid to a regular 0.625 by 0.5 degree latitude-longitude grid; the file specification states most variable collections use bilinear interpolation and names the conservatively remapped exceptions"
+      ],
+      "limits": [
+        "the public file specification does not state enough detail to reconstruct the conditional time-averaging behavior of an in-cloud diagnostic when a grid column is cloud-free during part of an averaging interval",
+        "time-averaged marginal fields do not by themselves provide missing cross-moments/covariances between cloud fraction, in-cloud optical thickness, layer geometry and other fields"
+      ]
+    },
+    {
+      "id": "NASA-GMAO-MERRA2-CURRENT-SYSTEM",
+      "role": "primary-official-system-and-latency-semantics",
+      "independentObservationRoot": true,
+      "urls": [
+        "https://gmao.gsfc.nasa.gov/reanalysis/",
+        "https://gmao.gsfc.nasa.gov/gmao-products/merra-2/system-characteristics_merra-2/"
+      ],
+      "lockedFacts": [
+        "MERRA-2 is a global reanalysis, not an operational realtime weather forecast",
+        "the model is approximately 50 km scale, distributed at 0.625 degree longitude by 0.5 degree latitude with 72 native model levels",
+        "3-D outputs are provided at 3-hourly frequency",
+        "current GMAO documentation describes MERRA-2 as running behind realtime and releases data on a delayed reanalysis cadence"
+      ]
+    }
+  ],
+  "catalogTransportSources": [
+    {
+      "id": "NASA-EARTHDATA-CMR-M2T3NVCLD",
+      "role": "official-catalog-and-access-metadata",
+      "independentObservationRoot": false,
+      "urls": [
+        "https://cmr.earthdata.nasa.gov/search/site/collections/directory/GES_DISC/gov.nasa.eosdis",
+        "https://gmao.gsfc.nasa.gov/gmao-products/merra-2/citing-merra-2-data_merra-2/"
+      ],
+      "lockedFacts": [
+        "Earthdata CMR lists M2T3NVCLD version 5.12.4 and its DOI 10.5067/F9353J0FAHIH",
+        "GES DISC provides granule download and OPeNDAP access paths, with Earthdata authentication present in the catalog flow"
+      ],
+      "limits": [
+        "no M2T3NVCLD NetCDF bytes were authenticated or materialized in this bounded runtime; this cycle therefore makes no claim about actual cloud values in a specific granule"
+      ]
+    }
+  ],
+  "engineeringSources": [
+    {
+      "id": "SIDEFX-KARMA-VOLUME-R11",
+      "role": "primary-vendor-local-medium-evaluator-semantics",
+      "independentObservationRoot": false,
+      "url": "https://www.sidefx.com/docs/houdini/nodes/vop/kma_volume.html",
+      "lockedUse": [
+        "Karma Volume represents absorption and scattering as rates per distance travelled in the medium in m^-1",
+        "local participating-medium coefficients are evaluator inputs and are not equivalent to a coarse time-averaged path optical thickness"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-VOLUME-R11",
+      "role": "primary-vendor-realtime-volume-evaluator-semantics",
+      "independentObservationRoot": false,
+      "urls": [
+        "https://dev.epicgames.com/documentation/en-us/unreal-engine/volumetric-fog-in-unreal-engine",
+        "https://dev.epicgames.com/documentation/unreal-engine/volumetric-cloud-material-in-unreal-engine"
+      ],
+      "lockedUse": [
+        "UE 5.8 volume materials describe local Albedo, Emissive and Extinction at positions in space",
+        "UE cloud authoring uses 3-D noise, layout and density controls to create local structure; those are renderer/authoring mechanisms rather than meteorological evidence"
+      ]
+    }
+  ],
+  "derivedEvidence": {
+    "probe": "PROBES/cloud_aggregation_representativeness_probe_r11.py",
+    "role": "mathematical-and-contract invariants only",
+    "independentObservationRoot": false
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
