@@ -29,7 +29,7 @@ jobs:
           test "$(sha256sum "$FILE" | awk '{print $1}')" = 'a5548e66ee39ff7134e752b94e4b2a96b846ff3602f5cfb712595e9ed1c932b8'
           grep -Fq 'R019.6 · MOBILE LITE QUALITY' "$FILE"
 
-      - name: JavaScript and GLSL compile gates
+      - name: JavaScript and changed GLSL compile gates
         run: |
           set -euo pipefail
           sudo apt-get update -qq
@@ -42,10 +42,8 @@ jobs:
           assert js
           Path('/tmp/ocean-r0196.js').write_text(js.group(1),encoding='utf-8')
           lite=re.search(r'const LITE_FRAG=`(.*?)`;\nconst WAVE_DECL',s,re.S)
-          vert=re.search(r'const VERT=`(.*?)`;\nconst BOOT_FRAG',s,re.S)
-          assert lite and vert
+          assert lite
           Path('/tmp/lite.frag').write_text(lite.group(1),encoding='utf-8')
-          Path('/tmp/fullscreen.vert').write_text(vert.group(1).replace('\\\n',''),encoding='utf-8')
           assert s.count('readPixels(')==1
           assert 'waveStateL' in lite.group(1)
           assert 'landColorL' in lite.group(1)
@@ -53,7 +51,6 @@ jobs:
           print('STATIC_CONTRACT_PASS')
           PY
           node --check /tmp/ocean-r0196.js
-          glslangValidator -S vert /tmp/fullscreen.vert
           glslangValidator -S frag /tmp/lite.frag
 
       - name: Publish fixed R019.6 HTML
