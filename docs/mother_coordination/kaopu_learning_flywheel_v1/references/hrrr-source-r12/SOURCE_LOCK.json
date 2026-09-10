@@ -1,0 +1,116 @@
+{
+  "schema": "kaopu-source-lock/hrrr-source-r12",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "evidenceRoots": [
+    {
+      "id": "NOAA-GSL-HRRR-SYSTEM",
+      "role": "primary-official-model-system-semantics",
+      "independentEvidenceRoot": true,
+      "observationRootEligibleForAtmosphericState": false,
+      "urls": [
+        "https://gsl.noaa.gov/news/tenth-anniversary-of-the-hrrr-in-operations/",
+        "https://gsl.noaa.gov/pages/air-quality-and-health/"
+      ],
+      "lockedFacts": [
+        "HRRR is an operational NOAA high-resolution numerical weather model with approximately 3 km horizontal grid spacing over the contiguous United States",
+        "HRRR updates forecasts hourly",
+        "NOAA describes the model as predicting the atmosphere at 50 vertical elevations above each horizontal grid point"
+      ],
+      "limits": [
+        "cloud-resolving/high-resolution model language does not make HRRR grid state an observation of every local cloud structure",
+        "3 km support remains much coarser than close-range cinematic/realtime volume footprints"
+      ]
+    },
+    {
+      "id": "NOAA-NCEP-HRRR-PRODUCT-INVENTORY",
+      "role": "primary-official-product-schema-semantics",
+      "independentEvidenceRoot": true,
+      "observationRootEligibleForAtmosphericState": false,
+      "urls": [
+        "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/",
+        "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/hrrr.t00z.wrfnatf00.grib2.shtml",
+        "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/hrrr.t00z.wrfsubhf00.grib2.shtml"
+      ],
+      "lockedFacts": [
+        "CONUS native-level HRRR products are listed at 3 km Lambert Conformal resolution",
+        "the native-level analysis inventory contains 50 hybrid levels",
+        "native hybrid levels expose pressure, cloud liquid mixing ratio CLWMR, cloud ice mixing ratio CIMIXR, cloud-droplet number concentration NCONCD, cloud-ice number concentration NCCICE, cloud fraction FRACCC, geopotential height HGT, temperature TMP and specific humidity SPFH among other fields",
+        "the HRRR sub-hourly product is explicitly a 2-D Surface Levels product; the product page says each file contains the forecast hour plus 15, 30 and 45 minutes before the hour",
+        "the listed sub-hourly analysis inventory contains surface/column/cloud-base/cloud-top/radiation diagnostics rather than a 50-level native microphysics state"
+      ],
+      "limits": [
+        "product inventories describe model output schema, not observed atmospheric truth",
+        "absence of renderer-specific extinction/scattering/albedo/phase quantities means a separate optical closure is still required",
+        "the inventory page warns actual parameters may differ from those listed; live indexes should be checked for executable ingestion"
+      ]
+    },
+    {
+      "id": "NOAA-NOMADS-HRRR-LIVE-INDEX-20260909",
+      "role": "primary-official-live-operational-transport-and-schema-evidence",
+      "independentEvidenceRoot": false,
+      "dependsOn": [
+        "NOAA-NCEP-HRRR-PRODUCT-INVENTORY"
+      ],
+      "observationRootEligibleForAtmosphericState": false,
+      "urls": [
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/",
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.20260909/conus/",
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/hrrr.20260909/conus/hrrr.t00z.wrfnatf00.grib2.idx"
+      ],
+      "lockedFacts": [
+        "the official NOMADS directory exposed HRRR data for 2026-09-09 when checked",
+        "the 2026-09-09 00 UTC CONUS native analysis file hrrr.t00z.wrfnatf00.grib2 was listed at approximately 667 MB and its index at approximately 59 KB",
+        "the live index records d=2026090900 and repeats CLWMR/CIMIXR/NCONCD/NCCICE/FRACCC/HGT/PRES/TMP/SPFH through hybrid level 50"
+      ],
+      "limits": [
+        "the 667 MB file size is an operational sample, not a permanent size invariant",
+        "this cycle inspected directory/index metadata rather than decoding a selected GRIB2 value packet",
+        "whole-file browser ingestion is not implied or recommended; NOMADS exposes GRIB filtering and indexes suitable for subsetting"
+      ]
+    },
+    {
+      "id": "NOAA-NCEP-HRRR-CURRENT-PRODUCTION-STATUS",
+      "role": "primary-official-operational-status",
+      "independentEvidenceRoot": false,
+      "observationRootEligibleForAtmosphericState": false,
+      "url": "https://www.nco.ncep.noaa.gov/pmb/nwprod/prodstat/",
+      "lockedFacts": [
+        "NCEP production-status reporting showed HRRR hourly cycles completing in the current production suite around the R12 check"
+      ],
+      "limits": [
+        "operational status is time-varying and must be treated as lifecycle metadata rather than a Frozen source assumption"
+      ]
+    },
+    {
+      "id": "NOAA-GSL-NCEP-RRFS-TRANSITION",
+      "role": "primary-official-source-lifecycle-and-migration-semantics",
+      "independentEvidenceRoot": true,
+      "observationRootEligibleForAtmosphericState": false,
+      "urls": [
+        "https://gsl.noaa.gov/rrfs/",
+        "https://www.nco.ncep.noaa.gov/pmb/products/rrfs/"
+      ],
+      "lockedFacts": [
+        "NOAA describes RRFS as the next-generation rapidly updating high-resolution system and states RRFSv1 is transitioning to operations in 2026",
+        "the NCEP RRFS product inventory checked in 2026 is marked preliminary and subject to change, with several NOMADS products described as coming soon/parallel"
+      ],
+      "limits": [
+        "RRFS transition status does not justify silently replacing HRRR in a current pipeline",
+        "source lifecycle/version/effective-time must be explicit in routing and migration tests"
+      ]
+    }
+  ],
+  "derivedEvidence": {
+    "probe": "PROBES/weather_source_capability_probe_r12.py",
+    "role": "support-gap and contract invariants only",
+    "independentObservationRoot": false,
+    "expectedResultFromBoundedRun": "7/7 PASS"
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
