@@ -36,6 +36,7 @@ jobs:
           grep -q "setIndex" site/dist/r3-6/osm-runtime.js
           grep -q "canonicalTruth!==false" site/dist/r3-6/osm-runtime.js
           grep -q "individualPhysicalTruth!==false" site/dist/r3-6/osm-runtime.js
+          grep -q 'await new Promise(resolve=>requestAnimationFrame(resolve))' site/dist/r3-6/osm-runtime.js
       - name: Install Chromium probe runner
         run: |
           set -euo pipefail
