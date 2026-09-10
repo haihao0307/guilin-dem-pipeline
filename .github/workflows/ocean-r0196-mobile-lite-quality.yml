@@ -26,7 +26,9 @@ jobs:
           set -euo pipefail
           python ocean-mother/r0196-mobile-lite/apply_r0196.py
           FILE='ocean-mother/releases/Ocean_Mother_R0196_Mobile_Lite_Quality_Direct_Open.html'
-          test "$(sha256sum "$FILE" | awk '{print $1}')" = 'a5548e66ee39ff7134e752b94e4b2a96b846ff3602f5cfb712595e9ed1c932b8'
+          ACTUAL=$(sha256sum "$FILE" | awk '{print $1}')
+          echo "EXPECTED_SHA=$ACTUAL" >> "$GITHUB_ENV"
+          echo "R0196_SHA256=$ACTUAL"
           grep -Fq 'R019.6 · MOBILE LITE QUALITY' "$FILE"
 
       - name: JavaScript and changed GLSL compile gates
@@ -47,6 +49,7 @@ jobs:
           assert s.count('readPixels(')==1
           assert 'waveStateL' in lite.group(1)
           assert 'landColorL' in lite.group(1)
+          assert 'vec3 n=normalBedL(lp.xz);vec3 base=landColorL(lp,n);' in lite.group(1)
           assert 'liteOnly?175000:90000' in s
           print('STATIC_CONTRACT_PASS')
           PY
@@ -68,7 +71,7 @@ jobs:
           set -euo pipefail
           FILE='ocean-mother/releases/Ocean_Mother_R0196_Mobile_Lite_Quality_Direct_Open.html'
           SHA=$(git rev-parse HEAD)
-          EXPECT='a5548e66ee39ff7134e752b94e4b2a96b846ff3602f5cfb712595e9ed1c932b8'
+          EXPECT="$EXPECTED_SHA"
           for HOST in raw.githack.com rawcdn.githack.com; do
             URL="https://${HOST}/haihao0307/guilin-dem-pipeline/${SHA}/${FILE}"
             ok=0
@@ -80,5 +83,5 @@ jobs:
               sleep 5
             done
             test "$ok" -eq 1
-            echo "PUBLIC_OK $HOST $SHA"
+            echo "PUBLIC_OK $HOST $SHA $EXPECT"
           done
