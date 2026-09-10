@@ -1,0 +1,85 @@
+{
+  "schema": "kaopu-tool-routing-extension/r22",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-PRODUCER-REQUEST-R22",
+      "domain": "weather-diagnostic-producer-liveness",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_physics_init.F + Registry.EM_COMMON at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "effective-radius request-flag gate",
+        "use_mp_re default/source semantics",
+        "initial radiative effective-radius values"
+      ],
+      "doNotUseFor": [
+        "proving a model timestep executed",
+        "physical atmospheric observation",
+        "promoting runtime authentication"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-THOMPSON-LIVENESS-R22",
+      "domain": "weather-microphysics-producer-guard",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_mp_thompson.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "calc_effectRad guard identity",
+        "aerosol-aware CCN activation-table dependency"
+      ],
+      "doNotUseFor": [
+        "assuming a stream-exposed field was refreshed",
+        "assuming a different Thompson generation has identical guard semantics"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-SCM-VS-CONUS-CONFIG-R22",
+      "domain": "weather-validation-harness-source-path",
+      "toolOrSource": "locked em_scm_xy namelist + locked CONUS hrrr_wrf.nl",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "detecting the shipped SCM 1/1 radiation mismatch with the effective-radius producer request",
+        "constructing the explicit L1 28/4/4/1 source-path configuration"
+      ],
+      "doNotUseFor": [
+        "claiming SCM is operationally equivalent to HRRR"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-CCN-AUX-R22",
+      "domain": "weather-microphysics-runtime-dependency",
+      "toolOrSource": "locked Thompson source + locked CONUS forecast staging script",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "capturing CCN activation table as an explicit runtime dependency of the aerosol-aware path"
+      ],
+      "doNotUseFor": [
+        "treating an auxiliary table as a physical Observation Root"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-LIVENESS-PROBE-R22",
+      "domain": "coordinator-source-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_effective_radius_liveness_probe_r22.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "rejecting stream-exposure/producer-liveness conflation",
+        "checking the corrected L1 source-path gate",
+        "rejecting plausible initialized values as freshness proof"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR execution evidence",
+        "numerical checkpoint authentication",
+        "ReplayStatus promotion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
