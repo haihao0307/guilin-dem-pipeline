@@ -1,0 +1,106 @@
+{
+  "schema": "kaopu-tool-routing-extension/r11",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-NASA-MERRA2-FILESPEC-R11",
+      "domain": "cloud-aggregation-and-support-semantics",
+      "toolOrSource": "NASA GMAO MERRA-2 File Specification",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "time-averaged product interval semantics",
+        "M2T3NVCLD variable/support identity",
+        "M2T3NENAV edge-height support",
+        "distributed-grid and remap provenance"
+      ],
+      "doNotUseFor": [
+        "claiming time-mean optical depth is instantaneous local extinction",
+        "inferring undocumented conditional averaging of in-cloud diagnostics",
+        "reconstructing lost covariance/subgrid geometry"
+      ]
+    },
+    {
+      "id": "TOOL-NASA-MERRA2-SYSTEM-R11",
+      "domain": "reanalysis-representativeness-and-latency",
+      "toolOrSource": "NASA GMAO MERRA-2 current system/reanalysis documentation",
+      "authority": "primary-official",
+      "independentRoot": true,
+      "useFor": [
+        "global reanalysis identity",
+        "approximate 50-km model scale",
+        "72 native model levels",
+        "3-hourly 3-D output cadence",
+        "delayed/non-realtime applicability limits"
+      ],
+      "doNotUseFor": [
+        "current instantaneous Weather truth",
+        "local cloud topology"
+      ]
+    },
+    {
+      "id": "TOOL-NASA-EARTHDATA-CMR-R11",
+      "domain": "dataset-catalog-and-authentication-path",
+      "toolOrSource": "NASA Earthdata CMR / GES DISC",
+      "authority": "primary-official-catalog",
+      "independentRoot": false,
+      "useFor": [
+        "M2T3NVCLD collection/version/DOI identity",
+        "granule/subset/OPeNDAP access routing",
+        "future authenticated packet acquisition"
+      ],
+      "doNotUseFor": [
+        "cloud physical values without authenticated granule bytes",
+        "independent physical Observation evidence"
+      ]
+    },
+    {
+      "id": "TOOL-SIDEFX-KARMA-VOLUME-R11",
+      "domain": "local-participating-medium-evaluator-target",
+      "toolOrSource": "SideFX Karma Volume",
+      "authority": "primary-vendor",
+      "independentRoot": false,
+      "useFor": [
+        "local absorption/scattering coefficients in m^-1",
+        "testing downstream adapter targets"
+      ],
+      "doNotUseFor": [
+        "meteorological support semantics",
+        "turning a coarse path optical diagnostic into local truth"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-VOLUME-R11",
+      "domain": "realtime-local-volume-evaluator-target",
+      "toolOrSource": "Unreal Engine 5.8 Volumetric Fog / Volumetric Cloud Material",
+      "authority": "primary-vendor",
+      "independentRoot": false,
+      "useFor": [
+        "local point-in-space extinction/albedo/emissive representation",
+        "3-D noise/layout as explicit renderer/disaggregation mechanisms",
+        "visual/performance evaluator comparisons"
+      ],
+      "doNotUseFor": [
+        "meteorological subgrid truth",
+        "claiming procedural detail recovers unresolved source structure"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-CLOUD-AGGREGATION-R11-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/cloud_aggregation_representativeness_probe_r11.py",
+      "authority": "derived-executable-evidence",
+      "independentRoot": false,
+      "useFor": [
+        "non-commutation of averaging and Beer-Lambert transmittance",
+        "ratio-of-means versus mean-local-extinction counterexample",
+        "lost covariance between cloud fraction and in-cloud tau",
+        "temporal/spatial non-uniqueness",
+        "direct-local-volume readiness guard"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
