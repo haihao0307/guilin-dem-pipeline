@@ -1,0 +1,71 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-instrumentation-comparator-r20",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRoots": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRRV4-DIFFWRF",
+      "role": "locked-operational-source-comparison-tool",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/external/io_netcdf/diffwrf.F90",
+      "blobSha": "0be8681f8b5c33181ed21a76051ca53c0f939295",
+      "lockedFacts": [
+        "comparison iterates variables from the first file and looks up the same variable in the second file",
+        "when control is the first file, extra variables present only in the instrumented second file are not part of the comparison traversal",
+        "the locked HRRRv4 copy enters field-value comparison only for WRF_REAL variables",
+        "the locked comparator checks matching time strings, dimensions, WRF type and real-valued field contents for traversed variables",
+        "the locked comparator does not provide a complete allowlisted added-variable manifest or a full shared-attribute/schema equality contract"
+      ],
+      "limits": [
+        "this is an engineering comparison tool, not an atmospheric Observation Root",
+        "a diffwrf pass alone does not prove equality of skipped integer/string state, all metadata, exact added-variable set, or all dataset-manifest properties"
+      ]
+    },
+    {
+      "id": "WRF-CURRENT-DIFFWRF",
+      "role": "current-upstream-comparator-reference",
+      "authority": "primary-official-source",
+      "repository": "wrf-model/WRF",
+      "commit": "06d4240ae989cc3e50af412bb472df3d9048783c",
+      "path": "external/io_netcdf/diffwrf.F90",
+      "blobSha": "4c72cfed7f65f2784c399eb808ae6b15044eaa50",
+      "lockedFacts": [
+        "the inspected current upstream comparator handles WRF_REAL and WRF_INTEGER value comparison",
+        "comparison-tool behavior therefore changes across source generations and must itself be version-locked"
+      ],
+      "limits": [
+        "current upstream WRF comparator behavior cannot be silently substituted for the locked HRRRv4 tool when claiming HRRRv4 validation identity"
+      ]
+    },
+    {
+      "id": "WRF-OFFICIAL-BITWISE-METHOD",
+      "role": "official-validation-method",
+      "authority": "primary-official-documentation",
+      "urls": [
+        "https://github.com/wrf-model/WRF/wiki/How-to-Check-Bit-wise-Identical-Results",
+        "https://github.com/wrf-model/WRF/wiki/How-to-Check-Bit-for-Bit-Results-with-Restart-Capability"
+      ],
+      "lockedFacts": [
+        "WRF officially uses paired output runs and diffwrf for bit-wise reproducibility checks",
+        "when differences occur, the documented debugging method is to increase output frequency and locate the first differing variable/time"
+      ],
+      "limits": [
+        "official use of diffwrf does not imply that the locked HRRRv4 copy validates instrumentation-specific schema and metadata conditions that its source does not check"
+      ]
+    }
+  ],
+  "derivedExecutableEvidence": {
+    "path": "PROBES/hrrrv4_instrumentation_comparator_probe_r20.py",
+    "result": "8/8 PASS",
+    "scope": "semantic comparator contract only; no WRF or HRRR execution and no atmospheric truth values"
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
