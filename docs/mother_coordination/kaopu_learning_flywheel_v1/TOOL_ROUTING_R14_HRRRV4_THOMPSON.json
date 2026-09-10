@@ -1,0 +1,11 @@
+{
+  "schema":"kaopu-tool-routing-extension/r14",
+  "updatedAt":"2026-09-10",
+  "learningId":"LQ-ATMOSPHERE-001",
+  "status":"candidate-routing",
+  "routes":[
+    {"id":"TOOL-NOAA-HRRR-V4-OPS-SOURCE","domain":"source-model-diagnostic-replay","toolOrSource":"NOAA-EMC/HRRR commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827","authority":"primary-official-operational-source","observationRootEligible":false,"useFor":["exact HRRR v4.1.20 source identity","Thompson calc_effectRad algorithm","runtime namelist/configuration evidence"],"doNotUseFor":["physical atmospheric Observation truth","visible-light extinction without optical closure"]},
+    {"id":"TOOL-WRF-V39-UPSTREAM","domain":"source-comparison","toolOrSource":"wrf-model/WRF V3.9 module_mp_thompson.F","authority":"primary-upstream","observationRootEligible":false,"useFor":["bounded calc_effectRad comparison"],"doNotUseFor":["substituting upstream WRF identity for HRRR operational provenance"]},
+    {"id":"TOOL-KAOPU-HRRR-THOMPSON-R14-PROBE","domain":"coordinator-executable-test","toolOrSource":"PROBES/hrrrv4_thompson_effective_radius_replay_r14.py","authority":"derived-executable-evidence","observationRootEligible":false,"useFor":["formula/clamp replay","configuration sensitivity","effective-radius-versus-extinction separation"],"productionMutationAllowed":false}
+  ]
+}
