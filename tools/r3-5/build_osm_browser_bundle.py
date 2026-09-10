@@ -6,7 +6,8 @@ bundle keyed to the 17 already-verified R3.4 terrain/view patches.
 
 Semantic boundary:
 - OSM highway LineStrings -> mapped centerline-style display evidence only.
-- OSM building/building:part MultiPolygon -> flat footprint-boundary evidence only.
+- OSM building/building:part MultiPolygons -> source polygon boundary lines only.
+- Building boundaries are clipped as lines; patch-edge closure is never generated.
 - No road physical width, building height, levels, roof or material is invented.
 - Output is external mapped observation, not canonical/survey-grade truth.
 """
@@ -17,10 +18,9 @@ import array
 import gzip
 import hashlib
 import json
-import math
 import sys
 import zipfile
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -31,6 +31,7 @@ from shapely.ops import transform
 SOURCE_RELEASE_TAG = "wenzhou-r3.5-osm-object-evidence-20260910"
 SOURCE_RELEASE_ASSET = "Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip"
 SOURCE_RELEASE_ASSET_SHA256 = "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101"
+CORRECTED_REPORT_ASSET = "OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json"
 CORRECTED_REPORT_SHA256 = "d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364"
 ALLOWED_MAJOR = {
     "motorway", "motorway_link", "trunk", "trunk_link", "primary",
@@ -66,7 +67,11 @@ def write_array(path: Path, typecode: str, values: Iterable[int]) -> dict[str, A
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("wb") as f:
         a.tofile(f)
-    return {"path": "./data/osm/" + path.name, "bytes": path.stat().st_size, "sha256": sha256_file(path)}
+    return {
+        "path": "./data/osm/" + path.name,
+        "bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
 
 
 def quantize_xy(x: float, y: float, bounds: list[float]) -> tuple[int, int]:
@@ -78,7 +83,12 @@ def quantize_xy(x: float, y: float, bounds: list[float]) -> tuple[int, int]:
     return max(0, min(65535, qx)), max(0, min(65535, qy))
 
 
-def add_linestring(acc: dict[str, Any], coords: Iterable[tuple[float, float]], bounds: list[float], meta: tuple[int, int]) -> None:
+def add_linestring(
+    acc: dict[str, Any],
+    coords: Iterable[tuple[float, float]],
+    bounds: list[float],
+    meta: tuple[int, int],
+) -> None:
     pts = list(coords)
     if len(pts) < 2:
         return
@@ -96,6 +106,8 @@ def iter_line_components(geom: Any):
         return
     if geom.geom_type == "LineString":
         yield geom
+    elif geom.geom_type == "LinearRing":
+        yield geom
     elif geom.geom_type == "MultiLineString":
         yield from geom.geoms
     elif geom.geom_type == "GeometryCollection":
@@ -103,39 +115,16 @@ def iter_line_components(geom: Any):
             yield from iter_line_components(g)
 
 
-def iter_polygon_rings(geom: Any):
-    if geom.is_empty:
-        return
-    polys = []
-    if geom.geom_type == "Polygon":
-        polys = [geom]
-    elif geom.geom_type == "MultiPolygon":
-        polys = list(geom.geoms)
-    elif geom.geom_type == "GeometryCollection":
-        for g in geom.geoms:
-            yield from iter_polygon_rings(g)
-        return
-    for poly in polys:
-        yield poly.exterior.coords, 0
-        for ring in poly.interiors:
-            yield ring.coords, 1
-
-
-def load_release(zip_path: Path, temp: Path) -> tuple[Path, Path, dict[str, Any]]:
+def load_release(zip_path: Path, temp: Path) -> tuple[Path, Path]:
     if sha256_file(zip_path) != SOURCE_RELEASE_ASSET_SHA256:
         raise RuntimeError("source release ZIP SHA256 mismatch")
     with zipfile.ZipFile(zip_path) as zf:
         zf.extractall(temp)
     roads = temp / "WENZHOU_OSM_ROADS.geojsonseq.gz"
     buildings = temp / "WENZHOU_OSM_BUILDINGS.geojsonseq.gz"
-    report = temp / "OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json"
     if not roads.is_file() or not buildings.is_file():
         raise RuntimeError("expected OSM evidence payload missing")
-    # The corrected report is a release sidecar, not inside the original acquisition ZIP.
-    corrected = {}
-    if report.is_file():
-        corrected = json.loads(report.read_text(encoding="utf-8"))
-    return roads, buildings, corrected
+    return roads, buildings
 
 
 def main() -> int:
@@ -147,19 +136,29 @@ def main() -> int:
     args = ap.parse_args()
 
     args.temp.mkdir(parents=True, exist_ok=True)
-    roads_path, buildings_path, _ = load_release(args.release_zip, args.temp)
+    roads_path, buildings_path = load_release(args.release_zip, args.temp)
     patch_manifest = json.loads(args.patch_manifest.read_text(encoding="utf-8"))
     patches = {p["id"]: p for p in patch_manifest["patches"]}
     if len(patches) != 17:
         raise RuntimeError(f"expected 17 inherited patches, got {len(patches)}")
 
-    patch_boxes = {pid: box(*[float(v) for v in p["bounds"]]) for pid, p in patches.items()}
-    road_acc = {pid: {"xy": [], "parts": [], "partCount": 0, "vertexCount": 0, "classes": Counter()} for pid in patches}
-    bld_acc = {pid: {"xy": [], "parts": [], "partCount": 0, "vertexCount": 0} for pid in patches if pid != "overview"}
+    patch_boxes = {
+        pid: box(*[float(v) for v in p["bounds"]]) for pid, p in patches.items()
+    }
+    road_acc = {
+        pid: {
+            "xy": [], "parts": [], "partCount": 0, "vertexCount": 0,
+            "classes": Counter(),
+        }
+        for pid in patches
+    }
+    building_acc = {
+        pid: {"xy": [], "parts": [], "partCount": 0, "vertexCount": 0}
+        for pid in patches if pid != "overview"
+    }
     transformer = Transformer.from_crs("EPSG:4326", "EPSG:32651", always_xy=True)
     project = transformer.transform
 
-    road_source_count = 0
     road_candidate_count = 0
     with gzip.open(roads_path, "rt", encoding="utf-8") as f:
         for line in f:
@@ -171,8 +170,7 @@ def main() -> int:
             gobj = feat.get("geometry") or {}
             if gobj.get("type") != "LineString" or not props.get("highway"):
                 continue
-            road_source_count += 1
-            highway = str(props.get("highway"))
+            highway = str(props["highway"])
             try:
                 geom = transform(project, shape(gobj))
             except Exception:
@@ -181,7 +179,10 @@ def main() -> int:
                 continue
             road_candidate_count += 1
             class_code = ROAD_CLASS_CODE.get(highway, 255)
-            flags = (1 if props.get("bridge") not in (None, "", "no") else 0) | (2 if props.get("tunnel") not in (None, "", "no") else 0)
+            flags = (
+                (1 if props.get("bridge") not in (None, "", "no") else 0)
+                | (2 if props.get("tunnel") not in (None, "", "no") else 0)
+            )
             gx0, gy0, gx1, gy1 = geom.bounds
             for pid, pbox in patch_boxes.items():
                 if pid == "overview" and highway not in ALLOWED_MAJOR:
@@ -191,10 +192,13 @@ def main() -> int:
                     continue
                 clipped = geom.intersection(pbox)
                 for ls in iter_line_components(clipped):
-                    add_linestring(road_acc[pid], ls.coords, patches[pid]["bounds"], (class_code, flags))
+                    add_linestring(
+                        road_acc[pid], ls.coords, patches[pid]["bounds"],
+                        (class_code, flags),
+                    )
                     road_acc[pid]["classes"][highway] += 1
 
-    building_source_count = 0
+    building_candidate_count = 0
     building_identity_seen: set[tuple[str, str]] = set()
     with gzip.open(buildings_path, "rt", encoding="utf-8") as f:
         for line in f:
@@ -210,44 +214,64 @@ def main() -> int:
             if key in building_identity_seen:
                 continue
             building_identity_seen.add(key)
-            building_source_count += 1
+            building_candidate_count += 1
             try:
-                geom = transform(project, shape(gobj))
+                polygon_geom = transform(project, shape(gobj))
             except Exception:
                 continue
-            if geom.is_empty:
+            if polygon_geom.is_empty:
                 continue
-            gx0, gy0, gx1, gy1 = geom.bounds
+
+            # IMPORTANT: clip the original polygon BOUNDARY as a line. Clipping
+            # the polygon first and then asking for its boundary would create
+            # synthetic closure segments along the patch rectangle. Those are
+            # not OSM building edges and must never enter the evidence layer.
+            boundary_geom = polygon_geom.boundary
+            gx0, gy0, gx1, gy1 = boundary_geom.bounds
             for pid, pbox in patch_boxes.items():
                 if pid == "overview":
                     continue
                 px0, py0, px1, py1 = pbox.bounds
                 if gx1 < px0 or gx0 > px1 or gy1 < py0 or gy0 > py1:
                     continue
-                clipped = geom.intersection(pbox)
-                for ring, ring_type in iter_polygon_rings(clipped):
-                    pts = list(ring)
-                    if len(pts) < 4:
-                        continue
-                    add_linestring(bld_acc[pid], pts, patches[pid]["bounds"], (ring_type, 0))
+                clipped_boundary = boundary_geom.intersection(pbox)
+                for ls in iter_line_components(clipped_boundary):
+                    add_linestring(
+                        building_acc[pid], ls.coords, patches[pid]["bounds"],
+                        (0, 0),
+                    )
 
     args.out.mkdir(parents=True, exist_ok=True)
-    patch_records = []
+    patch_records: list[dict[str, Any]] = []
     total_bytes = 0
     for pid, p in patches.items():
         rb = road_acc[pid]
         road_xy = write_array(args.out / f"{pid}.roads.xy.u16le", "H", rb["xy"])
-        road_parts = write_array(args.out / f"{pid}.roads.parts.u32le", "I", rb["parts"])
-        files = {"roadXY": road_xy, "roadParts": road_parts}
+        road_parts = write_array(
+            args.out / f"{pid}.roads.parts.u32le", "I", rb["parts"]
+        )
+        files: dict[str, Any] = {"roadXY": road_xy, "roadParts": road_parts}
         total_bytes += road_xy["bytes"] + road_parts["bytes"]
-        bmeta = {"ringCount": 0, "vertexCount": 0}
+
+        building_meta = {"boundaryPartCount": 0, "vertexCount": 0}
         if pid != "overview":
-            bb = bld_acc[pid]
-            bxy = write_array(args.out / f"{pid}.buildings.xy.u16le", "H", bb["xy"])
-            bparts = write_array(args.out / f"{pid}.buildings.parts.u32le", "I", bb["parts"])
-            files.update({"buildingXY": bxy, "buildingParts": bparts})
-            total_bytes += bxy["bytes"] + bparts["bytes"]
-            bmeta = {"ringCount": bb["partCount"], "vertexCount": bb["vertexCount"]}
+            bb = building_acc[pid]
+            building_xy = write_array(
+                args.out / f"{pid}.buildings.xy.u16le", "H", bb["xy"]
+            )
+            building_parts = write_array(
+                args.out / f"{pid}.buildings.parts.u32le", "I", bb["parts"]
+            )
+            files.update({
+                "buildingXY": building_xy,
+                "buildingParts": building_parts,
+            })
+            total_bytes += building_xy["bytes"] + building_parts["bytes"]
+            building_meta = {
+                "boundaryPartCount": bb["partCount"],
+                "vertexCount": bb["vertexCount"],
+            }
+
         minx, miny, maxx, maxy = [float(v) for v in p["bounds"]]
         patch_records.append({
             "id": pid,
@@ -264,7 +288,9 @@ def main() -> int:
                 "screenLineWidthOnly": True,
             },
             "buildings": {
-                **bmeta,
+                **building_meta,
+                "sourceMultiPolygonBoundaryOnly": True,
+                "clippingCreatesPatchClosure": False,
                 "flatFootprintBoundaryOnly": True,
                 "heightClaim": "unknown-not-generated",
             },
@@ -272,10 +298,11 @@ def main() -> int:
         })
 
     manifest = {
-        "schema": "wenzhou-r3.5-osm-browser-bundle/r1",
+        "schema": "wenzhou-r3.5-osm-browser-bundle/r2",
         "sourceReleaseTag": SOURCE_RELEASE_TAG,
         "sourceReleaseAsset": SOURCE_RELEASE_ASSET,
         "sourceReleaseAssetSha256": SOURCE_RELEASE_ASSET_SHA256,
+        "sourceCorrectedReportAsset": CORRECTED_REPORT_ASSET,
         "sourceCorrectedReportSha256": CORRECTED_REPORT_SHA256,
         "sourceIdentity": "external_mapped_observation",
         "sourceCrs": "EPSG:4326",
@@ -284,24 +311,43 @@ def main() -> int:
         "surveyGradeGeometry": False,
         "individualPhysicalTruth": False,
         "productionReady": False,
-        "roadPolicy": "Only explicit highway LineString geometry is used as mapped centerline-style display evidence. Rendered line width is screen styling, never physical road width.",
-        "buildingPolicy": "Only unique OSM identities with MultiPolygon building/building:part geometry are used as flat footprint-boundary evidence. No height/levels/roof/material defaults are generated.",
-        "overviewPolicy": "Overview excludes buildings and includes only motorway/trunk/primary/secondary/tertiary classes and links.",
+        "roadPolicy": (
+            "Only explicit highway LineString geometry is used as mapped "
+            "centerline-style display evidence. Rendered line width is screen "
+            "styling, never physical road width."
+        ),
+        "buildingPolicy": (
+            "Only unique OSM identities with MultiPolygon building/building:part "
+            "geometry are eligible. The source polygon boundary is converted to "
+            "line evidence before clipping, so patch boundaries never create "
+            "synthetic closure edges. No height/levels/roof/material defaults are generated."
+        ),
+        "overviewPolicy": (
+            "Overview excludes buildings and includes only motorway/trunk/primary/"
+            "secondary/tertiary classes and links."
+        ),
         "sourceCandidateCounts": {
             "roadLineStringHighway": road_candidate_count,
-            "buildingMultiPolygonUniqueIdentity": building_source_count,
+            "buildingMultiPolygonUniqueIdentity": building_candidate_count,
         },
         "patchCount": len(patch_records),
         "totalBytes": total_bytes,
         "patches": patch_records,
-        "roadClassCodes": {str(v): k for k, v in ROAD_CLASS_CODE.items()} | {"255": "other-explicit-highway"},
-        "roadFlags": {"1": "bridge-tag-present-non-no", "2": "tunnel-tag-present-non-no"},
-        "buildingPartMeta": {"0": "exterior-boundary", "1": "interior-hole-boundary"},
+        "roadClassCodes": (
+            {str(v): k for k, v in ROAD_CLASS_CODE.items()}
+            | {"255": "other-explicit-highway"}
+        ),
+        "roadFlags": {
+            "1": "bridge-tag-present-non-no",
+            "2": "tunnel-tag-present-non-no",
+        },
+        "buildingPartMeta": {
+            "0": "source-polygon-boundary-line-clipped-to-view-no-synthetic-patch-closure"
+        },
     }
     write_json(args.out / "osm-context.json", manifest)
 
-    # Self-check every emitted payload.
-    errors = []
+    errors: list[str] = []
     for rec in patch_records:
         for item in rec["files"].values():
             p = args.out / Path(item["path"]).name
@@ -311,14 +357,30 @@ def main() -> int:
         raise RuntimeError(f"bundle self-check failed: {errors}")
     if total_bytes > 48 * 1024 * 1024:
         raise RuntimeError(f"browser bundle too large: {total_bytes} bytes")
+    if road_candidate_count != 177578:
+        raise RuntimeError(f"road source candidate count changed: {road_candidate_count}")
+    if building_candidate_count != 68359:
+        raise RuntimeError(
+            f"building source candidate count changed: {building_candidate_count}"
+        )
 
     print(json.dumps({
         "passed": True,
+        "schema": manifest["schema"],
         "patchCount": len(patch_records),
         "totalBytes": total_bytes,
         "roadSourceCandidates": road_candidate_count,
-        "buildingSourceCandidates": building_source_count,
-        "patchSummary": [{"id": r["id"], "roadParts": r["roads"]["partCount"], "buildingRings": r["buildings"]["ringCount"], "maxQuantizationStepM": r["quantization"]["maxStepM"]} for r in patch_records],
+        "buildingSourceCandidates": building_candidate_count,
+        "buildingBoundaryPolicy": "source-boundary-before-clip-no-synthetic-patch-closure",
+        "patchSummary": [
+            {
+                "id": r["id"],
+                "roadParts": r["roads"]["partCount"],
+                "buildingBoundaryParts": r["buildings"]["boundaryPartCount"],
+                "maxQuantizationStepM": r["quantization"]["maxStepM"],
+            }
+            for r in patch_records
+        ],
     }, ensure_ascii=False, indent=2))
     return 0
 
