@@ -1,0 +1,124 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-checkpoint-surface-r18",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-NCO-HRRR-PRODUCT-INVENTORY",
+      "role": "official-public-product-surface",
+      "independentRoot": true,
+      "url": "https://www.nco.ncep.noaa.gov/pmb/products/hrrr/",
+      "checkedAt": "2026-09-10",
+      "lockedFacts": [
+        "official HRRR public inventory enumerates pressure-level, native-level, surface, sub-hourly and BUFR product families",
+        "no restart/wrfrst product family is listed on that publication surface"
+      ],
+      "limits": [
+        "absence from the public product inventory does not prove absence from internal NOAA operational storage"
+      ]
+    },
+    {
+      "id": "NOAA-GSL-HRRR-ARCHIVE-DESCRIPTION",
+      "role": "official-archive-surface-description",
+      "independentRoot": true,
+      "url": "https://rapidrefresh.noaa.gov/hrrr/",
+      "checkedAt": "2026-09-10",
+      "lockedFacts": [
+        "official HRRR page describes Google, AWS and Azure archives as native/isobaric/surface HRRR archives",
+        "the described archive categories do not advertise restart artifacts"
+      ],
+      "limits": [
+        "archive-category documentation is not a universal statement about every historical or internal file"
+      ]
+    },
+    {
+      "id": "NOAA-NCEP-NOMADS-HRRR-NWGES-LIVE",
+      "role": "live-public-distribution-surface",
+      "independentRoot": true,
+      "urls": [
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/prod/nwges/",
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/v4.1/nwges/"
+      ],
+      "checkedAt": "2026-09-10",
+      "lockedFacts": [
+        "current public nwges listing exposes hrrrdasges and hrrrges_sfc surfaces",
+        "no restart- or wrfrst-named surface is exposed in the checked listing"
+      ],
+      "limits": [
+        "directory naming alone is not sufficient to classify file stream identity; locked workflow source is used separately for that classification",
+        "this is a current rotating public surface, not a complete historical archive proof"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-WORKFLOW",
+      "role": "locked-source-workflow-identity",
+      "independentRoot": true,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "scripts/conus/exhrrr_post.sh",
+        "scripts/hrrrdas/exhrrr_fcst.sh",
+        "parm/conus/hrrr_wrf.nl"
+      ],
+      "lockedFacts": [
+        "hrrrges_sfc is populated by copying wrfout_d01 model/history output",
+        "hrrrdasges full and reduced products are populated from wrfout_d01, wrfout_d02 and an ncks-reduced wrfout_small_d02",
+        "locked CONUS forecast namelist has restart=.false. and restart_interval=5000"
+      ],
+      "limits": [
+        "source workflow proves identity of these named stores, not universal absence of any unpublished restart elsewhere"
+      ]
+    },
+    {
+      "id": "WRF-USERS-GUIDE-RUNTIME-IO",
+      "role": "upstream-model-io-semantics",
+      "independentRoot": true,
+      "repository": "wrf-model/Users_Guide",
+      "commit": "cc8dc53ef00a466adf5c20fa230a704c1e3f12f8",
+      "file": "output.rst",
+      "lockedFacts": [
+        "runtime I/O can change output-stream membership of already-declared state without Registry recompilation",
+        "the official guide warns runtime I/O can impose a performance hit"
+      ],
+      "limits": [
+        "documentation of output selection does not prove numerical non-interference for the locked HRRRv4 build"
+      ]
+    },
+    {
+      "id": "WRF-RESTART-BITWISE-METHOD",
+      "role": "upstream-reproducibility-method",
+      "independentRoot": true,
+      "url": "https://github.com/wrf-model/WRF/wiki/How-to-Check-Bit-for-Bit-Results-with-Restart-Capability",
+      "checkedAt": "2026-09-10",
+      "lockedFacts": [
+        "WRF documents paired-run comparison using matching output times and diffwrf as a bit-wise reproducibility method"
+      ],
+      "limits": [
+        "the published example is a restart reproducibility test, not a direct proof that runtime-I/O instrumentation is non-interfering; R18 transfers only the paired-control comparison method"
+      ]
+    }
+  ],
+  "negativeEvidenceScope": {
+    "covered": [
+      "NCO public HRRR product inventory",
+      "GSL official archive-category description",
+      "current NOMADS HRRR nwges public surface",
+      "locked workflow origin of current nwges candidate stores"
+    ],
+    "notCovered": [
+      "internal NOAA filesystem",
+      "offline disaster-recovery storage",
+      "undocumented historical operational artifacts",
+      "private experiment archives"
+    ],
+    "allowedConclusion": "no eligible untouched HRRRv4 restart checkpoint was found or proven on the bounded public surfaces checked",
+    "forbiddenConclusion": "no HRRRv4 operational restart artifact exists anywhere"
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
