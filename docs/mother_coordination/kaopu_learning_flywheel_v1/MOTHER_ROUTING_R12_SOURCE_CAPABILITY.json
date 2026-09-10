@@ -1,0 +1,67 @@
+{
+  "schema": "kaopu-mother-routing-extension/r12",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRR_SOURCE_CAPABILITY_R12.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "add WeatherSourceCapabilityContract, QuerySupportMatch, SourceFederationPolicy and SourceLifecycleState before production provider selection",
+        "treat HRRR as a regional operational model-state candidate, not a global canonical Weather truth",
+        "preserve source role, domain, horizontal/vertical/temporal support and lifecycle/effective-time lineage",
+        "keep microphysicsReady separate from opticalClosureReady and localVolumeReady",
+        "prefer filtered/subset compact packets over full native GRIB2 browser ingestion"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept support-aware model microphysics and a separately derived CloudOpticalClosure",
+        "do not classify 3 km model output as instantaneous renderer-local truth",
+        "retain DerivedSyntheticDisaggregation for all generated structure below source support"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume CloudOpticalClosure rather than raw CLWMR/CIMIXR/NCONCD/NCCICE as extinction/scattering",
+        "keep evaluator quality/budget independent of provider/model state",
+        "use the same closure packet across evaluator comparisons"
+      ]
+    },
+    {
+      "mother": "Noise/Field",
+      "items": [
+        "use procedural detail only as a declared conditional local realization constrained by Weather state",
+        "never relabel 3 km-to-local synthesized structure as HRRR Observation/model-native detail"
+      ]
+    },
+    {
+      "mother": "Terrain/Landscape",
+      "items": [
+        "preserve HRRR projection/grid and vertical-reference lineage through geographic subset and placement",
+        "do not let terrain conversion mutate source Weather state identity"
+      ]
+    },
+    {
+      "mother": "Ocean/Coast",
+      "items": [
+        "treat regional model domain and lifecycle as query constraints for coastal Weather coupling",
+        "use source federation outside regional coverage rather than extrapolating HRRR identity globally"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make WeatherSourceCapabilityContract, QuerySupportMatch, SourceFederationPolicy, source role and source lifecycle first-class",
+        "represent readiness per task rather than one provider-quality Boolean",
+        "make provider migration a versioned Judgment/experiment event with regression gates",
+        "make transport/subsetting capability part of routing without confusing transport with physical evidence"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after decoded official source packet + physical optical closure + dual-evaluator experiment; no Frozen promotion in R12"
+}
