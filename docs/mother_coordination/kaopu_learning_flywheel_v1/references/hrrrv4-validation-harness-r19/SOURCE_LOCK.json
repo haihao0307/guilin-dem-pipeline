@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-validation-harness-r19",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRRV4-LOCKED-SCM",
+      "authority": "primary-official-operational-source",
+      "repo": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/README.scm",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/namelist.input",
+        "parm/conus/hrrr_wrf.nl"
+      ],
+      "lockedFacts": [
+        "the locked source contains a 3x3 WRF single-column test with periodic X/Y boundaries and no horizontal gradients",
+        "the locked SCM default namelist uses mp_physics=2",
+        "the locked HRRRv4 CONUS namelist uses 1800x1060 horizontal points, 51 vertical levels, 3 km spacing and mp_physics=28",
+        "the locked HRRRv4 CONUS namelist sets use_aero_icbc=true and use_rap_aero_icbc=true and uses specified lateral boundaries"
+      ],
+      "limits": [
+        "presence of the SCM inside the HRRR source tree does not establish operational-state equivalence",
+        "the SCM documentation/input format does not by itself reproduce HRRR aerosol IC/BC or lateral-boundary state"
+      ]
+    },
+    {
+      "id": "NCAR-WRF-THOMPSON-AEROSOL-AWARE",
+      "authority": "primary-official-model-documentation",
+      "urls": [
+        "https://www2.mmm.ucar.edu/wrf/site/documentation/thompson_aerosol-aware.html",
+        "https://www2.mmm.ucar.edu/wrf/site/documentation/users_guide/physics.html"
+      ],
+      "lockedFacts": [
+        "mp_physics=28 is Thompson aerosol-aware microphysics",
+        "with use_aero_icbc=false WRF can initialize idealized/common aerosol profiles internally",
+        "externally supplied aerosol IC/BC is a distinct input mode"
+      ],
+      "limits": [
+        "internal-profile aerosol mode is not treated as equivalent to the locked HRRR external aerosol configuration"
+      ]
+    },
+    {
+      "id": "NCAR-WRF-RUNTIME-IO",
+      "authority": "primary-official-model-documentation",
+      "urls": [
+        "https://www2.mmm.ucar.edu/wrf/wrf_tutorial/runtime_io.html",
+        "https://www2.mmm.ucar.edu/wrf/site/documentation/users_guide/output.html"
+      ],
+      "lockedFacts": [
+        "runtime I/O can add already-declared state to output streams without Registry edits or recompilation",
+        "official WRF documentation warns runtime I/O can cause a performance hit"
+      ]
+    },
+    {
+      "id": "NCAR-WRF-TEST-FRAMEWORK-INSPECTED-TABLE",
+      "authority": "primary-official-testing-documentation",
+      "url": "https://www2.mmm.ucar.edu/wrf/site/code_contribution/wtf.html",
+      "lockedFacts": [
+        "the inspected public WRF ARW regression table documents short bit-for-bit serial/non-serial tests",
+        "the inspected table includes Thompson mp_physics=8",
+        "the inspected table does not list aerosol-aware Thompson mp_physics=28"
+      ],
+      "limits": [
+        "absence of mp=28 from this inspected public table is scoped negative evidence only and is not a claim that mp=28 is never tested elsewhere"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
