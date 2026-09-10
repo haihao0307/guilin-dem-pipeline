@@ -1,0 +1,47 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-thompson-r14",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRR-V4.1.20-OPS-SYNC",
+      "authority": "primary-official-operational-source",
+      "repo": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "commitMessage": "Sync changes from NCO's hrrr.v4.1.20 operational directory",
+      "commitDate": "2026-05-01T14:08:25Z",
+      "releaseNotes": "release_notes_v4.1.20",
+      "releaseDate": "2025-06-18",
+      "thompsonPath": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F",
+      "thompsonBlob": "1e6cdb1e718473ee1a031e16b1c00c96113f19f8",
+      "namelistEvidence": "parm/conus/hrrr_wrf.nl",
+      "lockedFacts": [
+        "HRRR v4 source is carried in a WRFV3.9 tree, but source identity is the NOAA HRRR operational fork, not merely upstream WRF V3.9",
+        "CONUS hrrr_wrf.nl at the locked commit uses mp_physics=28 for the primary domain",
+        "calc_effectRad derives radiation effective radii for cloud water, ice and snow and includes explicit lower/upper clamps",
+        "is_aerosol_aware is runtime state set by presence of aerosol arguments; mp_physics=28 alone is not a proof of every invocation's runtime branch"
+      ]
+    },
+    {
+      "id": "WRF-UPSTREAM-V3.9-COMPARISON",
+      "authority": "primary-upstream-engineering-source",
+      "repo": "wrf-model/WRF",
+      "ref": "V3.9",
+      "path": "phys/module_mp_thompson.F",
+      "blob": "966368edaea47a726f6cb5395b08b38a613919b3",
+      "lockedUse": [
+        "compare the bounded calc_effectRad block against the HRRR fork",
+        "do not use upstream WRF identity as a substitute for HRRR operational provenance"
+      ]
+    }
+  ],
+  "boundedComparison": {
+    "result": "No textual difference was found in the fetched complete calc_effectRad subroutine between the locked HRRR v4.1.20 source and upstream WRF V3.9. This statement is scoped to calc_effectRad only; the module blobs differ and the operational model is not thereby equivalent to upstream WRF V3.9.",
+    "hrrrRangesReviewed": ["5170-5355"],
+    "upstreamRangeReviewed": ["5000-5300"]
+  },
+  "externalAI": {"usedAsEvidence": false}
+}
