@@ -16,6 +16,10 @@ Farmland Object DNA 是 `guilin-dem-pipeline` 中面向传统农业对象的独�
 
 V0.1 公开工作台已被用户否决，只保留为失败对照。当前没有可分享的视觉候选，也没有人工视觉接受或生产批准。
 
+当前研究续接到 R023：R021 建立可复算水量账本，R022 建立理想截面与六种
+合成水力情形，R023 锁定红河哈尼地区证据边界并建立坐标级田块拓扑内核。
+这些结果仍缺地方构件测绘和水稻独立形态，不能提升为地区结构样板。
+
 ## 严谨生产路线
 
 每个对象必须依次完成：
@@ -110,7 +114,7 @@ Microscope 只在宏观系统、中观拓扑、截面、尺寸和水力通过以
 
 `researchGate=in_progress`
 
-`structuralTruthWorkbench=not_started`
+`structuralTruthWorkbench=foundation_r023_topology_only_no_visual_workbench`
 
 `activePublicCandidate=none`
 

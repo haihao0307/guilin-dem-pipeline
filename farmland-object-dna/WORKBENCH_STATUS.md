@@ -1,6 +1,6 @@
 # Farmland Object DNA 工作台状态
 
-日期：2026-09-07
+日期：2026-09-10
 
 当前生产线：`restart/farmland-object-dna-v020-20260907`
 
@@ -43,21 +43,25 @@
 
 `yuanyangSystemResearch=in_progress`
 
-`channelSections=not_ready`
+`regionalEvidence=r023_20_documented_facts_8_dimensions_unknown`
 
-`bundAndTerraceSections=not_ready`
+`parcelPlanTopology=r023_coordinate_validated_synthetic_fixtures`
+
+`channelSections=generic_r022_ideal_only_regional_not_ready`
+
+`bundAndTerraceSections=generic_r022_plus_honghe_clay_constraint_regional_dimensions_not_ready`
 
 `traditionalDividerGeometry=unknown`
 
-`flatlandHydraulicGraph=not_ready`
+`flatlandHydraulicGraph=r022_ideal_synthetic_pass`
 
-`terraceHydraulicGraph=not_ready`
+`terraceHydraulicGraph=r022_ideal_synthetic_pass`
 
-`waterMassBalance=not_run`
+`waterMassBalance=r022_six_synthetic_scenarios_pass_real_field_not_run`
 
 `riceStageMorphology=not_ready`
 
-`structuralTruthWorkbench=not_started`
+`structuralTruthWorkbench=foundation_r023_topology_only_no_visual_workbench`
 
 `aaaVisualPrecheck=not_run`
 

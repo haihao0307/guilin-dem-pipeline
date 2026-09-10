@@ -6,6 +6,17 @@
 
 用途：为 Farmland Object DNA 的山地梯田、水利、村落、森林、劳动和文明系统建立证据基础。本页只登记已读到的权威起点、用户提供的现场知识方向和待验证问题，不代表结构已经完成。
 
+## R023 原件复核（2026-09-10）
+
+已直接读取 ICOMOS 2013 评估原件 `https://whc.unesco.org/document/151777`。
+原件称木柱上的 `wood-cuts` 表示水量需求，水少时采用轮流供水；它没有提供
+木棍根数对应瞬时流量比例的证据。该比例机制继续保持 unknown。
+
+原件称所评梯田由黑色黏土构筑，没有挡土墙，梯壁为黏土切面；Bada、
+Duoyishu 与 Laohuzui 的相对坡度等级也不同。地区配置因此禁止默认石墙和同一
+重复梯田模板。完整逐条证据及八项未测尺寸见
+`r023-honghe-regional-contract/HONGHE_PROFILE.json`。
+
 ## 一、已由权威材料支持的整体结构
 
 UNESCO World Heritage Centre 将红河哈尼梯田描述为森林、供水、梯田和房屋组成的一体化系统。山顶森林捕获并维持灌溉所需水分，雨水经岩石裂隙和地层进入泉水，再由复杂渠道分配到不同山谷和梯田。村落位于山顶森林下方、梯田上方的高程带。
@@ -153,17 +164,19 @@ threatened_by
 
 ## 八、生产准入状态
 
-overall_system_sources=partial
-forest_source_relation=partial
-village_elevation_relation=partial
-trunk_and_branch_channel_inventory=partial
+overall_system_sources=partial_documented_unesco_ICOMOS
+forest_source_relation=documented_system_relation_parameters_unknown
+village_elevation_relation=documented_relative_band_numeric_elevations_unknown
+trunk_and_branch_channel_inventory=documented_counts_and_total_length_sections_unknown
 traditional_divider_geometry=unknown
 traditional_divider_ratio_mechanism=unknown
-channel_sections=unknown
-bund_sections=unknown
-terrace_sections=unknown
-field_level_hydraulics=unknown
-mass_balance_model=not_run
+traditional_divider_allocation_semantics=documented_need_markers_and_rotation
+channel_sections=generic_r022_only_regional_dimensions_unknown
+bund_sections=generic_r022_only_regional_dimensions_unknown
+terrace_sections=black_clay_cut_face_no_default_retaining_wall_dimensions_unknown
+parcel_plan_topology=r023_coordinate_validated_synthetic_fixtures
+field_level_hydraulics=r022_ideal_synthetic_only
+mass_balance_model=six_synthetic_scenarios_pass_real_field_not_run
 labor_governance_model=not_run
 ready_for_structural_prototype=false
 ready_for_public_candidate=false

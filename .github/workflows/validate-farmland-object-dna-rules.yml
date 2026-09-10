@@ -72,6 +72,16 @@ jobs:
       - name: Six ideal hydraulic scenarios and step refinement
         run: python farmland-object-dna/tools/probe_hydraulic_r022.py > /tmp/farmland-r022-probe.json
 
+      - name: Honghe evidence boundary and parcel topology probes
+        run: |
+          python farmland-object-dna/tools/regional_profile.py \
+            farmland-object-dna/research/r023-honghe-regional-contract/HONGHE_PROFILE.json \
+            > /tmp/farmland-r023-profile.json
+          python farmland-object-dna/tools/probe_regional_r023.py \
+            > /tmp/farmland-r023-probe.json
+          cmp farmland-object-dna/research/r023-honghe-regional-contract/PROBE_RESULTS.json \
+            /tmp/farmland-r023-probe.json
+
       - name: Verify mandatory rules and failed gates
         shell: bash
         run: |
@@ -134,6 +144,8 @@ jobs:
             echo 'JSON contracts: PASS'
             echo 'Research-only V0.2 record: PASS'
             echo 'Rejected V0.1 blocked by current validator: PASS'
+            echo 'R021-R022 water and ideal hydraulics: PASS'
+            echo 'R023 Honghe evidence boundary and parcel topology: PASS'
             echo 'Hydraulic and visual failure gates: PRESENT'
             echo 'Public share status for rejected V0.1: FALSE'
             echo 'Human visual acceptance: FALSE'

@@ -1,5 +1,13 @@
 # Farmland Object DNA 干净重启入口 V0.2.0
 
+## R023 续接（2026-09-10）
+
+见 `research/r023-honghe-regional-contract/README.md`。
+本轮把 20 条地区关系锁到 UNESCO/ICOMOS 原件，纠正木刻需水标记与瞬时水力
+分配的混淆，并锁定黑色黏土切面、无默认挡土墙和三个子区不同坡度等级。
+新增坐标级田块拓扑内核，拒绝自交、重叠、T 形断边和重复坐标身份；平坝两田
+与梯田六田仅为合成拓扑探针，不是地方测绘。八项地区构件尺寸仍保持未知。
+
 ## R022 续接（2026-09-09）
 
 见 `research/r022-hydraulic-sections/README.md` 与构件来源卡。
@@ -119,7 +127,7 @@ Microscope 不得用于掩盖水源、田块拓扑、渠道截面、水深或作
 
 `researchGate=in_progress`
 
-`structuralTruthWorkbench=not_started`
+`structuralTruthWorkbench=foundation_r023_topology_only_no_visual_workbench`
 
 `activePublicCandidate=none`
 
