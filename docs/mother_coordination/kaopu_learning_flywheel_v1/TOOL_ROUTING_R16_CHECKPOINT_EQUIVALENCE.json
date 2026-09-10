@@ -1,0 +1,98 @@
+{
+  "schema": "kaopu-tool-routing-extension/r16",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-THOMPSON-SOURCE-CHECKPOINT-R16",
+      "domain": "source-model-effective-radius",
+      "toolOrSource": "NOAA-EMC/HRRR module_mp_thompson.F at 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "source diagnostic identity",
+        "calc_effectRad signature and replay target",
+        "future source-model-state checkpoint equivalence"
+      ],
+      "doNotUseFor": [
+        "self-generated independent checkpoint",
+        "physical atmospheric Observation truth"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-WRFPOST-EFFR-R16",
+      "domain": "differential-effective-radius-comparator",
+      "toolOrSource": "NOAA-EMC/HRRR hrrr_wrfpost CALRAD_WCLOUD_newcrtm.f EFFR at 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-independent-implementation",
+      "observationRootEligible": false,
+      "useFor": [
+        "independent differential comparison",
+        "localizing branch/species/input-transform disagreement",
+        "testing whether semantic equivalence to calc_effectRad can be established"
+      ],
+      "doNotUseFor": [
+        "automatic independent_checkpoint_matched promotion",
+        "assuming implementation independence means same diagnostic definition"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-MODEL-STATE-RE-R16",
+      "domain": "preferred-runtime-checkpoint-route",
+      "toolOrSource": "locked HRRR ARW internal re_cloud/re_ice/re_snow routing plus history/restart/intermediate search",
+      "authority": "primary-official-source-routing",
+      "observationRootEligible": false,
+      "useFor": [
+        "testing whether the exact source-model diagnostic is emitted by a fixed operational runtime artifact",
+        "preferred independent checkpoint acquisition if exact cycle/configuration/support can be locked"
+      ],
+      "doNotUseFor": [
+        "inferring runtime file availability from source variable existence",
+        "generalizing NMM/NEMS I/O evidence to CONUS ARW without proof"
+      ]
+    },
+    {
+      "id": "TOOL-NOAA-UPP-RRFS-EFFR-R16",
+      "domain": "producer-diagnostic-interface-reference",
+      "toolOrSource": "current NOAA-EMC/UPP EFFRL/EFFRI/EFFRS and cleffr/cieffr/cseffr",
+      "authority": "primary-official-later-generation-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "producer-native diagnostic carry-through pattern",
+        "future source lifecycle/migration contract design"
+      ],
+      "doNotUseFor": [
+        "HRRRv4 numerical authentication",
+        "silently substituting RRFS diagnostic semantics for HRRRv4"
+      ]
+    },
+    {
+      "id": "TOOL-NOAA-NOMADS-HRRR-R16",
+      "domain": "current-real-input-availability",
+      "toolOrSource": "NOAA NOMADS HRRR CONUS native files for 2026-09-10",
+      "authority": "primary-official-operational-product",
+      "observationRootEligible": false,
+      "useFor": [
+        "fixed-cycle input acquisition",
+        "file/index identity and size",
+        "future GRIB record extraction"
+      ],
+      "doNotUseFor": [
+        "claiming real_input_executed from file listing alone"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-CHECKPOINT-R16-PROBE",
+      "domain": "coordinator-executable-test",
+      "toolOrSource": "PROBES/hrrrv4_checkpoint_equivalence_probe_r16.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "checkpoint independence/equivalence state logic",
+        "comparator-class promotion guards",
+        "authentication ladder guard"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
