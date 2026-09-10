@@ -108,7 +108,7 @@ jobs:
           print(json.dumps({'passed':True,'totalBytes':d['totalBytes'],'patchCount':d['patchCount']},indent=2))
           PY
 
-      - name: Commit generated browser evidence bundle without overwriting newer work
+      - name: Commit generated bundle and transplant only that commit onto latest branch
         env:
           BRANCH: feature/wenzhou-r3-5-osm-context-20260911
         run: |
@@ -121,10 +121,11 @@ jobs:
             exit 0
           fi
           git commit -m 'data(wenzhou): derive R3.5 patch-scoped OSM display bundle [skip ci]'
-          git reset --hard HEAD
-          git clean -fd
+          GENERATED_COMMIT="$(git rev-parse HEAD)"
           git fetch origin "$BRANCH"
-          git rebase "origin/$BRANCH"
+          git reset --hard "origin/$BRANCH"
+          git clean -fd
+          git cherry-pick "$GENERATED_COMMIT"
           git push origin "HEAD:${BRANCH}"
 
       - name: Upload build report
