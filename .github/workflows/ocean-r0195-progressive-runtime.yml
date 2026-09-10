@@ -66,9 +66,29 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html
-          if git diff --cached --quiet; then
+          if ! git diff --cached --quiet; then
+            git commit -m 'release(ocean): publish R019.5 progressive runtime direct-open [skip ci]'
+            git push
+          else
             echo 'Release file already current.'
-            exit 0
           fi
-          git commit -m 'release(ocean): publish R019.5 progressive runtime direct-open [skip ci]'
-          git push
+
+      - name: Verify fixed public HTTPS entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          FILE='ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html'
+          DEV="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/${FILE}"
+          CDN="https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/${FILE}"
+          echo "fixed_sha=${SHA}"
+          curl -fL --retry 8 --retry-delay 8 --retry-all-errors --connect-timeout 15 --max-time 60 -D /tmp/dev.headers -o /tmp/dev.html "$DEV"
+          grep -Eiq '^content-type: *text/html' /tmp/dev.headers
+          grep -Fq 'Ocean Mother R019.5 · Progressive Runtime' /tmp/dev.html
+          test "$(sha256sum /tmp/dev.html | awk '{print $1}')" = '4200790ab47a4f98d9cb5e4ab5fffe5d8bfc733c7defc8039f855091313c52da'
+          curl -fL --retry 8 --retry-delay 8 --retry-all-errors --connect-timeout 15 --max-time 60 -D /tmp/cdn.headers -o /tmp/cdn.html "$CDN"
+          grep -Eiq '^content-type: *text/html' /tmp/cdn.headers
+          grep -Fq 'Ocean Mother R019.5 · Progressive Runtime' /tmp/cdn.html
+          test "$(wc -c < /tmp/cdn.html)" -gt 50000
+          echo "RAW_GITHACK_PASS ${DEV}"
+          echo "RAWCDN_PASS ${CDN}"
