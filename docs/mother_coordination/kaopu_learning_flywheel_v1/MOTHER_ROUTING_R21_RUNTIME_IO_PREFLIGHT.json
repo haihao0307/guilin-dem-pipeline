@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-mother-routing-extension/r21",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_HRRRV4_RUNTIME_IO_PREFLIGHT_R21.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "require an InstrumentationPreflightContract before any HRRR/WRF paired instrumentation execution",
+        "for the locked HRRRv4 effective-radius experiment preserve symbol↔DNAME identity and use the canonical manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW",
+        "set ignore_iofields_warning=.false. for evidence-bearing runs and preserve runtime logs so warning-and-continue cannot masquerade as successful instrumentation",
+        "verify the intended physics package is active before treating a declared Registry field as semantically initialized"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept source-model re_cloud/re_ice/re_snow only from an instrumentation outcome classified configured_and_resolved at the applicable harness tier",
+        "keep effective-radius checkpoint semantics separate from optical closure and keep ReplayStatus unchanged after L1"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add FieldExposureEligibility and InstrumentationOutcomeClass as typed provenance rather than reducing instrumentation to a run-success Boolean",
+        "preserve both internal model symbol and external/Registry DNAME because tool interfaces may key on different identities",
+        "carry evidence ceilings through preflight, execution, comparison and promotion"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R21; effective radius remains upstream of the spectral optical packet required by Lighting"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after eligible locked HRRRv4 L3 real-input ControlInstrumentedPair and downstream optical/evaluator gates"
+}
