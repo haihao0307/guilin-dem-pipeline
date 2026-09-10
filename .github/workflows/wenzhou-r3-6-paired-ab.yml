@@ -1,0 +1,50 @@
+name: Wenzhou R3.6 Paired A/B
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-6-paired-ab-20260911
+    paths:
+      - 'tools/r3-6/paired_ab.mjs'
+      - '.github/workflows/wenzhou-r3-6-paired-ab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify R3.5 and R3.6 source identity before measuring
+        run: |
+          set -euo pipefail
+          node --check tools/r3-6/paired_ab.mjs
+          grep -q "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101" site/dist/r3-6/osm-runtime.js
+          grep -q "d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364" site/dist/r3-6/osm-runtime.js
+          grep -q 'await new Promise(resolve=>requestAnimationFrame(resolve))' site/dist/r3-6/osm-runtime.js
+          test ! -d site/dist/r3-6/data/osm
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run A-B-B-A paired measurement
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r36-paired-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null && break || sleep 1; done
+          BASE_URL=http://127.0.0.1:8765/site/dist node tools/r3-6/paired_ab.mjs | tee /tmp/r36-paired-ab.json
+          grep -q '"schema": "wenzhou-r3.6-paired-ab/r1"' /tmp/r36-paired-ab.json
+          grep -q '"realIphoneVerified": false' /tmp/r36-paired-ab.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-6-paired-ab-${{ github.sha }}
+          path: |
+            /tmp/r36-paired-ab.json
+            /tmp/r36-paired-http.log
+          retention-days: 30
