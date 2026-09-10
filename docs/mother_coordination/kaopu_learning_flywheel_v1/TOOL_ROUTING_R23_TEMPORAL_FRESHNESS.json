@@ -1,0 +1,73 @@
+{
+  "schema": "kaopu-tool-routing-extension/r23",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-INTEGRATION-ORDER-R23",
+      "domain": "weather-checkpoint-sampling-epoch",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_integrate.F + mediation_integrate.F + solve_em.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "history-before-solve ordering",
+        "cold-start and restart-start sampling classification",
+        "model-timestep versus producer-event epoch reasoning"
+      ],
+      "doNotUseFor": [
+        "claiming a specific L1/L3 run executed",
+        "physical atmospheric truth",
+        "runtime authentication without numerical execution"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-MICROPHYSICS-EPOCH-R23",
+      "domain": "weather-diagnostic-refresh-cadence",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_microphysics_driver.F + module_mp_thompson.F",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "establishing that the eligible Thompson effective-radius producer is inside the per-timestep microphysics path",
+        "rejecting radiation-alarm cadence as the producer-refresh cadence"
+      ],
+      "doNotUseFor": [
+        "proving a particular runtime step completed",
+        "assuming other WRF/Thompson generations have identical call ordering"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-HISTORY-SEMANTICS-R23",
+      "domain": "weather-output-time-semantics",
+      "toolOrSource": "current official UCAR/NCAR WRF Users Guide and running tutorial",
+      "authority": "primary-official-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "corroborating that ordinary history output includes the simulation initial time",
+        "corroborating restart-start history semantics through write_hist_at_0h_rst"
+      ],
+      "doNotUseFor": [
+        "replacing locked HRRRv4 source identity",
+        "asserting every historical WRF branch has identical implementation details"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-TEMPORAL-FRESHNESS-PROBE-R23",
+      "domain": "coordinator-source-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_effective_radius_temporal_freshness_probe_r23.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "rejecting value-change freshness heuristics",
+        "checking producer-event temporal eligibility",
+        "distinguishing cold-start/restart-start carried frames from post-producer frames"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR execution evidence",
+        "numerical checkpoint authentication",
+        "ReplayStatus promotion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
