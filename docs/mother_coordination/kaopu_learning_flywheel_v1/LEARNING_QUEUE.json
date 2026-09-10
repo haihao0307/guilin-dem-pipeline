@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-learning-queue/r1",
-  "updatedAt": "2026-09-10",
+  "updatedAt": "2026-09-11",
   "policy": {
     "chooseOneQuestionPerCycle": true,
     "preferPrimarySources": true,
@@ -17,7 +17,7 @@
       "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
       "targetSystems": ["KAOPU", "Weather", "Ocean", "Landscape", "Lighting", "Future-Space"],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 separated checkpoint producer independence from semantic equivalence. R17 established restart-only default effective-radius state and runtime-I/O as the least invasive exposure path. R18 bounded public restart hunting and defined ControlInstrumentedPair plus InstrumentationValidityVector. R19 established ValidationHarnessIdentity, HarnessEquivalenceVector, EvidenceCeiling and a L0-L3 ValidationScaleLadder. R20 defines the comparison contract required before the first paired execution: the locked HRRRv4 diffwrf is asymmetric and, with control first, naturally compares shared pre-existing variables while ignoring instrumented-only additions, but the locked copy numerically compares only WRF_REAL fields and does not provide complete integer/string/metadata/allowlist coverage. Therefore paired validation must use a TwoLayerInstrumentationComparator: locked diffwrf(control,instrumented) plus a versioned schema/metadata sidecar with an exact InstrumentationManifest. ComparatorIdentity and ComparatorCoverageVector are first-class provenance. Whole-file hash equality is rejected for intentional instrumentation deltas. The R20 semantic probe passed 8/8. ReplayStatus remains source_callpath_authenticated. No physical Observation Root was added and no production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a stronger regional operational microphysics constraint. R13 established the microphysics-to-visible-optics operation boundary and required version-locked MicrophysicsDiagnosticReplay plus separate SpectralOpticalClosure. R14 source-locked HRRR v4.1.20 Thompson calc_effectRad and separated source_locked from runtime_authenticated. R15 authenticated the locked source/configuration call path as aerosol-aware and defined ReplayAuthenticationLadder, typed public-native input adaptation, and IndependentNumericalCheckpoint. R16 separated checkpoint producer independence from semantic equivalence. R17 established restart-only default effective-radius state and runtime-I/O as the least invasive exposure path. R18 bounded public restart hunting and defined ControlInstrumentedPair plus InstrumentationValidityVector. R19 established ValidationHarnessIdentity, HarnessEquivalenceVector, EvidenceCeiling and a L0-L3 ValidationScaleLadder. R20 defined the TwoLayerInstrumentationComparator and exact instrumentation-manifest comparison semantics. R21 closes the source-level runtime-I/O preflight gap: in locked HRRR v4.1.20 the Registry DNAMEs RE_CLOUD/RE_ICE/RE_SNOW are restart-only state but are members of the thompsonaero mp_physics==28 package; the locked parser lower-case normalizes requested DNAMEs, sets the requested stream mask on a resolved plus operation, warns on unresolved fields, and has a 200-modification hard bound. Locked runtime-I/O documentation allows main history stream 0 and limits lines to 256 characters. Because ignore_iofields_warning defaults true, an evidence-bearing run must set it false so warning-and-continue cannot masquerade as successful instrumentation. The exact canonical manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW is source-eligible and the R21 source/semantic probe passed 13/13. No WRF/HRRR pair was executed; ReplayStatus remains source_callpath_authenticated; no physical Observation Root was added and no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -38,7 +38,8 @@
         "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_IO_CHECKPOINT_R17.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY_R18.md",
         "LEARNING_LOG/2026-09-10_HRRRV4_VALIDATION_HARNESS_EQUIVALENCE_R19.md",
-        "LEARNING_LOG/2026-09-10_HRRRV4_INSTRUMENTATION_COMPARATOR_R20.md"
+        "LEARNING_LOG/2026-09-10_HRRRV4_INSTRUMENTATION_COMPARATOR_R20.md",
+        "LEARNING_LOG/2026-09-11_HRRRV4_RUNTIME_IO_PREFLIGHT_R21.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
@@ -53,7 +54,8 @@
         "references/hrrrv4-runtime-io-r17/SOURCE_LOCK.json",
         "references/hrrrv4-checkpoint-surface-r18/SOURCE_LOCK.json",
         "references/hrrrv4-validation-harness-r19/SOURCE_LOCK.json",
-        "references/hrrrv4-instrumentation-comparator-r20/SOURCE_LOCK.json"
+        "references/hrrrv4-instrumentation-comparator-r20/SOURCE_LOCK.json",
+        "references/hrrrv4-runtime-io-preflight-r21/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -73,6 +75,7 @@
       "hrrrV4CheckpointSurfaceProbe": "PROBES/hrrrv4_checkpoint_surface_probe_r18.py",
       "hrrrV4ValidationHarnessProbe": "PROBES/hrrrv4_validation_harness_probe_r19.py",
       "hrrrV4InstrumentationComparatorProbe": "PROBES/hrrrv4_instrumentation_comparator_probe_r20.py",
+      "hrrrV4RuntimeIOPreflightProbe": "PROBES/hrrrv4_runtime_io_preflight_probe_r21.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
@@ -86,7 +89,8 @@
         "CURRENT_BEST_VIEW_R17_RUNTIME_IO_CHECKPOINT.md",
         "CURRENT_BEST_VIEW_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.md",
         "CURRENT_BEST_VIEW_R19_VALIDATION_HARNESS_EQUIVALENCE.md",
-        "CURRENT_BEST_VIEW_R20_INSTRUMENTATION_COMPARATOR.md"
+        "CURRENT_BEST_VIEW_R20_INSTRUMENTATION_COMPARATOR.md",
+        "CURRENT_BEST_VIEW_R21_RUNTIME_IO_PREFLIGHT.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -101,7 +105,8 @@
         "TOOL_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json",
         "TOOL_ROUTING_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.json",
         "TOOL_ROUTING_R19_VALIDATION_HARNESS_EQUIVALENCE.json",
-        "TOOL_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json"
+        "TOOL_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json",
+        "TOOL_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -116,9 +121,10 @@
         "MOTHER_ROUTING_R17_RUNTIME_IO_CHECKPOINT.json",
         "MOTHER_ROUTING_R18_CHECKPOINT_SURFACE_AND_INSTRUMENTATION_VALIDITY.json",
         "MOTHER_ROUTING_R19_VALIDATION_HARNESS_EQUIVALENCE.json",
-        "MOTHER_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json"
+        "MOTHER_ROUTING_R20_INSTRUMENTATION_COMPARATOR.json",
+        "MOTHER_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R20 fixes the comparison semantics required by the R19 validation ladder. Next, if execution resources permit, run the locked-source L1 SCM ControlInstrumentedPair with the exact re_cloud/re_ice/re_snow InstrumentationManifest. Validate it with the TwoLayerInstrumentationComparator: locked HRRRv4 diffwrf(control,instrumented) for shared real state plus a versioned schema/metadata sidecar for integer/string/time/attribute/allowlist coverage; measure runtime and I/O cost separately. L1 must not advance ReplayStatus. ReplayStatus may advance only after the same comparison contract is applied to an eligible L3 locked HRRRv4 real-input pair and the source-model re_* checkpoint matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R21 establishes exact source-level eligibility and fail-fast semantics for the three-field HRRRv4 effective-radius instrumentation request. Next, if execution resources permit, run the locked-source L1 SCM ControlInstrumentedPair with an explicitly chosen mp_physics=28 harness configuration, exact manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW, iofields_filename enabled, and ignore_iofields_warning=.false. Require zero runtime-I/O resolution warnings; then validate with the R20 TwoLayerInstrumentationComparator and measure runtime/I/O cost separately. L1 must not advance ReplayStatus. ReplayStatus may advance only after the same preflight and comparison contracts are applied to an eligible L3 locked HRRRv4 real-input pair and its source-model re_* checkpoint matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
