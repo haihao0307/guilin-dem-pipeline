@@ -196,10 +196,16 @@ export function installOptimizedOsmRuntime(){
     if(currentController&&!currentController.signal.aborted){currentController.abort('superseded-view');abortCount++;}
     const controller=new AbortController(),signal=controller.signal;currentController=controller;
     disposeActive();captureRenderer(terrain,scene);
-    const patchId=canvas()?.dataset.patch||document.getElementById('location')?.value||'';
-    setDataset({osmRuntime:'indexed-r36',osmIndexed:true,osmLoading:true,osmLoaded:false,osmPatch:patchId,osmAbortController:true,osmAbortCount:abortCount,osmFetchAbortCount:fetchAbortCount,osmError:null});
+    let patchId='';
     const buildStart=performance.now();
     try{
+      // R3.1 writes canvas.dataset.patch after scene.add(terrain). R3.5 already
+      // waited one frame before binding evidence to the view; preserve that
+      // inherited timing contract so R3.6 never attaches the previous patch.
+      await new Promise(resolve=>requestAnimationFrame(resolve));
+      throwIfAborted(signal);if(token!==buildToken)throw abortError('superseded-token');
+      patchId=canvas()?.dataset.patch||document.getElementById('location')?.value||'';
+      setDataset({osmRuntime:'indexed-r36',osmIndexed:true,osmLoading:true,osmLoaded:false,osmPatch:patchId,osmAbortController:true,osmAbortCount:abortCount,osmFetchAbortCount:fetchAbortCount,osmError:null});
       const[manifest,contract]=await Promise.all([manifestPromise,contractPromise]);throwIfAborted(signal);if(token!==buildToken)throw abortError('superseded-token');
       const meta=manifest.patches.find(p=>p.id===patchId),patch=contract.patches.find(p=>p.id===patchId);if(!meta||!patch)throw Error(`R3.6 缺少 OSM 视域 ${patchId}`);
       if(meta.buildings?.sourceMultiPolygonBoundaryOnly!==true||meta.buildings?.clippingCreatesPatchClosure!==false||meta.buildings?.heightClaim!=='unknown-not-generated')throw Error(`R3.6 ${patchId} 建筑证据边界不一致`);
