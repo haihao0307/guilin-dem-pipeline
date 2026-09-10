@@ -1,0 +1,92 @@
+name: Ocean R019.7 mobile heightfield
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-r0197-mobile-heightfield-20260911
+    paths:
+      - 'ocean-mother/r0197-mobile-heightfield/**'
+      - '.github/workflows/ocean-r0197-mobile-heightfield.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-compile-public-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R019.7 from frozen R019.6
+        run: |
+          set -euo pipefail
+          python ocean-mother/r0197-mobile-heightfield/apply_r0197.py
+          FILE='ocean-mother/releases/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html'
+          ACTUAL=$(sha256sum "$FILE" | awk '{print $1}')
+          echo "EXPECTED_SHA=$ACTUAL" >> "$GITHUB_ENV"
+          echo "R0197_SHA256=$ACTUAL"
+          grep -Fq 'R019.7 · MOBILE HEIGHTFIELD' "$FILE"
+
+      - name: JavaScript and changed GLSL compile gates
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('ocean-mother/releases/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html').read_text(encoding='utf-8')
+          js=re.search(r'<script>\s*(.*?)\s*</script>',s,re.S)
+          assert js
+          Path('/tmp/ocean-r0197.js').write_text(js.group(1),encoding='utf-8')
+          lite=re.search(r'const LITE_FRAG=`(.*?)`;\nconst WAVE_DECL',s,re.S)
+          assert lite
+          frag=lite.group(1)
+          Path('/tmp/lite.frag').write_text(frag,encoding='utf-8')
+          assert s.count('readPixels(')==1
+          assert 'waveStateL' in frag
+          assert 'bool frontLand=' in frag
+          assert 'for(int i=0;i<20;i++)' in frag
+          assert 'for(int j=0;j<4;j++)' in frag
+          assert 'hp.y=bedL(hp.xz)' in frag
+          assert 'greenLowL' in frag and 'greenHighL' in frag
+          assert 'liteOnly?205000:90000' in s
+          assert 'liteOnly?320:220' in s
+          print('STATIC_CONTRACT_PASS')
+          PY
+          node --check /tmp/ocean-r0197.js
+          glslangValidator -S frag /tmp/lite.frag
+
+      - name: Publish fixed R019.7 HTML
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          FILE='ocean-mother/releases/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html'
+          git add "$FILE"
+          git commit -m 'release(ocean): publish R019.7 mobile heightfield [skip ci]'
+          git push
+
+      - name: Verify fixed public HTTPS URLs
+        run: |
+          set -euo pipefail
+          FILE='ocean-mother/releases/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html'
+          SHA=$(git rev-parse HEAD)
+          EXPECT="$EXPECTED_SHA"
+          for HOST in raw.githack.com rawcdn.githack.com; do
+            URL="https://${HOST}/haihao0307/guilin-dem-pipeline/${SHA}/${FILE}"
+            ok=0
+            for i in 1 2 3 4 5 6; do
+              if curl -LfsS --connect-timeout 10 --max-time 30 "$URL" -o /tmp/public.html; then
+                GOT=$(sha256sum /tmp/public.html | awk '{print $1}')
+                if [ "$GOT" = "$EXPECT" ]; then ok=1; break; fi
+              fi
+              sleep 5
+            done
+            test "$ok" -eq 1
+            echo "PUBLIC_OK $HOST $SHA $EXPECT"
+          done
