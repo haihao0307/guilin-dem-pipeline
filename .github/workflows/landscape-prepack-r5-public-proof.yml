@@ -1,0 +1,26 @@
+name: Landscape pre-pack R5 fixed public proof
+
+on:
+  push:
+    branches:
+      - review/landscape-prepack-compare-20260911
+    paths:
+      - .github/workflows/landscape-prepack-r5-public-proof.yml
+
+jobs:
+  public-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify immutable R5 pre-pack public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://raw.githack.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html'
+          curl --fail --location --retry 10 --retry-delay 2 --connect-timeout 10 --max-time 90 -D /tmp/headers.txt "$URL" -o /tmp/r5.html
+          test "$(sha256sum /tmp/r5.html | awk '{print $1}')" = 'ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2'
+          test "$(stat -c%s /tmp/r5.html)" -eq 83847
+          grep -qi 'content-type: text/html' /tmp/headers.txt
+          grep -q '水蚀石灰岩 R5 表面显微层' /tmp/r5.html
+          echo "PUBLIC_URL=$URL"
+          echo "PUBLIC_SHA256=$(sha256sum /tmp/r5.html | awk '{print $1}')"
+          echo "PUBLIC_BYTES=$(stat -c%s /tmp/r5.html)"
