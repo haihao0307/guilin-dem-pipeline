@@ -1,0 +1,50 @@
+name: Wenzhou R3.6 OSM Performance Baseline
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-6-osm-performance-baseline-20260911
+    paths:
+      - 'tools/r3-6/performance_probe.mjs'
+      - '.github/workflows/wenzhou-r3-6-osm-performance-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium probe runner
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run local R3.5 mobile-like performance baseline
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r36-baseline-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-5/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R35_URL=http://127.0.0.1:8765/site/dist/r3-5/ node tools/r3-6/performance_probe.mjs | tee /tmp/r36-baseline.json
+          grep -q '"schema": "wenzhou-r3.6-osm-performance-baseline/r1"' /tmp/r36-baseline.json
+          grep -q '"realIphoneVerified": false' /tmp/r36-baseline.json
+      - name: Upload baseline evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-6-osm-performance-baseline-${{ github.sha }}
+          path: |
+            /tmp/r36-baseline.json
+            /tmp/r36-baseline-http.log
+          if-no-files-found: error
+          retention-days: 30
