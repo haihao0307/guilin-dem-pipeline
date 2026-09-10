@@ -1,0 +1,109 @@
+{
+  "schema": "kaopu-tool-routing-extension/r12",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-WEATHER-NOAA-GSL-HRRR-SYSTEM",
+      "domain": "weather-source-system-capability",
+      "toolOrSource": "NOAA Global Systems Laboratory HRRR official material",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "evidenceClass": "model-system-semantics",
+      "useFor": [
+        "3 km/hourly HRRR system capability",
+        "regional operational-model role",
+        "vertical-level/system context"
+      ],
+      "doNotUseFor": [
+        "physical Observation truth for a particular cloud",
+        "claim that 3 km resolves renderer-local cloud detail"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NCEP-HRRR-INVENTORY",
+      "domain": "weather-source-product-schema",
+      "toolOrSource": "NOAA/NCEP HRRR Products Inventory",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "evidenceClass": "operational-product-schema",
+      "useFor": [
+        "native 3 km product support",
+        "50-hybrid-level cloud/microphysics field availability",
+        "sub-hourly 2-D support semantics",
+        "NOMADS parameter/subsetting planning"
+      ],
+      "doNotUseFor": [
+        "actual atmospheric values without decoding a valid packet",
+        "inferring renderer extinction from cloud mixing ratio"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NOMADS-HRRR-LIVE-INDEX",
+      "domain": "weather-source-live-transport-schema",
+      "toolOrSource": "NOAA/NOMADS HRRR production directory and GRIB2 .idx",
+      "authority": "primary-official-live",
+      "observationRootEligible": false,
+      "evidenceClass": "transport-and-current-schema",
+      "useFor": [
+        "current file/index availability",
+        "byte-offset-aware field selection",
+        "confirming selected fields and hybrid levels before materialization",
+        "estimating transport cost"
+      ],
+      "doNotUseFor": [
+        "treating index metadata as decoded physical values",
+        "freezing current full-file size as a permanent invariant"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NOMADS-GRIB-FILTER",
+      "domain": "weather-source-subsetting",
+      "toolOrSource": "NOAA/NCEP NOMADS GRIB filter",
+      "authority": "primary-official-service",
+      "observationRootEligible": false,
+      "evidenceClass": "data-access-tool",
+      "useFor": [
+        "variable/level/geographic subsetting",
+        "avoiding naive whole-file browser ingestion",
+        "building compact provenance-bearing runtime packets"
+      ],
+      "doNotUseFor": [
+        "changing source support semantics during subset",
+        "dropping source/model/time/vertical metadata"
+      ]
+    },
+    {
+      "id": "TOOL-WEATHER-NOAA-RRFS-LIFECYCLE",
+      "domain": "weather-source-lifecycle-migration",
+      "toolOrSource": "NOAA/GSL RRFS and NCEP RRFS product documentation",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "evidenceClass": "model-lifecycle-semantics",
+      "useFor": [
+        "source lifecycle state",
+        "future HRRR/RRFS migration planning",
+        "version/effective-time routing tests"
+      ],
+      "doNotUseFor": [
+        "silently replacing HRRR while RRFS product status is preliminary/transitioning",
+        "assuming schema parity without regression testing"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-WEATHER-SOURCE-CAPABILITY-R12-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/weather_source_capability_probe_r12.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "source-support gap invariants",
+        "microphysics-versus-optical-readiness separation",
+        "regional/global validity",
+        "2-D/3-D identifiability boundary"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
