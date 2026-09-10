@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-mother-routing-extension/r22",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_HRRRV4_EFFECTIVE_RADIUS_LIVENESS_R22.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "separate stream observability from effective-radius producer liveness",
+        "for L1 bind mp_physics=28, ra_lw_physics=4, ra_sw_physics=4 and explicit use_mp_re=1 before treating re_* as source-model diagnostics",
+        "capture Thompson CCN activation-table identity and other auxiliary runtime dependencies in the harness",
+        "classify checkpoint freshness as initialized, producer-refreshed, carried/restarted, or unknown"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept re_cloud/re_ice/re_snow for replay comparison only after producer-refreshed lineage is established",
+        "do not infer freshness from plausible/nonzero effective-radius values",
+        "keep ReplayStatus unchanged after L1"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add ProducerExecutionEligibility, ProducerDemandCoupling, CheckpointFreshnessContract and AuxiliaryRuntimeDependency as typed provenance",
+        "treat observability and producer execution as orthogonal evidence dimensions",
+        "preserve the R19 evidence ceiling through corrected L1"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R22; effective radius remains upstream of the spectral optical packet"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after eligible locked HRRRv4 L3 real-input ControlInstrumentedPair and downstream optical/evaluator gates"
+}
