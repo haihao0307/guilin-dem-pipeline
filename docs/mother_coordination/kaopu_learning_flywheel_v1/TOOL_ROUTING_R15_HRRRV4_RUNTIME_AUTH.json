@@ -1,0 +1,69 @@
+{
+  "schema": "kaopu-tool-routing-extension/r15",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-NOAA-HRRR-V4-CALLPATH-R15",
+      "domain": "source-callpath-authentication",
+      "toolOrSource": "NOAA-EMC/HRRR commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "mp_physics=28 to THOMPSONAERO mapping",
+        "NWFA/NIFA/NWFA2D argument-path authentication",
+        "is_aerosol_aware source-level branch state",
+        "calc_effectRad source identity"
+      ],
+      "doNotUseFor": [
+        "cycle-specific runtime trace",
+        "physical atmospheric Observation truth",
+        "visible-light optical closure"
+      ]
+    },
+    {
+      "id": "TOOL-NOAA-NCO-HRRR-NATIVE-R15",
+      "domain": "real-input-product-schema",
+      "toolOrSource": "NOAA/NCO HRRR native product inventory",
+      "authority": "primary-official-operational-product-schema",
+      "observationRootEligible": false,
+      "useFor": [
+        "required replay input field availability",
+        "hybrid-level/support identity",
+        "checking whether expected diagnostic fields are publicly emitted"
+      ],
+      "doNotUseFor": [
+        "claiming actual gridpoint values were decoded when GRIB bytes were not materialized",
+        "independent effective-radius checkpoint when the field is absent"
+      ]
+    },
+    {
+      "id": "TOOL-NCEP-GRIB2-EFFECTIVE-RADIUS-R15",
+      "domain": "format-semantics",
+      "toolOrSource": "NCEP GRIB2 Table 4.2-0-1",
+      "authority": "primary-official-format-semantics",
+      "observationRootEligible": false,
+      "useFor": [
+        "EFRCWAT/EFRCICE/EFRSNOW representability"
+      ],
+      "doNotUseFor": [
+        "inferring HRRR publishes those fields"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-RUNTIME-AUTH-R15-PROBE",
+      "domain": "coordinator-executable-test",
+      "toolOrSource": "PROBES/hrrrv4_runtime_input_auth_probe_r15.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "authentication-ladder invariant",
+        "typed SPFH-to-Qv adapter",
+        "same-unit semantic masking failure mode",
+        "format-versus-publication distinction"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
