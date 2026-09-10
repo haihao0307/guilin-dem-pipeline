@@ -1,0 +1,66 @@
+name: Wenzhou R3.6 OSM Runtime Compare
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-6-osm-runtime-20260911
+    paths:
+      - 'site/dist/r3-6/**'
+      - 'tools/r3-6/performance_compare.mjs'
+      - '.github/workflows/wenzhou-r3-6-osm-runtime-compare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Frozen R3.5 boundary and syntax
+        run: |
+          set -euo pipefail
+          git diff --exit-code 58ae114d61442d5f5f86d00f29d0e34fdf95f15e HEAD -- site/dist/r3-5 site/dist/r3-4 site/dist/r3-3 site/dist/r3-2
+          node --check site/dist/r3-6/bootstrap.js
+          node --check site/dist/r3-6/osm-runtime.js
+          node --check tools/r3-6/performance_compare.mjs
+          grep -q "wenzhou.r3.6.osm-runtime-installed" site/dist/r3-6/osm-runtime.js
+          grep -q "AbortController" site/dist/r3-6/osm-runtime.js
+          grep -q "setIndex" site/dist/r3-6/osm-runtime.js
+          grep -q "canonicalTruth!==false" site/dist/r3-6/osm-runtime.js
+          grep -q "individualPhysicalTruth!==false" site/dist/r3-6/osm-runtime.js
+      - name: Install Chromium probe runner
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run same-class mobile emulation A/B probe
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r36-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/performance_compare.mjs | tee /tmp/r36-compare.json
+          grep -q '"schema": "wenzhou-r3.6-osm-performance-compare/r1"' /tmp/r36-compare.json
+          grep -q '"realIphoneVerified": false' /tmp/r36-compare.json
+          grep -q '"runtime": "indexed-r36"' /tmp/r36-compare.json
+          grep -q '"indexed": "true"' /tmp/r36-compare.json
+          grep -q '"abortController": "true"' /tmp/r36-compare.json
+      - name: Upload comparison evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-6-osm-runtime-compare-${{ github.sha }}
+          path: |
+            /tmp/r36-compare.json
+            /tmp/r36-http.log
+          if-no-files-found: error
+          retention-days: 30
