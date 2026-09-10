@@ -1,0 +1,83 @@
+name: Landscape pre-pack historical compare
+
+on:
+  push:
+    branches:
+      - review/landscape-prepack-compare-20260911
+    paths:
+      - .github/workflows/landscape-prepack-compare.yml
+
+permissions:
+  contents: write
+
+jobs:
+  render-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/landscape-prepack-compare-20260911
+          fetch-depth: 1
+      - name: Fetch exact historical single-file workbenches
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/landscape-history qa/landscape-history
+          curl --fail --location --retry 5 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/89ee5141357f35ac822d5d2d0d1481947d7f6cc2/workbenches/landscape-function/index.html' -o /tmp/landscape-history/A_R5_APPROVED_BASELINE.html
+          curl --fail --location --retry 5 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html' -o /tmp/landscape-history/B_R5_SURFACE.html
+          curl --fail --location --retry 5 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/4899a5bfbcb252fe55aad6d412a28c76a582c739/workbenches/landscape-surface-r10/index.html' -o /tmp/landscape-history/C_R10_PREPACK.html
+          sha256sum /tmp/landscape-history/*.html | tee qa/landscape-history/source-sha256.txt
+      - name: Render exact historical candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --directory /tmp/landscape-history >/tmp/landscape-history/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          FLAGS='--headless=new --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --enable-webgl --ignore-gpu-blocklist --hide-scrollbars'
+          for N in A_R5_APPROVED_BASELINE B_R5_SURFACE C_R10_PREPACK; do
+            timeout 150s "$CHROME" $FLAGS --virtual-time-budget=18000 --window-size=1280,800 --screenshot="$GITHUB_WORKSPACE/qa/landscape-history/${N}.png" "http://127.0.0.1:8765/${N}.html"
+            test -s "$GITHUB_WORKSPACE/qa/landscape-history/${N}.png"
+          done
+      - name: Build labeled contact sheet
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont
+          from pathlib import Path
+          root=Path('qa/landscape-history')
+          items=[
+            ('A','2026-09-07 05:52Z · approved water-eroded baseline',root/'A_R5_APPROVED_BASELINE.png'),
+            ('B','2026-09-07 05:53Z · R5 surface-only microscope candidate',root/'B_R5_SURFACE.png'),
+            ('C','2026-09-08 02:38Z · R10 pre-pack source',root/'C_R10_PREPACK.png'),
+          ]
+          W=960; card_h=640; label_h=46
+          canvas=Image.new('RGB',(W,card_h*len(items)),(20,22,21))
+          d=ImageDraw.Draw(canvas)
+          font=ImageFont.load_default()
+          for i,(letter,label,p) in enumerate(items):
+            im=Image.open(p).convert('RGB')
+            im.thumbnail((W,card_h-label_h),Image.Resampling.LANCZOS)
+            y=i*card_h
+            x=(W-im.width)//2
+            canvas.paste(im,(x,y+label_h))
+            d.rectangle((0,y,W,y+label_h),fill=(28,31,29))
+            d.text((18,y+15),f'{letter}  {label}',font=font,fill=(235,239,235))
+          canvas.save(root/'PREPACK_COMPARE.jpg',quality=72,optimize=True)
+          thumb=canvas.copy(); thumb.thumbnail((720,1440),Image.Resampling.LANCZOS)
+          thumb.save(root/'PREPACK_COMPARE_SMALL.jpg',quality=65,optimize=True)
+          PY
+      - name: Commit evidence images
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f qa/landscape-history
+          git commit -m 'qa(landscape): add historical pre-pack comparison screenshots'
+          git push origin HEAD:review/landscape-prepack-compare-20260911
