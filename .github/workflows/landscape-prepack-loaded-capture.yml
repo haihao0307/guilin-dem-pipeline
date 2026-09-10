@@ -40,7 +40,7 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           export CHROME
-          cat > /tmp/capture.mjs <<'JS'
+          cat > capture.mjs <<'JS'
           import { chromium } from 'playwright-core';
           import fs from 'fs';
           const browser = await chromium.launch({executablePath:process.env.CHROME,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
@@ -71,7 +71,8 @@ jobs:
           }
           await browser.close();
           JS
-          node /tmp/capture.mjs
+          node capture.mjs
+          rm -f capture.mjs
           cat qa/landscape-history-loaded/*.json
       - name: Make compact review images
         shell: bash
