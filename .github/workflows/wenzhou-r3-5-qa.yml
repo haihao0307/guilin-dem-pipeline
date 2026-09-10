@@ -1,0 +1,98 @@
+name: Wenzhou R3.5 QA
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-5-osm-context-20260911
+    paths:
+      - 'site/dist/r3-5/**'
+      - 'tools/r3-5/**'
+      - '.github/workflows/wenzhou-r3-5-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Frozen R3.2 R3.3 R3.4 boundary
+        run: |
+          set -euo pipefail
+          BASE=21da8276032717e089fbe70ee46a17c3e0da5c12
+          git diff --exit-code "$BASE" HEAD -- \
+            site/dist/r3-2 site/dist/r3-3 site/dist/r3-4 \
+            records/R3_2 records/R3_3 records/R3_4 \
+            inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json
+
+      - name: Static R3.5 evidence and syntax gate
+        run: |
+          set -euo pipefail
+          python tools/r3-5/validate_static.py | tee /tmp/r35-static-qa.json
+          grep -q '"passed": true' /tmp/r35-static-qa.json
+          node --check site/dist/r3-5/bootstrap.js
+          node --check site/dist/r3-5/osm-evidence.js
+          node --check tools/r3-5/browser_qa.mjs
+
+      - name: Install browser runner
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local Chromium QA
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/wenzhou-r35-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-5/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R35_URL=http://127.0.0.1:8765/site/dist/r3-5/ node tools/r3-5/browser_qa.mjs | tee /tmp/r35-local-qa.json
+          grep -q '"passed": true' /tmp/r35-local-qa.json
+
+      - name: Fixed-commit public raw.githack Chromium QA
+        env:
+          R35_SHA: ${{ github.sha }}
+          R35_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${R35_REPO}/${R35_SHA}/site/dist/r3-5/index.html"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.5'; then ready=1; break; fi
+            sleep 4
+          done
+          test "$ready" = 1
+          R35_URL="$URL" node tools/r3-5/browser_qa.mjs | tee /tmp/r35-public-qa.json
+          grep -q '"passed": true' /tmp/r35-public-qa.json
+          echo "$URL" > /tmp/r35-preview.txt
+
+      - name: Upload QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-5-qa-${{ github.sha }}
+          path: |
+            /tmp/r35-static-qa.json
+            /tmp/r35-local-qa.json
+            /tmp/r35-public-qa.json
+            /tmp/r35-preview.txt
+            /tmp/wenzhou-r35-http.log
+          if-no-files-found: warn
+          retention-days: 30
