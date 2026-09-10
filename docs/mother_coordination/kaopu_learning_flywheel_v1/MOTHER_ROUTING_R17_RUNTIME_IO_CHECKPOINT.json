@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-mother-routing-extension/r17",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRRV4_RUNTIME_IO_CHECKPOINT_R17.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "distinguish model-state availability from default file emission",
+        "preserve output-stream/instrumentation lineage in every replay checkpoint",
+        "if a future isolated HRRRv4 experiment is available, prefer runtime-I/O exposure of re_cloud/re_ice/re_snow over physics-source edits"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept source-model effective radius only with checkpoint class and source/runtime identity",
+        "do not infer effective-radius availability from public wrfout size or model-state existence"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no direct change to optical evaluator semantics; effective radius remains an intermediate diagnostic",
+        "instrumented source-model output must not be promoted to optical truth"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add OutputStreamIdentity and InstrumentationLineage to evidence identity",
+        "distinguish OperationalSourceModelStateCheckpoint from InstrumentedSourceModelCheckpoint",
+        "keep ReplayStatus at source_callpath_authenticated until actual source-model bytes are produced/decoded and matched"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after an actual locked HRRRv4 source-model state checkpoint and matching real-input replay"
+}
