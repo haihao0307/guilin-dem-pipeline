@@ -1,0 +1,109 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-runtime-io-preflight-r21",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRoots": [],
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRRV4-REGISTRY-EM-COMMON-R21",
+      "role": "locked-state-and-package-definition",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/Registry.EM_COMMON",
+      "blobSha": "f3e86038a161c18d2644e6276110a01fc13839f3",
+      "lockedFacts": [
+        "re_cloud, re_ice and re_snow are real ikj state variables with Registry DNAMEs RE_CLOUD, RE_ICE and RE_SNOW, units m, and default restart-only I/O flag r",
+        "the thompsonaero package selected by mp_physics==28 includes re_cloud, re_ice and re_snow as state members"
+      ],
+      "limits": [
+        "Registry declaration alone does not establish that a field is physically meaningful in a run whose package is not active",
+        "these are engineering/model-state facts, not physical atmospheric Observations"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-RUNTIME-IO-PARSER-R21",
+      "role": "locked-runtime-io-parser",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/frame/module_domain.F",
+      "blobSha": "9ca0c7ea385d3038323f1386403ecfa325581ab3",
+      "lockedFacts": [
+        "requested field tokens and Registry DataName values are normalized to lower case before matching in the inspected parser",
+        "a resolved plus operation sets the requested stream mask",
+        "an unresolved field sets warning state",
+        "max_hst_mods is hard-coded to 200 and exceeding it is fatal"
+      ],
+      "limits": [
+        "case-insensitive behavior is locked to this source generation and must not be assumed for unrelated implementations",
+        "parser resolution proves stream-mask eligibility, not numerical non-interference"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-RUNTIME-IO-DOC-R21",
+      "role": "locked-runtime-io-contract-documentation",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/README.io_config",
+      "blobSha": "cf3b213b3b3b2996c28c262f2f33dca95bfc336b",
+      "lockedFacts": [
+        "runtime I/O can add or remove existing state variables from history/input streams without recompilation",
+        "stream 0 represents main input or history",
+        "an iofields line is limited to 256 characters",
+        "ignore_iofields_warning defaults to true, which warns and continues; false aborts on user-file errors"
+      ],
+      "limits": [
+        "warning-and-continue is unsuitable as evidence of successful instrumentation resolution",
+        "runtime-I/O convenience does not establish zero numerical or performance perturbation"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-SCM-NAMELIST-R21",
+      "role": "locked-l1-harness-baseline",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/namelist.input",
+      "blobSha": "50571a305625bdf5ddecb91c7493a8acb5eb3dd9",
+      "lockedFacts": [
+        "the shipped SCM baseline is a 3x3 single-domain periodic case",
+        "the shipped baseline uses mp_physics=2, not mp_physics=28"
+      ],
+      "limits": [
+        "an L1 instrumentation preflight must explicitly change the physics option if it intends to exercise the thompsonaero package",
+        "such an SCM remains a low-evidence plumbing/physics harness and is not operational HRRR equivalence"
+      ]
+    }
+  ],
+  "documentationRoots": [
+    {
+      "id": "WRF-CURRENT-RUNTIME-IO-DOC-R21",
+      "authority": "primary-official-documentation",
+      "urls": [
+        "https://www2.mmm.ucar.edu/wrf/wrf_tutorial/runtime_io.html",
+        "https://www2.mmm.ucar.edu/wrf/users/wrf_users_guide/build/html/output.html"
+      ],
+      "lockedFacts": [
+        "current WRF documentation confirms Registry quoted DNAME identity for runtime-I/O field names",
+        "current documentation confirms stream 0 as standard history, Registry state-variable prerequisite and warning/abort behavior"
+      ],
+      "limits": [
+        "current documentation is corroborating architecture evidence; locked HRRRv4 source remains authoritative for source-generation-specific parser behavior"
+      ]
+    }
+  ],
+  "derivedExecutableEvidence": {
+    "path": "PROBES/hrrrv4_runtime_io_preflight_probe_r21.py",
+    "sha256": "aa27206d164b75884f01c8bf276cc2fdad62a154dad1aafe431303cd60ee948d",
+    "result": "13/13 PASS",
+    "scope": "locked-source instrumentation eligibility and fail-fast semantics only; no WRF or HRRR execution, no paired non-interference test and no atmospheric truth values"
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
