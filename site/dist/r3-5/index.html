@@ -11,7 +11,24 @@
  <link rel="stylesheet" href="./style.css">
  <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
  <script>
-  (()=>{const nativeFetch=window.fetch.bind(window);window.fetch=(input,init)=>{if(typeof input==='string'){if(input.startsWith('/r3/data/'))input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;else if(input.startsWith('/r3-1/data/'))input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;}return nativeFetch(input,init);};})();
+  (()=>{
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=(input,init)=>{
+      if(typeof input==='string'){
+        // Frozen inherited modules keep their own historical relative fetch
+        // contracts. R3.5 routes only the document-relative requests that
+        // would otherwise resolve into the wrong generation directory.
+        if(input.startsWith('./data/worldcover/')){
+          input=new URL('../r3-4/data/worldcover/'+input.slice('./data/worldcover/'.length),location.href).href;
+        }else if(input.startsWith('/r3/data/')){
+          input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;
+        }else if(input.startsWith('/r3-1/data/')){
+          input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;
+        }
+      }
+      return nativeFetch(input,init);
+    };
+  })();
  </script>
 </head>
 <body>
