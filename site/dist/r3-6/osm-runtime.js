@@ -88,11 +88,8 @@ function roadColor(code,flags){
   return[.55,.68,.55];
 }
 function maxSegmentCount(parts){let n=0;for(let p=0;p<parts.length;p+=4)n+=Math.max(0,Number(parts[p+1])-1);return n;}
-function cpuState(){return{chunkStart:performance.now(),maxChunkMs:0,yieldCount:0,processedSinceCheck:0};}
+function cpuState(){return{chunkStart:performance.now(),maxChunkMs:0,yieldCount:0};}
 async function checkpoint(state,signal,force=false){
-  state.processedSinceCheck++;
-  if(!force&&state.processedSinceCheck<CPU_CHECK_INTERVAL)return;
-  state.processedSinceCheck=0;
   throwIfAborted(signal);
   const now=performance.now(),chunk=now-state.chunkStart;
   state.maxChunkMs=Math.max(state.maxChunkMs,chunk);
@@ -105,7 +102,7 @@ async function buildIndexedRoads(xy,parts,meta,origin,sampler,signal){
   const t0=performance.now(),vertexCount=xy.length/2;
   const positions=new Float32Array(vertexCount*3),colors=new Float32Array(vertexCount*3),valid=new Uint8Array(vertexCount);
   const maxSegments=maxSegmentCount(parts),IndexType=vertexCount<=65535?Uint16Array:Uint32Array,indices=new IndexType(maxSegments*2);
-  let iw=0,drawnParts=0,drawnSegments=0,rejectedSegments=0,sampleCalls=0;
+  let iw=0,drawnParts=0,drawnSegments=0,rejectedSegments=0,sampleCalls=0,processed=0;
   const cpu=cpuState();
   for(let p=0;p<parts.length;p+=4){
     throwIfAborted(signal);
@@ -116,7 +113,7 @@ async function buildIndexedRoads(xy,parts,meta,origin,sampler,signal){
       const[e,n]=decodeProjected(xy[a],xy[a+1],meta.bounds),x=(e-origin[0])/1000,z=(origin[1]-n)/1000,h=sampler.sample(x,z);sampleCalls++;
       const q=vi*3;positions[q]=x;positions[q+2]=z;colors[q]=color[0];colors[q+1]=color[1];colors[q+2]=color[2];
       if(h!==null){positions[q+1]=h+ROAD_LIFT_M/1000;valid[vi]=1;}
-      await checkpoint(cpu,signal);
+      processed++;if(processed%CPU_CHECK_INTERVAL===0)await checkpoint(cpu,signal);
     }
     for(let j=0;j<count-1;j++){
       const a=start+j,b=a+1;if(valid[a]&&valid[b]){indices[iw++]=a;indices[iw++]=b;drawnSegments++;partDrawn=true;}else rejectedSegments++;
@@ -135,7 +132,7 @@ async function buildIndexedBuildings(xy,parts,meta,origin,sampler,signal){
   const t0=performance.now(),vertexCount=xy.length/2;
   const positions=new Float32Array(vertexCount*3),valid=new Uint8Array(vertexCount);
   const maxSegments=maxSegmentCount(parts),IndexType=vertexCount<=65535?Uint16Array:Uint32Array,indices=new IndexType(maxSegments*2);
-  let iw=0,drawnBoundaryParts=0,drawnSegments=0,rejectedSegments=0,sampleCalls=0;
+  let iw=0,drawnBoundaryParts=0,drawnSegments=0,rejectedSegments=0,sampleCalls=0,processed=0;
   const cpu=cpuState();
   for(let p=0;p<parts.length;p+=4){
     throwIfAborted(signal);
@@ -144,7 +141,7 @@ async function buildIndexedBuildings(xy,parts,meta,origin,sampler,signal){
       const vi=start+j,a=vi*2;if(a+1>=xy.length)throw Error('R3.6 building xy 索引越界');
       const[e,n]=decodeProjected(xy[a],xy[a+1],meta.bounds),x=(e-origin[0])/1000,z=(origin[1]-n)/1000,h=sampler.sample(x,z);sampleCalls++;
       const q=vi*3;positions[q]=x;positions[q+2]=z;if(h!==null){positions[q+1]=h+BUILDING_LIFT_M/1000;valid[vi]=1;}
-      await checkpoint(cpu,signal);
+      processed++;if(processed%CPU_CHECK_INTERVAL===0)await checkpoint(cpu,signal);
     }
     for(let j=0;j<count-1;j++){
       const a=start+j,b=a+1;if(valid[a]&&valid[b]){indices[iw++]=a;indices[iw++]=b;drawnSegments++;partDrawn=true;}else rejectedSegments++;
