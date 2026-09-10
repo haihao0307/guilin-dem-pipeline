@@ -1,0 +1,1155 @@
+{
+  "schema": "wenzhou-r3.5-osm-browser-bundle/r2",
+  "sourceReleaseTag": "wenzhou-r3.5-osm-object-evidence-20260910",
+  "sourceReleaseAsset": "Wenzhou_R3_5_OSM_Object_Evidence_20260910.zip",
+  "sourceReleaseAssetSha256": "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101",
+  "sourceCorrectedReportAsset": "OSM_OBJECT_EVIDENCE_REPORT_CORRECTED.json",
+  "sourceCorrectedReportSha256": "d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364",
+  "sourceIdentity": "external_mapped_observation",
+  "sourceCrs": "EPSG:4326",
+  "displayCrs": "EPSG:32651",
+  "canonicalTruth": false,
+  "surveyGradeGeometry": false,
+  "individualPhysicalTruth": false,
+  "productionReady": false,
+  "roadPolicy": "Only explicit highway LineString geometry is used as mapped centerline-style display evidence. Rendered line width is screen styling, never physical road width.",
+  "buildingPolicy": "Only unique OSM identities with MultiPolygon building/building:part geometry are eligible. The source polygon boundary is converted to line evidence before clipping, so patch boundaries never create synthetic closure edges. No height/levels/roof/material defaults are generated.",
+  "overviewPolicy": "Overview excludes buildings and includes only motorway/trunk/primary/secondary/tertiary classes and links.",
+  "sourceCandidateCounts": {
+    "roadLineStringHighway": 177578,
+    "buildingMultiPolygonUniqueIdentity": 68359
+  },
+  "patchCount": 17,
+  "totalBytes": 4313416,
+  "patches": [
+    {
+      "id": "overview",
+      "bounds": [
+        190400.0,
+        2991200.0,
+        411360.0,
+        3242000.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 3.8269626916914627
+      },
+      "roads": {
+        "partCount": 48847,
+        "vertexCount": 558459,
+        "classPartCounts": {
+          "tertiary": 16289,
+          "secondary": 9436,
+          "primary": 7786,
+          "motorway": 5651,
+          "trunk": 4747,
+          "motorway_link": 2409,
+          "trunk_link": 1028,
+          "primary_link": 919,
+          "secondary_link": 381,
+          "tertiary_link": 201
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 0,
+        "vertexCount": 0,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/overview.roads.xy.u16le",
+          "bytes": 2233836,
+          "sha256": "d5849a4e4d9c02f96c7b275d362af4eef680132e2984468c5307d96c0e0de134"
+        },
+        "roadParts": {
+          "path": "./data/osm/overview.roads.parts.u32le",
+          "bytes": 781552,
+          "sha256": "d2a711141e3a3c6ff8438074ccf7e5b5151b73a15d3da3a41ddb84a67a882890"
+        }
+      }
+    },
+    {
+      "id": "mountains",
+      "bounds": [
+        227160.0,
+        3144160.0,
+        243280.0,
+        3160280.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.2459754329747463
+      },
+      "roads": {
+        "partCount": 32,
+        "vertexCount": 1924,
+        "classPartCounts": {
+          "unclassified": 18,
+          "secondary": 12,
+          "tertiary": 2
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 0,
+        "vertexCount": 0,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/mountains.roads.xy.u16le",
+          "bytes": 7696,
+          "sha256": "ee2124dbe33db7ea9e7a2f10acc6c248935478f3c6abf91b55df5ad4370d4d97"
+        },
+        "roadParts": {
+          "path": "./data/osm/mountains.roads.parts.u32le",
+          "bytes": 512,
+          "sha256": "44b339b85d9965cf5a750a9406078214ca27d8bbbbad78de46ec38e28fab46e3"
+        },
+        "buildingXY": {
+          "path": "./data/osm/mountains.buildings.xy.u16le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "buildingParts": {
+          "path": "./data/osm/mountains.buildings.parts.u32le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "id": "query-01",
+      "bounds": [
+        301380.0,
+        3229840.0,
+        313410.0,
+        3241870.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 446,
+        "vertexCount": 11562,
+        "classPartCounts": {
+          "service": 115,
+          "residential": 91,
+          "unclassified": 86,
+          "footway": 41,
+          "tertiary": 37,
+          "path": 25,
+          "living_street": 16,
+          "motorway": 10,
+          "secondary": 9,
+          "track": 8,
+          "primary": 5,
+          "tertiary_link": 2,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 189,
+        "vertexCount": 1099,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-01.roads.xy.u16le",
+          "bytes": 46248,
+          "sha256": "86d2be54c684e959246e08e8723ef98831d5896ac160ed73503ef4838e733d71"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-01.roads.parts.u32le",
+          "bytes": 7136,
+          "sha256": "c97c93270b940eb0250f0d69e8450d2e41db2f69d2627c561bb634d3b988e48d"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-01.buildings.xy.u16le",
+          "bytes": 4396,
+          "sha256": "c4fe6cfeec309b688da3999a9ae4b00ce212797c25c3e3a1188353578f7ca798"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-01.buildings.parts.u32le",
+          "bytes": 3024,
+          "sha256": "2e8a1797b11864bda6b1f05f02aaff3fd2469c1fe98b61d4058e1037bcb87f60"
+        }
+      }
+    },
+    {
+      "id": "query-02",
+      "bounds": [
+        333200.0,
+        3229840.0,
+        345230.0,
+        3241870.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 980,
+        "vertexCount": 14781,
+        "classPartCounts": {
+          "unclassified": 193,
+          "tertiary": 137,
+          "residential": 117,
+          "motorway": 111,
+          "primary": 104,
+          "secondary": 74,
+          "track": 74,
+          "path": 58,
+          "service": 53,
+          "footway": 22,
+          "primary_link": 11,
+          "motorway_link": 10,
+          "cycleway": 6,
+          "secondary_link": 4,
+          "construction": 4,
+          "pedestrian": 2
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 64,
+        "vertexCount": 338,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-02.roads.xy.u16le",
+          "bytes": 59124,
+          "sha256": "cc442a699c9d4a599bd160fa4755f7bdb54a01ddc6e3840c6068f204edb99a8f"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-02.roads.parts.u32le",
+          "bytes": 15680,
+          "sha256": "8ad650b297bb6d53b3273571cf57688ce8759cb0adbede24f361d99784240156"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-02.buildings.xy.u16le",
+          "bytes": 1352,
+          "sha256": "f28d343ee59d487304c50872e6a70c2ad70527acf508d90a89a544ae8f84284f"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-02.buildings.parts.u32le",
+          "bytes": 1024,
+          "sha256": "e6adf648fc08842de826baab2db5ec0c6a1ab13446f547e7b20eec97821bd28f"
+        }
+      }
+    },
+    {
+      "id": "query-03",
+      "bounds": [
+        307740.0,
+        3229840.0,
+        319770.0,
+        3241870.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 213,
+        "vertexCount": 9757,
+        "classPartCounts": {
+          "unclassified": 67,
+          "service": 34,
+          "tertiary": 31,
+          "footway": 28,
+          "residential": 17,
+          "living_street": 16,
+          "path": 11,
+          "track": 4,
+          "secondary": 2,
+          "tertiary_link": 2,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 105,
+        "vertexCount": 687,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-03.roads.xy.u16le",
+          "bytes": 39028,
+          "sha256": "c43f2db31c95c375f6e1ca2f4e1ab2df184a99ac9d1875c4805d9af9cfa8fbf2"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-03.roads.parts.u32le",
+          "bytes": 3408,
+          "sha256": "f8a6d490a70de3f39767912e25e8d8a1e69923d3c847020889be9e9940b686b0"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-03.buildings.xy.u16le",
+          "bytes": 2748,
+          "sha256": "2046aa9609097282f49f665fb2062a2032c849b097caff8e42a96976bdb892af"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-03.buildings.parts.u32le",
+          "bytes": 1680,
+          "sha256": "bbab584393763973e85d7ef45d0353fd89ac4de9663e6728b8da59303b71dbdf"
+        }
+      }
+    },
+    {
+      "id": "query-04",
+      "bounds": [
+        252770.0,
+        3229840.0,
+        264800.0,
+        3241870.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 60,
+        "vertexCount": 4641,
+        "classPartCounts": {
+          "unclassified": 23,
+          "tertiary": 14,
+          "secondary": 12,
+          "track": 7,
+          "residential": 4
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 0,
+        "vertexCount": 0,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-04.roads.xy.u16le",
+          "bytes": 18564,
+          "sha256": "0d5178e088b28b54f133ab526f23e689df44dfa9b0a62152be7206e98db637a5"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-04.roads.parts.u32le",
+          "bytes": 960,
+          "sha256": "977d41086d29a885a7d93b7161518e3b5ca1c5f5bc142a50e6645cca1cbe15ac"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-04.buildings.xy.u16le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-04.buildings.parts.u32le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "id": "query-05",
+      "bounds": [
+        190470.0,
+        3229840.0,
+        202500.0,
+        3241870.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 1432,
+        "vertexCount": 11858,
+        "classPartCounts": {
+          "service": 321,
+          "residential": 308,
+          "unclassified": 235,
+          "tertiary": 175,
+          "motorway": 84,
+          "secondary": 64,
+          "trunk": 51,
+          "footway": 43,
+          "primary": 42,
+          "trunk_link": 33,
+          "motorway_link": 29,
+          "primary_link": 11,
+          "track": 9,
+          "secondary_link": 9,
+          "tertiary_link": 7,
+          "living_street": 5,
+          "cycleway": 4,
+          "path": 1,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 38,
+        "vertexCount": 249,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-05.roads.xy.u16le",
+          "bytes": 47432,
+          "sha256": "c924a2482dc43212c8e2cceb3a3182731a4d476538f30b02efe8978567d8d04b"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-05.roads.parts.u32le",
+          "bytes": 22912,
+          "sha256": "a9f248485f9c5cacf0f594851582d2e002620c22d48d06bfc8c0b6975874777d"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-05.buildings.xy.u16le",
+          "bytes": 996,
+          "sha256": "e96a16f308d10e01324dc51d7d6d080be66455299bb1cd057431ebc5b991ab9e"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-05.buildings.parts.u32le",
+          "bytes": 608,
+          "sha256": "8468c8c127e9cfac8963494fab87e4677a71575cbcca1817d997e6fd3ad47805"
+        }
+      }
+    },
+    {
+      "id": "query-06",
+      "bounds": [
+        334890.0,
+        3227820.0,
+        346920.0,
+        3239850.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 833,
+        "vertexCount": 14573,
+        "classPartCounts": {
+          "unclassified": 181,
+          "tertiary": 122,
+          "residential": 114,
+          "motorway": 81,
+          "primary": 78,
+          "secondary": 75,
+          "track": 68,
+          "path": 41,
+          "service": 39,
+          "motorway_link": 10,
+          "footway": 9,
+          "primary_link": 5,
+          "secondary_link": 4,
+          "trunk": 2,
+          "cycleway": 2,
+          "pedestrian": 2
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 14,
+        "vertexCount": 79,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-06.roads.xy.u16le",
+          "bytes": 58292,
+          "sha256": "176f353f4495a4e9986fbc63802dfd900a258fc3c7c494a0f7f549d7fbf1ccf6"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-06.roads.parts.u32le",
+          "bytes": 13328,
+          "sha256": "b9825d8a2515ad4a28af6c60b48586bf6fe2683cc29f6ae4c46445dedd29f9da"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-06.buildings.xy.u16le",
+          "bytes": 316,
+          "sha256": "bc269c4959141082b4a1860c6d1b33624a9f0aa88ecb26aa4453bf1d1e238815"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-06.buildings.parts.u32le",
+          "bytes": 224,
+          "sha256": "0e2db1b3476eb575a2a9f90c070db09e1d046a4b50e5b051b908bb670d476a4b"
+        }
+      }
+    },
+    {
+      "id": "query-07",
+      "bounds": [
+        287180.0,
+        3227090.0,
+        299210.0,
+        3239120.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 847,
+        "vertexCount": 8228,
+        "classPartCounts": {
+          "service": 405,
+          "residential": 183,
+          "unclassified": 70,
+          "tertiary": 49,
+          "primary": 35,
+          "living_street": 27,
+          "secondary": 20,
+          "trunk": 16,
+          "track": 13,
+          "motorway_link": 12,
+          "motorway": 10,
+          "trunk_link": 2,
+          "secondary_link": 2,
+          "tertiary_link": 1,
+          "construction": 1,
+          "primary_link": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 128,
+        "vertexCount": 667,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-07.roads.xy.u16le",
+          "bytes": 32912,
+          "sha256": "fc7218787febc4160e0043a9dc779873babae579fae42529d0149f975a38e536"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-07.roads.parts.u32le",
+          "bytes": 13552,
+          "sha256": "b8d6bfdffa08d950f8078d21e0d010f8be14fab269e6fcaf0c6a711004d9942b"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-07.buildings.xy.u16le",
+          "bytes": 2668,
+          "sha256": "d238a12084225e09841006a4e655ec9d0c7927e2fdbe8679a572b4bd42179156"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-07.buildings.parts.u32le",
+          "bytes": 2048,
+          "sha256": "d55419576c7ef8bd7ad0dd7c37eaf1db39377189a015a0fe29bb86e300d0e8ad"
+        }
+      }
+    },
+    {
+      "id": "query-08",
+      "bounds": [
+        265470.0,
+        3226020.0,
+        277500.0,
+        3238050.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 249,
+        "vertexCount": 4474,
+        "classPartCounts": {
+          "residential": 85,
+          "living_street": 45,
+          "tertiary": 43,
+          "unclassified": 41,
+          "primary": 11,
+          "service": 11,
+          "secondary": 10,
+          "primary_link": 2,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 0,
+        "vertexCount": 0,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-08.roads.xy.u16le",
+          "bytes": 17896,
+          "sha256": "3fd885dc361d694504f9c8d5b91458637d066ad7d9db96a111acbf56224173d1"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-08.roads.parts.u32le",
+          "bytes": 3984,
+          "sha256": "ca486abab95f1dc655955afe1423b72374bdd26c8573de28306a058d9b1b45cc"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-08.buildings.xy.u16le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-08.buildings.parts.u32le",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "id": "query-09",
+      "bounds": [
+        291550.0,
+        3224030.0,
+        303580.0,
+        3236060.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 1278,
+        "vertexCount": 11524,
+        "classPartCounts": {
+          "service": 649,
+          "residential": 273,
+          "tertiary": 93,
+          "secondary": 72,
+          "primary": 51,
+          "unclassified": 49,
+          "track": 21,
+          "trunk": 19,
+          "motorway": 18,
+          "living_street": 17,
+          "secondary_link": 9,
+          "primary_link": 5,
+          "tertiary_link": 1,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 165,
+        "vertexCount": 871,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-09.roads.xy.u16le",
+          "bytes": 46096,
+          "sha256": "2d2ac4d43ed7e1736dec79f477ba42a96dee4d02be3fa2fe94b8d51b061334bf"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-09.roads.parts.u32le",
+          "bytes": 20448,
+          "sha256": "4f2340618d3f4045ddb90f3b3d39343c7e076800cd2b6e1ce5eefeb1b595b2db"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-09.buildings.xy.u16le",
+          "bytes": 3484,
+          "sha256": "611a39ca7d19ccc975a61eb52896e100c8f651b74e1edd766174fadee4bd72f2"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-09.buildings.parts.u32le",
+          "bytes": 2640,
+          "sha256": "de0d86958ad0ea4662e1380a1df91a61270a3e71c4142cc98439c32f6a7eea6a"
+        }
+      }
+    },
+    {
+      "id": "query-10",
+      "bounds": [
+        339650.0,
+        3221780.0,
+        351680.0,
+        3233810.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 443,
+        "vertexCount": 9817,
+        "classPartCounts": {
+          "residential": 113,
+          "tertiary": 109,
+          "secondary": 75,
+          "unclassified": 75,
+          "track": 27,
+          "service": 16,
+          "tertiary_link": 8,
+          "primary": 6,
+          "trunk": 4,
+          "path": 4,
+          "steps": 2,
+          "secondary_link": 2,
+          "primary_link": 1,
+          "living_street": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 59,
+        "vertexCount": 336,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-10.roads.xy.u16le",
+          "bytes": 39268,
+          "sha256": "41e723e239c751f7839d382b93b67fc0ded384c368ab652a330327548ec44d6b"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-10.roads.parts.u32le",
+          "bytes": 7088,
+          "sha256": "7b0ce857694053f0dc52ae851c9c9849ce3c4205d3a9d9f15e505c03be1e8d30"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-10.buildings.xy.u16le",
+          "bytes": 1344,
+          "sha256": "a952865e32987ac39758f1747b15a073d7765490a9b3b3c00b5b60e75af98994"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-10.buildings.parts.u32le",
+          "bytes": 944,
+          "sha256": "d1d4adf28043d9065dba89e553e898475190087be57fd0d84ea528c85be6af42"
+        }
+      }
+    },
+    {
+      "id": "query-11",
+      "bounds": [
+        278720.0,
+        3221030.0,
+        290750.0,
+        3233060.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 782,
+        "vertexCount": 7949,
+        "classPartCounts": {
+          "service": 391,
+          "residential": 91,
+          "unclassified": 79,
+          "living_street": 48,
+          "motorway": 42,
+          "tertiary": 37,
+          "motorway_link": 27,
+          "primary": 25,
+          "track": 17,
+          "secondary": 9,
+          "steps": 5,
+          "pedestrian": 4,
+          "footway": 2,
+          "secondary_link": 2,
+          "services": 2,
+          "construction": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 18,
+        "vertexCount": 101,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-11.roads.xy.u16le",
+          "bytes": 31796,
+          "sha256": "5f93cd254bd648f2ee97f2d23796860cb0007dbeb0087cafdb26c2dd2bc7fdd3"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-11.roads.parts.u32le",
+          "bytes": 12512,
+          "sha256": "2eb6967ef93714d902d048ce8c02e372e398518747b55ae5c13e12c9e1e61094"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-11.buildings.xy.u16le",
+          "bytes": 404,
+          "sha256": "c83141b91deb875a23faa9907d68b6d61ba875a036e8c04b9e4e298e2b43dd07"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-11.buildings.parts.u32le",
+          "bytes": 288,
+          "sha256": "fd9f81c2811c5ef111a9c24228e8cb875de7222116e5b1df4112b516fdec3692"
+        }
+      }
+    },
+    {
+      "id": "query-12",
+      "bounds": [
+        197020.0,
+        3221120.0,
+        209050.0,
+        3233150.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.18356603341725794
+      },
+      "roads": {
+        "partCount": 719,
+        "vertexCount": 7391,
+        "classPartCounts": {
+          "unclassified": 166,
+          "service": 163,
+          "residential": 115,
+          "primary": 85,
+          "tertiary": 68,
+          "track": 34,
+          "secondary": 31,
+          "trunk_link": 16,
+          "trunk": 13,
+          "cycleway": 7,
+          "path": 6,
+          "secondary_link": 6,
+          "primary_link": 5,
+          "footway": 2,
+          "bridleway": 1,
+          "pedestrian": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 19,
+        "vertexCount": 121,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/query-12.roads.xy.u16le",
+          "bytes": 29564,
+          "sha256": "4c27703553fa3425e842af343755274946989fca19a69610467acfa889611187"
+        },
+        "roadParts": {
+          "path": "./data/osm/query-12.roads.parts.u32le",
+          "bytes": 11504,
+          "sha256": "f537f44dfff9d407f3080449476e4788fb3114e4ff6d30c27e8f0ddfafc602b1"
+        },
+        "buildingXY": {
+          "path": "./data/osm/query-12.buildings.xy.u16le",
+          "bytes": 484,
+          "sha256": "8d8a03ffc40942a95977e63fee7688848573eee42d69b4ac6e35ac30fff1ba6a"
+        },
+        "buildingParts": {
+          "path": "./data/osm/query-12.buildings.parts.u32le",
+          "bytes": 304,
+          "sha256": "38f318b9b397a68a4d947d4268e1c2ef83fea4de8b46252047b90bc06ad40442"
+        }
+      }
+    },
+    {
+      "id": "river-oujiang",
+      "bounds": [
+        275460.0,
+        3086600.0,
+        295520.0,
+        3106660.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.30609597924773024
+      },
+      "roads": {
+        "partCount": 5736,
+        "vertexCount": 38947,
+        "classPartCounts": {
+          "unclassified": 1679,
+          "residential": 980,
+          "tertiary": 785,
+          "service": 517,
+          "secondary": 502,
+          "primary": 314,
+          "trunk": 243,
+          "footway": 150,
+          "motorway": 133,
+          "trunk_link": 122,
+          "motorway_link": 117,
+          "path": 47,
+          "primary_link": 44,
+          "track": 34,
+          "steps": 17,
+          "cycleway": 15,
+          "secondary_link": 9,
+          "pedestrian": 8,
+          "construction": 7,
+          "raceway": 7,
+          "living_street": 5,
+          "tertiary_link": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 283,
+        "vertexCount": 2475,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/river-oujiang.roads.xy.u16le",
+          "bytes": 155788,
+          "sha256": "de78c345eaae629fa8c24f9861fcb70055f0162d5c1d5390838e8c0e43082a01"
+        },
+        "roadParts": {
+          "path": "./data/osm/river-oujiang.roads.parts.u32le",
+          "bytes": 91776,
+          "sha256": "9119d456888fa39df6a5ec6e286499e61b0d8d05971c594935f4d62487c4951c"
+        },
+        "buildingXY": {
+          "path": "./data/osm/river-oujiang.buildings.xy.u16le",
+          "bytes": 9900,
+          "sha256": "80cb9d2df1acd45f4bcc48cd613f8463f410c95d8c567c8f13f9cee741cdae5b"
+        },
+        "buildingParts": {
+          "path": "./data/osm/river-oujiang.buildings.parts.u32le",
+          "bytes": 4528,
+          "sha256": "b485b6d2321659f73c345c74f54371aed64e0386d416e2f46dedc06d1bdf8115"
+        }
+      }
+    },
+    {
+      "id": "river-feiyun",
+      "bounds": [
+        262420.0,
+        3056400.0,
+        282480.0,
+        3076460.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.30609597924773024
+      },
+      "roads": {
+        "partCount": 2691,
+        "vertexCount": 16919,
+        "classPartCounts": {
+          "unclassified": 974,
+          "tertiary": 584,
+          "primary": 345,
+          "secondary": 304,
+          "trunk": 206,
+          "service": 80,
+          "motorway": 56,
+          "motorway_link": 49,
+          "track": 21,
+          "residential": 19,
+          "secondary_link": 11,
+          "primary_link": 10,
+          "footway": 8,
+          "construction": 8,
+          "path": 6,
+          "trunk_link": 6,
+          "living_street": 1,
+          "cycleway": 1,
+          "pedestrian": 1,
+          "services": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 67,
+        "vertexCount": 396,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/river-feiyun.roads.xy.u16le",
+          "bytes": 67676,
+          "sha256": "2ed085b1da9f30dad078963bd619f7fe01df4860c6d1d1978ca10f06cef388a2"
+        },
+        "roadParts": {
+          "path": "./data/osm/river-feiyun.roads.parts.u32le",
+          "bytes": 43056,
+          "sha256": "f2328165d104e840ab1d6739df2417b15363211d33b586472bccf008f17141ec"
+        },
+        "buildingXY": {
+          "path": "./data/osm/river-feiyun.buildings.xy.u16le",
+          "bytes": 1584,
+          "sha256": "cd7ec645727d4e0b19cd1dcbdf6aa66a52fa645016a9daf7b169c88bfa2b0cc2"
+        },
+        "buildingParts": {
+          "path": "./data/osm/river-feiyun.buildings.parts.u32le",
+          "bytes": 1072,
+          "sha256": "0ff7dee1a2da2629c395f348351e13dff713a53090f6a307a09c9d91c07deb92"
+        }
+      }
+    },
+    {
+      "id": "river-aojiang",
+      "bounds": [
+        253200.0,
+        3044120.0,
+        273260.0,
+        3064180.0
+      ],
+      "quantization": {
+        "type": "uint16-bounds-relative",
+        "maxStepM": 0.30609597924773024
+      },
+      "roads": {
+        "partCount": 5153,
+        "vertexCount": 36104,
+        "classPartCounts": {
+          "unclassified": 2315,
+          "tertiary": 830,
+          "service": 493,
+          "secondary": 364,
+          "primary": 326,
+          "trunk": 195,
+          "residential": 125,
+          "primary_link": 89,
+          "motorway": 87,
+          "motorway_link": 64,
+          "pedestrian": 62,
+          "footway": 58,
+          "cycleway": 52,
+          "track": 36,
+          "living_street": 16,
+          "trunk_link": 14,
+          "secondary_link": 10,
+          "construction": 9,
+          "path": 4,
+          "tertiary_link": 3,
+          "rest_area": 1
+        },
+        "physicalWidthKnown": false,
+        "screenLineWidthOnly": true
+      },
+      "buildings": {
+        "boundaryPartCount": 1322,
+        "vertexCount": 9179,
+        "sourceMultiPolygonBoundaryOnly": true,
+        "clippingCreatesPatchClosure": false,
+        "flatFootprintBoundaryOnly": true,
+        "heightClaim": "unknown-not-generated"
+      },
+      "files": {
+        "roadXY": {
+          "path": "./data/osm/river-aojiang.roads.xy.u16le",
+          "bytes": 144416,
+          "sha256": "e39872e74321fa8650a2d9caea380b157173773e3cef7c3aee6e532574f3b606"
+        },
+        "roadParts": {
+          "path": "./data/osm/river-aojiang.roads.parts.u32le",
+          "bytes": 82448,
+          "sha256": "323a989221f15cc6e7a7ac53f287d31668bbff12ef03c010e85fbdcd96b6a161"
+        },
+        "buildingXY": {
+          "path": "./data/osm/river-aojiang.buildings.xy.u16le",
+          "bytes": 36716,
+          "sha256": "4a957d96b748dc95996de46905377d1036583611500fe8fef53f0fc9763ea901"
+        },
+        "buildingParts": {
+          "path": "./data/osm/river-aojiang.buildings.parts.u32le",
+          "bytes": 21152,
+          "sha256": "2932acf22bd52d971fe0f4c789bf569a39c2712be83828ab2a1847aae4ba011c"
+        }
+      }
+    }
+  ],
+  "roadClassCodes": {
+    "1": "motorway",
+    "2": "motorway_link",
+    "3": "trunk",
+    "4": "trunk_link",
+    "5": "primary",
+    "6": "primary_link",
+    "7": "secondary",
+    "8": "secondary_link",
+    "9": "tertiary",
+    "10": "tertiary_link",
+    "11": "residential",
+    "12": "unclassified",
+    "13": "service",
+    "14": "living_street",
+    "15": "track",
+    "16": "path",
+    "17": "footway",
+    "18": "cycleway",
+    "19": "pedestrian",
+    "20": "steps",
+    "21": "construction",
+    "255": "other-explicit-highway"
+  },
+  "roadFlags": {
+    "1": "bridge-tag-present-non-no",
+    "2": "tunnel-tag-present-non-no"
+  },
+  "buildingPartMeta": {
+    "0": "source-polygon-boundary-line-clipped-to-view-no-synthetic-patch-closure"
+  }
+}

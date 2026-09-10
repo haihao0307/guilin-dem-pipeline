@@ -1,0 +1,100 @@
+{
+  "version": "R3.5",
+  "date": "2026-09-11",
+  "status": "verified-visual-candidate-awaiting-user-review",
+  "visualCandidateCommit": "58ae114d61442d5f5f86d00f29d0e34fdf95f15e",
+  "implementationBranch": "feature/wenzhou-r3-5-osm-context-20260911",
+  "baseR34VisualCandidate": "21da8276032717e089fbe70ee46a17c3e0da5c12",
+  "fixedPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/58ae114d61442d5f5f86d00f29d0e34fdf95f15e/site/dist/r3-5/index.html",
+  "qa": {
+    "workflowRun": 34540735234,
+    "artifactId": 10177209146,
+    "artifactSha256": "37f14ba066d8d522463ad4b7c23b577cd4f8e7cc60c9927aaa1812cd70d583f5",
+    "frozenR32R33R34": true,
+    "staticEvidenceGate": true,
+    "localChromium": true,
+    "fixedCommitPublicChromium": true,
+    "roadPixelToggleVerified": true,
+    "buildingPixelToggleVerified": true,
+    "mobile390x844": true,
+    "runtimeErrors": 0,
+    "mobileErrors": 0
+  },
+  "permanentOsmEvidence": {
+    "releaseTag": "wenzhou-r3.5-osm-object-evidence-20260910",
+    "releaseUrl": "https://github.com/haihao0307/guilin-dem-pipeline/releases/tag/wenzhou-r3.5-osm-object-evidence-20260910",
+    "sourceArchiveSha256": "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101",
+    "correctedAuditSha256": "d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364",
+    "roadLineStringHighwayCandidates": 177578,
+    "buildingMultiPolygonUniqueIdentityCandidates": 68359
+  },
+  "browserBundle": {
+    "schema": "wenzhou-r3.5-osm-browser-bundle/r2",
+    "patchCount": 17,
+    "totalBytes": 4313416,
+    "queryQuantizationMaxStepM": 0.18356603341725794,
+    "riverQuantizationMaxStepM": 0.30609597924773024,
+    "mountainsQuantizationMaxStepM": 0.2459754329747463,
+    "overviewQuantizationMaxStepM": 3.8269626916914627,
+    "overviewBuildingsLoaded": false,
+    "overviewRoadPolicy": "motorway/trunk/primary/secondary/tertiary classes and links only"
+  },
+  "verifiedRuntimeSamples": {
+    "query01": {
+      "roadParts": 446,
+      "roadSegmentsDrawn": 11007,
+      "roadSegmentsRejectedWithoutDisplaySurface": 109,
+      "buildingBoundaryParts": 189,
+      "buildingSegmentsDrawn": 906,
+      "buildingSegmentsRejectedWithoutDisplaySurface": 4,
+      "syntheticPatchClosure": false,
+      "eyeHeightBeforeMoveM": 1.6,
+      "eyeHeightAfterMoveM": 1.6
+    },
+    "riverOujiang": {
+      "roadParts": 5736,
+      "roadSegmentsDrawn": 32807,
+      "roadSegmentsRejectedWithoutDisplaySurface": 404,
+      "buildingBoundaryParts": 283,
+      "buildingSegmentsDrawn": 2184,
+      "buildingSegmentsRejectedWithoutDisplaySurface": 8,
+      "syntheticPatchClosure": false
+    },
+    "mountains": {
+      "roadParts": 32,
+      "roadSegmentsDrawn": 1865,
+      "roadSegmentsRejectedWithoutDisplaySurface": 27,
+      "buildingBoundaryParts": 0,
+      "buildingSegmentsDrawn": 0,
+      "note": "No mapped building footprint evidence in this patch; no objects are invented."
+    },
+    "overview": {
+      "roadParts": 48847,
+      "roadSegmentsDrawn": 508201,
+      "roadSegmentsRejectedWithoutDisplaySurface": 1411,
+      "buildingBoundaryParts": 0,
+      "buildingSegmentsDrawn": 0
+    }
+  },
+  "semanticBoundary": {
+    "sourceIdentity": "external_mapped_observation",
+    "canonicalTruth": false,
+    "surveyGradeGeometry": false,
+    "individualPhysicalTruth": false,
+    "productionReady": false,
+    "roadPhysicalWidthClaim": "none; rendered line width is screen styling only",
+    "buildingHeightClaim": "unknown-not-generated",
+    "buildingBoundaryPolicy": "source MultiPolygon boundary is converted to line evidence before patch clipping; no synthetic patch-closure edges",
+    "surfaceAnchor": "current displayed DEM triangles; rendering relation only, not OSM elevation truth",
+    "timeBoundary": "OSM object edit times are mixed; this is not a same-time field survey snapshot"
+  },
+  "knownConstraint": {
+    "mobileLayoutVerified": true,
+    "mobileOverviewPerformanceVerifiedOnRealIPhone": false,
+    "reason": "Overview currently draws 508201 road segments. Desktop Chromium and 390x844 viewport QA pass, but a viewport emulation is not evidence of real iPhone GPU/CPU production performance.",
+    "nextGate": "R3.6 mobile/runtime performance and request scheduling without changing evidence semantics"
+  },
+  "visualApprovedByUser": false,
+  "productionReady": false,
+  "taskMode": "one-off continuation, not recurring"
+}

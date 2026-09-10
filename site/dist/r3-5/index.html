@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州 R3.5：继承 R3.4，经永久归档 OpenStreetMap 证据增加道路中心线与建筑 footprint 映射上下文。">
+ <title>小温州 · 三维地形 R3.5</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="../r3-2/style.css">
+ <link rel="stylesheet" href="../r3-3/style.css">
+ <link rel="stylesheet" href="../r3-4/style.css">
+ <link rel="stylesheet" href="./style.css">
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script>
+  (()=>{
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=(input,init)=>{
+      if(typeof input==='string'){
+        // Frozen inherited modules keep their own historical relative fetch
+        // contracts. R3.5 routes only the document-relative requests that
+        // would otherwise resolve into the wrong generation directory.
+        if(input.startsWith('./data/worldcover/')){
+          input=new URL('../r3-4/data/worldcover/'+input.slice('./data/worldcover/'.length),location.href).href;
+        }else if(input.startsWith('/r3/data/')){
+          input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;
+        }else if(input.startsWith('/r3-1/data/')){
+          input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;
+        }
+      }
+      return nativeFetch(input,init);
+    };
+  })();
+ </script>
+</head>
+<body>
+ <main id="stage" aria-label="温州 R3.5 三维地形、环境外观与道路建筑外部地图证据">
+   <canvas id="terrain" tabindex="0" aria-label="三维地形；普通模式方向键旋转、加减号缩放；人眼模式拖动环视，WASD 行走，方向键转头，加减号前后移动，R键复位"></canvas>
+   <svg id="river-leaders" aria-hidden="true"></svg>
+   <header class="topbar">
+     <div class="brand"><span class="brand-mark" aria-hidden="true">山</span><div><h1>小温州<span>三维地形</span></h1><p>真实 DEM · R3.5</p></div></div>
+     <div class="view-switch" role="group" aria-label="地形范围"><button id="mountains" class="active" aria-pressed="true">山地近景</button><button id="overview" aria-pressed="false">全域</button></div>
+     <button id="info-button" class="quiet" aria-expanded="false" aria-controls="info">资料说明</button>
+   </header>
+   <section class="focus-panel" aria-label="位置与显示设置">
+     <label for="location">查看位置</label>
+     <select id="location"><option value="mountains">山地近景</option><option value="overview">全域</option></select>
+     <label for="exaggeration">地形比例</label>
+     <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
+     <div id="eye-card" class="eye-card" hidden><strong>1.6 米人眼视角</strong><span id="eye-status">相机锚定到显示曲面。</span><small>1.6 米只描述相机与显示曲面的关系，不是测绘精度。</small></div>
+     <div class="hydro-options">
+       <label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><label><input id="show-sea" type="checkbox" checked> 演示海面</label>
+       <label><input id="show-surface" type="checkbox" checked> 土壤外观演示</label><label><input id="show-landcover" type="checkbox"> 土地覆盖证据</label>
+       <label><input id="show-osm-roads" type="checkbox" checked> OSM 道路中心线</label><label><input id="show-osm-buildings" type="checkbox" checked> OSM 建筑 footprint</label>
+       <small>OSM 图层只显示映射证据：道路线宽是屏幕样式；建筑不生成高度。</small>
+     </div>
+     <div id="osm-card" class="osm-card" hidden>
+       <strong id="osm-title">OpenStreetMap · 道路/建筑映射证据</strong>
+       <span id="osm-status">读取证据…</span>
+       <div class="osm-metrics"><b id="osm-road-count">中心线 —</b><b id="osm-building-count">footprint —</b></div>
+       <small id="osm-source">这是外部地图观察，不是 survey-grade physical truth。</small>
+     </div>
+     <div id="landcover-card" class="landcover-card" hidden>
+       <strong id="landcover-title">ESA WorldCover 2021 · 土地覆盖证据</strong>
+       <span id="landcover-status">读取证据…</span>
+       <div id="landcover-metrics" class="landcover-metrics"></div>
+       <small id="landcover-source">类别不是个体 Object Truth。</small>
+     </div>
+     <div id="surface-card" class="surface-card" hidden>
+       <strong id="surface-title">土壤外观演示</strong>
+       <span id="surface-status">读取证据…</span>
+       <div class="surface-metrics"><b id="surface-clay">黏土 —</b><b id="surface-sand">砂 —</b><b id="surface-silt">粉砂 —</b><b id="surface-soc">SOC —</b></div>
+       <small id="surface-source">模型预测只用于外观演示。</small>
+     </div>
+     <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
+   </section>
+   <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
+   <div class="compass" aria-label="北方向"><span id="north-arrow">↑</span><b>北</b></div>
+   <nav class="camera-controls" aria-label="相机控制">
+     <button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="zoom-out" title="缩小" aria-label="缩小">−</button>
+     <span class="separator"></span><button id="turn-left" title="向左旋转" aria-label="向左旋转">↶</button><button id="turn-right" title="向右旋转" aria-label="向右旋转">↷</button>
+     <span class="separator"></span><button id="eye-view" aria-pressed="false">人眼 1.6m</button><button id="top-view">俯视</button><button id="reset">复位</button>
+   </nav>
+   <footer><div class="caption"><strong id="view-title">山地近景</strong><span id="render-status" role="status" aria-live="polite">准备地形</span></div><p id="gesture-hint" class="gesture-hint">拖动旋转 · 滚轮缩放 · 双指平移</p><div class="height-legend"><span>低</span><i></i><span>高</span></div></footer>
+   <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>
+   <aside id="info" class="info-panel" hidden aria-label="资料说明">
+      <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>R3.5 增加了什么</h2>
+      <p>R3.5 从已验证的 R3.4 固定画面提交派生，不改 R3.1 DEM、R3.2 人眼相机、R3.3 土壤外观或 R3.4 WorldCover 声部。本版新增的是永久归档 OpenStreetMap 道路/建筑外部地图证据的轻量浏览器声部。</p>
+      <dl>
+        <dt>道路来源</dt><dd>OpenStreetMap / Geofabrik 浙江与福建区域 PBF 的锁定裁剪证据。纠正审计后，177,578 个显式 highway LineString 可作为中心线式显示候选。道路线宽只用于屏幕辨识，不代表物理道路宽度；原证据中 width 标签极少，缺失值保持 unknown。</dd>
+        <dt>建筑来源</dt><dd>同一锁定 OSM 证据中有 68,359 个唯一 OSM 身份具备 MultiPolygon building/building:part 几何，可作为平面 footprint 边界显示候选。建筑不默认拉高；缺少 height、building:levels、roof、material 时全部保持 unknown。</dd>
+        <dt>身份纠正</dt><dd>原导出有 136,573 个建筑 geometry feature，但其中大量 LineString 与 MultiPolygon 是同一 OSM type+id 的双表示。R3.5 永久归档已增加跨 geometry 身份审计，因此不会把双表示误画成两栋建筑。</dd>
+        <dt>时间边界</dt><dd>OSM 对象编辑时间不统一。纠正审计显示道路记录约跨 2007-10-13 至 2026-09-08，建筑约跨 2011-06-25 至 2026-09-08；因此这一层不能被称作同一时刻的实测世界快照。</dd>
+        <dt>按需显示</dt><dd>17 个视域分别派生量化二进制对象包。query、河流和山地只加载当前范围对象；全域不加载建筑，只保留 motorway/trunk/primary/secondary/tertiary 等主干道路及连接线。</dd>
+        <dt>贴地方式</dt><dd>道路与建筑边界锚定到当前实际显示三角面，并只做厘米级视觉抬升避免 Z-fighting。这个锚定描述显示关系，不提升 OSM 的测绘精度，也不改变 DEM。</dd>
+        <dt>真值边界</dt><dd>OSM 是外部 mapped observation：`canonicalTruth=false`、`surveyGradeGeometry=false`、`individualPhysicalTruth=false`、`productionReady=false`。R3.5 不把地图线位偷换成道路边缘，不把 footprint 偷换成真实三维建筑。</dd>
+        <dt>R3.4 土地覆盖</dt><dd>继续独立存在。WorldCover 的 built-up/tree-cover/cropland 等类别可以与 OSM 空间证据互相质疑和校验，但不能自动互相升级成更高精度 Object Truth。</dd>
+        <dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网曲面；显示误差与实测误差分别记录。</dd>
+      </dl>
+      <a href="../r3-1/data/terrain.json" target="_blank" rel="noreferrer">查看锁定地形规则</a><br>
+      <a href="./data/osm/osm-context.json" target="_blank" rel="noreferrer">查看 R3.5 浏览器 OSM 对象索引</a><br>
+      <a href="https://github.com/haihao0307/guilin-dem-pipeline/releases/tag/wenzhou-r3.5-osm-object-evidence-20260910" target="_blank" rel="noreferrer">查看永久 OSM 证据归档</a>
+   </aside>
+ </main>
+ <script type="module" src="./bootstrap.js"></script>
+</body></html>
