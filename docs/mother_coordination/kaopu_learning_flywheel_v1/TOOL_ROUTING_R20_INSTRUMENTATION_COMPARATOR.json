@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu-tool-routing-extension/r20",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-LOCKED-DIFFWRF-R20",
+      "domain": "weather-instrumentation-shared-real-state-comparison",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 external/io_netcdf/diffwrf.F90 at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "control-first comparison of shared real-valued WRF state",
+        "dimension/type/time-label checks implemented by the locked tool",
+        "historically faithful HRRRv4 comparison-tool provenance"
+      ],
+      "doNotUseFor": [
+        "whole-file equality",
+        "complete integer/string-state equality",
+        "complete attribute/schema equality",
+        "proving that the only added variables are the intended re_* fields"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-CURRENT-DIFFWRF-R20",
+      "domain": "supplementary-comparator-reference",
+      "toolOrSource": "current official wrf-model/WRF external/io_netcdf/diffwrf.F90 at commit 06d4240ae989cc3e50af412bb472df3d9048783c",
+      "authority": "primary-official-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "evidence that comparator coverage evolves across generations",
+        "supplementary integer-value comparison if explicitly versioned"
+      ],
+      "doNotUseFor": [
+        "silently replacing the locked HRRRv4 comparator identity",
+        "retroactively claiming historical HRRRv4 diffwrf covered integers"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-BITWISE-METHOD-R20",
+      "domain": "paired-run-validation-method",
+      "toolOrSource": "official WRF bit-wise and restart reproducibility documentation",
+      "authority": "primary-official-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "paired-run field comparison",
+        "first-difference localization by increasing output frequency"
+      ],
+      "doNotUseFor": [
+        "assuming one historical diffwrf binary covers all instrumentation-specific invariants"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-INSTRUMENTATION-COMPARATOR-PROBE-R20",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_instrumentation_comparator_probe_r20.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "artifact-identity versus state-non-interference separation",
+        "allowlisted asymmetric comparator invariants",
+        "integer/metadata/time/schema sidecar requirements"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
