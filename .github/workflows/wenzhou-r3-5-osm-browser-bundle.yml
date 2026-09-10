@@ -101,6 +101,11 @@ jobs:
             exit 0
           fi
           git commit -m 'data(wenzhou): derive R3.5 patch-scoped OSM display bundle [skip ci]'
+          # The generated payload is already committed. Remove only transient
+          # post-build dirt (for example Python cache/metadata) before rebasing
+          # that commit onto any newer human-authored branch commits.
+          git reset --hard HEAD
+          git clean -fd
           git fetch origin "$BRANCH"
           git rebase "origin/$BRANCH"
           git push origin "HEAD:${BRANCH}"
