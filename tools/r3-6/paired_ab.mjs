@@ -16,13 +16,16 @@ async function runOne(version,label){
   const nav0=now();await page.goto(`${base}/${version}/`,{waitUntil:'domcontentloaded',timeout:180000});await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.ready==='true',null,{timeout:180000});const initialTerrainReadyMs=now()-nav0;
   const q=await selectTimed(page,'query-01');const qMetrics=await metrics(page),qRaf=await rafProbe(page,30);
   const o=await selectTimed(page,'overview');const oMetrics=await metrics(page),oRaf=await rafProbe(page,30);
-  assert(q.state.roads===11007&&q.state.roadRejected===109&&q.state.buildings===906&&q.state.buildingRejected===4,`${label} q01 geometry ${JSON.stringify(q.state)}`);
-  assert(o.state.roads===508201&&o.state.roadRejected===1411&&o.state.buildings===0,`${label} overview geometry ${JSON.stringify(o.state)}`);
   assert(q.state.sourceSha==='f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101'&&q.state.reportSha==='d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364',`${label} evidence SHA changed`);
-  assert(q.state.closure==='false',`${label} synthetic closure changed`);
-  if(version==='r3-6')assert(q.state.runtime==='indexed-r36'&&q.state.roadSourceVertices===q.state.roadGpuVertices&&q.state.roadIndexCount===q.state.roads*2,`${label} indexed runtime mismatch ${JSON.stringify(q.state)}`);
+  assert(q.state.closure==='false'&&o.state.closure==='false',`${label} synthetic closure changed`);
+  if(version==='r3-6'){
+    assert(q.state.runtime==='indexed-r36'&&q.state.roadSourceVertices===q.state.roadGpuVertices&&q.state.roadIndexCount===q.state.roads*2,`${label} query indexed runtime mismatch ${JSON.stringify(q.state)}`);
+    assert(o.state.runtime==='indexed-r36'&&o.state.roadSourceVertices===o.state.roadGpuVertices&&o.state.roadIndexCount===o.state.roads*2,`${label} overview indexed runtime mismatch ${JSON.stringify(o.state)}`);
+  }
   await context.close();return{label,version,initialTerrainReadyMs,query01:{...q,metrics:qMetrics,raf:qRaf},overview:{...o,metrics:oMetrics,raf:oRaf},errors};
 }
+function geomTuple(run,view){const s=run[view].state;return{roads:s.roads,roadRejected:s.roadRejected,buildings:s.buildings,buildingRejected:s.buildingRejected};}
+function sameGeom(a,b){return a.roads===b.roads&&a.roadRejected===b.roadRejected&&a.buildings===b.buildings&&a.buildingRejected===b.buildingRejected;}
 async function cancellationStress(version){
   const context=await browser.newContext(mobileOptions);let started=0,finished=0,failed=0;const failedDetails=[];const match=u=>u.includes('/site/dist/r3-5/data/osm/')&&(u.endsWith('.u16le')||u.endsWith('.u32le'));
   context.on('request',r=>{if(match(r.url()))started++;});context.on('requestfinished',r=>{if(match(r.url()))finished++;});context.on('requestfailed',r=>{if(match(r.url())){failed++;failedDetails.push({url:r.url(),failure:r.failure()?.errorText});}});
@@ -31,8 +34,13 @@ async function cancellationStress(version){
   for(const id of['query-01','query-02','query-03']){await page.selectOption('#location',id);await waitTerrain(page,id);}await waitOsm(page,'query-03');await page.waitForTimeout(1200);const state=await runtimeState(page);await context.close();return{version,delayMs:350,started,finished,failed,failedDetails,state};
 }
 const runs=[];for(const [v,l] of[['r3-5','A1-r3.5'],['r3-6','B1-r3.6'],['r3-6','B2-r3.6'],['r3-5','A2-r3.5']])runs.push(await runOne(v,l));
+const mobileReference={query01:geomTuple(runs[0],'query01'),overview:geomTuple(runs[0],'overview')};
+for(const r of runs.slice(1)){
+  assert(sameGeom(geomTuple(r,'query01'),mobileReference.query01),`${r.label} query mobile display-support geometry differs from A1 R3.5: got=${JSON.stringify(geomTuple(r,'query01'))} ref=${JSON.stringify(mobileReference.query01)}`);
+  assert(sameGeom(geomTuple(r,'overview'),mobileReference.overview),`${r.label} overview mobile display-support geometry differs from A1 R3.5: got=${JSON.stringify(geomTuple(r,'overview'))} ref=${JSON.stringify(mobileReference.overview)}`);
+}
 const cancellation=[await cancellationStress('r3-5'),await cancellationStress('r3-6')];
 function avg(vals){return vals.reduce((a,b)=>a+b,0)/vals.length;}function pair(path){const pick=(r,p)=>p.reduce((v,k)=>v[k],r);const a=runs.filter(r=>r.version==='r3-5').map(r=>pick(r,path)),b=runs.filter(r=>r.version==='r3-6').map(r=>pick(r,path));const av=avg(a),bv=avg(b);return{r35:a,r36:b,r35Mean:av,r36Mean:bv,r36OverR35:bv/av,percentChange:(bv/av-1)*100};}
 const summary={queryOsmReady:pair(['query01','osmReadyMs']),overviewOsmReady:pair(['overview','osmReadyMs']),queryHeap:pair(['query01','metrics','heapUsed']),overviewHeap:pair(['overview','metrics','heapUsed']),queryRafP50:pair(['query01','raf','p50Ms']),overviewRafP50:pair(['overview','raf','p50Ms'])};
-assert(runs.every(r=>r.errors.length===0),`runtime errors ${JSON.stringify(runs.map(r=>r.errors))}`);assert(cancellation[0].failed===0,'R3.5 cancellation baseline unexpectedly failed payload requests');assert(cancellation[1].state.runtime==='indexed-r36','R3.6 cancellation state missing runtime marker');
-const report={schema:'wenzhou-r3.6-paired-ab/r1',environment:'same GitHub Actions runner, same Chromium process, fresh contexts; mobile emulation only, NOT real iPhone/Safari/GPU',order:runs.map(r=>r.label),runs,cancellation,summary,realIphoneVerified:false,failures};console.log(JSON.stringify(report,null,2));await browser.close();if(failures.length)process.exit(1);
+assert(runs.every(r=>r.errors.length===0),`runtime errors ${JSON.stringify(runs.map(r=>r.errors))}`);assert(cancellation[0].failed===0,'R3.5 cancellation baseline unexpectedly failed payload requests');assert(cancellation[1].state.runtime==='indexed-r36','R3.6 cancellation state missing runtime marker');assert(cancellation[1].state.abortCount>=2,`R3.6 cancellation controllers did not advance: ${JSON.stringify(cancellation[1])}`);
+const report={schema:'wenzhou-r3.6-paired-ab/r2',environment:'same GitHub Actions runner, same Chromium process, fresh contexts; mobile emulation only, NOT real iPhone/Safari/GPU',method:'A-B-B-A; geometry equivalence is relative to A1 R3.5 on the same mobile display-support surface, not desktop QA counts',order:runs.map(r=>r.label),mobileReference,runs,cancellation,summary,realIphoneVerified:false,failures};console.log(JSON.stringify(report,null,2));await browser.close();if(failures.length)process.exit(1);
