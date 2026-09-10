@@ -1,0 +1,109 @@
+name: Build and verify Weather Mother R24 mobile aircraft direct-pass
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r24-mobile-aircraft-directpass-20260911
+    paths:
+      - weather-mother/r24-mobile-aircraft-directpass-src/**
+      - .github/workflows/build-verify-weather-r24-mobile-aircraft-directpass.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-mother-r24-mobile-aircraft-directpass
+  cancel-in-progress: false
+
+jobs:
+  public-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R24 from frozen R22 plus proven R23 cloud path
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 weather-mother/r24-mobile-aircraft-directpass-src/build-r24.py
+          OUT=weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/index.html
+          test -s "$OUT"
+          grep -q 'Weather Mother · 完整天气恢复 R22' "$OUT"
+          grep -q 'weather-mother-r24-mobile-aircraft-directpass' "$OUT"
+          grep -q '银边积云' "$OUT"
+          grep -q '原自由飞行' "$OUT"
+
+      - name: Freeze page commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(weather-mother): R24 mobile aircraft direct-pass candidate [skip ci]'
+            git push origin HEAD:feature/weather-mother-r24-mobile-aircraft-directpass-20260911
+          fi
+          PAGE_SHA=$(git rev-parse HEAD)
+          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$PAGE_SHA/weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/index.html"
+          echo "PAGE_SHA=$PAGE_SHA" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
+
+      - name: Wait for immutable public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 40); do
+            code=$(curl -L -sS -o /tmp/r24.html -w '%{http_code}' --connect-timeout 10 --max-time 45 "$PUBLIC_URL?probe=$attempt" || true)
+            if [ "$code" = 200 ] && grep -q 'weather-mother-r24-mobile-aircraft-directpass' /tmp/r24.html; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "fixed public R24 is live: $PUBLIC_URL"
+
+      - name: Install Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install playwright==1.55.0 >/dev/null
+          python3 -m playwright install chromium >/dev/null
+
+      - name: Verify cloud invariant aircraft pixels flight input and mobile layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python3 -u weather-mother/r24-mobile-aircraft-directpass-src/qa-public-r24.py
+
+      - name: Commit public evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911
+          cat > weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/PUBLICATION_PROOF.json <<JSON
+          {
+            "schema": "weather-mother-r24-mobile-aircraft-directpass-publication-proof/1",
+            "pageCommit": "$PAGE_SHA",
+            "url": "$PUBLIC_URL",
+            "baseR22Commit": "8aeb8dac519f8bda851cfc998e07266870d3eaef",
+            "acceptedR21CoreCommit": "d6796df38a2cb872f58ff1f8ce72b5f36d8d2322",
+            "provenR23CloudPageCommit": "001a9e3dc028b3a7719ff8ab96bacdd7b8b1cac8",
+            "publicBrowser390x844": true,
+            "cloudVisibilityInvariant": true,
+            "aircraftDirectPassVisible": true,
+            "flightInputChangedState": true,
+            "silverSeaSwitch": true,
+            "sharedDepth": false,
+            "realIPhoneAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/PUBLIC_QA_MOBILE_AIRCRAFT_2026-09-11.json weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/PUBLIC_R24_MOBILE_AIRCRAFT_390x844.png weather-mother/full-weather-r24-mobile-aircraft-directpass-20260911/PUBLICATION_PROOF.json
+          git commit -m 'qa(weather-mother): prove R24 mobile aircraft direct-pass publicly [skip ci]'
+          git push origin HEAD:feature/weather-mother-r24-mobile-aircraft-directpass-20260911
