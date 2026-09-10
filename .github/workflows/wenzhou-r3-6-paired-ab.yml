@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: wenzhou-r3-6-paired-ab-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   paired:
     runs-on: ubuntu-24.04
@@ -39,7 +43,7 @@ jobs:
           python -m http.server 8765 --directory . >/tmp/r36-paired-http.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null && break || sleep 1; done
           BASE_URL=http://127.0.0.1:8765/site/dist node tools/r3-6/paired_ab.mjs | tee /tmp/r36-paired-ab.json
-          grep -q '"schema": "wenzhou-r3.6-paired-ab/r1"' /tmp/r36-paired-ab.json
+          grep -q '"schema": "wenzhou-r3.6-paired-ab/r2"' /tmp/r36-paired-ab.json
           grep -q '"realIphoneVerified": false' /tmp/r36-paired-ab.json
       - uses: actions/upload-artifact@v4
         with:
