@@ -1,0 +1,134 @@
+{
+  "schema": "kaopu-tool-routing-extension/r13",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-NOAA-HRRRV4-MICROPHYSICS-CONFIG",
+      "domain": "source-model-microphysics-version",
+      "toolOrSource": "NOAA HRRR system description + NOAA GSL diagnostics memo",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "useFor": [
+        "HRRRv4 Thompson microphysics identity",
+        "predicted-moment capability",
+        "version/lifecycle boundaries against newer RRFS implementations"
+      ],
+      "doNotUseFor": [
+        "claiming exact executable source hash",
+        "physical Observation truth for a particular cloud"
+      ]
+    },
+    {
+      "id": "TOOL-NOMADS-HRRR-NATIVE-INDEX-R13",
+      "domain": "source-field-sufficiency-and-range-planning",
+      "toolOrSource": "NOAA/NOMADS 2026-09-09 00 UTC HRRR native-analysis .idx",
+      "authority": "primary-official-live",
+      "observationRootEligible": false,
+      "useFor": [
+        "confirming TMP/PRES/SPFH/CLWMR/NCONCD/CIMIXR/NCCICE/SNMR/MASSDEN/FRACCC support",
+        "byte-offset/range acquisition planning",
+        "preserving hybrid-level field identity"
+      ],
+      "doNotUseFor": [
+        "inventing decoded values",
+        "treating index entries as source-native effective radius"
+      ]
+    },
+    {
+      "id": "TOOL-DTC-WRF-THOMPSON-EFFECTIVE-RADIUS",
+      "domain": "microphysics-diagnostic-replay",
+      "toolOrSource": "DTC CCPP Thompson SciDoc + WRF module_mp_thompson source",
+      "authority": "primary-community-physics",
+      "observationRootEligible": false,
+      "useFor": [
+        "calc_effectRad input dependency",
+        "model-consistent effective-radius method",
+        "PSD/mass-size assumption inventory",
+        "designing MicrophysicsDiagnosticReplay"
+      ],
+      "doNotUseFor": [
+        "calling a current WRF source file the exact HRRRv4 operational implementation without version authentication",
+        "treating replay output as Observation"
+      ]
+    },
+    {
+      "id": "TOOL-DTC-RRTMG-CLOUD-INPUT-CONTRACT",
+      "domain": "radiation-cloud-closure",
+      "toolOrSource": "DTC RRTMG Clouds documentation",
+      "authority": "primary-community-physics",
+      "observationRootEligible": false,
+      "useFor": [
+        "separating condensate path, cloud fraction, effective radius and overlap/subgrid assumptions",
+        "radiation-ready versus microphysics-ready capability boundaries"
+      ],
+      "doNotUseFor": [
+        "copying legacy GFS empirical defaults into KAOPU truth"
+      ]
+    },
+    {
+      "id": "TOOL-NASA-LIQUID-MIE-LUT",
+      "domain": "visible-liquid-cloud-optics",
+      "toolOrSource": "NASA/NTRS Lorenz-Mie liquid-water cloud lookup-table work",
+      "authority": "primary-government-research",
+      "observationRootEligible": false,
+      "useFor": [
+        "liquid-water spectral scattering candidate",
+        "wavelength/refractive-index/effective-radius/effective-variance dependency",
+        "future validated LUT implementation"
+      ],
+      "doNotUseFor": [
+        "ice-cloud habit/roughness optics",
+        "claiming a single wavelength-independent cloud closure"
+      ]
+    },
+    {
+      "id": "TOOL-SIDEFX-KARMA-VOLUME-R13",
+      "domain": "renderer-optical-adapter",
+      "toolOrSource": "SideFX Karma Volume documentation",
+      "authority": "primary-vendor",
+      "observationRootEligible": false,
+      "useFor": [
+        "absorption/scattering m^-1 target semantics",
+        "anisotropy target semantics",
+        "keeping evaluator bounce/modifier controls separate"
+      ],
+      "doNotUseFor": [
+        "deriving Weather microphysics",
+        "backfilling missing physical optical parameters"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-VOLUME-R13",
+      "domain": "renderer-optical-adapter",
+      "toolOrSource": "Epic Unreal Engine 5.8 Volumetric/Local Fog documentation",
+      "authority": "primary-vendor",
+      "observationRootEligible": false,
+      "useFor": [
+        "extinction/albedo/phase-G evaluator targets",
+        "local/spot-light participating-medium validation",
+        "performance/artifact failure-mode comparison"
+      ],
+      "doNotUseFor": [
+        "meteorological truth",
+        "equating engine defaults with physical coefficients"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRR-MICROPHYSICS-OPTICAL-R13-PROBE",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/hrrr_microphysics_optical_bridge_probe_r13.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "field-category sufficiency check",
+        "mass+number PSD non-identifiability counterexample",
+        "air-density dependency",
+        "renderer-neutral optical decomposition",
+        "typed Missing for ice optical context"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
