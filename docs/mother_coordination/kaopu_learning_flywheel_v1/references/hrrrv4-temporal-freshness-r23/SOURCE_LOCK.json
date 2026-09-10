@@ -1,0 +1,83 @@
+{
+  "schema": "kaopu-source-lock/r23",
+  "date": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "title": "HRRRv4 effective-radius checkpoint temporal freshness and sampling epoch",
+  "status": "candidate-source-lock",
+  "noChineseWebSources": true,
+  "productionMotherMutationAllowed": false,
+  "roots": [
+    {
+      "id": "ROOT-HRRRV4-PHYSICS-INIT-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_physics_init.F",
+      "blob": "2a6dac7d3c0c2b9c87ff3a2dfdbcf9e635aa6e6d",
+      "use": "pre-integrate initialization stage and initial re_cloud/re_ice/re_snow values"
+    },
+    {
+      "id": "ROOT-HRRRV4-SOLVE-EM-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/dyn_em/solve_em.F",
+      "blob": "fc487de3a628cb4b8ecdad62f233d8e829614343",
+      "use": "solve_em advances one model timestep and executes time-split microphysics after RK"
+    },
+    {
+      "id": "ROOT-HRRRV4-MICROPHYSICS-DRIVER-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_microphysics_driver.F",
+      "blob": "f5ed7aec6aa5b2187936ed447ed7dc2faede3095",
+      "use": "THOMPSONAERO branch calls mp_gt_driver during microphysics execution"
+    },
+    {
+      "id": "ROOT-HRRRV4-THOMPSON-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F",
+      "blob": "1e6cdb1e718473ee1a031e16b1c00c96113f19f8",
+      "use": "per-call calc_effectRad guard and exact cloud/ice lower clamps that can alias initialization values"
+    },
+    {
+      "id": "ROOT-HRRRV4-INTEGRATE-ORDER-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/frame/module_integrate.F",
+      "blob": "bca4f65007041da969a56f710f983972a5605f8a",
+      "use": "history/restart I/O occurs in med_before_solve_io before solve_interface advances the domain"
+    },
+    {
+      "id": "ROOT-HRRRV4-MEDIATION-IO-R23",
+      "type": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/share/mediation_integrate.F",
+      "blob": "1b98d2894dffeb1ac2477ba238df32e9f3520957",
+      "use": "history output is emitted by med_before_solve_io; restart-start history can be written before the first resumed solve when write_hist_at_0h_rst is enabled"
+    },
+    {
+      "id": "ROOT-WRF-CURRENT-RUNNING-DOC-R23",
+      "type": "primary-official-documentation",
+      "source": "wrf-model/Users_Guide running_wrf documentation and UCAR WRF running tutorial",
+      "retrieved": "2026-09-11",
+      "use": "current corroboration that history output includes simulation initial time and that write_hist_at_0h_rst controls restart-start history; not a locked HRRR runtime identity"
+    }
+  ],
+  "independence": {
+    "physicalObservationRootAdded": false,
+    "note": "All roots are engineering/source/I-O evidence. Multiple files from the locked NOAA HRRR tree are distinct evidence surfaces but not independent physical Observation Roots. Current WRF documentation is corroboration, not a second physical root."
+  },
+  "probe": {
+    "path": "PROBES/hrrrv4_effective_radius_temporal_freshness_probe_r23.py",
+    "sha256": "9cd1dc5f20ccf663475350480efe78bdc235d2cdc5b99c0cbc893455f4b701ed",
+    "result": "12/12 PASS",
+    "evidenceClass": "derived-executable-source-semantic-evidence",
+    "ceiling": "No WRF/HRRR model execution; no ReplayStatus promotion."
+  }
+}
