@@ -45,6 +45,8 @@ jobs:
           node --check site/dist/r3-6/bootstrap.js
           node --check site/dist/r3-6/osm-runtime.js
           node --check tools/r3-6/browser_qa.mjs
+          grep -q 'id="approximation-info"' site/dist/r3-6/index.html
+          grep -q 'await new Promise(resolve=>requestAnimationFrame(resolve))' site/dist/r3-6/osm-runtime.js
 
       - name: Install Chromium runner
         run: |
