@@ -1,0 +1,42 @@
+name: Ocean R019.5 public HTTPS QA
+
+on:
+  push:
+    branches:
+      - work/ocean-mother-r0195-progressive-runtime-20260910
+    paths:
+      - '.github/workflows/ocean-r0195-public-https-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-https:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify fixed raw.githack URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA='f0fc8758ba0bc4b2114fbc5e6482265f97ac6b6b'
+          PATH_HTML='ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html'
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/${PATH_HTML}"
+          curl -fL --retry 8 --retry-delay 8 --retry-all-errors --connect-timeout 15 --max-time 60 -D /tmp/githack.headers -o /tmp/githack.html "$URL"
+          grep -Eiq '^content-type: *text/html' /tmp/githack.headers
+          grep -Fq 'Ocean Mother R019.5 · Progressive Runtime' /tmp/githack.html
+          test "$(sha256sum /tmp/githack.html | awk '{print $1}')" = '4200790ab47a4f98d9cb5e4ab5fffe5d8bfc733c7defc8039f855091313c52da'
+          echo "RAW_GITHACK_PASS $URL"
+
+      - name: Verify fixed rawcdn URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA='f0fc8758ba0bc4b2114fbc5e6482265f97ac6b6b'
+          PATH_HTML='ocean-mother/releases/Ocean_Mother_R0195_Progressive_Runtime_Direct_Open.html'
+          URL="https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/${PATH_HTML}"
+          curl -fL --retry 8 --retry-delay 8 --retry-all-errors --connect-timeout 15 --max-time 60 -D /tmp/rawcdn.headers -o /tmp/rawcdn.html "$URL"
+          grep -Eiq '^content-type: *text/html' /tmp/rawcdn.headers
+          grep -Fq 'Ocean Mother R019.5 · Progressive Runtime' /tmp/rawcdn.html
+          test "$(wc -c < /tmp/rawcdn.html)" -gt 50000
+          echo "RAWCDN_PASS $URL"
