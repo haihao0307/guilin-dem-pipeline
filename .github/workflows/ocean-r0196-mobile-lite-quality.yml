@@ -25,6 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           python ocean-mother/r0196-mobile-lite/apply_r0196.py
+          python ocean-mother/r0196-mobile-lite/fix_compile_r0196.py
           FILE='ocean-mother/releases/Ocean_Mother_R0196_Mobile_Lite_Quality_Direct_Open.html'
           ACTUAL=$(sha256sum "$FILE" | awk '{print $1}')
           echo "EXPECTED_SHA=$ACTUAL" >> "$GITHUB_ENV"
@@ -48,8 +49,8 @@ jobs:
           Path('/tmp/lite.frag').write_text(lite.group(1),encoding='utf-8')
           assert s.count('readPixels(')==1
           assert 'waveStateL' in lite.group(1)
-          assert 'landColorL' in lite.group(1)
-          assert 'vec3 n=normalBedL(lp.xz);vec3 base=landColorL(lp,n);' in lite.group(1)
+          assert 'landColorL(lp,n)' not in lite.group(1)
+          assert 'beachL=1.-smoothstep' in lite.group(1)
           assert 'liteOnly?175000:90000' in s
           print('STATIC_CONTRACT_PASS')
           PY
