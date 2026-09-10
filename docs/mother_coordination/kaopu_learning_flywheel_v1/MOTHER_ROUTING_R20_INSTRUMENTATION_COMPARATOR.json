@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu-mother-routing-extension/r20",
+  "updatedAt": "2026-09-10",
+  "fromLearning": "LEARNING_LOG/2026-09-10_HRRRV4_INSTRUMENTATION_COMPARATOR_R20.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "attach ComparatorIdentity, ComparatorCoverageVector and InstrumentationManifest to every ControlInstrumentedPair",
+        "for locked HRRRv4 use control as diffwrf file-1 and instrumented output as file-2",
+        "supplement locked diffwrf with a versioned manifest/schema sidecar rather than using whole-file hashes"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "accept instrumented re_cloud/re_ice/re_snow only after both shared-state and instrumentation-manifest gates pass at the applicable harness tier",
+        "keep replay authentication unchanged until eligible L3 real-input evidence exists"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "make ArtifactIdentity, SchemaIdentity and StateNonInterferenceIdentity distinct provenance concepts",
+        "make comparator version/direction/coverage and exact instrumentation allowlists first-class evidence metadata"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R20; effective radius remains upstream of spectral optical closure"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after eligible locked HRRRv4 L3 real-input ControlInstrumentedPair and downstream optical/evaluator gates"
+}
