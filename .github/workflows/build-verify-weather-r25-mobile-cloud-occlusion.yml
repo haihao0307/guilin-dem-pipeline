@@ -30,12 +30,14 @@ jobs:
           set -euo pipefail
           python3 weather-mother/r25-mobile-cloud-occlusion-src/build-r25.py
           OUT=weather-mother/full-weather-r25-mobile-cloud-occlusion-20260911/index.html
+          SRC=weather-mother/r25-mobile-cloud-occlusion-src/aircraft-cloud-occlusion.js
           test -s "$OUT"
           grep -q 'Weather Mother · 完整天气恢复 R22' "$OUT"
           grep -q 'weather-mother-r25-mobile-cloud-occlusion' "$OUT"
-          grep -q 'OPTICAL OCCLUSION' "$OUT"
-          grep -q 'cpu-mirror-beer-lambert' "$OUT"
-          ! grep -q 'createFramebuffer' weather-mother/r25-mobile-cloud-occlusion-src/aircraft-cloud-occlusion.js
+          grep -q 'OPTICAL OCCLUSION' "$SRC"
+          grep -q 'cpu-mirror-beer-lambert' "$SRC"
+          grep -q 'depthFBO:false' "$SRC"
+          ! grep -q 'createFramebuffer' "$SRC"
 
       - name: Freeze page commit
         shell: bash
