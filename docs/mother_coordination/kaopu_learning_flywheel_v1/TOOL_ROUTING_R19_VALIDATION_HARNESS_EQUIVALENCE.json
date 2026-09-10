@@ -1,0 +1,78 @@
+{
+  "schema": "kaopu-tool-routing-extension/r19",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-LOCKED-SCM-R19",
+      "domain": "weather-validation-harness",
+      "toolOrSource": "NOAA-EMC HRRRv4 locked em_scm_xy source at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "low-cost WRF runtime-I/O plumbing preflight",
+        "single-column test-case identity",
+        "documenting reduced dynamics/boundary assumptions"
+      ],
+      "doNotUseFor": [
+        "HRRRv4 operational replay authentication",
+        "HRRR aerosol IC/BC equivalence",
+        "full-domain numerical non-interference"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-MP28-DOC-R19",
+      "domain": "microphysics-harness-semantics",
+      "toolOrSource": "official NCAR WRF Thompson aerosol-aware documentation",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "useFor": [
+        "mp_physics=28 semantics",
+        "internal-versus-external aerosol initialization distinction"
+      ],
+      "doNotUseFor": [
+        "assuming internal-profile SCM aerosols are HRRR operational aerosols"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-RUNTIME-IO-R19",
+      "domain": "instrumentation",
+      "toolOrSource": "official WRF runtime-I/O documentation",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "useFor": [
+        "adding existing state to output streams without Registry recompile",
+        "runtime-I/O performance-cost warning"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-TEST-FRAMEWORK-R19",
+      "domain": "regression-evidence-scope",
+      "toolOrSource": "official WRF Testing Framework public ARW physics table",
+      "authority": "primary-official",
+      "observationRootEligible": false,
+      "useFor": [
+        "bit-for-bit reduced regression method",
+        "scoped coverage evidence"
+      ],
+      "doNotUseFor": [
+        "claiming mp=28 is never tested because it is absent from the inspected table",
+        "inheriting mp=28 regression status from mp=8"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-HARNESS-PROBE-R19",
+      "domain": "coordinator-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_validation_harness_probe_r19.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "validation-harness evidence-ceiling invariants",
+        "SCM preflight eligibility",
+        "preventing reduced-harness evidence promotion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
