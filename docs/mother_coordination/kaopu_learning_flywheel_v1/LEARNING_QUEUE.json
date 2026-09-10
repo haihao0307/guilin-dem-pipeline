@@ -24,7 +24,7 @@
         "Future-Space"
       ],
       "userPriorityOverride": true,
-      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity and rejected direct promotion of coarse three-hour path optics to instantaneous local-volume truth. R12 selected the alternative next-gate route and evaluated NOAA HRRR as a higher-temporal/higher-spatial regional operational source. Official NOAA/NCEP evidence shows 3 km native-level HRRR output, hourly model runs, 50 hybrid levels carrying CLWMR/CIMIXR/NCONCD/NCCICE/FRACCC/PRES/HGT/TMP/SPFH, and a separate sub-hourly product explicitly classified as 2-D Surface Levels. A live 2026-09-09 NOMADS native-analysis index confirmed the selected field family through hybrid level 50; the full sampled native analysis was about 667 MB, showing why subset/preprocessing capability matters. The R12 semantic probe passed 7/7: HRRR materially reduces the nominal source-support gap versus MERRA-2 but still remains about 30x coarser than a test-only 100 m local-volume footprint, model analysis remains model-derived rather than Observation truth, 2-D support cannot identify a unique 3-D profile, and microphysics readiness does not imply renderer optical closure. Candidate WeatherSourceCapabilityContract, QuerySupportMatch, SourceFederationPolicy and SourceLifecycleState were added. NOAA's 2026 RRFS transition/preliminary product state is retained as lifecycle/migration evidence rather than permission for a silent provider swap. No production Mother branch was modified.",
+      "progress": "R01-R06 established state/evaluator separation, ground-to-space semantics, query-scoped evaluator validity, multi-root Earth references, evidence dependency, per-quantity validity, typed Missing/Unsupported, and split-overlap semantics. R07 locked Takram reference-frame/evaluator architecture. R08 defined typed Weather vertical coordinates. R09 separated coordinate conversion from spatial retarget and split RuntimeCloudPlacement, CloudOpticalClosure and EvaluatorBudget. R10 defined minimum CloudOpticalClosure sufficiency and identified NASA MERRA-2 source-native path optics as a lower-assumption global experiment route. R11 established aggregation/representativeness validity and rejected direct promotion of coarse three-hour path optics to instantaneous local-volume truth. R12 established query-scoped source capability/lifecycle routing and identified NOAA HRRR as a materially stronger regional operational microphysics constraint while retaining model-derived, regional and sub-source-scale limits. R13 tested the microphysics-to-visible-optics bridge. NOAA/NOMADS live native schema exposes the field categories required by the documented Thompson calc_effectRad interface (TMP/PRES/SPFH/CLWMR/NCONCD/CIMIXR/NCCICE/SNMR) plus MASSDEN/FRACCC, but does not expose source-native re_cloud/re_ice/re_snow under those names. DTC/WRF shows radiation effective radii are derived consistently with scheme-specific PSD/mass-size assumptions, and NOAA documents HRRRv4 as a versioned Thompson configuration distinct from newer RRFS implementations. Therefore KAOPU should prefer a version-locked MicrophysicsDiagnosticReplay over a generic q/N radius shortcut, then apply a separate SpectralOpticalClosure. A 7/7 executable semantic probe showed equal mass+number can still produce about 11.5% different projected area when PSD shape changes, per-metre extinction depends on air-density support, and ice optics remain Missing without wavelength/habit/phase assumptions. No actual HRRR GRIB body values were materialized and no physical Observation Root was added. No production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -37,14 +37,16 @@
         "LEARNING_LOG/2026-09-10_WEATHER_REAL_COLUMN_R09.md",
         "LEARNING_LOG/2026-09-10_CLOUD_OPTICAL_CLOSURE_R10.md",
         "LEARNING_LOG/2026-09-10_CLOUD_AGGREGATION_REPRESENTATIVENESS_R11.md",
-        "LEARNING_LOG/2026-09-10_HRRR_SOURCE_CAPABILITY_R12.md"
+        "LEARNING_LOG/2026-09-10_HRRR_SOURCE_CAPABILITY_R12.md",
+        "LEARNING_LOG/2026-09-10_HRRR_MICROPHYSICS_OPTICAL_BRIDGE_R13.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
         "references/weather-column-r09/SOURCE_LOCK.json",
         "references/cloud-optical-r10/SOURCE_LOCK.json",
         "references/cloud-aggregation-r11/SOURCE_LOCK.json",
-        "references/hrrr-source-r12/SOURCE_LOCK.json"
+        "references/hrrr-source-r12/SOURCE_LOCK.json",
+        "references/hrrr-optical-r13/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -56,28 +58,32 @@
       "cloudOpticalClosureProbe": "PROBES/cloud_optical_closure_probe_r10.py",
       "cloudAggregationProbe": "PROBES/cloud_aggregation_representativeness_probe_r11.py",
       "weatherSourceCapabilityProbe": "PROBES/weather_source_capability_probe_r12.py",
+      "hrrrMicrophysicsOpticalBridgeProbe": "PROBES/hrrr_microphysics_optical_bridge_probe_r13.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
         "CURRENT_BEST_VIEW_R10_CLOUD_OPTICAL_CLOSURE.md",
         "CURRENT_BEST_VIEW_R11_CLOUD_AGGREGATION_REPRESENTATIVENESS.md",
-        "CURRENT_BEST_VIEW_R12_SOURCE_CAPABILITY.md"
+        "CURRENT_BEST_VIEW_R12_SOURCE_CAPABILITY.md",
+        "CURRENT_BEST_VIEW_R13_MICROPHYSICS_OPTICS.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
         "TOOL_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
         "TOOL_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json",
         "TOOL_ROUTING_R11_CLOUD_AGGREGATION_REPRESENTATIVENESS.json",
-        "TOOL_ROUTING_R12_SOURCE_CAPABILITY.json"
+        "TOOL_ROUTING_R12_SOURCE_CAPABILITY.json",
+        "TOOL_ROUTING_R13_MICROPHYSICS_OPTICS.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
         "MOTHER_ROUTING_R09_WEATHER_COLUMN_CLOSURE.json",
         "MOTHER_ROUTING_R10_CLOUD_OPTICAL_CLOSURE.json",
         "MOTHER_ROUTING_R11_CLOUD_AGGREGATION_REPRESENTATIVENESS.json",
-        "MOTHER_ROUTING_R12_SOURCE_CAPABILITY.json"
+        "MOTHER_ROUTING_R12_SOURCE_CAPABILITY.json",
+        "MOTHER_ROUTING_R13_MICROPHYSICS_OPTICS.json"
       ],
-      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R12 establishes query-scoped, lifecycle-aware source routing and identifies HRRR as a materially stronger regional operational microphysics constraint than MERRA-2 for current CONUS Weather, without treating it as global or local-volume truth. Next materialize one small official HRRR native GRIB2 subset for a selected region/time containing at least PRES/HGT/CLWMR/CIMIXR/NCONCD/NCCICE/FRACCC/TMP with exact GRIB support/vertical metadata; derive one explicit candidate visible-light CloudOpticalClosure with formula/model/assumption uncertainty; create DerivedSyntheticDisaggregation only if a finer local packet is required; then feed the same optical packet to two evaluator adapters and report source/model, support/disaggregation, optical-closure, numerical/visual and performance errors separately. Keep global fallback/source federation and HRRR-to-RRFS lifecycle migration as separate work. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep three gates distinct. Physical-reference gate: authoritative NRLMSIS 2.1 numerical confirmation plus a tiny authenticated HITRAN checkpoint set. Runtime-atmosphere gate: one KAOPU ReferenceFrame + RuntimeAtmospherePacket consumed by two evaluator adapters. Weather-coupling gate: R13 establishes the required microphysics-to-optics operation boundary and finds that the public HRRR native schema contains the field categories needed for a Thompson-style radiation-effective-radius replay, but exact HRRRv4 replay remains blocked by operational implementation/version authentication and the GRIB body was not materialized. Next lock or numerically authenticate the exact HRRRv4 Thompson effective-radius diagnostic, materialize a tiny official HRRR native range/subset containing TMP/PRES/SPFH/CLWMR/NCONCD/CIMIXR/NCCICE/SNMR/MASSDEN/FRACCC plus exact support metadata, replay liquid/ice/snow effective radii, then attach a versioned visible-band liquid scattering model and a separately justified ice habit/scattering model. Only then feed one renderer-neutral spectral optical packet to two evaluator adapters and report source/model, diagnostic-replay/version, PSD/moment, spectral/scattering, support/disaggregation and evaluator numerical/visual/performance errors separately. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
