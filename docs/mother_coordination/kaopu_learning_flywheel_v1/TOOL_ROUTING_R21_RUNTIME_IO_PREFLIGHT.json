@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu-tool-routing-extension/r21",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-REGISTRY-PREFLIGHT-R21",
+      "domain": "weather-instrumentation-field-eligibility",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 Registry.EM_COMMON at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "internal-symbol to Registry-DNAME identity",
+        "units/dimension/default-I/O identity",
+        "physics-package membership for re_cloud/re_ice/re_snow"
+      ],
+      "doNotUseFor": [
+        "proving runtime numerical values",
+        "proving a package is active without the run configuration",
+        "physical atmospheric Observation"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-RUNTIME-IO-PARSER-R21",
+      "domain": "weather-instrumentation-runtime-resolution",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 frame/module_domain.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "source-generation-specific DNAME matching behavior",
+        "stream-mask mutation semantics",
+        "missing-field warning behavior",
+        "runtime modification-count limits"
+      ],
+      "doNotUseFor": [
+        "assuming parser behavior transfers unchanged to another WRF generation",
+        "claiming numerical non-interference from source inspection alone"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-RUNTIME-IO-DOC-R21",
+      "domain": "runtime-io-contract-reference",
+      "toolOrSource": "official WRF runtime-I/O tutorial and Users Guide",
+      "authority": "primary-official-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "Registry quoted-name identity",
+        "history stream 0 semantics",
+        "warning-versus-abort policy",
+        "state-variable prerequisite"
+      ],
+      "doNotUseFor": [
+        "overriding locked HRRRv4 parser behavior where source generations differ"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-RUNTIME-IO-PREFLIGHT-PROBE-R21",
+      "domain": "coordinator-source-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_runtime_io_preflight_probe_r21.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "checking the exact three-field instrumentation manifest against locked source facts",
+        "checking fail-fast policy and syntax/modification bounds",
+        "preventing L1 execution when source-level eligibility is already invalid"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR execution evidence",
+        "control/instrumented non-interference",
+        "ReplayStatus promotion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
