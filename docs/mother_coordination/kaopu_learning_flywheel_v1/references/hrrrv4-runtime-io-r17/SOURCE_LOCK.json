@@ -1,0 +1,116 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-runtime-io-r17",
+  "updatedAt": "2026-09-10",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "physicalObservationRootsAdded": false,
+  "engineeringRoots": [
+    {
+      "id": "NOAA-EMC-HRRRV4-REGISTRY-ARW",
+      "authority": "primary-official-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/Registry.EM",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/Registry.EM_COMMON"
+      ],
+      "lockedFacts": [
+        "Registry.EM includes Registry.EM_COMMON for the EM/ARW core",
+        "re_cloud, re_ice and re_snow are state variables with IO token r, not h",
+        "thompsonaero mp_physics==28 carries state:re_cloud,re_ice,re_snow"
+      ],
+      "limits": [
+        "Registry membership proves state availability to the compiled model, not presence in every runtime file",
+        "r means restart association; it does not imply history output"
+      ]
+    },
+    {
+      "id": "WRF-REGISTRY-IO-SEMANTICS",
+      "authority": "primary-official-documentation",
+      "repository": "wrf-model/Users_Guide",
+      "commit": "cc8dc53ef00a466adf5c20fa230a704c1e3f12f8",
+      "file": "software.rst",
+      "lockedFacts": [
+        "WRF Registry IO token i means input, r means restart and h means history"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-RUNTIME-IO",
+      "authority": "primary-official-source-documentation",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/README.io_config",
+        "sorc/hrrr_wrfarw.fd/WRFV3.9/Registry/registry.io_boilerplate"
+      ],
+      "lockedFacts": [
+        "iofields_filename can add or remove existing state variables from history or input streams at run time without recompiling",
+        "the syntax is op:streamtype:streamid:variables",
+        "history stream 0 is the main history stream",
+        "iofields_filename defaults to NONE_SPECIFIED"
+      ],
+      "candidateInstrumentation": "+:h:0:re_cloud,re_ice,re_snow",
+      "limits": [
+        "documentation establishes the mechanism but this bounded cycle did not execute a compiled HRRR binary with the override"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-CONUS-RUN-TEMPLATE",
+      "authority": "primary-official-configuration",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "file": "parm/conus/hrrr_run_namelist.input",
+      "lockedFacts": [
+        "template run_hours is 12",
+        "template restart is false",
+        "template restart_interval is 5000 minutes",
+        "template io_form_history and io_form_restart are NetCDF form 2",
+        "the time_control block does not activate iofields_filename"
+      ],
+      "limits": [
+        "operational job scripts may alter template values; this source lock does not claim every production cycle ran exactly these literal time-control values"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-NWGES-HISTORY-CARRY",
+      "authority": "primary-official-workflow-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "files": [
+        "scripts/conus/exhrrr_post.sh",
+        "scripts/conus/exhrrr_wrfbufr.sh",
+        "release_notes_v4.1.20"
+      ],
+      "lockedFacts": [
+        "exhrrr_post.sh copies INPUT_DATA/wrfout_d01_<time> into HRRRGES_SFC/hrrr_<cycle>f<forecast-hour>",
+        "exhrrr_wrfbufr.sh later copies an HRRRGES_SFC file back to a wrfoutd01_<time> name",
+        "v4.1.20 release notes state the first 18 forecast hours of model output are saved to COM/nwges/hrrrges_sfc and add about 2.59 TB/day"
+      ],
+      "limits": [
+        "this identifies the nwges object as carried WRF history/model output, not a restart file",
+        "this cycle did not byte-inspect the current multi-gigabyte nwges NetCDF object"
+      ]
+    },
+    {
+      "id": "NOAA-NOMADS-HRRR-NWGES-LIVE",
+      "authority": "primary-official-live-distribution",
+      "checkedAt": "2026-09-10",
+      "urls": [
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/v4.1/nwges/hrrrges_sfc/conus/",
+        "https://nomads.ncep.noaa.gov/pub/data/nccf/com/hrrr/v4.1/"
+      ],
+      "lockedFacts": [
+        "NOMADS exposes current hrrrges_sfc CONUS objects and current listings show individual objects around 15 GB"
+      ],
+      "limits": [
+        "container networking could not range-fetch the binary object in this bounded cycle",
+        "directory presence is not evidence that a specific variable exists in the file"
+      ]
+    }
+  ],
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "external AI output is candidate interpretation only and is not an Observation Root"
+  }
+}
