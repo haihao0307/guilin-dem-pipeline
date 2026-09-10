@@ -1,0 +1,105 @@
+name: Landscape pre-pack loaded capture
+
+on:
+  push:
+    branches:
+      - review/landscape-prepack-compare-20260911
+    paths:
+      - .github/workflows/landscape-prepack-loaded-capture.yml
+
+permissions:
+  contents: write
+
+jobs:
+  loaded-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/landscape-prepack-compare-20260911
+          fetch-depth: 1
+      - name: Fetch exact pre-pack candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/landscape-loaded qa/landscape-history-loaded
+          curl --fail --location --retry 5 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/89ee5141357f35ac822d5d2d0d1481947d7f6cc2/workbenches/landscape-function/index.html' -o /tmp/landscape-loaded/A_BASELINE.html
+          curl --fail --location --retry 5 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html' -o /tmp/landscape-loaded/B_SURFACE.html
+      - name: Install browser controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright-core@1.55.0
+      - name: Serve and capture after generator finishes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8766 --directory /tmp/landscape-loaded >/tmp/landscape-loaded/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          export CHROME
+          cat > /tmp/capture.mjs <<'JS'
+          import { chromium } from 'playwright-core';
+          import fs from 'fs';
+          const browser = await chromium.launch({executablePath:process.env.CHROME,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader-webgl','--enable-unsafe-swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+          for (const [name,file] of [['A_BASELINE','A_BASELINE.html'],['B_SURFACE','B_SURFACE.html']]) {
+            const page = await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:1});
+            const errors=[];
+            page.on('pageerror',e=>errors.push('pageerror: '+e.message));
+            page.on('console',m=>{ if(m.type()==='error') errors.push('console: '+m.text()); });
+            await page.goto('http://127.0.0.1:8766/'+file,{waitUntil:'domcontentloaded',timeout:120000});
+            let ready=false;
+            try {
+              await page.waitForFunction(() => {
+                const l=document.querySelector('#loading');
+                return l && l.classList.contains('hidden');
+              },null,{timeout:240000});
+              ready=true;
+            } catch(e) { errors.push('wait: '+e.message); }
+            await page.waitForTimeout(2500);
+            const state=await page.evaluate(() => ({
+              loadingClass:document.querySelector('#loading')?.className||null,
+              status:document.querySelector('#status')?.textContent||null,
+              title:document.title,
+              canvas:[document.querySelector('canvas')?.width||0,document.querySelector('canvas')?.height||0]
+            }));
+            fs.writeFileSync(`qa/landscape-history-loaded/${name}.json`,JSON.stringify({ready,state,errors},null,2));
+            await page.screenshot({path:`qa/landscape-history-loaded/${name}.png`,fullPage:false});
+            await page.close();
+          }
+          await browser.close();
+          JS
+          node /tmp/capture.mjs
+          cat qa/landscape-history-loaded/*.json
+      - name: Make compact review images
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont
+          from pathlib import Path
+          root=Path('qa/landscape-history-loaded')
+          for n in ['A_BASELINE','B_SURFACE']:
+              im=Image.open(root/f'{n}.png').convert('RGB')
+              im.thumbnail((720,450),Image.Resampling.LANCZOS)
+              im.save(root/f'{n}_SMALL.jpg',quality=62,optimize=True)
+          a=Image.open(root/'A_BASELINE_SMALL.jpg').convert('RGB')
+          b=Image.open(root/'B_SURFACE_SMALL.jpg').convert('RGB')
+          W=max(a.width,b.width); label=32; H=a.height+b.height+label*2
+          out=Image.new('RGB',(W,H),(20,22,21)); d=ImageDraw.Draw(out); f=ImageFont.load_default()
+          d.text((12,10),'A  approved water-eroded baseline · 2026-09-07 05:52Z',font=f,fill='white'); out.paste(a,((W-a.width)//2,label))
+          y=label+a.height; d.text((12,y+10),'B  surface-only microscope candidate · 2026-09-07 05:53Z',font=f,fill='white'); out.paste(b,((W-b.width)//2,y+label))
+          out.save(root/'AB_PREPACK_LOADED.jpg',quality=66,optimize=True)
+          PY
+      - name: Commit loaded screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f qa/landscape-history-loaded
+          git commit -m 'qa(landscape): add fully loaded pre-pack water-eroded screenshots'
+          git push origin HEAD:review/landscape-prepack-compare-20260911
