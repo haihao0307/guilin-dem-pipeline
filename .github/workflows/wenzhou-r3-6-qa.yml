@@ -42,6 +42,7 @@ jobs:
           set -euo pipefail
           python tools/r3-6/validate_static.py | tee /tmp/r36-static.json
           grep -q '"passed": true' /tmp/r36-static.json
+          python -m py_compile tools/r3-6/delayed_http_server.py
           node --check site/dist/r3-6/bootstrap.js
           node --check site/dist/r3-6/osm-runtime.js
           node --check tools/r3-6/browser_qa.mjs
@@ -56,18 +57,19 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Local functional browser QA
+      - name: Local functional browser QA with real delayed-response abort gate
         run: |
           set -euo pipefail
-          python -m http.server 8765 --directory . >/tmp/r36-http.log 2>&1 &
+          python tools/r3-6/delayed_http_server.py --port 8765 --directory . --stress-delay-ms 500 >/tmp/r36-http.log 2>&1 &
           ready=0
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null; then ready=1; break; fi
             sleep 1
           done
           test "$ready" = 1
-          R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-local.json
+          R36_STRESS_MODE=server-header R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-local.json
           grep -q '"passed": true' /tmp/r36-local.json
+          grep -q 'CLIENT_ABORT' /tmp/r36-http.log
 
       - name: Fixed-commit raw.githack browser QA
         env:
@@ -82,7 +84,7 @@ jobs:
             sleep 4
           done
           test "$ready" = 1
-          R36_URL="$URL" node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-public.json
+          R36_STRESS_MODE=public-nongating R36_URL="$URL" node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-public.json
           grep -q '"passed": true' /tmp/r36-public.json
           echo "$URL" > /tmp/r36-preview.txt
 
