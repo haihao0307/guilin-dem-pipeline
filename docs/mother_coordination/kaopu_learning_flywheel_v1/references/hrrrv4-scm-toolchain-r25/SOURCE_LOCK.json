@@ -1,0 +1,110 @@
+{
+  "schema": "kaopu-source-lock/hrrrv4-scm-toolchain-r25",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-source-lock",
+  "productionMutationAllowed": false,
+  "roots": [
+    {
+      "id": "NOAA-EMC-HRRRV4-WRF39-ARCH",
+      "role": "primary-official-locked-build-source",
+      "independentPhysicalObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/arch/configure_new.defaults",
+      "blob": "f454bb000d020e88856d5be54de0df1b6fc82856",
+      "lockedFacts": [
+        "the GNU architecture advertises serial, smpar, dmpar and dm+sm modes",
+        "the base GNU stanza has DMPARALLEL commented and uses gfortran/gcc as serial compilers",
+        "mpif90/mpicc are distributed-memory compiler wrappers, not evidence that serial SCM requires MPI"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-WRF39-CONFIGURE",
+      "role": "primary-official-locked-build-source",
+      "independentPhysicalObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/configure",
+      "blob": "6a2353f02837fe2b136362662161d7ad7acf02af",
+      "lockedFacts": [
+        "MPI capability tests are conditional on a configured DMPARALLEL build",
+        "the configure script detects libnetcdff separately from libnetcdf and can consult nf-config",
+        "the script can technically configure without NetCDF, but that does not preserve the locked SCM NetCDF I/O contract"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-WRF39-COMPILE-MAKE",
+      "role": "primary-official-locked-build-source",
+      "independentPhysicalObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "artifacts": [
+        {"path": "sorc/hrrr_wrfarw.fd/WRFV3.9/compile", "blob": "aca4393b8cd6898edcf676460e03768a114b54ff"},
+        {"path": "sorc/hrrr_wrfarw.fd/WRFV3.9/Makefile", "blob": "6bb8d424fc3216e81a4a33759735ef38591e8d33"}
+      ],
+      "lockedFacts": [
+        "the locked compile driver is a csh script",
+        "the locked Makefile exposes an em_scm_xy target that builds the SCM ideal initializer plus wrf.exe"
+      ]
+    },
+    {
+      "id": "NOAA-EMC-HRRRV4-SCM-NAMELIST",
+      "role": "primary-official-locked-test-configuration",
+      "independentPhysicalObservationRoot": false,
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/namelist.input",
+      "lockedFacts": [
+        "the shipped SCM uses io_form_history=2, io_form_restart=2, io_form_input=2, io_form_boundary=2 and io_form_auxinput3=2",
+        "preserving this canonical harness therefore preserves NetCDF-based input/output rather than switching formats to evade a missing library"
+      ]
+    },
+    {
+      "id": "NCAR-WRF-CURRENT-BUILD-DOC",
+      "role": "primary-official-current-documentation",
+      "independentPhysicalObservationRoot": false,
+      "urls": [
+        "https://www2.mmm.ucar.edu/wrf/users/wrf_users_guide/build/html/running_wrf.html",
+        "https://www2.mmm.ucar.edu/wrf/site/compiling_tutorial.html",
+        "https://www2.mmm.ucar.edu/wrf/users/wrf_users_guide/build/html/compiling.html"
+      ],
+      "lockedFacts": [
+        "current WRF documentation states 1-D and 2-D idealized cases must use a serial compiling option",
+        "current WRF build instructions require netCDF-C and netCDF-Fortran",
+        "MPI/OpenMP libraries are conditional on choosing parallel processing"
+      ],
+      "limits": [
+        "current documentation is corroboration for transferable build semantics and must not silently override locked HRRRv4/WRF3.9 implementation details"
+      ]
+    },
+    {
+      "id": "UNIDATA-NETCDF-FORTRAN",
+      "role": "primary-official-library-documentation",
+      "independentPhysicalObservationRoot": false,
+      "url": "https://docs.unidata.ucar.edu/netcdf-fortran/current/nc_f77_interface_guide.html",
+      "lockedFacts": [
+        "Fortran callers require the netCDF Fortran interface/include/module",
+        "libnetcdff is distinct from libnetcdf and depends on the C library"
+      ]
+    }
+  ],
+  "boundedRuntimeEvidence": {
+    "probe": "PROBES/hrrrv4_scm_toolchain_probe_r25.py",
+    "probeSha256": "79d2ccfb66de7a4df832c922d642608440f721d7f3af8b2c4f78418be52665d1",
+    "environmentFindings": [
+      "gfortran 14.2.0, gcc, make, perl, m4, cpp, ar, sed and awk were present",
+      "netCDF-C 4.9.3 compiled, linked and executed through a C probe",
+      "netCDF-Fortran compilation failed because netcdf.inc/libnetcdff interface was absent",
+      "csh was absent",
+      "mpif90 was absent but is not a hard blocker for the serial SCM path",
+      "package installation could not complete because the bounded runtime could not resolve external package repositories"
+    ],
+    "evidenceClass": "environment-and-toolchain-executable-evidence",
+    "physicalObservationRootEligible": false
+  },
+  "externalAI": {
+    "usedAsEvidence": false,
+    "policy": "candidate interpretation only; no external AI output is an Observation Root"
+  }
+}
