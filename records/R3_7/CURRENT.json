@@ -99,7 +99,8 @@
     "wrb": {
       "status": "pre-audited-not-yet-integrated",
       "officialMostProbableLegendResolved": true,
-      "criticalIssue": "The old aligned MostProbable categorical raster was bilinear-resampled. Do not integrate it directly. Rebuild MostProbable from the 30 aligned probability layers by argmax or reproject the native categorical raster with nearest-neighbour, then cross-check.",
+      "correctedAudit": "Independent reprojection of the native categorical MostProbable raster with nearest-neighbour matched the archived aligned MostProbable raster pixel-for-pixel. The roughly 6.1% disagreement is instead between that official categorical path and argmax taken after separately bilinear-aligning the 30 continuous probability surfaces. This is an order-of-operations difference, not proof that the categorical archive was corrupted.",
+      "integrationPolicy": "Preserve official MostProbable categorical evidence through nearest-neighbour semantics and preserve the 30 probability surfaces separately. If a post-alignment argmax is shown, label it as a derived interpolated-probability classification and do not silently replace official MostProbable.",
       "probabilityLayerRole": "estimated WRB Reference Soil Group occurrence probability, not field-class truth"
     },
     "profileDepths": "integrate the remaining five SoilGrids depth intervals without implying farm-scale profile truth",
