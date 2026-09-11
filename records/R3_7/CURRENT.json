@@ -45,7 +45,25 @@
   "currentWorkbenchCleanup": {
     "legacyR3_3QueryOnlySoilAppearanceInstalled": false,
     "legacyHistoryDeleted": false,
-    "note": "R3.7 suppresses the redundant R3.3 12-query local appearance hook only in the current workbench. R3.3 files, fixed history and recovery chain remain untouched."
+    "oneOffR3_6FilesRemovedFromR3_7Mainline": [
+      ".github/workflows/wenzhou-r3-6-startup-diagnostic.yml",
+      "tools/r3-6/startup_diagnostic.mjs",
+      ".github/workflows/wenzhou-r3-6-query01-diagnostic.yml",
+      "tools/r3-6/diagnose_query01.mjs",
+      ".github/workflows/wenzhou-r3-6-same-runner-compare.yml",
+      "tools/r3-6/same_runner_compare.mjs",
+      ".github/workflows/wenzhou-r3-6-osm-runtime-compare.yml",
+      "tools/r3-6/performance_compare.mjs"
+    ],
+    "formalR3_6QaRetained": [
+      ".github/workflows/wenzhou-r3-6-qa.yml",
+      "tools/r3-6/browser_qa.mjs",
+      "tools/r3-6/browser_qa_timer_wrapper.mjs",
+      "tools/r3-6/cancel_probe.mjs",
+      "tools/r3-6/delayed_http_server.py",
+      "tools/r3-6/validate_static.py"
+    ],
+    "note": "Cleanup is limited to the R3.7 mainline. R3.3/R3.6 historical branches, fixed commits, QA records and permanent releases remain untouched."
   },
   "qa": {
     "runId": 34577823936,
