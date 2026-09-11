@@ -1,0 +1,40 @@
+{
+  "schema": "kaopu-mother-routing/r34",
+  "status": "prepared-in-coordinator-awaiting-feedback",
+  "inherits": "MOTHER_ROUTING_R33_GAUSSIAN_HANDOFF.json",
+  "fromLearning": "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
+  "meetingFeedbackApplied": "MEETINGS/2026-09-12/TECHNICAL_REVIEW.md",
+  "routes": [
+    {
+      "mother": "KAOPU coordinator",
+      "action": "Add separate pre-pack source validation, post-pack SPZ envelope validation, awaited decode and semantic comparison stages to the Candidate handoff; retain hashes and the float checkpoint.",
+      "acceptance": "Every stage has an independent status and error list; no downstream pass overwrites an upstream failure or Unknown.",
+      "feedback": null,
+      "acknowledged": false
+    },
+    {
+      "mother": "Three.js Delivery Mothers",
+      "action": "Trial the R34 fail-closed adapter before Three.js r186 SPZLoader. Reject declaration/header mismatch, extensions, SH>3, malformed TOC, wrong stream sizes, truncation and trailing bytes before awaiting decode.",
+      "acceptance": "The 12-test CPU fixture remains green in the actual integration, including pre-pack wrap/saturation rejection and both r186 permissive-envelope counterexamples; target-device and visual gates stay separate.",
+      "feedback": null,
+      "acknowledged": false
+    },
+    {
+      "mother": "Photo Reconstruction Tool Mother candidate",
+      "action": "Before SPZ packing, reject non-finite values, position centers outside the int24/fractionalBits domain, log-scale saturation unless explicitly budgeted, invalid quaternions and absent/invalid metric anchors; preserve a float checkpoint.",
+      "acceptance": "One future real-photo pilot records pre-pack rejection counts, pack/unpack attribute error, image error and scale-anchor evidence separately. RealityScan remains available until user acceptance.",
+      "feedback": null,
+      "acknowledged": false
+    },
+    {
+      "mother": "Object DNA-bearing Mothers",
+      "action": "No new production action. Continue treating a splat as observation/reference or presentation derivative, never as automatic replacement of topology, anchors, collision, articulation, material state, history or regeneration logic.",
+      "acceptance": "Any later trial keeps splat evidence identity separate from Object DNA identity and requires explicit human acceptance.",
+      "feedback": null,
+      "acknowledged": false
+    }
+  ],
+  "deliveryAcknowledged": false,
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}

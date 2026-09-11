@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-learning-queue/r1",
-  "updatedAt": "2026-09-11",
+  "updatedAt": "2026-09-12",
   "policy": {
     "chooseOneQuestionPerCycle": true,
     "preferPrimarySources": true,
@@ -26,20 +26,28 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33 locked COLMAP 2d2f00a, Brush 063945e, SPZ affd0ec and Three.js r186 148ef33. It separates pose solution, uncompressed reconstruction checkpoint, lossy delivery encoding and viewer adapter. Source audit found that COLMAP images store Hamilton world-to-camera pose and T is not camera center; Brush inverts this pose and exports GraphDECO-style PLY; SPZ v4 defaults to RUB but may carry a coordinate-system extension and supports SH4; Three.js r186 skips SPZ vendor extensions and clamps SH to degree 3. A nine-test CPU probe executed the actual Three r186 PLY/SPZ loaders, reproducing correct wxyz-to-covariance conversion and demonstrating SH4 truncation. Source-semantic negative controls reject non-RUB extension-bearing SPZ and quantify default SPZ position/log-scale/SH loss. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts and separated pose, float checkpoint, lossy delivery and viewer identities. R34 read the 2026-09-12 Mother meeting critique, then executed the pinned Niantic SPZ v4 encoder/unpacker and actual Three.js r186 loader on a two-splat RDF-to-RUB SH3 fixture. Twelve CPU checks passed: centers matched Niantic unpack within 6.25e-10 stored units, covariance within 1.083e-7, and all SH1-SH3 bytes exactly. New negative controls showed that r186 accepts one-byte truncation and trailing bytes, while the candidate exact-envelope gate rejects both. The actual Niantic packer also accepted x=2048 at fractionalBits=12 and decoded it as -2048, while log-scales -11 and 6 saturated to -10 and 5.9375; the new pre-pack gate rejects those inputs. This requires separate pre-pack source validation and post-pack envelope validation. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
       "resultLogs": [
-        "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md"
+        "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md"
       ],
       "sourceLocks": [
-        "references/gaussian-handoff-r33/SOURCE_LOCK.json"
+        "references/gaussian-handoff-r33/SOURCE_LOCK.json",
+        "references/gaussian-spz-interop-r34/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
+      "interopProbe": "PROBES/gaussian_spz_three_interop_r34.mjs",
+      "interopProbeResult": "PROBES/gaussian_spz_three_interop_result_r34.json",
+      "candidateDeliveryGate": "ADAPTERS/gaussian_spz_delivery_gate_r34.mjs",
       "candidateContract": "ADAPTERS/gaussian_reconstruction_handoff_contract_r33.json",
       "currentBestViewExtension": "CURRENT_BEST_VIEW_R33_GAUSSIAN_HANDOFF.md",
       "toolRoutingExtension": "TOOL_ROUTING_R33_GAUSSIAN_HANDOFF.json",
       "motherRoutingExtension": "MOTHER_ROUTING_R33_GAUSSIAN_HANDOFF.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with reprojection/registration evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; encode a separate RUB/no-extension/SH<=3 SPZ v4 derivative; compare fixed-view linear renders and attribute statistics before/after packing; then test Three.js r186 on macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence from this gate."
+      "currentBestViewInteropExtension": "CURRENT_BEST_VIEW_R34_GAUSSIAN_SPZ_INTEROP.md",
+      "toolRoutingInteropExtension": "TOOL_ROUTING_R34_GAUSSIAN_SPZ_INTEROP.json",
+      "motherRoutingInteropExtension": "MOTHER_ROUTING_R34_GAUSSIAN_SPZ_INTEROP.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with reprojection/registration evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; preflight finite attributes, normalized quaternions, signed-int24 position range, log-scale saturation and a measured scale anchor before encoding; create a separate RUB/no-extension/SH<=3 SPZ v4 derivative; validate hash, header/declaration agreement, TOC/stream sizes and exact byte-envelope coverage before awaiting Three decode; compare fixed-view linear renders and semantic attribute statistics before/after packing; then test Three.js r186 on macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence from this gate."
     },
     {
       "id": "LQ-TELLUX-001",
