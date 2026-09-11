@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu-xiaoma-coordinator-handoff/r32",
+  "date": "2026-09-11",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "handoffBranch": "coordination/kaopu-xiaoma-handoff-r32-20260911",
+  "authoritativeLearningBranch": "coordination/kaopu-learning-flywheel-r1-20260909",
+  "verifiedStateBaseCommit": "1a8773bb3d4dc7892eb26a995f278e1aacafec13",
+  "frozenR1": true,
+  "productionMotherMutationAllowed": false,
+  "sourceAuditCheckpoint": {
+    "commit": "14d5a6099afc79ee9b1ca3507320435c6527edaf",
+    "branch": "coordination/kaopu-source-gates-r02-20260911",
+    "files": [
+      "experiments/kaopu-wenzhou-source-audit-r02/00_JUDGMENT.md",
+      "experiments/kaopu-wenzhou-source-audit-r02/MOTHER_ROUTING.json"
+    ],
+    "rules": [
+      "inherits learning-flywheel R05/R06 dependency rules",
+      "Longwan negative-control audit is additive",
+      "schema checks, raw-data replay, evidence independence and human acceptance stay separate",
+      "R01 legacy independent-root labels are unverified self-reports",
+      "different reference frames do not automatically constitute an evidence conflict"
+    ]
+  },
+  "telluxR30": {
+    "coordinatorCheckpoint": "d7bdda1d49c25d95f2f174e62a47c32f6a0b48e0",
+    "upstreamSourceLock": "72a1c38b62b5f067720d629da55cf6062b1e1f10",
+    "files": [
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/LEARNING_LOG/2026-09-11_TELLUX_R30.md",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/MOTHER_ROUTING_R30_TELLUX.json",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/CURRENT_BEST_VIEW_R30_TELLUX.md",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/revision_cache_r30.mjs",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/LEARNING_QUEUE.json"
+    ]
+  },
+  "tilesR31": {
+    "commit": "0036f2123537ab6448c2d8f87f759a2ebc0544e3",
+    "files": [
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/CURRENT_BEST_VIEW_R31_TILES_FILTER_RESPONSE.md",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/MOTHER_ROUTING_R31_TILES_FILTER_RESPONSE.json",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/TOOL_ROUTING_R31_TILES_FILTER_RESPONSE.json"
+    ]
+  },
+  "substanceR32": {
+    "commit": "1a8773bb3d4dc7892eb26a995f278e1aacafec13",
+    "files": [
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/LEARNING_LOG/2026-09-11_SUBSTANCE_R32_GRAPH_REPLAY_CONTRACT.md",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/CURRENT_BEST_VIEW_R32_SUBSTANCE_GRAPH_REPLAY.md",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/MOTHER_ROUTING_R32_SUBSTANCE_GRAPH_REPLAY.json",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/TOOL_ROUTING_R32_SUBSTANCE_GRAPH_REPLAY.json",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/substance_graph_contract_probe_r32.py",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/substance_graph_contract_result_r32.json",
+      "docs/mother_coordination/kaopu_learning_flywheel_v1/references/substance-graph-contract-r32/SOURCE_LOCK.json"
+    ]
+  },
+  "takeover": {
+    "oldWindowState": "STOP_AFTER_HANDOFF",
+    "newWindowRule": "VERIFY_CURRENT_REMOTE_HEAD_THEN_CONTINUE",
+    "duplicateCoordinatorWorkAllowed": false,
+    "duplicateRecurringTaskAllowed": false
+  }
+}

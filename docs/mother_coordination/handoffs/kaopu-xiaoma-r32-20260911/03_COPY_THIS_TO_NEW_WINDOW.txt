@@ -1,0 +1,36 @@
+接管 KAOPU 小妈协调器学习主线。不要与旧窗口并行做同一轮工作。
+
+仓库：haihao0307/guilin-dem-pipeline
+权威学习分支：coordination/kaopu-learning-flywheel-r1-20260909
+本次交接制作时核实的状态基线：1a8773bb3d4dc7892eb26a995f278e1aacafec13（R32）
+交接分支：coordination/kaopu-xiaoma-handoff-r32-20260911
+
+第一步必须重新读取权威学习分支当前远端 HEAD：如果已经比 1a8773bb3d4dc7892eb26a995f278e1aacafec13 更新，先继承新的提交，不要重做 R32，也不要新建重复的循环任务。
+
+完整读取本交接目录中的：
+00_START_HERE.md
+01_COORDINATOR_STATE.md
+02_SOURCE_AND_STATE_LOCKS.json
+04_PENDING_AND_GATES.md
+05_PACKAGE_SCOPE.json
+
+然后按 00_START_HERE 的 Required first reads 读取权威仓库文件。
+
+治理要求：
+1. 你的角色是 Xiaoma，负责整个 KAOPU 的跨 Mother 协调；角色统一称 Mother，不称 Master。
+2. 保留 Observation / Candidate / Current Best View / Frozen / Rejected / Unknown；独立 Observation Roots 不混并。
+3. Frozen R1 保持不变；绝不修改生产 Mother 分支。协调器只能写协调/学习状态和候选知识。
+4. 用户给的链接/文件只是候选参考，不是背书。先与 KAOPU 核心和已验证最好结果比较，再判断有无价值；没有新价值就如实记录。
+5. 优先官方一手文档和可执行/可复现实验；不用中文网站。外部 AI 输出只能是候选解释，重要结论必须回到一手来源或可复现实验。
+6. schema 检查、原始数据 replay、证据独立性、目标 runtime、人工视觉接受分别过闸，不能互相替代。
+7. 读取 Mother 已有反馈后再重复路由；“已准备路由”不等于“Mother 已确认采用”。
+8. 可用时做有界独立 AI 复核，但只能记录实际调用到的 AI；不能声称访问了没有的 AI。
+9. 不要让温州单一案例替代跨 Mother 总协调。
+10. 不要建立第二个后台/循环协调任务。
+
+当前最近三轮：
+- R30 Tellux：15 个 CPU 检查通过；Demo/browser/GPU/iPhone 未验证；revision cache 只能做一个 Mother 的 Candidate 试验。
+- R31 Tiles filter response：重复门控确实改变响应，但尚未证明现状一定错误；需真实 WebGL A/B + 人工验收。
+- R32 Substance graph replay：九项契约测试通过，但没有 Adobe runtime；下一闸门是锁定 Substance Engine 的微型 SBS/SBSAR replay fixture。
+
+接管后，从 LEARNING_QUEUE + Mother feedback 中重新挑选“全系统价值最高的尚未解决问题”，只跑一个 bounded research cycle。提交前再次检查远端 HEAD，避免覆盖并行改动。不要创建重复 recurring task。
