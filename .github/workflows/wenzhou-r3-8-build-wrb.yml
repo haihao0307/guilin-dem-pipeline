@@ -1,0 +1,92 @@
+name: Wenzhou R3.8 Build WRB Context
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-8-soil-profile-water-20260911
+    paths:
+      - 'tools/r3-8/build_wrb_context.py'
+      - '.github/workflows/wenzhou-r3-8-build-wrb.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install GDAL + numpy
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal python3-numpy unzip
+      - name: Download permanent WRB evidence asset
+        run: |
+          set -euo pipefail
+          URL='https://github.com/haihao0307/guilin-dem-pipeline/releases/download/wenzhou-r3.7-soilgrids-evidence-20260911/Wenzhou_R3_7_SoilGrids_wrb.zip'
+          curl -fL --retry 4 --retry-delay 2 "$URL" -o /tmp/wrb.zip
+          echo 'a32110ba7bdf94c95e61486e7514c8a856957350ca25caedf444ef2fe5d97b30  /tmp/wrb.zip' | sha256sum -c -
+          rm -rf /tmp/wrb-stage && mkdir -p /tmp/wrb-stage
+          unzip -q /tmp/wrb.zip -d /tmp/wrb-stage
+      - name: Reverify permanent payload manifest
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('/tmp/wrb-stage')
+          m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+          assert m['passed'] and m['payloadCount']==65
+          for x in m['payloads']:
+              p=root/x['path']; assert p.is_file(); assert p.stat().st_size==x['bytes']
+              h=hashlib.sha256();
+              with p.open('rb') as f:
+                  for c in iter(lambda:f.read(8*1024*1024),b''): h.update(c)
+              assert h.hexdigest()==x['sha256'], p
+          print({'passed':True,'checked':len(m['payloads'])})
+          PY
+      - name: Build WRB browser context and audit operator order
+        run: |
+          set -euo pipefail
+          rm -rf site/dist/r3-8/data/wrb
+          /usr/bin/python3 tools/r3-8/build_wrb_context.py --stage /tmp/wrb-stage --output site/dist/r3-8/data/wrb | tee /tmp/r38-wrb-build.json
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          root=pathlib.Path('site/dist/r3-8/data/wrb')
+          m=json.loads((root/'wrb-context.json').read_text(encoding='utf-8'))
+          assert m['audit']['archivedAlignedMostProbableEqualsIndependentNearestReprojection'] is True
+          assert m['audit']['validLockedDomainProbabilityPixels']>500000
+          assert 0.04 < m['audit']['officialVsPostAlignmentArgmaxMismatchRatio'] < 0.08
+          assert len(m['legend'])==30 and len(m['probabilityLayers'])==30
+          assert m['truthBoundary']['canonicalTruth'] is False
+          assert m['displayPolicy']['postAlignmentArgmaxIsDerivedAuditLayer'] is True
+          for x in m['probabilityLayers']:
+              p=root/x['path']; assert p.stat().st_size==x['bytes']; assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']
+          for x in m['outputs'].values():
+              p=root/x['path']; assert p.stat().st_size==x['bytes']; assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']
+          print({'passed':True,'mismatchRatio':m['audit']['officialVsPostAlignmentArgmaxMismatchRatio']})
+          PY
+      - name: Commit verified WRB browser context transactionally
+        run: |
+          set -euo pipefail
+          BRANCH=feature/wenzhou-r3-8-soil-profile-water-20260911
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add site/dist/r3-8/data/wrb
+          if git diff --cached --quiet; then echo 'No WRB changes'; exit 0; fi
+          git commit -m 'data(wenzhou): add audited R3.8 WRB context'
+          DATA_COMMIT=$(git rev-parse HEAD)
+          git fetch origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
+          git reset --hard "origin/${BRANCH}"
+          git cherry-pick "$DATA_COMMIT"
+          git push origin "HEAD:${BRANCH}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-8-wrb-proof-${{ github.sha }}
+          path: /tmp/r38-wrb-build.json
+          retention-days: 30
