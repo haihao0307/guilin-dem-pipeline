@@ -1,0 +1,48 @@
+{
+  "schema": "kaopu-gaussian-sh-direction-contract/r36",
+  "status": "candidate",
+  "sourceConvention": {
+    "implementation": "GraphDECO reference",
+    "coordinateFrame": "RDF",
+    "viewDirection": "normalize(splatCenter - cameraCenter)",
+    "coefficientLayout": "coefficient-major, RGB-channel-minor",
+    "maximumDegree": 3
+  },
+  "deliveryConvention": {
+    "implementation": "Three.js r186 constrained SPZ path",
+    "coordinateFrame": "RUB",
+    "viewDirection": "normalize(splatCenter - cameraCenter)",
+    "rdfToRubDirection": ["+x", "-y", "-z"],
+    "maximumDegree": 3
+  },
+  "requiredAtomicTransform": [
+    "splat centers",
+    "camera centers and poses",
+    "quaternion or covariance orientation",
+    "SH1-SH3 coefficient orientation"
+  ],
+  "failClosedIf": [
+    "source or target coordinate frame is unspecified",
+    "view-vector order is unspecified",
+    "SH coefficient layout is unspecified",
+    "geometry is transformed without the matching SH transformation",
+    "stored SH degree exceeds viewer capability",
+    "directional regression exceeds its declared numeric budget"
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_sh_direction_r36.mjs",
+    "result": "PROBES/gaussian_sh_direction_result_r36.json",
+    "syntheticDirections": 14,
+    "coefficients": 45,
+    "maximumPositivePathError": 1.0450229925851318e-7,
+    "negativeControlMinimumMaxError": 1.602190796525118
+  },
+  "notClaims": [
+    "Brush export was executed",
+    "GPU shader output was rendered",
+    "SPZ quantization is lossless for arbitrary coefficients",
+    "real reconstruction appearance is accepted",
+    "SH is physical relighting"
+  ],
+  "productionMutationAllowed": false
+}

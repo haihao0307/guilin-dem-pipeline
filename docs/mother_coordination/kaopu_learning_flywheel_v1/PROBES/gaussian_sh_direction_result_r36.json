@@ -1,0 +1,81 @@
+{
+  "schema": "kaopu-gaussian-sh-direction-probe/r36",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "graphdeco": "54c035f7834b564019656c3e3fcc3646292f727d",
+    "spz": "affd0ecea7fbb4c265ee119475af7ee5b2997482",
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519"
+  },
+  "testsRun": 6,
+  "failures": [],
+  "tests": [
+    {
+      "name": "Pinned Three r186 source uses center-minus-camera and the locked SH1-SH3 basis",
+      "pass": true,
+      "detail": {
+        "graphdecoRendererBlob": "e12f4b68037e4437feb670d7f8750b4846cca4cb",
+        "graphdecoShUtilsBlob": "bbca7d192aa3a7edf8c5b2d24dee535eac765785",
+        "threeGaussianSplatBlob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+      }
+    },
+    {
+      "name": "Actual Niantic RDF-to-RUB conversion preserves the SH1-SH3 directional function",
+      "pass": true,
+      "detail": {
+        "maxError": 0,
+        "meanMaxChannelError": 0,
+        "directions": 14
+      }
+    },
+    {
+      "name": "Actual Niantic packing and Three r186 loading preserve the quantization-grid coefficients",
+      "pass": true,
+      "detail": {
+        "coefficientCount": 45,
+        "maxCoefficientError": 0
+      }
+    },
+    {
+      "name": "Three r186 rounded SH basis preserves the GraphDECO directional function within source-rounding error",
+      "pass": true,
+      "detail": {
+        "maxError": 1.0450229925851318e-7,
+        "meanMaxChannelError": 3.867303021322972e-8,
+        "directions": 14
+      }
+    },
+    {
+      "name": "Flipping positions/directions without transforming SH is a detected negative control",
+      "pass": true,
+      "detail": {
+        "maxError": 1.602190796525118,
+        "meanMaxChannelError": 1.0117850163033302,
+        "directions": 14
+      }
+    },
+    {
+      "name": "Using camera-minus-center instead of center-minus-camera is a detected negative control",
+      "pass": true,
+      "detail": {
+        "maxError": 1.6021908159791487,
+        "meanMaxChannelError": 1.0872200724160783,
+        "directions": 14
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "syntheticDirectionalFixtureOnly": true,
+    "nianticCoordinateConverterExecuted": true,
+    "nianticPackerExecuted": true,
+    "threeR186SpzLoaderExecuted": true,
+    "threeRendererSourceAuthenticatedButGpuNotExecuted": true,
+    "brushTrainingExecuted": false,
+    "userPhotosAvailable": false,
+    "gpuRenderExecuted": false,
+    "perceptualImageComparisonExecuted": false,
+    "humanAcceptancePerformed": false
+  },
+  "observationRootNote": "Three and SPZ form one dependent delivery chain; GraphDECO supplies the trainer-reference convention. This is derived interoperability evidence, not physical corroboration.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}
