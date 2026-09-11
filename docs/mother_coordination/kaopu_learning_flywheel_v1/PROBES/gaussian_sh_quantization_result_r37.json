@@ -1,0 +1,95 @@
+{
+  "schema": "kaopu-gaussian-sh-quantization-probe/r37",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "graphdeco": "54c035f7834b564019656c3e3fcc3646292f727d",
+    "spz": "affd0ecea7fbb4c265ee119475af7ee5b2997482",
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519"
+  },
+  "testsRun": 5,
+  "failures": [],
+  "tests": [
+    {
+      "name": "Default Niantic two-stage quantizer needs the widened per-band bound",
+      "pass": true,
+      "detail": [
+        {"degree": 1, "coefficientCount": 576, "maxError": 0.034995973000000014, "rmse": 0.017798914750542964, "naiveHalfStep": 0.03125, "twoStageBound": 0.03515625},
+        {"degree": 2, "coefficientCount": 960, "maxError": 0.06637799700000002, "rmse": 0.036839521383861755, "naiveHalfStep": 0.0625, "twoStageBound": 0.06640625},
+        {"degree": 3, "coefficientCount": 1344, "maxError": 0.06636399000000001, "rmse": 0.03680078651850981, "naiveHalfStep": 0.0625, "twoStageBound": 0.06640625}
+      ]
+    },
+    {
+      "name": "Actual arbitrary-coefficient handoff has a measured directional error distribution",
+      "pass": true,
+      "detail": {
+        "points": 64,
+        "directions": 2054,
+        "samples": 394368,
+        "maxError": 0.1317093809539963,
+        "rmse": 0.03701786798332178,
+        "maxAt": {"point": 25, "directionIndex": 125, "channel": 2}
+      }
+    },
+    {
+      "name": "Candidate gate accepts the measured in-domain fixture only with explicit budgets",
+      "pass": true,
+      "detail": {
+        "errors": [],
+        "warnings": [],
+        "metrics": {
+          "coefficientCount": 2880,
+          "outsideCodecDomainCount": 0,
+          "maxCoefficientError": 0.06637799700000002,
+          "coefficientRmse": 0.03387845037435832,
+          "measuredDirectionalMax": 0.1317093809539963
+        }
+      }
+    },
+    {
+      "name": "Actual Niantic packer saturates out-of-domain SH and the gate rejects it",
+      "pass": true,
+      "detail": {
+        "sourcePositiveAfterRdfToRub": 1.25,
+        "decodedPositive": 0.9921875,
+        "sourceNegativeAfterRdfToRub": -1.25,
+        "decodedNegative": -1,
+        "gate": {
+          "errors": ["source-sh-outside-declared-minus-one-to-one-domain", "coefficient-error-budget-exceeded"],
+          "warnings": [],
+          "metrics": {
+            "coefficientCount": 45,
+            "outsideCodecDomainCount": 2,
+            "maxCoefficientError": 0.2578125,
+            "coefficientRmse": 0.05353447179284474,
+            "measuredDirectionalMax": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Missing budgets and a stricter measured-direction budget fail separately",
+      "pass": true,
+      "detail": {
+        "missingBudgetErrors": ["missing-explicit-quantization-budget"],
+        "strictBudgetErrors": ["directional-error-budget-exceeded"]
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "deterministicSyntheticCoefficientsOnly": true,
+    "coefficientDomain": [-0.95, 0.95],
+    "points": 64,
+    "directions": 2054,
+    "nianticPackerExecuted": true,
+    "threeR186SpzLoaderExecuted": true,
+    "graphdecoAndThreeBasisMirroredFromLockedSource": true,
+    "brushTrainingExecuted": false,
+    "userPhotosAvailable": false,
+    "gpuRenderExecuted": false,
+    "perceptualImageComparisonExecuted": false,
+    "humanAcceptancePerformed": false
+  },
+  "interpretation": "Directional errors are linear SH-contribution errors for this deterministic fixture, not final pixel errors or a universal quality threshold.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}

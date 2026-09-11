@@ -26,18 +26,20 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts. R34 executed actual Niantic SPZ v4 and Three r186 center/covariance/SH interop while establishing separate source-range and envelope gates. R35 found that opacity bytes transfer exactly but Three clamps SPZ DC bytes outside 60-195 before higher SH, requiring a separate appearance-domain gate. R36 locked the GraphDECO reference view-vector and SH basis, then executed Niantic RDF-to-RUB conversion, v4 packing and actual Three loading on 45 SH1-SH3 coefficients across 14 directions. The converted directional function had zero error before viewer constant rounding and maximum GraphDECO-to-Three error 1.045023e-7. Negative controls for missing SH conversion and reversed view direction each produced maximum error about 1.602. Six checks passed, closing the constrained direction-convention question without claiming arbitrary-coefficient, GPU or real-photo fidelity. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts. R34 established actual center/covariance/SH interop plus separate source-range and envelope gates. R35 found exact opacity-byte handoff but Three DC clamping outside bytes 60-195. R36 verified the GraphDECO-to-RUB direction convention with grid-aligned SH1-SH3 values. R37 then executed actual Niantic default quantization and Three loading for 2,880 deterministic off-grid coefficients across 2,054 directions per splat. The codec's two-stage rounding exceeded naive half-step bounds: measured maxima were 0.034996 for SH1 and about 0.06638 for SH2/3; safe accounting bounds are 0.03515625 and 0.06640625. The fixture's linear SH-contribution max error was 0.131709381 and RMSE 0.037017868 across 394,368 samples, but these are not pixel or perceptual thresholds. Actual out-of-domain coefficients +1.25/-1.25 saturated to 0.9921875/-1 with max loss 0.2578125. Five checks passed with explicit-budget and saturation negative controls. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_APPEARANCE_R35.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_DIRECTION_R36.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_DIRECTION_R36.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_QUANTIZATION_R37.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
         "references/gaussian-spz-interop-r34/SOURCE_LOCK.json",
         "references/gaussian-spz-appearance-r35/SOURCE_LOCK.json",
-        "references/gaussian-sh-direction-r36/SOURCE_LOCK.json"
+        "references/gaussian-sh-direction-r36/SOURCE_LOCK.json",
+        "references/gaussian-sh-quantization-r37/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -63,7 +65,13 @@
       "currentBestViewShDirectionExtension": "CURRENT_BEST_VIEW_R36_GAUSSIAN_SH_DIRECTION.md",
       "toolRoutingShDirectionExtension": "TOOL_ROUTING_R36_GAUSSIAN_SH_DIRECTION.json",
       "motherRoutingShDirectionExtension": "MOTHER_ROUTING_R36_GAUSSIAN_SH_DIRECTION.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; declare the actual frame, coefficient layout and center-minus-camera view convention; run the R36 directional regression with learned coefficients; retain R34 pre-pack/envelope gates and R35 DC histogram/clamp gate; create a separate RUB/no-extension/SH<=3 SPZ v4 derivative; compare an independent high-fidelity float-SH fixed-view reference against r186; then test macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Treat out-of-range DC only as explicitly lossy unless an image-error budget is accepted. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
+      "shQuantizationProbe": "PROBES/gaussian_sh_quantization_r37.mjs",
+      "shQuantizationProbeResult": "PROBES/gaussian_sh_quantization_result_r37.json",
+      "candidateShQuantizationGate": "ADAPTERS/gaussian_sh_quantization_gate_r37.mjs",
+      "currentBestViewShQuantizationExtension": "CURRENT_BEST_VIEW_R37_GAUSSIAN_SH_QUANTIZATION.md",
+      "toolRoutingShQuantizationExtension": "TOOL_ROUTING_R37_GAUSSIAN_SH_QUANTIZATION.json",
+      "motherRoutingShQuantizationExtension": "MOTHER_ROUTING_R37_GAUSSIAN_SH_QUANTIZATION.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one Brush checkpoint; preserve uncompressed PLY and cleanup log; declare frame/layout/center-minus-camera convention; retain R34 source/envelope, R35 DC and R36 direction gates; record actual learned per-band SH distributions and fail outside [-1,1]; compare actual decoded coefficients using R37 two-stage bounds and explicit non-circular budgets; compare an independent float-SH fixed-view reference against r186; then test macOS and 390x844 iPhone/Safari performance, sorting and human acceptance. Do not reuse the probe's 0.25 harness threshold as an acceptance threshold, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
     },
     {
       "id": "LQ-TELLUX-001",
