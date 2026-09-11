@@ -1,0 +1,76 @@
+import {chromium} from 'playwright';
+
+const base=process.env.BASE_URL||'http://127.0.0.1:8765/site/dist/';
+const targets={r35:new URL('r3-5/',base).href,r36:new URL('r3-6/',base).href};
+const browser=await chromium.launch({headless:true});
+const poll={timeout:180000,polling:200};
+const now=()=>performance.now();
+
+async function cdpMetrics(page){
+  const cdp=await page.context().newCDPSession(page);
+  await cdp.send('Performance.enable');
+  let gcSupported=true;
+  try{await cdp.send('HeapProfiler.collectGarbage');}catch{gcSupported=false;}
+  const raw=await cdp.send('Performance.getMetrics');
+  const map=Object.fromEntries(raw.metrics.map(x=>[x.name,x.value]));
+  const dom=await cdp.send('Memory.getDOMCounters');
+  await cdp.detach();
+  const keep=['JSHeapUsedSize','JSHeapTotalSize','Nodes','LayoutCount','RecalcStyleCount','ScriptDuration','TaskDuration'];
+  const out={};for(const k of keep)if(k in map)out[k]=map[k];
+  return{gcSupported,...out,documents:dom.documents,nodes:dom.nodes,jsEventListeners:dom.jsEventListeners};
+}
+async function waitTerrain(page,id){await page.waitForFunction(expected=>{const c=document.querySelector('#terrain');return c?.dataset.ready==='true'&&c?.dataset.patch===expected;},id,poll);}
+async function waitOsm(page,id,runtime=null){await page.waitForFunction(({expected,runtime})=>{const c=document.querySelector('#terrain');return c?.dataset.osmLoaded==='true'&&c?.dataset.osmPatch===expected&&(!runtime||c?.dataset.osmRuntime===runtime);},{expected:id,runtime},poll);}
+async function state(page){return page.evaluate(()=>{const c=document.querySelector('#terrain');return{
+ patch:c?.dataset.patch,osmPatch:c?.dataset.osmPatch,runtime:c?.dataset.osmRuntime||'r35-nonindexed',
+ roadSegments:Number(c?.dataset.osmRoadSegmentsDrawn),buildingSegments:Number(c?.dataset.osmBuildingSegmentsDrawn),
+ roadRejected:Number(c?.dataset.osmRoadSegmentsRejectedNoSurface),buildingRejected:Number(c?.dataset.osmBuildingSegmentsRejectedNoSurface),
+ sourceSha:c?.dataset.osmSourceReleaseSha256,auditSha:c?.dataset.osmCorrectedReportSha256,
+ buildMs:Number(c?.dataset.osmBuildMs),maxChunkMs:Number(c?.dataset.osmMaxChunkMs),yieldCount:Number(c?.dataset.osmYieldCount),
+ roadSourceVertices:Number(c?.dataset.osmRoadSourceVertices),roadGpuVertices:Number(c?.dataset.osmRoadGpuVertices),roadGpuIndexCount:Number(c?.dataset.osmRoadGpuIndexCount),roadSampleCalls:Number(c?.dataset.osmRoadSampleCalls),
+ abortCount:Number(c?.dataset.osmAbortCount),fetchAbortCount:Number(c?.dataset.osmFetchAbortCount),cacheHits:Number(c?.dataset.osmCacheHits),cacheMisses:Number(c?.dataset.osmCacheMisses),
+ roadWidth:c?.dataset.osmRoadWidthClaim,buildingHeight:c?.dataset.osmBuildingHeightClaim,syntheticClosure:c?.dataset.osmBuildingSyntheticPatchClosure
+};});}
+async function timedSelect(page,id,runtime=null){
+ const t0=now();await page.selectOption('#location',id);await waitTerrain(page,id);const terrainReadyMs=now()-t0;await waitOsm(page,id,runtime);const osmReadyMs=now()-t0;
+ return{terrainReadyMs,osmReadyMs,osmIncrementAfterTerrainMs:Math.max(0,osmReadyMs-terrainReadyMs),state:await state(page),cdp:await cdpMetrics(page)};
+}
+async function runVersion(label,target,runtime=null){
+ const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:3,isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1'});
+ const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(`pageerror:${e.message}`));page.on('console',m=>{if(m.type()==='error')errors.push(`console:${m.text()}`);});
+ const nav0=now();await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});await waitTerrain(page,'overview');const initialTerrainReadyMs=now()-nav0;await waitOsm(page,'overview',runtime);const initialOverviewOsmStableMs=now()-nav0;
+ const initial=await state(page);
+ const query01=await timedSelect(page,'query-01',runtime);
+ const overview=await timedSelect(page,'overview',runtime);
+ await context.close();
+ return{label,target,initialTerrainReadyMs,initialOverviewOsmStableMs,initial,query01,overview,errors};
+}
+
+async function cancellationStress(label,target,runtime=null){
+ const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:3,isMobile:true,hasTouch:true});
+ let started=0,finished=0,failed=0;const failedUrls=[];
+ const match=url=>url.includes('/site/dist/r3-5/data/osm/')&&url.endsWith('.u16le');
+ context.on('request',r=>{if(match(r.url()))started++;});context.on('requestfinished',r=>{if(match(r.url()))finished++;});context.on('requestfailed',r=>{if(match(r.url())){failed++;failedUrls.push({url:r.url(),error:r.failure()?.errorText||''});}});
+ await context.route('**/site/dist/r3-5/data/osm/*.u16le',async route=>{await new Promise(r=>setTimeout(r,500));try{await route.continue();}catch{}});
+ const page=await context.newPage();await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});await waitTerrain(page,'overview');await waitOsm(page,'overview',runtime);
+ const before=await state(page);
+ for(const id of ['query-01','query-02','query-03']){await page.selectOption('#location',id);await waitTerrain(page,id);}
+ await waitOsm(page,'query-03',runtime);await page.waitForTimeout(1200);const final=await state(page);await context.close();
+ return{label,artificialPayloadDelayMs:500,started,finished,failed,failedUrls,before,final};
+}
+
+const r35=await runVersion('R3.5 fixed candidate',targets.r35,null);
+const r36=await runVersion('R3.6 indexed runtime',targets.r36,'indexed-r36');
+const cancel35=await cancellationStress('R3.5',targets.r35,null);
+const cancel36=await cancellationStress('R3.6',targets.r36,'indexed-r36');
+const ratio=(a,b)=>Number.isFinite(a)&&Number.isFinite(b)&&a>0?b/a:null;
+const report={schema:'wenzhou-r3.6-same-runner-comparison/r1',engine:'same GitHub Actions runner, same Playwright Chromium process; mobile emulation only, NOT real iPhone Safari/GPU acceptance',targets,r35,r36,cancellation:{r35:cancel35,r36:cancel36},comparison:{
+ queryOsmIncrementRatioR36OverR35:ratio(r35.query01.osmIncrementAfterTerrainMs,r36.query01.osmIncrementAfterTerrainMs),
+ overviewOsmIncrementRatioR36OverR35:ratio(r35.overview.osmIncrementAfterTerrainMs,r36.overview.osmIncrementAfterTerrainMs),
+ queryHeapUsedRatioR36OverR35:ratio(r35.query01.cdp.JSHeapUsedSize,r36.query01.cdp.JSHeapUsedSize),
+ overviewHeapUsedRatioR36OverR35:ratio(r35.overview.cdp.JSHeapUsedSize,r36.overview.cdp.JSHeapUsedSize),
+ r35StaleFinished:cancel35.finished,r35StaleFailed:cancel35.failed,r36StaleFinished:cancel36.finished,r36StaleFailed:cancel36.failed,r36AbortCount:cancel36.final.abortCount,r36FetchAbortCount:cancel36.final.fetchAbortCount
+},interpretation:{realIphoneVerified:false,absoluteTimingIsNotDeviceSla:true,acceptanceBasis:'relative same-runner comparison plus functional equality; real iPhone remains a separate gate'}};
+console.log(JSON.stringify(report,null,2));
+await browser.close();
+if(r35.errors.length||r36.errors.length)process.exit(1);
