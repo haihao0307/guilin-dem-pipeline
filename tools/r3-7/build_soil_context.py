@@ -94,6 +94,14 @@ def write_layer(output: Path, stage: Path, prop: str, statistic: str, meta: dict
     expected = ROWS * COLS * 2
     if dst.stat().st_size != expected:
         raise RuntimeError(f'raw byte size mismatch for {name}')
+    if statistic == 'uncertainty':
+        mapped_unit = 'SoilGrids uncertainty index'
+        conversion_factor = 1
+        conventional_unit = 'relative index'
+    else:
+        mapped_unit = meta['mappedUnit']
+        conversion_factor = meta['conversionFactor']
+        conventional_unit = meta['conventionalUnit']
     return {
         'property': prop,
         'labelZh': meta['labelZh'],
@@ -108,9 +116,9 @@ def write_layer(output: Path, stage: Path, prop: str, statistic: str, meta: dict
         'geotransform': gt,
         'bounds': BOUNDS,
         'noData': NODATA,
-        'mappedUnit': meta['mappedUnit'],
-        'conversionFactor': meta['conversionFactor'],
-        'conventionalUnit': meta['conventionalUnit'],
+        'mappedUnit': mapped_unit,
+        'conversionFactor': conversion_factor,
+        'conventionalUnit': conventional_unit,
         'statisticsRaw': stats(arr),
         'sourceRow0IsNorth': True,
         'canonicalTruth': False,
@@ -160,6 +168,7 @@ def main() -> int:
         'displayPolicy': {
             'loadSelectedPropertyOnDemand': True,
             'medianAndUncertaintyKeptSeparate': True,
+            'uncertaintyIsRelativeIndex': True,
             'interpolation': 'bilinear-for-display-only',
             'heightDisplacement': False,
             'mayGenerateFieldBoundaries': False,
