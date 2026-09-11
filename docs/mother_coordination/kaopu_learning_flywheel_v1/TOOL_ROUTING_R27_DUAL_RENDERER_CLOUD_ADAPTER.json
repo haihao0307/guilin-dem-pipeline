@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu-tool-routing-extension/r27",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-RRTMG-DUAL-ADAPTER-R27",
+      "domain": "weather-to-optics-source-fixture",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_ra_rrtmg_sw.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "building a source-semantic two-band mixed-phase spectral packet",
+        "testing renderer adapter invariants without inventing cloud opacity from effective radius"
+      ],
+      "doNotUseFor": [
+        "claiming an HRRR runtime checkpoint",
+        "claiming physical atmospheric observation",
+        "claiming modern optical optimality"
+      ]
+    },
+    {
+      "id": "TOOL-SIDEFX-KARMA-VOLUME-R27",
+      "domain": "renderer-local-coefficient-contract",
+      "toolOrSource": "current official SideFX Karma Volume documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "binding local absorption/scattering rates in m^-1",
+        "binding a single anisotropy target vocabulary"
+      ],
+      "doNotUseFor": [
+        "claiming all renderer phase models are identical",
+        "using renderer values as Weather truth"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-VOLUME-R27",
+      "domain": "renderer-volume-semantic-contract",
+      "toolOrSource": "current official Unreal Engine 5.8 Volumetric Fog + Volumetric Cloud + Volumetric Cloud Material documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "binding Albedo/Extinction as UE-side local volume semantics",
+        "separating Conservative Density optimization from physical extinction",
+        "separating dual-phase/multiscatter controls from one source asymmetry parameter"
+      ],
+      "doNotUseFor": [
+        "assuming UE Extinction is already authenticated in SI or inverse-UU units",
+        "copying one source g into Phase A/Phase B/Blend without a declared approximation",
+        "feeding UE quality controls back into Weather"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-WORLD-UNITS-R27",
+      "domain": "renderer-geometric-unit-context",
+      "toolOrSource": "current official Unreal Engine documentation stating 1 Unreal Unit = 1 cm for world/object scale",
+      "authority": "primary-official-engine-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "declaring geometric path conversion candidates for homogeneous-slab calibration"
+      ],
+      "doNotUseFor": [
+        "proving the numeric unit of the Volume-material Extinction input without engine/source or runtime evidence"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-DUAL-RENDERER-PROBE-R27",
+      "domain": "coordinator-numeric-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_dual_renderer_adapter_probe_r27.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "checking immutable two-band optical packets",
+        "checking sigma_t=sigma_a+sigma_s and albedo reconstruction",
+        "checking explicit unit and phase binding",
+        "checking subcolumn nonlinearity and acceleration-hint separation"
+      ],
+      "doNotUseFor": [
+        "Karma runtime authentication",
+        "Unreal runtime authentication",
+        "visual parity claims",
+        "physical atmospheric observation"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
