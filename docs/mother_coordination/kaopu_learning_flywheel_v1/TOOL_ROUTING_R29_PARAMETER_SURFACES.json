@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu-tool-routing-extension/r29",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-UE5.8-RAW-PHASE-R29",
+      "domain": "renderer-phase-primitive-surface",
+      "toolOrSource": "Epic UE 5.8 Volumetric Advanced Material Output docs/API",
+      "authority": "primary-official-documentation",
+      "useFor": ["raw PhaseG/PhaseG2 documented sign semantics", "primitive-surface identity"],
+      "doNotUseFor": ["default material Phase A/B mapping", "runtime authentication", "physical atmosphere truth"]
+    },
+    {
+      "id": "TOOL-UE5.8-DEFAULT-CLOUD-WRAPPER-R29",
+      "domain": "renderer-wrapper-control-surface",
+      "toolOrSource": "Epic UE 5.8 default Volumetric Cloud Material docs",
+      "authority": "primary-official-documentation",
+      "useFor": ["identifying m_SimpleVolumetricCloud_Inst Phase A/B as wrapper controls", "documented positive-forward user semantics"],
+      "doNotUseFor": ["assuming identity or negation mapping to raw PhaseG", "runtime authentication"]
+    },
+    {
+      "id": "TOOL-HOUDINI-PARAMETER-PROMOTION-R29",
+      "domain": "parameter-surface-reference-pattern",
+      "toolOrSource": "SideFX Houdini HDA parameter promotion documentation",
+      "authority": "primary-official-documentation",
+      "useFor": ["generalizing wrapper-vs-internal parameter identities"],
+      "doNotUseFor": ["inferring Unreal implementation details"]
+    },
+    {
+      "id": "TOOL-SUBSTANCE-EXPOSED-PARAMETERS-R29",
+      "domain": "parameter-surface-reference-pattern",
+      "toolOrSource": "Adobe Substance 3D Designer exposed-parameter documentation",
+      "authority": "primary-official-documentation",
+      "useFor": ["generalizing public graph controls and one-to-many internal fan-out"],
+      "doNotUseFor": ["inferring Unreal implementation details"]
+    },
+    {
+      "id": "TOOL-KAOPU-PARAMETER-SURFACE-PROBE-R29",
+      "domain": "coordinator-source-semantic-test",
+      "toolOrSource": "PROBES/ue_phase_parameter_surface_probe_r29.py",
+      "authority": "derived-executable-evidence",
+      "useFor": ["rejecting unsupported identity mapping", "showing multiple transforms can reconcile the documented surfaces"],
+      "doNotUseFor": ["claiming Epic uses negation", "UE runtime evidence", "physical phase validation"],
+      "productionMutationAllowed": false
+    }
+  ]
+}
