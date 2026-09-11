@@ -1,0 +1,47 @@
+{
+  "schema": "kaopu-mother-routing-extension/r27",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_DUAL_RENDERER_CLOUD_ADAPTER_R27.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "emit only typed phase-resolved Weather/cloud state and R26 optical-input lineage; never emit renderer density, RGB or Conservative Density as canonical truth",
+        "keep cloud fraction/overlap separate from in-cloud condensate and local extinction",
+        "when Lighting reports a mismatch, change Weather only if a Weather invariant fails; do not tune Weather to compensate for renderer sampling or phase approximations"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "produce one immutable SpectralLayerOpticalPacket and derive a LocalPhysicalCoefficientPacket only after path/distribution semantics are explicit",
+        "enforce sigma_t=sigma_s+sigma_a and preserve source spectral/phase identities",
+        "retain source g separately from any renderer-specific multi-lobe phase binding",
+        "reject a renderer request for raw density/extinction when unit/path semantics are missing"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "compare renderers through physical SI coefficient invariants before comparing raw engine parameters or pixels",
+        "for Karma-style routing use documented m^-1 absorption/scattering and declared compatible anisotropy semantics",
+        "for UE-style routing derive physical albedo and physical sigma_t first; leave final engine Extinction unbound until a unit calibration/source proof exists",
+        "do not invent UE Phase A/Phase B/Blend from one source g; record an explicit PhaseFunctionBinding approximation",
+        "treat UE Conservative Density and sampling/multiscatter/shadow quality controls as evaluator-only acceleration/quality state",
+        "run homogeneous-slab Beer tests at two path lengths before visual cloud tuning"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add RendererAdapterIdentity, RendererUnitBinding, PhaseFunctionBinding and RenderAccelerationHint provenance types",
+        "use LocalPhysicalCoefficientPacket as the cross-renderer validation surface rather than raw vendor parameters",
+        "preserve one-way state flow Weather -> spectral optics -> SI local coefficients -> renderer binding -> display projection"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after engine-runtime homogeneous-slab unit calibration, phase-function reduction validation, existing R25/L1 and L3 Weather-runtime gates, and independent visual acceptance"
+}
