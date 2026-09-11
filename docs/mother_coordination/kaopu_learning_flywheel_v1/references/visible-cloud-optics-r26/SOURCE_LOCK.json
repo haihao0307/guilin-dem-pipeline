@@ -1,0 +1,83 @@
+{
+  "schema": "kaopu-source-lock/r26",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "topic": "visible/spectral cloud optical closure from effective radius to renderer-neutral optical packets",
+  "observationRootEligible": false,
+  "roots": [
+    {
+      "id": "NOAA-HRRRV4-RADIATION-DRIVER",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_radiation_driver.F",
+      "blob": "9769918bc3f8089851af655a7d7e37d570601c74",
+      "useFor": [
+        "locking the re_cloud/re_ice/re_snow handoff into RRTMG",
+        "distinguishing microphysics-produced radius from radiation-consumed inputs"
+      ]
+    },
+    {
+      "id": "NOAA-HRRRV4-RRTMG-SW",
+      "authority": "primary-official-operational-source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_ra_rrtmg_sw.F",
+      "blob": "d3848906b5bec0a656b1009baa2cad35f609eb6e",
+      "useFor": [
+        "locking in-cloud liquid/ice/snow water-path semantics",
+        "locking liquid/ice/snow effective-size parameterization identities",
+        "locking phase-specific optical-depth/SSA/asymmetry composition and delta scaling",
+        "locking documented snow reuse of ice optical tables as a source limitation"
+      ]
+    },
+    {
+      "id": "ECMWF-ECRAD-USER-GUIDE",
+      "authority": "primary-official-documentation",
+      "url": "https://confluence.ecmwf.int/download/attachments/70945505/ecrad_documentation.pdf?api=v2",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "independent mature-system evidence that cloud optical models bind hydrometeor amount and effective radius to spectral lookup-table identity",
+        "separating cloud optics from solver and spectral configuration"
+      ]
+    },
+    {
+      "id": "ECMWF-ECRAD-TECH-MEMO-787",
+      "authority": "primary-official-technical-memo",
+      "url": "https://www.ecmwf.int/en/elibrary/79850-ecrad-new-radiation-scheme-ifs",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "independent evidence for band optical-depth/SSA/asymmetry packets and separate subgrid-cloud treatment"
+      ]
+    },
+    {
+      "id": "SIDEFX-KARMA-VOLUME",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://www.sidefx.com/docs/houdini/nodes/vop/kma_whitewater.html",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "renderer-side local absorption/scattering rate per distance and anisotropy target semantics"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-VOLUMETRIC-FOG",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/volumetric-fog-in-unreal-engine",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "renderer-side volume albedo/extinction/scattering controls",
+        "separating rendering controls from Weather truth"
+      ]
+    },
+    {
+      "id": "BLENDER-52-PRINCIPLED-VOLUME",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://docs.blender.org/manual/en/5.2/render/shader_nodes/shader/volume_principled.html",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "corroborating renderer abstraction around density/scattering/absorption/anisotropy"
+      ]
+    }
+  ],
+  "evidenceBoundary": "Engineering/model/rendering evidence only. No source above is promoted to an independent physical atmospheric Observation Root merely because multiple systems share a similar decomposition. Renderer controls are evaluator semantics, not canonical Weather state."
+}
