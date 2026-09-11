@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-mother-routing-extension/r25",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_HRRRV4_SCM_TOOLCHAIN_R25.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "for L1 use the locked-source serial em_scm_xy build path; do not require MPI merely because full HRRR later uses distributed-memory execution",
+        "before compilation require a working NetCDF-Fortran binding compatible with the chosen compiler plus the locked csh build driver",
+        "preserve the canonical NetCDF I/O contract instead of changing io_form values to bypass a missing library",
+        "if locked WRF3.9 fails with the modern compiler, record the first reproducible incompatibility before introducing any compatibility patch"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "do not interpret toolchain closure or SCM compilation as effective-radius numerical evidence",
+        "keep ReplayStatus source_callpath_authenticated until the existing L3 state-source-aligned checkpoint gate is met"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add ToolchainCapabilityVector and BuildModeIdentity to experiment provenance",
+        "distinguish HardDependency, OptionalParallelDependency, ArtifactFormatDependency and BuildDriverDependency",
+        "record language-interface readiness separately when a library family exposes C and Fortran bindings"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R25; toolchain readiness is upstream engineering evidence only"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after locked HRRRv4 L3 real-input/state-source checkpoint and downstream optical/evaluator gates; serial toolchain closure alone has no promotion authority"
+}
