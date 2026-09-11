@@ -1,0 +1,74 @@
+{
+  "schema": "kaopu-tool-routing-extension/r25",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-WRF39-SERIAL-BUILD-R25",
+      "domain": "weather-validation-build-mode",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 WRF3.9 configure_new.defaults + configure + Makefile + compile at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-locked-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "locking the serial GNU build mode for em_scm_xy",
+        "separating MPI-only distributed-memory dependencies from serial SCM requirements",
+        "locking the csh build-driver and NetCDF-Fortran dependency surface"
+      ],
+      "doNotUseFor": [
+        "claiming the locked source compiles with a modern compiler before execution",
+        "physical atmospheric validation",
+        "L3 operational-HRRR equivalence"
+      ]
+    },
+    {
+      "id": "TOOL-NCAR-WRF-BUILD-DOC-R25",
+      "domain": "weather-model-build-requirements",
+      "toolOrSource": "current official NCAR/WRF Users Guide and compiling tutorial",
+      "authority": "primary-official-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "corroborating serial compilation for 1-D idealized cases",
+        "distinguishing mandatory NetCDF-C/Fortran from parallel-only MPI/OpenMP",
+        "providing the standard Fortran+C+NetCDF compatibility test"
+      ],
+      "doNotUseFor": [
+        "overriding locked HRRRv4/WRF3.9 build implementation details",
+        "assuming modern WRF source compatibility with HRRRv4"
+      ]
+    },
+    {
+      "id": "TOOL-UNIDATA-NETCDFF-R25",
+      "domain": "artifact-io-language-binding",
+      "toolOrSource": "official Unidata NetCDF-Fortran interface documentation",
+      "authority": "primary-official-library-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "separating libnetcdff/Fortran interface readiness from libnetcdf/C readiness",
+        "validating netcdf.inc/Fortran binding requirements"
+      ],
+      "doNotUseFor": [
+        "claiming WRF compile success",
+        "treating library presence as model-physics evidence"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-SCM-TOOLCHAIN-PROBE-R25",
+      "domain": "coordinator-environment-capability-test",
+      "toolOrSource": "PROBES/hrrrv4_scm_toolchain_probe_r25.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "classifying hard versus optional dependencies for the selected serial L1 path",
+        "testing netCDF-C and netCDF-Fortran language-interface readiness separately",
+        "preventing missing MPI from being mislabeled as the serial-SCM blocker"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR numerical execution evidence",
+        "compiler compatibility beyond the tested mini programs",
+        "ReplayStatus promotion"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
