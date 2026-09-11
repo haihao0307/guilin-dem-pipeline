@@ -8,6 +8,12 @@ checkpoint。桂林 canonical DEM 身份确认为 EPSG:32649、12.5 m、54 瓦�
 但当前 Farmland 树没有数值瓦片，R025 没有读取 terrain sample 或实现查询。
 它不能解析田间构件，也不能给红河配置提供地形。没有生成几何或视觉候选。
 
+跨 Mother 接管使用
+`distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip`。
+它由固定源提交 `9fb3c6837bc8358a57450d48758760fa96a51ca8` 确定性构建，
+包含 79 个载荷文件并通过 118 项测试；先读包内 `00_START_HERE.md`，再核对
+外部 receipt 与 SHA256。它不授予地形、几何、视觉或生产准入。
+
 ## R024 续接（2026-09-10）
 
 见 `research/r024-rice-morphology/README.md`。本轮把水稻生命周期拆为十四个
@@ -144,6 +150,8 @@ Microscope 不得用于掩盖水源、田块拓扑、渠道截面、水深或作
 `researchGate=in_progress`
 
 `structuralTruthWorkbench=foundation_r025_contracts_only_no_visual_workbench`
+
+`bridgePackage=r025_verified_deterministic_handoff_118_tests`
 
 `activePublicCandidate=none`
 

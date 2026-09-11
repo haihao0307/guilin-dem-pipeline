@@ -69,6 +69,8 @@
 
 `tloCheckpoint=r025_candidate_not_core_schema_world_time_and_parcel_position_unknown`
 
+`bridgePackage=r025_verified_deterministic_handoff_79_files_118_tests`
+
 `structuralTruthWorkbench=foundation_r025_contracts_only_no_visual_workbench`
 
 `aaaVisualPrecheck=not_run`
@@ -78,6 +80,10 @@
 `visualAcceptance=false`
 
 `productionReady=false`
+
+桥梁包只用于小妈 / TLO、DEM / Landscape 与下一位 Farmland 执行者之间的
+合同、证据回执、验证器和源码交接。它没有接入数值地形，也不改变上述工作台、
+公开视觉与生产门禁。
 
 ## 下一工作台准入条件
 
