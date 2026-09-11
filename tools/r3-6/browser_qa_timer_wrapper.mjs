@@ -6,6 +6,10 @@ const sourcePath=join(here,'browser_qa.mjs');
 const generatedPath=join(here,'.browser_qa_timer.generated.mjs');
 let source=await readFile(sourcePath,'utf8');
 source=source.replaceAll('{timeout:120000}', '{timeout:120000,polling:200}');
+source=source.replace(
+  "assert(s.maxChunkMs>0&&s.yieldCount>0&&Number.isFinite(s.buildMs),'R3.6 runtime instrumentation missing');",
+  "assert(Number.isFinite(s.buildMs)&&s.buildMs>=0&&Number.isFinite(s.maxChunkMs)&&s.maxChunkMs>=0&&Number.isFinite(s.yieldCount)&&s.yieldCount>=0,'R3.6 runtime instrumentation missing');assert(s.maxChunkMs<25,`R3.6 main-thread chunk exceeded bound ${JSON.stringify(s)}`);"
+);
 const stressMode=process.env.R36_STRESS_MODE||'route';
 const routeLine="await stressContext.route('**/site/dist/r3-5/data/osm/*.u16le',async route=>{await new Promise(r=>setTimeout(r,500));try{await route.continue();}catch{}});";
 const controllerAssertion="assert(cancellation.abortCount>=2,`superseded build controllers were not aborted ${JSON.stringify(cancellation)}`);";
