@@ -59,9 +59,9 @@
 
 `waterMassBalance=r022_six_synthetic_scenarios_pass_real_field_not_run`
 
-`riceStageMorphology=not_ready`
+`riceStageMorphology=r024_14_stage_organ_contract_pass_24_regional_parameters_unknown_geometry_not_built`
 
-`structuralTruthWorkbench=foundation_r023_topology_only_no_visual_workbench`
+`structuralTruthWorkbench=foundation_r024_topology_hydraulics_and_rice_contracts_no_visual_workbench`
 
 `aaaVisualPrecheck=not_run`
 

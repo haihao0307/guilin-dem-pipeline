@@ -6,6 +6,18 @@
 
 用途：为 Farmland Object DNA 的山地梯田、水利、村落、森林、劳动和文明系统建立证据基础。本页只登记已读到的权威起点、用户提供的现场知识方向和待验证问题，不代表结构已经完成。
 
+## R024 水稻结构合同（2026-09-10）
+
+已直接读取澳大利亚政府 OGTR 的水稻生物学文档，并将物种级器官关系拆为
+十四个阶段状态。分蘖、拔节、幼穗分化、孕穗、抽穗、开花、灌浆、成熟、
+收割和残茬各自具有不可复用的结构事件；详见
+`r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json`。
+
+ICOMOS 对红河的记录只证明当地红米具有显著品种和海拔适应差异，不能提供一套
+统一的株高、株行距、分蘖数、叶穗尺寸或阶段色板。R024 因此把 24 项地区参数
+保持为 null，且没有生成几何资产。育秧、起秧、插秧、返青、收割和残茬的地方
+作业形态仍需可读取的权威资料与现场记录。
+
 ## R023 原件复核（2026-09-10）
 
 已直接读取 ICOMOS 2013 评估原件 `https://whc.unesco.org/document/151777`。
@@ -177,6 +189,9 @@ terrace_sections=black_clay_cut_face_no_default_retaining_wall_dimensions_unknow
 parcel_plan_topology=r023_coordinate_validated_synthetic_fixtures
 field_level_hydraulics=r022_ideal_synthetic_only
 mass_balance_model=six_synthetic_scenarios_pass_real_field_not_run
+rice_lifecycle_contract=r024_fourteen_stage_organ_structure_pass
+rice_regional_parameters=r024_twenty_four_unknown
+rice_geometry_assets=not_built
 labor_governance_model=not_run
 ready_for_structural_prototype=false
 ready_for_public_candidate=false

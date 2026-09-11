@@ -83,10 +83,12 @@ REQUIRED_WATER_STATE = {
 }
 REQUIRED_RICE_STAGE_MODELS = {
     "nursery",
+    "lifting_seedlings",
     "transplanted",
     "establishment",
     "tillering",
     "stem_elongation",
+    "panicle_initiation",
     "booting",
     "heading",
     "flowering",

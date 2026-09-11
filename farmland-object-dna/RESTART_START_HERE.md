@@ -1,5 +1,13 @@
 # Farmland Object DNA 干净重启入口 V0.2.0
 
+## R024 续接（2026-09-10）
+
+见 `research/r024-rice-morphology/README.md`。本轮把水稻生命周期拆为十四个
+独立结构状态，锁定分蘖、节间伸长、旗叶鞘内幼穗、抽穗、小花开放、乳熟到
+蜡熟、硬粒成熟、收割断裂和无穗残茬等器官事件。验证器拒绝同一几何族或同一
+拓扑签名跨阶段复用，并将 24 项地区品种、栽植、器官、田水、色彩和风响应
+参数保持为空。当前没有生成水稻几何或视觉候选。
+
 ## R023 续接（2026-09-10）
 
 见 `research/r023-honghe-regional-contract/README.md`。
@@ -127,7 +135,7 @@ Microscope 不得用于掩盖水源、田块拓扑、渠道截面、水深或作
 
 `researchGate=in_progress`
 
-`structuralTruthWorkbench=foundation_r023_topology_only_no_visual_workbench`
+`structuralTruthWorkbench=foundation_r024_topology_hydraulics_and_rice_contracts_no_visual_workbench`
 
 `activePublicCandidate=none`
 

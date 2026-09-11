@@ -106,6 +106,13 @@ Spatial DNA 还要保存坡面曲率、沟谷、脊线、集水区、自然排�
 
 必须保存 cultivar、stage、seedling_age、hill_count、seedlings_per_hill、spacing、planting_depth、height_distribution、tiller_distribution、leaf_geometry、panicle_state、grain_state、color_state、lodging、wind_response 和 harvest_state。
 
+R024 把 crop_stand 的最小生命周期扩展为 nursery、lifting_seedlings、
+transplanted、establishment、tillering、stem_elongation、panicle_initiation、
+booting、heading、flowering、grain_filling、maturity、harvest 和 stubble。
+每一阶段必须有独立 geometry_family_id、拓扑事件、器官显隐和结构签名；阶段
+参数必须引用地区测量配置。合同对象不得内嵌无来源的株高、分蘖数、叶片、穗、
+籽粒、割茬、色彩或风响应数值。
+
 ## 对象族
 
 V0.1.1 预留六类：paddy、dry_field、vegetable_garden、orchard、nursery、fallow。

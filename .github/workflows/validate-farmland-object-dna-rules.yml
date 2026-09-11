@@ -35,6 +35,8 @@ jobs:
           python -m json.tool farmland-object-dna/schema/farmland-object-dna.schema.json >/dev/null
           python -m json.tool farmland-object-dna/examples/traditional-paddy-v002-research.json >/dev/null
           python -m json.tool farmland-object-dna/PUBLICATION_PROOF.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json >/dev/null
 
       - name: Validate strict research record
         shell: bash
@@ -81,6 +83,16 @@ jobs:
             > /tmp/farmland-r023-probe.json
           cmp farmland-object-dna/research/r023-honghe-regional-contract/PROBE_RESULTS.json \
             /tmp/farmland-r023-probe.json
+
+      - name: Rice organ and lifecycle contract probe
+        run: |
+          python farmland-object-dna/tools/rice_morphology.py \
+            farmland-object-dna/research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json \
+            > /tmp/farmland-r024-contract.json
+          python farmland-object-dna/tools/probe_rice_morphology_r024.py \
+            > /tmp/farmland-r024-probe.json
+          cmp farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json \
+            /tmp/farmland-r024-probe.json
 
       - name: Verify mandatory rules and failed gates
         shell: bash
@@ -146,6 +158,7 @@ jobs:
             echo 'Rejected V0.1 blocked by current validator: PASS'
             echo 'R021-R022 water and ideal hydraulics: PASS'
             echo 'R023 Honghe evidence boundary and parcel topology: PASS'
+            echo 'R024 rice organ and lifecycle contract: PASS'
             echo 'Hydraulic and visual failure gates: PRESENT'
             echo 'Public share status for rejected V0.1: FALSE'
             echo 'Human visual acceptance: FALSE'
