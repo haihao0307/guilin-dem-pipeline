@@ -1,0 +1,18 @@
+{
+  "schema": "kaopu-candidate-routing/r02",
+  "status": "prepared-awaiting-mother-feedback",
+  "learning": "Separate structure checks, raw replay, evidence independence and human acceptance",
+  "inherits": {
+    "commit": "9197c21b0a2d9d6aa9b6f698ba984fff8d5649fd",
+    "path": "docs/mother_coordination/kaopu_learning_flywheel_v1/MOTHER_ROUTING.json",
+    "rules": ["ATMOSPHERE_R05_EVIDENCE_INDEPENDENCE", "ATMOSPHERE_R06_QUANTITY_VALIDITY_AND_SPLIT_OVERLAP"]
+  },
+  "routes": [
+    {"mother": "Wenzhou/Terrain", "action": "Keep tide-gauge placement and vertical-datum compatibility blocked until sourced metadata is pinned; preserve canonical DEM.", "requiredFeedback": "Source-bound placement and datum evidence, or explicit Unknown", "feedback": null},
+    {"mother": "Weather/Ocean", "action": "Track raw replay separately from source-callpath and schema checks; retain shared calibration and processing dependencies.", "requiredFeedback": "One executed source replay or bounded blocker report", "feedback": null},
+    {"mother": "All evidence-bearing Mothers", "action": "Use a same-source copy as a negative control; do not count new filenames or AI agreement as independent observations.", "requiredFeedback": "Executed copy-control result with scope and limitations", "feedback": null}
+  ],
+  "productionMutationAllowed": false,
+  "deliveryAcknowledged": false,
+  "formalR2Frozen": false
+}
