@@ -14,7 +14,9 @@ Farmland Object DNA 是 `guilin-dem-pipeline` 中面向传统农业对象的独�
 
 全量包：`distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip`
 
-R025 桥梁包：`distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip`
+当前全量交接包：`distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip`
+
+统一入口：`CURRENT_FULL_HANDOFF.md`；机器入口：`CURRENT_FULL_HANDOFF.json`。
 
 V0.1 公开工作台已被用户否决，只保留为失败对照。当前没有可分享的视觉候选，也没有人工视觉接受或生产批准。
 
@@ -23,7 +25,7 @@ V0.1 公开工作台已被用户否决，只保留为失败对照。当前没有
 R024 建立十四阶段水稻器官与结构事件合同，R025 接收小妈 TLO 候选通信合同与
 桂林 canonical DEM 身份边界。当前没有接通数值地形；桂林 12.5 m DEM 不覆盖
 红河，也不能代替田间级测绘。地区构件测绘、水稻地方品种参数和阶段几何资产
-仍未完成，不能提升为地区结构样板。R025 已打成可复算的跨 Mother 桥梁包，
+仍未完成，不能提升为地区结构样板。R025 已打成可复算的当前全量交接包，
 交给小妈 / TLO、DEM / Landscape 与下一位 Farmland 执行者；该包只交换合同、
 证据回执、验证器和当前源码，不携带数值 DEM、受保护门户内容或视觉资产。
 

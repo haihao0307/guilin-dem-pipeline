@@ -9,7 +9,8 @@ checkpoint。桂林 canonical DEM 身份确认为 EPSG:32649、12.5 m、54 瓦�
 它不能解析田间构件，也不能给红河配置提供地形。没有生成几何或视觉候选。
 
 跨 Mother 接管使用
-`distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip`。
+`distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip`；
+统一入口为 `CURRENT_FULL_HANDOFF.md`，机器入口为 `CURRENT_FULL_HANDOFF.json`。
 它由固定源提交 `9fb3c6837bc8358a57450d48758760fa96a51ca8` 确定性构建，
 包含 79 个载荷文件并通过 118 项测试；先读包内 `00_START_HERE.md`，再核对
 外部 receipt 与 SHA256。它不授予地形、几何、视觉或生产准入。

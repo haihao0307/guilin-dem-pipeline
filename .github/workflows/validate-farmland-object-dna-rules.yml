@@ -33,6 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m json.tool farmland-object-dna/HANDOFF.json >/dev/null
+          python -m json.tool farmland-object-dna/CURRENT_FULL_HANDOFF.json >/dev/null
           python -m json.tool farmland-object-dna/QUALITY_GATES.json >/dev/null
           python -m json.tool farmland-object-dna/schema/farmland-object-dna.schema.json >/dev/null
           python -m json.tool farmland-object-dna/examples/traditional-paddy-v002-research.json >/dev/null
@@ -146,6 +147,27 @@ jobs:
             cmp "$bridge_dir/LATEST.json" "$rebuild_dir/LATEST.json"
           fi
 
+          full_archive='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip'
+          full_receipt='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.receipt.json'
+          full_sha='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.sha256'
+          if [[ -f "$full_archive" ]]; then
+            cmp "$bridge_dir/$archive" "$full_archive"
+            (cd farmland-object-dna/distributions && sha256sum -c "$(basename "$full_sha")")
+            python -m json.tool "$full_receipt" >/dev/null
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          pointer = json.loads(Path('farmland-object-dna/CURRENT_FULL_HANDOFF.json').read_text())
+          receipt = json.loads(Path('farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.receipt.json').read_text())
+          assert pointer['archive']['sha256'] == receipt['archiveSha256']
+          assert pointer['archive']['bytes'] == receipt['archiveBytes']
+          assert pointer['archive']['byteIdenticalToCanonicalBridgeArtifact'] is True
+          assert receipt['byteIdenticalToCanonicalBridgeArtifact'] is True
+          assert pointer['status']['visualAcceptance'] is False
+          assert pointer['status']['productionReady'] is False
+          PY
+          fi
+
       - name: Verify mandatory rules and failed gates
         shell: bash
         run: |
@@ -214,6 +236,7 @@ jobs:
             echo 'R025 Xiaoma TLO and Guilin DEM fixed-source intake: PASS'
             echo 'R025 cross-Mother bridge contract: PASS'
             echo 'R025 deterministic bridge package (when present): PASS'
+            echo 'Current Full Handoff discoverability alias (when present): PASS'
             echo 'Hydraulic and visual failure gates: PRESENT'
             echo 'Public share status for rejected V0.1: FALSE'
             echo 'Human visual acceptance: FALSE'
