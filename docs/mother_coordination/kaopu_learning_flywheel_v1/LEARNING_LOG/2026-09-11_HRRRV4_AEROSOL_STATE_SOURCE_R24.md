@@ -23,7 +23,7 @@ The coordinator still ranks `LQ-ATMOSPHERE-001` first under explicit user priori
 Transferable facts: `is_aerosol_aware` depends on presence of NWFA2D/NWFA/NIFA; `thompson_init` checks existing aerosol fields and constructs basic vertical profiles when they are below the source epsilon. This is model-source behavior, not physical observation.
 
 ### Root B — locked NOAA-EMC physics initialization
-Same commit, `module_physics_init.F`, blob `2a6dac7d3c0b9c87ff3a2dfdbcf9e635aa6e6d`.
+Same commit, `module_physics_init.F`, blob `2a6dac7d3c0c2b9c87ff3a2dfdbcf9e635aa6e6d`.
 
 Transferable fact: the THOMPSONAERO initialization call supplies NWFA2D/NWFA/NIFA arrays to `thompson_init`; array presence does not encode where their values came from.
 
