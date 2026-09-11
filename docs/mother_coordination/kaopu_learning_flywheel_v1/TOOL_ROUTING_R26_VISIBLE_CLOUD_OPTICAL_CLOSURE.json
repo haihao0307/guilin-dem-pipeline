@@ -1,0 +1,105 @@
+{
+  "schema": "kaopu-tool-routing-extension/r26",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-RRTMG-SW-R26",
+      "domain": "weather-cloud-optical-closure",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_radiation_driver.F + module_ra_rrtmg_sw.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "source-native effective-radius-to-shortwave-optics semantics",
+        "phase-resolved in-cloud water-path requirements",
+        "delta/non-delta optical packet identity",
+        "documenting clamps/fallback/category remapping and snow-table limitations"
+      ],
+      "doNotUseFor": [
+        "physical atmospheric truth without observation",
+        "assuming old HRRR optical defaults are universally best",
+        "direct renderer density/color without an adapter"
+      ]
+    },
+    {
+      "id": "TOOL-ECMWF-ECRAD-R26",
+      "domain": "modern-atmospheric-radiation-architecture",
+      "toolOrSource": "current official ECMWF ecRad User Guide + Technical Memorandum 787",
+      "authority": "primary-official-mature-system-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "separating cloud optics, spectral configuration and solver",
+        "corroborating effective-radius plus hydrometeor-amount spectral optical closure",
+        "designing evaluator-swappable KAOPU optical contracts"
+      ],
+      "doNotUseFor": [
+        "claiming numerical equivalence to HRRR RRTMG",
+        "silently replacing a source-locked replay evaluator"
+      ]
+    },
+    {
+      "id": "TOOL-KARMA-VOLUME-R26",
+      "domain": "renderer-local-volume-adapter",
+      "toolOrSource": "current official SideFX Karma volume documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "local absorption/scattering rate per distance semantics",
+        "anisotropy-oriented renderer adapter design"
+      ],
+      "doNotUseFor": [
+        "defining Weather condensate truth",
+        "treating path optical depth as local m^-1 extinction without geometry"
+      ]
+    },
+    {
+      "id": "TOOL-UE58-VOLUME-R26",
+      "domain": "renderer-volume-adapter",
+      "toolOrSource": "Unreal Engine 5.8 Volumetric Fog/Cloud documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "mapping closed optical packets into real-time volume material/evaluator controls",
+        "keeping real-time multiple-scattering approximations in evaluator state"
+      ],
+      "doNotUseFor": [
+        "feeding artistic extinction/albedo controls back into Canonical Weather",
+        "claiming renderer approximation is source-model radiation truth"
+      ]
+    },
+    {
+      "id": "TOOL-BLENDER52-VOLUME-R26",
+      "domain": "secondary-renderer-volume-adapter",
+      "toolOrSource": "Blender 5.2 LTS Principled Volume documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "independent adapter vocabulary for density/scattering/absorption/anisotropy",
+        "dual-evaluator closure tests"
+      ],
+      "doNotUseFor": [
+        "Canonical Weather state",
+        "source-native HRRR optical replay"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-VISIBLE-OPTICS-PROBE-R26",
+      "domain": "coordinator-optical-closure-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_visible_optics_closure_probe_r26.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "testing information-boundary invariants",
+        "preventing radius-only/mixed-radius/cloud-fraction shortcuts",
+        "testing path-to-local and spectral-projection separation"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR runtime authentication",
+        "physical cloud validation",
+        "visual acceptance"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
