@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   public-gate:
@@ -19,7 +19,13 @@ jobs:
     env:
       VERSION_MARKER: FARMLAND_MOTHER_R026_STRUCTURAL_TRUTH_WB_20260911
       PAGE_PATH: farmland-object-dna/Farmland_Mother_R026_Structural_Truth_Workbench_2026-09-11/index.html
+      DIAG_PATH: farmland-object-dna/diagnostics/Farmland_R026_Browser_Gate_Diagnostic.txt
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
       - name: Build fixed-commit public URL
         shell: bash
         run: |
@@ -32,14 +38,9 @@ jobs:
           set -euo pipefail
           for attempt in $(seq 1 50); do
             if curl --fail --location --silent --show-error --output /tmp/farmland-r026.html "$PUBLIC_URL"; then
-              if grep -q "$VERSION_MARKER" /tmp/farmland-r026.html; then
-                break
-              fi
+              if grep -q "$VERSION_MARKER" /tmp/farmland-r026.html; then break; fi
             fi
-            if [ "$attempt" = 50 ]; then
-              echo 'Fixed-commit public workbench did not become readable with expected marker.'
-              exit 1
-            fi
+            if [ "$attempt" = 50 ]; then echo 'Fixed-commit public workbench did not become readable with expected marker.'; exit 1; fi
             sleep 5
           done
           test -s /tmp/farmland-r026.html
@@ -51,58 +52,68 @@ jobs:
           test -s /tmp/three.module.js
           test -s /tmp/orbit-controls.js
           grep -q 'REVISION' /tmp/three.module.js
-          echo "HTTP_BYTES=$(wc -c < /tmp/farmland-r026.html)"
-          echo "HTTP_SHA256=$(sha256sum /tmp/farmland-r026.html | awk '{print $1}')"
 
       - name: Desktop and mobile browser startup
+        id: browser
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "$(dirname "$DIAG_PATH")"
+          : > "$DIAG_PATH"
+          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          echo "commit=$GITHUB_SHA" >> "$DIAG_PATH"
+          echo "url=$PUBLIC_URL" >> "$DIAG_PATH"
+          echo "browser=$BROWSER" >> "$DIAG_PATH"
+          "$BROWSER" --version >> "$DIAG_PATH" 2>&1 || true
+          if [ -z "$BROWSER" ]; then echo 'NO_BROWSER' >> "$DIAG_PATH"; exit 1; fi
+          run_browser () {
+            local label="$1" size="$2" out="$3" err="$4"
+            echo "=== $label $size ===" >> "$DIAG_PATH"
+            set +e
+            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --window-size="$size" --virtual-time-budget=14000 --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
+            code=$?
+            set -e
+            echo "exit=$code" >> "$DIAG_PATH"
+            echo '--- stderr tail ---' >> "$DIAG_PATH"
+            tail -160 "$err" >> "$DIAG_PATH" 2>&1 || true
+            echo '--- runtime markers ---' >> "$DIAG_PATH"
+            grep -E -o 'data-runtime-(ready|error)="[^"]+"' "$out" >> "$DIAG_PATH" 2>&1 || true
+            echo '--- canvas marker ---' >> "$DIAG_PATH"
+            grep -o '<canvas[^>]*>' "$out" | head -3 >> "$DIAG_PATH" 2>&1 || true
+            echo '--- body opening ---' >> "$DIAG_PATH"
+            grep -o '<body[^>]*>' "$out" | head -1 >> "$DIAG_PATH" 2>&1 || true
+            if [ "$code" -ne 0 ]; then return "$code"; fi
+            grep -q 'data-runtime-ready="true"' "$out" || return 31
+            grep -q '<canvas' "$out" || return 32
+            grep -q "$VERSION_MARKER" "$out" || return 33
+            grep -q 'stageSlider' "$out" || return 34
+            grep -q 'flowToggle' "$out" || return 35
+          }
+          failed=0
+          run_browser desktop '1440,960' /tmp/farmland-r026-desktop-dom.html /tmp/farmland-r026-desktop.err || failed=$?
+          if [ "$failed" -eq 0 ]; then run_browser mobile '390,844' /tmp/farmland-r026-mobile-dom.html /tmp/farmland-r026-mobile.err || failed=$?; fi
+          echo "final_exit=$failed" >> "$DIAG_PATH"
+          exit "$failed"
+
+      - name: Persist browser diagnostic on failure
+        if: steps.browser.outcome == 'failure'
         shell: bash
         run: |
           set -euo pipefail
-          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
-          if [ -z "$BROWSER" ]; then
-            echo 'No Chrome or Chromium executable is available on the runner.'
-            exit 1
-          fi
-          run_browser () {
-            local size="$1"
-            local out="$2"
-            local err="$3"
-            set +e
-            timeout 50s "$BROWSER" \
-              --headless=new \
-              --no-sandbox \
-              --disable-dev-shm-usage \
-              --enable-webgl \
-              --ignore-gpu-blocklist \
-              --use-gl=angle \
-              --use-angle=swiftshader \
-              --enable-unsafe-swiftshader \
-              --window-size="$size" \
-              --virtual-time-budget=14000 \
-              --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
-            code=$?
-            set -e
-            if [ "$code" -ne 0 ]; then
-              echo "Browser process failed with exit code $code"
-              tail -120 "$err" || true
-              exit "$code"
-            fi
-            if ! grep -q 'data-runtime-ready="true"' "$out"; then
-              echo 'Runtime-ready marker missing. Browser stderr:'
-              tail -120 "$err" || true
-              echo 'DOM diagnostic:'
-              grep -E -o 'data-runtime-(ready|error)="[^"]+"' "$out" || true
-              exit 1
-            fi
-            grep -q '<canvas' "$out"
-            grep -q "$VERSION_MARKER" "$out"
-            grep -q 'stageSlider' "$out"
-            grep -q 'flowToggle' "$out"
-          }
-          run_browser '1440,960' /tmp/farmland-r026-desktop-dom.html /tmp/farmland-r026-desktop.err
-          run_browser '390,844' /tmp/farmland-r026-mobile-dom.html /tmp/farmland-r026-mobile.err
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$DIAG_PATH"
+          git commit -m 'Farmland R026: capture browser gate diagnostic'
+          git push origin HEAD:restart/farmland-object-dna-v020-20260907
+
+      - name: Enforce browser result
+        if: steps.browser.outcome == 'failure'
+        shell: bash
+        run: exit 1
 
       - name: Summary
+        if: steps.browser.outcome == 'success'
         shell: bash
         run: |
           {
