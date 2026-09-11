@@ -1,0 +1,92 @@
+{
+  "schema": "wenzhou-r3.7-current/r1",
+  "version": "R3.7",
+  "state": "verified-candidate-awaiting-user-review",
+  "visualAcceptance": false,
+  "productionReady": false,
+  "realIphoneVerified": false,
+  "verifiedCandidateCommit": "81354b32acedf158490203f89e4cda5c3449e3a0",
+  "base": {
+    "r3_6VerifiedCandidate": "3b1af516ae2c7f3241cabb180f63f673d45bd4d2",
+    "r3_6StatusHeadAtBranchCreation": "5af467e3db7d01fff3df113a90cf16d0f67a992e",
+    "inheritedImplementationFrozenByQa": true
+  },
+  "fixedPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html",
+  "soilEvidence": {
+    "provider": "ISRIC World Soil Information",
+    "product": "SoilGrids 2.0 rolling release",
+    "sourceIdentity": "model_prediction_external_observation",
+    "nativeResolutionM": 250,
+    "alignedCrs": "EPSG:32651",
+    "alignedBounds": [190250, 2991250, 411250, 3242000],
+    "alignedRowsCols": [1003, 884],
+    "fullAcquisitionRunId": 34189255543,
+    "fullAcquisitionCommit": "b8471edd4de95a50656ae95d6559c2f687301f42",
+    "fullCoverageCount": 426,
+    "fullDepths": ["0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"],
+    "permanentReleaseTag": "wenzhou-r3.7-soilgrids-evidence-20260911",
+    "permanentReleaseUrl": "https://github.com/haihao0307/guilin-dem-pipeline/releases/tag/wenzhou-r3.7-soilgrids-evidence-20260911",
+    "browserDepth": "0-5cm",
+    "browserProperties": ["clay", "sand", "silt", "soc", "phh2o", "bdod", "cfvo", "wv0033"],
+    "browserLayerCount": 16,
+    "browserBundlePayloadBytes": 29259516,
+    "loadPolicy": "selected property Q0.5 plus uncertainty on demand",
+    "uncertaintyMeaning": "relative SoilGrids uncertainty index; kept separate from property physical units",
+    "canonicalTruth": false,
+    "fieldObservation": false,
+    "mayClaim12p5mSoilTruth": false,
+    "mayReplaceFieldSurvey": false,
+    "mayOverrideCanonicalDem": false,
+    "farmLevelUseRequiresLocalCalibration": true,
+    "heightDisplacement": false,
+    "fieldBoundaryGeneration": false,
+    "individualObjectGeneration": false
+  },
+  "currentWorkbenchCleanup": {
+    "legacyR3_3QueryOnlySoilAppearanceInstalled": false,
+    "legacyHistoryDeleted": false,
+    "note": "R3.7 suppresses the redundant R3.3 12-query local appearance hook only in the current workbench. R3.3 files, fixed history and recovery chain remain untouched."
+  },
+  "qa": {
+    "runId": 34577823936,
+    "passed": true,
+    "staticSoilEvidenceGate": true,
+    "localFunctionalBrowser": true,
+    "fixedCommitRawGithackBrowser": true,
+    "soilPixelToggleVerified": true,
+    "uncertaintyPixelToggleVerified": true,
+    "allEightPropertiesLoadedAndShaVerified": true,
+    "query01IndependentBinaryCheck": {
+      "property": "clay",
+      "row": 1,
+      "column": 468,
+      "raw": 176,
+      "displayValue": 17.6,
+      "displayUnit": "mass%",
+      "uncertaintyRawRelativeIndex": 39
+    },
+    "eyeDisplaySurfaceMetersBeforeMovement": 1.6,
+    "eyeDisplaySurfaceMetersAfterMovement": 1.6,
+    "mobileViewport": [390, 844],
+    "mobileScrollWidth": 390,
+    "mobilePanelAboveCameraControls": true,
+    "query01InheritedRoadSegments": 11007,
+    "query01InheritedBuildingSegments": 906,
+    "runtimeErrors": [],
+    "mobileErrors": [],
+    "artifactId": 10190489024,
+    "artifactZipSha256": "87c9941b0b283b0194e892daccbd1ae04b8b62a3dfa675b15b633c729608d656"
+  },
+  "nextEvidenceWork": {
+    "wrb": {
+      "status": "pre-audited-not-yet-integrated",
+      "officialMostProbableLegendResolved": true,
+      "criticalIssue": "The old aligned MostProbable categorical raster was bilinear-resampled. Do not integrate it directly. Rebuild MostProbable from the 30 aligned probability layers by argmax or reproject the native categorical raster with nearest-neighbour, then cross-check.",
+      "probabilityLayerRole": "estimated WRB Reference Soil Group occurrence probability, not field-class truth"
+    },
+    "profileDepths": "integrate the remaining five SoilGrids depth intervals without implying farm-scale profile truth",
+    "jrcWaterHistory": "integrate 1984-2024 historical surface-water evidence as a separate observation voice; never replace current sea, river-network or water-level semantics"
+  },
+  "statusCommitDoesNotChangeVerifiedCandidate": true,
+  "recordedAt": "2026-09-11"
+}
