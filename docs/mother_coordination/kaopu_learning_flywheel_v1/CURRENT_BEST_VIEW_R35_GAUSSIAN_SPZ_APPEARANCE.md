@@ -1,0 +1,9 @@
+# Current Best View — Gaussian SPZ appearance compatibility R35 candidate
+
+1. R34's constrained SPZ delivery profile remains necessary: v4, default RUB, no coordinate extension, SH degree at most 3, strict pre-pack and byte-envelope gates, and a retained float reconstruction checkpoint.
+2. It is not sufficient for appearance preservation in Three.js r186. An exhaustive actual encoder/loader matrix found that r186 clamps packed SPZ DC bytes `0..59` and `196..255`; only `60..195` avoid this extra base-color clamp.
+3. The mismatch matters in principle because SPZ intentionally represents out-of-display-range DC for possible higher-SH compensation, while r186 stores the converted base in clamped 8-bit color before adding SH. CPU counterexamples prove that clamp-before-SH and clamp-after-SH are not equivalent. Actual visual impact remains Unknown.
+4. Opacity packed-byte handoff passed for all 256 values, but the source logit was already mapped through sigmoid and 8-bit quantization. Exact byte handoff is not source or rendered-alpha equivalence.
+5. Three r186's float PLY loader has the same tested DC clamp. Preserve float PLY as the authoritative reconstruction checkpoint, but use an independent high-fidelity float-SH evaluator or renderer for comparison rather than treating the r186 PLY path as the reference.
+6. Candidate delivery policy: record the actual DC-byte histogram and fail the label `appearance-preserving` when any DC code lies outside `60..195`, unless a versioned fixed-view image error budget is explicitly accepted. The artifact may still proceed as an explicitly lossy presentation derivative.
+7. No photo reconstruction, Brush run, GPU/device test or human acceptance occurred. RealityScan is not replaced; splats are neither Canonical Truth nor complete Object DNA. Frozen R1 and production Mothers remain unchanged.

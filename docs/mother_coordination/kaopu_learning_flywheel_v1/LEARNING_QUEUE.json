@@ -26,14 +26,16 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts and separated pose, float checkpoint, lossy delivery and viewer identities. R34 read the 2026-09-12 Mother meeting critique, then executed the pinned Niantic SPZ v4 encoder/unpacker and actual Three.js r186 loader on a two-splat RDF-to-RUB SH3 fixture. Twelve CPU checks passed: centers matched Niantic unpack within 6.25e-10 stored units, covariance within 1.083e-7, and all SH1-SH3 bytes exactly. New negative controls showed that r186 accepts one-byte truncation and trailing bytes, while the candidate exact-envelope gate rejects both. The actual Niantic packer also accepted x=2048 at fractionalBits=12 and decoded it as -2048, while log-scales -11 and 6 saturated to -10 and 5.9375; the new pre-pack gate rejects those inputs. This requires separate pre-pack source validation and post-pack envelope validation. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts and separated pose, float checkpoint, lossy delivery and viewer identities. R34 executed the pinned Niantic SPZ v4 encoder/unpacker and actual Three.js r186 loader on a two-splat RDF-to-RUB SH3 fixture: center/covariance/SH interop passed, while envelope and pre-pack range counterexamples required separate gates. R35 executed an exhaustive 256-code Niantic encoder -> Three r186 loader matrix. Opacity bytes transferred exactly, but r186 clamped SPZ DC bytes 0-59 and 196-255; only 60-195 avoided the extra base-color clamp, and maximum endpoint linear DC loss was 0.4403159726. The actual r186 float PLY loader also clamped tested DC extremes. Source inspection plus executable arithmetic counterexamples show that r186's clamp-before-higher-SH order is not equivalent to post-SH clamping, but no GPU or perceptual impact was measured. Seven CPU checks passed and an appearance-domain candidate gate was added. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_APPEARANCE_R35.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
-        "references/gaussian-spz-interop-r34/SOURCE_LOCK.json"
+        "references/gaussian-spz-interop-r34/SOURCE_LOCK.json",
+        "references/gaussian-spz-appearance-r35/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -47,7 +49,13 @@
       "currentBestViewInteropExtension": "CURRENT_BEST_VIEW_R34_GAUSSIAN_SPZ_INTEROP.md",
       "toolRoutingInteropExtension": "TOOL_ROUTING_R34_GAUSSIAN_SPZ_INTEROP.json",
       "motherRoutingInteropExtension": "MOTHER_ROUTING_R34_GAUSSIAN_SPZ_INTEROP.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with reprojection/registration evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; preflight finite attributes, normalized quaternions, signed-int24 position range, log-scale saturation and a measured scale anchor before encoding; create a separate RUB/no-extension/SH<=3 SPZ v4 derivative; validate hash, header/declaration agreement, TOC/stream sizes and exact byte-envelope coverage before awaiting Three decode; compare fixed-view linear renders and semantic attribute statistics before/after packing; then test Three.js r186 on macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence from this gate."
+      "appearanceProbe": "PROBES/gaussian_spz_appearance_r35.mjs",
+      "appearanceProbeResult": "PROBES/gaussian_spz_appearance_result_r35.json",
+      "candidateAppearanceGate": "ADAPTERS/gaussian_spz_appearance_gate_r35.mjs",
+      "currentBestViewAppearanceExtension": "CURRENT_BEST_VIEW_R35_GAUSSIAN_SPZ_APPEARANCE.md",
+      "toolRoutingAppearanceExtension": "TOOL_ROUTING_R35_GAUSSIAN_SPZ_APPEARANCE.json",
+      "motherRoutingAppearanceExtension": "MOTHER_ROUTING_R35_GAUSSIAN_SPZ_APPEARANCE.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with reprojection/registration evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; preflight finite attributes, normalized quaternions, signed-int24 position range, log-scale saturation and a measured scale anchor before encoding; create a separate RUB/no-extension/SH<=3 SPZ v4 derivative; validate hash, header/declaration agreement, TOC/stream sizes and exact byte-envelope coverage before awaiting Three decode; record source and packed DC histograms, Three clamp counts and opacity endpoints; compare an independent high-fidelity float-SH fixed-view reference against the r186 result rather than using r186 PLY as the sole reference; then test macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Treat out-of-range DC only as an explicitly lossy candidate unless a versioned image-error budget is accepted. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence from this gate."
     },
     {
       "id": "LQ-TELLUX-001",
