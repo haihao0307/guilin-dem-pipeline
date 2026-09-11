@@ -1,0 +1,74 @@
+{
+  "schema": "kaopu-tool-routing-extension/r28",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-EPIC-UE58-PHASE-DOC-CONFLICT-R28",
+      "domain": "renderer-phase-contract",
+      "toolOrSource": "UE 5.8 generated API/header docs + Volumetric Cloud Component Properties + Volumetric Cloud Material docs",
+      "authority": "primary-official-engine-documentation-with-conflict",
+      "observationRootEligible": false,
+      "useFor": [
+        "preserving the current official PhaseG sign-description conflict as evidence",
+        "blocking silent sign binding until runtime/source calibration"
+      ],
+      "doNotUseFor": [
+        "claiming UE runtime PhaseG sign is known",
+        "physical atmospheric truth",
+        "choosing one documentation page by preference"
+      ]
+    },
+    {
+      "id": "TOOL-SIDEFX-KARMA-PHASE-R28",
+      "domain": "renderer-phase-contract",
+      "toolOrSource": "current SideFX Karma Volume documentation",
+      "authority": "primary-official-renderer-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "locking Karma positive-forward / negative-backward anisotropy semantics",
+        "locking secondary-anisotropy linear-mix behavior as a distinct evaluator representation"
+      ],
+      "doNotUseFor": [
+        "assuming source optical g uses the same phase family/convention without verification",
+        "resolving UE runtime behavior"
+      ]
+    },
+    {
+      "id": "TOOL-PBRT4-PHASE-R28",
+      "domain": "phase-reference-implementation",
+      "toolOrSource": "PBRT v4 Phase Functions reference implementation/book",
+      "authority": "primary-reference-implementation",
+      "observationRootEligible": false,
+      "useFor": [
+        "locking HG g as mean cosine / first moment",
+        "making direction-vector convention explicit",
+        "demonstrating non-uniqueness of phase distributions sharing one g"
+      ],
+      "doNotUseFor": [
+        "asserting UE or Karma implementation identity",
+        "physical cloud validation"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-PHASE-CONVENTION-PROBE-R28",
+      "domain": "coordinator-numeric-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_phase_convention_probe_r28.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "checking HG normalization/moments under an explicit KAOPU convention",
+        "quantifying sign-inversion impact",
+        "proving direction-vector convention can alter formula form without changing physical distribution",
+        "proving first-moment-only dual-lobe mapping is underdetermined"
+      ],
+      "doNotUseFor": [
+        "UE/Karma runtime authentication",
+        "WRF/HRRR runtime authentication",
+        "physical atmospheric Observation Roots"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
