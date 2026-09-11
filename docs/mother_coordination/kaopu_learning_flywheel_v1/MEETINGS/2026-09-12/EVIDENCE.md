@@ -1,0 +1,21 @@
+# 固定证据索引
+
+- [coordinator-r33](https://github.com/haihao0307/guilin-dem-pipeline/blob/5e75d68a7c0fb5be2fc6ff8516a2c080235520d2/docs/mother_coordination/kaopu_learning_flywheel_v1/CURRENT_BEST_VIEW_R33_GAUSSIAN_HANDOFF.md) — published-candidate
+- [r33-probe](https://github.com/haihao0307/guilin-dem-pipeline/blob/5e75d68a7c0fb5be2fc6ff8516a2c080235520d2/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_handoff_probe_r33.mjs) — source
+- [wenzhou-user-baseline-receipt](https://github.com/haihao0307/guilin-dem-pipeline/issues/61#issuecomment-5630816884) — historical-Mother-receipt; R3.2 user-confirmed; not tonight attendance
+- [wenzhou-current-rules](https://github.com/haihao0307/guilin-dem-pipeline/blob/cc9e033115ab2ab259e76955183e75d59a892efc/AGENTS.md) — authority-rules
+- [farmland-full](https://github.com/haihao0307/guilin-dem-pipeline/blob/9962b82d73f1bc80be87951a72ab348ad368aedd/farmland-object-dna/CURRENT_FULL_HANDOFF.md) — full-handoff-pointer
+- [farmland-r026-gate](https://github.com/haihao0307/guilin-dem-pipeline/blob/9962b82d73f1bc80be87951a72ab348ad368aedd/farmland-object-dna/diagnostics/Farmland_R026_Browser_Gate_Diagnostic.txt) — published-failed-gate; external notice intercepted; not product renderer failure proof
+- [weather-r26-qa](https://github.com/haihao0307/guilin-dem-pipeline/blob/df296367d842e91279a42fc2616b7e0e441ca141/weather-mother/full-weather-r26-observation-bandwidth-20260911/PUBLIC_QA_MOBILE_OBSERVATION_BANDWIDTH_2026-09-11.json) — published-browser-QA-not-rerun
+- [ocean-r0197-workflow](https://github.com/haihao0307/guilin-dem-pipeline/blob/b5be782a135d43d54253cbe20e664b53f2c726c6/.github/workflows/ocean-r0197-mobile-heightfield.yml) — workflow-source; compile-and-URL-gate; not executed browser proof
+- [brick-request](https://github.com/haihao0307/HOUSE/issues/16#issuecomment-5626643428) — historical-Mother-review-request
+- [brick-r8-source](https://github.com/haihao0307/HOUSE/blob/cc9b6b68235d0c608804ede9aad08e0127da6539/yunnan-courtyard-architecture-factory-v5.2.1-full-local/yunnan-courtyard-architecture-factory-v5.2.1-full-local/brick-mother/experiments/atelier-r7/Brick_Mother_R8_Final_Sprint.html) — source; reviewer and coordinator inspected code paths; GPU not executed
+- [tiles-r07-qa](https://github.com/haihao0307/HOUSE/blob/a632268744396ae8cd608ff5dc6e376dc4e5ecee/tiles-mother/r2-closeout-07-visible-handmade/QA.json) — candidate-QA
+- [tiles-r07-source](https://github.com/haihao0307/HOUSE/blob/a632268744396ae8cd608ff5dc6e376dc4e5ecee/tiles-mother/r2-closeout-07-visible-handmade/START_HERE.html) — source
+- [skin-frozen](https://github.com/haihao0307/AIRCRAFT/blob/636f26ec102680b4154a6f9dca0cf49fc951f51e/ACCEPTED_BASELINE.json) — accepted-frozen
+- [skin-instance](https://github.com/haihao0307/AIRCRAFT/blob/479e812c2461e91083c8f1e286fb05b23508cd5f/instances/80-days-r1/MARKING_CONTRACT.json) — unaccepted-instance-contract
+- [skin-rejected-registration](https://github.com/haihao0307/AIRCRAFT/blob/479e812c2461e91083c8f1e286fb05b23508cd5f/instances/80-days-r7/SELF_AUDIT.md) — published-rejected-hypotheses
+- [weapons-w13](https://github.com/haihao0307/AIRCRAFT/blob/430f63ee712a23e6d8aaf0173f52d03215f7dcb9/production/aircraft-anm2-v0.2/CURRENT.json) — awaiting-user-review; digital exterior display only
+- [weapons-w13-qa](https://github.com/haihao0307/AIRCRAFT/blob/430f63ee712a23e6d8aaf0173f52d03215f7dcb9/production/aircraft-anm2-v0.2/validation/w13/QA.json) — published-local-QA; url null; byteIdentityVerified false
+- [human-inbox](https://github.com/haihao0307/Humanoid-Rig-Lab-Next/issues/1) — verified-inbox-no-new-Mother-receipt
+- [historical-world-inbox](https://github.com/haihao0307/Three.js/issues/2) — verified-inbox-no-new-Mother-receipt

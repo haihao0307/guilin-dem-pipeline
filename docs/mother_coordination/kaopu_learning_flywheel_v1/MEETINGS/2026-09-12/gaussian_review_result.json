@@ -1,0 +1,128 @@
+{
+  "evidence": {
+    "declarationValidator": [
+      {
+        "errors": [],
+        "inputLabel": "missing"
+      },
+      {
+        "errors": [],
+        "inputLabel": "NaN-runtime-only-not-valid-JSON"
+      },
+      {
+        "errors": [],
+        "inputLabel": "null"
+      },
+      {
+        "errors": [],
+        "inputLabel": "negative"
+      },
+      {
+        "errors": [],
+        "inputLabel": "fractional"
+      },
+      {
+        "errors": [],
+        "inputLabel": "string"
+      },
+      {
+        "errors": [],
+        "inputLabel": "valid3"
+      },
+      {
+        "errors": [
+          "three-r186-sh-degree-over-3-is-truncated"
+        ],
+        "inputLabel": "unsupported4"
+      }
+    ],
+    "int24AtFractionalBits12": {
+      "cases": [
+        {
+          "inRepresentableCenterRange": false,
+          "input": -2048.000244140625,
+          "integer": -8388609,
+          "uncheckedLow24BitDecode": 2047.999755859375
+        },
+        {
+          "inRepresentableCenterRange": true,
+          "input": -2048,
+          "integer": -8388608,
+          "uncheckedLow24BitDecode": -2048
+        },
+        {
+          "inRepresentableCenterRange": true,
+          "input": 2047.999755859375,
+          "integer": 8388607,
+          "uncheckedLow24BitDecode": 2047.999755859375
+        },
+        {
+          "inRepresentableCenterRange": false,
+          "input": 2048,
+          "integer": 8388608,
+          "uncheckedLow24BitDecode": -2048
+        }
+      ],
+      "max": 2047.999755859375,
+      "min": -2048,
+      "step": 0.000244140625
+    },
+    "logScale": [
+      {
+        "byte": 0,
+        "decoded": -10,
+        "input": -11,
+        "relativeError": 1.718281828459045
+      },
+      {
+        "byte": 0,
+        "decoded": -10,
+        "input": -10,
+        "relativeError": 0
+      },
+      {
+        "byte": 126,
+        "decoded": -2.125,
+        "input": -2.131,
+        "relativeError": 0.0060180360540647015
+      },
+      {
+        "byte": 255,
+        "decoded": 5.9375,
+        "input": 5.9375,
+        "relativeError": 0
+      },
+      {
+        "byte": 255,
+        "decoded": 5.9375,
+        "input": 6,
+        "relativeError": 0.06058693718652419
+      }
+    ],
+    "unclippedLogScaleRelativeBound": 0.03174340749910276,
+    "unitExamples": [
+      {
+        "halfStepPositionErrorMeters": 0.0001220703125,
+        "metersPerStoredUnit": 1
+      },
+      {
+        "halfStepPositionErrorMeters": 0.1220703125,
+        "metersPerStoredUnit": 1000
+      }
+    ]
+  },
+  "schema": "kaopu-independent-r33-counterexamples/1",
+  "scope": {
+    "boundScope": "Ideal nearest log-scale quantization without saturation; excludes Float32, exponent evaluation, quaternion and covariance error",
+    "gpuExecuted": false,
+    "javascriptExecutedBy": "node",
+    "note": "Int24 low-bit wrap demonstrates a hazard, not actual encoder behavior. Quantization bounds are in stored units, not an inferred metric accuracy claim.",
+    "productionCodeChanged": false,
+    "r33ValidatorExpressionReproduced": true,
+    "realSpzEncoderExecuted": false,
+    "realThreeLoaderExecuted": false,
+    "realTrainingExecuted": false,
+    "roundingPolicy": "JavaScript Math.round; actual encoder tie handling not verified here"
+  },
+  "status": "counterexamples-reproduced"
+}
