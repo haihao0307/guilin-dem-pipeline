@@ -1,0 +1,70 @@
+name: Wenzhou R3.6 Same-Runner Comparison
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-6-osm-runtime-20260911
+    paths:
+      - 'site/dist/r3-6/**'
+      - 'tools/r3-6/same_runner_compare.mjs'
+      - '.github/workflows/wenzhou-r3-6-same-runner-compare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Freeze R3.5 visual/data implementation
+        run: |
+          set -euo pipefail
+          BASE=58ae114d61442d5f5f86d00f29d0e34fdf95f15e
+          git diff --exit-code "$BASE" HEAD -- site/dist/r3-5
+          node --check tools/r3-6/same_runner_compare.mjs
+      - name: Install Chromium
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run same-runner R3.5 versus R3.6 comparison
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r36-compare-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          BASE_URL=http://127.0.0.1:8765/site/dist/ node tools/r3-6/same_runner_compare.mjs | tee /tmp/r36-same-runner.json
+          grep -q '"schema": "wenzhou-r3.6-same-runner-comparison/r2"' /tmp/r36-same-runner.json
+          grep -q '"realIphoneVerified": false' /tmp/r36-same-runner.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/r36-same-runner.json'))
+          assert d['r35']['query01']['state']['roadSegments']==11007
+          assert d['r36']['query01']['state']['roadSegments']==11007
+          assert d['r35']['query01']['state']['buildingSegments']==906
+          assert d['r36']['query01']['state']['buildingSegments']==906
+          assert all(d['geometryEqual'].values()), d['geometryEqual']
+          assert d['r36']['query01']['state']['samplerMode']=='regular-o1-with-boundary-correction'
+          assert d['r36']['overview']['state']['samplerMode']=='regular-o1-with-boundary-correction'
+          print(json.dumps({'passed':True,'geometryEqual':d['geometryEqual'],'comparison':d['comparison']},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-6-same-runner-${{ github.sha }}
+          path: |
+            /tmp/r36-same-runner.json
+            /tmp/r36-compare-http.log
+          if-no-files-found: error
+          retention-days: 30

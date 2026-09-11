@@ -1,0 +1,127 @@
+{
+  "schema": "wenzhou-r3.6-current/r1",
+  "version": "R3.6",
+  "state": "awaiting-user-review",
+  "visualAcceptance": false,
+  "productionReady": false,
+  "realIphoneVerified": false,
+  "verifiedCandidateCommit": "3b1af516ae2c7f3241cabb180f63f673d45bd4d2",
+  "runtimeImplementationLine": {
+    "sixMsO1Parent": "cf9f8f4c6bc67443ce75075eeb88d83ce2818267",
+    "note": "The verified candidate keeps the 6 ms O(1) runtime implementation. Later commits through the candidate are QA/test-only changes."
+  },
+  "base": {
+    "r3_5VerifiedCandidate": "58ae114d61442d5f5f86d00f29d0e34fdf95f15e",
+    "branch": "feature/wenzhou-r3-5-osm-context-20260911",
+    "mergeBaseVerified": true
+  },
+  "fixedPublicPreview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/3b1af516ae2c7f3241cabb180f63f673d45bd4d2/site/dist/r3-6/index.html",
+  "evidence": {
+    "reusesExactR3_5BrowserBundle": true,
+    "r3_6OsmDataCopy": false,
+    "sourceReleaseAssetSha256": "f3ae1c9051b25fc1d23c8df1dd951a9138d6b188b1e46bff56a352c324a90101",
+    "correctedAuditSha256": "d9a2d7986f74cfd4309174151dbc36920e188080f4c1daf21ae865efa3dd4364",
+    "canonicalTruth": false,
+    "surveyGradeGeometry": false,
+    "individualPhysicalTruth": false,
+    "roadPhysicalWidthClaim": "none-screen-style-only",
+    "buildingHeightClaim": "unknown-not-generated",
+    "syntheticPatchClosure": false,
+    "displaySurfaceAnchorIsElevationTruth": false
+  },
+  "runtime": {
+    "representation": "indexed-line-segments",
+    "sourceVertexSampledOnce": true,
+    "sameEvidenceSegmentsPreserved": true,
+    "regularTerrainSampler": "O(1)-cell-location-with-boundary-correction-and-binary-fallback",
+    "cpuYieldBudgetMs": 6,
+    "payloadCacheLimit": 2,
+    "abortController": true,
+    "trueInflightFetchCancellationVerified": true,
+    "cancellationEvidence": [
+      "superseded build controller abort",
+      "browser requestfailed/net::ERR_ABORTED",
+      "local delayed HTTP server CLIENT_ABORT"
+    ],
+    "fetchAbortCountTelemetryAuthoritative": false
+  },
+  "geometryRegression": {
+    "query_01": {
+      "roadSegmentsDrawn": 11007,
+      "roadSegmentsRejectedNoSurface": 109,
+      "buildingSegmentsDrawn": 906,
+      "buildingSegmentsRejectedNoSurface": 4,
+      "roadSourceVertices": 11562,
+      "roadGpuVertices": 11562,
+      "roadGpuIndexCount": 22014
+    },
+    "river_oujiang": {
+      "roadSegmentsDrawn": 32807,
+      "roadSegmentsRejectedNoSurface": 404,
+      "buildingSegmentsDrawn": 2184,
+      "buildingSegmentsRejectedNoSurface": 8
+    },
+    "mountains": {
+      "roadSegmentsDrawn": 1865,
+      "roadSegmentsRejectedNoSurface": 27,
+      "buildingSegmentsDrawn": 0
+    },
+    "overview": {
+      "roadSegmentsDrawn": 508201,
+      "roadSegmentsRejectedNoSurface": 1411,
+      "buildingSegmentsDrawn": 0,
+      "roadSourceVertices": 558459,
+      "roadGpuVertices": 558459,
+      "roadGpuIndexCount": 1016402
+    }
+  },
+  "qa": {
+    "runId": 34550131324,
+    "passed": true,
+    "frozenR3_2ThroughR3_5": true,
+    "localFunctionalBrowser": true,
+    "trueInflightCancellation": true,
+    "fixedCommitRawGithackBrowser": true,
+    "roadPixelToggleVerified": true,
+    "buildingPixelToggleVerified": true,
+    "eyeDisplaySurfaceMetersBeforeMovement": 1.6,
+    "eyeDisplaySurfaceMetersAfterMovement": 1.6,
+    "mobileViewport": [390, 844],
+    "runtimeErrors": [],
+    "mobileErrors": [],
+    "artifactId": 10177956714,
+    "artifactZipSha256": "335fe65be6ca67fda8e14f841b99b20ad4af5467f91fe7cf3f4047778fe67c13"
+  },
+  "performanceEvidence": {
+    "sameRunnerReference": {
+      "runId": 34548938349,
+      "kind": "390x844 DPR3 Playwright Chromium mobile emulation",
+      "query01AfterTerrainOsmIncrementRatioR36OverR35Approx": 0.363,
+      "overviewAfterTerrainOsmIncrementRatioR36OverR35Approx": 0.997,
+      "geometryEqual": true,
+      "meaningfulHeapReductionProven": false,
+      "realDeviceSla": false
+    },
+    "rejectedExperiment": {
+      "cpuYieldBudgetMs": 12,
+      "commit": "6f5d84dc6248173648a3519ea34ade9f40d09fd0",
+      "overviewRatioApprox": 1.312,
+      "accepted": false
+    },
+    "cpuProfile": {
+      "runId": 34550193601,
+      "diagnosticOnly": true,
+      "finding": "Headless overview wall time is dominated by native/software-renderer/program time rather than R3.6 JavaScript hot loops. buildIndexedRoads sampled at roughly 50 ms and terrainSampler at roughly 8 ms while cached overview wall time remained much larger.",
+      "realIphoneEvidence": false
+    },
+    "overviewPerformanceConclusion": "Neutral/not proven better on reliable same-runner evidence; do not claim global FPS or iPhone speedup.",
+    "queryPerformanceConclusion": "Material same-runner near-view improvement was observed while exact evidence geometry remained equal."
+  },
+  "remainingGates": [
+    "user visual acceptance",
+    "real iPhone Safari/GPU/CPU performance verification",
+    "production-readiness decision only after real-device evidence"
+  ],
+  "statusCommitDoesNotChangeVerifiedCandidate": true,
+  "recordedAt": "2026-09-11"
+}
