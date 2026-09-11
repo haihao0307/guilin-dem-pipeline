@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu-mother-routing-extension/r26",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_VISIBLE_CLOUD_OPTICAL_CLOSURE_R26.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "emit a typed CloudMicrophysicsPacket carrying phase-resolved condensate or water-path basis, cloud-fraction semantics, layer geometry, produced effective radius, source identity, and source-consumed radius when replaying source-native radiation",
+        "tag condensate/path semantics as in_cloud, grid_mean, or unknown; never erase this distinction",
+        "do not derive cloud color, opacity, local extinction or renderer density directly from RE_CLOUD/RE_ICE/RE_SNOW",
+        "do not multiply cloud fraction into local extinction by default; preserve subgrid/overlap provenance separately"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "own OpticalClosureIdentity and convert typed Weather state into a SpectralLayerOpticalPacket",
+        "evaluate liquid, ice and snow optical contributions separately before mixed-phase composition",
+        "preserve optical parameterization/LUT identity, effective-size definition, spectral bands, and non-delta versus delta-scaled quantities",
+        "record every radius clamp, fallback or category remap in OpticsInputLineage rather than hiding it",
+        "when reproducing locked HRRRv4 RRTMG, preserve the documented snow reuse of ice lookup tables as an explicit limitation"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "consume SpectralLayerOpticalPacket rather than raw microphysics effective-radius fields",
+        "reject physically routed packets that lack hydrometeor amount/path basis, optical-model identity, spectral identity or geometry/path basis",
+        "derive local sigma_t/sigma_s/sigma_a only through an explicit LocalVolumeOpticsAdapter with declared spatial assumptions",
+        "perform spectral-to-renderer RGB/color projection as a versioned evaluator transform and preserve the original spectral packet",
+        "keep artistic density, albedo, phase, multiple-scattering and performance controls evaluator-only; never write them back into Weather Canonical Truth"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "add OpticalClosureIdentity, OpticsInputLineage, SpectralLayerOpticalPacket, LocalVolumeOpticsAdapter, MixedPhaseCompositionRule and OpticsFallbackPolicy as candidate reusable contracts",
+        "require ProducedRadiusIdentity and ConsumedRadiusIdentity to remain distinguishable when an evaluator clamps, substitutes or reclassifies a state",
+        "treat path-integrated optical depth, local per-distance coefficients and display/RGB quantities as different typed quantities",
+        "split QA into semantic closure, numeric invariants and visual acceptance; a visually pleasing cloud is not semantic evidence"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after a typed mixed-phase/partial-cloud spectral fixture closes through at least two independent renderer adapters and all applicable Weather runtime and replay gates remain satisfied"
+}
