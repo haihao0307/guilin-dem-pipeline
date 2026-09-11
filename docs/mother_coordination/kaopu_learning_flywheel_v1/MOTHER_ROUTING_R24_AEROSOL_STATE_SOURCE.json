@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-mother-routing-extension/r24",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_HRRRV4_AEROSOL_STATE_SOURCE_R24.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "add AerosolStateSourceIdentity to any ThompsonAero checkpoint lineage",
+        "for L1 permit source-internal fallback aerosol profiles to reduce setup cost, but label Evidence Ceiling algorithm-path-only",
+        "keep the R22 28/4/4/1 producer gate, R21 fail-fast runtime-I/O, R23 post-producer sampling and locked CCN_ACTIVATE.BIN dependency",
+        "for L3 restore the operational external HRRR/RAP aerosol IC/BC lineage and do not substitute fallback state"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "treat algorithm-path equivalence and state-source equivalence as separate checkpoint dimensions",
+        "do not promote effective-radius replay from a fallback-aerosol SCM into operational HRRR authentication",
+        "keep ReplayStatus source_callpath_authenticated after R24 and after any L1-only success"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "generalize AerosolStateSourceIdentity into a reusable StateSourceIdentity provenance contract",
+        "preserve source class, artifact/version, initialization epoch, update/boundary policy and fallback constants",
+        "extend HarnessEquivalenceVector with separate AlgorithmPathEquivalence and StateSourceEquivalence axes"
+      ]
+    },
+    {
+      "mother": "Lighting",
+      "items": [
+        "no physical promotion from R24; effective radius remains upstream of spectral optical closure and renderer-neutral optical packets"
+      ]
+    }
+  ],
+  "promotionAuthority": "Xiaoma Judgment after state-source-aligned locked HRRRv4 L3 real-input ControlInstrumentedPair plus independent source-model checkpoint and downstream optical/evaluator gates"
+}
