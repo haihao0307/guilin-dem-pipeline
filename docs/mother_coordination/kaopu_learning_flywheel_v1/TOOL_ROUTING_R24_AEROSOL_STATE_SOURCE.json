@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu-tool-routing-extension/r24",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "id": "TOOL-HRRRV4-THOMPSON-AEROSOL-STATE-R24",
+      "domain": "weather-microphysics-state-source",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 module_mp_thompson.F + module_physics_init.F at commit 40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "authority": "primary-official-operational-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "distinguishing aerosol-aware algorithm-path eligibility from aerosol state-source provenance",
+        "identifying source-internal NWFA/NIFA fallback initialization when fields are absent/nearly zero",
+        "designing a lower-dependency L1 ThompsonAero harness"
+      ],
+      "doNotUseFor": [
+        "claiming fallback aerosol profiles are operational HRRR aerosol state",
+        "physical atmospheric truth",
+        "runtime authentication without model execution"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-SCM-R24",
+      "domain": "weather-validation-harness-input-surface",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 test/em_scm_xy README.scm + namelist.input",
+      "authority": "primary-official-model-test-source",
+      "observationRootEligible": false,
+      "useFor": [
+        "bounding the shipped SCM input contract",
+        "separating baseline 2/1/1 SCM configuration from the corrected 28/4/4/1 L1 configuration",
+        "keeping SCM Evidence Ceiling below operational HRRR"
+      ],
+      "doNotUseFor": [
+        "operational HRRR state equivalence",
+        "horizontal-advection or specified-boundary validation"
+      ]
+    },
+    {
+      "id": "TOOL-HRRRV4-CONUS-AEROSOL-CONFIG-R24",
+      "domain": "weather-operational-state-source-identity",
+      "toolOrSource": "locked NOAA-EMC HRRRv4 parm/conus/hrrr_wrf.nl",
+      "authority": "primary-official-operational-configuration",
+      "observationRootEligible": false,
+      "useFor": [
+        "locking operational use_aero_icbc/use_rap_aero_icbc identity",
+        "preventing fallback-SCM state from being mislabeled operational"
+      ],
+      "doNotUseFor": [
+        "asserting a specific archived cycle actually executed without runtime evidence",
+        "turning configuration into physical observation"
+      ]
+    },
+    {
+      "id": "TOOL-WRF-THOMPSON-AEROSOL-DOC-R24",
+      "domain": "weather-microphysics-user-contract",
+      "toolOrSource": "current official UCAR/NCAR WRF Thompson Aerosol-aware documentation",
+      "authority": "primary-official-documentation",
+      "observationRootEligible": false,
+      "useFor": [
+        "corroborating the documented use_aero_icbc=false assumed-profile route for WRFV3.9+",
+        "explaining external climatological aerosol input as an optional state-source route"
+      ],
+      "doNotUseFor": [
+        "overriding locked HRRR source details",
+        "assuming later WRF implementation details are identical to HRRRv4"
+      ]
+    },
+    {
+      "id": "TOOL-KAOPU-HRRRV4-AEROSOL-STATE-SOURCE-PROBE-R24",
+      "domain": "coordinator-source-semantic-test",
+      "toolOrSource": "PROBES/hrrrv4_aerosol_state_source_probe_r24.py",
+      "authority": "derived-executable-evidence",
+      "observationRootEligible": false,
+      "useFor": [
+        "checking algorithm-path versus state-source identity separation",
+        "enforcing fallback L1 Evidence Ceiling",
+        "preventing ReplayStatus promotion from fallback-only evidence"
+      ],
+      "doNotUseFor": [
+        "WRF/HRRR execution evidence",
+        "physical aerosol validation",
+        "numerical checkpoint authentication"
+      ],
+      "productionMutationAllowed": false
+    }
+  ]
+}
