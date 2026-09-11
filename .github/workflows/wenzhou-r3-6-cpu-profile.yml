@@ -1,0 +1,55 @@
+name: Wenzhou R3.6 CPU Resource Profile
+
+on:
+  push:
+    branches:
+      - experiment/wenzhou-r3-6-cpu-profile-20260911
+    paths:
+      - 'tools/r3-6/cpu_profile_probe.mjs'
+      - '.github/workflows/wenzhou-r3-6-cpu-profile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate probe and runtime baseline
+        run: |
+          set -euo pipefail
+          node --check tools/r3-6/cpu_profile_probe.mjs
+          grep -q 'CPU_YIELD_BUDGET_MS=6' site/dist/r3-6/osm-runtime.js
+          grep -q "osmRuntime:'indexed-r36'" site/dist/r3-6/osm-runtime.js
+      - name: Install Chromium
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run CPU and resource attribution probe
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r36-profile-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-6/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/cpu_profile_probe.mjs | tee /tmp/r36-cpu-profile.json
+          grep -q '"schema": "wenzhou-r3.6-cpu-resource-profile/r1"' /tmp/r36-cpu-profile.json
+          grep -q '"realIphoneVerified": false' /tmp/r36-cpu-profile.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-6-cpu-profile-${{ github.sha }}
+          path: |
+            /tmp/r36-cpu-profile.json
+            /tmp/r36-profile-http.log
+          if-no-files-found: error
+          retention-days: 30
