@@ -1,0 +1,40 @@
+import {chromium} from 'playwright';
+
+const target=process.env.R36_URL||'http://127.0.0.1:8765/site/dist/r3-6/';
+const browser=await chromium.launch({headless:true});
+const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
+const page=await context.newPage();
+const match=url=>url.includes('/site/dist/r3-5/data/osm/')&&url.endsWith('.u16le');
+let started=0,finished=0,failed=0;const failedUrls=[],errors=[];
+context.on('request',r=>{if(match(r.url()))started++;});
+context.on('requestfinished',r=>{if(match(r.url()))finished++;});
+context.on('requestfailed',r=>{if(match(r.url())){failed++;failedUrls.push({url:r.url(),error:r.failure()?.errorText||''});}});
+page.on('pageerror',e=>errors.push(`pageerror:${e.message}`));
+page.on('console',m=>{if(m.type()==='error')errors.push(`console:${m.text()}`);});
+const poll={timeout:180000,polling:100};
+await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
+await page.waitForFunction(()=>{const c=document.querySelector('#terrain');return c?.dataset.ready==='true'&&c?.dataset.patch==='overview'&&c?.dataset.osmLoaded==='true'&&c?.dataset.osmPatch==='overview'&&c?.dataset.osmRuntime==='indexed-r36';},null,poll);
+const baseline={started,finished,failed};
+await page.setExtraHTTPHeaders({'X-R36-Stress':'1'});
+await page.selectOption('#location','query-01');
+const startDeadline=Date.now()+120000;
+while(started<=baseline.started&&Date.now()<startDeadline)await page.waitForTimeout(25);
+if(started<=baseline.started)throw new Error(`query-01 stress payload never started; counters=${JSON.stringify({baseline,started,finished,failed})}`);
+const afterRequestStarted={started,finished,failed};
+// Query-01 terrain already exists when its OSM payload request begins. Rebuilding the
+// same patch at 3x creates a new terrain quickly and must abort the old in-flight OSM fetch.
+await page.selectOption('#exaggeration','3');
+await page.waitForFunction(()=>{const c=document.querySelector('#terrain');return c?.dataset.ready==='true'&&c?.dataset.patch==='query-01'&&c?.dataset.osmLoaded==='true'&&c?.dataset.osmPatch==='query-01'&&c?.dataset.osmRuntime==='indexed-r36';},null,poll);
+await page.waitForTimeout(9000);
+const final=await page.evaluate(()=>{const c=document.querySelector('#terrain');return{patch:c?.dataset.patch,osmPatch:c?.dataset.osmPatch,runtime:c?.dataset.osmRuntime,abortCount:Number(c?.dataset.osmAbortCount),fetchAbortCount:Number(c?.dataset.osmFetchAbortCount),roadSegments:Number(c?.dataset.osmRoadSegmentsDrawn),buildingSegments:Number(c?.dataset.osmBuildingSegmentsDrawn),error:c?.dataset.osmError||null};});
+const report={schema:'wenzhou-r3.6-inflight-cancel-probe/r1',target,baseline,afterRequestStarted,counters:{started,finished,failed,failedUrls},final,errors,passed:false};
+const failures=[];
+if(final.patch!=='query-01'||final.osmPatch!=='query-01'||final.runtime!=='indexed-r36')failures.push('final optimized query-01 state missing');
+if(final.roadSegments!==11007||final.buildingSegments!==906)failures.push(`final geometry changed ${JSON.stringify(final)}`);
+if(final.abortCount<1)failures.push(`no in-flight build abort recorded ${JSON.stringify(final)}`);
+if(final.fetchAbortCount<1)failures.push(`fetch AbortError was not observed ${JSON.stringify(final)}`);
+if(failed<1)failures.push(`browser saw no failed/aborted OSM request: ${JSON.stringify({started,finished,failed})}`);
+if(errors.length)failures.push(`runtime errors: ${errors.join(' | ')}`);
+report.failures=failures;report.passed=failures.length===0;
+console.log(JSON.stringify(report,null,2));
+await context.close();await browser.close();if(failures.length)process.exit(1);
