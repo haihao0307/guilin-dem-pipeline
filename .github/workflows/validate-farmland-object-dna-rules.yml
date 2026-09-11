@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Parse machine-readable contracts
         shell: bash
@@ -41,6 +43,8 @@ jobs:
           python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json >/dev/null
           python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json >/dev/null
           python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/LOCAL_WORKFLOW_CHECK.json >/dev/null
+          python -m json.tool farmland-object-dna/bridges/r025-xiaoma-tlo-dem/BRIDGE_CONTRACT.json >/dev/null
+          python -m json.tool farmland-object-dna/bridges/r025-xiaoma-tlo-dem/PACKAGE_SCOPE.json >/dev/null
 
       - name: Validate strict research record
         shell: bash
@@ -109,6 +113,39 @@ jobs:
           cmp farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json \
             /tmp/farmland-r025-probe.json
 
+      - name: R025 cross-Mother bridge contract and deterministic package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python farmland-object-dna/tools/verify_bridge_package_r025.py \
+            --contract-only > /tmp/farmland-r025-bridge-contract.json
+
+          bridge_dir='farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem'
+          archive='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip'
+          receipt='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.receipt.json'
+          sha_file='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.sha256'
+          if [[ -f "$bridge_dir/$archive" ]]; then
+            python farmland-object-dna/tools/verify_bridge_package_r025.py \
+              > /tmp/farmland-r025-bridge-package.json
+            source_commit=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem')
+          receipt = json.loads((path / 'Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.receipt.json').read_text())
+          print(receipt['sourceCommit'])
+          PY
+          )
+            rebuild_dir=$(mktemp -d)
+            python farmland-object-dna/tools/build_bridge_package_r025.py \
+              --source-ref "$source_commit" \
+              --output-dir "$rebuild_dir" \
+              > /tmp/farmland-r025-bridge-rebuild.json
+            cmp "$bridge_dir/$archive" "$rebuild_dir/$archive"
+            cmp "$bridge_dir/$receipt" "$rebuild_dir/$receipt"
+            cmp "$bridge_dir/$sha_file" "$rebuild_dir/$sha_file"
+            cmp "$bridge_dir/LATEST.json" "$rebuild_dir/LATEST.json"
+          fi
+
       - name: Verify mandatory rules and failed gates
         shell: bash
         run: |
@@ -175,6 +212,8 @@ jobs:
             echo 'R023 Honghe evidence boundary and parcel topology: PASS'
             echo 'R024 rice organ and lifecycle contract: PASS'
             echo 'R025 Xiaoma TLO and Guilin DEM fixed-source intake: PASS'
+            echo 'R025 cross-Mother bridge contract: PASS'
+            echo 'R025 deterministic bridge package (when present): PASS'
             echo 'Hydraulic and visual failure gates: PRESENT'
             echo 'Public share status for rejected V0.1: FALSE'
             echo 'Human visual acceptance: FALSE'
