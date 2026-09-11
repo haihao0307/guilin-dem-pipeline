@@ -46,7 +46,7 @@ The roots above are engineering/model evidence. They are not counted as independ
 
 ## Executable evidence
 
-`PROBES/hrrrv4_aerosol_state_source_probe_r24.py` executed locally and returned `12/12 PASS`; SHA256 `b9217fcbe7521fdc6dca2e02f150719f97e3941edd6717ac241ab45ceba94f84`.
+`PROBES/hrrrv4_aerosol_state_source_probe_r24.py` executed locally and returned `12/12 PASS`; SHA256 `189dc02a968ee235b77318006777139c1e59491239e9ab0244d128939b0353b0`.
 
 The probe checks source-semantic contracts only: target producer request gate, aerosol-aware array presence, fallback versus external state-source classification, retained CCN-table dependency, Evidence Ceiling, and prohibition on ReplayStatus promotion. It is not a WRF/HRRR model run and produces no atmospheric truth observation.
 
