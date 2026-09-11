@@ -93,16 +93,20 @@ jobs:
           assert len(m['layers'])==16
           assert m['truthBoundary']['canonicalTruth'] is False
           assert m['displayPolicy']['heightDisplacement'] is False
+          assert m['displayPolicy']['uncertaintyIsRelativeIndex'] is True
           for x in m['layers']:
               p=root/x['path']
               assert p.stat().st_size==x['bytes']
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']
+              if x['statistic']=='uncertainty':
+                  assert x['conventionalUnit']=='relative index'
           print({'passed':True,'layers':len(m['layers'])})
           PY
 
-      - name: Commit verified browser bundle to R3.7 branch
+      - name: Commit verified browser bundle transactionally
         run: |
           set -euo pipefail
+          BRANCH=feature/wenzhou-r3-7-soil-context-20260911
           git config user.name 'Haihao_Nature Grace HK'
           git config user.email 'haihao0307@gmail.com'
           git add site/dist/r3-7/data/soil
@@ -111,7 +115,11 @@ jobs:
             exit 0
           fi
           git commit -m 'data(wenzhou): add verified R3.7 SoilGrids browser context'
-          git push origin HEAD:feature/wenzhou-r3-7-soil-context-20260911
+          DATA_COMMIT=$(git rev-parse HEAD)
+          git fetch origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
+          git reset --hard "origin/${BRANCH}"
+          git cherry-pick "$DATA_COMMIT"
+          git push origin "HEAD:${BRANCH}"
 
       - uses: actions/upload-artifact@v4
         with:
