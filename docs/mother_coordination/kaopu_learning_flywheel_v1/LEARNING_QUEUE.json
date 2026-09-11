@@ -17,7 +17,7 @@
       "question": "Which current UE 5.8, SideFX Karma, and modern atmosphere/whole-atmosphere ideas are transferable into KAOPU as vendor-independent atmosphere/lighting semantics and evaluator contracts without copying engine implementations or defaults?",
       "targetSystems": ["KAOPU", "Weather", "Ocean", "Landscape", "Lighting", "Future-Space"],
       "userPriorityOverride": true,
-      "progress": "R01-R13 established state/evaluator separation, ground-to-space semantics, evidence and quantity validity, typed Weather vertical/spatial contracts, cloud optical/aggregation boundaries, source-capability routing, and a versioned microphysics-to-optics bridge. R14-R16 source-locked HRRR v4.1.20 Thompson effective-radius logic, separated source lock from runtime authentication, authenticated the source/configuration call path, and separated checkpoint independence from semantic equivalence. R17-R21 established restart/default stream semantics, bounded public checkpoint hunting, ControlInstrumentedPair, ValidationHarnessIdentity/EvidenceCeiling, TwoLayerInstrumentationComparator, and fail-fast runtime-I/O exposure for RE_CLOUD/RE_ICE/RE_SNOW. R22 proved that stream exposure is not producer liveness and corrected the L1 source-path contract to explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1 plus locked auxiliary-table identity. R23 closes the temporal-freshness gap: locked HRRR writes history before the next solve, initialization occurs before integrate, and Thompson effective radii are refreshed inside the eligible per-timestep microphysics path. Initial-time and restart-start history frames therefore cannot be called producer-refreshed in the current execution segment. Value-change heuristics are invalid because locked cloud/ice initialization values equal valid calc_effectRad lower clamps. R23 adds ProducerRefreshEpoch and CheckpointTemporalEligibility; its source-semantic probe passed 12/12. R24 separates algorithm-path identity from aerosol state-source identity. Locked ThompsonAero becomes aerosol-aware from NWFA2D/NWFA/NIFA presence and thompson_init self-seeds basic profiles when NWFA/NIFA are absent/nearly zero, so L1 may use a fallback-aerosol SCM to lower setup cost. Operational HRRR remains a different state-source identity because locked CONUS enables external aerosol IC/BC. R24 adds AerosolStateSourceIdentity and separate AlgorithmPathEquivalence/StateSourceEquivalence; its source-semantic probe passed 12/12. No WRF/HRRR numerical pair was executed, ReplayStatus remains source_callpath_authenticated, no physical Observation Root was added, and no production Mother branch was modified.",
+      "progress": "R01-R13 established state/evaluator separation, ground-to-space semantics, evidence and quantity validity, typed Weather vertical/spatial contracts, cloud optical/aggregation boundaries, source-capability routing, and a versioned microphysics-to-optics bridge. R14-R16 source-locked HRRR v4.1.20 Thompson effective-radius logic, separated source lock from runtime authentication, authenticated the source/configuration call path, and separated checkpoint independence from semantic equivalence. R17-R21 established restart/default stream semantics, bounded public checkpoint hunting, ControlInstrumentedPair, ValidationHarnessIdentity/EvidenceCeiling, TwoLayerInstrumentationComparator, and fail-fast runtime-I/O exposure for RE_CLOUD/RE_ICE/RE_SNOW. R22 proved that stream exposure is not producer liveness and corrected the L1 source-path contract to explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1 plus locked auxiliary-table identity. R23 added producer temporal freshness and excluded initial/restart-start frames. R24 separated algorithm-path identity from aerosol state-source identity and permitted source-internal fallback aerosol state for an algorithm-path-only L1 harness. R25 corrects the execution-toolchain boundary: the 1-D em_scm_xy validation harness should use the locked serial WRF build path, so missing mpif90/MPI is not a hard L1 blocker. Locked HRRRv4 source plus current official WRF documentation separate serial from distributed-memory requirements. A bounded executable environment probe showed netCDF-C working while netCDF-Fortran and csh are absent; these, not MPI, are the present canonical serial-SCM blockers. No WRF/HRRR numerical pair was executed, ReplayStatus remains source_callpath_authenticated, no physical Observation Root was added, and no production Mother branch was modified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R01.md",
         "LEARNING_LOG/2026-09-09_ATMOSPHERE_R02_GROUND_TO_SPACE.md",
@@ -42,7 +42,8 @@
         "LEARNING_LOG/2026-09-11_HRRRV4_RUNTIME_IO_PREFLIGHT_R21.md",
         "LEARNING_LOG/2026-09-11_HRRRV4_EFFECTIVE_RADIUS_LIVENESS_R22.md",
         "LEARNING_LOG/2026-09-11_HRRRV4_TEMPORAL_FRESHNESS_R23.md",
-        "LEARNING_LOG/2026-09-11_HRRRV4_AEROSOL_STATE_SOURCE_R24.md"
+        "LEARNING_LOG/2026-09-11_HRRRV4_AEROSOL_STATE_SOURCE_R24.md",
+        "LEARNING_LOG/2026-09-11_HRRRV4_SCM_TOOLCHAIN_R25.md"
       ],
       "sourceLocks": [
         "references/takram-three-geospatial-r01/SOURCE_LOCK.json",
@@ -61,7 +62,8 @@
         "references/hrrrv4-runtime-io-preflight-r21/SOURCE_LOCK.json",
         "references/hrrrv4-effective-radius-liveness-r22/SOURCE_LOCK.json",
         "references/hrrrv4-temporal-freshness-r23/SOURCE_LOCK.json",
-        "references/hrrrv4-aerosol-state-source-r24/SOURCE_LOCK.json"
+        "references/hrrrv4-aerosol-state-source-r24/SOURCE_LOCK.json",
+        "references/hrrrv4-scm-toolchain-r25/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/atmosphere_reference_fixture.py",
       "earthReferenceProbe": "PROBES/atmosphere_earth_reference_fixture_r04.py",
@@ -85,6 +87,7 @@
       "hrrrV4EffectiveRadiusLivenessProbe": "PROBES/hrrrv4_effective_radius_liveness_probe_r22.py",
       "hrrrV4TemporalFreshnessProbe": "PROBES/hrrrv4_effective_radius_temporal_freshness_probe_r23.py",
       "hrrrV4AerosolStateSourceProbe": "PROBES/hrrrv4_aerosol_state_source_probe_r24.py",
+      "hrrrV4ScmToolchainProbe": "PROBES/hrrrv4_scm_toolchain_probe_r25.py",
       "currentBestViewExtensions": [
         "CURRENT_BEST_VIEW_R08_VERTICAL_COORDINATES.md",
         "CURRENT_BEST_VIEW_R09_WEATHER_COLUMN_CLOSURE.md",
@@ -102,7 +105,8 @@
         "CURRENT_BEST_VIEW_R21_RUNTIME_IO_PREFLIGHT.md",
         "CURRENT_BEST_VIEW_R22_EFFECTIVE_RADIUS_LIVENESS.md",
         "CURRENT_BEST_VIEW_R23_TEMPORAL_FRESHNESS.md",
-        "CURRENT_BEST_VIEW_R24_AEROSOL_STATE_SOURCE.md"
+        "CURRENT_BEST_VIEW_R24_AEROSOL_STATE_SOURCE.md",
+        "CURRENT_BEST_VIEW_R25_HRRRV4_SCM_TOOLCHAIN.md"
       ],
       "toolRoutingExtensions": [
         "TOOL_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -121,7 +125,8 @@
         "TOOL_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json",
         "TOOL_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json",
         "TOOL_ROUTING_R23_TEMPORAL_FRESHNESS.json",
-        "TOOL_ROUTING_R24_AEROSOL_STATE_SOURCE.json"
+        "TOOL_ROUTING_R24_AEROSOL_STATE_SOURCE.json",
+        "TOOL_ROUTING_R25_HRRRV4_SCM_TOOLCHAIN.json"
       ],
       "motherRoutingExtensions": [
         "MOTHER_ROUTING_R08_VERTICAL_COORDINATES.json",
@@ -140,9 +145,10 @@
         "MOTHER_ROUTING_R21_RUNTIME_IO_PREFLIGHT.json",
         "MOTHER_ROUTING_R22_EFFECTIVE_RADIUS_LIVENESS.json",
         "MOTHER_ROUTING_R23_TEMPORAL_FRESHNESS.json",
-        "MOTHER_ROUTING_R24_AEROSOL_STATE_SOURCE.json"
+        "MOTHER_ROUTING_R24_AEROSOL_STATE_SOURCE.json",
+        "MOTHER_ROUTING_R25_HRRRV4_SCM_TOOLCHAIN.json"
       ],
-      "nextGate": "Keep the physical-reference, runtime-atmosphere, and Weather-coupling gates distinct. Weather-coupling: R24 permits a lower-dependency L1 fallback-aerosol SCM only for algorithm-path/plumbing evidence. When execution dependencies are available, run the locked-source L1 SCM ControlInstrumentedPair with explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1; use_aero_icbc=false or no external aerosol state only if the actual run proves source-internal fallback initialization; exact manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW; iofields_filename enabled; ignore_iofields_warning=.false.; locked CCN_ACTIVATE.BIN and other auxiliary-table identity; and explicit ProducerRefreshEpoch evidence. Do not use the initial-time or restart-start t0 history frame. Sample only after at least one completed eligible microphysics step, require zero runtime-I/O resolution warnings and producer-liveness evidence, then apply the R20 TwoLayerInstrumentationComparator and measure runtime/I/O cost separately. Classify successful L1 evidence as algorithm-path-only and do not advance ReplayStatus. ReplayStatus may advance only after an eligible L3 locked HRRRv4 real-input pair restores the locked operational external HRRR/RAP aerosol state-source lineage and its temporally eligible source-model re_* checkpoint matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
+      "nextGate": "Keep the physical-reference, runtime-atmosphere, and Weather-coupling gates distinct. Weather-coupling: first close the R25 canonical serial-SCM toolchain in an environment that can install the missing build dependencies. Use the locked HRRRv4/WRF3.9 GNU serial configuration for em_scm_xy; MPI/mpif90 is not a hard dependency for this L1 1-D harness. Require csh plus a NetCDF-Fortran interface built with a compiler-compatible toolchain, and run the official Fortran+C+NetCDF compatibility test before WRF compilation. Preserve the locked SCM NetCDF I/O contract. Compile em_scm_xy without changing physics source; if the locked source fails with the selected modern compiler, record the first reproducible incompatibility before any compatibility patch. If compilation succeeds, run the existing L1 fallback-aerosol ControlInstrumentedPair with explicit mp_physics=28, ra_lw_physics=4, ra_sw_physics=4, use_mp_re=1; source-internal fallback aerosol only for algorithm-path/plumbing evidence; exact manifest +:h:0:RE_CLOUD,RE_ICE,RE_SNOW; iofields_filename enabled; ignore_iofields_warning=.false.; locked CCN_ACTIVATE.BIN and other auxiliary-table identity; and explicit ProducerRefreshEpoch evidence. Do not use initial-time or restart-start t0. Then apply the R20 TwoLayerInstrumentationComparator and measure runtime/I/O cost separately. L1/toolchain success does not advance ReplayStatus. ReplayStatus may advance only after an eligible L3 locked HRRRv4 real-input pair restores operational external HRRR/RAP aerosol state-source lineage and its source-model re_* checkpoint independently matches the external source-locked Thompson replay. Visible-band liquid/ice optical closure and dual-evaluator validation remain separate gates. Candidate-complete promotion requires all applicable gates; Frozen promotion remains a separate Judgment event."
     },
     {
       "id": "LQ-GAEA-001",
