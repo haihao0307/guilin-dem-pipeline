@@ -43,7 +43,7 @@ jobs:
           done
           test "$ready" = 1
           R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/cpu_profile_probe.mjs | tee /tmp/r36-cpu-profile.json
-          grep -q '"schema": "wenzhou-r3.6-cpu-resource-profile/r1"' /tmp/r36-cpu-profile.json
+          grep -q '"schema": "wenzhou-r3.6-cpu-resource-profile/r2"' /tmp/r36-cpu-profile.json
           grep -q '"realIphoneVerified": false' /tmp/r36-cpu-profile.json
       - uses: actions/upload-artifact@v4
         with:
