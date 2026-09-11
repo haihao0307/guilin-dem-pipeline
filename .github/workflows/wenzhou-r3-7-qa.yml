@@ -1,0 +1,97 @@
+name: Wenzhou R3.7 QA
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-7-soil-context-20260911
+    paths:
+      - 'site/dist/r3-7/**'
+      - 'tools/r3-7/validate_static.py'
+      - 'tools/r3-7/browser_qa.mjs'
+      - '.github/workflows/wenzhou-r3-7-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Freeze R3.2 through R3.6 inherited implementation
+        run: |
+          set -euo pipefail
+          BASE=5af467e3db7d01fff3df113a90cf16d0f67a992e
+          git diff --exit-code "$BASE" HEAD -- \
+            site/dist/r3-2 site/dist/r3-3 site/dist/r3-4 site/dist/r3-5 site/dist/r3-6 \
+            records/R3_2 records/R3_3 records/R3_4 records/R3_6 \
+            inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json
+
+      - name: Static SoilGrids evidence and syntax gate
+        run: |
+          set -euo pipefail
+          python tools/r3-7/validate_static.py | tee /tmp/r37-static.json
+          grep -q '"passed": true' /tmp/r37-static.json
+          node --check site/dist/r3-7/bootstrap.js
+          node --check site/dist/r3-7/soil-context.js
+          node --check tools/r3-7/browser_qa.mjs
+
+      - name: Install Chromium
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local browser QA
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --directory . >/tmp/r37-http.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/site/dist/r3-7/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          R37_URL=http://127.0.0.1:8765/site/dist/r3-7/ node tools/r3-7/browser_qa.mjs | tee /tmp/r37-local.json
+          grep -q '"passed": true' /tmp/r37-local.json
+
+      - name: Fixed-commit raw.githack browser QA
+        env:
+          R37_SHA: ${{ github.sha }}
+          R37_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${R37_REPO}/${R37_SHA}/site/dist/r3-7/index.html"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.7'; then ready=1; break; fi
+            sleep 4
+          done
+          test "$ready" = 1
+          R37_URL="$URL" node tools/r3-7/browser_qa.mjs | tee /tmp/r37-public.json
+          grep -q '"passed": true' /tmp/r37-public.json
+          echo "$URL" > /tmp/r37-preview.txt
+
+      - name: Upload QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-7-qa-${{ github.sha }}
+          path: |
+            /tmp/r37-static.json
+            /tmp/r37-local.json
+            /tmp/r37-public.json
+            /tmp/r37-preview.txt
+            /tmp/r37-http.log
+          if-no-files-found: error
+          retention-days: 30
