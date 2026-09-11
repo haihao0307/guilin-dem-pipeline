@@ -37,6 +37,10 @@ jobs:
           python -m json.tool farmland-object-dna/PUBLICATION_PROOF.json >/dev/null
           python -m json.tool farmland-object-dna/research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json >/dev/null
           python -m json.tool farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/LOCAL_WORKFLOW_CHECK.json >/dev/null
 
       - name: Validate strict research record
         shell: bash
@@ -93,6 +97,17 @@ jobs:
             > /tmp/farmland-r024-probe.json
           cmp farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json \
             /tmp/farmland-r024-probe.json
+
+      - name: Xiaoma TLO and Guilin DEM fixed-source intake probe
+        run: |
+          python farmland-object-dna/tools/cross_mother_intake.py \
+            farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json \
+            farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json \
+            > /tmp/farmland-r025-contract.json
+          python farmland-object-dna/tools/probe_cross_mother_intake_r025.py \
+            > /tmp/farmland-r025-probe.json
+          cmp farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json \
+            /tmp/farmland-r025-probe.json
 
       - name: Verify mandatory rules and failed gates
         shell: bash
@@ -159,6 +174,7 @@ jobs:
             echo 'R021-R022 water and ideal hydraulics: PASS'
             echo 'R023 Honghe evidence boundary and parcel topology: PASS'
             echo 'R024 rice organ and lifecycle contract: PASS'
+            echo 'R025 Xiaoma TLO and Guilin DEM fixed-source intake: PASS'
             echo 'Hydraulic and visual failure gates: PRESENT'
             echo 'Public share status for rejected V0.1: FALSE'
             echo 'Human visual acceptance: FALSE'

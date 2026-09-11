@@ -1,5 +1,13 @@
 # Farmland Object DNA 干净重启入口 V0.2.0
 
+## R025 续接（2026-09-11）
+
+见 `research/r025-xiaoma-tlo-dem-intake/README.md`。本轮读取并逐文件锁定小妈
+TLO 交接与 Landscape/DEM 固定 Git 来源，建立不冻结核心 schema 的 T/L/O 候选
+checkpoint。桂林 canonical DEM 身份确认为 EPSG:32649、12.5 m、54 瓦片布局，
+但当前 Farmland 树没有数值瓦片，R025 没有读取 terrain sample 或实现查询。
+它不能解析田间构件，也不能给红河配置提供地形。没有生成几何或视觉候选。
+
 ## R024 续接（2026-09-10）
 
 见 `research/r024-rice-morphology/README.md`。本轮把水稻生命周期拆为十四个
@@ -135,7 +143,7 @@ Microscope 不得用于掩盖水源、田块拓扑、渠道截面、水深或作
 
 `researchGate=in_progress`
 
-`structuralTruthWorkbench=foundation_r024_topology_hydraulics_and_rice_contracts_no_visual_workbench`
+`structuralTruthWorkbench=foundation_r025_contracts_only_no_visual_workbench`
 
 `activePublicCandidate=none`
 

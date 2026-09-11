@@ -16,10 +16,12 @@ Farmland Object DNA 是 `guilin-dem-pipeline` 中面向传统农业对象的独�
 
 V0.1 公开工作台已被用户否决，只保留为失败对照。当前没有可分享的视觉候选，也没有人工视觉接受或生产批准。
 
-当前研究续接到 R024：R021 建立可复算水量账本，R022 建立理想截面与六种
+当前研究续接到 R025：R021 建立可复算水量账本，R022 建立理想截面与六种
 合成水力情形，R023 锁定红河哈尼地区证据边界并建立坐标级田块拓扑内核，
-R024 建立十四阶段水稻器官与结构事件合同。地区构件测绘、水稻地方品种参数和
-阶段几何资产仍未完成，不能提升为地区结构样板。
+R024 建立十四阶段水稻器官与结构事件合同，R025 接收小妈 TLO 候选通信合同与
+桂林 canonical DEM 身份边界。当前没有接通数值地形；桂林 12.5 m DEM 不覆盖
+红河，也不能代替田间级测绘。地区构件测绘、水稻地方品种参数和阶段几何资产
+仍未完成，不能提升为地区结构样板。
 
 ## 严谨生产路线
 
@@ -118,7 +120,9 @@ Microscope 只在宏观系统、中观拓扑、截面、尺寸和水力通过以
 
 `researchGate=in_progress`
 
-`structuralTruthWorkbench=foundation_r024_topology_hydraulics_and_rice_contracts_no_visual_workbench`
+`crossMotherIntake=r025_tlo_candidate_and_guilin_dem_identity_locked_numeric_terrain_not_connected`
+
+`structuralTruthWorkbench=foundation_r025_contracts_only_no_visual_workbench`
 
 `activePublicCandidate=none`
 

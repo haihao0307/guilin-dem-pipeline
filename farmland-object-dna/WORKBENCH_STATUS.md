@@ -1,6 +1,6 @@
 # Farmland Object DNA 工作台状态
 
-日期：2026-09-10
+日期：2026-09-11
 
 当前生产线：`restart/farmland-object-dna-v020-20260907`
 
@@ -61,7 +61,15 @@
 
 `riceStageMorphology=r024_14_stage_organ_contract_pass_24_regional_parameters_unknown_geometry_not_built`
 
-`structuralTruthWorkbench=foundation_r024_topology_hydraulics_and_rice_contracts_no_visual_workbench`
+`crossMotherIntake=r025_tlo_candidate_and_guilin_dem_fixed_sources_locked`
+
+`guilinTerrainAuthority=r025_epsg32649_12p5m_identity_only_numeric_tiles_not_connected`
+
+`hongheTerrainAuthority=unknown_guilin_dem_forbidden`
+
+`tloCheckpoint=r025_candidate_not_core_schema_world_time_and_parcel_position_unknown`
+
+`structuralTruthWorkbench=foundation_r025_contracts_only_no_visual_workbench`
 
 `aaaVisualPrecheck=not_run`
 

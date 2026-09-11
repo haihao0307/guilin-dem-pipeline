@@ -12,6 +12,12 @@ Farmland Object DNA 用一组可追踪、可组合、可重建的参数描述农
 
 保存 world_id、object_id、type_id、variant_id、configuration_id、revision、valid_time、recorded_at、evidence 和 review_status。身份与位置分开，历史事实、推断、生成、未知和冲突分开。
 
+R025 增加一个不冻结核心 schema 的 TLO 通信 checkpoint 候选：`T` 保存记录、
+世界、有效、事件与来源版本时间，`L` 保存参考系、位置、姿态、容器、不确定性
+与来源，`O` 引用稳定对象身份、Object DNA、状态、关系和证据。当前候选只用于
+跨 Mother 传递最小充分上下文；扩展名、物理容器与最终 relation ontology 未定。
+详见 `research/r025-xiaoma-tlo-dem-intake/`。
+
 ### 2. Spatial DNA
 
 保存 CRS、局部坐标系、垂直基准、边界、面积、坡度统计、朝向、海拔范围及与 DEM 的采样依据。农田几何必须贴合权威地形，不改写 DEM 真值。

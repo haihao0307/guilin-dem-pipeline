@@ -6,6 +6,17 @@
 
 用途：为 Farmland Object DNA 的山地梯田、水利、村落、森林、劳动和文明系统建立证据基础。本页只登记已读到的权威起点、用户提供的现场知识方向和待验证问题，不代表结构已经完成。
 
+## R025 桂林 DEM 分区边界（2026-09-11）
+
+已从固定 Git commit/blob 读取 Landscape/DEM 身份资料，并锁定桂林 canonical
+DEM 为 EPSG:32649、12.5 m 的宏观地形来源。该 AOI 属于桂林，不是位于云南
+南部的红河哈尼梯田；禁止把它用于本计划的元阳地形、田块、渠埂截面、水控
+高程或地方水稻参数。
+
+当前也没有接通 canonical 数值瓦片或读取 terrain sample。元阳/红河仍需要同一
+区域的权威地形、选定田块与田间测绘。R025 的 TLO checkpoint 只保存候选通信
+身份和 explicit unknown，不构成地形或结构准入。
+
 ## R024 水稻结构合同（2026-09-10）
 
 已直接读取澳大利亚政府 OGTR 的水稻生物学文档，并将物种级器官关系拆为
@@ -192,6 +203,9 @@ mass_balance_model=six_synthetic_scenarios_pass_real_field_not_run
 rice_lifecycle_contract=r024_fourteen_stage_organ_structure_pass
 rice_regional_parameters=r024_twenty_four_unknown
 rice_geometry_assets=not_built
+cross_mother_tlo_checkpoint=r025_candidate_not_frozen
+guilin_dem_for_honghe=forbidden_wrong_region
+honghe_authoritative_terrain=unknown_not_connected
 labor_governance_model=not_run
 ready_for_structural_prototype=false
 ready_for_public_candidate=false

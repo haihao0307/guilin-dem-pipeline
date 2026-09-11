@@ -14,6 +14,36 @@ Farmland Object DNA 在同一 world_id、time、revision 和空间参考下读�
 
 保护：不得改写权威高程、AOI、真值哈希或用视觉修饰替代真实地形。农田切填产生的局部构造层必须保存相对原始地形的差值和方法版本。
 
+### R025 桂林固定来源边界
+
+R025 只接入来源身份和候选通信 checkpoint，不接入数值地形。桂林 canonical
+来源锁定为标签 `guilin-native-12p5m-single-truth-v001`、提交
+`e4906653b705712edb610ee31f91716f18922369`，其源栅格为 EPSG:32649、
+12.5 × 12.5 m、17408 × 18867 的只读 int16 高程。来源、AOI、54 瓦片布局、
+桂林锚点瓦片与不可变线性水文的哈希登记在
+`research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json`。
+
+当前 Farmland 树内没有 canonical 数值瓦片，R025 没有读到任何 terrain sample，
+也没有实现查询适配器。因此当前只可声明桂林 AOI/CRS 和未来宏观地形查询的
+来源身份；不得声明田块边界、微地形、田埂/田坎截面、渠槽截面、进出水口底
+高程或厘米水深。12.5 m 栅格间距不得误写为 12.5 cm 的田间精度。
+
+该桂林来源不覆盖红河哈尼梯田，禁止给 R023/R024 的红河配置填充地形、构件
+尺寸或水稻参数。`landscape-karst-kaopu-r6` 是自报 synthetic 且未获 truth、
+visual 或 production 批准的审查对象，不能成为 DEM 真值。
+
+### R025 TLO 通信候选
+
+小妈 TLO 资料固定到提交 `a4e1b79298205f37dd09b5c63cbcfbe88912e6f9`
+及逐文件 Git blob SHA-1/内容 SHA-256。Farmland 采用 `T=Time`、`L=Location`、`O=Object identity +
+Object DNA/state/evidence references` 作为候选跨 Mother checkpoint；Object 不是
+mesh，也不是 `(t,x,y,z)` 之外的第五几何维度。
+
+该 checkpoint 不修改当前 Farmland 核心 schema。文件扩展名、容器、chunk/index、
+压缩、流协议、全局 Location、事件编码和 relation ontology 仍未冻结。没有田块
+选择和数值查询时，世界/事件时间、位置、方向与所有田间尺度必须保持 null 或
+explicit unknown。移动分支名、相机结果和渲染输出都不能单独充当世界事实。
+
 ## 来自森林、植被与流域系统
 
 读取：watershed_boundary、forest_type、forest_cover、recharge_function、spring_recharge_context、erosion_control_context、protected_forest_boundary、vegetation_root_stability。
