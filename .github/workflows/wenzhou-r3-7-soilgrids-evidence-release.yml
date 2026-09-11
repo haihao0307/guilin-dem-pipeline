@@ -1,0 +1,149 @@
+name: Wenzhou R3.7 SoilGrids Evidence Release
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-7-soil-context-20260911
+    paths:
+      - '.github/workflows/wenzhou-r3-7-soilgrids-evidence-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TAG: wenzhou-r3.7-soilgrids-evidence-20260911
+      SOURCE_RUN_ID: '34189255543'
+      SOURCE_COMMIT: b8471edd4de95a50656ae95d6559c2f687301f42
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download exact verified SoilGrids artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p soil-artifacts
+          download_one(){
+            id="$1"; name="$2"; expected="$3"
+            curl -fL --retry 4 --retry-delay 2 \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}/zip" \
+              -o "soil-artifacts/${name}.zip"
+            actual=$(sha256sum "soil-artifacts/${name}.zip" | awk '{print $1}')
+            test "$actual" = "$expected"
+            printf '%s  %s.zip\n' "$actual" "$name" >> soil-artifacts/ARTIFACT_SHA256SUMS.txt
+          }
+          download_one 10041728881 Wenzhou_R3_7_SoilGrids_physical_texture 9cc80faaf1cf6bde8ae5d77beeda73f2c6dc8b485b3a1bb22b65a00d258c5278
+          download_one 10041712691 Wenzhou_R3_7_SoilGrids_chemical_carbon f961be74e11912bfb56c85ddaa728e1a5a10cdae624464f13f2589fc8dd73ac0
+          download_one 10041668632 Wenzhou_R3_7_SoilGrids_hydraulic 3c0f590da84a7ab4646d3e32e8ce23ca26923eeb7663d02264e1d00e946c23d8
+          download_one 10041619224 Wenzhou_R3_7_SoilGrids_wrb a32110ba7bdf94c95e61486e7514c8a856957350ca25caedf444ef2fe5d97b30
+
+      - name: Reverify every internal payload and build permanent evidence index
+        run: |
+          set -euo pipefail
+          mkdir -p soil-stage
+          for zip in soil-artifacts/Wenzhou_R3_7_SoilGrids_*.zip; do
+            group=$(basename "$zip" .zip | sed 's/^Wenzhou_R3_7_SoilGrids_//')
+            mkdir -p "soil-stage/$group"
+            unzip -q "$zip" -d "soil-stage/$group"
+          done
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,datetime
+          root=Path('soil-stage')
+          groups={}
+          all_errors=[]
+          for d in sorted(p for p in root.iterdir() if p.is_dir()):
+              m=json.loads((d/'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+              errors=[]
+              for item in m['payloads']:
+                  p=d/item['path']
+                  if not p.is_file(): errors.append({'path':item['path'],'error':'missing'}); continue
+                  if p.stat().st_size!=item['bytes']: errors.append({'path':item['path'],'error':'bytes'}); continue
+                  h=hashlib.sha256()
+                  with p.open('rb') as f:
+                      for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+                  if h.hexdigest()!=item['sha256']: errors.append({'path':item['path'],'error':'sha256'})
+              groups[d.name]={'passed':bool(m.get('passed')) and not errors,'payloadCount':m['payloadCount'],'totalBytes':m['totalBytes'],'errors':errors}
+              all_errors.extend(errors)
+          expected={'physical_texture','chemical_carbon','hydraulic','wrb'}
+          if set(groups)!=expected or all_errors or not all(x['passed'] for x in groups.values()):
+              raise SystemExit(json.dumps({'groups':groups,'errors':all_errors},indent=2))
+          contract={
+            'provider':'ISRIC World Soil Information',
+            'product':'SoilGrids 2.0 rolling release',
+            'nativeResolutionMeters':250,
+            'alignedCrs':'EPSG:32651',
+            'alignedBounds':[190250,2991250,411250,3242000],
+            'alignedRowsCols':[1003,884],
+            'depths':['0-5cm','5-15cm','15-30cm','30-60cm','60-100cm','100-200cm'],
+            'canonicalTruth':False,
+            'mayReplaceFieldSurvey':False,
+            'mayOverrideCanonicalDem':False,
+            'farmLevelUseRequiresLocalCalibration':True
+          }
+          index={
+            'schema':'wenzhou-r3.7-soilgrids-permanent-evidence/r1',
+            'generatedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'sourceAcquisitionRunId':34189255543,
+            'sourceAcquisitionCommit':'b8471edd4de95a50656ae95d6559c2f687301f42',
+            'artifactDigests':{
+              'physical_texture':'9cc80faaf1cf6bde8ae5d77beeda73f2c6dc8b485b3a1bb22b65a00d258c5278',
+              'chemical_carbon':'f961be74e11912bfb56c85ddaa728e1a5a10cdae624464f13f2589fc8dd73ac0',
+              'hydraulic':'3c0f590da84a7ab4646d3e32e8ce23ca26923eeb7663d02264e1d00e946c23d8',
+              'wrb':'a32110ba7bdf94c95e61486e7514c8a856957350ca25caedf444ef2fe5d97b30'
+            },
+            'coverageCount':426,
+            'groups':groups,
+            'contract':contract,
+            'interpretation':{
+              'role':'regional soil property, class and uncertainty evidence',
+              'fieldScaleTruth':False,
+              'canonicalTerrainTruthChanged':False,
+              'productionReady':False
+            }
+          }
+          Path('soil-artifacts/SOILGRIDS_EVIDENCE_INDEX.json').write_text(json.dumps(index,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(index,ensure_ascii=False,indent=2))
+          PY
+          cp soil-artifacts/ARTIFACT_SHA256SUMS.txt soil-artifacts/SHA256SUMS.txt
+          sha256sum soil-artifacts/SOILGRIDS_EVIDENCE_INDEX.json >> soil-artifacts/SHA256SUMS.txt
+
+      - name: Publish permanent SoilGrids evidence release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to overwrite immutable evidence."
+            exit 2
+          fi
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title '小温州 R3.7 · SoilGrids 全域土壤证据永久归档' \
+            --notes '来自已成功验证的 SoilGrids acquisition run 34189255543。四组 Actions 临时 artifact 先按 GitHub SHA-256 复核，再逐 payload 按 PAYLOAD_MANIFEST.json 复核后原封不动归档。250 m SoilGrids 仅作为区域模型证据，不是 12.5 m 土壤真值，不替代现场土样，不修改 DEM。' \
+            soil-artifacts/Wenzhou_R3_7_SoilGrids_physical_texture.zip \
+            soil-artifacts/Wenzhou_R3_7_SoilGrids_chemical_carbon.zip \
+            soil-artifacts/Wenzhou_R3_7_SoilGrids_hydraulic.zip \
+            soil-artifacts/Wenzhou_R3_7_SoilGrids_wrb.zip \
+            soil-artifacts/SOILGRIDS_EVIDENCE_INDEX.json \
+            soil-artifacts/SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-7-soilgrids-release-proof-${{ github.sha }}
+          path: |
+            soil-artifacts/SOILGRIDS_EVIDENCE_INDEX.json
+            soil-artifacts/SHA256SUMS.txt
+          retention-days: 30
