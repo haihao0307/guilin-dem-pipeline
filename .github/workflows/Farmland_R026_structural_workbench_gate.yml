@@ -1,0 +1,92 @@
+name: Farmland R026 structural truth workbench gate
+
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - '.github/workflows/Farmland_R026_structural_workbench_gate.yml'
+      - 'farmland-object-dna/Farmland_Mother_R026_Structural_Truth_Workbench_2026-09-11/index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      VERSION_MARKER: FARMLAND_MOTHER_R026_STRUCTURAL_TRUTH_WB_20260911
+      PAGE_PATH: farmland-object-dna/Farmland_Mother_R026_Structural_Truth_Workbench_2026-09-11/index.html
+    steps:
+      - name: Build fixed-commit public URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "PUBLIC_URL=https://raw.githack.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/${PAGE_PATH}" >> "$GITHUB_ENV"
+
+      - name: HTTP readback and dependency check
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 50); do
+            if curl --fail --location --silent --show-error --output /tmp/farmland-r026.html "$PUBLIC_URL"; then
+              if grep -q "$VERSION_MARKER" /tmp/farmland-r026.html; then
+                break
+              fi
+            fi
+            if [ "$attempt" = 50 ]; then
+              echo 'Fixed-commit public workbench did not become readable with expected marker.'
+              exit 1
+            fi
+            sleep 5
+          done
+          test -s /tmp/farmland-r026.html
+          grep -q 'three@0.179.1' /tmp/farmland-r026.html
+          grep -q 'SYNTHETIC QA' /tmp/farmland-r026.html
+          grep -q 'data-runtime-ready="false"' /tmp/farmland-r026.html
+          curl --fail --location --silent --show-error --output /tmp/three.module.js 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js'
+          curl --fail --location --silent --show-error --output /tmp/orbit-controls.js 'https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/controls/OrbitControls.js'
+          test -s /tmp/three.module.js
+          test -s /tmp/orbit-controls.js
+          grep -q 'REVISION' /tmp/three.module.js
+          echo "HTTP_BYTES=$(wc -c < /tmp/farmland-r026.html)"
+          echo "HTTP_SHA256=$(sha256sum /tmp/farmland-r026.html | awk '{print $1}')"
+
+      - name: Desktop and mobile browser startup
+        shell: bash
+        run: |
+          set -euo pipefail
+          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER" ]; then
+            echo 'No Chrome or Chromium executable is available on the runner.'
+            exit 1
+          fi
+          run_browser () {
+            local size="$1"
+            local out="$2"
+            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --window-size="$size" --virtual-time-budget=12000 --dump-dom "$PUBLIC_URL" > "$out"
+            grep -q 'data-runtime-ready="true"' "$out"
+            grep -q '<canvas' "$out"
+            grep -q "$VERSION_MARKER" "$out"
+            grep -q 'stageSlider' "$out"
+            grep -q 'flowToggle' "$out"
+          }
+          run_browser '1440,960' /tmp/farmland-r026-desktop-dom.html
+          run_browser '390,844' /tmp/farmland-r026-mobile-dom.html
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## Farmland R026 structural truth workbench gate'
+            echo
+            echo "Fixed URL: $PUBLIC_URL"
+            echo 'HTTP readback: PASS'
+            echo 'Version marker: PASS'
+            echo 'Three.js dependency: PASS'
+            echo 'Desktop browser startup: PASS'
+            echo '390x844 browser startup: PASS'
+            echo 'Status: internal structural diagnostic only; visualAcceptance=false; productionReady=false.'
+          } >> "$GITHUB_STEP_SUMMARY"
