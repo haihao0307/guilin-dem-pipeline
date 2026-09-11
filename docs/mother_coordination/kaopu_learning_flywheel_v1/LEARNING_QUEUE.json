@@ -12,6 +12,36 @@
   },
   "queue": [
     {
+      "id": "LQ-GAUSSIAN-001",
+      "priority": 0,
+      "userPriorityOverride": true,
+      "status": "candidate-partial",
+      "question": "Can a photo-validation -> COLMAP/SfM -> Brush training -> cleanup/PLY checkpoint -> SPZ delivery -> Three.js r186 viewer pipeline preserve reconstruction semantics without replacing KAOPU Object DNA or Canonical Truth?",
+      "targetSystems": [
+        "KAOPU",
+        "Photo Reconstruction Tool",
+        "House",
+        "Aircraft",
+        "Animals",
+        "Vegetation",
+        "Three.js Delivery"
+      ],
+      "progress": "R33 locked COLMAP 2d2f00a, Brush 063945e, SPZ affd0ec and Three.js r186 148ef33. It separates pose solution, uncompressed reconstruction checkpoint, lossy delivery encoding and viewer adapter. Source audit found that COLMAP images store Hamilton world-to-camera pose and T is not camera center; Brush inverts this pose and exports GraphDECO-style PLY; SPZ v4 defaults to RUB but may carry a coordinate-system extension and supports SH4; Three.js r186 skips SPZ vendor extensions and clamps SH to degree 3. A nine-test CPU probe executed the actual Three r186 PLY/SPZ loaders, reproducing correct wxyz-to-covariance conversion and demonstrating SH4 truncation. Source-semantic negative controls reject non-RUB extension-bearing SPZ and quantify default SPZ position/log-scale/SH loss. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "resultLogs": [
+        "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md"
+      ],
+      "sourceLocks": [
+        "references/gaussian-handoff-r33/SOURCE_LOCK.json"
+      ],
+      "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
+      "probeResult": "PROBES/gaussian_handoff_result_r33.json",
+      "candidateContract": "ADAPTERS/gaussian_reconstruction_handoff_contract_r33.json",
+      "currentBestViewExtension": "CURRENT_BEST_VIEW_R33_GAUSSIAN_HANDOFF.md",
+      "toolRoutingExtension": "TOOL_ROUTING_R33_GAUSSIAN_HANDOFF.json",
+      "motherRoutingExtension": "MOTHER_ROUTING_R33_GAUSSIAN_HANDOFF.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photo coverage and masks; solve COLMAP poses with reprojection/registration evidence; train one Brush checkpoint; preserve the uncompressed PLY plus cleanup log; encode a separate RUB/no-extension/SH<=3 SPZ v4 derivative; compare fixed-view linear renders and attribute statistics before/after packing; then test Three.js r186 on macOS and 390x844 iPhone/Safari for load time, peak memory, frame time, sorting artifacts and human visual acceptance. Do not retire RealityScan, alter a production Mother, or claim Object DNA equivalence from this gate."
+    },
+    {
       "id": "LQ-TELLUX-001",
       "priority": 0,
       "userPriorityOverride": true,

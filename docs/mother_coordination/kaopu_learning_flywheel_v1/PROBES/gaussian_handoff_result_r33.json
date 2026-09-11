@@ -1,0 +1,72 @@
+{
+  "schema": "kaopu-gaussian-handoff-result/r33",
+  "status": "Candidate-pass",
+  "testsRun": 9,
+  "failures": [],
+  "tests": [
+    {
+      "name": "three-r186-actual-spz-v3-degree4-drops-band4",
+      "status": "pass"
+    },
+    {
+      "name": "three-r186-actual-ply-uses-wxyz-and-builds-anisotropic-covariance",
+      "status": "pass"
+    },
+    {
+      "name": "colmap-pose-is-world-to-camera-and-t-is-not-camera-center",
+      "status": "pass"
+    },
+    {
+      "name": "rdf-to-rub-must-transform-position-quaternion-and-sh-together",
+      "status": "pass"
+    },
+    {
+      "name": "skipping-rdf-coordinate-extension-is-observably-wrong",
+      "status": "pass"
+    },
+    {
+      "name": "spz-position-quantization-is-bounded-but-lossy",
+      "status": "pass"
+    },
+    {
+      "name": "spz-log-scale-quantization-is-bounded-but-lossy",
+      "status": "pass"
+    },
+    {
+      "name": "spz-default-sh-quantization-is-not-lossless",
+      "status": "pass"
+    },
+    {
+      "name": "viewer-contract-rejects-unverifiable-coordinate-and-degree-combinations",
+      "status": "pass"
+    }
+  ],
+  "actualThreeR186Execution": true,
+  "trainingExecuted": false,
+  "gpuViewerExecuted": false,
+  "userPhotoDatasetAvailable": false,
+  "interoperabilityCounterexamples": {
+    "spzCoordinateExtension": "Three r186 skips vendor extensions; a non-RUB stored cloud is decoded without the required position/quaternion/SH conversion.",
+    "shDegree4": "SPZ supports degree 4; Three r186 clamps decoded attributes to degree 3, dropping 27 directional coefficients per splat.",
+    "colmapPose": "images.txt stores world-to-camera Hamilton quaternion plus translation; camera center is -R^T T."
+  },
+  "quantization": {
+    "positionStepInStoredUnitsAtFractionalBits12": 0.000244140625,
+    "sourcePosition": [
+      0.12345,
+      -2.34567,
+      10.00013
+    ],
+    "decodedPosition": [
+      0.12353515625,
+      -2.345703125,
+      10.000244140625
+    ],
+    "maxAbsPositionErrorInStoredUnits": 0.00011414062499959243,
+    "worstCaseLogScaleRelativeError": 0.03174340749910276,
+    "defaultSh1Bits": 5,
+    "defaultShRestBits": 4
+  },
+  "frozenChanged": false,
+  "productionMotherChanged": false
+}

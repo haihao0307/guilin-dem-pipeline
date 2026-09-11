@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu-gaussian-reconstruction-handoff/r33",
+  "status": "Candidate",
+  "authority": "coordinator-proposed-not-adopted",
+  "stages": [
+    {
+      "id": "capturePoseEvidence",
+      "required": [
+        "photoSetHash",
+        "perImageHash",
+        "maskPolicy",
+        "cameraIntrinsics",
+        "poseSolverRepository",
+        "poseSolverCommit",
+        "poseConvention",
+        "worldFromCamera",
+        "registrationMetrics",
+        "reprojectionMetrics",
+        "coordinateFrame",
+        "scaleStatus",
+        "metricAnchor"
+      ]
+    },
+    {
+      "id": "uncompressedReconstructionCheckpoint",
+      "required": [
+        "trainerRepository",
+        "trainerCommit",
+        "trainerConfigHash",
+        "seed",
+        "checkpointHash",
+        "format",
+        "coordinateFrame",
+        "units",
+        "shDegree",
+        "floatAttributePolicy"
+      ]
+    },
+    {
+      "id": "cleanupHistory",
+      "required": [
+        "inputCheckpointHash",
+        "orderedEditLog",
+        "outputCheckpointHash",
+        "reversibleOrLossy"
+      ]
+    },
+    {
+      "id": "deliveryDerivative",
+      "required": [
+        "parentCheckpointHash",
+        "encoderRepository",
+        "encoderCommit",
+        "formatVersion",
+        "storageCoordinateSystem",
+        "coordinateExtensionPresent",
+        "shDegree",
+        "quantizationPolicy",
+        "outputHash",
+        "errorReport"
+      ]
+    },
+    {
+      "id": "viewerAdapter",
+      "required": [
+        "viewerRepository",
+        "viewerCommit",
+        "renderer",
+        "supportedCoordinateProfile",
+        "maxShDegree",
+        "targetDeviceEvidence",
+        "humanAcceptance"
+      ]
+    }
+  ],
+  "threeR186CandidateProfile": {
+    "format": "SPZ",
+    "version": 4,
+    "storageCoordinateSystem": "RUB",
+    "coordinateExtensionPresent": false,
+    "maxShDegree": 3,
+    "retainFloatCheckpoint": true
+  },
+  "invariants": [
+    "viewer is not trainer",
+    "delivery derivative is not Canonical Truth",
+    "axis conversion includes position quaternion/covariance and SH",
+    "metric scale requires an explicit anchor",
+    "splat is not complete Object DNA",
+    "production Mother mutation forbidden until separate acceptance"
+  ],
+  "frozenR1Changed": false
+}
