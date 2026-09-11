@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu-mother-routing-extension/r28",
+  "updatedAt": "2026-09-11",
+  "fromLearning": "LEARNING_LOG/2026-09-11_PHASE_CONVENTION_AND_REDUCTION_R28.md",
+  "status": "candidate-route",
+  "productionMutationAllowed": false,
+  "requiresMotherExperiment": true,
+  "targets": [
+    {
+      "mother": "Weather",
+      "items": [
+        "emit source optical asymmetry with spectral/source identity only; do not attach renderer forward/backward sign conventions",
+        "do not invent a second phase lobe because a renderer exposes one",
+        "route phase requests downstream through PhaseMomentPacket rather than raw renderer parameters"
+      ]
+    },
+    {
+      "mother": "Atmosphere",
+      "items": [
+        "add PhaseConventionIdentity and PhaseMomentPacket to optical outputs",
+        "preserve higher angular moments or richer phase data when the source provides them instead of compressing early to one g",
+        "mark UE 5.8 runtime phase sign Unknown while current official documentation remains internally contradictory",
+        "never infer direction-vector convention from parameter names or formula sign alone"
+      ]
+    },
+    {
+      "mother": "Lighting / Karma",
+      "items": [
+        "use SideFX documented positive-forward anisotropy only after source and target convention/family compatibility is explicit",
+        "treat Secondary Anisotropy/Mix as a PhaseReductionIdentity rather than free physical detail",
+        "keep firefly/noise mitigation in renderer sampling/evaluator state"
+      ]
+    },
+    {
+      "mother": "Lighting / UE",
+      "items": [
+        "do not bind PhaseG/Phase A/B sign from current documentation alone; preserve both conflicting Epic roots",
+        "authenticate runtime sign with a fixed single-scattering directional fixture using signed g pairs before multiscatter or tone mapping",
+        "do not fit Phase A/B/Blend from one source g using first-moment matching alone",
+        "if a dual-lobe reduction is introduced, publish at least P1/P2 or angular-distribution error plus tolerance"
+      ]
+    },
+    {
+      "mother": "KAOPU semantic core",
+      "items": [
+        "generalize PhaseConventionIdentity for any cross-tool angular distribution contract",
+        "add PrimaryDocumentationConflict so contradictory current primary sources remain explicit Unknowns",
+        "require PhaseReductionIdentity whenever one representation adds/removes lobes or moments"
+      ]
+    }
+  ],
+  "nextExperiment": {
+    "name": "DirectionalSingleScatteringPhaseAuthentication",
+    "requirements": [
+      "homogeneous medium with fixed sigma_a/sigma_s and physical path",
+      "one directional light",
+      "camera/light geometries sampling forward and backward scattering",
+      "test g=0,+0.5,+0.85 and negative counterparts",
+      "disable or isolate multiscatter and display transforms",
+      "record linear radiance ratios",
+      "determine runtime sign/convention before dual-lobe fitting"
+    ]
+  },
+  "promotionAuthority": "Xiaoma Judgment after renderer phase/runtime evidence plus the existing independent Weather runtime, unit and optical gates"
+}
