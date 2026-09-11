@@ -53,49 +53,123 @@ jobs:
           test -s /tmp/orbit-controls.js
           grep -q 'REVISION' /tmp/three.module.js
 
-      - name: Desktop and mobile browser startup
+      - name: Install browser driver library
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --quiet selenium
+          google-chrome --version
+          (chromedriver --version || true)
+
+      - name: Desktop and mobile browser interaction gate
         id: browser
         continue-on-error: true
         shell: bash
         run: |
           set -uo pipefail
           mkdir -p "$(dirname "$DIAG_PATH")"
-          : > "$DIAG_PATH"
-          BROWSER="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
-          echo "commit=$GITHUB_SHA" >> "$DIAG_PATH"
-          echo "url=$PUBLIC_URL" >> "$DIAG_PATH"
-          echo "browser=$BROWSER" >> "$DIAG_PATH"
-          "$BROWSER" --version >> "$DIAG_PATH" 2>&1 || true
-          if [ -z "$BROWSER" ]; then echo 'NO_BROWSER' >> "$DIAG_PATH"; exit 1; fi
-          run_browser () {
-            local label="$1" size="$2" out="$3" err="$4"
-            echo "=== $label $size ===" >> "$DIAG_PATH"
-            set +e
-            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-certificate-errors --window-size="$size" --virtual-time-budget=14000 --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
-            code=$?
-            set -e
-            echo "exit=$code" >> "$DIAG_PATH"
-            echo '--- stderr tail ---' >> "$DIAG_PATH"
-            tail -160 "$err" >> "$DIAG_PATH" 2>&1 || true
-            echo '--- runtime markers ---' >> "$DIAG_PATH"
-            grep -E -o 'data-runtime-(ready|error)="[^"]+"' "$out" >> "$DIAG_PATH" 2>&1 || true
-            echo '--- canvas marker ---' >> "$DIAG_PATH"
-            grep -o '<canvas[^>]*>' "$out" | head -3 >> "$DIAG_PATH" 2>&1 || true
-            echo '--- dom head ---' >> "$DIAG_PATH"
-            head -c 5000 "$out" >> "$DIAG_PATH" 2>&1 || true
-            echo >> "$DIAG_PATH"
-            if [ "$code" -ne 0 ]; then return "$code"; fi
-            grep -q 'data-runtime-ready="true"' "$out" || return 31
-            grep -q '<canvas' "$out" || return 32
-            grep -q "$VERSION_MARKER" "$out" || return 33
-            grep -q 'stageSlider' "$out" || return 34
-            grep -q 'flowToggle' "$out" || return 35
-          }
-          failed=0
-          run_browser desktop '1440,960' /tmp/farmland-r026-desktop-dom.html /tmp/farmland-r026-desktop.err || failed=$?
-          if [ "$failed" -eq 0 ]; then run_browser mobile '390,844' /tmp/farmland-r026-mobile-dom.html /tmp/farmland-r026-mobile.err || failed=$?; fi
-          echo "final_exit=$failed" >> "$DIAG_PATH"
-          exit "$failed"
+          cat > /tmp/farmland_r026_browser_gate.py <<'PY'
+          import os, json, time, traceback
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+          from selenium.webdriver.common.action_chains import ActionChains
+          from selenium.webdriver.common.keys import Keys
+
+          url=os.environ['PUBLIC_URL']
+          marker=os.environ['VERSION_MARKER']
+          diag=os.environ['DIAG_PATH']
+          results=[]
+
+          def log(msg):
+              results.append(str(msg))
+
+          def make_driver(w,h):
+              options=webdriver.ChromeOptions()
+              for arg in ['--headless=new','--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-certificate-errors']:
+                  options.add_argument(arg)
+              options.set_capability('goog:loggingPrefs', {'browser':'ALL'})
+              d=webdriver.Chrome(options=options)
+              d.set_window_size(w,h)
+              return d
+
+          def open_through_notice(d):
+              d.get(url)
+              WebDriverWait(d,20).until(lambda x: x.execute_script('return document.readyState') in ('interactive','complete'))
+              if 'External Content Notice' in d.title:
+                  log('githack_notice=seen')
+                  btn=WebDriverWait(d,12).until(EC.element_to_be_clickable((By.CSS_SELECTOR,'button.url-action-button')))
+                  if btn.text.strip()!='Open the page':
+                      raise AssertionError(f'unexpected notice button: {btn.text!r}')
+                  btn.click()
+              WebDriverWait(d,25).until(lambda x: x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
+
+          def check_view(label,w,h):
+              d=make_driver(w,h)
+              try:
+                  log(f'=== {label} {w}x{h} ===')
+                  open_through_notice(d)
+                  assert marker in d.page_source, 'version marker missing'
+                  assert len(d.find_elements(By.TAG_NAME,'canvas'))>=1, 'canvas missing'
+                  assert d.execute_script("return document.body.dataset.version") == marker, 'runtime version mismatch'
+                  # Camera interaction
+                  terrace=d.find_element(By.CSS_SELECTOR,'button[data-cam="terrace"]')
+                  terrace.click(); time.sleep(.25)
+                  assert 'active' in terrace.get_attribute('class').split(), 'terrace camera did not activate'
+                  human=d.find_element(By.CSS_SELECTOR,'button[data-cam="human"]')
+                  human.click(); time.sleep(.25)
+                  assert 'active' in human.get_attribute('class').split(), 'human camera did not activate'
+                  # Toggle interaction
+                  flow=d.find_element(By.ID,'flowToggle')
+                  before=flow.is_selected(); flow.click(); time.sleep(.15)
+                  assert flow.is_selected()!=before, 'flow toggle did not change'
+                  flow.click()
+                  # Rice lifecycle interaction: move to stage 13 Stubble
+                  slider=d.find_element(By.ID,'stageSlider')
+                  d.execute_script("arguments[0].value='13'; arguments[0].dispatchEvent(new Event('input',{bubbles:true}));",slider)
+                  time.sleep(.25)
+                  stage=d.find_element(By.ID,'stageName').text
+                  assert ('残茬' in stage) or ('Stubble' in stage), f'stage interaction failed: {stage}'
+                  # Viewport containment checks for user-facing controls
+                  metrics=d.execute_script("""
+                    const c=document.getElementById('controls').getBoundingClientRect();
+                    const t=document.getElementById('title').getBoundingClientRect();
+                    return {iw:innerWidth,ih:innerHeight,controls:{left:c.left,right:c.right,top:c.top,bottom:c.bottom,width:c.width,height:c.height},title:{left:t.left,right:t.right,top:t.top,bottom:t.bottom,width:t.width,height:t.height}};
+                  """)
+                  assert metrics['controls']['left']>=-1 and metrics['controls']['right']<=metrics['iw']+1, f'controls horizontal overflow {metrics}'
+                  assert metrics['title']['left']>=-1 and metrics['title']['right']<=metrics['iw']+1, f'title horizontal overflow {metrics}'
+                  if label=='mobile':
+                      assert metrics['controls']['bottom']<=metrics['ih']+1, f'mobile controls bottom overflow {metrics}'
+                      assert metrics['title']['bottom']<metrics['controls']['top'], f'mobile title/controls overlap {metrics}'
+                  severe=[e for e in d.get_log('browser') if e.get('level')=='SEVERE']
+                  severe=[e for e in severe if 'favicon' not in e.get('message','').lower()]
+                  if severe:
+                      raise AssertionError('SEVERE browser logs: '+json.dumps(severe,ensure_ascii=False))
+                  log('runtime_ready=true')
+                  log('canvas=pass')
+                  log('camera_interaction=pass')
+                  log('flow_toggle=pass')
+                  log('rice_stage_13=pass')
+                  log('viewport_containment=pass')
+                  log('browser_severe_logs=0')
+              finally:
+                  d.quit()
+
+          ok=True
+          try:
+              check_view('desktop',1440,960)
+              check_view('mobile',390,844)
+          except Exception:
+              ok=False
+              log('ERROR:\n'+traceback.format_exc())
+          with open(diag,'w',encoding='utf-8') as f:
+              f.write('commit='+os.environ['GITHUB_SHA']+'\n')
+              f.write('url='+url+'\n')
+              f.write('\n'.join(results)+'\n')
+          raise SystemExit(0 if ok else 1)
+          PY
+          python /tmp/farmland_r026_browser_gate.py
 
       - name: Persist browser diagnostic on failure
         if: steps.browser.outcome == 'failure'
@@ -117,14 +191,14 @@ jobs:
         if: steps.browser.outcome == 'success'
         shell: bash
         run: |
+          cat "$DIAG_PATH" >> "$GITHUB_STEP_SUMMARY"
           {
-            echo '## Farmland R026 structural truth workbench gate'
             echo
-            echo "Fixed URL: $PUBLIC_URL"
             echo 'HTTP readback: PASS'
             echo 'Version marker: PASS'
             echo 'Three.js dependency: PASS'
-            echo 'Desktop browser startup: PASS'
-            echo '390x844 browser startup: PASS'
+            echo 'Githack first-visit notice: PASS'
+            echo 'Desktop runtime + interactions: PASS'
+            echo '390x844 runtime + interactions: PASS'
             echo 'Status: internal structural diagnostic only; visualAcceptance=false; productionReady=false.'
           } >> "$GITHUB_STEP_SUMMARY"
