@@ -6,8 +6,7 @@ on:
       - feature/wenzhou-r3-7-soil-context-20260911
     paths:
       - 'site/dist/r3-7/**'
-      - 'tools/r3-7/validate_static.py'
-      - 'tools/r3-7/browser_qa.mjs'
+      - 'tools/r3-7/**'
       - '.github/workflows/wenzhou-r3-7-qa.yml'
   workflow_dispatch:
 
@@ -46,6 +45,7 @@ jobs:
           node --check site/dist/r3-7/bootstrap.js
           node --check site/dist/r3-7/soil-context.js
           node --check tools/r3-7/browser_qa.mjs
+          node --check tools/r3-7/browser_qa_redirect_aware.mjs
 
       - name: Install Chromium
         run: |
@@ -63,7 +63,7 @@ jobs:
             sleep 1
           done
           test "$ready" = 1
-          R37_URL=http://127.0.0.1:8765/site/dist/r3-7/ node tools/r3-7/browser_qa.mjs | tee /tmp/r37-local.json
+          R37_URL=http://127.0.0.1:8765/site/dist/r3-7/ node tools/r3-7/browser_qa_redirect_aware.mjs | tee /tmp/r37-local.json
           grep -q '"passed": true' /tmp/r37-local.json
 
       - name: Fixed-commit raw.githack browser QA
@@ -79,7 +79,7 @@ jobs:
             sleep 4
           done
           test "$ready" = 1
-          R37_URL="$URL" node tools/r3-7/browser_qa.mjs | tee /tmp/r37-public.json
+          R37_URL="$URL" node tools/r3-7/browser_qa_redirect_aware.mjs | tee /tmp/r37-public.json
           grep -q '"passed": true' /tmp/r37-public.json
           echo "$URL" > /tmp/r37-preview.txt
 
