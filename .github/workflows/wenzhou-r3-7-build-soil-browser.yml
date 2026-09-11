@@ -1,0 +1,120 @@
+name: Wenzhou R3.7 Build Soil Browser Bundle
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-7-soil-context-20260911
+    paths:
+      - 'tools/r3-7/build_soil_context.py'
+      - '.github/workflows/wenzhou-r3-7-build-soil-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GDAL + numpy
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal python3-numpy unzip
+          /usr/bin/python3 - <<'PY'
+          from osgeo import gdal
+          import numpy
+          print(gdal.VersionInfo(), numpy.__version__)
+          PY
+
+      - name: Download exact verified SoilGrids artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p soil-zips soil-stage
+          get(){
+            id="$1"; group="$2"; expected="$3"
+            curl -fL --retry 4 --retry-delay 2 \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}/zip" \
+              -o "soil-zips/${group}.zip"
+            actual=$(sha256sum "soil-zips/${group}.zip" | awk '{print $1}')
+            test "$actual" = "$expected"
+            mkdir -p "soil-stage/${group}"
+            unzip -q "soil-zips/${group}.zip" -d "soil-stage/${group}"
+          }
+          get 10041728881 physical_texture 9cc80faaf1cf6bde8ae5d77beeda73f2c6dc8b485b3a1bb22b65a00d258c5278
+          get 10041712691 chemical_carbon f961be74e11912bfb56c85ddaa728e1a5a10cdae624464f13f2589fc8dd73ac0
+          get 10041668632 hydraulic 3c0f590da84a7ab4646d3e32e8ce23ca26923eeb7663d02264e1d00e946c23d8
+
+      - name: Verify source payload manifests again
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          for group in ['physical_texture','chemical_carbon','hydraulic']:
+              root=Path('soil-stage')/group
+              m=json.loads((root/'PAYLOAD_MANIFEST.json').read_text(encoding='utf-8'))
+              assert m['passed']
+              for item in m['payloads']:
+                  p=root/item['path']
+                  assert p.is_file(), p
+                  assert p.stat().st_size==item['bytes'], p
+                  h=hashlib.sha256()
+                  with p.open('rb') as f:
+                      for c in iter(lambda:f.read(8*1024*1024),b''): h.update(c)
+                  assert h.hexdigest()==item['sha256'], p
+              print(group, m['payloadCount'], m['totalBytes'])
+          PY
+
+      - name: Build browser bundle
+        run: |
+          set -euo pipefail
+          rm -rf site/dist/r3-7/data/soil
+          /usr/bin/python3 tools/r3-7/build_soil_context.py \
+            --stage soil-stage \
+            --output site/dist/r3-7/data/soil | tee /tmp/r37-soil-build.json
+          test -f site/dist/r3-7/data/soil/soil-context.json
+          python3 - <<'PY'
+          import json, pathlib, hashlib
+          root=pathlib.Path('site/dist/r3-7/data/soil')
+          m=json.loads((root/'soil-context.json').read_text(encoding='utf-8'))
+          assert m['resolutionM']==250
+          assert len(m['layers'])==16
+          assert m['truthBoundary']['canonicalTruth'] is False
+          assert m['displayPolicy']['heightDisplacement'] is False
+          for x in m['layers']:
+              p=root/x['path']
+              assert p.stat().st_size==x['bytes']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256']
+          print({'passed':True,'layers':len(m['layers'])})
+          PY
+
+      - name: Commit verified browser bundle to R3.7 branch
+        run: |
+          set -euo pipefail
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add site/dist/r3-7/data/soil
+          if git diff --cached --quiet; then
+            echo 'No soil browser bundle changes.'
+            exit 0
+          fi
+          git commit -m 'data(wenzhou): add verified R3.7 SoilGrids browser context'
+          git push origin HEAD:feature/wenzhou-r3-7-soil-context-20260911
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-7-soil-browser-proof-${{ github.sha }}
+          path: /tmp/r37-soil-build.json
+          retention-days: 30
