@@ -23,4 +23,4 @@ R24 evidence status:
 - Frozen: none.
 - Rejected: “no external aerosol IC/BC means ThompsonAero cannot run”; “same Thompson code path means same aerosol state”; “fallback profile is operationally representative”; “an L1 fallback numerical match authenticates HRRR runtime”.
 - Unknown: whether the locked SCM actually executes successfully under the corrected 28/4/4/1 configuration in the target build; exact initialized fallback fields produced in that run; L1 bitwise non-interference and I/O cost; state-source-aligned L3 HRRRv4 execution and external replay numerical gap.
-- Executable source/semantic probe: `PROBES/hrrrv4_aerosol_state_source_probe_r24.py`, result `12/12 PASS`, SHA256 `b9217fcbe7521fdc6dca2e02f150719f97e3941edd6717ac241ab45ceba94f84`.
+- Executable source/semantic probe: `PROBES/hrrrv4_aerosol_state_source_probe_r24.py`, result `12/12 PASS`, SHA256 `189dc02a968ee235b77318006777139c1e59491239e9ab0244d128939b0353b0`.
