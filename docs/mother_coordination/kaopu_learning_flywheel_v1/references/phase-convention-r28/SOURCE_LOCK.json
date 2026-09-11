@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu-source-lock/r28",
+  "updatedAt": "2026-09-11",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "topic": "phase-function convention identity and one-to-two-lobe reduction boundary",
+  "observationRootEligible": false,
+  "roots": [
+    {
+      "id": "EPIC-UE58-VOLUMETRIC-ADVANCED-API-R28",
+      "authority": "primary-official-engine-api-documentation",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionVolumetricAdv-_1",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "locking the UE 5.8 generated API/header tooltip that describes PhaseG and PhaseG2 as forward for g<0 and backward for g>0",
+        "recording a source-adjacent documentation convention that conflicts with another official UE 5.8 cloud page"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-CLOUD-MATERIAL-R28",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/volumetric-cloud-material-in-unreal-engine",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "locking the UE 5.8 default cloud-material description that Phase A/B positive values scatter forward and negative values scatter backward",
+        "locking the documented two-phase linear blend as renderer/evaluator state"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-CLOUD-PROPERTIES-R28",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/volumetric-cloud-component-properties-in-unreal-engine",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "corroborating the API-side Phase G/G2 wording with g<0 described as forward and g>0 as backward",
+        "keeping the internal Epic documentation conflict explicit rather than silently choosing one sign convention"
+      ]
+    },
+    {
+      "id": "SIDEFX-KARMA-VOLUME-R28",
+      "authority": "primary-official-renderer-documentation",
+      "url": "https://www.sidefx.com/docs/houdini/nodes/vop/kma_volume.html",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "locking Karma anisotropy semantics in which positive values are forward and negative values are backward",
+        "locking the existence of a linearly blended secondary anisotropy as a separate renderer-side lobe"
+      ]
+    },
+    {
+      "id": "PBRT4-PHASE-FUNCTIONS-R28",
+      "authority": "primary-reference-implementation-and-book",
+      "url": "https://www.pbr-book.org/4ed/Volume_Scattering/Phase_Functions",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "locking Henyey-Greenstein g as the mean cosine/first angular moment and positive g as forward scattering in the physical interpretation",
+        "locking the warning that PBRT's incident/outgoing vectors both point away from the scattering point, unlike common scattering-literature direction conventions",
+        "supporting the fact that identical physical scattering can have different algebraic cosine/sign forms under different direction-vector conventions",
+        "supporting weighted sums of phase functions as a non-unique higher-order representation"
+      ]
+    },
+    {
+      "id": "EPIC-UE58-MATERIALX-VDF-R28",
+      "authority": "primary-official-engine-api-documentation",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/InterchangeCommon/EInterchangeMaterialXVDF",
+      "retrieved": "2026-09-11",
+      "useFor": [
+        "showing that UE's MaterialX anisotropic VDF path is documented as Henyey-Greenstein",
+        "preventing that fact from being overgeneralized to the separate Volumetric Cloud PhaseG implementation without direct evidence"
+      ]
+    }
+  ],
+  "evidenceConflict": {
+    "status": "unresolved-primary-documentation-conflict",
+    "detail": "Within current official UE 5.8 documentation, the generated UMaterialExpressionVolumetricAdvancedMaterialOutput API/header tooltip and the Volumetric Cloud Component Properties page describe PhaseG g<0 as forward and g>0 as backward, while the official Volumetric Cloud Material page describes positive Phase A/B as forward and negative as backward. This cycle does not guess which wording matches runtime behavior."
+  },
+  "evidenceBoundary": "All roots are engineering/rendering/reference-implementation evidence rather than physical atmospheric Observation Roots. The UE sign conflict is itself evidence that raw phase parameters cannot be promoted without PhaseConventionIdentity and runtime/source calibration. SideFX and PBRT independently use positive-forward semantics, but they do not resolve UE runtime behavior."
+}
