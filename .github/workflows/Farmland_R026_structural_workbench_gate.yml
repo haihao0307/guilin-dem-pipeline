@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "PUBLIC_URL=https://raw.githack.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/${PAGE_PATH}" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=https://rawcdn.githack.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/${PAGE_PATH}" >> "$GITHUB_ENV"
 
       - name: HTTP readback and dependency check
         shell: bash
@@ -71,7 +71,7 @@ jobs:
             local label="$1" size="$2" out="$3" err="$4"
             echo "=== $label $size ===" >> "$DIAG_PATH"
             set +e
-            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --window-size="$size" --virtual-time-budget=14000 --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
+            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-certificate-errors --window-size="$size" --virtual-time-budget=14000 --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
             code=$?
             set -e
             echo "exit=$code" >> "$DIAG_PATH"
@@ -81,8 +81,9 @@ jobs:
             grep -E -o 'data-runtime-(ready|error)="[^"]+"' "$out" >> "$DIAG_PATH" 2>&1 || true
             echo '--- canvas marker ---' >> "$DIAG_PATH"
             grep -o '<canvas[^>]*>' "$out" | head -3 >> "$DIAG_PATH" 2>&1 || true
-            echo '--- body opening ---' >> "$DIAG_PATH"
-            grep -o '<body[^>]*>' "$out" | head -1 >> "$DIAG_PATH" 2>&1 || true
+            echo '--- dom head ---' >> "$DIAG_PATH"
+            head -c 5000 "$out" >> "$DIAG_PATH" 2>&1 || true
+            echo >> "$DIAG_PATH"
             if [ "$code" -ne 0 ]; then return "$code"; fi
             grep -q 'data-runtime-ready="true"' "$out" || return 31
             grep -q '<canvas' "$out" || return 32
