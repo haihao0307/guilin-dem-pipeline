@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu-source-lock/r24",
+  "learningId": "LQ-ATMOSPHERE-001",
+  "date": "2026-09-11",
+  "topic": "HRRRv4 ThompsonAero aerosol state-source identity and low-cost L1 harness boundary",
+  "primarySources": [
+    {
+      "authority": "NOAA-EMC HRRR operational source snapshot",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_mp_thompson.F",
+      "blobSha": "1e6cdb1e718473ee1a031e16b1c00c96113f19f8",
+      "lockedFacts": [
+        "is_aerosol_aware becomes true when nwfa2d, nwfa and nifa optional arrays are present",
+        "thompson_init checks existing NWFA/NIFA and fills basic vertical profiles when the corresponding field maximum is below eps",
+        "fallback profile construction is source behavior, not an external observation",
+        "the aerosol-aware path still uses the CCN activation lookup table"
+      ]
+    },
+    {
+      "authority": "NOAA-EMC HRRR operational source snapshot",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/phys/module_physics_init.F",
+      "blobSha": "2a6dac7d3c0c2b9c87ff3a2dfdbcf9e635aa6e6d",
+      "lockedFacts": [
+        "THOMPSONAERO initialization passes NWFA2D, NWFA and NIFA arrays to thompson_init",
+        "array presence and state-source provenance are separate properties"
+      ]
+    },
+    {
+      "authority": "NOAA-EMC HRRR shipped SCM documentation",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/README.scm",
+      "blobSha": "f1c6ffd1bb755c64e6a30b2616d17e7f18afe4ce",
+      "lockedFacts": [
+        "SCM is a 3x3 periodic single-column harness with no horizontal gradients unless explicitly forced",
+        "input_sounding contains terrain/surface plus z,u,v,theta,qv and does not define aerosol IC/BC fields"
+      ]
+    },
+    {
+      "authority": "NOAA-EMC HRRR shipped SCM configuration",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/test/em_scm_xy/namelist.input",
+      "blobSha": "50571a305625bdf5ddecb91c7493a8acb5eb3dd9",
+      "lockedFacts": [
+        "baseline SCM is mp_physics=2, ra_lw_physics=1, ra_sw_physics=1",
+        "baseline SCM is not a ThompsonAero effective-radius validation harness without explicit configuration changes"
+      ]
+    },
+    {
+      "authority": "NOAA-EMC HRRR CONUS operational configuration",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "parm/conus/hrrr_wrf.nl",
+      "blobSha": "7b9b8ccb34d00bf03558e6abb4915202b1e50860",
+      "lockedFacts": [
+        "CONUS uses mp_physics=28 and RRTMG longwave/shortwave 4/4",
+        "CONUS explicitly sets use_aero_icbc=.true. and use_rap_aero_icbc=.true.",
+        "operational aerosol state-source identity is therefore not the same as the SCM fallback-profile identity"
+      ]
+    },
+    {
+      "authority": "NOAA-EMC HRRR build/test source",
+      "repository": "NOAA-EMC/HRRR",
+      "commit": "40ee6058c2fc6624cbfbbe8cf1c20c59e6a45827",
+      "path": "sorc/hrrr_wrfarw.fd/WRFV3.9/Makefile",
+      "blobSha": "6bb8d424fc3216e81a4a33759735ef38591e8d33",
+      "lockedFacts": [
+        "WRF test/run linking includes CCN_ACTIVATE.BIN as an auxiliary runtime dependency",
+        "SCM build target uses the shipped em_scm_xy ideal-case inputs"
+      ]
+    },
+    {
+      "authority": "current official UCAR/NCAR WRF documentation",
+      "url": "https://www2.mmm.ucar.edu/wrf/site/documentation/thompson_aerosol-aware.html",
+      "retrieved": "2026-09-11",
+      "lockedFacts": [
+        "for WRFV3.9+ use_aero_icbc=false uses assumed vertical profiles of water- and ice-friendly aerosols",
+        "external climatological aerosol IC/BC is an optional state-source route, not a prerequisite for entering the aerosol-aware scheme"
+      ]
+    }
+  ],
+  "evidenceBoundary": {
+    "ObservationRootAdded": false,
+    "WRFOrHRRRNumericalRunExecuted": false,
+    "ReplayStatusBefore": "source_callpath_authenticated",
+    "ReplayStatusAfter": "source_callpath_authenticated",
+    "productionMotherMutationAllowed": false
+  }
+}
