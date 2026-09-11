@@ -66,15 +66,41 @@ jobs:
           run_browser () {
             local size="$1"
             local out="$2"
-            timeout 50s "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --enable-webgl --ignore-gpu-blocklist --window-size="$size" --virtual-time-budget=12000 --dump-dom "$PUBLIC_URL" > "$out"
-            grep -q 'data-runtime-ready="true"' "$out"
+            local err="$3"
+            set +e
+            timeout 50s "$BROWSER" \
+              --headless=new \
+              --no-sandbox \
+              --disable-dev-shm-usage \
+              --enable-webgl \
+              --ignore-gpu-blocklist \
+              --use-gl=angle \
+              --use-angle=swiftshader \
+              --enable-unsafe-swiftshader \
+              --window-size="$size" \
+              --virtual-time-budget=14000 \
+              --dump-dom "$PUBLIC_URL" > "$out" 2> "$err"
+            code=$?
+            set -e
+            if [ "$code" -ne 0 ]; then
+              echo "Browser process failed with exit code $code"
+              tail -120 "$err" || true
+              exit "$code"
+            fi
+            if ! grep -q 'data-runtime-ready="true"' "$out"; then
+              echo 'Runtime-ready marker missing. Browser stderr:'
+              tail -120 "$err" || true
+              echo 'DOM diagnostic:'
+              grep -E -o 'data-runtime-(ready|error)="[^"]+"' "$out" || true
+              exit 1
+            fi
             grep -q '<canvas' "$out"
             grep -q "$VERSION_MARKER" "$out"
             grep -q 'stageSlider' "$out"
             grep -q 'flowToggle' "$out"
           }
-          run_browser '1440,960' /tmp/farmland-r026-desktop-dom.html
-          run_browser '390,844' /tmp/farmland-r026-mobile-dom.html
+          run_browser '1440,960' /tmp/farmland-r026-desktop-dom.html /tmp/farmland-r026-desktop.err
+          run_browser '390,844' /tmp/farmland-r026-mobile-dom.html /tmp/farmland-r026-mobile.err
 
       - name: Summary
         shell: bash
