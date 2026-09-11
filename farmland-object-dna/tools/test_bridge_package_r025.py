@@ -1,6 +1,7 @@
 import copy
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from verify_bridge_package_r025 import (  # noqa: E402
     validate_bridge_contract,
     validate_package_scope,
 )
+from build_bridge_package_r025 import _iter_files  # noqa: E402
 
 
 BRIDGE = ROOT / "bridges/r025-xiaoma-tlo-dem/BRIDGE_CONTRACT.json"
@@ -101,6 +103,18 @@ class BridgePackageR025Tests(unittest.TestCase):
         scope["prohibited_payloads"].remove("protected portal content")
         with self.assertRaisesRegex(ValueError, "prohibited payload"):
             validate_package_scope(scope)
+
+    def test_runtime_bytecode_cannot_enter_deterministic_payload(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "keep.txt").write_text("tracked\n", encoding="utf-8")
+            cache = root / "source/__pycache__"
+            cache.mkdir(parents=True)
+            (cache / "generated.pyc").write_bytes(b"runtime")
+            self.assertEqual(
+                [path.relative_to(root).as_posix() for path in _iter_files(root)],
+                ["keep.txt"],
+            )
 
 
 if __name__ == "__main__":

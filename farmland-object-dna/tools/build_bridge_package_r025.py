@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -92,6 +93,7 @@ def _run(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         timeout=180,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
     )
     if check and result.returncode != 0:
         stdout = result.stdout if text else result.stdout.decode("utf-8", "replace")
@@ -143,7 +145,11 @@ def _iter_files(root: Path, exclude: Iterable[str] = ()) -> list[Path]:
     return [
         path
         for path in sorted(root.rglob("*"))
-        if path.is_file() and path.relative_to(root).as_posix() not in excluded
+        if path.is_file()
+        and "__pycache__" not in path.relative_to(root).parts
+        and path.suffix != ".pyc"
+        and path.name != ".DS_Store"
+        and path.relative_to(root).as_posix() not in excluded
     ]
 
 
