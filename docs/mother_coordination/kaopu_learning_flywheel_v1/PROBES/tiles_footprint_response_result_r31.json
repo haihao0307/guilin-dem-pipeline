@@ -1,0 +1,170 @@
+{
+  "schema": "kaopu-footprint-results/r31",
+  "executedAt": "2026-09-11",
+  "existingTypedWaveProbe": {
+    "status": "pass",
+    "rawPointSampleVsExactCellAverage": {
+      "rmse": 0.06447928308313718,
+      "mae": 0.052830025115416734,
+      "maxAbs": 0.180145282380065
+    },
+    "numericalCellAverageVsAnalyticSincAverage": {
+      "rmse": 0.00004546320420992708,
+      "mae": 0.00003759988871888047,
+      "maxAbs": 0.00010618036158049904
+    }
+  },
+  "tilesResponseFixture": {
+    "aggregateTransitionRmseMetres": {
+      "doubleGate": 0.00006090839516354063,
+      "doubleOverSingle": 1.4215765660984716,
+      "singleGate": 0.000042845666294784395
+    },
+    "cases": [
+      {
+        "amplitudeMetres": 0.00012,
+        "footprintMetres": 0.0008974358974358973,
+        "gate": 1,
+        "normalizedFootprint": 0.35,
+        "rmseMetres": {
+          "doubleGate": 0.00001574045420907559,
+          "point": 0.00001574045420907559,
+          "singleGate": 0.00001574045420907559
+        },
+        "scale": 390
+      },
+      {
+        "amplitudeMetres": 0.00012,
+        "footprintMetres": 0.001282051282051282,
+        "gate": 0.84375,
+        "normalizedFootprint": 0.5,
+        "rmseMetres": {
+          "doubleGate": 0.000005869071663166239,
+          "point": 0.000030550812650138396,
+          "singleGate": 0.000017159623548020966
+        },
+        "scale": 390
+      },
+      {
+        "amplitudeMetres": 0.00012,
+        "footprintMetres": 0.0016666666666666668,
+        "gate": 0.4999999999999999,
+        "normalizedFootprint": 0.65,
+        "rmseMetres": {
+          "doubleGate": 0.000017261031748251603,
+          "point": 0.00004611802838533613,
+          "singleGate": 0.0000040271195717789085
+        },
+        "scale": 390
+      },
+      {
+        "amplitudeMetres": 0.00012,
+        "footprintMetres": 0.0020512820512820513,
+        "gate": 0.15624999999999978,
+        "normalizedFootprint": 0.8,
+        "rmseMetres": {
+          "doubleGate": 0.00002064077192730035,
+          "point": 0.00006163776862933288,
+          "singleGate": 0.000009660608064451966
+        },
+        "scale": 390
+      },
+      {
+        "amplitudeMetres": 0.00012,
+        "footprintMetres": 0.0024358974358974356,
+        "gate": 0,
+        "normalizedFootprint": 0.95,
+        "rmseMetres": {
+          "doubleGate": 0.000009855623739438447,
+          "point": 0.00007590381915957671,
+          "singleGate": 0.000009855623739438447
+        },
+        "scale": 390
+      },
+      {
+        "amplitudeMetres": 0.000047,
+        "footprintMetres": 0.0002999143101970865,
+        "gate": 1,
+        "normalizedFootprint": 0.35,
+        "rmseMetres": {
+          "doubleGate": 0.000006280557876547194,
+          "point": 0.000006280557876547194,
+          "singleGate": 0.000006280557876547194
+        },
+        "scale": 1167
+      },
+      {
+        "amplitudeMetres": 0.000047,
+        "footprintMetres": 0.0004284490145672665,
+        "gate": 0.84375,
+        "normalizedFootprint": 0.5,
+        "rmseMetres": {
+          "doubleGate": 0.000002270943398432167,
+          "point": 0.000011824310503314628,
+          "singleGate": 0.000006641110006523465
+        },
+        "scale": 1167
+      },
+      {
+        "amplitudeMetres": 0.000047,
+        "footprintMetres": 0.0005569837189374465,
+        "gate": 0.49999999999999956,
+        "normalizedFootprint": 0.65,
+        "rmseMetres": {
+          "doubleGate": 0.000006785089843354582,
+          "point": 0.000018110965218635464,
+          "singleGate": 0.0000015777915542134182
+        },
+        "scale": 1167
+      },
+      {
+        "amplitudeMetres": 0.000047,
+        "footprintMetres": 0.0006855184233076265,
+        "gate": 0.15624999999999978,
+        "normalizedFootprint": 0.8,
+        "rmseMetres": {
+          "doubleGate": 0.00000808148658303569,
+          "point": 0.000024158816798004336,
+          "singleGate": 0.0000037794135497956694
+        },
+        "scale": 1167
+      },
+      {
+        "amplitudeMetres": 0.000047,
+        "footprintMetres": 0.0008140531276778063,
+        "gate": 0,
+        "normalizedFootprint": 0.95,
+        "rmseMetres": {
+          "doubleGate": 0.0000037905527327711424,
+          "point": 0.000029594570557885878,
+          "singleGate": 0.0000037905527327711424
+        },
+        "scale": 1167
+      }
+    ],
+    "fixedSource": {
+      "commit": "95c97a96877a0b09660d1887ce858fe1c018a5c8",
+      "path": "tiles-mother/r2-closeout-06-handmade/START_HERE.html",
+      "repository": "haihao0307/HOUSE",
+      "shaderResponse": "band(fp, scale)=1-smoothstep(.35,.95,fp*scale); grain and micro are gated during assignment and multiplied by band again in structuralHeight"
+    },
+    "fixture": {
+      "basis": "oriented plane-wave surrogate",
+      "reference": "analytic rectangular-footprint average",
+      "samplesPerCase": 4096,
+      "scope": "response-curve counterexample; not WebGL or visual acceptance",
+      "seed": 20260911
+    },
+    "frozenChanged": false,
+    "judgment": "Repeated application is not idempotent and increases error in this bounded fixture; require one declared response per signal path and measure the actual shader before changing production.",
+    "productionMotherChanged": false,
+    "schema": "kaopu-tiles-footprint-response/r31",
+    "status": "Candidate"
+  },
+  "evidenceClass": "derived-executable-evidence",
+  "physicalObservationRoot": false,
+  "gpuRuntimeExecuted": false,
+  "humanAcceptance": false,
+  "frozenChanged": false,
+  "productionMotherChanged": false
+}
