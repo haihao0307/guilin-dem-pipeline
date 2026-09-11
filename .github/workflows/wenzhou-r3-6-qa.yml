@@ -45,6 +45,7 @@ jobs:
           node --check site/dist/r3-6/bootstrap.js
           node --check site/dist/r3-6/osm-runtime.js
           node --check tools/r3-6/browser_qa.mjs
+          node --check tools/r3-6/browser_qa_timer_wrapper.mjs
           grep -q 'id="approximation-info"' site/dist/r3-6/index.html
           grep -q 'await new Promise(resolve=>requestAnimationFrame(resolve))' site/dist/r3-6/osm-runtime.js
           grep -q 'await allowGithack(stressContext)' tools/r3-6/browser_qa.mjs
@@ -65,7 +66,7 @@ jobs:
             sleep 1
           done
           test "$ready" = 1
-          R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/browser_qa.mjs | tee /tmp/r36-local.json
+          R36_URL=http://127.0.0.1:8765/site/dist/r3-6/ node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-local.json
           grep -q '"passed": true' /tmp/r36-local.json
 
       - name: Fixed-commit raw.githack browser QA
@@ -81,7 +82,7 @@ jobs:
             sleep 4
           done
           test "$ready" = 1
-          R36_URL="$URL" node tools/r3-6/browser_qa.mjs | tee /tmp/r36-public.json
+          R36_URL="$URL" node tools/r3-6/browser_qa_timer_wrapper.mjs | tee /tmp/r36-public.json
           grep -q '"passed": true' /tmp/r36-public.json
           echo "$URL" > /tmp/r36-preview.txt
 
