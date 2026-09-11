@@ -30,6 +30,7 @@ function summarizeProfile(profile){
     top:all.slice(0,30).map(x=>({...x,ms:x.us/1000})),
   };
 }
+async function stopProfile(){const out=await cdp.send('Profiler.stop');if(!out?.profile?.nodes)throw new Error(`CDP Profiler.stop returned no profile nodes: ${JSON.stringify(Object.keys(out||{}))}`);return out.profile;}
 async function resourceSnapshot(){
   return page.evaluate(()=>performance.getEntriesByType('resource').filter(e=>e.name.includes('/r3-5/data/osm/')).map(e=>({name:e.name.split('/').at(-1),duration:e.duration,fetchStart:e.fetchStart,responseStart:e.responseStart,responseEnd:e.responseEnd,transferSize:e.transferSize,encodedBodySize:e.encodedBodySize,decodedBodySize:e.decodedBodySize})).sort((a,b)=>a.fetchStart-b.fetchStart));
 }
@@ -39,46 +40,35 @@ async function waitPatch(id){
   await page.waitForFunction(expected=>{const c=document.querySelector('#terrain');return c?.dataset.osmLoaded==='true'&&c?.dataset.osmPatch===expected&&c?.dataset.osmRuntime==='indexed-r36';},id,poll);
 }
 
-// Initial overview: start profiler before navigation so first-load fetch/SHA/build is visible.
 await cdp.send('Profiler.start');
 const nav0=performance.now();
 await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
 await waitPatch('overview');
 const initialOverviewWallMs=performance.now()-nav0;
-const initialProfile=summarizeProfile(await cdp.send('Profiler.stop'));
+const initialProfile=summarizeProfile(await stopProfile());
 const initialResources=await resourceSnapshot();
 const initialState=await state();
 
-// Query-01 on the same page, with fresh resource-timing buffer.
 await page.evaluate(()=>performance.clearResourceTimings());
 await cdp.send('Profiler.start');
 const q0=performance.now();
 await page.selectOption('#location','query-01');
 await waitPatch('query-01');
 const queryWallMs=performance.now()-q0;
-const queryProfile=summarizeProfile(await cdp.send('Profiler.stop'));
+const queryProfile=summarizeProfile(await stopProfile());
 const queryResources=await resourceSnapshot();
 const queryState=await state();
 
-// Return to overview. Payload should be a cache hit; this isolates sampler/geometry/upload better.
 await page.evaluate(()=>performance.clearResourceTimings());
 await cdp.send('Profiler.start');
 const o0=performance.now();
 await page.selectOption('#location','overview');
 await waitPatch('overview');
 const overviewRevisitWallMs=performance.now()-o0;
-const overviewRevisitProfile=summarizeProfile(await cdp.send('Profiler.stop'));
+const overviewRevisitProfile=summarizeProfile(await stopProfile());
 const overviewRevisitResources=await resourceSnapshot();
 const overviewRevisitState=await state();
 
-const report={
-  schema:'wenzhou-r3.6-cpu-resource-profile/r1',
-  target,
-  engine:'Playwright Chromium software/headless environment; diagnostic attribution only, not real iPhone performance',
-  initialOverview:{wallMs:initialOverviewWallMs,state:initialState,resources:initialResources,profile:initialProfile},
-  query01:{wallMs:queryWallMs,state:queryState,resources:queryResources,profile:queryProfile},
-  overviewRevisit:{wallMs:overviewRevisitWallMs,state:overviewRevisitState,resources:overviewRevisitResources,profile:overviewRevisitProfile},
-  interpretation:{realIphoneVerified:false,resourceTimingIncludesBrowserCacheBehavior:true,cpuProfileIsSamplingNotExactInstrumentation:true}
-};
+const report={schema:'wenzhou-r3.6-cpu-resource-profile/r2',target,engine:'Playwright Chromium software/headless environment; diagnostic attribution only, not real iPhone performance',initialOverview:{wallMs:initialOverviewWallMs,state:initialState,resources:initialResources,profile:initialProfile},query01:{wallMs:queryWallMs,state:queryState,resources:queryResources,profile:queryProfile},overviewRevisit:{wallMs:overviewRevisitWallMs,state:overviewRevisitState,resources:overviewRevisitResources,profile:overviewRevisitProfile},interpretation:{realIphoneVerified:false,resourceTimingIncludesBrowserCacheBehavior:true,cpuProfileIsSamplingNotExactInstrumentation:true}};
 console.log(JSON.stringify(report,null,2));
 await cdp.detach();await context.close();await browser.close();
