@@ -251,7 +251,7 @@
     {
       "id": "LQ-SUBSTANCE-001",
       "priority": 4,
-      "status": "queued",
+      "status": "candidate-partial",
       "question": "Which Substance 3D Designer material-graph practices are transferable as data-generating functions rather than texture assets?",
       "targetSystems": [
         "Brick",
@@ -260,7 +260,20 @@
         "Weapons",
         "Vegetation",
         "Character"
-      ]
+      ],
+      "progress": "R32 locked current Adobe Substance 3D Designer documentation at AdobeDocs commit 4524a7a and separated editable SBS source, published SBSAR evaluator package, effective inherited context, exposed runtime controls and rendered outputs. Official docs show that output size/format/tiling/random seed inherit through the graph; graph identifier is unique while label is display-only; SBSAR remains dynamic but is one-way and cannot reconstruct SBS; static parameters disappear after cooking; $time is engine-uptime seconds, not KAOPU world time; precision and filtering choices can propagate downstream. A nine-test source-semantic manifest probe passed and rejected SBSAR-only provenance, unresolved inherited seed/context, engine uptime as world time, static-runtime promises, untyped outputs and forbidden external bitmaps. No Adobe runtime, image bake, GPU, visual acceptance or physical material validation occurred.",
+      "resultLogs": [
+        "LEARNING_LOG/2026-09-11_SUBSTANCE_R32_GRAPH_REPLAY_CONTRACT.md"
+      ],
+      "sourceLocks": [
+        "references/substance-graph-contract-r32/SOURCE_LOCK.json"
+      ],
+      "candidateProbe": "PROBES/substance_graph_contract_probe_r32.py",
+      "probeResult": "PROBES/substance_graph_contract_result_r32.json",
+      "currentBestViewExtension": "CURRENT_BEST_VIEW_R32_SUBSTANCE_GRAPH_REPLAY.md",
+      "toolRoutingExtension": "TOOL_ROUTING_R32_SUBSTANCE_GRAPH_REPLAY.json",
+      "motherRoutingExtension": "MOTHER_ROUTING_R32_SUBSTANCE_GRAPH_REPLAY.json",
+      "nextGate": "Run one tiny authoritative SBS/SBSAR fixture with Substance Engine locked: same editable source and resolved parameters at two resolutions plus two seeds. Capture effective inheritance, engine version, output identifiers/usages, linear/raw output hashes and publish warnings. Verify that resolution changes only the derived-evaluation identity, seed changes are intentional, and source SBS remains recoverable. This validates the adapter only; it does not authorize textures/SBSAR in production Mothers or prove physical/visual correctness."
     },
     {
       "id": "LQ-HOUDINI-001",

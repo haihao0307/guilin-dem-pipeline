@@ -1,0 +1,74 @@
+{
+  "schema": "kaopu-tool-routing/r32",
+  "status": "candidate",
+  "tools": [
+    {
+      "id": "TOOL-R32-ADOBEDOCS-GRAPH-CONTEXT",
+      "authority": "primary-official-documentation",
+      "repository": "AdobeDocs/substance-3d-designer.en",
+      "commit": "4524a7a6582a11f9b6d68b1878371b1672b96040",
+      "paths": [
+        "help/compositing-graphs/graph-parameters/graph-parameters.md",
+        "help/compositing-graphs/inheritance-compositing/inheritance-in-substance-compositing-graphs.md",
+        "help/compositing-graphs/manage-parameters/exposing-a-parameter/exposing-a-parameter.md"
+      ],
+      "useFor": [
+        "graph identity",
+        "inherited evaluator context",
+        "static/dynamic exposed controls"
+      ],
+      "notFor": [
+        "physical material truth",
+        "runtime determinism"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R32-ADOBEDOCS-PUBLISH-OUTPUT",
+      "authority": "primary-official-documentation",
+      "repository": "AdobeDocs/substance-3d-designer.en",
+      "commit": "4524a7a6582a11f9b6d68b1878371b1672b96040",
+      "paths": [
+        "help/compositing-graphs/publishing-asset-files/publishing-substance-3d-asset-files-sbsar.md",
+        "help/technical-issues/incorrect-image-output/incorrect-image-output.md",
+        "help/function-graphs/variables/system-variables/system-variables.md",
+        "help/function-graphs/the-function-graph/the-function-graph.md"
+      ],
+      "useFor": [
+        "SBSAR one-way boundary",
+        "output precision/filtering",
+        "engine uptime boundary",
+        "typed function output"
+      ],
+      "notFor": [
+        "adopting SBSAR as KAOPU source",
+        "visual acceptance"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R32-MANIFEST-PROBE",
+      "authority": "derived-executable-evidence",
+      "path": "PROBES/substance_graph_contract_probe_r32.py",
+      "resultPath": "PROBES/substance_graph_contract_result_r32.json",
+      "useFor": [
+        "negative-control schema checks",
+        "request identity separation"
+      ],
+      "notFor": [
+        "Substance runtime replay",
+        "image quality",
+        "physical validation"
+      ],
+      "observationRootEligible": false
+    }
+  ],
+  "runtimeAvailability": {
+    "sbscooker": false,
+    "sbsrender": false,
+    "designer": false,
+    "consequence": "authoritative runtime replay unavailable in this cycle"
+  },
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}
