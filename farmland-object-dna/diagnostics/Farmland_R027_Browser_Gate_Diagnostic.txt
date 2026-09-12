@@ -1,16 +1,19 @@
-commit=d74aca0cd9bf26ed9f858fb5ca329a2da895cd69
-url=https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/d74aca0cd9bf26ed9f858fb5ca329a2da895cd69/farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html
+commit=6e49cfad5d1ec03bfb35e5eb4bbf0d007aef796e
+url=https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/6e49cfad5d1ec03bfb35e5eb4bbf0d007aef796e/farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html
 === desktop 1440x960 ===
 githack_notice=seen
+runtime_ready=false
+title=Farmland Mother R027 · Continuous Ground Workbench
+browser_logs=[{"level": "SEVERE", "message": "https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/6e49cfad5d1ec03bfb35e5eb4bbf0d007aef796e/farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html 74:221 Uncaught ReferenceError: torso is not defined", "source": "javascript", "timestamp": 1789185189079}, {"level": "SEVERE", "message": "https://rawcdn.githack.com/favicon.ico - Failed to load resource: the server responded with a status of 404 ()", "source": "network", "timestamp": 1789185189663}]
 ERROR:
 Traceback (most recent call last):
-  File "/tmp/farmland_r027_browser_gate.py", line 47, in <module>
+  File "/tmp/farmland_r027_browser_gate.py", line 57, in <module>
     check('desktop',1440,960);check('mobile',390,844)
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/tmp/farmland_r027_browser_gate.py", line 24, in check
+  File "/tmp/farmland_r027_browser_gate.py", line 34, in check
     log(f'=== {label} {w}x{h} ==='); open_page(d)
                                      ^^^^^^^^^^^^
-  File "/tmp/farmland_r027_browser_gate.py", line 20, in open_page
+  File "/tmp/farmland_r027_browser_gate.py", line 21, in open_page
     WebDriverWait(d,30).until(lambda x:x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
   File "/home/runner/.local/lib/python3.12/site-packages/selenium/webdriver/support/wait.py", line 121, in until
     raise TimeoutException(message, screen, stacktrace)
