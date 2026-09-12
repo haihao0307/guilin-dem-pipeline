@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州 R3.8：继承 R3.6 已验证地形、海面、WorldCover 与 OSM 证据，加入全温州 SoilGrids 250 m 土壤属性和不确定性覆盖声部。">
+ <title>小温州 · 三维地形 R3.8</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="../r3-2/style.css">
+ <link rel="stylesheet" href="../r3-3/style.css">
+ <link rel="stylesheet" href="../r3-4/style.css">
+ <link rel="stylesheet" href="../r3-5/style.css">
+ <link rel="stylesheet" href="../r3-7/style.css"><link rel="stylesheet" href="./style.css">
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script>
+  (()=>{
+    const nativeFetch=window.fetch.bind(window);
+    window.fetch=(input,init)=>{
+      if(typeof input==='string'){
+        if(input.startsWith('./data/worldcover/')){
+          input=new URL('../r3-4/data/worldcover/'+input.slice('./data/worldcover/'.length),location.href).href;
+        }else if(input.startsWith('/r3/data/')){
+          input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;
+        }else if(input.startsWith('/r3-1/data/')){
+          input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;
+        }
+      }
+      return nativeFetch(input,init);
+    };
+  })();
+ </script>
+</head>
+<body>
+ <main id="stage" aria-label="温州 R3.8 三维地形、海面、土地覆盖、道路建筑和 SoilGrids 土壤模型证据">
+   <canvas id="terrain" tabindex="0" aria-label="三维地形；普通模式方向键旋转、加减号缩放；人眼模式拖动环视，WASD 行走，方向键转头，加减号前后移动，R键复位"></canvas>
+   <svg id="river-leaders" aria-hidden="true"></svg>
+   <header class="topbar">
+     <div class="brand"><span class="brand-mark" aria-hidden="true">山</span><div><h1>小温州<span>三维地形</span></h1><p>真实 DEM · R3.8</p></div></div>
+     <div class="view-switch" role="group" aria-label="地形范围"><button id="mountains" class="active" aria-pressed="true">山地近景</button><button id="overview" aria-pressed="false">全域</button></div>
+     <button id="info-button" class="quiet" aria-expanded="false" aria-controls="info">资料说明</button>
+   </header>
+   <section class="focus-panel" aria-label="位置与显示设置">
+     <label for="location">查看位置</label>
+     <select id="location"><option value="mountains">山地近景</option><option value="overview">全域</option></select>
+     <label for="exaggeration">地形比例</label>
+     <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
+     <div id="eye-card" class="eye-card" hidden><strong>1.6 米人眼视角</strong><span id="eye-status">相机锚定到显示曲面。</span><small>1.6 米只描述相机与显示曲面的关系，不是测绘精度。</small></div>
+     <details class="base-layers"><summary>海岸、海面与地图证据</summary><div class="hydro-options">
+       <label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><label><input id="show-sea" type="checkbox" checked> 演示海面</label>
+       <label><input id="show-landcover" type="checkbox"> 土地覆盖证据</label>
+       <label><input id="show-osm-roads" type="checkbox" checked> OSM 道路中心线</label><label><input id="show-osm-buildings" type="checkbox" checked> OSM 建筑 footprint</label>
+       </div></details><div class="hydro-options"><label><input id="show-soil-context" type="checkbox" checked> 所选环境证据</label>
+     </div>
+     <div class="soil-controls" aria-label="SoilGrids 土壤覆盖设置">
+       <label for="evidence-mode">同一地点 · 环境证据</label>
+       <select id="evidence-mode"><option value="soil">土壤剖面 · 属性与不确定性</option><option value="wrb-official">WRB · 官方分类</option><option value="wrb-probability">WRB · 单类概率</option><option value="wrb-derived">WRB · 概率对齐后的派生分类</option><option value="wrb-difference">WRB · 两种分类差异</option><option value="water">JRC · 历史水体</option></select>
+       <div id="soil-settings"><label for="soil-depth">土壤深度</label><select id="soil-depth"><option value="0-5cm">0-5 cm</option><option value="5-15cm">5-15 cm</option><option value="15-30cm">15-30 cm</option><option value="30-60cm">30-60 cm</option><option value="60-100cm">60-100 cm</option><option value="100-200cm">100-200 cm</option></select><label for="soil-property">土壤属性</label>
+       <select id="soil-property">
+         <option value="clay">黏土</option><option value="sand">砂</option><option value="silt">粉砂</option><option value="soc">土壤有机碳</option>
+         <option value="phh2o">pH</option><option value="bdod">容重</option><option value="cfvo">粗颗粒体积分数</option><option value="wv0033">33 kPa 持水量</option>
+       </select>
+       <label class="soil-uncertainty"><input id="show-soil-uncertainty" type="checkbox" checked> 用灰化 / 透明度显示相对不确定性</label></div><div id="wrb-settings" hidden><label for="wrb-class">WRB 类别</label><select id="wrb-class"></select></div><div id="water-settings" hidden><label for="water-product">历史指标</label><select id="water-product"><option value="occurrence">水体出现频率</option><option value="recurrence">年际复现率</option><option value="transitions">长期变化类别</option><option value="change">出现频率变化</option><option value="seasonality">季节性 · 2022–2024 部分</option><option value="extent">最大范围 · 2022–2024 部分</option></select></div>
+       <small id="environment-help">250 m 土壤模型证据；不代替现场土样。</small>
+     </div>
+     <div id="soil-context-card" class="soil-context-card" hidden>
+       <strong id="soil-context-title">SoilGrids · 黏土</strong>
+       <span id="soil-context-status">读取 250 m 土壤覆盖…</span>
+       <div class="soil-context-metrics"><b id="soil-context-value">属性值 —</b><b id="soil-context-uncertainty">不确定性 —</b></div>
+       <small id="soil-context-source">模型预测不是现场土样。</small><button id="soil-retry" hidden>重试当前土壤证据</button>
+     </div>
+     <div id="environment-card" class="soil-context-card" hidden aria-live="polite"><strong id="environment-title"></strong><span id="environment-status"></span><b id="environment-value"></b><small id="environment-boundary"></small><div id="environment-legend"></div><button id="environment-retry" hidden>重试当前证据</button></div>
+     <details id="world-score-card"><summary>同一地点 · 证据总览</summary><div id="world-score-summary">等待位置…</div><pre id="world-score-query"></pre></details>
+     <div id="osm-card" class="osm-card" hidden>
+       <strong id="osm-title">OpenStreetMap · R3.6 索引化映射证据</strong>
+       <span id="osm-status">读取证据…</span>
+       <div class="osm-metrics"><b id="osm-road-count">道路顶点 —</b><b id="osm-building-count">建筑顶点 —</b></div>
+       <small id="osm-source">证据语义与 R3.5 完全相同。</small>
+     </div>
+     <div id="landcover-card" class="landcover-card" hidden>
+       <strong id="landcover-title">ESA WorldCover 2021 · 土地覆盖证据</strong><span id="landcover-status">读取证据…</span><div id="landcover-metrics" class="landcover-metrics"></div><small id="landcover-source">类别不是个体 Object Truth。</small>
+     </div>
+     <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
+   </section>
+   <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
+   <div class="compass" aria-label="北方向"><span id="north-arrow">↑</span><b>北</b></div>
+   <nav class="camera-controls" aria-label="相机控制"><button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="zoom-out" title="缩小" aria-label="缩小">−</button><span class="separator"></span><button id="turn-left" title="向左旋转" aria-label="向左旋转">↶</button><button id="turn-right" title="向右旋转" aria-label="向右旋转">↷</button><span class="separator"></span><button id="eye-view" aria-pressed="false">人眼 1.6m</button><button id="top-view">俯视</button><button id="reset">复位</button></nav>
+   <footer><div class="caption"><strong id="view-title">山地近景</strong><span id="render-status" role="status" aria-live="polite">准备地形</span></div><p id="gesture-hint" class="gesture-hint">拖动旋转 · 滚轮缩放 · 双指平移</p><div class="height-legend"><span>低</span><i></i><span>高</span></div></footer>
+   <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>
+   <aside id="info" class="info-panel" hidden aria-label="资料说明">
+      <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>R3.8 · 同一地点的环境证据</h2><p>继承地形、相机、海面、WorldCover 和 OSM。土壤六个深度、WRB 和 JRC 是同一世界中的不同观察证据，按当前选择加载。</p><dl>
+        <dt>土壤属性</dt><dd>当前支持 0–200 cm 的六个标准深度：黏土、砂、粉砂、SOC、pH、容重、粗颗粒体积分数、33 kPa 持水量；每项中位数与 uncertainty 独立保存，浏览器只按当前选择加载。</dd>
+        <dt>不确定性</dt><dd>uncertainty 是 SoilGrids 相对不确定性指标，不沿用属性物理单位。R3.8 只用灰化和透明度表达相对不确定性，不把它写成“土壤含量百分比”。</dd>
+        <dt>真值边界</dt><dd>250 m SoilGrids 是模型预测外部观察，不是 12.5 m 土壤真值，不替代现场土样，不生成田块/道路/建筑，不修改 DEM 高度；农田尺度应用仍需要局部校准。</dd>
+        <dt>WRB 分类</dt><dd>官方分类与概率对齐后 argmax 同时保留；6.1103% 差异是两种算子顺序的比较，不据此覆盖官方结果。概率保留源分数，不强行归一到 100%。</dd><dt>历史水体</dt><dd>Source: EC JRC/Google。30 m 对齐证据在当前工作台以 250 m 最近邻抽样展示，小水体可能遗漏。每项保留来源时间范围，不代表当前水位或海陆拓扑。</dd><dt>旧显示清理</dt><dd>R3.3 查询点半径 48 m 的程序化土壤外观在 R3.8 主工作台停用，避免与全域覆盖重复；旧文件、固定提交和恢复链未删除。</dd>
+        <dt>显示近似</dt><dd id="approximation-info">当前显示层的近似高度界尚未核定；不代表实测精度。</dd>
+        <dt>真机约束</dt><dd>390×844 Chromium 移动仿真仍只是回归门；真实 iPhone Safari/GPU/CPU 未完成前不把本版本称为 productionReady。</dd>
+      </dl>
+      <a href="./data/soil/soil-context.json" target="_blank" rel="noreferrer">查看六层土壤索引</a><br>
+      <a href="https://github.com/haihao0307/guilin-dem-pipeline/releases/tag/wenzhou-r3.7-soilgrids-evidence-20260911" target="_blank" rel="noreferrer">查看完整 SoilGrids 永久证据归档</a><br>
+      <a href="../r3-5/data/osm/osm-context.json" target="_blank" rel="noreferrer">查看冻结 OSM 浏览器证据索引</a>
+   </aside>
+ </main>
+ <script type="module" src="./bootstrap.js"></script>
+</body></html>
