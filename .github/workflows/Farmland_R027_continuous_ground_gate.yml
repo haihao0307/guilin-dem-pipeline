@@ -84,7 +84,17 @@ jobs:
               if 'External Content Notice' in d.title:
                   log('githack_notice=seen')
                   WebDriverWait(d,12).until(EC.element_to_be_clickable((By.CSS_SELECTOR,'button.url-action-button'))).click()
-              WebDriverWait(d,30).until(lambda x:x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
+              try:
+                  WebDriverWait(d,30).until(lambda x:x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
+              except Exception:
+                  log('runtime_ready='+str(d.execute_script("return document.body && document.body.dataset.runtimeReady")))
+                  log('title='+d.title)
+                  try:
+                      logs=d.get_log('browser')
+                      log('browser_logs='+json.dumps(logs,ensure_ascii=False))
+                  except Exception as le:
+                      log('browser_log_error='+repr(le))
+                  raise
           def check(label,w,h):
               d=driver(w,h)
               try:
