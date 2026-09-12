@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R46 locked the principal handoff, codec/range/appearance/SH/antialias/sorting/memory, full-covariance and projection controls. R47 added a fixed-source 33x33 CPU reference compositor combining post-SH versus early-DC clamp order, r186 0.3 kernel/alpha compensation and Gaussian cutoff, exact versus same-bin order, projected ellipse changes and normal source-over blending. In the derived two-splat control, combined maximum linear RGB error was 0.0851303, exceeding every single ablation (DC 0.0483221, order 0.0434365, ellipse 0.0467564); the maximum non-additive residual was 0.0895575. A tiny 0.00341946-pixel isotropic base scale became 0.548022 pixels while center alphaScale fell to 3.89741e-5 and the continuous area-alpha proxy stayed equal. The 1024-pixel cap still hid 46.0678 pixels of raw-axis difference. These are deterministic synthetic CPU results, not universal, GPU, perceptual, device or real-asset thresholds.",
+      "progress": "R33-R47 locked the principal handoff, codec, appearance, sorting, memory, covariance, projection and continuous-compositor controls. R48 executed the exact R47 two-splat analytic equations in an independent desktop OpenGL shader on a surfaceless Mesa llvmpipe RGBA8 framebuffer, with normal source-over blending, dither off and no sRGB/tone mapping. Two runs were byte-identical. The backend preserved a material reference/candidate maximum channel difference of 0.0823529 versus the continuous CPU value 0.0851303. Backend-versus-continuous maxima were 0.00497459 reference and 0.00537919 candidate. A naive per-draw UNORM8 CPU oracle matched the reference within one code but needed two codes for the candidate, rejecting exact backend prediction from generic rounding. This is software-backend framebuffer evidence, not direct Three.js TSL, hardware GPU, browser/device, real-asset or human acceptance.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -42,7 +42,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_COVARIANCE_QUANTIZATION_R44.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_POSITION_PROJECTION_R45.md",
         "LEARNING_LOG/2026-09-13_GAUSSIAN_ELLIPSE_PROJECTION_R46.md",
-        "LEARNING_LOG/2026-09-13_GAUSSIAN_REFERENCE_COMPOSITOR_R47.md"
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_REFERENCE_COMPOSITOR_R47.md",
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_SOFTWARE_GL_COMPOSITOR_R48.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -59,7 +60,8 @@
         "references/gaussian-covariance-quantization-r44/SOURCE_LOCK.json",
         "references/gaussian-position-projection-r45/SOURCE_LOCK.json",
         "references/gaussian-ellipse-projection-r46/SOURCE_LOCK.json",
-        "references/gaussian-reference-compositor-r47/SOURCE_LOCK.json"
+        "references/gaussian-reference-compositor-r47/SOURCE_LOCK.json",
+        "references/gaussian-software-gl-compositor-r48/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -121,7 +123,7 @@
       "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
       "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
       "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
-      "nextGate": "Execute the exact R47 two-splat fixture through pinned Three.js r186 TSL on an actual WebGPU or WebGL-fallback backend with framebuffer readback, explicit color-space/tone-map state and edge-pixel checks. Compare direct backend pixels with the CPU linear reference before proposing any target-device or real-photo threshold. When the user supplies a small static-object photo set, only then run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R47 gates. Do not add component maxima as a final-pixel guarantee, infer visibility from kernel-expanded size alone, alter Canonical Truth, retire RealityScan, modify a production Mother or claim Object DNA equivalence.",
+      "nextGate": "Run the exact R47 fixture through pinned Three.js r186's generated TSL shader on WebGL fallback or WebGPU with framebuffer readback. Compare both a float intermediate target and final RGBA8 output, recording backend identity, blend state, dither, color space, tone mapping and edge pixels. Keep R48 llvmpipe's two-code envelope fixture-specific; do not reuse it as an asset, perceptual or device threshold. When the user supplies a small static-object photo set, only then run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R48 gates. Do not alter Canonical Truth, retire RealityScan, modify a production Mother or claim Object DNA equivalence.",
       "quaternionQuantizationProbe": "PROBES/gaussian_quaternion_quantization_r43.cc",
       "quaternionQuantizationProbeResult": "PROBES/gaussian_quaternion_quantization_result_r43.json",
       "candidateQuaternionQuantizationGate": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
@@ -151,7 +153,13 @@
       "candidateReferenceCompositorGate": "ADAPTERS/gaussian_reference_compositor_gate_r47.mjs",
       "currentBestViewReferenceCompositorExtension": "CURRENT_BEST_VIEW_R47_GAUSSIAN_REFERENCE_COMPOSITOR.md",
       "toolRoutingReferenceCompositorExtension": "TOOL_ROUTING_R47_GAUSSIAN_REFERENCE_COMPOSITOR.json",
-      "motherRoutingReferenceCompositorExtension": "MOTHER_ROUTING_R47_GAUSSIAN_REFERENCE_COMPOSITOR.json"
+      "motherRoutingReferenceCompositorExtension": "MOTHER_ROUTING_R47_GAUSSIAN_REFERENCE_COMPOSITOR.json",
+      "softwareGlCompositorProbe": "PROBES/gaussian_software_gl_compositor_r48.py",
+      "softwareGlCompositorProbeResult": "PROBES/gaussian_software_gl_compositor_result_r48.json",
+      "candidateSoftwareGlCompositorGate": "ADAPTERS/gaussian_software_gl_compositor_gate_r48.mjs",
+      "currentBestViewSoftwareGlCompositorExtension": "CURRENT_BEST_VIEW_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.md",
+      "toolRoutingSoftwareGlCompositorExtension": "TOOL_ROUTING_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.json",
+      "motherRoutingSoftwareGlCompositorExtension": "MOTHER_ROUTING_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.json"
     },
     {
       "id": "LQ-TELLUX-001",

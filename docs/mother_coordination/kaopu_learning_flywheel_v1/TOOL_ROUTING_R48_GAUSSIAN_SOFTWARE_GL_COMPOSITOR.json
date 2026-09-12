@@ -1,0 +1,35 @@
+{
+  "schema": "kaopu-tool-routing/r48",
+  "status": "Candidate partial",
+  "question": "Which framebuffer evidence may bridge the R47 analytic compositor toward direct Three.js device validation?",
+  "routes": [
+    {
+      "stage": "analytic-reference",
+      "tool": "PROBES/gaussian_reference_compositor_r47.mjs",
+      "authority": "continuous equation reference",
+      "notAuthorityFor": ["RGBA8 exact pixels", "GPU equivalence", "device safety"]
+    },
+    {
+      "stage": "software-raster-control",
+      "tool": "PROBES/gaussian_software_gl_compositor_r48.py",
+      "authority": "fixed llvmpipe shader, blending and RGBA8 readback regression",
+      "required": ["backend identity", "framebuffer format", "blend state", "dither", "sRGB", "tone mapping"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_software_gl_compositor_gate_r48.mjs",
+      "authority": "R48 evidence completeness and fixture regression",
+      "notAuthorityFor": ["direct Three.js TSL", "hardware GPU", "browser", "iPhone/Safari", "perceptual acceptance"]
+    },
+    {
+      "stage": "viewer-next",
+      "tool": "Three.js r186 GaussianSplat",
+      "authority": "fixed delivery viewer only after direct execution",
+      "requiredNext": ["TSL-generated shader", "WebGL fallback or WebGPU", "float and RGBA8 readback", "explicit output transform", "edge-pixel comparison"]
+    }
+  ],
+  "softwareRendererIsHardwareGpu": false,
+  "viewerIsTrainer": false,
+  "deliveryIsCanonicalTruth": false,
+  "productionMutationAllowed": false
+}
