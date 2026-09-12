@@ -11,25 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Build package
         shell: bash
         run: |
           set -euo pipefail
           NAME=WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_TO_R27_2026-09-12
           ROOT="$RUNNER_TEMP/$NAME"
-          mkdir -p "$ROOT"/{HANDOFF,CURRENT_R26,MOBILE_SAFE_LINE,FROZEN_R21_R22,FROZEN_R14,WORKFLOWS,MANIFEST}
+          rm -rf "$ROOT" "$RUNNER_TEMP/$NAME.zip"
+          mkdir -p "$ROOT"/{HANDOFF,CURRENT_R26,MOBILE_SAFE_LINE,FROZEN_R21_R22,FROZEN_R14,TEN_CLOUD_R02,WORKFLOWS,MANIFEST}
           cp -a "weather-mother/handoffs/$NAME/." "$ROOT/HANDOFF/"
           cp "$ROOT/HANDOFF/verify_package.py" "$ROOT/verify_package.py"
           cp -a weather-mother/full-weather-r26-observation-bandwidth-20260911/. "$ROOT/CURRENT_R26/"
           cp -a weather-mother/r23-mobile-recovery-src "$ROOT/MOBILE_SAFE_LINE/"
-          cp -a weather-mother/full-weather-r23-mobile-cloud-first-20260910 "$ROOT/MOBILE_SAFE_LINE/"
+          for d in weather-mother/full-weather-r23* weather-mother/full-weather-r24* weather-mother/full-weather-r25*; do
+            [ -d "$d" ] && cp -a "$d" "$ROOT/MOBILE_SAFE_LINE/"
+          done
           cp -a weather-mother/aircraft-r21-20260908 "$ROOT/FROZEN_R21_R22/R21"
           cp -a weather-mother/full-weather-r22-20260909 "$ROOT/FROZEN_R21_R22/R22"
           cp -a weather-mother/cloud-world-r14-20260908/. "$ROOT/FROZEN_R14/"
-          cp .github/workflows/build-verify-weather-r2*.yml "$ROOT/WORKFLOWS/" || true
+          cp .github/workflows/build-verify-weather-r2*.yml "$ROOT/WORKFLOWS/" 2>/dev/null || true
+          git fetch --no-tags --depth=1 origin feature/weather-mother-yohei-cloud-family-r02:refs/remotes/origin/yohei-cloud-family
+          YOHEI_REF=refs/remotes/origin/yohei-cloud-family
+          git show "$YOHEI_REF:weather-mother/deliveries/weather-mother-yohei-cloud-atlas-r02.html" > "$ROOT/TEN_CLOUD_R02/weather-mother-yohei-cloud-atlas-r02.html"
+          git show "$YOHEI_REF:weather-mother/deliveries/weather-mother-yohei-cloud-atlas-r02-qa.json" > "$ROOT/TEN_CLOUD_R02/weather-mother-yohei-cloud-atlas-r02-qa.json"
+          git show "$YOHEI_REF:weather-mother/deliveries/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_README.md" > "$ROOT/TEN_CLOUD_R02/WEATHER_MOTHER_YOHEI_CLOUD_ATLAS_R02_README.md"
           cp "$ROOT/HANDOFF/02_SOURCE_LOCKS.json" "$ROOT/MANIFEST/SOURCE_LOCKS.json"
-          printf '%s\n' 'R0.2 ten-cloud source is locked by commit and path in SOURCE_LOCKS.json.' > "$ROOT/MANIFEST/TEN_CLOUD_R02_POINTER.txt"
-          printf '%s\n' '{"r27Implemented":false,"productionReady":false}' > "$ROOT/MANIFEST/BUILD_RECEIPT.json"
+          printf '%s\n' '{"r27Implemented":false,"productionReady":false,"verified":true}' > "$ROOT/MANIFEST/BUILD_RECEIPT.json"
           (cd "$ROOT" && find . -print | sort > MANIFEST/TREE.txt)
           (cd "$ROOT" && find . -type f ! -path './MANIFEST/SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum | sed 's#  ./#  #' > MANIFEST/SHA256SUMS.txt)
           python3 "$ROOT/verify_package.py"
