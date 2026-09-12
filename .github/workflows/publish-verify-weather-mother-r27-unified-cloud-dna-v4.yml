@@ -1,4 +1,4 @@
-name: Publish and verify Weather Mother R27 unified cloud DNA v4
+name: Verify fixed Weather Mother R27 public candidate v4
 
 on:
   push:
@@ -11,11 +11,13 @@ permissions:
   contents: write
 
 jobs:
-  publish-and-verify:
+  fixed-public-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     env:
       OUT_DIR: weather-mother/full-weather-r27-unified-cloud-dna-20260912
+      PAGE_COMMIT: d2f4ab4ce0b498c9a28e4b386c29109adbaf2283
+      PUBLIC_URL: https://raw.githack.com/haihao0307/guilin-dem-pipeline/d2f4ab4ce0b498c9a28e4b386c29109adbaf2283/weather-mother/full-weather-r27-unified-cloud-dna-20260912/index.html
       EXPECTED_SHA256: a238fca33599b85361704e8e4aa2233ba5aaeb5d988ea048aa0ab018547bb188
       EXPECTED_BYTES: '37702'
     steps:
@@ -23,48 +25,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Assemble exact R27 single-file page from verified UTF-8 parts
+      - name: Reconfirm immutable public bytes
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$OUT_DIR"
-          cat weather-mother/r27-text-v1/part-*.htmlpart > "$OUT_DIR/index.html"
-          test "$(wc -c < "$OUT_DIR/index.html" | tr -d ' ')" = "$EXPECTED_BYTES"
-          test "$(sha256sum "$OUT_DIR/index.html" | awk '{print $1}')" = "$EXPECTED_SHA256"
-          grep -Fq 'Weather Mother · Cloud DNA Flight R27' "$OUT_DIR/index.html"
-          grep -Fq 'sameCloudForObserveAndFlight:true' "$OUT_DIR/index.html"
-          grep -Fq 'Cloud Seed' "$OUT_DIR/index.html"
-          grep -Fq 'Detail Seed' "$OUT_DIR/index.html"
-          grep -Fq 'physicalRainClaim:false' "$OUT_DIR/index.html"
-
-      - name: Freeze immutable page commit
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'Weather Mother CI'
-          git config user.email 'weather-mother-ci@users.noreply.github.com'
-          git add "$OUT_DIR/index.html"
-          git commit -m 'publish(weather-mother): R27 unified Cloud Object DNA [skip ci]'
-          git push origin HEAD:feature/weather-mother-r27-unified-cloud-dna-20260912
-          git rev-parse HEAD > /tmp/page_commit.txt
-
-      - name: Verify fixed raw.githack page bytes
-        shell: bash
-        run: |
-          set -euo pipefail
-          PAGE_COMMIT=$(cat /tmp/page_commit.txt)
-          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${PAGE_COMMIT}/${OUT_DIR}/index.html"
-          echo "PAGE_COMMIT=$PAGE_COMMIT" >> "$GITHUB_ENV"
-          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
-          status=''
-          for attempt in $(seq 1 18); do
-            status=$(curl -L --silent --show-error --connect-timeout 15 --max-time 60 -w '%{http_code}' -o /tmp/public-r27.html "$PUBLIC_URL" || true)
-            [ "$status" = '200' ] && break
-            sleep 8
-          done
-          test "$status" = '200'
+          curl -L --fail --retry 3 --connect-timeout 15 --max-time 60 "$PUBLIC_URL" -o /tmp/public-r27.html
           test "$(wc -c < /tmp/public-r27.html | tr -d ' ')" = "$EXPECTED_BYTES"
           test "$(sha256sum /tmp/public-r27.html | awk '{print $1}')" = "$EXPECTED_SHA256"
+          grep -Fq 'Weather Mother · Cloud DNA Flight R27' /tmp/public-r27.html
 
       - uses: actions/setup-python@v5
         with:
@@ -77,13 +45,13 @@ jobs:
           python -m pip install --quiet playwright==1.55.0 pillow
           python -m playwright install --with-deps chromium
 
-      - name: Run focused desktop and 390x844 public browser QA
+      - name: Run fixed-public desktop and 390x844 browser QA
         shell: bash
         run: |
           set -euo pipefail
           python weather-mother/r27-tools/qa_public.py
 
-      - name: Commit public evidence
+      - name: Commit fixed-public evidence
         shell: bash
         run: |
           set -euo pipefail
