@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Farmland Mother R027 · Continuous Ground Workbench</title>
+<style>
+:root{--panel:rgba(17,22,18,.84);--line:rgba(255,255,255,.14);--text:#f3f6ef;--muted:#bac4b5;--accent:#d6e8aa;--water:#88c8d8;--warn:#f3c77f}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(#b8cbd2 0%,#d9d4b9 48%,#8f7b5d 100%);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}.hud{position:fixed;z-index:4;pointer-events:none}.card{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.22);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}
+#title{left:14px;top:max(14px,env(safe-area-inset-top));width:min(470px,calc(100vw - 28px));padding:12px 14px}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800}.title{font-size:18px;font-weight:800;line-height:1.15;margin:5px 0}.sub{font-size:11px;line-height:1.48;color:var(--muted)}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{font-size:9px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.chip.ok{color:#e8ffd1;border-color:rgba(214,232,170,.38)}.chip.warn{color:#ffe1aa;border-color:rgba(243,199,127,.4)}
+#controls{right:14px;top:max(14px,env(safe-area-inset-top));width:248px;padding:11px}.sectionTitle{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#dde7d7;margin:0 0 8px}.row{display:flex;gap:6px;flex-wrap:wrap}.btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--text);border-radius:9px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer}.btn.active,.btn:hover{background:rgba(214,232,170,.15);border-color:rgba(214,232,170,.42)}.toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;padding:8px 0;border-top:1px solid var(--line)}.toggle input{accent-color:#b9d77d}.note{font-size:9px;line-height:1.45;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+#readout{left:14px;bottom:max(14px,env(safe-area-inset-bottom));width:320px;padding:10px 12px}.metric{font-size:10px;line-height:1.5;color:#dfe7dc}.metric b{color:#fff}.metric .ok{color:#dbf8bd}.metric .warn{color:#ffd399}.watermark{position:fixed;z-index:2;left:50%;bottom:16px;transform:translateX(-50%);font-size:8px;letter-spacing:.12em;color:rgba(255,255,255,.56);pointer-events:none;text-transform:uppercase}
+@media(max-width:760px){#title{width:calc(100vw - 28px);padding:10px 12px}.title{font-size:15px}.sub{font-size:10px}.chips{display:none}#controls{left:14px;right:14px;top:auto;bottom:max(14px,env(safe-area-inset-bottom));width:auto;max-height:205px;overflow:auto;padding:10px 12px}#readout{width:auto;right:14px;bottom:235px}.watermark{bottom:218px;max-width:72vw;text-align:center}}
+</style>
+</head>
+<body data-runtime-ready="false" data-terrain-mesh-count="0">
+<div id="title" class="hud card">
+  <div class="eyebrow">FARMLAND_MOTHER_R027_CONTINUOUS_GROUND_20260912</div>
+  <div class="title">一张地面：平缓区 → 连续过渡 → 坡地梯田</div>
+  <div class="sub">按用户参考图重建。主地形只有一张连续高度场：平坝水田直接在平缓区内挖，梯田直接在坡体上削台。水、人、草帽农人和水牛都在同一工作台、同一地面坐标系内。</div>
+  <div class="chips"><span class="chip ok">terrainMeshCount = 1</span><span class="chip">1 unit = 1 m</span><span class="chip">single height field</span><span class="chip warn">SYNTHETIC QA · NOT REGIONAL TRUTH</span></div>
+</div>
+<div id="controls" class="hud card">
+  <div class="sectionTitle">Camera</div>
+  <div class="row"><button class="btn active" data-cam="overview">总览</button><button class="btn" data-cam="flat">平坝</button><button class="btn" data-cam="slope">坡地</button><button class="btn" data-cam="human">人眼</button></div>
+  <label class="toggle">显示水路 <input id="waterToggle" type="checkbox" checked></label>
+  <label class="toggle">显示人物 / 水牛 <input id="lifeToggle" type="checkbox" checked></label>
+  <label class="toggle">显示诊断线 <input id="guideToggle" type="checkbox" checked></label>
+  <div class="note">R026 的独立平台板、漂浮梯田和盒子地面全部停止使用。R027 的梯田平台、田坎、主渠和田块高差均来自同一张地形网格的顶点高度。</div>
+</div>
+<div id="readout" class="hud card">
+  <div class="sectionTitle">Ground Contract</div>
+  <div class="metric"><b>母地形：</b><span class="ok">1 张连续网格</span><br><b>平缓段：</b>x ≈ −68…−8 m<br><b>连续变坡：</b>x ≈ −8…+8 m<br><b>坡地区：</b>x ≈ +8…+68 m<br><b>梯田：</b>坡体内削台，不生成独立平台 Mesh<br><b>人物：</b>草帽农人 × 3　<b>水牛：</b>× 2<br><span class="warn">当前尺寸用于结构检验，不宣称元阳实测。</span></div>
+</div>
+<div class="watermark">R027 · ONE GROUND / ONE WORKBENCH / NO FLOATING TERRACE SLABS</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/controls/OrbitControls.js';
+
+const VERSION='FARMLAND_MOTHER_R027_CONTINUOUS_GROUND_20260912';
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0xbac5b5,105,200);
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.08,320);
+camera.position.set(92,58,92);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.55));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.target.set(0,5,0);controls.maxPolarAngle=Math.PI*.495;controls.minDistance=3;controls.maxDistance=190;
+scene.add(new THREE.HemisphereLight(0xeaf2e4,0x5b4635,2.0));
+const sun=new THREE.DirectionalLight(0xffedc9,3.35);sun.position.set(-42,76,38);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-95;sun.shadow.camera.right=95;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;scene.add(sun);
+const fill=new THREE.DirectionalLight(0x9bb9c8,.65);fill.position.set(65,25,-55);scene.add(fill);
+
+const world=new THREE.Group();scene.add(world);const waterGroup=new THREE.Group();scene.add(waterGroup);const lifeGroup=new THREE.Group();scene.add(lifeGroup);const guideGroup=new THREE.Group();scene.add(guideGroup);
+const mat={
+ terrain:new THREE.MeshStandardMaterial({vertexColors:true,roughness:.98,metalness:0,side:THREE.DoubleSide}),
+ water:new THREE.MeshPhysicalMaterial({color:0x77b9c9,roughness:.14,metalness:0,transmission:.08,transparent:true,opacity:.76,depthWrite:false}),
+ channel:new THREE.MeshPhysicalMaterial({color:0x65a8b8,roughness:.18,transparent:true,opacity:.84,depthWrite:false}),
+ bund:new THREE.MeshStandardMaterial({color:0x5d4c38,roughness:1}),
+ rice:new THREE.MeshStandardMaterial({color:0x4e743e,roughness:.9,side:THREE.DoubleSide}),
+ rice2:new THREE.MeshStandardMaterial({color:0x668648,roughness:.9,side:THREE.DoubleSide}),
+ cloth:new THREE.MeshStandardMaterial({color:0xb8a17b,roughness:.9}),
+ skin:new THREE.MeshStandardMaterial({color:0xb9835e,roughness:.88}),
+ hat:new THREE.MeshStandardMaterial({color:0xd7b86d,roughness:.98}),
+ dark:new THREE.MeshStandardMaterial({color:0x272923,roughness:.94}),
+ horn:new THREE.MeshStandardMaterial({color:0xd4cdb8,roughness:.88}),
+ wood:new THREE.MeshStandardMaterial({color:0x6c4c32,roughness:.96}),
+ guide:new THREE.LineBasicMaterial({color:0xeaf6cd,transparent:true,opacity:.72,depthTest:false})
+};
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const hash=(x,z)=>{const s=Math.sin(x*12.9898+z*78.233)*43758.5453;return (s-Math.floor(s))*2-1};
+function dseg(px,pz,ax,az,bx,bz){const vx=bx-ax,vz=bz-az,wx=px-ax,wz=pz-az;const c1=vx*wx+vz*wz,c2=vx*vx+vz*vz;const t=clamp(c1/c2,0,1);const dx=px-(ax+t*vx),dz=pz-(az+t*vz);return Math.hypot(dx,dz)}
+function dpoly(x,z,pts){let d=1e9;for(let i=0;i<pts.length-1;i++)d=Math.min(d,dseg(x,z,...pts[i],...pts[i+1]));return d}
+
+const mainChannel=[[-2,-42],[-1,-24],[0,-4],[3,16],[8,35]];
+const branchA=[[-1,-12],[-16,-10],[-31,-7],[-47,-6]];
+const branchB=[[2,6],[-14,10],[-30,13],[-48,16]];
+const terraceChannel=[[12,31],[20,21],[28,10],[37,-2],[46,-14],[55,-26]];
+function baseGround(x,z){
+  const flat=.42 + .12*Math.sin(z*.13)+.07*Math.sin(x*.11+z*.07);
+  const t=smooth(-8,8,x);
+  const naturalSlope=.42 + Math.max(0,x+8)*.285 + .18*Math.sin(z*.11)+.12*Math.sin(x*.06+z*.09);
+  let y=flat*(1-t)+naturalSlope*t;
+  y+=hash(x*.17,z*.17)*.055;
+  const fields=[
+    {cx:-42,cz:-17,rx:13,rz:9,level:.18},{cx:-28,cz:-16,rx:10,rz:8,level:.22},
+    {cx:-44,cz:7,rx:14,rz:9,level:.26},{cx:-27,cz:8,rx:10,rz:8,level:.30}
+  ];
+  for(const f of fields){
+    const q=Math.sqrt(((x-f.cx)/f.rx)**2+((z-f.cz)/f.rz)**2);const inside=1-smooth(.86,1.02,q);y=y*(1-inside)+f.level*inside;
+    const edge=Math.exp(-Math.pow((q-1)/.055,2));y+=edge*.34;
+  }
+  const dc=Math.min(dpoly(x,z,mainChannel),dpoly(x,z,branchA),dpoly(x,z,branchB));
+  if(dc<1.65){const k=1-smooth(.45,1.65,dc);y-=.52*k;}
+  const terraceMask=smooth(8,14,x)*(1-smooth(25,34,Math.abs(z)));
+  if(terraceMask>0){
+    const u=x-8, stepW=8.2;const n=Math.floor(u/stepW);const local=u-n*stepW;
+    const stepLevel=.55+n*2.34 + .025*z;
+    const next=stepLevel+2.34;const riser=smooth(stepW-1.25,stepW-.18,local);
+    const terraceY=stepLevel*(1-riser)+next*riser;
+    y=y*(1-terraceMask)+terraceY*terraceMask;
+    const crest=Math.exp(-Math.pow((local-1.15)/.36,2))*terraceMask*.28;y+=crest;
+  }
+  const dt=dpoly(x,z,terraceChannel);if(dt<1.45){const k=1-smooth(.35,1.45,dt);y-=.42*k*smooth(10,16,x);}
+  return y;
+}
+
+const W=142,D=100,segX=178,segZ=124;const geo=new THREE.PlaneGeometry(W,D,segX,segZ);geo.rotateX(-Math.PI/2);
+const pos=geo.attributes.position;const colors=[];const c=new THREE.Color();
+for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),z=pos.getZ(i),y=baseGround(x,z);pos.setY(i,y);
+  if(x<8){
+    const wet=Math.min(dpoly(x,z,mainChannel),dpoly(x,z,branchA),dpoly(x,z,branchB))<2.2;
+    c.set(wet?0x67533d:0x756145);
+    if(x<-12 && Math.abs(z)<30)c.lerp(new THREE.Color(0x596943),.24);
+  } else {c.set(0x796347);c.lerp(new THREE.Color(0x68724b),clamp((z+45)/105,0,.18));}
+  const n=hash(x*.23,z*.23)*.045;c.offsetHSL(0,0,n);colors.push(c.r,c.g,c.b);
+}
+pos.needsUpdate=true;geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
+const terrain=new THREE.Mesh(geo,mat.terrain);terrain.receiveShadow=true;terrain.castShadow=true;world.add(terrain);document.body.dataset.terrainMeshCount='1';
+
+function addSkirt(){const steps=90;const perimeter=[];for(let i=0;i<=steps;i++)perimeter.push([-W/2+i*W/steps,-D/2]);for(let i=1;i<=steps;i++)perimeter.push([W/2,-D/2+i*D/steps]);for(let i=1;i<=steps;i++)perimeter.push([W/2-i*W/steps,D/2]);for(let i=1;i<steps;i++)perimeter.push([-W/2,D/2-i*D/steps]);
+ const verts=[],idx=[];for(let i=0;i<perimeter.length;i++){const [x,z]=perimeter[i],y=baseGround(x,z);verts.push(x,y,z,x,-5.2,z)}for(let i=0;i<perimeter.length;i++){const j=(i+1)%perimeter.length;idx.push(i*2,j*2,i*2+1,j*2,j*2+1,i*2+1)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x584534,roughness:1}));m.receiveShadow=true;world.add(m)}addSkirt();
+
+function strip(points,width,material,yOffset=.035){const left=[],right=[];for(let i=0;i<points.length;i++){const [x,z]=points[i];const p0=points[Math.max(0,i-1)],p1=points[Math.min(points.length-1,i+1)];const dx=p1[0]-p0[0],dz=p1[1]-p0[1],len=Math.hypot(dx,dz)||1,nx=-dz/len,nz=dx/len;const y=baseGround(x,z)+yOffset;left.push([x+nx*width/2,y,z+nz*width/2]);right.push([x-nx*width/2,y,z-nz*width/2])}const v=[],ind=[];for(let i=0;i<points.length;i++){v.push(...left[i],...right[i]);if(i<points.length-1){const a=i*2,b=a+1,c0=a+2,d0=a+3;ind.push(a,c0,b,c0,d0,b)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(ind);g.computeVertexNormals();const m=new THREE.Mesh(g,material);m.receiveShadow=true;waterGroup.add(m);return m}
+strip(mainChannel,1.15,mat.channel,.12);strip(branchA,.78,mat.channel,.11);strip(branchB,.78,mat.channel,.11);strip(terraceChannel,.82,mat.channel,.1);
+
+function waterPatch(cx,cz,rx,rz,level){const g=new THREE.CircleGeometry(1,64);g.rotateX(-Math.PI/2);const p=g.attributes.position;for(let i=0;i<p.count;i++){p.setX(i,cx+p.getX(i)*rx*.92);p.setZ(i,cz+p.getZ(i)*rz*.92);p.setY(i,level+.055)}p.needsUpdate=true;const m=new THREE.Mesh(g,mat.water);waterGroup.add(m)}
+waterPatch(-42,-17,13,9,.18);waterPatch(-28,-16,10,8,.22);waterPatch(-44,7,14,9,.26);waterPatch(-27,8,10,8,.30);
+for(let n=0;n<7;n++){const x=12+n*8.2+3.9,cz=-1.5+Math.sin(n*.8)*2.2,base=.55+n*2.34+.025*cz;const g=new THREE.PlaneGeometry(6.15,29,1,1);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,mat.water);m.position.set(x,base+.055,cz);m.material=m.material.clone();m.material.opacity=.50;waterGroup.add(m)}
+
+const leafGeo=new THREE.BufferGeometry();leafGeo.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,.03,.28,0,0,.56,0,-.03,.28,0],3));leafGeo.setIndex([0,1,2,0,2,3]);leafGeo.computeVertexNormals();
+const ricePoints=[];for(let x=-53;x<-18;x+=2.0)for(let z=-24;z<17;z+=2.0){if(Math.min(Math.hypot((x+42)/13,(z+17)/9),Math.hypot((x+28)/10,(z+16)/8),Math.hypot((x+44)/14,(z-7)/9),Math.hypot((x+27)/10,(z-8)/8))<.82)ricePoints.push([x,z])}
+for(let n=0;n<7;n++){for(let z=-12;z<=11;z+=2.2){const x=12+n*8.2+4.2;if(Math.abs(z)<14)ricePoints.push([x,z])}}
+const rice=new THREE.InstancedMesh(leafGeo,mat.rice,ricePoints.length*3);const dum=new THREE.Object3D();let ri=0;for(const [x,z] of ricePoints){for(let k=0;k<3;k++){const a=k*2.094+hash(x+k,z)*.2;dum.position.set(x+Math.cos(a)*.08,baseGround(x,z)+.07,z+Math.sin(a)*.08);dum.rotation.set(0,a,.32);dum.scale.set(.85,.82+hash(x,z+k)*.12,.85);dum.updateMatrix();rice.setMatrixAt(ri++,dum.matrix)}}rice.castShadow=true;world.add(rice);
+
+function mesh(g,m){const o=new THREE.Mesh(g,m);o.castShadow=true;o.receiveShadow=true;return o}
+function addFarmer(x,z,rot=0,shirt=0x6f7b54){const g=new THREE.Group();const cloth=mat.cloth.clone();cloth.color.setHex(shirt);const torso=mesh(new THREE.CapsuleGeometry(.21,.62,5,10),cloth);torso.position.y=1.08;g.add(torso);const head=mesh(new THREE.SphereGeometry(.16,18,12),mat.skin);head.position.y=1.72;g.add(head);const brim=mesh(new THREE.CylinderGeometry(.38,.38,.035,28),mat.hat);brim.position.y=1.91;g.add(brim);const crown=mesh(new THREE.ConeGeometry(.22,.18,24),mat.hat);crown.position.y=2.02;g.add(crown);for(const sx of [-1,1]){const leg=mesh(new THREE.CylinderGeometry(.055,.07,.72,8),mat.dark);leg.position.set(sx*.09,.38,0);g.add(leg);const arm=mesh(new THREE.CylinderGeometry(.045,.055,.64,8),mat.skin);arm.position.set(sx*.25,1.12,0);arm.rotation.z=sx*.35;g.add(arm)}const pole=mesh(new THREE.CylinderGeometry(.018,.018,2.25,8),mat.wood);pole.rotation.z=Math.PI/2;pole.position.set(0,1.38,0);g.add(pole);g.rotation.y=rot;g.position.set(x,baseGround(x,z),z);lifeGroup.add(g);return g}
+function addBuffalo(x,z,rot=0,s=.95){const g=new THREE.Group();const body=mesh(new THREE.SphereGeometry(1,24,16),mat.dark);body.scale.set(1.25,.68,.56);body.position.y=.96;g.add(body);const neck=mesh(new THREE.SphereGeometry(.52,18,12),mat.dark);neck.scale.set(.72,.85,.7);neck.position.set(-.92,1.08,0);g.add(neck);const head=mesh(new THREE.SphereGeometry(.44,18,12),mat.dark);head.scale.set(.9,.72,.72);head.position.set(-1.35,1.05,0);g.add(head);for(const xx of [-.58,.48])for(const zz of [-.34,.34]){const leg=mesh(new THREE.CylinderGeometry(.065,.095,.7,8),mat.dark);leg.position.set(xx,.42,zz);g.add(leg)}for(const zz of [-.22,.22]){const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(-1.5,1.28,zz),new THREE.Vector3(-1.78,1.52,zz*1.3),new THREE.Vector3(-1.94,1.32,zz*1.5));const horn=mesh(new THREE.TubeGeometry(curve,12,.035,7,false),mat.horn);g.add(horn)}const tail=mesh(new THREE.CylinderGeometry(.025,.035,.82,6),mat.dark);tail.position.set(1.12,1.0,0);tail.rotation.z=-.8;g.add(tail);g.scale.setScalar(s);g.rotation.y=rot;g.position.set(x,baseGround(x,z),z);lifeGroup.add(g);return g}
+addFarmer(-34,-3,.2,0x6b7650);addFarmer(29,4,-.65,0x6f5a43);addFarmer(48,-10,-.5,0x50655a);addBuffalo(-38,-1,.1,.92);addBuffalo(37,5,-.4,.86);
+
+function line(points,color=0xeaf6cd){const g=new THREE.BufferGeometry().setFromPoints(points.map(([x,z])=>new THREE.Vector3(x,baseGround(x,z)+.18,z)));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.65,depthTest:false}));guideGroup.add(l)}
+line([[-8,-48],[-8,48]],0xffdfa0);line([[8,-48],[8,48]],0xffdfa0);for(let n=0;n<7;n++){const x=12+n*8.2+1.15;line([[x,-18],[x,18]],0xeaf6cd)}
+
+const presets={overview:{p:[92,58,92],t:[0,5,0]},flat:{p:[-64,24,55],t:[-35,.5,0]},slope:{p:[78,38,58],t:[36,9,0]},human:{p:[-40,2.2,9],t:[-28,1.3,0]}};
+function goCamera(k){const q=presets[k];camera.position.fromArray(q.p);controls.target.fromArray(q.t);controls.update();document.querySelectorAll('[data-cam]').forEach(b=>b.classList.toggle('active',b.dataset.cam===k))}document.querySelectorAll('[data-cam]').forEach(b=>b.addEventListener('click',()=>goCamera(b.dataset.cam)));
+document.getElementById('waterToggle').addEventListener('change',e=>waterGroup.visible=e.target.checked);document.getElementById('lifeToggle').addEventListener('change',e=>lifeGroup.visible=e.target.checked);document.getElementById('guideToggle').addEventListener('change',e=>guideGroup.visible=e.target.checked);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.55))});
+const clock=new THREE.Clock();let first=true;function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();mat.water.opacity=.72+Math.sin(t*.9)*.035;controls.update();renderer.render(scene,camera);if(first){first=false;document.body.dataset.runtimeReady='true';document.body.dataset.version=VERSION;document.body.dataset.terrainMeshCount=String(world.children.filter(o=>o===terrain).length)}}animate();
+</script>
+</body>
+</html>
