@@ -99,9 +99,15 @@ jobs:
                   r=d.execute_script("const a=document.getElementById('title').getBoundingClientRect(),b=document.getElementById('controls').getBoundingClientRect();return {iw:innerWidth,ih:innerHeight,a:{l:a.left,r:a.right,t:a.top,b:a.bottom},b:{l:b.left,r:b.right,t:b.top,b:b.bottom}}")
                   assert r['a']['l']>=-1 and r['a']['r']<=r['iw']+1 and r['b']['l']>=-1 and r['b']['r']<=r['iw']+1
                   if label=='mobile': assert r['a']['b']<r['b']['t'] and r['b']['b']<=r['ih']+1
-                  severe=[e for e in d.get_log('browser') if e.get('level')=='SEVERE' and 'favicon' not in e.get('message','').lower()]
+                  severe=[]
+                  for e in d.get_log('browser'):
+                      msg=e.get('message','').lower()
+                      if e.get('level')!='SEVERE': continue
+                      if 'favicon' in msg: continue
+                      if 'server.ethicalads.io' in msg or 'ethicalads' in msg: continue
+                      severe.append(e)
                   if severe: raise AssertionError(json.dumps(severe,ensure_ascii=False))
-                  log('runtime_ready=true');log('terrain_mesh_count=1');log('camera_interaction=pass');log('water_toggle=pass');log('life_toggle=pass');log('viewport=pass');log('browser_severe_logs=0')
+                  log('runtime_ready=true');log('terrain_mesh_count=1');log('camera_interaction=pass');log('water_toggle=pass');log('life_toggle=pass');log('viewport=pass');log('browser_severe_logs=0_project_errors')
               finally: d.quit()
           ok=True
           try:
