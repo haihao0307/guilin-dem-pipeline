@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu-tool-routing/r40",
+  "status": "candidate",
+  "inherits": "TOOL_ROUTING_R39_GAUSSIAN_SORTING_PRECISION.json",
+  "tools": [
+    {
+      "id": "TOOL-R40-THREE-R186-GAUSSIAN-CONSTRUCTOR",
+      "authority": "official-primary-source-executed-cpu-path",
+      "repository": "mrdoob/three.js",
+      "commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "version": "0.186.0",
+      "useFor": ["retained source/storage TypedArray layout", "sort-buffer allocation timing", "lazy WebGPU SH contribution allocation"],
+      "notFor": ["GPU allocation", "loader peak", "browser process peak", "target-device capacity"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R40-RUNTIME-MEMORY-GATE",
+      "authority": "candidate-derived-adapter",
+      "path": "ADAPTERS/gaussian_runtime_memory_gate_r40.mjs",
+      "useFor": ["fixed-revision lower-bound arithmetic", "separate missing device evidence"],
+      "notFor": ["universal splat limit", "GPU/browser prediction", "visual acceptance"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R40-RUNTIME-MEMORY-PROBE",
+      "authority": "derived-executable-evidence",
+      "paths": [
+        "PROBES/gaussian_runtime_memory_r40.mjs",
+        "PROBES/run_gaussian_runtime_memory_r40.sh",
+        "PROBES/gaussian_runtime_memory_result_r40.json"
+      ],
+      "useFor": ["six-check constructor regression", "ArrayBuffer-identity deduplication", "SH0-SH3 allocation matrix"],
+      "notFor": ["SPZ/ZSTD peak", "real reconstruction", "GPU rendering", "macOS/iPhone/Safari acceptance"],
+      "observationRootEligible": false
+    }
+  ],
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}

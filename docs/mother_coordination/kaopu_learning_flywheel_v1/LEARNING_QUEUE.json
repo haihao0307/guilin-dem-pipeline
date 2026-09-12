@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R38 locked the principal handoff, range/envelope/DC/SH/antialias contracts and executable codec/viewer controls. R39 tested Three r186 approximate sorting. Five checks passed. With depth range 0-100, depths 50 and 50.000001 shared bin 2047 because 4096 bins give nominal step 0.02442002442; actual CPU CountingSort retained source order [0,1] although exact back-to-front order was [1,0]. A synthetic alpha-0.5 red/blue compositing control changed RGB by up to 0.25, illustrating order sensitivity but not a real pixel threshold. Actual GaussianSplat sort-decision execution showed that its 0.9995 direction threshold equals about 1.811927 degrees: a one-degree yaw inverted exact depth order but did not resort, while two degrees did. GPU sorting/rasterization, real-asset collision frequency, photos, COLMAP/Brush training, Safari/iPhone and human acceptance remain unverified.",
+      "progress": "R33-R39 locked the principal handoff, range/envelope/DC/SH/antialias/sorting contracts and executable codec/viewer controls. R40 executed the fixed Three r186 constructor and lazy WebGPU SH allocation path for counts 1, 17 and 1024 at SH0-SH3; six checks passed. Deduplicated CPU-visible TypedArray storage is 65,596 fixed bytes plus 104/116/132/156 bytes per splat for SH0/1/2/3. First WebGPU SH use adds 16 bytes/splat when SH is present. Source and storage SH arrays alias and are counted once. autoSort=false retained the same constructor allocation as true. One million SH3 projects to 148.836 MiB at construction and 164.095 MiB after lazy SH allocation, but this is not total browser/GPU/device memory. Loader/ZSTD peak, GPU allocations, process peak, real-asset distributions, photos, COLMAP/Brush training, Safari/iPhone and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -34,7 +34,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_DIRECTION_R36.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_QUANTIZATION_R37.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_ANTIALIAS_HANDOFF_R38.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_SORTING_PRECISION_R39.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SORTING_PRECISION_R39.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_RUNTIME_MEMORY_R40.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -43,7 +44,8 @@
         "references/gaussian-sh-direction-r36/SOURCE_LOCK.json",
         "references/gaussian-sh-quantization-r37/SOURCE_LOCK.json",
         "references/gaussian-antialias-handoff-r38/SOURCE_LOCK.json",
-        "references/gaussian-sorting-r39/SOURCE_LOCK.json"
+        "references/gaussian-sorting-r39/SOURCE_LOCK.json",
+        "references/gaussian-runtime-memory-r40/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -87,7 +89,13 @@
       "currentBestViewSortingExtension": "CURRENT_BEST_VIEW_R39_GAUSSIAN_SORTING_PRECISION.md",
       "toolRoutingSortingExtension": "TOOL_ROUTING_R39_GAUSSIAN_SORTING_PRECISION.json",
       "motherRoutingSortingExtension": "MOTHER_ROUTING_R39_GAUSSIAN_SORTING_PRECISION.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R39 gates; record learned SH/DC/footprint distributions; compare decoded coefficients and independent float-reference fixed views; report actual r186 depth range/bin width and non-equal-depth collisions at fixed cameras; sweep camera motion in sub-1.812-degree steps and compare actual GPU images; then test macOS and 390x844 iPhone/Safari memory, frame time, sorting artifacts and human acceptance. Do not treat the synthetic 0.25 RGB control as an acceptance threshold, adopt an exact-sort rewrite without cost evidence, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
+      "runtimeMemoryProbe": "PROBES/gaussian_runtime_memory_r40.mjs",
+      "runtimeMemoryProbeResult": "PROBES/gaussian_runtime_memory_result_r40.json",
+      "candidateRuntimeMemoryGate": "ADAPTERS/gaussian_runtime_memory_gate_r40.mjs",
+      "currentBestViewRuntimeMemoryExtension": "CURRENT_BEST_VIEW_R40_GAUSSIAN_RUNTIME_MEMORY.md",
+      "toolRoutingRuntimeMemoryExtension": "TOOL_ROUTING_R40_GAUSSIAN_RUNTIME_MEMORY.json",
+      "motherRoutingRuntimeMemoryExtension": "MOTHER_ROUTING_R40_GAUSSIAN_RUNTIME_MEMORY.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R40 gates; record learned SH/DC/footprint/count distributions; compare decoded coefficients and independent float-reference fixed views; report actual r186 depth range/bin width and non-equal-depth collisions at fixed cameras; sweep camera motion in sub-1.812-degree steps and compare actual GPU images; then separately measure compressed size, loader/ZSTD peak, retained CPU/process peak, GPU allocation where available, frame time, sorting artifacts and failure behavior on macOS and 390x844 iPhone/Safari before human acceptance. Do not use the R40 lower bound as a device-capacity claim, treat synthetic controls as acceptance thresholds, adopt an exact-sort rewrite without cost evidence, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
     },
     {
       "id": "LQ-TELLUX-001",

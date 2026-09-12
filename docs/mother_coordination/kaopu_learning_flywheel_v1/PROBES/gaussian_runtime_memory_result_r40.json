@@ -1,0 +1,263 @@
+{
+  "schema": "kaopu-gaussian-runtime-memory-probe/r40",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519"
+  },
+  "testsRun": 6,
+  "failures": [],
+  "formula": {
+    "constructorFixedBytes": 65596,
+    "constructorBytesPerSplatByShDegree": {
+      "0": 104,
+      "1": 116,
+      "2": 132,
+      "3": 156
+    },
+    "postFirstWebgpuShBytesPerSplatByShDegree": {
+      "0": 104,
+      "1": 132,
+      "2": 148,
+      "3": 172
+    }
+  },
+  "tests": [
+    {
+      "name": "actual constructor bytes match the deduplicated lower-bound formula for SH0-SH3",
+      "pass": true,
+      "detail": [
+        {
+          "degree": 0,
+          "count": 1,
+          "bytes": 65700
+        },
+        {
+          "degree": 0,
+          "count": 17,
+          "bytes": 67364
+        },
+        {
+          "degree": 0,
+          "count": 1024,
+          "bytes": 172092
+        },
+        {
+          "degree": 1,
+          "count": 1,
+          "bytes": 65712
+        },
+        {
+          "degree": 1,
+          "count": 17,
+          "bytes": 67568
+        },
+        {
+          "degree": 1,
+          "count": 1024,
+          "bytes": 184380
+        },
+        {
+          "degree": 2,
+          "count": 1,
+          "bytes": 65728
+        },
+        {
+          "degree": 2,
+          "count": 17,
+          "bytes": 67840
+        },
+        {
+          "degree": 2,
+          "count": 1024,
+          "bytes": 200764
+        },
+        {
+          "degree": 3,
+          "count": 1,
+          "bytes": 65752
+        },
+        {
+          "degree": 3,
+          "count": 17,
+          "bytes": 68248
+        },
+        {
+          "degree": 3,
+          "count": 1024,
+          "bytes": 225340
+        }
+      ]
+    },
+    {
+      "name": "actual first WebGPU SH update adds exactly 16 bytes per splat only when SH is present",
+      "pass": true,
+      "detail": [
+        {
+          "degree": 0,
+          "count": 1,
+          "addedBytes": 0,
+          "dispatched": false
+        },
+        {
+          "degree": 0,
+          "count": 17,
+          "addedBytes": 0,
+          "dispatched": false
+        },
+        {
+          "degree": 0,
+          "count": 1024,
+          "addedBytes": 0,
+          "dispatched": false
+        },
+        {
+          "degree": 1,
+          "count": 1,
+          "addedBytes": 16,
+          "dispatched": true
+        },
+        {
+          "degree": 1,
+          "count": 17,
+          "addedBytes": 272,
+          "dispatched": true
+        },
+        {
+          "degree": 1,
+          "count": 1024,
+          "addedBytes": 16384,
+          "dispatched": true
+        },
+        {
+          "degree": 2,
+          "count": 1,
+          "addedBytes": 16,
+          "dispatched": true
+        },
+        {
+          "degree": 2,
+          "count": 17,
+          "addedBytes": 272,
+          "dispatched": true
+        },
+        {
+          "degree": 2,
+          "count": 1024,
+          "addedBytes": 16384,
+          "dispatched": true
+        },
+        {
+          "degree": 3,
+          "count": 1,
+          "addedBytes": 16,
+          "dispatched": true
+        },
+        {
+          "degree": 3,
+          "count": 17,
+          "addedBytes": 272,
+          "dispatched": true
+        },
+        {
+          "degree": 3,
+          "count": 1024,
+          "addedBytes": 16384,
+          "dispatched": true
+        }
+      ]
+    },
+    {
+      "name": "source SH arrays are aliased by storage nodes and counted once",
+      "pass": true,
+      "detail": [
+        {
+          "bytes": 204,
+          "aliases": [
+            "source.sphericalHarmonics1",
+            "storage.sh1"
+          ]
+        },
+        {
+          "bytes": 272,
+          "aliases": [
+            "source.sphericalHarmonics2",
+            "storage.sh2"
+          ]
+        },
+        {
+          "bytes": 408,
+          "aliases": [
+            "source.sphericalHarmonics3",
+            "storage.sh3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "autoSort false does not avoid constructor sort allocation",
+      "pass": true,
+      "detail": {
+        "autoSortTrueBytes": 225340,
+        "autoSortFalseBytes": 225340,
+        "difference": 0
+      }
+    },
+    {
+      "name": "one-million-splat projection is arithmetic from the executed formula, not a device peak",
+      "pass": true,
+      "detail": {
+        "constructorBytes": 156065596,
+        "constructorMiB": 148.83575057983398,
+        "afterFirstWebgpuShBytes": 172065596,
+        "afterFirstWebgpuShMiB": 164.09453964233398,
+        "excluded": [
+          "GPU allocation/padding/copies",
+          "SPZ and ZSTD loader peak",
+          "browser and JS object overhead",
+          "render targets",
+          "OS process peak"
+        ]
+      }
+    },
+    {
+      "name": "candidate gate refuses to treat constructor bytes as target-device memory acceptance",
+      "pass": true,
+      "detail": {
+        "status": "Candidate-incomplete",
+        "expected": {
+          "count": 1024,
+          "shDegree": 3,
+          "sourceGeometry": 94208,
+          "constructorStorageCopies": 53248,
+          "countingSort": 77824,
+          "drawGeometry": 60,
+          "lazyWebgpuShContribution": 0,
+          "total": 225340,
+          "bytesPerSplatExcludingFixed": 156,
+          "fixedBytes": 65596
+        },
+        "errors": [
+          "target-device-peak-memory-missing",
+          "backend-gpu-allocation-missing",
+          "loader-decompression-peak-missing",
+          "human-acceptance-missing"
+        ],
+        "warning": "CPU-visible TypedArray bytes are a reproducible lower bound, not process, browser, GPU, loader, or device peak memory."
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "actualThreeGaussianSplatConstructorExecuted": true,
+    "actualLazyWebgpuShAllocationPathExecutedWithoutGpuBackend": true,
+    "uniqueArrayBuffersDeduplicatedByIdentity": true,
+    "actualGpuAllocationMeasured": false,
+    "loaderOrZstdPeakMeasured": false,
+    "browserProcessPeakMeasured": false,
+    "userPhotosAvailable": false,
+    "targetDeviceTested": false,
+    "humanAcceptancePerformed": false
+  },
+  "interpretation": "The exact TypedArray inventory is a reproducible CPU-visible lower bound for this fixed constructor path. It is not total runtime, browser, GPU, loader, or device peak memory.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}
