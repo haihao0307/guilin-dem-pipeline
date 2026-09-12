@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu-tool-routing/r44",
+  "status": "candidate",
+  "inherits": "TOOL_ROUTING_R43_GAUSSIAN_QUATERNION_QUANTIZATION.json",
+  "tools": [
+    {
+      "id": "TOOL-R44-NIANTIC-SPZ-COVARIANCE",
+      "authority": "official-primary-source-inspected-and-source-faithful-execution",
+      "repository": "nianticlabs/spz",
+      "commit": "affd0ecea7fbb4c265ee119475af7ee5b2997482",
+      "useFor": [
+        "log-scale byte contract",
+        "smallest-three rotation contract",
+        "combined covariance codec envelope"
+      ],
+      "notFor": [
+        "real-asset pixel equivalence",
+        "Three renderer behavior",
+        "physical accuracy"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R44-COVARIANCE-PROBE",
+      "authority": "derived-executable-evidence",
+      "paths": [
+        "PROBES/gaussian_covariance_quantization_r44.cc",
+        "PROBES/run_gaussian_covariance_quantization_r44.sh",
+        "PROBES/gaussian_covariance_quantization_result_r44.json"
+      ],
+      "useFor": [
+        "one-million-case deterministic regression",
+        "scale-only, rotation-only and combined full-covariance error"
+      ],
+      "notFor": [
+        "real reconstruction",
+        "pixel threshold",
+        "GPU/device acceptance"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R44-COVARIANCE-GATE",
+      "authority": "candidate-derived-adapter",
+      "path": "ADAPTERS/gaussian_covariance_quantization_gate_r44.mjs",
+      "useFor": [
+        "source parameter preflight",
+        "float-to-decoded full-covariance comparison",
+        "asset-specific tolerance enforcement"
+      ],
+      "notFor": [
+        "automatic production acceptance",
+        "universal visual tolerance"
+      ],
+      "observationRootEligible": false
+    }
+  ],
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}

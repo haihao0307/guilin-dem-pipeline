@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R42 locked the principal handoff, range/envelope/DC/SH/antialias/sorting and CPU/WASM memory contracts. R43 isolated SPZ v3/v4 smallest-three quaternion quantization from the fixed Niantic source. A source-faithful C++ probe evaluated 1,000,000 deterministic uniform unit quaternions; -O0 and -O2 outputs were byte-identical. The observed maximum rotation error was 0.247711 degrees and RMS 0.086105 degrees. The 9-bit magnitude step yields a conservative real-arithmetic angular bound of 0.275221 degrees for finite normalized inputs. Rotation-only covariance perturbation is conservatively bounded by 0.960703% of the largest covariance eigenvalue; deterministic fixture relative Frobenius maxima were about 0.000000977, 0.00418543 and 0.00504653 for isotropic, moderate and extreme spectra. These are parameter-space controls, not pixel or visual thresholds. Real learned quaternion/anisotropy distributions, scale-plus-rotation combined error, photos, COLMAP/Brush training, browser/GPU, Safari/iPhone and human acceptance remain unverified.",
+      "progress": "R33-R43 locked the principal handoff, codec/range/appearance/SH/antialias/sorting/memory and quaternion controls. R44 combined the fixed Niantic SPZ log-scale and quaternion packers into one source-faithful full-covariance probe. One million deterministic cases produced byte-identical -O0/-O2 results. The ideal log-scale half-step is 0.03125, but source float arithmetic observed 0.0312504768; the explicit implementation envelope is 0.031251. This implies conservative implementation envelopes of 3.174444% for semiaxis and 6.449659% for a covariance eigenvalue. Adding the inherited R43 rotation perturbation bound yields a conservative 7.410361% full-covariance spectral envelope relative to the largest source eigenvalue under finite normalized quaternion and non-saturating scale assumptions. Observed maxima were 6.449547% scale-only, 0.348038% rotation-only and 6.457397% combined. These are codec parameter regression controls, not image or visual tolerances. Real learned distributions, photos, COLMAP/Brush training, projected/pixel error, browser/GPU, Safari/iPhone and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -38,7 +38,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_RUNTIME_MEMORY_R40.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_LOADER_MEMORY_R41.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_ZSTD_WASM_MEMORY_R42.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_QUATERNION_QUANTIZATION_R43.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_QUATERNION_QUANTIZATION_R43.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_COVARIANCE_QUANTIZATION_R44.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -51,7 +52,8 @@
         "references/gaussian-runtime-memory-r40/SOURCE_LOCK.json",
         "references/gaussian-spz-loader-memory-r41/SOURCE_LOCK.json",
         "references/gaussian-zstd-wasm-memory-r42/SOURCE_LOCK.json",
-        "references/gaussian-quaternion-quantization-r43/SOURCE_LOCK.json"
+        "references/gaussian-quaternion-quantization-r43/SOURCE_LOCK.json",
+        "references/gaussian-covariance-quantization-r44/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -113,13 +115,19 @@
       "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
       "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
       "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R43 gates. Inventory quaternion norms, log-scales, anisotropy, SH/DC, footprint and count before encoding; compare float-checkpoint versus decoded position, scale, quaternion and full covariance, then compare independent float-reference fixed views. Record actual r186 depth bins and sub-1.812-degree camera motion artifacts. Separately measure compressed size, loader arrays, WASM/fetch/process and constructor/GPU overlap, frame time and failure behavior on macOS and 390x844 iPhone/Safari before human acceptance. Do not use R43's synthetic parameter bounds as pixel or visual acceptance, treat Worker isolation as accepted, retire RealityScan, alter a production Mother, or claim Object DNA equivalence.",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R44 gates. Inventory quaternion norms, log-scales, anisotropy, SH/DC, footprint and count before encoding; compare float-checkpoint versus decoded position, scale, quaternion and full covariance with an asset-specific tolerance stricter than both the R44 codec envelope and visual acceptance, then compare independent float-reference fixed views. Record actual r186 depth bins and sub-1.812-degree camera motion artifacts. Separately measure compressed size, loader arrays, WASM/fetch/process and constructor/GPU overlap, frame time and failure behavior on macOS and 390x844 iPhone/Safari before human acceptance. Do not use R44's synthetic parameter envelope as a pixel threshold, treat Worker isolation as accepted, retire RealityScan, alter a production Mother, or claim Object DNA equivalence.",
       "quaternionQuantizationProbe": "PROBES/gaussian_quaternion_quantization_r43.cc",
       "quaternionQuantizationProbeResult": "PROBES/gaussian_quaternion_quantization_result_r43.json",
       "candidateQuaternionQuantizationGate": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
       "currentBestViewQuaternionQuantizationExtension": "CURRENT_BEST_VIEW_R43_GAUSSIAN_QUATERNION_QUANTIZATION.md",
       "toolRoutingQuaternionQuantizationExtension": "TOOL_ROUTING_R43_GAUSSIAN_QUATERNION_QUANTIZATION.json",
-      "motherRoutingQuaternionQuantizationExtension": "MOTHER_ROUTING_R43_GAUSSIAN_QUATERNION_QUANTIZATION.json"
+      "motherRoutingQuaternionQuantizationExtension": "MOTHER_ROUTING_R43_GAUSSIAN_QUATERNION_QUANTIZATION.json",
+      "covarianceQuantizationProbe": "PROBES/gaussian_covariance_quantization_r44.cc",
+      "covarianceQuantizationProbeResult": "PROBES/gaussian_covariance_quantization_result_r44.json",
+      "candidateCovarianceQuantizationGate": "ADAPTERS/gaussian_covariance_quantization_gate_r44.mjs",
+      "currentBestViewCovarianceQuantizationExtension": "CURRENT_BEST_VIEW_R44_GAUSSIAN_COVARIANCE_QUANTIZATION.md",
+      "toolRoutingCovarianceQuantizationExtension": "TOOL_ROUTING_R44_GAUSSIAN_COVARIANCE_QUANTIZATION.json",
+      "motherRoutingCovarianceQuantizationExtension": "MOTHER_ROUTING_R44_GAUSSIAN_COVARIANCE_QUANTIZATION.json"
     },
     {
       "id": "LQ-TELLUX-001",
