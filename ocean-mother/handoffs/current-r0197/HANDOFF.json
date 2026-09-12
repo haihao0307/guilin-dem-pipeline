@@ -1,0 +1,49 @@
+{
+  "schema": "ocean-mother-current-full-handoff-v1",
+  "productionLine": "Ocean Mother",
+  "packageVersion": "R0197-HANDOFF-2026-09-12",
+  "packageFile": "Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.zip",
+  "entrypoint": "START_HERE.md",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "handoffBranch": "handoff/ocean-mother-current-full-r0197-20260912",
+  "roles": {
+    "visualRestoreSource": "frozen_visual_source/restart-v0311",
+    "currentMobileRuntimeCandidate": "current_mobile_candidate/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html",
+    "methodGuidance": "METHOD_GUIDANCE_KAOPU_LEARN_R0.1.md"
+  },
+  "currentTruth": {
+    "r0197CanOpenOnUserIPhone": true,
+    "r0197VisualQuality": "too-rough-not-commercial",
+    "r0197IsVisualMother": false,
+    "r01811IsFrozenRestoreSource": true,
+    "nextObjective": "restore the near-success visual mother, then transplant runtime fixes without visual regression"
+  },
+  "requiredExecutionOrder": [
+    "read START_HERE.md and CURRENT_STATE.md",
+    "run python verify_package.py .",
+    "restore and capture the frozen R018.11 visual baseline",
+    "transplant non-blocking boot only and compare A/B",
+    "transplant context restore and pixel budget only and compare A/B",
+    "commercially refine ocean, coast, island, rocks and smoke in separate gates",
+    "publish a fixed-commit HTTPS candidate only after actual device review"
+  ],
+  "claims": {
+    "visualApproved": false,
+    "productionApproved": false,
+    "commercialQualityReached": false,
+    "hydrodynamicsValidated": false,
+    "fullReplicationComplete": false
+  },
+  "exclusions": [
+    "textures",
+    "images",
+    "concept-art",
+    "screenshots",
+    "external-models",
+    "dependencies",
+    "browser-binaries",
+    "caches",
+    "temporary-files",
+    "unrelated-production-lines"
+  ]
+}
