@@ -1,0 +1,50 @@
+ss="row"><div class="lab">世界时间速度<span class="hint">形态预览，不冒充已验证平流</span></div><div class="val" id="timeScaleV">1.00×</div><input id="timeScale" type="range" min="0" max="3" step="0.05" value="1"></div></div>
+<div class="section"><div class="section-title"><span>性能</span><span>观察带宽</span></div><div class="seg" id="qualitySeg"><button data-quality="mobile">MOBILE</button><button class="on" data-quality="auto">AUTO</button><button data-quality="high">HIGH</button></div></div>
+<div class="actions"><button id="pause">暂停时间</button><button id="reset">复位观察者</button><button id="copyLink">复制参数</button></div><div class="note"><b>方法边界：</b>相关频带与稳定前缀属于可迁移方法；具体云形、Seed、参数、光学与镜头均为 Weather Mother Cloud DNA。视觉密度不是物理降雨率，降水仍需独立状态与证据。</div></div>
+<div class="flightbar"><button id="observeBtn" class="on">观云</button><button id="flightBtn">进入飞行</button><button id="autoBtn">自动前进</button><button id="resetBtn">回到起点</button></div>
+<div class="mobile-pad" aria-label="移动端飞行控制"><button data-key="q">↙</button><button data-key="w">↑</button><button data-key="e">↗</button><button data-key="a">←</button><button data-key="s">↓</button><button data-key="d">→</button></div><button class="mobile-toggle" id="mobileToggle">云 DNA</button><div class="crosshair"></div>
+<div class="stats"><span class="stat">FPS <b id="fps">--</b></span><span class="stat">CPU <b id="frameMs">--</b>ms</span><span class="stat">RAY <b id="raySteps">--</b></span><span class="stat">SCALE <b id="renderScale">--</b></span><span class="stat">START <b id="startup">--</b>ms</span></div>
+<div class="loading" id="loading">正在建立同一云体世界…</div><div class="error" id="error"><pre id="errText"></pre></div>
+<script>
+(()=>{'use strict';
+const started=performance.now(),canvas=document.getElementById('cloudCanvas'),loading=document.getElementById('loading'),errorBox=document.getElementById('error'),errText=document.getElementById('errText');
+const $=s=>document.querySelector(s),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t;
+const TYPES=[
+{code:'CU',cn:'积云',latin:'Cumulus',cover:.48,wet:.80,ext:1.55,cam:[0,4.1,12.5]},
+{code:'CB',cn:'积雨云',latin:'Cumulonimbus',cover:.39,wet:.69,ext:2.10,cam:[0,5.5,15.5]},
+{code:'SC',cn:'层积云',latin:'Stratocumulus',cover:.45,wet:.84,ext:1.45,cam:[0,4.2,13.5]},
+{code:'ST',cn:'层云',latin:'Stratus',cover:.40,wet:.93,ext:1.25,cam:[0,3.6,11.5]},
+{code:'AC',cn:'高积云',latin:'Altocumulus',cover:.47,wet:.77,ext:1.30,cam:[0,5.0,13.0]},
+{code:'AS',cn:'高层云',latin:'Altostratus',cover:.39,wet:.91,ext:1.65,cam:[0,5.0,12.5]},
+{code:'NS',cn:'雨层云',latin:'Nimbostratus',cover:.37,wet:.87,ext:2.30,cam:[0,4.4,12.0]},
+{code:'CI',cn:'卷云',latin:'Cirrus',cover:.38,wet:.64,ext:.86,cam:[0,6.3,12.0]},
+{code:'CC',cn:'卷积云',latin:'Cirrocumulus',cover:.47,wet:.72,ext:.92,cam:[0,6.1,12.8]},
+{code:'CS',cn:'卷层云',latin:'Cirrostratus',cover:.37,wet:.96,ext:.72,cam:[0,6.0,11.5]}
+];
+const EnvironmentDriver={sunAz:25,sunEl:28,windDir:62,windSpeed:12};
+const WorldClock={time:4,playing:true,scale:1};
+const CloudState={type:0,objectSeed:73017,detailSeed:991,coverage:.48,wet:.80,detail:.62,ext:1.55};
+const ObserverState={mode:'observe',position:[0,4.1,12.5],yaw:Math.PI,pitch:-.06,orbitYaw:0,orbitPitch:.06,orbitRadius:12.5,target:[0,3.8,0],speed:3.2,auto:false,roll:0};
+const RenderCache={quality:'auto',scale:.72,steps:56,lightSteps:2,lastResize:0,dirty:true,frameTimes:[],fps:0};
+const qa={version:'WM-R27-UNIFIED-CLOUD-DNA-20260912',ready:false,frames:0,startupMs:null,errors:[],renderSize:[0,0],context:null,sameCloudForObserveAndFlight:true,seedControls:true,worldStateSeparated:true,querySeparated:true,cacheSeparated:true,physicalRainClaim:false};
+let gl,program,buffer,loc={},raf=0,last=performance.now(),pointer=null,lost=false,frameCounter=0,fpsStamp=performance.now(),lastAdaptive=0;
+const keys=new Set();
+const VS=`attribute vec2 a;varying vec2 vUv;void main(){vUv=a*.5+.5;gl_Position=vec4(a,0.,1.);}`;
+const FS=`precision highp float;precision highp int;varying vec2 vUv;
+uniform vec2 uRes;uniform float uTime,uCover,uWet,uDetail,uExt,uSunAz,uSunEl,uObjSeed,uDetSeed,uMode,uInspect;uniform int uType,uSteps;uniform vec3 uCam,uFwd,uRight,uUp;
+#define PI 3.14159265359
+float sat(float x){return clamp(x,0.,1.);}mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}float h11(float n){return fract(sin(n*127.1+311.7)*43758.5453123);}float h21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}float h31(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453123);}float smin(float a,float b,float k){float h=sat(.5+.5*(b-a)/k);return mix(b,a,h)-k*h*(1.-h);}float sdEll(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-4);} 
+vec4 seedPack(float s){return fract(sin(vec4(s*.013+s*.00017,s*.019+1.3,s*.023+3.7,s*.031+7.1))*vec4(43758.54,22578.14,19642.35,31821.77));}
+float macroBands(vec3 p,vec4 s){float sum=0.,amp=.55,f=1.;for(int i=0;i<3;i++){vec3 a=vec3(.73+s.x*.31,1.11+s.y*.27,.91+s.z*.35);vec3 b=vec3(1.27+s.w*.22,.63+s.x*.41,1.43+s.y*.19);float ph=(s.z+s.w)*6.283+float(i)*1.731;sum+=amp*sin(dot(p,a)*f+ph)*cos(dot(p.yzx,b)*f-ph*.63);f*=2.;amp*=.5;}return sum;}
+float detailBands(vec3 p,vec4 s){float sum=0.,amp=.23,f=8.;for(int i=0;i<2;i++){vec3 a=vec3(.83+s.y*.42,1.37+s.z*.28,.59+s.w*.51);vec3 b=vec3(1.53+s.x*.25,.77+s.w*.34,1.07+s.y*.29);float ph=(s.x+s.z)*9.71+float(i)*2.137;sum+=amp*sin(dot(p,a)*f+ph)*cos(dot(p.zxy,b)*f-ph*.47);f*=2.;amp*=.5;}return sum;}
+vec3 instanceLocal(vec3 p,out vec2 cell,out vec4 os){vec2 spacing=vec2(12.,17.);cell=floor((p.xz+spacing*.5)/spacing);float cid=cell.x*37.+cell.y*101.;os=seedPack(uObjSeed+cid*13.17);vec3 c=vec3(cell.x*spacing.x+(os.x-.5)*3.0,3.5+(os.y-.5)*1.2,cell.y*spacing.y+(os.z-.5)*4.2);vec3 q=p-c;q.xz=rot((os.w-.5)*.72)*q.xz;return q;}
+float pCU(vec3 q,vec4 s){float d=sdEll(q-vec3(-1.7+s.x,.0,.15),vec3(2.6,1.0,1.7));d=smin(d,sdEll(q-vec3(.55+s.y*.6,.20,-.1),vec3(2.7,1.15,1.9)),.48);d=smin(d,sdEll(q-vec3(2.4+s.z*.5,.05,.2),vec3(1.65,.9,1.25)),.28);d=smin(d,sdEll(q-vec3(-1.0,1.35+s.w*.35,.2),vec3(1.35,1.35,1.05)),.34);d=smin(d,sdEll(q-vec3(.75,1.55+s.x*.35,-.15),vec3(1.45,1.5,1.12)),.36);d=max(d,-(q.y+.72));return d;}
+float pCB(vec3 q,vec4 s){float d=sdEll(q-vec3(0.,-.1,0.),vec3(3.2,1.1,1.85));d=smin(d,sdEll(q-vec3(-.8,1.4,.1),vec3(1.85,1.7,1.35)),.28);d=smin(d,sdEll(q-vec3(.7,2.8,-.1),vec3(1.75,1.8,1.3)),.25);d=smin(d,sdEll(q-vec3(-.2,4.35,.0),vec3(1.8,1.55,1.25)),.24);d=smin(d,sdEll(q-vec3(2.25+s.x,5.15,.0),vec3(4.4,.72,1.55)),.32);d=max(d,-(q.y+.8));return d;}
+float pSC(vec3 q,vec4 s){float wave=.18*sin(q.x*.55+s.x*6.)+.12*sin(q.z*.71+s.z*5.);vec3 w=q-vec3(0.,wave,0.);float d=sdEll(w-vec3(-2.2,.45,.1),vec3(3.4,.72,2.0));d=smin(d,sdEll(w-vec3(1.0,.5,-.15),vec3(3.8,.78,2.2)),.55);d=smin(d,sdEll(w-vec3(3.5,.42,.15),vec3(2.4,.66,1.6)),.38);return d;}
+float pST(vec3 q,vec4 s){float wave=.10*sin(q.x*.34+s.x*5.)+.08*sin(q.z*.47+s.y*4.);return sdEll(q-vec3(0.,.45+wave,0.),vec3(5.6,.62,3.0));}
+float cellLayer(vec3 q,float size,float y,float thick){vec2 id=floor((q.xz+size*.5)/size);vec2 c=mod(q.xz+size*.5,size)-size*.5;float h=h21(id+uObjSeed*.01);c+=(vec2(h21(id+2.7),h21(id+6.4))-.5)*size*.20;float d=sdEll(vec3(c.x,q.y-(y+(h-.5)*.22),c.y),vec3(size*.38,thick,size*.31)*(.84+.22*h));float bound=sdEll(q-vec3(0.,y,0.),vec3(5.0,1.15,2.8));return max(d,bound);}
+float pAS(vec3 q,vec4 s){float wave=.14*sin(q.x*.27+s.x*4.)+.09*sin(q.z*.39+s.y*5.);float d=sdEll(q-vec3(-1.6,.95+wave,.1),vec3(3.7,.82,2.1));d=smin(d,sdEll(q-vec3(1.5,.92+wave,-.1),vec3(3.9,.86,2.25)),.58);return d;}
+float pNS(vec3 q,vec4 s){float wave=.18*sin(q.x*.25+s.x*5.)+.14*sin(q.z*.34+s.y*4.);float d=sdEll(q-vec3(-1.5,.75+wave,.1),vec3(3.9,1.25,2.15));d=smin(d,sdEll(q-vec3(1.6,.70+wave,-.1),vec3(4.1,1.35,2.35)),.62);d=smin(d,sdEll(q-vec3(-1.8,-.55,.2),vec3(1.5,.35,.9)),.18);d=smin(d,sdEll(q-vec3(1.1,-.62,-.2),vec3(1.8,.38,1.05)),.20);return d;}
+float strands(vec3 q,vec4 s){float f=0.;for(int i=0;i<5;i++){float fi=float(i),ph=fi*1.31+s.x*4.;float y=.5+.42*fi+.34*sin(q.x*.30+ph);float z=(s.z-.5)*.5+.20*sin(q.x*.43+ph*1.2);float d=length(vec2((q.y-y)*2.0,(q.z-z)*1.55));float taper=smoothstep(-5.0,-3.2,q.x)*(1.-smoothstep(2.8,5.0,q.x));f+=exp(-d*d*(9.5+fi))*taper*(.9-fi*.09);}return f;}
+vec4 envelope(vec3 q,vec4 s){float d=0.,outer=0.,core=0.;if(uType==7){float f=strands(q,s);outer=smoothstep(.02,.22,f);core=smoothstep(.18,.64,f);return vec4(outer,core,sat(outer-core),f);}if(uType==0)d=pCU(q,s);else if(uType==1)d=pCB(q,s);else if(uType==2)d=pSC(q,s);else if(uType==3)d=pST(q,s);else if(uType==4)d=cellLayer(q,1.55,1.05,.34);else if(uType==5)d=pAS(q,s);else if(uType==6)d=pNS(q,s);else if(uType==8)d=cellLayer(q,.78,1.45,.15);else d=sdEll(q-vec3(0.,1.55,0.),vec3(5.3,.36,2.9));float ow=(uType==3||uType==5||uType==9)?.42:.30;outer=1.-smoothstep(-.10,ow,d);core=1.-smoothstep(-.52,.02,d);return vec4(outer,core,sat(outer-core),-d);}
+vec4 densityAt(vec3 p,float camDist){vec2 cell;vec4 os;vec3 q=instanceLocal(p,cell,os);vec4 e=envelope(q,os);if(e.x<.001)return vec4(0.);vec4 ds=seedPack(uDetSeed+cell.x*17.3+cell.y*41.9);float macro=.5+.5*macroBands(q*.42,os);float detailW=smoothstep(27.,13.,camDist);float tail=detailBands(q*.62,ds)*detailW*uDetail;float shoulder=mix(pow(max(e.x,0.),1.20),pow(max(e.x,0.),.78),uWet);float cellMask=smoothstep(uCover-.18,uCover+.18,macro+tail*.42);float typeScale=1.;if(uType==1||uType==6)typeScale=1.22;else if(uType==7||uType==8)typeScale=.62;else if(uType==9)typeScale=.38;else if(uType==3||uType==5)typeScale=.78;float rho=shoulder*(.07+.48*cellM
