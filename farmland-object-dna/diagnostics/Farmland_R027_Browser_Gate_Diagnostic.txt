@@ -1,0 +1,19 @@
+commit=7a70fd229e091af99f2842c479255edf9d8eb587
+url=https://rawcdn.githack.com/haihao0307/guilin-dem-pipeline/7a70fd229e091af99f2842c479255edf9d8eb587/farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html
+=== desktop 1440x960 ===
+githack_notice=seen
+ERROR:
+Traceback (most recent call last):
+  File "/tmp/farmland_r027_browser_gate.py", line 41, in <module>
+    check('desktop',1440,960);check('mobile',390,844)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/farmland_r027_browser_gate.py", line 24, in check
+    log(f'=== {label} {w}x{h} ==='); open_page(d)
+                                     ^^^^^^^^^^^^
+  File "/tmp/farmland_r027_browser_gate.py", line 20, in open_page
+    WebDriverWait(d,30).until(lambda x:x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
+  File "/home/runner/.local/lib/python3.12/site-packages/selenium/webdriver/support/wait.py", line 121, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+
