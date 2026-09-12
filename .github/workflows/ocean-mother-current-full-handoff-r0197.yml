@@ -1,0 +1,86 @@
+name: Ocean Mother Current Full Handoff R0197
+
+on:
+  push:
+    branches:
+      - handoff/ocean-mother-current-full-r0197-20260912
+    paths:
+      - 'ocean-mother/handoffs/current-r0197/**'
+      - '.github/workflows/ocean-mother-current-full-handoff-r0197.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build deterministic full handoff
+        run: |
+          set -euo pipefail
+          python ocean-mother/handoffs/current-r0197/build_package.py
+
+      - name: Verify package, source locks and current candidate
+        run: |
+          set -euo pipefail
+          STEM='Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12'
+          ZIP="ocean-mother/distributions/${STEM}.zip"
+          ROOT="ocean-mother/.handoff_build/${STEM}"
+          python ocean-mother/handoffs/current-r0197/verify_package.py "$ROOT"
+          python ocean-mother/handoffs/current-r0197/verify_package.py "$ZIP"
+          unzip -t "$ZIP"
+          test "$(sha256sum ocean-mother/releases/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html | awk '{print $1}')" = 'ec8df35770a70a14fc10a596c7866c763630f4022a76b04be84d41a9c3d28b5f'
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          root=Path('ocean-mother/.handoff_build/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12')
+          handoff=json.loads((root/'HANDOFF.json').read_text(encoding='utf-8'))
+          assert all(v is False for v in handoff['claims'].values())
+          src=(root/'frozen_visual_source/restart-v0311/SOURCE_LOCK.json')
+          lock=json.loads(src.read_text(encoding='utf-8'))
+          assert lock['runtimeSha256']=='2c689e15c1be7dfd4cd14c83ad3353e63868baee006cd04f3aee3a5f653842e3'
+          html=(root/'current_mobile_candidate/Ocean_Mother_R0197_Mobile_Heightfield_Direct_Open.html').read_text(encoding='utf-8')
+          js=re.search(r'<script>\s*(.*?)\s*</script>',html,re.S)
+          assert js and 'R019.7-mobile-heightfield-candidate' in html
+          Path('/tmp/ocean-r0197-handoff.js').write_text(js.group(1),encoding='utf-8')
+          print('SOURCE_AND_CLAIM_LOCKS_PASS')
+          PY
+          node --check /tmp/ocean-r0197-handoff.js
+
+      - name: Commit package and current pointer
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            ocean-mother/distributions/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.zip \
+            ocean-mother/distributions/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.receipt.json \
+            ocean-mother/distributions/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.sha256.txt \
+            ocean-mother/CURRENT_FULL_HANDOFF.md
+          git commit -m 'handoff(ocean): publish current full R0197 restart package [skip ci]'
+          git push
+
+      - name: Verify fixed-commit raw package
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          FILE='ocean-mother/distributions/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.zip'
+          EXPECT=$(awk '{print $1}' ocean-mother/distributions/Ocean_Mother_Current_Full_Handoff_R0197_2026-09-12.sha256.txt)
+          URL="https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${SHA}/${FILE}"
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            if curl -LfsS --connect-timeout 10 --max-time 45 "$URL" -o /tmp/ocean-current-full.zip; then
+              GOT=$(sha256sum /tmp/ocean-current-full.zip | awk '{print $1}')
+              if [ "$GOT" = "$EXPECT" ]; then ok=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$ok" -eq 1
+          unzip -t /tmp/ocean-current-full.zip
+          echo "PUBLIC_PACKAGE_OK $SHA $EXPECT"
