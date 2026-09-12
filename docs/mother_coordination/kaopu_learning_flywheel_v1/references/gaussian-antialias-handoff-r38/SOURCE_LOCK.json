@@ -1,0 +1,102 @@
+{
+  "schema": "kaopu-source-lock/r38",
+  "lockedAt": "2026-09-12",
+  "learningId": "LQ-GAUSSIAN-001",
+  "sources": [
+    {
+      "root": "Brush fixed candidate trainer/export source",
+      "repository": "ArthurBrussee/brush",
+      "commit": "063945e797e0b3b7fd60b0feb7b9010385dd4bda",
+      "assets": [
+        {
+          "path": "crates/brush-serde/src/export.rs",
+          "blobSha": "d119ac11eb346681f4b5b7bf7b00b892d37f8db4",
+          "url": "https://github.com/ArthurBrussee/brush/blob/063945e797e0b3b7fd60b0feb7b9010385dd4bda/crates/brush-serde/src/export.rs"
+        },
+        {
+          "path": "crates/brush-render/src/kernels/helpers.rs",
+          "blobSha": "149781070dd6f58d2f877138ec8511304198fd21",
+          "url": "https://github.com/ArthurBrussee/brush/blob/063945e797e0b3b7fd60b0feb7b9010385dd4bda/crates/brush-render/src/kernels/helpers.rs"
+        }
+      ],
+      "claimBoundary": "render-mode and PLY export semantics only; Brush executable not run"
+    },
+    {
+      "root": "Niantic SPZ official format/source",
+      "repository": "nianticlabs/spz",
+      "commit": "affd0ecea7fbb4c265ee119475af7ee5b2997482",
+      "assets": [
+        {
+          "path": "README.md",
+          "blobSha": "0eea8c9d530d73c7b7d187d54d9e77b397a3235b",
+          "url": "https://github.com/nianticlabs/spz/blob/affd0ecea7fbb4c265ee119475af7ee5b2997482/README.md"
+        },
+        {
+          "path": "src/cc/load-spz.cc",
+          "blobSha": "59930fb20c2227577921dd09c3d38649475b339c",
+          "url": "https://github.com/nianticlabs/spz/blob/affd0ecea7fbb4c265ee119475af7ee5b2997482/src/cc/load-spz.cc"
+        },
+        {
+          "path": "cli_tools/src/ply_to_spz.cpp",
+          "url": "https://github.com/nianticlabs/spz/blob/affd0ecea7fbb4c265ee119475af7ee5b2997482/cli_tools/src/ply_to_spz.cpp"
+        }
+      ],
+      "claimBoundary": "PLY ingestion, flag serialization and v4 codec behavior; no visual acceptance"
+    },
+    {
+      "root": "GraphDECO official reference implementation",
+      "repository": "graphdeco-inria/gaussian-splatting",
+      "commit": "54c035f7834b564019656c3e3fcc3646292f727d",
+      "assets": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/graphdeco-inria/gaussian-splatting/blob/54c035f7834b564019656c3e3fcc3646292f727d/README.md"
+        },
+        {
+          "path": "gaussian_renderer/__init__.py",
+          "url": "https://github.com/graphdeco-inria/gaussian-splatting/blob/54c035f7834b564019656c3e3fcc3646292f727d/gaussian_renderer/__init__.py"
+        }
+      ],
+      "claimBoundary": "training/render antialias toggle guidance and call path"
+    },
+    {
+      "root": "GraphDECO pinned antialiasing rasterizer implementation",
+      "repository": "graphdeco-inria/diff-gaussian-rasterization",
+      "commit": "9c5c2028f6fbee2be239bc4c9421ff894fe4fbe0",
+      "assets": [
+        {
+          "path": "cuda_rasterizer/forward.cu",
+          "blobSha": "c5e01ddc475c88f41c4368894330851aa3acc67e",
+          "url": "https://github.com/graphdeco-inria/diff-gaussian-rasterization/blob/9c5c2028f6fbee2be239bc4c9421ff894fe4fbe0/cuda_rasterizer/forward.cu"
+        }
+      ],
+      "claimBoundary": "reference 0.3 kernel and conditional opacity compensation equations; CUDA not run"
+    },
+    {
+      "root": "Three.js official r186 viewer source",
+      "repository": "mrdoob/three.js",
+      "commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "version": "0.186.0",
+      "assets": [
+        {
+          "path": "examples/jsm/loaders/SPZLoader.js",
+          "blobSha": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/loaders/SPZLoader.js"
+        },
+        {
+          "path": "examples/jsm/objects/GaussianSplat.js",
+          "blobSha": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js"
+        }
+      ],
+      "claimBoundary": "loader and renderer source plus executed loader; no GPU/image/device result"
+    }
+  ],
+  "relationshipNotes": [
+    "Brush, SPZ, GraphDECO and Three.js are distinct software roots but form a dependent interoperability chain, not independent physical corroboration.",
+    "The single-splat CPU probe is derived executable evidence and not a physical Observation Root.",
+    "No external-AI output was used or counted as an evidence root."
+  ],
+  "observationRootEligible": false
+}
+

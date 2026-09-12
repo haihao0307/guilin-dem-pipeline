@@ -26,20 +26,22 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33 locked the COLMAP/Brush/SPZ/Three contracts. R34 established actual center/covariance/SH interop plus separate source-range and envelope gates. R35 found exact opacity-byte handoff but Three DC clamping outside bytes 60-195. R36 verified the GraphDECO-to-RUB direction convention with grid-aligned SH1-SH3 values. R37 then executed actual Niantic default quantization and Three loading for 2,880 deterministic off-grid coefficients across 2,054 directions per splat. The codec's two-stage rounding exceeded naive half-step bounds: measured maxima were 0.034996 for SH1 and about 0.06638 for SH2/3; safe accounting bounds are 0.03515625 and 0.06640625. The fixture's linear SH-contribution max error was 0.131709381 and RMSE 0.037017868 across 394,368 samples, but these are not pixel or perceptual thresholds. Actual out-of-domain coefficients +1.25/-1.25 saturated to 0.9921875/-1 with max loss 0.2578125. Five checks passed with explicit-budget and saturation negative controls. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "progress": "R33-R37 locked the principal COLMAP/Brush/SPZ/Three contracts, actual coordinate/covariance/SH path, range/envelope/DC/direction gates and two-stage SH quantization bounds. R38 separated training mode, SPZ antialias flag and viewer capability. Seven CPU checks passed. Actual Niantic PLY ingestion/default conversion skipped a Brush-shaped `SplatRenderMode: mip` comment and emitted v4 flag 0; explicitly setting `GaussianCloud.antialiased=true` emitted and decoded flag 1. Actual Three r186 loading collapsed otherwise identical false/true flag files to identical geometry and exposed no mode. Its renderer source unconditionally applies the 0.3 kernel and determinant opacity compensation: a non-AA covariance control produced alpha scale 0.7692307692 instead of 1, while an ordinary positive AA equation aligned; a singular control differed 0 versus GraphDECO's 0.005 floor. These are metadata/formula results, not GPU pixels. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_APPEARANCE_R35.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_DIRECTION_R36.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_QUANTIZATION_R37.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_QUANTIZATION_R37.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_ANTIALIAS_HANDOFF_R38.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
         "references/gaussian-spz-interop-r34/SOURCE_LOCK.json",
         "references/gaussian-spz-appearance-r35/SOURCE_LOCK.json",
         "references/gaussian-sh-direction-r36/SOURCE_LOCK.json",
-        "references/gaussian-sh-quantization-r37/SOURCE_LOCK.json"
+        "references/gaussian-sh-quantization-r37/SOURCE_LOCK.json",
+        "references/gaussian-antialias-handoff-r38/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -71,7 +73,13 @@
       "currentBestViewShQuantizationExtension": "CURRENT_BEST_VIEW_R37_GAUSSIAN_SH_QUANTIZATION.md",
       "toolRoutingShQuantizationExtension": "TOOL_ROUTING_R37_GAUSSIAN_SH_QUANTIZATION.json",
       "motherRoutingShQuantizationExtension": "MOTHER_ROUTING_R37_GAUSSIAN_SH_QUANTIZATION.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one Brush checkpoint; preserve uncompressed PLY and cleanup log; declare frame/layout/center-minus-camera convention; retain R34 source/envelope, R35 DC and R36 direction gates; record actual learned per-band SH distributions and fail outside [-1,1]; compare actual decoded coefficients using R37 two-stage bounds and explicit non-circular budgets; compare an independent float-SH fixed-view reference against r186; then test macOS and 390x844 iPhone/Safari performance, sorting and human acceptance. Do not reuse the probe's 0.25 harness threshold as an acceptance threshold, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
+      "antialiasHandoffProbe": "PROBES/gaussian_antialias_handoff_r38.mjs",
+      "antialiasHandoffProbeResult": "PROBES/gaussian_antialias_handoff_result_r38.json",
+      "candidateAntialiasHandoffGate": "ADAPTERS/gaussian_antialias_handoff_gate_r38.mjs",
+      "currentBestViewAntialiasHandoffExtension": "CURRENT_BEST_VIEW_R38_GAUSSIAN_ANTIALIAS_HANDOFF.md",
+      "toolRoutingAntialiasHandoffExtension": "TOOL_ROUTING_R38_GAUSSIAN_ANTIALIAS_HANDOFF.json",
+      "motherRoutingAntialiasHandoffExtension": "MOTHER_ROUTING_R38_GAUSSIAN_ANTIALIAS_HANDOFF.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; declare frame/layout/center-minus-camera and trainingRenderMode; explicitly set and post-verify SPZ antialias bit 0x1 rather than relying on the PLY comment; retain R34-R38 gates; record actual learned SH/DC distributions and fail outside declared domains; compare decoded coefficients using R37 bounds; compare an independent float reference against fixed-view r186 GPU images including small/singular footprints; then test macOS and 390x844 iPhone/Safari performance, sorting and human acceptance. Keep a default/non-AA checkpoint out of native r186 reference use unless an explicit compatible viewer mode exists. Do not reuse probe thresholds as acceptance thresholds, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
     },
     {
       "id": "LQ-TELLUX-001",
