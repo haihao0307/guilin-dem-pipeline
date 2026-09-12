@@ -1,0 +1,31 @@
+name: Diagnose Weather Mother R27 v3 payload
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r27-unified-cloud-dna-20260912
+    paths:
+      - .github/workflows/diag-r27-payload-v3.yml
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect payload
+        shell: bash
+        run: |
+          set -u
+          f=weather-mother/r27-assembly-v3/index.html.gz
+          ls -l "$f"
+          wc -c "$f"
+          sha256sum "$f"
+          git hash-object "$f"
+          gzip -t "$f"; echo "gzip_rc=$?"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('weather-mother/r27-assembly-v3/index.html.gz')
+          b=p.read_bytes()
+          print('first32',b[:32].hex())
+          print('last32',b[-32:].hex())
+          PY
