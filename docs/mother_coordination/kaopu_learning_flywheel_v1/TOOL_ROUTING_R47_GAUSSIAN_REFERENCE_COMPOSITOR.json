@@ -1,0 +1,34 @@
+{
+  "schema": "kaopu-tool-routing/r47",
+  "status": "Candidate partial",
+  "question": "How should combined Gaussian display error be checked before a real-photo pilot?",
+  "routes": [
+    {
+      "stage": "source-reference",
+      "tool": "uncompressed float checkpoint plus fixed camera/order",
+      "authority": "comparison reference only",
+      "required": ["raw DC plus SH", "opacity", "3D covariance", "camera matrices", "exact depth order"]
+    },
+    {
+      "stage": "cpu-compositor",
+      "tool": "PROBES/gaussian_reference_compositor_r47.mjs",
+      "authority": "deterministic equation replay",
+      "required": ["post-SH source clamp", "r186 early DC clamp", "0.3 kernel alphaScale", "ellipse cutoff", "normal source-over blend", "exact and viewer order"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_reference_compositor_gate_r47.mjs",
+      "authority": "CPU evidence completeness and tolerance check",
+      "notAuthorityFor": ["GPU equivalence", "device safety", "perceptual acceptance", "physical truth"]
+    },
+    {
+      "stage": "viewer",
+      "tool": "Three.js r186 GaussianSplat",
+      "authority": "fixed delivery viewer only",
+      "requiredNext": ["direct TSL/GPU readback", "explicit color space", "explicit tone mapping", "edge-pixel comparison"]
+    }
+  ],
+  "viewerIsTrainer": false,
+  "deliveryIsCanonicalTruth": false,
+  "productionMutationAllowed": false
+}
