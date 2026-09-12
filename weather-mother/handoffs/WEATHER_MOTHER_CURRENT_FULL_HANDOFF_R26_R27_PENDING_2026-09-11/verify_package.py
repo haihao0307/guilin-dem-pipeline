@@ -16,11 +16,11 @@ required = [
     "08_PACKAGE_CHECKLIST.json",
     "runtime/index.html",
     "source/r23-mobile-recovery-src/mobile-safe-aircraft.html",
-    "source/r25-mobile-cloud-occlusion-src/mobile-aircraft-overlay-r25.js",
-    "source/r26-observation-bandwidth-src/observation-bandwidth-r26.js",
+    "source/r25-mobile-cloud-occlusion-src/aircraft-cloud-occlusion.js",
+    "source/r26-observation-bandwidth-src/observation-bandwidth.glsl",
     "source/yohei-cloud-atlas-r02/weather-mother-yohei-cloud-atlas-r02.html",
     "reference/r21/index.html",
-    "reference/r22/index.html"
+    "reference/r22/index.html",
 ]
 missing = [path for path in required if not (root / path).is_file()]
 if missing:
