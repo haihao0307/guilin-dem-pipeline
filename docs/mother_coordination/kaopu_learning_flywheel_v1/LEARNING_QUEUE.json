@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R40 locked the principal handoff, range/envelope/DC/SH/antialias/sorting and constructor-memory contracts. R41 executed the fixed Niantic v4 encoder, Three r186 public SPZ loader and actual ZSTD stream decoder; six checks passed. During parsing, decoded streams require 20/29/44/65 bytes per splat and output geometry 40/52/68/92 bytes per splat for SH0/1/2/3, plus compressed input and 9,472 shared lookup-table bytes. Two valid 1024-splat SH3 files were 241 and 37,888 compressed bytes (157.212x difference) but each decoded to 66,560 stream bytes and 94,208 geometry bytes, disproving file size as a runtime-memory proxy. ZSTD WASM allocator peak, fetch/FileLoader copies, garbage-collection overlap with GaussianSplat construction, GPU/process peak, real-asset distributions, photos, COLMAP/Brush training, Safari/iPhone and human acceptance remain unverified.",
+      "progress": "R33-R41 locked the principal handoff, range/envelope/DC/SH/antialias/sorting, constructor-memory and SPZ parse-array contracts. R42 executed the fixed Three r186 bundled ZSTD decoder with read-only in-memory capacity instrumentation; five checks passed and every decoded byte was verified. The decoder initialized 16 MiB. A 24 MiB zero output from 787 compressed bytes retained 29.1875 MiB, while the same-size varied output from 25,166,410 compressed bytes retained 53.1875 MiB. Calling free, constructing another decoder object and decoding 1 MiB did not shrink or reset that 53.1875 MiB because the module instance is shared. This is retained WebAssembly linear-memory capacity, not live occupancy or browser process peak. Actual SPZ stream high-water, Worker isolation/copy cost, fetch/FileLoader copies, garbage-collection overlap with GaussianSplat construction, GPU/process peak, real-asset distributions, photos, COLMAP/Brush training, Safari/iPhone and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -36,7 +36,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_ANTIALIAS_HANDOFF_R38.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SORTING_PRECISION_R39.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_RUNTIME_MEMORY_R40.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_LOADER_MEMORY_R41.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_LOADER_MEMORY_R41.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_ZSTD_WASM_MEMORY_R42.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -47,7 +48,8 @@
         "references/gaussian-antialias-handoff-r38/SOURCE_LOCK.json",
         "references/gaussian-sorting-r39/SOURCE_LOCK.json",
         "references/gaussian-runtime-memory-r40/SOURCE_LOCK.json",
-        "references/gaussian-spz-loader-memory-r41/SOURCE_LOCK.json"
+        "references/gaussian-spz-loader-memory-r41/SOURCE_LOCK.json",
+        "references/gaussian-zstd-wasm-memory-r42/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -103,7 +105,13 @@
       "currentBestViewSpzLoaderMemoryExtension": "CURRENT_BEST_VIEW_R41_GAUSSIAN_SPZ_LOADER_MEMORY.md",
       "toolRoutingSpzLoaderMemoryExtension": "TOOL_ROUTING_R41_GAUSSIAN_SPZ_LOADER_MEMORY.json",
       "motherRoutingSpzLoaderMemoryExtension": "MOTHER_ROUTING_R41_GAUSSIAN_SPZ_LOADER_MEMORY.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R41 gates; record learned SH/DC/footprint/count distributions; compare decoded coefficients and independent float-reference fixed views; report actual r186 depth range/bin width and non-equal-depth collisions at fixed cameras; sweep camera motion in sub-1.812-degree steps and compare actual GPU images; then separately measure compressed size, deterministic loader arrays, ZSTD WASM/fetch/process peak, garbage-collection overlap with R40 constructor buffers, GPU allocation where available, frame time, sorting artifacts and failure behavior on macOS and 390x844 iPhone/Safari before human acceptance. Do not use file size or R40-R41 lower bounds as device-capacity claims, treat synthetic controls as acceptance thresholds, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
+      "zstdWasmMemoryProbe": "PROBES/gaussian_zstd_wasm_memory_r42.mjs",
+      "zstdWasmMemoryProbeResult": "PROBES/gaussian_zstd_wasm_memory_result_r42.json",
+      "candidateZstdWasmGate": "ADAPTERS/gaussian_zstd_wasm_gate_r42.mjs",
+      "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
+      "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
+      "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R42 gates; record learned SH/DC/footprint/count distributions; compare decoded coefficients and independent float-reference fixed views; report actual r186 depth range/bin width and non-equal-depth collisions at fixed cameras; sweep camera motion in sub-1.812-degree steps and compare actual GPU images; then separately measure compressed size, deterministic loader arrays, WASM capacity before/after each real SPZ stream, after disposal and after the next asset, fetch/process peak, garbage-collection overlap with R40 constructor buffers, GPU allocation where available, frame time, sorting artifacts and failure behavior. A/B main-thread decoding against a short-lived Worker/realm on macOS and 390x844 iPhone/Safari, including transfer/copy bytes and lifecycle failures, before human acceptance. Do not treat Worker isolation as accepted, use file size or R40-R42 lower bounds as device-capacity claims, treat synthetic controls as acceptance thresholds, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
     },
     {
       "id": "LQ-TELLUX-001",

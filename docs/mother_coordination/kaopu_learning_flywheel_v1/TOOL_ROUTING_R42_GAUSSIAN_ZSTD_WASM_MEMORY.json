@@ -1,0 +1,40 @@
+{
+  "schema": "kaopu-tool-routing/r42",
+  "status": "candidate",
+  "inherits": "TOOL_ROUTING_R41_GAUSSIAN_SPZ_LOADER_MEMORY.json",
+  "tools": [
+    {
+      "id": "TOOL-R42-THREE-R186-ZSTD-WASM",
+      "authority": "official-primary-source-executed-with-read-only-capacity-instrumentation",
+      "repository": "mrdoob/three.js",
+      "commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "version": "0.186.0",
+      "useFor": ["module initialization capacity", "WASM growth and persistence", "same-module decoder sharing"],
+      "notFor": ["live allocator occupancy", "JavaScript heap", "browser process peak", "Safari/iPhone behavior"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R42-ZSTD-WASM-GATE",
+      "authority": "candidate-derived-adapter",
+      "path": "ADAPTERS/gaussian_zstd_wasm_gate_r42.mjs",
+      "useFor": ["capacity evidence separation", "missing browser/device evidence"],
+      "notFor": ["universal memory limit", "worker adoption", "GPU or process prediction"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R42-ZSTD-WASM-PROBE",
+      "authority": "derived-executable-evidence",
+      "paths": [
+        "PROBES/gaussian_zstd_stream_fixture_r42.cc",
+        "PROBES/gaussian_zstd_wasm_memory_r42.mjs",
+        "PROBES/run_gaussian_zstd_wasm_memory_r42.sh",
+        "PROBES/gaussian_zstd_wasm_memory_result_r42.json"
+      ],
+      "useFor": ["five-check decoder regression", "compressibility-controlled growth comparison", "post-free and new-object persistence control"],
+      "notFor": ["real reconstruction", "SPZ container parsing", "browser worker transfer", "macOS/iPhone/Safari acceptance"],
+      "observationRootEligible": false
+    }
+  ],
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}

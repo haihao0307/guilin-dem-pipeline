@@ -1,0 +1,21 @@
+{
+  "schema": "kaopu-source-lock/r42",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-12",
+  "sources": [
+    {
+      "root": "O-R42-THREE-ZSTD",
+      "repository": "mrdoob/three.js",
+      "revision": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "tag": "r186",
+      "assets": [
+        {"path": "examples/jsm/libs/zstddec.module.js", "githubBlob": "ed19f91162d2afaa5d058c67a2f6ed074ba8c197"},
+        {"path": "examples/jsm/loaders/SPZLoader.js", "githubBlob": "456aa33e7c6e10bec74b34a5413606bb45bb0c16"}
+      ],
+      "use": ["module singleton behavior", "malloc/decode/free path", "relationship to sequential SPZ stream decoding"]
+    }
+  ],
+  "instrumentation": "The fixed JavaScript source was modified only in memory to export the private WebAssembly.Memory byteLength. Decode code and embedded WASM bytes were unchanged.",
+  "fixtureBoundary": "System libzstd created controlled zero and deterministic-varied streams. They isolate decoder behavior and are not a physical or real-asset Observation Root.",
+  "independentObservationRootsAdded": 0
+}

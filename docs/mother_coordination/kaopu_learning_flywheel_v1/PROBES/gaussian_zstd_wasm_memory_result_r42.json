@@ -1,0 +1,111 @@
+{
+  "schema": "kaopu-gaussian-zstd-wasm-memory-probe/r42",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519"
+  },
+  "testsRun": 5,
+  "failures": [],
+  "fixtures": {
+    "smallVaried": {
+      "compressedBytes": 1048609,
+      "rawBytes": 1048576
+    },
+    "largeZero": {
+      "compressedBytes": 787,
+      "rawBytes": 25165824
+    },
+    "largeVaried": {
+      "compressedBytes": 25166410,
+      "rawBytes": 25165824
+    }
+  },
+  "observations": {
+    "initialWasmBytes": 16777216,
+    "afterSmallVariedBytes": 16777216,
+    "afterLargeZeroBytes": 30605312,
+    "afterLargeVariedBytes": 55771136,
+    "largeVariedRetainedAfterSmallDecodeBytes": 55771136
+  },
+  "tests": [
+    {
+      "name": "fixed decoder initializes one 16 MiB WebAssembly linear memory",
+      "pass": true,
+      "detail": {
+        "initialBytes": 16777216,
+        "initialMiB": 16,
+        "wasmPageBytes": 65536
+      }
+    },
+    {
+      "name": "actual decoded outputs match the zero and deterministic-varied sources",
+      "pass": true,
+      "detail": [
+        {
+          "compressedBytes": 1048609,
+          "outputBytes": 1048576,
+          "outputVerified": true
+        },
+        {
+          "compressedBytes": 787,
+          "outputBytes": 25165824,
+          "outputVerified": true
+        },
+        {
+          "compressedBytes": 25166410,
+          "outputBytes": 25165824,
+          "outputVerified": true
+        }
+      ]
+    },
+    {
+      "name": "same 24 MiB output size reaches different retained WASM capacities by compressed input size",
+      "pass": true,
+      "detail": {
+        "rawOutputBytes": 25165824,
+        "zeroCompressedBytes": 787,
+        "variedCompressedBytes": 25166410,
+        "zeroRetainedWasmBytes": 30605312,
+        "variedRetainedWasmBytes": 55771136
+      }
+    },
+    {
+      "name": "freed decode allocations do not shrink WebAssembly.Memory and a new decoder shares the module high-water mark",
+      "pass": true,
+      "detail": {
+        "highWaterBytes": 55771136,
+        "afterSecondDecoderInitBytes": 55771136,
+        "afterSmallDecodeBytes": 55771136,
+        "sharedModuleInstance": true
+      }
+    },
+    {
+      "name": "candidate gate keeps WASM capacity separate from Safari and process peak",
+      "pass": true,
+      "detail": {
+        "status": "Candidate-incomplete",
+        "errors": [
+          "safari-wasm-memory-missing",
+          "browser-process-peak-missing"
+        ],
+        "warning": "WebAssembly.Memory byteLength is a retained linear-memory capacity observation, not live allocations, JavaScript heap, GPU memory, or process peak."
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "fixedThreeDecoderExecuted": true,
+    "decoderSourceInstrumentedInMemoryToExposePrivateWasmCapacity": true,
+    "decodedBytesVerified": true,
+    "actualSpzContainerParsedThisCycle": false,
+    "liveWasmAllocationsMeasured": false,
+    "javascriptHeapMeasured": false,
+    "browserProcessPeakMeasured": false,
+    "safariOrIphoneTested": false,
+    "gpuTested": false,
+    "userPhotosAvailable": false,
+    "humanAcceptancePerformed": false
+  },
+  "interpretation": "WebAssembly.Memory byteLength records retained module capacity/high-water behavior, not live allocations or total process peak. Synthetic ZSTD streams isolate decoder behavior and are not real-asset statistics.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}
