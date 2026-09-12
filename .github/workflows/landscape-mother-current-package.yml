@@ -40,6 +40,7 @@ jobs:
           set -euo pipefail
           git config user.name 'Landscape Mother'
           git config user.email 'actions@users.noreply.github.com'
+          # The canonical ZIP is explicitly unignored in this branch's .gitignore.
           git add -A handoffs/landscape-mother/CURRENT
           git commit -m 'handoff(landscape): publish one canonical full package'
           git push origin HEAD:handoff/landscape-mother-current
