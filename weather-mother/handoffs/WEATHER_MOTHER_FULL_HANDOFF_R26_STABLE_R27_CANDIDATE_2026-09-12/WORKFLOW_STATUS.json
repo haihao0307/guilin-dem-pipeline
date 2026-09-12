@@ -1,0 +1,18 @@
+{
+  "schema": "weather-mother-r27-workflow-status/1",
+  "latestRun": {
+    "id": 34672318112,
+    "workflow": "Publish and verify Weather Mother R27 unified cloud DNA v4",
+    "status": "completed",
+    "conclusion": "failure",
+    "pageCommitCreated": "d2f4ab4ce0b498c9a28e4b386c29109adbaf2283",
+    "assembly": "success",
+    "fixedPublicByteVerification": "success",
+    "browserQA": "failure",
+    "failurePoint": "desktop.wait_for_function(window.WeatherR27 && WeatherR27.qa.ready)",
+    "timeoutMs": 120000
+  },
+  "interpretation": "The R27 single-file bytes are fixed and publicly retrievable, but the runtime did not report ready in automated Chromium. Treat it as a debuggable candidate, not a validated release.",
+  "previousRuns": "Earlier R27 assembly/publish/strict/public verification attempts also failed and are retained in repository history.",
+  "productionReady": false
+}
