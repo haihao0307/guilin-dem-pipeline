@@ -1,0 +1,430 @@
+{
+  "schema": "kaopu-gaussian-spz-loader-memory-probe/r41",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "spz": "affd0ecea7fbb4c265ee119475af7ee5b2997482"
+  },
+  "testsRun": 6,
+  "failures": [],
+  "formulas": {
+    "rawDecodedStreamBytesPerSplatByShDegree": {
+      "0": 20,
+      "1": 29,
+      "2": 44,
+      "3": 65
+    },
+    "outputGeometryBytesPerSplatByShDegree": {
+      "0": 40,
+      "1": 52,
+      "2": 68,
+      "3": 92
+    },
+    "sharedLoaderLookupTablesBytes": 9472
+  },
+  "rows": [
+    {
+      "name": "d0-varied.spz",
+      "count": 257,
+      "degree": 0,
+      "numStreams": 5,
+      "compressedInputBytes": 4034,
+      "decodedStreamBytes": [
+        2313,
+        257,
+        771,
+        771,
+        1028
+      ],
+      "geometryBytes": {
+        "position": 3084,
+        "covariance": 6168,
+        "color": 1028
+      },
+      "measuredPerLoadReachableArrays": 19454,
+      "expectedPerLoadReachableArrays": 19454,
+      "uniqueBufferCount": 9
+    },
+    {
+      "name": "d1-varied.spz",
+      "count": 257,
+      "degree": 1,
+      "numStreams": 6,
+      "compressedInputBytes": 5263,
+      "decodedStreamBytes": [
+        2313,
+        257,
+        771,
+        771,
+        1028,
+        2313
+      ],
+      "geometryBytes": {
+        "position": 3084,
+        "covariance": 6168,
+        "color": 1028,
+        "sphericalHarmonics1": 3084
+      },
+      "measuredPerLoadReachableArrays": 26080,
+      "expectedPerLoadReachableArrays": 26080,
+      "uniqueBufferCount": 11
+    },
+    {
+      "name": "d2-varied.spz",
+      "count": 257,
+      "degree": 2,
+      "numStreams": 6,
+      "compressedInputBytes": 7088,
+      "decodedStreamBytes": [
+        2313,
+        257,
+        771,
+        771,
+        1028,
+        6168
+      ],
+      "geometryBytes": {
+        "position": 3084,
+        "covariance": 6168,
+        "color": 1028,
+        "sphericalHarmonics1": 3084,
+        "sphericalHarmonics2": 4112
+      },
+      "measuredPerLoadReachableArrays": 35872,
+      "expectedPerLoadReachableArrays": 35872,
+      "uniqueBufferCount": 12
+    },
+    {
+      "name": "d3-varied.spz",
+      "count": 257,
+      "degree": 3,
+      "numStreams": 6,
+      "compressedInputBytes": 9350,
+      "decodedStreamBytes": [
+        2313,
+        257,
+        771,
+        771,
+        1028,
+        11565
+      ],
+      "geometryBytes": {
+        "position": 3084,
+        "covariance": 6168,
+        "color": 1028,
+        "sphericalHarmonics1": 3084,
+        "sphericalHarmonics2": 4112,
+        "sphericalHarmonics3": 6168
+      },
+      "measuredPerLoadReachableArrays": 49699,
+      "expectedPerLoadReachableArrays": 49699,
+      "uniqueBufferCount": 13
+    },
+    {
+      "name": "d3-compressible-1024.spz",
+      "count": 1024,
+      "degree": 3,
+      "numStreams": 6,
+      "compressedInputBytes": 241,
+      "decodedStreamBytes": [
+        9216,
+        1024,
+        3072,
+        3072,
+        4096,
+        46080
+      ],
+      "geometryBytes": {
+        "position": 12288,
+        "covariance": 24576,
+        "color": 4096,
+        "sphericalHarmonics1": 12288,
+        "sphericalHarmonics2": 16384,
+        "sphericalHarmonics3": 24576
+      },
+      "measuredPerLoadReachableArrays": 161009,
+      "expectedPerLoadReachableArrays": 161009,
+      "uniqueBufferCount": 13
+    },
+    {
+      "name": "d3-varied-1024.spz",
+      "count": 1024,
+      "degree": 3,
+      "numStreams": 6,
+      "compressedInputBytes": 37888,
+      "decodedStreamBytes": [
+        9216,
+        1024,
+        3072,
+        3072,
+        4096,
+        46080
+      ],
+      "geometryBytes": {
+        "position": 12288,
+        "covariance": 24576,
+        "color": 4096,
+        "sphericalHarmonics1": 12288,
+        "sphericalHarmonics2": 16384,
+        "sphericalHarmonics3": 24576
+      },
+      "measuredPerLoadReachableArrays": 198656,
+      "expectedPerLoadReachableArrays": 198656,
+      "uniqueBufferCount": 13
+    }
+  ],
+  "tests": [
+    {
+      "name": "actual public Three r186 parse accepts every Niantic v4 fixture",
+      "pass": true,
+      "detail": [
+        {
+          "name": "d0-varied.spz",
+          "count": 257,
+          "attributes": [
+            "position",
+            "covariance",
+            "color"
+          ]
+        },
+        {
+          "name": "d1-varied.spz",
+          "count": 257,
+          "attributes": [
+            "position",
+            "covariance",
+            "color",
+            "sphericalHarmonics1"
+          ]
+        },
+        {
+          "name": "d2-varied.spz",
+          "count": 257,
+          "attributes": [
+            "position",
+            "covariance",
+            "color",
+            "sphericalHarmonics1",
+            "sphericalHarmonics2"
+          ]
+        },
+        {
+          "name": "d3-varied.spz",
+          "count": 257,
+          "attributes": [
+            "position",
+            "covariance",
+            "color",
+            "sphericalHarmonics1",
+            "sphericalHarmonics2",
+            "sphericalHarmonics3"
+          ]
+        },
+        {
+          "name": "d3-compressible-1024.spz",
+          "count": 1024,
+          "attributes": [
+            "position",
+            "covariance",
+            "color",
+            "sphericalHarmonics1",
+            "sphericalHarmonics2",
+            "sphericalHarmonics3"
+          ]
+        },
+        {
+          "name": "d3-varied-1024.spz",
+          "count": 1024,
+          "attributes": [
+            "position",
+            "covariance",
+            "color",
+            "sphericalHarmonics1",
+            "sphericalHarmonics2",
+            "sphericalHarmonics3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "actual ZSTD decode outputs match declared raw-stream byte formulas for SH0-SH3",
+      "pass": true,
+      "detail": [
+        {
+          "degree": 0,
+          "count": 257,
+          "decodedStreamBytes": [
+            2313,
+            257,
+            771,
+            771,
+            1028
+          ],
+          "total": 5140
+        },
+        {
+          "degree": 1,
+          "count": 257,
+          "decodedStreamBytes": [
+            2313,
+            257,
+            771,
+            771,
+            1028,
+            2313
+          ],
+          "total": 7453
+        },
+        {
+          "degree": 2,
+          "count": 257,
+          "decodedStreamBytes": [
+            2313,
+            257,
+            771,
+            771,
+            1028,
+            6168
+          ],
+          "total": 11308
+        },
+        {
+          "degree": 3,
+          "count": 257,
+          "decodedStreamBytes": [
+            2313,
+            257,
+            771,
+            771,
+            1028,
+            11565
+          ],
+          "total": 16705
+        }
+      ]
+    },
+    {
+      "name": "deduplicated input plus decoded streams plus output geometry matches the concurrent per-load lower bound",
+      "pass": true,
+      "detail": [
+        {
+          "name": "d0-varied.spz",
+          "measured": 19454,
+          "expected": 19454,
+          "uniqueBufferCount": 9
+        },
+        {
+          "name": "d1-varied.spz",
+          "measured": 26080,
+          "expected": 26080,
+          "uniqueBufferCount": 11
+        },
+        {
+          "name": "d2-varied.spz",
+          "measured": 35872,
+          "expected": 35872,
+          "uniqueBufferCount": 12
+        },
+        {
+          "name": "d3-varied.spz",
+          "measured": 49699,
+          "expected": 49699,
+          "uniqueBufferCount": 13
+        },
+        {
+          "name": "d3-compressible-1024.spz",
+          "measured": 161009,
+          "expected": 161009,
+          "uniqueBufferCount": 13
+        },
+        {
+          "name": "d3-varied-1024.spz",
+          "measured": 198656,
+          "expected": 198656,
+          "uniqueBufferCount": 13
+        }
+      ]
+    },
+    {
+      "name": "fixed loader lookup tables add 9472 shared bytes independent of asset count",
+      "pass": true,
+      "detail": {
+        "declarations": [
+          {
+            "pattern": "new Float32Array( 256 )",
+            "bytes": 1024
+          },
+          {
+            "pattern": "new Uint8ClampedArray( 256 )",
+            "bytes": 256
+          },
+          {
+            "pattern": "new Float64Array( 1024 )",
+            "bytes": 8192
+          }
+        ],
+        "total": 9472
+      }
+    },
+    {
+      "name": "same count and SH degree can have different compressed sizes but identical decoded/output allocation",
+      "pass": true,
+      "detail": {
+        "count": 1024,
+        "degree": 3,
+        "compressibleFileBytes": 241,
+        "variedFileBytes": 37888,
+        "fileSizeRatio": 157.21161825726142,
+        "eachDecodedStreamBytes": 66560,
+        "eachOutputGeometryBytes": 94208
+      }
+    },
+    {
+      "name": "candidate gate refuses compressed and reachable bytes as target-device peak acceptance",
+      "pass": true,
+      "detail": {
+        "status": "Candidate-incomplete",
+        "expected": {
+          "count": 1024,
+          "shDegree": 3,
+          "compressedInputBytes": 37888,
+          "decodedStreams": 66560,
+          "outputGeometry": 94208,
+          "perLoadReachableArrays": 198656,
+          "sharedModuleLookupTables": 9472,
+          "concurrentJsArrayBufferLowerBound": 208128,
+          "excluded": [
+            "ZSTD WebAssembly memory and allocator high-water mark",
+            "FileLoader/fetch/network copies",
+            "Promise and JS object overhead",
+            "subsequent GaussianSplat constructor buffers",
+            "GPU allocations",
+            "browser/OS process overhead"
+          ]
+        },
+        "errors": [
+          "zstd-wasm-peak-missing",
+          "browser-process-peak-missing",
+          "target-device-load-test-missing"
+        ],
+        "warning": "Compressed file bytes and concurrent JS ArrayBuffers do not bound ZSTD WASM, fetch, browser, constructor, GPU, or process peak memory."
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "actualNianticV4EncoderExecuted": true,
+    "actualThreePublicParseExecuted": true,
+    "actualThreeParseRawV4WithRealZstdDecodeExecuted": true,
+    "concurrentJsArrayBuffersRetainedByTracingWrapper": true,
+    "zstdWasmAllocatorPeakMeasured": false,
+    "fetchOrFileLoaderCopiesMeasured": false,
+    "browserProcessPeakMeasured": false,
+    "gaussianSplatConstructorOverlapMeasured": false,
+    "userPhotosAvailable": false,
+    "targetDeviceTested": false,
+    "humanAcceptancePerformed": false
+  },
+  "interpretation": "The probe establishes a fixed-source concurrent JS ArrayBuffer lower bound during SPZ v4 parsing. It does not establish ZSTD WASM, fetch, browser, constructor-overlap, GPU, or device peak memory.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}
