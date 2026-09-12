@@ -77,6 +77,13 @@ def copy_tree(src: Path, dst: Path) -> None:
         copy_file(path, dst / path.relative_to(src))
 
 
+def copy_git_file(ref: str, repo_path: str, dst: Path) -> None:
+    """Copy one exact file from a locked Git commit, independent of current branch contents."""
+    data = subprocess.check_output(["git", "show", f"{ref}:{repo_path}"], cwd=REPO)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(data)
+
+
 def git_head() -> str:
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip()
 
@@ -172,8 +179,9 @@ def main() -> int:
     )
 
     copy_tree(OCEAN / "learning/ocean-coast-r1", PACKAGE_ROOT / "learning/ocean-coast-r1")
-    copy_file(
-        REPO / "docs/mother_coordination/world_knowledge_lab_v1/adapters/OCEAN_COAST_ADAPTER_R1.md",
+    copy_git_file(
+        METHOD_COMMIT,
+        "docs/mother_coordination/world_knowledge_lab_v1/adapters/OCEAN_COAST_ADAPTER_R1.md",
         PACKAGE_ROOT / "method/OCEAN_COAST_ADAPTER_R1.md",
     )
 
