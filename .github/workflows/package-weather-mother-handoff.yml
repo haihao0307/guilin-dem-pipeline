@@ -1,0 +1,43 @@
+name: Package Weather Mother handoff
+on:
+  push:
+    branches: [handoff/weather-mother-r26-to-r27-full-20260912]
+    paths: [.github/workflows/package-weather-mother-handoff.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build package
+        shell: bash
+        run: |
+          set -euo pipefail
+          NAME=WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_TO_R27_2026-09-12
+          ROOT="$RUNNER_TEMP/$NAME"
+          mkdir -p "$ROOT"/{HANDOFF,CURRENT_R26,MOBILE_SAFE_LINE,FROZEN_R21_R22,FROZEN_R14,WORKFLOWS,MANIFEST}
+          cp -a "weather-mother/handoffs/$NAME/." "$ROOT/HANDOFF/"
+          cp "$ROOT/HANDOFF/verify_package.py" "$ROOT/verify_package.py"
+          cp -a weather-mother/full-weather-r26-observation-bandwidth-20260911/. "$ROOT/CURRENT_R26/"
+          cp -a weather-mother/r23-mobile-recovery-src "$ROOT/MOBILE_SAFE_LINE/"
+          cp -a weather-mother/full-weather-r23-mobile-cloud-first-20260910 "$ROOT/MOBILE_SAFE_LINE/"
+          cp -a weather-mother/aircraft-r21-20260908 "$ROOT/FROZEN_R21_R22/R21"
+          cp -a weather-mother/full-weather-r22-20260909 "$ROOT/FROZEN_R21_R22/R22"
+          cp -a weather-mother/cloud-world-r14-20260908/. "$ROOT/FROZEN_R14/"
+          cp .github/workflows/build-verify-weather-r2*.yml "$ROOT/WORKFLOWS/" || true
+          cp "$ROOT/HANDOFF/02_SOURCE_LOCKS.json" "$ROOT/MANIFEST/SOURCE_LOCKS.json"
+          printf '%s\n' 'R0.2 ten-cloud source is locked by commit and path in SOURCE_LOCKS.json.' > "$ROOT/MANIFEST/TEN_CLOUD_R02_POINTER.txt"
+          printf '%s\n' '{"r27Implemented":false,"productionReady":false}' > "$ROOT/MANIFEST/BUILD_RECEIPT.json"
+          (cd "$ROOT" && find . -print | sort > MANIFEST/TREE.txt)
+          (cd "$ROOT" && find . -type f ! -path './MANIFEST/SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum | sed 's#  ./#  #' > MANIFEST/SHA256SUMS.txt)
+          python3 "$ROOT/verify_package.py"
+          (cd "$RUNNER_TEMP" && zip -X -q -r "$NAME.zip" "$NAME")
+          cp "$RUNNER_TEMP/$NAME.zip" "weather-mother/handoffs/$NAME.zip"
+          sha256sum "weather-mother/handoffs/$NAME.zip" > "weather-mother/handoffs/$NAME.zip.sha256"
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "weather-mother/handoffs/$NAME.zip" "weather-mother/handoffs/$NAME.zip.sha256"
+          git commit -m 'handoff(weather-mother): publish R26 to R27 full package [skip ci]'
+          git push
