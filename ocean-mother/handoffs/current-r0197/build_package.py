@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -17,7 +16,7 @@ METHOD_COMMIT = "f254721b7e3e23cb35b7b660fa9441dc6cef9796"
 FIXED_ZIP_TIME = (2026, 9, 12, 0, 0, 0)
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[3]
+REPO = HERE.parents[2]
 OCEAN = REPO / "ocean-mother"
 BUILD_PARENT = OCEAN / ".handoff_build"
 PACKAGE_ROOT = BUILD_PARENT / PACKAGE_STEM
@@ -29,7 +28,16 @@ POINTER_PATH = OCEAN / "CURRENT_FULL_HANDOFF.md"
 
 FORBIDDEN_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".glb", ".gltf", ".fbx", ".obj"}
 SKIP_EXTS = FORBIDDEN_EXTS | {".zip"}
-SKIP_PARTS = {"node_modules", "__pycache__", ".pytest_cache", "playwright-browsers", ".git"}
+SKIP_PARTS = {
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    "playwright-browsers",
+    ".git",
+    "screenshots",
+    "concept-art",
+    "concept_art",
+}
 
 
 def sha256(path: Path) -> str:
