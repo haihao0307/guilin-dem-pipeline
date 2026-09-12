@@ -1,0 +1,45 @@
+name: Landscape Mother canonical single package
+
+on:
+  push:
+    branches:
+      - handoff/landscape-mother-current
+    paths:
+      - .github/workflows/landscape-mother-current-package.yml
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/landscape-mother-current
+          fetch-depth: 0
+
+      - name: Build canonical full package
+        run: python3 package_sources/landscape-mother-current/build_package.py
+
+      - name: Verify archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find handoffs/landscape-mother/CURRENT -maxdepth 1 -name '*.zip' | wc -l)" -eq 1
+          unzip -t handoffs/landscape-mother/CURRENT/Landscape_Mother_Current_Unique_Full_Handoff_2026-09-12.zip
+          rm -rf /tmp/landscape-package-check
+          mkdir -p /tmp/landscape-package-check
+          unzip -q handoffs/landscape-mother/CURRENT/Landscape_Mother_Current_Unique_Full_Handoff_2026-09-12.zip -d /tmp/landscape-package-check
+          python3 /tmp/landscape-package-check/Landscape_Mother_Current_Unique_Full_Handoff_2026-09-12/verify_package.py
+
+      - name: Commit one active package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A handoffs/landscape-mother/CURRENT
+          git commit -m 'handoff(landscape): publish one canonical full package'
+          git push origin HEAD:handoff/landscape-mother-current
