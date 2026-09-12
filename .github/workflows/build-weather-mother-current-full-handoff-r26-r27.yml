@@ -1,0 +1,32 @@
+name: Build Weather Mother current full handoff
+
+on:
+  push:
+    branches:
+      - handoff/weather-mother-current-full-r26-r27-pending-20260911
+    paths:
+      - .github/workflows/build-weather-mother-current-full-handoff-r26-r27.yml
+      - weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFV_R26_R27_PENDING_2026-09-11/**
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build and verify clean package
+        shell: bash
+        run: bash weather-mother/handoffs/WEASHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/build_package.sh
+
+      - name: Commit package and receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Weather Mother CI"
+0L@
