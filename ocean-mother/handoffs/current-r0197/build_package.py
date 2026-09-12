@@ -96,8 +96,9 @@ def write_json(path: Path, data: object) -> None:
 def build_manifest() -> dict:
     entries = []
     total = 0
+    root_manifest = PACKAGE_ROOT / "MANIFEST.json"
     for path in sorted(PACKAGE_ROOT.rglob("*")):
-        if not path.is_file() or path.name == "MANIFEST.json":
+        if not path.is_file() or path == root_manifest:
             continue
         rel = path.relative_to(PACKAGE_ROOT).as_posix()
         size = path.stat().st_size
