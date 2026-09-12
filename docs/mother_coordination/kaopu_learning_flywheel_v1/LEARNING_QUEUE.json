@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-learning-queue/r1",
-  "updatedAt": "2026-09-12",
+  "updatedAt": "2026-09-13",
   "policy": {
     "chooseOneQuestionPerCycle": true,
     "preferPrimarySources": true,
@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R44 locked the principal handoff, codec/range/appearance/SH/antialias/sorting/memory and full-covariance parameter controls. R45 connected the fixed Niantic 24-bit/12-fractional-bit position codec to Three.js r186 center projection and hard z cull. A source-faithful 1,000,000-value sweep confirmed a 0.0001220703125-storage-unit component half-step; -O0/-O2 results were byte-identical. In a 390x844, 60-degree vertical-FOV identity-view fixture, near-half-step lateral errors on both axes produced 12.60465, 1.260465, 0.126170 and 0.012617 pixels of center displacement at depths about 0.01, 0.1, 1 and 10 storage units. A source z=-0.00999 was hard-culled by r186 while its decoded z=-0.010009765625 passed that hard cull, proving a boundary decision can flip despite the small parameter error. Pixel impact therefore depends on focal length, view depth, off-axis ratio, reversible delivery normalization and visibility margins. These are CPU projection contracts, not GPU raster, covariance-footprint, device or human acceptance.",
+      "progress": "R33-R45 locked the principal handoff, codec/range/appearance/SH/antialias/sorting/memory, full-covariance and center-projection controls. R46 replayed the fixed Three.js r186 projected-covariance/eigen-axis path, including its 0.3 kernel, 1e-7 eigen-radius floor and 1024-pixel scale cap, after source-faithful Niantic scale/quaternion quantization. One million deterministic off-axis cases produced byte-identical -O0/-O2 results. The stress fixture observed maxima of 17.8401% projected-covariance spectral error, 8.4801% raw major-axis scale error, 27.5374% raw minor-axis scale error and 40.6212 degrees principal-axis error among sufficiently anisotropic uncapped samples; these are fixture observations, not universal bounds. A cap counterexample hid 46.0678 pixels of raw major-axis difference because both displayed scales clamped to 1024. A tiny 0.003419-pixel base footprint became about 0.548 pixels after the kernel. Static source analysis also proves the declared angle fallback is unreachable for finite values because sqrt(1e-7) exceeds its 1e-5 threshold. Real assets, composited pixels, GPU/browser/device and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -40,7 +40,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_ZSTD_WASM_MEMORY_R42.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_QUATERNION_QUANTIZATION_R43.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_COVARIANCE_QUANTIZATION_R44.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_POSITION_PROJECTION_R45.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_POSITION_PROJECTION_R45.md",
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_ELLIPSE_PROJECTION_R46.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -55,7 +56,8 @@
         "references/gaussian-zstd-wasm-memory-r42/SOURCE_LOCK.json",
         "references/gaussian-quaternion-quantization-r43/SOURCE_LOCK.json",
         "references/gaussian-covariance-quantization-r44/SOURCE_LOCK.json",
-        "references/gaussian-position-projection-r45/SOURCE_LOCK.json"
+        "references/gaussian-position-projection-r45/SOURCE_LOCK.json",
+        "references/gaussian-ellipse-projection-r46/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -117,7 +119,7 @@
       "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
       "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
       "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
-      "nextGate": "Before a real-photo pilot, extend the fixed r186 CPU fixture from center position to projected 2D covariance/ellipse axes, including the 0.3 kernel, 1024-pixel cap and boundary discontinuities. When the user supplies one small static-object photo set, validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R45 gates. Record the reversible delivery normalization from canonical/world units to SPZ storage units, camera matrices, viewport, minimum depth and visibility-boundary margins. Compare float-checkpoint versus decoded position/full covariance and independent fixed views, then measure actual r186 sorting, memory, frame time and failure behavior on macOS and 390x844 iPhone/Safari before human acceptance. Do not use R44/R45 synthetic bounds as visual thresholds, alter Canonical Truth, retire RealityScan, modify a production Mother, or claim Object DNA equivalence.",
+      "nextGate": "Before a real-photo pilot, build a minimal fixed-source CPU reference compositor for a few splats that combines R35 DC handling, R38 kernel/alpha behavior, R39 order and R46 projected ellipse parameters. Keep it explicitly separate from GPU/device acceptance. When the user supplies one small static-object photo set, run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R46 gates; record reversible delivery normalization, matrices, viewport, depth/boundary margins, cap/kernel incidence, raw and displayed ellipse axes, fixed-view pixels, sorting, memory and target-device behavior. Do not infer covariance fidelity from equal capped/kernel-dominated displayed sizes, use synthetic results as visual thresholds, alter Canonical Truth, retire RealityScan, modify a production Mother, or claim Object DNA equivalence.",
       "quaternionQuantizationProbe": "PROBES/gaussian_quaternion_quantization_r43.cc",
       "quaternionQuantizationProbeResult": "PROBES/gaussian_quaternion_quantization_result_r43.json",
       "candidateQuaternionQuantizationGate": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
@@ -135,7 +137,13 @@
       "candidatePositionProjectionGate": "ADAPTERS/gaussian_position_projection_gate_r45.mjs",
       "currentBestViewPositionProjectionExtension": "CURRENT_BEST_VIEW_R45_GAUSSIAN_POSITION_PROJECTION.md",
       "toolRoutingPositionProjectionExtension": "TOOL_ROUTING_R45_GAUSSIAN_POSITION_PROJECTION.json",
-      "motherRoutingPositionProjectionExtension": "MOTHER_ROUTING_R45_GAUSSIAN_POSITION_PROJECTION.json"
+      "motherRoutingPositionProjectionExtension": "MOTHER_ROUTING_R45_GAUSSIAN_POSITION_PROJECTION.json",
+      "ellipseProjectionProbe": "PROBES/gaussian_ellipse_projection_r46.cc",
+      "ellipseProjectionProbeResult": "PROBES/gaussian_ellipse_projection_result_r46.json",
+      "candidateEllipseProjectionGate": "ADAPTERS/gaussian_ellipse_projection_gate_r46.mjs",
+      "currentBestViewEllipseProjectionExtension": "CURRENT_BEST_VIEW_R46_GAUSSIAN_ELLIPSE_PROJECTION.md",
+      "toolRoutingEllipseProjectionExtension": "TOOL_ROUTING_R46_GAUSSIAN_ELLIPSE_PROJECTION.json",
+      "motherRoutingEllipseProjectionExtension": "MOTHER_ROUTING_R46_GAUSSIAN_ELLIPSE_PROJECTION.json"
     },
     {
       "id": "LQ-TELLUX-001",
