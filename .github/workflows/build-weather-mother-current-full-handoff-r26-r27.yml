@@ -6,7 +6,7 @@ on:
       - handoff/weather-mother-current-full-r26-r27-pending-20260911
     paths:
       - .github/workflows/build-weather-mother-current-full-handoff-r26-r27.yml
-      - weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFV_R26_R27_PENDING_2026-09-11/**
+      - weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/**
 
 permissions:
   contents: write
@@ -22,11 +22,21 @@ jobs:
 
       - name: Build and verify clean package
         shell: bash
-        run: bash weather-mother/handoffs/WEASHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/build_package.sh
+        run: bash weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/build_package.sh
 
       - name: Commit package and receipts
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "Weather Mother CI"
-0L@
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add \
+            weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11.zip \
+            weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/PACKAGE_BUILD.json \
+            weather-mother/handoffs/WEATHER_MOTHER_CURRENT_FULL_HANDOFF_R26_R27_PENDING_2026-09-11/PACKAGE_SHA256.txt
+          if git diff --cached --quiet; then
+            echo "No package changes."
+          else
+            git commit -m "package(weather-mother): current full R26 R27-pending handoff [skip ci]"
+            git push origin HEAD:handoff/weather-mother-current-full-r26-r27-pending-20260911
+          fi
