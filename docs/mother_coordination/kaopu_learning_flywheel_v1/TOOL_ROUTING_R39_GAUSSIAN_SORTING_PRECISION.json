@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu-tool-routing/r39",
+  "status": "candidate",
+  "inherits": "TOOL_ROUTING_R38_GAUSSIAN_ANTIALIAS_HANDOFF.json",
+  "tools": [
+    {
+      "id": "TOOL-R39-THREE-R186-COUNTING-SORT",
+      "authority": "official-primary-source-executed-cpu-path",
+      "repository": "mrdoob/three.js",
+      "commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "version": "0.186.0",
+      "useFor": ["approximate depth-bin semantics", "actual WebGL CPU fallback order", "same-bin negative control"],
+      "notFor": ["exact depth order", "GPU same-bin order claim", "visual acceptance"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R39-THREE-R186-SORT-DECISION",
+      "authority": "official-primary-source-executed-cpu-decision-path",
+      "repository": "mrdoob/three.js",
+      "commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "useFor": ["angular resort-threshold regression", "small-angle stale-order control"],
+      "notFor": ["GPU raster output", "real-asset artifact frequency", "target-device performance"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R39-SORTING-GATE",
+      "authority": "candidate-derived-adapter",
+      "path": "ADAPTERS/gaussian_sorting_gate_r39.mjs",
+      "useFor": ["fixed-camera depth-bin analysis", "separate evidence-status enforcement"],
+      "notFor": ["exact sorting", "choosing a visual threshold", "performance prediction"],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R39-SORTING-PROBE",
+      "authority": "derived-executable-evidence",
+      "paths": [
+        "PROBES/gaussian_sorting_precision_r39.mjs",
+        "PROBES/run_gaussian_sorting_precision_r39.sh",
+        "PROBES/gaussian_sorting_precision_result_r39.json"
+      ],
+      "useFor": ["five-check sorting regression", "same-bin and small-angle order-inversion controls"],
+      "notFor": ["real reconstruction", "GPU rendering", "macOS/iPhone/Safari acceptance", "human acceptance"],
+      "observationRootEligible": false
+    }
+  ],
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}
+

@@ -26,14 +26,15 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R37 locked the principal COLMAP/Brush/SPZ/Three contracts, actual coordinate/covariance/SH path, range/envelope/DC/direction gates and two-stage SH quantization bounds. R38 separated training mode, SPZ antialias flag and viewer capability. Seven CPU checks passed. Actual Niantic PLY ingestion/default conversion skipped a Brush-shaped `SplatRenderMode: mip` comment and emitted v4 flag 0; explicitly setting `GaussianCloud.antialiased=true` emitted and decoded flag 1. Actual Three r186 loading collapsed otherwise identical false/true flag files to identical geometry and exposed no mode. Its renderer source unconditionally applies the 0.3 kernel and determinant opacity compensation: a non-AA covariance control produced alpha scale 0.7692307692 instead of 1, while an ordinary positive AA equation aligned; a singular control differed 0 versus GraphDECO's 0.005 floor. These are metadata/formula results, not GPU pixels. No photos, COLMAP/Brush training, GPU viewer, Safari/iPhone or human visual acceptance occurred.",
+      "progress": "R33-R38 locked the principal handoff, range/envelope/DC/SH/antialias contracts and executable codec/viewer controls. R39 tested Three r186 approximate sorting. Five checks passed. With depth range 0-100, depths 50 and 50.000001 shared bin 2047 because 4096 bins give nominal step 0.02442002442; actual CPU CountingSort retained source order [0,1] although exact back-to-front order was [1,0]. A synthetic alpha-0.5 red/blue compositing control changed RGB by up to 0.25, illustrating order sensitivity but not a real pixel threshold. Actual GaussianSplat sort-decision execution showed that its 0.9995 direction threshold equals about 1.811927 degrees: a one-degree yaw inverted exact depth order but did not resort, while two degrees did. GPU sorting/rasterization, real-asset collision frequency, photos, COLMAP/Brush training, Safari/iPhone and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_APPEARANCE_R35.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_DIRECTION_R36.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SH_QUANTIZATION_R37.md",
-        "LEARNING_LOG/2026-09-12_GAUSSIAN_ANTIALIAS_HANDOFF_R38.md"
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_ANTIALIAS_HANDOFF_R38.md",
+        "LEARNING_LOG/2026-09-12_GAUSSIAN_SORTING_PRECISION_R39.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -41,7 +42,8 @@
         "references/gaussian-spz-appearance-r35/SOURCE_LOCK.json",
         "references/gaussian-sh-direction-r36/SOURCE_LOCK.json",
         "references/gaussian-sh-quantization-r37/SOURCE_LOCK.json",
-        "references/gaussian-antialias-handoff-r38/SOURCE_LOCK.json"
+        "references/gaussian-antialias-handoff-r38/SOURCE_LOCK.json",
+        "references/gaussian-sorting-r39/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -79,7 +81,13 @@
       "currentBestViewAntialiasHandoffExtension": "CURRENT_BEST_VIEW_R38_GAUSSIAN_ANTIALIAS_HANDOFF.md",
       "toolRoutingAntialiasHandoffExtension": "TOOL_ROUTING_R38_GAUSSIAN_ANTIALIAS_HANDOFF.json",
       "motherRoutingAntialiasHandoffExtension": "MOTHER_ROUTING_R38_GAUSSIAN_ANTIALIAS_HANDOFF.json",
-      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; declare frame/layout/center-minus-camera and trainingRenderMode; explicitly set and post-verify SPZ antialias bit 0x1 rather than relying on the PLY comment; retain R34-R38 gates; record actual learned SH/DC distributions and fail outside declared domains; compare decoded coefficients using R37 bounds; compare an independent float reference against fixed-view r186 GPU images including small/singular footprints; then test macOS and 390x844 iPhone/Safari performance, sorting and human acceptance. Keep a default/non-AA checkpoint out of native r186 reference use unless an explicit compatible viewer mode exists. Do not reuse probe thresholds as acceptance thresholds, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
+      "sortingPrecisionProbe": "PROBES/gaussian_sorting_precision_r39.mjs",
+      "sortingPrecisionProbeResult": "PROBES/gaussian_sorting_precision_result_r39.json",
+      "candidateSortingGate": "ADAPTERS/gaussian_sorting_gate_r39.mjs",
+      "currentBestViewSortingExtension": "CURRENT_BEST_VIEW_R39_GAUSSIAN_SORTING_PRECISION.md",
+      "toolRoutingSortingExtension": "TOOL_ROUTING_R39_GAUSSIAN_SORTING_PRECISION.json",
+      "motherRoutingSortingExtension": "MOTHER_ROUTING_R39_GAUSSIAN_SORTING_PRECISION.json",
+      "nextGate": "When the user supplies one small static-object photo set, run a fixed-source pilot: validate photos/masks; solve COLMAP poses with registration/reprojection and measured-scale evidence; train one explicitly recorded Brush Mip checkpoint; preserve uncompressed PLY and cleanup log; explicitly set/post-verify SPZ bit 0x1; retain R34-R39 gates; record learned SH/DC/footprint distributions; compare decoded coefficients and independent float-reference fixed views; report actual r186 depth range/bin width and non-equal-depth collisions at fixed cameras; sweep camera motion in sub-1.812-degree steps and compare actual GPU images; then test macOS and 390x844 iPhone/Safari memory, frame time, sorting artifacts and human acceptance. Do not treat the synthetic 0.25 RGB control as an acceptance threshold, adopt an exact-sort rewrite without cost evidence, retire RealityScan, alter a production Mother, or claim Object DNA equivalence."
     },
     {
       "id": "LQ-TELLUX-001",

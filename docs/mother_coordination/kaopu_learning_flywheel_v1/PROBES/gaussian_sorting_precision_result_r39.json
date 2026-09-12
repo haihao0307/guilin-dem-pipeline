@@ -1,0 +1,92 @@
+{
+  "schema": "kaopu-gaussian-sorting-precision-probe/r39",
+  "status": "Candidate-pass",
+  "sourceLocks": {
+    "three": "148ef33ecb6d2502ff796d4554abd1549c95d519"
+  },
+  "testsRun": 5,
+  "failures": [],
+  "tests": [
+    {
+      "name": "actual Three r186 CPU CountingSort retains input order inside one bin",
+      "pass": true,
+      "detail": {
+        "depths": [50, 50.000001],
+        "bins": [2047, 2047],
+        "nominalDepthStep": 0.02442002442002442,
+        "approximate": [0, 1],
+        "exactBackToFront": [1, 0]
+      }
+    },
+    {
+      "name": "same-bin order can change transparent color while final alpha stays equal",
+      "pass": true,
+      "detail": {
+        "exactBackToFrontRgba": [0.5, 0, 0.25, 0.75],
+        "collidedInputOrderRgba": [0.25, 0, 0.5, 0.75],
+        "maxRgbDifference": 0.25
+      }
+    },
+    {
+      "name": "candidate gate keeps bin precision separate from GPU and target-device evidence",
+      "pass": true,
+      "detail": {
+        "errors": [
+          "non-equal-depths-share-counting-sort-bin",
+          "fixed-view-gpu-sort-comparison-missing",
+          "target-device-sort-evidence-missing"
+        ],
+        "analysis": {
+          "bins": [2047, 2047],
+          "nominalDepthStep": 0.02442002442002442,
+          "nonEqualDepthCollisions": [
+            {
+              "bin": 2047,
+              "indices": [0, 1],
+              "depthSpan": 9.999999974752427e-7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "actual GaussianSplat skips a one-degree resort although exact depth order flips",
+      "pass": true,
+      "detail": {
+        "threshold": 0.9995,
+        "thresholdDegrees": 1.8119271380739088,
+        "initialDepths": [1.001, 1],
+        "rotatedDepths": [0.9991023022078191, 1.0015929358001197],
+        "initialOrder": [0, 1],
+        "retainedOrder": [0, 1],
+        "exactRotatedOrder": [1, 0],
+        "resortDispatched": false
+      }
+    },
+    {
+      "name": "actual GaussianSplat dispatches after a two-degree direction change from last sort",
+      "pass": true,
+      "detail": {
+        "twoDegreeDot": 0.9993908270190958,
+        "threshold": 0.9995,
+        "resortDispatched": true,
+        "order": [1, 0]
+      }
+    }
+  ],
+  "evidenceLimits": {
+    "deterministicSyntheticSplatsOnly": true,
+    "actualThreeCountingSortCpuExecuted": true,
+    "actualThreeGaussianSplatSortDecisionExecuted": true,
+    "webglFallbackSortPathExercisedWithoutGpuDraw": true,
+    "gpuCountingSortExecuted": false,
+    "rasterizationExecuted": false,
+    "userPhotosAvailable": false,
+    "targetDeviceTested": false,
+    "humanAcceptancePerformed": false
+  },
+  "interpretation": "The controls prove exact depth order is not guaranteed by r186 approximate sorting; the RGBA values illustrate order sensitivity and are not a real-asset image metric.",
+  "frozenR1Changed": false,
+  "productionMotherChanged": false
+}
+
