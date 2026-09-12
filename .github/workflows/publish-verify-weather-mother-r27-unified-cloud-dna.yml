@@ -1,0 +1,184 @@
+name: Publish and verify Weather Mother R27 unified cloud DNA
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r27-unified-cloud-dna-20260912
+    paths:
+      - .github/workflows/publish-verify-weather-mother-r27-unified-cloud-dna.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OUT_DIR: weather-mother/full-weather-r27-unified-cloud-dna-20260912
+      EXPECTED_SHA256: a238fca33599b85361704e8e4aa2233ba5aaeb5d988ea048aa0ab018547bb188
+      EXPECTED_BYTES: '37702'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble immutable single-file R27
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT_DIR"
+          cat weather-mother/r27-parts/index.html.gz.b64.part-* | base64 -d | gzip -d > "$OUT_DIR/index.html"
+          test "$(wc -c < "$OUT_DIR/index.html" | tr -d ' ')" = "$EXPECTED_BYTES"
+          test "$(sha256sum "$OUT_DIR/index.html" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          grep -Fq 'Weather Mother · Cloud DNA Flight R27' "$OUT_DIR/index.html"
+          grep -Fq 'sameCloudForObserveAndFlight:true' "$OUT_DIR/index.html"
+          grep -Fq 'Cloud Seed' "$OUT_DIR/index.html"
+          grep -Fq 'Detail Seed' "$OUT_DIR/index.html"
+          grep -Fq 'physicalRainClaim:false' "$OUT_DIR/index.html"
+
+      - name: Freeze page commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "$OUT_DIR/index.html"
+          git rm -r weather-mother/r27-parts
+          git commit -m 'publish(weather-mother): R27 unified cloud DNA candidate [skip ci]'
+          git push origin HEAD:feature/weather-mother-r27-unified-cloud-dna-20260912
+          git rev-parse HEAD > /tmp/page_commit.txt
+
+      - name: Wait for fixed raw.githack page
+        shell: bash
+        run: |
+          set -euo pipefail
+          PAGE_COMMIT=$(cat /tmp/page_commit.txt)
+          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${PAGE_COMMIT}/${OUT_DIR}/index.html"
+          echo "PAGE_COMMIT=$PAGE_COMMIT" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
+          status=''
+          for attempt in $(seq 1 15); do
+            status=$(curl -L --silent --show-error --connect-timeout 15 --max-time 60 -w '%{http_code}' -o /tmp/public-r27.html "$PUBLIC_URL" || true)
+            if [ "$status" = '200' ]; then break; fi
+            sleep 8
+          done
+          test "$status" = '200'
+          test "$(sha256sum /tmp/public-r27.html | awk '{print $1}')" = "$EXPECTED_SHA256"
+          test "$(wc -c < /tmp/public-r27.html | tr -d ' ')" = "$EXPECTED_BYTES"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Chromium browser harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet playwright==1.55.0 pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Public browser QA at 390x844 and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/qa_r27.py <<'PY'
+          import base64, hashlib, io, json, os
+          from pathlib import Path
+          from PIL import Image, ImageFilter
+          from playwright.sync_api import sync_playwright
+
+          url=os.environ['PUBLIC_URL']
+          out=Path(os.environ['GITHUB_WORKSPACE'])/os.environ['OUT_DIR']
+          report={
+            'schema':'weather-mother-r27-unified-cloud-dna/public-qa@1',
+            'pageCommit':os.environ['PAGE_COMMIT'],
+            'publicURL':url,
+            'artifactBytes':int(os.environ['EXPECTED_BYTES']),
+            'artifactSHA256':os.environ['EXPECTED_SHA256'],
+            'realIPhoneAcceptance':False,
+            'visualAcceptance':False,
+            'productionReady':False
+          }
+
+          def decode(url): return base64.b64decode(url.split(',',1)[1])
+          def low_metrics(a,b):
+            ia=Image.open(io.BytesIO(a)).convert('L').resize((64,40)).filter(ImageFilter.GaussianBlur(3))
+            ib=Image.open(io.BytesIO(b)).convert('L').resize((64,40)).filter(ImageFilter.GaussianBlur(3))
+            pa=list(ia.getdata());pb=list(ib.getdata());ma=sum(pa)/len(pa);mb=sum(pb)/len(pb)
+            va=sum((x-ma)**2 for x in pa);vb=sum((x-mb)**2 for x in pb);cov=sum((x-ma)*(y-mb) for x,y in zip(pa,pb))
+            return {'correlation':cov/((va*vb)**.5) if va and vb else 1,'mae':sum(abs(x-y) for x,y in zip(pa,pb))/len(pa)}
+
+          with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True,args=['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
+            desktop=browser.new_page(viewport={'width':640,'height':400},device_scale_factor=1)
+            errors=[];console=[]
+            desktop.on('pageerror',lambda e:errors.append(str(e)))
+            desktop.on('console',lambda m:console.append(m.text) if m.type=='error' else None)
+            desktop.goto(url+'?qa=desktop',wait_until='domcontentloaded',timeout=120000)
+            desktop.wait_for_function('window.WeatherR27 && WeatherR27.qa.ready',timeout=120000)
+            desktop.evaluate("document.querySelector('[data-quality=mobile]').click();WeatherR27.WorldClock.playing=false;WeatherR27.WorldClock.time=4")
+            desktop.wait_for_timeout(250)
+            base=desktop.evaluate("() => ({qa:WeatherR27.qa,overflow:{x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight},seed:WeatherR27.seedInvariantReport(),queryObserve:WeatherR27.CloudQuery.sample([0,3.8,0])})")
+            hashes={}
+            for i in range(10):
+              desktop.evaluate(f'WeatherR27.setType({i});WeatherR27.RenderCache.dirty=true')
+              desktop.wait_for_timeout(100)
+              hashes[str(i)]=hashlib.sha256(decode(desktop.evaluate('WeatherR27.capture()'))).hexdigest()[:16]
+            desktop.evaluate("WeatherR27.setType(0);WeatherR27.setMode('observe');WeatherR27.setSeeds(73017,991);WeatherR27.RenderCache.dirty=true")
+            desktop.wait_for_timeout(120);a=decode(desktop.evaluate('WeatherR27.capture()'))
+            desktop.evaluate("WeatherR27.setSeeds(73017,992);WeatherR27.RenderCache.dirty=true")
+            desktop.wait_for_timeout(120);b=decode(desktop.evaluate('WeatherR27.capture()'))
+            desktop.evaluate("WeatherR27.setSeeds(73018,992);WeatherR27.RenderCache.dirty=true")
+            desktop.wait_for_timeout(120);c=decode(desktop.evaluate('WeatherR27.capture()'))
+            desktop.evaluate("WeatherR27.setMode('flight')")
+            query_flight=desktop.evaluate('WeatherR27.CloudQuery.sample([0,3.8,0])')
+            desktop.screenshot(path=str(out/'PUBLIC_R27_DESKTOP_640x400.png'))
+            report['desktop']={
+              **base,'queryFlight':query_flight,'sameQueryAcrossModes':base['queryObserve']==query_flight,
+              'tenUniqueCloudGenera':len(set(hashes.values())),'hashes':hashes,
+              'detailSeed':{'changesPixels':hashlib.sha256(a).digest()!=hashlib.sha256(b).digest(),**low_metrics(a,b)},
+              'objectSeed':{'changesPixels':hashlib.sha256(b).digest()!=hashlib.sha256(c).digest(),**low_metrics(b,c)},
+              'pageErrors':errors,'consoleErrors':console
+            }
+            mobile=browser.new_page(viewport={'width':390,'height':844},device_scale_factor=2,is_mobile=True,has_touch=True)
+            mobile_errors=[];mobile.on('pageerror',lambda e:mobile_errors.append(str(e)))
+            mobile.goto(url+'?qa=mobile',wait_until='domcontentloaded',timeout=120000)
+            mobile.wait_for_function('window.WeatherR27 && WeatherR27.qa.ready',timeout=120000)
+            mobile.evaluate('WeatherR27.WorldClock.playing=false')
+            before=mobile.evaluate("() => ({qa:WeatherR27.qa,pos:[...WeatherR27.ObserverState.position],overflow:{x:document.documentElement.scrollWidth-innerWidth,y:document.documentElement.scrollHeight-innerHeight},panel:getComputedStyle(document.getElementById('panel')).display})")
+            mobile.click('#mobileToggle');mobile.wait_for_timeout(100);panel=mobile.evaluate("getComputedStyle(document.getElementById('panel')).display");mobile.click('#mobileToggle')
+            mobile.click('#flightBtn');mobile.locator('[data-key=d]').dispatch_event('pointerdown',{'pointerId':7,'clientX':20,'clientY':20});mobile.wait_for_timeout(350);mobile.locator('[data-key=d]').dispatch_event('pointerup',{'pointerId':7,'clientX':20,'clientY':20})
+            after=mobile.evaluate("() => ({pos:[...WeatherR27.ObserverState.position],yaw:WeatherR27.ObserverState.yaw,roll:WeatherR27.ObserverState.roll,mode:WeatherR27.ObserverState.mode})")
+            mobile.screenshot(path=str(out/'PUBLIC_R27_MOBILE_390x844.png'))
+            report['mobile390x844']={'before':before,'panelAfter':panel,'after':after,'errors':mobile_errors,'horizontalOverflow':before['overflow']['x']}
+            browser.close()
+
+          report['overallPass']=(
+            report['desktop']['tenUniqueCloudGenera']==10 and
+            report['desktop']['sameQueryAcrossModes'] and
+            report['desktop']['seed']['identical'] and
+            report['desktop']['detailSeed']['changesPixels'] and
+            report['desktop']['detailSeed']['correlation']>0.995 and
+            report['desktop']['objectSeed']['changesPixels'] and
+            report['desktop']['objectSeed']['correlation']<0.995 and
+            report['mobile390x844']['panelAfter']=='block' and
+            report['mobile390x844']['horizontalOverflow']==0 and
+            report['mobile390x844']['after']['mode']=='flight' and
+            not report['desktop']['pageErrors'] and not report['desktop']['consoleErrors'] and not report['mobile390x844']['errors']
+          )
+          (out/'PUBLIC_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          if not report['overallPass']: raise SystemExit(1)
+          PY
+          python /tmp/qa_r27.py
+
+      - name: Commit public evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Weather Mother CI'
+          git config user.email 'weather-mother-ci@users.noreply.github.com'
+          git add "$OUT_DIR/PUBLIC_QA.json" "$OUT_DIR/PUBLIC_R27_DESKTOP_640x400.png" "$OUT_DIR/PUBLIC_R27_MOBILE_390x844.png"
+          git commit -m 'qa(weather-mother): prove fixed public R27 unified cloud DNA [skip ci]'
+          git push origin HEAD:feature/weather-mother-r27-unified-cloud-dna-20260912
