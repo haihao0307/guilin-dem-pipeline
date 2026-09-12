@@ -1,0 +1,73 @@
+{
+  "schema": "wenzhou-current-full-handoff-state/v1",
+  "date": "2026-09-12",
+  "project": "小温州 / 温州世界生产线",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "handoffBranch": "handoff/wenzhou-r3-8-current-full-20260912",
+  "lastVerifiedVisual": {
+    "version": "R3.7",
+    "commit": "81354b32acedf158490203f89e4cda5c3449e3a0",
+    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html",
+    "qaRunId": 34577823936,
+    "localChromium": true,
+    "fixedRawGithackChromium": true,
+    "visualAcceptedByUser": false,
+    "productionReady": false,
+    "realIphoneVerified": false
+  },
+  "currentWork": {
+    "version": "R3.8-in-progress",
+    "sourceCommitBeforeHandoffDocs": "9339ba3e48c2db41b8f08690e118a9202299f1db",
+    "branch": "feature/wenzhou-r3-8-soil-profile-water-20260911",
+    "wrbBrowserContextBuilt": true,
+    "wrbBuildRunId": 34578859120,
+    "r3_8DisplayIntegrated": false,
+    "r3_8BrowserQaPassed": false,
+    "sixDepthSoilProfileIntegrated": false,
+    "jrcWaterHistoryIntegrated": false
+  },
+  "r3_7Soil": {
+    "resolutionM": 250,
+    "browserDepth": "0-5cm",
+    "properties": ["clay", "sand", "silt", "soc", "phh2o", "bdod", "cfvo", "wv0033"],
+    "medianAndUncertaintySeparate": true,
+    "uncertaintySemantics": "relative index",
+    "browserPayloadBytes": 29259516,
+    "canonicalTruth": false,
+    "fieldObservation": false,
+    "heightDisplacement": false
+  },
+  "r3_8Wrb": {
+    "officialMostProbableLegendClasses": 30,
+    "officialCategoricalSemantics": "nearest-neighbour categorical path",
+    "probabilityLayerCount": 30,
+    "postAlignmentArgmaxRole": "derived audit/classification after continuous probability alignment",
+    "officialVsPostAlignmentArgmaxMismatchApprox": 0.061,
+    "importantCorrection": "The archived aligned MostProbable categorical raster matches an independent nearest-neighbour reprojection pixel-for-pixel. The mismatch with post-alignment argmax is an operator-order difference, not evidence that the categorical archive is corrupted.",
+    "canonicalTruth": false,
+    "fieldClassificationTruth": false
+  },
+  "worldScoreDecision": {
+    "singleWorldScore": true,
+    "soilIsSeparateWorldScore": false,
+    "wrbIsSeparateWorldScore": false,
+    "jrcIsSeparateWorldScore": false,
+    "rule": "Independent sources remain separate as evidence voices, but semantic integration and generation/造波 are performed inside one shared world score / 大合唱. Runtime loads only the voices needed by the current observation or task."
+  },
+  "keep": [
+    "R3.2-R3.7 fixed historical versions",
+    "R3.4 permanent environmental evidence release",
+    "R3.5 permanent OSM evidence release",
+    "R3.7 permanent SoilGrids evidence release",
+    "R3.7 verified preview and QA evidence",
+    "R3.8 audited WRB browser context"
+  ],
+  "doNotClaim": [
+    "SoilGrids as 12.5m soil truth",
+    "OSM road centerline as physical road width",
+    "OSM footprint as known building height",
+    "JRC historical surface-water as current water level",
+    "demo sea as tide/MSL/vertical datum/ocean physics",
+    "R3.8 as verified visual candidate before display integration and QA"
+  ]
+}
