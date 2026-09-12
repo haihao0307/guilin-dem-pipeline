@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R47 locked the principal handoff, codec, appearance, sorting, memory, covariance, projection and continuous-compositor controls. R48 executed the exact R47 two-splat analytic equations in an independent desktop OpenGL shader on a surfaceless Mesa llvmpipe RGBA8 framebuffer, with normal source-over blending, dither off and no sRGB/tone mapping. Two runs were byte-identical. The backend preserved a material reference/candidate maximum channel difference of 0.0823529 versus the continuous CPU value 0.0851303. Backend-versus-continuous maxima were 0.00497459 reference and 0.00537919 candidate. A naive per-draw UNORM8 CPU oracle matched the reference within one code but needed two codes for the candidate, rejecting exact backend prediction from generic rounding. This is software-backend framebuffer evidence, not direct Three.js TSL, hardware GPU, browser/device, real-asset or human acceptance.",
+      "progress": "R33-R48 locked the principal handoff, codec, appearance, sorting, memory, covariance, projection, continuous-compositor and software-RGBA8 controls. R49 added an RGBA32F texture target on the same Mesa llvmpipe backend to isolate float evaluation from final-target quantization. The float framebuffer matched continuous CPU within 9.94916e-8 reference and 6.48086e-8 candidate, with zero coverage-mask mismatches. The reference/candidate maximum was 0.0851303041 in RGBA32F versus 0.0851302859 on CPU, only 1.82347e-8 apart. The same backend's RGBA8 target differed from RGBA32F by up to 0.00497459 and 0.00537919 and reduced the combined maximum to 0.0823529. Thus the R48 discrepancy is dominated by final-target storage/blending for this fixture; a smaller quantized delta does not prove higher fidelity. This remains an independent llvmpipe shader, not direct Three.js TSL, WebGL/WebGPU, hardware GPU, browser/device, real-asset or human acceptance.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -43,7 +43,8 @@
         "LEARNING_LOG/2026-09-12_GAUSSIAN_POSITION_PROJECTION_R45.md",
         "LEARNING_LOG/2026-09-13_GAUSSIAN_ELLIPSE_PROJECTION_R46.md",
         "LEARNING_LOG/2026-09-13_GAUSSIAN_REFERENCE_COMPOSITOR_R47.md",
-        "LEARNING_LOG/2026-09-13_GAUSSIAN_SOFTWARE_GL_COMPOSITOR_R48.md"
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_SOFTWARE_GL_COMPOSITOR_R48.md",
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_FLOAT_TARGET_R49.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -61,7 +62,8 @@
         "references/gaussian-position-projection-r45/SOURCE_LOCK.json",
         "references/gaussian-ellipse-projection-r46/SOURCE_LOCK.json",
         "references/gaussian-reference-compositor-r47/SOURCE_LOCK.json",
-        "references/gaussian-software-gl-compositor-r48/SOURCE_LOCK.json"
+        "references/gaussian-software-gl-compositor-r48/SOURCE_LOCK.json",
+        "references/gaussian-float-target-r49/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -123,7 +125,7 @@
       "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
       "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
       "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
-      "nextGate": "Run the exact R47 fixture through pinned Three.js r186's generated TSL shader on WebGL fallback or WebGPU with framebuffer readback. Compare both a float intermediate target and final RGBA8 output, recording backend identity, blend state, dither, color space, tone mapping and edge pixels. Keep R48 llvmpipe's two-code envelope fixture-specific; do not reuse it as an asset, perceptual or device threshold. When the user supplies a small static-object photo set, only then run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R48 gates. Do not alter Canonical Truth, retire RealityScan, modify a production Mother or claim Object DNA equivalence.",
+      "nextGate": "Execute the exact R47 fixture through pinned Three.js r186-generated TSL on WebGL fallback or WebGPU, reading both a float intermediate target and the final target. Record backend identity, blend state, dither, color space, tone mapping, coverage and edge pixels. Keep R49's sub-1e-7 float agreement and all RGBA8 deltas specific to its independent llvmpipe fixture; do not infer Three.js, hardware, device or visual equivalence. When the user supplies a small static-object photo set, only then run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R49 gates. Do not alter Canonical Truth, retire RealityScan, modify a production Mother or claim Object DNA equivalence.",
       "quaternionQuantizationProbe": "PROBES/gaussian_quaternion_quantization_r43.cc",
       "quaternionQuantizationProbeResult": "PROBES/gaussian_quaternion_quantization_result_r43.json",
       "candidateQuaternionQuantizationGate": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
@@ -159,7 +161,13 @@
       "candidateSoftwareGlCompositorGate": "ADAPTERS/gaussian_software_gl_compositor_gate_r48.mjs",
       "currentBestViewSoftwareGlCompositorExtension": "CURRENT_BEST_VIEW_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.md",
       "toolRoutingSoftwareGlCompositorExtension": "TOOL_ROUTING_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.json",
-      "motherRoutingSoftwareGlCompositorExtension": "MOTHER_ROUTING_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.json"
+      "motherRoutingSoftwareGlCompositorExtension": "MOTHER_ROUTING_R48_GAUSSIAN_SOFTWARE_GL_COMPOSITOR.json",
+      "floatTargetProbe": "PROBES/gaussian_float_target_r49.py",
+      "floatTargetProbeResult": "PROBES/gaussian_float_target_result_r49.json",
+      "candidateFloatTargetGate": "ADAPTERS/gaussian_float_target_gate_r49.mjs",
+      "currentBestViewFloatTargetExtension": "CURRENT_BEST_VIEW_R49_GAUSSIAN_FLOAT_TARGET.md",
+      "toolRoutingFloatTargetExtension": "TOOL_ROUTING_R49_GAUSSIAN_FLOAT_TARGET.json",
+      "motherRoutingFloatTargetExtension": "MOTHER_ROUTING_R49_GAUSSIAN_FLOAT_TARGET.json"
     },
     {
       "id": "LQ-TELLUX-001",

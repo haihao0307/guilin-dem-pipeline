@@ -1,0 +1,79 @@
+{
+  "schema": "kaopu-gaussian-float-target-probe/r49",
+  "status": "Candidate-pass",
+  "source": {
+    "threeRevision": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r48Commit": "7e7b3897f9e05b310bd6eec1771caeb2e84b8a2f"
+  },
+  "backend": {
+    "eglVersion": "1.5",
+    "vendor": "Mesa",
+    "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+    "glVersion": "4.5 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.2",
+    "shaderVersion": "4.50"
+  },
+  "fixture": {
+    "imagePixels": [33, 33],
+    "splats": 2,
+    "floatTarget": "RGBA32F texture framebuffer",
+    "finalTarget": "RGBA8 EGL pbuffer",
+    "dither": false,
+    "srgb": false,
+    "toneMapping": false,
+    "note": "Independent fixed-equation OpenGL shader inherited from R48; not Three.js-generated TSL."
+  },
+  "reference": {
+    "rgba32fVsContinuousCpu": {
+      "maxAbs": 9.949156676292148e-08,
+      "rmse": 5.712541180615451e-09,
+      "channelsOver1e6": 0,
+      "channelsOver1e5": 0
+    },
+    "rgba8VsRgba32f": {
+      "maxAbs": 0.004974591783156582,
+      "rmse": 0.000526870074051119,
+      "channelsOver1e6": 435,
+      "channelsOver1e5": 435
+    },
+    "coverageMismatchPixels": []
+  },
+  "candidate": {
+    "rgba32fVsContinuousCpu": {
+      "maxAbs": 6.480858005808443e-08,
+      "rmse": 5.044629924091288e-09,
+      "channelsOver1e6": 0,
+      "channelsOver1e5": 0
+    },
+    "rgba8VsRgba32f": {
+      "maxAbs": 0.005379190208280787,
+      "rmse": 0.0005117603987019006,
+      "channelsOver1e6": 388,
+      "channelsOver1e5": 381
+    },
+    "coverageMismatchPixels": []
+  },
+  "crossImage": {
+    "continuousCpuMaxAbs": 0.08513028586340521,
+    "rgba32fBackendMaxAbs": 0.08513030409812927,
+    "rgba8BackendMaxAbs": 0.08235294117647057,
+    "cpuToFloatMaximumDelta": 1.823472406403681e-08,
+    "floatToRgba8MaximumDelta": 0.0027773629216586992
+  },
+  "checks": {
+    "rgba32fFramebufferComplete": true,
+    "referenceFloatMatchesContinuousWithin1e5": true,
+    "candidateFloatMatchesContinuousWithin1e5": true,
+    "referenceCoverageMatches": true,
+    "candidateCoverageMatches": true,
+    "rgba8AddsMoreErrorThanFloatArithmetic": true,
+    "materialCombinedDifferencePersistsInFloatTarget": true
+  },
+  "limits": {
+    "directThreeTsl": false,
+    "webglOrWebgpu": false,
+    "hardwareGpu": false,
+    "browserOrTargetDevice": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

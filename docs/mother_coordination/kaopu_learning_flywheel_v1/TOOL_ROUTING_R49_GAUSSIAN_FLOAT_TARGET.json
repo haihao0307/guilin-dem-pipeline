@@ -1,0 +1,35 @@
+{
+  "schema": "kaopu-tool-routing/r49",
+  "status": "Candidate partial",
+  "question": "How should float computation be separated from final-target quantization in Gaussian viewer validation?",
+  "routes": [
+    {
+      "stage": "analytic-reference",
+      "tool": "R47 continuous CPU compositor",
+      "authority": "equation reference",
+      "notAuthorityFor": ["framebuffer storage", "browser backend", "device presentation"]
+    },
+    {
+      "stage": "float-backend-control",
+      "tool": "PROBES/gaussian_float_target_r49.py",
+      "authority": "llvmpipe RGBA32F shader/blend readback",
+      "required": ["backend identity", "float target format", "coverage comparison"]
+    },
+    {
+      "stage": "final-target-control",
+      "tool": "R48 RGBA8 framebuffer replay",
+      "authority": "llvmpipe final-target quantization observation",
+      "required": ["format", "blend", "dither", "sRGB", "tone mapping"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_float_target_gate_r49.mjs",
+      "authority": "fixed-fixture evidence completeness",
+      "notAuthorityFor": ["Three.js TSL", "WebGL/WebGPU", "hardware GPU", "Safari/iPhone", "perceptual acceptance"]
+    }
+  ],
+  "lowerQuantizedDeltaMeansHigherFidelity": false,
+  "softwareRendererIsHardwareGpu": false,
+  "deliveryIsCanonicalTruth": false,
+  "productionMutationAllowed": false
+}
