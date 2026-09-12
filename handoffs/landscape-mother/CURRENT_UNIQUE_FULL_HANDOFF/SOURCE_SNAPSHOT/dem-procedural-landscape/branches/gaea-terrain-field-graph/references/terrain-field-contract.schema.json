@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/terrain-field-contract-v1.json",
+  "title": "Terrain Field Graph Contract",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "truth",
+    "seedBank",
+    "nodes",
+    "outputs",
+    "approval"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+"
+    },
+    "truth": {
+      "type": "object",
+      "required": [
+        "demSha256",
+        "crs",
+        "pixelSize",
+        "immutable"
+      ],
+      "properties": {
+        "demSha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "crs": {
+          "type": "string"
+        },
+        "pixelSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "immutable": {
+          "const": true
+        },
+        "hydrologyImmutable": {
+          "type": "boolean"
+        },
+        "coastlineImmutable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "seedBank": {
+      "type": "object",
+      "required": [
+        "master",
+        "shape",
+        "warp",
+        "geology",
+        "erosion",
+        "hydrologyVisual",
+        "color",
+        "microDetail"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "family",
+          "inputs",
+          "outputs",
+          "scaleBand",
+          "truthImpact",
+          "parameters"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "primitive",
+              "warp",
+              "profile",
+              "erosion",
+              "data",
+              "color",
+              "render",
+              "utility"
+            ]
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "seedChannel": {
+            "type": "string"
+          },
+          "scaleBand": {
+            "enum": [
+              "macro",
+              "meso",
+              "micro",
+              "subpixel"
+            ]
+          },
+          "truthImpact": {
+            "enum": [
+              "read-only",
+              "bounded-delta",
+              "visual-only",
+              "candidate-only"
+            ]
+          },
+          "mask": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "evidenceRequired": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "Z_truth",
+        "Z_render",
+        "productionReady"
+      ],
+      "properties": {
+        "Z_truth": {
+          "type": "string"
+        },
+        "Z_render": {
+          "type": "string"
+        },
+        "Z_collision": {
+          "type": "string"
+        },
+        "dataMaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "productionReady": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "approval": {
+      "type": "object",
+      "required": [
+        "truthApproved",
+        "visualApproved",
+        "productionApproved"
+      ],
+      "properties": {
+        "truthApproved": {
+          "type": "boolean"
+        },
+        "visualApproved": {
+          "type": "boolean"
+        },
+        "productionApproved": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

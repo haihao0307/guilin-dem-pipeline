@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "1.0.0",
+  "package": "XIAOWANG_GAEA_TERRAIN_KNOWLEDGE_MINIPACK_2026-08-30_v1.0",
+  "purpose": "Gaea-inspired truth-preserving procedural terrain field graphs",
+  "truthPolicy": {
+    "demImmutable": true,
+    "hydrologyImmutable": true,
+    "coastlineImmutable": true,
+    "bathymetryImmutable": true,
+    "proceduralOutputs": [
+      "boundedHeightDelta",
+      "dataMaps",
+      "materialWeights",
+      "normalMicro",
+      "roughness",
+      "ao",
+      "color"
+    ],
+    "forbidden": [
+      "movePeaks",
+      "inventRivers",
+      "moveCoastline",
+      "unapprovedHoleFill",
+      "silentResolutionFallback"
+    ]
+  },
+  "seedChannels": [
+    "master",
+    "shape",
+    "warp",
+    "geology",
+    "erosion",
+    "hydrologyVisual",
+    "color",
+    "microDetail",
+    "ecology"
+  ],
+  "operatorFamilies": {
+    "primitives": [
+      "fbm",
+      "ridgedFbm",
+      "worley",
+      "cracks",
+      "fault",
+      "ridge",
+      "gradient"
+    ],
+    "warps": [
+      "domainWarp",
+      "directionalWarp"
+    ],
+    "profile": [
+      "shaper",
+      "thermalShaper",
+      "recurve",
+      "terrace"
+    ],
+    "erosion": [
+      "erosion",
+      "fluvial",
+      "hydro",
+      "thermal",
+      "rugged",
+      "stratify",
+      "microErosion",
+      "buildup",
+      "sediment"
+    ],
+    "data": [
+      "slope",
+      "curvature",
+      "realFlow",
+      "cavity",
+      "protrusion",
+      "rockMap",
+      "soil",
+      "wetness",
+      "exposure",
+      "separation"
+    ],
+    "color": [
+      "autoLevel",
+      "clarity",
+      "clut5",
+      "normalizedSplat",
+      "colorFx"
+    ],
+    "render": [
+      "normal",
+      "roughness",
+      "ao",
+      "distanceFade"
+    ]
+  },
+  "recipes": [
+    {
+      "id": "truth-preserving-general",
+      "region": "generic",
+      "graph": [
+        "Z_truth",
+        "slope+curvature+realFlow",
+        "ruggedA(lowStrength,broad)",
+        "ruggedB(lowStrength,halfScale,newSeed)",
+        "stratify(mask=rockExposure*slope)",
+        "microErosion(mask=cavity+realFlow)",
+        "boundedHeightDelta(mask=confidence*(1-protected))",
+        "rock+soil+wet+exposure",
+        "autoLevel+clarity",
+        "clut5+normalizedSplat",
+        "normal+roughness+ao"
+      ],
+      "truthImpact": "bounded-delta-and-visual",
+      "requiredOutputs": [
+        "Z_truth",
+        "Z_delta",
+        "slope",
+        "curvature",
+        "realFlow",
+        "rockMap",
+        "wetness",
+        "materialWeights",
+        "finalColor"
+      ]
+    },
+    {
+      "id": "guilin-karst",
+      "region": "Guilin",
+      "graph": [
+        "Z_truth",
+        "karstRockMask=slope*protrusion*(1-soil)",
+        "directionalWarp(mask=karstRockMask)",
+        "ruggedA+ruggedB(mask=karstRockMask)",
+        "localStratify(mask=karstRockMask)",
+        "microErosion(mask=cavity+realFlow)",
+        "limestoneClut",
+        "vegetationRockSplat"
+      ],
+      "protected": [
+        "riverMask",
+        "valleyFloorMask",
+        "peakPositions"
+      ],
+      "truthImpact": "visual-first-bounded-meso"
+    },
+    {
+      "id": "wenzhou-coastal-mountain",
+      "region": "Wenzhou",
+      "graph": [
+        "landDem+bathymetryTruth",
+        "landSeaHardMasks",
+        "slope+exposure+distanceToCoast",
+        "rugged(mask=mountainRock)",
+        "wetness+salt(mask=coastalExposure)",
+        "sediment(mask=lowSlope*realFlow)",
+        "coastalClut+normalizedSplat"
+      ],
+      "protected": [
+        "coastlineMask",
+        "bathymetryTruthMask",
+        "riverCenterlines"
+      ],
+      "truthImpact": "visual-only-near-coast"
+    },
+    {
+      "id": "kunming-plateau-basin",
+      "region": "Kunming",
+      "graph": [
+        "Z_truth",
+        "broadProfileAnalysis",
+        "veryLowShaper(mask=approvedNaturalTerrain)",
+        "ridgePreservingRugged",
+        "localThermal(mask=steepUnstableSlope)",
+        "soil+sediment(mask=basinMargins)",
+        "plateauClut+seasonalSplat"
+      ],
+      "protected": [
+        "cityMask",
+        "airportMask",
+        "lakeMask",
+        "majorRoadBuffer",
+        "ridgeCrests"
+      ],
+      "truthImpact": "bounded-low-frequency"
+    },
+    {
+      "id": "multipass-erosion-candidate",
+      "region": "generic",
+      "graph": [
+        "passA=mainGrooves(lowFrequency)",
+        "passB=downcuttingAndFlow",
+        "passC=lowStrengthUnification"
+      ],
+      "requiredEvidence": [
+        "heightBefore",
+        "heightAfter",
+        "delta",
+        "flow",
+        "sediment",
+        "erosionMask",
+        "seed",
+        "parameters"
+      ],
+      "truthImpact": "candidate-only-until-qa"
+    }
+  ]
+}

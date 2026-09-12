@@ -1,0 +1,296 @@
+{
+  "schema": "terrain-hydrology-reference-profile@1.0.0",
+  "profileId": "guilin-yangshuo-karst-reference-v001",
+  "status": "distilled-candidate",
+  "scope": "guilin",
+  "sourceReceipt": "knowledge/terrain-hydrology/guilin/inbox/2026-08-27_guilin-geomorphology-photo-set-v001_RECEIPT.json",
+  "evidenceMatrix": "knowledge/terrain-hydrology/guilin/distilled/GUILIN_KARST_IMAGE_EVIDENCE_MATRIX_V1.json",
+  "methodBindings": [
+    {
+      "skill": "dem-procedural-surface-ecology@0.1.0",
+      "module": "DEM-M03",
+      "activeSubset": [
+        "terrain",
+        "terrace",
+        "hydrology",
+        "surface-material"
+      ],
+      "excludedSubset": [
+        "trees",
+        "shrubs",
+        "grass",
+        "crops",
+        "canopy",
+        "ecology-instances"
+      ]
+    },
+    {
+      "reference": "MrRolord procedural terrain translation v0.4.0",
+      "activeSubset": [
+        "geometry-vs-shader-separation",
+        "river-distance-fields",
+        "world-space-stable-fields",
+        "distance-based-detail"
+      ],
+      "excludedSubset": [
+        "vegetation",
+        "orchards",
+        "crop-fields"
+      ]
+    }
+  ],
+  "heightModel": {
+    "z_truth_m": {
+      "role": "read-only approved 12.5 m DEM",
+      "writable": false
+    },
+    "z_base_resampled_m": {
+      "role": "continuous display or approved high-resolution output grid",
+      "sourceClaim": "derived"
+    },
+    "z_micro_delta_m": {
+      "role": "reversible cliff, footslope, bank, bar, erosion and terrace detail",
+      "defaultValue": 0.0,
+      "requiresParentMask": true,
+      "requiresEvidence": true,
+      "requiresRollback": true
+    },
+    "z_visual_m": {
+      "role": "runtime display composition",
+      "surveyClaim": false
+    }
+  },
+  "archetypes": [
+    "broad-alluvial-or-agricultural-valley-floor",
+    "isolated-tower-karst",
+    "dense-irregular-peak-forest",
+    "connected-interpeak-low-corridor",
+    "river-gorge-with-cliff-bank",
+    "continuous-limestone-cliff-wall",
+    "low-sand-or-gravel-bar",
+    "low-island-or-floodplain-edge",
+    "settlement-at-karst-foot",
+    "floodplain-meander-with-towers",
+    "rare-natural-arch-landmark"
+  ],
+  "hardRules": {
+    "preserveApprovedPeakAndValleyLocations": true,
+    "preserveBroadLowlandMatrix": true,
+    "riverCannotCrossPeakFootprint": true,
+    "noNeedleSpikes": true,
+    "noUniformPeakLattice": true,
+    "noGlobalTerraceQuantization": true,
+    "noBlanketRockExposure": true,
+    "naturalArchIsRare": true,
+    "noNoiseMoveMainRiver": true,
+    "noNoiseMoveMainPeak": true,
+    "noDataCannotFormVerticalWalls": true,
+    "verticalScale": 1.0,
+    "vegetationRuntimeIncluded": false
+  },
+  "shapeGrammar": {
+    "peakCrowns": [
+      "rounded",
+      "asymmetric",
+      "notched",
+      "saddled",
+      "locally-sharp-but-not-needle-like"
+    ],
+    "peakSpacing": "irregular, multi-scale, non-periodic",
+    "peakFoot": "short abrupt transition from flat or low-relief floor, modulated by approved footslope mask",
+    "valleyFloor": "continuous broad low-relief matrix with local bars and floodplain edges",
+    "cliffExposure": "patchy, vertically elongated, ledged, partly occluded, never full-slope uniform",
+    "river": "continuous low-corridor alignment, variable width, broad bends, occasional tight gorge",
+    "barsAndIslands": "low, elongated or point-bar-like, conditioned by approved water and flow fields"
+  },
+  "nodeGraph": [
+    {
+      "id": "terrain.truth_input",
+      "input": "z_truth_m",
+      "output": "truth_height",
+      "writable": false
+    },
+    {
+      "id": "terrain.derivatives",
+      "inputs": [
+        "truth_height"
+      ],
+      "outputs": [
+        "slope",
+        "aspect",
+        "profile_curvature",
+        "plan_curvature",
+        "local_relief",
+        "tpi"
+      ]
+    },
+    {
+      "id": "hydro.approved_input",
+      "inputs": [
+        "approved_centerline",
+        "approved_water_mask"
+      ],
+      "outputs": [
+        "approved_hydrology"
+      ],
+      "writable": false
+    },
+    {
+      "id": "hydro.channel_extract",
+      "inputs": [
+        "truth_height",
+        "flow_accumulation"
+      ],
+      "outputs": [
+        "derived_channel_candidate"
+      ],
+      "authoritative": false
+    },
+    {
+      "id": "hydro.channel_snap",
+      "inputs": [
+        "approved_hydrology",
+        "derived_channel_candidate",
+        "valley_mask"
+      ],
+      "outputs": [
+        "channel_field"
+      ]
+    },
+    {
+      "id": "terrain.valley_floor_preserve",
+      "inputs": [
+        "truth_height",
+        "tpi",
+        "channel_field"
+      ],
+      "outputs": [
+        "valley_floor_mask"
+      ]
+    },
+    {
+      "id": "karst.peak_field",
+      "inputs": [
+        "truth_height",
+        "local_relief",
+        "curvature"
+      ],
+      "outputs": [
+        "peak_footprint",
+        "peak_crown_class"
+      ]
+    },
+    {
+      "id": "karst.foot_transition",
+      "inputs": [
+        "peak_footprint",
+        "valley_floor_mask",
+        "slope"
+      ],
+      "outputs": [
+        "footslope_mask",
+        "footslope_delta_candidate"
+      ]
+    },
+    {
+      "id": "karst.cliff_exposure",
+      "inputs": [
+        "slope",
+        "curvature",
+        "local_relief"
+      ],
+      "outputs": [
+        "cliff_core",
+        "cliff_edge",
+        "rock_exposure_mask"
+      ]
+    },
+    {
+      "id": "hydro.bar_candidate",
+      "inputs": [
+        "channel_field",
+        "flow_direction",
+        "curvature",
+        "approved_water_mask"
+      ],
+      "outputs": [
+        "bar_mask",
+        "island_mask"
+      ]
+    },
+    {
+      "id": "material.rock_normal",
+      "inputs": [
+        "rock_exposure_mask",
+        "world_position",
+        "stable_seed"
+      ],
+      "outputs": [
+        "rock_normal"
+      ]
+    },
+    {
+      "id": "material.rock_roughness",
+      "inputs": [
+        "rock_exposure_mask",
+        "wetness",
+        "world_position",
+        "stable_seed"
+      ],
+      "outputs": [
+        "rock_roughness"
+      ]
+    },
+    {
+      "id": "material.rock_parallax",
+      "inputs": [
+        "rock_exposure_mask",
+        "world_position",
+        "stable_seed"
+      ],
+      "outputs": [
+        "rock_parallax"
+      ],
+      "defaultStrength": 0
+    }
+  ],
+  "runtimeBands": {
+    "far": [
+      "truth-height",
+      "macro-relief",
+      "approved-river",
+      "atmospheric-visual-layer"
+    ],
+    "middle": [
+      "cliff-mask",
+      "footslope-mask",
+      "bar-mask",
+      "normal",
+      "roughness",
+      "wetness"
+    ],
+    "near": [
+      "adaptive-local-mesh",
+      "bounded-parallax",
+      "approved-reversible-microgeometry"
+    ]
+  },
+  "qa": {
+    "truthOverwrite": false,
+    "sourceResamplingAllowedWithoutManifest": false,
+    "syntheticGapFill": false,
+    "derivedHydrologyAuthoritative": false,
+    "microDisplacementDefault": 0.0,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "requiredVisualChecks": [
+      "no-large-square-facets-at-close-view",
+      "no-needle-spikes",
+      "no-uniform-peak-lattice",
+      "broad-valley-floor-remains-readable",
+      "river-remains-continuous-and-avoids-peak-core",
+      "rock-exposure-remains-patchy",
+      "natural-arch-not-repeated"
+    ]
+  }
+}

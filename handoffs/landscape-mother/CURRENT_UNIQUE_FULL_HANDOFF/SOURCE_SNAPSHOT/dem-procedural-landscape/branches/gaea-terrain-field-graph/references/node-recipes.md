@@ -1,0 +1,181 @@
+# 节点职责与地形图谱配方
+
+## 1. 节点职责速表
+
+| GAEA 类别 | 独立实现职责 | 地形用途 |
+|---|---|---|
+| Primitives | 生成基础标量场 | 山脊、断层、板块、裂隙、区域分区 |
+| Warps | 对采样坐标做低频和定向扭曲 | 打破规则边界、改变结构方向 |
+| Adjustments | AutoLevel、Gamma、Clamp、Threshold、Combine | 调整范围、对比、混合和遮罩 |
+| Profile | Shaper、ThermalShaper、Recurve | 控制总体轮廓和坡肩 |
+| Erosion | Hydraulic、Fluvial、Hydro、Thermal | 形成沟谷、沉积、坡面和流水结构 |
+| LookDev | Rugged、Stratify、Outcrops | 增加地质层次和岩面结构 |
+| Data | Slope、Curvature、Flow、RockMap、Soil | 为材质、植被和过程提供遮罩 |
+| Color | CLUT、Splat、ColorFX、Synth | 结构驱动的综合色彩 |
+| Render | Normal、AO、Roughness、Height | 运行时着色和近景细节 |
+| Utilities | Switch、TileGate、Route、Loop | LOD、瓦片、分支和调试 |
+
+字段合同不直接复制 GAEA UI 的类别名称。通用范围调整和 Combine 映射到内部 `utility` 家族；只影响外观的 AutoLevel 和 Clarity 可以映射到 `color` 家族。这样可以保持 `terrain-field-contract.schema.json`、运行时接口和图谱验证器一致。
+
+## 2. 通用真值保护图谱
+
+```text
+DEM Truth
+  ├─ Slope / Curvature / Flow Accumulation
+  ├─ Rock Exposure / Soil / Wetness / Sunlight
+  ├─ Low Strength Rugged A
+  ├─ Low Strength Rugged B, half scale
+  ├─ Local Stratify, mask by rock exposure and slope
+  ├─ MicroErosion, mask by cavity and flow
+  ├─ Bounded Z_delta, mask by confidence
+  ├─ CLUT5 and normalized Splat
+  └─ Normal, roughness, AO, color
+```
+
+公式：
+
+```text
+Z_render = Z_truth + clamp(Z_delta_macro + Z_delta_meso, -budget, +budget) * confidence
+```
+
+## 3. 桂林喀斯特配方
+
+目标：保留真实峰丛位置、峰林轮廓、鞍部、河谷和永久水体，同时增加岩溶表面层次。
+
+```text
+Z_truth
+→ slope + convex curvature
+→ ridged field, low strength
+→ directional domain warp, aligned to local ridge direction
+→ rugged A, broad plates
+→ rugged B, smaller scale
+→ local stratify on exposed rock
+→ micro erosion on cavity and runoff masks
+→ rockMap + soil + wetness
+→ limestone CLUT + vegetation Splat
+```
+
+约束：
+
+```text
+riverMask = hard preserve
+valleyFloorMask = low displacement
+karstRockMask = slope × protrusion × low soil
+peakPositionChange = 0
+```
+
+色彩：深湿灰绿、冷灰石灰岩、中性灰褐、暖色风化面、浅色碳酸盐。
+
+## 4. 温州海岸与山海配方
+
+目标：保持岸线、海岛、潮滩、水深、河口和真实水系，增强山地岩坡、湿润海岸、冲积和海蚀感。
+
+```text
+land DEM + bathymetry truth
+→ land/sea hard masks
+→ slope + exposure + distance-to-coast
+→ broad rugged on mountain rock
+→ fluvial micro detail on approved land mask
+→ wetness and salt masks near coast
+→ sediment mask on low slope and flow accumulation
+→ coastal CLUT + normalized Splat
+```
+
+约束：
+
+```text
+coastlineMask = immutable
+bathymetryTruth = immutable
+riverCenterline = immutable
+intertidalColor may vary
+intertidalHeight requires separate approved data
+```
+
+色彩：山岩冷灰、潮湿蓝灰、氧化褐色、盐析浅灰、植被深绿、冲积土黄褐。
+
+## 5. 昆明高原盆地配方
+
+目标：保持高原盆地、长波山脊、湖盆、城市和机场真值，增强坡肩、裸土、岩层和季节性湿润变化。
+
+```text
+Z_truth
+→ broad profile analysis
+→ very low strength shaper on approved natural terrain
+→ ridge-preserving rugged
+→ local thermal shaping on steep unstable slopes
+→ soil and sediment masks on basin margins
+→ exposure + wetness + landcover
+→ plateau CLUT + seasonal Splat
+```
+
+约束：
+
+```text
+cityMask = zero displacement
+airportMask = zero displacement
+lakeMask = immutable
+majorRoadBuffer = protected
+ridgeCrestShift = zero
+```
+
+色彩：高原暖灰褐、红土和氧化橙褐、干季黄绿、雨季深绿、裸岩冷灰、低洼湿润深色。
+
+## 6. 多遍侵蚀配方
+
+```text
+Pass A：低分辨率或低频引导，形成主沟槽
+Pass B：加强下切和流向，保持主结构
+Pass C：低强度统一表面，保留前两遍的大结构
+```
+
+每一遍输出：
+
+```text
+height_before
+height_after
+delta
+flow
+sediment
+erosion_mask
+seed
+parameters
+```
+
+侵蚀结果默认进入候选增强层。通过幅度、河网、峰位和接缝 QA 后，才允许进入 `Z_render`。
+
+## 7. 颜色图谱配方
+
+```text
+rock = normalize(rockMap + protrusion + slope)
+wet = normalize(flow + cavity + lowElevation)
+soil = normalize(soil + sediment + lowSlope)
+exposed = normalize(curvatureConvex + sunlight + wind)
+
+W = normalizedSplat(rock, wet, soil, exposed)
+C = W.r * rockPalette
+  + W.g * wetPalette
+  + W.b * soilPalette
+  + W.a * exposedPalette
+```
+
+后处理顺序：
+
+```text
+AutoLevel
+→ local Clarity
+→ CLUT
+→ Splat
+→ mild HSL or Gamma
+→ distance-based desaturation and detail reduction
+```
+
+## 8. 多尺度裂隙配方
+
+```text
+largeCracks   scale 1.0, low density
+mediumCracks  scale 0.5, medium density
+smallCracks   scale 0.25, low strength
+all cracks    use different seeds and directional warp
+```
+
+裂隙用于岩面、干裂土和地质遮罩。不要直接把裂隙写入所有地形高程。
