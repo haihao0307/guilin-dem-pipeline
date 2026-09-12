@@ -1,0 +1,59 @@
+{
+  "schema": "kaopu-tool-routing/r43",
+  "status": "candidate",
+  "inherits": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
+  "tools": [
+    {
+      "id": "TOOL-R43-NIANTIC-SPZ-QUATERNION",
+      "authority": "official-primary-source-inspected-and-source-faithful-execution",
+      "repository": "nianticlabs/spz",
+      "commit": "affd0ecea7fbb4c265ee119475af7ee5b2997482",
+      "useFor": [
+        "smallest-three bit contract",
+        "normalization and reconstruction arithmetic",
+        "rotation quantization bound"
+      ],
+      "notFor": [
+        "real-asset visual equivalence",
+        "Three renderer behavior",
+        "physical accuracy"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R43-QUATERNION-PROBE",
+      "authority": "derived-executable-evidence",
+      "paths": [
+        "PROBES/gaussian_quaternion_quantization_r43.cc",
+        "PROBES/run_gaussian_quaternion_quantization_r43.sh",
+        "PROBES/gaussian_quaternion_quantization_result_r43.json"
+      ],
+      "useFor": [
+        "one-million-sample deterministic regression",
+        "orientation and anisotropy-controlled covariance error"
+      ],
+      "notFor": [
+        "real reconstruction",
+        "pixel threshold",
+        "GPU/device acceptance"
+      ],
+      "observationRootEligible": false
+    },
+    {
+      "id": "TOOL-R43-QUATERNION-GATE",
+      "authority": "candidate-derived-adapter",
+      "path": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
+      "useFor": [
+        "source quaternion preflight",
+        "parameter/covariance/pixel/device evidence separation"
+      ],
+      "notFor": [
+        "automatic production acceptance",
+        "universal visual tolerance"
+      ],
+      "observationRootEligible": false
+    }
+  ],
+  "productionMutationAllowed": false,
+  "formalR2Frozen": false
+}
