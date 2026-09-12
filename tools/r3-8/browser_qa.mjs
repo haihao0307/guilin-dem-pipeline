@@ -66,7 +66,7 @@ try{
   await wait(()=>{const s=document.querySelector('#terrain').dataset;return s.environmentLoaded==='true'&&s.environmentMode==='wrb-official';});
   check(Number((await state()).environmentCacheEntries)<=4,'unbounded environment cache');
   const query=await page.evaluate(()=>window.wenzhouWorldScore.queryLocation({easting:300000,northing:3100000}));check(query.worldId==='wenzhou'&&Object.keys(query.voiceRefs).length===8,'unified location references missing');
-  for(const [key,ref] of Object.entries(query.voiceRefs)){const r=await context.request.get(ref.url);check(r.ok(),`${key}: broken evidence reference`);}
+  for(const [key,ref] of Object.entries(query.voiceRefs)){const ok=await page.evaluate(async url=>(await fetch(url)).ok,ref.url);check(ok,`${key}: broken evidence reference`);}
   await page.selectOption('#location','mountains');await wait(()=>{const s=document.querySelector('#terrain').dataset;return s.environmentLoaded==='true'&&s.environmentPatch==='mountains';});
   const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
   const mp=await mobile.newPage();mp.on('pageerror',e=>errors.push('mobile:'+e.message));await mp.goto(target,{waitUntil:'domcontentloaded',timeout:120000});

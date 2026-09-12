@@ -16,6 +16,7 @@ await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
 await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.ready==='true',null,poll);
 await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.soilContextLoaded==='true',null,poll);
 await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmLoaded==='true',null,poll);
+await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.landcoverLoaded==='true',null,poll);
 assert((await page.title()).includes('R3.8'),'title is not R3.8');
 assert((await page.getAttribute('html','data-wenzhou-r38-boot'))==='true','R3.8 bootstrap marker missing');
 
