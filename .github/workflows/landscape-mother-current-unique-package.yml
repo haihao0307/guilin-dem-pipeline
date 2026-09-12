@@ -1,0 +1,437 @@
+name: Landscape Mother Current Unique Full Handoff
+
+on:
+  push:
+    branches:
+      - handoff/landscape-mother-current-unique
+    paths:
+      - .github/workflows/landscape-mother-current-unique-package.yml
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/landscape-mother-current-unique
+          fetch-depth: 0
+
+      - name: Build one authoritative Landscape Mother package
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_COMMIT='039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90'
+          SOURCE_HTML_SHA256='ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2'
+          ROOT='handoffs/landscape-mother'
+          PKG="$ROOT/CURRENT_UNIQUE_FULL_HANDOFF"
+          ZIP="$ROOT/Landscape_Mother_Current_Unique_Full_Handoff.zip"
+
+          test "$(git merge-base "$SOURCE_COMMIT" HEAD)" = "$SOURCE_COMMIT"
+          printf '%s  %s\n' "$SOURCE_HTML_SHA256" 'workbenches/landscape-surface-r5/index.html' | sha256sum -c -
+
+          rm -rf "$ROOT"
+          mkdir -p "$PKG/SOURCE_SNAPSHOT/workbenches" \
+                   "$PKG/SOURCE_SNAPSHOT/knowledge" \
+                   "$PKG/QA"
+
+          cp -a workbenches/landscape-surface-r5 "$PKG/SOURCE_SNAPSHOT/workbenches/"
+          cp -a workbenches/landscape-function "$PKG/SOURCE_SNAPSHOT/workbenches/"
+          cp -a landscape-mother "$PKG/SOURCE_SNAPSHOT/"
+          cp -a skills/dem-procedural-landscape "$PKG/SOURCE_SNAPSHOT/"
+          cp -a knowledge/terrain-hydrology/guilin/distilled "$PKG/SOURCE_SNAPSHOT/knowledge/guilin-distilled"
+          cp -a knowledge/terrain-hydrology/shared/distilled "$PKG/SOURCE_SNAPSHOT/knowledge/shared-distilled"
+          cp -a contracts "$PKG/SOURCE_SNAPSHOT/"
+          cp AGENTS.md "$PKG/SOURCE_SNAPSHOT/ROOT_AGENTS.md"
+
+          cat > "$PKG/00_START_HERE.md" <<'EOF'
+          # Landscape Mother｜唯一当前全量交接包
+
+          这是 Landscape Mother 当前唯一有效的继续工作入口。其他对话、Mother 或 AGO 接手时，先读本文件，再按编号读取其余文档。
+
+          ## 唯一母版
+
+          - 仓库：`haihao0307/guilin-dem-pipeline`
+          - 用户确认的唯一形体母版提交：`039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90`
+          - 工作台：`workbenches/landscape-surface-r5/index.html`
+          - 工作台 SHA-256：`ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2`
+          - 固定公网工作台：
+            `https://raw.githack.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html`
+
+          ## 接手后的第一条规则
+
+          不再更换形体，不从后来走偏的 KAOPU R2/R3/R4/R5/R6 或其他柱状峰体继续。后续修改必须从本包的 R5 水蚀石灰岩母版派生，并把主体轮廓、主洞口、峰脚、土体和落石空间关系视为冻结不变量。
+
+          ## 当前允许做什么
+
+          只允许沿既有母版继续细化：喀斯特水—岩作用、洞内滴水与碳酸钙沉积、近表面显微结构、结构派生材质、独立粗糙度、湿润与苔藓响应、可验证的交互与时间过程。
+
+          ## 当前状态
+
+          用户已经确认母版形体正确；这不等于最终画面、地质真值或生产版本已经批准。继续保持 `visualApproved=false`、`productionReady=false`、`truthApproved=false`，直到用户再次明确验收。
+          EOF
+
+          cat > "$PKG/01_CURRENT_STATE.md" <<'EOF'
+          # 当前状态
+
+          ## 已确认
+
+          1. 唯一母版是打包前的 R5 水蚀石灰岩工作台，而不是后来另起炉灶的轻量峰丛版本。
+          2. 用户认可的是复杂、连续、异型的整体岩体关系。
+          3. 后续所有新知识只能服务于该母版，不能借“学习新方法”重造宏观形体。
+          4. 当前单文件工作台是程序现场生成，不保存展开网格；历史 QA 状态曾显示约 1194k 面。
+
+          ## 尚未完成
+
+          - 喀斯特作为“活系统”的可视化过程仍需补齐：渗入、溶蚀、裂隙扩展、滴水、脱气和碳酸钙沉积。
+          - 洞内钟乳石、石笋和滴水点的因果关系尚未形成正式实现。
+          - 部分岩面仍存在机械重复感。
+          - Microscope 的位置相关方向场需要在不改变主形的前提下继续优化。
+          - 材质需继续坚持结构先行，不能用自由颜色噪点掩盖几何问题。
+
+          ## 验收状态
+
+          - `shapeApprovedByUser = true`
+          - `visualApproved = false`
+          - `productionReady = false`
+          - `truthApproved = false`
+          EOF
+
+          cat > "$PKG/02_SOURCE_LOCKS.json" <<'EOF'
+          {
+            "schema": "LANDSCAPE_MOTHER_UNIQUE_HANDOFF_LOCKS_V1",
+            "repository": "haihao0307/guilin-dem-pipeline",
+            "acceptedMasterCommit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+            "acceptedWorkbenchPath": "workbenches/landscape-surface-r5/index.html",
+            "acceptedWorkbenchSha256": "ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2",
+            "acceptedWorkbenchGitBlob": "c2195ec28e67ddac2259ed3330143b9930956b12",
+            "acceptedBasePath": "workbenches/landscape-function/index.html",
+            "acceptedBaseSha256": "f2a98883f348c1702b7f49cfa6b351c6f7f9917d87c9a29e672ef0c359b360e0",
+            "branch": "handoff/landscape-mother-current-unique",
+            "canonicalPackagePath": "handoffs/landscape-mother/CURRENT_UNIQUE_FULL_HANDOFF",
+            "canonicalZip": "handoffs/landscape-mother/Landscape_Mother_Current_Unique_Full_Handoff.zip",
+            "shapeApprovedByUser": true,
+            "visualApproved": false,
+            "productionReady": false,
+            "truthApproved": false
+          }
+          EOF
+
+          cat > "$PKG/03_NONNEGOTIABLES.md" <<'EOF'
+          # 不可协商约束
+
+          1. **唯一形体母版**：只从提交 `039d3a7...` 的 R5 继续。
+          2. **不换大形**：不得重排峰体、重做主洞口、替换峰脚、删除土体或重置落石关系。
+          3. **第一性原则**：先问真实过程需要哪些状态和因果关系，再决定字段和表现，不为“看起来复杂”叠加无因噪声。
+          4. **一因一改**：每轮只推进一个可验证问题，保留前后对照；发现大形改变立即失败关闭。
+          5. **几何先于颜色**：高度、边缘、破损、孔腔、裂隙和汇水先完成；颜色由曲率与结构派生；粗糙度独立计算。
+          6. **显微不造山**：Microscope 只能影响近表面法线、粗糙度和受控的极小位移，不能进入宏观形体场。
+          7. **稳定世界坐标**：细节不能随相机、帧时间、缩放或设备漂移。
+          8. **无外部模型/贴图依赖**：继续保持函数生成和单文件工作台路线。
+          9. **一个公网版本、一个全量包**：不得同时声称多个“当前版”。
+          10. **失败历史不回流**：后来偏离母版的 KAOPU 轻量峰丛路线只作失败记录，不再作为继承源。
+          EOF
+
+          cat > "$PKG/04_NEXT_WORK.md" <<'EOF'
+          # 下一轮直接执行
+
+          ## A. 先加“活的喀斯特”过程点
+
+          在不改大形的前提下，新增一条最小因果链：
+
+          `降水/渗入 → 含 CO₂ 弱酸水 → 裂隙与孔腔溶蚀 → 洞顶滴水点 → CO₂ 脱气/过饱和 → 方解石沉积 → 钟乳石/石笋缓慢生长`
+
+          第一轮只做少量可追踪滴水点，不铺满整个洞体。每个滴水点必须绑定上方入渗路径、局部汇水和洞顶位置。
+
+          ## B. 再处理机械重复
+
+          - 以石块身份、矿物区身份和连续局部位置共同决定局部方向框架。
+          - 使用多尺度、非整数频率比、域弯曲和独立相位，避免可见周期。
+          - 同一位置必须可复现；相邻位置必须连续；不同石块可以明显不同。
+          - 先做诊断视图，再合入彩色材质。
+
+          ## C. 材质顺序
+
+          `结构高度 → 边缘/破损 → 法线/曲率/凹腔/汇水 → 岩性色区 → 湿润与沉积 → 独立粗糙度`
+
+          ## D. 每轮必须输出
+
+          - 固定提交公网工作台
+          - 母版与候选的宏观轮廓差异检查
+          - 洞口、峰脚和落石锚点不变检查
+          - 近景前后对照
+          - 当前状态 JSON；未获用户批准不得把 `visualApproved` 改为 true
+          EOF
+
+          cat > "$PKG/05_KARST_LIVING_PROCESS.md" <<'EOF'
+          # 活的喀斯特过程模型
+
+          喀斯特并非静止雕塑，而是水、二氧化碳、碳酸盐岩、裂隙、重力和时间共同作用的开放系统。
+
+          ## 溶蚀声部
+
+          雨水和土壤水吸收 CO₂ 后形成弱酸性水，沿节理、裂隙和孔隙进入岩体，溶解碳酸盐并扩大流路。有效实现至少需要：入渗量、溶解无机碳或等效酸度、流路连通性、停留时间、局部岩性/裂隙易蚀性和排水出口。
+
+          ## 沉积声部
+
+          富含碳酸氢钙的水进入洞腔后，因 CO₂ 脱气、蒸发或温压条件改变而发生方解石沉积。洞顶先形成钟乳石，滴落到地面后可形成石笋；两者长期生长可能连接成石柱。沉积位置必须来自真实滴水路径，而不是随机悬挂装饰。
+
+          ## 数字实现边界
+
+          - 时间滑块可以表达相对演化阶段，但没有现场标定时不能把阶段冒充真实年数。
+          - 溶蚀和沉积必须共享同一水量与溶质预算，不能同时无限增强。
+          - 第一版只做机制可见与状态可逆，不宣称地球化学定量模拟已经完成。
+          EOF
+
+          cat > "$PKG/06_MICROSCOPE_SUBSTANCE_METHOD.md" <<'EOF'
+          # Microscope 与 Substance 正确方法
+
+          ## Microscope
+
+          两个固定旋转矩阵可以合并成一个固定旋转，因此“多转几次”本身不会增加自然性。有效变化必须来自位置相关、石块相关和矿物区相关的稳定方向场。
+
+          推荐结构：
+
+          `localFrame = F(stoneId, mineralZoneId, stableWorldPosition, seed, algorithmVersion)`
+
+          然后所有显微频带都在该局部框架中展开。框架需连续插值，禁止网格硬切，禁止跟随相机或时间抖动。
+
+          “完全无重复、无限变化”在有限精度、有限程序和有限设备上不是严格可实现的数学承诺。正确目标是：在规定的观察尺度和场景范围内无可见重复，并且结果稳定可复现。可通过多尺度非整比频率、域弯曲、局部相位、稀疏事件场和分层种子提高感知非重复度。
+
+          ## Substance
+
+          正确依赖不是颜色噪声起步，而是：
+
+          `主体高度/轮廓 → 层理/边缘/破损/孔腔 → 法线/曲率/凹凸/遮蔽/汇水 → 结构派生色区`
+
+          粗糙度另行计算。它可以读取孔隙、湿润、晶粒、断面和矿物区等共同原因，但不能简单复制颜色明暗，也不能让颜色、凹凸和高光共用同一随机值。
+          EOF
+
+          cat > "$PKG/07_PUBLIC_ENTRIES.md" <<'EOF'
+          # 公网入口
+
+          ## 当前唯一母版工作台
+
+          `https://raw.githack.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html`
+
+          ## 项目级辅助入口
+
+          - `https://guilin-dem-terrain.sunhaihao.chatgpt.site`
+          - `https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof`
+
+          辅助入口不替代当前唯一母版，也不得被误认成新的 Landscape 形体基线。
+          EOF
+
+          cat > "$PKG/08_FAILED_AND_ARCHIVED_ROUTES.md" <<'EOF'
+          # 失败与归档路线
+
+          后来另行生成的轻量 KAOPU R2/R3/R4/R5/R6 峰丛工作台偏离了用户已经接近认可的复杂水蚀岩体母版。它们不得继续向当前线回流。
+
+          旧的 V012—V016、统一尖顶、径向柱体、独立圆柱峰等历史路线只能用于失败对照，不可因版本号更高而自动取得继承权。
+
+          本交接分支中的 `handoffs/landscape-mother/` 已被清理为一个当前包，避免其他工作台从旧交接目录误选过期版本。Git 历史仍保留，不做事实删除。
+          EOF
+
+          cat > "$PKG/09_PACKAGE_SCOPE.md" <<'EOF'
+          # 包范围
+
+          本包包含：
+
+          - 用户确认的 R5 单文件工作台与其生成补丁
+          - R5 所继承的 `landscape-function` 基线
+          - Landscape Mother 策略、测试和验证工具
+          - DEM 程序化地形技能树及 GAEA 字段图资料
+          - 桂林喀斯特与共享近景地形蒸馏知识
+          - 当前决策、约束、下一步、失败路线和来源锁
+          - 自动验证脚本、文件清单与 SHA-256
+
+          本包不包含：
+
+          - 整个桂林真实 DEM 大数据
+          - 外部模型或贴图
+          - 后来走偏的 KAOPU 峰丛工作台作为继承源
+          - 未经用户确认的“最新版本”替换关系
+          EOF
+
+          cat > "$PKG/10_USER_DECISIONS.md" <<'EOF'
+          # 用户确认记录
+
+          - 用户确认打包前的 R5 水蚀石灰岩版本为正确母版。
+          - 用户要求以后就按该体系继续，不得反复换版本或重造形体。
+          - 用户要求把喀斯特视为活系统：外部水进入并溶蚀岩体，洞内滴水发生碳酸钙沉积并形成钟乳石等洞穴沉积物。
+          - 用户要求重新掌握 Microscope 的连续、丰富、无明显重复的表面变化方法。
+          - 用户要求从第一性原则出发，以简单、高效、可验证的方式推进。
+          - 用户要求本次只生成一个唯一全量交接包，供其他地方继续工作。
+          EOF
+
+          cat > "$PKG/CURRENT.json" <<'EOF'
+          {
+            "identity": "LANDSCAPE_MOTHER_CURRENT_UNIQUE_FULL_HANDOFF",
+            "date": "2026-09-12",
+            "branch": "handoff/landscape-mother-current-unique",
+            "acceptedMasterCommit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+            "acceptedWorkbench": "SOURCE_SNAPSHOT/workbenches/landscape-surface-r5/index.html",
+            "shapeApprovedByUser": true,
+            "visualApproved": false,
+            "productionReady": false,
+            "truthApproved": false,
+            "singleAuthoritativePackage": true,
+            "nextFocus": [
+              "karst water-rock dissolution process",
+              "drip-path-bound calcite deposition and speleothem growth",
+              "stable non-visibly-repeating microscope orientation field",
+              "structure-derived material and independent roughness"
+            ]
+          }
+          EOF
+
+          cat > "$PKG/verify_package.py" <<'PY'
+          from __future__ import annotations
+          import hashlib, json, pathlib, sys
+
+          root = pathlib.Path(__file__).resolve().parent
+          expected_html = 'ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2'
+          html = root / 'SOURCE_SNAPSHOT/workbenches/landscape-surface-r5/index.html'
+          required = [
+              '00_START_HERE.md','01_CURRENT_STATE.md','02_SOURCE_LOCKS.json',
+              '03_NONNEGOTIABLES.md','04_NEXT_WORK.md','05_KARST_LIVING_PROCESS.md',
+              '06_MICROSCOPE_SUBSTANCE_METHOD.md','07_PUBLIC_ENTRIES.md',
+              '08_FAILED_AND_ARCHIVED_ROUTES.md','09_PACKAGE_SCOPE.md',
+              '10_USER_DECISIONS.md','CURRENT.json','PACKAGE_MANIFEST.json'
+          ]
+          missing = [p for p in required if not (root / p).is_file()]
+          if missing:
+              raise SystemExit('missing: ' + ', '.join(missing))
+          got = hashlib.sha256(html.read_bytes()).hexdigest()
+          if got != expected_html:
+              raise SystemExit(f'accepted workbench hash mismatch: {got}')
+          current = json.loads((root/'CURRENT.json').read_text(encoding='utf-8'))
+          assert current['singleAuthoritativePackage'] is True
+          assert current['acceptedMasterCommit'] == '039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90'
+          manifest = json.loads((root/'PACKAGE_MANIFEST.json').read_text(encoding='utf-8'))
+          for item in manifest['files']:
+              p = root / item['path']
+              if not p.is_file():
+                  raise SystemExit('manifest missing file: ' + item['path'])
+              h = hashlib.sha256(p.read_bytes()).hexdigest()
+              if h != item['sha256']:
+                  raise SystemExit('manifest hash mismatch: ' + item['path'])
+          print(json.dumps({
+              'ok': True,
+              'files': len(manifest['files']),
+              'acceptedWorkbenchSha256': got,
+              'singleAuthoritativePackage': True
+          }, ensure_ascii=False, indent=2))
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('handoffs/landscape-mother/CURRENT_UNIQUE_FULL_HANDOFF')
+          files=[]
+          for p in sorted(root.rglob('*')):
+              if p.is_file() and p.name not in {'PACKAGE_MANIFEST.json'}:
+                  files.append({
+                      'path': p.relative_to(root).as_posix(),
+                      'bytes': p.stat().st_size,
+                      'sha256': hashlib.sha256(p.read_bytes()).hexdigest()
+                  })
+          manifest={
+              'schema':'LANDSCAPE_MOTHER_PACKAGE_MANIFEST_V1',
+              'packageIdentity':'LANDSCAPE_MOTHER_CURRENT_UNIQUE_FULL_HANDOFF',
+              'acceptedMasterCommit':'039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90',
+              'files':files
+          }
+          (root/'PACKAGE_MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          python3 "$PKG/verify_package.py" | tee "$PKG/QA/VERIFY_RESULT.json"
+          node landscape-mother/tests/policy.test.cjs | tee "$PKG/QA/POLICY_TEST.txt"
+          python3 landscape-mother/tools/validate.py | tee "$PKG/QA/LANDSCAPE_VALIDATE.txt"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, urllib.request
+          root=Path('handoffs/landscape-mother/CURRENT_UNIQUE_FULL_HANDOFF')
+          urls=[
+            'https://raw.githack.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html',
+            'https://guilin-dem-terrain.sunhaihao.chatgpt.site',
+            'https://guilin-dem-terrain.sunhaihao.chatgpt.site/guilin/gaea-proof'
+          ]
+          result=[]
+          for u in urls:
+              try:
+                  req=urllib.request.Request(u,headers={'User-Agent':'Landscape-Mother-QA/1.0'})
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      data=r.read()
+                      result.append({'url':u,'status':r.status,'bytes':len(data),'contentType':r.headers.get('content-type'),'sha256':hashlib.sha256(data).hexdigest()})
+              except Exception as e:
+                  result.append({'url':u,'error':type(e).__name__+': '+str(e)})
+          (root/'QA/PUBLIC_HTTP_CHECK.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          # Rebuild manifest after QA outputs, then verify once more.
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path('handoffs/landscape-mother/CURRENT_UNIQUE_FULL_HANDOFF')
+          files=[]
+          for p in sorted(root.rglob('*')):
+              if p.is_file() and p.name != 'PACKAGE_MANIFEST.json':
+                  files.append({'path':p.relative_to(root).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          manifest={'schema':'LANDSCAPE_MOTHER_PACKAGE_MANIFEST_V1','packageIdentity':'LANDSCAPE_MOTHER_CURRENT_UNIQUE_FULL_HANDOFF','acceptedMasterCommit':'039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90','files':files}
+          (root/'PACKAGE_MANIFEST.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          python3 "$PKG/verify_package.py"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('handoffs/landscape-mother/CURRENT_UNIQUE_FULL_HANDOFF')
+          out=Path('handoffs/landscape-mother/Landscape_Mother_Current_Unique_Full_Handoff.zip')
+          fixed=(2026,9,12,0,0,0)
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in sorted(root.rglob('*')):
+                  if not p.is_file():
+                      continue
+                  rel=Path('Landscape_Mother_Current_Unique_Full_Handoff')/p.relative_to(root)
+                  info=zipfile.ZipInfo(rel.as_posix(),fixed)
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.external_attr=(0o100644 & 0xFFFF)<<16
+                  z.writestr(info,p.read_bytes())
+          PY
+
+          unzip -t "$ZIP"
+          sha256sum "$ZIP" > "$ROOT/PACKAGE_SHA256.txt"
+
+          cat > "$ROOT/CURRENT_POINTER.json" <<EOF
+          {
+            "onlyAuthoritativePackage": "Landscape_Mother_Current_Unique_Full_Handoff.zip",
+            "unpackedMirror": "CURRENT_UNIQUE_FULL_HANDOFF",
+            "sourceCommit": "$SOURCE_COMMIT",
+            "branch": "handoff/landscape-mother-current-unique"
+          }
+          EOF
+
+      - name: Commit canonical package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f handoffs/landscape-mother
+          git commit -m 'handoff(landscape): publish one unique current full package'
+          git push origin HEAD:handoff/landscape-mother-current-unique
+
+      - name: Upload canonical package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Landscape_Mother_Current_Unique_Full_Handoff
+          path: |
+            handoffs/landscape-mother/Landscape_Mother_Current_Unique_Full_Handoff.zip
+            handoffs/landscape-mother/CURRENT_POINTER.json
+          if-no-files-found: error
+          retention-days: 30
