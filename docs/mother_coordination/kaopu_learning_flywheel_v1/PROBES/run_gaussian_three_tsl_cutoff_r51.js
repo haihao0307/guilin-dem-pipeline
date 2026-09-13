@@ -7,14 +7,25 @@ if (!['webgl', 'webgpu'].includes(mode)) throw new Error(`invalid mode: ${mode}`
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 160, height: 64 } });
+let browserPageError = null;
+let rejectPageError;
+const pageErrorPromise = new Promise((_, reject) => { rejectPageError = reject; });
 page.on('console', msg => console.log(`[browser:${mode}] ${msg.type()}: ${msg.text()}`));
-page.on('pageerror', error => console.error(`[browser:${mode}] pageerror: ${error.stack || error}`));
+page.on('pageerror', error => {
+  browserPageError ||= error;
+  console.error(`[browser:${mode}] pageerror: ${error.stack || error}`);
+  rejectPageError(error);
+});
 
 const url = ['http:', '', '127.0.0.1:8765', 'docs', 'mother_coordination', 'kaopu_learning_flywheel_v1', 'PROBES', `gaussian_three_tsl_cutoff_r51.html?mode=${mode}`].join('/');
 let result;
 try {
   await page.goto(url, { waitUntil: 'load', timeout: 120000 });
-  await page.waitForFunction(() => window.__KAOPU_DONE__ === true, null, { timeout: 300000 });
+  if (browserPageError) throw browserPageError;
+  await Promise.race([
+    page.waitForFunction(() => window.__KAOPU_DONE__ === true, null, { timeout: 300000 }),
+    pageErrorPromise,
+  ]);
   result = await page.evaluate(() => window.__KAOPU_RESULT__);
 } catch (error) {
   let progress = null;
