@@ -1,0 +1,30 @@
+{
+  "schema": "kaopu-tool-routing/r54",
+  "status": "Candidate partial",
+  "question": "What error is introduced by stable RGBA8 storage versus a float intermediate before Gaussian blend and presentation effects are added?",
+  "inherits": "TOOL_ROUTING_R53_GAUSSIAN_CROSS_BACKEND_MASK.json",
+  "routes": [
+    {
+      "stage": "stable-float-final-storage",
+      "tool": "PROBES/gaussian_three_float_final_color_r54.html + PROBES/run_gaussian_three_float_final_color_r54.js",
+      "authority": "direct Three.js r186 stable-pixel RGBA32F-to-RGBA8 offscreen storage baseline on locked software WebGL/WebGPU",
+      "required": ["explicit target formats","tone-map state","target color-space state","backend identity","float/final hashes","error metrics"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_float_final_color_gate_r54.mjs",
+      "authority": "stable-storage evidence completeness and one-code error bound",
+      "notAuthorityFor": ["Gaussian blending","browser presentation","hardware GPU","target device","asset quality","human acceptance"]
+    },
+    {
+      "stage": "blend-next",
+      "tool": "direct Three.js two-splat blend float/final comparator",
+      "authority": "per-draw source-over accumulation error once implemented",
+      "requiredNext": ["blendable float intermediate","RGBA8 final target","locked draw order","source-over factors","stable pixels separated from cutoff-neighbor pixels"]
+    }
+  ],
+  "stableStorageBaselineEstablished": true,
+  "gaussianBlendEvidenceEstablished": false,
+  "presentationEvidenceEstablished": false,
+  "productionMutationAllowed": false
+}
