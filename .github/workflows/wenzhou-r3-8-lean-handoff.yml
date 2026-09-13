@@ -1,4 +1,4 @@
-name: Wenzhou R3.8 Lean Handoff
+name: Wenzhou R3.9 Lean Handoff
 
 on:
   workflow_dispatch:
@@ -14,9 +14,11 @@ permissions:
 jobs:
   package:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -26,29 +28,42 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Validate clean active handoff and soil pair manifest
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check numpy==2.5.3
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Validate current R3.9 state and active-workset cleanliness
         run: |
           set -euo pipefail
           python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
           node --check site/dist/r3-8/soil-pair-loader.js
+          node --check site/dist/r3-8/evidence-gzip-loader.js
           node --check tools/r3-9/soil_pair_browser_qa.mjs
+          node --check tools/r3-9/evidence_gzip_browser_qa.mjs
           test ! -f tools/r3-handoff/build_current_full_handoff.py
           test ! -f handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER
+          test ! -f tools/r3-9/benchmark_soil_pair_codec.py
+          test ! -f tools/r3-9/benchmark_u8_evidence_codec.py
+          test ! -f tools/r3-9/build_soil_pair_payloads.py
+          test ! -f tools/r3-9/build_evidence_gzip_payloads.py
+          test ! -f records/R3_9/SOIL_PAIR_CLEANUP_TRIGGER
+          test ! -f records/R3_9/EVIDENCE_GZIP_TRIGGER
+          test ! -f records/R3_9/EVIDENCE_GZIP_CLEANUP_TRIGGER
+          python tools/r3-8/validate_static.py | tee /tmp/r39-static.json
           python - <<'PY'
           import json, pathlib
-          p=pathlib.Path('site/dist/r3-8/data/soil-pairs/soil-pairs.json')
-          m=json.loads(p.read_text(encoding='utf-8'))
-          assert m['schema']=='wenzhou-soil-pair-payloads/v1'
-          assert m['lossless'] is True
-          assert m['pairCount']==48
-          assert m['rawBytes']==170237184
-          assert m['compressedBytes']==34571806
-          assert m['reduction']>0.79
-          assert all((p.parent/x['path']).is_file() for x in m['pairs'])
-          print({'pairs':m['pairCount'],'rawBytes':m['rawBytes'],'compressedBytes':m['compressedBytes'],'reduction':m['reduction']})
+          state=json.loads(pathlib.Path('records/R3_9/CURRENT.json').read_text(encoding='utf-8'))
+          assert state['schema']=='wenzhou-r3.9-current/v1'
+          assert state['state']=='verified-lean-runtime-transport'
+          assert state['combinedActivePayload']['afterBytes']==37995870
+          assert state['verification']['decodedSourceShaPreserved'] is True
+          assert state['verification']['fixedCommitRawGithackPassed'] is True
+          print(state['combinedActivePayload'])
           PY
 
-      - name: Build lean continuation package
+      - name: Build current lean handoff
         env:
           SOURCE_SHA: ${{ github.sha }}
         run: |
@@ -56,9 +71,10 @@ jobs:
           mkdir -p /tmp/wenzhou-lean
           python tools/r3-handoff/build_current_lean_handoff.py \
             --repo-root "$GITHUB_WORKSPACE" \
-            --output-zip /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip \
+            --output-zip /tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_${SOURCE_SHA}.zip \
             --source-commit "$SOURCE_SHA" | tee /tmp/wenzhou-lean/build-report.log
-          python -m zipfile -t /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip
+          python -m zipfile -t /tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_${SOURCE_SHA}.zip
+          test -s /tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_${SOURCE_SHA}.zip.report.json
 
       - name: Enforce carry-size and dedup gates
         env:
@@ -67,62 +83,71 @@ jobs:
           python - <<'PY'
           import json, os, pathlib
           sha=os.environ['SOURCE_SHA']
-          r=json.loads(pathlib.Path(f'/tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_{sha}.zip.report.json').read_text(encoding='utf-8'))
+          p=pathlib.Path(f'/tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_{sha}.zip.report.json')
+          r=json.loads(p.read_text(encoding='utf-8'))
+          assert r['passed'] is True and r['version']=='R3.9'
           assert r['fullRestartBaseEmbedded'] is False
           assert r['permanentEvidenceEmbedded'] is False
           assert r['browserBinaryPayloadsEmbedded'] is False
+          assert r['currentTransportIndexesEmbedded'] is True
+          assert r['r39CurrentRecordEmbedded'] is True
           assert r['contentDeduplicated'] is True
           assert r['uniqueUncompressedBytes'] <= 8 * 1024 * 1024
           assert r['bytes'] <= 8 * 1024 * 1024
           print(r)
           PY
 
-      - name: Install Chromium QA runner
-        run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
-
-      - name: Local browser QA for dual-channel soil transport
+      - name: Local browser regressions
         run: |
           set -euo pipefail
-          python -m http.server 8768 >/tmp/r38-http.log 2>&1 &
+          python -m http.server 8768 >/tmp/r39-http.log 2>&1 &
           server_pid=$!
           trap 'kill $server_pid || true' EXIT
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8768/site/dist/r3-8/data/soil-pairs/soil-pairs.json >/dev/null; then break; fi
+            if curl -fsS http://127.0.0.1:8768/site/dist/r3-8/data/evidence-gzip/index.json >/dev/null && \
+               curl -fsS http://127.0.0.1:8768/site/dist/r3-8/data/soil-pairs/soil-pairs.json >/dev/null; then break; fi
             sleep 1
           done
-          R38_URL='http://127.0.0.1:8768/site/dist/r3-8/' node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/soil-pair-local-qa.json
-          grep -q '"passed": true' /tmp/soil-pair-local-qa.json
+          R38_URL='http://127.0.0.1:8768/site/dist/r3-8/' node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/r39-soil-local.json
+          grep -q '"passed": true' /tmp/r39-soil-local.json
+          R38_URL='http://127.0.0.1:8768/site/dist/r3-8/' node tools/r3-9/evidence_gzip_browser_qa.mjs | tee /tmp/r39-evidence-local.json
+          grep -q '"passed": true' /tmp/r39-evidence-local.json
 
-      - name: Fixed public browser QA for dual-channel soil transport
+      - name: Fixed public regressions
         env:
           SOURCE_SHA: ${{ github.sha }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           URL="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/index.html"
-          INDEX="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/data/soil-pairs/soil-pairs.json"
+          SOIL="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/data/soil-pairs/soil-pairs.json"
+          EVIDENCE="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/data/evidence-gzip/index.json"
           ready=0
-          for i in $(seq 1 30); do
-            if curl -fsS -H 'Cookie: __Http-phish=1' "$INDEX" | grep -q 'wenzhou-soil-pair-payloads'; then ready=1; break; fi
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$SOIL" | grep -q 'wenzhou-soil-pair-payloads' && \
+               curl -fsS -H 'Cookie: __Http-phish=1' "$EVIDENCE" | grep -q 'wenzhou-r3.9-evidence-gzip'; then ready=1; break; fi
             sleep 3
           done
           test "$ready" = 1
-          R38_URL="$URL" node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/soil-pair-public-qa.json
-          grep -q '"passed": true' /tmp/soil-pair-public-qa.json
-          echo "$URL" > /tmp/soil-pair-fixed-preview.txt
+          R38_URL="$URL" node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/r39-soil-public.json
+          grep -q '"passed": true' /tmp/r39-soil-public.json
+          R38_URL="$URL" node tools/r3-9/evidence_gzip_browser_qa.mjs | tee /tmp/r39-evidence-public.json
+          grep -q '"passed": true' /tmp/r39-evidence-public.json
+          echo "$URL" > /tmp/r39-fixed-preview.txt
 
-      - name: Upload lean handoff and QA proof
+      - name: Upload R3.9 lean handoff and proof
         uses: actions/upload-artifact@v4
         with:
-          name: wenzhou-r3-8-soil-pair-qa-${{ github.sha }}
+          name: wenzhou-r3-9-lean-handoff-${{ github.sha }}
           path: |
-            /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip
-            /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip.report.json
+            /tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_${{ github.sha }}.zip
+            /tmp/wenzhou-lean/Wenzhou_R3_9_LEAN_HANDOFF_${{ github.sha }}.zip.report.json
             /tmp/wenzhou-lean/build-report.log
-            /tmp/soil-pair-local-qa.json
-            /tmp/soil-pair-public-qa.json
-            /tmp/soil-pair-fixed-preview.txt
+            /tmp/r39-static.json
+            /tmp/r39-soil-local.json
+            /tmp/r39-evidence-local.json
+            /tmp/r39-soil-public.json
+            /tmp/r39-evidence-public.json
+            /tmp/r39-fixed-preview.txt
           if-no-files-found: error
           retention-days: 30
