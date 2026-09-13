@@ -1,0 +1,113 @@
+name: Wenzhou R3.9 Evidence Gzip Materialize
+
+on:
+  push:
+    branches:
+      - feature/wenzhou-r3-8-overlay-transform-contract-20260913
+    paths:
+      - 'records/R3_9/EVIDENCE_GZIP_TRIGGER'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser QA
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Build and verify lossless gzip payloads
+        run: |
+          set -euo pipefail
+          python tools/r3-9/build_evidence_gzip_payloads.py | tee /tmp/evidence-gzip-build.json
+          python - <<'PY'
+          import json, pathlib
+          r=json.load(open('/tmp/evidence-gzip-build.json'))
+          assert r['passed'] is True and r['fileCount']==41
+          assert r['rawBytes']==37239384 and r['packedBytes']==3424064
+          assert r['reduction']>0.90
+          m=json.loads(pathlib.Path('site/dist/r3-8/data/evidence-gzip/index.json').read_text(encoding='utf-8'))
+          assert len(m['records'])==41 and m['lossless'] is True
+          print(r)
+          PY
+
+      - name: Local browser QA on gzip transport candidate
+        run: |
+          set -euo pipefail
+          python -m http.server 8768 >/tmp/evidence-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8768/site/dist/r3-8/data/evidence-gzip/index.json >/dev/null; then break; fi
+            sleep 1
+          done
+          R38_URL='http://127.0.0.1:8768/site/dist/r3-8/' node tools/r3-9/evidence_gzip_browser_qa.mjs | tee /tmp/evidence-gzip-local-qa.json
+          grep -q '"passed": true' /tmp/evidence-gzip-local-qa.json
+
+      - name: Commit and publish isolated gzip candidate
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-8/data/evidence-gzip
+          git commit -m 'data(wenzhou): add lossless WRB JRC gzip payloads'
+          echo "CANDIDATE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "VERIFY_BRANCH=verify/wenzhou-r3-9-evidence-gzip-${RUN_ID}" >> "$GITHUB_ENV"
+          git push origin HEAD:"verify/wenzhou-r3-9-evidence-gzip-${RUN_ID}"
+
+      - name: Fixed public QA on gzip candidate
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${REPO}/${CANDIDATE_SHA}/site/dist/r3-8/index.html"
+          INDEX="https://raw.githack.com/${REPO}/${CANDIDATE_SHA}/site/dist/r3-8/data/evidence-gzip/index.json"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$INDEX" | grep -q 'wenzhou-r3.9-evidence-gzip'; then ready=1; break; fi
+            sleep 3
+          done
+          test "$ready" = 1
+          R38_URL="$URL" node tools/r3-9/evidence_gzip_browser_qa.mjs | tee /tmp/evidence-gzip-public-qa.json
+          grep -q '"passed": true' /tmp/evidence-gzip-public-qa.json
+          echo "$URL" > /tmp/evidence-gzip-fixed-preview.txt
+
+      - name: Promote verified gzip payloads to active branch
+        env:
+          TARGET: feature/wenzhou-r3-8-overlay-transform-contract-20260913
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$TARGET"
+          test "$(git rev-parse origin/$TARGET)" = "$SOURCE_SHA"
+          git push origin HEAD:"$TARGET"
+          git push origin --delete "$VERIFY_BRANCH"
+
+      - name: Upload gzip transport proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-9-evidence-gzip-${{ github.sha }}
+          path: |
+            /tmp/evidence-gzip-build.json
+            /tmp/evidence-gzip-local-qa.json
+            /tmp/evidence-gzip-public-qa.json
+            /tmp/evidence-gzip-fixed-preview.txt
+          if-no-files-found: warn
+          retention-days: 30
