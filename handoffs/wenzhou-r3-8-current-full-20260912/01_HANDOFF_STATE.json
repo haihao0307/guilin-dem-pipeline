@@ -1,73 +1,70 @@
 {
-  "schema": "wenzhou-current-full-handoff-state/v1",
-  "date": "2026-09-12",
+  "schema": "wenzhou-current-lean-handoff-state/v2",
+  "date": "2026-09-13",
   "project": "小温州 / 温州世界生产线",
   "repository": "haihao0307/guilin-dem-pipeline",
-  "handoffBranch": "handoff/wenzhou-r3-8-current-full-20260912",
-  "lastVerifiedVisual": {
-    "version": "R3.7",
-    "commit": "81354b32acedf158490203f89e4cda5c3449e3a0",
-    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html",
-    "qaRunId": 34577823936,
-    "localChromium": true,
-    "fixedRawGithackChromium": true,
+  "verifiedCandidate": {
+    "version": "R3.8",
+    "commit": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
+    "stateCommit": "a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
+    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/3018da201a2ef6b5d122522e85bbbb5b91f8a34d/site/dist/r3-8/index.html",
+    "localBrowserQaPassed": true,
+    "fixedPublicBrowserQaPassed": true,
     "visualAcceptedByUser": false,
     "productionReady": false,
     "realIphoneVerified": false
   },
-  "currentWork": {
-    "version": "R3.8-in-progress",
-    "sourceCommitBeforeHandoffDocs": "9339ba3e48c2db41b8f08690e118a9202299f1db",
-    "branch": "feature/wenzhou-r3-8-soil-profile-water-20260911",
-    "wrbBrowserContextBuilt": true,
-    "wrbBuildRunId": 34578859120,
-    "r3_8DisplayIntegrated": false,
-    "r3_8BrowserQaPassed": false,
-    "sixDepthSoilProfileIntegrated": false,
-    "jrcWaterHistoryIntegrated": false
+  "currentContinuation": {
+    "branch": "feature/wenzhou-r3-8-overlay-transform-contract-20260913",
+    "baseStateCommit": "a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
+    "overlayTransformContractAdded": true,
+    "overlayTransformUnitRegressionAdded": true,
+    "leanHandoffBuilderAdded": true,
+    "contentSha256DedupAdded": true,
+    "obsoleteFullHandoffBuilderRemoved": true,
+    "obsoleteFullHandoffWorkflowRemoved": true,
+    "obsoleteFullPackageTriggerRemoved": true,
+    "newFixedPublicQaPassed": false,
+    "newVisualCandidate": false
   },
-  "r3_7Soil": {
-    "resolutionM": 250,
-    "browserDepth": "0-5cm",
-    "properties": ["clay", "sand", "silt", "soc", "phh2o", "bdod", "cfvo", "wv0033"],
-    "medianAndUncertaintySeparate": true,
-    "uncertaintySemantics": "relative index",
-    "browserPayloadBytes": 29259516,
-    "canonicalTruth": false,
-    "fieldObservation": false,
-    "heightDisplacement": false
+  "r3_8Evidence": {
+    "soilProfile": {
+      "resolutionM": 250,
+      "depths": ["0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"],
+      "properties": ["clay", "sand", "silt", "soc", "phh2o", "bdod", "cfvo", "wv0033"],
+      "payloadChannelsPerPropertyDepth": ["Q0.5", "uncertainty"],
+      "payloadCount": 96,
+      "q05AndUncertaintyAreDuplicates": false,
+      "canonicalTruth": false,
+      "fieldObservation": false,
+      "heightDisplacement": false
+    },
+    "wrb": {
+      "officialMostProbableLegendClasses": 30,
+      "probabilityLayerCount": 30,
+      "officialVsPostAlignmentArgmaxMismatchApprox": 0.061,
+      "canonicalTruth": false,
+      "fieldClassificationTruth": false
+    },
+    "jrcHistoricalWaterIntegrated": true,
+    "singleWorldLocationIndex": true
   },
-  "r3_8Wrb": {
-    "officialMostProbableLegendClasses": 30,
-    "officialCategoricalSemantics": "nearest-neighbour categorical path",
-    "probabilityLayerCount": 30,
-    "postAlignmentArgmaxRole": "derived audit/classification after continuous probability alignment",
-    "officialVsPostAlignmentArgmaxMismatchApprox": 0.061,
-    "importantCorrection": "The archived aligned MostProbable categorical raster matches an independent nearest-neighbour reprojection pixel-for-pixel. The mismatch with post-alignment argmax is an operator-order difference, not evidence that the categorical archive is corrupted.",
-    "canonicalTruth": false,
-    "fieldClassificationTruth": false
+  "carryPolicy": {
+    "mode": "lean",
+    "maxUniqueUncompressedBytes": 8388608,
+    "fullRestartBaseEmbedded": false,
+    "permanentEvidenceEmbedded": false,
+    "browserBinaryPayloadsEmbedded": false,
+    "offlineDependenciesEmbedded": false,
+    "contentDeduplicatedBySha256": true,
+    "coldArchivesRecoveredBy": ["fixed Git commit", "Release tag", "asset name", "bytes", "SHA-256"]
   },
-  "worldScoreDecision": {
-    "singleWorldScore": true,
-    "soilIsSeparateWorldScore": false,
-    "wrbIsSeparateWorldScore": false,
-    "jrcIsSeparateWorldScore": false,
-    "rule": "Independent sources remain separate as evidence voices, but semantic integration and generation/造波 are performed inside one shared world score / 大合唱. Runtime loads only the voices needed by the current observation or task."
-  },
-  "keep": [
-    "R3.2-R3.7 fixed historical versions",
-    "R3.4 permanent environmental evidence release",
-    "R3.5 permanent OSM evidence release",
-    "R3.7 permanent SoilGrids evidence release",
-    "R3.7 verified preview and QA evidence",
-    "R3.8 audited WRB browser context"
-  ],
   "doNotClaim": [
     "SoilGrids as 12.5m soil truth",
     "OSM road centerline as physical road width",
     "OSM footprint as known building height",
     "JRC historical surface-water as current water level",
     "demo sea as tide/MSL/vertical datum/ocean physics",
-    "R3.8 as verified visual candidate before display integration and QA"
+    "the continuation branch as a new verified visual candidate before new fixed-public QA"
   ]
 }
