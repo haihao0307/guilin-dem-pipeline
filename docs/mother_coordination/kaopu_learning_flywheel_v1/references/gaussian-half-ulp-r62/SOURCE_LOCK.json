@@ -1,0 +1,61 @@
+{
+  "schema": "kaopu-source-lock/r62",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-14",
+  "topic": "three-r186-half-ulp-sequential-precision",
+  "inherits": "references/gaussian-mixed-alpha-order-r61/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R62-THREE-R186-HALF-ULP-EXECUTION",
+      "sameEvidenceLineageAs": ["O-R61-THREE-R186-MIXED-ALPHA-ORDER-EXECUTION", "O-R60-THREE-R186-ALPHA-OVERLAP-EXECUTION", "O-R59-THREE-R186-SPZ-ACCUMULATION-EXECUTION"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "browserHarness": "playwright@1.57.0",
+      "graphics": "Chromium/SwiftShader software WebGL",
+      "orderVariants": ["ascending", "descending", "interleaved", "seeded", "seed112", "seed545"]
+    },
+    {
+      "root": "O-R62-THREE-R186-DATAUTILS-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/extras/DataUtils.js",
+      "constraint": "r186 toHalfFloat converts through Float32 then right-shifts discarded mantissa bits; fromHalfFloat decodes stored bits. The packer is not treated as the GPU blend-target rounding oracle."
+    },
+    {
+      "root": "O-R62-CI-HALF-ULP",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34772729110,
+      "workflowHeadSha": "2f3317efa0f32d74cdb41d52b1cd454dce925b8d",
+      "artifactId": 10322173145,
+      "artifactName": "kaopu-gaussian-r62-half-ulp",
+      "artifactDigestSha256": "1cdfcfcfdd504024215b5bbdacc7a8167d4cd21b6add26146b15a9a0ef611433",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "failedAttempts": [
+    {
+      "workflowRunId": 34772497221,
+      "workflowHeadSha": "ef6745f4cb02af29fc222715892027be74299b16",
+      "artifactId": 10322596249,
+      "artifactDigestSha256": "332961c35c230491227359c366671808c1d384d605e0120e91181b54c32ddc0e",
+      "outcome": "Used r186 DataUtils.toHalfFloat truncation as if it were GPU nearest-even target rounding. Half replay and threshold checks failed. Official source inspection identified the mismatch; the failed attempt is excluded from the predictor conclusion and superseded by the corrected run."
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_half_ulp_r62.html",
+    "runner": "PROBES/run_gaussian_three_half_ulp_r62.js",
+    "compactResult": "PROBES/gaussian_three_half_ulp_result_r62.json",
+    "resultGitBlobSha": "8b6ab408d2f67d98ad946a4231c09ed4a3fcaea3",
+    "gate": "ADAPTERS/gaussian_three_half_ulp_gate_r62.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r62-half-ulp.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

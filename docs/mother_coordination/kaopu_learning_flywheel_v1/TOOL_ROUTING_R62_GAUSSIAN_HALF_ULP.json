@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-tool-routing/r62",
+  "status": "Candidate partial",
+  "question": "Can total at-or-below-half-ULP writes predict ordered HalfFloat accumulation risk?",
+  "inherits": "TOOL_ROUTING_R61_GAUSSIAN_MIXED_ALPHA_ORDER.json",
+  "routes": [
+    {
+      "stage": "official-half-bit-decoding",
+      "tool": "Pinned Three.js r186 DataUtils.fromHalfFloat",
+      "authority": "decode observed Half readback bits",
+      "notAuthorityFor": ["GPU blend rounding policy", "physical truth", "visual acceptance"]
+    },
+    {
+      "stage": "gpu-half-replay",
+      "tool": "Bracketed representable Half values with nearest-even selection",
+      "authority": "bit-exact center replay for the six locked software-WebGL sequences",
+      "notAuthorityFor": ["all drivers", "WebGPU", "hardware GPU", "real assets"]
+    },
+    {
+      "stage": "risk-screening",
+      "tool": "Count of source-over increments at or below half the current upward Half ULP",
+      "authority": "candidate stall-frequency screening feature",
+      "notAuthorityFor": ["final-error prediction", "precision certification", "universal threshold"]
+    },
+    {
+      "stage": "fixed-renderer-execution",
+      "tool": "Actual r186 SPZLoader and GaussianSplat through Playwright",
+      "authority": "the six tested Chromium/SwiftShader sequences only",
+      "notAuthorityFor": ["independent physical root", "Safari/iPhone", "human acceptance"]
+    }
+  ],
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "halfReplayBitExactForLockedCenters": true,
+  "totalStallCountSufficient": false,
+  "dataUtilsToHalfFloatIsGpuRoundingOracle": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}
+

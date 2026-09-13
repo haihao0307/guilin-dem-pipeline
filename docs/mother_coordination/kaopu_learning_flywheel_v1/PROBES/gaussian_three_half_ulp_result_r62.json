@@ -1,0 +1,220 @@
+{
+  "schema": "kaopu-three-half-ulp/r62",
+  "status": "Candidate-pass",
+  "question": "Can the predeclared count of source-over writes whose increment is at or below half the current upward Half ULP explain the locked R61 orders and survive a targeted same-count counterexample?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "r61ResultCommit": "d0ad7a38829b1cabbc64422daec39ebf61e1c499"
+  },
+  "fixture": {
+    "alphaCounts": {
+      "1": 1779,
+      "2": 114,
+      "8": 48
+    },
+    "calibration": [
+      {
+        "alphaByte": 1,
+        "centerAlpha": 0.0033296337351202965
+      },
+      {
+        "alphaByte": 2,
+        "centerAlpha": 0.006659267470240593
+      },
+      {
+        "alphaByte": 8,
+        "centerAlpha": 0.026637069880962372
+      }
+    ],
+    "lockedOrders": [
+      "ascending",
+      "descending",
+      "interleaved",
+      "seeded"
+    ],
+    "targetedOrders": {
+      "seed112": 112,
+      "seed545": 545
+    },
+    "selectionRule": "deterministic same-multiset xorshift32 permutations selected because the predeclared count collides while simulated final Half differs"
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "devicePixelRatio": 1,
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "contextAttributes": {
+        "alpha": true,
+        "antialias": false,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "default",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": false,
+        "stencil": false,
+        "xrCompatible": false
+      }
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat; official DataUtils.fromHalfFloat decode plus bracketed IEEE nearest-even replay",
+    "blend": "NormalBlending"
+  },
+  "cells": [
+    {
+      "orderName": "ascending",
+      "sequenceHash": "9db4fc7e68ce1424150ac7e0d4e40e0d112a74ff9e175ce468d0fa3cd682c875",
+      "halfObserved": 0.9912109375,
+      "floatObserved": 0.9996616840362549,
+      "simulation": {
+        "orderName": "ascending",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1070,
+        "exactStallCount": 1070,
+        "firstAtOrBelowHalfUlp": 749,
+        "firstExactStall": 749,
+        "half": 0.9912109375,
+        "float": 0.999661922454834
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.384185791015625e-7
+    },
+    {
+      "orderName": "descending",
+      "sequenceHash": "0c3990d66d5c44d6ab0ad04320c0796eb9248a5ea986047b3236860c59705e6b",
+      "halfObserved": 0.9267578125,
+      "floatObserved": 0.9996613264083862,
+      "simulation": {
+        "orderName": "descending",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1666,
+        "exactStallCount": 1666,
+        "firstAtOrBelowHalfUlp": 275,
+        "firstExactStall": 275,
+        "half": 0.9267578125,
+        "float": 0.9996616244316101
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.980232238769531e-7
+    },
+    {
+      "orderName": "interleaved",
+      "sequenceHash": "a230d479125ce23c513838a6e844b2a1cc0057674bdaeb1f93ea3c2b97b19d87",
+      "halfObserved": 0.9267578125,
+      "floatObserved": 0.9996613264083862,
+      "simulation": {
+        "orderName": "interleaved",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1640,
+        "exactStallCount": 1640,
+        "firstAtOrBelowHalfUlp": 301,
+        "firstExactStall": 301,
+        "half": 0.9267578125,
+        "float": 0.9996616244316101
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.980232238769531e-7
+    },
+    {
+      "orderName": "seeded",
+      "sequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+      "halfObserved": 0.97900390625,
+      "floatObserved": 0.9996615052223206,
+      "simulation": {
+        "orderName": "seeded",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1228,
+        "exactStallCount": 1228,
+        "firstAtOrBelowHalfUlp": 642,
+        "firstExactStall": 642,
+        "half": 0.97900390625,
+        "float": 0.9996617436408997
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.384185791015625e-7
+    },
+    {
+      "orderName": "seed112",
+      "sequenceHash": "ea738979c0355818f0f0dfb0563404a369e9d8c5c3873b47b786645b70153408",
+      "halfObserved": 0.97900390625,
+      "floatObserved": 0.999661386013031,
+      "simulation": {
+        "orderName": "seed112",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1260,
+        "exactStallCount": 1260,
+        "firstAtOrBelowHalfUlp": 611,
+        "firstExactStall": 611,
+        "half": 0.97900390625,
+        "float": 0.9996616840362549
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.980232238769531e-7
+    },
+    {
+      "orderName": "seed545",
+      "sequenceHash": "40c5f959083f6644867c19cedf928b8f7f726ad579357264328463ef737cbfff",
+      "halfObserved": 0.97607421875,
+      "floatObserved": 0.9996614456176758,
+      "simulation": {
+        "orderName": "seed545",
+        "writes": 1941,
+        "atOrBelowHalfUlpCount": 1260,
+        "exactStallCount": 1260,
+        "firstAtOrBelowHalfUlp": 618,
+        "firstExactStall": 618,
+        "half": 0.97607421875,
+        "float": 0.9996616840362549
+      },
+      "halfReplayAbsError": 0,
+      "floatReplayAbsError": 2.384185791015625e-7
+    }
+  ],
+  "analysis": {
+    "targetSameCount": 1260,
+    "targetHalfObserved": [
+      0.97900390625,
+      0.97607421875
+    ],
+    "targetHalfObservedAbsDifference": 0.0029296875,
+    "assessment": "rejected-as-sufficient-order-sensitive-predictor",
+    "stepMechanismAssessment": "confirmed-for-six-locked-sequences"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "distinctSequences": true,
+    "lockedR61Reproduced": true,
+    "halfReplayExact": true,
+    "floatReplayClose": true,
+    "thresholdCountEqualsExactStalls": true,
+    "targetCountCollision": true,
+    "targetObservedOutputDivergence": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "The threshold identifies exact Half stalls in these six sequences and exact nearest-even Half replay reproduces the renderer center.",
+    "rejected": [
+      "The total count alone is not sufficient: equal counts can end at different Half values.",
+      "The truncating r186 DataUtils.toHalfFloat packer is not an exact model of GPU Half-target blending."
+    ],
+    "candidate": "Keep sequential replay or an equivalently order-sensitive state trace for validation; do not promote a universal threshold.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "syntheticCenteredSplats": true,
+    "softwareWebglOnly": true,
+    "privateRevisionPinnedProbe": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}
