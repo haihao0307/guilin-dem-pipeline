@@ -1,0 +1,922 @@
+{
+  "schema": "kaopu-three-color-residual/r63",
+  "status": "Candidate-pass",
+  "question": "Can a per-channel signed propagated rounding-residual trace explain mixed-color Half divergence that an identical alpha-only trace cannot?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r62Commit": "93433ea36a9d1364805a15b1b0cf9c319ea84387"
+  },
+  "fixture": {
+    "alphaCounts": {
+      "1": 1779,
+      "2": 114,
+      "8": 48
+    },
+    "alphaOrder": "fixed xorshift32 seed 0x4b41504f for every case",
+    "colorCounts": {
+      "red": 647,
+      "green": 647,
+      "blue": 647
+    },
+    "colorCases": {
+      "blocked": "647 red, then 647 green, then 647 blue",
+      "cycled": "RGB repeated 647 times",
+      "seeded": "same color multiset shuffled with xorshift32 seed 0x52474263"
+    },
+    "calibration": [
+      {
+        "alphaByte": 1,
+        "centerAlpha": 0.0033296337351202965
+      },
+      {
+        "alphaByte": 2,
+        "centerAlpha": 0.006659267470240593
+      },
+      {
+        "alphaByte": 8,
+        "centerAlpha": 0.026637069880962372
+      }
+    ],
+    "control": "same alpha sequence and color multiset; only color assignment order changes"
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "devicePixelRatio": 1,
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "contextAttributes": {
+        "alpha": true,
+        "antialias": false,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "default",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": false,
+        "stencil": false,
+        "xrCompatible": false
+      }
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat",
+    "blend": "NormalBlending",
+    "output": "SRGBColorSpace / NoToneMapping"
+  },
+  "cells": [
+    {
+      "colorCase": "blocked",
+      "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+      "colorSequenceHash": "603db824cc2656c427937cdaeb9c06474d056074cb43adcac5585919692caa1e",
+      "colorMultisetHash": "b30be23e63e5fa547ad05544a8b28be4e238802bf1ea4e1e1396c9546f7681db",
+      "halfObserved": [
+        0.0038604736328125,
+        0.0579833984375,
+        0.93359375,
+        0.97900390625
+      ],
+      "floatObserved": [
+        0.0038347425870597363,
+        0.05860849842429161,
+        0.937218427658081,
+        0.9996615052223206
+      ],
+      "halfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.020657598972320557,
+        "changedChannels": 4
+      },
+      "rgbHalfVsFloat": {
+        "channels": 3,
+        "maxAbs": 0.0036246776580810547,
+        "changedChannels": 3
+      },
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 5,
+        "changedChannels": 19
+      },
+      "halfPresentationHash": "1dbfdb2ed11e07a2f1c050fe7c757cbddd364ffe0af84e8df5f18ad49f949ba8",
+      "floatPresentationHash": "9c9f0871d0da8f4eb7ed49e145a7a9cb5cab9cec29045df3e81ab1049ebcbf4a",
+      "simulation": {
+        "name": "blocked",
+        "writes": 1941,
+        "half": [
+          0.0038604736328125,
+          0.0579833984375,
+          0.93359375,
+          0.97900390625
+        ],
+        "float": [
+          0.003834749339148402,
+          0.058608539402484894,
+          0.9372186660766602,
+          0.9996617436408997
+        ],
+        "ideal": [
+          0.0038347476008066335,
+          0.058608486154718885,
+          0.9372182417067053,
+          0.9996614754622309
+        ],
+        "halfMinusIdeal": [
+          0.000025726032005866494,
+          -0.0006250877172188848,
+          -0.003624491706705313,
+          -0.020657569212230942
+        ],
+        "propagatedResidual": [
+          0.000025726032005856872,
+          -0.0006250877172187748,
+          -0.00362449170670539,
+          -0.020657569212230817
+        ],
+        "decompositionAbsError": [
+          9.622294280808852e-18,
+          1.100465205072787e-16,
+          7.719519468096792e-17,
+          1.249000902703301e-16
+        ],
+        "signedLocalResidual": [
+          0.002419362721367335,
+          -0.00489600507351895,
+          -0.004589032781964875,
+          -0.16029676118701275
+        ],
+        "absoluteLocalResidual": [
+          0.10238007501561874,
+          0.10323588599819544,
+          0.06936198413037431,
+          0.23732280804531314
+        ],
+        "nonzeroResidualWrites": [
+          1941,
+          1294,
+          647,
+          1941
+        ],
+        "alphaStalls": 1228,
+        "traceSha256": "3dfb94830ec7493f10c5210f3059543a30bcd4d0be832b5b7cd1142435f52ae0",
+        "checkpoints": [
+          {
+            "write": 1,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.003330230712890625,
+              0,
+              0,
+              0.003330230712890625
+            ],
+            "localResidual": [
+              5.969777703285217e-7,
+              0,
+              0,
+              5.969777703285217e-7
+            ],
+            "propagatedResidual": [
+              5.969777703285217e-7,
+              0,
+              0,
+              5.969777703285217e-7
+            ]
+          },
+          {
+            "write": 256,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.61669921875,
+              0,
+              0,
+              0.61669921875
+            ],
+            "localResidual": [
+              0.00018371514488535468,
+              0,
+              0,
+              0.00018371514488535468
+            ],
+            "propagatedResidual": [
+              -0.0010229160413182514,
+              0,
+              0,
+              -0.0010229160413182514
+            ]
+          },
+          {
+            "write": 512,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.85986328125,
+              0,
+              0,
+              0.85986328125
+            ],
+            "localResidual": [
+              0.000020051505998708308,
+              0,
+              0,
+              0.000020051505998708308
+            ],
+            "propagatedResidual": [
+              -0.006752443812705334,
+              0,
+              0,
+              -0.006752443812705334
+            ]
+          },
+          {
+            "write": 1024,
+            "alphaByte": 1,
+            "color": [
+              0,
+              1,
+              0
+            ],
+            "half": [
+              0.2130126953125,
+              0.77001953125,
+              0,
+              0.9462890625
+            ],
+            "localResidual": [
+              -0.000020728922095258895,
+              0.00020756017738676746,
+              0,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              0.0009490038223277163,
+              0.0008038194032324865,
+              0,
+              -0.03499034083693977
+            ]
+          },
+          {
+            "write": 1536,
+            "alphaByte": 2,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.02227783203125,
+              0.336181640625,
+              0.6416015625,
+              0.97314453125
+            ],
+            "localResidual": [
+              -0.00000321772489542127,
+              0.00005609001800621627,
+              0.00003847721654892666,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              0.0002438015927236401,
+              -0.0005761599711541929,
+              0.0023385176330241843,
+              -0.02491034465165636
+            ]
+          },
+          {
+            "write": 1941,
+            "alphaByte": 1,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.0038604736328125,
+              0.0579833984375,
+              0.93359375,
+              0.97900390625
+            ],
+            "localResidual": [
+              -4.5302178186545916e-7,
+              0.000010567684910256503,
+              -0.0002211084902228322,
+              -0.00006990930205574841
+            ],
+            "propagatedResidual": [
+              0.000025726032005856872,
+              -0.0006250877172187748,
+              -0.00362449170670539,
+              -0.020657569212230817
+            ]
+          }
+        ]
+      },
+      "halfReplay": {
+        "channels": 4,
+        "maxAbs": 0,
+        "changedChannels": 0
+      },
+      "floatReplay": {
+        "channels": 4,
+        "maxAbs": 2.384185791015625e-7,
+        "changedChannels": 4
+      },
+      "halfFloatDecompositionMaxAbs": 1.1102230246251565e-16
+    },
+    {
+      "colorCase": "cycled",
+      "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+      "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+      "colorMultisetHash": "b30be23e63e5fa547ad05544a8b28be4e238802bf1ea4e1e1396c9546f7681db",
+      "halfObserved": [
+        0.34716796875,
+        0.2998046875,
+        0.3505859375,
+        0.97900390625
+      ],
+      "floatObserved": [
+        0.35350245237350464,
+        0.29436326026916504,
+        0.35179582238197327,
+        0.9996615052223206
+      ],
+      "halfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.020657598972320557,
+        "changedChannels": 4
+      },
+      "rgbHalfVsFloat": {
+        "channels": 3,
+        "maxAbs": 0.006334483623504639,
+        "changedChannels": 3
+      },
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 6,
+        "changedChannels": 27
+      },
+      "halfPresentationHash": "a7e40d7c24c95dbfc3055178c6dd09f264ffee3f12d8956def900936324ec52c",
+      "floatPresentationHash": "413a8235a0d3f1a0524866670865c9f32c3d4cd87f49b44d89b7298c976ad5b4",
+      "simulation": {
+        "name": "cycled",
+        "writes": 1941,
+        "half": [
+          0.34716796875,
+          0.2998046875,
+          0.3505859375,
+          0.97900390625
+        ],
+        "float": [
+          0.3535025417804718,
+          0.2943633198738098,
+          0.35179591178894043,
+          0.9996617436408997
+        ],
+        "ideal": [
+          0.3535025281778096,
+          0.29436324211518794,
+          0.3517957051692331,
+          0.9996614754622309
+        ],
+        "halfMinusIdeal": [
+          -0.006334559427809583,
+          0.00544144538481206,
+          -0.001209767669233086,
+          -0.020657569212230942
+        ],
+        "propagatedResidual": [
+          -0.0063345594278094155,
+          0.0054414453848116336,
+          -0.0012097676692330312,
+          -0.020657569212230817
+        ],
+        "decompositionAbsError": [
+          1.6740081543176188e-16,
+          4.2674197509029455e-16,
+          5.4860629927766524e-17,
+          1.249000902703301e-16
+        ],
+        "signedLocalResidual": [
+          -0.015634292733746946,
+          0.019260881120604978,
+          -0.0008344189675106861,
+          -0.16029676118701275
+        ],
+        "absoluteLocalResidual": [
+          0.09999737843495282,
+          0.11604826732827078,
+          0.10324070827315168,
+          0.23732280804531314
+        ],
+        "nonzeroResidualWrites": [
+          1941,
+          1940,
+          1939,
+          1941
+        ],
+        "alphaStalls": 1228,
+        "traceSha256": "45b4cfda472956274a38370bb4928b31466e24e7539b47fb138bb6d0f2b96846",
+        "checkpoints": [
+          {
+            "write": 1,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.003330230712890625,
+              0,
+              0,
+              0.003330230712890625
+            ],
+            "localResidual": [
+              5.969777703285217e-7,
+              0,
+              0,
+              5.969777703285217e-7
+            ],
+            "propagatedResidual": [
+              5.969777703285217e-7,
+              0,
+              0,
+              5.969777703285217e-7
+            ]
+          },
+          {
+            "write": 256,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.2105712890625,
+              0.21728515625,
+              0.1888427734375,
+              0.61669921875
+            ],
+            "localResidual": [
+              0.00004809652011772414,
+              -0.000006503192025775206,
+              0.00002045795372396242,
+              0.00018371514488535468
+            ],
+            "propagatedResidual": [
+              0.00009041567576994675,
+              -0.0006579470599613896,
+              -0.0004553846571268074,
+              -0.0010229160413182514
+            ]
+          },
+          {
+            "write": 512,
+            "alphaByte": 1,
+            "color": [
+              0,
+              1,
+              0
+            ],
+            "half": [
+              0.272705078125,
+              0.280517578125,
+              0.306396484375,
+              0.85986328125
+            ],
+            "localResidual": [
+              -0.00006530287669193058,
+              0.00003766431768781331,
+              0.00004687716614171222,
+              0.000020051505998708308
+            ],
+            "propagatedResidual": [
+              -0.00412294520340129,
+              -0.004708107137085642,
+              0.0018344679027816003,
+              -0.006752443812705334
+            ]
+          },
+          {
+            "write": 1024,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.32666015625,
+              0.314208984375,
+              0.355224609375,
+              0.9462890625
+            ],
+            "localResidual": [
+              -0.0000520255237006495,
+              0.00007288992969733954,
+              -0.0000338707877745037,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              0.0063164279554047105,
+              0.0029888593624189863,
+              0.005509059345236509,
+              -0.03499034083693977
+            ]
+          },
+          {
+            "write": 1536,
+            "alphaByte": 2,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.33544921875,
+              0.322998046875,
+              0.333251953125,
+              0.97314453125
+            ],
+            "localResidual": [
+              0.00005121262483953615,
+              -0.00003170305899402592,
+              -0.00007478668840121827,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              -0.005838614986821223,
+              0.00499797925019522,
+              -0.0055150214150303705,
+              -0.02491034465165636
+            ]
+          },
+          {
+            "write": 1941,
+            "alphaByte": 1,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.34716796875,
+              0.2998046875,
+              0.3505859375,
+              0.97900390625
+            ],
+            "localResidual": [
+              -0.000060696450191244367,
+              0.000024928896891651675,
+              0.000027638564688459155,
+              -0.00006990930205574841
+            ],
+            "propagatedResidual": [
+              -0.0063345594278094155,
+              0.0054414453848116336,
+              -0.0012097676692330312,
+              -0.020657569212230817
+            ]
+          }
+        ]
+      },
+      "halfReplay": {
+        "channels": 4,
+        "maxAbs": 0,
+        "changedChannels": 0
+      },
+      "floatReplay": {
+        "channels": 4,
+        "maxAbs": 2.384185791015625e-7,
+        "changedChannels": 4
+      },
+      "halfFloatDecompositionMaxAbs": 4.440892098500626e-16
+    },
+    {
+      "colorCase": "seeded",
+      "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+      "colorSequenceHash": "21d2661f11b579e75c4c7171c56598d1df726aab8d259595698080bfb306faab",
+      "colorMultisetHash": "b30be23e63e5fa547ad05544a8b28be4e238802bf1ea4e1e1396c9546f7681db",
+      "halfObserved": [
+        0.379638671875,
+        0.305908203125,
+        0.311279296875,
+        0.97900390625
+      ],
+      "floatObserved": [
+        0.38188937306404114,
+        0.3087290823459625,
+        0.30904269218444824,
+        0.9996615052223206
+      ],
+      "halfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.020657598972320557,
+        "changedChannels": 4
+      },
+      "rgbHalfVsFloat": {
+        "channels": 3,
+        "maxAbs": 0.0028208792209625244,
+        "changedChannels": 3
+      },
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 6,
+        "changedChannels": 27
+      },
+      "halfPresentationHash": "0e209f6f887cd11cbea86f4f9ccebf62de6f1947aece2863e40a217f3d006171",
+      "floatPresentationHash": "6ea9b1d49334ce938cdcc8ab5b0cf2faafef9d2ae90965884ee114acf14e6b9b",
+      "simulation": {
+        "name": "seeded",
+        "writes": 1941,
+        "half": [
+          0.379638671875,
+          0.305908203125,
+          0.311279296875,
+          0.97900390625
+        ],
+        "float": [
+          0.3818894624710083,
+          0.3087292015552521,
+          0.3090428113937378,
+          0.9996617436408997
+        ],
+        "ideal": [
+          0.3818895220369008,
+          0.30872918495166785,
+          0.30904276847366247,
+          0.9996614754622309
+        ],
+        "halfMinusIdeal": [
+          -0.002250850161900797,
+          -0.0028209818266678455,
+          0.002236528401337534,
+          -0.020657569212230942
+        ],
+        "propagatedResidual": [
+          -0.002250850161900635,
+          -0.0028209818266676937,
+          0.0022365284013375194,
+          -0.020657569212230817
+        ],
+        "decompositionAbsError": [
+          1.6219664500383146e-16,
+          1.5178830414797062e-16,
+          1.474514954580286e-17,
+          1.249000902703301e-16
+        ],
+        "signedLocalResidual": [
+          -0.008431064625725071,
+          -0.01027190808194689,
+          0.02071343825856431,
+          -0.16029676118701275
+        ],
+        "absoluteLocalResidual": [
+          0.11252450018528748,
+          0.11108120723692849,
+          0.10945685169458486,
+          0.23732280804531314
+        ],
+        "nonzeroResidualWrites": [
+          1935,
+          1941,
+          1939,
+          1941
+        ],
+        "alphaStalls": 1228,
+        "traceSha256": "e24c269d86a9664b553bbd6f454a4854653ffecd69ef5badae1fb39c826352b2",
+        "checkpoints": [
+          {
+            "write": 1,
+            "alphaByte": 1,
+            "color": [
+              0,
+              1,
+              0
+            ],
+            "half": [
+              0,
+              0.003330230712890625,
+              0,
+              0.003330230712890625
+            ],
+            "localResidual": [
+              0,
+              5.969777703285217e-7,
+              0,
+              5.969777703285217e-7
+            ],
+            "propagatedResidual": [
+              0,
+              5.969777703285217e-7,
+              0,
+              5.969777703285217e-7
+            ]
+          },
+          {
+            "write": 256,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.220703125,
+              0.2337646484375,
+              0.164306640625,
+              0.61669921875
+            ],
+            "localResidual": [
+              -0.00003983204021551501,
+              0.000048367481099376164,
+              0.0000604254812515137,
+              0.00018371514488535468
+            ],
+            "propagatedResidual": [
+              -0.00010664165882482493,
+              -0.00036465008970084365,
+              0.0015235710197074167,
+              -0.0010229160413182514
+            ]
+          },
+          {
+            "write": 512,
+            "alphaByte": 1,
+            "color": [
+              1,
+              0,
+              0
+            ],
+            "half": [
+              0.29345703125,
+              0.3291015625,
+              0.240234375,
+              0.85986328125
+            ],
+            "localResidual": [
+              0.00008074795732682105,
+              -0.00012085096591363254,
+              -0.00005175456215056329,
+              0.000020051505998708308
+            ],
+            "propagatedResidual": [
+              -0.004140033168740721,
+              0.0004467880212835094,
+              -0.00012951116524812352,
+              -0.006752443812705334
+            ]
+          },
+          {
+            "write": 1024,
+            "alphaByte": 1,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.325439453125,
+              0.3486328125,
+              0.3095703125,
+              0.9462890625
+            ],
+            "localResidual": [
+              0.0001102832773085538,
+              -0.000055819057024564245,
+              -0.00010892844397858426,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              -0.0022320463367395756,
+              -0.00022237049835555444,
+              0.004817591623155332,
+              -0.03499034083693977
+            ]
+          },
+          {
+            "write": 1536,
+            "alphaByte": 2,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.274658203125,
+              0.396240234375,
+              0.32763671875,
+              0.97314453125
+            ],
+            "localResidual": [
+              -0.00011109618071714067,
+              -0.00002899339688156033,
+              -0.00011218003601243254,
+              -0.0001788377494449378
+            ],
+            "propagatedResidual": [
+              0.0007163237699450881,
+              -0.0019250022883185568,
+              0.0016889588667171052,
+              -0.02491034465165636
+            ]
+          },
+          {
+            "write": 1941,
+            "alphaByte": 1,
+            "color": [
+              0,
+              0,
+              1
+            ],
+            "half": [
+              0.379638671875,
+              0.305908203125,
+              0.311279296875,
+              0.97900390625
+            ],
+            "localResidual": [
+              0.000047419098336831667,
+              0.000045251368419485516,
+              -0.00010323815195079078,
+              -0.00006990930205574841
+            ],
+            "propagatedResidual": [
+              -0.002250850161900635,
+              -0.0028209818266676937,
+              0.0022365284013375194,
+              -0.020657569212230817
+            ]
+          }
+        ]
+      },
+      "halfReplay": {
+        "channels": 4,
+        "maxAbs": 0,
+        "changedChannels": 0
+      },
+      "floatReplay": {
+        "channels": 4,
+        "maxAbs": 2.384185791015625e-7,
+        "changedChannels": 4
+      },
+      "halfFloatDecompositionMaxAbs": 1.6653345369377348e-16
+    }
+  ],
+  "analysis": {
+    "rgbHalfFloatErrorMin": 0.0028208792209625244,
+    "rgbHalfFloatErrorMax": 0.006334483623504639,
+    "rgbHalfFloatErrorSpread": 0.0035136044025421143,
+    "alphaOnlyAssessment": "rejected-as-sufficient-for-rgb-precision",
+    "signedPropagatedResidualAssessment": "confirmed-as-exact-decomposition-for-three-locked-cases"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "sameAlphaSequence": true,
+    "sameColorMultiset": true,
+    "distinctColorSequences": true,
+    "halfReplayBitExact": true,
+    "floatReplayClose": true,
+    "propagatedResidualIdentity": true,
+    "alphaTraceIdentical": true,
+    "mixedColorAlphaOnlyCounterexample": true,
+    "presentationCaptured": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "The signed propagated local Half residual exactly decomposes Half-minus-ideal per channel, and nearest-even replay matches actual Half centers.",
+    "rejected": "An identical alpha sequence, alpha state trace and color multiset are sufficient to predict RGB precision.",
+    "candidate": "Retain ordered per-channel state or the signed propagated residual trace for diagnostics; no compact universal threshold is established.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "traceIsDiagnosticReplayNotPhysicalTruth": true,
+    "syntheticCenteredSplats": true,
+    "softwareWebglOnly": true,
+    "privateRevisionPinnedProbe": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

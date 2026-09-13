@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r63",
+  "updatedAt": "2026-09-14",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R62_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R63 executed three mixed-color assignments through actual Three.js r186 SPZLoader and GaussianSplat while keeping the complete alpha sequence and RGB color multiset fixed. All cases had 1228 alpha stalls and Half alpha 0.97900390625, but maximum internal RGB Half/Float error ranged from 0.0028208792 to 0.0063344836. A per-channel nearest-even replay matched actual Half center bits exactly, and signed propagated local residuals decomposed Half-minus-ideal within 4.27e-16. This rejects alpha-only precision evidence as sufficient for RGB and retains the full ordered residual trace as a diagnostic Candidate, not a universal score or independent physical root.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-14_GAUSSIAN_COLOR_RESIDUAL_R63.md"],
+  "appendSourceLocks": ["references/gaussian-color-residual-r63/SOURCE_LOCK.json"],
+  "r63Probe": "PROBES/gaussian_three_color_residual_r63.html",
+  "r63Runner": "PROBES/run_gaussian_three_color_residual_r63.js",
+  "r63Result": "PROBES/gaussian_three_color_residual_result_r63.json",
+  "candidateR63Gate": "ADAPTERS/gaussian_three_color_residual_gate_r63.mjs",
+  "currentBestViewR63Extension": "CURRENT_BEST_VIEW_R63_GAUSSIAN_COLOR_RESIDUAL.md",
+  "toolRoutingR63Extension": "TOOL_ROUTING_R63_GAUSSIAN_COLOR_RESIDUAL.json",
+  "motherRoutingR63Extension": "MOTHER_ROUTING_R63_GAUSSIAN_COLOR_RESIDUAL.json",
+  "nextGate": "Lock source, camera, covariance and order, then compare full-pixel Half/Float readback with a per-pixel nearest-even replay whose effective alpha includes the fixed r186 Gaussian footprint and explicit cutoff-neighborhood classification. Do not define a universal asset or device threshold.",
+  "mergePolicy": "This overlay supersedes R62 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
+

@@ -1,0 +1,59 @@
+{
+  "schema": "kaopu-source-lock/r63",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-14",
+  "topic": "three-r186-mixed-color-propagated-residual",
+  "inherits": "references/gaussian-half-ulp-r62/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R63-THREE-R186-COLOR-RESIDUAL-EXECUTION",
+      "sameEvidenceLineageAs": ["O-R62-THREE-R186-HALF-ULP-EXECUTION", "O-R61-THREE-R186-MIXED-ALPHA-ORDER-EXECUTION"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "browserHarness": "playwright@1.57.0",
+      "graphics": "Chromium/SwiftShader software WebGL",
+      "alphaOrder": "fixed xorshift32 seed 0x4b41504f",
+      "colorVariants": ["blocked", "cycled", "seeded"]
+    },
+    {
+      "root": "O-R63-THREE-R186-GAUSSIAN-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js",
+      "constraint": "r186 reads ordered RGB and alpha from splat storage, applies the fixed Gaussian fragment alpha and uses the material's transparent source-over route."
+    },
+    {
+      "root": "O-R63-CI-COLOR-RESIDUAL",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34778643346,
+      "workflowHeadSha": "9936e3dc5f6cfe87cdac0790c48210ba0c942916",
+      "artifactId": 10324565291,
+      "artifactName": "kaopu-gaussian-r63-color-residual",
+      "artifactDigestSha256": "0d25894cd67a8b720e84099514a676370e059619b7d36535aeb124a81964c276",
+      "machineGate": "Candidate-pass"
+    },
+    {
+      "root": "O-R63-MOTHER-COORDINATION-INHERITANCE",
+      "independentPhysicalObservationRoot": false,
+      "commit": "07fcf69276f5ce2705ae0d63a3011f04fee8f50b",
+      "constraint": "No Mother acknowledgment was present; the meeting retained deterministic mixed-color residual replay as the next bounded learning gap."
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_color_residual_r63.html",
+    "runner": "PROBES/run_gaussian_three_color_residual_r63.js",
+    "compactResult": "PROBES/gaussian_three_color_residual_result_r63.json",
+    "resultGitBlobSha": "600b8fcb98ba48597dfad71ad9c4016daeff89b6",
+    "gate": "ADAPTERS/gaussian_three_color_residual_gate_r63.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r63-color-residual.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

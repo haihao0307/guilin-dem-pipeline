@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-tool-routing/r63",
+  "status": "Candidate partial",
+  "question": "Can an ordered per-channel propagated Half residual explain mixed-color RGB divergence?",
+  "inherits": "TOOL_ROUTING_R62_GAUSSIAN_HALF_ULP.json",
+  "routes": [
+    {
+      "stage": "official-render-semantics",
+      "tool": "Pinned Three.js r186 GaussianSplat.js and NormalBlending route",
+      "authority": "fragment RGB/alpha and ordered source-over behavior for the locked revision",
+      "notAuthorityFor": ["physical relighting", "perceptual threshold", "future revisions"]
+    },
+    {
+      "stage": "actual-mixed-color-execution",
+      "tool": "R63 Playwright probe using public SPZLoader and GaussianSplat",
+      "authority": "three locked color assignments in the tested Chromium/SwiftShader lineage",
+      "notAuthorityFor": ["hardware GPU", "WebGPU", "Safari/iPhone", "real assets"]
+    },
+    {
+      "stage": "precision-diagnosis",
+      "tool": "Ordered per-channel nearest-even replay and signed propagated local residual",
+      "authority": "bit-exact center Half replay and exact Half-minus-ideal decomposition for R63",
+      "notAuthorityFor": ["compact risk prediction", "visual acceptance", "independent physical evidence"]
+    },
+    {
+      "stage": "risk-screening",
+      "tool": "Alpha tau, sum(alpha^2), stall count and alpha state trace",
+      "authority": "candidate opacity-domain screening data",
+      "notAuthorityFor": ["RGB precision certification", "color-order effects"]
+    }
+  ],
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "perChannelHalfReplayBitExactForLockedCenters": true,
+  "signedPropagatedResidualIdentityVerified": true,
+  "alphaOnlyEvidenceSufficientForRgb": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}
+
