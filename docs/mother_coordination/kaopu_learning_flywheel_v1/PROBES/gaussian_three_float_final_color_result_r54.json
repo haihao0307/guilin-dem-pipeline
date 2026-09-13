@@ -1,0 +1,61 @@
+{
+  "schema": "kaopu-three-float-final-color-result/r54",
+  "status": "Candidate-pass",
+  "workflow": {
+    "runId": 34735939991,
+    "runNumber": 2,
+    "headSha": "0d281fc5332f3d2dffb81b2b29700579e01b52d7",
+    "artifactId": 10311191870,
+    "artifactName": "kaopu-gaussian-r54-float-final-color",
+    "artifactDigestSha256": "03f25f3fa46711cd0bdecd4a8f96b1eb2d25eb9a9de4387bd23aaf1dd0d7946d"
+  },
+  "toolchain": {
+    "threeRevision": "186",
+    "browser": "Headless Chromium 143.0.7499.4",
+    "browserHarness": "playwright@1.57.0",
+    "webgl": "WebGLBackend / ANGLE Vulkan SwiftShader",
+    "webgpu": "WebGPUBackend / Google SwiftShader"
+  },
+  "fixture": {
+    "sampleCount": 256,
+    "sampledChannels": 1024,
+    "floatTarget": "RGBA32F offscreen RenderTarget",
+    "finalTarget": "RGBA8 offscreen RenderTarget",
+    "toneMapping": "NoToneMapping",
+    "rendererOutputColorSpace": "LinearSRGBColorSpace",
+    "targetColorSpace": "NoColorSpace",
+    "blending": false,
+    "gaussianCutoff": false,
+    "presentationSurface": false
+  },
+  "summary": {
+    "webglMaxAbs": 0.0019607962346544494,
+    "webgpuMaxAbs": 0.0019607962346544494,
+    "webglRmse": 0.001131800634389483,
+    "webgpuRmse": 0.001131800634389483,
+    "channelsOverOneCodeWebgl": 0,
+    "channelsOverOneCodeWebgpu": 0,
+    "floatTargetSha256": "964924dc62a4f2c16c9f93f34d19e4a0392ad41a5412d15c9671464d14d73a69",
+    "finalTargetSha256": "cb9e4d9859c67d8a2d414a52571886cf77adc70fc8da92cf7b729ef60b11636e",
+    "crossBackendFloatTargetHashEqual": true,
+    "crossBackendFinalTargetHashEqual": true,
+    "crossBackendMaxAbsDelta": 0,
+    "crossBackendRmseDelta": 0,
+    "machineGate": "Candidate-pass"
+  },
+  "evidenceSha256": {
+    "webglResult": "bebff9177b4e48fa024cbf9097e2570b91a9f78dc646cde1931a1c072d556bf3",
+    "webgpuResult": "3e738d6bb3cbe495131d14fddb4b393a5a54d750511be545306e088041bf1dd5",
+    "comparison": "577c4e5b7149d0e281a81d8d958fcd00af976e6196cd662d04bd8a573dd4cff4",
+    "gate": "ed405d6f987c8509b50e3e69886def54e1eed5ce9829306433b3406e9ce00c3b"
+  },
+  "limits": {
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "browserPresentationSurface": false,
+    "gaussianBlendPath": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  },
+  "interpretation": "For 256 stable direct-TSL colors under explicit offscreen no-tone-map/no-target-color-space state, RGBA8 storage differed from RGBA32F by at most about half an 8-bit code plus float epsilon. WebGL and WebGPU produced identical float and final target bytes in this software fixture. This does not yet cover Gaussian blending or presentation transforms."
+}
