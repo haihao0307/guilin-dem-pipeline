@@ -1,0 +1,39 @@
+{
+  "schema": "LANDSCAPE_KARST_LIVING_R1_STATUS",
+  "date": "2026-09-13",
+  "branch": "feature/landscape-mother-karst-living-r1-20260913",
+  "acceptedMasterCommit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+  "acceptedMasterPath": "workbenches/landscape-surface-r5/index.html",
+  "acceptedMasterSha256": "ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2",
+  "shapeApprovedByUser": true,
+  "visualApproved": false,
+  "productionReady": false,
+  "truthApproved": false,
+  "implemented": [
+    "deterministic fixed-world vertical surface-to-cave-roof tracing",
+    "small explicit drip-site candidate set",
+    "local catchment proxy",
+    "fracture/connectivity/residence proxies",
+    "shared input-water budget",
+    "shared dissolved-carbonate budget",
+    "calcite deposition bounded by carried dissolved load",
+    "reversible relative process stage with calibratedYears=false",
+    "read-only geometry invariant",
+    "guarded builder that refuses any R5 source SHA mismatch and asserts worldSource byte identity"
+  ],
+  "localTest": {
+    "passed": true,
+    "siteCount": 5,
+    "waterIn": 1.0,
+    "dissolutionProxy": 0.1698252211414495,
+    "dissolvedLoadInProxy": 0.13925668133598856,
+    "calciteDepositProxy": 0.05774590828222186,
+    "dissolvedLoadOutProxy": 0.0815107730537667,
+    "massBalanceError": 0.0,
+    "deterministicRepeat": true,
+    "relativeStageMonotone": true
+  },
+  "candidateHtmlMaterialized": false,
+  "nextIntegration": "Run build_karst_living_r1.py against the frozen R5 checkout, then browser-check the generated single-file candidate before any public-preview claim.",
+  "protectedMacroGeometryMustRemainByteIdentical": true
+}
