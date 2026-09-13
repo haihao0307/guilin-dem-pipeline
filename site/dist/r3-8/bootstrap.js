@@ -1,7 +1,9 @@
 import * as THREE from 'three';
+import {installOverlayTransformContract} from './overlay-transform-contract.js';
 import {installSoilContext} from './soil-context.js';
 import {installEnvironmentContext} from './environment-context.js';
 import {installWorldScore} from './world-score.js';
+installOverlayTransformContract(THREE);
 THREE.Object3D.prototype[Symbol.for('wenzhou.r3.3.surface-evidence-installed')]=true;
 installSoilContext();installEnvironmentContext();installWorldScore();
 await import('../r3-6/bootstrap.js');
