@@ -1,0 +1,325 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU Gaussian Three.js cross-backend mask R53</title>
+<script>
+window.__KAOPU_PROGRESS__ = { schema: 'kaopu-gaussian-cross-backend-mask-progress/r53', stage: 'html-loaded' };
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/webgpu": "/node_modules/three/build/three.webgpu.js",
+    "three/tsl": "/node_modules/three/build/three.tsl.js"
+  }
+}
+</script>
+<body></body>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { Fn, Discard, attribute, vec4 } from 'three/tsl';
+
+const requestedMode = new URLSearchParams(location.search).get('mode') || 'webgl';
+const f32 = Math.fround;
+const ulpSteps = Array.from({ length: 129 }, (_, i) => i - 64);
+
+function f32Bits(value) {
+  const b = new ArrayBuffer(4);
+  const dv = new DataView(b);
+  dv.setFloat32(0, f32(value), true);
+  return dv.getUint32(0, true);
+}
+function bitsF32(bits) {
+  const b = new ArrayBuffer(4);
+  const dv = new DataView(b);
+  dv.setUint32(0, bits >>> 0, true);
+  return dv.getFloat32(0, true);
+}
+function detectBackend(renderer) {
+  const backend = renderer.backend;
+  if (backend?.isWebGPUBackend) return 'webgpu';
+  if (backend?.isWebGLBackend) return 'webgl';
+  const name = backend?.constructor?.name || 'unknown';
+  if (/webgpu/i.test(name)) return 'webgpu';
+  if (/webgl/i.test(name)) return 'webgl';
+  return name;
+}
+async function adapterIdentity(renderer, actualBackend) {
+  const identity = {
+    backendClass: renderer.backend?.constructor?.name || null,
+    rendererClass: renderer.constructor?.name || null,
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+  };
+  if (actualBackend === 'webgl') {
+    const gl = renderer.backend?.gl || null;
+    if (gl) {
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      identity.glVersion = gl.getParameter(gl.VERSION);
+      identity.glslVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+      identity.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+      identity.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    }
+  } else if (actualBackend === 'webgpu' && navigator.gpu) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      const info = adapter?.info || {};
+      identity.adapter = {
+        vendor: info.vendor || null,
+        architecture: info.architecture || null,
+        device: info.device || null,
+        description: info.description || null,
+      };
+    } catch (error) {
+      identity.adapterError = String(error?.stack || error);
+    }
+  }
+  return identity;
+}
+function makeStripGeometry(count) {
+  const vertexCount = count * 4;
+  const positions = new Float32Array(vertexCount * 3);
+  const ux = new Float32Array(vertexCount);
+  const uy = new Float32Array(vertexCount);
+  const us = new Float32Array(vertexCount);
+  const indices = new Uint32Array(count * 6);
+  for (let i = 0; i < count; i++) {
+    const x0 = -1 + (2 * i) / count;
+    const x1 = -1 + (2 * (i + 1)) / count;
+    const v = i * 4;
+    positions.set([x0,-1,0, x1,-1,0, x1,1,0, x0,1,0], v * 3);
+    indices.set([v,v+1,v+2, v,v+2,v+3], i * 6);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('kaopuUx', new THREE.BufferAttribute(ux, 1));
+  geometry.setAttribute('kaopuUy', new THREE.BufferAttribute(uy, 1));
+  geometry.setAttribute('kaopuUs', new THREE.BufferAttribute(us, 1));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  return geometry;
+}
+function setSlotFloat(attr, i, value) {
+  const b = i * 4;
+  attr.array[b] = value;
+  attr.array[b+1] = value;
+  attr.array[b+2] = value;
+  attr.array[b+3] = value;
+}
+function maskFromBooleans(values) {
+  return values.map(v => v ? '1' : '0').join('');
+}
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function main() {
+  window.__KAOPU_PROGRESS__ = { ...window.__KAOPU_PROGRESS__, stage: 'module-start', requestedMode };
+  const renderer = new THREE.WebGPURenderer({
+    antialias: false,
+    alpha: true,
+    forceWebGL: requestedMode === 'webgl',
+    outputBufferType: THREE.UnsignedByteType,
+  });
+  renderer.setPixelRatio(1);
+  renderer.setSize(ulpSteps.length, 1, false);
+  renderer.setClearColor(0x000000, 0);
+  document.body.appendChild(renderer.domElement);
+  await renderer.init();
+
+  const actualBackend = detectBackend(renderer);
+  const identity = await adapterIdentity(renderer, actualBackend);
+  if (requestedMode !== actualBackend) {
+    return {
+      schema: 'kaopu-gaussian-cross-backend-mask/r53',
+      status: 'unsupported', requestedMode, actualBackend, threeRevision: THREE.REVISION, identity,
+      reason: `Requested ${requestedMode} but initialized ${actualBackend}.`
+    };
+  }
+
+  const geometry = makeStripGeometry(ulpSteps.length);
+  const uxAttribute = geometry.getAttribute('kaopuUx');
+  const uyAttribute = geometry.getAttribute('kaopuUy');
+  const usAttribute = geometry.getAttribute('kaopuUs');
+  const uxNode = attribute('kaopuUx', 'float');
+  const uyNode = attribute('kaopuUy', 'float');
+  const usNode = attribute('kaopuUs', 'float');
+  const fragment = Fn(() => {
+    const qx = uxNode.div(usNode);
+    const qy = uyNode.div(usNode);
+    const r2 = qx.mul(qx).add(qy.mul(qy));
+    Discard(r2.greaterThan(4.0));
+    return vec4(1.0, 1.0, 1.0, 1.0);
+  });
+  const material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
+  material.fragmentNode = fragment();
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.frustumCulled = false;
+  const scene = new THREE.Scene();
+  scene.add(mesh);
+  const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,2);
+  camera.position.z = 1;
+  const target = new THREE.RenderTarget(ulpSteps.length, 1, {
+    type: THREE.UnsignedByteType,
+    format: THREE.RGBAFormat,
+    depthBuffer: false,
+    stencilBuffer: false,
+    minFilter: THREE.NearestFilter,
+    magFilter: THREE.NearestFilter,
+  });
+  renderer.setRenderTarget(target);
+  renderer.setViewport(0,0,ulpSteps.length,1);
+  await renderer.compileAsync(scene, camera);
+
+  const scales = [2 ** -10, 0.3, 1.0, 3.7, 256.0, 1024.0];
+  const directions = [
+    ['axis', 2.0, 0.0],
+    ['shallow', Math.sqrt(3.75), 0.5],
+    ['one-one-root2', Math.sqrt(3.0), 1.0],
+    ['diagonal', Math.sqrt(2.0), Math.sqrt(2.0)],
+    ['steep', Math.sqrt(1.75), 1.5],
+    ['root3', 1.0, Math.sqrt(3.0)],
+  ];
+  const expectedCaseCount = scales.length * directions.length * ulpSteps.length;
+  const groups = [];
+  let caseCount = 0;
+  let floatMismatchCount = 0;
+  let doubleMismatchCount = 0;
+  let renderSubmissionCount = 0;
+  let readbackCount = 0;
+
+  window.__KAOPU_PROGRESS__ = {
+    schema: 'kaopu-gaussian-cross-backend-mask-progress/r53', stage: 'sweep', requestedMode, actualBackend,
+    completedGroups: 0, totalGroups: scales.length * directions.length,
+    completedCases: 0, totalCases: expectedCaseCount,
+  };
+
+  for (let scaleIndex = 0; scaleIndex < scales.length; scaleIndex++) {
+    const scale = f32(scales[scaleIndex]);
+    for (let directionIndex = 0; directionIndex < directions.length; directionIndex++) {
+      const [direction, qx0, qy0] = directions[directionIndex];
+      const baseX = f32(qx0 * scale);
+      const distanceY = f32(qy0 * scale);
+      const baseBits = f32Bits(baseX);
+      const floatCovered = [];
+      const doubleCovered = [];
+      const xBits = [];
+
+      for (let i = 0; i < ulpSteps.length; i++) {
+        const ulpStep = ulpSteps[i];
+        const currentXBits = (baseBits + ulpStep) >>> 0;
+        const effectiveX = f32(bitsF32(currentXBits));
+        const effectiveY = f32(distanceY);
+        const qxFloat = f32(effectiveX / scale);
+        const qyFloat = f32(effectiveY / scale);
+        const r2Float = f32(f32(qxFloat * qxFloat) + f32(qyFloat * qyFloat));
+        const r2Double = (effectiveX / scale) ** 2 + (effectiveY / scale) ** 2;
+        setSlotFloat(uxAttribute, i, effectiveX);
+        setSlotFloat(uyAttribute, i, effectiveY);
+        setSlotFloat(usAttribute, i, scale);
+        xBits.push(currentXBits);
+        floatCovered.push(r2Float <= 4.0);
+        doubleCovered.push(r2Double <= 4.0);
+      }
+      uxAttribute.needsUpdate = true;
+      uyAttribute.needsUpdate = true;
+      usAttribute.needsUpdate = true;
+
+      renderer.setRenderTarget(target);
+      renderer.setViewport(0,0,ulpSteps.length,1);
+      renderer.setScissorTest(false);
+      renderer.clear(true,false,false);
+      await renderer.renderAsync(scene,camera);
+      renderSubmissionCount++;
+      const rgba = await renderer.readRenderTargetPixelsAsync(target,0,0,ulpSteps.length,1);
+      readbackCount++;
+      const backendCovered = ulpSteps.map((_, i) => rgba[i * 4 + 3] > 0);
+
+      for (let i = 0; i < ulpSteps.length; i++) {
+        if (floatCovered[i] !== backendCovered[i]) floatMismatchCount++;
+        if (doubleCovered[i] !== backendCovered[i]) doubleMismatchCount++;
+      }
+      caseCount += ulpSteps.length;
+
+      const inputIdentity = JSON.stringify({
+        scaleBits: f32Bits(scale), direction, directionIndex,
+        distanceYBits: f32Bits(distanceY), xBits,
+      });
+      groups.push({
+        groupIndex: groups.length,
+        scaleIndex,
+        scale,
+        directionIndex,
+        direction,
+        inputSha256: await sha256Hex(inputIdentity),
+        backendCoverageMask: maskFromBooleans(backendCovered),
+        float32CoverageMask: maskFromBooleans(floatCovered),
+        doubleCoverageMask: maskFromBooleans(doubleCovered),
+      });
+
+      window.__KAOPU_PROGRESS__ = {
+        ...window.__KAOPU_PROGRESS__, completedGroups: groups.length, completedCases: caseCount, scaleIndex, direction,
+      };
+    }
+  }
+
+  const aggregateMask = groups.map(g => g.backendCoverageMask).join('|');
+  const aggregateInput = groups.map(g => g.inputSha256).join('|');
+  const aggregateFloatMask = groups.map(g => g.float32CoverageMask).join('|');
+
+  renderer.dispose();
+  geometry.dispose();
+  material.dispose();
+  target.dispose();
+
+  return {
+    schema: 'kaopu-gaussian-cross-backend-mask/r53',
+    status: 'candidate-observation',
+    requestedMode,
+    actualBackend,
+    threeRevision: THREE.REVISION,
+    identity,
+    fixture: {
+      caseCount,
+      groupCount: groups.length,
+      scaleCount: scales.length,
+      directionCount: directions.length,
+      ulpStepCountPerDirection: ulpSteps.length,
+      ulpRange: [-64,64],
+      renderSubmissionCount,
+      readbackCount,
+      tslMaterialCount: 1,
+      renderTarget: 'RGBA8 129x1 coverage row',
+      cutoffRule: 'TSL Discard when r2 > 4.0',
+    },
+    summary: {
+      float32PredicateMismatchCount: floatMismatchCount,
+      doublePredicateMismatchCount: doubleMismatchCount,
+      aggregateBackendMaskSha256: await sha256Hex(aggregateMask),
+      aggregateFloat32MaskSha256: await sha256Hex(aggregateFloatMask),
+      aggregateInputSha256: await sha256Hex(aggregateInput),
+    },
+    groups,
+    checks: {
+      allCasesExecuted: caseCount === expectedCaseCount,
+      fullGroupCount: groups.length === 36,
+      fullUlpRange: ulpSteps.length === 129 && ulpSteps[0] === -64 && ulpSteps[128] === 64,
+      float32ModelMatchesBackendCoverage: floatMismatchCount === 0,
+      expectedDoubleCounterexampleCount: doubleMismatchCount === 32,
+      expectedBatchCounts: renderSubmissionCount === 36 && readbackCount === 36,
+    },
+    limits: { hardwareGpu: false, targetDevice: false, realPhotoOrLearnedAsset: false, humanAcceptance: false },
+  };
+}
+
+try {
+  window.__KAOPU_RESULT__ = await main();
+} catch (error) {
+  window.__KAOPU_RESULT__ = {
+    schema: 'kaopu-gaussian-cross-backend-mask/r53', status: 'error', requestedMode,
+    progress: window.__KAOPU_PROGRESS__ || null,
+    message: String(error?.message || error), stack: String(error?.stack || ''),
+  };
+}
+window.__KAOPU_DONE__ = true;
+</script>
