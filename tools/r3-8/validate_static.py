@@ -7,10 +7,6 @@ VERIFIED_R38_RUNTIME='3018da201a2ef6b5d122522e85bbbb5b91f8a34d'
 errors=[]
 def check(ok,label):
     if not ok:errors.append(label)
-def read(base,rec,dtype):
-    p=(base/rec['path']).resolve();check(p.is_relative_to((ROOT/'site/dist').resolve()),'path escapes runtime')
-    b=p.read_bytes();check(len(b)==rec['bytes'] and hashlib.sha256(b).hexdigest()==rec['sha256'],str(p))
-    return np.frombuffer(b,dtype=dtype)
 def digest(b):return hashlib.sha256(b).hexdigest()
 
 def decode_soil_pairs():
@@ -35,6 +31,25 @@ def decode_soil_pairs():
         decoded[(rec['property'],rec['depth'],'uncertainty')]=ub
     return m,decoded
 
+def evidence_index():
+    base=SITE/'data/evidence-gzip'
+    m=json.loads((base/'index.json').read_text(encoding='utf-8'))
+    check(m['schema']=='wenzhou-r3.9-evidence-gzip/v1','evidence gzip schema')
+    check(m['lossless'] is True and m['fileCount']==41,'41 lossless WRB/JRC gzip payloads')
+    check(m['rawBytes']==37239384 and m['packedBytes']==3424064,'evidence gzip byte contract')
+    return base,m,{(r['family'],r['logicalPath']):r for r in m['records']}
+
+def read_env(base,index,family,rec,dtype):
+    er=index.get((family,rec['path']))
+    check(er is not None,f'evidence gzip record {family}/{rec["path"]}')
+    if er is None:return np.array([],dtype=dtype)
+    packed=(base/er['packedPath']).read_bytes()
+    check(len(packed)==er['packedBytes'] and digest(packed)==er['packedSha256'],f'packed evidence {family}/{rec["path"]}')
+    raw=gzip.decompress(packed)
+    check(len(raw)==rec['bytes'] and len(raw)==er['rawBytes'],'evidence decoded bytes')
+    check(digest(raw)==rec['sha256'] and digest(raw)==er['rawSha256'],f'evidence decoded sha {family}/{rec["path"]}')
+    return np.frombuffer(raw,dtype=dtype)
+
 soil=json.loads((SITE/'data/soil/soil-context.json').read_text(encoding='utf-8'))
 check(soil['schema']=='wenzhou-r3.8-soil-profile/r1','profile schema')
 check(len(soil['layers'])==96,'96 property/stat/depth semantics')
@@ -49,11 +64,13 @@ for r in soil['layers']:
     check(r['geotransform']==[190250,250,0,3242000,0,-250],'soil frame')
     if r['statistic']=='uncertainty':check(r['conventionalUnit']=='relative index' and r['conversionFactor']==1,'uncertainty units')
 check(soil['truthBoundary']['mayOverrideCanonicalDem'] is False,'soil height boundary')
+
+env_base,env_manifest,env_index=evidence_index()
 w=json.loads((SITE/'data/wrb/wrb-context.json').read_text(encoding='utf-8'))
-stack=np.stack([read(SITE/'data/wrb',r,'u1') for r in w['probabilityLayers']])
-official=read(SITE/'data/wrb',w['outputs']['officialMostProbable'],'u1');mask=official!=255
-derived=read(SITE/'data/wrb',w['outputs']['postAlignmentArgmax'],'u1')
-difference=read(SITE/'data/wrb',w['outputs']['classificationDisagreement'],'u1')
+stack=np.stack([read_env(env_base,env_index,'wrb',r,'u1') for r in w['probabilityLayers']])
+official=read_env(env_base,env_index,'wrb',w['outputs']['officialMostProbable'],'u1');mask=official!=255
+derived=read_env(env_base,env_index,'wrb',w['outputs']['postAlignmentArgmax'],'u1')
+difference=read_env(env_base,env_index,'wrb',w['outputs']['classificationDisagreement'],'u1')
 check(np.array_equal(derived[mask],stack[:,mask].argmax(axis=0)),'WRB argmax')
 check(np.array_equal(difference[mask],(official[mask]!=derived[mask]).astype('u1')),'WRB difference')
 check(np.count_nonzero(difference[mask])==32142,'WRB audit count')
@@ -61,12 +78,12 @@ water=json.loads((SITE/'data/water/water-context.json').read_text(encoding='utf-
 check(len(water['layers'])==6,'water six products')
 check(water['sourceNativeResolutionM']==30 and water['displayResolutionM']==250,'water source vs display scale')
 for r in water['layers']:
-    a=read(SITE/'data/water',r,'u1');check(a.size==1003*884,'water shape')
+    a=read_env(env_base,env_index,'water',r,'u1');check(a.size==1003*884,'water shape')
     check(sorted(map(int,np.unique(a)))==r['rawValues'],'water source codes')
     if r['product'] in ['seasonality','extent']:check('2022-2024' in r['period'],'partial water timeline')
     if r['product']=='change':check(any(x['value']=='254' and 'Unable to compute' in x['label'] for x in r['palette']),'change missing-data semantics')
 check(all(v is False for v in water['truthBoundary'].values()),'water truth boundary')
 frozen=subprocess.run(['git','diff','--exit-code',VERIFIED_R38_RUNTIME,'--',*[f'site/dist/r3-{i}' for i in range(1,8)],'site/dist/r3','site/dist/vendor'],cwd=ROOT,capture_output=True)
 check(frozen.returncode==0,'historical runtime changed since verified R3.8 candidate')
-print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'historicalFreezeAnchor':VERIFIED_R38_RUNTIME,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
+print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'evidenceGzipFiles':env_manifest['fileCount'],'evidenceGzipPackedBytes':env_manifest['packedBytes'],'historicalFreezeAnchor':VERIFIED_R38_RUNTIME,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
 raise SystemExit(bool(errors))
