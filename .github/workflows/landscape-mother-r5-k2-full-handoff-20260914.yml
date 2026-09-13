@@ -1,0 +1,310 @@
+name: Landscape Mother R5.K2 Full Handoff 2026-09-14
+
+on:
+  push:
+    branches:
+      - handoff/landscape-mother-r5-k2-full-20260914
+    paths:
+      - .github/workflows/landscape-mother-r5-k2-full-handoff-20260914.yml
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/landscape-mother-r5-k2-full-20260914
+          fetch-depth: 0
+
+      - name: Build current full handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='handoffs/landscape-mother/r5-k2-full-20260914'
+          PKG="$ROOT/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14"
+          ZIP="$ROOT/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14.zip"
+          rm -rf "$ROOT"
+          mkdir -p "$PKG/SOURCE_SNAPSHOT" "$PKG/QA"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          pkg = Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14/SOURCE_SNAPSHOT')
+          sources = [
+              Path('workbenches/landscape-surface-r5-k2'),
+              Path('workbenches/landscape-surface-r5'),
+              Path('workbenches/landscape-function'),
+              Path('landscape-mother'),
+              Path('skills/dem-procedural-landscape'),
+              Path('contracts'),
+              Path('knowledge/terrain-hydrology/guilin/distilled'),
+              Path('knowledge/terrain-hydrology/shared/distilled'),
+          ]
+          for src in sources:
+              if not src.exists():
+                  continue
+              dst = pkg / src
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              if src.is_dir():
+                  shutil.copytree(src, dst, dirs_exist_ok=True)
+              else:
+                  shutil.copy2(src, dst)
+          for f in [Path('AGENTS.md'), Path('README.md')]:
+              if f.exists():
+                  dst = pkg / f
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(f, dst)
+          PY
+
+          cat > "$PKG/START_HERE.md" <<'EOF'
+          # Landscape Mother — R5.K2 当前全量交接
+
+          日期：2026-09-14
+
+          本包用于从当前最新有效 Landscape Mother 成果继续工作。
+
+          ## 当前母版与候选
+
+          - 用户确认的宏观形体母版：`039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90`
+          - 母版工作台：`workbenches/landscape-surface-r5/index.html`
+          - 母版 SHA-256：`ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2`
+          - 当前最新细化提交：`e7e04ffab58d97edd4442443fcba682d3f2c9de5`
+          - 当前候选：`workbenches/landscape-surface-r5-k2/index.html`
+          - 当前候选 SHA-256：`919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709`
+          - 当前候选大小：`84981 bytes`
+
+          固定公网候选：
+          `https://raw.githack.com/haihao0307/guilin-dem-pipeline/e7e04ffab58d97edd4442443fcba682d3f2c9de5/workbenches/landscape-surface-r5-k2/index.html`
+
+          ## 绝对规则
+
+          R5.K2 只能从用户确认的 R5 复杂异型水蚀石灰岩继续。不得替换峰体、主洞口、峰脚、土体和落石关系，不得回到后来走偏的简化峰丛路线。
+
+          R5.K2 已完成有机 Microscope 表面层：稳定世界坐标、连续矿物区、连续局部方向框架，以及六个非整数尺度的嵌套孔腔、圆润孔缘、微孔和结节。它明确禁止方向性机械刻槽、周期正弦沟纹、外部模型运行时和外部贴图运行时。
+
+          当前仍未完成“活喀斯特”完整可视过程：外部渗水、裂隙/孔腔溶蚀、洞顶滴水、碳酸钙沉积、钟乳石/石笋生长仍是下一阶段任务。
+
+          ## 接手顺序
+
+          1. 读 `CURRENT_STATE.json`
+          2. 读 `SOURCE_LOCKS.json`
+          3. 读 `WORK_RULES.md`
+          4. 读 `NEXT_WORK.md`
+          5. 运行 `python verify_package.py`
+          6. 从自己的功能分支继续，不直接覆盖本交接包
+          EOF
+
+          cat > "$PKG/CURRENT_STATE.json" <<'EOF'
+          {
+            "schema": "LANDSCAPE_MOTHER_R5_K2_CURRENT_FULL_HANDOFF_V1",
+            "date": "2026-09-14",
+            "repository": "haihao0307/guilin-dem-pipeline",
+            "handoffBranch": "handoff/landscape-mother-r5-k2-full-20260914",
+            "acceptedMacroCommit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+            "latestCandidateCommit": "e7e04ffab58d97edd4442443fcba682d3f2c9de5",
+            "latestCandidatePath": "workbenches/landscape-surface-r5-k2/index.html",
+            "latestCandidateSha256": "919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709",
+            "latestCandidateBytes": 84981,
+            "macroGeometryChanged": false,
+            "vertexIndexGeneratorChanged": false,
+            "worldSourceChanged": false,
+            "shapeApprovedByUser": true,
+            "visualApproved": false,
+            "productionReady": false,
+            "truthApproved": false,
+            "completedNow": [
+              "R5 macro shape retained",
+              "organic Microscope surface field",
+              "continuous position-dependent local frame",
+              "six non-integer nested surface scales",
+              "browser-tested/frozen R5.K2 candidate"
+            ],
+            "pending": [
+              "living karst water-rock process",
+              "cave drip path",
+              "calcite deposition",
+              "stalactite/stalagmite growth",
+              "final visual approval"
+            ]
+          }
+          EOF
+
+          cat > "$PKG/SOURCE_LOCKS.json" <<'EOF'
+          {
+            "acceptedMacro": {
+              "commit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+              "path": "workbenches/landscape-surface-r5/index.html",
+              "sha256": "ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2"
+            },
+            "latestCandidate": {
+              "commit": "e7e04ffab58d97edd4442443fcba682d3f2c9de5",
+              "path": "workbenches/landscape-surface-r5-k2/index.html",
+              "sha256": "919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709",
+              "bytes": 84981
+            },
+            "forbiddenRegression": [
+              "macro peak replacement",
+              "main cave opening relocation",
+              "peak-foot relationship reset",
+              "directional carved stripes",
+              "periodic sine grooves",
+              "external mesh runtime",
+              "external texture runtime"
+            ]
+          }
+          EOF
+
+          cat > "$PKG/WORK_RULES.md" <<'EOF'
+          # 工作规则
+
+          1. 大形不动。每一轮先做 R5 母版同镜位回归，再评审表面。
+          2. Microscope 只服务于近表面，不进入宏观造山场。
+          3. 局部方向来自稳定世界位置、岩块/矿物区和连续局部框架，不能随相机或时间漂移。
+          4. 用多尺度非整数频率、稳定域弯曲、局部相位和稀疏事件消除可见机械重复。
+          5. 高度/边缘/孔腔/裂隙/破损先于颜色；颜色从结构派生；粗糙度独立计算。
+          6. 喀斯特过程必须因果化：来水决定湿润与溶蚀，滴水路径决定沉积，沉积不能随机挂在洞顶。
+          7. 无真实速率标定前，时间滑块只能代表相对演化阶段，不能冒充真实地质年代。
+          8. 每个候选必须保留 `visualApproved=false`、`productionReady=false`，直到用户明确验收。
+          EOF
+
+          cat > "$PKG/NEXT_WORK.md" <<'EOF'
+          # 下一阶段：R5.K3 Living Karst
+
+          在 R5.K2 不改变宏观几何的前提下，加入最小可验证的“活喀斯特”状态链：
+
+          `water input → infiltration path → dissolution → transported mineral → cave drip → calcite deposition`
+
+          第一轮只增加少量可追踪过程点：
+
+          - 3—5 条稳定入渗路径；
+          - 与裂隙/孔腔连通的湿润和溶蚀代理；
+          - 2—4 个洞顶滴水点；
+          - 滴点下方对应石笋生长点；
+          - 洞顶钟乳石与洞底石笋共享同一水量/矿物账本；
+          - 时间前后可逆；
+          - 不改变用户确认的峰体、洞口和峰脚。
+
+          验收先看因果关系是否清楚，再看视觉丰富度。不要一次把洞穴铺满。
+          EOF
+
+          cat > "$PKG/DECISIONS.md" <<'EOF'
+          # 已确认决策
+
+          - 用户明确确认 R5 复杂异型水蚀石灰岩是唯一宏观母版。
+          - 后续不得反复切换宏观版本。
+          - 用户要求把喀斯特视为活的过程：外部水进入并溶蚀岩体，内部滴水导致碳酸钙沉积并形成钟乳石等洞穴沉积物。
+          - 用户要求 Microscope 表面变化像自然生长系统一样避免可见重复和机械模板。
+          - R5.K1 的方向性刻槽/雕刻感路线已撤回；当前有效表面候选是 R5.K2 Organic Microscope V2。
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          pkg=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14')
+          files=[]
+          for p in sorted(pkg.rglob('*')):
+              if p.is_file() and p.name != 'MANIFEST.json':
+                  files.append({'path':p.relative_to(pkg).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (pkg/'MANIFEST.json').write_text(json.dumps({'schema':'LANDSCAPE_MOTHER_R5_K2_MANIFEST_V1','files':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          cat > "$PKG/verify_package.py" <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          root=Path(__file__).resolve().parent
+          manifest=json.loads((root/'MANIFEST.json').read_text(encoding='utf-8'))
+          for item in manifest['files']:
+              p=root/item['path']
+              assert p.is_file(), item['path']
+              assert p.stat().st_size==item['bytes'], item['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==item['sha256'], item['path']
+          base=root/'SOURCE_SNAPSHOT/workbenches/landscape-surface-r5/index.html'
+          k2=root/'SOURCE_SNAPSHOT/workbenches/landscape-surface-r5-k2/index.html'
+          assert hashlib.sha256(base.read_bytes()).hexdigest()=='ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2'
+          assert hashlib.sha256(k2.read_bytes()).hexdigest()=='919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709'
+          state=json.loads((root/'CURRENT_STATE.json').read_text(encoding='utf-8'))
+          assert state['macroGeometryChanged'] is False
+          assert state['visualApproved'] is False
+          print(json.dumps({'ok':True,'files':len(manifest['files']),'candidateSha256':state['latestCandidateSha256']},ensure_ascii=False,indent=2))
+          PY
+
+          # Manifest includes verify script too; rebuild after creating it.
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          pkg=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14')
+          files=[]
+          for p in sorted(pkg.rglob('*')):
+              if p.is_file() and p.name != 'MANIFEST.json':
+                  files.append({'path':p.relative_to(pkg).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (pkg/'MANIFEST.json').write_text(json.dumps({'schema':'LANDSCAPE_MOTHER_R5_K2_MANIFEST_V1','files':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          python3 "$PKG/verify_package.py" | tee "$PKG/QA/VERIFY_RESULT.json"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          pkg=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14')
+          urls={
+            'r5':'https://raw.githack.com/haihao0307/guilin-dem-pipeline/039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90/workbenches/landscape-surface-r5/index.html',
+            'r5k2':'https://raw.githack.com/haihao0307/guilin-dem-pipeline/e7e04ffab58d97edd4442443fcba682d3f2c9de5/workbenches/landscape-surface-r5-k2/index.html'
+          }
+          (pkg/'QA/PUBLIC_URLS.json').write_text(json.dumps(urls,indent=2)+'\n',encoding='utf-8')
+          PY
+
+          # Rebuild final manifest after QA outputs.
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          pkg=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14')
+          files=[]
+          for p in sorted(pkg.rglob('*')):
+              if p.is_file() and p.name != 'MANIFEST.json':
+                  files.append({'path':p.relative_to(pkg).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (pkg/'MANIFEST.json').write_text(json.dumps({'schema':'LANDSCAPE_MOTHER_R5_K2_MANIFEST_V1','files':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          python3 "$PKG/verify_package.py"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14')
+          out=Path('handoffs/landscape-mother/r5-k2-full-20260914/Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14.zip')
+          fixed=(2026,9,14,0,0,0)
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in sorted(root.rglob('*')):
+                  if not p.is_file():
+                      continue
+                  rel=Path(root.name)/p.relative_to(root)
+                  info=zipfile.ZipInfo(rel.as_posix(),fixed)
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.external_attr=(0o100644 & 0xFFFF)<<16
+                  z.writestr(info,p.read_bytes())
+          PY
+
+          unzip -t "$ZIP"
+          sha256sum "$ZIP" | tee "$ROOT/PACKAGE_SHA256.txt"
+
+          cat > "$ROOT/CURRENT_POINTER.json" <<'EOF'
+          {
+            "package": "Landscape_Mother_R5_K2_Current_Full_Handoff_2026-09-14.zip",
+            "sourceMacroCommit": "039d3a7f32c73ff3ac292c5bbb18c3f6f5535b90",
+            "latestCandidateCommit": "e7e04ffab58d97edd4442443fcba682d3f2c9de5",
+            "branch": "handoff/landscape-mother-r5-k2-full-20260914"
+          }
+          EOF
+
+      - name: Commit full handoff package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f handoffs/landscape-mother/r5-k2-full-20260914
+          git commit -m 'handoff(landscape): publish R5.K2 current full package 2026-09-14'
+          git push origin HEAD:handoff/landscape-mother-r5-k2-full-20260914
