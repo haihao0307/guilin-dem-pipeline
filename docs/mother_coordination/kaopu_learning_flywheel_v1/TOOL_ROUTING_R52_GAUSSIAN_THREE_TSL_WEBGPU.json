@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu-tool-routing/r52",
+  "status": "Candidate partial",
+  "question": "How should the Gaussian hard-cutoff contract be routed after direct Three.js r186 TSL agreement on both WebGL and confirmed WebGPU software backends?",
+  "inherits": "TOOL_ROUTING_R51_GAUSSIAN_THREE_TSL_WEBGL.json",
+  "routes": [
+    {
+      "stage": "direct-three-webgpu",
+      "tool": "PROBES/run_gaussian_three_tsl_cutoff_r52_webgpu.js + PROBES/gaussian_three_tsl_cutoff_r51.html",
+      "authority": "confirmed direct Three.js r186 TSL WebGPU coverage replay for the locked 4,644-case cutoff-neighbor fixture",
+      "required": [
+        "actualBackend=webgpu",
+        "adapter identity",
+        "browser identity",
+        "full case count",
+        "float32 predicate comparison",
+        "double predicate counterexamples",
+        "exact cutoff controls"
+      ]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_tsl_webgpu_gate_r52.mjs",
+      "authority": "R52 WebGPU evidence completeness and locked boundary-result consistency",
+      "notAuthorityFor": [
+        "hardware WebGPU",
+        "Safari/WebKit",
+        "macOS/iOS",
+        "universal guard width",
+        "asset tolerance",
+        "human visual acceptance"
+      ]
+    },
+    {
+      "stage": "cross-backend-exactness-next",
+      "tool": "R53 per-case coverage-mask comparator",
+      "authority": "exact sample-identity comparison between direct WebGL and WebGPU under one browser/toolchain",
+      "requiredNext": [
+        "identical 4,644 case identities",
+        "per-scale/direction coverage masks",
+        "exact WebGL/WebGPU mask equality",
+        "float32 model mask equality",
+        "backend identities"
+      ]
+    },
+    {
+      "stage": "hardware-and-target-later",
+      "tool": "hardware-backed WebGPU plus Apple browser/device execution",
+      "authority": "device evidence only after explicit GPU, OS, browser and backend identity",
+      "requiredNext": [
+        "hardware GPU identity",
+        "macOS/iOS device class",
+        "Safari/WebKit version",
+        "float-intermediate versus final-target stable-pixel error",
+        "human acceptance kept separate"
+      ]
+    }
+  ],
+  "directThreeWebglEvidenceEstablished": true,
+  "directThreeWebgpuSoftwareEvidenceEstablished": true,
+  "hardwareWebgpuEvidenceEstablished": false,
+  "doubleCpuCoverageIsUniversalAuthority": false,
+  "syntheticBoundaryWidthIsAssetTolerance": false,
+  "productionMutationAllowed": false
+}
