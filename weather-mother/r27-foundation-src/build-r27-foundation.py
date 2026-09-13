@@ -12,31 +12,33 @@ R26_OUT = ROOT / "weather-mother/full-weather-r26-observation-bandwidth-20260911
 OUT = ROOT / "weather-mother/full-weather-r27-foundation-20260913/index.html"
 
 
+def exact(text: str, old: str, new: str, count: int, label: str) -> str:
+    actual = text.count(old)
+    if actual != count:
+        raise SystemExit(f"R27 foundation patch {label}: expected {count} matches, got {actual}")
+    return text.replace(old, new, count)
+
+
 def once(text: str, old: str, new: str, label: str) -> str:
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f"R27 foundation patch {label}: expected exactly one match, got {count}")
-    return text.replace(old, new, 1)
+    return exact(text, old, new, 1, label)
 
 
-# Rebuild the accepted R26 chain first. This preserves R22 shell + R23 cloud-first
-# + R25 aircraft optical attenuation + R26 observation bandwidth.
+# Always rebuild from the frozen R26 chain first. R27 foundation is a surgical
+# continuation of R22 shell + R23 cloud-first + R25 optical overlay + R26 banding.
 subprocess.check_call([sys.executable, str(R26_BUILD)], cwd=ROOT)
 r26 = R26_OUT.read_text(encoding="utf-8")
 
 m = re.search(r"const safe=decodeURIComponent\(escape\(atob\('([^']+)'\)\)\);", r26)
 if not m:
-    raise SystemExit("R27 foundation: could not locate embedded R26 mobile-safe payload")
+    raise SystemExit("R27 foundation: embedded R26 mobile-safe payload not found")
 old64 = m.group(1)
 safe = base64.b64decode(old64).decode("utf-8")
 
-# Identity only; historical compatibility exports remain available.
 safe = once(safe, "<title>Weather Mother · R26 Observation Bandwidth Flight</title>", "<title>Weather Mother · R27 Foundation Flight</title>", "title")
-safe = once(safe, "WEATHER MOTHER / R26 MOBILE", "WEATHER MOTHER / R27 FOUNDATION", "brand")
+# R26 writes this label twice: initial HTML and the post-overlay UI rewrite.
+safe = exact(safe, "WEATHER MOTHER / R26 MOBILE", "WEATHER MOTHER / R27 FOUNDATION", 2, "brand writes")
 safe = once(safe, "CLOUD-FIRST · OBS-BAND · OPTICAL", "CLOUD-FIRST · OBS-BAND · OPTICAL · FOUNDATION", "badge")
 
-# Explicit independent world clock. Flight pause remains flight-only; P / clock button
-# freezes cloud time while the observer can continue to move.
 safe = once(
     safe,
     "let gl,program,buf,loc={},last=performance.now(),raf=0,lost=false,scene='silver',pointer=null,obsOverride=-1;",
@@ -62,8 +64,7 @@ safe = once(
     "clock button",
 )
 
-# Fix the R23 unit inconsistency: state speed is m/s (HUD already multiplies by 3.6),
-# while world position is km. Therefore integration must use /1000, not /3600.
+# R23 state speed is m/s (HUD uses *3.6), while world coordinates are km.
 safe = once(safe, "const b=basis(),kmps=S.speed/3600;", "const b=basis(),kmps=S.speed/1000;", "speed units")
 safe = once(safe, "}S.time+=dt;updateHud();}", "}if(worldPlaying)S.time+=dt;updateHud();}", "world time independence")
 safe = once(
@@ -97,9 +98,8 @@ safe = once(
     "world clock button event",
 )
 
-# Correct view-path attenuation to integrate using the actual march step ds.
-# This preserves the same 2.7 km^-1 extinction coefficient and makes the
-# existing sun approximation explicit as an optical-depth variable.
+# Use the actual ray-march step for optical depth. 2.7 remains the inherited
+# extinction coefficient in km^-1, so the accepted visual is changed minimally.
 safe = once(safe, "float d=den(x,t);if(d>.006){", "float d=den(x,t),ds=d>.02?.34:.48;if(d>.006){", "view ds")
 safe = once(
     safe,
@@ -110,8 +110,8 @@ safe = once(
 safe = once(safe, "float a=1.-exp(-d*.34*2.7);", "float tau=d*ds*2.7,a=1.-exp(-tau);", "view optical depth")
 safe = once(safe, "T*=1.-a;od+=d*.34;}t+=d>.02?.34:.48;", "T*=exp(-tau);od+=d*ds;}t+=ds;", "view transmittance")
 
-# R25's CPU aircraft probe was already Beer-Lambert. Make its units explicit
-# without changing its numerical result: 1.10 km^-1 over a 2.4 km probe.
+# R25 CPU aircraft probe keeps identical numerical behavior, but its units are
+# made explicit: 2.4 km path and 1.10 km^-1 extinction.
 safe = once(safe, "const length=2.4,steps=10,ds=length/steps;let od=0;", "const lengthKm=2.4,steps=10,dsKm=lengthKm/steps,sigmaExtKm=1.10;let tau=0;", "r25 probe units")
 safe = once(
     safe,
@@ -122,7 +122,6 @@ safe = once(
 safe = once(safe, "return Math.exp(-1.10*od);", "return Math.exp(-tau);", "r25 probe transmittance")
 safe = once(safe, "occlusionModel:'cpu-mirror-beer-lambert',failOpen:true", "occlusionModel:'cpu-mirror-beer-lambert',opticalUnits:'km-km^-1',failOpen:true", "r25 qa units")
 
-# Preserve R23/R26 compatibility surfaces while exposing the R27 foundation API.
 safe = once(
     safe,
     "window.AircraftWorld={qa,getState,setScene,reset,setPose,setLook,setFlying,gl:()=>gl,capture:()=>canvas.toDataURL()};window.WeatherMobileR23={qa,getState,setScene};window.WeatherMobileR26={qa,getState,setScene,setObservationOverride,observationWeight,cloud:window.WeatherMobileR23};",
