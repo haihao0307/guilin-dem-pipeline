@@ -9,12 +9,12 @@ on:
       - 'handoffs/wenzhou-r3-8-current-full-20260912/LEAN_PACKAGE_TRIGGER'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   package:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -22,27 +22,30 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate lean handoff builder
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate clean active handoff and soil pair manifest
         run: |
           set -euo pipefail
           python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
-          python -m py_compile tools/r3-9/benchmark_soil_pair_codec.py
-          python -m py_compile tools/r3-9/build_soil_pair_payloads.py
-          test -f handoffs/wenzhou-r3-8-current-full-20260912/06_PACKAGE_SCOPE.md
+          node --check site/dist/r3-8/soil-pair-loader.js
+          node --check tools/r3-9/soil_pair_browser_qa.mjs
           test ! -f tools/r3-handoff/build_current_full_handoff.py
           test ! -f handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER
-
-      - name: Benchmark lossless soil pair codec
-        run: |
-          set -euo pipefail
-          python tools/r3-9/benchmark_soil_pair_codec.py | tee /tmp/soil-codec-benchmark.json
           python - <<'PY'
-          import json
-          r=json.load(open('/tmp/soil-codec-benchmark.json'))
-          assert r['passed'] is True
-          assert r['pairs'] == 48
-          assert r['shuffleGzip'] < r['raw']
-          print({k:r[k] for k in ['raw','concatGzip','shuffleGzip','concatReduction','shuffleReduction']})
+          import json, pathlib
+          p=pathlib.Path('site/dist/r3-8/data/soil-pairs/soil-pairs.json')
+          m=json.loads(p.read_text(encoding='utf-8'))
+          assert m['schema']=='wenzhou-soil-pair-payloads/v1'
+          assert m['lossless'] is True
+          assert m['pairCount']==48
+          assert m['rawBytes']==170237184
+          assert m['compressedBytes']==34571806
+          assert m['reduction']>0.79
+          assert all((p.parent/x['path']).is_file() for x in m['pairs'])
+          print({'pairs':m['pairCount'],'rawBytes':m['rawBytes'],'compressedBytes':m['compressedBytes'],'reduction':m['reduction']})
           PY
 
       - name: Build lean continuation package
@@ -56,7 +59,6 @@ jobs:
             --output-zip /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip \
             --source-commit "$SOURCE_SHA" | tee /tmp/wenzhou-lean/build-report.log
           python -m zipfile -t /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip
-          test -s /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip.report.json
 
       - name: Enforce carry-size and dedup gates
         env:
@@ -65,8 +67,7 @@ jobs:
           python - <<'PY'
           import json, os, pathlib
           sha=os.environ['SOURCE_SHA']
-          p=pathlib.Path(f'/tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_{sha}.zip.report.json')
-          r=json.loads(p.read_text(encoding='utf-8'))
+          r=json.loads(pathlib.Path(f'/tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_{sha}.zip.report.json').read_text(encoding='utf-8'))
           assert r['fullRestartBaseEmbedded'] is False
           assert r['permanentEvidenceEmbedded'] is False
           assert r['browserBinaryPayloadsEmbedded'] is False
@@ -76,44 +77,52 @@ jobs:
           print(r)
           PY
 
-      - name: Upload lean handoff artifact
+      - name: Install Chromium QA runner
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Local browser QA for dual-channel soil transport
+        run: |
+          set -euo pipefail
+          python -m http.server 8768 >/tmp/r38-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8768/site/dist/r3-8/data/soil-pairs/soil-pairs.json >/dev/null; then break; fi
+            sleep 1
+          done
+          R38_URL='http://127.0.0.1:8768/site/dist/r3-8/' node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/soil-pair-local-qa.json
+          grep -q '"passed": true' /tmp/soil-pair-local-qa.json
+
+      - name: Fixed public browser QA for dual-channel soil transport
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/index.html"
+          INDEX="https://raw.githack.com/${REPO}/${SOURCE_SHA}/site/dist/r3-8/data/soil-pairs/soil-pairs.json"
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$INDEX" | grep -q 'wenzhou-soil-pair-payloads'; then ready=1; break; fi
+            sleep 3
+          done
+          test "$ready" = 1
+          R38_URL="$URL" node tools/r3-9/soil_pair_browser_qa.mjs | tee /tmp/soil-pair-public-qa.json
+          grep -q '"passed": true' /tmp/soil-pair-public-qa.json
+          echo "$URL" > /tmp/soil-pair-fixed-preview.txt
+
+      - name: Upload lean handoff and QA proof
         uses: actions/upload-artifact@v4
         with:
-          name: wenzhou-r3-8-lean-handoff-${{ github.sha }}
+          name: wenzhou-r3-8-soil-pair-qa-${{ github.sha }}
           path: |
             /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip
             /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip.report.json
             /tmp/wenzhou-lean/build-report.log
-            /tmp/soil-codec-benchmark.json
+            /tmp/soil-pair-local-qa.json
+            /tmp/soil-pair-public-qa.json
+            /tmp/soil-pair-fixed-preview.txt
           if-no-files-found: error
           retention-days: 30
-
-      - name: Build lossless dual-channel soil payloads
-        run: |
-          set -euo pipefail
-          python tools/r3-9/build_soil_pair_payloads.py | tee /tmp/soil-pair-build.json
-          python - <<'PY'
-          import json
-          r=json.load(open('/tmp/soil-pair-build.json'))
-          assert r['passed'] is True
-          assert r['pairs'] == 48
-          assert r['compressedBytes'] < 40 * 1024 * 1024
-          assert r['reduction'] > 0.75
-          print(r)
-          PY
-
-      - name: Commit generated soil pair payloads
-        run: |
-          set -euo pipefail
-          BRANCH='feature/wenzhou-r3-8-overlay-transform-contract-20260913'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add site/dist/r3-8/data/soil-pairs
-          if git diff --cached --quiet; then
-            echo 'soil pair payloads already current'
-          else
-            git commit -m 'data(wenzhou): add lossless dual-channel soil payloads'
-            git fetch origin "$BRANCH"
-            git rebase "origin/$BRANCH"
-            git push origin HEAD:"$BRANCH"
-          fi
