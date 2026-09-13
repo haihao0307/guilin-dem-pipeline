@@ -4,6 +4,7 @@ on:
     branches: [feature/landscape-mother-karst-living-r1-20260913]
     paths:
       - 'workbenches/landscape-surface-r5-k1/build_rillenkarren_microscope.py'
+      - 'workbenches/landscape-function/browser_check.py'
       - '.github/workflows/landscape-r5-k1-build.yml'
 permissions:
   contents: write
@@ -38,6 +39,7 @@ jobs:
         env:
           LM_SITE: workbenches/landscape-surface-r5-k1
           LM_EVIDENCE: /tmp/landscape-r5-k1-evidence
+          LM_EXPECT_RELEASE: limestone-water-surface-r5
         run: |
           mkdir -p "$LM_EVIDENCE"
           python3 -m http.server 8791 --bind 127.0.0.1 --directory "$LM_SITE" > "$LM_EVIDENCE/http.log" 2>&1 &
