@@ -1,0 +1,111 @@
+name: Object DNA R4A.1 public QA
+
+on:
+  push:
+    branches:
+      - qa/object-dna-r4a1-public-20260913
+    paths:
+      - '.github/workflows/object-dna-r4a1-public-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-browser-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for published HTTPS page and verify assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/'
+          ok=0
+          for i in $(seq 1 24); do
+            code=$(curl -L -sS -o /tmp/r4a1.html -w '%{http_code}' "$URL" || true)
+            if [ "$code" = "200" ] && grep -q 'PUBLIC REVIEW MIRROR' /tmp/r4a1.html; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = 1
+          grep -q 'R4A.1' /tmp/r4a1.html
+          for p in style.css main.js build-object.js detail-primitives.js geometry-operators.js object/exterior-v3.json object/r4a-physical-frame.json object/r4a1-visual-state.json; do
+            test "$(curl -L -sS -o /tmp/asset -w '%{http_code}' "${URL}${p}")" = "200"
+            test -s /tmp/asset
+          done
+          echo "PUBLIC_HTTP_OK $URL"
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+
+      - name: Browser interaction and visual state QA
+        shell: bash
+        run: |
+          cat > /tmp/r4a1-qa.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+          const errors=[],failures=[];
+          page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+          page.on('pageerror',e=>errors.push(e.message));
+          page.on('response',r=>{if(r.status()>=400)failures.push({status:r.status(),url:r.url()})});
+          await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForFunction(()=>document.documentElement.dataset.ready==='r4a1',null,{timeout:90000});
+          await page.waitForTimeout(800);
+          const initial=await page.evaluate(()=>window.objectDnaQA());
+          if(initial.ready!=='r4a1')throw Error('ready flag missing');
+          if(initial.referenceConfiguration?.type!=='flexible')throw Error('flexible type missing');
+          if(initial.referenceConfiguration?.status!=='confirmed_at_reference_type_level')throw Error('configuration status drifted');
+          if(initial.finalPhysicalCalibration!==null)throw Error('final calibration must remain null');
+          if(initial.secondIndependentAnchorRequired!==true)throw Error('second anchor guard missing');
+          if(initial.geometryEditAuthorized!==false)throw Error('geometry edit unexpectedly authorized');
+          if(Math.abs(initial.provisionalMetersPerSourceU-0.9505723099668064)>1e-12)throw Error('provisional scale drifted');
+          if(Math.abs(initial.sourceFitDifferencePercent-0.05055)>1e-7)throw Error('source-fit delta drifted');
+          if(initial.physical!==true||initial.evidence!==false||initial.attachments!==false)throw Error('default display state drifted');
+          await page.screenshot({path:'r4a1-public-overall.png',fullPage:true});
+          await page.click('#evidence');
+          const evidence=await page.evaluate(()=>window.objectDnaQA());
+          if(evidence.evidence!==true)throw Error('evidence toggle failed');
+          await page.screenshot({path:'r4a1-public-evidence.png',fullPage:true});
+          await page.click('#physical');
+          if((await page.evaluate(()=>window.objectDnaQA())).physical!==false)throw Error('physical toggle failed');
+          await page.click('#physical');
+          await page.click('[data-focus="receiver"]');
+          await page.click('[data-view="side"]');
+          await page.waitForTimeout(250);
+          await page.screenshot({path:'r4a1-public-receiver-side.png',fullPage:true});
+          await page.click('[data-focus="rear"]');
+          await page.click('[data-view="perspective"]');
+          await page.waitForTimeout(250);
+          await page.screenshot({path:'r4a1-public-rear.png',fullPage:true});
+          await page.click('#attachments');
+          if((await page.evaluate(()=>window.objectDnaQA())).attachments!==true)throw Error('attachment toggle failed');
+          await page.click('#attachments');
+          await page.setViewportSize({width:390,height:844});
+          await page.click('#reset');
+          await page.waitForTimeout(250);
+          await page.screenshot({path:'r4a1-public-mobile-390x844.png',fullPage:true});
+          const final=await page.evaluate(()=>window.objectDnaQA());
+          const result={url,title:await page.title(),errors,failures,initial,evidence,final};
+          fs.writeFileSync('r4a1-public-qa.json',JSON.stringify(result,null,2));
+          console.log(JSON.stringify(result));
+          if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+          if(failures.length)throw Error('HTTP failures: '+JSON.stringify(failures));
+          await browser.close();
+          EOF
+          node /tmp/r4a1-qa.mjs
+
+      - name: Upload QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Object-DNA-R4A1-Public-QA
+          path: |
+            r4a1-public-*.png
+            r4a1-public-qa.json
+          if-no-files-found: warn
