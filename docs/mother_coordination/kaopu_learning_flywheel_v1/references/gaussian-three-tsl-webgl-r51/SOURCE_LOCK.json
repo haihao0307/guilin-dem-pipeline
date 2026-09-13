@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu-source-lock/r51",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "gaussian-three-tsl-webgl-cutoff",
+  "inherits": "references/gaussian-cutoff-boundary-r50/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R51-THREE-R186-TSL",
+      "sameEvidenceLineageAs": [
+        "O-R50-THREE-R186",
+        "O-R47-THREE-R186",
+        "O-R49-THREE-R186"
+      ],
+      "independentPhysicalObservationRoot": false,
+      "package": "three@0.186.0",
+      "renderer": "WebGPURenderer forced to WebGL fallback",
+      "cutoffExpression": "Discard(r2.greaterThan(4.0))",
+      "use": "direct Three.js-generated TSL cutoff execution"
+    },
+    {
+      "root": "O-R51-CI-WEBGL-SWIFTSHADER",
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "workflowRunId": 34734918445,
+      "workflowRunNumber": 11,
+      "workflowHeadSha": "231a74f1a80340768afdec77830a6e0fd463b88c",
+      "artifactId": 10311065798,
+      "artifactName": "kaopu-gaussian-r51-three-tsl",
+      "browser": "Headless Chromium 140.0.7339.16",
+      "backendClass": "WebGLBackend",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "glslVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "caseCount": 4644,
+      "renderSubmissionCount": 36,
+      "readbackCount": 36
+    },
+    {
+      "root": "O-R51-WEBGPU-REQUEST",
+      "independentPhysicalObservationRoot": false,
+      "requestedBackend": "webgpu",
+      "actualBackend": "webgl",
+      "status": "unsupported",
+      "reason": "WebGPU requested but Three.js initialized a non-WebGPU backend."
+    }
+  ],
+  "evidence": {
+    "webglResult": "PROBES/gaussian_three_tsl_cutoff_result_r51_webgl.json",
+    "webgpuResult": "PROBES/gaussian_three_tsl_cutoff_result_r51_webgpu.json",
+    "ciSummary": "PROBES/gaussian_three_tsl_cutoff_summary_r51.json",
+    "webglResultSha256": "5a2d3dda65f2d3dc0881d8ba789a54cebedbfc7ea912f8d8867e152f7df660cf",
+    "webgpuResultSha256": "84646eab4c23c3a90be7b2c9dc86426c20628763cd458825963542bfba18aa37",
+    "artifactZipSha256": "7f33958ef60ff27fffd8d3eb224444b974d964bd85934d2282a5b8244d814a76"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "directThreeTslExecuted": true,
+  "webglExecuted": true,
+  "webgpuExecuted": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}
