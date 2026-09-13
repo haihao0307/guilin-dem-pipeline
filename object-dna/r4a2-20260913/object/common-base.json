@@ -1,0 +1,385 @@
+{
+  "schema": "object-dna.multi-voice-common-base-controls/1.0",
+  "measurementId": "ANM2-RECEIVER-TWO-VOICE-COMMON-BASE-CONTROLS-R1",
+  "date": "2026-09-11",
+  "status": "proposed-permanent-overlap-window-controls_pending-review",
+  "object": "AN/M2 receiver common base for A-INNER + X-CROSS-DOMAIN overlap window only",
+  "source": {
+    "referenceFile": "references/anm2_browning_.50_cal_aircraft_machine_gun.glb",
+    "referenceSha256": "2d6a1f323018523db42d1fe54dcf1a26661f139548134835779933d61ab68c8b",
+    "permanentLocalControls": "knowledge/measurements/ANM2_RECEIVER_LOCAL_FEATURE_SIMPLE_CHAIN_CONTROLS_R1.json",
+    "overlapDecision": "knowledge/production/ANM2_RECEIVER_MULTI_VOICE_OVERLAP_DECISION_R1.json",
+    "multiArcDecision": "knowledge/production/SECTION_CONTOUR_MULTI_ARC_REPLACE_V1_SYNTHETIC_DECISION_R1.json"
+  },
+  "frame": {
+    "axes": {
+      "+X": "forward",
+      "+Y": "left",
+      "+Z": "up"
+    },
+    "sourceToDefinition": "x,-z,y",
+    "unit": "source_u_unscaled",
+    "physicalCalibration": "Unknown",
+    "aircraftInstallationTransform": "Unknown"
+  },
+  "encoding": {
+    "kind": "int32 little-endian base64 interleaved YZ",
+    "quantization": 1E-08,
+    "maxPermittedCoordinateError": 5E-09,
+    "maxPermittedSharedEndpointEuclideanSnap": 7.072067811865476E-09
+  },
+  "scope": {
+    "fractions": [
+      0.325,
+      0.35,
+      0.375
+    ],
+    "voices": [
+      "LFV-A-INNER-R1",
+      "LFV-X-CROSS-DOMAIN-R1"
+    ],
+    "globalLowFrequencyReceiverBase": false,
+    "allLocalVoicesRemoved": false,
+    "reason": "only two validated simultaneous disjoint local arcs are removed; all other observed contour structure remains in the preserved complement"
+  },
+  "sections": [
+    {
+      "fraction": 0.325,
+      "x": -0.28667578436434266,
+      "sourcePrimaryLoop": {
+        "pointCount": 76,
+        "pointSha256": "8999f474b1f4b672d71434ae9da150b5475111772e2b58cbd7269f7669cbebc2",
+        "nonConvexAreaDeficit": 0.11894482618785895
+      },
+      "voices": {
+        "A": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48
+          ],
+          "maxLineageDistanceNormalized": 0
+        },
+        "X": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62
+          ],
+          "maxLineageDistanceNormalized": 1.2547433735168464E-17
+        }
+      },
+      "commonBase": {
+        "meaning": "raw primary complement with both validated disjoint local voice arcs replaced by explicit endpoint chords; preserves all other observed contour structure and therefore is not a global low-frequency receiver base",
+        "contour": {
+          "encoding": "int32-le-base64-interleaved-yz",
+          "quantization": 1E-08,
+          "pointCount": 66,
+          "data": "xSDc/3PSbADgutf/XrFqAINA1f9BfmkAV0DT/4hbZQAY5NH/NYxiAGjR0f8UMVUA0tPR/7ZpVADM09H/3tlTAO7F0f9OtUAAMjnV/061QAAElNn/TrVAAASU2f86oDMA/JPZ/xVY6//8k9n/njri//uT2f/dk9n/6ZPZ/6osv/+N8tn/4EW+/4hN2v/JZb3/KFna/+FNvf9gxdr/jUi8/38B1/+NSLz/5STQ/41IvP81UNH/NLyp/+3y0f86jJ///l7V/06Fnf+uldv/Rt2Z//ZoGABn3Zn/4OY5AGfdmf+DUz0AquSb/5B+QwBnh5//ia5EABAdsv/5UEUAjUi8//l0PgCNSLz/9rA6AI1IvP8egzsA6UO+/1LiOwDAKb//UuI7AJ+Czv9S4jsAG4Ll/7GJPQAbguX/gmZBABuC5f+CZkEAwZro/4JmQQBos+v/gmZBALxk7P+CZkEAeQz+/4JmQQCz3v7/gmZBAG2KAgCCZkEAdocDAIJmQQAnNgYAsYk9ACc2BgBS4jsAJzYGAFLiOwDMlwgAUuI7AKVaDABS4jsAIaAjAFLiOwC1IzEAUuI7AE61QADWRD8ATrVAAGmwQwBOtUAAJKNDABbXUwAdo0MABoFUAEanQwD7RlUA3ZJDANqKYgCeNkIALVplANI1QABCfmkA4yQ8ADR2awCRVTkAc9JsAJu+FwBz0mwA",
+          "byteSha256": "abce4a33e6a773b16d4ea623633e3d89681ab97e0edfbe9cc11020dcfa3f5595",
+          "maxObservedQuantizationError": 4.9612403837939745E-09
+        },
+        "chordSlots": {
+          "A-INNER": {
+            "startIndex": 42,
+            "endIndex": 43
+          },
+          "X-CROSS-DOMAIN": {
+            "startIndex": 51,
+            "endIndex": 52
+          }
+        }
+      },
+      "storageAnchorNormalization": {
+        "rawA": {
+          "startDistance": 2.0375569989022362E-09,
+          "endDistance": 9.044435663824418E-10,
+          "maxDistance": 2.0375569989022362E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "rawX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeA": {
+          "startDistance": 2.0375569989022362E-09,
+          "endDistance": 9.044435663824418E-10,
+          "maxDistance": 2.0375569989022362E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        }
+      },
+      "roundTrip": {
+        "rawTwoArc": {
+          "meanNormalized": 1.1891201135929664E-08,
+          "maxNormalized": 3.6987027887880374E-08,
+          "meanDistance": 1.643997187268852E-09,
+          "maxDistance": 5.1135767630219316E-09,
+          "referenceScale": 0.1382532486395726,
+          "samplesPerDirection": 512
+        },
+        "nativeTwoVoice": {
+          "meanNormalized": 2.1878768386168372E-06,
+          "maxNormalized": 9.906528966843223E-05,
+          "meanDistance": 3.024810805620557E-07,
+          "maxDistance": 1.3696098124081044E-05,
+          "referenceScale": 0.1382532486395726,
+          "samplesPerDirection": 512
+        }
+      }
+    },
+    {
+      "fraction": 0.35,
+      "x": -0.27327001914381976,
+      "sourcePrimaryLoop": {
+        "pointCount": 76,
+        "pointSha256": "3d93664ac7333c7329c79e8d0dbb391e54a7a62e191a4b643141de2718137ec3",
+        "nonConvexAreaDeficit": 0.11893163083043445
+      },
+      "voices": {
+        "A": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48
+          ],
+          "maxLineageDistanceNormalized": 0
+        },
+        "X": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62
+          ],
+          "maxLineageDistanceNormalized": 0
+        }
+      },
+      "commonBase": {
+        "meaning": "raw primary complement with both validated disjoint local voice arcs replaced by explicit endpoint chords; preserves all other observed contour structure and therefore is not a global low-frequency receiver base",
+        "contour": {
+          "encoding": "int32-le-base64-interleaved-yz",
+          "quantization": 1E-08,
+          "pointCount": 66,
+          "data": "xSDc/3PSbAC779f/9cpqAINA1f9BfmkA1F3T/32YZQCR5NH/PI1iAFPQ0f83FVQA8NLR/z09UwDq0tH/aaFSAO7F0f9OtUAAyoLV/061QAAElNn/TrVAAASU2f8tiTIA/ZPZ/5MG7//9k9n/qCbl//uT2f9Xx9v/6JPZ/+Esv/9v+tn/2zK+//9c2v8YQL3/l2na/zMmvf9gxdr/jUi8/9uT1/+NSLz/5STQ/41IvP8madH/kTCo/znz0f+Ri5//nNrU/zzTnf/Vldv/N92Z/4d6HQBb3Zn/Pec5AFvdmf8/zzwADpab/919QwBXhp//KcdEAGqos//vUEUAjUi8/6DiPQCNSLz/9rA6AI1IvP+hlDsAL26+/1LiOwDAKb//UuI7AP6vy/9S4jsAG4Ll/1QQPQAbguX/gmZBABuC5f+CZkEAh7fn/4JmQQD07On/gmZBALxk7P+CZkEAeQz+/4JmQQB6+QAAgmZBANGXAwCCZkEAUEwEAIJmQQAnNgYAVBA9ACc2BgBS4jsAJzYGAFLiOwAI6QcAUuI7AKVaDABS4jsAIaAjAFLiOwCf1y8AUuI7AE61QAAJjT8ATrVAAGmwQwBOtUAA/aNDAJeeUgD2o0MAr1ZTAHeoQwAjLVQAW5JDAPWLYgAYGUIAN5dlANI1QABCfmkA0mA8ADBZawCRVTkAc9JsACLyFABz0mwA",
+          "byteSha256": "75268696dfd92dbbdf854ef003d281ba976b01fc54cad88091a75bbb15e1967d",
+          "maxObservedQuantizationError": 4.9887667191717E-09
+        },
+        "chordSlots": {
+          "A-INNER": {
+            "startIndex": 42,
+            "endIndex": 43
+          },
+          "X-CROSS-DOMAIN": {
+            "startIndex": 51,
+            "endIndex": 52
+          }
+        }
+      },
+      "storageAnchorNormalization": {
+        "rawA": {
+          "startDistance": 2.615135283489115E-09,
+          "endDistance": 9.018917020160166E-10,
+          "maxDistance": 2.615135283489115E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "rawX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeA": {
+          "startDistance": 2.615135283489115E-09,
+          "endDistance": 9.018917020160166E-10,
+          "maxDistance": 2.615135283489115E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        }
+      },
+      "roundTrip": {
+        "rawTwoArc": {
+          "meanNormalized": 1.109842011986352E-08,
+          "maxNormalized": 3.0905278860563114E-08,
+          "meanDistance": 1.534394358237863E-09,
+          "maxDistance": 4.272759997483235E-09,
+          "referenceScale": 0.1382534037877755,
+          "samplesPerDirection": 512
+        },
+        "nativeTwoVoice": {
+          "meanNormalized": 2.3390856347403686E-06,
+          "maxNormalized": 0.00011035588285865953,
+          "meanDistance": 3.2338655075394537E-07,
+          "maxDistance": 1.525707643321471E-05,
+          "referenceScale": 0.1382534037877755,
+          "samplesPerDirection": 512
+        }
+      }
+    },
+    {
+      "fraction": 0.375,
+      "x": -0.25986425392329693,
+      "sourcePrimaryLoop": {
+        "pointCount": 76,
+        "pointSha256": "ee1f632b79d030c36b86e6092aaa48bf0a7c2ebf9f1ce9cfd156e13f82013da5",
+        "nonConvexAreaDeficit": 0.11891887750322983
+      },
+      "voices": {
+        "A": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48
+          ],
+          "maxLineageDistanceNormalized": 0
+        },
+        "X": {
+          "direction": "raw-forward",
+          "reversed": false,
+          "rawArcIndices": [
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62
+          ],
+          "maxLineageDistanceNormalized": 1.2547405573697465E-17
+        }
+      },
+      "commonBase": {
+        "meaning": "raw primary complement with both validated disjoint local voice arcs replaced by explicit endpoint chords; preserves all other observed contour structure and therefore is not a global low-frequency receiver base",
+        "contour": {
+          "encoding": "int32-le-base64-interleaved-yz",
+          "quantization": 1E-08,
+          "pointCount": 66,
+          "data": "xSDc/3PSbACWJNj/jORqAINA1f9BfmkAUXvT/3PVZQAL5dH/Qo5iAD7P0f9b+VIADtLR/8QQUgAH0tH/9GhRAO7F0f9OtUAAYszV/061QAAElNn/TrVAAASU2f8hcjEA/pPZ/xG18v/9k9n/shLo//yT2f/R+t3/55PZ/xgtv/9RAtr/1x++/3Zs2v9oGr3/BXra/4T+vP9gxdr/jUi8/zgm2P+NSLz/5STQ/41IvP8WgtH/7qSm/4Tz0f/oip//OlbU/yohnv/8ldv/J92Z/xiMIgBO3Zn/m+c5AE7dmf/6SjwAcUeb/yp9QwBHhZ//yt9EAMMztf/lUEUAjUi8/0ZQPQCNSLz/9rA6AI1IvP8jpjsAdZi+/1LiOwDAKb//UuI7AF7dyP9S4jsAG4Ll//aWPAAbguX/gmZBABuC5f+CZkEATdTm/4JmQQCAJuj/gmZBALxk7P+CZkEAeQz+/4JmQQBBFAMAgmZBADSlBACCZkEAKhEFAIJmQQAnNgYA9pY8ACc2BgBS4jsAJzYGAFLiOwBEOgcAUuI7AKVaDABS4jsAIaAjAFLiOwCKiy4AUuI7AE61QAA81T8ATrVAAGmwQwBOtUAA1aRDABdmUQDOpEMAWSxSAKipQwBKE1MA2ZFDAA+NYgCR+0EAQNRlANI1QABCfmkAwpw8ACw8awCRVTkAc9JsAKklEgBz0mwA",
+          "byteSha256": "e7ecd2d4dd245cd59ab111133e27a9ff328ab34729c9a35f15bf5be81869b353",
+          "maxObservedQuantizationError": 4.913711541820742E-09
+        },
+        "chordSlots": {
+          "A-INNER": {
+            "startIndex": 42,
+            "endIndex": 43
+          },
+          "X-CROSS-DOMAIN": {
+            "startIndex": 51,
+            "endIndex": 52
+          }
+        }
+      },
+      "storageAnchorNormalization": {
+        "rawA": {
+          "startDistance": 3.21093943592757E-09,
+          "endDistance": 1.0023849000874354E-09,
+          "maxDistance": 3.21093943592757E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "rawX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeA": {
+          "startDistance": 3.21093943592757E-09,
+          "endDistance": 1.0023849000874354E-09,
+          "maxDistance": 3.21093943592757E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        },
+        "nativeX": {
+          "startDistance": 1.0818199280315618E-09,
+          "endDistance": 6.332710210835014E-10,
+          "maxDistance": 1.0818199280315618E-09,
+          "maxPermittedDistance": 7.072067811865476E-09,
+          "interiorPointsChanged": false
+        }
+      },
+      "roundTrip": {
+        "rawTwoArc": {
+          "meanNormalized": 9.108242154584468E-09,
+          "maxNormalized": 4.497229450532345E-08,
+          "meanDistance": 1.2592468935220072E-09,
+          "maxDistance": 6.217579768877916E-09,
+          "referenceScale": 0.13825355893597846,
+          "samplesPerDirection": 512
+        },
+        "nativeTwoVoice": {
+          "meanNormalized": 2.406864353402894E-06,
+          "maxNormalized": 0.00011009628813755598,
+          "meanDistance": 3.327575627340927E-07,
+          "maxDistance": 1.5221203660658063E-05,
+          "referenceScale": 0.13825355893597846,
+          "samplesPerDirection": 512
+        }
+      }
+    }
+  ],
+  "provenanceBoundary": {
+    "referenceTrianglesEmbedded": false,
+    "generatedChordsAreObservedPhysicalSurfaces": false,
+    "physicalPartIdentityClaimed": false,
+    "manufacturingFeatureIdentityClaimed": false,
+    "birthDeathTransitionGeometryKnown": false
+  },
+  "approval": {
+    "measurementAccepted": false,
+    "commonBaseAccepted": false,
+    "geometryAccepted": false,
+    "visualAcceptance": false,
+    "productionReadiness": false
+  }
+}

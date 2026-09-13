@@ -1,0 +1,81 @@
+{
+  "schema": "object-dna.local-contour-chain-controls/1.0",
+  "measurementId": "ANM2-RECEIVER-LOCAL-FEATURE-SIMPLE-CHAIN-CONTROLS-R1",
+  "date": "2026-09-10",
+  "status": "measured-controls-candidate_not-geometry-acceptance",
+  "object": "AN/M2 receiver simple local contour reconstruction voices",
+  "source": {
+    "file": "references/anm2_browning_.50_cal_aircraft_machine_gun.glb",
+    "sha256": "2d6a1f323018523db42d1fe54dcf1a26661f139548134835779933d61ab68c8b",
+    "node": "body_15",
+    "componentSelector": "largest welded connected component",
+    "weldedVertexCount": 313,
+    "triangleCount": 624,
+    "adjacencyWorkflowRun": 34418029883,
+    "adjacencyArtifactId": 10129831987,
+    "adjacencyArtifactDigest": "sha256:0d027fd37c7f92940cb5b8414e71e9a78a590262aac76c020ab4a6a870112c39",
+    "lifetimeWorkflowRun": 34417810477,
+    "lifetimeArtifactId": 10129756371,
+    "lifetimeArtifactDigest": "sha256:b667b5772774edf3cc25a544db47e629c5e411d05b9a6da3b441fc76605fccea"
+  },
+  "frame": {
+    "axes": {"+X":"forward","+Y":"left","+Z":"up"},
+    "sourceToDefinition": "x,-z,y",
+    "unit": "source_u_unscaled",
+    "physicalCalibration": "Unknown",
+    "aircraftInstallationTransform": "Unknown"
+  },
+  "chainConvention": {
+    "orientation": "ordered from lower-Z adjacent boundary point toward higher-Z adjacent boundary point",
+    "landmarkOrder": ["adjacent-before","finite-concave-1","finite-concave-2","adjacent-after"],
+    "pointFormat": "[Y,Z] in Object-DNA definition frame",
+    "meaning": "purely geometric local contour landmarks; names describe chain order only and do not assert physical part/manufacturing semantics"
+  },
+  "voices": [
+    {
+      "voiceId": "LFV-A-INNER-R1",
+      "sourcePair": "PAIR-CANDIDATE-A-INNER",
+      "trackIds": ["FT-A-03141-NEG01285","FT-A-03141-NEG00128"],
+      "lifecycle": {
+        "birthTransition": {"fraction":[0.315234375,0.315625],"state":"Unknown"},
+        "deathTransition": {"fraction":[0.389453125,0.38984375],"state":"Unknown"},
+        "stableControlFractions": [0.325,0.35,0.375]
+      },
+      "controls": [
+        {"fraction":0.325,"x":-0.28667578436434266,"chain":[[0.04286082088947296,-0.012849321833160217],[0.03140823543071747,-0.012849321833160217],[0.03140823543071747,-0.0012787898361219443],[0.04286082088947296,-0.0012787898361219443]]},
+        {"fraction":0.35,"x":-0.27327001914381976,"chain":[[0.04286082088947296,-0.012849322459221504],[0.03140823543071747,-0.012849322459221504],[0.03140823543071747,-0.0012787901491525884],[0.04286082088947296,-0.0012787901491525884]]},
+        {"fraction":0.375,"x":-0.25986425392329693,"chain":[[0.04286082088947296,-0.012849323085282794],[0.03140823543071747,-0.012849323085282794],[0.03140823543071747,-0.0012787904621832326],[0.04286082088947296,-0.0012787904621832326]]}
+      ]
+    },
+    {
+      "voiceId": "LFV-X-CROSS-DOMAIN-R1",
+      "sourcePair": "PAIR-CANDIDATE-CROSS-DOMAIN",
+      "trackIds": ["FT-X-02726-POS0081","FT-X-02726-POS0233"],
+      "crossesPrimaryLowFrequencyDomains": true,
+      "lifecycle": {
+        "birthTransition": {"fraction":[0.174609375,0.175],"state":"Unknown"},
+        "deathTransition": {"fraction":[0.596875,0.597265625],"state":"Unknown"},
+        "stableControlFractions": [0.2,0.4,0.575]
+      },
+      "controls": [
+        {"fraction":0.2,"x":-0.35370461046695706,"chain":[[0.039245620369911194,0.008096368983387947],[0.02725503034889698,0.008098386039134552],[0.02725503034889698,0.023303738233564315],[0.039245620369911194,0.023347530514001846]]},
+        {"fraction":0.4,"x":-0.246458488702774,"chain":[[0.039245620369911194,0.008096368983387947],[0.02725503034889698,0.008130062436458477],[0.02725503034889698,0.023326461228036725],[0.039245620369911194,0.023347530514001846]]},
+        {"fraction":0.575,"x":-0.1526181321591139,"chain":[[0.039245620369911194,0.008096368983387947],[0.02725503034889698,0.008157779284116913],[0.02725503034889698,0.02334634384820008],[0.039245620369911194,0.023347530514001846]]}
+      ]
+    }
+  ],
+  "provenanceBoundary": {
+    "referenceTrianglesEmbedded": false,
+    "controlsAreMeasuredCoordinatesNotReferenceMesh": true,
+    "physicalDimensionsClaimed": false,
+    "physicalPartIdentityClaimed": false,
+    "manufacturingFeatureIdentityClaimed": false,
+    "birthDeathTransitionGeometryKnown": false
+  },
+  "approval": {
+    "measurementAccepted": false,
+    "geometryAccepted": false,
+    "visualAcceptance": false,
+    "productionReadiness": false
+  }
+}
