@@ -1,0 +1,67 @@
+name: Landscape R5 K2 Organic Microscope
+on:
+  push:
+    branches: [feature/landscape-mother-karst-living-r1-20260913]
+    paths:
+      - 'workbenches/landscape-surface-r5-k2/build_microscope_organic.py'
+      - 'workbenches/landscape-surface-r5-k2/qa_microscope_organic.py'
+      - 'workbenches/landscape-function/browser_check.py'
+      - '.github/workflows/landscape-r5-k2-build.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      LM_SITE: workbenches/landscape-surface-r5-k2
+      LM_EVIDENCE: /tmp/landscape-r5-k2-evidence
+      LM_EXPECT_RELEASE: limestone-water-surface-r5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-mother-karst-living-r1-20260913
+      - name: Build guarded R5.K2 candidate
+        run: python3 workbenches/landscape-surface-r5-k2/build_microscope_organic.py
+      - name: Verify frozen R5 and candidate contract
+        run: |
+          echo 'ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2  workbenches/landscape-surface-r5/index.html' | sha256sum -c -
+          test -s workbenches/landscape-surface-r5-k2/index.html
+          python3 - <<'PY'
+          import json
+          p='workbenches/landscape-surface-r5-k2/build.json'
+          d=json.load(open(p))
+          assert d['macroGeometryChanged'] is False
+          assert d['vertexIndexGeneratorChanged'] is False
+          assert d['worldSourceChanged'] is False
+          assert d['visualApproved'] is False
+          assert 'directional carved stripes' in d['explicitlyForbidden']
+          print(d['candidateSha256'], d['candidateBytes'])
+          PY
+      - name: Install browser QA
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Serve candidate
+        run: |
+          mkdir -p "$LM_EVIDENCE"
+          python3 -m http.server 8792 --bind 127.0.0.1 --directory "$LM_SITE" > "$LM_EVIDENCE/http.log" 2>&1 &
+      - name: Full desktop and mobile workbench QA
+        run: python3 workbenches/landscape-function/browser_check.py http://127.0.0.1:8792/index.html r5-k2
+      - name: Organic Microscope close-view QA
+        run: python3 workbenches/landscape-surface-r5-k2/qa_microscope_organic.py http://127.0.0.1:8792/index.html
+      - name: Commit only browser-checked candidate
+        run: |
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add workbenches/landscape-surface-r5-k2/index.html workbenches/landscape-surface-r5-k2/build.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build(landscape): materialize browser-checked R5.K2 organic microscope [skip ci]'
+          git push origin HEAD:feature/landscape-mother-karst-living-r1-20260913
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: landscape-r5-k2-${{ github.sha }}
+          path: /tmp/landscape-r5-k2-evidence/
+          if-no-files-found: warn
+          retention-days: 14
