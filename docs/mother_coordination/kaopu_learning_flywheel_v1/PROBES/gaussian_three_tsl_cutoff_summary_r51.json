@@ -1,0 +1,36 @@
+{
+  "schema": "kaopu-gaussian-three-tsl-cutoff-ci/r51",
+  "workflowRunId": 34734918445,
+  "workflowRunNumber": 11,
+  "headSha": "231a74f1a80340768afdec77830a6e0fd463b88c",
+  "artifactId": 10311065798,
+  "artifactName": "kaopu-gaussian-r51-three-tsl",
+  "results": {
+    "webgl": {
+      "status": "candidate-observation",
+      "requestedMode": "webgl",
+      "actualBackend": "webgl",
+      "threeRevision": "186",
+      "caseCount": 4644,
+      "renderSubmissionCount": 36,
+      "readbackCount": 36,
+      "tslMaterialCount": 1,
+      "doublePredicateMismatchCount": 32,
+      "float32PredicateMismatchCount": 0,
+      "exactTwiceScaleCasesCovered": 6,
+      "exactTwiceScaleCaseCount": 6,
+      "allChecksPassed": true,
+      "resultSha256": "5a2d3dda65f2d3dc0881d8ba789a54cebedbfc7ea912f8d8867e152f7df660cf"
+    },
+    "webgpu": {
+      "status": "unsupported",
+      "requestedMode": "webgpu",
+      "actualBackend": "webgl",
+      "reason": "WebGPU requested but Three.js initialized a non-WebGPU backend.",
+      "resultSha256": "84646eab4c23c3a90be7b2c9dc86426c20628763cd458825963542bfba18aa37"
+    }
+  },
+  "artifactZipSha256": "7f33958ef60ff27fffd8d3eb224444b974d964bd85934d2282a5b8244d814a76",
+  "summarySha256": "e93fa494ee977dceb383a350b99dc149fda2d56e7a5b03a8773bf0c42ba5ba58",
+  "interpretation": "Direct Three.js r186 TSL WebGL fallback reproduces the complete R50 cutoff-neighbor pattern in this fixed CI environment. WebGPU remains unverified because the requested WebGPU path fell back to WebGL and was correctly marked unsupported."
+}
