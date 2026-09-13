@@ -1,0 +1,64 @@
+{
+  "schema": "kaopu-source-lock/r64",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-14",
+  "topic": "three-r186-spatial-half-residual-and-cutoff",
+  "inherits": "references/gaussian-color-residual-r63/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R64-THREE-R186-SPATIAL-RESIDUAL-EXECUTION",
+      "sameEvidenceLineageAs": ["O-R63-THREE-R186-COLOR-RESIDUAL-EXECUTION", "O-R50-THREE-R186-CUTOFF-EXECUTION"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "browserHarness": "playwright@1.57.0",
+      "graphics": "Chromium/SwiftShader software WebGL",
+      "viewport": [33, 33],
+      "topologyCounts": {"stable-inside": 1, "cutoff-inside": 12, "cutoff-outside": 24, "stable-outside": 1052}
+    },
+    {
+      "root": "O-R64-THREE-R186-GAUSSIAN-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js",
+      "constraint": "Locked source supplies projection, 0.3 screen kernel, strict r2 > 4 fragment cutoff, order buffer use and transparent blend route."
+    },
+    {
+      "root": "O-R64-CI-FIRST-FAILED-GATE",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34784753255,
+      "workflowHeadSha": "09a8fc90d8b2fec3424f49d60799a986c3ffb332",
+      "artifactId": 10326062822,
+      "artifactDigestSha256": "8092a2c5dbc363f0fe238b30b90f8610b9e377f31fb6b723de6769e4ec905ac2",
+      "status": "Candidate-fail",
+      "reason": "generic JavaScript Float replay max 9.2983e-6 exceeded preregistered 1e-6 tolerance"
+    },
+    {
+      "root": "O-R64-CI-CLASSIFIED-FINAL",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34785499841,
+      "workflowHeadSha": "cc5eefd0d24091d56b7fbb9fdb0eee7662313b2b",
+      "artifactId": 10326900102,
+      "artifactName": "kaopu-gaussian-r64-spatial-residual",
+      "artifactDigestSha256": "efe2d513ffeb500d4feb168eb1c00679badd689fe09c6a71c73b73be9b01aaa3",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_spatial_residual_r64.html",
+    "runner": "PROBES/run_gaussian_three_spatial_residual_r64.js",
+    "compactResult": "PROBES/gaussian_three_spatial_residual_result_r64.json",
+    "resultSha256": "e5c171cce93008ed8a64b352733ae9e197df44e6243c1f896954652c860b54ee",
+    "resultGitBlobSha": "6e0b705684b309656ac82f34c6620afb7cdcb1ff",
+    "gate": "ADAPTERS/gaussian_three_spatial_residual_gate_r64.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r64-spatial-residual.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

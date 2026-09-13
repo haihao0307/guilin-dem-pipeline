@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r64",
+  "updatedAt": "2026-09-14",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R63_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R64 extended the R63 Half residual replay to a measured 33x33 r186 footprint. One-splat Float calibration incorporated the fixed projection, screen kernel and cutoff. All 4356 Half channels replayed bit-exactly and propagated residual decomposition closed within 1.11e-15 across stable-inside, cutoff-inside, cutoff-outside and stable-outside classes. Center-only certification was rejected because cutoff-inside RGB Half/Float error reached 0.03287943 versus 0.00940910 at center. A preregistered 1e-6 generic JavaScript Float replay gate failed at 9.2983e-6; the bit-exact Float-oracle claim was rejected rather than hiding the failure.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-14_GAUSSIAN_SPATIAL_RESIDUAL_R64.md"],
+  "appendSourceLocks": ["references/gaussian-spatial-residual-r64/SOURCE_LOCK.json"],
+  "r64Probe": "PROBES/gaussian_three_spatial_residual_r64.html",
+  "r64Runner": "PROBES/run_gaussian_three_spatial_residual_r64.js",
+  "r64Result": "PROBES/gaussian_three_spatial_residual_result_r64.json",
+  "candidateR64Gate": "ADAPTERS/gaussian_three_spatial_residual_gate_r64.mjs",
+  "currentBestViewR64Extension": "CURRENT_BEST_VIEW_R64_GAUSSIAN_SPATIAL_RESIDUAL.md",
+  "toolRoutingR64Extension": "TOOL_ROUTING_R64_GAUSSIAN_SPATIAL_RESIDUAL.json",
+  "motherRoutingR64Extension": "MOTHER_ROUTING_R64_GAUSSIAN_SPATIAL_RESIDUAL.json",
+  "nextGate": "Pre-register a state-dependent unsigned Half-ULP times downstream-transmittance bound, then compare it with the exact signed residual over the locked spatial fixture. Reject underestimation; do not infer a universal asset, perceptual or device threshold.",
+  "mergePolicy": "This overlay supersedes R63 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
+

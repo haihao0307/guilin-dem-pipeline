@@ -1,0 +1,176 @@
+{
+  "schema": "kaopu-three-spatial-residual/r64",
+  "status": "Candidate-pass",
+  "question": "Does the per-channel signed propagated Half residual remain an exact diagnostic across the spatial Gaussian footprint and the r186 hard-cutoff neighborhood?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r63Commit": "b2e0d4d818a064bfe70e9dc6de24c6d73d96b541"
+  },
+  "fixture": {
+    "viewport": [
+      33,
+      33
+    ],
+    "splatCount": 1941,
+    "alphaCounts": {
+      "1": 1779,
+      "2": 114,
+      "8": 48
+    },
+    "alphaOrder": "xorshift32 0x4b41504f",
+    "colorOrder": "RGB cycle repeated 647 times",
+    "scaleByte": 116,
+    "decodedLogScale": -0.75,
+    "calibration": "one white Float-target splat per alpha byte; framebuffer alpha is used as measured effective per-pixel alpha",
+    "topology": {
+      "stable-inside": 1,
+      "cutoff-inside": 12,
+      "cutoff-outside": 24,
+      "stable-outside": 1052
+    },
+    "centerPixel": 544
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat",
+    "output": "SRGBColorSpace / NoToneMapping"
+  },
+  "analysis": {
+    "globalHalfReplay": {
+      "channels": 4356,
+      "maxAbs": 0,
+      "changedChannels": 0
+    },
+    "globalFloatReplay": {
+      "channels": 4356,
+      "maxAbs": 0.000009298324584960938,
+      "changedChannels": 52
+    },
+    "floatReplayAssessment": "generic stepwise JavaScript float replay is measured but rejected as a bit-exact renderer oracle",
+    "globalDecompositionMaxAbs": 1.1102230246251565e-15,
+    "presentationHalfFloat": {
+      "channels": 4356,
+      "maxCodeDiff": 18,
+      "changedChannels": 38
+    },
+    "center": {
+      "pixel": 544,
+      "x": 16,
+      "y": 16,
+      "category": "stable-inside",
+      "effectiveAlphaByByte": {
+        "1": 0.002884544199332595,
+        "2": 0.00576908839866519,
+        "8": 0.02307635359466076
+      },
+      "nonzeroEffectiveWrites": 1941,
+      "halfReplayMaxAbs": 0,
+      "floatReplayMaxAbs": 0.000005125999450683594,
+      "decompositionMaxAbs": 4.85722573273506e-17,
+      "rgbHalfFloatMaxAbs": 0.009409099817276001,
+      "alphaHalfFloatAbs": 0.026355266571044922
+    },
+    "categoryMetrics": {
+      "stable-inside": {
+        "pixels": 1,
+        "maxHalfReplayAbs": 0,
+        "maxFloatReplayAbs": 0.000005125999450683594,
+        "maxDecompositionAbs": 4.85722573273506e-17,
+        "maxRgbHalfFloatAbs": 0.009409099817276001,
+        "maxAlphaHalfFloatAbs": 0.026355266571044922,
+        "pixelsWithRgbDifference": 1,
+        "effectiveAlpha8Range": [
+          0.02307635359466076,
+          0.02307635359466076
+        ]
+      },
+      "cutoff-inside": {
+        "pixels": 12,
+        "maxHalfReplayAbs": 0,
+        "maxFloatReplayAbs": 0.000009298324584960938,
+        "maxDecompositionAbs": 1.1102230246251565e-15,
+        "maxRgbHalfFloatAbs": 0.03287942707538605,
+        "maxAlphaHalfFloatAbs": 0.1277361512184143,
+        "pixelsWithRgbDifference": 12,
+        "effectiveAlpha8Range": [
+          0.003924276679754257,
+          0.014818880707025528
+        ]
+      },
+      "cutoff-outside": {
+        "pixels": 24,
+        "maxHalfReplayAbs": 0,
+        "maxFloatReplayAbs": 0,
+        "maxDecompositionAbs": 0,
+        "maxRgbHalfFloatAbs": 0,
+        "maxAlphaHalfFloatAbs": 0,
+        "pixelsWithRgbDifference": 0,
+        "effectiveAlpha8Range": [
+          0,
+          0
+        ]
+      },
+      "stable-outside": {
+        "pixels": 1052,
+        "maxHalfReplayAbs": 0,
+        "maxFloatReplayAbs": 0,
+        "maxDecompositionAbs": 0,
+        "maxRgbHalfFloatAbs": 0,
+        "maxAlphaHalfFloatAbs": 0,
+        "pixelsWithRgbDifference": 0,
+        "effectiveAlpha8Range": [
+          0,
+          0
+        ]
+      }
+    },
+    "propagatedResidualSha256": "e436c1d62f290e8704da23fd1b700bf38e123ff2e0fe2b04504dc2d035552048",
+    "spatialResidualAssessment": "confirmed-as-exact-for-locked-full-footprint",
+    "centerOnlyAssessment": "rejected-as-full-image-certificate"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "sameFixture": true,
+    "fullCoverageTopology": true,
+    "halfReplayBitExact": true,
+    "floatReplayDeviationClassified": true,
+    "propagatedResidualIdentity": true,
+    "cutoffMaskConsistent": true,
+    "spatialVariationObserved": true,
+    "presentationCaptured": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Measured per-pixel effective alpha plus nearest-even ordered replay reproduces the actual Half framebuffer throughout stable interior, cutoff-inside, cutoff-outside and stable exterior classes.",
+    "candidate": "Use a full ordered per-pixel/channel residual trace only as a revision-pinned diagnostic oracle; seek a smaller conservative delivery gate separately.",
+    "rejected": [
+      "A center-pixel trace alone certifies the entire rendered footprint.",
+      "A generic stepwise JavaScript Float replay driven by single-splat measured alpha is a bit-exact oracle for renderer Float blending."
+    ],
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "measuredCalibrationDependsOnLockedFixture": true,
+    "syntheticRepeatedSplats": true,
+    "dcColorsOnly": true,
+    "softwareWebglOnly": true,
+    "privateRevisionPinnedProbe": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

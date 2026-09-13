@@ -1,0 +1,28 @@
+{
+  "schema": "kaopu-tool-routing/r64",
+  "status": "candidate-routing",
+  "inherits": "TOOL_ROUTING_R63_GAUSSIAN_COLOR_RESIDUAL.json",
+  "routes": [
+    {
+      "task": "revision-pinned Half spatial precision diagnosis",
+      "primary": "Three.js r186 SPZLoader + GaussianSplat with internal Half readback",
+      "pairedEvidence": "same source/order/camera with Float internal target plus final sRGB capture",
+      "diagnostic": "one-splat per-alpha Float calibration and ordered per-pixel nearest-even Half residual replay",
+      "status": "Candidate validated only for the locked Chromium/SwiftShader fixture"
+    },
+    {
+      "task": "renderer Float arithmetic oracle",
+      "primary": "actual renderer Float framebuffer readback",
+      "rejected": "generic stepwise JavaScript Float recurrence as bit-exact oracle",
+      "observedMaxReplayDeviation": 0.000009298324584960938
+    },
+    {
+      "task": "production output buffer choice",
+      "status": "not authorized and not established",
+      "constraint": "Half and Float remain paired candidates pending real-asset target-device quality/performance evidence and Mother acceptance"
+    }
+  ],
+  "revokedToolsRestored": false,
+  "productionMutationAllowed": false
+}
+
