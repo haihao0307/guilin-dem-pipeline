@@ -1,76 +1,43 @@
-# 下一步继续顺序
+# 下一步继续顺序 · 轻量主线
 
-## 1. R3.8 WRB 显示整合
+R3.8 的 WRB、六深度 SoilProfile、JRC 历史水体和单一世界地点索引已经完成并通过固定提交公网浏览器 QA；不要再按旧交接文档重复这些工作。
 
-当前 `site/dist/r3-8/data/wrb/` 已经由成功工作流生成并校验。继续时先做 R3.8 UI/运行时，不重新下载或重算 WRB。
+## 1. 完成轻量交接闭环
 
-必须同时保留：
-- 官方 MostProbable 分类；
-- 30 个 WRB 发生概率声部；
-- 对齐概率后的 argmax 仅作为派生审计层；
-- 官方分类 vs 派生分类差异层。
+- 用 `tools/r3-handoff/build_current_lean_handoff.py` 生成当前接续包。
+- 包内只允许当前代码、状态、规则、索引和必要 QA/构建文本。
+- 相同 SHA-256 的文本内容只保存一份，其他路径记录 alias。
+- 唯一未压缩内容总量必须 <= 8 MiB；浏览器二进制、历史全量底包和永久证据 ZIP 不得进入包。
 
-不要把二者约 6.1% 差异解释成“官方错了”或“归档被 bilinear 损坏”。独立 nearest 重投影已经证明官方分类归档与 categorical nearest 路径逐像元一致。
+## 2. 保持运行仓与交接包分离
 
-## 2. 六层土壤剖面
+当前公网工作台仍需要现有浏览器二进制栅格，因此不能为了缩交接包直接删除运行数据。正确做法是：
 
-R3.7 当前浏览器只接 0–5 cm。下一步从永久 SoilGrids Release 派生其余 5 个深度：
-- 5–15 cm
-- 15–30 cm
-- 30–60 cm
-- 60–100 cm
-- 100–200 cm
+- 运行仓保留当前候选真正依赖的数据；
+- 交接包不携带这些大载荷，只带精确恢复索引；
+- 历史冻结数据和完整源证据继续放永久 Release / 固定 commit，退出活动工作集。
 
-不要做成六个独立谱。语义上归为同一地点 `SoilProfile` 的 depth axis，属性/uncertainty 随 depth 读取。
+## 3. 研究 SoilProfile 运行载荷压缩
 
-浏览器仍按需加载：当前 property + current depth + uncertainty，不一次加载全部 96+ 栅格。
+每个 `property × depth` 的 `Q0.5` 与 `uncertainty` 不是重复，不能静默删掉任一声部。后续单独做隔离实验：
 
-## 3. JRC GSW 长期水体
+- 双通道容器，把 Q0.5 + uncertainty 作为一个逻辑 payload；
+- 可逆 delta / bit packing / 分块；
+- 按位置、尺度、任务懒加载；
+- 解码后逐像元哈希/值域回归，证明不损失语义后才能替换当前浏览器载荷。
 
-永久源已锁：`wenzhou-r3.4-environment-evidence-20260910`。
+没有通过对照前，不动 R3.8 已验证候选的固定数据。
 
-接入时应作为 `HistoricalWaterObservation` 声部，支持 occurrence / recurrence / transitions / change / seasonality / extent。
+## 4. 覆盖层变换契约回归
 
-禁止：
-- 用 JRC 替换当前海陆拓扑；
-- 用 JRC 替换河网；
-- 把 1984–2024 历史统计解释为某一天实时水位；
-- 把 JRC 与 R3.2 演示海面混成同一物理真值。
+当前续作修复了 SoilProfile overlay 未完整继承 terrain `position/quaternion/scale` 的结构问题。若要晋升新候选，必须完成：
 
-## 4. 统一世界谱索引
-
-把现有：
-- canonical terrain / display terrain
-- coast / rivers
-- demo sea
-- WorldCover
-- SoilGrids properties + profile + uncertainty
-- WRB class probabilities
-- JRC water history
-- OSM roads / building footprints
-
-都挂回一个地点/时间/对象语义入口。证据文件可以独立，世界身份不分裂。
-
-优先设计“一个 location 查询返回多个 voice refs”，而不是多个孤立页面/多套世界。
-
-## 5. 显示与运行时收敛
-
-用户不希望世界无限膨胀。后续每加声部都必须回答：
-- 是否真的需要常驻？
-- 能否按位置/尺度/任务懒加载？
-- 能否与已有声部合并为统一语义而不是新开一套 UI？
-- 是否有独立真值来源？
-
-## 6. 最终 QA
-
-R3.8 完成显示后，重新做：
-- 静态来源/哈希/语义门；
-- 本地 Chromium；
+- transform contract 单元回归；
+- R3.8 原有静态/浏览器继承回归；
 - fixed-commit raw.githack；
 - 390×844；
-- R3.7 道路/建筑/海面/1.600m 回归；
-- WRB 官方分类/概率/差异审计；
-- 土壤 depth 切换与按需加载；
-- JRC 与当前水体语义隔离。
+- 1.600 m 人眼、道路/建筑/海面、Soil/WRB/JRC 全部不退化。
 
-只有这些通过后才把 R3.8 标为 verified candidate。
+## 5. 控制新增数据
+
+新增任何大型声部前必须先回答：是否已有等价证据、是否可以只留索引、是否能按需取回、是否值得增加运行成本。没有明确收益就不加入活动工作集。
