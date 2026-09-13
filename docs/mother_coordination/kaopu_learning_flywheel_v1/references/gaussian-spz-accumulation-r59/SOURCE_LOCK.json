@@ -1,0 +1,88 @@
+{
+  "schema": "kaopu-source-lock/r59",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-actual-spz-accumulation-precision",
+  "inherits": "references/gaussian-output-buffer-r58/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R59-THREE-R186-SPZ-ACCUMULATION-EXECUTION",
+      "sameEvidenceLineageAs": [
+        "O-R58-THREE-R186-OUTPUT-BUFFER-EXECUTION",
+        "O-R57-THREE-R186-WEBGPU-SWAPCHAIN",
+        "O-R56-THREE-R186-PRESENTATION",
+        "O-R55-THREE-R186-TWO-LAYER-BLEND"
+      ],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "graphics": "Google SwiftShader",
+      "rawSpzSha256": "2ba8db733eafb8342a25f179ff4c406b68a289fb24880a7275858a95cf388f00",
+      "gzipSpzSha256": "c0f12177fe9880dca2d26b4c90718027c02d743678a31eea7ca11794c06df70b"
+    },
+    {
+      "root": "O-R59-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/loaders/SPZLoader.js",
+          "blobSha": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+          "constraint": "public r186 legacy gzip SPZ parsing and v3 attribute construction used by the fixture"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js",
+          "blobSha": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+          "constraint": "actual GaussianSplat material, kernel, cutoff, projection, sorting and transparent render route"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/common/Renderer.js",
+          "blobSha": "c05aa68471f07a0bbbf6203865da1096fea503c1",
+          "constraint": "HalfFloatType constructor default and internal color-conversion target selection"
+        }
+      ]
+    },
+    {
+      "root": "O-R59-CI-SPZ-ACCUMULATION",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34755499053,
+      "workflowHeadSha": "1c961fc17b0caab4bc124f5c8332d61faa06962f",
+      "artifactId": 10317930498,
+      "artifactName": "kaopu-gaussian-r59-spz-accumulation",
+      "artifactDigestSha256": "472941ecd7e4c446c1cfa9eeb9baadc645eb71d54d557f6c165b3d360196e0a3",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "candidateInterpretationProvenance": {
+    "source": "MEETINGS/2026-09-13/EXPERT_R58_0300.md",
+    "commit": "51a3317db17927bc6b0595bc2037fb3cf5faf6fd",
+    "classification": "candidate expert interpretation, not independent empirical evidence",
+    "useInR59": "selected the missing iterative-accumulation question; the important claim was independently executed against fixed primary source"
+  },
+  "failedAttempts": [
+    {
+      "workflowRunId": 34755425877,
+      "workflowHeadSha": "69679c1f9373c31ff68a21494de24f57af0d543a",
+      "outcome": "Numerical result obtained, but gate rejected non-identical gzip wrapper timestamps despite identical raw SPZ hashes; superseded by a locked container timestamp and successful rerun"
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_spz_accumulation_r59.html",
+    "runner": "PROBES/run_gaussian_three_spz_accumulation_r59.js",
+    "compactResult": "PROBES/gaussian_three_spz_accumulation_result_r59.json",
+    "resultGitBlobSha": "cee9963128e1be5e90cb7e967cf5b6c39b959e6b",
+    "gate": "ADAPTERS/gaussian_three_spz_accumulation_gate_r59.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r59-spz-accumulation.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

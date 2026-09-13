@@ -1,0 +1,23 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r59",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R58_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R59 executed a deterministic 4096-splat low-alpha/high-overlap SPZ through the actual Three.js r186 SPZLoader and GaussianSplat NormalBlending path on software WebGL. The paired default HalfFloat versus explicit Float difference grew from maxAbs 0.00000119396 at one layer to 0.060539484 at 4096 layers. Half center fixed at 0.96337890625 from the sampled 512 layers onward while Float reached 0.99999552965; the final opaque-black sRGB canvas differed by up to 15 codes. This rejects extending R58's one-write envelope to iterative splat accumulation and corrects HalfFloat from a delivery-preference candidate to an unmodified validation start. The stress fixture is not a real-asset, device or perceptual threshold. No independent physical root or Mother adoption was added.",
+  "appendResultLogs": [
+    "LEARNING_LOG/2026-09-13_GAUSSIAN_SPZ_ACCUMULATION_R59.md"
+  ],
+  "appendSourceLocks": [
+    "references/gaussian-spz-accumulation-r59/SOURCE_LOCK.json"
+  ],
+  "r59Probe": "PROBES/gaussian_three_spz_accumulation_r59.html",
+  "r59Runner": "PROBES/run_gaussian_three_spz_accumulation_r59.js",
+  "r59Result": "PROBES/gaussian_three_spz_accumulation_result_r59.json",
+  "candidateR59Gate": "ADAPTERS/gaussian_three_spz_accumulation_gate_r59.mjs",
+  "currentBestViewR59Extension": "CURRENT_BEST_VIEW_R59_GAUSSIAN_SPZ_ACCUMULATION.md",
+  "toolRoutingR59Extension": "TOOL_ROUTING_R59_GAUSSIAN_SPZ_ACCUMULATION.json",
+  "motherRoutingR59Extension": "MOTHER_ROUTING_R59_GAUSSIAN_SPZ_ACCUMULATION.json",
+  "nextGate": "Run a deterministic source-alpha by overlap-count grid through the same actual r186 SPZLoader/GaussianSplat path, with paired HalfFloat and Float internal targets and final display captures. Test whether effective optical depth predicts divergence, but do not define a universal threshold without real-asset and target-device evidence.",
+  "mergePolicy": "This overlay supersedes R58 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu-tool-routing/r59",
+  "status": "Candidate partial",
+  "question": "Can Three.js r186 default HalfFloat accumulation diverge materially from paired Float when actual low-alpha high-overlap SPZ splats are blended?",
+  "inherits": "TOOL_ROUTING_R58_GAUSSIAN_OUTPUT_BUFFER.json",
+  "routes": [
+    {
+      "stage": "official-input-and-render-semantics",
+      "tool": "Pinned Three.js r186 SPZLoader.js, GaussianSplat.js and Renderer.js",
+      "authority": "SPZ v3 input interpretation, actual splat material/kernel/cutoff route, renderer default and internal-target selection",
+      "notAuthorityFor": [
+        "real-asset significance",
+        "device safety",
+        "human acceptance"
+      ]
+    },
+    {
+      "stage": "actual-spz-accumulation",
+      "tool": "PROBES/gaussian_three_spz_accumulation_r59.html through Playwright",
+      "authority": "locked-fixture Half/Float layer-gradient behavior in the tested software WebGL lineage",
+      "notAuthorityFor": [
+        "hardware GPU",
+        "WebGPU",
+        "Safari/iPhone",
+        "real reconstruction thresholds"
+      ]
+    },
+    {
+      "stage": "internal-linear-readback",
+      "tool": "Revision-pinned renderer._frameBufferTargets inspection",
+      "authority": "diagnostic internal Half/Float target values and hashes for fixed r186",
+      "notAuthorityFor": [
+        "public production API",
+        "future Three.js revisions"
+      ]
+    },
+    {
+      "stage": "presentation-check",
+      "tool": "Opaque-black sRGB PNG capture",
+      "authority": "fixture-specific final code differences in the tested browser lineage",
+      "notAuthorityFor": [
+        "perceptual rejection",
+        "transparent compositor equivalence",
+        "target-device acceptance"
+      ]
+    },
+    {
+      "stage": "next-risk-map",
+      "tool": "Pinned alpha-by-overlap SPZ grid through actual r186 GaussianSplat",
+      "authority": "candidate overlap-risk predictor once executed",
+      "requiredNext": [
+        "same source hashes",
+        "alpha and overlap grid",
+        "effective optical depth candidate",
+        "internal linear difference",
+        "final display difference",
+        "no universal threshold claim"
+      ]
+    }
+  ],
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "iterativeHalfVsFloatCompared": true,
+  "webgpuHalfVsFloatCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}
