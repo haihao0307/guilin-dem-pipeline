@@ -7,6 +7,7 @@ on:
     paths:
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_tsl_cutoff_r51.html
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_tsl_webgl_gate_r51.mjs
       - .github/workflows/kaopu-gaussian-r51-three-tsl.yml
 
 permissions:
@@ -44,6 +45,18 @@ jobs:
       - name: Run Three.js r186 TSL on forced WebGL fallback
         run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js webgl
 
+      - name: Validate locked R51 WebGL evidence contract
+        shell: bash
+        run: |
+          cat r51-result-webgl.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_tsl_webgl_gate_r51.mjs > r51-gate-webgl.json
+          cat r51-gate-webgl.json
+          python3 - <<'PY'
+          import json
+          d = json.load(open('r51-gate-webgl.json'))
+          if d.get('status') != 'Candidate-pass':
+              raise SystemExit(f"R51 WebGL gate failed: {d}")
+          PY
+
       - name: Run Three.js r186 TSL on WebGPU when available
         run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js webgpu
 
@@ -74,6 +87,8 @@ jobs:
                   'counterexamples': d.get('counterexamples'),
                   'message': d.get('message'),
               }
+          gate = Path('r51-gate-webgl.json')
+          out['webglGate'] = json.loads(gate.read_text()) if gate.exists() else {'status': 'missing'}
           Path('r51-summary.json').write_text(json.dumps(out, indent=2) + '\n')
           print(json.dumps(out, indent=2))
           PY
@@ -85,6 +100,7 @@ jobs:
           name: kaopu-gaussian-r51-three-tsl
           path: |
             r51-result-webgl.json
+            r51-gate-webgl.json
             r51-result-webgpu.json
             r51-summary.json
           if-no-files-found: warn
