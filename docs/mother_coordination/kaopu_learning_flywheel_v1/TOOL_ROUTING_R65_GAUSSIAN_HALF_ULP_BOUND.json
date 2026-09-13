@@ -1,0 +1,28 @@
+{
+  "schema": "kaopu-tool-routing/r65",
+  "status": "candidate-routing",
+  "inherits": "TOOL_ROUTING_R64_GAUSSIAN_SPATIAL_RESIDUAL.json",
+  "routes": [
+    {
+      "task": "revision-pinned conservative Half precision guard",
+      "primary": "Three.js r186 SPZLoader + GaussianSplat with actual internal Half readback",
+      "pairedEvidence": "same source/order/camera with measured one-splat Float alpha calibration",
+      "diagnostic": "ordered nearest-even Half replay plus per-step bracketing-half-gap bound propagated by later transmittance",
+      "status": "Candidate validated only for the locked Chromium/SwiftShader fixture"
+    },
+    {
+      "task": "compact precision certification",
+      "rejected": "endpoint-only Half ULP as sufficient accumulated-error bound",
+      "observedUnderestimatedChannels": 52,
+      "constraint": "the R65 bound still requires ordered state and per-pixel effective alpha; it is not an asset summary"
+    },
+    {
+      "task": "production output buffer choice",
+      "status": "not authorized and not established",
+      "constraint": "Half and Float remain paired candidates pending real-asset target-device quality/performance evidence and Mother acceptance"
+    }
+  ],
+  "revokedToolsRestored": false,
+  "productionMutationAllowed": false
+}
+

@@ -1,0 +1,139 @@
+{
+  "schema": "kaopu-gaussian-half-ulp-bound/r65",
+  "status": "Candidate-pass",
+  "question": "Can a preregistered unsigned per-step Half-gap bound propagated by later transmittance conservatively dominate the exact spatial Half residual?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r64Commit": "fb6ef58c7d0fb7f265266ac102d87bebfb0973bb"
+  },
+  "boundDefinition": {
+    "perStep": "zero for an exactly representable unrounded value; otherwise one half of the gap between adjacent bracketing binary16 values",
+    "recurrence": "B_i = B_(i-1) * (1 - effectiveAlpha_i) + localBound_i",
+    "proofObligation": "abs(Half_i - ideal_i) <= B_i, checked at the final state for every pixel/channel",
+    "usesSignedResidual": false,
+    "usesOrderedHalfState": true,
+    "usesMeasuredPerPixelEffectiveAlpha": true
+  },
+  "fixture": {
+    "viewport": [
+      33,
+      33
+    ],
+    "splatCount": 1941,
+    "alphaCounts": {
+      "1": 1779,
+      "2": 114,
+      "8": 48
+    },
+    "alphaOrder": "xorshift32 0x4b41504f",
+    "colorOrder": "RGB cycle repeated 647 times",
+    "scaleByte": 116,
+    "topology": {
+      "stable-inside": 1,
+      "cutoff-inside": 12,
+      "cutoff-outside": 24,
+      "stable-outside": 1052
+    }
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat Half target"
+  },
+  "analysis": {
+    "maxReplayAbs": 0,
+    "maxDecompositionAbs": 1.1102230246251565e-15,
+    "globalLocalViolations": 0,
+    "underestimatedChannels": 0,
+    "endpointOnlyUnderestimatedChannels": 52,
+    "minSlack": 0,
+    "maxActualAbs": 0.12773165063845437,
+    "maxBound": 0.18712705453127046,
+    "maxBoundActualRatio": 1.4650014588861404,
+    "maxBoundActualRatioAtErrorAtLeast1e6": 26.48417310500964,
+    "categories": {
+      "stable-inside": {
+        "pixels": 1,
+        "channels": 4,
+        "maxActualAbs": 0.02635517451572833,
+        "maxBound": 0.06449128664614255,
+        "minSlack": 0.022784795467745422,
+        "underestimatedChannels": 0,
+        "endpointOnlyUnderestimatedChannels": 4,
+        "maxBoundActualRatioAtErrorAtLeast1e6": 26.48417310500964
+      },
+      "cutoff-inside": {
+        "pixels": 12,
+        "channels": 48,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.18712705453127046,
+        "minSlack": 0.023114629558210656,
+        "underestimatedChannels": 0,
+        "endpointOnlyUnderestimatedChannels": 48,
+        "maxBoundActualRatioAtErrorAtLeast1e6": 6.587073986052694
+      },
+      "cutoff-outside": {
+        "pixels": 24,
+        "channels": 96,
+        "maxActualAbs": 0,
+        "maxBound": 0,
+        "minSlack": 0,
+        "underestimatedChannels": 0,
+        "endpointOnlyUnderestimatedChannels": 0,
+        "maxBoundActualRatioAtErrorAtLeast1e6": 0
+      },
+      "stable-outside": {
+        "pixels": 1052,
+        "channels": 4208,
+        "maxActualAbs": 0,
+        "maxBound": 0,
+        "minSlack": 0,
+        "underestimatedChannels": 0,
+        "endpointOnlyUnderestimatedChannels": 0,
+        "maxBoundActualRatioAtErrorAtLeast1e6": 0
+      }
+    },
+    "resultDigestSha256": "cf4e50b48bda65800231f6134f9bb1662498fbd4df98e07508a10c5a9e7c26a8",
+    "propagatedUnsignedBoundAssessment": "conservative-for-all-locked-channels",
+    "endpointOnlyAssessment": "rejected-as-sufficient"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "fullCoverageTopology": true,
+    "halfReplayBitExact": true,
+    "localHalfGapBoundValid": true,
+    "propagatedResidualIdentity": true,
+    "noPropagatedBoundUnderestimate": true,
+    "endpointOnlyBoundRejected": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "The ordered unsigned half-gap/transmittance recurrence dominates the exact Half-minus-ideal endpoint error for every locked spatial channel.",
+    "candidate": "Use it as a deterministic regression guard when full signed residual storage is undesirable, while retaining order, Half state and per-pixel effective alpha.",
+    "rejected": "A single half-ULP bound evaluated only at the endpoint certifies accumulated Half blending error.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "syntheticRepeatedSplats": true,
+    "dcColorsOnly": true,
+    "fullOrderedReplayStillRequired": true,
+    "notACompactAssetSummary": true,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

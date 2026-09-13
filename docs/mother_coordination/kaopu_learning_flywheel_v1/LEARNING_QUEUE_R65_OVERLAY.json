@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r65",
+  "updatedAt": "2026-09-14",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R64_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R65 preregistered an unsigned per-step Half-gap bound propagated by later transmittance over the locked 33x33 r186 footprint. It underestimated none of 4356 channels; maximum actual error was 0.12773165063845437 and maximum bound 0.18712705453127046. The endpoint-only Half-ULP shortcut underestimated 52 visible channels and was rejected. The successful bound still requires ordered Half state and measured per-pixel effective alpha, so it is not a compact asset summary or delivery threshold.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-14_GAUSSIAN_HALF_ULP_BOUND_R65.md"],
+  "appendSourceLocks": ["references/gaussian-half-ulp-bound-r65/SOURCE_LOCK.json"],
+  "r65Runner": "PROBES/run_gaussian_half_ulp_bound_r65.js",
+  "r65Result": "PROBES/gaussian_half_ulp_bound_result_r65.json",
+  "candidateR65Gate": "ADAPTERS/gaussian_half_ulp_bound_gate_r65.mjs",
+  "currentBestViewR65Extension": "CURRENT_BEST_VIEW_R65_GAUSSIAN_HALF_ULP_BOUND.md",
+  "toolRoutingR65Extension": "TOOL_ROUTING_R65_GAUSSIAN_HALF_ULP_BOUND.json",
+  "motherRoutingR65Extension": "MOTHER_ROUTING_R65_GAUSSIAN_HALF_ULP_BOUND.json",
+  "nextGate": "Pre-register a blockwise checkpoint composition of the propagated bound, include an adversarial cross-block sequence, and reject any final-channel underestimation. Measure state cost explicitly; do not infer universal asset, perceptual or device thresholds.",
+  "mergePolicy": "This overlay supersedes R64 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
+
