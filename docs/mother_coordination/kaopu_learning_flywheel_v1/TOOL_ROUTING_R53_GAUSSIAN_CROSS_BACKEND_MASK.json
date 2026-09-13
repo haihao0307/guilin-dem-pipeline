@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu-tool-routing/r53",
+  "status": "Candidate partial",
+  "question": "Do direct Three.js r186 WebGL and WebGPU agree on every individual Gaussian cutoff-neighbor decision, not just summary counts?",
+  "inherits": "TOOL_ROUTING_R52_GAUSSIAN_THREE_TSL_WEBGPU.json",
+  "routes": [
+    {
+      "stage": "exact-cross-backend-mask",
+      "tool": "PROBES/gaussian_three_cross_backend_mask_r53.html + PROBES/run_gaussian_three_cross_backend_mask_r53.js",
+      "authority": "exact per-case software WebGL/WebGPU edge-mask comparison for the locked 4,644 sample identities",
+      "required": [
+        "same Three.js revision",
+        "same browser/toolchain",
+        "distinct actual WebGL and WebGPU backends",
+        "input identity hashes",
+        "129-bit mask per scale/direction group",
+        "first divergent case if any"
+      ]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_cross_backend_mask_gate_r53.mjs",
+      "authority": "exact mask identity and evidence completeness",
+      "notAuthorityFor": [
+        "hardware GPU",
+        "Apple target devices",
+        "stable-pixel color error",
+        "real-asset acceptance",
+        "human visual acceptance"
+      ]
+    },
+    {
+      "stage": "hardware-next",
+      "tool": "hardware-backed WebGPU runner",
+      "authority": "hardware evidence only when adapter identifies a real GPU rather than SwiftShader/software rasterization",
+      "requiredNext": [
+        "GPU vendor/device identity",
+        "OS and browser identity",
+        "same locked 4,644 case identities",
+        "exact edge-mask comparison against R53"
+      ]
+    },
+    {
+      "stage": "color-next",
+      "tool": "float-intermediate versus final-target stable-pixel comparator",
+      "authority": "color-path evidence outside the discontinuous cutoff-neighbor band",
+      "requiredNext": [
+        "stable-pixel selection",
+        "float intermediate target",
+        "final target",
+        "linear/display transform declaration",
+        "absolute and relative error metrics"
+      ]
+    }
+  ],
+  "exactSoftwareWebglWebgpuMaskIdentityEstablished": true,
+  "hardwareGpuEvidenceEstablished": false,
+  "stablePixelColorEvidenceEstablished": false,
+  "productionMutationAllowed": false
+}
