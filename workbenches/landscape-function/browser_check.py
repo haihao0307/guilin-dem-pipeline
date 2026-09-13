@@ -11,6 +11,7 @@ url=sys.argv[1] if len(sys.argv)>1 else ''
 label=sys.argv[2] if len(sys.argv)>2 else 'local'
 site=Path(os.environ.get('LM_SITE',str(root)))
 out=Path(os.environ.get('LM_EVIDENCE',str(root/'qa')));out.mkdir(parents=True,exist_ok=True)
+expected_release=os.environ.get('LM_EXPECT_RELEASE','limestone-water-2')
 file=site/('Landscape_Mother_Erosion.html' if local else 'index.html')
 raw=file.read_bytes();expected=hashlib.sha256(raw).hexdigest()
 with sync_playwright() as p:
@@ -38,14 +39,14 @@ with sync_playwright() as p:
     r=page.goto(url,wait_until='domcontentloaded',timeout=60000)
     check('exact HTTP 200 payload',r.status==200 and hashlib.sha256(r.body()).hexdigest()==expected)
    ready()
-   check('correct candidate',page.evaluate("window.__LM__.release==='limestone-water-2'"))
+   check('correct candidate',page.evaluate('(r)=>window.__LM__.release===r',expected_release),page.evaluate('window.__LM__.release'))
    before=page.evaluate('window.__LM__.bufferFingerprint()');saved=page.evaluate('window.__LM__.getState()')
    check('all static contacts supported',page.evaluate('window.__LM__.report.supports.every(s=>s.centerInsideSupportHull&&s.minimumGapM<=0&&s.minimumGapM>=-.221)'))
    for v in ('hero','cliff','cave','foot','back','section','stone'):
     page.locator('[data-view="'+v+'"]').click();audit(v,v in ('hero','cave','foot','stone'))
    check('camera leaves geometry unchanged',page.evaluate('window.__LM__.bufferFingerprint()')==before)
    page.locator('#panelbtn').click()
-   for mode in (1,2,3,4,0):
+   for mode in (1,2,3,4,5,0):
     page.locator('[data-mode="'+str(mode)+'"]').click();audit('mode'+str(mode))
    page.locator('#wet').evaluate('(e)=>{e.value=.8;e.dispatchEvent(new Event("input",{bubbles:true}))}')
    page.locator('#micro').evaluate('(e)=>{e.value=.45;e.dispatchEvent(new Event("input",{bubbles:true}))}')
