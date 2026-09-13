@@ -1,0 +1,60 @@
+{
+  "schema": "kaopu-source-lock/r56",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-canvas-output-color-and-alpha-presentation",
+  "inherits": "references/gaussian-two-splat-blend-r55/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R56-THREE-R186-PRESENTATION",
+      "sameEvidenceLineageAs": ["O-R55-THREE-R186-TWO-LAYER-BLEND"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "webglBackend": "ANGLE Vulkan SwiftShader",
+      "webgpuBackend": "Google SwiftShader"
+    },
+    {
+      "root": "O-R56-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {"url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/common/Renderer.js", "blobSha": "c05aa68471f07a0bbbf6203865da1096fea503c1", "constraint": "screen targets use configured tone mapping/output color space; non-output targets use working color space; transformed output uses an intermediate target"},
+        {"url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/nodes/display/RenderOutputNode.js", "blobSha": "4a356dd7c8d86a8b058face29a7502b306b36b37", "constraint": "output clamps alpha, unpremultiplies, tone maps, converts color space and premultiplies in output space"},
+        {"url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/math/ColorManagement.js", "blobSha": "b4c1bd94f81a5852e83b01ae9557f1944e55068e", "constraint": "Linear-sRGB and sRGB share Rec.709 primaries but use linear versus sRGB transfer"},
+        {"url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/webgpu/WebGPUBackend.js", "blobSha": "e6345e42e2008f6606971c626326d6479e50a51a", "constraint": "WebGPU canvas is configured premultiplied with COPY_SRC usage"},
+        {"url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/materials/nodes/NodeMaterial.js", "blobSha": "558a15b256cf7fc120b92f0be4b23d40f0974311", "constraint": "material premultiplication is conditional on material.premultipliedAlpha"}
+      ]
+    },
+    {
+      "root": "O-R56-CI-PRESENTATION",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34741403097,
+      "workflowHeadSha": "e50cbd53de8c76dea6f8368970dda55a1674754d",
+      "artifactId": 10313240410,
+      "artifactName": "kaopu-gaussian-r56-presentation",
+      "artifactDigestSha256": "e078360a4930ae0dcb706689da515f359a924e738e5ab2fe13b013e697f6f31b",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_presentation_r56.html",
+    "runner": "PROBES/run_gaussian_three_presentation_r56.js",
+    "compactResult": "PROBES/gaussian_three_presentation_result_r56.json",
+    "gate": "ADAPTERS/gaussian_three_presentation_gate_r56.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r56-presentation.yml",
+    "comparisonSha256": "d91d803250572b6b597b2af2d42c7e95ddc8c4b647db31a30c9c6d3b4873e9ea",
+    "gateResultSha256": "1f6609695e526d1cc4b8ff418809a0bac2c28661d30a2d35fd09b5bf04a7f03b"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "webglPresentationCompared": true,
+  "webgpuPresentationCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

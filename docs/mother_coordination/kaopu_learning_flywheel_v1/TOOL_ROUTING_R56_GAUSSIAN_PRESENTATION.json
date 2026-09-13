@@ -1,0 +1,38 @@
+{
+  "schema": "kaopu-tool-routing/r56",
+  "status": "Candidate partial",
+  "question": "What changes when the exact R55 premultiplied float output is sent through Three.js r186 canvas color transfer and browser alpha/background presentation?",
+  "inherits": "TOOL_ROUTING_R55_GAUSSIAN_TWO_SPLAT_BLEND.json",
+  "routes": [
+    {
+      "stage": "pre-presentation-lock",
+      "tool": "PROBES/gaussian_three_presentation_r56.html",
+      "authority": "exact R55 source identity and offscreen RGBA32F NoColorSpace replay",
+      "required": ["source hash", "offscreen hash", "target format", "target color space", "backend identity"]
+    },
+    {
+      "stage": "webgl-presentation",
+      "tool": "PROBES/run_gaussian_three_presentation_r56.js",
+      "authority": "locked Chromium/SwiftShader WebGL screenshot observations for explicit Linear-sRGB/sRGB output and transparent/black/white backgrounds",
+      "required": ["renderer output color space", "tone mapping", "output buffer type", "canvas alpha mode", "background", "readback location", "PNG metrics"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_presentation_gate_r56.mjs",
+      "authority": "fixture identity, explicit presentation contract, finite WebGL metrics and explicit WebGPU unavailability classification",
+      "notAuthorityFor": ["WebGPU canvas colors", "hardware GPU", "Safari/iPhone", "asset quality", "perceptual acceptance"]
+    },
+    {
+      "stage": "webgpu-next",
+      "tool": "direct GPUCanvasContext current-texture copy-to-buffer probe",
+      "authority": "WebGPU canvas texture bytes before browser screenshot/compositor once implemented",
+      "requiredNext": ["swapchain format", "COPY_SRC usage", "bytes-per-row padding", "alpha mode", "output transfer", "readback timing"]
+    }
+  ],
+  "stableStorageBaselineEstablished": true,
+  "twoLayerBlendEvidenceEstablished": true,
+  "webglPresentationEvidenceEstablished": true,
+  "webgpuPresentationEvidenceEstablished": false,
+  "gaussianCutoffEvidenceSeparate": true,
+  "productionMutationAllowed": false
+}
