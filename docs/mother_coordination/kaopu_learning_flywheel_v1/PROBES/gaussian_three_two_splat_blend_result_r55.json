@@ -1,0 +1,105 @@
+{
+  "schema": "kaopu-three-two-splat-blend-result/r55",
+  "status": "Candidate-pass",
+  "acceptedWorkflow": {
+    "runId": 34736638886,
+    "headSha": "9448fe01dbafc0d04353560a49c8e9d8cb1eda7f",
+    "artifactId": 10310898792,
+    "artifactName": "kaopu-gaussian-r55-two-splat-blend",
+    "artifactDigestSha256": "4d416b597f6d93dea57152de8eefe86e627ced70ac276d2cf68bf29bee776867",
+    "conclusion": "success"
+  },
+  "diagnosticHistory": [
+    {
+      "runId": 34736269295,
+      "headSha": "6426b521b7d50789ee7a2fd1da7cef580c33adbd",
+      "artifactId": 10311017830,
+      "artifactDigestSha256": "2fd80e968668c4f6a8f16f0d66501577b0ebbf97d4dc4f3a2c3bcfca4d671323",
+      "observation": "First WebGL RGBA32F blend attempt rejected with an undefined browser error while WebGPU completed; cause not established."
+    },
+    {
+      "runId": 34736558717,
+      "headSha": "87e20c64142a4cd690b1e6e3546c4373012b1b4f",
+      "artifactId": 10311306080,
+      "artifactDigestSha256": "77b779148b462f8047d321e14af4b60266765e272d835716032e3d3d44f3faac",
+      "observation": "The no-direct-EXT_float_blend-call control succeeded; the workflow failed only because the provisional gate incorrectly expected that control to fail."
+    }
+  ],
+  "toolchain": {
+    "threeRevision": "186",
+    "threePackage": "three@0.186.0",
+    "browser": "Headless Chromium 143.0.7499.4",
+    "browserHarness": "playwright@1.57.0",
+    "webgl": "WebGLBackend / ANGLE Vulkan SwiftShader",
+    "webgpu": "WebGPUBackend / Google SwiftShader"
+  },
+  "fixture": {
+    "sampleCount": 256,
+    "sampledChannels": 1024,
+    "drawsPerPixel": 2,
+    "drawOrder": "back renderOrder 0, front renderOrder 1",
+    "reverseControl": "back renderOrder 1, front renderOrder 0",
+    "blending": "NormalBlending; premultipliedAlpha=false; transparent=true; depthTest=false; depthWrite=false",
+    "floatTarget": "RGBA32F offscreen RenderTarget",
+    "finalTarget": "RGBA8 offscreen RenderTarget",
+    "toneMapping": "NoToneMapping",
+    "targetColorSpace": "NoColorSpace",
+    "gaussianCutoff": false,
+    "presentationSurface": false
+  },
+  "summary": {
+    "floatVsStepwiseSourceOverMaxAbs": 0,
+    "floatVsRgba8MaxAbs": 0.0033492621253518595,
+    "floatVsRgba8MaxAbsInCodes": 0.8540618419647241,
+    "floatVsRgba8Rmse": 0.0013398207486287322,
+    "channelsOverHalfCode": 144,
+    "channelsOverOneCode": 0,
+    "channelsOverTwoCodes": 0,
+    "reverseOrderMaxRgbAbs": 0.6491359174251556,
+    "reverseOrderMaxAlphaAbs": 5.960464477539063e-8,
+    "reverseOrderChangedRgbChannels": 768,
+    "webglWebgpuInputHashEqual": true,
+    "webglWebgpuFloatHashEqual": true,
+    "webglWebgpuRgba8HashEqual": true,
+    "webglWebgpuReverseHashEqual": true,
+    "noDirectFloatBlendCallControlHashEqual": true,
+    "machineGate": "Candidate-pass"
+  },
+  "hashes": {
+    "input": "4d00026982615db9eb972d49c7e7bf59c65b8e538c30b59ec57a7e3d03ba5ddf",
+    "float": "0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520",
+    "rgba8": "d77ef47a4e34b1ca8d7337953d595d6663fa4130e49e6776b029431dacf02bef",
+    "reverseFloat": "ce3dd8a3877359929095ae800d6cc93d236f50d39d16edfb81c669de4e6cb93d",
+    "comparisonArtifact": "7001e51f1493380da9b0e933f689127e1c84bdb6d87e55349ccca0fb22827d34",
+    "gateArtifact": "44ca020a03b42f06a37e9257a12c04520e2e878d0f0aad1792ea7b0e4bb5212b"
+  },
+  "statusLedger": {
+    "Observation": [
+      "The accepted locked software WebGL and WebGPU paths matched the stepwise source-over float reference exactly and produced byte-identical RGBA32F and RGBA8 outputs.",
+      "The first WebGL attempt failed before producing a result; later exact-fixture runs did not reproduce it."
+    ],
+    "Candidate": [
+      "Use this two-layer fixture as a regression gate separating per-draw RGBA8 accumulation from stable storage, cutoff and presentation transforms."
+    ],
+    "CurrentBestView": "Two-layer RGBA8 source-over accumulation can exceed R54's half-code stable-storage baseline while remaining below one code in this locked fixture. Error depends on draw count, input values, order and target format; 0.854 codes is not a universal or asset tolerance.",
+    "Frozen": "Frozen R1 and Canonical Truth are unchanged.",
+    "Rejected": [
+      "R54's half-code stable-storage envelope automatically bounds a blended target.",
+      "Calling getExtension('EXT_float_blend') directly is required after EXT_color_buffer_float has been enabled.",
+      "Software WebGL/WebGPU agreement is independent physical corroboration."
+    ],
+    "Unknown": [
+      "Cause of the first-run WebGL undefined rejection.",
+      "Accumulation behavior for real splat overlap depths, browser presentation transforms, hardware GPUs, Safari/iPhone, real reconstructions and human acceptance."
+    ]
+  },
+  "limits": {
+    "independentPhysicalObservationRootsAdded": 0,
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "browserPresentationSurface": false,
+    "gaussianCutoffPath": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

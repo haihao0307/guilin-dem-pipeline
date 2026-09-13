@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r55",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R54_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R55 isolated direct Three.js r186 two-layer source-over accumulation on 256 stable pixels. Both locked software WebGL and WebGPU RGBA32F outputs matched the stepwise float32 reference exactly. RGBA8 accumulation differed by at most 0.0033492621253518595 (0.8540618419647241 8-bit codes); 144/1024 channels exceeded half a code and none exceeded one code. Backends produced identical float, RGBA8 and reverse-order hashes. Reversing order changed all 768 RGB channels with max 0.6491359174251556 while alpha stayed invariant to 5.96e-8. A provisional direct-EXT_float_blend activation explanation for the first WebGL failure was rejected: a control without that direct call, but with EXT_color_buffer_float enabled, succeeded identically, matching Khronos implicit-enable semantics. The first failure cause remains Unknown. Machine gate passed. This does not cover arbitrary overlap, cutoff, presentation, hardware, Apple devices, real assets or human acceptance.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-13_GAUSSIAN_TWO_SPLAT_BLEND_R55.md"],
+  "appendSourceLocks": ["references/gaussian-two-splat-blend-r55/SOURCE_LOCK.json"],
+  "r55Probe": "PROBES/gaussian_three_two_splat_blend_r55.html",
+  "r55Runner": "PROBES/run_gaussian_three_two_splat_blend_r55.js",
+  "r55Result": "PROBES/gaussian_three_two_splat_blend_result_r55.json",
+  "candidateR55Gate": "ADAPTERS/gaussian_three_two_splat_blend_gate_r55.mjs",
+  "currentBestViewR55Extension": "CURRENT_BEST_VIEW_R55_GAUSSIAN_TWO_SPLAT_BLEND.md",
+  "toolRoutingR55Extension": "TOOL_ROUTING_R55_GAUSSIAN_TWO_SPLAT_BLEND.json",
+  "motherRoutingR55Extension": "MOTHER_ROUTING_R55_GAUSSIAN_TWO_SPLAT_BLEND.json",
+  "nextGate": "Compare the same locked float output through Three.js r186 offscreen linear output and the browser canvas/presentation path. Declare renderer output color space, target color space, tone mapping, alpha/background compositing and readback location. Keep presentation error separate from R55 blend accumulation and R50-R53 cutoff masks. Hardware-backed WebGPU and Apple Safari/WebKit remain explicit infrastructure-dependent Unknowns; do not substitute additional SwiftShader repetitions. Only after a user photo set exists should the COLMAP/Brush/PLY/SPZ/r186 pilot run under accumulated R34-R55 gates.",
+  "mergePolicy": "This overlay supersedes R54 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}

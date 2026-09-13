@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu-tool-routing/r55",
+  "status": "Candidate partial",
+  "question": "What additional error appears when two ordered translucent samples are accumulated into RGBA8 rather than RGBA32F?",
+  "inherits": "TOOL_ROUTING_R54_GAUSSIAN_FLOAT_FINAL_COLOR.json",
+  "routes": [
+    {
+      "stage": "two-layer-source-over",
+      "tool": "PROBES/gaussian_three_two_splat_blend_r55.html + PROBES/run_gaussian_three_two_splat_blend_r55.js",
+      "authority": "direct Three.js r186 two-draw RGBA32F/RGBA8 accumulation and draw-order negative control on locked software WebGL/WebGPU",
+      "required": ["draw count", "render order", "blend mode and premultiplication", "depth state", "target formats", "color state", "backend identity", "float/final/reverse hashes"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_two_splat_blend_gate_r55.mjs",
+      "authority": "fixture integrity, analytic float agreement, control validity and measured RGBA8 accumulation envelope",
+      "notAuthorityFor": ["arbitrary overlap depth", "Gaussian cutoff", "browser presentation", "hardware GPU", "target device", "asset quality", "human acceptance"]
+    },
+    {
+      "stage": "presentation-next",
+      "tool": "direct Three.js offscreen-linear versus canvas/presentation comparator",
+      "authority": "presentation/output-transform error once implemented",
+      "requiredNext": ["renderer output color space", "target color space", "tone mapping", "canvas format", "alpha/background compositing", "pre/post-presentation readback"]
+    }
+  ],
+  "stableStorageBaselineEstablished": true,
+  "twoLayerBlendEvidenceEstablished": true,
+  "gaussianCutoffEvidenceSeparate": true,
+  "presentationEvidenceEstablished": false,
+  "productionMutationAllowed": false
+}
