@@ -1,0 +1,34 @@
+{
+  "schema": "kaopu-tool-routing/r50",
+  "status": "Candidate partial",
+  "question": "How should hard Gaussian cutoff pixels be compared across CPU and viewer backends?",
+  "routes": [
+    {
+      "stage": "stable-reference",
+      "tool": "continuous CPU compositor",
+      "authority": "interior/exterior equation reference",
+      "notAuthorityFor": ["hard-edge coverage under different precision"]
+    },
+    {
+      "stage": "precision-reference",
+      "tool": "PROBES/gaussian_cutoff_boundary_r50.py",
+      "authority": "stepwise float32 versus llvmpipe coverage regression",
+      "required": ["effective uniforms", "operation precision", "strict cutoff operator", "backend identity"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_cutoff_boundary_gate_r50.mjs",
+      "authority": "fixed-fixture edge evidence completeness",
+      "notAuthorityFor": ["universal guard width", "Three.js TSL", "hardware GPU", "Safari/iPhone", "visual acceptance"]
+    },
+    {
+      "stage": "viewer-next",
+      "tool": "Three.js r186 WebGL/WebGPU",
+      "authority": "only after direct generated-shader execution",
+      "requiredNext": ["backend identity", "float target", "final target", "edge coverage mask", "stable-pixel color error"]
+    }
+  ],
+  "doubleCpuCoverageIsUniversalAuthority": false,
+  "syntheticBoundaryWidthIsAssetTolerance": false,
+  "productionMutationAllowed": false
+}

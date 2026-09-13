@@ -1,0 +1,73 @@
+{
+  "schema": "kaopu-gaussian-cutoff-boundary-probe/r50",
+  "status": "Candidate-pass",
+  "source": {
+    "threeRevision": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r49Commit": "2987fe98d2d5d32e915959ae250c7fca2982d8c8"
+  },
+  "backend": {
+    "eglVersion": "1.5",
+    "vendor": "Mesa",
+    "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+    "glVersion": "4.5 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.2",
+    "shaderVersion": "4.50"
+  },
+  "fixture": {
+    "target": "RGBA32F texture framebuffer",
+    "pixel": [16, 16],
+    "scales": [0.0009765625, 0.30000001192092896, 1.0, 3.700000047683716, 256.0, 1024.0],
+    "directions": ["axis", "shallow", "one-one-root2", "diagonal", "steep", "root3"],
+    "xUlpStepsPerDirection": [-64, 64],
+    "caseCount": 4644,
+    "cutoffRule": "discard when r2 > 4.0",
+    "note": "Adversarial float-neighbor control using the independent R48 shader; not Three.js-generated TSL."
+  },
+  "summary": {
+    "doublePredicateMismatchCount": 32,
+    "float32PredicateMismatchCount": 0,
+    "doubleOutsideBackendInsideCount": 32,
+    "doubleInsideBackendOutsideCount": 0,
+    "minimumDoubleExcessAmongIncludedMismatches": 2.6925955687318037e-8,
+    "maximumDoubleExcessAmongIncludedMismatches": 4.2355672125182764e-7,
+    "mismatchCountsByDirection": {
+      "axis": 0,
+      "shallow": 5,
+      "one-one-root2": 6,
+      "diagonal": 6,
+      "steep": 8,
+      "root3": 7
+    },
+    "exactTwiceScaleCasesCovered": 6,
+    "exactTwiceScaleCaseCount": 6
+  },
+  "counterexamples": {
+    "doubleOutsideBackendInsideFirst": {
+      "scale": 0.0009765625,
+      "direction": "shallow",
+      "xUlpStepFromDirectionBase": 0,
+      "distance": [0.0018911052029579878, 0.00048828125],
+      "r2Double": 4.000000211950066,
+      "r2Float32Model": 4.0,
+      "doubleCovered": false,
+      "float32ModelCovered": true,
+      "backendCovered": true,
+      "backendAlpha": 0.0676676481962204
+    },
+    "doubleInsideBackendOutsideFirst": null
+  },
+  "checks": {
+    "allCasesExecuted": true,
+    "float32ModelMatchesBackendCoverage": true,
+    "doublePredicateHasCoverageCounterexample": true,
+    "exactCutoffIsIncluded": true,
+    "bothSidesOfBoundaryWereSampled": true
+  },
+  "limits": {
+    "directThreeTsl": false,
+    "webglOrWebgpu": false,
+    "hardwareGpu": false,
+    "browserOrTargetDevice": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

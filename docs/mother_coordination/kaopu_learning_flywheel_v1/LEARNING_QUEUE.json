@@ -26,7 +26,7 @@
         "Vegetation",
         "Three.js Delivery"
       ],
-      "progress": "R33-R48 locked the principal handoff, codec, appearance, sorting, memory, covariance, projection, continuous-compositor and software-RGBA8 controls. R49 added an RGBA32F texture target on the same Mesa llvmpipe backend to isolate float evaluation from final-target quantization. The float framebuffer matched continuous CPU within 9.94916e-8 reference and 6.48086e-8 candidate, with zero coverage-mask mismatches. The reference/candidate maximum was 0.0851303041 in RGBA32F versus 0.0851302859 on CPU, only 1.82347e-8 apart. The same backend's RGBA8 target differed from RGBA32F by up to 0.00497459 and 0.00537919 and reduced the combined maximum to 0.0823529. Thus the R48 discrepancy is dominated by final-target storage/blending for this fixture; a smaller quantized delta does not prove higher fidelity. This remains an independent llvmpipe shader, not direct Three.js TSL, WebGL/WebGPU, hardware GPU, browser/device, real-asset or human acceptance.",
+      "progress": "R33-R49 locked the principal handoff, codec, appearance, sorting, memory, covariance, projection, continuous-compositor and software float/final-target controls. R50 stress-tested the strict r2 > 4 Gaussian cutoff with 4,644 adjacent-float cases over six scales and six directions on the inherited llvmpipe RGBA32F backend. A stepwise float32 predicate matched actual coverage in every case; a double-precision predicate disagreed 32 times. All mismatches were double-outside/backend-inside: double r2 exceeded four by 2.69e-8 to 4.24e-7 while float32 rounded to exactly 4.0, so the strict greater-than test retained the fragment. All exact one-axis r2=4 controls were retained. This proves hard-edge validation must separate stable pixels from a backend/precision-declared cutoff-neighbor band; the observed width is not universal and direct Three.js TSL, WebGL/WebGPU, hardware GPU, browser/device, real assets and human acceptance remain unverified.",
       "resultLogs": [
         "LEARNING_LOG/2026-09-11_GAUSSIAN_HANDOFF_R33.md",
         "LEARNING_LOG/2026-09-12_GAUSSIAN_SPZ_INTEROP_R34.md",
@@ -44,7 +44,8 @@
         "LEARNING_LOG/2026-09-13_GAUSSIAN_ELLIPSE_PROJECTION_R46.md",
         "LEARNING_LOG/2026-09-13_GAUSSIAN_REFERENCE_COMPOSITOR_R47.md",
         "LEARNING_LOG/2026-09-13_GAUSSIAN_SOFTWARE_GL_COMPOSITOR_R48.md",
-        "LEARNING_LOG/2026-09-13_GAUSSIAN_FLOAT_TARGET_R49.md"
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_FLOAT_TARGET_R49.md",
+        "LEARNING_LOG/2026-09-13_GAUSSIAN_CUTOFF_BOUNDARY_R50.md"
       ],
       "sourceLocks": [
         "references/gaussian-handoff-r33/SOURCE_LOCK.json",
@@ -63,7 +64,8 @@
         "references/gaussian-ellipse-projection-r46/SOURCE_LOCK.json",
         "references/gaussian-reference-compositor-r47/SOURCE_LOCK.json",
         "references/gaussian-software-gl-compositor-r48/SOURCE_LOCK.json",
-        "references/gaussian-float-target-r49/SOURCE_LOCK.json"
+        "references/gaussian-float-target-r49/SOURCE_LOCK.json",
+        "references/gaussian-cutoff-boundary-r50/SOURCE_LOCK.json"
       ],
       "candidateProbe": "PROBES/gaussian_handoff_probe_r33.mjs",
       "probeResult": "PROBES/gaussian_handoff_result_r33.json",
@@ -125,7 +127,7 @@
       "currentBestViewZstdWasmExtension": "CURRENT_BEST_VIEW_R42_GAUSSIAN_ZSTD_WASM_MEMORY.md",
       "toolRoutingZstdWasmExtension": "TOOL_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
       "motherRoutingZstdWasmExtension": "MOTHER_ROUTING_R42_GAUSSIAN_ZSTD_WASM_MEMORY.json",
-      "nextGate": "Execute the exact R47 fixture through pinned Three.js r186-generated TSL on WebGL fallback or WebGPU, reading both a float intermediate target and the final target. Record backend identity, blend state, dither, color space, tone mapping, coverage and edge pixels. Keep R49's sub-1e-7 float agreement and all RGBA8 deltas specific to its independent llvmpipe fixture; do not infer Three.js, hardware, device or visual equivalence. When the user supplies a small static-object photo set, only then run the fixed COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R49 gates. Do not alter Canonical Truth, retire RealityScan, modify a production Mother or claim Object DNA equivalence.",
+      "nextGate": "Run the R50 cutoff-neighbor fixture through pinned Three.js r186-generated TSL on WebGL fallback and WebGPU. Compare stepwise effective-precision predicates, float intermediate coverage and final-target edge masks, recording compiler/backend identity. Keep stable-pixel color error separate from cutoff-neighbor coverage and do not promote R50's 4.24e-7 observed double excess into a universal guard width. When the user supplies a small static-object photo set, only then run the COLMAP/Brush/PLY/SPZ/r186 pilot with R34-R50 gates. Do not alter Canonical Truth, retire RealityScan, modify production Mothers or claim Object DNA equivalence.",
       "quaternionQuantizationProbe": "PROBES/gaussian_quaternion_quantization_r43.cc",
       "quaternionQuantizationProbeResult": "PROBES/gaussian_quaternion_quantization_result_r43.json",
       "candidateQuaternionQuantizationGate": "ADAPTERS/gaussian_quaternion_quantization_gate_r43.mjs",
@@ -167,7 +169,13 @@
       "candidateFloatTargetGate": "ADAPTERS/gaussian_float_target_gate_r49.mjs",
       "currentBestViewFloatTargetExtension": "CURRENT_BEST_VIEW_R49_GAUSSIAN_FLOAT_TARGET.md",
       "toolRoutingFloatTargetExtension": "TOOL_ROUTING_R49_GAUSSIAN_FLOAT_TARGET.json",
-      "motherRoutingFloatTargetExtension": "MOTHER_ROUTING_R49_GAUSSIAN_FLOAT_TARGET.json"
+      "motherRoutingFloatTargetExtension": "MOTHER_ROUTING_R49_GAUSSIAN_FLOAT_TARGET.json",
+      "cutoffBoundaryProbe": "PROBES/gaussian_cutoff_boundary_r50.py",
+      "cutoffBoundaryProbeResult": "PROBES/gaussian_cutoff_boundary_result_r50.json",
+      "candidateCutoffBoundaryGate": "ADAPTERS/gaussian_cutoff_boundary_gate_r50.mjs",
+      "currentBestViewCutoffBoundaryExtension": "CURRENT_BEST_VIEW_R50_GAUSSIAN_CUTOFF_BOUNDARY.md",
+      "toolRoutingCutoffBoundaryExtension": "TOOL_ROUTING_R50_GAUSSIAN_CUTOFF_BOUNDARY.json",
+      "motherRoutingCutoffBoundaryExtension": "MOTHER_ROUTING_R50_GAUSSIAN_CUTOFF_BOUNDARY.json"
     },
     {
       "id": "LQ-TELLUX-001",
