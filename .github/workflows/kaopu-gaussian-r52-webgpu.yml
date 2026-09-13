@@ -25,12 +25,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install pinned renderer and browser harness
+      - name: Install pinned renderer and WebGPU-capable browser harness
         shell: bash
         run: |
           npm init -y
           npm pkg set type=module
-          npm install --no-save three@0.186.0 playwright@1.55.0
+          npm install --no-save three@0.186.0 playwright@1.57.0
           npx playwright install --with-deps chromium
 
       - name: Start local fixture server
