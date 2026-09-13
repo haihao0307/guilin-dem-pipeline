@@ -6,7 +6,7 @@ const mode = process.argv[2] || 'webgl';
 if (!['webgl', 'webgpu'].includes(mode)) throw new Error(`invalid mode: ${mode}`);
 
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 64, height: 64 } });
+const page = await browser.newPage({ viewport: { width: 160, height: 64 } });
 page.on('console', msg => console.log(`[browser:${mode}] ${msg.type()}: ${msg.text()}`));
 page.on('pageerror', error => console.error(`[browser:${mode}] pageerror: ${error.stack || error}`));
 
@@ -41,6 +41,7 @@ console.log(JSON.stringify({
   requestedMode: result.requestedMode,
   actualBackend: result.actualBackend,
   progress: result.progress,
+  fixture: result.fixture,
   summary: result.summary,
   checks: result.checks,
 }, null, 2));
@@ -48,14 +49,16 @@ console.log(JSON.stringify({
 if (mode === 'webgl') {
   if (result.status !== 'candidate-observation') process.exitCode = 2;
   if (result.actualBackend !== 'webgl') process.exitCode = 3;
-  if (result.fixture?.caseCount !== 396) process.exitCode = 4;
+  if (result.fixture?.caseCount !== 4644) process.exitCode = 4;
+  if (result.fixture?.readbackCount !== 36) process.exitCode = 5;
   const checks = result.checks || {};
   if (!checks.allCasesExecuted ||
-      !checks.r50DivergenceStepsIncluded ||
+      !checks.fullR50UlpRangeCovered ||
+      !checks.readbackBatchCountIsExpected ||
       !checks.float32ModelMatchesBackendCoverage ||
       !checks.doublePredicateHasCoverageCounterexample ||
       !checks.exactCutoffIsIncluded ||
       !checks.bothSidesOfBoundaryWereSampled) {
-    process.exitCode = 5;
+    process.exitCode = 6;
   }
 }
