@@ -6,7 +6,7 @@ import json
 import zipfile
 from pathlib import Path
 
-PACKAGE_NAME = "Wenzhou_R3_8_LEAN_HANDOFF"
+PACKAGE_NAME = "Wenzhou_R3_9_LEAN_HANDOFF"
 MAX_UNCOMPRESSED_BYTES = 8 * 1024 * 1024
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".js", ".mjs", ".py", ".css", ".html", ".yml", ".yaml"}
 
@@ -24,10 +24,16 @@ CORE_FILES = [
     "site/dist/r3-8/bootstrap.js",
     "site/dist/r3-8/soil-context.js",
     "site/dist/r3-8/soil-pair-loader.js",
+    "site/dist/r3-8/evidence-gzip-loader.js",
     "site/dist/r3-8/environment-context.js",
     "site/dist/r3-8/world-score.js",
     "site/dist/r3-8/style.css",
     "site/dist/r3-8/overlay-transform-contract.js",
+    "site/dist/r3-8/data/soil/soil-context.json",
+    "site/dist/r3-8/data/soil-pairs/soil-pairs.json",
+    "site/dist/r3-8/data/wrb/wrb-context.json",
+    "site/dist/r3-8/data/water/water-context.json",
+    "site/dist/r3-8/data/evidence-gzip/index.json",
 ]
 
 
@@ -46,7 +52,7 @@ def collect(repo: Path) -> list[Path]:
         if p.is_file():
             files[p.relative_to(repo).as_posix()] = p
 
-    for root_rel in ["tools/r3-8", "tools/r3-9", "records/R3_8"]:
+    for root_rel in ["tools/r3-8", "tools/r3-9", "records/R3_8", "records/R3_9"]:
         root = repo / root_rel
         if not root.is_dir():
             continue
@@ -96,19 +102,20 @@ def main() -> int:
 
     lock_entries = [{k: x[k] for k in ("path", "bytes", "sha256")} for x in canonical]
     lock = {
-        "schema": "wenzhou-lean-handoff/v2",
+        "schema": "wenzhou-lean-handoff/v3",
+        "version": "R3.9",
         "sourceCommit": args.source_commit,
         "policy": "code-state-indexes-only-content-deduplicated",
-        "largeDataPolicy": "do-not-carry; resolve by immutable release/tag/sha256 or fixed Git commit",
+        "largeDataPolicy": "do-not-carry; resolve current runtime payloads and immutable evidence by fixed Git commit or release tag plus SHA-256",
         "excludedByDesign": [
             "R3.1/R3.2 full restart archives",
             "complete lossless DEM archives",
             "historical fixed web versions",
             "permanent evidence ZIPs",
-            "browser binary rasters",
+            "current browser binary payload bodies (.s2gz/.gz)",
             "offline Python wheels/dependencies",
         ],
-        "semanticNote": "Soil Q0.5 and uncertainty are distinct evidence channels, not duplicates; current runtime codec combines them losslessly into one transport payload per property/depth pair.",
+        "semanticNote": "Soil Q0.5 and uncertainty remain two semantic channels but use one lossless transport payload per property/depth pair. WRB and JRC preserve one logical evidence voice per payload while gzip compressing transport. All current transport manifests and original decoded hashes are carried as text indexes.",
         "logicalFileCount": len(files),
         "uniqueFileCount": len(canonical),
         "duplicateAliasCount": len(aliases),
@@ -127,6 +134,7 @@ def main() -> int:
 
     report = {
         "passed": True,
+        "version": "R3.9",
         "package": output.name,
         "bytes": output.stat().st_size,
         "logicalUncompressedBytes": logical_total,
@@ -138,6 +146,8 @@ def main() -> int:
         "fullRestartBaseEmbedded": False,
         "permanentEvidenceEmbedded": False,
         "browserBinaryPayloadsEmbedded": False,
+        "currentTransportIndexesEmbedded": True,
+        "r39CurrentRecordEmbedded": (repo / "records/R3_9/CURRENT.json").is_file(),
         "contentDeduplicated": True,
     }
     output.with_suffix(output.suffix + ".report.json").write_text(
