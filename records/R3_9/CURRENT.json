@@ -1,0 +1,43 @@
+{
+  "schema": "wenzhou-r3.9-current/v1",
+  "state": "verified-lean-runtime-transport",
+  "verifiedRuntimeCommit": "d591713f236107f7db5a24fb9d74e087550e688a",
+  "historicalFreezeAnchor": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
+  "soil": {
+    "semanticChannels": 96,
+    "physicalPayloads": 48,
+    "codec": "i16le-pair-byte-shuffle-gzip-v1",
+    "packedBytes": 34571806,
+    "removedSupersededSplitFiles": 80,
+    "removedSupersededSplitBytes": 141864320,
+    "record": "SOIL_PAIR_CLEANUP.json",
+    "lossless": true
+  },
+  "wrbAndHistoricalWater": {
+    "logicalPayloads": 41,
+    "physicalPayloads": 41,
+    "codec": "gzip-v1",
+    "packedBytes": 3424064,
+    "removedSupersededRawFiles": 41,
+    "removedSupersededRawBytes": 37239384,
+    "record": "EVIDENCE_GZIP_CLEANUP.json",
+    "lossless": true
+  },
+  "combinedActivePayload": {
+    "beforeBytes": 179103704,
+    "afterBytes": 37995870,
+    "reductionBytes": 141107834,
+    "reductionRatio": 0.7878554761770867
+  },
+  "verification": {
+    "decodedSourceShaPreserved": true,
+    "localChromiumPassed": true,
+    "mobile390x844Passed": true,
+    "fixedCommitRawGithackPassed": true,
+    "soilRegressionPassedAfterEvidenceCleanup": true,
+    "historicalR3ThroughR37Changed": false,
+    "permanentEvidenceReleasesChanged": false
+  },
+  "runtimeConstraint": "Compressed transport requires browser support for DecompressionStream('gzip'); productionReady remains false until real iPhone Safari/GPU/CPU verification.",
+  "principle": "Keep one semantic world score; preserve evidence identity and hashes; carry only current runtime payloads; keep source archives and historical candidates as cold immutable recovery evidence rather than duplicating them into handoff packages."
+}
