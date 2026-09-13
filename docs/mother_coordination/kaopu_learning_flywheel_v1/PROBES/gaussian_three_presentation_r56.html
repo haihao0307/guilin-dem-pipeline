@@ -73,12 +73,13 @@ async function main(){
   const target=new THREE.RenderTarget(SAMPLE_COUNT,1,{format:THREE.RGBAFormat,type:THREE.FloatType,depthBuffer:false,stencilBuffer:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});target.texture.colorSpace=THREE.NoColorSpace;
   renderer.setRenderTarget(target);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);const offscreen=await renderer.readRenderTargetPixelsAsync(target,0,0,SAMPLE_COUNT,1);
   renderer.setRenderTarget(null);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);
+  renderer.setAnimationLoop(()=>{renderer.setRenderTarget(null);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.render(scene,camera);});
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   const result={schema:'kaopu-three-presentation/r56',status:'candidate-observation',requestedMode,actualBackend,outputName,threeRevision:THREE.REVISION,identity:id,
     contract:{source:'R55 stepwise float32 premultiplied source-over result',sourcePremultiplied:true,materialBlending:'NoBlending',materialPremultipliedAlpha:false,rendererAlpha:true,canvasAlphaMode:actualBackend==='webgpu'?'premultiplied per pinned WebGPUBackend':'WebGL context default premultipliedAlpha; recorded in identity.contextAttributes',offscreenTarget:'RGBA32F NoColorSpace',rendererOutputColorSpace:outputName==='linear'?'LinearSRGBColorSpace':'SRGBColorSpace',workingColorSpace:'LinearSRGBColorSpace',toneMapping:'NoToneMapping',outputBufferType:'FloatType',clear:'transparent black',gaussianCutoff:false},
     prePresentation:{expectedHash:await sha256(premul),readbackHash:await sha256(offscreen),metrics:metrics(premul,offscreen),values:Array.from(premul)},
     checks:{r55SourceHashLocked:(await sha256(premul))==='0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520',offscreenMatchesSource:metrics(premul,offscreen).maxAbs<=1e-6,canvasSize:renderer.domElement.width===256&&renderer.domElement.height===1},
-    limits:{screenshotReadbackPending:true,hardwareGpu:false,targetDevice:false,gaussianCutoffPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
+    limits:{continuousPresentationLoop:true,screenshotReadbackPending:true,hardwareGpu:false,targetDevice:false,gaussianCutoffPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
   window.__KAOPU_RESULT__=result;window.__KAOPU_DONE__=true;
 }
 try{await main();}catch(error){window.__KAOPU_RESULT__={schema:'kaopu-three-presentation/r56',status:'error',requestedMode,outputName,progress:window.__KAOPU_PROGRESS__,message:String(error?.message||error),stack:String(error?.stack||'')};window.__KAOPU_DONE__=true;}
