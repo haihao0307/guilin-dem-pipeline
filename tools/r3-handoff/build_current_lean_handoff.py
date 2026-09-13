@@ -56,6 +56,25 @@ def collect(repo: Path) -> list[Path]:
     return [files[k] for k in sorted(files)]
 
 
+def deduplicate(repo: Path, files: list[Path]) -> tuple[list[dict], dict[str, str], int]:
+    by_digest: dict[str, dict] = {}
+    aliases: dict[str, str] = {}
+    logical_total = 0
+
+    for p in files:
+        rel = p.relative_to(repo).as_posix()
+        size = p.stat().st_size
+        digest = sha256(p)
+        logical_total += size
+        if digest in by_digest:
+            aliases[rel] = by_digest[digest]["path"]
+            continue
+        by_digest[digest] = {"path": rel, "bytes": size, "sha256": digest, "source": p}
+
+    canonical = [by_digest[d] for d in sorted(by_digest, key=lambda d: by_digest[d]["path"])]
+    return canonical, aliases, logical_total
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", type=Path, required=True)
@@ -69,21 +88,16 @@ def main() -> int:
     if not files:
         raise RuntimeError("lean handoff has no files")
 
-    entries = []
-    total = 0
-    for p in files:
-        rel = p.relative_to(repo).as_posix()
-        size = p.stat().st_size
-        total += size
-        entries.append({"path": rel, "bytes": size, "sha256": sha256(p)})
+    canonical, aliases, logical_total = deduplicate(repo, files)
+    unique_total = sum(x["bytes"] for x in canonical)
+    if unique_total > MAX_UNCOMPRESSED_BYTES:
+        raise RuntimeError(f"lean handoff exceeded {MAX_UNCOMPRESSED_BYTES} unique bytes: {unique_total}")
 
-    if total > MAX_UNCOMPRESSED_BYTES:
-        raise RuntimeError(f"lean handoff exceeded {MAX_UNCOMPRESSED_BYTES} bytes: {total}")
-
+    lock_entries = [{k: x[k] for k in ("path", "bytes", "sha256")} for x in canonical]
     lock = {
-        "schema": "wenzhou-lean-handoff/v1",
+        "schema": "wenzhou-lean-handoff/v2",
         "sourceCommit": args.source_commit,
-        "policy": "code-state-indexes-only",
+        "policy": "code-state-indexes-only-content-deduplicated",
         "largeDataPolicy": "do-not-carry; resolve by immutable release/tag/sha256 or fixed Git commit",
         "excludedByDesign": [
             "R3.1/R3.2 full restart archives",
@@ -94,29 +108,36 @@ def main() -> int:
             "offline Python wheels/dependencies",
         ],
         "semanticNote": "Soil Q0.5 and uncertainty are distinct evidence channels, not duplicates.",
-        "fileCount": len(entries),
-        "uncompressedBytes": total,
-        "files": entries,
+        "logicalFileCount": len(files),
+        "uniqueFileCount": len(canonical),
+        "duplicateAliasCount": len(aliases),
+        "logicalUncompressedBytes": logical_total,
+        "uniqueUncompressedBytes": unique_total,
+        "deduplicatedAliases": aliases,
+        "files": lock_entries,
     }
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.unlink(missing_ok=True)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         zf.writestr(f"{PACKAGE_NAME}/LEAN_HANDOFF_LOCK.json", json.dumps(lock, ensure_ascii=False, indent=2) + "\n")
-        for p in files:
-            rel = p.relative_to(repo).as_posix()
-            zf.write(p, f"{PACKAGE_NAME}/{rel}")
+        for rec in canonical:
+            zf.write(rec["source"], f"{PACKAGE_NAME}/{rec['path']}")
 
     report = {
         "passed": True,
         "package": output.name,
         "bytes": output.stat().st_size,
-        "uncompressedBytes": total,
-        "fileCount": len(entries),
+        "logicalUncompressedBytes": logical_total,
+        "uniqueUncompressedBytes": unique_total,
+        "logicalFileCount": len(files),
+        "uniqueFileCount": len(canonical),
+        "duplicateAliasCount": len(aliases),
         "sourceCommit": args.source_commit,
         "fullRestartBaseEmbedded": False,
         "permanentEvidenceEmbedded": False,
         "browserBinaryPayloadsEmbedded": False,
+        "contentDeduplicated": True,
     }
     output.with_suffix(output.suffix + ".report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
