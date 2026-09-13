@@ -1,0 +1,57 @@
+name: KAOPU Gaussian R54 Float Final Color
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_float_final_color_r54.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_float_final_color_r54.js
+      - .github/workflows/kaopu-gaussian-r54-float-final-color.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r54-float-final-color:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout coordination branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned renderer and common browser harness
+        shell: bash
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.57.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local fixture server
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r54-http.log 2>&1 &
+          echo $! > /tmp/r54-http.pid
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_float_final_color_r54.html > /dev/null
+
+      - name: Run direct TSL float-versus-RGBA8 storage comparison
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_float_final_color_r54.js
+
+      - name: Upload R54 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r54-float-final-color
+          path: |
+            r54-result-webgl.json
+            r54-result-webgpu.json
+            r54-comparison.json
+          if-no-files-found: warn
+          retention-days: 30
