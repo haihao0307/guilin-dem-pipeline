@@ -1,0 +1,276 @@
+{
+  "schema": "kaopu-three-output-buffer-comparison/r58",
+  "status": "Candidate-pass",
+  "fixture": {
+    "sampleCount": 256,
+    "source": "exact R55 stepwise float32 premultiplied output",
+    "sourceHash": "0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520",
+    "outputColorSpace": "SRGBColorSpace forces the r186 internal framebuffer path",
+    "toneMapping": "NoToneMapping",
+    "bufferCases": [
+      "constructor default omitted (HalfFloatType)",
+      "explicit FloatType"
+    ],
+    "presentation": "opaque-black Playwright PNG; RGB checked separately from internal target"
+  },
+  "observations": {
+    "webgl-default": {
+      "actualBackend": "webgl",
+      "identity": {
+        "backendClass": "WebGLBackend",
+        "rendererClass": "WebGPURenderer",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+        "platform": "Linux x86_64",
+        "devicePixelRatio": 1,
+        "vendor": "Google Inc. (Google)",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+        "contextAttributes": {
+          "alpha": true,
+          "antialias": false,
+          "depth": true,
+          "desynchronized": false,
+          "failIfMajorPerformanceCaveat": false,
+          "powerPreference": "default",
+          "premultipliedAlpha": true,
+          "preserveDrawingBuffer": false,
+          "stencil": false,
+          "xrCompatible": false
+        }
+      },
+      "internalTarget": {
+        "rendererOutputBufferType": 1016,
+        "textureType": 1016,
+        "expectedType": 1016,
+        "isPostProcessingRenderTarget": true,
+        "rawConstructor": "Uint16Array",
+        "rawByteLength": 2048,
+        "rawHash": "81c6c20943c6050c89d8a5865b51c6cc9301ccd30aacea9a31c1d4693dde43ba",
+        "decodedHash": "58e8101f202560231d6333bb727d7d1be28250814600d2911392e8e4f97e3873",
+        "finiteChannels": 1024,
+        "metricsAgainstSource": {
+          "channels": 1024,
+          "maxAbs": 0.000244140625,
+          "rmse": 0.00010213396882336865,
+          "changedChannels": 1024,
+          "firstDifference": {
+            "channelIndex": 0,
+            "pixel": 0,
+            "channel": 0,
+            "source": 0.0030699982307851315,
+            "stored": 0.003070831298828125,
+            "absDiff": 8.330680429935455e-7
+          }
+        },
+        "decodedValuesHash": "58e8101f202560231d6333bb727d7d1be28250814600d2911392e8e4f97e3873"
+      },
+      "presentation": {
+        "background": "opaque black page",
+        "pngHash": "0674c08b8a51b05c42be2e4cb9385b465a6830028cc2860b4d30f789b1bd26f6",
+        "blankBlackPattern": false,
+        "rgbMetricsAgainstAnalyticStoredValues": {
+          "channelsCompared": 768,
+          "maxCodeDiff": 1,
+          "rmseCodes": 0.03608439182435161,
+          "changedChannels": 1,
+          "perChannelMaxCodeDiff": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "firstDifference": {
+            "channelIndex": 332,
+            "pixel": 83,
+            "channel": 0,
+            "actual": 121,
+            "expected": 120,
+            "diff": 1
+          }
+        }
+      }
+    },
+    "webgl-float": {
+      "actualBackend": "webgl",
+      "identity": {
+        "backendClass": "WebGLBackend",
+        "rendererClass": "WebGPURenderer",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+        "platform": "Linux x86_64",
+        "devicePixelRatio": 1,
+        "vendor": "Google Inc. (Google)",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+        "contextAttributes": {
+          "alpha": true,
+          "antialias": false,
+          "depth": true,
+          "desynchronized": false,
+          "failIfMajorPerformanceCaveat": false,
+          "powerPreference": "default",
+          "premultipliedAlpha": true,
+          "preserveDrawingBuffer": false,
+          "stencil": false,
+          "xrCompatible": false
+        }
+      },
+      "internalTarget": {
+        "rendererOutputBufferType": 1015,
+        "textureType": 1015,
+        "expectedType": 1015,
+        "isPostProcessingRenderTarget": true,
+        "rawConstructor": "Float32Array",
+        "rawByteLength": 4096,
+        "rawHash": "0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520",
+        "decodedHash": "0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520",
+        "finiteChannels": 1024,
+        "metricsAgainstSource": {
+          "channels": 1024,
+          "maxAbs": 0,
+          "rmse": 0,
+          "changedChannels": 0,
+          "firstDifference": null
+        },
+        "decodedValuesHash": "0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520"
+      },
+      "presentation": {
+        "background": "opaque black page",
+        "pngHash": "6d7872e55425702f945ad9f6660a967c671187dd4608f9b8e118760ae68b7346",
+        "blankBlackPattern": false,
+        "rgbMetricsAgainstAnalyticStoredValues": {
+          "channelsCompared": 768,
+          "maxCodeDiff": 0,
+          "rmseCodes": 0,
+          "changedChannels": 0,
+          "perChannelMaxCodeDiff": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "firstDifference": null
+        }
+      }
+    },
+    "webgpu-default": {
+      "status": "error",
+      "message": "Failed to execute 'mapAsync' on 'GPUBuffer': A valid external Instance reference no longer exists."
+    },
+    "webgpu-float": {
+      "status": "error",
+      "message": "Failed to execute 'mapAsync' on 'GPUBuffer': A valid external Instance reference no longer exists."
+    }
+  },
+  "comparisons": {
+    "webgl": {
+      "internalHalfVsFloat": {
+        "channels": 1024,
+        "maxAbs": 0.000244140625,
+        "rmse": 0.00010213396882336865,
+        "changedChannels": 1024
+      },
+      "canvasHalfVsFloatRgb": {
+        "channelsCompared": 768,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.15309310892394862,
+        "changedChannels": 18,
+        "perChannelMaxCodeDiff": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "firstDifference": {
+          "channelIndex": 72,
+          "pixel": 18,
+          "channel": 0,
+          "actual": 208,
+          "expected": 209,
+          "diff": 1
+        }
+      },
+      "halfInternal": {
+        "channels": 1024,
+        "maxAbs": 0.000244140625,
+        "rmse": 0.00010213396882336865,
+        "changedChannels": 1024,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "source": 0.0030699982307851315,
+          "stored": 0.003070831298828125,
+          "absDiff": 8.330680429935455e-7
+        }
+      },
+      "floatInternal": {
+        "channels": 1024,
+        "maxAbs": 0,
+        "rmse": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfCanvas": {
+        "channelsCompared": 768,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.03608439182435161,
+        "changedChannels": 1,
+        "perChannelMaxCodeDiff": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "firstDifference": {
+          "channelIndex": 332,
+          "pixel": 83,
+          "channel": 0,
+          "actual": 121,
+          "expected": 120,
+          "diff": 1
+        }
+      },
+      "floatCanvas": {
+        "channelsCompared": 768,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "perChannelMaxCodeDiff": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "firstDifference": null
+      }
+    },
+    "webgpu": null
+  },
+  "checks": {
+    "twoWebglSuccessfulPages": true,
+    "allWebglPageChecks": true,
+    "sourceLocked": true,
+    "defaultIsHalfFloat": true,
+    "explicitIsFloat": true,
+    "floatPathMatchesSource": true,
+    "halfPathFiniteAndBounded": true,
+    "webglCanvasClassified": true,
+    "webgpuReadbackUnavailableClassified": true
+  },
+  "interpretation": {
+    "candidate": "For the bounded [0,1] R55 fixture, the r186 default path must be judged from observed RGBA16F storage error separately from the later sRGB/canvas quantization.",
+    "counterexample": "A matching or smaller final 8-bit difference cannot prove the internal Float and HalfFloat paths are equivalent.",
+    "webgpuBoundary": "Both internal-target readbacks reached the same external-instance mapAsync failure as R57; this run therefore adds no WebGPU numeric comparison.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "webgpuInternalReadback": "Unknown in this execution environment",
+    "fixtureErrorBoundsAreNotAssetAcceptanceThresholds": true,
+    "privateRevisionPinnedProbe": true,
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

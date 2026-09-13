@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r58",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R57_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R58 compared Three.js r186's omitted/default HalfFloatType output buffer against explicit FloatType using the exact locked R55 source. In the working software WebGL route, Float matched all 1024 channels exactly; HalfFloat changed every channel with maxAbs 0.000244140625 and RMSE 0.000102134 while using 2048 rather than 4096 raw target bytes. Final opaque-black sRGB canvases differed in 18/768 RGB channels by at most one code, rejecting the claim that final 8-bit output necessarily hides internal precision differences. Both WebGPU readbacks reproduced the R57 external-instance mapAsync boundary, so no WebGPU numeric comparison was obtained. No independent physical root, hardware/device/asset evidence or human acceptance was added.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-13_GAUSSIAN_OUTPUT_BUFFER_R58.md"],
+  "appendSourceLocks": ["references/gaussian-output-buffer-r58/SOURCE_LOCK.json"],
+  "r58Probe": "PROBES/gaussian_three_output_buffer_r58.html",
+  "r58Runner": "PROBES/run_gaussian_three_output_buffer_r58.js",
+  "r58Result": "PROBES/gaussian_three_output_buffer_result_r58.json",
+  "candidateR58Gate": "ADAPTERS/gaussian_three_output_buffer_gate_r58.mjs",
+  "currentBestViewR58Extension": "CURRENT_BEST_VIEW_R58_GAUSSIAN_OUTPUT_BUFFER.md",
+  "toolRoutingR58Extension": "TOOL_ROUTING_R58_GAUSSIAN_OUTPUT_BUFFER.json",
+  "motherRoutingR58Extension": "MOTHER_ROUTING_R58_GAUSSIAN_OUTPUT_BUFFER.json",
+  "nextGate": "Render a deterministic minimal SPZ through the actual Three.js r186 SPZLoader/GaussianSplat object under default HalfFloatType and explicit FloatType, preserving internal-target, final-canvas, sorting and antialias semantics as separate checks. Hardware-backed Chromium and Apple Safari/WebKit acceptance remain infrastructure-dependent. Only after a user photo set exists should the COLMAP/Brush/PLY/SPZ/r186 pilot run under accumulated R34-R58 gates.",
+  "mergePolicy": "This overlay supersedes R57 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}

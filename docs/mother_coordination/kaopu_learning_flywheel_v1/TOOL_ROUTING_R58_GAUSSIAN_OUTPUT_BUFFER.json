@@ -1,0 +1,44 @@
+{
+  "schema": "kaopu-tool-routing/r58",
+  "status": "Candidate partial",
+  "question": "What bounded difference does Three.js r186 default HalfFloatType introduce relative to explicit FloatType before and after sRGB canvas output?",
+  "inherits": "TOOL_ROUTING_R57_GAUSSIAN_WEBGPU_SWAPCHAIN.json",
+  "routes": [
+    {
+      "stage": "official-default-and-allocation",
+      "tool": "Pinned Three.js Renderer.js and WebGPUTextureUtils.js",
+      "authority": "constructor default, internal framebuffer allocation condition and texture-format mapping",
+      "notAuthorityFor": ["asset significance", "device safety", "human acceptance"]
+    },
+    {
+      "stage": "webgl-internal-comparison",
+      "tool": "PROBES/gaussian_three_output_buffer_r58.html private revision-pinned target readback",
+      "authority": "locked fixture HalfFloat/Float storage, finite values, error and raw byte count in software WebGL",
+      "notAuthorityFor": ["public production API", "WebGPU", "hardware GPU", "Safari/iPhone"]
+    },
+    {
+      "stage": "webgl-presentation-comparison",
+      "tool": "Playwright opaque-black PNG capture",
+      "authority": "fixture-specific final sRGB RGB code difference in the tested browser lineage",
+      "notAuthorityFor": ["perceptual threshold", "transparent compositor equivalence", "target-device acceptance"]
+    },
+    {
+      "stage": "webgpu-attempt",
+      "tool": "Three.js readRenderTargetPixelsAsync",
+      "authority": "stable reproduction of the R57 external-instance mapAsync boundary",
+      "notAuthorityFor": ["WebGPU numeric comparison", "WebGPU canvas correctness"]
+    },
+    {
+      "stage": "next-software-verification",
+      "tool": "Pinned minimal SPZ through Three.js r186 SPZLoader/GaussianSplat",
+      "authority": "actual splat-object default-versus-Float regression once implemented",
+      "requiredNext": ["source and SPZ hashes", "antialias flag", "sort order", "internal target", "final canvas", "fixed views"]
+    }
+  ],
+  "webglDefaultHalfFloatCompared": true,
+  "webglExplicitFloatCompared": true,
+  "webgpuHalfVsFloatCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}

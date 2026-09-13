@@ -1,0 +1,75 @@
+{
+  "schema": "kaopu-source-lock/r58",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-half-float-output-buffer",
+  "inherits": "references/gaussian-webgpu-swapchain-r57/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R58-THREE-R186-OUTPUT-BUFFER-EXECUTION",
+      "sameEvidenceLineageAs": ["O-R57-THREE-R186-WEBGPU-SWAPCHAIN", "O-R56-THREE-R186-PRESENTATION", "O-R55-THREE-R186-TWO-LAYER-BLEND"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "graphics": "Google SwiftShader"
+    },
+    {
+      "root": "O-R58-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/common/Renderer.js",
+          "blobSha": "c05aa68471f07a0bbbf6203865da1096fea503c1",
+          "constraint": "HalfFloatType is the default outputBufferType; color-space or tone-mapping output allocates an internal framebuffer with that type"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/webgpu/utils/WebGPUTextureUtils.js",
+          "blobSha": "0b02ff45ed682a86f5b9b416262048d5c4fef666",
+          "constraint": "RGBA HalfFloat and Float map to rgba16float and rgba32float and have distinct readback array types"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/extras/DataUtils.js",
+          "blobSha": "44e34e8d912528aa9f7219390e9ba82b6c9609c6",
+          "constraint": "revision-pinned half-float decoding used by the probe"
+        }
+      ]
+    },
+    {
+      "root": "O-R58-CI-OUTPUT-BUFFER",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34750525794,
+      "workflowHeadSha": "501ec4b9007c511aa3f9712acf756311b277aad4",
+      "artifactId": 10315264196,
+      "artifactName": "kaopu-gaussian-r58-output-buffer",
+      "artifactDigestSha256": "ceb1a3508d58106ab241258b0cd0db88a8b27405be948046ce608038b82a3dbc",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "failedAttempts": [
+    {
+      "workflowRunId": 34750377601,
+      "workflowHeadSha": "300df5b8ec26c76e10387a8ef4ca6779c02de576",
+      "outcome": "WebGL numeric result obtained, but initial gate incorrectly required WebGPU numeric readback despite the inherited R57 environment boundary; superseded by explicit availability classification"
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_output_buffer_r58.html",
+    "runner": "PROBES/run_gaussian_three_output_buffer_r58.js",
+    "compactResult": "PROBES/gaussian_three_output_buffer_result_r58.json",
+    "resultGitBlobSha": "61bdb6143909aee57349ee841aabc3c20fcaf416",
+    "gate": "ADAPTERS/gaussian_three_output_buffer_gate_r58.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r58-output-buffer.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "webglHalfVsFloatCompared": true,
+  "webgpuHalfVsFloatCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}
