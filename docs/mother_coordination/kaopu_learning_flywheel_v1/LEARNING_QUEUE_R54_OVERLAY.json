@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r54",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R53_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R54 separated stable color storage from cutoff and blending. Under pinned Three.js r186 / Chromium 143 direct software WebGL and confirmed WebGPU, 256 stable one-pixel samples (1024 channels) were rendered to offscreen RGBA32F and RGBA8 with NoToneMapping and NoColorSpace on the targets. Maximum normalized float-to-RGBA8 error was 0.0019607962346544494 on both backends, about half an 8-bit code plus float epsilon; no channel exceeded one code. WebGL/WebGPU float-target hashes matched exactly and final-target hashes matched exactly. The R54 machine gate passed. This does not cover Gaussian blend accumulation, presentation transforms, hardware GPU, Apple target devices, real assets or human acceptance.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-13_GAUSSIAN_FLOAT_FINAL_COLOR_R54.md"],
+  "appendSourceLocks": ["references/gaussian-float-final-color-r54/SOURCE_LOCK.json"],
+  "r54Probe": "PROBES/gaussian_three_float_final_color_r54.html",
+  "r54Runner": "PROBES/run_gaussian_three_float_final_color_r54.js",
+  "r54Result": "PROBES/gaussian_three_float_final_color_result_r54.json",
+  "candidateR54Gate": "ADAPTERS/gaussian_three_float_final_color_gate_r54.mjs",
+  "currentBestViewR54Extension": "CURRENT_BEST_VIEW_R54_GAUSSIAN_FLOAT_FINAL_COLOR.md",
+  "toolRoutingR54Extension": "TOOL_ROUTING_R54_GAUSSIAN_FLOAT_FINAL_COLOR.json",
+  "motherRoutingR54Extension": "MOTHER_ROUTING_R54_GAUSSIAN_FLOAT_FINAL_COLOR.json",
+  "nextGate": "Build a controlled direct Three.js r186 two-splat source-over blend comparison using a blendable float intermediate and RGBA8 final target. Preserve locked draw order and blend factors, and keep stable pixels separate from cutoff-neighbor pixels. Then test browser presentation/color transforms independently. Hardware-backed WebGPU and Apple Safari/WebKit remain explicit infrastructure-dependent Unknowns; do not substitute SwiftShader repetition for hardware evidence. Only after the user supplies a small static photo set should the COLMAP/Brush/PLY/SPZ/r186 pilot run under accumulated R34-R54 gates.",
+  "mergePolicy": "This overlay supersedes R53 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
