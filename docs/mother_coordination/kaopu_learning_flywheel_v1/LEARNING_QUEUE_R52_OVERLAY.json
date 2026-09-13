@@ -1,0 +1,22 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r52",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R51_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R52 executed the locked 4,644-case cutoff-neighbor fixture through pinned Three.js r186 TSL on a confirmed actualBackend=webgpu path using Playwright 1.57 / Chromium 143 and a Google SwiftShader adapter. The float32 predicate matched WebGPU coverage in all cases; the double CPU predicate disagreed 32 times with the same direction distribution and exact-cutoff controls as R50 and R51 WebGL. The first R52 attempt with Chromium 140 reached WebGPU but failed before the sweep because its WebGPU API surface rejected the swizzle descriptor used by r186; this is retained as a browser/API compatibility counterexample. The final R52 machine gate passed with no errors. Hardware GPU, Apple target devices, stable-pixel float-intermediate/final-target color error, real assets and human acceptance remain unverified.",
+  "appendResultLogs": [
+    "LEARNING_LOG/2026-09-13_GAUSSIAN_THREE_TSL_WEBGPU_R52.md"
+  ],
+  "appendSourceLocks": [
+    "references/gaussian-three-tsl-webgpu-r52/SOURCE_LOCK.json"
+  ],
+  "r52Runner": "PROBES/run_gaussian_three_tsl_cutoff_r52_webgpu.js",
+  "r52WebgpuResult": "PROBES/gaussian_three_tsl_cutoff_result_r52_webgpu.json",
+  "candidateR52Gate": "ADAPTERS/gaussian_three_tsl_webgpu_gate_r52.mjs",
+  "currentBestViewR52Extension": "CURRENT_BEST_VIEW_R52_GAUSSIAN_THREE_TSL_WEBGPU.md",
+  "toolRoutingR52Extension": "TOOL_ROUTING_R52_GAUSSIAN_THREE_TSL_WEBGPU.json",
+  "motherRoutingR52Extension": "MOTHER_ROUTING_R52_GAUSSIAN_THREE_TSL_WEBGPU.json",
+  "nextGate": "Run a same-browser, same-Three-r186 R53 exact per-case coverage-mask comparison between direct WebGL and confirmed WebGPU for all 4,644 locked sample identities. Summary-count agreement is insufficient; require exact mask identity or record the first divergent sample. Then move to hardware-backed WebGPU and Apple Safari/WebKit paths, and add float-intermediate versus final-target stable-pixel color error. Do not promote the observed 2.69e-8..4.24e-7 double excess into a universal guard width or asset threshold. Only after the user supplies a small static photo set should the COLMAP/Brush/PLY/SPZ/r186 pilot run under the accumulated R34-R53 gates.",
+  "mergePolicy": "This overlay supersedes R51 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
