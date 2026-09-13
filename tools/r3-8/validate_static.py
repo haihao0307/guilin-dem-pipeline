@@ -1,5 +1,5 @@
 from pathlib import Path
-import hashlib,json,subprocess
+import gzip,hashlib,json,subprocess
 import numpy as np
 ROOT=Path(__file__).resolve().parents[2]
 SITE=ROOT/'site/dist/r3-8'
@@ -10,12 +10,41 @@ def read(base,rec,dtype):
     p=(base/rec['path']).resolve();check(p.is_relative_to((ROOT/'site/dist').resolve()),'path escapes runtime')
     b=p.read_bytes();check(len(b)==rec['bytes'] and hashlib.sha256(b).hexdigest()==rec['sha256'],str(p))
     return np.frombuffer(b,dtype=dtype)
+def digest(b):return hashlib.sha256(b).hexdigest()
+
+def decode_soil_pairs():
+    base=SITE/'data/soil-pairs'
+    m=json.loads((base/'soil-pairs.json').read_text(encoding='utf-8'))
+    check(m['schema']=='wenzhou-soil-pair-payloads/v1','soil pair schema')
+    check(m['lossless'] is True and m['pairCount']==48,'48 lossless soil pairs')
+    check(m['rawBytes']==170237184 and m['compressedBytes']==34571806,'soil pair byte contract')
+    decoded={}
+    for rec in m['pairs']:
+        p=base/rec['path'];packed=p.read_bytes()
+        check(len(packed)==rec['compressedBytes'] and digest(packed)==rec['compressedSha256'],f'packed {rec["property"]} {rec["depth"]}')
+        b=gzip.decompress(packed);n=rec['samples']
+        check(len(b)==n*4,'soil pair decoded length')
+        q=bytearray(n*2);u=bytearray(n*2)
+        q[0::2]=b[0:n];q[1::2]=b[n:2*n]
+        u[0::2]=b[2*n:3*n];u[1::2]=b[3*n:4*n]
+        qb,ub=bytes(q),bytes(u)
+        check(digest(qb)==rec['valueSha256'],f'value sha {rec["property"]} {rec["depth"]}')
+        check(digest(ub)==rec['uncertaintySha256'],f'uncertainty sha {rec["property"]} {rec["depth"]}')
+        decoded[(rec['property'],rec['depth'],'Q0.5')]=qb
+        decoded[(rec['property'],rec['depth'],'uncertainty')]=ub
+    return m,decoded
+
 soil=json.loads((SITE/'data/soil/soil-context.json').read_text(encoding='utf-8'))
 check(soil['schema']=='wenzhou-r3.8-soil-profile/r1','profile schema')
-check(len(soil['layers'])==96,'96 property/stat/depth payloads')
+check(len(soil['layers'])==96,'96 property/stat/depth semantics')
 check(len({(x['property'],x['statistic'],x['depth']) for x in soil['layers']})==96,'unique soil axes')
+pair_manifest,soil_bytes=decode_soil_pairs()
 for r in soil['layers']:
-    a=read(SITE/'data/soil',r,'<i2');check(a.size==1003*884,'soil shape')
+    key=(r['property'],r['depth'],r['statistic']);b=soil_bytes.get(key)
+    check(b is not None,f'pair covers {key}')
+    if b is None:continue
+    check(len(b)==r['bytes'] and digest(b)==r['sha256'],f'pair preserves legacy sha {key}')
+    a=np.frombuffer(b,dtype='<i2');check(a.size==1003*884,'soil shape')
     check(r['geotransform']==[190250,250,0,3242000,0,-250],'soil frame')
     if r['statistic']=='uncertainty':check(r['conventionalUnit']=='relative index' and r['conversionFactor']==1,'uncertainty units')
 check(soil['truthBoundary']['mayOverrideCanonicalDem'] is False,'soil height boundary')
@@ -38,5 +67,5 @@ for r in water['layers']:
 check(all(v is False for v in water['truthBoundary'].values()),'water truth boundary')
 frozen=subprocess.run(['git','diff','--exit-code','bb01ee52b21cfbd3406ace8e9e8f81c7ad4ad92b','--',*[f'site/dist/r3-{i}' for i in range(1,8)],'site/dist/r3','site/dist/vendor'],cwd=ROOT,capture_output=True)
 check(frozen.returncode==0,'historical runtime changed')
-print(json.dumps({'passed':not errors,'soilLayers':96,'wrbProbabilityLayers':30,'waterLayers':6,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
+print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
 raise SystemExit(bool(errors))
