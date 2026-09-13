@@ -1,0 +1,258 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU Gaussian Three.js TSL cutoff R51</title>
+<body></body>
+<script type="module">
+import * as THREE from '/node_modules/three/build/three.webgpu.js';
+import { Fn, Discard, uniform, vec4 } from '/node_modules/three/build/three.tsl.js';
+
+const params = new URLSearchParams(location.search);
+const requestedMode = params.get('mode') || 'webgl';
+const f32 = Math.fround;
+
+function f32Bits(value) {
+  const b = new ArrayBuffer(4);
+  const dv = new DataView(b);
+  dv.setFloat32(0, f32(value), true);
+  return dv.getUint32(0, true);
+}
+
+function bitsF32(bits) {
+  const b = new ArrayBuffer(4);
+  const dv = new DataView(b);
+  dv.setUint32(0, bits >>> 0, true);
+  return dv.getFloat32(0, true);
+}
+
+function detectBackend(renderer) {
+  const backend = renderer.backend;
+  if (backend?.isWebGPUBackend) return 'webgpu';
+  if (backend?.isWebGLBackend) return 'webgl';
+  const name = backend?.constructor?.name || 'unknown';
+  if (/webgpu/i.test(name)) return 'webgpu';
+  if (/webgl/i.test(name)) return 'webgl';
+  return name;
+}
+
+async function adapterIdentity(renderer, actualBackend) {
+  const identity = {
+    backendClass: renderer.backend?.constructor?.name || null,
+    rendererClass: renderer.constructor?.name || null,
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+  };
+  if (actualBackend === 'webgl') {
+    const gl = renderer.backend?.gl || null;
+    if (gl) {
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      identity.glVersion = gl.getParameter(gl.VERSION);
+      identity.glslVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+      identity.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+      identity.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    }
+  } else if (actualBackend === 'webgpu' && navigator.gpu) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      const info = adapter?.info || {};
+      identity.adapter = {
+        vendor: info.vendor || null,
+        architecture: info.architecture || null,
+        device: info.device || null,
+        description: info.description || null,
+      };
+    } catch (error) {
+      identity.adapterError = String(error?.stack || error);
+    }
+  }
+  return identity;
+}
+
+async function main() {
+  const renderer = new THREE.WebGPURenderer({
+    antialias: false,
+    alpha: true,
+    forceWebGL: requestedMode === 'webgl',
+    outputBufferType: THREE.UnsignedByteType,
+  });
+  renderer.setPixelRatio(1);
+  renderer.setSize(1, 1, false);
+  renderer.setClearColor(0x000000, 0);
+  document.body.appendChild(renderer.domElement);
+  await renderer.init();
+
+  const actualBackend = detectBackend(renderer);
+  const identity = await adapterIdentity(renderer, actualBackend);
+
+  if (requestedMode === 'webgpu' && actualBackend !== 'webgpu') {
+    return {
+      schema: 'kaopu-gaussian-three-tsl-cutoff/r51',
+      status: 'unsupported',
+      requestedMode,
+      actualBackend,
+      threeRevision: THREE.REVISION,
+      identity,
+      reason: 'WebGPU requested but Three.js initialized a non-WebGPU backend.',
+      limits: { hardwareGpu: false, targetDevice: false, humanAcceptance: false },
+    };
+  }
+
+  const ux = uniform(0.0);
+  const uy = uniform(0.0);
+  const us = uniform(1.0);
+  const fragment = Fn(() => {
+    const qx = ux.div(us);
+    const qy = uy.div(us);
+    const r2 = qx.mul(qx).add(qy.mul(qy));
+    Discard(r2.greaterThan(4.0));
+    return vec4(1.0, 1.0, 1.0, 1.0);
+  });
+
+  const material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
+  material.fragmentNode = fragment();
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  const mesh = new THREE.Mesh(geometry, material);
+  const scene = new THREE.Scene();
+  scene.add(mesh);
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2);
+  camera.position.z = 1;
+
+  const target = new THREE.RenderTarget(1, 1, {
+    type: THREE.UnsignedByteType,
+    format: THREE.RGBAFormat,
+    depthBuffer: false,
+    stencilBuffer: false,
+    minFilter: THREE.NearestFilter,
+    magFilter: THREE.NearestFilter,
+  });
+  renderer.setRenderTarget(target);
+  await renderer.compileAsync(scene, camera);
+
+  const scales = [2 ** -10, 0.3, 1.0, 3.7, 256.0, 1024.0];
+  const directions = [
+    ['axis', 2.0, 0.0],
+    ['shallow', Math.sqrt(3.75), 0.5],
+    ['one-one-root2', Math.sqrt(3.0), 1.0],
+    ['diagonal', Math.sqrt(2.0), Math.sqrt(2.0)],
+    ['steep', Math.sqrt(1.75), 1.5],
+    ['root3', 1.0, Math.sqrt(3.0)],
+  ];
+
+  const cases = [];
+  const doubleMismatches = [];
+  const floatMismatches = [];
+  for (const scaleInput of scales) {
+    const scale = f32(scaleInput);
+    for (const [direction, qx0, qy0] of directions) {
+      const baseX = f32(qx0 * scale);
+      const distanceY = f32(qy0 * scale);
+      const baseBits = f32Bits(baseX);
+      for (let ulpStep = -64; ulpStep <= 64; ulpStep++) {
+        const distanceX = bitsF32(baseBits + ulpStep);
+        const centerX = f32(-distanceX);
+        const centerY = f32(-distanceY);
+        const effectiveX = f32(-centerX);
+        const effectiveY = f32(-centerY);
+        const r2Double = (effectiveX / scale) ** 2 + (effectiveY / scale) ** 2;
+        const qxFloat = f32(effectiveX / scale);
+        const qyFloat = f32(effectiveY / scale);
+        const r2Float = f32(f32(qxFloat * qxFloat) + f32(qyFloat * qyFloat));
+
+        ux.value = effectiveX;
+        uy.value = effectiveY;
+        us.value = scale;
+        await renderer.renderAsync(scene, camera);
+        const rgba = await renderer.readRenderTargetPixelsAsync(target, 0, 0, 1, 1);
+        const backendCovered = rgba[3] > 0;
+        const doubleCovered = r2Double <= 4.0;
+        const floatCovered = r2Float <= 4.0;
+        const c = {
+          scale,
+          direction,
+          xUlpStepFromDirectionBase: ulpStep,
+          distance: [effectiveX, effectiveY],
+          r2Double,
+          r2Float32Model: r2Float,
+          doubleCovered,
+          float32ModelCovered: floatCovered,
+          backendCovered,
+          backendAlpha: rgba[3],
+        };
+        cases.push(c);
+        if (doubleCovered !== backendCovered) doubleMismatches.push(c);
+        if (floatCovered !== backendCovered) floatMismatches.push(c);
+      }
+    }
+  }
+
+  const exactCases = cases.filter(c => c.direction === 'axis' && c.xUlpStepFromDirectionBase === 0);
+  const outsideDoubleInsideBackend = doubleMismatches.filter(c => !c.doubleCovered && c.backendCovered);
+  const insideDoubleOutsideBackend = doubleMismatches.filter(c => c.doubleCovered && !c.backendCovered);
+  const excesses = outsideDoubleInsideBackend.map(c => c.r2Double - 4.0);
+  const mismatchCountsByDirection = Object.fromEntries(
+    directions.map(([name]) => [name, doubleMismatches.filter(c => c.direction === name).length])
+  );
+
+  renderer.dispose();
+  geometry.dispose();
+  material.dispose();
+  target.dispose();
+
+  return {
+    schema: 'kaopu-gaussian-three-tsl-cutoff/r51',
+    status: 'candidate-observation',
+    requestedMode,
+    actualBackend,
+    threeRevision: THREE.REVISION,
+    identity,
+    fixture: {
+      renderTarget: 'RGBA8 1x1 coverage target',
+      scaleCount: scales.length,
+      directionCount: directions.length,
+      xUlpSteps: [-64, 64],
+      caseCount: cases.length,
+      cutoffRule: 'TSL Discard when r2 > 4.0',
+      note: 'Coverage-only browser probe. Target precision differs from R50 RGBA32F, but discard coverage is measured before color storage.',
+    },
+    summary: {
+      doublePredicateMismatchCount: doubleMismatches.length,
+      float32PredicateMismatchCount: floatMismatches.length,
+      doubleOutsideBackendInsideCount: outsideDoubleInsideBackend.length,
+      doubleInsideBackendOutsideCount: insideDoubleOutsideBackend.length,
+      minimumDoubleExcessAmongIncludedMismatches: excesses.length ? Math.min(...excesses) : null,
+      maximumDoubleExcessAmongIncludedMismatches: excesses.length ? Math.max(...excesses) : null,
+      mismatchCountsByDirection,
+      exactTwiceScaleCasesCovered: exactCases.filter(c => c.backendCovered).length,
+      exactTwiceScaleCaseCount: exactCases.length,
+    },
+    counterexamples: {
+      doubleOutsideBackendInsideFirst: outsideDoubleInsideBackend[0] || null,
+      doubleInsideBackendOutsideFirst: insideDoubleOutsideBackend[0] || null,
+      float32MismatchFirst: floatMismatches[0] || null,
+    },
+    checks: {
+      allCasesExecuted: cases.length === scales.length * directions.length * 129,
+      exactCutoffIsIncluded: exactCases.every(c => c.backendCovered),
+      bothSidesOfBoundaryWereSampled: cases.some(c => c.backendCovered) && cases.some(c => !c.backendCovered),
+    },
+    limits: {
+      hardwareGpu: false,
+      targetDevice: false,
+      realPhotoOrLearnedAsset: false,
+      humanAcceptance: false,
+    },
+  };
+}
+
+try {
+  window.__KAOPU_RESULT__ = await main();
+} catch (error) {
+  window.__KAOPU_RESULT__ = {
+    schema: 'kaopu-gaussian-three-tsl-cutoff/r51',
+    status: 'error',
+    requestedMode,
+    message: String(error?.message || error),
+    stack: String(error?.stack || ''),
+  };
+}
+window.__KAOPU_DONE__ = true;
+</script>
