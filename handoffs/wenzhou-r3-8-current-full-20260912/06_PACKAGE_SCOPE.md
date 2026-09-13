@@ -1,39 +1,48 @@
-# 全量包范围
+# 轻量交接包范围
 
-本交接包的目标是：**在新窗口不依赖旧对话即可直接继续小温州生产线。**
+目标：新窗口可以准确接续“小温州”当前生产状态，但默认不搬运历史大文件和浏览器二进制载荷。
 
-## 包内包含
+## 默认包内包含
 
-1. R3.2 冻结全量重启底座（约 1.03 GB）的全部内容；
-2. 当前仓库里的 R3.3–R3.8 运行时/浏览器数据；
-3. R3.3–R3.8 相关 `records/`、`tools/`；
-4. 当前 SoilGrids 0–5 cm 16 个浏览器层；
-5. 当前 R3.8 WRB 浏览器上下文及审计数据；
-6. WorldCover/OSM 等当前浏览器派生数据；
-7. 本交接目录全部状态、下一步、单一世界谱规则、永久证据索引；
-8. 当前 Wenzhou R3.x 相关 GitHub Actions 工作流；
-9. `inputs/knowledge-r2-2` 中当前仍参与证据边界/对象语义的锁定输入；
-10. 完整 `MANIFEST.json`、SHA-256、包生成报告和可离线运行的 `verify_package.py`。
+1. 当前 `START_HERE / STATE / SOURCE_LOCKS / WORLD_SCORE / NEXT_STEPS / EVIDENCE_ARCHIVES / PACKAGE_SCOPE / CHECKLIST`；
+2. 当前 R3.8 关键 HTML/CSS/JS 源代码；
+3. `tools/r3-8`、`records/R3_8` 中不超过 1 MiB 的文本型 QA/构建/记录文件；
+4. `AGENTS.md`；
+5. 自动生成的 `LEAN_HANDOFF_LOCK.json`，记录源提交、文件 SHA-256、内容去重 alias 和体积统计。
 
-## 大型永久证据为什么不重复塞进同一个 ZIP
+包内文本按 SHA-256 去重。相同内容只保存一个 canonical 文件，其他逻辑路径记录在 alias 表，不重复存储。
 
-WorldCover、JRC、OSM 和完整 SoilGrids 原始/对齐证据已经分别作为永久 GitHub Release 锁定，总量接近 1 GB。若再次把这些 ZIP 嵌进 1.03 GB 重启底座，会让单一 Release 资产逼近 GitHub 单文件上限，并形成同一证据的重复存储。
+## 明确不进入默认随身包
 
-因此本包采取：
-- **运行所需派生数据放包内；**
-- **大型源证据放永久 Release；**
-- 包内 `02_SOURCE_LOCKS.json` / `05_EVIDENCE_ARCHIVES.json` 固定 tag、asset、bytes、SHA-256，可一键恢复并复核。
+- R3.1 / R3.2 约 1.03 GB 全量重启 ZIP；
+- 完整无损 DEM 归档；
+- 历史固定网页版本；
+- WorldCover / JRC / OSM / SoilGrids 永久证据 ZIP；
+- 当前浏览器 `.i16le / .u8 / .u16le / .wzdem2 / .bundle` 等二进制栅格/载荷；
+- Windows Python wheels 和其它离线依赖；
+- 已失效的 full-handoff 构建器和 PACKAGE_TRIGGER。
 
-这不等于“缺文件”：生产运行/继续开发所需当前状态在包内；源证据作为独立永久原件不做二次嵌套。
+这些内容不是删除真值，而是退出活动随身工作集。需要恢复时必须使用固定 Git commit、Release tag、asset 名、bytes 与 SHA-256 精确取回。
 
-## 包外但永久锁定
+## 为什么旧包会膨胀到约 2.05 GB
 
-- `wenzhou-r3.4-environment-evidence-20260910`
-- `wenzhou-r3.5-osm-object-evidence-20260910`
-- `wenzhou-r3.7-soilgrids-evidence-20260911`
+旧链路先完整解压 R3.2 的约 1.03 GB 重启底座，再叠加 R3.3–R3.8 的运行/浏览器数据、records 和 tools。R3.2 自身又继承 R3.1 的约 1.03 GB 底座。与此同时旧 ZIP 构建器把 `.zip / .whl / .gz / .wzdem2 / .i16 / .i16le / .u8 / .u16le / .bundle` 设为 `ZIP_STORED`，二进制基本原尺寸写入，因此新增六层 SoilProfile 等载荷会直接推高包体积。
 
-## 版本边界
+这个“历史整包 + 当前增量继续叠加”的滚雪球方式已经停止。
 
-- R3.7 是最后 verified visual candidate；
-- R3.8 是 in-progress handoff，WRB data 已构建，但显示整合/完整 QA 未做完；
-- 包名中的 `CURRENT` 表示“当前工作全量交接”，不是宣称 R3.8 已 production ready。
+## 关于两个土壤二进制声部
+
+每个 SoilGrids `property × depth` 的两个 payload 是：
+
+- `Q0.5`：属性中位预测值；
+- `uncertainty`：模型相对不确定性。
+
+两者哈希、单位、统计语义不同，不是重复。当前不删除任何一个。后续若要继续压缩运行载荷，应通过双通道容器、分块、量化或其它可验证编码方案实现，而不是丢弃 uncertainty。
+
+## 体积门
+
+轻量交接包唯一未压缩内容硬上限为 8 MiB；ZIP 本体同样必须 <= 8 MiB。超过即构建失败，不允许继续滚雪球。
+
+## 冷档案
+
+历史 Release 与固定已验证提交继续永久保留，不覆盖、不删除；它们只不再随每次交接重复搬运。
