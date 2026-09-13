@@ -1,149 +1,64 @@
-name: Wenzhou R3.8 Current Full Handoff
+name: Wenzhou R3.8 Lean Current Handoff
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - handoff/wenzhou-r3-8-current-full-20260912
-    paths:
-      - 'handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   package:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Handoff state and current data gates
+      - name: Validate lean handoff builder
         run: |
           set -euo pipefail
-          H='handoffs/wenzhou-r3-8-current-full-20260912'
-          test -f "$H/00_START_HERE.md"
-          test -f "$H/01_HANDOFF_STATE.json"
-          test -f "$H/02_SOURCE_LOCKS.json"
-          test -f "$H/03_WORLD_SCORE_RULE.md"
-          test -f "$H/04_NEXT_STEPS.md"
-          test -f "$H/05_EVIDENCE_ARCHIVES.json"
-          test -f "$H/06_PACKAGE_SCOPE.md"
-          test -f "$H/07_PACKAGE_CHECKLIST.json"
-          test -f site/dist/r3-7/data/soil/soil-context.json
-          test -f site/dist/r3-8/data/wrb/wrb-context.json
-          python - <<'PY'
-          import json, pathlib
-          h=pathlib.Path('handoffs/wenzhou-r3-8-current-full-20260912')
-          state=json.loads((h/'01_HANDOFF_STATE.json').read_text(encoding='utf-8'))
-          locks=json.loads((h/'02_SOURCE_LOCKS.json').read_text(encoding='utf-8'))
-          wrb=json.loads(pathlib.Path('site/dist/r3-8/data/wrb/wrb-context.json').read_text(encoding='utf-8'))
-          soil=json.loads(pathlib.Path('site/dist/r3-7/data/soil/soil-context.json').read_text(encoding='utf-8'))
-          assert state['lastVerifiedVisual']['commit']=='81354b32acedf158490203f89e4cda5c3449e3a0'
-          assert state['currentWork']['r3_8DisplayIntegrated'] is False
-          assert locks['runtimeBase']['sha256']=='ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c'
-          assert soil['resolutionM']==250 and len(soil['layers'])==16
-          assert wrb['schema']=='wenzhou-r3.8-wrb-browser-context/r1'
-          assert len(wrb['legend'])==30 and len(wrb['probabilityLayers'])==30
-          assert wrb['audit']['archivedAlignedMostProbableEqualsIndependentNearestReprojection'] is True
-          assert wrb['truthBoundary']['canonicalTruth'] is False
-          print({'passed':True,'wrbMismatchRatio':wrb['audit']['officialVsPostAlignmentArgmaxMismatchRatio']})
-          PY
-          python -m py_compile tools/r3-handoff/build_current_full_handoff.py
+          python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
+          test -f handoffs/wenzhou-r3-8-current-full-20260912/08_LEAN_CONTINUATION_POLICY_20260913.md
 
-      - name: Recheck last verified R3.7 fixed public entry
-        run: |
-          set -euo pipefail
-          URL='https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html'
-          ok=0
-          for i in $(seq 1 30); do
-            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '真实 DEM · R3.7'; then ok=1; break; fi
-            sleep 3
-          done
-          test "$ok" = 1
-          echo "$URL" > /tmp/verified-r37-preview.txt
-
-      - name: Download and verify frozen R3.2 full restart base
+      - name: Build lean continuation package
         env:
-          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          mkdir -p /tmp/wenzhou-base
-          gh release download wenzhou-r3.2-full-20260909 \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern 'Wenzhou_R3_2_FULL_RESTART_20260909.zip' \
-            --dir /tmp/wenzhou-base
-          echo 'ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c  /tmp/wenzhou-base/Wenzhou_R3_2_FULL_RESTART_20260909.zip' | sha256sum -c -
-
-      - name: Build and double-verify current full handoff
-        env:
-          HANDOFF_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/wenzhou-current-output
-          python tools/r3-handoff/build_current_full_handoff.py \
-            --base-zip /tmp/wenzhou-base/Wenzhou_R3_2_FULL_RESTART_20260909.zip \
+          mkdir -p /tmp/wenzhou-lean
+          python tools/r3-handoff/build_current_lean_handoff.py \
             --repo-root "$GITHUB_WORKSPACE" \
-            --work-dir /tmp/wenzhou-current-build \
-            --output-zip /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip \
-            --source-commit "$HANDOFF_SHA" | tee /tmp/wenzhou-current-build.log
-          test -s /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip
-          test -s /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.sha256
-          test -s /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.report.json
+            --output-zip /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip \
+            --source-commit "$SOURCE_SHA" | tee /tmp/wenzhou-lean/build-report.log
+          python -m zipfile -t /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip
+          test -s /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip.report.json
 
-      - name: Publish fixed full handoff Release
+      - name: Enforce carry-size ceiling
         env:
-          GH_TOKEN: ${{ github.token }}
-          HANDOFF_SHA: ${{ github.sha }}
+          SOURCE_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
-          TAG='wenzhou-r3.8-current-full-handoff-20260912'
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; refusing to overwrite this handoff snapshot."
-            exit 2
-          fi
-          cat > /tmp/release-notes.md <<EOF
-          # 小温州 · R3.8 当前全量交接包 · 2026-09-12
+          python - <<'PY'
+          import json, os, pathlib
+          sha=os.environ['SOURCE_SHA']
+          p=pathlib.Path(f'/tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_{sha}.zip.report.json')
+          r=json.loads(p.read_text(encoding='utf-8'))
+          assert r['fullRestartBaseEmbedded'] is False
+          assert r['permanentEvidenceEmbedded'] is False
+          assert r['browserBinaryPayloadsEmbedded'] is False
+          assert r['uncompressedBytes'] <= 8 * 1024 * 1024
+          print(r)
+          PY
 
-          包源提交：\`${HANDOFF_SHA}\`
-
-          最后已验证视觉候选：R3.7 \`81354b32acedf158490203f89e4cda5c3449e3a0\`
-
-          固定预览：https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html
-
-          当前 R3.8 状态：WRB 浏览器上下文和算子顺序审计已生成；R3.8 显示层、六层土壤剖面、JRC 长期水体整合与最终浏览器 QA 尚未完成。因此此包是 **CURRENT FULL HANDOFF**，不是 R3.8 production release。
-
-          包内从已验证的 R3.2 1.03 GB 全量重启底座恢复，并叠加 R3.3–R3.8 当前运行/浏览器数据、records、tools、交接文档和当前 Wenzhou R3.x 工作流；叠加前后都运行完整 MANIFEST 校验，并测试 ZIP 完整性。
-
-          WorldCover/JRC/OSM/完整 SoilGrids 大型源证据已经以独立永久 Release 锁定，本包不重复嵌套这些 ZIP，以避免重复存储和逼近 GitHub 单资产上限；包内包含准确 tag / bytes / SHA-256 和当前派生数据。
-          EOF
-          gh release create "$TAG" \
-            /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip \
-            /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.sha256 \
-            /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.report.json \
-            handoffs/wenzhou-r3-8-current-full-20260912/00_START_HERE.md \
-            handoffs/wenzhou-r3-8-current-full-20260912/01_HANDOFF_STATE.json \
-            handoffs/wenzhou-r3-8-current-full-20260912/02_SOURCE_LOCKS.json \
-            handoffs/wenzhou-r3-8-current-full-20260912/07_PACKAGE_CHECKLIST.json \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$HANDOFF_SHA" \
-            --title '小温州 R3.8 当前全量交接包 · 2026-09-12' \
-            --notes-file /tmp/release-notes.md
-
-      - name: Upload build proof
-        if: always()
+      - name: Upload lean handoff artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wenzhou-r3-8-current-full-handoff-${{ github.sha }}
+          name: wenzhou-r3-8-lean-handoff-${{ github.sha }}
           path: |
-            /tmp/verified-r37-preview.txt
-            /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.sha256
-            /tmp/wenzhou-current-output/Wenzhou_R3_8_CURRENT_FULL_HANDOFF_20260912.zip.report.json
-            /tmp/wenzhou-current-build.log
-          if-no-files-found: warn
+            /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip
+            /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip.report.json
+            /tmp/wenzhou-lean/build-report.log
+          if-no-files-found: error
           retention-days: 30
