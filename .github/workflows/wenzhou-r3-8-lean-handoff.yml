@@ -9,7 +9,7 @@ on:
       - 'handoffs/wenzhou-r3-8-current-full-20260912/LEAN_PACKAGE_TRIGGER'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   package:
@@ -27,6 +27,7 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
           python -m py_compile tools/r3-9/benchmark_soil_pair_codec.py
+          python -m py_compile tools/r3-9/build_soil_pair_payloads.py
           test -f handoffs/wenzhou-r3-8-current-full-20260912/06_PACKAGE_SCOPE.md
           test ! -f tools/r3-handoff/build_current_full_handoff.py
           test ! -f handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER
@@ -86,3 +87,30 @@ jobs:
             /tmp/soil-codec-benchmark.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Build lossless dual-channel soil payloads
+        run: |
+          set -euo pipefail
+          python tools/r3-9/build_soil_pair_payloads.py | tee /tmp/soil-pair-build.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/soil-pair-build.json'))
+          assert r['passed'] is True
+          assert r['pairs'] == 48
+          assert r['compressedBytes'] < 40 * 1024 * 1024
+          assert r['reduction'] > 0.75
+          print(r)
+          PY
+
+      - name: Commit generated soil pair payloads
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-8/data/soil-pairs
+          if git diff --cached --quiet; then
+            echo 'soil pair payloads already current'
+          else
+            git commit -m 'data(wenzhou): add lossless dual-channel soil payloads'
+            git push origin HEAD:feature/wenzhou-r3-8-overlay-transform-contract-20260913
+          fi
