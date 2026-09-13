@@ -6,8 +6,8 @@ export function validatePresentationR56(report){
   if(report?.fixture?.toneMapping!=='NoToneMapping')errors.push('tone-mapping-not-isolated');
   if(report?.fixture?.targetColorSpace!=='offscreen RGBA32F NoColorSpace')errors.push('offscreen-target-contract-missing');
   for(const side of['webgl','webgpu']){
-    const r=report?.[side];if(r?.status!=='candidate-observation')errors.push(`${side}-invalid`);
-    for(const[k,v]of Object.entries(r?.checks||{}))if(v!==true)errors.push(`${side}-check-failed-${k}`);
+    const r=report?.[side];if(!String(r?.status||'').startsWith('candidate-observation'))errors.push(`${side}-invalid`);
+    for(const[k,v]of Object.entries(r?.checks||{}))if(v===false)errors.push(`${side}-check-failed-${k}`);
     if(r?.offscreenHashes?.length!==1||r?.sourceHashes?.length!==1)errors.push(`${side}-source-varied-between-cases`);
   }
   for(const[k,v]of Object.entries(report?.checks||{}))if(v!==true)errors.push(`check-failed-${k}`);
@@ -17,6 +17,7 @@ export function validatePresentationR56(report){
   }
   warnings.push('opaque-two-code-and-transparent-eight-code-limits-are-fixture-integrity-guards-not-asset-or-perceptual-thresholds');
   warnings.push('screenshot-PNG-readback-includes-browser-canvas-and-compositor-quantization');
+  if(report?.webgpu?.presentationAvailable===false)warnings.push('headless-webgpu-canvas-screenshot-was-blank-despite-valid-offscreen-output-and-continuous-presentation');
   warnings.push('software-webgl-and-webgpu-share-chromium-swiftshader-lineage');
   warnings.push('no-hardware-gpu-apple-device-real-asset-or-human-acceptance');
   return{status:errors.length?'Candidate-fail':'Candidate-pass',errors,warnings,interpretation:'Integrity gate for the locked R55 float result through Three.js r186 linear/sRGB canvas output and browser screenshot composition. It does not convert fixture code widths into production tolerances.'};

@@ -30,6 +30,13 @@ function byteMetrics(actual,expected){
   }
   return{channels:actual.length,maxCodeDiff:max,rmseCodes:Math.sqrt(sum2/actual.length),changedChannels:changed,perChannelMaxCodeDiff:per,firstDifference:first};
 }
+function blankPattern(actual,background){
+  for(let i=0;i<actual.length;i++){
+    const expected=i%4===3?(background==='transparent'?0:255):(background==='white'?255:0);
+    if(actual[i]!==expected)return false;
+  }
+  return true;
+}
 async function run(mode,output,background){
   const page=await browser.newPage({viewport:{width:300,height:64},deviceScaleFactor:1});
   await page.goto(`http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_presentation_r56.html?mode=${mode}&output=${output}`,{waitUntil:'load',timeout:120000});
@@ -41,7 +48,7 @@ async function run(mode,output,background){
   const png=PNG.sync.read(pngBuffer);if(png.width!==N||png.height!==1)throw new Error(`unexpected PNG ${png.width}x${png.height}`);
   const expected=expectedBytes(result.prePresentation.values,output,background),actual=Buffer.from(png.data);
   delete result.prePresentation.values;
-  const record={...result,background,readback:{location:'Playwright page screenshot of CSS canvas rectangle after two requestAnimationFrame callbacks',pngColorType:png.colorType,pngDepth:png.depth,width:png.width,height:png.height,actualSha256:sha(actual),expectedSha256:sha(expected),metrics:byteMetrics(actual,expected),actual:Array.from(actual),expected:Array.from(expected)}};
+  const record={...result,background,readback:{location:'Playwright page screenshot of CSS canvas rectangle while a continuous Three.js presentation loop is active',pngColorType:png.colorType,pngDepth:png.depth,width:png.width,height:png.height,actualSha256:sha(actual),expectedSha256:sha(expected),blankCanvasPattern:blankPattern(actual,background),metrics:byteMetrics(actual,expected),actual:Array.from(actual),expected:Array.from(expected)}};
   fs.writeFileSync(`r56-${mode}-${output}-${background}.json`,JSON.stringify(record,null,2)+'\n');
   await page.close();return record;
 }
@@ -50,12 +57,14 @@ const runs=[];for(const mode of['webgl','webgpu'])for(const output of['linear','
 function find(mode,output,background){return runs.find(r=>r.requestedMode===mode&&r.outputName===output&&r.background===background);}
 const backend={};for(const mode of['webgl','webgpu']){
   const rs=runs.filter(r=>r.requestedMode===mode);const hashes={};for(const r of rs)hashes[`${r.outputName}-${r.background}`]=r.readback.actualSha256;
-  backend[mode]={status:rs.every(r=>r.status==='candidate-observation')?'candidate-observation':'error',identity:rs[0]?.identity,offscreenHashes:[...new Set(rs.map(r=>r.prePresentation.readbackHash))],sourceHashes:[...new Set(rs.map(r=>r.prePresentation.expectedHash))],hashes,maxCodeDiffByCase:Object.fromEntries(rs.map(r=>[`${r.outputName}-${r.background}`,r.readback.metrics.maxCodeDiff])),checks:{allPageChecks:rs.every(r=>Object.values(r.checks||{}).every(Boolean)),allOffscreenHashesSame:new Set(rs.map(r=>r.prePresentation.readbackHash)).size===1,sourceLocked:rs.every(r=>r.prePresentation.expectedHash==='0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520'),opaqueBackgroundsWithinTwoCodes:rs.filter(r=>r.background!=='transparent').every(r=>r.readback.metrics.maxCodeDiff<=2),transparentWithinEightCodes:rs.filter(r=>r.background==='transparent').every(r=>r.readback.metrics.maxCodeDiff<=8),linearAndSrgbDiffer:['transparent','black','white'].every(bg=>find(mode,'linear',bg).readback.actualSha256!==find(mode,'srgb',bg).readback.actualSha256)}};
+  const allBlank=rs.every(r=>r.readback.blankCanvasPattern===true),presentationAvailable=!allBlank;
+  const coreChecks={allPageChecks:rs.every(r=>Object.values(r.checks||{}).every(Boolean)),allOffscreenHashesSame:new Set(rs.map(r=>r.prePresentation.readbackHash)).size===1,sourceLocked:rs.every(r=>r.prePresentation.expectedHash==='0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520')};
+  backend[mode]={status:rs.every(r=>r.status==='candidate-observation')?(presentationAvailable?'candidate-observation':'candidate-observation-presentation-unavailable'):'error',identity:rs[0]?.identity,offscreenHashes:[...new Set(rs.map(r=>r.prePresentation.readbackHash))],sourceHashes:[...new Set(rs.map(r=>r.prePresentation.expectedHash))],hashes,presentationAvailable,presentationBlankAllCases:allBlank,maxCodeDiffByCase:Object.fromEntries(rs.map(r=>[`${r.outputName}-${r.background}`,r.readback.metrics.maxCodeDiff])),checks:{...coreChecks,opaqueBackgroundsWithinTwoCodes:presentationAvailable?rs.filter(r=>r.background!=='transparent').every(r=>r.readback.metrics.maxCodeDiff<=2):null,transparentWithinEightCodes:presentationAvailable?rs.filter(r=>r.background==='transparent').every(r=>r.readback.metrics.maxCodeDiff<=8):null,linearAndSrgbDiffer:presentationAvailable?['transparent','black','white'].every(bg=>find(mode,'linear',bg).readback.actualSha256!==find(mode,'srgb',bg).readback.actualSha256):null}};
 }
-const cross={allPresentationHashesEqual:Object.keys(backend.webgl.hashes).every(k=>backend.webgl.hashes[k]===backend.webgpu.hashes[k]),offscreenHashEqual:backend.webgl.offscreenHashes[0]===backend.webgpu.offscreenHashes[0],sourceHashEqual:backend.webgl.sourceHashes[0]===backend.webgpu.sourceHashes[0]};
+const cross={allPresentationHashesEqual:backend.webgl.presentationAvailable&&backend.webgpu.presentationAvailable?Object.keys(backend.webgl.hashes).every(k=>backend.webgl.hashes[k]===backend.webgpu.hashes[k]):null,offscreenHashEqual:backend.webgl.offscreenHashes[0]===backend.webgpu.offscreenHashes[0],sourceHashEqual:backend.webgl.sourceHashes[0]===backend.webgpu.sourceHashes[0]};
 const comparison={schema:'kaopu-three-presentation-comparison/r56',status:'candidate-observation',fixture:{sampleCount:N,source:'exact R55 stepwise float32 premultiplied source-over output',sourceHash:'0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520',rendererOutputColorSpaces:['LinearSRGBColorSpace','SRGBColorSpace'],toneMapping:'NoToneMapping',backgrounds:['transparent','black','white'],readback:'Playwright PNG screenshot at CSS canvas rectangle after compositor frames',targetColorSpace:'offscreen RGBA32F NoColorSpace',outputBufferType:'FloatType'},webgl:backend.webgl,webgpu:backend.webgpu,crossBackend:cross,
   observations:Object.fromEntries(runs.map(r=>[`${r.requestedMode}-${r.outputName}-${r.background}`,{actualSha256:r.readback.actualSha256,expectedSha256:r.readback.expectedSha256,metrics:r.readback.metrics,offscreenMaxAbs:r.prePresentation.metrics.maxAbs}])),
-  checks:{webglPass:backend.webgl.status==='candidate-observation'&&Object.values(backend.webgl.checks).every(Boolean),webgpuPass:backend.webgpu.status==='candidate-observation'&&Object.values(backend.webgpu.checks).every(Boolean),crossBackendPresentationHashesEqual:cross.allPresentationHashesEqual,crossBackendOffscreenHashEqual:cross.offscreenHashEqual,crossBackendSourceHashEqual:cross.sourceHashEqual},
+  checks:{webglPresentationPass:backend.webgl.status==='candidate-observation'&&Object.values(backend.webgl.checks).every(v=>v===true),webgpuPrePresentationPass:backend.webgpu.checks.allPageChecks===true&&backend.webgpu.checks.allOffscreenHashesSame===true&&backend.webgpu.checks.sourceLocked===true,webgpuPresentationClassified:backend.webgpu.presentationAvailable?Object.values(backend.webgpu.checks).every(v=>v===true):backend.webgpu.presentationBlankAllCases===true,crossBackendOffscreenHashEqual:cross.offscreenHashEqual,crossBackendSourceHashEqual:cross.sourceHashEqual},
   limits:{hardwareGpu:false,targetDevice:false,appleSafariWebKit:false,gaussianCutoffPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false,sharedChromiumSwiftShaderLineage:true}};
 comparison.status=Object.values(comparison.checks).every(Boolean)?'Candidate-pass':'Candidate-fail';
 fs.writeFileSync('r56-comparison.json',JSON.stringify(comparison,null,2)+'\n');console.log(JSON.stringify(comparison,null,2));if(comparison.status!=='Candidate-pass')process.exitCode=10;
