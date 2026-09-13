@@ -4,10 +4,14 @@ import numpy as np
 ROOT=Path(__file__).resolve().parents[2]
 SITE=ROOT/'site/dist/r3-8'
 VERIFIED_R38_RUNTIME='3018da201a2ef6b5d122522e85bbbb5b91f8a34d'
+FROZEN_PATHS=['site/dist/r3','site/dist/vendor',*[f'site/dist/r3-{i}' for i in range(1,8)]]
 errors=[]
 def check(ok,label):
     if not ok:errors.append(label)
 def digest(b):return hashlib.sha256(b).hexdigest()
+def tree_sha(rev,path):
+    r=subprocess.run(['git','rev-parse',f'{rev}:{path}'],cwd=ROOT,capture_output=True,text=True)
+    return r.stdout.strip() if r.returncode==0 else None
 
 def decode_soil_pairs():
     base=SITE/'data/soil-pairs'
@@ -83,7 +87,9 @@ for r in water['layers']:
     if r['product'] in ['seasonality','extent']:check('2022-2024' in r['period'],'partial water timeline')
     if r['product']=='change':check(any(x['value']=='254' and 'Unable to compute' in x['label'] for x in r['palette']),'change missing-data semantics')
 check(all(v is False for v in water['truthBoundary'].values()),'water truth boundary')
-frozen=subprocess.run(['git','diff','--exit-code',VERIFIED_R38_RUNTIME,'--',*[f'site/dist/r3-{i}' for i in range(1,8)],'site/dist/r3','site/dist/vendor'],cwd=ROOT,capture_output=True)
-check(frozen.returncode==0,'historical runtime changed since verified R3.8 candidate')
-print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'evidenceGzipFiles':env_manifest['fileCount'],'evidenceGzipPackedBytes':env_manifest['packedBytes'],'historicalFreezeAnchor':VERIFIED_R38_RUNTIME,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
+
+frozen_trees={p:{'anchor':tree_sha(VERIFIED_R38_RUNTIME,p),'head':tree_sha('HEAD',p)} for p in FROZEN_PATHS}
+frozen_ok=all(v['anchor'] is not None and v['anchor']==v['head'] for v in frozen_trees.values())
+check(frozen_ok,'historical runtime tree identities changed since verified R3.8 candidate')
+print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'evidenceGzipFiles':env_manifest['fileCount'],'evidenceGzipPackedBytes':env_manifest['packedBytes'],'historicalFreezeAnchor':VERIFIED_R38_RUNTIME,'frozenR3ThroughR37':frozen_ok,'frozenTreeIdentities':frozen_trees,'errors':errors},ensure_ascii=False,indent=2))
 raise SystemExit(bool(errors))
