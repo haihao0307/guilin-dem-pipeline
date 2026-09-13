@@ -44,9 +44,11 @@ safe = once(
     "qa detail policy",
 )
 
+# bandsOB is formatted across multiple GLSL lines, so allow whitespace between
+# its final semicolon and closing brace. This remains a strict single-match patch.
 safe = sub1(
     safe,
-    r"float bandsOB\(vec3 p,float highGate\)\{.*?return \.5\+s/\.96875;\}",
+    r"float bandsOB\(vec3 p,float highGate\)\{.*?return \.5\+s/\.96875;\s*\}",
     """float bandsOB(vec3 p,float highGate){
   float a=.5,s=0.;
   for(int i=0;i<5;i++){
