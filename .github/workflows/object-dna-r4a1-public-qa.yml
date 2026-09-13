@@ -44,7 +44,7 @@ jobs:
       - name: Browser interaction and visual state QA
         shell: bash
         run: |
-          cat > /tmp/r4a1-qa.mjs <<'EOF'
+          cat > r4a1-qa.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
           const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/';
@@ -98,7 +98,7 @@ jobs:
           if(failures.length)throw Error('HTTP failures: '+JSON.stringify(failures));
           await browser.close();
           EOF
-          node /tmp/r4a1-qa.mjs
+          node r4a1-qa.mjs
 
       - name: Upload QA screenshots
         if: always()
