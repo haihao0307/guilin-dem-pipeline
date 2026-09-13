@@ -71,8 +71,15 @@ async function main(){
   const params={antialias:false,alpha:true,forceWebGL:true};if(bufferName==='float')params.outputBufferType=THREE.FloatType;
   const renderer=new THREE.WebGPURenderer(params);renderer.setPixelRatio(1);renderer.setSize(WIDTH,HEIGHT,false);renderer.setClearColor(0x000000,0);renderer.toneMapping=THREE.NoToneMapping;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);await renderer.init();
   if(!renderer.backend?.isWebGLBackend)throw new Error(`expected WebGL fallback, got ${renderer.backend?.constructor?.name}`);
-  const splat=new GaussianSplat(geometry,{autoSort:false});splat.frustumCulled=false;
+  const splat=new GaussianSplat(geometry,{autoSort:true});splat.frustumCulled=false;
   const scene=new THREE.Scene();scene.add(splat);const camera=new THREE.PerspectiveCamera(60,1,0.1,10);camera.position.set(0,0,2);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+  // r186's material always reads CountingSort.orderRead. On WebGL, updateSort() also enables
+  // the PBO-backed storage path. All centers share one depth bin, and the CPU counting sort is
+  // stable for this input, so this initializes an identity order before automatic resorting is disabled.
+  const sortInitialized=splat.updateSort(renderer,camera);
+  const orderArray=splat._sort.orderAttribute.array;
+  const identityOrder=Array.from(orderArray).every((value,index)=>value===index);
+  splat.autoSort=false;
   const expectedType=bufferName==='default'?THREE.HalfFloatType:THREE.FloatType;
   const pos=geometry.getAttribute('position'),cov=geometry.getAttribute('covariance'),color=geometry.getAttribute('color');
   const observedCounts={};for(const a of alphas)observedCounts[a]=(observedCounts[a]||0)+1;
@@ -80,9 +87,9 @@ async function main(){
   window.__KAOPU_BASE__={schema:'kaopu-three-mixed-alpha-order-page/r61',status:'candidate-observation',mode,orderName,bufferName,calibrationAlpha,threeRevision:THREE.REVISION,identity:await identity(renderer),
     spz:{container:'legacy gzip SPZ v3 parsed by r186 SPZLoader',rawBytes:rawSpz.byteLength,gzipBytes:gzip.byteLength,rawHash:await sha256(rawSpz),gzipHash:await sha256(gzip),count:alphas.length,shDegree:0,fractionalBits:12,flags:0,alphaCounts:observedCounts,alphaSequenceHash:await sha256(alphas),alphaMultisetHash:await sha256(sortedAlpha),colorBytes:[255,255,255],scaleBytes:[160,160,160],rotationPacked:'0xc0000000'},
     geometry:{position:{count:pos.count,itemSize:pos.itemSize,array:pos.array.constructor.name},covariance:{count:cov.count,itemSize:cov.itemSize,array:cov.array.constructor.name},color:{count:color.count,itemSize:color.itemSize,array:color.array.constructor.name,normalized:color.normalized,first:Array.from(color.array.slice(0,4))}},
-    splat:{className:splat.constructor.name,isGaussianSplat:splat.isGaussianSplat===true,autoSort:splat.autoSort,material:{transparent:splat.material.transparent,blending:splat.material.blending,depthWrite:splat.material.depthWrite,depthTest:splat.material.depthTest,forceSinglePass:splat.material.forceSinglePass},semanticControls:{identicalCentersColorScaleRotation:true,instanceOrder:'source order; autoSort=false',viewerKernel:'fixed r186 KERNEL_2D_SIZE 0.3',viewerCutoff:'fixed r186 r2 > 4',spzAntialiasFlag:false}},
+    splat:{className:splat.constructor.name,isGaussianSplat:splat.isGaussianSplat===true,autoSort:splat.autoSort,sortInitialized,identityOrder,orderHash:await sha256(orderArray),material:{transparent:splat.material.transparent,blending:splat.material.blending,depthWrite:splat.material.depthWrite,depthTest:splat.material.depthTest,forceSinglePass:splat.material.forceSinglePass},semanticControls:{identicalCentersColorScaleRotation:true,instanceOrder:'stable CPU counting-sort identity initialized once; autoSort=false during render',viewerKernel:'fixed r186 KERNEL_2D_SIZE 0.3',viewerCutoff:'fixed r186 r2 > 4',spzAntialiasFlag:false}},
     render:{backend:'WebGL fallback of WebGPURenderer',viewport:[WIDTH,HEIGHT],camera:{type:'PerspectiveCamera',fov:60,aspect:1,near:0.1,far:10,position:[0,0,2],lookAt:[0,0,0]},outputColorSpace:'SRGBColorSpace',workingColorSpace:'LinearSRGBColorSpace',toneMapping:'NoToneMapping',clear:'transparent black',expectedType,privateProbeSurface:'revision-pinned renderer._frameBufferTargets map; not a public production API'},
-    checks:{sourceCount:pos.count===alphas.length&&cov.count===alphas.length&&color.count===alphas.length,spzLoaderAttributes:pos.itemSize===3&&cov.itemSize===6&&color.itemSize===4,actualGaussianSplat:splat.isGaussianSplat===true,normalBlendPath:splat.material.transparent===true&&splat.material.depthWrite===false&&splat.material.blending===THREE.NormalBlending,orderLocked:splat.autoSort===false,expectedMultiset:mode==='calibration'||JSON.stringify(observedCounts)===JSON.stringify({'1':1779,'2':114,'8':48})}};
+    checks:{sourceCount:pos.count===alphas.length&&cov.count===alphas.length&&color.count===alphas.length,spzLoaderAttributes:pos.itemSize===3&&cov.itemSize===6&&color.itemSize===4,actualGaussianSplat:splat.isGaussianSplat===true,normalBlendPath:splat.material.transparent===true&&splat.material.depthWrite===false&&splat.material.blending===THREE.NormalBlending,sortInitialized:sortInitialized===true,identityOrder,orderLocked:splat.autoSort===false,expectedMultiset:mode==='calibration'||JSON.stringify(observedCounts)===JSON.stringify({'1':1779,'2':114,'8':48})}};
   renderer.setRenderTarget(null);renderer.setViewport(0,0,WIDTH,HEIGHT);renderer.clear(true,true,false);await renderer.renderAsync(scene,camera);
   const target=renderer._frameBufferTargets.get(renderer.getCanvasTarget());if(!target)throw new Error('R61 internal framebuffer target absent');
   const raw=await renderer.readRenderTargetPixelsAsync(target,0,0,WIDTH,HEIGHT),decoded=decodeReadback(raw,target.texture.type),center=Array.from(decoded.slice(16,20));
@@ -91,4 +98,3 @@ async function main(){
 }
 try{await main();}catch(error){window.__KAOPU_BASE__={schema:'kaopu-three-mixed-alpha-order-page/r61',status:'error',mode,orderName,bufferName,message:String(error?.message||error),stack:String(error?.stack||'')};window.__KAOPU_READY__=true;}
 </script>
-
