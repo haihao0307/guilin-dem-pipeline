@@ -306,45 +306,48 @@ float bmN(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(
 float noise(vec3 p){return bmN(p);}
 vec3 mmRot(vec3 v,vec3 axis,float a){axis=normalize(axis);float c=cos(a),ss=sin(a);return c*v+ss*cross(axis,v)+(1.-c)*axis*dot(axis,v);}
 vec3 mmFrame(vec3 rawQ){
-  vec3 q=rawQ*.145;
+  vec3 q=rawQ*.28;
   vec3 low=vec3(
-    bmN(rawQ*.021+vec3(3.1,7.2,-2.4)),
-    bmN(rawQ*.019+vec3(-8.3,2.7,4.6)),
-    bmN(rawQ*.023+vec3(1.5,-6.4,9.1))
+    bmN(rawQ*.026+vec3(3.1,7.2,-2.4)),
+    bmN(rawQ*.023+vec3(-8.3,2.7,4.6)),
+    bmN(rawQ*.029+vec3(1.5,-6.4,9.1))
   )-.5;
-  float zone=bmN(rawQ*.014+vec3(17.1,-5.3,8.7));
+  float zone=bmN(rawQ*.017+vec3(17.1,-5.3,8.7));
   vec3 axis=normalize(vec3(.41,.79,.46)+low*.78);
-  q+=low*1.24;
-  q=mmRot(q,axis,(zone-.5)*1.28);
+  q+=low*1.34;
+  q=mmRot(q,axis,(zone-.5)*1.34);
   vec3 warp=vec3(
-    bmN(q*.31+vec3(5.7,-3.9,2.6)),
-    bmN(q*.287+vec3(-4.6,8.1,11.3)),
-    bmN(q*.337+vec3(9.4,3.2,-7.5))
+    bmN(q*.23+vec3(5.7,-3.9,2.6)),
+    bmN(q*.211+vec3(-4.6,8.1,11.3)),
+    bmN(q*.257+vec3(9.4,3.2,-7.5))
   )-.5;
-  return q+warp*(.92+.36*zone);
+  return q+warp*(1.02+.42*zone);
 }
 vec3 mmOrganicData(vec3 rawQ){
   vec3 q=mmFrame(rawQ);
-  float zone=bmN(rawQ*.018+vec3(31.7,7.9,-13.1));
-  float a=bmN(q*.27+vec3(2.1,11.7,-6.4));
-  float b=bmN(q*.59+vec3(-9.6,3.8,14.2));
-  float c=bmN(q*1.31+vec3(7.4,-13.1,4.5));
-  float d0=bmN(q*2.83+vec3(19.2,5.6,-8.7));
-  float e0=bmN(q*6.07+vec3(-3.9,17.6,12.8));
-  float broad=.50*a+.31*b+.19*c;
-  float mid=.41*b+.37*c+.22*d0;
-  float threshold=.60+.08*(zone-.5);
-  float cavity0=smoothstep(threshold,threshold+.19,broad);
-  float rim0=1.-smoothstep(.028,.115,abs(broad-threshold));
-  float cavity1=smoothstep(.69,.88,mid)*(1.-cavity0*.55);
-  float rim1=(1.-smoothstep(.018,.078,abs(mid-.69)))*(1.-cavity0*.55);
-  float pit=smoothstep(.76,.92,e0)*smoothstep(.34,.78,1.-mid);
-  float nodule=smoothstep(.58,.84,d0)*smoothstep(.34,.75,broad)*(1.-cavity0);
-  float lowShape=(broad-.5)*.34+(mid-.5)*.16;
-  float h=lowShape+.32*rim0-.56*cavity0+.15*rim1-.24*cavity1-.10*pit+.09*nodule;
-  h=tanh(h*1.45);
-  float cavity=clamp(cavity0*.78+cavity1*.46+pit*.18,0.,1.);
-  float rim=clamp(rim0*.72+rim1*.45+nodule*.16,0.,1.);
+  float zone=bmN(rawQ*.021+vec3(31.7,7.9,-13.1));
+  float a=bmN(q*.55+vec3(2.1,11.7,-6.4));
+  float b=bmN(q*.97+vec3(-9.6,3.8,14.2));
+  float c=bmN(q*1.87+vec3(7.4,-13.1,4.5));
+  float d0=bmN(q*3.73+vec3(19.2,5.6,-8.7));
+  float e0=bmN(q*7.51+vec3(-3.9,17.6,12.8));
+  float f0=bmN(q*15.13+vec3(13.8,-9.2,21.7));
+  float broad=.45*a+.32*b+.23*c;
+  float mid=.38*b+.37*c+.25*d0;
+  float fine=.45*d0+.35*e0+.20*f0;
+  float threshold=.61+.07*(zone-.5);
+  float cavity0=smoothstep(threshold,threshold+.11,broad);
+  float rim0=1.-smoothstep(.014,.064,abs(broad-threshold));
+  float cavity1=smoothstep(.68,.82,mid)*(1.-cavity0*.52);
+  float rim1=(1.-smoothstep(.011,.050,abs(mid-.68)))*(1.-cavity0*.52);
+  float pit=smoothstep(.72,.87,fine)*smoothstep(.28,.82,1.-mid);
+  float poreRim=(1.-smoothstep(.010,.042,abs(fine-.72)))*(1.-cavity0*.58);
+  float nodule=smoothstep(.57,.82,d0)*smoothstep(.33,.76,broad)*(1.-cavity0);
+  float lowShape=(broad-.5)*.18+(mid-.5)*.10;
+  float h=lowShape+.28*rim0-.44*cavity0+.14*rim1-.22*cavity1+.055*poreRim-.095*pit+.08*nodule;
+  h=tanh(h*1.72);
+  float cavity=clamp(cavity0*.82+cavity1*.50+pit*.24,0.,1.);
+  float rim=clamp(rim0*.78+rim1*.50+poreRim*.18+nodule*.16,0.,1.);
   return vec3(h,cavity,rim);
 }
 float mmSurface(vec3 rawQ){return mmOrganicData(rawQ).x;}
@@ -368,8 +371,8 @@ albedo=mix(albedo,vec3(.40,.31,.215),smoothstep(.58,.77,drift)*.19);
 albedo=mix(albedo,vec3(.69,.686,.61),seams);
 float fresh=smoothstep(.35,.78,c);albedo=mix(albedo,vec3(.65,.646,.607),mineral*fresh*.23);
 albedo*=.975+.16*(grain-.5)+.045*field;
-vec3 mmData=mmOrganicData(q),mmFineData=mmOrganicData(q*1.91+vec3(2.9,-1.7,4.1));float mmLo=mmData.x,mmFine=mmFineData.x;float shell=(d.x<2.5?1.:0.)*uScope;float height=field*.011+(grain-.5)*.0042+shell*(mmLo*.0054+mmFine*.0017);
-rough=clamp((family==1?.92:family==2?.91:family==5?.88:.80)+.12*(drift-.5)-mineral*fresh*.08+shell*(.025*mmFine+.055*mmData.y+.028*mmData.z),.58,.99);albedo*=1.+shell*(.022*mmLo-.045*mmData.y+.018*mmData.z);
+vec3 mmData=mmOrganicData(q),mmFineData=mmOrganicData(q*1.37+vec3(2.9,-1.7,4.1));float mmLo=mmData.x,mmFine=mmFineData.x;float shell=(d.x<2.5?1.:0.)*uScope;float height=field*.011+(grain-.5)*.0042+shell*(mmLo*.0072+mmFine*.0026);
+rough=clamp((family==1?.92:family==2?.91:family==5?.88:.80)+.12*(drift-.5)-mineral*fresh*.08+shell*(.030*mmFine+.075*mmData.y+.034*mmData.z),.58,.99);albedo*=1.+shell*(.026*mmLo-.065*mmData.y+.024*mmData.z);
 if(family==5){albedo=mix(albedo,vec3(.56,.516,.438),.24);height*=.87;}
 if(family==6){albedo=mix(vec3(.285,.31,.29),vec3(.565,.537,.456),clamp(.54+(a-.5)*1.4,0.,1.));albedo=mix(albedo,vec3(.70,.69,.626),mineral*.12);height=field*.0028+(grain-.5)*.0022;rough=clamp(.80+.07*(b-.5),.50,.96);}
 float rain=clamp(e.z,0.,1.),stain=smoothstep(.27,.88,rain),retention=clamp(.68*rain+.20*(1.-sun)+.24*(1.-ao),0.,1.);
@@ -404,7 +407,7 @@ albedo*=mix(1.,.73,uWet);rough=.99;
 }else{albedo=mix(vec3(.20,.25,.12),vec3(.34,.36,.18),b);rough=1.;}
 if(uMode==1)albedo=vec3(.55,.57,.53);
 if(uMode==2){float ny=normalize(n0).y;albedo=ny<-.10?mix(vec3(.85,.37,.17),vec3(.66,.15,.08),clamp(-ny,0.,1.)):mix(vec3(.32,.46,.55),vec3(.56,.69,.39),clamp(ny,0.,1.));}
-if(uMode==3){frag=vec4(normalize(n0)*.5+.5,1.);return;}if(uMode==4){frag=vec4(mix(vec3(.22,.25,.22),vec3(.19,.66,.89),clamp(e.z,0.,1.)),1.);return;}if(uMode==5){vec3 m=mmOrganicData(q);float v=clamp(.52+.27*m.x-.18*m.y+.12*m.z,0.,1.);frag=vec4(vec3(v),1.);return;}
+if(uMode==3){frag=vec4(normalize(n0)*.5+.5,1.);return;}if(uMode==4){frag=vec4(mix(vec3(.22,.25,.22),vec3(.19,.66,.89),clamp(e.z,0.,1.)),1.);return;}if(uMode==5){vec3 m=mmOrganicData(q);float v=clamp(.50+.33*m.x-.23*m.y+.18*m.z,0.,1.);frag=vec4(vec3(v),1.);return;}
 if(uSelect>0&&int(e.y+.1)==uSelect)albedo=mix(albedo,vec3(.84,.62,.27),.40);
 albedo=linearize(albedo);
 vec3 L=normalize(vec3(-.65,.74,.46)),V=normalize(uEye-p),H=normalize(L+V);float nl=max(0.,dot(N,L)),nv=max(.001,dot(N,V)),nh=max(0.,dot(N,H)),vh=max(0.,dot(V,H));
