@@ -23,6 +23,7 @@ CORE_FILES = [
     "site/dist/r3-8/index.html",
     "site/dist/r3-8/bootstrap.js",
     "site/dist/r3-8/soil-context.js",
+    "site/dist/r3-8/soil-pair-loader.js",
     "site/dist/r3-8/environment-context.js",
     "site/dist/r3-8/world-score.js",
     "site/dist/r3-8/style.css",
@@ -45,7 +46,7 @@ def collect(repo: Path) -> list[Path]:
         if p.is_file():
             files[p.relative_to(repo).as_posix()] = p
 
-    for root_rel in ["tools/r3-8", "records/R3_8"]:
+    for root_rel in ["tools/r3-8", "tools/r3-9", "records/R3_8"]:
         root = repo / root_rel
         if not root.is_dir():
             continue
@@ -107,7 +108,7 @@ def main() -> int:
             "browser binary rasters",
             "offline Python wheels/dependencies",
         ],
-        "semanticNote": "Soil Q0.5 and uncertainty are distinct evidence channels, not duplicates.",
+        "semanticNote": "Soil Q0.5 and uncertainty are distinct evidence channels, not duplicates; current runtime codec combines them losslessly into one transport payload per property/depth pair.",
         "logicalFileCount": len(files),
         "uniqueFileCount": len(canonical),
         "duplicateAliasCount": len(aliases),
