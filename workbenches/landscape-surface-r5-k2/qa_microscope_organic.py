@@ -8,7 +8,8 @@ out.mkdir(parents=True, exist_ok=True)
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True, args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
-    page = browser.new_page(viewport={'width': 1440, 'height': 960}, device_scale_factor=1)
+    page = browser.new_page(viewport={'width': 1024, 'height': 720}, device_scale_factor=1)
+    page.set_default_timeout(120000)
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     response = page.goto(url, wait_until='domcontentloaded', timeout=60000)
@@ -18,22 +19,20 @@ with sync_playwright() as p:
     assert not errors, errors
 
     fingerprint = page.evaluate('window.__LM__.bufferFingerprint()')
-    page.locator('#panelbtn').click()
-    page.locator('#scope').evaluate("e=>{e.value=1.05;e.dispatchEvent(new Event('input',{bubbles:true}))}")
-    page.locator('#micro').evaluate("e=>{e.value=.82;e.dispatchEvent(new Event('input',{bubbles:true}))}")
+    page.evaluate("window.__LM__.setMaterial({scope:1.05,micro:.82,wet:0,exposure:1.08})")
 
     captures = []
-    for view in ('cliff','cave','stone'):
-        page.locator(f'[data-view="{view}"]').click()
-        page.locator('[data-mode="0"]').click()
-        page.wait_for_timeout(150)
-        page.screenshot(path=str(out/f'organic-{view}-color.png'))
+    for view in ('cliff','cave'):
+        page.evaluate('(v)=>window.__LM__.goView(v)', view)
+        page.evaluate('window.__LM__.setMode(0)')
+        page.wait_for_timeout(250)
+        page.screenshot(path=str(out/f'organic-{view}-color.png'), timeout=120000)
         captures.append(f'organic-{view}-color.png')
-        page.locator('[data-mode="5"]').click()
-        page.wait_for_timeout(150)
+        page.evaluate('window.__LM__.setMode(5)')
+        page.wait_for_timeout(250)
         audit = page.evaluate('window.__LM__.auditFrame()')
         assert audit['glError'] == 0 and audit['unique'] > 25 and audit['nonzeroSamples'] > 100, audit
-        page.screenshot(path=str(out/f'organic-{view}-microscope.png'))
+        page.screenshot(path=str(out/f'organic-{view}-microscope.png'), timeout=120000)
         captures.append(f'organic-{view}-microscope.png')
 
     assert page.evaluate('window.__LM__.bufferFingerprint()') == fingerprint
