@@ -26,7 +26,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
-          test -f handoffs/wenzhou-r3-8-current-full-20260912/08_LEAN_CONTINUATION_POLICY_20260913.md
+          test -f handoffs/wenzhou-r3-8-current-full-20260912/06_PACKAGE_SCOPE.md
+          test ! -f tools/r3-handoff/build_current_full_handoff.py
+          test ! -f handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER
 
       - name: Build lean continuation package
         env:
@@ -41,7 +43,7 @@ jobs:
           python -m zipfile -t /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip
           test -s /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${SOURCE_SHA}.zip.report.json
 
-      - name: Enforce carry-size ceiling
+      - name: Enforce carry-size and dedup gates
         env:
           SOURCE_SHA: ${{ github.sha }}
         run: |
@@ -53,7 +55,8 @@ jobs:
           assert r['fullRestartBaseEmbedded'] is False
           assert r['permanentEvidenceEmbedded'] is False
           assert r['browserBinaryPayloadsEmbedded'] is False
-          assert r['uncompressedBytes'] <= 8 * 1024 * 1024
+          assert r['contentDeduplicated'] is True
+          assert r['uniqueUncompressedBytes'] <= 8 * 1024 * 1024
           assert r['bytes'] <= 8 * 1024 * 1024
           print(r)
           PY
