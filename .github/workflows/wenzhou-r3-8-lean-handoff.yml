@@ -105,6 +105,7 @@ jobs:
       - name: Commit generated soil pair payloads
         run: |
           set -euo pipefail
+          BRANCH='feature/wenzhou-r3-8-overlay-transform-contract-20260913'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add site/dist/r3-8/data/soil-pairs
@@ -112,5 +113,7 @@ jobs:
             echo 'soil pair payloads already current'
           else
             git commit -m 'data(wenzhou): add lossless dual-channel soil payloads'
-            git push origin HEAD:feature/wenzhou-r3-8-overlay-transform-contract-20260913
+            git fetch origin "$BRANCH"
+            git rebase "origin/$BRANCH"
+            git push origin HEAD:"$BRANCH"
           fi
