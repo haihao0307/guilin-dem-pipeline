@@ -3,6 +3,7 @@ import gzip,hashlib,json,subprocess
 import numpy as np
 ROOT=Path(__file__).resolve().parents[2]
 SITE=ROOT/'site/dist/r3-8'
+VERIFIED_R38_RUNTIME='3018da201a2ef6b5d122522e85bbbb5b91f8a34d'
 errors=[]
 def check(ok,label):
     if not ok:errors.append(label)
@@ -65,7 +66,7 @@ for r in water['layers']:
     if r['product'] in ['seasonality','extent']:check('2022-2024' in r['period'],'partial water timeline')
     if r['product']=='change':check(any(x['value']=='254' and 'Unable to compute' in x['label'] for x in r['palette']),'change missing-data semantics')
 check(all(v is False for v in water['truthBoundary'].values()),'water truth boundary')
-frozen=subprocess.run(['git','diff','--exit-code','bb01ee52b21cfbd3406ace8e9e8f81c7ad4ad92b','--',*[f'site/dist/r3-{i}' for i in range(1,8)],'site/dist/r3','site/dist/vendor'],cwd=ROOT,capture_output=True)
-check(frozen.returncode==0,'historical runtime changed')
-print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
+frozen=subprocess.run(['git','diff','--exit-code',VERIFIED_R38_RUNTIME,'--',*[f'site/dist/r3-{i}' for i in range(1,8)],'site/dist/r3','site/dist/vendor'],cwd=ROOT,capture_output=True)
+check(frozen.returncode==0,'historical runtime changed since verified R3.8 candidate')
+print(json.dumps({'passed':not errors,'soilLayers':96,'soilPairs':pair_manifest['pairCount'],'soilPairCompressedBytes':pair_manifest['compressedBytes'],'wrbProbabilityLayers':30,'waterLayers':6,'historicalFreezeAnchor':VERIFIED_R38_RUNTIME,'frozenR3ThroughR37':frozen.returncode==0,'errors':errors},ensure_ascii=False,indent=2))
 raise SystemExit(bool(errors))
