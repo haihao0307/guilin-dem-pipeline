@@ -137,6 +137,21 @@ async function main() {
     ['root3', 1.0, Math.sqrt(3.0)],
   ];
 
+  // R50 independently swept every ULP from -64..64. Its double-vs-float32
+  // predicate disagreements occur only at -1, 0, 1, 2. R51 therefore keeps
+  // every known dangerous ULP plus near-boundary and far-side sentinels, while
+  // avoiding 4,644 serial browser/GPU readbacks on software WebGL.
+  const r50DivergenceUlpSteps = [-1, 0, 1, 2];
+  const ulpSteps = [-64, -8, -4, -2, -1, 0, 1, 2, 4, 8, 64];
+  const expectedCaseCount = scales.length * directions.length * ulpSteps.length;
+  window.__KAOPU_PROGRESS__ = {
+    schema: 'kaopu-gaussian-three-tsl-cutoff-progress/r51',
+    requestedMode,
+    actualBackend,
+    completed: 0,
+    total: expectedCaseCount,
+  };
+
   const cases = [];
   const doubleMismatches = [];
   const floatMismatches = [];
@@ -146,7 +161,7 @@ async function main() {
       const baseX = f32(qx0 * scale);
       const distanceY = f32(qy0 * scale);
       const baseBits = f32Bits(baseX);
-      for (let ulpStep = -64; ulpStep <= 64; ulpStep++) {
+      for (const ulpStep of ulpSteps) {
         const distanceX = bitsF32(baseBits + ulpStep);
         const centerX = f32(-distanceX);
         const centerY = f32(-distanceY);
@@ -180,6 +195,13 @@ async function main() {
         cases.push(c);
         if (doubleCovered !== backendCovered) doubleMismatches.push(c);
         if (floatCovered !== backendCovered) floatMismatches.push(c);
+        window.__KAOPU_PROGRESS__ = {
+          ...window.__KAOPU_PROGRESS__,
+          completed: cases.length,
+          scale,
+          direction,
+          ulpStep,
+        };
       }
     }
   }
@@ -208,10 +230,12 @@ async function main() {
       renderTarget: 'RGBA8 1x1 coverage target',
       scaleCount: scales.length,
       directionCount: directions.length,
-      xUlpSteps: [-64, 64],
+      xUlpSteps: ulpSteps,
+      r50DivergenceUlpSteps,
       caseCount: cases.length,
+      samplingStrategy: 'R50-informed focused boundary set: all R50 divergence ULPs plus near-boundary and +/-64 sentinels',
       cutoffRule: 'TSL Discard when r2 > 4.0',
-      note: 'Coverage-only browser probe. Target precision differs from R50 RGBA32F, but discard coverage is measured before color storage.',
+      note: 'Coverage-only browser probe. R50 already exhaustively swept -64..64 with an independent shader; R51 directly checks Three.js r186 TSL on the evidence-bearing boundary subset to avoid serial software-GPU readback timeout.',
     },
     summary: {
       doublePredicateMismatchCount: doubleMismatches.length,
@@ -230,7 +254,10 @@ async function main() {
       float32MismatchFirst: floatMismatches[0] || null,
     },
     checks: {
-      allCasesExecuted: cases.length === scales.length * directions.length * 129,
+      allCasesExecuted: cases.length === expectedCaseCount,
+      r50DivergenceStepsIncluded: r50DivergenceUlpSteps.every(step => ulpSteps.includes(step)),
+      float32ModelMatchesBackendCoverage: floatMismatches.length === 0,
+      doublePredicateHasCoverageCounterexample: doubleMismatches.length > 0,
       exactCutoffIsIncluded: exactCases.every(c => c.backendCovered),
       bothSidesOfBoundaryWereSampled: cases.some(c => c.backendCovered) && cases.some(c => !c.backendCovered),
     },
@@ -250,6 +277,7 @@ try {
     schema: 'kaopu-gaussian-three-tsl-cutoff/r51',
     status: 'error',
     requestedMode,
+    progress: window.__KAOPU_PROGRESS__ || null,
     message: String(error?.message || error),
     stack: String(error?.stack || ''),
   };
