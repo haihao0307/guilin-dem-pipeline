@@ -1,0 +1,82 @@
+{
+  "schema": "kaopu-gaussian-three-tsl-cutoff/r51",
+  "status": "candidate-observation",
+  "requestedMode": "webgl",
+  "actualBackend": "webgl",
+  "threeRevision": "186",
+  "identity": {
+    "backendClass": "WebGLBackend",
+    "rendererClass": "WebGPURenderer",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36",
+    "platform": "Linux x86_64",
+    "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "glslVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "fixture": {
+    "renderTarget": "RGBA8 129x1 coverage row",
+    "scaleCount": 6,
+    "directionCount": 6,
+    "xUlpSteps": [-64, 64],
+    "ulpStepCountPerDirection": 129,
+    "caseCount": 4644,
+    "renderSubmissionCount": 36,
+    "readbackCount": 36,
+    "tslMaterialCount": 1,
+    "batchingStrategy": "129 quads share one TSL material; per-case x/y/scale are float attributes; one scene submission and one row readback per scale/direction",
+    "cutoffRule": "TSL Discard when r2 > 4.0",
+    "note": "Complete R50-compatible -64..64 ULP sweep using direct Three.js r186 TSL. Batching changes only execution scheduling and evidence collection, not tested cases."
+  },
+  "summary": {
+    "doublePredicateMismatchCount": 32,
+    "float32PredicateMismatchCount": 0,
+    "doubleOutsideBackendInsideCount": 32,
+    "doubleInsideBackendOutsideCount": 0,
+    "minimumDoubleExcessAmongIncludedMismatches": 2.6925955687318037e-8,
+    "maximumDoubleExcessAmongIncludedMismatches": 4.2355672125182764e-7,
+    "mismatchCountsByDirection": {
+      "axis": 0,
+      "shallow": 5,
+      "one-one-root2": 6,
+      "diagonal": 6,
+      "steep": 8,
+      "root3": 7
+    },
+    "exactTwiceScaleCasesCovered": 6,
+    "exactTwiceScaleCaseCount": 6
+  },
+  "counterexamples": {
+    "doubleOutsideBackendInsideFirst": {
+      "scale": 0.0009765625,
+      "direction": "shallow",
+      "xUlpStepFromDirectionBase": 0,
+      "distance": [0.0018911052029579878, 0.00048828125],
+      "r2Double": 4.000000211950066,
+      "r2Float32Model": 4,
+      "doubleCovered": false,
+      "float32ModelCovered": true,
+      "backendAlpha": 255,
+      "backendCovered": true
+    },
+    "doubleInsideBackendOutsideFirst": null,
+    "float32MismatchFirst": null
+  },
+  "checks": {
+    "allCasesExecuted": true,
+    "fullR50UlpRangeCovered": true,
+    "singleTslMaterialUsed": true,
+    "renderSubmissionBatchCountIsExpected": true,
+    "readbackBatchCountIsExpected": true,
+    "float32ModelMatchesBackendCoverage": true,
+    "doublePredicateHasCoverageCounterexample": true,
+    "exactCutoffIsIncluded": true,
+    "bothSidesOfBoundaryWereSampled": true
+  },
+  "limits": {
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}
