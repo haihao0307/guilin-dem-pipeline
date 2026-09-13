@@ -1,3 +1,4 @@
+# benchmark revision 1: WRB + JRC active uint8 payloads
 import gzip, json
 from pathlib import Path
 
