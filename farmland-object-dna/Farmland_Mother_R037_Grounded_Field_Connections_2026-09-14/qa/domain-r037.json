@@ -1,0 +1,157 @@
+{
+  "version": "FARMLAND_R037_GROUNDED_FIELD_CONNECTIONS_20260914",
+  "ok": true,
+  "errors": [],
+  "validation": {
+    "ok": true,
+    "errors": [],
+    "visualSourceVersion": "FARMLAND_R037_GROUNDED_FIELD_CONNECTIONS_20260914",
+    "fieldCount": 14,
+    "junctionCount": 4,
+    "carrierCount": 6,
+    "connections": 22,
+    "ports": 28,
+    "bundProfiles": 2,
+    "canalProfiles": 6,
+    "dropTransitions": 10,
+    "optionalCarriers": 1,
+    "frame": {
+      "id": "farmland-r028-local",
+      "unit": "m",
+      "axes": "x east, y up, z south",
+      "datum": "synthetic local zero",
+      "surveyAccuracy": null,
+      "worldLocation": null
+    },
+    "worldSourceVersion": "FARMLAND_R028_WATERSHED_20260912",
+    "runtimeSourceVersion": "FARMLAND_R029_RUNTIME_LIGHT_20260913",
+    "hierarchySourceVersion": "FARMLAND_R030_IRRIGATION_HIERARCHY_20260913",
+    "morphologySourceVersion": "FARMLAND_R031_FIELD_BUND_CANAL_MORPHOLOGY_20260913",
+    "controlSourceVersion": "FARMLAND_R032_FIELD_CONTROL_MAINTENANCE_20260913",
+    "maintenanceProfiles": 4,
+    "erosionZones": 10,
+    "synthetic": true,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "scenarios": [
+    {
+      "scenario": "normal",
+      "error": null,
+      "time": 120,
+      "rain": 0,
+      "balance": 3.637978807091713e-11,
+      "activeEdges": 21
+    },
+    {
+      "scenario": "dry",
+      "error": null,
+      "time": 120,
+      "rain": 0,
+      "balance": 0,
+      "activeEdges": 21
+    },
+    {
+      "scenario": "backwater",
+      "error": null,
+      "time": 120,
+      "rain": 0,
+      "balance": 8.731149137020111e-11,
+      "activeEdges": 21
+    },
+    {
+      "scenario": "blocked",
+      "error": null,
+      "time": 120,
+      "rain": 0,
+      "balance": 2.1827872842550278e-11,
+      "activeEdges": 20
+    },
+    {
+      "scenario": "breach",
+      "error": null,
+      "time": 120,
+      "rain": 0,
+      "balance": 2.1827872842550278e-11,
+      "activeEdges": 21
+    },
+    {
+      "scenario": "flood",
+      "error": null,
+      "time": 120,
+      "rain": 14.995470022435738,
+      "balance": 2.680344834971038e-11,
+      "activeEdges": 21
+    }
+  ],
+  "channelClearance": {
+    "min": 0.13499999999999623,
+    "max": 0.13500000000000334,
+    "below": 0,
+    "worst": {
+      "edge": "spill-T1-T2",
+      "t": 0.056,
+      "x": -23.51022044444444,
+      "z": -114.94415171472143,
+      "waterY": 14.0488,
+      "groundY": 13.913800000000004,
+      "clearance": 0.13499999999999623
+    }
+  },
+  "actorCounts": {
+    "person": 5,
+    "water_buffalo": 1
+  },
+  "portSeparation": {
+    "T1": 8.928656291556191,
+    "T2": 66.58815874623183,
+    "T3": 56.36077550154538,
+    "T4": 9.204225707583289,
+    "T5": 70.0636867794969,
+    "T6": 61.55706916531483,
+    "T7": 9.161258212370793,
+    "T8": 68.45371035608208,
+    "T9": 60.922978051149585,
+    "T10": 62.85218053188999,
+    "F1": 43.73660295388427,
+    "F2": 47.986793171872414,
+    "F3": 40.36839848939316,
+    "F4": 20.79468007483468
+  },
+  "grammar": {
+    "sourceBacked": {
+      "catchment": "forested upper catchment / springs feed the irrigation network",
+      "carriers": "trunk canal distributes to branch ditches and terrace groups",
+      "basin": "each paddy is a level basin retained by compacted bunds",
+      "cascade": "controlled outlets may pass water to a lower terrace or return/drain carrier",
+      "husbandry": "water buffalo and human labour are valid actors in the integrated terrace system"
+    },
+    "geometry": {
+      "continuousLandform": "rear mountains -> one cultivated hillside -> footslope -> flat paddy plain",
+      "allObjectsGrounded": true,
+      "terracesCarvedIntoSlope": true,
+      "contourFollowing": true,
+      "parallelBandsForbidden": true,
+      "widthVariation": "terrace width changes with slope opportunity and local contour curvature",
+      "inletOutletSeparation": "prefer separated inlet/outlet positions to avoid a purely symbolic short circuit",
+      "bundContinuity": "bund is continuous except at explicit ports, paths or documented failure"
+    },
+    "composition": {
+      "hierarchy": [
+        "forested catchment",
+        "terrace amphitheatre",
+        "main canal spine",
+        "reflective paddies",
+        "human/animal scale anchors"
+      ],
+      "rhythm": "nested contour curves with nonuniform spacing; avoid equal repetition",
+      "contrast": "bright crop planes against darker bund faces; limited water reflections as focal accents",
+      "asymmetry": "variation is correlated with terrain and management, not white-noise randomness"
+    }
+  },
+  "claims": {
+    "visualAcceptance": false,
+    "productionReady": false,
+    "regionalSurveyTruth": false
+  }
+}

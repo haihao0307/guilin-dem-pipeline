@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#183529"><title>Farmland R037 · 梯田生态与水系工作台</title>
+<meta name="description" content="从高处来水到河湾稻田，在同一片山水里观察梯田、插秧与灌排关系。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23183529'/%3E%3Cpath d='M9 30Q30 20 12 11M14 30Q32 17 24 8' fill='none' stroke='%23d6e7a1' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body data-version="FARMLAND_R037_GROUNDED_FIELD_CONNECTIONS_20260914" data-runtime-ready="false">
+<main id="landscape" aria-label="可旋转、缩放的农田三维场景"></main>
+<header><div class="identity"><span class="brand">FARMLAND <b>R037</b></span><h1>森林来水 · 梯田 · 人与水牛</h1><p>从高位森林水源、主渠分水、田口跌水到下游排水，按同一套对象关系组织梯田；田块顺等高线变化，人和水牛作为真实尺度锚点。</p></div><button id="infoButton" aria-expanded="false" aria-controls="info" title="查看场景说明">田与水 <span>↗</span></button></header>
+<section id="info" hidden aria-label="田与水的关系">
+<h2>水有来处，也有去处。</h2>
+<p>R037 把参考图和外部学习收束成一套梯田语法：高位森林/山泉先进入主渠，主渠沿高位坡脚保持输水，再在分水点进入支渠和田块；梯田顺地形等高线形成，宽窄随局部坡势和曲率改变；每块田只有明确进水口和排水口，田间跌水只发生在局部缺口。人、水牛、稻株、田埂和水深共用米制尺度。</p>
+<dl><div><dt>田块</dt><dd>10 级坡地梯田 · 4 块河湾水田</dd></div><div><dt>田埂</dt><dd>梯田 / 平坝两种参数化截面</dd></div><div><dt>水路</dt><dd>主渠 · 支渠 · 回水 · 排水 · 局部跌水</dd></div><div><dt>田口</dt><dd>28 个明确进/排水口 · openness 0–1</dd></div><div><dt>维护</dt><dd>maintained / worn / eroded / patched 候选状态</dd></div><div><dt>冲刷</dt><dd>10 个田间跌水局部湿泥 / 冲刷显示区</dd></div><div><dt>交互</dt><dd>点击田块 → 控制排水口 → 推进水力状态</dd></div><div><dt>尺度</dt><dd>对象、田埂、水路、人、秧苗和水牛共用米制坐标</dd></div><div><dt>生产关系</dt><dd>插秧者 · 田埂行走 · 田口维护 · 水牛</dd></div></dl>
+<p class="small">形态参考来自用户提供的多地区稻田、梯田、水渠、田口和竹制输水构造照片；它们只用于抽取结构类别，不能推出某地、某年代的实测尺寸。R037 的维护状态、冲刷尺度、人物/水牛位置和尺寸仍是合成候选，不代表真实年代或维修频率。竹制高架水槽继续只登记为可选 carrier 类型，默认不接入当前场景。</p>
+<a href="https://www.fao.org/4/r4082e/r4082e06.htm" target="_blank" rel="noopener">灌排关系参考 · FAO</a>
+</section>
+<div id="loader" role="status"><span class="loaderLine"></span><p>正在走进这片田…</p></div>
+<div id="fallback" hidden role="alert"><h2>三维场景暂时无法启动</h2><p id="errorText">请使用支持 WebGL 2 的浏览器。</p><button onclick="location.reload()">重新加载</button></div>
+<div id="selection" hidden aria-live="polite"></div>
+<footer>
+<nav aria-label="观察位置"><button data-view="overview" class="active">山水总览</button><button data-view="terrace">梯田</button><button data-view="gate">田口跌水</button><button data-view="canal">主渠近景</button><button data-view="farmers">插秧</button><button data-view="buffalo">水牛</button><button data-view="river">河湾</button></nav>
+<div class="tools"><button id="flowButton" aria-pressed="false"><span class="flowIcon">≋</span> 看水怎么流</button><button id="pauseButton" aria-pressed="false" title="暂停风和水流动画">暂停</button></div>
+</footer>
+<div class="caption"><span id="viewCaption">后山高地 · 连续斜坡梯田 · 坡脚平坝</span><span class="gesture">拖动环看 / 滚轮缩放</span></div>
+<aside id="waterPanel" hidden aria-live="polite"><b>森林/山泉 → 高位主渠 → 分水支渠 → 田口/梯田 → 回水 → 下游河段</b><p>点击任意水田查看当前水深、维护状态与排水口；选中后可直接控制田口。</p><div id="waterStats"></div></aside>
+<aside id="gatePanel" hidden aria-live="polite"><b id="gateTitle">田口控制</b><p id="gateDetail">先点击一块水田。</p><div class="gateActions"><button data-gate="1">全开</button><button data-gate="0.5">半开</button><button data-gate="0">关闭</button><button id="advanceButton">推进 15 s</button></div><div id="gateReadout"></div></aside>
+<script>function startupFailure(){document.getElementById('fallback').hidden=false;document.getElementById('loader').hidden=true;}window.addEventListener('error',startupFailure,true);window.addEventListener('unhandledrejection',startupFailure);</script>
+<script type="module" src="scene.mjs"></script>
+</body></html>
