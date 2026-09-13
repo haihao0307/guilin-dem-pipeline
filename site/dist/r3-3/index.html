@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#101b27"><meta name="description" content="小温州 R3.3：继承 R3.2 的真实 DEM、人眼相机与演示海面，新增证据驱动的近地土壤外观声部。">
+ <title>小温州 · 三维地形 R3.3</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="../r3-2/style.css">
+ <link rel="stylesheet" href="./style.css">
+ <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+ <script>
+  (()=>{const nativeFetch=window.fetch.bind(window);window.fetch=(input,init)=>{if(typeof input==='string'){if(input.startsWith('/r3/data/'))input=new URL('../r3/data/'+input.slice('/r3/data/'.length),location.href).href;else if(input.startsWith('/r3-1/data/'))input=new URL('../r3-1/data/'+input.slice('/r3-1/data/'.length),location.href).href;}return nativeFetch(input,init);};})();
+ </script>
+</head>
+<body>
+ <main id="stage" aria-label="温州 R3.3 三维地形与证据驱动近地表面">
+   <canvas id="terrain" tabindex="0" aria-label="三维地形；普通模式方向键旋转、加减号缩放；人眼模式拖动环视，WASD 行走，方向键转头，加减号前后移动，R键复位"></canvas>
+   <svg id="river-leaders" aria-hidden="true"></svg>
+   <header class="topbar">
+     <div class="brand"><span class="brand-mark" aria-hidden="true">山</span><div><h1>小温州<span>三维地形</span></h1><p>真实 DEM · R3.3</p></div></div>
+     <div class="view-switch" role="group" aria-label="地形范围"><button id="mountains" class="active" aria-pressed="true">山地近景</button><button id="overview" aria-pressed="false">全域</button></div>
+     <button id="info-button" class="quiet" aria-expanded="false" aria-controls="info">资料说明</button>
+   </header>
+   <section class="focus-panel" aria-label="位置与显示设置">
+     <label for="location">查看位置</label>
+     <select id="location"><option value="mountains">山地近景</option><option value="overview">全域</option></select>
+     <label for="exaggeration">地形比例</label>
+     <select id="exaggeration"><option value="1">真实比例 · 1×</option><option value="3">起伏增强 · 3×</option><option value="6">起伏增强 · 6×</option></select>
+     <div id="eye-card" class="eye-card" hidden><strong>1.6 米人眼视角</strong><span id="eye-status">相机锚定到显示曲面。</span><small>1.6 米只描述相机与显示曲面的关系，不是测绘精度。</small></div>
+     <div class="hydro-options"><label><input id="show-rivers" type="checkbox" checked> 河流标注</label><label><input id="show-coast" type="checkbox" checked> 海岸线</label><label><input id="show-sea" type="checkbox" checked> 演示海面</label><label><input id="show-surface" type="checkbox" checked> 土壤外观演示</label><small>海面与土壤外观都是独立显示声部；不写回 DEM。</small></div>
+     <div id="surface-card" class="surface-card" hidden>
+       <strong id="surface-title">土壤外观演示</strong>
+       <span id="surface-status">读取证据…</span>
+       <div class="surface-metrics"><b id="surface-clay">黏土 —</b><b id="surface-sand">砂 —</b><b id="surface-silt">粉砂 —</b><b id="surface-soc">SOC —</b></div>
+       <small id="surface-source">模型预测只用于外观演示。</small>
+     </div>
+     <div id="query-card" hidden><h2 id="query-title"></h2><p id="query-elevation"></p><small id="query-surface"></small><br><small id="query-anchor"></small></div>
+   </section>
+   <div id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span id="loading-text">正在读取真实地形…</span><button id="retry" hidden>重试</button></div>
+   <div class="compass" aria-label="北方向"><span id="north-arrow">↑</span><b>北</b></div>
+   <nav class="camera-controls" aria-label="相机控制">
+     <button id="zoom-in" title="放大" aria-label="放大">＋</button><button id="zoom-out" title="缩小" aria-label="缩小">−</button>
+     <span class="separator"></span><button id="turn-left" title="向左旋转" aria-label="向左旋转">↶</button><button id="turn-right" title="向右旋转" aria-label="向右旋转">↷</button>
+     <span class="separator"></span><button id="eye-view" aria-pressed="false">人眼 1.6m</button><button id="top-view">俯视</button><button id="reset">复位</button>
+   </nav>
+   <footer><div class="caption"><strong id="view-title">山地近景</strong><span id="render-status" role="status" aria-live="polite">准备地形</span></div><p id="gesture-hint" class="gesture-hint">拖动旋转 · 滚轮缩放 · 双指平移</p><div class="height-legend"><span>低</span><i></i><span>高</span></div></footer>
+   <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · ODbL</a>
+   <aside id="info" class="info-panel" hidden aria-label="资料说明">
+      <button id="close-info" class="close" aria-label="关闭资料说明">×</button><h2>R3.3 增加了什么</h2>
+      <p>R3.3 直接继承已验证的 R3.2 地形、人眼相机、河流/海岸和演示海面，只新增证据驱动的近地表面声部；R3.2 固定版本不改。</p>
+      <dl>
+        <dt>地形真值</dt><dd>仍来自 R3.1 锁定 DEM。格距 12.5 米，来源信息尺度约 30 米；高程基准和独立物理误差仍未闭合。R3.3 不新增高度测量。</dd>
+        <dt>1.6 米人眼视角</dt><dd>继承 R3.2：相机在 1× 显示比例下维持在当前有效显示三角面上方 1.6 米，并沿移动路径检查有效支撑。</dd>
+        <dt>演示海面</dt><dd>继承 R3.2：独立环境显示层，演示基准 0 米、程序化波幅约 0.22 米；不是潮位、平均海平面、海床或 Ocean Mother 物理真值。</dd>
+        <dt>土壤证据</dt><dd>12 个查询点来自已锁定 OBJECT_EVIDENCE_R2_2。土壤属性为 SoilGrids 250 米预测格网、0–5 cm 深度；预测分位数不能建立脚下局部测量精度。</dd>
+        <dt>土壤外观演示</dt><dd>只有在 query-01 至 query-12 证据近景中显示。黏土、砂、粉砂和 SOC 的均值用于控制程序化颜色与颗粒外观；细小颗粒不是照片、实测纹理或真实几何。表面层只做约 2 cm 的视觉抬升防止 Z-fighting，不改变 DEM 或人眼地表合同。</dd>
+        <dt>为什么不直接做道路/建筑/树木</dt><dd>现有锁定证据没有提供这些对象的完整位置、形状、组成、时间与误差合同。把它们从 DEM 或土壤预测里“猜出来”会把视觉合理性偷换成世界真值，所以仍挂起等待独立来源。</dd>
+        <dt>显示近似</dt><dd id="approximation-info">显示三角面近似原格网曲面；显示误差与实测误差分别记录。</dd>
+      </dl>
+      <a href="../r3-1/data/terrain.json" target="_blank" rel="noreferrer">查看锁定地形规则</a><br>
+      <a href="../../../inputs/knowledge-r2-2/OBJECT_EVIDENCE_R2_2.json" target="_blank" rel="noreferrer">查看 R3.3 使用的对象证据</a>
+   </aside>
+ </main>
+ <script type="module" src="./bootstrap.js"></script>
+</body></html>
