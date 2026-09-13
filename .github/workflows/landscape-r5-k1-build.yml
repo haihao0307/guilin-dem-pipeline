@@ -1,0 +1,39 @@
+name: Landscape R5 K1 Microscope candidate
+on:
+  push:
+    branches: [feature/landscape-mother-karst-living-r1-20260913]
+    paths:
+      - 'workbenches/landscape-surface-r5-k1/build_rillenkarren_microscope.py'
+      - '.github/workflows/landscape-r5-k1-build.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-mother-karst-living-r1-20260913
+      - name: Build guarded R5.K1 candidate
+        run: python3 workbenches/landscape-surface-r5-k1/build_rillenkarren_microscope.py
+      - name: Verify original R5 remains unchanged
+        run: |
+          echo 'ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2  workbenches/landscape-surface-r5/index.html' | sha256sum -c -
+          test -s workbenches/landscape-surface-r5-k1/index.html
+          python3 - <<'PY'
+          import json
+          p='workbenches/landscape-surface-r5-k1/build.json'
+          d=json.load(open(p))
+          assert d['macroGeometryChanged'] is False
+          assert d['worldSourceChanged'] is False
+          assert d['visualApproved'] is False
+          print(d['candidateSha256'], d['candidateBytes'])
+          PY
+      - name: Commit candidate to same branch
+        run: |
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add workbenches/landscape-surface-r5-k1/index.html workbenches/landscape-surface-r5-k1/build.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build(landscape): materialize R5.K1 rillenkarren candidate [skip ci]'
+          git push origin HEAD:feature/landscape-mother-karst-living-r1-20260913
