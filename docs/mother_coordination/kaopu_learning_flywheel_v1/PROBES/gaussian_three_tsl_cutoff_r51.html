@@ -9,6 +9,7 @@ import { Fn, Discard, uniform, vec4 } from '/node_modules/three/build/three.tsl.
 const params = new URLSearchParams(location.search);
 const requestedMode = params.get('mode') || 'webgl';
 const f32 = Math.fround;
+const ulpSteps = Array.from({ length: 129 }, (_, i) => i - 64);
 
 function f32Bits(value) {
   const b = new ArrayBuffer(4);
@@ -75,8 +76,9 @@ async function main() {
     outputBufferType: THREE.UnsignedByteType,
   });
   renderer.setPixelRatio(1);
-  renderer.setSize(1, 1, false);
+  renderer.setSize(ulpSteps.length, 1, false);
   renderer.setClearColor(0x000000, 0);
+  renderer.autoClear = false;
   document.body.appendChild(renderer.domElement);
   await renderer.init();
 
@@ -116,7 +118,11 @@ async function main() {
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2);
   camera.position.z = 1;
 
-  const target = new THREE.RenderTarget(1, 1, {
+  // One pixel per ULP neighbor. Each scale/direction group renders 129 cases
+  // into one row and performs a single readback. This preserves the complete
+  // R50-compatible 4,644-case sweep while reducing GPU synchronization from
+  // 4,644 readbacks to 36.
+  const target = new THREE.RenderTarget(ulpSteps.length, 1, {
     type: THREE.UnsignedByteType,
     format: THREE.RGBAFormat,
     depthBuffer: false,
@@ -125,6 +131,7 @@ async function main() {
     magFilter: THREE.NearestFilter,
   });
   renderer.setRenderTarget(target);
+  renderer.setViewport(0, 0, ulpSteps.length, 1);
   await renderer.compileAsync(scene, camera);
 
   const scales = [2 ** -10, 0.3, 1.0, 3.7, 256.0, 1024.0];
@@ -136,32 +143,38 @@ async function main() {
     ['steep', Math.sqrt(1.75), 1.5],
     ['root3', 1.0, Math.sqrt(3.0)],
   ];
-
-  // R50 independently swept every ULP from -64..64. Its double-vs-float32
-  // predicate disagreements occur only at -1, 0, 1, 2. R51 therefore keeps
-  // every known dangerous ULP plus near-boundary and far-side sentinels, while
-  // avoiding 4,644 serial browser/GPU readbacks on software WebGL.
-  const r50DivergenceUlpSteps = [-1, 0, 1, 2];
-  const ulpSteps = [-64, -8, -4, -2, -1, 0, 1, 2, 4, 8, 64];
   const expectedCaseCount = scales.length * directions.length * ulpSteps.length;
+  const expectedReadbackCount = scales.length * directions.length;
   window.__KAOPU_PROGRESS__ = {
     schema: 'kaopu-gaussian-three-tsl-cutoff-progress/r51',
     requestedMode,
     actualBackend,
-    completed: 0,
-    total: expectedCaseCount,
+    completedCases: 0,
+    totalCases: expectedCaseCount,
+    completedReadbacks: 0,
+    totalReadbacks: expectedReadbackCount,
   };
 
   const cases = [];
   const doubleMismatches = [];
   const floatMismatches = [];
+  let readbackCount = 0;
+
   for (const scaleInput of scales) {
     const scale = f32(scaleInput);
     for (const [direction, qx0, qy0] of directions) {
       const baseX = f32(qx0 * scale);
       const distanceY = f32(qy0 * scale);
       const baseBits = f32Bits(baseX);
-      for (const ulpStep of ulpSteps) {
+      const group = [];
+
+      renderer.setRenderTarget(target);
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, ulpSteps.length, 1);
+      renderer.clear(true, false, false);
+
+      for (let i = 0; i < ulpSteps.length; i++) {
+        const ulpStep = ulpSteps[i];
         const distanceX = bitsF32(baseBits + ulpStep);
         const centerX = f32(-distanceX);
         const centerY = f32(-distanceY);
@@ -175,34 +188,43 @@ async function main() {
         ux.value = effectiveX;
         uy.value = effectiveY;
         us.value = scale;
+        renderer.setViewport(i, 0, 1, 1);
+        renderer.setScissor(i, 0, 1, 1);
+        renderer.setScissorTest(true);
         await renderer.renderAsync(scene, camera);
-        const rgba = await renderer.readRenderTargetPixelsAsync(target, 0, 0, 1, 1);
-        const backendCovered = rgba[3] > 0;
-        const doubleCovered = r2Double <= 4.0;
-        const floatCovered = r2Float <= 4.0;
-        const c = {
+
+        group.push({
           scale,
           direction,
           xUlpStepFromDirectionBase: ulpStep,
           distance: [effectiveX, effectiveY],
           r2Double,
           r2Float32Model: r2Float,
-          doubleCovered,
-          float32ModelCovered: floatCovered,
-          backendCovered,
-          backendAlpha: rgba[3],
-        };
-        cases.push(c);
-        if (doubleCovered !== backendCovered) doubleMismatches.push(c);
-        if (floatCovered !== backendCovered) floatMismatches.push(c);
-        window.__KAOPU_PROGRESS__ = {
-          ...window.__KAOPU_PROGRESS__,
-          completed: cases.length,
-          scale,
-          direction,
-          ulpStep,
-        };
+          doubleCovered: r2Double <= 4.0,
+          float32ModelCovered: r2Float <= 4.0,
+        });
       }
+
+      renderer.setScissorTest(false);
+      const rgbaRow = await renderer.readRenderTargetPixelsAsync(target, 0, 0, ulpSteps.length, 1);
+      readbackCount++;
+
+      for (let i = 0; i < group.length; i++) {
+        const c = group[i];
+        c.backendAlpha = rgbaRow[i * 4 + 3];
+        c.backendCovered = c.backendAlpha > 0;
+        cases.push(c);
+        if (c.doubleCovered !== c.backendCovered) doubleMismatches.push(c);
+        if (c.float32ModelCovered !== c.backendCovered) floatMismatches.push(c);
+      }
+
+      window.__KAOPU_PROGRESS__ = {
+        ...window.__KAOPU_PROGRESS__,
+        completedCases: cases.length,
+        completedReadbacks: readbackCount,
+        scale,
+        direction,
+      };
     }
   }
 
@@ -227,15 +249,16 @@ async function main() {
     threeRevision: THREE.REVISION,
     identity,
     fixture: {
-      renderTarget: 'RGBA8 1x1 coverage target',
+      renderTarget: `RGBA8 ${ulpSteps.length}x1 coverage row`,
       scaleCount: scales.length,
       directionCount: directions.length,
-      xUlpSteps: ulpSteps,
-      r50DivergenceUlpSteps,
+      xUlpSteps: [ulpSteps[0], ulpSteps[ulpSteps.length - 1]],
+      ulpStepCountPerDirection: ulpSteps.length,
       caseCount: cases.length,
-      samplingStrategy: 'R50-informed focused boundary set: all R50 divergence ULPs plus near-boundary and +/-64 sentinels',
+      readbackCount,
+      batchingStrategy: '129 one-pixel viewports per scale/direction, then one row readback',
       cutoffRule: 'TSL Discard when r2 > 4.0',
-      note: 'Coverage-only browser probe. R50 already exhaustively swept -64..64 with an independent shader; R51 directly checks Three.js r186 TSL on the evidence-bearing boundary subset to avoid serial software-GPU readback timeout.',
+      note: 'Complete R50-compatible -64..64 ULP sweep using direct Three.js r186 TSL. Batching changes only evidence collection, not tested cases.',
     },
     summary: {
       doublePredicateMismatchCount: doubleMismatches.length,
@@ -255,7 +278,8 @@ async function main() {
     },
     checks: {
       allCasesExecuted: cases.length === expectedCaseCount,
-      r50DivergenceStepsIncluded: r50DivergenceUlpSteps.every(step => ulpSteps.includes(step)),
+      fullR50UlpRangeCovered: ulpSteps.length === 129 && ulpSteps[0] === -64 && ulpSteps[128] === 64,
+      readbackBatchCountIsExpected: readbackCount === expectedReadbackCount,
       float32ModelMatchesBackendCoverage: floatMismatches.length === 0,
       doublePredicateHasCoverageCounterexample: doubleMismatches.length > 0,
       exactCutoffIsIncluded: exactCases.every(c => c.backendCovered),
