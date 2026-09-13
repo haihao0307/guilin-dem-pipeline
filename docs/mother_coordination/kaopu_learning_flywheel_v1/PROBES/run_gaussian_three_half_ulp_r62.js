@@ -29,13 +29,26 @@ function nextHalfUp(value){
   const bits=DataUtils.toHalfFloat(value);
   return DataUtils.fromHalfFloat(bits+1);
 }
+function toHalfRoundNearestEven(value){
+  // r186 DataUtils.toHalfFloat is a truncating storage packer. GPU Half targets
+  // use round-to-nearest behavior, so bracket with official decode values and
+  // select the nearest representable Half; exact ties choose an even low bit.
+  const lowBits=DataUtils.toHalfFloat(Math.fround(value));
+  const low=DataUtils.fromHalfFloat(lowBits);
+  if(low===value)return low;
+  const highBits=lowBits+1,high=DataUtils.fromHalfFloat(highBits);
+  const lowDistance=value-low,highDistance=high-value;
+  if(lowDistance<highDistance)return low;
+  if(highDistance<lowDistance)return high;
+  return (lowBits&1)===0?low:high;
+}
 function replay(orderName,alphas){
   let half=0,float=0,atOrBelowHalfUlpCount=0,exactStallCount=0,firstAtOrBelowHalfUlp=null,firstExactStall=null;
   const seq=sequence(orderName);
   for(let i=0;i<seq.length;i++){
     const alpha=alphas[seq[i]],increment=alpha*(1-half),upUlp=nextHalfUp(half)-half;
     if(increment<=0.5*upUlp){atOrBelowHalfUlpCount++;if(firstAtOrBelowHalfUlp===null)firstAtOrBelowHalfUlp=i;}
-    const nextHalf=DataUtils.fromHalfFloat(DataUtils.toHalfFloat(alpha+half*(1-alpha)));
+    const nextHalf=toHalfRoundNearestEven(alpha+half*(1-alpha));
     if(nextHalf===half){exactStallCount++;if(firstExactStall===null)firstExactStall=i;}
     half=nextHalf;
     float=Math.fround(alpha+Math.fround(float*(1-alpha)));
@@ -61,6 +74,6 @@ const target=cells.filter(c=>TARGET_ORDERS.includes(c.orderName));
 const countCollision=target[0].simulation.atOrBelowHalfUlpCount===target[1].simulation.atOrBelowHalfUlpCount;
 const observedOutputDivergence=Math.abs(target[0].halfObserved-target[1].halfObserved);
 const checks={allPageChecks:records.every(r=>Object.values(r.base.checks).every(Boolean)&&Object.values(r.render.checks).every(Boolean)),distinctSequences:new Set(cells.map(c=>c.sequenceHash)).size===ORDERS.length,lockedR61Reproduced:cells.filter(c=>LOCKED_ORDERS.includes(c.orderName)).every(c=>c.halfObserved===R61_CENTERS[c.orderName].half&&c.floatObserved===R61_CENTERS[c.orderName].float),halfReplayExact:cells.every(c=>c.halfReplayAbsError===0),floatReplayClose:cells.every(c=>c.floatReplayAbsError<=1e-6),thresholdCountEqualsExactStalls:cells.every(c=>c.simulation.atOrBelowHalfUlpCount===c.simulation.exactStallCount&&c.simulation.firstAtOrBelowHalfUlp===c.simulation.firstExactStall),targetCountCollision:countCollision,targetObservedOutputDivergence:observedOutputDivergence>=0.001,outcomeClassified:true};
-const result={schema:'kaopu-three-half-ulp/r62',status:'Candidate-observation',question:'Can the predeclared count of source-over writes whose increment is at or below half the current upward Half ULP explain the locked R61 orders and survive a targeted same-count counterexample?',sourceLocks:{threePackage:'0.186.0',r61ResultCommit:'d0ad7a38829b1cabbc64422daec39ebf61e1c499'},fixture:{alphaCounts:ALPHA_COUNTS,calibration,lockedOrders:LOCKED_ORDERS,targetedOrders:{seed112:112,seed545:545},selectionRule:'deterministic same-multiset xorshift32 permutations selected because the predeclared count collides while simulated final Half differs'},runtime:{threeRevision:records[0].base.threeRevision,identity:records[0].base.identity,backend:'software WebGL fallback of WebGPURenderer',source:'actual r186 SPZLoader and GaussianSplat plus official DataUtils half conversion',blend:'NormalBlending'},cells,analysis:{targetSameCount:target[0].simulation.atOrBelowHalfUlpCount,targetHalfObserved:[target[0].halfObserved,target[1].halfObserved],targetHalfObservedAbsDifference:observedOutputDivergence,assessment:countCollision&&observedOutputDivergence>=0.001?'rejected-as-sufficient-order-sensitive-predictor':'not-rejected-in-this-bounded-test',stepMechanismAssessment:checks.halfReplayExact&&checks.thresholdCountEqualsExactStalls?'confirmed-for-six-locked-sequences':'not-confirmed'},checks,interpretation:{observation:'The threshold identifies exact Half stalls in these six sequences and exact Half replay reproduces the renderer center.',rejected:'The total count alone is not sufficient: equal counts can end at different Half values.',candidate:'Keep sequential replay or an equivalently order-sensitive state trace for validation; do not promote a universal threshold.',sameChromiumSwiftShaderEvidenceRoot:true},limits:{syntheticCenteredSplats:true,softwareWebglOnly:true,privateRevisionPinnedProbe:true,hardwareGpu:false,webgpu:false,targetDevice:false,appleSafariWebKit:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
+const result={schema:'kaopu-three-half-ulp/r62',status:'Candidate-observation',question:'Can the predeclared count of source-over writes whose increment is at or below half the current upward Half ULP explain the locked R61 orders and survive a targeted same-count counterexample?',sourceLocks:{threePackage:'0.186.0',r61ResultCommit:'d0ad7a38829b1cabbc64422daec39ebf61e1c499'},fixture:{alphaCounts:ALPHA_COUNTS,calibration,lockedOrders:LOCKED_ORDERS,targetedOrders:{seed112:112,seed545:545},selectionRule:'deterministic same-multiset xorshift32 permutations selected because the predeclared count collides while simulated final Half differs'},runtime:{threeRevision:records[0].base.threeRevision,identity:records[0].base.identity,backend:'software WebGL fallback of WebGPURenderer',source:'actual r186 SPZLoader and GaussianSplat; official DataUtils.fromHalfFloat decode plus bracketed IEEE nearest-even replay',blend:'NormalBlending'},cells,analysis:{targetSameCount:target[0].simulation.atOrBelowHalfUlpCount,targetHalfObserved:[target[0].halfObserved,target[1].halfObserved],targetHalfObservedAbsDifference:observedOutputDivergence,assessment:countCollision&&observedOutputDivergence>=0.001?'rejected-as-sufficient-order-sensitive-predictor':'not-rejected-in-this-bounded-test',stepMechanismAssessment:checks.halfReplayExact&&checks.thresholdCountEqualsExactStalls?'confirmed-for-six-locked-sequences':'not-confirmed'},checks,interpretation:{observation:'The threshold identifies exact Half stalls in these six sequences and exact nearest-even Half replay reproduces the renderer center.',rejected:['The total count alone is not sufficient: equal counts can end at different Half values.','The truncating r186 DataUtils.toHalfFloat packer is not an exact model of GPU Half-target blending.'],candidate:'Keep sequential replay or an equivalently order-sensitive state trace for validation; do not promote a universal threshold.',sameChromiumSwiftShaderEvidenceRoot:true},limits:{syntheticCenteredSplats:true,softwareWebglOnly:true,privateRevisionPinnedProbe:true,hardwareGpu:false,webgpu:false,targetDevice:false,appleSafariWebKit:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
 const required=Object.keys(checks);result.status=required.every(k=>checks[k]===true)?'Candidate-pass':'Candidate-fail';
 fs.writeFileSync('r62-comparison.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));if(result.status!=='Candidate-pass')process.exitCode=10;
