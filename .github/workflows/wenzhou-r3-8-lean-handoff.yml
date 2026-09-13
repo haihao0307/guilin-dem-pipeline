@@ -26,9 +26,23 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile tools/r3-handoff/build_current_lean_handoff.py
+          python -m py_compile tools/r3-9/benchmark_soil_pair_codec.py
           test -f handoffs/wenzhou-r3-8-current-full-20260912/06_PACKAGE_SCOPE.md
           test ! -f tools/r3-handoff/build_current_full_handoff.py
           test ! -f handoffs/wenzhou-r3-8-current-full-20260912/PACKAGE_TRIGGER
+
+      - name: Benchmark lossless soil pair codec
+        run: |
+          set -euo pipefail
+          python tools/r3-9/benchmark_soil_pair_codec.py | tee /tmp/soil-codec-benchmark.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/soil-codec-benchmark.json'))
+          assert r['passed'] is True
+          assert r['pairs'] == 48
+          assert r['shuffleGzip'] < r['raw']
+          print({k:r[k] for k in ['raw','concatGzip','shuffleGzip','concatReduction','shuffleReduction']})
+          PY
 
       - name: Build lean continuation package
         env:
@@ -69,5 +83,6 @@ jobs:
             /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip
             /tmp/wenzhou-lean/Wenzhou_R3_8_LEAN_HANDOFF_${{ github.sha }}.zip.report.json
             /tmp/wenzhou-lean/build-report.log
+            /tmp/soil-codec-benchmark.json
           if-no-files-found: error
           retention-days: 30
