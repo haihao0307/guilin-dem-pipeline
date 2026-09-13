@@ -7,6 +7,7 @@ on:
     paths:
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_tsl_cutoff_r51.html
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r52_webgpu.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_tsl_webgpu_gate_r52.mjs
       - .github/workflows/kaopu-gaussian-r52-webgpu.yml
 
 permissions:
@@ -44,11 +45,25 @@ jobs:
       - name: Run locked fixture on confirmed WebGPU
         run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r52_webgpu.js
 
+      - name: Validate locked R52 WebGPU evidence contract
+        shell: bash
+        run: |
+          cat r52-result-webgpu.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_tsl_webgpu_gate_r52.mjs > r52-gate-webgpu.json
+          cat r52-gate-webgpu.json
+          python3 - <<'PY'
+          import json
+          d = json.load(open('r52-gate-webgpu.json'))
+          if d.get('status') != 'Candidate-pass':
+              raise SystemExit(f"R52 WebGPU gate failed: {d}")
+          PY
+
       - name: Upload R52 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: kaopu-gaussian-r52-webgpu
-          path: r52-result-webgpu.json
+          path: |
+            r52-result-webgpu.json
+            r52-gate-webgpu.json
           if-no-files-found: warn
           retention-days: 30
