@@ -1,88 +1,85 @@
 {
-  "schema": "wenzhou-current-lean-handoff-state/v2",
+  "schema": "wenzhou-current-lean-handoff-state/v3",
   "date": "2026-09-13",
   "project": "小温州 / 温州世界生产线",
   "repository": "haihao0307/guilin-dem-pipeline",
-  "verifiedCandidate": {
+  "baseline": {
     "version": "R3.8",
-    "commit": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
+    "verifiedCandidateCommit": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
     "stateCommit": "a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
-    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/3018da201a2ef6b5d122522e85bbbb5b91f8a34d/site/dist/r3-8/index.html",
-    "localBrowserQaPassed": true,
-    "fixedPublicBrowserQaPassed": true,
+    "historicalFreezeAnchor": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d"
+  },
+  "currentVerifiedRuntime": {
+    "version": "R3.9-lean-transport",
+    "commit": "d591713f236107f7db5a24fb9d74e087550e688a",
+    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/d591713f236107f7db5a24fb9d74e087550e688a/site/dist/r3-8/index.html",
+    "staticSemanticGatePassed": true,
+    "localChromiumPassed": true,
+    "mobile390x844Passed": true,
+    "fixedPublicRawGithackPassed": true,
     "visualAcceptedByUser": false,
-    "productionReady": false,
-    "realIphoneVerified": false
+    "realIphoneVerified": false,
+    "productionReady": false
   },
-  "currentContinuation": {
+  "soilTransport": {
+    "semanticLayerCount": 96,
+    "propertyDepthPairCount": 48,
+    "semanticChannelsPerPair": ["Q0.5", "uncertainty"],
+    "physicalPayloadCount": 48,
+    "codec": "i16le-pair-byte-shuffle-gzip-v1",
+    "sourceSemanticBytes": 170237184,
+    "packedBytes": 34571806,
+    "removedSupersededActiveFiles": 80,
+    "removedSupersededActiveBytes": 141864320,
+    "decodedSourceShaPreserved": true,
+    "informationLoss": false
+  },
+  "wrbJrcTransport": {
+    "logicalPayloadCount": 41,
+    "physicalPayloadCount": 41,
+    "codec": "gzip-v1",
+    "sourceBytes": 37239384,
+    "packedBytes": 3424064,
+    "removedSupersededActiveFiles": 41,
+    "removedSupersededActiveBytes": 37239384,
+    "decodedSourceShaPreserved": true,
+    "informationLoss": false,
+    "wrbProbabilityLayersRemainIndividuallyLazyLoadable": true
+  },
+  "combinedActivePayload": {
+    "beforeBytes": 179103704,
+    "afterBytes": 37995870,
+    "reductionBytes": 141107834,
+    "reductionRatio": 0.7878554761770867
+  },
+  "continuation": {
     "branch": "feature/wenzhou-r3-8-overlay-transform-contract-20260913",
-    "baseStateCommit": "a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
-    "overlayTransformContractAdded": true,
-    "overlayTransformUnitRegressionAdded": true,
-    "leanHandoffBuilderAdded": true,
-    "contentSha256DedupAdded": true,
-    "obsoleteFullHandoffBuilderRemoved": true,
-    "obsoleteFullHandoffWorkflowRemoved": true,
-    "obsoleteFullPackageTriggerRemoved": true,
-    "newFixedPublicQaPassed": false,
-    "newVisualCandidate": false
+    "runtimeAfterD591Changed": false,
+    "postRuntimeWork": ["handoff documentation refresh", "obsolete scaffold removal", "R3.9 lean handoff rebuild"]
   },
-  "lastLeanBuild": {
-    "sourceCommit": "86bf8d2d6b6e931ac68069923e727c3763cbe16a",
-    "workflowRunId": 34744411363,
-    "passed": true,
-    "packageBytes": 66663,
-    "logicalUncompressedBytes": 164686,
-    "uniqueUncompressedBytes": 164686,
-    "logicalFileCount": 32,
-    "uniqueFileCount": 32,
-    "duplicateAliasCount": 0,
-    "contentDeduplicated": true,
-    "fullRestartBaseEmbedded": false,
-    "permanentEvidenceEmbedded": false,
-    "browserBinaryPayloadsEmbedded": false,
-    "artifactId": 10313845041,
-    "artifactArchiveBytes": 63127,
-    "artifactArchiveSha256": "156f32aa3078f88e2ccb297b37fa3ecbaea306918b7ddcf45ba9c69bdcfff5c7"
-  },
-  "r3_8Evidence": {
-    "soilProfile": {
-      "resolutionM": 250,
-      "depths": ["0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"],
-      "properties": ["clay", "sand", "silt", "soc", "phh2o", "bdod", "cfvo", "wv0033"],
-      "payloadChannelsPerPropertyDepth": ["Q0.5", "uncertainty"],
-      "payloadCount": 96,
-      "q05AndUncertaintyAreDuplicates": false,
-      "canonicalTruth": false,
-      "fieldObservation": false,
-      "heightDisplacement": false
-    },
-    "wrb": {
-      "officialMostProbableLegendClasses": 30,
-      "probabilityLayerCount": 30,
-      "officialVsPostAlignmentArgmaxMismatchApprox": 0.061,
-      "canonicalTruth": false,
-      "fieldClassificationTruth": false
-    },
-    "jrcHistoricalWaterIntegrated": true,
-    "singleWorldLocationIndex": true
+  "historicalSafety": {
+    "r3ThroughR37ExactTreeIdentitiesPreserved": true,
+    "permanentEvidenceReleasesChanged": false,
+    "coldArchivesDeleted": false
   },
   "carryPolicy": {
     "mode": "lean",
     "maxUniqueUncompressedBytes": 8388608,
     "fullRestartBaseEmbedded": false,
     "permanentEvidenceEmbedded": false,
-    "browserBinaryPayloadsEmbedded": false,
-    "offlineDependenciesEmbedded": false,
+    "currentBrowserBinaryPayloadBodiesEmbedded": false,
+    "currentTransportIndexesEmbedded": true,
     "contentDeduplicatedBySha256": true,
     "coldArchivesRecoveredBy": ["fixed Git commit", "Release tag", "asset name", "bytes", "SHA-256"]
   },
+  "runtimeConstraint": "Current compressed transport requires DecompressionStream('gzip'). Real iPhone Safari/GPU/CPU has not been verified, so productionReady remains false.",
   "doNotClaim": [
     "SoilGrids as 12.5m soil truth",
     "OSM road centerline as physical road width",
     "OSM footprint as known building height",
     "JRC historical surface-water as current water level",
     "demo sea as tide/MSL/vertical datum/ocean physics",
-    "the continuation branch as a new verified visual candidate before new fixed-public QA"
+    "real iPhone verification",
+    "production readiness"
   ]
 }
