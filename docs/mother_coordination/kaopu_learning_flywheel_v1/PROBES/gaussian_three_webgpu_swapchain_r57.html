@@ -43,6 +43,7 @@ function makeGeometry(colors){
   g.setIndex(new THREE.BufferAttribute(indices,1));
   return g;
 }
+function metrics(a,b){let maxAbs=0,sum2=0;for(let i=0;i<a.length;i++){const d=Math.abs(Number(a[i])-Number(b[i]));maxAbs=Math.max(maxAbs,d);sum2+=d*d;}return{channels:a.length,maxAbs,rmse:Math.sqrt(sum2/a.length)};}
 async function sha256(view){
   const u8=new Uint8Array(view.buffer,view.byteOffset,view.byteLength),d=await crypto.subtle.digest('SHA-256',u8);
   return Array.from(new Uint8Array(d),x=>x.toString(16).padStart(2,'0')).join('');
@@ -85,6 +86,11 @@ async function main(){
   material.fragmentNode=Fn(()=>attribute('kaopuPremul','vec4'))();
   const mesh=new THREE.Mesh(geometry,material);mesh.frustumCulled=false;
   const scene=new THREE.Scene();scene.add(mesh);const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,2);camera.position.z=1;
+  const target=new THREE.RenderTarget(SAMPLE_COUNT,1,{format:THREE.RGBAFormat,type:THREE.FloatType,depthBuffer:false,stencilBuffer:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+  target.texture.colorSpace=THREE.NoColorSpace;
+  renderer.setRenderTarget(target);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);
+  const offscreen=await renderer.readRenderTargetPixelsAsync(target,0,0,SAMPLE_COUNT,1);
+  const sourceHash=await sha256(premul),offscreenHash=await sha256(offscreen),offscreenMetrics=metrics(premul,offscreen);
   renderer.setRenderTarget(null);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);
   await new Promise(resolve=>requestAnimationFrame(resolve));
   const context=renderer.backend.context,device=renderer.backend.device,format=renderer.backend.utils.getPreferredCanvasFormat();
@@ -92,15 +98,19 @@ async function main(){
   window.__KAOPU_PROGRESS__={schema:'kaopu-three-webgpu-swapchain-progress/r57',stage:'texture-preacquired',format};
   renderer.setRenderTarget(null);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);renderer.render(scene,camera);
   window.__KAOPU_PROGRESS__.stage='sync-three-render-submitted-copy-pending';
-  const copyPromise=copyTexture(device,texture,format);
-  window.__KAOPU_PROGRESS__.stage='copy-submitted-map-pending';
-  const copied=await copyPromise,rgba=toRgba8(copied.bytes,format);
-  const sourceHash=await sha256(premul),rawHash=await sha256(copied.bytes),rgbaHash=await sha256(rgba);
+  let copied=null,rgba=null,swapchainError=null;
+  try{
+    const copyPromise=copyTexture(device,texture,format);
+    window.__KAOPU_PROGRESS__.stage='copy-submitted-map-pending';
+    copied=await copyPromise;rgba=toRgba8(copied.bytes,format);
+  }catch(error){swapchainError={message:String(error?.message||error),name:error?.name||null,stage:window.__KAOPU_PROGRESS__.stage};}
+  const rawHash=copied?await sha256(copied.bytes):null,rgbaHash=rgba?await sha256(rgba):null;
   window.__KAOPU_RESULT__={schema:'kaopu-three-webgpu-swapchain/r57',status:'candidate-observation',outputName,threeRevision:THREE.REVISION,identity:await identity(renderer),
-    contract:{source:'R55 stepwise float32 premultiplied source-over result',sourcePremultiplied:true,materialBlending:'NoBlending',rendererAlpha:true,canvasAlphaMode:'premultiplied per pinned WebGPUBackend',rendererOutputColorSpace:outputName==='linear'?'LinearSRGBColorSpace':'SRGBColorSpace',workingColorSpace:'LinearSRGBColorSpace',toneMapping:'NoToneMapping',outputBufferType:'FloatType',clear:'transparent black',warmup:'same canvas format renderAsync followed by one animation frame before new texture acquisition',currentTextureAcquisition:'before synchronous Three canvas render; render and copy command submission have no await boundary',copyUsage:'canvas configured by pinned backend with RENDER_ATTACHMENT | COPY_SRC',format,bytesPerPixel:copied.bytesPerPixel,bytesPerRow:copied.bytesPerRow,unpaddedBytes:copied.unpaddedBytes},
+    contract:{source:'R55 stepwise float32 premultiplied source-over result',sourcePremultiplied:true,materialBlending:'NoBlending',rendererAlpha:true,canvasAlphaMode:'premultiplied per pinned WebGPUBackend',rendererOutputColorSpace:outputName==='linear'?'LinearSRGBColorSpace':'SRGBColorSpace',workingColorSpace:'LinearSRGBColorSpace',toneMapping:'NoToneMapping',outputBufferType:'FloatType',clear:'transparent black',positiveControl:'Three RGBA32F offscreen readRenderTargetPixelsAsync',warmup:'same canvas format renderAsync followed by one animation frame before new texture acquisition',currentTextureAcquisition:'before synchronous Three canvas render; render and copy command submission have no await boundary',copyUsage:'canvas configured by pinned backend with RENDER_ATTACHMENT | COPY_SRC',format,bytesPerPixel:copied?.bytesPerPixel||4,bytesPerRow:copied?.bytesPerRow||1024,unpaddedBytes:copied?.unpaddedBytes||1024},
     source:{hash:sourceHash,lockedHash:'0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520'},
-    swapchain:{rawHash,rgbaHash,rgba:Array.from(rgba)},
-    checks:{r55SourceHashLocked:sourceHash==='0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520',canvasSize:renderer.domElement.width===256&&renderer.domElement.height===1,copySrcFormatHandled:format==='bgra8unorm'||format==='rgba8unorm',copyByteCount:rgba.length===SAMPLE_COUNT*4},
+    positiveControl:{readbackHash:offscreenHash,metrics:offscreenMetrics},
+    swapchain:{status:rgba?'candidate-observation':'candidate-unavailable',rawHash,rgbaHash,error:swapchainError,rgba:rgba?Array.from(rgba):null},
+    checks:{r55SourceHashLocked:sourceHash==='0ca00d66d1646fd820cf6fca230460f4dd11b31d05c1a683aa12278603a1e520',offscreenControlMatchesSource:offscreenMetrics.maxAbs<=1e-6,canvasSize:renderer.domElement.width===256&&renderer.domElement.height===1,copySrcFormatHandled:format==='bgra8unorm'||format==='rgba8unorm',swapchainOutcomeClassified:Boolean(rgba)||Boolean(swapchainError)},
     limits:{sameTaskImmediateReadback:true,screenshotControlPending:true,hardwareGpu:false,targetDevice:false,appleSafariWebKit:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
   window.__KAOPU_DONE__=true;
 }
