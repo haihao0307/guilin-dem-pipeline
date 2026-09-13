@@ -1,0 +1,244 @@
+name: Validate Farmland Object DNA strict rules
+
+on:
+  push:
+    branches:
+      - feature/farmland-object-dna-v001
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - 'farmland-object-dna/**'
+      - 'AGENTS.md'
+      - '.github/workflows/validate-farmland-object-dna-rules.yml'
+  pull_request:
+    paths:
+      - 'farmland-object-dna/**'
+      - '.github/workflows/validate-farmland-object-dna-rules.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Parse machine-readable contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool farmland-object-dna/HANDOFF.json >/dev/null
+          python -m json.tool farmland-object-dna/CURRENT_FULL_HANDOFF.json >/dev/null
+          python -m json.tool farmland-object-dna/QUALITY_GATES.json >/dev/null
+          python -m json.tool farmland-object-dna/schema/farmland-object-dna.schema.json >/dev/null
+          python -m json.tool farmland-object-dna/examples/traditional-paddy-v002-research.json >/dev/null
+          python -m json.tool farmland-object-dna/PUBLICATION_PROOF.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json >/dev/null
+          python -m json.tool farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/LOCAL_WORKFLOW_CHECK.json >/dev/null
+          python -m json.tool farmland-object-dna/bridges/r025-xiaoma-tlo-dem/BRIDGE_CONTRACT.json >/dev/null
+          python -m json.tool farmland-object-dna/bridges/r025-xiaoma-tlo-dem/PACKAGE_SCOPE.json >/dev/null
+
+      - name: Validate strict research record
+        shell: bash
+        run: |
+          set -euo pipefail
+          python farmland-object-dna/tools/validate_farmland_dna.py \
+            farmland-object-dna/examples/traditional-paddy-v002-research.json \
+            | tee /tmp/farmland-validation.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/farmland-validation.json').read_text())
+          assert data['ok'] is True
+          assert data['mode'] == 'research'
+          assert data['public_candidate'] is False
+          assert data['hydraulic_graph']['cell_count'] >= 1
+          assert data['hydraulic_graph']['edge_count'] >= 1
+          assert data['visualAcceptance'] is False
+          assert data['productionReady'] is False
+          PY
+
+      - name: Confirm rejected V0.1 cannot pass current validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python farmland-object-dna/tools/validate_farmland_dna.py \
+            farmland-object-dna/examples/traditional-paddy-v001.json; then
+            echo 'Rejected V0.1 unexpectedly passed the strict validator.'
+            exit 1
+          fi
+
+      - name: Water accounting and adversarial contract tests
+        run: python -m unittest discover -s farmland-object-dna/tools -p 'test_*.py' -v
+
+      - name: Six ideal hydraulic scenarios and step refinement
+        run: python farmland-object-dna/tools/probe_hydraulic_r022.py > /tmp/farmland-r022-probe.json
+
+      - name: Honghe evidence boundary and parcel topology probes
+        run: |
+          python farmland-object-dna/tools/regional_profile.py \
+            farmland-object-dna/research/r023-honghe-regional-contract/HONGHE_PROFILE.json \
+            > /tmp/farmland-r023-profile.json
+          python farmland-object-dna/tools/probe_regional_r023.py \
+            > /tmp/farmland-r023-probe.json
+          cmp farmland-object-dna/research/r023-honghe-regional-contract/PROBE_RESULTS.json \
+            /tmp/farmland-r023-probe.json
+
+      - name: Rice organ and lifecycle contract probe
+        run: |
+          python farmland-object-dna/tools/rice_morphology.py \
+            farmland-object-dna/research/r024-rice-morphology/RICE_LIFECYCLE_CONTRACT.json \
+            > /tmp/farmland-r024-contract.json
+          python farmland-object-dna/tools/probe_rice_morphology_r024.py \
+            > /tmp/farmland-r024-probe.json
+          cmp farmland-object-dna/research/r024-rice-morphology/PROBE_RESULTS.json \
+            /tmp/farmland-r024-probe.json
+
+      - name: Xiaoma TLO and Guilin DEM fixed-source intake probe
+        run: |
+          python farmland-object-dna/tools/cross_mother_intake.py \
+            farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json \
+            farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json \
+            > /tmp/farmland-r025-contract.json
+          python farmland-object-dna/tools/probe_cross_mother_intake_r025.py \
+            > /tmp/farmland-r025-probe.json
+          cmp farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/PROBE_RESULTS.json \
+            /tmp/farmland-r025-probe.json
+
+      - name: R025 cross-Mother bridge contract and deterministic package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python farmland-object-dna/tools/verify_bridge_package_r025.py \
+            --contract-only > /tmp/farmland-r025-bridge-contract.json
+
+          bridge_dir='farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem'
+          archive='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip'
+          receipt='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.receipt.json'
+          sha_file='Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.sha256'
+          if [[ -f "$bridge_dir/$archive" ]]; then
+            python farmland-object-dna/tools/verify_bridge_package_r025.py \
+              > /tmp/farmland-r025-bridge-package.json
+            source_commit=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem')
+          receipt = json.loads((path / 'Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.receipt.json').read_text())
+          print(receipt['sourceCommit'])
+          PY
+          )
+            rebuild_dir=$(mktemp -d)
+            python farmland-object-dna/tools/build_bridge_package_r025.py \
+              --source-ref "$source_commit" \
+              --output-dir "$rebuild_dir" \
+              > /tmp/farmland-r025-bridge-rebuild.json
+            cmp "$bridge_dir/$archive" "$rebuild_dir/$archive"
+            cmp "$bridge_dir/$receipt" "$rebuild_dir/$receipt"
+            cmp "$bridge_dir/$sha_file" "$rebuild_dir/$sha_file"
+            cmp "$bridge_dir/LATEST.json" "$rebuild_dir/LATEST.json"
+          fi
+
+          full_archive='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip'
+          full_receipt='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.receipt.json'
+          full_sha='farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.sha256'
+          if [[ -f "$full_archive" ]]; then
+            cmp "$bridge_dir/$archive" "$full_archive"
+            (cd farmland-object-dna/distributions && sha256sum -c "$(basename "$full_sha")")
+            python -m json.tool "$full_receipt" >/dev/null
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          pointer = json.loads(Path('farmland-object-dna/CURRENT_FULL_HANDOFF.json').read_text())
+          receipt = json.loads(Path('farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.receipt.json').read_text())
+          assert pointer['archive']['sha256'] == receipt['archiveSha256']
+          assert pointer['archive']['bytes'] == receipt['archiveBytes']
+          assert pointer['archive']['byteIdenticalToCanonicalBridgeArtifact'] is True
+          assert receipt['byteIdenticalToCanonicalBridgeArtifact'] is True
+          assert pointer['status']['visualAcceptance'] is False
+          assert pointer['status']['productionReady'] is False
+          PY
+          fi
+
+      - name: Verify mandatory rules and failed gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          gates = json.loads(Path('farmland-object-dna/QUALITY_GATES.json').read_text())
+          by_id = {item['id']: item for item in gates['gates']}
+          required_failed = {
+              'shared_boundary_topology',
+              'channel_plan_and_sections',
+              'bund_and_terrace_sections',
+              'hydraulic_closed_graph',
+              'hydraulic_elevation_legality',
+              'water_depth_truth',
+              'water_mass_balance',
+              'rice_stage_morphology',
+              'no_proxy_in_public_candidate',
+              'material_identity',
+              'aaa_visual_precheck',
+          }
+          missing = sorted(required_failed - set(by_id))
+          assert not missing, missing
+          for gate_id in required_failed:
+              assert by_id[gate_id]['v001Status'] == 'fail', gate_id
+
+          handoff = json.loads(Path('farmland-object-dna/HANDOFF.json').read_text())
+          assert handoff['rejectedPredecessor']['status'] == 'rejected'
+          assert handoff['rejectedPredecessor']['allowedUse'] == 'negative_reference_only'
+          assert handoff['status']['visualAcceptance'] is False
+          assert handoff['status']['productionReady'] is False
+
+          proof = json.loads(Path('farmland-object-dna/PUBLICATION_PROOF.json').read_text())
+          assert proof['userReview']['status'] == 'rejected'
+          assert proof['shareAllowed'] is False
+          assert proof['allowedUse'] == 'negative_reference_only'
+          PY
+
+      - name: Verify startup reading order
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'FARMLAND_PRODUCTION_RULES.md' AGENTS.md
+          grep -q 'V001_FAILURE_REGISTER.md' AGENTS.md
+          grep -q 'FARMLAND_PRODUCTION_RULES.md' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'YUANYANG_SYSTEM_RESEARCH_PLAN.md' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'traditional-paddy-v002-research.json' farmland-object-dna/RESTART_START_HERE.md
+          grep -q 'Microscope' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+          grep -q '水量守恒' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+          grep -q '3A' farmland-object-dna/FARMLAND_PRODUCTION_RULES.md
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## Farmland Object DNA strict rule validation'
+            echo
+            echo 'JSON contracts: PASS'
+            echo 'Research-only V0.2 record: PASS'
+            echo 'Rejected V0.1 blocked by current validator: PASS'
+            echo 'R021-R022 water and ideal hydraulics: PASS'
+            echo 'R023 Honghe evidence boundary and parcel topology: PASS'
+            echo 'R024 rice organ and lifecycle contract: PASS'
+            echo 'R025 Xiaoma TLO and Guilin DEM fixed-source intake: PASS'
+            echo 'R025 cross-Mother bridge contract: PASS'
+            echo 'R025 deterministic bridge package (when present): PASS'
+            echo 'Current Full Handoff discoverability alias (when present): PASS'
+            echo 'Hydraulic and visual failure gates: PRESENT'
+            echo 'Public share status for rejected V0.1: FALSE'
+            echo 'Human visual acceptance: FALSE'
+            echo 'Production ready: FALSE'
+          } >> "$GITHUB_STEP_SUMMARY"

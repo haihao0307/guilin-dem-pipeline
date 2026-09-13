@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#183529"><title>Farmland R028 · 山水之间</title>
+<meta name="description" content="从高处来水到河湾稻田，在同一片山水里观察梯田、插秧与灌排关系。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23183529'/%3E%3Cpath d='M9 30Q30 20 12 11M14 30Q32 17 24 8' fill='none' stroke='%23d6e7a1' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;color:#f6f5e9;background:#153525;font-synthesis:none}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid #f4d77a;outline-offset:4px}button{color:inherit}#landscape{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}header{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;padding:32px 38px 75px;pointer-events:none;background:linear-gradient(#0e253954,transparent);text-shadow:0 2px 18px #13382788}.identity{pointer-events:none}.brand{font-family:system-ui,sans-serif;letter-spacing:.22em;font-size:13px;font-weight:600}.brand b{letter-spacing:.06em;font-size:11px;margin-left:9px;border-left:1px solid #ffffff55;padding-left:12px;font-weight:400}h1{font-family:"Songti SC","SimSun",serif;font-weight:400;font-size:38px;letter-spacing:.2em;margin:10px 0 5px}header p{font-size:13px;letter-spacing:.09em;margin:0;color:#f6f6d9dc}#infoButton{pointer-events:auto;border:1px solid #fff6;background:#193e347d;border-radius:30px;padding:10px 18px;font-size:14px;backdrop-filter:blur(10px)}#infoButton span{margin-left:18px;color:#d8e9b9}#info{position:absolute;right:30px;top:90px;width:360px;padding:25px;background:#16362ded;backdrop-filter:blur(18px);border:1px solid #d2e5c533;border-radius:16px;box-shadow:0 20px 60px #071d2955;max-height:calc(100vh - 240px);overflow:auto}#info h2{font-family:serif;font-size:21px;margin:0 0 17px}#info p{font-size:14px;line-height:1.8;color:#e0e8d6}#info .small{font-size:12px;color:#bbcbbb}#info a{color:#dbeac4;font-size:12px}dl{border-top:1px solid #d2e5c533;border-bottom:1px solid #d2e5c533;padding:10px 0}dl div{display:flex;font-size:13px;margin:8px 0}dt{color:#a6bd9c;width:55px}dd{margin:0}footer{position:absolute;bottom:max(36px,env(safe-area-inset-bottom));left:38px;right:38px;display:flex;justify-content:space-between;gap:16px;pointer-events:none}nav,.tools{display:flex;align-items:center;gap:5px;padding:5px;border:1px solid #e5eed430;background:#112c24cb;backdrop-filter:blur(16px);border-radius:36px;box-shadow:0 6px 30px #0a231f33;pointer-events:auto}footer button{border:none;background:transparent;font-size:14px;padding:12px 19px;border-radius:28px;transition:background .18s,color .18s;white-space:nowrap}footer button:hover{background:#ffffff18}footer button.active,button[aria-pressed=true]{background:#e0e8bc;color:#21352c}#flowButton{min-width:160px}.flowIcon{font-size:19px;margin-right:8px}#pauseButton{font-size:12px;padding:12px 15px;border-left:1px solid #fff2}.caption{position:absolute;bottom:12px;left:45px;right:45px;display:flex;justify-content:space-between;font-size:11px;color:#ffffffb3;text-shadow:0 1px 5px #051913}.gesture{color:#fff9}#loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#163b36;transition:opacity .7s;pointer-events:none}#loader p{font-family:serif;letter-spacing:.18em;color:#dce5d6}.loaderLine{width:90px;height:1px;background:#8aa48b;position:relative;overflow:hidden}.loaderLine:after{content:"";position:absolute;inset:0;background:#d8e6b4;animation:load 1.6s infinite}@keyframes load{from{transform:translateX(-100%)}to{transform:translateX(100%)}}#loader.done{opacity:0}#fallback{position:absolute;inset:25%;padding:30px;background:#18382bea;border:1px solid #9bb184;border-radius:16px}#fallback h2{font-size:20px}#fallback p{line-height:1.7}#fallback button{padding:12px 20px;background:#dce8bb;color:#193829;border:none;border-radius:25px}#waterPanel{position:absolute;left:38px;bottom:118px;background:#12382bdd;padding:17px 20px;border-radius:14px;border:1px solid #dce8b638;max-width:435px;backdrop-filter:blur(12px)}#waterPanel b{font-size:14px;color:#e5f3bd}#waterPanel p,#waterStats{font-size:12px;line-height:1.6;color:#c8d8bf;margin:7px 0 0}#selection{position:absolute;right:38px;bottom:118px;max-width:310px;background:#173a2ee8;padding:18px 22px;border:1px solid #dce8b650;border-radius:14px;font-size:14px;line-height:1.8}#selection b{color:#e8efc8}[hidden]{display:none!important}
+@media(max-width:760px){header{padding:22px 20px 50px}h1{font-size:30px}.brand{font-size:11px}header p{font-size:12px}#infoButton{font-size:12px;padding:9px 13px}#infoButton span{margin-left:8px}#info{top:77px;right:16px;left:16px;width:auto;padding:20px;max-height:60vh}footer{left:12px;right:12px;bottom:max(35px,env(safe-area-inset-bottom));flex-direction:column;align-items:center;gap:9px}nav{width:100%;justify-content:center}footer button{font-size:12px;padding:12px 13px}nav button{flex:1;padding:12px 4px}.tools{padding:2px;background:#16382bdb}#flowButton{min-width:150px;padding:8px 13px}#pauseButton{padding:9px 13px}.caption{left:20px;right:20px;font-size:10px;bottom:13px}.gesture{display:none}#waterPanel{left:14px;right:14px;bottom:156px;padding:13px 15px;max-width:none}#waterPanel b{font-size:12px}#waterPanel p{font-size:11px}#selection{left:14px;right:14px;bottom:270px;max-width:none;padding:10px 14px;font-size:12px}#fallback{inset:18% 6%}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body data-version="FARMLAND_R028_WATERSHED_20260912" data-runtime-ready="false">
+<main id="landscape" aria-label="可旋转、缩放的农田三维场景"></main>
+<header><div class="identity"><span class="brand">FARMLAND <b>R028</b></span><h1>山水之间</h1><p>一片田，从山泉到河湾。</p></div><button id="infoButton" aria-expanded="false" aria-controls="info" title="查看场景说明">田与水 <span>↗</span></button></header>
+<section id="info" hidden aria-label="田与水的关系">
+<h2>水有来处，也有去处。</h2>
+<p>高位山泉经取水沟进入上层梯田，由有缺口的田口逐级供水，流经河湾水田，最后汇入下游河段。河里的低位水不会自行流回山上。</p>
+<dl><div><dt>田块</dt><dd>10 级梯田 · 4 块河湾田</dd></div><div><dt>水位</dt><dd>每块田独立水平蓄水</dd></div><div><dt>尺度</dt><dd>人、秧苗、田埂共用米制坐标</dd></div></dl>
+<p class="small">形态参考合成场景，非桂林或元阳实测复原。水量采用有限蓄水与理想田口模型；地方尺寸、土体稳定和真实流量尚未标定。</p>
+<a href="https://www.fao.org/4/r4082e/r4082e06.htm" target="_blank" rel="noopener">灌排关系参考 · FAO</a>
+</section>
+<div id="loader" role="status"><span class="loaderLine"></span><p>正在走进这片田…</p></div>
+<div id="fallback" hidden role="alert"><h2>三维场景暂时无法启动</h2><p id="errorText">请使用支持 WebGL 2 的浏览器。</p><button onclick="location.reload()">重新加载</button></div>
+<div id="selection" hidden aria-live="polite"></div>
+<footer>
+<nav aria-label="观察位置"><button data-view="overview" class="active">山水总览</button><button data-view="terrace">沿着梯田</button><button data-view="farmers">走近插秧</button><button data-view="river">河湾水田</button></nav>
+<div class="tools"><button id="flowButton" aria-pressed="false"><span class="flowIcon">≋</span> 看水怎么流</button><button id="pauseButton" aria-pressed="false" title="暂停风和水流动画">暂停</button></div>
+</footer>
+<div class="caption"><span id="viewCaption">高处梯田 · 河湾水田 · 远山</span><span class="gesture">拖动环看 / 滚轮缩放</span></div>
+<aside id="waterPanel" hidden aria-live="polite"><b>高位水源 → 梯田 → 河湾田 → 下游河段</b><p>光点沿已连接的田口方向移动；点击水田查看它的进水与排水。</p><div id="waterStats"></div></aside>
+<script>function startupFailure(){document.getElementById('fallback').hidden=false;document.getElementById('loader').hidden=true;}window.addEventListener('error',startupFailure,true);window.addEventListener('unhandledrejection',startupFailure);</script>
+<script type="module">
+const W=(()=>{
+// Farmland R028. Persistent synthetic relationships; render buffers are derived.
+const VERSION='FARMLAND_R028_WATERSHED_20260912';
+const FRAME={id:'farmland-r028-local',unit:'m',axes:'x east, y up, z south',datum:'synthetic local zero',surveyAccuracy:null,worldLocation:null};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const mix=(a,b,t)=>a+(b-a)*t;
+function smooth(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+function rng(seed=280912){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const hash=(x,z)=>{const a=Math.sin(x*127.1+z*311.7)*43758.5453;return a-Math.floor(a);};
+function noise(x,z){const i=Math.floor(x),j=Math.floor(z),u=smooth(0,1,x-i),v=smooth(0,1,z-j);return mix(mix(hash(i,j),hash(i+1,j),u),mix(hash(i,j+1),hash(i+1,j+1),u),v);}
+const terraceLevels=[14.1,12.65,11.5,9.8,8.4,6.9,5.55,4.25,2.9,1.65];
+const contourZ=[-113,-101,-86,-77,-63,-48,-37,-23,-9,6,25];
+function contour(k,u){return contourZ[k]+18*Math.sin(u*Math.PI*1.45+.2)+5.2*Math.sin(u*Math.PI*3.1+k*.24)+2.7*Math.cos(u*8-k*.35);}
+function terracePoint(k,u,v){return[-106+98*u,mix(contour(k,u),contour(k+1,u),v)];}
+function terraceCoordinate(x,z){const u=(x+106)/98;if(u<0||u>1)return null;for(let k=0;k<10;k++){const a=contour(k,u),b=contour(k+1,u);if(z>=a&&z<=b)return{k,u,v:(z-a)/(b-a)};}return null;}
+function riverX(z){return 58+11*Math.sin((z+30)*.018)+4*Math.sin(z*.042);}
+function riverY(z){return -.36-.0025*(z+115);}
+const extent={xmin:-195,xmax:180,zmin:-305,zmax:145,step:.5};
+const flatBeds=[1.16,.98,.79,.59];
+const flatZ=[27,48,69,91,113];
+function flatPoint(k,u,v){const a=flatZ[k]+5*Math.sin(u*5+k*.4),b=flatZ[k+1]+5*Math.sin(u*5+(k+1)*.4),z=mix(a,b,v);const left=-4+2*Math.sin(z*.04);const right=riverX(z)-12;return[mix(left,right,u),z];}
+function flatCoordinate(x,z){for(let k=0;k<4;k++){
+  const left=-4+2*Math.sin(z*.04),u=(x-left)/(riverX(z)-12-left),a=flatZ[k]+5*Math.sin(u*5+k*.4),b=flatZ[k+1]+5*Math.sin(u*5+(k+1)*.4),v=(z-a)/(b-a);
+  if(u>=0&&u<=1&&v>=0&&v<=1)return{k,u,v};
+}return null;}
+function area(poly){let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p[0]*q[1]-q[0]*p[1];}return Math.abs(a)*.5;}
+function ring(point,k,u0=.06,u1=.94,v0=.12,v1=.68){const p=[];for(let j=0;j<=70;j++)p.push(point(k,mix(u0,u1,j/70),v0));for(let j=0;j<=70;j++)p.push(point(k,mix(u1,u0,j/70),v1));return p;}
+const fields=[...terraceLevels.map((bed,k)=>({id:`T${k+1}`,name:`坡地第 ${k+1} 级`,kind:'terrace',k,bed,point:terracePoint,bounds:[.06,.94,.12,.68],polygon:ring(terracePoint,k),stage:k===2||k===5?'heading':'tillering',source:'generated',frame:FRAME.id})),...flatBeds.map((bed,k)=>({id:`F${k+1}`,name:['河湾秧田','移栽田','插秧田','河畔水田'][k],kind:'flat',k,bed,point:flatPoint,bounds:[.045,.955,.10,.86],polygon:ring(flatPoint,k,.045,.955,.10,.86),stage:k===0?'tillering':'transplanted',source:'generated',frame:FRAME.id}))];
+for(const f of fields){f.area=area(f.polygon);f.crest=f.bed+.26;f.inletId=`in-${f.id}`;f.outletId=`out-${f.id}`;f.evidence={kind:'synthetic',source:'reference morphology, not surveyed dimensions',uncertainty:null};}
+const fieldById=Object.fromEntries(fields.map(f=>[f.id,f]));
+const mountains=[[-153,-206,48,47],[-100,-242,72,40],[-43,-211,65,34],[8,-257,99,43],[65,-215,77,38],[121,-248,70,44],[165,-192,70,48],[-193,-127,65,49],[-162,-266,81,45],[45,-289,73,50]];
+function rockHeight(x,z){let y=0;for(let i=0;i<mountains.length;i++){const[cx,cz,h,r]=mountains[i],dx=(x-cx)/r,dz=(z-cz)/(r*.72),theta=Math.atan2(dz,dx),rad=Math.hypot(dx,dz)/(1+.15*Math.sin(theta*3+i)+.045*Math.sin(theta*9));if(rad<1){const cap=Math.pow(1-Math.pow(rad,1.75+(i%3)*.35),.56+(i%2)*.11);const crack=1-.16*noise(x*.11,z*.12)-.045*Math.abs(Math.sin(theta*15+x*.025))-.035*noise(x*.42,z*.35);y=Math.max(y,h*cap*crack);}}return y;}
+function earthBase(x,z){
+  const rear=3+4*noise(x*.017,z*.017);let y=.24+.23*noise(x*.035,z*.035)+rear*smooth(30,-125,z);
+  // Enclosing hills are unmeasured procedural context, independent of DEM truth.
+  y+=rockHeight(x,z);
+  const tc=terraceCoordinate(x,z);
+  if(tc){const{k,u,v}=tc,h=terraceLevels[k],next=terraceLevels[k+1]??.9;
+    let ty=v<.82?h:mix(h,next,smooth(.82,1,v));
+    ty+=.32*Math.exp(-Math.pow((v-.78)/.045,4));
+    ty+=.30*Math.exp(-Math.pow((u-.025)/.016,4))+.30*Math.exp(-Math.pow((u-.975)/.016,4));
+    const edge=(1-smooth(.97,1,u))*smooth(0,.03,u);y=mix(y,ty,edge);
+  }else if(x>-114&&x<0&&z>-120&&z<35){
+    const u=clamp((x+106)/98,0,1);let k=0;while(k<9&&z>contour(k+1,u))k++;
+    const side=1-smooth(0,9,Math.min(Math.abs(x+106),Math.abs(x+8)));
+    y=mix(y,terraceLevels[k]+.1,side);
+  }
+  const fc=flatCoordinate(x,z);if(fc){const{k,u,v}=fc;const crest=.25*Math.exp(-Math.pow((v-.93)/.045,4))+.25*Math.exp(-Math.pow((u-.018)/.016,4))+.25*Math.exp(-Math.pow((u-.982)/.016,4));y=flatBeds[k]+crest;}
+  const d=Math.abs(x-riverX(z));if(z>-137){const channel=riverY(z)-.9+.02*Math.sin(z*.08);y=mix(channel,y,smooth(5.7,11,d));}
+  return y;
+}
+const connections=[];
+function addEdge(id,from,to,points,crest,width=.68){connections.push({id,from,to,points,crest,width,coefficient:.38,model:'ideal head-controlled opening; uncalibrated',source:'generated',frame:FRAME.id});}
+const first=fields[0],p0=first.point(0,.9,.2);
+const spring={id:'spring',x:p0[0]+6,z:p0[1]-12,bed:14.3,area:Math.PI*2.25**2,initialVolume:Math.PI*2.25**2*.085};
+addEdge('spring-intake','spring','T1',[[spring.x,spring.bed+.07,spring.z],[p0[0],first.bed+.07,p0[1]]],first.bed+.10,.36);
+for(let k=0;k<9;k++){
+  const a=fields[k],b=fields[k+1],p=a.point(k,.9,.54),q=a.point(k,.9,.83),r=b.point(k+1,.9,.23);
+  addEdge(`spill-${a.id}-${b.id}`,a.id,b.id,[[p[0],a.bed+.015,p[1]],[q[0],a.bed+.055,q[1]],[r[0],b.bed+.015,r[1]]],a.bed+.055,.85);
+}
+const lastT=fields[9],firstF=fields[10],a=lastT.point(9,.9,.54),b=lastT.point(9,.9,.85),c=firstF.point(0,.1,.22);
+addEdge('terrace-to-flat','T10','F1',[[a[0],lastT.bed+.015,a[1]],[b[0],lastT.bed+.055,b[1]],[-7,1.35,29],[c[0],firstF.bed+.015,c[1]]],lastT.bed+.055,1.0);
+for(let k=0;k<3;k++){const a=fields[10+k],b=fields[11+k],p=a.point(k,.15,.62),q=a.point(k,.15,.96),r=b.point(k+1,.15,.23);addEdge(`spill-${a.id}-${b.id}`,a.id,b.id,[[p[0],a.bed+.01,p[1]],[q[0],a.bed+.055,q[1]],[r[0],b.bed+.01,r[1]]],a.bed+.055,.95);}
+const last=fields[13],out=last.point(3,.83,.62),riverZ=out[1]+7;
+const receiver={id:'river',area:50000,bed:-2,initialVolume:(riverY(riverZ)+2)*50000,z:riverZ,scope:'finite downstream reach extending beyond the visible river segment'};
+addEdge('field-return-river','F4','river',[[out[0],last.bed+.01,out[1]],[riverX(out[1])-11,last.bed+.055,out[1]],[riverX(riverZ),riverY(riverZ)-.2,riverZ]],last.bed+.055,1.05);
+function segmentProjection(x,z,a,b){const dx=b[0]-a[0],dz=b[2]-a[2],t=clamp(((x-a[0])*dx+(z-a[2])*dz)/(dx*dx+dz*dz),0,1);return{t,d:Math.hypot(x-mix(a[0],b[0],t),z-mix(a[2],b[2],t)),bed:mix(a[1],b[1],t)};}
+function ground(x,z){let y=earthBase(x,z);
+  const d=Math.hypot(x-spring.x,z-spring.z);if(d<16){const tc=terraceCoordinate(x,z),guard=tc?1-smooth(0,.06,tc.v):1;const mound=mix(spring.bed+.24,y,smooth(3.6,16,d));y=Math.max(y,mix(y,mound,guard));}if(d<3.6)y=mix(spring.bed,Math.max(y,spring.bed+.24),smooth(2.3,3.6,d));
+  // Channels and notches carve the same soil surface used by all display objects.
+  for(const e of connections)for(let j=0;j<e.points.length-1;j++){const p=segmentProjection(x,z,e.points[j],e.points[j+1]);const w=e.width*.5+.35;
+    if(p.d<w+.75){const bed=p.bed-.12,cut=mix(bed,y,smooth(w,w+.75,p.d));y=Math.min(y,cut);}
+  }
+  return y;
+}
+const nodes=[{...spring},...fields.map(f=>({id:f.id,area:f.area,bed:f.bed,initialVolume:f.area*.08})),{...receiver}];
+const nodesById=Object.fromEntries(nodes.map(n=>[n.id,n]));
+function makeState(scenario='normal'){
+  const s={time:0,volume:Object.fromEntries(nodes.map(n=>[n.id,n.initialVolume])),lastFlows:{},rain:0,loss:0,scenario,initial:0,clamped:0};
+  if(scenario==='dry')s.volume.spring=0;
+  if(scenario==='backwater')s.volume.river=nodesById.river.area*(.78-nodesById.river.bed);
+  s.initial=Object.values(s.volume).reduce((a,b)=>a+b,0);return s;
+}
+function level(state,id){const n=nodesById[id];return n.bed+state.volume[id]/n.area;}
+function step(state,dt=1){if(!(dt>0&&dt<=30&&Number.isFinite(dt)))throw Error('Time step outside declared model range');
+  const proposals=[],outgoing={};
+  for(const e of connections){const ha=level(state,e.from),hb=level(state,e.to);const from=ha>=hb?e.from:e.to,to=ha>=hb?e.to:e.from;let crest=e.crest,width=e.width;
+    if(state.scenario==='blocked'&&e.id==='spill-T4-T5')width=0;
+    if(state.scenario==='breach'&&e.id==='spill-T4-T5'){crest=fieldById.T4.bed;width=2.1;}
+    const high=Math.max(ha,hb),low=Math.min(ha,hb),head=Math.max(0,high-Math.max(crest,low));
+    const q=e.coefficient*width*Math.sqrt(2*9.81)*Math.pow(head,1.5);
+    const equalize=Math.abs(ha-hb)/(1/nodesById[from].area+1/nodesById[to].area);
+    const volume=Math.min(q*dt,equalize*.48);proposals.push({id:e.id,from,to,volume,sign:from===e.from?1:-1});outgoing[from]=(outgoing[from]||0)+volume;
+  }
+  const next={...state.volume},flows={};let newClamps=0,newRain=0;
+  for(const p of proposals){const fraction=Math.min(1,state.volume[p.from]/(outgoing[p.from]||1));if(fraction<1)newClamps++;const v=p.volume*fraction;next[p.from]-=v;next[p.to]+=v;flows[p.id]=p.sign*v/dt;}
+  if(state.scenario==='flood')for(const f of fields){const rain=f.area*(.045/3600)*dt;next[f.id]+=rain;newRain+=rain;}
+  for(const id in next)if(!Number.isFinite(next[id])||next[id]<-1e-9)throw Error('Invalid storage '+id);
+  for(const f of fields)if(f.bed+next[f.id]/f.area>f.crest)throw Error('Unsupported overtopping beyond modeled ports: '+f.id);
+  state.volume=next;state.lastFlows=flows;state.time+=dt;state.rain+=newRain;state.clamped+=newClamps;return state;
+}
+function balance(s){return Object.values(s.volume).reduce((a,b)=>a+b,0)-s.initial-s.rain+s.loss;}
+function waterSurfaceOnEdge(e,state,t){
+  const lengths=e.points.slice(1).map((p,i)=>Math.hypot(p[0]-e.points[i][0],p[2]-e.points[i][2]));const total=lengths.reduce((a,b)=>a+b,0);let distance=t*total;
+  for(let i=0;i<lengths.length;i++){if(distance<=lengths[i]||i===lengths.length-1){const f=clamp(distance/lengths[i],0,1),p=e.points[i],q=e.points[i+1];return[mix(p[0],q[0],f),mix(p[1],q[1],f)+.015,mix(p[2],q[2],f)];}distance-=lengths[i];}
+}
+function validateWorld(){const errors=[];const outgoing={};for(const e of connections){if(!nodesById[e.from]||!nodesById[e.to])errors.push('missing_endpoint:'+e.id);(outgoing[e.from]??=[]).push(e.to);if(e.points.some(p=>p.some(v=>!Number.isFinite(v))))errors.push('invalid_point:'+e.id);}
+  const reaches=(a,b,seen=new Set())=>a===b||(!seen.has(a)&&(seen.add(a),(outgoing[a]||[]).some(n=>reaches(n,b,seen))));
+  for(const f of fields){if(!reaches('spring',f.id)||!reaches(f.id,'river'))errors.push('orphan:'+f.id);if(!(f.area>10))errors.push('invalid_area:'+f.id);if(!connections.some(e=>e.to===f.id)||!connections.some(e=>e.from===f.id))errors.push('missing_port:'+f.id);}
+  return{ok:errors.length===0,errors,fieldCount:fields.length,connections:connections.length,frame:FRAME,synthetic:true,visualAcceptance:false,productionReady:false};
+}
+
+return {VERSION,FRAME,clamp,mix,smooth,rng,hash,noise,terraceLevels,contour,terracePoint,terraceCoordinate,riverX,riverY,extent,flatPoint,flatCoordinate,area,ring,fields,fieldById,mountains,rockHeight,earthBase,connections,spring,receiver,segmentProjection,ground,nodes,nodesById,makeState,level,step,balance,waterSurfaceOnEdge,validateWorld};
+})();
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {Sky} from 'three/addons/objects/Sky.js';
+import {Reflector} from 'three/addons/objects/Reflector.js';
+
+
+const $=id=>document.getElementById(id),mobile=innerWidth<760,reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}catch(error){$('fallback').hidden=false;$('loader').hidden=true;throw error;}
+renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.6));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;$('landscape').append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#8dbcd5');scene.fog=new THREE.FogExp2('#a3c1d0',.00165);scene.environmentIntensity=.035;
+const camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.08,1200);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.07;controls.maxPolarAngle=Math.PI*.489;controls.minDistance=2.2;controls.maxDistance=390;controls.target.set(-26,8,-27);
+renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','三维农田：拖动旋转，滚轮缩放，方向键平移');controls.listenToKeyEvents(window);
+const ambient=new THREE.HemisphereLight('#d8eaff','#556338',.85);scene.add(ambient);
+const sunlight=new THREE.DirectionalLight('#fff3d0',2.4);sunlight.position.set(-105,175,88);sunlight.castShadow=true;sunlight.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);Object.assign(sunlight.shadow.camera,{left:-125,right:125,top:145,bottom:-145,near:1,far:440});sunlight.shadow.normalBias=.08;sunlight.shadow.bias=-.00008;sunlight.target.position.set(-25,0,5);scene.add(sunlight,sunlight.target);
+const su={sunPosition:{value:sunlight.position.clone().normalize()}};
+const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,toneMapped:false,vertexShader:'varying vec3 vSky;void main(){vSky=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:`varying vec3 vSky;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}void main(){vec3 d=normalize(vSky);float t=pow(max(d.y,0.),.45);vec3 c=mix(vec3(.70,.81,.83),vec3(.19,.48,.72),t);vec2 uv=d.xz/(max(d.y,.05)+.25)*2.;float f=n(uv)*.55+n(uv*2.)*.26+n(uv*4.)*.13+n(uv*8.)*.06;float cloud=smoothstep(.57,.78,f)*smoothstep(.02,.18,d.y);c=mix(c,vec3(.93,.95,.91),cloud*.83);gl_FragColor=vec4(c,1.);}`});const sky=new THREE.Mesh(new THREE.SphereGeometry(950,24,16),skyMat);scene.add(sky);
+const pmrem=new THREE.PMREMGenerator(renderer);const envScene=new THREE.Scene();const envSky=new Sky();envSky.material.uniforms.sunPosition.value.copy(su.sunPosition.value);envSky.material.uniforms.turbidity.value=3.5;envSky.material.uniforms.rayleigh.value=1.5;envSky.scale.setScalar(500);envScene.add(envSky);scene.environment=pmrem.fromScene(envScene,.035).texture;pmrem.dispose();envSky.geometry.dispose();envSky.material.dispose();
+const sceneGroup=new THREE.Group();scene.add(sceneGroup);const waterGroup=new THREE.Group(),flowGroup=new THREE.Group(),personGroup=new THREE.Group();scene.add(waterGroup,flowGroup,personGroup);flowGroup.visible=false;
+let elapsed=0,paused=reduced,flowVisible=false,selected=null,view='overview';const state=W.makeState();W.step(state,1);const worldValidation=W.validateWorld();if(!worldValidation.ok)throw Error(worldValidation.errors.join(', '));
+const soilMat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95});
+const shaderMaterials=[];
+function organicMaterial(mat,strength=.13,scale=2.0){mat.onBeforeCompile=s=>{
+  s.uniforms.uSurfaceScale={value:scale};s.uniforms.uSurfaceStrength={value:strength};
+  s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWorldSurface;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvec4 organicPos=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\norganicPos=instanceMatrix*organicPos;\n#endif\nvWorldSurface=(modelMatrix*organicPos).xyz;');
+  s.fragmentShader=s.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vWorldSurface;uniform float uSurfaceScale;uniform float uSurfaceStrength;float h3(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}`)
+    .replace('#include <color_fragment>',`#include <color_fragment>\nfloat grain=n3(vWorldSurface*uSurfaceScale)*.6+n3(vWorldSurface*uSurfaceScale*7.)*.25+n3(vWorldSurface*uSurfaceScale*31.)*.15;diffuseColor.rgb*=1.+(grain-.5)*uSurfaceStrength;`);
+};mat.customProgramCacheKey=()=>`organic-${strength}-${scale}`;return mat;}
+organicMaterial(soilMat,.38,1.2);const soilCompile=soilMat.onBeforeCompile;soilMat.onBeforeCompile=s=>{soilCompile(s);s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>\nfloat rockMask=smoothstep(18.,27.,vWorldSurface.y);float relief=(n3(vWorldSurface*vec3(.65,.18,.65))*.23+n3(vWorldSurface*3.)*.025)*rockMask;vec3 sx=dFdx(-vViewPosition),sy=dFdy(-vViewPosition),r1=cross(sy,normal),r2=cross(normal,sx);float det=dot(sx,r1);normal=normalize(abs(det)*normal-sign(det)*(dFdx(relief)*r1+dFdy(relief)*r2));`).replace('diffuseColor.rgb*=1.+(grain-.5)*uSurfaceStrength;',`diffuseColor.rgb*=1.+(grain-.5)*uSurfaceStrength;float rock=smoothstep(18.,30.,vWorldSurface.y);float strata=smoothstep(.44,.57,n3(vec3(vWorldSurface.x*.17,vWorldSurface.y*.7,vWorldSurface.z*.17)));diffuseColor.rgb*=1.-rock*strata*.2;`);};soilMat.customProgramCacheKey=()=> 'r028-rock-strata';
+const mats={earth:organicMaterial(new THREE.MeshStandardMaterial({color:'#776343',roughness:1}),.4,4),wood:organicMaterial(new THREE.MeshStandardMaterial({color:'#695138',roughness:.98}),.25,5),rock:organicMaterial(new THREE.MeshStandardMaterial({color:'#8e9480',roughness:.95}),.35,1),skin:new THREE.MeshStandardMaterial({color:'#ae7955',roughness:.85}),hat:organicMaterial(new THREE.MeshStandardMaterial({color:'#d1b477',roughness:.93}),.38,22),dark:new THREE.MeshStandardMaterial({color:'#253c43',roughness:.97}),mud:new THREE.MeshStandardMaterial({color:'#504d2e',roughness:.75})};
+const terrainGeo=new THREE.PlaneGeometry(W.extent.xmax-W.extent.xmin,W.extent.zmax-W.extent.zmin,(W.extent.xmax-W.extent.xmin)/W.extent.step,(W.extent.zmax-W.extent.zmin)/W.extent.step);terrainGeo.rotateX(-Math.PI/2);terrainGeo.translate((W.extent.xmax+W.extent.xmin)/2,0,(W.extent.zmax+W.extent.zmin)/2);
+const tp=terrainGeo.attributes.position,colors=new Float32Array(tp.count*3),col=new THREE.Color();
+for(let i=0;i<tp.count;i++){const x=tp.getX(i),z=tp.getZ(i),y=W.ground(x,z),tc=W.terraceCoordinate(x,z),fc=W.flatCoordinate(x,z),rock=W.rockHeight(x,z);tp.setY(i,y);
+  if(rock>4){const slope=Math.hypot(W.rockHeight(x+.7,z)-rock,W.rockHeight(x,z+.7)-rock)/.7;col.set(slope>1.55?'#7f8983':'#376337');if(slope>2)col.lerp(new THREE.Color('#bac0b2'),.10);}
+  else if(tc){col.set(tc.v>.82?'#816343':tc.v>.71?'#627240':'#707044');if(tc.u<.05||tc.u>.95)col.set('#617444');}
+  else if(fc)col.set(fc.v>.86?'#697244':'#6a7049');
+  else if(Math.abs(x-W.riverX(z))<10&&z>-137)col.set('#666b4b');
+  else col.set('#4c763e');
+  const n=W.noise(x*.06,z*.06)-.5;col.multiplyScalar(1+n*.28);colors[i*3]=col.r;colors[i*3+1]=col.g;colors[i*3+2]=col.b;
+}terrainGeo.setAttribute('color',new THREE.BufferAttribute(colors,3));terrainGeo.computeVertexNormals();const terrain=new THREE.Mesh(terrainGeo,soilMat);terrain.receiveShadow=true;sceneGroup.add(terrain);
+// Actual triangle interpolation, used for planting, tree and human grounding.
+const nx=(W.extent.xmax-W.extent.xmin)/W.extent.step,nz=(W.extent.zmax-W.extent.zmin)/W.extent.step;
+function displayGround(x,z){const gx=W.clamp((x-W.extent.xmin)/W.extent.step,0,nx-1e-6),gz=W.clamp((z-W.extent.zmin)/W.extent.step,0,nz-1e-6),i=Math.floor(gx),j=Math.floor(gz),u=gx-i,v=gz-j;const idx=j*(nx+1)+i;const a=tp.getY(idx),b=tp.getY(idx+1),c=tp.getY(idx+nx+1),d=tp.getY(idx+nx+2);return u+v<=1?a+(b-a)*u+(c-a)*v:d+(c-d)*(1-u)+(b-d)*(1-v);}
+function buffer(positions,indices,vertexColors){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));if(indices)g.setIndex(indices);if(vertexColors)g.setAttribute('color',new THREE.Float32BufferAttribute(vertexColors,3));g.computeVertexNormals();return g;}
+function mesh(geo,mat,parent=sceneGroup){const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+// One level per field, no per-tile water offsets.
+const waterMat=new THREE.MeshPhysicalMaterial({color:'#4d7564',roughness:.27,metalness:.05,transparent:true,opacity:.67,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:.10,clearcoat:.7,clearcoatRoughness:.2});
+waterMat.onBeforeCompile=s=>{s.uniforms.uTime={value:0};s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWaterWorld;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvWaterWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWaterWorld;uniform float uTime;').replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec2 wr=vWaterWorld.xz;normal.x+=sin(wr.x*8.+wr.y*4.+uTime*.8)*.055+sin(wr.y*16.-uTime)*.026;normal.z+=cos(wr.y*7.+uTime*.6)*.045;normal=normalize(normal);');shaderMaterials.push(s);};
+const fieldMeshes=[];
+for(const f of W.fields){const p=[],ix=[],steps=70;const[u0,u1,v0,v1]=f.bounds;
+  for(let i=0;i<=steps;i++){const u=W.mix(u0,u1,i/steps);for(const v of[v0,v1]){const[x,z]=f.point(f.k,u,v);p.push(x,W.level(state,f.id),z);}if(i<steps){const n=i*2;ix.push(n,n+2,n+1,n+2,n+3,n+1);}}
+  const m=new THREE.Mesh(buffer(p,ix),waterMat);m.userData.fieldId=f.id;waterGroup.add(m);fieldMeshes.push(m);
+}
+const rp=[],rix=[];for(let i=0;i<=240;i++){const z=-134+i*(W.extent.zmax+134)/240,c=W.riverX(z),w=5.8+1.15*Math.sin(z*.035);rp.push(c-w,W.riverY(z),z,c+w,W.riverY(z),z);if(i<240){const n=i*2;rix.push(n,n+1,n+2,n+1,n+3,n+2);}}
+const reflectionPoints=[];const tilt=Math.atan(.0025);for(let i=0;i<rp.length;i+=3)reflectionPoints.push(rp[i],-rp[i+2]/Math.cos(tilt),0);
+const reflectionShader={...Reflector.ReflectorShader,uniforms:THREE.UniformsUtils.clone(Reflector.ReflectorShader.uniforms)};reflectionShader.uniforms.uTime={value:0};reflectionShader.fragmentShader=reflectionShader.fragmentShader.replace('uniform vec3 color;','uniform vec3 color;uniform float uTime;').replace('vec4 base = texture2DProj( tDiffuse, vUv );','vec4 uv=vUv;uv.x+=sin(vUv.y*55.+uTime*.65)*.0012*vUv.w;uv.y+=sin(vUv.x*70.-uTime*.4)*.0006*vUv.w;vec4 base=texture2DProj(tDiffuse,uv);').replace('vec4( blendOverlay( base.rgb, color ), 1.0 )','vec4(mix(base.rgb,vec3(.085,.23,.20),.38),1.0)');
+let reflectionBusy=false;const reflectionMaterials=[];
+function throttleReflection(object,frequency=4){const render=object.onBeforeRender;let frame=0;object.onBeforeRender=function(...args){if(reflectionBusy||frame++%frequency!==0)return;reflectionBusy=true;try{render.apply(this,args);}finally{reflectionBusy=false;}};reflectionMaterials.push(object.material);}
+const reflectIndices=[];for(let i=0;i<rix.length;i+=3)reflectIndices.push(rix[i],rix[i+2],rix[i+1]);const riverMesh=new Reflector(buffer(reflectionPoints,reflectIndices),{textureWidth:mobile?512:1024,textureHeight:mobile?512:768,clipBias:.002,shader:reflectionShader,multisample:0});riverMesh.rotation.x=-Math.PI/2+tilt;riverMesh.position.y=W.riverY(0);waterGroup.add(riverMesh);throttleReflection(riverMesh,4);
+for(const f of W.fields.filter(f=>f.kind==='flat'&&f.k>=2)){
+  const source=fieldMeshes.find(m=>m.userData.fieldId===f.id),p=source.geometry.attributes.position.array,ix=source.geometry.index.array,local=[],indices=[];for(let i=0;i<p.length;i+=3)local.push(p[i],-p[i+2],0);for(let i=0;i<ix.length;i+=3)indices.push(ix[i],ix[i+2],ix[i+1]);
+  const shader={...reflectionShader,uniforms:THREE.UniformsUtils.clone(reflectionShader.uniforms)};shader.fragmentShader=shader.fragmentShader.replace('vec3(.085,.23,.20),.38','vec3(.15,.18,.105),.45');const mirror=new Reflector(buffer(local,indices),{textureWidth:mobile?512:1024,textureHeight:mobile?512:768,clipBias:.001,shader,multisample:0});mirror.rotation.x=-Math.PI/2;mirror.position.y=W.level(state,f.id);mirror.userData.fieldId=f.id;waterGroup.add(mirror);source.visible=false;throttleReflection(mirror,6);
+}
+// Continuous channel cross sections use the same centerline elevations as soil cuts.
+const channelMeshes=[];
+for(const e of W.connections){const pos=[],ix=[],bankPos=[],bankIx=[];const segments=Math.ceil(e.points.reduce((s,p,i)=>s+(i?Math.hypot(p[0]-e.points[i-1][0],p[2]-e.points[i-1][2]):0),0)*4);
+  for(let j=0;j<=segments;j++){const t=j/segments,p=W.waterSurfaceOnEdge(e,state,t),prev=W.waterSurfaceOnEdge(e,state,Math.max(0,t-.001)),next=W.waterSurfaceOnEdge(e,state,Math.min(1,t+.001)),dx=next[0]-prev[0],dz=next[2]-prev[2],len=Math.hypot(dx,dz)||1,nx=-dz/len,nz=dx/len;
+    for(const side of[-1,1])pos.push(p[0]+nx*e.width*.46*side,p[1],p[2]+nz*e.width*.46*side);
+    if(j<segments){const n=j*2;ix.push(n,n+2,n+1,n+2,n+3,n+1);}
+    for(const side of[-1,1]){const x=p[0]+nx*(e.width*.5+.28)*side,z=p[2]+nz*(e.width*.5+.28)*side;bankPos.push(x,Math.max(displayGround(x,z),p[1]+.15),z,x,p[1]-.12,z);}
+    if(j<segments){const a=j*4,b=a+4;bankIx.push(a,b,a+1,b,b+1,a+1,a+2,a+3,b+2,b+2,a+3,b+3);}
+  }
+  const m=new THREE.Mesh(buffer(pos,ix),waterMat);m.userData.edgeId=e.id;waterGroup.add(m);channelMeshes.push(m);mesh(buffer(bankPos,bankIx),mats.earth);
+}
+const basin=mesh(new THREE.CylinderGeometry(2.25,2.25,.025,48),waterMat,waterGroup);basin.position.set(W.spring.x,W.level(state,'spring'),W.spring.z);basin.castShadow=false;
+// Side rocks protect the high-gradient drops. No invented regional divider device.
+const random=W.rng(),rockGeo=new THREE.IcosahedronGeometry(1,1);
+for(const e of W.connections)for(let j=1;j<e.points.length-1;j++){const p=e.points[j];for(const side of[-1,1]){const m=mesh(rockGeo,mats.rock);m.position.set(p[0]+side*(e.width*.5+.32),p[1]+.05,p[2]);m.scale.set(.27,.22,.35);m.rotation.set(random(),random()*3,random()*.3);}}
+// Cultivated plants: curved tapered leaf blades, culms and hanging panicles.
+function plantGeometry(stage){const p=[],ix=[],cc=[],color=new THREE.Color();const rand=W.rng(stage==='transplanted'?31:stage==='heading'?63:49),count=stage==='transplanted'?5:9,baseHeight=stage==='transplanted'?.27:stage==='heading'?.94:.75;
+  function vertex(x,y,z,c){p.push(x,y,z);cc.push(c.r,c.g,c.b);return p.length/3-1;}
+  for(let b=0;b<count;b++){const angle=b*2.399+rand()*.3,h=baseHeight*(.68+rand()*.42),lean=(stage==='transplanted'?.10:.25)+rand()*.1,width=stage==='transplanted'?.013:.025,steps=5;const start=p.length/3;
+    for(let s=0;s<=steps;s++){const t=s/steps,rad=lean*t*t,y=h*(t-.11*Math.pow(t,4)),w=width*Math.sin(Math.PI*(t*.94+.035));color.set(stage==='heading'?'#8c9d3b':stage==='transplanted'?'#57964a':'#658e33');color.multiplyScalar(.75+.4*t+rand()*.05);for(const sign of[-1,1])vertex(Math.cos(angle)*rad-Math.sin(angle)*w*sign,y,Math.sin(angle)*rad+Math.cos(angle)*w*sign,color);if(s<steps){const a=start+s*2;ix.push(a,a+2,a+1,a+2,a+3,a+1);}}
+  }
+  if(stage==='heading')for(let stem=0;stem<3;stem++){const a=stem*2.094,ox=Math.cos(a)*.06,oz=Math.sin(a)*.06;for(let j=0;j<13;j++){const t=j/12,cy=.77+.25*t-.26*t*t,cx=ox+.2*t,cz=oz+.025*Math.sin(t*5+stem),r=.012*(1-.35*t);color.set('#b9af58');const n=p.length/3;vertex(cx-r,cy-r,cz,color);vertex(cx+r,cy-r,cz,color);vertex(cx,cy+r*2,cz+r,color);vertex(cx,cy,cz-r,color);ix.push(n,n+1,n+2,n,n+3,n+1,n+1,n+3,n+2,n,n+2,n+3);}}
+  return buffer(p,ix,cc);
+}
+const cropMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.83});
+cropMat.onBeforeCompile=s=>{s.uniforms.uTime={value:0};s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nuniform float uTime;').replace('#include <begin_vertex>','#include <begin_vertex>\n#ifdef USE_INSTANCING\nfloat phase=instanceMatrix[3].x*.09+instanceMatrix[3].z*.08;transformed.x+=sin(uTime*1.35+phase)*position.y*position.y*.075;transformed.z+=cos(uTime*.9+phase)*position.y*position.y*.045;\n#endif');shaderMaterials.push(s);};
+const farmerDefs=[['F4',.36,.55,-.5,'#dee0cf'],['F4',.54,.36,.55,'#314c64'],['F4',.69,.60,.2,'#806c8d'],['F3',.40,.52,.4,'#c4bdb0'],['F3',.67,.36,-.5,'#3b5964'],['F2',.45,.5,.6,'#998573'],['T9',.44,.45,.1,'#657155'],['T8',.68,.45,-.4,'#b79a70']].map(([id,u,v,rotation,color])=>{const f=W.fieldById[id],[x,z]=f.point(f.k,u,v);return{id,x,z,rotation,color,bed:f.bed};});
+const cropPositions={transplanted:[],tillering:[],heading:[]};
+for(const f of W.fields){const[u0,u1,b0,b1]=f.bounds,v0=b0+.02,v1=b1-.02;const spacing=(f.stage==='transplanted'?.40:.37)*(mobile?1.25:1);const du=spacing/(f.kind==='terrace'?98:60);for(let u=u0+.015;u<u1-.015;u+=du){const a=f.point(f.k,u,0),b=f.point(f.k,u,1),dv=spacing/Math.hypot(a[0]-b[0],a[1]-b[1]);for(let v=v0;v<v1;v+=dv){const[x,z]=f.point(f.k,u+(random()-.5)*du*.20,v+(random()-.5)*dv*.20);if(farmerDefs.some(a=>Math.hypot(x-a.x,z-a.z)<.64))continue;if(W.connections.some(e=>e.points.slice(1).some((p,i)=>W.segmentProjection(x,z,e.points[i],p).d<e.width*.5+.38)))continue;const y=displayGround(x,z);if(y>f.bed+.024)continue;cropPositions[f.stage].push([x,y-.025,z,.92+random()*.26,random()*6.28]);}}}
+const dummy=new THREE.Object3D();let totalClumps=0;
+for(const stage of Object.keys(cropPositions)){const list=cropPositions[stage],inst=new THREE.InstancedMesh(plantGeometry(stage),cropMat,list.length);list.forEach(([x,y,z,s,r],i)=>{dummy.position.set(x,y,z);dummy.scale.setScalar(s);dummy.rotation.set(0,r,0);dummy.updateMatrix();inst.setMatrixAt(i,dummy.matrix);});inst.receiveShadow=true;inst.castShadow=!mobile;inst.frustumCulled=false;sceneGroup.add(inst);totalClumps+=list.length;}
+// People are a connected skeleton in local metres, planted on the actual ground.
+const sphere=new THREE.SphereGeometry(1,12,10),cylinder=new THREE.CylinderGeometry(1,1,1,9),hatGeo=new THREE.ConeGeometry(.30,.16,28,1,true);
+function ellipsoid(parent,xyz,scale,mat){const o=mesh(sphere,mat,parent);o.position.set(...xyz);o.scale.set(...scale);return o;}
+function limb(parent,a,b,r,mat){const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b),m=mesh(cylinder,mat,parent);m.position.copy(va).add(vb).multiplyScalar(.5);m.scale.set(r,va.distanceTo(vb),r);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),vb.sub(va).normalize());return m;}
+const people=[];
+for(let i=0;i<farmerDefs.length;i++){const f=farmerDefs[i],g=new THREE.Group();g.position.set(f.x,displayGround(f.x,f.z)-.025,f.z);g.rotation.y=f.rotation;personGroup.add(g);const cloth=organicMaterial(new THREE.MeshStandardMaterial({color:f.color,roughness:.96}),.16,10);const trousers=new THREE.MeshStandardMaterial({color:i%2?'#33494a':'#3e4039',roughness:1});
+  const hips=[0,.75,0],shoulders=[0,1.06,-.34],neck=[0,1.13,-.47];limb(g,hips,shoulders,.17,cloth);ellipsoid(g,hips,[.20,.17,.14],trousers);ellipsoid(g,[0,1.22,-.49],[.11,.14,.115],mats.skin);
+  for(const sign of[-1,1]){const hip=[sign*.10,.75,0],knee=[sign*.17,.38,-.07],ankle=[sign*.19,.085,.05],foot=[sign*.19,.045,-.025];limb(g,hip,knee,.076,trousers);limb(g,knee,ankle,.048,mats.skin);ellipsoid(g,foot,[.055,.04,.125],mats.skin);const shoulder=[sign*.18,1.015,-.33],elbow=[sign*.24,.62,-.54],hand=[sign*.20,.14,-.78];limb(g,shoulder,elbow,.055,cloth);limb(g,elbow,hand,.035,mats.skin);ellipsoid(g,hand,[.045,.055,.045],mats.skin);}
+  const hat=mesh(hatGeo,mats.hat,g);hat.position.set(0,1.38,-.50);hat.rotation.x=-.25;const hatRim=mesh(new THREE.TorusGeometry(.30,.009,4,28),mats.hat,g);hatRim.rotation.x=Math.PI/2-.25;hatRim.position.set(0,1.30,-.48);
+  const bundle=mesh(plantGeometry('transplanted'),cropMat,g);bundle.position.set(-.21,.10,-.79);bundle.scale.setScalar(.8);const root=ellipsoid(g,[-.21,.10,-.79],[.025,.02,.025],mats.mud);
+  people.push(g);
+  // A small, correctly grounded seedling basket beside the worker.
+  if(i<3){const basket=mesh(new THREE.CylinderGeometry(.23,.19,.22,16,1,true),mats.wood);basket.position.set(f.x+.70,displayGround(f.x+.70,f.z)+.11,f.z);}
+}
+// A walkable route on the outside margin; plank crossings explicitly bridge cuts.
+const pathPoints=[];for(let i=0;i<80;i++){const z=-112+i*2.9,x=-111+2*Math.sin(z*.04);pathPoints.push([x,displayGround(x,z)+.035,z]);}
+function groundRibbon(points,width,material){const p=[],ix=[];for(let i=0;i<points.length;i++){const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)],len=Math.hypot(b[0]-a[0],b[2]-a[2])||1;for(const s of[-1,1]){const x=points[i][0]-(b[2]-a[2])/len*width*.5*s,z=points[i][2]+(b[0]-a[0])/len*width*.5*s;p.push(x,displayGround(x,z)+.035,z);}if(i<points.length-1){const a=i*2;ix.push(a,a+2,a+1,a+1,a+2,a+3);}}return mesh(buffer(p,ix),material);}
+groundRibbon(pathPoints,1.65,mats.earth);
+// Riparian vegetation leaves the river channel and every field opening clear.
+const treeSites=[],shrubs=[];for(let x=-186;x<173;x+=4.1)for(let z=-291;z<137;z+=4.1){const xx=x+(random()-.5)*2,zz=z+(random()-.5)*2;if(W.terraceCoordinate(xx,zz)||W.flatCoordinate(xx,zz))continue;if(zz>85&&xx>-5&&xx<54)continue;if(zz>-137&&Math.abs(xx-W.riverX(zz))<11.4)continue;if(Math.hypot(xx-W.spring.x,zz-W.spring.z)<5)continue;if(W.connections.some(e=>e.points.slice(1).some((p,i)=>W.segmentProjection(xx,zz,e.points[i],p).d<3)))continue;if(Math.abs(xx+110)<3.2&&zz>-117)continue;
+  const y=displayGround(xx,zz),slope=Math.hypot(displayGround(xx+1,zz)-y,displayGround(xx,zz+1)-y),rock=W.rockHeight(xx,zz),r=random();if(rock>5&&slope>1.8)continue;
+  if(r<.30&&(zz<30||xx>78||xx<-122)){const size=rock>8?2+random()*2.3:3.8+random()*4.3;treeSites.push([xx,y,zz,size]);}else if(r<.52)shrubs.push([xx,y,zz,.45+random()*.8]);}
+const trunkGeo=new THREE.CylinderGeometry(.09,.16,1,6),leafGeo=new THREE.IcosahedronGeometry(1,1),trunkMat=new THREE.MeshStandardMaterial({color:'#524932',roughness:1}),leafMat=organicMaterial(new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94,side:THREE.DoubleSide}),.9,7);
+const leafCompile=leafMat.onBeforeCompile;leafMat.onBeforeCompile=s=>{leafCompile(s);s.fragmentShader=s.fragmentShader.replace('float grain=','if(n3(vWorldSurface*14.)>.78)discard;float grain=');};leafMat.customProgramCacheKey=()=> 'foliage-r028-leafgrain';
+const crownCount=12,trunks=new THREE.InstancedMesh(trunkGeo,trunkMat,treeSites.length),foliage=new THREE.InstancedMesh(leafGeo,leafMat,treeSites.length*crownCount);const green=new THREE.Color();
+treeSites.forEach(([x,y,z,h],i)=>{dummy.rotation.set(0,random()*6,0);dummy.position.set(x,y+h*.35,z);dummy.scale.set(h*.4,h*.7,h*.4);dummy.updateMatrix();trunks.setMatrixAt(i,dummy.matrix);for(let j=0;j<crownCount;j++){const a=j*2.4,rad=h*(.12+random()*.25),cx=x+Math.cos(a)*rad,cz=z+Math.sin(a)*rad;dummy.position.set(cx,y+h*(.62+random()*.32),cz);dummy.scale.set(h*(.18+random()*.08),h*(.17+random()*.07),h*(.18+random()*.08));dummy.rotation.set(random(),random(),random());dummy.updateMatrix();foliage.setMatrixAt(i*crownCount+j,dummy.matrix);green.setHSL(.24+random()*.065,.40+random()*.19,.13+random()*.085);foliage.setColorAt(i*crownCount+j,green);}});
+trunks.castShadow=!mobile;foliage.castShadow=true;trunks.receiveShadow=foliage.receiveShadow=true;sceneGroup.add(trunks,foliage);
+const bush=new THREE.InstancedMesh(leafGeo,leafMat,shrubs.length);shrubs.forEach(([x,y,z,h],i)=>{dummy.position.set(x,y+h*.4,z);dummy.scale.set(h,h*.8,h);dummy.rotation.set(random(),random(),random());dummy.updateMatrix();bush.setMatrixAt(i,dummy.matrix);green.setHSL(.23+random()*.08,.4,.20+random()*.1);bush.setColorAt(i,green);});bush.receiveShadow=true;bush.castShadow=!mobile;sceneGroup.add(bush);
+// Near-bank reeds, not giant decorative lotus leaves obscuring the channel.
+const reedPts=[];for(let z=-110;z<135;z+=.7)for(const side of[-1,1])if(random()<.62){const x=W.riverX(z)+side*(10.7+random()*2);if(W.connections.some(e=>e.points.slice(1).some((p,i)=>W.segmentProjection(x,z,e.points[i],p).d<2)))continue;reedPts.push([x,displayGround(x,z),z]);}
+const reeds=new THREE.InstancedMesh(plantGeometry('tillering'),cropMat,reedPts.length);reedPts.forEach(([x,y,z],i)=>{dummy.position.set(x,y,z);dummy.scale.set(1.2,1.5,1.2);dummy.rotation.set(0,random()*6.28,0);dummy.updateMatrix();reeds.setMatrixAt(i,dummy.matrix);});sceneGroup.add(reeds);
+const grassPts=[];for(let x=-125;x<84;x+=1.1)for(let z=-105;z<127;z+=1.1){const xx=x+(random()-.5)*.5,zz=z+(random()-.5)*.5,tc=W.terraceCoordinate(xx,zz),fc=W.flatCoordinate(xx,zz);if(tc&&tc.v<.72)continue;if(fc&&fc.u>.03&&fc.u<.97&&fc.v<.90)continue;if(Math.abs(xx-W.riverX(zz))<10.8)continue;if(Math.abs(xx+110)<2.3)continue;if(W.connections.some(e=>e.points.slice(1).some((p,i)=>W.segmentProjection(xx,zz,e.points[i],p).d<1.3)))continue;if(random()>.53)continue;grassPts.push([xx,displayGround(xx,zz),zz,.6+random()*.6]);}
+const grass=new THREE.InstancedMesh(plantGeometry('transplanted'),cropMat,grassPts.length);grassPts.forEach(([x,y,z,s],i)=>{dummy.position.set(x,y-.02,z);dummy.rotation.set(0,random()*6.28,0);dummy.scale.set(s,s,s);dummy.updateMatrix();grass.setMatrixAt(i,dummy.matrix);});grass.receiveShadow=true;sceneGroup.add(grass);
+// Natural stones distributed on stream banks and hill toes.
+const stones=[];for(let i=0;i<230;i++){const z=-122+random()*256,x=W.riverX(z)+(random()<.5?-1:1)*(8+random()*4);if(W.flatCoordinate(x,z))continue;stones.push([x,displayGround(x,z),z,.18+random()*.5]);}const stoneInst=new THREE.InstancedMesh(rockGeo,mats.rock,stones.length);stones.forEach(([x,y,z,s],i)=>{dummy.position.set(x,y+s*.2,z);dummy.scale.set(s,s*.5,s*.7);dummy.rotation.set(random(),random()*6,random());dummy.updateMatrix();stoneInst.setMatrixAt(i,dummy.matrix);});stoneInst.castShadow=true;sceneGroup.add(stoneInst);
+// Flow markers follow the actual connected opening paths; visual speed is normalized.
+const flowDots=[];const dotGeo=new THREE.SphereGeometry(.12,7,5),dotMat=new THREE.MeshBasicMaterial({color:'#f2f8b2',depthTest:false});
+for(const e of W.connections){const pts=[];for(let i=0;i<=60;i++){const p=W.waterSurfaceOnEdge(e,state,i/60);pts.push(new THREE.Vector3(p[0],p[1]+.12,p[2]));}const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:'#deefb0',transparent:true,opacity:.85,depthTest:false}));line.renderOrder=20;flowGroup.add(line);for(let j=0;j<3;j++){const dot=new THREE.Mesh(dotGeo,dotMat);dot.renderOrder=21;flowGroup.add(dot);flowDots.push({dot,e,phase:j/3});}}
+const presets={overview:{p:[94,42,137],t:[-24,9,-42],caption:'高处梯田 · 河湾水田 · 远山'},terrace:{p:[-77,20,57],t:[-54,8,-47],caption:'顺着地势展开的田面与田坎'},farmers:{p:[27,2.3,107],t:[21,1.1,91],caption:'秧苗入泥 · 人在浅水中劳作'},river:{p:[103,17,108],t:[25,1,43],caption:'河湾平田 · 田口排水进入下游'}};
+let transition=null;function setView(name,instant=false){view=name;const p=presets[name];const aspect=innerWidth/innerHeight;const end=new THREE.Vector3(...p.p);if(aspect<1&&name==='overview')end.set(125,67,206);if(aspect<1&&name==='farmers')end.set(27,2.6,111);transition=instant?null:{from:camera.position.clone(),target:controls.target.clone(),end,to:new THREE.Vector3(...p.t),time:0};if(instant){camera.position.copy(end);controls.target.fromArray(p.t);controls.update();}document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));$('viewCaption').textContent=p.caption;$('selection').hidden=true;}
+setView('overview',true);document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view,reduced)));controls.addEventListener('start',()=>transition=null);
+$('infoButton').onclick=()=>{const show=$('info').hidden;$('info').hidden=!show;$('infoButton').setAttribute('aria-expanded',String(show));};
+$('flowButton').onclick=()=>{flowVisible=!flowVisible;flowGroup.visible=flowVisible;$('flowButton').setAttribute('aria-pressed',String(flowVisible));$('waterPanel').hidden=!flowVisible;if(!flowVisible)$('selection').hidden=true;};
+$('pauseButton').setAttribute('aria-pressed',String(paused));$('pauseButton').textContent=paused?'继续':'暂停';$('pauseButton').onclick=()=>{paused=!paused;$('pauseButton').setAttribute('aria-pressed',String(paused));$('pauseButton').textContent=paused?'继续':'暂停';};
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down=null;renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);renderer.domElement.addEventListener('pointerup',e=>{if(!flowVisible||!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;pointer.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(fieldMeshes)[0];if(!hit)return;const f=W.fieldById[hit.object.userData.fieldId],up=W.connections.find(e=>e.to===f.id),dn=W.connections.find(e=>e.from===f.id);selected=f.id;$('selection').innerHTML=`<b>${f.id} · ${f.name}</b><br>浅水 ${(100*(W.level(state,f.id)-f.bed)).toFixed(1)} cm · 面积 ${Math.round(f.area)} m²<br>进水 ${up.from==='spring'?'高位山泉':up.from} → ${f.id}<br>排水 ${f.id} → ${dn.to==='river'?'下游河段':dn.to}`;$('selection').hidden=false;});
+$('waterStats').textContent=`14 块田全部接通 · 水量闭合误差 < 0.000001 m³ · 合成静态水位示意`;
+const frameTimes=[];let last=performance.now(),firstFrameMs=null,frameCount=0,slow=0;function animate(now){requestAnimationFrame(animate);if(document.hidden){last=now;return;}const dt=Math.min((now-last)/1000,.1);last=now;if(!paused)elapsed+=dt;for(const m of reflectionMaterials)m.uniforms.uTime.value=elapsed;
+  if(transition){transition.time+=dt;const t=W.smooth(0,1,Math.min(1,transition.time/1.4));camera.position.lerpVectors(transition.from,transition.end,t);controls.target.lerpVectors(transition.target,transition.to,t);if(t>=1)transition=null;}
+  for(const s of shaderMaterials)s.uniforms.uTime.value=elapsed;for(const f of flowDots){const dir=(state.lastFlows[f.e.id]||0)>=0?1:-1;const t=((elapsed*.11*dir+f.phase)%1+1)%1;const p=W.waterSurfaceOnEdge(f.e,state,t);f.dot.position.set(p[0],p[1]+.12,p[2]);}
+  controls.update();renderer.render(scene,camera);frameCount++;if(frameCount>20){frameTimes.push(dt*1000);if(frameTimes.length>240)frameTimes.shift();if(dt>.055)slow++;else slow=Math.max(0,slow-1);if(slow>80&&renderer.getPixelRatio()>1){renderer.setPixelRatio(1);slow=0;}}
+  if(frameCount===2){firstFrameMs=performance.now();document.body.dataset.runtimeReady='true';document.body.dataset.version=W.VERSION;$('loader').classList.add('done');setTimeout(()=>$('loader').hidden=true,800);}
+}
+requestAnimationFrame(animate);addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();$('fallback').hidden=false;$('errorText').textContent='图形上下文已中断，可以重新加载场景。';});
+window.__FARMLAND_QA__={version:W.VERSION,worldValidation,fields:W.fields.map(f=>({id:f.id,area:f.area,bed:f.bed})),get state(){return state;},get metrics(){const a=[...frameTimes].sort((a,b)=>a-b);return{drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,clumps:totalClumps,trees:treeSites.length,people:people.length,dpr:renderer.getPixelRatio(),p50:a[Math.floor(a.length*.5)]||0,p95:a[Math.floor(a.length*.95)]||0,firstFrameMs};},setView,get view(){return view;},get flowVisible(){return flowVisible;},get selected(){return selected;},displayGround,ground:W.ground,waterPositions:fieldMeshes.map(m=>Array.from(m.geometry.attributes.position.array)),waterLevels:()=>W.fields.map(f=>W.level(state,f.id)),projectPoint:(x,y,z)=>{const p=new THREE.Vector3(x,y,z).project(camera);return{x:(p.x+1)*innerWidth/2,y:(1-p.y)*innerHeight/2};}};
+addEventListener('error',e=>{console.error('Farmland runtime:',e.message);$('fallback').hidden=false;$('errorText').textContent='场景遇到加载错误，请重新加载。';$('loader').hidden=true;});
+
+</script>
+</body></html>

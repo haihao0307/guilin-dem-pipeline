@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haihao0307.github.io/guilin-dem-pipeline/farmland-object-dna/schema/farmland-object-dna.schema.json",
+  "title": "Farmland Object DNA V0.1.2 — research water accounting",
+  "$comment": "Must be used with FARMLAND_PRODUCTION_RULES.md, V001_FAILURE_REGISTER.md and QUALITY_GATES.json. Schema conformance alone does not grant visual acceptance or production readiness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "spatial",
+    "parcel",
+    "hydraulics",
+    "soil",
+    "crop",
+    "laborSettlement",
+    "calendar",
+    "maintenance",
+    "degradation",
+    "coupling",
+    "representation"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world_id", "object_id", "type_id", "revision", "evidence", "review_status"],
+      "properties": {
+        "world_id": {"type": "string", "minLength": 1},
+        "object_id": {"type": "string", "minLength": 1},
+        "type_id": {"enum": ["paddy", "dry_field", "vegetable_garden", "orchard", "nursery", "fallow"]},
+        "variant_id": {"type": ["string", "null"]},
+        "configuration_id": {"type": ["string", "null"]},
+        "revision": {"type": "string", "minLength": 1},
+        "valid_time": {"type": ["object", "null"]},
+        "recorded_at": {"type": ["string", "null"]},
+        "evidence": {"$ref": "#/$defs/evidence"},
+        "review_status": {"enum": ["candidate", "checked", "accepted", "conflicted", "rejected"]}
+      }
+    },
+    "spatial": {
+      "type": "object",
+      "required": ["crs", "units", "boundary", "area_m2", "terrain_ref"],
+      "properties": {
+        "crs": {"type": ["string", "null"]},
+        "frame": {"type": ["string", "null"]},
+        "units": {"const": "m"},
+        "vertical_datum": {"type": ["string", "null"]},
+        "boundary": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 3,
+            "items": {"type": "number"}
+          }
+        },
+        "area_m2": {"type": "number", "exclusiveMinimum": 0},
+        "elevation_range_m": {
+          "type": ["array", "null"],
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"type": "number"}
+        },
+        "slope_mean_deg": {"type": ["number", "null"], "minimum": 0, "maximum": 90},
+        "terrain_ref": {"type": ["string", "null"]},
+        "terrain_features": {"type": ["object", "null"], "additionalProperties": true},
+        "research_status": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "parcel": {
+      "type": "object",
+      "required": ["cells", "bunds", "paths", "relations"],
+      "properties": {
+        "cells": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": true}},
+        "bunds": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "terrace_steps": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "paths": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}},
+        "scale_modulus": {"type": ["object", "null"], "additionalProperties": true}
+      },
+      "additionalProperties": true
+    },
+    "hydraulics": {
+      "type": "object",
+      "required": ["water_source", "inlets", "outlets", "channels", "surface_water_depth_m"],
+      "properties": {
+        "water_source": {"type": ["object", "null"], "additionalProperties": true},
+        "inlets": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "outlets": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "channels": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "dividers": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+        "downstream_receiver": {"type": ["object", "null"], "additionalProperties": true},
+        "graph": {"type": "array", "items": {"$ref": "#/$defs/hydraulicEdge"}},
+        "surface_water_depth_m": {"type": ["number", "null"], "minimum": 0},
+        "water_state": {"type": ["object", "null"], "additionalProperties": true},
+        "cell_water_states": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/waterBudget"}},
+        "irrigation_demand_m3_per_day": {"type": ["number", "null"], "minimum": 0},
+        "drainage_state": {"type": ["string", "null"]},
+        "closed_graph_check": {"type": ["boolean", "null"]},
+        "elevation_check": {"type": ["boolean", "null"]},
+        "mass_balance_check": {"type": ["boolean", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "soil": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "crop": {
+      "type": "object",
+      "required": ["species", "stage"],
+      "properties": {
+        "species": {"type": ["string", "null"]},
+        "variety": {"type": ["string", "null"]},
+        "stage": {
+          "enum": [
+            "unknown",
+            "nursery",
+            "lifting_seedlings",
+            "transplanted",
+            "establishment",
+            "tillering",
+            "stem_elongation",
+            "panicle_initiation",
+            "booting",
+            "heading",
+            "flowering",
+            "grain_filling",
+            "maturity",
+            "harvest",
+            "stubble",
+            "fallow"
+          ]
+        },
+        "canopy_cover": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "planting_method": {"type": ["string", "null"]},
+        "establishment": {"type": ["object", "null"], "additionalProperties": true},
+        "stage_models": {"type": ["object", "null"], "additionalProperties": true},
+        "ready_for_geometry": {"type": ["boolean", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "laborSettlement": {
+      "type": "object",
+      "required": ["settlement_ref", "household_ref", "available_labor_person_days", "maintenance_capacity_state"],
+      "properties": {
+        "settlement_ref": {"type": ["string", "null"]},
+        "household_ref": {"type": ["string", "null"]},
+        "available_labor_person_days": {"type": ["number", "null"], "minimum": 0},
+        "maintenance_capacity_state": {"enum": ["unknown", "adequate", "strained", "insufficient"]},
+        "distance_to_field_m": {"type": ["number", "string", "null"]},
+        "tool_profile": {"type": ["object", "string", "null"]},
+        "animal_power_profile": {"type": ["object", "string", "null"]},
+        "water_rights": {"type": ["object", "string", "null"]},
+        "maintenance_group": {"type": ["object", "string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "calendar": {"type": "object", "additionalProperties": true},
+    "maintenance": {"type": "object", "additionalProperties": true},
+    "degradation": {"type": "object", "additionalProperties": true},
+    "coupling": {
+      "type": "object",
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": {"type": "array", "items": {"type": "object"}},
+        "outputs": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    },
+    "representation": {
+      "type": "object",
+      "required": ["seed", "method_version", "mode", "debug_only", "public_candidate"],
+      "properties": {
+        "seed": {"type": ["integer", "string"]},
+        "method_version": {"type": "string", "minLength": 1},
+        "mode": {"enum": ["research", "structural_prototype", "internal_visual_candidate", "public_candidate", "failure_reference"]},
+        "debug_only": {"type": "boolean"},
+        "public_candidate": {"type": "boolean"},
+        "visible_proxy_policy": {"type": ["string", "null"]},
+        "forbidden_proxy_types": {"type": "array", "items": {"type": "string"}},
+        "microscope_allowed": {"type": ["boolean", "null"]},
+        "runtime_budget": {"type": ["object", "null"]}
+      },
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"representation": {"properties": {"mode": {"const": "public_candidate"}}, "required": ["mode"]}}}, "then": {"properties": {"representation": {"properties": {"public_candidate": {"const": true}}}}}},
+    {"if": {"properties": {"identity": {"properties": {"type_id": {"const": "paddy"}}}, "representation": {"properties": {"public_candidate": {"const": true}}}}}, "then": {"anyOf": [{"properties": {"hydraulics": {"required": ["cell_water_states"]}}}, {"properties": {"parcel": {"properties": {"cells": {"maxItems": 1}}}, "hydraulics": {"properties": {"water_state": {"$ref": "#/$defs/waterBudget"}}}}}]}},
+    {
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "type_id": {"const": "paddy"}
+            },
+            "required": ["type_id"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "hydraulics": {
+            "required": [
+              "water_source",
+              "inlets",
+              "outlets",
+              "channels",
+              "downstream_receiver",
+              "graph",
+              "water_state",
+              "closed_graph_check",
+              "elevation_check",
+              "mass_balance_check"
+            ]
+          },
+          "parcel": {
+            "required": ["scale_modulus"]
+          },
+          "crop": {
+            "required": ["establishment", "stage_models", "ready_for_geometry"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "representation": {
+            "properties": {
+              "public_candidate": {"const": true}
+            },
+            "required": ["public_candidate"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "representation": {
+            "properties": {
+              "mode": {"const": "public_candidate"},
+              "debug_only": {"const": false},
+              "microscope_allowed": {"const": true}
+            }
+          },
+          "identity": {
+            "properties": {
+              "review_status": {"enum": ["checked", "accepted"]}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "waterBudget": {"type": "object", "required": ["bed_elevation_m", "mud_surface_elevation_m", "water_surface_elevation_m", "average_depth_m", "storage_area_m2", "storage_volume_m3", "bund_crest_minimum_m", "inflow_m3", "rainfall_m3", "outflow_m3", "overflow_m3", "evaporation_m3", "seepage_m3", "storage_change_m3", "mass_balance_error_m3", "initial_storage_volume_m3", "start_time_s", "end_time_s", "storage_model"], "properties": {"bed_elevation_m": {"type": "number"}, "mud_surface_elevation_m": {"type": "number"}, "water_surface_elevation_m": {"type": "number"}, "average_depth_m": {"type": "number", "minimum": 0}, "storage_area_m2": {"type": "number", "exclusiveMinimum": 0}, "storage_volume_m3": {"type": "number", "minimum": 0}, "bund_crest_minimum_m": {"type": "number"}, "inflow_m3": {"type": "number", "minimum": 0}, "rainfall_m3": {"type": "number", "minimum": 0}, "outflow_m3": {"type": "number", "minimum": 0}, "overflow_m3": {"type": "number", "minimum": 0}, "evaporation_m3": {"type": "number", "minimum": 0}, "seepage_m3": {"type": "number", "minimum": 0}, "storage_change_m3": {"type": "number"}, "mass_balance_error_m3": {"type": "number"}, "initial_storage_volume_m3": {"type": "number", "minimum": 0}, "start_time_s": {"type": "number"}, "end_time_s": {"type": "number"}, "storage_model": {"const": "level_planar_field"}}, "$comment": "Per-field SI interval volumes. Arithmetic consistency and per-cell coverage are checked by validate_farmland_dna.py."},
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "sources"],
+      "properties": {
+        "kind": {"enum": ["observed", "measured", "documented", "inferred", "generated", "unknown", "conflicted"]},
+        "sources": {"type": "array", "items": {"type": "string"}},
+        "method_version": {"type": ["string", "null"]},
+        "uncertainty": {"type": ["string", "number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "relation": {
+      "type": "object",
+      "required": ["kind", "target_id"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "adjacent_to",
+            "upstream_of",
+            "downstream_of",
+            "feeds",
+            "drains_to",
+            "divides_to",
+            "contains",
+            "belongs_to_household",
+            "belongs_to_settlement",
+            "maintained_by",
+            "served_by_path",
+            "bounded_by",
+            "shares_boundary_with",
+            "occupies_terrain",
+            "protected_by_forest",
+            "affected_by_weather",
+            "allocated_to",
+            "discharges_to_receiver",
+            "crosses",
+            "blocked_by",
+            "threatened_by"
+          ]
+        },
+        "target_id": {"type": "string"},
+        "valid_time": {"type": ["object", "null"]},
+        "evidence": {"$ref": "#/$defs/evidence"}
+      },
+      "additionalProperties": true
+    },
+    "hydraulicEdge": {
+      "type": "object",
+      "required": ["from", "to", "kind"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1},
+        "to": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["feeds", "divides_to", "spills_to", "drains_to", "returns_to"]},
+        "valid_time": {"type": ["object", "null"]},
+        "evidence": {"$ref": "#/$defs/evidence"}
+      },
+      "additionalProperties": true
+    }
+  }
+}

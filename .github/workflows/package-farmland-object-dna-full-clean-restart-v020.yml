@@ -1,0 +1,143 @@
+name: Package Farmland Object DNA Full Clean Restart V0.2.0
+
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - '.github/workflows/package-farmland-object-dna-full-clean-restart-v020.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: farmland-object-dna-full-clean-restart-v020
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout restart production line
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch small-mother coordination source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin \
+            refs/heads/handoff/xiaoma-mentor-v1.1-20260905:refs/remotes/origin/handoff/xiaoma-mentor-v1.1-20260905
+          git rev-parse origin/handoff/xiaoma-mentor-v1.1-20260905
+
+      - name: Build deterministic full clean restart package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python farmland-object-dna/tools/build_full_clean_restart_package_v020.py \
+            | tee /tmp/farmland-package-receipt.json
+          test -s farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip
+          test -s farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json
+          test -s farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.sha256
+          test -s farmland-object-dna/distributions/LATEST.json
+
+      - name: Verify archive and receipt again
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import zipfile
+          from pathlib import Path
+
+          root = Path('farmland-object-dna/distributions')
+          archive = root / 'Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip'
+          receipt_path = root / 'Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json'
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert digest == receipt['archiveSha256']
+          assert archive.stat().st_size == receipt['archiveBytes']
+          assert receipt['validation'] == 'pass'
+          assert receipt['v001Rejected'] is True
+          assert receipt['visualAcceptance'] is False
+          assert receipt['productionReady'] is False
+          with zipfile.ZipFile(archive, 'r') as zf:
+              assert zf.testzip() is None
+              names = zf.namelist()
+              assert any(name.endswith('/00_START_HERE.md') for name in names)
+              assert any(name.endswith('/PACKAGE_MANIFEST.json') for name in names)
+              assert any(name.endswith('/SHA256SUMS.txt') for name in names)
+              assert any(name.endswith('/source/farmland-object-dna/FARMLAND_PRODUCTION_RULES.md') for name in names)
+              assert any(name.endswith('/source/farmland-object-dna/V001_FAILURE_REGISTER.md') for name in names)
+              assert any(name.endswith('/coordination/docs/mother_coordination/mentor-v1.1/MOTHER_STARTUP.md') for name in names)
+              assert len([name for name in names if not name.endswith('/')]) == receipt['payloadFileCount']
+          print(json.dumps({
+              'archive': archive.name,
+              'bytes': archive.stat().st_size,
+              'sha256': digest,
+              'payloadFileCount': receipt['payloadFileCount'],
+              'status': 'pass'
+          }, indent=2))
+          PY
+
+      - name: Commit package to restart branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip'
+          receipt='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json'
+          checksum='farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.sha256'
+          latest='farmland-object-dna/distributions/LATEST.json'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$receipt" "$checksum" "$latest"
+          git add -f "$archive"
+          git ls-files --error-unmatch "$archive"
+          if git diff --cached --quiet; then
+            echo 'Package is already current.'
+          else
+            git commit -m 'package: Farmland Object DNA full clean restart V0.2.0'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+          git rev-parse HEAD
+
+      - name: Upload verified package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Farmland-Object-DNA-Full-Clean-Restart-V0.2.0
+          path: |
+            farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip
+            farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json
+            farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.sha256
+            farmland-object-dna/distributions/LATEST.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path('farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json').read_text(encoding='utf-8'))
+          print('## Farmland Object DNA V0.2.0 full clean restart')
+          print()
+          print(f"Archive: `{receipt['archive']}`")
+          print(f"Source branch: `{receipt['sourceBranch']}`")
+          print(f"Source commit: `{receipt['sourceCommit']}`")
+          print(f"Coordination commit: `{receipt['coordinationCommit']}`")
+          print(f"Files: `{receipt['payloadFileCount']}`")
+          print(f"Bytes: `{receipt['archiveBytes']}`")
+          print(f"SHA256: `{receipt['archiveSha256']}`")
+          print('ZIP tracked in Git: **YES**')
+          print('Validation: **PASS**')
+          print('V0.1 rejected baseline preserved: **YES**')
+          print('Visual acceptance: **FALSE**')
+          print('Production ready: **FALSE**')
+          PY

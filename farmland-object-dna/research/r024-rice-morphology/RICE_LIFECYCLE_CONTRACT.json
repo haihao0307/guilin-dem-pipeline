@@ -1,0 +1,901 @@
+{
+  "contract_id": "rice_lifecycle_r024",
+  "status": "species_structure_contract_complete_regional_parameters_and_geometry_unresolved",
+  "species": "Oryza sativa",
+  "accessed_at": "2026-09-10",
+  "scope": {
+    "purpose": "organ-level stage specification before any rice geometry asset or structural truth workbench",
+    "biological_scope": "species-level categorical morphology and development",
+    "management_scope": "required nursery-to-stubble transitions, with local operation form unresolved",
+    "regional_scope": "Honghe profile only as a diversity constraint; no regional numeric morphology is supplied",
+    "not_a_calendar": true,
+    "not_a_geometry_asset": true,
+    "not_a_regional_measurement": true
+  },
+  "source_locks": {
+    "AU_OGTR_RICE_BIOLOGY_2005_2021": {
+      "title": "The Biology and Ecology of Rice (Oryza sativa L.) in Australia",
+      "organization": "Australian Government, Office of the Gene Technology Regulator",
+      "url": "https://www.ogtr.gov.au/sites/default/files/files/2021-07/the_biology_of_rice.pdf",
+      "publication_year": 2005,
+      "page_updated_year": 2021,
+      "retrieval_status": "read",
+      "applicable_scope": "general Oryza sativa morphology and development; Australian regulatory review, not Honghe dimensions or practices"
+    },
+    "UNESCO_ICOMOS_HONGHE_2013": {
+      "title": "ICOMOS Advisory Body Evaluation: Cultural Landscape of Honghe Hani Rice Terraces (No. 1111)",
+      "organization": "ICOMOS via UNESCO World Heritage Centre",
+      "url": "https://whc.unesco.org/document/151777",
+      "publication_year": 2013,
+      "retrieval_status": "read",
+      "applicable_scope": "Honghe red-rice diversity and broad reported calendar; no organ dimensions or single cultivar morphology"
+    }
+  },
+  "unavailable_source_targets": [
+    {
+      "source_id": "IRRI_MANUAL_TRANSPLANTING",
+      "url": "https://www.knowledgebank.irri.org/training/fact-sheets/crop-establishment/manual-transplanting",
+      "access_attempt": "2026-09-10",
+      "retrieval_status": "timeout_at_access",
+      "usable_as_evidence": false
+    },
+    {
+      "source_id": "IRRI_TRANSPLANTING",
+      "url": "https://www.knowledgebank.irri.org/ericeproduction/II.4_Transplanting.htm",
+      "access_attempt": "2026-09-10",
+      "retrieval_status": "timeout_at_access",
+      "usable_as_evidence": false
+    },
+    {
+      "source_id": "IRRI_GROWTH_STAGES",
+      "url": "https://www.knowledgebank.irri.org/ericeproduction/0.2._Growth_stages_of_the_rice_plant.htm",
+      "access_attempt": "2026-09-10",
+      "retrieval_status": "timeout_at_access",
+      "usable_as_evidence": false
+    }
+  ],
+  "documented_facts": [
+    {
+      "fact_id": "rice.typical_grass_architecture",
+      "claim": "Cultivated rice is a grass with a fibrous root system, erect culms, long flat leaves, and multiple tillers; a tiller consists of a culm and leaves and may or may not bear a panicle.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.3, PDF pp. 10-11 (document pages 9-10)",
+      "kind": "documented",
+      "applicable_scope": "species-level organ inventory; dimensions and cultivar form are not supplied"
+    },
+    {
+      "fact_id": "rice.tiller_hierarchy",
+      "claim": "Primary tillers arise from nodes near the base of the main culm; secondary and tertiary tillers arise sequentially from them.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.3, document p. 9; Section 1.4.1, document p. 10",
+      "kind": "documented",
+      "applicable_scope": "categorical branching relation, not a tiller count"
+    },
+    {
+      "fact_id": "rice.leaf_anatomy",
+      "claim": "Rice leaves alternate on the culm and include a sheath enclosing the culm, a flat blade, a collar, a ligule, and auricles.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.3, document pp. 9-10",
+      "kind": "documented",
+      "applicable_scope": "species-level component topology; size, color, and pubescence vary"
+    },
+    {
+      "fact_id": "rice.panicle_spikelet_floret",
+      "claim": "The panicle emerges from the flag-leaf sheath; its rachis and branches bear spikelets, each with a floret, and at anthesis the floret opens as the stamens elongate and emerge.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.3, document p. 10",
+      "kind": "documented",
+      "applicable_scope": "species-level reproductive organ relations, not regional panicle dimensions"
+    },
+    {
+      "fact_id": "rice.vegetative_growth",
+      "claim": "Fibrous roots develop from underground nodes, the primary leaf emerges, tillers develop from lower leaf axils, and internodes begin to elongate at or near panicle initiation.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.4.1, document p. 10",
+      "kind": "documented",
+      "applicable_scope": "developmental sequence; timing and dimensions are not regional defaults"
+    },
+    {
+      "fact_id": "rice.panicle_initiation_and_boot",
+      "claim": "Reproductive development begins with panicle initiation at the growing tip of a tiller, after which the panicle grows inside the flag-leaf sheath before heading.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.4.2, document p. 10",
+      "kind": "documented",
+      "applicable_scope": "categorical hidden-panicle transition"
+    },
+    {
+      "fact_id": "rice.heading_and_flowering",
+      "claim": "Heading is panicle emergence and may be partial or full; flowering follows, with florets opening and stamens elongating.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.4.2, document pp. 10-11",
+      "kind": "documented",
+      "applicable_scope": "event order and visible organ change; no regional dates or percentages"
+    },
+    {
+      "fact_id": "rice.grain_ripening",
+      "claim": "After fertilization, ovaries develop into grain that passes through milky and dough states; the panicle bends, senescence advances, and mature grain becomes hard and dry as the plant yellows and dries.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Section 1.4.3, document p. 11",
+      "kind": "documented",
+      "applicable_scope": "categorical ripening structure and posture; no regional calendar or color values"
+    },
+    {
+      "fact_id": "rice.cultivar_variability",
+      "claim": "Rice cultivars vary in height, tiller number and form, and leaf, panicle, hull, and grain shape, size, and color.",
+      "source_id": "AU_OGTR_RICE_BIOLOGY_2005_2021",
+      "locator": "Sections 1.2.2 and 1.3, document pp. 8-10",
+      "kind": "documented",
+      "applicable_scope": "constraint against one universal numeric or visual rice model"
+    },
+    {
+      "fact_id": "honghe.red_rice_diversity",
+      "claim": "The Honghe evaluation reports many local red-rice varieties and says farmers vary varieties and methods with altitude and local conditions.",
+      "source_id": "UNESCO_ICOMOS_HONGHE_2013",
+      "locator": "ICOMOS Advisory Body Evaluation No. 1111, p. 76",
+      "kind": "documented",
+      "applicable_scope": "regional diversity constraint; it does not supply organ dimensions for a single reference cultivar"
+    }
+  ],
+  "scope_evidence_refs": [
+    "rice.cultivar_variability",
+    "honghe.red_rice_diversity"
+  ],
+  "stage_order": [
+    "nursery",
+    "lifting_seedlings",
+    "transplanted",
+    "establishment",
+    "tillering",
+    "stem_elongation",
+    "panicle_initiation",
+    "booting",
+    "heading",
+    "flowering",
+    "grain_filling",
+    "maturity",
+    "harvest",
+    "stubble"
+  ],
+  "stage_models": {
+    "nursery": {
+      "stage": "nursery",
+      "phase": "establishment_management",
+      "basis": "contractual_management_transition_with_documented_seedling_anatomy",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:nursery_seedling_medium_contact",
+      "topology_tokens": [
+        "nursery_root_medium_contact",
+        "seedling_primary_culm",
+        "unfolding_seedling_leaves"
+      ],
+      "structure": {
+        "stand_context": "seedlings_rooted_in_nursery_medium",
+        "root_state": "fibrous_seedling_roots_scale_unmeasured",
+        "culm_state": "primary_seedling_culm",
+        "tiller_state": "absent_or_unresolved_at_selected_nursery_age",
+        "leaf_state": "emerging_and_unfolded_seedling_leaves",
+        "flag_leaf_state": "absent",
+        "panicle_state": "absent",
+        "spikelet_state": "absent",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "seedling_culms",
+        "seedling_leaf_blades"
+      ],
+      "hidden_organs": [
+        "fibrous_roots"
+      ],
+      "events": [
+        "germination_and_seedling_growth",
+        "root_contact_with_nursery_medium"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.leaf_anatomy",
+        "rice.vegetative_growth"
+      ],
+      "field_response": {
+        "color_basis": "living_seedling_organs_palette_requires_cultivar_and_observation",
+        "water_relation": "nursery_medium_and_water_regime_require_method_specific_evidence",
+        "wind_response_driver": "short_seedling_culm_and_leaf_blade_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "lifting_seedlings": {
+      "stage": "lifting_seedlings",
+      "phase": "establishment_management",
+      "basis": "contractual_management_transition",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:lifted_seedling_batch",
+      "topology_tokens": [
+        "broken_root_medium_contact",
+        "exposed_root_bundle",
+        "lifted_seedling_leaves"
+      ],
+      "structure": {
+        "stand_context": "lifted_seedling_batch",
+        "root_state": "lifted_from_growth_medium_extent_unmeasured",
+        "culm_state": "seedling_culms_gathered_or_separate_method_unresolved",
+        "tiller_state": "selected_seedling_tiller_state_unmeasured",
+        "leaf_state": "seedling_leaves_after_lifting_condition_unmeasured",
+        "flag_leaf_state": "absent",
+        "panicle_state": "absent",
+        "spikelet_state": "absent",
+        "grain_state": "absent",
+        "cut_state": "nursery_soil_contact_broken_not_culm_cut"
+      },
+      "visible_organs": [
+        "lifted_seedling_roots",
+        "seedling_culms",
+        "seedling_leaf_blades"
+      ],
+      "hidden_organs": [],
+      "events": [
+        "nursery_medium_contact_broken",
+        "transport_or_handling_form_requires_local_evidence"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.leaf_anatomy"
+      ],
+      "field_response": {
+        "color_basis": "post_lifting_organ_condition_palette_requires_observation",
+        "water_relation": "lifted_batch_has_no_assumed_field_water_depth",
+        "wind_response_driver": "lifted_root_leaf_batch_response_depends_on_handling_form_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "transplanted": {
+      "stage": "transplanted",
+      "phase": "establishment_management",
+      "basis": "contractual_management_transition",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:newly_transplanted_field_hills",
+      "topology_tokens": [
+        "discrete_inserted_hills",
+        "root_mud_insertion",
+        "sparse_seedling_blades"
+      ],
+      "structure": {
+        "stand_context": "newly_inserted_field_hills",
+        "root_state": "inserted_seedling_roots_disturbance_unmeasured",
+        "culm_state": "seedling_culms_grouped_per_hill_count_unmeasured",
+        "tiller_state": "post_transplant_tiller_state_unmeasured",
+        "leaf_state": "sparse_seedling_leaves_condition_unmeasured",
+        "flag_leaf_state": "absent",
+        "panicle_state": "absent",
+        "spikelet_state": "absent",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "seedling_culms",
+        "seedling_leaf_blades",
+        "hill_insertion_points"
+      ],
+      "hidden_organs": [
+        "inserted_roots"
+      ],
+      "events": [
+        "seedling_roots_inserted_into_field",
+        "hill_spacing_and_angle_require_regional_measurement"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.leaf_anatomy"
+      ],
+      "field_response": {
+        "color_basis": "newly_transplanted_tissue_condition_palette_requires_observation",
+        "water_relation": "field_water_depth_at_transplant_requires_regional_method_evidence",
+        "wind_response_driver": "sparse_inserted_hill_leaf_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "establishment": {
+      "stage": "establishment",
+      "phase": "establishment_management",
+      "basis": "contractual_management_transition",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:establishing_field_hills",
+      "topology_tokens": [
+        "rooted_recovering_hills",
+        "new_field_root_contact",
+        "recovering_leaf_fans"
+      ],
+      "structure": {
+        "stand_context": "field_hills_in_rooting_recovery",
+        "root_state": "field_root_anchorage_developing_extent_unmeasured",
+        "culm_state": "seedling_culms_uprightness_recovery_unmeasured",
+        "tiller_state": "pre_tillering_or_early_tillering_boundary_requires_observation",
+        "leaf_state": "recovery_and_new_leaf_state_requires_observation",
+        "flag_leaf_state": "absent",
+        "panicle_state": "absent",
+        "spikelet_state": "absent",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "field_seedling_culms",
+        "recovering_leaf_blades"
+      ],
+      "hidden_organs": [
+        "developing_field_roots"
+      ],
+      "events": [
+        "field_root_contact_develops",
+        "recovery_boundary_requires_method_and_cultivar_evidence"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.vegetative_growth"
+      ],
+      "field_response": {
+        "color_basis": "establishment_recovery_palette_requires_field_observation",
+        "water_relation": "establishment_water_state_requires_regional_management_profile",
+        "wind_response_driver": "rooted_sparse_hill_leaf_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "tillering": {
+      "stage": "tillering",
+      "phase": "vegetative",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:basally_branching_tiller_clump",
+      "topology_tokens": [
+        "basal_tiller_branches",
+        "primary_secondary_tiller_hierarchy",
+        "alternating_leaf_sheaths"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_branching_culms",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "main_culm_with_basal_axillary_branches",
+        "tiller_state": "basal_primary_then_higher_order_tillers",
+        "leaf_state": "alternating_sheath_blade_units_on_culms",
+        "flag_leaf_state": "absent_or_not_yet_identifiable",
+        "panicle_state": "absent",
+        "spikelet_state": "absent",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "main_culm",
+        "basal_tillers",
+        "leaf_sheaths",
+        "leaf_blades"
+      ],
+      "hidden_organs": [
+        "fibrous_roots"
+      ],
+      "events": [
+        "primary_tillers_emerge_from_lower_nodes",
+        "higher_order_tillers_follow_sequentially"
+      ],
+      "evidence_refs": [
+        "rice.tiller_hierarchy",
+        "rice.leaf_anatomy",
+        "rice.vegetative_growth"
+      ],
+      "field_response": {
+        "color_basis": "vegetative_tiller_clump_palette_requires_cultivar_observation",
+        "water_relation": "tillering_field_water_state_requires_regional_management_profile",
+        "wind_response_driver": "basal_branch_count_leaf_area_and_culm_flexure_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "stem_elongation": {
+      "stage": "stem_elongation",
+      "phase": "vegetative",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:elongating_nodal_culm_clump",
+      "topology_tokens": [
+        "elongated_culm_internodes",
+        "culm_nodes",
+        "elevated_leaf_blade_origins"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_elongating_culms",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "internodes_beginning_to_elongate",
+        "tiller_state": "established_tillers_with_elongating_culms",
+        "leaf_state": "alternating_sheath_blade_units_at_extended_nodes",
+        "flag_leaf_state": "not_yet_resolved_or_developing",
+        "panicle_state": "not_externally_visible_state_requires_stage_observation",
+        "spikelet_state": "not_externally_visible",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culm_nodes",
+        "elongating_internodes",
+        "leaf_sheaths",
+        "leaf_blades"
+      ],
+      "hidden_organs": [
+        "fibrous_roots",
+        "apical_state"
+      ],
+      "events": [
+        "internodes_begin_to_elongate",
+        "culm_proportions_diverge_from_tillering_model"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.leaf_anatomy",
+        "rice.vegetative_growth"
+      ],
+      "field_response": {
+        "color_basis": "elongating_vegetative_organs_palette_requires_cultivar_observation",
+        "water_relation": "stem_elongation_water_state_requires_regional_management_profile",
+        "wind_response_driver": "longer_internodes_and_elevated_leaf_blades_change_flexure_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "panicle_initiation": {
+      "stage": "panicle_initiation",
+      "phase": "reproductive",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:hidden_apical_panicle_transition",
+      "topology_tokens": [
+        "hidden_apical_panicle",
+        "elongating_upper_culm",
+        "developing_flag_leaf"
+      ],
+      "structure": {
+        "stand_context": "rooted_reproductive_field_hills",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "elongating_culm_supporting_internal_reproductive_apex",
+        "tiller_state": "tillers_with_reproductive_transition_not_all_assumed_synchronous",
+        "leaf_state": "upper_leaves_developing_lower_senescence_may_begin",
+        "flag_leaf_state": "developing_before_heading",
+        "panicle_state": "initiated_at_tiller_growing_tip_hidden",
+        "spikelet_state": "internal_development_not_visually_resolved_by_locked_source",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culms",
+        "upper_leaf_sheaths",
+        "leaf_blades"
+      ],
+      "hidden_organs": [
+        "fibrous_roots",
+        "initiated_panicle"
+      ],
+      "events": [
+        "reproductive_apex_initiates_at_tiller_tip",
+        "panicle_remains_internal"
+      ],
+      "evidence_refs": [
+        "rice.panicle_initiation_and_boot",
+        "rice.vegetative_growth"
+      ],
+      "field_response": {
+        "color_basis": "external_vegetative_palette_with_hidden_reproductive_state_requires_observation",
+        "water_relation": "panicle_initiation_water_state_requires_regional_management_profile",
+        "wind_response_driver": "internal_apical_mass_and_upper_culm_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "booting": {
+      "stage": "booting",
+      "phase": "reproductive",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:flag_sheath_enclosed_panicle",
+      "topology_tokens": [
+        "panicle_within_flag_sheath",
+        "flag_leaf_sheath_enclosure",
+        "upper_culm"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_enclosed_panicles",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "elongated_culms_supporting_enclosed_panicles",
+        "tiller_state": "reproductive_tillers_with_synchrony_unmeasured",
+        "leaf_state": "flag_and_upper_leaves_present_lower_senescence_may_begin",
+        "flag_leaf_state": "sheath_encloses_panicle",
+        "panicle_state": "developing_inside_flag_leaf_sheath",
+        "spikelet_state": "borne_on_hidden_panicle_not_externally_visible",
+        "grain_state": "absent",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culms",
+        "flag_leaf_sheaths",
+        "flag_leaf_blades"
+      ],
+      "hidden_organs": [
+        "fibrous_roots",
+        "developing_panicles",
+        "spikelets"
+      ],
+      "events": [
+        "panicle_develops_inside_flag_leaf_sheath",
+        "external_sheath_form_requires_cultivar_observation"
+      ],
+      "evidence_refs": [
+        "rice.panicle_initiation_and_boot",
+        "rice.leaf_anatomy",
+        "rice.panicle_spikelet_floret"
+      ],
+      "field_response": {
+        "color_basis": "flag_sheath_and_leaf_palette_requires_cultivar_observation",
+        "water_relation": "booting_water_state_requires_regional_management_profile",
+        "wind_response_driver": "enclosed_panicle_mass_flag_sheath_and_culm_flexure_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "heading": {
+      "stage": "heading",
+      "phase": "reproductive",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:emerging_panicle_through_flag_sheath",
+      "topology_tokens": [
+        "panicle_crosses_flag_sheath_opening",
+        "visible_rachis_and_branches",
+        "flag_leaf"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_emerging_panicles",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "elongated_culms_ending_at_panicle_bearing_upper_node",
+        "tiller_state": "panicle_bearing_and_nonbearing_tillers_may_coexist",
+        "leaf_state": "flag_and_upper_leaves_present_lower_senescence_progressing",
+        "flag_leaf_state": "sheath_opening_allows_panicle_emergence",
+        "panicle_state": "partially_or_fully_emerged_from_flag_leaf_sheath",
+        "spikelet_state": "borne_on_emerged_panicle_flowering_not_required",
+        "grain_state": "absent_before_fertilization",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culms",
+        "flag_leaves",
+        "emerged_panicles",
+        "spikelets"
+      ],
+      "hidden_organs": [
+        "fibrous_roots"
+      ],
+      "events": [
+        "panicle_emerges_partially_or_fully",
+        "emergence_fraction_requires_stage_observation"
+      ],
+      "evidence_refs": [
+        "rice.heading_and_flowering",
+        "rice.panicle_spikelet_floret"
+      ],
+      "field_response": {
+        "color_basis": "emerged_panicle_and_living_leaf_palette_requires_cultivar_observation",
+        "water_relation": "heading_water_state_requires_regional_management_profile",
+        "wind_response_driver": "emerged_branched_panicle_adds_exposed_drag_and_mass_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "flowering": {
+      "stage": "flowering",
+      "phase": "reproductive",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:open_floret_anthesis_panicle",
+      "topology_tokens": [
+        "open_florets_and_exserted_stamens",
+        "emerged_branched_panicle",
+        "flag_leaf"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_flowering_panicles",
+        "root_state": "fibrous_roots_from_underground_nodes",
+        "culm_state": "elongated_panicle_bearing_culms",
+        "tiller_state": "flowering_synchrony_across_tillers_unmeasured",
+        "leaf_state": "flag_and_upper_leaves_active_lower_senescence_progressing",
+        "flag_leaf_state": "panicle_emerged_beyond_sheath",
+        "panicle_state": "emerged_with_opening_florets",
+        "spikelet_state": "florets_opening_stamens_or_anthers_exposed",
+        "grain_state": "fertilization_transition_not_yet_filled",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culms",
+        "flag_leaves",
+        "panicles",
+        "open_florets",
+        "stamens_or_anthers"
+      ],
+      "hidden_organs": [
+        "fibrous_roots"
+      ],
+      "events": [
+        "florets_open",
+        "stamens_elongate_and_emerge",
+        "flowering_progresses_over_panicle"
+      ],
+      "evidence_refs": [
+        "rice.heading_and_flowering",
+        "rice.panicle_spikelet_floret"
+      ],
+      "field_response": {
+        "color_basis": "anthesis_organs_and_panicle_palette_requires_cultivar_and_time_observation",
+        "water_relation": "flowering_water_state_requires_regional_management_profile",
+        "wind_response_driver": "open_florets_anthers_and_emerged_panicle_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "grain_filling": {
+      "stage": "grain_filling",
+      "phase": "ripening",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:developing_grain_bending_panicle",
+      "topology_tokens": [
+        "filled_spikelets_and_bending_panicle",
+        "milk_to_dough_grain",
+        "senescing_lower_leaves"
+      ],
+      "structure": {
+        "stand_context": "rooted_field_hills_with_filling_grain",
+        "root_state": "fibrous_root_function_and_senescence_state_unmeasured",
+        "culm_state": "elongated_culms_carrying_increasing_panicle_load",
+        "tiller_state": "grain_bearing_tillers_with_fill_synchrony_unmeasured",
+        "leaf_state": "lower_leaf_senescence_with_flag_and_upper_leaves_still_active_initially",
+        "flag_leaf_state": "present_during_grain_fill",
+        "panicle_state": "emerged_green_and_bending_with_developing_grain",
+        "spikelet_state": "fertilized_spikelets_enclosing_developing_caryopses",
+        "grain_state": "fertilized_ovary_filling_milk_to_dough",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "culms",
+        "flag_leaves",
+        "bending_panicles",
+        "filled_spikelets",
+        "developing_grains"
+      ],
+      "hidden_organs": [
+        "fibrous_roots"
+      ],
+      "events": [
+        "ovaries_develop_into_grain",
+        "milk_then_dough_transition",
+        "panicle_begins_to_bend"
+      ],
+      "evidence_refs": [
+        "rice.grain_ripening",
+        "rice.panicle_spikelet_floret"
+      ],
+      "field_response": {
+        "color_basis": "grain_fill_and_progressive_senescence_palette_requires_cultivar_observation",
+        "water_relation": "grain_fill_water_state_requires_regional_management_profile",
+        "wind_response_driver": "increasing_grain_mass_and_bending_panicle_change_flexure_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "maturity": {
+      "stage": "maturity",
+      "phase": "ripening",
+      "basis": "documented_species_morphology",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:hard_grain_senescent_stand",
+      "topology_tokens": [
+        "hard_grain_on_senescent_stand",
+        "drying_panicle",
+        "senescent_leaf_blades"
+      ],
+      "structure": {
+        "stand_context": "standing_mature_crop_before_local_harvest_operation",
+        "root_state": "late_season_root_state_unmeasured",
+        "culm_state": "drying_culms_supporting_mature_panicles",
+        "tiller_state": "mature_panicle_bearing_and_nonbearing_culms_may_coexist",
+        "leaf_state": "advanced_senescence_yellowing_and_drying",
+        "flag_leaf_state": "senescing_or_dry_state_requires_cultivar_observation",
+        "panicle_state": "bent_or_supported_posture_requires_cultivar_and_load_measurement",
+        "spikelet_state": "mature_husks_enclose_grain",
+        "grain_state": "hard_and_dry",
+        "cut_state": "uncut"
+      },
+      "visible_organs": [
+        "drying_culms",
+        "senescent_leaves",
+        "mature_panicles",
+        "hard_grains"
+      ],
+      "hidden_organs": [
+        "late_season_roots"
+      ],
+      "events": [
+        "grain_hardens_and_dries",
+        "whole_plant_yellows_and_dries",
+        "crop_becomes_harvestable"
+      ],
+      "evidence_refs": [
+        "rice.grain_ripening",
+        "rice.cultivar_variability"
+      ],
+      "field_response": {
+        "color_basis": "mature_grain_husk_and_senescent_tissue_palette_requires_cultivar_observation",
+        "water_relation": "preharvest_field_water_state_requires_regional_management_profile",
+        "wind_response_driver": "mature_grain_load_dry_panicle_and_senescent_leaf_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "harvest": {
+      "stage": "harvest",
+      "phase": "post_crop_management",
+      "basis": "contractual_management_transition_with_documented_maturity",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:harvest_severance_and_removed_crop",
+      "topology_tokens": [
+        "severed_or_removed_crop_components",
+        "detached_grain_bearing_material",
+        "field_cut_transition"
+      ],
+      "structure": {
+        "stand_context": "harvest_transition_field_configuration_method_unresolved",
+        "root_state": "roots_remaining_or_removed_depends_on_operation",
+        "culm_state": "standing_or_detached_culm_fraction_requires_harvest_method",
+        "tiller_state": "preharvest_tiller_topology_interrupted_by_operation",
+        "leaf_state": "attached_or_detached_senescent_leaves_depend_on_operation",
+        "flag_leaf_state": "attached_or_removed_with_cut_material",
+        "panicle_state": "detached_or_removed_from_standing_crop",
+        "spikelet_state": "grain_bearing_material_removed_or_collected_form_unresolved",
+        "grain_state": "mature_harvested_product_handling_unresolved",
+        "cut_state": "harvest_severance_or_removal_form_unresolved"
+      },
+      "visible_organs": [
+        "detached_crop_material",
+        "remaining_field_culm_portions"
+      ],
+      "hidden_organs": [
+        "remaining_roots"
+      ],
+      "events": [
+        "standing_crop_topology_is_interrupted",
+        "cut_height_and_bundle_or_windrow_form_require_local_evidence"
+      ],
+      "evidence_refs": [
+        "rice.grain_ripening",
+        "rice.typical_grass_architecture"
+      ],
+      "field_response": {
+        "color_basis": "harvested_and_remaining_organ_palette_requires_operation_observation",
+        "water_relation": "harvest_field_water_or_mud_state_requires_regional_management_profile",
+        "wind_response_driver": "detached_material_and_remaining_culms_require_separate_wind_response_profiles"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    },
+    "stubble": {
+      "stage": "stubble",
+      "phase": "post_crop_management",
+      "basis": "contractual_management_transition",
+      "model_status": "contract_only_no_geometry",
+      "geometry_family_id": "rice:postharvest_cut_culm_stubble",
+      "topology_tokens": [
+        "cut_culm_ends_without_panicles",
+        "remaining_culm_nodes",
+        "root_anchored_bases"
+      ],
+      "structure": {
+        "stand_context": "postharvest_field_with_remaining_cut_culm_bases",
+        "root_state": "remaining_roots_condition_and_regrowth_potential_unmeasured",
+        "culm_state": "truncated_culms_with_nodes_and_internodes",
+        "tiller_state": "cut_tiller_bases_remain_configuration_unmeasured",
+        "leaf_state": "remaining_leaf_fragments_or_absence_depends_on_cut_height",
+        "flag_leaf_state": "removed_from_remaining_short_culms_or_not_applicable",
+        "panicle_state": "absent_from_remaining_cut_culms",
+        "spikelet_state": "absent_from_remaining_cut_culms",
+        "grain_state": "absent_from_remaining_cut_culms",
+        "cut_state": "cut_culm_bases_remain_height_unresolved"
+      },
+      "visible_organs": [
+        "cut_culm_ends",
+        "remaining_culm_nodes",
+        "stubble_bases"
+      ],
+      "hidden_organs": [
+        "remaining_roots"
+      ],
+      "events": [
+        "panicle_bearing_upper_crop_is_removed",
+        "cut_surface_and_stubble_height_require_local_harvest_evidence"
+      ],
+      "evidence_refs": [
+        "rice.typical_grass_architecture",
+        "rice.cultivar_variability"
+      ],
+      "field_response": {
+        "color_basis": "cut_surface_dry_tissue_and_residual_leaf_palette_requires_field_observation",
+        "water_relation": "postharvest_water_mud_and_drainage_state_requires_regional_management_profile",
+        "wind_response_driver": "short_cut_culm_and_residual_leaf_response_parameters_unresolved"
+      },
+      "regional_numeric_profile_ref": "unresolved_regional_parameters",
+      "geometry_ready": false
+    }
+  },
+  "unresolved_regional_parameters": {
+    "cultivar_identity": null,
+    "calendar_days_by_stage": null,
+    "seedling_age_days": null,
+    "seedlings_per_hill": null,
+    "row_spacing_m": null,
+    "hill_spacing_m": null,
+    "planting_depth_m": null,
+    "planting_angle_degrees": null,
+    "hill_count_per_m2": null,
+    "missing_hill_rate": null,
+    "repair_rate": null,
+    "field_water_depth_m_by_stage": null,
+    "plant_height_m_by_stage": null,
+    "tiller_count_by_stage": null,
+    "culm_diameter_m_by_stage": null,
+    "internode_length_m_by_stage": null,
+    "leaf_length_m_by_stage": null,
+    "leaf_width_m_by_stage": null,
+    "panicle_length_m_by_stage": null,
+    "grain_dimensions_m": null,
+    "stubble_height_m": null,
+    "lodging_rate_by_stage": null,
+    "wind_response_coefficients_by_stage": null,
+    "color_palette_by_stage": null
+  },
+  "measurement_requirements": {
+    "cultivar_identity": "named local accession or cultivar tied to place, altitude, season, and source",
+    "calendar_days_by_stage": "dated field observations for the selected cultivar, altitude, and production year",
+    "seedling_age_days": "nursery and transplant record for the selected local method",
+    "seedlings_per_hill": "field count distribution with sampling design and date",
+    "row_spacing_m": "measured row spacing distribution where rows are used",
+    "hill_spacing_m": "measured within-field hill spacing distribution",
+    "planting_depth_m": "measured insertion depth distribution and method",
+    "planting_angle_degrees": "measured seedling or hill angle convention and distribution",
+    "hill_count_per_m2": "derived from a georeferenced hill census or measured quadrats",
+    "missing_hill_rate": "dated field census with denominator and repair timing",
+    "repair_rate": "dated missing-hill and replanting records",
+    "field_water_depth_m_by_stage": "stage-linked water-surface and mud-surface elevation measurements",
+    "plant_height_m_by_stage": "stage-linked plant height distribution for the selected cultivar",
+    "tiller_count_by_stage": "stage-linked productive and nonproductive tiller counts per hill",
+    "culm_diameter_m_by_stage": "node-referenced culm measurements by stage",
+    "internode_length_m_by_stage": "node-indexed internode measurements by stage",
+    "leaf_length_m_by_stage": "leaf-position-indexed blade measurements by stage",
+    "leaf_width_m_by_stage": "leaf-position-indexed blade measurements by stage",
+    "panicle_length_m_by_stage": "panicle measurement distribution tied to emergence and grain state",
+    "grain_dimensions_m": "local accession grain measurements with husked or unhusked state explicit",
+    "stubble_height_m": "postharvest cut-height distribution tied to harvesting method",
+    "lodging_rate_by_stage": "dated plot observation with angle threshold and denominator",
+    "wind_response_coefficients_by_stage": "calibration from stage-specific organ geometry, material, and wind observations",
+    "color_palette_by_stage": "calibrated imagery with cultivar, light, exposure, and color workflow recorded"
+  },
+  "prohibited_shortcuts": [
+    "single_geometry_scaled_across_stages",
+    "color_only_stage_substitution",
+    "cone_rice_proxy",
+    "generic_green_tuft",
+    "regional_numbers_without_measurement"
+  ],
+  "production_gate": {
+    "species_stage_contract_complete": true,
+    "regional_numeric_profile_complete": false,
+    "geometry_assets_complete": false,
+    "ready_for_structural_truth_workbench": false,
+    "ready_for_public_candidate": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}
