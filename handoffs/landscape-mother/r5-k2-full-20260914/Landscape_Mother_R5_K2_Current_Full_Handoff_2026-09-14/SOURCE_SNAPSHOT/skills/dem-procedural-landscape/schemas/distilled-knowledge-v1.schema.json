@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haihao0307.github.io/guilin-dem-pipeline/schemas/distilled-knowledge-v1.schema.json",
+  "title": "Terrain Hydrology Distilled Knowledge v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "knowledgeId", "scope", "title", "sourceIntakes", "claims", "review"],
+  "properties": {
+    "schemaVersion": {"const": "terrain-hydrology-distilled-knowledge@1.0.0"},
+    "knowledgeId": {"type": "string", "minLength": 1},
+    "scope": {"enum": ["shared", "guilin", "wenzhou", "kunming"]},
+    "title": {"type": "string", "minLength": 1},
+    "sourceIntakes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "evidenceLevel", "runtimeRole"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "statement": {"type": "string", "minLength": 1},
+          "evidenceLevel": {"enum": ["direct-image", "direct-text", "cross-checked", "inference", "unresolved"]},
+          "runtimeRole": {"enum": ["truth-constraint", "procedural-guidance", "qa-rule", "visual-reference", "historical-hypothesis"]},
+          "spatialScope": {"type": "string"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parentMask": {"type": "string"},
+        "allowedLayers": {"type": "array", "items": {"enum": ["terrain", "terrace", "hydrology"]}, "uniqueItems": true},
+        "forbiddenTruthOverwrite": {"const": true},
+        "rollbackRequired": {"const": true}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reviewer", "reviewedAtUtc"],
+      "properties": {
+        "status": {"enum": ["draft", "needs-source", "reviewed", "approved", "rejected"]},
+        "reviewer": {"type": "string", "minLength": 1},
+        "reviewedAtUtc": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://haihao0307.github.io/guilin-dem-pipeline/schemas/reference-intake-v1.schema.json",
+  "title": "Terrain Hydrology Reference Intake v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workbenchVersion", "scope", "createdAtUtc", "entries"],
+  "properties": {
+    "schemaVersion": {"const": "terrain-hydrology-reference-intake@1.0.0"},
+    "workbenchVersion": {"type": "string", "minLength": 1},
+    "scope": {"enum": ["shared", "guilin", "wenzhou", "kunming"]},
+    "createdAtUtc": {"type": "string", "format": "date-time"},
+    "authorNote": {"type": "string"},
+    "tags": {
+      "type": "array",
+      "items": {"enum": ["terrain", "terrace", "hydrology", "riverbank", "erosion", "sediment", "historical", "shared-method"]},
+      "uniqueItems": true
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "name", "sourceStatus"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["text", "image", "document", "link"]},
+          "name": {"type": "string", "minLength": 1},
+          "mimeType": {"type": "string"},
+          "byteLength": {"type": "integer", "minimum": 0},
+          "lastModified": {"type": "integer", "minimum": 0},
+          "caption": {"type": "string"},
+          "content": {"type": "string"},
+          "dataUrl": {"type": "string"},
+          "sourceStatus": {"enum": ["user-provided", "archival", "verified", "unverified", "unknown"]}
+        }
+      }
+    },
+    "githubTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inboxPath", "distilledPath"],
+      "properties": {
+        "inboxPath": {"type": "string", "pattern": "^knowledge/terrain-hydrology/"},
+        "distilledPath": {"type": "string", "pattern": "^knowledge/terrain-hydrology/"}
+      }
+    }
+  }
+}
