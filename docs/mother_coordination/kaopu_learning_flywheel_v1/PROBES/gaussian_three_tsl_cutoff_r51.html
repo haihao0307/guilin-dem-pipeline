@@ -1,10 +1,22 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>KAOPU Gaussian Three.js TSL cutoff R51</title>
+<script>
+window.__KAOPU_PROGRESS__ = { schema: 'kaopu-gaussian-three-tsl-cutoff-progress/r51', stage: 'html-loaded' };
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/webgpu": "/node_modules/three/build/three.webgpu.js",
+    "three/tsl": "/node_modules/three/build/three.tsl.js"
+  }
+}
+</script>
 <body></body>
 <script type="module">
-import * as THREE from '/node_modules/three/build/three.webgpu.js';
-import { Fn, Discard, attribute, vec4 } from '/node_modules/three/build/three.tsl.js';
+import * as THREE from 'three/webgpu';
+import { Fn, Discard, attribute, vec4 } from 'three/tsl';
 
 const params = new URLSearchParams(location.search);
 const requestedMode = params.get('mode') || 'webgl';
@@ -109,6 +121,7 @@ function setSlotFloat(attributeObject, slotIndex, value) {
 }
 
 async function main() {
+  window.__KAOPU_PROGRESS__ = { ...window.__KAOPU_PROGRESS__, stage: 'module-start', requestedMode };
   const renderer = new THREE.WebGPURenderer({
     antialias: false,
     alpha: true,
@@ -119,6 +132,7 @@ async function main() {
   renderer.setSize(ulpSteps.length, 1, false);
   renderer.setClearColor(0x000000, 0);
   document.body.appendChild(renderer.domElement);
+  window.__KAOPU_PROGRESS__ = { ...window.__KAOPU_PROGRESS__, stage: 'renderer-init' };
   await renderer.init();
 
   const actualBackend = detectBackend(renderer);
@@ -172,6 +186,7 @@ async function main() {
   });
   renderer.setRenderTarget(target);
   renderer.setViewport(0, 0, ulpSteps.length, 1);
+  window.__KAOPU_PROGRESS__ = { ...window.__KAOPU_PROGRESS__, stage: 'compile' };
   await renderer.compileAsync(scene, camera);
 
   const scales = [2 ** -10, 0.3, 1.0, 3.7, 256.0, 1024.0];
@@ -187,6 +202,7 @@ async function main() {
   const expectedBatchCount = scales.length * directions.length;
   window.__KAOPU_PROGRESS__ = {
     schema: 'kaopu-gaussian-three-tsl-cutoff-progress/r51',
+    stage: 'sweep',
     requestedMode,
     actualBackend,
     completedCases: 0,
