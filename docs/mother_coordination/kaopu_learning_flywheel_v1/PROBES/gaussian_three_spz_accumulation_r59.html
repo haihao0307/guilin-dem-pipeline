@@ -44,7 +44,7 @@ async function identity(renderer){
 
 async function main(){
   if(bufferName!=='default'&&bufferName!=='float')throw new Error(`unknown buffer ${bufferName}`);
-  const rawSpz=makeRawSpz(),gzip=gzipSync(rawSpz),gzipBuffer=gzip.buffer.slice(gzip.byteOffset,gzip.byteOffset+gzip.byteLength);
+  const rawSpz=makeRawSpz(),gzip=gzipSync(rawSpz,{mtime:0}),gzipBuffer=gzip.buffer.slice(gzip.byteOffset,gzip.byteOffset+gzip.byteLength);
   const geometry=await new SPZLoader().parse(gzipBuffer);
   const params={antialias:false,alpha:true,forceWebGL:true};if(bufferName==='float')params.outputBufferType=THREE.FloatType;
   const renderer=new THREE.WebGPURenderer(params);renderer.setPixelRatio(1);renderer.setSize(WIDTH,HEIGHT,false);renderer.setClearColor(0x000000,0);renderer.toneMapping=THREE.NoToneMapping;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);await renderer.init();
