@@ -78,7 +78,6 @@ async function main() {
   renderer.setPixelRatio(1);
   renderer.setSize(ulpSteps.length, 1, false);
   renderer.setClearColor(0x000000, 0);
-  renderer.autoClear = false;
   document.body.appendChild(renderer.domElement);
   await renderer.init();
 
@@ -98,30 +97,34 @@ async function main() {
     };
   }
 
-  const ux = uniform(0.0);
-  const uy = uniform(0.0);
-  const us = uniform(1.0);
-  const fragment = Fn(() => {
-    const qx = ux.div(us);
-    const qy = uy.div(us);
-    const r2 = qx.mul(qx).add(qy.mul(qy));
-    Discard(r2.greaterThan(4.0));
-    return vec4(1.0, 1.0, 1.0, 1.0);
-  });
-
-  const material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
-  material.fragmentNode = fragment();
   const geometry = new THREE.PlaneGeometry(2, 2);
-  const mesh = new THREE.Mesh(geometry, material);
   const scene = new THREE.Scene();
-  scene.add(mesh);
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2);
   camera.position.z = 1;
 
-  // One pixel per ULP neighbor. Each scale/direction group renders 129 cases
-  // into one row and performs a single readback. This preserves the complete
-  // R50-compatible 4,644-case sweep while reducing GPU synchronization from
-  // 4,644 readbacks to 36.
+  // One independent Three.js TSL material per ULP neighbor. Each mesh spans
+  // exactly one render-target pixel. All 129 cases in a scale/direction group
+  // are submitted in one renderer.renderAsync() call, then read back together.
+  const slots = ulpSteps.map((ulpStep, i) => {
+    const ux = uniform(0.0);
+    const uy = uniform(0.0);
+    const us = uniform(1.0);
+    const fragment = Fn(() => {
+      const qx = ux.div(us);
+      const qy = uy.div(us);
+      const r2 = qx.mul(qx).add(qy.mul(qy));
+      Discard(r2.greaterThan(4.0));
+      return vec4(1.0, 1.0, 1.0, 1.0);
+    });
+    const material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
+    material.fragmentNode = fragment();
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.scale.x = 1 / ulpSteps.length;
+    mesh.position.x = -1 + (2 * (i + 0.5)) / ulpSteps.length;
+    scene.add(mesh);
+    return { ulpStep, ux, uy, us, material, mesh };
+  });
+
   const target = new THREE.RenderTarget(ulpSteps.length, 1, {
     type: THREE.UnsignedByteType,
     format: THREE.RGBAFormat,
@@ -144,20 +147,23 @@ async function main() {
     ['root3', 1.0, Math.sqrt(3.0)],
   ];
   const expectedCaseCount = scales.length * directions.length * ulpSteps.length;
-  const expectedReadbackCount = scales.length * directions.length;
+  const expectedBatchCount = scales.length * directions.length;
   window.__KAOPU_PROGRESS__ = {
     schema: 'kaopu-gaussian-three-tsl-cutoff-progress/r51',
     requestedMode,
     actualBackend,
     completedCases: 0,
     totalCases: expectedCaseCount,
+    completedRenderSubmissions: 0,
+    totalRenderSubmissions: expectedBatchCount,
     completedReadbacks: 0,
-    totalReadbacks: expectedReadbackCount,
+    totalReadbacks: expectedBatchCount,
   };
 
   const cases = [];
   const doubleMismatches = [];
   const floatMismatches = [];
+  let renderSubmissionCount = 0;
   let readbackCount = 0;
 
   for (const scaleInput of scales) {
@@ -168,13 +174,9 @@ async function main() {
       const baseBits = f32Bits(baseX);
       const group = [];
 
-      renderer.setRenderTarget(target);
-      renderer.setScissorTest(false);
-      renderer.setViewport(0, 0, ulpSteps.length, 1);
-      renderer.clear(true, false, false);
-
-      for (let i = 0; i < ulpSteps.length; i++) {
-        const ulpStep = ulpSteps[i];
+      for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        const ulpStep = slot.ulpStep;
         const distanceX = bitsF32(baseBits + ulpStep);
         const centerX = f32(-distanceX);
         const centerY = f32(-distanceY);
@@ -185,13 +187,9 @@ async function main() {
         const qyFloat = f32(effectiveY / scale);
         const r2Float = f32(f32(qxFloat * qxFloat) + f32(qyFloat * qyFloat));
 
-        ux.value = effectiveX;
-        uy.value = effectiveY;
-        us.value = scale;
-        renderer.setViewport(i, 0, 1, 1);
-        renderer.setScissor(i, 0, 1, 1);
-        renderer.setScissorTest(true);
-        await renderer.renderAsync(scene, camera);
+        slot.ux.value = effectiveX;
+        slot.uy.value = effectiveY;
+        slot.us.value = scale;
 
         group.push({
           scale,
@@ -205,7 +203,13 @@ async function main() {
         });
       }
 
+      renderer.setRenderTarget(target);
+      renderer.setViewport(0, 0, ulpSteps.length, 1);
       renderer.setScissorTest(false);
+      renderer.clear(true, false, false);
+      await renderer.renderAsync(scene, camera);
+      renderSubmissionCount++;
+
       const rgbaRow = await renderer.readRenderTargetPixelsAsync(target, 0, 0, ulpSteps.length, 1);
       readbackCount++;
 
@@ -221,6 +225,7 @@ async function main() {
       window.__KAOPU_PROGRESS__ = {
         ...window.__KAOPU_PROGRESS__,
         completedCases: cases.length,
+        completedRenderSubmissions: renderSubmissionCount,
         completedReadbacks: readbackCount,
         scale,
         direction,
@@ -238,7 +243,7 @@ async function main() {
 
   renderer.dispose();
   geometry.dispose();
-  material.dispose();
+  for (const slot of slots) slot.material.dispose();
   target.dispose();
 
   return {
@@ -255,10 +260,11 @@ async function main() {
       xUlpSteps: [ulpSteps[0], ulpSteps[ulpSteps.length - 1]],
       ulpStepCountPerDirection: ulpSteps.length,
       caseCount: cases.length,
+      renderSubmissionCount,
       readbackCount,
-      batchingStrategy: '129 one-pixel viewports per scale/direction, then one row readback',
+      batchingStrategy: '129 independent TSL materials rendered as one-pixel meshes in one scene submission per scale/direction, then one row readback',
       cutoffRule: 'TSL Discard when r2 > 4.0',
-      note: 'Complete R50-compatible -64..64 ULP sweep using direct Three.js r186 TSL. Batching changes only evidence collection, not tested cases.',
+      note: 'Complete R50-compatible -64..64 ULP sweep using direct Three.js r186 TSL. Batching changes only execution scheduling and evidence collection, not the tested cases.',
     },
     summary: {
       doublePredicateMismatchCount: doubleMismatches.length,
@@ -279,7 +285,8 @@ async function main() {
     checks: {
       allCasesExecuted: cases.length === expectedCaseCount,
       fullR50UlpRangeCovered: ulpSteps.length === 129 && ulpSteps[0] === -64 && ulpSteps[128] === 64,
-      readbackBatchCountIsExpected: readbackCount === expectedReadbackCount,
+      renderSubmissionBatchCountIsExpected: renderSubmissionCount === expectedBatchCount,
+      readbackBatchCountIsExpected: readbackCount === expectedBatchCount,
       float32ModelMatchesBackendCoverage: floatMismatches.length === 0,
       doublePredicateHasCoverageCounterexample: doubleMismatches.length > 0,
       exactCutoffIsIncluded: exactCases.every(c => c.backendCovered),
