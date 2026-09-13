@@ -50,17 +50,19 @@ if (mode === 'webgl') {
   if (result.status !== 'candidate-observation') process.exitCode = 2;
   if (result.actualBackend !== 'webgl') process.exitCode = 3;
   if (result.fixture?.caseCount !== 4644) process.exitCode = 4;
-  if (result.fixture?.renderSubmissionCount !== 36) process.exitCode = 5;
-  if (result.fixture?.readbackCount !== 36) process.exitCode = 6;
+  if (result.fixture?.tslMaterialCount !== 1) process.exitCode = 5;
+  if (result.fixture?.renderSubmissionCount !== 36) process.exitCode = 6;
+  if (result.fixture?.readbackCount !== 36) process.exitCode = 7;
   const checks = result.checks || {};
   if (!checks.allCasesExecuted ||
       !checks.fullR50UlpRangeCovered ||
+      !checks.singleTslMaterialUsed ||
       !checks.renderSubmissionBatchCountIsExpected ||
       !checks.readbackBatchCountIsExpected ||
       !checks.float32ModelMatchesBackendCoverage ||
       !checks.doublePredicateHasCoverageCounterexample ||
       !checks.exactCutoffIsIncluded ||
       !checks.bothSidesOfBoundaryWereSampled) {
-    process.exitCode = 7;
+    process.exitCode = 8;
   }
 }
