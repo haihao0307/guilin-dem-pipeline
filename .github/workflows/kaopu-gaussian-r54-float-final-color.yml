@@ -7,6 +7,7 @@ on:
     paths:
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_float_final_color_r54.html
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_float_final_color_r54.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_float_final_color_gate_r54.mjs
       - .github/workflows/kaopu-gaussian-r54-float-final-color.yml
 
 permissions:
@@ -44,6 +45,18 @@ jobs:
       - name: Run direct TSL float-versus-RGBA8 storage comparison
         run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_float_final_color_r54.js
 
+      - name: Validate R54 stable-color storage contract
+        shell: bash
+        run: |
+          cat r54-comparison.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_float_final_color_gate_r54.mjs > r54-gate.json
+          cat r54-gate.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('r54-gate.json'))
+          if d.get('status')!='Candidate-pass':
+              raise SystemExit(f"R54 gate failed: {d}")
+          PY
+
       - name: Upload R54 evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,5 +66,6 @@ jobs:
             r54-result-webgl.json
             r54-result-webgpu.json
             r54-comparison.json
+            r54-gate.json
           if-no-files-found: warn
           retention-days: 30
