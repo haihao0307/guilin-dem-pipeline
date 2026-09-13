@@ -1,0 +1,24 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r60",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R59_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R60 executed a seven-alpha by four-target-tau grid through the actual Three.js r186 SPZLoader and GaussianSplat NormalBlending path with paired default HalfFloat and explicit Float targets. In the matched target-tau=8 group, actual tau varied by only 1.2019% while center Half/Float error varied 119.73x and final sRGB difference ranged from 0 to 29 codes. The target-tau=4 group varied 1.9614% in actual tau while error varied 674.36x and display difference ranged from 0 to 14 codes. Effective optical depth is rejected as a sole precision-risk predictor in this fixture; validation must also retain alpha decomposition, overlap count, target format and real spatial/view/order conditions. No universal threshold, independent physical root or Mother adoption was added.",
+  "appendResultLogs": [
+    "LEARNING_LOG/2026-09-13_GAUSSIAN_ALPHA_OVERLAP_R60.md"
+  ],
+  "appendSourceLocks": [
+    "references/gaussian-alpha-overlap-r60/SOURCE_LOCK.json"
+  ],
+  "r60Probe": "PROBES/gaussian_three_alpha_overlap_r60.html",
+  "r60Runner": "PROBES/run_gaussian_three_alpha_overlap_r60.js",
+  "r60Result": "PROBES/gaussian_three_alpha_overlap_result_r60.json",
+  "candidateR60Gate": "ADAPTERS/gaussian_three_alpha_overlap_gate_r60.mjs",
+  "currentBestViewR60Extension": "CURRENT_BEST_VIEW_R60_GAUSSIAN_ALPHA_OVERLAP.md",
+  "toolRoutingR60Extension": "TOOL_ROUTING_R60_GAUSSIAN_ALPHA_OVERLAP.json",
+  "motherRoutingR60Extension": "MOTHER_ROUTING_R60_GAUSSIAN_ALPHA_OVERLAP.json",
+  "nextGate": "Run controlled matched-tau, fixed-order mixed-alpha sequences through the same actual r186 path and test one predeclared second statistic, such as sum(alpha^2), maximum alpha or Half-ULP margin, for counterexample resistance. Do not fit or declare a universal production threshold.",
+  "mergePolicy": "This overlay supersedes R59 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
+

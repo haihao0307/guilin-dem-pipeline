@@ -1,0 +1,2283 @@
+{
+  "schema": "kaopu-three-alpha-overlap-comparison/r60",
+  "status": "Candidate-pass",
+  "question": "Does effective optical depth alone predict HalfFloat-versus-Float accumulation risk in the actual r186 SPZLoader/GaussianSplat path?",
+  "fixture": {
+    "alphaBytes": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ],
+    "targetTaus": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "maxSplats": 4096,
+    "calibration": [
+      {
+        "alphaByte": 1,
+        "centerAlpha": 0.0033296337351202965,
+        "tauStep": 0.003335189300952774,
+        "rawSpzHash": "fb672870e9d6807dd92721d8484a7ffef019db4b37dd55565faee06dbbbf367e",
+        "gzipSpzHash": "2bdfd2ed19aa43db6a0fee95917d6f6c0a3a070db7e03460a52ec3eb28a654c2"
+      },
+      {
+        "alphaByte": 2,
+        "centerAlpha": 0.006659267470240593,
+        "tauStep": 0.0066815393230767045,
+        "rawSpzHash": "2ba8db733eafb8342a25f179ff4c406b68a289fb24880a7275858a95cf388f00",
+        "gzipSpzHash": "c0f12177fe9880dca2d26b4c90718027c02d743678a31eea7ca11794c06df70b"
+      },
+      {
+        "alphaByte": 4,
+        "centerAlpha": 0.013318534940481186,
+        "tauStep": 0.013408022073481197,
+        "rawSpzHash": "4ef5f8cedb9793b8170dfcc6275b37f56339d2c1fc40e5bcbff81b00f69f5cd0",
+        "gzipSpzHash": "dc9b3d17153d909c410d586a2547e506eff8c98f7d0a601d6fe246fc1e2c2cb5"
+      },
+      {
+        "alphaByte": 8,
+        "centerAlpha": 0.026637069880962372,
+        "tauStep": 0.02699826519367722,
+        "rawSpzHash": "95502c425975f9e8b4be6f8c2870765115118d83450dadfc30d6d317d00ee274",
+        "gzipSpzHash": "ca4dc18f6975fc90e1a76133b68c1aa8a3a074691d0f9bd78b1e45c7cb14efa3"
+      },
+      {
+        "alphaByte": 16,
+        "centerAlpha": 0.053274139761924744,
+        "tauStep": 0.05474571002931319,
+        "rawSpzHash": "b0b68d963c2897dd9712dfd859a70ccd9bae3f183484b3da0083f39db8ce50bc",
+        "gzipSpzHash": "255839c10aab7f862f66d4856ff8bf6750dcac8e7833760c7805490ca137972a"
+      },
+      {
+        "alphaByte": 32,
+        "centerAlpha": 0.10654827952384949,
+        "tauStep": 0.11266298000466696,
+        "rawSpzHash": "742ebeb11753f4a9804e106f11014c6d95880ef2f82e1ad6ee86a1bfbe12cf60",
+        "gzipSpzHash": "6e4d863f3fa2fc287d093e652b6ac3f8a53757eb527804b034988c44a660f2b8"
+      },
+      {
+        "alphaByte": 64,
+        "centerAlpha": 0.21309655904769897,
+        "tauStep": 0.23964973065586737,
+        "rawSpzHash": "4a887502083c2f64baba6c678ec5a2489e25eadc8513c0c34e0d189bdf0f1670",
+        "gzipSpzHash": "87958c7f636fe63b42a4d01ccd2ca69704cf80c148a2e24973a318c5ca0345eb"
+      }
+    ],
+    "plans": [
+      {
+        "alphaByte": 1,
+        "centerAlpha": 0.0033296337351202965,
+        "tauStep": 0.003335189300952774,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 300,
+            "actualTau": 1.0005567902858323,
+            "idealOpacity": 0.6323253335141912
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 600,
+            "actualTau": 2.0011135805716647,
+            "idealOpacity": 0.8648153396245493
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 1199,
+            "actualTau": 3.9988919718423763,
+            "idealOpacity": 0.9816640556202018
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 2399,
+            "actualTau": 8.001119132985705,
+            "idealOpacity": 0.9996649125893916
+          }
+        ]
+      },
+      {
+        "alphaByte": 2,
+        "centerAlpha": 0.006659267470240593,
+        "tauStep": 0.0066815393230767045,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 150,
+            "actualTau": 1.0022308984615056,
+            "idealOpacity": 0.6329403457372096
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 299,
+            "actualTau": 1.9977802575999346,
+            "idealOpacity": 0.8643639736343112
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 599,
+            "actualTau": 4.002242054522946,
+            "idealOpacity": 0.9817253797720572
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 1197,
+            "actualTau": 7.997802569722816,
+            "idealOpacity": 0.9996637994058444
+          }
+        ]
+      },
+      {
+        "alphaByte": 4,
+        "centerAlpha": 0.013318534940481186,
+        "tauStep": 0.013408022073481197,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 75,
+            "actualTau": 1.0056016555110898,
+            "idealOpacity": 0.6341755317289739
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 149,
+            "actualTau": 1.9977952889486983,
+            "idealOpacity": 0.8643660124114055
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 298,
+            "actualTau": 3.9955905778973966,
+            "idealOpacity": 0.981603421410817
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 597,
+            "actualTau": 8.004589177868274,
+            "idealOpacity": 0.9996660733426483
+          }
+        ]
+      },
+      {
+        "alphaByte": 8,
+        "centerAlpha": 0.026637069880962372,
+        "tauStep": 0.02699826519367722,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 37,
+            "actualTau": 0.9989358121660572,
+            "idealOpacity": 0.6317288576180407
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 74,
+            "actualTau": 1.9978716243321144,
+            "idealOpacity": 0.8643763656886866
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 148,
+            "actualTau": 3.995743248664229,
+            "idealOpacity": 0.9816062298161912
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 296,
+            "actualTau": 7.991486497328458,
+            "idealOpacity": 0.9996616692184253
+          }
+        ]
+      },
+      {
+        "alphaByte": 16,
+        "centerAlpha": 0.053274139761924744,
+        "tauStep": 0.05474571002931319,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 18,
+            "actualTau": 0.9854227805276373,
+            "idealOpacity": 0.626718622526553
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 37,
+            "actualTau": 2.025591271084588,
+            "idealOpacity": 0.8680841778869146
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 73,
+            "actualTau": 3.9964368321398624,
+            "idealOpacity": 0.9816189830080324
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 146,
+            "actualTau": 7.992873664279725,
+            "idealOpacity": 0.999662138214341
+          }
+        ]
+      },
+      {
+        "alphaByte": 32,
+        "centerAlpha": 0.10654827952384949,
+        "tauStep": 0.11266298000466696,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 9,
+            "actualTau": 1.0139668200420027,
+            "idealOpacity": 0.6372229497484472
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 18,
+            "actualTau": 2.0279336400840053,
+            "idealOpacity": 0.8683928118107823
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 36,
+            "actualTau": 4.055867280168011,
+            "idealOpacity": 0.9826795480169278
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 71,
+            "actualTau": 7.999071580331354,
+            "idealOpacity": 0.9996642257773727
+          }
+        ]
+      },
+      {
+        "alphaByte": 64,
+        "centerAlpha": 0.21309655904769897,
+        "tauStep": 0.23964973065586737,
+        "cells": [
+          {
+            "targetTau": 1,
+            "layerCount": 4,
+            "actualTau": 0.9585989226234695,
+            "idealOpacity": 0.6165702754763598
+          },
+          {
+            "targetTau": 2,
+            "layerCount": 8,
+            "actualTau": 1.917197845246939,
+            "idealOpacity": 0.8529816463517254
+          },
+          {
+            "targetTau": 4,
+            "layerCount": 17,
+            "actualTau": 4.074045421149745,
+            "idealOpacity": 0.9829915571699878
+          },
+          {
+            "targetTau": 8,
+            "layerCount": 33,
+            "actualTau": 7.908441111643623,
+            "idealOpacity": 0.9996323727760655
+          }
+        ]
+      }
+    ],
+    "control": "identical splats control sorting; only alpha byte, layer count and paired output buffer type vary"
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "devicePixelRatio": 1,
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "contextAttributes": {
+        "alpha": true,
+        "antialias": false,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "default",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": false,
+        "stencil": false,
+        "xrCompatible": false
+      }
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat",
+    "kernel": "fixed r186 KERNEL_2D_SIZE 0.3",
+    "blend": "NormalBlending",
+    "output": "SRGBColorSpace / NoToneMapping"
+  },
+  "cells": [
+    {
+      "alphaByte": 1,
+      "targetTau": 1,
+      "layerCount": 300,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 1.0005567902858323,
+      "idealOpacity": 0.6323253335141912,
+      "halfCenter": [
+        0.634765625,
+        0.634765625,
+        0.634765625,
+        0.634765625
+      ],
+      "floatCenter": [
+        0.6323254108428955,
+        0.6323254108428955,
+        0.6323254108428955,
+        0.6323254108428955
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.002440214157104492,
+        "rmse": 0.002440214157104492,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.634765625,
+          "b": 0.6323254108428955,
+          "absDiff": 0.002440214157104492
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.002440214157104492,
+        "rmse": 0.0016698533320861847,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.454833984375,
+          "b": 0.45284968614578247,
+          "absDiff": 0.0019842982292175293
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.002440291485808821,
+      "floatVsIdealCenterAlpha": 7.732870432874961e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.6454972243679028,
+        "changedChannels": 15,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 116,
+          "b": 115,
+          "diff": 1
+        }
+      },
+      "halfDecodedHash": "a3ffa3c3f230c577e6f7a9282a8ee183486c081b9b8e79d5346c0ed6b5e58863",
+      "floatDecodedHash": "876582321018067cc2bb5bf1e64317c52be289859e6334585088c8dd569b76f5",
+      "halfPngHash": "cd86ceac5dc7adf1a63e78b689824d2bd0963441b411e467fffbbafeb34ea362",
+      "floatPngHash": "4e81f99ca169aeaf8c45fb6a1d3c6fd752559bf8f020f19c091515c8a06bfa3c"
+    },
+    {
+      "alphaByte": 1,
+      "targetTau": 2,
+      "layerCount": 600,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 2.0011135805716647,
+      "idealOpacity": 0.8648153396245493,
+      "halfCenter": [
+        0.85400390625,
+        0.85400390625,
+        0.85400390625,
+        0.85400390625
+      ],
+      "floatCenter": [
+        0.8648152947425842,
+        0.8648152947425842,
+        0.8648152947425842,
+        0.8648152947425842
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.010811388492584229,
+        "rmse": 0.010811388492584229,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.85400390625,
+          "b": 0.8648152947425842,
+          "absDiff": 0.010811388492584229
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.013096630573272705,
+        "rmse": 0.011095206644549245,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.69189453125,
+          "b": 0.7006260752677917,
+          "absDiff": 0.008731544017791748
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.010811433374549262,
+      "floatVsIdealCenterAlpha": 4.488196503338315e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 3,
+        "rmseCodes": 2.598076211353316,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 176,
+          "b": 179,
+          "diff": 3
+        }
+      },
+      "halfDecodedHash": "3992e34a0d850328b9a6812a61347d7ff68dd69d5b8c3510355fcd9d77aecfa7",
+      "floatDecodedHash": "bfc44231b14b0f2fd06d87d861dcbeb8bd2edbb26ed2a43937988f6ae41a2425",
+      "halfPngHash": "1383701b067a0c6df5dab6792495e69265b8e017711f341c11884345aad3bd22",
+      "floatPngHash": "1bc412d0746a1fceae357b0afa69e6a5ef24ca47f43bb0c7956ed72b9c03fcb6"
+    },
+    {
+      "alphaByte": 1,
+      "targetTau": 4,
+      "layerCount": 1199,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 3.9988919718423763,
+      "idealOpacity": 0.9816640556202018,
+      "halfCenter": [
+        0.9267578125,
+        0.9267578125,
+        0.9267578125,
+        0.9267578125
+      ],
+      "floatCenter": [
+        0.9816640615463257,
+        0.9816640615463257,
+        0.9816640615463257,
+        0.9816640615463257
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.054906249046325684,
+        "rmse": 0.054906249046325684,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9267578125,
+          "b": 0.9816640615463257,
+          "absDiff": 0.054906249046325684
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.054906249046325684,
+        "rmse": 0.04305808491545485,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.87890625,
+          "b": 0.9101951718330383,
+          "absDiff": 0.03128892183303833
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.05490624312020176,
+      "floatVsIdealCenterAlpha": 5.926123924915316e-9,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 14,
+        "rmseCodes": 9.695359714832659,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 224,
+          "b": 232,
+          "diff": 8
+        }
+      },
+      "halfDecodedHash": "896da7c0f3c5d91112f88a9a5b5180e84dbbc24ad073c7ffb7784b710070f518",
+      "floatDecodedHash": "2c0d3c9ea96db9773ce20664065725ff09aba9c3d1cf9755e4aa260ea4f75a6b",
+      "halfPngHash": "4ade62b3faccf8b91c1165ee0e8152a720965e8623e48d43ec6010c9d700770d",
+      "floatPngHash": "3a4865844e6bbbfd939c1bdc63a94da317b63657eb809ceedff90d7588bcb740"
+    },
+    {
+      "alphaByte": 1,
+      "targetTau": 8,
+      "layerCount": 2399,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 8.001119132985705,
+      "idealOpacity": 0.9996649125893916,
+      "halfCenter": [
+        0.9267578125,
+        0.9267578125,
+        0.9267578125,
+        0.9267578125
+      ],
+      "floatCenter": [
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.07290714979171753,
+        "rmse": 0.07290714979171753,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9267578125,
+          "b": 0.9996649622917175,
+          "absDiff": 0.07290714979171753
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.11304551362991333,
+        "rmse": 0.10025476901563901,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.87890625,
+          "b": 0.9919517636299133,
+          "absDiff": 0.11304551362991333
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.07290710008939161,
+      "floatVsIdealCenterAlpha": 4.970232592160784e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 29,
+        "rmseCodes": 22.06241147291021,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 224,
+          "b": 253,
+          "diff": 29
+        }
+      },
+      "halfDecodedHash": "896da7c0f3c5d91112f88a9a5b5180e84dbbc24ad073c7ffb7784b710070f518",
+      "floatDecodedHash": "6c82313eb3caa1dfc0fedac7be5fa9f234488e628dbc959804c066411591b750",
+      "halfPngHash": "4ade62b3faccf8b91c1165ee0e8152a720965e8623e48d43ec6010c9d700770d",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 2,
+      "targetTau": 1,
+      "layerCount": 150,
+      "tauStep": 0.0066815393230767045,
+      "actualTau": 1.0022308984615056,
+      "idealOpacity": 0.6329403457372096,
+      "halfCenter": [
+        0.63232421875,
+        0.63232421875,
+        0.63232421875,
+        0.63232421875
+      ],
+      "floatCenter": [
+        0.6329404711723328,
+        0.6329404711723328,
+        0.6329404711723328,
+        0.6329404711723328
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0006162524223327637,
+        "rmse": 0.0006162524223327637,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.63232421875,
+          "b": 0.6329404711723328,
+          "absDiff": 0.0006162524223327637
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0006162524223327637,
+        "rmse": 0.0005430749683248145,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.45263671875,
+          "b": 0.45318353176116943,
+          "absDiff": 0.0005468130111694336
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0006161269872095865,
+      "floatVsIdealCenterAlpha": 1.2543512317719774e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.5773502691896257,
+        "changedChannels": 12,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 115,
+          "b": 116,
+          "diff": 1
+        }
+      },
+      "halfDecodedHash": "4c94dcef35907287ef37c08207b5c99fc84d6872a76c351de234d79fc8d0924e",
+      "floatDecodedHash": "394548d770307acfad75c099f817be6b29d2c4a744c516d3ccad73aa4f391159",
+      "halfPngHash": "4e81f99ca169aeaf8c45fb6a1d3c6fd752559bf8f020f19c091515c8a06bfa3c",
+      "floatPngHash": "82b1d9c8cd028aaf2abc2554a08948e1a412e6c4f20e1eddf0f6f62b05515e10"
+    },
+    {
+      "alphaByte": 2,
+      "targetTau": 2,
+      "layerCount": 299,
+      "tauStep": 0.0066815393230767045,
+      "actualTau": 1.9977802575999346,
+      "idealOpacity": 0.8643639736343112,
+      "halfCenter": [
+        0.86181640625,
+        0.86181640625,
+        0.86181640625,
+        0.86181640625
+      ],
+      "floatCenter": [
+        0.8643642067909241,
+        0.8643642067909241,
+        0.8643642067909241,
+        0.8643642067909241
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0025478005409240723,
+        "rmse": 0.0025478005409240723,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.86181640625,
+          "b": 0.8643642067909241,
+          "absDiff": 0.0025478005409240723
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0025478005409240723,
+        "rmse": 0.0020928121829977015,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.70166015625,
+          "b": 0.6997848153114319,
+          "absDiff": 0.0018753409385681152
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.002547567384311167,
+      "floatVsIdealCenterAlpha": 2.3315661290546075e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.816496580927726,
+        "changedChannels": 24,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 179,
+          "b": 178,
+          "diff": 1
+        }
+      },
+      "halfDecodedHash": "78560c89d0e1f305d805da381bf8fb376f12d285c11c9727ed4f71247dd6d949",
+      "floatDecodedHash": "72f7f8423c5a0d3fdc5916f94a63d488fd08012864c1e8bde7efa5751f7d4680",
+      "halfPngHash": "017611ca24687c2536cb36f98d72593210f188a6b843c8d6d5d13b25ca344244",
+      "floatPngHash": "f440e8732e8862537633820964212a66d92b2ecdd4cfaa98a546bd4f5ec7e05d"
+    },
+    {
+      "alphaByte": 2,
+      "targetTau": 4,
+      "layerCount": 599,
+      "tauStep": 0.0066815393230767045,
+      "actualTau": 4.002242054522946,
+      "idealOpacity": 0.9817253797720572,
+      "halfCenter": [
+        0.96337890625,
+        0.96337890625,
+        0.96337890625,
+        0.96337890625
+      ],
+      "floatCenter": [
+        0.9817253947257996,
+        0.9817253947257996,
+        0.9817253947257996,
+        0.9817253947257996
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.01834648847579956,
+        "rmse": 0.01834648847579956,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.96337890625,
+          "b": 0.9817253947257996,
+          "absDiff": 0.01834648847579956
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.01834648847579956,
+        "rmse": 0.006810314091196579,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.90625,
+          "b": 0.9102320671081543,
+          "absDiff": 0.003982067108154297
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.018346473522057205,
+      "floatVsIdealCenterAlpha": 1.4953742355494626e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 4,
+        "rmseCodes": 1.4142135623730951,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 231,
+          "b": 232,
+          "diff": 1
+        }
+      },
+      "halfDecodedHash": "71091c8e5c4b6ba88fc1b6c643d5f7f7c0bb53d2fa658297151311e8892c69f7",
+      "floatDecodedHash": "d9b5769e56e8ac14b5f2a3019974c19fabb1c9d0aa71dec792b6d04df2adb032",
+      "halfPngHash": "0344428764e71d37ad6ab039d855c4582bbbad5e0d8b9085fe3a32954c3c9012",
+      "floatPngHash": "3a4865844e6bbbfd939c1bdc63a94da317b63657eb809ceedff90d7588bcb740"
+    },
+    {
+      "alphaByte": 2,
+      "targetTau": 8,
+      "layerCount": 1197,
+      "tauStep": 0.0066815393230767045,
+      "actualTau": 7.997802569722816,
+      "idealOpacity": 0.9996637994058444,
+      "halfCenter": [
+        0.96337890625,
+        0.96337890625,
+        0.96337890625,
+        0.96337890625
+      ],
+      "floatCenter": [
+        0.9996638894081116,
+        0.9996638894081116,
+        0.9996638894081116,
+        0.9996638894081116
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.03628498315811157,
+        "rmse": 0.03628498315811157,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.96337890625,
+          "b": 0.9996638894081116,
+          "absDiff": 0.03628498315811157
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0524558424949646,
+        "rmse": 0.04757705542506675,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.939453125,
+          "b": 0.9919089674949646,
+          "absDiff": 0.0524558424949646
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.03628489315584438,
+      "floatVsIdealCenterAlpha": 9.000226719457771e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 13,
+        "rmseCodes": 10.169398540064535,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 240,
+          "b": 253,
+          "diff": 13
+        }
+      },
+      "halfDecodedHash": "e76b3b447ab8bfc214fd3ac0da7575d59bad7eee91f0c0c3a0c2bbb5e260b080",
+      "floatDecodedHash": "8cd7ad577f55a8f9ee828bb15c162a7e477acb71733789288ea684f2fc087d44",
+      "halfPngHash": "268a5b646d3977dca1a2f0407d9e1720658d35644f1f627b0512038b250b60f7",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 4,
+      "targetTau": 1,
+      "layerCount": 75,
+      "tauStep": 0.013408022073481197,
+      "actualTau": 1.0056016555110898,
+      "idealOpacity": 0.6341755317289739,
+      "halfCenter": [
+        0.63427734375,
+        0.63427734375,
+        0.63427734375,
+        0.63427734375
+      ],
+      "floatCenter": [
+        0.6341755986213684,
+        0.6341755986213684,
+        0.6341755986213684,
+        0.6341755986213684
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0001017451286315918,
+        "rmse": 0.0001017451286315918,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.63427734375,
+          "b": 0.6341755986213684,
+          "absDiff": 0.0001017451286315918
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0004729032516479492,
+        "rmse": 0.0003536064505453725,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.45361328125,
+          "b": 0.4538480341434479,
+          "absDiff": 0.00023475289344787598
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0001018120210261042,
+      "floatVsIdealCenterAlpha": 6.68923945124078e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "c469eb915e7614e9b2b9dc5ab68932094a536c50217d9cbd175022526e2bf65b",
+      "floatDecodedHash": "6c4350a386e11874e37c6c1f045a78cef7ace891a3f312f5dc8c0bf1efb7dce8",
+      "halfPngHash": "cd86ceac5dc7adf1a63e78b689824d2bd0963441b411e467fffbbafeb34ea362",
+      "floatPngHash": "cd86ceac5dc7adf1a63e78b689824d2bd0963441b411e467fffbbafeb34ea362"
+    },
+    {
+      "alphaByte": 4,
+      "targetTau": 2,
+      "layerCount": 149,
+      "tauStep": 0.013408022073481197,
+      "actualTau": 1.9977952889486983,
+      "idealOpacity": 0.8643660124114055,
+      "halfCenter": [
+        0.8642578125,
+        0.8642578125,
+        0.8642578125,
+        0.8642578125
+      ],
+      "floatCenter": [
+        0.8643660545349121,
+        0.8643660545349121,
+        0.8643660545349121,
+        0.8643660545349121
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00010824203491210938,
+        "rmse": 0.00010824203491210938,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.8642578125,
+          "b": 0.8643660545349121,
+          "absDiff": 0.00010824203491210938
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0010612010955810547,
+        "rmse": 0.0007086257252116851,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.6982421875,
+          "b": 0.699303388595581,
+          "absDiff": 0.0010612010955810547
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00010819991140553764,
+      "floatVsIdealCenterAlpha": 4.2123506571734026e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "8a5b117cefa4bf569ba702d2ad913c64e0f8e41bb8822839ab75beb4a9b4ad60",
+      "floatDecodedHash": "63f58b7173c5b42053785b047a2e44cae688480a8d3d4b746b811db2d38f27a8",
+      "halfPngHash": "f440e8732e8862537633820964212a66d92b2ecdd4cfaa98a546bd4f5ec7e05d",
+      "floatPngHash": "f440e8732e8862537633820964212a66d92b2ecdd4cfaa98a546bd4f5ec7e05d"
+    },
+    {
+      "alphaByte": 4,
+      "targetTau": 4,
+      "layerCount": 298,
+      "tauStep": 0.013408022073481197,
+      "actualTau": 3.9955905778973966,
+      "idealOpacity": 0.981603421410817,
+      "halfCenter": [
+        0.98193359375,
+        0.98193359375,
+        0.98193359375,
+        0.98193359375
+      ],
+      "floatCenter": [
+        0.98160320520401,
+        0.98160320520401,
+        0.98160320520401,
+        0.98160320520401
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00033038854598999023,
+        "rmse": 0.00033038854598999023,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.98193359375,
+          "b": 0.98160320520401,
+          "absDiff": 0.00033038854598999023
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.003701627254486084,
+        "rmse": 0.0025697942927107678,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.91064453125,
+          "b": 0.9095818400382996,
+          "absDiff": 0.0010626912117004395
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00033017233918297695,
+      "floatVsIdealCenterAlpha": 2.162068070132861e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "bb411f46e4ae8e30dfd7b94887179477eb6ef148c56e5a0857167db80049b62d",
+      "floatDecodedHash": "c8595ea1a3685b62335fcb23afc036342aad5122b987c8303d3c68049e87c585",
+      "halfPngHash": "8a48e98e5c0decd070edfdb480de186b6a9750ed424b815b282349836faf3892",
+      "floatPngHash": "8a48e98e5c0decd070edfdb480de186b6a9750ed424b815b282349836faf3892"
+    },
+    {
+      "alphaByte": 4,
+      "targetTau": 8,
+      "layerCount": 597,
+      "tauStep": 0.013408022073481197,
+      "actualTau": 8.004589177868274,
+      "idealOpacity": 0.9996660733426483,
+      "halfCenter": [
+        0.98193359375,
+        0.98193359375,
+        0.98193359375,
+        0.98193359375
+      ],
+      "floatCenter": [
+        0.9996662139892578,
+        0.9996662139892578,
+        0.9996662139892578,
+        0.9996662139892578
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.017732620239257812,
+        "rmse": 0.017732620239257812,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.98193359375,
+          "b": 0.9996662139892578,
+          "absDiff": 0.017732620239257812
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.022163867950439453,
+        "rmse": 0.02138282708594177,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9697265625,
+          "b": 0.9918904304504395,
+          "absDiff": 0.022163867950439453
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.017732479592648343,
+      "floatVsIdealCenterAlpha": 1.4064660946999652e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 6,
+        "rmseCodes": 4.73462423711393,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 247,
+          "b": 253,
+          "diff": 6
+        }
+      },
+      "halfDecodedHash": "c4e1eb13adaa6b37eb5b62067f8b7e7422673e469a1edf64d0ed20efd53f0b80",
+      "floatDecodedHash": "ea670d07d421124ff6cef0c5679556f0d17bef7915adef0d89c19e66d7636537",
+      "halfPngHash": "6c8d2a030e1d206d03b62515d27433509aa232e16f6114e63a53bae0681a48ff",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 8,
+      "targetTau": 1,
+      "layerCount": 37,
+      "tauStep": 0.02699826519367722,
+      "actualTau": 0.9989358121660572,
+      "idealOpacity": 0.6317288576180407,
+      "halfCenter": [
+        0.63232421875,
+        0.63232421875,
+        0.63232421875,
+        0.63232421875
+      ],
+      "floatCenter": [
+        0.6317288875579834,
+        0.6317288875579834,
+        0.6317288875579834,
+        0.6317288875579834
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0005953311920166016,
+        "rmse": 0.0005953311920166016,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.63232421875,
+          "b": 0.6317288875579834,
+          "absDiff": 0.0005953311920166016
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0009676814079284668,
+        "rmse": 0.0006768842270838549,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.45068359375,
+          "b": 0.45076024532318115,
+          "absDiff": 0.00007665157318115234
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0005953611319593488,
+      "floatVsIdealCenterAlpha": 2.993994274724798e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "08b6b272b3e616ae62543b0b83b50f7d6c3a6f07ed6b03a5efcc6a65b2790caa",
+      "floatDecodedHash": "56f5fa427302f5d6379b7c20e30ba15683a1ec5e46c33b469be4c905fd04fe27",
+      "halfPngHash": "72f3c5a778ab12c3ba525f7935a3fc1dbd10c6047de0a102434d8874d30ddb4b",
+      "floatPngHash": "72f3c5a778ab12c3ba525f7935a3fc1dbd10c6047de0a102434d8874d30ddb4b"
+    },
+    {
+      "alphaByte": 8,
+      "targetTau": 2,
+      "layerCount": 74,
+      "tauStep": 0.02699826519367722,
+      "actualTau": 1.9978716243321144,
+      "idealOpacity": 0.8643763656886866,
+      "halfCenter": [
+        0.8642578125,
+        0.8642578125,
+        0.8642578125,
+        0.8642578125
+      ],
+      "floatCenter": [
+        0.8643763661384583,
+        0.8643763661384583,
+        0.8643763661384583,
+        0.8643763661384583
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00011855363845825195,
+        "rmse": 0.00011855363845825195,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.8642578125,
+          "b": 0.8643763661384583,
+          "absDiff": 0.00011855363845825195
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0005816817283630371,
+        "rmse": 0.0004947305206940863,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.69775390625,
+          "b": 0.698335587978363,
+          "absDiff": 0.0005816817283630371
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0001185531886865876,
+      "floatVsIdealCenterAlpha": 4.4977166435700155e-10,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "846ed730ad972b70836339bbeefa8ceb6e1b22fec2059fabd3ac0ec70c2024dd",
+      "floatDecodedHash": "899e7e5cdb0bad08628549049ecdfd6aceabddac823489fd10f0d83d052cd80e",
+      "halfPngHash": "f440e8732e8862537633820964212a66d92b2ecdd4cfaa98a546bd4f5ec7e05d",
+      "floatPngHash": "f440e8732e8862537633820964212a66d92b2ecdd4cfaa98a546bd4f5ec7e05d"
+    },
+    {
+      "alphaByte": 8,
+      "targetTau": 4,
+      "layerCount": 148,
+      "tauStep": 0.02699826519367722,
+      "actualTau": 3.995743248664229,
+      "idealOpacity": 0.9816062298161912,
+      "halfCenter": [
+        0.98046875,
+        0.98046875,
+        0.98046875,
+        0.98046875
+      ],
+      "floatCenter": [
+        0.9816063046455383,
+        0.9816063046455383,
+        0.9816063046455383,
+        0.9816063046455383
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00113755464553833,
+        "rmse": 0.00113755464553833,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.98046875,
+          "b": 0.9816063046455383,
+          "absDiff": 0.00113755464553833
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00113755464553833,
+        "rmse": 0.0009570534920466587,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.908203125,
+          "b": 0.9089986681938171,
+          "absDiff": 0.0007955431938171387
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.001137479816191167,
+      "floatVsIdealCenterAlpha": 7.482934716307454e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "8ecc1249e3fef9a51fc4195d12feb3d4578c6ec482c422e2674ca331df7e2545",
+      "floatDecodedHash": "8aa4b4411321553ca76f99829344ac2068b969eac55ebfff6a6fda43985bd194",
+      "halfPngHash": "8a48e98e5c0decd070edfdb480de186b6a9750ed424b815b282349836faf3892",
+      "floatPngHash": "8a48e98e5c0decd070edfdb480de186b6a9750ed424b815b282349836faf3892"
+    },
+    {
+      "alphaByte": 8,
+      "targetTau": 8,
+      "layerCount": 296,
+      "tauStep": 0.02699826519367722,
+      "actualTau": 7.991486497328458,
+      "idealOpacity": 0.9996616692184253,
+      "halfCenter": [
+        0.9912109375,
+        0.9912109375,
+        0.9912109375,
+        0.9912109375
+      ],
+      "floatCenter": [
+        0.9996618032455444,
+        0.9996618032455444,
+        0.9996618032455444,
+        0.9996618032455444
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.008450865745544434,
+        "rmse": 0.008450865745544434,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9912109375,
+          "b": 0.9996618032455444,
+          "absDiff": 0.008450865745544434
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00966346263885498,
+        "rmse": 0.008386043219311592,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.98486328125,
+          "b": 0.9917186498641968,
+          "absDiff": 0.006855368614196777
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.008450731718425253,
+      "floatVsIdealCenterAlpha": 1.3402711918075738e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 2,
+        "rmseCodes": 1.7320508075688772,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 251,
+          "b": 253,
+          "diff": 2
+        }
+      },
+      "halfDecodedHash": "b688fbe8ac314c35192a9b4e488ca68f2a7cc79089804333ee01981e5f99db4c",
+      "floatDecodedHash": "d0b82f6c75ab657c6ae162a8b5e70218b62b8c8303eaff6a816ea4146efa9236",
+      "halfPngHash": "688f96558c24bede638460014652bf0fb6436c2e967cf503dd577c123c24eb12",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 16,
+      "targetTau": 1,
+      "layerCount": 18,
+      "tauStep": 0.05474571002931319,
+      "actualTau": 0.9854227805276373,
+      "idealOpacity": 0.626718622526553,
+      "halfCenter": [
+        0.626953125,
+        0.626953125,
+        0.626953125,
+        0.626953125
+      ],
+      "floatCenter": [
+        0.6267186403274536,
+        0.6267186403274536,
+        0.6267186403274536,
+        0.6267186403274536
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00023448467254638672,
+        "rmse": 0.00023448467254638672,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.626953125,
+          "b": 0.6267186403274536,
+          "absDiff": 0.00023448467254638672
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00023448467254638672,
+        "rmse": 0.00013816366944461447,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.444580078125,
+          "b": 0.4444652199745178,
+          "absDiff": 0.00011485815048217773
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00023450247344702912,
+      "floatVsIdealCenterAlpha": 1.7800900642406248e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "7d11e4f2390e8d457316991ffca787b4579b5d67567cd5fb7c96b180b17ce2f6",
+      "floatDecodedHash": "4a7171b843a104b48327d9242ce23b80360cc3307a88cd1dbdcb5a8216f8a59c",
+      "halfPngHash": "c923e4d50375ef4439a1a9cda93e3aaebe5abc5cbc1b7480b3ba8b981e803b7f",
+      "floatPngHash": "c923e4d50375ef4439a1a9cda93e3aaebe5abc5cbc1b7480b3ba8b981e803b7f"
+    },
+    {
+      "alphaByte": 16,
+      "targetTau": 2,
+      "layerCount": 37,
+      "tauStep": 0.05474571002931319,
+      "actualTau": 2.025591271084588,
+      "idealOpacity": 0.8680841778869146,
+      "halfCenter": [
+        0.8681640625,
+        0.8681640625,
+        0.8681640625,
+        0.8681640625
+      ],
+      "floatCenter": [
+        0.8680842518806458,
+        0.8680842518806458,
+        0.8680842518806458,
+        0.8680842518806458
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00007981061935424805,
+        "rmse": 0.00007981061935424805,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.8681640625,
+          "b": 0.8680842518806458,
+          "absDiff": 0.00007981061935424805
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00012505054473876953,
+        "rmse": 0.00009106312111049639,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.701171875,
+          "b": 0.7012969255447388,
+          "absDiff": 0.00012505054473876953
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0000798846130853903,
+      "floatVsIdealCenterAlpha": 7.399373114225227e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "121576dd6bc2cada155a1c0cd4b84140e13ce86902bb75505edbb0627c67cb41",
+      "floatDecodedHash": "e0bf22383bb3418d41337a8e5f703df9a0efc3c9005958f0d4e1c1692269d8a9",
+      "halfPngHash": "70d2b74c00a29ed54ec667f822bcb467d9695de0ad2c79e70f693831419c31a6",
+      "floatPngHash": "70d2b74c00a29ed54ec667f822bcb467d9695de0ad2c79e70f693831419c31a6"
+    },
+    {
+      "alphaByte": 16,
+      "targetTau": 4,
+      "layerCount": 73,
+      "tauStep": 0.05474571002931319,
+      "actualTau": 3.9964368321398624,
+      "idealOpacity": 0.9816189830080324,
+      "halfCenter": [
+        0.9814453125,
+        0.9814453125,
+        0.9814453125,
+        0.9814453125
+      ],
+      "floatCenter": [
+        0.9816189408302307,
+        0.9816189408302307,
+        0.9816189408302307,
+        0.9816189408302307
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0001736283302307129,
+        "rmse": 0.0001736283302307129,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9814453125,
+          "b": 0.9816189408302307,
+          "absDiff": 0.0001736283302307129
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0001736283302307129,
+        "rmse": 0.00012958182136869932,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.90771484375,
+          "b": 0.9078146815299988,
+          "absDiff": 0.0000998377799987793
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00017367050803240858,
+      "floatVsIdealCenterAlpha": 4.217780169568641e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "b427f9d121728134b8661583c1f19cb78443d71914d0db847791a35696844a7a",
+      "floatDecodedHash": "1c8df68037e6b5cca7570e0b1d882e4fa7108acf738fcc30066230592f4a57fb",
+      "halfPngHash": "77f981fc961fa69fdd26b42faeda3ce305045b8a0cd5d98ee0af66321aa1af34",
+      "floatPngHash": "77f981fc961fa69fdd26b42faeda3ce305045b8a0cd5d98ee0af66321aa1af34"
+    },
+    {
+      "alphaByte": 16,
+      "targetTau": 8,
+      "layerCount": 146,
+      "tauStep": 0.05474571002931319,
+      "actualTau": 7.992873664279725,
+      "idealOpacity": 0.999662138214341,
+      "halfCenter": [
+        0.99560546875,
+        0.99560546875,
+        0.99560546875,
+        0.99560546875
+      ],
+      "floatCenter": [
+        0.9996620416641235,
+        0.9996620416641235,
+        0.9996620416641235,
+        0.9996620416641235
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.004056572914123535,
+        "rmse": 0.004056572914123535,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.99560546875,
+          "b": 0.9996620416641235,
+          "absDiff": 0.004056572914123535
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.004056572914123535,
+        "rmse": 0.0029569932174416695,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.99267578125,
+          "b": 0.9915018081665039,
+          "absDiff": 0.0011739730834960938
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.004056669464341023,
+      "floatVsIdealCenterAlpha": 9.655021748766757e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 1,
+        "rmseCodes": 0.28867513459481287,
+        "changedChannels": 3,
+        "firstDifference": {
+          "channelIndex": 16,
+          "pixel": 4,
+          "channel": 0,
+          "a": 254,
+          "b": 255,
+          "diff": 1
+        }
+      },
+      "halfDecodedHash": "0fdfcff0d05b018abb00192ddab29683f85f7b92f1305557a06291a5e84a8814",
+      "floatDecodedHash": "06c849204898ba1e44531ad74f8fd3aa12163bb2bc244f5739f9a0e85f4db8a0",
+      "halfPngHash": "2f7c88decbcb475fe592990198f3ef34d6ed4179a60293ab03fbccd76fd9df1b",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 32,
+      "targetTau": 1,
+      "layerCount": 9,
+      "tauStep": 0.11266298000466696,
+      "actualTau": 1.0139668200420027,
+      "idealOpacity": 0.6372229497484472,
+      "halfCenter": [
+        0.63720703125,
+        0.63720703125,
+        0.63720703125,
+        0.63720703125
+      ],
+      "floatCenter": [
+        0.6372228860855103,
+        0.6372228860855103,
+        0.6372228860855103,
+        0.6372228860855103
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.000015854835510253906,
+        "rmse": 0.000015854835510253906,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.63720703125,
+          "b": 0.6372228860855103,
+          "absDiff": 0.000015854835510253906
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00016170740127563477,
+        "rmse": 0.00010793470800388002,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.449951171875,
+          "b": 0.44995078444480896,
+          "absDiff": 3.8743019104003906e-7
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.000015918498447176077,
+      "floatVsIdealCenterAlpha": 6.366293692217084e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "5f5bba3bc248142e7bfa98b74381aab64401731ac3c8a0f827a2f13f9257bcf7",
+      "floatDecodedHash": "a1a55ce076c6aa50f77e818bf6ba7113db74372135fe4378395c0ff362d3fb40",
+      "halfPngHash": "f24ad00fa2ed665cb36c144d9f867f09896b4227099d1aa945138787c3b8cff8",
+      "floatPngHash": "f24ad00fa2ed665cb36c144d9f867f09896b4227099d1aa945138787c3b8cff8"
+    },
+    {
+      "alphaByte": 32,
+      "targetTau": 2,
+      "layerCount": 18,
+      "tauStep": 0.11266298000466696,
+      "actualTau": 2.0279336400840053,
+      "idealOpacity": 0.8683928118107823,
+      "halfCenter": [
+        0.8681640625,
+        0.8681640625,
+        0.8681640625,
+        0.8681640625
+      ],
+      "floatCenter": [
+        0.8683925867080688,
+        0.8683925867080688,
+        0.8683925867080688,
+        0.8683925867080688
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00022852420806884766,
+        "rmse": 0.00022852420806884766,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.8681640625,
+          "b": 0.8683925867080688,
+          "absDiff": 0.00022852420806884766
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00032633543014526367,
+        "rmse": 0.00030874227909664817,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.69775390625,
+          "b": 0.697445809841156,
+          "absDiff": 0.00030809640884399414
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00022874931078231686,
+      "floatVsIdealCenterAlpha": 2.2510271346920518e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "d20889df681a1103ee601beaaccd7f9ac44ca85c0dd2e793de4606d663f3c6b7",
+      "floatDecodedHash": "71bee5f98543dbaa5b1d86c0d0f451305e7eb5f9fcbf39003ac45ca72bccdce1",
+      "halfPngHash": "c6f037d3a1243088ecb4a1120acc21637229eb6b7be7bb70d2f367d715451d53",
+      "floatPngHash": "c6f037d3a1243088ecb4a1120acc21637229eb6b7be7bb70d2f367d715451d53"
+    },
+    {
+      "alphaByte": 32,
+      "targetTau": 4,
+      "layerCount": 36,
+      "tauStep": 0.11266298000466696,
+      "actualTau": 4.055867280168011,
+      "idealOpacity": 0.9826795480169278,
+      "halfCenter": [
+        0.982421875,
+        0.982421875,
+        0.982421875,
+        0.982421875
+      ],
+      "floatCenter": [
+        0.9826792478561401,
+        0.9826792478561401,
+        0.9826792478561401,
+        0.9826792478561401
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0002573728561401367,
+        "rmse": 0.0002573728561401367,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.982421875,
+          "b": 0.9826792478561401,
+          "absDiff": 0.0002573728561401367
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0007187724113464355,
+        "rmse": 0.0006684141049201213,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9091796875,
+          "b": 0.9084609150886536,
+          "absDiff": 0.0007187724113464355
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0002576730169278063,
+      "floatVsIdealCenterAlpha": 3.0016078766959e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "0da33ceee5b55169234a1b0b966f53b2be0aaf79342cf02799497d322a2b3070",
+      "floatDecodedHash": "0beecb164969cc836103f47dc20db3ac674dfd79af67d5e97af9577e16aabcb3",
+      "halfPngHash": "ec6e6e52c6a5033621fb175b25bf71f2f71e23fab75c04dcd3cffc957838db2d",
+      "floatPngHash": "ec6e6e52c6a5033621fb175b25bf71f2f71e23fab75c04dcd3cffc957838db2d"
+    },
+    {
+      "alphaByte": 32,
+      "targetTau": 8,
+      "layerCount": 71,
+      "tauStep": 0.11266298000466696,
+      "actualTau": 7.999071580331354,
+      "idealOpacity": 0.9996642257773727,
+      "halfCenter": [
+        0.998046875,
+        0.998046875,
+        0.998046875,
+        0.998046875
+      ],
+      "floatCenter": [
+        0.9996638298034668,
+        0.9996638298034668,
+        0.9996638298034668,
+        0.9996638298034668
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0016169548034667969,
+        "rmse": 0.0016169548034667969,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.998046875,
+          "b": 0.9996638298034668,
+          "absDiff": 0.0016169548034667969
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0016169548034667969,
+        "rmse": 0.0007694753219652115,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.99072265625,
+          "b": 0.9910451769828796,
+          "absDiff": 0.00032252073287963867
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0016173507773726836,
+      "floatVsIdealCenterAlpha": 3.959739058867484e-7,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "a9a7e84cb1f6da1d6c55d91ace3325624cc9c3532119308ce953d36a765610c0",
+      "floatDecodedHash": "6184f75e63c98302250c5e03213a619a309905c7826939f4c193b8fa729a06a9",
+      "halfPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    {
+      "alphaByte": 64,
+      "targetTau": 1,
+      "layerCount": 4,
+      "tauStep": 0.23964973065586737,
+      "actualTau": 0.9585989226234695,
+      "idealOpacity": 0.6165702754763598,
+      "halfCenter": [
+        0.61669921875,
+        0.61669921875,
+        0.61669921875,
+        0.61669921875
+      ],
+      "floatCenter": [
+        0.616570234298706,
+        0.616570234298706,
+        0.616570234298706,
+        0.616570234298706
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0001289844512939453,
+        "rmse": 0.0001289844512939453,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.61669921875,
+          "b": 0.616570234298706,
+          "absDiff": 0.0001289844512939453
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0001289844512939453,
+        "rmse": 0.00011027191489316069,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.423095703125,
+          "b": 0.42318791151046753,
+          "absDiff": 0.0000922083854675293
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00012894327364021407,
+      "floatVsIdealCenterAlpha": 4.117765373123916e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "a43b399d9a9b7ab6ed0d57a2d4c239815388ca0ec7a2711ed791e9d914a0fc2e",
+      "floatDecodedHash": "77d4118dbecb7963042638f04d14bd3f7ef12981499ecae56e2740fe9847f242",
+      "halfPngHash": "801ee5a8f75f725052c5cd38b057d13d17faa76b4c03bb9161f4ac625f9f7492",
+      "floatPngHash": "801ee5a8f75f725052c5cd38b057d13d17faa76b4c03bb9161f4ac625f9f7492"
+    },
+    {
+      "alphaByte": 64,
+      "targetTau": 2,
+      "layerCount": 8,
+      "tauStep": 0.23964973065586737,
+      "actualTau": 1.917197845246939,
+      "idealOpacity": 0.8529816463517254,
+      "halfCenter": [
+        0.85302734375,
+        0.85302734375,
+        0.85302734375,
+        0.85302734375
+      ],
+      "floatCenter": [
+        0.8529816269874573,
+        0.8529816269874573,
+        0.8529816269874573,
+        0.8529816269874573
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.00004571676254272461,
+        "rmse": 0.00004571676254272461,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.85302734375,
+          "b": 0.8529816269874573,
+          "absDiff": 0.00004571676254272461
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0001927018165588379,
+        "rmse": 0.00016013330737427913,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.66748046875,
+          "b": 0.6672877669334412,
+          "absDiff": 0.0001927018165588379
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.000045697398274646694,
+      "floatVsIdealCenterAlpha": 1.9364268077914915e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "6f1ed8c4a92e80f80e67a020caaaa7582fe7050f4728fdb6436919a6a8fdcb87",
+      "floatDecodedHash": "9f0a026f0f7c05fdf1f4b077b8feaac4d91e2e9e165dc6d01732fede84affbda",
+      "halfPngHash": "92a455410df9ca514b1eab7491338096a3b3969e5b99d2aac80444eb039d157c",
+      "floatPngHash": "92a455410df9ca514b1eab7491338096a3b3969e5b99d2aac80444eb039d157c"
+    },
+    {
+      "alphaByte": 64,
+      "targetTau": 4,
+      "layerCount": 17,
+      "tauStep": 0.23964973065586737,
+      "actualTau": 4.074045421149745,
+      "idealOpacity": 0.9829915571699878,
+      "halfCenter": [
+        0.98291015625,
+        0.98291015625,
+        0.98291015625,
+        0.98291015625
+      ],
+      "floatCenter": [
+        0.9829915761947632,
+        0.9829915761947632,
+        0.9829915761947632,
+        0.9829915761947632
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0000814199447631836,
+        "rmse": 0.0000814199447631836,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.98291015625,
+          "b": 0.9829915761947632,
+          "absDiff": 0.0000814199447631836
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.00026983022689819336,
+        "rmse": 0.00022909088792293954,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9033203125,
+          "b": 0.903529167175293,
+          "absDiff": 0.00020885467529296875
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.00008140091998776189,
+      "floatVsIdealCenterAlpha": 1.9024775421705442e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "a9e44074415abc62dc56863d0b7c7cde703f8c26010746b1bc2125d6f0e48087",
+      "floatDecodedHash": "a1379568bc8514f43fa051253c6536f2f85a7c15c420ba9b202e24b50bea1e0f",
+      "halfPngHash": "38a2bff6fe0b3807490c5f6a30edcf3298e985f9360067ccc345661168c45829",
+      "floatPngHash": "38a2bff6fe0b3807490c5f6a30edcf3298e985f9360067ccc345661168c45829"
+    },
+    {
+      "alphaByte": 64,
+      "targetTau": 8,
+      "layerCount": 33,
+      "tauStep": 0.23964973065586737,
+      "actualTau": 7.908441111643623,
+      "idealOpacity": 0.9996323727760655,
+      "halfCenter": [
+        0.9990234375,
+        0.9990234375,
+        0.9990234375,
+        0.9990234375
+      ],
+      "floatCenter": [
+        0.9996323585510254,
+        0.9996323585510254,
+        0.9996323585510254,
+        0.9996323585510254
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.0006089210510253906,
+        "rmse": 0.0006089210510253906,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9990234375,
+          "b": 0.9996323585510254,
+          "absDiff": 0.0006089210510253906
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.0006089210510253906,
+        "rmse": 0.00032502151613993075,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9892578125,
+          "b": 0.9893209338188171,
+          "absDiff": 0.00006312131881713867
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.0006089352760655364,
+      "floatVsIdealCenterAlpha": 1.4225040145809942e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 0,
+        "rmseCodes": 0,
+        "changedChannels": 0,
+        "firstDifference": null
+      },
+      "halfDecodedHash": "1b26ed972725c392f733aee9ba8de96613cce52689a538bbf012e2fad8a52680",
+      "floatDecodedHash": "976b8b255b2ac161b646db71c6a55082c05b9fa45f395ea7fd5e735f9d48bfbb",
+      "halfPngHash": "976638588ecb3fa6474b03e89789245a9bffeb15c158bea3b4a2965d1ac118a4",
+      "floatPngHash": "976638588ecb3fa6474b03e89789245a9bffeb15c158bea3b4a2965d1ac118a4"
+    }
+  ],
+  "analysis": {
+    "groups": [
+      {
+        "targetTau": 1,
+        "cellCount": 7,
+        "actualTauMin": 0.9585989226234695,
+        "actualTauMax": 1.0139668200420027,
+        "actualTauRelativeSpread": 0.05536789741853321,
+        "centerErrorMin": 0.000015854835510253906,
+        "centerErrorMax": 0.002440214157104492,
+        "centerErrorRatio": 153.90977443609023,
+        "presentationCodeMin": 0,
+        "presentationCodeMax": 1,
+        "largestError": {
+          "alphaByte": 1,
+          "layerCount": 300,
+          "actualTau": 1.0005567902858323,
+          "error": 0.002440214157104492
+        },
+        "smallestError": {
+          "alphaByte": 32,
+          "layerCount": 9,
+          "actualTau": 1.0139668200420027,
+          "error": 0.000015854835510253906
+        }
+      },
+      {
+        "targetTau": 2,
+        "cellCount": 7,
+        "actualTauMin": 1.917197845246939,
+        "actualTauMax": 2.0279336400840053,
+        "actualTauRelativeSpread": 0.05536789741853321,
+        "centerErrorMin": 0.00004571676254272461,
+        "centerErrorMax": 0.010811388492584229,
+        "centerErrorRatio": 236.48631029986961,
+        "presentationCodeMin": 0,
+        "presentationCodeMax": 3,
+        "largestError": {
+          "alphaByte": 1,
+          "layerCount": 600,
+          "actualTau": 2.0011135805716647,
+          "error": 0.010811388492584229
+        },
+        "smallestError": {
+          "alphaByte": 64,
+          "layerCount": 8,
+          "actualTau": 1.917197845246939,
+          "error": 0.00004571676254272461
+        }
+      },
+      {
+        "targetTau": 4,
+        "cellCount": 7,
+        "actualTauMin": 3.9955905778973966,
+        "actualTauMax": 4.074045421149745,
+        "actualTauRelativeSpread": 0.01961371081308716,
+        "centerErrorMin": 0.0000814199447631836,
+        "centerErrorMax": 0.054906249046325684,
+        "centerErrorRatio": 674.3587115666179,
+        "presentationCodeMin": 0,
+        "presentationCodeMax": 14,
+        "largestError": {
+          "alphaByte": 1,
+          "layerCount": 1199,
+          "actualTau": 3.9988919718423763,
+          "error": 0.054906249046325684
+        },
+        "smallestError": {
+          "alphaByte": 64,
+          "layerCount": 17,
+          "actualTau": 4.074045421149745,
+          "error": 0.0000814199447631836
+        }
+      },
+      {
+        "targetTau": 8,
+        "cellCount": 7,
+        "actualTauMin": 7.908441111643623,
+        "actualTauMax": 8.004589177868274,
+        "actualTauRelativeSpread": 0.012018508278081375,
+        "centerErrorMin": 0.0006089210510253906,
+        "centerErrorMax": 0.07290714979171753,
+        "centerErrorRatio": 119.73169537979639,
+        "presentationCodeMin": 0,
+        "presentationCodeMax": 29,
+        "largestError": {
+          "alphaByte": 1,
+          "layerCount": 2399,
+          "actualTau": 8.001119132985705,
+          "error": 0.07290714979171753
+        },
+        "smallestError": {
+          "alphaByte": 64,
+          "layerCount": 33,
+          "actualTau": 7.908441111643623,
+          "error": 0.0006089210510253906
+        }
+      }
+    ],
+    "sameTauDifferentErrorObserved": true,
+    "counterexample": {
+      "targetTau": 8,
+      "cellCount": 7,
+      "actualTauMin": 7.908441111643623,
+      "actualTauMax": 8.004589177868274,
+      "actualTauRelativeSpread": 0.012018508278081375,
+      "centerErrorMin": 0.0006089210510253906,
+      "centerErrorMax": 0.07290714979171753,
+      "centerErrorRatio": 119.73169537979639,
+      "presentationCodeMin": 0,
+      "presentationCodeMax": 29,
+      "largestError": {
+        "alphaByte": 1,
+        "layerCount": 2399,
+        "actualTau": 8.001119132985705,
+        "error": 0.07290714979171753
+      },
+      "smallestError": {
+        "alphaByte": 64,
+        "layerCount": 33,
+        "actualTau": 7.908441111643623,
+        "error": 0.0006089210510253906
+      }
+    },
+    "opticalDepthAloneAssessment": "rejected-as-sole-predictor-in-this-fixture",
+    "maxInternalDifference": {
+      "alphaByte": 1,
+      "targetTau": 8,
+      "layerCount": 2399,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 8.001119132985705,
+      "idealOpacity": 0.9996649125893916,
+      "halfCenter": [
+        0.9267578125,
+        0.9267578125,
+        0.9267578125,
+        0.9267578125
+      ],
+      "floatCenter": [
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.07290714979171753,
+        "rmse": 0.07290714979171753,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9267578125,
+          "b": 0.9996649622917175,
+          "absDiff": 0.07290714979171753
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.11304551362991333,
+        "rmse": 0.10025476901563901,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.87890625,
+          "b": 0.9919517636299133,
+          "absDiff": 0.11304551362991333
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.07290710008939161,
+      "floatVsIdealCenterAlpha": 4.970232592160784e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 29,
+        "rmseCodes": 22.06241147291021,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 224,
+          "b": 253,
+          "diff": 29
+        }
+      },
+      "halfDecodedHash": "896da7c0f3c5d91112f88a9a5b5180e84dbbc24ad073c7ffb7784b710070f518",
+      "floatDecodedHash": "6c82313eb3caa1dfc0fedac7be5fa9f234488e628dbc959804c066411591b750",
+      "halfPngHash": "4ade62b3faccf8b91c1165ee0e8152a720965e8623e48d43ec6010c9d700770d",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    "maxPresentationDifference": {
+      "alphaByte": 1,
+      "targetTau": 8,
+      "layerCount": 2399,
+      "tauStep": 0.003335189300952774,
+      "actualTau": 8.001119132985705,
+      "idealOpacity": 0.9996649125893916,
+      "halfCenter": [
+        0.9267578125,
+        0.9267578125,
+        0.9267578125,
+        0.9267578125
+      ],
+      "floatCenter": [
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175,
+        0.9996649622917175
+      ],
+      "centerHalfVsFloat": {
+        "channels": 4,
+        "maxAbs": 0.07290714979171753,
+        "rmse": 0.07290714979171753,
+        "changedChannels": 4,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.9267578125,
+          "b": 0.9996649622917175,
+          "absDiff": 0.07290714979171753
+        }
+      },
+      "allPixelsHalfVsFloat": {
+        "channels": 36,
+        "maxAbs": 0.11304551362991333,
+        "rmse": 0.10025476901563901,
+        "changedChannels": 36,
+        "firstDifference": {
+          "channel": 0,
+          "a": 0.87890625,
+          "b": 0.9919517636299133,
+          "absDiff": 0.11304551362991333
+        }
+      },
+      "halfVsIdealCenterAlpha": 0.07290710008939161,
+      "floatVsIdealCenterAlpha": 4.970232592160784e-8,
+      "presentationHalfVsFloat": {
+        "channels": 36,
+        "maxCodeDiff": 29,
+        "rmseCodes": 22.06241147291021,
+        "changedChannels": 27,
+        "firstDifference": {
+          "channelIndex": 0,
+          "pixel": 0,
+          "channel": 0,
+          "a": 224,
+          "b": 253,
+          "diff": 29
+        }
+      },
+      "halfDecodedHash": "896da7c0f3c5d91112f88a9a5b5180e84dbbc24ad073c7ffb7784b710070f518",
+      "floatDecodedHash": "6c82313eb3caa1dfc0fedac7be5fa9f234488e628dbc959804c066411591b750",
+      "halfPngHash": "4ade62b3faccf8b91c1165ee0e8152a720965e8623e48d43ec6010c9d700770d",
+      "floatPngHash": "18ab9ceb469ae9566aa5a17f08270972d9dd128730e20a54a8a1e64c4834d5b3"
+    },
+    "maxFloatIdealCenterError": 3.959739058867484e-7,
+    "maxHalfIdealCenterError": 0.07290710008939161
+  },
+  "checks": {
+    "allPagesSuccessful": true,
+    "allPageChecks": true,
+    "sourcePairsSame": true,
+    "calibrationComplete": true,
+    "gridComplete": true,
+    "countsBounded": true,
+    "tauGroupsWithinFivePercent": false,
+    "counterexampleTauWithinFivePercent": true,
+    "internalComparisonsFinite": true,
+    "presentationCaptured": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "decisionRule": "Optical depth may describe ideal accumulated opacity, but precision risk also depends on per-write alpha step and finite target spacing. A fixture counterexample is not a real-asset threshold.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "fixtureNumbersAreNotAssetAcceptanceThresholds": true,
+    "syntheticIdenticalSplats": true,
+    "softwareWebglOnly": true,
+    "privateRevisionPinnedProbe": true,
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}

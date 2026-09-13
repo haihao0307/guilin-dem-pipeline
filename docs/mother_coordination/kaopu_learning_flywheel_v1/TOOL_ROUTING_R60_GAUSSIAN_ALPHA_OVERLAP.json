@@ -1,0 +1,69 @@
+{
+  "schema": "kaopu-tool-routing/r60",
+  "status": "Candidate partial",
+  "question": "Can effective optical depth alone predict HalfFloat-versus-Float accumulation risk across alpha/overlap decompositions in the actual Three.js r186 splat path?",
+  "inherits": "TOOL_ROUTING_R59_GAUSSIAN_SPZ_ACCUMULATION.json",
+  "routes": [
+    {
+      "stage": "official-input-and-render-semantics",
+      "tool": "Pinned Three.js r186 SPZLoader.js, GaussianSplat.js and Renderer.js",
+      "authority": "SPZ v3 input interpretation, actual splat kernel/cutoff/blend path, renderer default and internal-target selection",
+      "notAuthorityFor": [
+        "real-asset significance",
+        "device safety",
+        "human acceptance"
+      ]
+    },
+    {
+      "stage": "alpha-overlap-execution",
+      "tool": "PROBES/gaussian_three_alpha_overlap_r60.html through Playwright",
+      "authority": "locked-fixture alpha-by-tau Half/Float behavior in the tested software WebGL lineage",
+      "notAuthorityFor": [
+        "hardware GPU",
+        "WebGPU",
+        "Safari/iPhone",
+        "real reconstruction thresholds"
+      ]
+    },
+    {
+      "stage": "optical-depth-calibration",
+      "tool": "Float one-layer center-alpha readback plus repeated source-over expression",
+      "authority": "fixture layer-count construction and analytic comparison",
+      "notAuthorityFor": [
+        "physical opacity",
+        "perceptual equality",
+        "mixed spatial splats"
+      ]
+    },
+    {
+      "stage": "precision-routing",
+      "tool": "R60 multidimensional validation tuple",
+      "authority": "candidate method requiring tau, alpha decomposition, overlap count, target format and view/order metadata",
+      "notAuthorityFor": [
+        "universal Half/Float threshold",
+        "production promotion without device evidence"
+      ]
+    },
+    {
+      "stage": "next-predictor-test",
+      "tool": "One predeclared second statistic on fixed-order mixed-alpha sequences",
+      "authority": "candidate sufficiency test once executed",
+      "requiredNext": [
+        "matched tau",
+        "fixed order and color",
+        "paired Half and Float",
+        "counterexample search",
+        "no universal threshold claim"
+      ]
+    }
+  ],
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "alphaOverlapGridExecuted": true,
+  "tauAloneSufficient": false,
+  "webgpuHalfVsFloatCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}
+

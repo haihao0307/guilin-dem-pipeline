@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu-source-lock/r60",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-alpha-overlap-optical-depth-precision",
+  "inherits": "references/gaussian-spz-accumulation-r59/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R60-THREE-R186-ALPHA-OVERLAP-EXECUTION",
+      "sameEvidenceLineageAs": [
+        "O-R59-THREE-R186-SPZ-ACCUMULATION-EXECUTION",
+        "O-R58-THREE-R186-OUTPUT-BUFFER-EXECUTION",
+        "O-R57-THREE-R186-WEBGPU-SWAPCHAIN",
+        "O-R56-THREE-R186-PRESENTATION",
+        "O-R55-THREE-R186-TWO-LAYER-BLEND"
+      ],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "graphics": "Google SwiftShader",
+      "fixtureAlphaBytes": [1, 2, 4, 8, 16, 32, 64],
+      "targetEffectiveOpticalDepth": [1, 2, 4, 8],
+      "fixtureHashes": "retained per alpha in PROBES/gaussian_three_alpha_overlap_result_r60.json"
+    },
+    {
+      "root": "O-R60-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/loaders/SPZLoader.js",
+          "blobSha": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+          "constraint": "public r186 legacy gzip SPZ parsing and v3 attribute construction used by every fixture"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js",
+          "blobSha": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+          "constraint": "actual GaussianSplat material, kernel, cutoff, projection, sorting and transparent render route"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/common/Renderer.js",
+          "blobSha": "c05aa68471f07a0bbbf6203865da1096fea503c1",
+          "constraint": "HalfFloatType constructor default and internal color-conversion target selection"
+        }
+      ]
+    },
+    {
+      "root": "O-R60-CI-ALPHA-OVERLAP",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34761069876,
+      "workflowHeadSha": "7ccd2f487de8af58407af726b4673e899313b739",
+      "artifactId": 10318284891,
+      "artifactName": "kaopu-gaussian-r60-alpha-overlap",
+      "artifactDigestSha256": "6132897a6290aaf8bf6fb98fab4070d8dcc5e6df59325fc52d6d0a4abcd61060",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "failedAttempts": [
+    {
+      "workflowRunId": 34760804324,
+      "workflowHeadSha": "bd3c31c80a1e403df70c6eb895fa409edfc3e788",
+      "outcome": "All execution checks and the numerical counterexample completed, but the first gate incorrectly required every target-tau group to lie within 5%; tau=1 and 2 exposed integer-layer discretization beyond that band. The observations were retained and the decisive matched-group rule was made explicit."
+    },
+    {
+      "workflowRunId": 34760994385,
+      "workflowHeadSha": "a22d56373dcac220c1841771d931783ca62510d6",
+      "outcome": "The independent gate was corrected, but the runner still computed total status from every observation boolean, so the retained tau-groups negative observation still forced failure. Runner and independent gate were aligned to the same explicit required-check list; numerical observations were unchanged."
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_alpha_overlap_r60.html",
+    "runner": "PROBES/run_gaussian_three_alpha_overlap_r60.js",
+    "compactResult": "PROBES/gaussian_three_alpha_overlap_result_r60.json",
+    "resultGitBlobSha": "26e74ced25d58cf8a9a7c004fceb4b87b8552130",
+    "gate": "ADAPTERS/gaussian_three_alpha_overlap_gate_r60.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r60-alpha-overlap.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}
