@@ -1,0 +1,4 @@
+let raw='';for await(const chunk of process.stdin)raw+=chunk;const d=JSON.parse(raw);
+const required=['allPageChecks','sameAlphaSequence','sameColorMultiset','distinctColorSequences','halfReplayBitExact','floatReplayClose','propagatedResidualIdentity','alphaTraceIdentical','mixedColorAlphaOnlyCounterexample','presentationCaptured','outcomeClassified'],failures=required.filter(k=>d.checks?.[k]!==true);
+const out={schema:'kaopu-three-color-residual-gate/r63',status:failures.length?'Candidate-fail':'Candidate-pass',inputSchema:d.schema,failures,alphaOnlyAssessment:d.analysis?.alphaOnlyAssessment,signedPropagatedResidualAssessment:d.analysis?.signedPropagatedResidualAssessment,rgbHalfFloatErrorSpread:d.analysis?.rgbHalfFloatErrorSpread,limits:d.limits};process.stdout.write(JSON.stringify(out,null,2)+'\n');if(failures.length)process.exitCode=10;
+
