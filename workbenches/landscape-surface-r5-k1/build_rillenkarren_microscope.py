@@ -1,5 +1,5 @@
 from pathlib import Path
-import hashlib, json, re
+import hashlib, json
 
 ROOT=Path(__file__).resolve().parents[2]
 SRC=ROOT/'workbenches/landscape-surface-r5/index.html'
@@ -41,8 +41,8 @@ float mmRillenkarren(vec3 rawQ){
   float ridge=smoothstep(.55,.96,abs(sin((u+warp*.32)*(f0*.52)+.7)));
   float steep=smoothstep(.18,.82,fl),water=smoothstep(.035,.52,clamp(e.z,0.,1.));
   float exposed=smoothstep(.24,.82,d.y)*smoothstep(.05,.42,d.z);
-  float patch=smoothstep(.30,.66,bmN(rawQ*.083+vec3(-7.1,19.3,4.7))+.18*zone);
-  float mask=steep*mix(.28,1.,water)*exposed*patch*clamp(uStage/2.,0.,1.);
+  float zoneMask=smoothstep(.30,.66,bmN(rawQ*.083+vec3(-7.1,19.3,4.7))+.18*zone);
+  float mask=steep*mix(.28,1.,water)*exposed*zoneMask*clamp(uStage/2.,0.,1.);
   return mask*(-.0155*g1-.0065*g2-.0028*g3+.0032*ridge);
 }"""
 assert old in s, 'Microscope source block not found'
