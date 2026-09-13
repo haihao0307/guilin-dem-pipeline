@@ -1,0 +1,51 @@
+name: Freeze tested Landscape R5 K2
+on:
+  push:
+    branches: [feature/landscape-mother-karst-living-r1-20260913]
+    paths:
+      - '.github/workflows/landscape-r5-k2-freeze.yml'
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/landscape-mother-karst-living-r1-20260913
+          fetch-depth: 1
+      - name: Rebuild exact browser-tested candidate
+        run: python3 workbenches/landscape-surface-r5-k2/build_microscope_organic.py
+      - name: Verify exact tested bytes and frozen R5
+        run: |
+          echo 'ac46bf029cf2a9d5ffd3dcc5a53a29990be7aedcc17aa84be27462c8e6e89ec2  workbenches/landscape-surface-r5/index.html' | sha256sum -c -
+          echo '919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709  workbenches/landscape-surface-r5-k2/index.html' | sha256sum -c -
+          python3 - <<'PY'
+          import json
+          d=json.load(open('workbenches/landscape-surface-r5-k2/build.json'))
+          assert d['schema']=='LANDSCAPE_R5_K2_ORGANIC_MICROSCOPE_V2'
+          assert d['candidateSha256']=='919df1a9eff14a6d310d4aca93a2ccfcc9a59bb70a9b44b0bfe7d57aed335709'
+          assert d['macroGeometryChanged'] is False
+          assert d['vertexIndexGeneratorChanged'] is False
+          assert d['worldSourceChanged'] is False
+          assert d['visualApproved'] is False
+          PY
+      - name: Commit exact tested candidate with retry
+        run: |
+          set -euo pipefail
+          git config user.name 'Landscape Mother'
+          git config user.email 'actions@users.noreply.github.com'
+          git add workbenches/landscape-surface-r5-k2/index.html workbenches/landscape-surface-r5-k2/build.json
+          if git diff --cached --quiet; then
+            echo 'Exact candidate already frozen.'
+            exit 0
+          fi
+          git commit -m 'build(landscape): freeze tested R5.K2 organic microscope [skip ci]'
+          for delay in 0 5 12 25; do
+            sleep "$delay"
+            if git push origin HEAD:feature/landscape-mother-karst-living-r1-20260913; then
+              exit 0
+            fi
+          done
+          exit 1
