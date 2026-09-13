@@ -1,21 +1,29 @@
 {
-  "schema": "wenzhou-current-source-locks/v1",
+  "schema": "wenzhou-current-source-locks/v2",
   "repository": "haihao0307/guilin-dem-pipeline",
-  "runtimeBase": {
+  "coldRestartArchive": {
     "tag": "wenzhou-r3.2-full-20260909",
     "asset": "Wenzhou_R3_2_FULL_RESTART_20260909.zip",
     "bytes": 1037710376,
-    "sha256": "ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c"
+    "sha256": "ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c",
+    "role": "cold recovery archive only; never embed in current lean handoff"
   },
-  "verifiedVisual": {
-    "version": "R3.7",
-    "commit": "81354b32acedf158490203f89e4cda5c3449e3a0",
-    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/81354b32acedf158490203f89e4cda5c3449e3a0/site/dist/r3-7/index.html",
-    "qaArtifactSha256": "87c9941b0b283b0194e892daccbd1ae04b8b62a3dfa675b15b633c729608d656"
+  "verifiedBaseline": {
+    "version": "R3.8",
+    "commit": "3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
+    "stateCommit": "a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
+    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/3018da201a2ef6b5d122522e85bbbb5b91f8a34d/site/dist/r3-8/index.html"
   },
-  "currentR3_8": {
-    "workingSourceCommit": "9339ba3e48c2db41b8f08690e118a9202299f1db",
-    "wrbBuildRunId": 34578859120
+  "currentVerifiedRuntime": {
+    "version": "R3.9-lean-transport",
+    "commit": "d591713f236107f7db5a24fb9d74e087550e688a",
+    "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/d591713f236107f7db5a24fb9d74e087550e688a/site/dist/r3-8/index.html",
+    "soilTransportIndex": "site/dist/r3-8/data/soil-pairs/soil-pairs.json",
+    "wrbJrcTransportIndex": "site/dist/r3-8/data/evidence-gzip/index.json",
+    "soilPackedBytes": 34571806,
+    "wrbJrcPackedBytes": 3424064,
+    "combinedPackedBytes": 37995870,
+    "decodedSourceHashesPreserved": true
   },
   "permanentEvidenceReleases": [
     {
@@ -62,5 +70,5 @@
       "sha256": "a32110ba7bdf94c95e61486e7514c8a856957350ca25caedf444ef2fe5d97b30"
     }
   ],
-  "rule": "The handoff ZIP contains the complete restart runtime/base and all current derived browser data. Large source-evidence archives are not duplicated inside the same ZIP because doing so would approach GitHub's single-asset size ceiling; they are permanently locked by tag, bytes and SHA-256 here and are independently downloadable from the same repository Releases."
+  "rule": "The current lean handoff carries code, state, semantic/transport indexes and exact recovery locks only. It does not embed the cold full restart archive, permanent evidence ZIPs, or current browser payload bodies. Current runtime payloads are recovered from the fixed R3.9 runtime commit; source evidence is recovered from permanent Releases by tag, asset, bytes and SHA-256."
 }
