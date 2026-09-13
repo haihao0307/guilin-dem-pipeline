@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
           ok=0
           for attempt in $(seq 1 40); do
             code=$(curl -L -sS -o /tmp/r27-cumulus.html -w '%{http_code}' --connect-timeout 10 --max-time 45 "$PUBLIC_URL?probe=$attempt" || true)
-            if [ "$code" = 200 ] && grep -q "r27-shared-seed-density" /tmp/r27-cumulus.html; then
+            if [ "$code" = 200 ] && grep -q "high-bands-only" /tmp/r27-cumulus.html; then
               ok=1
               break
             fi
@@ -91,6 +91,12 @@ jobs:
           set -euo pipefail
           xvfb-run -a python -u weather-mother/r27-cumulus-clouddna-src/qa-public-r27-cumulus-clouddna.py
 
+      - name: Verify detail seed high-band and envelope policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r27-cumulus-clouddna-src/qa-public-r27-cumulus-detail-policy.py
+
       - name: Commit R27 cumulus public evidence
         if: success()
         shell: bash
@@ -99,7 +105,7 @@ jobs:
           OUT=weather-mother/full-weather-r27-cumulus-clouddna-20260913
           cat > "$OUT/PUBLICATION_PROOF_R27_CUMULUS_DNA.json" <<JSON
           {
-            "schema": "weather-mother-r27-cumulus-clouddna-publication-proof/1",
+            "schema": "weather-mother-r27-cumulus-clouddna-publication-proof/2",
             "pageCommit": "$PAGE_SHA",
             "url": "$PUBLIC_URL",
             "foundationPageCommit": "d2575ab765dbceeebcb3544cdc52927f60cac86f",
@@ -113,6 +119,8 @@ jobs:
             "sameAircraftIframeAcrossObserveAndFlight": true,
             "canonicalCpuDensityQuery": true,
             "cpuGpuDNAParametersShared": true,
+            "detailSeedHighBandsOnly": true,
+            "detailSeedEnvelopeInvariant": true,
             "worldPositionUnit": "km",
             "speedUnit": "m/s",
             "timeUnit": "s",
@@ -130,7 +138,7 @@ jobs:
           JSON
           git config user.name "Weather Mother CI"
           git config user.email "weather-mother-ci@users.noreply.github.com"
-          git add "$OUT/PUBLIC_QA_R27_CUMULUS_DNA_2026-09-13.json" "$OUT/PUBLIC_R27_CUMULUS_DNA_OBSERVE_390x844.png" "$OUT/PUBLICATION_PROOF_R27_CUMULUS_DNA.json"
+          git add "$OUT/PUBLIC_QA_R27_CUMULUS_DNA_2026-09-13.json" "$OUT/PUBLIC_QA_R27_CUMULUS_DETAIL_POLICY_2026-09-13.json" "$OUT/PUBLIC_R27_CUMULUS_DNA_OBSERVE_390x844.png" "$OUT/PUBLICATION_PROOF_R27_CUMULUS_DNA.json"
           git commit -m "qa(weather-mother): prove R27 shared cumulus Cloud DNA publicly [skip ci]"
           git push origin HEAD:feature/weather-mother-r27-cumulus-clouddna-20260913
 
@@ -143,6 +151,7 @@ jobs:
             /tmp/r27-cumulus-clouddna-static-qa.txt
             weather-mother/full-weather-r27-cumulus-clouddna-20260913/index.html
             weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLIC_QA_R27_CUMULUS_DNA_2026-09-13.json
+            weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLIC_QA_R27_CUMULUS_DETAIL_POLICY_2026-09-13.json
             weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLIC_R27_CUMULUS_DNA_OBSERVE_390x844.png
             weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLICATION_PROOF_R27_CUMULUS_DNA.json
           if-no-files-found: warn
