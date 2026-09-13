@@ -1,0 +1,80 @@
+{
+  "schema": "kaopu-gaussian-cross-backend-mask-result/r53",
+  "status": "Candidate-pass",
+  "workflow": {
+    "runId": 34735711931,
+    "runNumber": 1,
+    "headSha": "6c47f577bb457a2ada0d279651e42e89a38d9029",
+    "artifactId": 10310872456,
+    "artifactName": "kaopu-gaussian-r53-cross-backend-mask",
+    "artifactDigestSha256": "f4db6d180a35009e1f250c279949dafa8035c8e34001e0602a41135f3343de3a"
+  },
+  "toolchain": {
+    "threeRevision": "186",
+    "browser": "Headless Chromium 143.0.7499.4",
+    "browserHarness": "playwright@1.57.0",
+    "webgl": {
+      "backendClass": "WebGLBackend",
+      "renderer": "ANGLE Vulkan SwiftShader"
+    },
+    "webgpu": {
+      "backendClass": "WebGPUBackend",
+      "adapterVendor": "google",
+      "adapterArchitecture": "swiftshader"
+    }
+  },
+  "fixture": {
+    "caseCountPerBackend": 4644,
+    "groupCountPerBackend": 36,
+    "scaleCount": 6,
+    "directionCount": 6,
+    "ulpStepCountPerDirection": 129,
+    "ulpRange": [-64, 64],
+    "renderSubmissionCountPerBackend": 36,
+    "readbackCountPerBackend": 36,
+    "tslMaterialCount": 1,
+    "renderTarget": "RGBA8 129x1 coverage row",
+    "cutoffRule": "TSL Discard when r2 > 4.0"
+  },
+  "summary": {
+    "aggregateBackendMaskSha256": "88658a976148927fbb2676874bafe48274aa65c662e3978c24939cb1c919cdd6",
+    "aggregateFloat32MaskSha256": "88658a976148927fbb2676874bafe48274aa65c662e3978c24939cb1c919cdd6",
+    "aggregateInputSha256": "078382191e293e114cdf4e9a8968ba1e513c9670ed98838558862e8cfaf3b6ea",
+    "webglFloat32MismatchCount": 0,
+    "webgpuFloat32MismatchCount": 0,
+    "webglDoubleMismatchCount": 32,
+    "webgpuDoubleMismatchCount": 32,
+    "exactPerCaseWebglWebgpuMaskIdentity": true,
+    "exactInputIdentity": true,
+    "firstDivergence": null
+  },
+  "checks": {
+    "webglCandidateObservation": true,
+    "webgpuCandidateObservation": true,
+    "actualBackendsAreDistinctAndCorrect": true,
+    "sameThreeRevision": true,
+    "fullCaseCounts": true,
+    "fullGroupCounts": true,
+    "exactInputIdentity": true,
+    "exactBackendCoverageMaskIdentity": true,
+    "bothBackendsMatchFloat32Masks": true,
+    "aggregateBackendMaskHashIdentity": true,
+    "aggregateInputHashIdentity": true,
+    "expectedDoubleCounterexampleCounts": true,
+    "machineGateCandidatePass": true
+  },
+  "evidenceSha256": {
+    "webglResult": "8574268236c9dc09f9b5c8b34eabe51b8595be65124d1d5bf75fd63900e17f97",
+    "webgpuResult": "050279ca20ab70e4fc68ee5e317dcb8d3a4dde15ebc7d3019f0b863da3a55336",
+    "comparison": "08de9730f15727e02db3974935b8d8d776bb04faae767e9542381c0717939170",
+    "gate": "75a70fac23a197cc29cad16261b42df9fca89c8b0e0813cb90fdce35eb5a0d44"
+  },
+  "limits": {
+    "hardwareGpu": false,
+    "targetDevice": false,
+    "stablePixelFloatVsFinalColorError": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  },
+  "interpretation": "Under one Chromium 143 / Three.js r186 toolchain, direct WebGL and confirmed WebGPU produced identical per-case coverage masks for all 4,644 locked cutoff-neighbor samples; both matched the stepwise float32 model exactly. This is software-backend evidence, not hardware or target-device proof."
+}
