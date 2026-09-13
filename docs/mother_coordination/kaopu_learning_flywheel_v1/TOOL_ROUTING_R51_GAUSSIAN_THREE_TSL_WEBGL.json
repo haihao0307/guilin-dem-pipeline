@@ -1,0 +1,65 @@
+{
+  "schema": "kaopu-tool-routing/r51",
+  "status": "Candidate partial",
+  "question": "How should the R50 Gaussian hard-cutoff fixture be interpreted after direct Three.js r186 TSL WebGL execution?",
+  "inherits": "TOOL_ROUTING_R50_GAUSSIAN_CUTOFF_BOUNDARY.json",
+  "routes": [
+    {
+      "stage": "direct-three-webgl",
+      "tool": "PROBES/gaussian_three_tsl_cutoff_r51.html + PROBES/run_gaussian_three_tsl_cutoff_r51.js",
+      "authority": "direct pinned Three.js r186 TSL coverage replay for the locked 4,644-case cutoff-neighbor fixture",
+      "required": [
+        "three revision",
+        "browser identity",
+        "actual backend identity",
+        "full case count",
+        "float32 predicate comparison",
+        "double predicate counterexamples",
+        "edge coverage mask"
+      ]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_tsl_webgl_gate_r51.mjs",
+      "authority": "R51 evidence completeness and boundary-result consistency",
+      "notAuthorityFor": [
+        "universal guard width",
+        "WebGPU",
+        "hardware GPU",
+        "Safari/iPhone/macOS/iOS",
+        "real-photo asset acceptance",
+        "human visual acceptance"
+      ]
+    },
+    {
+      "stage": "webgpu-next",
+      "tool": "confirmed Three.js r186 WebGPU backend",
+      "authority": "only after actualBackend=webgpu is demonstrated",
+      "requiredNext": [
+        "adapter identity",
+        "compiler/backend identity",
+        "same 4,644 case identities",
+        "float-intermediate comparison",
+        "final-target edge mask",
+        "stable-pixel color error separated from cutoff coverage"
+      ]
+    },
+    {
+      "stage": "target-device-later",
+      "tool": "Apple hardware/browser path",
+      "authority": "target-device evidence only after explicit hardware and browser identity",
+      "requiredNext": [
+        "macOS/iOS device class",
+        "Safari/WebKit version",
+        "actual GPU/backend",
+        "locked camera/fixture",
+        "human acceptance kept separate"
+      ]
+    }
+  ],
+  "directThreeWebglEvidenceEstablished": true,
+  "webgpuEvidenceEstablished": false,
+  "doubleCpuCoverageIsUniversalAuthority": false,
+  "syntheticBoundaryWidthIsAssetTolerance": false,
+  "productionMutationAllowed": false
+}
