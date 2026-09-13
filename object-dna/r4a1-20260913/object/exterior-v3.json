@@ -1,0 +1,216 @@
+{
+  "format": "Object DNA exterior draft",
+  "version": "EXTERIOR-V3-CANDIDATE",
+  "scope": "nonfunctional game exterior study; not AAA acceptance or physical manufacture",
+  "frame": {
+    "axes": [
+      "forward",
+      "left",
+      "up"
+    ],
+    "unit": "source_u_unscaled",
+    "physicalCalibration": null,
+    "sourceToDefinition": "x,-z,y from source glTF world; explicit Y-up conversion"
+  },
+  "sources": {
+    "aircraftShapeSha256": "2d6a1f323018523db42d1fe54dcf1a26661f139548134835779933d61ab68c8b",
+    "appearanceSha256": "23273a3232a479d118e87ebeb82348498bd8f57b5559f6012a3b1476272d0fbb",
+    "attribution": "Measurements and visual study of CC-BY-4.0 references by Misja van Laatum and emran.bayati; newly authored approximations."
+  },
+  "knowledgeRules": [
+    "MAT-COMMON R0.1",
+    "OBS-REL R0.1"
+  ],
+  "provenance": {
+    "observed_ranges": [
+      "receiver overall external range",
+      "tube overall external range",
+      "rear grip external range",
+      "aircraft exterior component landmarks remapped x,-z,y",
+      "grip centers and size",
+      "individual visible rivet positions",
+      "front collar dimensions",
+      "box length-to-width ratio from fine reference"
+    ],
+    "visual_estimates": [
+      "profile interpolation",
+      "open exterior passage reconstruction",
+      "visible coil appearance only",
+      "sight and ground-support candidates",
+      "user-selected opposite-side box placement",
+      "box appearance scale relative to scene",
+      "tube perforation pattern from side views",
+      "surface distress rules"
+    ],
+    "display_settings": [
+      "material colors and optical response",
+      "surface noise and scratches",
+      "display shell depth",
+      "source-unit relative scale"
+    ],
+    "unknown": [
+      "physical size calibration",
+      "actual steel/wood types",
+      "part-specific historical configuration",
+      "B24 station mount",
+      "internal mechanism",
+      "functional ammunition/feed geometry",
+      "unreadable headstamp characters; not invented"
+    ]
+  },
+  "groups": {
+    "receiver": "机匣外观",
+    "barrel": "管状外观与通风护套",
+    "grips": "握持外观",
+    "sights": "瞄具外观候选",
+    "support": "支承外观候选",
+    "feed": "弹箱与静态弹带表现"
+  },
+  "materials": {
+    "gunmetal": {
+      "color": "#666663",
+      "metalness": 1,
+      "roughness": 0.4745098039215686,
+      "appearance": "reference_worn_gunmetal",
+      "evidence": "207 outside-face ray samples from user supplied GLB, median base-color RGB 102 102 99, G roughness 121, B metallic 255; image appearance only"
+    },
+    "edge": {
+      "color": "#92938c",
+      "metalness": 1,
+      "roughness": 0.36,
+      "appearance": "rubbed_metal",
+      "evidence": "artistic setting"
+    },
+    "dark": {
+      "color": "#292a28",
+      "metalness": 0.88,
+      "roughness": 0.58,
+      "appearance": "dark_metal",
+      "evidence": "artistic setting"
+    },
+    "wood": {
+      "color": "#81533b",
+      "metalness": 0,
+      "roughness": 0.48,
+      "appearance": "longitudinal_woodlike",
+      "evidence": "fine-reference red-brown directional pattern; material identity unknown"
+    },
+    "olive": {
+      "color": "#4b4f35",
+      "metalness": 0.18,
+      "roughness": 0.7,
+      "appearance": "painted_olive",
+      "evidence": "fine-reference coating appearance candidate"
+    },
+    "brass": {
+      "color": "#b89a4f",
+      "metalness": 0.9,
+      "roughness": 0.35,
+      "appearance": "yellow_metal",
+      "evidence": "yellow-metal artistic appearance, not composition measurement"
+    },
+    "link": {
+      "color": "#303a37",
+      "metalness": 0.78,
+      "roughness": 0.5,
+      "appearance": "dark_metal",
+      "evidence": "artistic setting"
+    },
+    "copper": {
+      "color": "#b96838",
+      "metalness": 0.88,
+      "roughness": 0.34,
+      "appearance": "copper_jacket_candidate",
+      "evidence": "observed reference bullet/case color split"
+    },
+    "primer": {
+      "color": "#ac826a",
+      "metalness": 0.8,
+      "roughness": 0.4,
+      "appearance": "primer_surface",
+      "evidence": "observed warmer circular base region"
+    }
+  },
+  "parts": [
+    {"id":"receiver","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.292,0.0065,0.002],"size":[0.338,0.073,0.118],"bevel":0.0012},
+    {"id":"receiver-front-lower","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.022,0.0071635000000000015,-0.032],"size":[0.194,0.063277,0.061],"bevel":0.0012},
+    {"id":"receiver-front-upper","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.022,0.007030999999999999,0.059],"size":[0.194,0.06306,0.023],"bevel":0.001},
+    {"id":"receiver-front-nose","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[0.047,0.007030999999999999,0.021],"size":[0.056,0.06306,0.053],"bevel":0.0007},
+    {"id":"rear-plate","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.455,0.0086,0.0027240000000000007],"size":[0.014,0.104,0.124448],"bevel":0.001},
+    {"id":"cover","parent":"receiver","shape":"profile_plate","material":"gunmetal","plane":"xy","position":[0,0,0.061724],"outline":[[-0.458,-0.03],[-0.119,-0.03],[-0.119,-0.024499000000000003],[0.07400000000000001,-0.024499000000000003],[0.07400000000000001,0.038561],[-0.119,0.038561],[-0.119,0.043],[-0.458,0.043]],"holes":[],"depth":0.006448000000000002,"bevel":0.0002,"visualEvidence":{"outerPlanes":"cap-base-constrained illustration candidate","longitudinalBreak":"existing R3 exterior region boundary, not a confirmed physical seam","internalStructure":"not modeled"}},
+    {"id":"cover-hinge","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.116,0.0065,0.074],"size":[0.01,0.085,0.008],"bevel":0.0007},
+    {"id":"cover-rear-ridge","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.367,0.0065,0.076],"size":[0.136,0.03,0.008],"bevel":0.0007},
+    {"id":"port-side--1--0.116","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.116,-0.0455,0.027],"size":[0.007,0.037,0.032],"bevel":0.0007},
+    {"id":"port-side--1-0.019","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[0.019,-0.0455,0.027],"size":[0.007,0.037,0.032],"bevel":0.0007},
+    {"id":"port-tray--1","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.048,-0.0455,0.006],"size":[0.14,0.04,0.005],"bevel":0.0007},
+    {"id":"port-lip--1--0.095","parent":"receiver","shape":"beveled_box","material":"edge","position":[-0.095,-0.06649999999999999,0.009],"size":[0.014,0.004,0.006],"bevel":0.0007},
+    {"id":"port-lip--1--0.025","parent":"receiver","shape":"beveled_box","material":"edge","position":[-0.025,-0.06649999999999999,0.009],"size":[0.014,0.004,0.006],"bevel":0.0007},
+    {"id":"port-hinge--1","parent":"receiver","shape":"cylinder","material":"gunmetal","position":[-0.048,-0.0625,0.047],"radius":0.0025,"length":0.13,"axis":"x"},
+    {"id":"port-side-1--0.116","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.116,0.058499999999999996,0.027],"size":[0.007,0.037,0.032],"bevel":0.0007},
+    {"id":"port-side-1-0.019","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[0.019,0.058499999999999996,0.027],"size":[0.007,0.037,0.032],"bevel":0.0007},
+    {"id":"port-tray-1","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.048,0.058499999999999996,0.006],"size":[0.14,0.04,0.005],"bevel":0.0007},
+    {"id":"port-lip-1--0.095","parent":"receiver","shape":"beveled_box","material":"edge","position":[-0.095,0.0795,0.009],"size":[0.014,0.004,0.006],"bevel":0.0007},
+    {"id":"port-lip-1--0.025","parent":"receiver","shape":"beveled_box","material":"edge","position":[-0.025,0.0795,0.009],"size":[0.014,0.004,0.006],"bevel":0.0007},
+    {"id":"port-hinge-1","parent":"receiver","shape":"cylinder","material":"gunmetal","position":[-0.048,0.07550000000000001,0.047],"radius":0.0025,"length":0.13,"axis":"x"},
+    {"id":"side-frame--1--0.025","parent":"receiver","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.329,-0.0395,-0.025],"outline":[[-0.111,-0.0115],[0.111,-0.0115],[0.111,0.0115],[-0.111,0.0115]],"holes":[[[-0.1005,-0.0065],[0.1005,-0.0065],[0.1005,0.0065],[-0.1005,0.0065]]],"depth":0.005,"plane":"xz","cornerRadius":0.004,"roundHoles":true,"holeCornerRadius":0.003,"bevel":0.0007},
+    {"id":"side-frame--1-0.02","parent":"receiver","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.329,-0.0395,0.02],"outline":[[-0.111,-0.0115],[0.111,-0.0115],[0.111,0.0115],[-0.111,0.0115]],"holes":[[[-0.1005,-0.0065],[0.1005,-0.0065],[0.1005,0.0065],[-0.1005,0.0065]]],"depth":0.005,"plane":"xz","cornerRadius":0.004,"roundHoles":true,"holeCornerRadius":0.003,"bevel":0.0007},
+    {"id":"side-bolt--1--0.435","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,-0.0425,0.019],"radius":0.0058,"axis":"y","sign":-1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-bolt--1--0.298","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.298,-0.0425,0.019],"radius":0.0058,"axis":"y","sign":-1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-bolt--1--0.223","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.223,-0.0425,0.019],"radius":0.0058,"axis":"y","sign":-1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-slot-screw--1--0.021","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,-0.0425,-0.021],"radius":0.0044,"axis":"y","sign":-1,"style":"slot","layeredHead":true,"recessedSlot":true,"bevelHead":true},
+    {"id":"side-slot-screw--1-0.023","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,-0.0425,0.023],"radius":0.0044,"axis":"y","sign":-1,"style":"slot","layeredHead":true,"recessedSlot":true,"bevelHead":true},
+    {"id":"side-frame-1--0.025","parent":"receiver","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.329,0.046,-0.025],"outline":[[-0.111,-0.0115],[0.111,-0.0115],[0.111,0.0115],[-0.111,0.0115]],"holes":[[[-0.1005,-0.0065],[0.1005,-0.0065],[0.1005,0.0065],[-0.1005,0.0065]]],"depth":0.005,"plane":"xz","cornerRadius":0.004,"roundHoles":true,"holeCornerRadius":0.003,"bevel":0.0007},
+    {"id":"side-frame-1-0.02","parent":"receiver","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.329,0.046,0.02],"outline":[[-0.111,-0.0115],[0.111,-0.0115],[0.111,0.0115],[-0.111,0.0115]],"holes":[[[-0.1005,-0.0065],[0.1005,-0.0065],[0.1005,0.0065],[-0.1005,0.0065]]],"depth":0.005,"plane":"xz","cornerRadius":0.004,"roundHoles":true,"holeCornerRadius":0.003,"bevel":0.0007},
+    {"id":"side-bolt-1--0.435","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,0.049,0.019],"radius":0.0058,"axis":"y","sign":1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-bolt-1--0.298","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.298,0.049,0.019],"radius":0.0058,"axis":"y","sign":1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-bolt-1--0.223","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.223,0.049,0.019],"radius":0.0058,"axis":"y","sign":1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"side-slot-screw-1--0.021","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,0.049,-0.021],"radius":0.0044,"axis":"y","sign":1,"style":"slot","layeredHead":true,"recessedSlot":true,"bevelHead":true},
+    {"id":"side-slot-screw-1-0.023","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.435,0.049,0.023],"radius":0.0044,"axis":"y","sign":1,"style":"slot","layeredHead":true,"recessedSlot":true,"bevelHead":true},
+    {"id":"side-guide-rod","parent":"receiver","shape":"swept_round","material":"edge","points":[[-0.425,-0.046,-0.007],[-0.224,-0.046,-0.007]],"radius":0.0014},
+    {"id":"visible-side-coil","parent":"receiver","shape":"visible_coil","material":"edge","position":[-0.336,-0.0465,-0.001],"length":0.178,"radius":0.0025,"wireRadius":0.00065,"turns":54},
+    {"id":"side-lever","parent":"receiver","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.256,-0.05,0.015],"outline":[[-0.01,-0.04],[0.002,-0.042],[0.018,-0.013],[0.011,0.012],[0.013,0.039],[0.004,0.047],[-0.008,0.038],[-0.002,0.012]],"holes":[],"depth":0.007,"plane":"xz","cornerRadius":0.003,"bevel":0.0008},
+    {"id":"side-handle","parent":"receiver","shape":"turned_profile","material":"wood","position":[-0.248,-0.0949,0.0473],"radius":0.0147,"length":0.077,"axis":"y","smoothProfile":true,"profile":[[-0.0385,0.014112],[-0.03311,0.0147],[-0.01386,0.0152145],[0.01386,0.0152145],[0.03311,0.0147],[0.0385,0.014112]]},
+    {"id":"side-lever-pivot","parent":"receiver","shape":"detailed_fastener","material":"gunmetal","position":[-0.253,-0.056,-0.02],"radius":0.006,"axis":"y","sign":-1,"style":"hex","layeredHead":true,"bevelHead":true},
+    {"id":"lower-ear--0.0077","parent":"receiver","shape":"profile_plate","material":"gunmetal","position":[-0.272,-0.0077,-0.069],"outline":[[-0.016,0.008],[0.016,0.008],[0.012,-0.012],[0,-0.018],[-0.012,-0.012]],"holes":[[[-0.004,-0.008],[0.004,-0.008],[0.004,-0.001],[-0.004,-0.001]]],"depth":0.009,"plane":"xz"},
+    {"id":"lower-ear-0.0224","parent":"receiver","shape":"profile_plate","material":"gunmetal","position":[-0.272,0.0224,-0.069],"outline":[[-0.016,0.008],[0.016,0.008],[0.012,-0.012],[0,-0.018],[-0.012,-0.012]],"holes":[[[-0.004,-0.008],[0.004,-0.008],[0.004,-0.001],[-0.004,-0.001]]],"depth":0.009,"plane":"xz"},
+    {"id":"vent-jacket","parent":"barrel","shape":"perforated_shell","material":"gunmetal","position":[0,0.0034,-0.0004],"start":0.07442,"end":0.953,"radius":0.023,"displayShellDepth":0.0016,"perforations":{"start":0.39,"pitch":0.078,"count":7,"rows":8,"radius":0.0078,"stagger":0.5}},
+    {"id":"tube-dark-core","parent":"barrel","shape":"cylinder","material":"dark","position":[0.524,0.0034,-0.0004],"radius":0.0115,"length":0.89,"axis":"x"},
+    {"id":"root-collar","parent":"barrel","shape":"cylinder","material":"gunmetal","position":[0.099,0.0034,-0.0004],"radius":0.0286,"length":0.05,"axis":"x"},
+    {"id":"jacket-end-ring","parent":"barrel","shape":"open_ring","material":"gunmetal","position":[0.9256,0.0034,-0.0004],"axis":"x","outerRadius":0.02856,"innerRadius":0.022,"length":0.0267},
+    {"id":"visible-front-tip","parent":"barrel","shape":"open_ring","material":"gunmetal","position":[0.966,0.0034,-0.0004],"axis":"x","outerRadius":0.0218,"innerRadius":0.0108,"length":0.0271},
+    {"id":"front-tip-lip","parent":"barrel","shape":"open_ring","material":"edge","position":[0.978,0.0034,-0.0004],"axis":"x","outerRadius":0.0218,"innerRadius":0.0108,"length":0.002},
+    {"id":"mount-front-ear","parent":"barrel","shape":"profile_plate","material":"gunmetal","position":[0.1,0.0065,-0.028],"outline":[[-0.027,0.013],[0.027,0.013],[0.022,-0.024],[0,-0.038],[-0.02,-0.024]],"holes":[[[-0.009,-0.011],[0,-0.019],[0.009,-0.011],[0,-0.003]]],"depth":0.028,"plane":"xz"},
+    {"id":"grip-yoke--0.0425","parent":"grips","shape":"rounded_profile_plate","material":"gunmetal","position":[0,0,-0.0425],"outline":[[-0.447,-0.04],[-0.478,-0.04],[-0.486,-0.069],[-0.504,-0.069],[-0.513,-0.059],[-0.508,-0.042],[-0.481,-0.027],[-0.463,-0.027],[-0.463,0.032],[-0.481,0.032],[-0.508,0.049],[-0.513,0.065],[-0.504,0.077],[-0.486,0.077],[-0.478,0.048],[-0.447,0.048]],"holes":[],"depth":0.006,"plane":"xy","cornerRadius":0.003,"bevel":0.00035},
+    {"id":"grip-yoke-0.0581","parent":"grips","shape":"rounded_profile_plate","material":"gunmetal","position":[0,0,0.0581],"outline":[[-0.447,-0.04],[-0.478,-0.04],[-0.486,-0.069],[-0.504,-0.069],[-0.513,-0.059],[-0.508,-0.042],[-0.481,-0.027],[-0.463,-0.027],[-0.463,0.032],[-0.481,0.032],[-0.508,0.049],[-0.513,0.065],[-0.504,0.077],[-0.486,0.077],[-0.478,0.048],[-0.447,0.048]],"holes":[],"depth":0.006,"plane":"xy","cornerRadius":0.003,"bevel":0.00035},
+    {"id":"grip-6","parent":"grips","shape":"turned_profile","material":"wood","position":[-0.496123,0.06039,0.0075685],"axis":"z","profile":[[-0.0493485,0.01166277],[-0.04243971,0.01284381],[-0.02467425,0.01432011],[0,0.014763],[0.02763516,0.01417248],[0.04540062,0.0118104],[0.0493485,0.01151514]],"smoothProfile":true},
+    {"id":"grip-7","parent":"grips","shape":"turned_profile","material":"wood","position":[-0.4957725,-0.052926,0.0073785],"axis":"z","profile":[[-0.0493485,0.011663165],[-0.04243971,0.012844245],[-0.02467425,0.014320595],[0,0.0147635],[0.02763516,0.01417296],[0.04540062,0.0118108],[0.0493485,0.01151553]],"smoothProfile":true},
+    {"id":"rear-cross-body","parent":"grips","shape":"cylinder","material":"gunmetal","position":[-0.486,0.0063,0.0034],"radius":0.0189,"length":0.0806,"axis":"x"},
+    {"id":"rear-cross-end-ring","parent":"grips","shape":"open_ring","material":"edge","position":[-0.526,0.0063,0.0034],"axis":"x","outerRadius":0.0189,"innerRadius":0.0148,"length":0.003},
+    {"id":"butterfly-paddle","parent":"grips","shape":"rounded_profile_plate","material":"gunmetal","position":[-0.4758886272076284,0.006207564265980404,0.03559166115349229],"outline":[[-0.017148696,-0.021411839],[0.0069945,-0.006815225],[0.008127274,-0.005644714],[0.009005654,-0.003948988],[0.009581219,-0.002053591],[0.009805352,-0.000284072],[0.009634104,0.001480711],[0.009068253,0.003368221],[0.008126967,0.005062369],[0.006829109,0.006247078],[-0.015409843,0.020880161],[-0.018514357,0.023700523],[-0.019831391,0.025618582],[-0.020355554,0.027666918],[-0.020085262,0.029576963],[-0.019267241,0.031094062],[-0.017796764,0.032082877],[-0.015569034,0.032408057],[-0.008966474,0.029902703],[0.002351602,0.024335957],[0.019891486,0.015093063],[0.032824998,0.015093061],[0.033073005,-0.015330522],[0.020139494,-0.015330521],[0.001984273,-0.024364242],[-0.009534152,-0.029794776],[-0.015905859,-0.032195759],[-0.01787449,-0.031853051],[-0.019464284,-0.030891965],[-0.020514861,-0.029342684],[-0.020866185,-0.027235396],[-0.020293614,-0.024974157],[-0.018929341,-0.023002954]],"holes":[],"depth":0.005705218466414924,"plane":"xy","cornerRadius":0.00006460381674274419,"bevel":0,"rotation":[5.499604029604306e-9,-0.6550955163332839,3.3505512036740523e-9]},
+    {"id":"rear-sight-foot","parent":"sights","shape":"beveled_box","material":"gunmetal","position":[-0.386,0.0065,0.08],"size":[0.084,0.066,0.009],"bevel":0.0007},
+    {"id":"rear-sight-frame","parent":"sights","shape":"rectangular_frame","material":"gunmetal","position":[-0.393,0.0065,0.123],"axis":"x","width":0.021,"height":0.076,"stroke":0.003,"depth":0.003},
+    {"id":"sight-slider","parent":"sights","shape":"beveled_box","material":"edge","position":[-0.394,0.0065,0.111],"size":[0.007,0.022,0.006],"bevel":0.0007},
+    {"id":"front-sight-foot","parent":"sights","shape":"beveled_box","material":"gunmetal","position":[0.053,0.0065,0.077],"size":[0.037,0.041,0.007],"bevel":0.0007},
+    {"id":"front-sight-blade","parent":"sights","shape":"beveled_box","material":"edge","position":[0.053,0.0065,0.098],"size":[0.004,0.003,0.033],"bevel":0.0007},
+    {"id":"opposite-exit-tray","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.048,0.077,0.006],"size":[0.14,0.05,0.004],"bevel":0.0007},
+    {"id":"opposite-exit-cheek--0.112","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[-0.112,0.075,0.017],"size":[0.004,0.05,0.022],"bevel":0.0007},
+    {"id":"opposite-exit-cheek-0.016","parent":"receiver","shape":"beveled_box","material":"gunmetal","position":[0.016,0.075,0.017],"size":[0.004,0.05,0.022],"bevel":0.0007},
+    {"id":"effect-ejection","parent":"receiver","shape":"anchor","material":"gunmetal","position":[-0.042,0.029,-0.066]},
+    {"id":"effect-muzzle","parent":"barrel","shape":"anchor","material":"gunmetal","position":[0.98,0.0034,-0.0004]},
+    {"id":"effect-ground","parent":"support","shape":"anchor","material":"gunmetal","position":[0,0,-0.281]},
+    {"id":"support-stub","parent":"support","shape":"cylinder","material":"gunmetal","position":[0.081,0.0065,-0.105],"radius":0.021,"length":0.061,"axis":"z"},
+    {"id":"tripod-base","parent":"support","shape":"profile_plate","material":"olive","position":[0.071,0.0065,-0.138],"outline":[[-0.068,-0.045],[0.05,-0.045],[0.069,0],[0.05,0.045],[-0.068,0.045],[-0.088,0]],"holes":[],"depth":0.023,"plane":"xy"},
+    {"id":"tripod-leg-0","parent":"support","shape":"swept_round","material":"olive","points":[[0.025,-0.0185,-0.143],[-0.455,-0.265,-0.275]],"radius":0.012},
+    {"id":"tripod-leg-1","parent":"support","shape":"swept_round","material":"olive","points":[[0.025,0.0315,-0.143],[-0.455,0.278,-0.275]],"radius":0.012},
+    {"id":"tripod-leg-2","parent":"support","shape":"swept_round","material":"olive","points":[[0.025,0.0065,-0.143],[0.393,0.0065,-0.275]],"radius":0.012},
+    {"id":"tripod-foot-0","parent":"support","shape":"beveled_box","material":"olive","position":[-0.455,-0.265,-0.275],"size":[0.088,0.065,0.012],"bevel":0.005},
+    {"id":"tripod-foot-1","parent":"support","shape":"beveled_box","material":"olive","position":[-0.455,0.278,-0.275],"size":[0.088,0.065,0.012],"bevel":0.005},
+    {"id":"tripod-foot-2","parent":"support","shape":"beveled_box","material":"olive","position":[0.393,0.0065,-0.275],"size":[0.088,0.065,0.012],"bevel":0.005}
+  ],
+  "relations": [
+    {"subject":"feed","predicate":"visual_path_ends_at","object":"left-entry-surround","state":"provisional_artistic_layout_not_operational_feed"},
+    {"subject":"support","predicate":"below","object":"receiver","state":"visual_layout_not_verified_B24_mount"}
+  ],
+  "displayRelations": {"feedSide":"right; requested display arrangement, not certified historical configuration","roundAxis":[1,0,0],"visiblePortRange":{"x":[-0.112,0.015],"z":[0.013,0.048]},"groundZ":-0.281,"muzzleAnchor":"effect-muzzle","caseAnchor":"effect-ejection","boxLongAxis":"Y","boxSize":[0.145,0.34,0.17]},
+  "visualRevision": {"id":"EXTERIOR-20260912-V3","purpose":"Non-functional exterior art","physicalCalibration":null,"geometryAccepted":false,"sourceSha256":"23273a3232a479d118e87ebeb82348498bd8f57b5559f6012a3b1476272d0fbb","sourceFile":"精美browning_m2.glb","sourceAuthor":"emran.bayati","sourceLicense":"CC BY 4.0","sourceVariant":"Browning M2 ground presentation; not identical to existing aviation reference","scope":"Surface appearance and shared visible decorative caps, washers, grip ferrules and panel borders only","unresolved":["No exact 1:1 physical calibration","No complete correspondence of all source components","Stand connection remains unverified","No internal operating mechanism reconstruction"]}
+}
