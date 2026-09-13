@@ -15,24 +15,24 @@ jobs:
   public-browser-qa:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for published HTTPS page and verify assets
+      - name: Wait for final published HTTPS page and verify assets
         shell: bash
         run: |
           set -euo pipefail
           URL='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/'
           ok=0
-          for i in $(seq 1 24); do
-            code=$(curl -L -sS -o /tmp/r4a1.html -w '%{http_code}' "$URL" || true)
-            if [ "$code" = "200" ] && grep -q 'PUBLIC REVIEW MIRROR' /tmp/r4a1.html; then ok=1; break; fi
+          for i in $(seq 1 36); do
+            code=$(curl -L -sS -H 'Cache-Control: no-cache' -o /tmp/r4a1.html -w '%{http_code}' "${URL}?qa=${GITHUB_RUN_ATTEMPT}-${i}" || true)
+            if [ "$code" = "200" ] && grep -q 'PUBLIC REVIEW MIRROR' /tmp/r4a1.html && grep -q 'focus-cleanup.js' /tmp/r4a1.html; then ok=1; break; fi
             sleep 5
           done
           test "$ok" = 1
           grep -q 'R4A.1' /tmp/r4a1.html
-          for p in style.css main.js build-object.js detail-primitives.js geometry-operators.js object/exterior-v3.json object/r4a-physical-frame.json object/r4a1-visual-state.json; do
-            test "$(curl -L -sS -o /tmp/asset -w '%{http_code}' "${URL}${p}")" = "200"
+          for p in style.css main.js build-object.js detail-primitives.js geometry-operators.js focus-cleanup.js object/exterior-v3.json object/r4a-physical-frame.json object/r4a1-visual-state.json; do
+            test "$(curl -L -sS -H 'Cache-Control: no-cache' -o /tmp/asset -w '%{http_code}' "${URL}${p}?qa=${GITHUB_RUN_ATTEMPT}")" = "200"
             test -s /tmp/asset
           done
-          echo "PUBLIC_HTTP_OK $URL"
+          echo "PUBLIC_FINAL_HTTP_OK $URL"
 
       - name: Install Playwright Chromium
         shell: bash
@@ -47,7 +47,8 @@ jobs:
           cat > r4a1-qa.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
-          const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/';
+          const base='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a1-20260913/';
+          const url=base+'?qa='+Date.now();
           const browser=await chromium.launch({headless:true});
           const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
           const errors=[],failures=[];
@@ -76,6 +77,8 @@ jobs:
           if((await page.evaluate(()=>window.objectDnaQA())).physical!==false)throw Error('physical toggle failed');
           await page.click('#physical');
           await page.click('[data-focus="receiver"]');
+          await page.waitForTimeout(100);
+          if((await page.evaluate(()=>window.objectDnaQA())).physical!==false)throw Error('local focus did not auto-hide whole-gun physical overlay');
           await page.click('[data-view="side"]');
           await page.waitForTimeout(250);
           await page.screenshot({path:'r4a1-public-receiver-side.png',fullPage:true});
@@ -89,9 +92,11 @@ jobs:
           await page.setViewportSize({width:390,height:844});
           await page.click('#reset');
           await page.waitForTimeout(250);
+          const restored=await page.evaluate(()=>window.objectDnaQA());
+          if(restored.physical!==true||restored.focus!=='all')throw Error('reset did not restore whole-gun scale and overall focus');
           await page.screenshot({path:'r4a1-public-mobile-390x844.png',fullPage:true});
           const final=await page.evaluate(()=>window.objectDnaQA());
-          const result={url,title:await page.title(),errors,failures,initial,evidence,final};
+          const result={url:base,title:await page.title(),errors,failures,initial,evidence,final};
           fs.writeFileSync('r4a1-public-qa.json',JSON.stringify(result,null,2));
           console.log(JSON.stringify(result));
           if(errors.length)throw Error('browser errors: '+errors.join(' | '));
@@ -104,7 +109,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Object-DNA-R4A1-Public-QA
+          name: Object-DNA-R4A1-Public-QA-Final
           path: |
             r4a1-public-*.png
             r4a1-public-qa.json
