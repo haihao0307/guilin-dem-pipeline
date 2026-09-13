@@ -1,0 +1,45 @@
+name: Wenzhou R3.8 Soil Pair Pack Experiment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-8-overlay-transform-contract-20260913
+    paths:
+      - 'records/R3_8/SOIL_PAIR_PACK_TRIGGER'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact reversible pair pack benchmark
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wsp1
+          python tools/r3-8/experiment_pack_soil_pair.py --out /tmp/wsp1 > /tmp/wsp1-report.json
+          python - <<'PY'
+          import json, pathlib
+          r=json.loads(pathlib.Path('/tmp/wsp1-report.json').read_text())
+          assert r['pairCount']==48
+          assert r['sourceLayerCount']==96
+          assert r['targetContainerCount']==48
+          assert r['allRoundTripExact'] is True
+          assert r['totalPackedBytes'] < r['totalRawBytes']
+          print(json.dumps({k:r[k] for k in ['pairCount','sourceLayerCount','targetContainerCount','totalRawBytes','totalPackedBytes','overallRatio','savedBytes','savedFraction','allRoundTripExact']}, indent=2))
+          PY
+      - name: Upload benchmark proof only
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-r3-8-soil-pair-pack-${{ github.sha }}
+          path: |
+            /tmp/wsp1-report.json
+          if-no-files-found: error
+          retention-days: 30
