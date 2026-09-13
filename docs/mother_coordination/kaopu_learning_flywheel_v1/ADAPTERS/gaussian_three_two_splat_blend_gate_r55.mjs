@@ -20,7 +20,8 @@ export function validateTwoSplatBlendR55(report){
   if(report?.crossBackend?.inputHashEqual!==true)errors.push('input-identity-differs');
   if(report?.crossBackend?.byteHashEqual!==true)errors.push('byte-target-hash-differs');
   if(report?.webgl?.fixture?.floatBlendCapability?.floatBlendListed!==true||report?.webgl?.fixture?.floatBlendCapability?.floatBlendActivated!==true)errors.push('webgl-float-blend-not-explicitly-activated');
-  if(report?.activationControl?.floatBlendListed!==true||report?.activationControl?.floatBlendActivated!==false||report?.activationControl?.status!=='error')errors.push('listed-only-negative-control-did-not-fail');
+  if(report?.activationControl?.floatBlendListed!==true||report?.activationControl?.floatBlendActivated!==false||report?.activationControl?.status!=='candidate-observation')errors.push('listed-only-control-invalid');
+  if(report?.crossBackend?.listedOnlyFloatHashEqual!==true||report?.crossBackend?.listedOnlyByteHashEqual!==true||report?.crossBackend?.listedOnlyReverseHashEqual!==true)errors.push('listed-only-control-output-differs');
   warnings.push('observed-two-code-bound-is-a-fixture-regression-envelope-not-an-asset-threshold');
   warnings.push('software-webgl-and-webgpu-are-not-independent-physical-roots');
   warnings.push('no-browser-presentation-transform-hardware-device-real-asset-or-human-acceptance');
