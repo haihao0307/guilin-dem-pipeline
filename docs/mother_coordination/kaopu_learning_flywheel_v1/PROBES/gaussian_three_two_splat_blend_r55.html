@@ -1,0 +1,134 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU Three.js Two-Splat Blend R55</title>
+<script>window.__KAOPU_PROGRESS__={schema:'kaopu-three-two-splat-blend-progress/r55',stage:'html-loaded'};</script>
+<script type="importmap">
+{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js"}}
+</script>
+<body></body>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { Fn, attribute } from 'three/tsl';
+
+const requestedMode=new URLSearchParams(location.search).get('mode')||'webgl';
+const SAMPLE_COUNT=256;
+const f32=Math.fround;
+
+function detectBackend(renderer){
+  const b=renderer.backend;
+  if(b?.isWebGPUBackend)return'webgpu';
+  if(b?.isWebGLBackend)return'webgl';
+  const n=b?.constructor?.name||'unknown';
+  return/webgpu/i.test(n)?'webgpu':(/webgl/i.test(n)?'webgl':n);
+}
+async function identity(renderer,actualBackend){
+  const out={backendClass:renderer.backend?.constructor?.name||null,rendererClass:renderer.constructor?.name||null,userAgent:navigator.userAgent,platform:navigator.platform};
+  if(actualBackend==='webgl'){
+    const gl=renderer.backend?.gl||null;
+    if(gl){const ext=gl.getExtension('WEBGL_debug_renderer_info');out.vendor=ext?gl.getParameter(ext.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);out.renderer=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);out.glVersion=gl.getParameter(gl.VERSION);}
+  }else if(actualBackend==='webgpu'&&navigator.gpu){
+    try{const a=await navigator.gpu.requestAdapter();const i=a?.info||{};out.adapter={vendor:i.vendor||null,architecture:i.architecture||null,device:i.device||null,description:i.description||null};}catch(e){out.adapterError=String(e);}
+  }
+  return out;
+}
+function makeGeometry(colors){
+  const positions=new Float32Array(SAMPLE_COUNT*4*3);
+  const expanded=new Float32Array(SAMPLE_COUNT*4*4);
+  const indices=new Uint32Array(SAMPLE_COUNT*6);
+  for(let i=0;i<SAMPLE_COUNT;i++){
+    const x0=-1+2*i/SAMPLE_COUNT,x1=-1+2*(i+1)/SAMPLE_COUNT,v=i*4;
+    positions.set([x0,-1,0,x1,-1,0,x1,1,0,x0,1,0],v*3);
+    for(let j=0;j<4;j++)expanded.set(colors.subarray(i*4,i*4+4),(v+j)*4);
+    indices.set([v,v+1,v+2,v,v+2,v+3],i*6);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('kaopuColor',new THREE.BufferAttribute(expanded,4));
+  geo.setIndex(new THREE.BufferAttribute(indices,1));
+  return geo;
+}
+function fixtureColors(){
+  const back=new Float32Array(SAMPLE_COUNT*4),front=new Float32Array(SAMPLE_COUNT*4);
+  for(let i=0;i<SAMPLE_COUNT;i++){
+    back.set([
+      f32(((i*97+13)%1021+0.37)/1021),f32(((i*193+71)%1021+0.61)/1021),f32(((i*389+127)%1021+0.49)/1021),
+      f32(0.05+0.9*(((i*53+17)%997)/996))
+    ],i*4);
+    front.set([
+      f32(((i*149+29)%1019+0.73)/1019),f32(((i*307+43)%1019+0.19)/1019),f32(((i*461+83)%1019+0.57)/1019),
+      f32(0.05+0.9*(((i*79+31)%991)/990))
+    ],i*4);
+  }
+  return{back,front};
+}
+function expectedSourceOver(back,front){
+  const out=new Float32Array(SAMPLE_COUNT*4);
+  for(let i=0;i<SAMPLE_COUNT;i++){
+    const k=i*4,ba=back[k+3],fa=front[k+3],oma=f32(1-fa);
+    for(let c=0;c<3;c++){
+      const dst=f32(back[k+c]*ba);
+      out[k+c]=f32(f32(front[k+c]*fa)+f32(dst*oma));
+    }
+    out[k+3]=f32(fa+f32(ba*oma));
+  }
+  return out;
+}
+function errorMetrics(a,b,byteB=false){
+  let maxAbs=0,sum2=0,overHalfCode=0,overOneCode=0,overTwoCodes=0,firstOverOneCode=null;
+  const perChannelMax=[0,0,0,0],n=Math.min(a.length,b.length);
+  for(let i=0;i<n;i++){
+    const av=Number(a[i]),bv=byteB?Number(b[i])/255:Number(b[i]),d=Math.abs(av-bv);
+    maxAbs=Math.max(maxAbs,d);perChannelMax[i%4]=Math.max(perChannelMax[i%4],d);sum2+=d*d;
+    if(d>0.5/255+1e-7)overHalfCode++;
+    if(d>1/255+1e-7){overOneCode++;if(!firstOverOneCode)firstOverOneCode={channelIndex:i,pixel:Math.floor(i/4),channel:i%4,a:av,b:bv,diff:d};}
+    if(d>2/255+1e-7)overTwoCodes++;
+  }
+  return{sampledChannels:n,maxAbs,rmse:Math.sqrt(sum2/n),perChannelMax,channelsOverHalfCode:overHalfCode,channelsOverOneCode:overOneCode,channelsOverTwoCodes:overTwoCodes,firstOverOneCode};
+}
+function orderMetrics(a,b){
+  let maxRgb=0,maxAlpha=0,changedRgbChannels=0;
+  for(let i=0;i<a.length;i++){
+    const d=Math.abs(Number(a[i])-Number(b[i]));
+    if(i%4===3)maxAlpha=Math.max(maxAlpha,d);else{maxRgb=Math.max(maxRgb,d);if(d>1e-7)changedRgbChannels++;}
+  }
+  return{maxRgbAbs:maxRgb,maxAlphaAbs:maxAlpha,changedRgbChannels};
+}
+async function sha256Bytes(view){
+  const u8=new Uint8Array(view.buffer,view.byteOffset,view.byteLength),d=await crypto.subtle.digest('SHA-256',u8);
+  return Array.from(new Uint8Array(d),x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function main(){
+  const renderer=new THREE.WebGPURenderer({antialias:false,alpha:true,forceWebGL:requestedMode==='webgl'});
+  renderer.setPixelRatio(1);renderer.setSize(SAMPLE_COUNT,1,false);renderer.setClearColor(0x000000,0);renderer.sortObjects=true;
+  renderer.toneMapping=THREE.NoToneMapping;renderer.outputColorSpace=THREE.LinearSRGBColorSpace;
+  document.body.appendChild(renderer.domElement);await renderer.init();
+  const actualBackend=detectBackend(renderer),id=await identity(renderer,actualBackend);
+  if(actualBackend!==requestedMode)return{schema:'kaopu-three-two-splat-blend/r55',status:'unsupported',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id};
+
+  const {back,front}=fixtureColors(),backGeo=makeGeometry(back),frontGeo=makeGeometry(front),colorNode=attribute('kaopuColor','vec4');
+  function makeMaterial(){const m=new THREE.MeshBasicNodeMaterial({depthTest:false,depthWrite:false,transparent:true,blending:THREE.NormalBlending,premultipliedAlpha:false});m.fragmentNode=Fn(()=>colorNode)();return m;}
+  const backMat=makeMaterial(),frontMat=makeMaterial(),backMesh=new THREE.Mesh(backGeo,backMat),frontMesh=new THREE.Mesh(frontGeo,frontMat);
+  backMesh.frustumCulled=false;frontMesh.frustumCulled=false;backMesh.renderOrder=0;frontMesh.renderOrder=1;
+  const scene=new THREE.Scene();scene.add(backMesh,frontMesh);
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,2);camera.position.z=1;
+  const common={format:THREE.RGBAFormat,depthBuffer:false,stencilBuffer:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter};
+  const floatTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType});
+  const byteTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.UnsignedByteType});
+  const reverseTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType});
+  for(const target of[floatTarget,byteTarget,reverseTarget])target.texture.colorSpace=THREE.NoColorSpace;
+  async function render(target){renderer.setRenderTarget(target);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);return renderer.readRenderTargetPixelsAsync(target,0,0,SAMPLE_COUNT,1);}
+  const floatPixels=await render(floatTarget),bytePixels=await render(byteTarget);
+  backMesh.renderOrder=1;frontMesh.renderOrder=0;
+  const reversePixels=await render(reverseTarget);
+  const expected=expectedSourceOver(back,front),floatVsExpected=errorMetrics(expected,floatPixels),floatVsByte=errorMetrics(floatPixels,bytePixels,true),order=orderMetrics(floatPixels,reversePixels);
+  const hashes={float:await sha256Bytes(floatPixels),byte:await sha256Bytes(bytePixels),reverseFloat:await sha256Bytes(reversePixels),inputs:await sha256Bytes(new Float32Array([...back,...front]))};
+  renderer.dispose();for(const x of[backGeo,frontGeo,backMat,frontMat,floatTarget,byteTarget,reverseTarget])x.dispose();
+  return{schema:'kaopu-three-two-splat-blend/r55',status:'candidate-observation',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id,
+    fixture:{sampleCount:SAMPLE_COUNT,sampledChannels:SAMPLE_COUNT*4,drawsPerPixel:2,drawOrder:'back renderOrder 0, front renderOrder 1',reverseControl:'back 1, front 0',blending:'NormalBlending; premultipliedAlpha=false; transparent=true; depthTest=false; depthWrite=false',expectedBlend:'RGB=src.rgb*src.a+dst.rgb*(1-src.a); A=src.a+dst.a*(1-src.a)',floatTarget:'RGBA32F offscreen RenderTarget',finalTarget:'RGBA8 offscreen RenderTarget',toneMapping:'NoToneMapping',rendererOutputColorSpace:'LinearSRGBColorSpace',targetColorSpace:'NoColorSpace',gaussianCutoff:false,presentationSurface:false},
+    summary:{floatVsExpected,floatVsByte,order,hashes},
+    checks:{allSamplesHaveAlpha:Array.from(floatPixels).filter((_,i)=>i%4===3).every(x=>x>0),floatMatchesStepwiseSourceOver:floatVsExpected.maxAbs<=1e-5,reverseOrderChangesRgb:order.changedRgbChannels>0&&order.maxRgbAbs>1e-4,reverseOrderPreservesAlpha:order.maxAlphaAbs<=1e-6,noChannelsOverTwoCodes:floatVsByte.channelsOverTwoCodes===0},
+    limits:{hardwareGpu:false,targetDevice:false,browserPresentationSurface:false,gaussianCutoffPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
+}
+try{window.__KAOPU_RESULT__=await main();}catch(error){window.__KAOPU_RESULT__={schema:'kaopu-three-two-splat-blend/r55',status:'error',requestedMode,progress:window.__KAOPU_PROGRESS__||null,message:String(error?.message||error),stack:String(error?.stack||'')};}
+window.__KAOPU_DONE__=true;
+</script>

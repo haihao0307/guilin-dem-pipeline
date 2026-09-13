@@ -1,0 +1,64 @@
+name: KAOPU Gaussian R55 Two-Splat Blend
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_two_splat_blend_r55.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_two_splat_blend_r55.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_two_splat_blend_gate_r55.mjs
+      - .github/workflows/kaopu-gaussian-r55-two-splat-blend.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r55-two-splat-blend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout coordination branch
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned renderer and browser harness
+        shell: bash
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Start local fixture server
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r55-http.log 2>&1 &
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_two_splat_blend_r55.html > /dev/null
+      - name: Run direct TSL two-splat blend comparison
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_two_splat_blend_r55.js
+      - name: Validate R55 blend contract
+        shell: bash
+        run: |
+          cat r55-comparison.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_three_two_splat_blend_gate_r55.mjs > r55-gate.json
+          cat r55-gate.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('r55-gate.json'))
+          if d.get('status')!='Candidate-pass':
+              raise SystemExit(f"R55 gate failed: {d}")
+          PY
+      - name: Upload R55 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r55-two-splat-blend
+          path: |
+            r55-result-webgl.json
+            r55-result-webgpu.json
+            r55-comparison.json
+            r55-gate.json
+          if-no-files-found: warn
+          retention-days: 30
