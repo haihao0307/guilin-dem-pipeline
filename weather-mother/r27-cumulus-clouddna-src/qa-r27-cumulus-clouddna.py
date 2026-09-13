@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-BUILD = ROOT / "weather-mother/r27-cumulus-clouddna-src/build-r27-cumulus-clouddna.py"
+BUILD = ROOT / "weather-mother/r27-cumulus-clouddna-src/build-r27-cumulus-clouddna-v2.py"
 OUT = ROOT / "weather-mother/full-weather-r27-cumulus-clouddna-20260913/index.html"
 
 subprocess.check_call([sys.executable, str(BUILD)], cwd=ROOT)
@@ -21,16 +21,23 @@ safe = base64.b64decode(m.group(1)).decode("utf-8")
 checks = {
     "foundation_marker_preserved": "weatherFoundation='r27-units-clock-optics'" in page,
     "cumulus_marker_present": "weatherCumulusCloudDNA='r27-shared-seed-density'" in page,
+    "detail_policy_marker_present": "weatherCumulusDetailPolicy='high-bands-only'" in page,
     "same_iframe_coordinator_present": "observeFlightRenderer='same-aircraft-iframe'" in page,
     "reference_seeds_present": "objectSeed:73017,detailSeed:991" in safe,
     "reference_is_zero_delta": "DNAReference={object:[dnaUnit(73017,1)" in safe and "detail:[dnaUnit(991,5)" in safe,
     "shared_js_parameter_function": "window.WeatherCumulusDNAParams=dnaParams" in safe,
     "gpu_dna_uniforms": "uniform vec4 uDNAObject;uniform vec3 uDNADetail" in safe,
     "gpu_dna_upload": "gl.uniform4fv(loc.uDNAObject,dna.object)" in safe and "gl.uniform3fv(loc.uDNADetail,dna.detail)" in safe,
+    "gpu_detail_seed_high_bands_only": "if(i>=3)sampleP+=uDNADetail*(float(i)-2.)*1.7" in safe,
+    "gpu_low_prefix_unshifted": "p*.72+vec3(0.,0.,uTime*.004)" in safe and "p*.72+vec3(uDNADetail.xy" not in safe,
+    "gpu_mid_prefix_unshifted": "p*1.85+vec3(11.3,7.1,3.7)" in safe and "p*1.85+vec3(11.3,7.1,3.7)+uDNADetail" not in safe,
+    "cpu_detail_seed_high_bands_only": "const k=i>=3?(i-2)*1.7:0" in safe,
     "cpu_uses_shared_params": safe.count("window.WeatherCumulusDNAParams?window.WeatherCumulusDNAParams()") >= 2,
     "canonical_density_export": "sampleDensity:(point,sceneName='silver',timeS=0)" in safe,
-    "cloud_query_api": "CloudQuery:{sample:sampleCloudDensity}" in safe,
+    "canonical_envelope_export": "sampleEnvelopeDistance:(point,sceneName='silver')" in safe,
+    "cloud_query_api": "CloudQuery:{sample:sampleCloudDensity,envelope:" in safe,
     "seed_control_api": "getCloudDNA,setSeeds,CloudQuery" in safe,
+    "detail_policy_claim_scoped": "detailSeedHighBandsOnly:true" in safe and "detailSeedEnvelopeInvariant:true" in safe,
     "same_cloud_claim_scoped": "sameCloudForObserveAndFlight:true" in safe and "canonicalDensityQuery:true" in safe,
     "observer_mode_gate": "S.flying&&viewMode==='flight'" in safe and "setViewMode" in safe and "getViewMode" in safe,
     "speed_fix_preserved": "kmps=S.speed/1000" in safe and "kmps=S.speed/3600" not in safe,
@@ -43,13 +50,14 @@ checks = {
 }
 
 result = {
-    "version": "WM-R27-CUMULUS-CLOUD-DNA-STATIC-QA-20260913",
+    "version": "WM-R27-CUMULUS-CLOUD-DNA-HF-STATIC-QA-20260913",
     "checks": checks,
     "allPassed": all(checks.values()),
     "scope": {
         "buildAndStaticQA": True,
         "publicBrowserQA": False,
         "sameDensityAcrossObserveFlightRuntimeProbe": False,
+        "detailSeedEnvelopeRuntimeProbe": False,
         "realDeviceQA": False,
         "visualAcceptance": False,
         "productionReady": False,
