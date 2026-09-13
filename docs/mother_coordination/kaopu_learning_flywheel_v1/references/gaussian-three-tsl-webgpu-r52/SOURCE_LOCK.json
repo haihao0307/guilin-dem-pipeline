@@ -1,0 +1,71 @@
+{
+  "schema": "kaopu-source-lock/r52",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "gaussian-three-tsl-webgpu-cutoff",
+  "inherits": "references/gaussian-three-tsl-webgl-r51/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R52-THREE-R186-TSL-WEBGPU",
+      "sameEvidenceLineageAs": [
+        "O-R51-THREE-R186-TSL",
+        "O-R50-THREE-R186"
+      ],
+      "independentPhysicalObservationRoot": false,
+      "package": "three@0.186.0",
+      "renderer": "WebGPURenderer",
+      "requestedBackend": "webgpu",
+      "actualBackend": "webgpu",
+      "cutoffExpression": "Discard(r2.greaterThan(4.0))",
+      "use": "direct Three.js-generated TSL WebGPU cutoff execution"
+    },
+    {
+      "root": "O-R52-CI-WEBGPU-SWIFTSHADER",
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "workflowRunId": 34735508683,
+      "workflowRunNumber": 3,
+      "workflowHeadSha": "ac9398c0132a6babfd1bf4430069c910a80c1e3f",
+      "artifactId": 10310597863,
+      "artifactName": "kaopu-gaussian-r52-webgpu",
+      "artifactDigestSha256": "54c2c437fb1e65bafe145a92644403729aec6f1a62d4ceb37d75e582ccdbc8c0",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "backendClass": "WebGPUBackend",
+      "adapterVendor": "google",
+      "adapterArchitecture": "swiftshader",
+      "caseCount": 4644,
+      "renderSubmissionCount": 36,
+      "readbackCount": 36,
+      "machineGate": "Candidate-pass"
+    },
+    {
+      "root": "O-R52-BROWSER-COMPAT-COUNTEREXAMPLE",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34735376706,
+      "workflowRunNumber": 1,
+      "browserHarness": "playwright@1.55.0",
+      "browser": "Headless Chromium 140.0.7339.16",
+      "actualBackend": "webgpu",
+      "status": "compatibility-fail-before-sweep",
+      "error": "GPUTexture.createView swizzle descriptor rejected before first sweep render",
+      "interpretation": "Browser/API compatibility counterexample only; not Gaussian evidence."
+    }
+  ],
+  "evidence": {
+    "webgpuResult": "PROBES/gaussian_three_tsl_cutoff_result_r52_webgpu.json",
+    "runner": "PROBES/run_gaussian_three_tsl_cutoff_r52_webgpu.js",
+    "gate": "ADAPTERS/gaussian_three_tsl_webgpu_gate_r52.mjs",
+    "resultSha256": "e449fe97e48b376e3beda8446a0ff946b9da8d708cee7f2b0c69ecd5a7d674cd",
+    "gateResultSha256": "56db9dd7119ef4ccfef509917db01e2c5e9d8a2d918f462e35fde9f98e7fdbdd",
+    "artifactZipSha256": "54c2c437fb1e65bafe145a92644403729aec6f1a62d4ceb37d75e582ccdbc8c0"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "directThreeTslExecuted": true,
+  "webglExecutedPreviously": true,
+  "webgpuExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}
