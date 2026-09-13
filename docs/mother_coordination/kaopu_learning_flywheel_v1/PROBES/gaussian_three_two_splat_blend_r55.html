@@ -31,6 +31,13 @@ async function identity(renderer,actualBackend){
   }
   return out;
 }
+function blendCapability(renderer,actualBackend){
+  if(actualBackend==='webgpu')return{floatBlendSupported:true,reason:'WebGPU blendable rgba32float target executed by this fixture'};
+  const gl=renderer.backend?.gl||null;
+  if(!gl)return{floatBlendSupported:false,reason:'WebGL context unavailable'};
+  const extensions=gl.getSupportedExtensions()||[];
+  return{floatBlendSupported:Boolean(gl.getExtension('EXT_float_blend')),colorBufferFloatSupported:Boolean(gl.getExtension('EXT_color_buffer_float')),extensions,reason:extensions.includes('EXT_float_blend')?'EXT_float_blend exposed':'EXT_float_blend not exposed'};
+}
 function makeGeometry(colors){
   const positions=new Float32Array(SAMPLE_COUNT*4*3);
   const expanded=new Float32Array(SAMPLE_COUNT*4*4);
@@ -104,6 +111,7 @@ async function main(){
   document.body.appendChild(renderer.domElement);await renderer.init();
   const actualBackend=detectBackend(renderer),id=await identity(renderer,actualBackend);
   if(actualBackend!==requestedMode)return{schema:'kaopu-three-two-splat-blend/r55',status:'unsupported',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id};
+  const capability=blendCapability(renderer,actualBackend);
 
   const {back,front}=fixtureColors(),backGeo=makeGeometry(back),frontGeo=makeGeometry(front),colorNode=attribute('kaopuColor','vec4');
   function makeMaterial(){const m=new THREE.MeshBasicNodeMaterial({depthTest:false,depthWrite:false,transparent:true,blending:THREE.NormalBlending,premultipliedAlpha:false});m.fragmentNode=Fn(()=>colorNode)();return m;}
@@ -112,21 +120,26 @@ async function main(){
   const scene=new THREE.Scene();scene.add(backMesh,frontMesh);
   const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,2);camera.position.z=1;
   const common={format:THREE.RGBAFormat,depthBuffer:false,stencilBuffer:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter};
-  const floatTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType});
+  const floatTarget=capability.floatBlendSupported?new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType}):null;
   const byteTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.UnsignedByteType});
-  const reverseTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType});
-  for(const target of[floatTarget,byteTarget,reverseTarget])target.texture.colorSpace=THREE.NoColorSpace;
+  const reverseTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:capability.floatBlendSupported?THREE.FloatType:THREE.UnsignedByteType});
+  for(const target of[floatTarget,byteTarget,reverseTarget].filter(Boolean))target.texture.colorSpace=THREE.NoColorSpace;
   async function render(target){renderer.setRenderTarget(target);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);return renderer.readRenderTargetPixelsAsync(target,0,0,SAMPLE_COUNT,1);}
-  const floatPixels=await render(floatTarget),bytePixels=await render(byteTarget);
+  const expected=expectedSourceOver(back,front);
+  const floatPixels=floatTarget?await render(floatTarget):null,bytePixels=await render(byteTarget);
   backMesh.renderOrder=1;frontMesh.renderOrder=0;
   const reversePixels=await render(reverseTarget);
-  const expected=expectedSourceOver(back,front),floatVsExpected=errorMetrics(expected,floatPixels),floatVsByte=errorMetrics(floatPixels,bytePixels,true),order=orderMetrics(floatPixels,reversePixels);
-  const hashes={float:await sha256Bytes(floatPixels),byte:await sha256Bytes(bytePixels),reverseFloat:await sha256Bytes(reversePixels),inputs:await sha256Bytes(new Float32Array([...back,...front]))};
-  renderer.dispose();for(const x of[backGeo,frontGeo,backMat,frontMat,floatTarget,byteTarget,reverseTarget])x.dispose();
+  const normalizedByte=Float32Array.from(bytePixels,x=>x/255),normalizedReverse=capability.floatBlendSupported?reversePixels:Float32Array.from(reversePixels,x=>x/255);
+  const floatVsExpected=floatPixels?errorMetrics(expected,floatPixels):null;
+  const referenceVsByte=errorMetrics(expected,bytePixels,true);
+  const floatVsByte=floatPixels?errorMetrics(floatPixels,bytePixels,true):null;
+  const order=orderMetrics(floatPixels||normalizedByte,normalizedReverse);
+  const hashes={float:floatPixels?await sha256Bytes(floatPixels):null,byte:await sha256Bytes(bytePixels),reverse:await sha256Bytes(reversePixels),inputs:await sha256Bytes(new Float32Array([...back,...front]))};
+  renderer.dispose();for(const x of[backGeo,frontGeo,backMat,frontMat,floatTarget,byteTarget,reverseTarget].filter(Boolean))x.dispose();
   return{schema:'kaopu-three-two-splat-blend/r55',status:'candidate-observation',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id,
-    fixture:{sampleCount:SAMPLE_COUNT,sampledChannels:SAMPLE_COUNT*4,drawsPerPixel:2,drawOrder:'back renderOrder 0, front renderOrder 1',reverseControl:'back 1, front 0',blending:'NormalBlending; premultipliedAlpha=false; transparent=true; depthTest=false; depthWrite=false',expectedBlend:'RGB=src.rgb*src.a+dst.rgb*(1-src.a); A=src.a+dst.a*(1-src.a)',floatTarget:'RGBA32F offscreen RenderTarget',finalTarget:'RGBA8 offscreen RenderTarget',toneMapping:'NoToneMapping',rendererOutputColorSpace:'LinearSRGBColorSpace',targetColorSpace:'NoColorSpace',gaussianCutoff:false,presentationSurface:false},
-    summary:{floatVsExpected,floatVsByte,order,hashes},
-    checks:{allSamplesHaveAlpha:Array.from(floatPixels).filter((_,i)=>i%4===3).every(x=>x>0),floatMatchesStepwiseSourceOver:floatVsExpected.maxAbs<=1e-5,reverseOrderChangesRgb:order.changedRgbChannels>0&&order.maxRgbAbs>1e-4,reverseOrderPreservesAlpha:order.maxAlphaAbs<=1e-6,noChannelsOverTwoCodes:floatVsByte.channelsOverTwoCodes===0},
+    fixture:{sampleCount:SAMPLE_COUNT,sampledChannels:SAMPLE_COUNT*4,drawsPerPixel:2,drawOrder:'back renderOrder 0, front renderOrder 1',reverseControl:'back 1, front 0',blending:'NormalBlending; premultipliedAlpha=false; transparent=true; depthTest=false; depthWrite=false',expectedBlend:'RGB=src.rgb*src.a+dst.rgb*(1-src.a); A=src.a+dst.a*(1-src.a)',floatTarget:capability.floatBlendSupported?'RGBA32F offscreen RenderTarget':'not executed: backend did not expose float blending',finalTarget:'RGBA8 offscreen RenderTarget',toneMapping:'NoToneMapping',rendererOutputColorSpace:'LinearSRGBColorSpace',targetColorSpace:'NoColorSpace',gaussianCutoff:false,presentationSurface:false,floatBlendSupported:capability.floatBlendSupported,floatBlendCapability:capability},
+    summary:{floatVsExpected,referenceVsByte,floatVsByte,order,hashes},
+    checks:{allSamplesHaveAlpha:Array.from(floatPixels||bytePixels).filter((_,i)=>i%4===3).every(x=>x>0),floatReferenceValid:floatPixels?floatVsExpected.maxAbs<=1e-5:capability.floatBlendSupported===false,reverseOrderChangesRgb:order.changedRgbChannels>0&&order.maxRgbAbs>1e-4,reverseOrderPreservesAlpha:order.maxAlphaAbs<=(capability.floatBlendSupported?1e-6:1/255+1e-7),noChannelsOverTwoCodes:referenceVsByte.channelsOverTwoCodes===0},
     limits:{hardwareGpu:false,targetDevice:false,browserPresentationSurface:false,gaussianCutoffPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}};
 }
 try{window.__KAOPU_RESULT__=await main();}catch(error){window.__KAOPU_RESULT__={schema:'kaopu-three-two-splat-blend/r55',status:'error',requestedMode,progress:window.__KAOPU_PROGRESS__||null,message:String(error?.message||error),stack:String(error?.stack||'')};}
