@@ -1,0 +1,148 @@
+name: build-verify-weather-r27-cumulus-clouddna
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r27-cumulus-clouddna-20260913
+    paths:
+      - weather-mother/r27-cumulus-clouddna-src/**
+      - .github/workflows/build-verify-weather-r27-cumulus-clouddna.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-mother-r27-cumulus-clouddna
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and run static cumulus Cloud DNA gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python weather-mother/r27-cumulus-clouddna-src/qa-r27-cumulus-clouddna.py | tee /tmp/r27-cumulus-clouddna-static-qa.txt
+
+      - name: Freeze generated page and fixed public coordinate
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r27-cumulus-clouddna-20260913
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add "$OUT/index.html"
+          if git diff --cached --quiet; then
+            echo "generated page already current"
+          else
+            git commit -m "build(weather-mother): generate R27 cumulus Cloud DNA page [skip ci]"
+            git push origin HEAD:feature/weather-mother-r27-cumulus-clouddna-20260913
+          fi
+          PAGE_SHA=$(git rev-parse HEAD)
+          PUBLIC_URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$PAGE_SHA/$OUT/index.html"
+          echo "PAGE_SHA=$PAGE_SHA" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$PUBLIC_URL" >> "$GITHUB_ENV"
+          echo "fixed page: $PUBLIC_URL"
+
+      - name: Wait for immutable public page
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 40); do
+            code=$(curl -L -sS -o /tmp/r27-cumulus.html -w '%{http_code}' --connect-timeout 10 --max-time 45 "$PUBLIC_URL?probe=$attempt" || true)
+            if [ "$code" = 200 ] && grep -q "r27-shared-seed-density" /tmp/r27-cumulus.html; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
+          echo "fixed public R27 cumulus Cloud DNA is live: $PUBLIC_URL"
+
+      - name: Install Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install playwright==1.55.0 >/dev/null
+          python -m playwright install chromium >/dev/null
+
+      - name: Re-run complete R26 public browser regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r26-observation-bandwidth-src/qa-public-r26.py
+
+      - name: Verify shared cumulus Cloud DNA in public browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a python -u weather-mother/r27-cumulus-clouddna-src/qa-public-r27-cumulus-clouddna.py
+
+      - name: Commit R27 cumulus public evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=weather-mother/full-weather-r27-cumulus-clouddna-20260913
+          cat > "$OUT/PUBLICATION_PROOF_R27_CUMULUS_DNA.json" <<JSON
+          {
+            "schema": "weather-mother-r27-cumulus-clouddna-publication-proof/1",
+            "pageCommit": "$PAGE_SHA",
+            "url": "$PUBLIC_URL",
+            "foundationPageCommit": "d2575ab765dbceeebcb3544cdc52927f60cac86f",
+            "r26PublicRegressionReRun": true,
+            "publicBrowser390x844": true,
+            "cumulusCloudDNA": true,
+            "referenceObjectSeed": 73017,
+            "referenceDetailSeed": 991,
+            "referenceSeedPreservesFoundationField": true,
+            "sameCloudForObserveAndFlight": true,
+            "sameAircraftIframeAcrossObserveAndFlight": true,
+            "canonicalCpuDensityQuery": true,
+            "cpuGpuDNAParametersShared": true,
+            "worldPositionUnit": "km",
+            "speedUnit": "m/s",
+            "timeUnit": "s",
+            "extinctionUnit": "km^-1",
+            "worldClockIndependentFromObserver": true,
+            "beerLambertPathIntegration": true,
+            "observationBandwidthPreserved": true,
+            "aircraftOpticalOcclusionPreserved": true,
+            "sharedDepth": false,
+            "depthFBO": false,
+            "realDeviceQA": false,
+            "visualAcceptance": false,
+            "productionReady": false
+          }
+          JSON
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add "$OUT/PUBLIC_QA_R27_CUMULUS_DNA_2026-09-13.json" "$OUT/PUBLIC_R27_CUMULUS_DNA_OBSERVE_390x844.png" "$OUT/PUBLICATION_PROOF_R27_CUMULUS_DNA.json"
+          git commit -m "qa(weather-mother): prove R27 shared cumulus Cloud DNA publicly [skip ci]"
+          git push origin HEAD:feature/weather-mother-r27-cumulus-clouddna-20260913
+
+      - name: Upload R27 cumulus evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-mother-r27-cumulus-clouddna-evidence
+          path: |
+            /tmp/r27-cumulus-clouddna-static-qa.txt
+            weather-mother/full-weather-r27-cumulus-clouddna-20260913/index.html
+            weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLIC_QA_R27_CUMULUS_DNA_2026-09-13.json
+            weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLIC_R27_CUMULUS_DNA_OBSERVE_390x844.png
+            weather-mother/full-weather-r27-cumulus-clouddna-20260913/PUBLICATION_PROOF_R27_CUMULUS_DNA.json
+          if-no-files-found: warn
