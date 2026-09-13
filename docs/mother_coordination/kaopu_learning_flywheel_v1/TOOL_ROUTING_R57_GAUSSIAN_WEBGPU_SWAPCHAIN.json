@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu-tool-routing/r57",
+  "status": "Candidate partial",
+  "question": "Can a direct Three.js r186 WebGPU current-texture copy expose canvas bytes before the R56 screenshot/compositor path?",
+  "inherits": "TOOL_ROUTING_R56_GAUSSIAN_PRESENTATION.json",
+  "routes": [
+    {
+      "stage": "offscreen-positive-control",
+      "tool": "Three.js RGBA32F readRenderTargetPixelsAsync in PROBES/gaussian_three_webgpu_swapchain_r57.html",
+      "authority": "same-page source identity and offscreen WebGPU calculation health",
+      "required": ["source hash", "offscreen hash", "maxAbs", "backend identity"]
+    },
+    {
+      "stage": "current-texture-attempt",
+      "tool": "GPUCanvasContext.getCurrentTexture plus copyTextureToBuffer",
+      "authority": "timing, canvas format, copy-submission milestone and stable unavailability observation in the pinned headless lineage",
+      "notAuthorityFor": ["actual canvas bytes", "Three.js canvas correctness", "browser compositor correctness", "hardware GPU", "Safari/iPhone"]
+    },
+    {
+      "stage": "candidate-gate",
+      "tool": "ADAPTERS/gaussian_three_webgpu_swapchain_gate_r57.mjs",
+      "authority": "locked source, positive-control pass, and explicit classification of either obtained bytes or stable unavailability",
+      "notAuthorityFor": ["visual threshold", "asset quality", "perceptual acceptance"]
+    },
+    {
+      "stage": "next-software-verification",
+      "tool": "pinned Three.js default HalfFloatType versus forced FloatType comparison",
+      "authority": "finite-range and rounding effects before presentation once implemented",
+      "requiredNext": ["outputBufferType", "target format", "blend/output-transfer order", "float reference", "fixture-specific error"]
+    }
+  ],
+  "stableStorageBaselineEstablished": true,
+  "twoLayerBlendEvidenceEstablished": true,
+  "webglPresentationEvidenceEstablished": true,
+  "webgpuOffscreenEvidenceEstablished": true,
+  "webgpuCurrentTextureEvidenceEstablished": false,
+  "webgpuPresentationEvidenceEstablished": false,
+  "productionMutationAllowed": false
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "kaopu-source-lock/r57",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-webgpu-current-texture-readback",
+  "inherits": "references/gaussian-presentation-r56/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R57-THREE-R186-WEBGPU-SWAPCHAIN",
+      "sameEvidenceLineageAs": ["O-R56-THREE-R186-PRESENTATION", "O-R55-THREE-R186-TWO-LAYER-BLEND"],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "webgpuBackend": "Google SwiftShader"
+    },
+    {
+      "root": "O-R57-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/webgpu/WebGPUBackend.js",
+          "blobSha": "e6345e42e2008f6606971c626326d6479e50a51a",
+          "constraint": "canvas context is configured with RENDER_ATTACHMENT | COPY_SRC and premultiplied or opaque alpha mode"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/webgpu/utils/WebGPUUtils.js",
+          "blobSha": "419310e3b9feadf36b9f86a2eb9292fe565402e0",
+          "constraint": "preferred canvas format is used when canvas outputType is undefined; runtime format must still be recorded"
+        }
+      ]
+    },
+    {
+      "root": "O-R57-CI-WEBGPU-SWAPCHAIN",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34746373524,
+      "workflowHeadSha": "f5302d4aa23a58cf11ec58bcff79019058d50307",
+      "artifactId": 10314740422,
+      "artifactName": "kaopu-gaussian-r57-webgpu-swapchain",
+      "artifactDigestSha256": "409409bdd58d5929c66b8c708d9ac00fa86e4c4ad2eecc589948d5c9c583af79",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "failedAttempts": [
+    {
+      "workflowRunId": 34746045676,
+      "workflowHeadSha": "f71c0081d9652a8f094285de80349ddbe30d7a63",
+      "condition": "copy attempted after renderAsync",
+      "outcome": "same AbortError before mapped bytes"
+    },
+    {
+      "workflowRunId": 34746128331,
+      "workflowHeadSha": "e9d7f0cfc83840c32827fd4c64137c79eb61e7bc",
+      "condition": "offscreen warmup then synchronous canvas render and immediate copy",
+      "outcome": "same AbortError after copy submission"
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_webgpu_swapchain_r57.html",
+    "runner": "PROBES/run_gaussian_three_webgpu_swapchain_r57.js",
+    "compactResult": "PROBES/gaussian_three_webgpu_swapchain_result_r57.json",
+    "gate": "ADAPTERS/gaussian_three_webgpu_swapchain_gate_r57.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r57-webgpu-swapchain.yml",
+    "comparisonSha256": "cd8e0e7080cd907af89e96875a63d7a7f67d35dcc981967419ff8d0b1cbbf6ec",
+    "gateResultSha256": "e3b182aa2d26fd949a87ee1a95d74065d6834cdc9778536acd5f9b24f1522586"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "webgpuOffscreenCompared": true,
+  "webgpuCurrentTextureCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}

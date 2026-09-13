@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r57",
+  "updatedAt": "2026-09-13",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R56_OVERLAY.json",
+  "status": "candidate-partial",
+  "progressAppend": "R57 attempted direct WebGPU current-texture readback in pinned Three.js r186. The same-page RGBA32F positive control exactly matched the locked R55 source in both output-space pages, but three timing/prewarm variants ended with the same AbortError at GPUBuffer.mapAsync and exposed no swapchain bytes. Transparent screenshots remained blank. This characterizes current-texture readback as unavailable in the tested Headless Chromium/SwiftShader lineage; it neither proves blank Three output nor localizes the screenshot failure. No independent physical root, hardware/device/asset evidence or human acceptance was added.",
+  "appendResultLogs": ["LEARNING_LOG/2026-09-13_GAUSSIAN_WEBGPU_SWAPCHAIN_R57.md"],
+  "appendSourceLocks": ["references/gaussian-webgpu-swapchain-r57/SOURCE_LOCK.json"],
+  "r57Probe": "PROBES/gaussian_three_webgpu_swapchain_r57.html",
+  "r57Runner": "PROBES/run_gaussian_three_webgpu_swapchain_r57.js",
+  "r57Result": "PROBES/gaussian_three_webgpu_swapchain_result_r57.json",
+  "candidateR57Gate": "ADAPTERS/gaussian_three_webgpu_swapchain_gate_r57.mjs",
+  "currentBestViewR57Extension": "CURRENT_BEST_VIEW_R57_GAUSSIAN_WEBGPU_SWAPCHAIN.md",
+  "toolRoutingR57Extension": "TOOL_ROUTING_R57_GAUSSIAN_WEBGPU_SWAPCHAIN.json",
+  "motherRoutingR57Extension": "MOTHER_ROUTING_R57_GAUSSIAN_WEBGPU_SWAPCHAIN.json",
+  "nextGate": "Compare Three.js r186 default HalfFloatType output-buffer behavior against the locked forced-FloatType R55/R56 fixture in software-verifiable RGBA32F readback, including finite-range, rounding and blend/output-transfer effects. Keep hardware-backed Chromium and Apple Safari/WebKit swapchain/presentation acceptance infrastructure-dependent. Only after a user photo set exists should the COLMAP/Brush/PLY/SPZ/r186 pilot run under accumulated R34-R57 gates.",
+  "mergePolicy": "This overlay supersedes R56 for LQ-GAUSSIAN-001 and should be folded into LEARNING_QUEUE.json at the next queue compaction."
+}
