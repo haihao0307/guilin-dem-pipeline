@@ -1,0 +1,44 @@
+name: Wenzhou R3.8 Build Soil Pairs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-8-overlay-transform-contract-20260913
+    paths:
+      - 'records/R3_8/SOIL_PAIR_BUILD_TRIGGER'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build exact paired payloads
+        run: |
+          set -euo pipefail
+          rm -rf site/dist/r3-8/data/soil-paired
+          python tools/r3-8/build_soil_pair_payloads.py --out site/dist/r3-8/data/soil-paired > /tmp/soil-pair-build.json
+          python - <<'PY'
+          import json, pathlib
+          r=json.loads(pathlib.Path('/tmp/soil-pair-build.json').read_text())
+          assert r['passed'] is True
+          assert r['pairCount']==48
+          assert r['totalPackedBytes'] < 40000000
+          print(r)
+          PY
+      - name: Commit paired payloads to isolated runtime path
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-8/data/soil-paired
+          git diff --cached --quiet && exit 0
+          git commit -m 'data(wenzhou): add exact paired SoilProfile payloads'
+          git push origin HEAD:feature/wenzhou-r3-8-overlay-transform-contract-20260913
