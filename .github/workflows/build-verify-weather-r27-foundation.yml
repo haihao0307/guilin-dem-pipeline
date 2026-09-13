@@ -1,0 +1,54 @@
+name: build-verify-weather-r27-foundation
+
+on:
+  push:
+    branches:
+      - feature/weather-mother-r27-foundation-units-clock-optics-20260913
+    paths:
+      - weather-mother/r27-foundation-src/**
+      - .github/workflows/build-verify-weather-r27-foundation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and run static foundation gates
+        run: |
+          python weather-mother/r27-foundation-src/qa-r27-foundation.py | tee /tmp/r27-foundation-qa.json
+
+      - name: Commit generated R27 foundation page to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Weather Mother CI"
+          git config user.email "weather-mother-ci@users.noreply.github.com"
+          git add weather-mother/full-weather-r27-foundation-20260913/index.html
+          if git diff --cached --quiet; then
+            echo "generated page already current"
+          else
+            git commit -m "build(weather-mother): generate R27 foundation page [skip ci]"
+            git push origin HEAD:feature/weather-mother-r27-foundation-units-clock-optics-20260913
+          fi
+
+      - name: Upload foundation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-mother-r27-foundation-evidence
+          path: |
+            /tmp/r27-foundation-qa.json
+            weather-mother/full-weather-r27-foundation-20260913/index.html
+          if-no-files-found: error
