@@ -1,0 +1,91 @@
+name: KAOPU Gaussian R51 Three TSL
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_tsl_cutoff_r51.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js
+      - .github/workflows/kaopu-gaussian-r51-three-tsl.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r51:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout coordination branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned renderer and browser harness
+        shell: bash
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local fixture server
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r51-http.log 2>&1 &
+          echo $! > /tmp/r51-http.pid
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_tsl_cutoff_r51.html > /dev/null
+
+      - name: Run Three.js r186 TSL on forced WebGL fallback
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js webgl
+
+      - name: Run Three.js r186 TSL on WebGPU when available
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_three_tsl_cutoff_r51.js webgpu
+
+      - name: Build compact result summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          out = {'schema': 'kaopu-gaussian-three-tsl-cutoff-ci/r51', 'results': {}}
+          for mode in ('webgl', 'webgpu'):
+              p = Path(f'r51-result-{mode}.json')
+              if not p.exists():
+                  out['results'][mode] = {'status': 'missing'}
+                  continue
+              d = json.loads(p.read_text())
+              out['results'][mode] = {
+                  'status': d.get('status'),
+                  'requestedMode': d.get('requestedMode'),
+                  'actualBackend': d.get('actualBackend'),
+                  'threeRevision': d.get('threeRevision'),
+                  'identity': d.get('identity'),
+                  'fixture': d.get('fixture'),
+                  'summary': d.get('summary'),
+                  'checks': d.get('checks'),
+                  'limits': d.get('limits'),
+                  'counterexamples': d.get('counterexamples'),
+                  'message': d.get('message'),
+              }
+          Path('r51-summary.json').write_text(json.dumps(out, indent=2) + '\n')
+          print(json.dumps(out, indent=2))
+          PY
+
+      - name: Upload R51 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r51-three-tsl
+          path: |
+            r51-result-webgl.json
+            r51-result-webgpu.json
+            r51-summary.json
+          if-no-files-found: warn
+          retention-days: 30
