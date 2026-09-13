@@ -19,6 +19,8 @@ export function validateTwoSplatBlendR55(report){
   for(const[k,v]of Object.entries(report?.checks||{}))if(v!==true)errors.push(`check-failed-${k}`);
   if(report?.crossBackend?.inputHashEqual!==true)errors.push('input-identity-differs');
   if(report?.crossBackend?.byteHashEqual!==true)errors.push('byte-target-hash-differs');
+  if(report?.webgl?.fixture?.floatBlendCapability?.floatBlendListed!==true||report?.webgl?.fixture?.floatBlendCapability?.floatBlendActivated!==true)errors.push('webgl-float-blend-not-explicitly-activated');
+  if(report?.activationControl?.floatBlendListed!==true||report?.activationControl?.floatBlendActivated!==false||report?.activationControl?.status!=='error')errors.push('listed-only-negative-control-did-not-fail');
   warnings.push('observed-two-code-bound-is-a-fixture-regression-envelope-not-an-asset-threshold');
   warnings.push('software-webgl-and-webgpu-are-not-independent-physical-roots');
   warnings.push('no-browser-presentation-transform-hardware-device-real-asset-or-human-acceptance');

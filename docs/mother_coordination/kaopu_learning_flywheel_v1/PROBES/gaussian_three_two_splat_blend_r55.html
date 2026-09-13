@@ -11,6 +11,7 @@ import * as THREE from 'three/webgpu';
 import { Fn, attribute } from 'three/tsl';
 
 const requestedMode=new URLSearchParams(location.search).get('mode')||'webgl';
+const activateFloatBlend=new URLSearchParams(location.search).get('activateFloatBlend')!=='0';
 const SAMPLE_COUNT=256;
 const f32=Math.fround;
 
@@ -36,7 +37,9 @@ function blendCapability(renderer,actualBackend){
   const gl=renderer.backend?.gl||null;
   if(!gl)return{floatBlendSupported:false,reason:'WebGL context unavailable'};
   const extensions=gl.getSupportedExtensions()||[];
-  return{floatBlendSupported:Boolean(gl.getExtension('EXT_float_blend')),colorBufferFloatSupported:Boolean(gl.getExtension('EXT_color_buffer_float')),extensions,reason:extensions.includes('EXT_float_blend')?'EXT_float_blend exposed':'EXT_float_blend not exposed'};
+  const listed=extensions.includes('EXT_float_blend');
+  const activated=activateFloatBlend?Boolean(gl.getExtension('EXT_float_blend')):false;
+  return{floatBlendSupported:listed,colorBufferFloatSupported:Boolean(gl.getExtension('EXT_color_buffer_float')),floatBlendListed:listed,floatBlendActivated:activated,activationRequested:activateFloatBlend,extensions,reason:listed?(activated?'EXT_float_blend listed and activated':'EXT_float_blend listed but deliberately not activated'):'EXT_float_blend not exposed'};
 }
 function makeGeometry(colors){
   const positions=new Float32Array(SAMPLE_COUNT*4*3);
