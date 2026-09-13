@@ -1,0 +1,69 @@
+{
+  "schema": "kaopu-tool-routing/r61",
+  "status": "Candidate partial",
+  "question": "Is unordered (effective optical depth, sum(alpha^2)) sufficient to predict HalfFloat accumulation risk when mixed-alpha splat order changes?",
+  "inherits": "TOOL_ROUTING_R60_GAUSSIAN_ALPHA_OVERLAP.json",
+  "routes": [
+    {
+      "stage": "official-input-render-and-order-semantics",
+      "tool": "Pinned Three.js r186 SPZLoader.js, GaussianSplat.js, CountingSort.js and Renderer.js",
+      "authority": "SPZ input, splat blend path, orderRead indirection, WebGL CPU-sort/PBO initialization and output-target selection",
+      "notAuthorityFor": [
+        "real-asset significance",
+        "device safety",
+        "human acceptance"
+      ]
+    },
+    {
+      "stage": "fixed-order-execution",
+      "tool": "PROBES/gaussian_three_mixed_alpha_order_r61.html through Playwright",
+      "authority": "locked identical-multiset permutation behavior in the tested software WebGL lineage",
+      "notAuthorityFor": [
+        "WebGPU",
+        "hardware GPU",
+        "Safari/iPhone",
+        "real reconstruction thresholds"
+      ]
+    },
+    {
+      "stage": "fixed-order-harness",
+      "tool": "One explicit updateSort plus identity-order verification, followed by autoSort=false",
+      "authority": "r186 software-WebGL source-order lock for this diagnostic fixture",
+      "notAuthorityFor": [
+        "public stable API",
+        "future Three.js revisions",
+        "production sorting strategy"
+      ]
+    },
+    {
+      "stage": "risk-screening",
+      "tool": "tau and sum(alpha^2)",
+      "authority": "candidate unordered screening features",
+      "notAuthorityFor": [
+        "precision certification",
+        "order-sensitive finite-state behavior"
+      ]
+    },
+    {
+      "stage": "next-mechanism-test",
+      "tool": "Running source-over increment versus current Half ULP",
+      "authority": "candidate order-sensitive mechanism once executed",
+      "requiredNext": [
+        "locked R61 sequences",
+        "explicit Half rounding model",
+        "actual renderer comparison",
+        "targeted counterexample",
+        "no universal threshold claim"
+      ]
+    }
+  ],
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "fixedOrderInitializedAndVerified": true,
+  "unorderedTauPlusSumAlphaSquaredSufficient": false,
+  "webgpuHalfVsFloatCompared": false,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "productionMutationAllowed": false
+}
+

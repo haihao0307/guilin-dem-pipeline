@@ -1,0 +1,91 @@
+{
+  "schema": "kaopu-source-lock/r61",
+  "status": "observation-source-locked",
+  "retrievedAt": "2026-09-13",
+  "topic": "three-r186-mixed-alpha-order-precision",
+  "inherits": "references/gaussian-alpha-overlap-r60/SOURCE_LOCK.json",
+  "sources": [
+    {
+      "root": "O-R61-THREE-R186-MIXED-ALPHA-ORDER-EXECUTION",
+      "sameEvidenceLineageAs": [
+        "O-R60-THREE-R186-ALPHA-OVERLAP-EXECUTION",
+        "O-R59-THREE-R186-SPZ-ACCUMULATION-EXECUTION",
+        "O-R58-THREE-R186-OUTPUT-BUFFER-EXECUTION",
+        "O-R57-THREE-R186-WEBGPU-SWAPCHAIN",
+        "O-R56-THREE-R186-PRESENTATION",
+        "O-R55-THREE-R186-TWO-LAYER-BLEND"
+      ],
+      "independentPhysicalObservationRoot": false,
+      "newExecutableCondition": true,
+      "threeRevision": "186",
+      "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "threeRelease": "https://github.com/mrdoob/three.js/releases/tag/r186",
+      "browserHarness": "playwright@1.57.0",
+      "browser": "Headless Chromium 143.0.7499.4",
+      "graphics": "Google SwiftShader",
+      "alphaCounts": {"1": 1779, "2": 114, "8": 48},
+      "orderVariants": ["ascending", "descending", "interleaved", "seeded"],
+      "alphaMultisetSha256": "9db4fc7e68ce1424150ac7e0d4e40e0d112a74ff9e175ce468d0fa3cd682c875",
+      "fixtureHashes": "ordered raw/gzip and sequence hashes retained in PROBES/gaussian_three_mixed_alpha_order_result_r61.json"
+    },
+    {
+      "root": "O-R61-THREE-R186-OFFICIAL-SOURCE",
+      "independentPhysicalObservationRoot": false,
+      "evidenceClass": "official-primary-source",
+      "files": [
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/loaders/SPZLoader.js",
+          "blobSha": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+          "constraint": "public r186 legacy gzip SPZ parsing and attribute construction"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/objects/GaussianSplat.js",
+          "blobSha": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+          "constraint": "material always reads CountingSort.orderRead; updateSort invokes the WebGL order-buffer route"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/examples/jsm/gpgpu/CountingSort.js",
+          "blobSha": "0ef0bd8442972a7209eb0adb6d14188c95d84278",
+          "constraint": "constructor creates identity order data; computeCPU is stable for equal bins; enableWebGLBuffers establishes PBO usage"
+        },
+        {
+          "url": "https://github.com/mrdoob/three.js/blob/148ef33ecb6d2502ff796d4554abd1549c95d519/src/renderers/common/Renderer.js",
+          "blobSha": "c05aa68471f07a0bbbf6203865da1096fea503c1",
+          "constraint": "HalfFloatType default and paired Float target selection"
+        }
+      ]
+    },
+    {
+      "root": "O-R61-CI-MIXED-ALPHA-ORDER",
+      "independentPhysicalObservationRoot": false,
+      "workflowRunId": 34766945485,
+      "workflowHeadSha": "ac86573b198358d2e06bdb67d3a7734b61e85a1c",
+      "artifactId": 10320768039,
+      "artifactName": "kaopu-gaussian-r61-mixed-alpha-order",
+      "artifactDigestSha256": "8c281263c3ebc33ca0c85c87a4596b2dcb9ccaa6b7e2c069617bb8a9f7d68750",
+      "machineGate": "Candidate-pass"
+    }
+  ],
+  "failedAttempts": [
+    {
+      "workflowRunId": 34766767199,
+      "workflowHeadSha": "a1a3a40cecac55775034c97105fd478354887b37",
+      "outcome": "autoSort was disabled before the r186 WebGL order/PBO buffer was initialized. The run produced a wrong one-write calibration and failed the Float-order-stability gate. Official source review identified updateSort as the initialization route; the attempt was excluded from the metric conclusion and superseded by the successful initialized-order run."
+    }
+  ],
+  "evidence": {
+    "probe": "PROBES/gaussian_three_mixed_alpha_order_r61.html",
+    "runner": "PROBES/run_gaussian_three_mixed_alpha_order_r61.js",
+    "compactResult": "PROBES/gaussian_three_mixed_alpha_order_result_r61.json",
+    "resultGitBlobSha": "b7f4214042280b62d3c16e51124ae473792976cb",
+    "gate": "ADAPTERS/gaussian_three_mixed_alpha_order_gate_r61.mjs",
+    "workflow": ".github/workflows/kaopu-gaussian-r61-mixed-alpha-order.yml"
+  },
+  "independentPhysicalObservationRootsAdded": 0,
+  "actualSpzLoaderExecuted": true,
+  "actualGaussianSplatExecuted": true,
+  "hardwareGpuExecuted": false,
+  "targetDeviceExecuted": false,
+  "realPhotoOrLearnedAssetExecuted": false,
+  "humanAcceptanceExecuted": false
+}
