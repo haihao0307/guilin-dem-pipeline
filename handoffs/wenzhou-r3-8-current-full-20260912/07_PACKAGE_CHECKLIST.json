@@ -1,31 +1,39 @@
 {
-  "schema": "wenzhou-current-lean-package-checklist/v2",
+  "schema": "wenzhou-current-lean-package-checklist/v3",
   "required": [
-    "R3.8 verified candidate remains fixed at 3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
-    "R3.8 state/QA commit remains a942cfb06e3b33f6b202c1d376c74e06f7a07e0c",
+    "R3.8 frozen verified baseline remains 3018da201a2ef6b5d122522e85bbbb5b91f8a34d",
+    "R3.9 verified lean runtime remains d591713f236107f7db5a24fb9d74e087550e688a unless a later runtime candidate independently passes the same gates",
+    "R3.1-R3.7 historical runtime tree identities match the verified R3.8 freeze anchor",
     "lean handoff builder compiles",
     "obsolete build_current_full_handoff.py is absent",
-    "obsolete full-package PACKAGE_TRIGGER is absent",
-    "obsolete current-full-handoff workflow entry is absent",
+    "obsolete full-package PACKAGE_TRIGGER and one-time migration triggers are absent",
+    "completed benchmark/materialize/cleanup scaffolds are absent from the active workset",
+    "soil-pair-loader.js and evidence-gzip-loader.js are carried as source",
+    "soil/WRB/JRC semantic and transport index JSON files are carried",
+    "records/R3_9/CURRENT.json and cleanup reports are carried",
     "full restart base is not embedded",
     "permanent evidence ZIPs are not embedded",
-    "browser binary rasters are not embedded",
+    "current .s2gz/.gz browser payload bodies are not embedded",
     "offline dependency archives are not embedded",
     "text payloads are content-deduplicated by SHA-256",
     "duplicate logical paths are recorded as aliases",
     "unique uncompressed bytes are <= 8388608",
     "ZIP bytes are <= 8388608",
     "source/release/hash recovery locks are included",
-    "Soil Q0.5 and uncertainty remain semantically distinct",
+    "96 Soil semantic channels remain recoverable from 48 lossless pair payloads",
+    "41 WRB/JRC logical payloads remain individually recoverable from 41 lossless gzip payloads",
+    "decoded original SHA-256 identities are preserved",
+    "local Chromium, 390x844 and fixed-commit raw.githack regressions remain passed for the R3.9 runtime",
     "ZIP integrity test passes",
     "package report JSON is generated"
   ],
   "mustNotDo": [
     "Do not delete a semantically distinct Soil uncertainty channel as if it were duplicate",
+    "Do not merge all WRB probability voices into one eager payload merely to reduce file count",
     "Do not embed R3.1/R3.2 full restart archives in the current handoff",
     "Do not duplicate permanent evidence ZIPs inside the current handoff",
-    "Do not carry browser binary rasters in the default handoff",
+    "Do not carry current browser binary payload bodies in the default handoff",
     "Do not overwrite historical verified candidates or permanent evidence releases",
-    "Do not call the continuation branch a new visual candidate before new fixed-public QA"
+    "Do not claim real iPhone verification or production readiness without real-device evidence"
   ]
 }
