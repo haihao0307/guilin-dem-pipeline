@@ -1,0 +1,121 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU Three.js Float vs RGBA8 Stable Color R54</title>
+<script>window.__KAOPU_PROGRESS__={schema:'kaopu-three-float-final-color-progress/r54',stage:'html-loaded'};</script>
+<script type="importmap">
+{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js"}}
+</script>
+<body></body>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { Fn, attribute } from 'three/tsl';
+
+const requestedMode = new URLSearchParams(location.search).get('mode') || 'webgl';
+const f32 = Math.fround;
+const SAMPLE_COUNT = 256;
+
+function detectBackend(renderer){
+  const b=renderer.backend;
+  if(b?.isWebGPUBackend) return 'webgpu';
+  if(b?.isWebGLBackend) return 'webgl';
+  const n=b?.constructor?.name||'unknown';
+  return /webgpu/i.test(n)?'webgpu':(/webgl/i.test(n)?'webgl':n);
+}
+async function identity(renderer,actualBackend){
+  const out={backendClass:renderer.backend?.constructor?.name||null,rendererClass:renderer.constructor?.name||null,userAgent:navigator.userAgent,platform:navigator.platform};
+  if(actualBackend==='webgl'){
+    const gl=renderer.backend?.gl||null;
+    if(gl){const ext=gl.getExtension('WEBGL_debug_renderer_info');out.vendor=ext?gl.getParameter(ext.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);out.renderer=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);out.glVersion=gl.getParameter(gl.VERSION);}
+  }else if(actualBackend==='webgpu'&&navigator.gpu){
+    try{const a=await navigator.gpu.requestAdapter();const i=a?.info||{};out.adapter={vendor:i.vendor||null,architecture:i.architecture||null,device:i.device||null,description:i.description||null};}catch(e){out.adapterError=String(e);}
+  }
+  return out;
+}
+function makeGeometry(count){
+  const positions=new Float32Array(count*4*3);
+  const colors=new Float32Array(count*4*4);
+  const indices=new Uint32Array(count*6);
+  for(let i=0;i<count;i++){
+    const x0=-1+2*i/count,x1=-1+2*(i+1)/count,v=i*4;
+    positions.set([x0,-1,0,x1,-1,0,x1,1,0,x0,1,0],v*3);
+    const r=f32(((i*97+13)%1021+0.37)/1021);
+    const g=f32(((i*193+71)%1021+0.61)/1021);
+    const b=f32(((i*389+127)%1021+0.49)/1021);
+    const a=f32(0.1+0.8*(((i*53+17)%997)/996));
+    for(let j=0;j<4;j++) colors.set([r,g,b,a],(v+j)*4);
+    indices.set([v,v+1,v+2,v,v+2,v+3],i*6);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('kaopuColor',new THREE.BufferAttribute(colors,4));
+  geo.setIndex(new THREE.BufferAttribute(indices,1));
+  return {geo,colors};
+}
+function metrics(floatValues,byteValues){
+  const n=Math.min(floatValues.length,byteValues.length);
+  let maxAbs=0,sum2=0,overHalfCode=0,overOneCode=0;
+  const perChannelMax=[0,0,0,0];
+  let firstOverOneCode=null;
+  for(let i=0;i<n;i++){
+    const fv=Number(floatValues[i]);
+    const bv=Number(byteValues[i])/255;
+    const d=Math.abs(fv-bv);
+    if(d>maxAbs)maxAbs=d;
+    if(d>perChannelMax[i%4])perChannelMax[i%4]=d;
+    sum2+=d*d;
+    if(d>(0.5/255+1e-7)) overHalfCode++;
+    if(d>(1/255+1e-7)){overOneCode++;if(!firstOverOneCode)firstOverOneCode={channelIndex:i,pixel:Math.floor(i/4),channel:i%4,floatValue:fv,byteValue:byteValues[i],normalizedByte:bv,diff:d};}
+  }
+  return {sampledChannels:n,maxAbs,rmse:Math.sqrt(sum2/n),perChannelMax,channelsOverHalfCode:overHalfCode,channelsOverOneCode:overOneCode,firstOverOneCode};
+}
+async function sha256Bytes(view){
+  const u8=new Uint8Array(view.buffer,view.byteOffset,view.byteLength);
+  const d=await crypto.subtle.digest('SHA-256',u8);
+  return Array.from(new Uint8Array(d),x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function main(){
+  const renderer=new THREE.WebGPURenderer({antialias:false,alpha:true,forceWebGL:requestedMode==='webgl'});
+  renderer.setPixelRatio(1);renderer.setSize(SAMPLE_COUNT,1,false);renderer.setClearColor(0x000000,0);
+  renderer.toneMapping=THREE.NoToneMapping;
+  renderer.outputColorSpace=THREE.LinearSRGBColorSpace;
+  document.body.appendChild(renderer.domElement);
+  await renderer.init();
+  const actualBackend=detectBackend(renderer);const id=await identity(renderer,actualBackend);
+  if(actualBackend!==requestedMode)return{schema:'kaopu-three-float-final-color/r54',status:'unsupported',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id};
+
+  const {geo}=makeGeometry(SAMPLE_COUNT);
+  const colorNode=attribute('kaopuColor','vec4');
+  const material=new THREE.MeshBasicNodeMaterial({depthTest:false,depthWrite:false,transparent:false});
+  material.fragmentNode=Fn(()=>colorNode)();
+  const mesh=new THREE.Mesh(geo,material);mesh.frustumCulled=false;
+  const scene=new THREE.Scene();scene.add(mesh);
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,2);camera.position.z=1;
+
+  const common={format:THREE.RGBAFormat,depthBuffer:false,stencilBuffer:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter};
+  const floatTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.FloatType});
+  const finalTarget=new THREE.RenderTarget(SAMPLE_COUNT,1,{...common,type:THREE.UnsignedByteType});
+  floatTarget.texture.colorSpace=THREE.NoColorSpace;
+  finalTarget.texture.colorSpace=THREE.NoColorSpace;
+
+  renderer.setRenderTarget(floatTarget);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);
+  const floatPixels=await renderer.readRenderTargetPixelsAsync(floatTarget,0,0,SAMPLE_COUNT,1);
+  renderer.setRenderTarget(finalTarget);renderer.setViewport(0,0,SAMPLE_COUNT,1);renderer.clear(true,false,false);await renderer.renderAsync(scene,camera);
+  const finalPixels=await renderer.readRenderTargetPixelsAsync(finalTarget,0,0,SAMPLE_COUNT,1);
+
+  const m=metrics(floatPixels,finalPixels);
+  const floatHash=await sha256Bytes(floatPixels);
+  const finalHash=await sha256Bytes(finalPixels);
+  const stableAlphaCount=Array.from({length:SAMPLE_COUNT},(_,i)=>floatPixels[i*4+3]>0).filter(Boolean).length;
+
+  renderer.dispose();geo.dispose();material.dispose();floatTarget.dispose();finalTarget.dispose();
+  return {
+    schema:'kaopu-three-float-final-color/r54',status:'candidate-observation',requestedMode,actualBackend,threeRevision:THREE.REVISION,identity:id,
+    fixture:{sampleCount:SAMPLE_COUNT,channels:SAMPLE_COUNT*4,floatTarget:'RGBA32F offscreen RenderTarget',finalTarget:'RGBA8 offscreen RenderTarget',toneMapping:'NoToneMapping',rendererOutputColorSpace:'LinearSRGBColorSpace',targetColorSpace:'NoColorSpace',blending:false,dither:'renderer/backend default; no explicit presentation surface',note:'Stable one-pixel quads; no Gaussian cutoff or overlap. This isolates direct TSL float-output storage versus RGBA8 storage under explicit offscreen target color state.'},
+    summary:{...m,floatTargetSha256:floatHash,finalTargetSha256:finalHash,stableAlphaPixelCount:stableAlphaCount},
+    checks:{allPixelsCovered:stableAlphaCount===SAMPLE_COUNT,maxErrorWithinOneCode:m.maxAbs<=(1/255+1e-6),noChannelsOverOneCode:m.channelsOverOneCode===0},
+    limits:{hardwareGpu:false,targetDevice:false,browserPresentationSurface:false,gaussianBlendPath:false,realPhotoOrLearnedAsset:false,humanAcceptance:false}
+  };
+}
+try{window.__KAOPU_RESULT__=await main();}catch(error){window.__KAOPU_RESULT__={schema:'kaopu-three-float-final-color/r54',status:'error',requestedMode,progress:window.__KAOPU_PROGRESS__||null,message:String(error?.message||error),stack:String(error?.stack||'')};}
+window.__KAOPU_DONE__=true;
+</script>
