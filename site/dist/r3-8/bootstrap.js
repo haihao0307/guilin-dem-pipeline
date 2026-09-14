@@ -15,4 +15,11 @@ installReadingControls();
 THREE.Object3D.prototype[Symbol.for('wenzhou.r3.3.surface-evidence-installed')]=true;
 installSoilContext();installEnvironmentContext();installWorldScore();
 await import('../r3-6/bootstrap.js');
+if(window.__WENZHOU_HISTORY_1942===true){
+  const {installHistorical1953ControlLayer}=await import('./history-1953-control-layer.js');
+  installHistorical1953ControlLayer();
+  await new Promise(resolve=>requestAnimationFrame(resolve));
+  const location=document.getElementById('location');
+  if(location)location.dispatchEvent(new Event('change',{bubbles:true}));
+}
 document.documentElement.dataset.wenzhouR38Boot='true';
