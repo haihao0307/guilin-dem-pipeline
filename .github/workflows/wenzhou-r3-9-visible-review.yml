@@ -1,0 +1,44 @@
+name: Wenzhou Visible Runtime Review
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/wenzhou-r3-8-overlay-transform-contract-20260913]
+    paths: [tools/r3-9/review_visible_runtime.mjs]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - name: Review actual fixed public entry
+        env:
+          R38_URL: https://raw.githack.com/${{ github.repository }}/${{ github.sha }}/site/dist/r3-8/index.html
+          QA_OUTPUT: /tmp/wenzhou-visible/public
+        run: node tools/r3-9/review_visible_runtime.mjs
+      - name: Collect auditable text sources without binary data
+        if: always()
+        run: |
+          python - <<'PY'
+          import pathlib, subprocess, shutil
+          out=pathlib.Path('/tmp/wenzhou-visible/source')
+          for name in subprocess.check_output(['git','ls-files'],text=True).splitlines():
+              p=pathlib.Path(name)
+              if not name.startswith(('site/dist/','tools/r3-8/','tools/r3-9/','records/R3_9/')): continue
+              if p.suffix not in {'.js','.mjs','.css','.html','.json','.py'} or not p.is_file() or p.stat().st_size>3000000: continue
+              d=out/p;d.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,d)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wenzhou-visible-review-${{ github.sha }}
+          path: /tmp/wenzhou-visible/
+          retention-days: 3
+          if-no-files-found: error
