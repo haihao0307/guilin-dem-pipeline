@@ -51,8 +51,20 @@ const snapshotToPostSeconds =
   snapshotDate === null ? null : (xPostDate.getTime() - snapshotDate.getTime()) / 1000;
 const postToReplySeconds =
   (xReplyDate.getTime() - xPostDate.getTime()) / 1000;
+const soundFieldPresent =
+  snapshot !== null &&
+  typeof snapshot === 'object' &&
+  Object.prototype.hasOwnProperty.call(snapshot, 'sound');
+const soundValueKind =
+  !soundFieldPresent
+    ? 'absent'
+    : snapshot.sound === null
+      ? 'null'
+      : Array.isArray(snapshot.sound)
+        ? 'array'
+        : typeof snapshot.sound;
 const soundSource =
-  snapshot?.sound !== null && typeof snapshot?.sound === 'object'
+  soundValueKind === 'object'
     ? snapshot.sound.source
     : null;
 const soundSourceFingerprint =
@@ -75,9 +87,10 @@ const checks = {
   sourceCodePointLengthMatchesObservedXText: codePoints === expectedSource.codePoints,
   asciiDoubleDecrementTokensPresent: asciiDoubleDecrementCount === 2,
   noTypographyDashSubstitution: unicodeDashCount === 0,
-  soundShapeKnown:
-    snapshot?.sound === null ||
-    (typeof snapshot?.sound === 'object' && typeof soundSource === 'string'),
+  soundFieldClassified:
+    soundValueKind === 'absent' ||
+    soundValueKind === 'null' ||
+    (soundValueKind === 'object' && typeof soundSource === 'string'),
   timestampValid: dateIso !== null,
   snapshotPredatesAuthorPost:
     snapshotToPostSeconds !== null && snapshotToPostSeconds >= 0,
@@ -117,7 +130,8 @@ const result = {
     sourceFingerprint: { sha256, utf8Bytes, codePoints },
     asciiDoubleDecrementCount,
     unicodeDashCount,
-    soundPresent: snapshot?.sound !== null,
+    soundFieldPresent,
+    soundValueKind,
     soundSourceFingerprint,
     snapshotDateSeconds: dateSeconds,
     snapshotDateIso: dateIso,
