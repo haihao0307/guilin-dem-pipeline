@@ -77,7 +77,14 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          pkg='docs/mother_coordination/handoffs/2026-09-14/xiaoma-kaopu-functional-world-score-r1-20260914'
+          zip_name='XIAOMA_KAOPU_FUNCTIONAL_WORLD_SCORE_CURRENT_FULL_HANDOFF_R1_20260914.zip'
           git add -A
+          git add -f "$pkg/references/worley_cellular_reference.webp" \
+            "$pkg/references/yohei_macroscopic_microscope_reference.webp" \
+            "$pkg/references/yohei_moon_surface_reference.webp" \
+            "$pkg/$zip_name" \
+            "$pkg/ZIP_SHA256.txt"
           if git diff --cached --quiet; then
             echo 'No build changes.'
             exit 0
