@@ -48,8 +48,21 @@ try{
   check(Number(ds.historyRemovedMajorBridgeParts)===history.summary.majorBridge,'canvas major bridge summary mismatch');
   check(Number(ds.historyRemovedConstructionParts)===history.summary.construction,'canvas construction summary mismatch');
   await page.screenshot({path:`${out}/desktop-query-02.png`,fullPage:true});
+
   await page.selectOption('#location','overview');
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch==='overview',{},{timeout:120000});
+  await page.waitForSelector('#show-history-1953-control',{timeout:120000});
+  check(!(await page.locator('#show-history-1953-control').isChecked()),'1953 control layer must default off');
+  await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1953ControlSegments||0)>0,{},{timeout:120000});
+  const historicalSegments=Number(await page.locator('#terrain').getAttribute('data-history-1953-control-segments'));
+  const frameRejected=Number(await page.locator('#terrain').getAttribute('data-history-1953-frame-segments-rejected'));
+  check(historicalSegments>0,'1953 control layer generated no georeferenced segments');
+  check(frameRejected>=0,'1953 frame rejection metric missing');
+  await page.check('#show-history-1953-control');
+  check(await page.locator('#history-1953-layer-card').isVisible(),'1953 control card not visible after toggle on');
+  await page.screenshot({path:`${out}/desktop-overview-1953-on.png`,fullPage:true});
+  await page.uncheck('#show-history-1953-control');
+  check(!(await page.locator('#history-1953-layer-card').isVisible()),'1953 control card still visible after toggle off');
   await page.screenshot({path:`${out}/desktop-overview.png`,fullPage:true});
 
   const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
@@ -57,8 +70,12 @@ try{
   await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r3',{},{timeout:120000});
   check(await mp.locator('#history-1942-card').count()===1,'mobile history status card missing');
   const brand=await mp.locator('.brand p').textContent();check(brand?.includes('1942/1953'),'mobile header does not identify historical preclean');
-  await mp.screenshot({path:`${out}/mobile-390x844.png`,fullPage:true});await mobile.close();
-  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedConstructionParts:history.summary.construction,removedMajorBridgeParts:history.summary.majorBridge,removedMajorBridgeByClass:history.summary.majorBridgeByClass,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,removedMotorwayClasses:overviewCheck.motorway,removedConstructionParts:overviewCheck.construction,removedMajorBridgeParts:overviewCheck.bridge},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts,removedConstructionParts:q2summary.construction,removedMajorBridgeParts:q2summary.majorBridge},failures},null,2));
+  await mp.waitForSelector('#show-history-1953-control',{timeout:120000});
+  check(!(await mp.locator('#show-history-1953-control').isChecked()),'mobile 1953 layer must default off');
+  await mp.check('#show-history-1953-control');
+  check(await mp.locator('#history-1953-layer-card').count()===1,'mobile 1953 layer card missing');
+  await mp.screenshot({path:`${out}/mobile-390x844-1953-on.png`,fullPage:true});await mobile.close();
+  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedConstructionParts:history.summary.construction,removedMajorBridgeParts:history.summary.majorBridge,removedMajorBridgeByClass:history.summary.majorBridgeByClass,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,historical1953Layer:{segments:historicalSegments,frameSegmentsRejected:frameRejected,defaultVisible:false,togglePassed:true},overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,removedMotorwayClasses:overviewCheck.motorway,removedConstructionParts:overviewCheck.construction,removedMajorBridgeParts:overviewCheck.bridge},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts,removedConstructionParts:q2summary.construction,removedMajorBridgeParts:q2summary.majorBridge},failures},null,2));
 }catch(e){failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,failures},null,2));}
 finally{await browser.close();}
 if(failures.length)process.exit(1);
