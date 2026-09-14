@@ -1,0 +1,28 @@
+{
+  "schema": "kaopu-tool-routing/r66",
+  "status": "candidate-routing",
+  "inherits": "TOOL_ROUTING_R65_GAUSSIAN_HALF_ULP_BOUND.json",
+  "routes": [
+    {
+      "task": "revision-pinned block-localized Half precision guard",
+      "primary": "Three.js r186 SPZLoader + GaussianSplat with actual internal Half readback",
+      "diagnostic": "sequential block summaries storing true Half endpoint, bound contribution and transmittance",
+      "status": "Candidate validated only for the locked Chromium/SwiftShader fixture",
+      "constraint": "source order and calibrated per-pixel alpha remain required and excluded from the state-reduction percentage"
+    },
+    {
+      "task": "independent block recomputation",
+      "rejected": "restart every block from zero Half state and compose the resulting summaries",
+      "observedUnderestimatedChannelRange": [20, 51],
+      "required": "seed each block with the true preceding Half checkpoint"
+    },
+    {
+      "task": "production output buffer or block-size choice",
+      "status": "not authorized and not established",
+      "constraint": "measure real-asset target-device quality, localization needs, memory and runtime before choosing a block size or output format"
+    }
+  ],
+  "revokedToolsRestored": false,
+  "productionMutationAllowed": false
+}
+

@@ -1,0 +1,233 @@
+{
+  "schema": "kaopu-gaussian-block-bound/r66",
+  "status": "Candidate-pass",
+  "question": "Can checkpointed block summaries compose the R65 conservative bound with much less persisted diagnostic state, and is the boundary Half state necessary?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r65Commit": "29204b27aec3ca1e9536873af6df0c0156018bf6"
+  },
+  "blockDefinition": {
+    "summary": "per block and pixel: ending four-channel Half state, four-channel bound contribution from zero incoming bound, and scalar transmittance",
+    "composition": "B_out = B_in * T_block + G_block",
+    "boundaryRequirement": "the true Half endpoint of the previous block seeds local-gap calculation in the next block",
+    "preregisteredBlockSizes": [
+      32,
+      64,
+      128,
+      256,
+      512
+    ]
+  },
+  "fixture": {
+    "viewport": [
+      33,
+      33
+    ],
+    "splatCount": 1941,
+    "alphaCounts": {
+      "1": 1779,
+      "2": 114,
+      "8": 48
+    },
+    "alphaOrder": "xorshift32 0x4b41504f",
+    "colorOrder": "RGB cycle repeated 647 times",
+    "scaleByte": 116,
+    "topology": {
+      "stable-inside": 1,
+      "cutoff-inside": 12,
+      "cutoff-outside": 24,
+      "stable-outside": 1052
+    }
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer",
+    "source": "actual r186 SPZLoader and GaussianSplat Half target"
+  },
+  "analysis": {
+    "maxReplayAbs": 0,
+    "globalLocalViolations": 0,
+    "byBlockSize": {
+      "32": {
+        "blockSize": 32,
+        "blockCount": 61,
+        "maxCompositionAbs": 3.885780586188048e-16,
+        "underestimatedChannels": 0,
+        "resetUnderestimatedChannels": 51,
+        "minSlack": 0,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.18712705453127026,
+        "firstResetCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "category": "cutoff-inside",
+          "channel": 0,
+          "actualError": 0.02819163316062906,
+          "resetBound": 0.0013801385424506377,
+          "underestimate": 0.026811494618178423
+        }
+      },
+      "64": {
+        "blockSize": 64,
+        "blockCount": 31,
+        "maxCompositionAbs": 2.220446049250313e-16,
+        "underestimatedChannels": 0,
+        "resetUnderestimatedChannels": 51,
+        "minSlack": 0,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.18712705453127035,
+        "firstResetCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "category": "cutoff-inside",
+          "channel": 0,
+          "actualError": 0.02819163316062906,
+          "resetBound": 0.002564235870499555,
+          "underestimate": 0.025627397290129503
+        }
+      },
+      "128": {
+        "blockSize": 128,
+        "blockCount": 16,
+        "maxCompositionAbs": 2.498001805406602e-16,
+        "underestimatedChannels": 0,
+        "resetUnderestimatedChannels": 51,
+        "minSlack": 0,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.1871270545312703,
+        "firstResetCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "category": "cutoff-inside",
+          "channel": 0,
+          "actualError": 0.02819163316062906,
+          "resetBound": 0.004849562106711386,
+          "underestimate": 0.023342071053917675
+        }
+      },
+      "256": {
+        "blockSize": 256,
+        "blockCount": 8,
+        "maxCompositionAbs": 1.942890293094024e-16,
+        "underestimatedChannels": 0,
+        "resetUnderestimatedChannels": 32,
+        "minSlack": 0,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.18712705453127026,
+        "firstResetCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "category": "cutoff-inside",
+          "channel": 0,
+          "actualError": 0.02819163316062906,
+          "resetBound": 0.009701955143378982,
+          "underestimate": 0.01848967801725008
+        }
+      },
+      "512": {
+        "blockSize": 512,
+        "blockCount": 4,
+        "maxCompositionAbs": 1.3877787807814457e-16,
+        "underestimatedChannels": 0,
+        "resetUnderestimatedChannels": 20,
+        "minSlack": 0,
+        "maxActualAbs": 0.12773165063845437,
+        "maxBound": 0.18712705453127038,
+        "firstResetCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "category": "cutoff-inside",
+          "channel": 0,
+          "actualError": 0.02819163316062906,
+          "resetBound": 0.018447442875233144,
+          "underestimate": 0.009744190285395915
+        }
+      }
+    },
+    "stateCost": {
+      "definition": "numeric values persisted per pixel; source draw data and calibrated alpha maps are excluded and remain required",
+      "fullPerStepHalfAndLocalBoundValues": 15528,
+      "blockSchemes": {
+        "32": {
+          "blocks": 61,
+          "persistedValues": 549,
+          "reductionVsFullPerStepTrace": 0.964644513137558,
+          "valuesPerBlock": "4 Half endpoint + 4 bound contribution + 1 transmittance"
+        },
+        "64": {
+          "blocks": 31,
+          "persistedValues": 279,
+          "reductionVsFullPerStepTrace": 0.982032457496136,
+          "valuesPerBlock": "4 Half endpoint + 4 bound contribution + 1 transmittance"
+        },
+        "128": {
+          "blocks": 16,
+          "persistedValues": 144,
+          "reductionVsFullPerStepTrace": 0.990726429675425,
+          "valuesPerBlock": "4 Half endpoint + 4 bound contribution + 1 transmittance"
+        },
+        "256": {
+          "blocks": 8,
+          "persistedValues": 72,
+          "reductionVsFullPerStepTrace": 0.9953632148377125,
+          "valuesPerBlock": "4 Half endpoint + 4 bound contribution + 1 transmittance"
+        },
+        "512": {
+          "blocks": 4,
+          "persistedValues": 36,
+          "reductionVsFullPerStepTrace": 0.9976816074188563,
+          "valuesPerBlock": "4 Half endpoint + 4 bound contribution + 1 transmittance"
+        }
+      }
+    },
+    "resultDigestSha256": "a76a9ad484df49f2516aa1fdc0a647710e60221dd57f428835287d610b767b0e",
+    "blockCompositionAssessment": "matches-per-step-bound",
+    "boundaryStateAssessment": "required-by-counterexample"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "fullCoverageTopology": true,
+    "halfReplayBitExact": true,
+    "localHalfGapBoundValid": true,
+    "allBlockCompositionsExact": true,
+    "allBlockBoundsConservative": true,
+    "boundaryHalfStateOmissionRejected": true,
+    "stateReductionExplicit": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Checkpointed block contributions compose the same conservative endpoint bound for every locked channel at all preregistered block sizes.",
+    "candidate": "Persist block summaries for later localization while computing each block online from the true boundary Half state.",
+    "rejected": "Blocks can be independently restarted from zero Half state and still certify the accumulated endpoint error.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "sourceDrawDataAndAlphaMapsExcludedFromStateCost": true,
+    "blockSummaryMustBeComputedSequentially": true,
+    "notACompactAssetSummary": true,
+    "syntheticRepeatedSplats": true,
+    "dcColorsOnly": true,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false
+  }
+}
