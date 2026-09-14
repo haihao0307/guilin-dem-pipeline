@@ -1,0 +1,93 @@
+name: Verify Object DNA R4A.4 Public Workbench
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-object-dna-r4a4-public.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Verify public HTTP resources
+        run: |
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a4-20260914/'
+          for i in $(seq 1 40); do
+            if curl -fsS "$URL" | grep -q 'R4A.4 REFERENCE ALIGNMENT'; then break; fi
+            sleep 3
+          done
+          curl -fsS "$URL" | grep -q 'R4A.4 REFERENCE ALIGNMENT'
+          curl -fsS "${URL}assets/r4a4-app.js" | grep -q 'R4A.4'
+          curl -fsS "${URL}assets/r4a4-style.css" >/dev/null
+          curl -fsS "${URL}object/exterior-v3.json" | grep -q 'EXTERIOR-V3-CANDIDATE'
+          curl -fsS "${URL}object/r4a4-reference-evidence.json" | grep -q '23273a3232a479d118e87ebeb82348498bd8f57b5559f6012a3b1476272d0fbb'
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Open and exercise public 3D workbench
+        run: |
+          cat >verify-r4a4.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a4-20260914/';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:1440,height:1000}});
+          const errors=[];
+          page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+          page.on('pageerror',e=>errors.push(e.message));
+          const domClick=selector=>page.evaluate(sel=>{
+            const el=document.querySelector(sel);
+            if(!el)throw new Error(`missing control ${sel}`);
+            el.click();
+          },selector);
+          await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForFunction(()=>document.documentElement.dataset.ready==='own'&&document.body.dataset.r4a4==='ready',null,{timeout:90000});
+          const initial=await page.evaluate(()=>({
+            title:document.title,
+            header:document.querySelector('.version')?.textContent,
+            mainCount:document.querySelectorAll('main').length,
+            stageCount:document.querySelectorAll('#stage').length,
+            canvasCount:document.querySelectorAll('#stage canvas').length,
+            loadingHidden:document.getElementById('loading')?.hidden,
+            attachments:document.getElementById('attachments')?.getAttribute('aria-pressed'),
+            animationControl:document.getElementById('r4a4Animate')?.textContent,
+            canvas:[document.querySelector('#stage canvas')?.width,document.querySelector('#stage canvas')?.height]
+          }));
+          if(!initial.title.includes('R4A.4')||!initial.header?.includes('R4A.4')) throw new Error('public R4A.4 labels missing');
+          if(initial.mainCount!==1||initial.stageCount!==1||initial.canvasCount!==1||initial.loadingHidden!==true) throw new Error('public WebGL workbench did not initialize');
+          if(initial.attachments!=='true') throw new Error('ammo box/reference tripod are not visible by default');
+          if(!initial.animationControl) throw new Error('visual animation control missing');
+          if(initial.canvas.some(v=>!v||v<=0)) throw new Error('initial public canvas size invalid');
+          await domClick('.focusbar button[data-focus="receiver"]');
+          await domClick('.viewbar button[data-view="side"]');
+          await domClick('.viewbar button[data-view="top"]');
+          await domClick('.focusbar button[data-focus="all"]');
+          await domClick('.viewbar button[data-view="perspective"]');
+          await domClick('#r4a4Animate');
+          await page.waitForTimeout(250);
+          const during=await page.evaluate(()=>({
+            pressed:document.getElementById('r4a4Animate')?.getAttribute('aria-pressed'),
+            focus:document.body.dataset.focus,
+            canvas:[document.querySelector('#stage canvas')?.width,document.querySelector('#stage canvas')?.height]
+          }));
+          if(during.pressed!=='true') throw new Error('public visual animation did not start');
+          await domClick('#r4a4Animate');
+          const after=await page.evaluate(()=>document.getElementById('r4a4Animate')?.getAttribute('aria-pressed'));
+          if(after!=='false') throw new Error('public visual animation did not stop');
+          if(during.canvas.some(v=>!v||v<=0)) throw new Error('public canvas invalid after interaction');
+          if(errors.length) throw new Error(errors.join(' | '));
+          console.log(JSON.stringify({url,initial,during,after,errors},null,2));
+          await browser.close();
+          JS
+          node verify-r4a4.mjs
