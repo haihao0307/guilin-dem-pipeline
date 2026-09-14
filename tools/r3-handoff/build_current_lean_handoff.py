@@ -22,6 +22,8 @@ CORE_FILES = [
     "handoffs/wenzhou-r3-8-current-full-20260912/07_PACKAGE_CHECKLIST.json",
     "site/dist/r3-8/index.html",
     "site/dist/r3-8/bootstrap.js",
+    "site/dist/r3-8/checked-transport.js",
+    "site/dist/r3-8/reading-controls.js",
     "site/dist/r3-8/soil-context.js",
     "site/dist/r3-8/soil-pair-loader.js",
     "site/dist/r3-8/evidence-gzip-loader.js",
@@ -49,8 +51,9 @@ def collect(repo: Path) -> list[Path]:
     files: dict[str, Path] = {}
     for rel in CORE_FILES:
         p = repo / rel
-        if p.is_file():
-            files[p.relative_to(repo).as_posix()] = p
+        if not p.is_file():
+            raise FileNotFoundError(f"Required lean source missing: {rel}")
+        files[p.relative_to(repo).as_posix()] = p
 
     for root_rel in ["tools/r3-8", "tools/r3-9", "records/R3_8", "records/R3_9"]:
         root = repo / root_rel
