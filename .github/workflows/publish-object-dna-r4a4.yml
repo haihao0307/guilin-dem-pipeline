@@ -1,0 +1,57 @@
+name: Publish Object DNA R4A.4
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-object-dna-r4a4.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+
+      - name: Download verified public-safe R4A.4 build
+        run: |
+          curl --fail --location --retry 3 'https://sdmntprwestus3.oaiusercontent.com/files/00000000-4a78-81fd-8df1-88754836f826/raw?se=2026-09-14T04%3A50%3A53Z&sp=r&sv=2026-02-06&sr=b&scid=96055cfa-fb76-516a-b573-15c2e513c8cb&skoid=c69179d1-5b5d-430f-afa3-b9bdcf9d6497&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-13T13%3A18%3A48Z&ske=2026-09-14T13%3A18%3A48Z&sks=b&skv=2026-02-06&sig=cCzL7IycPQMTnogG5LP5PzlvUugE253XEGspDBCGlHw%3D' -o /tmp/object-dna-r4a4.zip
+          rm -rf /tmp/object-dna-r4a4
+          mkdir -p /tmp/object-dna-r4a4
+          unzip -q /tmp/object-dna-r4a4.zip -d /tmp/object-dna-r4a4
+          test -f /tmp/object-dna-r4a4/index.html
+          test -f /tmp/object-dna-r4a4/assets/r4a4-app.js
+          test -f /tmp/object-dna-r4a4/assets/r4a4-style.css
+          test -f /tmp/object-dna-r4a4/object/exterior-v3.json
+          test -f /tmp/object-dna-r4a4/object/r4a4-reference-evidence.json
+
+      - name: Install fixed R4A.4 workbench
+        run: |
+          rm -rf object-dna/r4a4-20260914
+          mkdir -p object-dna/r4a4-20260914
+          cp -a /tmp/object-dna-r4a4/. object-dna/r4a4-20260914/
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('object-dna/r4a4-20260914/index.html')
+          s=p.read_text()
+          s=s.replace('<button data-mode="compare">同坐标对照 <small>程序化 / 航空参考</small></button>','')
+          p.write_text(s)
+          PY
+          test "$(git hash-object object-dna/r4a4-20260914/object/exterior-v3.json)" = 'b82b5c56618320d094729bfc9cca8dce396e1414'
+          grep -q 'R4A.4 REFERENCE ALIGNMENT' object-dna/r4a4-20260914/index.html
+          grep -q '23273a3232a479d118e87ebeb82348498bd8f57b5559f6012a3b1476272d0fbb' object-dna/r4a4-20260914/object/r4a4-reference-evidence.json
+
+      - name: Commit fixed public preview
+        run: |
+          git config user.name 'Object DNA CI'
+          git config user.email 'object-dna-ci@users.noreply.github.com'
+          git add object-dna/r4a4-20260914
+          git diff --cached --quiet && exit 0
+          git commit -m 'publish(object-dna): R4A.4 reference-aligned workbench [skip ci]'
+          git push origin gh-pages
