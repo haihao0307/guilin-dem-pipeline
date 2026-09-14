@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r73",
+  "updatedAt": "2026-09-14",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R72_OVERLAY.json",
+  "doesNotSupersede": "LEARNING_QUEUE_R71_OVERLAY.json",
+  "status": "candidate-partial",
+  "question": "Can R72/R66 summaries be reused after changing only camera z while source bytes and draw order stay fixed?",
+  "progress": "R73 held source bytes, exact draw order, covariance, Half target, projection and block size 128 fixed, changing only camera z from baseline 2.0 to 1.5 and 2.5. Both changes altered calibrated effective-alpha maps and summary digests. Recomputed summaries underestimated zero channels; stale baseline reuse at z=1.5 underestimated 32 channels, worst shortfall 0.08109634. View-dependent footprint is now a demonstrated invalidation dimension.",
+  "resultLog": "LEARNING_LOG/2026-09-14_GAUSSIAN_VIEW_CACHE_R73.md",
+  "sourceLock": "references/gaussian-view-cache-r73/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_view_cache_r73.js",
+  "result": "PROBES/gaussian_view_cache_result_r73.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R73_GAUSSIAN_VIEW_CACHE.md",
+  "toolRouting": "TOOL_ROUTING_R73_GAUSSIAN_VIEW_CACHE.json",
+  "motherRouting": "MOTHER_ROUTING_R73_GAUSSIAN_VIEW_CACHE.json",
+  "nextGate": "Hold camera and order fixed, change one covariance scale, require footprint and summary invalidation plus zero underestimation after sequential recomputation; test stale covariance summaries as negative control.",
+  "yoheiQueueNote": "R71 remains the latest Yohei overlay; its genuinely different WebGL/GPU gate is deferred, not cancelled or overwritten."
+}
+

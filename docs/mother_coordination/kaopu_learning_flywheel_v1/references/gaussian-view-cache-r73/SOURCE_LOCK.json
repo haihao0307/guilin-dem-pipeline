@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-source-lock/r73",
-  "status": "preregistered-candidate",
+  "status": "candidate-pass",
   "question": "Can R72/R66 summaries be reused after changing only camera z while source bytes and draw order stay fixed?",
   "sourceLocks": {
     "threePackage": "0.186.0",
@@ -15,6 +15,13 @@
     "negativeControl": "reuse baseline-z2.0 composed bound",
     "positiveControl": "recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints",
     "requiredOutcome": "source bytes/order remain identical; both changed views alter effective-alpha and summary digests; recomputed bounds remain conservative; at least one stale-view reuse underestimates"
+  },
+  "execution": {
+    "probeCommit": "6f2a28e2be4b20ee8b9504d5ec651f7b8e9687ae",
+    "workflowRun": 34864217097,
+    "workflowConclusion": "success",
+    "artifactId": 10355999201,
+    "artifactSha256": "3b5769ecf8e1ab3a152a00107c00ed75a411b4e34c1c5b291214cb0b96c953ba"
   },
   "evidenceScope": "Same Chromium/SwiftShader lineage as R55-R66/R72; camera-z invalidation only, not device validation.",
   "firstTierExpertAI": "not-called"

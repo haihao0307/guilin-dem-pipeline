@@ -1,0 +1,32 @@
+{
+  "schema": "kaopu-tool-routing/r73",
+  "status": "candidate-partial",
+  "inherits": "TOOL_ROUTING_R72_GAUSSIAN_ORDER_CACHE.json",
+  "route": "Three.js r186 diagnostic validation only",
+  "candidateMethod": {
+    "cacheKeyMustBind": [
+      "exact ordered draw-stream hash",
+      "exact camera/view state",
+      "calibrated effective alpha-map hashes",
+      "renderer revision and backend path",
+      "blend implementation",
+      "output numeric format",
+      "block size and summary schema"
+    ],
+    "onViewOrAlphaFootprintChange": "invalidate and recompute blocks sequentially from true prior Half endpoints",
+    "provenNecessaryThroughR73": ["exact ordered draw stream", "view-dependent effective-alpha footprint"],
+    "notYetProvenSufficient": true
+  },
+  "rejected": [
+    "renderer/source-only cache key across camera changes",
+    "stable source bytes and order as proof of summary reuse safety across views",
+    "far-view accidental conservatism as universal reuse authority"
+  ],
+  "notAuthorized": [
+    "production outputBufferType change",
+    "production Mother mutation",
+    "asset replacement",
+    "Canonical Truth or Frozen R1 modification"
+  ]
+}
+

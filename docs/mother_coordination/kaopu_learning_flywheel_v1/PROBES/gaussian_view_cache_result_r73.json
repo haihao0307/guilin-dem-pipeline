@@ -1,0 +1,189 @@
+{
+  "schema": "kaopu-gaussian-view-cache/r73",
+  "status": "Candidate-pass",
+  "question": "Can R72/R66 summaries be reused after changing only camera z while source bytes and draw order stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r72Commit": "a2cd466e6ca92378f105c8507e8f2900f1e3dfb7"
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "baseline": {
+      "id": "baseline-z2.0",
+      "cameraZ": 2
+    },
+    "changedViews": [
+      {
+        "id": "near-z1.5",
+        "cameraZ": 1.5
+      },
+      {
+        "id": "far-z2.5",
+        "cameraZ": 2.5
+      }
+    ],
+    "onlyChangedInput": "camera position z",
+    "negativeControl": "reuse baseline-z2.0 composed bound",
+    "positiveControl": "recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints",
+    "weakKey": "renderer/source key without camera or effective-alpha hashes",
+    "strongKeyAdds": [
+      "camera position",
+      "effective alpha-map hashes"
+    ]
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "sourceTokenHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+    "baseline": {
+      "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+      "weakViewInsensitiveKey": "7fff563cfdda3fbd2115613b7cf1ef6d80533b2cdad7fe152478d5fba0bfd9b7",
+      "strongViewKey": "e239f8b02b0858bf2d6981caf23fad9595e60e6051adf6b3e8065b3f58896994",
+      "alphaMapHashes": {
+        "1": "8a350c053336f785de08bcda8c05a6bf1e5863681049a8532fe259ea77feed20",
+        "2": "4173a9c7bad38ddc2cacafd297aa2cc0c025650ec7aec98460119377af264667",
+        "8": "506d90b2ef10fc3dc7eeca6db7137cfeb172659cd3f975fab2096de0bcfc8233"
+      },
+      "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1"
+    },
+    "byView": {
+      "near-z1.5": {
+        "view": "near-z1.5",
+        "cameraZ": 1.5,
+        "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "alphaMapHashes": {
+          "1": "6615cf0c9be571431092cbf1989134e78ab46ccb569e1131e7c489d9736d8b3e",
+          "2": "f1d56431b12f384d61b967e78f69d30a66d7639658bdf54b7989d84159b46713",
+          "8": "eb63cc24cbb1cd9a0c49726e2a972356b2fe84d8be800741075ce7b420f76a1f"
+        },
+        "weakViewInsensitiveKey": "7fff563cfdda3fbd2115613b7cf1ef6d80533b2cdad7fe152478d5fba0bfd9b7",
+        "strongViewKey": "aa166c8463ed162887c880eb97ad4046b7ff7003963dff2c413dfd65c82d9038",
+        "summaryDigest": "6226b7de1ac4f472e0938008d95c7fc66249e0cca105428caba9c8ab4c5e46db",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 32,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": -0.08109634109349051,
+        "maxActualError": 0.08109634109349051,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": {
+          "pixel": 477,
+          "x": 15,
+          "y": 14,
+          "channel": 0,
+          "actualError": 0.020912228388062115,
+          "staleBaselineBound": 0,
+          "underestimate": 0.020912228388062115
+        }
+      },
+      "baseline-z2.0": {
+        "view": "baseline-z2.0",
+        "cameraZ": 2,
+        "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "alphaMapHashes": {
+          "1": "8a350c053336f785de08bcda8c05a6bf1e5863681049a8532fe259ea77feed20",
+          "2": "4173a9c7bad38ddc2cacafd297aa2cc0c025650ec7aec98460119377af264667",
+          "8": "506d90b2ef10fc3dc7eeca6db7137cfeb172659cd3f975fab2096de0bcfc8233"
+        },
+        "weakViewInsensitiveKey": "7fff563cfdda3fbd2115613b7cf1ef6d80533b2cdad7fe152478d5fba0bfd9b7",
+        "strongViewKey": "e239f8b02b0858bf2d6981caf23fad9595e60e6051adf6b3e8065b3f58896994",
+        "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.12773165063845437,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "far-z2.5": {
+        "view": "far-z2.5",
+        "cameraZ": 2.5,
+        "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "alphaMapHashes": {
+          "1": "6325a85b5dfab40200780801955e5f6bcc2b042ec6602fe9563313e96c8a1235",
+          "2": "18b7db78905d5ae16108b5f8edcaf937bbbb4997aa187ef1e4d5244d4ce0e7e9",
+          "8": "7b2e6cca65f065be0d86fbb36411eaf4913d2d1c39d8fcdcb4b33ae58770f23c"
+        },
+        "weakViewInsensitiveKey": "7fff563cfdda3fbd2115613b7cf1ef6d80533b2cdad7fe152478d5fba0bfd9b7",
+        "strongViewKey": "bf118bee01f8d673fddfc062a178572b6c651342616f1f2456ab36f3a624e20b",
+        "summaryDigest": "4b33e89dafb05f53781d00dc06cbaab70fcc43173ae93e744354c0f7d30fd0d1",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.08204447449896402,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      }
+    },
+    "globalReplayAbs": 0,
+    "globalLocalViolations": 0,
+    "globalCompositionAbs": 4.996003610813204e-16,
+    "staleUnderestimatedChannels": 32,
+    "changedAlphaMaps": [
+      "near-z1.5",
+      "far-z2.5"
+    ],
+    "changedSummaries": [
+      "near-z1.5",
+      "far-z2.5"
+    ],
+    "changedStrongKeys": [
+      "near-z1.5",
+      "far-z2.5"
+    ]
+  },
+  "checks": {
+    "allPageChecks": true,
+    "sourceBytesAndOrderStable": true,
+    "halfReplayBitExact": true,
+    "localHalfGapBoundValid": true,
+    "blockCompositionExact": true,
+    "viewInsensitiveKeyCollision": true,
+    "effectiveAlphaMapsInvalidateBothChangedViews": true,
+    "strongViewKeysInvalidateBothChangedViews": true,
+    "recomputedSummariesChangeBothViews": true,
+    "recomputedBoundsConservative": true,
+    "staleViewReuseRejected": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Changing only camera z changed every calibrated effective-alpha-map digest, strong view key and recomputed summary digest. Recomputed bounds remained conservative, while stale baseline reuse underestimated at least one changed-view channel.",
+    "candidate": "Bind exact camera/view state and calibrated effective-alpha maps in the diagnostic-summary key and recompute sequential summaries after either changes.",
+    "rejected": "Stable source bytes and draw order, or a renderer/source-only key, is sufficient authority to reuse R66/R72 summaries across camera changes.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "cameraZOnly": true,
+    "drawOrderFixed": true,
+    "covarianceFixed": true,
+    "syntheticRepeatedCenteredSplats": true,
+    "dcColorsOnly": true,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}
