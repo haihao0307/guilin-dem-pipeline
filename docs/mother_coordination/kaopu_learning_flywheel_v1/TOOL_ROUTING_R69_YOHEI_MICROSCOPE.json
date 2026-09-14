@@ -1,0 +1,38 @@
+{
+  "schema": "kaopu-tool-routing/r69",
+  "status": "candidate-routing-only",
+  "topic": "Yohei / twigl historical host contract",
+  "routes": [
+    {
+      "stage": "publication_identity",
+      "preferred": ["author article", "original post", "twigl share URL"],
+      "gate": "separate identification of tool/mode from proof of exact deployment",
+      "failureMode": "An article mention is treated as a build receipt."
+    },
+    {
+      "stage": "historical_host_lock",
+      "preferred": ["official GitHub commit chronology", "pinned source blob", "pinned license blob"],
+      "gate": "choose the latest commit no later than publication; never substitute current master silently",
+      "failureMode": "Present-day host behavior is back-projected into an older artwork."
+    },
+    {
+      "stage": "generated_shader_contract",
+      "preferred": ["fully preprocessed source", "first-read/first-write inventory", "declaration-versus-assignment audit"],
+      "gate": "prove every injected or initialized name before pixel comparison",
+      "failureMode": "out declarations or framebuffer clears are mistaken for shader-variable initialization."
+    },
+    {
+      "stage": "language_semantics",
+      "preferred": ["Khronos GLSL ES 3.00 revision 6"],
+      "gate": "match the exact profile emitted by the host",
+      "failureMode": "A similar desktop rule is used without checking the actual ES profile."
+    },
+    {
+      "stage": "future_runtime_evidence",
+      "preferred": ["deployment receipt", "byte-exact shader", "two independent browser/GPU families", "NaN and pixel masks"],
+      "gate": "keep historical emulation and explicit portable reinterpretation separate",
+      "failureMode": "One driver's undefined values become a cross-runtime contract."
+    }
+  ],
+  "notAuthorized": ["production asset generation", "production Mother branch edits", "silent zero seeds", "artwork redistribution", "physical or Object DNA claims"]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "kaopu-yohei-twigl-host-contract-probe/r69",
+  "status": "candidate-partial",
+  "question": "Does the historical twigl geekest (300 es) host initialize or rewrite i/e/R/q/o before the user fragment executes?",
+  "sourceLock": {
+    "repository": "doxas/twigl",
+    "commit": "969491b285ba217fd895132a466ee6b3128243f3",
+    "commitDate": "2023-05-04T08:51:32Z",
+    "selectionRule": "latest repository commit returned at or before the artwork date 2025-01-18",
+    "file": "src/fragmen.js",
+    "blobSha": "8fdee9a542b31cc2e3f9a106885c9f529f3c05c9",
+    "licenseFileBlobSha": "efd715b944a25c9475b87735a49ca091fbe61dc2",
+    "repositoryLicense": "MIT"
+  },
+  "lockedContract": {
+    "mode": "MODE_GEEKEST_300 (7)",
+    "prefixBeforeNoise": "#define FC gl_FragCoord\nprecision highp float;uniform vec2 r;uniform vec2 m;uniform float t;uniform float f;uniform float s;uniform sampler2D b;\n",
+    "outputChunk": "out vec4 o;\n",
+    "preprocessOrder": [
+      "#version 300 es",
+      "GEEKEST_CHUNK",
+      "out vec4 o declaration",
+      "optional void main wrapper",
+      "user code",
+      "optional closing brace"
+    ],
+    "injectedInputs": [
+      "FC macro",
+      "r",
+      "m",
+      "t",
+      "f",
+      "s",
+      "b"
+    ],
+    "targetStateAssignmentsBeforeUserCode": {
+      "i": false,
+      "e": false,
+      "R": false,
+      "q": false,
+      "o": false
+    },
+    "wrappedAuditFixtureSha256": "769d1c1988d3d7c6e9b45d2a0e98c3169f854f995e20d12513543355fdfcdb71"
+  },
+  "firstReadSitesRetainedFromR68": {
+    "q": 37,
+    "i": 41,
+    "e": 52,
+    "o": 61,
+    "R": 81
+  },
+  "checks": {
+    "historicalCommitPrecedesArtwork": true,
+    "lockedBlobShaIsExact": true,
+    "es300DirectiveIsFirst": true,
+    "fragmentCoordAliasIsInjected": true,
+    "onlyDocumentedUniformSetIsInjected": true,
+    "outputIsDeclarationOnly": true,
+    "wrapperAddsMainWhenAbsent": true,
+    "wrapperDoesNotDuplicateExistingMain": true,
+    "userBytesRemainContiguous": true,
+    "noTargetStateWriteBeforeUserCode": true,
+    "allMaterialFirstReadSitesRemain": true,
+    "framebufferClearCannotInitializeShaderLocal": true
+  },
+  "totals": {
+    "passed": 12,
+    "total": 12
+  },
+  "classifications": {
+    "observation": [
+      "At the locked repository snapshot, geekest 300es prepends #version 300 es, aliases FC, declares uniforms, declares out vec4 o, and optionally wraps the user text in void main.",
+      "That wrapper does not assign i, e, R, q, or o before the user text.",
+      "GLSL ES 3.00 revision 6 specifies that reading before writing or initializing is legal but yields an undefined value."
+    ],
+    "candidate": "The author article identifies twigl and geekest (300es), but no share URL or deployed-build receipt proves the January 2025 artwork used bytes identical to this repository snapshot.",
+    "currentBestView": "The closest official historical twigl source does not supply the missing initial values. A portable port must declare explicit seeds and is therefore a versioned reinterpretation unless original runtime evidence establishes the intended state.",
+    "rejected": [
+      "twigl geekest (300es) portably zero-initializes i/e/R/q/o.",
+      "Declaring out vec4 o initializes o.",
+      "Clearing the framebuffer initializes the shader output variable read by o+=."
+    ],
+    "unknown": [
+      "Exact deployed twigl build and share URL used for the artwork",
+      "Byte-exact artwork source and typographic dash repair",
+      "Original browser, WebGL implementation, compiler, GPU, framebuffer and pixels",
+      "Whether implementation-specific undefined values were intentionally relied upon",
+      "Artwork adaptation and redistribution license"
+    ]
+  },
+  "evidenceBoundary": "This is a deterministic contract replay of a pinned official repository snapshot plus a normative GLSL ES rule. It is not a live deployment, original GPU pixel, visual acceptance, or physical Observation Root."
+}

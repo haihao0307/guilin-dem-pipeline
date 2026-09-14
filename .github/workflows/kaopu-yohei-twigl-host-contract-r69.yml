@@ -1,0 +1,22 @@
+name: KAOPU Yohei twigl host contract R69
+
+on:
+  push:
+    paths:
+      - "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_host_contract_r69.mjs"
+      - "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_twigl_host_contract_result_r69.json"
+      - ".github/workflows/kaopu-yohei-twigl-host-contract-r69.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Replay locked contract
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_host_contract_r69.mjs > /tmp/r69.json
+      - name: Compare locked result
+        run: diff -u docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_twigl_host_contract_result_r69.json /tmp/r69.json
