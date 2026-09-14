@@ -9,6 +9,11 @@ const context=await browser.newContext({viewport:{width:1280,height:800},reduced
 if(target.includes('githack'))await context.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
 const page=await context.newPage();
 const failures=[];const check=(v,m)=>{if(!v)failures.push(m);};
+async function exposeHistoryControls(p){
+  await p.waitForSelector('#show-history-1953-control',{state:'attached',timeout:120000});
+  const details=p.locator('details.base-layers');
+  if(await details.count())await details.evaluate(el=>{el.open=true;});
+}
 try{
   await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r3',{},{timeout:120000});
@@ -51,7 +56,7 @@ try{
 
   await page.selectOption('#location','overview');
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch==='overview',{},{timeout:120000});
-  await page.waitForSelector('#show-history-1953-control',{timeout:120000});
+  await exposeHistoryControls(page);
   check(!(await page.locator('#show-history-1953-control').isChecked()),'1953 control layer must default off');
   await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1953ControlSegments||0)>0,{},{timeout:120000});
   const historicalSegments=Number(await page.locator('#terrain').getAttribute('data-history-1953-control-segments'));
@@ -70,7 +75,7 @@ try{
   await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r3',{},{timeout:120000});
   check(await mp.locator('#history-1942-card').count()===1,'mobile history status card missing');
   const brand=await mp.locator('.brand p').textContent();check(brand?.includes('1942/1953'),'mobile header does not identify historical preclean');
-  await mp.waitForSelector('#show-history-1953-control',{timeout:120000});
+  await exposeHistoryControls(mp);
   check(!(await mp.locator('#show-history-1953-control').isChecked()),'mobile 1953 layer must default off');
   await mp.check('#show-history-1953-control');
   check(await mp.locator('#history-1953-layer-card').count()===1,'mobile 1953 layer card missing');
