@@ -15,6 +15,10 @@ function isTerrainCandidate(object) {
   );
 }
 
+function currentPatchId() {
+  return document.getElementById('location')?.value || document.getElementById('terrain')?.dataset.patch || '';
+}
+
 function inheritTerrainTransform(object, terrain) {
   const liftM = Number(object.userData?.visualLiftM || 0);
   object.scale.copy(terrain.scale);
@@ -35,7 +39,9 @@ export function installOverlayTransformContract(THREE) {
       for (const object of objects) {
         if (isTerrainCandidate(object)) {
           ACTIVE_TERRAIN_BY_SCENE.set(this, object);
-          terrainEvents.push({scene: this, terrain: object});
+          const patchId = currentPatchId();
+          if (patchId) object.userData.wenzhouPatchId = patchId;
+          terrainEvents.push({scene: this, terrain: object, patchId});
           continue;
         }
         if (object?.userData?.wenzhouSoilContextEvidence) {
