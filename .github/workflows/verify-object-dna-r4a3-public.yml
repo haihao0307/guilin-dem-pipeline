@@ -37,7 +37,7 @@ jobs:
 
       - name: Open and exercise public 3D workbench
         run: |
-          cat >/tmp/verify-r4a3.mjs <<'JS'
+          cat >verify-r4a3.mjs <<'JS'
           import { chromium } from 'playwright';
           const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a3-20260914/';
           const browser=await chromium.launch({headless:true});
@@ -77,6 +77,4 @@ jobs:
           console.log(JSON.stringify({url,initial,finalState,errors},null,2));
           await browser.close();
           JS
-          node /tmp/verify-r4a3.mjs
-
-# trigger public verification after the workbench publish commit
+          node verify-r4a3.mjs
