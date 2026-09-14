@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {installOverlayTransformContract} from './overlay-transform-contract.js';
+import {installEyeLookContract} from './eye-look-contract.js';
 import {installSoilPairLoader} from './soil-pair-loader.js';
 import {installEvidenceGzipLoader} from './evidence-gzip-loader.js';
 import {installReadingControls} from './reading-controls.js';
@@ -7,6 +8,7 @@ import {installSoilContext} from './soil-context.js';
 import {installEnvironmentContext} from './environment-context.js';
 import {installWorldScore} from './world-score.js';
 installOverlayTransformContract(THREE);
+installEyeLookContract();
 installSoilPairLoader();
 installEvidenceGzipLoader();
 installReadingControls();
