@@ -1,0 +1,68 @@
+name: Wenzhou 1942 Preclean QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wenzhou-r3-8-overlay-transform-contract-20260913
+    paths:
+      - 'records/R3_10/HISTORICAL_1942_PRECLEAN_TRIGGER'
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static syntax
+        run: |
+          set -euo pipefail
+          node --check site/dist/r3-8/history-1942-preclean.js
+          node --check site/dist/r3-8/history-1942-entry.js
+          node --check site/dist/r3-8/history-1942-shell.js
+          node --check tools/r3-10/history_1942_preclean_qa.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Local browser comparison
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8768 -d . >/tmp/wz1942-http.log 2>&1 &
+          server=$!
+          trap 'kill $server || true' EXIT
+          WZ1942_URL='http://127.0.0.1:8768/site/dist/r3-8/history-1942.html' WZ1942_OUT='/tmp/wz1942/local' node tools/r3-10/history_1942_preclean_qa.mjs | tee /tmp/wz1942-local.json
+          grep -q '"passed": true' /tmp/wz1942-local.json
+      - name: Fixed public browser comparison
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${SHA}/site/dist/r3-8/history-1942.html"
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS -H 'Cookie: __Http-phish=1' "$URL" | grep -q '1942'; then ready=1; break; fi
+            sleep 3
+          done
+          test "$ready" = 1
+          WZ1942_URL="$URL" WZ1942_OUT='/tmp/wz1942/public' node tools/r3-10/history_1942_preclean_qa.mjs | tee /tmp/wz1942-public.json
+          grep -q '"passed": true' /tmp/wz1942-public.json
+          echo "$URL" > /tmp/wz1942-public-url.txt
+      - name: Upload comparison proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-1942-preclean-${{ github.sha }}
+          path: |
+            /tmp/wz1942-local.json
+            /tmp/wz1942-public.json
+            /tmp/wz1942-public-url.txt
+            /tmp/wz1942/local/*.png
+            /tmp/wz1942/public/*.png
+          if-no-files-found: error
+          retention-days: 30
