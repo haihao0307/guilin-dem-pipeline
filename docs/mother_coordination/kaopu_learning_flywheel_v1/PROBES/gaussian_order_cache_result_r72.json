@@ -1,0 +1,223 @@
+{
+  "schema": "kaopu-gaussian-order-cache/r72",
+  "status": "Candidate-pass",
+  "question": "Can R66 block summaries be reused after draw order changes when the unordered splat multiset and all renderer/view conditions stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r66Commit": "9d8c8a58b7b15a43da9a2e2b0c0186cca28427b7"
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "variants": [
+      "baseline",
+      "reverse",
+      "alpha-asc",
+      "alpha-desc",
+      "color-group",
+      "rotate-647",
+      "shuffle-r72"
+    ],
+    "negativeControl": "reuse baseline composed block bound for every changed order",
+    "positiveControl": "recompute sequential summaries from the true Half boundary state for each order",
+    "weakKey": "hash of sorted alpha+RGB record tokens",
+    "strongKeyFields": [
+      "threePackage",
+      "threeTagCommit",
+      "renderer",
+      "outputBufferType",
+      "blend",
+      "blockSize",
+      "camera",
+      "scaleByte",
+      "orderedRecordHash",
+      "effectiveAlphaMapHashes"
+    ]
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "alphaMapHashes": {
+      "1": "8a350c053336f785de08bcda8c05a6bf1e5863681049a8532fe259ea77feed20",
+      "2": "4173a9c7bad38ddc2cacafd297aa2cc0c025650ec7aec98460119377af264667",
+      "8": "506d90b2ef10fc3dc7eeca6db7137cfeb172659cd3f975fab2096de0bcfc8233"
+    },
+    "baseline": {
+      "orderedRecordHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+      "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+      "strongCacheKey": "f20debe7fa152eb498a57bbed09e8d6aab27b91007ec1b8c4fed1eb1435378c3",
+      "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1"
+    },
+    "byVariant": {
+      "baseline": {
+        "variant": "baseline",
+        "orderedRecordHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "f20debe7fa152eb498a57bbed09e8d6aab27b91007ec1b8c4fed1eb1435378c3",
+        "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.12773165063845437,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "reverse": {
+        "variant": "reverse",
+        "orderedRecordHash": "aae17a9d2bb9a5e9d1054c4228150fcd73abf4e45dd300672fa33b249d12bd42",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "42d4cc51f7a22583b9d952c85eb435e06c35bcacfbbe7d40f9bb7e7dc14589dc",
+        "summaryDigest": "bdd7fe539a04c53bcccfc4a5277afc764a55ef279ee2464284e5e9bfe85ce6ec",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.1487277443884537,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "alpha-asc": {
+        "variant": "alpha-asc",
+        "orderedRecordHash": "0d9eb5deb3cd2fa3ed5a78a9c1d06f279f8201c6e67e91363699296608e4b117",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "ff66c0062ea19241732064011736df611b56b152a4d771c55c18860b47785bbd",
+        "summaryDigest": "0436646d4bd6f19e2e4734a779ab0cc76dc4af2d60800639b3fb9e482526967a",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.06034883813845349,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "alpha-desc": {
+        "variant": "alpha-desc",
+        "orderedRecordHash": "d38cdd9b7eccc4e6938196e002f1f7cb8024607ea753a9ba5f3243248ad78c31",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "01bdf71640364e2456c0d9fade8913c233a2c3ee1c2fa29477d25c7ae0f4484a",
+        "summaryDigest": "2f6b058d8868042bb75aff8f48cc9f460dc76523fd3cac875d275d0f05fd9127",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 13,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": -0.019535977421867107,
+        "maxActualError": 0.18827852563845504,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": {
+          "pixel": 478,
+          "x": 16,
+          "y": 14,
+          "channel": 3,
+          "actualError": 0.18827843945666556,
+          "staleBaselineBound": 0.1871270545312703,
+          "underestimate": 0.0011513849253952657
+        }
+      },
+      "color-group": {
+        "variant": "color-group",
+        "orderedRecordHash": "21b24bc0b76dcc1ae393fbb7aa1028c60e0540843a09a3965e5920c2d02caa18",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "d7fd02ca202a5324b4df3b5bb347fc605f378505c881c954795ade13907ffa7f",
+        "summaryDigest": "af1bc3eb7a24d8bd5092340a89d8cbbdff5287c179d2974ed6b77d071e223ff9",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.1277316506384527,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "rotate-647": {
+        "variant": "rotate-647",
+        "orderedRecordHash": "9e201eb4b228db47825182da07df7e006392d18d7cff2b4c2609777d05f13235",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "1dd356b9337e63e94cdedf9cdc08c91dec64190e1f46665e6a20cfddf061d009",
+        "summaryDigest": "b22d9601283ccbd6e9b561078b467dbbde9bde25208b1802d3d450aed185253f",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.1462863381384537,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "shuffle-r72": {
+        "variant": "shuffle-r72",
+        "orderedRecordHash": "0b1693800c8c3a8a3b25cbe7ad62fc9e75fbc1f1a507418da8b09234fbb93ff4",
+        "weakUnorderedMultisetHash": "17305a574be3c7fb61cbc42d025d96f80c747bb81102b62f396e0962fb5015d7",
+        "strongCacheKey": "d94bdf0cd854555c2675f9a80e9df78fdc9cf1b6bbe885233d2d74212dabd543",
+        "summaryDigest": "a85b727e2adf632309689a398866fdde9a1577a27038b482d2aaab89c91c378d",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.14286836938845404,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      }
+    },
+    "globalReplayAbs": 0,
+    "globalLocalViolations": 0,
+    "globalCompositionAbs": 5.828670879282072e-16,
+    "staleUnderestimatedChannels": 13,
+    "differentSummaryVariants": [
+      "reverse",
+      "alpha-asc",
+      "alpha-desc",
+      "color-group",
+      "rotate-647",
+      "shuffle-r72"
+    ],
+    "differentStrongKeyVariants": [
+      "reverse",
+      "alpha-asc",
+      "alpha-desc",
+      "color-group",
+      "rotate-647",
+      "shuffle-r72"
+    ]
+  },
+  "checks": {
+    "allPageChecks": true,
+    "halfReplayBitExact": true,
+    "localHalfGapBoundValid": true,
+    "blockCompositionExact": true,
+    "unorderedMultisetKeyCollision": true,
+    "orderedRecordKeysInvalidateAllChangedOrders": true,
+    "recomputedSummariesChangeAllOrders": true,
+    "recomputedBoundsConservative": true,
+    "staleSummaryReuseRejected": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "All fixed order changes preserved the unordered splat multiset but changed the ordered source key and recomputed summary digest. Recomputed summaries remained conservative; stale baseline summaries underestimated at least one changed-order channel.",
+    "candidate": "Cache lookup must bind the exact ordered draw stream plus effective alpha maps, renderer/output/blend/block schema and view state. Recompute sequential summaries after an order-key change.",
+    "rejected": "An unordered splat multiset hash, unchanged camera, or unchanged block size is sufficient authority to reuse R66 summaries after sorting changes.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "drawOrderOnly": true,
+    "cameraChangeNotTested": true,
+    "syntheticRepeatedCenteredSplats": true,
+    "dcColorsOnly": true,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}

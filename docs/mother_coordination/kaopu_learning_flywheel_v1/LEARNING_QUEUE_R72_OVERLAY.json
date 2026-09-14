@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r72",
+  "updatedAt": "2026-09-14",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R66_OVERLAY.json",
+  "doesNotSupersede": "LEARNING_QUEUE_R71_OVERLAY.json",
+  "status": "candidate-partial",
+  "question": "Can R66 block summaries be reused after draw-order changes when unordered source membership and all other declared conditions stay fixed?",
+  "progress": "R72 held the 1,941-record multiset, camera, covariance, effective-alpha calibration, Half target and block size 128 fixed while executing six deterministic reorderings. All changed orders collided under an unordered-multiset hash but changed the exact ordered key and summary digest. Recomputed summaries underestimated zero channels; stale baseline reuse underestimated 13 alpha-descending channels, with worst shortfall 0.0195359774. Exact draw order is therefore a demonstrated invalidation dimension.",
+  "resultLog": "LEARNING_LOG/2026-09-14_GAUSSIAN_ORDER_CACHE_R72.md",
+  "sourceLock": "references/gaussian-order-cache-r72/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_order_cache_r72.js",
+  "result": "PROBES/gaussian_order_cache_result_r72.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R72_GAUSSIAN_ORDER_CACHE.md",
+  "toolRouting": "TOOL_ROUTING_R72_GAUSSIAN_ORDER_CACHE.json",
+  "motherRouting": "MOTHER_ROUTING_R72_GAUSSIAN_ORDER_CACHE.json",
+  "nextGate": "Change one locked camera parameter with source order fixed. Require effective-alpha-map and summary key invalidation, a stale-view mismatch or underbound, and zero underestimation after sequential recomputation.",
+  "yoheiQueueNote": "R71 remains the latest Yohei overlay; its genuinely different WebGL/GPU gate is deferred, not cancelled or overwritten."
+}
+
