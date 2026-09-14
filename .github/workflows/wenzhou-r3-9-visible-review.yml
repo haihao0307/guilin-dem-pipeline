@@ -44,11 +44,15 @@ jobs:
         run: |
           python -m http.server 8768 > /tmp/wenzhou-visible/server.log 2>&1 &
           R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ QA_OUTPUT=/tmp/wenzhou-visible/local node tools/r3-9/review_visible_runtime.mjs
+          R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ QA_OUTPUT=/tmp/wenzhou-visible/local node tools/r3-9/eye_look_browser_qa.mjs
           R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ node tools/r3-9/soil_pair_browser_qa.mjs > /tmp/wenzhou-visible/soil-regression.json
           R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ node tools/r3-9/evidence_gzip_browser_qa.mjs > /tmp/wenzhou-visible/environment-regression.json
       - name: Review actual clean fixed public entry
         run: |
-          R38_URL="https://raw.githack.com/$GITHUB_REPOSITORY/$REVIEW_SHA/site/dist/r3-8/index.html" QA_OUTPUT=/tmp/wenzhou-visible/public node tools/r3-9/review_visible_runtime.mjs
+          export R38_URL="https://raw.githack.com/$GITHUB_REPOSITORY/$REVIEW_SHA/site/dist/r3-8/index.html"
+          export QA_OUTPUT=/tmp/wenzhou-visible/public
+          node tools/r3-9/review_visible_runtime.mjs
+          node tools/r3-9/eye_look_browser_qa.mjs
       - name: Verify lightweight continuation still carries new runtime modules
         run: |
           python tools/r3-handoff/build_current_lean_handoff.py --repo-root . --output-zip /tmp/wenzhou-lean-check.zip --source-commit "$REVIEW_SHA" > /tmp/wenzhou-visible/lean-build-check.json
@@ -58,7 +62,7 @@ jobs:
           assert r['bytes'] <= 8*1024*1024 and r['uniqueUncompressedBytes'] <= 8*1024*1024
           with zipfile.ZipFile('/tmp/wenzhou-lean-check.zip') as z:
               assert z.testzip() is None
-              for name in ['checked-transport.js','reading-controls.js']:
+              for name in ['checked-transport.js','reading-controls.js','eye-look-contract.js']:
                   assert any(p.endswith('/site/dist/r3-8/'+name) for p in z.namelist())
           print(r)
           PY
