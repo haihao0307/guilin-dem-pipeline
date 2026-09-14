@@ -39,7 +39,7 @@ jobs:
         run: |
           cat r76-comparison.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_replay_precision_gate_r76.mjs > r76-gate.json
           cat r76-gate.json
-          node -e "const d=require('./r76-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+          node -e "const d=require('./r76-gate.json');if(d.status!=='Candidate-pass-classified')process.exit(10)"
       - name: Upload R76 evidence
         if: always()
         uses: actions/upload-artifact@v4
