@@ -42,16 +42,18 @@ function ensureUi(){
   if(!document.getElementById('history-1953-style')){const s=document.createElement('style');s.id='history-1953-style';s.textContent='#history-1953-toggle[aria-pressed="true"]{background:#214966;border-color:#6ebef0}';document.head.append(s);}
 }
 export function installHistorical1953ControlLayer(){
-  if(THREE.Object3D.prototype[FLAG])return;THREE.Object3D.prototype[FLAG]=true;
-  const originalAdd=THREE.Object3D.prototype.add,contractPromise=fetchJson(TERRAIN_URL),controlPromise=Promise.all(CONTROLS.map(async c=>({...c,geos:await Promise.all(c.urls.map(fetchJson))})));
-  let active=null,buildToken=0,renderer=null,camera=null,sceneRef=null;
+  if(window[FLAG])return;window[FLAG]=true;
+  const contractPromise=fetchJson(TERRAIN_URL),controlPromise=Promise.all(CONTROLS.map(async c=>({...c,geos:await Promise.all(c.urls.map(fetchJson))})));
+  let active=null,buildToken=0,renderer=null,camera=null,sceneRef=null,terrainEvents=0,buildAttempts=0;
+  const canvas=()=>document.getElementById('terrain');
+  function diag(values){const c=canvas();if(!c)return;for(const[k,v]of Object.entries(values))c.dataset[k]=String(v);}
   function forceRender(){if(renderer&&camera&&sceneRef)renderer.render(sceneRef,camera);}
   function setVisible(value){if(!active)return;const button=document.getElementById('history-1953-toggle'),on=value??button?.getAttribute('aria-pressed')!=='true';if(button)button.setAttribute('aria-pressed',String(on));active.line.visible=on;const card=document.getElementById('history-1953-layer-card');if(card)card.hidden=!on;forceRender();}
   function captureRenderer(terrain,scene){const prior=terrain.onAfterRender;terrain.onAfterRender=function(r,renderScene,c,...rest){renderer=r;camera=c;sceneRef=scene;if(typeof prior==='function')prior.call(this,r,renderScene,c,...rest);};}
   async function build(scene,terrain){
-    const token=++buildToken;captureRenderer(terrain,scene);await new Promise(resolve=>requestAnimationFrame(resolve));const patchId=document.getElementById('location')?.value||document.getElementById('terrain')?.dataset.patch||'';
+    const token=++buildToken;buildAttempts++;captureRenderer(terrain,scene);await new Promise(resolve=>requestAnimationFrame(resolve));const patchId=document.getElementById('location')?.value||canvas()?.dataset.patch||'';diag({history1953BuildAttempts:buildAttempts,history1953LastPatch:patchId,history1953LastError:''});
     try{
-      const[contract,controls]=await Promise.all([contractPromise,controlPromise]);if(token!==buildToken)return;const patch=contract.patches.find(p=>p.id===patchId);if(!patch)return;
+      const[contract,controls]=await Promise.all([contractPromise,controlPromise]);if(token!==buildToken)return;const patch=contract.patches.find(p=>p.id===patchId);if(!patch)throw Error(`1953 控制层缺少地形 patch ${patchId}`);
       const origin=terrainOrigin(contract,patch),sampler=terrainSampler(terrain),positions=[];let accepted=0,terrainAnchored=0,referenceAnchored=0,rejectedOutside=0,frameSegments=0;
       for(const control of controls)for(const geo of control.geos)for(const ring of rings(geo))for(let i=0;i+1<ring.length;i++){
         const a=ring[i],b=ring[i+1];if(isNeatline(a,b,control.bounds)){frameSegments++;continue;}
@@ -61,11 +63,14 @@ export function installHistorical1953ControlLayer(){
         if(h0===null||h1===null)referenceAnchored++;else terrainAnchored++;positions.push(x0,y0,z0,x1,y1,z1);accepted++;
       }
       if(token!==buildToken)return;if(active){active.scene.remove(active.line);active.line.geometry.dispose();active.line.material.dispose();}
-      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));if(positions.length)g.computeBoundingSphere();const m=new THREE.LineBasicMaterial({color:0x4fb6ff,transparent:true,opacity:.84,depthWrite:false});const line=new THREE.LineSegments(g,m);line.renderOrder=3.1;line.userData.wenzhouHistory1953=true;line.userData.kind='1953-coarse-water-coast-control';line.userData.verticalClaim='terrain-anchor-where-known-reference-plane-where-dem-missing';line.visible=false;originalAdd.call(scene,line);active={scene,line,patchId,accepted,terrainAnchored,referenceAnchored,rejectedOutside,frameSegments};
-      const canvas=document.getElementById('terrain');if(canvas){canvas.dataset.history1953ControlSegments=String(accepted);canvas.dataset.history1953TerrainAnchored=String(terrainAnchored);canvas.dataset.history1953ReferenceAnchored=String(referenceAnchored);canvas.dataset.history1953FrameSegmentsRejected=String(frameSegments);canvas.dataset.history1953RejectedOutsidePatch=String(rejectedOutside);}
-      const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`${patchId} · 控制线段 ${accepted.toLocaleString()} · 地形锚定 ${terrainAnchored.toLocaleString()} · 海域参考平面 ${referenceAnchored.toLocaleString()}`;setVisible(false);forceRender();
-    }catch(error){console.error(error);const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`1953 控制层失败：${error.message||error}`;}
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));if(positions.length)g.computeBoundingSphere();const m=new THREE.LineBasicMaterial({color:0x4fb6ff,transparent:true,opacity:.84,depthWrite:false});const line=new THREE.LineSegments(g,m);line.renderOrder=3.1;line.userData.wenzhouHistory1953=true;line.userData.kind='1953-coarse-water-coast-control';line.userData.verticalClaim='terrain-anchor-where-known-reference-plane-where-dem-missing';const wanted=document.getElementById('history-1953-toggle')?.getAttribute('aria-pressed')==='true';line.visible=wanted;scene.add(line);active={scene,line,patchId,accepted,terrainAnchored,referenceAnchored,rejectedOutside,frameSegments};
+      diag({history1953ControlSegments:accepted,history1953TerrainAnchored:terrainAnchored,history1953ReferenceAnchored:referenceAnchored,history1953FrameSegmentsRejected:frameSegments,history1953RejectedOutsidePatch:rejectedOutside,history1953LastError:''});
+      const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`${patchId} · 控制线段 ${accepted.toLocaleString()} · 地形锚定 ${terrainAnchored.toLocaleString()} · 海域参考平面 ${referenceAnchored.toLocaleString()}`;setVisible(wanted);forceRender();
+    }catch(error){diag({history1953LastError:error.message||error});console.error(error);const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`1953 控制层失败：${error.message||error}`;}
   }
-  THREE.Object3D.prototype.add=function(...objects){const result=originalAdd.apply(this,objects);if(this.isScene)for(const object of objects)if(isTerrainCandidate(object)){ensureUi();queueMicrotask(()=>build(this,object));}return result;};
-  const bind=()=>{ensureUi();document.getElementById('history-1953-toggle')?.addEventListener('click',()=>setVisible());};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+  ensureUi();document.getElementById('history-1953-toggle')?.addEventListener('click',()=>setVisible());
+  window.addEventListener('wenzhou:terrain-added',event=>{
+    const {scene,terrain}=event.detail||{};if(!scene?.isScene||!isTerrainCandidate(terrain))return;terrainEvents++;diag({history1953TerrainEvents:terrainEvents});ensureUi();queueMicrotask(()=>build(scene,terrain));
+  });
+  document.documentElement.dataset.wenzhouHistory1953EventListener='true';
 }
