@@ -1,0 +1,46 @@
+{
+  "format": "Object DNA physical/world frame",
+  "version": "R4A-PHYSICAL-FRAME-CANDIDATE",
+  "sourceObjectDefinition": "exterior-v3.json",
+  "sourceCoordinateUnit": "source_u",
+  "sourceCoordinatePolicy": "immutable",
+  "sourceFramePurpose": "Preserve the verified observation/reconstruction coordinates inherited from V3 and the same-target aircraft reference.",
+  "configuration": {
+    "type": "flexible",
+    "typeStatus": "confirmed_at_reference_type_level",
+    "context": "B-17 waist-gunner reference",
+    "exactBackplateSubtypeStatus": "probable_not_fully_proven"
+  },
+  "provisionalWorldTransform": {
+    "status": "single_anchor_only_not_final_1to1",
+    "kind": "uniform_scale",
+    "uniformScaleMPerSourceU": 0.9505723099668064,
+    "anchor": {
+      "source": "War Department TM 9-225 (1942-04-30)",
+      "configuration": "flexible",
+      "dimension": "overall length",
+      "valueIn": 56.4,
+      "valueM": 1.43256
+    },
+    "sourceSpanUsed": {
+      "name": "generated R4A core longitudinal span",
+      "valueSourceU": 1.5070500002782792,
+      "excludedGroups": ["support", "feed"]
+    },
+    "applicationRule": "Apply at world/object root as a reversible transform only. Do not bake the value into component coordinates or reinterpret source_u as meters."
+  },
+  "finalPhysicalCalibration": null,
+  "secondIndependentAnchorRequired": true,
+  "secondAnchorCandidates": [
+    "another independently documented physical dimension on the same flexible configuration",
+    "a reconstructed complete 36 in semantic barrel component including its hidden rear portion, if its endpoints can be proven from the manual and source geometry"
+  ],
+  "explicitlyNotValidSecondAnchor": [
+    "visible barrel.001_8 node length by itself",
+    "ground M2 display reference dimensions",
+    "Smithsonian configured-object overall length unless included hardware is configuration-matched",
+    "sample/raycast hit counts"
+  ],
+  "geometryEditAuthorized": false,
+  "productionReady": false
+}
