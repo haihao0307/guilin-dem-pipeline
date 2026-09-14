@@ -1,38 +1,40 @@
-# 小温州 · R3.9 当前轻量交接入口 · 2026-09-13
+# 小温州 · R3.9.1 当前轻量交接入口 · 2026-09-14
 
-这是换窗口继续工作的唯一入口。历史全量 ZIP 与永久证据 Release 是冷档案，不再作为默认随身接续载体。
+从本文件接续，不回退重做已经完成的压缩与显示整合。交接目录及网页路径继续沿用 r3-8，以保持依赖和世界身份一致，不代表另有一套地图。
 
-## 当前权威状态
+## 当前唯一候选
 
-- R3.8 冻结验证基线：`3018da201a2ef6b5d122522e85bbbb5b91f8a34d`；状态/QA 提交：`a942cfb06e3b33f6b202c1d376c74e06f7a07e0c`。
-- R3.9 当前已验证轻量运行态：`d591713f236107f7db5a24fb9d74e087550e688a`。
-- R3.9 固定公网预览：`https://raw.githack.com/haihao0307/guilin-dem-pipeline/d591713f236107f7db5a24fb9d74e087550e688a/site/dist/r3-8/index.html`。
-- R3.9 已通过静态语义门、本地 Chromium、390×844、固定提交 raw.githack；SoilProfile、WRB、JRC 的新压缩 transport 在旧活动二进制物理删除后仍通过回归。
-- 用户视觉验收、真实 iPhone Safari/GPU/CPU 验证和 `productionReady` 仍未成立。
-- 当前接续分支：`feature/wenzhou-r3-8-overlay-transform-contract-20260913`。`d591713f...` 之后的提交只做交接文档/工具脚手架清理与 lean 包收束，不改已验证运行 payload。
+运行提交：`6785b76dff0255a2a3e3223f292300b6b71e02c9`。
 
-## R3.9 已完成的轻量化
+固定公网入口：
+https://raw.githack.com/haihao0307/guilin-dem-pipeline/6785b76dff0255a2a3e3223f292300b6b71e02c9/site/dist/r3-8/index.html
 
-1. SoilProfile 仍保留 96 个语义声部：48 个 `property × depth`，每个都有 `Q0.5` 与 `uncertainty`；它们不是重复。
-2. 物理传输改为 48 个无损双通道 `.s2gz`：`i16le-pair-byte-shuffle-gzip-v1`。解码后逐层 SHA 与原始 96 层一致。
-3. R3.8 活动树中已删除被替代的 80 个 5–200 cm 分裂 `.i16le`；R3.7 冻结 0–5 cm 历史版本没有改动。
-4. WRB/JRC 保持一个逻辑声部一个 payload，不把 30 个 WRB 概率面粗暴合成一个大文件；传输改为逐层无损 gzip。
-5. R3.8 活动树中已删除被替代的 41 个 WRB/JRC 原始 `.u8/.u16le`；永久证据 Release 没有改动。
-6. 两批活动载荷合计从 `179,103,704` bytes 降至 `37,995,870` bytes，净减 `141,107,834` bytes，约 `78.79%`，信息损失为 false。
-7. 覆盖层 transform contract 已统一：SoilProfile 继承 terrain `position / quaternion / scale` 后再加可审计 visual lift。
+权威状态：`records/R3_9/CURRENT.json`。本轮验收：`records/R3_9/R391_BROWSER_ACCEPTANCE.json`，GitHub Actions run `34798649496`。
 
-## 必须保留的事实
+R3.9.1 已通过本地 Chromium 与固定提交公网检查：山地、瓯江/飞云江/鳌江、2 m 移动、1.600 m 相对显示曲面高度、边界阻挡、复位、390×844 展开/收起、土壤/WRB/JRC 切换，以及压缩索引失败和损坏载荷的重试。另有独立实际相机朝向与像素变化测试，不能再只凭离地数值判断人眼视角正确。
 
-- SoilGrids 250 m 是模型预测外部观察，不是 12.5 m 土壤真值，不替代现场土样，不改变 DEM。
-- WRB 官方 `MostProbable` 与概率对齐后的 argmax 同时保留；约 6.1% 差异属于算子顺序差异。
-- JRC 长期水体只是历史观察，不能替代当前海陆拓扑、河网或某一天水位。
-- DEM、海岸/河流、演示海面、WorldCover、SoilProfile、WRB、JRC、OSM 属于同一世界总谱的不同证据声部。
-- R3.1–R3.7 历史运行目录以 `3018da...` 的逐目录 Git tree SHA 冻结核对；永久 Release 不删除、不覆盖。
-- 当前压缩运行层依赖浏览器 `DecompressionStream('gzip')`；真实 iPhone 未验证前不能宣称 production ready。
+用户视觉认可、真实 iPhone Safari/GPU/CPU 和 productionReady 仍为 false。
 
-## 接下来只做两件主事
+## 本轮实际变化
 
-1. 完成 R3.9 lean handoff 的最终构建与 QA：包只带当前代码、状态、语义索引、SHA/恢复指针和可重复 QA；不带 38 MB 当前运行二进制，更不带历史 GB 级底包。
-2. 交接闭环后回到小温州画面与世界体验本身：以 R3.9 固定运行态做完整视觉/交互复核，重点继续看山地近景、河流近景、1.600 m 人眼关系、移动阻挡和 390×844；没有明确收益不再新增大型数据声部。
+手机设置默认收起，可随时重新展开；人眼状态独立显示。修复共享请求取消互相影响、失败索引不能重试、索引失败退回旧大文件的问题。压缩传输缓存最多两组土壤、四项环境载荷。
 
-历史大包仍可按固定 commit、Release tag、asset 名、bytes、SHA-256 精确恢复；“不随身携带”不等于删除真值。
+修复原人眼代码只更新 controls.target、未更新 camera 朝向的问题。当前 eye-look-contract 在渲染前只同步朝向，不改变相机位置、高程、旧 OrbitControls 或冻结地形源码。
+
+删除了未被工作台使用的 48 个 WSP1 实验文件及其索引：仅数据体 38,832,048 bytes。删除前已与保留的 s2gz 双通道逐字节比较。记录：`records/R3_9/WSP1_DUPLICATE_CLEANUP.json`。禁止重新生成这套闲置运行副本；历史实验仍可从固定提交 d4a4a9bb569aa1019a8e4afe9d745a0d7a921ec6 恢复。
+
+## 继承与体积
+
+保留 48 个双通道 s2gz（土壤 96 个语义通道，34,571,806 bytes）及 41 个独立 WRB/JRC gzip（3,424,064 bytes）。37,995,870 bytes 只是这两批环境载荷，不是整个应用、完整 DEM 或内存占用。原始解码 SHA 全部一致。
+
+R3.8 冻结数据基线 3018da201a2ef6b5d122522e85bbbb5b91f8a34d、此前 R3.9 d591713f236107f7db5a24fb9d74e087550e688a 均保留。R3–R3.7 历史目录与永久证据 Release 不改、不删除。
+
+## 边界与下一步
+
+一个世界总谱，多证据声部；来源、时间、尺度和置信度不能混同。SoilGrids 250 m 不是现场土样或 12.5 m 土壤真值；WRB 官方分类和对齐后 argmax 同时保留；JRC 历史统计不代表当前水位；OSM 中心线/轮廓不代表道路宽度或建筑高度。
+
+本轮未修改 DEM 或新增微地形。当前显示采样与有限区域边界仍存在，近地视觉不能仅凭数值测试称为自然或高精度。后续围绕用户对本固定候选的实际视觉反馈推进，不为遮盖边界而合成填洞，不恢复旧 Qingjiang 或 30 m fallback。
+
+默认交接只带代码、状态、语义索引、哈希与恢复指针；不带环境二进制正文、历史 GB 级包和离线依赖。8 MiB 未压缩上限继续生效。新模块已列入 lean 构建器必带清单；本运行提交实测包 139,513 bytes，不宣称它包含完整离线世界。
+
+小温州是一次生产任务，不创建长期每日自动任务。
