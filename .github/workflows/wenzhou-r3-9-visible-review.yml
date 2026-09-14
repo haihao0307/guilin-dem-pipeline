@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [feature/wenzhou-r3-8-overlay-transform-contract-20260913]
-    paths: [tools/r3-9/review_visible_runtime.mjs]
+    paths: [tools/r3-9/review_visible_runtime.mjs, .github/workflows/wenzhou-r3-9-visible-review.yml]
 permissions:
   contents: write
 jobs:
@@ -49,6 +49,19 @@ jobs:
       - name: Review actual clean fixed public entry
         run: |
           R38_URL="https://raw.githack.com/$GITHUB_REPOSITORY/$REVIEW_SHA/site/dist/r3-8/index.html" QA_OUTPUT=/tmp/wenzhou-visible/public node tools/r3-9/review_visible_runtime.mjs
+      - name: Verify lightweight continuation still carries new runtime modules
+        run: |
+          python tools/r3-handoff/build_current_lean_handoff.py --repo-root . --output-zip /tmp/wenzhou-lean-check.zip --source-commit "$REVIEW_SHA" > /tmp/wenzhou-visible/lean-build-check.json
+          python - <<'PY'
+          import json,zipfile
+          r=json.load(open('/tmp/wenzhou-visible/lean-build-check.json'))
+          assert r['bytes'] <= 8*1024*1024 and r['uniqueUncompressedBytes'] <= 8*1024*1024
+          with zipfile.ZipFile('/tmp/wenzhou-lean-check.zip') as z:
+              assert z.testzip() is None
+              for name in ['checked-transport.js','reading-controls.js']:
+                  assert any(p.endswith('/site/dist/r3-8/'+name) for p in z.namelist())
+          print(r)
+          PY
       - name: Collect auditable text sources without binary data
         if: always()
         run: |
