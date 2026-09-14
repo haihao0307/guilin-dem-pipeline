@@ -16,6 +16,12 @@ THREE.Object3D.prototype[Symbol.for('wenzhou.r3.3.surface-evidence-installed')]=
 installSoilContext();installEnvironmentContext();installWorldScore();
 await import('../r3-6/bootstrap.js');
 if(window.__WENZHOU_HISTORY_1942===true){
+  const canvas=document.getElementById('terrain');
+  const started=performance.now();
+  while(canvas&&(canvas.dataset.ready!=='true'||!canvas.dataset.osmPatch)){
+    if(performance.now()-started>45000)throw Error('1953 历史控制层等待基础地图稳定超时');
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
   const {installHistorical1953ControlLayer}=await import('./history-1953-control-layer.js');
   installHistorical1953ControlLayer();
   await new Promise(resolve=>requestAnimationFrame(resolve));
