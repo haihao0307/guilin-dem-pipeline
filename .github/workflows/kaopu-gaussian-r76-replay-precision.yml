@@ -1,0 +1,50 @@
+name: KAOPU Gaussian R76 Replay Precision
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_replay_precision_r76.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_replay_precision_r76.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_replay_precision_gate_r76.mjs
+      - .github/workflows/kaopu-gaussian-r76-replay-precision.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r76-replay-precision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned renderer and browser harness
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Start local fixture server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r76-http.log 2>&1 &
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_replay_precision_r76.html > /dev/null
+      - name: Run preregistered replay-precision probe
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_replay_precision_r76.js
+      - name: Validate R76 evidence contract
+        run: |
+          cat r76-comparison.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_replay_precision_gate_r76.mjs > r76-gate.json
+          cat r76-gate.json
+          node -e "const d=require('./r76-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+      - name: Upload R76 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r76-replay-precision
+          path: r76-*.json
+          if-no-files-found: warn
+          retention-days: 30
