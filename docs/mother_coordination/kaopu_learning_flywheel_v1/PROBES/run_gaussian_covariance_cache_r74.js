@@ -1,0 +1,59 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { chromium } from 'playwright';
+import { DataUtils } from 'three';
+
+const WIDTH=33,HEIGHT=33,PIXELS=WIDTH*HEIGHT,ALPHA_COUNTS={1:1779,2:114,8:48},EPS=2e-15,BLOCK_SIZE=128;
+const COVARIANCES=[{id:'small-s112',scaleByte:112},{id:'baseline-s116',scaleByte:116},{id:'large-s120',scaleByte:120}],BASELINE='baseline-s116';
+const CONTEXT={threePackage:'0.186.0',threeTagCommit:'148ef33ecb6d2502ff796d4554abd1549c95d519',renderer:'WebGL fallback of WebGPURenderer',outputBufferType:'HalfFloatType',blend:'NormalBlending',blockSize:BLOCK_SIZE,camera:{fov:60,aspect:1,near:0.1,far:10,position:[0,0,2]}};
+const browser=await chromium.launch({headless:true,args:['--enable-features=Vulkan','--use-angle=vulkan','--use-vulkan=swiftshader','--disable-vulkan-surface','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),hashJson=x=>sha(Buffer.from(JSON.stringify(x)));
+function xorshift32(seed){let x=seed>>>0;return()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};}
+function shuffle(out,seed){const rand=xorshift32(seed);for(let i=out.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;}
+function records(){const alphas=shuffle(Object.entries(ALPHA_COUNTS).flatMap(([a,n])=>Array(n).fill(Number(a))),0x4b41504f);return alphas.map((alpha,i)=>({alpha,color:i%3===0?[1,0,0]:i%3===1?[0,1,0]:[0,0,1]}));}
+function halfBracket(value){const lowBits=DataUtils.toHalfFloat(Math.fround(value)),low=DataUtils.fromHalfFloat(lowBits);if(low===value)return{lowBits,low,highBits:lowBits,high:low,gap:0};const highBits=lowBits+1,high=DataUtils.fromHalfFloat(highBits);return{lowBits,low,highBits,high,gap:high-low};}
+function halfRoundNearestEven(value){const b=halfBracket(value);if(b.gap===0)return{bits:b.lowBits,value:b.low,localBound:0};const dl=value-b.low,dh=b.high-value;if(dl<dh)return{bits:b.lowBits,value:b.low,localBound:b.gap/2};if(dh<dl)return{bits:b.highBits,value:b.high,localBound:b.gap/2};return(b.lowBits&1)===0?{bits:b.lowBits,value:b.low,localBound:b.gap/2}:{bits:b.highBits,value:b.high,localBound:b.gap/2};}
+async function openPage(params){const page=await browser.newPage({viewport:{width:64,height:64},deviceScaleFactor:1}),query=new URLSearchParams(params);await page.goto(`http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_covariance_cache_r74.html?${query}`,{waitUntil:'load',timeout:120000});await page.waitForFunction(()=>window.__KAOPU_READY__===true,null,{timeout:300000});const base=await page.evaluate(()=>window.__KAOPU_BASE__);if(base.status!=='candidate-observation')throw new Error(`page failed ${query}: ${base.message}`);const render=await page.evaluate(()=>window.__KAOPU_RENDER__);await page.close();return{base,render};}
+function replay(pixel,alphaMaps,source){
+ const half=[0,0,0,0],ideal=[0,0,0,0],perStepBound=[0,0,0,0],composedBound=[0,0,0,0],summaries=[];let maxCompositionAbs=0,localViolations=0;
+ for(let start=0;start<source.length;start+=BLOCK_SIZE){
+  const end=Math.min(source.length,start+BLOCK_SIZE),blockG=[0,0,0,0];let blockT=1;
+  for(let i=start;i<end;i++){
+   const rec=source[i],a=alphaMaps[rec.alpha][pixel],src=[...rec.color,1];blockT*=1-a;
+   for(let ch=0;ch<4;ch++){const u=src[ch]*a+half[ch]*(1-a),q=halfRoundNearestEven(u);if(Math.abs(q.value-u)>q.localBound+EPS)localViolations++;half[ch]=q.value;ideal[ch]=src[ch]*a+ideal[ch]*(1-a);perStepBound[ch]=perStepBound[ch]*(1-a)+q.localBound;blockG[ch]=blockG[ch]*(1-a)+q.localBound;}
+  }
+  for(let ch=0;ch<4;ch++){composedBound[ch]=composedBound[ch]*blockT+blockG[ch];maxCompositionAbs=Math.max(maxCompositionAbs,Math.abs(composedBound[ch]-perStepBound[ch]));}
+  summaries.push(...half,...blockG,blockT);
+ }
+ return{half,ideal,perStepBound,composedBound,summaries,maxCompositionAbs,localViolations};
+}
+
+const captures={};
+for(const covariance of COVARIANCES){const calibration={};for(const alpha of [1,2,8])calibration[alpha]=await openPage({mode:'calibration',alpha:String(alpha),buffer:'float',scaleByte:String(covariance.scaleByte)});const observed=await openPage({mode:'order',buffer:'default',scaleByte:String(covariance.scaleByte)});captures[covariance.id]={covariance,calibration,observed};}
+await browser.close();
+const source=records(),sourceTokenHash=hashJson(source.map(r=>`${r.alpha}:${r.color.join('')}`)),replays={},alphaMapHashes={},summaryDigests={},strongKeys={},weakKeys={};
+for(const {id,scaleByte} of COVARIANCES){
+ const c=captures[id],maps={};for(const alpha of [1,2,8])maps[alpha]=Array.from({length:PIXELS},(_,p)=>c.calibration[alpha].render.allPixels[p*4+3]);
+ alphaMapHashes[id]=Object.fromEntries(Object.entries(maps).map(([k,v])=>[k,hashJson(v)]));replays[id]=Array.from({length:PIXELS},(_,p)=>replay(p,maps,source));summaryDigests[id]=hashJson(replays[id].flatMap(x=>x.summaries));
+ weakKeys[id]=hashJson({...CONTEXT,sourceTokenHash});strongKeys[id]=hashJson({...CONTEXT,sourceTokenHash,scaleByte,decodedCovarianceHash:c.observed.base.spz.decodedCovarianceHash,effectiveAlphaMapHashes:alphaMapHashes[id]});
+}
+const baselineBounds=replays[BASELINE].map(x=>x.composedBound),stats={};let globalReplayAbs=0,globalLocalViolations=0,globalCompositionAbs=0;
+for(const {id,scaleByte} of COVARIANCES){
+ const actual=captures[id].observed.render.allPixels,base=captures[id].observed.base,s={condition:id,scaleByte,decodedLogScale:base.spz.decodedLogScale,sourceRawHash:base.spz.rawHash,alphaSequenceHash:base.spz.alphaSequenceHash,colorSequenceHash:base.spz.colorSequenceHash,decodedCovarianceHash:base.spz.decodedCovarianceHash,alphaMapHashes:alphaMapHashes[id],weakCovarianceInsensitiveKey:weakKeys[id],strongCovarianceKey:strongKeys[id],summaryDigest:summaryDigests[id],recomputedUnderestimatedChannels:0,staleBaselineUnderestimatedChannels:0,minRecomputedSlack:Infinity,minStaleSlack:Infinity,maxActualError:0,maxReplayAbs:0,firstStaleCounterexample:null};
+ for(let p=0;p<PIXELS;p++){
+  const r=replays[id][p];globalLocalViolations+=r.localViolations;globalCompositionAbs=Math.max(globalCompositionAbs,r.maxCompositionAbs);
+  for(let ch=0;ch<4;ch++){
+   const obs=actual[p*4+ch],replayAbs=Math.abs(obs-r.half[ch]),actualError=Math.abs(obs-r.ideal[ch]),recomputedSlack=r.composedBound[ch]-actualError,staleSlack=baselineBounds[p][ch]-actualError;
+   globalReplayAbs=Math.max(globalReplayAbs,replayAbs);s.maxReplayAbs=Math.max(s.maxReplayAbs,replayAbs);s.maxActualError=Math.max(s.maxActualError,actualError);s.minRecomputedSlack=Math.min(s.minRecomputedSlack,recomputedSlack);s.minStaleSlack=Math.min(s.minStaleSlack,staleSlack);
+   if(recomputedSlack < -EPS)s.recomputedUnderestimatedChannels++;
+   if(id!==BASELINE&&staleSlack < -EPS){s.staleBaselineUnderestimatedChannels++;if(!s.firstStaleCounterexample)s.firstStaleCounterexample={pixel:p,x:p%WIDTH,y:Math.floor(p/WIDTH),channel:ch,actualError,staleBaselineBound:baselineBounds[p][ch],underestimate:actualError-baselineBounds[p][ch]};}
+  }
+ }
+ stats[id]=s;
+}
+const allCaptures=Object.values(captures),allPageChecks=allCaptures.every(c=>[...Object.values(c.calibration),c.observed].every(x=>Object.values(x.base.checks).every(Boolean)&&Object.values(x.render.checks).every(Boolean))),changed=COVARIANCES.map(x=>x.id).filter(id=>id!==BASELINE);
+const nonCovarianceSourceStable=COVARIANCES.every(x=>stats[x.id].alphaSequenceHash===stats[BASELINE].alphaSequenceHash&&stats[x.id].colorSequenceHash===stats[BASELINE].colorSequenceHash),rawAndCovarianceChanged=changed.every(id=>stats[id].sourceRawHash!==stats[BASELINE].sourceRawHash&&stats[id].decodedCovarianceHash!==stats[BASELINE].decodedCovarianceHash),staleFailures=changed.reduce((n,id)=>n+stats[id].staleBaselineUnderestimatedChannels,0);
+const changedAlphaMaps=changed.filter(id=>hashJson(alphaMapHashes[id])!==hashJson(alphaMapHashes[BASELINE])),changedSummaries=changed.filter(id=>summaryDigests[id]!==summaryDigests[BASELINE]),changedStrongKeys=changed.filter(id=>strongKeys[id]!==strongKeys[BASELINE]);
+const checks={allPageChecks,positionColorAlphaOrderStable:nonCovarianceSourceStable,covarianceBytesAndDecodedValuesChanged:rawAndCovarianceChanged,halfReplayBitExact:globalReplayAbs===0,localHalfGapBoundValid:globalLocalViolations===0,blockCompositionExact:globalCompositionAbs<=1e-12,covarianceInsensitiveKeyCollision:COVARIANCES.every(x=>weakKeys[x.id]===weakKeys[BASELINE]),effectiveAlphaMapsInvalidateBothChanges:changedAlphaMaps.length===changed.length,strongCovarianceKeysInvalidateBothChanges:changedStrongKeys.length===changed.length,recomputedSummariesChangeBothConditions:changedSummaries.length===changed.length,recomputedBoundsConservative:COVARIANCES.every(x=>stats[x.id].recomputedUnderestimatedChannels===0),staleCovarianceReuseRejected:staleFailures>0,outcomeClassified:true};
+const result={schema:'kaopu-gaussian-covariance-cache/r74',status:'Candidate-observation',question:'Can R73/R72/R66 summaries be reused after changing only isotropic covariance scale while camera, positions, colors, alpha sequence and draw order stay fixed?',sourceLocks:{threePackage:'0.186.0',threeTagCommit:'148ef33ecb6d2502ff796d4554abd1549c95d519',r73Commit:'40dff86eed826c7f2144bb34e97f403b834130c2'},preregistered:{blockSize:BLOCK_SIZE,baseline:{id:BASELINE,scaleByte:116,decodedLogScale:-0.75},changedConditions:[{id:'small-s112',scaleByte:112,decodedLogScale:-1},{id:'large-s120',scaleByte:120,decodedLogScale:-0.5}],onlyChangedInput:'SPZ isotropic scale byte for all splats',negativeControl:'reuse baseline-s116 composed bound',positiveControl:'recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints',weakKey:'renderer/camera/position/color/alpha/order key without covariance or effective-alpha hashes',strongKeyAdds:['scale byte','decoded covariance hash','effective alpha-map hashes']},runtime:{threeRevision:captures[BASELINE].observed.base.threeRevision,identity:captures[BASELINE].observed.base.identity,backend:'software WebGL fallback of WebGPURenderer'},analysis:{sourceTokenHash,baseline:{sourceRawHash:stats[BASELINE].sourceRawHash,decodedCovarianceHash:stats[BASELINE].decodedCovarianceHash,weakCovarianceInsensitiveKey:weakKeys[BASELINE],strongCovarianceKey:strongKeys[BASELINE],alphaMapHashes:alphaMapHashes[BASELINE],summaryDigest:summaryDigests[BASELINE]},byCondition:stats,globalReplayAbs,globalLocalViolations,globalCompositionAbs,staleUnderestimatedChannels:staleFailures,changedAlphaMaps,changedSummaries,changedStrongKeys},checks,interpretation:{observation:'Changing only isotropic scale changed decoded covariance, every calibrated effective-alpha-map digest, strong condition key and recomputed summary digest. Recomputed bounds remained conservative, while stale baseline reuse underestimated at least one changed-covariance channel.',candidate:'Bind decoded covariance identity and effective alpha maps in the diagnostic-summary cache key and recompute sequential summaries after either changes.',rejected:'Stable positions/colors/alpha order/draw order/camera, or a cache key that omits covariance, is sufficient authority to reuse R66-R73 summaries.',sameChromiumSwiftShaderEvidenceRoot:true},limits:{isotropicUniformCovarianceOnly:true,cameraFixed:true,drawOrderFixed:true,syntheticRepeatedCenteredSplats:true,dcColorsOnly:true,softwareWebglOnly:true,hardwareGpu:false,webgpu:false,targetDevice:false,appleSafariWebKit:false,realPhotoOrLearnedAsset:false,humanAcceptance:false,motherAdoptionAcknowledged:false}};
+result.status=Object.values(checks).every(Boolean)?'Candidate-pass':'Candidate-fail';fs.writeFileSync('r74-comparison.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));if(result.status!=='Candidate-pass')process.exitCode=10;

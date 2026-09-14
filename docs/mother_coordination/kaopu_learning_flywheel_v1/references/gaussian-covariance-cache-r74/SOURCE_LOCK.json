@@ -1,0 +1,22 @@
+{
+  "schema": "kaopu-source-lock/r74",
+  "status": "preregistered-candidate",
+  "question": "Can R73/R72/R66 summaries be reused after changing only isotropic covariance scale while camera, positions, colors, alpha sequence and draw order stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r73Commit": "40dff86eed826c7f2144bb34e97f403b834130c2"
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "baselineScaleByte": 116,
+    "changedScaleBytes": [112, 120],
+    "decodedLogScales": [-1.0, -0.75, -0.5],
+    "onlyChangedInput": "SPZ isotropic scale byte for every splat",
+    "negativeControl": "reuse baseline-s116 composed bound",
+    "positiveControl": "recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints",
+    "requiredOutcome": "position/color/alpha order and camera remain identical; both scale changes alter decoded covariance, effective-alpha and summary digests; recomputed bounds remain conservative; at least one stale-covariance reuse underestimates"
+  },
+  "evidenceScope": "Same Chromium/SwiftShader lineage as R55-R66/R72-R73; uniform isotropic covariance invalidation only, not device validation.",
+  "firstTierExpertAI": "not-called"
+}
