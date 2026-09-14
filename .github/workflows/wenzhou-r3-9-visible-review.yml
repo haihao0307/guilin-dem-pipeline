@@ -5,24 +5,50 @@ on:
     branches: [feature/wenzhou-r3-8-overlay-transform-contract-20260913]
     paths: [tools/r3-9/review_visible_runtime.mjs]
 permissions:
-  contents: read
+  contents: write
 jobs:
   review:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
-      - name: Review actual fixed public entry
+      - name: Verify source-exact payloads and isolated transport tests
+        run: |
+          mkdir -p /tmp/wenzhou-visible
+          node tools/r3-9/test_checked_transport.mjs | tee /tmp/wenzhou-visible/unit-tests.txt
+          python tools/r3-9/verify_runtime_payloads.py --remove-duplicate-experiment | tee /tmp/wenzhou-visible/integrity.json
+      - name: Commit only byte-proven duplicate experiment removal
         env:
-          R38_URL: https://raw.githack.com/${{ github.repository }}/${{ github.sha }}/site/dist/r3-8/index.html
-          QA_OUTPUT: /tmp/wenzhou-visible/public
-        run: node tools/r3-9/review_visible_runtime.mjs
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if git ls-files 'site/dist/r3-8/data/soil-paired/*' | grep -q .; then
+            git add -u -- site/dist/r3-8/data/soil-paired
+          fi
+          git add records/R3_9/TRANSPORT_INTEGRITY.json
+          if test -f records/R3_9/WSP1_DUPLICATE_CLEANUP.json; then git add records/R3_9/WSP1_DUPLICATE_CLEANUP.json; fi
+          if ! git diff --cached --quiet; then
+            REMOTE_SHA=$(git ls-remote --heads origin "$GITHUB_REF_NAME" | cut -f1)
+            test "$REMOTE_SHA" = "$SOURCE_SHA"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'cleanup(wenzhou): remove byte-identical unused WSP1 experiment bodies'
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
+          echo "REVIEW_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - name: Local browser and regression gates
+        run: |
+          python -m http.server 8768 > /tmp/wenzhou-visible/server.log 2>&1 &
+          R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ QA_OUTPUT=/tmp/wenzhou-visible/local node tools/r3-9/review_visible_runtime.mjs
+          R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ node tools/r3-9/soil_pair_browser_qa.mjs > /tmp/wenzhou-visible/soil-regression.json
+          R38_URL=http://127.0.0.1:8768/site/dist/r3-8/ node tools/r3-9/evidence_gzip_browser_qa.mjs > /tmp/wenzhou-visible/environment-regression.json
+      - name: Review actual clean fixed public entry
+        run: |
+          R38_URL="https://raw.githack.com/$GITHUB_REPOSITORY/$REVIEW_SHA/site/dist/r3-8/index.html" QA_OUTPUT=/tmp/wenzhou-visible/public node tools/r3-9/review_visible_runtime.mjs
       - name: Collect auditable text sources without binary data
         if: always()
         run: |
