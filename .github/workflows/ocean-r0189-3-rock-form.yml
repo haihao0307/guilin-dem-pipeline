@@ -1,0 +1,77 @@
+name: Ocean R018.9.3 analytic rock-form candidate
+
+on:
+  push:
+    branches: [work/ocean-r0189-recovery-20260914]
+    paths:
+      - .github/workflows/ocean-r0189-3-rock-form.yml
+      - ocean-mother/recovery/r0189-2/Ocean_Mother_R018.9.2_Shore_Contact_Candidate.html
+      - ocean-mother/recovery/r0189-3/build_r0189_3_rock_form.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r0189-3-rock-form
+  cancel-in-progress: true
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Build bounded R018.9.3 candidate
+        run: |
+          set -euo pipefail
+          python ocean-mother/recovery/r0189-3/build_r0189_3_rock_form.py | tee /tmp/r0189_3_build.txt
+
+      - name: Static contract and JavaScript syntax gate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, re, subprocess
+          p = Path('ocean-mother/recovery/r0189-3/Ocean_Mother_R018.9.3_Rock_Form_Candidate.html')
+          report = json.loads(Path('ocean-mother/recovery/r0189-3/R0189_3_BUILD_REPORT.json').read_text())
+          assert report['candidate'] == 'R018.9.3'
+          assert report['protectedHashesUnchanged'] is True
+          assert report['deepOceanByteIdentityInsideCandidate'] is True
+          assert report['deepOcean'] == 'frozen original V001'
+          assert report['rockAnchorCount'] == 9
+          assert report['externalAssets'] == 0
+          assert report['visualApproved'] is False
+          s = p.read_text()
+          assert 'ISLAND GOLD COAST / R018.9.3' in s
+          assert 'r0189.3-rock-form-v001-deep-frozen' in s
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', s, re.S)
+          for i, code in enumerate(scripts):
+              q = Path('/tmp') / f'ocean-r0189-3-{i}.js'
+              q.write_text(code)
+              subprocess.run(['node', '--check', str(q)], check=True)
+          print('R018.9.3 static gate passed; scripts', len(scripts))
+          PY
+
+      - name: Commit materialized candidate and evidence
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/recovery/r0189-3/Ocean_Mother_R018.9.3_Rock_Form_Candidate.html ocean-mother/recovery/r0189-3/R0189_3_BUILD_REPORT.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'ocean: materialize R018.9.3 analytic rock-form candidate'
+            git push origin HEAD:work/ocean-r0189-recovery-20260914
+          fi
+
+      - name: Preserve review candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R0189_3_Rock_Form
+          path: ocean-mother/recovery/r0189-3
+          retention-days: 30
+          if-no-files-found: error
