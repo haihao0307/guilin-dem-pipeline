@@ -1,0 +1,32 @@
+{
+  "schema": "kaopu-tool-routing/r67",
+  "status": "candidate-routing-only",
+  "topic": "Yohei Macroscopic microscope source and formula audit",
+  "routes": [
+    {
+      "stage": "source_provenance",
+      "preferred": ["author page", "author-authored article", "original post archive"],
+      "gate": "record URL, publication date, source bytes or explicit transcription limits, and license scope",
+      "failureMode": "A publisher's demo license is incorrectly applied to embedded third-party code."
+    },
+    {
+      "stage": "language_semantics",
+      "preferred": ["Khronos GLSL specification pinned by version and commit"],
+      "gate": "translate two-argument atan as atan(y,x); isolate undefined origin and decrement semantics",
+      "failureMode": "Host-language atan2 argument conventions silently rotate the domain."
+    },
+    {
+      "stage": "formula_replay",
+      "preferred": ["Node.js deterministic CPU probe"],
+      "gate": "enumerate all scales and compare compact vs scalar-expanded kernel before rendering",
+      "failureMode": "A valid derivation is mislabeled as independent renderer or physical evidence."
+    },
+    {
+      "stage": "future_visual_reproduction",
+      "preferred": ["fixed licensed source", "fixed GLSL runtime", "per-scale field slices", "pixel comparison"],
+      "gate": "do not begin until byte and license gates are satisfied",
+      "failureMode": "Visual tuning hides source, axis, singularity or license uncertainty."
+    }
+  ],
+  "notAuthorized": ["production asset generation", "production Mother branch edits", "global 17-scale deployment", "copied shader redistribution"]
+}

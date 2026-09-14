@@ -1,0 +1,45 @@
+{
+  "schema": "kaopu-yohei-microscope-source-audit/r67",
+  "status": "Observation plus reproducible derivation; artwork reconstruction remains Candidate partial",
+  "sourceExpressionUnderTest": "for (...; s < 1e5; s += s) e += cos(dot(cos(p.zyy*s), cos(p.xyx*s))) / s",
+  "scales": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536],
+  "amplitudes": [1, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125, 0.0009765625, 0.00048828125, 0.000244140625, 0.0001220703125, 0.00006103515625, 0.000030517578125, 0.0000152587890625],
+  "amplitudeSum": 1.9999847412109375,
+  "maximumScale": 65536,
+  "nextScale": 131072,
+  "termCount": 17,
+  "maxCompactVsExpandedDifference": 0,
+  "angleCounterexample": {
+    "transformedX": 1,
+    "transformedY": 0,
+    "sourceCall_atan_pX_pY": 1.5707963267948966,
+    "conventionalAtan2_y_x": 0,
+    "absoluteDifference": 1.5707963267948966
+  },
+  "originDomain": {
+    "radius": 0,
+    "log2RadiusFinite": false,
+    "normalizedZFinite": false,
+    "glslAtanDefinedBySpec": false
+  },
+  "checks": {
+    "scaleCountIs17": true,
+    "scaleEndpointsAre1And65536": true,
+    "nextScaleFailsLoopGuard": true,
+    "everyScaleDoubles": true,
+    "amplitudeIsReciprocalScale": true,
+    "frequencyAmplitudeProductIsOne": true,
+    "compactExpansionMatches": true,
+    "atanArgumentOrderHasCounterexample": true,
+    "originIsOutsideDeclaredSafeDomain": true
+  },
+  "checkCount": 9,
+  "passedCheckCount": 9,
+  "constraints": [
+    "The Codrops rendering contains typographic dash substitutions; this probe does not claim byte-identical recovery of the original X shader.",
+    "The 17-term result is a derivation from the published loop guard and update, not an author prose statement about a reusable universal octave count.",
+    "The angle result follows the GLSL 4.60 atan(y, x) contract; it is not the common atan2(y, x) spelling applied to the same textual argument order.",
+    "The origin is singular for log2(R), z/R, and atan(0,0); no epsilon or fallback is silently introduced.",
+    "Dimensionless transformed-coordinate scales do not define metres, displacement, material identity, or physical truth."
+  ]
+}
