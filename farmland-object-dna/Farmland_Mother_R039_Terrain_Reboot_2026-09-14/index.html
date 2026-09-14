@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Farmland R039 · Terrain Reboot</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a7c8d4;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#f5f7eb}canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:fixed;z-index:5}.title{left:16px;top:16px;padding:11px 14px;border-radius:14px;background:#11362ddd;border:1px solid #edf4df2b;backdrop-filter:blur(10px);box-shadow:0 12px 36px #0b2a2444}.title b{font-size:12px;letter-spacing:.15em}.title h1{font:500 21px serif;margin:5px 0 2px}.title span{font-size:10px;color:#d5e2cf}.nav{left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border-radius:30px;background:#102f27e5;border:1px solid #fff2;backdrop-filter:blur(10px)}button{border:0;border-radius:20px;padding:9px 13px;background:transparent;color:#eef3e6;font-size:12px;cursor:pointer;white-space:nowrap}button.on,button:hover{background:#e1e9c0;color:#18342a}.note{right:16px;bottom:16px;max-width:300px;padding:10px 12px;border-radius:13px;background:#12382fdd;border:1px solid #edf4df22;font-size:10px;line-height:1.55}.note b{color:#eaf2bc}.badge{right:16px;top:16px;padding:8px 10px;border-radius:20px;background:#13372ecc;font-size:9px;letter-spacing:.12em}.fail{display:none;position:fixed;z-index:20;inset:20%;padding:24px;border-radius:16px;background:#17382ff0}.fail.show{display:block}@media(max-width:760px){.title{left:10px;right:10px;top:10px}.title span,.badge,.note{display:none}.nav{left:8px;right:8px;transform:none;overflow:auto;bottom:8px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body>
+<div class="hud title"><b>FARMLAND MOTHER · R039</b><h1>Terrain Reboot · 从地形长出梯田</h1><span>稳定大形 → 等高切田 → 田埂分区 → 山上来水 → 平坝 → 河道</span></div>
+<div class="hud badge">XIAOMA METHOD · LOW → HIGH SCALE</div>
+<div class="hud nav"><button data-v="overview" class="on">总览</button><button data-v="terrain">大地形</button><button data-v="terrace">梯田坡</button><button data-v="water">水系</button><button data-v="plain">平坝</button><button data-v="life">人和水牛</button></div>
+<div class="hud note"><b>这版不是旧场景修补：</b>后山、主坡、梯田、平坝和河道由同一连续高度场派生；梯田由坡面等高层量化产生，不是贴上去的条带。</div>
+<div id="fail" class="fail">三维场景没有正常启动，请刷新或使用支持 WebGL2 的浏览器。</div>
+<script src="core.js"></script>
+<script type="module" src="scene.mjs"></script>
+</body></html>
