@@ -18,7 +18,11 @@
       "scale": "1:250000",
       "bounds": [120.0, 28.0, 121.5, 29.0],
       "record": "HISTORICAL_1953_CONTROL_SOURCE.json",
-      "sourceImageSha256": "cb6bde447701c0e7d93c12ec3795f361af79c3a5084f05702483246726d4f3d3"
+      "sourceImageSha256": "cb6bde447701c0e7d93c12ec3795f361af79c3a5084f05702483246726d4f3d3",
+      "waterExtraction": {
+        "status": "locally-derived-and-visually-checked; repository GeoJSON publication pending final compact export",
+        "method": "blue-water segmentation + large-component filtering + coarse linear-neatline georeference"
+      }
     },
     {
       "id": "NG51-1",
@@ -27,7 +31,13 @@
       "scale": "1:250000",
       "bounds": [120.0, 27.0, 121.5, 28.0],
       "record": "HISTORICAL_1953_CONTROL_SOURCE_NG51_1.json",
-      "sourceImageSha256": "42ef8bb533703d24d8023ff0d84f0476dd5b59ec2ac739f3e255dcd960f3ad3a"
+      "sourceImageSha256": "42ef8bb533703d24d8023ff0d84f0476dd5b59ec2ac739f3e255dcd960f3ad3a",
+      "waterControl": "HISTORICAL_1953_WATER_CONTROL_NG51_1.geojson",
+      "waterExtraction": {
+        "status": "published",
+        "method": "blue-water segmentation + large-component filtering + coarse linear-neatline georeference",
+        "use": "major coastline/open-water/reclamation/reservoir conflict control only"
+      }
     }
   ],
   "finerControls": [
@@ -47,7 +57,7 @@
     "major hydrography and settlement anchors"
   ],
   "nextExtractionPriority": [
-    "coastline and open-water boundary",
+    "publish compact NH51-13 water control",
     "major roads",
     "major reservoirs/dams absent or present",
     "large reclamation areas",
