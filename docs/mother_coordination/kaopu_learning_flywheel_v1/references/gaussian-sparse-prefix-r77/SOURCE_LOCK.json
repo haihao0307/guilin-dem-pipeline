@@ -1,0 +1,43 @@
+{
+  "schema": "kaopu-gaussian-sparse-prefix-source-lock/r77",
+  "status": "preregistered",
+  "question": "Do independently rendered sparse Half checkpoints preserve R76 terminal replay equality, and can predicted-divergence checkpoints distinguish f32-final from f32-staged?",
+  "coordinator_parent": "38bd60237e5f6337f43886b3587cfd0275006cc2",
+  "inherits": {
+    "r75": "e525388cb1adeb7073af252b0d5ef314b53bc8ce",
+    "r76": "38bd60237e5f6337f43886b3587cfd0275006cc2"
+  },
+  "three": {
+    "package": "0.186.0",
+    "tag_commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "GaussianSplat_js_blob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+  },
+  "fixed_fixture": {
+    "rotation_packed": "0xc0000115",
+    "scale_bytes": [128, 96, 96],
+    "camera": [0, 0, 2],
+    "draw_count": 1941,
+    "order": "R75/R76 deterministic identity order",
+    "target": "HalfFloatType",
+    "viewport": [33, 33]
+  },
+  "fixed_prefixes": [1, 32, 128, 512, 1024, 1536, 1941],
+  "adversarial_selection": "Before observed prefix rendering, scan predicted f32-final versus f32-staged states; retain first, global-maximum and last divergent steps and their +/-1 neighbours; union fixed prefixes; maximum 16 checkpoints.",
+  "acceptance": {
+    "comparison": "exact decoded Half equality only",
+    "independence": "every checkpoint is a separate full-frame render and readback",
+    "final_control": "prefix 1941 must equal a separately rendered full-frame control",
+    "separation": "terminal equality and sparse-prefix equality are distinct gates"
+  },
+  "observation_root": "same Chromium/ANGLE Vulkan SwiftShader software root as R59-R76",
+  "not_claimed": [
+    "all unsampled writes",
+    "fixed-function internal operation order",
+    "hardware GPU",
+    "WebGPU",
+    "Safari or iPhone",
+    "real asset",
+    "human acceptance",
+    "Mother adoption"
+  ]
+}
