@@ -1,0 +1,28 @@
+{
+  "schema": "kaopu-source-lock/r75",
+  "status": "preregistered",
+  "question": "Can a diagnostic summary be reused after changing only anisotropic covariance orientation?",
+  "baseCoordinatorCommit": "113941c24dfbf6bdedc7bdfc3eb34df3545089d8",
+  "inheritsR74": "f0bac6b694516c4e5d8a59171de6f002a893d9f1",
+  "sources": [
+    {
+      "repository": "mrdoob/three.js",
+      "tagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+      "package": "0.186.0",
+      "path": "examples/jsm/loaders/SPZLoader.js",
+      "blob": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+      "role": "Primary executable decoder contract for SPZ v3 scale and smallest-three quaternion to decoded covariance."
+    }
+  ],
+  "fixture": {
+    "scaleBytes": [128, 96, 96],
+    "decodedLogScales": [-2, -4, -4],
+    "packedRotations": ["0xc0000000", "0xc0000115", "0xc00001ff"],
+    "nominalAnglesDegrees": [0, 45, 90],
+    "fixed": ["camera", "position", "RGB", "alpha sequence", "exact draw order", "Half output", "block size 128"],
+    "negativeControl": "Reuse the 0-degree bound for rotated conditions.",
+    "positiveControl": "Recalibrate effective alpha maps and recompute summaries from true Half checkpoints."
+  },
+  "observationRoot": "OR-R55-R66-R72-R75-THREE-R186-CHROMIUM-SWIFTSHADER",
+  "independenceNote": "R75 remains inside the existing Three.js r186 Chromium/SwiftShader software-browser evidence lineage."
+}
