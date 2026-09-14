@@ -1,0 +1,293 @@
+{
+  "schema": "kaopu-gaussian-anisotropy-orientation/r75",
+  "status": "Candidate-pass-classified",
+  "question": "Can R74/R73/R72/R66 summaries be reused after rotating only a fixed anisotropic covariance while camera, position, color, alpha sequence, scale values and draw order stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "threeSpzLoaderBlob": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+    "r74Commit": "f0bac6b694516c4e5d8a59171de6f002a893d9f1",
+    "motherMeetingCommit": "113941c24dfbf6bdedc7bdfc3eb34df3545089d8",
+    "failedRun": 34889048003,
+    "failedArtifact": 10366033802
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "scaleBytes": [
+      128,
+      96,
+      96
+    ],
+    "decodedLogScales": [
+      -2,
+      -4,
+      -4
+    ],
+    "baseline": {
+      "id": "x-major-r0",
+      "rotationPacked": "0xc0000000",
+      "nominalDegrees": 0
+    },
+    "changedConditions": [
+      {
+        "id": "diagonal-r45",
+        "rotationPacked": "0xc0000115",
+        "nominalDegrees": 45
+      },
+      {
+        "id": "y-major-r90",
+        "rotationPacked": "0xc00001ff",
+        "nominalDegrees": 90
+      }
+    ],
+    "onlyChangedInput": "SPZ v3 packed quaternion for every splat; anisotropic scale bytes remain [128,96,96]",
+    "negativeControl": "reuse x-major-r0 composed bound",
+    "positiveControl": "recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints",
+    "weakKey": "renderer/camera/position/color/alpha/order/scale key without rotation, decoded covariance or effective-alpha hashes",
+    "strongKeyAdds": [
+      "packed rotation",
+      "decoded covariance hash",
+      "effective alpha-map hashes"
+    ]
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "sourceTokenHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+    "baseline": {
+      "sourceRawHash": "6d38c10911e2b83df75a0b919ce025eeeb89622ac26bba3827af2046c5ff826e",
+      "decodedCovarianceHash": "64100d6cf66e9d15cc1412bb5aef8789e980d63ac9ca4a64fb19d201a95efeca",
+      "weakOrientationInsensitiveKey": "d2684aceda2f037109cb84499cdae8a099fe5fbfc6d4ce58dbb77a1920e6ab81",
+      "strongOrientationKey": "1aebb649a66a9b1a4ac15525bc4316573e357f987cdc0eb5da93b83c0c0adc95",
+      "alphaMapHashes": {
+        "1": "6f3377152d31cb2c25989a7378dfd448c502faf13e941ee9b97f22f05b547e45",
+        "2": "a283184fbce4299ba5016811a5d57b09968d429f1029f7f44cf85b916e5d8374",
+        "8": "acf0e8002c4c59a1f3bb054b964590e541bdb948d8c72895cc3a11b46156e865"
+      },
+      "summaryDigest": "844c6627911e1b4d786735092eb4aedb57f66f8c8082b36ec4e474c03beb45dd"
+    },
+    "byCondition": {
+      "x-major-r0": {
+        "condition": "x-major-r0",
+        "rotationPacked": 3221225472,
+        "rotationPackedHex": "0xc0000000",
+        "nominalDegrees": 0,
+        "scaleBytes": [
+          128,
+          96,
+          96
+        ],
+        "decodedLogScales": [
+          -2,
+          -4,
+          -4
+        ],
+        "sourceRawHash": "6d38c10911e2b83df75a0b919ce025eeeb89622ac26bba3827af2046c5ff826e",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "scaleSequenceHash": "da37c3a66d8ad50f178472670b6dac26e244a2d4ade974513a5a646dfea43a13",
+        "rotationSequenceHash": "63e2d836d55bdc8958873643b9a7f33e6115b11d82cfea5760e06b9a476393a7",
+        "decodedCovarianceHash": "64100d6cf66e9d15cc1412bb5aef8789e980d63ac9ca4a64fb19d201a95efeca",
+        "firstDecodedCovariance": [
+          0.018315639346837997,
+          0,
+          0,
+          0.00033546265331096947,
+          0,
+          0.00033546265331096947
+        ],
+        "alphaMapHashes": {
+          "1": "6f3377152d31cb2c25989a7378dfd448c502faf13e941ee9b97f22f05b547e45",
+          "2": "a283184fbce4299ba5016811a5d57b09968d429f1029f7f44cf85b916e5d8374",
+          "8": "acf0e8002c4c59a1f3bb054b964590e541bdb948d8c72895cc3a11b46156e865"
+        },
+        "weakOrientationInsensitiveKey": "d2684aceda2f037109cb84499cdae8a099fe5fbfc6d4ce58dbb77a1920e6ab81",
+        "strongOrientationKey": "1aebb649a66a9b1a4ac15525bc4316573e357f987cdc0eb5da93b83c0c0adc95",
+        "summaryDigest": "844c6627911e1b4d786735092eb4aedb57f66f8c8082b36ec4e474c03beb45dd",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.11089316303607777,
+        "maxReplayAbs": 0.000244140625,
+        "firstStaleCounterexample": null
+      },
+      "diagonal-r45": {
+        "condition": "diagonal-r45",
+        "rotationPacked": 3221225749,
+        "rotationPackedHex": "0xc0000115",
+        "nominalDegrees": 45,
+        "scaleBytes": [
+          128,
+          96,
+          96
+        ],
+        "decodedLogScales": [
+          -2,
+          -4,
+          -4
+        ],
+        "sourceRawHash": "110e1d7c21504c88b33fdef0e8c6518a0b5b24408e4eb265014e2d51a4fddc3c",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "scaleSequenceHash": "da37c3a66d8ad50f178472670b6dac26e244a2d4ade974513a5a646dfea43a13",
+        "rotationSequenceHash": "2d183fb3f11dbd4a8b5357dcdb314bd498c5e36d8355673bbb279cc917f72b3a",
+        "decodedCovarianceHash": "ac7e733f3aa4a27a557c9b0f119bfb5d9f2b4e37c7999c25ffe5c1822cfc1838",
+        "firstDecodedCovariance": [
+          0.009301374666392803,
+          0.008990054950118065,
+          0,
+          0.009349726140499115,
+          0,
+          0.00033546265331096947
+        ],
+        "alphaMapHashes": {
+          "1": "360d2381ec4c4995e29cbbee582341ef1b3c3968ae2b06e40ec6526f7f534c32",
+          "2": "8fc9c204e9786d2807e4c1c263a0bd34c6a527db2a2c71f665d38f2d3643d0a7",
+          "8": "bcdb159c2b91f094974838fbea3734cefb76aad32f8a6c8f2ed3105bc7a4c1cb"
+        },
+        "weakOrientationInsensitiveKey": "d2684aceda2f037109cb84499cdae8a099fe5fbfc6d4ce58dbb77a1920e6ab81",
+        "strongOrientationKey": "9a37d5805f1c1091ae363e5a003ddcc2d541bb0c9700d5d5701ae378abb2c96f",
+        "summaryDigest": "793e31fe48a2bd8af3b796fd92d1807a3c2a67c19da6f56b3461e311fed53593",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 16,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": -0.11270411639080968,
+        "maxActualError": 0.11270423172607469,
+        "maxReplayAbs": 0.00048828125,
+        "firstStaleCounterexample": {
+          "pixel": 476,
+          "x": 14,
+          "y": 14,
+          "channel": 0,
+          "actualError": 0.0032949350499496544,
+          "staleBaselineBound": 0,
+          "underestimate": 0.0032949350499496544
+        }
+      },
+      "y-major-r90": {
+        "condition": "y-major-r90",
+        "rotationPacked": 3221225983,
+        "rotationPackedHex": "0xc00001ff",
+        "nominalDegrees": 90,
+        "scaleBytes": [
+          128,
+          96,
+          96
+        ],
+        "decodedLogScales": [
+          -2,
+          -4,
+          -4
+        ],
+        "sourceRawHash": "528739d40b7dede0a1f62925115ce9c0ffb4c4a6bbc446bbb9d63e9d36d59529",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "scaleSequenceHash": "da37c3a66d8ad50f178472670b6dac26e244a2d4ade974513a5a646dfea43a13",
+        "rotationSequenceHash": "17e7b07bb9bc6d56a88a3ef7a275115d0ab91cd89e21b58c56a9cc609b43a8a0",
+        "decodedCovarianceHash": "32a32aac2445d1a3ac0e873fcf110404c6cb0b6214e4c29bb6459d7f6b898a4d",
+        "firstDecodedCovariance": [
+          0.00033546265331096947,
+          -3.992400874967295e-18,
+          0,
+          0.018315639346837997,
+          0,
+          0.00033546265331096947
+        ],
+        "alphaMapHashes": {
+          "1": "f331e7de4ccc4ec0b738349ba2b4e4aecbd091797d8842cf85c73cc9a21d517d",
+          "2": "cf9d08d355b1a3c8dfb56a64ce0083c007d3225e5793dd5881ee2293492642e6",
+          "8": "0611854faf1ff22812b99938290c3fb000cabbc40665a3f85be6630d8d266fec"
+        },
+        "weakOrientationInsensitiveKey": "d2684aceda2f037109cb84499cdae8a099fe5fbfc6d4ce58dbb77a1920e6ab81",
+        "strongOrientationKey": "a2194499e4d060ad2e1643af019cc85634268b6d31af199da8d533eaa660bee5",
+        "summaryDigest": "300ecd73e12298bb97fb0490cd0d9712321e9e72d671861b109ff9109336ccc5",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 36,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": -0.11089316303607777,
+        "maxActualError": 0.11089316303607777,
+        "maxReplayAbs": 0.000244140625,
+        "firstStaleCounterexample": {
+          "pixel": 412,
+          "x": 16,
+          "y": 12,
+          "channel": 0,
+          "actualError": 0.017421325445280522,
+          "staleBaselineBound": 0,
+          "underestimate": 0.017421325445280522
+        }
+      }
+    },
+    "globalReplayAbs": 0.00048828125,
+    "globalLocalViolations": 0,
+    "globalCompositionAbs": 4.996003610813204e-16,
+    "staleUnderestimatedChannels": 52,
+    "changedAlphaMaps": [
+      "diagonal-r45",
+      "y-major-r90"
+    ],
+    "changedSummaries": [
+      "diagonal-r45",
+      "y-major-r90"
+    ],
+    "changedStrongKeys": [
+      "diagonal-r45",
+      "y-major-r90"
+    ]
+  },
+  "checks": {
+    "allPageChecks": true,
+    "positionColorAlphaOrderScaleStable": true,
+    "rotationBytesAndDecodedCovarianceChanged": true,
+    "halfReplayBitExact": false,
+    "floatCalibrationReplayMismatchClassified": true,
+    "localHalfGapBoundValid": true,
+    "blockCompositionExact": true,
+    "orientationInsensitiveKeyCollision": true,
+    "effectiveAlphaMapsInvalidateBothRotations": true,
+    "strongOrientationKeysInvalidateBothRotations": true,
+    "recomputedSummariesChangeBothRotations": true,
+    "recomputedBoundsEmpiricallyConservative": true,
+    "staleOrientationReuseRejected": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Rotating only a fixed anisotropic covariance changed decoded covariance, calibrated effective-alpha maps, strong condition keys and recomputed summary digests. Relative to the Float-calibrated surrogate, recomputed bounds empirically underestimated zero channels and stale baseline reuse underestimated rotated conditions.",
+    "candidate": "Bind the decoded covariance tensor or equivalent packed scale-plus-rotation identity and effective alpha maps in the diagnostic-summary cache key; recompute after an orientation change, while treating the present bound as empirical until the replay mismatch is closed.",
+    "rejected": [
+      "Stable positions/colors/alpha order/draw order/camera/scale values, or a key that omits covariance orientation, is sufficient authority to reuse summaries.",
+      "R62-R74 Float-calibrated alpha replay automatically remains bit-exact for the more eccentric R75 footprint."
+    ],
+    "failedGateClassification": "The preregistered first run failed because global Half replay mismatch was 0.00048828125. The fixture and threshold were not changed; bit-exact generalization is now explicitly Rejected.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "fixedSyntheticAnisotropicCovarianceOnly": true,
+    "cameraFixed": true,
+    "drawOrderFixed": true,
+    "syntheticRepeatedCenteredSplats": true,
+    "dcColorsOnly": true,
+    "floatCalibratedSurrogateNotRendererBitTruth": true,
+    "formalBoundProof": false,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}

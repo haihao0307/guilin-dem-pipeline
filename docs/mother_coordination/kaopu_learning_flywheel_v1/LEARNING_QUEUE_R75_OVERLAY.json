@@ -1,0 +1,21 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r75",
+  "updatedAt": "2026-09-15",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R74_OVERLAY.json",
+  "doesNotSupersede": ["LEARNING_QUEUE_R71_OVERLAY.json", "MEETINGS/2026-09-15/MOTHER_0230_MICROSCOPE.md"],
+  "status": "candidate-partial",
+  "question": "Can R74/R73/R72/R66 summaries be reused after rotating only a fixed anisotropic covariance?",
+  "progress": "R75 fixed scale bytes [128,96,96], camera, positions, RGB, Alpha sequence, exact order, Half output and block size while rotating the packed quaternion nominally 0/45/90 degrees. Rotations changed decoded covariance, effective Alpha maps and summaries. Stale 0-degree reuse underestimated 16 and 36 channels. The first preregistered run also falsified automatic bit-exact Float-calibrated replay: max mismatch 0.00048828125. Recomputed bounds are therefore empirical, not formal.",
+  "failedRun": 34889048003,
+  "classifiedRun": 34889391030,
+  "resultLog": "LEARNING_LOG/2026-09-15_GAUSSIAN_ANISOTROPY_ORIENTATION_R75.md",
+  "sourceLock": "references/gaussian-anisotropy-orientation-r75/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_anisotropy_orientation_r75.js",
+  "result": "PROBES/gaussian_anisotropy_orientation_result_r75.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R75_GAUSSIAN_ANISOTROPY_ORIENTATION.md",
+  "toolRouting": "TOOL_ROUTING_R75_GAUSSIAN_ANISOTROPY_ORIENTATION.json",
+  "motherRouting": "MOTHER_ROUTING_R75_GAUSSIAN_ANISOTROPY_ORIENTATION.json",
+  "nextGate": "Hold the nominal 45-degree eccentric fixture fixed and isolate the replay mismatch across Float calibration, Half readback, analytic shader inputs and selected incremental Half checkpoints.",
+  "microscopeQueueNote": "The Mother meeting's KAOPU-Q-MICROSCOPE-COLOR-20260915 remains owned by the separate expert task; R75 neither solves nor displaces it."
+}
