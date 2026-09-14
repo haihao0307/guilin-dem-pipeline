@@ -30,10 +30,12 @@ export function installOverlayTransformContract(THREE) {
 
   const originalAdd = THREE.Object3D.prototype.add;
   THREE.Object3D.prototype.add = function (...objects) {
+    const terrainEvents = [];
     if (this.isScene) {
       for (const object of objects) {
         if (isTerrainCandidate(object)) {
           ACTIVE_TERRAIN_BY_SCENE.set(this, object);
+          terrainEvents.push({scene: this, terrain: object});
           continue;
         }
         if (object?.userData?.wenzhouSoilContextEvidence) {
@@ -42,8 +44,15 @@ export function installOverlayTransformContract(THREE) {
         }
       }
     }
-    return originalAdd.apply(this, objects);
+    const result = originalAdd.apply(this, objects);
+    for (const detail of terrainEvents) {
+      try {
+        window.dispatchEvent(new CustomEvent('wenzhou:terrain-added', {detail}));
+      } catch {}
+    }
+    return result;
   };
 
   document.documentElement.dataset.wenzhouOverlayTransformContract = 'true';
+  document.documentElement.dataset.wenzhouTerrainEventContract = 'true';
 }
