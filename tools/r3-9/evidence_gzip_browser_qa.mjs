@@ -43,6 +43,8 @@ try{
 
   const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
   const mp=await mobile.newPage();await mp.goto(target,{waitUntil:'domcontentloaded',timeout:120000});await mp.waitForFunction(()=>document.querySelector('#terrain')?.dataset.soilContextLoaded==='true',null,{timeout:120000});
+  const toggle=mp.locator('#panel-toggle');
+  if(await toggle.count() && await toggle.getAttribute('aria-expanded')==='false')await toggle.click();
   await mp.selectOption('#evidence-mode','water');await mp.waitForFunction(()=>{const s=document.querySelector('#terrain')?.dataset;return s?.environmentLoaded==='true'&&s?.environmentMode==='water'&&s?.environmentPayloadTransport==='gzip';},null,{timeout:120000});
   const ms=await mp.locator('#terrain').evaluate(c=>({...c.dataset}));check(ms.environmentPayloadTransport==='gzip','mobile JRC did not use gzip transport');await mobile.close();
 
