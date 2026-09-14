@@ -1,0 +1,29 @@
+{
+  "schema": "kaopu-tool-routing/r77",
+  "status": "candidate-partial",
+  "tool": "Three.js r186 GaussianSplat Half diagnostic replay",
+  "inherits": "TOOL_ROUTING_R76_GAUSSIAN_REPLAY_PRECISION.json",
+  "route": {
+    "allowedCandidateUse": "Fixed-version diagnostic replay with separate full-frame prefix renders, explicit Float32 evaluation, nearest-even Half storage and exact comparisons.",
+    "requiredEvidenceSeparation": [
+      "terminal equality",
+      "sampled-prefix equality",
+      "all-write equivalence",
+      "formal cross-backend proof",
+      "hardware/device acceptance"
+    ],
+    "requiredPrefixControl": "The final prefix must exactly reproduce a separately rendered complete-frame control.",
+    "modelSelectionRule": "Do not select between arithmetic models unless their predicted Half states diverge at a preregistered observed checkpoint.",
+    "currentEvidenceClass": "Seven exact independent prefixes on one synthetic Chromium/SwiftShader fixture; both tested Float32 models are prediction-equivalent on the complete modeled sequence.",
+    "forbiddenClaims": [
+      "all actual writes verified",
+      "fixed-function operation order identified",
+      "cross-backend validity",
+      "production-wide cache authority",
+      "physical reconstruction truth"
+    ]
+  },
+  "workflowRun": 34910279853,
+  "productionMutationAllowed": false,
+  "motherAdoptionAcknowledged": false
+}

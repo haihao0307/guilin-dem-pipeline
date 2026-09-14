@@ -1,0 +1,254 @@
+{
+  "schema": "kaopu-gaussian-sparse-prefix/r77",
+  "status": "Candidate-pass",
+  "question": "Do independently rendered sparse Half checkpoints preserve R76 terminal replay equality, and can adversarial predicted-divergence checkpoints distinguish f32-final from f32-staged?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "threeGaussianSplatBlob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+    "r76Commit": "38bd60237e5f6337f43886b3587cfd0275006cc2"
+  },
+  "preregistered": {
+    "fixedInputs": {
+      "rotationPacked": "0xc0000115",
+      "scaleBytes": [
+        128,
+        96,
+        96
+      ],
+      "camera": [
+        0,
+        0,
+        2
+      ],
+      "drawCount": 1941,
+      "order": "R75/R76 deterministic identity order"
+    },
+    "fixedPrefixes": [
+      1,
+      32,
+      128,
+      512,
+      1024,
+      1536,
+      1941
+    ],
+    "adversarialRule": "Before any observed prefix render, derive first/global-max/last f32-final versus f32-staged predicted divergence steps, add +/-1, union fixed prefixes, maximum 16.",
+    "acceptance": "Exact Half-decoded equality only; prefix 1941 must equal an independently rendered full control. Terminal equality and sparse-prefix equality are separate."
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "sourceTokenHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+    "predictedDivergence": {
+      "divergentChannelStates": 0,
+      "first": null,
+      "maximum": null,
+      "last": null
+    },
+    "selectedPrefixes": [
+      1,
+      32,
+      128,
+      512,
+      1024,
+      1536,
+      1941
+    ],
+    "comparisons": {
+      "1": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "32": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "128": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "512": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "1024": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "1536": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "1941": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      }
+    },
+    "exactPrefixes": {
+      "f32-final": [
+        1,
+        32,
+        128,
+        512,
+        1024,
+        1536,
+        1941
+      ],
+      "f32-staged": [
+        1,
+        32,
+        128,
+        512,
+        1024,
+        1536,
+        1941
+      ]
+    },
+    "exactAllModels": [
+      "f32-final",
+      "f32-staged"
+    ],
+    "distinguishedPrefixes": [],
+    "classification": "models-prediction-equivalent-on-fixture",
+    "finalControlComparison": {
+      "mismatchChannels": 0,
+      "maxAbs": 0,
+      "maxIndex": -1,
+      "pixel": null,
+      "channel": null
+    },
+    "controlDecodedHash": "73665ee5e47eb730503006526464732749088ac21584891310a5353162bba922",
+    "finalCheckpointDecodedHash": "73665ee5e47eb730503006526464732749088ac21584891310a5353162bba922"
+  },
+  "checks": {
+    "allPageChecks": true,
+    "sameLockedSource": true,
+    "calibrationContract": true,
+    "selectionOccurredBeforeObservedPrefixes": true,
+    "selectedPrefixesBounded": true,
+    "selectedPrefixesUnique": true,
+    "independentFullFrameReadbacks": true,
+    "finalCheckpointEqualsIndependentControl": true,
+    "allModelsEvaluated": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Every checkpoint was a separate full-frame render and readback; the final checkpoint matched an independent full-frame control. Exact sparse-prefix outcomes are recorded without treating unobserved writes as measured.",
+    "candidate": "A replay model is only a candidate for the sampled writes if it is exact at every selected prefix. Even that does not prove unsampled writes or another backend.",
+    "rejected": [
+      "The invalid R76 scissored prefix series can be rehabilitated from its finite length alone.",
+      "Terminal equality is sufficient evidence for intermediate writes."
+    ],
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "sparsePrefixesOnly": true,
+    "unobservedWritesRemainUnknown": true,
+    "fixedSynthetic45DegreeFixtureOnly": true,
+    "fixedFunctionBlendInternalsNotDirectlyObserved": true,
+    "formalCrossBackendProof": false,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r77",
+  "updatedAt": "2026-09-15",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R76_OVERLAY.json",
+  "doesNotSupersede": [
+    "LEARNING_QUEUE_R71_OVERLAY.json",
+    "MEETINGS/2026-09-15/MOTHER_0230_MICROSCOPE.md"
+  ],
+  "status": "candidate-partial",
+  "question": "Do valid independent sparse prefixes preserve Float32 replay closure and distinguish f32-final from f32-staged?",
+  "progress": "R77 replaced the invalid R76 series with seven independent full-frame prefix renders. Both Float32 models matched all 4,356 channels at every observed prefix and the final prefix reproduced a separate full-frame control. The models also generated zero divergent predicted Half channel-states across all 1,941 modeled steps, so the fixture cannot select their operation order.",
+  "workflowRun": 34910279853,
+  "resultLog": "LEARNING_LOG/2026-09-15_GAUSSIAN_SPARSE_PREFIX_R77.md",
+  "sourceLock": "references/gaussian-sparse-prefix-r77/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_sparse_prefix_r77.js",
+  "result": "PROBES/gaussian_sparse_prefix_result_r77.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R77_GAUSSIAN_SPARSE_PREFIX.md",
+  "toolRouting": "TOOL_ROUTING_R77_GAUSSIAN_SPARSE_PREFIX.json",
+  "motherRouting": "MOTHER_ROUTING_R77_GAUSSIAN_SPARSE_PREFIX.json",
+  "nextGate": "Construct a bounded r186 counterexample fixture where f32-final and f32-staged predict different Half results at a preregistered prefix, then independently render that prefix to select one or reject both.",
+  "microscopeQueueNote": "KAOPU-Q-MICROSCOPE-COLOR-20260915 remains owned by the separate expert task; R77 neither solves nor displaces it."
+}
