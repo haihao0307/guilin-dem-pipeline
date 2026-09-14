@@ -1,0 +1,51 @@
+name: KAOPU Yohei twigl fixed runtime R71
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - .github/workflows/kaopu-yohei-twigl-runtime-r71.yml
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_runtime_r71.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-fixed-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser harness
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Execute exact-wrapper fixed-runtime comparison
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_runtime_r71.mjs
+      - name: Enforce source-free evidence contract
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='r71-runtime-result.json';
+          const raw=fs.readFileSync(p,'utf8');
+          const d=JSON.parse(raw);
+          if(d.status!=='Candidate-pass') process.exit(10);
+          if(raw.includes('float i,e,R,s;vec3 q,p,d=')) process.exit(11);
+          if(!d.runtimeChecks.initializedRepeatDeterministic) process.exit(12);
+          console.log(JSON.stringify({status:d.status,runtime:d.runtime,comparisons:d.comparisons,controls:d.controls},null,2));
+          NODE
+      - name: Upload source-free evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-yohei-twigl-runtime-r71
+          path: r71-runtime-result.json
+          if-no-files-found: warn
+          retention-days: 30
