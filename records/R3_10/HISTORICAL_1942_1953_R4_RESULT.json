@@ -1,0 +1,74 @@
+{
+  "schema": "wenzhou-1942-1953-historical-control-r4/v1",
+  "date": "2026-09-14",
+  "runtimeCommit": "0215d23f04056cc262d78309f464530e38d08e00",
+  "preview": "https://raw.githack.com/haihao0307/guilin-dem-pipeline/0215d23f04056cc262d78309f464530e38d08e00/site/dist/r3-8/history-1942.html",
+  "workflowRunId": 34834112397,
+  "artifactId": 10342853397,
+  "artifactSha256": "551882bc257fe5db35f616bd705360de3f193675b6ce30066e98c160dd3edafd",
+  "passed": true,
+  "localBrowserPassed": true,
+  "fixedPublicBrowserPassed": true,
+  "roadSubtraction": {
+    "removedMotorwayParts": 6283,
+    "removedMotorwayLinkParts": 2727,
+    "removedConstructionParts": 35,
+    "removedMajorBridgeParts": 8537,
+    "removedMajorBridgeByClass": {
+      "primary": 2856,
+      "secondary": 2856,
+      "trunk": 2082,
+      "trunk_link": 467,
+      "primary_link": 232,
+      "secondary_link": 44
+    },
+    "removedRoadPartsTotal": 17582,
+    "removedRoadSegmentsTotal": 60249
+  },
+  "controlAtlas": {
+    "index": "HISTORICAL_1953_CONTROL_ATLAS.json",
+    "sheets": ["NH51-13", "NG51-1", "NH51-14"],
+    "finerLocalOverride": "1945 YUNG-CHIA / WENCHOW 1:12500 city plan"
+  },
+  "history1953Layer": {
+    "defaultVisible": false,
+    "topbarToggle": true,
+    "toggleLabel": "1953层",
+    "terrainEvents": 3,
+    "buildAttempts": 3,
+    "staleEvents": 0,
+    "committedPatch": "overview",
+    "controlSegments": 2877,
+    "terrainAnchoredSegments": 2875,
+    "seaNoDataReferencePlaneSegments": 2,
+    "mapFrameSegmentsRejected": 3,
+    "outsidePatchSegmentsRejected": 11,
+    "lastError": "",
+    "verticalBoundary": "Terrain segments follow displayed DEM; segments in horizontally valid DEM sea/no-data areas use a reference plane only to preserve 2D historical location and do not claim historical elevation."
+  },
+  "terrainIdentityContract": {
+    "event": "wenzhou:terrain-added",
+    "patchIdentityLocked": true,
+    "staleAsyncCommitRejected": true,
+    "evidenceMeshesExcludedFromTerrainIdentity": true
+  },
+  "modernBaselineChanged": false,
+  "frozenHistoricalEvidenceDeleted": false,
+  "realIphoneVerified": false,
+  "productionReady": false,
+  "complete1942Truth": false,
+  "limitations": [
+    "The 1953 L500 sheets are 1:250000 controls, so absence is strong evidence only for major modern features, not minor roads, small bridges, field paths, local drains, or individual buildings.",
+    "Historical water/coast controls are source-derived coarse controls, not survey-grade shorelines.",
+    "More detailed user-provided historical maps override the 1:250000 controls locally.",
+    "The atlas envelope contains an uncovered southeast rectangle from 121.5E to 123E and 27N to 28N; no historical authority is claimed there yet.",
+    "Reference-plane rendering over current DEM sea/no-data preserves 2D historical location only and is not an elevation claim."
+  ],
+  "next": [
+    "extract and register 1953 major-road skeletons by sheet",
+    "identify large modern reclamation/seawall/hard-shore conflicts against historical open water",
+    "identify major modern reservoir/dam conflicts and reconstruct pre-reservoir valley/river topology",
+    "extract major historical river channels",
+    "accept finer user maps as local overrides without rebuilding the atlas"
+  ]
+}
