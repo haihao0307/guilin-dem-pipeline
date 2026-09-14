@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kaopu World Score Draft R1",
+  "type": "object",
+  "required": [
+    "identity",
+    "tlo",
+    "observations",
+    "function_graph",
+    "constraints",
+    "history",
+    "evidence"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": [
+        "object_id",
+        "object_type"
+      ],
+      "properties": {
+        "object_id": {
+          "type": "string"
+        },
+        "object_type": {
+          "type": "string"
+        },
+        "parts": {
+          "type": "array"
+        },
+        "material_domains": {
+          "type": "array"
+        }
+      }
+    },
+    "tlo": {
+      "type": "object",
+      "properties": {
+        "time": {},
+        "location": {},
+        "reference_frames": {
+          "type": "array"
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "resolution",
+          "confidence",
+          "lock_policy"
+        ]
+      }
+    },
+    "coordinate_domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "transform",
+          "stability_key"
+        ]
+      }
+    },
+    "function_graph": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array"
+        },
+        "edges": {
+          "type": "array"
+        },
+        "scale_bands": {
+          "type": "array"
+        }
+      }
+    },
+    "fields": {
+      "type": "array"
+    },
+    "constraints": {
+      "type": "array"
+    },
+    "interactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "operator"
+        ]
+      }
+    },
+    "processes": {
+      "type": "array"
+    },
+    "events": {
+      "type": "array"
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "timeline": {
+          "type": "array"
+        },
+        "state_checkpoints": {
+          "type": "array"
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "status",
+          "provenance"
+        ]
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "properties": {
+        "lod_policy": {},
+        "cache_policy": {},
+        "platform_budgets": {}
+      }
+    },
+    "derivatives": {
+      "type": "object",
+      "description": "Compiled outputs such as meshes, materials, textures, audio, collision and navigation."
+    }
+  }
+}

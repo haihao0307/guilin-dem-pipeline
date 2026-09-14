@@ -1,0 +1,86 @@
+name: Build Xiaoma Kaopu Functional World Score R1
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - 'docs/mother_coordination/handoffs/2026-09-14/xiaoma-kaopu-functional-world-score-r1-20260914/.package-build/**'
+      - '.github/workflows/build-xiaoma-kaopu-functional-world-score-r1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Decode references and build deterministic ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import base64, hashlib, zipfile
+
+          repo = Path.cwd()
+          pkg = repo / 'docs/mother_coordination/handoffs/2026-09-14/xiaoma-kaopu-functional-world-score-r1-20260914'
+          build = pkg / '.package-build'
+          refs = pkg / 'references'
+          refs.mkdir(parents=True, exist_ok=True)
+
+          for src in sorted(build.glob('*.webp.b64')):
+              dst = refs / src.name.removesuffix('.b64')
+              dst.write_bytes(base64.b64decode(src.read_text(encoding='ascii')))
+
+          for src in build.glob('*'):
+              src.unlink()
+          build.rmdir()
+
+          zip_name = 'XIAOMA_KAOPU_FUNCTIONAL_WORLD_SCORE_CURRENT_FULL_HANDOFF_R1_20260914.zip'
+          zip_path = pkg / zip_name
+          sha_path = pkg / 'ZIP_SHA256.txt'
+          zip_path.unlink(missing_ok=True)
+          sha_path.unlink(missing_ok=True)
+
+          with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+              for p in sorted(pkg.rglob('*')):
+                  if not p.is_file() or p in {zip_path, sha_path}:
+                      continue
+                  arc = f'XIAOMA_KAOPU_FUNCTIONAL_WORLD_SCORE_CURRENT_FULL_HANDOFF_R1_20260914/{p.relative_to(pkg).as_posix()}'
+                  zi = zipfile.ZipInfo(arc, date_time=(2026, 9, 14, 0, 0, 0))
+                  zi.compress_type = zipfile.ZIP_DEFLATED
+                  zi.create_system = 3
+                  zi.external_attr = (0o100644 << 16)
+                  z.writestr(zi, p.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+
+          with zipfile.ZipFile(zip_path) as z:
+              bad = z.testzip()
+              if bad is not None:
+                  raise RuntimeError(f'ZIP validation failed at {bad}')
+
+          digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          sha_path.write_text(f'{digest}  {zip_name}\n', encoding='utf-8')
+          print(f'ZIP_SHA256={digest}')
+          PY
+
+      - name: Commit built package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No build changes.'
+            exit 0
+          fi
+          git commit -m 'build(kaopu): publish function world score R1 full package [skip ci]'
+          git push origin "HEAD:${{ github.ref_name }}"
