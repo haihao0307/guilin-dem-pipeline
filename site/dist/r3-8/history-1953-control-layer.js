@@ -3,9 +3,13 @@ import * as THREE from 'three';
 const FLAG=Symbol.for('wenzhou.r3.10.history-1953-control-layer-installed');
 const TERRAIN_URL='../r3-1/data/terrain.json';
 const CONTROLS=[
-  {sheet:'NH51-13',bounds:[120,28,121.5,29],url:'../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13.geojson'},
-  {sheet:'NG51-1',bounds:[120,27,121.5,28],url:'../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NG51_1.geojson'},
-  {sheet:'NH51-14',bounds:[121.5,28,123,29],url:'../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_14.geojson'},
+  {sheet:'NH51-13',bounds:[120,28,121.5,29],urls:[
+    '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P1.geojson',
+    '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P2.geojson',
+    '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P3.geojson',
+  ]},
+  {sheet:'NG51-1',bounds:[120,27,121.5,28],urls:['../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NG51_1.geojson']},
+  {sheet:'NH51-14',bounds:[121.5,28,123,29],urls:['../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_14.geojson']},
 ];
 const LIFT_M=0.12;
 
@@ -45,22 +49,22 @@ function ensureUi(){
 }
 export function installHistorical1953ControlLayer(){
   if(THREE.Object3D.prototype[FLAG])return;THREE.Object3D.prototype[FLAG]=true;
-  const originalAdd=THREE.Object3D.prototype.add,contractPromise=fetchJson(TERRAIN_URL),controlPromise=Promise.all(CONTROLS.map(async c=>({...c,geo:await fetchJson(c.url)})));
+  const originalAdd=THREE.Object3D.prototype.add,contractPromise=fetchJson(TERRAIN_URL),controlPromise=Promise.all(CONTROLS.map(async c=>({...c,geos:await Promise.all(c.urls.map(fetchJson))})));
   let active=null,buildToken=0;
   function setVisible(){if(!active)return;const checked=document.getElementById('show-history-1953-control')?.checked??false;active.line.visible=checked;const card=document.getElementById('history-1953-layer-card');if(card)card.hidden=!checked;}
   async function build(scene,terrain){
-    const token=++buildToken,patchId=document.getElementById('terrain')?.dataset.patch||document.getElementById('location')?.value||'';
+    const token=++buildToken;await new Promise(resolve=>requestAnimationFrame(resolve));
+    const patchId=document.getElementById('location')?.value||document.getElementById('terrain')?.dataset.patch||'';
     try{
       const[contract,controls]=await Promise.all([contractPromise,controlPromise]);if(token!==buildToken)return;
       const patch=contract.patches.find(p=>p.id===patchId);if(!patch)return;
       const origin=terrainOrigin(contract,patch),sample=terrainSampler(terrain),positions=[];let accepted=0,rejected=0,frameSegments=0;
-      for(const control of controls){for(const ring of rings(control.geo)){for(let i=0;i+1<ring.length;i++){const a=ring[i],b=ring[i+1];if(isNeatline(a,b,control.bounds)){frameSegments++;continue;}const[e0,n0]=utm51(a[0],a[1]),[e1,n1]=utm51(b[0],b[1]),x0=(e0-origin[0])/1000,z0=(origin[1]-n0)/1000,x1=(e1-origin[0])/1000,z1=(origin[1]-n1)/1000,h0=sample(x0,z0),h1=sample(x1,z1);if(h0===null||h1===null){rejected++;continue;}positions.push(x0,h0+LIFT_M/1000,z0,x1,h1+LIFT_M/1000,z1);accepted++;}}}
-      }
+      for(const control of controls){for(const geo of control.geos){for(const ring of rings(geo)){for(let i=0;i+1<ring.length;i++){const a=ring[i],b=ring[i+1];if(isNeatline(a,b,control.bounds)){frameSegments++;continue;}const[e0,n0]=utm51(a[0],a[1]),[e1,n1]=utm51(b[0],b[1]),x0=(e0-origin[0])/1000,z0=(origin[1]-n0)/1000,x1=(e1-origin[0])/1000,z1=(origin[1]-n1)/1000,h0=sample(x0,z0),h1=sample(x1,z1);if(h0===null||h1===null){rejected++;continue;}positions.push(x0,h0+LIFT_M/1000,z0,x1,h1+LIFT_M/1000,z1);accepted++;}}}}
       if(token!==buildToken)return;
       if(active){active.scene.remove(active.line);active.line.geometry.dispose();active.line.material.dispose();}
-      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeBoundingSphere();
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));if(positions.length)g.computeBoundingSphere();
       const m=new THREE.LineBasicMaterial({color:0x4fb6ff,transparent:true,opacity:.84,depthWrite:false});const line=new THREE.LineSegments(g,m);line.renderOrder=3.1;line.userData.wenzhouHistory1953=true;line.userData.kind='1953-coarse-water-coast-control';line.visible=document.getElementById('show-history-1953-control')?.checked??false;originalAdd.call(scene,line);active={scene,line,patchId,accepted,rejected,frameSegments};
-      const canvas=document.getElementById('terrain');if(canvas){canvas.dataset.history1953ControlSegments=String(accepted);canvas.dataset.history1953FrameSegmentsRejected=String(frameSegments);}
+      const canvas=document.getElementById('terrain');if(canvas){canvas.dataset.history1953ControlSegments=String(accepted);canvas.dataset.history1953FrameSegmentsRejected=String(frameSegments);canvas.dataset.history1953RejectedOutsideSurface=String(rejected);}
       const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`${patchId} · 控制线段 ${accepted.toLocaleString()} · 图幅边框剔除 ${frameSegments.toLocaleString()}`;setVisible();
     }catch(error){console.error(error);const status=document.getElementById('history-1953-layer-status');if(status)status.textContent=`1953 控制层失败：${error.message||error}`;}
   }
