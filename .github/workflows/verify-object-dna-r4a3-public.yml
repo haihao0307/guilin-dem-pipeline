@@ -1,0 +1,80 @@
+name: Verify Object DNA R4A.3 Public Workbench
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-object-dna-r4a3-public.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Verify public HTTP resources
+        run: |
+          URL='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a3-20260914/'
+          for i in $(seq 1 40); do
+            if curl -fsS "$URL" | grep -q 'R4A.3 VISIBLE ASSEMBLY'; then break; fi
+            sleep 3
+          done
+          curl -fsS "$URL" | grep -q 'R4A.3 VISIBLE ASSEMBLY'
+          curl -fsS "${URL}assets/r4a3-app.js" | grep -q 'R4A.3'
+          curl -fsS "${URL}assets/r4a3-style.css" >/dev/null
+          curl -fsS "${URL}object/exterior-v3.json" | grep -q 'EXTERIOR-V3-CANDIDATE'
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Open and exercise public 3D workbench
+        run: |
+          cat >/tmp/verify-r4a3.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url='https://haihao0307.github.io/guilin-dem-pipeline/object-dna/r4a3-20260914/';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:1440,height:1000}});
+          const errors=[];
+          page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+          page.on('pageerror',e=>errors.push(e.message));
+          await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForFunction(()=>document.documentElement.dataset.ready==='own'&&document.body.dataset.r4a3==='ready',null,{timeout:90000});
+          const initial=await page.evaluate(()=>({
+            title:document.title,
+            canvasCount:document.querySelectorAll('#stage canvas').length,
+            loadingHidden:document.getElementById('loading')?.hidden,
+            attachments:document.getElementById('attachments')?.getAttribute('aria-pressed'),
+            physical:document.getElementById('physical')?.getAttribute('aria-pressed')
+          }));
+          if(!initial.title.includes('R4A.3')) throw new Error('public title is not R4A.3');
+          if(initial.canvasCount!==1||initial.loadingHidden!==true) throw new Error('public WebGL workbench did not initialize');
+          if(initial.attachments!=='true') throw new Error('ammo box/support are not visible by default');
+          if(initial.physical!=='false') throw new Error('scale overlay is not hidden by default');
+          await page.click('[data-focus="receiver"]');
+          await page.click('[data-view="side"]');
+          await page.click('[data-view="top"]');
+          await page.click('[data-focus="all"]');
+          await page.click('[data-view="perspective"]');
+          await page.click('#attachments');
+          await page.click('#attachments');
+          const finalState=await page.evaluate(()=>({
+            mode:document.body.dataset.mode,
+            focus:document.body.dataset.focus,
+            attachments:document.getElementById('attachments')?.getAttribute('aria-pressed'),
+            canvas:[document.querySelector('#stage canvas')?.width,document.querySelector('#stage canvas')?.height]
+          }));
+          if(finalState.attachments!=='true') throw new Error('attachment toggle did not restore');
+          if(finalState.canvas.some(v=>!v||v<=0)) throw new Error('public canvas size invalid');
+          if(errors.length) throw new Error(errors.join(' | '));
+          console.log(JSON.stringify({url,initial,finalState,errors},null,2));
+          await browser.close();
+          JS
+          node /tmp/verify-r4a3.mjs
