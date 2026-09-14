@@ -8,6 +8,8 @@ const xPostUrl =
   'https://x.com/YoheiNishitsuji/status/1880561598982668452';
 const xReplyUrl =
   'https://x.com/YoheiNishitsuji/status/1880562010603311179';
+const xPostId = '1880561598982668452';
+const xReplyId = '1880562010603311179';
 const expectedSource = {
   sha256: '5253b2a44baa9f99af79cd04d85747ac6bb515c021562c7558e841446a4c3fea',
   utf8Bytes: 265,
@@ -39,6 +41,28 @@ const dateIso =
   Number.isSafeInteger(dateSeconds) && dateSeconds > 0
     ? new Date(dateSeconds * 1000).toISOString()
     : null;
+const snowflakeEpochMs = 1288834974657n;
+const snowflakeDate = (id) =>
+  new Date(Number((BigInt(id) >> 22n) + snowflakeEpochMs));
+const xPostDate = snowflakeDate(xPostId);
+const xReplyDate = snowflakeDate(xReplyId);
+const snapshotDate = dateIso === null ? null : new Date(dateIso);
+const snapshotToPostSeconds =
+  snapshotDate === null ? null : (xPostDate.getTime() - snapshotDate.getTime()) / 1000;
+const postToReplySeconds =
+  (xReplyDate.getTime() - xPostDate.getTime()) / 1000;
+const soundSource =
+  snapshot?.sound !== null && typeof snapshot?.sound === 'object'
+    ? snapshot.sound.source
+    : null;
+const soundSourceFingerprint =
+  typeof soundSource === 'string'
+    ? {
+        sha256: createHash('sha256').update(soundSource, 'utf8').digest('hex'),
+        utf8Bytes: Buffer.byteLength(soundSource, 'utf8'),
+        codePoints: [...soundSource].length,
+      }
+    : null;
 
 const checks = {
   httpJson: (response.headers.get('content-type') ?? '').includes('application/json'),
@@ -51,8 +75,15 @@ const checks = {
   sourceCodePointLengthMatchesObservedXText: codePoints === expectedSource.codePoints,
   asciiDoubleDecrementTokensPresent: asciiDoubleDecrementCount === 2,
   noTypographyDashSubstitution: unicodeDashCount === 0,
-  soundAbsent: snapshot?.sound === null,
+  soundShapeKnown:
+    snapshot?.sound === null ||
+    (typeof snapshot?.sound === 'object' && typeof soundSource === 'string'),
   timestampValid: dateIso !== null,
+  snapshotPredatesAuthorPost:
+    snapshotToPostSeconds !== null && snapshotToPostSeconds >= 0,
+  snapshotCloseToAuthorPost:
+    snapshotToPostSeconds !== null && snapshotToPostSeconds <= 300,
+  authorReplyFollowsPost: postToReplySeconds > 0,
 };
 
 const failures = Object.entries(checks)
@@ -72,6 +103,8 @@ const result = {
     snapshotUrl,
     xPostUrl,
     xReplyUrl,
+    xPostId,
+    xReplyId,
     expectedSourceFingerprintFromVisibleAuthorPost: expectedSource,
     historicalHostCommit: '969491b285ba217fd895132a466ee6b3128243f3',
   },
@@ -85,8 +118,13 @@ const result = {
     asciiDoubleDecrementCount,
     unicodeDashCount,
     soundPresent: snapshot?.sound !== null,
+    soundSourceFingerprint,
     snapshotDateSeconds: dateSeconds,
     snapshotDateIso: dateIso,
+    xPostDateIsoFromSnowflake: xPostDate.toISOString(),
+    xReplyDateIsoFromSnowflake: xReplyDate.toISOString(),
+    snapshotToPostSeconds,
+    postToReplySeconds,
     mutableCountersObservedButExcludedFromIdentity: {
       viewCountType: typeof snapshot?.viewCount,
       starCountType: typeof snapshot?.starCount,
