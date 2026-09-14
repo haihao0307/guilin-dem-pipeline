@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-source-lock/r72",
+  "status": "preregistered-candidate",
+  "question": "Can R66 block summaries be reused after draw order changes when the unordered splat multiset and renderer/view conditions stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r66Commit": "9d8c8a58b7b15a43da9a2e2b0c0186cca28427b7"
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "orderVariants": ["baseline", "reverse", "alpha-asc", "alpha-desc", "color-group", "rotate-647", "shuffle-r72"],
+    "negativeControl": "reuse baseline composed block bound for every changed order",
+    "positiveControl": "recompute summaries sequentially from the true prior Half state for every order",
+    "requiredOutcome": "all recomputed bounds remain conservative and at least one stale-baseline reuse underestimates a changed-order channel"
+  },
+  "evidenceScope": "Same Chromium/SwiftShader lineage as R55-R66; order invalidation only, not camera or device validation.",
+  "firstTierExpertAI": "not-called"
+}
