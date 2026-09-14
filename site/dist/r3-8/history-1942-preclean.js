@@ -48,7 +48,8 @@ function decorateUi(summary){
 }
 
 export function installHistory1942Preclean(){
-  if(window[FLAG]||new URLSearchParams(location.search).get('year')!=='1942')return false;
+  const enabled=window.__WENZHOU_HISTORY_1942===true||new URLSearchParams(location.search).get('year')==='1942'||location.pathname.endsWith('/history-1942.html');
+  if(window[FLAG]||!enabled)return false;
   window[FLAG]=true;
   const nativeFetch=window.fetch.bind(window),synthetic=new Map();
   const manifestPromise=(async()=>{
