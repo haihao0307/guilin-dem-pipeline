@@ -1,0 +1,54 @@
+name: Publish Object DNA R4A.3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-object-dna-r4a3.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+
+      - name: Download verified public-safe R4A.3 build
+        run: |
+          curl --fail --location --retry 3 'https://sdmntprwestus.oaiusercontent.com/files/00000000-e650-8230-985c-12b6d0220163/raw?se=2026-09-14T03%3A47%3A10Z&sp=r&sv=2026-02-06&sr=b&scid=ed5fa214-2277-5667-ae75-56fc76222104&skoid=c69179d1-5b5d-430f-afa3-b9bdcf9d6497&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-13T23%3A21%3A05Z&ske=2026-09-14T23%3A21%3A05Z&sks=b&skv=2026-02-06&sig=8JHYEdmrVOrdDwg/Kyay0OxAC/1RB72woXM1v1RLpmQ%3D' -o /tmp/object-dna-r4a3.zip
+          rm -rf /tmp/object-dna-r4a3
+          mkdir -p /tmp/object-dna-r4a3
+          unzip -q /tmp/object-dna-r4a3.zip -d /tmp/object-dna-r4a3
+          test -f /tmp/object-dna-r4a3/index.html
+          test -f /tmp/object-dna-r4a3/assets/r4a3-app.js
+          test -f /tmp/object-dna-r4a3/assets/r4a3-style.css
+          test -f /tmp/object-dna-r4a3/object/exterior-v3.json
+
+      - name: Install fixed R4A.3 workbench
+        run: |
+          rm -rf object-dna/r4a3-20260914
+          mkdir -p object-dna/r4a3-20260914
+          cp -a /tmp/object-dna-r4a3/. object-dna/r4a3-20260914/
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('object-dna/r4a3-20260914/index.html')
+          s=p.read_text()
+          s=s.replace('<button data-mode="compare">同坐标对照 <small>程序化 / 航空参考</small></button>','')
+          p.write_text(s)
+          PY
+          test "$(git hash-object object-dna/r4a3-20260914/object/exterior-v3.json)" = 'b82b5c56618320d094729bfc9cca8dce396e1414'
+
+      - name: Commit fixed public preview
+        run: |
+          git config user.name 'Object DNA CI'
+          git config user.email 'object-dna-ci@users.noreply.github.com'
+          git add object-dna/r4a3-20260914
+          git diff --cached --quiet && exit 0
+          git commit -m 'publish(object-dna): R4A.3 visible assembly workbench [skip ci]'
+          git push origin gh-pages
