@@ -1,0 +1,32 @@
+name: KAOPU Yohei twigl snapshot R70
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - .github/workflows/kaopu-yohei-twigl-snapshot-r70.yml
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_snapshot_r70.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Fetch and fingerprint the author-linked twigl snapshot
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_twigl_snapshot_r70.mjs
+      - name: Upload source-free result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yohei-twigl-snapshot-result-r70
+          path: docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_twigl_snapshot_result_r70.json
+          if-no-files-found: error
