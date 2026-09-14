@@ -24,6 +24,7 @@ CORE_FILES = [
     "site/dist/r3-8/bootstrap.js",
     "site/dist/r3-8/checked-transport.js",
     "site/dist/r3-8/reading-controls.js",
+    "site/dist/r3-8/eye-look-contract.js",
     "site/dist/r3-8/soil-context.js",
     "site/dist/r3-8/soil-pair-loader.js",
     "site/dist/r3-8/evidence-gzip-loader.js",
