@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-source-lock/r75",
-  "status": "preregistered",
+  "status": "preregistered-first-failure-classified",
   "question": "Can a diagnostic summary be reused after changing only anisotropic covariance orientation?",
   "baseCoordinatorCommit": "113941c24dfbf6bdedc7bdfc3eb34df3545089d8",
   "inheritsR74": "f0bac6b694516c4e5d8a59171de6f002a893d9f1",
@@ -24,5 +24,14 @@
     "positiveControl": "Recalibrate effective alpha maps and recompute summaries from true Half checkpoints."
   },
   "observationRoot": "OR-R55-R66-R72-R75-THREE-R186-CHROMIUM-SWIFTSHADER",
-  "independenceNote": "R75 remains inside the existing Three.js r186 Chromium/SwiftShader software-browser evidence lineage."
+  "independenceNote": "R75 remains inside the existing Three.js r186 Chromium/SwiftShader software-browser evidence lineage.",
+  "firstRun": {
+    "workflowRun": 34889048003,
+    "conclusion": "failure",
+    "artifact": 10366033802,
+    "artifactSha256": "6203347d52691e88eff4bf9687203514a90be3eb518bd8fdcf29370a5925a4c1",
+    "failedCheck": "halfReplayBitExact",
+    "observedGlobalReplayAbs": 0.00048828125,
+    "classification": "The fixture and bit-exact threshold are unchanged. Automatic generalization of Float-calibrated alpha replay to this more eccentric footprint is Rejected; subsequent gates require the mismatch to remain explicit."
+  }
 }

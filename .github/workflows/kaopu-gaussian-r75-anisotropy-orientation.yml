@@ -39,7 +39,7 @@ jobs:
         run: |
           cat r75-comparison.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_anisotropy_orientation_gate_r75.mjs > r75-gate.json
           cat r75-gate.json
-          node -e "const d=require('./r75-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+          node -e "const d=require('./r75-gate.json');if(d.status!=='Candidate-pass-classified')process.exit(10)"
       - name: Upload R75 evidence
         if: always()
         uses: actions/upload-artifact@v4
