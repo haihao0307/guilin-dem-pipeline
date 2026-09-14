@@ -11,30 +11,37 @@ const page=await context.newPage();
 const failures=[];const check=(v,m)=>{if(!v)failures.push(m);};
 try{
   await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
-  await page.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r1',{},{timeout:120000});
+  await page.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r2',{},{timeout:120000});
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch,{},{timeout:120000});
   const history=await page.evaluate(()=>window.__wenzhouHistory1942Preclean);
   check(history?.active===true,'history preclean not active');
+  check(history?.schema==='wenzhou-history-1942-preclean/r2','history schema mismatch');
   check(history?.summary?.motorway>0,'no motorway parts removed');
   check(history?.summary?.motorwayLink>0,'no motorway_link parts removed');
-  check(history?.summary?.removedParts===history.summary.motorway+history.summary.motorwayLink,'removed part count mismatch');
+  check(history?.summary?.majorBridge>0,'no major bridge parts removed');
+  check(history?.summary?.removedParts===history.summary.motorway+history.summary.motorwayLink+history.summary.majorBridge,'removed part count mismatch');
+  check(history?.removedBridgePolicy?.minorBridgeClassesPreserved===true,'minor bridge preservation boundary missing');
   check(history?.railwayAction==='none-current-runtime-has-no-railway-layer','railway boundary mismatch');
   const manifest=await page.evaluate(()=>fetch('../r3-5/data/osm/osm-context.json').then(r=>r.json()));
   check(manifest.history1942Preclean?.active===true,'intercepted manifest missing history policy');
-  const overview=manifest.patches.find(p=>p.id==='overview');
-  const overviewExpected=(overview.roads.sourceModernClassPartCounts.motorway||0)+(overview.roads.sourceModernClassPartCounts.motorway_link||0);
-  check(!('motorway' in overview.roads.classPartCounts),'overview motorway class survived');
-  check(!('motorway_link' in overview.roads.classPartCounts),'overview motorway_link class survived');
-  check(overview.roads.sourcePartCount-overview.roads.partCount===overviewExpected,'overview removed more/less than motorway classes');
+  const verifyPatch=(id)=>{
+    const p=manifest.patches.find(x=>x.id===id),s=history.summary.patches.find(x=>x.id===id);
+    const source=p.roads.sourceModernClassPartCounts||{},active=p.roads.classPartCounts||{};
+    const motorway=(source.motorway||0)+(source.motorway_link||0),bridge=s.majorBridge||0;
+    check(!('motorway' in active),`${id}: motorway class survived`);
+    check(!('motorway_link' in active),`${id}: motorway_link class survived`);
+    check(p.roads.sourcePartCount-p.roads.partCount===motorway+bridge,`${id}: source/filtered part delta mismatch`);
+    for(const [name,count] of Object.entries(s.majorBridgeByClass||{}))check((source[name]||0)-(active[name]||0)===count,`${id}: ${name} bridge subtraction mismatch`);
+    return{p,s,motorway,bridge};
+  };
+  const overviewCheck=verifyPatch('overview'),overview=overviewCheck.p;
   await page.selectOption('#location','query-02');
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch==='query-02',{},{timeout:120000});
-  const q2=manifest.patches.find(p=>p.id==='query-02'),q2summary=history.summary.patches.find(p=>p.id==='query-02');
-  const q2Expected=(q2.roads.sourceModernClassPartCounts.motorway||0)+(q2.roads.sourceModernClassPartCounts.motorway_link||0);
-  check(q2summary?.removedParts===q2Expected,'query-02 removed class count mismatch');
-  check(q2.roads.sourcePartCount-q2.roads.partCount===q2Expected,'query-02 source/filtered part delta mismatch');
+  const q2Check=verifyPatch('query-02'),q2=q2Check.p,q2summary=q2Check.s;
   const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
   check(Number(ds.osmRoadParts)===q2.roads.partCount,'runtime did not consume filtered query-02 road parts');
-  check(ds.historyMode==='1942-preclean-r1','canvas history mode missing');
+  check(ds.historyMode==='1942-preclean-r2','canvas history mode missing');
+  check(Number(ds.historyRemovedMajorBridgeParts)===history.summary.majorBridge,'canvas major bridge summary mismatch');
   await page.screenshot({path:`${out}/desktop-query-02.png`,fullPage:true});
   await page.selectOption('#location','overview');
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch==='overview',{},{timeout:120000});
@@ -42,11 +49,11 @@ try{
 
   const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
   const mp=await mobile.newPage();await mp.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
-  await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r1',{},{timeout:120000});
+  await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r2',{},{timeout:120000});
   check(await mp.locator('#history-1942-card').count()===1,'mobile history status card missing');
   const brand=await mp.locator('.brand p').textContent();check(brand?.includes('1942'),'mobile header does not identify historical preclean');
   await mp.screenshot({path:`${out}/mobile-390x844.png`,fullPage:true});await mobile.close();
-  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,expectedRemoved:overviewExpected},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts},failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedMajorBridgeParts:history.summary.majorBridge,removedMajorBridgeByClass:history.summary.majorBridgeByClass,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,removedMotorwayClasses:overviewCheck.motorway,removedMajorBridgeParts:overviewCheck.bridge},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts,removedMajorBridgeParts:q2summary.majorBridge},failures},null,2));
 }catch(e){failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,failures},null,2));}
 finally{await browser.close();}
 if(failures.length)process.exit(1);
