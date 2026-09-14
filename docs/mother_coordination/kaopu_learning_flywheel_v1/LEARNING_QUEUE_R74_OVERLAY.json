@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r74",
+  "updatedAt": "2026-09-15",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R73_OVERLAY.json",
+  "doesNotSupersede": "LEARNING_QUEUE_R71_OVERLAY.json",
+  "status": "candidate-partial",
+  "question": "Can R73/R72/R66 summaries be reused after changing only isotropic covariance scale while other declared inputs stay fixed?",
+  "progress": "R74 held camera, positions, rotations, RGB, alpha sequence, exact order, Half target and block size 128 fixed while changing uniform SPZ scale byte 112/116/120. Both changes altered decoded covariance, effective-alpha maps and summary digests. Recomputed summaries underestimated zero channels; stale baseline reuse at enlarged scale 120 underestimated 32 channels, worst shortfall 0.08463239. Decoded covariance is now a demonstrated invalidation dimension.",
+  "resultLog": "LEARNING_LOG/2026-09-15_GAUSSIAN_COVARIANCE_CACHE_R74.md",
+  "sourceLock": "references/gaussian-covariance-cache-r74/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_covariance_cache_r74.js",
+  "result": "PROBES/gaussian_covariance_cache_result_r74.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R74_GAUSSIAN_COVARIANCE_CACHE.md",
+  "toolRouting": "TOOL_ROUTING_R74_GAUSSIAN_COVARIANCE_CACHE.json",
+  "motherRouting": "MOTHER_ROUTING_R74_GAUSSIAN_COVARIANCE_CACHE.json",
+  "nextGate": "Use a fixed small anisotropic covariance pair with one controlled orientation change; require covariance/footprint/summary invalidation and zero underestimation after recomputation.",
+  "yoheiQueueNote": "R71 remains the latest Yohei overlay; its genuinely different WebGL/GPU gate is deferred, not cancelled or overwritten."
+}
+

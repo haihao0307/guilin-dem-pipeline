@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu-tool-routing/r74",
+  "status": "candidate-partial",
+  "inherits": "TOOL_ROUTING_R73_GAUSSIAN_VIEW_CACHE.json",
+  "route": "Three.js r186 diagnostic validation only",
+  "candidateMethod": {
+    "cacheKeyMustBind": [
+      "exact ordered draw-stream hash",
+      "exact camera/view state",
+      "decoded covariance identity",
+      "calibrated effective alpha-map hashes",
+      "renderer revision and backend path",
+      "blend implementation",
+      "output numeric format",
+      "block size and summary schema"
+    ],
+    "onCovarianceOrFootprintChange": "invalidate and recompute blocks sequentially from true prior Half endpoints",
+    "provenNecessaryThroughR74": ["exact ordered draw stream", "view-dependent effective-alpha footprint", "decoded covariance"],
+    "notYetProvenSufficient": true
+  },
+  "rejected": [
+    "covariance-insensitive cache key",
+    "stable position/color/alpha order/draw order/camera as proof of reuse safety across covariance changes",
+    "reduced-scale accidental conservatism as universal reuse authority"
+  ],
+  "notAuthorized": [
+    "production outputBufferType change",
+    "production Mother mutation",
+    "asset replacement",
+    "Canonical Truth or Frozen R1 modification"
+  ]
+}
+

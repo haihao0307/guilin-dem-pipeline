@@ -1,0 +1,201 @@
+{
+  "schema": "kaopu-gaussian-covariance-cache/r74",
+  "status": "Candidate-pass",
+  "question": "Can R73/R72/R66 summaries be reused after changing only isotropic covariance scale while camera, positions, colors, alpha sequence and draw order stay fixed?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "r73Commit": "40dff86eed826c7f2144bb34e97f403b834130c2"
+  },
+  "preregistered": {
+    "blockSize": 128,
+    "baseline": {
+      "id": "baseline-s116",
+      "scaleByte": 116,
+      "decodedLogScale": -0.75
+    },
+    "changedConditions": [
+      {
+        "id": "small-s112",
+        "scaleByte": 112,
+        "decodedLogScale": -1
+      },
+      {
+        "id": "large-s120",
+        "scaleByte": 120,
+        "decodedLogScale": -0.5
+      }
+    ],
+    "onlyChangedInput": "SPZ isotropic scale byte for all splats",
+    "negativeControl": "reuse baseline-s116 composed bound",
+    "positiveControl": "recalibrate effective alpha maps and recompute sequential summaries from true Half checkpoints",
+    "weakKey": "renderer/camera/position/color/alpha/order key without covariance or effective-alpha hashes",
+    "strongKeyAdds": [
+      "scale byte",
+      "decoded covariance hash",
+      "effective alpha-map hashes"
+    ]
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "sourceTokenHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+    "baseline": {
+      "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+      "decodedCovarianceHash": "42bd14c2afa519894137d2c3b89fdc50f56be381c1c93de03633544e7fa60d47",
+      "weakCovarianceInsensitiveKey": "6ca8dbb670d34094c2e7c52437565324b56ebb2f489f40162f461b9591951291",
+      "strongCovarianceKey": "1ae6a9fd59d154f0509e48cc937fef7ffd5d31bf4e80c5282bf0e6643d8c2533",
+      "alphaMapHashes": {
+        "1": "8a350c053336f785de08bcda8c05a6bf1e5863681049a8532fe259ea77feed20",
+        "2": "4173a9c7bad38ddc2cacafd297aa2cc0c025650ec7aec98460119377af264667",
+        "8": "506d90b2ef10fc3dc7eeca6db7137cfeb172659cd3f975fab2096de0bcfc8233"
+      },
+      "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1"
+    },
+    "byCondition": {
+      "small-s112": {
+        "condition": "small-s112",
+        "scaleByte": 112,
+        "decodedLogScale": -1,
+        "sourceRawHash": "294ed7c0168f8dac802ccba383aec23e9e50cee27aa59c4ac4975c5f481e8586",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "decodedCovarianceHash": "a967f7cfbf2bb28ced5862b8f3d42374e4e0a4472c5be81e922595c2d7cfc146",
+        "alphaMapHashes": {
+          "1": "dc4ee5bb483860a8f401982adcb7773a707e6514896c263f004eeb6cb2842d33",
+          "2": "7e702f8815d1c366f7e48a401a21b8dd479e9231f8216a38775d6f9c0dd4a171",
+          "8": "0bbcaacc316216855d93206e6d229628052e2a4376ef26fd25519694554967da"
+        },
+        "weakCovarianceInsensitiveKey": "6ca8dbb670d34094c2e7c52437565324b56ebb2f489f40162f461b9591951291",
+        "strongCovarianceKey": "99ab6270f9b1f92236fa4386f9448684a14f734cb9cc041cae03353b6d1ed3fb",
+        "summaryDigest": "27130f066f190992974859d24315edfd51be16f3f8273b38f64f9b86a91a1f38",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.08243844101422615,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "baseline-s116": {
+        "condition": "baseline-s116",
+        "scaleByte": 116,
+        "decodedLogScale": -0.75,
+        "sourceRawHash": "7fcfacbcaefe2608b5eb78a7e777d51434d013cf7c80ad2e2f5ac7164913139d",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "decodedCovarianceHash": "42bd14c2afa519894137d2c3b89fdc50f56be381c1c93de03633544e7fa60d47",
+        "alphaMapHashes": {
+          "1": "8a350c053336f785de08bcda8c05a6bf1e5863681049a8532fe259ea77feed20",
+          "2": "4173a9c7bad38ddc2cacafd297aa2cc0c025650ec7aec98460119377af264667",
+          "8": "506d90b2ef10fc3dc7eeca6db7137cfeb172659cd3f975fab2096de0bcfc8233"
+        },
+        "weakCovarianceInsensitiveKey": "6ca8dbb670d34094c2e7c52437565324b56ebb2f489f40162f461b9591951291",
+        "strongCovarianceKey": "1ae6a9fd59d154f0509e48cc937fef7ffd5d31bf4e80c5282bf0e6643d8c2533",
+        "summaryDigest": "c7ea1a0d12311915a1e8c1a0e33d2c9f3eb4b6ccfedae7122ae89944492614f1",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 0,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": 0,
+        "maxActualError": 0.12773165063845437,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": null
+      },
+      "large-s120": {
+        "condition": "large-s120",
+        "scaleByte": 120,
+        "decodedLogScale": -0.5,
+        "sourceRawHash": "e8fce331c98651f3899fcf6424334c103cb955c8ac97b15f262226568a73d37f",
+        "alphaSequenceHash": "cd929c02c28f36f39409a0dc463298f0f46290e5172f17e490ebecf78b364311",
+        "colorSequenceHash": "9dffce1425fee0113de192df5848ba6ebd9bafd5d5c2e09db16540f9337bd8df",
+        "decodedCovarianceHash": "5f5b28429c41f60cd22010a57db0350afdf83d5e60a3ffed46593653e48e0a04",
+        "alphaMapHashes": {
+          "1": "72c4c35f2e1f21851eea4dfae0bab51ac7f3f83165db7cfc18c0de4963b341ea",
+          "2": "3e844d24f2341cfbede6b1da85fe370280f865c7f15f7201763e18b2239b914e",
+          "8": "7eb29a74786aceb6d69bc61fac954b7997c4f53b80c5b64fee74574b5402510e"
+        },
+        "weakCovarianceInsensitiveKey": "6ca8dbb670d34094c2e7c52437565324b56ebb2f489f40162f461b9591951291",
+        "strongCovarianceKey": "bad5191e8a23b20423c61356edcbaac44531d1d4a135dd54deb16d973c0ab169",
+        "summaryDigest": "b566a5d1f4e8ebb17b2718af029dc5f305d12ebb14e725aeb053d5aac5bdf305",
+        "recomputedUnderestimatedChannels": 0,
+        "staleBaselineUnderestimatedChannels": 32,
+        "minRecomputedSlack": 0,
+        "minStaleSlack": -0.08463239124033439,
+        "maxActualError": 0.08463239124033439,
+        "maxReplayAbs": 0,
+        "firstStaleCounterexample": {
+          "pixel": 477,
+          "x": 15,
+          "y": 14,
+          "channel": 0,
+          "actualError": 0.011094549946214838,
+          "staleBaselineBound": 0,
+          "underestimate": 0.011094549946214838
+        }
+      }
+    },
+    "globalReplayAbs": 0,
+    "globalLocalViolations": 0,
+    "globalCompositionAbs": 3.0531133177191805e-16,
+    "staleUnderestimatedChannels": 32,
+    "changedAlphaMaps": [
+      "small-s112",
+      "large-s120"
+    ],
+    "changedSummaries": [
+      "small-s112",
+      "large-s120"
+    ],
+    "changedStrongKeys": [
+      "small-s112",
+      "large-s120"
+    ]
+  },
+  "checks": {
+    "allPageChecks": true,
+    "positionColorAlphaOrderStable": true,
+    "covarianceBytesAndDecodedValuesChanged": true,
+    "halfReplayBitExact": true,
+    "localHalfGapBoundValid": true,
+    "blockCompositionExact": true,
+    "covarianceInsensitiveKeyCollision": true,
+    "effectiveAlphaMapsInvalidateBothChanges": true,
+    "strongCovarianceKeysInvalidateBothChanges": true,
+    "recomputedSummariesChangeBothConditions": true,
+    "recomputedBoundsConservative": true,
+    "staleCovarianceReuseRejected": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "Changing only isotropic scale changed decoded covariance, every calibrated effective-alpha-map digest, strong condition key and recomputed summary digest. Recomputed bounds remained conservative, while stale baseline reuse underestimated at least one changed-covariance channel.",
+    "candidate": "Bind decoded covariance identity and effective alpha maps in the diagnostic-summary cache key and recompute sequential summaries after either changes.",
+    "rejected": "Stable positions/colors/alpha order/draw order/camera, or a cache key that omits covariance, is sufficient authority to reuse R66-R73 summaries.",
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "isotropicUniformCovarianceOnly": true,
+    "cameraFixed": true,
+    "drawOrderFixed": true,
+    "syntheticRepeatedCenteredSplats": true,
+    "dcColorsOnly": true,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "appleSafariWebKit": false,
+    "realPhotoOrLearnedAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}
