@@ -1,0 +1,325 @@
+{
+  "schema": "kaopu-gaussian-replay-precision/r76",
+  "status": "Candidate-pass-classified",
+  "question": "Which bounded replay input/arithmetic distinction explains the R75 0.00048828125 Half checkpoint mismatch on the fixed 45-degree eccentric footprint?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "threeGaussianSplatBlob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+    "r75Commit": "e525388cb1adeb7073af252b0d5ef314b53bc8ce",
+    "firstRunWithInsufficientSeriesGate": 34900682439
+  },
+  "preregistered": {
+    "fixedInputs": {
+      "rotationPacked": "0xc0000115",
+      "scaleBytes": [
+        128,
+        96,
+        96
+      ],
+      "camera": [
+        0,
+        0,
+        2
+      ],
+      "drawCount": 1941,
+      "order": "R75 deterministic identity order"
+    },
+    "sourceCandidates": [
+      "float-calibration",
+      "half-calibration"
+    ],
+    "arithmeticCandidates": [
+      "double",
+      "f32-final",
+      "f32-staged"
+    ],
+    "selectionRule": "Use the maximum final mismatch location from the inherited Float-calibration/double replay, then record every actual Half prefix at that one pixel.",
+    "promotionRule": "A model may become a Candidate explanation only if full-frame final output and every selected-pixel prefix are exact; this run cannot prove other GPU implementations."
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "sourceTokenHash": "ef31cc849a9006bd2787abf06feea01f72dc69dec77c262e0089a5b5069fb5de",
+    "selectedR75Mismatch": {
+      "mismatchChannels": 6,
+      "maxAbs": 0.00048828125,
+      "maxIndex": 2043,
+      "pixel": 510,
+      "channel": 3
+    },
+    "alphaSourceDiff": {
+      "1": {
+        "differingPixels": 13,
+        "maxAbs": 2.0791776478290558e-7,
+        "maxAt": {
+          "pixel": 544,
+          "x": 16,
+          "y": 16,
+          "float": 0.0016267604660242796,
+          "half": 0.0016269683837890625
+        }
+      },
+      "2": {
+        "differingPixels": 13,
+        "maxAbs": 4.1583552956581116e-7,
+        "maxAt": {
+          "pixel": 544,
+          "x": 16,
+          "y": 16,
+          "float": 0.003253520932048559,
+          "half": 0.003253936767578125
+        }
+      },
+      "8": {
+        "differingPixels": 13,
+        "maxAbs": 0.0000016633421182632446,
+        "maxAt": {
+          "pixel": 544,
+          "x": 16,
+          "y": 16,
+          "float": 0.013014083728194237,
+          "half": 0.0130157470703125
+        }
+      }
+    },
+    "fullStats": {
+      "float-calibration/double": {
+        "mismatchChannels": 6,
+        "maxAbs": 0.00048828125,
+        "maxIndex": 2043,
+        "pixel": 510,
+        "channel": 3,
+        "predictedHash": "ebabf8a0755fd232c5f6f1454ce179be151d2ac0915dc67f68dfb3ea9d59db46"
+      },
+      "float-calibration/f32-final": {
+        "mismatchChannels": 0,
+        "maxAbs": 0,
+        "maxIndex": -1,
+        "pixel": null,
+        "channel": null,
+        "predictedHash": "14673a27afe2fd387cd7b7e55229a13d7ed0cad9e7051fc494e1adc879a68c8c"
+      },
+      "float-calibration/f32-staged": {
+        "mismatchChannels": 0,
+        "maxAbs": 0,
+        "maxIndex": -1,
+        "pixel": null,
+        "channel": null,
+        "predictedHash": "14673a27afe2fd387cd7b7e55229a13d7ed0cad9e7051fc494e1adc879a68c8c"
+      },
+      "half-calibration/double": {
+        "mismatchChannels": 6,
+        "maxAbs": 0.00048828125,
+        "maxIndex": 2047,
+        "pixel": 511,
+        "channel": 3,
+        "predictedHash": "eade94ad40f9c2ddc50c69eeac46fa322722f28b972fbb3f7d9a844e52268159"
+      },
+      "half-calibration/f32-final": {
+        "mismatchChannels": 6,
+        "maxAbs": 0.00048828125,
+        "maxIndex": 2047,
+        "pixel": 511,
+        "channel": 3,
+        "predictedHash": "eade94ad40f9c2ddc50c69eeac46fa322722f28b972fbb3f7d9a844e52268159"
+      },
+      "half-calibration/f32-staged": {
+        "mismatchChannels": 6,
+        "maxAbs": 0.00048828125,
+        "maxIndex": 2047,
+        "pixel": 511,
+        "channel": 3,
+        "predictedHash": "eade94ad40f9c2ddc50c69eeac46fa322722f28b972fbb3f7d9a844e52268159"
+      }
+    },
+    "seriesPixel": {
+      "pixel": 510,
+      "x": 15,
+      "y": 15,
+      "channel": 3
+    },
+    "seriesCaptureComparison": {
+      "observedSelectedFinal": [
+        0.31787109375,
+        0.29248046875,
+        0.3232421875,
+        0.88818359375
+      ],
+      "seriesSelectedFinal": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "valid": false
+    },
+    "seriesStatsInvalidDoNotUse": {
+      "float-calibration/double": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.888671875,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.888671875
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.888671875,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      },
+      "float-calibration/f32-final": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.88818359375,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.88818359375
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.88818359375,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      },
+      "float-calibration/f32-staged": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.88818359375,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.88818359375
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.88818359375,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      },
+      "half-calibration/double": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.88818359375,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.88818359375
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.88818359375,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      },
+      "half-calibration/f32-final": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.88818359375,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.88818359375
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.88818359375,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      },
+      "half-calibration/f32-staged": {
+        "firstMismatchStep": 1,
+        "mismatchSteps": 1941,
+        "maxAbs": 0.88818359375,
+        "maxAt": {
+          "step": 1939,
+          "channel": 3,
+          "actual": 0,
+          "predicted": 0.88818359375
+        },
+        "final": {
+          "mismatchChannels": 4,
+          "maxAbs": 0.88818359375,
+          "maxIndex": 3,
+          "pixel": 0,
+          "channel": 3
+        },
+        "exactTailStart": null
+      }
+    },
+    "exactFinalModels": [
+      "float-calibration/f32-final",
+      "float-calibration/f32-staged"
+    ],
+    "seriesExactModelsInvalidDoNotUse": []
+  },
+  "checks": {
+    "allPageChecks": true,
+    "fixedR75DiagonalFixture": true,
+    "r75FloatDoubleMismatchReproduced": true,
+    "halfSingleSplatIsDistinctSource": true,
+    "allModelsEvaluated": true,
+    "selectedSeriesComplete": true,
+    "seriesCaptureValid": false,
+    "invalidSeriesCaptureClassified": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "The fixed R75 full-frame final mismatch was reproduced. Float calibration plus explicit float32 rounding before Half conversion matched all 4,356 final channels; Half one-splat calibration did not. The preregistered scissored prefix capture returned zeros and is invalid, so no prefix claim is made.",
+    "candidate": "On this exact SwiftShader fixture, float32 blend arithmetic before Half storage is a candidate explanation of the R75 terminal mismatch. Intermediate-write equivalence remains Unknown until a valid checkpoint path is executed.",
+    "rejected": [
+      "Half one-splat readback is automatically a more faithful replay source than Float calibration.",
+      "Final-frame equality alone establishes the tested replay model at intermediate writes.",
+      "The first-run finite-length check was sufficient to validate scissored prefix capture."
+    ],
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "fixedSynthetic45DegreeFixtureOnly": true,
+    "attemptedSelectedPixelPrefixSeriesInvalid": true,
+    "otherPixelsFinalOnly": true,
+    "fixedFunctionBlendInternalsNotDirectlyObserved": true,
+    "formalCrossBackendProof": false,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}

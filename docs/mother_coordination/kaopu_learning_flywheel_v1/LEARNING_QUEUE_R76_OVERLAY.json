@@ -1,0 +1,24 @@
+{
+  "schema": "kaopu-learning-queue-overlay/r76",
+  "updatedAt": "2026-09-15",
+  "appliesTo": "LQ-GAUSSIAN-001",
+  "supersedes": "LEARNING_QUEUE_R75_OVERLAY.json",
+  "doesNotSupersede": [
+    "LEARNING_QUEUE_R71_OVERLAY.json",
+    "MEETINGS/2026-09-15/MOTHER_0230_MICROSCOPE.md"
+  ],
+  "status": "candidate-partial-classified",
+  "question": "Which bounded source/readback or arithmetic distinction explains R75's Half replay mismatch?",
+  "progress": "R76 reproduced the six-channel, 0.00048828125 terminal mismatch. Float calibration plus Float32-rounded blend evaluation matched all 4,356 final channels; Half calibration under all tested arithmetic models did not. The attempted scissored prefix series returned zeros and failed an independent terminal control, so it is excluded and no intermediate-write equivalence is claimed.",
+  "firstRunWithInsufficientSeriesGate": 34900682439,
+  "classifiedRun": 34901077719,
+  "resultLog": "LEARNING_LOG/2026-09-15_GAUSSIAN_REPLAY_PRECISION_R76.md",
+  "sourceLock": "references/gaussian-replay-precision-r76/SOURCE_LOCK.json",
+  "runner": "PROBES/run_gaussian_replay_precision_r76.js",
+  "result": "PROBES/gaussian_replay_precision_result_r76.json",
+  "currentBestView": "CURRENT_BEST_VIEW_R76_GAUSSIAN_REPLAY_PRECISION.md",
+  "toolRouting": "TOOL_ROUTING_R76_GAUSSIAN_REPLAY_PRECISION.json",
+  "motherRouting": "MOTHER_ROUTING_R76_GAUSSIAN_REPLAY_PRECISION.json",
+  "nextGate": "Render sparse prefixes independently, require the last prefix to equal the full-frame control, then distinguish f32-final from f32-staged without using the invalid scissored series.",
+  "microscopeQueueNote": "KAOPU-Q-MICROSCOPE-COLOR-20260915 remains owned by the separate expert task; R76 neither solves nor displaces it."
+}
