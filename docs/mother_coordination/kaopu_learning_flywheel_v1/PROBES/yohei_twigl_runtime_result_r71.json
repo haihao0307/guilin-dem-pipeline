@@ -1,0 +1,492 @@
+{
+  "schema": "kaopu-yohei-twigl-fixed-runtime/r71",
+  "status": "Candidate-pass",
+  "checkedAt": "2026-09-14T11:52:27.289Z",
+  "question": "What do the exact compact source, kernel-expanded form, and explicitly initialized reinterpretation produce in one fixed software WebGL2 runtime?",
+  "sourceLocks": {
+    "snapshotId": "-OGsvumeLdZM1eg3CtFG",
+    "snapshotSourceSha256": "5253b2a44baa9f99af79cd04d85747ac6bb515c021562c7558e841446a4c3fea",
+    "twiglCommit": "969491b285ba217fd895132a466ee6b3128243f3",
+    "fragmenBlobSha": "8fdee9a542b31cc2e3f9a106885c9f529f3c05c9",
+    "noiseBlobSha": "37f731ca606ca3d0998e5bc366b9c478246d13b2",
+    "graphicsMode": 7
+  },
+  "fixture": {
+    "viewport": [
+      32,
+      32
+    ],
+    "times": [
+      0,
+      1.25,
+      7.5
+    ],
+    "target": "RGBA32F plus historical twigl one-to-one post pass to default RGBA8",
+    "uniforms": {
+      "m": [
+        0,
+        0
+      ],
+      "f": 0,
+      "s": 0,
+      "b": "1x1 zero RGBA32F"
+    },
+    "vertex": "historical twigl vertex source transformed for GLSL ES 3.00",
+    "initializationReinterpretation": "i=0, e=0, R=0, q=vec3(0), o=vec4(0); p and s remain assigned before first read",
+    "kernelExpansion": "one dot(cos(p.zyy*s),cos(p.xyx*s)) term expanded componentwise; all other source tokens retained"
+  },
+  "runtime": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+    "platform": "Linux x86_64",
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "drawingBufferColorSpace": "srgb"
+  },
+  "sourceFingerprints": {
+    "compact_undefined": {
+      "sha256": "5253b2a44baa9f99af79cd04d85747ac6bb515c021562c7558e841446a4c3fea",
+      "utf8Bytes": 265
+    },
+    "kernel_expanded_undefined": {
+      "sha256": "155d96c8a80490702224f68982db955c33134f5b00dd9008fb17c36307570c42",
+      "utf8Bytes": 302
+    },
+    "compact_initialized": {
+      "sha256": "5fd12cee3084576797df29eeacb93b9176ce2d67982e5ab6e70765c5882fc674",
+      "utf8Bytes": 294
+    },
+    "kernel_expanded_initialized": {
+      "sha256": "fe546d6f15d3146396c336f72fdb35aecc3ea835b9d95664cf73911d9162049f",
+      "utf8Bytes": 331
+    }
+  },
+  "preprocessedFingerprints": {
+    "compact_undefined": {
+      "sha256": "c11c4581f7e207f87563482dcb401abd6a3a85502f7d4e8a9e78846c150ffda8",
+      "utf8Bytes": 9038
+    },
+    "kernel_expanded_undefined": {
+      "sha256": "a5cafdfbe4f2f0349b946e93bb16afc296f99721b3255d292463875446417e9a",
+      "utf8Bytes": 9075
+    },
+    "compact_initialized": {
+      "sha256": "bb786d03eae0ddcb36ee3467f6dee79056d8f401317e8b3e65f9833324326724",
+      "utf8Bytes": 9067
+    },
+    "kernel_expanded_initialized": {
+      "sha256": "1809ede45c45d4504c031883e9568b006aab56d579642e6635ff313f38669dc7",
+      "utf8Bytes": 9104
+    }
+  },
+  "hostChecks": {
+    "sourceHash": true,
+    "sourceLength": true,
+    "fragmenGitBlob": true,
+    "noiseGitBlob": true,
+    "exactVersionChunk": true,
+    "exactOutputChunk": true,
+    "exactWrapperComposition": true,
+    "exactMainOpen": true,
+    "exactMainClose": true
+  },
+  "transformChecks": {
+    "oneKernelExpression": true,
+    "oneDeclarationInsertion": true,
+    "oneLoopInsertion": true,
+    "compactUnchanged": true,
+    "expandedChanged": true,
+    "initializedChanged": true,
+    "initializedHasNoTargetReadBeforeSeed": true
+  },
+  "runtimeChecks": {
+    "allRunsCompleted": true,
+    "noReadErrors": true,
+    "allChannelCounts": true,
+    "compileAndLinkLogsEmpty": true,
+    "clearControlClassified": true,
+    "initializedRepeatDeterministic": true,
+    "comparisonsClassified": true
+  },
+  "runs": [
+    {
+      "name": "compact_undefined",
+      "time": 0,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "faeb73ba39c350432df8d6aad378e225817320847095caa75fafb75faf9bd8b3",
+      "byteSha256": "77481e62ee953dfeb50d0bafcbb7a1a6cf46163739264486fe8be3de22abe219",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.1909019649028778,
+        1.002480387687683
+      ]
+    },
+    {
+      "name": "compact_undefined",
+      "time": 1.25,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    },
+    {
+      "name": "compact_undefined",
+      "time": 7.5,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "c2e02ad0bb5064c33f9e6f903871afa264bad009ae1992a549ddb53c0b01eb18",
+      "byteSha256": "bab1440c68bcadacd320c763de544300e2a78644b4d9cd3cd0c0d664dd3e248b",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.21295972168445587,
+        0.8987309336662292
+      ]
+    },
+    {
+      "name": "kernel_expanded_undefined",
+      "time": 0,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "faeb73ba39c350432df8d6aad378e225817320847095caa75fafb75faf9bd8b3",
+      "byteSha256": "77481e62ee953dfeb50d0bafcbb7a1a6cf46163739264486fe8be3de22abe219",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.1909019649028778,
+        1.002480387687683
+      ]
+    },
+    {
+      "name": "kernel_expanded_undefined",
+      "time": 1.25,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    },
+    {
+      "name": "kernel_expanded_undefined",
+      "time": 7.5,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "c2e02ad0bb5064c33f9e6f903871afa264bad009ae1992a549ddb53c0b01eb18",
+      "byteSha256": "bab1440c68bcadacd320c763de544300e2a78644b4d9cd3cd0c0d664dd3e248b",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.21295972168445587,
+        0.8987309336662292
+      ]
+    },
+    {
+      "name": "compact_initialized",
+      "time": 0,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "faeb73ba39c350432df8d6aad378e225817320847095caa75fafb75faf9bd8b3",
+      "byteSha256": "77481e62ee953dfeb50d0bafcbb7a1a6cf46163739264486fe8be3de22abe219",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.1909019649028778,
+        1.002480387687683
+      ]
+    },
+    {
+      "name": "compact_initialized",
+      "time": 1.25,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    },
+    {
+      "name": "compact_initialized",
+      "time": 7.5,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "c2e02ad0bb5064c33f9e6f903871afa264bad009ae1992a549ddb53c0b01eb18",
+      "byteSha256": "bab1440c68bcadacd320c763de544300e2a78644b4d9cd3cd0c0d664dd3e248b",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.21295972168445587,
+        0.8987309336662292
+      ]
+    },
+    {
+      "name": "kernel_expanded_initialized",
+      "time": 0,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "faeb73ba39c350432df8d6aad378e225817320847095caa75fafb75faf9bd8b3",
+      "byteSha256": "77481e62ee953dfeb50d0bafcbb7a1a6cf46163739264486fe8be3de22abe219",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.1909019649028778,
+        1.002480387687683
+      ]
+    },
+    {
+      "name": "kernel_expanded_initialized",
+      "time": 1.25,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    },
+    {
+      "name": "kernel_expanded_initialized",
+      "time": 7.5,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "c2e02ad0bb5064c33f9e6f903871afa264bad009ae1992a549ddb53c0b01eb18",
+      "byteSha256": "bab1440c68bcadacd320c763de544300e2a78644b4d9cd3cd0c0d664dd3e248b",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.21295972168445587,
+        0.8987309336662292
+      ]
+    },
+    {
+      "name": "compact_undefined_clear_control",
+      "time": 1.25,
+      "clear": [
+        0.75,
+        0.125,
+        0.5,
+        1
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    },
+    {
+      "name": "compact_initialized_repeat",
+      "time": 1.25,
+      "clear": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "floatReadError": 0,
+      "byteReadError": 0,
+      "shaderLogsEmpty": true,
+      "floatSha256": "0e2719b4672fba88e7917e5cb33cc06a56ede48554ed28c8b7ddd3433faf60a6",
+      "byteSha256": "752e5aff9b993d78fa39c1dbe0d942776641d95bb85b0efa978afc4416f2851d",
+      "channels": 4096,
+      "finite": 4096,
+      "nan": 0,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0,
+      "finiteRange": [
+        0.15228290855884552,
+        1.064376711845398
+      ]
+    }
+  ],
+  "comparisons": {
+    "0": {
+      "compactVsExpandedUndefinedFloatEqual": true,
+      "compactVsInitializedFloatEqual": true,
+      "initializedCompactVsExpandedFloatEqual": true,
+      "initializedCompactVsExpandedByteEqual": true
+    },
+    "1.25": {
+      "compactVsExpandedUndefinedFloatEqual": true,
+      "compactVsInitializedFloatEqual": true,
+      "initializedCompactVsExpandedFloatEqual": true,
+      "initializedCompactVsExpandedByteEqual": true
+    },
+    "7.5": {
+      "compactVsExpandedUndefinedFloatEqual": true,
+      "compactVsInitializedFloatEqual": true,
+      "initializedCompactVsExpandedFloatEqual": true,
+      "initializedCompactVsExpandedByteEqual": true
+    }
+  },
+  "controls": {
+    "compactUndefinedClearColorAffectsFloat": false,
+    "compactUndefinedClearColorAffectsByte": false,
+    "compactInitializedRepeatFloatEqual": true,
+    "compactInitializedRepeatByteEqual": true
+  },
+  "classifications": {
+    "observation": "All hashes and pixel summaries describe only the pinned Chromium/SwiftShader condition recorded by runtime identity.",
+    "candidate": "The explicitly initialized compact/expanded pair is a portable reinterpretation candidate for differential testing; it is not the author original.",
+    "rejected": [
+      "A successful compile or stable pixel hash makes undefined local/output initialization portable.",
+      "A compact-versus-expanded match or mismatch under undefined state proves algebraic equivalence or inequivalence.",
+      "A single software renderer establishes the author recording pixels, cross-GPU behavior, physical meaning, or visual acceptance."
+    ],
+    "unknown": [
+      "Author recording browser, GPU, driver, compiler and framebuffer pixels",
+      "Cross-browser and cross-GPU results",
+      "Artwork adaptation and redistribution permission",
+      "Mother acceptance and production applicability"
+    ]
+  },
+  "sourcePolicy": "No raw author artwork source or preprocessed shader text is emitted; only fingerprints, lengths, runtime identity and aggregate pixel evidence are persisted."
+}
