@@ -1,0 +1,184 @@
+{
+  "schema": "kaopu-yohei-microscope-outer-state-probe/r68",
+  "status": "candidate-partial",
+  "question": "Does the published compact outer loop define portable deterministic state, and does d/=-d reverse the ray direction?",
+  "sourceExpression": "float i,e,R,s; vec3 q,p,d=...; for(q--; i++<119.; i>89.?d/=-d:d){...}",
+  "normativeInputs": {
+    "glslSpec": "Khronos OpenGL Shading Language 4.60.8",
+    "uninitializedRead": "legal, value undefined",
+    "compoundAssignment": "lvalue op= expression is equivalent to lvalue = lvalue op expression",
+    "vectorArithmetic": "same-size vector arithmetic is component-wise"
+  },
+  "explicitSeedCounterexamples": {
+    "iterationTraces": [
+      {
+        "initialI": 0,
+        "bodyIterations": 119,
+        "firstSnapUpdate": {
+          "afterBody": 90,
+          "i": 90
+        },
+        "snapUpdateCount": 30,
+        "finalI": 120
+      },
+      {
+        "initialI": 5,
+        "bodyIterations": 114,
+        "firstSnapUpdate": {
+          "afterBody": 85,
+          "i": 90
+        },
+        "snapUpdateCount": 30,
+        "finalI": 120
+      },
+      {
+        "initialI": -2,
+        "bodyIterations": 121,
+        "firstSnapUpdate": {
+          "afterBody": 92,
+          "i": 90
+        },
+        "snapUpdateCount": 30,
+        "finalI": 120
+      }
+    ],
+    "qPostDecrement": {
+      "fromZero": [
+        -1,
+        -1,
+        -1
+      ],
+      "fromOther": [
+        1,
+        -4,
+        -0.5
+      ]
+    },
+    "firstPosition": {
+      "fromZeroQ": {
+        "qAfterPostDecrement": [
+          -1,
+          -1,
+          -1
+        ],
+        "comparedI": 0,
+        "i": 1,
+        "e": 0.0002,
+        "p": [
+          -1,
+          -1,
+          -1
+        ],
+        "radius": 1.7320508075688772
+      },
+      "fromOneQ": {
+        "qAfterPostDecrement": [
+          0,
+          0,
+          0
+        ],
+        "comparedI": 0,
+        "i": 1,
+        "e": 0.0002,
+        "p": [
+          0,
+          0,
+          0
+        ],
+        "radius": 0
+      },
+      "note": "With identical explicit i/e/R/d seeds, q0=[1,1,1] reaches radius 0 while q0=[0,0,0] does not."
+    }
+  },
+  "directionUpdate": {
+    "input": [
+      0.25,
+      -0.5,
+      1
+    ],
+    "source_d_divide_equals_negative_d": [
+      -1,
+      -1,
+      -1
+    ],
+    "actual_negation": [
+      -0.25,
+      0.5,
+      -1
+    ],
+    "maxAbsDifference": 1.5,
+    "zeroComponentInput": [
+      0,
+      0.5,
+      1
+    ],
+    "zeroComponentResult": [
+      "NaN",
+      -1,
+      -1
+    ],
+    "zeroComponentClassification": "undefined/non-finite boundary; do not normalize it into a portable rule"
+  },
+  "undefinedFirstReadsInPublishedFragment": [
+    {
+      "variable": "q",
+      "site": "q--",
+      "consequence": "post-decrement reads an undefined old vector before writing it"
+    },
+    {
+      "variable": "i",
+      "site": "i++<119.",
+      "consequence": "iteration count and branch boundary depend on an undefined old scalar"
+    },
+    {
+      "variable": "e",
+      "site": "e+=i/5e3",
+      "consequence": "compound assignment reads an undefined old scalar"
+    },
+    {
+      "variable": "R",
+      "site": "d*e*R*.16",
+      "consequence": "R is read before the later R=length(p) assignment"
+    },
+    {
+      "variable": "o",
+      "site": "o+=e*e/25.",
+      "consequence": "initial value depends on the unavailable host wrapper/output contract"
+    }
+  ],
+  "checks": {
+    "zeroSeedRuns119Bodies": true,
+    "fiveSeedRuns114Bodies": true,
+    "negativeSeedRuns121Bodies": true,
+    "firstSnapAfterBody90": true,
+    "zeroSeedHas30SnapUpdates": true,
+    "sourceUpdateSnapsNonzeroComponentsToMinusOne": true,
+    "sourceUpdateIsNotDirectionReversal": true,
+    "zeroDirectionComponentIsNonFinite": true,
+    "qPostDecrementFromZeroBecomesMinusOne": true,
+    "qPostDecrementDependsOnSeed": true,
+    "explicitQSeedChangesFirstRadius": true,
+    "oneQSeedHitsKnownOriginSingularity": true
+  },
+  "totals": {
+    "passed": 12,
+    "total": 12
+  },
+  "classifications": {
+    "observation": "The article visibly declares i/e/R/s and q/p without initializers and visibly contains i++, e+=, q+=, R use-before-assignment, and d/=-d.",
+    "candidate": "The typographic q dash is repaired as q--; exact source bytes and host wrapper remain unavailable.",
+    "currentBestView": "The fragment is not a portable deterministic standalone program without an explicit initialization/host contract. d/=-d snaps each nonzero component to -1; it is not vector negation.",
+    "rejected": [
+      "Uninitialized GLSL locals can be treated as portable zero initialization.",
+      "d/=-d reverses the existing direction vector.",
+      "One matching driver image proves defined cross-runtime semantics."
+    ],
+    "unknown": [
+      "Original byte-exact source and exact host wrapper",
+      "Whether the author intentionally relied on a particular compiler or host initialization behavior",
+      "Original GLSL profile, precision, GPU, framebuffer and pixels",
+      "Permission or license for adaptation and redistribution"
+    ]
+  },
+  "evidenceBoundary": "This CPU probe checks explicit-seed consequences and source-token semantics. It is not an original GPU pixel observation or an independent physical root."
+}

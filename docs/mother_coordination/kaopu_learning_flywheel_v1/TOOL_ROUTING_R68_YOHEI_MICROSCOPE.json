@@ -1,0 +1,32 @@
+{
+  "schema": "kaopu-tool-routing/r68",
+  "status": "candidate-routing-only",
+  "topic": "Yohei Macroscopic microscope state and compound-operator audit",
+  "routes": [
+    {
+      "stage": "source_and_host_provenance",
+      "preferred": ["author byte-exact source", "original twigl or other host wrapper", "explicit license or permission"],
+      "gate": "lock source bytes, wrapper bytes, GLSL profile and every host-provided input/output initializer",
+      "failureMode": "A visible snippet is treated as a complete deterministic program."
+    },
+    {
+      "stage": "language_semantics",
+      "preferred": ["Khronos GLSL specification pinned to version 4.60.8"],
+      "gate": "inventory first reads/writes and expand every compound/vector operator literally",
+      "failureMode": "Undefined locals become implicit zero or d/=-d is mislabeled as direction reversal."
+    },
+    {
+      "stage": "counterexample_replay",
+      "preferred": ["Node.js deterministic explicit-seed probe"],
+      "gate": "vary seeds and zero components without claiming original pixels",
+      "failureMode": "A derivation is mislabeled as independent renderer or physical evidence."
+    },
+    {
+      "stage": "future_runtime_comparison",
+      "preferred": ["fixed source and wrapper", "fixed GLSL runtime", "compact/literal/portable variants", "pixel and NaN masks"],
+      "gate": "begin only after source, host and license gates; keep faithful and portable variants separate",
+      "failureMode": "One permissive driver image is generalized into portable defined semantics."
+    }
+  ],
+  "notAuthorized": ["production asset generation", "production Mother branch edits", "silent zero initialization", "d=-d substitution", "copied shader redistribution"]
+}
