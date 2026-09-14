@@ -1,0 +1,36 @@
+{
+  "schema": "kaopu-tool-routing/r70",
+  "status": "candidate-routing",
+  "routes": [
+    {
+      "tool": "Author publication page",
+      "use": "discover and preserve the same-author snapshot link",
+      "gate": "record post/reply IDs and exact observed URL",
+      "notProofOf": ["snapshot bytes", "runtime build", "pixels"]
+    },
+    {
+      "tool": "twigl public snapshot service",
+      "use": "read source fingerprint, mode and creation time",
+      "gate": "HTTP JSON, schema, source hash/length and mode",
+      "notProofOf": ["browser/GPU", "initial undefined state", "visual acceptance"]
+    },
+    {
+      "tool": "GitHub Actions Node 20",
+      "use": "source-free repeatable fingerprint and chronology checks",
+      "gate": "15 checks and zero failures",
+      "notProofOf": ["independent Observation Root", "GPU output", "production readiness"]
+    },
+    {
+      "tool": "Firebase official documentation",
+      "use": "classify missing-vs-null behavior",
+      "gate": "explicit key-presence test",
+      "notProofOf": ["historical deployed client version"]
+    }
+  ],
+  "prohibitions": [
+    "Do not republish the raw artwork source while its license is Unknown.",
+    "Do not treat article typography as canonical shader bytes.",
+    "Do not treat a source snapshot as a recording-runtime or pixel receipt."
+  ],
+  "productionChangesAuthorized": false
+}
