@@ -1,0 +1,71 @@
+{
+  "schema": "kaopu-gaussian-rounding-matrix-source-lock/r79",
+  "status": "preregistered",
+  "question": "Can three fixed r186 Half-boundary counterexamples separately test complement, product and sum Float32 staging?",
+  "coordinator_parent": "67179ec3aec92ff308899e21f006fae2bb2d566b",
+  "three": {
+    "package": "0.186.0",
+    "tag_commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "GaussianSplat_js_blob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+  },
+  "derivation": "CPU search using only the R78 center Alpha ratio identified shortest two-record candidates whose approximate predictions isolate one declared ablation. Actual Float calibration must reproduce all three isolated divergences before any Half target is rendered.",
+  "cases": {
+    "no_comp": {
+      "stage_tested": "Float32 rounding of 1-alpha",
+      "target_channel": "red",
+      "records": [
+        {"alpha_byte": 19, "rgb_bytes": [240, 0, 0]},
+        {"alpha_byte": 237, "rgb_bytes": [4, 0, 0]}
+      ]
+    },
+    "no_prod": {
+      "stage_tested": "Float32 rounding of source and destination products",
+      "target_channel": "green",
+      "records": [
+        {"alpha_byte": 13, "rgb_bytes": [0, 8, 0]},
+        {"alpha_byte": 123, "rgb_bytes": [0, 248, 0]}
+      ]
+    },
+    "no_sum": {
+      "stage_tested": "Float32 rounding of the product sum",
+      "target_channel": "blue",
+      "records": [
+        {"alpha_byte": 1, "rgb_bytes": [0, 0, 224]},
+        {"alpha_byte": 120, "rgb_bytes": [0, 0, 192]}
+      ]
+    }
+  },
+  "fixed_fixture": {
+    "rotation_packed": "0xc0000115",
+    "scale_bytes": [128, 96, 96],
+    "camera": [0, 0, 2],
+    "order": "identity",
+    "target": "HalfFloatType",
+    "viewport": [33, 33]
+  },
+  "models": {
+    "staged": "Float32 complement, each product and sum before nearest-even Half storage",
+    "no_comp": "double complement, otherwise staged",
+    "no_prod": "double products, otherwise staged",
+    "no_sum": "double sum, otherwise staged"
+  },
+  "execution_order": [
+    "render independent Float one-splat Alpha calibration for bytes 1, 13, 19, 120, 123 and 237",
+    "compute all four predicted Half frames for all three cases",
+    "abort before every target render unless each case differs from staged only for its declared ablation at its declared center channel",
+    "independently render Half prefixes 1 and 2 for each case",
+    "independently render a duplicate prefix-2 control for each case",
+    "classify exact matches without tolerance"
+  ],
+  "observation_root": "same Chromium/ANGLE Vulkan SwiftShader software root as R59-R78",
+  "not_claimed": [
+    "hidden fixed-function instruction sequence",
+    "all blend inputs",
+    "hardware GPU",
+    "WebGPU",
+    "Safari or iPhone",
+    "real asset",
+    "human acceptance",
+    "Mother adoption"
+  ]
+}

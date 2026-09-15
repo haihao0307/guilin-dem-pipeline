@@ -1,0 +1,5 @@
+let raw='';for await(const chunk of process.stdin)raw+=chunk;const d=JSON.parse(raw);
+const required=['allPageChecks','calibrationContract','caseTargetLocks','allCasesIsolatedBeforeTarget','independentPrefixReadbacks','duplicateControls','allModelsEvaluated','outcomeClassified'];
+const failures=required.filter(k=>d.checks?.[k]!==true);if(d.schema!=='kaopu-gaussian-rounding-matrix/r79')failures.push('schema');
+const out={schema:'kaopu-gaussian-rounding-matrix-gate/r79',status:failures.length?'Candidate-fail':'Candidate-pass',failures,calibrationAlphaAtCenter:d.calibrationAlphaAtCenter,allThreeStagesRequired:d.allThreeStagesRequired,cases:Object.fromEntries(Object.entries(d.analysis||{}).map(([k,v])=>[k,{targetChannel:v.targetChannel,preTarget:v.preTarget,comparisons:v.comparisons,exactBothPrefixes:v.exactBothPrefixes,targetAblationRejected:v.targetAblationRejected,stagedExact:v.stagedExact,duplicateControl:v.duplicateControl,centerObserved:v.centerObserved,observedHashes:v.observedHashes}])),limits:d.limits};
+process.stdout.write(JSON.stringify(out,null,2)+'\n');if(failures.length)process.exitCode=10;
