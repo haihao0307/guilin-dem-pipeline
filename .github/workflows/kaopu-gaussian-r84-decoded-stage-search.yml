@@ -1,0 +1,38 @@
+name: KAOPU Gaussian R84 Decoded Stage Search
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_stage_search_r84.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_decoded_stage_search_gate_r84.mjs
+      - .github/workflows/kaopu-gaussian-r84-decoded-stage-search.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r84-decoded-stage-search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Replay bounded decoded-domain candidate search
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_stage_search_r84.mjs
+      - name: Validate R84 semantic outcome
+        run: |
+          cat r84-result.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_decoded_stage_search_gate_r84.mjs > r84-gate.json
+          cat r84-gate.json
+          node -e "const d=require('./r84-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+      - name: Upload R84 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r84-decoded-stage-search
+          path: r84-*.json
+          if-no-files-found: warn
+          retention-days: 30

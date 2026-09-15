@@ -1,0 +1,5 @@
+let raw='';for await(const chunk of process.stdin)raw+=chunk;const d=JSON.parse(raw);
+const required=['r80TableIdentity','r82TableIdentity','r83CollapseReproduced','boundedSearch','expectedFirstHitsExact','allThreeIsolated','newIdentity','noHalfTargetRendered'];
+const failures=required.filter(k=>d.checks?.[k]!==true);
+if(d.schema!=='kaopu-gaussian-decoded-stage-search/r84')failures.push('schema');if(d.answer!=='yes-candidate-matrix-found')failures.push('answer');if(d.candidateMatrix?.id!=='KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A')failures.push('matrix-id');if(Object.keys(d.candidateMatrix?.cases||{}).sort().join(',')!=='no_comp,no_prod,no_sum')failures.push('three-cases');if(d.limits?.candidateDiscoveryWasExploratoryBeforeFreeze!==true||d.limits?.searchExhaustive!==false||d.limits?.halfTargetRendered!==false)failures.push('limits');
+const out={schema:'kaopu-gaussian-decoded-stage-search-gate/r84',status:failures.length?'Candidate-fail':'Candidate-pass',failures,answer:d.answer,matrix:d.candidateMatrix,search:d.search,checks:d.checks,limits:d.limits};process.stdout.write(JSON.stringify(out,null,2)+'\n');if(failures.length)process.exitCode=10;
