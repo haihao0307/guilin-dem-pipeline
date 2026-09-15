@@ -1,0 +1,5 @@
+import fs from 'node:fs';
+const r=JSON.parse(fs.readFileSync(process.argv[2]||'r85-result.json','utf8'));
+const checks={schema:r.schema==='kaopu-gaussian-decoded-stage-target/r85',status:r.status==='Candidate-pass',matrixFrozen:r.matrixId==='KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A',prefix1Gate:r.checks?.prefix1GatePassed===true,prefix2ActuallyClassified:Object.keys(r.analysis||{}).length===3,eachAblationRejected:r.checks?.eachDeclaredAblationRejected===true,stagedExact:r.checks?.stagedCenterExactAllCases===true,intersectionStagedOnly:JSON.stringify(r.exactIntersection)===JSON.stringify(['staged']),duplicatesExact:r.checks?.allDuplicateControlsExact===true,boundariesPreserved:r.limits?.hardwareGpu===false&&r.limits?.webgpu===false&&r.limits?.realAsset===false&&r.limits?.motherAdoptionAcknowledged===false};
+const gate={schema:'kaopu-gaussian-decoded-stage-target-gate/r85',status:Object.values(checks).every(Boolean)?'pass':'fail',checks};
+fs.writeFileSync('r85-gate.json',JSON.stringify(gate,null,2)+'\n');console.log(JSON.stringify(gate,null,2));if(gate.status!=='pass')process.exitCode=11;

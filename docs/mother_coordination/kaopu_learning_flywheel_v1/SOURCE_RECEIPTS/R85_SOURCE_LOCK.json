@@ -1,0 +1,19 @@
+{
+  "schema": "kaopu-gaussian-decoded-stage-target-source-lock/r85",
+  "status": "Candidate-preregistered-before-target",
+  "parentCommit": "1482a7c8892adbec974eb090e7c9173069ec5512",
+  "matrixId": "KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A",
+  "matrixSourceCommit": "1482a7c8892adbec974eb090e7c9173069ec5512",
+  "three": {"package":"0.186.0","tagCommit":"148ef33ecb6d2502ff796d4554abd1549c95d519","dataUtilsBlob":"44e34e8d912528aa9f7219390e9ba82b6c9609c6"},
+  "r80AlphaHash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+  "r82ColorHash": "0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1",
+  "cases": {
+    "no_comp": {"targetChannel":0,"records":[{"alphaByte":207,"colorRawByte":225,"colorDecodedByte":255},{"alphaByte":144,"colorRawByte":186,"colorDecodedByte":238}],"prefix1":0.336669921875,"predictedHalf":{"staged":0.476318359375,"no_comp":0.4765625,"no_prod":0.476318359375,"no_sum":0.476318359375}},
+    "no_prod": {"targetChannel":1,"records":[{"alphaByte":84,"colorRawByte":127,"colorDecodedByte":127},{"alphaByte":119,"colorRawByte":164,"colorDecodedByte":196}],"prefix1":0.06805419921875,"predictedHalf":{"staged":0.2037353515625,"no_comp":0.2037353515625,"no_prod":0.20361328125,"no_sum":0.2037353515625}},
+    "no_sum": {"targetChannel":2,"records":[{"alphaByte":140,"colorRawByte":143,"colorDecodedByte":157},{"alphaByte":40,"colorRawByte":67,"colorDecodedByte":14}],"prefix1":0.1402587890625,"predictedHalf":{"staged":0.134765625,"no_comp":0.134765625,"no_prod":0.134765625,"no_sum":0.1346435546875}}
+  },
+  "targetGate": "First reproduce all six R80 Float planes and exact R82 decoded attributes. Render three independent prefix-1 Half frames and require exact full-plane f32-staged replay. Only after all pass may three independent prefix-2 frames and duplicate controls be read.",
+  "acceptance": "Each prefix-2 center channel equals the staged prediction, differs from its declared ablation, and the intersection of exact center models across cases is staged only; all duplicate frames are bit-identical.",
+  "evidenceRoot": "Three.js r186 WebGPURenderer forced WebGL fallback; Chromium 143 / ANGLE Vulkan SwiftShader",
+  "limits": {"hardwareGpu":false,"webgpu":false,"safariIphone":false,"realAsset":false,"humanAcceptance":false,"motherAdoptionAcknowledged":false}
+}

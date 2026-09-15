@@ -1,0 +1,36 @@
+name: KAOPU Gaussian R85 decoded stage target
+on:
+  push:
+    branches: [coordination/kaopu-learning-flywheel-r1-20260909]
+    paths:
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_decoded_stage_target_r85.html'
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_stage_target_r85.js'
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_decoded_stage_target_gate_r85.mjs'
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/SOURCE_RECEIPTS/R85_SOURCE_LOCK.json'
+      - '.github/workflows/kaopu-gaussian-r85-decoded-stage-target.yml'
+permissions:
+  contents: read
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save three@0.186.0 playwright@1.57.0
+      - run: npx playwright install --with-deps chromium
+      - name: Serve fixed tree
+        run: npx http-server . -p 8765 > /tmp/r85-http.log 2>&1 &
+      - name: Run preregistered target
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_stage_target_r85.js
+      - name: Semantic gate
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_decoded_stage_target_gate_r85.mjs r85-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kaopu-gaussian-r85-decoded-stage-target
+          path: |
+            r85-result.json
+            r85-gate.json
+            /tmp/r85-http.log
