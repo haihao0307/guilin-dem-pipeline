@@ -9,19 +9,16 @@ const context=await browser.newContext({viewport:{width:1280,height:800},reduced
 if(target.includes('githack'))await context.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
 const page=await context.newPage();
 const failures=[];const check=(v,m)=>{if(!v)failures.push(m);};
-async function historyButton(p){await p.waitForSelector('#history-1953-toggle',{state:'visible',timeout:120000});return p.locator('#history-1953-toggle');}
 async function historyDiag(p){return p.locator('#terrain').evaluate(c=>({
   terrainEvents:Number(c.dataset.history1953TerrainEvents||0),
-  buildAttempts:Number(c.dataset.history1953BuildAttempts||0),
   staleEvents:Number(c.dataset.history1953StaleEvents||0),
   lastEventPatch:c.dataset.history1953LastEventPatch||'',
   lastPatch:c.dataset.history1953LastPatch||'',
   committedPatch:c.dataset.history1953CommittedPatch||'',
   segments:Number(c.dataset.history1953ControlSegments||0),
-  terrainAnchored:Number(c.dataset.history1953TerrainAnchored||0),
-  referenceAnchored:Number(c.dataset.history1953ReferenceAnchored||0),
   frameRejected:Number(c.dataset.history1953FrameSegmentsRejected||0),
   rejectedOutside:Number(c.dataset.history1953RejectedOutsidePatch||0),
+  visualized:c.dataset.history1953Visualized||'',
   lastError:c.dataset.history1953LastError||'',
   osmPatch:c.dataset.osmPatch||'',
   patch:c.dataset.patch||''
@@ -49,20 +46,21 @@ try{
   check(Number(ds.osmRoadParts)===q2.roads.partCount,'runtime did not consume filtered query-02 road parts');check(ds.historyMode==='1942-preclean-r3','canvas history mode missing');check(Number(ds.historyRemovedMajorBridgeParts)===history.summary.majorBridge,'canvas major bridge summary mismatch');check(Number(ds.historyRemovedConstructionParts)===history.summary.construction,'canvas construction summary mismatch');await page.screenshot({path:`${out}/desktop-query-02.png`,fullPage:true});
 
   await page.selectOption('#location','overview');await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmPatch==='overview',{},{timeout:120000});
-  const hb=await historyButton(page);check((await hb.getAttribute('aria-pressed'))==='false','1953 control layer must default off');
-  try{await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1953BuildAttempts||0)>0,{},{timeout:30000});}catch{}
-  await page.waitForTimeout(1200);
-  const hdiag=await historyDiag(page);
-  check(hdiag.terrainEvents>0,'1953 layer received no canonical terrain event');
-  check(hdiag.buildAttempts>0,'1953 layer never started a build');
-  check(hdiag.lastError==='','1953 layer build error: '+hdiag.lastError);
-  check(hdiag.committedPatch==='overview','1953 layer did not commit overview patch');
-  check(hdiag.segments>0,'1953 control layer generated no georeferenced segments');
-  check(hdiag.referenceAnchored>0,'1953 sea-gap reference anchoring was not exercised');
-  if(hdiag.segments>0){await hb.click();check((await hb.getAttribute('aria-pressed'))==='true','1953 toggle did not turn on');check(await page.locator('#history-1953-layer-card').isVisible(),'1953 control card not visible after toggle on');await page.screenshot({path:`${out}/desktop-overview-1953-on.png`,fullPage:true});await hb.click();check((await hb.getAttribute('aria-pressed'))==='false','1953 toggle did not turn off');}
+  try{await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1953ControlSegments||0)>0,{},{timeout:30000});}catch{}
+  await page.waitForTimeout(600);
+  const hdiag=await historyDiag(page),control=await page.evaluate(()=>window.__wenzhouHistoricalControl1953||null);
+  check(hdiag.terrainEvents>0,'1953 control index received no canonical terrain event');
+  check(hdiag.lastError==='','1953 control index error: '+hdiag.lastError);
+  check(hdiag.committedPatch==='overview','1953 control index did not commit overview patch');
+  check(hdiag.segments>0,'1953 control index has no georeferenced segments');
+  check(control?.schema==='wenzhou-historical-control-index/1953-v1','1953 control index schema missing');
+  check(control?.visualized===false,'1953 raw controls must remain nonvisual');
+  check(await page.locator('#history-1953-toggle').count()===0,'legacy 1953 visual toggle still present');
+  check(await page.locator('#history-1953-layer-card').count()===0,'legacy 1953 visual card still present');
+  check(await page.locator('html').getAttribute('data-wenzhou-history-1953-visual')==='false','document does not declare nonvisual 1953 controls');
   await page.screenshot({path:`${out}/desktop-overview.png`,fullPage:true});
 
-  const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});const mp=await mobile.newPage();await mp.goto(target,{waitUntil:'domcontentloaded',timeout:120000});await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r3',{},{timeout:120000});check(await mp.locator('#history-1942-card').count()===1,'mobile history status card missing');const brand=await mp.locator('.brand p').textContent();check(brand?.includes('1942/1953'),'mobile header does not identify historical preclean');const mhb=await historyButton(mp);check((await mhb.getAttribute('aria-pressed'))==='false','mobile 1953 layer must default off');await mp.screenshot({path:`${out}/mobile-390x844.png`,fullPage:true});await mobile.close();
-  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedConstructionParts:history.summary.construction,removedMajorBridgeParts:history.summary.majorBridge,removedMajorBridgeByClass:history.summary.majorBridgeByClass,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,historical1953Layer:hdiag,overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,removedMotorwayClasses:overviewCheck.motorway,removedConstructionParts:overviewCheck.construction,removedMajorBridgeParts:overviewCheck.bridge},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts,removedConstructionParts:q2summary.construction,removedMajorBridgeParts:q2summary.majorBridge},failures},null,2));
-}catch(e){failures.push(e.stack||String(e));let diag={};try{diag=await historyDiag(page);}catch{}console.log(JSON.stringify({passed:false,target,historical1953Layer:diag,failures},null,2));}
+  const mobile=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});if(target.includes('githack'))await mobile.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});const mp=await mobile.newPage();await mp.goto(target,{waitUntil:'domcontentloaded',timeout:120000});await mp.waitForFunction(()=>document.documentElement.dataset.wenzhouHistoryMode==='1942-preclean-r3',{},{timeout:120000});check(await mp.locator('#history-1942-card').count()===1,'mobile history status card missing');const brand=await mp.locator('.brand p').textContent();check(brand?.includes('1942/1953'),'mobile header does not identify historical preclean');check(await mp.locator('#history-1953-toggle').count()===0,'mobile legacy 1953 visual toggle still present');await mp.screenshot({path:`${out}/mobile-390x844.png`,fullPage:true});await mobile.close();
+  console.log(JSON.stringify({passed:!failures.length,target,removedMotorwayParts:history.summary.motorway,removedMotorwayLinkParts:history.summary.motorwayLink,removedConstructionParts:history.summary.construction,removedMajorBridgeParts:history.summary.majorBridge,removedMajorBridgeByClass:history.summary.majorBridgeByClass,removedRoadParts:history.summary.removedParts,removedRoadSegments:history.summary.removedSegments,historical1953Control:hdiag,overview:{sourceParts:overview.roads.sourcePartCount,filteredParts:overview.roads.partCount,removedMotorwayClasses:overviewCheck.motorway,removedConstructionParts:overviewCheck.construction,removedMajorBridgeParts:overviewCheck.bridge},query02:{sourceParts:q2.roads.sourcePartCount,filteredParts:q2.roads.partCount,removedParts:q2summary.removedParts,removedConstructionParts:q2summary.construction,removedMajorBridgeParts:q2summary.majorBridge},failures},null,2));
+}catch(e){failures.push(e.stack||String(e));let diag={};try{diag=await historyDiag(page);}catch{}console.log(JSON.stringify({passed:false,target,historical1953Control:diag,failures},null,2));}
 finally{await browser.close();}if(failures.length)process.exit(1);
