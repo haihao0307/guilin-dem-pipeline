@@ -1,0 +1,57 @@
+{
+  "schema": "kaopu-gaussian-decoded-case-viability-source-lock/r83",
+  "status": "preregistered",
+  "question": "After frozen r186 COLOR_LUT decode, do the unchanged R81 raw-byte cases remain isolated Half-boundary discriminators?",
+  "coordinator_parent": "2d806ddbf04585c66612bf2ef4650fee88332915",
+  "inherits_completed_expert_candidate": "docs/mother_coordination/kaopu_learning_flywheel_v1/MEETINGS/2026-09-15/EXPERT_MICROSCOPE_COLOR_0300.md",
+  "mother_feedback": {
+    "r82_acknowledged": false,
+    "source": "MOTHER_ROUTING_R82_GAUSSIAN_COLOR_DECODE.json"
+  },
+  "three": {
+    "package": "0.186.0",
+    "r81_page_blob": "ae7323abea8aa1ce6da87f499f6258d2ad2d2886"
+  },
+  "frozen_inputs": {
+    "r80_commit": "7b0e1509c6089f7c896f4681390fc9d2f5f91e47",
+    "r80_center_table_hash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+    "r82_commit": "f7bdbe3c150933ecb5dda5799c3d43a38f33ddf3",
+    "r82_color_table_hash": "0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1"
+  },
+  "unchanged_r81_cases": {
+    "no_comp": [{"alpha":21,"rgb":[248,0,0]},{"alpha":52,"rgb":[1,0,0]}],
+    "no_prod": [{"alpha":13,"rgb":[0,8,0]},{"alpha":123,"rgb":[0,248,0]}],
+    "no_sum": [{"alpha":1,"rgb":[0,0,224]},{"alpha":120,"rgb":[0,0,192]}]
+  },
+  "preregistered_center_result": {
+    "no_comp": 0.03125,
+    "no_prod": 0.2000732421875,
+    "no_sum": 0.19189453125,
+    "all_four_models_equal_per_case": true
+  },
+  "execution_order": [
+    "verify R80 and R82 table bytes and hashes",
+    "reproduce the six R80 Float Alpha planes and hashes",
+    "apply the R82 decoded color bytes to the unchanged R81 source-byte records",
+    "evaluate all four replay models at prefixes one and two",
+    "classify whether each original declared stage remains isolated",
+    "do not render any Half target"
+  ],
+  "semantic_acceptance": {
+    "expected_answer": "no-none",
+    "all_three_declared_center_discriminators_must_collapse": true,
+    "semantic_gate_must_require_the_answer_and_target_prohibition": true
+  },
+  "hard_prohibitions": [
+    "No Half target render",
+    "No prefix-one or prefix-two Half readback",
+    "No replacement of R81 raw-byte cases",
+    "No arithmetic-stage or cross-backend conclusion",
+    "No production branch mutation"
+  ],
+  "observation_roots": {
+    "r80_runtime": "Repeated Float calibration on the same Chromium/ANGLE SwiftShader lineage",
+    "r82_parser": "Pinned official source and byte-identical parser execution; not algorithmically independent",
+    "r83_derivation": "Deterministic replay derivation from frozen R80 and R82 observations"
+  }
+}

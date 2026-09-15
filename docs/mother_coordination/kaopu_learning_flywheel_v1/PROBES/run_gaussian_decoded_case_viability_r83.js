@@ -1,0 +1,47 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { chromium } from 'playwright';
+import { DataUtils } from 'three';
+
+const WIDTH=33,HEIGHT=33,PIXELS=WIDTH*HEIGHT,CHANNELS=PIXELS*4,CENTER=544,ROTATION_PACKED=0xc0000115;
+const MODELS=['staged','no_comp','no_prod','no_sum'],ALPHAS=[1,13,21,52,120,123];
+const RAW_CASES={
+ no_comp:{targetChannel:0,records:[{alpha:21,rgbBytes:[248,0,0]},{alpha:52,rgbBytes:[1,0,0]}]},
+ no_prod:{targetChannel:1,records:[{alpha:13,rgbBytes:[0,8,0]},{alpha:123,rgbBytes:[0,248,0]}]},
+ no_sum:{targetChannel:2,records:[{alpha:1,rgbBytes:[0,0,224]},{alpha:120,rgbBytes:[0,0,192]}]}
+};
+const EXPECTED_CENTER={no_comp:0.03125,no_prod:0.2000732421875,no_sum:0.19189453125};
+const R80_PATH='docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_alpha_calibration_result_r80.json';
+const R82_PATH='docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_color_decode_result_r82.json';
+const R80_HASH='19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8';
+const R82_HASH='0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1';
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const r80=JSON.parse(fs.readFileSync(R80_PATH,'utf8')),r82=JSON.parse(fs.readFileSync(R82_PATH,'utf8'));
+const r80Entries=r80.calibration.entries,r82Bytes=Uint8Array.from(r82.entries.map(x=>x.decodedBytes[0]));
+const r80Center=Float32Array.from(r80Entries.map(x=>x.centerAlpha));
+if(r80.schema!=='kaopu-gaussian-alpha-calibration/r80'||r80.calibration.centerTableHash!==R80_HASH||sha(Buffer.from(r80Center.buffer))!==R80_HASH)throw new Error('R80 identity failed');
+if(r82.schema!=='kaopu-gaussian-color-decode/r82'||r82.stats.tableHash!==R82_HASH||r82Bytes.length!==256||sha(Buffer.from(r82Bytes))!==R82_HASH)throw new Error('R82 identity failed');
+const CASES=Object.fromEntries(Object.entries(RAW_CASES).map(([name,c])=>[name,{...c,records:c.records.map(r=>({...r,color:r.rgbBytes.map(b=>r82Bytes[b]/255),decodedBytes:r.rgbBytes.map(b=>r82Bytes[b])}))}]));
+const browser=await chromium.launch({headless:true,args:['--enable-features=Vulkan','--use-angle=vulkan','--use-vulkan=swiftshader','--disable-vulkan-surface','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
+function halfBracket(value){const lowBits=DataUtils.toHalfFloat(Math.fround(value)),low=DataUtils.fromHalfFloat(lowBits);if(low===value)return{lowBits,low,highBits:lowBits,high:low,gap:0};const highBits=lowBits+1,high=DataUtils.fromHalfFloat(highBits);return{lowBits,low,highBits,high,gap:high-low};}
+function halfRoundNearestEven(value){const b=halfBracket(value);if(b.gap===0)return b.low;const dl=value-b.low,dh=b.high-value;if(dl<dh)return b.low;if(dh<dl)return b.high;return(b.lowBits&1)===0?b.low:b.high;}
+function blendInput(src,a,dst,model){if(model==='staged'){const c=Math.fround(1-a),s=Math.fround(src*a),d=Math.fround(dst*c);return Math.fround(s+d);}if(model==='no_comp'){const c=1-a,s=Math.fround(src*a),d=Math.fround(dst*c);return Math.fround(s+d);}if(model==='no_prod'){const c=Math.fround(1-a);return Math.fround(src*a+dst*c);}if(model==='no_sum'){const c=Math.fround(1-a),s=Math.fround(src*a),d=Math.fround(dst*c);return s+d;}throw new Error(model);}
+function stepState(state,maps,rec,model){for(let p=0;p<PIXELS;p++){const a=maps[rec.alpha][p],o=p*4,src=[...rec.color,1];for(let ch=0;ch<4;ch++)state[o+ch]=halfRoundNearestEven(blendInput(src[ch],a,state[o+ch],model));}}
+function compare(a,b){let mismatchChannels=0,maxAbs=0,maxIndex=-1;for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);if(d>0)mismatchChannels++;if(d>maxAbs){maxAbs=d;maxIndex=i;}}return{mismatchChannels,maxAbs,maxIndex,pixel:maxIndex<0?null:Math.floor(maxIndex/4),channel:maxIndex<0?null:maxIndex%4};}
+async function openCalibration(alpha){const page=await browser.newPage({viewport:{width:64,height:64},deviceScaleFactor:1}),query=new URLSearchParams({mode:'calibration',case:'no_comp',alpha:String(alpha),buffer:'float',r83:'viability-only'});await page.goto(`http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_rounding_matrix_r81.html?${query}`,{waitUntil:'load',timeout:120000});await page.waitForFunction(()=>window.__KAOPU_READY__===true,null,{timeout:1200000});const base=await page.evaluate(()=>window.__KAOPU_BASE__),render=await page.evaluate(()=>window.__KAOPU_RENDER__);await page.close();if(base.status!=='candidate-observation')throw new Error(`calibration ${alpha} failed: ${base.message}`);return{base,render,invocation:query.toString()};}
+const calibration={};for(const alpha of ALPHAS)calibration[alpha]=await openCalibration(alpha);await browser.close();
+const maps={};for(const alpha of ALPHAS)maps[alpha]=Array.from({length:PIXELS},(_,p)=>calibration[alpha].render.allPixels[p*4+3]);
+const calibrationAgainstR80=Object.fromEntries(ALPHAS.map(alpha=>{const plane=Float32Array.from(maps[alpha]);return[alpha,{centerActual:maps[alpha][CENTER],centerFrozen:r80Entries[alpha].centerAlpha,centerExact:maps[alpha][CENTER]===r80Entries[alpha].centerAlpha,planeHashActual:sha(Buffer.from(plane.buffer)),planeHashFrozen:r80Entries[alpha].alphaPlaneHash,planeHashExact:sha(Buffer.from(plane.buffer))===r80Entries[alpha].alphaPlaneHash}];}));
+const predicted={},analysis={};
+for(const [name,c] of Object.entries(CASES)){
+ predicted[name]={};for(const model of MODELS){const state=new Float32Array(CHANNELS);predicted[name][model]={};for(let step=1;step<=2;step++){stepState(state,maps,c.records[step-1],model);predicted[name][model][step]=Array.from(state);}}
+ const staged=predicted[name].staged[2],declared=compare(staged,predicted[name][name][2]),others=Object.fromEntries(MODELS.filter(m=>m!=='staged'&&m!==name).map(m=>[m,compare(staged,predicted[name][m][2])])),centerIndex=CENTER*4+c.targetChannel,center=Object.fromEntries(MODELS.map(m=>[m,predicted[name][m][2][centerIndex]]));
+ analysis[name]={targetChannel:c.targetChannel,records:c.records.map(r=>({alphaByte:r.alpha,rgbBytes:r.rgbBytes,decodedBytes:r.decodedBytes,decodedNormalized:r.color})),declaredAblation:name,declaredDivergence:declared,otherAblations:others,declaredCenterValues:center,centerModelsCollapsed:new Set(Object.values(center)).size===1,expectedCenterValue:EXPECTED_CENTER[name],expectedCenterExact:Object.values(center).every(x=>x===EXPECTED_CENTER[name]),stillIsolated:declared.mismatchChannels>0&&declared.maxIndex===centerIndex&&Object.values(others).every(x=>x.mismatchChannels===0)};
+}
+const allPages=Object.values(calibration),allPageChecks=allPages.every(x=>Object.values(x.base.checks).every(Boolean)&&Object.values(x.render.checks).every(Boolean));
+const rawLocksExact=JSON.stringify(RAW_CASES)===JSON.stringify({no_comp:{targetChannel:0,records:[{alpha:21,rgbBytes:[248,0,0]},{alpha:52,rgbBytes:[1,0,0]}]},no_prod:{targetChannel:1,records:[{alpha:13,rgbBytes:[0,8,0]},{alpha:123,rgbBytes:[0,248,0]}]},no_sum:{targetChannel:2,records:[{alpha:1,rgbBytes:[0,0,224]},{alpha:120,rgbBytes:[0,0,192]}]}});
+const checks={r80TableIdentity:true,r82TableIdentity:true,rawR81CasesExact:rawLocksExact,calibrationMatchesFrozenR80:Object.values(calibrationAgainstR80).every(x=>x.centerExact&&x.planeHashExact),allCalibrationPageChecks:allPageChecks,allModelsEvaluated:Object.values(predicted).every(x=>Object.keys(x).length===MODELS.length),centerCollapsePreregistered:Object.values(analysis).every(x=>x.centerModelsCollapsed&&x.expectedCenterExact),outcomeClassified:true,noHalfTargetRendered:true};
+const viableCases=Object.entries(analysis).filter(([,x])=>x.stillIsolated).map(([name])=>name);
+const result={schema:'kaopu-gaussian-decoded-case-viability/r83',status:Object.values(checks).every(Boolean)?'Candidate-pass':'Candidate-fail',question:'After frozen r186 COLOR_LUT decode, do the unchanged R81 raw-byte cases remain isolated Half-boundary discriminators?',answer:viableCases.length===3?'yes-all':viableCases.length===0?'no-none':'partial',sourceLocks:{coordinatorParent:'2d806ddbf04585c66612bf2ef4650fee88332915',threePackage:'0.186.0',r81PageBlob:'ae7323abea8aa1ce6da87f499f6258d2ad2d2886',r80Commit:'7b0e1509c6089f7c896f4681390fc9d2f5f91e47',r80CenterTableHash:R80_HASH,r82Commit:'f7bdbe3c150933ecb5dda5799c3d43a38f33ddf3',r82ColorTableHash:R82_HASH},calibrationAgainstR80,analysis,viableCases,checks,interpretation:{observation:'The R80 Float Alpha planes were independently reproduced; the frozen R82 parser table was applied to the unchanged R81 source bytes before computing all four replay models.',candidate:'Only a separately preregistered new raw-byte matrix that remains discriminative after decode may proceed to Half target readback.',rejected:['Repair R81 by silently treating encoded SPZ bytes as display RGB.','Render unchanged R81 Half targets after their declared center discriminators collapse.','Rename a different raw-byte matrix as an unchanged R81 replay.'],sameChromiumSwiftShaderEvidenceRoot:true},limits:{predictionAndFloatCalibrationOnly:true,halfTargetRendered:false,noPrefixOneHalfReadback:true,noPrefixTwoHalfReadback:true,hiddenBlendInstructionsUnobserved:true,hardwareGpu:false,webgpu:false,targetDevice:false,realAsset:false,humanAcceptance:false,motherAdoptionAcknowledged:false}};
+fs.writeFileSync('r83-result.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({status:result.status,answer:result.answer,viableCases,analysis,checks},null,2));if(result.status!=='Candidate-pass')process.exitCode=10;
+

@@ -1,0 +1,50 @@
+name: KAOPU Gaussian R83 Decoded-Case Viability
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_case_viability_r83.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_decoded_case_viability_gate_r83.mjs
+      - .github/workflows/kaopu-gaussian-r83-decoded-case-viability.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r83-decoded-case-viability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned renderer and browser harness
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Start local fixture server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r83-http.log 2>&1 &
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_rounding_matrix_r81.html > /dev/null
+      - name: Audit decoded-case viability without Half targets
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_decoded_case_viability_r83.js
+      - name: Validate R83 semantic outcome
+        run: |
+          cat r83-result.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_decoded_case_viability_gate_r83.mjs > r83-gate.json
+          cat r83-gate.json
+          node -e "const d=require('./r83-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+      - name: Upload R83 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r83-decoded-case-viability
+          path: r83-*.json
+          if-no-files-found: warn
+          retention-days: 30
+
