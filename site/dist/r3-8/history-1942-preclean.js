@@ -34,6 +34,7 @@ function filterRoadParts(buffer){
 function decorateUi(summary){
   const apply=()=>{
     document.documentElement.dataset.wenzhouHistoryMode=MODE;
+    document.documentElement.dataset.wenzhouMapMotherEpoch='1940s';
     const canvas=document.getElementById('terrain');
     if(canvas){
       canvas.dataset.historyMode=MODE;
@@ -44,11 +45,11 @@ function decorateUi(summary){
       canvas.dataset.historyRemovedRoadParts=String(summary.removedParts);
       canvas.dataset.historyRemovedRoadSegments=String(summary.removedSegments);
     }
-    const brand=document.querySelector('.brand p');if(brand)brand.textContent='1942/1953 预清理 · 第 3 轮';
+    const brand=document.querySelector('.brand p');if(brand)brand.textContent='1940s Map Mother · 历史海陆回退';
     const panel=document.querySelector('.focus-panel');
     if(panel&&!document.getElementById('history-1942-card')){
       const card=document.createElement('div');card.id='history-1942-card';card.className='osm-card';card.hidden=false;
-      card.innerHTML=`<strong>1942/1953 预清理 · 高置信减法 R3</strong><span>高速/匝道 ${summary.motorway+summary.motorwayLink} parts · 主要道路桥梁 ${summary.majorBridge} parts · construction ${summary.construction} parts 已隐藏</span><small>1953 全域图已登记为历史控制源；当前只删除有明确现代语义的对象。三级及以下本地桥、普通道路、建筑仍保留等待更细历史图。水库、围垦和历史海岸下一阶段按控制图做地理回退。</small>`;
+      card.innerHTML=`<strong>1940s Map Mother · 高置信现代减法</strong><span>高速/匝道 ${summary.motorway+summary.motorwayLink} parts · 主要道路桥梁 ${summary.majorBridge} parts · construction ${summary.construction} parts 已隐藏</span><small>这些是有明确现代语义的交通对象。三级及以下本地桥、普通道路、建筑仍保留，等待更细历史证据；海陆、围垦和水域由 Map Mother 历史状态模块单独回退。</small>`;
       panel.prepend(card);
     }
   };
