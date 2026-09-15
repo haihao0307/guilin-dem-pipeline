@@ -1,20 +1,24 @@
 {
-  "schema": "map-mother/wenzhou-temporal-terrain/v0.1",
+  "schema": "map-mother/wenzhou-instance/v0.1",
+  "conceptRef": "records/MAP_MOTHER/MAP_CONCEPT_R0_1.md",
   "objectId": "WENZHOU_MAP_MOTHER",
-  "status": "active-design-1940s-first",
+  "status": "active-instance-1940s-first",
   "crs": "EPSG:32651",
+  "scope": {
+    "role": "current Wenzhou instance of Map Mother concepts; not the complete cross-domain Map Mother platform",
+    "domainsInScope": ["terrain", "bathymetry", "coast", "hydrography", "transport", "settlement", "soil-reference"],
+    "targetWindow": "1940s",
+    "targetYear": 1942
+  },
   "canonicalSpatialBasis": {
     "bounds": [190475, 2991275, 411250, 3241862.5],
     "gridSpacingM": 12.5,
     "shape": [20047, 17662],
     "terrainContract": "site/dist/r3-1/data/terrain.json",
-    "rule": "one spatial identity; time never creates another world"
+    "rule": "one shared spatial identity; time states do not create separate worlds"
   },
-  "storageModel": {
-    "baseStoredOnce": true,
-    "fullEpochDemCopiesForbidden": true,
-    "coldHistoricalScansExcludedFromRuntime": true,
-    "epochState": "base + sparse temporal deltas",
+  "stateModel": {
+    "preferred": "locked shared basis + semantically typed temporal changes",
     "deltaFamilies": [
       "terrain_height_residual",
       "land_water_mask",
@@ -25,17 +29,27 @@
       "transport_visibility",
       "settlement_visibility"
     ],
-    "compressionRule": "quantized coordinates + sparse masks/residual patches + source identity/hash; no duplicated full rasters",
-    "sizeGoal": "preserve the existing approximately 2.x MiB canonical core; historical epochs should add only sparse deltas, not another core"
+    "baseBindingRequired": true,
+    "eachChangeMustRecord": ["base_version", "crs_or_object_frame", "units", "method_version", "source_refs", "time_or_window", "reversible"],
+    "checkpointPolicy": "prefer sparse reusable changes, but permit native snapshots or checkpoints when they are necessary for verification, cheaper than accumulated deltas, or required by major base changes",
+    "fullEpochDemPolicy": "not the default and never duplicated casually; not globally forbidden"
+  },
+  "storageModel": {
+    "runtimeRule": "keep only the knowledge and state needed for query/render; do not carry source scans as routine runtime payload",
+    "sourceImageExitRule": "after extraction, record what was preserved and what remains unextracted; then decide whether the source can exit active storage. Do not assume automatic permanent cold storage and do not delete before required evidence is preserved.",
+    "compressionRule": "reuse stable basis; use quantized coordinates, semantic state changes, sparse masks/residuals and source identity/hash where appropriate",
+    "sizeReference": "the user-approved approximately 2.x MiB compact Wenzhou result is a behavior reference, not a hard unverified byte target",
+    "costReporting": ["shared_basis", "epoch_increment", "indexes_and_residuals", "required_dependencies", "display_cache"]
   },
   "sourceIntake": {
-    "status": "paused-for-distillation",
-    "reason": "digest the current coarse atlas and local city plan into a clean 1940s state before accepting more historical maps",
+    "status": "paused-for-current-Wenzhou-distillation",
+    "scope": "temporary workflow choice for the current Wenzhou task only; not a global Map Mother rule",
+    "reason": "finish digesting current maps into a clean 1940s state before asking the user for more detailed maps",
     "reopenWhen": [
-      "raw 1953 engineering guide lines are absent from the visual scene",
-      "1940s land-water/coast delta is built and reviewed",
-      "high-confidence reclamation and reservoir removals are encoded as reversible deltas",
-      "size report confirms no full-map duplication"
+      "raw engineering guide lines are absent from the normal visual scene",
+      "1940s land-water/coast state is built and reviewed",
+      "high-confidence reclamation and reservoir changes are encoded reversibly",
+      "a size report confirms no accidental full-map duplication"
     ]
   },
   "activeEpoch": {
@@ -44,7 +58,7 @@
     "workingWindow": "1940s",
     "status": "active",
     "priority": 1,
-    "rule": "finish this short historical window before adding later decades",
+    "rule": "finish this short historical window before expanding to later decades",
     "majorModernRemovals": [
       "motorway",
       "motorway_link",
@@ -56,26 +70,44 @@
     ]
   },
   "historicalEvidence": {
-    "coarseAtlas": ["NH51-13", "NG51-1", "NH51-14"],
-    "localOverride": ["YUNG-CHIA_WENCHOW_1_12500_1945"],
-    "precedence": "finer local evidence overrides coarse atlas inside its verified footprint",
-    "displayRule": "raw extraction/control geometry is nonvisual; users see reconstructed historical state, not engineering guide lines"
+    "targetTruth": "1940s / target 1942",
+    "sources": [
+      {"id": "NH51-13", "nominalYear": 1953, "role": "nearby-era coarse control; not automatically 1940s truth"},
+      {"id": "NG51-1", "nominalYear": 1953, "role": "nearby-era coarse control; not automatically 1940s truth"},
+      {"id": "NH51-14", "nominalYear": 1953, "role": "nearby-era coarse control; not automatically 1940s truth"},
+      {"id": "YUNG-CHIA_WENCHOW_1_12500_1945", "nominalYear": 1945, "role": "finer local historical control for the city area"}
+    ],
+    "precedence": "finer verified evidence may override coarse evidence only within its valid footprint; date compatibility must still be checked",
+    "displayRule": "raw extraction/control geometry is backend evidence; the normal view should show reconstructed historical state rather than engineering guide lines"
+  },
+  "bathymetryCandidate": {
+    "userAuthorizedInference": true,
+    "status": "allowed-but-not-yet-implemented",
+    "rule": "derived seabed may be constructed as a replaceable candidate using explicit constraints and method records; it must remain distinguishable from observed/archive bathymetry",
+    "replacementRule": "when better bathymetry arrives, replace only affected candidate regions and recheck dependent results"
   },
   "truthBoundary": {
-    "historicalCoast": "may be inferred between reliable map controls when the inference is recorded and reversible",
-    "bathymetry": "do not promote inferred seabed heights to observed truth; store observed/derived/confidence separately",
-    "reservoir": "remove modern water/dam when historical absence is secure; pre-reservoir valley elevation remains derived until supported",
-    "minorFeatures": "absence on 1:250000 sheets is not evidence that small roads, bridges, drains or buildings did not exist"
+    "historicalCoast": "may be inferred between reliable controls when source roles, method and reversibility are recorded",
+    "bathymetry": "inferred seabed is derived candidate, never silently promoted to observed truth",
+    "reservoir": "modern reservoir/dam can be removed from a historical state when absence is secure; drowned-valley elevation remains derived until supported",
+    "minorFeatures": "absence on 1:250000 sheets is not proof that small roads, bridges, drains or buildings did not exist",
+    "registration": "apparent change must be separated from map registration error where possible"
   },
-  "evidenceFieldsPerDelta": [
-    "time_or_window",
-    "location",
-    "object_or_feature",
-    "operation",
-    "source_refs",
-    "confidence",
-    "method",
-    "reversible",
-    "hash"
-  ]
+  "currentImplementationBoundary": {
+    "implementedOrPresent": [
+      "shared Wenzhou spatial basis",
+      "1940s high-confidence modern transport subtraction",
+      "1953 coarse control atlas records",
+      "1945 city-plan local control concept",
+      "Map Mother concept and Wenzhou-instance knowledge entries"
+    ],
+    "notYetImplementedOrVerified": [
+      "complete 1942 land-water/coast state",
+      "systematic reversible reclamation and reservoir deltas",
+      "derived seabed candidate field and dependency invalidation",
+      "checkpoint-vs-delta cost policy in runtime",
+      "complete cross-Mother query interface",
+      "full Map Mother platform/database"
+    ]
+  }
 }
