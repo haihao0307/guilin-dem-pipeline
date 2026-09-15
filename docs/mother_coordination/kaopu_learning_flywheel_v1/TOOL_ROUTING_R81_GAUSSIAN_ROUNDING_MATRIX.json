@@ -1,0 +1,30 @@
+{
+  "schema": "kaopu-tool-routing/r81",
+  "status": "candidate-failed-target-model-and-gate",
+  "tool": "Three.js r186 GaussianSplat Half diagnostic replay",
+  "inherits": "TOOL_ROUTING_R80_GAUSSIAN_ALPHA_CALIBRATION.json",
+  "route": {
+    "allowedCandidateUse": "Preserve R81 as a negative-control receipt showing that Alpha-only calibration cannot authorize non-endpoint SPZ color replay.",
+    "requiredEvidenceSeparation": [
+      "raw SPZ bytes",
+      "decoded clamped normalized color attributes",
+      "effective Alpha planes",
+      "arithmetic replay",
+      "semantic acceptance gate",
+      "cross-backend and device acceptance"
+    ],
+    "currentEvidenceClass": "Reproducible target mismatch under one software root; official pinned source identifies an omitted COLOR_LUT input contract.",
+    "hold": "Do not use R81 to change renderer-stage guidance. Keep R78 as the narrow endpoint-color candidate until a separately preregistered decoded-color replay is tested.",
+    "forbiddenClaims": [
+      "R81 stage selection",
+      "raw SPZ byte equals decoded shader RGB",
+      "green workflow equals semantic pass",
+      "cross-backend validity",
+      "production-wide replay authority"
+    ]
+  },
+  "workflowRun": 34943454170,
+  "semanticAcceptance": false,
+  "productionMutationAllowed": false,
+  "motherAdoptionAcknowledged": false
+}

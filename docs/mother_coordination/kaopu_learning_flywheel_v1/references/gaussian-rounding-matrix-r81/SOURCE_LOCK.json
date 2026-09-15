@@ -1,6 +1,6 @@
 {
   "schema": "kaopu-gaussian-rounding-matrix-source-lock/r81",
-  "status": "preregistered",
+  "status": "executed-candidate-failed-target-model-and-gate",
   "question": "Does a separately preregistered matrix derived from frozen R80 calibration select Float32 complement, product and sum staging on the locked r186 software route?",
   "coordinator_parent": "7b0e1509c6089f7c896f4681390fc9d2f5f91e47",
   "three": {
@@ -66,6 +66,15 @@
     "independently render a duplicate prefix-2 control for each case",
     "classify exact matches without tolerance"
   ],
+  "execution": {
+    "preregister_commit": "078e7ccd37b1c8374a11660662b36589f036cb7d",
+    "workflow_run": 34943454170,
+    "workflow_conclusion": "success",
+    "artifact_id": 10386177678,
+    "artifact_sha256": "71d9e80c6715a49f878936f283c6539c40d66d6e98e0dbc1951d6a5f98d3393c",
+    "semantic_acceptance": false,
+    "semantic_failure": "Every case mismatched every replay model from prefix 1; the gate omitted allThreeStagesRequired from its required checks and therefore reported Candidate-pass incorrectly."
+  },
   "hard_prohibitions": [
     "No post-target case replacement",
     "No target render after a failed freeze or isolation gate",

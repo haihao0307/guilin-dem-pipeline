@@ -1,0 +1,78 @@
+{
+  "schema": "kaopu-gaussian-rounding-matrix-classification/r81",
+  "status": "Candidate-failed-target-model-and-gate",
+  "workflow": {
+    "run": 34943454170,
+    "conclusion": "success",
+    "artifactId": 10386177678,
+    "artifactSha256": "71d9e80c6715a49f878936f283c6539c40d66d6e98e0dbc1951d6a5f98d3393c",
+    "workflowSuccessIsSemanticAcceptance": false
+  },
+  "preTargetObservations": {
+    "r80TableIdentity": true,
+    "allSixCenterAndPlaneHashesMatchR80": true,
+    "allThreeDeclaredAblationsIsolated": true
+  },
+  "targetObservations": {
+    "no_comp": {
+      "prefix1MismatchChannelsForEveryModel": 13,
+      "prefix2MismatchChannelsForEveryModel": 13,
+      "exactBothPrefixes": [],
+      "centerObserved": 0.03125,
+      "centerStagedPrediction": 0.0307464599609375,
+      "centerAbsDifference": 0.0005035400390625,
+      "duplicatePrefix2Exact": true
+    },
+    "no_prod": {
+      "prefix1MismatchChannelsForEveryModel": 13,
+      "prefix2MismatchChannelsForEveryModel": 13,
+      "exactBothPrefixes": [],
+      "centerObserved": 0.2000732421875,
+      "centerStagedPrediction": 0.1951904296875,
+      "centerAbsDifference": 0.0048828125,
+      "duplicatePrefix2Exact": true
+    },
+    "no_sum": {
+      "prefix1MismatchChannelsForEveryModel": 13,
+      "prefix2MismatchChannelsForEveryModel": 13,
+      "exactBothPrefixes": [],
+      "centerObserved": 0.19189453125,
+      "centerStagedPrediction": 0.148193359375,
+      "centerAbsDifference": 0.043701171875,
+      "duplicatePrefix2Exact": true
+    }
+  },
+  "gateDefect": {
+    "rawGateStatus": "Candidate-pass",
+    "allThreeStagesRequired": false,
+    "cause": "The gate checked completion and preregistration fields but did not require allThreeStagesRequired or stagedExact.",
+    "classification": "Rejected-gate-as-semantic-acceptance"
+  },
+  "officialSourceObservation": {
+    "threeCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "spzLoaderBlob": "456aa33e7c6e10bec74b34a5413606bb45bb0c16",
+    "gaussianSplatUtilsBlob": "9d4752a92b01ce2aa936253e03f3315c8d154a48",
+    "colorContract": "SPZLoader maps source color bytes through a Uint8Clamped COLOR_LUT using SH_C0/0.15 before creating a normalized color attribute; raw byte/255 is not the decoded shader input in general.",
+    "usedByteExamples": {
+      "1": 0,
+      "8": 0,
+      "192": 249,
+      "224": 255,
+      "248": 255
+    }
+  },
+  "currentBestView": "R81 cannot select complement, product or sum staging. R78 remains the narrow current-best observed Half-target result because its color inputs were endpoint bytes 255 and 0, which the locked COLOR_LUT preserves after clamping.",
+  "rejected": [
+    "Raw SPZ color byte divided by 255 is a valid general replay input.",
+    "A successful workflow conclusion means the declared renderer model passed.",
+    "R81 establishes any of the three Float32 stages.",
+    "Post-target repair and rerun can remain the same preregistered experiment."
+  ],
+  "unknown": [
+    "Whether a separately preregistered COLOR_LUT-aware replay exactly matches R81 target frames.",
+    "Complement, product and sum stage selection for non-endpoint SPZ color bytes.",
+    "Hidden fixed-function instructions.",
+    "Hardware GPU, WebGPU, Safari or iPhone behavior.",
+    "Real-asset behavior, performance, human acceptance and Mother adoption."
+  ]
+}
