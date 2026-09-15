@@ -1,0 +1,57 @@
+{
+  "schema": "kaopu-gaussian-rounding-matrix-prereg-result/r79",
+  "status": "Candidate-failed-preregistration",
+  "source": {
+    "workflow_run": 34926199976,
+    "workflow_job": 104244671061,
+    "preregister_commit": "f342202517e8ddf4fedd0461f229bed7470d4f99",
+    "workflow_conclusion": "failure",
+    "artifact_uploaded": false
+  },
+  "target_render_prohibition_honored": true,
+  "half_targets_rendered": false,
+  "preTarget": {
+    "no_comp": {
+      "targetAblation": "no_comp",
+      "targetDivergence": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null},
+      "otherAblations": {
+        "no_prod": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null},
+        "no_sum": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null}
+      },
+      "isolated": false,
+      "centerPredicted": {"staged": 0.0239105224609375, "no_comp": 0.0239105224609375, "no_prod": 0.0239105224609375, "no_sum": 0.0239105224609375}
+    },
+    "no_prod": {
+      "targetAblation": "no_prod",
+      "targetDivergence": {"mismatchChannels": 1, "maxAbs": 0.0001220703125, "maxIndex": 2177, "pixel": 544, "channel": 1},
+      "otherAblations": {
+        "no_comp": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null},
+        "no_sum": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null}
+      },
+      "isolated": true,
+      "centerPredicted": {"staged": 0.1951904296875, "no_comp": 0.1951904296875, "no_prod": 0.195068359375, "no_sum": 0.1951904296875}
+    },
+    "no_sum": {
+      "targetAblation": "no_sum",
+      "targetDivergence": {"mismatchChannels": 1, "maxAbs": 0.0001220703125, "maxIndex": 2178, "pixel": 544, "channel": 2},
+      "otherAblations": {
+        "no_comp": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null},
+        "no_prod": {"mismatchChannels": 0, "maxAbs": 0, "maxIndex": -1, "pixel": null, "channel": null}
+      },
+      "isolated": true,
+      "centerPredicted": {"staged": 0.148193359375, "no_comp": 0.148193359375, "no_prod": 0.148193359375, "no_sum": 0.1480712890625}
+    }
+  },
+  "classification": {
+    "no_comp": "Rejected as a discriminating fixture after actual Float calibration",
+    "no_prod": "Candidate fixture passed pre-target isolation only; target unobserved",
+    "no_sum": "Candidate fixture passed pre-target isolation only; target unobserved",
+    "matrix": "Rejected for target execution because all three preregistered cases did not pass"
+  },
+  "not_observed": [
+    "Half target output for every case",
+    "renderer selection for product staging",
+    "renderer selection for sum staging",
+    "complement staging under a discriminating fixture"
+  ]
+}
