@@ -1,0 +1,30 @@
+{
+  "schema": "kaopu-tool-routing/r80",
+  "status": "candidate-partial-calibration-observed-target-unrendered",
+  "tool": "Three.js r186 GaussianSplat Half diagnostic replay",
+  "inherits": "TOOL_ROUTING_R79_GAUSSIAN_ROUNDING_MATRIX.json",
+  "route": {
+    "allowedCandidateUse": "Use the frozen R80 center effective-Alpha table only for fixtures matching its exact footprint, camera, pixel, Three.js revision and software-runtime contract.",
+    "requiredEvidenceSeparation": [
+      "calibration-only observation",
+      "candidate derivation from frozen calibration",
+      "separate target preregistration",
+      "pre-target model isolation",
+      "independent Half readback",
+      "cross-backend and device acceptance"
+    ],
+    "currentEvidenceClass": "Complete Float center calibration under one Chromium/ANGLE Vulkan SwiftShader root; derived complement target remains unrendered.",
+    "hold": "Keep R78 as the current best observed Half-target result. Do not route an arithmetic-stage implementation rule from R80.",
+    "forbiddenClaims": [
+      "R80 Half-target result",
+      "fixed-function instruction observation",
+      "universal Alpha transfer function",
+      "cross-footprint or cross-backend validity",
+      "production-wide replay authority"
+    ]
+  },
+  "workflowRun": 34934243478,
+  "centerTableHash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+  "productionMutationAllowed": false,
+  "motherAdoptionAcknowledged": false
+}
