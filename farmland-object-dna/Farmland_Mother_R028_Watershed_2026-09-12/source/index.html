@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#183529"><title>Farmland R028 · 山水之间</title>
+<meta name="description" content="从高处来水到河湾稻田，在同一片山水里观察梯田、插秧与灌排关系。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23183529'/%3E%3Cpath d='M9 30Q30 20 12 11M14 30Q32 17 24 8' fill='none' stroke='%23d6e7a1' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body data-version="FARMLAND_R028_WATERSHED_20260912" data-runtime-ready="false">
+<main id="landscape" aria-label="可旋转、缩放的农田三维场景"></main>
+<header><div class="identity"><span class="brand">FARMLAND <b>R028</b></span><h1>山水之间</h1><p>一片田，从山泉到河湾。</p></div><button id="infoButton" aria-expanded="false" aria-controls="info" title="查看场景说明">田与水 <span>↗</span></button></header>
+<section id="info" hidden aria-label="田与水的关系">
+<h2>水有来处，也有去处。</h2>
+<p>高位山泉经取水沟进入上层梯田，由有缺口的田口逐级供水，流经河湾水田，最后汇入下游河段。河里的低位水不会自行流回山上。</p>
+<dl><div><dt>田块</dt><dd>10 级梯田 · 4 块河湾田</dd></div><div><dt>水位</dt><dd>每块田独立水平蓄水</dd></div><div><dt>尺度</dt><dd>人、秧苗、田埂共用米制坐标</dd></div></dl>
+<p class="small">形态参考合成场景，非桂林或元阳实测复原。水量采用有限蓄水与理想田口模型；地方尺寸、土体稳定和真实流量尚未标定。</p>
+<a href="https://www.fao.org/4/r4082e/r4082e06.htm" target="_blank" rel="noopener">灌排关系参考 · FAO</a>
+</section>
+<div id="loader" role="status"><span class="loaderLine"></span><p>正在走进这片田…</p></div>
+<div id="fallback" hidden role="alert"><h2>三维场景暂时无法启动</h2><p id="errorText">请使用支持 WebGL 2 的浏览器。</p><button onclick="location.reload()">重新加载</button></div>
+<div id="selection" hidden aria-live="polite"></div>
+<footer>
+<nav aria-label="观察位置"><button data-view="overview" class="active">山水总览</button><button data-view="terrace">沿着梯田</button><button data-view="farmers">走近插秧</button><button data-view="river">河湾水田</button></nav>
+<div class="tools"><button id="flowButton" aria-pressed="false"><span class="flowIcon">≋</span> 看水怎么流</button><button id="pauseButton" aria-pressed="false" title="暂停风和水流动画">暂停</button></div>
+</footer>
+<div class="caption"><span id="viewCaption">高处梯田 · 河湾水田 · 远山</span><span class="gesture">拖动环看 / 滚轮缩放</span></div>
+<aside id="waterPanel" hidden aria-live="polite"><b>高位水源 → 梯田 → 河湾田 → 下游河段</b><p>光点沿已连接的田口方向移动；点击水田查看它的进水与排水。</p><div id="waterStats"></div></aside>
+<script>function startupFailure(){document.getElementById('fallback').hidden=false;document.getElementById('loader').hidden=true;}window.addEventListener('error',startupFailure,true);window.addEventListener('unhandledrejection',startupFailure);</script>
+<script type="module" src="scene.mjs"></script>
+</body></html>

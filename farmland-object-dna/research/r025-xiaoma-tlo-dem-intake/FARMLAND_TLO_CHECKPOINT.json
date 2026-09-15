@@ -1,0 +1,67 @@
+{
+  "schema": "farmland-tlo-checkpoint/r025-candidate",
+  "schema_status": "candidate_not_frozen",
+  "T": {
+    "recorded_at": "2026-09-11T00:00:00Z",
+    "world_time": null,
+    "valid_from": null,
+    "valid_to": null,
+    "event_time": null,
+    "source_version_time": {
+      "xiaoma_tlo": "2026-09-08T09:08:02+08:00",
+      "landscape_lock": "2026-09-10T04:41:44+08:00",
+      "canonical_dem": "2026-08-29T10:24:51Z"
+    },
+    "time_state": "world_and_event_time_not_sampled"
+  },
+  "L": {
+    "reference_frame": "EPSG:32649",
+    "position": null,
+    "orientation": null,
+    "container_ref": "guilin-native-12p5m-single-truth-v001:accepted-aoi",
+    "uncertainty": "No parcel has been selected and no canonical numeric terrain sample has been read for this Farmland object.",
+    "source_ref": "xiaoma_tlo_guilin_dem_intake_r025",
+    "position_status": "parcel_not_selected",
+    "region_profile": "guilin_only_pending_site_selection"
+  },
+  "O": {
+    "object_id": "farmland-context:guilin-parcel-unselected:r025",
+    "object_type": "farmland_system_context_candidate",
+    "object_dna_ref": "farmland-object-dna/OBJECT_DNA_CONTRACT.md",
+    "state_ref": "farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json",
+    "relations": [
+      {
+        "type": "terrain_authority",
+        "target": "guilin-native-12p5m-single-truth-v001",
+        "status": "source-confirmed",
+        "evidence_ref": "XIAOMA_TLO_DEM_INTAKE.json#guilin_dem_identity"
+      },
+      {
+        "type": "separate_regional_profile",
+        "target": "honghe-hani-rice-terraces",
+        "status": "source-confirmed",
+        "evidence_ref": "XIAOMA_TLO_DEM_INTAKE.json#honghe_separation_evidence"
+      }
+    ],
+    "evidence_ref": "farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json",
+    "statement": "Farmland may bind a future Guilin parcel to the locked macro-terrain authority only after site selection and canonical numeric sample access; this record supplies no field geometry and no Honghe terrain.",
+    "status": "candidate",
+    "unknowns": [
+      "parcel_site",
+      "parcel_boundary",
+      "terrain_sample_window",
+      "field_microtopography",
+      "bund_sections",
+      "channel_sections",
+      "water_control_elevations"
+    ],
+    "next_question": "Which surveyed parcel and canonical numeric terrain window should be attached for a Guilin-only terrain query?"
+  },
+  "gates": {
+    "terrain_query_ready": false,
+    "field_scale_geometry_ready": false,
+    "honghe_profile_attached": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}

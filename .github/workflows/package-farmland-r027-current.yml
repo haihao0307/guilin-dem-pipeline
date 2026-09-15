@@ -1,0 +1,82 @@
+name: Package Farmland R027 Current Full Handoff
+
+on:
+  push:
+    branches: [restart/farmland-object-dna-v020-20260907]
+    paths: [.github/workflows/package-farmland-r027-current.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restart/farmland-object-dna-v020-20260907
+          fetch-depth: 0
+      - name: Fix known R027 runtime bug and freeze source
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html')
+          s=p.read_text(encoding='utf-8')
+          old="const g=new THREE.Group(),cloth=mats.wall.clone();cloth.color.setHex(shirt),torso=mesh(new THREE.CapsuleGeometry(.21,.62,5,10),cloth);"
+          new="const g=new THREE.Group();const cloth=mats.wall.clone();cloth.color.setHex(shirt);const torso=mesh(new THREE.CapsuleGeometry(.21,.62,5,10),cloth);"
+          if old in s: p.write_text(s.replace(old,new,1),encoding='utf-8')
+          elif new not in s: raise SystemExit('R027 farmer pattern missing')
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html
+          if ! git diff --cached --quiet; then git commit -m 'Farmland R027: fix farmer runtime declaration'; git push origin HEAD:restart/farmland-object-dna-v020-20260907; fi
+          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Build full handoff package
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,shutil,tempfile,zipfile
+          pkg='Farmland_Object_DNA_Current_Full_Handoff_R027_2026-09-12'
+          source=os.environ['SOURCE_COMMIT']
+          branch='restart/farmland-object-dna-v020-20260907'
+          dist=Path('farmland-object-dna/distributions'); dist.mkdir(parents=True,exist_ok=True)
+          zip_path=dist/(pkg+'.zip')
+          md=f'''# Farmland Mother — CURRENT FULL HANDOFF\n\nCurrent package: `{pkg}.zip`\n\nRepository path: `farmland-object-dna/distributions/{pkg}.zip`\n\nAuthority branch: `{branch}`\n\nPackage source commit: `{source}`\n\nCurrent workbench: `farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html`\n\nR021–R025 research/contracts/validators are retained. R026 is retained as the rejected diagnostic predecessor. R027 is the current one-ground integrated-scene workbench. User-supplied terrace images are morphology/relationship references, not regional measurements. The known R027 `torso is not defined` runtime bug is fixed in the package source. `visualAcceptance=false`; `productionReady=false`. Numeric Honghe/Yuanyang field-scale survey truth remains disconnected.\n\nFuture executors: read this file first, then `00_START_HERE.md` inside the ZIP. Do not treat `main` as newer while PR #65 remains open.\n'''
+          Path('farmland-object-dna/CURRENT_FULL_HANDOFF.md').write_text(md,encoding='utf-8')
+          obj={'schema':'farmland-current-full-handoff/v2','package':pkg+'.zip','repositoryPath':'farmland-object-dna/distributions/'+pkg+'.zip','authorityBranch':branch,'packageSourceCommit':source,'currentWorkbench':'farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html','currentRound':'R027','visualAcceptance':False,'productionReady':False,'terrainMeshContract':1,'regionalMeasurementTruth':False}
+          Path('farmland-object-dna/CURRENT_FULL_HANDOFF.json').write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          with tempfile.TemporaryDirectory() as td:
+            root=Path(td)/pkg; root.mkdir()
+            def ign(path,names):
+              return {'distributions'} if Path(path).name=='farmland-object-dna' else set()
+            shutil.copytree('farmland-object-dna',root/'farmland-object-dna',ignore=ign)
+            wf=root/'.github/workflows'; wf.mkdir(parents=True)
+            for p in Path('.github/workflows').glob('*farmland*'):
+              if p.is_file(): shutil.copy2(p,wf/p.name)
+            start=f'''# START HERE — Farmland Mother R027 Current Full Handoff\n\nPackage: `{pkg}.zip`\nAuthority branch: `{branch}`\nPackage source commit: `{source}`\n\nThis package contains the current Farmland Mother source line through R027: R021–R025 research/contracts/validators, R026 diagnostic predecessor, R027 continuous-ground workbench, diagnostics, tools and relevant CI. R027 keeps flat paddies, slope terraces, channels, road, village, forest, straw-hat farmers and buffalo in one world coordinate system on one continuous terrain mesh. User reference images are visual morphology/relationship references, not survey truth.\n\nContinue from `farmland-object-dna/CURRENT_FULL_HANDOFF.md`. Preserve uncertainty and do not return to floating terrace slabs.\n'''
+            (root/'00_START_HERE.md').write_text(start,encoding='utf-8')
+            files=[]
+            for p in sorted(root.rglob('*')):
+              if p.is_file() and p.name!='PACKAGE_MANIFEST.json':
+                b=p.read_bytes(); files.append({'path':p.relative_to(root).as_posix(),'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+            (root/'PACKAGE_MANIFEST.json').write_text(json.dumps({'package':pkg,'sourceCommit':source,'fileCount':len(files),'files':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            if zip_path.exists(): zip_path.unlink()
+            with zipfile.ZipFile(zip_path,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in sorted(root.rglob('*')):
+                if p.is_file(): z.write(p,f'{pkg}/{p.relative_to(root).as_posix()}')
+          b=zip_path.read_bytes(); sha=hashlib.sha256(b).hexdigest()
+          rec={'package':zip_path.name,'repositoryPath':zip_path.as_posix(),'sourceCommit':source,'authorityBranch':branch,'bytes':len(b),'sha256':sha,'visualAcceptance':False,'productionReady':False}
+          (dist/(pkg+'.receipt.json')).write_text(json.dumps(rec,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          (dist/(pkg+'.sha256')).write_text(f'{sha}  {zip_path.name}\n',encoding='utf-8')
+          with zipfile.ZipFile(zip_path) as z: assert z.testzip() is None
+          print(json.dumps(rec,ensure_ascii=False))
+          PY
+      - name: Publish package
+        shell: bash
+        run: |
+          git add farmland-object-dna/CURRENT_FULL_HANDOFF.md farmland-object-dna/CURRENT_FULL_HANDOFF.json farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R027_2026-09-12.*
+          git commit -m 'Farmland R027: publish current full handoff package'
+          git push origin HEAD:restart/farmland-object-dna-v020-20260907

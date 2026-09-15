@@ -1,0 +1,36 @@
+name: Publish Farmland R027 ZIP
+on:
+  push:
+    branches: [restart/farmland-object-dna-v020-20260907]
+    paths: [.github/workflows/publish-farmland-r027-zip-final.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restart/farmland-object-dna-v020-20260907
+          fetch-depth: 0
+      - name: Build and publish
+        shell: bash
+        run: |
+          set -e
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          PKG=Farmland_Object_DNA_Current_Full_Handoff_R027_2026-09-12
+          SRC=$(git rev-parse HEAD)
+          rm -rf /tmp/$PKG && mkdir -p /tmp/$PKG
+          rsync -a --exclude distributions farmland-object-dna/ /tmp/$PKG/farmland-object-dna/
+          cp -a .github/workflows /tmp/$PKG/.github/
+          printf '# START HERE\n\nFarmland Mother R027 current full handoff.\nSource commit: %s\nBranch: restart/farmland-object-dna-v020-20260907\nCurrent workbench: farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html\nvisualAcceptance=false\nproductionReady=false\n' "$SRC" > /tmp/$PKG/00_START_HERE.md
+          (cd /tmp && zip -qr /tmp/$PKG.zip $PKG)
+          cp /tmp/$PKG.zip farmland-object-dna/distributions/$PKG.zip
+          SHA=$(sha256sum farmland-object-dna/distributions/$PKG.zip | awk '{print $1}')
+          printf '%s  %s.zip\n' "$SHA" "$PKG" > farmland-object-dna/distributions/$PKG.sha256
+          printf '# Farmland Mother — CURRENT FULL HANDOFF\n\nCurrent package: `%s.zip`\n\nRepository path: `farmland-object-dna/distributions/%s.zip`\n\nAuthority branch: `restart/farmland-object-dna-v020-20260907`\n\nPackage source commit: `%s`\n\nCurrent workbench: `farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html`\n\nR021-R027 current work is included. R027 uses one continuous ground. visualAcceptance=false; productionReady=false.\n' "$PKG" "$PKG" "$SRC" > farmland-object-dna/CURRENT_FULL_HANDOFF.md
+          git add farmland-object-dna/CURRENT_FULL_HANDOFF.md farmland-object-dna/distributions/$PKG.sha256
+          git add -f farmland-object-dna/distributions/$PKG.zip
+          git commit -m 'Farmland R027: publish current full handoff ZIP'
+          git push origin HEAD:restart/farmland-object-dna-v020-20260907

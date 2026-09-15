@@ -31,3 +31,22 @@ DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother �
 遇到 404、403、空白页、托管平台错误页、资源丢失或页面启动失败，立即视为发布失败，修复并重新执行完整发布闭环。不得先让用户代为测试，也不得沿用未回读的猜测地址。
 
 每次成功发布都要保存 `PUBLICATION_PROOF.json`。只有其中 `shareAllowed=true` 时才允许分享链接。新版公开验证通过以前保留旧版可用入口。
+
+## Farmland Object DNA 专项硬规则
+
+Farmland Object DNA 每次开工必须先读取：
+
+1. `farmland-object-dna/FARMLAND_PRODUCTION_RULES.md`
+2. `farmland-object-dna/V001_FAILURE_REGISTER.md`
+3. `farmland-object-dna/RESTART_START_HERE.md`
+4. `farmland-object-dna/QUALITY_GATES.json`
+
+水田生产必须先完成来源卡、系统关系、平面、横断面、纵断面、真实尺度、水力闭环和生育阶段模型。渠道、田埂、田坎、进水口、出水口、分水设施、水深和水稻形态都需要独立证据与检查。
+
+每块灌溉田都必须拥有从水源到进水、蓄水、出水、排水和下游受体的可追踪路径，并通过高程、水量和守恒测试。森林、水源、村落、田块、道路、劳动与维护必须进入同一关系系统。
+
+Microscope 只能在宏观系统、中观拓扑和截面通过以后使用，负责土块、石头、草根、湿润线、沉积、裂缝、叶片、分蘖和稻穗等微观细节。禁止用 Microscope、材质、雾和光照掩盖结构错误。
+
+FARMLAND_DNA_WB_V0.1.0_20260907 已被用户否决，只允许作为失败对照。圆管渠道、圆管田埂、假水深、孤立进排水节点、机械格网、重复梯级和圆锥水稻禁止回归。后续不得沿 V0.1 造型路径继续装饰。
+
+公开候选必须达到可供用户有效判断的 3A 最低完成度。简单代理几何、无厚度边界、无水力逻辑、无生命周期差异和低完成度画面只能保留在内部诊断区。宁可延长生产时间，也不得降低结构、证据和视觉门槛。

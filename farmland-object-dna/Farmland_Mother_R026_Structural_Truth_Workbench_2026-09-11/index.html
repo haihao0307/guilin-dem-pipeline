@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Farmland Mother R026 · Structural Truth Workbench</title>
+<style>
+:root{--panel:rgba(20,26,22,.86);--panel2:rgba(30,39,32,.78);--line:rgba(255,255,255,.16);--text:#f0f5ee;--muted:#b7c5b5;--accent:#b9dc8e;--warn:#f4c57b;--blue:#8fd0d5}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(#9fb4ae 0%,#d7c9a8 52%,#8a7054 100%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+canvas{position:fixed;inset:0;display:block;touch-action:none}.hud{position:fixed;z-index:3;pointer-events:none}.card{pointer-events:auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 36px rgba(0,0,0,.24);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px}
+#title{left:14px;top:max(14px,env(safe-area-inset-top));padding:12px 14px;width:min(440px,calc(100vw - 28px))}.eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:800}.title{font-size:18px;line-height:1.15;font-weight:760;margin:4px 0 5px}.sub{font-size:11px;line-height:1.45;color:var(--muted)}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{padding:4px 7px;border:1px solid var(--line);border-radius:999px;font-size:9px;color:#dfe8dd;background:rgba(255,255,255,.045)}.chip.warn{color:#ffe1aa;border-color:rgba(244,197,123,.4);background:rgba(244,197,123,.08)}
+#controls{right:14px;top:max(14px,env(safe-area-inset-top));width:255px;padding:12px}.sectionTitle{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#d9e5d5;margin:0 0 8px}.row{display:flex;gap:6px;flex-wrap:wrap}.btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--text);border-radius:9px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer}.btn:hover,.btn.active{background:rgba(185,220,142,.16);border-color:rgba(185,220,142,.5);color:#efffdd}.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:8px 0;font-size:10px;color:#dbe6d8}.toggle:first-of-type{margin-top:10px}.toggle input{accent-color:#9bc671}.range{width:100%;accent-color:#9bc671}.stageLine{display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px;font-size:10px}.stageName{color:var(--accent);font-weight:800}.note{font-size:9px;line-height:1.45;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+#legend{left:14px;bottom:max(14px,env(safe-area-inset-bottom));width:290px;padding:10px 12px}.legendGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:9px;color:#dce6d9}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}.status{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:9px;color:var(--muted);line-height:1.45}.status b{color:#eef5eb}.meter{position:fixed;z-index:2;right:14px;bottom:max(14px,env(safe-area-inset-bottom));pointer-events:none;background:rgba(13,18,15,.6);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:9px;color:#e3ebdf}.watermark{position:fixed;z-index:2;left:50%;bottom:18px;transform:translateX(-50%);font-size:8px;letter-spacing:.12em;color:rgba(255,255,255,.5);pointer-events:none;text-transform:uppercase}
+@media(max-width:760px){#title{width:calc(100vw - 28px);padding:10px 12px}.title{font-size:15px}.sub{font-size:10px}#controls{left:14px;right:14px;top:auto;bottom:max(14px,env(safe-area-inset-bottom));width:auto;max-height:245px;overflow:auto;padding:10px 12px}.btn{padding:7px 8px}#legend{display:none}.meter{right:14px;bottom:270px}.watermark{bottom:272px;max-width:70vw;text-align:center}.chips{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body data-runtime-ready="false">
+<div id="title" class="hud card">
+  <div class="eyebrow">FARMLAND_MOTHER_R026_STRUCTURAL_TRUTH_WB_20260911</div>
+  <div class="title">Farmland Mother · 内部结构真值工作台</div>
+  <div class="sub">R025 基线上的第一版三维结构诊断。1 world unit = 1 m。当前没有接通区域数值 DEM；所有未被地区测量锁定的尺寸只用于结构 QA，不代表红河/元阳实测值。</div>
+  <div class="chips"><span class="chip">R021 水量合同</span><span class="chip">R022 理想水力</span><span class="chip">R023 田块拓扑</span><span class="chip">R024 14 阶段稻作</span><span class="chip warn">SYNTHETIC QA · NOT REGIONAL TRUTH</span></div>
+</div>
+<div id="controls" class="hud card">
+  <div class="sectionTitle">视角 / Camera</div>
+  <div class="row" id="cameraButtons">
+    <button class="btn active" data-cam="overview">总览</button><button class="btn" data-cam="flat">平坝</button><button class="btn" data-cam="terrace">梯田</button><button class="btn" data-cam="section">剖面</button><button class="btn" data-cam="human">人眼</button>
+  </div>
+  <label class="toggle">水路与流向叠加 <input id="flowToggle" type="checkbox" checked></label>
+  <label class="toggle">结构标签 <input id="labelToggle" type="checkbox" checked></label>
+  <label class="toggle">土层剖面台 <input id="sectionToggle" type="checkbox" checked></label>
+  <div class="stageLine"><span>水稻结构阶段</span><span class="stageName" id="stageName">插秧 / Transplant</span></div>
+  <input class="range" id="stageSlider" type="range" min="0" max="13" value="2" step="1">
+  <div class="note">禁止回归：圆管渠 / 圆管田埂 / 重复共享边 / 假水深 / 孤立进排水节点 / 棋盘格田块 / 等距机械梯田 / 单锥体水稻。当前为内部诊断版，visualAcceptance=false。</div>
+</div>
+<div id="legend" class="hud card">
+  <div class="sectionTitle">结构图例 / Structure Legend</div>
+  <div class="legendGrid">
+    <div><span class="dot" style="background:#5c4732"></span>压实土 / 田埂</div><div><span class="dot" style="background:#78aebb"></span>真实坐标水面</div>
+    <div><span class="dot" style="background:#445b31"></span>稻株 / 冠层</div><div><span class="dot" style="background:#87634b"></span>黑黏土田坎面</div>
+    <div><span class="dot" style="background:#8fc6d0"></span>流向诊断叠加</div><div><span class="dot" style="background:#d7d2bf"></span>人体 / 工具尺度</div>
+  </div>
+  <div class="status"><b>本轮目标：</b>先确认系统、拓扑、截面、高程、水深和生命周期在同一三维场景中是否成立；不使用材质、雾或光照掩盖结构错误。</div>
+</div>
+<div class="meter" id="meter">1 unit = 1 m · water depth QA = 0.08 m</div>
+<div class="watermark">INTERNAL STRUCTURAL DIAGNOSTIC · NOT A REGIONAL OR PRODUCTION CANDIDATE</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const VERSION='FARMLAND_MOTHER_R026_STRUCTURAL_TRUTH_WB_20260911';
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0xb6b9aa,82,155);
+const camera=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.05,260);
+camera.position.set(66,48,75);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.target.set(0,2,0);controls.maxPolarAngle=Math.PI*.49;controls.minDistance=2.2;controls.maxDistance=150;
+scene.add(new THREE.HemisphereLight(0xe6eee4,0x574637,2.2));
+const sun=new THREE.DirectionalLight(0xfff1d0,3.1);sun.position.set(-35,62,26);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-85;sun.shadow.camera.right=85;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;scene.add(sun);
+const fill=new THREE.DirectionalLight(0xa8c4d0,.75);fill.position.set(40,20,-40);scene.add(fill);
+
+const mat={
+ soil:new THREE.MeshStandardMaterial({color:0x6f5843,roughness:.98}),
+ mud:new THREE.MeshStandardMaterial({color:0x4a372b,roughness:.92}),
+ bund:new THREE.MeshStandardMaterial({color:0x5c4732,roughness:1}),
+ wetBund:new THREE.MeshStandardMaterial({color:0x46382d,roughness:.86}),
+ clay:new THREE.MeshStandardMaterial({color:0x87634b,roughness:1}),
+ water:new THREE.MeshPhysicalMaterial({color:0x78aebb,roughness:.18,metalness:0,transmission:.12,transparent:true,opacity:.72,depthWrite:false}),
+ channelWater:new THREE.MeshPhysicalMaterial({color:0x6faab4,roughness:.22,transparent:true,opacity:.82,depthWrite:false}),
+ grass:new THREE.MeshStandardMaterial({color:0x596f3e,roughness:.95}),
+ rice:new THREE.MeshStandardMaterial({color:0x456b36,roughness:.86,side:THREE.DoubleSide}),
+ riceGold:new THREE.MeshStandardMaterial({color:0xa98b45,roughness:.88,side:THREE.DoubleSide}),
+ ricePale:new THREE.MeshStandardMaterial({color:0x759348,roughness:.9,side:THREE.DoubleSide}),
+ panicle:new THREE.MeshStandardMaterial({color:0xb09555,roughness:.9}),
+ human:new THREE.MeshStandardMaterial({color:0xd8d5c7,roughness:.78}),
+ dark:new THREE.MeshStandardMaterial({color:0x2c332a,roughness:.9}),
+ wood:new THREE.MeshStandardMaterial({color:0x634832,roughness:.95}),
+ roof:new THREE.MeshStandardMaterial({color:0x4f3a2d,roughness:.93}),
+ flow:new THREE.MeshBasicMaterial({color:0x9de8ef,transparent:true,opacity:.9,depthTest:false}),
+ flower:new THREE.MeshBasicMaterial({color:0xf3efe0})
+};
+
+const world=new THREE.Group();scene.add(world);const labelGroup=new THREE.Group();scene.add(labelGroup);const flowGroup=new THREE.Group();scene.add(flowGroup);const sectionGroup=new THREE.Group();scene.add(sectionGroup);const riceGroup=new THREE.Group();scene.add(riceGroup);
+const clock=new THREE.Clock();const flowMarkers=[];
+
+function seedRand(seed=12345){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rand=seedRand(260911);
+function mesh(g,m,cast=true,receive=true){const o=new THREE.Mesh(g,m);o.castShadow=cast;o.receiveShadow=receive;return o}
+function makeLabel(text,pos,scale=.92,accent=false){const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='rgba(18,23,20,.82)';x.roundRect(4,4,504,88,18);x.fill();x.strokeStyle=accent?'rgba(185,220,142,.72)':'rgba(255,255,255,.25)';x.lineWidth=2;x.stroke();x.font='600 28px system-ui';x.fillStyle=accent?'#e8ffd1':'#f2f5ef';x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,48);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));s.position.copy(pos);s.scale.set(5.3*scale,1*scale,1);s.userData.label=true;labelGroup.add(s);return s}
+function shapeMesh(points,y,material){const sh=new THREE.Shape();sh.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)sh.lineTo(points[i][0],points[i][1]);sh.closePath();const g=new THREE.ShapeGeometry(sh,2);g.rotateX(-Math.PI/2);const o=mesh(g,material,false,true);o.position.y=y;return o}
+function trapezoidPrism(length,bottomW,topW,height,material){const z=length/2,b=bottomW/2,t=topW/2;const v=new Float32Array([-b,0,-z,b,0,-z,-b,0,z,b,0,z,-t,height,-z,t,height,-z,-t,height,z,t,height,z]);const idx=[0,1,5,0,5,4,2,6,7,2,7,3,0,4,6,0,6,2,1,3,7,1,7,5,4,5,7,4,7,6,0,2,3,0,3,1];const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();return mesh(g,material)}
+function addBund(a,b,y,width=.78,height=.43){const dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);const o=trapezoidPrism(len,width*1.85,width,height,mat.bund);o.position.set((a[0]+b[0])/2,y,(a[1]+b[1])/2);o.rotation.y=Math.atan2(dx,dz);world.add(o);return o}
+function addChannelSegment(a,b,y,topW=1.8,bottomW=.72,depth=.48,waterDepth=.17){const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),ang=Math.atan2(dx,dz);const g=new THREE.BufferGeometry();const z=len/2,bt=bottomW/2,tp=topW/2;const v=new Float32Array([-tp,0,-z,tp,0,-z,-tp,0,z,tp,0,z,-bt,-depth,-z,bt,-depth,-z,-bt,-depth,z,bt,-depth,z]);const idx=[0,4,6,0,6,2,1,3,7,1,7,5,4,5,7,4,7,6];g.setAttribute('position',new THREE.BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();const trench=mesh(g,mat.wetBund,false,true);trench.position.set((a.x+b.x)/2,y,(a.z+b.z)/2);trench.rotation.y=ang;world.add(trench);const wg=new THREE.PlaneGeometry(bottomW*.94,len*.985);wg.rotateX(-Math.PI/2);const w=mesh(wg,mat.channelWater,false,false);w.position.set((a.x+b.x)/2,y-depth+waterDepth,(a.z+b.z)/2);w.rotation.y=ang;world.add(w);return {trench,w};}
+function addFlowPath(points,label){const curve=new THREE.CatmullRomCurve3(points,false,'centripetal');const linePts=curve.getPoints(90);const geo=new THREE.BufferGeometry().setFromPoints(linePts);const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0x8edce5,transparent:true,opacity:.46,depthTest:false}));line.renderOrder=99;flowGroup.add(line);for(let i=0;i<3;i++){const marker=mesh(new THREE.ConeGeometry(.14,.55,5),mat.flow,false,false);marker.rotation.x=Math.PI/2;marker.renderOrder=100;flowGroup.add(marker);flowMarkers.push({mesh:marker,curve,offset:i/3+rand()*.08,speed:.055+rand()*.025});} if(label){const p=curve.getPoint(.55).clone().add(new THREE.Vector3(0,.75,0));makeLabel(label,p,.7,true)}}
+function edgeKey(a,b){const f=p=>`${p[0].toFixed(2)},${p[1].toFixed(2)}`;const aa=f(a),bb=f(b);return aa<bb?`${aa}|${bb}`:`${bb}|${aa}`}
+
+const ground=mesh(new THREE.BoxGeometry(104,.8,72),mat.soil,false,true);ground.position.set(0,-.75,0);world.add(ground);
+
+const flat=new THREE.Group();world.add(flat);
+const parcels=[
+ {id:'F1',p:[[-48,-13],[-36,-14],[-35,-4],[-47,-3]]},
+ {id:'F2',p:[[-35,-14],[-23,-12],[-24,-3],[-35,-4]]},
+ {id:'F3',p:[[-23,-12],[-10,-13],[-9,-3],[-24,-3]]},
+ {id:'F4',p:[[-47,-3],[-35,-4],[-34,7],[-46,9]]},
+ {id:'F5',p:[[-35,-4],[-24,-3],[-23,8],[-34,7]]},
+ {id:'F6',p:[[-24,-3],[-9,-3],[-11,9],[-23,8]]}
+];
+const flatY=.08;const edgeMap=new Map();
+for(const P of parcels){const mud=shapeMesh(P.p,flatY,mat.mud);flat.add(mud);const water=shapeMesh(P.p,flatY+.08,mat.water);water.position.y+=.003;flat.add(water);P.center=new THREE.Vector3(P.p.reduce((s,q)=>s+q[0],0)/P.p.length,flatY+.68,P.p.reduce((s,q)=>s+q[1],0)/P.p.length);makeLabel(P.id,P.center,.52,false);for(let i=0;i<P.p.length;i++){const a=P.p[i],b=P.p[(i+1)%P.p.length],k=edgeKey(a,b);if(!edgeMap.has(k))edgeMap.set(k,[a,b]);}}
+for(const [a,b] of edgeMap.values())addBund(a,b,flatY-.04,.82,.5);
+addChannelSegment(new THREE.Vector3(-50,0,-17),new THREE.Vector3(-7,0,-17),.12,2.6,1.0,.62,.22);
+addChannelSegment(new THREE.Vector3(-43,0,-17),new THREE.Vector3(-43,0,10),.12,1.7,.62,.5,.18);
+addChannelSegment(new THREE.Vector3(-28,0,-17),new THREE.Vector3(-28,0,10),.12,1.65,.6,.48,.16);
+addChannelSegment(new THREE.Vector3(-13,0,-17),new THREE.Vector3(-13,0,11),.12,1.7,.62,.5,.18);
+addChannelSegment(new THREE.Vector3(-49,0,13),new THREE.Vector3(-7,0,13),.10,2.2,.82,.56,.2);
+const inletPairs=[[-43,-11,-47,-10],[-28,-10,-35,-9],[-13,-10,-22,-9],[-43,5,-46,5],[-28,5,-34,4],[-13,5,-23,4]];
+for(const q of inletPairs)addChannelSegment(new THREE.Vector3(q[0],0,q[1]),new THREE.Vector3(q[2],0,q[3]),flatY+.05,.72,.34,.22,.12);
+const outletPairs=[[-47,8,-47,13],[-34,7,-34,13],[-22,8,-22,13],[-10,8,-10,13]];
+for(const q of outletPairs)addChannelSegment(new THREE.Vector3(q[0],0,q[1]),new THREE.Vector3(q[2],0,q[3]),flatY+.04,.68,.30,.22,.11);
+makeLabel('平坝水田 · shared bund topology',new THREE.Vector3(-28,3.2,-22),1.0,true);
+makeLabel('主渠 / main canal',new THREE.Vector3(-28,1.5,-17),.68,false);makeLabel('排水受体 →',new THREE.Vector3(-5,1.25,13),.62,false);
+addFlowPath([new THREE.Vector3(-52,.05,-17),new THREE.Vector3(-44,.05,-17),new THREE.Vector3(-43,.05,-9),new THREE.Vector3(-42,.1,-7),new THREE.Vector3(-45,.1,3),new THREE.Vector3(-47,.05,13),new THREE.Vector3(-5,.05,13)],'source → field → drain');
+addFlowPath([new THREE.Vector3(-31,.05,-17),new THREE.Vector3(-28,.05,-12),new THREE.Vector3(-28,.05,4),new THREE.Vector3(-22,.1,8),new THREE.Vector3(-22,.05,13)],'branch continuity');
+
+const terraceLevels=[
+ {y:.7,p:[[8,-13],[16,-15],[18,-4],[10,-2]]},
+ {y:1.75,p:[[13,-2],[24,-5],[25,5],[14,7]]},
+ {y:3.15,p:[[19,7],[31,4],[32,14],[21,17]]},
+ {y:4.65,p:[[24,-17],[35,-19],[37,-9],[26,-7]]},
+ {y:6.35,p:[[30,-7],[42,-10],[43,1],[31,3]]},
+ {y:8.2,p:[[35,2],[48,-1],[48,10],[36,13]]}
+];
+for(let n=0;n<terraceLevels.length;n++){const T=terraceLevels[n];const pad=shapeMesh(T.p,T.y,mat.mud);world.add(pad);const water=shapeMesh(T.p,T.y+.075,mat.water);world.add(water);const lower=Math.max(-.1,T.y-1.15-(n%2)*.22);const downhill=[T.p[0],T.p[T.p.length-1]];const dx=downhill[1][0]-downhill[0][0],dz=downhill[1][1]-downhill[0][1],len=Math.hypot(dx,dz);const face=trapezoidPrism(len,1.35,.72,T.y-lower,mat.clay);face.position.set((downhill[0][0]+downhill[1][0])/2,lower,(downhill[0][1]+downhill[1][1])/2);face.rotation.y=Math.atan2(dx,dz);world.add(face);addBund(T.p[1],T.p[2],T.y-.03,.68,.38);addBund(T.p[2],T.p[3],T.y-.03,.72,.42);makeLabel(`T${n+1}`,new THREE.Vector3(T.p.reduce((s,q)=>s+q[0],0)/4,T.y+.78,T.p.reduce((s,q)=>s+q[1],0)/4),.48,false)}
+for(let i=0;i<24;i++){const x=39+rand()*17,z=-20+rand()*38,y=9.5+(x-39)*.12+rand()*.35;const trunk=mesh(new THREE.CylinderGeometry(.09,.16,1.7,7),mat.wood);trunk.position.set(x,y+.85,z);world.add(trunk);const crown=mesh(new THREE.IcosahedronGeometry(.7+rand()*.35,1),new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(.27+rand()*.03,.32,.24+rand()*.1),roughness:1}));crown.scale.y=1.2+rand()*.5;crown.position.set(x,y+2,z);world.add(crown)}
+for(let i=0;i<5;i++){const x=33+i*2.2,z=16+(i%2)*2.4,y=8.2+(x-35)*.08;const h=mesh(new THREE.BoxGeometry(1.55,.95,1.15),mat.clay);h.position.set(x,y+.48,z);world.add(h);const roof=mesh(new THREE.ConeGeometry(1.18,.5,4),mat.roof);roof.rotation.y=Math.PI/4;roof.position.set(x,y+1.18,z);world.add(roof)}
+makeLabel('上部森林 / catchment forest',new THREE.Vector3(45,14,-16),.82,true);makeLabel('村落高程带 / village band',new THREE.Vector3(37,11.2,19),.72,false);makeLabel('山地梯田 · irregular terraces',new THREE.Vector3(29,11,-23),.95,true);
+addChannelSegment(new THREE.Vector3(45,0,-18),new THREE.Vector3(44,0,8),10.0,1.35,.48,.42,.15);
+addChannelSegment(new THREE.Vector3(44,0,8),new THREE.Vector3(39,0,9),9.2,1.05,.4,.36,.13);
+const cascade=[new THREE.Vector3(42,9.35,8),new THREE.Vector3(39,8.35,7),new THREE.Vector3(36,6.5,5),new THREE.Vector3(31,4.8,4),new THREE.Vector3(25,3.3,6),new THREE.Vector3(18,1.9,6),new THREE.Vector3(11,.85,8),new THREE.Vector3(6,.15,14)];
+addFlowPath(cascade,'forest spring → terraces → toe drain');
+const riverPts=[[4,12],[15,15],[28,20],[48,24],[56,21],[56,30],[30,28],[12,20],[3,18]];world.add(shapeMesh(riverPts,.02,mat.channelWater));makeLabel('坡脚排水 / 河谷受体',new THREE.Vector3(29,1.3,25),.75,true);
+
+function addHuman(x,y,z){const g=new THREE.Group();const torso=mesh(new THREE.CapsuleGeometry(.18,.62,4,8),mat.human);torso.position.y=1.08;g.add(torso);const head=mesh(new THREE.SphereGeometry(.16,14,10),mat.human);head.position.y=1.73;g.add(head);for(const sx of [-1,1]){const leg=mesh(new THREE.CylinderGeometry(.055,.07,.72,7),mat.human);leg.position.set(sx*.09,.38,0);g.add(leg);const arm=mesh(new THREE.CylinderGeometry(.042,.055,.68,7),mat.human);arm.position.set(sx*.25,1.12,0);arm.rotation.z=sx*.25;g.add(arm)}const pole=mesh(new THREE.CylinderGeometry(.018,.018,2.35,6),mat.wood);pole.rotation.z=Math.PI/2;pole.position.set(0,1.45,0);g.add(pole);g.position.set(x,y,z);world.add(g);return g}
+addHuman(-8,.08,7);addHuman(27,4.65,-10);
+function addBuffalo(x,y,z,s=.9){const g=new THREE.Group();const body=mesh(new THREE.SphereGeometry(1,18,12),mat.dark);body.scale.set(1.25,.7,.55);body.position.y=.95;g.add(body);const head=mesh(new THREE.SphereGeometry(.48,14,10),mat.dark);head.scale.set(.8,.8,.7);head.position.set(-1.05,1.02,0);g.add(head);for(const zz of [-.36,.36])for(const xx of [-.55,.55]){const leg=mesh(new THREE.CylinderGeometry(.07,.1,.65,7),mat.dark);leg.position.set(xx,.42,zz);g.add(leg)}for(const zz of [-.22,.22]){const horn=mesh(new THREE.TorusGeometry(.28,.035,6,16,Math.PI*.72),mat.human);horn.rotation.set(Math.PI/2,0,zz<0?-.8:.8);horn.position.set(-1.28,1.28,zz);g.add(horn)}g.scale.setScalar(s);g.position.set(x,y,z);world.add(g)}
+addBuffalo(-8,.08,-1,.8);
+makeLabel('1.70 m human + carrying pole',new THREE.Vector3(-8,2.35,7),.62,false);makeLabel('buffalo scale ref',new THREE.Vector3(-8,1.75,-1),.58,false);
+
+const secX=-2,secZ=29;function layer(w,h,d,y,color){const o=mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:1}));o.position.set(secX,y,secZ);sectionGroup.add(o);return o}
+layer(9,.7,5,-.38,0x6b503a);layer(9,.34,5,.14,0x5b4434);layer(9,.26,5,.44,0x3e3027);layer(9,.18,5,.66,0x4b392d);
+const secWater=mesh(new THREE.BoxGeometry(8.7,.08,4.6),mat.water,false,false);secWater.position.set(secX,.79,secZ);sectionGroup.add(secWater);
+const secBund=trapezoidPrism(5,1.7,.78,.55,mat.bund);secBund.rotation.y=Math.PI/2;secBund.position.set(secX,.69,secZ);sectionGroup.add(secBund);
+const secTrench=addChannelSegment(new THREE.Vector3(4.5,0,27),new THREE.Vector3(4.5,0,31),.65,2.0,.7,.62,.2);secTrench.trench.parent.remove(secTrench.trench);secTrench.w.parent.remove(secTrench.w);sectionGroup.add(secTrench.trench,secTrench.w);
+makeLabel('剖面 QA：田面 / 泥化层 / 耕作层 / 低渗层 / 下伏土',new THREE.Vector3(secX,2.25,secZ),.85,true);makeLabel('water = 0.08 m (synthetic QA)',new THREE.Vector3(secX,1.35,secZ-2.7),.58,false);makeLabel('open earthen channel section',new THREE.Vector3(4.5,1.85,29),.6,false);
+const pole=mesh(new THREE.BoxGeometry(.045,2.2,.045),mat.human);pole.position.set(-7.2,.55,27);sectionGroup.add(pole);for(let i=0;i<=20;i++){const tick=mesh(new THREE.BoxGeometry(i%5===0?.35:.18,.02,.04),mat.human,false,false);tick.position.set(-7.02,-.55+i*.1,27);sectionGroup.add(tick)}makeLabel('metric datum',new THREE.Vector3(-7.2,2.0,27),.5,false);
+
+const stageDefs=[
+ ['育秧 / Nursery',{h:.28,t:1,l:3,dense:1.7,water:.035,color:'pale'}],['起秧 / Lifting',{h:.34,t:1,l:3,lift:true,water:.025,color:'pale'}],['插秧 / Transplant',{h:.38,t:1,l:3,dense:.55,water:.08,color:'pale'}],['返青 / Establishment',{h:.46,t:2,l:4,dense:.62,water:.075,color:'rice'}],['分蘖 / Tillering',{h:.62,t:5,l:5,dense:.7,water:.07,color:'rice'}],['拔节 / Stem elongation',{h:.92,t:6,l:6,dense:.74,water:.065,color:'rice'}],['幼穗分化 / Panicle initiation',{h:1.05,t:7,l:7,dense:.78,water:.06,color:'rice'}],['孕穗 / Booting',{h:1.18,t:8,l:7,dense:.8,water:.055,color:'rice',flag:true}],['抽穗 / Heading',{h:1.26,t:8,l:7,dense:.82,water:.05,color:'rice',panicle:.55}],['开花 / Flowering',{h:1.28,t:8,l:7,dense:.82,water:.045,color:'rice',panicle:.7,flower:true}],['灌浆 / Grain filling',{h:1.3,t:8,l:7,dense:.82,water:.035,color:'rice',panicle:1}],['成熟 / Maturity',{h:1.24,t:7,l:6,dense:.8,water:.018,color:'gold',panicle:1.15,droop:.3}],['收割 / Harvest',{h:.28,t:4,l:0,dense:.7,water:.0,color:'gold',harvest:true}],['残茬 / Stubble',{h:.18,t:3,l:0,dense:.66,water:.0,color:'gold',stubble:true}]
+];
+function clearGroup(g){while(g.children.length){const o=g.children.pop();if(o.geometry)o.geometry.dispose();}}
+function buildRiceStage(i){clearGroup(riceGroup);const [name,p]=stageDefs[i];document.getElementById('stageName').textContent=name;const center=new THREE.Vector3(-29,flatY+.1,2);const patch=mesh(new THREE.BoxGeometry(10,.08,8),mat.mud,false,true);patch.position.set(center.x,flatY+.02,center.z);riceGroup.add(patch);if(p.water>0){const w=mesh(new THREE.BoxGeometry(9.8,p.water,7.8),mat.water,false,false);w.position.set(center.x,flatY+.06+p.water*.5,center.z);riceGroup.add(w)}
+ const localRand=seedRand(1000+i*97);let cols=Math.max(3,Math.round(5*p.dense)),rows=Math.max(3,Math.round(4*p.dense));if(p.dense>1){cols=9;rows=7}if(p.lift){cols=4;rows=3}
+ const plants=[];for(let ix=0;ix<cols;ix++)for(let iz=0;iz<rows;iz++)plants.push({x:center.x+(ix-(cols-1)/2)*(8.3/Math.max(1,cols-1))+(localRand()-.5)*.18,z:center.z+(iz-(rows-1)/2)*(6.2/Math.max(1,rows-1))+(localRand()-.5)*.18});
+ const culmGeo=new THREE.CylinderGeometry(.015,.022,1,5);const culms=new THREE.InstancedMesh(culmGeo,p.color==='gold'?mat.riceGold:(p.color==='pale'?mat.ricePale:mat.rice),plants.length*p.t);culms.castShadow=true;let k=0;const dummy=new THREE.Object3D();for(const pl of plants)for(let t=0;t<p.t;t++){const a=(t/p.t)*Math.PI*2+localRand()*.4,r=.035*t;dummy.position.set(pl.x+Math.cos(a)*r,flatY+.08+p.h*.5,pl.z+Math.sin(a)*r);dummy.rotation.set((localRand()-.5)*.06,localRand()*Math.PI*2,(localRand()-.5)*.05);dummy.scale.set(1,p.h,1);dummy.updateMatrix();culms.setMatrixAt(k++,dummy.matrix)}riceGroup.add(culms);
+ if(p.l>0){const leafGeo=new THREE.BufferGeometry();leafGeo.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,.032,.45,0,0,.92,0,-.032,.45,0],3));leafGeo.setIndex([0,1,2,0,2,3]);leafGeo.computeVertexNormals();const leavesPer=Math.min(p.l,7);const leaves=new THREE.InstancedMesh(leafGeo,p.color==='gold'?mat.riceGold:(p.color==='pale'?mat.ricePale:mat.rice),plants.length*leavesPer);k=0;for(const pl of plants)for(let l=0;l<leavesPer;l++){const a=l/leavesPer*Math.PI*2+localRand()*.5;dummy.position.set(pl.x,flatY+.08+p.h*(.18+.055*l),pl.z);dummy.rotation.set(0,a,.35+localRand()*.32);dummy.scale.set(.65+.35*localRand(),p.h*(.58+.32*localRand()),1);dummy.updateMatrix();leaves.setMatrixAt(k++,dummy.matrix)}riceGroup.add(leaves)}
+ if(p.panicle){const panGeo=new THREE.SphereGeometry(.07,5,4);const pans=new THREE.InstancedMesh(panGeo,mat.panicle,plants.length*Math.max(1,Math.floor(p.t*.55)));k=0;for(const pl of plants)for(let q=0;q<Math.max(1,Math.floor(p.t*.55));q++){const a=q*.9+localRand(),r=.06*q;dummy.position.set(pl.x+Math.cos(a)*r,flatY+.1+p.h*(.96-p.droop*.04),pl.z+Math.sin(a)*r);dummy.rotation.set(0,a,p.droop||.12);dummy.scale.set(.7,1.8+p.panicle*.7,.7);dummy.updateMatrix();pans.setMatrixAt(k++,dummy.matrix)}riceGroup.add(pans);if(p.flower){const flGeo=new THREE.SphereGeometry(.022,4,3);const fl=new THREE.InstancedMesh(flGeo,mat.flower,plants.length*2);k=0;for(const pl of plants)for(let q=0;q<2;q++){dummy.position.set(pl.x+(localRand()-.5)*.12,flatY+.14+p.h,pl.z+(localRand()-.5)*.12);dummy.scale.setScalar(1);dummy.updateMatrix();fl.setMatrixAt(k++,dummy.matrix)}riceGroup.add(fl)}}
+ if(p.harvest){for(let b=0;b<3;b++){const sheaf=mesh(new THREE.CylinderGeometry(.18,.32,1.0,8),mat.riceGold);sheaf.rotation.z=.85+(localRand()-.5)*.2;sheaf.position.set(center.x+2.8+b*.65,flatY+.28,center.z+2.1);riceGroup.add(sheaf)}}
+ makeLabel(`R024 ${name} · structure QA only`,new THREE.Vector3(center.x,2.4,center.z),.68,true)
+}
+buildRiceStage(2);
+
+const presets={overview:{p:[66,48,75],t:[0,2,1]},flat:{p:[-58,24,35],t:[-28,.7,0]},terrace:{p:[60,28,42],t:[29,5,0]},section:{p:[18,11,47],t:[0,.5,29]},human:{p:[-13,2.2,8],t:[-20,1.1,2]}};
+function goCamera(key){const q=presets[key];camera.position.fromArray(q.p);controls.target.fromArray(q.t);controls.update();document.querySelectorAll('[data-cam]').forEach(b=>b.classList.toggle('active',b.dataset.cam===key))}
+document.querySelectorAll('[data-cam]').forEach(b=>b.addEventListener('click',()=>goCamera(b.dataset.cam)));
+document.getElementById('flowToggle').addEventListener('change',e=>flowGroup.visible=e.target.checked);
+document.getElementById('labelToggle').addEventListener('change',e=>labelGroup.visible=e.target.checked);
+document.getElementById('sectionToggle').addEventListener('change',e=>sectionGroup.visible=e.target.checked);
+document.getElementById('stageSlider').addEventListener('input',e=>buildRiceStage(+e.target.value));
+
+function onResize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7))}addEventListener('resize',onResize);
+let first=true;function animate(){requestAnimationFrame(animate);const dt=clock.getDelta(),t=clock.elapsedTime;for(const f of flowMarkers){f.offset=(f.offset+dt*f.speed)%1;const p=f.curve.getPoint(f.offset),p2=f.curve.getPoint(Math.min(.999,f.offset+.01));f.mesh.position.copy(p);f.mesh.lookAt(p2);f.mesh.rotateX(Math.PI/2)}mat.water.opacity=.68+Math.sin(t*.9)*.035;controls.update();renderer.render(scene,camera);if(first){first=false;document.body.dataset.runtimeReady='true';document.body.dataset.version=VERSION}}
+animate();
+</script>
+</body></html>
