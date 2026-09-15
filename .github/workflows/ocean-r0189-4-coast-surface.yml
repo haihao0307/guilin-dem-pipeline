@@ -49,6 +49,9 @@ jobs:
           s=p.read_text()
           assert 'ISLAND GOLD COAST / R018.9.4' in s
           assert 'r0189.4-coast-surface-v001-deep-frozen' in s
+          assert "reviewQuery.has('still')" in s
+          assert "reviewQuery.get('view')" in s
+          assert "reviewQuery.get('zone')" in s
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
           for i,code in enumerate(scripts):
               q=Path('/tmp')/f'ocean-r0189-4-{i}.js'
@@ -63,7 +66,7 @@ jobs:
           python -m pip install --disable-pip-version-check -q playwright
           python -m playwright install --with-deps chromium
 
-      - name: Render fixed review views and verify deep startup
+      - name: Render deterministic review views and verify deep startup
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -74,7 +77,7 @@ jobs:
           review=root/'review'; review.mkdir(exist_ok=True)
           port=8765
           server=subprocess.Popen(['python','-m','http.server',str(port),'--bind','127.0.0.1'],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-          logs=[]; errors=[]; qa=None; deep=None
+          logs=[]; errors=[]; qa_by_view={}; deep=None
           try:
               for _ in range(80):
                   try:
@@ -82,34 +85,37 @@ jobs:
                   except OSError: time.sleep(.1)
               with sync_playwright() as pw:
                   browser=pw.chromium.launch(headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
-                  page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
-                  page.on('console',lambda m: logs.append({'type':m.type,'text':m.text}))
-                  page.on('pageerror',lambda e: errors.append(str(e)))
-                  page.goto(f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html',wait_until='load',timeout=120000)
-                  page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
-                  page.wait_for_timeout(2600)
-                  page.evaluate("document.getElementById('pause').click()")
-                  page.wait_for_timeout(400)
                   for view in ['overview','top','shore','rocks']:
-                      page.evaluate("v=>document.querySelector('[data-view=\"'+v+'\"]').click()",view)
-                      page.wait_for_timeout(1200)
+                      page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
+                      page.on('console',lambda m,v=view: logs.append({'view':v,'type':m.type,'text':m.text}))
+                      page.on('pageerror',lambda e,v=view: errors.append({'view':v,'error':str(e)}))
+                      url=f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html?qa=1&still=1&view={view}'
+                      page.goto(url,wait_until='load',timeout=120000)
+                      page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
+                      page.wait_for_timeout(1100)
+                      qa=page.evaluate('window.__OCEAN_QA__')
+                      assert qa['version']=='0.3.9.4-r0189-coast-surface'
+                      assert qa['buildId']=='r0189.4-coast-surface-v001-deep-frozen'
+                      assert qa['paused'] is True
+                      qa_by_view[view]=qa
                       page.screenshot(path=str(review/f'{view}.png'),timeout=120000)
-                  qa=page.evaluate('window.__OCEAN_QA__')
-                  assert qa['version']=='0.3.9.4-r0189-coast-surface'
-                  assert qa['buildId']=='r0189.4-coast-surface-v001-deep-frozen'
-                  page.evaluate("document.querySelector('[data-zone=\"deep\"]').click()")
+                      page.close()
+                  page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
+                  page.on('console',lambda m: logs.append({'view':'deep','type':m.type,'text':m.text}))
+                  page.on('pageerror',lambda e: errors.append({'view':'deep','error':str(e)}))
+                  page.goto(f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html?qa=1&still=1&zone=deep',wait_until='load',timeout=120000)
                   page.wait_for_function("window.__OCEAN_DEEP_READY__ === true",timeout=120000)
-                  page.wait_for_timeout(1200)
+                  page.wait_for_timeout(800)
                   deep=page.evaluate("({ready:window.__OCEAN_DEEP_READY__,zone:window.__OCEAN_ZONE__})")
                   assert deep['ready'] is True and deep['zone']=='deep'
-                  browser.close()
+                  page.close(); browser.close()
           finally:
               server.terminate()
               with contextlib.suppress(Exception): server.wait(timeout=5)
-          runtime={'qa':qa,'deep':deep,'errors':errors,'console':logs[-80:]}
+          runtime={'qaByView':qa_by_view,'deep':deep,'errors':errors,'console':logs[-100:]}
           (review/'browser_runtime.json').write_text(json.dumps(runtime,ensure_ascii=False,indent=2))
           assert not errors, errors
-          print(json.dumps({'version':qa['version'],'deep':deep,'screenshots':4,'errors':errors},ensure_ascii=False,indent=2))
+          print(json.dumps({'views':sorted(qa_by_view),'deep':deep,'screenshots':4,'errors':errors},ensure_ascii=False,indent=2))
           PY
 
       - name: Commit candidate, evidence and browser review
