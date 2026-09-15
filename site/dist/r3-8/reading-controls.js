@@ -27,7 +27,7 @@ export function installReadingControls(){
       #panel-toggle{min-width:82px}
     }
   `;document.head.append(style);
-  const historical=window.__WENZHOU_HISTORY_1942===true;
+  const historical=window.__WENZHOU_HISTORY_1942===true||location.pathname.includes('history-1942');
   if(historical){
     document.title='小温州 · 1940s Map Mother';
     const caption=document.querySelector('.brand p');if(caption)caption.textContent='1940s Map Mother · 历史海陆回退';
