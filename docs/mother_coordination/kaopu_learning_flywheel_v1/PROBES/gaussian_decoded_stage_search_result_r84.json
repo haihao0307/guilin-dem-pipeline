@@ -1,0 +1,215 @@
+{
+  "schema": "kaopu-gaussian-decoded-stage-search/r84",
+  "status": "Candidate-pass",
+  "question": "Can a newly identified raw-SPZ-byte matrix isolate complement, product and sum staging after the frozen r186 decode?",
+  "answer": "yes-candidate-matrix-found",
+  "sourceLocks": {
+    "r80Hash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+    "r82Hash": "0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1",
+    "threeRevision": "0.186.0",
+    "dataUtilsCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "dataUtilsBlob": "44e34e8d912528aa9f7219390e9ba82b6c9609c6"
+  },
+  "search": {
+    "method": "fixed-seed LCG candidate discovery replay; not exhaustive",
+    "initialSeed": 2227240942,
+    "finalSeed": 3128673766,
+    "maxSamples": 1000000,
+    "samplesExecuted": 443254,
+    "firstHits": {
+      "no_sum": {
+        "sample": 3460,
+        "alpha1Byte": 140,
+        "color1RawByte": 143,
+        "color1DecodedByte": 157,
+        "alpha2Byte": 40,
+        "color2RawByte": 67,
+        "color2DecodedByte": 14,
+        "prefix1": 0.1402587890625,
+        "values": {
+          "staged": 0.134765625,
+          "no_comp": 0.134765625,
+          "no_prod": 0.134765625,
+          "no_sum": 0.1346435546875
+        }
+      },
+      "no_prod": {
+        "sample": 50805,
+        "alpha1Byte": 84,
+        "color1RawByte": 127,
+        "color1DecodedByte": 127,
+        "alpha2Byte": 119,
+        "color2RawByte": 164,
+        "color2DecodedByte": 196,
+        "prefix1": 0.06805419921875,
+        "values": {
+          "staged": 0.2037353515625,
+          "no_comp": 0.2037353515625,
+          "no_prod": 0.20361328125,
+          "no_sum": 0.2037353515625
+        }
+      },
+      "no_comp": {
+        "sample": 443253,
+        "alpha1Byte": 207,
+        "color1RawByte": 225,
+        "color1DecodedByte": 255,
+        "alpha2Byte": 144,
+        "color2RawByte": 186,
+        "color2DecodedByte": 238,
+        "prefix1": 0.336669921875,
+        "values": {
+          "staged": 0.476318359375,
+          "no_comp": 0.4765625,
+          "no_prod": 0.476318359375,
+          "no_sum": 0.476318359375
+        }
+      }
+    }
+  },
+  "oldR81Replay": {
+    "no_comp": {
+      "prefix1": 0.034149169921875,
+      "values": {
+        "staged": 0.03125,
+        "no_comp": 0.03125,
+        "no_prod": 0.03125,
+        "no_sum": 0.03125
+      },
+      "allModelsCollapsed": true,
+      "expectedExact": true
+    },
+    "no_prod": {
+      "prefix1": 0,
+      "values": {
+        "staged": 0.2000732421875,
+        "no_comp": 0.2000732421875,
+        "no_prod": 0.2000732421875,
+        "no_sum": 0.2000732421875
+      },
+      "allModelsCollapsed": true,
+      "expectedExact": true
+    },
+    "no_sum": {
+      "prefix1": 0.0016269683837890625,
+      "values": {
+        "staged": 0.19189453125,
+        "no_comp": 0.19189453125,
+        "no_prod": 0.19189453125,
+        "no_sum": 0.19189453125
+      },
+      "allModelsCollapsed": true,
+      "expectedExact": true
+    }
+  },
+  "candidateMatrix": {
+    "id": "KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A",
+    "status": "Candidate-unrendered-target",
+    "cases": {
+      "no_sum": {
+        "targetAblation": "no_sum",
+        "targetChannel": 2,
+        "records": [
+          {
+            "alphaByte": 140,
+            "colorRawByte": 143,
+            "colorDecodedByte": 157
+          },
+          {
+            "alphaByte": 40,
+            "colorRawByte": 67,
+            "colorDecodedByte": 14
+          }
+        ],
+        "prefix1": 0.1402587890625,
+        "predictedHalf": {
+          "staged": 0.134765625,
+          "no_comp": 0.134765625,
+          "no_prod": 0.134765625,
+          "no_sum": 0.1346435546875
+        }
+      },
+      "no_prod": {
+        "targetAblation": "no_prod",
+        "targetChannel": 1,
+        "records": [
+          {
+            "alphaByte": 84,
+            "colorRawByte": 127,
+            "colorDecodedByte": 127
+          },
+          {
+            "alphaByte": 119,
+            "colorRawByte": 164,
+            "colorDecodedByte": 196
+          }
+        ],
+        "prefix1": 0.06805419921875,
+        "predictedHalf": {
+          "staged": 0.2037353515625,
+          "no_comp": 0.2037353515625,
+          "no_prod": 0.20361328125,
+          "no_sum": 0.2037353515625
+        }
+      },
+      "no_comp": {
+        "targetAblation": "no_comp",
+        "targetChannel": 0,
+        "records": [
+          {
+            "alphaByte": 207,
+            "colorRawByte": 225,
+            "colorDecodedByte": 255
+          },
+          {
+            "alphaByte": 144,
+            "colorRawByte": 186,
+            "colorDecodedByte": 238
+          }
+        ],
+        "prefix1": 0.336669921875,
+        "predictedHalf": {
+          "staged": 0.476318359375,
+          "no_comp": 0.4765625,
+          "no_prod": 0.476318359375,
+          "no_sum": 0.476318359375
+        }
+      }
+    }
+  },
+  "checks": {
+    "r80TableIdentity": true,
+    "r82TableIdentity": true,
+    "r83CollapseReproduced": true,
+    "boundedSearch": true,
+    "expectedFirstHitsExact": true,
+    "allThreeIsolated": true,
+    "newIdentity": true,
+    "noHalfTargetRendered": true
+  },
+  "interpretation": {
+    "observation": "The fixed search replay reproduced the R83 collapse and found one decoded-aware scalar discriminator for each of the three declared ablations.",
+    "candidate": "The new matrix is suitable only for a separately preregistered Half prefix-1 target test.",
+    "rejected": [
+      "Reuse the R81 identity.",
+      "Call the bounded pseudorandom search exhaustive.",
+      "Treat CPU discrimination as renderer-stage evidence."
+    ],
+    "observationRoots": {
+      "r80Runtime": "Inherited Float calibration on Chromium/ANGLE SwiftShader.",
+      "r82Parser": "Inherited pinned parser table; official source and byte-identical execution remain one lineage.",
+      "r84Search": "Deterministic CPU candidate generation and replay."
+    }
+  },
+  "limits": {
+    "candidateDiscoveryWasExploratoryBeforeFreeze": true,
+    "searchExhaustive": false,
+    "halfTargetRendered": false,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}

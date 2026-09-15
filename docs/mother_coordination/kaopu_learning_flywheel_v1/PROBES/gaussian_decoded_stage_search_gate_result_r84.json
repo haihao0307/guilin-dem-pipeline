@@ -1,0 +1,159 @@
+{
+  "schema": "kaopu-gaussian-decoded-stage-search-gate/r84",
+  "status": "Candidate-pass",
+  "failures": [],
+  "answer": "yes-candidate-matrix-found",
+  "matrix": {
+    "id": "KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A",
+    "status": "Candidate-unrendered-target",
+    "cases": {
+      "no_sum": {
+        "targetAblation": "no_sum",
+        "targetChannel": 2,
+        "records": [
+          {
+            "alphaByte": 140,
+            "colorRawByte": 143,
+            "colorDecodedByte": 157
+          },
+          {
+            "alphaByte": 40,
+            "colorRawByte": 67,
+            "colorDecodedByte": 14
+          }
+        ],
+        "prefix1": 0.1402587890625,
+        "predictedHalf": {
+          "staged": 0.134765625,
+          "no_comp": 0.134765625,
+          "no_prod": 0.134765625,
+          "no_sum": 0.1346435546875
+        }
+      },
+      "no_prod": {
+        "targetAblation": "no_prod",
+        "targetChannel": 1,
+        "records": [
+          {
+            "alphaByte": 84,
+            "colorRawByte": 127,
+            "colorDecodedByte": 127
+          },
+          {
+            "alphaByte": 119,
+            "colorRawByte": 164,
+            "colorDecodedByte": 196
+          }
+        ],
+        "prefix1": 0.06805419921875,
+        "predictedHalf": {
+          "staged": 0.2037353515625,
+          "no_comp": 0.2037353515625,
+          "no_prod": 0.20361328125,
+          "no_sum": 0.2037353515625
+        }
+      },
+      "no_comp": {
+        "targetAblation": "no_comp",
+        "targetChannel": 0,
+        "records": [
+          {
+            "alphaByte": 207,
+            "colorRawByte": 225,
+            "colorDecodedByte": 255
+          },
+          {
+            "alphaByte": 144,
+            "colorRawByte": 186,
+            "colorDecodedByte": 238
+          }
+        ],
+        "prefix1": 0.336669921875,
+        "predictedHalf": {
+          "staged": 0.476318359375,
+          "no_comp": 0.4765625,
+          "no_prod": 0.476318359375,
+          "no_sum": 0.476318359375
+        }
+      }
+    }
+  },
+  "search": {
+    "method": "fixed-seed LCG candidate discovery replay; not exhaustive",
+    "initialSeed": 2227240942,
+    "finalSeed": 3128673766,
+    "maxSamples": 1000000,
+    "samplesExecuted": 443254,
+    "firstHits": {
+      "no_sum": {
+        "sample": 3460,
+        "alpha1Byte": 140,
+        "color1RawByte": 143,
+        "color1DecodedByte": 157,
+        "alpha2Byte": 40,
+        "color2RawByte": 67,
+        "color2DecodedByte": 14,
+        "prefix1": 0.1402587890625,
+        "values": {
+          "staged": 0.134765625,
+          "no_comp": 0.134765625,
+          "no_prod": 0.134765625,
+          "no_sum": 0.1346435546875
+        }
+      },
+      "no_prod": {
+        "sample": 50805,
+        "alpha1Byte": 84,
+        "color1RawByte": 127,
+        "color1DecodedByte": 127,
+        "alpha2Byte": 119,
+        "color2RawByte": 164,
+        "color2DecodedByte": 196,
+        "prefix1": 0.06805419921875,
+        "values": {
+          "staged": 0.2037353515625,
+          "no_comp": 0.2037353515625,
+          "no_prod": 0.20361328125,
+          "no_sum": 0.2037353515625
+        }
+      },
+      "no_comp": {
+        "sample": 443253,
+        "alpha1Byte": 207,
+        "color1RawByte": 225,
+        "color1DecodedByte": 255,
+        "alpha2Byte": 144,
+        "color2RawByte": 186,
+        "color2DecodedByte": 238,
+        "prefix1": 0.336669921875,
+        "values": {
+          "staged": 0.476318359375,
+          "no_comp": 0.4765625,
+          "no_prod": 0.476318359375,
+          "no_sum": 0.476318359375
+        }
+      }
+    }
+  },
+  "checks": {
+    "r80TableIdentity": true,
+    "r82TableIdentity": true,
+    "r83CollapseReproduced": true,
+    "boundedSearch": true,
+    "expectedFirstHitsExact": true,
+    "allThreeIsolated": true,
+    "newIdentity": true,
+    "noHalfTargetRendered": true
+  },
+  "limits": {
+    "candidateDiscoveryWasExploratoryBeforeFreeze": true,
+    "searchExhaustive": false,
+    "halfTargetRendered": false,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}
