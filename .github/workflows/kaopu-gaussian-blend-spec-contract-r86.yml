@@ -19,8 +19,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Verify PDF extractor
-        run: pdftotext -v
+      - name: Install PDF extractor
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
       - name: Run frozen source-contract audit
         run: |
           node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_probe_r86.mjs \
