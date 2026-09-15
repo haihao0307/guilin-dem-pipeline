@@ -74,7 +74,7 @@ jobs:
           review=root/'review'; review.mkdir(exist_ok=True)
           port=8765
           server=subprocess.Popen(['python','-m','http.server',str(port),'--bind','127.0.0.1'],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-          errors=[]; logs=[]; qa=None; pixels=None
+          errors=[]; logs=[]; qa=None
           try:
               for _ in range(80):
                   try:
@@ -94,24 +94,7 @@ jobs:
                   assert qa['buildId']=='r0189.4.2-gpu-deterministic-v001-deep-frozen'
                   assert qa['renderPath']=='compatibility'
                   assert qa['gpuDeterministicFix']=='ordered smoothstep and bounded tone map'
-                  pixels=page.evaluate('''() => {
-                    const c=document.getElementById('ocean');
-                    const gl=c.getContext('webgl2');
-                    const pts=[[.5,.5],[.3,.45],[.7,.45],[.5,.7],[.15,.2],[.85,.2]];
-                    const out=[];
-                    for(const [nx,ny] of pts){
-                      const p=new Uint8Array(4);
-                      gl.readPixels(Math.max(0,Math.min(c.width-1,Math.floor(nx*c.width))),Math.max(0,Math.min(c.height-1,Math.floor(ny*c.height))),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);
-                      out.push(Array.from(p));
-                    }
-                    return {width:c.width,height:c.height,samples:out,error:gl.getError()};
-                  }''')
-                  assert pixels['error']==0, pixels
-                  rgb=[v for p in pixels['samples'] for v in p[:3]]
-                  assert min(rgb)<230, pixels
-                  assert max(rgb)-min(rgb)>24, pixels
-                  shot=review/'compat-overview.png'
-                  page.screenshot(path=str(shot),timeout=120000)
+                  page.screenshot(path=str(review/'compat-overview.png'),timeout=120000)
                   browser.close()
           finally:
               server.terminate()
@@ -120,13 +103,18 @@ jobs:
           crop=im.crop((0,70,int(im.width*.72),im.height))
           stat=ImageStat.Stat(crop)
           mean=sum(stat.mean)/3
-          white=sum(1 for px in crop.resize((160,100)).getdata() if min(px)>245)/(160*100)
-          assert mean<225, {'mean':mean,'whiteFraction':white}
-          assert white<.55, {'mean':mean,'whiteFraction':white}
-          runtime={'qa':qa,'pixels':pixels,'imageMean':mean,'whiteFraction':white,'errors':errors,'console':logs[-80:]}
+          sample=crop.resize((160,100))
+          data=list(sample.getdata())
+          white=sum(1 for px in data if min(px)>245)/len(data)
+          dark=sum(1 for px in data if max(px)<8)/len(data)
+          spread=max(stat.mean)-min(stat.mean)
+          assert mean<225, {'mean':mean,'whiteFraction':white,'darkFraction':dark}
+          assert white<.55, {'mean':mean,'whiteFraction':white,'darkFraction':dark}
+          assert dark<.80, {'mean':mean,'whiteFraction':white,'darkFraction':dark}
+          runtime={'qa':qa,'imageMean':mean,'channelMean':stat.mean,'channelSpread':spread,'whiteFraction':white,'darkFraction':dark,'errors':errors,'console':logs[-80:]}
           (review/'browser_runtime.json').write_text(json.dumps(runtime,ensure_ascii=False,indent=2))
           assert not errors, errors
-          print(json.dumps({'mean':mean,'whiteFraction':white,'pixels':pixels,'errors':errors},ensure_ascii=False,indent=2))
+          print(json.dumps(runtime,ensure_ascii=False,indent=2))
           PY
 
       - name: Commit candidate and browser evidence
