@@ -75,7 +75,7 @@ const checks = {
     webgl2.includes('OpenGL ES 3.0') && webgl2.includes('WebGL 2.0'),
   officialConformanceUsesNonzeroThreshold:
     conformance.includes('[12, 12, 12, 12]') &&
-    conformance.includes('thresholdCompare'),
+    conformance.includes('bilinearCompare'),
   officialConformanceIncludesRGBA16F:
     conformance.includes('case gl.RGBA16F:')
 };
