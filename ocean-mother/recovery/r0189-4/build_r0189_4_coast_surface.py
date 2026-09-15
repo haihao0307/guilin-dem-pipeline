@@ -203,6 +203,16 @@ repls=[
 ]
 for a,b,l in repls:s=repl(s,a,b,l)
 
+# Deterministic review queries do not affect normal interactive use.
+s=repl(s,
+"let renderMode=0,paused=false,time=0,last=performance.now(),yaw=.62,pitch=.48,distance=116,target=[0,5,0],drag=null,renderScale=Math.min(devicePixelRatio||1,1.25)*.62,fps=0,fpsFrames=0,fpsStart=performance.now();",
+"const reviewQuery=new URLSearchParams(location.search);\nlet renderMode=0,paused=reviewQuery.has('still'),time=0,last=performance.now(),yaw=.62,pitch=.48,distance=116,target=[0,5,0],drag=null,renderScale=reviewQuery.has('qa')?.44:Math.min(devicePixelRatio||1,1.25)*.62,fps=0,fpsFrames=0,fpsStart=performance.now();",
+'review query runtime')
+s=repl(s,
+"syncEffects();resize();document.getElementById('loading').classList.add('done');requestAnimationFrame(draw);",
+"syncEffects();resize();\nconst initialView=reviewQuery.get('view');if(initialView)setView(initialView);\nif(paused){document.getElementById('pause').textContent='继续运行';document.getElementById('status').textContent='静态审查';}\nconst initialZone=reviewQuery.get('zone');if(initialZone==='deep')setZone('deep');\ndocument.getElementById('loading').classList.add('done');requestAnimationFrame(draw);",
+'review query boot')
+
 after={k:sha(get(s,p,k).encode()) for k,p in protected.items()}
 changed=[k for k in before if before[k]!=after[k]]
 if changed: raise RuntimeError('protected changed '+str(changed))
