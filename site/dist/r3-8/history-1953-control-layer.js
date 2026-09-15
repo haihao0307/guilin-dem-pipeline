@@ -3,6 +3,7 @@ import * as THREE from 'three';
 const FLAG=Symbol.for('wenzhou.map-mother.1940s-coast-installed');
 const TERRAIN_URL='../r3-1/data/terrain.json';
 const MASK_MAX=1024;
+const EDGE_EPS_DEG=.004;
 const CONTROLS=[
   {sheet:'NH51-13',bounds:[120,28,121.5,29],urls:[
     '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P1.geojson',
@@ -21,7 +22,7 @@ function utm51(lonDeg,latDeg){
   return[500000+k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120),k0*(M+N*t*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720))];
 }
 function featurePolygons(geo){
-  const out=[];for(const f of geo.features||[]){const g=f.geometry;if(!g)continue;if(g.type==='Polygon')out.push(g.coordinates||[]);else if(g.type==='MultiPolygon')for(const p of g.coordinates||[])out.push(p);}return out;
+  const out=[];for(const f of geo.features||[]){const g=f.geometry;if(!g)continue;if(g.type==='Polygon')out.push({coordinates:g.coordinates||[],properties:f.properties||{}});else if(g.type==='MultiPolygon')for(const p of g.coordinates||[])out.push({coordinates:p,properties:f.properties||{}});}return out;
 }
 function patchBounds(contract,patch){
   const t=contract.source.transform,east=col=>t[2]+t[0]*(col+.5),north=row=>t[5]+t[4]*(row+.5),e0=east(patch.columnIndices[0]),e1=east(patch.columnIndices.at(-1)),n0=north(patch.rowIndices[0]),n1=north(patch.rowIndices.at(-1));
@@ -36,24 +37,44 @@ function drawWaterPolygons(ctx,polygons,box,w,h,fill='#fff'){
   ctx.fillStyle=fill;
   for(const item of polygons){ctx.beginPath();for(const ring of item.rings){let first=true;for(const[e,n]of ring){const x=(e-box[0])/(box[2]-box[0])*w,y=(box[3]-n)/(box[3]-box[1])*h;if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}ctx.closePath();}ctx.fill('evenodd');}
 }
+function touchingEdges(poly,bounds){
+  const[w,s,e,n]=bounds,edges=new Set();for(const ring of poly)for(const[lon,lat]of ring){if(Math.abs(lon-w)<=EDGE_EPS_DEG)edges.add('west');if(Math.abs(lon-e)<=EDGE_EPS_DEG)edges.add('east');if(Math.abs(lat-s)<=EDGE_EPS_DEG)edges.add('south');if(Math.abs(lat-n)<=EDGE_EPS_DEG)edges.add('north');}return[...edges];
+}
 function buildProjectedControls(controls,box){
   const polygons=[];let sourcePolygonCount=0,pointCount=0;
-  for(const control of controls)for(const geo of control.geos)for(const poly of featurePolygons(geo)){
-    sourcePolygonCount++;const p=projectedPolygon(poly),b=polygonBounds(p);if(!boxesIntersect(b,box))continue;for(const r of p)pointCount+=r.length;polygons.push({sheet:control.sheet,rings:p,bounds:b});
+  for(const control of controls)for(const geo of control.geos)for(const source of featurePolygons(geo)){
+    sourcePolygonCount++;const p=projectedPolygon(source.coordinates),b=polygonBounds(p);if(!boxesIntersect(b,box))continue;for(const r of p)pointCount+=r.length;polygons.push({sheet:control.sheet,rings:p,bounds:b,touchEdges:touchingEdges(source.coordinates,control.bounds),sourcePixelArea:Number(source.properties?.pixelArea||0)});
   }
   return{polygons,sourcePolygonCount,pointCount};
+}
+function classifyControlPolygons(polygons,base,box,w,h){
+  const fullPixels=w*h,accepted=[],rejected=[],[candidateCanvas,candidateCtx]=makeCanvas(w,h,'#000');
+  for(let index=0;index<polygons.length;index++){
+    const item=polygons[index];candidateCtx.clearRect(0,0,w,h);candidateCtx.fillStyle='#000';candidateCtx.fillRect(0,0,w,h);drawWaterPolygons(candidateCtx,[item],box,w,h,'#fff');
+    const candidate=candidateCtx.getImageData(0,0,w,h).data;let areaPixels=0,modernLandPixels=0;
+    for(let i=0;i<candidate.length;i+=4)if(candidate[i+1]>=128){areaPixels++;if(base[i+1]>=128)modernLandPixels++;}
+    if(!areaPixels)continue;const coverage=areaPixels/fullPixels,landFraction=modernLandPixels/areaPixels,waterSupport=1-landFraction,edgeCount=item.touchEdges.length;
+    let reason='accepted';
+    if(coverage>=.20&&landFraction>=.42)reason='reject-very-large-mostly-modern-land';
+    else if(coverage>=.08&&landFraction>=.62)reason='reject-large-mostly-modern-land';
+    else if(edgeCount>=2&&coverage>=.08&&landFraction>=.50)reason='reject-frame-connected-background';
+    const diagnostic={index,sheet:item.sheet,areaPixels,coverage:+coverage.toFixed(5),modernLandPixels,landFraction:+landFraction.toFixed(5),modernWaterSupport:+waterSupport.toFixed(5),touchEdges:item.touchEdges,sourcePixelArea:item.sourcePixelArea,reason};
+    if(reason==='accepted'){accepted.push(item);diagnostic.accepted=true;}else{rejected.push(diagnostic);diagnostic.accepted=false;}
+    item.quality=diagnostic;
+  }
+  return{accepted,rejected,all:polygons.map(p=>p.quality).filter(Boolean)};
 }
 function buildHistoricalMasks(terrain,projected,box){
   const baseTexture=terrain.userData.wenzhouMapMotherBaseAlphaMap||terrain.material?.alphaMap;if(!baseTexture?.image)throw Error('1940s 海陆回退缺少当前地形 land mask');
   terrain.userData.wenzhouMapMotherBaseAlphaMap=baseTexture;
   const[w,h]=maskSize(box),[baseCanvas,baseCtx]=makeCanvas(w,h,'#000'),[waterCanvas,waterCtx]=makeCanvas(w,h,'#000'),[landCanvas,landCtx]=makeCanvas(w,h,'#000');
-  baseCtx.drawImage(baseTexture.image,0,0,w,h);
-  drawWaterPolygons(waterCtx,projected.polygons,box,w,h,'#fff');
-  landCtx.drawImage(baseCanvas,0,0,w,h);drawWaterPolygons(landCtx,projected.polygons,box,w,h,'#000');
-  const base=baseCtx.getImageData(0,0,w,h).data,water=waterCtx.getImageData(0,0,w,h).data;let historicalWaterPixels=0,reclaimedPixels=0,currentLandPixels=0;
+  baseCtx.drawImage(baseTexture.image,0,0,w,h);const base=baseCtx.getImageData(0,0,w,h).data,quality=classifyControlPolygons(projected.polygons,base,box,w,h);
+  if(!quality.accepted.length)throw Error('1940s 历史水域控制全部被质量门拒绝');
+  drawWaterPolygons(waterCtx,quality.accepted,box,w,h,'#fff');landCtx.drawImage(baseCanvas,0,0,w,h);drawWaterPolygons(landCtx,quality.accepted,box,w,h,'#000');
+  const water=waterCtx.getImageData(0,0,w,h).data;let historicalWaterPixels=0,reclaimedPixels=0,currentLandPixels=0;
   for(let i=0;i<base.length;i+=4){const b=base[i+1],q=water[i+1];if(b>=128)currentLandPixels++;if(q>=128){historicalWaterPixels++;if(b>=128)reclaimedPixels++;}}
   const texture=new THREE.CanvasTexture(landCanvas);texture.minFilter=THREE.NearestFilter;texture.magFilter=THREE.NearestFilter;texture.generateMipmaps=false;texture.needsUpdate=true;texture.userData={wenzhouMapMother:true,epoch:'1940s',kind:'derived-land-water-mask'};
-  return{texture,width:w,height:h,historicalWaterPixels,reclaimedPixels,currentLandPixels};
+  return{texture,width:w,height:h,historicalWaterPixels,reclaimedPixels,currentLandPixels,acceptedControlPolygons:quality.accepted.length,rejectedControlPolygons:quality.rejected.length,rejectedControls:quality.rejected,controlQuality:quality.all};
 }
 function applyHistoricalLandMask(scene,terrain,masks){
   const old=terrain.userData.wenzhouMapMotherHistoryAlphaMap;if(old&&old!==masks.texture)old.dispose?.();
@@ -65,33 +86,25 @@ function applyHistoricalLandMask(scene,terrain,masks){
 function removeLegacyVisualUi(){document.getElementById('history-1953-toggle')?.remove();document.getElementById('history-1953-layer-card')?.remove();document.getElementById('history-1953-style')?.remove();}
 function updateUi(state){
   const brand=document.querySelector('.brand p');if(brand)brand.textContent='1940s Map Mother · 历史海陆回退';
-  const card=document.getElementById('history-1942-card');if(card){const strong=card.querySelector('strong'),span=card.querySelector('span'),small=card.querySelector('small');if(strong)strong.textContent='1940s Map Mother · 海陆差分 V1';if(span)span.textContent=`现代交通减法继续生效 · 当前视域历史水域 ${state.historicalWaterPixels.toLocaleString()} mask px · 其中现代陆地回退 ${state.reclaimedPixels.toLocaleString()} px`;if(small)small.textContent='1953/1945 图只作为后台历史控制；蓝色工程参考线已退出画面。历史状态直接改变海陆 mask：有把握的现代围垦从陆地裁除，由同一海面层补回水体。该结果是可逆差分，不复制整张 DEM。';}
+  const card=document.getElementById('history-1942-card');if(card){const strong=card.querySelector('strong'),span=card.querySelector('span'),small=card.querySelector('small');if(strong)strong.textContent='1940s Map Mother · 海陆差分 V1';if(span)span.textContent=`历史水域控制 ${state.acceptedControlPolygons} 个 · 排除扫描/图框误提取 ${state.rejectedControlPolygons} 个 · 现代陆地回退 ${state.reclaimedPixels.toLocaleString()} mask px`;if(small)small.textContent='1953 图作为邻近年代粗控制，1945 城图为局部更细证据；原始蓝色参考线不显示。大面积且主要压住今天内陆、并与图框连通的水色提取会被质量门拒绝。历史状态直接改变海陆 mask，不复制整张 DEM。';}
 }
 export function installHistorical1953ControlLayer(){
   if(window[FLAG])return;window[FLAG]=true;removeLegacyVisualUi();
-  document.documentElement.setAttribute('data-wenzhou-history-1953-visual','false');
-  document.documentElement.dataset.wenzhouHistory1953ControlIndex='true';
-  document.documentElement.dataset.wenzhouMapMotherEpoch='1940s';
+  document.documentElement.setAttribute('data-wenzhou-history-1953-visual','false');document.documentElement.dataset.wenzhouHistory1953ControlIndex='true';document.documentElement.dataset.wenzhouMapMotherEpoch='1940s';
   const contractPromise=fetchJson(TERRAIN_URL),controlPromise=Promise.all(CONTROLS.map(async c=>({...c,geos:await Promise.all(c.urls.map(fetchJson))})));
-  let buildToken=0,terrainEvents=0,staleEvents=0,activeTerrain=null;
-  const canvas=()=>document.getElementById('terrain');
+  let buildToken=0,terrainEvents=0,staleEvents=0,activeTerrain=null;const canvas=()=>document.getElementById('terrain');
   function diag(values){const c=canvas();if(!c)return;for(const[k,v]of Object.entries(values))c.dataset[k]=String(v);}
   async function build(scene,terrain,patchId){
     const token=++buildToken;diag({history1953LastPatch:patchId,history1953LastError:'',history1953Visualized:false,mapMotherEpoch:'1940s'});
     try{
       const[contract,controls]=await Promise.all([contractPromise,controlPromise]);if(token!==buildToken||currentPatchId()!==patchId){staleEvents++;diag({history1953StaleEvents:staleEvents});return;}
-      const patch=contract.patches.find(p=>p.id===patchId);if(!patch)throw Error(`1940s Map Mother 缺少地形 patch ${patchId}`);const box=patchBounds(contract,patch),projected=buildProjectedControls(controls,box);
-      if(!projected.polygons.length)throw Error('当前视域没有可用的历史水域控制');
+      const patch=contract.patches.find(p=>p.id===patchId);if(!patch)throw Error(`1940s Map Mother 缺少地形 patch ${patchId}`);const box=patchBounds(contract,patch),projected=buildProjectedControls(controls,box);if(!projected.polygons.length)throw Error('当前视域没有可用的历史水域控制');
       const masks=buildHistoricalMasks(terrain,projected,box);if(token!==buildToken||currentPatchId()!==patchId){masks.texture.dispose();staleEvents++;diag({history1953StaleEvents:staleEvents});return;}
       if(activeTerrain&&activeTerrain!==terrain)activeTerrain=null;activeTerrain=terrain;const seaUpdated=applyHistoricalLandMask(scene,terrain,masks);
-      const state={schema:'wenzhou-map-mother/1940s-land-water-delta-v1',patchId,crs:'EPSG:32651',visualizedAsState:true,rawGuideLinesVisible:false,sourceSheets:CONTROLS.map(x=>x.sheet),historicalControlPolygonCount:projected.polygons.length,sourcePolygonCount:projected.sourcePolygonCount,projectedPointCount:projected.pointCount,maskWidth:masks.width,maskHeight:masks.height,historicalWaterPixels:masks.historicalWaterPixels,reclaimedPixels:masks.reclaimedPixels,currentLandPixels:masks.currentLandPixels,seaMaskUpdated:seaUpdated,storage:'runtime-derived-from-vector-controls-no-epoch-dem-copy',truthBoundary:'historical coast/water is derived from registered 1953 coarse controls with finer 1945 city override reserved; no historical elevation claim'};
-      window.__wenzhouHistoricalControl1953={schema:'wenzhou-historical-control-index/1953-v2',patchId,crs:'EPSG:32651',visualized:false,polygonCount:projected.polygons.length,sourceSheets:CONTROLS.map(x=>x.sheet)};window.__wenzhouMapMother1940s=state;
-      diag({history1953ControlSegments:projected.pointCount,history1953CommittedPatch:patchId,history1953Visualized:false,history1953LastError:'',history1940sMaskWidth:masks.width,history1940sMaskHeight:masks.height,history1940sHistoricalWaterPixels:masks.historicalWaterPixels,history1940sReclaimedPixels:masks.reclaimedPixels,history1940sSeaMaskUpdated:seaUpdated,history1940sRawGuideLinesVisible:false});updateUi(state);
-      window.dispatchEvent(new CustomEvent('wenzhou:map-mother-1940s-ready',{detail:state}));
+      const state={schema:'wenzhou-map-mother/1940s-land-water-delta-v1',patchId,crs:'EPSG:32651',visualizedAsState:true,rawGuideLinesVisible:false,sourceSheets:CONTROLS.map(x=>x.sheet),historicalControlPolygonCount:projected.polygons.length,acceptedControlPolygons:masks.acceptedControlPolygons,rejectedControlPolygons:masks.rejectedControlPolygons,rejectedControls:masks.rejectedControls,controlQuality:masks.controlQuality,sourcePolygonCount:projected.sourcePolygonCount,projectedPointCount:projected.pointCount,maskWidth:masks.width,maskHeight:masks.height,historicalWaterPixels:masks.historicalWaterPixels,reclaimedPixels:masks.reclaimedPixels,currentLandPixels:masks.currentLandPixels,seaMaskUpdated:seaUpdated,storage:'runtime-derived-from-vector-controls-no-epoch-dem-copy',truthBoundary:'1940s candidate coast/water is derived from registered 1953 nearby-era coarse controls; 1953 is not silently promoted to 1942 fact. Finer 1945 city evidence locally overrides when vectorized. No historical elevation claim.'};
+      window.__wenzhouHistoricalControl1953={schema:'wenzhou-historical-control-index/1953-v3',patchId,crs:'EPSG:32651',visualized:false,polygonCount:projected.polygons.length,accepted:masks.acceptedControlPolygons,rejected:masks.rejectedControlPolygons,sourceSheets:CONTROLS.map(x=>x.sheet)};window.__wenzhouMapMother1940s=state;
+      diag({history1953ControlSegments:projected.pointCount,history1953CommittedPatch:patchId,history1953Visualized:false,history1953LastError:'',history1940sMaskWidth:masks.width,history1940sMaskHeight:masks.height,history1940sHistoricalWaterPixels:masks.historicalWaterPixels,history1940sReclaimedPixels:masks.reclaimedPixels,history1940sAcceptedControlPolygons:masks.acceptedControlPolygons,history1940sRejectedControlPolygons:masks.rejectedControlPolygons,history1940sSeaMaskUpdated:seaUpdated,history1940sRawGuideLinesVisible:false});updateUi(state);window.dispatchEvent(new CustomEvent('wenzhou:map-mother-1940s-ready',{detail:state}));
     }catch(error){diag({history1953LastError:error.message||error});console.error(error);}
   }
-  window.addEventListener('wenzhou:terrain-added',event=>{
-    const {scene,terrain,patchId}=event.detail||{};if(!scene?.isScene||!terrain?.isMesh||!patchId)return;terrainEvents++;diag({history1953TerrainEvents:terrainEvents,history1953LastEventPatch:patchId,history1953Visualized:false});
-    if(currentPatchId()!==patchId){staleEvents++;diag({history1953StaleEvents:staleEvents});return;}queueMicrotask(()=>build(scene,terrain,patchId));
-  });
+  window.addEventListener('wenzhou:terrain-added',event=>{const {scene,terrain,patchId}=event.detail||{};if(!scene?.isScene||!terrain?.isMesh||!patchId)return;terrainEvents++;diag({history1953TerrainEvents:terrainEvents,history1953LastEventPatch:patchId,history1953Visualized:false});if(currentPatchId()!==patchId){staleEvents++;diag({history1953StaleEvents:staleEvents});return;}queueMicrotask(()=>build(scene,terrain,patchId));});
 }
