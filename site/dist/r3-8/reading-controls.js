@@ -27,8 +27,14 @@ export function installReadingControls(){
       #panel-toggle{min-width:82px}
     }
   `;document.head.append(style);
-  document.title='小温州 · 三维地形 R3.9.1';
-  const caption=document.querySelector('.brand p');if(caption)caption.textContent='真实 DEM · R3.9.1';
-  const heading=document.querySelector('#info h2');if(heading)heading.textContent='R3.9.1 · 同一地点的环境证据';
-  document.documentElement.dataset.wenzhouReadingControls='R3.9.1';
+  const historical=window.__WENZHOU_HISTORY_1942===true;
+  if(historical){
+    document.title='小温州 · 1940s Map Mother';
+    const caption=document.querySelector('.brand p');if(caption)caption.textContent='1940s Map Mother · 历史海陆回退';
+  }else{
+    document.title='小温州 · 三维地形 R3.9.1';
+    const caption=document.querySelector('.brand p');if(caption)caption.textContent='真实 DEM · R3.9.1';
+  }
+  const heading=document.querySelector('#info h2');if(heading)heading.textContent=historical?'1940s Map Mother · 历史状态':'R3.9.1 · 同一地点的环境证据';
+  document.documentElement.dataset.wenzhouReadingControls=historical?'1940s-map-mother':'R3.9.1';
 }
