@@ -1,0 +1,151 @@
+name: Ocean R018.9.4.2 GPU whiteout fix
+
+on:
+  push:
+    branches: [work/ocean-r0189-4-2-whiteout-fix-20260915]
+    paths:
+      - .github/workflows/ocean-r0189-4-2-whiteout-fix.yml
+      - ocean-mother/recovery/r0189-4-1/Ocean_Mother_R018.9.4.1_Startup_Recovery.html
+      - ocean-mother/recovery/r0189-4-2/build_r0189_4_2_whiteout_fix.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r0189-4-2-whiteout-fix
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Build deterministic compatibility candidate
+        run: |
+          set -euo pipefail
+          python ocean-mother/recovery/r0189-4-2/build_r0189_4_2_whiteout_fix.py
+
+      - name: Static source and JavaScript gates
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, re, subprocess
+          root=Path('ocean-mother/recovery/r0189-4-2')
+          html=root/'Ocean_Mother_R018.9.4.2_GPU_Deterministic.html'
+          report=json.loads((root/'R0189_4_2_BUILD_REPORT.json').read_text())
+          assert report['candidate']=='R018.9.4.2'
+          assert report['descendingSmoothstepCount']==0
+          assert report['deepOceanByteIdentityInsideCandidate'] is True
+          assert report['primaryVisualShaderUnchanged'] is True
+          assert report['visualApproved'] is False
+          s=html.read_text()
+          assert '0.3.9.4.2-r0189-gpu-deterministic' in s
+          assert 'r0189.4.2-gpu-deterministic-v001-deep-frozen' in s
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          for i,code in enumerate(scripts):
+              p=Path('/tmp')/f'ocean-r0189-4-2-{i}.js'
+              p.write_text(code)
+              subprocess.run(['node','--check',str(p)],check=True)
+          print('static gate passed; scripts',len(scripts))
+          PY
+
+      - name: Install browser QA runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q playwright pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Render forced compatibility path and reject white output
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          from PIL import Image, ImageStat
+          import contextlib, json, socket, subprocess, time
+          root=Path('ocean-mother/recovery/r0189-4-2').resolve()
+          review=root/'review'; review.mkdir(exist_ok=True)
+          port=8765
+          server=subprocess.Popen(['python','-m','http.server',str(port),'--bind','127.0.0.1'],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+          errors=[]; logs=[]; qa=None; pixels=None
+          try:
+              for _ in range(80):
+                  try:
+                      with socket.create_connection(('127.0.0.1',port),timeout=.2): break
+                  except OSError: time.sleep(.1)
+              with sync_playwright() as pw:
+                  browser=pw.chromium.launch(headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+                  page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
+                  page.on('pageerror',lambda e: errors.append(str(e)))
+                  page.on('console',lambda m: logs.append({'type':m.type,'text':m.text}))
+                  url=f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4.2_GPU_Deterministic.html?compat=1&still=1&qa=1'
+                  page.goto(url,wait_until='load',timeout=120000)
+                  page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
+                  page.wait_for_timeout(1800)
+                  qa=page.evaluate('window.__OCEAN_QA__')
+                  assert qa['version']=='0.3.9.4.2-r0189-gpu-deterministic'
+                  assert qa['buildId']=='r0189.4.2-gpu-deterministic-v001-deep-frozen'
+                  assert qa['renderPath']=='compatibility'
+                  assert qa['gpuDeterministicFix']=='ordered smoothstep and bounded tone map'
+                  pixels=page.evaluate('''() => {
+                    const c=document.getElementById('ocean');
+                    const gl=c.getContext('webgl2');
+                    const pts=[[.5,.5],[.3,.45],[.7,.45],[.5,.7],[.15,.2],[.85,.2]];
+                    const out=[];
+                    for(const [nx,ny] of pts){
+                      const p=new Uint8Array(4);
+                      gl.readPixels(Math.max(0,Math.min(c.width-1,Math.floor(nx*c.width))),Math.max(0,Math.min(c.height-1,Math.floor(ny*c.height))),1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);
+                      out.push(Array.from(p));
+                    }
+                    return {width:c.width,height:c.height,samples:out,error:gl.getError()};
+                  }''')
+                  assert pixels['error']==0, pixels
+                  rgb=[v for p in pixels['samples'] for v in p[:3]]
+                  assert min(rgb)<230, pixels
+                  assert max(rgb)-min(rgb)>24, pixels
+                  shot=review/'compat-overview.png'
+                  page.screenshot(path=str(shot),timeout=120000)
+                  browser.close()
+          finally:
+              server.terminate()
+              with contextlib.suppress(Exception): server.wait(timeout=5)
+          im=Image.open(review/'compat-overview.png').convert('RGB')
+          crop=im.crop((0,70,int(im.width*.72),im.height))
+          stat=ImageStat.Stat(crop)
+          mean=sum(stat.mean)/3
+          white=sum(1 for px in crop.resize((160,100)).getdata() if min(px)>245)/(160*100)
+          assert mean<225, {'mean':mean,'whiteFraction':white}
+          assert white<.55, {'mean':mean,'whiteFraction':white}
+          runtime={'qa':qa,'pixels':pixels,'imageMean':mean,'whiteFraction':white,'errors':errors,'console':logs[-80:]}
+          (review/'browser_runtime.json').write_text(json.dumps(runtime,ensure_ascii=False,indent=2))
+          assert not errors, errors
+          print(json.dumps({'mean':mean,'whiteFraction':white,'pixels':pixels,'errors':errors},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Commit candidate and browser evidence
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/recovery/r0189-4-2/Ocean_Mother_R018.9.4.2_GPU_Deterministic.html \
+                  ocean-mother/recovery/r0189-4-2/R0189_4_2_BUILD_REPORT.json \
+                  ocean-mother/recovery/r0189-4-2/review
+          if ! git diff --cached --quiet; then
+            git commit -m 'ocean: materialize and browser-test R018.9.4.2 GPU whiteout fix'
+            git push origin HEAD:work/ocean-r0189-4-2-whiteout-fix-20260915
+          fi
+
+      - name: Preserve review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R0189_4_2_GPU_Whiteout_Fix
+          path: ocean-mother/recovery/r0189-4-2
+          retention-days: 30
+          if-no-files-found: error
