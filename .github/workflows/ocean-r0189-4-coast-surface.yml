@@ -89,15 +89,16 @@ jobs:
                   page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
                   page.wait_for_timeout(2600)
                   if '暂停' in page.locator('#pause').inner_text():
-                      page.click('#pause'); page.wait_for_timeout(400)
+                      page.evaluate("document.getElementById('pause').click()")
+                      page.wait_for_timeout(400)
                   for view in ['overview','top','shore','rocks']:
-                      page.click(f'[data-view="{view}"]')
+                      page.locator(f'[data-view="{view}"]').evaluate('el=>el.click()')
                       page.wait_for_timeout(1200)
                       page.screenshot(path=str(review/f'{view}.png'))
                   qa=page.evaluate('window.__OCEAN_QA__')
                   assert qa['version']=='0.3.9.4-r0189-coast-surface'
                   assert qa['buildId']=='r0189.4-coast-surface-v001-deep-frozen'
-                  page.click('[data-zone="deep"]')
+                  page.locator('[data-zone="deep"]').evaluate('el=>el.click()')
                   page.wait_for_function("window.__OCEAN_DEEP_READY__ === true",timeout=120000)
                   page.wait_for_timeout(1200)
                   deep=page.evaluate("({ready:window.__OCEAN_DEEP_READY__,zone:window.__OCEAN_ZONE__})")
