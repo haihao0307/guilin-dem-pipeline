@@ -1,0 +1,43 @@
+name: KAOPU Gaussian R82 SPZ Color Decode
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_color_decode_r82.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_color_decode_gate_r82.mjs
+      - .github/workflows/kaopu-gaussian-r82-color-decode.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r82-color-decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned parser
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0
+      - name: Run preregistered complete color decode
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_color_decode_r82.js
+      - name: Validate semantic evidence contract
+        run: |
+          cat r82-result.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_color_decode_gate_r82.mjs > r82-gate.json
+          cat r82-gate.json
+          node -e "const d=require('./r82-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+      - name: Upload R82 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r82-color-decode
+          path: r82-*.json
+          if-no-files-found: warn
+          retention-days: 30
