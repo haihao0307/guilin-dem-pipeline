@@ -1,0 +1,17 @@
+{
+  "baseline": "R018.9.4.1",
+  "baselineSha256": "3c907bd4aa6ddb3b615784f9a2ff816ca46f3a83a5f7c0d7224a53d325ae4ef5",
+  "candidate": "R018.9.4.2",
+  "candidateSha256": "71de6e1bcae195400a29b15a68bc39110a69e7307a69e2b903a89f5ed38eaf32",
+  "rootCause": "descending-edge smoothstep calls in the compatibility shader invoked undefined GLSL behavior on the user's Windows GPU",
+  "fixes": [
+    "replace descending-edge smoothstep calls with ordered equivalent expressions",
+    "bound compatibility HDR values before a rational tone map",
+    "retain automatic primary-to-compatibility startup fallback"
+  ],
+  "descendingSmoothstepCount": 0,
+  "deepOceanByteIdentityInsideCandidate": true,
+  "primaryVisualShaderUnchanged": true,
+  "visualApproved": false,
+  "productionApproved": false
+}
