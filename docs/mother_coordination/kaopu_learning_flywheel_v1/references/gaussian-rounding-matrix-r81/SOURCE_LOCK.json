@@ -1,0 +1,86 @@
+{
+  "schema": "kaopu-gaussian-rounding-matrix-source-lock/r81",
+  "status": "preregistered",
+  "question": "Does a separately preregistered matrix derived from frozen R80 calibration select Float32 complement, product and sum staging on the locked r186 software route?",
+  "coordinator_parent": "7b0e1509c6089f7c896f4681390fc9d2f5f91e47",
+  "three": {
+    "package": "0.186.0",
+    "tag_commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "GaussianSplat_js_blob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+  },
+  "frozen_calibration": {
+    "source_commit": "7b0e1509c6089f7c896f4681390fc9d2f5f91e47",
+    "result": "PROBES/gaussian_alpha_calibration_result_r80.json",
+    "center_table_hash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+    "required_center_and_plane_hash_match_before_target": true
+  },
+  "cases": {
+    "no_comp": {
+      "provenance": "R80 frozen-table candidate",
+      "stage_tested": "Float32 rounding of 1-alpha",
+      "target_channel": "red",
+      "records": [
+        {"alpha_byte": 21, "rgb_bytes": [248, 0, 0]},
+        {"alpha_byte": 52, "rgb_bytes": [1, 0, 0]}
+      ]
+    },
+    "no_prod": {
+      "provenance": "R79 surviving unrendered candidate",
+      "stage_tested": "Float32 rounding of source and destination products",
+      "target_channel": "green",
+      "records": [
+        {"alpha_byte": 13, "rgb_bytes": [0, 8, 0]},
+        {"alpha_byte": 123, "rgb_bytes": [0, 248, 0]}
+      ]
+    },
+    "no_sum": {
+      "provenance": "R79 surviving unrendered candidate",
+      "stage_tested": "Float32 rounding of the product sum",
+      "target_channel": "blue",
+      "records": [
+        {"alpha_byte": 1, "rgb_bytes": [0, 0, 224]},
+        {"alpha_byte": 120, "rgb_bytes": [0, 0, 192]}
+      ]
+    }
+  },
+  "fixed_fixture": {
+    "rotation_packed": "0xc0000115",
+    "scale_bytes": [128, 96, 96],
+    "camera": [0, 0, 2],
+    "order": "identity",
+    "target": "HalfFloatType",
+    "viewport": [33, 33]
+  },
+  "models": {
+    "staged": "Float32 complement, each product and sum before nearest-even Half storage",
+    "no_comp": "double complement, otherwise staged",
+    "no_prod": "double products, otherwise staged",
+    "no_sum": "double sum, otherwise staged"
+  },
+  "execution_order": [
+    "verify the committed R80 table bytes and hash",
+    "independently render Float full-plane calibration for the six used Alpha bytes",
+    "abort unless center values and full-plane hashes match R80",
+    "compute all four predicted Half frames and abort unless all three cases isolate only their declared ablation",
+    "independently render Half prefixes 1 and 2 for each case",
+    "independently render a duplicate prefix-2 control for each case",
+    "classify exact matches without tolerance"
+  ],
+  "hard_prohibitions": [
+    "No post-target case replacement",
+    "No target render after a failed freeze or isolation gate",
+    "No hidden-instruction claim",
+    "No cross-backend generalization"
+  ],
+  "observation_root": "same Chromium/ANGLE Vulkan SwiftShader software root as R59-R80",
+  "not_claimed": [
+    "hidden fixed-function instruction sequence",
+    "all blend inputs",
+    "hardware GPU",
+    "WebGPU",
+    "Safari or iPhone",
+    "real asset",
+    "human acceptance",
+    "Mother adoption"
+  ]
+}

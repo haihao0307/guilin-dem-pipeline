@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU Three.js Rounding Matrix R81</title>
+<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000}canvas{display:block;width:33px;height:33px}</style>
+<script type="importmap">
+{"imports":{"three":"/node_modules/three/build/three.module.js","three/webgpu":"/node_modules/three/build/three.webgpu.js","three/tsl":"/node_modules/three/build/three.tsl.js"}}
+</script>
+<body></body>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { SPZLoader } from '/node_modules/three/examples/jsm/loaders/SPZLoader.js';
+import { GaussianSplat } from '/node_modules/three/examples/jsm/objects/GaussianSplat.js';
+import { gzipSync } from '/node_modules/three/examples/jsm/libs/fflate.module.js';
+
+const p=new URLSearchParams(location.search),bufferName=p.get('buffer')||'default',mode=p.get('mode')||'order',caseName=p.get('case')||'no_comp',calibrationAlpha=Number(p.get('alpha')||21),prefix=Number(p.get('prefix')||2);
+const WIDTH=33,HEIGHT=33,SCALE_BYTES=[128,96,96],ROTATION_PACKED=0xc0000115,ALPHAS=[1,13,21,52,120,123];
+const CASES={
+ no_comp:[{alpha:21,color:[248,0,0],index:0},{alpha:52,color:[1,0,0],index:1}],
+ no_prod:[{alpha:13,color:[0,8,0],index:0},{alpha:123,color:[0,248,0],index:1}],
+ no_sum:[{alpha:1,color:[0,0,224],index:0},{alpha:120,color:[0,0,192],index:1}]
+};
+function orderedRecords(){if(mode==='calibration')return[{alpha:calibrationAlpha,color:[255,255,255],index:0}];return CASES[caseName];}
+function makeRawSpz(records){const count=records.length,alphas=Uint8Array.from(records,r=>r.alpha),colors=Uint8Array.from(records.flatMap(r=>r.color)),scales=new Uint8Array(count*3),rotations=new Uint8Array(count*4),bytes=new Uint8Array(16+count*20),view=new DataView(bytes.buffer);view.setUint32(0,0x5053474e,true);view.setUint32(4,3,true);view.setUint32(8,count,true);view.setUint8(12,0);view.setUint8(13,12);view.setUint8(14,0);view.setUint8(15,0);for(let i=0;i<count;i++){scales.set(SCALE_BYTES,i*3);new DataView(rotations.buffer).setUint32(i*4,ROTATION_PACKED,true);}let o=16+count*9;bytes.set(alphas,o);o+=count;bytes.set(colors,o);o+=count*3;bytes.set(scales,o);o+=count*3;bytes.set(rotations,o);return{bytes,alphas,colors,scales,rotations};}
+async function sha256(view){const u8=new Uint8Array(view.buffer,view.byteOffset,view.byteLength),d=await crypto.subtle.digest('SHA-256',u8);return Array.from(new Uint8Array(d),x=>x.toString(16).padStart(2,'0')).join('');}
+function decode(raw,type){if(type===THREE.HalfFloatType&&raw instanceof Uint16Array){const out=new Float32Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=THREE.DataUtils.fromHalfFloat(raw[i]);return out;}if(raw instanceof Float32Array)return new Float32Array(raw);throw new Error(`unsupported readback ${raw?.constructor?.name}`);}
+async function identity(renderer){const gl=renderer.backend?.gl||null,out={backendClass:renderer.backend?.constructor?.name||null,rendererClass:renderer.constructor?.name||null,userAgent:navigator.userAgent,platform:navigator.platform};if(gl){const ext=gl.getExtension('WEBGL_debug_renderer_info');out.vendor=ext?gl.getParameter(ext.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);out.renderer=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);out.glVersion=gl.getParameter(gl.VERSION);}return out;}
+async function main(){
+ if(!['default','float'].includes(bufferName)||!['calibration','order'].includes(mode)||!Object.hasOwn(CASES,caseName))throw new Error('bad query');if(mode==='calibration'&&!ALPHAS.includes(calibrationAlpha))throw new Error('bad calibration alpha');if(!Number.isInteger(prefix)||prefix<1||prefix>2)throw new Error('bad prefix');
+ const records=orderedRecords(),packed=makeRawSpz(records),rawSpz=packed.bytes,gzip=gzipSync(rawSpz,{mtime:0}),geometry=await new SPZLoader().parse(gzip.buffer.slice(gzip.byteOffset,gzip.byteOffset+gzip.byteLength));
+ const params={antialias:false,alpha:true,forceWebGL:true};if(bufferName==='float')params.outputBufferType=THREE.FloatType;const renderer=new THREE.WebGPURenderer(params);renderer.setPixelRatio(1);renderer.setSize(WIDTH,HEIGHT,false);renderer.setClearColor(0x000000,0);renderer.toneMapping=THREE.NoToneMapping;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);await renderer.init();if(!renderer.backend?.isWebGLBackend)throw new Error('expected WebGL fallback');
+ const splat=new GaussianSplat(geometry,{autoSort:true});splat.frustumCulled=false;const scene=new THREE.Scene();scene.add(splat);const camera=new THREE.PerspectiveCamera(60,1,0.1,10);camera.position.set(0,0,2);camera.lookAt(0,0,0);camera.updateMatrixWorld();const sortInitialized=splat.updateSort(renderer,camera),order=splat._sort.orderAttribute.array,identityOrder=Array.from(order).every((v,i)=>v===i);splat.autoSort=false;
+ const expectedType=bufferName==='default'?THREE.HalfFloatType:THREE.FloatType,pos=geometry.getAttribute('position'),cov=geometry.getAttribute('covariance'),color=geometry.getAttribute('color');
+ window.__KAOPU_BASE__={schema:'kaopu-three-rounding-matrix-page/r81',status:'candidate-observation',mode,caseName,bufferName,calibrationAlpha,prefix,rotationPacked:ROTATION_PACKED,threeRevision:THREE.REVISION,identity:await identity(renderer),spz:{count:records.length,rawHash:await sha256(rawSpz),gzipHash:await sha256(gzip),alphaSequenceHash:await sha256(packed.alphas),colorSequenceHash:await sha256(packed.colors),scaleSequenceHash:await sha256(packed.scales),rotationSequenceHash:await sha256(packed.rotations),scaleBytes:SCALE_BYTES,decodedCovarianceHash:await sha256(cov.array)},render:{viewport:[WIDTH,HEIGHT],camera:{fov:60,aspect:1,near:0.1,far:10,position:[0,0,2]},kernel:'r186 KERNEL_2D_SIZE 0.3',cutoff:'r186 r2 > 4',expectedType},checks:{sourceCount:pos.count===records.length&&cov.count===records.length&&color.count===records.length,actualGaussianSplat:splat.isGaussianSplat===true,normalBlendPath:splat.material.transparent===true&&splat.material.depthWrite===false&&splat.material.blending===THREE.NormalBlending,sortInitialized:sortInitialized===true,identityOrder,orderLocked:splat.autoSort===false}};
+ splat.geometry.instanceCount=mode==='calibration'?1:prefix;renderer.setRenderTarget(null);renderer.setViewport(0,0,WIDTH,HEIGHT);renderer.setScissorTest(false);renderer.clear(true,true,false);await renderer.renderAsync(scene,camera);const target=renderer._frameBufferTargets.get(renderer.getCanvasTarget());if(!target)throw new Error('internal framebuffer target absent');const raw=await renderer.readRenderTargetPixelsAsync(target,0,0,WIDTH,HEIGHT),decoded=decode(raw,target.texture.type);window.__KAOPU_RENDER__={targetType:target.texture.type,rawConstructor:raw.constructor.name,rawHash:await sha256(raw),decodedHash:await sha256(decoded),allPixels:Array.from(decoded),checks:{instanceCount:splat.geometry.instanceCount===(mode==='calibration'?1:prefix),outputBufferType:renderer.getOutputBufferType()===expectedType&&target.texture.type===expectedType,readbackConstructor:expectedType===THREE.HalfFloatType?raw instanceof Uint16Array:raw instanceof Float32Array,allFinite:Array.from(decoded).every(Number.isFinite)}};window.__KAOPU_READY__=true;
+}
+try{await main();}catch(error){window.__KAOPU_BASE__={schema:'kaopu-three-rounding-matrix-page/r81',status:'error',message:String(error?.message||error),stack:String(error?.stack||'')};window.__KAOPU_READY__=true;}
+</script>
