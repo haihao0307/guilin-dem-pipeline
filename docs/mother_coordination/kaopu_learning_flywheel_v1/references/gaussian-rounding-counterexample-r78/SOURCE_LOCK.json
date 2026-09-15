@@ -1,0 +1,34 @@
+{
+  "schema": "kaopu-gaussian-rounding-counterexample-source-lock/r78",
+  "status": "preregistered",
+  "question": "Can a fixed two-splat r186 fixture force f32-final and f32-staged onto opposite Half values and let independent readback select one?",
+  "coordinator_parent": "71fffbf5342c5e92e22b7fdf816aae5b00bb88fc",
+  "three": {
+    "package": "0.186.0",
+    "tag_commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "GaussianSplat_js_blob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+  },
+  "derivation": "A CPU breadth-first search using the R76 center Float alpha-per-byte estimate found this shortest two-step binary-color candidate before R78 target rendering.",
+  "records": [
+    {"alpha_byte": 193, "rgb_bytes": [255, 0, 0]},
+    {"alpha_byte": 144, "rgb_bytes": [0, 0, 0]}
+  ],
+  "fixed_fixture": {
+    "rotation_packed": "0xc0000115",
+    "scale_bytes": [128, 96, 96],
+    "camera": [0, 0, 2],
+    "order": "identity",
+    "target": "HalfFloatType",
+    "viewport": [33, 33]
+  },
+  "execution_order": [
+    "render Float one-splat Alpha calibration for bytes 193 and 144",
+    "compute both predicted Half frames at prefixes 1 and 2",
+    "abort before target render unless prefix 2 contains at least one predicted divergence",
+    "independently render Half prefixes 1 and 2",
+    "independently render a duplicate prefix-2 control",
+    "classify exact matches without tolerance"
+  ],
+  "observation_root": "same Chromium/ANGLE Vulkan SwiftShader software root as R59-R77",
+  "not_claimed": ["hardware GPU", "WebGPU", "Safari or iPhone", "real asset", "human acceptance", "Mother adoption"]
+}

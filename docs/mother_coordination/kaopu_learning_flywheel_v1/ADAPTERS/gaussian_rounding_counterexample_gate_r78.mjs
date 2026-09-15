@@ -1,0 +1,5 @@
+let raw='';for await(const chunk of process.stdin)raw+=chunk;const d=JSON.parse(raw);
+const required=['allPageChecks','sameLockedTarget','calibrationContract','predictedDivergenceBeforeTarget','independentPrefixReadbacks','duplicateFinalControl','allModelsEvaluated','outcomeClassified'];
+const failures=required.filter(k=>d.checks?.[k]!==true);if(d.schema!=='kaopu-gaussian-rounding-counterexample/r78')failures.push('schema');
+const out={schema:'kaopu-gaussian-rounding-counterexample-gate/r78',status:failures.length?'Candidate-fail':'Candidate-pass',failures,calibrationAlphaAtCenter:d.analysis?.calibrationAlphaAtCenter,predictedDifference:d.analysis?.predictedDifference,comparisons:d.analysis?.comparisons,exactBothPrefixes:d.analysis?.exactBothPrefixes,classification:d.analysis?.classification,duplicateControl:d.analysis?.duplicateControl,observedHashes:d.analysis?.observedHashes,limits:d.limits};
+process.stdout.write(JSON.stringify(out,null,2)+'\n');if(failures.length)process.exitCode=10;

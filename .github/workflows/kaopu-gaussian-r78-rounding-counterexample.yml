@@ -1,0 +1,50 @@
+name: KAOPU Gaussian R78 Rounding Counterexample
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_rounding_counterexample_r78.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_rounding_counterexample_r78.js
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_rounding_counterexample_gate_r78.mjs
+      - .github/workflows/kaopu-gaussian-r78-rounding-counterexample.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r78-rounding-counterexample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned renderer and browser harness
+        run: |
+          npm init -y
+          npm pkg set type=module
+          npm install --no-save three@0.186.0 playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Start local fixture server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/r78-http.log 2>&1 &
+          sleep 2
+          curl --fail --silent http://127.0.0.1:8765/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_three_rounding_counterexample_r78.html > /dev/null
+      - name: Run preregistered rounding-counterexample probe
+        run: node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_gaussian_rounding_counterexample_r78.js
+      - name: Validate R78 evidence contract
+        run: |
+          cat r78-result.json | node docs/mother_coordination/kaopu_learning_flywheel_v1/ADAPTERS/gaussian_rounding_counterexample_gate_r78.mjs > r78-gate.json
+          cat r78-gate.json
+          node -e "const d=require('./r78-gate.json');if(d.status!=='Candidate-pass')process.exit(10)"
+      - name: Upload R78 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-r78-rounding-counterexample
+          path: r78-*.json
+          if-no-files-found: warn
+          retention-days: 30
