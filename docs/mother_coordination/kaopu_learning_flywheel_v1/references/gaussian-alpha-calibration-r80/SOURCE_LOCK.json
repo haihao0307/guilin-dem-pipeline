@@ -1,0 +1,47 @@
+{
+  "schema": "kaopu-gaussian-alpha-calibration-source-lock/r80",
+  "status": "preregistered",
+  "question": "Can a calibration-only Three.js r186 cycle freeze the complete center effective-Alpha table before any new Half target fixture is selected?",
+  "coordinator_parent": "7786e62a113ac8126fc7245ff39b44385b19e8ca",
+  "three": {
+    "package": "0.186.0",
+    "tag_commit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "GaussianSplat_js_blob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691"
+  },
+  "fixed_fixture": {
+    "source_alpha_bytes": "every integer 0 through 255 exactly once in ascending order",
+    "source_rgb_bytes": [255, 255, 255],
+    "record_count_per_render": 1,
+    "rotation_packed": "0xc0000115",
+    "scale_bytes": [128, 96, 96],
+    "camera": [0, 0, 2],
+    "target": "FloatType only",
+    "viewport": [33, 33],
+    "center_pixel": 544
+  },
+  "candidate_search": {
+    "occurs_after_primary_calibration": true,
+    "alpha_bytes": "0..255",
+    "color_byte_subset": [0, 1, 2, 4, 8, 16, 32, 64, 96, 128, 160, 192, 224, 240, 248, 252, 254, 255],
+    "selection": "lexicographically first two-record case where only no_comp differs from fully staged Half output",
+    "status_if_found": "Candidate-unrendered-target"
+  },
+  "repeat_rule": "After candidate derivation, independently repeat Alpha bytes 0, 255 and every byte used by the candidate; require exact full-frame Float equality.",
+  "hard_prohibitions": [
+    "No HalfFloatType target",
+    "No two-record target",
+    "No renderer arithmetic-stage claim",
+    "No post-calibration candidate treated as observed target evidence"
+  ],
+  "observation_root": "same Chromium/ANGLE Vulkan SwiftShader software root as R59-R79",
+  "not_claimed": [
+    "Half target behavior",
+    "fixed-function instruction sequence",
+    "hardware GPU",
+    "WebGPU",
+    "Safari or iPhone",
+    "real asset",
+    "human acceptance",
+    "Mother adoption"
+  ]
+}
