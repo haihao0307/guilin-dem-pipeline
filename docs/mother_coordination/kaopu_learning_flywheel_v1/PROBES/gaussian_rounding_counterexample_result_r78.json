@@ -1,0 +1,167 @@
+{
+  "schema": "kaopu-gaussian-rounding-counterexample/r78",
+  "status": "Candidate-pass",
+  "question": "Can a preregistered two-splat r186 fixture place f32-final and f32-staged on opposite sides of a Half boundary and let independent readback select one?",
+  "sourceLocks": {
+    "threePackage": "0.186.0",
+    "threeTagCommit": "148ef33ecb6d2502ff796d4554abd1549c95d519",
+    "threeGaussianSplatBlob": "06d37fe6af583cf8cbdf8bd93565403bc3b94691",
+    "r77Commit": "71fffbf5342c5e92e22b7fdf816aae5b00bb88fc"
+  },
+  "preregistered": {
+    "derivation": "CPU breadth-first search seeded by R76 center Float alpha-per-byte estimate; R78 uses actual Float calibration before predictions.",
+    "records": [
+      {
+        "alphaByte": 193,
+        "rgbBytes": [
+          255,
+          0,
+          0
+        ]
+      },
+      {
+        "alphaByte": 144,
+        "rgbBytes": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "targetRenderProhibition": "Do not render target unless actual calibration yields a predicted Half divergence.",
+    "acceptance": "Exact decoded Half equality at independent prefixes 1 and 2; duplicate prefix-2 control required."
+  },
+  "runtime": {
+    "threeRevision": "186",
+    "identity": {
+      "backendClass": "WebGLBackend",
+      "rendererClass": "WebGPURenderer",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+      "platform": "Linux x86_64",
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "backend": "software WebGL fallback of WebGPURenderer"
+  },
+  "analysis": {
+    "records": [
+      {
+        "alpha": 193,
+        "color": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "alpha": 144,
+        "color": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "calibrationAlphaAtCenter": {
+      "144": 0.23425349593162537,
+      "193": 0.3139647841453552
+    },
+    "predictedDifference": {
+      "mismatchChannels": 1,
+      "maxAbs": 0.0001220703125,
+      "maxIndex": 2176,
+      "pixel": 544,
+      "channel": 0
+    },
+    "comparisons": {
+      "1": {
+        "f32-final": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "2": {
+        "f32-final": {
+          "mismatchChannels": 1,
+          "maxAbs": 0.0001220703125,
+          "maxIndex": 2176,
+          "pixel": 544,
+          "channel": 0
+        },
+        "f32-staged": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      }
+    },
+    "exactBothPrefixes": [
+      "f32-staged"
+    ],
+    "classification": "f32-staged-selected",
+    "duplicateControl": {
+      "mismatchChannels": 0,
+      "maxAbs": 0,
+      "maxIndex": -1,
+      "pixel": null,
+      "channel": null
+    },
+    "observedHashes": {
+      "prefix1": "1472c9cf0d97e121116cda7a0db9ab738af1f246b2ab4f2c9d9225f21ea956d6",
+      "prefix2": "3fbda5390c20767dcc3086564527b5df88ef80d8e427a67c28b3461dbe566c2b",
+      "prefix2Control": "3fbda5390c20767dcc3086564527b5df88ef80d8e427a67c28b3461dbe566c2b"
+    },
+    "predictedHashes": {
+      "f32Final1": "b4cf1d375ea0717c1538426887027eaff08e694559df844f4c352ec499007871",
+      "f32Final2": "565a6e7bdac8404b11072c8a2027937a2072a617e2329e8e08edcee4ed758f38",
+      "f32Staged1": "b4cf1d375ea0717c1538426887027eaff08e694559df844f4c352ec499007871",
+      "f32Staged2": "695546bb551e4673bf5182fd83dafdbdfca9411cd63865fdaf18e806834e9880"
+    }
+  },
+  "checks": {
+    "allPageChecks": true,
+    "sameLockedTarget": true,
+    "calibrationContract": true,
+    "predictedDivergenceBeforeTarget": true,
+    "independentPrefixReadbacks": true,
+    "duplicateFinalControl": true,
+    "allModelsEvaluated": true,
+    "outcomeClassified": true
+  },
+  "interpretation": {
+    "observation": "The target was rendered only after actual Float calibration proved that the two replay models predict different Half outputs. Independent prefix readbacks and a duplicate final control then classified the models exactly.",
+    "candidate": "Any selected model is limited to this synthetic software fixture and blend route. A model rejected here should not be used as bit-exact replay authority for the R75-R77 diagnostics.",
+    "rejected": [
+      "A fixture that has no predicted Half divergence can identify operation ordering.",
+      "Terminal-only agreement is sufficient without an independently rendered prefix and duplicate control."
+    ],
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "twoSyntheticSplatsOnly": true,
+    "binaryRedThenBlack": true,
+    "fixed45DegreeFootprint": true,
+    "fixedFunctionInternalsInferredNotObserved": true,
+    "formalCrossBackendProof": false,
+    "softwareWebglOnly": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}
