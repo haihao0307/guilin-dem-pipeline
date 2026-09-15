@@ -1,0 +1,35 @@
+name: KAOPU Gaussian Blend Spec Contract R86
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_prereg_r86.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_probe_r86.mjs
+      - .github/workflows/kaopu-gaussian-blend-spec-contract-r86.yml
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify PDF extractor
+        run: pdftotext -v
+      - name: Run frozen source-contract audit
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_probe_r86.mjs \
+            docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_result_r86.json
+      - name: Enforce semantic result
+        run: |
+          node -e "const r=require('./docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_result_r86.json'); if(r.failedChecks.length) process.exit(1); if(r.decision.r85F32StagedNormativelyRequired!==false) process.exit(1);"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-gaussian-blend-spec-contract-r86
+          path: docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/gaussian_blend_spec_contract_result_r86.json
+          if-no-files-found: error
