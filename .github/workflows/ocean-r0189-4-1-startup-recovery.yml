@@ -1,0 +1,130 @@
+name: Ocean R018.9.4.1 startup recovery
+
+on:
+  push:
+    branches: [work/ocean-r0189-4-1-startup-recovery-20260915]
+    paths:
+      - .github/workflows/ocean-r0189-4-1-startup-recovery.yml
+      - ocean-mother/recovery/r0189-4/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html
+      - ocean-mother/recovery/r0189-4-1/build_r0189_4_1_startup_recovery.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r0189-4-1-startup-recovery
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Build automatic shader fallback candidate
+        run: |
+          set -euo pipefail
+          python ocean-mother/recovery/r0189-4-1/build_r0189_4_1_startup_recovery.py | tee /tmp/r0189_4_1_build.txt
+
+      - name: Static identity, inheritance and JavaScript gates
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          root=Path('ocean-mother/recovery/r0189-4-1')
+          p=root/'Ocean_Mother_R018.9.4.1_Startup_Recovery.html'
+          report=json.loads((root/'R0189_4_1_BUILD_REPORT.json').read_text())
+          assert report['candidate']=='R018.9.4.1'
+          assert report['deepHashUnchanged'] is True
+          assert report['primaryShaderPreserved'] is True
+          assert report['compatibilityShaderAdded'] is True
+          assert report['visualApproved'] is False
+          s=p.read_text()
+          assert 'ISLAND GOLD COAST / R018.9.4.1' in s
+          assert 'r0189.4.1-startup-compat-v001-deep-frozen' in s
+          assert 'const FRAG_SAFE=' in s
+          assert 'automatic compatibility fallback' in report['startupBehavior']
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          for i,code in enumerate(scripts):
+              q=Path('/tmp')/f'ocean-r0189-4-1-{i}.js'
+              q.write_text(code)
+              subprocess.run(['node','--check',str(q)],check=True)
+          print('static gates passed; scripts',len(scripts))
+          PY
+
+      - name: Install browser QA runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Compile, link and render compatibility path
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import contextlib,json,socket,subprocess,time
+          root=Path('ocean-mother/recovery/r0189-4-1').resolve()
+          review=root/'review';review.mkdir(exist_ok=True)
+          port=8871
+          server=subprocess.Popen(['python','-m','http.server',str(port),'--bind','127.0.0.1'],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+          logs=[];errors=[]
+          try:
+              for _ in range(80):
+                  try:
+                      with socket.create_connection(('127.0.0.1',port),timeout=.2):break
+                  except OSError:time.sleep(.1)
+              with sync_playwright() as pw:
+                  browser=pw.chromium.launch(headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+                  page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
+                  page.on('console',lambda m:logs.append({'type':m.type,'text':m.text}))
+                  page.on('pageerror',lambda e:errors.append(str(e)))
+                  url=f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4.1_Startup_Recovery.html?compat=1&qa=1&still=1&view=overview'
+                  page.goto(url,wait_until='load',timeout=120000)
+                  page.wait_for_function("window.__OCEAN_STARTUP__ && window.__OCEAN_STARTUP__.ready === true",timeout=120000)
+                  page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
+                  startup=page.evaluate('window.__OCEAN_STARTUP__')
+                  qa=page.evaluate('window.__OCEAN_QA__')
+                  assert startup['renderPath']=='compatibility',startup
+                  assert qa['renderPath']=='compatibility',qa
+                  assert qa['version']=='0.3.9.4.1-r0189-startup-compat'
+                  assert qa['buildId']=='r0189.4.1-startup-compat-v001-deep-frozen'
+                  page.wait_for_timeout(1200)
+                  page.screenshot(path=str(review/'compat-overview.png'),timeout=120000)
+                  browser.close()
+          finally:
+              server.terminate()
+              with contextlib.suppress(Exception):server.wait(timeout=5)
+          result={'startup':startup,'qa':qa,'errors':errors,'console':logs[-80:]}
+          (review/'browser_runtime.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+          assert not errors,errors
+          print(json.dumps({'renderPath':startup['renderPath'],'renderer':startup['rendererInfo'],'errors':errors},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Commit fixed candidate and evidence
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/recovery/r0189-4-1/Ocean_Mother_R018.9.4.1_Startup_Recovery.html \
+                  ocean-mother/recovery/r0189-4-1/R0189_4_1_BUILD_REPORT.json \
+                  ocean-mother/recovery/r0189-4-1/review
+          if ! git diff --cached --quiet; then
+            git commit -m 'ocean: materialize and browser-test R018.9.4.1 startup recovery'
+            git push origin HEAD:work/ocean-r0189-4-1-startup-recovery-20260915
+          fi
+
+      - name: Preserve review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R0189_4_1_Startup_Recovery
+          path: ocean-mother/recovery/r0189-4-1
+          retention-days: 30
+          if-no-files-found: error
