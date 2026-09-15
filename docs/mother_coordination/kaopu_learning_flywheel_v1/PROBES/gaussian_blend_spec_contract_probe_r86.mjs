@@ -5,12 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const sources = [
-  ['gles-3.0.6', 'https://registry.khronos.org/OpenGL/specs/es/3.0/es_spec_3.0.pdf'],
-  ['gles-ext-color-buffer-float', 'https://registry.khronos.org/OpenGL/extensions/EXT/EXT_color_buffer_float.txt'],
-  ['gles-ext-float-blend', 'https://registry.khronos.org/OpenGL/extensions/EXT/EXT_float_blend.txt'],
-  ['webgl-ext-color-buffer-float', 'https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/'],
-  ['webgl-ext-float-blend', 'https://registry.khronos.org/webgl/extensions/EXT_float_blend/'],
-  ['webgl-2.0.0', 'https://registry.khronos.org/webgl/specs/2.0.0/'],
+  ['gles-3.0.6', 'https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/specs/es/3.0/es_spec_3.0.pdf'],
+  ['gles-ext-color-buffer-float', 'https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/extensions/EXT/EXT_color_buffer_float.txt'],
+  ['gles-ext-float-blend', 'https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/extensions/EXT/EXT_float_blend.txt'],
+  ['webgl-ext-color-buffer-float', 'https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/extensions/EXT_color_buffer_float/extension.xml'],
+  ['webgl-ext-float-blend', 'https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/extensions/EXT_float_blend/extension.xml'],
+  ['webgl-2.0.0', 'https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/specs/2.0.0/index.html'],
   ['webgl-conformance-fbo-render', 'https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/conformance-suites/2.0.0/deqp/functional/gles3/es3fFboRenderTest.js']
 ];
 
@@ -67,8 +67,10 @@ const checks = {
     !/\bprecision\b/i.test(floatBlendExt) && !/\bround(?:ing|ed)?\b/i.test(floatBlendExt),
   webglColorExtensionExposesRGBA16F:
     webglColorExt.includes('RGBA16F') && webglColorExt.includes('color-renderable'),
-  webglFloatBlendHasNoBehavioralChanges:
-    webglFloatBlend.includes('There are no WebGL-specific behavioral changes'),
+  webglFloatBlendMirrorsNativeAndOnlyEnables32Bit:
+    webglFloatBlend.includes('name="EXT_float_blend"') &&
+    webglFloatBlend.includes('32-bit floating-point components') &&
+    !/\bprecision\b/i.test(webglFloatBlend) && !/\bround(?:ing|ed)?\b/i.test(webglFloatBlend),
   stableWebgl2DerivesFromES3:
     webgl2.includes('OpenGL ES 3.0') && webgl2.includes('WebGL 2.0'),
   officialConformanceUsesNonzeroThreshold:
@@ -83,6 +85,7 @@ const result = {
   schema: 'kaopu-gaussian-blend-spec-contract-result/r86',
   status: failedChecks.length === 0 ? 'Observation: source-contract audit passed' : 'Candidate: source-contract audit incomplete',
   observedAt: new Date().toISOString(),
+  sourceTransportCorrection: 'Two registry.khronos.org runner fetches failed before evidence collection (403); the audit uses commit-pinned files from KhronosGroup official GitHub repositories in the same standards lineage.',
   sourceReceipts: Object.fromEntries(Object.entries(fetched).map(([id, item]) => [id, {
     url: item.url,
     byteLength: item.byteLength,
