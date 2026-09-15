@@ -1,0 +1,134 @@
+name: Ocean R018.9.4 coastline and surface candidate
+
+on:
+  push:
+    branches: [work/ocean-r0189-recovery-20260914]
+    paths:
+      - .github/workflows/ocean-r0189-4-coast-surface.yml
+      - ocean-mother/recovery/r0189-3/Ocean_Mother_R018.9.3_Rock_Form_Candidate.html
+      - ocean-mother/recovery/r0189-4/build_r0189_4_coast_surface.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ocean-r0189-4-coast-surface
+  cancel-in-progress: true
+
+jobs:
+  materialize-and-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Build bounded R018.9.4 candidate
+        run: |
+          set -euo pipefail
+          python ocean-mother/recovery/r0189-4/build_r0189_4_coast_surface.py | tee /tmp/r0189_4_build.txt
+
+      - name: Static contract and JavaScript syntax gate
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, re, subprocess
+          root=Path('ocean-mother/recovery/r0189-4')
+          p=root/'Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html'
+          report=json.loads((root/'R0189_4_BUILD_REPORT.json').read_text())
+          assert report['candidate']=='R018.9.4'
+          assert report['protectedHashesUnchanged'] is True
+          assert report['deepOceanByteIdentityInsideCandidate'] is True
+          assert report['deepOcean']=='frozen original V001'
+          assert report['smokeFireDefaultOff'] is True
+          assert report['visualApproved'] is False
+          s=p.read_text()
+          assert 'ISLAND GOLD COAST / R018.9.4' in s
+          assert 'r0189.4-coast-surface-v001-deep-frozen' in s
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          for i,code in enumerate(scripts):
+              q=Path('/tmp')/f'ocean-r0189-4-{i}.js'
+              q.write_text(code)
+              subprocess.run(['node','--check',str(q)],check=True)
+          print('R018.9.4 static gate passed; scripts',len(scripts))
+          PY
+
+      - name: Install browser QA runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Render fixed review views and verify deep startup
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import contextlib, json, socket, subprocess, time
+          root=Path('ocean-mother/recovery/r0189-4').resolve()
+          review=root/'review'; review.mkdir(exist_ok=True)
+          port=8765
+          server=subprocess.Popen(['python','-m','http.server',str(port),'--bind','127.0.0.1'],cwd=root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+          logs=[]; errors=[]; qa=None; deep=None
+          try:
+              for _ in range(80):
+                  try:
+                      with socket.create_connection(('127.0.0.1',port),timeout=.2): break
+                  except OSError: time.sleep(.1)
+              with sync_playwright() as pw:
+                  browser=pw.chromium.launch(headless=True,args=['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+                  page=browser.new_page(viewport={'width':1280,'height':800},device_scale_factor=1)
+                  page.on('console',lambda m: logs.append({'type':m.type,'text':m.text}))
+                  page.on('pageerror',lambda e: errors.append(str(e)))
+                  page.goto(f'http://127.0.0.1:{port}/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html',wait_until='load',timeout=120000)
+                  page.wait_for_function("window.__OCEAN_QA__ && window.__OCEAN_QA__.ready === true",timeout=120000)
+                  page.wait_for_timeout(2600)
+                  if '暂停' in page.locator('#pause').inner_text():
+                      page.click('#pause'); page.wait_for_timeout(400)
+                  for view in ['overview','top','shore','rocks']:
+                      page.click(f'[data-view="{view}"]')
+                      page.wait_for_timeout(1200)
+                      page.screenshot(path=str(review/f'{view}.png'))
+                  qa=page.evaluate('window.__OCEAN_QA__')
+                  assert qa['version']=='0.3.9.4-r0189-coast-surface'
+                  assert qa['buildId']=='r0189.4-coast-surface-v001-deep-frozen'
+                  page.click('[data-zone="deep"]')
+                  page.wait_for_function("window.__OCEAN_DEEP_READY__ === true",timeout=120000)
+                  page.wait_for_timeout(1200)
+                  deep=page.evaluate("({ready:window.__OCEAN_DEEP_READY__,zone:window.__OCEAN_ZONE__})")
+                  assert deep['ready'] is True and deep['zone']=='deep'
+                  browser.close()
+          finally:
+              server.terminate()
+              with contextlib.suppress(Exception): server.wait(timeout=5)
+          runtime={'qa':qa,'deep':deep,'errors':errors,'console':logs[-80:]}
+          (review/'browser_runtime.json').write_text(json.dumps(runtime,ensure_ascii=False,indent=2))
+          assert not errors, errors
+          print(json.dumps({'version':qa['version'],'deep':deep,'screenshots':4,'errors':errors},ensure_ascii=False,indent=2))
+          PY
+
+      - name: Commit candidate, evidence and browser review
+        run: |
+          set -euo pipefail
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ocean-mother/recovery/r0189-4/Ocean_Mother_R018.9.4_Coast_Surface_Candidate.html \
+                  ocean-mother/recovery/r0189-4/R0189_4_BUILD_REPORT.json \
+                  ocean-mother/recovery/r0189-4/review
+          if ! git diff --cached --quiet; then
+            git commit -m 'ocean: materialize and browser-review R018.9.4 coast-surface candidate'
+            git push origin HEAD:work/ocean-r0189-recovery-20260914
+          fi
+
+      - name: Preserve review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R0189_4_Coast_Surface
+          path: ocean-mother/recovery/r0189-4
+          retention-days: 30
+          if-no-files-found: error
