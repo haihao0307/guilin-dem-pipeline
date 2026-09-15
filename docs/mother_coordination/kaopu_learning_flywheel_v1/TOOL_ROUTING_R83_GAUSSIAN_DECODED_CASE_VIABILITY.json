@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu-tool-routing/r83",
+  "status": "candidate-negative-control-old-matrix-collapsed",
+  "tool": "Three.js r186 SPZ parser-aware GaussianSplat diagnostic replay",
+  "inherits": "TOOL_ROUTING_R82_GAUSSIAN_COLOR_DECODE.json",
+  "route": {
+    "allowedCandidateUse": "Use the frozen R80 Alpha and R82 decoded-color tables to search for a new, separately identified stage-discrimination matrix before any target render.",
+    "requiredEvidenceSeparation": [
+      "raw SPZ coefficient bytes",
+      "decoded clamped color bytes",
+      "Float Alpha calibration",
+      "CPU model discrimination",
+      "Half prefix readback",
+      "hidden blend implementation",
+      "final appearance and acceptance"
+    ],
+    "currentEvidenceClass": "Decoded-domain deterministic negative control with repeated Float calibration; no Half target.",
+    "hold": "Keep R81 failed and R78 narrow. Do not render the unchanged R81 targets or treat a changed matrix as an R81 repair.",
+    "forbiddenClaims": [
+      "R81 selects any arithmetic stage",
+      "the four arithmetic models are generally equivalent",
+      "CPU replay observes fixed-function blend instructions",
+      "R78 generalizes across backends",
+      "SPZ is lossless Canonical Truth",
+      "production-wide replay authority"
+    ]
+  },
+  "workflowRun": 34965392980,
+  "r80AlphaTableHash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+  "r82ColorTableHash": "0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1",
+  "productionMutationAllowed": false,
+  "motherAdoptionAcknowledged": false
+}

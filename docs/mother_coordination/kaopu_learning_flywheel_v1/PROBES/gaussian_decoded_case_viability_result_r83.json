@@ -1,0 +1,327 @@
+{
+  "schema": "kaopu-gaussian-decoded-case-viability/r83",
+  "status": "Candidate-pass",
+  "question": "After frozen r186 COLOR_LUT decode, do the unchanged R81 raw-byte cases remain isolated Half-boundary discriminators?",
+  "answer": "no-none",
+  "sourceLocks": {
+    "coordinatorParent": "2d806ddbf04585c66612bf2ef4650fee88332915",
+    "threePackage": "0.186.0",
+    "r81PageBlob": "ae7323abea8aa1ce6da87f499f6258d2ad2d2886",
+    "r80Commit": "7b0e1509c6089f7c896f4681390fc9d2f5f91e47",
+    "r80CenterTableHash": "19fc9645e760d2fe3fc363985d9c52f07166979abbf5a3e3276ee16f41c7eab8",
+    "r82Commit": "f7bdbe3c150933ecb5dda5799c3d43a38f33ddf3",
+    "r82ColorTableHash": "0463086b181acd9d7991acb07c693b8d1179aba5f65b58d155bbdca5108802f1"
+  },
+  "calibrationAgainstR80": {
+    "1": {
+      "centerActual": 0.0016267604660242796,
+      "centerFrozen": 0.0016267604660242796,
+      "centerExact": true,
+      "planeHashActual": "0148c26b7d0ff7c376145a2edd8df9069ebc0c33c17c689ff7dc8871d27666b0",
+      "planeHashFrozen": "0148c26b7d0ff7c376145a2edd8df9069ebc0c33c17c689ff7dc8871d27666b0",
+      "planeHashExact": true
+    },
+    "13": {
+      "centerActual": 0.02114788629114628,
+      "centerFrozen": 0.02114788629114628,
+      "centerExact": true,
+      "planeHashActual": "92ed418fc8d001106635871276ad28f0d807259ddd9556bca4660c25111b8532",
+      "planeHashFrozen": "92ed418fc8d001106635871276ad28f0d807259ddd9556bca4660c25111b8532",
+      "planeHashExact": true
+    },
+    "21": {
+      "centerActual": 0.034161970019340515,
+      "centerFrozen": 0.034161970019340515,
+      "centerExact": true,
+      "planeHashActual": "809cd6172bc91b2606d0cd1cbf32735317f460f13e18eca8a13cbf95e7f6eab1",
+      "planeHashFrozen": "809cd6172bc91b2606d0cd1cbf32735317f460f13e18eca8a13cbf95e7f6eab1",
+      "planeHashExact": true
+    },
+    "52": {
+      "centerActual": 0.08459154516458511,
+      "centerFrozen": 0.08459154516458511,
+      "centerExact": true,
+      "planeHashActual": "b9a9bf5f5ee190555b3b7e0bb33d04869caf3927e4478c38771cba3af20546ed",
+      "planeHashFrozen": "b9a9bf5f5ee190555b3b7e0bb33d04869caf3927e4478c38771cba3af20546ed",
+      "planeHashExact": true
+    },
+    "120": {
+      "centerActual": 0.195211261510849,
+      "centerFrozen": 0.195211261510849,
+      "centerExact": true,
+      "planeHashActual": "b8f6440395a56043f078f54ab7bf86332c73c8d8dab82fe74a4491cdf76e8f1b",
+      "planeHashFrozen": "b8f6440395a56043f078f54ab7bf86332c73c8d8dab82fe74a4491cdf76e8f1b",
+      "planeHashExact": true
+    },
+    "123": {
+      "centerActual": 0.20009154081344604,
+      "centerFrozen": 0.20009154081344604,
+      "centerExact": true,
+      "planeHashActual": "ee93331689e33b2751981ea300d3cc7d7e473a7bac597e2df8266fe23bcd4f69",
+      "planeHashFrozen": "ee93331689e33b2751981ea300d3cc7d7e473a7bac597e2df8266fe23bcd4f69",
+      "planeHashExact": true
+    }
+  },
+  "analysis": {
+    "no_comp": {
+      "targetChannel": 0,
+      "records": [
+        {
+          "alphaByte": 21,
+          "rgbBytes": [
+            248,
+            0,
+            0
+          ],
+          "decodedBytes": [
+            255,
+            0,
+            0
+          ],
+          "decodedNormalized": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "alphaByte": 52,
+          "rgbBytes": [
+            1,
+            0,
+            0
+          ],
+          "decodedBytes": [
+            0,
+            0,
+            0
+          ],
+          "decodedNormalized": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "declaredAblation": "no_comp",
+      "declaredDivergence": {
+        "mismatchChannels": 0,
+        "maxAbs": 0,
+        "maxIndex": -1,
+        "pixel": null,
+        "channel": null
+      },
+      "otherAblations": {
+        "no_prod": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "no_sum": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "declaredCenterValues": {
+        "staged": 0.03125,
+        "no_comp": 0.03125,
+        "no_prod": 0.03125,
+        "no_sum": 0.03125
+      },
+      "centerModelsCollapsed": true,
+      "expectedCenterValue": 0.03125,
+      "expectedCenterExact": true,
+      "stillIsolated": false
+    },
+    "no_prod": {
+      "targetChannel": 1,
+      "records": [
+        {
+          "alphaByte": 13,
+          "rgbBytes": [
+            0,
+            8,
+            0
+          ],
+          "decodedBytes": [
+            0,
+            0,
+            0
+          ],
+          "decodedNormalized": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "alphaByte": 123,
+          "rgbBytes": [
+            0,
+            248,
+            0
+          ],
+          "decodedBytes": [
+            0,
+            255,
+            0
+          ],
+          "decodedNormalized": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "declaredAblation": "no_prod",
+      "declaredDivergence": {
+        "mismatchChannels": 0,
+        "maxAbs": 0,
+        "maxIndex": -1,
+        "pixel": null,
+        "channel": null
+      },
+      "otherAblations": {
+        "no_comp": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "no_sum": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "declaredCenterValues": {
+        "staged": 0.2000732421875,
+        "no_comp": 0.2000732421875,
+        "no_prod": 0.2000732421875,
+        "no_sum": 0.2000732421875
+      },
+      "centerModelsCollapsed": true,
+      "expectedCenterValue": 0.2000732421875,
+      "expectedCenterExact": true,
+      "stillIsolated": false
+    },
+    "no_sum": {
+      "targetChannel": 2,
+      "records": [
+        {
+          "alphaByte": 1,
+          "rgbBytes": [
+            0,
+            0,
+            224
+          ],
+          "decodedBytes": [
+            0,
+            0,
+            255
+          ],
+          "decodedNormalized": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "alphaByte": 120,
+          "rgbBytes": [
+            0,
+            0,
+            192
+          ],
+          "decodedBytes": [
+            0,
+            0,
+            249
+          ],
+          "decodedNormalized": [
+            0,
+            0,
+            0.9764705882352941
+          ]
+        }
+      ],
+      "declaredAblation": "no_sum",
+      "declaredDivergence": {
+        "mismatchChannels": 0,
+        "maxAbs": 0,
+        "maxIndex": -1,
+        "pixel": null,
+        "channel": null
+      },
+      "otherAblations": {
+        "no_comp": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        },
+        "no_prod": {
+          "mismatchChannels": 0,
+          "maxAbs": 0,
+          "maxIndex": -1,
+          "pixel": null,
+          "channel": null
+        }
+      },
+      "declaredCenterValues": {
+        "staged": 0.19189453125,
+        "no_comp": 0.19189453125,
+        "no_prod": 0.19189453125,
+        "no_sum": 0.19189453125
+      },
+      "centerModelsCollapsed": true,
+      "expectedCenterValue": 0.19189453125,
+      "expectedCenterExact": true,
+      "stillIsolated": false
+    }
+  },
+  "viableCases": [],
+  "checks": {
+    "r80TableIdentity": true,
+    "r82TableIdentity": true,
+    "rawR81CasesExact": true,
+    "calibrationMatchesFrozenR80": true,
+    "allCalibrationPageChecks": true,
+    "allModelsEvaluated": true,
+    "centerCollapsePreregistered": true,
+    "outcomeClassified": true,
+    "noHalfTargetRendered": true
+  },
+  "interpretation": {
+    "observation": "The R80 Float Alpha planes were independently reproduced; the frozen R82 parser table was applied to the unchanged R81 source bytes before computing all four replay models.",
+    "candidate": "Only a separately preregistered new raw-byte matrix that remains discriminative after decode may proceed to Half target readback.",
+    "rejected": [
+      "Repair R81 by silently treating encoded SPZ bytes as display RGB.",
+      "Render unchanged R81 Half targets after their declared center discriminators collapse.",
+      "Rename a different raw-byte matrix as an unchanged R81 replay."
+    ],
+    "sameChromiumSwiftShaderEvidenceRoot": true
+  },
+  "limits": {
+    "predictionAndFloatCalibrationOnly": true,
+    "halfTargetRendered": false,
+    "noPrefixOneHalfReadback": true,
+    "noPrefixTwoHalfReadback": true,
+    "hiddenBlendInstructionsUnobserved": true,
+    "hardwareGpu": false,
+    "webgpu": false,
+    "targetDevice": false,
+    "realAsset": false,
+    "humanAcceptance": false,
+    "motherAdoptionAcknowledged": false
+  }
+}
