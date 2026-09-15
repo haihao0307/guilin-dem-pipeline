@@ -1,0 +1,71 @@
+{
+  "schema": "kaopu-gaussian-blend-spec-contract-prereg/r86",
+  "status": "Frozen preregistration",
+  "date": "2026-09-15",
+  "question": "Do WebGL 2 / OpenGL ES normative sources require the exact R85 f32-staged arithmetic and bitwise Half result?",
+  "inherits": {
+    "runtimeCandidate": "KAOPU-GAUSSIAN-R84-DECODED-STAGE-MATRIX-A",
+    "currentBestView": "CURRENT_BEST_VIEW_R85_GAUSSIAN_DECODED_STAGE_TARGET.md",
+    "r85Commit": "fca3f015fb2d370f9e0454b0c47229edbf496019"
+  },
+  "sourceLock": [
+    {
+      "id": "gles-3.0.6",
+      "url": "https://registry.khronos.org/OpenGL/specs/es/3.0/es_spec_3.0.pdf",
+      "authority": "Khronos normative specification",
+      "sections": ["2.1", "2.1.1", "2.1.2", "4.1.7"]
+    },
+    {
+      "id": "gles-ext-color-buffer-float",
+      "url": "https://registry.khronos.org/OpenGL/extensions/EXT/EXT_color_buffer_float.txt",
+      "authority": "Khronos extension specification"
+    },
+    {
+      "id": "gles-ext-float-blend",
+      "url": "https://registry.khronos.org/OpenGL/extensions/EXT/EXT_float_blend.txt",
+      "authority": "Khronos extension specification"
+    },
+    {
+      "id": "webgl-ext-color-buffer-float",
+      "url": "https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/",
+      "authority": "Khronos WebGL extension specification"
+    },
+    {
+      "id": "webgl-ext-float-blend",
+      "url": "https://registry.khronos.org/webgl/extensions/EXT_float_blend/",
+      "authority": "Khronos WebGL extension specification"
+    },
+    {
+      "id": "webgl-2.0.0",
+      "url": "https://registry.khronos.org/webgl/specs/2.0.0/",
+      "authority": "Khronos stable WebGL 2 specification"
+    },
+    {
+      "id": "webgl-conformance-fbo-render",
+      "url": "https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/conformance-suites/2.0.0/deqp/functional/gles3/es3fFboRenderTest.js",
+      "authority": "Official conformance repository, non-normative implementation receipt",
+      "commit": "714857a28445e8f5d8d6ae1c78498578009534d8"
+    }
+  ],
+  "preregisteredChecks": [
+    "all source downloads succeed and hashes are recorded",
+    "OpenGL ES general floating-point section says otherwise-unspecified representation and operation details are not specified",
+    "OpenGL ES acknowledges distinct implementations may differ pixel-for-pixel",
+    "blend computation precision floor is destination-component precision, not a mandated Float32 stage sequence",
+    "EXT_color_buffer_float adds floating-point color-buffer blending applicability but no precision or rounding rule",
+    "EXT_float_blend enables 32-bit floating-point blending but adds no precision or rounding rule",
+    "WebGL extension pages add no WebGL-specific behavioral precision rule",
+    "official WebGL conformance lineage uses a non-zero image threshold and is not reclassified as normative"
+  ],
+  "decisionRule": {
+    "specGuaranteed": "Only if a normative source explicitly fixes complement/product/sum precision, rounding boundaries and Half storage rounding sufficiently to force the R85 bits.",
+    "empiricalOnly": "If sources define equations and a minimum precision but leave operation details or implementation variation open.",
+    "noNovelty": "If the audit cannot distinguish those cases, preserve R85 unchanged and record Unknown."
+  },
+  "prohibitions": [
+    "Do not render the R85 target again on SwiftShader.",
+    "Do not treat absence of a keyword as standalone proof; combine it with positive normative clauses.",
+    "Do not treat the conformance repository as a normative specification.",
+    "Do not modify production Mothers, Canonical Truth or Frozen R1."
+  ]
+}
