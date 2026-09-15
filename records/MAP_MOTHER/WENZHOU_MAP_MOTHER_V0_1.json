@@ -1,0 +1,71 @@
+{
+  "schema": "map-mother/wenzhou-temporal-terrain/v0.1",
+  "objectId": "WENZHOU_MAP_MOTHER",
+  "status": "active-design-1940s-first",
+  "crs": "EPSG:32651",
+  "canonicalSpatialBasis": {
+    "bounds": [190475, 2991275, 411250, 3241862.5],
+    "gridSpacingM": 12.5,
+    "shape": [20047, 17662],
+    "terrainContract": "site/dist/r3-1/data/terrain.json",
+    "rule": "one spatial identity; time never creates another world"
+  },
+  "storageModel": {
+    "baseStoredOnce": true,
+    "fullEpochDemCopiesForbidden": true,
+    "coldHistoricalScansExcludedFromRuntime": true,
+    "epochState": "base + sparse temporal deltas",
+    "deltaFamilies": [
+      "terrain_height_residual",
+      "land_water_mask",
+      "coastline_control",
+      "hydro_topology",
+      "reclamation_remove",
+      "reservoir_remove_restore_valley",
+      "transport_visibility",
+      "settlement_visibility"
+    ],
+    "compressionRule": "quantized coordinates + sparse masks/residual patches + source identity/hash; no duplicated full rasters",
+    "sizeGoal": "preserve the existing approximately 2.x MiB canonical core; historical epochs should add only sparse deltas, not another core"
+  },
+  "activeEpoch": {
+    "id": "WENZHOU_1940S_TARGET",
+    "targetYear": 1942,
+    "workingWindow": "1940s",
+    "status": "active",
+    "priority": 1,
+    "rule": "finish this short historical window before adding later decades",
+    "majorModernRemovals": [
+      "motorway",
+      "motorway_link",
+      "major_modern_bridges",
+      "construction_roads",
+      "large_reclamation",
+      "modern_seawalls_and_hard_shore",
+      "modern_reservoirs_and_dams"
+    ]
+  },
+  "historicalEvidence": {
+    "coarseAtlas": ["NH51-13", "NG51-1", "NH51-14"],
+    "localOverride": ["YUNG-CHIA_WENCHOW_1_12500_1945"],
+    "precedence": "finer local evidence overrides coarse atlas inside its verified footprint",
+    "displayRule": "raw extraction/control geometry is nonvisual; users see reconstructed historical state, not engineering guide lines"
+  },
+  "truthBoundary": {
+    "historicalCoast": "may be inferred between reliable map controls when the inference is recorded and reversible",
+    "bathymetry": "do not promote inferred seabed heights to observed truth; store observed/derived/confidence separately",
+    "reservoir": "remove modern water/dam when historical absence is secure; pre-reservoir valley elevation remains derived until supported",
+    "minorFeatures": "absence on 1:250000 sheets is not evidence that small roads, bridges, drains or buildings did not exist"
+  },
+  "evidenceFieldsPerDelta": [
+    "time_or_window",
+    "location",
+    "object_or_feature",
+    "operation",
+    "source_refs",
+    "confidence",
+    "method",
+    "reversible",
+    "hash"
+  ]
+}
