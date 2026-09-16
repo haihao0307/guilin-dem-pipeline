@@ -1,0 +1,56 @@
+{
+  "id": "KAOPU-MRROLORD-T03-EXECUTION-20260916",
+  "observedAt": "2026-09-16T08:42:00.019Z",
+  "nodeVersion": "v22.16.0",
+  "probeSha256": "c91dd277047b498a90731b93b2d186e1d0e99da68184c6cfa1e9b53175e81165",
+  "sources": {
+    "farmland": {
+      "commit": "86d583f7844402ca23338892340f229764a5ed70",
+      "path": "farmland-object-dna/Farmland_Mother_R041_Cellular_Irrigation_2026-09-16/core.js",
+      "gitBlob": "7b0dfda3b2e38d50a77093d7cebebf910841e9e8",
+      "bytes": 14241,
+      "sha256": "be5f3ed657397092bab6b336aae699e0948b6b94ba036adc3ab2a8060b9162bf",
+      "exactBlobVerified": true
+    },
+    "landscape": {
+      "commit": "4e1c893b2b07d8b32551b0144b1dbd7507113680",
+      "path": "workbenches/landscape-microscope-geometry-r1/index.html",
+      "gitBlob": "b1e1307a082272702251237cfbb7dcbf7c98b6e8",
+      "scope": "reviewed mappedDetail/kernel/mainRadius mathematical fragments, not full HTML replay"
+    }
+  },
+  "landscape": {
+    "sampleCount": 200,
+    "worstOriginalSample": {"yM": 23.500000000000064, "xM": 6.508784813397594, "originalJump": 0.12948639723547906, "integerCandidateJump": 0},
+    "candidateMaxSeamDifference": 7.771561172376096e-16,
+    "seamRefinement": [
+      {"epsilonRadians": 0.01, "originalDifference": 0.13341539510377498, "candidateDifference": 0.017905908020022454},
+      {"epsilonRadians": 0.001, "originalDifference": 0.1301670802505831, "candidateDifference": 0.001857972151326881},
+      {"epsilonRadians": 0.0001, "originalDifference": 0.129557753669314, "candidateDifference": 0.00018586515703067352},
+      {"epsilonRadians": 1e-05, "originalDifference": 0.1294935661090768, "candidateDifference": 1.858658365017085e-05}
+    ],
+    "interpretation": "2.3 angular harmonic is not single-valued on the periodic cylinder. Integer 2 is a candidate seam-free harmonic, not proof of whole-mesh or geological quality."
+  },
+  "checks": {
+    "exactFarmlandSource": true,
+    "originalGraphPasses": true,
+    "currentInletMetadataContradictionReproduced": true,
+    "headDataCannotCertifyAllGravitySupply": true,
+    "originalAngularBranchCutReproduced": true,
+    "candidateHarmonicClosesTestedSeam": true,
+    "candidateRefinementReducesDifference": true
+  },
+  "productionStatus": "baseline defects reproduced; production code NOT modified",
+  "notTested": ["full Landscape browser render", "whole-mesh self-intersection", "true local sill/head values", "flow or water conservation in R041", "MrRolord node files", "Yohei shader reproduction", "target device performance", "Mother execution", "new public version", "user visual acceptance"],
+  "farmland": {
+    "originalGraphQA": {"ok": true, "errors": [], "fieldCount": 137, "plainCount": 56, "terraceCount": 81, "edgeCount": 285},
+    "sourceDeclaredLevelM": 18.2,
+    "bedsAboveGlobalSource": 17,
+    "declaredInletLevelBelowBedCount": 39,
+    "inletSourceIdentityMismatches": [{"edgeId": "branchA-TF81", "fieldId": "TF81", "graphFrom": "SOURCE", "inletCanal": "branchA", "bedM": 23.68, "sourceLevelM": 18.2}],
+    "interpretation": "Graph connectivity passes despite identity inconsistencies and declared supply levels below field beds. The gravity-head reading is conditional on level representing water elevation, common datum, no pressure/pump/extra energy. This is not a discharge solver or proof of physical failure in a measured field.",
+    "flaggedInletFieldIds": ["TF81", "TF75", "TF76", "TF77", "TF78", "TF79", "TF80", "TF70", "TF71", "TF72", "TF73", "TF74", "TF65", "TF66", "TF67", "TF68", "TF69", "TF59", "TF60", "TF61", "TF62", "TF63", "TF64", "TF54", "TF55", "TF56", "TF57", "TF58", "TF49", "TF50", "TF51", "TF52", "TF53", "TF46", "TF47", "TF48", "TF40", "TF41", "TF42"]
+  },
+  "summaryOfFullAuditSha256": "6379dba84566e55714c009e8fe460dfc8d80827ee19297448380af7fbc37f9b6",
+  "summaryNote": "Subset of executed result: full per-edge detail omitted here; rerun the included probe on pinned core.js to reproduce."
+}
