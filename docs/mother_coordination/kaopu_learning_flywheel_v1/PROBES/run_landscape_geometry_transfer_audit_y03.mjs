@@ -3,11 +3,30 @@ import { writeFile } from 'node:fs/promises';
 
 const SOURCE_URL = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/83d3649728e1eb2c21c995f42e9bb0026c20a464/workbenches/landscape-microscope-geometry-r1/index.html';
 const EXPECTED_SHA256 = '1e7404a272b1887908030743d83eea17f63c491ce4c62211dfb1313882b24c52';
+const CURRENT_HEAD = '21861af63591d42bb84b9a88e00ef645ffc55b76';
+const CURRENT_SOURCE_URL = `https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${CURRENT_HEAD}/workbenches/landscape-surface-r5-k2-geometry-r1/index.html`;
+const CURRENT_QA_URL = `https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/${CURRENT_HEAD}/workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json`;
 const BUILD_REPORTED_PROTECTED_VERTEX_COUNT = 3136;
-const response = await fetch(SOURCE_URL);
+const [response, currentSourceResponse, currentQaResponse] = await Promise.all([
+  fetch(SOURCE_URL), fetch(CURRENT_SOURCE_URL), fetch(CURRENT_QA_URL)
+]);
 if (!response.ok) throw new Error(`source fetch failed: ${response.status}`);
+if (!currentSourceResponse.ok) throw new Error(`current source fetch failed: ${currentSourceResponse.status}`);
+if (!currentQaResponse.ok) throw new Error(`current QA fetch failed: ${currentQaResponse.status}`);
 const source = await response.text();
+const currentSource = await currentSourceResponse.text();
+const currentQaText = await currentQaResponse.text();
+const currentQa = JSON.parse(currentQaText);
 const sourceSha256 = createHash('sha256').update(source).digest('hex');
+const currentSourceSha256 = createHash('sha256').update(currentSource).digest('hex');
+const currentQaSha256 = createHash('sha256').update(currentQaText).digest('hex');
+const nonPeriodicHarmonicPresent = /Math\.sin\(th\*2\.3\+y\*\.07\)/.test(currentSource);
+const periodicReplacementPresent = /Math\.sin\(th\*2\+y\*\.07\)/.test(currentSource);
+const currentGeometryQa = currentQa.microscopeGeometry;
+const clippedVertexRatio = currentGeometryQa.clippedVertexCount / currentQa.mainVertices;
+const currentQaMetricKeys = [...Object.keys(currentQa), ...Object.keys(currentGeometryQa)];
+const currentQaHasMeanMetric = currentQaMetricKeys.some(k => /mean/i.test(k));
+const currentQaHasDerivativeMetric = currentQaMetricKeys.some(k => /deriv|gradient|slope/i.test(k));
 
 const requiredSnippets = [
   'const H=28, NT=196, NY=154',
@@ -166,13 +185,52 @@ const checks = {
   scaleControlsChangeMean: Math.abs(cases.scaleLow.meanDetailActive - cases.scaleHigh.meanDetailActive) > 1e-6,
   derivativeProxyNotMonotoneAttenuatedByLayers: cases.layers9.derivativeProxy.max >= cases.layers1.derivativeProxy.max,
   transitionDerivativeMeasuredNotGatedByExistingQA: cases.default.derivativeProxy.transitionMax > 0,
-  buildProtectedCountMismatchConfirmed: cases.default.protectedCount !== BUILD_REPORTED_PROTECTED_VERTEX_COUNT
+  buildProtectedCountMismatchConfirmed: cases.default.protectedCount !== BUILD_REPORTED_PROTECTED_VERTEX_COUNT,
+  currentHeadSourceHttp200: currentSourceResponse.status === 200,
+  currentHeadQaHttp200: currentQaResponse.status === 200,
+  currentIntegratedHeadStillUsesNonPeriodicHarmonic: nonPeriodicHarmonicPresent,
+  currentIntegratedHeadDoesNotContainClaimedPeriodicReplacement: !periodicReplacementPresent,
+  currentQaOmitsMeanMetric: !currentQaHasMeanMetric,
+  currentQaOmitsDerivativeMetric: !currentQaHasDerivativeMetric,
+  currentQaShowsMajorityVertexClipping: clippedVertexRatio > 0.6,
+  currentQaProtectedAnchorsPass: currentGeometryQa.protectedDriftCount === 0,
+  currentQaTriangleFlipsPass: currentGeometryQa.triangleFlipCount === 0,
+  currentQaStillMarksGeometryFieldUncoupled: currentQa.geometryFieldCoupled === false,
+  currentQaStillMarksProductionNotReady: currentQa.productionReady === false
 };
 const result = {
-  schema: 'kaopu-landscape-y03-transfer-audit/2',
+  schema: 'kaopu-landscape-y03-transfer-audit/3',
   date: '2026-09-16',
-  question: 'Does the current isolated Landscape geometry lab satisfy Y01 anchor, mean and derivative constraints?',
+  question: 'Does PR #79 current head close the Y01/T03 anchor, mean, derivative and periodic-seam transfer gates?',
   source: { url: SOURCE_URL, httpStatus: response.status, bytes: Buffer.byteLength(source), sha256: sourceSha256, expectedSha256: EXPECTED_SHA256 },
+  currentIntegratedHead: {
+    commit: CURRENT_HEAD,
+    source: { url: CURRENT_SOURCE_URL, httpStatus: currentSourceResponse.status, bytes: Buffer.byteLength(currentSource), sha256: currentSourceSha256 },
+    runtimeQa: { url: CURRENT_QA_URL, httpStatus: currentQaResponse.status, bytes: Buffer.byteLength(currentQaText), sha256: currentQaSha256 },
+    nonPeriodicHarmonic: { expression: 'Math.sin(th*2.3+y*.07)', present: nonPeriodicHarmonicPresent },
+    claimedPeriodicReplacement: { expression: 'Math.sin(th*2+y*.07)', present: periodicReplacementPresent },
+    qaMetrics: {
+      vertexCount: currentQa.mainVertices,
+      clippedVertexCount: currentGeometryQa.clippedVertexCount,
+      clippedVertexRatio,
+      clippedVertexPercent: clippedVertexRatio * 100,
+      protectedVertexCount: currentGeometryQa.protectedVertexCount,
+      protectedDriftCount: currentGeometryQa.protectedDriftCount,
+      triangleFlipCount: currentGeometryQa.triangleFlipCount,
+      requestedAmplitudeM: currentGeometryQa.requestedAmplitudeM,
+      effectiveAmplitudeM: currentGeometryQa.effectiveAmplitudeM,
+      requestedLayers: currentGeometryQa.requestedLayers,
+      effectiveLayers: currentGeometryQa.effectiveLayers,
+      maxDisplacementM: currentGeometryQa.maxDisplacementM,
+      rmsDisplacementM: currentGeometryQa.rmsDisplacementM,
+      maxNormalAngleDeg: currentGeometryQa.maxNormalAngleDeg,
+      geometryFieldCoupled: currentQa.geometryFieldCoupled,
+      visualApproved: currentQa.visualApproved,
+      productionReady: currentQa.productionReady,
+      hasMeanMetric: currentQaHasMeanMetric,
+      hasDerivativeMetric: currentQaHasDerivativeMetric
+    }
+  },
   lockedImplementation: {
     vertices: VCOUNT,
     triangles: indices.length / 3,
@@ -189,6 +247,8 @@ const result = {
     anchors: 'Observation pass for exact M=0 vertices in this CPU replay',
     mean: 'Candidate fail for mean-neutral transfer: mapped and biased active-field means are nonzero and control-dependent',
     derivatives: 'Unknown acceptance: derivative proxies are measurable but the implementation defines no physical derivative budget or pass threshold',
+    periodicSeam: 'Rejected claimed closure at current integrated head: the non-periodic 2.3 angular harmonic remains and the claimed integer-harmonic replacement is absent',
+    clipping: 'Candidate partial safety control: per-vertex clipping and bandwidth filtering coexist with zero protected drift and zero flips, but 64% of vertices are clipped and field-distribution fidelity is not established',
     geometry: 'Observation from source/replay that vertex positions are changed; browser visual acceptance remains separate',
     evidenceContract: 'Candidate mismatch: build.json protectedVertexCount omits the two explicit TOP/BOTTOM vertices counted by source recompute',
     production: 'Frozen/unchanged'
@@ -197,7 +257,10 @@ const result = {
     'CPU replay matches the target Float32 typed storage but is not a browser WebGL observation root.',
     'Edge displacement slope is a derivative proxy, not full surface curvature or geologic validation.',
     'A nonzero mean may be an intentional uncalibrated erosion bias, but it cannot be called mean-preserving.',
-    'No production branch, R5/K2 geometry, DEM, collision, or user acceptance was tested.'
+    'The old R1 CPU replay and the current integrated head are related source evidence, not independent Observation Roots.',
+    'The current-head inspection is a source/QA contract audit; it does not rerun the integrated 310k-vertex browser geometry.',
+    'Current runtime QA does not record an area-weighted mean, a derivative budget, collision coupling, or user visual acceptance.',
+    'No production branch, DEM, collision, or user acceptance was modified or promoted.'
   ]
 };
 await writeFile(process.argv[2] ?? 'landscape_geometry_transfer_audit_result_y03.json', JSON.stringify(result, null, 2) + '\n');
