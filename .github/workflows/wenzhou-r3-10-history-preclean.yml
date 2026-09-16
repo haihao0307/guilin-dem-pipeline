@@ -30,6 +30,7 @@ jobs:
           node --check site/dist/r3-8/history-1953-control-layer.js
           node --check site/dist/r3-8/history-1940s-refine.js
           node --check tools/r3-10/history_1942_preclean_qa.mjs
+          node --check tools/r3-10/history_1940s_refine_qa.mjs
       - name: Install Chromium
         run: |
           npm install --no-save playwright@1.55.0
@@ -42,6 +43,8 @@ jobs:
           trap 'kill $server || true' EXIT
           WZ1942_URL='http://127.0.0.1:8768/site/dist/r3-8/history-1942.html' WZ1942_OUT='/tmp/wz1942/local' node tools/r3-10/history_1942_preclean_qa.mjs | tee /tmp/wz1942-local.json
           grep -q '"passed": true' /tmp/wz1942-local.json
+          WZ1942_URL='http://127.0.0.1:8768/site/dist/r3-8/history-1942.html' WZ1942_OUT='/tmp/wz1942/refine-local' node tools/r3-10/history_1940s_refine_qa.mjs | tee /tmp/wz1942-refine-local.json
+          grep -q '"passed": true' /tmp/wz1942-refine-local.json
       - name: Fixed public browser comparison
         env:
           SHA: ${{ github.sha }}
@@ -56,6 +59,8 @@ jobs:
           test "$ready" = 1
           WZ1942_URL="$URL" WZ1942_OUT='/tmp/wz1942/public' node tools/r3-10/history_1942_preclean_qa.mjs | tee /tmp/wz1942-public.json
           grep -q '"passed": true' /tmp/wz1942-public.json
+          WZ1942_URL="$URL" WZ1942_OUT='/tmp/wz1942/refine-public' node tools/r3-10/history_1940s_refine_qa.mjs | tee /tmp/wz1942-refine-public.json
+          grep -q '"passed": true' /tmp/wz1942-refine-public.json
           echo "$URL" > /tmp/wz1942-public-url.txt
       - name: Upload comparison proof
         uses: actions/upload-artifact@v4
@@ -64,8 +69,12 @@ jobs:
           path: |
             /tmp/wz1942-local.json
             /tmp/wz1942-public.json
+            /tmp/wz1942-refine-local.json
+            /tmp/wz1942-refine-public.json
             /tmp/wz1942-public-url.txt
             /tmp/wz1942/local/*.png
             /tmp/wz1942/public/*.png
+            /tmp/wz1942/refine-local/*.png
+            /tmp/wz1942/refine-public/*.png
           if-no-files-found: error
           retention-days: 30
