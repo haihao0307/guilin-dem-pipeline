@@ -1,0 +1,184 @@
+{
+  "schema": "kaopu-world-water-handoff-contract-result/w01",
+  "status": "pass",
+  "evidenceClass": "official-source-contract plus synthetic CPU continuity and counterexample fixture",
+  "observationRoots": [
+    "FAO-56 soil-water-balance contract",
+    "US-EPA-SWMM continuity-accounting contract",
+    "Node.js synthetic two-field/two-interval fixture; not a hydrologic calibration or Mother runtime"
+  ],
+  "fixtureSha256": "4a7896a73747cd9df7d0932b3221a306cfdbc43e60cc8c0cd87fd582f049b3ba",
+  "summary": {
+    "checks": 17,
+    "passed": 17,
+    "failed": 0,
+    "step1": {
+      "nodeResiduals": {
+        "F1": 0,
+        "F2": 0
+      },
+      "globalResidual": 0,
+      "externalIn": 30,
+      "externalOut": 4.7
+    },
+    "step2": {
+      "nodeResiduals": {
+        "F1": 0,
+        "F2": 0
+      },
+      "globalResidual": 0,
+      "externalIn": 6,
+      "externalOut": 4.999999999999999
+    },
+    "duplicateRainBugCounterfactualResidualM3": 18
+  },
+  "currentBestView": "At a cross-Mother water boundary, exchange immutable directed volume fluxes with one writer, explicit interval, units, source/destination and provenance. Give each source-measure conversion a unique event + interval + spatial-support key and record its process stage separately. Keep forcing depth, storage state, losses, discharge and presentation state separate.",
+  "boundary": "The arithmetic fixture verifies accounting structure only. It does not validate KAOPU rainfall, runoff, infiltration, evapotranspiration, canal routing, field geometry or visual acceptance.",
+  "checks": [
+    {
+      "name": "10 mm over 1000 m2 converts to 10 m3",
+      "pass": true,
+      "detail": {
+        "value": 10
+      }
+    },
+    {
+      "name": "10 mm over 800 m2 converts to 8 m3",
+      "pass": true,
+      "detail": {
+        "value": 8
+      }
+    },
+    {
+      "name": "step 1 node balances close",
+      "pass": true,
+      "detail": {
+        "F1": 0,
+        "F2": 0
+      }
+    },
+    {
+      "name": "step 1 global balance closes",
+      "pass": true,
+      "detail": {
+        "nodeResiduals": {
+          "F1": 0,
+          "F2": 0
+        },
+        "globalResidual": 0,
+        "externalIn": 30,
+        "externalOut": 4.7
+      }
+    },
+    {
+      "name": "step 2 node balances close",
+      "pass": true,
+      "detail": {
+        "F1": 0,
+        "F2": 0
+      }
+    },
+    {
+      "name": "step 2 global balance closes",
+      "pass": true,
+      "detail": {
+        "nodeResiduals": {
+          "F1": 0,
+          "F2": 0
+        },
+        "globalResidual": 0,
+        "externalIn": 6,
+        "externalOut": 4.999999999999999
+      }
+    },
+    {
+      "name": "step 2 initial storage is step 1 final storage",
+      "pass": true,
+      "detail": {
+        "F1": 21.5,
+        "F2": 11.8
+      }
+    },
+    {
+      "name": "one directed internal transfer cancels in global balance",
+      "pass": true,
+      "detail": {
+        "withInternal": 0,
+        "withoutInternal": 0
+      }
+    },
+    {
+      "name": "same rain event and same spatial support cannot be converted twice",
+      "pass": true,
+      "detail": {
+        "expected": "duplicate-source-measure-conversion",
+        "actual": "duplicate-source-measure-conversion"
+      }
+    },
+    {
+      "name": "same rain event on disjoint supports is valid",
+      "pass": true,
+      "detail": {
+        "keys": [
+          "rain-001|t1|support-F1",
+          "rain-001|t1|support-F2"
+        ]
+      }
+    },
+    {
+      "name": "duplicate immutable flux ID is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "duplicate-flux-id",
+        "actual": "duplicate-flux-id"
+      }
+    },
+    {
+      "name": "unauthorized Mother cannot write another stage",
+      "pass": true,
+      "detail": {
+        "expected": "writer-stage-not-authorized",
+        "actual": "writer-stage-not-authorized"
+      }
+    },
+    {
+      "name": "depth unit cannot enter volume ledger without conversion",
+      "pass": true,
+      "detail": {
+        "expected": "ledger-unit-must-be-m3",
+        "actual": "ledger-unit-must-be-m3"
+      }
+    },
+    {
+      "name": "implicit or zero time interval is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "explicit-interval-required",
+        "actual": "explicit-interval-required"
+      }
+    },
+    {
+      "name": "presentation wetness cannot enter mass ledger",
+      "pass": true,
+      "detail": {
+        "expected": "presentation-state-not-mass-flux",
+        "actual": "presentation-state-not-mass-flux"
+      }
+    },
+    {
+      "name": "conversion stage without source measure identity is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "source-measure-key-required",
+        "actual": "source-measure-key-required"
+      }
+    },
+    {
+      "name": "collapsed direct-rain plus derived-runoff bug is rejected before its 18 m3 surplus enters state",
+      "pass": true,
+      "detail": {
+        "counterfactualResidualM3": 18
+      }
+    }
+  ]
+}

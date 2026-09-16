@@ -1,0 +1,30 @@
+{
+  "schema": "kaopu-mother-routing/1",
+  "round": "W01",
+  "status": "prepared-not-delivered-not-acknowledged-not-adopted",
+  "targets": [
+    {
+      "mother": "Weather Mother",
+      "guidance": "Publish forcing event, interval and spatial-support provenance; do not write downstream field storage or presentation state.",
+      "acceptance": "The same forcing support cannot be converted twice without an explicit partition or transformation boundary."
+    },
+    {
+      "mother": "Landscape Mother",
+      "guidance": "Own runoff/canal derivation on declared supports and emit one directed boundary flux per transfer with volume units and one writer.",
+      "acceptance": "Internal transfers cancel globally while source/destination node balances close."
+    },
+    {
+      "mother": "Farmland Mother",
+      "guidance": "Own field storage, serial field transfer, infiltration/evaporation/percolation and discharge as separate terms; consume upstream fluxes without re-authoring them.",
+      "acceptance": "Initial plus inflow minus outflow equals final storage for every field and interval."
+    },
+    {
+      "mother": "Three.js Mother",
+      "guidance": "Treat wetness and water appearance as read-only presentation derived from canonical state; never insert display variables into the mass ledger.",
+      "acceptance": "Presentation changes cannot change physical water totals."
+    }
+  ],
+  "feedback": [],
+  "adoption": false,
+  "productionBranchesModified": false
+}
