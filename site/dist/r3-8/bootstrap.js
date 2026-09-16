@@ -23,7 +23,9 @@ if(window.__WENZHOU_HISTORY_1942===true){
     await new Promise(resolve=>setTimeout(resolve,50));
   }
   const {installHistorical1953ControlLayer}=await import('./history-1953-control-layer.js');
+  const {installHistorical1940sRefine}=await import('./history-1940s-refine.js');
   installHistorical1953ControlLayer();
+  installHistorical1940sRefine();
   await new Promise(resolve=>requestAnimationFrame(resolve));
   const location=document.getElementById('location');
   if(location)location.dispatchEvent(new Event('change',{bubbles:true}));
