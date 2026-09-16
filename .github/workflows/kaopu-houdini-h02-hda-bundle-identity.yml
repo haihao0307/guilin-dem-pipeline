@@ -1,0 +1,32 @@
+name: KAOPU Houdini H02 HDA Bundle Identity Audit
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/houdini_hda_bundle_identity_h02.mjs'
+      - '.github/workflows/kaopu-houdini-h02-hda-bundle-identity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate HDA bundle identity counterexamples
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/houdini_hda_bundle_identity_h02.mjs \
+            houdini_hda_bundle_identity_result_h02.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-houdini-h02-hda-bundle-identity
+          path: houdini_hda_bundle_identity_result_h02.json
+          if-no-files-found: error

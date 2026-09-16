@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu-houdini-hda-bundle-identity-result/h02",
+  "status": "pass",
+  "evidenceClass": "source-contract CPU fixture",
+  "observationRoot": "official SideFX documentation lineage plus synthetic container fixtures; not Houdini runtime",
+  "summary": {
+    "checks": 12,
+    "passed": 12,
+    "failed": 0,
+    "rawLibraryA": "45f0889817252913271128997d4626b41ec2e20ddffaf43dede3db00ef81b54b",
+    "rawLibraryB": "3a06290605c9037fa7c80b05a84576e12bf82b14b347cd4a970b78257e968e1c",
+    "targetDefinitionBundle": "443593acb980d81a5c360af8dd707447af3a6bd2455d6201dd5efbe4cb86c733",
+    "contentsOnly": "010e50df1b55a8cbdfa9df11d3c6ac8fca884513583e3b1e5678741c06d9fde0"
+  },
+  "currentBestView": "Record both transport hash and selected-definition bundle hash. Do not substitute whole-library or Contents-only hashes for the selected definition bundle.",
+  "boundary": "The bundle is conservative exact-definition identity, not semantic equivalence and not proof of deterministic cook output.",
+  "checks": [
+    { "name": "whole library hash changes with packaging or sibling definition", "pass": true },
+    { "name": "target definition bundle stays stable across packaging and sibling change", "pass": true },
+    { "name": "Contents-only hash misses PythonModule change", "pass": true },
+    { "name": "definition bundle catches PythonModule change", "pass": true },
+    { "name": "Contents-only hash misses embedded section change", "pass": true },
+    { "name": "definition bundle catches embedded section change", "pass": true },
+    { "name": "section enumeration order does not change bundle identity", "pass": true },
+    { "name": "fully qualified type participates in bundle identity", "pass": true },
+    { "name": "definition options participate in bundle identity", "pass": true },
+    { "name": "interface contract participates in bundle identity", "pass": true },
+    { "name": "duplicate same-name definitions rejected before hashing", "pass": true },
+    { "name": "duplicate section names rejected", "pass": true }
+  ]
+}
