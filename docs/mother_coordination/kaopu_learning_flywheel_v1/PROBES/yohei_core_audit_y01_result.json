@@ -1,0 +1,61 @@
+{
+  "id": "KAOPU-YOHEI-Y01-20260916",
+  "observed_at_utc": "2026-09-16T04:04:06.223831+00:00",
+  "evidence_class": "synthetic CPU algebra checks; no original-video equivalence",
+  "source": "https://tympanus.net/codrops/2025/02/18/rendering-the-simulation-theory-exploring-fractals-glsl-and-the-nature-of-reality/",
+  "python": "3.13.5",
+  "probe_sha256": "eb3f7d947995d75202a49579e695b543b49680b4511fc1a6f2b5bc8f4d159432",
+  "checks": {
+    "published_inner_loop_has_17_terms": true,
+    "inner_kernel_analytic_gradient_matches": true,
+    "kernel_is_not_zero_mean_on_test_domain": true,
+    "sampled_tail_respects_height_bound": true,
+    "small_amplitude_does_not_force_small_derivatives": true,
+    "radial_dilation_is_chart_translation_not_field_identity": true,
+    "log_chart_derivative_amplifies_near_origin": true,
+    "audit_policy_rejects_singular_points": true,
+    "ray_expression_is_not_general_direction_negation": true,
+    "physical_segment_transmittance_is_partition_invariant": true,
+    "fixed_alpha_per_sample_fails_same_volume_test": true,
+    "same_process_same_inputs_repeat_exactly": true
+  },
+  "passed": 12,
+  "total": 12,
+  "metrics": {
+    "scales": [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0, 2048.0, 4096.0, 8192.0, 16384.0, 32768.0, 65536.0],
+    "analytic_gradient_max_abs_error_vs_central_difference": 2.767728268793235e-10,
+    "unwarped_torus_means": {
+      "n32": 0.6556965458313673,
+      "n64": 0.6556965458313673,
+      "difference": 0.0
+    },
+    "eight_to_seventeen_terms": {
+      "height_tail_abs_bound": 0.0077972412109375,
+      "mean_tail_on_test_torus": 0.005112624129025706
+    },
+    "one_dimensional_counterexample": {
+      "N8": {"height_abs_bound": 1.9921875, "slope_at_zero": 8, "second_derivative_triangle_bound": 255},
+      "N17": {"height_abs_bound": 1.9999847412109375, "slope_at_zero": 17, "second_derivative_triangle_bound": 131071},
+      "highest_term_height_amplitude": 1.52587890625e-05,
+      "highest_term_slope_amplitude": 1,
+      "highest_term_second_derivative_amplitude": 65536
+    },
+    "doubling_radius_chart_shift_error": 0.0,
+    "log_radius_gradient_norm_at_selected_radii": [1.4426950408889634, 144.26950408889633, 14426.950408889636],
+    "componentwise_d_divide_negative_d": [-1.0, -1.0, -1.0],
+    "homogeneous_volume": {
+      "sigma_per_metre": 0.37,
+      "length_m": 3.0,
+      "expected_T": 0.3295589610751891,
+      "step_counts_T": {"8": 0.329558961075189, "16": 0.32955896107518895, "32": 0.3295589610751892, "64": 0.32955896107519017},
+      "incorrect_fixed_alpha_T": {"8": 0.6634204312890623, "16": 0.44012666865176536, "32": 0.19371148445850087, "64": 0.03752413921111602}
+    },
+    "source_loop_cost_estimate_not_gpu_benchmark": {
+      "outer_iterations_assuming_explicit_i_zero": 119,
+      "inner_terms_per_outer": 17,
+      "inner_terms_per_pixel": 2023,
+      "inner_terms_per_1920x1080_frame": 4194892800
+    }
+  },
+  "not_tested": ["GLSL compilation", "GPU rendering", "browser/public URL", "iPhone performance", "#261 exact source", "cloud artwork equivalence", "geological validity", "production bug cause", "Mother adoption", "user visual acceptance"]
+}
