@@ -1,0 +1,32 @@
+name: KAOPU Landscape Y03 Transfer Audit
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_landscape_geometry_transfer_audit_y03.mjs'
+      - '.github/workflows/kaopu-landscape-y03-transfer-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit locked Landscape geometry field
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_landscape_geometry_transfer_audit_y03.mjs \
+            landscape_geometry_transfer_audit_result_y03.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-landscape-y03-transfer-audit
+          path: landscape_geometry_transfer_audit_result_y03.json
+          if-no-files-found: error
