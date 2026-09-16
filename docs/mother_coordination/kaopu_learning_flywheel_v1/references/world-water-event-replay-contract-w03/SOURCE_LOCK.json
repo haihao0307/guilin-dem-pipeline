@@ -1,0 +1,46 @@
+{
+  "schema": "kaopu-source-lock/1",
+  "round": "W03",
+  "retrievedAt": "2026-09-16T23:42:35Z",
+  "sources": [
+    {
+      "id": "CLOUDEVENTS-1.0.2",
+      "publisher": "Cloud Native Computing Foundation CloudEvents project",
+      "title": "CloudEvents Specification 1.0.2",
+      "repository": "cloudevents/spec",
+      "ref": "v1.0.2",
+      "path": "cloudevents/spec.md",
+      "gitBlobSha": "03fa928fa7457c54918425db7f1d5487bb95fe3e",
+      "url": "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md",
+      "lockedClaims": [
+        "A producer must make source plus id unique for each distinct event.",
+        "A resent duplicate may keep the same id and a consumer may treat identical source and id as duplicates.",
+        "The optional time attribute describes when the occurrence happened, subject to a source-consistent fallback when that time is unavailable."
+      ],
+      "doesNotClaim": [
+        "exactly-once transport",
+        "payload hashes",
+        "revision or supersession semantics",
+        "deterministic domain-state replay"
+      ]
+    },
+    {
+      "id": "OGC-SENSORTHINGS-1.1-18-088",
+      "publisher": "Open Geospatial Consortium",
+      "title": "OGC SensorThings API Part 1: Sensing Version 1.1",
+      "standardNumber": "OGC 18-088",
+      "url": "https://docs.ogc.org/is/18-088/18-088.html",
+      "lockedClaims": [
+        "phenomenonTime is the instant or period when an Observation happens.",
+        "resultTime is the time when the Observation result was generated.",
+        "The two fields are separate and may therefore support distinct occurrence and result-generation chronology."
+      ],
+      "doesNotClaim": [
+        "arrival-order mutation",
+        "water-ledger correction policy",
+        "checkpoint retention"
+      ]
+    }
+  ],
+  "independenceNote": "CloudEvents identity semantics and OGC observation-time semantics are distinct official documentation roots. The Node.js fixture is a reproducible KAOPU derivation, not an independent physical or transport observation."
+}

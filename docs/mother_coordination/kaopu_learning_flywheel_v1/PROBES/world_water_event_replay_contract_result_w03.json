@@ -1,0 +1,184 @@
+{
+  "schema": "kaopu-world-water-event-replay-contract-result/w03",
+  "status": "pass",
+  "evidenceClass": "official CloudEvents/OGC time semantics plus synthetic CPU event-ledger counterexamples",
+  "observationRoots": [
+    "CNCF CloudEvents 1.0.2 source-plus-id duplicate identity semantics",
+    "OGC SensorThings API 1.1 phenomenonTime and resultTime semantics",
+    "Node.js nonlinear bounded-storage replay fixture; reproducible derivation, not hydrologic runtime evidence"
+  ],
+  "fixtureSha256": "909860276e0c6dda82575d7a97b84f008cc8837a07e898d0b2536ee86bfbf8c9",
+  "summary": {
+    "checks": 17,
+    "passed": 17,
+    "failed": 0,
+    "orderedFinalStorageM3": 108,
+    "orderedOverflowM3": 6,
+    "directLateAppendStorageM3": 111,
+    "revisedOverflowM3": 5
+  },
+  "currentBestView": "Use source-plus-id as immutable delivery identity, bind a payload hash, keep phenomenon interval distinct from result/arrival time, treat exact redelivery as a no-op, and express corrections as explicit acyclic supersession. Late unique events and revisions trigger deterministic replay from a checkpoint; they are never appended to current nonlinear state or added beside the value they replace.",
+  "boundary": "This verifies event-ledger and replay semantics only. It does not provide exactly-once transport, choose checkpoint retention, validate real hydrology, execute a Mother runtime, or prove adoption.",
+  "checks": [
+    {
+      "name": "phenomenon-time replay reaches capacity-safe final state",
+      "pass": true,
+      "detail": {
+        "storageM3": 108,
+        "capacityM3": 112,
+        "overflowM3": 6
+      }
+    },
+    {
+      "name": "arrival order does not change canonical replay",
+      "pass": true,
+      "detail": {
+        "ordered": {
+          "storageM3": 108,
+          "capacityM3": 112,
+          "overflowM3": 6
+        },
+        "unordered": {
+          "storageM3": 108,
+          "capacityM3": 112,
+          "overflowM3": 6
+        }
+      }
+    },
+    {
+      "name": "identical redelivery is an idempotent no-op",
+      "pass": true,
+      "detail": {
+        "final": {
+          "storageM3": 108,
+          "capacityM3": 112,
+          "overflowM3": 6
+        },
+        "duplicateCount": 1
+      }
+    },
+    {
+      "name": "late event requires replay because direct append changes nonlinear state",
+      "pass": true,
+      "detail": {
+        "directLateAppend": {
+          "storageM3": 111,
+          "capacityM3": 112,
+          "overflowM3": 3
+        },
+        "replayed": {
+          "storageM3": 108,
+          "capacityM3": 112,
+          "overflowM3": 6
+        }
+      }
+    },
+    {
+      "name": "explicit revision replaces rather than adds to predecessor",
+      "pass": true,
+      "detail": {
+        "final": {
+          "storageM3": 108,
+          "capacityM3": 112,
+          "overflowM3": 5
+        },
+        "activeIds": [
+          "rain-000",
+          "rain-001",
+          "rain-002-r2",
+          "runoff-001"
+        ]
+      }
+    },
+    {
+      "name": "report event is retained as evidence but cannot mutate storage",
+      "pass": true,
+      "detail": {
+        "identityCount": 6,
+        "activeCount": 4
+      }
+    },
+    {
+      "name": "correction may arrive before predecessor and resolves after ledger validation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "same id from a distinct source is a distinct identity",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "same source and id with changed payload is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "identity-payload-collision",
+        "actual": "identity-payload-collision"
+      }
+    },
+    {
+      "name": "payload tampering is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "payload-hash-mismatch",
+        "actual": "payload-hash-mismatch"
+      }
+    },
+    {
+      "name": "missing superseded event fails closed",
+      "pass": true,
+      "detail": {
+        "expected": "missing-superseded-event",
+        "actual": "missing-superseded-event"
+      }
+    },
+    {
+      "name": "revision must strictly increase",
+      "pass": true,
+      "detail": {
+        "expected": "revision-must-increase",
+        "actual": "revision-must-increase"
+      }
+    },
+    {
+      "name": "revision scope cannot silently change interval",
+      "pass": true,
+      "detail": {
+        "expected": "revision-scope-mismatch",
+        "actual": "revision-scope-mismatch"
+      }
+    },
+    {
+      "name": "two successors of one event are rejected",
+      "pass": true,
+      "detail": {
+        "expected": "supersession-fork",
+        "actual": "supersession-fork"
+      }
+    },
+    {
+      "name": "supersession cycles are rejected",
+      "pass": true,
+      "detail": {
+        "expected": "revision-must-increase",
+        "actual": "revision-must-increase"
+      }
+    },
+    {
+      "name": "zero-duration phenomenon interval is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "valid-phenomenon-interval-required",
+        "actual": "valid-phenomenon-interval-required"
+      }
+    },
+    {
+      "name": "mutation must carry finite volume",
+      "pass": true,
+      "detail": {
+        "expected": "finite-mutation-quantity-required",
+        "actual": "finite-mutation-quantity-required"
+      }
+    }
+  ]
+}

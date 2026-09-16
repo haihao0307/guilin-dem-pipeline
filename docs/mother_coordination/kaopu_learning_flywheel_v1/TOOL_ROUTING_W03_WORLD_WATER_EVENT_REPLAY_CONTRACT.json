@@ -1,0 +1,20 @@
+{
+  "schema": "kaopu-tool-routing/1",
+  "round": "W03",
+  "status": "prepared-not-adopted",
+  "routes": [
+    {
+      "tool": "Node.js event-ledger replay probe",
+      "purpose": "Verify scoped identity, payload collision rejection, duplicate no-op, supersession and nonlinear late-event replay",
+      "allowedClaim": "W03 synthetic event-ledger contracts and counterexamples are reproducible",
+      "forbiddenClaim": "exactly-once transport, durable recovery or a Mother runtime has been validated"
+    },
+    {
+      "tool": "Mother durable target runtime",
+      "purpose": "Test atomic ledger/checkpoint recovery and deterministic state publication",
+      "allowedClaim": "none until executed",
+      "forbiddenClaim": "prepared routing equals adoption"
+    }
+  ],
+  "toolProhibitions": "No withdrawn tool route is restored and no production asset generation is authorized."
+}

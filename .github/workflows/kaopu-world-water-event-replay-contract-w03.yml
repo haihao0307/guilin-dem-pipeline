@@ -1,0 +1,36 @@
+name: KAOPU W03 world water event replay contract
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/world_water_event_replay_contract_w03.mjs'
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/references/world-water-event-replay-contract-w03/SOURCE_LOCK.json'
+      - '.github/workflows/kaopu-world-water-event-replay-contract-w03.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run W03 event-ledger replay probe
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/world_water_event_replay_contract_w03.mjs /tmp/world_water_event_replay_contract_result_w03.json
+          diff -u \
+            <(jq -S . docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/world_water_event_replay_contract_result_w03.json) \
+            <(jq -S . /tmp/world_water_event_replay_contract_result_w03.json)
+      - name: Upload exact result
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-w03-world-water-event-replay-contract
+          path: /tmp/world_water_event_replay_contract_result_w03.json
+          if-no-files-found: error
