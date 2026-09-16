@@ -1,0 +1,188 @@
+name: Ocean Mother R018.8.1 browser compatibility release
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r0188-wave-deep-restore
+    paths:
+      - .github/workflows/ocean-r0188-browser-compat-release.yml
+      - ocean-mother/tools/patch_r0188_browser_compat.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-r0188-browser-compat-release
+  cancel-in-progress: true
+
+jobs:
+  rebuild-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild the byte-frozen R018.8 base
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0188/v001 /tmp/ocean-r0188/base dist/ocean-mother/island-r018-r0188 evidence
+          base64 -d tools/build_ocean_r0188.py.xz.b64 | xz -d > /tmp/ocean-r0188/build_ocean_r0188.py
+          python3 -m py_compile /tmp/ocean-r0188/build_ocean_r0188.py
+          cat tools/ocean_v001_source.01.b64 tools/ocean_v001_source.02.b64 tools/ocean_v001_source.03.b64 tools/ocean_v001_source.04.b64 | base64 -d > /tmp/ocean-r0188/ocean_v001_source.tar.xz
+          echo '01b987c9d6764562f6fce9a21ddf5aaef5540cc14e0853031a519e442a8b570c  /tmp/ocean-r0188/ocean_v001_source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/ocean-r0188/ocean_v001_source.tar.xz -C /tmp/ocean-r0188/v001
+          git fetch origin gh-pages
+          git show origin/gh-pages:ocean-mother/island-r018/index.html > /tmp/ocean-r0188/R018.7.html
+          test "$(git hash-object /tmp/ocean-r0188/R018.7.html)" = '674fb6ffb85b70e0950035a357a1a3e0b7e3a3e3'
+          python3 /tmp/ocean-r0188/build_ocean_r0188.py \
+            --baseline /tmp/ocean-r0188/R018.7.html \
+            --v001 /tmp/ocean-r0188/v001 \
+            --output /tmp/ocean-r0188/base/index.html \
+            --report evidence/R0188_BASE_BUILD_IDENTITY.json
+          echo '91c61f19809ac6154220a0716ba5a3f4f7069e5ae537fa930d5d96624c7be2f3  /tmp/ocean-r0188/base/index.html' | sha256sum -c -
+
+      - name: Apply the deterministic browser compatibility repair
+        run: |
+          set -euo pipefail
+          python3 ocean-mother/tools/patch_r0188_browser_compat.py \
+            --input /tmp/ocean-r0188/base/index.html \
+            --output dist/ocean-mother/island-r018-r0188/index.html \
+            --receipt evidence/R0188_BROWSER_COMPAT_RECEIPT.json
+          cp dist/ocean-mother/island-r018-r0188/index.html dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8.1_Direct_Open.html
+
+      - name: Verify source identity, syntax and zero-asset policy
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          page=Path('dist/ocean-mother/island-r018-r0188/index.html')
+          direct=Path('dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8.1_Direct_Open.html')
+          receipt=json.loads(Path('evidence/R0188_BROWSER_COMPAT_RECEIPT.json').read_text(encoding='utf-8'))
+          text=page.read_text(encoding='utf-8')
+          assert receipt['sourceSha256']=='91c61f19809ac6154220a0716ba5a3f4f7069e5ae537fa930d5d96624c7be2f3'
+          assert receipt['version']=='0.3.8.1-island-r018-browser-compat'
+          assert receipt['buildId']=='island-r018-wave-refinement-link-repair'
+          assert hashlib.sha256(page.read_bytes()).hexdigest()==receipt['outputSha256']
+          assert page.read_bytes()==direct.read_bytes()
+          assert receipt['visualFieldMutation'] is False
+          assert receipt['shaderTiers']==['full','full-link-safe','compat','safe']
+          required=['R018.8.1','const FRAG_COMPAT=','const FRAG_SAFE=','window.__OCEAN_SHADER_DIAGNOSTICS__','Program link failed without a driver log','Math.max(0,Math.min(.05']
+          for marker in required: assert marker in text,marker
+          forbidden=re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
+          assert not forbidden,forbidden[:8]
+          match=re.search(r'<script>\n\(\(\)=>\{(.*)\}\)\(\);\n</script>',text,re.S)
+          assert match,'outer application script not found'
+          Path('/tmp/ocean-r0188/outer-app.js').write_text('(()=>{'+match.group(1)+'})();\n',encoding='utf-8')
+          PY
+          node --check /tmp/ocean-r0188/outer-app.js
+
+      - name: Verify all shader tiers link in a real WebGL2 browser
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          cat > /tmp/ocean-r0188/check_shader_tiers.py <<'PY'
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          import json,re,shutil
+
+          text=Path('dist/ocean-mother/island-r018-r0188/index.html').read_text(encoding='utf-8')
+          vert=re.search(r'const VERT=`(.*?)`;\n',text,re.S).group(1)
+          frag=re.search(r'const FRAG=`(.*?)`;\n',text,re.S).group(1)
+          vert_safe=vert.replace('out vec2 vUv;\n','').replace('vUv=aPosition*.5+.5;','')
+          frag_link_safe=frag.replace('in vec2 vUv;\n','')
+          compat=(frag_link_safe
+              .replace('for(int i=0;i<5;i++)','for(int i=0;i<4;i++)')
+              .replace('for(int i=0;i<3;i++){','for(int i=0;i<2;i++){')
+              .replace('for(int i=0;i<82;i++){','for(int i=0;i<52;i++){')
+              .replace('for(int i=0;i<7;i++){','for(int i=0;i<4;i++){')
+              .replace('const int STEPS=22;','const int STEPS=8;'))
+          safe=(frag_link_safe
+              .replace('for(int i=0;i<5;i++)','for(int i=0;i<3;i++)')
+              .replace('for(int i=0;i<3;i++){','for(int i=0;i<1;i++){')
+              .replace('for(int i=0;i<2;i++){','for(int i=0;i<1;i++){')
+              .replace('for(int i=0;i<82;i++){','for(int i=0;i<34;i++){')
+              .replace('for(int i=0;i<7;i++){','for(int i=0;i<3;i++){')
+              .replace('const int STEPS=22;','const int STEPS=1;')
+              .replace('float curl=curlDensity(p);\n    float spray=sprayDensity(p);\n    float smoke=smokeDensityAt(p);\n    float dens=curl*.22+spray*.085+smoke*.084;','float curl=0.,spray=0.,smoke=0.,dens=0.;'))
+          tiers={'full':(vert,frag),'full-link-safe':(vert_safe,frag_link_safe),'compat':(vert_safe,compat),'safe':(vert_safe,safe)}
+          js='''({vert,frag})=>{const c=document.createElement('canvas');const gl=c.getContext('webgl2');if(!gl)return {webgl2:false};const ext=gl.getExtension('WEBGL_debug_renderer_info');const compile=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return {s,ok:gl.getShaderParameter(s,gl.COMPILE_STATUS),log:gl.getShaderInfoLog(s)||''}};const v=compile(gl.VERTEX_SHADER,vert),f=compile(gl.FRAGMENT_SHADER,frag);let linked=false,plog='';if(v.ok&&f.ok){const p=gl.createProgram();gl.attachShader(p,v.s);gl.attachShader(p,f.s);gl.bindAttribLocation(p,0,'aPosition');gl.linkProgram(p);linked=gl.getProgramParameter(p,gl.LINK_STATUS);plog=gl.getProgramInfoLog(p)||'';}return {webgl2:true,renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),vok:v.ok,vlog:v.log,fok:f.ok,flog:f.log,linked,plog,glError:gl.getError()};}'''
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium')
+          assert chrome,'Chrome or Chromium was not found'
+          report={'format':'ocean-r0188-browser-compat-link-qa','passed':False,'tiers':{}}
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page();page.set_content('<!doctype html><canvas></canvas>')
+              for name,(vs,fs) in tiers.items():
+                  result=page.evaluate(js,{'vert':vs,'frag':fs})
+                  report['tiers'][name]=result
+                  assert result['webgl2'],result
+                  assert result['vok'] and result['fok'] and result['linked'],result
+              browser.close()
+          report['passed']=True
+          Path('evidence/R0188_BROWSER_COMPAT_LINK_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          xvfb-run -a python3 /tmp/ocean-r0188/check_shader_tiers.py
+
+      - name: Publish R018.8.1 to the existing direct-open route
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r0188-pages
+          git worktree add --detach /tmp/ocean-r0188-pages origin/gh-pages
+          cd /tmp/ocean-r0188-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/island-r018-r0188
+          mkdir -p ocean-mother/island-r018-r0188
+          cp "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0188/index.html" ocean-mother/island-r018-r0188/index.html
+          cp "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8.1_Direct_Open.html" ocean-mother/island-r018-r0188/Ocean_Mother_R018.8.1_Direct_Open.html
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BASE_BUILD_IDENTITY.json" ocean-mother/island-r018-r0188/R0188_BASE_BUILD_IDENTITY.json
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BROWSER_COMPAT_RECEIPT.json" ocean-mother/island-r018-r0188/R0188_BROWSER_COMPAT_RECEIPT.json
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BROWSER_COMPAT_LINK_QA.json" ocean-mother/island-r018-r0188/R0188_BROWSER_COMPAT_LINK_QA.json
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/island-r018-r0188
+          git commit -m "publish(ocean): R018.8.1 Windows shader link repair" || true
+          git push origin HEAD:gh-pages
+
+      - name: Verify the public file is byte-identical
+        run: |
+          set -euo pipefail
+          LOCAL=dist/ocean-mother/island-r018-r0188/index.html
+          URL=https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0188/index.html
+          EXPECTED=$(python3 - <<'PY'
+          import json
+          print(json.load(open('evidence/R0188_BROWSER_COMPAT_RECEIPT.json'))['outputSha256'])
+          PY
+          )
+          for n in $(seq 1 45); do
+            if curl -fsSL --retry 2 "$URL?compat=${GITHUB_SHA}-${n}" -o /tmp/r0188-public.html; then
+              ACTUAL=$(sha256sum /tmp/r0188-public.html | awk '{print $1}')
+              if [ "$ACTUAL" = "$EXPECTED" ]; then break; fi
+            fi
+            sleep 8
+          done
+          test "$(sha256sum /tmp/r0188-public.html | awk '{print $1}')" = "$EXPECTED"
+          cmp "$LOCAL" /tmp/r0188-public.html
+
+      - name: Upload the repaired single-file workbench and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.8.1_Browser_Compat
+          path: |
+            dist/ocean-mother/island-r018-r0188/index.html
+            dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8.1_Direct_Open.html
+            evidence/R0188_BASE_BUILD_IDENTITY.json
+            evidence/R0188_BROWSER_COMPAT_RECEIPT.json
+            evidence/R0188_BROWSER_COMPAT_LINK_QA.json
+          if-no-files-found: error
+          retention-days: 90
