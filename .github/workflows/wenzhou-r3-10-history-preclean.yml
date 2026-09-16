@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - feature/wenzhou-r3-8-overlay-transform-contract-20260913
+      - feature/wenzhou-map-mother-1940s-refine-r27-20260916
     paths:
       - 'records/R3_10/HISTORICAL_1942_PRECLEAN_TRIGGER'
 
@@ -27,6 +28,7 @@ jobs:
           node --check site/dist/r3-8/history-1942-entry.js
           node --check site/dist/r3-8/history-1942-shell.js
           node --check site/dist/r3-8/history-1953-control-layer.js
+          node --check site/dist/r3-8/history-1940s-refine.js
           node --check tools/r3-10/history_1942_preclean_qa.mjs
       - name: Install Chromium
         run: |
