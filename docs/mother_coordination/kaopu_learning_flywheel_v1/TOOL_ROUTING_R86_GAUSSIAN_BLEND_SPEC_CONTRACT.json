@@ -1,0 +1,49 @@
+{
+  "schema": "kaopu-tool-routing/r86",
+  "status": "candidate-runtime-specific-staged-replay",
+  "tool": "Three.js r186 GaussianSplat Half replay plus normative WebGL/OpenGL ES contract audit",
+  "inherits": "TOOL_ROUTING_R85_GAUSSIAN_DECODED_STAGE_TARGET.json",
+  "route": {
+    "allowedCandidateUse": "Use R85 as a narrow regression fixture for its exact runtime. Use R86 to prevent standards claims that exceed the normative precision contract.",
+    "requiredEvidenceForNextRoot": [
+      "unchanged R85 matrix identity",
+      "browser and version",
+      "WebGL vendor and renderer",
+      "hardware GPU and driver/runtime",
+      "extension set",
+      "blend path",
+      "output format",
+      "prefix-1 and prefix-2 exact bits",
+      "repeated-frame identity"
+    ],
+    "requiredCacheAndReceiptFields": [
+      "Three.js revision",
+      "renderer/backend identity",
+      "driver/runtime",
+      "blend path",
+      "output buffer type",
+      "raw SPZ bytes",
+      "decoded attributes",
+      "camera and footprint",
+      "draw order",
+      "replay model version"
+    ],
+    "hold": "Do not authorize cross-backend bit-exact reuse from format support, extension presence or conformance alone. Do not count another SwiftShader execution as an independent runtime root.",
+    "forbiddenClaims": [
+      "WebGL mandates f32-staged",
+      "RGBA16F mandates half arithmetic",
+      "float renderability implies bitwise portability",
+      "conformance tolerance authorizes exact cache reuse",
+      "hidden driver instructions observed",
+      "WebGPU or hardware GPU acceptance",
+      "SPZ is lossless Canonical Truth",
+      "production-wide adoption"
+    ]
+  },
+  "normativeAuditWorkflowRun": 35004160706,
+  "normativeAuditArtifactId": 10410892462,
+  "normativeAuditArtifactSha256": "08676adc3bde04bc012ae66e675f379b6637a44d0931fe638439bf0f094c8a7d",
+  "firstTierExpertCalled": false,
+  "productionMutationAllowed": false,
+  "motherAdoptionAcknowledged": false
+}
