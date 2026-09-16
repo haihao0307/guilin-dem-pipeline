@@ -1,0 +1,42 @@
+(function install(root){
+'use strict';
+const VERSION='FARMLAND_R042_TERRAIN_HYDRO_PARCEL_GRAPH_20260916';
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const mix=(a,b,t)=>a+(b-a)*t;
+function sm(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+function hash(x,z){const v=Math.sin(x*127.1+z*311.7)*43758.5453123;return v-Math.floor(v);}
+function rng(seed=420916){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function noise(x,z){const i=Math.floor(x),j=Math.floor(z),u=sm(0,1,x-i),v=sm(0,1,z-j);return mix(mix(hash(i,j),hash(i+1,j),u),mix(hash(i,j+1),hash(i+1,j+1),u),v);}
+function ridged(x,z){return 1-Math.abs(noise(x,z)*2-1);}
+const R=rng();
+
+// Independent multiscale coordinate field distilled from Xiaoma's reading of
+// Yohei Nishitsuji's Macroscopic microscope: fixed world coordinates,
+// dyadic scales, decreasing amplitude. It modulates spacing and curvature;
+// it never defines parcel topology by itself.
+function microscopeKernel(u,v,w){return Math.cos(Math.cos(w)*Math.cos(u)+Math.cos(v)*Math.cos(v)+Math.cos(v)*Math.cos(u));}
+function microscopeField(x,z,phase=0,levels=4,base=.005){let s=0,a=1,n=0;const u=(x+.17*z)*base+phase,v=(z-.08*x)*base*1.12-phase*.7,w=(x+z)*base*.68+phase*1.37;for(let j=0;j<levels;j++){const k=2**j;s+=a*microscopeKernel(u*k,v*k,w*k);n+=a;a*=.5;}return s/(n||1);}
+function geomDetail(x,z){let qx=x*.006,qz=z*.006,s=0,a=.34;for(let i=0;i<5;i++){const k=2**i;s+=(noise(qx*k,qz*k)-.5)*a;a*=.52;}return s;}
+function fineDetail(x,z){let qx=x*.018,qz=z*.018,s=0,a=.55;for(let i=0;i<5;i++){const k=2**i;s+=(noise(qx*k,qz*k)-.5)*a;a*=.48;}return s;}
+
+function signedArea(poly){let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p[0]*q[1]-q[0]*p[1];}return a*.5;}
+function area(poly){return Math.abs(signedArea(poly));}
+function centroid(poly){let a=0,cx=0,cz=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],c=p[0]*q[1]-q[0]*p[1];a+=c;cx+=(p[0]+q[0])*c;cz+=(p[1]+q[1])*c;}a*=.5;if(Math.abs(a)<1e-9)return poly.reduce((s,p)=>[s[0]+p[0]/poly.length,s[1]+p[1]/poly.length],[0,0]);return[cx/(6*a),cz/(6*a)];}
+function pointInPoly(x,z,p){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const xi=p[i][0],zi=p[i][1],xj=p[j][0],zj=p[j][1];if(((zi>z)!=(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi+1e-12)+xi))c=!c;}return c;}
+function dedupePoly(poly,eps=1e-7){const out=[];for(const p of poly){const q=out[out.length-1];if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>eps)out.push(p);}if(out.length>2&&Math.hypot(out[0][0]-out.at(-1)[0],out[0][1]-out.at(-1)[1])<eps)out.pop();return out;}
+function bbox(poly){let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity;for(const p of poly){minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);minz=Math.min(minz,p[1]);maxz=Math.max(maxz,p[1]);}return{minx,maxx,minz,maxz,w:maxx-minx,h:maxz-minz};}
+function clipHalfPlane(poly,nx,nz,c,keepLess){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c,ina=keepLess?fa<=1e-9:fa>=-1e-9,inb=keepLess?fb<=1e-9:fb>=-1e-9;if(ina)out.push(a);if(ina!==inb){const t=fa/(fa-fb);out.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}return dedupePoly(out);}
+
+const PLAIN={xmin:-128,xmax:128,zmin:18,zmax:128};
+function warpPoint(x,z){const mx=Math.sin(Math.PI*(x-PLAIN.xmin)/(PLAIN.xmax-PLAIN.xmin)),mz=Math.sin(Math.PI*(z-PLAIN.zmin)/(PLAIN.zmax-PLAIN.zmin)),mask=Math.max(0,mx*mz);const wx=mask*(1.95*microscopeField(x,z,.31,4,.0046)+.78*Math.sin(z*.027)+.34*Math.sin((x+z)*.038)),wz=mask*(1.08*microscopeField(x,z,1.73,4,.0051)+.28*Math.sin(x*.031));return[x+wx,z+wz];}
+function densifyWarpPolygon(poly,spacing=4.2){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/spacing));for(let q=0;q<n;q++){const t=q/n;out.push(warpPoint(mix(a[0],b[0],t),mix(a[1],b[1],t)));}}return dedupePoly(out,1e-5);}
+
+// Agricultural parcels are faces of a constraint graph, not literal cells.
+// Four contiguous macro management zones are recursively split by bounded
+// lines whose orientation follows aspect ratio, access direction and a
+// fixed multiscale field. This keeps T-junctions and varied parcel sizes.
+const macroCuts=[PLAIN.xmin,-68,-8,58,PLAIN.xmax];
+const latentBundSegments=[];
+function lineSegmentInPoly(poly,nx,nz,c){const hits=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c;if(Math.abs(fa)<1e-8)hits.push(a);if(fa*fb<0){const t=fa/(fa-fb);hits.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}const uniq=[];for(const h of hits)if(!uniq.some(q=>Math.hypot(q[0]-h[0],q[1]-h[1])<1e-6))uniq.push(h);if(uniq.length<2)return null;let best=[uniq[0],uniq[1]],d=0;for(let i=0;i<uniq.length;i++)for(let j=i+1;j<uniq.length;j++){const dd=Math.hypot(uniq[i][0]-uniq[j][0],uniq[i][1]-uniq[j][1]);if(dd>d){d=dd;best=[uniq[i],uniq[j]];}}return best;}
+function subdivideParcel(poly,depth,phase,out){const A=area(poly),b=bbox(poly),c=centroid(poly),target=205+205*((microscopeField(c[0],c[1],phase,4,.0062)+1)*.5);if(A<=target||depth>=9){out.push(poly);return;}let theta;if(b.w>b.h*1.42)theta=0+(R()-.5)*.38;else if(b.h>b.w*1.42)theta=Math.PI/2+(R()-.5)*.34;else theta=((depth+Math.floor(Math.abs(c[0])/27))%2?Math.PI/2:0)+(R()-.5)*.48;const nx=Math.cos(theta),nz=Math.sin(theta),proj=poly.map(p=>nx*p[0]+nz*p[1]),lo=Math.min(...proj),hi=Math.max(...proj),bias=.42+.16*R()+.035*microscopeField(c[0],c[1],phase+2.1,3,.009),ratio=clamp(bias,.34,.66),cut=lo+(hi-lo)*ratio,a=clipHalfPlane(poly,nx,nz,cut,true),d=clipHalfPlane(poly,nx,nz,cut,false);if(a.length<3||d.length<3||area(a)<82||area(d)<82){out.push(poly);return;}const seg=lineSegmentInPoly(poly,nx,nz,cut);if(seg)latentBundSegments.push({a:seg[0],b:seg[1],kind:'internal'});subdivideParcel(a,depth+1,phase+.73,out);subdivideParcel(d,depth+1,phase+1.19,out);}
+function buildPlainFields(){const latent=[];latentBundSegments.push({a:[PLAIN.xmin,PLAIN.zmin],b:[PLAIN.xmax,PLAIN.zmin],kind:'outer'},{a:[PLAIN.xmax,PLAIN.zmin],b:[PLAIN.xmax,PLAIN.zmax],kind:'outer'},{a:[PLAIN.xmax,PLAIN.zmax],b:[PLAIN.xmin,PLAIN.zmax],kind:'outer'},{a:[PLAIN.xmin,PLAIN.zmax],b:[PLAIN.xmin,PLAIN.zmin],kind:'outer'});for(let i=1;i<macroCuts.length-1;i++)latentBundSegments.push({a:[macroCuts[i],PLAIN.zmin],b:[macroCuts[i],PLAIN.zmax],kind:'major'});for(let i=0;i<macroCuts.length-
