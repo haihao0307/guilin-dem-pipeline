@@ -1,0 +1,312 @@
+{
+  "schema": "kaopu-landscape-y03-transfer-audit/3",
+  "date": "2026-09-16",
+  "question": "Does PR #79 current head close the Y01/T03 anchor, mean, derivative and periodic-seam transfer gates?",
+  "source": {
+    "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/83d3649728e1eb2c21c995f42e9bb0026c20a464/workbenches/landscape-microscope-geometry-r1/index.html",
+    "httpStatus": 200,
+    "bytes": 20500,
+    "sha256": "1e7404a272b1887908030743d83eea17f63c491ce4c62211dfb1313882b24c52",
+    "expectedSha256": "1e7404a272b1887908030743d83eea17f63c491ce4c62211dfb1313882b24c52"
+  },
+  "currentIntegratedHead": {
+    "commit": "21861af63591d42bb84b9a88e00ef645ffc55b76",
+    "source": {
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/21861af63591d42bb84b9a88e00ef645ffc55b76/workbenches/landscape-surface-r5-k2-geometry-r1/index.html",
+      "httpStatus": 200,
+      "bytes": 91777,
+      "sha256": "36ca41019aaa9f05b027a9129d7a531750254b29625ec2b896cd29ec2cb8f7ec"
+    },
+    "runtimeQa": {
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/21861af63591d42bb84b9a88e00ef645ffc55b76/workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json",
+      "httpStatus": 200,
+      "bytes": 1731,
+      "sha256": "b7d16e5d56913875d6cd124a3968bf6c211cdf20625823332c9fdf2cf4eced43"
+    },
+    "nonPeriodicHarmonic": {
+      "expression": "Math.sin(th*2.3+y*.07)",
+      "present": true
+    },
+    "claimedPeriodicReplacement": {
+      "expression": "Math.sin(th*2+y*.07)",
+      "present": false
+    },
+    "qaMetrics": {
+      "vertexCount": 310074,
+      "clippedVertexCount": 199324,
+      "clippedVertexRatio": 0.6428271960886756,
+      "clippedVertexPercent": 64.28271960886755,
+      "protectedVertexCount": 53492,
+      "protectedDriftCount": 0,
+      "triangleFlipCount": 0,
+      "requestedAmplitudeM": 0.22,
+      "effectiveAmplitudeM": 0.22,
+      "requestedLayers": 6,
+      "effectiveLayers": 2,
+      "maxDisplacementM": 0.040518965721130375,
+      "rmsDisplacementM": 0.007719881257748405,
+      "maxNormalAngleDeg": 11.910635606573928,
+      "geometryFieldCoupled": false,
+      "visualApproved": false,
+      "productionReady": false,
+      "hasMeanMetric": false,
+      "hasDerivativeMetric": false
+    }
+  },
+  "lockedImplementation": {
+    "vertices": 30186,
+    "triangles": 60368,
+    "octaveMeans": [
+      0.800879655775252,
+      0.5740849163514019,
+      0.6377702709977546,
+      0.6556272600604811,
+      0.6508795642981936,
+      0.6839555494230928,
+      0.6351648232067384,
+      0.6469942770481378,
+      0.6544472252803823
+    ],
+    "requiredSnippets": [
+      "const H=28, NT=196, NY=154",
+      "octaveMeans[j]=s/c",
+      "function mappedDetail(x,y,z,th,ell,N,dir,warp)",
+      "let state={amp:.55,scale:2.6,layers:6,direction:18*Math.PI/180,warp:.42,bias:.32",
+      "let eroded=d-state.bias*Math.max(0,d)*Math.max(0,d)",
+      "if(gate[id]<1e-7)"
+    ],
+    "buildReportedProtectedVertexCount": 3136,
+    "replayProtectedVertexCount": 3138,
+    "countDifferenceExplanation": "source recompute counts 3136 side vertices plus TOP and BOTTOM; build.json records 3136"
+  },
+  "cases": {
+    "default": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 6,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": 0.007585975005165555,
+      "meanDetailActive": 0.014553657060054513,
+      "meanNormalOffsetAllM": 0.006321846638533366,
+      "meanNormalOffsetActiveM": 0.007055281818647153,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.3921925495538681,
+        "p95": 0.14429322517454038,
+        "transitionMax": 0.09848338105171513,
+        "transitionP95": 0.04761626943309385
+      }
+    },
+    "noBias": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 6,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0
+      },
+      "meanDetailAll": 0.007585975005165555,
+      "meanDetailActive": 0.014553657060054513,
+      "meanNormalOffsetAllM": 0.007960995540756667,
+      "meanNormalOffsetActiveM": 0.008884598173368854,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.39344185586149055,
+        "p95": 0.14845038792659732,
+        "transitionMax": 0.09848338105171513,
+        "transitionP95": 0.04879839466884497
+      }
+    },
+    "noRotationWarp": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 6,
+        "direction": 0,
+        "warp": 0,
+        "bias": 0.32
+      },
+      "meanDetailAll": -0.003211285304988713,
+      "meanDetailActive": 0.0036035516471937725,
+      "meanNormalOffsetAllM": 0.0010386214476340416,
+      "meanNormalOffsetActiveM": 0.00115911812401217,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.4341441569555432,
+        "p95": 0.15127339303578227,
+        "transitionMax": 0.12220480109409446,
+        "transitionP95": 0.04966163428411748
+      }
+    },
+    "scaleLow": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 0.8,
+        "layers": 6,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": -0.05948445587935395,
+      "meanDetailActive": -0.04903060839936905,
+      "meanNormalOffsetAllM": -0.020638348594860013,
+      "meanNormalOffsetActiveM": -0.023032726659436717,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 1.5891847726440074,
+        "p95": 0.41517363289900927,
+        "transitionMax": 0.23649302090948046,
+        "transitionP95": 0.09116496675370238
+      }
+    },
+    "scaleHigh": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 6,
+        "layers": 6,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": -0.1462403528668849,
+      "meanDetailActive": -0.12859729528766123,
+      "meanNormalOffsetAllM": -0.05505674575999503,
+      "meanNormalOffsetActiveM": -0.06144420761280723,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.27666353974911895,
+        "p95": 0.08122554742305381,
+        "transitionMax": 0.2624949777680127,
+        "transitionP95": 0.1444112272824982
+      }
+    },
+    "layers1": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 1,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": -0.00668411481492504,
+      "meanDetailActive": -0.002904349376394575,
+      "meanNormalOffsetAllM": -0.003230240187333644,
+      "meanNormalOffsetActiveM": -0.0036049996411880126,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.2389902729590136,
+        "p95": 0.05755712661758319,
+        "transitionMax": 0.04621065395315692,
+        "transitionP95": 0.020924878421196648
+      }
+    },
+    "layers3": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 3,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": 0.008256819887895351,
+      "meanDetailActive": 0.01492237988029819,
+      "meanNormalOffsetAllM": 0.006469826404630133,
+      "meanNormalOffsetActiveM": 0.0072204296010856695,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.26617607523501047,
+        "p95": 0.10523679140470858,
+        "transitionMax": 0.08794207291723932,
+        "transitionP95": 0.04240256890714349
+      }
+    },
+    "layers9": {
+      "settings": {
+        "amp": 0.55,
+        "scale": 2.6,
+        "layers": 9,
+        "direction": 0.3141592653589793,
+        "warp": 0.42,
+        "bias": 0.32
+      },
+      "meanDetailAll": 0.0077601658020384125,
+      "meanDetailActive": 0.014730821905760298,
+      "meanNormalOffsetAllM": 0.006398615076606433,
+      "meanNormalOffsetActiveM": 0.007140956621651944,
+      "protectedCount": 3138,
+      "protectedDrift": 0,
+      "derivativeProxy": {
+        "definition": "absolute normal-offset difference divided by base edge length",
+        "max": 0.39164739429810114,
+        "p95": 0.1469796597586386,
+        "transitionMax": 0.09796293667856652,
+        "transitionP95": 0.04754132106774772
+      }
+    }
+  },
+  "checks": {
+    "sourceHttp200": true,
+    "sourceSha256Locked": true,
+    "sourceContractSnippetsPresent": true,
+    "exactProtectedAnchorsPass": true,
+    "defaultMappedMeanNotNeutral": true,
+    "nonlinearBiasChangesMean": true,
+    "transformControlsChangeMean": true,
+    "scaleControlsChangeMean": true,
+    "derivativeProxyNotMonotoneAttenuatedByLayers": true,
+    "transitionDerivativeMeasuredNotGatedByExistingQA": true,
+    "buildProtectedCountMismatchConfirmed": true,
+    "currentHeadSourceHttp200": true,
+    "currentHeadQaHttp200": true,
+    "currentIntegratedHeadStillUsesNonPeriodicHarmonic": true,
+    "currentIntegratedHeadDoesNotContainClaimedPeriodicReplacement": true,
+    "currentQaOmitsMeanMetric": true,
+    "currentQaOmitsDerivativeMetric": true,
+    "currentQaShowsMajorityVertexClipping": true,
+    "currentQaProtectedAnchorsPass": true,
+    "currentQaTriangleFlipsPass": true,
+    "currentQaStillMarksGeometryFieldUncoupled": true,
+    "currentQaStillMarksProductionNotReady": true
+  },
+  "passed": true,
+  "classification": {
+    "anchors": "Observation pass for exact M=0 vertices in this CPU replay",
+    "mean": "Candidate fail for mean-neutral transfer: mapped and biased active-field means are nonzero and control-dependent",
+    "derivatives": "Unknown acceptance: derivative proxies are measurable but the implementation defines no physical derivative budget or pass threshold",
+    "periodicSeam": "Rejected claimed closure at current integrated head: the non-periodic 2.3 angular harmonic remains and the claimed integer-harmonic replacement is absent",
+    "clipping": "Candidate partial safety control: per-vertex clipping and bandwidth filtering coexist with zero protected drift and zero flips, but 64% of vertices are clipped and field-distribution fidelity is not established",
+    "geometry": "Observation from source/replay that vertex positions are changed; browser visual acceptance remains separate",
+    "evidenceContract": "Candidate mismatch: build.json protectedVertexCount omits the two explicit TOP/BOTTOM vertices counted by source recompute",
+    "production": "Frozen/unchanged"
+  },
+  "limitations": [
+    "CPU replay matches the target Float32 typed storage but is not a browser WebGL observation root.",
+    "Edge displacement slope is a derivative proxy, not full surface curvature or geologic validation.",
+    "A nonzero mean may be an intentional uncalibrated erosion bias, but it cannot be called mean-preserving.",
+    "The old R1 CPU replay and the current integrated head are related source evidence, not independent Observation Roots.",
+    "The current-head inspection is a source/QA contract audit; it does not rerun the integrated 310k-vertex browser geometry.",
+    "Current runtime QA does not record an area-weighted mean, a derivative budget, collision coupling, or user visual acceptance.",
+    "No production branch, DEM, collision, or user acceptance was modified or promoted."
+  ]
+}
