@@ -1,0 +1,422 @@
+{
+  "schema": "kaopu-landscape-y04-clipping-distribution-audit/1",
+  "date": "2026-09-16",
+  "question": "How does the current per-vertex safety clamp change displacement distribution and periodic-domain error in PR #79 head?",
+  "source": {
+    "head": "21861af63591d42bb84b9a88e00ef645ffc55b76",
+    "source": {
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/21861af63591d42bb84b9a88e00ef645ffc55b76/workbenches/landscape-surface-r5-k2-geometry-r1/index.html",
+      "httpStatus": 200,
+      "sha256": "36ca41019aaa9f05b027a9129d7a531750254b29625ec2b896cd29ec2cb8f7ec",
+      "expectedSha256": "36ca41019aaa9f05b027a9129d7a531750254b29625ec2b896cd29ec2cb8f7ec"
+    },
+    "runtimeQa": {
+      "url": "https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/21861af63591d42bb84b9a88e00ef645ffc55b76/workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json",
+      "httpStatus": 200,
+      "sha256": "b7d16e5d56913875d6cd124a3968bf6c211cdf20625823332c9fdf2cf4eced43",
+      "expectedSha256": "b7d16e5d56913875d6cd124a3968bf6c211cdf20625823332c9fdf2cf4eced43"
+    }
+  },
+  "replay": {
+    "vertices": 310074,
+    "triangles": 624172,
+    "activeVertices": 256582,
+    "protectedVertices": 53492,
+    "clippedVertices": 199324,
+    "clippedVertexFractionActive": 0.7768432703775011,
+    "clippedVertexFractionTotal": 0.6428271960886756,
+    "clippedAreaFractionActive": 0.7434489909565356,
+    "requestedAmplitudeM": 0.22,
+    "effectiveAmplitudeM": 0.22,
+    "requestedLayers": 6,
+    "effectiveLayers": 2,
+    "rawOffsetM": {
+      "count": 256582,
+      "min": -0.27698907686105895,
+      "p05": -0.08798737736168025,
+      "p50": 0.007984801162725864,
+      "p95": 0.04324574971799873,
+      "max": 0.04737857983018507,
+      "mean": -0.0007259277679543833,
+      "rms": 0.04380046654877022
+    },
+    "appliedOffsetM": {
+      "count": 256582,
+      "min": -0.04051896557211876,
+      "p05": -0.012801653193309902,
+      "p50": 0.0023497408255934715,
+      "p95": 0.014489200385287403,
+      "max": 0.04029959812760353,
+      "mean": 0.0019578130587498063,
+      "rms": 0.00848653102433099
+    },
+    "capM": {
+      "count": 256582,
+      "min": 0.000001,
+      "p05": 0.0008504237309098244,
+      "p50": 0.007910192608833314,
+      "p95": 0.01733503478765487,
+      "max": 0.04428355693817139,
+      "mean": 0.008281932830504784,
+      "rms": 0.009748396681032303
+    },
+    "magnitudeRetention": {
+      "count": 256582,
+      "min": 0.000013084888172088038,
+      "p05": 0.02964061144560349,
+      "p50": 0.3403160954223644,
+      "p95": 1.0000000225677244,
+      "max": 1.0000000592641602,
+      "mean": 0.45839453946071584,
+      "rms": 0.5817126452635545
+    },
+    "vertexL1MagnitudeRetention": 0.23428613460370518,
+    "vertexL2EnergyRetention": 0.03754074901516438,
+    "areaWeightedRaw": {
+      "weight": 15696.5648190073,
+      "mean": -0.0009043614434444021,
+      "meanAbs": 0.029557940696097542,
+      "rms": 0.044118803840858346
+    },
+    "areaWeightedApplied": {
+      "weight": 15696.5648190073,
+      "mean": 0.002287531686536685,
+      "meanAbs": 0.008144023410458867,
+      "rms": 0.009707482155568539
+    },
+    "heightBands": [
+      {
+        "band": 0,
+        "normalizedY": [
+          0,
+          0.1
+        ],
+        "activeVertices": 0,
+        "clippedVertices": 0,
+        "clippedVertexFraction": null,
+        "clippedAreaFraction": null,
+        "areaWeightedRaw": {
+          "weight": 0,
+          "mean": null,
+          "meanAbs": null,
+          "rms": null
+        },
+        "areaWeightedApplied": {
+          "weight": 0,
+          "mean": null,
+          "meanAbs": null,
+          "rms": null
+        }
+      },
+      {
+        "band": 1,
+        "normalizedY": [
+          0.1,
+          0.2
+        ],
+        "activeVertices": 19168,
+        "clippedVertices": 9677,
+        "clippedVertexFraction": 0.50485183639399,
+        "clippedAreaFraction": 0.44618536342515386,
+        "areaWeightedRaw": {
+          "weight": 1111.7308322217377,
+          "mean": -0.0001293083228271795,
+          "meanAbs": 0.01078411765165959,
+          "rms": 0.01604461675363198
+        },
+        "areaWeightedApplied": {
+          "weight": 1111.7308322217377,
+          "mean": 0.00012713342721380774,
+          "meanAbs": 0.0053610250391194205,
+          "rms": 0.007221594159337267
+        }
+      },
+      {
+        "band": 2,
+        "normalizedY": [
+          0.2,
+          0.3
+        ],
+        "activeVertices": 31039,
+        "clippedVertices": 23403,
+        "clippedVertexFraction": 0.7539869196816907,
+        "clippedAreaFraction": 0.7123856813154056,
+        "areaWeightedRaw": {
+          "weight": 1894.8099733434117,
+          "mean": 0.008589388608808469,
+          "meanAbs": 0.021026299828618276,
+          "rms": 0.025787180339191855
+        },
+        "areaWeightedApplied": {
+          "weight": 1894.8099733434117,
+          "mean": 0.0034659781502949924,
+          "meanAbs": 0.0077736548175200235,
+          "rms": 0.009272402654608276
+        }
+      },
+      {
+        "band": 3,
+        "normalizedY": [
+          0.3,
+          0.4
+        ],
+        "activeVertices": 39064,
+        "clippedVertices": 33354,
+        "clippedVertexFraction": 0.853829612942863,
+        "clippedAreaFraction": 0.8275147616944218,
+        "areaWeightedRaw": {
+          "weight": 2385.794021100175,
+          "mean": 0.008500698944659836,
+          "meanAbs": 0.030319125703206034,
+          "rms": 0.03928874982270641
+        },
+        "areaWeightedApplied": {
+          "weight": 2385.794021100175,
+          "mean": 0.004185953973276227,
+          "meanAbs": 0.008767855924298943,
+          "rms": 0.010139512398413042
+        }
+      },
+      {
+        "band": 4,
+        "normalizedY": [
+          0.4,
+          0.5
+        ],
+        "activeVertices": 43769,
+        "clippedVertices": 35425,
+        "clippedVertexFraction": 0.8093627910164728,
+        "clippedAreaFraction": 0.7738882136190731,
+        "areaWeightedRaw": {
+          "weight": 2706.48688656692,
+          "mean": -0.02106974388000194,
+          "meanAbs": 0.039978953122639285,
+          "rms": 0.05985530833252323
+        },
+        "areaWeightedApplied": {
+          "weight": 2706.48688656692,
+          "mean": -0.001135783927755158,
+          "meanAbs": 0.008415424335073378,
+          "rms": 0.009882062419085175
+        }
+      },
+      {
+        "band": 5,
+        "normalizedY": [
+          0.5,
+          0.6
+        ],
+        "activeVertices": 43231,
+        "clippedVertices": 36489,
+        "clippedVertexFraction": 0.844047095834008,
+        "clippedAreaFraction": 0.8141111397105916,
+        "areaWeightedRaw": {
+          "weight": 2731.5976328048005,
+          "mean": 0.016370420155987823,
+          "meanAbs": 0.026515951243575354,
+          "rms": 0.030878827706897344
+        },
+        "areaWeightedApplied": {
+          "weight": 2731.5976328048005,
+          "mean": 0.005688159684892552,
+          "meanAbs": 0.008887317021600217,
+          "rms": 0.010295291538520001
+        }
+      },
+      {
+        "band": 6,
+        "normalizedY": [
+          0.6,
+          0.7
+        ],
+        "activeVertices": 37726,
+        "clippedVertices": 30288,
+        "clippedVertexFraction": 0.8028415416423687,
+        "clippedAreaFraction": 0.7678965105790075,
+        "areaWeightedRaw": {
+          "weight": 2296.5488708422604,
+          "mean": 0.006228829592844582,
+          "meanAbs": 0.02593190393043047,
+          "rms": 0.033144803623756935
+        },
+        "areaWeightedApplied": {
+          "weight": 2296.5488708422604,
+          "mean": 0.0031749463693581917,
+          "meanAbs": 0.008394349761409587,
+          "rms": 0.009910551430652295
+        }
+      },
+      {
+        "band": 7,
+        "normalizedY": [
+          0.7,
+          0.8
+        ],
+        "activeVertices": 27428,
+        "clippedVertices": 21911,
+        "clippedVertexFraction": 0.7988551844830101,
+        "clippedAreaFraction": 0.7687706327819392,
+        "areaWeightedRaw": {
+          "weight": 1674.4582179292033,
+          "mean": -0.03121299471027629,
+          "meanAbs": 0.04822648450180734,
+          "rms": 0.07420898174431387
+        },
+        "areaWeightedApplied": {
+          "weight": 1674.4582179292033,
+          "mean": -0.0016717331650981592,
+          "meanAbs": 0.00848950059111397,
+          "rms": 0.010111381804219999
+        }
+      },
+      {
+        "band": 8,
+        "normalizedY": [
+          0.8,
+          0.9
+        ],
+        "activeVertices": 13663,
+        "clippedVertices": 8710,
+        "clippedVertexFraction": 0.6374881065651761,
+        "clippedAreaFraction": 0.5896608944258491,
+        "areaWeightedRaw": {
+          "weight": 811.736123724737,
+          "mean": -0.0004376617020625881,
+          "meanAbs": 0.023174608759209448,
+          "rms": 0.03969036154335073
+        },
+        "areaWeightedApplied": {
+          "weight": 811.736123724737,
+          "mean": 0.00275905258472422,
+          "meanAbs": 0.006947176387113883,
+          "rms": 0.008763588963633308
+        }
+      },
+      {
+        "band": 9,
+        "normalizedY": [
+          0.9,
+          1
+        ],
+        "activeVertices": 1494,
+        "clippedVertices": 67,
+        "clippedVertexFraction": 0.04484605087014726,
+        "clippedAreaFraction": 0.01995635849467558,
+        "areaWeightedRaw": {
+          "weight": 83.40226047398471,
+          "mean": 0.00018112730815197773,
+          "meanAbs": 0.0004898839977747165,
+          "rms": 0.0008847457657221937
+        },
+        "areaWeightedApplied": {
+          "weight": 83.40226047398471,
+          "mean": 0.00018324775087267853,
+          "meanAbs": 0.0004777487736150938,
+          "rms": 0.0008558242680473918
+        }
+      }
+    ]
+  },
+  "periodicity": {
+    "definition": "same physical x/y/z and field inputs, with angular coordinate shifted by exactly 2pi",
+    "rawOffsetDifferenceM": {
+      "count": 256582,
+      "min": 0,
+      "p05": 0.00008650275303683511,
+      "p50": 0.006415668448648748,
+      "p95": 0.05092883251738123,
+      "max": 0.16251639979550653,
+      "mean": 0.013430323281714642,
+      "rms": 0.022138359500179894
+    },
+    "appliedOffsetDifferenceM": {
+      "count": 256582,
+      "min": 0,
+      "p05": 0,
+      "p50": 0,
+      "p95": 0.014910111029166694,
+      "max": 0.062267519533634186,
+      "mean": 0.002389432964556108,
+      "rms": 0.005875426470888569
+    },
+    "areaWeightedMeanRawDifferenceM": 0.013558492694875149,
+    "areaWeightedMeanAppliedDifferenceM": 0.002877921164381254,
+    "defectVertices": 256580,
+    "defectVerticesMaskedToZeroByClamp": 162801,
+    "branchCutEdgeSlope": {
+      "raw": {
+        "count": 2029,
+        "min": 0.00002480527906351092,
+        "p05": 0.0014130533284545668,
+        "p50": 0.025304330186689348,
+        "p95": 0.3037753314271691,
+        "max": 13.788328185546835,
+        "mean": 0.09244839596920883,
+        "rms": 0.4191253709255165
+      },
+      "applied": {
+        "count": 2029,
+        "min": 0.000016387768136009048,
+        "p05": 0.0011427342635528782,
+        "p50": 0.014307886907627932,
+        "p95": 0.04966203731387657,
+        "max": 0.14972009982029016,
+        "mean": 0.01870252680054324,
+        "rms": 0.025277163262789594
+      }
+    },
+    "ordinaryEdgeSlope": {
+      "raw": {
+        "count": 761630,
+        "min": 9.577853858077484e-10,
+        "p05": 0.000738410197590301,
+        "p50": 0.01133826413485262,
+        "p95": 0.05962119954367818,
+        "max": 20578.368074965612,
+        "mean": 0.11874884021174385,
+        "rms": 32.44535602258837
+      },
+      "applied": {
+        "count": 761630,
+        "min": 0,
+        "p05": 0.0008317687149104713,
+        "p50": 0.012665251076739478,
+        "p95": 0.04006021819022651,
+        "max": 0.10531558258423375,
+        "mean": 0.015430307080975434,
+        "rms": 0.01978238470676961
+      }
+    }
+  },
+  "checks": {
+    "sourceLocksPass": true,
+    "vertexCountMatchesQa": true,
+    "triangleCountMatchesQa": true,
+    "protectedCountMatchesQa": true,
+    "protectedDriftMatchesQa": true,
+    "flipCountMatchesQa": true,
+    "clippedCountMatchesQa": true,
+    "maxDisplacementMatchesQa": true,
+    "rmsDisplacementMatchesQa": true,
+    "clippingChangesDistribution": true,
+    "periodicDefectReproduced": true,
+    "clampDoesNotProvePeriodicity": true
+  },
+  "classification": {
+    "replay": "Observation: exact CPU replay of the locked current source and QA contract",
+    "clamp": "Candidate partial: topology safety improves, but clipping materially changes the field distribution",
+    "mean": "Candidate measurement: area- and vertex-weighted pre/post-clamp means are recorded; physical acceptance remains Unknown",
+    "periodicity": "Rejected as a closure: symmetric clamping may attenuate or mask some defects but does not make the 2.3-harmonic field periodic",
+    "topology": "Observation pass in this replay: protected drift and triangle flips remain zero",
+    "physicalValidity": "Unknown: no approved derivative, mean, or morphology threshold and no collision/SDF coupling",
+    "visualAcceptance": "Unknown",
+    "production": "Frozen/unchanged"
+  },
+  "limitations": [
+    "This is a CPU replay of the same source lineage, not a new browser or hardware Observation Root.",
+    "One-third triangle area assigned to each incident vertex is a reproducible area-weighting approximation, not a volume-conservation proof.",
+    "Branch-cut edge slope is a mesh diagnostic; it is not a physically approved curvature threshold.",
+    "No Mother code, production branch, Canonical Truth, collision field or visual approval was modified."
+  ],
+  "passed": true
+}
