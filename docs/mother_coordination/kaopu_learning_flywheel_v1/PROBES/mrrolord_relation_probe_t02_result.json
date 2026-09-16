@@ -1,0 +1,50 @@
+{
+  "id": "KAOPU-MRROLORD-T02-20260916",
+  "evidence_class": "original synthetic counterexamples for candidate transfer, not author-code reproduction",
+  "observed_at_utc": "2026-09-16T07:32:50.153626+00:00",
+  "python": "3.13.5",
+  "probe_sha256": "9384c25719b2aa4ca4da551145a249c0213b58a7de15e431f7a29a6b3356a24e",
+  "checks": {
+    "A_stable_hierarchical_ids_and_shared_orientation": true,
+    "B_micro_slope_can_change_classification_without_structural_slope_change": true,
+    "C_zero_mean_is_insufficient_near_shore_and_volume_reconciliation_works": true
+  },
+  "passed": 3,
+  "total": 3,
+  "cases": {
+    "hierarchy": {
+      "stable_records": {
+        "region-a/plot-0": {"parcel_id": "region-a/plot-0", "parent_orientation_radians": 2.099711009656236, "parcel_orientation_radians": 2.116442988509858},
+        "region-a/plot-1": {"parcel_id": "region-a/plot-1", "parent_orientation_radians": 2.099711009656236, "parcel_orientation_radians": 2.1218018049860703},
+        "region-b/plot-0": {"parcel_id": "region-b/plot-0", "parent_orientation_radians": 1.9001682970212994, "parcel_orientation_radians": 1.923601054617818}
+      },
+      "unchanged_existing_records": true,
+      "naive_array_key_changed_records": 3,
+      "limits": "Synthetic hierarchy only, not real parcel subdivision or universal cross-platform determinism."
+    },
+    "reference_slope": {
+      "structural_slope": 0.02,
+      "detail_amplitude_m": 0.002,
+      "detail_wavelength_m": 0.04,
+      "arbitrary_test_threshold": 0.1,
+      "samples": 1000,
+      "classification_changed_samples": 794,
+      "changed_fraction": 0.794,
+      "limits": "Synthetic surface; does not prescribe agronomic thresholds or measure current Mother code."
+    },
+    "water_capacity": {
+      "horizontal_areas_m2": [0.5, 0.5],
+      "bed_m": [-0.006, 0.006],
+      "area_weighted_mean_displacement_m": 0.0,
+      "initial_level_m": 0.004,
+      "initial_volume_m3": 0.004,
+      "unchanged_level_new_volume_m3": 0.005,
+      "relative_volume_change": 0.25,
+      "volume_preserving_new_level_m": 0.001999999999999999,
+      "reconciled_volume_m3": 0.004,
+      "deep_flooded_control_volume_m3": 0.02,
+      "limits": "Two-column horizontal level-pool example; no infiltration, flow dynamics, or regional calibration."
+    }
+  },
+  "not_tested": ["MrRolord Blender node graph", "Yohei full shader", "production implementation", "real agronomy or hydrology", "GPU/browser/mobile performance", "Mother adoption", "user approval"]
+}
