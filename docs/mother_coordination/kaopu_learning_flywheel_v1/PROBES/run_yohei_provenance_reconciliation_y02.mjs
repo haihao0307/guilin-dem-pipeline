@@ -19,8 +19,27 @@ const postId = '1880561598982668452';
 const sourceHash = '5253b2a44baa9f99af79cd04d85747ac6bb515c021562c7558e841446a4c3fea';
 const codrops = 'https://tympanus.net/codrops/2025/02/18/rendering-the-simulation-theory-exploring-fractals-glsl-and-the-nature-of-reality/';
 
+let articleStatus = 0;
+let articleHtml = '';
+let articleFetchError = null;
+try {
+  const response = await fetch(codrops, {
+    headers: { 'user-agent': 'KAOPU-Y02-source-audit/1.0' },
+    signal: AbortSignal.timeout(20000)
+  });
+  articleStatus = response.status;
+  articleHtml = await response.text();
+} catch (error) {
+  articleFetchError = String(error);
+}
+
+const titleIndex = articleHtml.indexOf('Macroscopic microscope');
+const postIndex = articleHtml.indexOf(postId);
 const checks = {
-  r67NamesMacroscopicMicroscopeAndPost: r67Log.includes('Macroscopic microscope') && r67Log.includes(postId),
+  liveAuthorArticleHttp200: articleStatus === 200,
+  liveAuthorArticleBindsTitleToPost: titleIndex >= 0 && postIndex >= 0 &&
+    Math.abs(titleIndex - postIndex) < 20000,
+  r67NamesMacroscopicMicroscope: r67Log.includes('Macroscopic microscope'),
   r70AuthorPostIdentityMatches: r70.inputs?.xPostId === postId,
   r70SourceFingerprintLocked: r70.observations?.sourceFingerprint?.sha256 === sourceHash &&
     r70.observations?.sourceFingerprint?.utf8Bytes === 265 &&
@@ -46,11 +65,20 @@ const passed = Object.values(checks).filter(Boolean).length;
 const result = {
   schema: 'kaopu-yohei-provenance-reconciliation/y02',
   status: passed === Object.keys(checks).length ?
-    'Observation: stored-evidence reconciliation passed' :
+    'Observation: source and stored-evidence reconciliation passed' :
     'Candidate: reconciliation incomplete',
   observedAt: new Date().toISOString(),
   question: 'Does Y01 still lack the exact Macroscopic microscope source/host evidence, or had R70-R71 already closed that narrower gap?',
   inputs: {
+    liveAuthorArticle: {
+      url: codrops,
+      httpStatus: articleStatus,
+      byteLength: Buffer.byteLength(articleHtml),
+      sha256: articleHtml ? sha256(articleHtml) : null,
+      fetchError: articleFetchError,
+      titleIndex,
+      embeddedPostIdIndex: postIndex
+    },
     r67LogSha256: sha256(r67Log),
     y01LogSha256: sha256(y01Log),
     r70ResultBlobIdentity: {
@@ -66,9 +94,9 @@ const result = {
   total: Object.keys(checks).length,
   classification: {
     macroscopicMicroscopeSource:
-      'Observation: R70 locked the author-linked 265-byte twigl snapshot for X post 1880561598982668452; R71 locked its generated GLSL and one software runtime.',
+      'Observation: the live author article binds Macroscopic microscope to X post 1880561598982668452; R70 locked that post’s author-linked 265-byte twigl snapshot, and R71 locked its generated GLSL and one software runtime.',
     y01BlanketGap:
-      'Rejected for the Macroscopic microscope source/host question because it failed to inherit R70-R71.',
+      'Rejected for the Macroscopic microscope source/host question because Y01 did not inherit R70-R71.',
     numberedScreenshotIdentity:
       'Unknown: Y01 did not preserve a checkable link proving that the separately described “#261 the moon surface color” screenshot is the same publication as X post 1880561598982668452.',
     runtime:
@@ -77,7 +105,7 @@ const result = {
       'Unknown: source identity does not grant artwork adaptation or redistribution permission.'
   },
   evidenceRoots: {
-    authorPublication: ['Yohei Codrops article', 'X post/reply receipt inherited from R70'],
+    authorPublication: ['live Yohei-authored Codrops article', 'X post/reply receipt inherited from R70'],
     twiglService: ['R70 snapshot receipt'],
     twiglRepositoryAndRuntime: ['R69 host commit', 'R71 locked wrapper/runtime'],
     derivation: 'This Y02 check reconciles existing receipts and is not a new visual, GPU, physical, or independent source root.'
