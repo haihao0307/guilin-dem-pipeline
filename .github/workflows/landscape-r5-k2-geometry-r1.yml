@@ -6,6 +6,7 @@ on:
       - feature/landscape-microscope-geometry-lab-r1-20260916
     paths:
       - workbenches/landscape-surface-r5-k2-geometry-r1/build.py
+      - workbenches/landscape-surface-r5-k2-geometry-r1/apply_grid_bandwidth_fix.py
       - .github/workflows/landscape-r5-k2-geometry-r1.yml
 
 permissions:
@@ -22,7 +23,9 @@ jobs:
       - name: Build locked R5.K2 geometry candidate
         run: |
           python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r1/build.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r1/apply_grid_bandwidth_fix.py
           python workbenches/landscape-surface-r5-k2-geometry-r1/build.py
+          python workbenches/landscape-surface-r5-k2-geometry-r1/apply_grid_bandwidth_fix.py
 
       - name: Static candidate QA
         run: |
@@ -36,9 +39,13 @@ jobs:
           assert 'protectedDriftCount' in s
           assert 'triangleFlipCount' in s
           assert 'fieldCoupled:false' in s
+          assert 'effectiveLayers:layers' in s
+          assert 'minimumGeometryScaleM:minimumGeometryScale' in s
           assert b['macroGeometryReplacement'] is False
           assert b['indexOrderChangedByIntegration'] is False
           assert b['geometryFieldCoupled'] is False
+          assert b['geometry']['effectiveLayersExpected'] == 2
+          assert b['geometry']['minimumGeometryScaleM'] == 1.0
           blocks = []
           for sid in ('worldSource','generateSource'):
               m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, s, re.S)
@@ -57,11 +64,14 @@ jobs:
           const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1};
           const data=generateScene(cfg,()=>{});
           const g=data.report.microscopeGeometry;
+          console.log('MICROSCOPE_GEOMETRY='+JSON.stringify(g));
           if(!g)throw Error('runtime microscope geometry report missing');
           if(g.protectedDriftCount!==0)throw Error('protected vertex drift: '+g.protectedDriftCount);
           if(g.triangleFlipCount!==0)throw Error('triangle flips: '+g.triangleFlipCount);
           if(g.effectiveAmplitudeM>g.requestedAmplitudeM+1e-12)throw Error('effective amplitude exceeded request');
           if(g.maxDisplacementM<1e-6)throw Error('geometry displacement did not execute');
+          if(g.effectiveLayers!==2)throw Error('unexpected effective geometry layers: '+g.effectiveLayers);
+          if(g.finestGeometryScaleM<g.minimumGeometryScaleM)throw Error('geometry scale below grid bandwidth');
           const out={schema:'LANDSCAPE_R5_K2_G1_RUNTIME_QA',date:'2026-09-16',config:cfg,microscopeGeometry:g,mainVertices:data.report.mainVertices,mainTriangles:data.report.mainTriangles,geometryGridM:data.report.geometryGridM,geometryFieldCoupled:false,visualApproved:false,productionReady:false};
           fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json',JSON.stringify(out,null,2));
           console.log(JSON.stringify(out));
@@ -82,5 +92,5 @@ jobs:
             echo "candidate and QA already materialized"
             exit 0
           fi
-          git commit -m "qa(landscape): materialize R5.K2.G1 runtime geometry evidence [skip ci]"
+          git commit -m "qa(landscape): materialize bandwidth-safe R5.K2.G1 geometry evidence [skip ci]"
           git push
