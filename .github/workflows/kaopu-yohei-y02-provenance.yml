@@ -1,0 +1,37 @@
+name: KAOPU Yohei Y02 Provenance Reconciliation
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - .github/workflows/kaopu-yohei-y02-provenance.yml
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_provenance_reconciliation_y02.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_twigl_snapshot_result_r70.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_twigl_runtime_result_r71.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/yohei_core_audit_y01_result.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/LEARNING_LOG/2026-09-14_YOHEI_MICROSCOPE_SOURCE_AUDIT_R67.md
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/LEARNING_LOG/2026-09-16_YOHEI_Y01_SOURCE_TO_SHAPE.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconcile locked provenance receipts
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_yohei_provenance_reconciliation_y02.mjs \
+            --output artifacts/yohei_provenance_reconciliation_result_y02.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-yohei-y02-provenance
+          path: artifacts/yohei_provenance_reconciliation_result_y02.json
+          if-no-files-found: error
