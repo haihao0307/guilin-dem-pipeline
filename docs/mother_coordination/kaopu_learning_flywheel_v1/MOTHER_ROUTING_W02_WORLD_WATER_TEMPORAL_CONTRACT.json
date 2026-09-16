@@ -1,0 +1,26 @@
+{
+  "schema": "kaopu-mother-routing/1",
+  "round": "W02",
+  "status": "prepared-not-delivered-not-acknowledged-not-adopted",
+  "targets": [
+    {
+      "mother": "Weather Mother",
+      "guidance": "Publish each forcing value with UTC bounds, amount/rate/point class, unit and method; do not conceal accumulation behind a timestamp."
+    },
+    {
+      "mother": "Landscape Mother",
+      "guidance": "Reconcile forcing and routing intervals conservatively; retain source bounds and transformation lineage; reject overlap and gaps."
+    },
+    {
+      "mother": "Farmland Mother",
+      "guidance": "Mutate storage only from reconciled interval fluxes; never reapply reporting aggregates or treat rates as amounts."
+    },
+    {
+      "mother": "Three.js Mother",
+      "guidance": "Presentation interpolation may smooth display time but must not feed interpolated mass back into canonical state."
+    }
+  ],
+  "feedback": [],
+  "adoption": false,
+  "productionBranchesModified": false
+}

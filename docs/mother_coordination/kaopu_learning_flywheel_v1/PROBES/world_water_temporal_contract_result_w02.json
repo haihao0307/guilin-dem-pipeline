@@ -1,0 +1,151 @@
+{
+  "schema": "kaopu-world-water-temporal-contract-result/w02",
+  "status": "pass",
+  "evidenceClass": "official CF/EPA source contract plus synthetic CPU temporal counterexamples",
+  "observationRoots": [
+    "CF Conventions 1.13 interval bounds and cell-method semantics",
+    "US EPA SWMM 5.2 computation/routing/reporting time-step and continuity guidance",
+    "Node.js synthetic temporal fixture; reproducible derivation, not hydrologic runtime evidence"
+  ],
+  "fixtureSha256": "84b5d3539a953ce15c0cf8113531c6e2831cae60639bdeab655bca12127d45ce",
+  "summary": {
+    "checks": 17,
+    "passed": 17,
+    "failed": 0,
+    "hourlyAmountMm": 12,
+    "quarterHourRatesIntegratedMm": 3,
+    "naiveRateSumMm": 12,
+    "unequalDurationIntegratedMm": 3.5
+  },
+  "currentBestView": "Every exchanged water quantity must bind half-open time bounds, quantity class, unit and aggregation method. Sum extensive amounts; duration-integrate intensive rates; use duration-weighted means; reject overlaps/gaps and require an explicit conservative policy before disaggregation.",
+  "boundary": "This verifies temporal accounting semantics only. It does not select a hydrologic solver time step, infer within-interval rainfall shape, validate physical parameters or prove Mother adoption.",
+  "checks": [
+    {
+      "name": "four 15-minute precipitation amounts sum to 12 mm",
+      "pass": true,
+      "detail": {
+        "amountMm": 12
+      }
+    },
+    {
+      "name": "12 mm over 1000 m2 converts to 12 m3 after temporal aggregation",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "four 15-minute rates integrate to 3 mm rather than summing to 12 mm",
+      "pass": true,
+      "detail": {
+        "integratedMm": 3,
+        "naiveSum": 12
+      }
+    },
+    {
+      "name": "equal-duration weighted mean rate is 3 mm/h",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "unequal-duration rate cells integrate to 3.5 mm",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "unequal-duration weighted mean is 3.5 mm/h, not unweighted 3",
+      "pass": true,
+      "detail": {
+        "weighted": 3.5,
+        "unweighted": 3
+      }
+    },
+    {
+      "name": "explicit constant-rate disaggregation preserves parent amount",
+      "pass": true,
+      "detail": {
+        "childValues": [
+          3,
+          3,
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "name": "half-open adjacent cells form a non-overlapping partition",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "overlapping cells are rejected",
+      "pass": true,
+      "detail": {
+        "expected": "overlapping-time-cells",
+        "actual": "overlapping-time-cells"
+      }
+    },
+    {
+      "name": "gapped cells are rejected",
+      "pass": true,
+      "detail": {
+        "expected": "partition-gap-or-domain-mismatch",
+        "actual": "partition-gap-or-domain-mismatch"
+      }
+    },
+    {
+      "name": "point timestamp cannot stand in for accumulated interval",
+      "pass": true,
+      "detail": {
+        "expected": "valid-half-open-bounds-required",
+        "actual": "valid-half-open-bounds-required"
+      }
+    },
+    {
+      "name": "rate cannot be labeled extensive sum",
+      "pass": true,
+      "detail": {
+        "expected": "rate-must-be-intensive",
+        "actual": "rate-must-be-intensive"
+      }
+    },
+    {
+      "name": "amount cells cannot be aggregated by rate contract",
+      "pass": true,
+      "detail": {
+        "expected": "rate-mean-contract-required",
+        "actual": "rate-mean-contract-required"
+      }
+    },
+    {
+      "name": "rate cells cannot be aggregated by amount contract",
+      "pass": true,
+      "detail": {
+        "expected": "amount-sum-contract-required",
+        "actual": "amount-sum-contract-required"
+      }
+    },
+    {
+      "name": "disaggregation without declared policy is rejected",
+      "pass": true,
+      "detail": {
+        "expected": "explicit-disaggregation-policy-required",
+        "actual": "explicit-disaggregation-policy-required"
+      }
+    },
+    {
+      "name": "child time domain must match parent bounds",
+      "pass": true,
+      "detail": {
+        "expected": "child-domain-mismatch",
+        "actual": "child-domain-mismatch"
+      }
+    },
+    {
+      "name": "naive summation of quarter-hour rates produces a fourfold amount error",
+      "pass": true,
+      "detail": {
+        "naiveMm": 12,
+        "correctMm": 3
+      }
+    }
+  ]
+}
