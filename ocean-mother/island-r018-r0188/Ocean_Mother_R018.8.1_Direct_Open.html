@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071c25">
 <link rel="icon" href="data:,">
-<title>Ocean Mother | R018.8 海岛金岸真实感工作台</title>
+<title>Ocean Mother | R018.8.1 海岛金岸兼容修复</title>
 <style>
 :root{
   color-scheme:dark;
@@ -141,7 +141,7 @@ body.deep-mode .brandText small::after{content:'ORIGINAL DEEP OCEAN / V001';font
 <main id="stage"><canvas id="ocean" aria-label="异形海岛、无限海面、浪墙、卷浪、泡沫墙和浓烟的程序化三维工作台"></canvas><iframe id="deepFrame" title="Ocean Mother 原始深海工作台 V001" hidden></iframe></main>
 <div id="fallback"><div><h1>当前浏览器无法启动 WebGL2</h1><p>请在支持 WebGL2 的桌面或移动浏览器中打开这个工作台。</p></div></div>
 <header class="topbar">
-  <div class="brand glass"><span class="brandMark">O</span><span class="brandText"><b>OCEAN MOTHER</b><small>ISLAND GOLD COAST / R018.8</small></span></div>
+  <div class="brand glass"><span class="brandMark">O</span><span class="brandText"><b>OCEAN MOTHER</b><small>ISLAND GOLD COAST / R018.8.1</small></span></div>
   <nav class="tabs glass" aria-label="水域"><button class="selected" data-zone="island">海岛金岸</button><button data-zone="deep">深海</button></nav>
   <div class="actions glass"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle" aria-expanded="true">参数工作台</button></div>
 </header>
@@ -200,11 +200,11 @@ body.deep-mode .brandText small::after{content:'ORIGINAL DEEP OCEAN / V001';font
         <div class="control"><label for="rockContrast">岩石明暗对比</label><output data-out="rockContrast"></output><input id="rockContrast" data-param="rockContrast" type="range" min="0.4" max="2" step="0.01"></div>
       </section>
       <section class="controlGroup"><h3>检查模式</h3><label class="selectRow">显示模式<select id="renderMode"><option value="0">环境日光</option><option value="1">中性材质</option><option value="2">水深与泡沫诊断</option><option value="3">岩石与岸线诊断</option></select></label><p class="note">液态玻璃界面的高光会随指针、场景日光和时间缓慢流动。界面没有贴图。</p></section>
-      <section class="controlGroup"><h3>运行记录</h3><div class="metrics"><span>渲染比例</span><b id="renderScale">0.00</b><span>显示帧率</span><b id="fpsPanel">0</b><span>效果数量</span><b id="effectCount">8</b><span>构建身份</span><b>R018.8</b></div></section>
+      <section class="controlGroup"><h3>运行记录</h3><div class="metrics"><span>渲染比例</span><b id="renderScale">0.00</b><span>显示帧率</span><b id="fpsPanel">0</b><span>效果数量</span><b id="effectCount">8</b><span>构建身份</span><b>R018.8.1</b></div></section>
     </div>
   </div>
 </aside>
-<footer class="glass"><span><i id="statusDot"></i><span id="status">实时运行</span></span><span id="clock">0.0 s</span><span id="fps">0 FPS</span><span class="hideMobile" id="resolution"></span><span class="hideMobile" id="windReadout"></span><span>R018.8 · 真实感候选</span></footer>
+<footer class="glass"><span><i id="statusDot"></i><span id="status">实时运行</span></span><span id="clock">0.0 s</span><span id="fps">0 FPS</span><span class="hideMobile" id="resolution"></span><span class="hideMobile" id="windReadout"></span><span>R018.8.1 · 浏览器兼容修复</span></footer>
 <div id="loading"><div class="loadCard"><div class="loadOrb"></div><b>构建海岛金岸实验室</b><span>准备非对称岛体、方向性破浪、岩石湿面与烟流</span></div></div>
 <pre id="qaProbe"></pre>
 <script>
@@ -668,10 +668,93 @@ void main(){
   fragColor=vec4(clamp(col,0.,1.),1.);
 }`;
 
-function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){throw new Error(gl.getShaderInfoLog(s)||'Shader compilation failed');}return s;}
-let program;
-try{program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,VERT));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program)||'Program link failed');}
-catch(err){document.getElementById('fallback').classList.add('show');document.getElementById('fallback').innerHTML='<div><h1>海岛着色器启动失败</h1><pre style="white-space:pre-wrap;text-align:left">'+String(err.message||err)+'</pre></div>';document.getElementById('loading').classList.add('done');return;}
+// R018.8.1 browser-compatibility ladder. The full R018.8 shader remains first choice.
+// Some Windows/ANGLE drivers accept both shader stages but fail while linking the
+// monolithic volumetric program. Lower tiers preserve the same controls and fields,
+// reducing static loop expansion only when the complete program cannot be linked.
+const VERT_LINK_SAFE=VERT.replace('out vec2 vUv;\n','').replace('vUv=aPosition*.5+.5;','');
+const FRAG_LINK_SAFE=FRAG.replace('in vec2 vUv;\n','');
+const FRAG_COMPAT=FRAG_LINK_SAFE
+  .replace('for(int i=0;i<5;i++)','for(int i=0;i<4;i++)')
+  .replaceAll('for(int i=0;i<3;i++){','for(int i=0;i<2;i++){')
+  .replace('for(int i=0;i<82;i++){','for(int i=0;i<52;i++){')
+  .replace('for(int i=0;i<7;i++){','for(int i=0;i<4;i++){')
+  .replace('const int STEPS=22;','const int STEPS=8;');
+const FRAG_SAFE=FRAG_LINK_SAFE
+  .replace('for(int i=0;i<5;i++)','for(int i=0;i<3;i++)')
+  .replaceAll('for(int i=0;i<3;i++){','for(int i=0;i<1;i++){')
+  .replace('for(int i=0;i<2;i++){','for(int i=0;i<1;i++){')
+  .replace('for(int i=0;i<82;i++){','for(int i=0;i<34;i++){')
+  .replace('for(int i=0;i<7;i++){','for(int i=0;i<3;i++){')
+  .replace('const int STEPS=22;','const int STEPS=1;')
+  .replace('float curl=curlDensity(p);\n    float spray=sprayDensity(p);\n    float smoke=smokeDensityAt(p);\n    float dens=curl*.22+spray*.085+smoke*.084;',
+           'float curl=0.,spray=0.,smoke=0.,dens=0.;');
+
+const shaderDiagnostics=[];
+function rendererInfo(){
+  const ext=gl.getExtension('WEBGL_debug_renderer_info');
+  return {
+    vendor:ext?gl.getParameter(ext.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR),
+    renderer:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
+    version:gl.getParameter(gl.VERSION),
+    shadingLanguage:gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+    maxFragmentUniformVectors:gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
+    maxVaryingVectors:gl.getParameter(gl.MAX_VARYING_VECTORS)
+  };
+}
+function compileShader(type,source,label){
+  const shader=gl.createShader(type);
+  gl.shaderSource(shader,source);
+  gl.compileShader(shader);
+  if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){
+    const log=gl.getShaderInfoLog(shader)||'Shader compilation failed without a driver log';
+    gl.deleteShader(shader);
+    throw new Error(label+': '+log);
+  }
+  return shader;
+}
+function tryProgram(candidate){
+  let vertex=null,fragment=null,p=null;
+  try{
+    vertex=compileShader(gl.VERTEX_SHADER,candidate.vert,candidate.label+' vertex');
+    fragment=compileShader(gl.FRAGMENT_SHADER,candidate.frag,candidate.label+' fragment');
+    p=gl.createProgram();
+    gl.attachShader(p,vertex);gl.attachShader(p,fragment);
+    gl.bindAttribLocation(p,0,'aPosition');
+    gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS)){
+      throw new Error(candidate.label+': '+(gl.getProgramInfoLog(p)||'Program link failed without a driver log'));
+    }
+    gl.detachShader(p,vertex);gl.detachShader(p,fragment);gl.deleteShader(vertex);gl.deleteShader(fragment);
+    shaderDiagnostics.push({tier:candidate.label,ok:true});
+    return p;
+  }catch(error){
+    const glError=gl.getError();
+    shaderDiagnostics.push({tier:candidate.label,ok:false,error:String(error.message||error),glError});
+    if(p)gl.deleteProgram(p);if(vertex)gl.deleteShader(vertex);if(fragment)gl.deleteShader(fragment);
+    return null;
+  }
+}
+const requestedTier=(new URLSearchParams(location.search).get('shader')||window.__OCEAN_FORCE_SHADER_TIER__||'auto').toLowerCase();
+const shaderCandidates=[
+  {label:'full',vert:VERT,frag:FRAG},
+  {label:'full-link-safe',vert:VERT_LINK_SAFE,frag:FRAG_LINK_SAFE},
+  {label:'compat',vert:VERT_LINK_SAFE,frag:FRAG_COMPAT},
+  {label:'safe',vert:VERT_LINK_SAFE,frag:FRAG_SAFE}
+];
+let program=null,shaderTier='none';
+for(const candidate of shaderCandidates){
+  if(requestedTier!=='auto'&&requestedTier!==candidate.label)continue;
+  program=tryProgram(candidate);
+  if(program){shaderTier=candidate.label;break;}
+}
+window.__OCEAN_SHADER_DIAGNOSTICS__={requestedTier,selectedTier:shaderTier,renderer:rendererInfo(),attempts:shaderDiagnostics};
+if(!program){
+  const details=shaderDiagnostics.map(x=>x.tier+': '+(x.error||'failed')+' [GL '+x.glError+']').join('\n');
+  document.getElementById('fallback').classList.add('show');
+  document.getElementById('fallback').innerHTML='<div><h1>海岛着色器启动失败</h1><p>浏览器已尝试完整、兼容和安全渲染路径。</p><pre style="white-space:pre-wrap;text-align:left;max-width:min(760px,90vw);font-size:11px">'+details+'</pre></div>';
+  document.getElementById('loading').classList.add('done');return;
+}
 const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.useProgram(program);const aPos=gl.getAttribLocation(program,'aPosition');gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
 const U={};['uResolution','uTime','uCamPos','uCamRight','uCamUp','uCamForward','uIsland','uWaves','uMedia','uOptics','uRocks','uExtra','uFlags','uMode'].forEach(n=>U[n]=gl.getUniformLocation(program,n));
 
@@ -693,8 +776,8 @@ function camera(){const cp=Math.cos(pitch),sp=Math.sin(pitch),cy=Math.cos(yaw),s
 function flags(){return (effects.foamWall?1:0)|(effects.waveWall?2:0)|(effects.curl?4:0)|(effects.runup?8:0)|(effects.spray?16:0)|(effects.smoke?32:0)|(effects.fire?64:0);}
 function resize(){const w=Math.max(2,Math.round(innerWidth*renderScale)),h=Math.max(2,Math.round(innerHeight*renderScale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}document.getElementById('resolution').textContent=`${w} × ${h}`;document.getElementById('renderScale').textContent=renderScale.toFixed(2);}
 function uniforms(){const c=camera();gl.uniform2f(U.uResolution,canvas.width,canvas.height);gl.uniform1f(U.uTime,time);gl.uniform3fv(U.uCamPos,c.pos);gl.uniform3fv(U.uCamRight,c.right);gl.uniform3fv(U.uCamUp,c.up);gl.uniform3fv(U.uCamForward,c.forward);gl.uniform4f(U.uIsland,params.islandHeight,params.islandIrregularity,params.beachWidth,params.shoreBias);gl.uniform4f(U.uWaves,params.waveHeight,params.waveSpeed,params.breakerPower,params.curlPower);gl.uniform4f(U.uMedia,params.foamWall,params.smokeHeight,params.runup,params.spray);gl.uniform4f(U.uOptics,params.waterClarity,params.sunAngle,params.exposure,params.wind);gl.uniform4f(U.uRocks,params.rockSharpness,params.rockContrast,params.fire,params.foamNoise);gl.uniform4f(U.uExtra,params.smokeDensity,params.foamNoise,0.,0.);gl.uniform1i(U.uFlags,flags());gl.uniform1i(U.uMode,renderMode);}
-function draw(now){if(activeZone==='deep'){last=now;requestAnimationFrame(draw);return;}const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)time+=dt;resize();uniforms();gl.drawArrays(gl.TRIANGLES,0,6);fpsFrames++;if(now-fpsStart>700){fps=fpsFrames*1000/(now-fpsStart);fpsFrames=0;fpsStart=now;document.getElementById('fps').textContent=`${fps.toFixed(0)} FPS`;document.getElementById('fpsPanel').textContent=fps.toFixed(0);if(fps<24&&renderScale>.42){renderScale=Math.max(.42,renderScale*.9);}else if(fps>48&&renderScale<Math.min(devicePixelRatio||1,1.25)*.68){renderScale=Math.min(Math.min(devicePixelRatio||1,1.25)*.68,renderScale*1.035);}}
-document.getElementById('clock').textContent=time.toFixed(1)+' s';document.getElementById('windReadout').textContent=`风力 ${params.wind.toFixed(2)}× · 烟高 ${params.smokeHeight.toFixed(0)} m`;window.__OCEAN_QA__={ready:true,time,paused,fps,renderScale,canvas:[canvas.width,canvas.height],flags:flags(),zone:activeZone,version:'0.3.8-island-r018-wave-refinement',buildId:'island-r018-wave-refinement-deep-restore',foamModel:'antialiased advected filament field',curlModel:'three-layer crest lip and falling sheet',deepModel:'frozen Ocean Mother V001'};requestAnimationFrame(draw);}
+function draw(now){if(activeZone==='deep'){last=now;requestAnimationFrame(draw);return;}const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;if(!paused)time+=dt;resize();uniforms();gl.drawArrays(gl.TRIANGLES,0,6);fpsFrames++;if(now-fpsStart>700){fps=fpsFrames*1000/(now-fpsStart);fpsFrames=0;fpsStart=now;document.getElementById('fps').textContent=`${fps.toFixed(0)} FPS`;document.getElementById('fpsPanel').textContent=fps.toFixed(0);if(fps<24&&renderScale>.42){renderScale=Math.max(.42,renderScale*.9);}else if(fps>48&&renderScale<Math.min(devicePixelRatio||1,1.25)*.68){renderScale=Math.min(Math.min(devicePixelRatio||1,1.25)*.68,renderScale*1.035);}}
+document.getElementById('clock').textContent=time.toFixed(1)+' s';document.getElementById('windReadout').textContent=`风力 ${params.wind.toFixed(2)}× · 烟高 ${params.smokeHeight.toFixed(0)} m`;window.__OCEAN_QA__={ready:true,time,paused,fps,renderScale,canvas:[canvas.width,canvas.height],flags:flags(),zone:activeZone,version:'0.3.8.1-island-r018-browser-compat',buildId:'island-r018-wave-refinement-link-repair',foamModel:'antialiased advected filament field',curlModel:'three-layer crest lip and falling sheet',deepModel:'frozen Ocean Mother V001',shaderTier,shaderDiagnostics:window.__OCEAN_SHADER_DIAGNOSTICS__};requestAnimationFrame(draw);}
 
 function syncControl(el){const name=el.dataset.param,v=params[name],min=+el.min,max=+el.max;el.value=v;el.style.setProperty('--fill',`${100*(v-min)/(max-min)}%`);const out=document.querySelector(`[data-out="${name}"]`);if(out)out.textContent=(Math.abs(v)>=10?v.toFixed(1):v.toFixed(2))+units[name];}
 document.querySelectorAll('[data-param]').forEach(el=>{syncControl(el);el.addEventListener('input',()=>{params[el.dataset.param]=+el.value;syncControl(el);markPreset(null);});});
@@ -732,7 +815,7 @@ let touches=new Map(),pinch=0;canvas.addEventListener('pointerdown',e=>{if(e.poi
 function glassPointer(e){const x=100*e.clientX/innerWidth,y=100*e.clientY/innerHeight;document.documentElement.style.setProperty('--mx',x+'%');document.documentElement.style.setProperty('--my',y+'%');document.documentElement.style.setProperty('--flow-x',(100-x)+'%');document.documentElement.style.setProperty('--flow-y',(25+y*.5)+'%');}
 addEventListener('pointermove',glassPointer,{passive:true});addEventListener('resize',resize,{passive:true});
 
-syncEffects();resize();setTimeout(()=>document.getElementById('loading').classList.add('done'),550);requestAnimationFrame(draw);
+syncEffects();resize();if(shaderTier!=='full'){document.getElementById('status').textContent='兼容渲染 · 实时运行';}setTimeout(()=>document.getElementById('loading').classList.add('done'),550);requestAnimationFrame(draw);
 })();
 </script>
 <script>window.__OCEAN_DELIVERY_POLICY__={defaultDeliverable:'interactive-3d-html-webgl',imageGeneration:false,imageAllowedOnlyByExplicitUserRequest:true,visualApproved:false,productionApproved:false};</script>
