@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu-houdini-hda-identity-result/h01",
+  "status": "pass",
+  "evidenceClass": "source-contract CPU fixture",
+  "observationRoot": "official SideFX documentation lineage plus local manifest logic; not Houdini runtime",
+  "summary": {
+    "checks": 13,
+    "passed": 13,
+    "failed": 0,
+    "baseArtifactIdentity": "99be599b1db5645aec5a2b76fcde21cb270210e972c11c89bf8e0d657ce15830",
+    "changedDefinitionArtifactIdentity": "2b6b9f2f6baa4c84ad43b62d5185e2b8e064cf69099c9a32870618dae7623e30"
+  },
+  "observations": [
+    "A fully qualified type and user version do not identify exact HDA definition bytes.",
+    "Definition resolution policy, selected payload, instance lock state, parameters, context and external inputs affect reproducible identity.",
+    "The fixture validates a handoff manifest only; it does not execute Houdini or prove cooked geometry equivalence."
+  ],
+  "checks": [
+    { "name": "complete manifest passes", "pass": true },
+    { "name": "artifact identity is sha256", "pass": true },
+    { "name": "same type and version but changed definition changes identity", "pass": true },
+    { "name": "changed definition search order changes identity", "pass": true },
+    { "name": "changed external input changes identity", "pass": true },
+    { "name": "ambiguous type reference rejected", "pass": true },
+    { "name": "unlocked dirty instance rejected", "pass": true },
+    { "name": "library path without payload hash rejected", "pass": true },
+    { "name": "multiple definitions require explicit selected payload", "pass": true },
+    { "name": "selected definition must match recorded payload", "pass": true },
+    { "name": "external input without content hash rejected", "pass": true },
+    { "name": "implicit cook time rejected", "pass": true },
+    { "name": "user version participates but cannot replace payload identity", "pass": true }
+  ]
+}
