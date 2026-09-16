@@ -3,15 +3,16 @@ name: Ocean R018.13 startup recovery
 on:
   push:
     branches:
-      - release/ocean-mother-r01813-startup-recovery-20260907
+      - work/ocean-r01813-recovery-20260916
     paths:
       - .github/workflows/ocean-r01813-startup-recovery.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: ocean-r01813-startup-recovery
+  group: ocean-r01813-recovery-20260916
   cancel-in-progress: false
 
 jobs:
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - name: Check out release branch
+      - name: Check out recovery branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -140,7 +141,7 @@ jobs:
           git commit -m "release(ocean): publish R018.13 startup recovery single HTML [skip ci]"
           FINAL_SHA="$(git rev-parse HEAD)"
           printf '%s\n' "$FINAL_SHA" > evidence/FINAL_COMMIT.txt
-          git push origin HEAD
+          git push origin HEAD:work/ocean-r01813-recovery-20260916
 
       - name: Verify immutable raw.githack delivery
         shell: bash
@@ -167,7 +168,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Ocean_Mother_R01813_Startup_Recovery
+          name: Ocean_Mother_R01813_Startup_Recovery_20260916
           path: |
             candidate/index.html
             ocean-mother/releases/Ocean_Mother_R01813_Startup_Recovery_Direct_Open.html
