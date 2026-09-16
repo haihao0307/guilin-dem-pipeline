@@ -1,0 +1,32 @@
+name: KAOPU Landscape Y04 Clipping Distribution Audit
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - 'docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_landscape_clipping_distribution_audit_y04.mjs'
+      - '.github/workflows/kaopu-landscape-y04-clipping-distribution.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Replay locked Landscape clamp and distribution
+        run: |
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/run_landscape_clipping_distribution_audit_y04.mjs \
+            landscape_clipping_distribution_result_y04.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-landscape-y04-clipping-distribution
+          path: landscape_clipping_distribution_result_y04.json
+          if-no-files-found: error
