@@ -1,0 +1,86 @@
+{
+  "schema": "kaopu-gaussian-blend-spec-contract-result/r86",
+  "status": "Observation: source-contract audit passed",
+  "observedAt": "2026-09-15T17:54:53.176Z",
+  "sourceTransportCorrection": "Two registry.khronos.org runner fetches failed before evidence collection (403); the audit uses commit-pinned files from KhronosGroup official GitHub repositories in the same standards lineage.",
+  "sourceReceipts": {
+    "gles-3.0.6": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/specs/es/3.0/es_spec_3.0.pdf",
+      "byteLength": 1528315,
+      "sha256": "7e831831595d3e44c267cc0a0d754f8c244cf3c8f5056f49a674f25fb9d5adeb"
+    },
+    "gles-ext-color-buffer-float": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/extensions/EXT/EXT_color_buffer_float.txt",
+      "byteLength": 13154,
+      "sha256": "a0248913842c02babda2d79c0821accf13bc6ed6b63944630c017dec417aa075"
+    },
+    "gles-ext-float-blend": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/1cdd228e34966dd6b95bd203e9f84faba0f371a1/extensions/EXT/EXT_float_blend.txt",
+      "byteLength": 1815,
+      "sha256": "b97d2626aebd7437c660715fd9ce888714153f7fd8f152fda07e1c80aca6dc9e"
+    },
+    "webgl-ext-color-buffer-float": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/extensions/EXT_color_buffer_float/extension.xml",
+      "byteLength": 3931,
+      "sha256": "1d248cba6b358a1d61afc7f22f07dda0c778885e04a3afad65c5f6a280b90e50"
+    },
+    "webgl-ext-float-blend": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/extensions/EXT_float_blend/extension.xml",
+      "byteLength": 2984,
+      "sha256": "e97b3f0f2603b175211187c0a8626ee904624cace807622a9520bd8809e2641c"
+    },
+    "webgl-2.0.0": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/specs/2.0.0/index.html",
+      "byteLength": 248411,
+      "sha256": "c910fa8aee78b9b7e20d194baa2a632a92ae5cdc03d60135d9fbc1c2bda6635e"
+    },
+    "webgl-conformance-fbo-render": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/WebGL/714857a28445e8f5d8d6ae1c78498578009534d8/conformance-suites/2.0.0/deqp/functional/gles3/es3fFboRenderTest.js",
+      "byteLength": 85605,
+      "sha256": "d1edbd777eb4bf0d99b9c00467e55bc8b70e439063032fbb97867abf39b29800"
+    }
+  },
+  "checks": {
+    "coreLeavesOtherOperationDetailsUnspecified": true,
+    "coreAllowsPixelVariationAcrossImplementations": true,
+    "coreDefinesHalfRepresentation": true,
+    "blendPrecisionFloorIsDestinationPrecision": true,
+    "blendEquationHasSourceOverTerms": true,
+    "colorBufferFloatAddsFloatingPointBlendApplicability": true,
+    "nativeColorBufferFloatAddsNoPrecisionTerm": true,
+    "floatBlendIs32BitEnablement": true,
+    "nativeFloatBlendAddsNoPrecisionTerm": true,
+    "webglColorExtensionExposesRGBA16F": true,
+    "webglFloatBlendMirrorsNativeAndOnlyEnables32Bit": true,
+    "stableWebgl2DerivesFromES3": true,
+    "officialConformanceUsesNonzeroThreshold": true,
+    "officialConformanceIncludesRGBA16F": true
+  },
+  "failedChecks": [],
+  "boundedTermAudit": {
+    "nativeColorBufferFloatPrecisionOrRoundingTerms": 0,
+    "nativeFloatBlendPrecisionOrRoundingTerms": 0,
+    "limitation": "Term absence is supporting evidence only; the positive core clauses control the decision."
+  },
+  "decision": {
+    "r85F32StagedNormativelyRequired": false,
+    "currentBestView": "R85 f32-staged remains an empirical input/output-equivalent model for its locked runtime root.",
+    "reason": "Normative sources set equations and a destination-precision floor but leave otherwise-unspecified operation representation/details open; the extensions add renderability or enablement without fixing staging.",
+    "hardwareReplayMeaning": "A different hardware-backed WebGL result is a new runtime Observation Root, not a conformance proof of the R85 bit pattern.",
+    "cacheImplication": "Bit-exact replay/cache authorization must remain bound to backend, driver/runtime, blend path and output format."
+  },
+  "evidenceRoots": {
+    "normativeKhronos": [
+      "gles-3.0.6",
+      "gles-ext-color-buffer-float",
+      "gles-ext-float-blend",
+      "webgl-ext-color-buffer-float",
+      "webgl-ext-float-blend",
+      "webgl-2.0.0"
+    ],
+    "nonNormativeKhronosRepository": [
+      "webgl-conformance-fbo-render"
+    ],
+    "independenceNote": "These sources are one Khronos standards lineage; repository execution policy is not an independent normative root."
+  }
+}
