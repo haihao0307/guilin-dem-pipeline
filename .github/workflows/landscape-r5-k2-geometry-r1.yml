@@ -44,19 +44,40 @@ jobs:
               m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, s, re.S)
               assert m, sid
               blocks.append(m.group(1))
-          Path('/tmp/landscape-worker.js').write_text('\n'.join(blocks), encoding='utf-8')
+          base = '\n'.join(blocks)
+          Path('/tmp/landscape-worker.js').write_text(base, encoding='utf-8')
+          runner = r'''
+const fs=require('fs');
+const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1};
+const data=generateScene(cfg,()=>{});
+const g=data.report.microscopeGeometry;
+if(!g)throw Error('runtime microscope geometry report missing');
+if(g.protectedDriftCount!==0)throw Error('protected vertex drift: '+g.protectedDriftCount);
+if(g.triangleFlipCount!==0)throw Error('triangle flips: '+g.triangleFlipCount);
+if(g.effectiveAmplitudeM>g.requestedAmplitudeM+1e-12)throw Error('effective amplitude exceeded request');
+if(g.maxDisplacementM<1e-6)throw Error('geometry displacement did not execute');
+const out={schema:'LANDSCAPE_R5_K2_G1_RUNTIME_QA',date:'2026-09-16',config:cfg,microscopeGeometry:g,mainVertices:data.report.mainVertices,mainTriangles:data.report.mainTriangles,geometryGridM:data.report.geometryGridM,geometryFieldCoupled:false,visualApproved:false,productionReady:false};
+fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json',JSON.stringify(out,null,2));
+console.log(JSON.stringify(out));
+'''
+          Path('/tmp/landscape-runtime-qa.js').write_text(base + '\n' + runner, encoding='utf-8')
           print(json.dumps(b, ensure_ascii=False, indent=2))
           PY
           node --check /tmp/landscape-worker.js
 
-      - name: Materialize generated candidate
+      - name: Full numerical geometry runtime QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=2048
+        run: node /tmp/landscape-runtime-qa.js
+
+      - name: Materialize generated candidate and QA
         run: |
           git config user.name "Landscape Mother"
           git config user.email "actions@users.noreply.github.com"
-          git add workbenches/landscape-surface-r5-k2-geometry-r1/index.html workbenches/landscape-surface-r5-k2-geometry-r1/build.json
+          git add workbenches/landscape-surface-r5-k2-geometry-r1/index.html workbenches/landscape-surface-r5-k2-geometry-r1/build.json workbenches/landscape-surface-r5-k2-geometry-r1/runtime-qa.json
           if git diff --cached --quiet; then
-            echo "candidate already materialized"
+            echo "candidate and QA already materialized"
             exit 0
           fi
-          git commit -m "build(landscape): materialize R5.K2 Microscope geometry R1 [skip ci]"
+          git commit -m "qa(landscape): materialize R5.K2.G1 runtime geometry evidence [skip ci]"
           git push
