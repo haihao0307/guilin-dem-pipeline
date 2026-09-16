@@ -7,4 +7,12 @@ scene.add(new THREE.HemisphereLight(0xeaf4ea,0x485038,1.45));const sun=new THREE
 const MAT={terrain:new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}),soil:new THREE.MeshStandardMaterial({color:'#6c5038',roughness:1}),wet:new THREE.MeshStandardMaterial({color:'#3e3428',roughness:.82}),grass:new THREE.MeshStandardMaterial({color:'#4a7437',roughness:.96}),water:new THREE.MeshPhysicalMaterial({color:'#5f969a',roughness:.18,transparent:true,opacity:.68,depthWrite:false,clearcoat:.65,clearcoatRoughness:.26}),crop:new THREE.MeshStandardMaterial({color:'#67923c',roughness:.9,side:THREE.DoubleSide}),trunk:new THREE.MeshStandardMaterial({color:'#514532',roughness:1}),leaf:new THREE.MeshStandardMaterial({color:'#285d37',roughness:.93}),skin:new THREE.MeshStandardMaterial({color:'#ad7955',roughness:.86}),cloth:new THREE.MeshStandardMaterial({color:'#53644b',roughness:.96}),dark:new THREE.MeshStandardMaterial({color:'#2e312b',roughness:1}),horn:new THREE.MeshStandardMaterial({color:'#d8ceb5',roughness:.9}),wood:new THREE.MeshStandardMaterial({color:'#705438',roughness:.97}),thatch:new THREE.MeshStandardMaterial({color:'#b89b5f',roughness:.96})};
 const mesh=(g,m,parent=scene)=>{const o=new THREE.Mesh(g,m);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
 window.R41={THREE,mobile,renderer,scene,camera,controls,sun,MAT,mesh};
-import('./terrain.mjs');
+if(window.W&&typeof window.W.fineDetail!=='function'&&typeof window.W.noise==='function'){
+  window.W.fineDetail=(x,z)=>{let qx=x*.018,qz=z*.018,s=0,a=.55;for(let i=0;i<5;i++){const k=1<<i;s+=(window.W.noise(qx*k,qz*k)-.5)*a;a*=.48;}return s;};
+}
+import('./terrain.mjs').catch(error=>{
+  console.error('R041_STARTUP_ERROR',error);
+  const fail=document.getElementById('fail');
+  fail.innerHTML='<b>R041 启动失败，已记录错误。</b><p style="font-size:12px;line-height:1.5">'+String(error?.message||error)+'</p>';
+  fail.classList.add('show');
+});
