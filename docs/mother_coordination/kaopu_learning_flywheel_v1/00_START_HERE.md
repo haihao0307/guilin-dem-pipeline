@@ -34,3 +34,11 @@ Next bounded question: verify the original Microscope host wrapping, initial val
 Keep each cycle focused on one unresolved question and report an actual source explanation, executable result, counterexample or specific blocker. Do not count repeated terminology or the number of meetings as progress. Source reproduction and engineering adaptation have separate acceptance gates. Shared guidance, receipt, understanding, implementation and user acceptance remain separate states.
 
 This additive intake does not delete or mark prior Gaussian/other learning complete, change any automation or meeting, restore prohibited tools, authorize new assets, modify production branches, or alter Canonical Truth and frozen geometry.
+
+## 2026-09-16 complementary terrain-video intake: T01
+
+Read [T01 video/source review and targeted guidance](LEARNING_LOG/2026-09-16_TERRAIN_VIDEO_T01_RELATION_FIELDS.md), [CPU counterexample probe](PROBES/terrain_relation_probe_t01.py), and [actual result](PROBES/terrain_relation_probe_t01_result.json).
+
+The user's uploaded development montage adds a candidate relationship layer: branch-level geometric distances, shared terrain/material domains, and explicit separation of remote displacement proxies from complete interactive objects. Three synthetic CPU counterexamples were actually run. They distinguish nearest-all distance from hierarchical distance, distance from directed connectivity, and shared from mismatched geometry/material coordinates. They do not reproduce the author's node graph or validate hydrology.
+
+Keep Yohei Y01's next original-source question open. T01 is complementary intake, not authorization to replace frozen DEM with a generated river-first terrain, create hand-drawn canonical rivers, exchange approved trees for displacement lumps, or mark fields as cultivable from Voronoi colors alone. Exact video attribution and full node sources remain unverified; actual Mother receipt, implementation and user acceptance remain Unknown. No production branches, automations or frozen data were changed.

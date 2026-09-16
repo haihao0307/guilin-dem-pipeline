@@ -1,0 +1,35 @@
+{
+  "id": "KAOPU-TERRAIN-VIDEO-T01-20260916",
+  "observed_at_utc": "2026-09-16T07:16:41.010010+00:00",
+  "probe_sha256": "bebcf4686096430be3b0970b1a1689b622c3d18c32c642277c1e06855c4a8619",
+  "evidence": "synthetic CPU counterexamples; no author-code reproduction",
+  "checks": {
+    "hierarchy_preserves_information_lost_by_nearest_all": true,
+    "distance_is_not_directed_hydraulic_connectivity": true,
+    "shared_domain_prevents_this_label_mismatch": true
+  },
+  "passed": 3,
+  "total": 3,
+  "cases": [
+    {
+      "nearest_only_at_trunk_and_branch_m": [0.0, 0.0],
+      "chosen_two_level_average_m": [0.0, 1.5],
+      "interpretation": "Hierarchy distances can distinguish points collapsed by nearest-all distance. This does not establish real channel slopes or author weights."
+    },
+    {
+      "max_nearest_distance_change_on_reversing_edges_m": 0.0,
+      "source_reaches_outlet_forward": true,
+      "source_reaches_outlet_reversed": false,
+      "interpretation": "Proximity cannot determine connectivity direction; neither case contains hydraulic state."
+    },
+    {
+      "world_point": [-0.1, 1.5707963267948966],
+      "shared_warped_domain_point": [0.19999999999999998, 1.5707963267948966],
+      "geometry_label_in_warped_domain": 1,
+      "incorrect_shader_label_in_unwarped_domain": 0,
+      "consistent_shader_label_in_shared_domain": 1,
+      "interpretation": "Warping only one consumer can disagree on parcel identity. A shared domain fixes this constructed example, not all topology problems."
+    }
+  ],
+  "not_tested": ["author node graph", "Blender rendering", "hydrology", "terrain geology", "parcel polygon extraction", "GPU/target device performance", "Mother implementation or receipt"]
+}
