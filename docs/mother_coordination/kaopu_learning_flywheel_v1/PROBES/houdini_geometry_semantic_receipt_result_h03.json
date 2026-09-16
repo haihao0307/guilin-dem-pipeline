@@ -1,0 +1,58 @@
+{
+  "schema": "kaopu-houdini-geometry-semantic-receipt-result/h03",
+  "status": "pass",
+  "evidenceClass": "official-source-contract plus synthetic CPU counterexamples",
+  "observationRoot": "one official SideFX documentation lineage plus Node.js synthetic fixtures; not Houdini runtime",
+  "summary": {
+    "checks": 13,
+    "passed": 13,
+    "failed": 0,
+    "baseSemanticReceipt": "a3cbbe9d8b39a5b817e825684b39326db83975cef348b8828f5ceba2a8bd17aa",
+    "baseWeakMetrics": {
+      "pointCount": 4,
+      "primitiveCount": 2,
+      "bounds": [0, 1, 0, 1, 0, 0]
+    },
+    "baseNaiveOrderHash": "a5470dc3d0bf9d349468c22a96091a9a981aac1473c2d0155cf613e342eea50b",
+    "permutedNaiveOrderHash": "b050ecc32768dbdd93d52a4ea5cd2a9c9030c6496fb26089b5171eea221c1fe0"
+  },
+  "currentBestView": "Bind cooked-geometry receipts to coordinate frame, stable semantic IDs, topology, owner-specific typed attribute schemas and values, groups and detail metadata. Keep raw transport hashes and quality metrics separate.",
+  "boundary": "This is a conservative polygonal fixture contract, not a universal Houdini geometry canonicalizer, renderer equivalence test or cross-machine cook determinism result.",
+  "checks": [
+    {
+      "name": "stable IDs remove point, primitive, cyclic-start and unordered-group enumeration noise",
+      "pass": true,
+      "detail": {
+        "base": "a3cbbe9d8b39a5b817e825684b39326db83975cef348b8828f5ceba2a8bd17aa",
+        "permuted": "a3cbbe9d8b39a5b817e825684b39326db83975cef348b8828f5ceba2a8bd17aa"
+      }
+    },
+    {
+      "name": "naive order-sensitive serialization changes under harmless enumeration changes",
+      "pass": true,
+      "detail": {
+        "baseRaw": "a5470dc3d0bf9d349468c22a96091a9a981aac1473c2d0155cf613e342eea50b",
+        "permutedRaw": "b050ecc32768dbdd93d52a4ea5cd2a9c9030c6496fb26089b5171eea221c1fe0"
+      }
+    },
+    {
+      "name": "bbox and counts can match while topology differs",
+      "pass": true,
+      "detail": {
+        "weakMetrics": { "pointCount": 4, "primitiveCount": 2, "bounds": [0, 1, 0, 1, 0, 0] },
+        "base": "a3cbbe9d8b39a5b817e825684b39326db83975cef348b8828f5ceba2a8bd17aa",
+        "otherTopology": "a0f9dbde7bbc34288a839ba241adabf3755a5fbb0d3ac94730536f787a3aa70f"
+      }
+    },
+    { "name": "vertex-owned UV change changes semantic receipt", "pass": true, "detail": null },
+    { "name": "polygon winding reversal is not erased by cyclic normalization", "pass": true, "detail": null },
+    { "name": "detail attribute change changes semantic receipt", "pass": true, "detail": null },
+    { "name": "group membership change changes semantic receipt", "pass": true, "detail": null },
+    { "name": "attribute storage precision is part of schema identity", "pass": true, "detail": null },
+    { "name": "transient change counters do not change content receipt", "pass": true, "detail": null },
+    { "name": "equal synthetic data IDs do not substitute for content comparison", "pass": true, "detail": null },
+    { "name": "position-only canonicalization with coincident points is rejected without stable IDs", "pass": true, "detail": null },
+    { "name": "duplicate stable point IDs are rejected", "pass": true, "detail": null },
+    { "name": "ordered group sequence remains semantic", "pass": true, "detail": null }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "kaopu-mother-routing/1",
+  "id": "KAOPU-HOUDINI-H03-GEOMETRY-SEMANTIC-RECEIPT",
+  "date": "2026-09-17",
+  "targetMother": "Object DNA Mother",
+  "status": "prepared-not-delivered",
+  "acknowledged": false,
+  "adopted": false,
+  "guidance": [
+    "Record exact cooked-output transport hash, semantic geometry receipt and quality/acceptance metrics separately.",
+    "For polygon receipts, bind coordinate frame/units, stable point and primitive IDs, topology and winding, owner-specific typed attribute schemas and values, detail metadata and groups.",
+    "Normalize cyclic polygon start and semantically unordered enumeration only; preserve winding and ordered-group sequence.",
+    "Reject missing or duplicate stable IDs instead of guessing correspondence from coordinates.",
+    "Do not treat bbox, counts, data IDs, renderer output or human acceptance as interchangeable evidence."
+  ],
+  "acceptanceChecks": [
+    "two fixed-context cooks produce the same semantic receipt or a classified difference",
+    "harmless element renumbering leaves semantic receipt unchanged",
+    "topology, vertex-UV and winding negative controls each change semantic receipt",
+    "raw output hash and semantic receipt are both retained",
+    "type-specific output outside the polygon subset fails closed",
+    "production Object DNA and Canonical Truth remain unchanged"
+  ],
+  "boundary": "Prepared guidance only; no Mother feedback, Houdini runtime evidence or adoption."
+}

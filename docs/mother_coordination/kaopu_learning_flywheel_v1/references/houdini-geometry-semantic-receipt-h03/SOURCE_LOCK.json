@@ -1,0 +1,68 @@
+{
+  "schema": "kaopu-source-lock/1",
+  "id": "KAOPU-HOUDINI-H03-SOURCE-LOCK",
+  "retrievedAt": "2026-09-17",
+  "vendorVersionShown": "Houdini 22.0",
+  "sources": [
+    {
+      "url": "https://www.sidefx.com/docs/houdini/model/points.html",
+      "title": "Points and vertices",
+      "claimsUsed": [
+        "A vertex references a point and primitives use vertices to reference points.",
+        "Primitives can share points while vertices remain unique to a primitive.",
+        "Coincident positions do not imply the same point-sharing topology."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/model/attributes.html",
+      "title": "Geometry attributes",
+      "claimsUsed": [
+        "Attributes can be owned by vertices, points, primitives or the whole detail.",
+        "Owner precedence and storage precision affect interpretation.",
+        "The conventional id attribute is distinct from element number and can track elements when numbering changes."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/model/groups.html",
+      "title": "Groups",
+      "claimsUsed": [
+        "Groups are named component collections.",
+        "Ordered and unordered groups carry different ordering semantics."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/model/primitives.html",
+      "title": "Primitives",
+      "claimsUsed": [
+        "Polygons are defined by ordered vertex sequences.",
+        "Different primitive representations may have different attribute and topology semantics."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/hom/hou/Geometry.html",
+      "title": "hou.Geometry",
+      "claimsUsed": [
+        "HOM exposes point, vertex, primitive and detail attribute sets separately.",
+        "HOM exposes point, primitive, edge and vertex groups separately.",
+        "Topology and primitive-intrinsic data IDs are change indicators, while the modification counter is not unique across geometry objects."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/hom/hou/Attrib.html",
+      "title": "hou.Attrib",
+      "claimsUsed": [
+        "Attribute identity includes owner, data type, numeric precision, component size and qualifier metadata."
+      ]
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/model/mkl.html",
+      "title": "Speed vs. reproducibility in Math Kernel Library",
+      "claimsUsed": [
+        "Floating-point output may vary across runtimes, optimized paths, threading, alignment, hardware and control settings.",
+        "Reproducibility controls improve but do not universally guarantee identical output."
+      ]
+    }
+  ],
+  "independence": "One official SideFX documentation lineage plus a synthetic CPU fixture. Documentation authority and CI replay do not create independent Houdini runtime evidence.",
+  "runtimeExecuted": false
+}
