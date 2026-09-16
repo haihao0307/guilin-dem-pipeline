@@ -1,0 +1,146 @@
+name: Ocean Mother R018.8 immutable archive republish
+
+on:
+  push:
+    branches:
+      - feature/ocean-mother-r0188-wave-deep-restore
+    paths:
+      - .github/workflows/ocean-r0188-immutable-republish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ocean-r0188-immutable-republish
+  cancel-in-progress: false
+
+jobs:
+  rebuild-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild the frozen R018.8 artifact
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ocean-r0188/v001 dist/ocean-mother/island-r018-r0188 evidence
+          base64 -d tools/build_ocean_r0188.py.xz.b64 | xz -d > /tmp/ocean-r0188/build_ocean_r0188.py
+          python3 -m py_compile /tmp/ocean-r0188/build_ocean_r0188.py
+          cat tools/ocean_v001_source.01.b64 tools/ocean_v001_source.02.b64 tools/ocean_v001_source.03.b64 tools/ocean_v001_source.04.b64 | base64 -d > /tmp/ocean-r0188/ocean_v001_source.tar.xz
+          echo '01b987c9d6764562f6fce9a21ddf5aaef5540cc14e0853031a519e442a8b570c  /tmp/ocean-r0188/ocean_v001_source.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/ocean-r0188/ocean_v001_source.tar.xz -C /tmp/ocean-r0188/v001
+          git fetch origin gh-pages
+          git show origin/gh-pages:ocean-mother/island-r018/index.html > /tmp/ocean-r0188/R018.7.html
+          test "$(git hash-object /tmp/ocean-r0188/R018.7.html)" = '674fb6ffb85b70e0950035a357a1a3e0b7e3a3e3'
+          python3 /tmp/ocean-r0188/build_ocean_r0188.py \
+            --baseline /tmp/ocean-r0188/R018.7.html \
+            --v001 /tmp/ocean-r0188/v001 \
+            --output dist/ocean-mother/island-r018-r0188/index.html \
+            --report evidence/R0188_BUILD_IDENTITY.json
+          cp dist/ocean-mother/island-r018-r0188/index.html dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+
+      - name: Verify immutable byte identity and locked scope
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os, re
+          root=Path('dist/ocean-mother/island-r018-r0188')
+          page=root/'index.html'
+          direct=root/'Ocean_Mother_R018.8_Direct_Open.html'
+          identity=json.loads(Path('evidence/R0188_BUILD_IDENTITY.json').read_text(encoding='utf-8'))
+          raw=page.read_bytes()
+          digest=hashlib.sha256(raw).hexdigest()
+          expected='91c61f19809ac6154220a0716ba5a3f4f7069e5ae537fa930d5d96624c7be2f3'
+          assert len(raw)==121826, len(raw)
+          assert digest==expected, digest
+          assert direct.read_bytes()==raw
+          assert identity['version']=='0.3.8-island-r018-wave-refinement'
+          assert identity['buildId']=='island-r018-wave-refinement-deep-restore'
+          assert identity['outputSha256']==expected
+          assert identity['nearshoreLocked']==['terrain','island','sand','rocks','fire','smoke','camera presets','UI layout']
+          assert identity['changed']==['foam field','water crest shaping','curling-wave lip','deep-sea switch']
+          assert identity['deepRestore']['version']=='0.1.0'
+          assert identity['deepRestore']['manifestHashesPreserved'] is True
+          assert identity['generatedImagesUsed'] is False
+          text=raw.decode('utf-8')
+          required=['ISLAND GOLD COAST / R018.8','0.3.8-island-r018-wave-refinement','island-r018-wave-refinement-deep-restore','frozen Ocean Mother V001','Ocean Mother · 原始深海工作台 V001','window.__OCEAN_DEEP_RESTORED__']
+          for marker in required:
+              assert marker in text, marker
+          forbidden=re.findall(r'https?://|data:image/|\.png\b|\.jpe?g\b|\.webp\b|\.glb\b|\.gltf\b',text,re.I)
+          assert not forbidden, forbidden[:8]
+          receipt={
+            'format':'ocean-r0188-immutable-archive-receipt',
+            'version':identity['version'],
+            'buildId':identity['buildId'],
+            'bytes':len(raw),
+            'sha256':digest,
+            'sourceBranch':'feature/ocean-mother-r0188-wave-deep-restore',
+            'sourceCommit':os.environ['SOURCE_SHA'],
+            'historicalRecoveryAnchor':'aad4643d899dfd16c2a53fff3e402bce05b181c2',
+            'historicalArtifactSha256':'91c61f19809ac6154220a0716ba5a3f4f7069e5ae537fa930d5d96624c7be2f3',
+            'byteIdenticalToHistoricalArtifact':True,
+            'visualMutationAllowed':False,
+            'browserApprovalInferred':False,
+            'verificationScope':'deterministic rebuild identity, locked-scope assertions, zero-image policy and public byte identity'
+          }
+          Path('evidence/R0188_ARCHIVE_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Publish the isolated immutable R018.8 route
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          rm -rf /tmp/ocean-r0188-pages
+          git worktree add --detach /tmp/ocean-r0188-pages origin/gh-pages
+          cd /tmp/ocean-r0188-pages
+          git checkout -B gh-pages
+          rm -rf ocean-mother/island-r018-r0188
+          mkdir -p ocean-mother/island-r018-r0188
+          cp "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0188/index.html" ocean-mother/island-r018-r0188/index.html
+          cp "$GITHUB_WORKSPACE/dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html" ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+          cp "$GITHUB_WORKSPACE/evidence/R0188_BUILD_IDENTITY.json" ocean-mother/island-r018-r0188/R0188_BUILD_IDENTITY.json
+          cp "$GITHUB_WORKSPACE/evidence/R0188_ARCHIVE_RECEIPT.json" ocean-mother/island-r018-r0188/R0188_ARCHIVE_RECEIPT.json
+          touch .nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .nojekyll ocean-mother/island-r018-r0188
+          git commit -m "publish(ocean): restore immutable R018.8 archive" || true
+          git push origin HEAD:gh-pages
+
+      - name: Verify public byte identity
+        run: |
+          set -euo pipefail
+          LOCAL=dist/ocean-mother/island-r018-r0188/index.html
+          URL=https://haihao0307.github.io/guilin-dem-pipeline/ocean-mother/island-r018-r0188/index.html
+          EXPECTED=91c61f19809ac6154220a0716ba5a3f4f7069e5ae537fa930d5d96624c7be2f3
+          for n in $(seq 1 45); do
+            if curl -fsSL --retry 2 "$URL?archive=${GITHUB_SHA}-${n}" -o /tmp/r0188-public.html; then
+              ACTUAL=$(sha256sum /tmp/r0188-public.html | awk '{print $1}')
+              if [ "$ACTUAL" = "$EXPECTED" ]; then break; fi
+            fi
+            sleep 8
+          done
+          test "$(sha256sum /tmp/r0188-public.html | awk '{print $1}')" = "$EXPECTED"
+          cmp "$LOCAL" /tmp/r0188-public.html
+
+      - name: Upload the restored direct-open HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018.8_Immutable_Archive
+          path: |
+            dist/ocean-mother/island-r018-r0188/index.html
+            dist/ocean-mother/island-r018-r0188/Ocean_Mother_R018.8_Direct_Open.html
+            evidence/R0188_BUILD_IDENTITY.json
+            evidence/R0188_ARCHIVE_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 90
