@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises';
 
 const SOURCE_URL = 'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/83d3649728e1eb2c21c995f42e9bb0026c20a464/workbenches/landscape-microscope-geometry-r1/index.html';
 const EXPECTED_SHA256 = '1e7404a272b1887908030743d83eea17f63c491ce4c62211dfb1313882b24c52';
+const BUILD_REPORTED_PROTECTED_VERTEX_COUNT = 3136;
 const response = await fetch(SOURCE_URL);
 if (!response.ok) throw new Error(`source fetch failed: ${response.status}`);
 const source = await response.text();
@@ -24,8 +25,10 @@ const smooth = (a, b, x) => {
 };
 const H = 28, NT = 196, NY = 154, SIDE = NT * NY, VCOUNT = SIDE + 2;
 const TOP = SIDE, BOTTOM = SIDE + 1;
-const basePos = new Float64Array(VCOUNT * 3);
-const gate = new Float64Array(VCOUNT);
+// Match the target implementation's typed storage. JS arithmetic is still
+// Number/Float64 between reads and writes, exactly as in the page.
+const basePos = new Float32Array(VCOUNT * 3);
+const gate = new Float32Array(VCOUNT);
 const indices = [];
 function mainRadius(th, t) {
   const core = 7.4 * (1 - .23 * t + .10 * Math.sin(Math.PI * t));
@@ -56,7 +59,7 @@ for (let i = 0; i < NT; i++) {
   indices.push(TOP, tb, ta, BOTTOM, ba, bb);
 }
 function normals(P) {
-  const N = new Float64Array(P.length);
+  const N = new Float32Array(P.length);
   for (let q = 0; q < indices.length; q += 3) {
     const ai = indices[q] * 3, bi = indices[q + 1] * 3, ci = indices[q + 2] * 3;
     const ux = P[bi] - P[ai], uy = P[bi + 1] - P[ai + 1], uz = P[bi + 2] - P[ai + 2];
@@ -162,14 +165,23 @@ const checks = {
   transformControlsChangeMean: Math.abs(cases.default.meanDetailActive - cases.noRotationWarp.meanDetailActive) > 1e-6,
   scaleControlsChangeMean: Math.abs(cases.scaleLow.meanDetailActive - cases.scaleHigh.meanDetailActive) > 1e-6,
   derivativeProxyNotMonotoneAttenuatedByLayers: cases.layers9.derivativeProxy.max >= cases.layers1.derivativeProxy.max,
-  transitionDerivativeMeasuredNotGatedByExistingQA: cases.default.derivativeProxy.transitionMax > 0
+  transitionDerivativeMeasuredNotGatedByExistingQA: cases.default.derivativeProxy.transitionMax > 0,
+  buildProtectedCountMismatchConfirmed: cases.default.protectedCount !== BUILD_REPORTED_PROTECTED_VERTEX_COUNT
 };
 const result = {
-  schema: 'kaopu-landscape-y03-transfer-audit/1',
+  schema: 'kaopu-landscape-y03-transfer-audit/2',
   date: '2026-09-16',
   question: 'Does the current isolated Landscape geometry lab satisfy Y01 anchor, mean and derivative constraints?',
   source: { url: SOURCE_URL, httpStatus: response.status, bytes: Buffer.byteLength(source), sha256: sourceSha256, expectedSha256: EXPECTED_SHA256 },
-  lockedImplementation: { vertices: VCOUNT, triangles: indices.length / 3, octaveMeans, requiredSnippets },
+  lockedImplementation: {
+    vertices: VCOUNT,
+    triangles: indices.length / 3,
+    octaveMeans,
+    requiredSnippets,
+    buildReportedProtectedVertexCount: BUILD_REPORTED_PROTECTED_VERTEX_COUNT,
+    replayProtectedVertexCount: cases.default.protectedCount,
+    countDifferenceExplanation: 'source recompute counts 3136 side vertices plus TOP and BOTTOM; build.json records 3136'
+  },
   cases,
   checks,
   passed: Object.values(checks).every(Boolean),
@@ -178,10 +190,11 @@ const result = {
     mean: 'Candidate fail for mean-neutral transfer: mapped and biased active-field means are nonzero and control-dependent',
     derivatives: 'Unknown acceptance: derivative proxies are measurable but the implementation defines no physical derivative budget or pass threshold',
     geometry: 'Observation from source/replay that vertex positions are changed; browser visual acceptance remains separate',
+    evidenceContract: 'Candidate mismatch: build.json protectedVertexCount omits the two explicit TOP/BOTTOM vertices counted by source recompute',
     production: 'Frozen/unchanged'
   },
   limitations: [
-    'CPU Float64 replay is not a browser WebGL observation root.',
+    'CPU replay matches the target Float32 typed storage but is not a browser WebGL observation root.',
     'Edge displacement slope is a derivative proxy, not full surface curvature or geologic validation.',
     'A nonzero mean may be an intentional uncalibrated erosion bias, but it cannot be called mean-preserving.',
     'No production branch, R5/K2 geometry, DEM, collision, or user acceptance was tested.'
