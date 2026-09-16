@@ -1,0 +1,23 @@
+{
+  "schema": "kaopu-learning-queue-overlay/1",
+  "round": "Y04",
+  "date": "2026-09-16",
+  "completedQuestion": {
+    "id": "LQ-LANDSCAPE-Y04-CLIPPING-DISTRIBUTION",
+    "question": "How does the current per-vertex safety clamp change displacement distribution and periodic-domain error in PR #79 head?",
+    "status": "Candidate partial / distribution failure",
+    "answer": "It preserves topology but clips 77.68% of active vertices and 74.34% of active area, retains only 23.43% of magnitude and 3.75% of squared energy, reverses the area-weighted signed mean, and masks rather than closes most periodic defects."
+  },
+  "nextQuestion": {
+    "id": "LQ-LANDSCAPE-Y05-PERIODIC-REBALANCE",
+    "question": "After a genuinely periodic field is integrated, can amplitude/frequency and mesh bandwidth be rebalanced so clipping is exceptional while approved mean, distribution and derivative bounds pass?",
+    "status": "queued-blocked-on-Mother-implementation",
+    "owner": "Landscape Mother implementation; Xiaoma audit after a new head exists"
+  },
+  "blockedBy": [
+    "periodic replacement absent from current integrated source",
+    "no approved clipping, mean, distribution or derivative thresholds",
+    "no new Mother head or acknowledgement",
+    "no collision/SDF coupling or human visual acceptance"
+  ]
+}
