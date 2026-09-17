@@ -1,0 +1,51 @@
+{
+  "schema": "LANDSCAPE_R5_K2_G4_SOURCE_COUPLED_FORM_V1",
+  "date": "2026-09-17",
+  "sourcePath": "workbenches/landscape-surface-r5-k2-geometry-r3/index.html",
+  "sourceSha256": "bc81c198e1eef170b2c1f35d08777399382170f288fa43acc83acfa4e488c849",
+  "candidatePath": "workbenches/landscape-surface-r5-k2-geometry-r4/index.html",
+  "candidateSha256": "f365983db7ff91ebe7ce734e0bc9671ccb21c845ffd6f5b5d1e23415583614ec",
+  "candidateBytes": 114919,
+  "sourceGeometry": {
+    "schema": "LANDSCAPE_SOURCE_FIELD_MICROSCOPE_R1",
+    "fieldCoupled": true,
+    "applicationPoint": "substrate() before erosionField and before W.mesh",
+    "defaultStrength": 1.15,
+    "defaultScaleM": 6.4,
+    "defaultWarp": 1.3,
+    "defaultErosionBias": 0.9,
+    "controls": [
+      "sourceForm",
+      "sourceScale",
+      "sourceWarp",
+      "sourceErosion"
+    ],
+    "affects": [
+      "silhouette",
+      "cavity boundary",
+      "cross-section",
+      "collision/SDF",
+      "water/occlusion source field"
+    ]
+  },
+  "soilGeometry": {
+    "schema": "LANDSCAPE_SOIL_SOURCE_FIELD_R2",
+    "fieldCoupled": true,
+    "applicationPoint": "groundBed() before soilField and before W.mesh",
+    "defaultStrength": 0.85,
+    "postMeshDisplacementRemoved": true,
+    "terrainSupportUsesSourceMesh": true
+  },
+  "secondaryGeometry": {
+    "schema": "LANDSCAPE_MICROSCOPE_GEOMETRY_R2",
+    "role": "bounded secondary detail only",
+    "defaultStrength": 0.8,
+    "fieldCoupled": false
+  },
+  "macroGeometryReplacement": false,
+  "cameraAffectsGeometry": false,
+  "timeAffectsStaticRock": false,
+  "geometryFieldCoupled": true,
+  "visualApproved": false,
+  "productionReady": false
+}
