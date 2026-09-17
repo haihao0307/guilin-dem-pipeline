@@ -8,6 +8,7 @@ on:
       - workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
       - workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
       - workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+      - workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
       - .github/workflows/landscape-r5-k2-geometry-r2.yml
 
 permissions:
@@ -27,9 +28,11 @@ jobs:
           python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
           python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
           python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
           python workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
           python workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
           python workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
 
       - name: Static workbench QA
         run: |
@@ -41,7 +44,7 @@ jobs:
           b = json.loads((root / 'build.json').read_text(encoding='utf-8'))
           required = [
               'microscopeGeometryR2', 'LANDSCAPE_MICROSCOPE_GEOMETRY_R2',
-              'antiSpikeAdjustedVertices', 'baseTriangleFlipCount',
+              'antiSpikeAdjustedVertices', 'antiSpikeRejectedTrials', 'baseTriangleFlipCount',
               'id="geo"', 'id="concavity"', 'id="spikeGuard"',
               'id="shellScale"', 'id="shellContrast"', 'id="shellCoverage"',
               'id="shellDirection"', 'id="breakContrast"',
@@ -83,7 +86,7 @@ jobs:
             if(g.effectiveAmplitudeM<=0)throw Error(label+': zero effective amplitude');
             if(g.maxDisplacementM<0.050)throw Error(label+': geometry still too weak '+g.maxDisplacementM);
             if(g.effectiveLayers!==3)throw Error(label+': unexpected geometry bands '+g.effectiveLayers);
-            if(g.antiSpikePasses<1)throw Error(label+': anti-spike pass did not execute');
+            if(g.antiSpikePasses<1||g.antiSpikeAdjustedVertices<1)throw Error(label+': anti-spike correction did not execute');
             return {label,config:cfg,microscopeGeometry:g,mainVertices:data.report.mainVertices,mainTriangles:data.report.mainTriangles,geometryGridM:data.report.geometryGridM};
           }
           const standard=run('standard');
