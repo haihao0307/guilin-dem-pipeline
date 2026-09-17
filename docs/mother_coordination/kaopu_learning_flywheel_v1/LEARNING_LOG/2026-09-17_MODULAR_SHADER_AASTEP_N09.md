@@ -61,7 +61,7 @@ Status: **Candidate partial / pinned-source and one SwiftShader WebGL2 probe ver
 
 - The analytic WebGL2 result and screenshot are available, but they cover only Chrome 152 / ANGLE Vulkan SwiftShader.
 - Full R8 integration, locked Brick camera behavior, normal/roughness interaction, fragment cost, hardware GPU, mobile/public deployment and user visual acceptance are Unknown.
-- Brick Material Mother has not received or acknowledged this route. The route is prepared only.
+- Incremental guidance was delivered once to [Brick Material PR15](https://github.com/haihao0307/HOUSE/pull/15#issuecomment-5714011913). Delivery is not acknowledgement, implementation or adoption; all three remain Unknown.
 - Landscape PR79 and Farmland PR65 still have no new receipt after earlier N02 guidance, so no repeat was sent. Brick shape and Tiles/building were not routed.
 - Canonical Truth, Frozen R1 and all production Mother branches remain unchanged.
 
