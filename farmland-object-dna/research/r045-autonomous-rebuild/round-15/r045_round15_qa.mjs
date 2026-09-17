@@ -13,7 +13,14 @@ function frameAt(path,u){
 }
 function sampleDelta(z0,z1){let max=0,sum=0,n=0,at=null;for(let x=-220;x<=220;x+=6)for(let z=z0;z<=z1;z+=4){const v=Math.abs(K.foothillPlainDelta(x,z));if(v>max){max=v;at=[x,z]}sum+=v;n++}return{max,mean:sum/(n||1),n,at}}
 function drainageAwareBarrier(model,distanceFn,z0,z1,clearance=16){let max=-1e9,at=null,n=0;for(let x=-205;x<=205;x+=10)for(let z=z0;z<=z1;z+=4){if(distanceFn(x,z)<clearance||distanceFn(x,z+4)<clearance)continue;const v=model.height(x,z+4)-model.height(x,z);n++;if(v>max){max=v;at=[x,z]}}return{max,at,n,clearance}}
-function wallPersistence(model,distanceFn,z0=-198,z1=128,clearance=16,threshold=.55){let worst={fraction:0,z:null,count:0,eligible:0,maxContiguousSpan:0};for(let z=z0;z<=z1;z+=4){let count=0,eligible=0,run=0,maxRun=0;for(let x=-205;x<=205;x+=10){if(distanceFn(x,z)<clearance||distanceFn(x,z+4)<clearance){run=0;continue}eligible++;const rise=model.height(x,z+4)-model.height(x,z);if(rise>threshold){count++;run++;maxRun=Math.max(maxRun,run)}else run=0}const fraction=count/(eligible||1),span=Math.max(0,(maxRun-1)*10);if(fraction>worst.fraction||(fraction===worst.fraction&&span>worst.maxContiguousSpan))worst={fraction,z,count,eligible,maxContiguousSpan:span}}return{...worst,clearance,threshold}}
+function wallPersistence(model,distanceFn,z0=-198,z1=128,clearance=16,threshold=.55){
+  // Keep an explicit sampled-row sentinel. The previous implementation initialized fraction=0 and
+  // therefore reported eligible=0 whenever every sampled row had zero failures; that was a reporting
+  // fallacy, not evidence of zero coverage. This version proves the wall gate actually sampled terrain.
+  let worst=null,totalEligible=0,rowsWithEligible=0;
+  for(let z=z0;z<=z1;z+=4){let count=0,eligible=0,run=0,maxRun=0;for(let x=-205;x<=205;x+=10){if(distanceFn(x,z)<clearance||distanceFn(x,z+4)<clearance){run=0;continue}eligible++;const rise=model.height(x,z+4)-model.height(x,z);if(rise>threshold){count++;run++;maxRun=Math.max(maxRun,run)}else run=0}if(eligible>0)rowsWithEligible++;totalEligible+=eligible;const fraction=count/(eligible||1),span=Math.max(0,(maxRun-1)*10),row={fraction,z,count,eligible,maxContiguousSpan:span};if(!worst||fraction>worst.fraction||(fraction===worst.fraction&&span>worst.maxContiguousSpan))worst=row}
+  return{...(worst||{fraction:0,z:null,count:0,eligible:0,maxContiguousSpan:0}),clearance,threshold,totalEligible,rowsWithEligible};
+}
 
 add('version',K.VERSION==='R045.15',K.VERSION,'R045.15');
 add('water_graph_identity_preserved',K.nodes.length===R14.nodes.length&&K.edges.length===R14.edges.length,{nodes:[R14.nodes.length,K.nodes.length],edges:[R14.edges.length,K.edges.length]},'unchanged');
@@ -41,6 +48,7 @@ const rowMeans=[];for(let z=-60;z<=112;z+=12){const a=[];for(let x=-210;x<=210;x
 add('transition_is_not_a_uniform_horizontal_shelf',rowMeans.filter(r=>r.stdev>.012).length>=6,rowMeans,'at least 6 rows cross-slope stdev >0.012 m');
 
 const oldWall=wallPersistence(R14,R14.nearestExtendedDrainageDistance),newWall=wallPersistence(K,K.nearestExtendedDrainageDistance);
+add('wall_gate_has_real_sampling_coverage',oldWall.totalEligible>500&&newWall.totalEligible>500&&oldWall.rowsWithEligible>20&&newWall.rowsWithEligible>20,{r14:{totalEligible:oldWall.totalEligible,rowsWithEligible:oldWall.rowsWithEligible},r15:{totalEligible:newWall.totalEligible,rowsWithEligible:newWall.rowsWithEligible}},'>500 eligible samples and >20 sampled rows in each version');
 add('r14_wall_state_not_regressed',newWall.fraction<.12&&newWall.maxContiguousSpan<60,{r14:oldWall,r15:newWall},'R15 fraction <12% and contiguous span <60 m');
 const candidate=drainageAwareBarrier(K,K.nearestExtendedDrainageDistance,-158,8,16);
 add('candidate_slope_forward_reversal_bounded',candidate.max<.55,candidate,'<0.55 m rise per 4 m, >=16 m from drainage');
