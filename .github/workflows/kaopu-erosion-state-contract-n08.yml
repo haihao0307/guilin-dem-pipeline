@@ -1,0 +1,48 @@
+name: KAOPU Erosion State Contract N08
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/erosion_state_contract_probe_n08.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/erosion_state_contract_result_n08.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/erosion-state-contract-n08/SOURCE_LOCK.json
+      - .github/workflows/kaopu-erosion-state-contract-n08.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.id == "KAOPU-EROSION-N08-SOURCE-LOCK" and (.sources | length) == 3 and (.limitations | length) == 3' docs/mother_coordination/kaopu_learning_flywheel_v1/references/erosion-state-contract-n08/SOURCE_LOCK.json
+      - name: Build and run bounded CPU bookkeeping probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/erosion_state_contract_probe_n08.cpp -o /tmp/erosion-state-n08
+          /tmp/erosion-state-n08 /tmp/erosion_state_contract_result_n08.json >/tmp/erosion-state-n08.log
+      - name: Check semantic result and deterministic replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.status == "pass" and .summary.checks == 15 and .summary.passed == 15 and .summary.failed == 0' /tmp/erosion_state_contract_result_n08.json
+          jq -e '.counterexamples.same_total_rain_different_history.rain_m3 == 2 and .counterexamples.positive_height_noise.unbooked_mass_kg == 320 and .counterexamples.zero_mean_height_noise.global_mass_change_kg == 0' /tmp/erosion_state_contract_result_n08.json
+          diff -u docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/erosion_state_contract_result_n08.json /tmp/erosion_state_contract_result_n08.json
+      - name: Preserve replay artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-erosion-state-contract-n08
+          path: |
+            /tmp/erosion_state_contract_result_n08.json
+            /tmp/erosion-state-n08.log
+          if-no-files-found: error

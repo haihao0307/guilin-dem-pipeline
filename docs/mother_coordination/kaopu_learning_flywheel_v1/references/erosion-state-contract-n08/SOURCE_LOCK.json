@@ -1,0 +1,45 @@
+{
+  "id": "KAOPU-EROSION-N08-SOURCE-LOCK",
+  "accessedDate": "2026-09-17",
+  "sources": [
+    {
+      "publisher": "SideFX",
+      "title": "HeightField Erode 3.0",
+      "versionContext": "Houdini 22.0 documentation; node since 21.0",
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_erode.html",
+      "observedContract": [
+        "iterative simulation from a start frame",
+        "rainfall removes and transports material",
+        "separate height, sediment, debris, flow and flow-direction outputs",
+        "transport distance depends on spread iterations and feature size"
+      ]
+    },
+    {
+      "publisher": "SideFX",
+      "title": "HeightField Erode Hydro",
+      "versionContext": "Houdini 22.0 documentation",
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_erode_hydro.html",
+      "observedContract": [
+        "separate water, debris, sediment, eroding-height and reference-bedrock layers",
+        "sediment capacity is expressed per unit moving water",
+        "deposition moves excess sediment into debris"
+      ]
+    },
+    {
+      "publisher": "SideFX",
+      "title": "HeightField Slump",
+      "versionContext": "Houdini 22.0 documentation",
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_slump.html",
+      "observedContract": [
+        "erosion requires sediment and entrained layers",
+        "material outflow beyond the heightfield edge is an explicit boundary policy",
+        "removal rate is an explicit material sink"
+      ]
+    }
+  ],
+  "limitations": [
+    "The SideFX pages are mutable product documentation rather than immutable source revisions.",
+    "Their layer and boundary design is mature-system evidence, not proof that the N08 toy equations are physically calibrated.",
+    "N08 executable evidence is an independently written bookkeeping counterexample; it does not execute Houdini."
+  ]
+}

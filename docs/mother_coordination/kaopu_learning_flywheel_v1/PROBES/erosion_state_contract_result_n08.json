@@ -1,0 +1,33 @@
+{
+  "id": "KAOPU-EROSION-N08-STATE-CONTRACT-A",
+  "status": "pass",
+  "scope": "two-cell deterministic bookkeeping counterexample; not a calibrated erosion solver",
+  "units": {"water":"m3","sediment":"kg","bed":"kg","height":"m"},
+  "fixed_parameters": {"erosion_capacity_kg_per_m3":4.000000000000,"downstream_capacity_kg_per_m3":1.000000000000,"max_detachment_kg_per_step":3.000000000000,"internal_transfer_fraction":0.500000000000,"deposition_fraction":0.600000000000,"boundary_outflow_fraction":0.400000000000},
+  "histories": [{"name":"early_pulse","final":{"upstream":{"water_m3":0.250000000000,"suspended_kg":1.000000000000,"bed_kg":994.500000000000},"downstream":{"water_m3":0.546000000000,"suspended_kg":0.819312000000,"bed_kg":1001.955280000000}},"ledger":{"rain_m3":2.000000000000,"internal_water_m3":1.750000000000,"internal_sediment_kg":4.500000000000,"boundary_water_m3":1.204000000000,"boundary_sediment_kg":1.725408000000,"detached_kg":5.500000000000,"deposited_kg":1.955280000000},"residuals":{"water_m3":0.000000000000,"sediment_kg":0.000000000000,"bed_identity_kg":0.000000000000,"suspended_identity_kg":0.000000000000}},{"name":"late_pulse","final":{"upstream":{"water_m3":1.000000000000,"suspended_kg":1.500000000000,"bed_kg":997.000000000000},"downstream":{"water_m3":0.600000000000,"suspended_kg":0.720000000000,"bed_kg":1000.300000000000}},"ledger":{"rain_m3":2.000000000000,"internal_water_m3":1.000000000000,"internal_sediment_kg":1.500000000000,"boundary_water_m3":0.400000000000,"boundary_sediment_kg":0.480000000000,"detached_kg":3.000000000000,"deposited_kg":0.300000000000},"residuals":{"water_m3":0.000000000000,"sediment_kg":0.000000000000,"bed_identity_kg":0.000000000000,"suspended_identity_kg":0.000000000000}}],
+  "counterexamples": {
+    "same_total_rain_different_history": {"rain_m3":2.000000000000,"final_distribution_l1_kg":4.754592000000,"early_boundary_sediment_kg":1.725408000000,"late_boundary_sediment_kg":0.480000000000},
+    "omitted_open_boundary": {"apparent_water_residual_m3":1.204000000000,"apparent_sediment_residual_kg":1.725408000000},
+    "positive_height_noise": {"area_m2":20.000000000000,"offset_m":0.010000000000,"bulk_density_kg_m3":1600.000000000000,"unbooked_mass_kg":320.000000000000,"semantic_gate":"reject-unbooked-solid-source"},
+    "zero_mean_height_noise": {"global_mass_change_kg":0.000000000000,"semantic_gate":"reject-missing-water-sediment-flux-history-even-when-global-mass-is-zero"}
+  },
+  "minimum_receipt": ["cell_or_support_id","half_open_time_interval","water_storage_m3","suspended_sediment_kg","bed_or_mobile_solid_kg","directed_internal_fluxes","external_sources_and_sinks","boundary_exports","detachment_and_deposition_transfers","event_identity_and_revision_chain","parameter_and_solver_revision"],
+  "checks": [
+    {"id":"early-water-conservation","pass":true},
+    {"id":"early-sediment-conservation","pass":true},
+    {"id":"late-water-conservation","pass":true},
+    {"id":"late-sediment-conservation","pass":true},
+    {"id":"same-rainfall-total","pass":true},
+    {"id":"history-changes-final-distribution","pass":true},
+    {"id":"history-changes-boundary-export","pass":true},
+    {"id":"nonnegative-state","pass":true},
+    {"id":"internal-water-flux-not-global-source","pass":true},
+    {"id":"detachment-bed-identity","pass":true},
+    {"id":"deposition-suspension-identity","pass":true},
+    {"id":"omitted-boundary-water-fails","pass":true},
+    {"id":"positive-noise-offset-creates-unbooked-mass","pass":true},
+    {"id":"zero-mean-noise-is-not-process-proof","pass":true},
+    {"id":"deterministic-replay","pass":true}
+  ],
+  "summary": {"checks":15,"passed":15,"failed":0}
+}
