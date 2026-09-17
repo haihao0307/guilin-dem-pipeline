@@ -1,0 +1,112 @@
+name: Palau V0160 reef islands browser review
+on:
+  push:
+    branches: [work/survivor-palau-v0160-reef-islands-20260917]
+    paths:
+      - games/survivor-palau/source/v0160/**
+      - .github/workflows/survivor-palau-v0160.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: palau-v0160-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout: |
+            games/survivor-palau
+          persist-credentials: true
+      - name: Build source and check JavaScript
+        run: |
+          python3 games/survivor-palau/source/v0160/build.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('games/survivor-palau/releases/v0.1.6.0/index.html').read_text()
+          Path('/tmp/palau.mjs').write_text(re.search(r'<script type="module">(.*)</script>',s,re.S)[1])
+          PY
+          node --check /tmp/palau.mjs
+      - name: Browser prerequisites
+        run: |
+          python3 -m pip install -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb fonts-noto-cjk
+      - name: Real WebGL and gameplay tests
+        id: qa
+        continue-on-error: true
+        run: xvfb-run -a python3 games/survivor-palau/source/v0160/browser_qa.py
+      - name: Persist candidate and actual test evidence
+        if: always()
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add games/survivor-palau/releases/v0.1.6.0
+          git diff --cached --quiet || git commit -m 'build(palau): preserve V0160 candidate and actual browser results [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+          echo "PALAU_BUILD_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Verify fixed public URL and interactions
+        if: steps.qa.outcome == 'success'
+        run: |
+          cat >/tmp/palau_public.py <<'PY'
+          from pathlib import Path
+          import os,time,json,hashlib,urllib.request,shutil,traceback
+          from playwright.sync_api import sync_playwright
+          root=Path('games/survivor-palau/releases/v0.1.6.0')
+          url='https://raw.githack.com/haihao0307/guilin-dem-pipeline/'+os.environ['PALAU_BUILD_COMMIT']+'/games/survivor-palau/releases/v0.1.6.0/index.html'
+          expected=hashlib.sha256((root/'index.html').read_bytes()).hexdigest()
+          proof={'sourceModified':True,'interactive3D':True,'staticImageSubstitute':False,'publicHttpsPassed':False,'browserPassed':False,'shareAllowed':False,'visualAcceptancePending':True,'physicalPhoneTested':False,'url':url,'commit':os.environ['PALAU_BUILD_COMMIT'],'sha256':expected,'viewports':[],'errors':[]}
+          try:
+            for attempt in range(10):
+              try:
+                with urllib.request.urlopen(url,timeout=30) as response:
+                  body=response.read();assert response.status==200 and hashlib.sha256(body).hexdigest()==expected
+                proof['publicHttpsPassed']=True;proof['bytes']=len(body);break
+              except Exception:
+                if attempt==9:raise
+                time.sleep(5)
+            with sync_playwright() as p:
+              b=p.chromium.launch(executable_path=shutil.which('google-chrome') or shutil.which('chromium'),headless=False,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
+              for width,height in [(1280,800),(390,844)]:
+                page=b.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+                page.on('pageerror',lambda e:proof['errors'].append(str(e)))
+                page.on('console',lambda m:proof['errors'].append(m.text) if m.type=='error' else None)
+                response=page.goto(url,wait_until='domcontentloaded',timeout=90000);assert response.status==200
+                page.wait_for_function('()=>window.OceanMotherR018?.qa?.ready && window.PalauExperience',timeout=120000)
+                page.wait_for_function('OceanMotherR018.qa.frames>3',timeout=120000)
+                page.locator('#actionFish').click(timeout=45000)
+                assert page.evaluate('PalauExperience.fishing.phase')=='ready'
+                page.screenshot(path=str(root/'evidence'/('public-'+str(width)+'-fishing.png')),timeout=90000)
+                q=page.evaluate('({...OceanMotherR018.qa})');assert not q['errors'] and q.get('glError',0)==0
+                proof['viewports'].append({'width':width,'height':height,'webgl2':q['webgl2'],'frames':q['frames'],'fishingEntry':True})
+                page.close()
+              b.close()
+            assert not proof['errors'],proof['errors']
+            proof['browserPassed']=True;proof['shareAllowed']=True
+          except Exception as e:
+            proof['failure']=str(e);proof['traceback']=traceback.format_exc()
+          (root/'PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2))
+          print(json.dumps(proof,ensure_ascii=False,indent=2));assert proof['shareAllowed']
+          PY
+          xvfb-run -a python3 /tmp/palau_public.py
+      - name: Persist public proof
+        if: always()
+        run: |
+          git add games/survivor-palau/releases/v0.1.6.0
+          git diff --cached --quiet || git commit -m 'test(palau): persist fixed-URL public browser proof [skip ci]'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Palau-V0160-real-browser-evidence
+          path: games/survivor-palau/releases/v0.1.6.0
+          retention-days: 30
+      - name: Enforce gameplay gate
+        if: steps.qa.outcome != 'success'
+        run: exit 1
