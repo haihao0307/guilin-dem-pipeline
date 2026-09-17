@@ -17,7 +17,7 @@ The [OpenGL ES Shading Language 3.00.6 specification](https://registry.khronos.o
 
 ### Observation root C — executable local-difference counterexamples
 
-The N11 CPU probe models a forward local difference over four pixel-coordinate steps and sweeps 801 phases around an integer seam. Seven semantic gates pass.
+The N11 CPU probe models a forward local difference over four pixel-coordinate steps and sweeps 801 phases around an integer seam. Seven semantic gates pass locally and in [GitHub Actions run 35242603669](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35242603669); the tracked JSON reproduced without a diff.
 
 At the smallest coordinate step `h=1/128`:
 
@@ -32,7 +32,7 @@ At the smallest coordinate step `h=1/128`:
 
 Raw wrapping is therefore not automatically invalid. A downstream periodic function can close both value and slope. Conversely, a scalar may look bounded and still contain a derivative singularity or branch change.
 
-The local run and any replay share one probe design. They establish a reproducible semantic counterexample, not independent GPU, material, geometry or perceptual evidence.
+The local run and Actions replay share one probe design. They establish a reproducible semantic counterexample across two CPU environments, not independent algorithm, GPU, material, geometry or perceptual evidence.
 
 ## Candidate
 
