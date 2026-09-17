@@ -1,0 +1,116 @@
+name: Landscape R5.K2.G4 Source-Coupled Form
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r4/build_g4.py
+      - .github/workflows/landscape-r5-k2-geometry-r4.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build G4 source-coupled candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r4/build_g4.py
+          python workbenches/landscape-surface-r5-k2-geometry-r4/build_g4.py
+
+      - name: Static source-field QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          root = Path('workbenches/landscape-surface-r5-k2-geometry-r4')
+          s = (root / 'index.html').read_text(encoding='utf-8')
+          b = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+          required = [
+              'LANDSCAPE_SOURCE_FIELD_MICROSCOPE_R1',
+              'LANDSCAPE_SOIL_SOURCE_FIELD_R2',
+              'function sourceMicroscopeOffset',
+              'function soilSourceOffset',
+              'return d+sourceMicroscopeOffset(x,y,z)',
+              '+soilSourceOffset(x,z)',
+              'const soilMicroscope=w.soilMicroscope',
+              'sourceMicroscope:w.sourceMicroscope',
+              'id="sourceForm"', 'id="sourceScale"',
+              'id="sourceWarp"', 'id="sourceErosion"',
+              'id="soilMicro"', 'data-form="strong"',
+          ]
+          for token in required:
+              assert token in s, token
+          assert b['schema'] == 'LANDSCAPE_R5_K2_G4_SOURCE_COUPLED_FORM_V1'
+          assert b['geometryFieldCoupled'] is True
+          assert b['sourceGeometry']['fieldCoupled'] is True
+          assert b['soilGeometry']['fieldCoupled'] is True
+          assert b['soilGeometry']['postMeshDisplacementRemoved'] is True
+          blocks = []
+          for sid in ('worldSource', 'generateSource'):
+              m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, s, re.S)
+              assert m, sid
+              blocks.append(m.group(1))
+          Path('/tmp/landscape-g4-worker.js').write_text('\n'.join(blocks), encoding='utf-8')
+          print(json.dumps(b, ensure_ascii=False, indent=2))
+          PY
+          node --check /tmp/landscape-g4-worker.js
+
+      - name: Prepare numerical source-form QA
+        run: |
+          cp /tmp/landscape-g4-worker.js /tmp/landscape-g4-runtime.js
+          cat >> /tmp/landscape-g4-runtime.js <<'JS'
+          const fs=require('fs');
+          const BASE={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,sourceForm:0,sourceScale:6.4,sourceWarp:0,sourceErosion:0,geo:.80,concavity:.70,spikeGuard:.95,soilMicro:0};
+          function signature(report,name){const p=report.parts.find(x=>x.name===name);if(!p)throw Error('missing part '+name);return p.signature;}
+          function run(label,overrides={}){
+            const cfg={...BASE,...overrides};
+            const data=generateScene(cfg,()=>{}),r=data.report,g=r.microscopeGeometry,src=r.sourceMicroscope,soil=r.soilMicroscope;
+            if(!src||src.schema!=='LANDSCAPE_SOURCE_FIELD_MICROSCOPE_R1')throw Error(label+': missing source geometry report');
+            if(!src.fieldCoupled||!src.appliesBeforeMeshing)throw Error(label+': rock field is not source-coupled');
+            if(!soil||soil.schema!=='LANDSCAPE_SOIL_SOURCE_FIELD_R2')throw Error(label+': missing soil source report');
+            if(!soil.fieldCoupled||!soil.appliesBeforeMeshing)throw Error(label+': soil field is not source-coupled');
+            if(g.triangleFlipCount!==0||g.protectedDriftCount!==0||g.baseTriangleFlipCount!==0)throw Error(label+': secondary geometry safety failure');
+            return {label,config:cfg,sourceMicroscope:src,soilMicroscope:soil,microscopeGeometry:g,mainSignature:signature(r,'主岩体'),soilSignature:signature(r,'土体与风化基底'),mainVertices:r.mainVertices,mainTriangles:r.mainTriangles,geometryGridM:r.geometryGridM};
+          }
+          const baseline=run('baseline');
+          const source=run('source',{sourceForm:1.15,sourceScale:6.4,sourceWarp:1.30,sourceErosion:.90});
+          const soil=run('soil',{soilMicro:.85});
+          const strong=run('strong',{sourceForm:1.90,sourceScale:7.2,sourceWarp:1.75,sourceErosion:1.25,soilMicro:1.25});
+          if(source.mainSignature===baseline.mainSignature)throw Error('source-form control did not change extracted rock mesh');
+          if(soil.soilSignature===baseline.soilSignature)throw Error('soil source control did not change extracted soil mesh');
+          if(source.sourceMicroscope.maxSampleOffsetM<.05)throw Error('source-form response still too weak '+source.sourceMicroscope.maxSampleOffsetM);
+          if(soil.soilMicroscope.maxSampleOffsetM<.02)throw Error('soil source response still too weak '+soil.soilMicroscope.maxSampleOffsetM);
+          if(strong.sourceMicroscope.maxSampleOffsetM+1e-9<source.sourceMicroscope.maxSampleOffsetM)throw Error('strong source preset reduced source-field response');
+          if(strong.soilMicroscope.maxSampleOffsetM+1e-9<soil.soilMicroscope.maxSampleOffsetM)throw Error('strong soil preset reduced ground response');
+          const out={schema:'LANDSCAPE_R5_K2_G4_RUNTIME_QA',date:'2026-09-17',variants:[baseline,source,soil,strong],rockSourceMeshChanged:source.mainSignature!==baseline.mainSignature,soilSourceMeshChanged:soil.soilSignature!==baseline.soilSignature,geometryFieldCoupled:true,visualApproved:false,productionReady:false};
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r4/runtime-qa.json',JSON.stringify(out,null,2));
+          console.log(JSON.stringify(out));
+          JS
+          node --check /tmp/landscape-g4-runtime.js
+
+      - name: Run numerical source-form QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node /tmp/landscape-g4-runtime.js
+
+      - name: Materialize G4 candidate and evidence
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r4/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r4/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r4/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "R5.K2.G4 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize source-coupled R5.K2.G4 [skip ci]"
+          git push
