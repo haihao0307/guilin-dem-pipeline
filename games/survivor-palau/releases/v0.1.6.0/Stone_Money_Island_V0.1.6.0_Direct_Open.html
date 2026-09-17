@@ -87,9 +87,16 @@ body[data-driving="true"] #cameraBar{display:none!important}
 [data-key="cloudiness"],[data-key="cloudSpeed"]{display:none!important}
 @media(max-width:760px){.topbar{padding:10px!important;align-items:flex-start}.brand b{font-size:11px}.brand small{font-size:9px;max-width:180px}.topActions{gap:3px!important;padding:3px!important}.topActions button{font-size:11px;min-height:42px;padding:8px!important}#panelToggle{max-width:60px;overflow:hidden;white-space:nowrap}#gameDock{left:10px!important;bottom:14px!important;right:10px!important;max-width:none;padding:8px!important}#canoeTelemetry{font-size:10px;max-width:calc(100vw - 160px)}#cameraBar{bottom:81px!important;left:10px!important;right:10px!important;transform:none!important;width:auto!important;max-width:none}#boatPad{bottom:88px!important;right:12px!important}#boatMission{top:84px!important;left:12px!important;right:auto!important;max-width:220px;padding:9px 11px;font-size:10px}#boatMission b{font-size:10px}.topbar .brand{padding:5px!important}}
 
+
+/* Clear inherited top before docking the same element at bottom. */
+#cameraBar{top:auto!important;bottom:82px!important;height:44px!important;min-height:0!important;max-height:44px!important;width:max-content!important;align-items:center!important;border-radius:18px!important;box-sizing:border-box!important;background:rgba(12,35,43,.55)!important;box-shadow:none!important;backdrop-filter:none!important;padding:3px!important}
+#cameraBar button{height:36px!important;min-height:36px!important;padding:5px 13px!important;flex:0 0 auto!important;border-radius:14px!important;color:#f4fff9!important}
+#cameraBar button:not([data-view="overview"]):not([data-view="shore"]):not([data-view="canoe"]):not([data-view="deepfish"]){display:none!important}
+@media(max-width:760px){#cameraBar{left:50%!important;right:auto!important;transform:translateX(-50%)!important;max-width:calc(100vw - 24px)!important;bottom:78px!important}#cameraBar button{font-size:10px!important;padding:5px 10px!important}.brand small{font-size:10px!important}}
+
 </style><meta name="ocean-direct-open" content="0.3.6-unified-seascape-verified"><meta name="ocean-scene-mode" content="single-continuous-field"></head><body>
 <main id="stage"><canvas id="scene" aria-label="海岛近岸、珊瑚礁深槽、远洋谱浪与云层统一三维场景"></canvas></main>
-<header class="topbar"><div class="brand glass"><span class="brandMark">O</span><span><b>STONE MONEY ISLAND</b><small>石钱岛 · 原版海天接回 / V0.1.6.0</small></span></div><div class="tabs glass sceneMode" aria-label="场景模式"><span>海岛—远洋统一场景</span></div><div class="topActions glass"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle" aria-expanded="false" aria-controls="panel">参数 · 3 页</button></div></header>
+<header class="topbar"><div class="brand glass"><span class="brandMark">O</span><span><b>STONE MONEY ISLAND</b><small>1944 · 帕劳</small></span></div><div class="tabs glass sceneMode" aria-label="场景模式"><span>海岛—远洋统一场景</span></div><div class="topActions glass"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle" aria-expanded="false" aria-controls="panel">设置</button></div></header>
 <div id="sceneTitle"><span class="eyebrow">PALAU / KARST LAGOON / OPEN OCEAN</span><h2>礁湖、石灰岩峰与远洋。</h2><p>自然破浪 · 恢复云层 · 中央卡斯特峰林 · 独木舟 · 深海钓点</p></div>
 <nav id="cameraBar" class="glass" aria-label="观察镜头"><button data-view="overview" class="active">海岛全景</button><button data-view="karst">岛心峰林</button><button data-view="shore">礁岸浅湾</button><button data-view="breaker">自然破浪</button><button data-view="canoe">独木舟</button><button data-view="deepfish">外海</button><button data-view="rocks">海蚀岩</button><button data-view="fire">营地火堆</button><button data-view="top">俯视全岛</button></nav>
 <aside id="panel" class="glass closed" aria-label="海岛参数"><div class="panelHead"><div class="panel-label"><span class="eyebrow">EXPERIMENT CONTROLS</span><button id="panelClose" aria-label="收起参数">收起</button></div><h1>统一海洋实验室</h1><p id="controlCount">统一场参数编译中</p><nav id="parameterTabs" role="tablist"><button data-page="1" class="selected" role="tab" aria-selected="true">1 海岛与海浪</button><button data-page="2" role="tab" aria-selected="false">2 泡沫与烟火</button><button data-page="3" role="tab" aria-selected="false">3 光学与界面</button></nav></div>
@@ -990,20 +997,20 @@ function setView(name,instant=false){
  const dir=flowDirection(config.swellDir),front=[-dir[0],-dir[1]],frontTheta=Math.atan2(front[1],front[0]),frontRadius=islandRadius(frontTheta),incomingYaw=Math.atan2(front[0],front[1]);
  const shoreTheta=frontTheta+.42,shoreRadius=islandRadius(shoreTheta),breakerTheta=frontTheta+1.18,breakerRadius=islandRadius(breakerTheta),breakerYaw=Math.atan2(Math.cos(breakerTheta),Math.sin(breakerTheta)),curlTheta=frontTheta-.28,curlRadius=islandRadius(curlTheta),curlYaw=Math.atan2(Math.cos(curlTheta),Math.sin(curlTheta));
  const v={
-  overview:{target:[0,6.5,0],yaw:incomingYaw+.34,pitch:.37,distance:r*6.15},
+  overview:{target:[0,6.5,0],yaw:.48,pitch:.12,distance:r*7.2},
   karst:{target:[0,10.5,0],yaw:2.44,pitch:.27,distance:68},
   shore:{target:[Math.cos(shoreTheta)*(shoreRadius+1.6),.35,Math.sin(shoreTheta)*(shoreRadius+1.6)],yaw:incomingYaw+.52,pitch:.21,distance:25},
   breaker:{target:[Math.cos(breakerTheta)*(breakerRadius+SURF_SPACING*1.50),.72,Math.sin(breakerTheta)*(breakerRadius+SURF_SPACING*1.50)],yaw:breakerYaw+.52,pitch:.10,distance:25},
   curl:{target:[Math.cos(curlTheta)*(curlRadius+SURF_SPACING*1.52),1.16,Math.sin(curlTheta)*(curlRadius+SURF_SPACING*1.52)],yaw:curlYaw+.58,pitch:.21,distance:30},
   canoe:{target:[CANOE_STATE.x,waterLevel(physicalTime,config)+.28,CANOE_STATE.z],yaw:CANOE_STATE.yaw+Math.PI,pitch:.30,distance:11},
-  deepfish:{target:[DEEP_FISH_POS[0],waterLevel(physicalTime,config)+.18,DEEP_FISH_POS[2]],yaw:2.12,pitch:.10,distance:72},
+  deepfish:{target:[DEEP_FISH_POS[0],.18,DEEP_FISH_POS[2]],yaw:.48,pitch:.055,distance:160},
   rocks:{target:[rock[0],Math.max(.8,bedHeight(rock[0],rock[1])+.8),rock[1]],yaw:2.74,pitch:.20,distance:18},
   fire:{target:[source[0],3.0,source[2]],yaw:2.75,pitch:.28,distance:24},
   smokeTop:{target:[0,5.2,0],yaw:2.55,pitch:1.10,distance:r*3.75},
   top:{target:[0,.2,0],yaw:.22,pitch:1.49,distance:r*5.10}
  }[name]||{target:[0,1.6,0],yaw:2.57,pitch:.50,distance:r*5.35};
  v.fov=(name==='curl'?52:name==='breaker'?54:50)*Math.PI/180;
- if(innerWidth<760&&name==='overview'){v.distance*=1.05;v.yaw=incomingYaw+.28;v.fov=63*Math.PI/180;}
+ if(innerWidth<760&&name==='overview'){v.distance*=1.05;v.yaw=.48;v.fov=63*Math.PI/180;}
  else if(innerWidth<760&&name==='top'){v.distance*=1.30;v.fov=60*Math.PI/180;}
  else if(innerWidth<760&&['breaker','curl'].includes(name)){v.distance*=1.16;v.fov=58*Math.PI/180;}
  while(v.yaw-camera.yaw>Math.PI)v.yaw-=TAU;while(v.yaw-camera.yaw<-Math.PI)v.yaw+=TAU;
@@ -1392,7 +1399,7 @@ function installCanoeGame(){
  document.querySelectorAll('[data-boat]').forEach(b=>{const k=b.dataset.boat,down=e=>{e.preventDefault();boatInput(k,true)},up=e=>{e.preventDefault();boatInput(k,false)};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
  window.StoneMoneyIslandGame=window.PalauSurvivalGame={shoreInstances:STONE_MONEY_SHORES,shoreEvidence:'authored-candidate-not-survey',version:VERSION,state:CANOE_STATE,input:boatInput,setCanoeDrive,teleportCanoe:(x,z,yaw=CANOE_STATE.yaw)=>{CANOE_STATE.x=x;CANOE_STATE.z=z;CANOE_STATE.yaw=yaw;CANOE_STATE.speed=0;opaqueDirty=true;},deepTarget:[...DEEP_FISH_POS]};
 }
-let smiGpuFence=null,smiReviewHold=false,smiReviewRequest=null,smiCompletedAt=0;
+let smiGpuFence=null,smiReviewHold=false,smiReviewRequest=null,smiReviewTarget=0,smiCompletedAt=0;
 function frame(now){
  requestAnimationFrame(frame);
  if(smiGpuFence){
@@ -1401,7 +1408,7 @@ function frame(now){
   if(status===gl.WAIT_FAILED){qa.errors.push('GPU completion wait failed');return;}
   gl.deleteSync(smiGpuFence);smiGpuFence=null;qa.completedFrames=(qa.completedFrames||0)+1;
   if(smiCompletedAt)qa.completedFrameMs=now-smiCompletedAt;smiCompletedAt=now;
-  if(smiReviewRequest){smiReviewHold=true;const done=smiReviewRequest;smiReviewRequest=null;done(true);}
+  if(smiReviewRequest&&qa.completedFrames>=smiReviewTarget){smiReviewHold=true;const done=smiReviewRequest;smiReviewRequest=null;done(true);}
  }
  if(smiReviewHold||qa.errors.length)return;
  if(document.hidden){lastFrame=now;return}
@@ -1458,7 +1465,7 @@ async function init(){
  const mediaWarmup=QA_MODE?8:14;for(let t=-mediaWarmup;t<0;t+=.16)updateParticles(.16,t);qa.mediaWarmupSeconds=mediaWarmup;
  const foamWarmup=QA_MODE?2.5:4;for(let t=-foamWarmup;t<0;t+=.25)updateFields(.25,t);qa.foamWarmupSeconds=foamWarmup;
  updateCurl(0);qa.ready=false;qa.parameterCount=PARAMS.length;qa.parameterPages=3;
- const api={qa,holdForReview:()=>new Promise(resolve=>{if(smiReviewHold){resolve(true);return;}smiReviewRequest=resolve;opaqueDirty=true;}),resumeFromReview:()=>{smiReviewHold=false;lastFrame=performance.now();},getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'same-world frozen V001 ocean/cloud kernel plus authored coast instances; shoreline transport and full collision agreement remain under verification'}),setConfig:applyParam,setView,setPage,
+ const api={qa,holdForReview:()=>new Promise(resolve=>{if(smiReviewHold){resolve(true);return;}smiReviewTarget=qa.frames+1;smiReviewRequest=resolve;opaqueDirty=true;}),resumeFromReview:()=>{smiReviewHold=false;smiReviewRequest=null;lastFrame=performance.now();},getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'same-world frozen V001 ocean/cloud kernel plus authored coast instances; shoreline transport and full collision agreement remain under verification'}),setConfig:applyParam,setView,setPage,
  pause:()=>{config.paused=true;$('pause').textContent='继续运行'},play:()=>{config.paused=false;$('pause').textContent='暂停';lastFrame=performance.now()},
  captureVisualProbe,sampleBed:(x,z)=>bedHeight(x,z),sampleRock:(x,z)=>rockField.sample(x,z),sampleWater:(x,z,t=physicalTime)=>waveAt(x,z,t,config),sampleWind:(x,y,z,t=physicalTime)=>windAt(x,y,z,t,config),getSources:()=>FIRE_SOURCES.map(s=>[...s]),getReefPitCenters:()=>reefPitCenters(config),
  policy:{imageGenerationMode:false,persistentImageAssets:0,treeCount:VEGETATION_COUNT,full3DFluid:false,singleScene:true,worldSpaceReefBathymetry:true,bananaUse:'cultivated-remnant-candidate',banyanUse:'palau-ficus-family-plausible',karstGeometry:'procedural-world-foundation-not-survey-truth'},reefPits:REEF_PITS.map(x=>({...x})),params:PARAMS};
