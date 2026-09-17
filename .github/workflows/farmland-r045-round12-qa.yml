@@ -8,6 +8,9 @@ on:
       - '.github/workflows/farmland-r045-round12-qa.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -15,8 +18,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Numeric R045.12 gates
-        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa.mjs
+        id: numeric
+        shell: bash
+        run: |
+          set +e
+          node farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa.mjs
+          CODE=$?
+          mkdir -p farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
+          cp farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12/r045_round12_qa_result.json
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          exit 0
       - name: Browser fixed-view gate
+        id: browser
         if: always()
         shell: bash
         run: |
@@ -47,6 +60,27 @@ jobs:
           with open(os.path.join(out,'r045_round12_browser_result.json'),'w') as f: json.dump(r,f,indent=2)
           print(json.dumps(r,indent=2)); raise SystemExit(0 if r['passed'] else 3)
           PY
+      - name: Persist machine-readable gate evidence
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          mkdir -p farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
+          if [ -f farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_browser_result.json ]; then
+            cp farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12/r045_round12_browser_result.json
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
+          if ! git diff --cached --quiet; then
+            git commit -m 'farmland R045.12 record CI gate evidence'
+            git push
+          fi
+      - name: Enforce numeric gate outcome
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.numeric.outputs.code }}" = "0"
       - name: Upload R045.12 audit evidence
         if: always()
         uses: actions/upload-artifact@v4
