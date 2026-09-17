@@ -1,0 +1,51 @@
+{
+  "id": "KAOPU-NOISE-N10-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N09_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N09_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_MODULAR_SHADER_AASTEP_N09.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6A",
+    "topic": "modular shader derivative coverage",
+    "question": "Which derivative-width estimator is faithful to straight-edge pixel-box coverage across rotation and scale?",
+    "state": "candidate-partial-analytic-cpu-verified",
+    "evidence": [
+      "PROBES/probe_derivative_coverage_n10.py",
+      "PROBES/derivative_coverage_result_n10.json",
+      "LEARNING_LOG/2026-09-17_DERIVATIVE_COVERAGE_N10.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {
+      "mother": "Brick material",
+      "entry": "HOUSE PR15",
+      "receipt": "N09 awaiting acknowledgement",
+      "actionThisRound": "held as addendum; no repeat delivery"
+    },
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "receipt": "not-applicable", "actionThisRound": "no route"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "receipt": "not-delivered", "actionThisRound": "no route"},
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "Unknown", "actionThisRound": "no-repeat"}
+  ],
+  "verificationReceipt": {
+    "primarySpec": "GLSL ES 3.00.6",
+    "pinnedCandidateSource": "glslify/glsl-aastep@49d59670789be4b9863c3991baa3a58b9bff8c05",
+    "cpuSemanticChecks": "7/7 pass",
+    "hardwareGPU": "Unknown",
+    "evidenceIndependence": "Exact polygon coverage and its CPU replay share one analytic design; N09 SwiftShader is a distinct runtime execution but not hardware GPU or independent coverage design."
+  },
+  "nextGap": "Await the N09 Brick Material receipt; then test the exact helper in the nonlinear R8 mask across locked cameras, scales and orientations, keeping GPU/device and user acceptance separate."
+}
