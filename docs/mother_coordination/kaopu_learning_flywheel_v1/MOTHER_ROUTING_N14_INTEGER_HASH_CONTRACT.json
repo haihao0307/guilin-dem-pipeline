@@ -1,0 +1,37 @@
+{
+  "id": "KAOPU-N14-INTEGER-HASH-ROUTING",
+  "status": "prepared-not-redelivered",
+  "candidate": "versioned i32-bit-pattern to u32 cell/hash ABI with locked cross-language vectors",
+  "routes": [
+    {
+      "mother": "Brick Material",
+      "entry": "haihao0307/HOUSE PR15",
+      "priorReceipt": "N09 delivery still unacknowledged",
+      "action": "hold N14 as an N13 addendum; after acknowledgement inspect the actual R8 coordinate source, axis order and shader path, then run locked vectors before visual A/B",
+      "adoption": "Unknown"
+    },
+    {
+      "mother": "Landscape",
+      "entry": "haihao0307/guilin-dem-pipeline PR79",
+      "priorReceipt": "no explicit N02 acknowledgement",
+      "action": "hold; if the candidate uses split tile/cell identity, require the same integer ABI across bake and runtime before integration",
+      "adoption": "Unknown"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "haihao0307/guilin-dem-pipeline PR65",
+      "priorReceipt": "no new N02 acknowledgement",
+      "action": "no route unless its actual material chain exposes split-cell or cross-language hash identity",
+      "adoption": "Unknown"
+    }
+  ],
+  "acceptanceGates": [
+    "actual cell source remains integer before hashing",
+    "signed i32 bit pattern, axis order and pair order are explicit",
+    "all arithmetic is u32 modulo 2^32 with logical shifts",
+    "shift counts outside 0..31 are rejected",
+    "locked vectors pass in every participating language/runtime",
+    "numeric identity and byte serialization/endianness are separately specified",
+    "hash quality, device performance and visual acceptance are checked independently"
+  ]
+}
