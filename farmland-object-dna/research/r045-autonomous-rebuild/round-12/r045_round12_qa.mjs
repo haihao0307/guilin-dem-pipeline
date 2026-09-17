@@ -1,10 +1,14 @@
 import fs from 'node:fs';
 import * as K from './r045_round12_kernel.mjs';
 import * as R11 from '../round-11/r045_round11_kernel.mjs';
+import * as R10 from '../round-10/r045_round10_kernel.mjs';
+import * as R9 from '../round-09/r045_round09_kernel.mjs';
+import * as R8 from '../round-08/r045_round08_kernel.mjs';
 const checks=[];const add=(name,pass,value,limit)=>checks.push({name,pass:Boolean(pass),value,limit});
 const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1);
 function sampleDelta(fn,z0,z1){let max=0,sum=0,n=0;for(let x=-210;x<=210;x+=12)for(let z=z0;z<=z1;z+=4){const v=Math.abs(fn(x,z));max=Math.max(max,v);sum+=v;n++}return{max,mean:sum/(n||1),n}}
 function barrier(model){let max=-1e9,at=null;for(let x=-205;x<=205;x+=10)for(let z=-198;z<=128;z+=4){const v=model.height(x,z+4)-model.height(x,z);if(v>max){max=v;at=[x,z]}}return{max,at}}
+function profile(model,x,z0,z1,step=2){const out=[];for(let z=z0;z<=z1;z+=step)out.push([z,model.height(x,z)]);return out}
 add('version',K.VERSION==='R045.12',K.VERSION,'R045.12');
 add('water_graph_identity_preserved',K.nodes.length===R11.nodes.length&&K.edges.length===R11.edges.length,{nodes:[R11.nodes.length,K.nodes.length],edges:[R11.edges.length,K.edges.length]},'unchanged');
 add('three_or_more_trunk_outlet_corridors',K.outletContinuum.length>=3,K.outletContinuum.map(o=>o.id),'>=3');
@@ -17,7 +21,7 @@ let nearDiv=[],farDiv=[];for(let x=-200;x<=200;x+=10)for(let z=-195;z<=-78;z+=5)
 add('interfluve_signal_tracks_divides',mean(nearDiv)>mean(farDiv)*1.8,{near:mean(nearDiv),far:mean(farDiv)},'near > 1.8x far');
 let outletNear=[],outletFar=[];for(let x=-205;x<=205;x+=10)for(let z=-55;z<=125;z+=6){const d=K.nearestOutletDistance(x,z),v=Math.abs(K.outletContinuumDelta(x,z));if(d<12)outletNear.push(v);if(d>38)outletFar.push(v)}
 add('outlet_signal_tracks_corridors',mean(outletNear)>mean(outletFar)*3,{near:mean(outletNear),far:mean(outletFar)},'near > 3x far');
-const b=barrier(K),b11=barrier(R11);add('no_new_forward_wall',b.max<.55&&b.max<=b11.max+.05,{r12:b,r11:b11,delta:b.max-b11.max},'<0.55 m rise per 4 m and <= inherited +0.05 m');
+const b=barrier(K),b11=barrier(R11),b10=barrier(R10),b9=barrier(R9),b8=barrier(R8);add('no_new_forward_wall',b.max<.55&&b.max<=b11.max+.05,{r12:b,r11:b11,delta:b.max-b11.max},'<0.55 m rise per 4 m and <= inherited +0.05 m');
 let rearCrest=0,river=0;for(let x=-210;x<=210;x+=30){const rz0=K.ridgeCrestZ(x);for(const z of [rz0-18,rz0,rz0+18])rearCrest=Math.max(rearCrest,Math.abs(K.height(x,z)-R11.height(x,z)));const rz=K.riverZ(x);for(const dz of [-5,0,5])river=Math.max(river,Math.abs(K.height(x,rz+dz)-R11.height(x,rz+dz)))}
 add('rear_crest_change_bounded',rearCrest<.35,rearCrest,'<0.35 m; source-catchment morphology may change rear terrain but not rewrite regional crest');
 add('front_receiver_controls_unchanged',river<1e-9,river,'0');
@@ -29,5 +33,5 @@ add('terrace_generator_locked',K.snapshot.terraceGeometryEnabled===false,K.snaps
 add('parcel_generator_locked',K.snapshot.parcelGenerationEnabled===false,K.snapshot.parcelGenerationEnabled,false);
 add('water_state_unknown',K.snapshot.waterStateKnown===false,K.snapshot.waterStateKnown,false);
 add('no_active_flow_claim',/no surveyed-dimension or active-flow claim/.test(K.snapshot.catchmentMorphologyClass),K.snapshot.catchmentMorphologyClass,'explicit boundary');
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{inter,head,out,all,barrier:b,baselineBarrier:b11,rearCrest,nearDivideMean:mean(nearDiv),farDivideMean:mean(farDiv),outletNearMean:mean(outletNear),outletFarMean:mean(outletFar),terraceNearDrainageMean:mean(near),terraceFarDrainageMean:mean(far)}};
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{inter,head,out,all,barrier:b,barrierGenealogy:{r8:b8,r9:b9,r10:b10,r11:b11,r12:b},wallProfile:{r8:profile(R8,-55,-188,-148),r9:profile(R9,-55,-188,-148),r10:profile(R10,-55,-188,-148),r11:profile(R11,-55,-188,-148),r12:profile(K,-55,-188,-148)},rearCrest,nearDivideMean:mean(nearDiv),farDivideMean:mean(farDiv),outletNearMean:mean(outletNear),outletFarMean:mean(outletFar),terraceNearDrainageMean:mean(near),terraceFarDrainageMean:mean(far)}};
 fs.writeFileSync(new URL('./r045_round12_qa_result.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
