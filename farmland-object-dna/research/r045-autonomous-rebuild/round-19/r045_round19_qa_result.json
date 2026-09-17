@@ -1,0 +1,450 @@
+{
+  "version": "R045.19",
+  "passed": false,
+  "gateCount": 27,
+  "passedCount": 24,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.19",
+      "limit": "R045.19"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "terrain_carrier_inventory_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": [
+          12,
+          12
+        ],
+        "outlets": [
+          3,
+          3
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "r18_headwater_profiles_preserved",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
+          "centerShift": -14
+        },
+        {
+          "id": "B",
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "centerShift": 24
+        },
+        {
+          "id": "C",
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
+          "centerShift": 8
+        }
+      ],
+      "limit": "exact R18 profile definitions"
+    },
+    {
+      "name": "continuity_repair_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.78,
+        "mean": 0.06305910625369394,
+        "n": 1406,
+        "at": [
+          -82,
+          -206
+        ]
+      },
+      "limit": "0.08 < max <= 0.781 m"
+    },
+    {
+      "name": "continuity_repair_is_bounded",
+      "pass": true,
+      "value": 0.06305910625369394,
+      "limit": "mean absolute repair <0.14 m"
+    },
+    {
+      "name": "complete_drainage_skeleton_is_protected",
+      "pass": true,
+      "value": {
+        "nearN": 238,
+        "nearDrain": 0
+      },
+      "limit": "sampled d<=11.5 m: zero R19 delta"
+    },
+    {
+      "name": "repair_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change outside upper repair band"
+    },
+    {
+      "name": "terrace_permission_is_exactly_inherited",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled permission difference"
+    },
+    {
+      "name": "front_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change around front receiver"
+    },
+    {
+      "name": "repair_is_not_single_row_qa_patch",
+      "pass": true,
+      "value": {
+        "activeRows": 15,
+        "zMin": -214,
+        "zMax": -186
+      },
+      "limit": ">=8 sampled z rows with >0.015 m repair"
+    },
+    {
+      "name": "repair_field_has_no_new_longitudinal_step",
+      "pass": false,
+      "value": {
+        "maxRepairStep": 0.7432286578663505,
+        "at": [
+          -185,
+          -200
+        ]
+      },
+      "limit": "<0.26 m repair-delta change per 4 m"
+    },
+    {
+      "name": "upper_wall_gate_has_real_sampling_coverage",
+      "pass": true,
+      "value": {
+        "r18": {
+          "totalEligible": 428,
+          "rows": 15
+        },
+        "r19": {
+          "totalEligible": 428,
+          "rows": 15
+        }
+      },
+      "limit": ">200 eligible samples each"
+    },
+    {
+      "name": "r18_debt_is_present_before_repair",
+      "pass": true,
+      "value": {
+        "oldWall": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "old202": {
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "fraction": 0.21212121212121213,
+          "maxRise": 3.382691161970051,
+          "at": -175
+        }
+      },
+      "limit": "R18 worst fraction >0.18"
+    },
+    {
+      "name": "upper_wall_debt_is_materially_reduced",
+      "pass": false,
+      "value": {
+        "r18": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "r19": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        }
+      },
+      "limit": "R19 worst fraction <0.12 and improves by >=0.07"
+    },
+    {
+      "name": "upper_wall_contiguous_span_not_worsened",
+      "pass": true,
+      "value": {
+        "r18": 10,
+        "r19": 10
+      },
+      "limit": "R19 <= R18 span"
+    },
+    {
+      "name": "z202_wall_is_reduced",
+      "pass": false,
+      "value": {
+        "r18": {
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "fraction": 0.21212121212121213,
+          "maxRise": 3.382691161970051,
+          "at": -175
+        },
+        "r19": {
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "fraction": 0.21212121212121213,
+          "maxRise": 3.11167506842623,
+          "at": 155
+        }
+      },
+      "limit": "both fraction and maximum rise lower at z=-202"
+    },
+    {
+      "name": "r18_source_footprints_not_erased_at_component_peaks",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "sourcePeak": 0.2921014990098049,
+          "at": [
+            -106,
+            -196
+          ],
+          "r19Repair": 0
+        },
+        {
+          "id": "B",
+          "sourcePeak": 0.3054079671081466,
+          "at": [
+            -114,
+            -192
+          ],
+          "r19Repair": 0.0005339176503450726
+        },
+        {
+          "id": "C",
+          "sourcePeak": 0.35811349352719996,
+          "at": [
+            182,
+            -192
+          ],
+          "r19Repair": 0.23588515134099686
+        }
+      ],
+      "limit": "R19 repair <0.42 m at each inherited source-component peak"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6837247695906252,
+      "limit": ">0.04; geometry still locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "qa_overfit_shortcut_rejected",
+      "pass": true,
+      "value": "a single z≈-202 row smoothing would overfit the QA sampling grid and can manufacture a new horizontal band; this repair responds to a band-wide baseline rise field instead",
+      "limit": "band-wide repair, not z=-202 row patch"
+    },
+    {
+      "name": "reference_is_visual_not_metric_truth",
+      "pass": true,
+      "value": "user references constrain continuous source-to-slope hierarchy and non-banded morphology only; no metric extraction",
+      "limit": "visual hierarchy only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed upper-slope section",
+        "measured channel section",
+        "active flow",
+        "regional terrace dimensions",
+        "field microtopography truth",
+        "soil/sediment property",
+        "ownership"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.78,
+      "mean": 0.06305910625369394,
+      "n": 1406,
+      "at": [
+        -82,
+        -206
+      ]
+    },
+    "nearDrainProtection": {
+      "nearN": 238,
+      "nearDrain": 0
+    },
+    "outside": 0,
+    "permissionDiff": 0,
+    "receiver": 0,
+    "activeZ": [
+      -214,
+      -212,
+      -210,
+      -208,
+      -206,
+      -204,
+      -202,
+      -200,
+      -198,
+      -196,
+      -194,
+      -192,
+      -190,
+      -188,
+      -186
+    ],
+    "maxRepairDeltaStep": {
+      "value": 0.7432286578663505,
+      "at": [
+        -185,
+        -200
+      ]
+    },
+    "oldWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "newWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "old202": {
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "fraction": 0.21212121212121213,
+      "maxRise": 3.382691161970051,
+      "at": -175
+    },
+    "new202": {
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "fraction": 0.21212121212121213,
+      "maxRise": 3.11167506842623,
+      "at": 155
+    },
+    "peakRepair": [
+      {
+        "id": "A",
+        "sourcePeak": 0.2921014990098049,
+        "at": [
+          -106,
+          -196
+        ],
+        "r19Repair": 0
+      },
+      {
+        "id": "B",
+        "sourcePeak": 0.3054079671081466,
+        "at": [
+          -114,
+          -192
+        ],
+        "r19Repair": 0.0005339176503450726
+      },
+      {
+        "id": "C",
+        "sourcePeak": 0.35811349352719996,
+        "at": [
+          182,
+          -192
+        ],
+        "r19Repair": 0.23588515134099686
+      }
+    ],
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6837247695906252
+  }
+}
