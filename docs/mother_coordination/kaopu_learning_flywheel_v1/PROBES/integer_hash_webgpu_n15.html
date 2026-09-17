@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU N15 WGSL integer hash runtime</title>
+<pre id="pending">pending</pre>
+<script>
+(() => {
+  const COUNT = 12;
+  const EXPECTED = [
+    '0x0ccf9faf','0x6e683c38','0x39dd06c6','0xe3f359d0',
+    '0x92c56eef','0x9e58184a','0xdccecdc0','0x01fce552',
+    '0x3b4ee4c6','0x5dd09b26','0xe9a375cf','0x20a7111b'
+  ];
+  const code = `
+    @group(0) @binding(0) var<storage,read_write> outv: array<u32,12>;
+    fn h1(input:u32)->u32{var x=input;x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+    fn rotl16(x:u32)->u32{return (x<<16u)|(x>>16u);}
+    fn hp(p:vec2<i32>)->u32{return h1(h1(bitcast<u32>(p.x))^rotl16(h1(bitcast<u32>(p.y)))^0x9e3779b9u);}
+    fn cell(i:u32)->vec2<i32>{
+      switch i {
+        case 0u:{return vec2<i32>(bitcast<i32>(0x80000000u),bitcast<i32>(0x80000000u));}
+        case 1u:{return vec2<i32>(bitcast<i32>(0x80000000u),-1i);}
+        case 2u:{return vec2<i32>(-16777217i,16777217i);}
+        case 3u:{return vec2<i32>(-65536i,65536i);}
+        case 4u:{return vec2<i32>(-1i,-1i);}
+        case 5u:{return vec2<i32>(-1i,0i);}
+        case 6u:{return vec2<i32>(0i,-1i);}
+        case 7u:{return vec2<i32>(0i,0i);}
+        case 8u:{return vec2<i32>(0i,1i);}
+        case 9u:{return vec2<i32>(1i,0i);}
+        case 10u:{return vec2<i32>(1i,1i);}
+        default:{return vec2<i32>(2147483647i,2147483647i);}
+      }
+    }
+    @compute @workgroup_size(1) fn main(@builtin(global_invocation_id) id:vec3<u32>){if(id.x<12u){outv[id.x]=hp(cell(id.x));}}
+  `;
+  async function run() {
+    if (!navigator.gpu) throw new Error('navigator.gpu absent');
+    let adapter = await navigator.gpu.requestAdapter({forceFallbackAdapter:true});
+    let fallbackRequested = true;
+    if (!adapter) { adapter = await navigator.gpu.requestAdapter(); fallbackRequested = false; }
+    if (!adapter) throw new Error('requestAdapter returned null');
+    const device = await adapter.requestDevice();
+    const module = device.createShaderModule({code});
+    const info = await module.getCompilationInfo();
+    const errors = info.messages.filter(m => m.type === 'error');
+    if (errors.length) throw new Error(errors.map(e => e.message).join('\n'));
+    const size = COUNT * 4;
+    const output = device.createBuffer({size, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC});
+    const read = device.createBuffer({size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ});
+    const pipeline = device.createComputePipeline({layout:'auto', compute:{module,entryPoint:'main'}});
+    const bind = device.createBindGroup({layout:pipeline.getBindGroupLayout(0), entries:[{binding:0,resource:{buffer:output}}]});
+    const enc = device.createCommandEncoder();
+    const pass = enc.beginComputePass(); pass.setPipeline(pipeline); pass.setBindGroup(0,bind); pass.dispatchWorkgroups(COUNT); pass.end();
+    enc.copyBufferToBuffer(output,0,read,0,size); device.queue.submit([enc.finish()]); await read.mapAsync(GPUMapMode.READ);
+    const hashes = Array.from(new Uint32Array(read.getMappedRange().slice(0))).map(x=>'0x'+x.toString(16).padStart(8,'0')); read.unmap();
+    const result = {
+      schema:'kaopu-wgsl-integer-hash-runtime-n15-v1', userAgent:navigator.userAgent,
+      fallbackRequested, adapterInfo: adapter.info || null,
+      wgsl:{compiled:true, hashes, expected:EXPECTED, exactMatch:JSON.stringify(hashes)===JSON.stringify(EXPECTED), compilationMessages:info.messages.map(m=>({type:m.type,message:m.message}))}
+    };
+    const pre=document.querySelector('pre'); pre.id='result'; pre.textContent=JSON.stringify(result,null,2);
+  }
+  addEventListener('load',()=>run().catch(e=>{const pre=document.querySelector('pre');pre.id='error';pre.textContent=String(e&&e.stack||e);}));
+})();
+</script>
