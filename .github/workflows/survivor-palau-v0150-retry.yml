@@ -1,0 +1,103 @@
+name: Palau Survival V0.1.5.0 canoe control retry
+on:
+  push:
+    branches: [work/survivor-palau-v0150-canoe-control-20260917]
+    paths: [.github/workflows/survivor-palau-v0150-retry.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Build exact canoe candidate
+        run: |
+          set -euo pipefail
+          python3 games/survivor-palau/source/build_v0150.py
+          OUT=games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html
+          test -s "$OUT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html')
+          s=p.read_text(encoding='utf-8')
+          for marker in ['palau-survival-0.1.5.0-canoe-control','playableCanoeV1:true','shoreDepthGateV1:true','mobileCanoeControlsV1:true','window.PalauSurvivalGame','updateCanoeGame(elapsed)','uModel']:
+            assert marker in s, marker
+          m=re.search(r'<script type="module">(.*)</script>',s,re.S); assert m
+          Path('/tmp/app.mjs').write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/app.mjs
+          sha256sum "$OUT"
+      - name: Chromium gameplay QA with software-render allowance
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+          cat >/tmp/qa_v0150_retry.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,math,shutil
+          f=Path('games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html').resolve()
+          r={'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False,'note':'GitHub runner uses SwiftShader; movement wait is frame-completion based, not wall-clock 1.6s.'}
+          chrome=shutil.which('google-chrome') or shutil.which('chromium'); assert chrome
+          with sync_playwright() as p:
+            b=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+            page=b.new_page(viewport={'width':1440,'height':900})
+            page.on('console',lambda m:r['consoleErrors'].append(m.text) if m.type=='error' else None)
+            page.on('pageerror',lambda e:r['pageErrors'].append(str(e)))
+            page.on('requestfailed',lambda q:r['requestFailures'].append({'url':q.url,'failure':str(q.failure)}))
+            page.goto(f.as_uri()+'?qa=1',wait_until='load',timeout=30000)
+            page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready && window.PalauSurvivalGame",timeout=120000)
+            qa0=page.evaluate("() => window.OceanMotherR018.qa")
+            assert qa0.get('webgl2') and qa0.get('glError',0)==0 and not qa0.get('errors')
+            assert qa0.get('playableCanoeV1') and qa0.get('shoreDepthGateV1') and qa0.get('mobileCanoeControlsV1')
+            page.screenshot(path='/tmp/v0150-overview.png',full_page=True)
+            start=page.evaluate("() => { PalauSurvivalGame.teleportCanoe(-142,82,0); PalauSurvivalGame.setCanoeDrive(true); PalauSurvivalGame.input('forward',true); return {...PalauSurvivalGame.state}; }")
+            page.wait_for_function("() => PalauSurvivalGame.state.speed > 0.01 && Number.isFinite(PalauSurvivalGame.state.depth) && OceanMotherR018.qa.canoePosition",timeout=30000,polling=250)
+            page.evaluate("() => PalauSurvivalGame.input('forward',false)")
+            end=page.evaluate("() => ({state:{...PalauSurvivalGame.state},qa:{...OceanMotherR018.qa}})")
+            moved=math.hypot(end['state']['x']-start['x'],end['state']['z']-start['z'])
+            assert moved>.001,(start,end,moved)
+            assert math.isfinite(end['state']['depth']) and end['state']['depth']>.08,end
+            assert end['qa'].get('glError',0)==0,end['qa']
+            page.screenshot(path='/tmp/v0150-canoe-drive.png',full_page=True)
+            page.set_viewport_size({'width':390,'height':844})
+            page.wait_for_timeout(500)
+            assert page.locator('#boatPad').evaluate("e => e.classList.contains('active')")
+            page.screenshot(path='/tmp/v0150-mobile-390x844.png',full_page=True)
+            r.update({'qa':end['qa'],'start':start,'end':end['state'],'movedMeters':moved,'passed':not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures']})
+            b.close()
+          Path('/tmp/BROWSER_QA.json').write_text(json.dumps(r,ensure_ascii=False,indent=2),encoding='utf-8')
+          assert r['passed'],r
+          PY
+          xvfb-run -a python3 /tmp/qa_v0150_retry.py
+      - name: Publish candidate on work branch
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.5.0
+          cp /tmp/BROWSER_QA.json "$ROOT/BROWSER_QA.json"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$ROOT"
+          git commit -m 'publish(game): Palau Survival V0.1.5.0 canoe control verified'
+          git push origin HEAD:work/survivor-palau-v0150-canoe-control-20260917
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Palau_Survival_V0.1.5.0_Canoe_Control_QA_Retry
+          path: |
+            /tmp/BROWSER_QA.json
+            /tmp/v0150-overview.png
+            /tmp/v0150-canoe-drive.png
+            /tmp/v0150-mobile-390x844.png
+            games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html
+          if-no-files-found: warn
+          retention-days: 90
