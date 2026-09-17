@@ -43,12 +43,29 @@ jobs:
           server=$!
           trap 'kill $server || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:8765/integer_hash_webgpu_n15.html >/dev/null && break; sleep 0.25; done
-          timeout 120 "${{ steps.chrome.outputs.path }}" \
-            --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu-sandbox \
-            --enable-unsafe-webgpu --ignore-gpu-blocklist \
-            --enable-features=Vulkan --use-angle=vulkan --disable-vulkan-surface \
-            --virtual-time-budget=30000 --dump-dom \
-            http://127.0.0.1:8765/integer_hash_webgpu_n15.html > /tmp/n15-dom.html
+          success=0
+          for angle in gl swiftshader vulkan; do
+            echo "Trying ANGLE backend: $angle"
+            set +e
+            timeout 80 "${{ steps.chrome.outputs.path }}" \
+              --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu-sandbox \
+              --enable-unsafe-webgpu --ignore-gpu-blocklist --enable-features=Vulkan \
+              --use-angle="$angle" --user-data-dir="/tmp/chrome-n15-$angle" \
+              --virtual-time-budget=30000 --dump-dom \
+              http://127.0.0.1:8765/integer_hash_webgpu_n15.html \
+              > "/tmp/n15-dom-$angle.html" 2> "/tmp/n15-chrome-$angle.log"
+            code=$?
+            set -e
+            if test "$code" -eq 0 && grep -q '<pre id="result">' "/tmp/n15-dom-$angle.html"; then
+              cp "/tmp/n15-dom-$angle.html" /tmp/n15-dom.html
+              echo "$angle" > /tmp/n15-angle-backend.txt
+              success=1
+              break
+            fi
+            tail -n 80 "/tmp/n15-chrome-$angle.log" || true
+            grep -o '<pre id="error">[^<]*' "/tmp/n15-dom-$angle.html" || true
+          done
+          test "$success" -eq 1
           python3 "$root/extract_wgsl_runtime_n15.py" /tmp/n15-dom.html /tmp/wgsl_integer_hash_runtime_result_n15.json
           jq -e '.summary.status == "pass" and .summary.checks == 4' /tmp/wgsl_integer_hash_runtime_result_n15.json
           jq '{adapterInfo,fallbackRequested,wgsl,checks,summary}' /tmp/wgsl_integer_hash_runtime_result_n15.json
@@ -58,5 +75,8 @@ jobs:
           name: kaopu-wgsl-integer-hash-n15
           path: |
             /tmp/n15-dom.html
+            /tmp/n15-dom-*.html
+            /tmp/n15-chrome-*.log
+            /tmp/n15-angle-backend.txt
             /tmp/wgsl_integer_hash_runtime_result_n15.json
           if-no-files-found: error
