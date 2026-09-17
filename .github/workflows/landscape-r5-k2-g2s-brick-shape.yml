@@ -1,0 +1,134 @@
+name: Landscape R5.K2.G2S Brick Shape
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/build_g2s.py
+      - .github/workflows/landscape-r5-k2-g2s-brick-shape.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build minimal G2S candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/build_g2s.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/build_g2s.py
+
+      - name: Static and browser-script QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          base = Path('workbenches/landscape-surface-r5-k2-geometry-r2')
+          root = Path('workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape')
+          s = (root / 'index.html').read_text(encoding='utf-8')
+          b = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+          required = [
+              'R5.K2.G2S Brick Shape Geometry',
+              'function brickShapeMicroscope',
+              'd+=brickShapeMicroscope(x,y,z,d);return d;',
+              'LANDSCAPE_BRICK_SHAPE_FIELD_R1',
+              'wholeObjectDomainWarp:false',
+              'materialOnly:false',
+              'Microscope 真实形体',
+              '没有新增整山 Warp',
+          ]
+          for token in required:
+              assert token in s, token
+          assert b['schema'] == 'LANDSCAPE_R5_K2_G2S_BRICK_SHAPE_V1'
+          assert b['onlyChange']['wholeObjectWarp'] is False
+          assert b['onlyChange']['newMaterialEffect'] is False
+          assert b['onlyChange']['newFeatureSystem'] is False
+          for html, out in [(base/'index.html','/tmp/g2-worker.js'), (root/'index.html','/tmp/g2s-worker.js')]:
+              text = html.read_text(encoding='utf-8')
+              blocks=[]
+              for sid in ('worldSource','generateSource'):
+                  m=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,text,re.S)
+                  assert m, (html,sid)
+                  blocks.append(m.group(1))
+              Path(out).write_text('\n'.join(blocks),encoding='utf-8')
+          marker="</script><script>'use strict';"
+          assert marker in s
+          app="'use strict';"+s.rsplit(marker,1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/g2s-app.js').write_text(app,encoding='utf-8')
+          PY
+          node --check /tmp/g2-worker.js
+          node --check /tmp/g2s-worker.js
+          node --check /tmp/g2s-app.js
+
+      - name: Generate baseline and G2S numerical evidence
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          cat >> /tmp/g2-worker.js <<'JS'
+          const fs=require('fs');
+          const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,geo:1.65,concavity:.85,spikeGuard:.95};
+          const data=generateScene(cfg,()=>{}),r=data.report,p=data.parts.find(x=>x.name==='主岩体');
+          function bbox(part){const V=part.vertices,s=part.stride||16,lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(let i=0;i<V.length;i+=s)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],V[i+k]);hi[k]=Math.max(hi[k],V[i+k])}return{lo,hi};}
+          fs.writeFileSync('/tmp/g2.json',JSON.stringify({signature:r.parts.find(x=>x.name==='主岩体').signature,vertices:r.mainVertices,triangles:r.mainTriangles,bbox:bbox(p),microscopeGeometry:r.microscopeGeometry}));
+          JS
+          cat >> /tmp/g2s-worker.js <<'JS'
+          const fs=require('fs');
+          const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,geo:1.65,concavity:.85,spikeGuard:.95};
+          const data=generateScene(cfg,()=>{}),r=data.report,p=data.parts.find(x=>x.name==='主岩体');
+          function bbox(part){const V=part.vertices,s=part.stride||16,lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(let i=0;i<V.length;i+=s)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],V[i+k]);hi[k]=Math.max(hi[k],V[i+k])}return{lo,hi};}
+          fs.writeFileSync('/tmp/g2s.json',JSON.stringify({signature:r.parts.find(x=>x.name==='主岩体').signature,vertices:r.mainVertices,triangles:r.mainTriangles,bbox:bbox(p),brickShapeMicroscope:r.brickShapeMicroscope,microscopeGeometry:r.microscopeGeometry}));
+          JS
+          node /tmp/g2-worker.js
+          node /tmp/g2s-worker.js
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          a=json.loads(Path('/tmp/g2.json').read_text())
+          b=json.loads(Path('/tmp/g2s.json').read_text())
+          assert a['signature'] != b['signature'], 'Brick shape field did not change the extracted rock mesh'
+          m=b['brickShapeMicroscope']
+          assert m['schema']=='LANDSCAPE_BRICK_SHAPE_FIELD_R1'
+          assert m['appliesBeforeMeshing'] is True
+          assert m['wholeObjectDomainWarp'] is False
+          assert m['materialOnly'] is False
+          assert .06 <= m['maxSampleOffsetM'] <= .40, m
+          assert b['microscopeGeometry']['triangleFlipCount']==0
+          assert b['microscopeGeometry']['protectedDriftCount']==0
+          bbox_delta=max(abs(a['bbox'][side][i]-b['bbox'][side][i]) for side in ('lo','hi') for i in range(3))
+          assert .01 < bbox_delta < .80, bbox_delta
+          out={
+            'schema':'LANDSCAPE_R5_K2_G2S_RUNTIME_QA',
+            'date':'2026-09-17',
+            'acceptedBaseline':a,
+            'candidate':b,
+            'mainMeshChanged':a['signature']!=b['signature'],
+            'maxBoundingChangeM':bbox_delta,
+            'macroReplacement':False,
+            'newMaterialSystem':False,
+            'visualApproved':False,
+            'productionReady':False,
+          }
+          Path('workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/runtime-qa.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+
+      - name: Materialize G2S candidate
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r2-brick-shape/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "G2S already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize minimal Brick-shape G2S [skip ci]"
+          git push
