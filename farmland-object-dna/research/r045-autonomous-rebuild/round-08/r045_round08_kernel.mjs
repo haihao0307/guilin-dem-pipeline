@@ -31,13 +31,14 @@ export const foothillAprons=R6.foothillAprons;
 export const foothillSwales=R6.foothillSwales;
 
 // Round 08 correction 1:
-// Coordinate-warping R06 through its inherited lower-slope bend amplified curvature even when
-// the absolute bend itself barely changed. That is a real logical error: changing the sampling
-// coordinate is not a neutral way to phase-shift a pre-existing seam. Keep the phase edit away
-// from the inherited high-curvature band with a broad quintic notch; R09 can then repair the
-// inherited bend directly rather than hiding it inside another deformation.
+// Coordinate-warping a pre-existing high-curvature bend is not a neutral phase operation: even a
+// small z shift can magnify the inherited kink. Earlier R08 attempts proved that numerically. The
+// warp is now exactly zero across the inherited lower-slope bend (not merely 98.5% attenuated),
+// with broad quintic shoulders. That preserves the useful lower-foothill lateral de-synchronizing
+// experiment while leaving the inherited bend for a later direct reconstruction rather than
+// disguising it inside another deformation.
 function foothillWarpEnvelope(z){return Q(-36,-10,z)*(1-Q(44,116,z))}
-function inheritedBendNotch(z){const band=Q(56,78,z)*(1-Q(100,122,z));return 1-.985*band}
+function inheritedBendNotch(z){const band=Q(50,72,z)*(1-Q(104,126,z));return 1-band}
 function foothillPhase(x){return 3.30*Math.sin((x+24)*.014)+1.15*Math.sin((x-31)*.041)+.52*Math.sin((x+80)*.0065)}
 export function foothillShift(x,z){
   const env=foothillWarpEnvelope(z)*inheritedBendNotch(z);
@@ -77,16 +78,23 @@ export function suitability(x,z){
 }
 
 // Round 08 correction 2:
-// The previous seed selector silently accepted the first zero-score grid point when no candidate
-// met all hard constraints; this produced an invalid pilot and then made several zero-valued QA
-// metrics look harmless. Never fall back to an unqualified site. Use soft room preferences but
-// hard safety bounds, and return an explicit invalid seed if no qualified point exists.
+// A valid centre point is not enough: the prior pilot chose a point only 16.6 m from drainage,
+// then its contour traces immediately ran out of legal room. Seed selection now tests a short
+// contour-direction corridor on both sides before accepting a site. This is a geometric test only;
+// it does not imply field ownership, irrigation rights or surveyed terrace dimensions.
 function seedScore(x,z){
-  const p=terracePermission(x,z),d=nearestTerrainDrainageDistance(x,z),dv=nearestDivideDistance(x,z),s=slope(x,z);
-  if(p<.55||d<16||dv<8||s<.09||s>.21)return -Infinity;
-  const slopeFit=1-C(Math.abs(s-.145)/.065,0,1);
-  const room=(.35+.65*S(18,40,d))*(.45+.55*S(8,24,dv))*(1-.35*S(165,205,Math.abs(x)));
-  return p*(.50+.50*slopeFit)*room;
+  const p=terracePermission(x,z),d=nearestTerrainDrainageDistance(x,z),dv=nearestDivideDistance(x,z),g=gradient(x,z),s=g.mag;
+  if(p<.55||d<22||dv<9||s<.09||s>.24)return -Infinity;
+  const L=Math.hypot(g.dx,g.dz)||1,tx=g.dz/L,tz=-g.dx/L;
+  let corridor=1;
+  for(const q of [-24,-16,-8,8,16,24]){
+    const xx=x+tx*q,zz=z+tz*q,dd=nearestTerrainDrainageDistance(xx,zz),pp=terracePermission(xx,zz);
+    if(Math.abs(xx)>202||zz<-154||zz>2||dd<13.5||pp<.24){corridor=0;break;}
+  }
+  if(!corridor)return -Infinity;
+  const slopeFit=1-C(Math.abs(s-.16)/.08,0,1);
+  const room=(.35+.65*S(22,44,d))*(.45+.55*S(9,26,dv))*(1-.35*S(165,205,Math.abs(x)));
+  return p*(.48+.52*slopeFit)*room;
 }
 function choosePilotSeed(){
   let best=null;
@@ -114,7 +122,7 @@ function traceHalf(start,target,dir,maxSteps){
     x+=tx*3.6;z+=tz*3.6;
     const pr=projectToHeight(x,z,target);if(!pr.ok)break;x=pr.x;z=pr.z;
     const p=terracePermission(x,z),dd=nearestTerrainDrainageDistance(x,z);
-    if(Math.abs(x)>205||z<-154||z>2||p<.28||dd<13.5)break;
+    if(Math.abs(x)>205||z<-154||z>2||p<.22||dd<13.5)break;
     pts.push([x,z]);
   }
   return pts;
@@ -130,10 +138,10 @@ function contourAt(seed,target,leftSteps,rightSteps){
 export const terracePilot=(()=>{
   const seed=choosePilotSeed();
   const specs=[
-    {id:'PILOT-BENCH-A',offset:2.60,halfWidth:2.20,left:15,right:18,trimStart:0,trimEnd:0},
-    {id:'PILOT-BENCH-B',offset:.80,halfWidth:3.30,left:18,right:16,trimStart:3,trimEnd:1},
-    {id:'PILOT-BENCH-C',offset:-1.25,halfWidth:2.40,left:17,right:19,trimStart:1,trimEnd:4},
-    {id:'PILOT-BENCH-D',offset:-3.65,halfWidth:3.60,left:20,right:18,trimStart:2,trimEnd:0}
+    {id:'PILOT-BENCH-A',offset:.70,halfWidth:1.70,left:13,right:17,trimStart:0,trimEnd:0},
+    {id:'PILOT-BENCH-B',offset:-.90,halfWidth:2.70,left:18,right:15,trimStart:2,trimEnd:0},
+    {id:'PILOT-BENCH-C',offset:-2.60,halfWidth:2.00,left:15,right:19,trimStart:0,trimEnd:3},
+    {id:'PILOT-BENCH-D',offset:-4.60,halfWidth:2.90,left:20,right:16,trimStart:1,trimEnd:0}
   ];
   const lines=specs.map(spec=>{
     const target=seed.y+spec.offset,raw=contourAt(seed,target,spec.left,spec.right);
@@ -178,5 +186,5 @@ export const snapshot={
   terraceGeometryEnabled:false,
   terracePilotPreviewEnabled:true,
   waterStateKnown:false,
-  round08Correction:'phase warp excluded from inherited bend + qualified variable bench/riser pilot with explicit failure state'
+  round08Correction:'exact exclusion of inherited bend from phase warp + corridor-qualified varied bench/riser pilot'
 };
