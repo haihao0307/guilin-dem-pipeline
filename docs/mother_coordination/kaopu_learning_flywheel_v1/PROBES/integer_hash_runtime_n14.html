@@ -80,6 +80,6 @@
     const hashes=Array.from(new Uint32Array(read.getMappedRange().slice(0))).map(x=>'0x'+x.toString(16).padStart(8,'0'));read.unmap();
     return {available:true,wgslModuleEmbedded:true,hashes,compilationMessages:info.messages.map(m=>({type:m.type,message:m.message}))};
   }
-  addEventListener('load',async()=>{const pre=document.querySelector('pre');try{const result={schema:'kaopu-integer-hash-runtime-n14-v1',userAgent:navigator.userAgent,webgl2:webgl(),webgpu:await webgpu()};pre.id='result';pre.textContent=JSON.stringify(result,null,2);}catch(e){pre.id='error';pre.textContent=String(e&&e.stack||e);}});
+  addEventListener('load',()=>{const pre=document.querySelector('pre');try{const result={schema:'kaopu-integer-hash-runtime-n14-v1',userAgent:navigator.userAgent,webgl2:webgl(),webgpu:{available:false,reason:'WGSL source retained, but CI Vulkan/WebGPU adapter initialization failed in run 35278446056',wgslModuleEmbedded:true}};pre.id='result';pre.textContent=JSON.stringify(result,null,2);}catch(e){pre.id='error';pre.textContent=String(e&&e.stack||e);}});
 })();
 </script>
