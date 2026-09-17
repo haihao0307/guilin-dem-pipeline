@@ -43,8 +43,11 @@
     return {available:true,hashes:hashes.map(x=>'0x'+x.toString(16).padStart(8,'0')),signedRightShiftMinusOne16:'0xffffffff',unsignedRightShiftMinusOneBits16:'0x0000ffff',version:gl.getParameter(gl.VERSION),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):null};
   }
   async function webgpu(){
-    if(!navigator.gpu)return {available:false,reason:'navigator.gpu absent'};
-    const adapter=await navigator.gpu.requestAdapter();if(!adapter)return {available:false,reason:'requestAdapter returned null'};
+    if(!navigator.gpu)return {available:false,reason:'navigator.gpu absent',wgslModuleEmbedded:true};
+    const adapter=await Promise.race([
+      navigator.gpu.requestAdapter(),
+      new Promise(resolve=>setTimeout(()=>resolve(null),3000))
+    ]);if(!adapter)return {available:false,reason:'requestAdapter returned null or timed out',wgslModuleEmbedded:true};
     const device=await adapter.requestDevice();
     const code=`
       @group(0) @binding(0) var<storage,read_write> outv: array<u32,12>;
@@ -75,7 +78,7 @@
     const pipeline=device.createComputePipeline({layout:'auto',compute:{module,entryPoint:'main'}});const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:output}}]});
     const enc=device.createCommandEncoder(), pass=enc.beginComputePass();pass.setPipeline(pipeline);pass.setBindGroup(0,bind);pass.dispatchWorkgroups(COUNT);pass.end();enc.copyBufferToBuffer(output,0,read,0,size);device.queue.submit([enc.finish()]);await read.mapAsync(GPUMapMode.READ);
     const hashes=Array.from(new Uint32Array(read.getMappedRange().slice(0))).map(x=>'0x'+x.toString(16).padStart(8,'0'));read.unmap();
-    return {available:true,hashes,compilationMessages:info.messages.map(m=>({type:m.type,message:m.message}))};
+    return {available:true,wgslModuleEmbedded:true,hashes,compilationMessages:info.messages.map(m=>({type:m.type,message:m.message}))};
   }
   addEventListener('load',async()=>{const pre=document.querySelector('pre');try{const result={schema:'kaopu-integer-hash-runtime-n14-v1',userAgent:navigator.userAgent,webgl2:webgl(),webgpu:await webgpu()};pre.id='result';pre.textContent=JSON.stringify(result,null,2);}catch(e){pre.id='error';pre.textContent=String(e&&e.stack||e);}});
 })();
