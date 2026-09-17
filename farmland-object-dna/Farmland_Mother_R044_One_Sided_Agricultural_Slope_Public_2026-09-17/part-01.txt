@@ -1,0 +1,54 @@
+0],p[i+1][1]-p[i][1]);lens.push(l);total+=l;}let best={d:Infinity,t:0,x:0,z:0,along:0,total},acc=0;for(let i=0;i<p.length-1;i++){const q=dseg(x,z,p[i],p[i+1]);if(q.d<best.d)best={...q,along:acc+q.t*lens[i],total};acc+=lens[i];}best.s=total?best.along/total:0;return best;}
+function nearestBoundaryPoint(poly,target){let best={d:Infinity,x:0,z:0};for(let i=0;i<poly.length;i++){const q=dseg(target[0],target[1],poly[i],poly[(i+1)%poly.length]);if(q.d<best.d)best=q;}return[best.x,best.z];}
+
+function boundsOf(poly){let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;for(const p of poly){minX=Math.min(minX,p[0]);minZ=Math.min(minZ,p[1]);maxX=Math.max(maxX,p[0]);maxZ=Math.max(maxZ,p[1]);}return{minX,minZ,maxX,maxZ};}
+function buildFieldIndex(fields,cell=24){const map=new Map();for(const f of fields){f.bounds=boundsOf(f.poly);const x0=Math.floor(f.bounds.minX/cell),x1=Math.floor(f.bounds.maxX/cell),z0=Math.floor(f.bounds.minZ/cell),z1=Math.floor(f.bounds.maxZ/cell);for(let ix=x0;ix<=x1;ix++)for(let iz=z0;iz<=z1;iz++){const k=`${ix}:${iz}`;if(!map.has(k))map.set(k,[]);map.get(k).push(f);}}return{map,cell};}
+function lookupField(index,x,z){const list=index.map.get(`${Math.floor(x/index.cell)}:${Math.floor(z/index.cell)}`)||[];for(const f of list){const b=f.bounds;if(x<b.minX||x>b.maxX||z<b.minZ||z>b.maxZ)continue;if(pointInPoly(x,z,f.poly))return f;}return null;}
+function clipHalfPlane(poly,nx,nz,c,keepLess){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c,ina=keepLess?fa<=1e-9:fa>=-1e-9,inb=keepLess?fb<=1e-9:fb>=-1e-9;if(ina)out.push(a);if(ina!==inb){const t=fa/(fa-fb);out.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}return dedupe(out);}
+function lineSegmentInPoly(poly,nx,nz,c){const hits=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c;if(Math.abs(fa)<1e-8)hits.push(a);if(fa*fb<0){const t=fa/(fa-fb);hits.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}const uniq=[];for(const h of hits)if(!uniq.some(q=>Math.hypot(q[0]-h[0],q[1]-h[1])<1e-6))uniq.push(h);if(uniq.length<2)return null;let best=[uniq[0],uniq[1]],dist=0;for(let i=0;i<uniq.length;i++)for(let j=i+1;j<uniq.length;j++){const d=Math.hypot(uniq[i][0]-uniq[j][0],uniq[i][1]-uniq[j][1]);if(d>dist){dist=d;best=[uniq[i],uniq[j]];}}return best;}
+
+// ---------------------------------------------------------------------------
+// 1. FIXED ONE-SIDED COMPOSITION
+// rear mountain -> one forward slope -> foothill -> broad plain -> front river
+// ---------------------------------------------------------------------------
+const peaks=[[-205,-252,65,48,45],[-158,-270,87,56,51],[-98,-247,73,50,46],[-25,-281,103,64,58],[55,-258,84,57,50],[121,-276,91,61,54],[188,-249,68,51,46],[-205,-184,48,43,40],[182,-185,49,44,40]];
+function peakField(x,z){let h=0;for(let i=0;i<peaks.length;i++){const[cx,cz,H,rx,rz]=peaks[i],dx=(x-cx)/rx,dz=(z-cz)/rz,theta=Math.atan2(dz,dx),warp=1+.12*Math.sin(theta*3+i*.7)+.05*Math.sin(theta*7-i*.4),rr=Math.hypot(dx,dz)/warp;if(rr<1.55){const core=Math.pow(Math.max(0,1-Math.pow(rr,1.58)),.57),rib=.82+.18*Math.abs(multiscale(x+i*13,z-i*11,3,.014));h=Math.max(h,H*core*rib);}}return h;}
+const springLines=[
+ {id:'S0',order:3,p:[[-118,-244],[-111,-218],[-107,-191],[-111,-162],[-106,-132]]},
+ {id:'S1',order:2,p:[[8,-256],[12,-226],[18,-194],[14,-165],[20,-134]]},
+ {id:'S2',order:2,p:[[128,-239],[120,-212],[126,-184],[119,-158],[124,-130]]}
+];
+function frontRiverZ(x){return 161+7.5*Math.sin((x+22)*.021)+3.4*Math.sin(x*.057);}
+function frontWaterY(x){return -.55-.05*Math.sin(x*.019);}
+function riverHalfWidth(x){return 8.5+1.7*Math.sin((x+35)*.024);}
+function baseSlopeHeight(x,z){
+  if(z>=25){const plain=.92-.0062*(z-25)+.09*Math.sin(x*.012)+.05*multiscale(x,z,3,.01);return plain;}
+  const t=1-sm(-168,22,z); // 1 at rear slope, 0 at foothill
+  let y=1.0+31*Math.pow(t,1.18);
+  y+=3.8*Math.exp(-Math.pow((x+18)/175,2))*Math.pow(t,.85);
+  y+=2.0*multiscale(x,z,5,.0045)*(0.28+.72*t);
+  y+=peakField(x,z);
+  return y;
+}
+function naturalTerrain(x,z){
+  let y=baseSlopeHeight(x,z);
+  for(const s of springLines){const q=polyProjection(x,z,s.p),depth=1.8+1.15*s.order,fade=1-sm(.78,1,q.s);y-=Math.exp(-Math.pow(q.d/(5.5+1.4*s.order),2))*depth*(.45+.55*fade);}
+  // foothill collector depression, still on the same forward slope
+  const footZ=18+2.6*Math.sin(x*.017);y-=Math.exp(-Math.pow((z-footZ)/8.5,2))*1.0;
+  // front river only; no second agricultural bank
+  const rz=frontRiverZ(x),d=Math.abs(z-rz),w=riverHalfWidth(x);if(z>135)y=mix(frontWaterY(x)-.45,y,sm(w,w+5,d));
+  return y;
+}
+function slopeAt(x,z){const e=1.5,dx=(naturalTerrain(x+e,z)-naturalTerrain(x-e,z))/(2*e),dz=(naturalTerrain(x,z+e)-naturalTerrain(x,z-e))/(2*e);return Math.hypot(dx,dz);}
+
+// ---------------------------------------------------------------------------
+// 2. WATER / ACCESS SKELETON IS FROZEN BEFORE PARCELS
+// ---------------------------------------------------------------------------
+function contourZ(x,base,amp=3.2,phase=0){return base+amp*Math.sin(x*.018+phase)+1.2*Math.sin(x*.051-phase*.7);}
+const sourcePath=[[-118,-244],[-111,-218],[-107,-191],[-111,-162],[-106,-132],[-106,contourZ(-106,-119,2.8,.2)]];
+const highCanal=[];for(let i=0;i<=48;i++){const x=mix(-183,178,i/48);highCanal.push([x,contourZ(x,-119,3.6,.24)]);}
+const distributorXs=[-145,-83,-18,51,119,164];
+const slopeDistributors=distributorXs.map((x0,i)=>{const p=[];for(let k=0;k<=18;k++){const t=k/18,z=mix(contourZ(x0,-117,3.2,.24),16,t),x=x0+4.2*Math.sin(t*Math.PI*1.45+i*.8)+1.5*Math.sin(t*Math.PI*4+i);p.push([x,z]);}return{id:`D${i}`,kind:'distributor',order:2,p,w:.55};});
+const foothillCollector=[];for(let i=0;i<=50;i++){const x=mix(-190,190,i/50);foothillCollector.push([x,18+2.6*Math.sin(x*.017)]);}
+const plainMain=[];for(let i=0;i<=50;i++){const x=mix(-190,190,i/50);plainMain.push([x,39+3.8*Math.sin((x+15)*.016)+1.1*Math.sin(x*.052)]);}
+const plainCollector=[];for(let i=
