@@ -19,7 +19,7 @@ Source receipt: [`SOURCE_LOCK.json`](../references/psrdnoise-contract-n07/SOURCE
 
 ## Observation
 
-All 15 CPU checks passed, and a second local execution reproduced the complete JSON byte-for-byte.
+All 15 CPU checks passed, and a second local execution reproduced the complete JSON byte-for-byte. [GitHub Actions run 35196571731](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35196571731) then verified both pinned source hashes and their incompatible phase-unit comments, rebuilt the CPU port and reproduced the stored JSON. Artifact `kaopu-psrdnoise-contract-n07` has digest `sha256:a65a76608d9c4223482095a65d0f814461591129cb7a42b1c2648ca92e7470ca`.
 
 - With period `(5,4)`, values and analytic gradients repeated across x, y and combined shifts within the recorded 12-decimal precision.
 - With declared period `(5,3)`, a y shift of 3 had value RMSE `0.64094` and gradient RMSE `3.70908`; a y shift of 6 closed exactly. The odd input is not its own y period.
