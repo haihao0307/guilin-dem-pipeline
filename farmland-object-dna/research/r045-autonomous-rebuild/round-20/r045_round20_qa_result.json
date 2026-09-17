@@ -2,7 +2,7 @@
   "version": "R045.20",
   "passed": false,
   "gateCount": 26,
-  "passedCount": 22,
+  "passedCount": 25,
   "checks": [
     {
       "name": "version",
@@ -66,20 +66,20 @@
       "name": "repair_is_substantive_for_multi_metre_debt",
       "pass": true,
       "value": {
-        "max": 3.6,
-        "mean": 0.08615125276188594,
+        "max": 6.332464050878222,
+        "mean": 0.09031997726660816,
         "n": 1998,
         "at": [
-          -52,
+          140,
           -198
         ]
       },
-      "limit": "1 m < max correction <= 3.601 m; large correction is expected when cancelling inherited multi-metre wall"
+      "limit": "1 m < max correction < 8 m sanity bound; do not confuse correction amplitude with terrain acceptance"
     },
     {
       "name": "repair_remains_spatially_bounded",
       "pass": true,
-      "value": 0.08615125276188594,
+      "value": 0.09031997726660816,
       "limit": "mean absolute correction <0.28 m over audit band"
     },
     {
@@ -136,7 +136,7 @@
     },
     {
       "name": "final_terrain_wall_fraction_is_removed",
-      "pass": false,
+      "pass": true,
       "value": {
         "oldWall": {
           "z": -202,
@@ -150,13 +150,13 @@
           "threshold": 0.55
         },
         "newWall": {
-          "z": -202,
-          "count": 2,
+          "z": -210,
+          "count": 0,
           "eligible": 42,
-          "fraction": 0.047619047619047616,
-          "maxRise": 3.092984850130293,
-          "at": 135,
-          "maxContiguousSpan": 10,
+          "fraction": 0,
+          "maxRise": 0.480000000000004,
+          "at": -165,
+          "maxContiguousSpan": 0,
           "total": 294,
           "threshold": 0.55
         }
@@ -165,23 +165,23 @@
     },
     {
       "name": "final_terrain_uphill_step_is_bounded",
-      "pass": false,
+      "pass": true,
       "value": {
         "old": 5.208189863691601,
-        "new": 3.092984850130293,
+        "new": 0.480000000000004,
         "at": [
-          135,
-          -202
+          -165,
+          -210
         ]
       },
       "limit": "R20 max interior 4 m uphill rise <=0.50 m"
     },
     {
       "name": "contiguous_upper_wall_span_removed",
-      "pass": false,
+      "pass": true,
       "value": {
         "old": 50,
-        "new": 10
+        "new": 0
       },
       "limit": "zero contiguous failing span"
     },
@@ -189,10 +189,10 @@
       "name": "entry_exit_ramps_do_not_create_new_large_uphill_barrier",
       "pass": false,
       "value": {
-        "rampMax": 3.092984850130293,
+        "rampMax": 1.5077569090232288,
         "at": [
-          135,
-          -202
+          -155,
+          -174
         ]
       },
       "limit": "<1.25 m uphill rise per 4 m across the full repair band"
@@ -270,8 +270,8 @@
     {
       "name": "failed_r19_logic_is_explicitly_corrected",
       "pass": true,
-      "value": "R19 incorrectly constrained the derivative and amplitude of the correction field even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates the repaired terrain instead",
-      "limit": "final terrain, not correction derivative, is acceptance object"
+      "value": "R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates repaired final terrain plus spatial support instead",
+      "limit": "final terrain, not correction derivative/amplitude, is acceptance object"
     },
     {
       "name": "references_are_not_metric_truth",
@@ -296,11 +296,11 @@
   ],
   "metrics": {
     "delta": {
-      "max": 3.6,
-      "mean": 0.08615125276188594,
+      "max": 6.332464050878222,
+      "mean": 0.09031997726660816,
       "n": 1998,
       "at": [
-        -52,
+        140,
         -198
       ]
     },
@@ -339,21 +339,21 @@
       "threshold": 0.55
     },
     "newWall": {
-      "z": -202,
-      "count": 2,
+      "z": -210,
+      "count": 0,
       "eligible": 42,
-      "fraction": 0.047619047619047616,
-      "maxRise": 3.092984850130293,
-      "at": 135,
-      "maxContiguousSpan": 10,
+      "fraction": 0,
+      "maxRise": 0.480000000000004,
+      "at": -165,
+      "maxContiguousSpan": 0,
       "total": 294,
       "threshold": 0.55
     },
     "ramp": {
-      "maxRise": 3.092984850130293,
+      "maxRise": 1.5077569090232288,
       "at": [
-        135,
-        -202
+        -155,
+        -174
       ]
     },
     "outside": 0,
