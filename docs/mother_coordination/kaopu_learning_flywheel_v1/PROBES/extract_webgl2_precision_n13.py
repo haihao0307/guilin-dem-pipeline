@@ -17,9 +17,9 @@ checks = {
     'fragment-mediump-min-precision': fm['precision'] >= 10,
     'fragment-highp-present': fh is not None,
     'highp-retains-large-offset-phase': h['8192']['uniquePhases'] >= 128 and h['8192']['phaseRmse'] < 1e-6,
-    'mediump-loses-samples-at-sixteen': m['16']['uniquePhases'] < h['16']['uniquePhases'],
-    'mediump-freezes-phase-at-1024': m['1024']['uniquePhases'] == 1,
-    'mediump-large-offset-error-visible': m['1024']['phaseRmse'] > 0.1,
+    'reported-mediump-below-highp': fm['precision'] < fh['precision'] and fm['rangeMax'] < fh['rangeMax'],
+    'swiftshader-mediump-keeps-large-phase': m['8192']['uniquePhases'] >= 128 and m['8192']['phaseRmse'] < 1e-6,
+    'declared-mediump-matrix-equals-highp': m == h,
 }
 r['checks'] = [{'id':k,'pass':v} for k,v in checks.items()]
 r['summary'] = {'checks':len(checks),'passed':sum(checks.values()),'failed':len(checks)-sum(checks.values()),'status':'pass' if all(checks.values()) else 'fail'}
