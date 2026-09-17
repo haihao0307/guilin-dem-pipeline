@@ -25,7 +25,7 @@ The N10 probe clips a unit pixel square against a linear half-plane and uses the
 - `0.5 * fwidth` with `smoothstep`;
 - a linear ramp spanning one `fwidth`.
 
-All 7 semantic checks pass. Aggregate RMSE is:
+All 7 semantic checks pass locally and in [GitHub Actions run 35229418843](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35229418843); the tracked JSON reproduced without a byte-level diff. Aggregate RMSE is:
 
 | Method | RMSE | maximum absolute error | scale RMSE range |
 |---|---:|---:|---:|
@@ -37,7 +37,7 @@ All 7 semantic checks pass. Aggregate RMSE is:
 
 The linear `fwidth` ramp is exact for the axis-aligned straight edge but becomes the worst derivative estimator near 45 degrees. The pinned Euclidean/smoothstep heuristic has the lowest aggregate and maximum error of the tested compact formulas, yet is still not exact. Fixed scalar width changes error materially with scale.
 
-The CPU probe and any replay of it share one analytic design. They establish reproducible mathematics, not an independent GPU or perceptual Observation root.
+The local CPU probe and Actions replay share one analytic design. They establish reproducible mathematics across two execution environments, not an independent algorithm, GPU or perceptual Observation root.
 
 ## Candidate
 
