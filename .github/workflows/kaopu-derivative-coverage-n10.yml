@@ -1,0 +1,23 @@
+name: KAOPU derivative coverage N10
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_derivative_coverage_n10.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/derivative_coverage_result_n10.json
+      - .github/workflows/kaopu-derivative-coverage-n10.yml
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recompute exact pixel-box matrix
+        run: |
+          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_derivative_coverage_n10.py
+      - name: Require tracked result to be reproducible
+        run: |
+          git diff --exit-code -- docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/derivative_coverage_result_n10.json
