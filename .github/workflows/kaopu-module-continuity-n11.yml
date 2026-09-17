@@ -1,0 +1,21 @@
+name: KAOPU module continuity N11
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_module_continuity_n11.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/module_continuity_result_n11.json
+      - .github/workflows/kaopu-module-continuity-n11.yml
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recompute continuity counterexamples
+        run: python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_module_continuity_n11.py
+      - name: Require tracked result to reproduce
+        run: git diff --exit-code -- docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/module_continuity_result_n11.json
