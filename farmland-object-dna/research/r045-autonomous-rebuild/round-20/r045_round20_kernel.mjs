@@ -9,9 +9,9 @@ const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 // R045.20 corrects the failed R045.19 acceptance logic and geometry together.
 // The inherited z≈-202 wall is a FINAL-TERRAIN defect. A correction field must therefore be
 // allowed to change sharply where it cancels a multi-metre baseline wall; constraining the
-// derivative of the correction itself is logically wrong. This round replaces the failed
-// drain-masked repair with a band-wide profile projection that changes elevation only, while
-// preserving every planimetric drainage carrier and all lower agricultural-slope geometry.
+// derivative or amplitude of the correction itself is logically wrong. This round replaces the
+// failed drain-masked repair with a band-wide profile projection that changes elevation only,
+// while preserving every planimetric drainage carrier and all lower agricultural-slope geometry.
 // Because water state is still unknown, preserving an inherited false uphill step on a drainage
 // axis would be less defensible than repairing the longitudinal ground profile through it.
 export const wallRepairBand={z0:-226,z1:-170,node0:-222,node1:-174,nodeStep:2,allowedRisePer2m:.24};
@@ -55,11 +55,13 @@ function projectedHeight(x,z){
 export function upperWallContinuityRepairDelta(x,z){
   if(z<=wallRepairBand.z0||z>=wallRepairBand.z1)return 0;
   // 12 m entry/exit ramps prevent a new horizontal seam. The inherited wall itself sits well
-  // inside the full-strength zone, so its final terrain can be evaluated directly.
+  // inside the full-strength zone. Do not amplitude-clamp the repair: that was the remaining R20
+  // failure because a 5.2 m inherited false step cannot be cancelled by an arbitrary 3.6 m cap.
+  // Acceptance is instead imposed on the FINAL terrain and spatial support in QA.
   const env=S(-226,-214,z)*(1-S(-182,-170,z));
   if(env<=0)return 0;
   const base=R18.height(x,z),target=projectedHeight(x,z);
-  return C((target-base)*env,-3.6,3.6);
+  return (target-base)*env;
 }
 
 export function height(x,z){return R18.height(x,z)+upperWallContinuityRepairDelta(x,z)}
@@ -81,8 +83,8 @@ export const snapshot={
   waterStateKnown:false,
   round20:{
     scope:'replace failed R19 upper-wall repair with final-terrain longitudinal continuity projection; no terrace, parcel, irrigation, road or task work',
-    method:'weighted isotonic projection of every x-profile over z=-222..-174 with <=0.48 m uphill rise per 4 m in the full-strength zone; 12 m longitudinal entry/exit ramps; planimetric drainage carriers unchanged',
-    logicCorrection:'R19 incorrectly constrained the derivative and amplitude of the correction field even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates the repaired terrain instead',
+    method:'weighted isotonic projection of every x-profile over z=-222..-174 with <=0.48 m uphill rise per 4 m in the full-strength zone; 12 m longitudinal entry/exit ramps; planimetric drainage carriers unchanged; no arbitrary amplitude clamp',
+    logicCorrection:'R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates repaired final terrain plus spatial support instead',
     referenceUse:'user references and MrRolord hierarchy are used only to require continuous source-to-slope morphology and drainage-first landform logic; no dimensions are extracted',
     evidenceClass:'synthetic macro-landform continuity repair; not surveyed Yunnan microtopography, channel section or hydraulic state',
     forbiddenClaims:['surveyed upper-slope section','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
