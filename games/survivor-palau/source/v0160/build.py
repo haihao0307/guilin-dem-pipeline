@@ -56,7 +56,7 @@ rep(' const depth=eta-bed,breaker=',' const nearWeight=1-smooth(8,20,Math.max(0,
 f=function(h,'float waveSurface(')
 h=h.replace(f,f.replace(' return eta;',' return mix(smiDeepHeight(p,uTime),eta,1.-smoothstep(8.,20.,max(0.,d0)));'))
 rep('outColor=vec4(lit*uExposure,1.0);','outColor=vec4(smiFilm(lit*uExposure),1.0);')
-rep('c=max(c,vec3(0));c=c/(vec3(.72)+c);c=pow(c,vec3(1.0/2.2));','c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.')
+rep('c=max(c,vec3(0));c=c/(vec3(.72)+c);c=pow(c,vec3(1.0/2.2));','c=clamp(c,0.,1.);')
 a=h.index('const WATER_FS=');b=h.index('const MEDIA_VS=',a);water=h[a:b]
 water=water.replace('void main(){','void main(){\n float smiCoastWeight=1.-smoothstep(8.,20.,max(0.,uSeaLevel-bedH(vWorld.xz)));if(smiCoastWeight<.001)discard;if(texture(uSceneDepth,gl_FragCoord.xy/uResolution).r<gl_FragCoord.z-.000001)discard;',1)
 water=water.replace('vec3 behind=texture(uScene,refrUv).rgb','vec3 behind=smiUnfilm(texture(uScene,refrUv).rgb)')
