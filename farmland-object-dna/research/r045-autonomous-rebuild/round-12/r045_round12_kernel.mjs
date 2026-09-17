@@ -48,6 +48,7 @@ function nearestPath(path,x,z){
   }
   return best;
 }
+function pathDistance(points,x,z){let d=1e9;for(let i=0;i<points.length-1;i++)d=Math.min(d,segFrame(x,z,points[i],points[i+1]).d);return d}
 function frameAt(c,u){
   const target=C(u,0,1)*(c.total||1);let i=0;while(i<c.cum.length-2&&c.cum[i+1]<target)i++;
   const a=c.p[i],b=c.p[i+1],L=(c.cum[i+1]-c.cum[i])||1,t=C((target-c.cum[i])/L,0,1),dx=b[0]-a[0],dz=b[1]-a[1],ll=Math.hypot(dx,dz)||1;
@@ -60,6 +61,33 @@ function pointAtZ(c,targetZ){
   }
   const f=frameAt(c,.88);return{x:f.x,z:f.z};
 }
+
+// 0) Inherited upper-slope continuity repair.
+// R045.04 contained two hard early-return cutoffs that contradicted their own smooth fade terms:
+// rearBayCut() stopped at z>-170 although its taper continued to -160, and curtainReduction()
+// stopped at z>-172 although its taper continued to -166. Those cutoffs generated a broad
+// downstream-facing step that survived R05-R11. Rather than loosening the QA threshold or smoothing
+// the entire slope, R045.12 restores only the missing tails of those original causal fields.
+// This preserves the old versions while making the intended taper continuous in the current model.
+function rearBayMissingTail(x,z){
+  if(z<=-170||z>=-160)return 0;
+  let cut=0;
+  for(const b of rearCatchmentBays){
+    const q=Math.sqrt(((x-b.x)/b.rx)**2+((z-b.z)/b.rz)**2);
+    cut+=b.depth*Math.exp(-.5*q*q);
+  }
+  return -cut*(1-S(-180,-160,z));
+}
+function curtainMissingTail(x,z){
+  if(z<=-172||z>=-166)return 0;
+  const dMain=pathDistance(mainRidge,x,z);
+  const broad=G(dMain,70)*S(-300,-270,z)*(1-S(-185,-166,z));
+  let support=0;
+  for(const c of secondaryCrests)support=Math.max(support,G(pathDistance(c.p,x,z),c.width*1.45));
+  const unsupported=1-C(support,0,1),lateral=.72+.28*Math.sin((x+35)*.027)**2;
+  return -8.8*broad*(.20+.80*unsupported)*lateral;
+}
+export function inheritedUpperSlopeContinuityRepairDelta(x,z){return rearBayMissingTail(x,z)+curtainMissingTail(x,z)}
 
 // 1) Interfluve relief: broad, low-amplitude divide shoulders whose strength changes with basin
 // position. This works away from drainage axes, so it cannot become another channel/berm overlay.
@@ -119,7 +147,7 @@ export function outletContinuumDelta(x,z){let d=0;for(const o of outletContinuum
 
 export function catchmentMorphDelta(x,z){return interfluveDelta(x,z)+headCatchmentDelta(x,z)+outletContinuumDelta(x,z)}
 export function channelMorphDelta(x,z){return R11.channelMorphDelta(x,z)}
-export function height(x,z){return R11.height(x,z)+catchmentMorphDelta(x,z)}
+export function height(x,z){return R11.height(x,z)+inheritedUpperSlopeContinuityRepairDelta(x,z)+catchmentMorphDelta(x,z)}
 export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z-e))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
@@ -169,5 +197,5 @@ export const snapshot={
   terracePilotPreviewEnabled:false,
   waterStateKnown:false,
   catchmentMorphologyClass:'synthetic divide/source/outlet terrain morphology aligned to existing drainage identity; no surveyed-dimension or active-flow claim',
-  round12Correction:'asymmetric interfluve shoulders + source amphitheatres + broad trunk outlet continuum through foothill/plain; terraces remain locked'
+  round12Correction:'restore inherited R04 upper-slope taper tails + asymmetric interfluve shoulders + source amphitheatres + broad trunk outlet continuum; terraces remain locked'
 };
