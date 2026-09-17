@@ -1,0 +1,74 @@
+{
+  "version": "R045.07",
+  "tested_commit": "f2b3cf12a3327b42598e8e41ad7cfe85b0f86629",
+  "github_actions_run": 35222873608,
+  "numeric": {
+    "passed": false,
+    "gate_count": 22,
+    "passed_gates": 20,
+    "failed_gates": [
+      {
+        "name": "foothill_transition_phase_is_laterally_staggered",
+        "reason": "phase field achieved std/range goals but max absolute shift was 8.163338 m against the provisional 8.0 m cap",
+        "value": {
+          "std_m": 4.872545,
+          "range_m": 15.901999,
+          "max_abs_m": 8.163338
+        }
+      },
+      {
+        "name": "foothill_local_derivative_change_bounded",
+        "reason": "local second-difference proxy exceeded the provisional limit near x=-110,z=78",
+        "value": 0.156260,
+        "limit": 0.12
+      }
+    ],
+    "macro_metrics": {
+      "max_forward_rise_per_4m_m": 0.086181,
+      "rear_height_difference_from_R06_m": 0,
+      "front_receiver_centerline_difference_from_R06_m": 0,
+      "terrace_permission_above_0_65_fraction": 0.345833,
+      "mean_permission_within_6m_of_drainage": 0,
+      "mean_permission_farther_than_18m_from_drainage": 0.782009
+    },
+    "terrace_pilot": {
+      "status": "preview-only",
+      "seed": {
+        "x": 5,
+        "z": -60,
+        "elevation_m": 12.298529,
+        "permission": 1,
+        "drainage_clearance_m": 32.720805,
+        "divide_clearance_m": 56.459832,
+        "slope_proxy": 0.255392
+      },
+      "synthetic_vertical_interval_m": 0.72,
+      "synthetic_half_width_m": 1.65,
+      "line_lengths_m": [35.893802, 39.885938, 39.880636],
+      "pairwise_minimum_separations_m": [2.509424, 5.044452, 2.535036],
+      "maximum_contour_projection_error_m": 0.00001575,
+      "minimum_drainage_clearance_m": 14.090792,
+      "maximum_preview_cut_fill_m": 0.222405,
+      "maximum_sampled_cross_bench_range_m": 0,
+      "footprint_fraction_of_candidate_rectangle": 0.006355,
+      "production_terraces_enabled": false,
+      "parcel_generation_enabled": false
+    }
+  },
+  "browser_audit": {
+    "passed": true,
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_bytes": 753317,
+    "artifact_id": 10497394474,
+    "artifact_name": "farmland-r045-round07-audit"
+  },
+  "acceptance": {
+    "browser_audit_page": true,
+    "visual_acceptance": false,
+    "production_ready": false,
+    "public_workbench_released": false
+  }
+}
