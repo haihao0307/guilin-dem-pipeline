@@ -10,6 +10,9 @@ on:
       - '.github/workflows/farmland-r045-round16-qa.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -63,3 +66,14 @@ jobs:
             farmland-object-dna/research/r045-autonomous-rebuild/round-16/r045_round16_qa_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-16/r045_round16_browser_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-16/r045_round16_fixed_view.png
+      - name: Persist machine-readable QA evidence
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-16/r045_round16_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-16/r045_round16_browser_result.json || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'farmland R045.16 persist QA evidence [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}
