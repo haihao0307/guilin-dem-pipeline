@@ -1,0 +1,48 @@
+{
+  "id": "KAOPU-NOISE-N11-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N10_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N10_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_DERIVATIVE_COVERAGE_N10.md",
+    "LEARNING_LOG/2026-09-17_CELLULAR_RETURN_N05.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6B",
+    "topic": "modular shader continuity and derivative safety",
+    "question": "When do downstream derivatives become invalid or misleading after non-smooth modular scalar operations?",
+    "state": "candidate-partial-primary-source-and-cpu-semantic-verified",
+    "evidence": [
+      "references/shader-module-continuity-n11/SOURCE_LOCK.json",
+      "PROBES/probe_module_continuity_n11.py",
+      "PROBES/module_continuity_result_n11.json",
+      "LEARNING_LOG/2026-09-17_SHADER_MODULE_CONTINUITY_N11.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {"mother": "Brick material", "entry": "HOUSE PR15", "receipt": "N09 awaiting acknowledgement", "actionThisRound": "held; no repeat delivery"},
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "no new N02 receipt", "actionThisRound": "held; no repeat delivery"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "no new N02 receipt", "actionThisRound": "held; no repeat delivery"},
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "receipt": "not-applicable", "actionThisRound": "no route"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "receipt": "not-delivered", "actionThisRound": "no route"}
+  ],
+  "verificationReceipt": {
+    "primarySpec": "GLSL ES 3.00.6",
+    "matureSource": "MaterialX v1.39.4 mx_aastep.glsl blob 463c7c208327ba84afab46b6150334f3e884e044",
+    "cpuSemanticChecks": "7/7 local pass",
+    "gpuRuntime": "Unknown",
+    "evidenceIndependence": "Khronos contract, MaterialX source and the KAOPU CPU counterexample are distinct source roles; a CI replay of the probe would not become an independent algorithm or GPU root."
+  },
+  "nextGap": "Run the same discontinuity matrix in a pinned WebGL2 quad and then, only after Mother receipt, audit the selected real R8 mask chain and locked views."
+}
