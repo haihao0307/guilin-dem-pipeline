@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/survivor-palau-v0150.yml
       - games/survivor-palau/source/build_v0150.py
+      - games/survivor-palau/source/v0150_camera_mobile_patch.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -23,6 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 games/survivor-palau/source/build_v0150.py
+          python3 games/survivor-palau/source/v0150_camera_mobile_patch.py
           OUT=games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html
           test -s "$OUT"
           python3 - <<'PY'
@@ -30,7 +32,7 @@ jobs:
           import re
           p=Path('games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html')
           s=p.read_text(encoding='utf-8')
-          for marker in ['palau-survival-0.1.5.0-canoe-control','playableCanoeV1:true','shoreDepthGateV1:true','mobileCanoeControlsV1:true','window.PalauSurvivalGame','updateCanoeGame(elapsed)','uModel']:
+          for marker in ['palau-survival-0.1.5.0-canoe-control','playableCanoeV1:true','shoreDepthGateV1:true','mobileCanoeControlsV1:true','window.PalauSurvivalGame','updateCanoeGame(elapsed)','uModel','mobileDrive?28:22','#boatPad{right:12px;bottom:232px}']:
             assert marker in s, marker
           m=re.search(r'<script type="module">(.*)</script>',s,re.S); assert m
           Path('/tmp/app.mjs').write_text(m.group(1),encoding='utf-8')
@@ -47,7 +49,7 @@ jobs:
           from pathlib import Path
           import json,math,shutil
           f=Path('games/survivor-palau/releases/v0.1.5.0/Survivor_Palau_V0.1.5.0_Canoe_Control_Direct_Open.html').resolve()
-          r={'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False,'note':'GitHub runner uses SwiftShader, so movement waits for a completed rendered frame rather than a fixed 1.6-second wall-clock interval.'}
+          r={'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False,'note':'GitHub runner uses SwiftShader, so movement waits for a completed rendered frame rather than a fixed wall-clock interval.'}
           chrome=shutil.which('google-chrome') or shutil.which('chromium'); assert chrome
           with sync_playwright() as p:
             b=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
@@ -71,7 +73,11 @@ jobs:
             assert end['qa'].get('glError',0)==0,end['qa']
             page.screenshot(path='/tmp/v0150-canoe-drive.png',full_page=True)
             page.set_viewport_size({'width':390,'height':844})
-            page.wait_for_timeout(500)
+            page.wait_for_function("() => innerWidth===390 && innerHeight===844",timeout=10000)
+            mobile_z=page.evaluate("() => PalauSurvivalGame.state.z")
+            page.evaluate("() => PalauSurvivalGame.input('forward',true)")
+            page.wait_for_function(f"() => Math.abs(PalauSurvivalGame.state.z-({mobile_z})) > 0.001",timeout=30000,polling=250)
+            page.evaluate("() => PalauSurvivalGame.input('forward',false)")
             assert page.locator('#boatPad').evaluate("e => e.classList.contains('active')")
             page.screenshot(path='/tmp/v0150-mobile-390x844.png',full_page=True)
             r.update({'qa':end['qa'],'start':start,'end':end['state'],'movedMeters':moved,'passed':not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures']})
