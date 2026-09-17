@@ -33,10 +33,11 @@ export const foothillSwales=R6.foothillSwales;
 // Round 08 correction 1:
 // R07 proved that lateral phase staggering can break the synchronized foothill seam, but its
 // maximum shift and local second derivative both exceeded the provisional numeric bounds.
-// Do not loosen the gates. Rebuild the phase field with lower amplitude and a quintic envelope
-// so the edit stays broad and low-frequency while approaching zero with flatter derivatives.
-function foothillWarpEnvelope(z){return Q(-34,-10,z)*(1-Q(52,100,z))}
-function foothillPhase(x){return 3.95*Math.sin((x+24)*.014)+1.38*Math.sin((x-31)*.041)+.62*Math.sin((x+80)*.0065)}
+// The first R08 attempt still had a 0.140 m/m local second difference at z≈86. Do not weaken
+// the gate: reduce phase amplitude and widen the quintic fade so the edit remains visible but
+// stops changing too abruptly near the plain.
+function foothillWarpEnvelope(z){return Q(-36,-10,z)*(1-Q(44,116,z))}
+function foothillPhase(x){return 3.30*Math.sin((x+24)*.014)+1.15*Math.sin((x-31)*.041)+.52*Math.sin((x+80)*.0065)}
 export function foothillShift(x,z){
   const env=foothillWarpEnvelope(z);
   if(env<=0)return 0;
@@ -47,7 +48,7 @@ export function foothillShift(x,z){
 }
 function macroHeight(x,z){return R6.height(x,z+foothillShift(x,z))}
 export function height(x,z){return macroHeight(x,z)}
-export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z-e))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
+export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 export function nearestStreamDistance(x,z){return R6.nearestStreamDistance(x,z)}
@@ -75,14 +76,17 @@ export function suitability(x,z){
 }
 
 // Round 08 correction 2:
-// The R07 pilot was visually too uniform. This remains preview-only, but now tests a small
-// management-scale family with deliberately varied bench widths, unequal vertical spacing and
-// unequal left/right extents. These are synthetic morphology probes, not local construction data.
+// Width variation is not evidence of realism if adjacent benches geometrically overlap. The
+// first R08 attempt selected a slope of 0.282, forcing 4.7–8.1 m benches into ~2 m centreline
+// spacing. That contradiction is rejected here rather than hidden by a looser QA threshold.
+// Select only a moderate-slope morphology test site and use larger unequal vertical intervals.
+// Values remain synthetic probes, not Yunnan construction dimensions.
 function seedScore(x,z){
   const p=terracePermission(x,z),d=nearestTerrainDrainageDistance(x,z),dv=nearestDivideDistance(x,z),s=slope(x,z);
-  const slopeFit=1-C(Math.abs(s-.145)/.095,0,1);
-  const room=S(22,38,d)*S(12,24,dv)*(1-S(170,205,Math.abs(x)));
-  return p*(.65+.35*slopeFit)*room;
+  if(s<.095||s>.195)return 0;
+  const slopeFit=1-C(Math.abs(s-.145)/.050,0,1);
+  const room=S(24,42,d)*S(14,27,dv)*(1-S(165,205,Math.abs(x)));
+  return p*(.50+.50*slopeFit)*room;
 }
 function choosePilotSeed(){
   let best={x:-120,z:-96,score:-1};
@@ -119,10 +123,10 @@ function contourAt(seed,target,leftSteps,rightSteps){
 export const terracePilot=(()=>{
   const seed=choosePilotSeed();
   const specs=[
-    {id:'PILOT-BENCH-A',offset:.86,halfWidth:2.35,left:11,right:16},
-    {id:'PILOT-BENCH-B',offset:.26,halfWidth:3.35,left:17,right:12},
-    {id:'PILOT-BENCH-C',offset:-.52,halfWidth:2.72,left:13,right:19},
-    {id:'PILOT-BENCH-D',offset:-1.36,halfWidth:4.05,left:20,right:14}
+    {id:'PILOT-BENCH-A',offset:1.85,halfWidth:2.35,left:11,right:16},
+    {id:'PILOT-BENCH-B',offset:.60,halfWidth:3.35,left:17,right:12},
+    {id:'PILOT-BENCH-C',offset:-.75,halfWidth:2.72,left:13,right:19},
+    {id:'PILOT-BENCH-D',offset:-2.35,halfWidth:4.05,left:20,right:14}
   ];
   const lines=specs.map(spec=>{
     const target=seed.y+spec.offset,points=contourAt(seed,target,spec.left,spec.right);
@@ -167,5 +171,5 @@ export const snapshot={
   terraceGeometryEnabled:false,
   terracePilotPreviewEnabled:true,
   waterStateKnown:false,
-  round08Correction:'lower-amplitude quintic foothill phase + varied-width/extent bench-riser terrace family pilot'
+  round08Correction:'bounded quintic foothill phase + non-overlapping varied bench/riser terrace-family pilot'
 };
