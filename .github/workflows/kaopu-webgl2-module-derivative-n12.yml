@@ -1,0 +1,52 @@
+name: KAOPU WebGL2 module derivative N12
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_module_derivative_probe_n12.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_module_derivative_probe_n12.py
+      - .github/workflows/kaopu-webgl2-module-derivative-n12.yml
+
+permissions:
+  contents: read
+
+jobs:
+  webgl2-quad-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate runner image Chrome
+        id: chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          "$chrome" --version
+          echo "path=$chrome" >> "$GITHUB_OUTPUT"
+      - name: Run pinned WebGL2 quad matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_module_derivative_probe_n12.html"
+          timeout 60 "${{ steps.chrome.outputs.path }}" \
+            --headless=new --no-sandbox --disable-dev-shm-usage \
+            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
+            --use-angle=swiftshader --virtual-time-budget=8000 \
+            --dump-dom "file://$probe" > /tmp/n12-dom.html
+          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_module_derivative_probe_n12.py \
+            /tmp/n12-dom.html /tmp/webgl2_module_derivative_result_n12.json
+          jq -e '.summary.status == "pass" and .summary.checks == 10' /tmp/webgl2_module_derivative_result_n12.json
+          cat /tmp/webgl2_module_derivative_result_n12.json
+      - name: Preserve runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-webgl2-module-derivative-n12
+          path: |
+            /tmp/webgl2_module_derivative_result_n12.json
+            /tmp/n12-dom.html
+          if-no-files-found: error
