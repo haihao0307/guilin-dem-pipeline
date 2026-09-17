@@ -66,7 +66,7 @@ Command:
 
 `node r045_round02_qa.mjs`
 
-All 16 gates passed.
+All 15 gates passed.
 
 Key results:
 
