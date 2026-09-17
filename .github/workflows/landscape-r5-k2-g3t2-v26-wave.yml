@@ -1,0 +1,127 @@
+name: Landscape R5.K2.G3.T2 V2.6 Wave
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/build_g3t2.py
+      - .github/workflows/landscape-r5-k2-g3t2-v26-wave.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build G3.T2 candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/build_g3t2.py
+          python workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/build_g3t2.py
+
+      - name: Verify locked world and V2.6 transfer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          src=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
+          out=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/index.html').read_text(encoding='utf-8')
+          build=json.loads(Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/build.json').read_text(encoding='utf-8'))
+          for sid in ('worldSource','generateSource'):
+              a=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,src,re.S)
+              b=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,out,re.S)
+              assert a and b and a.group(1)==b.group(1), sid
+          required=[
+              'R5.K2.G3.T2',
+              'Tiles Shape + Brick V2.6 Wave/Color · G3 Locked',
+              'V2.6 真实形体强度',
+              'V2.6 造波强度',
+              'V2.6 色彩强度',
+              'float lmV26Fbm',
+              'float lmV26Ridged',
+              'float lmV26Turb',
+              'vec3 lmV26Warp',
+              'clamp(tanh(shellValue*4.0)*amp,-.180,.160)',
+              'clamp(tanh(shellValue*3.4)*.052*uGroundMicro',
+              'vec3 lmV26Color',
+              'albedo=lmV26Color(albedo,q,n0)',
+              'local+=aN*shell',
+              'localN=normalize(cross(tx,tz))',
+          ]
+          for token in required: assert token in out, token
+          assert build['schema']=='LANDSCAPE_R5_K2_G3T2_TILES_V26_WAVE_V1'
+          assert build['acceptedVisualBaseline']=='R5.K2.G3.T1'
+          assert build['tilesShape']['wholeObjectDomainWarp'] is False
+          assert build['brickV26Transfer']['literalBrickPaletteCopied'] is False
+          assert build['brickV26Transfer']['limestonePaletteMapping'] is True
+          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',out,re.S)
+          fs=re.search(r'const FS=`(.*?)`;\n\'use strict\';',out,re.S)
+          assert vs and fs
+          Path('/tmp/g3t2.vert').write_text(vs.group(1),encoding='utf-8')
+          Path('/tmp/g3t2.frag').write_text(fs.group(1),encoding='utf-8')
+          marker="</script><script>'use strict';"
+          assert marker in out
+          app="'use strict';"+out.rsplit(marker,1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/g3t2-app.js').write_text(app,encoding='utf-8')
+          print(json.dumps(build,ensure_ascii=False,indent=2))
+          PY
+          node --check /tmp/g3t2-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/g3t2.vert
+          glslangValidator -S frag /tmp/g3t2.frag
+
+      - name: Run unchanged G3 generator QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/index.html').read_text(encoding='utf-8')
+          blocks=[]
+          for sid in ('worldSource','generateSource'):
+              m=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,s,re.S)
+              assert m, sid
+              blocks.append(m.group(1))
+          Path('/tmp/g3t2-runtime.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          cat >> /tmp/g3t2-runtime.js <<'JS'
+          const fs=require('fs');
+          const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,geo:1.65,concavity:.85,spikeGuard:.95,soilMicro:.80};
+          const data=generateScene(cfg,()=>{}),r=data.report,g=r.microscopeGeometry,soil=r.soilMicroscope;
+          if(g.triangleFlipCount!==0||g.protectedDriftCount!==0||g.baseTriangleFlipCount!==0)throw Error('accepted G3 geometry gate failed');
+          if(soil.triangleFlipCount!==0)throw Error('accepted G3 soil gate failed');
+          const qa={
+            schema:'LANDSCAPE_R5_K2_G3T2_RUNTIME_QA',date:'2026-09-17',
+            acceptedG3:{mainVertices:r.mainVertices,mainTriangles:r.mainTriangles,mainSignature:r.parts.find(p=>p.name==='主岩体').signature,soilSignature:r.parts.find(p=>p.name==='土体与风化基底').signature,microscopeGeometry:g,soilMicroscope:soil},
+            tilesShape:{source:'Tiles Mother 08F.2',oneScalarField:true,octaves:17,rockClampM:[-.180,.160],soilClampM:[-.065,.060],movesRenderedVertices:true,recomputesNormals:true,wholeObjectDomainWarp:false},
+            brickV26:{sourceBranch:'codex/brick-mother-r3-13-shell-v275-v26-unified-20260917',sourceCommit:'cfdda86c60076a0418fe1921eb3e8dff466ce266',methods:['domain warp','five-octave fBm','five-octave ridged fBm','four-octave turbulence','broad value range','rich mineral color masks'],limestonePaletteMapping:true,literalBrickPaletteCopied:false},
+            defaultControls:{shape:2.15,scale:.74,contrast:2.20,coverage:.94,warp:1.90,breakup:1.18,color:2.30},
+            sourceGeneratorUnchanged:true,visualApproved:false,productionReady:false
+          };
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/runtime-qa.json',JSON.stringify(qa,null,2));
+          console.log(JSON.stringify(qa));
+          JS
+          node --check /tmp/g3t2-runtime.js
+          node /tmp/g3t2-runtime.js
+
+      - name: Materialize G3.T2 candidate
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "G3.T2 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize V2.6-wave R5.K2.G3.T2 [skip ci]"
+          git push
