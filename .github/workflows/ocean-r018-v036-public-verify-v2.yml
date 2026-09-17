@@ -1,0 +1,86 @@
+name: Ocean Mother R018 V0.3.6 public browser verify v2
+
+on:
+  push:
+    branches:
+      - release/ocean-mother-r018-v036-unified-20260917
+    paths:
+      - .github/workflows/ocean-r018-v036-public-verify-v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  public-browser-verify-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Run fixed-commit public scene in Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          cat >/tmp/public_verify_v2.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json, shutil
+          commit='ccb4b82bf7e6509ddeb0ead437b2ef42d663d731'
+          path='ocean-mother/releases/r018-v036-unified/Ocean_Mother_R018_V0.3.6_Unified_Seascape_Verified_Direct_Open.html'
+          url=f'https://raw.githack.com/haihao0307/guilin-dem-pipeline/{commit}/{path}?qa=1'
+          report={'format':'ocean-r018-v036-public-browser-qa-v2','url':url,'commit':commit,'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium')
+          assert chrome
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              context=browser.new_context(viewport={'width':1440,'height':900})
+              context.add_cookies([{
+                  'name':'__Http-phish','value':'1','url':'https://raw.githack.com/',
+                  'secure':True,'httpOnly':True,'sameSite':'Lax'
+              }])
+              page=context.new_page()
+              page.on('console',lambda m: report['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: report['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda r: report['requestFailures'].append({'url':r.url,'failure':str(r.failure)}))
+              response=page.goto(url,wait_until='load',timeout=60000)
+              report['httpStatus']=response.status if response else None
+              report['titleAfterLoad']=page.title()
+              report['bodyPreview']=page.locator('body').inner_text()[:1000]
+              page.screenshot(path='/tmp/ocean-v036-public-before-wait.png',full_page=True)
+              assert response and response.ok
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              assert qa['webgl2'] is True
+              assert qa.get('glError',0)==0
+              assert not qa.get('errors')
+              assert page.locator('canvas').count()==1
+              assert page.locator('iframe').count()==0
+              page.locator('#pause').click(); page.wait_for_timeout(500)
+              assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is True
+              page.locator('#pause').click(); page.wait_for_timeout(500)
+              assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is False
+              page.locator('#panelToggle').click(); page.wait_for_timeout(250)
+              assert page.locator('#panel').evaluate("e=>!e.classList.contains('closed')")
+              page.screenshot(path='/tmp/ocean-v036-public.png',full_page=True)
+              report.update({'webgl2':qa['webgl2'],'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':qa.get('visualProbe'),'canvasCount':1,'iframeCount':0,'pausePlay':True,'panelToggle':True})
+              report['passed']=not report['consoleErrors'] and not report['pageErrors'] and not report['requestFailures']
+              browser.close()
+          Path('/tmp/public_browser_qa_v2.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert report['passed'], report
+          PY
+          xvfb-run -a python3 /tmp/public_verify_v2.py
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ocean_Mother_R018_V0.3.6_Public_Browser_QA_V2
+          path: |
+            /tmp/public_browser_qa_v2.json
+            /tmp/ocean-v036-public-before-wait.png
+            /tmp/ocean-v036-public.png
+          if-no-files-found: warn
+          retention-days: 90
