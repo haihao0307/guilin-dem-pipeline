@@ -1,0 +1,36 @@
+{
+  "schema": "kaopu-cellular-return-result/n05",
+  "status": "pass",
+  "evidenceClass": "pinned FastNoiseLite 1.1.1 C++ source plus deterministic CPU field/boundary/derivative probes",
+  "sourceRevision": "785f37a9ad76e283586a379675085f2063ae03f7",
+  "configuration": {"seed": 424242, "frequency": 1.000000000, "jitter": 1.000000000, "distanceFunction": "Euclidean", "grid": [193, 193]},
+  "sourceContractAudit": {"constructorDefaultExact": true, "constructorDefaults": "EuclideanSq + Distance", "setterRemarkLabelsInverted": true},
+  "boundaryProbe": {"count": 1200, "cellValueJumpFineOverCoarse": 1.000000000, "f1JumpFineOverCoarse": 0.249888354, "f2MinusF1JumpFineOverCoarse": 0.133333333, "f2MinusF1BoundaryGapP95": 0.000970542, "f1GradientJumpMedian": 1.772016789, "f2MinusF1SlopeMean": 1.291522059, "f2MinusF1SlopeCv": 0.373934112},
+  "fields": {
+    "CellValue": {"min": -0.998975396, "max": 0.998975396, "mean": 0.019953497, "stddev": 0.554186541, "zeroGradientFraction": 0.991060163, "maxGradient": 583.966860728},
+    "F1DistanceShifted": {"min": -0.986293674, "max": 0.108070374, "mean": -0.561888542, "stddev": 0.197017508, "zeroGradientFraction": 0.000000000, "maxGradient": 1.015264185},
+    "F2MinusF1Shifted": {"min": -0.999996960, "max": 0.089063883, "mean": -0.739900607, "stddev": 0.196955449, "zeroGradientFraction": 0.000000000, "maxGradient": 2.000105655}
+  },
+  "geometryHashes": {"baseline": "6c6ed0ec367200f7", "materialOnly": "6c6ed0ec367200f7", "CellValueDisplacement": "848fb750f106632e", "F1Displacement": "c023dd5dcf33e594", "F2MinusF1Displacement": "0c2e54492e827367"},
+  "cpuBenchmark": {"samplesEach": 1000000, "CellValueNs": 24620413, "F1Ns": 25416046, "F2MinusF1Ns": 26452413},
+  "summary": {"checks": 15, "passed": 15, "failed": 0},
+  "currentBestView": "CellValue is a piecewise-constant cell identity mask with value cliffs. F1 is value-continuous but has gradient seams at nearest-feature changes. FastNoiseLite Distance2Sub plus one is an unsigned edge-gap proxy that reaches zero at cell boundaries but is not a unit-slope Euclidean edge distance. Material use and authorized displacement remain separate.",
+  "boundary": "CPU and fixed-source only. No GPU derivative, antialiasing, Mother runtime, physical soil/rock meaning, collision, public device or user visual acceptance is verified.",
+  "checks": [
+    {"name": "constructor defaults equal explicit EuclideanSq plus Distance", "pass": true},
+    {"name": "boundary sample count is sufficient", "pass": true},
+    {"name": "CellValue boundary jump persists as epsilon shrinks", "pass": true},
+    {"name": "F1 value jump shrinks with epsilon", "pass": true},
+    {"name": "F2-F1 value jump shrinks with epsilon", "pass": true},
+    {"name": "F2-F1 raw gap approaches zero at cell boundaries", "pass": true},
+    {"name": "F1 gradient changes across cell boundaries", "pass": true},
+    {"name": "F2-F1 is not a unit-slope Euclidean distance", "pass": true},
+    {"name": "CellValue derivative is zero over most cell interiors", "pass": true},
+    {"name": "CellValue has boundary derivative spikes", "pass": true},
+    {"name": "material-only cellular lookup preserves geometry bytes", "pass": true},
+    {"name": "CellValue displacement changes geometry bytes", "pass": true},
+    {"name": "F1 displacement changes geometry bytes", "pass": true},
+    {"name": "F2-F1 displacement changes geometry bytes", "pass": true},
+    {"name": "all three CPU timings are positive", "pass": true}
+  ]
+}

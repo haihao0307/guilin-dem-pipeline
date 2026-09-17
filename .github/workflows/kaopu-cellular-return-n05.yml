@@ -1,0 +1,51 @@
+name: KAOPU Cellular Return N05
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/cellular_return_probe_n05.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/cellular_return_result_n05.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/cellular-return-n05/SOURCE_LOCK.json
+      - .github/workflows/kaopu-cellular-return-n05.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify pinned FastNoiseLite source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/Auburn/FastNoiseLite/785f37a9ad76e283586a379675085f2063ae03f7/Cpp/FastNoiseLite.h -o /tmp/FastNoiseLite.h
+          echo '47a29750dfe13d15651febd235f3c26b1cc57af7c6e26583b838fd7ab5215dc2  /tmp/FastNoiseLite.h' | sha256sum --check --strict
+      - name: Build and run bounded CPU probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 -I /tmp docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/cellular_return_probe_n05.cpp -o /tmp/cellular-return-n05
+          /tmp/cellular-return-n05 /tmp/cellular_return_result_n05.json >/tmp/cellular-return-n05.log
+      - name: Check semantic result and deterministic fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.status == "pass" and .summary.checks == 15 and .summary.passed == 15 and .summary.failed == 0' /tmp/cellular_return_result_n05.json
+          jq -e '.cpuBenchmark.CellValueNs > 0 and .cpuBenchmark.F1Ns > 0 and .cpuBenchmark.F2MinusF1Ns > 0' /tmp/cellular_return_result_n05.json
+          jq -S 'del(.cpuBenchmark)' docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/cellular_return_result_n05.json >/tmp/expected.json
+          jq -S 'del(.cpuBenchmark)' /tmp/cellular_return_result_n05.json >/tmp/actual.json
+          diff -u /tmp/expected.json /tmp/actual.json
+      - name: Preserve replay artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-cellular-return-n05
+          path: |
+            /tmp/cellular_return_result_n05.json
+            /tmp/cellular-return-n05.log
+          if-no-files-found: error

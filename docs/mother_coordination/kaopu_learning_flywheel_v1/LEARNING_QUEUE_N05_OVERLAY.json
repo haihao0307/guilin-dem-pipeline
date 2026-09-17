@@ -1,0 +1,68 @@
+{
+  "id": "KAOPU-NOISE-N05-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N04_OVERLAY.json",
+  "inherits": [
+    "LEARNING_LOG/2026-09-17_NOISE_N01_PRODUCTION_INTAKE.md",
+    "LEARNING_QUEUE_N04_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_NOISE_DOMAIN_WARP_N04.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "runtimeIntegrationVerified": false
+  },
+  "completedThisRound": {
+    "id": "N02-2",
+    "topic": "Cellular return type, seams and geometry/material boundary",
+    "state": "source-and-cpu-method-complete",
+    "evidence": [
+      "references/cellular-return-n05/SOURCE_LOCK.json",
+      "PROBES/cellular_return_result_n05.json",
+      "LEARNING_LOG/2026-09-17_CELLULAR_RETURN_N05.md"
+    ],
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "sequence": [
+    {
+      "id": "N02-3",
+      "topic": "fBm/ridged/multiscale",
+      "question": "How do amplitude, frequency and filtering preserve desired shape under sampling changes?",
+      "doneWhen": "Pre/post-clamp distribution, silhouette and LOD checks; no automatic zero-mean or mandatory 17 layers.",
+      "state": "next"
+    },
+    {
+      "id": "N02-4",
+      "topic": "psrdnoise",
+      "question": "Does composed warp/noise retain requested spatial and temporal continuity?",
+      "doneWhen": "Check actual period restrictions, derivatives, wrapping, phase and target language; flow appearance is not material advection.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-5",
+      "topic": "erosion",
+      "question": "What extra state is necessary beyond noise to account for water/sediment transport?",
+      "doneWhen": "Limited conservative example with sources/sinks and boundaries; inherit N01 counterexample, do not replace canonical terrain.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-6",
+      "topic": "modular shader",
+      "question": "Which small source-licensed function improves current authorized surface task?",
+      "doneWhen": "Coordinate/state/optics separation, dependency/license record, targeted visual/runtime evidence.",
+      "state": "queued"
+    }
+  ],
+  "routes": [
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Brick material", "entry": "HOUSE PR15", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"}
+  ],
+  "nextGap": "N02-3 multiscale amplitude/frequency/filtering behavior under resampling and LOD"
+}

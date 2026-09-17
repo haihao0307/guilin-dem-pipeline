@@ -1,0 +1,33 @@
+{
+  "id": "KAOPU-TOOL-ROUTING-N05-CELLULAR",
+  "status": "Candidate routing",
+  "sourceTool": {
+    "name": "FastNoiseLite C++",
+    "revision": "785f37a9ad76e283586a379675085f2063ae03f7",
+    "license": "MIT",
+    "role": "Pinned reference implementation and CPU probe"
+  },
+  "routes": [
+    {
+      "returnType": "CellValue",
+      "candidateUse": "categorical per-cell material mask or selector",
+      "geometryDefault": "reject",
+      "failureMode": "piecewise-constant value cliffs and undefined boundary normals"
+    },
+    {
+      "returnType": "Distance (F1-1)",
+      "candidateUse": "radial intra-cell material variation; isolated geometry trial only",
+      "geometryDefault": "Mother-owned isolated trial",
+      "failureMode": "value continuity hides gradient/normal seams at nearest-feature changes"
+    },
+    {
+      "returnType": "Distance2Sub ((F2-F1)-1)",
+      "candidateUse": "unsigned boundary-band material mask after explicit +1 and width remap",
+      "geometryDefault": "reject until remap, derivative and silhouette acceptance",
+      "failureMode": "not signed, normalized or unit-slope edge distance"
+    }
+  ],
+  "requiredReceipt": ["source revision/checksum", "coordinate units", "seed/frequency/jitter", "distance function", "return type and output shift", "material versus geometry route", "target filtering/runtime evidence"],
+  "prohibitedInference": ["physical grain truth", "masonry joint topology", "weathering history", "erosion process"],
+  "unknown": ["GPU derivatives", "antialiasing", "browser/iPhone performance", "Mother integration", "public runtime", "user acceptance"]
+}

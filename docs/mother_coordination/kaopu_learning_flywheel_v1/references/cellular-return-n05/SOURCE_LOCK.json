@@ -1,0 +1,34 @@
+{
+  "id": "KAOPU-CELLULAR-RETURN-N05-SOURCE-LOCK",
+  "status": "Observation / source locked",
+  "retrievedDate": "2026-09-17",
+  "source": {
+    "repository": "https://github.com/Auburn/FastNoiseLite",
+    "revision": "785f37a9ad76e283586a379675085f2063ae03f7",
+    "revisionDate": "2026-06-21",
+    "license": "MIT",
+    "header": {
+      "path": "Cpp/FastNoiseLite.h",
+      "gitBlob": "c67f2e5cec4653ebf85e9f19eec2d6ddfd8ca697",
+      "sha256": "47a29750dfe13d15651febd235f3c26b1cc57af7c6e26583b838fd7ab5215dc2",
+      "declaredVersion": "FastNoiseLite 1.1.1"
+    }
+  },
+  "sourceClaims": [
+    "The pinned constructor sets CellularDistanceFunction_EuclideanSq and CellularReturnType_Distance.",
+    "For Euclidean distance, Distance returns F1 minus one and Distance2Sub returns F2 minus F1 minus one.",
+    "CellValue returns a normalized hash of the closest feature point, not a distance.",
+    "The cellular jitter setter warns that values above one cause artifacts."
+  ],
+  "sourceAuditFinding": {
+    "status": "Observation defect",
+    "finding": "The remarks on SetCellularDistanceFunction and SetCellularReturnType have their default labels inverted: Distance is a return type and EuclideanSq is a distance function. Constructor state and an executable default-equivalence check were used as the contract.",
+    "effect": "Do not copy the two remark labels into a KAOPU receipt without checking constructor state."
+  },
+  "doesNotClaim": [
+    "F2-F1 is not documented as an exact unit-slope Euclidean distance to an edge.",
+    "The source does not assign physical soil, grain, brick, tile or rock meaning to cells.",
+    "The CPU probe shares this source and test design; CI replay is not an independent physical Observation Root.",
+    "No GPU derivative, antialiasing, Mother adoption, public-device or user visual result follows from the C++ source."
+  ]
+}
