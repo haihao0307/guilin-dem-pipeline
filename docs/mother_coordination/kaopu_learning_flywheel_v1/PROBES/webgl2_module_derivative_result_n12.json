@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu-webgl2-module-derivative-n12-v1",
+  "width": 256,
+  "height": 4,
+  "coordinateStep": 0.0078125,
+  "phases": [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75],
+  "fields": {
+    "linear": {"dx": {"count": 3584, "finiteCount": 3584, "min": 1, "max": 1, "maxAbs": 1}, "seamDx": {"count": 116, "finiteCount": 116, "min": 1, "max": 1, "maxAbs": 1}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}},
+    "fract": {"dx": {"count": 3584, "finiteCount": 3584, "min": -127, "max": 1, "maxAbs": 127}, "seamDx": {"count": 116, "finiteCount": 116, "min": -127, "max": 1, "maxAbs": 127}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}},
+    "floor": {"dx": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 128, "maxAbs": 128}, "seamDx": {"count": 116, "finiteCount": 116, "min": 0, "max": 128, "maxAbs": 128}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}},
+    "closed_sine": {"dx": {"count": 3584, "finiteCount": 3584, "min": -6.281233310699463, "max": 6.281209468841553, "maxAbs": 6.281233310699463}, "seamDx": {"count": 116, "finiteCount": 116, "min": 6.129611968994141, "max": 6.281209468841553, "maxAbs": 6.281209468841553}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}},
+    "abs": {"dx": {"count": 3584, "finiteCount": 3584, "min": -1, "max": 1, "maxAbs": 1}, "seamDx": {"count": 116, "finiteCount": 116, "min": -1, "max": 1, "maxAbs": 1}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}},
+    "triangle": {"dx": {"count": 3584, "finiteCount": 3584, "min": -2, "max": 2, "maxAbs": 2}, "seamDx": {"count": 116, "finiteCount": 116, "min": -2, "max": 2, "maxAbs": 2}, "dy": {"count": 3584, "finiteCount": 3584, "min": 0, "max": 0, "maxAbs": 0}}
+  },
+  "runtime": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "vendor": "WebKit",
+    "renderer": "WebKit WebGL",
+    "unmaskedVendor": "Google Inc. (Google)",
+    "unmaskedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "framebufferStatus": 36053
+  },
+  "checks": [
+    {"id": "webgl2-context", "pass": true}, {"id": "glsl-300-profile", "pass": true},
+    {"id": "all-captures-finite", "pass": true}, {"id": "linear-normalized-dfdx", "pass": true},
+    {"id": "raw-fract-seam-spike", "pass": true}, {"id": "floor-identity-jump", "pass": true},
+    {"id": "closed-sine-no-wrap-spike", "pass": true}, {"id": "abs-kink-bounded", "pass": true},
+    {"id": "triangle-branch-bounded", "pass": true}, {"id": "constant-y-zero-dfdy", "pass": true}
+  ],
+  "summary": {"checks": 10, "passed": 10, "failed": 0, "status": "pass"}
+}
