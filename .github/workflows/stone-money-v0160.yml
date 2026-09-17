@@ -10,30 +10,31 @@ permissions:
   contents: write
 concurrency:
   group: stone-money-v0160
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: work/stone-money-island-v0160-original-ocean-20260917
-      - name: Build from frozen source and readable integration source
+      - name: Build frozen-source integration
         run: |
           python games/survivor-palau/source/v0160/build.py
           python games/survivor-palau/source/v0160/integration_checks.py
-      - name: Run real-browser desktop and mobile diagnostics
+      - name: Real-browser desktop and mobile diagnostics
         run: |
           python -m pip install playwright pillow
           python -m playwright install --with-deps chromium
-          python games/survivor-palau/source/v0160/verify.py
-      - name: Commit only game integration outputs
+          timeout 450s python -u games/survivor-palau/source/v0160/verify.py
+      - name: Commit game integration outputs without overwriting concurrent source edits
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add games/survivor-palau
-          git diff --cached --quiet || git commit -m 'build(stone-money): record original ocean integration and actual browser results'
+          git add games/survivor-palau/releases/v0.1.6.0
+          git diff --cached --quiet || git commit -m 'build(stone-money): record candidate and measured browser diagnostics'
+          git pull --rebase origin work/stone-money-island-v0160-original-ocean-20260917
           git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
       - uses: actions/upload-artifact@v4
         if: always()
