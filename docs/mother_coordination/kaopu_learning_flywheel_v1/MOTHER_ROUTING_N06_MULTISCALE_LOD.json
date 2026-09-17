@@ -1,0 +1,21 @@
+{
+  "id": "KAOPU-MOTHER-ROUTING-N06-MULTISCALE-LOD",
+  "status": "prepared-not-delivered",
+  "reason": "N06 adds a verified multiscale/LOD method, but Landscape and Farmland have not acknowledged the earlier N02 publication. Brick/Tiles entries were already checked read-only; no agent was triggered.",
+  "incrementalGuidance": {
+    "amplitude": "Treat fractal bounding as a worst-case amplitude budget, not a zero-mean or distribution guarantee. Keep pre/post-clamp receipts.",
+    "sampling": "Remove nominal frequencies above target Nyquist while keeping original octave weights; renormalization changes macro amplitude across LOD.",
+    "nonlinear": "Ridged and other nonlinear transforms require an explicit removed-band mean policy.",
+    "acceptance": "Check field and silhouette separately; add normals, collision, runtime and visual acceptance in the target Mother."
+  },
+  "routes": [
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "priorPublication": "N02 comment 5706650878", "acknowledged": false, "adoption": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "priorPublication": "N02 comment 5706650998", "acknowledged": false, "adoption": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Brick material", "entry": "HOUSE PR15", "entryStatus": "verified-existing", "acknowledged": false, "adoption": "Unknown", "actionThisRound": "prepared only"},
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "entryStatus": "verified-existing", "acknowledged": false, "adoption": "Unknown", "actionThisRound": "prepared only"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "entryStatus": "verified-existing", "acknowledged": false, "adoption": "Unknown", "actionThisRound": "prepared only"}
+  ],
+  "productionChanges": false,
+  "canonicalTruthChanged": false,
+  "frozenR1Changed": false
+}

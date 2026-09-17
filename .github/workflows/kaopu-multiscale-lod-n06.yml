@@ -1,0 +1,51 @@
+name: KAOPU Multiscale LOD N06
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/multiscale_lod_probe_n06.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/multiscale_lod_result_n06.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/multiscale-lod-n06/SOURCE_LOCK.json
+      - .github/workflows/kaopu-multiscale-lod-n06.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify pinned FastNoiseLite source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/Auburn/FastNoiseLite/785f37a9ad76e283586a379675085f2063ae03f7/Cpp/FastNoiseLite.h -o /tmp/FastNoiseLite.h
+          echo '47a29750dfe13d15651febd235f3c26b1cc57af7c6e26583b838fd7ab5215dc2  /tmp/FastNoiseLite.h' | sha256sum --check --strict
+      - name: Build and run bounded CPU probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 -I /tmp docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/multiscale_lod_probe_n06.cpp -o /tmp/multiscale-lod-n06
+          /tmp/multiscale-lod-n06 /tmp/multiscale_lod_result_n06.json >/tmp/multiscale-lod-n06.log
+      - name: Check semantic result and deterministic fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.status == "pass" and .summary.checks == 15 and .summary.passed == 15 and .summary.failed == 0' /tmp/multiscale_lod_result_n06.json
+          jq -e '.octaveBudget.fBm8Ns250k > 0 and .octaveBudget.fBm17Ns250k > 0 and .octaveBudget.costRatio17Over8 > 1' /tmp/multiscale_lod_result_n06.json
+          jq -S 'del(.octaveBudget.fBm8Ns250k,.octaveBudget.fBm17Ns250k,.octaveBudget.costRatio17Over8)' docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/multiscale_lod_result_n06.json >/tmp/expected.json
+          jq -S 'del(.octaveBudget.fBm8Ns250k,.octaveBudget.fBm17Ns250k,.octaveBudget.costRatio17Over8)' /tmp/multiscale_lod_result_n06.json >/tmp/actual.json
+          diff -u /tmp/expected.json /tmp/actual.json
+      - name: Preserve replay artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-multiscale-lod-n06
+          path: |
+            /tmp/multiscale_lod_result_n06.json
+            /tmp/multiscale-lod-n06.log
+          if-no-files-found: error

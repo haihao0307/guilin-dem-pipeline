@@ -1,0 +1,69 @@
+{
+  "id": "KAOPU-NOISE-N06-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N05_OVERLAY.json",
+  "inherits": [
+    "LEARNING_LOG/2026-09-17_NOISE_N01_PRODUCTION_INTAKE.md",
+    "LEARNING_QUEUE_N05_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_CELLULAR_RETURN_N05.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "runtimeIntegrationVerified": false
+  },
+  "completedThisRound": {
+    "id": "N02-3",
+    "topic": "fBm/ridged multiscale amplitude, clamp and LOD",
+    "state": "source-and-cpu-method-complete",
+    "evidence": [
+      "references/multiscale-lod-n06/SOURCE_LOCK.json",
+      "PROBES/multiscale_lod_result_n06.json",
+      "LEARNING_LOG/2026-09-17_MULTISCALE_LOD_N06.md"
+    ],
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "sequence": [
+    {
+      "id": "N02-4",
+      "topic": "psrdnoise",
+      "question": "Does composed warp/noise retain requested spatial and temporal continuity?",
+      "doneWhen": "Check actual period restrictions, derivatives, wrapping, phase and target language; flow appearance is not material advection.",
+      "state": "next"
+    },
+    {
+      "id": "N02-5",
+      "topic": "erosion",
+      "question": "What extra state is necessary beyond noise to account for water/sediment transport?",
+      "doneWhen": "Limited conservative example with sources/sinks and boundaries; inherit N01 counterexample, do not replace canonical terrain.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-6",
+      "topic": "modular shader",
+      "question": "Which small source-licensed function improves current authorized surface task?",
+      "doneWhen": "Coordinate/state/optics separation, dependency/license record, targeted visual/runtime evidence.",
+      "state": "queued"
+    }
+  ],
+  "routes": [
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Brick material", "entry": "HOUSE PR15", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"}
+  ],
+  "verificationReceipt": {
+    "implementationCommit": null,
+    "successfulReplayRun": null,
+    "artifactId": null,
+    "artifactName": "kaopu-multiscale-lod-n06",
+    "artifactDigest": null,
+    "evidenceIndependence": "A future CI replay and the local replay share the same pinned source and probe design; CI is only a reproducibility receipt, not an independent physical Observation Root."
+  },
+  "nextGap": "N02-4 psrdnoise period, derivative, wrapping and phase contract"
+}

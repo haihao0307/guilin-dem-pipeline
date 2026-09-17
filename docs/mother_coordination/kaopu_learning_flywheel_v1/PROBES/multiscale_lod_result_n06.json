@@ -1,0 +1,46 @@
+{
+  "schema": "kaopu-multiscale-lod-result/n06",
+  "status": "pass",
+  "evidenceClass": "pinned FastNoiseLite 1.1.1 source plus deterministic CPU multiscale/resampling probe",
+  "sourceRevision": "785f37a9ad76e283586a379675085f2063ae03f7",
+  "configuration": {"seed": 98765, "baseFrequencyPerM": 0.031250000, "lacunarity": 2.000000000, "gain": 0.500000000, "octaves": 8, "fineStepM": 0.125000000, "domainM": 64.000000000},
+  "compositionEquivalenceRmse": {"fBm": 0.000000052, "ridged": 0.000000121},
+  "distribution": {"fBmPreClamp": {"min": -1.310885057, "max": 0.999396218, "mean": 0.025525674, "stddev": 0.487615035, "clippedFraction": 0.031818390, "meanSquare": 0.238419982}, "fBmPostClamp": {"min": -1.000000000, "max": 0.999396218, "mean": 0.028684133, "stddev": 0.480415466, "clippedFraction": 0.031818390, "meanSquare": 0.231621800}, "ridgedPreClamp": {"min": -0.471566085, "max": 2.468784054, "mean": 1.182778677, "stddev": 0.566194376, "clippedFraction": 0.628658295, "meanSquare": 1.719541469}, "ridgedPostClamp": {"min": -0.471566085, "max": 1.000000000, "mean": 0.843399028, "stddev": 0.279887745, "clippedFraction": 0.628658295, "meanSquare": 0.789659069}},
+  "lod": {
+    "fBm": [
+      {"spacingM": 0.500000000, "keptOctaves": 6, "fieldRmse": {"full": 0.001618309, "preserve": 0.002002365, "renormalized": 0.003163916, "meanCompensated": 0.002002364}, "silhouetteRmse": {"full": 0.001957635, "preserve": 0.002059944, "renormalized": 0.004891711, "meanCompensated": 0.002060484}},
+      {"spacingM": 1.000000000, "keptOctaves": 5, "fieldRmse": {"full": 0.003379497, "preserve": 0.004101212, "renormalized": 0.007225176, "meanCompensated": 0.004101203}, "silhouetteRmse": {"full": 0.003603663, "preserve": 0.004308265, "renormalized": 0.010773600, "meanCompensated": 0.004309402}},
+      {"spacingM": 2.000000000, "keptOctaves": 4, "fieldRmse": {"full": 0.006616493, "preserve": 0.008173968, "renormalized": 0.015855421, "meanCompensated": 0.008173958}, "silhouetteRmse": {"full": 0.008953333, "preserve": 0.008615332, "renormalized": 0.023079629, "meanCompensated": 0.008594498}},
+      {"spacingM": 4.000000000, "keptOctaves": 3, "fieldRmse": {"full": 0.013757829, "preserve": 0.015481644, "renormalized": 0.034300091, "meanCompensated": 0.015478751}, "silhouetteRmse": {"full": 0.018821649, "preserve": 0.013880135, "renormalized": 0.044284360, "meanCompensated": 0.013774249}},
+      {"spacingM": 8.000000000, "keptOctaves": 2, "fieldRmse": {"full": 0.027940559, "preserve": 0.026191002, "renormalized": 0.074086734, "meanCompensated": 0.026155892}, "silhouetteRmse": {"full": 0.035335431, "preserve": 0.026259592, "renormalized": 0.097263409, "meanCompensated": 0.025622561}}
+    ],
+    "ridged": [
+      {"spacingM": 0.500000000, "keptOctaves": 6, "fieldRmse": {"full": 0.003982497, "preserve": 0.007099824, "renormalized": 0.004572266, "meanCompensated": 0.003371184}, "silhouetteRmse": {"full": 0.005836749, "preserve": 0.004753767, "renormalized": 0.007991847, "meanCompensated": 0.004488532}},
+      {"spacingM": 1.000000000, "keptOctaves": 5, "fieldRmse": {"full": 0.008753656, "preserve": 0.016053071, "renormalized": 0.010353271, "meanCompensated": 0.006992544}, "silhouetteRmse": {"full": 0.012560935, "preserve": 0.010637582, "renormalized": 0.016936850, "meanCompensated": 0.008432848}},
+      {"spacingM": 2.000000000, "keptOctaves": 4, "fieldRmse": {"full": 0.018361653, "preserve": 0.034126779, "renormalized": 0.022183278, "meanCompensated": 0.013689142}, "silhouetteRmse": {"full": 0.027639950, "preserve": 0.022301172, "renormalized": 0.035362308, "meanCompensated": 0.017408133}},
+      {"spacingM": 4.000000000, "keptOctaves": 3, "fieldRmse": {"full": 0.037930630, "preserve": 0.069752328, "renormalized": 0.047582048, "meanCompensated": 0.025347722}, "silhouetteRmse": {"full": 0.050177028, "preserve": 0.050222024, "renormalized": 0.065685668, "meanCompensated": 0.028669239}},
+      {"spacingM": 8.000000000, "keptOctaves": 2, "fieldRmse": {"full": 0.079364727, "preserve": 0.139690122, "renormalized": 0.101616895, "meanCompensated": 0.046632995}, "silhouetteRmse": {"full": 0.121222901, "preserve": 0.107186916, "renormalized": 0.125257864, "meanCompensated": 0.051771942}}
+    ]
+  },
+  "octaveBudget": {"fBm8Vs17Rmse": 0.000759698, "ridged8Vs17Rmse": 0.002202276, "fBm8Ns250k": 22941421, "fBm17Ns250k": 51331725, "costRatio17Over8": 2.237512881},
+  "summary": {"checks": 15, "passed": 15, "failed": 0},
+  "currentBestView": "Fractal bounding limits worst-case amplitude but does not guarantee zero mean, preserved distribution, alias-free resampling or silhouette stability. LOD filtering should remove octaves above the sampling Nyquist limit while preserving original octave weights; nonzero-mean transforms such as ridged noise also require an explicit removed-band mean policy. Clamp statistics must be recorded before and after clipping. Octave count is an error/cost decision, not a mandatory layer count.",
+  "boundary": "CPU and fixed-source only. Nominal frequency cutoff is a conservative probe, not a proof of exact kernel bandwidth. No GPU derivatives, browser/device performance, Mother runtime, collision, physical geology or user visual acceptance is verified.",
+  "checks": [
+    {"name": "manual fBm composition matches pinned implementation", "pass": true},
+    {"name": "manual ridged composition matches pinned implementation", "pass": true},
+    {"name": "normalized fBm remains inside source amplitude bound", "pass": true},
+    {"name": "normalized ridged remains inside source amplitude bound", "pass": true},
+    {"name": "fBm sampled mean is not asserted exact zero", "pass": true},
+    {"name": "ridged transform has nonzero sampled mean", "pass": true},
+    {"name": "fBm clamp changes distribution", "pass": true},
+    {"name": "ridged clamp changes distribution", "pass": true},
+    {"name": "LOD octave count decreases with coarser sampling", "pass": true},
+    {"name": "coarse fBm filtering improves 4m and 8m silhouette plus 8m field error", "pass": true},
+    {"name": "coarse ridged mean-compensated filtering beats full point sampling", "pass": true},
+    {"name": "renormalizing retained fBm octaves is worse than preserving weights", "pass": true},
+    {"name": "ridged removed-octave mean compensation improves preserved cutoff", "pass": true},
+    {"name": "17 octaves are measurably more expensive than 8", "pass": true},
+    {"name": "8 to 17 octave RMS delta is bounded for gain one-half", "pass": true}
+  ]
+}

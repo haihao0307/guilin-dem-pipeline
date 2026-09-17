@@ -1,0 +1,29 @@
+{
+  "id": "KAOPU-TOOL-ROUTING-N06-MULTISCALE-LOD",
+  "status": "Candidate routing",
+  "sourceTool": {
+    "name": "FastNoiseLite C++",
+    "revision": "785f37a9ad76e283586a379675085f2063ae03f7",
+    "license": "MIT",
+    "role": "Pinned reference implementation and CPU probe"
+  },
+  "routes": [
+    {
+      "consumer": "material field",
+      "candidateMethod": "filter octaves above target sample Nyquist and preserve original amplitude weights",
+      "requiredMetrics": ["pre/post-clamp distribution", "screen-space aliasing", "normal stability", "target runtime"]
+    },
+    {
+      "consumer": "geometry displacement",
+      "candidateMethod": "same cutoff plus silhouette, bounds, collision and LOD transition checks",
+      "requiredMetrics": ["field error", "silhouette error", "clipped fraction", "collision parity", "visual acceptance"]
+    },
+    {
+      "consumer": "ridged or other nonlinear octave transform",
+      "candidateMethod": "record octave mean and make removed-band mean policy explicit",
+      "requiredMetrics": ["mean drift", "energy drift", "LOD transition", "clamp interaction"]
+    }
+  ],
+  "prohibitedInference": ["fractal bound implies zero mean", "more octaves always improve the target", "clamping is distribution-neutral", "CPU cost predicts GPU cost", "multiscale noise proves physical erosion"],
+  "unknown": ["GPU filtering", "browser/iPhone performance", "Mother integration", "collision", "public runtime", "user acceptance"]
+}
