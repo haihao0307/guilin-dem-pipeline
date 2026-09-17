@@ -1,0 +1,168 @@
+name: Survivor Palau V0.1.3.1 natural world runtime fix
+
+on:
+  push:
+    branches:
+      - game/survivor-palau-v001-20260917
+    paths:
+      - .github/workflows/survivor-palau-v0131-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: survivor-palau-v0131-release
+  cancel-in-progress: true
+
+jobs:
+  verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild V0.1.3.1 from verified V0.1.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat games/survivor-palau/source/v013_patch.part01.txt | base64 -d | gzip -d > /tmp/patch_v013.py
+          echo 'e018fdaecba51ec20738bb625f094c399c90b171ed53ecd321b7bf554b364fd9  /tmp/patch_v013.py' | sha256sum -c -
+          python3 /tmp/patch_v013.py
+          cat games/survivor-palau/source/v0131_patch.part01.txt | base64 -d | gzip -d > /tmp/patch_v0131.py
+          echo '7ee8e06ecaa835e2372895644285a06f994cb026f1552b689c00e3d1dfd50625  /tmp/patch_v0131.py' | sha256sum -c -
+          python3 /tmp/patch_v0131.py
+          OUT=games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html
+          echo '5bc243dd7ef1d2b4bb230fa8b19b90888704f913f49ee6095e1e812e818d94ad  '"$OUT" | sha256sum -c -
+          test "$(wc -c < "$OUT")" -eq 147608
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html')
+          s=p.read_text(encoding='utf-8')
+          assert 'Math.atan2(uz,ux)' in s and 'atan(uz,ux)' not in s.replace('Math.atan2(uz,ux)','')
+          assert s.count('<canvas')==1 and '<iframe' not in s
+          for marker in ['survivor-palau-0.1.3.1-natural-world-runtime-fix','naturalWaveSpectrum:true','canoeHullV2:true','karstMushroomProfile:true']:
+              assert marker in s,marker
+          m=re.search(r'<script type="module">(.*)</script>',s,re.S); assert m
+          Path('/tmp/v0131.mjs').write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/v0131.mjs
+
+      - name: Local Chromium WebGL2 QA and screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          cat >/tmp/v0131_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,shutil
+          pth=Path('games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html').resolve()
+          r={'format':'survivor-palau-v0131-local-browser-qa','consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium'); assert chrome
+          with sync_playwright() as p:
+              b=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+              page=b.new_page(viewport={'width':1600,'height':950})
+              page.on('console',lambda m:r['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e:r['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda q:r['requestFailures'].append({'url':q.url,'failure':str(q.failure)}))
+              page.goto(pth.as_uri()+'?qa=1',wait_until='load',timeout=30000)
+              try:
+                  page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              except Exception:
+                  r['errorBox']=page.locator('#error').text_content() if page.locator('#error').count() else None
+                  r['bodyText']=page.locator('body').inner_text()[:4000]
+                  Path('/tmp/v0131_debug.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+                  raise
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              for view in ['overview','karst','breaker','canoe','deepfish']:
+                  page.locator(f'[data-view="{view}"]').click();page.wait_for_timeout(1800);page.screenshot(path=f'/tmp/v0131-{view}.png',full_page=True)
+              assert qa.get('webgl2') is True and qa.get('glError',0)==0 and not qa.get('errors')
+              assert qa.get('karstFormationCount',0)>=10 and qa.get('treeCount',0)>=50 and qa.get('canoeCount',0)==1
+              assert page.locator('canvas').count()==1 and page.locator('iframe').count()==0
+              r.update({'webgl2':qa.get('webgl2'),'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':qa.get('visualProbe'),'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'foamActiveCells':qa.get('foamActiveCells'),'curlLayerTriangles':qa.get('curlLayerTriangles'),'viewsChecked':['overview','karst','breaker','canoe','deepfish']})
+              r['passed']=not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures'];b.close()
+          Path('/tmp/v0131_local_qa.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); assert r['passed'],r
+          PY
+          xvfb-run -a python3 /tmp/v0131_qa.py
+
+      - name: Commit verified direct-open and local QA
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.3
+          cp /tmp/v0131_local_qa.json "$ROOT/BROWSER_QA_V0131.json"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$ROOT"
+          git commit -m 'publish(game): Survivor Palau V0.1.3.1 natural world runtime verified'
+          git push origin HEAD:game/survivor-palau-v001-20260917
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Fixed-commit public bytes and Chromium QA
+        shell: bash
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          PATHNAME=games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html
+          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$COMMIT/$PATHNAME"
+          for n in $(seq 1 30); do
+            if curl -fsSL --retry 2 "$URL" -o /tmp/v0131-public.html; then
+              SHA=$(sha256sum /tmp/v0131-public.html | awk '{print $1}'); [ "$SHA" = '5bc243dd7ef1d2b4bb230fa8b19b90888704f913f49ee6095e1e812e818d94ad' ] && break
+            fi
+            sleep 4
+          done
+          echo '5bc243dd7ef1d2b4bb230fa8b19b90888704f913f49ee6095e1e812e818d94ad  /tmp/v0131-public.html' | sha256sum -c -
+          cat >/tmp/v0131_public.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,os,shutil
+          commit=os.environ['COMMIT']; path='games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html'; url=f'https://raw.githack.com/haihao0307/guilin-dem-pipeline/{commit}/{path}?qa=1'
+          r={'format':'survivor-palau-v0131-public-browser-qa','url':url,'commit':commit,'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium'); assert chrome
+          with sync_playwright() as p:
+              b=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              c=b.new_context(viewport={'width':1600,'height':950}); c.add_cookies([{'name':'__Http-phish','value':'1','url':'https://raw.githack.com/','secure':True,'httpOnly':True,'sameSite':'Lax'}]); page=c.new_page()
+              page.on('console',lambda m:r['consoleErrors'].append(m.text) if m.type=='error' else None); page.on('pageerror',lambda e:r['pageErrors'].append(str(e))); page.on('requestfailed',lambda q:r['requestFailures'].append({'url':q.url,'failure':str(q.failure)}))
+              resp=page.goto(url,wait_until='load',timeout=60000); assert resp and resp.ok
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000); qa=page.evaluate("() => window.OceanMotherR018.qa")
+              for view in ['overview','karst','breaker','canoe','deepfish']:
+                  page.locator(f'[data-view="{view}"]').click(); page.wait_for_timeout(1600); page.screenshot(path=f'/tmp/v0131-public-{view}.png',full_page=True)
+              assert qa.get('webgl2') is True and qa.get('glError',0)==0 and not qa.get('errors') and qa.get('karstFormationCount',0)>=10 and qa.get('treeCount',0)>=50 and qa.get('canoeCount',0)==1
+              r.update({'httpStatus':resp.status,'webgl2':qa.get('webgl2'),'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':qa.get('visualProbe'),'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'foamActiveCells':qa.get('foamActiveCells')}); r['passed']=not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures']; b.close()
+          Path('/tmp/v0131_public_qa.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); assert r['passed'],r
+          PY
+          xvfb-run -a python3 /tmp/v0131_public.py
+
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Survivor_Palau_V0.1.3.1_Natural_World_QA
+          path: |
+            /tmp/v0131_local_qa.json
+            /tmp/v0131_debug.json
+            /tmp/v0131-overview.png
+            /tmp/v0131-karst.png
+            /tmp/v0131-breaker.png
+            /tmp/v0131-canoe.png
+            /tmp/v0131-deepfish.png
+            /tmp/v0131-public.html
+            /tmp/v0131_public_qa.json
+            /tmp/v0131-public-overview.png
+            /tmp/v0131-public-karst.png
+            /tmp/v0131-public-breaker.png
+            /tmp/v0131-public-canoe.png
+            /tmp/v0131-public-deepfish.png
+          if-no-files-found: warn
+          retention-days: 90
