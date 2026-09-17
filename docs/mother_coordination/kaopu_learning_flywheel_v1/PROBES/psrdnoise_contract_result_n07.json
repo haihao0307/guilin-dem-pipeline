@@ -1,0 +1,41 @@
+{
+  "schema": "kaopu-psrdnoise-contract-result/n07",
+  "status": "pass",
+  "evidenceClass": "pinned psrdnoise GLSL source plus deterministic CPU semantic port",
+  "sourceRevision": "419175a270862ce7ae692038fafafb42ec0427e9",
+  "configuration": {"samples": 4096, "alphaRadians": 0.370000000000, "finiteDifferenceStep": 0.000010000000},
+  "periodicity": {
+    "validX_5": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000},
+    "validY_4": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000},
+    "validXY_5_4": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000},
+    "oddYDeclared_3": {"valueRmse": 0.640938881938, "valueMax": 1.553134118074, "gradientRmse": 3.709080457113, "gradientMax": 8.247966244598},
+    "oddYActual_6": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000},
+    "fractionalX_4_5": {"valueRmse": 0.618039095309, "valueMax": 1.640369485360, "gradientRmse": 3.360662929831, "gradientMax": 8.189443245775},
+    "partialXWrapped": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000},
+    "partialYDisabled": {"valueRmse": 0.679163311574, "valueMax": 1.693834355014, "gradientRmse": 3.538594724515, "gradientMax": 8.919061992573}
+  },
+  "phase": {"alphaPlusTwoPi": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000}, "alphaPlusOne": {"valueRmse": 0.456480402031, "valueMax": 0.914435774912, "gradientRmse": 2.372542856152, "gradientMax": 4.872458249532}},
+  "derivative": {"analyticVsFiniteRmse": 0.000000001586, "analyticVsFiniteMax": 0.000000003695, "scaledCoordinateCorrectedRmse": 0.000000005194, "scaledCoordinateOmittedChainRmse": 1.225666029865},
+  "worldPeriodScaling": {"validWorld4Frequency1_5": {"valueRmse": 0.000000000000, "valueMax": 0.000000000000, "gradientRmse": 0.000000000000, "gradientMax": 0.000000000000}, "invalidWorld5Frequency1_5": {"valueRmse": 0.658485015633, "valueMax": 1.631024655155, "gradientRmse": 3.624509826152, "gradientMax": 9.189654225495}},
+  "constantAdvectionNegativeControl": {"bestFitVelocity": [0.008751949983, 0.008247429916], "phaseDerivativeRmse": 0.472325321208, "residualRmse": 0.471815508405, "relativeResidual": 0.998920632073},
+  "summary": {"checks": 15, "passed": 15, "failed": 0},
+  "currentBestView": "The pinned 2-D psrdnoise contract tiles for positive integer x periods and positive even integer y periods; an odd y input repeats only after twice that input. Nonpositive components disable wrapping independently. Alpha is radians and repeats after two pi, but rotates lattice gradients rather than transporting material state. Analytic spatial derivatives require the ordinary coordinate-chain factor after scaling.",
+  "boundary": "The CPU port mirrors the pinned scalar GLSL equations but is not a shader-runtime observation. It does not verify GLSL precision, WGSL/HLSL parity, GPU cost, multioctave filtering, material advection, physical flow, Mother adoption or visual acceptance.",
+  "checks": [
+    {"name": "integer x period repeats value and gradient", "pass": true},
+    {"name": "even integer y period repeats value and gradient", "pass": true},
+    {"name": "combined valid period repeats value and gradient", "pass": true},
+    {"name": "odd declared y period is not its actual repeat", "pass": true},
+    {"name": "odd declared y period repeats after twice the value", "pass": true},
+    {"name": "fractional x period does not satisfy seamless contract", "pass": true},
+    {"name": "zero y period still permits x wrapping", "pass": true},
+    {"name": "zero y period disables y wrapping", "pass": true},
+    {"name": "alpha is periodic after two pi radians", "pass": true},
+    {"name": "alpha plus one is not a full turn", "pass": true},
+    {"name": "analytic gradient matches finite difference", "pass": true},
+    {"name": "scaled-coordinate gradient applies chain factor", "pass": true},
+    {"name": "valid world period times frequency maps to valid lattice period", "pass": true},
+    {"name": "fractional lattice period from world scaling fails tiling", "pass": true},
+    {"name": "alpha evolution is not one constant-velocity translation", "pass": true}
+  ]
+}

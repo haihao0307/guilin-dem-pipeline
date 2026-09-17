@@ -1,0 +1,62 @@
+{
+  "id": "KAOPU-NOISE-N07-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N06_OVERLAY.json",
+  "inherits": [
+    "LEARNING_LOG/2026-09-17_NOISE_N01_PRODUCTION_INTAKE.md",
+    "LEARNING_QUEUE_N06_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_MULTISCALE_LOD_N06.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "runtimeIntegrationVerified": false
+  },
+  "completedThisRound": {
+    "id": "N02-4",
+    "topic": "psrdnoise period, derivative, wrapping and phase contract",
+    "state": "source-and-cpu-method-complete",
+    "evidence": [
+      "references/psrdnoise-contract-n07/SOURCE_LOCK.json",
+      "PROBES/psrdnoise_contract_result_n07.json",
+      "LEARNING_LOG/2026-09-17_PSRDNOISE_CONTRACT_N07.md"
+    ],
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "sequence": [
+    {
+      "id": "N02-5",
+      "topic": "erosion",
+      "question": "What extra state is necessary beyond noise to account for water and sediment transport?",
+      "doneWhen": "Limited conservative example with sources, sinks, storage, sediment and boundaries; inherit N01 and W01-W03 counterexamples and do not replace canonical terrain.",
+      "state": "next"
+    },
+    {
+      "id": "N02-6",
+      "topic": "modular shader",
+      "question": "Which small source-licensed function improves a current authorized surface task?",
+      "doneWhen": "Coordinate/state/optics separation, dependency/license record, targeted visual/runtime evidence.",
+      "state": "queued"
+    }
+  ],
+  "routes": [
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "Unknown", "actionThisRound": "no-repeat"},
+    {"mother": "Brick material", "entry": "HOUSE PR15", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Brick shape", "entry": "HOUSE PR17", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"},
+    {"mother": "Tiles/building", "entry": "HOUSE PR11", "receipt": "not-delivered", "actionThisRound": "entry-verified; prepared only"}
+  ],
+  "verificationReceipt": {
+    "implementationCommit": null,
+    "successfulReplayRun": null,
+    "artifactId": null,
+    "artifactName": "kaopu-psrdnoise-contract-n07",
+    "artifactDigest": null,
+    "evidenceIndependence": "A future CI replay and local replay share the same pinned source and probe design; CI will be a reproducibility receipt, not an independent runtime or physical Observation Root."
+  },
+  "nextGap": "N02-5 conservative erosion state beyond procedural noise"
+}

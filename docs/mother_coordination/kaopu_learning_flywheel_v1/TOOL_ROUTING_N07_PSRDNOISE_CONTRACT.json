@@ -1,0 +1,29 @@
+{
+  "id": "KAOPU-TOOL-ROUTING-N07-PSRDNOISE",
+  "status": "Candidate routing",
+  "sourceTool": {
+    "name": "stegu/psrdnoise 2-D GLSL",
+    "revision": "419175a270862ce7ae692038fafafb42ec0427e9",
+    "license": "MIT",
+    "role": "Pinned periodic noise and analytic spatial derivative reference"
+  },
+  "routes": [
+    {
+      "consumer": "seamless material field",
+      "candidateMethod": "choose integer x and even-integer y periods in the scaled sampling domain",
+      "requiredReceipt": ["source revision", "coordinate units", "frequency", "world period", "shader period", "seam value", "seam gradient"]
+    },
+    {
+      "consumer": "geometry or normal field",
+      "candidateMethod": "apply coordinate chain factors and composed warp Jacobians before deriving normals",
+      "requiredReceipt": ["analytic-vs-finite derivative", "world-space scale", "silhouette", "collision", "LOD", "target runtime"]
+    },
+    {
+      "consumer": "animated presentation",
+      "candidateMethod": "advance alpha in radians with explicit phase period; label as rotating-gradient animation",
+      "requiredReceipt": ["implementation identity", "radians-per-second", "loop duration", "temporal aliasing", "visual acceptance"]
+    }
+  ],
+  "prohibitedInference": ["alpha animation is material advection", "flow appearance proves fluid physics", "odd y input is its own period", "fractional period is automatically repaired", "legacy turn units equal current radians", "CPU semantic port proves GPU parity"],
+  "unknown": ["GLSL runtime precision", "WGSL/HLSL parity", "browser/iPhone performance", "Mother integration", "physical transport", "user acceptance"]
+}

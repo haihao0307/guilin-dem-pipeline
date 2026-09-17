@@ -1,0 +1,37 @@
+{
+  "id": "KAOPU-NOISE-N07-SOURCE-LOCK",
+  "primarySource": {
+    "repository": "stegu/psrdnoise",
+    "revision": "419175a270862ce7ae692038fafafb42ec0427e9",
+    "revisionDate": "2023-03-07",
+    "file": "src/psrdnoise2.glsl",
+    "blobSha": "7a5b50c21642a4bc972216f52dac4501341a3604",
+    "rawSha256": "3abb8a203480c79363677995f38c8ffeb1fd9d1eb941473a6f3c4a07532458a6",
+    "sourceVersionDate": "2021-12-02",
+    "license": "MIT",
+    "article": "Stefan Gustavson and Ian McEwan, Tiling simplex noise and flow noise in two and three dimensions, JCGT 11(1), 2022",
+    "articleUrl": "https://jcgt.org/published/0011/01/02/",
+    "articleBlobSha": "b66bc8e3c94340c376cdf3121e6b315a37215f9d"
+  },
+  "legacyComparison": {
+    "repository": "stegu/webgl-noise",
+    "revision": "22434e04d7753f7e949e8d724ab3da2864c17a0f",
+    "file": "src/psrdnoise2D.glsl",
+    "blobSha": "9d22b2c57682a03490a4f3fc5e66b3490679f17e",
+    "rawSha256": "e945bcbb4b2718f27bbb1093d585c099226fef459ea505957e6145713a220383",
+    "semanticDifference": "The 2016 rot parameter expresses full turns; the pinned 2021 alpha parameter is radians. They are not interchangeable."
+  },
+  "sourceObservations": [
+    "The 2-D field tiles for any positive integer x period and positive even integer y period.",
+    "An odd positive y period is accepted but the actual y repeat is twice that input.",
+    "A nonpositive period component independently disables wrapping on that axis.",
+    "Alpha rotates lattice gradients in radians; the function returns analytic spatial derivatives."
+  ],
+  "notEstablishedBySource": [
+    "material or mass advection",
+    "a physical fluid or erosion process",
+    "cross-language bitwise parity",
+    "GPU precision or performance",
+    "Mother integration or visual acceptance"
+  ]
+}

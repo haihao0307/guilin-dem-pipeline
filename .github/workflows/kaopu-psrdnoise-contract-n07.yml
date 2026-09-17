@@ -1,0 +1,59 @@
+name: KAOPU psrdnoise Contract N07
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/psrdnoise_contract_probe_n07.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/psrdnoise_contract_result_n07.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/psrdnoise-contract-n07/SOURCE_LOCK.json
+      - .github/workflows/kaopu-psrdnoise-contract-n07.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify pinned psrdnoise sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/stegu/psrdnoise/419175a270862ce7ae692038fafafb42ec0427e9/src/psrdnoise2.glsl -o /tmp/psrdnoise2.glsl
+          echo '3abb8a203480c79363677995f38c8ffeb1fd9d1eb941473a6f3c4a07532458a6  /tmp/psrdnoise2.glsl' | sha256sum --check --strict
+          curl -fsSL https://raw.githubusercontent.com/stegu/webgl-noise/22434e04d7753f7e949e8d724ab3da2864c17a0f/src/psrdnoise2D.glsl -o /tmp/psrdnoise2D-legacy.glsl
+          echo 'e945bcbb4b2718f27bbb1093d585c099226fef459ea505957e6145713a220383  /tmp/psrdnoise2D-legacy.glsl' | sha256sum --check --strict
+      - name: Check pinned source semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'any integer period' /tmp/psrdnoise2.glsl
+          grep -F 'any even integer period' /tmp/psrdnoise2.glsl
+          grep -F 'actual tiling period will be twice' /tmp/psrdnoise2.glsl
+          grep -F 'rotation (in radians)' /tmp/psrdnoise2.glsl
+          grep -F '1.0 is one full turn' /tmp/psrdnoise2D-legacy.glsl
+      - name: Build and run bounded CPU semantic probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O2 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/psrdnoise_contract_probe_n07.cpp -o /tmp/psrdnoise-contract-n07
+          /tmp/psrdnoise-contract-n07 /tmp/psrdnoise_contract_result_n07.json >/tmp/psrdnoise-contract-n07.log
+      - name: Check semantic result and deterministic replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.status == "pass" and .summary.checks == 15 and .summary.passed == 15 and .summary.failed == 0' /tmp/psrdnoise_contract_result_n07.json
+          diff -u docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/psrdnoise_contract_result_n07.json /tmp/psrdnoise_contract_result_n07.json
+      - name: Preserve replay artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-psrdnoise-contract-n07
+          path: |
+            /tmp/psrdnoise_contract_result_n07.json
+            /tmp/psrdnoise-contract-n07.log
+          if-no-files-found: error
