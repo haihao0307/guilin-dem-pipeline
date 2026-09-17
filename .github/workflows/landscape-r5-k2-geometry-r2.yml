@@ -90,7 +90,7 @@ jobs:
             return {label,config:cfg,microscopeGeometry:g,mainVertices:data.report.mainVertices,mainTriangles:data.report.mainTriangles,geometryGridM:data.report.geometryGridM};
           }
           const standard=run('standard');
-          const strong=run('strong',{geo:2.50,concavity:1.10,spikeGuard:1.0});
+          const strong=run('strong',{geo:2.40,concavity:1.10,spikeGuard:1.0});
           if(strong.microscopeGeometry.maxDisplacementM+1e-9<standard.microscopeGeometry.maxDisplacementM)throw Error('strong preset reduced geometry response');
           const out={schema:'LANDSCAPE_R5_K2_G2_RUNTIME_QA',date:'2026-09-17',variants:[standard,strong],geometryFieldCoupled:false,visualApproved:false,productionReady:false};
           fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r2/runtime-qa.json',JSON.stringify(out,null,2));
