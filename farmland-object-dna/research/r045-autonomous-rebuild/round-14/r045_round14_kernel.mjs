@@ -77,13 +77,14 @@ export const basinProfiles=[
 
 // Broad shoulder field.  ALL inherited drainage axes remain untouched, not only the three trunk
 // centre lines.  The two shoulders are intentionally unequal and their strength changes slowly
-// along the basin.  This adds catchment mass at 20..80 m scale without creating a new painted
-// stream, narrow berm, or camera-dependent detail layer.
+// along the basin.  The 10..42 m transition is deliberately broad: a narrow drainage exclusion
+// ring created a visible/quantifiable step when a tributary crossed the shoulder field.  This adds
+// catchment mass at 20..80 m scale without creating a new painted stream, berm, or detail layer.
 function basinOne(b,x,z){
   if(z<=-208||z>=-20)return 0;
   const q=nearestPath(b.path,x,z),sd=q.signed,u=q.u;
   if(q.d>92)return 0;
-  const drainageClear=S(10,20,R13.nearestExtendedDrainageDistance(x,z));
+  const drainageClear=S(10,42,R13.nearestExtendedDrainageDistance(x,z));
   const divideClear=.38+.62*S(4,15,R13.nearestDivideDistance(x,z));
   const longitudinal=S(.03,.16,u)*(1-S(.78,.98,u));
   const slow=.86+.14*Math.sin(Math.PI*2*u+b.phase);
@@ -141,7 +142,7 @@ export const snapshot={
   round14:{
     scope:'couple broad asymmetric interfluve shoulders to A/B/C trunk catchments before terrace generation',
     basinProfiles:basinProfiles.map(({id,amp,offset,width,bias,phase})=>({id,amp,offset,width,bias,phase})),
-    method:'deterministic basin-scale shoulder field; full inherited drainage network protected; slow longitudinal variation; foothill fade',
+    method:'deterministic basin-scale shoulder field; full inherited drainage network protected; broad 10..42 m blend; slow longitudinal variation; foothill fade',
     evidenceClass:'synthetic catchment morphology; not surveyed Yunnan terrain',
     forbiddenClaims:['surveyed cross-section','measured soil or sediment','active flow','regional terrace dimension','ownership']
   }
