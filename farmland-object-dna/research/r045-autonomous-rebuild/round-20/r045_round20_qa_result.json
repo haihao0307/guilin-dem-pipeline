@@ -1,0 +1,395 @@
+{
+  "version": "R045.20",
+  "passed": false,
+  "gateCount": 26,
+  "passedCount": 22,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.20",
+      "limit": "R045.20"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric water graph identity"
+    },
+    {
+      "name": "terrain_carriers_planimetry_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "r18_headwater_profile_definitions_preserved",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
+          "centerShift": -14
+        },
+        {
+          "id": "B",
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "centerShift": 24
+        },
+        {
+          "id": "C",
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
+          "centerShift": 8
+        }
+      ],
+      "limit": "exact R18 source-footprint definitions"
+    },
+    {
+      "name": "repair_is_substantive_for_multi_metre_debt",
+      "pass": true,
+      "value": {
+        "max": 3.6,
+        "mean": 0.08615125276188594,
+        "n": 1998,
+        "at": [
+          -52,
+          -198
+        ]
+      },
+      "limit": "1 m < max correction <= 3.601 m; large correction is expected when cancelling inherited multi-metre wall"
+    },
+    {
+      "name": "repair_remains_spatially_bounded",
+      "pass": true,
+      "value": 0.08615125276188594,
+      "limit": "mean absolute correction <0.28 m over audit band"
+    },
+    {
+      "name": "repair_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside z=-226..-170"
+    },
+    {
+      "name": "lower_agricultural_slope_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled height change at z>=-168"
+    },
+    {
+      "name": "terrace_permission_exactly_inherited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero permission difference"
+    },
+    {
+      "name": "front_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "repair_is_band_wide_not_single_row_patch",
+      "pass": true,
+      "value": {
+        "activeRows": 21,
+        "zMin": -224,
+        "zMax": -172
+      },
+      "limit": ">=12 z rows with >0.02 m repair"
+    },
+    {
+      "name": "r18_inherited_wall_debt_is_real",
+      "pass": true,
+      "value": {
+        "oldWall": {
+          "z": -202,
+          "count": 16,
+          "eligible": 42,
+          "fraction": 0.38095238095238093,
+          "maxRise": 5.208189863691601,
+          "at": 135,
+          "maxContiguousSpan": 50,
+          "total": 294,
+          "threshold": 0.55
+        }
+      },
+      "limit": "R18 worst interior fraction >0.15 and max rise >1 m/4 m"
+    },
+    {
+      "name": "final_terrain_wall_fraction_is_removed",
+      "pass": false,
+      "value": {
+        "oldWall": {
+          "z": -202,
+          "count": 16,
+          "eligible": 42,
+          "fraction": 0.38095238095238093,
+          "maxRise": 5.208189863691601,
+          "at": 135,
+          "maxContiguousSpan": 50,
+          "total": 294,
+          "threshold": 0.55
+        },
+        "newWall": {
+          "z": -202,
+          "count": 2,
+          "eligible": 42,
+          "fraction": 0.047619047619047616,
+          "maxRise": 3.092984850130293,
+          "at": 135,
+          "maxContiguousSpan": 10,
+          "total": 294,
+          "threshold": 0.55
+        }
+      },
+      "limit": "R20 interior worst fraction = 0 at 0.55 m/4 m gate"
+    },
+    {
+      "name": "final_terrain_uphill_step_is_bounded",
+      "pass": false,
+      "value": {
+        "old": 5.208189863691601,
+        "new": 3.092984850130293,
+        "at": [
+          135,
+          -202
+        ]
+      },
+      "limit": "R20 max interior 4 m uphill rise <=0.50 m"
+    },
+    {
+      "name": "contiguous_upper_wall_span_removed",
+      "pass": false,
+      "value": {
+        "old": 50,
+        "new": 10
+      },
+      "limit": "zero contiguous failing span"
+    },
+    {
+      "name": "entry_exit_ramps_do_not_create_new_large_uphill_barrier",
+      "pass": false,
+      "value": {
+        "rampMax": 3.092984850130293,
+        "at": [
+          135,
+          -202
+        ]
+      },
+      "limit": "<1.25 m uphill rise per 4 m across the full repair band"
+    },
+    {
+      "name": "source_footprint_functions_remain_present",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "sourcePeak": 0.2921014990098049,
+          "at": [
+            -106,
+            -196
+          ],
+          "r20Correction": 0
+        },
+        {
+          "id": "B",
+          "sourcePeak": 0.3054079671081466,
+          "at": [
+            -114,
+            -192
+          ],
+          "r20Correction": 0
+        },
+        {
+          "id": "C",
+          "sourcePeak": 0.35811349352719996,
+          "at": [
+            182,
+            -192
+          ],
+          "r20Correction": 0
+        }
+      ],
+      "limit": "all inherited A/B/C source components remain non-zero at their own peaks"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6837247695906252,
+      "limit": ">0.04; geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "failed_r19_logic_is_explicitly_corrected",
+      "pass": true,
+      "value": "R19 incorrectly constrained the derivative and amplitude of the correction field even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates the repaired terrain instead",
+      "limit": "final terrain, not correction derivative, is acceptance object"
+    },
+    {
+      "name": "references_are_not_metric_truth",
+      "pass": true,
+      "value": "user references and MrRolord hierarchy are used only to require continuous source-to-slope morphology and drainage-first landform logic; no dimensions are extracted",
+      "limit": "visual/method hierarchy only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed upper-slope section",
+        "measured channel section",
+        "active flow",
+        "regional terrace dimensions",
+        "field microtopography truth",
+        "soil/sediment property",
+        "ownership"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 3.6,
+      "mean": 0.08615125276188594,
+      "n": 1998,
+      "at": [
+        -52,
+        -198
+      ]
+    },
+    "activeZ": [
+      -224,
+      -220,
+      -218,
+      -216,
+      -214,
+      -212,
+      -210,
+      -208,
+      -206,
+      -204,
+      -202,
+      -200,
+      -198,
+      -196,
+      -194,
+      -182,
+      -180,
+      -178,
+      -176,
+      -174,
+      -172
+    ],
+    "oldWall": {
+      "z": -202,
+      "count": 16,
+      "eligible": 42,
+      "fraction": 0.38095238095238093,
+      "maxRise": 5.208189863691601,
+      "at": 135,
+      "maxContiguousSpan": 50,
+      "total": 294,
+      "threshold": 0.55
+    },
+    "newWall": {
+      "z": -202,
+      "count": 2,
+      "eligible": 42,
+      "fraction": 0.047619047619047616,
+      "maxRise": 3.092984850130293,
+      "at": 135,
+      "maxContiguousSpan": 10,
+      "total": 294,
+      "threshold": 0.55
+    },
+    "ramp": {
+      "maxRise": 3.092984850130293,
+      "at": [
+        135,
+        -202
+      ]
+    },
+    "outside": 0,
+    "lower": 0,
+    "receiver": 0,
+    "permissionDiff": 0,
+    "peakRepair": [
+      {
+        "id": "A",
+        "sourcePeak": 0.2921014990098049,
+        "at": [
+          -106,
+          -196
+        ],
+        "r20Correction": 0
+      },
+      {
+        "id": "B",
+        "sourcePeak": 0.3054079671081466,
+        "at": [
+          -114,
+          -192
+        ],
+        "r20Correction": 0
+      },
+      {
+        "id": "C",
+        "sourcePeak": 0.35811349352719996,
+        "at": [
+          182,
+          -192
+        ],
+        "r20Correction": 0
+      }
+    ],
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6837247695906252
+  }
+}

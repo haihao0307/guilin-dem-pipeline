@@ -1,0 +1,178 @@
+{
+  "version": "R045.20",
+  "passed": false,
+  "passedCount": 22,
+  "gateCount": 26,
+  "failed": [
+    {
+      "name": "final_terrain_wall_fraction_is_removed",
+      "pass": false,
+      "value": {
+        "oldWall": {
+          "z": -202,
+          "count": 16,
+          "eligible": 42,
+          "fraction": 0.38095238095238093,
+          "maxRise": 5.208189863691601,
+          "at": 135,
+          "maxContiguousSpan": 50,
+          "total": 294,
+          "threshold": 0.55
+        },
+        "newWall": {
+          "z": -202,
+          "count": 2,
+          "eligible": 42,
+          "fraction": 0.047619047619047616,
+          "maxRise": 3.092984850130293,
+          "at": 135,
+          "maxContiguousSpan": 10,
+          "total": 294,
+          "threshold": 0.55
+        }
+      },
+      "limit": "R20 interior worst fraction = 0 at 0.55 m/4 m gate"
+    },
+    {
+      "name": "final_terrain_uphill_step_is_bounded",
+      "pass": false,
+      "value": {
+        "old": 5.208189863691601,
+        "new": 3.092984850130293,
+        "at": [
+          135,
+          -202
+        ]
+      },
+      "limit": "R20 max interior 4 m uphill rise <=0.50 m"
+    },
+    {
+      "name": "contiguous_upper_wall_span_removed",
+      "pass": false,
+      "value": {
+        "old": 50,
+        "new": 10
+      },
+      "limit": "zero contiguous failing span"
+    },
+    {
+      "name": "entry_exit_ramps_do_not_create_new_large_uphill_barrier",
+      "pass": false,
+      "value": {
+        "rampMax": 3.092984850130293,
+        "at": [
+          135,
+          -202
+        ]
+      },
+      "limit": "<1.25 m uphill rise per 4 m across the full repair band"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 527049,
+    "passed": true
+  },
+  "metrics": {
+    "delta": {
+      "max": 3.6,
+      "mean": 0.08615125276188594,
+      "n": 1998,
+      "at": [
+        -52,
+        -198
+      ]
+    },
+    "activeZ": [
+      -224,
+      -220,
+      -218,
+      -216,
+      -214,
+      -212,
+      -210,
+      -208,
+      -206,
+      -204,
+      -202,
+      -200,
+      -198,
+      -196,
+      -194,
+      -182,
+      -180,
+      -178,
+      -176,
+      -174,
+      -172
+    ],
+    "oldWall": {
+      "z": -202,
+      "count": 16,
+      "eligible": 42,
+      "fraction": 0.38095238095238093,
+      "maxRise": 5.208189863691601,
+      "at": 135,
+      "maxContiguousSpan": 50,
+      "total": 294,
+      "threshold": 0.55
+    },
+    "newWall": {
+      "z": -202,
+      "count": 2,
+      "eligible": 42,
+      "fraction": 0.047619047619047616,
+      "maxRise": 3.092984850130293,
+      "at": 135,
+      "maxContiguousSpan": 10,
+      "total": 294,
+      "threshold": 0.55
+    },
+    "ramp": {
+      "maxRise": 3.092984850130293,
+      "at": [
+        135,
+        -202
+      ]
+    },
+    "outside": 0,
+    "lower": 0,
+    "receiver": 0,
+    "permissionDiff": 0,
+    "peakRepair": [
+      {
+        "id": "A",
+        "sourcePeak": 0.2921014990098049,
+        "at": [
+          -106,
+          -196
+        ],
+        "r20Correction": 0
+      },
+      {
+        "id": "B",
+        "sourcePeak": 0.3054079671081466,
+        "at": [
+          -114,
+          -192
+        ],
+        "r20Correction": 0
+      },
+      {
+        "id": "C",
+        "sourcePeak": 0.35811349352719996,
+        "at": [
+          182,
+          -192
+        ],
+        "r20Correction": 0
+      }
+    ],
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6837247695906252
+  }
+}
