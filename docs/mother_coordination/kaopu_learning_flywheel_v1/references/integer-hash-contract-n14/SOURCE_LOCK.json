@@ -1,0 +1,34 @@
+{
+  "id": "KAOPU-N14-INTEGER-HASH-SOURCE-LOCK",
+  "lockedAt": "2026-09-18T05:40:00+08:00",
+  "sources": [
+    {
+      "authority": "Khronos Group",
+      "title": "The OpenGL ES Shading Language, Version 3.00.6",
+      "url": "https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf",
+      "status": "official specification",
+      "relevantContract": [
+        "highp signed integers are 32-bit two's-complement",
+        "integer operations wrap to the low n bits on overflow or underflow",
+        "int/uint conversions preserve the bit pattern",
+        "signed right shift sign-extends and unsigned right shift zero-fills",
+        "negative or out-of-range shift counts are undefined"
+      ]
+    },
+    {
+      "authority": "W3C GPU for the Web Working Group",
+      "title": "WebGPU Shading Language, Candidate Recommendation Draft 15 September 2026",
+      "url": "https://www.w3.org/TR/WGSL/",
+      "status": "official Candidate Recommendation Draft",
+      "relevantContract": [
+        "i32 and u32 are concrete 32-bit integer types",
+        "i32 uses two's-complement representation",
+        "concrete integer overflow is modulo 2^bitwidth",
+        "runtime shift counts are reduced modulo the bit width",
+        "constant and override shift counts at or above the bit width are errors",
+        "bitcast reinterprets the underlying bit representation"
+      ]
+    }
+  ],
+  "scope": "language semantics only; not runtime, statistical quality, collision resistance or production adoption evidence"
+}
