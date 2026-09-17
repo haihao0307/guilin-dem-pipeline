@@ -19,17 +19,16 @@ if(window.__WENZHOU_HISTORY_1942===true){
   const canvas=document.getElementById('terrain');
   const started=performance.now();
   while(canvas&&(canvas.dataset.ready!=='true'||!canvas.dataset.osmPatch)){
-    if(performance.now()-started>45000)throw Error('1953 历史控制层等待基础地图稳定超时');
+    if(performance.now()-started>45000)throw Error('1940s Map Mother 等待基础地图稳定超时');
     await new Promise(resolve=>setTimeout(resolve,50));
   }
   const {installHistorical1953ControlLayer}=await import('./history-1953-control-layer.js');
-  const {installHistory1942CoastRefinementV3}=await import('./history-1942-coast-refinement-v3.js');
-  const {installHistory1942CoastRefinementV4}=await import('./history-1942-coast-refinement-v4.js');
   const {installHistory1942CoastRefinementV5}=await import('./history-1942-coast-refinement-v5.js');
-  installHistorical1953ControlLayer();
-  installHistory1942CoastRefinementV3();
-  installHistory1942CoastRefinementV4();
+  // V5 subscribes first so it receives canonical terrain identity before the
+  // lightweight historical coordinator publishes the epoch-ready signal.
   installHistory1942CoastRefinementV5();
+  installHistorical1953ControlLayer();
+  document.documentElement.dataset.wenzhouHistoricalCoastRuntime='v5-only';
   await new Promise(resolve=>requestAnimationFrame(resolve));
   const location=document.getElementById('location');
   if(location)location.dispatchEvent(new Event('change',{bubbles:true}));
