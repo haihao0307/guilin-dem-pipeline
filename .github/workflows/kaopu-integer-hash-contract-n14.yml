@@ -1,0 +1,64 @@
+name: KAOPU integer hash contract N14
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_integer_hash_contract_n14.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/integer_hash_contract_result_n14.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/integer_hash_runtime_n14.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_integer_hash_runtime_n14.py
+      - .github/workflows/kaopu-integer-hash-contract-n14.yml
+
+permissions:
+  contents: read
+
+jobs:
+  portable-hash-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replay CPU u32 reference and counterexamples
+        run: |
+          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_integer_hash_contract_n14.py > /tmp/n14-cpu.json
+          git diff --exit-code -- docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/integer_hash_contract_result_n14.json
+          jq -e '.summary.status == "pass" and .summary.checks == 11' /tmp/n14-cpu.json
+      - name: Locate runner Chrome
+        id: chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          "$chrome" --version
+          echo "path=$chrome" >> "$GITHUB_OUTPUT"
+      - name: Execute GLSL ES and WGSL vectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES"
+          python3 -m http.server 8765 --directory "$root" >/tmp/n14-server.log 2>&1 &
+          server=$!
+          trap 'kill $server || true' EXIT
+          timeout 90 "${{ steps.chrome.outputs.path }}" \
+            --headless=new --no-sandbox --disable-dev-shm-usage \
+            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
+            --use-angle=swiftshader --enable-unsafe-webgpu \
+            --enable-features=Vulkan,UseSkiaRenderer \
+            --virtual-time-budget=15000 --dump-dom \
+            http://127.0.0.1:8765/integer_hash_runtime_n14.html > /tmp/n14-dom.html
+          python3 "$root/extract_integer_hash_runtime_n14.py" \
+            /tmp/n14-dom.html "$root/integer_hash_contract_result_n14.json" /tmp/integer_hash_runtime_result_n14.json
+          jq -e '.summary.status == "pass" and .summary.checks == 9' /tmp/integer_hash_runtime_result_n14.json
+      - name: Preserve bounded evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-integer-hash-contract-n14
+          path: |
+            /tmp/n14-cpu.json
+            /tmp/n14-dom.html
+            /tmp/integer_hash_runtime_result_n14.json
+          if-no-files-found: error
