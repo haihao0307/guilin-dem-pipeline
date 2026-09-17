@@ -49,5 +49,8 @@ export function installHistorical1953ControlLayer(){
       canvas.dataset.history1940sCoordinator='v1';
     }
     window.dispatchEvent(new CustomEvent('wenzhou:map-mother-1940s-ready',{detail:state}));
+    // Compatibility signal only: no V4 module is installed. V5 still consumes
+    // this historic event name until its listener is renamed in a later cleanup.
+    window.dispatchEvent(new CustomEvent('wenzhou:map-mother-1940s-refined-v4',{detail:{...state,compatibilitySignalOnly:true}}));
   });
 }
