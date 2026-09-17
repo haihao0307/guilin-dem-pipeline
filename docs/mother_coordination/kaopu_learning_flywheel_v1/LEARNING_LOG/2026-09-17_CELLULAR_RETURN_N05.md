@@ -19,7 +19,7 @@ Source receipt: [`SOURCE_LOCK.json`](../references/cellular-return-n05/SOURCE_LO
 
 ## Observation
 
-All 15 predeclared CPU checks passed. A second local run matched every non-timing field.
+All 15 predeclared CPU checks passed. A second local run matched every non-timing field. [GitHub Actions run 35179695477](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35179695477) then fetched the raw pinned header, verified its checksum, rebuilt the probe and reproduced all deterministic fields. Artifact `kaopu-cellular-return-n05` has digest `sha256:e67d0a385d086a2bd97c6007fc35af3aa8e5fe69dbc84b4b97dad54b4e8c21ab`.
 
 - `CellValue` is a closest-cell identity value. Across refined boundaries its fine/coarse jump ratio was exactly `1.0`; shrinking the offset did not shrink the value cliff. Its numerical gradient was zero at `99.106%` of grid samples but reached `583.97` at sampled cliffs.
 - `F1-1` was value-continuous: the fine/coarse cross-boundary difference ratio was `0.2499`. Its median gradient-vector change across boundaries was `1.772`, so continuous height does not imply a continuous normal.
