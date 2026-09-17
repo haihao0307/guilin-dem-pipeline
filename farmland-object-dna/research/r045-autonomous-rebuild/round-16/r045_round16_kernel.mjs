@@ -93,13 +93,14 @@ export const catchmentHierarchyProfiles=R15.basinProfiles.map((b,i)=>({
 }));
 
 export function catchmentHierarchyComponent(p,x,z){
-  // Keep the rear ridge/control area and the R15 foothill/plain field intact.  The hierarchy ends
-  // before the lower outlet apron becomes dominant so the two fields overlap only through smooth
-  // envelopes, not a hard category boundary.
-  if(z<=-218||z>=-34)return 0;
+  // Keep the rear ridge/control area and the R15 foothill/plain field intact. The first draft used
+  // an 18 m source-side fade and produced a measurable artificial shoulder at z≈-208. Widening the
+  // envelope is a geometry correction, not a relaxed QA threshold: source morphology now enters over
+  // 46 m and exits over 42 m, while z<=-220 and the lower R15 foothill/plain controls stay untouched.
+  if(z<=-220||z>=-34)return 0;
   const q=nearestPath(p.path,x,z),u=q.u,sd=q.signed;
   if(q.d>118)return 0;
-  const env=S(-218,-200,z)*(1-S(-60,-34,z));
+  const env=S(-220,-174,z)*(1-S(-76,-34,z));
   if(env<=0)return 0;
 
   // Protect the complete inherited drainage skeleton.  The 12..42 m ramp is deliberately broad;
@@ -175,7 +176,7 @@ export const snapshot={
   waterStateKnown:false,
   round16:{
     scope:'couple source amphitheatre, convergence shoulders and transport context into one A/B/C basin hierarchy before terrace generation',
-    method:'broad deterministic carrier-tied hierarchy field; complete inherited drainage skeleton protected; R15 foothill/plain field retained; no new water graph',
+    method:'broad deterministic carrier-tied hierarchy field with 46 m source entry and 42 m lower fade; complete inherited drainage skeleton protected; R15 foothill/plain field retained; no new water graph',
     referenceUse:'user terrace photographs constrain hierarchy/continuity/irregular nesting only; no metric extraction',
     evidenceClass:'synthetic catchment-scale morphology; not surveyed Yunnan terrain',
     forbiddenClaims:['surveyed catchment geometry','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
