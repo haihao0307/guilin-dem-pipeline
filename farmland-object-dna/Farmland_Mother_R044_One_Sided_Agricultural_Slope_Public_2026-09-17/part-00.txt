@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Farmland Mother R044 · One-Sided Agricultural Slope</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#9fc4d0;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#f5f7eb}canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:fixed;z-index:5}.title{left:15px;top:15px;padding:11px 14px;border-radius:14px;background:#10362ddd;border:1px solid #edf4df2b;backdrop-filter:blur(10px);box-shadow:0 12px 36px #0b2a2444;max-width:650px}.title b{font-size:12px;letter-spacing:.14em}.title h1{font:500 21px serif;margin:5px 0 2px}.title span{font-size:10px;color:#d5e2cf}.nav{left:50%;bottom:15px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border-radius:30px;background:#102f27e7;border:1px solid #fff2;backdrop-filter:blur(10px)}button{border:0;border-radius:20px;padding:9px 13px;background:transparent;color:#eef3e6;font-size:12px;cursor:pointer;white-space:nowrap}button.on,button:hover,button[aria-pressed=true]{background:#e1e9c0;color:#18342a}.panel{right:15px;bottom:15px;max-width:380px;padding:10px 12px;border-radius:13px;background:#12382fdd;border:1px solid #edf4df22;font-size:10px;line-height:1.55}.panel b{color:#eaf2bc}.stats{margin-top:6px;color:#d5e3d1}.badge{right:15px;top:15px;padding:8px 10px;border-radius:20px;background:#13372ecc;font-size:9px;letter-spacing:.1em}.fail{display:none;position:fixed;z-index:20;inset:18%;padding:24px;border-radius:16px;background:#17382ff0}.fail.show{display:block}@media(max-width:760px){.title{left:10px;right:10px;top:10px}.title span,.badge,.panel{display:none}.nav{left:8px;right:8px;transform:none;overflow-x:auto;bottom:8px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"}}</script>
+</head>
+<body>
+<div class="hud title"><b>FARMLAND MOTHER · R044</b><h1>后山 → 单面大坡 → 梯田 → 平坝 → 前景河</h1><span>只学习 MrRolord 的“水系先行与场图”方法，不复制双侧河谷构图。所有田、水、路、人、牛共享同一地形。</span></div>
+<div class="hud badge">ONE-SIDED SLOPE · HYDROLOGY-FIRST</div>
+<div class="hud nav"><button data-v="overview" class="on">长景总览</button><button data-v="slope">单面大坡</button><button data-v="terraces">梯田关系</button><button data-v="plain">平坝田块</button><button data-v="water">完整水系</button><button data-v="labor">农人水牛</button><button id="waterToggle" aria-pressed="true">水网开</button></div>
+<div class="hud panel"><b>固定空间关系：</b>后方高山与水源林 → 一块朝前下降的主坡 → 坡上梯田 → 坡脚汇水 → 前方平坝水田 → 最前方河道。<div class="stats" id="stats">正在构建单侧农业坡工作台…</div></div>
+<div id="fail" class="fail">三维场景没有正常启动。</div>
+<script>
+(function install(root){
+'use strict';
+
+const VERSION='FARMLAND_R044_ONE_SIDED_SLOPE_20260917';
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const mix=(a,b,t)=>a+(b-a)*t;
+function sm(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+function hash(x,z){const v=Math.sin(x*127.1+z*311.7)*43758.5453123;return v-Math.floor(v);}
+function noise(x,z){const i=Math.floor(x),j=Math.floor(z),u=sm(0,1,x-i),v=sm(0,1,z-j);return mix(mix(hash(i,j),hash(i+1,j),u),mix(hash(i,j+1),hash(i+1,j+1),u),v);}
+function rng(seed=440917){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const R=rng();
+function multiscale(x,z,levels=5,base=.0048,phase=0){let s=0,a=.5,n=0;for(let i=0;i<levels;i++){const k=2**i;s+=a*(noise((x+.13*z)*base*k+phase*11.3,(z-.08*x)*base*k-phase*7.1)-.5)*2;n+=a;a*=.5;}return s/(n||1);}
+function microscope(x,z,levels=5,base=.005,phase=0){let u=(x+.17*z)*base+phase,v=(z-.09*x)*base*1.08-phase*.7,w=(x+z)*base*.63+phase*1.3,s=0,a=1,n=0;for(let i=0;i<levels;i++){const k=2**i,c=Math.cos(Math.cos(w*k)*Math.cos(u*k)+Math.cos(v*k)**2+Math.cos(v*k)*Math.cos(u*k));s+=a*c;n+=a;a*=.5;}return s/(n||1);}
+
+function signedArea(poly){let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p[0]*q[1]-q[0]*p[1];}return a*.5;}
+function area(poly){return Math.abs(signedArea(poly));}
+function centroid(poly){let a=0,cx=0,cz=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],c=p[0]*q[1]-q[0]*p[1];a+=c;cx+=(p[0]+q[0])*c;cz+=(p[1]+q[1])*c;}a*=.5;if(Math.abs(a)<1e-9)return poly.reduce((s,p)=>[s[0]+p[0]/poly.length,s[1]+p[1]/poly.length],[0,0]);return[cx/(6*a),cz/(6*a)];}
+function bbox(poly){let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity;for(const p of poly){minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);minz=Math.min(minz,p[1]);maxz=Math.max(maxz,p[1]);}return{minx,maxx,minz,maxz,w:maxx-minx,h:maxz-minz};}
+function pointInPoly(x,z,p){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const xi=p[i][0],zi=p[i][1],xj=p[j][0],zj=p[j][1];if(((zi>z)!=(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi+1e-12)+xi))c=!c;}return c;}
+function dedupe(poly,eps=1e-7){const out=[];for(const p of poly){const q=out.at(-1);if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>eps)out.push(p);}if(out.length>2&&Math.hypot(out[0][0]-out.at(-1)[0],out[0][1]-out.at(-1)[1])<eps)out.pop();return out;}
+function dseg(px,pz,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],den=dx*dx+dz*dz||1,t=clamp(((px-a[0])*dx+(pz-a[1])*dz)/den,0,1),x=mix(a[0],b[0],t),z=mix(a[1],b[1],t);return{d:Math.hypot(px-x,pz-z),t,x,z};}
+function polylineLength(p){let n=0;for(let i=0;i<p.length-1;i++)n+=Math.hypot(p[i+1][0]-p[i][0],p[i+1][1]-p[i][1]);return n;}
+function samplePolyline(p,t){const total=polylineLength(p);let d=clamp(t,0,1)*total;for(let i=0;i<p.length-1;i++){const l=Math.hypot(p[i+1][0]-p[i][0],p[i+1][1]-p[i][1]);if(d<=l||i===p.length-2){const f=l?d/l:0;return[mix(p[i][0],p[i+1][0],f),mix(p[i][1],p[i+1][1],f)];}d-=l;}return p.at(-1).slice();}
+function polyProjection(x,z,p){const lens=[];let total=0;for(let i=0;i<p.length-1;i++){const l=Math.hypot(p[i+1][0]-p[i][0],p[i+1][1]-p[i][1]);lens.push(l);total+=l;}let best={d:Infinity,t:0,x:0,z:0,along:0,total},acc=0;for(let i=0;i<p.length-1;i++){const q=dseg(x,z,p[i],p[i+1]);if(q.d<best.d)best={...q,along:acc+q.t*lens[i],total};acc+=lens[i];}best.s=total?best.along/total:0;return best;}
+function nearestBoundaryPoint(poly,target){let best={d:Infinity,x:0,z:0};for(let i=0;i<poly.length;i++){const q=dseg(target[0],target[1],poly[i],poly[(i+1)%poly.length]);if(q.d<best.d)best=q;}return[best.x,best.z];}
+
+function boundsOf(poly){let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;for(const p of poly){minX=Math.min(minX,p[0]);minZ=Math.min(minZ,p[1]);maxX=Math.max(maxX,p[0]);maxZ=Math.max(maxZ,p[1]);}return{minX,minZ,maxX,maxZ};}
+function buildFieldIndex(fields,cell=24){const map=new Map();for(const f of fields){f.bounds=boundsOf(f.poly);const x0=Math.floor(f.bounds.minX/cell),x1=Math.floor(f.bounds.maxX/cell),z0=Math.floor(f.bounds.minZ/cell),z1=Math.floor(f.bounds.maxZ/cell);for(let ix=x0;ix<=x1;ix++)for(let iz=z0;iz<=z1;iz++){const k=`${ix}:${iz}`;if(!map.has(k))map.set(k,[]);map.get(k).push(f);}}return{map,cell};}
+function lookupField(index,x,z){const list=index.map.get(`${Math.floor(x/index.cell)}:${Math.floor(z/index.cell)}`)||[];for(const f of list){const b=f.bounds;if(x<b.minX||x>b.maxX||z<b.minZ||z>b.maxZ)continue;if(pointInPoly(x,z,f.poly))return f;}return null;}
+function clipHalfPlane(poly,nx,nz,c,keepLess){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c,ina=keepLess?fa<=1e-9:fa>=-1e-9,inb=keepLess?fb<=1e-9:fb>=-1e-9;if(ina)out.push(a);if(ina!==inb){const t=fa/(fa-fb);out.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}return dedupe(out);}
+function lineSegmentInPoly(poly,nx,nz,c){const hits=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],fa=nx*a[0]+nz*a[1]-c,fb=nx*b[0]+nz*b[1]-c;if(Math.abs(fa)<1e-8)hits.push(a);if(fa*fb<0){const t=fa/(fa-fb);hits.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);}}const uniq=[];for(const h of hits)if(!uniq.some(q=>Math.hypot(q[0]-h[0],q[1]-h[1])<1e-6))uniq.push(h);if(uniq.length<2)return null;let best=[uniq[0],uniq[1]],dist=0;for(let i=0;i<uniq.length;i++)for(let j=i+1;j<uniq.length;j++){const d=Math.hypot(uniq[i][0]-uniq[j][0],uniq[i][1]-uniq[j][1]);if(d>dist){dist=d;best=[uniq[i],uniq[j]];}}return best;}
+
+// ---------------------------------------------------------------------------
+// 1. FIXED ONE-SIDED COMPOSITION
+// rear mountain -> one forward slope -> foothill -> broad plain -> front river
+// ---------------------------------------------------------------------------
+const peaks=[[-205,-252,65,48,45],[-158,-270,87,56,51],[-98,-247,73,50,46],[-25,-281,103,64,58],[55,-258,84,57,50],[121,-276,91,61,54],[188,-249,68,51,46],[-205,-184,48,43,40],[182,-185,49,44,40]];
+function peakField(x,z){let h=0;for(let i=0;i<peaks.length;i++){const[cx,cz,H,rx,rz]=peaks[i],dx=(x-cx)/rx,dz=(z-cz)/rz,theta=Math.atan2(dz,dx),warp=1+.12*Math.sin(theta*3+i*.7)+.05*Math.sin(theta*7-i*.4),rr=Math.hypot(dx,dz)/warp;if(rr<1.55){const core=Math.pow(Math.max(0,1-Math.pow(rr,1.58)),.57),rib=.82+.18*Math.abs(multiscale(x+i*13,z-i*11,3,.014));h=Math.max(h,H*core*rib);}}return h;}
+const springLines=[
+ {id:'S0',order:3,p:[[-118,-244],[-111,-218],[-107,-191],[-111,-162],[-106,-132]]},
+ {id:'S1',order:2,p:[[8,-256],[12,-226],[18,-194],[14,-165],[20,-134]]},
+ {id:'S2',order:2,p:[[128,-239],[120,-212],[126,-184],[119,-158],[124,-130]]}
+];
+function frontRiverZ(x){return 161+7.5*Math.sin((x+22)*.021)+3.4*Math.sin(x*.057);}
+function frontWaterY(x){return -.55-.05*Math.sin(x*.019);}
+function riverHalfWidth(x){return 8.5+1.7*Math.sin((x+35)*.024);}
+function baseSlopeHeight(x,z){
+  if(z>=25){const plain=.92-.0062*(z-25)+.09*Math.sin(x*.012)+.05*multiscale(x,z,3,.01);return plain;}
+  const t=1-sm(-168,22,z); // 1 at rear slope, 0 at foothill
+  let y=1.0+31*Math.pow(t,1.18);
+  y+=3.8*Math.exp(-Math.pow((x+18)/175,2))*Math.pow(t,.85);
+  y+=
