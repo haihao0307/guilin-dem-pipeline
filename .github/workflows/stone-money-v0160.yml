@@ -4,10 +4,8 @@ on:
     branches: [work/stone-money-island-v0160-original-ocean-20260917]
     paths:
       - .github/workflows/stone-money-v0160.yml
-      - games/survivor-palau/source/v0160/build.py
+      - games/survivor-palau/source/v0160/*.py
       - games/survivor-palau/source/v0160/bridge.js
-      - games/survivor-palau/source/v0160/world_patch.py
-      - games/survivor-palau/source/v0160/verify.py
 permissions:
   contents: write
 concurrency:
@@ -21,37 +19,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: work/stone-money-island-v0160-original-ocean-20260917
-      - name: Materialize original resource strings without alteration
+      - name: Build from frozen source and readable integration source
         run: |
-          python - <<'PY'
-          import pathlib,json,hashlib,gzip,base64,textwrap
-          p=pathlib.Path('games/survivor-palau/source/v0160/frozen')
-          text=(p/'original-script-1.js').read_text()
-          resources,_=json.JSONDecoder().raw_decode(text.split('const __OM_TEXT__=',1)[1])
-          receipt={}
-          for name,source in resources.items():
-              file=p/'resources'/name;file.parent.mkdir(parents=True,exist_ok=True)
-              file.write_text(source,encoding='utf-8')
-              receipt[name]={'bytes':len(source.encode()),'sha256':hashlib.sha256(source.encode()).hexdigest()}
-          (p/'RESOURCES.json').write_text(json.dumps(receipt,indent=2)+'\n')
-          print(json.dumps(receipt,indent=2))
-          PY
-      - name: Build integration when source is present
+          python games/survivor-palau/source/v0160/build.py
+          python games/survivor-palau/source/v0160/integration_checks.py
+      - name: Run real-browser desktop and mobile diagnostics
         run: |
-          if [ -f games/survivor-palau/source/v0160/build.py ]; then python games/survivor-palau/source/v0160/build.py; fi
-      - name: Install real-browser verification when ready
-        run: |
-          if [ -f games/survivor-palau/source/v0160/verify.py ]; then
-            python -m pip install playwright pillow
-            python -m playwright install --with-deps chromium
-            python games/survivor-palau/source/v0160/verify.py
-          fi
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          python games/survivor-palau/source/v0160/verify.py
       - name: Commit only game integration outputs
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add games/survivor-palau
-          git diff --cached --quiet || git commit -m 'build(stone-money): materialize original ocean and verified integration candidate'
+          git diff --cached --quiet || git commit -m 'build(stone-money): record original ocean integration and actual browser results'
           git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
       - uses: actions/upload-artifact@v4
         if: always()
@@ -59,5 +41,6 @@ jobs:
           name: stone-money-v0160-build-and-qa
           path: |
             games/survivor-palau/releases/v0.1.6.0/
+            games/survivor-palau/source/v0160/
             /tmp/stone-money-qa/
-          if-no-files-found: ignore
+          if-no-files-found: error
