@@ -1,0 +1,44 @@
+name: Stone Money source correction
+on:
+  push:
+    branches: [work/stone-money-island-v0160-original-ocean-20260917]
+    paths: [.github/workflows/stone-money-v0160-source-fix.yml]
+permissions:
+  contents: write
+concurrency:
+  group: stone-money-v0160
+  cancel-in-progress: false
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0160-original-ocean-20260917
+      - name: Correct only the integration builder, not the frozen renderer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('games/survivor-palau/source/v0160/build.py')
+          s=p.read_text()
+          old='c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.'
+          assert s.count(old)==1
+          p.write_text(s.replace(old,'c=clamp(c,0.,1.);'))
+          PY
+      - name: Commit corrected readable source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/source/v0160/build.py
+          git commit -m 'fix(stone-money): preserve compositor closing brace after display transform'
+          git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
+      - name: Rebuild and verify this exact correction
+        run: |
+          python games/survivor-palau/source/v0160/build.py
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          python games/survivor-palau/source/v0160/verify.py
+          git add games/survivor-palau
+          git diff --cached --quiet || git commit -m 'test(stone-money): record corrected compositor browser diagnostics'
+          git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
