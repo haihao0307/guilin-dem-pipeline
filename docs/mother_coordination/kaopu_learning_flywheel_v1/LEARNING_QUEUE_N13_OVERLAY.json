@@ -1,0 +1,51 @@
+{
+  "id": "KAOPU-NOISE-N13-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N12_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N12_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_WEBGL2_MODULE_DERIVATIVE_N12.md",
+    "MEETINGS/2026-09-18/MOTHER_0230_PRODUCTION_EVIDENCE.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6D",
+    "topic": "mediump coordinate magnitude and local-origin contract",
+    "question": "When can mediump lose a 1/128 coordinate step, and can current SwiftShader CI expose that failure?",
+    "state": "candidate-partial-primary-source-binary16-and-swiftshader-verified",
+    "evidence": [
+      "references/mediump-coordinate-n13/SOURCE_LOCK.json",
+      "PROBES/probe_mediump_coordinate_n13.py",
+      "PROBES/mediump_coordinate_result_n13.json",
+      "PROBES/webgl2_precision_query_n13.html",
+      "PROBES/webgl2_precision_result_n13.json",
+      "LEARNING_LOG/2026-09-18_MEDIUMP_COORDINATE_N13.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {"mother": "Brick Material", "entry": "HOUSE PR15", "receipt": "N09 awaiting acknowledgement", "actionThisRound": "prepared N13; held to avoid repeat delivery"},
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "G3.T2 candidate but no explicit N02 acknowledgement", "actionThisRound": "prepared precision addendum; held"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "no new N02 acknowledgement", "actionThisRound": "no route"}
+  ],
+  "verificationReceipt": {
+    "normativeSources": "GLSL ES 3.00.6 and WebGL precision-query contract",
+    "cpuChecks": "10/10 pass",
+    "failedAssumptionRun": 35267268696,
+    "successfulRun": 35267368739,
+    "workflowCommit": "ec45fc9afa9ab7ecf17d494f0908f2035133351c",
+    "runtime": "Chrome 152.0.7977.82 / WebGL2 / ANGLE Vulkan SwiftShader",
+    "hardwareMobile": "Unknown",
+    "evidenceIndependence": "The specification defines allowed precision, binary16 supplies a conservative permitted counterexample, and SwiftShader supplies a distinct runtime observation. Neither runtime is target mobile hardware."
+  },
+  "nextGap": "Verify integer tile/cell hash bit-stability and overflow semantics across CPU, GLSL ES and WGSL before treating coordinate splitting as a portable module contract."
+}
