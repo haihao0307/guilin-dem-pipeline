@@ -23,12 +23,11 @@ jobs:
       - name: Static syntax
         run: |
           set -euo pipefail
+          node --check site/dist/r3-8/bootstrap.js
           node --check site/dist/r3-8/history-1942-preclean.js
           node --check site/dist/r3-8/history-1942-entry.js
           node --check site/dist/r3-8/history-1942-shell.js
           node --check site/dist/r3-8/history-1953-control-layer.js
-          node --check site/dist/r3-8/history-1942-coast-refinement-v3.js
-          node --check site/dist/r3-8/history-1942-coast-refinement-v4.js
           node --check site/dist/r3-8/history-1942-coast-refinement-v5.js
           node --check tools/r3-10/history_1942_preclean_qa.mjs
       - name: Install Chromium
