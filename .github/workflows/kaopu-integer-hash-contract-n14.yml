@@ -57,6 +57,7 @@ jobs:
           python3 "$root/extract_integer_hash_runtime_n14.py" \
             /tmp/n14-dom.html "$root/integer_hash_contract_result_n14.json" /tmp/integer_hash_runtime_result_n14.json
           jq -e '.summary.status == "pass" and .summary.checks == 8' /tmp/integer_hash_runtime_result_n14.json
+          jq '{webgl2,webgpu,webgpuVerification,checks,summary}' /tmp/integer_hash_runtime_result_n14.json
       - name: Preserve bounded evidence
         uses: actions/upload-artifact@v4
         with:
