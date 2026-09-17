@@ -33,8 +33,11 @@ export const foothillSwales=R6.foothillSwales;
 // A long foothill bench is not fixed by adding high-frequency noise. Noise changes texture,
 // not the lateral phase of the slope-to-plain transition. Instead, smoothly stagger the
 // transition in z across x while damping the warp near inherited drainage carriers.
-function foothillWarpEnvelope(z){return S(-34,-10,z)*(1-S(92,116,z))}
-function foothillPhase(x){return 6.2*Math.sin((x+24)*.014)+2.4*Math.sin((x-31)*.041)+1.1*Math.sin((x+80)*.0065)}
+// The first trial extended the phase warp too far into the lower plain and produced a local
+// curvature spike around z~88. This revision deliberately fades it out by z=88 so the edit
+// only de-synchronizes the foothill transition rather than reshaping the plain downstream.
+function foothillWarpEnvelope(z){return S(-34,-10,z)*(1-S(58,88,z))}
+function foothillPhase(x){return 5.6*Math.sin((x+24)*.014)+2.0*Math.sin((x-31)*.041)+.9*Math.sin((x+80)*.0065)}
 export function foothillShift(x,z){
   const env=foothillWarpEnvelope(z);
   if(env<=0)return 0;
@@ -117,7 +120,7 @@ function contourAt(seed,target){
 
 export const terracePilot=(()=>{
   const seed=choosePilotSeed();
-  const verticalInterval=.62; // synthetic pilot parameter; not a local measured standard
+  const verticalInterval=.72; // synthetic pilot parameter; not a local measured standard
   const targets=[seed.y+verticalInterval,seed.y,seed.y-verticalInterval];
   const lines=targets.map((target,i)=>{
     const points=contourAt(seed,target);
@@ -128,7 +131,7 @@ export const terracePilot=(()=>{
     evidenceClass:'synthetic geometry pilot; dimensions are not Yunnan survey truth',
     seed,
     verticalInterval,
-    benchHalfWidth:1.55,
+    benchHalfWidth:1.65,
     lines
   };
 })();
