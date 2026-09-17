@@ -1,0 +1,83 @@
+name: Stone Money fixed public URL verification
+on:
+  push:
+    branches: [work/stone-money-island-v0160-original-ocean-20260917]
+    paths: [.github/workflows/stone-money-v0160-publish-check.yml]
+permissions:
+  contents: write
+concurrency:
+  group: stone-money-v0160
+  cancel-in-progress: false
+jobs:
+  public-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0160-original-ocean-20260917
+      - name: Rebuild exactly the ocean A-B-tested candidate
+        run: |
+          python games/survivor-palau/source/v0160/build.py
+          python games/survivor-palau/source/v0160/integration_checks.py
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          p=Path('games/survivor-palau/releases/v0.1.6.0')
+          proof=json.loads((p/'ORIGINAL_RESTORE_CHECK.json').read_text())
+          data=(p/'Stone_Money_Island_V0.1.6.0_Direct_Open.html').read_bytes()
+          assert proof['passed'] and hashlib.sha256(data).hexdigest()==proof['candidateSha256']
+          PY
+      - name: Preserve a fixed version for public verification
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/releases/v0.1.6.0
+          git diff --cached --quiet || git commit -m 'release(stone-money): freeze original-ocean and white-shore review candidate'
+          git pull --rebase origin work/stone-money-island-v0160-original-ocean-20260917
+          git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
+          COMMIT=$(git rev-parse HEAD)
+          echo "STONE_MONEY_FIXED_COMMIT=$COMMIT" >> "$GITHUB_ENV"
+          echo "STONE_MONEY_PUBLIC_URL=https://raw.githack.com/haihao0307/guilin-dem-pipeline/$COMMIT/games/survivor-palau/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html" >> "$GITHUB_ENV"
+      - name: Confirm public bytes then exercise the real public canvas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,json,hashlib,os,time
+          p=Path('games/survivor-palau/releases/v0.1.6.0');expected=hashlib.sha256((p/'Stone_Money_Island_V0.1.6.0_Direct_Open.html').read_bytes()).hexdigest()
+          for attempt in range(6):
+              try:
+                  response=urllib.request.urlopen(os.environ['STONE_MONEY_PUBLIC_URL'],timeout=30);data=response.read()
+                  assert response.status==200 and hashlib.sha256(data).hexdigest()==expected
+                  break
+              except Exception:
+                  if attempt==5:raise
+                  time.sleep(8)
+          (p/'PUBLIC_BYTE_CHECK.json').write_text(json.dumps({'url':os.environ['STONE_MONEY_PUBLIC_URL'],'commit':os.environ['STONE_MONEY_FIXED_COMMIT'],'status':200,'sha256':expected,'byteIdentical':True},indent=2)+'\n')
+          PY
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          timeout 450s python -u games/survivor-palau/source/v0160/verify.py
+      - name: Record actual share gate, not a blanket visual acceptance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          p=Path('games/survivor-palau/releases/v0.1.6.0')
+          result=json.loads((p/'PUBLIC_BROWSER_QA.json').read_text());bytes_ok=json.loads((p/'PUBLIC_BYTE_CHECK.json').read_text());original=json.loads((p/'ORIGINAL_RESTORE_CHECK.json').read_text())
+          passed=result['browserPassed'] and bytes_ok['byteIdentical'] and original['passed']
+          proof={'name':'Stone Money Island','version':'0.1.6.0','url':os.environ['STONE_MONEY_PUBLIC_URL'],'commit':os.environ['STONE_MONEY_FIXED_COMMIT'],'entrySha256':bytes_ok['sha256'],'publicHttpsPassed':bool(passed),'desktopAndMobileBrowserPassed':result['browserPassed'],'originalFixedViewPixelParity':original['passed'],'shareAllowed':bool(passed),'visualAcceptance':False,'physicalIPhoneTest':False,'productionReady':False,'note':'Playable review candidate. No claim of AAA completion or physical-device high frame rate. New shoreline contact and island form remain candidate expressions.'}
+          (p/'PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n');print(json.dumps(proof,ensure_ascii=False,indent=2))
+          PY
+          git add games/survivor-palau/releases/v0.1.6.0
+          git diff --cached --quiet || git commit -m 'verify(stone-money): record fixed public browser evidence and explicit acceptance boundary'
+          git pull --rebase origin work/stone-money-island-v0160-original-ocean-20260917
+          git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-v0160-public-review
+          path: |
+            games/survivor-palau/releases/v0.1.6.0/
+            /tmp/stone-money-qa/
+          if-no-files-found: error
