@@ -1,0 +1,42 @@
+{
+  "version": "R045.03",
+  "passed": true,
+  "gateCount": 20,
+  "checks": [
+    {"name":"hydrology_node_count","pass":true,"value":22,"limit":22},
+    {"name":"permitted_transfer_count","pass":true,"value":37,"limit":37},
+    {"name":"unknown_current_water_state","pass":true,"value":0,"limit":0},
+    {"name":"all_sources_reach_front_river","pass":true,"value":[true,true,true],"limit":true},
+    {"name":"transfer_graph_acyclic","pass":true,"value":true,"limit":true},
+    {"name":"connected_rear_ridge_min_relief","pass":true,"value":8.4466786987038,"limit":"> 8m"},
+    {"name":"connected_rear_ridge_coverage","pass":true,"value":0.8222222222222222,"limit":"> 0.8"},
+    {"name":"saddles_are_lower_sections","pass":true,"value":[11.118222370858206,3.608178649313757],"limit":"2.5..28m"},
+    {"name":"headwaters_on_forward_ridge_flank","pass":true,"value":[11.925925925925924,13.34375,17,13.769230769230774,13.199999999999989,17.54054054054052,10.333333333333314],"limit":"3..35m downslope of crest"},
+    {"name":"headwater_paths_no_large_uphill_step","pass":true,"value":[-5.659984630352952,-1.9456749609305746,-3.688290268468279,-4.218182243258653,-1.8080103971196593,-5.171038377723406,-0.4782127274017185],"limit":"< 1.2m segment rise"},
+    {"name":"catchment_spacing_not_uniform","pass":true,"value":0.24806201550387597,"limit":"> 0.15 CV"},
+    {"name":"headwater_branch_counts_asymmetric","pass":true,"value":[2,2,3],"limit":"[2,2,3]"},
+    {"name":"mean_valley_divide_relief","pass":true,"value":[5.983112080039481,5.78607198662912,7.346254201279579],"limit":"mean > 2m"},
+    {"name":"catchment_relief_asymmetry","pass":true,"value":0.6937138205998948,"limit":"> 0.5m std"},
+    {"name":"central_forward_profile_no_opposing_wall","pass":true,"value":0.23188757705106666,"limit":"< 0.55m / 4m"},
+    {"name":"river_confined_to_front_receiver","pass":true,"value":[161.9136802902821,179.32887035686338],"limit":"154<z<188"},
+    {"name":"no_agriculture_beyond_front_river","pass":true,"value":0,"limit":0},
+    {"name":"terrace_permission_constrained","pass":true,"value":0.4520098441345365,"limit":"0.12..0.62"},
+    {"name":"terrace_permission_zero_near_streams","pass":true,"value":0,"limit":"< 0.03"},
+    {"name":"terrace_permission_viable_away_from_streams","pass":true,"value":0.7952043834068575,"limit":"> 0.35"}
+  ],
+  "metrics": {
+    "crestReliefMin": 8.4466786987038,
+    "crestReliefMean": 13.866129068302053,
+    "saddleDepths": [11.118222370858206,3.608178649313757],
+    "headOffsets": [11.925925925925924,13.34375,17,13.769230769230774,13.199999999999989,17.54054054054052,10.333333333333314],
+    "streamRises": [-5.659984630352952,-1.9456749609305746,-3.688290268468279,-4.218182243258653,-1.8080103971196593,-5.171038377723406,-0.4782127274017185],
+    "catchmentGapCv": 0.24806201550387597,
+    "catchmentRelief": [5.983112080039481,5.78607198662912,7.346254201279579],
+    "maxCentralRise4m": 0.23188757705106666,
+    "riverRange": [161.9136802902821,179.32887035686338],
+    "terracePermissionAbove065": 0.4520098441345365,
+    "nearStreamPermission": 0,
+    "farStreamPermission": 0.7952043834068575
+  },
+  "snapshot": {"version":"R045.03","visualAcceptance":false,"browserQA":false,"productionReady":false,"sedimentTransportSimulation":false,"regionalMicrotopographyTruth":false,"parcelGenerationEnabled":false,"terraceGeometryEnabled":false,"waterStateKnown":false}
+}
