@@ -1,0 +1,42 @@
+{
+  "schema": "map-mother/wenzhou-1940s-xuanmen-connectivity/v1",
+  "status": "active-derived-topology-constraint",
+  "epoch": "1940s",
+  "targetYear": 1942,
+  "object": "Xuanmen tidal connection / modern Xuanmen Project footprint",
+  "userHistoricalConstraint": "In the target historical state the Xuanmen water system is open and connected; later reclamation, enclosure, dam and reservoir state must not survive.",
+  "modernEngineeringEvidence": [
+    {
+      "source": "Frontiers in Marine Science, 2026, DOI 10.3389/fmars.2026.1835449",
+      "role": "dates and locates later Xuanmen engineering closure; not used as a substitute for the user's historical map",
+      "statement": "After Phase I the channel between eastern Yueqing Bay and Xuanmen Bay was fully blocked; the study models 1975 as the pre-project state.",
+      "phaseI_II_monitoring_points_wgs84": [
+        [121.216, 28.226],
+        [121.265, 28.223],
+        [121.284, 28.192]
+      ]
+    },
+    {
+      "source": "Frontiers in Marine Science, 2024, DOI 10.3389/fmars.2024.1459935",
+      "role": "independent evidence that the Xuanmen project connected Yuhuan Island and created later reclamation/reservoir state",
+      "statement": "The Xuanmen project constructed a dam to connect Yuhuan Island, created more than 7000 ha of farmland, and established a reservoir."
+    }
+  ],
+  "runtimeRule": {
+    "type": "hard-open-water-corridor",
+    "centerline_wgs84": [
+      [121.216, 28.226],
+      [121.265, 28.223],
+      [121.284, 28.192]
+    ],
+    "nominalWidthM": 1200,
+    "applicationOrder": "after high-terrain island protection",
+    "reason": "The modern project/dam must not remain as a land bridge in the 1940s state. The corridor guarantees topological connectivity while finer historical maps will later refine exact shoreline shape."
+  },
+  "truthBoundary": {
+    "topology": "hard constraint for the current 1940s candidate",
+    "exactShoreline": "derived and provisional until finer user-provided historical maps replace it",
+    "bathymetry": "not inferred by this rule",
+    "terrainElevation": "mountain/island elevation is preserved independently from the open-water corridor unless the corridor explicitly crosses later engineering fill"
+  }
+}
