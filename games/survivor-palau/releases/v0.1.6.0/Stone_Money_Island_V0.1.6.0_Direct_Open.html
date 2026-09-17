@@ -1381,7 +1381,7 @@ function updateCanoeGame(dt){
  const w=waveAt(CANOE_STATE.x,CANOE_STATE.z,physicalTime,config),followY=w.eta+.78,forwardX=Math.sin(CANOE_STATE.yaw),forwardZ=Math.cos(CANOE_STATE.yaw),mobileDrive=innerWidth<760;camera.target=[CANOE_STATE.x+forwardX*2.8,followY,CANOE_STATE.z+forwardZ*2.8];camera.yaw=CANOE_STATE.yaw+Math.PI;camera.pitch=mobileDrive?.48:.38;camera.distance=mobileDrive?28:22;camera.fov=58*Math.PI/180;cameraTween=null;
  qa.canoePosition=[CANOE_STATE.x,CANOE_STATE.z];qa.canoeSpeed=CANOE_STATE.speed;qa.canoeDepthM=CANOE_STATE.depth;qa.canoeGrounded=CANOE_STATE.grounded;qa.canoeHit=CANOE_STATE.hit;qa.canoeDeepTargetReached=canoeMissionReached;
  const telemetry=document.getElementById('canoeTelemetry'),mission=document.getElementById('boatMissionText');
- const zone=CANOE_STATE.grounded?'搁浅/极浅':CANOE_STATE.depth<1.2?'浅水':'深水';if(telemetry)telemetry.textContent=`${zone} · 水深 ${Math.max(0,CANOE_STATE.depth).toFixed(1)} m · 航速 ${Math.abs(CANOE_STATE.speed).toFixed(1)} m/s · 钓点 ${CANOE_STATE.targetDistance.toFixed(0)} m${CANOE_STATE.hit?' · 前方受阻':''}`;
+ const zone=CANOE_STATE.grounded?'搁浅/极浅':CANOE_STATE.depth<1.2?'浅水':'深水';if(telemetry)telemetry.textContent=`${zone} · 水深 ${Math.max(0,CANOE_STATE.depth).toFixed(1)} m · 航速 ${Math.abs(CANOE_STATE.speed).toFixed(1)} m/s · 外海 ${CANOE_STATE.targetDistance.toFixed(0)} m${CANOE_STATE.hit?' · 前方受阻':''}`;
  if(mission)mission.textContent=canoeMissionReached?'已到达外海。鱼群与钓鱼操作正在接续制作。':'沿白沙岸划行，绕过浅礁，驶向外海。';
  opaqueDirty=true;return true;
 }
@@ -1392,8 +1392,18 @@ function installCanoeGame(){
  document.querySelectorAll('[data-boat]').forEach(b=>{const k=b.dataset.boat,down=e=>{e.preventDefault();boatInput(k,true)},up=e=>{e.preventDefault();boatInput(k,false)};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
  window.StoneMoneyIslandGame=window.PalauSurvivalGame={shoreInstances:STONE_MONEY_SHORES,shoreEvidence:'authored-candidate-not-survey',version:VERSION,state:CANOE_STATE,input:boatInput,setCanoeDrive,teleportCanoe:(x,z,yaw=CANOE_STATE.yaw)=>{CANOE_STATE.x=x;CANOE_STATE.z=z;CANOE_STATE.yaw=yaw;CANOE_STATE.speed=0;opaqueDirty=true;},deepTarget:[...DEEP_FISH_POS]};
 }
+let smiGpuFence=null,smiReviewHold=false,smiReviewRequest=null,smiCompletedAt=0;
 function frame(now){
  requestAnimationFrame(frame);
+ if(smiGpuFence){
+  const status=gl.clientWaitSync(smiGpuFence,0,0);
+  if(status===gl.TIMEOUT_EXPIRED)return;
+  if(status===gl.WAIT_FAILED){qa.errors.push('GPU completion wait failed');return;}
+  gl.deleteSync(smiGpuFence);smiGpuFence=null;qa.completedFrames=(qa.completedFrames||0)+1;
+  if(smiCompletedAt)qa.completedFrameMs=now-smiCompletedAt;smiCompletedAt=now;
+  if(smiReviewRequest){smiReviewHold=true;const done=smiReviewRequest;smiReviewRequest=null;done(true);}
+ }
+ if(smiReviewHold||qa.errors.length)return;
  if(document.hidden){lastFrame=now;return}
  const raw=Math.max(0,(now-lastFrame)/1000),elapsed=Math.min(raw,.1);lastFrame=now;uiClock=now/1000;
  const oldResize=resizePending;if(resizePending)resize();if(geometryDirty)rebuildWorld();
@@ -1419,6 +1429,7 @@ function frame(now){
  }
  const flowing=config.glassSpeed>0&&config.glassFlow>0&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(changed||glassDirty||flowing)copyScene(true);else{metrics(now);return}
+ smiGpuFence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);gl.flush();
  frameCount++;qa.frames++;qa.physicalTime=physicalTime;qa.uiTime=uiClock;qa.glError=gl.getError();
  if(qa.glError!==gl.NO_ERROR){qa.glErrors??=[];if(qa.glErrors.length<20)qa.glErrors.push({frame:qa.frames,code:qa.glError});}
  if(now-fpsClock>=1000){fpsValue=frameCount*1000/(now-fpsClock);qa.fps=fpsValue;frameCount=0;fpsClock=now;}
@@ -1447,7 +1458,7 @@ async function init(){
  const mediaWarmup=QA_MODE?8:14;for(let t=-mediaWarmup;t<0;t+=.16)updateParticles(.16,t);qa.mediaWarmupSeconds=mediaWarmup;
  const foamWarmup=QA_MODE?2.5:4;for(let t=-foamWarmup;t<0;t+=.25)updateFields(.25,t);qa.foamWarmupSeconds=foamWarmup;
  updateCurl(0);qa.ready=false;qa.parameterCount=PARAMS.length;qa.parameterPages=3;
- const api={qa,getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'same-world frozen V001 ocean/cloud kernel plus authored coast instances; shoreline transport and full collision agreement remain under verification'}),setConfig:applyParam,setView,setPage,
+ const api={qa,holdForReview:()=>new Promise(resolve=>{if(smiReviewHold){resolve(true);return;}smiReviewRequest=resolve;opaqueDirty=true;}),resumeFromReview:()=>{smiReviewHold=false;lastFrame=performance.now();},getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'same-world frozen V001 ocean/cloud kernel plus authored coast instances; shoreline transport and full collision agreement remain under verification'}),setConfig:applyParam,setView,setPage,
  pause:()=>{config.paused=true;$('pause').textContent='继续运行'},play:()=>{config.paused=false;$('pause').textContent='暂停';lastFrame=performance.now()},
  captureVisualProbe,sampleBed:(x,z)=>bedHeight(x,z),sampleRock:(x,z)=>rockField.sample(x,z),sampleWater:(x,z,t=physicalTime)=>waveAt(x,z,t,config),sampleWind:(x,y,z,t=physicalTime)=>windAt(x,y,z,t,config),getSources:()=>FIRE_SOURCES.map(s=>[...s]),getReefPitCenters:()=>reefPitCenters(config),
  policy:{imageGenerationMode:false,persistentImageAssets:0,treeCount:VEGETATION_COUNT,full3DFluid:false,singleScene:true,worldSpaceReefBathymetry:true,bananaUse:'cultivated-remnant-candidate',banyanUse:'palau-ficus-family-plausible',karstGeometry:'procedural-world-foundation-not-survey-truth'},reefPits:REEF_PITS.map(x=>({...x})),params:PARAMS};

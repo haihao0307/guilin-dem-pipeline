@@ -1,5 +1,6 @@
 {
   "version": "0.1.6.0",
+  "testedUrl": "http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html",
   "browserPassed": false,
   "publicHttpsPassed": false,
   "shareAllowed": false,
@@ -16,10 +17,12 @@
       "consoleErrors": [],
       "requestFailures": [],
       "passed": false,
-      "errorPanel": "",
-      "qa": {
+      "phase": "failed",
+      "failure": "Page.wait_for_function: Timeout 100000ms exceeded.",
+      "trace": "Traceback (most recent call last):\n  File \"/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/games/survivor-palau/source/v0160/verify.py\", line 38, in <module>\n    page.wait_for_function(\"window.OceanIsland?.qa.ready || document.getElementById('error')?.textContent.trim()\",timeout=100000)\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 12809, in wait_for_function\n    self._sync(\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 1153, in wait_for_function\n    return await self._main_frame.wait_for_function(**locals_to_params(locals()))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_frame.py\", line 941, in wait_for_function\n    await self._channel.send(\"waitForFunction\", self._timeout, params)\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 100000ms exceeded.\n",
+      "finalQa": {
         "version": "stone-money-island-0.1.6.0-original-ocean",
-        "ready": true,
+        "ready": false,
         "relationshipPass": "survivor-palau-cloud-surf-karst-canoe-v014",
         "singleScene": true,
         "modeSwitchRemoved": true,
@@ -28,7 +31,7 @@
         "reefPitCount": 5,
         "oceanOuterRadius": 2400,
         "karstArchipelago": true,
-        "visibleClouds": true,
+        "visibleClouds": false,
         "naturalBreakerField": true,
         "canoePrototype": true,
         "irregularBreakerPackets": true,
@@ -60,24 +63,24 @@
         "rockCount": 27,
         "fireRingRockCount": 9,
         "logCount": 4,
-        "smokeParticles": 137,
+        "smokeParticles": 136,
         "flameParticles": 42,
         "sprayParticles": 1,
-        "foamActiveCells": 517,
-        "wetCells": 3687,
+        "foamActiveCells": 484,
+        "wetCells": 3685,
         "drawCalls": 13,
         "triangles": 467124,
-        "frames": 24,
-        "fps": 0.3045808966861601,
-        "physicalTime": 1.8749999999999958,
-        "displayLagSkippedSeconds": 40.2817,
-        "opaqueCacheRenders": 17,
-        "opaqueCacheReuses": 7,
+        "frames": 12,
+        "fps": 0.10714783186362231,
+        "physicalTime": 1.0999999999999985,
+        "displayLagSkippedSeconds": 106.16230000000002,
+        "opaqueCacheRenders": 12,
+        "opaqueCacheReuses": 0,
         "visualProbe": null,
         "frozenOcean": {
-          "ready": true,
+          "ready": false,
           "errors": [],
-          "cloudAtlasFrames": 1,
+          "cloudAtlasFrames": 0,
           "baselineVerified": true,
           "source": "original-deep-v001",
           "sourceByteIdentical": true,
@@ -96,8 +99,8 @@
           "cloudSteps": 160,
           "maxSteepnessBound": 0.504,
           "spectralComponents": 24,
-          "worldTime": 1.8749999999999958,
-          "cloudReady": true,
+          "worldTime": 1.0999999999999985,
+          "cloudReady": false,
           "environment": {
             "format": "weather-mother-environment",
             "schemaVersion": 1,
@@ -111,7 +114,7 @@
               "up": "+Y",
               "north": "-Z"
             },
-            "simulationSeconds": 1.8749999999999958,
+            "simulationSeconds": 1.0999999999999985,
             "hour": 16.2,
             "paused": false,
             "timeScale": 1,
@@ -123,11 +126,11 @@
                 -1.8369701987210297e-16
               ],
               "forceMps": 10,
-              "gustMultiplier": 1.117591355918721,
+              "gustMultiplier": 1.0926281295200937,
               "velocityMps": [
-                11.17591355918721,
+                10.926281295200937,
                 0,
-                -2.052982015170918e-15
+                -2.0071253122127134e-15
               ]
             },
             "cloud": {
@@ -135,16 +138,16 @@
               "seed": 4217,
               "driftMps": 12,
               "velocityMps": [
-                13.41109627102465,
+                13.111537554241124,
                 0,
-                -2.4635784182051016e-15
+                -2.4085503746552563e-15
               ],
               "offsetMetres": [
-                24.4690033450627,
+                14.175738501475179,
                 0,
-                -4.494882993728539e-15
+                -2.6040409172072212e-15
               ],
-              "loopPhase": 0.03124999999999992
+              "loopPhase": 0.018333333333333306
             },
             "sun": {
               "direction": [
@@ -190,11 +193,7 @@
           },
           "cloudVolumeBytes": 15728640,
           "cloudKind": "Cu",
-          "cloudSeed": 4217,
-          "atlasSimulationTime": 0.9249999999999992,
-          "lastBakeMs": 36665.2,
-          "atlasHour": 16.2,
-          "atlasKind": "Cu"
+          "cloudSeed": 4217
         },
         "rockDegenerateTriangles": 0,
         "karstFormationCount": 10,
@@ -205,26 +204,28 @@
         "view": "overview",
         "emberParticles": 9,
         "smokeSourceCount": 1,
-        "smokeExtentMeters": 41.60040449817444,
+        "smokeExtentMeters": 42.31448205461087,
         "mediaWarmupSeconds": 14,
         "fieldCellsUpdated": 4527,
-        "fieldUpdateCount": 27,
+        "fieldUpdateCount": 21,
         "foamWarmupSeconds": 4,
         "curlLayerTriangles": [
-          1680,
+          1760,
           800,
-          320
+          440
         ],
-        "waveWallSegments": 2800,
-        "curlUpdateCount": 24,
+        "waveWallSegments": 3000,
+        "curlUpdateCount": 13,
         "parameterCount": 102,
         "parameterPages": 3,
-        "sceneFrames": 24,
-        "uiTime": 42.201,
-        "glError": 0
+        "sceneFrames": 12,
+        "uiTime": 107.2774,
+        "glError": 0,
+        "completedFrames": 11,
+        "completedFrameMs": 9332.899999999994
       },
-      "failure": "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
-      "trace": "Traceback (most recent call last):\n  File \"/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/games/survivor-palau/source/v0160/verify.py\", line 34, in <module>\n    image=EVIDENCE/(name+'-overview.png');page.screenshot(path=str(image));preview(image,name+'-overview-preview')\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 10909, in screenshot\n    self._sync(\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 830, in screenshot\n    encoded_binary = await self._channel.send(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n\n"
+      "errorPanel": ""
     }
-  ]
+  ],
+  "phase": "completed"
 }
