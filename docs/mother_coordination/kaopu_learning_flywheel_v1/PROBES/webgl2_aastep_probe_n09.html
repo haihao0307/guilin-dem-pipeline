@@ -1,0 +1,199 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU N09 WebGL2 derivative threshold probe</title>
+<style>
+  body { margin: 24px; font: 14px system-ui; background: #111; color: #eee; }
+  #panels { display: flex; gap: 18px; flex-wrap: wrap; }
+  figure { margin: 0; }
+  canvas { width: 256px; height: 256px; image-rendering: auto; border: 1px solid #555; }
+  figcaption { margin-top: 8px; width: 256px; }
+  code { color: #9ddcff; }
+</style>
+<h1>N09 WebGL2 derivative-aware threshold probe</h1>
+<p>Same geometry and scalar field; only the fragment threshold helper changes.</p>
+<div id="panels"></div>
+<script>
+(() => {
+  const SIZE = 128;
+  const VERT = `#version 300 es
+  void main() {
+    vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+    gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+  }`;
+
+  const HELPERS = {
+    hard: `float edge(float threshold, float value) { return step(threshold, value); }`,
+    upstream_guarded: `float edge(float threshold, float value) {
+      #ifdef GL_OES_standard_derivatives
+        float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
+        return smoothstep(threshold-afwidth, threshold+afwidth, value);
+      #else
+        return step(threshold, value);
+      #endif
+    }`,
+    fixed_width: `float edge(float threshold, float value) {
+      return smoothstep(threshold - 0.02, threshold + 0.02, value);
+    }`,
+    webgl2_direct: `float edge(float threshold, float value) {
+      float afwidth = max(length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757, 1e-6);
+      return smoothstep(threshold-afwidth, threshold+afwidth, value);
+    }`
+  };
+
+  const FRAG = helper => `#version 300 es
+    precision highp float;
+    uniform float uScale;
+    uniform vec2 uPhase;
+    out vec4 outColor;
+    ${helper}
+    void main() {
+      vec2 q = (gl_FragCoord.xy + uPhase) / uScale;
+      vec2 cell = fract(q) - 0.5;
+      float scalar = length(cell);
+      float pore = 1.0 - edge(0.23, scalar);
+      outColor = vec4(vec3(pore), 1.0);
+    }`;
+
+  function shader(gl, type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    const ok = gl.getShaderParameter(s, gl.COMPILE_STATUS);
+    if (!ok) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  function program(gl, helper) {
+    const p = gl.createProgram();
+    gl.attachShader(p, shader(gl, gl.VERTEX_SHADER, VERT));
+    gl.attachShader(p, shader(gl, gl.FRAGMENT_SHADER, FRAG(helper)));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  }
+
+  function makeTarget(label) {
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const gl = canvas.getContext('webgl2', { antialias: false, preserveDrawingBuffer: true });
+    if (!gl) throw new Error('WebGL2 unavailable');
+    const fig = document.createElement('figure');
+    fig.append(canvas);
+    const cap = document.createElement('figcaption');
+    cap.innerHTML = `<code>${label}</code>`;
+    fig.append(cap);
+    document.querySelector('#panels').append(fig);
+    return { canvas, gl };
+  }
+
+  function render(target, prog, scale, phase) {
+    const gl = target.gl;
+    gl.viewport(0, 0, SIZE, SIZE);
+    gl.useProgram(prog);
+    gl.uniform1f(gl.getUniformLocation(prog, 'uScale'), scale);
+    gl.uniform2f(gl.getUniformLocation(prog, 'uPhase'), phase[0], phase[1]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const px = new Uint8Array(SIZE * SIZE * 4);
+    gl.readPixels(0, 0, SIZE, SIZE, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    let sum = 0, partial = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      sum += px[i] / 255;
+      if (px[i] > 0 && px[i] < 255) partial++;
+    }
+    return { mean: sum / (SIZE * SIZE), partialFraction: partial / (SIZE * SIZE), bytes: px };
+  }
+
+  function rms(a, b) {
+    let s = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      const d = (a[i] - b[i]) / 255;
+      s += d * d;
+    }
+    return Math.sqrt(s / (a.length / 4));
+  }
+
+  function std(xs) {
+    const m = xs.reduce((a,b) => a+b, 0) / xs.length;
+    return Math.sqrt(xs.reduce((a,b) => a + (b-m)*(b-m), 0) / xs.length);
+  }
+
+  function macroProbe() {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const gl = c.getContext('webgl2');
+    const fs = `#version 300 es
+      precision highp float; out vec4 outColor;
+      void main() {
+        #ifdef GL_OES_standard_derivatives
+          outColor = vec4(1,0,0,1);
+        #else
+          outColor = vec4(0,0,0,1);
+        #endif
+      }`;
+    const p = gl.createProgram();
+    gl.attachShader(p, shader(gl, gl.VERTEX_SHADER, VERT));
+    gl.attachShader(p, shader(gl, gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p); gl.useProgram(p); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const px = new Uint8Array(4); gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);
+    return { macroDefined: px[0] === 255, rgba: Array.from(px) };
+  }
+
+  window.runProbe = () => {
+    const phases = [];
+    for (const y of [0, .25, .5, .75]) for (const x of [0, .25, .5, .75]) phases.push([x,y]);
+    const scales = [16, 8, 4, 2];
+    const idealArea = Math.PI * 0.23 * 0.23;
+    const output = { schema: 'kaopu-webgl2-aastep-probe-v1', size: SIZE, idealArea, macro: macroProbe(), variants: {} };
+    const targets = {};
+    for (const [name, helper] of Object.entries(HELPERS)) {
+      const target = makeTarget(name);
+      const prog = program(target.gl, helper);
+      targets[name] = { target, prog };
+      output.variants[name] = {};
+      for (const scale of scales) {
+        const frames = phases.map(p => render(target, prog, scale, p));
+        const means = frames.map(f => f.mean);
+        const adjacent = frames.slice(1).map((f,i) => rms(frames[i].bytes, f.bytes));
+        output.variants[name][String(scale)] = {
+          meanCoverage: means.reduce((a,b)=>a+b,0)/means.length,
+          meanCoverageAbsError: Math.abs(means.reduce((a,b)=>a+b,0)/means.length - idealArea),
+          phaseMeanStddev: std(means),
+          adjacentFrameRms: adjacent.reduce((a,b)=>a+b,0)/adjacent.length,
+          partialPixelFraction: frames.reduce((a,f)=>a+f.partialFraction,0)/frames.length
+        };
+      }
+      render(target, prog, 3.0, [.37,.61]);
+    }
+    const gl = targets.webgl2_direct.target.gl;
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    output.runtime = {
+      userAgent: navigator.userAgent,
+      webglVersion: gl.getParameter(gl.VERSION),
+      shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+      vendor: gl.getParameter(gl.VENDOR),
+      renderer: gl.getParameter(gl.RENDERER),
+      unmaskedVendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : null,
+      unmaskedRenderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : null
+    };
+    output.exactUpstreamEqualsHard = JSON.stringify(output.variants.upstream_guarded) === JSON.stringify(output.variants.hard);
+    return output;
+  };
+
+  addEventListener('load', () => {
+    try {
+      const result = window.runProbe();
+      const pre = document.createElement('pre');
+      pre.id = 'result';
+      pre.textContent = JSON.stringify(result, null, 2);
+      document.body.append(pre);
+      document.body.dataset.probe = 'pass';
+    } catch (error) {
+      const pre = document.createElement('pre');
+      pre.id = 'error';
+      pre.textContent = String(error && error.stack || error);
+      document.body.append(pre);
+      document.body.dataset.probe = 'fail';
+    }
+  });
+})();
+</script>

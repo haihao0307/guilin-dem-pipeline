@@ -1,0 +1,71 @@
+name: KAOPU Modular Shader aastep N09
+
+on:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_aastep_probe_n09.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_aastep_probe_n09.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/modular-shader-aastep-n09/SOURCE_LOCK.json
+      - .github/workflows/kaopu-modular-shader-aastep-n09.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webgl2-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source and license receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.id == "KAOPU-N09-AASTEP-SOURCE-LOCK" and .candidate.license == "MIT" and (.limitations | length) == 3' docs/mother_coordination/kaopu_learning_flywheel_v1/references/modular-shader-aastep-n09/SOURCE_LOCK.json
+          test "$(git hash-object docs/mother_coordination/kaopu_learning_flywheel_v1/references/modular-shader-aastep-n09/upstream_glsl_aastep_index.glsl)" = "baffbe524071d0e1f8a81215d16735b977a7767f"
+      - name: Locate runner image Chrome
+        id: chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          "$chrome" --version
+          echo "path=$chrome" >> "$GITHUB_OUTPUT"
+      - name: Run pinned WebGL2 semantic matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_aastep_probe_n09.html"
+          timeout 60 "${{ steps.chrome.outputs.path }}" \
+            --headless=new --no-sandbox --disable-dev-shm-usage \
+            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
+            --use-angle=swiftshader --virtual-time-budget=8000 \
+            --dump-dom "file://$probe" > /tmp/n09-dom.html
+          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_aastep_probe_n09.py \
+            /tmp/n09-dom.html /tmp/webgl2_aastep_probe_result_n09.json
+          jq -e '.summary.status == "pass" and .summary.checks == 8 and .exactUpstreamEqualsHard == true' /tmp/webgl2_aastep_probe_result_n09.json
+      - name: Capture bounded visual comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_aastep_probe_n09.html"
+          timeout 60 "${{ steps.chrome.outputs.path }}" \
+            --headless=new --no-sandbox --disable-dev-shm-usage \
+            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
+            --use-angle=swiftshader --virtual-time-budget=8000 \
+            --window-size=1180,560 --screenshot=/tmp/webgl2_aastep_visual_n09.png \
+            "file://$probe"
+          test -s /tmp/webgl2_aastep_visual_n09.png
+      - name: Preserve runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-webgl2-aastep-n09
+          path: |
+            /tmp/webgl2_aastep_probe_result_n09.json
+            /tmp/webgl2_aastep_visual_n09.png
+            /tmp/n09-dom.html
+          if-no-files-found: error
