@@ -1,0 +1,30 @@
+name: Stone Money original ocean A-B
+on:
+  push:
+    branches: [work/stone-money-island-v0160-original-ocean-20260917]
+    paths: [.github/workflows/stone-money-v0160-reference.yml]
+permissions:
+  contents: read
+concurrency:
+  group: stone-money-v0160-reference
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0160-original-ocean-20260917
+      - run: |
+          python games/survivor-palau/source/v0160/build.py
+          python games/survivor-palau/source/v0160/integration_checks.py
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          timeout 330s python -u games/survivor-palau/source/v0160/verify_original.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-v0160-original-reference
+          path: /tmp/stone-money-reference/
+          if-no-files-found: error
