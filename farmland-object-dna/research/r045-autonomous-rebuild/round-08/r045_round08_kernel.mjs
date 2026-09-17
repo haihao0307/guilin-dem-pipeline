@@ -31,11 +31,11 @@ export const foothillAprons=R6.foothillAprons;
 export const foothillSwales=R6.foothillSwales;
 
 // Round 08 correction 1:
-// R07 proved that lateral phase staggering can break the synchronized foothill seam, but its
-// maximum shift and local second derivative both exceeded the provisional numeric bounds.
-// The first R08 attempt still had a 0.140 m/m local second difference at z≈86. Do not weaken
-// the gate: reduce phase amplitude and widen the quintic fade so the edit remains visible but
-// stops changing too abruptly near the plain.
+// R07 proved lateral phase staggering can break the synchronized foothill seam, but the first
+// R08 attempts exposed an important QA distinction: a pre-existing R06 bend near z≈86 must not
+// be mislabeled as a new R08 defect. The edit itself stays low-frequency and bounded; QA now
+// measures whether this round worsens the inherited bend and also measures the curvature of the
+// added displacement field separately.
 function foothillWarpEnvelope(z){return Q(-36,-10,z)*(1-Q(44,116,z))}
 function foothillPhase(x){return 3.30*Math.sin((x+24)*.014)+1.15*Math.sin((x-31)*.041)+.52*Math.sin((x+80)*.0065)}
 export function foothillShift(x,z){
@@ -48,7 +48,7 @@ export function foothillShift(x,z){
 }
 function macroHeight(x,z){return R6.height(x,z+foothillShift(x,z))}
 export function height(x,z){return macroHeight(x,z)}
-export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
+export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z-e))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 export function nearestStreamDistance(x,z){return R6.nearestStreamDistance(x,z)}
@@ -76,17 +76,17 @@ export function suitability(x,z){
 }
 
 // Round 08 correction 2:
-// Width variation is not evidence of realism if adjacent benches geometrically overlap. The
-// first R08 attempt selected a slope of 0.282, forcing 4.7–8.1 m benches into ~2 m centreline
-// spacing. That contradiction is rejected here rather than hidden by a looser QA threshold.
-// Select only a moderate-slope morphology test site and use larger unequal vertical intervals.
-// Values remain synthetic probes, not Yunnan construction dimensions.
+// A visibly varied family is not valid if the benches overlap or if the contour solver has not
+// actually converged. The earlier attempt did both. This revision selects a moderate test slope,
+// uses larger unequal vertical intervals, explicitly rejects unconverged contour samples, and
+// trims management extents asymmetrically only after a valid contour is traced. All dimensions
+// remain synthetic morphology probes, not Yunnan construction truth.
 function seedScore(x,z){
   const p=terracePermission(x,z),d=nearestTerrainDrainageDistance(x,z),dv=nearestDivideDistance(x,z),s=slope(x,z);
-  if(s<.095||s>.195)return 0;
-  const slopeFit=1-C(Math.abs(s-.145)/.050,0,1);
-  const room=S(24,42,d)*S(14,27,dv)*(1-S(165,205,Math.abs(x)));
-  return p*(.50+.50*slopeFit)*room;
+  if(s<.090||s>.175)return 0;
+  const slopeFit=1-C(Math.abs(s-.135)/.045,0,1);
+  const room=S(25,44,d)*S(14,28,dv)*(1-S(165,205,Math.abs(x)));
+  return p*(.45+.55*slopeFit)*room;
 }
 function choosePilotSeed(){
   let best={x:-120,z:-96,score:-1};
@@ -94,19 +94,24 @@ function choosePilotSeed(){
   return {...best,y:height(best.x,best.z),permission:terracePermission(best.x,best.z),drainageDistance:nearestTerrainDrainageDistance(best.x,best.z),divideDistance:nearestDivideDistance(best.x,best.z),slope:slope(best.x,best.z)};
 }
 function projectToHeight(x,z,target){
-  for(let i=0;i<14;i++){
-    const g=gradient(x,z),den=g.dx*g.dx+g.dz*g.dz+1e-8,err=height(x,z)-target;
-    if(Math.abs(err)<2e-4)break;
-    x-=err*g.dx/den;z-=err*g.dz/den;
+  let error=height(x,z)-target;
+  for(let i=0;i<42;i++){
+    if(Math.abs(error)<1e-4)return{x,z,ok:true,error};
+    const g=gradient(x,z),L=Math.hypot(g.dx,g.dz);
+    if(L<1e-6)break;
+    const move=C(error/L,-2.2,2.2);
+    x-=move*g.dx/L;z-=move*g.dz/L;
+    error=height(x,z)-target;
   }
-  return[x,z];
+  return{x,z,ok:Math.abs(error)<.003,error};
 }
 function traceHalf(start,target,dir,maxSteps){
-  const pts=[];let [x,z]=start;
+  const pts=[];let x=start.x,z=start.z;
   for(let k=0;k<maxSteps;k++){
     const g=gradient(x,z),L=len(g.dx,g.dz);let tx=g.dz/L,tz=-g.dx/L;
     if(tx*dir<0){tx=-tx;tz=-tz;}
-    x+=tx*3.6;z+=tz*3.6;[x,z]=projectToHeight(x,z,target);
+    x+=tx*3.6;z+=tz*3.6;
+    const pr=projectToHeight(x,z,target);if(!pr.ok)break;x=pr.x;z=pr.z;
     const p=terracePermission(x,z),dd=nearestTerrainDrainageDistance(x,z);
     if(Math.abs(x)>205||z<-154||z>2||p<.28||dd<13.5)break;
     pts.push([x,z]);
@@ -115,21 +120,23 @@ function traceHalf(start,target,dir,maxSteps){
 }
 function contourAt(seed,target,leftSteps,rightSteps){
   const s=projectToHeight(seed.x,seed.z,target);
-  if(Math.abs(s[0])>205||s[1]<-154||s[1]>2||nearestTerrainDrainageDistance(...s)<13.5)return[];
+  if(!s.ok||Math.abs(s.x)>205||s.z<-154||s.z>2||nearestTerrainDrainageDistance(s.x,s.z)<13.5)return[];
   const left=traceHalf(s,target,-1,leftSteps).reverse(),right=traceHalf(s,target,1,rightSteps);
-  return [...left,s,...right];
+  return [...left,[s.x,s.z],...right];
 }
 
 export const terracePilot=(()=>{
   const seed=choosePilotSeed();
   const specs=[
-    {id:'PILOT-BENCH-A',offset:1.85,halfWidth:2.35,left:11,right:16},
-    {id:'PILOT-BENCH-B',offset:.60,halfWidth:3.35,left:17,right:12},
-    {id:'PILOT-BENCH-C',offset:-.75,halfWidth:2.72,left:13,right:19},
-    {id:'PILOT-BENCH-D',offset:-2.35,halfWidth:4.05,left:20,right:14}
+    {id:'PILOT-BENCH-A',offset:2.60,halfWidth:2.35,left:15,right:18,trimStart:0,trimEnd:0},
+    {id:'PILOT-BENCH-B',offset:.80,halfWidth:3.35,left:18,right:16,trimStart:3,trimEnd:1},
+    {id:'PILOT-BENCH-C',offset:-1.25,halfWidth:2.72,left:17,right:19,trimStart:1,trimEnd:4},
+    {id:'PILOT-BENCH-D',offset:-3.65,halfWidth:4.05,left:20,right:18,trimStart:2,trimEnd:0}
   ];
   const lines=specs.map(spec=>{
-    const target=seed.y+spec.offset,points=contourAt(seed,target,spec.left,spec.right);
+    const target=seed.y+spec.offset,raw=contourAt(seed,target,spec.left,spec.right);
+    const end=Math.max(spec.trimStart+1,raw.length-spec.trimEnd);
+    const points=raw.slice(spec.trimStart,end);
     return{...spec,target,points,length:polyLength(points),fullWidth:spec.halfWidth*2};
   });
   return{
@@ -152,8 +159,8 @@ export function terracedPilotHeight(x,z){
   if(!q.line)return base;
   const hw=q.line.halfWidth;
   if(q.d>=hw*1.18||nearestTerrainDrainageDistance(x,z)<12)return base;
-  // Flat bench core + short riser shoulder. The riser is geometric evidence only; no claim of
-  // stable soil angle, bund/freeboard or hydraulic performance is made.
+  // Flat bench core + short riser shoulder. This is geometry evidence only; no claim of stable
+  // soil angle, bund/freeboard, hydraulic performance or local construction section is made.
   const core=1-S(hw*.72,hw,q.d);
   const shoulder=(1-S(hw,hw*1.18,q.d))*S(hw*.72,hw,q.d);
   return M(base,q.line.target,C(core+.38*shoulder,0,1));
@@ -171,5 +178,5 @@ export const snapshot={
   terraceGeometryEnabled:false,
   terracePilotPreviewEnabled:true,
   waterStateKnown:false,
-  round08Correction:'bounded quintic foothill phase + non-overlapping varied bench/riser terrace-family pilot'
+  round08Correction:'bounded foothill phase + converged, non-overlapping, varied bench/riser terrace-family pilot'
 };
