@@ -4,10 +4,56 @@
 <pre id="pending">pending</pre>
 <script>
 (() => {
+  const WIDTH=256, HEIGHT=4, H=1/128, OFFSETS=[0,8,16,64,256,1024,4096,8192];
   function fmt(gl, stage, kind) {
     const f = gl.getShaderPrecisionFormat(stage, kind);
     if (!f) return null;
     return {rangeMin:f.rangeMin, rangeMax:f.rangeMax, precision:f.precision};
+  }
+  function shader(gl, type, source) {
+    const s=gl.createShader(type); gl.shaderSource(s,source); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  function program(gl, qualifier) {
+    const vs=`#version 300 es
+      void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.0-1.0,0,1);}`;
+    const fs=`#version 300 es
+      precision highp float; precision highp int;
+      uniform ${qualifier} float uOffset;
+      layout(location=0) out uvec4 outBits;
+      void main(){
+        ${qualifier} float local=(gl_FragCoord.x-0.5)*0.0078125;
+        ${qualifier} float x=uOffset+local;
+        ${qualifier} float phase=fract(x);
+        uint b=floatBitsToUint(phase);
+        outBits=uvec4(b&255u,(b>>8u)&255u,(b>>16u)&255u,b>>24u);
+      }`;
+    const p=gl.createProgram(); gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,vs)); gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  }
+  function unpack(r,g,b,a){const v=new Uint8Array([r,g,b,a]);return new DataView(v.buffer).getFloat32(0,true);}
+  function runtimeMatrix(gl){
+    const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8UI,WIDTH,HEIGHT,0,gl.RGBA_INTEGER,gl.UNSIGNED_BYTE,null);
+    const fb=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fb); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+    if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error('integer framebuffer incomplete');
+    gl.viewport(0,0,WIDTH,HEIGHT);
+    const out={};
+    for(const q of ['mediump','highp']){
+      const p=program(gl,q), loc=gl.getUniformLocation(p,'uOffset'); gl.useProgram(p); out[q]={};
+      for(const offset of OFFSETS){
+        gl.uniform1f(loc,offset); gl.drawArrays(gl.TRIANGLES,0,3);
+        const px=new Uint8Array(WIDTH*HEIGHT*4); gl.readPixels(0,0,WIDTH,HEIGHT,gl.RGBA_INTEGER,gl.UNSIGNED_BYTE,px);
+        const values=[]; for(let x=0;x<WIDTH;x++){const i=x*4;values.push(unpack(px[i],px[i+1],px[i+2],px[i+3]));}
+        const ref=values.map((_,i)=>((offset+i*H)%1+1)%1);
+        const error=Math.sqrt(values.reduce((s,v,i)=>s+(v-ref[i])*(v-ref[i]),0)/values.length);
+        out[q][String(offset)]={uniquePhases:new Set(values).size,adjacentCollapseFraction:values.slice(1).filter((v,i)=>v===values[i]).length/(values.length-1),phaseRmse:error,min:Math.min(...values),max:Math.max(...values)};
+      }
+    }
+    return out;
   }
   addEventListener('load', () => {
     const pre = document.querySelector('pre');
@@ -35,6 +81,7 @@
           unmaskedRenderer:dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : null
         }
       };
+      result.runtimeMatrix=runtimeMatrix(gl);
       result.fragmentMediumpEqualsHighp = JSON.stringify(result.fragment.medium) === JSON.stringify(result.fragment.high);
       pre.id='result'; pre.textContent=JSON.stringify(result, null, 2);
     } catch (e) { pre.id='error'; pre.textContent=String(e && e.stack || e); }
