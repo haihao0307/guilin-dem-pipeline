@@ -22,7 +22,7 @@ jobs:
       - name: Install Mesa Vulkan software adapter
         run: |
           sudo apt-get update
-          sudo apt-get install -y mesa-vulkan-drivers vulkan-tools
+          sudo apt-get install -y mesa-vulkan-drivers vulkan-tools xvfb
           find /usr/share/vulkan/icd.d -maxdepth 1 -type f -name '*.json' -print
           icd="$(find /usr/share/vulkan/icd.d -maxdepth 1 -type f \( -name '*lvp*.json' -o -name '*lavapipe*.json' \) | head -n1)"
           test -n "$icd"
@@ -47,7 +47,7 @@ jobs:
           for angle in gl swiftshader vulkan; do
             echo "Trying ANGLE backend: $angle"
             set +e
-            timeout 80 "${{ steps.chrome.outputs.path }}" \
+            timeout 80 xvfb-run -a "${{ steps.chrome.outputs.path }}" \
               --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu-sandbox \
               --enable-unsafe-webgpu --ignore-gpu-blocklist --enable-features=Vulkan \
               --use-angle="$angle" --user-data-dir="/tmp/chrome-n15-$angle" \
