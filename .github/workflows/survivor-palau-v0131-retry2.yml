@@ -1,0 +1,131 @@
+name: Survivor Palau V0.1.3.1 retry2
+on:
+  push:
+    branches: [game/survivor-palau-v001-20260917]
+    paths: [.github/workflows/survivor-palau-v0131-retry2.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Rebuild exact candidate
+        run: |
+          set -euo pipefail
+          cat games/survivor-palau/source/v013_patch.part01.txt | base64 -d | gzip -d >/tmp/v013.py
+          echo 'e018fdaecba51ec20738bb625f094c399c90b171ed53ecd321b7bf554b364fd9  /tmp/v013.py' | sha256sum -c -
+          python3 /tmp/v013.py
+          cat games/survivor-palau/source/v0131_patch.part01.txt | base64 -d | gzip -d >/tmp/v0131.py
+          echo '5114a7e9097f8480604134394d22d1731bd5334576b427a90d42b510a2bbbcdd  /tmp/v0131.py' | sha256sum -c -
+          python3 /tmp/v0131.py
+          OUT=games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html
+          echo 'b9fc8fcee1eac039651b0af8caf6357a47835b9ba7e85bbf89ca9fbe0c2619fd  '"$OUT" | sha256sum -c -
+          test "$(wc -c < "$OUT")" -eq 147613
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html').read_text()
+          assert 'Math.sin(Math.atan2(uz,ux)' in s
+          assert s.count('<canvas')==1 and '<iframe' not in s
+          m=re.search(r'<script type="module">(.*)</script>',s,re.S);assert m
+          Path('/tmp/app.mjs').write_text(m.group(1))
+          PY
+          node --check /tmp/app.mjs
+      - name: Local browser QA
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+          cat >/tmp/qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,shutil
+          f=Path('games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html').resolve()
+          r={'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('chromium');assert chrome
+          with sync_playwright() as p:
+            b=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+            page=b.new_page(viewport={'width':1600,'height':950})
+            page.on('console',lambda m:r['consoleErrors'].append(m.text) if m.type=='error' else None)
+            page.on('pageerror',lambda e:r['pageErrors'].append(str(e)))
+            page.on('requestfailed',lambda q:r['requestFailures'].append({'url':q.url,'failure':str(q.failure)}))
+            page.goto(f.as_uri()+'?qa=1',wait_until='load',timeout=30000)
+            try: page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+            except Exception:
+              r['errorBox']=page.locator('#error').text_content() if page.locator('#error').count() else None
+              Path('/tmp/debug.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));raise
+            qa=page.evaluate("() => window.OceanMotherR018.qa")
+            assert qa.get('webgl2') and qa.get('glError',0)==0 and not qa.get('errors')
+            assert qa.get('karstFormationCount',0)>=10 and qa.get('treeCount',0)>=50 and qa.get('canoeCount',0)==1
+            for v in ['overview','karst','breaker','canoe','deepfish']:
+              page.locator(f'[data-view="{v}"]').click();page.wait_for_timeout(1600);page.screenshot(path=f'/tmp/{v}.png',full_page=True)
+            r.update({'qa':qa,'passed':not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures']});b.close()
+          Path('/tmp/qa.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));assert r['passed'],r
+          PY
+          xvfb-run -a python3 /tmp/qa.py
+      - name: Publish exact candidate
+        id: publish
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.3
+          cp /tmp/qa.json "$ROOT/BROWSER_QA_V0131.json"
+          git config user.name github-actions;git config user.email github-actions@github.com
+          git add "$ROOT";git commit -m 'publish(game): Survivor Palau V0.1.3.1 verified';git push origin HEAD:game/survivor-palau-v001-20260917
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Verify public fixed-commit bytes
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          P=games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html
+          U="https://raw.githack.com/haihao0307/guilin-dem-pipeline/$COMMIT/$P"
+          for n in $(seq 1 30); do
+            if curl -fsSL --retry 2 "$U" -o /tmp/public.html; then [ "$(sha256sum /tmp/public.html|cut -d' ' -f1)" = 'b9fc8fcee1eac039651b0af8caf6357a47835b9ba7e85bbf89ca9fbe0c2619fd' ] && break; fi
+            sleep 4
+          done
+          echo 'b9fc8fcee1eac039651b0af8caf6357a47835b9ba7e85bbf89ca9fbe0c2619fd  /tmp/public.html' | sha256sum -c -
+      - name: Public browser QA
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          cat >/tmp/public_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,os,shutil
+          c=os.environ['COMMIT'];p='games/survivor-palau/releases/v0.1.3/Survivor_Palau_V0.1.3.1_Natural_World_Runtime_Fix_Direct_Open.html';u=f'https://raw.githack.com/haihao0307/guilin-dem-pipeline/{c}/{p}?qa=1'
+          r={'url':u,'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False};chrome=shutil.which('google-chrome') or shutil.which('chromium');assert chrome
+          with sync_playwright() as pw:
+            b=pw.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader']);ctx=b.new_context(viewport={'width':1600,'height':950});ctx.add_cookies([{'name':'__Http-phish','value':'1','url':'https://raw.githack.com/','secure':True,'httpOnly':True,'sameSite':'Lax'}]);page=ctx.new_page()
+            page.on('console',lambda m:r['consoleErrors'].append(m.text) if m.type=='error' else None);page.on('pageerror',lambda e:r['pageErrors'].append(str(e)));page.on('requestfailed',lambda q:r['requestFailures'].append({'url':q.url,'failure':str(q.failure)}))
+            resp=page.goto(u,wait_until='load',timeout=60000);assert resp and resp.ok;page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000);qa=page.evaluate("() => window.OceanMotherR018.qa");assert qa.get('webgl2') and qa.get('glError',0)==0 and not qa.get('errors')
+            page.screenshot(path='/tmp/public.png',full_page=True);r.update({'qa':qa,'httpStatus':resp.status,'passed':not r['consoleErrors'] and not r['pageErrors'] and not r['requestFailures']});b.close()
+          Path('/tmp/public-qa.json').write_text(json.dumps(r,ensure_ascii=False,indent=2));assert r['passed'],r
+          PY
+          xvfb-run -a python3 /tmp/public_qa.py
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Survivor_Palau_V0.1.3.1_QA_Retry2
+          path: |
+            /tmp/qa.json
+            /tmp/debug.json
+            /tmp/overview.png
+            /tmp/karst.png
+            /tmp/breaker.png
+            /tmp/canoe.png
+            /tmp/deepfish.png
+            /tmp/public.html
+            /tmp/public.png
+            /tmp/public-qa.json
+          if-no-files-found: warn
+          retention-days: 90
