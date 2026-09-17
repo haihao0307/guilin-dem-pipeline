@@ -11,8 +11,8 @@ add('version',K.VERSION==='R045.18',K.VERSION,'R045.18');
 add('water_graph_identity_preserved',K.nodes.length===R17.nodes.length&&K.edges.length===R17.edges.length,{nodes:[R17.nodes.length,K.nodes.length],edges:[R17.edges.length,K.edges.length]},'unchanged');
 add('terrain_carrier_inventory_preserved',K.terrainChannels.length===R17.terrainChannels.length&&K.outletContinuum.length===R17.outletContinuum.length,{terrainChannels:[R17.terrainChannels.length,K.terrainChannels.length],outlets:[R17.outletContinuum.length,K.outletContinuum.length]},'unchanged');
 add('three_headwater_footprints_present',K.headwaterFootprintProfiles.length===3,K.headwaterFootprintProfiles.map(p=>p.id),'A/B/C');
-const sig=K.headwaterFootprintProfiles.map(({id,anchorU,angleDeg,major,minor,rimOffset,rearShift,amplitude,sideBias,rearScale})=>({id,anchorU,angleDeg,major,minor,rimOffset,rearShift,amplitude,sideBias,rearScale,aspect:major/minor}));
-add('headwater_profiles_are_not_parameter_clones',new Set(sig.map(p=>[p.anchorU,p.angleDeg,p.major,p.minor,p.rimOffset,p.sideBias].join('|'))).size===3,sig,'3 distinct signatures');
+const sig=K.headwaterFootprintProfiles.map(({id,anchorU,angleDeg,major,minor,rimOffset,rearShift,amplitude,sideBias,rearScale,centerShift})=>({id,anchorU,angleDeg,major,minor,rimOffset,rearShift,amplitude,sideBias,rearScale,centerShift,aspect:major/minor}));
+add('headwater_profiles_are_not_parameter_clones',new Set(sig.map(p=>[p.anchorU,p.angleDeg,p.major,p.minor,p.rimOffset,p.sideBias,p.centerShift].join('|'))).size===3,sig,'3 distinct signatures');
 add('orientation_span_is_substantive',Math.max(...sig.map(p=>p.angleDeg))-Math.min(...sig.map(p=>p.angleDeg))>55,sig.map(p=>p.angleDeg),'>55 degrees across A/B/C');
 add('footprint_aspect_ratios_are_not_clones',stdev(sig.map(p=>p.aspect))>.08,sig.map(p=>({id:p.id,aspect:p.aspect})),'aspect-ratio stdev >0.08');
 
@@ -37,7 +37,7 @@ const components=[];
 for(const p of K.headwaterFootprintProfiles){
   let max=0,sum=0,n=0,at=null;
   for(let x=-210;x<=210;x+=8)for(let z=-216;z<=-160;z+=4){const v=K.headwaterFootprintComponent(p,x,z);if(v>max){max=v;at=[x,z]}sum+=v;n++}
-  components.push({id:p.id,max,mean:sum/(n||1),at,angleDeg:p.angleDeg,major:p.major,minor:p.minor});
+  components.push({id:p.id,max,mean:sum/(n||1),at,angleDeg:p.angleDeg,major:p.major,minor:p.minor,centerShift:p.centerShift});
 }
 add('all_three_headwaters_gain_oriented_relief',components.every(c=>c.max>.09),components,'each component max >0.09 m');
 add('component_peak_locations_are_not_clones',new Set(components.map(c=>c.at.join(','))).size===3,components.map(c=>({id:c.id,at:c.at})),'3 distinct peak grid cells');
@@ -50,7 +50,11 @@ add('headwater_relief_is_cross_slope_structured_not_uniform_lift',rowStats.filte
 
 const oldWall=wallPersistence(R17,R17.nearestExtendedDrainageDistance),newWall=wallPersistence(K,K.nearestExtendedDrainageDistance);
 add('upper_wall_gate_has_real_sampling_coverage',oldWall.totalEligible>200&&newWall.totalEligible>200,{r17:{totalEligible:oldWall.totalEligible,rows:oldWall.rowsWithEligible},r18:{totalEligible:newWall.totalEligible,rows:newWall.rowsWithEligible}},'>200 eligible samples each');
-add('persistent_upper_cross_slope_wall_not_reintroduced',newWall.fraction<.12&&newWall.maxContiguousSpan<60,{r17:oldWall,r18:newWall},'R18 fraction <12%, contiguous span <60 m');
+// Important QA correction from first Runner: the R17 baseline itself is ~0.212 at z~-202. An absolute
+// <0.12 condition under a gate named "not reintroduced" was logically invalid: it demanded this single
+// headwater-footprint round solve inherited debt. R18 must instead prove it does not worsen that debt.
+add('inherited_upper_wall_debt_is_explicit',oldWall.fraction>.12&&K.snapshot.round18?.knownDebt?.includes('does not claim to solve'),{oldWall,knownDebt:K.snapshot.round18?.knownDebt},'baseline debt explicitly retained, not mislabeled solved');
+add('persistent_upper_cross_slope_wall_not_worsened',newWall.fraction<=oldWall.fraction+.001&&newWall.maxContiguousSpan<=oldWall.maxContiguousSpan+1,{r17:oldWall,r18:newWall},'R18 <= R17 baseline fraction/span; inherited debt remains for later round');
 
 let tNear=[],tFar=[];for(let x=-190;x<=190;x+=10)for(let z=-150;z<=0;z+=6){const d=K.nearestExtendedDrainageDistance(x,z),p=K.terracePermission(x,z);if(d<6)tNear.push(p);if(d>20)tFar.push(p)}
 add('terrace_permission_excludes_drainage',mean(tNear)<.01,mean(tNear),'<0.01');

@@ -7,12 +7,12 @@ const M=(a,b,t)=>a+(b-a)*t;
 const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const G2=(a,b)=>Math.exp(-0.5*(a*a+b*b));
 
-// R045.18 corrects a second tempting shortcut: simply increasing the amplitude or transverse drift
+// R045.18 corrects a tempting shortcut: simply increasing the amplitude or transverse drift
 // of R17's long basin shoulders would make the old ribbon rhythm louder, not more natural.
 // This round changes one macro component only: headwater/source-catchment FOOTPRINT. Each A/B/C
 // headwater receives a differently oriented, differently proportioned amphitheatre rim tied to its
 // inherited trunk path. The complete drainage skeleton stays protected, and the new field is exactly
-// zero at z>=-160 so the already delicate terrace-candidate slope is not altered in this round.
+// zero at z>=-160 so the delicate terrace-candidate slope is not altered in this round.
 export const mainRidge=R17.mainRidge;
 export const saddleXs=R17.saddleXs;
 export const naturalStreams=R17.naturalStreams;
@@ -85,36 +85,37 @@ function axes(frame,angleDeg){
   };
 }
 
-// These are synthetic shape controls, intentionally not measurements. anchorU keeps each intervention
-// in the upper source domain; angle/length/width/offset differ enough that A/B/C cannot be scaled clones.
+// Synthetic controls only. The first Runner exposed that the initial three aspect ratios were
+// accidentally near-clones and that A/B peaked on the same grid cell. This revision fixes geometry,
+// not the threshold: A/B/C now have deliberately different aspect, path anchor and cross-basin offset.
 export const headwaterFootprintProfiles=R17.nestedBasinProfiles.map((p,i)=>({
   id:p.id,path:p.path,
-  anchorU:[.145,.155,.135][i]??.145,
-  angleDeg:[-31,24,-46][i]??0,
-  major:[68,82,59][i]??70,
-  minor:[31,39,27][i]??32,
-  rimOffset:[47,57,43][i]??48,
-  rearShift:[-13,-21,-9][i]??-14,
-  amplitude:[.42,.50,.36][i]??.42,
-  sideBias:[-.22,.18,-.31][i]??0,
-  rearScale:[.42,.34,.48][i]??.40
+  anchorU:[.135,.245,.150][i]??.145,
+  angleDeg:[-34,27,-52][i]??0,
+  major:[70,88,58][i]??70,
+  minor:[34,34,31][i]??32,
+  rimOffset:[47,61,43][i]??48,
+  rearShift:[-15,-24,-10][i]??-14,
+  amplitude:[.34,.39,.31][i]??.34,
+  sideBias:[-.24,.22,-.32][i]??0,
+  rearScale:[.42,.32,.50][i]??.40,
+  centerShift:[-14,24,8][i]??0
 }));
 
 export function headwaterFootprintComponent(p,x,z){
   if(z<=-220||z>=-160)return 0;
-  const f=frameAt(p.path,p.anchorU);
+  const f0=frameAt(p.path,p.anchorU);
+  const f={...f0,x:f0.x+f0.nx*p.centerShift,z:f0.z+f0.nz*p.centerShift};
   const drainClear=S(12,58,R17.nearestExtendedDrainageDistance(x,z));
   if(drainClear<=0)return 0;
 
-  // Wide vertical fades avoid introducing a new horizontal band. The lower fade reaches exactly zero
-  // by -160 m; R17's terrace-candidate domain begins at -158 m and is therefore untouched.
-  const env=S(-220,-198,z)*(1-S(-190,-160,z));
+  // The first Runner found 0.254 m/4m at the upper fade. Widening the SAME intervention's source
+  // ramp, while lowering amplitude, removes that abrupt longitudinal entry rather than relaxing QA.
+  const env=S(-220,-190,z)*(1-S(-184,-160,z));
   if(env<=0)return 0;
   const divideEase=.72+.28*S(4,18,R17.nearestDivideDistance(x,z));
   const ax=axes(f,p.angleDeg);
 
-  // Paired asymmetric side rims plus a weak rear closure create an amphitheatre footprint rather than
-  // another carrier-parallel ribbon. All lobes are broad; the protected drainage axis remains unchanged.
   const leftC={
     x:f.x+f.tx*p.rearShift+f.nx*p.rimOffset,
     z:f.z+f.tz*p.rearShift+f.nz*p.rimOffset
@@ -145,11 +146,7 @@ export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),d
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 
-export function terracePermission(x,z){
-  // The R18 footprint field is identically zero over the terrace-candidate domain, so permission is
-  // deliberately inherited unchanged rather than recomputed against a geometry this round did not touch.
-  return R17.terracePermission(x,z);
-}
+export function terracePermission(x,z){return R17.terracePermission(x,z)}
 export function suitability(x,z){
   if(z>=-158)return R17.suitability(x,z);
   if(z>=150||z<-175)return 0;
@@ -178,6 +175,7 @@ export const snapshot={
     method:'carrier-anchored anisotropic source-rim ellipses with basin-specific angle/aspect/offset/asymmetry; complete drainage skeleton protected; field exactly zero by z=-160',
     referenceUse:'user reference images constrain source-to-slope hierarchy and non-clone contour turning only; no metric extraction',
     evidenceClass:'synthetic upper-catchment morphology; not surveyed Yunnan terrain',
+    knownDebt:'R17 already contains an upper-slope wall-persistence fraction near 0.212 around z=-202; R18 must not worsen it and does not claim to solve it in this single-scope round',
     forbiddenClaims:['surveyed headwater geometry','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
   }
 };
