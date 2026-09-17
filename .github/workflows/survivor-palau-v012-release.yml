@@ -1,0 +1,200 @@
+name: Survivor Palau V0.1.2 karst surf canoe release
+
+on:
+  push:
+    branches:
+      - game/survivor-palau-v001-20260917
+    paths:
+      - .github/workflows/survivor-palau-v012-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: survivor-palau-v012-release
+  cancel-in-progress: true
+
+jobs:
+  rebuild-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild V0.1.2 from verified V0.1.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat games/survivor-palau/source/v012_patch.part01.txt | base64 -d | gzip -d > /tmp/patch_v012_visual.py
+          echo '4b7715c1073ce1ddde3d07baec07c245b27e93e736a4d56637c74a4e8125ac56  /tmp/patch_v012_visual.py' | sha256sum -c -
+          python3 /tmp/patch_v012_visual.py
+          OUT=games/survivor-palau/releases/v0.1.2/Survivor_Palau_V0.1.2_Karst_Surf_Canoe_Direct_Open.html
+          echo '333215c87a28707748f6df52b56e6e2f521b071f18b7c24c3c65a3a3cc99e4e4  '"$OUT" | sha256sum -c -
+          test "$(wc -c < "$OUT")" -eq 146454
+
+      - name: Static identity and JavaScript validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          p=Path('games/survivor-palau/releases/v0.1.2/Survivor_Palau_V0.1.2_Karst_Surf_Canoe_Direct_Open.html')
+          b=p.read_bytes();s=b.decode('utf-8')
+          assert hashlib.sha256(b).hexdigest()=='333215c87a28707748f6df52b56e6e2f521b071f18b7c24c3c65a3a3cc99e4e4'
+          for marker in ['SURVIVOR: PALAU','survivor-palau-karst-surf-canoe-v012','karstFormationCount','canoePrototype','visibleClouds','naturalBreakerField','data-view="deepfish"','data-view="karst"']:
+              assert marker in s,marker
+          assert s.count('<canvas')==1 and '<iframe' not in s
+          m=re.search(r'<script type="module">(.*)</script>',s,re.S);assert m
+          Path('/tmp/survivor-palau-v012.mjs').write_text(m.group(1),encoding='utf-8')
+          Path('/tmp/static_identity_v012.json').write_text(json.dumps({'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'canvasCount':1,'iframeCount':0,'passed':True},indent=2)+'\n')
+          PY
+          node --check /tmp/survivor-palau-v012.mjs
+
+      - name: Real Chromium WebGL2 and visual QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          cat >/tmp/survivor_v012_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,shutil
+          page_path=Path('games/survivor-palau/releases/v0.1.2/Survivor_Palau_V0.1.2_Karst_Surf_Canoe_Direct_Open.html').resolve()
+          report={'format':'survivor-palau-v012-browser-qa','consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium');assert chrome
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+              page=browser.new_page(viewport={'width':1600,'height':950})
+              page.on('console',lambda m: report['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: report['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda r: report['requestFailures'].append({'url':r.url,'failure':str(r.failure)}))
+              page.goto(page_path.as_uri()+'?qa=1',wait_until='load',timeout=30000)
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              assert qa['webgl2'] is True and qa.get('glError',0)==0 and not qa.get('errors')
+              assert qa.get('karstFormationCount',0)>=10,qa
+              assert qa.get('treeCount',0)>=50,qa
+              assert qa.get('canoeCount',0)==1,qa
+              assert qa.get('foamActiveCells',0)>=20,qa
+              probe=qa.get('visualProbe') or {}
+              assert probe.get('nearWhiteRatio',0)>=0.001,probe
+              assert page.locator('canvas').count()==1 and page.locator('iframe').count()==0
+              for view in ['overview','karst','breaker','canoe','deepfish']:
+                  page.locator(f'[data-view="{view}"]').click();page.wait_for_timeout(1700);page.screenshot(path=f'/tmp/v012-{view}.png',full_page=True)
+              page.locator('#panelToggle').click();page.wait_for_timeout(250);assert page.locator('#panel').evaluate("e=>!e.classList.contains('closed')")
+              page.locator('#pause').click();page.wait_for_timeout(250);assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is True
+              page.locator('#pause').click();page.wait_for_timeout(250);assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is False
+              report.update({'webgl2':qa['webgl2'],'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':probe,'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'foamActiveCells':qa.get('foamActiveCells'),'curlLayerTriangles':qa.get('curlLayerTriangles'),'canvasCount':1,'iframeCount':0,'viewsChecked':['overview','karst','breaker','canoe','deepfish']})
+              report['passed']=not report['consoleErrors'] and not report['pageErrors'] and not report['requestFailures']
+              browser.close()
+          assert report['passed'],report
+          Path('/tmp/browser_qa_v012.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          xvfb-run -a python3 /tmp/survivor_v012_qa.py
+
+      - name: Commit verified V0.1.2 direct-open and QA receipt
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.2
+          cp /tmp/static_identity_v012.json "$ROOT/STATIC_IDENTITY.json"
+          cp /tmp/browser_qa_v012.json "$ROOT/BROWSER_QA.json"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$ROOT"
+          git commit -m 'publish(game): Survivor Palau V0.1.2 karst surf canoe verified'
+          git push origin HEAD:game/survivor-palau-v001-20260917
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify fixed-commit public bytes
+        shell: bash
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          PATHNAME=games/survivor-palau/releases/v0.1.2/Survivor_Palau_V0.1.2_Karst_Surf_Canoe_Direct_Open.html
+          for HOST in raw.githack.com rawcdn.githack.com; do
+            URL="https://$HOST/haihao0307/guilin-dem-pipeline/$COMMIT/$PATHNAME"
+            for n in $(seq 1 30); do
+              if curl -fsSL --retry 2 "$URL" -o "/tmp/v012-${HOST}.html"; then
+                SHA=$(sha256sum "/tmp/v012-${HOST}.html" | awk '{print $1}')
+                [ "$SHA" = '333215c87a28707748f6df52b56e6e2f521b071f18b7c24c3c65a3a3cc99e4e4' ] && break
+              fi
+              sleep 4
+            done
+            echo "333215c87a28707748f6df52b56e6e2f521b071f18b7c24c3c65a3a3cc99e4e4  /tmp/v012-${HOST}.html" | sha256sum -c -
+          done
+
+      - name: Verify fixed-commit public runtime in Chromium
+        shell: bash
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          cat >/tmp/survivor_v012_public_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,os,shutil
+          commit=os.environ['COMMIT']
+          path='games/survivor-palau/releases/v0.1.2/Survivor_Palau_V0.1.2_Karst_Surf_Canoe_Direct_Open.html'
+          url=f'https://raw.githack.com/haihao0307/guilin-dem-pipeline/{commit}/{path}?qa=1'
+          report={'format':'survivor-palau-v012-public-browser-qa','url':url,'commit':commit,'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium');assert chrome
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              context=browser.new_context(viewport={'width':1600,'height':950})
+              context.add_cookies([{'name':'__Http-phish','value':'1','url':'https://raw.githack.com/','secure':True,'httpOnly':True,'sameSite':'Lax'}])
+              page=context.new_page()
+              page.on('console',lambda m: report['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: report['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda r: report['requestFailures'].append({'url':r.url,'failure':str(r.failure)}))
+              response=page.goto(url,wait_until='load',timeout=60000);assert response and response.ok
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              probe=qa.get('visualProbe') or {}
+              assert qa['webgl2'] is True and qa.get('glError',0)==0 and not qa.get('errors')
+              assert qa.get('karstFormationCount',0)>=10 and qa.get('treeCount',0)>=50 and qa.get('canoeCount',0)==1 and qa.get('foamActiveCells',0)>=20
+              assert probe.get('nearWhiteRatio',0)>=0.001,probe
+              for view in ['overview','karst','breaker','canoe','deepfish']:
+                  page.locator(f'[data-view="{view}"]').click();page.wait_for_timeout(1500);page.screenshot(path=f'/tmp/v012-public-{view}.png',full_page=True)
+              report.update({'httpStatus':response.status,'webgl2':qa['webgl2'],'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':probe,'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'foamActiveCells':qa.get('foamActiveCells'),'viewsChecked':['overview','karst','breaker','canoe','deepfish']})
+              report['passed']=not report['consoleErrors'] and not report['pageErrors'] and not report['requestFailures']
+              browser.close()
+          Path('/tmp/public_browser_qa_v012.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert report['passed'],report
+          PY
+          xvfb-run -a python3 /tmp/survivor_v012_public_qa.py
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Survivor_Palau_V0.1.2_Karst_Surf_Canoe_QA
+          path: |
+            /tmp/static_identity_v012.json
+            /tmp/browser_qa_v012.json
+            /tmp/v012-overview.png
+            /tmp/v012-karst.png
+            /tmp/v012-breaker.png
+            /tmp/v012-canoe.png
+            /tmp/v012-deepfish.png
+            /tmp/v012-raw.githack.com.html
+            /tmp/v012-rawcdn.githack.com.html
+            /tmp/public_browser_qa_v012.json
+            /tmp/v012-public-overview.png
+            /tmp/v012-public-karst.png
+            /tmp/v012-public-breaker.png
+            /tmp/v012-public-canoe.png
+            /tmp/v012-public-deepfish.png
+          if-no-files-found: warn
+          retention-days: 90
