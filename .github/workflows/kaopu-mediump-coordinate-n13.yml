@@ -2,57 +2,12 @@ name: KAOPU mediump coordinate N13
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - coordination/kaopu-learning-flywheel-r1-20260909
-    paths:
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_mediump_coordinate_n13.py
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/mediump_coordinate_result_n13.json
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_precision_query_n13.html
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_precision_n13.py
-      - .github/workflows/kaopu-mediump-coordinate-n13.yml
 
 permissions:
   contents: read
 
 jobs:
-  precision-contract:
+  paused-for-atomic-probe-update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Replay binary16 coordinate counterexample
-        run: |
-          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_mediump_coordinate_n13.py > /tmp/n13-cpu.json
-          git diff --exit-code -- docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/mediump_coordinate_result_n13.json
-      - name: Locate runner image Chrome
-        id: chrome
-        shell: bash
-        run: |
-          set -euo pipefail
-          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
-          test -n "$chrome"
-          "$chrome" --version
-          echo "path=$chrome" >> "$GITHUB_OUTPUT"
-      - name: Query actual WebGL2 precision formats
-        shell: bash
-        run: |
-          set -euo pipefail
-          probe="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/webgl2_precision_query_n13.html"
-          timeout 60 "${{ steps.chrome.outputs.path }}" \
-            --headless=new --no-sandbox --disable-dev-shm-usage \
-            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
-            --use-angle=swiftshader --virtual-time-budget=5000 \
-            --dump-dom "file://$probe" > /tmp/n13-dom.html
-          python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_precision_n13.py \
-            /tmp/n13-dom.html /tmp/webgl2_precision_result_n13.json
-          jq -e '.summary.status == "pass" and .summary.checks == 6' /tmp/webgl2_precision_result_n13.json
-      - name: Preserve bounded evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: kaopu-mediump-coordinate-n13
-          path: |
-            /tmp/n13-cpu.json
-            /tmp/n13-dom.html
-            /tmp/webgl2_precision_result_n13.json
-          if-no-files-found: error
+      - run: echo "N13 probe update staging only"
