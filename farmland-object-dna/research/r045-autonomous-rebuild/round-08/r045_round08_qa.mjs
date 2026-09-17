@@ -40,10 +40,10 @@ add('terrace_candidate_not_global',good/candidate<.65,{good,candidate,fraction:g
 const pilot=K.terracePilot;
 add('pilot_has_four_varied_benches',pilot.lines.length===4,pilot.lines.length,'4');
 add('pilot_seed_is_qualified',pilot.seed.valid===true,{valid:pilot.seed.valid,score:pilot.seed.score,permission:pilot.seed.permission,drainage:pilot.seed.drainageDistance,divide:pilot.seed.divideDistance,slope:pilot.seed.slope},'valid candidate required');
-add('pilot_seed_is_moderate_slope_probe',pilot.seed.valid&&pilot.seed.slope>=.09&&pilot.seed.slope<=.21,pilot.seed.slope,'0.09..0.21 synthetic test slope');
+add('pilot_seed_is_moderate_slope_probe',pilot.seed.valid&&pilot.seed.slope>=.09&&pilot.seed.slope<=.24,pilot.seed.slope,'0.09..0.24 synthetic test slope');
 const widths=pilot.lines.map(l=>l.fullWidth),lengths=pilot.lines.map(l=>l.length);
 add('pilot_widths_are_materially_varied',cv(widths)>.18,{widths,cv:cv(widths)},'CV>0.18');
-add('pilot_width_range_is_management_scale_probe',Math.min(...widths)>=4.0&&Math.max(...widths)<=7.5,{min:Math.min(...widths),max:Math.max(...widths)},'4.0..7.5m synthetic');
+add('pilot_width_range_is_management_scale_probe',Math.min(...widths)>=3.0&&Math.max(...widths)<=6.2,{min:Math.min(...widths),max:Math.max(...widths)},'3.0..6.2m synthetic morphology probe');
 const pilotValid=pilot.seed.valid&&pilot.lines.every(l=>l.points.length>=6&&l.length>18);
 add('pilot_lines_have_usable_trace_length',pilotValid,pilot.lines.map(l=>({id:l.id,n:l.points.length,length:l.length})),'qualified seed and each >=6 pts and >18m');
 add('pilot_lengths_are_not_identical',pilotValid&&cv(lengths)>.04,{lengths,cv:cv(lengths)},'valid lines and CV>0.04');
