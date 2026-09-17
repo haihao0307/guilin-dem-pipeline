@@ -9,7 +9,7 @@ This round studies only that question. Cellular, multiscale composition, psrdnoi
 ## Fixed source and method
 
 - Official implementation: [Auburn/FastNoiseLite](https://github.com/Auburn/FastNoiseLite/tree/785f37a9ad76e283586a379675085f2063ae03f7), revision `785f37a9ad76e283586a379675085f2063ae03f7`, MIT.
-- Locked header: `Cpp/FastNoiseLite.h`, Git blob `c67f2e5…a697`, SHA-256 `bcba859a…df142`, declared version 1.1.1.
+- Locked header: `Cpp/FastNoiseLite.h`, Git blob `c67f2e5…a697`, raw-byte SHA-256 `47a29750…5dc2`, declared version 1.1.1.
 - Base seed `424242`, warp seed `31337`; base frequency `1/32 m^-1`, warp frequency `1/64 m^-1`, documented warp amplitude `8 m`, height scale `2.5 m`.
 - The same 129×129 object-space grid was evaluated with the same base-noise object before and after `DomainWarp`. OpenSimplex2, Perlin and Value were tested separately.
 - Geometry identity was hashed from float height bytes. A material-only branch intentionally retained the baseline height buffer; a displacement branch wrote the warped samples.
@@ -22,7 +22,7 @@ Source receipt: [`SOURCE_LOCK.json`](../references/noise-domain-warp-n04/SOURCE_
 
 ## Observation
 
-All 24 predeclared CPU checks passed. A second local run was identical after removing timing fields.
+All 24 predeclared CPU checks passed. A second local run was identical after removing timing fields. The first CI run stopped before compilation because the source receipt had hashed a locally saved copy with one extra trailing newline; that failed receipt remains evidence of the gate working, and the raw upstream byte hash was corrected before replay.
 
 | Base kernel | RMS field change | RMS height change | mean / max normal change | chain-rule RMS error | incomplete-gradient RMS error | local CPU ratio |
 |---|---:|---:|---:|---:|---:|---:|
