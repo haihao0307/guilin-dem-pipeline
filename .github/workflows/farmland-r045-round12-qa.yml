@@ -8,28 +8,66 @@ on:
       - '.github/workflows/farmland-r045-round12-qa.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   qa:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Numeric R045.12 gates
+      - name: Generate numeric result
         id: numeric
         shell: bash
         run: |
           set +e
           node farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa.mjs
-          CODE=$?
-          mkdir -p farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
-          cp farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12/r045_round12_qa_result.json
-          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "code=$?" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Gate version
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='version').pass?0:1)"
+      - name: Gate graph identity
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='water_graph_identity_preserved').pass?0:1)"
+      - name: Gate outlet count
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='three_or_more_trunk_outlet_corridors').pass?0:1)"
+      - name: Gate interfluve substantive
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='interfluve_work_is_substantive').pass?0:1)"
+      - name: Gate head catchment bounded
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='head_catchment_work_is_bounded').pass?0:1)"
+      - name: Gate outlet subtle
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='outlet_continuum_is_subtle').pass?0:1)"
+      - name: Gate combined bounded
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='combined_catchment_delta_bounded').pass?0:1)"
+      - name: Gate divide tracking
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='interfluve_signal_tracks_divides').pass?0:1)"
+      - name: Gate outlet tracking
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='outlet_signal_tracks_corridors').pass?0:1)"
+      - name: Gate no forward wall
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='no_new_forward_wall').pass?0:1)"
+      - name: Gate rear unchanged
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='rear_mountain_controls_unchanged').pass?0:1)"
+      - name: Gate receiver unchanged
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='front_receiver_controls_unchanged').pass?0:1)"
+      - name: Gate drainage terrace exclusion
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='terrace_permission_excludes_extended_drainage').pass?0:1)"
+      - name: Gate terrace remains available
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='terrace_permission_remains_available').pass?0:1)"
+      - name: Gate locks and evidence boundary
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');let n=['visual_acceptance_locked','terrace_generator_locked','parcel_generator_locked','water_state_unknown','no_active_flow_claim'];process.exit(n.every(k=>r.checks.find(x=>x.name===k).pass)?0:1)"
       - name: Browser fixed-view gate
-        id: browser
         if: always()
         shell: bash
         run: |
@@ -38,19 +76,14 @@ jobs:
           PAGE='http://127.0.0.1:8123/farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_audit.html'
           OUT="$ROOT/farmland-object-dna/research/r045-autonomous-rebuild/round-12"
           CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-          python3 -m http.server 8123 --bind 127.0.0.1 > /tmp/r045-r12-http.log 2>&1 &
-          SERVER_PID=$!
-          sleep 2
-          if [ -z "$CHROME_BIN" ]; then
-            SHOT_STATUS=127; DOM_STATUS=127; : > /tmp/r045-round12-dom.html
-          else
+          python3 -m http.server 8123 --bind 127.0.0.1 > /tmp/r045-r12-http.log 2>&1 & SERVER_PID=$!; sleep 2
+          if [ -z "$CHROME_BIN" ]; then SHOT_STATUS=127; DOM_STATUS=127; : > /tmp/r045-round12-dom.html; else
             unset DBUS_SESSION_BUS_ADDRESS
             FLAGS=(--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-component-update --disable-sync --disable-extensions --disable-default-apps --disable-domain-reliability --no-first-run --no-default-browser-check --metrics-recording-only --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=3500)
             timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --screenshot="$OUT/r045_round12_fixed_view.png" "$PAGE"; SHOT_STATUS=$?
             timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --dump-dom "$PAGE" > /tmp/r045-round12-dom.html; DOM_STATUS=$?
           fi
-          kill "$SERVER_PID" 2>/dev/null || true
-          grep -q 'data-ready="true"' /tmp/r045-round12-dom.html; READY_STATUS=$?
+          kill "$SERVER_PID" 2>/dev/null || true; grep -q 'data-ready="true"' /tmp/r045-round12-dom.html; READY_STATUS=$?
           export SHOT_STATUS DOM_STATUS READY_STATUS CHROME_BIN OUT
           python3 - <<'PY'
           import json, os
@@ -60,27 +93,6 @@ jobs:
           with open(os.path.join(out,'r045_round12_browser_result.json'),'w') as f: json.dump(r,f,indent=2)
           print(json.dumps(r,indent=2)); raise SystemExit(0 if r['passed'] else 3)
           PY
-      - name: Persist machine-readable gate evidence
-        if: always()
-        shell: bash
-        run: |
-          set -e
-          mkdir -p farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
-          if [ -f farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_browser_result.json ]; then
-            cp farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12/r045_round12_browser_result.json
-          fi
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add farmland-object-dna/research/r045-autonomous-rebuild/evidence/round-12
-          if ! git diff --cached --quiet; then
-            git commit -m 'farmland R045.12 record CI gate evidence'
-            git push
-          fi
-      - name: Enforce numeric gate outcome
-        if: always()
-        shell: bash
-        run: |
-          test "${{ steps.numeric.outputs.code }}" = "0"
       - name: Upload R045.12 audit evidence
         if: always()
         uses: actions/upload-artifact@v4
