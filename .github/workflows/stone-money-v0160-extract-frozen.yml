@@ -1,0 +1,48 @@
+name: Stone Money V0160 recover original ocean
+on:
+  push:
+    branches: [work/stone-money-island-v0160-original-ocean-20260917]
+    paths: [.github/workflows/stone-money-v0160-extract-frozen.yml]
+permissions:
+  contents: write
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract the frozen original without changing renderer or defaults
+        shell: bash
+        run: |
+          python - <<'PY'
+          import urllib.request,json,re,hashlib,pathlib
+          commit='7b6bba5f9affb9cfcfea5dabfafa5e7931bb492d'
+          source='ocean-mother/restart-v0311/source/inline-0.js'
+          url=f'https://raw.githubusercontent.com/haihao0307/guilin-dem-pipeline/{commit}/{source}'
+          text=urllib.request.urlopen(url,timeout=60).read().decode('utf-8')
+          marker='const ORIGINAL_DEEP_HTML='
+          assert text.count(marker)==1
+          original,end=json.JSONDecoder().raw_decode(text.split(marker,1)[1])
+          expected='3498800d4bb287eadf448f01fb8fa8cf1b1f07eb3eab57f1428d824a62b55fd1'
+          actual=hashlib.sha256(original.encode('utf-8')).hexdigest()
+          assert actual==expected,(actual,expected)
+          folder=pathlib.Path('games/survivor-palau/source/v0160/frozen')
+          folder.mkdir(parents=True,exist_ok=True)
+          (folder/'original-deep-v001.html').write_text(original,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',original)
+          components=[]
+          for i,script in enumerate(scripts):
+              name=f'original-script-{i}.js'
+              (folder/name).write_text(script,encoding='utf-8')
+              components.append({'path':name,'bytes':len(script.encode()),'sha256':hashlib.sha256(script.encode()).hexdigest(),'lines':len(script.splitlines())})
+          receipt={'sourceCommit':commit,'sourcePath':source,'originalDeepSha256':actual,'originalBytes':len(original.encode()),'byteIdentical':True,'scripts':components,'rendererChanges':0,'defaultParameterChanges':0,'visualAcceptance':False,'integrationPending':True}
+          (folder/'SOURCE_LOCK.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+      - name: Preserve recovered source only in the game work branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/source/v0160/frozen
+          git diff --cached --quiet || git commit -m 'restore(stone-money): recover exact original Ocean Mother V001 source and lock'
+          git push origin HEAD:work/stone-money-island-v0160-original-ocean-20260917
