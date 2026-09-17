@@ -47,11 +47,11 @@ export const inheritedBendRepairDelta=R12.inheritedBendRepairDelta;
 export const carrierProfile=R12.carrierProfile;
 
 // R045.12 evidence shows a broad interfluve reversal centred near z=-174: 40% of eligible
-// cross-slope samples rise >0.55 m per 4 m. The mistake would be to add noise, deepen channels, or
-// relax the gate. Instead, construct a monotone longitudinal bridge only on land that is clear of
-// the drainage carriers. The bridge uses the inherited surface at two anchors; it does not invent a
-// surveyed profile, channel section, discharge, soil strength, terrace dimension or active flow.
-export const continuityBand={z0:-190,z1:-146,fade:8,drainageProtect0:14,drainageProtect1:32};
+// cross-slope samples rise >0.55 m per 4 m. The first R045.13 runner reduced this to 13%, but the
+// remaining failures sat in the 16..30 m shoulder transition where the repair was intentionally
+// too weak. Do not relax the wall gate: protect the actual drainage axes (<10 m) and let the
+// monotone bridge reach full strength by 22 m. This changes shoulder continuity, not channel beds.
+export const continuityBand={z0:-190,z1:-146,fade:8,drainageProtect0:10,drainageProtect1:22};
 function endpointSlope(x,z,side){
   const e=4;
   return side<0?(R12.height(x,z)-R12.height(x,z-e))/e:(R12.height(x,z+e)-R12.height(x,z))/e;
@@ -89,7 +89,6 @@ export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),d
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 
-// Keep the R045.12 candidate logic, but recompute slope/curvature against the repaired surface.
 export function terracePermission(x,z){
   if(z<-158||z>8||Math.abs(x)>205)return 0;
   const g=gradient(x,z),s=g.mag;
@@ -109,7 +108,6 @@ export function suitability(x,z){
   return C(base*(1-.82*sp)*(1-.95*rp),0,1);
 }
 
-// R08 terrace pilot remains frozen failure evidence only.
 export function terracedPilotHeight(x,z){return R12.terracedPilotHeight(x,z)}
 export function pilotInfluence(x,z){return R12.pilotInfluence(x,z)}
 export function pilotRiserInfluence(x,z){return R12.pilotRiserInfluence(x,z)}
@@ -127,7 +125,7 @@ export const snapshot={
   round13:{
     scope:'repair inherited interfluve longitudinal reversal before any terrace generation',
     continuityBand,
-    method:'monotone Hermite bridge blended only >=14..32 m from drainage carriers',
+    method:'monotone Hermite bridge; actual drainage axis protected <10 m, full interfluve response by 22 m',
     evidenceClass:'synthetic continuity repair; not surveyed Yunnan terrain',
     forbiddenClaims:['surveyed profile','measured channel section','active flow','regional terrace dimension','soil strength']
   }
