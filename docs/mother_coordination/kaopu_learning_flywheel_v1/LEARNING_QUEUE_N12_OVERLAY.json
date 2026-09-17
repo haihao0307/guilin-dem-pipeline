@@ -1,0 +1,49 @@
+{
+  "id": "KAOPU-NOISE-N12-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N11_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N11_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_SHADER_MODULE_CONTINUITY_N11.md",
+    "LEARNING_LOG/2026-09-17_DERIVATIVE_COVERAGE_N10.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6C",
+    "topic": "WebGL2 runtime behavior of modular discontinuities and kinks",
+    "question": "Does the N11 continuity matrix reproduce inside an actual WebGL2 fragment quad?",
+    "state": "candidate-partial-webgl2-swiftshader-runtime-verified",
+    "evidence": [
+      "references/webgl2-module-derivative-n12/SOURCE_LOCK.json",
+      "PROBES/webgl2_module_derivative_probe_n12.html",
+      "PROBES/extract_webgl2_module_derivative_probe_n12.py",
+      "PROBES/webgl2_module_derivative_result_n12.json",
+      "LEARNING_LOG/2026-09-18_WEBGL2_MODULE_DERIVATIVE_N12.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {"mother": "Brick Material", "entry": "HOUSE PR15", "receipt": "N09 awaiting acknowledgement", "actionThisRound": "prepared N12 addendum; held to avoid repeat delivery"},
+    {"mother": "Landscape", "entry": "guilin-dem-pipeline PR79", "receipt": "no new N02 receipt", "actionThisRound": "held; no repeat delivery"},
+    {"mother": "Farmland", "entry": "guilin-dem-pipeline PR65", "receipt": "no new N02 receipt", "actionThisRound": "held; no repeat delivery"}
+  ],
+  "verificationReceipt": {
+    "normativeSpec": "GLSL ES 3.00.6",
+    "runtimeChecks": "10/10 pass",
+    "successfulRun": 35254768156,
+    "workflowCommit": "e02033f7d06344dfc5ed6300e9d07d49aafa4a4c",
+    "runtime": "Chrome 152 / WebGL2 / ANGLE Vulkan SwiftShader",
+    "hardwareGpu": "Unknown",
+    "evidenceIndependence": "The Khronos contract, N11 CPU model and N12 WebGL2 runtime have distinct roles. N11 and N12 share the same synthetic field design, so agreement is runtime transfer evidence, not an independent algorithm or production root."
+  },
+  "nextGap": "After Mother acknowledgement, test the selected real R8 mask and locked views on hardware. Without a receipt, bound mediump precision and large-coordinate failure modes for mobile-class modular shaders."
+}
