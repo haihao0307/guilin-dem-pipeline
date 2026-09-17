@@ -1,0 +1,94 @@
+{
+  "id": "KAOPU-NOISE-N02-FLYWHEEL-20260917",
+  "status": "queued",
+  "source": "User explicitly requests continued study and transfer through existing flywheel",
+  "inherits": "LEARNING_LOG/2026-09-17_NOISE_N01_PRODUCTION_INTAKE.md",
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "authorizedForProductionMethods": true,
+    "runtimeIntegrationVerified": false
+  },
+  "sequence": [
+    {
+      "id": "N02-1",
+      "topic": "Perlin/OpenSimplex/Value + domain warp",
+      "question": "At identical coordinates and seed, what changes in field, actual geometry and derivative when warp is enabled?",
+      "doneWhen": "Pinned source + baseline/warp comparison + chain-rule normal check + measured cost; distinguish CPU from GPU.",
+      "state": "next"
+    },
+    {
+      "id": "N02-2",
+      "topic": "Cellular",
+      "question": "Which return type provides appropriate value/edge/gradient behavior for soil grains and rock details?",
+      "doneWhen": "Compare CellValue, F1 and F2-F1 with seams and derivatives; geometry/material use separate.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-3",
+      "topic": "fBm/ridged/multiscale",
+      "question": "How do amplitude, frequency and filtering preserve desired shape under sampling changes?",
+      "doneWhen": "Pre/post-clamp distribution, silhouette and LOD checks; no automatic zero-mean or mandatory 17 layers.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-4",
+      "topic": "psrdnoise",
+      "question": "Does composed warp/noise retain requested spatial and temporal continuity?",
+      "doneWhen": "Check actual period restrictions, derivatives, wrapping, phase and target language; flow appearance is not material advection.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-5",
+      "topic": "erosion",
+      "question": "What extra state is necessary beyond noise to account for water/sediment transport?",
+      "doneWhen": "Limited conservative example with sources/sinks and boundaries; inherit N01 counterexample, do not replace canonical terrain.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-6",
+      "topic": "modular shader",
+      "question": "Which small source-licensed function improves current authorized surface task?",
+      "doneWhen": "Coordinate/state/optics separation, dependency/license record, targeted visual/runtime evidence.",
+      "state": "queued"
+    }
+  ],
+  "feedbackLoop": [
+    "source or counterexample",
+    "bounded validation",
+    "targeted guidance",
+    "actual executor receipt",
+    "implementation fixed version",
+    "public runtime/device QA",
+    "user visual acceptance",
+    "update current best view"
+  ],
+  "stopRules": [
+    "Do not repeat unchanged guidance or restart previous failures.",
+    "If target receipt absent, record pending; proceed to other useful learning.",
+    "No adopted/completed status from message count or publication alone."
+  ],
+  "routes": [
+    {
+      "mother": "Landscape",
+      "entry": "PR79",
+      "guidance": "Stable material coordinates and warp derivatives; inherit Y04 clipping failure. Preserve current base.",
+      "receipt": "Unknown"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "PR65",
+      "guidance": "Soil details only; preserve shared bunds, hydraulic topology and capacity. Noise cannot define water transfers.",
+      "receipt": "Unknown"
+    },
+    {
+      "mother": "Brick/Tiles",
+      "entry": null,
+      "guidance": "Grain scale and actual authorized surface displacement, preserve joints/overlap.",
+      "receipt": "pending-current-route-verification"
+    }
+  ]
+}
