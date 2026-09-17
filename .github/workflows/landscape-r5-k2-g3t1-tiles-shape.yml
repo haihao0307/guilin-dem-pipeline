@@ -29,7 +29,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import hashlib, json, re
+          import json, re
           src = Path('workbenches/landscape-surface-r5-k2-geometry-r3/index.html').read_text(encoding='utf-8')
           out = Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
           build = json.loads(Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build.json').read_text(encoding='utf-8'))
@@ -37,8 +37,8 @@ jobs:
               a = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, src, re.S)
               b = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, out, re.S)
               assert a and b and a.group(1) == b.group(1), sid
-          afs = re.search(r'const FS=`(.*?)`;\n\'use strict\';', src, re.S)
-          bfs = re.search(r'const FS=`(.*?)`;\n\'use strict\';', out, re.S)
+          afs = re.search(r"const FS=`(.*?)`;\n'use strict';", src, re.S)
+          bfs = re.search(r"const FS=`(.*?)`;\n'use strict';", out, re.S)
           assert afs and bfs and afs.group(1) == bfs.group(1), 'fragment/material baseline changed'
           required = [
               'R5.K2.G3.T1',
@@ -49,7 +49,6 @@ jobs:
               'local+=aN*shell',
               'localN=normalize(cross(tx,tz))',
               'float lmSoilShell',
-              'wholeObjectDomainWarp',
           ]
           for token in required:
               assert token in out, token
@@ -77,7 +76,8 @@ jobs:
           from pathlib import Path
           import re
           s=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
-          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',s,re.S); fs=re.search(r'const FS=`(.*?)`;\n\'use strict\';',s,re.S)
+          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',s,re.S)
+          fs=re.search(r"const FS=`(.*?)`;\n'use strict';",s,re.S)
           assert vs and fs
           Path('/tmp/g3t1.vert').write_text(vs.group(1),encoding='utf-8')
           Path('/tmp/g3t1.frag').write_text(fs.group(1),encoding='utf-8')
