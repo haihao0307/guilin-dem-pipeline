@@ -1,0 +1,133 @@
+name: Landscape R5.K2.G3.T1 Tiles Shape
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build_g3t1.py
+      - .github/workflows/landscape-r5-k2-g3t1-tiles-shape.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build G3.T1 candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build_g3t1.py
+          python workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build_g3t1.py
+
+      - name: Verify the accepted G3 world is unchanged
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+          src = Path('workbenches/landscape-surface-r5-k2-geometry-r3/index.html').read_text(encoding='utf-8')
+          out = Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
+          build = json.loads(Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build.json').read_text(encoding='utf-8'))
+          for sid in ('worldSource','generateSource'):
+              a = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, src, re.S)
+              b = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, out, re.S)
+              assert a and b and a.group(1) == b.group(1), sid
+          afs = re.search(r'const FS=`(.*?)`;\n\'use strict\';', src, re.S)
+          bfs = re.search(r'const FS=`(.*?)`;\n\'use strict\';', out, re.S)
+          assert afs and bfs and afs.group(1) == bfs.group(1), 'fragment/material baseline changed'
+          required = [
+              'R5.K2.G3.T1',
+              'Tiles Mother Shape Microscope · G3 Locked',
+              'Microscope 形体强度',
+              'float lmShapeBand',
+              'for(int j=0;j<17;j++)',
+              'local+=aN*shell',
+              'localN=normalize(cross(tx,tz))',
+              'float lmSoilShell',
+              'wholeObjectDomainWarp',
+          ]
+          for token in required:
+              assert token in out, token
+          assert 'id="scope" type="range" min="0"' in out
+          assert build['schema'] == 'LANDSCAPE_R5_K2_G3T1_TILES_SHAPE_V1'
+          assert build['acceptedVisualBaseline'] == 'R5.K2.G3'
+          assert build['tilesTransfer']['rockVertexDisplacement'] is True
+          assert build['tilesTransfer']['soilVertexDisplacement'] is True
+          assert build['tilesTransfer']['wholeObjectDomainWarp'] is False
+          Path('/tmp/g3t1-static.json').write_text(json.dumps({
+              'worldSourceUnchanged': True,
+              'generateSourceUnchanged': True,
+              'fragmentShaderUnchanged': True,
+              'rockShaderClampM': [-0.110, 0.095],
+              'soilShaderClampM': [-0.045, 0.040],
+              'visualApproved': False,
+              'productionReady': False,
+          }, indent=2), encoding='utf-8')
+          print(Path('/tmp/g3t1-static.json').read_text())
+          PY
+
+      - name: Extract and syntax-check shaders and browser app
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
+          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',s,re.S); fs=re.search(r'const FS=`(.*?)`;\n\'use strict\';',s,re.S)
+          assert vs and fs
+          Path('/tmp/g3t1.vert').write_text(vs.group(1),encoding='utf-8')
+          Path('/tmp/g3t1.frag').write_text(fs.group(1),encoding='utf-8')
+          marker="</script><script>'use strict';"
+          assert marker in s
+          app="'use strict';"+s.rsplit(marker,1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/g3t1-app.js').write_text(app,encoding='utf-8')
+          PY
+          node --check /tmp/g3t1-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/g3t1.vert
+          glslangValidator -S frag /tmp/g3t1.frag
+
+      - name: Run unchanged G3 generator QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html').read_text(encoding='utf-8')
+          blocks=[]
+          for sid in ('worldSource','generateSource'):
+              m=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,s,re.S); assert m; blocks.append(m.group(1))
+          Path('/tmp/g3t1-runtime.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          cat >> /tmp/g3t1-runtime.js <<'JS'
+          const fs=require('fs');
+          const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,geo:1.65,concavity:.85,spikeGuard:.95,soilMicro:.80};
+          const data=generateScene(cfg,()=>{}),r=data.report,g=r.microscopeGeometry,soil=r.soilMicroscope;
+          if(g.triangleFlipCount!==0||g.protectedDriftCount!==0||g.baseTriangleFlipCount!==0)throw Error('accepted G3 geometry gate failed');
+          if(soil.triangleFlipCount!==0)throw Error('accepted G3 soil gate failed');
+          const qa={schema:'LANDSCAPE_R5_K2_G3T1_RUNTIME_QA',date:'2026-09-17',acceptedG3:{mainVertices:r.mainVertices,mainTriangles:r.mainTriangles,mainSignature:r.parts.find(p=>p.name==='主岩体').signature,soilSignature:r.parts.find(p=>p.name==='土体与风化基底').signature,microscopeGeometry:g,soilMicroscope:soil},tilesVertexShape:{source:'Tiles Mother 08F.2',oneScalarField:true,octaves:17,rockClampM:[-.110,.095],soilClampM:[-.045,.040],movesRenderedVertices:true,recomputesNormals:true,wholeObjectDomainWarp:false,sourceGeneratorUnchanged:true},visualApproved:false,productionReady:false};
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/runtime-qa.json',JSON.stringify(qa,null,2));
+          console.log(JSON.stringify(qa));
+          JS
+          node --check /tmp/g3t1-runtime.js
+          node /tmp/g3t1-runtime.js
+
+      - name: Materialize G3.T1 candidate
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r3-tiles-microscope/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "G3.T1 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize Tiles-shape R5.K2.G3.T1 [skip ci]"
+          git push
