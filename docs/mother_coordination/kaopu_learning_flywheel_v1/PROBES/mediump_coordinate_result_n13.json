@@ -1,0 +1,144 @@
+{
+  "schema": "kaopu-mediump-coordinate-probe-n13-v1",
+  "emulation": "IEEE-754 binary16 candidate matching GLSL ES mediump minimum relative precision/range class; not a universal mediump implementation",
+  "coordinateStep": 0.0078125,
+  "sampleCount": 256,
+  "rows": [
+    {
+      "offset": 0,
+      "binary16UlpAtOffset": 5.960464477539063e-08,
+      "directUniqueCoordinates": 256,
+      "directUniquePhases": 128,
+      "directAdjacentCollapseFraction": 0.0,
+      "directPhaseRmse": 0.0,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.0,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 8,
+      "binary16UlpAtOffset": 0.0078125,
+      "directUniqueCoordinates": 256,
+      "directUniquePhases": 128,
+      "directAdjacentCollapseFraction": 0.0,
+      "directPhaseRmse": 0.0,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.0,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 16,
+      "binary16UlpAtOffset": 0.015625,
+      "directUniqueCoordinates": 129,
+      "directUniquePhases": 64,
+      "directAdjacentCollapseFraction": 0.4980392156862745,
+      "directPhaseRmse": 0.08786892093126557,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.0026589808556877824,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 64,
+      "binary16UlpAtOffset": 0.0625,
+      "directUniqueCoordinates": 33,
+      "directUniquePhases": 16,
+      "directAdjacentCollapseFraction": 0.8745098039215686,
+      "directPhaseRmse": 0.17425553143121456,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.02668361639051282,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 256,
+      "binary16UlpAtOffset": 0.25,
+      "directUniqueCoordinates": 9,
+      "directUniquePhases": 4,
+      "directAdjacentCollapseFraction": 0.9686274509803922,
+      "directPhaseRmse": 0.33707112507507225,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.02185502487294592,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 1024,
+      "binary16UlpAtOffset": 1.0,
+      "directUniqueCoordinates": 3,
+      "directUniquePhases": 1,
+      "directAdjacentCollapseFraction": 0.9921568627450981,
+      "directPhaseRmse": 0.5739662497563555,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.24317739804352784,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 4096,
+      "binary16UlpAtOffset": 4.0,
+      "directUniqueCoordinates": 1,
+      "directUniquePhases": 1,
+      "directAdjacentCollapseFraction": 1.0,
+      "directPhaseRmse": 0.5739662497563555,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.3394745855920369,
+      "splitValueNoiseRmse": 0.0
+    },
+    {
+      "offset": 8192,
+      "binary16UlpAtOffset": 8.0,
+      "directUniqueCoordinates": 1,
+      "directUniquePhases": 1,
+      "directAdjacentCollapseFraction": 1.0,
+      "directPhaseRmse": 0.5739662497563555,
+      "splitPhaseRmse": 0.0,
+      "directValueNoiseRmse": 0.21034911941363318,
+      "splitValueNoiseRmse": 0.0
+    }
+  ],
+  "checks": [
+    {
+      "id": "half-format-available",
+      "pass": true
+    },
+    {
+      "id": "origin-retains-grid",
+      "pass": true
+    },
+    {
+      "id": "eight-retains-grid",
+      "pass": true
+    },
+    {
+      "id": "sixteen-loses-samples",
+      "pass": true
+    },
+    {
+      "id": "sixtyfour-mostly-collapses",
+      "pass": true
+    },
+    {
+      "id": "one-kilounit-phase-frozen",
+      "pass": true
+    },
+    {
+      "id": "direct-noise-error-grows",
+      "pass": true
+    },
+    {
+      "id": "split-phase-preserved-all-offsets",
+      "pass": true
+    },
+    {
+      "id": "split-noise-low-error-all-offsets",
+      "pass": true
+    },
+    {
+      "id": "large-offset-not-overflow",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "checks": 10,
+    "passed": 10,
+    "failed": 0,
+    "status": "pass"
+  }
+}
