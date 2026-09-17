@@ -27,11 +27,19 @@ The bounded probe compiles four variants against one identical analytic repeated
 
 It records exact-profile macro state, mean coverage error, phase-to-phase mean instability, adjacent-frame RMS and partial-pixel rate at 16, 8, 4 and 2 pixels per cell. The analytic field is only an executable counterexample; it is not the Brick noise field.
 
-Local browser execution was attempted twice before shader execution. The first attempt found Playwright's default headless-shell absent; the second found the presumed Chromium path absent. An on-demand browser download then timed out. These failures are preserved as environment evidence, not counted as runtime results. The GitHub Actions WebGL2 run is pending.
+Local browser execution was attempted twice before shader execution. The first attempt found Playwright's default headless-shell absent; the second found the presumed Chromium path absent. An on-demand browser download then timed out. These failures are preserved as environment evidence, not counted as runtime results.
+
+[GitHub Actions run 35218517766](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35218517766) then executed the unchanged matrix in Chrome 152, WebGL2 / GLSL ES 3.00, ANGLE Vulkan SwiftShader. All 8 semantic gates passed and the visual/result artifact `10496256211` was preserved with digest `sha256:a23663192f5e993460ee00cbcc025ce1f57bfeafb085e11a25d7157c4b6402c2`.
+
+- `GL_OES_standard_derivatives` was absent in the WebGL2 shader profile.
+- The exact guarded upstream helper equaled hard `step` for every tested scale and phase and produced zero partial pixels.
+- At 2 pixels per cell, the WebGL2-direct helper reduced phase-mean standard deviation from `0.124020` to `0.069270` and coverage error from `0.025565` to `0.009851`; partial coverage rose from `0` to `0.609375`.
+- At 8 pixels per cell, phase-mean standard deviation fell from `0.015097` to `0.000958` and coverage error fell slightly from `0.006661` to `0.006386`.
+- The direct helper reduced phase instability at every tested scale, but it was not universally best on area error. Fixed-width smoothing had lower area error at 4, 8 and 16 pixels per cell, while it collapsed to hard-step behavior at 2 pixels per cell. This is a retained counterexample against blanket replacement.
 
 ## Candidate / Current Best View
 
-Status: **Candidate partial / source contract verified; target runtime pending**.
+Status: **Candidate partial / pinned-source and one SwiftShader WebGL2 probe verified**.
 
 - Keep the scalar generator in object coordinates. The threshold helper consumes that scalar and screen-space derivatives only to estimate fragment coverage.
 - For WebGL2, use a profile-specific direct derivative helper rather than the upstream WebGL1 extension macro guard. Record that adaptation separately from the pinned upstream source.
@@ -51,7 +59,7 @@ Status: **Candidate partial / source contract verified; target runtime pending**
 
 ## Unknown / routing state
 
-- The GitHub Actions WebGL2 result, exact renderer, screenshots and numerical matrix are pending.
+- The analytic WebGL2 result and screenshot are available, but they cover only Chrome 152 / ANGLE Vulkan SwiftShader.
 - Full R8 integration, locked Brick camera behavior, normal/roughness interaction, fragment cost, hardware GPU, mobile/public deployment and user visual acceptance are Unknown.
 - Brick Material Mother has not received or acknowledged this route. The route is prepared only.
 - Landscape PR79 and Farmland PR65 still have no new receipt after earlier N02 guidance, so no repeat was sent. Brick shape and Tiles/building were not routed.
@@ -59,6 +67,6 @@ Status: **Candidate partial / source contract verified; target runtime pending**
 
 ## Next gate
 
-Run the unchanged probe on a documented WebGL2 implementation. If it confirms the profile mismatch and the adapted helper reduces scale/phase instability without semantic leakage, send one incremental trial request to Brick Material PR15. Mother implementation and user acceptance remain separate.
+Send one incremental trial request to Brick Material PR15. The Mother should choose one mask, keep the current fixed-width path as a control, and judge locked R8 cameras, cost and hardware/mobile behavior before any adoption. Mother implementation and user acceptance remain separate.
 
 First-tier expert AI was not called; routine expert discussion remains owned by the separate night expert task.

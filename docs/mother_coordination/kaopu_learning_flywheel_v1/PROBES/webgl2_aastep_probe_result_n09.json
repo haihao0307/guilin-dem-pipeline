@@ -1,0 +1,53 @@
+{
+  "schema": "kaopu-webgl2-aastep-probe-v1",
+  "size": 128,
+  "idealArea": 0.16619025137490007,
+  "macro": {"macroDefined": false, "rgba": [0, 0, 0, 255]},
+  "variants": {
+    "hard": {
+      "2": {"meanCoverage":0.140625,"meanCoverageAbsError":0.025565251374900066,"phaseMeanStddev":0.12401959270615269,"adjacentFrameRms":0.16666666666666666,"partialPixelFraction":0},
+      "4": {"meanCoverage":0.17578125,"meanCoverageAbsError":0.009590998625099934,"phaseMeanStddev":0.059369859974885406,"adjacentFrameRms":0.2760079655385844,"partialPixelFraction":0},
+      "8": {"meanCoverage":0.1728515625,"meanCoverageAbsError":0.0066613111250999335,"phaseMeanStddev":0.015097289876699518,"adjacentFrameRms":0.18660250018783342,"partialPixelFraction":0},
+      "16": {"meanCoverage":0.164306640625,"meanCoverageAbsError":0.0018836107499000665,"phaseMeanStddev":0.005253279978356937,"adjacentFrameRms":0.12757441804214162,"partialPixelFraction":0}
+    },
+    "upstream_guarded": {
+      "2": {"meanCoverage":0.140625,"meanCoverageAbsError":0.025565251374900066,"phaseMeanStddev":0.12401959270615269,"adjacentFrameRms":0.16666666666666666,"partialPixelFraction":0},
+      "4": {"meanCoverage":0.17578125,"meanCoverageAbsError":0.009590998625099934,"phaseMeanStddev":0.059369859974885406,"adjacentFrameRms":0.2760079655385844,"partialPixelFraction":0},
+      "8": {"meanCoverage":0.1728515625,"meanCoverageAbsError":0.0066613111250999335,"phaseMeanStddev":0.015097289876699518,"adjacentFrameRms":0.18660250018783342,"partialPixelFraction":0},
+      "16": {"meanCoverage":0.164306640625,"meanCoverageAbsError":0.0018836107499000665,"phaseMeanStddev":0.005253279978356937,"adjacentFrameRms":0.12757441804214162,"partialPixelFraction":0}
+    },
+    "fixed_width": {
+      "2": {"meanCoverage":0.140625,"meanCoverageAbsError":0.025565251374900066,"phaseMeanStddev":0.12401959270615269,"adjacentFrameRms":0.16666666666666666,"partialPixelFraction":0},
+      "4": {"meanCoverage":0.16548713235293974,"meanCoverageAbsError":0.0007031190219603245,"phaseMeanStddev":0.04811084866842972,"adjacentFrameRms":0.2476549678091682,"partialPixelFraction":0.03125},
+      "8": {"meanCoverage":0.1666015624999994,"meanCoverageAbsError":0.0004113111250993451,"phaseMeanStddev":0.011610700471932252,"adjacentFrameRms":0.15291051704460287,"partialPixelFraction":0.046875},
+      "16": {"meanCoverage":0.16645124846813728,"meanCoverageAbsError":0.00026099709323720854,"phaseMeanStddev":0.0012822714750963184,"adjacentFrameRms":0.08512893205858248,"partialPixelFraction":0.052734375}
+    },
+    "webgl2_direct": {
+      "2": {"meanCoverage":0.17604166666665563,"meanCoverageAbsError":0.009851415291755566,"phaseMeanStddev":0.06926955281702493,"adjacentFrameRms":0.15186353275350775,"partialPixelFraction":0.609375},
+      "4": {"meanCoverage":0.1781862745098031,"meanCoverageAbsError":0.011996023134903028,"phaseMeanStddev":0.007518060242872892,"adjacentFrameRms":0.15785390961955442,"partialPixelFraction":0.41015625},
+      "8": {"meanCoverage":0.17257582720588152,"meanCoverageAbsError":0.006385575830981455,"phaseMeanStddev":0.0009578660085983069,"adjacentFrameRms":0.09709946192916867,"partialPixelFraction":0.2294921875},
+      "16": {"meanCoverage":0.1674622778799019,"meanCoverageAbsError":0.0012720265050018276,"phaseMeanStddev":0.00019028953768313424,"adjacentFrameRms":0.0663739212853732,"partialPixelFraction":0.12060546875}
+    }
+  },
+  "runtime": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "vendor": "WebKit",
+    "renderer": "WebKit WebGL",
+    "unmaskedVendor": "Google Inc. (Google)",
+    "unmaskedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "exactUpstreamEqualsHard": true,
+  "checks": [
+    {"id":"macro-absent-in-webgl2-profile","pass":true},
+    {"id":"upstream-guard-equals-hard-step","pass":true},
+    {"id":"direct-derivative-produces-partial-pixels","pass":true},
+    {"id":"guarded-source-produces-no-partial-pixels","pass":true},
+    {"id":"direct-lowers-coarse-phase-instability","pass":true},
+    {"id":"direct-lowers-eight-pixel-coverage-error","pass":true},
+    {"id":"webgl2-context-confirmed","pass":true},
+    {"id":"glsl-300-profile-confirmed","pass":true}
+  ],
+  "summary": {"checks":8,"passed":8,"failed":0,"status":"pass"}
+}
