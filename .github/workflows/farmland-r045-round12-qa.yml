@@ -31,6 +31,9 @@ jobs:
       - name: Gate outlet count
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='three_or_more_trunk_outlet_corridors').pass?0:1)"
+      - name: Gate upper-slope repair localized
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='upper_slope_repair_is_localized').pass?0:1)"
       - name: Gate interfluve substantive
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='interfluve_work_is_substantive').pass?0:1)"
@@ -49,9 +52,12 @@ jobs:
       - name: Gate outlet tracking
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='outlet_signal_tracks_corridors').pass?0:1)"
-      - name: Gate no forward wall
+      - name: Gate candidate-slope reversal
         if: always()
-        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='no_new_forward_wall').pass?0:1)"
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='candidate_slope_forward_reversal_bounded').pass?0:1)"
+      - name: Gate persistent cross-slope wall
+        if: always()
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='no_persistent_cross_slope_wall').pass?0:1)"
       - name: Gate rear crest bounded
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='rear_crest_change_bounded').pass?0:1)"
