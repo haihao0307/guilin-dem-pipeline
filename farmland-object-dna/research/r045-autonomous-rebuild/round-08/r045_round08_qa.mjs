@@ -36,6 +36,7 @@ add('terrace_candidate_not_global',good/candidate<.65,{good,candidate,fraction:g
 
 const pilot=K.terracePilot;
 add('pilot_has_four_varied_benches',pilot.lines.length===4,pilot.lines.length,'4');
+add('pilot_seed_is_moderate_slope_probe',pilot.seed.slope>=.095&&pilot.seed.slope<=.195,pilot.seed.slope,'0.095..0.195 synthetic test slope');
 const widths=pilot.lines.map(l=>l.fullWidth),lengths=pilot.lines.map(l=>l.length);
 add('pilot_widths_are_materially_varied',cv(widths)>.18,{widths,cv:cv(widths)},'CV>0.18');
 add('pilot_width_range_is_management_scale_probe',Math.min(...widths)>=4.5&&Math.max(...widths)<=8.5,{min:Math.min(...widths),max:Math.max(...widths)},'4.5..8.5m synthetic');
@@ -45,8 +46,8 @@ add('pilot_lengths_are_not_identical',cv(lengths)>.04,{lengths,cv:cv(lengths)},'
 const es=pilot.lines.map(lineElevStats),ds=pilot.lines.map(lineDrainStats);
 add('pilot_contours_remain_near_level',es.every(e=>e.error<.003),es,'max elevation error <0.003m');
 add('pilot_stays_clear_of_major_drainage',ds.every(d=>d.minDrain>12.5),ds,'all min drainage >12.5m');
-const seps=[];for(let i=0;i<pilot.lines.length-1;i++)seps.push(minLineSep(pilot.lines[i].points,pilot.lines[i+1].points));
-add('pilot_adjacent_centrelines_separate',seps.every(v=>v>2.0),seps,'>2m');
+const seps=[],requiredSeps=[];for(let i=0;i<pilot.lines.length-1;i++){seps.push(minLineSep(pilot.lines[i].points,pilot.lines[i+1].points));requiredSeps.push(pilot.lines[i].halfWidth+pilot.lines[i+1].halfWidth)}
+add('pilot_adjacent_bench_footprints_do_not_overlap',seps.every((v,i)=>v>requiredSeps[i]),{separations:seps,required:requiredSeps},'centreline separation > sum of adjacent half-widths');
 
 let maxCF=0,maxCross=0,nearDrainChanged=0,riserSamples=0;
 for(const line of pilot.lines){for(let i=0;i<line.points.length;i+=Math.max(1,Math.floor(line.points.length/7))){const [x,z]=line.points[i],g=K.gradient(x,z),L=Math.hypot(g.dx,g.dz)||1,nx=g.dx/L,nz=g.dz/L;for(const off of [-line.halfWidth,-line.halfWidth*.5,0,line.halfWidth*.5,line.halfWidth]){const xx=x+nx*off,zz=z+nz*off,b=K.height(xx,zz),t=K.terracedPilotHeight(xx,zz);maxCF=Math.max(maxCF,Math.abs(t-b));if(K.nearestTerrainDrainageDistance(xx,zz)<11&&Math.abs(t-b)>1e-6)nearDrainChanged++;if(K.pilotRiserInfluence(xx,zz)>.15)riserSamples++;}const vals=[-line.halfWidth*.5,0,line.halfWidth*.5].map(off=>K.terracedPilotHeight(x+nx*off,z+nz*off));maxCross=Math.max(maxCross,Math.max(...vals)-Math.min(...vals));}}
@@ -58,6 +59,6 @@ add('pilot_exposes_riser_band',riserSamples>0,riserSamples,'>0 sampled riser poi
 const footprint=pilot.lines.reduce((s,l)=>s+l.length*l.fullWidth,0),candidateArea=390*154,ratio=footprint/candidateArea;
 add('pilot_footprint_is_still_bounded',ratio<.055,{footprint,candidateArea,ratio},'<5.5% of candidate slope rectangle');
 
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{foothillShift:shift,maxForwardRise4m:rise,maxDerivativeChange:jump,rearDiff,riverDiff,terracePermissionAbove065:good/candidate,nearDrainagePermission:mean(near),farDrainagePermission:mean(far),pilotSeed:pilot.seed,pilotWidths:widths,pilotLengths:lengths,pilotLines:pilot.lines.map((l,i)=>({id:l.id,target:l.target,width:l.fullWidth,length:l.length,points:l.points.length,elevation:es[i],drainage:ds[i]})),pilotPairSeparations:seps,pilotMaxCutFill:maxCF,pilotMaxCrossfall:maxCross,pilotRiserSamples:riserSamples,pilotFootprintRatio:ratio},snapshot:K.snapshot};
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{foothillShift:shift,maxForwardRise4m:rise,maxDerivativeChange:jump,rearDiff,riverDiff,terracePermissionAbove065:good/candidate,nearDrainagePermission:mean(near),farDrainagePermission:mean(far),pilotSeed:pilot.seed,pilotWidths:widths,pilotLengths:lengths,pilotLines:pilot.lines.map((l,i)=>({id:l.id,target:l.target,width:l.fullWidth,length:l.length,points:l.points.length,elevation:es[i],drainage:ds[i]})),pilotPairSeparations:seps,pilotRequiredSeparations:requiredSeps,pilotMaxCutFill:maxCF,pilotMaxCrossfall:maxCross,pilotRiserSamples:riserSamples,pilotFootprintRatio:ratio},snapshot:K.snapshot};
 fs.writeFileSync(new URL('./r045_round08_qa_result.json',import.meta.url),JSON.stringify(result,null,2));
 console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
