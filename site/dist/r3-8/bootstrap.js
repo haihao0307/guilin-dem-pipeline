@@ -23,9 +23,9 @@ if(window.__WENZHOU_HISTORY_1942===true){
     await new Promise(resolve=>setTimeout(resolve,50));
   }
   const {installHistorical1953ControlLayer}=await import('./history-1953-control-layer.js');
-  const {installHistory1942CoastRefinement}=await import('./history-1942-coast-refinement.js');
+  const {installHistory1942CoastRefinementV3}=await import('./history-1942-coast-refinement-v3.js');
   installHistorical1953ControlLayer();
-  installHistory1942CoastRefinement();
+  installHistory1942CoastRefinementV3();
   await new Promise(resolve=>requestAnimationFrame(resolve));
   const location=document.getElementById('location');
   if(location)location.dispatchEvent(new Event('change',{bubbles:true}));
