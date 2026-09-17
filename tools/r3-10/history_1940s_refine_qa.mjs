@@ -14,8 +14,8 @@ try{
   check(!ds.history1940sRefineError,`refine runtime error: ${ds.history1940sRefineError||''}`);
   check(r?.schema==='wenzhou-map-mother/1940s-refine-r28','R28 refine state missing');
   check(r?.mask?.[0]>=1500&&r?.mask?.[1]>=1500,'refined mask resolution too low');
-  check(r?.highGroundSeeds>0,'no DEM high-ground island seeds');
-  check(r?.islandPixelsRestored>0,'no DEM high-ground land restored');
+  check(r?.highGroundSeeds>0,'no base-land high-ground island seeds');
+  check(r?.islandPixelsRestored>0,'no base-land high-ground land restored');
   check(r?.terrainHeightUnchanged===true,'historical mask modified terrain elevation');
   check(Number(r?.landAlphaTest)>=.5,'land alpha threshold can expand blurred land into water');
   check(Number.isFinite(Number(r?.blurLandGrowthPixelsClamped)),'blur land-growth guard did not publish diagnostics');
@@ -26,5 +26,5 @@ try{
   check(ds.history1940sRefine==='r28','R28 dataset marker missing');
   check(ds.history1940sTerrainHeightUnchanged==='true','terrain-height invariant dataset marker missing');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
-  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sIslandPixelsRestoredOutsideBase:ds.history1940sIslandPixelsRestoredOutsideBase,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
 }catch(e){const ds=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(c=>({...c.dataset})):{};failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,dataset:ds,consoleErrors,failures},null,2));}finally{await browser.close();}if(failures.length)process.exit(1);
