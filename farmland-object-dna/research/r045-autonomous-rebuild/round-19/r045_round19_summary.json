@@ -1,72 +1,34 @@
 {
   "version": "R045.19",
   "passed": false,
-  "passedCount": 24,
+  "passedCount": 25,
   "gateCount": 27,
   "failed": [
+    {
+      "name": "continuity_repair_is_substantive",
+      "pass": false,
+      "value": {
+        "max": 3.2,
+        "mean": 0.03178229353528764,
+        "n": 1406,
+        "at": [
+          152,
+          -198
+        ]
+      },
+      "limit": "0.08 < max <= 0.781 m"
+    },
     {
       "name": "repair_field_has_no_new_longitudinal_step",
       "pass": false,
       "value": {
-        "maxRepairStep": 0.7432286578663505,
+        "maxRepairStep": 1.6663507651496516,
         "at": [
-          -185,
+          -175,
           -200
         ]
       },
       "limit": "<0.26 m repair-delta change per 4 m"
-    },
-    {
-      "name": "upper_wall_debt_is_materially_reduced",
-      "pass": false,
-      "value": {
-        "r18": {
-          "fraction": 0.21212121212121213,
-          "z": -202,
-          "count": 7,
-          "eligible": 33,
-          "maxContiguousSpan": 10,
-          "clearance": 16,
-          "threshold": 0.55,
-          "totalEligible": 428,
-          "rowsWithEligible": 15
-        },
-        "r19": {
-          "fraction": 0.21212121212121213,
-          "z": -202,
-          "count": 7,
-          "eligible": 33,
-          "maxContiguousSpan": 10,
-          "clearance": 16,
-          "threshold": 0.55,
-          "totalEligible": 428,
-          "rowsWithEligible": 15
-        }
-      },
-      "limit": "R19 worst fraction <0.12 and improves by >=0.07"
-    },
-    {
-      "name": "z202_wall_is_reduced",
-      "pass": false,
-      "value": {
-        "r18": {
-          "z": -202,
-          "count": 7,
-          "eligible": 33,
-          "fraction": 0.21212121212121213,
-          "maxRise": 3.382691161970051,
-          "at": -175
-        },
-        "r19": {
-          "z": -202,
-          "count": 7,
-          "eligible": 33,
-          "fraction": 0.21212121212121213,
-          "maxRise": 3.11167506842623,
-          "at": 155
-        }
-      },
-      "limit": "both fraction and maximum rise lower at z=-202"
     }
   ],
   "browser": {
@@ -75,23 +37,23 @@
     "dom_status": 0,
     "ready_marker_status": 0,
     "screenshot_exists": true,
-    "screenshot_bytes": 528209,
+    "screenshot_bytes": 527477,
     "passed": true
   },
   "metrics": {
     "delta": {
-      "max": 0.78,
-      "mean": 0.06305910625369394,
+      "max": 3.2,
+      "mean": 0.03178229353528764,
       "n": 1406,
       "at": [
-        -82,
-        -206
+        152,
+        -198
       ]
     },
     "maxRepairDeltaStep": {
-      "value": 0.7432286578663505,
+      "value": 1.6663507651496516,
       "at": [
-        -185,
+        -175,
         -200
       ]
     },
@@ -107,11 +69,11 @@
       "rowsWithEligible": 15
     },
     "newWall": {
-      "fraction": 0.21212121212121213,
-      "z": -202,
-      "count": 7,
-      "eligible": 33,
-      "maxContiguousSpan": 10,
+      "fraction": 0,
+      "z": -218,
+      "count": 0,
+      "eligible": 30,
+      "maxContiguousSpan": 0,
       "clearance": 16,
       "threshold": 0.55,
       "totalEligible": 428,
@@ -127,11 +89,11 @@
     },
     "new202": {
       "z": -202,
-      "count": 7,
+      "count": 0,
       "eligible": 33,
-      "fraction": 0.21212121212121213,
-      "maxRise": 3.11167506842623,
-      "at": 155
+      "fraction": 0,
+      "maxRise": 0.480000000000004,
+      "at": -175
     },
     "peakRepair": [
       {
@@ -150,7 +112,7 @@
           -114,
           -192
         ],
-        "r19Repair": 0.0005339176503450726
+        "r19Repair": 0
       },
       {
         "id": "C",
@@ -159,7 +121,7 @@
           182,
           -192
         ],
-        "r19Repair": 0.23588515134099686
+        "r19Repair": 0
       }
     ],
     "terraceNearDrainageMean": 0,
