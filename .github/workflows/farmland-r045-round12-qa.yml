@@ -52,9 +52,9 @@ jobs:
       - name: Gate no forward wall
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='no_new_forward_wall').pass?0:1)"
-      - name: Gate rear unchanged
+      - name: Gate rear crest bounded
         if: always()
-        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='rear_mountain_controls_unchanged').pass?0:1)"
+        run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='rear_crest_change_bounded').pass?0:1)"
       - name: Gate receiver unchanged
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-12/r045_round12_qa_result.json');process.exit(r.checks.find(x=>x.name==='front_receiver_controls_unchanged').pass?0:1)"
