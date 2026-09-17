@@ -6,77 +6,42 @@ on:
     branches:
       - coordination/kaopu-learning-flywheel-r1-20260909
     paths:
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/integer_hash_webgpu_n15.html
-      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_wgsl_runtime_n15.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15/**
       - .github/workflows/kaopu-wgsl-integer-hash-n15.yml
 
 permissions:
   contents: read
 
 jobs:
-  wgsl-lavapipe-runtime:
+  wgsl-wgpu-native-lavapipe:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Install Mesa Vulkan software adapter
         run: |
           sudo apt-get update
-          sudo apt-get install -y mesa-vulkan-drivers vulkan-tools xvfb
+          sudo apt-get install -y mesa-vulkan-drivers vulkan-tools
           find /usr/share/vulkan/icd.d -maxdepth 1 -type f -name '*.json' -print
           icd="$(find /usr/share/vulkan/icd.d -maxdepth 1 -type f \( -name '*lvp*.json' -o -name '*lavapipe*.json' \) | head -n1)"
           test -n "$icd"
           echo "VK_ICD_FILENAMES=$icd" >> "$GITHUB_ENV"
-          VK_ICD_FILENAMES="$icd" vulkaninfo --summary
-      - name: Locate runner Chrome
-        id: chrome
+          VK_ICD_FILENAMES="$icd" vulkaninfo --summary | tee /tmp/n15-vulkaninfo.txt
+      - name: Execute pinned wgpu 29 WGSL vectors
+        env:
+          WGPU_BACKEND: vulkan
+        working-directory: docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15
         run: |
-          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
-          test -n "$chrome"
-          "$chrome" --version
-          echo "path=$chrome" >> "$GITHUB_OUTPUT"
-      - name: Execute locked WGSL vectors on WebGPU
-        run: |
-          set -euo pipefail
-          root="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES"
-          python3 -m http.server 8765 --directory "$root" >/tmp/n15-server.log 2>&1 &
-          server=$!
-          trap 'kill $server || true' EXIT
-          for i in {1..20}; do curl -fsS http://127.0.0.1:8765/integer_hash_webgpu_n15.html >/dev/null && break; sleep 0.25; done
-          success=0
-          for angle in gl swiftshader vulkan; do
-            echo "Trying ANGLE backend: $angle"
-            set +e
-            timeout 80 xvfb-run -a "${{ steps.chrome.outputs.path }}" \
-              --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu-sandbox \
-              --enable-unsafe-webgpu --ignore-gpu-blocklist --enable-features=Vulkan \
-              --use-angle="$angle" --user-data-dir="/tmp/chrome-n15-$angle" \
-              --virtual-time-budget=30000 --dump-dom \
-              http://127.0.0.1:8765/integer_hash_webgpu_n15.html \
-              > "/tmp/n15-dom-$angle.html" 2> "/tmp/n15-chrome-$angle.log"
-            code=$?
-            set -e
-            if test "$code" -eq 0 && grep -q '<pre id="result">' "/tmp/n15-dom-$angle.html"; then
-              cp "/tmp/n15-dom-$angle.html" /tmp/n15-dom.html
-              echo "$angle" > /tmp/n15-angle-backend.txt
-              success=1
-              break
-            fi
-            tail -n 80 "/tmp/n15-chrome-$angle.log" || true
-            grep -o '<pre id="error">[^<]*' "/tmp/n15-dom-$angle.html" || true
-          done
-          test "$success" -eq 1
-          python3 "$root/extract_wgsl_runtime_n15.py" /tmp/n15-dom.html /tmp/wgsl_integer_hash_runtime_result_n15.json
-          jq -e '.summary.status == "pass" and .summary.checks == 4' /tmp/wgsl_integer_hash_runtime_result_n15.json
-          jq '{adapterInfo,fallbackRequested,wgsl,checks,summary}' /tmp/wgsl_integer_hash_runtime_result_n15.json
+          cargo generate-lockfile
+          cargo run --release --locked 2>/tmp/n15-wgpu-stderr.log | tee /tmp/wgpu_integer_hash_runtime_result_n15.json
+          jq -e '.summary.status == "pass" and .exactMatch == true and (.hashes|length) == 12' /tmp/wgpu_integer_hash_runtime_result_n15.json
       - name: Preserve bounded evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kaopu-wgsl-integer-hash-n15
+          name: kaopu-wgpu-native-wgsl-n15
           path: |
-            /tmp/n15-dom.html
-            /tmp/n15-dom-*.html
-            /tmp/n15-chrome-*.log
-            /tmp/n15-angle-backend.txt
-            /tmp/wgsl_integer_hash_runtime_result_n15.json
+            /tmp/n15-vulkaninfo.txt
+            /tmp/n15-wgpu-stderr.log
+            /tmp/wgpu_integer_hash_runtime_result_n15.json
+            docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15/Cargo.lock
           if-no-files-found: error
