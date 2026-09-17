@@ -70,20 +70,20 @@ function nearestPath(path,x,z){
 
 const trunkById=id=>naturalStreams.find(s=>s.id===id);
 export const basinProfiles=[
-  {id:'A',path:prepPath(trunkById('A').p),amp:.72,offset:42,width:25,bias:-.24,phase:.35},
-  {id:'B',path:prepPath(trunkById('B').p),amp:.88,offset:47,width:29,bias:.31,phase:1.55},
-  {id:'C',path:prepPath(trunkById('C').p),amp:.64,offset:39,width:23,bias:-.38,phase:2.70}
+  {id:'A',path:prepPath(trunkById('A').p),amp:.46,offset:42,width:25,bias:-.24,phase:.35},
+  {id:'B',path:prepPath(trunkById('B').p),amp:.56,offset:47,width:29,bias:.31,phase:1.55},
+  {id:'C',path:prepPath(trunkById('C').p),amp:.41,offset:39,width:23,bias:-.38,phase:2.70}
 ];
 
-// Broad shoulder field.  The carrier axis (<10 m) remains untouched and the effect fades before
-// the foothill/plain transition.  The two shoulders are intentionally unequal and their strength
-// changes slowly along the basin.  This adds catchment mass at 20..80 m scale without creating a
-// new painted stream, narrow berm, or camera-dependent detail layer.
+// Broad shoulder field.  ALL inherited drainage axes remain untouched, not only the three trunk
+// centre lines.  The two shoulders are intentionally unequal and their strength changes slowly
+// along the basin.  This adds catchment mass at 20..80 m scale without creating a new painted
+// stream, narrow berm, or camera-dependent detail layer.
 function basinOne(b,x,z){
   if(z<=-208||z>=-20)return 0;
   const q=nearestPath(b.path,x,z),sd=q.signed,u=q.u;
   if(q.d>92)return 0;
-  const axisClear=S(10,20,q.d);
+  const drainageClear=S(10,20,R13.nearestExtendedDrainageDistance(x,z));
   const divideClear=.38+.62*S(4,15,R13.nearestDivideDistance(x,z));
   const longitudinal=S(.03,.16,u)*(1-S(.78,.98,u));
   const slow=.86+.14*Math.sin(Math.PI*2*u+b.phase);
@@ -93,7 +93,7 @@ function basinOne(b,x,z){
   const right=rightAmp*G(sd+b.offset,b.width*1.08);
   const inner=-.12*b.amp*(G(sd-b.offset*.48,b.width*.62)+G(sd+b.offset*.44,b.width*.68));
   const broad=.11*b.amp*G(sd,b.width*2.55);
-  return axisClear*divideClear*longitudinal*slow*sourceBoost*(left+right+inner+broad);
+  return drainageClear*divideClear*longitudinal*slow*sourceBoost*(left+right+inner+broad);
 }
 export function basinShoulderDelta(x,z){
   let d=0;for(const b of basinProfiles)d+=basinOne(b,x,z);
@@ -141,7 +141,7 @@ export const snapshot={
   round14:{
     scope:'couple broad asymmetric interfluve shoulders to A/B/C trunk catchments before terrace generation',
     basinProfiles:basinProfiles.map(({id,amp,offset,width,bias,phase})=>({id,amp,offset,width,bias,phase})),
-    method:'deterministic basin-scale shoulder field; drainage axes protected; slow longitudinal variation; foothill fade',
+    method:'deterministic basin-scale shoulder field; full inherited drainage network protected; slow longitudinal variation; foothill fade',
     evidenceClass:'synthetic catchment morphology; not surveyed Yunnan terrain',
     forbiddenClaims:['surveyed cross-section','measured soil or sediment','active flow','regional terrace dimension','ownership']
   }
