@@ -1,0 +1,170 @@
+{
+  "schema": "kaopu-integer-cell-hash-n14-v1",
+  "abi": {
+    "coordinateEncoding": "signed i32 two's-complement bit pattern reinterpreted as u32",
+    "arithmetic": "u32 modulo 2^32",
+    "rightShift": "logical zero-fill",
+    "shiftCount": "0..31 only; never rely on out-of-range behavior",
+    "pairOrder": "ordered (x,y)",
+    "output": "u32 hexadecimal; byte transport is explicit little-endian only where stated"
+  },
+  "vectors": [
+    {
+      "x": -2147483648,
+      "y": -2147483648,
+      "xBits": "0x80000000",
+      "yBits": "0x80000000",
+      "hash": "0x0ccf9faf"
+    },
+    {
+      "x": -2147483648,
+      "y": -1,
+      "xBits": "0x80000000",
+      "yBits": "0xffffffff",
+      "hash": "0x6e683c38"
+    },
+    {
+      "x": -16777217,
+      "y": 16777217,
+      "xBits": "0xfeffffff",
+      "yBits": "0x01000001",
+      "hash": "0x39dd06c6"
+    },
+    {
+      "x": -65536,
+      "y": 65536,
+      "xBits": "0xffff0000",
+      "yBits": "0x00010000",
+      "hash": "0xe3f359d0"
+    },
+    {
+      "x": -1,
+      "y": -1,
+      "xBits": "0xffffffff",
+      "yBits": "0xffffffff",
+      "hash": "0x92c56eef"
+    },
+    {
+      "x": -1,
+      "y": 0,
+      "xBits": "0xffffffff",
+      "yBits": "0x00000000",
+      "hash": "0x9e58184a"
+    },
+    {
+      "x": 0,
+      "y": -1,
+      "xBits": "0x00000000",
+      "yBits": "0xffffffff",
+      "hash": "0xdccecdc0"
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "xBits": "0x00000000",
+      "yBits": "0x00000000",
+      "hash": "0x01fce552"
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "xBits": "0x00000000",
+      "yBits": "0x00000001",
+      "hash": "0x3b4ee4c6"
+    },
+    {
+      "x": 1,
+      "y": 0,
+      "xBits": "0x00000001",
+      "yBits": "0x00000000",
+      "hash": "0x5dd09b26"
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "xBits": "0x00000001",
+      "yBits": "0x00000001",
+      "hash": "0xe9a375cf"
+    },
+    {
+      "x": 2147483647,
+      "y": 2147483647,
+      "xBits": "0x7fffffff",
+      "yBits": "0x7fffffff",
+      "hash": "0x20a7111b"
+    }
+  ],
+  "counterexamples": {
+    "float32CellAlias": {
+      "a": 16777216,
+      "b": 16777217,
+      "f32A": 16777216.0,
+      "f32B": 16777216.0,
+      "aliases": true,
+      "integerHashesDiffer": true
+    },
+    "signedVsUnsignedRightShift": {
+      "input": -1,
+      "arithmeticSignedRight16": 4294967295,
+      "logicalUnsignedRight16": 65535
+    },
+    "outOfRangeShift": {
+      "count": 32,
+      "glslEs": "undefined",
+      "wgslRuntime": "effective count modulo 32; const/override >=32 is an error",
+      "portableRule": "reject before evaluation"
+    }
+  },
+  "checks": [
+    {
+      "id": "vector-count-12",
+      "pass": true
+    },
+    {
+      "id": "signed-encoding-is-bijective-on-fixture",
+      "pass": true
+    },
+    {
+      "id": "pair-hashes-distinct-on-fixture",
+      "pass": true
+    },
+    {
+      "id": "minus-one-encodes-ffffffff",
+      "pass": true
+    },
+    {
+      "id": "int-min-encodes-80000000",
+      "pass": true
+    },
+    {
+      "id": "overflow-multiply-wraps",
+      "pass": true
+    },
+    {
+      "id": "unsigned-right-shift-zero-fills",
+      "pass": true
+    },
+    {
+      "id": "signed-right-shift-is-different",
+      "pass": true
+    },
+    {
+      "id": "float32-cell-identity-aliases",
+      "pass": true
+    },
+    {
+      "id": "u32-cell-identity-does-not-alias",
+      "pass": true
+    },
+    {
+      "id": "shift-31-accepted",
+      "pass": true
+    }
+  ],
+  "summary": {
+    "checks": 11,
+    "passed": 11,
+    "failed": 0,
+    "status": "pass"
+  }
+}
