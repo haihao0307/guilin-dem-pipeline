@@ -75,8 +75,8 @@ function nearestPath(path,x,z){
   return best;
 }
 
-// Each profile is intentionally different.  A single shared parameter set would merely create
-// three scaled clones.  sourceOffset->midOffset contracts the broad amphitheatre toward the
+// Each profile is intentionally different. A single shared parameter set would merely create
+// three scaled clones. sourceOffset->midOffset contracts the broad amphitheatre toward the
 // transport reach; source/mid/tail weights provide longitudinal hierarchy instead of free noise.
 export const catchmentHierarchyProfiles=R15.basinProfiles.map((b,i)=>({
   id:b.id,
@@ -103,10 +103,11 @@ export function catchmentHierarchyComponent(p,x,z){
   const env=S(-220,-174,z)*(1-S(-76,-34,z));
   if(env<=0)return 0;
 
-  // Protect the complete inherited drainage skeleton.  The 12..42 m ramp is deliberately broad;
-  // a narrow ring would create a false berm around tributaries.  This is morphology around a basin,
-  // not a second water channel.
-  const drainageClear=S(12,42,R15.nearestExtendedDrainageDistance(x,z));
+  // Protect the complete inherited drainage skeleton. A second failed draft showed that even a
+  // 30 m protection ramp could leave a visible longitudinal kink where an oblique tributary crosses
+  // the broad basin shoulder. The 12..56 m transition is intentionally macro-scale: it preserves
+  // the axis exactly while moving the catchment-volume deformation gradually onto the interfluve.
+  const drainageClear=S(12,56,R15.nearestExtendedDrainageDistance(x,z));
   if(drainageClear<=0)return 0;
   const divideEase=.62+.38*S(5,18,R15.nearestDivideDistance(x,z));
 
@@ -120,9 +121,9 @@ export function catchmentHierarchyComponent(p,x,z){
   const leftAmp=p.amp*hierarchy*(1+p.bias*(.72+.28*source));
   const rightAmp=p.amp*hierarchy*(1-p.bias*(.72+.28*source));
 
-  // Unequal broad shoulders define the catchment volume.  A very shallow central concavity links
+  // Unequal broad shoulders define the catchment volume. A very shallow central concavity links
   // the shoulders perceptually but cannot cut the protected drainage axis because drainageClear=0
-  // there.  Slow phase changes are basin identity, not stochastic detail.
+  // there. Slow phase changes are basin identity, not stochastic detail.
   const left=leftAmp*G(sd-off,w);
   const right=rightAmp*G(sd+off*1.04,w*1.08);
   const centre=-.15*p.amp*(.86*source+.58*convergence+.24*transport)*G(sd+p.bias*8,w*1.45);
@@ -176,7 +177,7 @@ export const snapshot={
   waterStateKnown:false,
   round16:{
     scope:'couple source amphitheatre, convergence shoulders and transport context into one A/B/C basin hierarchy before terrace generation',
-    method:'broad deterministic carrier-tied hierarchy field with 46 m source entry and 42 m lower fade; complete inherited drainage skeleton protected; R15 foothill/plain field retained; no new water graph',
+    method:'broad deterministic carrier-tied hierarchy field with 46 m source entry, 42 m lower fade and 44 m drainage-to-interfluve shoulder transition; complete inherited drainage skeleton protected; R15 foothill/plain field retained; no new water graph',
     referenceUse:'user terrace photographs constrain hierarchy/continuity/irregular nesting only; no metric extraction',
     evidenceClass:'synthetic catchment-scale morphology; not surveyed Yunnan terrain',
     forbiddenClaims:['surveyed catchment geometry','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
