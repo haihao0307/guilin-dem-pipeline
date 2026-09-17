@@ -1,0 +1,30 @@
+{
+  "version": "R045.06",
+  "passed": true,
+  "gateCount": 14,
+  "checks": [
+    {"name":"A2_C2_excess_contrast_reduced","pass":true,"value":{"R05":{"A2":4.411315024942496,"C2":4.073363770080434},"R06":{"A2":4.1741776218118005,"C2":3.797867626322841}},"limit":"each >0.12m reduction"},
+    {"name":"A2_C2_drainage_not_erased","pass":true,"value":{"A2":4.1741776218118005,"C2":3.797867626322841},"limit":">0.35m"},
+    {"name":"other_headwaters_minimally_changed","pass":true,"value":{"A1":0.04601711479773485,"B1":0.00003864806794240394,"B2":9.50564071899862e-11,"C1":0.06017879611093235,"C3":0.061855544360490455},"limit":"max <0.26m"},
+    {"name":"isolated_fan_prominence_reduced","pass":true,"value":[0.8725293745563383,0.1945024862085824],"limit":"<0.35*R05"},
+    {"name":"foothill_lateral_curvature_reduced","pass":true,"value":[[0.17248364410033556,2.6570275753614636],[0.0952956937163486,0.98677679997176]],"limit":"<0.72*R05 mean"},
+    {"name":"foothill_transition_no_forward_barrier","pass":true,"value":[-0.005699007795284761,-0.025215677162959915,0.015452189471131028,0.031271375866626316,-0.005131260995512976,0.010905878043688366,0.015551297372055184,0.10316477391405143,0.03120013250882181,-0.0026635960282916926,0.030079981109280007,0.05921580823174444,0.04735647010157851,0.04613959419217406,0.034365794251764004,0.042859914123549725,0.02403101496269522,0.028642270319850338,0.016401007744781593,0.03837511319889675,0.04145712321140049],"limit":"all <0.18m rise per 4m"},
+    {"name":"foothill_blend_boundary_derivative_jump_bounded","pass":true,"value":[0.0079746006226884,0.0023500596474526863],"limit":"<0.015m/m derivative jump"},
+    {"name":"catchment_identity_retained_at_toe","pass":true,"value":0.10772324370249042,"limit":">0.10m profile span"},
+    {"name":"rear_ridge_preserved","pass":true,"value":11.789977914227528,"limit":">6.5m"},
+    {"name":"central_forward_profile_no_opposing_wall","pass":true,"value":0.48715790170953,"limit":"<0.65m/4m"},
+    {"name":"river_confined_to_front_receiver","pass":true,"value":[161.9136802902821,179.32887035686338],"limit":"154<z<188"},
+    {"name":"terrace_permission_constrained","pass":true,"value":0.3527777777777778,"limit":"0.10..0.62"},
+    {"name":"terrace_permission_zero_near_drainage","pass":true,"value":0,"limit":"<.03"},
+    {"name":"terrace_permission_viable_away_from_drainage","pass":true,"value":0.7806749480957463,"limit":">.24"}
+  ],
+  "metrics": {
+    "headwaterR05":{"A1":0.2638463746147295,"A2":4.411315024942496,"B1":1.8859004410191886,"B2":0.7500704579679223,"C1":1.6289436538830557,"C2":4.073363770080434,"C3":1.238466771762198},
+    "headwaterR06":{"A1":0.30986348941246433,"A2":4.1741776218118005,"B1":1.885939089087131,"B2":0.7500704580629787,"C1":1.689122449993988,"C2":3.797867626322841,"C3":1.3003223161226884},
+    "toeProminenceR05":0.8725293745563383,"toeProminenceR06":0.1945024862085824,
+    "toeRoughnessR05":[0.17248364410033556,2.6570275753614636],"toeRoughnessR06":[0.0952956937163486,0.98677679997176],
+    "maxToeForwardRise4m":0.10316477391405143,"maxCentralRise4m":0.48715790170953,
+    "terracePermissionAbove065":0.3527777777777778,"nearDrainagePermission":0,"farDrainagePermission":0.7806749480957463,"catchmentToeProfileSpan":0.10772324370249042
+  },
+  "status":{"visualAcceptance":false,"browserQA":false,"terraceGeometryEnabled":false,"parcelGenerationEnabled":false}
+}
