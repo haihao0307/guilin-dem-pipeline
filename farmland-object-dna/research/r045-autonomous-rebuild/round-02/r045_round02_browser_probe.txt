@@ -1,0 +1,17 @@
+R045.02 browser startup probe
+Date: 2026-09-17
+Command 1:
+  timeout 25s chromium --headless=new --no-sandbox --disable-dev-shm-usage --use-gl=swiftshader --enable-unsafe-swiftshader --window-size=640,480 --screenshot=chromium_probe.png file://.../chromium_probe.html
+Result: timeout (exit 124); no screenshot.
+Key runtime errors:
+  Requested GL implementation not found in allowed implementations.
+  ANGLE DisplayVkXcb initialize: xcb_connect() failed.
+  eglInitialize SwANGLE failed with EGL_NOT_INITIALIZED.
+  Failed to connect to /run/dbus/system_bus_socket.
+
+Command 2:
+  timeout 15s chromium --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --dump-dom file://.../chromium_probe.html
+Result: timeout (exit 124); no DOM output.
+
+Conclusion:
+  browserQA=false. The runtime cannot currently complete even a trivial local Chromium probe, so no R045 public workbench is certified from this run. This is an execution-environment blocker, not a workbench pass.
