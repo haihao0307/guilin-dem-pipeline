@@ -13,15 +13,218 @@
         540
       ],
       "pageErrors": [],
-      "consoleErrors": [
-        "Error: glass fragment: ERROR: 0:129: '' : syntax error\n\n1: #version 300 es\n2: precision highp float;\n3: in vec2 vUv;out vec4 outColor;uniform sampler2D uColor,uDepth;uniform int uFinal,uGlassCount;uniform vec4 uGlassRects[8];uniform vec2 uViewport;uniform float uUiTime;\n4: uniform float uParams[102];\n5: #define p_radius uParams[0]\n6: #define p_roundness uParams[1]\n7: #define p_islandHeight uParams[2]\n8: #define p_beachWidth uParams[3]\n9: #define p_beachSlope uParams[4]\n10: #define p_shelfWidth uParams[5]\n11: #define p_seaDepth uParams[6]\n12: #define p_bedRelief uParams[7]\n13: #define p_tide uParams[8]\n14: #define p_tideAmplitude uParams[9]\n15: #define p_tidePeriod uParams[10]\n16: #define p_wetLife uParams[11]\n17: #define p_filmLife uParams[12]\n18: #define p_wind uParams[13]\n19: #define p_windDir uParams[14]\n20: #define p_gust uParams[15]\n21: #define p_gustPeriod uParams[16]\n22: #define p_turbulence uParams[17]\n23: #define p_groundDamping uParams[18]\n24: #define p_windShear uParams[19]\n25: #define p_windDrag uParams[20]\n26: #define p_swell uParams[21]\n27: #define p_period uParams[22]\n28: #define p_swellDir uParams[23]\n29: #define p_secondary uParams[24]\n30: #define p_secondaryPeriod uParams[25]\n31: #define p_secondaryDir uParams[26]\n32: #define p_windWave uParams[27]\n33: #define p_crest uParams[28]\n34: #define p_groupScale uParams[29]\n35: #define p_shoal uParams[30]\n36: #define p_curlOuter uParams[31]\n37: #define p_curlMiddle uParams[32]\n38: #define p_curlInner uParams[33]\n39: #define p_curlLip uParams[34]\n40: #define p_curlShoulder uParams[35]\n41: #define p_breakWidth uParams[36]\n42: #define p_breakThreshold uParams[37]\n43: #define p_runup uParams[38]\n44: #define p_backwash uParams[39]\n45: #define p_foam uParams[40]\n46: #define p_foamLife uParams[41]\n47: #define p_foamDiffusion uParams[42]\n48: #define p_foamThickness uParams[43]\n49: #define p_fineFoam uParams[44]\n50: #define p_foamTransport uParams[45]\n51: #define p_shoreFoam uParams[46]\n52: #define p_rockFoam uParams[47]\n53: #define p_residualFoam uParams[48]\n54: #define p_spray uParams[49]\n55: #define p_sprayHeight uParams[50]\n56: #define p_spraySpeed uParams[51]\n57: #define p_dropSize uParams[52]\n58: #define p_mistRatio uParams[53]\n59: #define p_mistLife uParams[54]\n60: #define p_mistSpread uParams[55]\n61: #define p_rockCount uParams[56]\n62: #define p_rockScale uParams[57]\n63: #define p_rockScatter uParams[58]\n64: #define p_rockEmbed uParams[59]\n65: #define p_rockWet uParams[60]\n66: #define p_rockRough uParams[61]\n67: #define p_fireCount uParams[62]\n68: #define p_fireStrands uParams[63]\n69: #define p_fire uParams[64]\n70: #define p_fireHeight uParams[65]\n71: #define p_fireWidth uParams[66]\n72: #define p_fireTurb uParams[67]\n73: #define p_fireSpeed uParams[68]\n74: #define p_fireTemp uParams[69]\n75: #define p_emberRate uParams[70]\n76: #define p_smokeStrands uParams[71]\n77: #define p_smoke uParams[72]\n78: #define p_smokeLife uParams[73]\n79: #define p_smokeRise uParams[74]\n80: #define p_smokeWidth uParams[75]\n81: #define p_smokeTurb uParams[76]\n82: #define p_smokeSpread uParams[77]\n83: #define p_smokeDrag uParams[78]\n84: #define p_smokeFade uParams[79]\n85: #define p_hour uParams[80]\n86: #define p_exposure uParams[81]\n87: #define p_skyLight uParams[82]\n88: #define p_haze uParams[83]\n89: #define p_cloudiness uParams[84]\n90: #define p_cloudSpeed uParams[85]\n91: #define p_clarity uParams[86]\n92: #define p_refraction uParams[87]\n93: #define p_absorption uParams[88]\n94: #define p_waterRough uParams[89]\n95: #define p_glassOpacity uParams[90]\n96: #define p_glassBlur uParams[91]\n97: #define p_glassEdge uParams[92]\n98: #define p_glassFlow uParams[93]\n99: #define p_glassSpeed uParams[94]\n100: #define p_glassRefract uParams[95]\n101: #define p_glassHue uParams[96]\n102: #define p_buttonDuration uParams[97]\n103: #define p_cameraTransition uParams[98]\n104: #define p_orbitSpeed uParams[99]\n105: #define p_zoomSpeed uParams[100]\n106: #define p_autoOrbit uParams[101]\n107: \n108: void main(){vec3 c=texture(uColor,vUv).rgb;\n109:  if(uFinal==1){\n110:  for(int i=0;i<8;i++){\n111:   if(i>=uGlassCount)break;vec4 r=uGlassRects[i];float rad=min(24.0,min(r.z,r.w)*.48);\n112:   vec2 p=gl_FragCoord.xy-r.xy-r.zw*.5,q=abs(p)-(r.zw*.5-rad);\n113:   float d=length(max(q,vec2(0)))+min(max(q.x,q.y),0.0)-rad;\n114:   if(d<0.0){\n115:    vec2 n=normalize(p/max(r.zw*.5,vec2(1.0))+vec2(.0001));float edge=exp(d*.19);\n116:    float t=uUiTime*p_glassSpeed,phase=p.x*.029+p.y*.011-t*.73;\n117:    float flow=sin(phase)+.45*sin(p.y*.023-p.x*.007+t*.52);\n118:    vec2 offset=(n*edge*p_glassRefract+vec2(flow,cos(phase*.77))*.35*p_glassFlow)/uViewport;vec2 uv=clamp(vUv+offset,vec2(.001),vec2(.999));\n119:    vec3 refr=texture(uColor,uv).rgb;\n120:    refr+=texture(uColor,uv+vec2(1.8,0)/uViewport).rgb+texture(uColor,uv-vec2(1.8,0)/uViewport).rgb;\n121:    refr/=3.0;\n122:    c=mix(c,refr,smoothstep(0.0,2.0,-d));vec3 flowColor=.55+.45*cos(vec3(0.0,2.1,4.2)+p_glassHue*.01745);\n123:    float caustic=pow(max(0.0,.5+.5*sin(phase+flow*.3)),7.0);\n124:    c+=vec3(.13,.15,.16)*edge*.16*p_glassEdge;\n125:    c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;\n126:   }\n127:  }\n128:  c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.}\n129:  outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}\n    at shader (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:978:251)\n    at program (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:979:114)\n    at init (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:1431:234)"
-      ],
+      "consoleErrors": [],
       "requestFailures": [],
       "passed": false,
-      "errorPanel": "Error: glass fragment: ERROR: 0:129: '' : syntax error\n\n1: #version 300 es\n2: precision highp float;\n3: in vec2 vUv;out vec4 outColor;uniform sampler2D uColor,uDepth;uniform int uFinal,uGlassCount;uniform vec4 uGlassRects[8];uniform vec2 uViewport;uniform float uUiTime;\n4: uniform float uParams[102];\n5: #define p_radius uParams[0]\n6: #define p_roundness uParams[1]\n7: #define p_islandHeight uParams[2]\n8: #define p_beachWidth uParams[3]\n9: #define p_beachSlope uParams[4]\n10: #define p_shelfWidth uParams[5]\n11: #define p_seaDepth uParams[6]\n12: #define p_bedRelief uParams[7]\n13: #define p_tide uParams[8]\n14: #define p_tideAmplitude uParams[9]\n15: #define p_tidePeriod uParams[10]\n16: #define p_wetLife uParams[11]\n17: #define p_filmLife uParams[12]\n18: #define p_wind uParams[13]\n19: #define p_windDir uParams[14]\n20: #define p_gust uParams[15]\n21: #define p_gustPeriod uParams[16]\n22: #define p_turbulence uParams[17]\n23: #define p_groundDamping uParams[18]\n24: #define p_windShear uParams[19]\n25: #define p_windDrag uParams[20]\n26: #define p_swell uParams[21]\n27: #define p_period uParams[22]\n28: #define p_swellDir uParams[23]\n29: #define p_secondary uParams[24]\n30: #define p_secondaryPeriod uParams[25]\n31: #define p_secondaryDir uParams[26]\n32: #define p_windWave uParams[27]\n33: #define p_crest uParams[28]\n34: #define p_groupScale uParams[29]\n35: #define p_shoal uParams[30]\n36: #define p_curlOuter uParams[31]\n37: #define p_curlMiddle uParams[32]\n38: #define p_curlInner uParams[33]\n39: #define p_curlLip uParams[34]\n40: #define p_curlShoulder uParams[35]\n41: #define p_breakWidth uParams[36]\n42: #define p_breakThreshold uParams[37]\n43: #define p_runup uParams[38]\n44: #define p_backwash uParams[39]\n45: #define p_foam uParams[40]\n46: #define p_foamLife uParams[41]\n47: #define p_foamDiffusion uParams[42]\n48: #define p_foamThickness uParams[43]\n49: #define p_fineFoam uParams[44]\n50: #define p_foamTransport uParams[45]\n51: #define p_shoreFoam uParams[46]\n52: #define p_rockFoam uParams[47]\n53: #define p_residualFoam uParams[48]\n54: #define p_spray uParams[49]\n55: #define p_sprayHeight uParams[50]\n56: #define p_spraySpeed uParams[51]\n57: #define p_dropSize uParams[52]\n58: #define p_mistRatio uParams[53]\n59: #define p_mistLife uParams[54]\n60: #define p_mistSpread uParams[55]\n61: #define p_rockCount uParams[56]\n62: #define p_rockScale uParams[57]\n63: #define p_rockScatter uParams[58]\n64: #define p_rockEmbed uParams[59]\n65: #define p_rockWet uParams[60]\n66: #define p_rockRough uParams[61]\n67: #define p_fireCount uParams[62]\n68: #define p_fireStrands uParams[63]\n69: #define p_fire uParams[64]\n70: #define p_fireHeight uParams[65]\n71: #define p_fireWidth uParams[66]\n72: #define p_fireTurb uParams[67]\n73: #define p_fireSpeed uParams[68]\n74: #define p_fireTemp uParams[69]\n75: #define p_emberRate uParams[70]\n76: #define p_smokeStrands uParams[71]\n77: #define p_smoke uParams[72]\n78: #define p_smokeLife uParams[73]\n79: #define p_smokeRise uParams[74]\n80: #define p_smokeWidth uParams[75]\n81: #define p_smokeTurb uParams[76]\n82: #define p_smokeSpread uParams[77]\n83: #define p_smokeDrag uParams[78]\n84: #define p_smokeFade uParams[79]\n85: #define p_hour uParams[80]\n86: #define p_exposure uParams[81]\n87: #define p_skyLight uParams[82]\n88: #define p_haze uParams[83]\n89: #define p_cloudiness uParams[84]\n90: #define p_cloudSpeed uParams[85]\n91: #define p_clarity uParams[86]\n92: #define p_refraction uParams[87]\n93: #define p_absorption uParams[88]\n94: #define p_waterRough uParams[89]\n95: #define p_glassOpacity uParams[90]\n96: #define p_glassBlur uParams[91]\n97: #define p_glassEdge uParams[92]\n98: #define p_glassFlow uParams[93]\n99: #define p_glassSpeed uParams[94]\n100: #define p_glassRefract uParams[95]\n101: #define p_glassHue uParams[96]\n102: #define p_buttonDuration uParams[97]\n103: #define p_cameraTransition uParams[98]\n104: #define p_orbitSpeed uParams[99]\n105: #define p_zoomSpeed uParams[100]\n106: #define p_autoOrbit uParams[101]\n107: \n108: void main(){vec3 c=texture(uColor,vUv).rgb;\n109:  if(uFinal==1){\n110:  for(int i=0;i<8;i++){\n111:   if(i>=uGlassCount)break;vec4 r=uGlassRects[i];float rad=min(24.0,min(r.z,r.w)*.48);\n112:   vec2 p=gl_FragCoord.xy-r.xy-r.zw*.5,q=abs(p)-(r.zw*.5-rad);\n113:   float d=length(max(q,vec2(0)))+min(max(q.x,q.y),0.0)-rad;\n114:   if(d<0.0){\n115:    vec2 n=normalize(p/max(r.zw*.5,vec2(1.0))+vec2(.0001));float edge=exp(d*.19);\n116:    float t=uUiTime*p_glassSpeed,phase=p.x*.029+p.y*.011-t*.73;\n117:    float flow=sin(phase)+.45*sin(p.y*.023-p.x*.007+t*.52);\n118:    vec2 offset=(n*edge*p_glassRefract+vec2(flow,cos(phase*.77))*.35*p_glassFlow)/uViewport;vec2 uv=clamp(vUv+offset,vec2(.001),vec2(.999));\n119:    vec3 refr=texture(uColor,uv).rgb;\n120:    refr+=texture(uColor,uv+vec2(1.8,0)/uViewport).rgb+texture(uColor,uv-vec2(1.8,0)/uViewport).rgb;\n121:    refr/=3.0;\n122:    c=mix(c,refr,smoothstep(0.0,2.0,-d));vec3 flowColor=.55+.45*cos(vec3(0.0,2.1,4.2)+p_glassHue*.01745);\n123:    float caustic=pow(max(0.0,.5+.5*sin(phase+flow*.3)),7.0);\n124:    c+=vec3(.13,.15,.16)*edge*.16*p_glassEdge;\n125:    c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;\n126:   }\n127:  }\n128:  c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.}\n129:  outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}\n    at shader (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:978:251)\n    at program (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:979:114)\n    at init (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:1431:234)",
-      "qa": null,
-      "failure": "Error: glass fragment: ERROR: 0:129: '' : syntax error\n\n1: #version 300 es\n2: precision highp float;\n3: in vec2 vUv;out vec4 outColor;uniform sampler2D uColor,uDepth;uniform int uFinal,uGlassCount;uniform vec4 uGlassRects[8];uniform vec2 uViewport;uniform float uUiTime;\n4: uniform float uParams[102];\n5: #define p_radius uParams[0]\n6: #define p_roundness uParams[1]\n7: #define p_islandHeight uParams[2]\n8: #define p_beachWidth uParams[3]\n9: #define p_beachSlope uParams[4]\n10: #define p_shelfWidth uParams[5]\n11: #define p_seaDepth uParams[6]\n12: #define p_bedRelief uParams[7]\n13: #define p_tide uParams[8]\n14: #define p_tideAmplitude uParams[9]\n15: #define p_tidePeriod uParams[10]\n16: #define p_wetLife uParams[11]\n17: #define p_filmLife uParams[12]\n18: #define p_wind uParams[13]\n19: #define p_windDir uParams[14]\n20: #define p_gust uParams[15]\n21: #define p_gustPeriod uParams[16]\n22: #define p_turbulence uParams[17]\n23: #define p_groundDamping uParams[18]\n24: #define p_windShear uParams[19]\n25: #define p_windDrag uParams[20]\n26: #define p_swell uParams[21]\n27: #define p_period uParams[22]\n28: #define p_swellDir uParams[23]\n29: #define p_secondary uParams[24]\n30: #define p_secondaryPeriod uParams[25]\n31: #define p_secondaryDir uParams[26]\n32: #define p_windWave uParams[27]\n33: #define p_crest uParams[28]\n34: #define p_groupScale uParams[29]\n35: #define p_shoal uParams[30]\n36: #define p_curlOuter uParams[31]\n37: #define p_curlMiddle uParams[32]\n38: #define p_curlInner uParams[33]\n39: #define p_curlLip uParams[34]\n40: #define p_curlShoulder uParams[35]\n41: #define p_breakWidth uParams[36]\n42: #define p_breakThreshold uParams[37]\n43: #define p_runup uParams[38]\n44: #define p_backwash uParams[39]\n45: #define p_foam uParams[40]\n46: #define p_foamLife uParams[41]\n47: #define p_foamDiffusion uParams[42]\n48: #define p_foamThickness uParams[43]\n49: #define p_fineFoam uParams[44]\n50: #define p_foamTransport uParams[45]\n51: #define p_shoreFoam uParams[46]\n52: #define p_rockFoam uParams[47]\n53: #define p_residualFoam uParams[48]\n54: #define p_spray uParams[49]\n55: #define p_sprayHeight uParams[50]\n56: #define p_spraySpeed uParams[51]\n57: #define p_dropSize uParams[52]\n58: #define p_mistRatio uParams[53]\n59: #define p_mistLife uParams[54]\n60: #define p_mistSpread uParams[55]\n61: #define p_rockCount uParams[56]\n62: #define p_rockScale uParams[57]\n63: #define p_rockScatter uParams[58]\n64: #define p_rockEmbed uParams[59]\n65: #define p_rockWet uParams[60]\n66: #define p_rockRough uParams[61]\n67: #define p_fireCount uParams[62]\n68: #define p_fireStrands uParams[63]\n69: #define p_fire uParams[64]\n70: #define p_fireHeight uParams[65]\n71: #define p_fireWidth uParams[66]\n72: #define p_fireTurb uParams[67]\n73: #define p_fireSpeed uParams[68]\n74: #define p_fireTemp uParams[69]\n75: #define p_emberRate uParams[70]\n76: #define p_smokeStrands uParams[71]\n77: #define p_smoke uParams[72]\n78: #define p_smokeLife uParams[73]\n79: #define p_smokeRise uParams[74]\n80: #define p_smokeWidth uParams[75]\n81: #define p_smokeTurb uParams[76]\n82: #define p_smokeSpread uParams[77]\n83: #define p_smokeDrag uParams[78]\n84: #define p_smokeFade uParams[79]\n85: #define p_hour uParams[80]\n86: #define p_exposure uParams[81]\n87: #define p_skyLight uParams[82]\n88: #define p_haze uParams[83]\n89: #define p_cloudiness uParams[84]\n90: #define p_cloudSpeed uParams[85]\n91: #define p_clarity uParams[86]\n92: #define p_refraction uParams[87]\n93: #define p_absorption uParams[88]\n94: #define p_waterRough uParams[89]\n95: #define p_glassOpacity uParams[90]\n96: #define p_glassBlur uParams[91]\n97: #define p_glassEdge uParams[92]\n98: #define p_glassFlow uParams[93]\n99: #define p_glassSpeed uParams[94]\n100: #define p_glassRefract uParams[95]\n101: #define p_glassHue uParams[96]\n102: #define p_buttonDuration uParams[97]\n103: #define p_cameraTransition uParams[98]\n104: #define p_orbitSpeed uParams[99]\n105: #define p_zoomSpeed uParams[100]\n106: #define p_autoOrbit uParams[101]\n107: \n108: void main(){vec3 c=texture(uColor,vUv).rgb;\n109:  if(uFinal==1){\n110:  for(int i=0;i<8;i++){\n111:   if(i>=uGlassCount)break;vec4 r=uGlassRects[i];float rad=min(24.0,min(r.z,r.w)*.48);\n112:   vec2 p=gl_FragCoord.xy-r.xy-r.zw*.5,q=abs(p)-(r.zw*.5-rad);\n113:   float d=length(max(q,vec2(0)))+min(max(q.x,q.y),0.0)-rad;\n114:   if(d<0.0){\n115:    vec2 n=normalize(p/max(r.zw*.5,vec2(1.0))+vec2(.0001));float edge=exp(d*.19);\n116:    float t=uUiTime*p_glassSpeed,phase=p.x*.029+p.y*.011-t*.73;\n117:    float flow=sin(phase)+.45*sin(p.y*.023-p.x*.007+t*.52);\n118:    vec2 offset=(n*edge*p_glassRefract+vec2(flow,cos(phase*.77))*.35*p_glassFlow)/uViewport;vec2 uv=clamp(vUv+offset,vec2(.001),vec2(.999));\n119:    vec3 refr=texture(uColor,uv).rgb;\n120:    refr+=texture(uColor,uv+vec2(1.8,0)/uViewport).rgb+texture(uColor,uv-vec2(1.8,0)/uViewport).rgb;\n121:    refr/=3.0;\n122:    c=mix(c,refr,smoothstep(0.0,2.0,-d));vec3 flowColor=.55+.45*cos(vec3(0.0,2.1,4.2)+p_glassHue*.01745);\n123:    float caustic=pow(max(0.0,.5+.5*sin(phase+flow*.3)),7.0);\n124:    c+=vec3(.13,.15,.16)*edge*.16*p_glassEdge;\n125:    c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;\n126:   }\n127:  }\n128:  c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.}\n129:  outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}\n    at shader (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:978:251)\n    at program (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:979:114)\n    at init (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:1431:234)",
-      "trace": "Traceback (most recent call last):\n  File \"/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/games/survivor-palau/source/v0160/verify.py\", line 32, in <module>\n    assert result['qa'] and result['qa']['ready'],result['errorPanel']\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Error: glass fragment: ERROR: 0:129: '' : syntax error\n\n1: #version 300 es\n2: precision highp float;\n3: in vec2 vUv;out vec4 outColor;uniform sampler2D uColor,uDepth;uniform int uFinal,uGlassCount;uniform vec4 uGlassRects[8];uniform vec2 uViewport;uniform float uUiTime;\n4: uniform float uParams[102];\n5: #define p_radius uParams[0]\n6: #define p_roundness uParams[1]\n7: #define p_islandHeight uParams[2]\n8: #define p_beachWidth uParams[3]\n9: #define p_beachSlope uParams[4]\n10: #define p_shelfWidth uParams[5]\n11: #define p_seaDepth uParams[6]\n12: #define p_bedRelief uParams[7]\n13: #define p_tide uParams[8]\n14: #define p_tideAmplitude uParams[9]\n15: #define p_tidePeriod uParams[10]\n16: #define p_wetLife uParams[11]\n17: #define p_filmLife uParams[12]\n18: #define p_wind uParams[13]\n19: #define p_windDir uParams[14]\n20: #define p_gust uParams[15]\n21: #define p_gustPeriod uParams[16]\n22: #define p_turbulence uParams[17]\n23: #define p_groundDamping uParams[18]\n24: #define p_windShear uParams[19]\n25: #define p_windDrag uParams[20]\n26: #define p_swell uParams[21]\n27: #define p_period uParams[22]\n28: #define p_swellDir uParams[23]\n29: #define p_secondary uParams[24]\n30: #define p_secondaryPeriod uParams[25]\n31: #define p_secondaryDir uParams[26]\n32: #define p_windWave uParams[27]\n33: #define p_crest uParams[28]\n34: #define p_groupScale uParams[29]\n35: #define p_shoal uParams[30]\n36: #define p_curlOuter uParams[31]\n37: #define p_curlMiddle uParams[32]\n38: #define p_curlInner uParams[33]\n39: #define p_curlLip uParams[34]\n40: #define p_curlShoulder uParams[35]\n41: #define p_breakWidth uParams[36]\n42: #define p_breakThreshold uParams[37]\n43: #define p_runup uParams[38]\n44: #define p_backwash uParams[39]\n45: #define p_foam uParams[40]\n46: #define p_foamLife uParams[41]\n47: #define p_foamDiffusion uParams[42]\n48: #define p_foamThickness uParams[43]\n49: #define p_fineFoam uParams[44]\n50: #define p_foamTransport uParams[45]\n51: #define p_shoreFoam uParams[46]\n52: #define p_rockFoam uParams[47]\n53: #define p_residualFoam uParams[48]\n54: #define p_spray uParams[49]\n55: #define p_sprayHeight uParams[50]\n56: #define p_spraySpeed uParams[51]\n57: #define p_dropSize uParams[52]\n58: #define p_mistRatio uParams[53]\n59: #define p_mistLife uParams[54]\n60: #define p_mistSpread uParams[55]\n61: #define p_rockCount uParams[56]\n62: #define p_rockScale uParams[57]\n63: #define p_rockScatter uParams[58]\n64: #define p_rockEmbed uParams[59]\n65: #define p_rockWet uParams[60]\n66: #define p_rockRough uParams[61]\n67: #define p_fireCount uParams[62]\n68: #define p_fireStrands uParams[63]\n69: #define p_fire uParams[64]\n70: #define p_fireHeight uParams[65]\n71: #define p_fireWidth uParams[66]\n72: #define p_fireTurb uParams[67]\n73: #define p_fireSpeed uParams[68]\n74: #define p_fireTemp uParams[69]\n75: #define p_emberRate uParams[70]\n76: #define p_smokeStrands uParams[71]\n77: #define p_smoke uParams[72]\n78: #define p_smokeLife uParams[73]\n79: #define p_smokeRise uParams[74]\n80: #define p_smokeWidth uParams[75]\n81: #define p_smokeTurb uParams[76]\n82: #define p_smokeSpread uParams[77]\n83: #define p_smokeDrag uParams[78]\n84: #define p_smokeFade uParams[79]\n85: #define p_hour uParams[80]\n86: #define p_exposure uParams[81]\n87: #define p_skyLight uParams[82]\n88: #define p_haze uParams[83]\n89: #define p_cloudiness uParams[84]\n90: #define p_cloudSpeed uParams[85]\n91: #define p_clarity uParams[86]\n92: #define p_refraction uParams[87]\n93: #define p_absorption uParams[88]\n94: #define p_waterRough uParams[89]\n95: #define p_glassOpacity uParams[90]\n96: #define p_glassBlur uParams[91]\n97: #define p_glassEdge uParams[92]\n98: #define p_glassFlow uParams[93]\n99: #define p_glassSpeed uParams[94]\n100: #define p_glassRefract uParams[95]\n101: #define p_glassHue uParams[96]\n102: #define p_buttonDuration uParams[97]\n103: #define p_cameraTransition uParams[98]\n104: #define p_orbitSpeed uParams[99]\n105: #define p_zoomSpeed uParams[100]\n106: #define p_autoOrbit uParams[101]\n107: \n108: void main(){vec3 c=texture(uColor,vUv).rgb;\n109:  if(uFinal==1){\n110:  for(int i=0;i<8;i++){\n111:   if(i>=uGlassCount)break;vec4 r=uGlassRects[i];float rad=min(24.0,min(r.z,r.w)*.48);\n112:   vec2 p=gl_FragCoord.xy-r.xy-r.zw*.5,q=abs(p)-(r.zw*.5-rad);\n113:   float d=length(max(q,vec2(0)))+min(max(q.x,q.y),0.0)-rad;\n114:   if(d<0.0){\n115:    vec2 n=normalize(p/max(r.zw*.5,vec2(1.0))+vec2(.0001));float edge=exp(d*.19);\n116:    float t=uUiTime*p_glassSpeed,phase=p.x*.029+p.y*.011-t*.73;\n117:    float flow=sin(phase)+.45*sin(p.y*.023-p.x*.007+t*.52);\n118:    vec2 offset=(n*edge*p_glassRefract+vec2(flow,cos(phase*.77))*.35*p_glassFlow)/uViewport;vec2 uv=clamp(vUv+offset,vec2(.001),vec2(.999));\n119:    vec3 refr=texture(uColor,uv).rgb;\n120:    refr+=texture(uColor,uv+vec2(1.8,0)/uViewport).rgb+texture(uColor,uv-vec2(1.8,0)/uViewport).rgb;\n121:    refr/=3.0;\n122:    c=mix(c,refr,smoothstep(0.0,2.0,-d));vec3 flowColor=.55+.45*cos(vec3(0.0,2.1,4.2)+p_glassHue*.01745);\n123:    float caustic=pow(max(0.0,.5+.5*sin(phase+flow*.3)),7.0);\n124:    c+=vec3(.13,.15,.16)*edge*.16*p_glassEdge;\n125:    c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;\n126:   }\n127:  }\n128:  c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.}\n129:  outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}\n    at shader (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:978:251)\n    at program (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:979:114)\n    at init (http://127.0.0.1:8765/releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html:1431:234)\n"
+      "errorPanel": "",
+      "qa": {
+        "version": "stone-money-island-0.1.6.0-original-ocean",
+        "ready": true,
+        "relationshipPass": "survivor-palau-cloud-surf-karst-canoe-v014",
+        "singleScene": true,
+        "modeSwitchRemoved": true,
+        "worldSpaceFarOcean": true,
+        "worldSpaceReefPits": true,
+        "reefPitCount": 5,
+        "oceanOuterRadius": 2400,
+        "karstArchipelago": true,
+        "visibleClouds": true,
+        "naturalBreakerField": true,
+        "canoePrototype": true,
+        "irregularBreakerPackets": true,
+        "naturalWaveSpectrum": false,
+        "canoeHullV2": true,
+        "karstMushroomProfile": true,
+        "cloudVisibilityV2": true,
+        "breakerVisibilityV2": true,
+        "canoeReadabilityV3": true,
+        "shallowWaterLayering": true,
+        "foamBandCoupling": true,
+        "waterFireReflection": true,
+        "smokeCoolingCurve": true,
+        "irregularShoreline": true,
+        "waveWallSystem": true,
+        "infiniteSeaBlend": true,
+        "rockMaterialPolish": true,
+        "denseSmoke": true,
+        "animatedGlassButtons": true,
+        "playableCanoeV1": true,
+        "shoreDepthGateV1": true,
+        "mobileCanoeControlsV1": true,
+        "webgl2": true,
+        "errors": [],
+        "persistentImageAssets": 0,
+        "externalModels": 0,
+        "externalCdn": 0,
+        "fixedStepS": 0.008333333333333333,
+        "rockCount": 27,
+        "fireRingRockCount": 9,
+        "logCount": 4,
+        "smokeParticles": 137,
+        "flameParticles": 42,
+        "sprayParticles": 1,
+        "foamActiveCells": 517,
+        "wetCells": 3687,
+        "drawCalls": 13,
+        "triangles": 467124,
+        "frames": 24,
+        "fps": 0.3045808966861601,
+        "physicalTime": 1.8749999999999958,
+        "displayLagSkippedSeconds": 40.2817,
+        "opaqueCacheRenders": 17,
+        "opaqueCacheReuses": 7,
+        "visualProbe": null,
+        "frozenOcean": {
+          "ready": true,
+          "errors": [],
+          "cloudAtlasFrames": 1,
+          "baselineVerified": true,
+          "source": "original-deep-v001",
+          "sourceByteIdentical": true,
+          "hdr": true,
+          "densityDimensions": [
+            320,
+            192,
+            256
+          ],
+          "meshVertices": 36993,
+          "meshTriangles": 73216,
+          "cloudAtlasSize": [
+            512,
+            192
+          ],
+          "cloudSteps": 160,
+          "maxSteepnessBound": 0.504,
+          "spectralComponents": 24,
+          "worldTime": 1.8749999999999958,
+          "cloudReady": true,
+          "environment": {
+            "format": "weather-mother-environment",
+            "schemaVersion": 1,
+            "units": {
+              "length": "metre",
+              "velocity": "metre/second",
+              "time": "simulation second"
+            },
+            "axes": {
+              "east": "+X",
+              "up": "+Y",
+              "north": "-Z"
+            },
+            "simulationSeconds": 1.8749999999999958,
+            "hour": 16.2,
+            "paused": false,
+            "timeScale": 1,
+            "wind": {
+              "fromDegrees": 270,
+              "direction": [
+                1,
+                0,
+                -1.8369701987210297e-16
+              ],
+              "forceMps": 10,
+              "gustMultiplier": 1.117591355918721,
+              "velocityMps": [
+                11.17591355918721,
+                0,
+                -2.052982015170918e-15
+              ]
+            },
+            "cloud": {
+              "kind": "Cu",
+              "seed": 4217,
+              "driftMps": 12,
+              "velocityMps": [
+                13.41109627102465,
+                0,
+                -2.4635784182051016e-15
+              ],
+              "offsetMetres": [
+                24.4690033450627,
+                0,
+                -4.494882993728539e-15
+              ],
+              "loopPhase": 0.03124999999999992
+            },
+            "sun": {
+              "direction": [
+                -0.8910065241883678,
+                0.3931673058512403,
+                0.22699524986977349
+              ],
+              "linearColor": [
+                1.2588991448867233,
+                1.1172338663978385,
+                0.8843988326074205
+              ],
+              "intensity": 1,
+              "skylight": 1,
+              "exposure": 1
+            },
+            "weather": {
+              "case": "fair",
+              "rain": 0,
+              "fog": 0.03,
+              "snow": 0,
+              "humidityPercent": 68
+            },
+            "limitations": [
+              "illustrative solar clock; no geographic ephemeris",
+              "graphical weather presets; not observed conditions",
+              "no ocean wave, foam, reflection or shared-depth integration supplied"
+            ]
+          },
+          "oceanState": {
+            "swell": 1.35,
+            "period": 8.8,
+            "chop": 0.72,
+            "rough": 0.16,
+            "foam": 0.32,
+            "tint": 0.15,
+            "height": 9,
+            "seaSpeed": 1,
+            "seed": 8071,
+            "quality": "fine",
+            "yaw": -0.48,
+            "pitch": -0.055
+          },
+          "cloudVolumeBytes": 15728640,
+          "cloudKind": "Cu",
+          "cloudSeed": 4217,
+          "atlasSimulationTime": 0.9249999999999992,
+          "lastBakeMs": 36665.2,
+          "atlasHour": 16.2,
+          "atlasKind": "Cu"
+        },
+        "rockDegenerateTriangles": 0,
+        "karstFormationCount": 10,
+        "fireSources": 1,
+        "treeCount": 270,
+        "canoeCount": 1,
+        "geometryRebuilds": 1,
+        "view": "overview",
+        "emberParticles": 9,
+        "smokeSourceCount": 1,
+        "smokeExtentMeters": 41.60040449817444,
+        "mediaWarmupSeconds": 14,
+        "fieldCellsUpdated": 4527,
+        "fieldUpdateCount": 27,
+        "foamWarmupSeconds": 4,
+        "curlLayerTriangles": [
+          1680,
+          800,
+          320
+        ],
+        "waveWallSegments": 2800,
+        "curlUpdateCount": 24,
+        "parameterCount": 102,
+        "parameterPages": 3,
+        "sceneFrames": 24,
+        "uiTime": 42.201,
+        "glError": 0
+      },
+      "failure": "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n",
+      "trace": "Traceback (most recent call last):\n  File \"/home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/games/survivor-palau/source/v0160/verify.py\", line 34, in <module>\n    image=EVIDENCE/(name+'-overview.png');page.screenshot(path=str(image));preview(image,name+'-overview-preview')\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/sync_api/_generated.py\", line 10909, in screenshot\n    self._sync(\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_sync_base.py\", line 115, in _sync\n    return task.result()\n           ^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_page.py\", line 830, in screenshot\n    encoded_binary = await self._channel.send(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 76, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/.local/lib/python3.12/site-packages/playwright/_impl/_connection.py\", line 632, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n\n"
     }
   ]
 }

@@ -908,7 +908,7 @@ void main(){vec3 c=texture(uColor,vUv).rgb;
    c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;
   }
  }
- c=clamp(c,0.,1.); // Do not tone-map the original ocean twice.}
+ c=clamp(c,0.,1.);}
  outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}`;
 
 const CURL_FS=`#version 300 es
