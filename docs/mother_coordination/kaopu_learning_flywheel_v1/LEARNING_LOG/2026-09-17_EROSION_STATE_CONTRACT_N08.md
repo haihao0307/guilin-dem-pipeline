@@ -31,7 +31,7 @@ Fifteen semantic checks cover water and sediment conservation, bed/suspension tr
 
 ## Observation
 
-All 15 local CPU checks passed and a second execution reproduced the result byte-for-byte.
+All 15 local CPU checks passed and a second execution reproduced the result byte-for-byte. [GitHub Actions run 35207451941](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35207451941) then rebuilt the probe and reproduced the stored JSON. Artifact `kaopu-erosion-state-contract-n08` has digest `sha256:2140793a6459bd08600c6e19f009acaa746b49215167cd22959970d6589f64f4`.
 
 - Both histories close water and sediment residuals to the recorded 12-decimal precision.
 - Equal rainfall totals do not erase history. The final bed-plus-suspension distribution differs by `4.754592 kg` in L1 distance. The early pulse exports `1.725408 kg` sediment; the late pulse exports `0.480000 kg`.
