@@ -1,0 +1,72 @@
+name: farmland-r045-round07-qa
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-07/**'
+      - '.github/workflows/farmland-r045-round07-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Numeric R045.07 gates
+        id: numeric
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-07/r045_round07_qa.mjs
+      - name: Browser fixed-view gate
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          ROOT="$PWD"
+          PAGE='http://127.0.0.1:8123/farmland-object-dna/research/r045-autonomous-rebuild/round-07/r045_round07_audit.html'
+          OUT="$ROOT/farmland-object-dna/research/r045-autonomous-rebuild/round-07"
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          python3 -m http.server 8123 --bind 127.0.0.1 > /tmp/r045-http.log 2>&1 &
+          SERVER_PID=$!
+          sleep 2
+          if [ -z "$CHROME_BIN" ]; then
+            SHOT_STATUS=127
+            DOM_STATUS=127
+            : > /tmp/r045-round07-dom.html
+          else
+            timeout 45s "$CHROME_BIN" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=5000 --screenshot="$OUT/r045_round07_fixed_view.png" "$PAGE"
+            SHOT_STATUS=$?
+            timeout 45s "$CHROME_BIN" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=5000 --dump-dom "$PAGE" > /tmp/r045-round07-dom.html
+            DOM_STATUS=$?
+          fi
+          kill "$SERVER_PID" 2>/dev/null || true
+          grep -q 'data-ready="true"' /tmp/r045-round07-dom.html
+          READY_STATUS=$?
+          export SHOT_STATUS DOM_STATUS READY_STATUS CHROME_BIN OUT
+          python3 - <<'PY'
+          import json, os
+          out=os.environ['OUT']
+          shot=os.path.join(out,'r045_round07_fixed_view.png')
+          result={
+            'chrome_bin':os.environ.get('CHROME_BIN',''),
+            'screenshot_status':int(os.environ.get('SHOT_STATUS','999')),
+            'dom_status':int(os.environ.get('DOM_STATUS','999')),
+            'ready_marker_status':int(os.environ.get('READY_STATUS','999')),
+            'screenshot_exists':os.path.exists(shot),
+            'screenshot_bytes':os.path.getsize(shot) if os.path.exists(shot) else 0,
+          }
+          result['passed']=result['screenshot_status']==0 and result['dom_status']==0 and result['ready_marker_status']==0 and result['screenshot_bytes']>20000
+          with open(os.path.join(out,'r045_round07_browser_result.json'),'w') as f: json.dump(result,f,indent=2)
+          print(json.dumps(result,indent=2))
+          raise SystemExit(0 if result['passed'] else 3)
+          PY
+      - name: Upload R045.07 audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farmland-r045-round07-audit
+          if-no-files-found: warn
+          path: |
+            farmland-object-dna/research/r045-autonomous-rebuild/round-07/r045_round07_qa_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-07/r045_round07_browser_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-07/r045_round07_fixed_view.png
