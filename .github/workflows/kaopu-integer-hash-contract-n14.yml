@@ -51,8 +51,7 @@ jobs:
           timeout 90 "${{ steps.chrome.outputs.path }}" \
             --headless=new --no-sandbox --disable-dev-shm-usage \
             --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader \
-            --use-angle=swiftshader --enable-unsafe-webgpu \
-            --enable-features=Vulkan,UseSkiaRenderer \
+            --use-angle=swiftshader \
             --virtual-time-budget=15000 --dump-dom \
             http://127.0.0.1:8765/integer_hash_runtime_n14.html > /tmp/n14-dom.html
           python3 "$root/extract_integer_hash_runtime_n14.py" \
