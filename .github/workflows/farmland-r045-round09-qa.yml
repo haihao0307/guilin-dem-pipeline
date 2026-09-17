@@ -34,9 +34,11 @@ jobs:
             DOM_STATUS=127
             : > /tmp/r045-round09-dom.html
           else
-            timeout 45s "$CHROME_BIN" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=5000 --screenshot="$OUT/r045_round09_fixed_view.png" "$PAGE"
+            unset DBUS_SESSION_BUS_ADDRESS
+            FLAGS=(--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-component-update --disable-sync --disable-extensions --disable-default-apps --disable-domain-reliability --no-first-run --no-default-browser-check --metrics-recording-only --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=3500)
+            timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --screenshot="$OUT/r045_round09_fixed_view.png" "$PAGE"
             SHOT_STATUS=$?
-            timeout 45s "$CHROME_BIN" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=5000 --dump-dom "$PAGE" > /tmp/r045-round09-dom.html
+            timeout 30s "$CHROME_BIN" "${FLAGS[@]}" --dump-dom "$PAGE" > /tmp/r045-round09-dom.html
             DOM_STATUS=$?
           fi
           kill "$SERVER_PID" 2>/dev/null || true
