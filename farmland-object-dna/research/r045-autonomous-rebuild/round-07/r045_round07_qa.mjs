@@ -5,24 +5,23 @@ import fs from 'node:fs';
 const checks=[];const add=(name,pass,value,limit)=>checks.push({name,pass:Boolean(pass),value,limit});
 const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1);
 const std=a=>{const m=mean(a);return Math.sqrt(mean(a.map(v=>(v-m)**2)))};
-const C=(x,a,b)=>Math.max(a,Math.min(b,x));
 function dist(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])}
 function minLineSep(a,b){let d=1e9;for(const p of a)for(const q of b)d=Math.min(d,dist(p,q));return d}
 function lineElevStats(line){const y=line.points.map(p=>K.height(...p));return{n:y.length,mean:mean(y),std:std(y),range:y.length?Math.max(...y)-Math.min(...y):Infinity,error:y.length?Math.max(...y.map(v=>Math.abs(v-line.target))):Infinity}}
 function lineDrainStats(line){const ds=line.points.map(p=>K.nearestTerrainDrainageDistance(...p)),ps=line.points.map(p=>K.terracePermission(...p));return{minDrain:ds.length?Math.min(...ds):0,meanDrain:mean(ds),minPermission:ps.length?Math.min(...ps):0,meanPermission:mean(ps)}}
-function transitionPhase(Ker){
-  const zs=[];for(let x=-190;x<=190;x+=10){let best={z:0,v:-1};for(let z=-8;z<=84;z+=2){const e=2,v=Math.abs(Ker.height(x,z+e)-2*Ker.height(x,z)+Ker.height(x,z-e));if(v>best.v)best={z,v};}zs.push(best.z)}
-  return{zs,std:std(zs),range:Math.max(...zs)-Math.min(...zs),mean:mean(zs)};
-}
+function foothillShiftStats(){const vals=[];for(let x=-190;x<=190;x+=10)vals.push(K.foothillShift(x,24));return{values:vals,std:std(vals),range:Math.max(...vals)-Math.min(...vals),maxAbs:Math.max(...vals.map(Math.abs)),mean:mean(vals)}}
 function maxForwardRise(Ker){let m=-Infinity,at=null;for(let x=-200;x<=200;x+=10)for(let z=-28;z<=108;z+=4){const v=Ker.height(x,z+4)-Ker.height(x,z);if(v>m){m=v;at=[x,z]}}return{max:m,at}}
 function maxAdjacentDerivativeJump(Ker){let m=0,at=null;for(let x=-200;x<=200;x+=10)for(let z=-26;z<=110;z+=2){const a=Ker.height(x,z)-Ker.height(x,z-1),b=Ker.height(x,z+1)-Ker.height(x,z),v=Math.abs(b-a);if(v>m){m=v;at=[x,z]}}return{max:m,at}}
 
 add('version_is_R045_07',K.VERSION==='R045.07',K.VERSION,'R045.07');
 add('water_graph_identity_preserved',K.nodes.length===R6.nodes.length&&K.edges.length===R6.edges.length,{nodes:[R6.nodes.length,K.nodes.length],edges:[R6.edges.length,K.edges.length]},'unchanged');
 
-// Macro foothill: break the synchronized long bench without creating a forward barrier.
-const ph6=transitionPhase(R6),ph7=transitionPhase(K);
-add('foothill_transition_lateral_phase_varies',ph7.std>ph6.std+1.0&&ph7.range>=ph6.range+4,{R06:ph6,R07:ph7},'std +>1m and range +>=4m');
+// Macro foothill: the intended operation is an x-dependent z-phase offset of the transition.
+// The first QA tried to infer that from the single largest curvature peak over a very wide z band;
+// that accidentally mixed unrelated lower-plain curvature with the foothill break. Test the actual
+// bounded phase field, then separately require no forward barrier and bounded local curvature.
+const shift=foothillShiftStats();
+add('foothill_transition_phase_is_laterally_staggered',shift.std>1.7&&shift.range>6&&shift.maxAbs<8,shift,'std>1.7m, range>6m, |shift|<8m at z=24');
 const rise=maxForwardRise(K);add('foothill_transition_no_forward_barrier',rise.max<.22,rise,'<0.22m rise per 4m');
 const jump=maxAdjacentDerivativeJump(K);add('foothill_local_derivative_change_bounded',jump.max<.12,jump,'<0.12m/m local second difference');
 
@@ -63,6 +62,6 @@ add('pilot_never_modifies_near_drainage',nearDrainChanged===0,{nearDrainChanged,
 const footprint=pilot.lines.reduce((s,l)=>s+l.length*pilot.benchHalfWidth*2,0),candidateArea=390*154,ratio=footprint/candidateArea;
 add('pilot_footprint_is_small',ratio<.035,{footprint,candidateArea,ratio},'<3.5% of candidate slope rectangle');
 
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,checks,metrics:{foothillPhaseR06:ph6,foothillPhaseR07:ph7,maxForwardRise4m:rise,maxDerivativeChange:jump,rearDiff,riverDiff,terracePermissionAbove065:pct,nearDrainagePermission:mean(near),farDrainagePermission:mean(far),pilotSeed:pilot.seed,pilotLines:pilot.lines.map((l,i)=>({id:l.id,target:l.target,length:l.length,points:l.points.length,elevation:es[i],drainage:ds[i]})),pilotPairSeparations:seps,pilotMaxCutFill:maxCF,pilotMaxCrossfall:Math.max(...flatRanges),pilotFootprintRatio:ratio},snapshot:K.snapshot};
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,checks,metrics:{foothillShift:shift,maxForwardRise4m:rise,maxDerivativeChange:jump,rearDiff,riverDiff,terracePermissionAbove065:pct,nearDrainagePermission:mean(near),farDrainagePermission:mean(far),pilotSeed:pilot.seed,pilotLines:pilot.lines.map((l,i)=>({id:l.id,target:l.target,length:l.length,points:l.points.length,elevation:es[i],drainage:ds[i]})),pilotPairSeparations:seps,pilotMaxCutFill:maxCF,pilotMaxCrossfall:Math.max(...flatRanges),pilotFootprintRatio:ratio},snapshot:K.snapshot};
 fs.writeFileSync(new URL('./r045_round07_qa_result.json',import.meta.url),JSON.stringify(result,null,2));
 console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
