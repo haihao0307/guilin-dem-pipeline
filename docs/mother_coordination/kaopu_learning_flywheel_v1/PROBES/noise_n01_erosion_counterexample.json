@@ -1,0 +1,13 @@
+{
+  "status": "executed CPU synthetic counterexample",
+  "date": "2026-09-17",
+  "input": "5x5 zeros with central value 1; uniform cell areas",
+  "operation": "scipy.ndimage.gaussian_filter(x,1.5,mode='wrap'); only replace central selected cell",
+  "source_sum": 1,
+  "full_blur_sum": 0.9999999999999999,
+  "masked_blur_sum": 0.07183506899653452,
+  "conclusion": "spatially masked conservative smoothing need not preserve total; this is not an execution of upstream apply_slippage or validation of its exact threshold",
+  "source_reference": "https://github.com/dandrino/terrain-erosion-3-ways/blob/master/simulation.py",
+  "GPU": false,
+  "physical_validation": false
+}
