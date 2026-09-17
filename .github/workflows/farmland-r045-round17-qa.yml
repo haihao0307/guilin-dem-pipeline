@@ -79,14 +79,14 @@ jobs:
             farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_browser_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_summary.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_fixed_view.png
-      - name: Persist machine-readable QA evidence
+      - name: Persist machine-readable and visual QA evidence
         if: always()
         shell: bash
         run: |
           set -e
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_summary.json || true
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_summary.json farmland-object-dna/research/r045-autonomous-rebuild/round-17/r045_round17_fixed_view.png || true
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'farmland R045.17 persist QA evidence [skip ci]'
           git push origin HEAD:${GITHUB_REF_NAME}
