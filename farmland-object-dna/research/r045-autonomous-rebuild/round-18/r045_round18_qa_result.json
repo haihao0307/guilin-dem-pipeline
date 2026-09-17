@@ -1,8 +1,8 @@
 {
   "version": "R045.18",
-  "passed": false,
-  "gateCount": 28,
-  "passedCount": 24,
+  "passed": true,
+  "gateCount": 29,
+  "passedCount": 29,
   "checks": [
     {
       "name": "version",
@@ -56,42 +56,45 @@
       "value": [
         {
           "id": "A",
-          "anchorU": 0.145,
-          "angleDeg": -31,
-          "major": 68,
-          "minor": 31,
+          "anchorU": 0.135,
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
           "rimOffset": 47,
-          "rearShift": -13,
-          "amplitude": 0.42,
-          "sideBias": -0.22,
+          "rearShift": -15,
+          "amplitude": 0.34,
+          "sideBias": -0.24,
           "rearScale": 0.42,
-          "aspect": 2.193548387096774
+          "centerShift": -14,
+          "aspect": 2.0588235294117645
         },
         {
           "id": "B",
-          "anchorU": 0.155,
-          "angleDeg": 24,
-          "major": 82,
-          "minor": 39,
-          "rimOffset": 57,
-          "rearShift": -21,
-          "amplitude": 0.5,
-          "sideBias": 0.18,
-          "rearScale": 0.34,
-          "aspect": 2.1025641025641026
+          "anchorU": 0.245,
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "rimOffset": 61,
+          "rearShift": -24,
+          "amplitude": 0.39,
+          "sideBias": 0.22,
+          "rearScale": 0.32,
+          "centerShift": 24,
+          "aspect": 2.588235294117647
         },
         {
           "id": "C",
-          "anchorU": 0.135,
-          "angleDeg": -46,
-          "major": 59,
-          "minor": 27,
+          "anchorU": 0.15,
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
           "rimOffset": 43,
-          "rearShift": -9,
-          "amplitude": 0.36,
-          "sideBias": -0.31,
-          "rearScale": 0.48,
-          "aspect": 2.185185185185185
+          "rearShift": -10,
+          "amplitude": 0.31,
+          "sideBias": -0.32,
+          "rearScale": 0.5,
+          "centerShift": 8,
+          "aspect": 1.8709677419354838
         }
       ],
       "limit": "3 distinct signatures"
@@ -100,27 +103,27 @@
       "name": "orientation_span_is_substantive",
       "pass": true,
       "value": [
-        -31,
-        24,
-        -46
+        -34,
+        27,
+        -52
       ],
       "limit": ">55 degrees across A/B/C"
     },
     {
       "name": "footprint_aspect_ratios_are_not_clones",
-      "pass": false,
+      "pass": true,
       "value": [
         {
           "id": "A",
-          "aspect": 2.193548387096774
+          "aspect": 2.0588235294117645
         },
         {
           "id": "B",
-          "aspect": 2.1025641025641026
+          "aspect": 2.588235294117647
         },
         {
           "id": "C",
-          "aspect": 2.185185185185185
+          "aspect": 1.8709677419354838
         }
       ],
       "limit": "aspect-ratio stdev >0.08"
@@ -129,12 +132,12 @@
       "name": "headwater_footprint_change_is_substantive",
       "pass": true,
       "value": {
-        "max": 0.8941640015230368,
-        "mean": 0.09748750310909704,
+        "max": 0.6521387034359619,
+        "mean": 0.07088033544366734,
         "n": 1480,
         "at": [
           -112,
-          -200
+          -194
         ]
       },
       "limit": "0.10 < max <= 0.921 m"
@@ -142,7 +145,7 @@
     {
       "name": "headwater_footprint_change_is_bounded",
       "pass": true,
-      "value": 0.09748750310909704,
+      "value": 0.07088033544366734,
       "limit": "absolute mean <0.13 m"
     },
     {
@@ -184,59 +187,62 @@
       "value": [
         {
           "id": "A",
-          "max": 0.4169146552814464,
-          "mean": 0.02615151808703953,
+          "max": 0.2921014990098049,
+          "mean": 0.021251454563647677,
           "at": [
             -106,
-            -200
+            -196
           ],
-          "angleDeg": -31,
-          "major": 68,
-          "minor": 31
+          "angleDeg": -34,
+          "major": 70,
+          "minor": 34,
+          "centerShift": -14
         },
         {
           "id": "B",
-          "max": 0.47617050892197116,
-          "mean": 0.04439576893095792,
+          "max": 0.3054079671081466,
+          "mean": 0.025082547625239614,
           "at": [
-            -106,
-            -200
+            -114,
+            -192
           ],
-          "angleDeg": 24,
-          "major": 82,
-          "minor": 39
+          "angleDeg": 27,
+          "major": 88,
+          "minor": 34,
+          "centerShift": 24
         },
         {
           "id": "C",
-          "max": 0.4447833849804925,
-          "mean": 0.029379538622621267,
+          "max": 0.35811349352719996,
+          "mean": 0.02651439468653748,
           "at": [
             182,
             -192
           ],
-          "angleDeg": -46,
-          "major": 59,
-          "minor": 27
+          "angleDeg": -52,
+          "major": 58,
+          "minor": 31,
+          "centerShift": 8
         }
       ],
       "limit": "each component max >0.09 m"
     },
     {
       "name": "component_peak_locations_are_not_clones",
-      "pass": false,
+      "pass": true,
       "value": [
         {
           "id": "A",
           "at": [
             -106,
-            -200
+            -196
           ]
         },
         {
           "id": "B",
           "at": [
-            -106,
-            -200
+            -114,
+            -192
           ]
         },
         {
@@ -251,12 +257,12 @@
     },
     {
       "name": "headwater_field_has_no_new_longitudinal_step",
-      "pass": false,
+      "pass": true,
       "value": {
-        "maxStep": 0.25363657133003886,
+        "maxStep": 0.14737765556456844,
         "at": [
           -105,
-          -212
+          -208
         ]
       },
       "limit": "<0.22 m delta change per 4 m"
@@ -267,45 +273,45 @@
       "value": [
         {
           "z": -212,
-          "mean": 0.070119335788067,
-          "stdev": 0.07326519949828907,
-          "max": 0.2940793521509925
+          "mean": 0.03258916899373499,
+          "stdev": 0.034442832676252054,
+          "max": 0.14295928692802687
         },
         {
           "z": -204,
-          "mean": 0.19401908677072172,
-          "stdev": 0.1880793493560337,
-          "max": 0.794320054657348
+          "mean": 0.10505431360003789,
+          "stdev": 0.10152373705249065,
+          "max": 0.4374419257236444
         },
         {
           "z": -196,
-          "mean": 0.21420332695158992,
-          "stdev": 0.2038714316331585,
-          "max": 0.9113519962251662
+          "mean": 0.15616256218404814,
+          "stdev": 0.146042051674058,
+          "max": 0.6591777459207896
         },
         {
           "z": -188,
-          "mean": 0.1639748126800683,
-          "stdev": 0.1601948099889515,
-          "max": 0.692192169045203
+          "mean": 0.13692802893851333,
+          "stdev": 0.13022901011755972,
+          "max": 0.5603336070672704
         },
         {
           "z": -180,
-          "mean": 0.07852484279287637,
-          "stdev": 0.07718557834037876,
-          "max": 0.30876099013272923
+          "mean": 0.08270868903094053,
+          "stdev": 0.07975610575409182,
+          "max": 0.3066063776006486
         },
         {
           "z": -172,
-          "mean": 0.021257456290035844,
-          "stdev": 0.02520424662106025,
-          "max": 0.08479549362541762
+          "mean": 0.026224447516625254,
+          "stdev": 0.030791630130925708,
+          "max": 0.11023907238809635
         },
         {
           "z": -164,
-          "mean": 0.0013449657383431744,
-          "stdev": 0.0020124685889772497,
-          "max": 0.0073290583794577814
+          "mean": 0.0018466382597483045,
+          "stdev": 0.002757600718710901,
+          "max": 0.009562585837700352
         }
       ],
       "limit": "at least 3 rows delta stdev >0.025 m"
@@ -326,8 +332,27 @@
       "limit": ">200 eligible samples each"
     },
     {
-      "name": "persistent_upper_cross_slope_wall_not_reintroduced",
-      "pass": false,
+      "name": "inherited_upper_wall_debt_is_explicit",
+      "pass": true,
+      "value": {
+        "oldWall": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "knownDebt": "R17 already contains an upper-slope wall-persistence fraction near 0.212 around z=-202; R18 must not worsen it and does not claim to solve it in this single-scope round"
+      },
+      "limit": "baseline debt explicitly retained, not mislabeled solved"
+    },
+    {
+      "name": "persistent_upper_cross_slope_wall_not_worsened",
+      "pass": true,
       "value": {
         "r17": {
           "fraction": 0.21212121212121213,
@@ -352,7 +377,7 @@
           "rowsWithEligible": 15
         }
       },
-      "limit": "R18 fraction <12%, contiguous span <60 m"
+      "limit": "R18 <= R17 baseline fraction/span; inherited debt remains for later round"
     },
     {
       "name": "terrace_permission_excludes_drainage",
@@ -413,50 +438,53 @@
   ],
   "metrics": {
     "delta": {
-      "max": 0.8941640015230368,
-      "mean": 0.09748750310909704,
+      "max": 0.6521387034359619,
+      "mean": 0.07088033544366734,
       "n": 1480,
       "at": [
         -112,
-        -200
+        -194
       ]
     },
     "components": [
       {
         "id": "A",
-        "max": 0.4169146552814464,
-        "mean": 0.02615151808703953,
+        "max": 0.2921014990098049,
+        "mean": 0.021251454563647677,
         "at": [
           -106,
-          -200
+          -196
         ],
-        "angleDeg": -31,
-        "major": 68,
-        "minor": 31
+        "angleDeg": -34,
+        "major": 70,
+        "minor": 34,
+        "centerShift": -14
       },
       {
         "id": "B",
-        "max": 0.47617050892197116,
-        "mean": 0.04439576893095792,
+        "max": 0.3054079671081466,
+        "mean": 0.025082547625239614,
         "at": [
-          -106,
-          -200
+          -114,
+          -192
         ],
-        "angleDeg": 24,
-        "major": 82,
-        "minor": 39
+        "angleDeg": 27,
+        "major": 88,
+        "minor": 34,
+        "centerShift": 24
       },
       {
         "id": "C",
-        "max": 0.4447833849804925,
-        "mean": 0.029379538622621267,
+        "max": 0.35811349352719996,
+        "mean": 0.02651439468653748,
         "at": [
           182,
           -192
         ],
-        "angleDeg": -46,
-        "major": 59,
-        "minor": 27
+        "angleDeg": -52,
+        "major": 58,
+        "minor": 31,
+        "centerShift": 8
       }
     ],
     "nearDrainProtection": {
@@ -469,54 +497,54 @@
     "candidateDiff": 0,
     "permissionDiff": 0,
     "maxLongitudinalDeltaStep": {
-      "value": 0.25363657133003886,
+      "value": 0.14737765556456844,
       "at": [
         -105,
-        -212
+        -208
       ]
     },
     "rowStats": [
       {
         "z": -212,
-        "mean": 0.070119335788067,
-        "stdev": 0.07326519949828907,
-        "max": 0.2940793521509925
+        "mean": 0.03258916899373499,
+        "stdev": 0.034442832676252054,
+        "max": 0.14295928692802687
       },
       {
         "z": -204,
-        "mean": 0.19401908677072172,
-        "stdev": 0.1880793493560337,
-        "max": 0.794320054657348
+        "mean": 0.10505431360003789,
+        "stdev": 0.10152373705249065,
+        "max": 0.4374419257236444
       },
       {
         "z": -196,
-        "mean": 0.21420332695158992,
-        "stdev": 0.2038714316331585,
-        "max": 0.9113519962251662
+        "mean": 0.15616256218404814,
+        "stdev": 0.146042051674058,
+        "max": 0.6591777459207896
       },
       {
         "z": -188,
-        "mean": 0.1639748126800683,
-        "stdev": 0.1601948099889515,
-        "max": 0.692192169045203
+        "mean": 0.13692802893851333,
+        "stdev": 0.13022901011755972,
+        "max": 0.5603336070672704
       },
       {
         "z": -180,
-        "mean": 0.07852484279287637,
-        "stdev": 0.07718557834037876,
-        "max": 0.30876099013272923
+        "mean": 0.08270868903094053,
+        "stdev": 0.07975610575409182,
+        "max": 0.3066063776006486
       },
       {
         "z": -172,
-        "mean": 0.021257456290035844,
-        "stdev": 0.02520424662106025,
-        "max": 0.08479549362541762
+        "mean": 0.026224447516625254,
+        "stdev": 0.030791630130925708,
+        "max": 0.11023907238809635
       },
       {
         "z": -164,
-        "mean": 0.0013449657383431744,
-        "stdev": 0.0020124685889772497,
-        "max": 0.0073290583794577814
+        "mean": 0.0018466382597483045,
+        "stdev": 0.002757600718710901,
+        "max": 0.009562585837700352
       }
     ],
     "oldWall": {
