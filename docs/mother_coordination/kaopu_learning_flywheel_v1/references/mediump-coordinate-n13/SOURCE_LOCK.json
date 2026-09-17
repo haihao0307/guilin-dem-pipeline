@@ -1,0 +1,31 @@
+{
+  "id": "KAOPU-N13-MEDIUMP-COORDINATE-SOURCES",
+  "sources": [
+    {
+      "authority": "Khronos Group",
+      "title": "OpenGL ES Shading Language 3.00, revision 6",
+      "date": "2016-01-29",
+      "url": "https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf",
+      "role": "normative minimum range, relative precision, conversion and implementation-variance contract"
+    },
+    {
+      "authority": "Khronos Group",
+      "title": "WebGL 1.0 Specification — WebGLShaderPrecisionFormat and getShaderPrecisionFormat",
+      "url": "https://registry.khronos.org/webgl/specs/latest/1.0/#5.14.9",
+      "role": "normative browser precision-query interface inherited by WebGL2"
+    }
+  ],
+  "runtimeObservation": {
+    "failedAssumptionRun": 35267268696,
+    "successfulRun": 35267368739,
+    "headCommit": "ec45fc9afa9ab7ecf17d494f0908f2035133351c",
+    "browserBinary": "Google Chrome 152.0.7977.82",
+    "api": "WebGL 2.0 / GLSL ES 3.00",
+    "backend": "ANGLE Vulkan SwiftShader Subzero"
+  },
+  "emulationBoundary": {
+    "model": "IEEE-754 binary16",
+    "reason": "matches the GLSL ES mediump minimum relative-precision class and exceeds its minimum range",
+    "status": "conservative candidate counterexample, not a universal mediump representation"
+  }
+}
