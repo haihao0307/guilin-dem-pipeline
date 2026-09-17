@@ -19,7 +19,7 @@ Source receipt: [`SOURCE_LOCK.json`](../references/multiscale-lod-n06/SOURCE_LOC
 
 ## Observation
 
-All 15 predeclared CPU checks passed after preserving one failed premise as a counterexample. A second local run matched every non-timing field.
+All 15 final CPU checks passed after preserving one failed premise as a counterexample. A second local run matched every non-timing field. [GitHub Actions run 35187282942](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35187282942) then fetched the pinned header, verified its checksum, rebuilt the probe and reproduced every deterministic field. Artifact `kaopu-multiscale-lod-n06` has digest `sha256:33b43bef27d3a9b6554a954ed0e13186dac9a3f28dce41f37711b55bcfe059c3`.
 
 - Manual octave composition matched the pinned built-in fBm and ridged paths with RMS errors `5.2e-8` and `1.21e-7`. This verifies that the probe's octave weights and transforms represent the selected source path.
 - The fixed fBm sample was not exactly zero-mean (`0.02553` after the 2.5 m height scale). Fractal bounding therefore cannot be promoted into a zero-mean claim.
