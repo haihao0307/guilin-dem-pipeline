@@ -24,6 +24,8 @@ Source receipt: [`SOURCE_LOCK.json`](../references/noise-domain-warp-n04/SOURCE_
 
 All 24 predeclared CPU checks passed. A second local run was identical after removing timing fields. The first CI run stopped before compilation because the source receipt had hashed a locally saved copy with one extra trailing newline; that failed receipt remains evidence of the gate working, and the raw upstream byte hash was corrected before replay.
 
+GitHub Actions receipt: first source-gate failure [run 35172091331](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35172091331); corrected full replay [run 35172248510](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35172248510), artifact `kaopu-noise-domain-warp-n04`, digest `sha256:150169d60abb3a3279362c19f8dfa554d6c56e15ba6da52d9f1cc4906788d954`.
+
 | Base kernel | RMS field change | RMS height change | mean / max normal change | chain-rule RMS error | incomplete-gradient RMS error | local CPU ratio |
 |---|---:|---:|---:|---:|---:|---:|
 | OpenSimplex2 | 0.07314 | 0.18284 m | 2.314° / 8.739° | 0.0000294 | 0.0096607 | 3.23× |
