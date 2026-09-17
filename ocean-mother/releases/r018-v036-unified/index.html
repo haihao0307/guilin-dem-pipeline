@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#091b24"><title>Ocean Mother R018 V0.3.6</title><style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#091b24;color:#eafcff;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}#loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#173f4d,#07151d 72%);z-index:2;transition:opacity .3s}#loading.done{opacity:0;pointer-events:none}.card{text-align:center;padding:26px 30px;border:1px solid #ffffff42;border-radius:24px;background:#0b2632aa;backdrop-filter:blur(16px);box-shadow:0 25px 80px #0007}.orb{width:58px;height:58px;margin:0 auto 15px;border-radius:50%;background:radial-gradient(circle at 32% 24%,#fff,#8dd9ea66 35%,#06202c22 70%);border:1px solid #fff8;animation:p 1.25s ease-in-out infinite alternate}@keyframes p{to{transform:translateY(-6px);filter:brightness(1.15)}}b{display:block;letter-spacing:.12em}small{display:block;margin-top:7px;color:#b6d8e0}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#091b24}#error{position:fixed;inset:20px;z-index:3;display:none;white-space:pre-wrap;overflow:auto;background:#fff4f4;color:#75272f;border-radius:18px;padding:20px}
+</style></head><body><div id="loading"><div class="card"><div class="orb"></div><b>OCEAN MOTHER</b><small>正在打开已检查的统一海洋场景</small></div></div><pre id="error"></pre><script>
+(async()=>{
+ const paths=['payload/part01.txt','payload/part02.txt','payload/part03.txt','payload/part04.txt','payload/part05.txt','payload/part06.txt','payload/part07.txt','payload/part08.txt'];
+ try{
+  const texts=await Promise.all(paths.map(async p=>{const r=await fetch(p,{cache:'force-cache'});if(!r.ok)throw new Error(p+' '+r.status);return r.text();}));
+  const s=texts.join(''); const bin=Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  const stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const html=await new Response(stream).text();
+  const f=document.createElement('iframe');f.title='Ocean Mother R018 V0.3.6 Unified Seascape';f.onload=()=>document.getElementById('loading').classList.add('done');f.srcdoc=html;document.body.appendChild(f);
+ }catch(e){const box=document.getElementById('error');box.style.display='block';box.textContent='Ocean Mother 启动失败：\n'+(e?.stack||e);document.getElementById('loading').style.display='none';}
+})();
+</script></body></html>
