@@ -1,0 +1,1281 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#b3d3db"><title>Survivor: Palau | V0.1.3.1 Natural World</title><link rel="icon" href="data:,"><style>
+/* Ocean Mother R018 V0.3.3 recovery takeover. All glass surfaces are procedural. Text is not rasterized. */
+:root{color-scheme:light;--ink:#172c34;--muted:#40565f;--line:rgba(255,255,255,.62);--glass:rgba(233,248,250,.16);--accent:#165665}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8eafbb;color:var(--ink);font:13px/1.5 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft Yahei",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}button,select{color:inherit;border:1px solid transparent;border-radius:999px;background:transparent;padding:9px 13px;min-height:40px;transition:background .16s,box-shadow .16s;white-space:nowrap}button:hover{background:rgba(255,255,255,.42)}button.active,button.selected{background:linear-gradient(155deg,rgba(255,255,255,.80),rgba(230,249,252,.28));border-color:rgba(255,255,255,.84);box-shadow:inset 0 1px 0 white,0 2px 7px #173a4820}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #237585;outline-offset:2px}select{background:#ffffff4d;border-color:#ffffff75;min-width:150px}option{background:#f3f9fa;color:#143742}
+[hidden]{display:none!important}#stage,#scene{position:absolute;inset:0;width:100%;height:100%;border:0}#scene{touch-action:none}
+.glass{background:linear-gradient(140deg,rgba(255,255,255,.31),rgba(230,246,249,.11) 42%,rgba(213,235,240,.24));border:1px solid var(--line);border-radius:24px;box-shadow:inset 0 1px 1px #fff, inset 0 -1px 1px #ffffff70,0 10px 30px #1335421b;position:relative;isolation:isolate;backdrop-filter:blur(7px) saturate(1.14);-webkit-backdrop-filter:blur(7px) saturate(1.14)}
+.glass:before{content:"";position:absolute;inset:2px;border:1px solid #ffffff24;border-radius:inherit;pointer-events:none;z-index:-1}.glass>*{position:relative}
+.topbar{position:fixed;z-index:30;top:max(16px,env(safe-area-inset-top));left:20px;right:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}.topbar>*{pointer-events:auto}.brand{display:flex;align-items:center;gap:10px;padding:10px 17px;min-width:234px}.brand>span:last-child{display:flex;flex-direction:column}.brand b{font-size:12px;letter-spacing:.13em}.brand small{font-size:9px;letter-spacing:.16em;color:#44616c}.brandMark,.loadingMark{display:grid;place-items:center;border:1px solid #ffffffb3;border-radius:50%;height:32px;width:32px;font:20px Georgia,serif;background:radial-gradient(at 30% 18%,#ffffffc9,#ffffff15 50%,#578a973b 85%);box-shadow:inset -2px -2px 4px #254f5a22,inset 1px 1px 2px white}.tabs,.topActions{display:flex;padding:4px;gap:3px}.tabs{position:absolute;left:50%;transform:translateX(-50%)}.topActions{margin-left:auto}
+#sceneTitle{position:fixed;z-index:10;top:104px;left:38px;pointer-events:none;color:#143743;text-shadow:0 1px 1px #ffffff9c}.eyebrow{font-size:9px;font-weight:650;letter-spacing:.18em}#sceneTitle h2{font-size:32px;letter-spacing:.06em;font-weight:420;margin:7px 0 5px}#sceneTitle p{font-size:11px;letter-spacing:.11em;margin:0;color:#345761}
+#cameraBar{position:fixed;z-index:25;top:98px;left:50%;transform:translateX(-50%);display:flex;padding:5px;gap:2px;border-radius:999px}#cameraBar button{font-size:11px;padding:7px 12px;min-height:34px}
+#panel{position:fixed;right:20px;top:158px;bottom:74px;width:300px;z-index:25;padding:23px 19px;overflow:auto;scrollbar-width:thin;scrollbar-color:#315d6650 transparent;transition:transform .24s,opacity .24s;contain:layout style}#panel.closed{opacity:0;pointer-events:none;transform:translateX(330px);visibility:hidden}.panelHead h1{margin:5px 0;font-size:21px;letter-spacing:.03em;font-weight:500}.panelHead p{color:var(--muted);font-size:11px;margin:0 0 16px}.panelHead .eyebrow{color:#51717d}
+section{border-top:1px solid #ffffff6e;padding:14px 0 3px;margin-top:11px}section h2{font-size:11px;letter-spacing:.12em;margin:0 0 12px;font-weight:650}.presetRow,.buttonRow{display:flex;gap:5px}.presetRow button,.buttonRow button{background:#ffffff29;font-size:10px;min-height:32px;padding:6px 11px;border-color:#ffffff48}.control{display:grid;grid-template-columns:1fr auto;gap:5px 10px;margin:12px 0 14px}.control label{font-size:11px;font-weight:550}.control output{font-size:10px;font-variant-numeric:tabular-nums;color:#325763}.control input{grid-column:1/-1;width:100%;height:18px;margin:0;accent-color:#3a7583;cursor:pointer}.control input[type=range]{appearance:none;background:transparent}.control input::-webkit-slider-runnable-track{height:5px;border:1px solid #ffffff9c;border-radius:5px;background:#376a7540;box-shadow:inset 0 1px 2px #14394324}.control input::-webkit-slider-thumb{appearance:none;width:15px;height:15px;margin-top:-6px;border-radius:50%;background:linear-gradient(135deg,white,#cbe3e9);border:1px solid white;box-shadow:0 1px 5px #12384450}.selectRow{display:flex;align-items:center;justify-content:space-between;font-size:11px;margin:9px 0}.metricGrid{display:grid;grid-template-columns:1fr auto;gap:5px;font-size:10px}.metricGrid b{font-variant-numeric:tabular-nums}details{margin-top:14px;font-size:10px;color:#3c616d}summary{cursor:pointer}details pre{white-space:pre-wrap;font-size:9px}.limitText{line-height:1.65}
+footer{position:fixed!important;z-index:25;bottom:max(18px,env(safe-area-inset-bottom));left:20px;display:flex;gap:15px;align-items:center;max-width:calc(100vw - 40px);padding:8px 16px!important;border-radius:999px!important;font-size:10px;font-variant-numeric:tabular-nums}#cameraHint{position:fixed;bottom:28px;right:24px;font-size:10px;color:#325663;text-shadow:0 1px white;pointer-events:none}#legend{position:fixed;bottom:78px;left:20px;background:#f7fcfbe0;border:1px solid white;border-radius:16px;padding:12px;z-index:20;font-size:11px}#legend span{margin-left:12px}#legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.water{background:#1a7789}.foam{background:#f6af45}.wet{background:#5fb5ae}.solid{background:#5f7074}.fire{background:#ed6928}
+#loading{position:fixed;z-index:60;inset:0;background:#dce8eb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:14px}#loading .loadingMark{width:56px;height:56px;font-size:30px}#loading span{font-size:11px;color:#4c6872}#loading.done{display:none}#error{position:fixed;z-index:99;inset:80px 20px 30px;overflow:auto;margin:0;padding:18px;background:#fff0f1f5;border:1px solid #f0b2b2;color:#742631;border-radius:18px;white-space:pre-wrap;font-size:11px}
+@media(max-width:760px){.topbar{left:10px;right:10px;top:max(9px,env(safe-area-inset-top));gap:6px;align-items:flex-start}.brand{min-width:0;padding:9px 10px;gap:6px}.brand b{font-size:10px;letter-spacing:.05em}.brand small{display:none}.brandMark{width:27px;height:27px;font-size:17px}.tabs{top:57px;left:10px;transform:none}.tabs button{min-height:32px;font-size:11px;padding:5px 12px}.topActions button{padding:5px 10px;min-height:34px;font-size:11px}#resetCamera{display:none}#sceneTitle{top:125px;left:20px}#sceneTitle h2{font-size:24px}#sceneTitle .eyebrow{font-size:8px}#sceneTitle p{font-size:10px}#cameraBar{top:auto;bottom:72px;left:10px;transform:none;right:10px;overflow:auto;justify-content:space-around;border-radius:22px;padding:4px}#cameraBar button{padding:5px 7px;font-size:10px;min-height:38px}#panel{top:110px;bottom:130px;width:min(310px,calc(100vw - 20px));right:10px;padding:19px 17px;background:linear-gradient(145deg,#eff9fbbd,#e8f5f895);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}footer{left:10px;bottom:max(20px,env(safe-area-inset-bottom));gap:10px;width:calc(100vw - 20px);padding:9px 12px!important;font-size:9px}footer .review,#resolution{display:none}#cameraHint{display:none}.glass{border-radius:21px}#legend{bottom:124px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){.glass{background:#eaf3f5f5!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:#e3eff2e8}}
+/* R017: parametric moving highlights. No image assets and no rasterized text. */
+:root{--glass-alpha:.28;--glass-blur:7px;--glass-flow:.75;--glass-edge:.9;--glass-hue:194;--button-duration:260ms;--flow-duration:30s}
+.glass{background:linear-gradient(145deg,rgba(236,250,253,var(--glass-alpha)),rgba(219,239,246,.15));backdrop-filter:blur(var(--glass-blur)) saturate(1.1);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.1)}
+.glass:after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:linear-gradient(120deg,transparent 18%,hsla(var(--glass-hue),80%,92%,.10) 34%,rgba(255,255,255,.38) 46%,transparent 58%,hsla(var(--glass-hue),65%,76%,.12) 75%,transparent 86%);background-size:270% 240%;opacity:calc(var(--glass-flow)*.5);animation:lightFlow var(--flow-duration) ease-in-out infinite}
+@keyframes lightFlow{0%,100%{background-position:0% 5%}50%{background-position:100% 85%}}
+.glass-still .glass:after{animation:none}button,select{transition:background var(--button-duration),border-color var(--button-duration),box-shadow var(--button-duration),transform var(--button-duration),color var(--button-duration)}
+button:active{transform:scale(.96)}button.active,button.selected{color:#104d62;background:linear-gradient(135deg,#fffdf7d9,#b7edf58c);box-shadow:inset 0 1px 1px white,0 3px 12px #14627d25}
+#panel{width:368px;top:155px;bottom:72px;padding:0;overflow:hidden;background:linear-gradient(145deg,rgba(230,247,249,calc(var(--glass-alpha) + .30)),rgba(210,234,241,calc(var(--glass-alpha) + .14)));display:flex;flex-direction:column;transition:transform .36s cubic-bezier(.18,.8,.2,1),opacity .25s;visibility:visible}
+#panel.closed{transform:translateX(400px);visibility:hidden}.panelHead{padding:14px 18px 0;flex:none;background:#e8f5fa24}.panelHead h1{font-size:20px;margin:0}.panelHead p{margin:3px 0 10px}.panel-label{display:flex;align-items:center;justify-content:space-between}.panel-label button{min-height:32px;font-size:10px;padding:4px 10px}
+#parameterTabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding:3px;background:#2a5a6b15;border-radius:13px}#parameterTabs button{padding:7px 3px;font-size:10px;min-height:36px;border-radius:11px}
+#panelScroll{overflow:auto;min-height:0;padding:10px 18px 25px;scrollbar-width:thin;scrollbar-color:#44748760 transparent}
+#panelScroll section{position:relative;padding-top:16px}section h2{margin-right:75px;letter-spacing:.05em}.group-reset{position:absolute;top:7px;right:0;min-height:28px;font-size:9px;padding:3px 8px;color:#436874}
+.control{grid-template-columns:1fr auto;gap:4px 8px;margin:15px 0}.control label{font-size:12px}.value-box{display:flex;gap:4px;align-items:center;font-variant-numeric:tabular-nums}.value-box input[type=number]{grid-column:auto;width:58px;height:26px;margin:0;background:#ffffff35;color:#173d4b;border:1px solid #ffffff64;border-radius:7px;text-align:right;padding:2px 5px;font-size:11px;appearance:textfield}.value-box small{min-width:26px;font-size:9px}.value-box input::-webkit-inner-spin-button{display:none}.control input[type=range]{height:22px;min-width:0}.control input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,#559bab var(--fill),#79949a38 var(--fill))}.control input[type=range]::-webkit-slider-thumb{width:17px;height:17px;margin-top:-7px}.buttonRow{flex-wrap:wrap}.quickActions button{font-size:10px}#sceneTitle h2{font-size:29px}#sceneTitle{top:107px;left:30px}#cameraBar{top:97px}#windReadout{font-size:10px}
+@media(max-width:950px) and (min-width:761px){.brand{min-width:190px}.brand b{font-size:10px}.brand small{font-size:8px}.tabs{left:49%}.topActions button{padding:7px 9px}#sceneTitle{top:157px}#cameraHint{display:none}}
+@media(max-width:760px){#panel{width:calc(100vw - 20px);top:111px;bottom:130px}.panelHead{padding:12px 15px 0}#panelScroll{padding:9px 15px 20px}.control label{font-size:12px}#parameterTabs button{font-size:10px;min-height:40px}#sceneTitle{top:130px;left:18px}#sceneTitle h2{font-size:23px}#sceneTitle p{font-size:9px}#cameraBar{top:auto}#windReadout{display:none}.topActions button{padding:5px 8px}.brand b{font-size:9px}.brand{padding:9px 8px}footer{bottom:max(18px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.glass:after{animation:none!important}button{transition:none!important}}
+
+/* R018 relationship-convergence interaction layer */
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #d9fbff;outline-offset:2px;box-shadow:0 0 0 4px #1a7f9638,inset 0 1px #fff}
+button{transform-origin:50% 55%}
+button:active{transform:translateY(1px) scale(.985)}
+#cameraBar button.active,.tabs button.selected,#parameterTabs button.selected{box-shadow:inset 0 1px #fff,0 4px 16px #1d74833b}
+#panel:not(.closed){will-change:transform,opacity}
+@media(prefers-contrast:more){.glass{border-color:#fff!important;background:#dff6f0e8!important}button{border-color:#245a68!important}}
+
+/* R018 V0.3.2 liquid-glass light transport and dense workbench controls */
+:root{--button-flow-duration:5.65s;--glass-line-strong:rgba(255,255,255,.84)}
+.glass{border-color:var(--glass-line-strong);box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.30),0 12px 34px rgba(10,48,62,.19)}
+.glass:before{border-color:rgba(255,255,255,.38);box-shadow:inset 0 0 18px rgba(170,228,239,.10)}
+button{position:relative;overflow:hidden;isolation:isolate;border-color:rgba(255,255,255,.18);text-shadow:0 1px rgba(255,255,255,.46)}
+button::after{content:"";position:absolute;z-index:-1;pointer-events:none;top:-65%;bottom:-65%;left:-48%;width:42%;transform:translateX(-215%) skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.10) 12%,rgba(255,255,255,.86) 47%,rgba(145,229,244,.27) 68%,transparent);filter:blur(.25px);opacity:calc(.20 + var(--glass-flow)*.44);animation:buttonGlint var(--button-flow-duration) cubic-bezier(.48,.02,.48,.98) infinite}
+button:nth-child(2n)::after{animation-delay:-1.15s}button:nth-child(3n)::after{animation-delay:-2.35s}button:nth-child(4n)::after{animation-delay:-3.40s}button:nth-child(5n)::after{animation-delay:-4.25s}
+button:hover::after,button.selected::after,button.active::after{opacity:calc(.32 + var(--glass-flow)*.55);animation-duration:calc(var(--button-flow-duration)*.72)}
+button:hover{border-color:rgba(255,255,255,.74);box-shadow:inset 0 1px rgba(255,255,255,.82),0 4px 14px rgba(18,83,101,.22)}
+button.active,button.selected{color:#0a4455;background:linear-gradient(145deg,rgba(255,255,255,.86),rgba(186,235,244,.40) 55%,rgba(255,255,255,.26));border-color:#fff;box-shadow:inset 0 1px 1px #fff,inset 0 -1px rgba(100,184,205,.26),0 4px 17px rgba(18,92,112,.32)}
+@keyframes buttonGlint{0%,12%{transform:translateX(-215%) skewX(-18deg)}52%,68%{transform:translateX(465%) skewX(-18deg)}100%{transform:translateX(465%) skewX(-18deg)}}
+#cameraBar{max-width:calc(100vw - 36px);overflow-x:auto;scrollbar-width:none;justify-content:flex-start}#cameraBar::-webkit-scrollbar{display:none}
+.presetRow{flex-wrap:wrap}.presetRow button{flex:1 1 auto}
+@media(max-width:760px){#cameraBar{justify-content:flex-start;scroll-snap-type:x proximity}#cameraBar button{scroll-snap-align:center;flex:0 0 auto}.presetRow button{font-size:9px;padding:5px 8px}}
+.glass-still button::after{animation:none;opacity:.14}
+@media(prefers-reduced-motion:reduce){button::after{animation:none!important;transform:translateX(180%) skewX(-18deg)}}
+
+
+/* R018 V0.3.6 single-scene shell. */
+.sceneMode{padding:8px 16px;min-height:42px;align-items:center;justify-content:center}
+.sceneMode span{font-size:10px;letter-spacing:.12em;color:#244c58;white-space:nowrap}
+#stage{background:linear-gradient(180deg,#8fc2cf 0%,#3c7a8a 48%,#063044 100%)}
+@media(max-width:760px){.sceneMode{top:57px;left:10px;transform:none;padding:7px 11px;min-height:34px}.sceneMode span{font-size:9px;letter-spacing:.06em}}
+</style><meta name="ocean-direct-open" content="0.3.6-unified-seascape-verified"><meta name="ocean-scene-mode" content="single-continuous-field"></head><body>
+<main id="stage"><canvas id="scene" aria-label="海岛近岸、珊瑚礁深槽、远洋谱浪与云层统一三维场景"></canvas></main>
+<header class="topbar"><div class="brand glass"><span class="brandMark">O</span><span><b>SURVIVOR: PALAU</b><small>NATURAL WORLD / V0.1.3.1</small></span></div><div class="tabs glass sceneMode" aria-label="场景模式"><span>海岛—远洋统一场景</span></div><div class="topActions glass"><button id="pause">暂停</button><button id="resetCamera">复位镜头</button><button id="panelToggle" aria-expanded="false" aria-controls="panel">参数 · 3 页</button></div></header>
+<div id="sceneTitle"><span class="eyebrow">PALAU / KARST LAGOON / OPEN OCEAN</span><h2>礁湖、石灰岩峰与远洋。</h2><p>自然破浪 · 恢复云层 · 中央卡斯特峰林 · 独木舟 · 深海钓点</p></div>
+<nav id="cameraBar" class="glass" aria-label="观察镜头"><button data-view="overview" class="active">海岛全景</button><button data-view="karst">岛心峰林</button><button data-view="shore">礁岸浅湾</button><button data-view="breaker">自然破浪</button><button data-view="canoe">独木舟</button><button data-view="deepfish">深海钓点</button><button data-view="rocks">海蚀岩</button><button data-view="fire">营地火堆</button><button data-view="top">俯视全岛</button></nav>
+<aside id="panel" class="glass closed" aria-label="海岛参数"><div class="panelHead"><div class="panel-label"><span class="eyebrow">EXPERIMENT CONTROLS</span><button id="panelClose" aria-label="收起参数">收起</button></div><h1>统一海洋实验室</h1><p id="controlCount">统一场参数编译中</p><nav id="parameterTabs" role="tablist"><button data-page="1" class="selected" role="tab" aria-selected="true">1 海岛与海浪</button><button data-page="2" role="tab" aria-selected="false">2 泡沫与烟火</button><button data-page="3" role="tab" aria-selected="false">3 光学与界面</button></nav></div>
+<div id="panelScroll"><div class="presetRow"><button data-sea="calm">平静水面</button><button data-sea="foamwall" class="selected">泡沫墙</button><button data-sea="curl">卷浪</button><button data-sea="rockbreak">撞岩浪</button><button data-sea="storm">强风浓烟</button></div>
+<div id="page-1" role="tabpanel"></div><div id="page-2" role="tabpanel" hidden></div><div id="page-3" role="tabpanel" hidden></div>
+<section class="quickActions"><h2>运行开关</h2><div class="buttonRow"><button id="fireToggle">停止添火</button><button id="smokeToggle">隐藏烟雾</button><button id="waterToggle">隐藏海水</button></div><label class="selectRow">检查模式<select id="mode"><option value="environment">环境日光</option><option value="neutral">中性检查</option><option value="studio">工作室检查</option><option value="diagnostic">水深、泡沫与水线诊断</option></select></label><button id="resetAll">全部参数恢复初始值</button></section>
+<section><h2>运行记录</h2><div class="metricGrid"><span>岸边岩石</span><b id="rockCount">0</b><span>火圈石</span><b id="ringCount">0</b><span>泡沫单元</span><b id="foamCount">0</b><span>烟粒子</span><b id="smokeCount">0</b><span>火焰粒子</span><b id="flameCount">0</b><span>显示帧率</span><b id="panelFps">0</b></div></section>
+<details><summary>能力边界与构建身份</summary><p class="limitText">程序化海岛试验域，无实测地形。异形岸线由多尺度地貌场生成，卷浪采用受水深约束的运动学浪墙与悬卷浪唇；泡沫和烟火采用数值输运、粒子近似。完整三维守恒流体和体积燃烧尚未接入。烟长由风、阻力、寿命共同产生。潮位周期为加速演示。</p><pre id="metrics"></pre><code id="build">island-r018-irregular-wavewall-v033-recovery</code></details></div></aside>
+<div id="legend" hidden>水深：浅绿至深蓝 · 泡沫：暖橙 · 固体：灰色 · 热源：橙红</div>
+<footer id="coastFooter" class="glass"><span id="status">构建帕劳世界基础</span><span id="clock">0.00 s</span><span id="fps"></span><span id="resolution"></span><span id="windReadout"></span><span class="review">SURVIVOR: PALAU V0.1.2 · 峰林与自然白浪候选</span></footer><div id="cameraHint">单指旋转 · 双指缩放 · Shift 拖动平移</div>
+<div id="loading"><div class="loadingMark">S</div><b>构建 Survivor: Palau</b><span id="progress">建立卡斯特礁湖、自然破浪、云层与独木舟</span></div><pre id="error" hidden></pre><pre id="qaProbe" hidden></pre><script type="module">
+// BEGIN params.mjs
+const GROUPS=[{"id": "island", "page": 1, "title": "海岛与海床"}, {"id": "tide", "page": 1, "title": "潮位与湿润历史"}, {"id": "wind", "page": 1, "title": "统一风场"}, {"id": "waves", "page": 1, "title": "来浪与风浪"}, {"id": "breakers", "page": 1, "title": "三层破浪与回洗"}, {"id": "foam", "page": 2, "title": "泡沫生命周期"}, {"id": "spray", "page": 2, "title": "浪花、飞沫与水雾"}, {"id": "rock", "page": 2, "title": "岩石与接触水线"}, {"id": "fire", "page": 2, "title": "多源、多股火焰"}, {"id": "smoke", "page": 2, "title": "多股长烟"}, {"id": "light", "page": 3, "title": "日光与海水光学"}, {"id": "glass", "page": 3, "title": "液态玻璃与流光"}, {"id": "camera", "page": 3, "title": "镜头与交互"}];
+const PARAMS=[{"key":"radius","label":"海岛半径","min":18,"max":38,"step":0.5,"value":27,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"roundness","label":"岸线轻微起伏","min":0,"max":0.6,"step":0.005,"value":0.43,"unit":"","kind":"geometry","group":"island","page":1},{"key":"islandHeight","label":"岛心高度","min":1.5,"max":7.5,"step":0.1,"value":6.4,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"beachWidth","label":"沙滩宽度","min":5,"max":17,"step":0.5,"value":11,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"beachSlope","label":"滩面坡形","min":0.8,"max":2.4,"step":0.05,"value":1.3,"unit":"","kind":"geometry","group":"island","page":1},{"key":"shelfWidth","label":"浅海平台宽度","min":12,"max":40,"step":1,"value":22,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"seaDepth","label":"外海深度","min":5,"max":18,"step":0.5,"value":10,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"bedRelief","label":"海床起伏","min":0,"max":0.75,"step":0.01,"value":0.34,"unit":"m","kind":"geometry","group":"island","page":1},{"key":"tide","label":"平均水位","min":-0.5,"max":1.0,"step":0.02,"value":0.18,"unit":"m","kind":"live","group":"tide","page":1},{"key":"tideAmplitude","label":"潮位振幅","min":0,"max":0.6,"step":0.01,"value":0.12,"unit":"m","kind":"live","group":"tide","page":1},{"key":"tidePeriod","label":"潮位演示周期","min":30,"max":600,"step":5,"value":240,"unit":"s","kind":"live","group":"tide","page":1},{"key":"wetLife","label":"湿沙干燥时间","min":15,"max":240,"step":5,"value":100,"unit":"s","kind":"live","group":"tide","page":1},{"key":"filmLife","label":"薄水膜退散时间","min":1,"max":25,"step":0.5,"value":7,"unit":"s","kind":"live","group":"tide","page":1},{"key":"wind","label":"平均风速","min":0,"max":24,"step":0.2,"value":12,"unit":"m/s","kind":"live","group":"wind","page":1},{"key":"windDir","label":"来风方向","min":0,"max":360,"step":1,"value":250,"unit":"°","kind":"live","group":"wind","page":1},{"key":"gust","label":"阵风幅度","min":0,"max":0.8,"step":0.02,"value":0.24,"unit":"","kind":"live","group":"wind","page":1},{"key":"gustPeriod","label":"阵风周期","min":2,"max":30,"step":0.5,"value":8,"unit":"s","kind":"live","group":"wind","page":1},{"key":"turbulence","label":"风场扰动","min":0,"max":3,"step":0.05,"value":0.8,"unit":"m/s","kind":"live","group":"wind","page":1},{"key":"groundDamping","label":"近地风速比例","min":0.1,"max":1,"step":0.02,"value":0.55,"unit":"","kind":"live","group":"wind","page":1},{"key":"windShear","label":"随高度增速","min":0,"max":0.6,"step":0.02,"value":0.16,"unit":"","kind":"live","group":"wind","page":1},{"key":"windDrag","label":"飞沫风阻响应","min":0.1,"max":3,"step":0.05,"value":1.0,"unit":"1/s","kind":"live","group":"wind","page":1},{"key":"swell","label":"主涌浪高度","min":0.15,"max":2.4,"step":0.05,"value":1.1,"unit":"m","kind":"live","group":"waves","page":1},{"key":"period","label":"主涌浪周期","min":4,"max":13,"step":0.1,"value":8.5,"unit":"s","kind":"live","group":"waves","page":1},{"key":"swellDir","label":"主涌浪来向","min":0,"max":360,"step":1,"value":210,"unit":"°","kind":"live","group":"waves","page":1},{"key":"secondary","label":"次涌浪高度","min":0,"max":1,"step":0.02,"value":0.26,"unit":"m","kind":"live","group":"waves","page":1},{"key":"secondaryPeriod","label":"次涌浪周期","min":3,"max":12,"step":0.1,"value":6,"unit":"s","kind":"live","group":"waves","page":1},{"key":"secondaryDir","label":"次涌浪来向","min":0,"max":360,"step":1,"value":255,"unit":"°","kind":"live","group":"waves","page":1},{"key":"windWave","label":"风浪相对强度","min":0,"max":1.5,"step":0.05,"value":0.55,"unit":"","kind":"live","group":"waves","page":1},{"key":"crest","label":"浪峰尖锐度","min":0,"max":0.55,"step":0.01,"value":0.18,"unit":"","kind":"live","group":"waves","page":1},{"key":"groupScale","label":"浪组调制","min":0,"max":1,"step":0.02,"value":0.35,"unit":"","kind":"live","group":"waves","page":1},{"key":"shoal","label":"浅化响应","min":0,"max":1.6,"step":0.05,"value":0.9,"unit":"","kind":"live","group":"waves","page":1},{"key":"curlOuter","label":"外层卷浪","min":0,"max":1.8,"step":0.05,"value":0.98,"unit":"×","kind":"live","group":"breakers","page":1},{"key":"curlMiddle","label":"中层卷浪","min":0,"max":1.8,"step":0.05,"value":0.74,"unit":"×","kind":"live","group":"breakers","page":1},{"key":"curlInner","label":"内层翻涌","min":0,"max":1.8,"step":0.05,"value":0.50,"unit":"×","kind":"live","group":"breakers","page":1},{"key":"curlLip","label":"浪唇悬出","min":0.1,"max":1.5,"step":0.05,"value":0.82,"unit":"m","kind":"live","group":"breakers","page":1},{"key":"curlShoulder","label":"浪肩长度","min":0.6,"max":3,"step":0.05,"value":1.85,"unit":"m","kind":"live","group":"breakers","page":1},{"key":"breakWidth","label":"破浪带宽度","min":1.5,"max":7,"step":0.1,"value":3.35,"unit":"m","kind":"live","group":"breakers","page":1},{"key":"breakThreshold","label":"破碎触发阈值","min":0.2,"max":0.85,"step":0.01,"value":0.4,"unit":"","kind":"live","group":"breakers","page":1},{"key":"runup","label":"贴岸上冲","min":0,"max":1.5,"step":0.05,"value":0.7,"unit":"×","kind":"live","group":"breakers","page":1},{"key":"backwash","label":"回洗速度","min":0,"max":1.8,"step":0.05,"value":0.8,"unit":"m/s","kind":"live","group":"breakers","page":1},{"key":"foam","label":"泡沫生成强度","min":0,"max":2,"step":0.05,"value":1.18,"unit":"×","kind":"live","group":"foam","page":2},{"key":"foamLife","label":"泡沫寿命","min":1,"max":32,"step":0.5,"value":6.0,"unit":"s","kind":"live","group":"foam","page":2},{"key":"foamDiffusion","label":"泡沫扩散","min":0,"max":0.8,"step":0.02,"value":0.07,"unit":"","kind":"live","group":"foam","page":2},{"key":"foamThickness","label":"泡沫光学厚度","min":0.1,"max":1.8,"step":0.05,"value":0.92,"unit":"×","kind":"live","group":"foam","page":2},{"key":"fineFoam","label":"细泡比例","min":0,"max":1,"step":0.02,"value":0.62,"unit":"","kind":"live","group":"foam","page":2},{"key":"foamTransport","label":"泡沫输运","min":0,"max":2,"step":0.05,"value":1,"unit":"×","kind":"live","group":"foam","page":2},{"key":"shoreFoam","label":"贴岸白沫增强","min":0,"max":2,"step":0.05,"value":0.58,"unit":"×","kind":"live","group":"foam","page":2},{"key":"rockFoam","label":"撞岩泡沫增强","min":0,"max":3,"step":0.05,"value":1.2,"unit":"×","kind":"live","group":"foam","page":2},{"key":"residualFoam","label":"回洗泡沫残留","min":0,"max":1,"step":0.05,"value":0.30,"unit":"","kind":"live","group":"foam","page":2},{"key":"spray","label":"浪花喷射量","min":0,"max":3,"step":0.05,"value":1.1,"unit":"×","kind":"live","group":"spray","page":2},{"key":"sprayHeight","label":"浪花上抛速度","min":0.5,"max":6,"step":0.1,"value":2.6,"unit":"m/s","kind":"live","group":"spray","page":2},{"key":"spraySpeed","label":"浪花向岸速度","min":0,"max":5,"step":0.1,"value":1.4,"unit":"m/s","kind":"live","group":"spray","page":2},{"key":"dropSize","label":"可见飞沫尺度","min":0.025,"max":0.25,"step":0.005,"value":0.07,"unit":"m","kind":"live","group":"spray","page":2},{"key":"mistRatio","label":"细水雾比例","min":0,"max":1,"step":0.02,"value":0.25,"unit":"","kind":"live","group":"spray","page":2},{"key":"mistLife","label":"水雾寿命","min":0.5,"max":8,"step":0.1,"value":2.4,"unit":"s","kind":"live","group":"spray","page":2},{"key":"mistSpread","label":"水雾扩散","min":0,"max":1,"step":0.05,"value":0.25,"unit":"m/s","kind":"live","group":"spray","page":2},{"key":"rockCount","label":"海岸岩石数量","min":0,"max":42,"step":1,"value":27,"unit":"块","kind":"geometry","group":"rock","page":2},{"key":"rockScale","label":"岩石尺度","min":0.4,"max":1.8,"step":0.05,"value":1.08,"unit":"×","kind":"geometry","group":"rock","page":2},{"key":"rockScatter","label":"沿岸分散程度","min":0,"max":1,"step":0.05,"value":0.6,"unit":"","kind":"geometry","group":"rock","page":2},{"key":"rockEmbed","label":"岩石埋砂深度","min":0.05,"max":0.65,"step":0.02,"value":0.24,"unit":"×","kind":"geometry","group":"rock","page":2},{"key":"rockWet","label":"湿岩变暗程度","min":0,"max":1,"step":0.02,"value":0.6,"unit":"","kind":"live","group":"rock","page":2},{"key":"rockRough","label":"岩石粗糙度","min":0.25,"max":0.95,"step":0.02,"value":0.68,"unit":"","kind":"live","group":"rock","page":2},{"key":"fireCount","label":"火堆数量","min":1,"max":5,"step":1,"value":1,"unit":"处","kind":"geometry","group":"fire","page":2},{"key":"fireStrands","label":"每堆火焰股数","min":1,"max":6,"step":1,"value":3,"unit":"股","kind":"live","group":"fire","page":2},{"key":"fire","label":"火焰发射强度","min":0,"max":2,"step":0.05,"value":1,"unit":"×","kind":"live","group":"fire","page":2},{"key":"fireHeight","label":"火焰上升速度","min":0.8,"max":5,"step":0.1,"value":2.6,"unit":"m/s","kind":"live","group":"fire","page":2},{"key":"fireWidth","label":"火根宽度","min":0.15,"max":1.1,"step":0.05,"value":0.48,"unit":"m","kind":"live","group":"fire","page":2},{"key":"fireTurb","label":"火焰摆动幅度","min":0,"max":2,"step":0.05,"value":0.7,"unit":"","kind":"live","group":"fire","page":2},{"key":"fireSpeed","label":"火焰摆动频率","min":0.5,"max":5,"step":0.1,"value":2.3,"unit":"Hz","kind":"live","group":"fire","page":2},{"key":"fireTemp","label":"火焰颜色温度","min":1000,"max":2300,"step":50,"value":1700,"unit":"K","kind":"live","group":"fire","page":2},{"key":"emberRate","label":"火星发射率","min":0,"max":20,"step":0.5,"value":4,"unit":"/s","kind":"live","group":"fire","page":2},{"key":"smokeStrands","label":"每堆烟柱股数","min":1,"max":5,"step":1,"value":3,"unit":"股","kind":"live","group":"smoke","page":2},{"key":"smoke","label":"每股出烟量","min":0,"max":14,"step":0.2,"value":3.2,"unit":"/s","kind":"live","group":"smoke","page":2},{"key":"smokeLife","label":"烟雾保留时间","min":6,"max":38,"step":1,"value":13,"unit":"s","kind":"live","group":"smoke","page":2},{"key":"smokeRise","label":"烟雾浮升速度","min":0.15,"max":3.0,"step":0.05,"value":1.9,"unit":"m/s","kind":"live","group":"smoke","page":2},{"key":"smokeWidth","label":"烟柱初始宽度","min":0.2,"max":1.7,"step":0.05,"value":0.42,"unit":"m","kind":"live","group":"smoke","page":2},{"key":"smokeTurb","label":"烟柱湍动","min":0,"max":2.5,"step":0.05,"value":0.9,"unit":"m/s","kind":"live","group":"smoke","page":2},{"key":"smokeSpread","label":"烟柱扩散速度","min":0.025,"max":0.5,"step":0.025,"value":0.065,"unit":"m/s","kind":"live","group":"smoke","page":2},{"key":"smokeDrag","label":"烟雾随风响应","min":0.15,"max":2,"step":0.05,"value":0.52,"unit":"1/s","kind":"live","group":"smoke","page":2},{"key":"smokeFade","label":"烟雾衰减指数","min":0.3,"max":2.5,"step":0.05,"value":0.66,"unit":"","kind":"live","group":"smoke","page":2},{"key":"hour","label":"日照时刻","min":8,"max":17,"step":0.1,"value":14.4,"unit":"h","kind":"live","group":"light","page":3},{"key":"exposure","label":"曝光","min":0.65,"max":1.45,"step":0.02,"value":0.98,"unit":"×","kind":"live","group":"light","page":3},{"key":"skyLight","label":"天空漫射光","min":0.5,"max":1.7,"step":0.05,"value":0.82,"unit":"×","kind":"live","group":"light","page":3},{"key":"haze","label":"空气透视","min":0,"max":2,"step":0.05,"value":0.10,"unit":"×","kind":"live","group":"light","page":3},{"key":"cloudiness","label":"云量","min":0,"max":1,"step":0.02,"value":0.46,"unit":"","kind":"live","group":"light","page":3},{"key":"cloudSpeed","label":"云层演示漂移","min":0,"max":2,"step":0.05,"value":0.5,"unit":"×","kind":"live","group":"light","page":3},{"key":"clarity","label":"海水清澈度","min":0.5,"max":2.5,"step":0.05,"value":1.72,"unit":"×","kind":"live","group":"light","page":3},{"key":"refraction","label":"浅水折射","min":0,"max":1.5,"step":0.05,"value":0.7,"unit":"×","kind":"live","group":"light","page":3},{"key":"absorption","label":"水体吸收","min":0.3,"max":2,"step":0.05,"value":1.32,"unit":"×","kind":"live","group":"light","page":3},{"key":"waterRough","label":"海面粗糙度","min":0.08,"max":0.5,"step":0.01,"value":0.21,"unit":"","kind":"live","group":"light","page":3},{"key":"glassOpacity","label":"玻璃底色浓度","min":0.08,"max":0.75,"step":0.02,"value":0.28,"unit":"","kind":"ui","group":"glass","page":3},{"key":"glassBlur","label":"背景模糊","min":0,"max":20,"step":1,"value":7,"unit":"px","kind":"ui","group":"glass","page":3},{"key":"glassEdge","label":"边缘高光","min":0,"max":2,"step":0.05,"value":0.9,"unit":"×","kind":"ui","group":"glass","page":3},{"key":"glassFlow","label":"内部流光","min":0,"max":2,"step":0.05,"value":0.75,"unit":"×","kind":"ui","group":"glass","page":3},{"key":"glassSpeed","label":"流光速度","min":0,"max":2,"step":0.05,"value":0.6,"unit":"×","kind":"ui","group":"glass","page":3},{"key":"glassRefract","label":"边缘折射","min":0,"max":12,"step":0.5,"value":5,"unit":"px","kind":"ui","group":"glass","page":3},{"key":"glassHue","label":"流光色相","min":170,"max":260,"step":2,"value":194,"unit":"°","kind":"ui","group":"glass","page":3},{"key":"buttonDuration","label":"按钮过渡时长","min":80,"max":600,"step":20,"value":260,"unit":"ms","kind":"ui","group":"glass","page":3},{"key":"cameraTransition","label":"镜头过渡时长","min":0.1,"max":2,"step":0.1,"value":0.8,"unit":"s","kind":"ui","group":"camera","page":3},{"key":"orbitSpeed","label":"拖动旋转速度","min":0.3,"max":2,"step":0.05,"value":1,"unit":"×","kind":"ui","group":"camera","page":3},{"key":"zoomSpeed","label":"缩放灵敏度","min":0.3,"max":2,"step":0.05,"value":1,"unit":"×","kind":"ui","group":"camera","page":3},{"key":"autoOrbit","label":"自动环岛速度","min":0,"max":4,"step":0.1,"value":0,"unit":"°/s","kind":"ui","group":"camera","page":3}];
+const DEFAULTS=Object.fromEntries(PARAMS.map(p=>[p.key,p.value]));
+const PARAM_INDEX=Object.fromEntries(PARAMS.map((p,i)=>[p.key,i]));
+const PARAM_GLSL=`uniform float uParams[102];
+#define p_radius uParams[0]
+#define p_roundness uParams[1]
+#define p_islandHeight uParams[2]
+#define p_beachWidth uParams[3]
+#define p_beachSlope uParams[4]
+#define p_shelfWidth uParams[5]
+#define p_seaDepth uParams[6]
+#define p_bedRelief uParams[7]
+#define p_tide uParams[8]
+#define p_tideAmplitude uParams[9]
+#define p_tidePeriod uParams[10]
+#define p_wetLife uParams[11]
+#define p_filmLife uParams[12]
+#define p_wind uParams[13]
+#define p_windDir uParams[14]
+#define p_gust uParams[15]
+#define p_gustPeriod uParams[16]
+#define p_turbulence uParams[17]
+#define p_groundDamping uParams[18]
+#define p_windShear uParams[19]
+#define p_windDrag uParams[20]
+#define p_swell uParams[21]
+#define p_period uParams[22]
+#define p_swellDir uParams[23]
+#define p_secondary uParams[24]
+#define p_secondaryPeriod uParams[25]
+#define p_secondaryDir uParams[26]
+#define p_windWave uParams[27]
+#define p_crest uParams[28]
+#define p_groupScale uParams[29]
+#define p_shoal uParams[30]
+#define p_curlOuter uParams[31]
+#define p_curlMiddle uParams[32]
+#define p_curlInner uParams[33]
+#define p_curlLip uParams[34]
+#define p_curlShoulder uParams[35]
+#define p_breakWidth uParams[36]
+#define p_breakThreshold uParams[37]
+#define p_runup uParams[38]
+#define p_backwash uParams[39]
+#define p_foam uParams[40]
+#define p_foamLife uParams[41]
+#define p_foamDiffusion uParams[42]
+#define p_foamThickness uParams[43]
+#define p_fineFoam uParams[44]
+#define p_foamTransport uParams[45]
+#define p_shoreFoam uParams[46]
+#define p_rockFoam uParams[47]
+#define p_residualFoam uParams[48]
+#define p_spray uParams[49]
+#define p_sprayHeight uParams[50]
+#define p_spraySpeed uParams[51]
+#define p_dropSize uParams[52]
+#define p_mistRatio uParams[53]
+#define p_mistLife uParams[54]
+#define p_mistSpread uParams[55]
+#define p_rockCount uParams[56]
+#define p_rockScale uParams[57]
+#define p_rockScatter uParams[58]
+#define p_rockEmbed uParams[59]
+#define p_rockWet uParams[60]
+#define p_rockRough uParams[61]
+#define p_fireCount uParams[62]
+#define p_fireStrands uParams[63]
+#define p_fire uParams[64]
+#define p_fireHeight uParams[65]
+#define p_fireWidth uParams[66]
+#define p_fireTurb uParams[67]
+#define p_fireSpeed uParams[68]
+#define p_fireTemp uParams[69]
+#define p_emberRate uParams[70]
+#define p_smokeStrands uParams[71]
+#define p_smoke uParams[72]
+#define p_smokeLife uParams[73]
+#define p_smokeRise uParams[74]
+#define p_smokeWidth uParams[75]
+#define p_smokeTurb uParams[76]
+#define p_smokeSpread uParams[77]
+#define p_smokeDrag uParams[78]
+#define p_smokeFade uParams[79]
+#define p_hour uParams[80]
+#define p_exposure uParams[81]
+#define p_skyLight uParams[82]
+#define p_haze uParams[83]
+#define p_cloudiness uParams[84]
+#define p_cloudSpeed uParams[85]
+#define p_clarity uParams[86]
+#define p_refraction uParams[87]
+#define p_absorption uParams[88]
+#define p_waterRough uParams[89]
+#define p_glassOpacity uParams[90]
+#define p_glassBlur uParams[91]
+#define p_glassEdge uParams[92]
+#define p_glassFlow uParams[93]
+#define p_glassSpeed uParams[94]
+#define p_glassRefract uParams[95]
+#define p_glassHue uParams[96]
+#define p_buttonDuration uParams[97]
+#define p_cameraTransition uParams[98]
+#define p_orbitSpeed uParams[99]
+#define p_zoomSpeed uParams[100]
+#define p_autoOrbit uParams[101]
+`;
+
+// END params.mjs
+
+// BEGIN core.mjs
+const VERSION='survivor-palau-0.1.3.1-natural-world-runtime-fix';
+const TAU=Math.PI*2;
+const DOMAIN=Object.freeze({minX:-260,maxX:260,minZ:-260,maxZ:260,width:520,depth:520});
+const OCEAN_OUTER_RADIUS=2400;
+const SURF_SPACING=6.4;
+let SURFACE={...DEFAULTS};
+const COAST_ROCKS=[],KARST_ROCKS=[],FIRE_RING=[],LOGS=[],FIRE_SOURCES=[],FIRE_CENTER=[0,0,0];
+const CANOE_POS=Object.freeze([-58,0,41]);
+const DEEP_FISH_POS=Object.freeze([-142,0,82]);
+let VEGETATION_COUNT=0;
+function addKarstDefinitions(c=SURFACE){
+ KARST_ROCKS.length=0;
+ // Central limestone massif: several overlapping bodies prevent a single smooth sand hill.
+ KARST_ROCKS.push([-3.2,-1.8,7.2,14.8,6.5,801],[4.4,-2.6,7.0,15.8,6.2,829],[-1.8,5.2,6.2,12.9,5.7,857],[7.6,4.5,5.5,10.8,5.0,883],[-8.0,4.7,5.2,10.2,4.8,899]);
+ // Rock-Island silhouettes around the lagoon. Their narrow bases remain below/near the water line.
+ KARST_ROCKS.push([-83,34,9.6,19.0,8.1,911],[76,-53,8.1,15.7,7.0,937],[112,23,7.0,13.2,6.0,953],[-119,-71,10.4,22.0,8.7,977],[38,106,6.8,12.2,5.9,991]);
+}
+function karstApproxTop(x,z){
+ let top=-1e9;
+ for(const [cx,cz,sx,sy,sz] of KARST_ROCKS.slice(0,5)){
+  const dx=(x-cx)/(sx*1.03),dz=(z-cz)/(sz*1.03),q=dx*dx+dz*dz;if(q>=1)continue;
+  const cy=bedHeight(cx,cz)+sy*.45;top=Math.max(top,cy+sy*Math.sqrt(Math.max(0,1-q))*.84);
+ }
+ return top;
+}
+function bindConfig(c){SURFACE=c;}
+
+function islandShape(theta){
+ const broad=.38*Math.sin(theta*2+.42)+.27*Math.sin(theta*3-1.18)+.17*Math.sin(theta*5+.68)+.10*Math.sin(theta*7-2.15)+.055*Math.sin(theta*11+.20);
+ const eastBay=-.48*Math.pow(Math.max(0,Math.cos(theta+.62)),4);
+ const northHead=.36*Math.pow(Math.max(0,Math.cos(theta-2.10)),3);
+ const southSpit=.31*Math.pow(Math.max(0,Math.cos(theta+1.67)),5);
+ const westCove=-.33*Math.pow(Math.max(0,Math.cos(theta-2.83)),7);
+ const southeastNotch=-.27*Math.pow(Math.max(0,Math.cos(theta+.12)),9);
+ const longAxis=.30*Math.cos(2*(theta-.30));
+ const asym=.15*Math.cos(theta+2.40);
+ return broad+eastBay+northHead+southSpit+westCove+southeastNotch+longAxis+asym;
+}
+function islandRadius(theta,c=SURFACE){return c.radius*Math.max(.58,1+c.roundness*islandShape(theta));}
+function beachWidthAt(theta,c=SURFACE){
+ const variation=.72+.25*Math.sin(theta*4-.70)+.16*Math.sin(theta*7+1.40)+.28*Math.pow(Math.max(0,Math.cos(theta-2.30)),3)-.24*Math.pow(Math.max(0,Math.cos(theta+.55)),4)+.12*Math.sin(theta*13-.90);
+ return c.beachWidth*clamp(variation,.34,1.56);
+}
+const REEF_PITS=Object.freeze([
+ {angle:.30,offset:.72,radial:.29,tangent:.48,depth:5.2,rim:.48,seed:11},
+ {angle:1.92,offset:.88,radial:.33,tangent:.42,depth:4.4,rim:.40,seed:23},
+ {angle:-1.02,offset:1.05,radial:.37,tangent:.31,depth:5.8,rim:.52,seed:37},
+ {angle:-2.28,offset:.78,radial:.27,tangent:.46,depth:3.9,rim:.36,seed:49},
+ {angle:2.88,offset:1.18,radial:.34,tangent:.28,depth:4.8,rim:.45,seed:61}
+]);
+function reefBathymetry(x,z,c=SURFACE){
+ let pit=0,rim=0;
+ for(const q of REEF_PITS){
+  const ca=Math.cos(q.angle),sa=Math.sin(q.angle),centerR=islandRadius(q.angle,c)+c.shelfWidth*q.offset;
+  const dx=x-ca*centerR,dz=z-sa*centerR;
+  const radial=(dx*ca+dz*sa)/(c.shelfWidth*q.radial),tangent=(-dx*sa+dz*ca)/(c.shelfWidth*q.tangent);
+  if(Math.abs(radial)>1.24||Math.abs(tangent)>1.24)continue;
+  const d=Math.hypot(radial,tangent),irregular=.76+.14*Math.sin(x*.19+q.seed)*Math.sin(z*.17-q.seed)+.10*Math.sin((x+z)*.31+q.seed*.37);
+  const core=(1-smooth(.18,1.02,d))*irregular;
+  const ring=Math.exp(-Math.pow((d-.92)/.115,2))*(.78+.22*Math.sin(x*.43-z*.37+q.seed));
+  pit=Math.max(pit,q.depth*core);rim=Math.max(rim,q.rim*ring);
+ }
+ return {pit,rim};
+}
+function reefPitCenters(c=SURFACE){return REEF_PITS.map(q=>{const r=islandRadius(q.angle,c)+c.shelfWidth*q.offset;return{x:Math.cos(q.angle)*r,z:Math.sin(q.angle)*r,angle:q.angle,depth:q.depth,radial:q.radial,tangent:q.tangent};});}
+function breakerWarp(x,z,time,layer=0){
+ const drift=time*.011;
+ const a=noise2(x*.030+layer*8.3+drift,z*.030-layer*6.1-drift*.73,91+layer*29);
+ const b=noise2(x*.074-layer*3.7-drift*.31,z*.074+layer*9.7+drift*.81,137+layer*17);
+ const c=noise2(x*.155+layer*1.9+time*.004,z*.155-layer*2.7-time*.006,173+layer*37);
+ return (a-.5)*5.2+(b-.5)*2.15+(c-.5)*.72;
+}
+function breakerPacket(x,z,time,layer=0){
+ const n=noise2(x*.026+layer*12.1+time*.006,z*.026-layer*7.2-time*.004,211+layer*41);
+ const m=noise2(x*.081-layer*5.7-time*.012,z*.081+layer*10.4+time*.008,307+layer*13);
+ const q=noise2(x*.185+layer*2.3+time*.018,z*.185-layer*3.4-time*.013,401+layer*31);
+ const k=.5+.5*Math.sin(x*.013-z*.021+layer*2.9-time*.017);
+ return smooth(.30,.72,.44*n+.30*m+.16*q+.10*k);
+}
+function breakerLocalPhase(x,z,time,layer=0){
+ const theta=Math.atan2(z,x),large=noise2(Math.cos(theta)*2.2+layer*7.0,Math.sin(theta)*2.2-layer*3.0,509+layer*17)-.5;
+ return fract(time/Math.max(.001,SURFACE.period)+large*.30+.075*Math.sin(theta*(2.0+layer*.63)-time*.031*(1+layer)));
+}
+function bedHeight(x,z){
+ const c=SURFACE,r=Math.hypot(x,z),theta=Math.atan2(z,x),R=islandRadius(theta,c),B=beachWidthAt(theta,c),s=r-R;
+ if(s>=0){
+  const shelf=-.13*Math.min(s,c.shelfWidth)-.38*Math.pow(clamp(s/c.shelfWidth,0,1),2);
+  const deep=-c.seaDepth*(1-Math.exp(-Math.max(0,s-c.shelfWidth)/42));
+  const relief=c.bedRelief*(.58*Math.sin(x*.17+z*.11)+.30*Math.sin(x*.41-z*.29)+.12*Math.sin(x*.91+z*.72))*smooth(.8,13,s)*Math.exp(-s/92);
+  const reef=reefBathymetry(x,z,c);
+  return shelf+deep+relief-reef.pit+reef.rim;
+ }
+ const inland=-s,beach=1.02*Math.pow(clamp(inland/B,0,1),c.beachSlope),interior=smooth(B*.66,B+3.2,inland),core=Math.pow(clamp(inland/Math.max(1,R),0,1),.68);
+ const body=beach+(c.islandHeight-1.02)*interior*(.32+.68*core);
+ const ridge=c.bedRelief*2.30*interior*(.48*Math.sin(x*.085+z*.027+.4)+.31*Math.sin(x*.037-z*.102-1.1)+.21*Math.sin(x*.19+z*.14));
+ const hummock=c.bedRelief*.31*interior*Math.sin(x*.61-z*.47)*Math.sin(x*.23+z*.71);
+ const erosion=-c.bedRelief*.36*interior*Math.pow(Math.max(0,Math.sin(x*.115-z*.075+1.35)),6);
+ return body+ridge+hummock+erosion;
+}
+function shorelineZ(x){
+ const maxR=SURFACE.radius*(1+Math.abs(SURFACE.roundness)*1.55);if(Math.abs(x)>=maxR)return 0;
+ let lo=0,hi=maxR*1.25;for(let i=0;i<42;i++){const z=(lo+hi)*.5,theta=Math.atan2(z,x),f=Math.hypot(x,z)-islandRadius(theta);if(f>0)hi=z;else lo=z;}return(lo+hi)*.5;
+}
+function waterLevel(t,c=SURFACE){return c.tide+c.tideAmplitude*Math.sin(TAU*t/c.tidePeriod);}
+function flowDirection(degrees){const a=degrees*Math.PI/180;return[-Math.sin(a),Math.cos(a)];}
+function windAt(x,y,z,t,c=SURFACE){
+ const d=flowDirection(c.windDir),gust=1+c.gust*Math.sin(TAU*t/c.gustPeriod)+c.gust*.3*Math.sin(t*1.713);
+ const ground=c.groundDamping+(1-c.groundDamping)*smooth(0,5,Math.max(0,y));
+ const speed=c.wind*Math.max(.12,gust)*ground*(1+c.windShear*Math.log1p(Math.max(0,y)/4));
+ return[d[0]*speed+c.turbulence*Math.sin(z*.12+t*.8),c.turbulence*.15*Math.sin(x*.1+t*.7),d[1]*speed+c.turbulence*Math.cos(x*.13-t*.73)];
+}
+function surfBandOffsets(time,c=SURFACE){
+ const travel=fract(time/Math.max(.001,c.period));
+ return [2.88,1.67,.63].map((order,i)=>order*SURF_SPACING-travel*SURF_SPACING*(1+[.00,.07,-.05][i]));
+}
+function waveAt(x,z,time,c=SURFACE){
+ const bed=bedHeight(x,z),level=waterLevel(time,c),depth0=level-bed,r=Math.hypot(x,z),theta=Math.atan2(z,x),s=r-islandRadius(theta,c);
+ const wet=smooth(-.12,.65,depth0),shallow=1-smooth(.7,4.0,depth0),d=flowDirection(c.swellDir);
+ const incidence=.035+.965*smooth(-.12,.68,-(x*d[0]+z*d[1])/Math.max(1,r));
+ let eta=level,slopeEnergy=0,primary=0;
+ for(let i=0;i<5;i++){
+  const dir=flowDirection(i===0?c.swellDir:i===1?c.secondaryDir:c.windDir+(i-3)*34),per=i===0?c.period:i===1?c.secondaryPeriod:2.1+(i-2)*.66;
+  const wavelength=i<2?1.56*per*per:(2.2+(i-2)*2.5),k=TAU/wavelength,omega=TAU/per;
+  const planar=dir[0]*x+dir[1]*z,phase=k*planar-omega*time+i*1.73;
+  let h=i===0?c.swell*.5:i===1?c.secondary*.5:c.windWave*c.wind*.0025/(i-1);if(i>=2)h*=mix(.14,1,1-smooth(88,205,r));
+  const group=1+c.groupScale*.28*Math.sin(phase*.22+time*.12);
+  const amp=Math.min(h*(.84+c.shoal*.38*shallow)*incidence*group,Math.max(.016,depth0*.36))*wet;
+  const shape=Math.sin(phase)+(i===0?c.crest*shallow*Math.sin(2*phase):0);
+  eta+=amp*shape;slopeEnergy+=Math.abs(amp*k*(Math.cos(phase)+(i===0?2*c.crest*shallow*Math.cos(2*phase):0)));
+  if(i===0)primary=Math.sin(phase);
+ }
+ const farMix=smooth(46,172,s);
+ if(farMix>0){
+  const deep=[
+   [31,.22,18],[19,.31,67],[13,.18,121],[9.5,.13,203],[6.2,.085,286],[4.1,.055,332]
+  ];
+  for(let i=0;i<deep.length;i++){
+   const [wl,amp,deg]=deep[i],a=deg*Math.PI/180,phase=(Math.cos(a)*x+Math.sin(a)*z)*TAU/wl-time*Math.sqrt(9.81*TAU/wl)+i*1.37;
+   eta+=farMix*c.swell*amp*Math.sin(phase)*(1+.13*Math.sin(phase*.37+time*.11+i));
+  }
+ }
+ const run=c.runup*.10*Math.sin(time*TAU/c.period-r*.60)*Math.exp(-s*s/12);
+ eta+=run;const gains=[c.curlOuter,c.curlMiddle,c.curlInner],offsets=[],bandStrengths=[];
+ let bands=0;
+ for(let i=0;i<3;i++){
+  const order=[2.72,1.51,.52][i],localTravel=breakerLocalPhase(x,z,time,i),radiusOffset=order*SURF_SPACING-localTravel*SURF_SPACING*(1+[0,.08,-.06][i]);offsets.push(radiusOffset);
+  const widthScale=i===0?1.26:i===1?1.04:.90,warpedS=s+breakerWarp(x,z,time,i),offsetJitter=(breakerPacket(x*.59,z*.59,time*.29,i)-.5)*SURF_SPACING*1.75;
+  const dist=(warpedS-(radiusOffset+offsetJitter))/(c.breakWidth*widthScale),shoreDissipation=smooth(-1.2,1.8,radiusOffset);
+  const packet=breakerPacket(x,z,time,i),gap=noise2(x*.118+i*4.3-time*.008,z*.118-i*6.1+time*.005,601+i*43);
+  const segment=Math.pow(packet,1.35)*smooth(.32,.67,gap)*smooth(.05,.93,.56+.26*Math.sin(theta*(2.3+i*.77)+i*2.6)+.10*Math.sin(theta*(8.7+i*1.9)-time*.051));
+  const strength=Math.exp(-dist*dist*1.38)*gains[i]*incidence*shoreDissipation*segment;
+  bandStrengths.push(strength);bands+=strength;eta+=.135*c.swell*strength*wet;
+ }
+ const depth=eta-bed,breaker=clamp((bands*.82+smooth(c.breakThreshold,.99,primary)*slopeEnergy*3.1)*smooth(.025,.20,depth),0,1.8);
+ return {eta,bed,depth0,depth,breaker,slopeEnergy,normal:[0,1,0],bands,bandStrengths,bandOffsets:offsets,level};
+}
+function rebuildDefinitions(c=SURFACE){
+ COAST_ROCKS.length=0;KARST_ROCKS.length=0;FIRE_RING.length=0;LOGS.length=0;FIRE_SOURCES.length=0;addKarstDefinitions(c);
+ const rng=new RNG(0x517b361d),clusters=[-2.62,-2.03,-.88,.18,1.42,2.42];
+ for(let i=0;i<Math.round(c.rockCount);i++){
+  const cluster=clusters[i%clusters.length],a=cluster+(rng.next()-.5)*(.34+c.rockScatter*.88)+(i%3-1)*.08;
+  const shore=islandRadius(a,c),radius=shore-1.2+rng.next()*(6.5+c.rockScatter*8.5),s=c.rockScale*(.62+rng.next()*1.55)*(i%11===0?1.30:1);
+  const sx=s*(.82+rng.next()*.72),sy=s*(.92+rng.next()*1.02),sz=s*(.84+rng.next()*.76);
+  COAST_ROCKS.push([Math.cos(a)*radius,Math.sin(a)*radius,1.18*sx,1.28*sy,1.20*sz,11+i*7]);
+ }
+ for(let i=0;i<Math.round(c.fireCount);i++){
+  const a=-.15+i*TAU/Math.max(3,c.fireCount),r=islandRadius(a,c)*(.39+(i%2)*.045),x=Math.cos(a)*r,z=Math.sin(a)*r;
+  FIRE_SOURCES.push([x,bedHeight(x,z)+.06,z]);
+  for(let j=0;j<9;j++){const t=j/9*TAU;FIRE_RING.push([x+Math.cos(t)*1.5,z+Math.sin(t)*1.5,.36,.30,.38,140+i*19+j*7]);}
+  for(let j=0;j<4;j++)LOGS.push([x,z,2.2,.24,.20,j*.83]);
+ }
+ FIRE_CENTER.splice(0,3,...FIRE_SOURCES[0]);
+}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const mix=(a,b,t)=>a+(b-a)*t;
+function smooth(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
+function smoother(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*t*(t*(t*6-15)+10)}
+function fract(v){return v-Math.floor(v)}
+function hash2(x,z,seed=0){return fract(Math.sin(x*127.1+z*311.7+seed*74.7)*43758.5453123)}
+function noise2(x,z,seed=0){const ix=Math.floor(x),iz=Math.floor(z),fx=fract(x),fz=fract(z),ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz),a=hash2(ix,iz,seed),b=hash2(ix+1,iz,seed),c=hash2(ix,iz+1,seed),d=hash2(ix+1,iz+1,seed);return mix(mix(a,b,ux),mix(c,d,ux),uz)}
+function fbm2(x,z,seed=0,octaves=5){let v=0,a=.5,px=x,pz=z;for(let i=0;i<octaves;i++){v+=a*noise2(px,pz,seed+i*17);const nx=.8*px+.6*pz,nz=-.6*px+.8*pz;px=nx*2.03+13.7;pz=nz*2.03-9.1;a*=.5}return v}
+function normalize3(a){const d=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/d,a[1]/d,a[2]/d]}
+function sub3(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function cross3(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function dot3(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function mat4Perspective(out,fovy,aspect,near,far){const f=1/Math.tan(fovy/2);out.fill(0);out[0]=f/aspect;out[5]=f;out[10]=(far+near)/(near-far);out[11]=-1;out[14]=2*far*near/(near-far);return out}
+function mat4LookAt(out,eye,center,up){const z=normalize3(sub3(eye,center)),x=normalize3(cross3(up,z)),y=cross3(z,x);out[0]=x[0];out[1]=y[0];out[2]=z[0];out[3]=0;out[4]=x[1];out[5]=y[1];out[6]=z[1];out[7]=0;out[8]=x[2];out[9]=y[2];out[10]=z[2];out[11]=0;out[12]=-dot3(x,eye);out[13]=-dot3(y,eye);out[14]=-dot3(z,eye);out[15]=1;return out}
+class RNG{constructor(seed=0x51a7c39d){this.state=seed>>>0}next(){let x=this.state;x^=x<<13;x^=x>>>17;x^=x<<5;this.state=x>>>0;return this.state/4294967296}range(a,b){return mix(a,b,this.next())}}
+
+rebuildDefinitions();
+
+// END core.mjs
+
+// BEGIN geometry.mjs
+function rockGeometry(definitions){
+ const vertices=[],indices=[];let inverted=0,degenerate=0;
+ for(const [cx,cz,sx,sy,sz,seed] of definitions){
+  const isKarst=seed>=800.0,base=vertices.length/7,cy=bedHeight(cx,cz)+sy*(isKarst?.45:(.72-SURFACE.rockEmbed)),lat=32,lon=64,rotation=seed*.671,leanX=.055*Math.sin(seed*.83),leanZ=.048*Math.cos(seed*.57);
+  function pt(ux,uy,uz){
+   const cs=Math.cos(rotation),sn=Math.sin(rotation),rx=ux*cs-uz*sn,rz=ux*sn+uz*cs;
+   ux=rx+uy*leanX;uz=rz+uy*leanZ;
+   let radius=1;
+   for(let k=0;k<21;k++){
+    const fy=1-2*(k+.5)/21,a=k*2.399963+rotation*.31,n=normalize3([Math.sqrt(Math.max(0,1-fy*fy))*Math.cos(a),fy,Math.sqrt(Math.max(0,1-fy*fy))*Math.sin(a)]);
+    const d=ux*n[0]+uy*n[1]+uz*n[2],plane=.865+.074*Math.sin(seed*.17+k*4.71)+.024*Math.sin(seed*.043*k+k*1.9);
+    if(d>0)radius=Math.min(radius,plane/d);
+   }
+   const broad=1+.075*Math.sin(ux*2.15+uz*1.42+seed*.19)+.050*Math.sin(uy*2.8-ux*1.15+seed*.31);
+   const bedding=1-.022*Math.pow(Math.sin((uy+1.15)*11.2+seed*.23),12);
+   const joint=1-.018*Math.pow(Math.sin(ux*7.3+uz*5.1+seed*.41),14);
+   const relief=broad*(1+.034*Math.sin(ux*8+uy*5+seed)*Math.sin(uz*9-uy*4+seed*.4)+.020*Math.sin((ux+uz)*17+seed)+.012*Math.sin((ux-uz)*27-seed*.13));
+   radius*=bedding*joint*relief;
+   const foot=isKarst&&uy<-.30?mix(.34,.72,smooth(-1.0,-.30,uy)):(uy<-.58?.90+(uy+.58)*.07:1);
+   const shoulder=isKarst?1.0+.30*smooth(-.30,.08,uy)*(1.0-smooth(.48,.88,uy)):1.0;
+   const crownTaper=isKarst?mix(1.0,.72,smooth(.58,1.0,uy)):1.0;
+   const wallFlute=isKarst?1.0+.045*Math.sin(Math.atan2(uz,ux)*7.0+seed*.13)*(1.0-smooth(.62,1.0,uy)):1.0;
+   const crown=1+.045*Math.max(0,uy)*Math.sin(seed*.11+ux*2.7-uz*1.8);
+   return[cx+ux*sx*radius*foot*shoulder*crownTaper*wallFlute,cy+uy*sy*radius*(uy<0?(isKarst?.94:.82):1)*crown,cz+uz*sz*radius*foot*shoulder*crownTaper*wallFlute];
+  }
+  function push(u){vertices.push(...pt(...u),0,0,0,1);}
+  push([0,1,0]);
+  for(let j=1;j<lat;j++)for(let i=0;i<lon;i++){const tt=j/lat*Math.PI,a=i/lon*TAU;push([Math.sin(tt)*Math.cos(a),Math.cos(tt),Math.sin(tt)*Math.sin(a)]);}
+  const bottom=vertices.length/7;push([0,-1,0]);
+  function tri(a,b,c){
+   const A=vertices.slice(a*7,a*7+3),B=vertices.slice(b*7,b*7+3),C=vertices.slice(c*7,c*7+3);
+   const u=[B[0]-A[0],B[1]-A[1],B[2]-A[2]],v=[C[0]-A[0],C[1]-A[1],C[2]-A[2]];let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+   const radial=[(A[0]+B[0]+C[0])/3-cx,(A[1]+B[1]+C[1])/3-cy,(A[2]+B[2]+C[2])/3-cz];
+   if(n[0]*radial[0]+n[1]*radial[1]+n[2]*radial[2]<0){[b,c]=[c,b];n=n.map(x=>-x);inverted++;}
+   if(Math.hypot(...n)<1e-10){degenerate++;return;}
+   indices.push(a,b,c);for(const id of [a,b,c])for(let k=0;k<3;k++)vertices[id*7+3+k]+=n[k];
+  }
+  for(let i=0;i<lon;i++)tri(base,base+1+i,base+1+(i+1)%lon);
+  for(let j=0;j<lat-2;j++)for(let i=0;i<lon;i++){const a=base+1+j*lon+i,b=base+1+j*lon+(i+1)%lon,c=a+lon,d=b+lon;tri(a,c,b);tri(b,c,d);}
+  for(let i=0;i<lon;i++)tri(bottom,base+1+(lat-2)*lon+(i+1)%lon,base+1+(lat-2)*lon+i);
+ }
+ for(let i=0;i<vertices.length;i+=7){const n=normalize3(vertices.slice(i+3,i+6));vertices[i+3]=n[0];vertices[i+4]=n[1];vertices[i+5]=n[2];}
+ return{data:new Float32Array(vertices),indices:new Uint32Array(indices),windingCorrections:inverted,degenerate};
+}
+
+function compileRockHeight(geometry,w=256,h=224){
+ const top=new Float32Array(w*h);top.fill(-64);const {data:d,indices:ix}=geometry;
+ // Rasterize the actual solid triangles into an ephemeral numeric height field.
+ for(let n=0;n<ix.length;n+=3){
+  const v=[ix[n],ix[n+1],ix[n+2]].map(i=>[d[i*7],d[i*7+1],d[i*7+2]]);
+  const g=v.map(p=>[(p[0]-DOMAIN.minX)/DOMAIN.width*(w-1),(p[2]-DOMAIN.minZ)/DOMAIN.depth*(h-1)]);
+  const den=(g[1][1]-g[2][1])*(g[0][0]-g[2][0])+(g[2][0]-g[1][0])*(g[0][1]-g[2][1]);if(Math.abs(den)<1e-8)continue;
+  for(let y=Math.max(0,Math.floor(Math.min(...g.map(p=>p[1]))));y<=Math.min(h-1,Math.ceil(Math.max(...g.map(p=>p[1]))));y++)
+   for(let x=Math.max(0,Math.floor(Math.min(...g.map(p=>p[0]))));x<=Math.min(w-1,Math.ceil(Math.max(...g.map(p=>p[0]))));x++){
+    const a=((g[1][1]-g[2][1])*(x-g[2][0])+(g[2][0]-g[1][0])*(y-g[2][1]))/den,b=((g[2][1]-g[0][1])*(x-g[2][0])+(g[0][0]-g[2][0])*(y-g[2][1]))/den,c=1-a-b;
+    if(Math.min(a,b,c)>=-1e-5)top[y*w+x]=Math.max(top[y*w+x],a*v[0][1]+b*v[1][1]+c*v[2][1]);
+   }
+ }
+ return{top,w,h,sample(x,z){const i=Math.round((x-DOMAIN.minX)/DOMAIN.width*(w-1)),j=Math.round((z-DOMAIN.minZ)/DOMAIN.depth*(h-1));return i<0||i>=w||j<0||j>=h?-64:top[j*w+i]}};
+}
+
+// END geometry.mjs
+
+// BEGIN shaders.mjs
+const COMMON=`
+precision highp float;
+${PARAM_GLSL}
+const float PI=3.141592653589793;
+uniform float uTime;
+uniform float uSeaLevel;
+uniform float uSwell;
+uniform float uPeriod;
+uniform float uWind;
+float sat(float x){return clamp(x,0.0,1.0);}
+float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
+float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash21(i),hash21(i+vec2(1.0,0.0)),f.x),mix(hash21(i+vec2(0.0,1.0)),hash21(i+vec2(1.0)),f.x),f.y);}
+float fbm(vec2 p){float v=0.0,a=.5;mat2 r=mat2(.80,.60,-.60,.80);for(int i=0;i<5;i++){v+=a*noise2(p);p=r*p*2.03+17.1;a*=.5;}return v;}
+float islandShape(float theta){
+ float broad=.38*sin(theta*2.0+.42)+.27*sin(theta*3.0-1.18)+.17*sin(theta*5.0+.68)+.10*sin(theta*7.0-2.15)+.055*sin(theta*11.0+.20);
+ float eastBay=-.48*pow(max(0.0,cos(theta+.62)),4.0);
+ float northHead=.36*pow(max(0.0,cos(theta-2.10)),3.0);
+ float southSpit=.31*pow(max(0.0,cos(theta+1.67)),5.0);
+ float westCove=-.33*pow(max(0.0,cos(theta-2.83)),7.0);
+ float southeastNotch=-.27*pow(max(0.0,cos(theta+.12)),9.0);
+ float longAxis=.30*cos(2.0*(theta-.30));
+ float asym=.15*cos(theta+2.40);
+ return broad+eastBay+northHead+southSpit+westCove+southeastNotch+longAxis+asym;
+}
+float islandR(vec2 p){float theta=atan(p.y,p.x);return p_radius*max(.58,1.0+p_roundness*islandShape(theta));}
+float beachW(vec2 p){float theta=atan(p.y,p.x);float v=.72+.25*sin(theta*4.0-.70)+.16*sin(theta*7.0+1.40)+.28*pow(max(0.0,cos(theta-2.30)),3.0)-.24*pow(max(0.0,cos(theta+.55)),4.0)+.12*sin(theta*13.0-.90);return p_beachWidth*clamp(v,.34,1.56);}
+vec2 reefOne(vec2 p,float angle,float off,float rr,float tr,float depth,float rim,float seed){
+ float ca=cos(angle),sa=sin(angle),centerR=islandR(vec2(ca,sa))+p_shelfWidth*off;vec2 d=p-vec2(ca,sa)*centerR;
+ float radial=dot(d,vec2(ca,sa))/(p_shelfWidth*rr),tangent=dot(d,vec2(-sa,ca))/(p_shelfWidth*tr),e=length(vec2(radial,tangent));
+ float irregular=.70+.30*noise2(p*.075+seed);float core=(1.0-smoothstep(.18,1.02,e))*irregular;
+ float ring=exp(-pow((e-.92)/.115,2.0))*(.70+.30*noise2(p*.18+seed*1.7));return vec2(depth*core,rim*ring);
+}
+vec2 reefBed(vec2 p){
+ vec2 v=vec2(0.0);vec2 q;
+ q=reefOne(p,.30,.72,.29,.48,5.2,.48,11.0);v=max(v,q);
+ q=reefOne(p,1.92,.88,.33,.42,4.4,.40,23.0);v=max(v,q);
+ q=reefOne(p,-1.02,1.05,.37,.31,5.8,.52,37.0);v=max(v,q);
+ q=reefOne(p,-2.28,.78,.27,.46,3.9,.36,49.0);v=max(v,q);
+ q=reefOne(p,2.88,1.18,.34,.28,4.8,.45,61.0);v=max(v,q);return v;
+}
+float breakerWarpG(vec2 p,float t,float layer){float a=fbm(p*.030+vec2(layer*8.3+t*.011,-layer*6.1-t*.008));float b=noise2(p*.074+vec2(-layer*3.7-t*.004,layer*9.7+t*.009));float c=noise2(p*.155+vec2(layer*1.9+t*.004,-layer*2.7-t*.006));return(a-.5)*5.2+(b-.5)*2.15+(c-.5)*.72;}
+float breakerPacketG(vec2 p,float t,float layer){float n=fbm(p*.026+vec2(layer*12.1+t*.006,-layer*7.2-t*.004));float m=noise2(p*.081+vec2(-layer*5.7-t*.012,layer*10.4+t*.008));float q=noise2(p*.185+vec2(layer*2.3+t*.018,-layer*3.4-t*.013));return smoothstep(.30,.72,.49*n+.31*m+.20*q);}
+float breakerLocalPhaseG(vec2 p,float t,float layer){float theta=atan(p.y,p.x);float large=noise2(vec2(cos(theta),sin(theta))*2.2+vec2(layer*7.0,-layer*3.0))-.5;return fract(t/max(.001,p_period)+large*.30+.075*sin(theta*(2.0+layer*.63)-t*.031*(1.0+layer)));}
+float deepSpectrum(vec2 p,float t){
+ float w1=fbm(p*.012+vec2(t*.0018,-t*.0012))-.5,w2=fbm(p*.018+vec2(-t*.0011,t*.0015)+17.3)-.5;vec2 q=p+vec2(w1,w2)*10.5;
+ float h=0.0;h+=.20*sin(dot(q,normalize(vec2(.951,.309)))*2.0*PI/34.0-t*1.34+.32*w2);
+ h+=.27*sin(dot(q,normalize(vec2(.391,.921)))*2.0*PI/21.0-t*1.73+1.37+.28*w1);
+ h+=.17*sin(dot(q,normalize(vec2(-.515,.857)))*2.0*PI/14.5-t*2.12+2.74);
+ h+=.12*sin(dot(q,normalize(vec2(-.921,-.391)))*2.0*PI/10.2-t*2.51+4.11);
+ h+=.075*sin(dot(q,normalize(vec2(.276,-.961)))*2.0*PI/6.7-t*3.08+5.48);
+ h+=.047*sin(dot(q,normalize(vec2(.883,-.469)))*2.0*PI/4.6-t*3.72+6.85);return h*(.86+.20*noise2(p*.021+vec2(t*.002,-t*.001)));
+}
+float bedH(vec2 p){
+ float r=length(p),R=islandR(p),B=beachW(p),s=r-R;
+ if(s>=0.0){
+  float shelf=-.13*min(s,p_shelfWidth)-.38*pow(clamp(s/p_shelfWidth,0.0,1.0),2.0);
+  float deep=-p_seaDepth*(1.0-exp(-max(0.0,s-p_shelfWidth)/42.0));
+  float relief=p_bedRelief*(.58*sin(p.x*.17+p.y*.11)+.30*sin(p.x*.41-p.y*.29)+.12*sin(p.x*.91+p.y*.72))*smoothstep(.8,13.0,s)*exp(-s/92.0);
+  vec2 reef=reefBed(p);return shelf+deep+relief-reef.x+reef.y;
+ }
+ float inland=-s,beach=1.02*pow(clamp(inland/B,0.0,1.0),p_beachSlope),interior=smoothstep(B*.66,B+3.2,inland),core=pow(clamp(inland/max(1.0,R),0.0,1.0),.68);
+ float body=beach+(p_islandHeight-1.02)*interior*(.32+.68*core);
+ float ridge=p_bedRelief*2.30*interior*(.48*sin(p.x*.085+p.y*.027+.4)+.31*sin(p.x*.037-p.y*.102-1.1)+.21*sin(p.x*.19+p.y*.14));
+ float hummock=p_bedRelief*.31*interior*sin(p.x*.61-p.y*.47)*sin(p.x*.23+p.y*.71);
+ float erosion=-p_bedRelief*.36*interior*pow(max(0.0,sin(p.x*.115-p.y*.075+1.35)),6.0);
+ return body+ridge+hummock+erosion;
+}
+vec2 flowDir(float degrees){float a=degrees*PI/180.0;return vec2(-sin(a),cos(a));}
+float waveSurface(vec2 p,out float breaker){
+ float bed=bedH(p),level=uSeaLevel,d0=level-bed,r=length(p),theta=atan(p.y,p.x),s=r-islandR(p);
+ float wet=smoothstep(-.12,.65,d0),shallow=1.0-smoothstep(.7,4.0,d0);
+ vec2 d=flowDir(p_swellDir);float incidence=.035+.965*smoothstep(-.12,.68,-dot(p,d)/max(1.0,r));
+ float eta=level,slope=0.0,primary=0.0;
+ for(int i=0;i<8;i++){
+  float fi=float(i),angle=i==0?p_swellDir:(i==1?p_secondaryDir:p_windDir+(fi-4.4)*27.0+11.0*sin(fi*1.83));
+  vec2 dir=flowDir(angle);float per=i==0?p_period:(i==1?p_secondaryPeriod:1.75+(fi-2.0)*.58);
+  float wavelength=i<2?1.56*per*per:2.0+(fi-2.0)*2.10,k=2.0*PI/wavelength,omega=2.0*PI/per;
+  float planar=dot(dir,p),phase=k*planar-omega*uTime+fi*1.73+.23*sin(planar*.041+fi*2.17)+.13*sin(planar*.087-fi*1.31+uTime*.05);
+  float h=i==0?p_swell*.46:(i==1?p_secondary*.46:p_windWave*p_wind*.00165/(1.0+fi*.32));
+  if(i>=2)h*=mix(.18,1.0,1.0-smoothstep(92.0,220.0,r));
+  float group=1.0+p_groupScale*(.16*sin(phase*.19+uTime*.10)+.09*sin(planar*.025-fi*1.2));
+  float amp=min(h*(.84+p_shoal*.38*shallow)*incidence*group,max(.016,d0*.36))*wet;
+  float shape=sin(phase)+(i==0?p_crest*shallow*sin(2.0*phase):0.0);
+  eta+=amp*shape;slope+=abs(amp*k*(cos(phase)+(i==0?2.0*p_crest*shallow*cos(2.0*phase):0.0)));
+  if(i==0)primary=sin(phase);
+ }
+ float farMix=smoothstep(46.0,172.0,s);eta+=farMix*p_swell*deepSpectrum(p,uTime);
+ eta+=p_runup*.11*sin(uTime*2.0*PI/p_period-r*.60)*exp(-s*s/11.0);
+ float bands=0.0;
+ for(int i=0;i<3;i++){
+  float fi=float(i),gain=i==0?p_curlOuter:(i==1?p_curlMiddle:p_curlInner);
+  float order=i==0?2.72:(i==1?1.51:.52),localTravel=breakerLocalPhaseG(p,uTime,fi),travelScale=i==0?1.0:(i==1?1.08:.94);
+  float radiusOffset=order*6.4-localTravel*6.4*travelScale,widthScale=i==0?1.26:(i==1?1.04:.90);
+  float warpedS=s+breakerWarpG(p,uTime,fi),jitter=(breakerPacketG(p*.59,uTime*.29,fi)-.5)*6.4*1.75;
+  float dist=(warpedS-(radiusOffset+jitter))/(p_breakWidth*widthScale),shoreDissipation=smoothstep(-1.2,1.8,radiusOffset);
+  float packet=breakerPacketG(p,uTime,fi),gap=noise2(p*.118+vec2(fi*4.3-uTime*.008,-fi*6.1+uTime*.005));
+  float segment=pow(packet,1.35)*smoothstep(.32,.67,gap)*smoothstep(.05,.93,.56+.26*sin(theta*(2.3+fi*.77)+fi*2.6)+.10*sin(theta*(8.7+fi*1.9)-uTime*.051));
+  float strength=exp(-dist*dist*1.38)*gain*incidence*shoreDissipation*segment;
+  bands+=strength;eta+=.135*p_swell*strength*wet;
+ }
+ float depth=eta-bed;
+ breaker=clamp((bands*.82+smoothstep(p_breakThreshold,.99,primary)*slope*3.1)*smoothstep(.025,.20,depth),0.0,1.8);
+ return eta;
+}
+vec3 skyRadiance(vec3 rd,vec3 sunDir,int mode,float exposure){
+ float h=sat(rd.y*.5+.5),sun=max(dot(rd,sunDir),0.0);if(mode==1){vec3 n=mix(vec3(.49,.53,.54),vec3(.82,.84,.82),pow(h,.58));return n*exposure;}if(mode==2){vec3 s=mix(vec3(.23,.30,.32),vec3(.71,.76,.75),pow(h,.62));s+=vec3(1.0,.83,.58)*pow(sun,280.0)*2.0;return s*exposure;}
+ vec3 horizon=vec3(.48,.72,.83),zenith=vec3(.055,.25,.52);vec3 c=mix(horizon,zenith,pow(sat(rd.y),.50));
+ vec2 cp=rd.xz/max(.14,rd.y+.34)*.22+vec2(uTime*.0025*p_cloudSpeed,-uTime*.0015*p_cloudSpeed);
+ vec2 warp=vec2(fbm(cp*.62+vec2(3.1,-7.4)),fbm(cp*.62+vec2(-5.2,6.8)))-.5;
+ float body=.56*fbm(cp+warp*2.05)+.29*fbm(cp*1.88-warp*.72)+.15*noise2(cp*4.7+warp*1.2);
+ float cover=clamp(p_cloudiness,0.0,1.0),threshold=mix(.70,.53,cover);
+ float altitude=smoothstep(.025,.115,rd.y)*(1.0-smoothstep(.72,.94,sat(rd.y)));
+ float cloudBand=smoothstep(threshold,threshold+.075,body)*altitude;
+ float cloudCore=smoothstep(threshold+.055,threshold+.14,body)*altitude;
+ float underside=smoothstep(threshold-.025,threshold+.055,body)*altitude*(1.0-smoothstep(.16,.52,rd.y));
+ float silver=pow(max(dot(normalize(vec3(rd.x+.13,rd.y+.045,rd.z)),sunDir),0.0),4.0);
+ vec3 cloudDark=vec3(.43,.50,.52),cloudMid=vec3(.92,.94,.92),cloudBright=vec3(1.62,1.58,1.42);
+ vec3 cloudLit=mix(cloudMid,cloudBright,sat(.28+sun*.62+silver*.85));
+ c=mix(c,cloudDark,underside*.38);c=mix(c,cloudLit,cloudBand*.82);c+=cloudBright*silver*cloudCore*.23;
+ c+=vec3(1.0,.86,.63)*pow(sun,480.0)*1.8;c+=vec3(1.0,.72,.44)*pow(sun,18.0)*.13;float haze=pow(sat(1.0-abs(rd.y)),5.0);c=mix(c,vec3(.55,.69,.77),haze*.08);return c*exposure*p_skyLight;
+}
+vec3 farSeaRadiance(vec3 rd,vec3 sunDir,int mode,float exposure){vec3 refl=skyRadiance(vec3(rd.x,abs(rd.y),rd.z),sunDir,mode,exposure);float f=.0204+.9796*pow(1.0-clamp(abs(rd.y),0.0,1.0),5.0);return mix(vec3(.016,.075,.112)*exposure,refl,f);}
+`;
+
+const SKY_VS=`#version 300 es
+precision highp float;
+out vec2 vUv;
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));vUv=p;gl_Position=vec4(p*2.0-1.0,0.0,1.0);}`;
+
+const SKY_FS=`#version 300 es
+${COMMON}
+in vec2 vUv;
+out vec4 outColor;
+uniform vec3 uCamForward,uCamRight,uCamUp,uSunDir;
+uniform float uAspect,uTanFov,uExposure;
+uniform int uMode;
+void main(){vec2 q=vUv*2.0-1.0;vec3 rd=normalize(uCamForward+q.x*uAspect*uTanFov*uCamRight+q.y*uTanFov*uCamUp);vec3 c=skyRadiance(rd,uSunDir,uMode,uExposure);if(rd.y<0.0)c=farSeaRadiance(rd,uSunDir,uMode,uExposure);outColor=vec4(c,1.0);}`;
+
+const SOLID_VS=`#version 300 es
+precision highp float;
+layout(location=0)in vec3 aPosition;
+layout(location=1)in vec3 aNormal;
+layout(location=2)in float aKind;
+uniform mat4 uView,uProj;
+out vec3 vWorld,vNormal;
+out float vKind;
+void main(){vWorld=aPosition;vNormal=aNormal;vKind=aKind;gl_Position=uProj*uView*vec4(aPosition,1.0);}`;
+
+const SOLID_FS=`#version 300 es
+${COMMON}
+in vec3 vWorld,vNormal;
+in float vKind;
+out vec4 outColor;
+uniform vec3 uCamera,uSunDir,uFirePos;
+uniform float uFireIntensity,uExposure;
+uniform vec3 uFirePositions[5];uniform int uFireCount;
+uniform sampler2D uWet,uRockHeight;
+uniform vec4 uDomain;
+uniform int uMode;
+vec2 fieldUv(vec2 p){return(p-uDomain.xy)/uDomain.zw;}
+void main(){
+ vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);float wetState=texture(uWet,fieldUv(vWorld.xz)).r,shoreDistance=length(vWorld.xz)-islandR(vWorld.xz);
+ float runupLine=uSeaLevel+p_runup*.11*sin(uTime*2.0*PI/p_period-length(vWorld.xz)*.60)*exp(-shoreDistance*shoreDistance/11.0);
+ float tidalReach=1.0-smoothstep(1.0,5.2,abs(shoreDistance)),waterWet=1.0-smoothstep(-.28,.18,vWorld.y-runupLine),tidalBand=exp(-abs(vWorld.y-uSeaLevel)*3.1)*tidalReach,wet=sat(max(wetState*.94,waterWet*tidalReach));
+ float n1=fbm(vWorld.xz*(vKind<.5?.16:.31)+vWorld.y*.27),n2=noise2(vWorld.xz*(vKind<.5?2.7:1.4)+17.0);vec3 base;float rough;
+ if(vKind<.5){
+  float deepFloor=smoothstep(1.2,16.0,shoreDistance),shell=smoothstep(.86,.975,noise2(vWorld.xz*6.3));
+  float inland=max(0.0,-shoreDistance),inner=smoothstep(beachW(vWorld.xz)*.58,beachW(vWorld.xz)+2.0,inland);
+  vec3 beachSand=mix(vec3(.40,.285,.155),vec3(.84,.735,.535),sat(n1*.72+n2*.24));beachSand=mix(beachSand,vec3(.93,.84,.66),shell*.12);
+  vec3 duneCore=mix(vec3(.145,.095,.045),vec3(.48,.325,.145),sat(n1*.88+n2*.18));
+  vec3 warmSand=mix(beachSand,duneCore,inner*(.70+.18*fbm(vWorld.xz*.21)));
+  float mineralPatch=smoothstep(.62,.82,fbm(vWorld.xz*.48+11.0))*inner;base=mix(warmSand,warmSand*vec3(.65,.72,.61),mineralPatch*.28);
+  vec3 seaFloor=mix(vec3(.020,.038,.037),vec3(.072,.095,.080),n1);base=mix(base,seaFloor,deepFloor);base*=mix(1.0,.50,wet*(1.0-deepFloor));rough=mix(.92,.42,wet);
+  float ripples=.0065*sin(vWorld.x*3.7+sin(vWorld.z*.54)*1.5)+.0045*fbm(vWorld.xz*1.55);
+  vec3 px=dFdx(vWorld),py=dFdy(vWorld),rx=cross(py,N),ry=cross(N,px);float det=dot(px,rx);if(abs(det)>1e-8)N=normalize(abs(det)*N-sign(det)*(dFdx(ripples)*rx+dFdy(ripples)*ry));
+ }else if(vKind<1.5){
+  vec3 faceN=normalize(cross(dFdx(vWorld),dFdy(vWorld)));if(dot(faceN,V)<0.0)faceN=-faceN;N=normalize(mix(N,faceN,.12));
+  float bedWave=sin(vWorld.y*2.05+fbm(vWorld.xz*.29)*3.2+sin(vWorld.x*.31)*.7),seam=smoothstep(.945,.995,abs(bedWave));
+  float mineral=noise2(vWorld.xz*13.0+vWorld.y*vec2(7.0,9.0)),joint=smoothstep(.76,.92,fbm(vWorld.xz*.76+vWorld.y*vec2(.43,.63)));
+  vec3 cool=vec3(.040,.050,.055),warm=vec3(.335,.270,.185);base=mix(cool,warm,sat(.12+n1*.70+n2*.18));base*=.70+.58*mineral;base*=mix(1.0,.72,seam*.54);base*=mix(1.0,.70,joint*.45);
+  float quartz=smoothstep(.89,.975,noise2(vWorld.xz*8.7+vWorld.y*vec2(5.7,8.9)));base=mix(base,vec3(.42,.39,.32),quartz*.17);
+  float rust=smoothstep(.76,.91,fbm(vWorld.xz*.58+vWorld.y*.17+41.0));base=mix(base,vec3(.225,.105,.045),rust*.12);
+  float lichen=smoothstep(.72,.90,fbm(vWorld.xz*1.15+vWorld.y*.31+23.0))*smoothstep(.40,.90,N.y)*(1.0-wet);base=mix(base,vec3(.120,.135,.082),lichen*.20);
+  float relief=.022*fbm(vWorld.xz*6.6+vWorld.y*vec2(3.7,5.6))+.008*sin(vWorld.y*8.8+vWorld.x*2.15)+.004*sin(vWorld.x*17.0-vWorld.z*13.0);
+  vec3 px=dFdx(vWorld),py=dFdy(vWorld),rx=cross(py,N),ry=cross(N,px);float det=dot(px,rx);if(abs(det)>1e-8)N=normalize(abs(det)*N-sign(det)*(dFdx(relief)*rx+dFdy(relief)*ry));
+  base*=mix(1.0,1.0-p_rockWet*.72,wet);base=mix(base,base*vec3(.28,.40,.43),tidalBand*.48);rough=mix(p_rockRough,max(.11,p_rockRough*.30),wet);rough=mix(rough,.13,tidalBand*.50);
+ }else if(vKind<2.5){
+  float grain=.5+.5*sin(vWorld.x*2.6+vWorld.z*3.1+n1*5.0);base=mix(vec3(.038,.012,.004),vec3(.235,.068,.012),grain*.45+n1*.35);base*=mix(1.0,.55,wet*.35);rough=.66;
+ }else if(vKind<3.5){
+  float bark=.5+.5*sin(vWorld.y*5.7+vWorld.x*3.1+n1*4.0);base=mix(vec3(.055,.030,.012),vec3(.19,.115,.047),bark*.62+n2*.22);rough=.86;
+ }else if(vKind<4.5){
+  float leaf=.58*fbm(vWorld.xz*.88+vWorld.y*.23)+.42*noise2(vWorld.xz*3.4+vWorld.y*vec2(.3,.6));base=mix(vec3(.018,.105,.035),vec3(.13,.31,.085),sat(leaf));base*=mix(.78,1.10,sat(N.y*.5+.5));rough=.80;
+ }else if(vKind<5.5){
+  float blade=.5+.5*sin(vWorld.x*1.8-vWorld.z*2.5+vWorld.y*.7);base=mix(vec3(.035,.16,.055),vec3(.26,.43,.075),blade*.35+n1*.45);rough=.72;
+ }else{
+  float wood=.5+.5*sin(vWorld.z*8.0+vWorld.x*.8+n1*2.0);base=mix(vec3(.095,.045,.018),vec3(.35,.17,.055),wood*.52+n2*.18);rough=.62;
+ }
+ float ndl=max(dot(N,uSunDir),0.0),hemi=.10+.20*sat(N.y*.5+.5);vec3 H=normalize(V+uSunDir);float spec=pow(max(dot(N,H),0.0),mix(15.0,155.0,1.0-rough))*mix(.010,.20,1.0-rough);
+ float fireFall=0.0;for(int k=0;k<5;k++){if(k>=uFireCount)break;float d=length(vWorld-uFirePositions[k]);fireFall+=exp(-d*.8)*uFireIntensity*.5;}
+ float visibility=1.0;for(int j=1;j<=10;j++){float distanceAlong=float(j)*.7;vec3 probe=vWorld+uSunDir*distanceAlong;float height=texture(uRockHeight,fieldUv(probe.xz)).r;visibility=min(visibility,smoothstep(-.08,.24,probe.y-height+.14));}
+ vec3 lit=base*(hemi+1.32*ndl*mix(.055,1.0,visibility))+skyRadiance(N,uSunDir,uMode,1.0)*base*.055+vec3(1.0,.82,.56)*spec*1.78+base*vec3(1.55,.30,.045)*fireFall*1.7;
+ if(uMode==1)lit=base*(.30+.86*ndl)+vec3(spec*.22);else if(uMode==2){vec3 key=normalize(vec3(-.42,.76,-.50));float k=max(dot(N,key),0.0),rim=pow(1.0-max(dot(N,V),0.0),3.0);lit=base*(.13+1.18*k)+vec3(.32,.46,.49)*rim*.18+base*vec3(1.35,.25,.03)*fireFall;}else if(uMode==3){lit=vKind<.5?mix(vec3(.47,.30,.15),vec3(.07,.52,.58),wet):vKind<1.5?vec3(.31,.35,.37):vKind<3.5?vec3(.58,.20,.045):vKind<5.5?vec3(.08,.52,.16):vec3(.45,.20,.06);}
+ float fog=1.0-exp(-length(uCamera-vWorld)*.0045*p_haze);lit=mix(lit,skyRadiance(normalize(vWorld-uCamera),uSunDir,uMode,1.0),fog*.15);outColor=vec4(lit*uExposure,1.0);
+}`;
+
+const WATER_VS=`#version 300 es
+${COMMON}
+layout(location=0)in vec2 aXZ;
+uniform mat4 uView,uProj;
+out vec3 vWorld,vNormal;
+out float vBreaker,vThickness;
+void main(){vec2 p=aXZ;float d0=uSeaLevel-bedH(p),shallow=1.0-smoothstep(.85,3.8,d0),k=2.0*PI/(20.5*(uPeriod/8.0)),omega=sqrt(9.81*k*tanh(k*3.5)),phase=k*dot(vec2(.06,-.998),p)-omega*uTime+.1,q=(.12+.20*shallow)*uSwell*smoothstep(.035,.62,d0);float br=0.0,y=waveSurface(p,br),e=.17,bx=0.0,bz=0.0,yx=waveSurface(p+vec2(e,0.0),bx),yz=waveSurface(p+vec2(0.0,e),bz);vec3 tx=vec3(e,yx-y,0.0),tz=vec3(0.0,yz-y,e);vNormal=normalize(cross(tz,tx));vWorld=vec3(p.x,y,p.y);vBreaker=br;vThickness=max(0.0,y-bedH(p));gl_Position=uProj*uView*vec4(vWorld,1.0);}`;
+
+const WATER_FS=`#version 300 es
+${COMMON}
+in vec3 vWorld,vNormal;
+in float vBreaker,vThickness;
+out vec4 outColor;
+uniform vec3 uCamera,uSunDir;
+uniform vec3 uFirePositions[5];uniform int uFireCount;uniform float uFireIntensity;
+uniform vec2 uResolution;
+uniform sampler2D uScene,uFoam,uSceneDepth,uRockHeight;
+uniform vec4 uDomain;
+uniform float uClarity,uFoamGain,uRefraction,uExposure;
+uniform int uMode;
+vec2 fieldUv(vec2 p){return(p-uDomain.xy)/uDomain.zw;}
+vec3 fresnelSchlick(float c,vec3 f0){return f0+(1.0-f0)*pow(1.0-c,5.0);}
+float Dggx(float ndh,float a){float a2=a*a,d=ndh*ndh*(a2-1.0)+1.0;return a2/(PI*d*d+.0001);}
+float G1(float nd,float k){return nd/(nd*(1.0-k)+k);}
+void main(){
+ if(vThickness<.003)discard;
+ vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);if(dot(N,V)<0.0)N=-N;
+ float deepMix=smoothstep(58.0,210.0,length(vWorld.xz));
+ vec2 microSlope=vec2(sin(dot(vWorld.xz,vec2(.83,.56))*1.71+uTime*2.7)+.55*sin(dot(vWorld.xz,vec2(-.37,.93))*2.83-uTime*3.9),cos(dot(vWorld.xz,vec2(.48,-.88))*2.19-uTime*3.1)+.45*cos(dot(vWorld.xz,vec2(.96,.28))*3.77+uTime*4.8));
+ N=normalize(N+vec3(microSlope.x,0.0,microSlope.y)*(.014+.028*deepMix)*p_waterRough);
+ float ndv=max(dot(N,V),.035),rock=texture(uRockHeight,fieldUv(vWorld.xz)).r;if(rock>vWorld.y+.04)discard;
+ float thickness=vThickness;vec3 refrDir=refract(-V,N,1.0/1.333);float opticalPath=thickness/max(.30,abs(refrDir.y));
+ vec2 uv=gl_FragCoord.xy/uResolution,bend=N.xz*.0052*sat(thickness/2.0)*uRefraction,refrUv=clamp(uv+bend,vec2(.001),vec2(.999));if(texture(uSceneDepth,refrUv).r<gl_FragCoord.z-.00005)refrUv=uv;
+ vec3 behind=texture(uScene,refrUv).rgb,sigma=vec3(.38,.17,.095)*p_absorption/max(.5,uClarity);float depthBlend=smoothstep(.02,1.15,thickness),opticalScale=mix(.68,1.18,depthBlend);vec3 trans=exp(-sigma*opticalPath*opticalScale);
+ vec3 F=fresnelSchlick(ndv,vec3(.0204)),reflected=skyRadiance(reflect(-V,N),uSunDir,uMode,1.0);
+ vec2 fp=vWorld.xz*.66+vec2(uTime*.026,-uTime*.034);float low=fbm(fp*.28),macro=smoothstep(.38,.70,noise2(fp*1.28)+low*.24),micro=smoothstep(.45,.72,noise2(fp*6.8)+low*.20);
+ float filament=smoothstep(.54,.78,fbm(vec2(fp.x*2.2+sin(fp.y*.32),fp.y*.58-uTime*.022))),lace=mix(macro,micro,p_fineFoam)*mix(.72,1.25,filament);
+ float foamState=texture(uFoam,fieldUv(vWorld.xz)).r;float carryGate=smoothstep(.30,.62,fbm(vWorld.xz*.115+vec2(uTime*.009,-uTime*.006))+.10*noise2(vWorld.xz*.31));float carried=foamState*(.08+.92*lace)*(.18+.82*carryGate),crest=smoothstep(.18,.78,vBreaker)*(.22+.66*lace);
+ float shoreDistance=length(vWorld.xz)-islandR(vWorld.xz),wall=0.0;
+ vec2 idir=flowDir(p_swellDir);float theta=atan(vWorld.z,vWorld.x),incidence=smoothstep(-.02,.62,-dot(normalize(vWorld.xz+vec2(.0001)),idir));
+ for(int i=0;i<3;i++){float fi=float(i),order=i==0?2.72:(i==1?1.51:.52),localTravel=breakerLocalPhaseG(vWorld.xz,uTime,fi),ts=i==0?1.0:(i==1?1.08:.94),off=order*6.4-localTravel*6.4*ts,ww=i==0?1.28:(i==1?1.04:.90);float warped=shoreDistance+breakerWarpG(vWorld.xz,uTime,fi),jitter=(breakerPacketG(vWorld.xz*.59,uTime*.29,fi)-.5)*6.4*1.75,d=(warped-(off+jitter))/(p_breakWidth*ww);float gap=noise2(vWorld.xz*.118+vec2(fi*4.3-uTime*.008,-fi*6.1+uTime*.005));float segmented=pow(breakerPacketG(vWorld.xz,uTime,fi),1.35)*smoothstep(.32,.67,gap)*smoothstep(.05,.93,.56+.26*sin(theta*(2.3+fi*.77)+fi*2.6)+.10*sin(theta*(8.7+fi*1.9)-uTime*.051));wall+=exp(-d*d*1.45)*segmented*incidence;}
+ crest+=wall*(.22+.46*lace)*smoothstep(.015,.18,thickness);
+ float shorePacket=breakerPacketG(vWorld.xz*1.06,uTime*.20,4.0)*smoothstep(.42,.69,fbm(vWorld.xz*.115+vec2(-uTime*.008,uTime*.005)));float shoreLace=(1.0-smoothstep(.14,2.05,abs(shoreDistance)))*p_shoreFoam*(.06+.25*lace)*shorePacket;
+ float foam=sat((carried*.76+crest*.92+shoreLace)*p_foamThickness)*smoothstep(.008,.07,thickness);vec2 fw=fp+vec2(low-.5,filament-.5)*2.45;float ribbon=fbm(vec2(fw.x*.51+sin(fw.y*.19),fw.y*.31-uTime*.016));float foamCell=smoothstep(.39,.68,.38*macro+.25*filament+.24*ribbon+.13*micro);float elongated=smoothstep(.30,.80,.5+.5*sin(fw.x*.47+fw.y*.14+low*4.1-uTime*.20));foam*=mix(.06,1.0,foamCell*mix(.38,1.0,elongated));
+ float surfWarp=shoreDistance+(fbm(vWorld.xz*.073+vec2(uTime*.007,-uTime*.005))-.5)*6.2+(noise2(vWorld.xz*.17+vec2(-uTime*.009,uTime*.006))-.5)*2.5;
+ float surfPatch=smoothstep(.43,.70,fbm(vWorld.xz*.132+vec2(uTime*.011,-uTime*.008))+.08*sin(theta*5.7-uTime*.17));
+ float surfFace=.10+.90*incidence;
+ float residualBand=exp(-pow((surfWarp-2.2)/2.20,2.0))*surfPatch*surfFace;
+ float outerGate=smoothstep(.48,.72,fbm(vWorld.xz*.086+vec2(uTime*.015,-uTime*.010)));
+ float outerBreak=exp(-pow((surfWarp-7.4)/2.85,2.0))*outerGate*surfFace;
+ foam=max(foam,sat((residualBand*.64+outerBreak*.76)*p_foamThickness));
+ float rough=mix(p_waterRough,.67,foam),ndl=max(dot(N,uSunDir),0.0);vec3 H=normalize(V+uSunDir);float ndh=max(dot(N,H),0.0),a=max(.035,rough*rough),gk=a*.5;
+ vec3 spec=fresnelSchlick(max(dot(V,H),0.0),vec3(.0204))*(Dggx(ndh,a)*G1(ndv,gk)*G1(ndl,gk)/max(.03,4.0*ndv*ndl))*ndl;spec=spec/(1.0+spec*1.8);
+ vec3 scatter=mix(vec3(.024,.255,.275),vec3(.008,.075,.125),smoothstep(.18,4.2,thickness));
+ vec3 water=(behind*trans+scatter*(1.0-trans))*(1.0-F)+reflected*F+spec*.88;
+ float shallowWaterMix=mix(.58,1.0,smoothstep(.025,.82,thickness));water=mix(behind,water,shallowWaterMix);
+ vec3 mirrorRay=reflect(-V,N);float fireReflection=0.0;for(int k=0;k<5;k++){if(k>=uFireCount)break;vec3 toFire=uFirePositions[k]-vWorld;float horizontal=length(toFire.xz),alignment=pow(max(dot(mirrorRay,normalize(toFire+vec3(0.0,.65,0.0))),0.0),24.0);float broken=.52+.48*noise2(vec2(vWorld.x*1.7+vWorld.z*.21,uTime*.72+float(k)*1.7));fireReflection+=alignment*exp(-horizontal*.10)*broken;}
+ water+=vec3(1.65,.30,.028)*fireReflection*uFireIntensity*(.38+.62*(1.0-foam));vec3 foamColor=mix(vec3(1.05,1.12,1.10),vec3(1.52,1.48,1.34),.34+.56*ndl);water=mix(water,foamColor,foam);
+ if(uMode==1)water=mix(vec3(.31,.49,.52),vec3(.88),foam);if(uMode==2)water*=vec3(.94,1.0,1.025);if(uMode==3)water=mix(mix(vec3(.57,.78,.66),vec3(.018,.23,.39),sat(thickness/3.0)),vec3(1.0,.63,.18),foam);
+ float fog=1.0-exp(-length(uCamera-vWorld)*.0022*p_haze);water=mix(water,skyRadiance(normalize(vWorld-uCamera),uSunDir,uMode,1.0),fog*.18);
+ float farBlend=smoothstep(105.0,225.0,length(vWorld.xz));water=mix(water,farSeaRadiance(normalize(vWorld-uCamera),uSunDir,uMode,1.0),farBlend);
+ float coverage=smoothstep(.001,.045,thickness);outColor=vec4(water*coverage*uExposure,coverage);
+}
+`;
+
+const MEDIA_VS=`#version 300 es
+precision highp float;
+layout(location=0)in vec4 aPositionLife;
+layout(location=1)in vec4 aSizeType;
+uniform mat4 uView,uProj;
+uniform vec2 uResolution;
+out float vLife,vType,vDepth,vSeed,vAge;
+out vec2 vQ;
+void main(){
+ vec2 q0=vec2(float(gl_VertexID&1)*2.0-1.0,float((gl_VertexID>>1)&1)*2.0-1.0);float kind=aSizeType.y,age=aSizeType.z,s=sqrt(max(0.0,age));
+ float angle=fract(aSizeType.w*.6180339)*6.2831853+.14*sin(age*.37+aSizeType.w);float ca=cos(angle),sa=sin(angle);vec2 q=mat2(ca,-sa,sa,ca)*q0;
+ float variance=.82+.30*fract(aSizeType.w*.3819);
+ vec2 scale=kind<.5?vec2(.72+.10*s,.94+.15*s)*variance:(kind<1.5?vec2(.58,1.45):(kind<2.5?vec2(.48,1.05):vec2(.62)));
+ vec4 view=uView*vec4(aPositionLife.xyz,1.0);view.xy+=q*aSizeType.x*scale;gl_Position=uProj*view;vQ=q0;vLife=aPositionLife.w;vType=kind;vDepth=-view.z;vAge=age;vSeed=aSizeType.w;
+}`;
+const MEDIA_FS=`#version 300 es
+precision highp float;
+in float vLife,vType,vDepth,vSeed,vAge;in vec2 vQ;
+out vec4 outColor;
+uniform float uExposure,uTime;
+${PARAM_GLSL}
+float hashM(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float nM(vec2 p){vec2 a=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hashM(a),hashM(a+vec2(1,0)),f.x),mix(hashM(a+vec2(0,1)),hashM(a+1.0),f.x),f.y);}
+void main(){
+ vec2 q=vQ;float r=dot(q,q);if(r>1.0)discard;float n=nM(q*3.2+vec2(vSeed,vAge*.18))+.52*nM(q*7.8+vSeed*.31-vec2(vAge*.16,0));float feather=1.0-smoothstep(.06,.99,r);
+ if(vType<.5){
+  float maturity=1.0-vLife,core=smoothstep(.16,.78,n),wisps=smoothstep(.36,.72,nM(q*12.0+vec2(vSeed*.2,-vAge*.3)));float density=feather*feather*(.66*core+.34*wisps)*pow(max(.001,vLife),p_smokeFade)*smoothstep(0.0,.30,vAge);
+  float alpha=(1.0-exp(-density*1.32))*(1.0-smoothstep(.92,1.0,maturity)*.30);
+  float light=.34+.25*(q.y*.5+.5)+.14*n;vec3 young=vec3(.040,.037,.034),middle=mix(vec3(.065,.072,.079),vec3(.285,.300,.310),light),c=mix(young,middle,smoothstep(.10,2.1,vAge));c=mix(c,vec3(.36,.37,.37),maturity*maturity*.25);outColor=vec4(c*alpha*uExposure,alpha);
+ }else if(vType<1.5){
+  float y=clamp(q.y*.5+.5,0.0,1.0),w=max(.04,(1.0-y)*.8),bend=sin(y*5.5+vSeed+uTime*p_fireSpeed)*p_fireTurb*.08;float tongue=pow(max(0.0,1.0-abs(q.x-bend)/w),1.25)*sin(3.141592653589793*y),edge=smoothstep(.17,.67,n)*tongue;float alpha=edge*smoothstep(0.0,.12,vLife)*smoothstep(0.0,.06,vAge)*.88;float hot=clamp((p_fireTemp-1000.0)/1300.0,0.0,1.0);vec3 c=mix(vec3(2.1,.10,.006),vec3(3.6,1.32,.15),hot*(1.0-y*.55));outColor=vec4(c*alpha*uExposure,alpha);
+ }else if(vType<2.5){
+  float streak=pow(max(0.0,1.0-abs(q.x)*1.25),1.6),a=feather*streak*min(1.0,vLife*4.0)*.30;vec3 c=vec3(.79,.88,.88);outColor=vec4(c*a*uExposure,a);
+ }else{float a=feather*feather*min(1.0,vLife*5.0);outColor=vec4(vec3(2.6,.55,.035)*a,a);}
+}`;
+
+const COPY_VS=SKY_VS;
+const COPY_FS=`#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 outColor;uniform sampler2D uColor,uDepth;uniform int uFinal,uGlassCount;uniform vec4 uGlassRects[8];uniform vec2 uViewport;uniform float uUiTime;
+${PARAM_GLSL}
+void main(){vec3 c=texture(uColor,vUv).rgb;
+ if(uFinal==1){
+ for(int i=0;i<8;i++){
+  if(i>=uGlassCount)break;vec4 r=uGlassRects[i];float rad=min(24.0,min(r.z,r.w)*.48);
+  vec2 p=gl_FragCoord.xy-r.xy-r.zw*.5,q=abs(p)-(r.zw*.5-rad);
+  float d=length(max(q,vec2(0)))+min(max(q.x,q.y),0.0)-rad;
+  if(d<0.0){
+   vec2 n=normalize(p/max(r.zw*.5,vec2(1.0))+vec2(.0001));float edge=exp(d*.19);
+   float t=uUiTime*p_glassSpeed,phase=p.x*.029+p.y*.011-t*.73;
+   float flow=sin(phase)+.45*sin(p.y*.023-p.x*.007+t*.52);
+   vec2 offset=(n*edge*p_glassRefract+vec2(flow,cos(phase*.77))*.35*p_glassFlow)/uViewport;vec2 uv=clamp(vUv+offset,vec2(.001),vec2(.999));
+   vec3 refr=texture(uColor,uv).rgb;
+   refr+=texture(uColor,uv+vec2(1.8,0)/uViewport).rgb+texture(uColor,uv-vec2(1.8,0)/uViewport).rgb;
+   refr/=3.0;
+   c=mix(c,refr,smoothstep(0.0,2.0,-d));vec3 flowColor=.55+.45*cos(vec3(0.0,2.1,4.2)+p_glassHue*.01745);
+   float caustic=pow(max(0.0,.5+.5*sin(phase+flow*.3)),7.0);
+   c+=vec3(.13,.15,.16)*edge*.16*p_glassEdge;
+   c+=flowColor*caustic*.072*p_glassFlow*smoothstep(0.0,7.0,-d);break;
+  }
+ }
+ c=max(c,vec3(0));c=c/(vec3(.72)+c);c=pow(c,vec3(1.0/2.2));}
+ outColor=vec4(c,1);gl_FragDepth=uFinal==0?texture(uDepth,vUv).r:1.0;}`;
+
+const CURL_FS=`#version 300 es
+${COMMON}
+in vec3 vWorld,vNormal;
+in float vBreaker,vThickness;
+out vec4 outColor;
+uniform vec3 uCamera,uSunDir;
+uniform vec3 uFirePositions[5];uniform int uFireCount;uniform float uFireIntensity;
+uniform vec2 uResolution;
+uniform sampler2D uScene,uFoam,uSceneDepth,uRockHeight;
+uniform vec4 uDomain;
+uniform float uClarity,uFoamGain,uRefraction,uExposure;
+uniform int uMode;
+vec2 fieldUvCurl(vec2 p){return(p-uDomain.xy)/uDomain.zw;}
+void main(){
+ vec3 N=normalize(vNormal),V=normalize(uCamera-vWorld);if(dot(N,V)<0.0)N=-N;
+ float ragged=fbm(vWorld.xz*.34+vec2(uTime*.028,-uTime*.021));float cut=.09+.14*(1.0-ragged);if(vThickness<cut)discard;
+ if(vBreaker<.56)discard;float segment=smoothstep(cut,cut+.24,vThickness),profile=smoothstep(.56,.70,vBreaker);if(segment*profile<.006)discard;
+ float lip=smoothstep(.77,.965,vBreaker),cap=smoothstep(.91,1.0,vBreaker),curtain=smoothstep(.44,.78,vBreaker)*(1.0-lip);
+ float n=fbm(vWorld.xz*.42+vec2(uTime*.045,-uTime*.031));
+ float lace=smoothstep(.39,.71,n+.18*sin(vWorld.x*1.14-vWorld.z*.73+uTime*.9));
+ float filament=smoothstep(.52,.82,noise2(vWorld.xz*2.15+vec2(uTime*.18,-uTime*.13))+.24*n);
+ float foam=sat((lip*(.42+.68*lace)+cap*.52+curtain*filament*.028)*p_foamThickness*p_foam);
+ vec2 ruv=fieldUvCurl(vWorld.xz),du=vec2(2.2/uDomain.z,0.0),dv=vec2(0.0,2.2/uDomain.w);float rock=max(texture(uRockHeight,ruv).r,max(max(texture(uRockHeight,ruv+du).r,texture(uRockHeight,ruv-du).r),max(texture(uRockHeight,ruv+dv).r,texture(uRockHeight,ruv-dv).r)));if(rock>vWorld.y-.32)discard;
+ float ndv=max(dot(N,V),.025),rim=pow(1.0-ndv,2.35),ndl=max(dot(N,uSunDir),0.0);
+ vec2 uv=gl_FragCoord.xy/uResolution,offset=N.xz*(.0018+.0048*rim)*uRefraction*segment;
+ vec3 behind=texture(uScene,clamp(uv+offset,vec2(.001),vec2(.999))).rgb;
+ vec3 waterBody=mix(vec3(.010,.145,.205),vec3(.035,.325,.385),.35+.45*ndl+.12*n);
+ vec3 reflected=skyRadiance(reflect(-V,N),uSunDir,uMode,1.0);
+ vec3 body=mix(waterBody,behind,.18);body=mix(body,reflected,.08+.25*rim);
+ vec3 H=normalize(V+uSunDir);float sparkle=pow(max(dot(N,H),0.0),96.0)*(.32+.68*segment);body+=vec3(.54,.76,.82)*sparkle*.25;
+ float fireReflection=0.0;for(int k=0;k<5;k++){if(k>=uFireCount)break;vec3 toFire=uFirePositions[k]-vWorld;fireReflection+=pow(max(dot(reflect(-V,N),normalize(toFire+vec3(0,.5,0))),0.0),30.0)*exp(-length(toFire.xz)*.12);}
+ body+=vec3(1.25,.20,.018)*fireReflection*uFireIntensity*.22;
+ vec3 foamColor=mix(vec3(.71,.82,.83),vec3(.985,.982,.930),.36+.50*ndl);vec3 color=mix(body,foamColor,foam);
+ float bodyAlpha=(.003+.026*rim+.006*curtain)*segment*profile*smoothstep(.58,.82,vBreaker);
+ float alpha=clamp(bodyAlpha+foam*.64*segment*profile,0.0,.72);
+ if(uMode==1)color=mix(vec3(.30,.49,.53),vec3(.94),foam);else if(uMode==3)color=mix(vec3(.02,.40,.54),vec3(1.0,.66,.20),foam);
+ outColor=vec4(color*alpha*uExposure,alpha);
+}
+`;
+
+const CURL_VS=`#version 300 es
+precision highp float;
+layout(location=0)in vec3 aPosition;layout(location=1)in vec3 aNormal;layout(location=2)in vec2 aBreakDepth;
+uniform mat4 uView,uProj;out vec3 vWorld,vNormal;out float vBreaker,vThickness;
+void main(){vWorld=aPosition;vNormal=aNormal;vBreaker=aBreakDepth.x;vThickness=aBreakDepth.y;gl_Position=uProj*uView*vec4(aPosition,1.0);}`;
+
+// END shaders.mjs
+
+const SH={COMMON,SKY_VS,SKY_FS,SOLID_VS,SOLID_FS,WATER_VS,WATER_FS,MEDIA_VS,MEDIA_FS,COPY_VS,COPY_FS,CURL_FS,CURL_VS};
+
+// BEGIN app.mjs
+
+const $=id=>document.getElementById(id);
+const canvas=$('scene'),loading=$('loading'),progress=$('progress'),errorBox=$('error'),qaProbe=$('qaProbe');
+const query=new URLSearchParams(location.search),QA_MODE=query.has('qa');
+const config={...DEFAULTS,paused:false,mode:'environment',smokeVisible:true,fireEnabled:true,waterVisible:true};bindConfig(config);
+
+const qa={version:VERSION,ready:false,relationshipPass:'survivor-palau-natural-world-v0131',singleScene:true,modeSwitchRemoved:true,worldSpaceFarOcean:true,worldSpaceReefPits:true,reefPitCount:REEF_PITS.length,oceanOuterRadius:OCEAN_OUTER_RADIUS,karstArchipelago:true,visibleClouds:true,naturalBreakerField:true,canoePrototype:true,irregularBreakerPackets:true,naturalWaveSpectrum:true,canoeHullV2:true,karstMushroomProfile:true,shallowWaterLayering:true,foamBandCoupling:true,waterFireReflection:true,smokeCoolingCurve:true,irregularShoreline:true,waveWallSystem:true,infiniteSeaBlend:true,rockMaterialPolish:true,denseSmoke:true,animatedGlassButtons:true,webgl2:false,errors:[],persistentImageAssets:0,externalModels:0,externalCdn:0,fixedStepS:1/120,rockCount:COAST_ROCKS.length,fireRingRockCount:FIRE_RING.length,logCount:LOGS.length,smokeParticles:0,flameParticles:0,sprayParticles:0,foamActiveCells:0,wetCells:0,drawCalls:0,triangles:0,frames:0,fps:0,physicalTime:0,displayLagSkippedSeconds:0,opaqueCacheRenders:0,opaqueCacheReuses:0,visualProbe:null};
+window.OceanCoastR012={qa};window.OceanMotherR018=window.OceanCoastR012;
+function fail(value){const err=value instanceof Error?value:new Error(String(value));qa.errors.push(err.stack||err.message);errorBox.hidden=false;errorBox.textContent=qa.errors.at(-1);loading.classList.add('done');console.error(err)}
+addEventListener('error',e=>fail(e.error||e.message));
+addEventListener('unhandledrejection',e=>fail(e.reason));
+
+function shader(gl,type,source,label){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){const numbered=source.split('\n').map((line,i)=>`${i+1}: ${line}`).join('\n');throw new Error(`${label}: ${gl.getShaderInfoLog(sh)}\n${numbered}`)}return sh}
+function program(gl,vs,fs,label){const p=gl.createProgram(),a=shader(gl,gl.VERTEX_SHADER,vs,`${label} vertex`),b=shader(gl,gl.FRAGMENT_SHADER,fs,`${label} fragment`);gl.attachShader(p,a);gl.attachShader(p,b);gl.linkProgram(p);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(`${label} link: ${gl.getProgramInfoLog(p)}`);return p}
+function locations(gl,p,names){const out={};for(const name of new Set([...names,'uParams[0]']))out[name]=gl.getUniformLocation(p,name);out.paramSize=0;for(let i=0;i<gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);i++){const u=gl.getActiveUniform(p,i);if(u.name==='uParams[0]')out.paramSize=u.size;}return out;}
+function sendParams(loc){if(loc.paramSize)gl.uniform1fv(loc['uParams[0]'],paramData.subarray(0,loc.paramSize));}
+
+function u1f(gl,loc,v){if(loc!==null)gl.uniform1f(loc,v)}function u1i(gl,loc,v){if(loc!==null)gl.uniform1i(loc,v)}function u2f(gl,loc,a,b){if(loc!==null)gl.uniform2f(loc,a,b)}function u3fv(gl,loc,v){if(loc!==null)gl.uniform3fv(loc,v)}function u4f(gl,loc,a,b,c,d){if(loc!==null)gl.uniform4f(loc,a,b,c,d)}function um4(gl,loc,m){if(loc!==null)gl.uniformMatrix4fv(loc,false,m)}
+
+const camera={target:[0,0,0],yaw:2.6,pitch:.48,distance:125,fov:50*Math.PI/180,eye:[0,0,0],forward:[0,0,-1],right:[1,0,0],up:[0,1,0],view:new Float32Array(16),proj:new Float32Array(16),dirty:true};
+function updateCamera(aspect){const cp=Math.cos(camera.pitch);camera.eye=[camera.target[0]+camera.distance*cp*Math.sin(camera.yaw),camera.target[1]+camera.distance*Math.sin(camera.pitch),camera.target[2]+camera.distance*cp*Math.cos(camera.yaw)];camera.forward=normalize3(sub3(camera.target,camera.eye));camera.right=normalize3(cross3(camera.forward,[0,1,0]));camera.up=normalize3(cross3(camera.right,camera.forward));mat4LookAt(camera.view,camera.eye,camera.target,[0,1,0]);mat4Perspective(camera.proj,camera.fov,aspect,.15,6000);camera.dirty=false;}
+const views={overview:1,karst:1,shore:1,breaker:1,curl:1,canoe:1,deepfish:1,rocks:1,fire:1,smokeTop:1,top:1};
+function setView(name,instant=false){
+ const r=config.radius,source=FIRE_SOURCES[0]||[r*.42,2,0],rock=COAST_ROCKS.slice().sort((a,b)=>b[3]-a[3])[0]||[r,0];
+ const dir=flowDirection(config.swellDir),front=[-dir[0],-dir[1]],frontTheta=Math.atan2(front[1],front[0]),frontRadius=islandRadius(frontTheta),incomingYaw=Math.atan2(front[0],front[1]);
+ const shoreTheta=frontTheta+.42,shoreRadius=islandRadius(shoreTheta),breakerTheta=frontTheta+1.18,breakerRadius=islandRadius(breakerTheta),breakerYaw=Math.atan2(Math.cos(breakerTheta),Math.sin(breakerTheta)),curlTheta=frontTheta-.28,curlRadius=islandRadius(curlTheta),curlYaw=Math.atan2(Math.cos(curlTheta),Math.sin(curlTheta));
+ const v={
+  overview:{target:[0,6.5,0],yaw:incomingYaw+.34,pitch:.37,distance:r*6.15},
+  karst:{target:[0,10.5,0],yaw:2.44,pitch:.27,distance:68},
+  shore:{target:[Math.cos(shoreTheta)*(shoreRadius+1.6),.35,Math.sin(shoreTheta)*(shoreRadius+1.6)],yaw:incomingYaw+.52,pitch:.21,distance:25},
+  breaker:{target:[Math.cos(breakerTheta)*(breakerRadius+SURF_SPACING*1.50),.72,Math.sin(breakerTheta)*(breakerRadius+SURF_SPACING*1.50)],yaw:breakerYaw+.52,pitch:.10,distance:25},
+  curl:{target:[Math.cos(curlTheta)*(curlRadius+SURF_SPACING*1.52),1.16,Math.sin(curlTheta)*(curlRadius+SURF_SPACING*1.52)],yaw:curlYaw+.58,pitch:.21,distance:30},
+  canoe:{target:[CANOE_POS[0],waterLevel(physicalTime,config)+.28,CANOE_POS[2]],yaw:2.16,pitch:.43,distance:13},
+  deepfish:{target:[DEEP_FISH_POS[0],waterLevel(physicalTime,config)+.18,DEEP_FISH_POS[2]],yaw:2.12,pitch:.10,distance:72},
+  rocks:{target:[rock[0],Math.max(.8,bedHeight(rock[0],rock[1])+.8),rock[1]],yaw:2.74,pitch:.20,distance:18},
+  fire:{target:[source[0],3.0,source[2]],yaw:2.75,pitch:.28,distance:24},
+  smokeTop:{target:[0,5.2,0],yaw:2.55,pitch:1.10,distance:r*3.75},
+  top:{target:[0,.2,0],yaw:.22,pitch:1.49,distance:r*5.10}
+ }[name]||{target:[0,1.6,0],yaw:2.57,pitch:.50,distance:r*5.35};
+ v.fov=(name==='curl'?52:name==='breaker'?54:50)*Math.PI/180;
+ if(innerWidth<760&&name==='overview'){v.distance*=1.05;v.yaw=incomingYaw+.28;v.fov=63*Math.PI/180;}
+ else if(innerWidth<760&&name==='top'){v.distance*=1.30;v.fov=60*Math.PI/180;}
+ else if(innerWidth<760&&['breaker','curl'].includes(name)){v.distance*=1.16;v.fov=58*Math.PI/180;}
+ while(v.yaw-camera.yaw>Math.PI)v.yaw-=TAU;while(v.yaw-camera.yaw<-Math.PI)v.yaw+=TAU;
+ if(instant||!qa.ready){Object.assign(camera,v);camera.target=[...v.target];cameraTween=null;}else cameraTween={start:performance.now(),a:{...camera,target:[...camera.target]},b:v};
+ camera.dirty=true;opaqueDirty=true;qa.view=name;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+}
+function installCamera(){
+ const pointers=new Map();let pinch=0;
+ canvas.addEventListener('pointerdown',e=>{cameraTween=null;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);pinch=0});
+ canvas.addEventListener('pointermove',e=>{const prev=pointers.get(e.pointerId);if(!prev)return;const dx=e.clientX-prev.x,dy=e.clientY-prev.y;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointers.size===2){const [a,b]=[...pointers.values()],distance=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)camera.distance=clamp(camera.distance*pinch/Math.max(5,distance),4,270);pinch=distance;}
+ else if(e.shiftKey||e.buttons===4){const k=camera.distance*.0014;for(let i=0;i<3;i++)camera.target[i]-=(camera.right[i]*dx-camera.up[i]*dy)*k;}
+ else{camera.yaw-=dx*.005*config.orbitSpeed;camera.pitch=clamp(camera.pitch-dy*.004*config.orbitSpeed,.035,1.51);}
+ opaqueDirty=true;});
+ const release=e=>{pointers.delete(e.pointerId);pinch=0};canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
+ canvas.addEventListener('wheel',e=>{e.preventDefault();cameraTween=null;camera.distance=clamp(camera.distance*Math.exp(e.deltaY*.001*config.zoomSpeed),4,270);opaqueDirty=true},{passive:false});
+ canvas.addEventListener('dblclick',()=>setView('overview'));canvas.addEventListener('contextmenu',e=>e.preventDefault());
+}
+
+const controls=new Map();let geometryTimer=0,geometryDirty=false,cameraTween=null,uiClock=0,currentPage=1;
+const paramData=new Float32Array(PARAMS.length);const paramMeta=new Map(PARAMS.map(p=>[p.key,p]));
+function syncParams(){PARAMS.forEach((p,i)=>paramData[i]=config[p.key]);}
+function applyUI(){
+ const root=document.documentElement;
+ for(const [name,key,unit] of [['glass-alpha','glassOpacity',''],['glass-blur','glassBlur','px'],['glass-flow','glassFlow',''],['glass-edge','glassEdge',''],['glass-hue','glassHue',''],['button-duration','buttonDuration','ms']])root.style.setProperty('--'+name,config[key]+unit);
+ root.style.setProperty('--flow-duration',`${18/Math.max(.01,config.glassSpeed)}s`);root.style.setProperty('--button-flow-duration',`${4.8/Math.max(.08,config.glassSpeed)}s`);
+ root.classList.toggle('glass-still',config.glassSpeed===0||config.glassFlow===0);
+ glassDirty=true;
+}
+function applyParam(key,value){
+ const m=paramMeta.get(key);if(!m||!Number.isFinite(Number(value)))return false;
+ const v=clamp(Number(value),m.min,m.max);config[key]=v;
+ const c=controls.get(key);if(c){c.input.value=v;c.number.value=Number(v.toFixed(3));c.row.style.setProperty('--fill',`${100*(v-m.min)/(m.max-m.min)}%`);}
+ syncParams();if(m.kind==='geometry'){clearTimeout(geometryTimer);geometryDirty=true;opaqueDirty=true;geometryTimer=setTimeout(()=>{if(geometryDirty&&config.paused&&gl)rebuildWorld()},130)}
+ if(m.kind==='ui')applyUI();else opaqueDirty=true;return true;
+}
+function buildControls(){
+ for(const group of GROUPS){const box=document.createElement('section');box.dataset.group=group.id;
+ const heading=document.createElement('h2');heading.textContent=group.title;box.append(heading);
+ const reset=document.createElement('button');reset.className='group-reset';reset.textContent='重置本组';reset.onclick=()=>PARAMS.filter(p=>p.group===group.id).forEach(p=>applyParam(p.key,p.value));box.append(reset);
+ for(const m of PARAMS.filter(p=>p.group===group.id)){
+  const row=document.createElement('div');row.className='control';row.dataset.key=m.key;
+  const label=document.createElement('label');label.htmlFor=`control-${m.key}`;label.textContent=m.label;
+  const valueBox=document.createElement('span');valueBox.className='value-box';
+  const number=document.createElement('input');number.type='number';number.min=m.min;number.max=m.max;number.step=m.step;number.value=config[m.key];number.setAttribute('aria-label',m.label+'数值');
+  const unit=document.createElement('small');unit.textContent=m.unit;valueBox.append(number,unit);
+  const input=document.createElement('input');Object.assign(input,{type:'range',min:m.min,max:m.max,step:m.step,value:config[m.key],id:`control-${m.key}`});
+  input.oninput=()=>applyParam(m.key,input.value);number.onchange=()=>applyParam(m.key,number.value);
+  row.append(label,valueBox,input);row.style.setProperty('--fill',`${100*(config[m.key]-m.min)/(m.max-m.min)}%`);controls.set(m.key,{input,number,row});box.append(row);
+ }
+ $(`page-${group.page}`).append(box);
+ }
+ $('controlCount').textContent=`${PARAMS.length} 项可调参数`;
+}
+function setPage(n){currentPage=n;for(let i=1;i<=3;i++)$('page-'+i).hidden=i!==n;
+ document.querySelectorAll('[data-page]').forEach(b=>{b.classList.toggle('selected',+b.dataset.page===n);b.setAttribute('aria-selected',String(+b.dataset.page===n))});$('panelScroll').scrollTop=0;glassDirty=true;
+}
+function installUI(){
+ buildControls();syncParams();applyUI();
+ document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(+b.dataset.page));
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+ $('panelToggle').onclick=()=>{const closed=$('panel').classList.toggle('closed');$('panelToggle').setAttribute('aria-expanded',String(!closed));glassDirty=true};
+ $('panelClose').onclick=()=>{$('panel').classList.add('closed');$('panelToggle').setAttribute('aria-expanded','false');glassDirty=true};
+ $('resetCamera').onclick=()=>setView('overview');
+ $('pause').onclick=()=>{config.paused=!config.paused;$('pause').textContent=config.paused?'继续运行':'暂停';lastFrame=performance.now();opaqueDirty=true};
+ $('mode').onchange=e=>{config.mode=e.target.value;$('legend').hidden=config.mode!=='diagnostic';opaqueDirty=true};
+ $('fireToggle').onclick=()=>{config.fireEnabled=!config.fireEnabled;$('fireToggle').textContent=config.fireEnabled?'停止添火':'继续添火';opaqueDirty=true};
+ $('smokeToggle').onclick=()=>{config.smokeVisible=!config.smokeVisible;$('smokeToggle').textContent=config.smokeVisible?'隐藏烟雾':'显示烟雾';updateParticleBuffer();opaqueDirty=true};
+ $('waterToggle').onclick=()=>{config.waterVisible=!config.waterVisible;$('waterToggle').textContent=config.waterVisible?'隐藏海水':'显示海水';opaqueDirty=true};
+ const presets={
+  calm:{wind:2,gust:.10,swell:.36,secondary:.06,curlOuter:.24,curlMiddle:.14,curlInner:.08,foam:.45,shoreFoam:.42,spray:.18,smoke:3.5},
+  foamwall:{wind:9,gust:.20,swell:1.15,secondary:.28,crest:.34,curlOuter:1.05,curlMiddle:.86,curlInner:.62,foam:1.75,foamThickness:1.55,shoreFoam:1.65,spray:1.1},
+  curl:{wind:12,gust:.24,swell:1.55,secondary:.36,crest:.40,curlOuter:1.65,curlMiddle:1.35,curlInner:.92,curlLip:1.18,curlShoulder:2.45,foam:1.38,spray:1.75},
+  rockbreak:{wind:14,gust:.29,swell:1.42,secondary:.42,curlOuter:1.40,curlMiddle:1.10,curlInner:.86,rockFoam:2.45,spray:2.25,mistRatio:.48},
+  storm:{wind:21,gust:.42,swell:1.95,secondary:.52,crest:.42,curlOuter:1.72,curlMiddle:1.42,curlInner:1.08,foam:1.65,spray:2.55,smoke:10.5,smokeLife:22}
+ };
+ document.querySelectorAll('[data-sea]').forEach(b=>b.onclick=()=>{Object.entries(presets[b.dataset.sea]).forEach(([k,v])=>applyParam(k,v));document.querySelectorAll('[data-sea]').forEach(x=>x.classList.toggle('selected',x===b));const view={foamwall:'breaker',curl:'curl',rockbreak:'rocks',storm:'smokeTop'}[b.dataset.sea];if(view)setView(view);});
+ $('resetAll').onclick=()=>PARAMS.forEach(p=>applyParam(p.key,p.value));
+}
+function mesh(gl,data,indices,stride=7){const vao=gl.createVertexArray(),vbo=gl.createBuffer(),ibo=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride*4,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,stride*4,12);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,1,gl.FLOAT,false,stride*4,24);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);gl.bindVertexArray(null);return{vao,vbo,ibo,count:indices.length,triangles:indices.length/3,vertices:data.length/stride}}
+function warpedCoord(t,min,max){const q=t*2-1,w=q*(.34+.66*Math.pow(Math.abs(q),.62));return mix(min,max,(w+1)*.5)}
+function gridMesh(gl,nx,nz,minX,maxX,minZ,maxZ,heightFn,kind=0){const data=new Float32Array((nx+1)*(nz+1)*7),indices=new Uint32Array(nx*nz*6);let o=0;for(let j=0;j<=nz;j++){const z=warpedCoord(j/nz,minZ,maxZ);for(let i=0;i<=nx;i++){const x=warpedCoord(i/nx,minX,maxX),y=heightFn(x,z),e=.16,dx=heightFn(x+e,z)-heightFn(x-e,z),dz=heightFn(x,z+e)-heightFn(x,z-e),n=normalize3([-dx/(2*e),1,-dz/(2*e)]);data[o++]=x;data[o++]=y;data[o++]=z;data[o++]=n[0];data[o++]=n[1];data[o++]=n[2];data[o++]=kind}}o=0;for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;indices[o++]=a;indices[o++]=c;indices[o++]=b;indices[o++]=b;indices[o++]=c;indices[o++]=d}return mesh(gl,data,indices)}
+function oceanMesh(gl,angular=256,radial=176,outer=OCEAN_OUTER_RADIUS){
+ const rings=radial+1,cols=angular+1,data=new Float32Array(rings*cols*2),indices=new Uint32Array(radial*angular*6);let o=0;
+ function radiusAt(t){if(t<.48)return 92*Math.pow(t/.48,1.08);if(t<.78)return 92+(360-92)*Math.pow((t-.48)/.30,1.45);return 360+(outer-360)*Math.pow((t-.78)/.22,2.05);}
+ for(let j=0;j<rings;j++){const r=Math.max(.08,radiusAt(j/radial));for(let i=0;i<cols;i++){const a=i/angular*TAU;data[o++]=Math.cos(a)*r;data[o++]=Math.sin(a)*r;}}
+ o=0;for(let j=0;j<radial;j++)for(let i=0;i<angular;i++){const a=j*cols+i,b=a+1,c=a+cols,d=c+1;indices[o++]=a;indices[o++]=c;indices[o++]=b;indices[o++]=b;indices[o++]=c;indices[o++]=d;}
+ const vao=gl.createVertexArray(),vbo=gl.createBuffer(),ibo=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,8,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);gl.bindVertexArray(null);return{vao,vbo,ibo,count:indices.length,triangles:indices.length/3,vertices:data.length/2,outerRadius:outer};}
+function rockMesh(gl,definitions){const g=rockGeometry(definitions);qa.rockDegenerateTriangles=(qa.rockDegenerateTriangles||0)+g.degenerate;return mesh(gl,g.data,g.indices)}
+function logMesh(gl){const data=[],indices=[];const faceDefs=[[[1,0,0],[1,2,6,5]],[[-1,0,0],[0,4,7,3]],[[0,1,0],[3,7,6,2]],[[0,-1,0],[0,1,5,4]],[[0,0,1],[4,5,6,7]],[[0,0,-1],[0,3,2,1]]];for(const[cx,cz,len,w,h,angle]of LOGS){const cy=bedHeight(cx,cz)+h*.5+.025,co=Math.cos(angle),si=Math.sin(angle),corners=[[-len/2,-h/2,-w/2],[len/2,-h/2,-w/2],[len/2,h/2,-w/2],[-len/2,h/2,-w/2],[-len/2,-h/2,w/2],[len/2,-h/2,w/2],[len/2,h/2,w/2],[-len/2,h/2,w/2]];for(const[nLocal,ids]of faceDefs){const base=data.length/7,n=[nLocal[0]*co+nLocal[2]*si,nLocal[1],-nLocal[0]*si+nLocal[2]*co];for(const id of ids){const q=corners[id],x=cx+q[0]*co+q[2]*si,z=cz-q[0]*si+q[2]*co;data.push(x,cy+q[1],z,n[0],n[1],n[2],2)}indices.push(base,base+1,base+2,base,base+2,base+3)}}return mesh(gl,new Float32Array(data),new Uint32Array(indices))}
+function vegetationMesh(gl){
+ const data=[],indices=[];let count=0;const rng=new RNG(0x50414c41);
+ function pushV(x,y,z,nx,ny,nz,kind){data.push(x,y,z,nx,ny,nz,kind);return data.length/7-1}
+ function cyl(cx,cy,cz,r,h,kind=3,sides=7){const base=data.length/7;for(let j=0;j<=1;j++)for(let i=0;i<sides;i++){const a=i/sides*TAU,co=Math.cos(a),si=Math.sin(a);pushV(cx+co*r,cy+j*h,cz+si*r,co,0,si,kind)}for(let i=0;i<sides;i++){const a=base+i,b=base+(i+1)%sides,c=base+sides+i,d=base+sides+(i+1)%sides;indices.push(a,c,b,b,c,d)}}
+ function ell(cx,cy,cz,rx,ry,rz,kind=4,lat=5,lon=8){const base=data.length/7;for(let j=0;j<=lat;j++){const t=j/lat*Math.PI;for(let i=0;i<lon;i++){const a=i/lon*TAU,st=Math.sin(t),nx=st*Math.cos(a),ny=Math.cos(t),nz=st*Math.sin(a);pushV(cx+nx*rx,cy+ny*ry,cz+nz*rz,nx,ny,nz,kind)}}for(let j=0;j<lat;j++)for(let i=0;i<lon;i++){const a=base+j*lon+i,b=base+j*lon+(i+1)%lon,c=a+lon,d=b+lon;indices.push(a,c,b,b,c,d)}}
+ function leaf(cx,cy,cz,a,len,w,tilt=.22,kind=5){const ux=Math.cos(a),uz=Math.sin(a),px=-uz,pz=ux;const y1=cy+Math.sin(tilt)*len*.32,x1=cx+ux*Math.cos(tilt)*len,z1=cz+uz*Math.cos(tilt)*len;const b=data.length/7;pushV(cx,cy,cz,0,1,0,kind);pushV(cx+px*w,cy+.04,cz+pz*w,0,1,0,kind);pushV(x1,y1,z1,0,1,0,kind);pushV(cx-px*w,cy+.04,cz-pz*w,0,1,0,kind);indices.push(b,b+1,b+2,b,b+2,b+3)}
+ function broadleafAt(x,z,y,scale=1){const h=(2.0+rng.next()*2.15)*scale;cyl(x,y-.10,z,.105*scale,h,3,7);const crownY=y+h*.86;for(let q=0;q<4;q++){const a=q*1.5708+rng.next()*.42,rr=(.48+.18*(q%2))*scale;ell(x+Math.cos(a)*rr,crownY+(q==0?.24:(q==2?-.08:0)),z+Math.sin(a)*rr,(1.20+rng.next()*.52)*scale,(.55+rng.next()*.32)*scale,(1.12+rng.next()*.50)*scale,4,4,8)}count++}
+ function broadleaf(x,z,scale=1){const y=karstApproxTop(x,z);if(!Number.isFinite(y)||y<-100)return;broadleafAt(x,z,y,scale)}
+ // Dense forest mantle: karst crowns/shelves plus lower island woodland.
+ for(let k=0;k<70;k++){const a=rng.next()*TAU,r=Math.sqrt(rng.next())*12.3,x=1.0+Math.cos(a)*r,z=-.7+Math.sin(a)*r;const y=karstApproxTop(x,z);if(y>4.8&&y<35.0)broadleafAt(x,z,y,.56+rng.next()*.52)}
+ for(let k=0;k<52;k++){const a=rng.next()*TAU,r=7.5+Math.sqrt(rng.next())*16.0,x=Math.cos(a)*r,z=Math.sin(a)*r,y=bedHeight(x,z);if(y>1.1&&y<8.2&&karstApproxTop(x,z)<-100)broadleafAt(x,z,y,.48+rng.next()*.42)}
+ // A large banyan-like fig mass with multiple trunks and a broad crown.
+ {const x=-1.8,z=2.8,y=karstApproxTop(x,z);if(y>-100){for(let k=0;k<5;k++){const a=k/5*TAU+.25;cyl(x+Math.cos(a)*.65,y-.15,z+Math.sin(a)*.65,.19,5.3,3,8)}ell(x,y+5.0,z,4.8,2.05,4.3,4,6,10);ell(x-2.1,y+4.7,z+.8,3.1,1.65,2.8,4,5,9);ell(x+2.0,y+4.8,z-.6,3.0,1.7,2.7,4,5,9);count++;}}
+ // Banana is treated as a small sheltered cultivated remnant, not the dominant wild canopy.
+ {const baseX=10.5,baseZ=-5.8;for(let k=0;k<7;k++){const a=k*.91,x=baseX+Math.cos(a)*(1.1+(k%3)*.55),z=baseZ+Math.sin(a)*(1.0+(k%2)*.65),y=bedHeight(x,z)+.10;cyl(x,y,z,.10,2.5,3,6);for(let j=0;j<7;j++)leaf(x,y+2.28,z,j/7*TAU+k*.2,2.2,.42,.20+(j%2)*.12,5);count++;}}
+ VEGETATION_COUNT=count;return mesh(gl,new Float32Array(data),new Uint32Array(indices));
+}
+function canoeMesh(gl){
+ const data=[],indices=[],cx=CANOE_POS[0],cz=CANOE_POS[2],cy=waterLevel(0,SURFACE)+.10,angle=-.58,co=Math.cos(angle),si=Math.sin(angle),N=36;
+ function world(lateral,longitudinal,y){return[cx+lateral*co+longitudinal*si,cy+y,cz-lateral*si+longitudinal*co]}
+ function pv(p,n,kind=6){data.push(p[0],p[1],p[2],n[0],n[1],n[2],kind);return data.length/7-1}
+ const glL=[],glR=[],chL=[],chR=[],keel=[],inL=[],inR=[];
+ for(let i=0;i<=N;i++){
+  const t=i/N*2-1,tip=Math.pow(Math.abs(t),1.7),shape=Math.pow(Math.max(.012,1-t*t),.48),half=.18+1.05*shape,long=t*5.15;
+  const gunY=.40+.30*tip,chineY=.02+.20*tip,keelY=-.22+.34*tip,innerHalf=Math.max(.06,half*.50);
+  glL.push(pv(world(-half,long,gunY),normalize3([-co,.24,si]),6));glR.push(pv(world(half,long,gunY),normalize3([co,.24,-si]),6));
+  chL.push(pv(world(-half*.70,long,chineY),normalize3([-co,.16,si]),6));chR.push(pv(world(half*.70,long,chineY),normalize3([co,.16,-si]),6));
+  keel.push(pv(world(0,long,keelY),[0,-1,0],6));
+  inL.push(pv(world(-innerHalf,long,.02+.10*tip),[0,1,0],7));inR.push(pv(world(innerHalf,long,.02+.10*tip),[0,1,0],7));
+ }
+ for(let i=0;i<N;i++){
+  indices.push(glL[i],glL[i+1],chL[i],chL[i],glL[i+1],chL[i+1],chL[i],chL[i+1],keel[i],keel[i],chL[i+1],keel[i+1]);
+  indices.push(chR[i],glR[i+1],glR[i],chR[i],chR[i+1],glR[i+1],keel[i],keel[i+1],chR[i],chR[i],keel[i+1],chR[i+1]);
+  indices.push(inL[i],inR[i],inL[i+1],inR[i],inR[i+1],inL[i+1]);
+ }
+ indices.push(glL[0],chL[0],keel[0],glL[0],keel[0],glR[0],glR[0],keel[0],chR[0]);
+ indices.push(glL[N],keel[N],chL[N],glL[N],glR[N],keel[N],glR[N],chR[N],keel[N]);
+ function bench(longitudinal,width=.82,depth=.48){const p0=world(-width,longitudinal,.46),p1=world(width,longitudinal,.46),p2=world(width,longitudinal+depth,.46),p3=world(-width,longitudinal+depth,.46),b=data.length/7;for(const p of [p0,p1,p2,p3])pv(p,[0,1,0],7);indices.push(b,b+1,b+2,b,b+2,b+3)}
+ bench(-1.65);bench(-.25);bench(1.20);
+ const p0=world(-2.0,.4,.66),p1=world(2.25,.4,.66),base=data.length/7,dx=p1[0]-p0[0],dz=p1[2]-p0[2],L=Math.hypot(dx,dz),nx=-dz/L,nz=dx/L,w=.07;for(const p of [[p0[0]+nx*w,p0[1],p0[2]+nz*w],[p0[0]-nx*w,p0[1],p0[2]-nz*w],[p1[0]-nx*w,p1[1],p1[2]-nz*w],[p1[0]+nx*w,p1[1],p1[2]+nz*w]])pv(p,[0,1,0],7);indices.push(base,base+1,base+2,base,base+2,base+3);
+ return mesh(gl,new Float32Array(data),new Uint32Array(indices));
+}
+function makeR8(gl,w,h,data){const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,w,h,0,gl.RED,gl.UNSIGNED_BYTE,data);return tex}
+
+const FIELD_W=QA_MODE?128:320,FIELD_H=QA_MODE?128:320,foamA=new Float32Array(FIELD_W*FIELD_H),foamB=new Float32Array(FIELD_W*FIELD_H),wetField=new Float32Array(FIELD_W*FIELD_H),filmField=new Float32Array(FIELD_W*FIELD_H),foamBytes=new Uint8Array(FIELD_W*FIELD_H),wetBytes=new Uint8Array(FIELD_W*FIELD_H);let foamFront=foamA,foamBack=foamB,foamTexture,wetTexture;
+function sampleField(field,x,z){const u=clamp((x-DOMAIN.minX)/DOMAIN.width,0,.9999),v=clamp((z-DOMAIN.minZ)/DOMAIN.depth,0,.9999),fx=u*(FIELD_W-1),fz=v*(FIELD_H-1),x0=Math.floor(fx),z0=Math.floor(fz),x1=Math.min(FIELD_W-1,x0+1),z1=Math.min(FIELD_H-1,z0+1),tx=fx-x0,tz=fz-z0;return mix(mix(field[z0*FIELD_W+x0],field[z0*FIELD_W+x1],tx),mix(field[z1*FIELD_W+x0],field[z1*FIELD_W+x1],tx),tz)}
+function updateFields(dt,time){
+ let foamCells=0,wetCells=0,active=0;const dir=flowDirection(config.swellDir);
+ for(let j=0;j<FIELD_H;j++){const z=mix(DOMAIN.minZ,DOMAIN.maxZ,j/(FIELD_H-1));for(let i=0;i<FIELD_W;i++){
+ const x=mix(DOMAIN.minX,DOMAIN.maxX,i/(FIELD_W-1)),id=j*FIELD_W+i,r=Math.hypot(x,z),s=r-islandRadius(Math.atan2(z,x));
+ if(s>35&&foamFront[id]<.005&&wetField[id]<.005){foamBack[id]=0;continue}active++;
+ const w=waveAt(x,z,time,config),contact=rockContact(x,z,w.eta),shoreBand=smooth(.01,.12,w.depth)*(1-smooth(.25,.9,w.depth));
+ const bandPulse=clamp((w.bandStrengths||[]).reduce((sum,value)=>sum+value,0),0,1.5);
+ const packet=smooth(.39,.72,.58*noise2(x*.058+time*.008,z*.066-time*.005,941)+.42*noise2(x*.133-time*.004,z*.119+time*.006,977));
+ const source=w.depth>0?clamp((bandPulse*.62+w.breaker*.28+shoreBand*.28*config.shoreFoam+contact.edge*Math.max(w.breaker,bandPulse)*config.rockFoam*.60)*config.foam*(.04+1.20*packet),0,3):0;
+ const back=config.backwash*Math.sin(time*TAU/config.period-r*.5)*(1-smooth(0,7,Math.abs(s)));
+ const vx=(dir[0]*(.18+w.breaker*.55)+x/Math.max(r,1)*back)*config.foamTransport,vz=(dir[1]*(.18+w.breaker*.55)+z/Math.max(r,1)*back)*config.foamTransport;
+ const old=rockField.sample(x-vx*dt,z-vz*dt)>w.eta?foamFront[id]:sampleField(foamFront,x-vx*dt,z-vz*dt);
+ const near=(foamFront[id-1]??old)+(foamFront[id+1]??old)+(foamFront[id-FIELD_W]??old)+(foamFront[id+FIELD_W]??old);
+ const life=config.foamLife*(w.depth>0?1:.15+config.residualFoam*.7);
+ foamBack[id]=contact.solid?0:clamp(old*Math.exp(-dt/life)+source*dt*(1-old)+config.foamDiffusion*dt*(near*.25-old),0,1);
+ if(w.depth>.01&&!contact.solid){wetField[id]=1;filmField[id]=1;}else{wetField[id]=Math.max(0,wetField[id]-dt/config.wetLife);filmField[id]=Math.max(0,filmField[id]-dt/config.filmLife);}
+ if(foamBack[id]>.09)foamCells++;if(wetField[id]>.08)wetCells++;
+ }}
+ [foamFront,foamBack]=[foamBack,foamFront];
+ for(let i=0;i<foamFront.length;i++){foamBytes[i]=Math.round(foamFront[i]*255);wetBytes[i]=Math.round((wetField[i]*.75+filmField[i]*.25)*255)}
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,foamTexture);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,FIELD_W,FIELD_H,gl.RED,gl.UNSIGNED_BYTE,foamBytes);
+ gl.bindTexture(gl.TEXTURE_2D,wetTexture);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,FIELD_W,FIELD_H,gl.RED,gl.UNSIGNED_BYTE,wetBytes);
+ qa.foamActiveCells=foamCells;qa.wetCells=wetCells;qa.fieldCellsUpdated=active;qa.fieldUpdateCount=(qa.fieldUpdateCount||0)+1;opaqueDirty=true;
+}
+
+function rockContact(x,z,eta){const c=rockField.sample(x,z),e=1.0;let edge=0;for(const [a,b] of [[e,0],[-e,0],[0,e],[0,-e]])if(rockField.sample(x+a,z+b)>eta)edge+=.25;return{solid:c>eta,edge:c>eta?0:edge}}
+const MAX_PARTICLES=QA_MODE?2800:(innerWidth<760?5200:9000);
+const particles=Array.from({length:MAX_PARTICLES},()=>({x:0,y:0,z:0,vx:0,vy:0,vz:0,life:0,maxLife:1,size:1,type:0,age:0,seed:0,source:0}));
+const particleData=new Float32Array(MAX_PARTICLES*8),rng=new RNG(0x7a51c30d);
+let particleCursor=0,mediaVao,mediaBuffer,fireY=0,smokeEmit=0,flameEmit=0,sprayEmit=0,emberEmit=0,liveParticles=0,sourceCursor=0;
+function takeParticle(){
+ for(let k=0;k<MAX_PARTICLES;k++){const p=particles[particleCursor++%MAX_PARTICLES];if(p.life<=0)return p}
+ qa.particleCapacityHits=(qa.particleCapacityHits||0)+1;return particles[particleCursor++%MAX_PARTICLES];
+}
+function sourceFor(strands){const index=(sourceCursor++)%FIRE_SOURCES.length,s=FIRE_SOURCES[index],strand=Math.floor(sourceCursor/FIRE_SOURCES.length)%Math.round(strands),a=strand/strands*TAU;return {index,x:s[0]+Math.cos(a)*.60,y:s[1],z:s[2]+Math.sin(a)*.60};}
+function spawnSmoke(time){
+ if(!config.fireEnabled||config.smoke===0)return;const s=sourceFor(config.smokeStrands),p=takeParticle(),wind=windAt(s.x,.45,s.z,time,config);
+ Object.assign(p,{x:s.x+(rng.next()-.5)*.18,y:s.y+.42,z:s.z+(rng.next()-.5)*.18,vx:wind[0]*.015,vy:config.smokeRise*(.92+rng.next()*.22),vz:wind[2]*.015,size:config.smokeWidth*(.72+rng.next()*.58),type:0,age:0,seed:rng.next()*100,source:s.index});
+ p.life=p.maxLife=config.smokeLife*(.8+rng.next()*.4);
+}
+function spawnFlame(){
+ if(!config.fireEnabled||config.fire===0)return;const s=sourceFor(config.fireStrands),p=takeParticle();
+ Object.assign(p,{x:s.x+(rng.next()-.5)*config.fireWidth,y:s.y+.25,z:s.z+(rng.next()-.5)*config.fireWidth,vx:0,vy:config.fireHeight*(.7+rng.next()*.5),vz:0,size:config.fireWidth*(.52+rng.next()*.55),type:1,age:0,seed:rng.next()*100,source:s.index});
+ p.life=p.maxLife=.65+rng.next()*.75;
+}
+function spawnEmber(){if(!config.fireEnabled||config.fire===0)return;const s=sourceFor(config.fireStrands),p=takeParticle();Object.assign(p,{x:s.x,y:s.y+.2,z:s.z,vx:0,vy:2+rng.next()*2,vz:0,size:.018+rng.next()*.026,type:3,age:0,seed:rng.next()*100,source:s.index});p.life=p.maxLife=1.5+rng.next()*2;}
+function spawnSpray(time){
+ if(!config.waterVisible)return;
+ for(let i=0;i<16;i++){
+ const a=rng.next()*TAU,r=islandRadius(a)+2+rng.next()*18,x=Math.cos(a)*r,z=Math.sin(a)*r,w=waveAt(x,z,time,config);
+ if(w.breaker<.28||w.depth<.03||rockField.sample(x,z)>w.eta)continue;
+ const p=takeParticle(),mist=rng.next()<config.mistRatio,d=flowDirection(config.swellDir);
+ Object.assign(p,{x,y:w.eta+.1,z,vx:d[0]*config.spraySpeed,vy:config.sprayHeight*(.7+rng.next()*.6),vz:d[1]*config.spraySpeed,size:config.dropSize*(mist?3:1),type:2,age:0,seed:rng.next()*100,source:-1,mist});
+ p.life=p.maxLife=mist?config.mistLife:.8+rng.next()*1.3;return;
+ }
+}
+function updateParticles(dt,time){
+ const n=FIRE_SOURCES.length;
+ smokeEmit+=dt*config.smoke*config.smokeStrands*n*1.10;flameEmit+=dt*config.fire*config.fireStrands*n*14;
+ sprayEmit+=dt*config.spray*(18+config.wind*1.7)*Math.min(2,(config.curlOuter+config.curlMiddle+config.curlInner)/2);emberEmit+=dt*config.emberRate*n;
+ while(smokeEmit>=1){spawnSmoke(time);smokeEmit--}while(flameEmit>=1){spawnFlame();flameEmit--}while(sprayEmit>=1){spawnSpray(time);sprayEmit--}while(emberEmit>=1){spawnEmber();emberEmit--}
+ for(const p of particles){if(p.life<=0)continue;p.life-=dt;p.age+=dt;if(p.life<=0)continue;
+ const wind=windAt(p.x,p.y-bedHeight(p.x,p.z),p.z,time,config);
+ if(p.type===0){
+  const age01=clamp(p.age/Math.max(.001,p.maxLife),0,1),drag=1-Math.exp(-config.smokeDrag*dt*(.68+.52*age01)),windShare=.18+.24*smooth(.18,.92,age01);
+  p.vx+=(wind[0]*windShare-p.vx)*drag;p.vz+=(wind[2]*windShare-p.vz)*drag;
+  const eddy=config.smokeTurb*(.32+.58*Math.sqrt(age01));
+  p.vx+=Math.sin(p.z*.18+time*.71+p.seed)*eddy*dt;p.vz+=Math.cos(p.x*.15-time*.63+p.seed)*eddy*dt;
+  const buoyancy=config.smokeRise*(1-.47*smooth(.10,.94,age01));
+  p.vy+=(buoyancy+Math.sin(p.x*.19+time+p.seed)*config.smokeTurb*.19-p.vy)*dt*(.82-.22*age01);
+  p.size+=config.smokeSpread*dt*(.62+1.20*Math.sqrt(age01));
+ }else if(p.type===1){
+  const drag=1-Math.exp(-config.windDrag*dt);p.vx+=(wind[0]*.22-p.vx)*drag;p.vz+=(wind[2]*.22-p.vz)*drag;
+  p.vx+=Math.sin(time*config.fireSpeed*TAU+p.seed)*config.fireTurb*dt;p.vz+=Math.cos(time*config.fireSpeed*4+p.seed)*config.fireTurb*dt;
+  p.vy-=.6*dt;p.size*=Math.exp(-.24*dt);
+ }else{
+  const drag=1-Math.exp(-config.windDrag*dt*(p.mist?1:.25));p.vx+=(wind[0]-p.vx)*drag;p.vz+=(wind[2]-p.vz)*drag;
+  p.vy-=9.81*(p.type===3?.18:p.mist?.12:1)*dt;if(p.mist)p.size+=config.mistSpread*dt;
+ }
+ p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
+ if(p.type>=2&&p.y<Math.max(bedHeight(p.x,p.z),waterLevel(time,config))){p.life=0;}
+ }
+ updateParticleBuffer();
+}
+function updateParticleBuffer(){
+ let smokeCount=0,flameCount=0,sprayCount=0,emberCount=0,span=0,o=0;const ids=new Set();
+ // Sorting transparent media gives a stable back-to-front approximation.
+ const live=particles.filter(p=>p.life>0).sort((a,b)=>Math.hypot(b.x-camera.eye[0],b.y-camera.eye[1],b.z-camera.eye[2])-Math.hypot(a.x-camera.eye[0],a.y-camera.eye[1],a.z-camera.eye[2]));
+ for(const p of live){
+  if(p.type===0){smokeCount++;ids.add(p.source);const s=FIRE_SOURCES[p.source];if(s)span=Math.max(span,Math.hypot(p.x-s[0],p.z-s[2]));if(!config.smokeVisible)continue;}
+  else if(p.type===1)flameCount++;else if(p.type===2)sprayCount++;else emberCount++;
+  particleData[o++]=p.x;particleData[o++]=p.y;particleData[o++]=p.z;particleData[o++]=Math.max(0,p.life/p.maxLife);particleData[o++]=p.size;particleData[o++]=p.type;particleData[o++]=p.age;particleData[o++]=p.seed;
+ }
+ liveParticles=o/8;Object.assign(qa,{smokeParticles:smokeCount,flameParticles:flameCount,sprayParticles:sprayCount,emberParticles:emberCount,smokeSourceCount:ids.size,smokeExtentMeters:span});
+ gl.bindBuffer(gl.ARRAY_BUFFER,mediaBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,particleData.subarray(0,o));
+}
+
+const glassRects=new Float32Array(32);let glassCount=0,glassDirty=true;
+function updateGlassRects(){glassDirty=false;glassCount=0;glassRects.fill(0);
+ if(matchMedia('(prefers-reduced-transparency: reduce)').matches)return;
+ const sx=canvas.width/innerWidth,sy=canvas.height/innerHeight;
+ for(const el of document.querySelectorAll('.glass')){const r=el.getBoundingClientRect(),c=getComputedStyle(el);if(c.visibility==='hidden'||c.display==='none'||+c.opacity<.1||r.width<2||r.height<2)continue;
+  if(glassCount>=8)break;glassRects.set([r.left*sx,(innerHeight-r.bottom)*sy,r.width*sx,r.height*sy],glassCount++*4);
+ }
+}
+new ResizeObserver(()=>glassDirty=true).observe(document.documentElement);
+new MutationObserver(()=>glassDirty=true).observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','hidden']});
+addEventListener('transitionend',()=>glassDirty=true);
+let compositeFbo,compositeColor,compositeDepth,copyProgram,copyLoc,rockTexture,rockField;
+let gl,skyProgram,solidProgram,waterProgram,mediaProgram,skyLoc,solidLoc,waterLoc,mediaLoc,emptyVao,terrainGeo,rocksGeo,ringGeo,logsGeo,vegetationGeo,canoeGeo,waterGeo,sceneFbo,sceneColor,sceneDepth,fboW=0,fboH=0,opaqueDirty=true,lastOpaque=-1,resizePending=true,physicalTime=0,accumulator=0,fieldAccumulator=0,particleAccumulator=0,lastFrame=performance.now(),frameCount=0,fpsClock=performance.now(),fpsValue=0,lastMetrics=0,qaScheduled=false;
+function modeInt(){return config.mode==='neutral'?1:config.mode==='studio'?2:config.mode==='diagnostic'?3:0}
+function sunDirection(){const phase=(config.hour-6)/12*Math.PI,elev=.18+.68*Math.sin(clamp(phase,0,Math.PI)),az=(config.hour-12)*.09+.42;return normalize3([Math.cos(az)*Math.cos(elev),Math.sin(elev),Math.sin(az)*Math.cos(elev)])}
+function setCommon(loc){sendParams(loc);u1f(gl,loc.uTime,physicalTime);u1f(gl,loc.uSeaLevel,waterLevel(physicalTime,config));u1f(gl,loc.uSwell,config.swell);u1f(gl,loc.uPeriod,config.period);u1f(gl,loc.uWind,config.wind)}
+function createSceneFbo(w,h){
+ for(const t of [sceneColor,sceneDepth,compositeColor,compositeDepth])if(t)gl.deleteTexture(t);
+ for(const f of [sceneFbo,compositeFbo])if(f)gl.deleteFramebuffer(f);
+ function color(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);return t}
+ function depth(){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,w,h,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);return t}
+ function target(c,d){const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,c,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,d,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Incomplete frame target');return f}
+ sceneColor=color();sceneDepth=depth();sceneFbo=target(sceneColor,sceneDepth);
+ compositeColor=color();compositeDepth=depth();compositeFbo=target(compositeColor,compositeDepth);
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);fboW=w;fboH=h;opaqueDirty=true;
+}
+function copyScene(final){
+ gl.bindFramebuffer(gl.FRAMEBUFFER,final?null:compositeFbo);gl.viewport(0,0,fboW,fboH);
+ gl.colorMask(true,true,true,true);gl.depthMask(true);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.ALWAYS);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);
+ gl.useProgram(copyProgram);sendParams(copyLoc);u1f(gl,copyLoc.uUiTime,matchMedia('(prefers-reduced-motion: reduce)').matches?0:uiClock);gl.bindVertexArray(emptyVao);gl.activeTexture(gl.TEXTURE4);gl.bindTexture(gl.TEXTURE_2D,final?compositeColor:sceneColor);u1i(gl,copyLoc.uColor,4);
+ gl.activeTexture(gl.TEXTURE5);gl.bindTexture(gl.TEXTURE_2D,sceneDepth);u1i(gl,copyLoc.uDepth,5);u1i(gl,copyLoc.uFinal,final?1:0);updateGlassRects();u1i(gl,copyLoc.uGlassCount,glassCount);gl.uniform4fv(copyLoc['uGlassRects[0]'],glassRects);u2f(gl,copyLoc.uViewport,fboW,fboH);gl.drawArrays(gl.TRIANGLES,0,3);gl.depthFunc(gl.LESS);qa.drawCalls++;
+}
+function resize(){const mobile=innerWidth<760,scale=QA_MODE?.68:(mobile?Math.min(1,devicePixelRatio||1):Math.min(1.15,devicePixelRatio||1)),w=Math.max(2,Math.floor(canvas.clientWidth*scale)),h=Math.max(2,Math.floor(canvas.clientHeight*scale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;createSceneFbo(w,h)}camera.dirty=true;glassDirty=true;resizePending=false}
+const fireUniformData=new Float32Array(15);
+function sendFireUniforms(loc){fireUniformData.fill(0);FIRE_SOURCES.forEach((p,i)=>fireUniformData.set(p,i*3));gl.uniform3fv(loc['uFirePositions[0]'],fireUniformData);u1i(gl,loc.uFireCount,FIRE_SOURCES.length);u1f(gl,loc.uFireIntensity,config.fireEnabled?config.fire:0);}
+function drawSky(sun){gl.useProgram(skyProgram);gl.bindVertexArray(emptyVao);setCommon(skyLoc);u3fv(gl,skyLoc.uCamForward,camera.forward);u3fv(gl,skyLoc.uCamRight,camera.right);u3fv(gl,skyLoc.uCamUp,camera.up);u3fv(gl,skyLoc.uSunDir,sun);u1f(gl,skyLoc.uAspect,canvas.width/canvas.height);u1f(gl,skyLoc.uTanFov,Math.tan(camera.fov/2));u1f(gl,skyLoc.uExposure,config.exposure);u1i(gl,skyLoc.uMode,modeInt());gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.drawArrays(gl.TRIANGLES,0,3);qa.drawCalls++}
+function drawSolid(geo,sun){gl.useProgram(solidProgram);gl.bindVertexArray(geo.vao);setCommon(solidLoc);um4(gl,solidLoc.uView,camera.view);um4(gl,solidLoc.uProj,camera.proj);u3fv(gl,solidLoc.uCamera,camera.eye);u3fv(gl,solidLoc.uSunDir,sun);u3fv(gl,solidLoc.uFirePos,[FIRE_CENTER[0],fireY,FIRE_CENTER[2]]);sendFireUniforms(solidLoc);u1f(gl,solidLoc.uExposure,config.exposure);u4f(gl,solidLoc.uDomain,DOMAIN.minX,DOMAIN.minZ,DOMAIN.width,DOMAIN.depth);u1i(gl,solidLoc.uMode,modeInt());gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,wetTexture);u1i(gl,solidLoc.uWet,0);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,rockTexture);u1i(gl,solidLoc.uRockHeight,3);gl.enable(gl.DEPTH_TEST);gl.depthMask(true);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.disable(gl.BLEND);gl.drawElements(gl.TRIANGLES,geo.count,gl.UNSIGNED_INT,0);qa.drawCalls++;qa.triangles+=geo.triangles}
+function renderOpaque(now){const sun=sunDirection();gl.bindFramebuffer(gl.FRAMEBUFFER,sceneFbo);gl.viewport(0,0,canvas.width,canvas.height);gl.depthMask(true);gl.colorMask(true,true,true,true);gl.depthFunc(gl.LESS);gl.clearColor(.56,.73,.78,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);drawSky(sun);drawSolid(terrainGeo,sun);drawSolid(rocksGeo,sun);drawSolid(ringGeo,sun);drawSolid(logsGeo,sun);drawSolid(vegetationGeo,sun);drawSolid(canoeGeo,sun);gl.bindFramebuffer(gl.FRAMEBUFFER,null);opaqueDirty=false;lastOpaque=now;qa.opaqueCacheRenders++}
+function blitOpaque(){copyScene(false)}
+function rebuildOpaqueDepth(sun){}
+function drawWater(sun){gl.useProgram(waterProgram);gl.bindVertexArray(waterGeo.vao);setCommon(waterLoc);um4(gl,waterLoc.uView,camera.view);um4(gl,waterLoc.uProj,camera.proj);u3fv(gl,waterLoc.uCamera,camera.eye);u3fv(gl,waterLoc.uSunDir,sun);u2f(gl,waterLoc.uResolution,canvas.width,canvas.height);u4f(gl,waterLoc.uDomain,DOMAIN.minX,DOMAIN.minZ,DOMAIN.width,DOMAIN.depth);u1f(gl,waterLoc.uClarity,config.clarity);u1f(gl,waterLoc.uFoamGain,config.foam);u1f(gl,waterLoc.uRefraction,config.refraction);u1f(gl,waterLoc.uExposure,config.exposure);sendFireUniforms(waterLoc);u1i(gl,waterLoc.uMode,modeInt());gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,sceneColor);u1i(gl,waterLoc.uScene,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,foamTexture);u1i(gl,waterLoc.uFoam,1);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,sceneDepth);u1i(gl,waterLoc.uSceneDepth,2);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,rockTexture);u1i(gl,waterLoc.uRockHeight,3);gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.drawElements(gl.TRIANGLES,waterGeo.count,gl.UNSIGNED_INT,0);gl.depthMask(true);qa.drawCalls++;qa.triangles+=waterGeo.triangles}
+function drawMedia(){if(liveParticles<=0)return;gl.useProgram(mediaProgram);sendParams(mediaLoc);u1f(gl,mediaLoc.uTime,physicalTime);gl.bindVertexArray(mediaVao);um4(gl,mediaLoc.uView,camera.view);um4(gl,mediaLoc.uProj,camera.proj);u2f(gl,mediaLoc.uResolution,canvas.width,canvas.height);u1f(gl,mediaLoc.uExposure,config.exposure);gl.enable(gl.DEPTH_TEST);gl.depthMask(false);gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.drawArraysInstanced(gl.TRIANGLE_STRIP,0,4,liveParticles);gl.depthMask(true);qa.drawCalls++}
+function metrics(now){if(now-lastMetrics<250)return;lastMetrics=now;$('rockCount').textContent=qa.rockCount;$('ringCount').textContent=qa.fireRingRockCount;$('foamCount').textContent=qa.foamActiveCells;$('smokeCount').textContent=qa.smokeParticles;$('flameCount').textContent=qa.flameParticles;$('panelFps').textContent=fpsValue.toFixed(0);$('clock').textContent=`${physicalTime.toFixed(2)} s`;$('fps').textContent=`${fpsValue.toFixed(0)} fps`;$('resolution').textContent=`${canvas.width} × ${canvas.height}`;$('windReadout').textContent=`风 ${config.wind.toFixed(1)} m/s · 烟延展 ${(qa.smokeExtentMeters||0).toFixed(0)} m`;$('status').textContent=config.paused?'统一海洋 · 已暂停':config.mode==='diagnostic'?'统一海洋 · 数值诊断':'海岛—远洋 · 实时运行';$('metrics').textContent=[`版本 ${VERSION}`,`物理步长 ${(1/120).toFixed(6)} s`,`岸石 ${qa.rockCount} · 卡斯特体 ${qa.karstFormationCount||0} · 树/芭蕉 ${qa.treeCount||0} · 独木舟 ${qa.canoeCount||0}`,`烟雾 ${qa.smokeParticles} · 火焰 ${qa.flameParticles} · 水雾 ${qa.sprayParticles}`,`泡沫活跃单元 ${qa.foamActiveCells} · 湿润单元 ${qa.wetCells}`,`不透明场重建 ${qa.opaqueCacheRenders} · 复用 ${qa.opaqueCacheReuses}`,`显示延迟未追赶 ${qa.displayLagSkippedSeconds.toFixed(3)} s`,`本帧绘制 ${qa.drawCalls} · 三角形 ${qa.triangles.toLocaleString()}`,`珊瑚礁深槽 ${REEF_PITS.length} · 海面半径 ${OCEAN_OUTER_RADIUS} m`,`图片资产 0 · 外部模型 0 · CDN 0`].join('\n')}
+function captureVisualProbe(){
+ const w=canvas.width,h=canvas.height,pixels=new Uint8Array(w*h*4);gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+ let sum=0,top=0,topN=0,count=0,nonDark=0,blue=0,earth=0,warm=0,nearWhite=0,edgeN=0,edgeWhite=0,cornerN=0,cornerWhite=0;const step=Math.max(1,Math.floor(Math.min(w,h)/320));
+ for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){
+  const i=(y*w+x)*4,r=pixels[i]/255,g=pixels[i+1]/255,b=pixels[i+2]/255,lum=.2126*r+.7152*g+.0722*b,chroma=Math.max(r,g,b)-Math.min(r,g,b),white=lum>.78&&chroma<.10;
+  sum+=lum;count++;if(y>h*.72){top+=lum;topN++;}if(lum>.08)nonDark++;if(b>.24&&b>r*1.03&&g>r*.94)blue++;if(r>.19&&r>g*1.04&&g>b*1.02)earth++;if(r>.68&&g>.10&&g<r*.78&&b<g*.62)warm++;if(white)nearWhite++;
+  const lowerWaterEdge=y<h*.66&&(x<w*.045||x>w*.955||y<h*.035);if(lowerWaterEdge){edgeN++;if(white)edgeWhite++;}
+  const corner=y<h*.45&&(x<w*.085||x>w*.915)&&y<h*.12;if(corner){cornerN++;if(white)cornerWhite++;}
+ }
+ const edgeNearWhiteRatio=edgeWhite/Math.max(1,edgeN),cornerNearWhiteRatio=cornerWhite/Math.max(1,cornerN);
+ const probe={averageLuminance:sum/count,topLuminance:top/Math.max(1,topN),nonDarkRatio:nonDark/count,blueWaterSkyRatio:blue/count,earthSandRockRatio:earth/count,warmFireRatio:warm/count,nearWhiteRatio:nearWhite/count,edgeNearWhiteRatio,cornerNearWhiteRatio,exposedPlaneDetected:edgeNearWhiteRatio>.055||cornerNearWhiteRatio>.08,width:w,height:h};
+ qa.visualProbe=probe;qa.exposedPlaneDetected=probe.exposedPlaneDetected;
+ const payload={version:VERSION,ready:qa.ready,error:qa.errors.at(-1)||null,physicalTime,composition:{rockCount:qa.rockCount,fireRingRockCount:qa.fireRingRockCount,logCount:qa.logCount,smokeParticles:qa.smokeParticles,flameParticles:qa.flameParticles,sprayParticles:qa.sprayParticles,foamActiveCells:qa.foamActiveCells,wetCells:qa.wetCells,curlLayerTriangles:qa.curlLayerTriangles,waveWallSegments:qa.waveWallSegments},visualProbe:probe,persistentImageAssets:0,externalModels:0,externalCdn:0};qaProbe.textContent=JSON.stringify(payload);document.body.dataset.qaReady='true';return probe;
+}
+let curlProgram,curlLoc,curlVao,curlBuffer,curlIndex,curlCount=0,curlLast=-1;
+function initCurl(){curlProgram=program(gl,SH.CURL_VS,SH.CURL_FS,'kinematic curling sheet');curlLoc=locations(gl,curlProgram,['uView','uProj',...Object.keys(waterLoc).filter(k=>k.startsWith('u'))]);curlVao=gl.createVertexArray();curlBuffer=gl.createBuffer();curlIndex=gl.createBuffer();gl.bindVertexArray(curlVao);gl.bindBuffer(gl.ARRAY_BUFFER,curlBuffer);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,32,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,32,12);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,2,gl.FLOAT,false,32,24);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,curlIndex);gl.bindVertexArray(null);}
+function updateCurl(time){
+ const verts=[],indices=[],counts=[0,0,0],N=QA_MODE?72:(innerWidth<760?120:216),K=QA_MODE?11:20,level=waterLevel(time,config),travel=((time/config.period)%1+1)%1,dir=flowDirection(config.swellDir),gains=[config.curlOuter,config.curlMiddle,config.curlInner];
+ for(let layer=0;layer<3;layer++){
+  const layerGain=gains[layer];if(layerGain<.001)continue;
+  const start=verts.length/8,masks=[];
+  for(let a=0;a<=N;a++){
+   const theta=a/N*TAU,nx=Math.cos(theta),nz=Math.sin(theta),facing=smooth(-.10,.80,-(nx*dir[0]+nz*dir[1]));
+   const order=[2.72,1.51,.52][layer],phaseShift=(noise2(nx*2.1+layer*6.7,nz*2.1-layer*3.5,743+layer*31)-.5)*.34+.07*Math.sin(theta*(2.2+layer*.7)-time*.035),localTravel=fract(time/config.period+phaseShift),travelScale=[1,1.08,.94][layer];
+   const nominalR=islandRadius(theta)+order*SURF_SPACING-localTravel*SURF_SPACING*travelScale,px=nx*nominalR,pz=nz*nominalR,segmented=Math.pow(breakerPacket(px,pz,time,layer),1.25),largeBreak=smooth(.16,.76,.55+.27*Math.sin(theta*(2.4+layer*.7)+layer*2.6)+.12*Math.sin(theta*(8.7+layer*1.9)-time*.05));
+   const gap=smooth(.27,.68,noise2(nx*2.7+layer*7.2-time*.005,nz*2.7-layer*4.8+time*.004,701+layer*29)),mask=clamp(facing*segmented*largeBreak*gap,0,1);masks.push(mask);
+   const centerR=nominalR-breakerWarp(px,pz,time,layer)*.72,w=waveAt(nx*centerR,nz*centerR,time,config),depthScale=Math.min(3.2,Math.max(.50,w.depth*1.20));
+   const angularGain=layerGain*(.78+.18*Math.sin(theta*3+time*.52)+.08*Math.sin(theta*13-time*.27)),H=depthScale*config.swell*(.40+.48*Math.max(0,angularGain))*(.16+.84*mask);
+   for(let j=0;j<=K;j++){
+    const u=j/K,baseR=centerR;let rr,yy;
+    if(u<=.76){const q=u/.76,e=q*q*(3-2*q);rr=baseR+config.curlShoulder*.12*(1-e)+.11*Math.sin(theta*7.7+layer*1.3+u*2.4)+.06*Math.sin(theta*17.2-time*.08);yy=level+.025+H*e;}
+    else{const q=(u-.76)/.24,A=q*Math.PI*.90;rr=baseR-config.curlLip*(.48+.30*Math.max(0,angularGain))*Math.sin(A);yy=level+.025+H-H*.21*(1-Math.cos(A));}
+    yy+=.075*Math.sin(theta*(11+layer*2)-time*.50+u*5.0)*mask*smooth(.42,1.0,u);
+    const x=Math.cos(theta)*rr,z=Math.sin(theta)*rr,profileMask=mask*(.82+.18*Math.sin(theta*23+layer*.9+time*.16));
+    verts.push(x,yy,z,0,0,0,u,clamp(profileMask,0,1));
+   }
+  }
+  for(let a=0;a<N;a++)for(let j=0;j<K;j++){
+   const a0=start+a*(K+1)+j,b=a0+1,c=a0+K+1,d=c+1,active=Math.max(masks[a],masks[a+1]);
+   for(const [A,B,C] of [[a0,c,b],[b,c,d]]){
+    const u=[0,1,2].map(k=>verts[B*8+k]-verts[A*8+k]),v=[0,1,2].map(k=>verts[C*8+k]-verts[A*8+k]),n=cross3(u,v);if(Math.hypot(...n)<1e-8)continue;indices.push(A,B,C);if(active>.08)counts[layer]++;for(const id of [A,B,C])for(let k=0;k<3;k++)verts[id*8+3+k]+=n[k];
+   }
+  }
+ }
+ for(let i=0;i<verts.length;i+=8){const n=normalize3(verts.slice(i+3,i+6));for(let k=0;k<3;k++)verts[i+3+k]=n[k];}
+ gl.bindBuffer(gl.ARRAY_BUFFER,curlBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.DYNAMIC_DRAW);gl.bindVertexArray(curlVao);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,curlIndex);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.DYNAMIC_DRAW);gl.bindVertexArray(null);
+ curlCount=indices.length;qa.curlLayerTriangles=counts;qa.waveWallSegments=counts.reduce((a,b)=>a+b,0);qa.curlUpdateCount=(qa.curlUpdateCount||0)+1;curlLast=time;
+}
+function drawCurl(sun){if(!curlCount)return;const oldLoc=waterLoc,oldProgram=waterProgram,oldGeo=waterGeo;waterLoc=curlLoc;waterProgram=curlProgram;waterGeo={vao:curlVao,count:curlCount,triangles:curlCount/3};drawWater(sun);waterLoc=oldLoc;waterProgram=oldProgram;waterGeo=oldGeo;}
+function disposeGeo(g){if(!g)return;gl.deleteVertexArray(g.vao);if(g.vbo)gl.deleteBuffer(g.vbo);if(g.ibo)gl.deleteBuffer(g.ibo);}
+function rebuildWorld(){
+ rebuildDefinitions(config);
+ for(const geo of [terrainGeo,rocksGeo,ringGeo,logsGeo,vegetationGeo,canoeGeo])disposeGeo(geo);
+ const mobile=innerWidth<760,terrainRes=QA_MODE?96:(mobile?150:220),rockRes=QA_MODE?256:(mobile?480:640);terrainGeo=gridMesh(gl,terrainRes,terrainRes,DOMAIN.minX,DOMAIN.maxX,DOMAIN.minZ,DOMAIN.maxZ,bedHeight,0);
+ const rg=rockGeometry([...COAST_ROCKS,...KARST_ROCKS]);rocksGeo=mesh(gl,rg.data,rg.indices);rockField=compileRockHeight(rg,rockRes,rockRes);
+ if(!rockTexture)rockTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,rockTexture);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.R32F,rockField.w,rockField.h,0,gl.RED,gl.FLOAT,rockField.top);
+ ringGeo=rockMesh(gl,FIRE_RING);logsGeo=logMesh(gl);vegetationGeo=vegetationMesh(gl);canoeGeo=canoeMesh(gl);fireY=FIRE_CENTER[1];
+ Object.assign(qa,{rockCount:COAST_ROCKS.length,karstFormationCount:KARST_ROCKS.length,fireRingRockCount:FIRE_RING.length,logCount:LOGS.length,fireSources:FIRE_SOURCES.length,rockDegenerateTriangles:rg.degenerate,treeCount:VEGETATION_COUNT,canoeCount:1,geometryRebuilds:(qa.geometryRebuilds||0)+1});
+ geometryDirty=false;opaqueDirty=true;curlLast=-1;
+}
+
+function frame(now){
+ requestAnimationFrame(frame);
+ if(document.hidden){lastFrame=now;return}
+ const raw=Math.max(0,(now-lastFrame)/1000),elapsed=Math.min(raw,.1);lastFrame=now;uiClock=now/1000;
+ const oldResize=resizePending;if(resizePending)resize();if(geometryDirty)rebuildWorld();
+ let changed=opaqueDirty||oldResize||!!cameraTween||config.autoOrbit>0;
+ if(cameraTween){const t=clamp((now-cameraTween.start)/(config.cameraTransition*1000),0,1),e=t*t*(3-2*t),a=cameraTween.a,b=cameraTween.b;
+ camera.target=a.target.map((x,i)=>mix(x,b.target[i],e));camera.yaw=mix(a.yaw,b.yaw,e);camera.pitch=mix(a.pitch,b.pitch,e);camera.distance=mix(a.distance,b.distance,e);camera.fov=mix(a.fov,b.fov,e);opaqueDirty=true;if(t===1)cameraTween=null;}
+ if(config.autoOrbit>0&&!config.paused){camera.yaw+=config.autoOrbit*Math.PI/180*elapsed;opaqueDirty=true;}
+ if(!config.paused){
+  accumulator+=elapsed;qa.displayLagSkippedSeconds+=Math.max(0,raw-elapsed);
+  while(accumulator>=qa.fixedStepS){physicalTime+=qa.fixedStepS;accumulator-=qa.fixedStepS;fieldAccumulator+=qa.fixedStepS;particleAccumulator+=qa.fixedStepS;}
+  if(fieldAccumulator>=.12){updateFields(fieldAccumulator,physicalTime);fieldAccumulator=0;}
+  while(particleAccumulator>=1/30){updateParticles(1/30,physicalTime);particleAccumulator-=1/30;}
+  changed=true;
+ }
+ updateCamera(canvas.width/canvas.height);
+ if(changed){
+  if(curlLast<0||Math.abs(physicalTime-curlLast)>1/24||opaqueDirty)updateCurl(physicalTime);
+  qa.drawCalls=0;qa.triangles=0;
+  if(opaqueDirty||(!config.paused&&now-lastOpaque>300))renderOpaque(now);else qa.opaqueCacheReuses++;
+  blitOpaque();const sun=sunDirection();if(config.waterVisible){drawWater(sun);drawCurl(sun)}drawMedia();qa.sceneFrames=(qa.sceneFrames||0)+1;
+ }
+ const flowing=config.glassSpeed>0&&config.glassFlow>0&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(changed||glassDirty||flowing)copyScene(true);else{metrics(now);return}
+ frameCount++;qa.frames++;qa.physicalTime=physicalTime;qa.uiTime=uiClock;qa.glError=gl.getError();
+ if(qa.glError!==gl.NO_ERROR){qa.glErrors??=[];if(qa.glErrors.length<20)qa.glErrors.push({frame:qa.frames,code:qa.glError});}
+ if(now-fpsClock>=1000){fpsValue=frameCount*1000/(now-fpsClock);qa.fps=fpsValue;frameCount=0;fpsClock=now;}
+ metrics(now);if(query.has('qa')&&!qaScheduled&&qa.frames>5){qaScheduled=true;captureVisualProbe();}
+}
+async function init(){
+ progress.textContent='建立海岛、数值水体与玻璃管线';
+ gl=canvas.getContext('webgl2',{antialias:false,alpha:false,depth:true,stencil:false,premultipliedAlpha:false,preserveDrawingBuffer:query.has('qa'),powerPreference:'default'});
+ if(!gl)throw Error('当前浏览器未提供 WebGL2');qa.webgl2=true;
+ skyProgram=program(gl,SH.SKY_VS,SH.SKY_FS,'sky');solidProgram=program(gl,SH.SOLID_VS,SH.SOLID_FS,'solid');waterProgram=program(gl,SH.WATER_VS,SH.WATER_FS,'water');mediaProgram=program(gl,SH.MEDIA_VS,SH.MEDIA_FS,'media');copyProgram=program(gl,SH.COPY_VS,SH.COPY_FS,'glass');
+ const common=['uTime','uSeaLevel','uSwell','uPeriod','uWind'];
+ copyLoc=locations(gl,copyProgram,['uColor','uDepth','uFinal','uGlassCount','uGlassRects[0]','uViewport','uUiTime']);
+ skyLoc=locations(gl,skyProgram,[...common,'uCamForward','uCamRight','uCamUp','uSunDir','uAspect','uTanFov','uExposure','uMode']);
+ solidLoc=locations(gl,solidProgram,[...common,'uView','uProj','uCamera','uSunDir','uFirePos','uFireIntensity','uFirePositions[0]','uFireCount','uExposure','uWet','uRockHeight','uDomain','uMode']);
+ waterLoc=locations(gl,waterProgram,[...common,'uView','uProj','uCamera','uSunDir','uFirePositions[0]','uFireCount','uFireIntensity','uResolution','uScene','uFoam','uSceneDepth','uRockHeight','uDomain','uClarity','uFoamGain','uRefraction','uExposure','uMode']);
+ mediaLoc=locations(gl,mediaProgram,['uView','uProj','uResolution','uExposure','uTime']);emptyVao=gl.createVertexArray();
+ syncParams();rebuildWorld();const mobile=innerWidth<760,oceanAngular=QA_MODE?144:(mobile?192:256),oceanRadial=QA_MODE?112:(mobile?144:176);waterGeo=oceanMesh(gl,oceanAngular,oceanRadial,OCEAN_OUTER_RADIUS);
+ foamTexture=makeR8(gl,FIELD_W,FIELD_H,foamBytes);wetTexture=makeR8(gl,FIELD_W,FIELD_H,wetBytes);
+ mediaVao=gl.createVertexArray();mediaBuffer=gl.createBuffer();gl.bindVertexArray(mediaVao);gl.bindBuffer(gl.ARRAY_BUFFER,mediaBuffer);gl.bufferData(gl.ARRAY_BUFFER,particleData.byteLength,gl.DYNAMIC_DRAW);
+ gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,4,gl.FLOAT,false,32,0);gl.vertexAttribDivisor(0,1);
+ gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,4,gl.FLOAT,false,32,16);gl.vertexAttribDivisor(1,1);gl.bindVertexArray(null);
+ initCurl();installUI();installCamera();
+ addEventListener('resize',()=>{resizePending=true;glassDirty=true});document.addEventListener('visibilitychange',()=>lastFrame=performance.now());
+ setView(query.get('view')||'overview',true);resize();updateCamera(canvas.width/canvas.height);
+ // Warm-up is explicit simulation history, not a backdrop or image sequence.
+ const mediaWarmup=QA_MODE?8:14;for(let t=-mediaWarmup;t<0;t+=.16)updateParticles(.16,t);qa.mediaWarmupSeconds=mediaWarmup;
+ const foamWarmup=QA_MODE?2.5:4;for(let t=-foamWarmup;t<0;t+=.25)updateFields(.25,t);qa.foamWarmupSeconds=foamWarmup;
+ updateCurl(0);qa.ready=true;qa.parameterCount=PARAMS.length;qa.parameterPages=3;
+ const api={qa,getState:()=>({version:VERSION,physicalTime,camera:{eye:[...camera.eye],target:[...camera.target],distance:camera.distance,fov:camera.fov},config:{...config},composition:{rockCount:qa.rockCount,fireSources:qa.fireSources,smokeSources:qa.smokeSourceCount,smokeExtentMeters:qa.smokeExtentMeters,curlLayerTriangles:qa.curlLayerTriangles},model:'single continuous island-to-ocean field with world-space deep spectrum, irregular breaker packets, transported foam, reef-pit bathymetry and procedural clouds; no 3D conservative solver'}),setConfig:applyParam,setView,setPage,
+ pause:()=>{config.paused=true;$('pause').textContent='继续运行'},play:()=>{config.paused=false;$('pause').textContent='暂停';lastFrame=performance.now()},
+ captureVisualProbe,sampleBed:(x,z)=>bedHeight(x,z),sampleRock:(x,z)=>rockField.sample(x,z),sampleWater:(x,z,t=physicalTime)=>waveAt(x,z,t,config),sampleWind:(x,y,z,t=physicalTime)=>windAt(x,y,z,t,config),getSources:()=>FIRE_SOURCES.map(s=>[...s]),getReefPitCenters:()=>reefPitCenters(config),
+ policy:{imageGenerationMode:false,persistentImageAssets:0,treeCount:VEGETATION_COUNT,full3DFluid:false,singleScene:true,worldSpaceReefBathymetry:true,bananaUse:'cultivated-remnant-candidate',banyanUse:'palau-ficus-family-plausible',karstGeometry:'procedural-world-foundation-not-survey-truth'},reefPits:REEF_PITS.map(x=>({...x})),params:PARAMS};
+ window.OceanIsland=window.OceanCoast=window.OceanCoastR012=window.OceanMotherR018=api;window.__OCEAN_UNIFIED_SCENE__={version:VERSION,buildId:'survivor-palau-v0131-natural-world-runtime-fix',singleScene:true,modeSwitchRemoved:true,farOceanRadius:OCEAN_OUTER_RADIUS,reefPitCount:REEF_PITS.length,foamModel:'advected patch foam with multi-scale shoreline breakup and wave-facing packet gates',cloudModel:'broken bright cumulus cells with shaded bases and blue-sky gaps',visualApproved:false,productionApproved:false};document.body.dataset.oceanScene='unified';loading.classList.add('done');lastFrame=performance.now();requestAnimationFrame(frame);
+}
+init().catch(fail);
+
+// END app.mjs
+
+</script></body></html>
