@@ -11,10 +11,10 @@ const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 // allowed to change sharply where it cancels a multi-metre baseline wall; constraining the
 // derivative or amplitude of the correction itself is logically wrong. This round replaces the
 // failed drain-masked repair with a band-wide profile projection that changes elevation only,
-// while preserving every planimetric drainage carrier and all lower agricultural-slope geometry.
+// while preserving every planimetric drainage carrier and the lower agricultural slope from z>=-168.
 // Because water state is still unknown, preserving an inherited false uphill step on a drainage
 // axis would be less defensible than repairing the longitudinal ground profile through it.
-export const wallRepairBand={z0:-226,z1:-170,node0:-222,node1:-174,nodeStep:2,allowedRisePer2m:.24};
+export const wallRepairBand={z0:-226,z1:-168,node0:-222,node1:-174,nodeStep:2,allowedRisePer2m:.24};
 
 function isotonicNonIncreasing(values,weights){
   const blocks=[];
@@ -39,8 +39,6 @@ function constrainedProfile(x){
   for(let z=wallRepairBand.node0;z<=wallRepairBand.node1+1e-9;z+=wallRepairBand.nodeStep){zs.push(z);base.push(R18.height(x,z))}
   const limit=wallRepairBand.allowedRisePer2m;
   const transformed=base.map((h,i)=>h-i*limit);
-  // Strong endpoint weights keep the projection tied to inherited macro elevations while the
-  // interior is free to remove the false wall.
   const weights=base.map((_,i)=>i<4||i>base.length-5?12:1);
   const projected=isotonicNonIncreasing(transformed,weights).map((g,i)=>g+i*limit);
   const p={zs,base,projected};profileCache.set(key,p);return p;
@@ -54,11 +52,11 @@ function projectedHeight(x,z){
 }
 export function upperWallContinuityRepairDelta(x,z){
   if(z<=wallRepairBand.z0||z>=wallRepairBand.z1)return 0;
-  // 12 m entry/exit ramps prevent a new horizontal seam. The inherited wall itself sits well
-  // inside the full-strength zone. Do not amplitude-clamp the repair: that was the remaining R20
-  // failure because a 5.2 m inherited false step cannot be cancelled by an arbitrary 3.6 m cap.
-  // Acceptance is instead imposed on the FINAL terrain and spatial support in QA.
-  const env=S(-226,-214,z)*(1-S(-182,-170,z));
+  // The first R20 attempt proved that ending the blend at -170 over only 12 m merely moved a
+  // residual 1.51 m/4 m uphill step to the exit. Widen the downstream return to baseline across
+  // 22 m (-190..-168), while keeping z>=-168 exactly inherited. The correction remains unclamped;
+  // final terrain continuity and spatial support are the acceptance objects.
+  const env=S(-226,-214,z)*(1-S(-190,-168,z));
   if(env<=0)return 0;
   const base=R18.height(x,z),target=projectedHeight(x,z);
   return (target-base)*env;
@@ -83,8 +81,8 @@ export const snapshot={
   waterStateKnown:false,
   round20:{
     scope:'replace failed R19 upper-wall repair with final-terrain longitudinal continuity projection; no terrace, parcel, irrigation, road or task work',
-    method:'weighted isotonic projection of every x-profile over z=-222..-174 with <=0.48 m uphill rise per 4 m in the full-strength zone; 12 m longitudinal entry/exit ramps; planimetric drainage carriers unchanged; no arbitrary amplitude clamp',
-    logicCorrection:'R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates repaired final terrain plus spatial support instead',
+    method:'weighted isotonic projection of every x-profile over z=-222..-174 with <=0.48 m uphill rise per 4 m in the full-strength zone; 12 m upstream entry and 22 m downstream return to baseline; planimetric drainage carriers unchanged; z>=-168 unchanged; no arbitrary amplitude clamp',
+    logicCorrection:'R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude; the second attempt then proved an overly short exit blend simply relocates the barrier. R20 gates repaired final terrain plus spatial support and uses a wider downstream continuity blend',
     referenceUse:'user references and MrRolord hierarchy are used only to require continuous source-to-slope morphology and drainage-first landform logic; no dimensions are extracted',
     evidenceClass:'synthetic macro-landform continuity repair; not surveyed Yunnan microtopography, channel section or hydraulic state',
     forbiddenClaims:['surveyed upper-slope section','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
