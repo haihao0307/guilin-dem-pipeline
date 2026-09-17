@@ -1,0 +1,140 @@
+name: Landscape R5.K2.G5 Volumetric Form
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r5/build_g5.py
+      - .github/workflows/landscape-r5-k2-geometry-r5.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build G5 volumetric form candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r5/build_g5.py
+          python workbenches/landscape-surface-r5-k2-geometry-r5/build_g5.py
+
+      - name: Static volumetric and browser QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          root = Path('workbenches/landscape-surface-r5-k2-geometry-r5')
+          s = (root / 'index.html').read_text(encoding='utf-8')
+          b = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+          required = [
+              'LANDSCAPE_VOLUMETRIC_MICROSCOPE_R2',
+              'LANDSCAPE_SOIL_SOURCE_FIELD_R3',
+              'function sourceDomain',
+              'function sourceFormOffset',
+              'domainWarpBeforeMeshing:true',
+              'caveDomainWarped:true',
+              'jointDomainWarped:true',
+              'let a=(X+6)/6.8',
+              '((X-12)/10)',
+              'cut(e,D.x,D.y,D.z)',
+              'id="sourceForm"', 'id="sourceScale"',
+              'id="sourceWarp"', 'id="sourceErosion"',
+              '灰模形体验收',
+              'scope:0', 'micro:0', 'mode:1',
+          ]
+          for token in required:
+              assert token in s, token
+          assert b['schema'] == 'LANDSCAPE_R5_K2_G5_VOLUMETRIC_FORM_V1'
+          assert b['geometryFieldCoupled'] is True
+          assert b['volumetricGeometry']['fieldCoupled'] is True
+          assert b['soilGeometry']['fieldCoupled'] is True
+          assert b['shapeProofView']['shaderShellDefault'] == 0
+          assert b['shapeProofView']['microNormalDefault'] == 0
+          blocks = []
+          for sid in ('worldSource', 'generateSource'):
+              m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, s, re.S)
+              assert m, sid
+              blocks.append(m.group(1))
+          Path('/tmp/landscape-g5-worker.js').write_text('\n'.join(blocks), encoding='utf-8')
+          marker = "</script><script>'use strict';"
+          assert marker in s
+          app = "'use strict';" + s.rsplit(marker, 1)[1].rsplit('</script>', 1)[0]
+          Path('/tmp/landscape-g5-app.js').write_text(app, encoding='utf-8')
+          print(json.dumps(b, ensure_ascii=False, indent=2))
+          PY
+          node --check /tmp/landscape-g5-worker.js
+          node --check /tmp/landscape-g5-app.js
+
+      - name: Prepare numerical form QA
+        run: |
+          cp /tmp/landscape-g5-worker.js /tmp/landscape-g5-runtime.js
+          cat >> /tmp/landscape-g5-runtime.js <<'JS'
+          const fs=require('fs');
+          const BASE={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,sourceForm:0,sourceScale:7.5,sourceWarp:0,sourceErosion:0,geo:.60,concavity:.60,spikeGuard:.95,soilMicro:0};
+          function part(data,name){const p=data.parts.find(x=>x.name===name);if(!p)throw Error('missing part '+name);return p;}
+          function signature(report,name){const p=report.parts.find(x=>x.name===name);if(!p)throw Error('missing report part '+name);return p.signature;}
+          function silhouette(p){
+            const yMin=-4,yMax=50,yBins=18,aBins=36,out=new Float64Array(yBins*aBins);out.fill(NaN);
+            const V=p.vertices,s=p.stride||16;
+            for(let i=0;i<V.length;i+=s){let x=V[i]+3,y=V[i+1],z=V[i+2];if(y<yMin||y>yMax)continue;let yi=Math.max(0,Math.min(yBins-1,Math.floor((y-yMin)/(yMax-yMin)*yBins))),a=(Math.atan2(z,x)+Math.PI*2)%(Math.PI*2),ai=Math.floor(a/(Math.PI*2)*aBins),r=Math.hypot(x,z),k=yi*aBins+ai;if(!Number.isFinite(out[k])||r>out[k])out[k]=r;}
+            return Array.from(out);
+          }
+          function topography(p){
+            const xMin=-50,xMax=50,zMin=-42,zMax=42,xb=25,zb=21,out=new Float64Array(xb*zb);out.fill(-Infinity);
+            const V=p.vertices,s=p.stride||16;
+            for(let i=0;i<V.length;i+=s){let x=V[i],y=V[i+1],z=V[i+2];if(x<xMin||x>xMax||z<zMin||z>zMax)continue;let xi=Math.max(0,Math.min(xb-1,Math.floor((x-xMin)/(xMax-xMin)*xb))),zi=Math.max(0,Math.min(zb-1,Math.floor((z-zMin)/(zMax-zMin)*zb))),k=zi*xb+xi;if(y>out[k])out[k]=y;}
+            return Array.from(out);
+          }
+          function delta(a,b){let sum=0,max=0,count=0,changed=0;for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i])||!Number.isFinite(b[i]))continue;let d=Math.abs(a[i]-b[i]);sum+=d;max=Math.max(max,d);count++;if(d>.18)changed++;}return{maxAbsM:max,meanAbsM:sum/Math.max(1,count),comparedBins:count,changedBins:changed};}
+          function run(label,overrides={}){
+            const cfg={...BASE,...overrides},data=generateScene(cfg,()=>{}),r=data.report,src=r.sourceMicroscope,soil=r.soilMicroscope,g=r.microscopeGeometry;
+            if(!src||src.schema!=='LANDSCAPE_VOLUMETRIC_MICROSCOPE_R2')throw Error(label+': missing volumetric report');
+            if(!src.fieldCoupled||!src.domainWarpBeforeMeshing||!src.caveDomainWarped||!src.jointDomainWarped)throw Error(label+': source geometry is not fully volumetric');
+            if(!soil||soil.schema!=='LANDSCAPE_SOIL_SOURCE_FIELD_R3'||!soil.fieldCoupled)throw Error(label+': soil source geometry missing');
+            if(g.triangleFlipCount!==0||g.protectedDriftCount!==0||g.baseTriangleFlipCount!==0)throw Error(label+': secondary geometry safety failure');
+            return{label,config:cfg,sourceMicroscope:src,soilMicroscope:soil,microscopeGeometry:g,mainSignature:signature(r,'主岩体'),soilSignature:signature(r,'土体与风化基底'),mainSilhouette:silhouette(part(data,'主岩体')),soilTopography:topography(part(data,'土体与风化基底')),mainVertices:r.mainVertices,mainTriangles:r.mainTriangles,geometryGridM:r.geometryGridM};
+          }
+          const baseline=run('baseline');
+          const standard=run('standard',{sourceForm:1.30,sourceScale:7.5,sourceWarp:1.40,sourceErosion:1.10,soilMicro:1.00});
+          const strong=run('strong',{sourceForm:2.10,sourceScale:8.6,sourceWarp:1.85,sourceErosion:1.45,soilMicro:1.35});
+          const silStandard=delta(baseline.mainSilhouette,standard.mainSilhouette),silStrong=delta(baseline.mainSilhouette,strong.mainSilhouette),soilStandard=delta(baseline.soilTopography,standard.soilTopography),soilStrong=delta(baseline.soilTopography,strong.soilTopography);
+          if(standard.mainSignature===baseline.mainSignature)throw Error('standard volumetric controls did not change extracted rock mesh');
+          if(standard.soilSignature===baseline.soilSignature)throw Error('soil controls did not change extracted ground mesh');
+          if(standard.sourceMicroscope.maxDomainWarpM<.65)throw Error('domain warp still too weak '+standard.sourceMicroscope.maxDomainWarpM);
+          if(standard.sourceMicroscope.maxFieldOffsetM<.45)throw Error('source field offset still too weak '+standard.sourceMicroscope.maxFieldOffsetM);
+          if(silStandard.maxAbsM<.40||silStandard.changedBins<18)throw Error('silhouette did not visibly change '+JSON.stringify(silStandard));
+          if(silStrong.maxAbsM+1e-9<silStandard.maxAbsM)throw Error('strong preset reduced silhouette response');
+          if(standard.soilMicroscope.maxSampleOffsetM<.14||soilStandard.maxAbsM<.10)throw Error('soil topography still too weak');
+          if(soilStrong.maxAbsM+1e-9<soilStandard.maxAbsM)throw Error('strong soil reduced topographic response');
+          delete baseline.mainSilhouette;delete baseline.soilTopography;delete standard.mainSilhouette;delete standard.soilTopography;delete strong.mainSilhouette;delete strong.soilTopography;
+          const out={schema:'LANDSCAPE_R5_K2_G5_RUNTIME_QA',date:'2026-09-17',variants:[baseline,standard,strong],silhouette:{standard:silStandard,strong:silStrong},soilTopography:{standard:soilStandard,strong:soilStrong},rockSourceMeshChanged:standard.mainSignature!==baseline.mainSignature,soilSourceMeshChanged:standard.soilSignature!==baseline.soilSignature,geometryFieldCoupled:true,shapeProofShaderDisabledByDefault:true,visualApproved:false,productionReady:false};
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r5/runtime-qa.json',JSON.stringify(out,null,2));
+          console.log(JSON.stringify(out));
+          JS
+          node --check /tmp/landscape-g5-runtime.js
+
+      - name: Run numerical volumetric QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node /tmp/landscape-g5-runtime.js
+
+      - name: Materialize G5 candidate and evidence
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r5/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r5/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r5/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "R5.K2.G5 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize volumetric R5.K2.G5 [skip ci]"
+          git push
