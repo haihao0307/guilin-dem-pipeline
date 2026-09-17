@@ -1,0 +1,185 @@
+{
+  "version": "R045.18",
+  "passed": false,
+  "passedCount": 24,
+  "gateCount": 28,
+  "failed": [
+    {
+      "name": "footprint_aspect_ratios_are_not_clones",
+      "pass": false,
+      "value": [
+        {
+          "id": "A",
+          "aspect": 2.193548387096774
+        },
+        {
+          "id": "B",
+          "aspect": 2.1025641025641026
+        },
+        {
+          "id": "C",
+          "aspect": 2.185185185185185
+        }
+      ],
+      "limit": "aspect-ratio stdev >0.08"
+    },
+    {
+      "name": "component_peak_locations_are_not_clones",
+      "pass": false,
+      "value": [
+        {
+          "id": "A",
+          "at": [
+            -106,
+            -200
+          ]
+        },
+        {
+          "id": "B",
+          "at": [
+            -106,
+            -200
+          ]
+        },
+        {
+          "id": "C",
+          "at": [
+            182,
+            -192
+          ]
+        }
+      ],
+      "limit": "3 distinct peak grid cells"
+    },
+    {
+      "name": "headwater_field_has_no_new_longitudinal_step",
+      "pass": false,
+      "value": {
+        "maxStep": 0.25363657133003886,
+        "at": [
+          -105,
+          -212
+        ]
+      },
+      "limit": "<0.22 m delta change per 4 m"
+    },
+    {
+      "name": "persistent_upper_cross_slope_wall_not_reintroduced",
+      "pass": false,
+      "value": {
+        "r17": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        },
+        "r18": {
+          "fraction": 0.21212121212121213,
+          "z": -202,
+          "count": 7,
+          "eligible": 33,
+          "maxContiguousSpan": 10,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 428,
+          "rowsWithEligible": 15
+        }
+      },
+      "limit": "R18 fraction <12%, contiguous span <60 m"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 527641,
+    "passed": true
+  },
+  "metrics": {
+    "delta": {
+      "max": 0.8941640015230368,
+      "mean": 0.09748750310909704,
+      "n": 1480,
+      "at": [
+        -112,
+        -200
+      ]
+    },
+    "components": [
+      {
+        "id": "A",
+        "max": 0.4169146552814464,
+        "mean": 0.02615151808703953,
+        "at": [
+          -106,
+          -200
+        ],
+        "angleDeg": -31,
+        "major": 68,
+        "minor": 31
+      },
+      {
+        "id": "B",
+        "max": 0.47617050892197116,
+        "mean": 0.04439576893095792,
+        "at": [
+          -106,
+          -200
+        ],
+        "angleDeg": 24,
+        "major": 82,
+        "minor": 39
+      },
+      {
+        "id": "C",
+        "max": 0.4447833849804925,
+        "mean": 0.029379538622621267,
+        "at": [
+          182,
+          -192
+        ],
+        "angleDeg": -46,
+        "major": 59,
+        "minor": 27
+      }
+    ],
+    "maxLongitudinalDeltaStep": {
+      "value": 0.25363657133003886,
+      "at": [
+        -105,
+        -212
+      ]
+    },
+    "oldWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "newWall": {
+      "fraction": 0.21212121212121213,
+      "z": -202,
+      "count": 7,
+      "eligible": 33,
+      "maxContiguousSpan": 10,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 428,
+      "rowsWithEligible": 15
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6837247695906252
+  }
+}
