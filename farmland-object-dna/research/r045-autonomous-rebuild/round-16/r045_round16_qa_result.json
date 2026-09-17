@@ -1,0 +1,966 @@
+{
+  "version": "R045.16",
+  "passed": false,
+  "gateCount": 27,
+  "passedCount": 26,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.16",
+      "limit": "R045.16"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "terrain_carrier_inventory_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": [
+          12,
+          12
+        ],
+        "outlets": [
+          3,
+          3
+        ]
+      },
+      "limit": "unchanged"
+    },
+    {
+      "name": "r15_foothill_profiles_preserved",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "same inherited outlet profiles"
+    },
+    {
+      "name": "three_catchment_hierarchy_profiles_present",
+      "pass": true,
+      "value": [
+        "A",
+        "B",
+        "C"
+      ],
+      "limit": "A/B/C"
+    },
+    {
+      "name": "catchment_hierarchy_profiles_are_not_parameter_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "amp": 0.78,
+          "sourceOffset": 55,
+          "midOffset": 39,
+          "width": 30,
+          "bias": -0.27,
+          "sourceU": 0.16,
+          "convergenceU": 0.4,
+          "transportU": 0.63
+        },
+        {
+          "id": "B",
+          "amp": 0.94,
+          "sourceOffset": 61,
+          "midOffset": 44,
+          "width": 34,
+          "bias": 0.34,
+          "sourceU": 0.2,
+          "convergenceU": 0.46,
+          "transportU": 0.67
+        },
+        {
+          "id": "C",
+          "amp": 0.69,
+          "sourceOffset": 50,
+          "midOffset": 36,
+          "width": 27,
+          "bias": -0.4,
+          "sourceU": 0.14,
+          "convergenceU": 0.37,
+          "transportU": 0.59
+        }
+      ],
+      "limit": "3 distinct signatures"
+    },
+    {
+      "name": "hierarchy_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 1.24,
+        "mean": 0.14888114633740657,
+        "n": 3404,
+        "at": [
+          -118,
+          -197
+        ]
+      },
+      "limit": "0.18 < max <= 1.241 m"
+    },
+    {
+      "name": "hierarchy_change_is_bounded",
+      "pass": true,
+      "value": 0.14888114633740657,
+      "limit": "absolute mean <0.24 m"
+    },
+    {
+      "name": "complete_drainage_skeleton_is_protected",
+      "pass": true,
+      "value": {
+        "nearN": 526,
+        "nearDrain": 0
+      },
+      "limit": "sampled d<=11.5 m: zero hierarchy delta"
+    },
+    {
+      "name": "rear_ridge_controls_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0 sampled change z<=-220"
+    },
+    {
+      "name": "r15_lower_foothill_plain_and_receiver_unchanged",
+      "pass": true,
+      "value": {
+        "lower": 0,
+        "receiver": 0
+      },
+      "limit": "0 sampled change at z>=0 and around receiver"
+    },
+    {
+      "name": "all_three_catchments_gain_broad_macro_shoulders",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -172.66940309350906,
+              "left": 0,
+              "right": 0.5138521383230689,
+              "centre": 0,
+              "shoulderMean": 0.25692606916153443,
+              "lr": -0.5138521383230689
+            },
+            {
+              "u": 0.44,
+              "z": -116.45829805171454,
+              "left": 0.061100967123624624,
+              "right": 0.12820921157623574,
+              "centre": 0,
+              "shoulderMean": 0.09465508934993018,
+              "lr": -0.06710824445261113
+            },
+            {
+              "u": 0.66,
+              "z": -67.87985275741723,
+              "left": 0.13071133852403152,
+              "right": 0.5058825852840934,
+              "centre": 0,
+              "shoulderMean": 0.3182969619040624,
+              "lr": -0.37517124676006186
+            }
+          ],
+          "meanShoulder": 0.22329270680517568,
+          "meanLR": -0.3187105431785806,
+          "range": 0.22364187255413226
+        },
+        {
+          "id": "B",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -181.30411854508537,
+              "left": 0.14920127839990105,
+              "right": 0.3226118047395687,
+              "centre": 0,
+              "shoulderMean": 0.23590654156973487,
+              "lr": -0.17341052633966764
+            },
+            {
+              "u": 0.44,
+              "z": -121.1247747597672,
+              "left": 0.3808990695883127,
+              "right": 0.004195961019855445,
+              "centre": 0,
+              "shoulderMean": 0.19254751530408407,
+              "lr": 0.3767031085684573
+            },
+            {
+              "u": 0.66,
+              "z": -70.10059066884142,
+              "left": 0.729447639916912,
+              "right": 0.15948887066764206,
+              "centre": 0,
+              "shoulderMean": 0.444468255292277,
+              "lr": 0.5699587692492699
+            }
+          ],
+          "meanShoulder": 0.29097410405536533,
+          "meanLR": 0.2577504504926865,
+          "range": 0.251920739988193
+        },
+        {
+          "id": "C",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -182.0637583477897,
+              "left": 0.36186383637257064,
+              "right": 0.8709404521650067,
+              "centre": 0,
+              "shoulderMean": 0.6164021442687887,
+              "lr": -0.509076615792436
+            },
+            {
+              "u": 0.44,
+              "z": -121.62619612590979,
+              "left": 0.01140001916786033,
+              "right": 0.05218545940640526,
+              "centre": 0,
+              "shoulderMean": 0.0317927392871328,
+              "lr": -0.040785440238544926
+            },
+            {
+              "u": 0.66,
+              "z": -70.4666363753119,
+              "left": 0.36106630115611915,
+              "right": 0.20494999535725256,
+              "centre": 0,
+              "shoulderMean": 0.28300814825668585,
+              "lr": 0.1561163057988666
+            }
+          ],
+          "meanShoulder": 0.31040101060420244,
+          "meanLR": -0.13124858341070478,
+          "range": 0.5846094049816559
+        }
+      ],
+      "limit": "each sampled mean shoulder response >0.025 m"
+    },
+    {
+      "name": "basin_cross_section_signatures_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -172.66940309350906,
+              "left": 0,
+              "right": 0.5138521383230689,
+              "centre": 0,
+              "shoulderMean": 0.25692606916153443,
+              "lr": -0.5138521383230689
+            },
+            {
+              "u": 0.44,
+              "z": -116.45829805171454,
+              "left": 0.061100967123624624,
+              "right": 0.12820921157623574,
+              "centre": 0,
+              "shoulderMean": 0.09465508934993018,
+              "lr": -0.06710824445261113
+            },
+            {
+              "u": 0.66,
+              "z": -67.87985275741723,
+              "left": 0.13071133852403152,
+              "right": 0.5058825852840934,
+              "centre": 0,
+              "shoulderMean": 0.3182969619040624,
+              "lr": -0.37517124676006186
+            }
+          ],
+          "meanShoulder": 0.22329270680517568,
+          "meanLR": -0.3187105431785806,
+          "range": 0.22364187255413226
+        },
+        {
+          "id": "B",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -181.30411854508537,
+              "left": 0.14920127839990105,
+              "right": 0.3226118047395687,
+              "centre": 0,
+              "shoulderMean": 0.23590654156973487,
+              "lr": -0.17341052633966764
+            },
+            {
+              "u": 0.44,
+              "z": -121.1247747597672,
+              "left": 0.3808990695883127,
+              "right": 0.004195961019855445,
+              "centre": 0,
+              "shoulderMean": 0.19254751530408407,
+              "lr": 0.3767031085684573
+            },
+            {
+              "u": 0.66,
+              "z": -70.10059066884142,
+              "left": 0.729447639916912,
+              "right": 0.15948887066764206,
+              "centre": 0,
+              "shoulderMean": 0.444468255292277,
+              "lr": 0.5699587692492699
+            }
+          ],
+          "meanShoulder": 0.29097410405536533,
+          "meanLR": 0.2577504504926865,
+          "range": 0.251920739988193
+        },
+        {
+          "id": "C",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -182.0637583477897,
+              "left": 0.36186383637257064,
+              "right": 0.8709404521650067,
+              "centre": 0,
+              "shoulderMean": 0.6164021442687887,
+              "lr": -0.509076615792436
+            },
+            {
+              "u": 0.44,
+              "z": -121.62619612590979,
+              "left": 0.01140001916786033,
+              "right": 0.05218545940640526,
+              "centre": 0,
+              "shoulderMean": 0.0317927392871328,
+              "lr": -0.040785440238544926
+            },
+            {
+              "u": 0.66,
+              "z": -70.4666363753119,
+              "left": 0.36106630115611915,
+              "right": 0.20494999535725256,
+              "centre": 0,
+              "shoulderMean": 0.28300814825668585,
+              "lr": 0.1561163057988666
+            }
+          ],
+          "meanShoulder": 0.31040101060420244,
+          "meanLR": -0.13124858341070478,
+          "range": 0.5846094049816559
+        }
+      ],
+      "limit": "cross-basin mean L/R signature stdev >0.02 m"
+    },
+    {
+      "name": "hierarchy_varies_along_each_basin",
+      "pass": true,
+      "value": [
+        {
+          "id": "A",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -172.66940309350906,
+              "left": 0,
+              "right": 0.5138521383230689,
+              "centre": 0,
+              "shoulderMean": 0.25692606916153443,
+              "lr": -0.5138521383230689
+            },
+            {
+              "u": 0.44,
+              "z": -116.45829805171454,
+              "left": 0.061100967123624624,
+              "right": 0.12820921157623574,
+              "centre": 0,
+              "shoulderMean": 0.09465508934993018,
+              "lr": -0.06710824445261113
+            },
+            {
+              "u": 0.66,
+              "z": -67.87985275741723,
+              "left": 0.13071133852403152,
+              "right": 0.5058825852840934,
+              "centre": 0,
+              "shoulderMean": 0.3182969619040624,
+              "lr": -0.37517124676006186
+            }
+          ],
+          "meanShoulder": 0.22329270680517568,
+          "meanLR": -0.3187105431785806,
+          "range": 0.22364187255413226
+        },
+        {
+          "id": "B",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -181.30411854508537,
+              "left": 0.14920127839990105,
+              "right": 0.3226118047395687,
+              "centre": 0,
+              "shoulderMean": 0.23590654156973487,
+              "lr": -0.17341052633966764
+            },
+            {
+              "u": 0.44,
+              "z": -121.1247747597672,
+              "left": 0.3808990695883127,
+              "right": 0.004195961019855445,
+              "centre": 0,
+              "shoulderMean": 0.19254751530408407,
+              "lr": 0.3767031085684573
+            },
+            {
+              "u": 0.66,
+              "z": -70.10059066884142,
+              "left": 0.729447639916912,
+              "right": 0.15948887066764206,
+              "centre": 0,
+              "shoulderMean": 0.444468255292277,
+              "lr": 0.5699587692492699
+            }
+          ],
+          "meanShoulder": 0.29097410405536533,
+          "meanLR": 0.2577504504926865,
+          "range": 0.251920739988193
+        },
+        {
+          "id": "C",
+          "samples": [
+            {
+              "u": 0.18,
+              "z": -182.0637583477897,
+              "left": 0.36186383637257064,
+              "right": 0.8709404521650067,
+              "centre": 0,
+              "shoulderMean": 0.6164021442687887,
+              "lr": -0.509076615792436
+            },
+            {
+              "u": 0.44,
+              "z": -121.62619612590979,
+              "left": 0.01140001916786033,
+              "right": 0.05218545940640526,
+              "centre": 0,
+              "shoulderMean": 0.0317927392871328,
+              "lr": -0.040785440238544926
+            },
+            {
+              "u": 0.66,
+              "z": -70.4666363753119,
+              "left": 0.36106630115611915,
+              "right": 0.20494999535725256,
+              "centre": 0,
+              "shoulderMean": 0.28300814825668585,
+              "lr": 0.1561163057988666
+            }
+          ],
+          "meanShoulder": 0.31040101060420244,
+          "meanLR": -0.13124858341070478,
+          "range": 0.5846094049816559
+        }
+      ],
+      "limit": "source/convergence/transport response range >0.015 m each"
+    },
+    {
+      "name": "hierarchy_field_has_no_new_longitudinal_step",
+      "pass": false,
+      "value": {
+        "maxStep": 0.4378785455206413,
+        "at": [
+          -115,
+          -208
+        ]
+      },
+      "limit": "<0.22 m delta change per 4 m"
+    },
+    {
+      "name": "macro_field_is_cross_slope_structured_not_uniform_lift",
+      "pass": true,
+      "value": [
+        {
+          "z": -196,
+          "mean": 0.3916565590739103,
+          "stdev": 0.3740220202443418,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -184,
+          "mean": 0.3521304302811851,
+          "stdev": 0.35883266174841516,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -172,
+          "mean": 0.1971853160644251,
+          "stdev": 0.23544791322600306,
+          "max": 0.9453798896468195,
+          "min": 0
+        },
+        {
+          "z": -160,
+          "mean": 0.0671317690879814,
+          "stdev": 0.10507185159348868,
+          "max": 0.5025345149064299,
+          "min": 0
+        },
+        {
+          "z": -148,
+          "mean": 0.023655946345149358,
+          "stdev": 0.05363896352277479,
+          "max": 0.280700383163765,
+          "min": 0
+        },
+        {
+          "z": -136,
+          "mean": 0.008111952840928895,
+          "stdev": 0.029840889520108858,
+          "max": 0.14362720044413008,
+          "min": 0
+        },
+        {
+          "z": -124,
+          "mean": 0.025587470324055048,
+          "stdev": 0.06963562807276522,
+          "max": 0.32696031682232785,
+          "min": 0
+        },
+        {
+          "z": -112,
+          "mean": 0.08065802127733994,
+          "stdev": 0.16011007496904942,
+          "max": 0.6998382490375075,
+          "min": 0
+        },
+        {
+          "z": -100,
+          "mean": 0.19916463933854403,
+          "stdev": 0.32480930827432025,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -88,
+          "mean": 0.24712142135805729,
+          "stdev": 0.37296790408810365,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -76,
+          "mean": 0.22832119767514855,
+          "stdev": 0.3617644886361945,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -64,
+          "mean": 0.1984486169925859,
+          "stdev": 0.3319110703604965,
+          "max": 1.24,
+          "min": 0
+        },
+        {
+          "z": -52,
+          "mean": 0.1110085708239995,
+          "stdev": 0.19587372229607597,
+          "max": 0.7322475396929546,
+          "min": 0
+        }
+      ],
+      "limit": "at least 5 rows delta stdev >0.045 m"
+    },
+    {
+      "name": "wall_gate_has_real_sampling_coverage",
+      "pass": true,
+      "value": {
+        "r15": {
+          "totalEligible": 1894,
+          "rowsWithEligible": 82
+        },
+        "r16": {
+          "totalEligible": 1894,
+          "rowsWithEligible": 82
+        }
+      },
+      "limit": ">500 samples and >20 rows each"
+    },
+    {
+      "name": "persistent_cross_slope_wall_not_reintroduced",
+      "pass": true,
+      "value": {
+        "r15": {
+          "fraction": 0,
+          "z": -198,
+          "count": 0,
+          "eligible": 33,
+          "maxContiguousSpan": 0,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 1894,
+          "rowsWithEligible": 82
+        },
+        "r16": {
+          "fraction": 0,
+          "z": -198,
+          "count": 0,
+          "eligible": 33,
+          "maxContiguousSpan": 0,
+          "clearance": 16,
+          "threshold": 0.55,
+          "totalEligible": 1894,
+          "rowsWithEligible": 82
+        }
+      },
+      "limit": "R16 fraction <12%, contiguous span <60 m"
+    },
+    {
+      "name": "candidate_slope_forward_reversal_bounded",
+      "pass": true,
+      "value": {
+        "max": 0.5096748745422204,
+        "at": [
+          -165,
+          -154
+        ],
+        "n": 678,
+        "clearance": 16
+      },
+      "limit": "<0.55 m rise per 4 m, >=16 m from drainage"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.7065820691442458,
+      "limit": ">0.05; geometry still locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "reference_is_visual_not_metric_truth",
+      "pass": true,
+      "value": "user terrace photographs constrain hierarchy/continuity/irregular nesting only; no metric extraction",
+      "limit": "visual hierarchy only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed catchment geometry",
+        "measured channel section",
+        "active flow",
+        "regional terrace dimensions",
+        "field microtopography truth",
+        "soil/sediment property",
+        "ownership"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 1.24,
+      "mean": 0.14888114633740657,
+      "n": 3404,
+      "at": [
+        -118,
+        -197
+      ]
+    },
+    "nearDrainProtection": {
+      "nearN": 526,
+      "nearDrain": 0
+    },
+    "upper": 0,
+    "lower": 0,
+    "receiver": 0,
+    "signatures": [
+      {
+        "id": "A",
+        "samples": [
+          {
+            "u": 0.18,
+            "z": -172.66940309350906,
+            "left": 0,
+            "right": 0.5138521383230689,
+            "centre": 0,
+            "shoulderMean": 0.25692606916153443,
+            "lr": -0.5138521383230689
+          },
+          {
+            "u": 0.44,
+            "z": -116.45829805171454,
+            "left": 0.061100967123624624,
+            "right": 0.12820921157623574,
+            "centre": 0,
+            "shoulderMean": 0.09465508934993018,
+            "lr": -0.06710824445261113
+          },
+          {
+            "u": 0.66,
+            "z": -67.87985275741723,
+            "left": 0.13071133852403152,
+            "right": 0.5058825852840934,
+            "centre": 0,
+            "shoulderMean": 0.3182969619040624,
+            "lr": -0.37517124676006186
+          }
+        ],
+        "meanShoulder": 0.22329270680517568,
+        "meanLR": -0.3187105431785806,
+        "range": 0.22364187255413226
+      },
+      {
+        "id": "B",
+        "samples": [
+          {
+            "u": 0.18,
+            "z": -181.30411854508537,
+            "left": 0.14920127839990105,
+            "right": 0.3226118047395687,
+            "centre": 0,
+            "shoulderMean": 0.23590654156973487,
+            "lr": -0.17341052633966764
+          },
+          {
+            "u": 0.44,
+            "z": -121.1247747597672,
+            "left": 0.3808990695883127,
+            "right": 0.004195961019855445,
+            "centre": 0,
+            "shoulderMean": 0.19254751530408407,
+            "lr": 0.3767031085684573
+          },
+          {
+            "u": 0.66,
+            "z": -70.10059066884142,
+            "left": 0.729447639916912,
+            "right": 0.15948887066764206,
+            "centre": 0,
+            "shoulderMean": 0.444468255292277,
+            "lr": 0.5699587692492699
+          }
+        ],
+        "meanShoulder": 0.29097410405536533,
+        "meanLR": 0.2577504504926865,
+        "range": 0.251920739988193
+      },
+      {
+        "id": "C",
+        "samples": [
+          {
+            "u": 0.18,
+            "z": -182.0637583477897,
+            "left": 0.36186383637257064,
+            "right": 0.8709404521650067,
+            "centre": 0,
+            "shoulderMean": 0.6164021442687887,
+            "lr": -0.509076615792436
+          },
+          {
+            "u": 0.44,
+            "z": -121.62619612590979,
+            "left": 0.01140001916786033,
+            "right": 0.05218545940640526,
+            "centre": 0,
+            "shoulderMean": 0.0317927392871328,
+            "lr": -0.040785440238544926
+          },
+          {
+            "u": 0.66,
+            "z": -70.4666363753119,
+            "left": 0.36106630115611915,
+            "right": 0.20494999535725256,
+            "centre": 0,
+            "shoulderMean": 0.28300814825668585,
+            "lr": 0.1561163057988666
+          }
+        ],
+        "meanShoulder": 0.31040101060420244,
+        "meanLR": -0.13124858341070478,
+        "range": 0.5846094049816559
+      }
+    ],
+    "maxLongitudinalDeltaStep": {
+      "value": 0.4378785455206413,
+      "at": [
+        -115,
+        -208
+      ]
+    },
+    "rowStats": [
+      {
+        "z": -196,
+        "mean": 0.3916565590739103,
+        "stdev": 0.3740220202443418,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -184,
+        "mean": 0.3521304302811851,
+        "stdev": 0.35883266174841516,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -172,
+        "mean": 0.1971853160644251,
+        "stdev": 0.23544791322600306,
+        "max": 0.9453798896468195,
+        "min": 0
+      },
+      {
+        "z": -160,
+        "mean": 0.0671317690879814,
+        "stdev": 0.10507185159348868,
+        "max": 0.5025345149064299,
+        "min": 0
+      },
+      {
+        "z": -148,
+        "mean": 0.023655946345149358,
+        "stdev": 0.05363896352277479,
+        "max": 0.280700383163765,
+        "min": 0
+      },
+      {
+        "z": -136,
+        "mean": 0.008111952840928895,
+        "stdev": 0.029840889520108858,
+        "max": 0.14362720044413008,
+        "min": 0
+      },
+      {
+        "z": -124,
+        "mean": 0.025587470324055048,
+        "stdev": 0.06963562807276522,
+        "max": 0.32696031682232785,
+        "min": 0
+      },
+      {
+        "z": -112,
+        "mean": 0.08065802127733994,
+        "stdev": 0.16011007496904942,
+        "max": 0.6998382490375075,
+        "min": 0
+      },
+      {
+        "z": -100,
+        "mean": 0.19916463933854403,
+        "stdev": 0.32480930827432025,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -88,
+        "mean": 0.24712142135805729,
+        "stdev": 0.37296790408810365,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -76,
+        "mean": 0.22832119767514855,
+        "stdev": 0.3617644886361945,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -64,
+        "mean": 0.1984486169925859,
+        "stdev": 0.3319110703604965,
+        "max": 1.24,
+        "min": 0
+      },
+      {
+        "z": -52,
+        "mean": 0.1110085708239995,
+        "stdev": 0.19587372229607597,
+        "max": 0.7322475396929546,
+        "min": 0
+      }
+    ],
+    "oldWall": {
+      "fraction": 0,
+      "z": -198,
+      "count": 0,
+      "eligible": 33,
+      "maxContiguousSpan": 0,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 1894,
+      "rowsWithEligible": 82
+    },
+    "newWall": {
+      "fraction": 0,
+      "z": -198,
+      "count": 0,
+      "eligible": 33,
+      "maxContiguousSpan": 0,
+      "clearance": 16,
+      "threshold": 0.55,
+      "totalEligible": 1894,
+      "rowsWithEligible": 82
+    },
+    "candidate": {
+      "max": 0.5096748745422204,
+      "at": [
+        -165,
+        -154
+      ],
+      "n": 678,
+      "clearance": 16
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.7065820691442458
+  }
+}
