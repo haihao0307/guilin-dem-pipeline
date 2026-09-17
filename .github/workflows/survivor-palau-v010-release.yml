@@ -1,0 +1,198 @@
+name: Survivor Palau V0.1.0 world foundation release
+
+on:
+  push:
+    branches:
+      - game/survivor-palau-v001-20260917
+    paths:
+      - .github/workflows/survivor-palau-v010-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: survivor-palau-v010-release
+  cancel-in-progress: true
+
+jobs:
+  rebuild-verify-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild exact single-file workbench
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.0
+          OUT="$ROOT/Survivor_Palau_V0.1.0_World_Foundation_Direct_Open.html"
+          cat games/survivor-palau/source/builder.part01.txt games/survivor-palau/source/builder.part02.txt | base64 -d | gzip -d > /tmp/build_v010_world_foundation.py
+          echo '532df43bfbb1d70ce9492af30dd811a615ec3516f54ff8d45b8277ef9336f3dd  /tmp/build_v010_world_foundation.py' | sha256sum -c -
+          python3 /tmp/build_v010_world_foundation.py
+          echo '93e14642c2114f81817b6b85943ae699f89a12d885b26102803f6460a65c7a04  '"$OUT" | sha256sum -c -
+          test "$(wc -c < "$OUT")" -eq 144113
+
+      - name: Static identity and JavaScript validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          p=Path('games/survivor-palau/releases/v0.1.0/Survivor_Palau_V0.1.0_World_Foundation_Direct_Open.html')
+          b=p.read_bytes();s=b.decode('utf-8')
+          assert hashlib.sha256(b).hexdigest()=='93e14642c2114f81817b6b85943ae699f89a12d885b26102803f6460a65c7a04'
+          for marker in ['SURVIVOR: PALAU','karstFormationCount','canoePrototype','visibleClouds','naturalBreakerField','data-view="deepfish"','data-view="karst"']:
+              assert marker in s,marker
+          assert s.count('<canvas')==1 and '<iframe' not in s
+          m=re.search(r'<script type="module">(.*)</script>',s,re.S);assert m
+          Path('/tmp/survivor-palau-v010.mjs').write_text(m.group(1),encoding='utf-8')
+          Path('/tmp/static_identity.json').write_text(json.dumps({'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'canvasCount':1,'iframeCount':0,'passed':True},indent=2)+'\n')
+          PY
+          node --check /tmp/survivor-palau-v010.mjs
+
+      - name: Real Chromium WebGL2 and visual QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check -q playwright
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          cat >/tmp/survivor_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,shutil
+          root=Path('games/survivor-palau/releases/v0.1.0')
+          page_path=root/'Survivor_Palau_V0.1.0_World_Foundation_Direct_Open.html'
+          report={'format':'survivor-palau-v010-browser-qa','consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium');assert chrome
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader','--allow-file-access-from-files'])
+              page=browser.new_page(viewport={'width':1600,'height':950})
+              page.on('console',lambda m: report['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: report['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda r: report['requestFailures'].append({'url':r.url,'failure':str(r.failure)}))
+              page.goto(page_path.resolve().as_uri()+'?qa=1',wait_until='load',timeout=30000)
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              assert qa['webgl2'] is True and qa.get('glError',0)==0 and not qa.get('errors')
+              assert qa.get('karstFormationCount',0)>=9,qa
+              assert qa.get('treeCount',0)>=20,qa
+              assert qa.get('canoeCount',0)==1,qa
+              assert page.locator('canvas').count()==1 and page.locator('iframe').count()==0
+              for view in ['overview','karst','breaker','canoe','deepfish']:
+                  page.locator(f'[data-view="{view}"]').click();page.wait_for_timeout(1600);page.screenshot(path=f'/tmp/{view}.png',full_page=True)
+              page.locator('#panelToggle').click();page.wait_for_timeout(250);assert page.locator('#panel').evaluate("e=>!e.classList.contains('closed')")
+              page.locator('#pause').click();page.wait_for_timeout(250);assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is True
+              page.locator('#pause').click();page.wait_for_timeout(250);assert page.evaluate("() => window.OceanMotherR018.getState().config.paused") is False
+              report.update({'webgl2':qa['webgl2'],'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':qa.get('visualProbe'),'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'foamActiveCells':qa.get('foamActiveCells'),'curlLayerTriangles':qa.get('curlLayerTriangles'),'canvasCount':1,'iframeCount':0,'viewsChecked':['overview','karst','breaker','canoe','deepfish']})
+              report['passed']=not report['consoleErrors'] and not report['pageErrors'] and not report['requestFailures']
+              browser.close()
+          assert report['passed'],report
+          Path('/tmp/browser_qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          xvfb-run -a python3 /tmp/survivor_qa.py
+
+      - name: Commit verified direct-open and QA receipt
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=games/survivor-palau/releases/v0.1.0
+          cp /tmp/static_identity.json "$ROOT/STATIC_IDENTITY.json"
+          cp /tmp/browser_qa.json "$ROOT/BROWSER_QA.json"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add "$ROOT"
+          git commit -m 'publish(game): Survivor Palau V0.1.0 world foundation verified'
+          git push origin HEAD:game/survivor-palau-v001-20260917
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify fixed-commit public bytes
+        shell: bash
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          PATHNAME=games/survivor-palau/releases/v0.1.0/Survivor_Palau_V0.1.0_World_Foundation_Direct_Open.html
+          for HOST in raw.githack.com rawcdn.githack.com; do
+            URL="https://$HOST/haihao0307/guilin-dem-pipeline/$COMMIT/$PATHNAME"
+            for n in $(seq 1 30); do
+              if curl -fsSL --retry 2 "$URL" -o "/tmp/${HOST}.html"; then
+                SHA=$(sha256sum "/tmp/${HOST}.html" | awk '{print $1}')
+                [ "$SHA" = '93e14642c2114f81817b6b85943ae699f89a12d885b26102803f6460a65c7a04' ] && break
+              fi
+              sleep 4
+            done
+            echo "93e14642c2114f81817b6b85943ae699f89a12d885b26102803f6460a65c7a04  /tmp/${HOST}.html" | sha256sum -c -
+          done
+
+      - name: Verify fixed-commit public runtime in Chromium
+        shell: bash
+        env:
+          COMMIT: ${{ steps.publish.outputs.commit }}
+        run: |
+          set -euo pipefail
+          cat >/tmp/survivor_public_qa.py <<'PY'
+          from playwright.sync_api import sync_playwright
+          from pathlib import Path
+          import json,os,shutil
+          commit=os.environ['COMMIT']
+          path='games/survivor-palau/releases/v0.1.0/Survivor_Palau_V0.1.0_World_Foundation_Direct_Open.html'
+          url=f'https://raw.githack.com/haihao0307/guilin-dem-pipeline/{commit}/{path}?qa=1'
+          report={'format':'survivor-palau-v010-public-browser-qa','url':url,'commit':commit,'consoleErrors':[],'pageErrors':[],'requestFailures':[],'passed':False}
+          chrome=shutil.which('google-chrome') or shutil.which('google-chrome-stable') or shutil.which('chromium');assert chrome
+          with sync_playwright() as p:
+              browser=p.chromium.launch(executable_path=chrome,headless=False,args=['--no-sandbox','--enable-webgl','--ignore-gpu-blocklist','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              context=browser.new_context(viewport={'width':1600,'height':950})
+              context.add_cookies([{'name':'__Http-phish','value':'1','url':'https://raw.githack.com/','secure':True,'httpOnly':True,'sameSite':'Lax'}])
+              page=context.new_page()
+              page.on('console',lambda m: report['consoleErrors'].append(m.text) if m.type=='error' else None)
+              page.on('pageerror',lambda e: report['pageErrors'].append(str(e)))
+              page.on('requestfailed',lambda r: report['requestFailures'].append({'url':r.url,'failure':str(r.failure)}))
+              response=page.goto(url,wait_until='load',timeout=60000);assert response and response.ok
+              page.wait_for_function("() => document.body.dataset.qaReady==='true' && window.OceanMotherR018?.qa?.ready",timeout=120000)
+              qa=page.evaluate("() => window.OceanMotherR018.qa")
+              assert qa['webgl2'] is True and qa.get('glError',0)==0 and not qa.get('errors')
+              assert qa.get('karstFormationCount',0)>=9 and qa.get('treeCount',0)>=20 and qa.get('canoeCount',0)==1
+              page.locator('[data-view="overview"]').click();page.wait_for_timeout(1400);page.screenshot(path='/tmp/public-overview.png',full_page=True)
+              page.locator('[data-view="karst"]').click();page.wait_for_timeout(1400);page.screenshot(path='/tmp/public-karst.png',full_page=True)
+              page.locator('[data-view="breaker"]').click();page.wait_for_timeout(1400);page.screenshot(path='/tmp/public-breaker.png',full_page=True)
+              page.locator('[data-view="canoe"]').click();page.wait_for_timeout(1400);page.screenshot(path='/tmp/public-canoe.png',full_page=True)
+              report.update({'httpStatus':response.status,'webgl2':qa['webgl2'],'glError':qa.get('glError',0),'qaErrors':qa.get('errors',[]),'visualProbe':qa.get('visualProbe'),'karstFormationCount':qa.get('karstFormationCount'),'treeCount':qa.get('treeCount'),'canoeCount':qa.get('canoeCount'),'viewsChecked':['overview','karst','breaker','canoe']})
+              report['passed']=not report['consoleErrors'] and not report['pageErrors'] and not report['requestFailures']
+              browser.close()
+          Path('/tmp/public_browser_qa.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert report['passed'],report
+          PY
+          xvfb-run -a python3 /tmp/survivor_public_qa.py
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Survivor_Palau_V0.1.0_World_Foundation_QA
+          path: |
+            /tmp/static_identity.json
+            /tmp/browser_qa.json
+            /tmp/overview.png
+            /tmp/karst.png
+            /tmp/breaker.png
+            /tmp/canoe.png
+            /tmp/deepfish.png
+            /tmp/raw.githack.com.html
+            /tmp/rawcdn.githack.com.html
+            /tmp/public_browser_qa.json
+            /tmp/public-overview.png
+            /tmp/public-karst.png
+            /tmp/public-breaker.png
+            /tmp/public-canoe.png
+          if-no-files-found: error
+          retention-days: 90
