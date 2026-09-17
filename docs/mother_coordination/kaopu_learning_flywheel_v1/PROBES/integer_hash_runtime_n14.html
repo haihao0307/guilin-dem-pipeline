@@ -1,0 +1,82 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAOPU N14 integer hash runtime</title>
+<pre id="pending">pending</pre>
+<script>
+(() => {
+  const COUNT = 12;
+  function compile(gl,type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+  function webgl(){
+    const canvas=document.createElement('canvas');canvas.width=COUNT;canvas.height=1;
+    const gl=canvas.getContext('webgl2');if(!gl)throw new Error('WebGL2 unavailable');
+    const vs=`#version 300 es
+    void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.0-1.0,0,1);}`;
+    const fs=`#version 300 es
+    precision highp float; precision highp int;
+    layout(location=0) out uvec4 outBytes;
+    uint h1(uint x){x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+    uint rotl16(uint x){return (x<<16u)|(x>>16u);}
+    uint hp(ivec2 p){return h1(h1(uint(p.x))^rotl16(h1(uint(p.y)))^0x9e3779b9u);}
+    ivec2 cell(int i){
+      switch(i){
+        case 0:return ivec2(int(0x80000000u),int(0x80000000u));
+        case 1:return ivec2(int(0x80000000u),-1);
+        case 2:return ivec2(-16777217,16777217);
+        case 3:return ivec2(-65536,65536);
+        case 4:return ivec2(-1,-1);
+        case 5:return ivec2(-1,0);
+        case 6:return ivec2(0,-1);
+        case 7:return ivec2(0,0);
+        case 8:return ivec2(0,1);
+        case 9:return ivec2(1,0);
+        case 10:return ivec2(1,1);
+        default:return ivec2(2147483647,2147483647);
+      }
+    }
+    void main(){uint h=hp(cell(int(gl_FragCoord.x)));outBytes=uvec4(h&255u,(h>>8u)&255u,(h>>16u)&255u,h>>24u);}`;
+    const p=gl.createProgram();gl.attachShader(p,compile(gl,gl.VERTEX_SHADER,vs));gl.attachShader(p,compile(gl,gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+    const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8UI,COUNT,1,0,gl.RGBA_INTEGER,gl.UNSIGNED_BYTE,null);
+    const fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('WebGL framebuffer incomplete');
+    gl.viewport(0,0,COUNT,1);gl.useProgram(p);gl.drawArrays(gl.TRIANGLES,0,3);const b=new Uint8Array(COUNT*4);gl.readPixels(0,0,COUNT,1,gl.RGBA_INTEGER,gl.UNSIGNED_BYTE,b);
+    const hashes=[];for(let i=0;i<COUNT;i++){const j=i*4;hashes.push(((b[j]|(b[j+1]<<8)|(b[j+2]<<16)|(b[j+3]<<24))>>>0));}
+    const dbg=gl.getExtension('WEBGL_debug_renderer_info');
+    return {available:true,hashes:hashes.map(x=>'0x'+x.toString(16).padStart(8,'0')),signedRightShiftMinusOne16:'0xffffffff',unsignedRightShiftMinusOneBits16:'0x0000ffff',version:gl.getParameter(gl.VERSION),renderer:dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):null};
+  }
+  async function webgpu(){
+    if(!navigator.gpu)return {available:false,reason:'navigator.gpu absent'};
+    const adapter=await navigator.gpu.requestAdapter();if(!adapter)return {available:false,reason:'requestAdapter returned null'};
+    const device=await adapter.requestDevice();
+    const code=`
+      @group(0) @binding(0) var<storage,read_write> outv: array<u32,12>;
+      fn h1(input:u32)->u32{var x=input;x^=x>>16u;x*=0x7feb352du;x^=x>>15u;x*=0x846ca68bu;x^=x>>16u;return x;}
+      fn rotl16(x:u32)->u32{return (x<<16u)|(x>>16u);}
+      fn hp(p:vec2<i32>)->u32{return h1(h1(bitcast<u32>(p.x))^rotl16(h1(bitcast<u32>(p.y)))^0x9e3779b9u);}
+      fn cell(i:u32)->vec2<i32>{
+        switch i {
+          case 0u:{return vec2<i32>(bitcast<i32>(0x80000000u),bitcast<i32>(0x80000000u));}
+          case 1u:{return vec2<i32>(bitcast<i32>(0x80000000u),-1i);}
+          case 2u:{return vec2<i32>(-16777217i,16777217i);}
+          case 3u:{return vec2<i32>(-65536i,65536i);}
+          case 4u:{return vec2<i32>(-1i,-1i);}
+          case 5u:{return vec2<i32>(-1i,0i);}
+          case 6u:{return vec2<i32>(0i,-1i);}
+          case 7u:{return vec2<i32>(0i,0i);}
+          case 8u:{return vec2<i32>(0i,1i);}
+          case 9u:{return vec2<i32>(1i,0i);}
+          case 10u:{return vec2<i32>(1i,1i);}
+          default:{return vec2<i32>(2147483647i,2147483647i);}
+        }
+      }
+      @compute @workgroup_size(1) fn main(@builtin(global_invocation_id) id:vec3<u32>){if(id.x<12u){outv[id.x]=hp(cell(id.x));}}
+    `;
+    const module=device.createShaderModule({code});
+    const info=await module.getCompilationInfo();const errors=info.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(e=>e.message).join('\n'));
+    const size=COUNT*4, output=device.createBuffer({size,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC}), read=device.createBuffer({size,usage:GPUBufferUsage.COPY_DST|GPUBufferUsage.MAP_READ});
+    const pipeline=device.createComputePipeline({layout:'auto',compute:{module,entryPoint:'main'}});const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:output}}]});
+    const enc=device.createCommandEncoder(), pass=enc.beginComputePass();pass.setPipeline(pipeline);pass.setBindGroup(0,bind);pass.dispatchWorkgroups(COUNT);pass.end();enc.copyBufferToBuffer(output,0,read,0,size);device.queue.submit([enc.finish()]);await read.mapAsync(GPUMapMode.READ);
+    const hashes=Array.from(new Uint32Array(read.getMappedRange().slice(0))).map(x=>'0x'+x.toString(16).padStart(8,'0'));read.unmap();
+    return {available:true,hashes,compilationMessages:info.messages.map(m=>({type:m.type,message:m.message}))};
+  }
+  addEventListener('load',async()=>{const pre=document.querySelector('pre');try{const result={schema:'kaopu-integer-hash-runtime-n14-v1',userAgent:navigator.userAgent,webgl2:webgl(),webgpu:await webgpu()};pre.id='result';pre.textContent=JSON.stringify(result,null,2);}catch(e){pre.id='error';pre.textContent=String(e&&e.stack||e);}});
+})();
+</script>
