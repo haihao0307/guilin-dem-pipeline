@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu-noise-domain-warp-result/n04",
+  "status": "pass",
+  "evidenceClass": "pinned FastNoiseLite 1.1.1 C++ source plus deterministic CPU field/geometry/derivative probes",
+  "sourceRevision": "785f37a9ad76e283586a379675085f2063ae03f7",
+  "sourceBlob": "c67f2e5cec4653ebf85e9f19eec2d6ddfd8ca697",
+  "configuration": {"baseSeed": 424242, "warpSeed": 31337, "baseFrequencyPerM": 0.031250000, "warpFrequencyPerM": 0.015625000, "warpAmplitudeM": 8.000000000, "heightScaleM": 2.500000000, "grid": [129, 129]},
+  "kernels": [
+    {"name": "OpenSimplex2", "rmsFieldDelta": 0.073137927, "rmsHeightDeltaM": 0.182844818, "maxWarpDistanceM": 1.638931360, "meanNormalAngleDeg": 2.313541739, "maxNormalAngleDeg": 8.738579583, "rmsChainRuleError": 0.000029374, "rmsNaiveDerivativeError": 0.009660663, "reorderExact": true, "baselineGeometryHash": "db3e2b93abc635d5", "materialOnlyGeometryHash": "db3e2b93abc635d5", "warpedGeometryHash": "6676127c9e8314ab", "cpuBenchmark": {"samples": 1000000, "baselineNs": 14757671, "warpPlusNoiseNs": 47646117, "ratio": 3.228566147}},
+    {"name": "Perlin", "rmsFieldDelta": 0.031874603, "rmsHeightDeltaM": 0.079686507, "maxWarpDistanceM": 1.638931360, "meanNormalAngleDeg": 0.686255448, "maxNormalAngleDeg": 2.232282817, "rmsChainRuleError": 0.000009838, "rmsNaiveDerivativeError": 0.003472885, "reorderExact": true, "baselineGeometryHash": "5d472c3890cb1560", "materialOnlyGeometryHash": "5d472c3890cb1560", "warpedGeometryHash": "3ac6edaab93ec1ee", "cpuBenchmark": {"samples": 1000000, "baselineNs": 13011917, "warpPlusNoiseNs": 41061398, "ratio": 3.155676293}},
+    {"name": "Value", "rmsFieldDelta": 0.021003103, "rmsHeightDeltaM": 0.052507757, "maxWarpDistanceM": 1.638931360, "meanNormalAngleDeg": 0.424035902, "maxNormalAngleDeg": 1.438241453, "rmsChainRuleError": 0.000005831, "rmsNaiveDerivativeError": 0.002173629, "reorderExact": true, "baselineGeometryHash": "f37a79137bbc1c92", "materialOnlyGeometryHash": "f37a79137bbc1c92", "warpedGeometryHash": "fe4c7037a13f6149", "cpuBenchmark": {"samples": 1000000, "baselineNs": 10414527, "warpPlusNoiseNs": 38119279, "ratio": 3.660202619}}
+  ],
+  "summary": {"checks": 24, "passed": 24, "failed": 0},
+  "currentBestView": "Domain warp changes the coordinates at which a fixed seeded base kernel is sampled. It changes actual shape only when the resulting scalar is assigned to vertex displacement. Normals for warped geometry require the full composed derivative J_q^T grad(n), while collision and other consumers require separately updated geometry.",
+  "boundary": "The timings are CPU-only and host-specific. No GPU, browser, iPhone, Mother runtime, collision, geological meaning, physical erosion, public delivery or user visual acceptance is verified.",
+  "checks": [
+    {"name": "OpenSimplex2 warp changes sampled field", "pass": true},
+    {"name": "OpenSimplex2 material-only warp leaves geometry bytes unchanged", "pass": true},
+    {"name": "OpenSimplex2 geometry changes only when warped field is assigned", "pass": true},
+    {"name": "OpenSimplex2 coordinate identity survives evaluation reorder", "pass": true},
+    {"name": "OpenSimplex2 chain-rule derivative matches composed field", "pass": true},
+    {"name": "OpenSimplex2 chain rule improves over unwarped-coordinate gradient", "pass": true},
+    {"name": "OpenSimplex2 warped height requires changed geometric normal", "pass": true},
+    {"name": "OpenSimplex2 CPU timing was measured", "pass": true},
+    {"name": "Perlin warp changes sampled field", "pass": true},
+    {"name": "Perlin material-only warp leaves geometry bytes unchanged", "pass": true},
+    {"name": "Perlin geometry changes only when warped field is assigned", "pass": true},
+    {"name": "Perlin coordinate identity survives evaluation reorder", "pass": true},
+    {"name": "Perlin chain-rule derivative matches composed field", "pass": true},
+    {"name": "Perlin chain rule improves over unwarped-coordinate gradient", "pass": true},
+    {"name": "Perlin warped height requires changed geometric normal", "pass": true},
+    {"name": "Perlin CPU timing was measured", "pass": true},
+    {"name": "Value warp changes sampled field", "pass": true},
+    {"name": "Value material-only warp leaves geometry bytes unchanged", "pass": true},
+    {"name": "Value geometry changes only when warped field is assigned", "pass": true},
+    {"name": "Value coordinate identity survives evaluation reorder", "pass": true},
+    {"name": "Value chain-rule derivative matches composed field", "pass": true},
+    {"name": "Value chain rule improves over unwarped-coordinate gradient", "pass": true},
+    {"name": "Value warped height requires changed geometric normal", "pass": true},
+    {"name": "Value CPU timing was measured", "pass": true}
+  ]
+}

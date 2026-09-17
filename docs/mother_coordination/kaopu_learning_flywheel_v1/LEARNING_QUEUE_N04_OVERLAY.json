@@ -1,0 +1,91 @@
+{
+  "id": "KAOPU-NOISE-N04-FLYWHEEL-20260917",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N02_OVERLAY.json",
+  "inherits": [
+    "LEARNING_LOG/2026-09-17_NOISE_N01_PRODUCTION_INTAKE.md",
+    "LEARNING_QUEUE_N02_OVERLAY.json",
+    "LEARNING_LOG/2026-09-17_KNOWLEDGE_SECTIONS_N03.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "authorizedForProductionMethods": true,
+    "runtimeIntegrationVerified": false
+  },
+  "completedThisRound": {
+    "id": "N02-1",
+    "topic": "Perlin/OpenSimplex/Value + domain warp",
+    "state": "source-and-cpu-method-complete",
+    "evidence": [
+      "references/noise-domain-warp-n04/SOURCE_LOCK.json",
+      "PROBES/noise_domain_warp_result_n04.json",
+      "LEARNING_LOG/2026-09-17_NOISE_DOMAIN_WARP_N04.md"
+    ],
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "sequence": [
+    {
+      "id": "N02-2",
+      "topic": "Cellular",
+      "question": "Which return type provides appropriate value/edge/gradient behavior for soil grains and rock details?",
+      "doneWhen": "Compare CellValue, F1 and F2-F1 with seams and derivatives; geometry/material use separate.",
+      "state": "next"
+    },
+    {
+      "id": "N02-3",
+      "topic": "fBm/ridged/multiscale",
+      "question": "How do amplitude, frequency and filtering preserve desired shape under sampling changes?",
+      "doneWhen": "Pre/post-clamp distribution, silhouette and LOD checks; no automatic zero-mean or mandatory 17 layers.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-4",
+      "topic": "psrdnoise",
+      "question": "Does composed warp/noise retain requested spatial and temporal continuity?",
+      "doneWhen": "Check actual period restrictions, derivatives, wrapping, phase and target language; flow appearance is not material advection.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-5",
+      "topic": "erosion",
+      "question": "What extra state is necessary beyond noise to account for water/sediment transport?",
+      "doneWhen": "Limited conservative example with sources/sinks and boundaries; inherit N01 counterexample, do not replace canonical terrain.",
+      "state": "queued"
+    },
+    {
+      "id": "N02-6",
+      "topic": "modular shader",
+      "question": "Which small source-licensed function improves current authorized surface task?",
+      "doneWhen": "Coordinate/state/optics separation, dependency/license record, targeted visual/runtime evidence.",
+      "state": "queued"
+    }
+  ],
+  "routes": [
+    {
+      "mother": "Landscape",
+      "entry": "PR79",
+      "publication": "published-before-N04",
+      "receipt": "Unknown",
+      "actionThisRound": "no-repeat"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "PR65",
+      "publication": "published-before-N04",
+      "receipt": "Unknown",
+      "actionThisRound": "no-repeat"
+    },
+    {
+      "mother": "Brick/Tiles",
+      "entry": null,
+      "receipt": "pending-current-route-verification",
+      "actionThisRound": "prepared-not-delivered"
+    }
+  ],
+  "nextGap": "N02-2 Cellular return-type, discontinuity and geometry/material boundary comparison"
+}
