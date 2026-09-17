@@ -1,0 +1,80 @@
+name: Landscape R5.K2.G4 Browser Startup Fix
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r4/fix_g4_startup.py
+      - .github/workflows/landscape-r5-k2-geometry-r4-startup-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild and repair G4
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r4/build_g4.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r4/fix_g4_startup.py
+          python workbenches/landscape-surface-r5-k2-geometry-r4/build_g4.py
+          python workbenches/landscape-surface-r5-k2-geometry-r4/fix_g4_startup.py
+
+      - name: Check worker and browser scripts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          root = Path('workbenches/landscape-surface-r5-k2-geometry-r4')
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          build = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+
+          bad = "$('#sourceScaleOut').textContent=recipe.sourceScale.toFixed(2)+' m'$('#seed').value=recipe.seed;"
+          good = "$('#sourceScaleOut').textContent=recipe.sourceScale.toFixed(2)+' m';$('#seed').value=recipe.seed;"
+          assert bad not in html
+          assert good in html
+          assert build['startupSyntaxFixed'] is True
+          assert build['browserMainScriptChecked'] is True
+
+          worker = []
+          for sid in ('worldSource', 'generateSource'):
+              m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, html, re.S)
+              assert m, sid
+              worker.append(m.group(1))
+          Path('/tmp/landscape-g4-worker.js').write_text('\n'.join(worker), encoding='utf-8')
+
+          scripts = re.findall(r'<script([^>]*)>(.*?)</script>', html, re.S)
+          executable = [body for attrs, body in scripts if 'text/plain' not in attrs and body.strip()]
+          assert executable, 'browser executable script missing'
+          main = executable[-1]
+          assert 'initGL()' in main and 'build(recipe)' in main
+          Path('/tmp/landscape-g4-main.js').write_text(main, encoding='utf-8')
+          print(json.dumps({
+              'workerBytes': Path('/tmp/landscape-g4-worker.js').stat().st_size,
+              'mainBytes': Path('/tmp/landscape-g4-main.js').stat().st_size,
+              'startupSyntaxFixed': True,
+          }))
+          PY
+          node --check /tmp/landscape-g4-worker.js
+          node --check /tmp/landscape-g4-main.js
+
+      - name: Materialize browser-startable G4
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r4/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r4/build.json
+          if git diff --cached --quiet; then
+            echo "G4 startup fix already materialized"
+            exit 0
+          fi
+          git commit -m "fix(landscape): materialize browser-startable G4 [skip ci]"
+          git push
