@@ -1,7 +1,7 @@
-# Ocean Mother
+# Ocean Mother — canonical core
 
-唯一日常接续入口：[WORKING_STATE.md](WORKING_STATE.md)。
+This branch contains one active Ocean Mother system: R018 V0.3.2 nearshore combined with the frozen original deep-ocean V001 source.
 
-完整知识、冻结来源、测试和历史评估均在仓库内保留，按任务读取，停止重复生成全量包。资料接收最新记录为 [SOURCE_RECEPTION_0.2.0.json](adoption/SOURCE_RECEPTION_0.2.0.json)。
+The authoritative runtime and full handoff are under `core-r018-v032/`. Screenshots, rejected recovery experiments, compatibility substitutes, alternate island rebuilds, and unrelated candidates are excluded from the active tree.
 
-旧流程快照保存在 [WORKFLOW_AT_E1C6295.md](adoption/WORKFLOW_AT_E1C6295.md)，其中阶段性“缺全文”状态已由新接收记录更新；缺原 Schema、原校验器及运行证据的事实继续保留。
+All subsequent work must be a small, reviewable adjustment from this core.
