@@ -1,0 +1,68 @@
+{
+  "id": "KAOPU-NOISE-N14-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N13_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N13_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_MEDIUMP_COORDINATE_N13.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6E",
+    "topic": "portable integer tile/cell hash semantics",
+    "question": "Can N13 cell identity use one bit-stable CPU/GLSL ES/WGSL contract without relying on incompatible overflow, conversion or shift behavior?",
+    "state": "candidate-partial-primary-source-cpu-and-webgl2-verified-wgsl-runtime-unknown",
+    "evidence": [
+      "references/integer-hash-contract-n14/SOURCE_LOCK.json",
+      "PROBES/probe_integer_hash_contract_n14.py",
+      "PROBES/integer_hash_contract_result_n14.json",
+      "PROBES/integer_hash_runtime_n14.html",
+      "PROBES/integer_hash_runtime_result_n14.json",
+      "LEARNING_LOG/2026-09-18_INTEGER_HASH_CONTRACT_N14.md",
+      "CURRENT_BEST_VIEW_N14_INTEGER_HASH_CONTRACT.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {
+      "mother": "Brick Material",
+      "entry": "HOUSE PR15",
+      "receipt": "N09 awaiting acknowledgement",
+      "actionThisRound": "prepared N14 as held N13 addendum; no repeat delivery"
+    },
+    {
+      "mother": "Landscape",
+      "entry": "guilin-dem-pipeline PR79",
+      "receipt": "no explicit N02 acknowledgement",
+      "actionThisRound": "prepared cross-language identity gate; held"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "receipt": "no new N02 acknowledgement",
+      "actionThisRound": "no route"
+    }
+  ],
+  "verificationReceipt": {
+    "normativeSources": "GLSL ES 3.00.6 and WGSL Candidate Recommendation Draft 15 September 2026",
+    "cpuChecks": "11/11 pass",
+    "webgl2Checks": "8/8 pass",
+    "failedWebgpuRun": 35278446056,
+    "successfulRun": 35278939343,
+    "workflowCommit": "61daf1da169b136b9540d312a1450eb3dac558a6",
+    "runtime": "Chrome 152.0.7977.82 / WebGL2 / GLSL ES 3.00 / ANGLE Vulkan SwiftShader",
+    "wgslRuntime": "Unknown: WebGPU adapter unavailable",
+    "hardwareMobile": "Unknown",
+    "evidenceIndependence": "The two specifications define language semantics. CPU and WebGL2 are separate executions of the same fixture and are not independent algorithm evidence. WGSL runtime and target mobile evidence are absent."
+  },
+  "nextGap": "Execute the locked N14 vectors on a real WebGPU/WGSL adapter and target mobile hardware, then audit the selected Mother's actual integer cell source and serialization boundary before promotion."
+}
