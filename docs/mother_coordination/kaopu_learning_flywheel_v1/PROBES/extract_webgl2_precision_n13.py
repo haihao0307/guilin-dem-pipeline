@@ -7,6 +7,8 @@ if not m:
     raise SystemExit(html.unescape(e.group(1)) if e else 'result node missing')
 r = json.loads(html.unescape(m.group(1)))
 fm, fh = r['fragment']['medium'], r['fragment']['high']
+m = r['runtimeMatrix']['mediump']
+h = r['runtimeMatrix']['highp']
 checks = {
     'webgl2-context': 'WebGL 2.0' in r['runtime']['webglVersion'],
     'glsl-300-profile': '3.00' in r['runtime']['shadingLanguageVersion'],
@@ -14,6 +16,10 @@ checks = {
     'fragment-mediump-min-range': fm['rangeMin'] >= 14 and fm['rangeMax'] >= 14,
     'fragment-mediump-min-precision': fm['precision'] >= 10,
     'fragment-highp-present': fh is not None,
+    'highp-retains-large-offset-phase': h['8192']['uniquePhases'] >= 128 and h['8192']['phaseRmse'] < 1e-6,
+    'mediump-loses-samples-at-sixteen': m['16']['uniquePhases'] < h['16']['uniquePhases'],
+    'mediump-freezes-phase-at-1024': m['1024']['uniquePhases'] == 1,
+    'mediump-large-offset-error-visible': m['1024']['phaseRmse'] > 0.1,
 }
 r['checks'] = [{'id':k,'pass':v} for k,v in checks.items()]
 r['summary'] = {'checks':len(checks),'passed':sum(checks.values()),'failed':len(checks)-sum(checks.values()),'status':'pass' if all(checks.values()) else 'fail'}
