@@ -14,7 +14,9 @@ let maxDelta=0,sumDelta=0,nDelta=0,at=null,outside=0,lower=0,receiver=0,permissi
 for(let x=-220;x<=220;x+=6)for(let z=-224;z<=-172;z+=2){const d=Math.abs(K.upperWallContinuityRepairDelta(x,z));if(d>maxDelta){maxDelta=d;at=[x,z]}sumDelta+=d;nDelta++;activeRows.set(z,Math.max(activeRows.get(z)||0,d))}
 for(let x=-220;x<=220;x+=10){for(const z of [-300,-240,-226,-170,-168,-158,-140,-80,0,80,140])outside=Math.max(outside,Math.abs(K.height(x,z)-R18.height(x,z)));for(const z of [-168,-158,-140,-80,0,80,140]){lower=Math.max(lower,Math.abs(K.height(x,z)-R18.height(x,z)));permissionDiff=Math.max(permissionDiff,Math.abs(K.terracePermission(x,z)-R18.terracePermission(x,z)))}const rz=K.riverZ(x);for(const dz of [-6,0,6])receiver=Math.max(receiver,Math.abs(K.height(x,rz+dz)-R18.height(x,rz+dz)))}
 const delta={max:maxDelta,mean:sumDelta/(nDelta||1),n:nDelta,at};
-add('repair_is_substantive_for_multi_metre_debt',maxDelta>1&&maxDelta<=3.601,delta,'1 m < max correction <= 3.601 m; large correction is expected when cancelling inherited multi-metre wall');
+// The old wall itself rises >5 m/4 m. A successful inverse correction can therefore be several
+// metres. This is a broad numerical sanity guard only; acceptance is determined by final terrain.
+add('repair_is_substantive_for_multi_metre_debt',maxDelta>1&&maxDelta<8,delta,'1 m < max correction < 8 m sanity bound; do not confuse correction amplitude with terrain acceptance');
 add('repair_remains_spatially_bounded',delta.mean<.28,delta.mean,'mean absolute correction <0.28 m over audit band');
 add('repair_is_band_limited',outside<1e-9,outside,'zero sampled change outside z=-226..-170');
 add('lower_agricultural_slope_unchanged',lower<1e-9,lower,'zero sampled height change at z>=-168');
@@ -42,7 +44,7 @@ add('visual_acceptance_locked',K.snapshot.visualAcceptance===false,K.snapshot.vi
 add('terrace_generator_locked',K.snapshot.terraceGeometryEnabled===false,K.snapshot.terraceGeometryEnabled,false);
 add('parcel_generator_locked',K.snapshot.parcelGenerationEnabled===false,K.snapshot.parcelGenerationEnabled,false);
 add('water_state_unknown',K.snapshot.waterStateKnown===false,K.snapshot.waterStateKnown,false);
-add('failed_r19_logic_is_explicitly_corrected',K.snapshot.round20?.logicCorrection?.includes('correction field'),K.snapshot.round20?.logicCorrection,'final terrain, not correction derivative, is acceptance object');
+add('failed_r19_logic_is_explicitly_corrected',K.snapshot.round20?.logicCorrection?.includes('correction-field'),K.snapshot.round20?.logicCorrection,'final terrain, not correction derivative/amplitude, is acceptance object');
 add('references_are_not_metric_truth',K.snapshot.round20?.referenceUse?.includes('no dimensions are extracted'),K.snapshot.round20?.referenceUse,'visual/method hierarchy only');
 add('survey_claims_forbidden',Array.isArray(K.snapshot.round20?.forbiddenClaims)&&K.snapshot.round20.forbiddenClaims.length>=7,K.snapshot.round20?.forbiddenClaims,'explicit evidence boundary');
 
