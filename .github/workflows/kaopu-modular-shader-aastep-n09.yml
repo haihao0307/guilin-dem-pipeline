@@ -48,6 +48,7 @@ jobs:
           python3 docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_webgl2_aastep_probe_n09.py \
             /tmp/n09-dom.html /tmp/webgl2_aastep_probe_result_n09.json
           jq -e '.summary.status == "pass" and .summary.checks == 8 and .exactUpstreamEqualsHard == true' /tmp/webgl2_aastep_probe_result_n09.json
+          cat /tmp/webgl2_aastep_probe_result_n09.json
       - name: Capture bounded visual comparison
         shell: bash
         run: |
