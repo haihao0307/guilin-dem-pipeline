@@ -1,0 +1,70 @@
+{
+  "id": "KAOPU-NOISE-N15-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N14_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N14_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_INTEGER_HASH_CONTRACT_N14.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6F",
+    "topic": "native WGSL integer-cell runtime and evidence boundary",
+    "question": "Can the N14 locked vectors execute as WGSL through an available version-locked runtime, and what remains unverified when browser WebGPU cannot initialize?",
+    "state": "candidate-partial-wgsl-wgpu-native-mesa-llvmpipe-verified-browser-hardware-mobile-unknown",
+    "evidence": [
+      "references/wgpu-native-wgsl-n15/SOURCE_LOCK.json",
+      "PROBES/wgpu_integer_hash_n15/Cargo.toml",
+      "PROBES/wgpu_integer_hash_n15/Cargo.lock",
+      "PROBES/wgpu_integer_hash_n15/src/hash.wgsl",
+      "PROBES/wgpu_integer_hash_n15/src/main.rs",
+      "PROBES/wgpu_integer_hash_runtime_result_n15.json",
+      "LEARNING_LOG/2026-09-18_WGPU_NATIVE_WGSL_RUNTIME_N15.md",
+      "CURRENT_BEST_VIEW_N15_WGPU_NATIVE_WGSL.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {
+      "mother": "Brick Material",
+      "entry": "HOUSE PR15",
+      "receipt": "N09 awaiting acknowledgement",
+      "actionThisRound": "prepared N15 as held N13/N14 evidence update; no repeat delivery"
+    },
+    {
+      "mother": "Landscape",
+      "entry": "guilin-dem-pipeline PR79",
+      "receipt": "no explicit N02 acknowledgement",
+      "actionThisRound": "prepared runtime-boundary gate; held"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "receipt": "no new N02 acknowledgement",
+      "actionThisRound": "no route"
+    }
+  ],
+  "verificationReceipt": {
+    "normativeSources": "WGSL Candidate Recommendation Draft 15 September 2026; official wgpu v29.0.0 source; Cargo dependency reference; Mesa llvmpipe documentation",
+    "lockedVectorCount": 12,
+    "nativeWgslChecks": "4/4 pass",
+    "failedBrowserRuns": [35288073891, 35288197597, 35288285791, 35288399763],
+    "exactVersionRun": 35289194303,
+    "finalLockedRun": 35289516174,
+    "workflowCommit": "8be5e37658ac4ef4576df5708b41d753028a3252",
+    "runtime": "wgpu 29.0.0 direct crate / Vulkan / Mesa 25.2.8 llvmpipe CPU adapter / committed Cargo.lock",
+    "browserWebgpu": "Unknown: available Chrome routes did not produce a usable WebGPU result",
+    "hardwareMobile": "Unknown",
+    "evidenceIndependence": "WGSL, Cargo, wgpu and Mesa sources define different contract layers. CPU, WebGL2 and native WGSL are separate executions of the same locked fixture, not independent algorithm or statistical-quality evidence. Browser WebGPU, hardware/mobile and Mother runtime evidence are absent."
+  },
+  "nextGap": "Obtain target browser/mobile execution, or after Mother acknowledgement audit the selected Mother's actual integer cell source, axis order and serialization boundary before promotion."
+}
