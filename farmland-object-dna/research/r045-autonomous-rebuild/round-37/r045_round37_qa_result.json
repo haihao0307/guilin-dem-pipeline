@@ -1,14 +1,33 @@
 {
   "version": "R045.37",
   "passed": false,
-  "gateCount": 34,
-  "passedCount": 31,
+  "gateCount": 35,
+  "passedCount": 34,
   "checks": [
     {
       "name": "version",
       "pass": true,
       "value": "R045.37",
       "limit": "R045.37"
+    },
+    {
+      "name": "seed_cache_generated",
+      "pass": true,
+      "value": {
+        "generated": true,
+        "positiveSeedCount": 12,
+        "maxGain": 0.2861395015095667,
+        "total": 1008,
+        "dx": 10,
+        "dz": 6,
+        "x0": -220,
+        "z0": -138,
+        "xmin": -230,
+        "xmax": 135,
+        "zmin": -150,
+        "zmax": 25
+      },
+      "limit": "generated cache with >=4 verified positive seeds"
     },
     {
       "name": "water_graph_identity_preserved",
@@ -39,25 +58,25 @@
       "pass": true,
       "value": {
         "deltaMax": 0.5045566963432688,
-        "changeFrom35": 0.015703662941921215,
-        "active": 488,
+        "changeFrom35": 0.1074889237658112,
+        "active": 495,
         "oldActive": 488,
-        "core": 345,
+        "core": 349,
         "oldCore": 345,
-        "gainCells": 20,
-        "thresholdCross": 0,
-        "maxGain": 0.0487184328918695,
+        "gainCells": 148,
+        "thresholdCross": 7,
+        "maxGain": 0.2578363501117956,
         "unsafe": 0,
         "hardCoreActive": 0,
         "hardCoreDelta": 0,
         "groups": [
           86,
-          200,
-          202
+          204,
+          205
         ],
-        "rowRunsN": 76,
+        "rowRunsN": 78,
         "rowRunsO": 76,
-        "fragmentationBurdenN": 0.1557377049180328,
+        "fragmentationBurdenN": 0.15757575757575756,
         "fragmentationBurdenO": 0.1557377049180328,
         "medianLongestN": 54,
         "medianLongestO": 54,
@@ -68,32 +87,32 @@
     },
     {
       "name": "cached_field_is_material",
-      "pass": false,
+      "pass": true,
       "value": {
-        "gainCells": 20,
-        "maxGain": 0.0487184328918695
+        "gainCells": 148,
+        "maxGain": 0.2578363501117956
       },
       "limit": ">20 samples gain >.004 and max gain >.01"
     },
     {
       "name": "cached_field_changes_topology",
-      "pass": false,
+      "pass": true,
       "value": {
-        "thresholdCross": 0
+        "thresholdCross": 7
       },
       "limit": ">2 weak inherited samples cross .12"
     },
     {
       "name": "r37_change_from_r35_bounded",
       "pass": true,
-      "value": 0.015703662941921215,
+      "value": 0.1074889237658112,
       "limit": ".005m < sampled max change < .40m"
     },
     {
       "name": "support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 488,
+        "active": 495,
         "oldActive": 488
       },
       "limit": "active support >= R35"
@@ -102,16 +121,16 @@
       "name": "core_does_not_shrink",
       "pass": true,
       "value": {
-        "core": 345,
+        "core": 349,
         "oldCore": 345
       },
       "limit": "core support >= R35"
     },
     {
       "name": "fragmentation_burden_improves_or_holds",
-      "pass": true,
+      "pass": false,
       "value": {
-        "burdenN": 0.1557377049180328,
+        "burdenN": 0.15757575757575756,
         "burdenO": 0.1557377049180328
       },
       "limit": "runs/active <=1.01x R35"
@@ -132,8 +151,8 @@
       "pass": true,
       "value": [
         86,
-        200,
-        202
+        204,
+        205
       ],
       "limit": "each group >20 active samples"
     },
@@ -156,13 +175,13 @@
     },
     {
       "name": "r36_verified_seed_signal_retained",
-      "pass": false,
+      "pass": true,
       "value": {
-        "seedCompared": 3,
-        "seedRetained": 3,
-        "maxSeedLoss": 0.03414498365075769
+        "seedCompared": 12,
+        "seedRetained": 12,
+        "maxSeedLoss": 0.21234132382452103
       },
-      "limit": ">=65% sampled R36 positive seeds remain positive in R37"
+      "limit": ">5 persisted R36-positive seeds and >=65% retain positive R37 support"
     },
     {
       "name": "r35_stair_frame_exact",
@@ -179,12 +198,12 @@
       "name": "bench_riser_samples_exist",
       "pass": true,
       "value": {
-        "benchN": 62,
+        "benchN": 63,
         "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6101468736072166
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
       },
       "limit": ">10 bench and >3 riser samples"
     },
@@ -192,12 +211,12 @@
       "name": "benches_flatter_than_r30",
       "pass": true,
       "value": {
-        "benchN": 62,
+        "benchN": 63,
         "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6101468736072166
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
       },
       "limit": "bench/base median <.90"
     },
@@ -205,12 +224,12 @@
       "name": "risers_steeper_than_benches",
       "pass": true,
       "value": {
-        "benchN": 62,
+        "benchN": 63,
         "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6101468736072166
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
       },
       "limit": "riser slope >1.25x bench"
     },
@@ -218,12 +237,12 @@
       "name": "risers_steepen_vs_r30",
       "pass": true,
       "value": {
-        "benchN": 62,
+        "benchN": 63,
         "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6101468736072166
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
       },
       "limit": "riser/base median >1.08"
     },
@@ -254,7 +273,7 @@
     {
       "name": "terrace_increment_not_cliff",
       "pass": true,
-      "value": 0.7659721144764824,
+      "value": 0.8252562220853783,
       "limit": "<1.25m per 6m"
     },
     {
@@ -284,7 +303,7 @@
     {
       "name": "logic_error_explicit",
       "pass": true,
-      "value": "R36 numeric success does not imply visual acceptance, because its real Chrome audit timed out. Conversely, a timeout does not justify merely raising the timeout: pointwise fan search cost was part of the implementation defect. R37 changes both topology representation and evaluation architecture while preserving stair amplitude and hydrology.",
+      "value": "R36 numeric success does not imply visual acceptance because its real Chrome audit timed out. A timeout also does not justify raising the timeout: runtime pointwise fan-search cost was an implementation defect, so R37 moves that work to a one-time verified cache and keeps the browser path bounded.",
       "limit": "numeric pass != visual pass; timeout != raise timeout"
     },
     {
@@ -315,25 +334,25 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5045566963432688,
-      "changeFrom35": 0.015703662941921215,
-      "active": 488,
+      "changeFrom35": 0.1074889237658112,
+      "active": 495,
       "oldActive": 488,
-      "core": 345,
+      "core": 349,
       "oldCore": 345,
-      "gainCells": 20,
-      "thresholdCross": 0,
-      "maxGain": 0.0487184328918695,
+      "gainCells": 148,
+      "thresholdCross": 7,
+      "maxGain": 0.2578363501117956,
       "unsafe": 0,
       "hardCoreActive": 0,
       "hardCoreDelta": 0,
       "groups": [
         86,
-        200,
-        202
+        204,
+        205
       ],
-      "rowRunsN": 76,
+      "rowRunsN": 78,
       "rowRunsO": 76,
-      "fragmentationBurdenN": 0.1557377049180328,
+      "fragmentationBurdenN": 0.15757575757575756,
       "fragmentationBurdenO": 0.1557377049180328,
       "medianLongestN": 54,
       "medianLongestO": 54,
@@ -341,20 +360,34 @@
       "maxLongestO": 72
     },
     "terraceMorphology": {
-      "benchN": 62,
+      "benchN": 63,
       "riserN": 14,
-      "benchRatioMedian": 0.2604845857102642,
-      "riserRatioMedian": 2.436454981437061,
-      "benchSlopeMedian": 0.0655900406174896,
-      "riserSlopeMedian": 0.6101468736072166
+      "benchRatioMedian": 0.25271592788137165,
+      "riserRatioMedian": 2.4395053683175716,
+      "benchSlopeMedian": 0.06363862055926353,
+      "riserSlopeMedian": 0.6057397015411001
     },
-    "seedRetained": 3,
-    "seedCompared": 3,
-    "maxSeedLoss": 0.03414498365075769,
+    "seedCache": {
+      "generated": true,
+      "positiveSeedCount": 12,
+      "maxGain": 0.2861395015095667,
+      "total": 1008,
+      "dx": 10,
+      "dz": 6,
+      "x0": -220,
+      "z0": -138,
+      "xmin": -230,
+      "xmax": 135,
+      "zmin": -150,
+      "zmax": 25
+    },
+    "seedRetained": 12,
+    "seedCompared": 12,
+    "maxSeedLoss": 0.21234132382452103,
     "far": 0,
     "near": 0,
     "receiver": 0,
     "outside": 0,
-    "maxInc": 0.7659721144764824
+    "maxInc": 0.8252562220853783
   }
 }
