@@ -82,19 +82,19 @@ function finishCpu(state,signal){throwIfAborted(signal);state.maxChunkMs=Math.ma
 
 async function buildIndexedRoads(xy,parts,meta,origin,sampler,signal){
   if(parts.length%4)throw Error('R3.6 road parts 格式错误');const t0=performance.now(),vertexCount=xy.length/2;
-  const positions=new Float32Array(vertexCount*3),colors=new Float32Array(vertexCount*3),valid=new Uint8Array(vertexCount),maxSegments=maxSegmentCount(parts),IndexType=vertexCount<=65535?Uint16Array:Uint32Array,indices=new IndexType(maxSegments*2);
+  const positions=new Float32Array(vertexCount*3),colors=new Float32Array(vertexCount*3),roadCodes=new Uint8Array(vertexCount),roadFlags=new Uint8Array(vertexCount),valid=new Uint8Array(vertexCount),maxSegments=maxSegmentCount(parts),IndexType=vertexCount<=65535?Uint16Array:Uint32Array,indices=new IndexType(maxSegments*2);
   let iw=0,drawnParts=0,drawnSegments=0,rejectedSegments=0,sampleCalls=0;const cpu=cpuState(),west=meta.bounds[0],south=meta.bounds[1],sx=(meta.bounds[2]-west)/65535,sy=(meta.bounds[3]-south)/65535;
   for(let p=0;p<parts.length;p+=4){
     throwIfAborted(signal);const start=Number(parts[p]),count=Number(parts[p+1]),code=Number(parts[p+2]),flags=Number(parts[p+3]);if(count<2)continue;const color=roadColor(code,flags);let partDrawn=false;
     for(let j=0;j<count;j++){
       const vi=start+j,a2=vi*2;if(a2+1>=xy.length)throw Error('R3.6 road xy 索引越界');
       const e=west+xy[a2]*sx,n=south+xy[a2+1]*sy,x=(e-origin[0])/1000,z=(origin[1]-n)/1000,h=sampler.sample(x,z);sampleCalls++;
-      const q=vi*3;positions[q]=x;positions[q+2]=z;colors[q]=color[0];colors[q+1]=color[1];colors[q+2]=color[2];if(h!==null){positions[q+1]=h+ROAD_LIFT_M/1000;valid[vi]=1;}
+      const q=vi*3;positions[q]=x;positions[q+2]=z;colors[q]=color[0];colors[q+1]=color[1];colors[q+2]=color[2];roadCodes[vi]=code;roadFlags[vi]=flags;if(h!==null){positions[q+1]=h+ROAD_LIFT_M/1000;valid[vi]=1;}
       if(++cpu.processed>=CPU_CHECK_INTERVAL){cpu.processed=0;await maybeYield(cpu,signal);}
     }
     for(let j=0;j<count-1;j++){const a=start+j,b=a+1;if(valid[a]&&valid[b]){indices[iw++]=a;indices[iw++]=b;drawnSegments++;partDrawn=true;}else rejectedSegments++;}if(partDrawn)drawnParts++;
   }
-  finishCpu(cpu,signal);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('color',new THREE.BufferAttribute(colors,3));g.setIndex(new THREE.BufferAttribute(indices.subarray(0,iw),1));
+  finishCpu(cpu,signal);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(positions,3));g.setAttribute('color',new THREE.BufferAttribute(colors,3));g.setAttribute('roadCode',new THREE.BufferAttribute(roadCodes,1));g.setAttribute('roadFlags',new THREE.BufferAttribute(roadFlags,1));g.setIndex(new THREE.BufferAttribute(indices.subarray(0,iw),1));
   const m=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.78,depthWrite:false}),line=new THREE.LineSegments(g,m);line.frustumCulled=false;line.renderOrder=2.5;line.userData.wenzhouOsmEvidence=true;line.userData.kind='osm-road-centerline-evidence';line.userData.heightClaim='display-surface-anchor-only';line.userData.physicalWidthClaim='none';line.userData.runtime='indexed-r36';
   return{object:line,drawnParts,drawnSegments,rejectedSegments,sourceVertexCount:vertexCount,gpuVertexCount:vertexCount,gpuIndexCount:iw,sampleCalls,indexType:IndexType===Uint16Array?'uint16':'uint32',buildMs:performance.now()-t0,maxChunkMs:cpu.maxChunkMs,yieldCount:cpu.yieldCount};
 }
