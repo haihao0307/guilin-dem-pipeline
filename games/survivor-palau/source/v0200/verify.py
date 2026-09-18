@@ -17,6 +17,7 @@ def snapshot(page,name):
  try:page.screenshot(path=str(EVIDENCE/(name+'.png')),timeout=15000)
  finally:page.evaluate('OceanIsland.resumeFromReview()')
 def aim(page,id):
+ page.evaluate('StoneMoneySurvival.test.advance(.6)')
  page.evaluate('''id=>{const g=StoneMoneySurvival,d=g.getDefinitions().find(o=>o.id===id),p=d.position,x=p[0]+.65,z=p[2]+.9,y=g.ground(x,z)+1.64;g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));}''',id)
  page.wait_for_function('id=>StoneMoneySurvival.diagnostics().target===id',arg=id,timeout=20000)
 def pick(page,id):
@@ -39,10 +40,10 @@ with sync_playwright() as p:
    phase(r,'walk');start=page.evaluate('[StoneMoneySurvival.getState().player.x,StoneMoneySurvival.getState().player.z]')
    if name=='desktop':page.keyboard.down('s')
    else:
-    b=page.locator('#smiJoy').bounding_box();page.dispatch_event('#smiJoy','pointerdown',{'pointerId':9,'pointerType':'touch','isPrimary':True,'clientX':b['x']+b['width']/2,'clientY':b['y']+b['height']/2+30})
+    b=page.locator('#smiJoy').bounding_box();touch=ctx.new_cdp_session(page);touch.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':b['x']+b['width']/2,'y':b['y']+b['height']/2+30,'id':9}]})
    page.wait_for_function('p=>Math.hypot(StoneMoneySurvival.getState().player.x-p[0],StoneMoneySurvival.getState().player.z-p[1])>.09',arg=start,timeout=35000)
    if name=='desktop':page.keyboard.up('s')
-   else:page.dispatch_event('#smiJoy','pointerup',{'pointerId':9,'pointerType':'touch','isPrimary':True})
+   else:touch.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
    end=page.evaluate('[StoneMoneySurvival.getState().player.x,StoneMoneySurvival.getState().player.z]');r['walkDistance']=sum((a-b)**2 for a,b in zip(start,end))**.5
    snapshot(page,name+'-beach');r['noInjury']=page.evaluate('StoneMoneySurvival.diagnostics().injury===false')
    phase(r,'pickup craft');pick(page,'driftwood-01');pick(page,'stone-01');page.locator('#smiCraft').click();page.wait_for_function('StoneMoneySurvival.getState().spear')
