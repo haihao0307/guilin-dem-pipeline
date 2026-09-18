@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Ocean Life Mother R01 | Fish · Bird · Coral</title><style>html,body{margin:0;height:100%;background:#09161d;color:#edf5f5;font:15px system-ui,sans-serif}#boot{min-height:100%;display:grid;place-items:center}article{max-width:32em;padding:24px}h1{font-size:22px}p{line-height:1.7;color:#acc7ce}button{padding:12px 22px;border:1px solid #49616b;background:#173541;color:white;border-radius:6px}</style></head><body><div id="boot"><article><h1>Ocean Life Mother R01</h1><p id="status">正在装载 Fish · Bird · Coral 工作台…</p><p>原生骨链 · 水域约束 · 动作研究</p></article></div><script>
+(async()=>{'use strict';const status=document.getElementById('status');try{
+ if(!self.crypto?.subtle||!('DecompressionStream' in self))throw Error('请使用支持安全校验与内置解压的新版浏览器。');
+ const text=async path=>{const r=await fetch(new URL(path,location.href),{cache:'no-store'});if(!r.ok)throw Error('资源读取失败：'+path+' ('+r.status+')');return r.text()};
+ const unpack=async list=>{const b64=(await Promise.all(list.map(text))).join('').trim();const a=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));return new Response(new Blob([a]).stream().pipeThrough(new DecompressionStream('gzip'))).text()};
+ const sha=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
+ const [base,bundleText]=await Promise.all([unpack(Array.from({length:6},(_,i)=>'../r00/payload/payload-0'+i+'.txt')),unpack(['bundle-0.txt','bundle-1.txt'])]);
+ if(await sha(base)!=='5d1d1383dcf63aed1dadffd32d60f9c604e964fc3992bce842ef75a4da364e35')throw Error('原工作台基线校验失败，请刷新后重试。');
+ if(await sha(bundleText)!=='71f81d4f9aa3897112f01d1163c02008980adab5c9184933892c91e38ee9a8e7')throw Error('R01 代码校验失败，请刷新后重试。');
+ const bundle=JSON.parse(bundleText);if(bundle.schema!=='ocean-life-source-bundle/1')throw Error('不支持的运行资源版本。');const f=bundle.files;
+ const upgrade=new Function(f['upgrade-r01.js']+'\nreturn upgradeOceanR01;')();
+ const normalized=base.replace('<title>Ocean Life Mother R00 · Fish / Bird / Coral / Ocean','<title>Ocean Mother · Fish / Bird / Coral · 单文件直开版').replace('Ocean Life Mother R00</h1>','Ocean Mother · Fish / Bird / Coral</h1>').replace('统一工作台外壳 · Fish / Bird / Coral / Ocean 独立内核 · 生态装配视图','单文件直开版 · 不依赖解压目录或本地服务器 · 生态装配视图');
+ const html=upgrade(normalized,{fish:f['fish-native.js'],habitat:f['habitat-life.js'],bird:f['bird-life.js'],kaopu:f['kaopu-life.js']});
+ if(await sha(html)!=='90e94e946845c2e48bb65d77e7c8ffa480520d1ec5dabe22641e4e86808bac9a')throw Error('构建结果与已测试版本不一致。');
+ document.open();document.write(html);document.close();
+ }catch(e){status.textContent=String(e.message||e);const button=document.createElement('button');button.textContent='重新打开';button.onclick=()=>location.reload();status.after(button);console.error(e)}})();
+</script></body></html>
