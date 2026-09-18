@@ -18,6 +18,7 @@ def snapshot(page,name):
  finally:page.evaluate('OceanIsland.resumeFromReview()')
 def aim(page,id):
  page.evaluate('StoneMoneySurvival.test.advance(.6)')
+ page.evaluate('StoneMoneySurvival.test.advance(.6)')
  page.evaluate('''id=>{const g=StoneMoneySurvival,d=g.getDefinitions().find(o=>o.id===id),p=d.position,x=p[0]+.65,z=p[2]+.9,y=g.ground(x,z)+1.64;g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));}''',id)
  page.wait_for_function('id=>StoneMoneySurvival.diagnostics().target===id',arg=id,timeout=20000)
 def pick(page,id):
