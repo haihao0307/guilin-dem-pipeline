@@ -1,0 +1,32 @@
+name: Landscape Formation Event Field V1
+on:
+  push:
+    branches:
+      - codex/landscape-formation-event-field-v1-20260918
+    paths:
+      - 'workbenches/landscape-formation-event-field-v1/**'
+      - 'ops/tasks/LANDSCAPE_FORMATION_EVENT_FIELD_V1_20260918.md'
+      - '.github/workflows/landscape-formation-event-field-v1.yml'
+  pull_request:
+    paths:
+      - 'workbenches/landscape-formation-event-field-v1/**'
+      - 'ops/tasks/LANDSCAPE_FORMATION_EVENT_FIELD_V1_20260918.md'
+      - '.github/workflows/landscape-formation-event-field-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Kernel regression
+        run: node workbenches/landscape-formation-event-field-v1/formation-event-field.test.mjs
+      - name: Static delivery contract
+        run: |
+          test -s workbenches/landscape-formation-event-field-v1/index.html
+          test -s workbenches/landscape-formation-event-field-v1/formation-event-field.mjs
+          grep -q 'protectedTruthMask' workbenches/landscape-formation-event-field-v1/formation-event-field.mjs
+          grep -q 'neutralGeometry' workbenches/landscape-formation-event-field-v1/formation-event-field.mjs
+          grep -q 'periodicAngularField' workbenches/landscape-formation-event-field-v1/formation-event-field.mjs
+          grep -q 'visualAcceptance' workbenches/landscape-formation-event-field-v1/build.json
