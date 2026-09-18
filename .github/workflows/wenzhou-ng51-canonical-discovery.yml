@@ -1,0 +1,45 @@
+name: Wenzhou NG51 Canonical Discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - wenzhou-island-relief-watermask-20260917
+    paths:
+      - 'records/R3_10/NG51_CANONICAL_DISCOVERY_TRIGGER'
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frozen Wenzhou full restart
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ng51
+          gh release download wenzhou-r3.2-full-20260909             --repo haihao0307/guilin-dem-pipeline             --pattern 'Wenzhou_R3_2_FULL_RESTART_20260909.zip'             --dir /tmp/ng51
+          sha256sum /tmp/ng51/Wenzhou_R3_2_FULL_RESTART_20260909.zip | tee /tmp/ng51/restart.sha256
+          grep -q '^ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c ' /tmp/ng51/restart.sha256
+      - name: Locate canonical DEM recovery material
+        run: |
+          set -euo pipefail
+          unzip -l /tmp/ng51/Wenzhou_R3_2_FULL_RESTART_20260909.zip > /tmp/ng51/full-listing.txt
+          grep -Ei 'canonical|wzdem|lorenzo|decoded-source|terrain|dem.*index|R2_2_1' /tmp/ng51/full-listing.txt > /tmp/ng51/canonical-candidates.txt || true
+          cat /tmp/ng51/canonical-candidates.txt
+          test -s /tmp/ng51/canonical-candidates.txt
+      - name: Upload discovery proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: wenzhou-ng51-canonical-discovery-${{ github.sha }}
+          path: |
+            /tmp/ng51/restart.sha256
+            /tmp/ng51/canonical-candidates.txt
+            /tmp/ng51/full-listing.txt
+          if-no-files-found: error
+          retention-days: 14
