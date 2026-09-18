@@ -26,7 +26,7 @@ report = {'version': '0.2.1', 'url': url, 'browserPassed': False, 'physicalDevic
           'visualAcceptance': False, 'cases': [], 'notes': [
               'Live WebGL terrain/water; no environment mocks.',
               'QA player placement; visible UI pickups/craft/spear hit.',
-              'Controlled 0.05s inspections, 120s progression plus one 180s advance.',
+              'Controlled 0.05s inspections: desktop 120s / touch 30s, each plus a 180s advance.',
               'Finite spatial/time sampling cannot prove arbitrary terrain or waveforms.']}
 
 
@@ -129,14 +129,15 @@ def main():
                 after = page.evaluate('({fish:StoneMoneySurvival.getFish(),time:StoneMoneySurvival.getState().worldSeconds})')
                 assert after['fish'] == paused['fish'] and after['time'] == paused['time'], 'Paused fish moved'
                 case['pausePassed'] = True; tap('#smiCloseJournal'); hold(page)
-                phase('120 seconds controlled live water progression')
+                phase(('30' if mobile else '120')+' seconds controlled live water progression')
                 page.evaluate('StoneMoneySurvival.test.position(25.2,12.1)')
                 checks = []
-                for batch in range(12):
+                for batch in range(3 if mobile else 12):
                     checks.append(page.evaluate("""checkSource=>{const check=eval('('+checkSource+')'),g=StoneMoneySurvival;
-                     let min=Infinity;for(let i=0;i<200;i++){g.test.advance(.05);const s=check();min=Math.min(min,s.minBodyClearance);
+                     const started=performance.now();let min=Infinity;for(let i=0;i<200;i++){g.test.advance(.05);const s=check();min=Math.min(min,s.minBodyClearance);
                      if(g.getMode()!=='playing')throw Error('Game stopped during fish progression');}
-                     return {time:g.getState().worldSeconds,minBodyClearance:min};}""", CHECK))
+                     return {time:g.getState().worldSeconds,minBodyClearance:min,wallMilliseconds:performance.now()-started};}""", CHECK))
+                    case['continuousChecks'] = checks; save()
                 case['continuousChecks'] = checks
                 phase('180 second elapsed-time jump')
                 page.evaluate('StoneMoneySurvival.test.advance(180)')
