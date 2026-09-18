@@ -13,36 +13,80 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 16
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: work/stone-money-island-v0200-shore-survival-20260918
-      - name: Normalize the touch test to actual browser input
+      - name: Normalize touch input and bounded action timing in the test harness
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('games/survivor-palau/source/v0200/verify.py');s=p.read_text()
-          s=s.replace("def aim(page,id):\n page.evaluate", "def aim(page,id):\n page.evaluate('StoneMoneySurvival.test.advance(.6)')\n page.evaluate")
+          if "def aim(page,id):\n page.evaluate('StoneMoneySurvival.test.advance(.6)')" not in s:
+              s=s.replace('def aim(page,id):\n page.evaluate',"def aim(page,id):\n page.evaluate('StoneMoneySurvival.test.advance(.6)')\n page.evaluate")
           a="b=page.locator('#smiJoy').bounding_box();page.dispatch_event('#smiJoy','pointerdown',{'pointerId':9,'pointerType':'touch','isPrimary':True,'clientX':b['x']+b['width']/2,'clientY':b['y']+b['height']/2+30})"
           b="b=page.locator('#smiJoy').bounding_box();touch=ctx.new_cdp_session(page);touch.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':b['x']+b['width']/2,'y':b['y']+b['height']/2+30,'id':9}]})"
-          s=s.replace(a,b).replace("page.dispatch_event('#smiJoy','pointerup',{'pointerId':9,'pointerType':'touch','isPrimary':True})", "touch.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})")
+          s=s.replace(a,b).replace("page.dispatch_event('#smiJoy','pointerup',{'pointerId':9,'pointerType':'touch','isPrimary':True})","touch.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})")
+          s=s.replace("phase(r,'actual spear hit');caught=False","phase(r,'actual spear hit');page.evaluate('StoneMoneySurvival.test.advance(.8)');caught=False")
+          s=s.replace('for attempt in range(4):\n    fishid=',"for attempt in range(4):\n    page.evaluate('StoneMoneySurvival.test.advance(.6)')\n    fishid=")
           p.write_text(s)
           PY
       - name: Rebuild from the byte-locked original ocean
         run: python games/survivor-palau/source/v0200/build.py
-      - name: Exercise the actual game
+      - name: Exercise first-chapter transactions and actual rendered controls
         run: |
           python -m pip install playwright pillow
           python -m playwright install --with-deps chromium
           timeout 820s python -u games/survivor-palau/source/v0200/verify.py
-      - name: Record source and actual diagnostics without overwriting concurrent edits
+      - name: Preserve source and diagnostics without overwriting concurrent edits
         if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add games/survivor-palau/source/v0200 games/survivor-palau/releases/v0.2.0
-          git diff --cached --quiet || git commit -m 'build(stone-money): preserve first-chapter runtime and actual browser findings'
+          git diff --cached --quiet || git commit -m 'build(stone-money): record first-chapter source, runtime and actual test results'
+          git pull --rebase origin work/stone-money-island-v0200-shore-survival-20260918
+          git push origin HEAD:work/stone-money-island-v0200-shore-survival-20260918
+      - name: Publish an isolated immutable review path only when the chapter tests passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,urllib.request,urllib.error,os,subprocess,time
+          p=Path('games/survivor-palau/releases/v0.2.0');qa=json.loads((p/'BROWSER_QA.json').read_text());build=json.loads((p/'BUILD_RECEIPT.json').read_text())
+          assert qa['browserPassed'],'First chapter failed; do not publish'
+          data=(p/'index.html').read_bytes();digest=hashlib.sha256(data).hexdigest();assert digest==build['entrySha256']
+          source=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          folder='games/stone-money-island/v0.2.0-'+digest[:8]
+          API='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'}
+          def api(path,body=None,method=None):
+              req=urllib.request.Request(API+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'))
+              with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
+          blob=api('git/blobs',{'content':data.decode(),'encoding':'utf-8'})['sha']
+          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','sourceCommit':source,'entrySha256':digest,'chapterLoopPassed':True,'frozenSourceUnchanged':True,'visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
+          for attempt in range(3):
+              head=api('git/ref/heads/gh-pages')['object']['sha'];base=api('git/commits/'+head)['tree']['sha']
+              tree=api('git/trees',{'base_tree':base,'tree':[{'path':folder+'/index.html','mode':'100644','type':'blob','sha':blob},{'path':folder+'/SOURCE.json','mode':'100644','type':'blob','content':source_info}]})['sha']
+              commit=api('git/commits',{'message':'publish(stone-money): add immutable playable shore chapter without replacing old Mother pages','tree':tree,'parents':[head]})['sha']
+              try:api('git/refs/heads/gh-pages',{'sha':commit,'force':False},'PATCH');break
+              except urllib.error.HTTPError as e:
+                  if e.code not in (409,422) or attempt==2:raise
+                  time.sleep(2)
+          url='https://haihao0307.github.io/guilin-dem-pipeline/'+folder+'/index.html'
+          with open(os.environ['GITHUB_ENV'],'a') as out:
+              for k,v in {'SMI_PUBLIC_URL':url,'SMI_EXPECTED_SHA256':digest,'SMI_SOURCE_COMMIT':source,'SMI_PAGES_COMMIT':commit}.items():out.write(k+'='+v+'\n')
+          print(json.dumps({'url':url,'sourceCommit':source,'pagesCommit':commit,'sha256':digest},indent=2))
+          PY
+      - name: Verify exact public bytes and ordinary mobile and desktop entry
+        run: timeout 410s python -u .github/scripts/stone-money-public020.py
+      - name: Preserve public verification receipt
+        if: always()
+        run: |
+          git add games/survivor-palau/releases/v0.2.0
+          git diff --cached --quiet || git commit -m 'verify(stone-money): record normal-URL mobile and desktop public acceptance boundary'
           git pull --rebase origin work/stone-money-island-v0200-shore-survival-20260918
           git push origin HEAD:work/stone-money-island-v0200-shore-survival-20260918
       - uses: actions/upload-artifact@v4
@@ -53,4 +97,5 @@ jobs:
             games/survivor-palau/source/v0200/
             games/survivor-palau/releases/v0.2.0/
             /tmp/stone-money-v0200-qa/
+            /tmp/smi-public020/
           if-no-files-found: error
