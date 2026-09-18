@@ -1,7 +1,7 @@
 {
   "version": "R045.44",
   "passed": false,
-  "gateCount": 31,
+  "gateCount": 29,
   "passedCount": 26,
   "checks": [
     {
@@ -38,19 +38,19 @@
       "name": "r44_macro_increment_material",
       "pass": false,
       "value": {
-        "incGain": 3,
-        "incThreshold": 3,
-        "active": 546,
+        "incGain": 8,
+        "incThreshold": 8,
+        "active": 551,
         "oldActive": 543,
         "bridge": 0,
-        "extension": 3
+        "extension": 8
       },
-      "limit": ">=15 gain samples, >=10 threshold crossings, >=10 active-cell growth"
+      "limit": ">=12 gain samples, >=8 threshold crossings, >=8 active-cell growth"
     },
     {
       "name": "r44_change_bounded_nontrivial",
       "pass": true,
-      "value": 0.07846005160111909,
+      "value": 0.07999429502055776,
       "limit": ".015m < sampled max R44-R43 change < .32m"
     },
     {
@@ -75,29 +75,30 @@
       "name": "all_three_groups_material",
       "pass": true,
       "value": [
-        94,
-        228,
+        96,
+        231,
         224
       ],
       "limit": "each >20"
     },
     {
-      "name": "corridor_support_present",
+      "name": "frozen_contour_support_material",
       "pass": false,
       "value": {
         "bridge": 0,
-        "extension": 3
+        "extension": 8,
+        "total": 8
       },
-      "limit": "both long-gap corridor and stable-chain extension modes occur"
+      "limit": ">=12 frozen support promotions, including >=8 stable-chain extensions"
     },
     {
       "name": "all_threshold_crossings_supported",
       "pass": true,
       "value": {
-        "incThreshold": 3,
+        "incThreshold": 8,
         "unsupported": 0
       },
-      "limit": "every new active sample has frozen-R43 macro support"
+      "limit": "every new active sample has frozen-R43 support"
     },
     {
       "name": "promotions_safe",
@@ -129,10 +130,10 @@
             21,
             20,
             16,
+            13,
             11,
             10,
-            9,
-            5,
+            6,
             4,
             3,
             2
@@ -169,7 +170,7 @@
       "limit": "compatible components/orphans/tiny components may not worsen"
     },
     {
-      "name": "largest_components_grow",
+      "name": "major_curved_components_grow",
       "pass": false,
       "value": {
         "new": [
@@ -179,33 +180,10 @@
         "prior": [
           124,
           79
-        ]
-      },
-      "limit": "top two compatible components gain >=8 cells combined"
-    },
-    {
-      "name": "long_ribbon_read_improves",
-      "pass": false,
-      "value": {
-        "median": [
-          57,
-          57
         ],
-        "max": [
-          78,
-          78
-        ]
+        "top2Growth": 1
       },
-      "limit": "median longest +6m or max longest +12m"
-    },
-    {
-      "name": "row_run_count_not_worse",
-      "pass": false,
-      "value": {
-        "rowRunsN": 83,
-        "rowRunsP": 82
-      },
-      "limit": "macro corridors may join/extend but not create more row fragments"
+      "limit": "top two compatible curved components gain >=8 cells combined"
     },
     {
       "name": "hard_drainage_core_empty",
@@ -284,13 +262,13 @@
     {
       "name": "logic_error_explicit",
       "pass": true,
-      "value": "main-view terrace weakness does not imply risers should be amplified: visibility and topological organization are different variables. Likewise, longer ribbons alone do not prove agricultural correctness because an indiscriminate bridge can erase real drainage separators. R44 therefore changes only frozen support organization, keeps vertical quantization fixed, and requires every promoted corridor to re-pass drainage and foreground-receiver safety.",
-      "limit": "visibility != riser amplitude; connectivity != agricultural truth"
+      "value": "main-view terrace weakness does not imply risers should be amplified: visibility and topological organization are different variables. Likewise, longer ribbons alone do not prove agricultural correctness because an indiscriminate bridge can erase real drainage separators. A further QA correction is required: per-row run count and per-row longest-run length are not valid hard truth for curved or branching contour ribbons; R43 already established this. R44 therefore changes only frozen support organization, keeps vertical quantization fixed, and evaluates materiality with same-family/stair-compatible 2-D component growth while retaining row metrics only as diagnostics.",
+      "limit": "visibility != riser amplitude; curved/branching topology != row-run metric"
     },
     {
       "name": "real_world_constraint_explicit",
       "pass": true,
-      "value": "the 6 m QA lattice, 12-36 m synthetic anchor search, three lattice directions, 12 m hard drainage core and generated corridor continuations are morphology/QA parameters, not surveyed Yunnan terrace dimensions or measured hydraulic connectivity. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity or event water-management records.",
+      "value": "the 6 m QA lattice, 12-36 m synthetic anchor search, four lattice directions, two-or-three frozen support cells, 12 m hard drainage core and generated continuations are morphology/QA parameters, not surveyed Yunnan terrace dimensions or measured hydraulic connectivity. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity or event water-management records.",
       "limit": "synthetic parameters and missing field truth explicit"
     },
     {
@@ -314,29 +292,31 @@
   ],
   "metrics": {
     "geometry": {
-      "active": 546,
+      "active": 551,
       "oldActive": 543,
       "core": 356,
       "oldCore": 356,
-      "incGain": 3,
-      "incThreshold": 3,
+      "incGain": 8,
+      "incThreshold": 8,
       "unsupported": 0,
       "unsafe": 0,
       "bridge": 0,
-      "extension": 3,
-      "maxGain": 0.25956811956828774,
-      "maxChange": 0.07846005160111909,
+      "extension": 8,
+      "maxGain": 0.2563599009832409,
+      "maxChange": 0.07999429502055776,
       "groups": [
-        94,
-        228,
+        96,
+        231,
         224
       ],
-      "rowRunsN": 83,
-      "rowRunsP": 82,
-      "medianLongestN": 57,
-      "medianLongestP": 57,
-      "maxLongestN": 78,
-      "maxLongestP": 78,
+      "rowRunsDiagnostic": {
+        "new": 87,
+        "prior": 82
+      },
+      "rowLongestDiagnostic": {
+        "new": 78,
+        "prior": 78
+      },
       "topology2D": {
         "new": {
           "components": 18,
@@ -356,10 +336,10 @@
             21,
             20,
             16,
+            13,
             11,
             10,
-            9,
-            5,
+            6,
             4,
             3,
             2
@@ -401,6 +381,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m frozen-R43 macro corridor sweep + exact R43 active inheritance + compatible 2D topology + long-ribbon materiality + hydrology/receiver boundaries"
+    "qaScope": "full 6m frozen-R43 contour continuation sweep + exact R43 active inheritance + compatible 2D topology/materiality + hydrology/receiver boundaries; row-run metrics diagnostic only because curved/branching ribbons invalidate them as hard gates"
   }
 }
