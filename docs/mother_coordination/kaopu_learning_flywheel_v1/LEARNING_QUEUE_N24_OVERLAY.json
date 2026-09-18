@@ -1,0 +1,66 @@
+{
+  "id": "KAOPU-NOISE-N24-FLYWHEEL-20260919",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N23_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N23_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_FARMLAND_STITCH_BOUNDARY_N23.md",
+    "CURRENT_BEST_VIEW_N23_FARMLAND_STITCH_BOUNDARY.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6O",
+    "topic": "Farmland contour-following continuation frame",
+    "question": "Does R045.39 world-X run support prove that its stable continuation follows local terrain contours?",
+    "state": "candidate-partial-pinned-source-cpu-semantic-counterexample-verified",
+    "evidence": [
+      "references/farmland-contour-direction-n24/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_contour_direction_n24.mjs",
+      "PROBES/farmland_contour_direction_result_n24.json",
+      "LEARNING_LOG/2026-09-19_FARMLAND_CONTOUR_DIRECTION_N24.md",
+      "CURRENT_BEST_VIEW_N24_FARMLAND_CONTOUR_DIRECTION.md"
+    ],
+    "checks": "8/8 local pass; CI pending",
+    "integration": "routing prepared for PR65 after successful CI; not acknowledged",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "R39 generator and fragmentation metric both privilege world X",
+    "6/10 fixed gain samples are more than 30 degrees from the local contour tangent and three lack analogous tangent support",
+    "7/10 cross the active threshold; two of those crossings are axis-only under the bounded tangent diagnostic",
+    "the same two-cell classifier changes outcome after a 90-degree rotation",
+    "local tangent following remains only a Candidate because it depends on derivative scale and is unstable near flats"
+  ],
+  "verificationReceipt": {
+    "checks": "8/8 local pass; CI pending",
+    "successfulRun": null,
+    "sourceReplay": "fixed Farmland R045.39 commit plus four SHA-256 source locks",
+    "runtime": "Node.js CPU exact Mother kernel replay plus synthetic 90-degree classifier control",
+    "hardwareGpuBrowserMobile": "not exercised by N24",
+    "evidenceIndependence": "R045.39 is one implementation root; N24 is a derived fixed-source counterexample; SideFX documentation is a separate mature contract root"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one frame/topology warning; delivery waits for CI"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no fixed R045.39 consumer"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no fixed R045.39 consumer"
+    }
+  ],
+  "nextGap": "Mother must return a versioned orientation-independent topology receipt or explicitly scope the current world-X metric as diagnostic-only, while retaining low-gradient and drainage locks."
+}

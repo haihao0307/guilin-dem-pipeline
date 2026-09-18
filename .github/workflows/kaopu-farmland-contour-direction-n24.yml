@@ -1,0 +1,42 @@
+name: KAOPU Farmland contour direction N24
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_contour_direction_n24.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_contour_direction_result_n24.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-contour-direction-n24/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-contour-direction-n24.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r39
+          git -C /tmp/farmland-r39 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r39 fetch --depth 1 origin 3f7eaf4f12a07d26c67c8e4659d8eceff5c691d5
+          git -C /tmp/farmland-r39 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r39 rev-parse HEAD)" = 3f7eaf4f12a07d26c67c8e4659d8eceff5c691d5
+      - name: Verify locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r39/farmland-object-dna/research/r045-autonomous-rebuild
+          test "$(sha256sum "$base/round-30/r045_round30_kernel.mjs" | cut -d' ' -f1)" = 964ce07778cc571273fc78c5e77a54d65e1393f1d85a3a69c4eb91a7df327f18
+          test "$(sha256sum "$base/round-38/r045_round38_kernel.mjs" | cut -d' ' -f1)" = f588e5fd54d5d8b147fa2d9e24514b10946786d03e55775037eca870e1d46d89
+          test "$(sha256sum "$base/round-39/r045_round39_kernel.mjs" | cut -d' ' -f1)" = fd3462a9a11bd7fcb5475d7d0882d9c3d028cd35eb74d5fa480b920a99cdbee8
+          test "$(sha256sum "$base/round-39/r045_round39_qa.mjs" | cut -d' ' -f1)" = 8c66b2e07522a72a94ceea4a4817d948c4849459735228087474cd0adcb5c568
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r39 \
+          KAOPU_N24_OUTPUT=/tmp/farmland_contour_direction_result_n24.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_contour_direction_n24.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_contour_direction_result_n24.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_contour_direction_result_n24.json

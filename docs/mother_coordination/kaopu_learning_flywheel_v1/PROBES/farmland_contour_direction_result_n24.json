@@ -1,0 +1,393 @@
+{
+  "schema": "kaopu.probe.farmland-contour-direction-n24/1",
+  "source": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "3f7eaf4f12a07d26c67c8e4659d8eceff5c691d5",
+    "version": "R045.39"
+  },
+  "passed": true,
+  "gateCount": 8,
+  "passedCount": 8,
+  "checks": [
+    {
+      "name": "fixed_source_versions",
+      "pass": true,
+      "value": {
+        "r39": "R045.39",
+        "r38": "R045.38"
+      },
+      "limit": "R045.39 over R045.38"
+    },
+    {
+      "name": "fixed_gain_samples_replay",
+      "pass": true,
+      "value": {
+        "count": 10,
+        "minGain": 0.008736155812
+      },
+      "limit": "ten fixed R39 continuation-gain samples, each gain > 0.008"
+    },
+    {
+      "name": "fixed_axis_materially_misaligned",
+      "pass": true,
+      "value": {
+        "min": 3.331497778,
+        "median": 31.14191072,
+        "p90": 48.74531524,
+        "max": 52.11350009,
+        "over30": 6,
+        "over45": 2
+      },
+      "limit": "at least 6/10 over 30 degrees and max over 50 degrees"
+    },
+    {
+      "name": "axis_support_not_equivalent_to_tangent_support",
+      "pass": true,
+      "value": 3,
+      "limit": "at least three gain samples lack the analogous two-cell support along the local contour tangent"
+    },
+    {
+      "name": "worst_case_is_cross_contour_material",
+      "pass": true,
+      "value": {
+        "x": -106,
+        "z": -108,
+        "gain": 0.07708861599,
+        "heightChangeFromR38": -0.003376609287,
+        "baseMask": 0,
+        "gradient": {
+          "dx": 0.3493954708,
+          "dz": -0.271864761,
+          "mag": 0.4427049167
+        },
+        "contourTangent": [
+          0.6140992582,
+          0.7892288014
+        ],
+        "axisTangentAngleDeg": 52.11350009,
+        "fixedAxisNormalProjection": 0.7892288014,
+        "tangentBacked": false
+      },
+      "limit": ">50 degrees, >0.78 normal projection, >0.07 gain, no tangent-backed pair"
+    },
+    {
+      "name": "axis_only_support_changes_active_topology",
+      "pass": true,
+      "value": {
+        "count": 2,
+        "worst": {
+          "x": 104,
+          "z": -30,
+          "gain": 0.04674355909,
+          "heightChangeFromR38": -0.003005893471,
+          "baseMask": 0.09887149449,
+          "gradient": {
+            "dx": -0.1947850938,
+            "dz": -0.2110388475,
+            "mag": 0.2871909259
+          },
+          "contourTangent": [
+            0.734838146,
+            -0.6782425076
+          ],
+          "axisTangentAngleDeg": 42.70645858,
+          "fixedAxisNormalProjection": 0.6782425076,
+          "tangentBacked": false
+        }
+      },
+      "limit": "at least two axis-only gains cross active threshold; worst is >40 degrees from tangent and >0.67 normal projection"
+    },
+    {
+      "name": "classifier_fails_rotation_control",
+      "pass": true,
+      "value": {
+        "horizontalAccepted": true,
+        "rotated90Accepted": false
+      },
+      "limit": "otherwise identical support changes result under 90-degree rotation"
+    },
+    {
+      "name": "production_locks_preserved",
+      "pass": true,
+      "value": {
+        "visualAcceptance": false,
+        "parcelGenerationEnabled": false,
+        "waterStateKnown": false,
+        "productionReady": false
+      },
+      "limit": "all remain false"
+    }
+  ],
+  "metrics": {
+    "fixedPromotionCount": 10,
+    "allPromotionGainsPositive": true,
+    "axisOnlyCount": 3,
+    "thresholdCrossingCount": 7,
+    "axisOnlyThresholdCrossingCount": 2,
+    "axisVsContourAngleDeg": {
+      "min": 3.331497778,
+      "median": 31.14191072,
+      "p90": 48.74531524,
+      "max": 52.11350009,
+      "over30": 6,
+      "over45": 2
+    },
+    "worst": {
+      "x": -106,
+      "z": -108,
+      "gain": 0.07708861599,
+      "heightChangeFromR38": -0.003376609287,
+      "baseMask": 0,
+      "gradient": {
+        "dx": 0.3493954708,
+        "dz": -0.271864761,
+        "mag": 0.4427049167
+      },
+      "contourTangent": [
+        0.6140992582,
+        0.7892288014
+      ],
+      "axisTangentAngleDeg": 52.11350009,
+      "fixedAxisNormalProjection": 0.7892288014,
+      "tangentBacked": false
+    },
+    "worstAxisOnlyThresholdCrossing": {
+      "x": 104,
+      "z": -30,
+      "gain": 0.04674355909,
+      "heightChangeFromR38": -0.003005893471,
+      "baseMask": 0.09887149449,
+      "gradient": {
+        "dx": -0.1947850938,
+        "dz": -0.2110388475,
+        "mag": 0.2871909259
+      },
+      "contourTangent": [
+        0.734838146,
+        -0.6782425076
+      ],
+      "axisTangentAngleDeg": 42.70645858,
+      "fixedAxisNormalProjection": 0.6782425076,
+      "tangentBacked": false
+    },
+    "rotationControl": {
+      "horizontalAccepted": true,
+      "rotated90Accepted": false
+    },
+    "samples": [
+      {
+        "x": -106,
+        "z": -108,
+        "gain": 0.07708861599,
+        "heightChangeFromR38": -0.003376609287,
+        "baseMask": 0,
+        "gradient": {
+          "dx": 0.3493954708,
+          "dz": -0.271864761,
+          "mag": 0.4427049167
+        },
+        "contourTangent": [
+          0.6140992582,
+          0.7892288014
+        ],
+        "axisTangentAngleDeg": 52.11350009,
+        "fixedAxisNormalProjection": 0.7892288014,
+        "tangentBacked": false
+      },
+      {
+        "x": -52,
+        "z": -102,
+        "gain": 0.03875349581,
+        "heightChangeFromR38": -0.01272860281,
+        "baseMask": 0.106203972,
+        "gradient": {
+          "dx": -0.2282832428,
+          "dz": -0.200232054,
+          "mag": 0.3036545972
+        },
+        "contourTangent": [
+          0.6594072867,
+          -0.7517858939
+        ],
+        "axisTangentAngleDeg": 48.74531524,
+        "fixedAxisNormalProjection": 0.7517858939,
+        "tangentBacked": true
+      },
+      {
+        "x": -142,
+        "z": -72,
+        "gain": 0.03690881518,
+        "heightChangeFromR38": 0.01058686335,
+        "baseMask": 0.1111879592,
+        "gradient": {
+          "dx": -0.2240327157,
+          "dz": -0.2739163639,
+          "mag": 0.3538655566
+        },
+        "contourTangent": [
+          0.7740690181,
+          -0.6331012203
+        ],
+        "axisTangentAngleDeg": 39.27929737,
+        "fixedAxisNormalProjection": 0.6331012203,
+        "tangentBacked": true
+      },
+      {
+        "x": -112,
+        "z": -54,
+        "gain": 0.03663985063,
+        "heightChangeFromR38": 0.01409004243,
+        "baseMask": 0.1115826221,
+        "gradient": {
+          "dx": 0.2555620725,
+          "dz": -0.2702580362,
+          "mag": 0.371956152
+        },
+        "contourTangent": [
+          0.7265857406,
+          0.6870758049
+        ],
+        "axisTangentAngleDeg": 43.39907691,
+        "fixedAxisNormalProjection": 0.6870758049,
+        "tangentBacked": true
+      },
+      {
+        "x": -16,
+        "z": -54,
+        "gain": 0.03510139146,
+        "heightChangeFromR38": 0.006782975188,
+        "baseMask": 0.11517124,
+        "gradient": {
+          "dx": 0.1571158397,
+          "dz": -0.2750762717,
+          "mag": 0.3167843783
+        },
+        "contourTangent": [
+          0.8683391308,
+          0.4959709205
+        ],
+        "axisTangentAngleDeg": 29.73379433,
+        "fixedAxisNormalProjection": 0.4959709205,
+        "tangentBacked": true
+      },
+      {
+        "x": -52,
+        "z": -30,
+        "gain": 0.03340706368,
+        "heightChangeFromR38": 0.008954378551,
+        "baseMask": 0.119399025,
+        "gradient": {
+          "dx": -0.1235151805,
+          "dz": -0.2044152341,
+          "mag": 0.2388338078
+        },
+        "contourTangent": [
+          0.8558890217,
+          -0.5171595329
+        ],
+        "axisTangentAngleDeg": 31.14191072,
+        "fixedAxisNormalProjection": 0.5171595329,
+        "tangentBacked": true
+      },
+      {
+        "x": 104,
+        "z": -30,
+        "gain": 0.04674355909,
+        "heightChangeFromR38": -0.003005893471,
+        "baseMask": 0.09887149449,
+        "gradient": {
+          "dx": -0.1947850938,
+          "dz": -0.2110388475,
+          "mag": 0.2871909259
+        },
+        "contourTangent": [
+          0.734838146,
+          -0.6782425076
+        ],
+        "axisTangentAngleDeg": 42.70645858,
+        "fixedAxisNormalProjection": 0.6782425076,
+        "tangentBacked": false
+      },
+      {
+        "x": 68,
+        "z": -24,
+        "gain": 0.008736155812,
+        "heightChangeFromR38": -0.001351241369,
+        "baseMask": 0.1142132922,
+        "gradient": {
+          "dx": 0.01659041456,
+          "dz": -0.2850037138,
+          "mag": 0.2854861796
+        },
+        "contourTangent": [
+          0.9983100205,
+          0.0581128466
+        ],
+        "axisTangentAngleDeg": 3.331497778,
+        "fixedAxisNormalProjection": 0.0581128466,
+        "tangentBacked": false
+      },
+      {
+        "x": 86,
+        "z": -24,
+        "gain": 0.01259068944,
+        "heightChangeFromR38": 0.00541613841,
+        "baseMask": 0.1073531336,
+        "gradient": {
+          "dx": -0.1400554529,
+          "dz": -0.2491201583,
+          "mag": 0.2857908031
+        },
+        "contourTangent": [
+          0.8716871067,
+          -0.4900628409
+        ],
+        "axisTangentAngleDeg": 29.34471201,
+        "fixedAxisNormalProjection": 0.4900628409,
+        "tangentBacked": true
+      },
+      {
+        "x": 68,
+        "z": 0,
+        "gain": 0.01043564884,
+        "heightChangeFromR38": -0.004237885059,
+        "baseMask": 0.1081879489,
+        "gradient": {
+          "dx": 0.01669472052,
+          "dz": -0.2503044722,
+          "mag": 0.2508606037
+        },
+        "contourTangent": [
+          0.9977831054,
+          0.06654979011
+        ],
+        "axisTangentAngleDeg": 3.815842291,
+        "fixedAxisNormalProjection": 0.06654979011,
+        "tangentBacked": true
+      }
+    ]
+  },
+  "candidate": {
+    "status": "frame-aware topology contract; no production continuation algorithm or tolerance selected",
+    "minimumReceipt": [
+      "declare the height-field version and derivative scale used to define local contour tangent",
+      "separate orientation-independent connected-component/topology evidence from axis-specific row diagnostics",
+      "test rotated and offset lattices plus local-tangent alignment; retain low-gradient Unknown band and drainage locks"
+    ]
+  },
+  "currentBestView": [
+    "A world-X row run is a sampling diagnostic, not a coordinate-invariant terrace-family topology contract.",
+    "For contour-following morphology, neighborhood direction must be derived from a declared local terrain frame or topology must be measured without privileging a world axis.",
+    "Local tangent following is itself only a Candidate: it is unstable on near-flat terrain, depends on derivative scale, and does not override drainage or field-evidence locks."
+  ],
+  "rejected": [
+    "same-family and stair-compatible x-neighbours prove contour-following continuation",
+    "lower horizontal row fragmentation proves better two-dimensional nested/branching/merging topology",
+    "the analysis tangent is an accepted production algorithm"
+  ],
+  "unknown": [
+    "Mother-selected rotation-invariant topology representation and acceptance tolerances",
+    "behaviour on near-flat/critical points, real mesh and LOD transitions",
+    "hardware/public runtime, Mother acknowledgement or adoption, and user visual acceptance"
+  ]
+}
