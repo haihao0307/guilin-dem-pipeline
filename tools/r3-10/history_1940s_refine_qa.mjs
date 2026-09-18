@@ -22,7 +22,7 @@ try{
   check(r?.xuanmenForcedWaterPixels>0,'Xuanmen Bay override opened no historical water');
   check(r?.seaMaskUpdated===true,'refined mask not connected to sea renderer');check(r?.strictWaterProtectionActive===true,'strict NG51-1 water protection not active during refinement');
   check((r?.osm?.objects||0)>0,'refined OSM remask found no loaded OSM objects');
-  check((r?.osm?.roadHidden||0)>0,'refined historical water hid no modern roads');
+  check((r?.osm?.roadHidden||0)>0,'refined historical water hid no modern roads');check((r?.roadMapSupport?.points||0)>=1000,'NG51-1 road support not loaded');check((r?.osm?.majorRoadUnsupportedHidden||0)>0,'NG51-1 map removed no unsupported major roads');
   check(ds.history1940sRefine==='r28','R28 dataset marker missing');
   check(ds.history1940sTerrainHeightUnchanged==='true','terrain-height invariant dataset marker missing');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
