@@ -27,7 +27,7 @@ The N17 C++20 probe passed `8/8` local and CI gates on eight boundary hashes. It
 - `float(h >> 8) * 2^-24` yields exactly `2^24` possible values in `[0,1)`, with maximum `1 - 2^-24`; it intentionally discards eight low bits.
 - `uintBitsToFloat(0x3f800000 | (h >> 9)) - 1` yields `2^23` values in `[0,1)`, with maximum `1 - 2^-23`; it intentionally discards nine low bits.
 
-The first WebGL2 run correctly rejected the expectation of exact agreement. Chrome 152 / ANGLE Vulkan SwiftShader mapped `0xffffff7f` to `1.0`, while C++ and native WGSL mapped it to the next float below one. The two half-open candidates matched bit-for-bit across all tested CPU, GLSL ES and native WGSL vectors. The initial failed runs are retained as evidence; the gate now requires this observed closed-form divergence rather than hiding it.
+The first WebGL2 run correctly rejected the expectation of exact agreement. Chrome 152 / ANGLE Vulkan SwiftShader mapped `0xffffff7f` to `1.0`, while C++ and native WGSL mapped it to the next float below one. The two half-open candidates matched bit-for-bit across all tested CPU, GLSL ES and native WGSL vectors. The initial failed runs are retained as evidence; the gate now requires this observed closed-form divergence rather than hiding it. The corrected [GitHub Actions run 35304991328](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35304991328) passed CPU `8/8`, WebGL2 `8/8` and native WGSL `4/4` gates.
 
 Native WGSL executed through pinned `wgpu 29.0.0`, Vulkan and Mesa llvmpipe. These are software runtimes, not hardware GPU or mobile evidence. All runtime paths share one test design and are not independent algorithm evidence.
 
@@ -77,6 +77,6 @@ The V2.6 source is deterministic but presently has an undocumented closed interv
 
 ## Routing recommendation
 
-Route one incremental warning to the existing Landscape PR79 thread because its newly fixed V2.6 transfer pack contains the audited expression: preserve the source's closed-interval behavior only if intentional; otherwise test a versioned `top24` half-open mapping. Do not claim adoption, do not revive PR #80, and do not repeat the older N02 instructions. Brick PR15 and Farmland PR65 need no repeat delivery.
+One incremental warning was delivered to the existing Landscape PR79 thread as [comment 5724930016](https://github.com/haihao0307/guilin-dem-pipeline/pull/79#issuecomment-5724930016) because its newly fixed V2.6 transfer pack contains the audited expression: preserve the source's closed-interval behavior only if intentional; otherwise test a versioned `top24` half-open mapping. Delivery is not acknowledgement, implementation or adoption. Do not revive PR #80, and do not repeat the older N02 instructions. Brick PR15 and Farmland PR65 need no repeat delivery.
 
 First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.
