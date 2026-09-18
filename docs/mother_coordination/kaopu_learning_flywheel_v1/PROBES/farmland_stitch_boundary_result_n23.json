@@ -1,0 +1,251 @@
+{
+  "schema": "kaopu.probe.farmland-stitch-boundary-n23/1",
+  "source": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "692e472abcdd52a677d029c5c42c7d0d56baf189",
+    "version": "R045.36"
+  },
+  "passed": true,
+  "gateCount": 9,
+  "passedCount": 9,
+  "checks": [
+    {
+      "name": "fixed_version_and_mother_qa_receipt",
+      "pass": true,
+      "value": {
+        "version": "R045.36",
+        "motherQa": {
+          "passed": true,
+          "gateCount": 39,
+          "passedCount": 39,
+          "coarseMaxAddedStep": 0.7659721145
+        }
+      },
+      "limit": "R045.36 and its persisted QA passes all gates"
+    },
+    {
+      "name": "clearance_boundary_is_refined",
+      "pass": true,
+      "value": {
+        "x": 42.97473432,
+        "z": -108,
+        "threshold": 0.035,
+        "bisectionIterations": 50,
+        "epsilonMeters": 0.000001,
+        "spanMeters": 0.000002
+      },
+      "limit": "two-micrometre bracket straddles drain clearance 0.035"
+    },
+    {
+      "name": "substrate_is_continuous_at_boundary",
+      "pass": true,
+      "value": 3.366075134e-7,
+      "limit": "< 0.00001 m across epsilon sides"
+    },
+    {
+      "name": "same_pair_exists_on_both_sides",
+      "pass": true,
+      "value": {
+        "pairIdentity": true,
+        "left": {
+          "axis": "contour",
+          "angle": -0.18,
+          "distance": 36,
+          "groupIndex": 0,
+          "indexGap": 1,
+          "stepGap": 0.09756965826,
+          "strength": 0.5451937573
+        },
+        "right": {
+          "axis": "contour",
+          "angle": -0.18,
+          "distance": 36,
+          "groupIndex": 0,
+          "indexGap": 1,
+          "stepGap": 0.09756968444,
+          "strength": 0.5451940358
+        }
+      },
+      "limit": "same strong contour pair exists across boundary"
+    },
+    {
+      "name": "hard_gate_creates_material_epsilon_seam",
+      "pass": true,
+      "value": {
+        "heightJump": 0.08016050428,
+        "maskJump": 0.4992985318,
+        "spanMeters": 0.000002
+      },
+      "limit": ">7.5 cm height and >0.45 mask jump across 2 micrometres"
+    },
+    {
+      "name": "hard_gate_is_the_changing_predicate",
+      "pass": true,
+      "value": {
+        "left": {
+          "drain": 0.03499995069,
+          "target": 0,
+          "broad": 0.8763477252,
+          "group": 0.9693125114
+        },
+        "right": {
+          "drain": 0.03500004931,
+          "target": 0.5370881437,
+          "broad": 0.8763478143,
+          "group": 0.9693125148
+        }
+      },
+      "limit": "drain threshold crosses while pair and other eligibility remain material"
+    },
+    {
+      "name": "zero_at_boundary_taper_removes_epsilon_jump_in_candidate",
+      "pass": true,
+      "value": {
+        "candidateHeightJump": 3.366089736e-7,
+        "leftTaper": 0,
+        "rightTaper": 1.823259636e-11
+      },
+      "limit": "<0.00001 m candidate jump; taper tends to zero at threshold"
+    },
+    {
+      "name": "candidate_reaches_current_inside_band",
+      "pass": true,
+      "value": {
+        "x": 44,
+        "drain": 0.1009598379,
+        "taper": 1,
+        "currentHeight": 29.59432119,
+        "candidateHeight": 29.59432119
+      },
+      "limit": "candidate exactly equals R36 once clearance >= 0.055"
+    },
+    {
+      "name": "production_locks_preserved",
+      "pass": true,
+      "value": {
+        "visualAcceptance": false,
+        "parcelGenerationEnabled": false,
+        "waterStateKnown": false,
+        "productionReady": false
+      },
+      "limit": "all remain false"
+    }
+  ],
+  "metrics": {
+    "boundary": {
+      "x": 42.97473432,
+      "z": -108,
+      "threshold": 0.035,
+      "bisectionIterations": 50,
+      "epsilonMeters": 0.000001,
+      "spanMeters": 0.000002
+    },
+    "initialBracket": {
+      "lo": 42.75,
+      "hi": 43,
+      "loClearance": 0.0247304738,
+      "hiClearance": 0.03625580512
+    },
+    "left": {
+      "x": 42.97473332,
+      "drain": 0.03499995069,
+      "broad": 0.8763477252,
+      "groupEnvelope": 0.9693125114,
+      "oldMask": 0.03778961191,
+      "currentMask": 0.03778961191,
+      "currentTarget": 0,
+      "oldGroupIndex": 0,
+      "oldIndex": 20,
+      "oldRaw": 0.1911262205,
+      "pair": {
+        "axis": "contour",
+        "angle": -0.18,
+        "distance": 36,
+        "groupIndex": 0,
+        "indexGap": 1,
+        "stepGap": 0.09756965826,
+        "strength": 0.5451937573
+      },
+      "currentAcceptedPair": null,
+      "inheritedHeight": 29.46208491,
+      "currentHeight": 29.46208491,
+      "currentLift": 0,
+      "taper": 0,
+      "candidateHeight": 29.46208491
+    },
+    "right": {
+      "x": 42.97473532,
+      "drain": 0.03500004931,
+      "broad": 0.8763478143,
+      "groupEnvelope": 0.9693125148,
+      "oldMask": 0.03778971792,
+      "currentMask": 0.5370881437,
+      "currentTarget": 0.5370881437,
+      "oldGroupIndex": 0,
+      "oldIndex": 20,
+      "oldRaw": 0.1911257198,
+      "pair": {
+        "axis": "contour",
+        "angle": -0.18,
+        "distance": 36,
+        "groupIndex": 0,
+        "indexGap": 1,
+        "stepGap": 0.09756968444,
+        "strength": 0.5451940358
+      },
+      "currentAcceptedPair": {
+        "axis": "contour",
+        "angle": -0.18,
+        "distance": 36,
+        "groupIndex": 0,
+        "indexGap": 1,
+        "stepGap": 0.09756968444,
+        "strength": 0.5451940358
+      },
+      "inheritedHeight": 29.46208525,
+      "currentHeight": 29.54224542,
+      "currentLift": 0.08016016767,
+      "taper": 1.823259636e-11,
+      "candidateHeight": 29.46208525
+    },
+    "inheritedHeightJump": 3.366075134e-7,
+    "currentHeightJump": 0.08016050428,
+    "currentLiftJump": 0.08016016767,
+    "currentMaskJump": 0.4992985318,
+    "candidateHeightJump": 3.366089736e-7,
+    "pairIdentity": true,
+    "motherQa": {
+      "passed": true,
+      "gateCount": 39,
+      "passedCount": 39,
+      "coarseMaxAddedStep": 0.7659721145
+    },
+    "farInside": {
+      "x": 44,
+      "drain": 0.1009598379,
+      "taper": 1,
+      "currentHeight": 29.59432119,
+      "candidateHeight": 29.59432119
+    }
+  },
+  "candidate": {
+    "status": "analysis-only boundary-compatible envelope; not a production parameter choice",
+    "formula": "h_candidate = h_R35 + smoothstep(0.035, 0.055, drainage_clearance) * (h_R36 - h_R35)",
+    "purpose": "demonstrate the zero-at-boundary contract; 0.02 mask-space width is not accepted for production"
+  },
+  "currentBestView": [
+    "A continuous source mask does not make a gated effect continuous when the effect begins with non-zero amplitude immediately after the eligibility predicate changes.",
+    "For a continuous output, every soft eligibility boundary must multiply the effect increment by an envelope that tends to zero at the boundary; hard safety exclusions and intentionally discontinuous terrace risers must remain separately named.",
+    "A coarse neighbor cliff bound cannot substitute for epsilon-side tests at every branch, threshold and discrete selector boundary."
+  ],
+  "rejected": [
+    "R045.36 39/39 coarse QA proves sub-grid stitch continuity",
+    "smoothstep inside safety scoring guarantees continuity when an earlier hard return bypasses the score",
+    "the analysis-only 0.02 taper width is a production recommendation or visual acceptance"
+  ],
+  "unknown": [
+    "which R36 predicates are intended hard safety boundaries versus soft morphology eligibility",
+    "accepted transition width and gradient/curvature tolerances at the real camera and mesh resolution",
+    "Mother implementation, hardware/public runtime and user visual acceptance"
+  ]
+}

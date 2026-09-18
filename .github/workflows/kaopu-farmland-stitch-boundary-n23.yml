@@ -1,0 +1,42 @@
+name: KAOPU Farmland stitch boundary N23
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_stitch_boundary_n23.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_stitch_boundary_result_n23.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-stitch-boundary-n23/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-stitch-boundary-n23.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r36
+          git -C /tmp/farmland-r36 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r36 fetch --depth 1 origin 692e472abcdd52a677d029c5c42c7d0d56baf189
+          git -C /tmp/farmland-r36 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r36 rev-parse HEAD)" = 692e472abcdd52a677d029c5c42c7d0d56baf189
+      - name: Verify locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r36/farmland-object-dna/research/r045-autonomous-rebuild
+          test "$(sha256sum "$base/round-35/r045_round35_kernel.mjs" | cut -d' ' -f1)" = 286c0ac9610500f5c23174a2df54ae23638a2dad2dcc966b890b024bd12080f6
+          test "$(sha256sum "$base/round-36/r045_round36_kernel.mjs" | cut -d' ' -f1)" = b3abe2b3f35d36adffc37cce23d7f74bbc4bb88e8d1880ac382f28c9909acd1c
+          test "$(sha256sum "$base/round-36/r045_round36_qa.mjs" | cut -d' ' -f1)" = 8027dce9bdbcb637a00e7c348206898968649780108e64f9d32edc96a453f237
+          test "$(sha256sum "$base/round-36/r045_round36_qa_result.json" | cut -d' ' -f1)" = 7e35f737fc2bb203c7009dc2fc4a3e5d5f7951c18086ac6d2ec2ffb55f28a80c
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r36 \
+          KAOPU_N23_OUTPUT=/tmp/farmland_stitch_boundary_result_n23.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_stitch_boundary_n23.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_stitch_boundary_result_n23.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_stitch_boundary_result_n23.json

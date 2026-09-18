@@ -1,0 +1,65 @@
+{
+  "id": "KAOPU-NOISE-N23-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N22_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N22_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_FAMILY_JUNCTION_N22.md",
+    "CURRENT_BEST_VIEW_N22_FARMLAND_TERRACE_FAMILY_JUNCTION.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6N",
+    "topic": "Farmland procedural stitch eligibility boundaries",
+    "question": "Does R045.36 remain continuous when its drainage-clearance predicate crosses the hard stitch gate?",
+    "state": "candidate-partial-pinned-source-cpu-semantic-counterexample-verified",
+    "evidence": [
+      "references/farmland-stitch-boundary-n23/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_stitch_boundary_n23.mjs",
+      "PROBES/farmland_stitch_boundary_result_n23.json",
+      "LEARNING_LOG/2026-09-18_FARMLAND_STITCH_BOUNDARY_N23.md",
+      "CURRENT_BEST_VIEW_N23_FARMLAND_STITCH_BOUNDARY.md"
+    ],
+    "checks": "9/9 local pass; coordinator CI pending",
+    "integration": "routing prepared only; N22 and prior routes remain unacknowledged",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "R36 returns before its safety score at drainage clearance <=0.035, while the inside score starts from a non-zero floor",
+    "the fixed boundary jumps 0.0801605 m in height and 0.499299 in mask across 2 micrometres even though the same strong contour pair exists on both sides",
+    "the inherited R35 height changes only 3.37e-7 m across that interval",
+    "soft eligibility requires a zero-at-boundary envelope on the effect increment; a later smooth score cannot repair an earlier hard return",
+    "the analysis taper demonstrates continuity but does not select a production width"
+  ],
+  "verificationReceipt": {
+    "checks": "9/9 local pass; CI pending",
+    "sourceReplay": "fixed Farmland R045.36 commit plus four SHA-256 source locks",
+    "runtime": "Node.js CPU exact Mother kernel replay with 50-step threshold bisection",
+    "hardwareGpuBrowserMobile": "not exercised by N23; R36's 39/39 and browser evidence remain inherited Mother roots",
+    "evidenceIndependence": "R045.36 is one implementation root; N23 is a derived fixed-source counterexample; SideFX documentation is a separate mature contract root"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one incremental boundary-compatibility warning; delivery waits for successful coordinator CI"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no fixed R045.36 consumer"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no fixed R045.36 consumer"
+    }
+  ],
+  "nextGap": "Mother must classify hard versus soft boundaries and return an implemented version with epsilon value/gradient/curvature, coarse mesh, fixed-view and existing lock receipts."
+}
