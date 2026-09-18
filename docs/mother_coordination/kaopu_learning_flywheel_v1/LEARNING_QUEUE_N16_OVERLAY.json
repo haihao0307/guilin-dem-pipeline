@@ -1,0 +1,67 @@
+{
+  "id": "KAOPU-NOISE-N16-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N15_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N15_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_WGPU_NATIVE_WGSL_RUNTIME_N15.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6G",
+    "topic": "2D integer-hash statistical and identity boundary",
+    "question": "Does the N14/N15 32-bit pair hash behave adequately on spatially adjacent 2D cells, and may its output be treated as unique Cell identity?",
+    "state": "candidate-partial-pinned-source-cpu-ci-verified-production-and-device-unknown",
+    "evidence": [
+      "references/integer-hash-quality-n16/SOURCE_LOCK.json",
+      "PROBES/probe_integer_hash_quality_n16.cpp",
+      "PROBES/integer_hash_quality_result_n16.json",
+      "LEARNING_LOG/2026-09-18_INTEGER_HASH_QUALITY_N16.md",
+      "CURRENT_BEST_VIEW_N16_INTEGER_HASH_QUALITY.md"
+    ],
+    "integration": "not-started",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "routes": [
+    {
+      "mother": "Brick Material",
+      "entry": "HOUSE PR15",
+      "receipt": "N09 awaiting acknowledgement",
+      "actionThisRound": "prepared identity-boundary correction; no repeat delivery"
+    },
+    {
+      "mother": "Landscape",
+      "entry": "guilin-dem-pipeline PR79",
+      "receipt": "no explicit N02 acknowledgement",
+      "actionThisRound": "prepared seed-versus-identity gate; held"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "receipt": "no new N02 acknowledgement",
+      "actionThisRound": "no route"
+    }
+  ],
+  "verificationReceipt": {
+    "pinnedSource": "skeeto/hash-prospector@396dbe235c94dfc2e9b559fc965bcfda8b6a122c",
+    "cpuChecks": "7/7 pass",
+    "successfulRun": 35296585484,
+    "workflowCommit": "6885855efc6135d19ab3b4f28b74246bdffe00ee",
+    "centeredGrid": "1048576 cells; current mixer 144 collision pairs versus 127.9999 birthday expectation",
+    "translatedWindows": "16 non-overlapping windows of 262144 cells; current mean 10.0 versus 7.99997 expectation",
+    "currentSampledAvalanche": "mean Hamming 15.997165; RMS cell deviation 0.001958; maximum 0.008652",
+    "negativeControl": "perfect low-byte histogram did not prevent 524288 duplicate items and mean adjacent Hamming 2.0117",
+    "identityCorrection": "32-bit pair output is a seed/fingerprint, not a collision-free Canonical Cell ID",
+    "hardwareMobile": "Unknown",
+    "evidenceIndependence": "The upstream source reports exhaustive bias for one 32-bit permutation. N16 independently executes KAOPU's 2D composition on bounded fixtures, but local and CI runs share one probe design and are not independent algorithm evidence. Production workload and target-device evidence are absent."
+  },
+  "nextGap": "Define and test the u32-to-float or gradient mapping contract, including endpoints, precision and bias, before treating the integer mixer as a complete procedural-noise source."
+}
