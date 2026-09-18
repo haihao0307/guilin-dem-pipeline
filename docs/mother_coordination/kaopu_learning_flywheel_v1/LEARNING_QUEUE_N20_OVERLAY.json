@@ -1,0 +1,65 @@
+{
+  "id": "KAOPU-NOISE-N20-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N19_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N19_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_FARMLAND_SCREEN_SPACE_N19.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6K",
+    "topic": "surface aspect sampling and near-flat conditioning",
+    "question": "Does R045.30's sampled <35 degree aspect gate bound the implemented field, and what minimum receipt makes direction comparison transferable?",
+    "state": "candidate-partial-pinned-source-cpu-sampling-counterexample-verified",
+    "evidence": [
+      "references/farmland-aspect-sampling-n20/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_aspect_sampling_n20.mjs",
+      "PROBES/farmland_aspect_sampling_result_n20.json",
+      "LEARNING_LOG/2026-09-18_FARMLAND_ASPECT_SAMPLING_N20.md",
+      "CURRENT_BEST_VIEW_N20_FARMLAND_ASPECT_SAMPLING.md"
+    ],
+    "checks": "8/8 local; CI pending",
+    "integration": "routing prepared, pending CI",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "the published 10x6 m lattice maximum of 32.384274 degrees is exactly reproducible",
+    "a 5x4 m lattice finds 35.641409 degrees in the same fixed implementation",
+    "shifting the 10x6 m lattice origin changes the sampled maximum to 26.952281 degrees",
+    "the missed threshold crossing occurs where the minimum old/new gradient magnitude is 0.014555",
+    "the same 0.01 orthogonal gradient perturbation rotates a 0.014 vector by 35.537678 degrees but a 0.14 vector by only 4.085617 degrees",
+    "signed atan2 agrees with acos magnitude on retained samples but does not remove near-flat conditioning"
+  ],
+  "verificationReceipt": {
+    "checks": "8/8 local; CI pending",
+    "sourceReplay": "fixed Farmland R045.30 commit plus five SHA-256 source locks",
+    "runtime": "Node.js CPU exact Mother and negative-control lattice replay",
+    "hardwareGpuBrowserMobile": "not exercised by N20 probe",
+    "evidenceIndependence": "Mother failures/final QA are one implementation root; N20 is a derived fixed-source counterexample; SideFX/GLSL/WGSL are separate contract references, not independent R045.30 measurements"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one incremental aspect sampling and conditioning warning; delivery pending CI"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no relevant current consumer"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no terrain-aspect consumer"
+    }
+  ],
+  "nextGap": "Obtain Mother acknowledgement and a versioned purpose-specific slope floor; then verify an offset/dense lattice beside actual visual or geometry acceptance without weakening thresholds."
+}

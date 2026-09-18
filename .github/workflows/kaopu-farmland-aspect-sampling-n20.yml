@@ -1,0 +1,43 @@
+name: KAOPU Farmland aspect sampling N20
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_aspect_sampling_n20.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_aspect_sampling_result_n20.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-aspect-sampling-n20/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-aspect-sampling-n20.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r30
+          git -C /tmp/farmland-r30 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r30 fetch --depth 1 origin b542dccc1a44880dbb8a6ba8313bcfa0e6da3726
+          git -C /tmp/farmland-r30 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r30 rev-parse HEAD)" = b542dccc1a44880dbb8a6ba8313bcfa0e6da3726
+      - name: Verify locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r30/farmland-object-dna/research/r045-autonomous-rebuild
+          test "$(sha256sum "$base/round-29/r045_round29_kernel.mjs" | cut -d' ' -f1)" = 2cf2624602e1406cf171308d098565f666e780777ec6407577016ff204eefef3
+          test "$(sha256sum "$base/round-30/r045_round30_kernel.mjs" | cut -d' ' -f1)" = 964ce07778cc571273fc78c5e77a54d65e1393f1d85a3a69c4eb91a7df327f18
+          test "$(sha256sum "$base/round-30/r045_round30_qa.mjs" | cut -d' ' -f1)" = b18b3121d955a4af738d3f4691200cdb2cfc47fc1fc893261acd07dad2910ba8
+          test "$(sha256sum "$base/round-30/r045_round30_qa_result.json" | cut -d' ' -f1)" = 759c7abe85a684056506b774bc9ae3c6e1603bd5841927c6797b3dd34e1e3fa6
+          test "$(sha256sum "$base/round-30/r045_round30_summary.json" | cut -d' ' -f1)" = 6a994b73bcb69a4c9d93c06e398f31951db9d25bbf37a6e57d86ed85705a0a3a
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r30 \
+          KAOPU_N20_OUTPUT=/tmp/farmland_aspect_sampling_result_n20.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_aspect_sampling_n20.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_aspect_sampling_result_n20.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_aspect_sampling_result_n20.json

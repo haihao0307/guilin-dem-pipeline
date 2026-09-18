@@ -1,0 +1,43 @@
+{
+  "schema": "kaopu.mother-routing.farmland-aspect-sampling-n20/1",
+  "status": "prepared-pending-ci",
+  "sourceLearningNote": "LEARNING_LOG/2026-09-18_FARMLAND_ASPECT_SAMPLING_N20.md",
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "haihao0307/guilin-dem-pipeline PR65",
+      "reason": "R045.30's fixed 10x6 m aspect lattice passes <35 degrees, while a pinned 5x4 m replay finds 35.641409 degrees at a near-flat sample",
+      "incrementalGuidance": [
+        "preserve the two failed R045.30 attempts and the final receipt",
+        "version finite-difference stencil, units, lattice spacing and origin phase",
+        "record old/new gradient magnitudes, gradient-vector delta and signed atan2(cross,dot) angle",
+        "run one offset or denser negative-control lattice around the maximum and threshold",
+        "mark direction Unknown below a Mother-accepted purpose-specific slope floor",
+        "do not weaken the 35 degree gate or adopt 0.02 as a threshold from N20 alone"
+      ],
+      "acceptance": {
+        "delivered": false,
+        "acknowledged": false,
+        "implemented": false,
+        "devicePublicChecked": false,
+        "userAccepted": false
+      }
+    }
+  ],
+  "notRouted": [
+    {
+      "mother": "Landscape",
+      "reason": "no current in-scope consumer of the fixed Farmland R045.30 aspect gate"
+    },
+    {
+      "mother": "Brick Material",
+      "reason": "no fixed terrain-aspect consumer"
+    }
+  ],
+  "frozen": [
+    "production Mother branches",
+    "Canonical Truth",
+    "Frozen R1",
+    "R045.30 terrace/parcel/water/production locks"
+  ]
+}

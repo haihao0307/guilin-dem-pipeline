@@ -1,0 +1,271 @@
+{
+  "schema": "kaopu.probe.farmland-aspect-sampling-n20/1",
+  "source": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "b542dccc1a44880dbb8a6ba8313bcfa0e6da3726",
+    "implementationCommit": "86186dd",
+    "sourceFiniteDifferenceHalfStepMeters": 1,
+    "motherAspectEligibilityFloor": 0.01
+  },
+  "passed": true,
+  "gateCount": 8,
+  "passedCount": 8,
+  "checks": [
+    {
+      "name": "fixed_versions",
+      "pass": true,
+      "value": {
+        "before": "R045.29",
+        "after": "R045.30"
+      },
+      "limit": "R045.29 -> R045.30"
+    },
+    {
+      "name": "mother_lattice_replayed",
+      "pass": true,
+      "value": {
+        "x": -60,
+        "z": 34,
+        "oldMagnitude": 0.0188619585407,
+        "newMagnitude": 0.021530278213,
+        "minMagnitude": 0.0188619585407,
+        "gradientDeltaMagnitude": 0.0115515525434,
+        "acosDegrees": 32.3842740874,
+        "signedAtan2Degrees": 32.3842740874,
+        "aspectDeltaMeters": -0.0423337464785
+      },
+      "limit": "exact published coarse maximum and location"
+    },
+    {
+      "name": "atan2_matches_acos_magnitude",
+      "pass": true,
+      "value": {
+        "mother": 3.74256018971e-10,
+        "shifted": 4.71825512688e-11,
+        "denser": 3.74256018971e-10
+      },
+      "limit": "<1e-9 degree on non-degenerate retained samples"
+    },
+    {
+      "name": "denser_lattice_finds_missed_threshold_crossing",
+      "pass": true,
+      "value": {
+        "x": -60,
+        "z": 36,
+        "oldMagnitude": 0.0145551291165,
+        "newMagnitude": 0.0193491068901,
+        "minMagnitude": 0.0145551291165,
+        "gradientDeltaMagnitude": 0.0113354183029,
+        "acosDegrees": 35.6414085863,
+        "signedAtan2Degrees": 35.6414085863,
+        "aspectDeltaMeters": -0.040957220752
+      },
+      "limit": ">35 degrees while fixed Mother lattice reports <35 degrees"
+    },
+    {
+      "name": "missed_peak_is_near_flat",
+      "pass": true,
+      "value": 0.0145551291165,
+      "limit": "minimum old/new gradient magnitude below 0.02"
+    },
+    {
+      "name": "lattice_phase_changes_reported_maximum",
+      "pass": true,
+      "value": {
+        "mother": 32.3842740874,
+        "shifted": 26.9522807443
+      },
+      "limit": ">0.1 degree difference under same spacing with shifted origin"
+    },
+    {
+      "name": "conditioning_counterexample_is_live",
+      "pass": true,
+      "value": [
+        {
+          "baseMagnitude": 0.014,
+          "perturbation": 0.01,
+          "angleDegrees": 35.537677792
+        },
+        {
+          "baseMagnitude": 0.14,
+          "perturbation": 0.01,
+          "angleDegrees": 4.08561677997
+        }
+      ],
+      "limit": "same 0.01 vector perturbation produces >30 degrees near flat and <5 degrees at 10x magnitude"
+    },
+    {
+      "name": "locks_preserved",
+      "pass": true,
+      "value": {
+        "visualAcceptance": false,
+        "terraceGeometryEnabled": false,
+        "waterStateKnown": false,
+        "productionReady": false
+      },
+      "limit": "all remain false"
+    }
+  ],
+  "scans": {
+    "mother": {
+      "name": "mother_10x6",
+      "lattice": {
+        "x0": -210,
+        "x1": 210,
+        "dx": 10,
+        "z0": -80,
+        "z1": 80,
+        "dz": 6
+      },
+      "count": 497,
+      "maximum": {
+        "x": -60,
+        "z": 34,
+        "oldMagnitude": 0.0188619585407,
+        "newMagnitude": 0.021530278213,
+        "minMagnitude": 0.0188619585407,
+        "gradientDeltaMagnitude": 0.0115515525434,
+        "acosDegrees": 32.3842740874,
+        "signedAtan2Degrees": 32.3842740874,
+        "aspectDeltaMeters": -0.0423337464785
+      },
+      "signedAgreementMax": 3.74256018971e-10,
+      "bands": [
+        {
+          "name": "mother_floor_to_0.02",
+          "count": 52,
+          "maximumDegrees": 32.3842740874,
+          "maximumGradientDeltaMagnitude": 0.0115515525434
+        },
+        {
+          "name": "0.02_to_0.05",
+          "count": 181,
+          "maximumDegrees": 28.1349934584,
+          "maximumGradientDeltaMagnitude": 0.0183110003421
+        },
+        {
+          "name": "at_least_0.05",
+          "count": 264,
+          "maximumDegrees": 13.1031709265,
+          "maximumGradientDeltaMagnitude": 0.0210975076431
+        }
+      ]
+    },
+    "shifted": {
+      "name": "shifted_10x6",
+      "lattice": {
+        "x0": -205,
+        "x1": 205,
+        "dx": 10,
+        "z0": -77,
+        "z1": 79,
+        "dz": 6
+      },
+      "count": 487,
+      "maximum": {
+        "x": -65,
+        "z": 37,
+        "oldMagnitude": 0.0211283339279,
+        "newMagnitude": 0.0319999148685,
+        "minMagnitude": 0.0211283339279,
+        "gradientDeltaMagnitude": 0.0162807386125,
+        "acosDegrees": 26.9522807443,
+        "signedAtan2Degrees": 26.9522807443,
+        "aspectDeltaMeters": -0.110289694763
+      },
+      "signedAgreementMax": 4.71825512688e-11,
+      "bands": [
+        {
+          "name": "mother_floor_to_0.02",
+          "count": 48,
+          "maximumDegrees": 23.9454873987,
+          "maximumGradientDeltaMagnitude": 0.0116069424238
+        },
+        {
+          "name": "0.02_to_0.05",
+          "count": 183,
+          "maximumDegrees": 26.9522807443,
+          "maximumGradientDeltaMagnitude": 0.017838651788
+        },
+        {
+          "name": "at_least_0.05",
+          "count": 256,
+          "maximumDegrees": 19.5354563808,
+          "maximumGradientDeltaMagnitude": 0.0204036976244
+        }
+      ]
+    },
+    "denser": {
+      "name": "denser_5x4",
+      "lattice": {
+        "x0": -210,
+        "x1": 210,
+        "dx": 5,
+        "z0": -80,
+        "z1": 80,
+        "dz": 4
+      },
+      "count": 1493,
+      "maximum": {
+        "x": -60,
+        "z": 36,
+        "oldMagnitude": 0.0145551291165,
+        "newMagnitude": 0.0193491068901,
+        "minMagnitude": 0.0145551291165,
+        "gradientDeltaMagnitude": 0.0113354183029,
+        "acosDegrees": 35.6414085863,
+        "signedAtan2Degrees": 35.6414085863,
+        "aspectDeltaMeters": -0.040957220752
+      },
+      "signedAgreementMax": 3.74256018971e-10,
+      "bands": [
+        {
+          "name": "mother_floor_to_0.02",
+          "count": 163,
+          "maximumDegrees": 35.6414085863,
+          "maximumGradientDeltaMagnitude": 0.0159575143814
+        },
+        {
+          "name": "0.02_to_0.05",
+          "count": 546,
+          "maximumDegrees": 28.3259033238,
+          "maximumGradientDeltaMagnitude": 0.0183696645487
+        },
+        {
+          "name": "at_least_0.05",
+          "count": 784,
+          "maximumDegrees": 18.3105497869,
+          "maximumGradientDeltaMagnitude": 0.0210975076431
+        }
+      ]
+    }
+  },
+  "conditioning": [
+    {
+      "baseMagnitude": 0.014,
+      "perturbation": 0.01,
+      "angleDegrees": 35.537677792
+    },
+    {
+      "baseMagnitude": 0.14,
+      "perturbation": 0.01,
+      "angleDegrees": 4.08561677997
+    }
+  ],
+  "currentBestView": [
+    "a maximum angle from one lattice is a sampled diagnostic, not a bound over the continuous support",
+    "aspect is ill-conditioned near a flat: preserve gradient magnitude and gradient-vector delta beside signed angle",
+    "use atan2(cross,dot) for signed wrapped angle only after both gradients pass a declared magnitude floor",
+    "an application-specific magnitude floor is still Unknown here; 0.02 is a diagnostic band, not a proposed production threshold"
+  ],
+  "rejected": [
+    "raising the 35 degree threshold merely because a denser lattice found 35.64 degrees",
+    "treating the Mother 10x6 metre maximum as a continuous-field guarantee",
+    "treating direction on near-flat samples as stable without retaining slope magnitude"
+  ],
+  "unknown": [
+    "purpose-specific slope magnitude floor for Farmland classification or geometry acceptance",
+    "maximum over the continuous field between all samples",
+    "hardware GPU, mobile, public runtime and user visual acceptance"
+  ]
+}
