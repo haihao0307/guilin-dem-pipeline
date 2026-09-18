@@ -1,0 +1,58 @@
+{
+  "contract": "smi-fishing-cross-medium/1",
+  "baseline": "Stone Money Island Survivor Palau 0.2.2",
+  "target": "0.2.3 fishing vertical slice",
+  "world": {
+    "units": "metres-seconds-kilograms",
+    "time": "single authoritative worldSeconds",
+    "frame": "shared right-handed world frame"
+  },
+  "invariants": [
+    "one fishId from free swimming through hook, breach, splashdown and landing",
+    "one authoritative water surface query for fish, line, lure, boat, splash and camera",
+    "render meshes and particles are derived outputs, never replacement identities",
+    "save/restore preserves fish, line, hook, lure, stamina, abrasion and event sequence",
+    "no permanent underwater x-ray camera in normal gameplay",
+    "frozen Ocean Mother source remains byte-stable; additions use adapters"
+  ],
+  "owners": {
+    "coordinator": ["schema", "integration", "build", "acceptance", "evidence boundary"],
+    "game": ["player intent", "fishing session", "inventory transaction", "UI", "survival consequences"],
+    "fish": ["body", "pose", "locomotion", "perception", "strike", "fight intent", "fatigue", "breach intent"],
+    "ocean": ["surfaceAt", "local disturbance", "splash response", "underwater optics", "medium audio parameters"],
+    "habitat": ["substrate", "cover", "snag collision", "line abrasion", "landing suitability"],
+    "human_tool_audio": ["hand/tool endpoints", "body response", "cast/reel/give/lift animation", "line and splash sound"],
+    "qa": ["determinism", "save restore", "crossing continuity", "mobile input", "performance receipts"]
+  },
+  "surfaceAt": {
+    "input": ["x", "z", "worldTime"],
+    "output": ["eta", "normal", "surfaceVelocity", "bed", "depth", "breaker", "clarity"],
+    "currentGap": "V0.2.2 normal is fixed and no horizontal surface velocity is exposed"
+  },
+  "habitatAt": {
+    "input": ["x", "y", "z", "worldTime"],
+    "output": ["substrate", "cover", "snagRisk", "abrasionRate", "currentCandidate", "landingSuitability", "evidenceStatus"]
+  },
+  "fishState": {
+    "required": ["fishId", "definitionRevision", "stateRevision", "position", "velocity", "orientation", "angularVelocity", "pose", "stamina", "stress", "hookPoint", "medium", "immersionFraction", "behaviorState", "habitatIntent"],
+    "behaviorStates": ["free", "notice", "orient", "approach", "inspect", "reject", "strike", "hooked", "fight_underwater", "surface_approach", "breach_takeoff", "airborne", "splashdown", "recovery", "exhausted", "landed", "escaped", "dead"]
+  },
+  "lineState": {
+    "required": ["lineId", "anchorA", "anchorB", "nodes", "restLength", "tension", "materialStrength", "abrasion", "hookSet", "slackDuration"],
+    "outcomes": ["working", "slack", "over_tension", "snagged", "broken", "released"]
+  },
+  "events": ["cast_begin", "lure_water_entry", "lure_submerged", "fish_notice", "fish_strike", "hookset_success", "hookset_fail", "line_tension_band", "snag_contact", "breach_begin", "breach_apex", "splashdown", "fish_landed", "fish_escaped", "line_broken"],
+  "acceptance": {
+    "maximumCrossingPositionJumpMetres": 0.15,
+    "maximumSplashPointErrorMetres": 0.2,
+    "deterministicReplay": true,
+    "mobileViewport": "390x844",
+    "physicalIphoneRequiredForProductionReady": true
+  },
+  "evidenceBoundary": {
+    "trailer": "method and pacing reference only",
+    "species": "unverified until Fish Mother evidence",
+    "1944Tackle": "candidate until historical evidence",
+    "reefAndLagoon": "use G05/G06 reference ledger"
+  }
+}
