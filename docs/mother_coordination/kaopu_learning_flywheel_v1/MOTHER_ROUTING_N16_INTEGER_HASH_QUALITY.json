@@ -1,0 +1,36 @@
+{
+  "id": "KAOPU-N16-SPATIAL-HASH-ROUTING",
+  "status": "prepared-not-redelivered",
+  "candidate": "retain ordered integer coordinates as Cell identity; use the versioned 32-bit hash only as a procedural seed or fingerprint",
+  "routes": [
+    {
+      "mother": "Brick Material",
+      "entry": "haihao0307/HOUSE PR15",
+      "priorReceipt": "N09 delivery still unacknowledged",
+      "action": "hold with N13-N15; if R8 uses hashed cell identity, audit whether it is a seed or an authoritative key before any A/B",
+      "adoption": "Unknown"
+    },
+    {
+      "mother": "Landscape",
+      "entry": "haihao0307/guilin-dem-pipeline PR79",
+      "priorReceipt": "no explicit N02 acknowledgement",
+      "action": "hold; preserve ordered integer coordinates for identity and test hash-to-gradient/value mapping separately if procedural seeding is used",
+      "adoption": "Unknown"
+    },
+    {
+      "mother": "Farmland",
+      "entry": "haihao0307/guilin-dem-pipeline PR65",
+      "priorReceipt": "no new N02 acknowledgement",
+      "action": "no route unless its actual implementation exposes a hash-derived Cell/cache identity",
+      "adoption": "Unknown"
+    }
+  ],
+  "acceptanceGates": [
+    "ordered signed coordinates remain authoritative identity",
+    "32-bit hash purpose is explicitly seed, fingerprint or non-authoritative bucket",
+    "collision witnesses and application population are tested",
+    "adjacent spatial behavior and avalanche matrix are checked separately from bucket histograms",
+    "constant changes are versioned because they alter every downstream procedural seed",
+    "hash-to-value or gradient mapping, runtime cost and visual acceptance are separate gates"
+  ]
+}
