@@ -1,0 +1,62 @@
+{
+  "revision": "R03.A-run1",
+  "date": "2026-09-18",
+  "increment": "Replace runtime's coefficient->raster->cubic resampling path with direct separable-field evaluation and add view-directed disposable sampling from the same canonical field.",
+  "sourceReplay": {
+    "attempted": true,
+    "libraryEntryFound": true,
+    "libraryPath": "/游戏GAME/model_67a_-_largemouth_bass.glb",
+    "reportedSizeBytes": 18644040,
+    "rawMaterialization": false,
+    "reason": "Current automation context could list the Library asset but raw-byte materialization was not authorized, so this run did not rerun black-bass fit or claim new source-fidelity measurements."
+  },
+  "kernel": {
+    "command": "node tools/view_budget_qa.cjs",
+    "syntheticContinuousFieldOnly": true,
+    "pass": true,
+    "tests": 6,
+    "latticeDirectVsReconstructMaxAbs": 2.384185793236071e-8,
+    "projectedPixelsToDetail": {
+      "2": 0.046875,
+      "8": 0.046875,
+      "20": 0.046875,
+      "80": 0.1875,
+      "160": 0.375,
+      "420": 1,
+      "900": 1
+    },
+    "sampleCounts": {
+      "near420px": 2145,
+      "mid100px": 144,
+      "far15px": 12,
+      "nearToFarRatio": 178.75
+    },
+    "sameFieldIdentityAcrossViewBudgets": true,
+    "generatedPayloadFinite": true,
+    "invalidInputRejected": true,
+    "sourceTriangleCount": 0,
+    "intermediateRaster": false
+  },
+  "browser": {
+    "command": "python tools/view_budget_browser_qa.py",
+    "engine": "Chromium 144 headless",
+    "viewports": [[1280,900],[390,844]],
+    "pageErrors": 0,
+    "pass": true,
+    "desktopMs": {"near420px": 34.29999999998836,"mid100px": 1.2000000000116415,"far15px": 0.19999999995343387},
+    "mobileLayoutMs": {"near420px": 29.099999999976717,"mid100px": 1.1999999999534339,"far15px": 0.20000000001164153},
+    "scope": "Real Chromium execution of a synthetic continuous-field document. It verifies the conductor and direct evaluator mechanics only; it is not a black-bass visual, WebGL study-runtime, iPhone or public-navigation acceptance."
+  },
+  "semanticBoundary": {
+    "preauthoredLODAssets": false,
+    "sameCanonicalField": true,
+    "viewBudgetQuantizedOnlyToLimitBufferRebuildChurn": true,
+    "fishSpeciesFidelityAccepted": false,
+    "materialFidelityAccepted": false,
+    "motionAccepted": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "shareAllowed": false
+  },
+  "next": "Wire the conductor into study-runtime only after rerunning the real FISH-REF-001 coefficient payload; then measure whether direct field evaluation plus view-directed sampling improves close-range aliasing and far-view cost without changing source-fit error."
+}
