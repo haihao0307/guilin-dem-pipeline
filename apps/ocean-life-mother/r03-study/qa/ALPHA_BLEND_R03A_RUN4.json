@@ -1,0 +1,38 @@
+{
+  "revision": "R03.A-run4",
+  "scope": "synthetic dual-pass alpha blend policy; not black-bass source replay or order-independent transparency",
+  "viewports": [
+    {
+      "size": [1280, 900],
+      "errors": [],
+      "result": {
+        "opaque": [255, 0, 0, 255],
+        "half": [128, 0, 128, 255],
+        "discard": [0, 0, 255, 255],
+        "depthMask": true,
+        "blend": false,
+        "glError": 0,
+        "classification": ["opaque", "translucent", "discard"]
+      }
+    },
+    {
+      "size": [390, 844],
+      "errors": [],
+      "result": {
+        "opaque": [255, 0, 0, 255],
+        "half": [128, 0, 128, 255],
+        "discard": [0, 0, 255, 255],
+        "depthMask": true,
+        "blend": false,
+        "glError": 0,
+        "classification": ["opaque", "translucent", "discard"]
+      }
+    }
+  ],
+  "interpretation": "Opaque alpha remains opaque; alpha=0.5 is no longer promoted to opaque and blends to the measured midpoint over blue; alpha below the explicit floor is discarded. GL state is restored after the translucent pass.",
+  "limits": [
+    "Does not replay FISH-REF-001 or prove real fin alpha fidelity.",
+    "Standard alpha blending remains draw-order dependent for overlapping translucent surfels.",
+    "No refraction, subsurface transport, weighted OIT, MSAA alpha-to-coverage, or iPhone device acceptance is claimed."
+  ]
+}
