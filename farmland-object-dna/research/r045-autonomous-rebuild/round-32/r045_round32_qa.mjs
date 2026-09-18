@@ -9,7 +9,7 @@ add('water_graph_identity_preserved',JSON.stringify(K.nodes)===JSON.stringify(R3
 add('terrain_carriers_identity_preserved',JSON.stringify(K.terrainChannels)===JSON.stringify(R31.terrainChannels)&&JSON.stringify(K.outletContinuum)===JSON.stringify(R31.outletContinuum),{terrainChannels:K.terrainChannels.length,outlets:K.outletContinuum.length},'exact inherited carrier arrays');
 
 let dmax=0,dsum=0,dn=0,pos=0,neg=0,maxStep=0,maxStepAt=null,active=0,core=0,oldActive=0,oldCore=0,changeFrom31=0;
-let activeRows=0,rowCounts=[],rowLongestRuns=[],groupCounts=[0,0,0],overlap01=0,overlap12=0;
+let activeRows=0,rowCounts=[],rowLongestRuns=[],rowSpans=[],groupCounts=[0,0,0],overlap01=0,overlap12=0;
 for(let z=-132;z<=10;z+=4){
   const xs=[];
   for(let x=-220;x<=120;x+=4){
@@ -21,16 +21,22 @@ for(let z=-132;z<=10;z+=4){
     const w=K.terraceGroupWeights(x,z);if(w[0]>.24&&w[1]>.24)overlap01++;if(w[1]>.24&&w[2]>.24)overlap12++;
     const s=Math.abs(K.terraceDelta(x,z+4)-st.delta);if(s>maxStep){maxStep=s;maxStepAt=[x,z]}
   }
-  if(xs.length){activeRows++;rowCounts.push(xs.length);let run=1,best=1;for(let i=1;i<xs.length;i++){if(xs[i]-xs[i-1]<=8){run++;best=Math.max(best,run)}else run=1}rowLongestRuns.push(best*4)}
+  if(xs.length){
+    activeRows++;rowCounts.push(xs.length);rowSpans.push(xs[xs.length-1]-xs[0]);
+    let run=1,best=1;for(let i=1;i<xs.length;i++){if(xs[i]-xs[i-1]<=8){run++;best=Math.max(best,run)}else run=1}rowLongestRuns.push(best*4);
+  }
 }
-const geom={deltaMax:dmax,deltaMean:dsum/(dn||1),pos,neg,maxStep,maxStepAt,active,core,oldActive,oldCore,changeFrom31,activeRows,groupCounts,overlap01,overlap12,rowCountMedian:median(rowCounts),longestContinuousRunM:Math.max(...rowLongestRuns)};
+const longestContinuousRunM=Math.max(...rowLongestRuns),maxFamilySpanM=Math.max(...rowSpans);
+const geom={deltaMax:dmax,deltaMean:dsum/(dn||1),pos,neg,maxStep,maxStepAt,active,core,oldActive,oldCore,changeFrom31,activeRows,groupCounts,overlap01,overlap12,rowCountMedian:median(rowCounts),longestContinuousRunM,maxFamilySpanM};
 add('terrace_geometry_remains_substantive_but_bounded',dmax>.22&&dmax<.95,geom,'.22 m < max terrace delta < .95 m');
 add('r32_is_a_real_change_from_r31',changeFrom31>.08&&changeFrom31<.85,changeFrom31,'.08 m < sampled max R32-R31 surface change < .85 m');
 add('terrace_geometry_has_both_cut_and_fill',pos>8&&neg>8,{pos,neg},'both signed responses >8 aggregate sample-m');
 add('terrace_support_expands_beyond_r31_islands',active>oldActive*1.30,{active,oldActive,ratio:active/(oldActive||1)},'R32 active mask samples >1.30x R31');
 add('terrace_core_expands_beyond_r31',core>oldCore*1.20,{core,oldCore,ratio:core/(oldCore||1)},'R32 core samples >1.20x R31');
 add('terrace_groups_span_the_slope',activeRows>=28,{activeRows,rowCountMedian:median(rowCounts)},'>=28 sampled z rows contain active terrace support');
-add('terrace_groups_have_long_connected_runs',Math.max(...rowLongestRuns)>84,{longestContinuousRunM:Math.max(...rowLongestRuns)},'>84 m sampled continuous active run on at least one row');
+// A single >84 m uninterrupted strip contradicts the hard drainage-gap rule. Test a broad family span plus a
+// substantial between-drain continuous segment instead of rewarding terraces that cross drainage cores.
+add('terrace_families_are_broad_but_respect_drainage_gaps',maxFamilySpanM>120&&longestContinuousRunM>48,{maxFamilySpanM,longestContinuousRunM},'family span >120 m and between-gap continuous segment >48 m');
 add('all_three_nested_groups_are_material',groupCounts.every(n=>n>45),groupCounts,'each dominant terrace group has >45 active samples');
 add('adjacent_groups_really_overlap',overlap01>12&&overlap12>12,{overlap01,overlap12},'each adjacent pair has >12 support-overlap samples');
 add('terrace_increment_is_not_a_cliff',maxStep<1.05,{maxStep,maxStepAt},'<1.05 m change in added terrace delta per 4 m z');
