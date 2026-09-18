@@ -1,5 +1,6 @@
 from pathlib import Path
 import hashlib,re,json,subprocess
+from harden import apply as harden
 HERE=Path(__file__).resolve().parent
 base=HERE.parents[1]/'releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html'
 assert hashlib.sha256(base.read_bytes()).hexdigest()=='dac1a80440d731488546b317ff8f286c55c8c63d5a2e9f1da3f8c900bbbc4710'
@@ -11,7 +12,6 @@ replace("const VERSION='stone-money-island-0.1.6.0-original-ocean'","const VERSI
 replace('<title>Stone Money Island · V0.1.6.0</title>','<title>Stone Money Island — Survivor Palau · Day 1</title>')
 replace('</style>','\n'+(HERE/'chapter.css').read_text()+'\n</style>')
 replace('let frozenOcean;','let frozenOcean,survival;')
-# Clock adapter only: unchanged original shaders, spectrum and field generator.
 replace('const api={qa,prepare,drawSky,drawSea,bindGame,','const api={qa,resetClock:t=>{lastWorldTime=t;seaTime=t;W.reset();W.tick(t);envForce=true;baking=false;},prepare,drawSky,drawSea,bindGame,')
 replace('function updateCamera(aspect){','function updateCamera(aspect){if(survival?.cameraFrame(aspect))return;')
 replace('initCurl();installUI();installCamera();installCanoeGame();','initCurl();installUI();if(query.has("reference"))installCamera();installCanoeGame();')
@@ -21,7 +21,6 @@ replace('drawSolid(canoeGeo,sun,canoeModel());}gl.bindFramebuffer','drawSolid(ca
 replace('if(!query.has("reference"))drawMedia();qa.sceneFrames','if(!query.has("reference")){drawMedia();survival?.drawHand();}qa.sceneFrames')
 replace('smokeVisible:true,fireEnabled:true','smokeVisible:false,fireEnabled:false')
 replace('init().catch(fail);',(HERE/'chapter.js').read_text()+'\ninit().catch(fail);')
-# Feet query the actual existing generated ground triangles, not an unrelated surface.
 code='''
  if(!query.has('reference')){
   const n=QA_MODE?96:(innerWidth<760?150:220),coords=Array.from({length:n+1},(_,i)=>warpedCoord(i/n,DOMAIN.minX,DOMAIN.maxX));
@@ -33,11 +32,12 @@ code='''
 '''
 replace("document.body.dataset.oceanScene='unified';progress.textContent=",code+"\ndocument.body.dataset.oceanScene='unified';progress.textContent=")
 replace('function updateGlassRects(){','function updateGlassRects(){if(survival){glassCount=0;glassDirty=false;return;}')
+s=harden(s)
 pattern=r'const __OM_TEXT__=(\{.*?\});\n'
 a=re.search(pattern,base.read_text(),re.S);b=re.search(pattern,s,re.S);assert a and b and a.group(1)==b.group(1)
 OUT=HERE.parents[1]/'releases/v0.2.0';OUT.mkdir(exist_ok=True,parents=True)
 (OUT/'index.html').write_text(s)
 for i,script in enumerate(re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)):
  p=OUT/f'.syntax-{i}.mjs';p.write_text(script);subprocess.run(['node','--check',str(p)],check=True);p.unlink()
-receipt={'version':'0.2.0','baseCommit':'9e0780eaff274d5ab606c7c09a99f92bcac045ab','baseSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
+receipt={'version':'0.2.0','baseCommit':'9e0780eaff274d5ab606c7c09a99f92bcac045ab','baseSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
 (OUT/'BUILD_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');print(json.dumps(receipt,ensure_ascii=False,indent=2))
