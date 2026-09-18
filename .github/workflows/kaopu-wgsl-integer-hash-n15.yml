@@ -32,7 +32,6 @@ jobs:
           WGPU_BACKEND: vulkan
         working-directory: docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15
         run: |
-          cargo generate-lockfile
           cargo run --release --locked 2>/tmp/n15-wgpu-stderr.log | tee /tmp/wgpu_integer_hash_runtime_result_n15.json
           jq -e '.summary.status == "pass" and .exactMatch == true and (.hashes|length) == 12' /tmp/wgpu_integer_hash_runtime_result_n15.json
       - name: Preserve bounded evidence
