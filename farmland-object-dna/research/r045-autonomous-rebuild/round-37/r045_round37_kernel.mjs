@@ -36,7 +36,7 @@ export function cachedStitchGain(x,z){
   return C((n/d)*.88*safety,0,.24);
 }
 export function terraceStateAt(x,z){
-  const old=R35.terraceStateAt(x,z),gain=cachedStitchGain(x,z),mask=C(old.mask+gain,0,.58),delta=.84*mask*old.raw;
+  const old=R35.terraceStateAt(x,z),gain=cachedStitchGain(x,z),mask=C(old.mask+gain,0,1),delta=.84*mask*old.raw;
   return {...old,mask,delta,target:old.base+delta,cachedStitchGain:gain};
 }
 export function terraceGroupMask(x,z){return terraceStateAt(x,z).mask}
