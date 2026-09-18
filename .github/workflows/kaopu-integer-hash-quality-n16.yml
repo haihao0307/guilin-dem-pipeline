@@ -1,0 +1,36 @@
+name: KAOPU integer hash quality N16
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_integer_hash_quality_n16.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/integer_hash_quality_result_n16.json
+      - .github/workflows/kaopu-integer-hash-quality-n16.yml
+
+permissions:
+  contents: read
+
+jobs:
+  integer-hash-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and replay bounded quality probe
+        run: |
+          set -euo pipefail
+          root="docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES"
+          g++ -std=c++20 -O3 -Wall -Wextra -pedantic "$root/probe_integer_hash_quality_n16.cpp" -o /tmp/probe_integer_hash_quality_n16
+          /tmp/probe_integer_hash_quality_n16 > /tmp/integer_hash_quality_result_n16.json
+          python3 -m json.tool /tmp/integer_hash_quality_result_n16.json >/dev/null
+          jq -e '.gates.status == "pass" and .gates.passed == 7 and .grid.currentLowbias32Pair.samples == 1048576 and (.collisionWitnesses.currentLowbias32Pair | length) == 4' /tmp/integer_hash_quality_result_n16.json
+          cmp "$root/integer_hash_quality_result_n16.json" /tmp/integer_hash_quality_result_n16.json
+      - name: Preserve bounded evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-integer-hash-quality-n16
+          path: /tmp/integer_hash_quality_result_n16.json
+          if-no-files-found: error
