@@ -42,13 +42,23 @@ Numerical checks confirmed every generated coordinate stayed inside an explicit 
 
 This is a kernel correctness improvement, not a new black-bass fidelity result. The exact FISH-REF-001 bytes were not resolved through the Files/runtime surfaces in this run, so the source fit was not rerun and no new claim is made about real mouth/fin edge error. A future bad source-domain extraction can still erase real detail before this sampler sees it; the fix only prevents view budgeting from silently dropping already-recorded intervals.
 
+## R03.A-run3 — geometry-normal and shading-normal separation
+
+The tangent-plane normal used to position disposable surfels is now derived from the same continuous `x/y/z` position fields that generate the displayed surface. The separately fitted source/PBR shading normal remains independent. This corrects a concrete inconsistency: previously a low-rank geometric-normal field could orient a surfel plane differently from the surface implied by the position fields, creating normal/surfel sparkle that was not necessarily a material error.
+
+The finite-difference frame is parameter-domain aware. U derivatives stay inside the current explicit interval; V derivatives search nearby rows for the same U coordinate and skip rows where that U is outside the observed domain. The derived normal is orientation-aligned to the stored source geometric-normal field when available, but the stored field no longer controls the tangent plane. Per-patch diagnostics now report minimum derived-vs-fitted geometric-normal agreement, maximum shading-vs-derived normal deviation and geometric-normal fallbacks.
+
+A synthetic warped-sheet regression produced a worst derived-vs-known normal dot of 0.9999999999999999. A deliberately invalid adjacent V row was skipped from 0.5 to 0.5625 while the lower neighbour remained 0.46875. Five Node checks passed, including retention of the run2 thin-domain boundary behavior. Real Chromium/SwiftShader executed the same kernel at 1280x900 and 390x844 with zero page errors and zero WebGL errors; near/far plans generated 2122 and 12 samples respectively. See `qa/NORMAL_FRAME_R03A_RUN3.json` and the reproducible scripts `tools/normal_frame_qa.cjs` and `tools/normal_frame_browser_qa.py`.
+
+This run still did NOT replay the black-bass source. Current conversation/library file discovery did not resolve the exact GLB and no matching GLB was mounted under `/mnt/data`. Therefore run3 proves only that one display-normal inconsistency class is removed from the shared kernel. It does not prove that the fitted black-bass shading normal is accurate, that close-range sparkle is gone on the real fish, or that mouth/fin/transparency errors improved.
+
 ## Persistence and reproduction
 
 The code checkpoint is in this directory. The generated coefficient files, HTML, full reports and internal screenshots from the original R03.A fit existed in the active runtime under `/mnt/data/ocean_r03/`; they were not uploaded to GitHub. The original GLB remains a user-provided source asset and must be verified as actually readable before any replay; do not pretend a later runtime has the old sandbox data.
 
-With the exact uploaded reference available, use Python with NumPy, SciPy, Pillow and Numba. Set `KAOPU_SOURCE` to its path. Run `python tools/fit_chart_fields.py`, then `python tools/compact_fields.py`, `python tools/build.py`, `python tools/heldout_qa.py`, and `node tools/kernel_qa.cjs`. The source reader is intentionally hash-locked to this specimen; other fish require their own source identity and mapping. `node tools/domain_boundary_qa.cjs` verifies the run2 thin-domain regression. `python tools/domain_boundary_browser_qa.py` executes that mechanism in Chromium when Playwright/Chromium are available.
+With the exact uploaded reference available, use Python with NumPy, SciPy, Pillow and Numba. Set `KAOPU_SOURCE` to its path. Run `python tools/fit_chart_fields.py`, then `python tools/compact_fields.py`, `python tools/build.py`, `python tools/heldout_qa.py`, and `node tools/kernel_qa.cjs`. The source reader is intentionally hash-locked to this specimen; other fish require their own source identity and mapping. `node tools/domain_boundary_qa.cjs` verifies the run2 thin-domain regression. `python tools/domain_boundary_browser_qa.py` executes that mechanism in Chromium when Playwright/Chromium are available. `node tools/normal_frame_qa.cjs` and `python tools/normal_frame_browser_qa.py` verify run3 without requiring the source payload.
 
-Final tested local HTML SHA256 from the original R03.A fit: 053d5f742e0dcc6171ad19630e02e3b2ef41d1bb46ce86963e33bcc8d16bbde6. Run2 did not rebuild that HTML because the exact coefficient payload was unavailable; do not silently attach the new kernel to the old hash.
+Final tested local HTML SHA256 from the original R03.A fit: 053d5f742e0dcc6171ad19630e02e3b2ef41d1bb46ce86963e33bcc8d16bbde6. Runs 2 and 3 did not rebuild that HTML because the exact coefficient payload was unavailable; do not silently attach the new kernel to the old hash.
 
 ## Publication boundary
 
@@ -56,9 +66,9 @@ No R03 public entry has been deployed. Local synthetic/browser tests are NOT fin
 
 ## Next bounded task
 
-When the exact FISH-REF-001 bytes/coefficient payload is readable again, rerun the real source fit and apply the boundary-aware sampler to the actual fish. Measure per-patch omitted-domain area, mouth/fin-edge error, normal-field aliasing and transparent-fin behavior separately. Only after that should the view conductor be wired into the full fish study runtime.
+When the exact FISH-REF-001 bytes/coefficient payload is readable again, rerun the real source fit with the run2 and run3 kernels. Measure per-patch omitted-domain area, derived-vs-source geometric-normal disagreement, shading-normal deviation, mouth/fin-edge error and transparent-fin behavior separately. This is necessary to tell whether remaining close-range defects come from source-domain extraction, low-rank material fitting, view sampling, or alpha rendering instead of masking them under one generic “normal problem.”
 
-Then split mouth/jaw/gill/eye/fin semantics and establish an anatomical coordinate mapping suitable for shared species recipes. The source-chart factorization remains an intermediate correspondence system, not the final fish kernel. Do not invent juvenile/adult growth from this one adult reference.
+After those source-grounded diagnostics, split mouth/jaw/gill/eye/fin semantics and establish an anatomical coordinate mapping suitable for shared species recipes. The source-chart factorization remains an intermediate correspondence system, not the final fish kernel. Do not invent juvenile/adult growth from this one adult reference.
 
 Do not restart with a guessed fish. Do not pursue an arbitrary tiny byte target by erasing source detail. Do not claim that a pair of coordinates proves anatomical correctness, or that one adult reference supplies a verified growth history. Keep the existing scalar field core, established KAOPU semantics, source licenses and necessary-residual rule. Use existing Xiaoma records as method references; no independent Xiaoma meeting or reply occurred in this run.
 
