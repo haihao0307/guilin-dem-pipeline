@@ -1,0 +1,38 @@
+name: KAOPU seed namespace N18
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_seed_namespace_n18.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/seed_namespace_result_n18.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/seed-namespace-n18/SOURCE_LOCK.json
+      - .github/workflows/kaopu-seed-namespace-n18.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed HOUSE source
+        shell: bash
+        run: |
+          git init -q /tmp/house-n18
+          git -C /tmp/house-n18 remote add origin https://github.com/haihao0307/HOUSE.git
+          git -C /tmp/house-n18 fetch --depth 1 origin c6223d36ceeb827e3894fc181340c284b1cbfa73
+          git -C /tmp/house-n18 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/house-n18 rev-parse HEAD)" = c6223d36ceeb827e3894fc181340c284b1cbfa73
+      - name: Verify source blobs and replay probe
+        shell: bash
+        run: |
+          package=/tmp/house-n18/yunnan-courtyard-architecture-factory-v5.2.1-full-local/yunnan-courtyard-architecture-factory-v5.2.1-full-local/brick-mother/skills/v26-composite-material-dna-transfer-r1
+          test "$(git -C /tmp/house-n18 hash-object "$package/src/v26_transfer_kernel.mjs")" = cb84cae8217299b6822f6a027c31ad1a41bdf183
+          test "$(git -C /tmp/house-n18 hash-object "$package/src/v26_event_geometry_kernel.mjs")" = b28e0dafc37778d68e6649eb0c56c03cd704cf7e
+          node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_seed_namespace_n18.mjs "$package" > /tmp/seed_namespace_result_n18.json
+          cmp /tmp/seed_namespace_result_n18.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/seed_namespace_result_n18.json
