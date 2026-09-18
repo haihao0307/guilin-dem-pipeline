@@ -1,0 +1,17 @@
+const fs=require('fs'),assert=require('assert');
+const F=require('../src/field-kernel.js');
+function rank1(rows,cols){return{rank:1,rows:[rows],cols:[cols]}}
+const W=65,H=33,onesW=Array(W).fill(1),onesH=Array(H).fill(1),lin=Array.from({length:W},(_,i)=>-0.5+i/(W-1)),vcurve=Array.from({length:H},(_,i)=>0.12*Math.sin(Math.PI*i/(H-1))),zeroW=Array(W).fill(0),zeroH=Array(H).fill(0);
+const fields={x:rank1(onesH,lin),y:rank1(vcurve,onesW),z:rank1(onesH,zeroW),red:rank1(onesH,Array(W).fill(.3)),green:rank1(onesH,Array(W).fill(.5)),blue:rank1(onesH,Array(W).fill(.2)),alpha:rank1(onesH,onesW),roughness:rank1(onesH,Array(W).fill(.6)),nx:rank1(onesH,zeroW),ny:rank1(onesH,onesW),nz:rank1(onesH,zeroW),er:rank1(onesH,zeroW),eg:rank1(onesH,zeroW),eb:rank1(onesH,zeroW),sx:rank1(onesH,zeroW),sy:rank1(onesH,onesW),sz:rank1(onesH,zeroW)};
+const patch={id:'synthetic',width:W,height:H,mirrorX:false,domain:Array.from({length:H},()=>[0,W-1]),fields};
+const doc={schema:'kaopu-source-chart-field-study/0.1',sourceLengthUnits:1,patches:[patch]};
+const names=['x','y','z','red','green','blue','alpha','roughness','nx','ny','nz','er','eg','eb','sx','sy','sz'];
+const tests=[];function test(name,fn){try{const value=fn();tests.push({name,pass:true,value})}catch(e){tests.push({name,pass:false,error:e.stack||e.message})}}
+test('direct field equals reconstructed lattice exactly within float32 tolerance',()=>{const r=F.reconstruct(patch);let m=0;for(let y=0;y<H;y+=4)for(let x=0;x<W;x+=4){const u=x/(W-1),v=y/(H-1),a=F.patchAt(patch,u,v);for(let k=0;k<17;k++)m=Math.max(m,Math.abs(a[k]-r[names[k]][y*W+x]))}assert(m<2e-7);return m});
+test('conduct is monotonic with projected size',()=>{const px=[2,8,20,80,160,420,900],d=px.map(x=>F.conduct(x).detail);for(let i=1;i<d.length;i++)assert(d[i]>=d[i-1]);assert(d[0]>=.045&&d.at(-1)===1);return{px,d}});
+test('same scalar field identity across view budgets',()=>{const probes=[[.13,.17],[.51,.63],[.91,.22]],vals=probes.map(([u,v])=>F.patchAt(patch,u,v));for(const p of [F.conduct(12),F.conduct(90),F.conduct(420)])for(let i=0;i<probes.length;i++)assert.deepStrictEqual(vals[i],F.patchAt(patch,...probes[i]));return true});
+test('far view materially reduces disposable samples without changing asset',()=>{const near=F.fish(doc,F.conduct(420)),mid=F.fish(doc,F.conduct(100)),far=F.fish(doc,F.conduct(15));assert(near.count>mid.count&&mid.count>far.count);assert.equal(near.sourceTriangleCount,0);assert.equal(far.sourceTriangleCount,0);assert.equal(near.intermediateRaster,false);assert.equal(far.intermediateRaster,false);return{near:near.count,mid:mid.count,far:far.count,ratio:near.count/far.count,nearPlan:near.patchPlans,farPlan:far.patchPlans}});
+test('generated sample payload finite at near and far budgets',()=>{for(const p of [F.conduct(8),F.conduct(420)]){const a=F.fish(doc,p);assert(a.data.every(Number.isFinite));assert.equal(a.data.length,a.count*18)}return true});
+test('invalid view and detail settings rejected',()=>{assert.throws(()=>F.conduct(NaN));assert.throws(()=>F.conduct(-1));assert.throws(()=>F.resolution(patch,0));assert.throws(()=>F.resolution(patch,1.1));return true});
+const report={revision:'R03.A-run1',date:'2026-09-18',tests,pass:tests.every(t=>t.pass),scope:'synthetic continuous-field kernel only; verifies direct evaluation and view-directed sampling mechanics, not black-bass source fidelity or browser visual quality'};
+fs.writeFileSync('../qa/view-budget-kernel.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(!report.pass)process.exit(1);
