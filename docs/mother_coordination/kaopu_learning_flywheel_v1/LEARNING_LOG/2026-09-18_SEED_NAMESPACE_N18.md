@@ -27,7 +27,7 @@ This is source and executable behavior of a prepared transfer package, not evide
 
 ### Observation root C — bounded executable probe
 
-The N18 fixture changed one named seed at a time by `+1` across 1,536 fixed 3D samples and hashed the complete event descriptors. All `13/13` gates passed locally. A count-only check would have missed real changes: damage, weather and inclusion changed event descriptor hashes while leaving every event count unchanged.
+The N18 fixture changed one named seed at a time by `+1` across 1,536 fixed 3D samples and hashed the complete event descriptors. All `13/13` gates passed locally and in [GitHub Actions run 35312496788](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35312496788), which fetched the fixed HOUSE commit, verified both source blobs and reproduced the committed result byte-for-byte. A count-only check would have missed real changes: damage, weather and inclusion changed event descriptor hashes while leaving every event count unchanged.
 
 The same probe sampled the nine raw `valueNoise3` streams at 6,144 coordinates. The largest observed absolute Pearson correlation was `0.084434` for color/detail; the same-seed control was exactly `1`. This is useful as a negative screen for an obvious linear coupling in this bounded window, but it is not a proof of independence, nonlinear decorrelation, spectral quality or downstream independence. All sample paths share the same source implementation and test design.
 
