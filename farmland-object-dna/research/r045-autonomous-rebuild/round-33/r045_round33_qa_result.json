@@ -1,0 +1,460 @@
+{
+  "version": "R045.33",
+  "passed": false,
+  "gateCount": 37,
+  "passedCount": 36,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.33",
+      "limit": "R045.33"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited planimetric graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "terrace_geometry_remains_substantive_but_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5166889575457687,
+        "deltaMean": 0.06647038297840713,
+        "pos": 97.93366219615544,
+        "neg": 107.8586435049929,
+        "maxStep": 0.91702925669516,
+        "maxStepAt": [
+          -60,
+          -60
+        ],
+        "active": 1084,
+        "core": 748,
+        "oldActive": 785,
+        "oldCore": 395,
+        "changeFrom32": 0.8442125319815688,
+        "activeRows": 32,
+        "groupCounts": [
+          187,
+          459,
+          438
+        ],
+        "overlap01": 840,
+        "overlap12": 846,
+        "rowCountMedian": 39,
+        "longestContinuousRunM": 68,
+        "maxFamilySpanM": 316,
+        "shoulderNew": 744,
+        "shoulderOld": 446,
+        "shoulderRatio": 1.6681614349775784,
+        "hardCoreActive": 0,
+        "hardCoreMaxDelta": 0
+      },
+      "limit": ".20 m < max terrace delta < .95 m"
+    },
+    {
+      "name": "r33_is_a_real_but_bounded_change_from_r32",
+      "pass": false,
+      "value": 0.8442125319815688,
+      "limit": ".025 m < sampled max R33-R32 surface change < .65 m"
+    },
+    {
+      "name": "terrace_geometry_has_both_cut_and_fill",
+      "pass": true,
+      "value": {
+        "pos": 97.93366219615544,
+        "neg": 107.8586435049929
+      },
+      "limit": "both signed responses >8 aggregate sample-m"
+    },
+    {
+      "name": "terrace_support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 1084,
+        "oldActive": 785,
+        "ratio": 1.3808917197452228
+      },
+      "limit": "R33 active support >=0.98x R32"
+    },
+    {
+      "name": "terrace_core_does_not_collapse",
+      "pass": true,
+      "value": {
+        "core": 748,
+        "oldCore": 395,
+        "ratio": 1.8936708860759495
+      },
+      "limit": "R33 core support >=0.92x R32"
+    },
+    {
+      "name": "drainage_shoulders_are_actually_stitched",
+      "pass": true,
+      "value": {
+        "shoulderNew": 744,
+        "shoulderOld": 446,
+        "ratio": 1.6681614349775784
+      },
+      "limit": "active samples 12-30 m from drainage >1.20x R32"
+    },
+    {
+      "name": "hard_drainage_core_stays_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreMaxDelta": 0
+      },
+      "limit": "zero terrace support/delta at <=12 m drainage distance"
+    },
+    {
+      "name": "terrace_families_still_span_the_slope",
+      "pass": true,
+      "value": {
+        "activeRows": 32,
+        "maxFamilySpanM": 316,
+        "rowCountMedian": 39
+      },
+      "limit": ">=28 active rows and >120 m family span"
+    },
+    {
+      "name": "between_drain_segments_remain_substantial",
+      "pass": true,
+      "value": {
+        "longestContinuousRunM": 68
+      },
+      "limit": ">48 m continuous terrace segment between hard drainage gaps"
+    },
+    {
+      "name": "all_three_nested_groups_remain_material",
+      "pass": true,
+      "value": [
+        187,
+        459,
+        438
+      ],
+      "limit": "each dominant terrace group has >45 active samples"
+    },
+    {
+      "name": "adjacent_groups_still_overlap",
+      "pass": true,
+      "value": {
+        "overlap01": 840,
+        "overlap12": 846
+      },
+      "limit": "each adjacent pair has >12 support-overlap samples"
+    },
+    {
+      "name": "terrace_increment_is_not_a_cliff",
+      "pass": true,
+      "value": {
+        "maxStep": 0.91702925669516,
+        "maxStepAt": [
+          -60,
+          -60
+        ]
+      },
+      "limit": "<1.05 m change in added terrace delta per 4 m z"
+    },
+    {
+      "name": "blended_family_phase_has_samples",
+      "pass": true,
+      "value": {
+        "n": 573,
+        "meanPhaseGradient": 0.005687184795348008,
+        "medianPhaseGradient": 0.0063015820176144655,
+        "maxPhaseGradient": 0.009706695323693754
+      },
+      "limit": ">30 family-overlap seam samples"
+    },
+    {
+      "name": "blended_family_phase_is_smooth",
+      "pass": true,
+      "value": {
+        "n": 573,
+        "meanPhaseGradient": 0.005687184795348008,
+        "medianPhaseGradient": 0.0063015820176144655,
+        "maxPhaseGradient": 0.009706695323693754
+      },
+      "limit": "max phase gradient <.035 m/m and median <.018 m/m"
+    },
+    {
+      "name": "bench_and_riser_samples_exist",
+      "pass": true,
+      "value": {
+        "benchN": 271,
+        "riserN": 50,
+        "benchRatioMean": 0.3298186758094095,
+        "benchRatioMedian": 0.2788033599403321,
+        "riserRatioMean": 2.6916237628908903,
+        "riserRatioMedian": 2.5449656065141095,
+        "benchSlopeMean": 0.08531458926504173,
+        "benchSlopeMedian": 0.06234330798008106,
+        "riserSlopeMean": 0.6509132447656595,
+        "riserSlopeMedian": 0.6617431034501318
+      },
+      "limit": ">45 bench and >12 riser core samples"
+    },
+    {
+      "name": "benches_are_flatter_than_r30_substrate",
+      "pass": true,
+      "value": {
+        "benchN": 271,
+        "riserN": 50,
+        "benchRatioMean": 0.3298186758094095,
+        "benchRatioMedian": 0.2788033599403321,
+        "riserRatioMean": 2.6916237628908903,
+        "riserRatioMedian": 2.5449656065141095,
+        "benchSlopeMean": 0.08531458926504173,
+        "benchSlopeMedian": 0.06234330798008106,
+        "riserSlopeMean": 0.6509132447656595,
+        "riserSlopeMedian": 0.6617431034501318
+      },
+      "limit": "median bench/base gradient ratio <.82"
+    },
+    {
+      "name": "risers_are_steeper_than_benches",
+      "pass": true,
+      "value": {
+        "benchMedianSlope": 0.06234330798008106,
+        "riserMedianSlope": 0.6617431034501318
+      },
+      "limit": "median riser slope >1.35x median bench slope"
+    },
+    {
+      "name": "risers_steepen_relative_to_r30",
+      "pass": true,
+      "value": {
+        "benchN": 271,
+        "riserN": 50,
+        "benchRatioMean": 0.3298186758094095,
+        "benchRatioMedian": 0.2788033599403321,
+        "riserRatioMean": 2.6916237628908903,
+        "riserRatioMedian": 2.5449656065141095,
+        "benchSlopeMean": 0.08531458926504173,
+        "benchSlopeMedian": 0.06234330798008106,
+        "riserSlopeMean": 0.6509132447656595,
+        "riserSlopeMedian": 0.6617431034501318
+      },
+      "limit": "median riser/base gradient ratio >1.18"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R33 change far upstream"
+    },
+    {
+      "name": "support_is_localized_to_agricultural_slope",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside terrace support"
+    },
+    {
+      "name": "drainage_axis_cores_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 12 m inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "stitched_terraces_do_not_create_pathological_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.08084969181683466,
+          "at": [
+            166,
+            12
+          ]
+        },
+        "new": {
+          "maxRise": 0.08084969181683466,
+          "at": [
+            166,
+            12
+          ]
+        }
+      },
+      "limit": "new worst 4 m forward rise <= R32 +1.05 m"
+    },
+    {
+      "name": "terrace_geometry_enabled_only_as_pilot",
+      "pass": true,
+      "value": {
+        "terraceGeometryEnabled": true,
+        "terracePilotPreviewEnabled": true
+      },
+      "limit": "synthetic terrace morphology ON"
+    },
+    {
+      "name": "global_visual_acceptance_remains_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_errors_explicitly_corrected",
+      "pass": true,
+      "value": "R32 cluster-like terraces do not prove that risers are too low. Raising risers would amplify isolated islands. A second invalid shortcut is to equate protection of a drainage carrier with an arbitrarily wide blank setback: without surveyed channel and bank sections, the previous 16-34 m shoulder is synthetic. R33 therefore tests narrower tapering shoulders while preserving the hard carrier core and does not raise terrace amplitude.",
+      "limit": "reject low-riser and wide-setback shortcuts"
+    },
+    {
+      "name": "real_world_constraint_is_explicit",
+      "pass": true,
+      "value": "a real terrace-to-channel edge cannot be reconstructed quickly from the current 12.5 m macro DEM and photographs because selected-field microtopography, surveyed channel/bund/riser sections, bankfull width, inlet/outlet sill elevations and event water-management records are absent. The 12 m core and 24 m taper are synthetic QA parameters, not Yunnan engineering dimensions.",
+      "limit": "state missing real-world evidence that blocks fast realization"
+    },
+    {
+      "name": "xiaoma_truth_boundary_retained",
+      "pass": true,
+      "value": "the Xiaoma/TLO intake still lists field location/boundary, field microtopography, bund section, channel section and water-control elevation as unknown; continuity and conservation appearance are not sufficient to establish hydraulic state. R33 creates no water head, depth, discharge or exchange law.",
+      "limit": "no necessary-condition -> sufficient-condition error"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved frame audit is used for ordering only: drainage hierarchy -> accumulated terrain influence -> terrain-conforming land use/contour bands. R33 lets terraces approach drainage carriers as terrain-conforming land use but does not copy Blender dimensions, Voronoi cells, shader displacement or adaptive subdivision as agricultural truth.",
+      "limit": "process ordering only"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round. R33 uses only the visible relationship that large contour-following terrace families approach narrow drainage interruptions instead of becoming broad blank islands; no metric terrace width, drainage setback, riser height, channel size or water depth is inferred.",
+      "limit": "morphology only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed terrace footprint",
+        "surveyed terrace width",
+        "measured drainage setback",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known inlet sill",
+        "known outlet sill",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5166889575457687,
+      "deltaMean": 0.06647038297840713,
+      "pos": 97.93366219615544,
+      "neg": 107.8586435049929,
+      "maxStep": 0.91702925669516,
+      "maxStepAt": [
+        -60,
+        -60
+      ],
+      "active": 1084,
+      "core": 748,
+      "oldActive": 785,
+      "oldCore": 395,
+      "changeFrom32": 0.8442125319815688,
+      "activeRows": 32,
+      "groupCounts": [
+        187,
+        459,
+        438
+      ],
+      "overlap01": 840,
+      "overlap12": 846,
+      "rowCountMedian": 39,
+      "longestContinuousRunM": 68,
+      "maxFamilySpanM": 316,
+      "shoulderNew": 744,
+      "shoulderOld": 446,
+      "shoulderRatio": 1.6681614349775784,
+      "hardCoreActive": 0,
+      "hardCoreMaxDelta": 0
+    },
+    "seam": {
+      "n": 573,
+      "meanPhaseGradient": 0.005687184795348008,
+      "medianPhaseGradient": 0.0063015820176144655,
+      "maxPhaseGradient": 0.009706695323693754
+    },
+    "terraceMorphology": {
+      "benchN": 271,
+      "riserN": 50,
+      "benchRatioMean": 0.3298186758094095,
+      "benchRatioMedian": 0.2788033599403321,
+      "riserRatioMean": 2.6916237628908903,
+      "riserRatioMedian": 2.5449656065141095,
+      "benchSlopeMean": 0.08531458926504173,
+      "benchSlopeMedian": 0.06234330798008106,
+      "riserSlopeMean": 0.6509132447656595,
+      "riserSlopeMedian": 0.6617431034501318
+    },
+    "farUp": 0,
+    "nearDrain": 0,
+    "receiver": 0,
+    "outside": 0,
+    "oldForward": {
+      "maxRise": 0.08084969181683466,
+      "at": [
+        166,
+        12
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.08084969181683466,
+      "at": [
+        166,
+        12
+      ]
+    }
+  }
+}
