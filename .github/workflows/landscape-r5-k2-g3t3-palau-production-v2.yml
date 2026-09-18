@@ -1,0 +1,141 @@
+name: Landscape R5.K2.G3.T3 Palau Production V2
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-g3t3-palau-production/build_g3t3.py
+      - .github/workflows/landscape-r5-k2-g3t3-palau-production-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build G3.T3 Palau production candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-g3t3-palau-production/build_g3t3.py
+          python workbenches/landscape-surface-r5-k2-g3t3-palau-production/build_g3t3.py
+
+      - name: Verify controls, karst soil boundary, shaders and app
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          src=Path('workbenches/landscape-surface-r5-k2-geometry-r3-tiles-v26/index.html').read_text(encoding='utf-8')
+          out=Path('workbenches/landscape-surface-r5-k2-g3t3-palau-production/index.html').read_text(encoding='utf-8')
+          build=json.loads(Path('workbenches/landscape-surface-r5-k2-g3t3-palau-production/build.json').read_text(encoding='utf-8'))
+          a=re.search(r'<script id="worldSource" type="text/plain">(.*?)</script>',src,re.S)
+          b=re.search(r'<script id="worldSource" type="text/plain">(.*?)</script>',out,re.S)
+          assert a and b and a.group(1)==b.group(1), 'frozen world source changed'
+          required=[
+              'R5.K2.G3.T3','10 Forms · Size Controls · Karst Soil Rule',
+              '山体高度','山体宽度','整体大小','色彩 Warp','色彩区域尺度','色彩连续破除',
+              'data-palau="0"','data-palau="9"','const PALAU_PRESETS=Object.freeze([',
+              "name:'P01 高耸礁塔'", "name:'P10 复合群峰'",
+              'uHeightScale','uWidthScale','uOverallScale','uColorWarp','uColorScale','uColorBreakup','uPalauSeed',
+              "schema:'LANDSCAPE_KARST_SOIL_ELIGIBILITY_R1'",'rejectedClosedSky','rejectedCaveInterior','treeEligiblePockets',
+              "name:'向天开口的积土与植被资格囊'",'report.soilEcology=soilEcology',
+              'local=vec3(local.x*ws,baseY+(local.y-baseY)*hs,local.z*ws)',
+              'float cscale=max(.18,uColorScale)',
+          ]
+          for token in required: assert token in out, token
+          assert out.count('data-palau=')==10
+          assert build['schema']=='LANDSCAPE_R5_K2_G3T3_PALAU_PRODUCTION_V1'
+          assert len(build['palauPresets'])==10
+          assert len({p['seed'] for p in build['palauPresets']})==10
+          assert build['karstSoilRule']['skyOpenRequired'] is True
+          assert build['karstSoilRule']['principalCaveVolumesExcluded'] is True
+          assert build['actualTreeGeometry'] is False
+          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',out,re.S)
+          fs=re.search(r'const FS=`(.*?)`;\n\'use strict\';',out,re.S)
+          assert vs and fs
+          Path('/tmp/g3t3.vert').write_text(vs.group(1),encoding='utf-8')
+          Path('/tmp/g3t3.frag').write_text(fs.group(1),encoding='utf-8')
+          marker="</script><script>'use strict';"
+          assert marker in out
+          app="'use strict';"+out.rsplit(marker,1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/g3t3-app.js').write_text(app,encoding='utf-8')
+          print(json.dumps(build,ensure_ascii=False,indent=2))
+          PY
+          node --check /tmp/g3t3-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/g3t3.vert
+          glslangValidator -S frag /tmp/g3t3.frag
+
+      - name: Prepare ten-form runtime QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('workbenches/landscape-surface-r5-k2-g3t3-palau-production/index.html').read_text(encoding='utf-8')
+          blocks=[]
+          for sid in ('worldSource','generateSource'):
+              m=re.search(r'<script id="%s" type="text/plain">(.*?)</script>'%sid,s,re.S)
+              assert m, sid
+              blocks.append(m.group(1))
+          Path('/tmp/g3t3-runtime.js').write_text('\n'.join(blocks),encoding='utf-8')
+          PY
+          cat >> /tmp/g3t3-runtime.js <<'JS'
+          const fs=require('fs');
+          const presets=[
+            {id:'P01',name:'高耸礁塔',seed:83,geo:1.68,concavity:.87,soilMicro:.86,height:1.30,width:.82},
+            {id:'P02',name:'宽顶岛丘',seed:211,geo:1.52,concavity:.74,soilMicro:1.02,height:.94,width:1.30},
+            {id:'P03',name:'穿洞高峰',seed:509,geo:1.82,concavity:1.02,soilMicro:.72,height:1.22,width:1.02},
+            {id:'P04',name:'双峰脊塔',seed:8231,geo:1.72,concavity:.90,soilMicro:.92,height:1.12,width:1.18},
+            {id:'P05',name:'蘑菇基座',seed:9298,geo:1.88,concavity:1.08,soilMicro:.66,height:.91,width:1.14},
+            {id:'P06',name:'细腰孤峰',seed:13007,geo:1.90,concavity:1.06,soilMicro:.64,height:1.38,width:.76},
+            {id:'P07',name:'阶台岩岛',seed:17011,geo:1.48,concavity:.68,soilMicro:1.12,height:.88,width:1.36},
+            {id:'P08',name:'偏心斜塔',seed:23117,geo:1.78,concavity:.94,soilMicro:.82,height:1.18,width:.94},
+            {id:'P09',name:'洞群厚峰',seed:31013,geo:1.94,concavity:1.12,soilMicro:.70,height:1.05,width:1.24},
+            {id:'P10',name:'复合群峰',seed:47051,geo:1.84,concavity:.98,soilMicro:.88,height:1.15,width:1.10}
+          ];
+          const variants=[];const signatures=new Set();let totalPockets=0,totalTreeEligible=0,totalCaveRejects=0,totalClosedRejects=0;
+          for(const p of presets){
+            const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:p.seed,stage:4,fracture:1,relief:1,geo:p.geo,concavity:p.concavity,spikeGuard:.95,soilMicro:p.soilMicro};
+            let data=generateScene(cfg,()=>{}),r=data.report,g=r.microscopeGeometry,soil=r.soilMicroscope,main=r.parts.find(x=>x.name==='主岩体');
+            if(!main)throw Error(p.id+': main rock missing');
+            if(signatures.has(main.signature))throw Error(p.id+': duplicate main rock signature '+main.signature);
+            signatures.add(main.signature);
+            if(g.triangleFlipCount!==0||g.protectedDriftCount!==0||g.baseTriangleFlipCount!==0)throw Error(p.id+': geometry safety gate failed');
+            if(soil.triangleFlipCount!==0)throw Error(p.id+': soil safety gate failed');
+            if(!r.soilEcology||r.soilEcology.schema!=='LANDSCAPE_KARST_SOIL_ELIGIBILITY_R1')throw Error(p.id+': karst soil report missing');
+            totalPockets+=r.soilEcology.acceptedPockets;totalTreeEligible+=r.soilEcology.treeEligiblePockets;totalCaveRejects+=r.soilEcology.rejectedCaveInterior;totalClosedRejects+=r.soilEcology.rejectedClosedSky;
+            variants.push({id:p.id,name:p.name,seed:p.seed,heightScale:p.height,widthScale:p.width,mainVertices:r.mainVertices,mainTriangles:r.mainTriangles,mainSignature:main.signature,soilSignature:r.parts.find(x=>x.name==='土体与风化基底').signature,microscopeGeometry:g,soilMicroscope:soil,soilEcology:r.soilEcology});
+            data=null;if(global.gc)global.gc();
+          }
+          if(signatures.size!==10)throw Error('ten unique mountain meshes not produced');
+          if(totalCaveRejects+totalClosedRejects<=0)throw Error('karst cave/sky soil exclusion never activated');
+          const qa={schema:'LANDSCAPE_R5_K2_G3T3_RUNTIME_QA',date:'2026-09-18',variants,uniqueMainSignatures:signatures.size,totalPockets,totalTreeEligible,totalCaveRejects,totalClosedRejects,controls:{height:[.65,1.55],width:[.65,1.60],overall:[.60,1.60],colourWarp:[0,3],colourScale:[.35,3],colourBreakup:[0,2]},actualTreeGeometry:false,visualApproved:false,productionReady:false};
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-g3t3-palau-production/runtime-qa.json',JSON.stringify(qa,null,2));
+          console.log(JSON.stringify({uniqueMainSignatures:qa.uniqueMainSignatures,totalPockets,totalTreeEligible,totalCaveRejects,totalClosedRejects}));
+          JS
+          node --check /tmp/g3t3-runtime.js
+
+      - name: Run ten-form runtime QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=7168
+        run: node --expose-gc /tmp/g3t3-runtime.js
+
+      - name: Materialize G3.T3 candidate
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-g3t3-palau-production/index.html \
+                  workbenches/landscape-surface-r5-k2-g3t3-palau-production/build.json \
+                  workbenches/landscape-surface-r5-k2-g3t3-palau-production/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "G3.T3 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize ten-form Palau G3.T3 [skip ci]"
+          git push
