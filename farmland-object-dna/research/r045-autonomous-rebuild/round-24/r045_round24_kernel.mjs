@@ -39,7 +39,7 @@ export const receivingPlainProfiles=R23.outletContinuum.map((o,i)=>({
   swing:[23,-31,37][i]??20,
   phase:[.24,1.18,2.27][i]??0,
   depth:[.27,.34,.23][i]??.27,
-  shoulder:[.12,.09,.15][i]??.11,
+  shoulder:[.16,.17,.15][i]??.16,
   nested:[.10,.14,.08][i]??.10,
   nestedSide:[1,-1,1][i]??1
 }));
@@ -66,12 +66,12 @@ export function receivingPlainComponent(p,x,z){
   const local=q.signed-centre;
   const bay=-p.depth*G(local,width);
 
-  // An unequal outer shoulder and a smaller nested hollow create a broad bay-within-apron planform,
-  // not a terrace step. They remain tied to the same carrier-local coordinate system.
-  const shoulderCentre=centre-p.nestedSide*width*1.16;
-  const outer=p.shoulder*G(q.signed-shoulderCentre,width*.72);
-  const nestedCentre=centre+p.nestedSide*width*.72;
-  const inner=-p.nested*G(q.signed-nestedCentre,width*.48)*S(.48,.82,u);
+  // Two outer shoulders are offset beyond the broad receiving hollow so they survive in the final
+  // signed relief instead of being numerically cancelled inside the hollow. They are deliberately
+  // unequal; the smaller nested hollow remains on only one side according to catchment identity.
+  const outer=p.shoulder*(G(local-width*1.48,width*.44)+.78*G(local+width*1.34,width*.50));
+  const nestedCentre=centre+p.nestedSide*width*.68;
+  const inner=-p.nested*G(q.signed-nestedCentre,width*.46)*S(.48,.82,u);
   const longitudinal=.90+.10*Math.sin(Math.PI*2*u+p.phase);
   return env*drainClear*riverClear*downstream*longitudinal*(bay+outer+inner);
 }
@@ -117,7 +117,7 @@ export const snapshot={
   waterStateKnown:false,
   round24:{
     scope:'replace the still-uniform lower receiving plain with three unequal nested carrier-coupled bays while preserving inherited drainage, R23 foothill contact and receiver river; terraces remain locked',
-    method:'three outlet-carrier local coordinate fields with unequal width expansion, lateral bending, shallow receiving hollows, outer shoulders and smaller nested hollows; exact drainage/river protection and smooth z support',
+    method:'three outlet-carrier local coordinate fields with unequal width expansion, lateral bending, shallow receiving hollows, surviving outer shoulders and smaller nested hollows; exact drainage/river protection and smooth z support',
     logicCorrection:'adding arbitrary extra lobes or merely amplifying the R23 toe would decorate the plain without causal structure. R24 ties every new receiving mass to an inherited outlet carrier before any terrace pattern is allowed',
     xiaomaBoundary:'rendered terrain continuity and carrier intersection are geometry evidence only; they do not establish hydraulic connectivity, water depth, discharge, control elevation, soil water or sediment state',
     mrRolordUse:'the saved frame audit was reread this round: river hierarchy -> cumulative distance/terrain -> land use. The recorded video observations are reused; no unsupported metric copying from Blender is performed',
