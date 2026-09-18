@@ -61,8 +61,10 @@ export function hierarchyComponent(p,x,z){
   const local=q.signed-centre;
   const hollow=-p.depth*G(local,width);
   const nested=-p.nested*G(local+p.edgeSign*width*.43,width*.31)*S(.42,.82,u);
-  const shoulder=p.shoulder*G(local-p.edgeSign*width*1.16,width*.34);
-  const counter=.36*p.shoulder*G(local+p.edgeSign*width*1.52,width*.47);
+  // First runner proved the old shoulder was inside the broad hollow and cancelled in the final
+  // signed field. Move it outside the receiving hollow instead of weakening the QA requirement.
+  const shoulder=p.shoulder*G(local-p.edgeSign*width*1.88,width*.36);
+  const counter=.36*p.shoulder*G(local+p.edgeSign*width*2.06,width*.43);
   const taper=.90+.10*Math.sin(Math.PI*1.35*u+p.phase);
   return env*along*drainClear*riverClear*taper*(hollow+nested+shoulder+counter);
 }
@@ -92,8 +94,9 @@ export const snapshot={
   parcelGenerationEnabled:false,terraceGeometryEnabled:false,terracePilotPreviewEnabled:false,waterStateKnown:false,
   round26:{
     scope:'strengthen the one-sided agricultural slope to foothill receiving-plain hierarchy by giving the three inherited outlet-coupled receiving bodies major, subordinate and local planform scales; terraces remain locked',
-    method:'three unequal outlet-coordinate toe-lobe fields with different support length, width growth, lateral sweep, bend, nested recess and one-sided shoulder; inherited drainage axes, upper work and foreground receiver are protected exactly',
+    method:'three unequal outlet-coordinate toe-lobe fields with different support length, width growth, lateral sweep, bend, nested recess and outer shoulder; inherited drainage axes, upper work and foreground receiver are protected exactly',
     logicCorrection:'weak whole-scene legibility does not justify simply increasing relief amplitude. A larger vertical signal can make the same wrong footprint more obvious; R26 changes nested planform scale and downstream occupation first.',
+    qaCorrection:'the first R26 runner showed that declared shoulders were fully cancelled because they sat inside the broad receiving hollow. The geometry was corrected by moving shoulders outside the hollow; the signed-relief QA gate was not weakened.',
     xiaomaBoundary:'the canonical macro terrain basis is about 12.5 m spacing and does not establish field boundaries, terrace bench/riser sections, bund or channel sections, control elevations, hydraulic connectivity, water depth, discharge, soil-water state or sediment state.',
     mrRolordUse:'the saved MrRolord frame audit was reread this round. R26 keeps river hierarchy and accumulated terrain fields ahead of land use, translating that ordering into deterministic browser geometry without copying Blender dimensions or Voronoi parcel styling.',
     referenceUse:'the user reference image image(173).png was reopened this round. It supports unequal nested contour occupation and non-uniform lower transitions only; no terrace width, riser height, channel size, water depth or regional metric is inferred from the photograph.',
