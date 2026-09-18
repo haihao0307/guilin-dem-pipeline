@@ -67,26 +67,26 @@
       "pass": true,
       "value": {
         "max": 6.332464050878222,
-        "mean": 0.09031997726660816,
-        "n": 1998,
+        "mean": 0.08722896006368902,
+        "n": 2072,
         "at": [
           140,
           -198
         ]
       },
-      "limit": "1 m < max correction < 8 m sanity bound; do not confuse correction amplitude with terrain acceptance"
+      "limit": "1 m < max correction < 8 m sanity bound; final terrain is the acceptance object"
     },
     {
       "name": "repair_remains_spatially_bounded",
       "pass": true,
-      "value": 0.09031997726660816,
+      "value": 0.08722896006368902,
       "limit": "mean absolute correction <0.28 m over audit band"
     },
     {
       "name": "repair_is_band_limited",
       "pass": true,
       "value": 0,
-      "limit": "zero sampled change outside z=-226..-170"
+      "limit": "zero sampled change outside z=-226..-168"
     },
     {
       "name": "lower_agricultural_slope_unchanged",
@@ -112,7 +112,7 @@
       "value": {
         "activeRows": 21,
         "zMin": -224,
-        "zMax": -172
+        "zMax": -170
       },
       "limit": ">=12 z rows with >0.02 m repair"
     },
@@ -189,13 +189,13 @@
       "name": "entry_exit_ramps_do_not_create_new_large_uphill_barrier",
       "pass": false,
       "value": {
-        "rampMax": 1.5077569090232288,
+        "rampMax": 1.4280448664297936,
         "at": [
           -155,
           -174
         ]
       },
-      "limit": "<1.25 m uphill rise per 4 m across the full repair band"
+      "limit": "<1.25 m uphill rise per 4 m across entry, repaired interior, and full exit to inherited terrain"
     },
     {
       "name": "source_footprint_functions_remain_present",
@@ -270,7 +270,7 @@
     {
       "name": "failed_r19_logic_is_explicitly_corrected",
       "pass": true,
-      "value": "R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude even though cancelling a multi-metre baseline wall necessarily requires a large opposite correction; R20 gates repaired final terrain plus spatial support instead",
+      "value": "R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude; the second attempt then proved an overly short exit blend simply relocates the barrier. R20 gates repaired final terrain plus spatial support and uses a wider downstream continuity blend",
       "limit": "final terrain, not correction derivative/amplitude, is acceptance object"
     },
     {
@@ -297,8 +297,8 @@
   "metrics": {
     "delta": {
       "max": 6.332464050878222,
-      "mean": 0.09031997726660816,
-      "n": 1998,
+      "mean": 0.08722896006368902,
+      "n": 2072,
       "at": [
         140,
         -198
@@ -323,9 +323,9 @@
       -182,
       -180,
       -178,
-      -176,
       -174,
-      -172
+      -172,
+      -170
     ],
     "oldWall": {
       "z": -202,
@@ -350,7 +350,7 @@
       "threshold": 0.55
     },
     "ramp": {
-      "maxRise": 1.5077569090232288,
+      "maxRise": 1.4280448664297936,
       "at": [
         -155,
         -174
