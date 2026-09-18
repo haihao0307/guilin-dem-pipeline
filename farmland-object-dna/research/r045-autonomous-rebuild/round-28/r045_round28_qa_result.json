@@ -1,0 +1,1429 @@
+{
+  "version": "R045.28",
+  "passed": true,
+  "gateCount": 42,
+  "passedCount": 42,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.28",
+      "limit": "R045.28"
+    },
+    {
+      "name": "three_contact_profiles",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major"
+        ],
+        [
+          "OUTLET-B",
+          "subordinate"
+        ],
+        [
+          "OUTLET-C",
+          "local"
+        ]
+      ],
+      "limit": "exactly three inherited outlet-tied contact profiles"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "r27_transition_identity_preserved",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "exact R27 transition definitions retained"
+    },
+    {
+      "name": "contact_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -6,
+          "zEnd": 108,
+          "width0": 66,
+          "width1": 144,
+          "centre0": -18,
+          "sweep": 52,
+          "bend": 28,
+          "pocket": 0.118,
+          "tongue": 0.094,
+          "notch": 0.058,
+          "counter": 0.038,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": 0,
+          "zEnd": 90,
+          "width0": 46,
+          "width1": 100,
+          "centre0": 24,
+          "sweep": -44,
+          "bend": 21,
+          "pocket": 0.09,
+          "tongue": 0.073,
+          "notch": 0.044,
+          "counter": 0.03,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": 8,
+          "zEnd": 74,
+          "width0": 34,
+          "width1": 74,
+          "centre0": -20,
+          "sweep": 31,
+          "bend": -18,
+          "pocket": 0.068,
+          "tongue": 0.055,
+          "notch": 0.034,
+          "counter": 0.022,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "three unique contact signatures"
+    },
+    {
+      "name": "declared_contact_scales_are_ordered",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -6,
+          "zEnd": 108,
+          "width0": 66,
+          "width1": 144,
+          "centre0": -18,
+          "sweep": 52,
+          "bend": 28,
+          "pocket": 0.118,
+          "tongue": 0.094,
+          "notch": 0.058,
+          "counter": 0.038,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": 0,
+          "zEnd": 90,
+          "width0": 46,
+          "width1": 100,
+          "centre0": 24,
+          "sweep": -44,
+          "bend": 21,
+          "pocket": 0.09,
+          "tongue": 0.073,
+          "notch": 0.044,
+          "counter": 0.03,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": 8,
+          "zEnd": 74,
+          "width0": 34,
+          "width1": 74,
+          "centre0": -20,
+          "sweep": 31,
+          "bend": -18,
+          "pocket": 0.068,
+          "tongue": 0.055,
+          "notch": 0.034,
+          "counter": 0.022,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "major > subordinate > local in declared width and support length"
+    },
+    {
+      "name": "contact_sweeps_change_direction",
+      "pass": true,
+      "value": [
+        52,
+        -44,
+        31
+      ],
+      "limit": "adjacent hierarchy members use opposite lateral sweep"
+    },
+    {
+      "name": "contact_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.128175199234434,
+        "mean": 0.014975927575322377,
+        "coreMean": 0.019134102227152908,
+        "n": 2310,
+        "maxAt": [
+          -80,
+          28
+        ],
+        "maxStep": 0.026810721717909776,
+        "maxStepAt": [
+          52,
+          56
+        ],
+        "positiveMass": 1.2440335105645783,
+        "negativeMass": 33.3503591884301,
+        "positiveToNegative": 0.03730195238785189
+      },
+      "limit": "0.025 m < max R28 delta < 0.32 m"
+    },
+    {
+      "name": "contact_change_is_broad_but_low_relief",
+      "pass": true,
+      "value": 0.019134102227152908,
+      "limit": "0.003 m < core mean abs delta < 0.10 m"
+    },
+    {
+      "name": "concave_and_convex_relief_both_survive",
+      "pass": true,
+      "value": {
+        "positiveMass": 1.2440335105645783,
+        "negativeMass": 33.3503591884301,
+        "ratio": 0.03730195238785189
+      },
+      "limit": "positive tongue/counter mass is 1%..200% of negative pocket/notch mass"
+    },
+    {
+      "name": "added_contact_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.026810721717909776,
+        "at": [
+          52,
+          56
+        ]
+      },
+      "limit": "<0.14 m change in R28 field per 4 m z"
+    },
+    {
+      "name": "contact_reaches_footslope",
+      "pass": true,
+      "value": 144,
+      "limit": ">35 active samples at z=0..28"
+    },
+    {
+      "name": "contact_reaches_receiving_plain",
+      "pass": true,
+      "value": 519,
+      "limit": ">90 active samples at z=42..96"
+    },
+    {
+      "name": "contact_overlaps_r27_transition",
+      "pass": true,
+      "value": 293,
+      "limit": ">25 cells where R28 contact and R27 transition both have substantive signal"
+    },
+    {
+      "name": "all_three_contact_components_exist",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "mass": 11.840485351212248,
+          "centroid": [
+            -135.02827760114138,
+            59.797439594519524
+          ],
+          "peak": 0.08742896343897083,
+          "peakAt": [
+            -174,
+            64
+          ],
+          "count": 366,
+          "occupiedRows": 18,
+          "positive": 0.5786226724995066,
+          "negative": 11.261862678712747
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "mass": 3.969297960704472,
+          "centroid": [
+            -48.352088185054654,
+            52.37201620248223
+          ],
+          "peak": 0.05570950894545829,
+          "peakAt": [
+            -78,
+            40
+          ],
+          "count": 220,
+          "occupiedRows": 13,
+          "positive": 0.2701650856809499,
+          "negative": 3.6991328750235213
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "mass": 2.060866424689955,
+          "centroid": [
+            156.7482708194857,
+            45.16557208556846
+          ],
+          "peak": 0.04376769719333137,
+          "peakAt": [
+            186,
+            34
+          ],
+          "count": 109,
+          "occupiedRows": 9,
+          "positive": 0.05953216897487338,
+          "negative": 2.0013342557150815
+        }
+      ],
+      "limit": "each component peak >0.012 m and >20 occupied samples"
+    },
+    {
+      "name": "actual_contact_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "count": 366,
+          "rows": 18
+        },
+        {
+          "id": "OUTLET-B",
+          "count": 220,
+          "rows": 13
+        },
+        {
+          "id": "OUTLET-C",
+          "count": 109,
+          "rows": 9
+        }
+      ],
+      "limit": "actual occupied samples major > subordinate > local by >5% each step"
+    },
+    {
+      "name": "contact_components_remain_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minSep": 86.9936705987531,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "scaleClass": "major",
+            "mass": 11.840485351212248,
+            "centroid": [
+              -135.02827760114138,
+              59.797439594519524
+            ],
+            "peak": 0.08742896343897083,
+            "peakAt": [
+              -174,
+              64
+            ],
+            "count": 366,
+            "occupiedRows": 18,
+            "positive": 0.5786226724995066,
+            "negative": 11.261862678712747
+          },
+          {
+            "id": "OUTLET-B",
+            "scaleClass": "subordinate",
+            "mass": 3.969297960704472,
+            "centroid": [
+              -48.352088185054654,
+              52.37201620248223
+            ],
+            "peak": 0.05570950894545829,
+            "peakAt": [
+              -78,
+              40
+            ],
+            "count": 220,
+            "occupiedRows": 13,
+            "positive": 0.2701650856809499,
+            "negative": 3.6991328750235213
+          },
+          {
+            "id": "OUTLET-C",
+            "scaleClass": "local",
+            "mass": 2.060866424689955,
+            "centroid": [
+              156.7482708194857,
+              45.16557208556846
+            ],
+            "peak": 0.04376769719333137,
+            "peakAt": [
+              186,
+              34
+            ],
+            "count": 109,
+            "occupiedRows": 9,
+            "positive": 0.05953216897487338,
+            "negative": 2.0013342557150815
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >15 m"
+    },
+    {
+      "name": "whole_contact_occupancy_evolves",
+      "pass": true,
+      "value": {
+        "rows": [
+          {
+            "z": 2,
+            "count": 10,
+            "centroid": -103.89523112249931,
+            "span": 84,
+            "posCells": 0,
+            "negCells": 10
+          },
+          {
+            "z": 8,
+            "count": 22,
+            "centroid": -112.2578916276631,
+            "span": 156,
+            "posCells": 6,
+            "negCells": 16
+          },
+          {
+            "z": 14,
+            "count": 31,
+            "centroid": -109.74264228052927,
+            "span": 168,
+            "posCells": 10,
+            "negCells": 21
+          },
+          {
+            "z": 20,
+            "count": 45,
+            "centroid": -87.92929217255907,
+            "span": 428,
+            "posCells": 9,
+            "negCells": 36
+          },
+          {
+            "z": 26,
+            "count": 48,
+            "centroid": -63.22151845816784,
+            "span": 440,
+            "posCells": 7,
+            "negCells": 41
+          },
+          {
+            "z": 32,
+            "count": 58,
+            "centroid": -54.825660712530386,
+            "span": 444,
+            "posCells": 9,
+            "negCells": 49
+          },
+          {
+            "z": 38,
+            "count": 71,
+            "centroid": -55.04276099471953,
+            "span": 444,
+            "posCells": 10,
+            "negCells": 61
+          },
+          {
+            "z": 44,
+            "count": 71,
+            "centroid": -57.24443746005382,
+            "span": 440,
+            "posCells": 9,
+            "negCells": 62
+          },
+          {
+            "z": 50,
+            "count": 70,
+            "centroid": -51.205862695020976,
+            "span": 448,
+            "posCells": 8,
+            "negCells": 62
+          },
+          {
+            "z": 56,
+            "count": 79,
+            "centroid": -47.54736989676885,
+            "span": 452,
+            "posCells": 2,
+            "negCells": 77
+          },
+          {
+            "z": 62,
+            "count": 80,
+            "centroid": -64.8335168723403,
+            "span": 460,
+            "posCells": 0,
+            "negCells": 80
+          },
+          {
+            "z": 68,
+            "count": 71,
+            "centroid": -95.29138515507451,
+            "span": 444,
+            "posCells": 0,
+            "negCells": 71
+          },
+          {
+            "z": 74,
+            "count": 57,
+            "centroid": -112.88500885193423,
+            "span": 340,
+            "posCells": 0,
+            "negCells": 57
+          },
+          {
+            "z": 80,
+            "count": 55,
+            "centroid": -116.20041741904842,
+            "span": 288,
+            "posCells": 0,
+            "negCells": 55
+          },
+          {
+            "z": 86,
+            "count": 62,
+            "centroid": -116.66694943736968,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 62
+          },
+          {
+            "z": 92,
+            "count": 61,
+            "centroid": -112.30565215815793,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 61
+          },
+          {
+            "z": 98,
+            "count": 50,
+            "centroid": -109.0529174261168,
+            "span": 292,
+            "posCells": 0,
+            "negCells": 50
+          }
+        ],
+        "countRange": 70
+      },
+      "limit": ">=9 active rows and occupied-cell count range >5"
+    },
+    {
+      "name": "whole_contact_sweeps_laterally",
+      "pass": true,
+      "value": {
+        "centroidRange": 69.11957954060082,
+        "rows": [
+          {
+            "z": 2,
+            "count": 10,
+            "centroid": -103.89523112249931,
+            "span": 84,
+            "posCells": 0,
+            "negCells": 10
+          },
+          {
+            "z": 8,
+            "count": 22,
+            "centroid": -112.2578916276631,
+            "span": 156,
+            "posCells": 6,
+            "negCells": 16
+          },
+          {
+            "z": 14,
+            "count": 31,
+            "centroid": -109.74264228052927,
+            "span": 168,
+            "posCells": 10,
+            "negCells": 21
+          },
+          {
+            "z": 20,
+            "count": 45,
+            "centroid": -87.92929217255907,
+            "span": 428,
+            "posCells": 9,
+            "negCells": 36
+          },
+          {
+            "z": 26,
+            "count": 48,
+            "centroid": -63.22151845816784,
+            "span": 440,
+            "posCells": 7,
+            "negCells": 41
+          },
+          {
+            "z": 32,
+            "count": 58,
+            "centroid": -54.825660712530386,
+            "span": 444,
+            "posCells": 9,
+            "negCells": 49
+          },
+          {
+            "z": 38,
+            "count": 71,
+            "centroid": -55.04276099471953,
+            "span": 444,
+            "posCells": 10,
+            "negCells": 61
+          },
+          {
+            "z": 44,
+            "count": 71,
+            "centroid": -57.24443746005382,
+            "span": 440,
+            "posCells": 9,
+            "negCells": 62
+          },
+          {
+            "z": 50,
+            "count": 70,
+            "centroid": -51.205862695020976,
+            "span": 448,
+            "posCells": 8,
+            "negCells": 62
+          },
+          {
+            "z": 56,
+            "count": 79,
+            "centroid": -47.54736989676885,
+            "span": 452,
+            "posCells": 2,
+            "negCells": 77
+          },
+          {
+            "z": 62,
+            "count": 80,
+            "centroid": -64.8335168723403,
+            "span": 460,
+            "posCells": 0,
+            "negCells": 80
+          },
+          {
+            "z": 68,
+            "count": 71,
+            "centroid": -95.29138515507451,
+            "span": 444,
+            "posCells": 0,
+            "negCells": 71
+          },
+          {
+            "z": 74,
+            "count": 57,
+            "centroid": -112.88500885193423,
+            "span": 340,
+            "posCells": 0,
+            "negCells": 57
+          },
+          {
+            "z": 80,
+            "count": 55,
+            "centroid": -116.20041741904842,
+            "span": 288,
+            "posCells": 0,
+            "negCells": 55
+          },
+          {
+            "z": 86,
+            "count": 62,
+            "centroid": -116.66694943736968,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 62
+          },
+          {
+            "z": 92,
+            "count": 61,
+            "centroid": -112.30565215815793,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 61
+          },
+          {
+            "z": 98,
+            "count": 50,
+            "centroid": -109.0529174261168,
+            "span": 292,
+            "posCells": 0,
+            "negCells": 50
+          }
+        ]
+      },
+      "limit": "weighted planform centroid shifts by >7 m"
+    },
+    {
+      "name": "whole_contact_width_evolves",
+      "pass": true,
+      "value": {
+        "spanRange": 376,
+        "rows": [
+          {
+            "z": 2,
+            "count": 10,
+            "centroid": -103.89523112249931,
+            "span": 84,
+            "posCells": 0,
+            "negCells": 10
+          },
+          {
+            "z": 8,
+            "count": 22,
+            "centroid": -112.2578916276631,
+            "span": 156,
+            "posCells": 6,
+            "negCells": 16
+          },
+          {
+            "z": 14,
+            "count": 31,
+            "centroid": -109.74264228052927,
+            "span": 168,
+            "posCells": 10,
+            "negCells": 21
+          },
+          {
+            "z": 20,
+            "count": 45,
+            "centroid": -87.92929217255907,
+            "span": 428,
+            "posCells": 9,
+            "negCells": 36
+          },
+          {
+            "z": 26,
+            "count": 48,
+            "centroid": -63.22151845816784,
+            "span": 440,
+            "posCells": 7,
+            "negCells": 41
+          },
+          {
+            "z": 32,
+            "count": 58,
+            "centroid": -54.825660712530386,
+            "span": 444,
+            "posCells": 9,
+            "negCells": 49
+          },
+          {
+            "z": 38,
+            "count": 71,
+            "centroid": -55.04276099471953,
+            "span": 444,
+            "posCells": 10,
+            "negCells": 61
+          },
+          {
+            "z": 44,
+            "count": 71,
+            "centroid": -57.24443746005382,
+            "span": 440,
+            "posCells": 9,
+            "negCells": 62
+          },
+          {
+            "z": 50,
+            "count": 70,
+            "centroid": -51.205862695020976,
+            "span": 448,
+            "posCells": 8,
+            "negCells": 62
+          },
+          {
+            "z": 56,
+            "count": 79,
+            "centroid": -47.54736989676885,
+            "span": 452,
+            "posCells": 2,
+            "negCells": 77
+          },
+          {
+            "z": 62,
+            "count": 80,
+            "centroid": -64.8335168723403,
+            "span": 460,
+            "posCells": 0,
+            "negCells": 80
+          },
+          {
+            "z": 68,
+            "count": 71,
+            "centroid": -95.29138515507451,
+            "span": 444,
+            "posCells": 0,
+            "negCells": 71
+          },
+          {
+            "z": 74,
+            "count": 57,
+            "centroid": -112.88500885193423,
+            "span": 340,
+            "posCells": 0,
+            "negCells": 57
+          },
+          {
+            "z": 80,
+            "count": 55,
+            "centroid": -116.20041741904842,
+            "span": 288,
+            "posCells": 0,
+            "negCells": 55
+          },
+          {
+            "z": 86,
+            "count": 62,
+            "centroid": -116.66694943736968,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 62
+          },
+          {
+            "z": 92,
+            "count": 61,
+            "centroid": -112.30565215815793,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 61
+          },
+          {
+            "z": 98,
+            "count": 50,
+            "centroid": -109.0529174261168,
+            "span": 292,
+            "posCells": 0,
+            "negCells": 50
+          }
+        ]
+      },
+      "limit": "active planform span changes by >12 m"
+    },
+    {
+      "name": "interleaved_signed_rows_exist",
+      "pass": true,
+      "value": {
+        "mixedRows": 9,
+        "rows": [
+          {
+            "z": 2,
+            "count": 10,
+            "centroid": -103.89523112249931,
+            "span": 84,
+            "posCells": 0,
+            "negCells": 10
+          },
+          {
+            "z": 8,
+            "count": 22,
+            "centroid": -112.2578916276631,
+            "span": 156,
+            "posCells": 6,
+            "negCells": 16
+          },
+          {
+            "z": 14,
+            "count": 31,
+            "centroid": -109.74264228052927,
+            "span": 168,
+            "posCells": 10,
+            "negCells": 21
+          },
+          {
+            "z": 20,
+            "count": 45,
+            "centroid": -87.92929217255907,
+            "span": 428,
+            "posCells": 9,
+            "negCells": 36
+          },
+          {
+            "z": 26,
+            "count": 48,
+            "centroid": -63.22151845816784,
+            "span": 440,
+            "posCells": 7,
+            "negCells": 41
+          },
+          {
+            "z": 32,
+            "count": 58,
+            "centroid": -54.825660712530386,
+            "span": 444,
+            "posCells": 9,
+            "negCells": 49
+          },
+          {
+            "z": 38,
+            "count": 71,
+            "centroid": -55.04276099471953,
+            "span": 444,
+            "posCells": 10,
+            "negCells": 61
+          },
+          {
+            "z": 44,
+            "count": 71,
+            "centroid": -57.24443746005382,
+            "span": 440,
+            "posCells": 9,
+            "negCells": 62
+          },
+          {
+            "z": 50,
+            "count": 70,
+            "centroid": -51.205862695020976,
+            "span": 448,
+            "posCells": 8,
+            "negCells": 62
+          },
+          {
+            "z": 56,
+            "count": 79,
+            "centroid": -47.54736989676885,
+            "span": 452,
+            "posCells": 2,
+            "negCells": 77
+          },
+          {
+            "z": 62,
+            "count": 80,
+            "centroid": -64.8335168723403,
+            "span": 460,
+            "posCells": 0,
+            "negCells": 80
+          },
+          {
+            "z": 68,
+            "count": 71,
+            "centroid": -95.29138515507451,
+            "span": 444,
+            "posCells": 0,
+            "negCells": 71
+          },
+          {
+            "z": 74,
+            "count": 57,
+            "centroid": -112.88500885193423,
+            "span": 340,
+            "posCells": 0,
+            "negCells": 57
+          },
+          {
+            "z": 80,
+            "count": 55,
+            "centroid": -116.20041741904842,
+            "span": 288,
+            "posCells": 0,
+            "negCells": 55
+          },
+          {
+            "z": 86,
+            "count": 62,
+            "centroid": -116.66694943736968,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 62
+          },
+          {
+            "z": 92,
+            "count": 61,
+            "centroid": -112.30565215815793,
+            "span": 320,
+            "posCells": 0,
+            "negCells": 61
+          },
+          {
+            "z": 98,
+            "count": 50,
+            "centroid": -109.0529174261168,
+            "span": 292,
+            "posCells": 0,
+            "negCells": 50
+          }
+        ]
+      },
+      "limit": ">=3 rows contain both convex tongue and concave pocket cells"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R28 change at z<=-14"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside R28 support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "contact_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.3725896831104989,
+          "at": [
+            60,
+            24
+          ]
+        },
+        "new": {
+          "maxRise": 0.3713056450240231,
+          "at": [
+            60,
+            24
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R27 + 0.10 m"
+    },
+    {
+      "name": "terrace_permission_recomputed_after_surface_change",
+      "pass": true,
+      "value": 0.020525635630035288,
+      "limit": "permission must respond to R28 contact change near candidate substrate"
+    },
+    {
+      "name": "permission_change_remains_bounded",
+      "pass": true,
+      "value": 0.020525635630035288,
+      "limit": "localized substrate update must not globally overturn suitability"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.666565987522404,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "R27 being visually subtle does not imply that more vertical amplitude is the missing cause. Amplifying a weak or wrong footprint would only make the wrong landform louder; R28 changes footprint occupancy, nesting and oblique contact geometry before considering terrace benches.",
+      "limit": "must reject amplitude-only visibility fix"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "macro surface continuity and a visually plausible slope-foot contact do not establish surveyed field boundaries, bund/channel sections, control elevations, hydraulic connectivity, water depth, discharge, gate state, soil-water state or sediment state; those require common-datum field evidence.",
+      "limit": "macro morphology cannot be promoted to surveyed/hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved video-frame audit is reused only for ordering: river hierarchy -> accumulated terrain influence -> land-use pattern. R28 does not copy Blender Geometry Nodes dimensions, Voronoi parcel style, adaptive subdivision or hydraulic claims.",
+      "limit": "reuse ordering only, not dimensions or truth"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round for unequal contour occupation, changing terrace-envelope widths and interleaving concave/convex slope-foot planform only; no terrace width, riser height, channel dimension, water depth or regional metric is inferred.",
+      "limit": "image(173).png reopened only for visible planform hierarchy"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed footslope footprint",
+        "measured terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known control elevation",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.128175199234434,
+      "mean": 0.014975927575322377,
+      "coreMean": 0.019134102227152908,
+      "n": 2310,
+      "maxAt": [
+        -80,
+        28
+      ],
+      "maxStep": 0.026810721717909776,
+      "maxStepAt": [
+        52,
+        56
+      ],
+      "positiveMass": 1.2440335105645783,
+      "negativeMass": 33.3503591884301,
+      "positiveToNegative": 0.03730195238785189
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "zStart": -6,
+        "zEnd": 108,
+        "width0": 66,
+        "width1": 144,
+        "centre0": -18,
+        "sweep": 52,
+        "bend": 28,
+        "pocket": 0.118,
+        "tongue": 0.094,
+        "notch": 0.058,
+        "counter": 0.038,
+        "edgeSign": 1
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "zStart": 0,
+        "zEnd": 90,
+        "width0": 46,
+        "width1": 100,
+        "centre0": 24,
+        "sweep": -44,
+        "bend": 21,
+        "pocket": 0.09,
+        "tongue": 0.073,
+        "notch": 0.044,
+        "counter": 0.03,
+        "edgeSign": -1
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "zStart": 8,
+        "zEnd": 74,
+        "width0": 34,
+        "width1": 74,
+        "centre0": -20,
+        "sweep": 31,
+        "bend": -18,
+        "pocket": 0.068,
+        "tongue": 0.055,
+        "notch": 0.034,
+        "counter": 0.022,
+        "edgeSign": 1
+      }
+    ],
+    "footCount": 144,
+    "plainCount": 519,
+    "overlap27": 293,
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "mass": 11.840485351212248,
+        "centroid": [
+          -135.02827760114138,
+          59.797439594519524
+        ],
+        "peak": 0.08742896343897083,
+        "peakAt": [
+          -174,
+          64
+        ],
+        "count": 366,
+        "occupiedRows": 18,
+        "positive": 0.5786226724995066,
+        "negative": 11.261862678712747
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "mass": 3.969297960704472,
+        "centroid": [
+          -48.352088185054654,
+          52.37201620248223
+        ],
+        "peak": 0.05570950894545829,
+        "peakAt": [
+          -78,
+          40
+        ],
+        "count": 220,
+        "occupiedRows": 13,
+        "positive": 0.2701650856809499,
+        "negative": 3.6991328750235213
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "mass": 2.060866424689955,
+        "centroid": [
+          156.7482708194857,
+          45.16557208556846
+        ],
+        "peak": 0.04376769719333137,
+        "peakAt": [
+          186,
+          34
+        ],
+        "count": 109,
+        "occupiedRows": 9,
+        "positive": 0.05953216897487338,
+        "negative": 2.0013342557150815
+      }
+    ],
+    "minCentroidSep": 86.9936705987531,
+    "rows": [
+      {
+        "z": 2,
+        "count": 10,
+        "centroid": -103.89523112249931,
+        "span": 84,
+        "posCells": 0,
+        "negCells": 10
+      },
+      {
+        "z": 8,
+        "count": 22,
+        "centroid": -112.2578916276631,
+        "span": 156,
+        "posCells": 6,
+        "negCells": 16
+      },
+      {
+        "z": 14,
+        "count": 31,
+        "centroid": -109.74264228052927,
+        "span": 168,
+        "posCells": 10,
+        "negCells": 21
+      },
+      {
+        "z": 20,
+        "count": 45,
+        "centroid": -87.92929217255907,
+        "span": 428,
+        "posCells": 9,
+        "negCells": 36
+      },
+      {
+        "z": 26,
+        "count": 48,
+        "centroid": -63.22151845816784,
+        "span": 440,
+        "posCells": 7,
+        "negCells": 41
+      },
+      {
+        "z": 32,
+        "count": 58,
+        "centroid": -54.825660712530386,
+        "span": 444,
+        "posCells": 9,
+        "negCells": 49
+      },
+      {
+        "z": 38,
+        "count": 71,
+        "centroid": -55.04276099471953,
+        "span": 444,
+        "posCells": 10,
+        "negCells": 61
+      },
+      {
+        "z": 44,
+        "count": 71,
+        "centroid": -57.24443746005382,
+        "span": 440,
+        "posCells": 9,
+        "negCells": 62
+      },
+      {
+        "z": 50,
+        "count": 70,
+        "centroid": -51.205862695020976,
+        "span": 448,
+        "posCells": 8,
+        "negCells": 62
+      },
+      {
+        "z": 56,
+        "count": 79,
+        "centroid": -47.54736989676885,
+        "span": 452,
+        "posCells": 2,
+        "negCells": 77
+      },
+      {
+        "z": 62,
+        "count": 80,
+        "centroid": -64.8335168723403,
+        "span": 460,
+        "posCells": 0,
+        "negCells": 80
+      },
+      {
+        "z": 68,
+        "count": 71,
+        "centroid": -95.29138515507451,
+        "span": 444,
+        "posCells": 0,
+        "negCells": 71
+      },
+      {
+        "z": 74,
+        "count": 57,
+        "centroid": -112.88500885193423,
+        "span": 340,
+        "posCells": 0,
+        "negCells": 57
+      },
+      {
+        "z": 80,
+        "count": 55,
+        "centroid": -116.20041741904842,
+        "span": 288,
+        "posCells": 0,
+        "negCells": 55
+      },
+      {
+        "z": 86,
+        "count": 62,
+        "centroid": -116.66694943736968,
+        "span": 320,
+        "posCells": 0,
+        "negCells": 62
+      },
+      {
+        "z": 92,
+        "count": 61,
+        "centroid": -112.30565215815793,
+        "span": 320,
+        "posCells": 0,
+        "negCells": 61
+      },
+      {
+        "z": 98,
+        "count": 50,
+        "centroid": -109.0529174261168,
+        "span": 292,
+        "posCells": 0,
+        "negCells": 50
+      }
+    ],
+    "countRange": 70,
+    "centroidRange": 69.11957954060082,
+    "spanRange": 376,
+    "mixedRows": 9,
+    "farUpstreamMax": 0,
+    "nearMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.3725896831104989,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3713056450240231,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.666565987522404,
+    "permissionMaxChange": 0.020525635630035288
+  }
+}
