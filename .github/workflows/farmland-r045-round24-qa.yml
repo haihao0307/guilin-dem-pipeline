@@ -89,7 +89,7 @@ jobs:
                   elif ft==4: scan[i]=(scan[i]+paeth(a,b,c))&255
                   elif ft!=0: raise ValueError(ft)
               rows.append(scan); prev=scan
-          tw=120; th=max(1,round(h*tw/w)); outrows=[]
+          tw=60; th=max(1,round(h*tw/w)); outrows=[]
           for yy in range(th):
               sy=min(h-1,round((yy+.5)*h/th-.5)); s=rows[sy]; r=bytearray(tw*3)
               for xx in range(tw):
@@ -103,7 +103,7 @@ jobs:
           b64=base64.b64encode(png).decode('ascii')
           open(os.path.join(os.environ['OUT'],'r045_round24_fixed_view_preview.b64.txt'),'w').write(b64+'\n')
           print({'source':[w,h],'preview':[tw,th],'preview_bytes':len(png),'b64_bytes':len(b64)})
-          assert len(b64)<25000
+          assert len(b64)<10000
           PY
       - name: Build concise QA summary
         if: always()
