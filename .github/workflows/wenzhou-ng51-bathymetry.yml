@@ -41,8 +41,9 @@ jobs:
           srcp=Path('/tmp/ng51-bathy/source.tif')
           out=Path('site/dist/r3-8/data/bathymetry'); out.mkdir(parents=True,exist_ok=True)
           with rasterio.open(srcp) as src:
-              if str(src.crs) not in ('EPSG:4326','OGC:CRS84'):
+              if src.crs is None or src.crs.to_epsg() not in (4326,9518):
                   raise SystemExit(f'unexpected CRS {src.crs}')
+              source_crs=str(src.crs)
               w=from_bounds(120.0,27.0,121.5,28.0,src.transform).round_offsets().round_lengths()
               a=src.read(1,window=w,masked=True)
               tr=src.window_transform(w)
@@ -55,6 +56,8 @@ jobs:
             'source':'NOAA ETOPO 2022 v1 15 arc-second surface elevation',
             'sourceUrl':'https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E120_surface.tif',
             'sourceSha256':hashlib.sha256(srcp.read_bytes()).hexdigest(),
+            'sourceCrs':source_crs,
+            'sourceVerticalReference':'EGM2008 height where encoded by EPSG:9518; retained as source metadata and not assumed equal to canonical DEM vertical datum',
             'role':'derived broad seabed/terrain basis; not a 1940s sounding survey and not a sea-surface datum',
             'sheet':'NG51-1',
             'boundsLonLat':[120.0,27.0,121.5,28.0],
