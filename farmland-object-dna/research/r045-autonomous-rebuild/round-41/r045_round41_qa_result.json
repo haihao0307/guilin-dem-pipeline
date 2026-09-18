@@ -2,7 +2,7 @@
   "version": "R045.41",
   "passed": false,
   "gateCount": 33,
-  "passedCount": 28,
+  "passedCount": 32,
   "checks": [
     {
       "name": "version",
@@ -39,33 +39,33 @@
       "pass": true,
       "value": {
         "deltaMax": 0.5073769549580318,
-        "changeFrom40": 0,
-        "active": 534,
+        "changeFrom40": 0.04667020996838607,
+        "active": 540,
         "oldActive": 534,
         "core": 356,
         "oldCore": 356,
-        "incGainCells": 0,
-        "incThreshold": 0,
+        "incGainCells": 6,
+        "incThreshold": 6,
         "incIsolated": 0,
-        "incCrossRow": 0,
-        "maxIncGain": 0,
-        "totalGainCells": 5,
-        "totalThreshold": 5,
+        "incCrossRow": 6,
+        "maxIncGain": 0.115,
+        "totalGainCells": 11,
+        "totalThreshold": 11,
         "totalJunction": 4,
-        "totalCrossRow39": 5,
+        "totalCrossRow39": 11,
         "totalOpposite": 3,
-        "maxTotalGain": 0.09459982654157606,
+        "maxTotalGain": 0.115,
         "unsafe": 0,
         "groups": [
-          90,
-          225,
-          219
+          92,
+          227,
+          221
         ],
-        "rowRunsN": 78,
+        "rowRunsN": 82,
         "rowRunsP": 78,
-        "fragmentationBurdenN": 0.14606741573033707,
+        "fragmentationBurdenN": 0.15185185185185185,
         "fragmentationBurdenP": 0.14606741573033707,
-        "medianLongestN": 60,
+        "medianLongestN": 57,
         "medianLongestP": 60,
         "maxLongestN": 78,
         "maxLongestP": 78,
@@ -76,22 +76,22 @@
     },
     {
       "name": "r40_failed_materiality_gate_repaired",
-      "pass": false,
+      "pass": true,
       "value": {
-        "totalGainCells": 5,
-        "maxTotalGain": 0.09459982654157606
+        "totalGainCells": 11,
+        "maxTotalGain": 0.115
       },
-      "limit": "original R40 total standard retained: >8 weak samples gain >.004 and max gain >.006"
+      "limit": "retain R40 standard: >8 gain samples and max >.006"
     },
     {
       "name": "r40_failed_topology_gate_repaired",
-      "pass": false,
+      "pass": true,
       "value": {
-        "totalThreshold": 5,
+        "totalThreshold": 11,
         "totalJunction": 4,
-        "totalCrossRow39": 5
+        "totalCrossRow39": 11
       },
-      "limit": "original material threshold retained: >=6 total crossings, >=4 junctions, and >=6 crossings have direct cross-row R39 support"
+      "limit": "retain R40 standard: >=6 crossings, >=4 junctions, >=6 cross-row supported"
     },
     {
       "name": "branch_remerge_evidence_present",
@@ -99,33 +99,33 @@
       "value": {
         "totalOpposite": 3
       },
-      "limit": ">=2 total promoted junctions have opposed inherited R39 support directions"
+      "limit": ">=2 promoted junctions with opposed inherited R39 support"
     },
     {
       "name": "r41_increment_is_material",
-      "pass": false,
+      "pass": true,
       "value": {
-        "incGainCells": 0,
-        "incThreshold": 0,
-        "maxIncGain": 0
+        "incGainCells": 6,
+        "incThreshold": 6,
+        "maxIncGain": 0.115
       },
-      "limit": ">=3 incremental gain samples, >=2 new threshold crossings, max incremental gain >.004"
+      "limit": ">=3 incremental gain samples, >=2 threshold crossings, max gain >.004"
     },
     {
       "name": "r41_increment_crossrow_supported",
       "pass": true,
       "value": {
-        "incThreshold": 0,
-        "incCrossRow": 0,
+        "incThreshold": 6,
+        "incCrossRow": 6,
         "incIsolated": 0
       },
-      "limit": "every new R41 crossing has >=2 compatible R40 neighbours and adjacent-row support"
+      "limit": "every R41 crossing has >=2 compatible immediate R40 neighbours and cross-row support"
     },
     {
       "name": "r41_change_from_r40_bounded",
-      "pass": false,
-      "value": 0,
-      "limit": ".001m < sampled max change < .14m"
+      "pass": true,
+      "value": 0.04667020996838607,
+      "limit": ".001m < max sampled change < .14m"
     },
     {
       "name": "existing_r40_active_surface_exact",
@@ -134,16 +134,16 @@
         "existingActiveMaskChange": 0,
         "existingActiveDeltaChange": 0
       },
-      "limit": "R41 changes only R40-weak support; all already-active R40 samples exact"
+      "limit": "all already-active R40 samples exact"
     },
     {
       "name": "support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 534,
+        "active": 540,
         "oldActive": 534
       },
-      "limit": "active support >= R40"
+      "limit": "active >= R40"
     },
     {
       "name": "core_does_not_shrink",
@@ -152,37 +152,37 @@
         "core": 356,
         "oldCore": 356
       },
-      "limit": "core support >= R40"
+      "limit": "core >= R40"
     },
     {
       "name": "fragmentation_not_worse",
-      "pass": true,
+      "pass": false,
       "value": {
-        "burdenN": 0.14606741573033707,
+        "burdenN": 0.15185185185185185,
         "burdenP": 0.14606741573033707
       },
-      "limit": "runs/active <= 101% of R40"
+      "limit": "runs/active <=101% R40"
     },
     {
       "name": "longest_ribbons_hold",
       "pass": true,
       "value": {
-        "medianNew": 60,
+        "medianNew": 57,
         "medianOld": 60,
         "maxNew": 78,
         "maxOld": 78
       },
-      "limit": "median longest loses at most one 6m cell and max longest >= R40"
+      "limit": "median loses <=6m and max >=R40"
     },
     {
       "name": "all_three_groups_remain_material",
       "pass": true,
       "value": [
-        90,
-        225,
-        219
+        92,
+        227,
+        221
       ],
-      "limit": "each group >20 active samples"
+      "limit": "each >20"
     },
     {
       "name": "repair_candidates_stay_safe",
@@ -190,7 +190,7 @@
       "value": {
         "unsafe": 0
       },
-      "limit": "no incremental gained sample in drainage core/outside eligibility/receiver"
+      "limit": "no incremental gain in hard drainage/outside eligibility/receiver"
     },
     {
       "name": "hard_drainage_core_empty",
@@ -199,7 +199,7 @@
         "hardCoreActive": 0,
         "hardCoreDelta": 0
       },
-      "limit": "zero support/delta <=12m drainage"
+      "limit": "zero <=12m drainage"
     },
     {
       "name": "r40_stair_frame_exact",
@@ -210,7 +210,7 @@
         "maxPhase": 0,
         "maxRaw": 0
       },
-      "limit": "step/phase/raw exactly inherited"
+      "limit": "step/phase/raw exact"
     },
     {
       "name": "far_upstream_untouched",
@@ -240,7 +240,7 @@
       "name": "terrace_increment_not_cliff",
       "pass": true,
       "value": 0.8363728754031337,
-      "limit": "<1.25m per 6m at focused samples"
+      "limit": "<1.25m / 6m"
     },
     {
       "name": "visual_acceptance_locked",
@@ -269,14 +269,14 @@
     {
       "name": "logic_error_explicit",
       "pass": true,
-      "value": "A successful browser render does not prove terrace topology, and lower fragmentation does not prove an agricultural branch or merge is true. R41 therefore repairs the measured R40 materiality deficit using R39-provenanced immediate support instead of weakening the original total-organization gates, increasing riser amplitude, or expanding topology from new cells.",
-      "limit": "browser/fragmentation are not topology truth"
+      "value": "R40 required more than eight material gain cells, but its sampled eligibility admitted only five gain cells. Lowering the gate would conceal an impossible gate/eligibility pairing. A successful browser render also does not prove terrace topology, and lower fragmentation does not prove an agricultural branch or merge is true. R41 therefore retains the materiality gate and introduces one explicit adjacent-row shoulder class instead of increasing riser amplitude or globally closing the mask.",
+      "limit": "browser/fragmentation != topology truth"
     },
     {
       "name": "real_world_constraint_explicit",
-      "pass": false,
-      "value": "the 6 m QA lattice, immediate-neighbour sector rule and 12 m hard-core exclusion are synthetic morphology parameters, not surveyed Yunnan terrace dimensions or measured branch/merge locations. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations or event water-management records.",
-      "limit": "synthetic radius and missing field truth explicit"
+      "pass": true,
+      "value": "the 6 m QA lattice, three-sample shoulder rule, 12 m hard-core exclusion and generated junctions are synthetic morphology parameters, not surveyed Yunnan terrace dimensions or measured branch/merge locations. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations or event water-management records.",
+      "limit": "synthetic parameters and missing field truth explicit"
     },
     {
       "name": "xiaoma_boundary_retained",
@@ -300,33 +300,33 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5073769549580318,
-      "changeFrom40": 0,
-      "active": 534,
+      "changeFrom40": 0.04667020996838607,
+      "active": 540,
       "oldActive": 534,
       "core": 356,
       "oldCore": 356,
-      "incGainCells": 0,
-      "incThreshold": 0,
+      "incGainCells": 6,
+      "incThreshold": 6,
       "incIsolated": 0,
-      "incCrossRow": 0,
-      "maxIncGain": 0,
-      "totalGainCells": 5,
-      "totalThreshold": 5,
+      "incCrossRow": 6,
+      "maxIncGain": 0.115,
+      "totalGainCells": 11,
+      "totalThreshold": 11,
       "totalJunction": 4,
-      "totalCrossRow39": 5,
+      "totalCrossRow39": 11,
       "totalOpposite": 3,
-      "maxTotalGain": 0.09459982654157606,
+      "maxTotalGain": 0.115,
       "unsafe": 0,
       "groups": [
-        90,
-        225,
-        219
+        92,
+        227,
+        221
       ],
-      "rowRunsN": 78,
+      "rowRunsN": 82,
       "rowRunsP": 78,
-      "fragmentationBurdenN": 0.14606741573033707,
+      "fragmentationBurdenN": 0.15185185185185185,
       "fragmentationBurdenP": 0.14606741573033707,
-      "medianLongestN": 60,
+      "medianLongestN": 57,
       "medianLongestP": 60,
       "maxLongestN": 78,
       "maxLongestP": 78,
@@ -338,6 +338,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m R41 weak-domain repair sweep + retained original R40 total material/topology standards + exact existing-R40 inheritance + drainage/receiver boundary checks"
+    "qaScope": "full 6m R41 weak-domain repair sweep + retained R40 total material/topology standards + exact active-R40 inheritance + drainage/receiver boundaries"
   }
 }

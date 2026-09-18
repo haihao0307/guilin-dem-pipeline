@@ -1,49 +1,17 @@
 {
   "version": "R045.41",
   "passed": false,
-  "passedCount": 28,
+  "passedCount": 32,
   "gateCount": 33,
   "failed": [
     {
-      "name": "r40_failed_materiality_gate_repaired",
+      "name": "fragmentation_not_worse",
       "pass": false,
       "value": {
-        "totalGainCells": 5,
-        "maxTotalGain": 0.09459982654157606
+        "burdenN": 0.15185185185185185,
+        "burdenP": 0.14606741573033707
       },
-      "limit": "original R40 total standard retained: >8 weak samples gain >.004 and max gain >.006"
-    },
-    {
-      "name": "r40_failed_topology_gate_repaired",
-      "pass": false,
-      "value": {
-        "totalThreshold": 5,
-        "totalJunction": 4,
-        "totalCrossRow39": 5
-      },
-      "limit": "original material threshold retained: >=6 total crossings, >=4 junctions, and >=6 crossings have direct cross-row R39 support"
-    },
-    {
-      "name": "r41_increment_is_material",
-      "pass": false,
-      "value": {
-        "incGainCells": 0,
-        "incThreshold": 0,
-        "maxIncGain": 0
-      },
-      "limit": ">=3 incremental gain samples, >=2 new threshold crossings, max incremental gain >.004"
-    },
-    {
-      "name": "r41_change_from_r40_bounded",
-      "pass": false,
-      "value": 0,
-      "limit": ".001m < sampled max change < .14m"
-    },
-    {
-      "name": "real_world_constraint_explicit",
-      "pass": false,
-      "value": "the 6 m QA lattice, immediate-neighbour sector rule and 12 m hard-core exclusion are synthetic morphology parameters, not surveyed Yunnan terrace dimensions or measured branch/merge locations. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations or event water-management records.",
-      "limit": "synthetic radius and missing field truth explicit"
+      "limit": "runs/active <=101% R40"
     }
   ],
   "browser": {
@@ -61,33 +29,33 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5073769549580318,
-      "changeFrom40": 0,
-      "active": 534,
+      "changeFrom40": 0.04667020996838607,
+      "active": 540,
       "oldActive": 534,
       "core": 356,
       "oldCore": 356,
-      "incGainCells": 0,
-      "incThreshold": 0,
+      "incGainCells": 6,
+      "incThreshold": 6,
       "incIsolated": 0,
-      "incCrossRow": 0,
-      "maxIncGain": 0,
-      "totalGainCells": 5,
-      "totalThreshold": 5,
+      "incCrossRow": 6,
+      "maxIncGain": 0.115,
+      "totalGainCells": 11,
+      "totalThreshold": 11,
       "totalJunction": 4,
-      "totalCrossRow39": 5,
+      "totalCrossRow39": 11,
       "totalOpposite": 3,
-      "maxTotalGain": 0.09459982654157606,
+      "maxTotalGain": 0.115,
       "unsafe": 0,
       "groups": [
-        90,
-        225,
-        219
+        92,
+        227,
+        221
       ],
-      "rowRunsN": 78,
+      "rowRunsN": 82,
       "rowRunsP": 78,
-      "fragmentationBurdenN": 0.14606741573033707,
+      "fragmentationBurdenN": 0.15185185185185185,
       "fragmentationBurdenP": 0.14606741573033707,
-      "medianLongestN": 60,
+      "medianLongestN": 57,
       "medianLongestP": 60,
       "maxLongestN": 78,
       "maxLongestP": 78,
@@ -99,6 +67,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m R41 weak-domain repair sweep + retained original R40 total material/topology standards + exact existing-R40 inheritance + drainage/receiver boundary checks"
+    "qaScope": "full 6m R41 weak-domain repair sweep + retained R40 total material/topology standards + exact active-R40 inheritance + drainage/receiver boundaries"
   }
 }
