@@ -14,6 +14,7 @@ function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
 function rotate(v,axis,angle){const c=Math.cos(angle),s=Math.sin(angle),d=dot(axis,v),x=cross(axis,v);return v.map((q,i)=>q*c+x[i]*s+axis[i]*d*(1-c))}
 function compile(spec){
  if(!spec||spec.schema!=='kaopu-fish-anatomy-articulation/0.1'||!Array.isArray(spec.parts))throw Error('Unsupported anatomy spec');
+ if(typeof spec.coordinateFrame!=='string'||!spec.coordinateFrame.trim()||typeof spec.lengthUnit!=='string'||!spec.lengthUnit.trim()||spec.angleUnit!=='rad')throw Error('Anatomy frame and units must be explicit');
  const parts=new Map();
  for(const raw of spec.parts){
   if(!raw||typeof raw.id!=='string'||!raw.id||parts.has(raw.id))throw Error('Invalid or duplicate anatomy part id');
@@ -29,6 +30,7 @@ function compile(spec){
   parts.set(part.id,part);
  }
  for(const part of parts.values())if(part.parent!=null&&!parts.has(part.parent))throw Error('Unknown anatomy parent: '+part.parent);
+ // Reject hierarchy cycles; do not silently flatten them.
  for(const part of parts.values()){
   const seen=new Set([part.id]);let q=part;
   while(q.parent!=null){if(seen.has(q.parent))throw Error('Anatomy hierarchy cycle');seen.add(q.parent);q=parts.get(q.parent);}
@@ -57,7 +59,7 @@ function compile(spec){
   const s=sample.shadingNormal?apply(partId,sample.position,sample.shadingNormal,states):null;
   return{...sample,position:g.point,geometricNormal:g.vector,shadingNormal:s?s.vector:null,articulation:g.applied};
  }
- return{schema:spec.schema,parts,lineage,apply,applySample,statesAreAnglesRadians:true,unknownBindingsRemainUnknown:true};
+ return{schema:spec.schema,coordinateFrame:spec.coordinateFrame,lengthUnit:spec.lengthUnit,angleUnit:spec.angleUnit,parts,lineage,apply,applySample,statesAreAnglesRadians:true,unknownBindingsRemainUnknown:true};
 }
 return{compile,rotate};
 })();
