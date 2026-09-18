@@ -1,0 +1,466 @@
+{
+  "version": "R045.23",
+  "passed": true,
+  "gateCount": 25,
+  "passedCount": 25,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.23",
+      "limit": "R045.23"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "foothill_contact_is_not_horizontal",
+      "pass": true,
+      "value": {
+        "min": 43.82937896833424,
+        "max": 80.96649894431272,
+        "range": 37.13711997597848
+      },
+      "limit": "28 m < synthetic contact-z range < 70 m across x"
+    },
+    {
+      "name": "foothill_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.862702652152921,
+        "mean": 0.14732870563426242,
+        "lowerMean": 0.17600351257842065,
+        "n": 2442,
+        "at": [
+          68,
+          44
+        ],
+        "maxStep": 0.2099502380546137,
+        "maxStepAt": [
+          26,
+          20
+        ],
+        "signed": {
+          "positiveCentroidZ": 51.99527809605494,
+          "negativeCentroidZ": 106.52753489143238,
+          "separation": 54.53225679537744,
+          "positiveMass": 324.39292235041063,
+          "negativeMass": 35.383776808458066
+        },
+        "contactRange": 37.13711997597848
+      },
+      "limit": "0.35 m < max added delta < 1.20 m"
+    },
+    {
+      "name": "foothill_change_is_broad",
+      "pass": true,
+      "value": 0.17600351257842065,
+      "limit": "0.045 m < mean abs delta in z 38..118 < 0.50 m"
+    },
+    {
+      "name": "toe_and_apron_are_downslope_separated",
+      "pass": true,
+      "value": {
+        "positiveCentroidZ": 51.99527809605494,
+        "negativeCentroidZ": 106.52753489143238,
+        "separation": 54.53225679537744,
+        "positiveMass": 324.39292235041063,
+        "negativeMass": 35.383776808458066
+      },
+      "limit": "negative receiving-apron centroid is >18 m downslope of positive toe centroid"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.2099502380546137,
+        "at": [
+          26,
+          20
+        ]
+      },
+      "limit": "<0.24 m change in added field per 4 m z"
+    },
+    {
+      "name": "upper_r22_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R23 change at z<=4"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside foothill support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "foothill_massing_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.2098744002052737,
+          "at": [
+            105,
+            32
+          ]
+        },
+        "new": {
+          "maxRise": 0.36479756017680876,
+          "at": [
+            65,
+            24
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R22 + 0.22 m"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6814326037170066,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "numerical continuity of the lower slope is not evidence that terrace benches should be drawn. Adding terrace stripes now would conceal an unresolved foothill substrate rather than solve it",
+      "limit": "must reject terrace-pattern masking of unresolved foothill substrate"
+    },
+    {
+      "name": "xiaoma_state_boundary_retained",
+      "pass": true,
+      "value": "topology and rendered-ground intersection evidence must precede claims of connected water behaviour; continuous terrain appearance does not establish hydraulic connectivity, water depth, discharge, gate state, soil water or sediment state",
+      "limit": "topology/rendered-ground evidence before water-state claims"
+    },
+    {
+      "name": "mrrolord_provenance_is_honest",
+      "pass": true,
+      "value": "the original MrRolord video was searched again but not located; only the previously saved drainage-first ordering topology/carriers -> terrain influence -> land use is reused, and no fresh viewing is claimed",
+      "limit": "saved ordering may be reused but not misreported as fresh viewing"
+    },
+    {
+      "name": "reference_is_not_metric_truth",
+      "pass": true,
+      "value": "image(173).png was reread only for non-uniform nested contour hierarchy and curved hillside occupation; no terrace width, riser height, channel section or water depth is inferred from the photograph",
+      "limit": "visual hierarchy only; no metric extraction"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed foothill breakline",
+        "measured terrace bench",
+        "measured riser or bund section",
+        "active irrigation connectivity",
+        "field water depth",
+        "discharge",
+        "soil or sediment property",
+        "ownership or cadastral boundary",
+        "regional terrace dimensions"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.862702652152921,
+      "mean": 0.14732870563426242,
+      "lowerMean": 0.17600351257842065,
+      "n": 2442,
+      "at": [
+        68,
+        44
+      ],
+      "maxStep": 0.2099502380546137,
+      "maxStepAt": [
+        26,
+        20
+      ],
+      "signed": {
+        "positiveCentroidZ": 51.99527809605494,
+        "negativeCentroidZ": 106.52753489143238,
+        "separation": 54.53225679537744,
+        "positiveMass": 324.39292235041063,
+        "negativeMass": 35.383776808458066
+      },
+      "contactRange": 37.13711997597848
+    },
+    "contact": {
+      "samples": [
+        {
+          "x": -220,
+          "z": 43.82937896833424
+        },
+        {
+          "x": -210,
+          "z": 44.61643555157084
+        },
+        {
+          "x": -200,
+          "z": 45.32456884142067
+        },
+        {
+          "x": -190,
+          "z": 45.93157697750064
+        },
+        {
+          "x": -180,
+          "z": 46.42177376158938
+        },
+        {
+          "x": -170,
+          "z": 46.7864449577659
+        },
+        {
+          "x": -160,
+          "z": 47.02406154676695
+        },
+        {
+          "x": -150,
+          "z": 47.1402438526452
+        },
+        {
+          "x": -140,
+          "z": 47.147478352523365
+        },
+        {
+          "x": -130,
+          "z": 47.06459681128303
+        },
+        {
+          "x": -120,
+          "z": 46.91603490994573
+        },
+        {
+          "x": -110,
+          "z": 46.7308945262512
+        },
+        {
+          "x": -100,
+          "z": 46.54184006204014
+        },
+        {
+          "x": -90,
+          "z": 46.38386450127666
+        },
+        {
+          "x": -80,
+          "z": 46.2929650608539
+        },
+        {
+          "x": -70,
+          "z": 46.3047712339065
+        },
+        {
+          "x": -60,
+          "z": 46.45316963063516
+        },
+        {
+          "x": -50,
+          "z": 46.76897024411734
+        },
+        {
+          "x": -40,
+          "z": 47.27865760034089
+        },
+        {
+          "x": -30,
+          "z": 48.003267727732094
+        },
+        {
+          "x": -20,
+          "z": 48.95742807853966
+        },
+        {
+          "x": -10,
+          "z": 50.14859256881771
+        },
+        {
+          "x": 0,
+          "z": 51.57649792755225
+        },
+        {
+          "x": 10,
+          "z": 53.232860742043826
+        },
+        {
+          "x": 20,
+          "z": 55.10132716494071
+        },
+        {
+          "x": 30,
+          "z": 57.157679436432055
+        },
+        {
+          "x": 40,
+          "z": 59.37029541335764
+        },
+        {
+          "x": 50,
+          "z": 61.70084943045883
+        },
+        {
+          "x": 60,
+          "z": 64.10523529003467
+        },
+        {
+          "x": 70,
+          "z": 66.53468521704632
+        },
+        {
+          "x": 80,
+          "z": 68.93705244207625
+        },
+        {
+          "x": 90,
+          "z": 71.25821987541534
+        },
+        {
+          "x": 100,
+          "z": 73.44359327303921
+        },
+        {
+          "x": 110,
+          "z": 75.439634495705
+        },
+        {
+          "x": 120,
+          "z": 77.19538901355641
+        },
+        {
+          "x": 130,
+          "z": 78.66396175681801
+        },
+        {
+          "x": 140,
+          "z": 79.80389676193384
+        },
+        {
+          "x": 150,
+          "z": 80.58041877248701
+        },
+        {
+          "x": 160,
+          "z": 80.96649894431272
+        },
+        {
+          "x": 170,
+          "z": 80.94371195401982
+        },
+        {
+          "x": 180,
+          "z": 80.50285796370676
+        },
+        {
+          "x": 190,
+          "z": 79.64432986523099
+        },
+        {
+          "x": 200,
+          "z": 78.3782138030963
+        },
+        {
+          "x": 210,
+          "z": 76.72411892537949
+        },
+        {
+          "x": 220,
+          "z": 74.71074039509081
+        }
+      ],
+      "min": 43.82937896833424,
+      "max": 80.96649894431272,
+      "range": 37.13711997597848
+    },
+    "nearMax": 0,
+    "upperMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.2098744002052737,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.36479756017680876,
+      "at": [
+        65,
+        24
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6814326037170066,
+    "permissionMaxChange": 0
+  }
+}
