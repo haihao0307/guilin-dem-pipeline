@@ -1,0 +1,59 @@
+{
+  "revision": "R03.A-run2",
+  "date": "2026-09-19",
+  "increment": "Preserve every explicit parameter-domain interval boundary when the same continuous field is sampled at coarse view budgets, so thin observed parts are not silently dropped by a uniform low-resolution grid.",
+  "sourceReplay": {
+    "attempted": true,
+    "rawSourceAvailableInRuntime": false,
+    "librarySearchResolvedExactGlb": false,
+    "mountedSourceFound": false,
+    "claimNewBlackBassFidelityMeasurement": false,
+    "reason": "This run could not resolve the exact FISH-REF-001 GLB bytes through the current Files/runtime surfaces, so no source refit or new source-fidelity metric is claimed."
+  },
+  "kernel": {
+    "command": "node /tmp/boundary_qa.cjs using the exact candidate field-kernel code later committed",
+    "pass": true,
+    "detailAt15ProjectedPixels": 0.046875,
+    "syntheticRows": 3,
+    "farParameterSamples": 18,
+    "farGeneratedFishSamples": 18,
+    "thinIntervalNormalized": [0.46875, 0.484375],
+    "oldUniformFarGridThinSamples": 0,
+    "newBoundaryAwareFarGridPreservesBothThinIntervalEdgesPerSampledRow": true,
+    "allGeneratedCoordinatesInsideExplicitDomain": true,
+    "invalidDomainIntervalsRejected": true,
+    "sourceTriangleCount": 0,
+    "intermediateRaster": false
+  },
+  "browser": {
+    "command": "python /tmp/boundary_browser.py using Chromium and the exact candidate field-kernel code later committed",
+    "engine": "Chromium headless",
+    "viewports": [[1280, 900], [390, 844]],
+    "pageErrors": 0,
+    "pass": true,
+    "countsByProjectedPixels": {
+      "15": 18,
+      "100": 126,
+      "420": 1452
+    },
+    "boundarySamplesByProjectedPixels": {
+      "15": 18,
+      "100": 54,
+      "420": 198
+    },
+    "scope": "Real browser execution of a synthetic explicit-domain field. It verifies domain-boundary retention and view-budget mechanics only; it is not a black-bass visual/WebGL study-runtime/iPhone/public-navigation acceptance."
+  },
+  "semanticBoundary": {
+    "preauthoredLODAssets": false,
+    "sameCanonicalField": true,
+    "thinObservedPartsCanStillBeLostByFutureBadDomainExtraction": true,
+    "fishSpeciesFidelityAccepted": false,
+    "materialFidelityAccepted": false,
+    "mouthGillEyeSemanticsAccepted": false,
+    "motionAccepted": false,
+    "visualAcceptance": false,
+    "productionReady": false,
+    "shareAllowed": false
+  },
+  "next": "When the exact FISH-REF-001 bytes/coefficient payload is available again, run the same boundary-aware sampler on the real fish and measure per-patch boundary coverage, close-view fin/mouth edge error and material aliasing before wiring the conductor into the public study runtime."
+}
