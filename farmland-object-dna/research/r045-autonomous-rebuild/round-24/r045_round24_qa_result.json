@@ -1,8 +1,8 @@
 {
   "version": "R045.24",
   "passed": true,
-  "gateCount": 31,
-  "passedCount": 31,
+  "gateCount": 32,
+  "passedCount": 32,
   "checks": [
     {
       "name": "version",
@@ -54,7 +54,7 @@
           "offset0": -18,
           "swing": 23,
           "depth": 0.27,
-          "shoulder": 0.12,
+          "shoulder": 0.16,
           "nested": 0.1
         },
         {
@@ -63,7 +63,7 @@
           "offset0": 16,
           "swing": -31,
           "depth": 0.34,
-          "shoulder": 0.09,
+          "shoulder": 0.17,
           "nested": 0.14
         },
         {
@@ -112,45 +112,56 @@
       "name": "receiving_plain_change_is_substantive",
       "pass": true,
       "value": {
-        "max": 0.32577775387670155,
-        "mean": 0.0645459037039629,
-        "coreMean": 0.0888005195347957,
+        "max": 0.3984813089104124,
+        "mean": 0.04978614486848007,
+        "coreMean": 0.06780296804406791,
         "n": 1998,
         "at": [
           -82,
           108
         ],
-        "maxStep": 0.08465275563702573,
+        "maxStep": 0.1028437020244452,
         "maxStepAt": [
           -82,
           120
         ],
-        "positiveMass": 0.031817036654126274,
-        "negativeMass": 128.93089856386376
+        "positiveMass": 11.260583715143719,
+        "negativeMass": 88.2121337320796,
+        "positiveToNegative": 0.127653455808525
       },
       "limit": "0.18 m < max added delta < 0.80 m"
     },
     {
       "name": "receiving_plain_change_is_broad",
       "pass": true,
-      "value": 0.0888005195347957,
+      "value": 0.06780296804406791,
       "limit": "0.025 m < mean abs delta in z 50..108 < 0.24 m"
     },
     {
       "name": "receiving_plain_is_hollow_dominant",
       "pass": true,
       "value": {
-        "positiveMass": 0.031817036654126274,
-        "negativeMass": 128.93089856386376,
-        "ratio": 4052.2597992212145
+        "positiveMass": 11.260583715143719,
+        "negativeMass": 88.2121337320796,
+        "ratio": 7.833708799078338
       },
       "limit": "negative receiving mass >1.25x positive shoulder mass"
+    },
+    {
+      "name": "receiving_shoulders_survive_signed_relief",
+      "pass": true,
+      "value": {
+        "positiveMass": 11.260583715143719,
+        "negativeMass": 88.2121337320796,
+        "positiveToNegative": 0.127653455808525
+      },
+      "limit": "positive shoulder mass is 2%..65% of negative bay mass"
     },
     {
       "name": "added_field_is_longitudinally_gradual",
       "pass": true,
       "value": {
-        "maxStep": 0.08465275563702573,
+        "maxStep": 0.1028437020244452,
         "at": [
           -82,
           120
@@ -186,49 +197,49 @@
       "name": "carrier_tied_planforms_are_spatially_distinct",
       "pass": true,
       "value": {
-        "minCentroidSep": 145.9250690780212,
+        "minCentroidSep": 102.19795211787037,
         "componentStats": [
           {
             "id": "OUTLET-A",
-            "mass": 21.19072079163234,
+            "mass": 15.728127796174224,
             "centroid": [
-              -166.9166150804636,
-              86.38728938707524
+              -151.67101734673952,
+              87.132045435579
             ],
-            "peak": 0.2455006743578394,
+            "peak": 0.20719287222476818,
             "peakAt": [
               -180,
               104
             ],
-            "count": 234
+            "count": 218
           },
           {
             "id": "OUTLET-B",
-            "mass": 22.27376519936287,
+            "mass": 14.3271114522796,
             "centroid": [
-              -14.749717808927098,
-              84.67390878863105
+              -49.47435743988387,
+              86.61811842810584
             ],
-            "peak": 0.21062135130423915,
+            "peak": 0.2430662157836226,
             "peakAt": [
-              -76,
+              -84,
               110
             ],
-            "count": 288
+            "count": 200
           },
           {
             "id": "OUTLET-C",
-            "mass": 22.545149319191385,
+            "mass": 23.180477194410873,
             "centroid": [
-              131.1147509763474,
-              88.87896900400652
+              153.41445554641092,
+              86.15154987963174
             ],
-            "peak": 0.19068228651794686,
+            "peak": 0.2333786279699693,
             "peakAt": [
-              180,
-              110
+              188,
+              104
             ],
-            "count": 307
+            "count": 291
           }
         ]
       },
@@ -240,45 +251,45 @@
       "value": [
         {
           "id": "OUTLET-A",
-          "mass": 21.19072079163234,
+          "mass": 15.728127796174224,
           "centroid": [
-            -166.9166150804636,
-            86.38728938707524
+            -151.67101734673952,
+            87.132045435579
           ],
-          "peak": 0.2455006743578394,
+          "peak": 0.20719287222476818,
           "peakAt": [
             -180,
             104
           ],
-          "count": 234
+          "count": 218
         },
         {
           "id": "OUTLET-B",
-          "mass": 22.27376519936287,
+          "mass": 14.3271114522796,
           "centroid": [
-            -14.749717808927098,
-            84.67390878863105
+            -49.47435743988387,
+            86.61811842810584
           ],
-          "peak": 0.21062135130423915,
+          "peak": 0.2430662157836226,
           "peakAt": [
-            -76,
+            -84,
             110
           ],
-          "count": 288
+          "count": 200
         },
         {
           "id": "OUTLET-C",
-          "mass": 22.545149319191385,
+          "mass": 23.180477194410873,
           "centroid": [
-            131.1147509763474,
-            88.87896900400652
+            153.41445554641092,
+            86.15154987963174
           ],
-          "peak": 0.19068228651794686,
+          "peak": 0.2333786279699693,
           "peakAt": [
-            180,
-            110
+            188,
+            104
           ],
-          "count": 307
+          "count": 291
         }
       ],
       "limit": "each component peak >0.04 m and >18 sampled occupied cells"
@@ -295,7 +306,7 @@
           ]
         },
         "new": {
-          "maxRise": 0.3063878219336629,
+          "maxRise": 0.3140290472313909,
           "at": [
             105,
             32
@@ -390,21 +401,22 @@
   ],
   "metrics": {
     "delta": {
-      "max": 0.32577775387670155,
-      "mean": 0.0645459037039629,
-      "coreMean": 0.0888005195347957,
+      "max": 0.3984813089104124,
+      "mean": 0.04978614486848007,
+      "coreMean": 0.06780296804406791,
       "n": 1998,
       "at": [
         -82,
         108
       ],
-      "maxStep": 0.08465275563702573,
+      "maxStep": 0.1028437020244452,
       "maxStepAt": [
         -82,
         120
       ],
-      "positiveMass": 0.031817036654126274,
-      "negativeMass": 128.93089856386376
+      "positiveMass": 11.260583715143719,
+      "negativeMass": 88.2121337320796,
+      "positiveToNegative": 0.127653455808525
     },
     "signatures": [
       {
@@ -413,7 +425,7 @@
         "offset0": -18,
         "swing": 23,
         "depth": 0.27,
-        "shoulder": 0.12,
+        "shoulder": 0.16,
         "nested": 0.1
       },
       {
@@ -422,7 +434,7 @@
         "offset0": 16,
         "swing": -31,
         "depth": 0.34,
-        "shoulder": 0.09,
+        "shoulder": 0.17,
         "nested": 0.14
       },
       {
@@ -438,48 +450,48 @@
     "componentStats": [
       {
         "id": "OUTLET-A",
-        "mass": 21.19072079163234,
+        "mass": 15.728127796174224,
         "centroid": [
-          -166.9166150804636,
-          86.38728938707524
+          -151.67101734673952,
+          87.132045435579
         ],
-        "peak": 0.2455006743578394,
+        "peak": 0.20719287222476818,
         "peakAt": [
           -180,
           104
         ],
-        "count": 234
+        "count": 218
       },
       {
         "id": "OUTLET-B",
-        "mass": 22.27376519936287,
+        "mass": 14.3271114522796,
         "centroid": [
-          -14.749717808927098,
-          84.67390878863105
+          -49.47435743988387,
+          86.61811842810584
         ],
-        "peak": 0.21062135130423915,
+        "peak": 0.2430662157836226,
         "peakAt": [
-          -76,
+          -84,
           110
         ],
-        "count": 288
+        "count": 200
       },
       {
         "id": "OUTLET-C",
-        "mass": 22.545149319191385,
+        "mass": 23.180477194410873,
         "centroid": [
-          131.1147509763474,
-          88.87896900400652
+          153.41445554641092,
+          86.15154987963174
         ],
-        "peak": 0.19068228651794686,
+        "peak": 0.2333786279699693,
         "peakAt": [
-          180,
-          110
+          188,
+          104
         ],
-        "count": 307
+        "count": 291
       }
     ],
-    "minCentroidSep": 145.9250690780212,
+    "minCentroidSep": 102.19795211787037,
     "nearMax": 0,
     "upperMax": 0,
     "receiverMax": 0,
@@ -492,7 +504,7 @@
       ]
     },
     "newForward": {
-      "maxRise": 0.3063878219336629,
+      "maxRise": 0.3140290472313909,
       "at": [
         105,
         32
