@@ -36,9 +36,9 @@ jobs:
           python3 -m http.server 8132 --bind 127.0.0.1 > /tmp/r045-r32-http.log 2>&1 & SERVER_PID=$!; sleep 2
           if [ -z "$CHROME_BIN" ]; then SHOT_STATUS=127; DOM_STATUS=127; : > /tmp/r045-round32-dom.html; else
             unset DBUS_SESSION_BUS_ADDRESS
-            FLAGS=(--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-component-update --disable-sync --disable-extensions --disable-default-apps --disable-domain-reliability --no-first-run --no-default-browser-check --metrics-recording-only --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=3600)
-            timeout 40s "$CHROME_BIN" "${FLAGS[@]}" --screenshot="$OUT/r045_round32_fixed_view.png" "$PAGE"; SHOT_STATUS=$?
-            timeout 40s "$CHROME_BIN" "${FLAGS[@]}" --dump-dom "$PAGE" > /tmp/r045-round32-dom.html; DOM_STATUS=$?
+            FLAGS=(--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-component-update --disable-sync --disable-extensions --disable-default-apps --disable-domain-reliability --no-first-run --no-default-browser-check --metrics-recording-only --hide-scrollbars --window-size=1400,900 --force-device-scale-factor=1 --virtual-time-budget=2400)
+            timeout 45s "$CHROME_BIN" "${FLAGS[@]}" --screenshot="$OUT/r045_round32_fixed_view.png" "$PAGE"; SHOT_STATUS=$?
+            timeout 45s "$CHROME_BIN" "${FLAGS[@]}" --dump-dom "$PAGE" > /tmp/r045-round32-dom.html; DOM_STATUS=$?
           fi
           kill "$SERVER_PID" 2>/dev/null || true; grep -q 'data-ready="true"' /tmp/r045-round32-dom.html; READY_STATUS=$?
           export SHOT_STATUS DOM_STATUS READY_STATUS CHROME_BIN OUT
@@ -77,7 +77,8 @@ jobs:
           set -e
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_summary.json farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_fixed_view.png
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_summary.json
+          if [ -f farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_fixed_view.png ]; then git add farmland-object-dna/research/r045-autonomous-rebuild/round-32/r045_round32_fixed_view.png; fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'farmland R045.32 persist QA evidence [skip ci]'
           git push origin HEAD:${GITHUB_REF_NAME}
