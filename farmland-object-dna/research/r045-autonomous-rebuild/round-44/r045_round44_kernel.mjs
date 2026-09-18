@@ -55,7 +55,7 @@ function extensionSupportAt(x,z){
    const q1=r43At(x-sgn*ux,z-sgn*uz),q2=r43At(x-2*sgn*ux,z-2*sgn*uz),q3=r43At(x-3*sgn*ux,z-3*sgn*uz);
    if(q1.mask<=.12||q2.mask<=.12||q3.mask<=.12)continue;
    if(!compatible(base,q1)||!compatible(base,q2)||!compatible(base,q3))continue;
-   if(safetyAt(x-sgn*ux,z-sgn*uz)<=0||safetyAt(x-2*sgn*ux,z-2*sgn*uz)<=0)return null;
+   if(safetyAt(x-sgn*ux,z-sgn*uz)<=0||safetyAt(x-2*sgn*ux,z-2*sgn*uz)<=0)continue;
    const strength=Math.min(q1.mask,q2.mask,q3.mask)+.25*safetyAt(x,z);
    if(!best||strength>best.strength)best={mode:'stable-three-anchor-extension',name,ux,uz,sgn,sourceMasks:[q1.mask,q2.mask,q3.mask],strength,groupIndex:base.groupIndex};
   }
