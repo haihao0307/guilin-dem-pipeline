@@ -1,0 +1,137 @@
+name: Wenzhou NG51 Island Relief Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - wenzhou-island-relief-watermask-20260917
+    paths:
+      - 'records/R3_10/NG51_ISLAND_RELIEF_BUILD_TRIGGER'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download frozen full restart and extract canonical DEM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ng51-relief/canonical
+          gh release download wenzhou-r3.2-full-20260909             --repo haihao0307/guilin-dem-pipeline             --pattern 'Wenzhou_R3_2_FULL_RESTART_20260909.zip'             --dir /tmp/ng51-relief
+          ZIP=/tmp/ng51-relief/Wenzhou_R3_2_FULL_RESTART_20260909.zip
+          echo 'ad868b29bdf3f116b4cfe5ec6aee584f997118f6bf9e56949e9373a7a8356c7c  '"$ZIP" | sha256sum -c -
+          unzip -p "$ZIP" '*/inputs/canonical-dem/WENZHOU_FINAL_CANONICAL_R2_2_1.lorenzo.wzdem2' > /tmp/ng51-relief/canonical/source.wzdem2
+          unzip -p "$ZIP" '*/inputs/canonical-dem/WENZHOU_FINAL_CANONICAL_R2_2_1.lorenzo.index.json' > /tmp/ng51-relief/canonical/source.index.json
+          echo '8800c053608c5fa74eeebd2ce0d06c1bed54fd65274ed059d6e84fc2ec82a1dc  /tmp/ng51-relief/canonical/source.wzdem2' | sha256sum -c -
+          echo '44a1713aac3e8800d801d6d0984e92e56df537fe37012fd9975fcf595130ef9b  /tmp/ng51-relief/canonical/source.index.json' | sha256sum -c -
+      - name: Decode canonical 50 m NG51 offshore patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, math, hashlib, struct, zlib, gzip
+          import numpy as np
+
+          ARC=Path('/tmp/ng51-relief/canonical/source.wzdem2')
+          IDX=Path('/tmp/ng51-relief/canonical/source.index.json')
+          OUT=Path('site/dist/r3-8/data/ng51-relief'); OUT.mkdir(parents=True,exist_ok=True)
+          idx=json.loads(IDX.read_text(encoding='utf-8-sig')); h=idx['header']
+          H,W=h['height'],h['width']; ND=h['nodata']; tr=h['transform']
+          assert (H,W)==(20047,17662) and tr==[12.5,0.0,190475.0,0.0,-12.5,3241862.5]
+
+          def utm51(lonDeg,latDeg):
+              a=6378137.; f=1/298.257223563; e2=f*(2-f); ep2=e2/(1-e2); k0=.9996
+              lon0=math.radians(123); lat=math.radians(latDeg); lon=math.radians(lonDeg)
+              s=math.sin(lat); c=math.cos(lat); tt=math.tan(lat); N=a/math.sqrt(1-e2*s*s)
+              T=tt*tt; C=ep2*c*c; A=c*(lon-lon0); e4=e2*e2; e6=e4*e2
+              M=a*((1-e2/4-3*e4/64-5*e6/256)*lat-(3*e2/8+3*e4/32+45*e6/1024)*math.sin(2*lat)+(15*e4/256+45*e6/1024)*math.sin(4*lat)-(35*e6/3072)*math.sin(6*lat))
+              return (500000+k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120),
+                      k0*(M+N*tt*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720)))
+
+          # Covers the supplied NG51-1 offshore/coastal island field; west of 120.5E is mainland-dominant.
+          corners=[utm51(lo,la) for lo,la in [(120.5,27.0),(121.5,27.0),(120.5,28.0),(121.5,28.0)]]
+          minE,maxE=min(x for x,y in corners),max(x for x,y in corners)
+          minN,maxN=min(y for x,y in corners),max(y for x,y in corners)
+          c0=max(0,math.ceil((minE-tr[2])/tr[0]-.5)); c1=min(W-1,math.floor((maxE-tr[2])/tr[0]-.5))
+          r0=max(0,math.ceil((tr[5]-maxN)/12.5-.5)); r1=min(H-1,math.floor((tr[5]-minN)/12.5-.5))
+          if not (r0<r1 and c0<c1): raise SystemExit('empty NG51 canonical intersection')
+          RH,RW=r1-r0+1,c1-c0+1
+          region=np.memmap('/tmp/ng51-relief/region.i16',dtype='<i2',mode='w+',shape=(RH,RW)); region[:]=ND
+          tiles=0
+          with ARC.open('rb') as f:
+              for e in idx['entries']:
+                  er0,ec0=e['rowOff'],e['colOff']; er1=er0+e['height']-1; ec1=ec0+e['width']-1
+                  if er1<r0 or er0>r1 or ec1<c0 or ec0>c1: continue
+                  f.seek(e['offset']); head=f.read(52)
+                  trr,tcc,th,tw,nv,nm,nd=struct.unpack('<4H3I',head[:20])
+                  mask_bytes=zlib.decompress(f.read(nm))
+                  mask=np.unpackbits(np.frombuffer(mask_bytes,dtype='u1'),bitorder='little')[:th*tw].reshape(th,tw).astype(bool)
+                  delta=np.frombuffer(zlib.decompress(f.read(nd)),dtype='<u2').reshape(th,tw)
+                  decoded=delta.cumsum(axis=0,dtype=np.uint32).cumsum(axis=1,dtype=np.uint32).astype('<u2')
+                  assert hashlib.sha256(decoded.tobytes()+mask_bytes).hexdigest()==e['rawSha256']==head[20:].hex()
+                  tile=decoded.view('<i2').copy(); tile[~mask]=ND
+                  ar0=max(r0,er0); ar1=min(r1,er1); ac0=max(c0,ec0); ac1=min(c1,ec1)
+                  region[ar0-r0:ar1-r0+1,ac0-c0:ac1-c0+1]=tile[ar0-er0:ar1-er0+1,ac0-ec0:ac1-ec0+1]
+                  tiles+=1
+          region.flush()
+
+          step=4
+          rows=np.arange(r0,r1+1,step,dtype=np.int32); cols=np.arange(c0,c1+1,step,dtype=np.int32)
+          if rows[-1]!=r1: rows=np.append(rows,r1)
+          if cols[-1]!=c1: cols=np.append(cols,c1)
+          rr=rows-r0; cc=cols-c0
+          samples=np.asarray(region[np.ix_(rr,cc)],dtype='<i2')
+          support=np.empty((len(rows)-1,len(cols)-1),dtype='u1')
+          for j,(ra,rb) in enumerate(zip(rr[:-1],rr[1:])):
+              bad=np.any(region[ra:rb+1,:]==ND,axis=0)
+              prefix=np.concatenate(([0],np.cumsum(bad,dtype=np.int32)))
+              support[j]=(prefix[cc[1:]+1]-prefix[cc[:-1]]==0)
+
+          hp=OUT/'ng51-islands-50m.i16'; sp=OUT/'ng51-islands-50m.support.u8'
+          hp.write_bytes(samples.tobytes()); sp.write_bytes(support.tobytes())
+          with hp.open('rb') as src,gzip.open(str(hp)+'.gz','wb',compresslevel=9,mtime=0) as dst: dst.write(src.read())
+          with sp.open('rb') as src,gzip.open(str(sp)+'.gz','wb',compresslevel=9,mtime=0) as dst: dst.write(src.read())
+          valid=samples[samples!=ND]
+          east=lambda col: tr[2]+tr[0]*(col+.5)
+          north=lambda row: tr[5]+tr[4]*(row+.5)
+          meta={
+            'schema':'wenzhou-ng51-canonical-relief/v1',
+            'source':'canonical-dem-r1',
+            'canonicalArchiveSha256':'8800c053608c5fa74eeebd2ce0d06c1bed54fd65274ed059d6e84fc2ec82a1dc',
+            'canonicalIndexSha256':'44a1713aac3e8800d801d6d0984e92e56df537fe37012fd9975fcf595130ef9b',
+            'decodedGridSha256':'23b5bc71624b65889fb72cf353f74286652147b159d7aa774896f05058e52c19',
+            'crs':'EPSG:32651','sourceSpacingM':12.5,'runtimeSampleStep':4,'runtimeSpacingM':50.0,
+            'selectionLonLat':[120.5,27.0,121.5,28.0],
+            'sourceWindow':[int(r0),int(r1),int(c0),int(c1)],
+            'rowIndices':rows.tolist(),'columnIndices':cols.tolist(),
+            'shape':[int(samples.shape[0]),int(samples.shape[1])],
+            'boundsEN':[east(int(cols[0])),north(int(rows[-1])),east(int(cols[-1])),north(int(rows[0]))],
+            'noData':int(ND),'heightRangeM':[int(valid.min()),int(valid.max())],
+            'validCells':int(support.sum()),'excludedCells':int(support.size-support.sum()),'decodedTiles':tiles,
+            'heightRawBytes':hp.stat().st_size,'heightGzipBytes':Path(str(hp)+'.gz').stat().st_size,
+            'supportRawBytes':sp.stat().st_size,'supportGzipBytes':Path(str(sp)+'.gz').stat().st_size,
+            'heightRawSha256':hashlib.sha256(hp.read_bytes()).hexdigest(),
+            'supportRawSha256':hashlib.sha256(sp.read_bytes()).hexdigest(),
+            'policy':'Exact retained samples from 12.5 m canonical DEM at every 4th source centre; no invented interpolation. Runtime uses this only for historical island holes, never to classify water as land.'
+          }
+          (OUT/'ng51-islands-50m.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          hp.unlink(); sp.unlink()
+          print(json.dumps(meta,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit compact NG51 relief payload
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-8/data/ng51-relief/
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'data(wenzhou): add canonical 50m NG51 island relief'
+          git push origin HEAD:wenzhou-island-relief-watermask-20260917
