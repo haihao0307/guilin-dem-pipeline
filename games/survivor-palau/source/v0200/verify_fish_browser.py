@@ -114,7 +114,7 @@ def main():
                      if(!f)throw Error('No fish available to spear');const p=f.pos,x=p[0]-.72,z=p[2]+.86,y=g.ground(x,z)+1.64;
                      g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));g.cameraFrame(innerWidth/innerHeight);g.tick(0,g.getState().worldSeconds);return f.id;}""", attempt)
                     try:
-                        page.wait_for_function('id=>StoneMoneySurvival.diagnostics().target===id', arg=fish_id, timeout=4000)
+                        # The HUD target is throttled; action() itself recomputes the geometric ray.
                         page.locator('#smiPrimary').click(force=True)
                         page.wait_for_function('id=>StoneMoneySurvival.getState().fish[id]==="kept"', arg=fish_id, timeout=2500)
                         caught = fish_id; break
