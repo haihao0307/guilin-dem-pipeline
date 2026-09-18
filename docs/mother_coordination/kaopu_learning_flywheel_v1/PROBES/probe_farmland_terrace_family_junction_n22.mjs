@@ -115,12 +115,14 @@ for (let z = -132; z <= 10; z += spacing) {
 }
 
 const blendOffFamilyFraction = blendOffFamily / (overlapSamples || 1);
+const maxSeamReceipt = { ...maxSeam, baseJumpLessThanOneMicrometre: maxSeam.baseJump < 1e-6 };
+delete maxSeamReceipt.baseJump;
 const checks = [];
 const add = (name, pass, value, limit) => checks.push({ name, pass: Boolean(pass), value, limit });
 add('fixed_version', R33.VERSION === 'R045.33', R33.VERSION, 'R045.33');
 add('overlap_and_switches_exist', overlapSamples > 600 && switchPairs > 100, { overlapSamples, switchPairs }, '>600 overlap samples and >100 coarse switch pairs');
 add('switch_boundaries_refined', refinedSeams === switchPairs, { refinedSeams, switchPairs }, 'every coarse switch pair yields an epsilon-scale dominant-family switch');
-add('hard_winner_has_material_epsilon_seams', maxSeamDeltaJump > .75 && maxSeam.baseJump < 1e-5, maxSeam, '>0.75 m terrace delta jump while substrate change is <1e-5 m');
+add('hard_winner_has_material_epsilon_seams', maxSeamDeltaJump > .75 && maxSeam.baseJump < 1e-5, maxSeamReceipt, '>0.75 m terrace delta jump while substrate change is <1e-5 m');
 add('seams_are_not_only_level_index_changes', maxSeam.a.index === maxSeam.b.index && refinedIndexChanging < refinedSeams, { maximumIndices: [maxSeam.a.index, maxSeam.b.index], refinedIndexChanging, refinedSeams }, 'same terrace index at maximum seam; not all seams change index');
 add('material_seams_are_common_in_sampled_switches', seamOverFiveCm > 100, { seamOverFiveCm, refinedSeams }, '>100 refined switch pairs exceed 5 cm');
 add('naive_height_blend_loses_family_level_identity', blendOffFamilyFraction > .60 && maxBlendOffFamily > .35, { overlapSamples, blendOffFamily, blendOffFamilyFraction, maxBlendOffFamily, maxBlend }, '>60% of overlap samples more than 5 cm from every active family and maximum >0.35 m');
@@ -131,7 +133,7 @@ const result = {
   source: { repository: 'haihao0307/guilin-dem-pipeline', commit: 'f8b180f1b1bda01885bdef6e3a2ab25e0c2257f8', version: R33.VERSION },
   passed: checks.every(c => c.pass), gateCount: checks.length, passedCount: checks.filter(c => c.pass).length, checks,
   sampling: { boundsMeters: { xmin: -220, xmax: 120, zmin: -132, zmax: 10 }, coarseSpacingMeters: spacing, bisectionIterations: 40, epsilonSegmentFraction: 1e-7 },
-  metrics: { overlapSamples, switchPairs, refinedSeams, refinedIndexChanging, seamOverFiveCm, maxCoarseDeltaJump, maxSeamDeltaJump, maxSeam, blendOffFamily, blendOffFamilyFraction, maxBlendOffFamily, maxBlend },
+  metrics: { overlapSamples, switchPairs, refinedSeams, refinedIndexChanging, seamOverFiveCm, maxCoarseDeltaJump, maxSeamDeltaJump, maxSeam: maxSeamReceipt, blendOffFamily, blendOffFamilyFraction, maxBlendOffFamily, maxBlend },
   currentBestView: [
     'R045.33 uses a continuous max envelope but chooses step and phase from a discontinuous dominant-family label; continuity of the mask therefore does not imply continuity of the composed height',
     'interpolating already-quantized family heights removes the hard switch but creates intermediate elevations that need not belong to any family level',
