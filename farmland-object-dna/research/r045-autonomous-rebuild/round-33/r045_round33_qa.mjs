@@ -45,18 +45,14 @@ add('all_three_nested_groups_remain_material',groupCounts.every(n=>n>45),groupCo
 add('adjacent_groups_still_overlap',overlap01>12&&overlap12>12,{overlap01,overlap12},'each adjacent pair has >12 support-overlap samples');
 add('terrace_increment_is_not_a_cliff',maxStep<1.05,{maxStep,maxStepAt},'<1.05 m change in added terrace delta per 4 m z');
 
-// R32 chooses one dominant family when assigning terrace phase/step. R33 blends those frames continuously.
-// Verify the new blended phase field is smooth at locations where two family supports compete.
-const seamGrad=[];let seamN=0;
-for(let x=-210;x<=110;x+=3)for(let z=-128;z<=6;z+=3){
-  const w=R32.terraceGroupWeights(x,z).slice().sort((a,b)=>b-a);
-  if(w[0]<.22||w[1]<.16||w[0]-w[1]>.16||R30.nearestExtendedDrainageDistance(x,z)<24)continue;
-  const p0=K.terraceFrameAt(x-1,z).phase,p1=K.terraceFrameAt(x+1,z).phase;
-  seamGrad.push(Math.abs(p1-p0)/2);seamN++;
+// Final R33 isolates the drainage-clearance hypothesis. Quantization must therefore be exactly inherited from R32.
+let frameN=0,maxStepDiff=0,maxPhaseDiff=0,maxRawDiff=0;
+for(let x=-210;x<=110;x+=7)for(let z=-128;z<=6;z+=5){
+  const n=K.terraceStateAt(x,z),o=R32.terraceStateAt(x,z);frameN++;
+  maxStepDiff=Math.max(maxStepDiff,Math.abs(n.step-o.step));maxPhaseDiff=Math.max(maxPhaseDiff,Math.abs(n.phase-o.phase));maxRawDiff=Math.max(maxRawDiff,Math.abs(n.raw-o.raw));
 }
-const seam={n:seamN,meanPhaseGradient:mean(seamGrad),medianPhaseGradient:median(seamGrad),maxPhaseGradient:seamGrad.length?Math.max(...seamGrad):0};
-add('blended_family_phase_has_samples',seamN>30,seam,'>30 family-overlap seam samples');
-add('blended_family_phase_is_smooth',seam.maxPhaseGradient<.035&&seam.medianPhaseGradient<.018,seam,'max phase gradient <.035 m/m and median <.018 m/m');
+const frameIdentity={samples:frameN,maxStepDiff,maxPhaseDiff,maxRawDiff};
+add('r32_quantization_frame_is_exactly_preserved',maxStepDiff<1e-12&&maxPhaseDiff<1e-12&&maxRawDiff<1e-12,frameIdentity,'step, phase and raw stair response exactly inherited from R32');
 
 const benchRat=[],riserRat=[],benchSlope=[],riserSlope=[];let benchN=0,riserN=0;
 for(let x=-210;x<=110;x+=5)for(let z=-128;z<=4;z+=4){
@@ -91,12 +87,13 @@ add('global_visual_acceptance_remains_locked',K.snapshot.visualAcceptance===fals
 add('parcel_generator_locked',K.snapshot.parcelGenerationEnabled===false,K.snapshot.parcelGenerationEnabled,false);
 add('water_state_unknown',K.snapshot.waterStateKnown===false,K.snapshot.waterStateKnown,false);
 add('production_locked',K.snapshot.productionReady===false,K.snapshot.productionReady,false);
-add('logic_errors_explicitly_corrected',K.snapshot.round33?.logicCorrection?.includes('do not prove')&&K.snapshot.round33?.logicCorrection?.includes('wide blank setback'),K.snapshot.round33?.logicCorrection,'reject low-riser and wide-setback shortcuts');
+add('logic_errors_explicitly_corrected',K.snapshot.round33?.logicCorrection?.includes('do not prove')&&K.snapshot.round33?.logicCorrection?.includes('arbitrarily wide blank agricultural setback')&&K.snapshot.round33?.logicCorrection?.includes('mixed shoulder narrowing'),K.snapshot.round33?.logicCorrection,'reject low-riser, wide-setback and confounded-two-variable shortcuts');
+add('failed_attempt_is_retained',K.snapshot.round33?.failedAttempt?.includes('36/37')&&K.snapshot.round33?.failedAttempt?.includes('0.8442125319815688'),K.snapshot.round33?.failedAttempt,'retain first-run failure rather than overwrite it');
 add('real_world_constraint_is_explicit',K.snapshot.round33?.constraint?.includes('cannot be reconstructed quickly')&&K.snapshot.round33?.constraint?.includes('bankfull width'),K.snapshot.round33?.constraint,'state missing real-world evidence that blocks fast realization');
 add('xiaoma_truth_boundary_retained',K.snapshot.round33?.xiaomaBoundary?.includes('unknown')&&K.snapshot.round33?.xiaomaBoundary?.includes('no water head'),K.snapshot.round33?.xiaomaBoundary,'no necessary-condition -> sufficient-condition error');
 add('mrrolord_ordering_only',K.snapshot.round33?.mrRolordUse?.includes('drainage hierarchy')&&K.snapshot.round33?.mrRolordUse?.includes('does not copy'),K.snapshot.round33?.mrRolordUse,'process ordering only');
 add('user_reference_reopened_without_metric_inference',K.snapshot.round33?.referenceUse?.includes('reopened this round')&&K.snapshot.round33?.referenceUse?.includes('no metric terrace width'),K.snapshot.round33?.referenceUse,'morphology only');
 add('survey_claims_forbidden',Array.isArray(K.snapshot.round33?.forbiddenClaims)&&K.snapshot.round33.forbiddenClaims.length>=15,K.snapshot.round33?.forbiddenClaims,'explicit evidence boundary');
 
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{geometry:geom,seam,terraceMorphology:terrMetrics,farUp,nearDrain,receiver,outside,oldForward,newForward}};
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{geometry:geom,frameIdentity,terraceMorphology:terrMetrics,farUp,nearDrain,receiver,outside,oldForward,newForward}};
 fs.writeFileSync(new URL('./r045_round33_qa_result.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
