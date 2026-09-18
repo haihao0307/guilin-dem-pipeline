@@ -1,0 +1,505 @@
+{
+  "version": "R045.24",
+  "passed": true,
+  "gateCount": 31,
+  "passedCount": 31,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.24",
+      "limit": "R045.24"
+    },
+    {
+      "name": "three_inherited_outlet_profiles",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "exactly three profiles from inherited outletContinuum"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "receiving_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "widthRatio": 2.21875,
+          "offset0": -18,
+          "swing": 23,
+          "depth": 0.27,
+          "shoulder": 0.12,
+          "nested": 0.1
+        },
+        {
+          "id": "OUTLET-B",
+          "widthRatio": 1.4871794871794872,
+          "offset0": 16,
+          "swing": -31,
+          "depth": 0.34,
+          "shoulder": 0.09,
+          "nested": 0.14
+        },
+        {
+          "id": "OUTLET-C",
+          "widthRatio": 2.9285714285714284,
+          "offset0": -9,
+          "swing": 37,
+          "depth": 0.23,
+          "shoulder": 0.15,
+          "nested": 0.08
+        }
+      ],
+      "limit": "all three parameter signatures unique"
+    },
+    {
+      "name": "width_expansion_is_unequal",
+      "pass": true,
+      "value": [
+        2.21875,
+        1.4871794871794872,
+        2.9285714285714284
+      ],
+      "limit": "profile width ratios differ by >0.70"
+    },
+    {
+      "name": "lateral_bending_is_directionally_distinct",
+      "pass": true,
+      "value": [
+        23,
+        -31,
+        37
+      ],
+      "limit": "signed swing range >55 m"
+    },
+    {
+      "name": "receiving_depths_are_unequal",
+      "pass": true,
+      "value": [
+        0.27,
+        0.34,
+        0.23
+      ],
+      "limit": "depth range >0.08 m"
+    },
+    {
+      "name": "receiving_plain_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.32577775387670155,
+        "mean": 0.0645459037039629,
+        "coreMean": 0.0888005195347957,
+        "n": 1998,
+        "at": [
+          -82,
+          108
+        ],
+        "maxStep": 0.08465275563702573,
+        "maxStepAt": [
+          -82,
+          120
+        ],
+        "positiveMass": 0.031817036654126274,
+        "negativeMass": 128.93089856386376
+      },
+      "limit": "0.18 m < max added delta < 0.80 m"
+    },
+    {
+      "name": "receiving_plain_change_is_broad",
+      "pass": true,
+      "value": 0.0888005195347957,
+      "limit": "0.025 m < mean abs delta in z 50..108 < 0.24 m"
+    },
+    {
+      "name": "receiving_plain_is_hollow_dominant",
+      "pass": true,
+      "value": {
+        "positiveMass": 0.031817036654126274,
+        "negativeMass": 128.93089856386376,
+        "ratio": 4052.2597992212145
+      },
+      "limit": "negative receiving mass >1.25x positive shoulder mass"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.08465275563702573,
+        "at": [
+          -82,
+          120
+        ]
+      },
+      "limit": "<0.22 m change in added field per 4 m z"
+    },
+    {
+      "name": "r23_upper_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R24 change at z<=26"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside receiving-plain support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "carrier_tied_planforms_are_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minCentroidSep": 145.9250690780212,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "mass": 21.19072079163234,
+            "centroid": [
+              -166.9166150804636,
+              86.38728938707524
+            ],
+            "peak": 0.2455006743578394,
+            "peakAt": [
+              -180,
+              104
+            ],
+            "count": 234
+          },
+          {
+            "id": "OUTLET-B",
+            "mass": 22.27376519936287,
+            "centroid": [
+              -14.749717808927098,
+              84.67390878863105
+            ],
+            "peak": 0.21062135130423915,
+            "peakAt": [
+              -76,
+              110
+            ],
+            "count": 288
+          },
+          {
+            "id": "OUTLET-C",
+            "mass": 22.545149319191385,
+            "centroid": [
+              131.1147509763474,
+              88.87896900400652
+            ],
+            "peak": 0.19068228651794686,
+            "peakAt": [
+              180,
+              110
+            ],
+            "count": 307
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >12 m"
+    },
+    {
+      "name": "all_three_components_are_visible_in_numeric_field",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "mass": 21.19072079163234,
+          "centroid": [
+            -166.9166150804636,
+            86.38728938707524
+          ],
+          "peak": 0.2455006743578394,
+          "peakAt": [
+            -180,
+            104
+          ],
+          "count": 234
+        },
+        {
+          "id": "OUTLET-B",
+          "mass": 22.27376519936287,
+          "centroid": [
+            -14.749717808927098,
+            84.67390878863105
+          ],
+          "peak": 0.21062135130423915,
+          "peakAt": [
+            -76,
+            110
+          ],
+          "count": 288
+        },
+        {
+          "id": "OUTLET-C",
+          "mass": 22.545149319191385,
+          "centroid": [
+            131.1147509763474,
+            88.87896900400652
+          ],
+          "peak": 0.19068228651794686,
+          "peakAt": [
+            180,
+            110
+          ],
+          "count": 307
+        }
+      ],
+      "limit": "each component peak >0.04 m and >18 sampled occupied cells"
+    },
+    {
+      "name": "receiving_planform_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.3097304734126678,
+          "at": [
+            105,
+            32
+          ]
+        },
+        "new": {
+          "maxRise": 0.3063878219336629,
+          "at": [
+            105,
+            32
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R23 + 0.18 m"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6814326037170066,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "adding arbitrary extra lobes or merely amplifying the R23 toe would decorate the plain without causal structure. R24 ties every new receiving mass to an inherited outlet carrier before any terrace pattern is allowed",
+      "limit": "must reject arbitrary decoration and bind new morphology to inherited carriers"
+    },
+    {
+      "name": "xiaoma_state_boundary_retained",
+      "pass": true,
+      "value": "rendered terrain continuity and carrier intersection are geometry evidence only; they do not establish hydraulic connectivity, water depth, discharge, control elevation, soil water or sediment state",
+      "limit": "geometry evidence must not be promoted to hydraulic-state evidence"
+    },
+    {
+      "name": "mrrolord_frame_audit_reused",
+      "pass": true,
+      "value": "the saved frame audit was reread this round: river hierarchy -> cumulative distance/terrain -> land use. The recorded video observations are reused; no unsupported metric copying from Blender is performed",
+      "limit": "saved frame audit reread; hydrology-first ordering retained"
+    },
+    {
+      "name": "reference_is_not_metric_truth",
+      "pass": true,
+      "value": "image(173).png was reread this round only for unequal nested hillside occupation and non-uniform contour hierarchy; no terrace width, riser height, channel section or water depth is inferred from the photograph",
+      "limit": "visual hierarchy only; no metric extraction"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed receiving-bay geometry",
+        "measured terrace bench",
+        "measured riser or bund section",
+        "active irrigation connectivity",
+        "field water depth",
+        "discharge",
+        "control elevation",
+        "soil or sediment property",
+        "ownership or cadastral boundary",
+        "regional terrace dimensions"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.32577775387670155,
+      "mean": 0.0645459037039629,
+      "coreMean": 0.0888005195347957,
+      "n": 1998,
+      "at": [
+        -82,
+        108
+      ],
+      "maxStep": 0.08465275563702573,
+      "maxStepAt": [
+        -82,
+        120
+      ],
+      "positiveMass": 0.031817036654126274,
+      "negativeMass": 128.93089856386376
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "widthRatio": 2.21875,
+        "offset0": -18,
+        "swing": 23,
+        "depth": 0.27,
+        "shoulder": 0.12,
+        "nested": 0.1
+      },
+      {
+        "id": "OUTLET-B",
+        "widthRatio": 1.4871794871794872,
+        "offset0": 16,
+        "swing": -31,
+        "depth": 0.34,
+        "shoulder": 0.09,
+        "nested": 0.14
+      },
+      {
+        "id": "OUTLET-C",
+        "widthRatio": 2.9285714285714284,
+        "offset0": -9,
+        "swing": 37,
+        "depth": 0.23,
+        "shoulder": 0.15,
+        "nested": 0.08
+      }
+    ],
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "mass": 21.19072079163234,
+        "centroid": [
+          -166.9166150804636,
+          86.38728938707524
+        ],
+        "peak": 0.2455006743578394,
+        "peakAt": [
+          -180,
+          104
+        ],
+        "count": 234
+      },
+      {
+        "id": "OUTLET-B",
+        "mass": 22.27376519936287,
+        "centroid": [
+          -14.749717808927098,
+          84.67390878863105
+        ],
+        "peak": 0.21062135130423915,
+        "peakAt": [
+          -76,
+          110
+        ],
+        "count": 288
+      },
+      {
+        "id": "OUTLET-C",
+        "mass": 22.545149319191385,
+        "centroid": [
+          131.1147509763474,
+          88.87896900400652
+        ],
+        "peak": 0.19068228651794686,
+        "peakAt": [
+          180,
+          110
+        ],
+        "count": 307
+      }
+    ],
+    "minCentroidSep": 145.9250690780212,
+    "nearMax": 0,
+    "upperMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.3097304734126678,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3063878219336629,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6814326037170066,
+    "permissionMaxChange": 0
+  }
+}
