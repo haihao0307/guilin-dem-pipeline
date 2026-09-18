@@ -1,6 +1,7 @@
 /* Local wet-area navigation, not hydrodynamic advection.
  * Guarantees are sampled: 8 footprint rim points + centre, swept at <= .10 m;
- * planning sees .8 m and 2 s ahead. Thin/unresolved obstacles and arbitrary
+ * planning sees .8 m and 2 s ahead. Endpoints reserve the next .1 s of water
+ * at start/mid/end samples, covering fractional-step display time. Thin/unresolved obstacles and arbitrary
  * discontinuous water changes cannot be made continuously safe by this model.
  * All state is JSON data; callers retain fish identity and captured state.
  */
@@ -31,6 +32,16 @@ function at(f,p,t){
  try{if(env.blocked)blocked=!!env.blocked(p[0],p[1],p[2],b.r);}catch(e){return{...b,valid:false,safe:false,reason:'obstacle-query-error'};}
  const safe=b.room>=0&&p[1]>=b.lo-1e-8&&p[1]<=b.hi+1e-8&&!blocked;
  return{...b,safe,reason:safe?'clear':blocked?'solid-obstacle':b.room<0?'insufficient-water':'body-outside-water'};
+}
+function holdingBounds(f,x,z,t){
+ // A completed fixed step is displayed until the next one. Reserve its whole
+ // following STEP, including the midpoint, instead of clamping to only its end.
+ const b=bounds(f,x,z,t);if(!b.valid)return b;
+ for(const offset of [STEP/2,STEP]){
+  const q=bounds(f,x,z,t+offset);if(!q.valid)return q;
+  b.lo=Math.max(b.lo,q.lo);b.hi=Math.min(b.hi,q.hi);
+ }
+ b.room=b.hi-b.lo;return b;
 }
 function segment(f,a,b,t0,t1){
  const n=Math.max(2,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])/.10));
@@ -83,14 +94,14 @@ function initialize(f,time,saved){
  return fail(nav,'unavailable','no-safe-spawn-within-10m');
 }
 function plan(f,nav,t){
- const p=nav.pos,now=bounds(f,p[0],p[2],t),future=bounds(f,p[0],p[2],t+2);
+ const p=nav.pos,now=holdingBounds(f,p[0],p[2],t),future=holdingBounds(f,p[0],p[2],t+2);
  if(!now.valid||!future.valid)return fail(nav,'unavailable',(!now.valid?now:future).reason);
  const retreat=Math.min(now.room,future.room)<.35;
  const phase=(finite(f.phase)?f.phase:0)+t*.19;
  const goal=[f.anchor[0]+Math.sin(phase)*1.25,f.anchor[1]+Math.cos(phase*.87)*.85];
  let best=-Infinity,heading=nav.yaw+Math.PI/2;
  for(let j=0;j<8;j++){
-  const a=j*TAU/8,x=p[0]+Math.sin(a)*.8,z=p[2]+Math.cos(a)*.8,b=bounds(f,x,z,t+1.25),b2=bounds(f,x,z,t+2);
+  const a=j*TAU/8,x=p[0]+Math.sin(a)*.8,z=p[2]+Math.cos(a)*.8,b=holdingBounds(f,x,z,t+1.25),b2=holdingBounds(f,x,z,t+2);
   if(!b.valid||!b2.valid)return fail(nav,'unavailable',(!b.valid?b:b2).reason);
   if(Math.min(b.room,b2.room)<.03)continue;
   const dest=[x,clamp(p[1],b.lo+.01,b.hi-.01),z];
@@ -109,7 +120,7 @@ function step(f,nav,t){
  // Try short, physically connected steps only. No snapping to a remote refuge.
  {
   const direction=a,x=start[0]+Math.sin(direction)*SPEED*STEP,z=start[2]+Math.cos(direction)*SPEED*STEP;
-  const b=bounds(f,x,z,t+STEP);
+  const b=holdingBounds(f,x,z,t+STEP);
   if(!b.valid)return fail(nav,'unavailable',b.reason);
   if(b.room>=.02){
   const target=clamp(start[1],b.lo+.01,b.hi-.01),y=start[1]+clamp(target-start[1],-.9*STEP,.9*STEP),dest=[x,y,z];
@@ -121,7 +132,7 @@ function step(f,nav,t){
  // Keep a visible fish waiting/turning when the full body can safely remain here.
  // Vertical adjustment is speed-limited and checked over the entire time interval.
  nav.yaw=a;nav.planAt=t;
- const hold=bounds(f,start[0],start[2],t+STEP);
+ const hold=holdingBounds(f,start[0],start[2],t+STEP);
  if(!hold.valid)return fail(nav,'unavailable',hold.reason);
  if(hold.room>=.02){
   const goal=clamp(start[1],hold.lo+.01,hold.hi-.01),p=[start[0],start[1]+clamp(goal-start[1],-.9*STEP,.9*STEP),start[2]];
@@ -148,5 +159,5 @@ function advance(f,nav,time){
  return nav;
 }
 return{initialize,advance,inspect,limits:{stepSeconds:STEP,speed:SPEED,forecastSeconds:2,lookAheadMetres:.8,
- footprintRimSamples:8,sweepMetres:.10,maximumAdvanceSeconds:600,hasWaterCurrent:false}};
+ footprintRimSamples:8,sweepMetres:.10,holdingForecastSeconds:STEP,holdingForecastSamples:3,maximumAdvanceSeconds:600,hasWaterCurrent:false}};
 }
