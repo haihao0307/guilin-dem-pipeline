@@ -1,0 +1,91 @@
+{
+  "version": "R045.42",
+  "passed": false,
+  "passedCount": 31,
+  "gateCount": 34,
+  "failed": [
+    {
+      "name": "r42_increment_is_material",
+      "pass": false,
+      "value": {
+        "incGainCells": 0,
+        "incThreshold": 0,
+        "maxIncGain": 0
+      },
+      "limit": ">=2 short-gap gains and >=2 threshold crossings"
+    },
+    {
+      "name": "r42_change_from_r41_bounded",
+      "pass": false,
+      "value": 0,
+      "limit": ".001m < sampled max change < .14m"
+    },
+    {
+      "name": "fragmentation_regression_repaired",
+      "pass": false,
+      "value": {
+        "burdenN": 0.15185185185185185,
+        "burdenP": 0.15185185185185185,
+        "burden40": 0.14606741573033707
+      },
+      "limit": "R42 must both improve R41 and satisfy unchanged <=101% R40 burden gate"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 261392,
+    "screenshot_process_clean_exit": true,
+    "render_evidence_present": true,
+    "page_startup_passed": true,
+    "passed": true
+  },
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5073769549580318,
+      "changeFrom41": 0,
+      "active": 540,
+      "oldActive": 540,
+      "core": 356,
+      "oldCore": 356,
+      "incGainCells": 0,
+      "incThreshold": 0,
+      "incUnsupported": 0,
+      "maxIncGain": 0,
+      "totalGainCells": 11,
+      "totalThreshold": 11,
+      "totalCrossRow39": 11,
+      "totalOpposite": 3,
+      "maxTotalGain": 0.115,
+      "unsafe": 0,
+      "groups": [
+        92,
+        227,
+        221
+      ],
+      "rowRunsN": 82,
+      "rowRunsP": 82,
+      "rowRuns40": 78,
+      "fragmentationBurdenN": 0.15185185185185185,
+      "fragmentationBurdenP": 0.15185185185185185,
+      "fragmentationBurden40": 0.14606741573033707,
+      "medianLongestN": 57,
+      "medianLongestP": 57,
+      "medianLongest40": 60,
+      "maxLongestN": 78,
+      "maxLongestP": 78,
+      "maxLongest40": 78,
+      "existingActiveMaskChange": 0,
+      "existingActiveDeltaChange": 0
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "full 6m R42 contour-gap closure sweep + unchanged R40 fragmentation gate + exact active-R41 inheritance + drainage/receiver boundaries"
+  }
+}
