@@ -1,20 +1,14 @@
 {
   "version": "R045.20",
   "passed": false,
-  "passedCount": 25,
-  "gateCount": 26,
+  "passedCount": 27,
+  "gateCount": 28,
   "failed": [
     {
-      "name": "entry_exit_ramps_do_not_create_new_large_uphill_barrier",
+      "name": "failed_logic_is_explicitly_corrected",
       "pass": false,
-      "value": {
-        "rampMax": 1.4280448664297936,
-        "at": [
-          -155,
-          -174
-        ]
-      },
-      "limit": "<1.25 m uphill rise per 4 m across entry, repaired interior, and full exit to inherited terrain"
+      "value": "R19 constrained the repair field instead of the repaired terrain; early R20 then returned too quickly to an inherited uphill profile and merely moved the barrier. Final R20 constrains the ground profile itself and lets the correction decay only when inherited terrain becomes compatible",
+      "limit": "must acknowledge that short blend relocates rather than solves barrier"
     }
   ],
   "browser": {
@@ -23,23 +17,22 @@
     "dom_status": 0,
     "ready_marker_status": 0,
     "screenshot_exists": true,
-    "screenshot_bytes": 525935,
+    "screenshot_bytes": 526212,
     "passed": true
   },
   "metrics": {
     "delta": {
-      "max": 6.332464050878222,
-      "mean": 0.08722896006368902,
-      "n": 2072,
+      "max": 6.902006577570134,
+      "mean": 0.08243443481784561,
+      "n": 3256,
       "at": [
         140,
         -198
-      ]
+      ],
+      "positiveMax": 0,
+      "endDelta": 0
     },
     "activeZ": [
-      -224,
-      -220,
-      -218,
       -216,
       -214,
       -212,
@@ -52,12 +45,22 @@
       -198,
       -196,
       -194,
-      -182,
-      -180,
+      -192,
+      -190,
       -178,
+      -176,
       -174,
       -172,
-      -170
+      -170,
+      -168,
+      -166,
+      -164,
+      -162,
+      -160,
+      -158,
+      -156,
+      -154,
+      -152
     ],
     "oldWall": {
       "z": -202,
@@ -76,20 +79,20 @@
       "eligible": 42,
       "fraction": 0,
       "maxRise": 0.480000000000004,
-      "at": -165,
+      "at": -55,
       "maxContiguousSpan": 0,
       "total": 294,
       "threshold": 0.55
     },
-    "ramp": {
-      "maxRise": 1.4280448664297936,
+    "fullBand": {
+      "maxRise": 0.480000000000004,
       "at": [
-        -155,
-        -174
+        -205,
+        -170
       ]
     },
     "outside": 0,
-    "lower": 0,
+    "farLower": 0,
     "receiver": 0,
     "permissionDiff": 0,
     "peakRepair": [
@@ -122,6 +125,6 @@
       }
     ],
     "terraceNearDrainageMean": 0,
-    "terraceFarDrainageMean": 0.6837247695906252
+    "terraceFarDrainageMean": 0.6789808136537528
   }
 }
