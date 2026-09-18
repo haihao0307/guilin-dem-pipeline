@@ -9,8 +9,9 @@ try{
   await page.waitForFunction(()=>window.__wenzhouMapMother1940sRefine?.schema==='wenzhou-map-mother/1940s-refine-r28'||document.querySelector('#terrain')?.dataset.history1940sRefineError,{},{timeout:45000});
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmLoaded==='true',{},{timeout:120000});
   await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1940sRefineOsmObjects||0)>0,{},{timeout:30000});
+  await page.waitForFunction(()=>window.__wenzhouNg51IslandRelief?.ready===true||document.querySelector('#terrain')?.dataset.ng51IslandReliefError,{},{timeout:120000});
   await page.waitForTimeout(700);
-  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
+  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null),ir=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
   check(!ds.history1940sRefineError,`refine runtime error: ${ds.history1940sRefineError||''}`);
   check(r?.schema==='wenzhou-map-mother/1940s-refine-r28','R28 refine state missing');
   check(r?.mask?.[0]>=1500&&r?.mask?.[1]>=1500,'refined mask resolution too low');
@@ -25,6 +26,13 @@ try{
   check((r?.osm?.roadHidden||0)>0,'refined historical water hid no modern roads');check((r?.roadMapSupport?.points||0)>=1000,'NG51-1 road support not loaded');check((r?.osm?.majorRoadUnsupportedHidden||0)>0,'NG51-1 map removed no unsupported major roads');
   check(ds.history1940sRefine==='r28','R28 dataset marker missing');
   check(ds.history1940sTerrainHeightUnchanged==='true','terrain-height invariant dataset marker missing');
+  check(!ds.ng51IslandReliefError,`NG51 island relief runtime error: ${ds.ng51IslandReliefError||''}`);
+  check(ir?.ready===true,'NG51 canonical island relief missing');
+  check(ir?.source==='canonical-dem-r1','NG51 island relief not sourced from canonical DEM');
+  check(ir?.sourceSpacingM===12.5&&ir?.runtimeSpacingM===50,'NG51 island relief spacing contract wrong');
+  check(ir?.islandHoleCount>=90,'NG51 island relief lost historical island holes');
+  check((ir?.islandCells||0)>0&&(ir?.triangles||0)>0,'NG51 island relief produced no geometry');
+  check((ir?.baseIslandMaskPixelsCut||0)>0,'200m base island layer was not cut before 50m replacement');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
-  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
 }catch(e){const ds=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(c=>({...c.dataset})):{};failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,dataset:ds,consoleErrors,failures},null,2));}finally{await browser.close();}if(failures.length)process.exit(1);
