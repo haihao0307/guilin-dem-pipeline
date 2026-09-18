@@ -1,0 +1,780 @@
+{
+  "version": "R045.25",
+  "passed": false,
+  "gateCount": 34,
+  "passedCount": 33,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.25",
+      "limit": "R045.25"
+    },
+    {
+      "name": "three_inherited_apron_profiles",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "exactly three profiles inherited from R24 receiving/outlet carriers"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "apron_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "width0": 62,
+          "width1": 118,
+          "offset": -22,
+          "sweep": 48,
+          "depth": 0.19,
+          "shoulder": 0.105,
+          "nested": 0.06,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "width0": 48,
+          "width1": 93,
+          "offset": 28,
+          "sweep": -42,
+          "depth": 0.23,
+          "shoulder": 0.12,
+          "nested": 0.075,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "width0": 72,
+          "width1": 132,
+          "offset": -10,
+          "sweep": 55,
+          "depth": 0.17,
+          "shoulder": 0.1,
+          "nested": 0.052,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "all three signatures unique"
+    },
+    {
+      "name": "aprons_are_broader_than_r24_bays",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "r24": 71,
+          "r25": 118
+        },
+        {
+          "id": "OUTLET-B",
+          "r24": 58,
+          "r25": 93
+        },
+        {
+          "id": "OUTLET-C",
+          "r24": 82,
+          "r25": 132
+        }
+      ],
+      "limit": "every downstream apron width exceeds R24 bay width by >25 m"
+    },
+    {
+      "name": "lateral_sweeps_are_directionally_distinct",
+      "pass": true,
+      "value": [
+        48,
+        -42,
+        55
+      ],
+      "limit": "signed sweep range >80 m"
+    },
+    {
+      "name": "apron_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.292112832808703,
+        "mean": 0.04135099073507204,
+        "coreMean": 0.0528733288404798,
+        "n": 2310,
+        "at": [
+          -80,
+          110
+        ],
+        "maxStep": 0.08194572534310564,
+        "maxStepAt": [
+          -80,
+          118
+        ],
+        "positiveMass": 2.7843405802673353,
+        "negativeMass": 92.73644801774915,
+        "positiveToNegative": 0.030024231462201685
+      },
+      "limit": "0.10 m < max added delta < 0.62 m"
+    },
+    {
+      "name": "apron_change_is_broad_but_shallow",
+      "pass": true,
+      "value": 0.0528733288404798,
+      "limit": "0.015 m < mean abs delta in z 38..108 < 0.16 m"
+    },
+    {
+      "name": "signed_shoulders_survive",
+      "pass": true,
+      "value": {
+        "positiveMass": 2.7843405802673353,
+        "negativeMass": 92.73644801774915,
+        "ratio": 0.030024231462201685
+      },
+      "limit": "positive mass is 0.5%..85% of negative receiving mass"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.08194572534310564,
+        "at": [
+          -80,
+          118
+        ]
+      },
+      "limit": "<0.18 m change in added field per 4 m z"
+    },
+    {
+      "name": "whole_scene_planform_is_broadly_occupied",
+      "pass": true,
+      "value": {
+        "rows": 12,
+        "meanWidth": 459.6666666666667
+      },
+      "limit": ">=8 occupied rows and mean lateral occupied width >120 m"
+    },
+    {
+      "name": "whole_scene_planform_is_not_constant_width",
+      "pass": false,
+      "value": {
+        "widthRange": 4,
+        "rowWidths": [
+          {
+            "z": 36,
+            "width": 456,
+            "count": 73
+          },
+          {
+            "z": 42,
+            "width": 460,
+            "count": 74
+          },
+          {
+            "z": 48,
+            "width": 460,
+            "count": 74
+          },
+          {
+            "z": 54,
+            "width": 460,
+            "count": 74
+          },
+          {
+            "z": 60,
+            "width": 460,
+            "count": 74
+          },
+          {
+            "z": 66,
+            "width": 460,
+            "count": 70
+          },
+          {
+            "z": 72,
+            "width": 460,
+            "count": 70
+          },
+          {
+            "z": 78,
+            "width": 460,
+            "count": 66
+          },
+          {
+            "z": 84,
+            "width": 460,
+            "count": 68
+          },
+          {
+            "z": 90,
+            "width": 460,
+            "count": 68
+          },
+          {
+            "z": 96,
+            "width": 460,
+            "count": 68
+          },
+          {
+            "z": 102,
+            "width": 460,
+            "count": 68
+          }
+        ]
+      },
+      "limit": "occupied width varies by >18 m across downslope rows"
+    },
+    {
+      "name": "whole_scene_planform_sweeps_laterally",
+      "pass": true,
+      "value": {
+        "centroidRange": 9.036344344595793,
+        "rowCentroids": [
+          {
+            "z": 36,
+            "x": 9.648701803797907
+          },
+          {
+            "z": 42,
+            "x": 8.753885190962754
+          },
+          {
+            "z": 48,
+            "x": 8.66320947533671
+          },
+          {
+            "z": 54,
+            "x": 6.607624169402072
+          },
+          {
+            "z": 60,
+            "x": 1.6444003432278416
+          },
+          {
+            "z": 66,
+            "x": 0.7421059111063517
+          },
+          {
+            "z": 72,
+            "x": 0.612357459202113
+          },
+          {
+            "z": 78,
+            "x": 1.1650982058312773
+          },
+          {
+            "z": 84,
+            "x": 3.18449549163338
+          },
+          {
+            "z": 90,
+            "x": 3.6881527061347197
+          },
+          {
+            "z": 96,
+            "x": 3.6084143320273174
+          },
+          {
+            "z": 102,
+            "x": 3.511494413121929
+          }
+        ]
+      },
+      "limit": "abs-delta planform centroid shifts by >6 m across rows"
+    },
+    {
+      "name": "carrier_tied_aprons_are_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minCentroidSep": 91.53584330770957,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "mass": 19.95634589574185,
+            "centroid": [
+              -146.5697581049325,
+              74.16096825728677
+            ],
+            "peak": 0.12754835490962618,
+            "peakAt": [
+              -182,
+              50
+            ],
+            "count": 373
+          },
+          {
+            "id": "OUTLET-B",
+            "mass": 13.20683636017525,
+            "centroid": [
+              -55.110152815843804,
+              77.89610017164479
+            ],
+            "peak": 0.1636177116730909,
+            "peakAt": [
+              -86,
+              110
+            ],
+            "count": 380
+          },
+          {
+            "id": "OUTLET-C",
+            "mass": 21.33031828682868,
+            "centroid": [
+              171.95988291935356,
+              75.2574306289723
+            ],
+            "peak": 0.18046063901000436,
+            "peakAt": [
+              210,
+              104
+            ],
+            "count": 346
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >18 m"
+    },
+    {
+      "name": "all_three_aprons_exist_in_numeric_field",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "mass": 19.95634589574185,
+          "centroid": [
+            -146.5697581049325,
+            74.16096825728677
+          ],
+          "peak": 0.12754835490962618,
+          "peakAt": [
+            -182,
+            50
+          ],
+          "count": 373
+        },
+        {
+          "id": "OUTLET-B",
+          "mass": 13.20683636017525,
+          "centroid": [
+            -55.110152815843804,
+            77.89610017164479
+          ],
+          "peak": 0.1636177116730909,
+          "peakAt": [
+            -86,
+            110
+          ],
+          "count": 380
+        },
+        {
+          "id": "OUTLET-C",
+          "mass": 21.33031828682868,
+          "centroid": [
+            171.95988291935356,
+            75.2574306289723
+          ],
+          "peak": 0.18046063901000436,
+          "peakAt": [
+            210,
+            104
+          ],
+          "count": 346
+        }
+      ],
+      "limit": "each component peak >0.025 m and >20 sampled occupied cells"
+    },
+    {
+      "name": "r24_upper_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R25 change at z<=10"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside apron support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "apron_planform_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.358574090305102,
+          "at": [
+            60,
+            22
+          ]
+        },
+        "new": {
+          "maxRise": 0.3617162581581126,
+          "at": [
+            60,
+            22
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R24 + 0.12 m"
+    },
+    {
+      "name": "terrace_permission_unchanged_before_terrace_stage",
+      "pass": true,
+      "value": 0,
+      "limit": "exact inherited permission because R25 support starts below candidate zone"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6814326037170066,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "whole-scene legibility is not evidence that vertical amplitude should simply be increased. Amplifying R24 would risk artificial berms; R25 changes lateral occupancy and sweep first, and every new mass remains tied to an inherited outlet carrier",
+      "limit": "must reject amplitude-only visibility fix and change carrier-tied planform occupancy"
+    },
+    {
+      "name": "xiaoma_state_boundary_retained",
+      "pass": true,
+      "value": "the current 12.5 m macro DEM and rendered geometry do not establish field-scale boundaries, bund/channel sections, control elevations, hydraulic connectivity, water depth, discharge, soil water or sediment state",
+      "limit": "macro geometry must not be promoted to field-scale/hydraulic truth"
+    },
+    {
+      "name": "mrrolord_frame_audit_reread",
+      "pass": true,
+      "value": "the saved frame audit was reread this round. R25 retains river hierarchy -> cumulative terrain field -> land use ordering and translates it to deterministic world-space browser fields rather than copying Blender nodes or dimensions",
+      "limit": "saved frame audit reread; hydrology-first ordering retained"
+    },
+    {
+      "name": "reference_reread_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reread this round for broad unequal nested hillside occupation, curved contour hierarchy and non-uniform lower transitions only; no terrace width, riser height, channel section, water depth or regional metric is inferred from the photograph",
+      "limit": "reference used only for visual hierarchy"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed apron footprint",
+        "measured terrace bench",
+        "measured riser or bund section",
+        "measured canal section",
+        "active irrigation connectivity",
+        "field water depth",
+        "discharge",
+        "control elevation",
+        "soil or sediment property",
+        "ownership or cadastral boundary",
+        "regional terrace dimensions"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.292112832808703,
+      "mean": 0.04135099073507204,
+      "coreMean": 0.0528733288404798,
+      "n": 2310,
+      "at": [
+        -80,
+        110
+      ],
+      "maxStep": 0.08194572534310564,
+      "maxStepAt": [
+        -80,
+        118
+      ],
+      "positiveMass": 2.7843405802673353,
+      "negativeMass": 92.73644801774915,
+      "positiveToNegative": 0.030024231462201685
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "width0": 62,
+        "width1": 118,
+        "offset": -22,
+        "sweep": 48,
+        "depth": 0.19,
+        "shoulder": 0.105,
+        "nested": 0.06,
+        "edgeSign": 1
+      },
+      {
+        "id": "OUTLET-B",
+        "width0": 48,
+        "width1": 93,
+        "offset": 28,
+        "sweep": -42,
+        "depth": 0.23,
+        "shoulder": 0.12,
+        "nested": 0.075,
+        "edgeSign": -1
+      },
+      {
+        "id": "OUTLET-C",
+        "width0": 72,
+        "width1": 132,
+        "offset": -10,
+        "sweep": 55,
+        "depth": 0.17,
+        "shoulder": 0.1,
+        "nested": 0.052,
+        "edgeSign": 1
+      }
+    ],
+    "rowWidths": [
+      {
+        "z": 36,
+        "width": 456,
+        "count": 73
+      },
+      {
+        "z": 42,
+        "width": 460,
+        "count": 74
+      },
+      {
+        "z": 48,
+        "width": 460,
+        "count": 74
+      },
+      {
+        "z": 54,
+        "width": 460,
+        "count": 74
+      },
+      {
+        "z": 60,
+        "width": 460,
+        "count": 74
+      },
+      {
+        "z": 66,
+        "width": 460,
+        "count": 70
+      },
+      {
+        "z": 72,
+        "width": 460,
+        "count": 70
+      },
+      {
+        "z": 78,
+        "width": 460,
+        "count": 66
+      },
+      {
+        "z": 84,
+        "width": 460,
+        "count": 68
+      },
+      {
+        "z": 90,
+        "width": 460,
+        "count": 68
+      },
+      {
+        "z": 96,
+        "width": 460,
+        "count": 68
+      },
+      {
+        "z": 102,
+        "width": 460,
+        "count": 68
+      }
+    ],
+    "rowCentroids": [
+      {
+        "z": 36,
+        "x": 9.648701803797907
+      },
+      {
+        "z": 42,
+        "x": 8.753885190962754
+      },
+      {
+        "z": 48,
+        "x": 8.66320947533671
+      },
+      {
+        "z": 54,
+        "x": 6.607624169402072
+      },
+      {
+        "z": 60,
+        "x": 1.6444003432278416
+      },
+      {
+        "z": 66,
+        "x": 0.7421059111063517
+      },
+      {
+        "z": 72,
+        "x": 0.612357459202113
+      },
+      {
+        "z": 78,
+        "x": 1.1650982058312773
+      },
+      {
+        "z": 84,
+        "x": 3.18449549163338
+      },
+      {
+        "z": 90,
+        "x": 3.6881527061347197
+      },
+      {
+        "z": 96,
+        "x": 3.6084143320273174
+      },
+      {
+        "z": 102,
+        "x": 3.511494413121929
+      }
+    ],
+    "meanWidth": 459.6666666666667,
+    "widthRange": 4,
+    "centroidRange": 9.036344344595793,
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "mass": 19.95634589574185,
+        "centroid": [
+          -146.5697581049325,
+          74.16096825728677
+        ],
+        "peak": 0.12754835490962618,
+        "peakAt": [
+          -182,
+          50
+        ],
+        "count": 373
+      },
+      {
+        "id": "OUTLET-B",
+        "mass": 13.20683636017525,
+        "centroid": [
+          -55.110152815843804,
+          77.89610017164479
+        ],
+        "peak": 0.1636177116730909,
+        "peakAt": [
+          -86,
+          110
+        ],
+        "count": 380
+      },
+      {
+        "id": "OUTLET-C",
+        "mass": 21.33031828682868,
+        "centroid": [
+          171.95988291935356,
+          75.2574306289723
+        ],
+        "peak": 0.18046063901000436,
+        "peakAt": [
+          210,
+          104
+        ],
+        "count": 346
+      }
+    ],
+    "minCentroidSep": 91.53584330770957,
+    "nearMax": 0,
+    "upperMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.358574090305102,
+      "at": [
+        60,
+        22
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3617162581581126,
+      "at": [
+        60,
+        22
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6814326037170066,
+    "permissionMaxChange": 0
+  }
+}
