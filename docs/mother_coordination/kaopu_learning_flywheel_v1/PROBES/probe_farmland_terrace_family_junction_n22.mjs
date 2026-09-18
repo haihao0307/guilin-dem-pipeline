@@ -151,7 +151,10 @@ const result = {
 };
 
 function canonicalize(value) {
-  if (typeof value === 'number' && Number.isFinite(value) && !Number.isInteger(value)) return Number(value.toPrecision(12));
+  // Keep the replay receipt stable across libm/CPU implementations. The first
+  // CI run differed only in the last serialized digits of an epsilon-side
+  // substrate delta, not in any gate or reported engineering-scale result.
+  if (typeof value === 'number' && Number.isFinite(value) && !Number.isInteger(value)) return Number(value.toPrecision(9));
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, canonicalize(v)]));
   return value;

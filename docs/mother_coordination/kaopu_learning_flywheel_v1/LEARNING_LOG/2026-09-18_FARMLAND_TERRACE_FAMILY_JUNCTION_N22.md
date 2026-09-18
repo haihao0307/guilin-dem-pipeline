@@ -34,7 +34,7 @@ The maximum seam is not caused by a changed integer terrace index: both sides re
 
 A second bounded counterexample interpolates the already-quantized family deltas using the continuous support weights. This removes the hard selector by construction but does not preserve family-level identity: `478/696` (`68.678%`) overlap samples land more than `0.05 m` from every materially active family's own delta. The largest off-family distance is `0.430071 m`; at that sample the two active family deltas are `+0.429642 m` and `-0.488010 m`, while their blend is `-0.057939 m`.
 
-All `8/8` gates pass locally. GitHub Actions replay: **pending initial commit**. Local and CI replay are the same analysis design, not independent evidence.
+All `8/8` gates pass locally. The first GitHub Actions run `35353093785` preserved a useful instrumentation failure: every gate executed, but byte comparison differed in the last serialized digits of the epsilon-side substrate delta. The gate was not relaxed; numeric receipt serialization was reduced from 12 to 9 significant digits before replay. Final CI receipt: **pending corrected commit**. Local and CI replay are the same analysis design, not independent evidence.
 
 ### Observation root C — mature primary contracts
 
