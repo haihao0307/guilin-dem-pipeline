@@ -1,0 +1,56 @@
+name: Stone Money first survival chapter
+on:
+  push:
+    branches: [work/stone-money-island-v0200-shore-survival-20260918]
+    paths:
+      - .github/workflows/stone-money-v0200.yml
+      - games/survivor-palau/source/v0200/**
+permissions:
+  contents: write
+concurrency:
+  group: stone-money-v0200
+  cancel-in-progress: true
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0200-shore-survival-20260918
+      - name: Normalize the touch test to actual browser input
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('games/survivor-palau/source/v0200/verify.py');s=p.read_text()
+          s=s.replace("def aim(page,id):\n page.evaluate", "def aim(page,id):\n page.evaluate('StoneMoneySurvival.test.advance(.6)')\n page.evaluate")
+          a="b=page.locator('#smiJoy').bounding_box();page.dispatch_event('#smiJoy','pointerdown',{'pointerId':9,'pointerType':'touch','isPrimary':True,'clientX':b['x']+b['width']/2,'clientY':b['y']+b['height']/2+30})"
+          b="b=page.locator('#smiJoy').bounding_box();touch=ctx.new_cdp_session(page);touch.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':b['x']+b['width']/2,'y':b['y']+b['height']/2+30,'id':9}]})"
+          s=s.replace(a,b).replace("page.dispatch_event('#smiJoy','pointerup',{'pointerId':9,'pointerType':'touch','isPrimary':True})", "touch.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})")
+          p.write_text(s)
+          PY
+      - name: Rebuild from the byte-locked original ocean
+        run: python games/survivor-palau/source/v0200/build.py
+      - name: Exercise the actual game
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          timeout 820s python -u games/survivor-palau/source/v0200/verify.py
+      - name: Record source and actual diagnostics without overwriting concurrent edits
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/source/v0200 games/survivor-palau/releases/v0.2.0
+          git diff --cached --quiet || git commit -m 'build(stone-money): preserve first-chapter runtime and actual browser findings'
+          git pull --rebase origin work/stone-money-island-v0200-shore-survival-20260918
+          git push origin HEAD:work/stone-money-island-v0200-shore-survival-20260918
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-v0200-actual-game-review
+          path: |
+            games/survivor-palau/source/v0200/
+            games/survivor-palau/releases/v0.2.0/
+            /tmp/stone-money-v0200-qa/
+          if-no-files-found: error
