@@ -52,8 +52,9 @@ with sync_playwright() as p:
    count=page.evaluate('StoneMoneySurvival.getState().events.length');page.evaluate('StoneMoneySurvival.test.craft()');assert page.evaluate('StoneMoneySurvival.getState().events.length')==count
    pick(page,'coconut-01');water=page.evaluate('StoneMoneySurvival.getState().player.water');page.locator('#smiEat').click();page.wait_for_function('v=>StoneMoneySurvival.getState().player.water>v+20',arg=water);r['coconutConsumedOnce']=page.evaluate('StoneMoneySurvival.getState().objects["coconut-01"].location==="used"')
    pick(page,'shell-01');pick(page,'leaves-01')
-   phase(r,'actual spear hit');caught=False
+   phase(r,'actual spear hit');page.evaluate('StoneMoneySurvival.test.advance(.8)');caught=False
    for attempt in range(4):
+    page.evaluate('StoneMoneySurvival.test.advance(.6)')
     fishid=page.evaluate('''()=>{const g=StoneMoneySurvival,f=g.getFish().find(f=>f.state==='swimming'),p=f.pos,x=p[0]-.72,z=p[2]+.86,y=g.ground(x,z)+1.64;g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));return f.id;}''')
     try:
      page.wait_for_function('id=>StoneMoneySurvival.diagnostics().target===id',arg=fishid,timeout=6000);page.locator('#smiPrimary').click();page.wait_for_function('id=>StoneMoneySurvival.getState().fish[id]==="kept"',arg=fishid,timeout=3000);caught=True;break
