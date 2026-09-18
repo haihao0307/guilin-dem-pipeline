@@ -20,7 +20,7 @@ try{
   check(Number(r?.landAlphaTest)>=.5,'land alpha threshold can expand blurred land into water');
   check(Number.isFinite(Number(r?.blurLandGrowthPixelsClamped)),'blur land-growth guard did not publish diagnostics');
   check(r?.xuanmenForcedWaterPixels>0,'Xuanmen Bay override opened no historical water');
-  check(r?.seaMaskUpdated===true,'refined mask not connected to sea renderer');
+  check(r?.seaMaskUpdated===true,'refined mask not connected to sea renderer');check(r?.strictWaterProtectionActive===true,'strict NG51-1 water protection not active during refinement');
   check((r?.osm?.objects||0)>0,'refined OSM remask found no loaded OSM objects');
   check((r?.osm?.roadHidden||0)>0,'refined historical water hid no modern roads');
   check(ds.history1940sRefine==='r28','R28 dataset marker missing');
