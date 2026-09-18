@@ -1,6 +1,7 @@
 from pathlib import Path
 import hashlib,re,json,subprocess
 from harden import apply as harden
+from reef_reference import patch_reef_reference
 HERE=Path(__file__).resolve().parent
 base=HERE.parents[1]/'releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html'
 assert hashlib.sha256(base.read_bytes()).hexdigest()=='dac1a80440d731488546b317ff8f286c55c8c63d5a2e9f1da3f8c900bbbc4710'
@@ -8,8 +9,8 @@ s=base.read_text()
 def replace(a,b):
  global s
  assert s.count(a)==1,(a[:120],s.count(a));s=s.replace(a,b)
-replace("const VERSION='stone-money-island-0.1.6.0-original-ocean'","const VERSION='stone-money-island-0.2.1-wet-fish-retreat'")
-replace('<title>Stone Money Island · V0.1.6.0</title>','<title>Stone Money Island — Survivor Palau · Day 1 · 0.2.1</title>')
+replace("const VERSION='stone-money-island-0.1.6.0-original-ocean'","const VERSION='stone-money-island-0.2.2-shared-reef-reference'")
+replace('<title>Stone Money Island · V0.1.6.0</title>','<title>Stone Money Island — Survivor Palau · Day 1 · 0.2.2</title>')
 replace('</style>','\n'+(HERE/'chapter.css').read_text()+'\n</style>')
 replace('let frozenOcean;','let frozenOcean,survival;')
 replace('const api={qa,prepare,drawSky,drawSea,bindGame,','const api={qa,resetClock:t=>{lastWorldTime=t;seaTime=t;W.reset();W.tick(t);envForce=true;baking=false;},prepare,drawSky,drawSea,bindGame,')
@@ -35,14 +36,15 @@ code='''
 replace("document.body.dataset.oceanScene='unified';progress.textContent=",code+"\ndocument.body.dataset.oceanScene='unified';progress.textContent=")
 replace('function updateGlassRects(){','function updateGlassRects(){if(survival){glassCount=0;glassDirty=false;return;}')
 s=harden(s)
+s=patch_reef_reference(s)
 # The existing near/deep water query reads this prepared frame's spectrum.
 replace(' if(survival){survival.tick(config.paused?0:elapsed,physicalTime);changed=true;opaqueDirty=true;}\n frozenOcean.prepare(now,physicalTime);',
         ' frozenOcean.prepare(now,physicalTime);\n if(survival){survival.tick(config.paused?0:elapsed,physicalTime);changed=true;opaqueDirty=true;}')
 pattern=r'const __OM_TEXT__=(\{.*?\});\n'
 a=re.search(pattern,base.read_text(),re.S);b=re.search(pattern,s,re.S);assert a and b and a.group(1)==b.group(1)
-OUT=HERE.parents[1]/'releases/v0.2.1';OUT.mkdir(exist_ok=True,parents=True)
+OUT=HERE.parents[1]/'releases/v0.2.2';OUT.mkdir(exist_ok=True,parents=True)
 (OUT/'index.html').write_text(s)
 for i,script in enumerate(re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)):
  p=OUT/f'.syntax-{i}.mjs';p.write_text(script);subprocess.run(['node','--check',str(p)],check=True);p.unlink()
-receipt={'version':'0.2.1','gameBaselineCommit':'19960d5d455ca5bb7be66e5ed47ed4b82ecc21bc','baseCommit':'9e0780eaff274d5ab606c7c09a99f92bcac045ab','baseSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
+receipt={'version':'0.2.2','gameBaselineCommit':'19960d5d455ca5bb7be66e5ed47ed4b82ecc21bc','baseCommit':'9e0780eaff274d5ab606c7c09a99f92bcac045ab','baseSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'reefReference':'G05-photo-observation','reefSharedPitDefinition':True,'reefMeasuredReconstruction':False,'fishFixSource':'75293ccedf5e3d82474418a48231925c3950077c','gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
 (OUT/'BUILD_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');print(json.dumps(receipt,ensure_ascii=False,indent=2))
