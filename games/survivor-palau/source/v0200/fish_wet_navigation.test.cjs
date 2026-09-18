@@ -68,3 +68,16 @@ run('inspect handles absent state and revalidates water during fractional steps'
  level=-4;n.advance(f,s,.07);assert.equal(s.status,'stranded');assert.equal(n.inspect(f,s).safe,false);
  assert.equal(s.simTime,0);assert.deepEqual(copy(s.pos),p);assert(Math.abs(s.remainder-.07)<1e-9);
 });
+run('smooth falling cosine water reserves fractional-step clearance without hiding',()=>{
+ const f=fish(),n=make({floor:()=>-2,water:(x,z,t)=>.8*Math.cos(t)}),a=n.initialize(f,0),b=n.initialize(f,0);
+ for(let i=1;i<=160;i++){
+  const before=[...a.pos];n.advance(f,a,i*.05);
+  assert.equal(a.status,'swimming',`smooth water flicker at ${i*.05}: ${a.reason}`);
+  assert(n.inspect(f,a).safe,`unsafe fractional time ${i*.05}`);
+  assert(Math.hypot(...a.pos.map((v,k)=>v-before[k]))<=.112,'vertical jump');
+ }
+ for(let i=1;i<=480;i++){n.advance(f,b,i/60);assert.equal(b.status,'swimming');assert(n.inspect(f,b).safe);}
+ assert(Math.hypot(...a.pos.map((v,k)=>v-b.pos[k]))<1e-9,'wave forecast changed with fps');
+ const saved=n.initialize(f,a.time,copy(a));assert.deepEqual(copy(saved.pos),copy(a.pos));
+ n.advance(f,a,10);n.advance(f,saved,10);assert.deepEqual(copy(saved.pos),copy(a.pos));
+});
