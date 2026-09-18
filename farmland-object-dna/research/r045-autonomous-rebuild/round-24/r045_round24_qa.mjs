@@ -30,10 +30,11 @@ for(let x=-220;x<=220;x+=10){
   for(let z=32;z<=128;z+=8)if(R23.nearestExtendedDrainageDistance(x,z)<10)nearMax=Math.max(nearMax,Math.abs(K.height(x,z)-R23.height(x,z)));
   const rz=K.riverZ(x);for(const dz of [-8,-4,0,4,8])receiverMax=Math.max(receiverMax,Math.abs(K.height(x,rz+dz)-R23.height(x,rz+dz)));
 }
-const delta={max,mean:sum/(n||1),coreMean:lowerSum/(lowerN||1),n,at,maxStep,maxStepAt,positiveMass:pos,negativeMass:neg};
+const delta={max,mean:sum/(n||1),coreMean:lowerSum/(lowerN||1),n,at,maxStep,maxStepAt,positiveMass:pos,negativeMass:neg,positiveToNegative:pos/(neg||1)};
 add('receiving_plain_change_is_substantive',max>.18&&max<.80,delta,'0.18 m < max added delta < 0.80 m');
 add('receiving_plain_change_is_broad',delta.coreMean>.025&&delta.coreMean<.24,delta.coreMean,'0.025 m < mean abs delta in z 50..108 < 0.24 m');
 add('receiving_plain_is_hollow_dominant',neg>pos*1.25,{positiveMass:pos,negativeMass:neg,ratio:neg/(pos||1)},'negative receiving mass >1.25x positive shoulder mass');
+add('receiving_shoulders_survive_signed_relief',pos>neg*.02&&pos<neg*.65,{positiveMass:pos,negativeMass:neg,positiveToNegative:pos/(neg||1)},'positive shoulder mass is 2%..65% of negative bay mass');
 add('added_field_is_longitudinally_gradual',maxStep<.22,{maxStep,at:maxStepAt},'<0.22 m change in added field per 4 m z');
 add('r23_upper_work_untouched',upperMax<1e-9,upperMax,'zero sampled R24 change at z<=26');
 add('support_is_band_limited',outsideMax<1e-9,outsideMax,'zero sampled change outside receiving-plain support');
