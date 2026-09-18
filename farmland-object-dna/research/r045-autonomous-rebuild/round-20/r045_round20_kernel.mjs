@@ -2,45 +2,24 @@ import * as R18 from '../round-18/r045_round18_kernel.mjs';
 export * from '../round-18/r045_round18_kernel.mjs';
 
 export const VERSION='R045.20';
-const C=(x,a,b)=>Math.max(a,Math.min(b,x));
 const M=(a,b,t)=>a+(b-a)*t;
-const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 
-// R045.20 corrects the failed R045.19 acceptance logic and geometry together.
-// The inherited z≈-202 wall is a FINAL-TERRAIN defect. A correction field must therefore be
-// allowed to change sharply where it cancels a multi-metre baseline wall; constraining the
-// derivative or amplitude of the correction itself is logically wrong. This round replaces the
-// failed drain-masked repair with a band-wide profile projection that changes elevation only,
-// while preserving every planimetric drainage carrier and the lower agricultural slope from z>=-168.
-// Because water state is still unknown, preserving an inherited false uphill step on a drainage
-// axis would be less defensible than repairing the longitudinal ground profile through it.
-export const wallRepairBand={z0:-226,z1:-168,node0:-222,node1:-174,nodeStep:2,allowedRisePer2m:.24};
-
-function isotonicNonIncreasing(values,weights){
-  const blocks=[];
-  for(let i=0;i<values.length;i++){
-    blocks.push({start:i,end:i,w:weights[i],sum:values[i]*weights[i]});
-    while(blocks.length>1){
-      const b=blocks[blocks.length-1],a=blocks[blocks.length-2];
-      if(a.sum/a.w>=b.sum/b.w)break;
-      blocks.pop();blocks.pop();
-      blocks.push({start:a.start,end:b.end,w:a.w+b.w,sum:a.sum+b.sum});
-    }
-  }
-  const out=new Array(values.length);
-  for(const b of blocks){const m=b.sum/b.w;for(let i=b.start;i<=b.end;i++)out[i]=m}
-  return out;
-}
+// R045.20 repairs the inherited z≈-202 cross-slope wall as a FINAL-TERRAIN problem.
+// Earlier attempts exposed two logic errors: (1) a correction field need not itself be small when
+// cancelling a multi-metre false wall; (2) blending back to an unchanged but still uphill lower
+// profile merely relocates the barrier. The final method therefore uses a one-sided downstream
+// barrier clip: it only lowers samples that would create >0.24 m uphill rise per 2 m, and carries
+// that correction downstream until the inherited profile naturally catches the constrained one.
+// Planimetric drainage topology, terrace permission, parcels and water state are not changed.
+export const wallRepairBand={node0:-226,node1:-140,nodeStep:2,allowedRisePer2m:.24};
 
 const profileCache=new Map();
 function constrainedProfile(x){
   const key=Number(x).toFixed(5);if(profileCache.has(key))return profileCache.get(key);
   const zs=[],base=[];
   for(let z=wallRepairBand.node0;z<=wallRepairBand.node1+1e-9;z+=wallRepairBand.nodeStep){zs.push(z);base.push(R18.height(x,z))}
-  const limit=wallRepairBand.allowedRisePer2m;
-  const transformed=base.map((h,i)=>h-i*limit);
-  const weights=base.map((_,i)=>i<4||i>base.length-5?12:1);
-  const projected=isotonicNonIncreasing(transformed,weights).map((g,i)=>g+i*limit);
+  const projected=[base[0]],limit=wallRepairBand.allowedRisePer2m;
+  for(let i=1;i<base.length;i++) projected[i]=Math.min(base[i],projected[i-1]+limit);
   const p={zs,base,projected};profileCache.set(key,p);return p;
 }
 function projectedHeight(x,z){
@@ -51,15 +30,9 @@ function projectedHeight(x,z){
   return M(p.projected[i],p.projected[i+1],t);
 }
 export function upperWallContinuityRepairDelta(x,z){
-  if(z<=wallRepairBand.z0||z>=wallRepairBand.z1)return 0;
-  // The first R20 attempt proved that ending the blend at -170 over only 12 m merely moved a
-  // residual 1.51 m/4 m uphill step to the exit. Widen the downstream return to baseline across
-  // 22 m (-190..-168), while keeping z>=-168 exactly inherited. The correction remains unclamped;
-  // final terrain continuity and spatial support are the acceptance objects.
-  const env=S(-226,-214,z)*(1-S(-190,-168,z));
-  if(env<=0)return 0;
+  if(z<wallRepairBand.node0||z>wallRepairBand.node1)return 0;
   const base=R18.height(x,z),target=projectedHeight(x,z);
-  return (target-base)*env;
+  return target-base;
 }
 
 export function height(x,z){return R18.height(x,z)+upperWallContinuityRepairDelta(x,z)}
@@ -67,7 +40,7 @@ export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),d
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 export function terracePermission(x,z){return R18.terracePermission(x,z)}
-export function suitability(x,z){return z>=-168?R18.suitability(x,z):0}
+export function suitability(x,z){return z>=-138?R18.suitability(x,z):0}
 
 export const snapshot={
   ...R18.snapshot,
@@ -80,10 +53,10 @@ export const snapshot={
   terracePilotPreviewEnabled:false,
   waterStateKnown:false,
   round20:{
-    scope:'replace failed R19 upper-wall repair with final-terrain longitudinal continuity projection; no terrace, parcel, irrigation, road or task work',
-    method:'weighted isotonic projection of every x-profile over z=-222..-174 with <=0.48 m uphill rise per 4 m in the full-strength zone; 12 m upstream entry and 22 m downstream return to baseline; planimetric drainage carriers unchanged; z>=-168 unchanged; no arbitrary amplitude clamp',
-    logicCorrection:'R19 and the first R20 attempt incorrectly constrained correction-field derivative/amplitude; the second attempt then proved an overly short exit blend simply relocates the barrier. R20 gates repaired final terrain plus spatial support and uses a wider downstream continuity blend',
-    referenceUse:'user references and MrRolord hierarchy are used only to require continuous source-to-slope morphology and drainage-first landform logic; no dimensions are extracted',
+    scope:'remove inherited upper-slope cross-slope barrier by final-terrain longitudinal constraint; no terrace, parcel, irrigation, road or task work',
+    method:'for each x-profile from z=-226 to -140, preserve the upstream sample and only lower downstream samples that exceed +0.24 m rise per 2 m; correction propagates only until inherited terrain catches it; planimetric drainage carriers and terrace permission unchanged',
+    logicCorrection:'R19 constrained the repair field instead of the repaired terrain; early R20 then returned too quickly to an inherited uphill profile and merely moved the barrier. Final R20 constrains the ground profile itself and lets the correction decay only when inherited terrain becomes compatible',
+    referenceUse:'user terrace reference and MrRolord hierarchy are used only to require continuous source-to-slope morphology and drainage-first landform logic; no dimensions are extracted',
     evidenceClass:'synthetic macro-landform continuity repair; not surveyed Yunnan microtopography, channel section or hydraulic state',
     forbiddenClaims:['surveyed upper-slope section','measured channel section','active flow','regional terrace dimensions','field microtopography truth','soil/sediment property','ownership']
   }
