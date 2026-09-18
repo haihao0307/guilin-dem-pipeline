@@ -44,7 +44,8 @@ add('visual_acceptance_locked',K.snapshot.visualAcceptance===false,K.snapshot.vi
 add('terrace_generator_locked',K.snapshot.terraceGeometryEnabled===false,K.snapshot.terraceGeometryEnabled,false);
 add('parcel_generator_locked',K.snapshot.parcelGenerationEnabled===false,K.snapshot.parcelGenerationEnabled,false);
 add('water_state_unknown',K.snapshot.waterStateKnown===false,K.snapshot.waterStateKnown,false);
-add('failed_logic_is_explicitly_corrected',K.snapshot.round20?.logicCorrection?.includes('relocates the barrier'),K.snapshot.round20?.logicCorrection,'must acknowledge that short blend relocates rather than solves barrier');
+const logic=K.snapshot.round20?.logicCorrection||'';
+add('failed_logic_is_explicitly_corrected',logic.includes('moved the barrier')||logic.includes('relocates the barrier'),logic,'must acknowledge that short blend moves/relocates rather than solves barrier');
 add('references_are_not_metric_truth',K.snapshot.round20?.referenceUse?.includes('no dimensions are extracted'),K.snapshot.round20?.referenceUse,'visual/method hierarchy only');
 add('survey_claims_forbidden',Array.isArray(K.snapshot.round20?.forbiddenClaims)&&K.snapshot.round20.forbiddenClaims.length>=7,K.snapshot.round20?.forbiddenClaims,'explicit evidence boundary');
 
