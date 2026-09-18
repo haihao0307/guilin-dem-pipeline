@@ -1,0 +1,377 @@
+{
+  "version": "R045.38",
+  "passed": true,
+  "gateCount": 36,
+  "passedCount": 36,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.38",
+      "limit": "R045.38"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carriers"
+    },
+    {
+      "name": "terrace_geometry_substantive_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5045566963432688,
+        "changeFrom37": 0.03201266202874888,
+        "active": 520,
+        "oldActive": 495,
+        "core": 349,
+        "oldCore": 349,
+        "gainCells": 36,
+        "thresholdCross": 25,
+        "isolatedCross": 0,
+        "maxGain": 0.12,
+        "unsafe": 0,
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0,
+        "groups": [
+          93,
+          210,
+          217
+        ],
+        "rowRunsN": 77,
+        "rowRunsO": 78,
+        "fragmentationBurdenN": 0.14807692307692308,
+        "fragmentationBurdenO": 0.15757575757575756,
+        "fragmentationBurdenR35": 0.1557377049180328,
+        "medianLongestN": 54,
+        "medianLongestO": 54,
+        "maxLongestN": 72,
+        "maxLongestO": 72
+      },
+      "limit": ".20m < max delta < .95m"
+    },
+    {
+      "name": "run_end_extension_material",
+      "pass": true,
+      "value": {
+        "gainCells": 36,
+        "maxGain": 0.12
+      },
+      "limit": ">8 samples gain >.004 and max gain >.008"
+    },
+    {
+      "name": "run_end_extension_changes_topology",
+      "pass": true,
+      "value": {
+        "thresholdCross": 25
+      },
+      "limit": ">3 R37-weak samples cross .12"
+    },
+    {
+      "name": "r38_change_from_r37_bounded",
+      "pass": true,
+      "value": 0.03201266202874888,
+      "limit": ".004m < sampled max change < .22m"
+    },
+    {
+      "name": "support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 520,
+        "oldActive": 495
+      },
+      "limit": "active support >= R37"
+    },
+    {
+      "name": "core_does_not_shrink",
+      "pass": true,
+      "value": {
+        "core": 349,
+        "oldCore": 349
+      },
+      "limit": "core support >= R37"
+    },
+    {
+      "name": "row_runs_do_not_increase",
+      "pass": true,
+      "value": {
+        "rowRunsN": 77,
+        "rowRunsO": 78
+      },
+      "limit": "new row-run count <= R37"
+    },
+    {
+      "name": "fragmentation_burden_improves",
+      "pass": true,
+      "value": {
+        "burdenN": 0.14807692307692308,
+        "burdenO": 0.15757575757575756
+      },
+      "limit": "runs/active improves by >=0.5% vs R37"
+    },
+    {
+      "name": "fragmentation_returns_within_r35_gate",
+      "pass": true,
+      "value": {
+        "burdenN": 0.14807692307692308,
+        "burden35": 0.1557377049180328
+      },
+      "limit": "runs/active <=1.01x verified R35"
+    },
+    {
+      "name": "no_isolated_threshold_crossings",
+      "pass": true,
+      "value": {
+        "isolatedCross": 0
+      },
+      "limit": "every newly active sample touches an already-active R37 row neighbour"
+    },
+    {
+      "name": "longest_ribbons_hold_or_improve",
+      "pass": true,
+      "value": {
+        "medianNew": 54,
+        "medianOld": 54,
+        "maxNew": 72,
+        "maxOld": 72
+      },
+      "limit": "median longest run >= R37"
+    },
+    {
+      "name": "all_three_groups_remain_material",
+      "pass": true,
+      "value": [
+        93,
+        210,
+        217
+      ],
+      "limit": "each group >20 active samples"
+    },
+    {
+      "name": "extension_candidates_stay_safe",
+      "pass": true,
+      "value": {
+        "unsafe": 0
+      },
+      "limit": "no gained sample in drainage core/outside eligibility/receiver"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero support/delta <=12m drainage"
+    },
+    {
+      "name": "r37_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 294,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "step/phase/raw exactly inherited"
+    },
+    {
+      "name": "bench_riser_samples_exist",
+      "pass": true,
+      "value": {
+        "benchN": 63,
+        "riserN": 14,
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": ">10 bench and >3 riser samples"
+    },
+    {
+      "name": "benches_flatter_than_r30",
+      "pass": true,
+      "value": {
+        "benchN": 63,
+        "riserN": 14,
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "bench/base median <.90"
+    },
+    {
+      "name": "risers_steeper_than_benches",
+      "pass": true,
+      "value": {
+        "benchN": 63,
+        "riserN": 14,
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "riser slope >1.25x bench"
+    },
+    {
+      "name": "risers_steepen_vs_r30",
+      "pass": true,
+      "value": {
+        "benchN": 63,
+        "riserN": 14,
+        "benchRatioMedian": 0.25271592788137165,
+        "riserRatioMedian": 2.4395053683175716,
+        "benchSlopeMedian": 0.06363862055926353,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "riser/base median >1.08"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.8252562220853783,
+      "limit": "<1.25m per 6m"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R37 browser success does not cancel its failed numeric topology gate: renderability and fragmentation are different claims. Conversely, weakening the fragmentation gate would only hide a real short-run regression. R38 therefore changes support topology itself, but only by extending an existing run end; it does not raise risers, increase the timeout, or globally close the terrace mask.",
+      "limit": "renderability != topology pass; do not weaken gate"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m run-end sampling distance and promoted joins are synthetic QA morphology, not surveyed Yunnan terrace dimensions. The current 12.5 m macro DEM and photographs still cannot provide measured branch/merge locations, parcel boundaries, bund/channel sections, inlet/outlet sill elevations or event water-management records.",
+      "limit": "missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO still treats field location/boundary, field microtopography, bund section, channel section and water-control elevation as unknown. Surface continuity cannot establish ownership, hydraulic connectivity, head, water depth, discharge or gate state.",
+      "limit": "surface continuity != ownership/hydraulics"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord frame audit is used only for ordering: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. R38 keeps the hydrology-first exclusions and deterministic world-space terrace support; Blender dimensions, Voronoi cells, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png was reopened this round. R38 uses only visible morphology: long curved benches form nested families and may reconnect locally while drainage interruptions remain legible. No metric terrace width, join length, riser height, channel size, water depth or hydraulic parameter is inferred.",
+      "limit": "visual morphology only"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5045566963432688,
+      "changeFrom37": 0.03201266202874888,
+      "active": 520,
+      "oldActive": 495,
+      "core": 349,
+      "oldCore": 349,
+      "gainCells": 36,
+      "thresholdCross": 25,
+      "isolatedCross": 0,
+      "maxGain": 0.12,
+      "unsafe": 0,
+      "hardCoreActive": 0,
+      "hardCoreDelta": 0,
+      "groups": [
+        93,
+        210,
+        217
+      ],
+      "rowRunsN": 77,
+      "rowRunsO": 78,
+      "fragmentationBurdenN": 0.14807692307692308,
+      "fragmentationBurdenO": 0.15757575757575756,
+      "fragmentationBurdenR35": 0.1557377049180328,
+      "medianLongestN": 54,
+      "medianLongestO": 54,
+      "maxLongestN": 72,
+      "maxLongestO": 72
+    },
+    "terraceMorphology": {
+      "benchN": 63,
+      "riserN": 14,
+      "benchRatioMedian": 0.25271592788137165,
+      "riserRatioMedian": 2.4395053683175716,
+      "benchSlopeMedian": 0.06363862055926353,
+      "riserSlopeMedian": 0.6057397015411001
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8252562220853783
+  }
+}
