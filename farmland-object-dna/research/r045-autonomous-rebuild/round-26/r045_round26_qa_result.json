@@ -1,0 +1,902 @@
+{
+  "version": "R045.26",
+  "passed": false,
+  "gateCount": 35,
+  "passedCount": 34,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.26",
+      "limit": "R045.26"
+    },
+    {
+      "name": "three_receiving_hierarchy_profiles",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major"
+        ],
+        [
+          "OUTLET-B",
+          "subordinate"
+        ],
+        [
+          "OUTLET-C",
+          "local"
+        ]
+      ],
+      "limit": "exactly three inherited outlet-tied hierarchy profiles"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "hierarchy_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": 24,
+          "zEnd": 130,
+          "width0": 82,
+          "width1": 158,
+          "centre0": -18,
+          "sweep": 58,
+          "bend": 34,
+          "depth": 0.128,
+          "shoulder": 0.058,
+          "nested": 0.052,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": 36,
+          "zEnd": 120,
+          "width0": 68,
+          "width1": 118,
+          "centre0": 26,
+          "sweep": -39,
+          "bend": 22,
+          "depth": 0.098,
+          "shoulder": 0.049,
+          "nested": 0.041,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": 48,
+          "zEnd": 108,
+          "width0": 54,
+          "width1": 88,
+          "centre0": -12,
+          "sweep": 31,
+          "bend": -27,
+          "depth": 0.073,
+          "shoulder": 0.038,
+          "nested": 0.031,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "three unique signatures"
+    },
+    {
+      "name": "declared_scale_classes_are_ordered",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": 24,
+          "zEnd": 130,
+          "width0": 82,
+          "width1": 158,
+          "centre0": -18,
+          "sweep": 58,
+          "bend": 34,
+          "depth": 0.128,
+          "shoulder": 0.058,
+          "nested": 0.052,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": 36,
+          "zEnd": 120,
+          "width0": 68,
+          "width1": 118,
+          "centre0": 26,
+          "sweep": -39,
+          "bend": 22,
+          "depth": 0.098,
+          "shoulder": 0.049,
+          "nested": 0.041,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": 48,
+          "zEnd": 108,
+          "width0": 54,
+          "width1": 88,
+          "centre0": -12,
+          "sweep": 31,
+          "bend": -27,
+          "depth": 0.073,
+          "shoulder": 0.038,
+          "nested": 0.031,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "major > subordinate > local in declared width and support length"
+    },
+    {
+      "name": "hierarchy_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.17121671610310818,
+        "mean": 0.034320438691622504,
+        "coreMean": 0.05074733589270738,
+        "n": 2156,
+        "maxAt": [
+          -80,
+          102
+        ],
+        "maxStep": 0.05967927424795745,
+        "maxStepAt": [
+          46,
+          58
+        ],
+        "positiveMass": 0,
+        "negativeMass": 73.99486581913811,
+        "positiveToNegative": 0
+      },
+      "limit": "0.045 m < max R26 delta < 0.46 m"
+    },
+    {
+      "name": "hierarchy_change_is_broad_but_shallow",
+      "pass": true,
+      "value": 0.05074733589270738,
+      "limit": "0.006 m < core mean abs delta < 0.13 m"
+    },
+    {
+      "name": "signed_shoulders_survive",
+      "pass": false,
+      "value": {
+        "positiveMass": 0,
+        "negativeMass": 73.99486581913811,
+        "ratio": 0
+      },
+      "limit": "positive shoulder mass is 0.3%..80% of negative receiving mass"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.05967927424795745,
+        "at": [
+          46,
+          58
+        ]
+      },
+      "limit": "<0.15 m change in R26 field per 4 m z"
+    },
+    {
+      "name": "all_three_hierarchy_components_exist",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "mass": 21.730350679216404,
+          "centroid": [
+            -145.36124396635856,
+            76.99107171356425
+          ],
+          "peak": 0.12888694892606697,
+          "peakAt": [
+            -182,
+            80
+          ],
+          "count": 383,
+          "occupiedRows": 16,
+          "positive": 0,
+          "negative": 21.730350679216404
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "mass": 10.466950011733736,
+          "centroid": [
+            -17.586190800539814,
+            80.85137345183259
+          ],
+          "peak": 0.07618934499543879,
+          "peakAt": [
+            18,
+            98
+          ],
+          "count": 306,
+          "occupiedRows": 13,
+          "positive": 0.015147449711145509,
+          "negative": 10.451802562022591
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "mass": 4.9782211791302196,
+          "centroid": [
+            94.22020427308512,
+            78.78143580757019
+          ],
+          "peak": 0.06413490358875375,
+          "peakAt": [
+            82,
+            86
+          ],
+          "count": 159,
+          "occupiedRows": 8,
+          "positive": 0.005417723570003223,
+          "negative": 4.972803455560216
+        }
+      ],
+      "limit": "each component peak >0.018 m and >20 occupied samples"
+    },
+    {
+      "name": "numeric_footprint_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "count": 383,
+          "rows": 16
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "count": 306,
+          "rows": 13
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "count": 159,
+          "rows": 8
+        }
+      ],
+      "limit": "actual occupied samples major > subordinate > local by >12% each step"
+    },
+    {
+      "name": "longitudinal_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "rows": 16
+        },
+        {
+          "id": "OUTLET-B",
+          "rows": 13
+        },
+        {
+          "id": "OUTLET-C",
+          "rows": 8
+        }
+      ],
+      "limit": "actual occupied row count major > subordinate > local"
+    },
+    {
+      "name": "carrier_tied_hierarchy_components_remain_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minSep": 111.82555441941987,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "scaleClass": "major",
+            "mass": 21.730350679216404,
+            "centroid": [
+              -145.36124396635856,
+              76.99107171356425
+            ],
+            "peak": 0.12888694892606697,
+            "peakAt": [
+              -182,
+              80
+            ],
+            "count": 383,
+            "occupiedRows": 16,
+            "positive": 0,
+            "negative": 21.730350679216404
+          },
+          {
+            "id": "OUTLET-B",
+            "scaleClass": "subordinate",
+            "mass": 10.466950011733736,
+            "centroid": [
+              -17.586190800539814,
+              80.85137345183259
+            ],
+            "peak": 0.07618934499543879,
+            "peakAt": [
+              18,
+              98
+            ],
+            "count": 306,
+            "occupiedRows": 13,
+            "positive": 0.015147449711145509,
+            "negative": 10.451802562022591
+          },
+          {
+            "id": "OUTLET-C",
+            "scaleClass": "local",
+            "mass": 4.9782211791302196,
+            "centroid": [
+              94.22020427308512,
+              78.78143580757019
+            ],
+            "peak": 0.06413490358875375,
+            "peakAt": [
+              82,
+              86
+            ],
+            "count": 159,
+            "occupiedRows": 8,
+            "positive": 0.005417723570003223,
+            "negative": 4.972803455560216
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >16 m"
+    },
+    {
+      "name": "whole_scene_hierarchy_occupancy_evolves",
+      "pass": true,
+      "value": {
+        "rows": [
+          {
+            "z": 34,
+            "count": 29,
+            "centroid": -161.30274528073426
+          },
+          {
+            "z": 40,
+            "count": 39,
+            "centroid": -155.62017496243936
+          },
+          {
+            "z": 46,
+            "count": 46,
+            "centroid": -140.7689416471448
+          },
+          {
+            "z": 52,
+            "count": 57,
+            "centroid": -115.07636355498916
+          },
+          {
+            "z": 58,
+            "count": 81,
+            "centroid": -86.32011317891875
+          },
+          {
+            "z": 64,
+            "count": 85,
+            "centroid": -56.87085591347105
+          },
+          {
+            "z": 70,
+            "count": 84,
+            "centroid": -51.45901814754096
+          },
+          {
+            "z": 76,
+            "count": 82,
+            "centroid": -49.24998289067808
+          },
+          {
+            "z": 82,
+            "count": 83,
+            "centroid": -47.3059873760604
+          },
+          {
+            "z": 88,
+            "count": 83,
+            "centroid": -46.493866376865036
+          },
+          {
+            "z": 94,
+            "count": 78,
+            "centroid": -53.81449259851398
+          },
+          {
+            "z": 100,
+            "count": 68,
+            "centroid": -68.30745287638968
+          },
+          {
+            "z": 106,
+            "count": 61,
+            "centroid": -89.05952697965967
+          },
+          {
+            "z": 112,
+            "count": 54,
+            "centroid": -111.01571290971657
+          }
+        ],
+        "countRange": 56
+      },
+      "limit": ">=8 active rows and occupied-cell count range >6"
+    },
+    {
+      "name": "whole_scene_hierarchy_sweeps_laterally",
+      "pass": true,
+      "value": {
+        "centroidRange": 114.80887890386921,
+        "rows": [
+          {
+            "z": 34,
+            "count": 29,
+            "centroid": -161.30274528073426
+          },
+          {
+            "z": 40,
+            "count": 39,
+            "centroid": -155.62017496243936
+          },
+          {
+            "z": 46,
+            "count": 46,
+            "centroid": -140.7689416471448
+          },
+          {
+            "z": 52,
+            "count": 57,
+            "centroid": -115.07636355498916
+          },
+          {
+            "z": 58,
+            "count": 81,
+            "centroid": -86.32011317891875
+          },
+          {
+            "z": 64,
+            "count": 85,
+            "centroid": -56.87085591347105
+          },
+          {
+            "z": 70,
+            "count": 84,
+            "centroid": -51.45901814754096
+          },
+          {
+            "z": 76,
+            "count": 82,
+            "centroid": -49.24998289067808
+          },
+          {
+            "z": 82,
+            "count": 83,
+            "centroid": -47.3059873760604
+          },
+          {
+            "z": 88,
+            "count": 83,
+            "centroid": -46.493866376865036
+          },
+          {
+            "z": 94,
+            "count": 78,
+            "centroid": -53.81449259851398
+          },
+          {
+            "z": 100,
+            "count": 68,
+            "centroid": -68.30745287638968
+          },
+          {
+            "z": 106,
+            "count": 61,
+            "centroid": -89.05952697965967
+          },
+          {
+            "z": 112,
+            "count": 54,
+            "centroid": -111.01571290971657
+          }
+        ]
+      },
+      "limit": "weighted planform centroid shifts by >5 m"
+    },
+    {
+      "name": "r25_upper_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R26 change at z<=20"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside R26 support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "nested_hierarchy_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.37002425914299986,
+          "at": [
+            60,
+            24
+          ]
+        },
+        "new": {
+          "maxRise": 0.3696685930682375,
+          "at": [
+            60,
+            24
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R25 + 0.12 m"
+    },
+    {
+      "name": "terrace_permission_unchanged_before_terrace_stage",
+      "pass": true,
+      "value": 0,
+      "limit": "exact inherited permission because R26 remains below candidate zone"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6814326037170066,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "weak whole-scene legibility does not justify simply increasing relief amplitude. A larger vertical signal can make the same wrong footprint more obvious; R26 changes nested planform scale and downstream occupation first.",
+      "limit": "must reject amplitude-only visibility fix"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "the canonical macro terrain basis is about 12.5 m spacing and does not establish field boundaries, terrace bench/riser sections, bund or channel sections, control elevations, hydraulic connectivity, water depth, discharge, soil-water state or sediment state.",
+      "limit": "macro terrain cannot be promoted to field/hydraulic truth"
+    },
+    {
+      "name": "mrrolord_frame_audit_reread",
+      "pass": true,
+      "value": "the saved MrRolord frame audit was reread this round. R26 keeps river hierarchy and accumulated terrain fields ahead of land use, translating that ordering into deterministic browser geometry without copying Blender dimensions or Voronoi parcel styling.",
+      "limit": "saved video-frame audit reread, hydrology-first ordering retained"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "the user reference image image(173).png was reopened this round. It supports unequal nested contour occupation and non-uniform lower transitions only; no terrace width, riser height, channel size, water depth or regional metric is inferred from the photograph.",
+      "limit": "image(173).png reopened only for visible hierarchy"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed field boundary",
+        "measured terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known control elevation",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.17121671610310818,
+      "mean": 0.034320438691622504,
+      "coreMean": 0.05074733589270738,
+      "n": 2156,
+      "maxAt": [
+        -80,
+        102
+      ],
+      "maxStep": 0.05967927424795745,
+      "maxStepAt": [
+        46,
+        58
+      ],
+      "positiveMass": 0,
+      "negativeMass": 73.99486581913811,
+      "positiveToNegative": 0
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "zStart": 24,
+        "zEnd": 130,
+        "width0": 82,
+        "width1": 158,
+        "centre0": -18,
+        "sweep": 58,
+        "bend": 34,
+        "depth": 0.128,
+        "shoulder": 0.058,
+        "nested": 0.052,
+        "edgeSign": 1
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "zStart": 36,
+        "zEnd": 120,
+        "width0": 68,
+        "width1": 118,
+        "centre0": 26,
+        "sweep": -39,
+        "bend": 22,
+        "depth": 0.098,
+        "shoulder": 0.049,
+        "nested": 0.041,
+        "edgeSign": -1
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "zStart": 48,
+        "zEnd": 108,
+        "width0": 54,
+        "width1": 88,
+        "centre0": -12,
+        "sweep": 31,
+        "bend": -27,
+        "depth": 0.073,
+        "shoulder": 0.038,
+        "nested": 0.031,
+        "edgeSign": 1
+      }
+    ],
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "mass": 21.730350679216404,
+        "centroid": [
+          -145.36124396635856,
+          76.99107171356425
+        ],
+        "peak": 0.12888694892606697,
+        "peakAt": [
+          -182,
+          80
+        ],
+        "count": 383,
+        "occupiedRows": 16,
+        "positive": 0,
+        "negative": 21.730350679216404
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "mass": 10.466950011733736,
+        "centroid": [
+          -17.586190800539814,
+          80.85137345183259
+        ],
+        "peak": 0.07618934499543879,
+        "peakAt": [
+          18,
+          98
+        ],
+        "count": 306,
+        "occupiedRows": 13,
+        "positive": 0.015147449711145509,
+        "negative": 10.451802562022591
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "mass": 4.9782211791302196,
+        "centroid": [
+          94.22020427308512,
+          78.78143580757019
+        ],
+        "peak": 0.06413490358875375,
+        "peakAt": [
+          82,
+          86
+        ],
+        "count": 159,
+        "occupiedRows": 8,
+        "positive": 0.005417723570003223,
+        "negative": 4.972803455560216
+      }
+    ],
+    "minCentroidSep": 111.82555441941987,
+    "rows": [
+      {
+        "z": 34,
+        "count": 29,
+        "centroid": -161.30274528073426
+      },
+      {
+        "z": 40,
+        "count": 39,
+        "centroid": -155.62017496243936
+      },
+      {
+        "z": 46,
+        "count": 46,
+        "centroid": -140.7689416471448
+      },
+      {
+        "z": 52,
+        "count": 57,
+        "centroid": -115.07636355498916
+      },
+      {
+        "z": 58,
+        "count": 81,
+        "centroid": -86.32011317891875
+      },
+      {
+        "z": 64,
+        "count": 85,
+        "centroid": -56.87085591347105
+      },
+      {
+        "z": 70,
+        "count": 84,
+        "centroid": -51.45901814754096
+      },
+      {
+        "z": 76,
+        "count": 82,
+        "centroid": -49.24998289067808
+      },
+      {
+        "z": 82,
+        "count": 83,
+        "centroid": -47.3059873760604
+      },
+      {
+        "z": 88,
+        "count": 83,
+        "centroid": -46.493866376865036
+      },
+      {
+        "z": 94,
+        "count": 78,
+        "centroid": -53.81449259851398
+      },
+      {
+        "z": 100,
+        "count": 68,
+        "centroid": -68.30745287638968
+      },
+      {
+        "z": 106,
+        "count": 61,
+        "centroid": -89.05952697965967
+      },
+      {
+        "z": 112,
+        "count": 54,
+        "centroid": -111.01571290971657
+      }
+    ],
+    "countRange": 56,
+    "centroidRange": 114.80887890386921,
+    "upperMax": 0,
+    "nearMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.37002425914299986,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3696685930682375,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6814326037170066,
+    "permissionMaxChange": 0
+  }
+}
