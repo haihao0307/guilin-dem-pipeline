@@ -38,6 +38,8 @@ R045.28 raised those exact-formula responses only modestly: the active-cell norm
 
 The first R045.28 extension correctly rejected an R27-specific expectation that more than `90%` of active vertices would remain under `0.1 px`: R045.28 measured `88.626%`. The reusable gate was corrected to preserve the actual distribution and require only the declared result that all active vertices remained under `0.25 px`. This is a scope correction, not a relaxed visual-acceptance gate; human acceptance stays false.
 
+The first pushed R27 CI replay, [run 35321466571](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35321466571), also correctly exposed a byte-comparison flaw: a cross-host final summation ULP differed even though all semantic gates passed. Serialization was versioned to twelve significant digits, the declared evidence precision. The final two-round replay passed both `13/13` matrices in [run 35322310281](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35322310281). The failed receipt remains part of the evidence chain.
+
 The bottom plan diagnostic uses `abs(delta) / roundMaximum` before coloring. It is deliberately amplitude-normalized: it is good evidence for support, sign and planform separation, but it cannot demonstrate that the same field is salient in the unnormalized perspective.
 
 ### Observation root C — mature terrain sampling contracts
@@ -90,6 +92,6 @@ The R045.28 footprint-first correction was the right causal discipline but was n
 
 ## Routing recommendation
 
-Route one incremental gate to the active Farmland PR65: for the next round after R045.28, save the exact camera/render grid, unnormalized perspective pixel-motion and normal/style receipts beside the already separate normalized plan diagnostic and human review. This is a delivered method request only; it is not acknowledgement, implementation or adoption until the Mother returns a fixed commit and result.
+One incremental gate was [delivered to Farmland PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5727083482): for the next round after R045.28, save the exact camera/render grid, unnormalized perspective pixel-motion and normal/style receipts beside the already separate normalized plan diagnostic and human review. Delivery is not acknowledgement, implementation or adoption; all three remain Unknown.
 
 No Landscape or Brick comment is warranted from this Farmland-specific result. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.

@@ -27,8 +27,8 @@
       "LEARNING_LOG/2026-09-18_FARMLAND_SCREEN_SPACE_N19.md",
       "CURRENT_BEST_VIEW_N19_FARMLAND_SCREEN_SPACE.md"
     ],
-    "checks": "R045.27 13/13 and R045.28 13/13 local pass; CI pending",
-    "integration": "routing prepared, not acknowledged",
+    "checks": "R045.27 13/13 and R045.28 13/13 local plus CI pass",
+    "integration": "routing delivered, not acknowledged",
     "productionAdoption": "Unknown",
     "devicePublicUserAcceptance": "Unknown"
   },
@@ -42,8 +42,14 @@
     "the plan diagnostic normalizes by the round maximum and therefore cannot prove perspective salience"
   ],
   "verificationReceipt": {
-    "checks": "R045.27 13/13 and R045.28 13/13 local pass",
-    "successfulRun": "pending",
+    "checks": "R045.27 13/13 and R045.28 13/13 local plus CI pass",
+    "successfulRun": 35322310281,
+    "failedRunsPreserved": [
+      {
+        "run": 35321466571,
+        "reason": "byte comparison exposed a cross-host final summation ULP; semantic gates passed and serialization was corrected to the declared twelve-significant-digit evidence precision"
+      }
+    ],
     "sourceReplay": "fixed Farmland R045.27 and R045.28 commits with eight source SHA-256 values",
     "runtime": "Node.js CPU exact camera/projection/style replay",
     "hardwareGpuBrowserMobile": "not exercised by N19 probe",
@@ -53,7 +59,7 @@
     {
       "mother": "Farmland",
       "entry": "guilin-dem-pipeline PR65",
-      "actionThisRound": "prepared one incremental post-R045.28 screen-space acceptance gate"
+      "actionThisRound": "delivered one incremental post-R045.28 screen-space acceptance gate; comment 5727083482; not acknowledged or adopted"
     },
     {
       "mother": "Landscape",
