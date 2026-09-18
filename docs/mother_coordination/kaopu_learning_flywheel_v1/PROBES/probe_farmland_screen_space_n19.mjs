@@ -153,7 +153,17 @@ const result = {
   ]
 };
 
+function canonicalize(value) {
+  if (typeof value === 'number' && Number.isFinite(value) && !Number.isInteger(value)) return Number(value.toPrecision(12));
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, canonicalize(v)]));
+  return value;
+}
+
+// CPU/libm implementations can differ by a final summation ULP. Evidence is serialized to twelve
+// significant digits so the fixed-source gate compares the declared precision, not host accident.
+const stableResult = canonicalize(result);
 const out = process.env.KAOPU_N19_OUTPUT || new URL('./farmland_screen_space_result_n19.json', import.meta.url);
-fs.writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
-console.log(JSON.stringify(result, null, 2));
+fs.writeFileSync(out, `${JSON.stringify(stableResult, null, 2)}\n`);
+console.log(JSON.stringify(stableResult, null, 2));
 if (!result.passed) process.exitCode = 2;
