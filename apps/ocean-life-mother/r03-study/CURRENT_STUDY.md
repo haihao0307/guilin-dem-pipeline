@@ -30,23 +30,37 @@ The screenshots were actually inspected internally. The black bass now resembles
 
 The preview retains alpha data but currently uses alpha threshold coverage, not a validated translucent-fin solution. Lighting and tone mapping are study choices; do not claim matching the author's original PBR scene or complete material fidelity.
 
+## R03.A-run1 — direct field and view conductor
+
+The runtime kernel no longer requires a coefficient -> raster -> cubic-resampling round trip before disposable display sampling. The same separable continuous fields can be evaluated directly. A view conductor maps projected object size to a quantized sampling budget only to limit buffer rebuild churn; it does not select another preauthored fish asset. Synthetic numerical/browser checks verified monotonic sample-budget reduction and no intermediate raster. This was not a black-bass source replay because the exact source payload was not materialized in that run.
+
+## R03.A-run2 — explicit parameter-domain boundary preservation
+
+The view-directed sampler now samples each explicit parameter-domain interval independently and always retains interval endpoints. This fixes a concrete failure mode of a coarse uniform parameter grid: a one-cell-wide observed interval can disappear entirely even though the canonical field still contains it. In the synthetic regression case, the old far-view regular grid produced zero samples inside the narrow interval [30/64, 31/64]; the new sampler preserved both edges on every sampled row.
+
+Numerical checks confirmed every generated coordinate stayed inside an explicit domain interval, invalid/reversed intervals were rejected, and near/mid/far sample counts remained monotonic. Real Chromium executed the same synthetic boundary test at 1280x900 and 390x844 with zero page errors. At projected sizes 15, 100 and 420 pixels the test generated 18, 126 and 1452 disposable samples respectively, while retaining nonzero boundary samples at every budget. See `qa/DOMAIN_BOUNDARY_R03A_RUN2.json`.
+
+This is a kernel correctness improvement, not a new black-bass fidelity result. The exact FISH-REF-001 bytes were not resolved through the Files/runtime surfaces in this run, so the source fit was not rerun and no new claim is made about real mouth/fin edge error. A future bad source-domain extraction can still erase real detail before this sampler sees it; the fix only prevents view budgeting from silently dropping already-recorded intervals.
+
 ## Persistence and reproduction
 
-The code checkpoint is in this directory. The generated coefficient files, HTML, full reports and internal screenshots currently exist in the active runtime under `/mnt/data/ocean_r03/`; the large coefficient payload and generated HTML have NOT been uploaded to GitHub. The original GLB remains the user-provided conversation attachment. A future run must verify availability, not pretend it can read missing sandbox files.
+The code checkpoint is in this directory. The generated coefficient files, HTML, full reports and internal screenshots from the original R03.A fit existed in the active runtime under `/mnt/data/ocean_r03/`; they were not uploaded to GitHub. The original GLB remains a user-provided source asset and must be verified as actually readable before any replay; do not pretend a later runtime has the old sandbox data.
 
-With the exact uploaded reference available, use Python with NumPy, SciPy, Pillow and Numba. Set `KAOPU_SOURCE` to its path. Run `python tools/fit_chart_fields.py`, then `python tools/compact_fields.py`, `python tools/build.py`, `python tools/heldout_qa.py`, and `node tools/kernel_qa.cjs`. The source reader is intentionally hash-locked to this specimen; other fish require their own source identity and mapping. `xvfb-run -a python tools/browser_qa.py` executes the local study through Playwright and Chromium. The additional interaction receipt is local; do not claim it has been rerun remotely.
+With the exact uploaded reference available, use Python with NumPy, SciPy, Pillow and Numba. Set `KAOPU_SOURCE` to its path. Run `python tools/fit_chart_fields.py`, then `python tools/compact_fields.py`, `python tools/build.py`, `python tools/heldout_qa.py`, and `node tools/kernel_qa.cjs`. The source reader is intentionally hash-locked to this specimen; other fish require their own source identity and mapping. `node tools/domain_boundary_qa.cjs` verifies the run2 thin-domain regression. `python tools/domain_boundary_browser_qa.py` executes that mechanism in Chromium when Playwright/Chromium are available.
 
-Final tested local HTML SHA256: 053d5f742e0dcc6171ad19630e02e3b2ef41d1bb46ce86963e33bcc8d16bbde6.
+Final tested local HTML SHA256 from the original R03.A fit: 053d5f742e0dcc6171ad19630e02e3b2ef41d1bb46ce86963e33bcc8d16bbde6. Run2 did not rebuild that HTML because the exact coefficient payload was unavailable; do not silently attach the new kernel to the old hash.
 
 ## Publication boundary
 
-No R03 public entry has been deployed. The current runtime's outbound DNS to the public source host failed. Local set_content tests are NOT final public HTTP or browser-navigation tests. `shareAllowed=false`. Do not send a guessed R03 URL, a download in place of online preview, or the unchanged R02 URL labelled as R03. Preserve all earlier published dependencies.
+No R03 public entry has been deployed. Local synthetic/browser tests are NOT final public HTTP or browser-navigation tests. `shareAllowed=false`. Do not send a guessed R03 URL, a download in place of online preview, or the unchanged R02 URL labelled as R03. Preserve all earlier published dependencies.
 
 ## Next bounded task
 
-First improve close-range appearance and source-domain boundaries while preserving the current specimen correspondence. Compare the normal-field fit, display sampling footprint and source high-frequency material separately, rather than blaming all errors on the shared function concept. Report local maxima and omitted domains. Then split the mouth/jaw/gill/fin semantics and establish an anatomical coordinate mapping suitable for shared species recipes; the source-chart factorization is only an intermediate.
+When the exact FISH-REF-001 bytes/coefficient payload is readable again, rerun the real source fit and apply the boundary-aware sampler to the actual fish. Measure per-patch omitted-domain area, mouth/fin-edge error, normal-field aliasing and transparent-fin behavior separately. Only after that should the view conductor be wired into the full fish study runtime.
 
-Do not restart with a guessed fish. Do not pursue an arbitrary tiny byte target by erasing source detail. Do not claim that a pair of coordinates proves anatomical correctness, or that one adult reference supplies a verified growth history. Keep the existing scalar field core, established KAOPU semantics, source licenses and necessary-residual rule. Use existing Xiaoma records as method references; no independent Xiaoma meeting or reply occurred in this round.
+Then split mouth/jaw/gill/eye/fin semantics and establish an anatomical coordinate mapping suitable for shared species recipes. The source-chart factorization remains an intermediate correspondence system, not the final fish kernel. Do not invent juvenile/adult growth from this one adult reference.
+
+Do not restart with a guessed fish. Do not pursue an arbitrary tiny byte target by erasing source detail. Do not claim that a pair of coordinates proves anatomical correctness, or that one adult reference supplies a verified growth history. Keep the existing scalar field core, established KAOPU semantics, source licenses and necessary-residual rule. Use existing Xiaoma records as method references; no independent Xiaoma meeting or reply occurred in this run.
 
 Reference: DigitalLife3D, Model 67A - Largemouth Bass, https://sketchfab.com/3d-models/model-67a-largemouth-bass-e60c457636b640629747c19feac4906c ; embedded CC BY-NC 4.0. The study is source-derived and not commercially cleared. PBR channel semantics were checked against https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html . Boids local-neighbourhood research is retained as a later behavior reference, https://www.red3d.com/cwr/boids/index.html ; no new ecological/Boids integration was claimed this round.
 
