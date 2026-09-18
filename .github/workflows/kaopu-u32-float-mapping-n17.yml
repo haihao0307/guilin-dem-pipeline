@@ -51,7 +51,7 @@ jobs:
             --virtual-time-budget=15000 --dump-dom http://127.0.0.1:8765/u32_float_runtime_n17.html > /tmp/n17-dom.html
           python3 "$root/extract_u32_float_runtime_n17.py" /tmp/n17-dom.html \
             "$root/u32_float_mapping_result_n17.json" /tmp/u32_float_webgl2_result_n17.json
-          jq -e '.summary.status == "pass" and .summary.passed == 6' /tmp/u32_float_webgl2_result_n17.json
+          jq -e '.summary.status == "pass" and .summary.passed == 8' /tmp/u32_float_webgl2_result_n17.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

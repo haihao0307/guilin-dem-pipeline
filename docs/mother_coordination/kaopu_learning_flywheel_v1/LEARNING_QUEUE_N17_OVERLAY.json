@@ -18,7 +18,7 @@
     "id": "N02-6H",
     "topic": "u32-to-float endpoint and precision contract",
     "question": "What endpoint and precision contract should map a 32-bit procedural hash to a floating value?",
-    "state": "candidate-partial-fixed-source-audit-cpu-verified-runtime-gates-pending-at-initial-commit",
+    "state": "candidate-partial-fixed-source-audit-cpu-native-wgsl-verified-glsl-divergence-preserved-hardware-unknown",
     "evidence": [
       "references/u32-float-mapping-n17/SOURCE_LOCK.json",
       "PROBES/probe_u32_float_mapping_n17.cpp",
@@ -39,6 +39,14 @@
     "applicability": "relevant only if receiver uses the kernel or ports its mapping",
     "adoption": "Unknown",
     "withdrawnImplementation": "Landscape PR80 remains closed and prohibited"
+  },
+  "verificationReceipt": {
+    "cpuChecks": "8/8 pass",
+    "nativeWGSL": "4/4 pass on pinned wgpu 29.0.0 / Vulkan / Mesa llvmpipe software adapter",
+    "webgl2": "Chrome 152 / ANGLE Vulkan SwiftShader reproduced both half-open candidates exactly and diverged from CPU/WGSL for closed division at 0xffffff7f",
+    "preservedFailures": [35304693486, 35304830452],
+    "hardwareMobile": "Unknown",
+    "evidenceIndependence": "Source audit, language specifications and executable fixture are distinct roots; CPU/GLSL/WGSL runs share one vector design and are not independent algorithm evidence."
   },
   "routes": [
     {"mother":"Landscape","entry":"guilin-dem-pipeline PR79","actionThisRound":"prepare one incremental warning after CI; no implementation claim"},

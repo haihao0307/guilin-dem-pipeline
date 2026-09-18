@@ -3,7 +3,7 @@
 Date: 2026-09-18  
 Bounded question: What endpoint and precision contract should map a 32-bit procedural hash to a floating value?
 
-Status: **Candidate partial / fixed-source audit and CPU fixture verified; software GLSL ES/WGSL replay pending at initial commit; target hardware, production implementation and Mother adoption Unknown**
+Status: **Candidate partial / fixed-source audit, CPU and native WGSL software-runtime verified; GLSL ES runtime divergence preserved; target hardware, production implementation and Mother adoption Unknown**
 
 ## Observation roots
 
@@ -21,13 +21,15 @@ This audit is a source observation, not evidence that Landscape has implemented 
 
 ### Observation root C — executable endpoint and precision fixture
 
-The N17 C++20 probe passed `8/8` local gates on eight boundary hashes. It reproduces the JavaScript upper endpoint and three float32 mappings.
+The N17 C++20 probe passed `8/8` local and CI gates on eight boundary hashes. It reproduces the JavaScript upper endpoint and three float32 mappings.
 
-- `float(h) / 4294967295.0f` is not merely the JavaScript formula at lower precision. The denominator rounds to `2^32`, and every hash from `0xffffff80` through `0xffffffff`—128 input states—rounds to `1.0`.
+- On the C++ reference path, `float(h) / 4294967295.0f` is not merely the JavaScript formula at lower precision. The denominator rounds to `2^32`, and every hash from `0xffffff80` through `0xffffffff`—128 input states—rounds to `1.0`.
 - `float(h >> 8) * 2^-24` yields exactly `2^24` possible values in `[0,1)`, with maximum `1 - 2^-24`; it intentionally discards eight low bits.
 - `uintBitsToFloat(0x3f800000 | (h >> 9)) - 1` yields `2^23` values in `[0,1)`, with maximum `1 - 2^-23`; it intentionally discards nine low bits.
 
-The committed WebGL2 and native WGSL fixtures use the same locked vectors and compare raw float bit patterns. Their CI results must remain separate from the CPU result, and all three share one test design rather than constituting independent algorithm evidence.
+The first WebGL2 run correctly rejected the expectation of exact agreement. Chrome 152 / ANGLE Vulkan SwiftShader mapped `0xffffff7f` to `1.0`, while C++ and native WGSL mapped it to the next float below one. The two half-open candidates matched bit-for-bit across all tested CPU, GLSL ES and native WGSL vectors. The initial failed runs are retained as evidence; the gate now requires this observed closed-form divergence rather than hiding it.
+
+Native WGSL executed through pinned `wgpu 29.0.0`, Vulkan and Mesa llvmpipe. These are software runtimes, not hardware GPU or mobile evidence. All runtime paths share one test design and are not independent algorithm evidence.
 
 ## Candidate
 
@@ -41,7 +43,7 @@ Every procedural module should declare its hash-to-value ABI explicitly:
 
 For a strict `[0,1)` shader contract, `top24` is the current compact candidate because it preserves one more random bit than the mantissa construction and uses ordinary numeric conversion. The mantissa construction remains a valid alternative where its bitcast contract is preferred. This is not authorization to replace the V2.6 package or any production implementation.
 
-If a receiver intentionally wants a closed `[0,1]` interval, division by `0xffffffff` can be retained only with an explicit endpoint policy. Porting that expression to float32 changes the endpoint multiplicity from one hash state to 128, so a direct textual port is not semantically identical.
+If a receiver intentionally wants a closed `[0,1]` interval, division by `0xffffffff` can be retained only with an explicit endpoint policy. Porting that expression to float32 changes endpoint multiplicity and can differ across conforming runtime paths at a rounding boundary, so a direct textual port is not semantically identical.
 
 ## Current Best View
 
@@ -60,6 +62,7 @@ The V2.6 source is deterministic but presently has an undocumented closed interv
 
 - “`uint / 0xffffffff` always produces a half-open random interval.”
 - “Copying the JavaScript division into float32 preserves endpoint behavior.”
+- “CPU float32 boundary bits are automatically identical to every GLSL ES implementation.”
 - “A deterministic integer hash completely specifies the procedural noise source.”
 - “Discarding low bits is automatically a defect”; it is an explicit precision tradeoff for exact float representability.
 - “Independent seed names prove statistical or physical independence.”
