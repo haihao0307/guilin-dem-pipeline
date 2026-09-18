@@ -51,7 +51,7 @@ function classifyControlPolygons(polygons,base,box,w,h){
     else if(coverage>=.20&&landFraction>=.42)reason='reject-very-large-mostly-modern-land';
     else if(coverage>=.08&&landFraction>=.62)reason='reject-large-mostly-modern-land';
     else if(edgeCount>=2&&coverage>=.08&&landFraction>=.50)reason='reject-frame-connected-background';
-    const diagnostic={index,sheet:item.sheet,strict:item.strict,authority:item.authority,ringCount:item.ringCount,islandHoleCount:item.islandHoleCount,areaPixels,coverage:+coverage.toFixed(5),modernLandPixels,landFraction:+landFraction.toFixed(5),modernWaterSupport:+waterSupport.toFixed(5),touchEdges:item.touchEdges,sourcePixelArea:item.sourcePixelArea,reason};if(reason==='accepted'){accepted.push(item);diagnostic.accepted=true;}else{rejected.push(diagnostic);diagnostic.accepted=false;}item.quality=diagnostic;
+    const diagnostic={index,sheet:item.sheet,strict:item.strict,authority:item.authority,ringCount:item.ringCount,islandHoleCount:item.islandHoleCount,areaPixels,coverage:+coverage.toFixed(5),modernLandPixels,landFraction:+landFraction.toFixed(5),modernWaterSupport:+waterSupport.toFixed(5),touchEdges:item.touchEdges,sourcePixelArea:item.sourcePixelArea,reason};const isAccepted=reason==='accepted'||reason.startsWith('accepted-');if(isAccepted){accepted.push(item);diagnostic.accepted=true;}else{rejected.push(diagnostic);diagnostic.accepted=false;}item.quality=diagnostic;
   }
   return{accepted,rejected,all:polygons.map(p=>p.quality).filter(Boolean)};
 }
