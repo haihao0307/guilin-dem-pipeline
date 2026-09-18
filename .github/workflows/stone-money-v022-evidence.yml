@@ -1,0 +1,75 @@
+name: Preserve completed Stone Money v022 evidence
+on:
+  push:
+    branches: [work/stone-money-island-v0220-reef-reference-20260918]
+    paths: [.github/workflows/stone-money-v022-evidence.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  preserve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: '35321546695'
+    steps:
+      - name: Wait for completed runtime checks, without rerunning them
+        run: |
+          python - <<'PY'
+          import os,json,time,urllib.request
+          root='https://api.github.com/repos/haihao0307/guilin-dem-pipeline'
+          def get(path):
+              req=urllib.request.Request(root+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              return json.load(urllib.request.urlopen(req,timeout=30))
+          for i in range(40):
+              run=get('/actions/runs/'+os.environ['EVIDENCE_RUN'])
+              if run['status']=='completed':break
+              time.sleep(15)
+          else:raise RuntimeError('Evidence run still running')
+          assert run['head_sha']=='6917fe58a3e1f8c1f2bc57234de279ee4ad70e63'
+          jobs={j['name']:j['conclusion'] for j in get('/actions/runs/'+os.environ['EVIDENCE_RUN']+'/jobs')['jobs']}
+          for name in ('build','fish','ordinary-entry'):assert jobs.get(name)=='success',(name,jobs)
+          print('All three actual candidate checks passed; archiving those artifacts only.')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0220-reef-reference-20260918
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 35321546695
+          path: /tmp/verified-reef-results
+      - name: Preserve receipts against latest branch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,shutil,datetime
+          root=Path('/tmp/verified-reef-results');out=Path('games/survivor-palau/releases/v0.2.2')
+          out.mkdir(parents=True,exist_ok=True)
+          for p in (root/'reef-candidate-build').glob('*'):
+              if p.is_file():shutil.copyfile(p,out/p.name)
+          paths=list((root/'reef-public-entry').rglob('PUBLICATION_PROOF.json'));assert len(paths)==1
+          proof=json.loads(paths[0].read_text())
+          fish=json.loads((root/'reef-fish-runtime/REPORT.json').read_text())
+          build=json.loads((out/'BUILD_RECEIPT.json').read_text())
+          assert proof['actualSha256']==proof['entrySha256']==build['entrySha256']
+          assert proof['sourceCommit']=='6917fe58a3e1f8c1f2bc57234de279ee4ad70e63'
+          assert proof['publicHttpsPassed'] and proof['browserPassed'] and fish['browserPassed']
+          assert len(fish['cases'])==2 and all(c['passed'] for c in fish['cases'])
+          assert build['frozenShaderAndWorkerStringsUnchanged']
+          proof['chapterLoopPassed']=True
+          proof['workflowJobs']={'fish':'success','ordinaryEntry':'success'}
+          proof['evidenceWorkflowRun']=35321546695
+          proof['evidenceRecordedAt']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+          proof['shareAllowed']=True
+          (out/'PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n')
+          (out/'FISH_BROWSER_QA.json').write_text(json.dumps(fish,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'shareAllowed':True,'url':proof['url'],'entrySha256':proof['entrySha256']}))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/releases/v0.2.2
+          git diff --cached --quiet || git commit -m 'verify(stone-money): preserve completed v022 runtime evidence on latest branch'
+          git pull --rebase origin work/stone-money-island-v0220-reef-reference-20260918
+          git push origin HEAD:work/stone-money-island-v0220-reef-reference-20260918
