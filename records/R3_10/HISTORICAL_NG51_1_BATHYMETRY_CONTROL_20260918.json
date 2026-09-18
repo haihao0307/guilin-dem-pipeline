@@ -1,0 +1,29 @@
+{
+  "schema": "wenzhou-ng51-1-bathymetry-control/v1",
+  "registeredDate": "2026-09-18",
+  "sheet": "NG51-1",
+  "sourceImageSha256": "42ef8bb533703d24d8023ff0d84f0476dd5b59ec2ac739f3e255dcd960f3ad3a",
+  "mapLegend": {
+    "depthCurvesUnit": "fathoms",
+    "foreshoreFlat": true,
+    "waterFeatures": [
+      "foreshore flat",
+      "depth curves in fathoms"
+    ]
+  },
+  "productionRules": {
+    "seaSurface": "separate dynamic water surface; never use as seabed",
+    "seabed": "must be a terrain/bathymetry field; never a flat plane",
+    "historicalMapRole": "constrains coastal/island bathymetric structure and depth-curve evidence",
+    "elevationTruth": "do not convert unlabelled lines into invented numeric depths",
+    "datum": "unknown from current runtime; record conversion assumptions before numerical fusion"
+  },
+  "externalBathymetryCandidate": {
+    "dataset": "NOAA ETOPO 2022",
+    "resolution": "15 arc-second",
+    "tile": "ETOPO_2022_v1_15s_N30E120_surface.tif",
+    "url": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E120_surface.tif",
+    "role": "candidate broad seabed base only; must be checked against NG51-1 depth curves before runtime adoption"
+  },
+  "runtimeStatus": "source lock created; flat sea plane is explicitly not accepted as seabed truth"
+}
