@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import * as K from './r045_round37_kernel.mjs';
-import * as R36 from '../round-36/r045_round36_kernel.mjs';
 import * as R35 from '../round-35/r045_round35_kernel.mjs';
 import * as R30 from '../round-30/r045_round30_kernel.mjs';
+import {SEEDS,META} from './r045_round37_seed_cache.mjs';
 const checks=[];const add=(name,pass,value,limit)=>checks.push({name,pass:Boolean(pass),value,limit});
 const median=a=>{if(!a.length)return 0;const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
 add('version',K.VERSION==='R045.37',K.VERSION,'R045.37');
+add('seed_cache_generated',META.generated===true&&META.positiveSeedCount>=4,META,'generated cache with >=4 verified positive seeds');
 add('water_graph_identity_preserved',JSON.stringify(K.nodes)===JSON.stringify(R35.nodes)&&JSON.stringify(K.edges)===JSON.stringify(R35.edges),{nodes:[R35.nodes.length,K.nodes.length],edges:[R35.edges.length,K.edges.length]},'exact inherited graph');
 add('terrain_carriers_identity_preserved',JSON.stringify(K.terrainChannels)===JSON.stringify(R35.terrainChannels)&&JSON.stringify(K.outletContinuum)===JSON.stringify(R35.outletContinuum),{terrainChannels:K.terrainChannels.length,outlets:K.outletContinuum.length},'exact inherited carriers');
 
@@ -27,7 +28,7 @@ add('all_three_groups_remain_material',groups.every(n=>n>20),groups,'each group 
 add('cached_candidates_stay_safe',unsafe===0,{unsafe},'no gained sample in drainage core/outside eligibility/receiver');
 add('hard_drainage_core_empty',hardCoreActive===0&&hardCoreDelta<1e-9,{hardCoreActive,hardCoreDelta},'zero support/delta <=12m drainage');
 
-let seedRetained=0,seedCompared=0,maxSeedLoss=0;for(let x=-210;x<=110;x+=16)for(let z=-128;z<=2;z+=10){const a=R35.terraceStateAt(x,z),b=R36.terraceStateAt(x,z),n=K.terraceStateAt(x,z),g=b.mask-a.mask;if(g>.004){seedCompared++;if(n.mask>a.mask+.002)seedRetained++;maxSeedLoss=Math.max(maxSeedLoss,Math.max(0,b.mask-n.mask))}}add('r36_verified_seed_signal_retained',seedCompared>5&&seedRetained>=Math.ceil(seedCompared*.65),{seedCompared,seedRetained,maxSeedLoss},'>=65% sampled R36 positive seeds remain positive in R37');
+let seedRetained=0,seedCompared=0,maxSeedLoss=0;for(const [key,s] of Object.entries(SEEDS)){if(s.gain<=.004)continue;seedCompared++;const [ix,iz]=key.split(',').map(Number),x=META.x0+ix*META.dx,z=META.z0+iz*META.dz,a=R35.terraceStateAt(x,z),n=K.terraceStateAt(x,z);if(n.mask>a.mask+.002)seedRetained++;maxSeedLoss=Math.max(maxSeedLoss,Math.max(0,s.mask36-n.mask))}add('r36_verified_seed_signal_retained',seedCompared>5&&seedRetained>=Math.ceil(seedCompared*.65),{seedCompared,seedRetained,maxSeedLoss},'>5 persisted R36-positive seeds and >=65% retain positive R37 support');
 
 let frameN=0,maxStep=0,maxPhase=0,maxRaw=0;for(let x=-210;x<=110;x+=16)for(let z=-128;z<=2;z+=10){const n=K.terraceStateAt(x,z),o=R35.terraceStateAt(x,z);frameN++;maxStep=Math.max(maxStep,Math.abs(n.step-o.step));maxPhase=Math.max(maxPhase,Math.abs(n.phase-o.phase));maxRaw=Math.max(maxRaw,Math.abs(n.raw-o.raw))}add('r35_stair_frame_exact',maxStep<1e-12&&maxPhase<1e-12&&maxRaw<1e-12,{frameN,maxStep,maxPhase,maxRaw},'step/phase/raw exactly inherited');
 
@@ -41,4 +42,4 @@ add('real_world_constraint_explicit',K.snapshot.round37?.constraint?.includes('1
 add('xiaoma_boundary_retained',K.snapshot.round37?.xiaomaBoundary?.includes('not ownership')||K.snapshot.round37?.xiaomaBoundary?.includes('not ownership or hydraulic'),K.snapshot.round37?.xiaomaBoundary,'surface continuity != hydraulic truth');
 add('mrrolord_ordering_only',K.snapshot.round37?.mrRolordUse?.includes('drainage hierarchy')&&K.snapshot.round37?.mrRolordUse?.includes('No Blender'),K.snapshot.round37?.mrRolordUse,'ordering only');
 add('reference_nonmetric',K.snapshot.round37?.referenceUse?.includes('reopened')&&K.snapshot.round37?.referenceUse?.includes('no metric'),K.snapshot.round37?.referenceUse,'visual morphology only');
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{geometry:geom,terraceMorphology:terr,seedRetained,seedCompared,maxSeedLoss,far,near,receiver,outside,maxInc}};fs.writeFileSync(new URL('./r045_round37_qa_result.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{geometry:geom,terraceMorphology:terr,seedCache:META,seedRetained,seedCompared,maxSeedLoss,far,near,receiver,outside,maxInc}};fs.writeFileSync(new URL('./r045_round37_qa_result.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
