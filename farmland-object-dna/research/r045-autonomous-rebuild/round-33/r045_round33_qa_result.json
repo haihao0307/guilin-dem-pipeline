@@ -1,8 +1,8 @@
 {
   "version": "R045.33",
-  "passed": false,
+  "passed": true,
   "gateCount": 37,
-  "passedCount": 36,
+  "passedCount": 37,
   "checks": [
     {
       "name": "version",
@@ -38,34 +38,34 @@
       "name": "terrace_geometry_remains_substantive_but_bounded",
       "pass": true,
       "value": {
-        "deltaMax": 0.5166889575457687,
-        "deltaMean": 0.06647038297840713,
-        "pos": 97.93366219615544,
-        "neg": 107.8586435049929,
-        "maxStep": 0.91702925669516,
+        "deltaMax": 0.5014199103967808,
+        "deltaMean": 0.06153185585050313,
+        "pos": 91.05505930495887,
+        "neg": 99.44756640819872,
+        "maxStep": 0.9441095433932607,
         "maxStepAt": [
-          -60,
-          -60
+          -8,
+          -80
         ],
-        "active": 1084,
-        "core": 748,
+        "active": 1078,
+        "core": 721,
         "oldActive": 785,
         "oldCore": 395,
-        "changeFrom32": 0.8442125319815688,
+        "changeFrom32": 0.34186294445747833,
         "activeRows": 32,
         "groupCounts": [
-          187,
-          459,
+          185,
+          455,
           438
         ],
         "overlap01": 840,
         "overlap12": 846,
-        "rowCountMedian": 39,
+        "rowCountMedian": 38.5,
         "longestContinuousRunM": 68,
         "maxFamilySpanM": 316,
-        "shoulderNew": 744,
+        "shoulderNew": 739,
         "shoulderOld": 446,
-        "shoulderRatio": 1.6681614349775784,
+        "shoulderRatio": 1.65695067264574,
         "hardCoreActive": 0,
         "hardCoreMaxDelta": 0
       },
@@ -73,16 +73,16 @@
     },
     {
       "name": "r33_is_a_real_but_bounded_change_from_r32",
-      "pass": false,
-      "value": 0.8442125319815688,
+      "pass": true,
+      "value": 0.34186294445747833,
       "limit": ".025 m < sampled max R33-R32 surface change < .65 m"
     },
     {
       "name": "terrace_geometry_has_both_cut_and_fill",
       "pass": true,
       "value": {
-        "pos": 97.93366219615544,
-        "neg": 107.8586435049929
+        "pos": 91.05505930495887,
+        "neg": 99.44756640819872
       },
       "limit": "both signed responses >8 aggregate sample-m"
     },
@@ -90,9 +90,9 @@
       "name": "terrace_support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 1084,
+        "active": 1078,
         "oldActive": 785,
-        "ratio": 1.3808917197452228
+        "ratio": 1.373248407643312
       },
       "limit": "R33 active support >=0.98x R32"
     },
@@ -100,9 +100,9 @@
       "name": "terrace_core_does_not_collapse",
       "pass": true,
       "value": {
-        "core": 748,
+        "core": 721,
         "oldCore": 395,
-        "ratio": 1.8936708860759495
+        "ratio": 1.8253164556962025
       },
       "limit": "R33 core support >=0.92x R32"
     },
@@ -110,9 +110,9 @@
       "name": "drainage_shoulders_are_actually_stitched",
       "pass": true,
       "value": {
-        "shoulderNew": 744,
+        "shoulderNew": 739,
         "shoulderOld": 446,
-        "ratio": 1.6681614349775784
+        "ratio": 1.65695067264574
       },
       "limit": "active samples 12-30 m from drainage >1.20x R32"
     },
@@ -131,7 +131,7 @@
       "value": {
         "activeRows": 32,
         "maxFamilySpanM": 316,
-        "rowCountMedian": 39
+        "rowCountMedian": 38.5
       },
       "limit": ">=28 active rows and >120 m family span"
     },
@@ -147,8 +147,8 @@
       "name": "all_three_nested_groups_remain_material",
       "pass": true,
       "value": [
-        187,
-        459,
+        185,
+        455,
         438
       ],
       "limit": "each dominant terrace group has >45 active samples"
@@ -166,50 +166,39 @@
       "name": "terrace_increment_is_not_a_cliff",
       "pass": true,
       "value": {
-        "maxStep": 0.91702925669516,
+        "maxStep": 0.9441095433932607,
         "maxStepAt": [
-          -60,
-          -60
+          -8,
+          -80
         ]
       },
       "limit": "<1.05 m change in added terrace delta per 4 m z"
     },
     {
-      "name": "blended_family_phase_has_samples",
+      "name": "r32_quantization_frame_is_exactly_preserved",
       "pass": true,
       "value": {
-        "n": 573,
-        "meanPhaseGradient": 0.005687184795348008,
-        "medianPhaseGradient": 0.0063015820176144655,
-        "maxPhaseGradient": 0.009706695323693754
+        "samples": 1242,
+        "maxStepDiff": 0,
+        "maxPhaseDiff": 0,
+        "maxRawDiff": 0
       },
-      "limit": ">30 family-overlap seam samples"
-    },
-    {
-      "name": "blended_family_phase_is_smooth",
-      "pass": true,
-      "value": {
-        "n": 573,
-        "meanPhaseGradient": 0.005687184795348008,
-        "medianPhaseGradient": 0.0063015820176144655,
-        "maxPhaseGradient": 0.009706695323693754
-      },
-      "limit": "max phase gradient <.035 m/m and median <.018 m/m"
+      "limit": "step, phase and raw stair response exactly inherited from R32"
     },
     {
       "name": "bench_and_riser_samples_exist",
       "pass": true,
       "value": {
-        "benchN": 271,
-        "riserN": 50,
-        "benchRatioMean": 0.3298186758094095,
-        "benchRatioMedian": 0.2788033599403321,
-        "riserRatioMean": 2.6916237628908903,
-        "riserRatioMedian": 2.5449656065141095,
-        "benchSlopeMean": 0.08531458926504173,
-        "benchSlopeMedian": 0.06234330798008106,
-        "riserSlopeMean": 0.6509132447656595,
-        "riserSlopeMedian": 0.6617431034501318
+        "benchN": 256,
+        "riserN": 54,
+        "benchRatioMean": 0.35685944628452126,
+        "benchRatioMedian": 0.3052191079754071,
+        "riserRatioMean": 2.4664336432170226,
+        "riserRatioMedian": 2.165176237700171,
+        "benchSlopeMean": 0.09270785553577421,
+        "benchSlopeMedian": 0.07245183139102068,
+        "riserSlopeMean": 0.6082179929131294,
+        "riserSlopeMedian": 0.6188179855542308
       },
       "limit": ">45 bench and >12 riser core samples"
     },
@@ -217,16 +206,16 @@
       "name": "benches_are_flatter_than_r30_substrate",
       "pass": true,
       "value": {
-        "benchN": 271,
-        "riserN": 50,
-        "benchRatioMean": 0.3298186758094095,
-        "benchRatioMedian": 0.2788033599403321,
-        "riserRatioMean": 2.6916237628908903,
-        "riserRatioMedian": 2.5449656065141095,
-        "benchSlopeMean": 0.08531458926504173,
-        "benchSlopeMedian": 0.06234330798008106,
-        "riserSlopeMean": 0.6509132447656595,
-        "riserSlopeMedian": 0.6617431034501318
+        "benchN": 256,
+        "riserN": 54,
+        "benchRatioMean": 0.35685944628452126,
+        "benchRatioMedian": 0.3052191079754071,
+        "riserRatioMean": 2.4664336432170226,
+        "riserRatioMedian": 2.165176237700171,
+        "benchSlopeMean": 0.09270785553577421,
+        "benchSlopeMedian": 0.07245183139102068,
+        "riserSlopeMean": 0.6082179929131294,
+        "riserSlopeMedian": 0.6188179855542308
       },
       "limit": "median bench/base gradient ratio <.82"
     },
@@ -234,8 +223,8 @@
       "name": "risers_are_steeper_than_benches",
       "pass": true,
       "value": {
-        "benchMedianSlope": 0.06234330798008106,
-        "riserMedianSlope": 0.6617431034501318
+        "benchMedianSlope": 0.07245183139102068,
+        "riserMedianSlope": 0.6188179855542308
       },
       "limit": "median riser slope >1.35x median bench slope"
     },
@@ -243,16 +232,16 @@
       "name": "risers_steepen_relative_to_r30",
       "pass": true,
       "value": {
-        "benchN": 271,
-        "riserN": 50,
-        "benchRatioMean": 0.3298186758094095,
-        "benchRatioMedian": 0.2788033599403321,
-        "riserRatioMean": 2.6916237628908903,
-        "riserRatioMedian": 2.5449656065141095,
-        "benchSlopeMean": 0.08531458926504173,
-        "benchSlopeMedian": 0.06234330798008106,
-        "riserSlopeMean": 0.6509132447656595,
-        "riserSlopeMedian": 0.6617431034501318
+        "benchN": 256,
+        "riserN": 54,
+        "benchRatioMean": 0.35685944628452126,
+        "benchRatioMedian": 0.3052191079754071,
+        "riserRatioMean": 2.4664336432170226,
+        "riserRatioMedian": 2.165176237700171,
+        "benchSlopeMean": 0.09270785553577421,
+        "benchSlopeMedian": 0.07245183139102068,
+        "riserSlopeMean": 0.6082179929131294,
+        "riserSlopeMedian": 0.6188179855542308
       },
       "limit": "median riser/base gradient ratio >1.18"
     },
@@ -337,8 +326,14 @@
     {
       "name": "logic_errors_explicitly_corrected",
       "pass": true,
-      "value": "R32 cluster-like terraces do not prove that risers are too low. Raising risers would amplify isolated islands. A second invalid shortcut is to equate protection of a drainage carrier with an arbitrarily wide blank setback: without surveyed channel and bank sections, the previous 16-34 m shoulder is synthetic. R33 therefore tests narrower tapering shoulders while preserving the hard carrier core and does not raise terrace amplitude.",
-      "limit": "reject low-riser and wide-setback shortcuts"
+      "value": "R32 cluster-like terraces do not prove that risers are too low. Raising risers would amplify isolated islands. It is also invalid to equate protection of a drainage carrier with an arbitrarily wide blank agricultural setback when no surveyed bank/channel section exists. The first R33 attempt additionally mixed shoulder narrowing with a new phase frame, so its 0.844 m R33-R32 change could not be causally attributed. Final R33 isolates the drainage-shoulder variable and keeps R32 quantization unchanged.",
+      "limit": "reject low-riser, wide-setback and confounded-two-variable shortcuts"
+    },
+    {
+      "name": "failed_attempt_is_retained",
+      "pass": true,
+      "value": "the first R33 machine run passed 36/37 gates but failed the bounded-change gate: sampled max R33-R32 surface change was 0.8442125319815688 m versus the unchanged <0.65 m limit. The wide-support result was not accepted; phase/step blending and smooth-union support were removed instead of relaxing the gate.",
+      "limit": "retain first-run failure rather than overwrite it"
     },
     {
       "name": "real_world_constraint_is_explicit",
@@ -389,54 +384,54 @@
   ],
   "metrics": {
     "geometry": {
-      "deltaMax": 0.5166889575457687,
-      "deltaMean": 0.06647038297840713,
-      "pos": 97.93366219615544,
-      "neg": 107.8586435049929,
-      "maxStep": 0.91702925669516,
+      "deltaMax": 0.5014199103967808,
+      "deltaMean": 0.06153185585050313,
+      "pos": 91.05505930495887,
+      "neg": 99.44756640819872,
+      "maxStep": 0.9441095433932607,
       "maxStepAt": [
-        -60,
-        -60
+        -8,
+        -80
       ],
-      "active": 1084,
-      "core": 748,
+      "active": 1078,
+      "core": 721,
       "oldActive": 785,
       "oldCore": 395,
-      "changeFrom32": 0.8442125319815688,
+      "changeFrom32": 0.34186294445747833,
       "activeRows": 32,
       "groupCounts": [
-        187,
-        459,
+        185,
+        455,
         438
       ],
       "overlap01": 840,
       "overlap12": 846,
-      "rowCountMedian": 39,
+      "rowCountMedian": 38.5,
       "longestContinuousRunM": 68,
       "maxFamilySpanM": 316,
-      "shoulderNew": 744,
+      "shoulderNew": 739,
       "shoulderOld": 446,
-      "shoulderRatio": 1.6681614349775784,
+      "shoulderRatio": 1.65695067264574,
       "hardCoreActive": 0,
       "hardCoreMaxDelta": 0
     },
-    "seam": {
-      "n": 573,
-      "meanPhaseGradient": 0.005687184795348008,
-      "medianPhaseGradient": 0.0063015820176144655,
-      "maxPhaseGradient": 0.009706695323693754
+    "frameIdentity": {
+      "samples": 1242,
+      "maxStepDiff": 0,
+      "maxPhaseDiff": 0,
+      "maxRawDiff": 0
     },
     "terraceMorphology": {
-      "benchN": 271,
-      "riserN": 50,
-      "benchRatioMean": 0.3298186758094095,
-      "benchRatioMedian": 0.2788033599403321,
-      "riserRatioMean": 2.6916237628908903,
-      "riserRatioMedian": 2.5449656065141095,
-      "benchSlopeMean": 0.08531458926504173,
-      "benchSlopeMedian": 0.06234330798008106,
-      "riserSlopeMean": 0.6509132447656595,
-      "riserSlopeMedian": 0.6617431034501318
+      "benchN": 256,
+      "riserN": 54,
+      "benchRatioMean": 0.35685944628452126,
+      "benchRatioMedian": 0.3052191079754071,
+      "riserRatioMean": 2.4664336432170226,
+      "riserRatioMedian": 2.165176237700171,
+      "benchSlopeMean": 0.09270785553577421,
+      "benchSlopeMedian": 0.07245183139102068,
+      "riserSlopeMean": 0.6082179929131294,
+      "riserSlopeMedian": 0.6188179855542308
     },
     "farUp": 0,
     "nearDrain": 0,
