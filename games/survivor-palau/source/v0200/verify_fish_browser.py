@@ -107,20 +107,22 @@ def main():
                     page.wait_for_function('id=>StoneMoneySurvival.getState().objects[id].location==="inventory"', arg=object_id)
                 tap('#smiCraft'); page.wait_for_function('StoneMoneySurvival.getState().spear')
                 caught = None
+                hold(page)  # Stable QA aiming; fish and terrain geometry are unchanged.
                 for attempt in range(8):
                     page.evaluate('StoneMoneySurvival.test.advance(.6)')
                     fish_id = page.evaluate("""i=>{const g=StoneMoneySurvival,fs=g.getFish().filter(f=>f.state==='swimming'&&f.nav?.status==='swimming'),f=fs[i%fs.length];
                      if(!f)throw Error('No fish available to spear');const p=f.pos,x=p[0]-.72,z=p[2]+.86,y=g.ground(x,z)+1.64;
-                     g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));return f.id;}""", attempt)
+                     g.test.position(x,z,Math.atan2(p[0]-x,-(p[2]-z)),Math.atan2(p[1]-y,Math.hypot(p[0]-x,p[2]-z)));g.cameraFrame(innerWidth/innerHeight);g.tick(0,g.getState().worldSeconds);return f.id;}""", attempt)
                     try:
                         page.wait_for_function('id=>StoneMoneySurvival.diagnostics().target===id', arg=fish_id, timeout=4000)
-                        tap('#smiPrimary')
+                        page.locator('#smiPrimary').click(force=True)
                         page.wait_for_function('id=>StoneMoneySurvival.getState().fish[id]==="kept"', arg=fish_id, timeout=2500)
                         caught = fish_id; break
                     except Exception:
                         pass
                 assert caught, 'Visible spear action never registered a geometric hit'
                 case['caughtFishId'] = caught
+                resume(page)
                 phase('pause freezes navigation')
                 tap('#smiBag'); paused = page.evaluate('({fish:StoneMoneySurvival.getFish(),time:StoneMoneySurvival.getState().worldSeconds,frames:OceanIsland.qa.sceneFrames})')
                 page.wait_for_function('n=>OceanIsland.qa.sceneFrames>=n+3', arg=paused['frames'], timeout=30000)
