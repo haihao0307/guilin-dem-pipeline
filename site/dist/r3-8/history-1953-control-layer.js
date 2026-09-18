@@ -10,7 +10,7 @@ const CONTROLS=[
     '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P2.geojson',
     '../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_13_P3.geojson',
   ]},
-  {sheet:'NG51-1',bounds:[120,27,121.5,28],urls:['../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NG51_1.geojson']},
+  {sheet:'NG51-1',bounds:[120,27,121.5,28],strict:true,authority:'user-provided-authoritative-sheet-20260918',urls:['../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NG51_1.geojson']},
   {sheet:'NH51-14',bounds:[121.5,28,123,29],urls:['../../../records/R3_10/HISTORICAL_1953_WATER_CONTROL_NH51_14.geojson']},
 ];
 
@@ -30,18 +30,19 @@ function maskSize(box){const dx=Math.max(1,box[2]-box[0]),dy=Math.max(1,box[3]-b
 function makeCanvas(w,h,fill){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle=fill;x.fillRect(0,0,w,h);return[c,x];}
 function drawWaterPolygons(ctx,polygons,box,w,h,fill='#fff'){ctx.fillStyle=fill;for(const item of polygons){ctx.beginPath();for(const ring of item.rings){let first=true;for(const[e,n]of ring){const x=(e-box[0])/(box[2]-box[0])*w,y=(box[3]-n)/(box[3]-box[1])*h;if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}ctx.closePath();}ctx.fill('evenodd');}}
 function touchingEdges(poly,bounds){const[w,s,e,n]=bounds,edges=new Set();for(const ring of poly)for(const[lon,lat]of ring){if(Math.abs(lon-w)<=EDGE_EPS_DEG)edges.add('west');if(Math.abs(lon-e)<=EDGE_EPS_DEG)edges.add('east');if(Math.abs(lat-s)<=EDGE_EPS_DEG)edges.add('south');if(Math.abs(lat-n)<=EDGE_EPS_DEG)edges.add('north');}return[...edges];}
-function buildProjectedControls(controls,box){const polygons=[];let sourcePolygonCount=0,pointCount=0;for(const control of controls)for(const geo of control.geos)for(const source of featurePolygons(geo)){sourcePolygonCount++;const p=projectedPolygon(source.coordinates),b=polygonBounds(p);if(!boxesIntersect(b,box))continue;for(const r of p)pointCount+=r.length;polygons.push({sheet:control.sheet,rings:p,bounds:b,touchEdges:touchingEdges(source.coordinates,control.bounds),sourcePixelArea:Number(source.properties?.pixelArea||0)});}return{polygons,sourcePolygonCount,pointCount};}
+function buildProjectedControls(controls,box){const polygons=[];let sourcePolygonCount=0,pointCount=0;for(const control of controls)for(const geo of control.geos)for(const source of featurePolygons(geo)){sourcePolygonCount++;const p=projectedPolygon(source.coordinates),b=polygonBounds(p);if(!boxesIntersect(b,box))continue;for(const r of p)pointCount+=r.length;polygons.push({sheet:control.sheet,strict:control.strict===true,authority:control.authority||'derived-coarse-control',rings:p,bounds:b,touchEdges:touchingEdges(source.coordinates,control.bounds),sourcePixelArea:Number(source.properties?.pixelArea||0)});}return{polygons,sourcePolygonCount,pointCount};}
 function classifyControlPolygons(polygons,base,box,w,h){
   const fullPixels=w*h,accepted=[],rejected=[],[candidateCanvas,candidateCtx]=makeCanvas(w,h,'#000');
   for(let index=0;index<polygons.length;index++){
     const item=polygons[index];candidateCtx.clearRect(0,0,w,h);candidateCtx.fillStyle='#000';candidateCtx.fillRect(0,0,w,h);drawWaterPolygons(candidateCtx,[item],box,w,h,'#fff');
     const candidate=candidateCtx.getImageData(0,0,w,h).data;let areaPixels=0,modernLandPixels=0;for(let i=0;i<candidate.length;i+=4)if(candidate[i+1]>=128){areaPixels++;if(base[i+1]>=128)modernLandPixels++;}
     if(!areaPixels)continue;const coverage=areaPixels/fullPixels,landFraction=modernLandPixels/areaPixels,waterSupport=1-landFraction,edgeCount=item.touchEdges.length;let reason='accepted';
-    if(edgeCount>=2&&item.sourcePixelArea>=8000&&waterSupport<.55)reason='reject-frame-connected-weak-modern-water-support';
+    if(item.strict)reason='accepted-authoritative-sheet';
+    else if(edgeCount>=2&&item.sourcePixelArea>=8000&&waterSupport<.55)reason='reject-frame-connected-weak-modern-water-support';
     else if(coverage>=.20&&landFraction>=.42)reason='reject-very-large-mostly-modern-land';
     else if(coverage>=.08&&landFraction>=.62)reason='reject-large-mostly-modern-land';
     else if(edgeCount>=2&&coverage>=.08&&landFraction>=.50)reason='reject-frame-connected-background';
-    const diagnostic={index,sheet:item.sheet,areaPixels,coverage:+coverage.toFixed(5),modernLandPixels,landFraction:+landFraction.toFixed(5),modernWaterSupport:+waterSupport.toFixed(5),touchEdges:item.touchEdges,sourcePixelArea:item.sourcePixelArea,reason};if(reason==='accepted'){accepted.push(item);diagnostic.accepted=true;}else{rejected.push(diagnostic);diagnostic.accepted=false;}item.quality=diagnostic;
+    const diagnostic={index,sheet:item.sheet,strict:item.strict,authority:item.authority,areaPixels,coverage:+coverage.toFixed(5),modernLandPixels,landFraction:+landFraction.toFixed(5),modernWaterSupport:+waterSupport.toFixed(5),touchEdges:item.touchEdges,sourcePixelArea:item.sourcePixelArea,reason};if(reason==='accepted'){accepted.push(item);diagnostic.accepted=true;}else{rejected.push(diagnostic);diagnostic.accepted=false;}item.quality=diagnostic;
   }
   return{accepted,rejected,all:polygons.map(p=>p.quality).filter(Boolean)};
 }
