@@ -13,27 +13,28 @@ function segFrame(px,pz,a,b){
   const rx=px-qx,rz=pz-qz;
   return{d:Math.hypot(rx,rz),signed:(dx*rz-dz*rx)/L,t,L};
 }
-function nearestPath(path,x,z){
-  let best={d:1e9,signed:0,u:0};
+function smoothPathFrame(path,x,z){
+  let minD=1e9,ws=0,ss=0,us=0;
   for(let i=0;i<path.p.length-1;i++){
     const q=segFrame(x,z,path.p[i],path.p[i+1]);
     const u=(path.cum[i]+q.L*q.t)/(path.total||1);
-    if(q.d<best.d)best={d:q.d,signed:q.signed,u};
+    minD=Math.min(minD,q.d);
+    const w=Math.exp(-.5*(q.d/42)*(q.d/42))+1e-7;
+    ws+=w;ss+=w*q.signed;us+=w*u;
   }
-  return best;
+  return{d:minD,signed:ss/(ws||1),u:us/(ws||1)};
 }
 
 // R30 does not add terrace relief. It changes lower-slope ASPECT so the agricultural slope,
 // footslope and receiving plain no longer read as one broad coplanar sheet. Each outlet family gets
 // a broad anti-symmetric torsion field: one flank is gently raised while the opposite flank is
-// lowered. This rotates local surface aspect without moving the inherited drainage graph, without
-// modifying drainage-axis cores, and without touching the foreground receiving river.
+// lowered. Segment frames are distance-blended so carrier bends cannot create a nearest-segment seam.
 export const aspectProfiles=R29.breakProfiles.map((p,i)=>({
   id:p.id,path:p.path,scaleClass:p.scaleClass,
   zStart:[-92,-78,-60][i],zEnd:[94,82,68][i],
   width0:[88,68,52][i],width1:[166,120,88][i],
   centre0:[-18,20,-10][i],sweep:[52,-44,30][i],bend:[24,-19,14][i],
-  twist:[.72,-.58,.46][i],counter:[-.20,.17,-.13][i],phase:[.24,1.12,2.18][i]
+  twist:[.52,-.42,.33][i],counter:[-.14,.12,-.09][i],phase:[.24,1.12,2.18][i]
 }));
 function aspectEnvelope(p,z){
   if(z<=p.zStart||z>=p.zEnd)return 0;
@@ -41,7 +42,7 @@ function aspectEnvelope(p,z){
 }
 export function aspectComponent(p,x,z){
   const env=aspectEnvelope(p,z);if(env<=0)return 0;
-  const q=nearestPath(p.path,x,z),u=q.u;
+  const q=smoothPathFrame(p.path,x,z),u=q.u;
   const along=S(.08,.25,u)*(1-S(.88,.994,u));if(along<=0)return 0;
   const d=R29.nearestExtendedDrainageDistance(x,z),drainClear=S(14,48,d);if(drainClear<=0)return 0;
   const riverGap=Math.abs(z-R29.riverZ(x));
@@ -90,8 +91,9 @@ export const snapshot={
   parcelGenerationEnabled:false,terraceGeometryEnabled:false,terracePilotPreviewEnabled:false,waterStateKnown:false,
   round30:{
     scope:'articulate the one-sided agricultural slope and footslope receiving plain with three unequal carrier-tied cross-slope aspect fields; terraces remain locked',
-    method:'broad anti-symmetric torsion around each outlet family rotates local slope aspect and separates catchment-facing masses while preserving inherited drainage-axis cores and the foreground receiver',
+    method:'broad anti-symmetric torsion around each outlet family rotates local slope aspect and separates catchment-facing masses while preserving inherited drainage-axis cores and the foreground receiver; carrier segment frames are smoothly blended to prevent artificial seams at bends',
     logicCorrection:'R29 being subtle in the whole-scene view does not imply that more vertical amplitude or terrace stripes are the missing cause. A broad sheet can remain visually flat because adjacent lower-slope masses share nearly the same aspect; R30 changes aspect before terrace geometry.',
+    failedAttemptCorrection:'the first R30 attempt passed 40/42 gates but created a 0.417 m per 4 m longitudinal delta jump and a 47.5 degree sampled aspect rotation. Those failures came from nearest-segment frame switching plus excessive torsion amplitude; the failed evidence is preserved and the implementation now blends segment frames and reduces torsion instead of weakening the QA gates.',
     permissionCorrection:'R30 changes local gradient and curvature inside the future candidate zone, so terrace permission is recomputed from the R30 surface; no bench, riser, parcel, inlet, outlet or hydraulic state is generated.',
     xiaomaBoundary:'the Xiaoma/TLO checkpoint still has no selected parcel and explicitly lists field microtopography, bund sections, channel sections and water-control elevations as unknown; R30 aspect articulation is synthetic substrate geometry, not survey truth.',
     mrRolordUse:'the saved frame audit is reread for ordering only: river hierarchy -> accumulated terrain influence -> terrain-conforming land use. Its Voronoi experiment, Blender dimensions, shader displacement and adaptive subdivision are not copied as agricultural truth.',
