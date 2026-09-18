@@ -1,0 +1,91 @@
+name: KAOPU u32 float mapping N17
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_u32_float_mapping_n17.cpp
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/u32_float_mapping_result_n17.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/u32_float_runtime_n17.html
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/extract_u32_float_runtime_n17.py
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15/src/bin/u32_float_n17.rs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15/src/u32_float_n17.wgsl
+      - .github/workflows/kaopu-u32-float-mapping-n17.yml
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-webgl2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replay CPU endpoint and precision probe
+        run: |
+          set -euo pipefail
+          root="docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES"
+          g++ -std=c++20 -O2 -Wall -Wextra -pedantic "$root/probe_u32_float_mapping_n17.cpp" -o /tmp/n17
+          /tmp/n17 > /tmp/u32_float_mapping_result_n17.json
+          jq -e '.gates.status == "pass" and .gates.passed == 8 and .float32ClosedDivision.hashesMappingToOne == 128' /tmp/u32_float_mapping_result_n17.json
+          cmp "$root/u32_float_mapping_result_n17.json" /tmp/u32_float_mapping_result_n17.json
+      - name: Locate runner Chrome
+        id: chrome
+        run: |
+          chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          "$chrome" --version
+          echo "path=$chrome" >> "$GITHUB_OUTPUT"
+      - name: Execute WebGL2 mapping vectors
+        run: |
+          set -euo pipefail
+          root="$PWD/docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES"
+          python3 -m http.server 8765 --directory "$root" >/tmp/n17-server.log 2>&1 &
+          server=$!
+          trap 'kill $server || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8765/u32_float_runtime_n17.html >/dev/null && break; sleep .25; done
+          timeout 90 "${{ steps.chrome.outputs.path }}" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --enable-webgl --ignore-gpu-blocklist --enable-unsafe-swiftshader --use-angle=swiftshader \
+            --virtual-time-budget=15000 --dump-dom http://127.0.0.1:8765/u32_float_runtime_n17.html > /tmp/n17-dom.html
+          python3 "$root/extract_u32_float_runtime_n17.py" /tmp/n17-dom.html \
+            "$root/u32_float_mapping_result_n17.json" /tmp/u32_float_webgl2_result_n17.json
+          jq -e '.summary.status == "pass" and .summary.passed == 6' /tmp/u32_float_webgl2_result_n17.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-u32-float-cpu-webgl2-n17
+          path: |
+            /tmp/u32_float_mapping_result_n17.json
+            /tmp/u32_float_webgl2_result_n17.json
+            /tmp/n17-dom.html
+          if-no-files-found: error
+
+  native-wgsl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mesa Vulkan software adapter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-vulkan-drivers vulkan-tools
+          icd="$(find /usr/share/vulkan/icd.d -maxdepth 1 -type f \( -name '*lvp*.json' -o -name '*lavapipe*.json' \) | head -n1)"
+          test -n "$icd"
+          echo "VK_ICD_FILENAMES=$icd" >> "$GITHUB_ENV"
+          VK_ICD_FILENAMES="$icd" vulkaninfo --summary | tee /tmp/n17-vulkaninfo.txt
+      - name: Execute pinned wgpu 29 WGSL mapping vectors
+        env:
+          WGPU_BACKEND: vulkan
+        working-directory: docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/wgpu_integer_hash_n15
+        run: |
+          cargo run --release --locked --bin u32_float_n17 2>/tmp/n17-wgpu-stderr.log | tee /tmp/u32_float_wgsl_result_n17.json
+          jq -e '.summary.status == "pass" and .exactCpuMatch == true and (.bits|length) == 24' /tmp/u32_float_wgsl_result_n17.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaopu-u32-float-native-wgsl-n17
+          path: |
+            /tmp/n17-vulkaninfo.txt
+            /tmp/n17-wgpu-stderr.log
+            /tmp/u32_float_wgsl_result_n17.json
+          if-no-files-found: error

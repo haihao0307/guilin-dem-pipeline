@@ -1,0 +1,36 @@
+{
+  "schema": "kaopu-source-lock-n17-v1",
+  "question": "What endpoint and precision contract should map a 32-bit procedural hash to a floating value?",
+  "observationRoots": [
+    {
+      "id": "A",
+      "type": "official-language-specifications",
+      "sources": [
+        {"title": "GLSL ES 3.00.6", "url": "https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf", "roles": ["uint-to-float conversion", "uintBitsToFloat", "floatBitsToUint"]},
+        {"title": "WGSL", "url": "https://www.w3.org/TR/WGSL/", "roles": ["u32-to-f32 conversion", "bitcast"]}
+      ]
+    },
+    {
+      "id": "B",
+      "type": "fixed-receiver-source-audit",
+      "repository": "haihao0307/HOUSE",
+      "commit": "c6223d36ceeb827e3894fc181340c284b1cbfa73",
+      "files": [
+        {"pathSuffix": "src/v26_event_geometry_kernel.mjs", "gitBlobSha1": "b28e0dafc37778d68e6649eb0c56c03cd704cf7e"},
+        {"pathSuffix": "src/v26_transfer_kernel.mjs", "gitBlobSha1": "cb84cae8217299b6822f6a027c31ad1a41bdf183"},
+        {"pathSuffix": "TRANSFER_CONTRACT.json", "gitBlobSha1": "843d1675163f7dd1089af4d5cd1fba5f164e514a"}
+      ],
+      "observation": "Both RNG.next and hash3i divide uint32 output by 0xffffffff; the JavaScript contract includes 1.0."
+    },
+    {
+      "id": "C",
+      "type": "executable-fixture",
+      "artifacts": [
+        "PROBES/probe_u32_float_mapping_n17.cpp",
+        "PROBES/u32_float_mapping_result_n17.json",
+        "PROBES/u32_float_runtime_n17.html",
+        "PROBES/wgpu_integer_hash_n15/src/u32_float_n17.wgsl"
+      ]
+    }
+  ]
+}

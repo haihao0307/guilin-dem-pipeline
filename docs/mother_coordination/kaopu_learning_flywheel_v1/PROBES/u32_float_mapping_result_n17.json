@@ -1,0 +1,31 @@
+{
+  "schema": "kaopu-u32-float-mapping-n17-v1",
+  "sourceAudit": {
+    "houseCommit": "c6223d36ceeb827e3894fc181340c284b1cbfa73",
+    "eventKernelBlob": "b28e0dafc37778d68e6649eb0c56c03cd704cf7e",
+    "transferKernelBlob": "cb84cae8217299b6822f6a027c31ad1a41bdf183",
+    "observedJavaScriptExpression": "uint32 / 0xffffffff",
+    "observedContract": "closed [0,1] with exact upper endpoint"
+  },
+  "float32ClosedDivision": {
+    "denominatorLiteralRoundsToBits": "0x4f800000",
+    "denominatorValue": 4294967296,
+    "firstHashMappingToOne": "0xffffff80",
+    "hashesMappingToOne": 128
+  },
+  "halfOpenCandidates": {
+    "top24": {"formula": "float(h >> 8) * 2^-24", "distinctValues": 16777216, "discardedLowBits": 8, "maximum": 0.9999999404},
+    "mantissa23": {"formula": "bitcastFloat(0x3f800000 | (h >> 9)) - 1", "distinctValues": 8388608, "discardedLowBits": 9, "maximum": 0.9999998808}
+  },
+  "vectors": [
+    {"hash": "0x00000000", "jsClosed": 0, "f32ClosedBits": "0x00000000", "top24Bits": "0x00000000", "mantissa23Bits": "0x00000000"},
+    {"hash": "0x00000001", "jsClosed": 2.3283064370807974e-10, "f32ClosedBits": "0x2f800000", "top24Bits": "0x00000000", "mantissa23Bits": "0x00000000"},
+    {"hash": "0x000000ff", "jsClosed": 5.9371814145560333e-08, "f32ClosedBits": "0x337f0000", "top24Bits": "0x00000000", "mantissa23Bits": "0x00000000"},
+    {"hash": "0x00000100", "jsClosed": 5.9604644789268413e-08, "f32ClosedBits": "0x33800000", "top24Bits": "0x33800000", "mantissa23Bits": "0x00000000"},
+    {"hash": "0xffffff7f", "jsClosed": 0.99999997019767761, "f32ClosedBits": "0x3f7fffff", "top24Bits": "0x3f7fffff", "mantissa23Bits": "0x3f7ffffe"},
+    {"hash": "0xffffff80", "jsClosed": 0.99999997043050826, "f32ClosedBits": "0x3f800000", "top24Bits": "0x3f7fffff", "mantissa23Bits": "0x3f7ffffe"},
+    {"hash": "0xfffffffe", "jsClosed": 0.99999999976716936, "f32ClosedBits": "0x3f800000", "top24Bits": "0x3f7fffff", "mantissa23Bits": "0x3f7ffffe"},
+    {"hash": "0xffffffff", "jsClosed": 1, "f32ClosedBits": "0x3f800000", "top24Bits": "0x3f7fffff", "mantissa23Bits": "0x3f7ffffe"}
+  ],
+  "gates": {"checks": 8, "passed": 8, "failed": 0, "status": "pass"}
+}
