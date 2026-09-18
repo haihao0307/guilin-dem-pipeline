@@ -1,0 +1,42 @@
+name: KAOPU Farmland screen space N19
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_screen_space_n19.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_result_n19.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-screen-space-n19/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-screen-space-n19.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r27
+          git -C /tmp/farmland-r27 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r27 fetch --depth 1 origin 4b53e5e84b8973884827ed81abad0c0f16148b14
+          git -C /tmp/farmland-r27 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r27 rev-parse HEAD)" = 4b53e5e84b8973884827ed81abad0c0f16148b14
+      - name: Verify source locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r27/farmland-object-dna/research/r045-autonomous-rebuild/round-27
+          test "$(sha256sum "$base/r045_round27_kernel.mjs" | cut -d' ' -f1)" = 03ba25a792a80e5e9765a442c63b67639c4020dfcd53ac9f06baaa1335d3f833
+          test "$(sha256sum "$base/r045_round27_audit.html" | cut -d' ' -f1)" = 1032f3f03e1ff245209223477d1a3a126c664a49ee20d6026584081d7c530745
+          test "$(sha256sum "$base/R045_ROUND27_REPORT.md" | cut -d' ' -f1)" = fb5967f7e0074f5161f0a306ccd768af726a5f7f5337758363045662a8a217a5
+          test "$(sha256sum "$base/r045_round27_qa_result.json" | cut -d' ' -f1)" = 89e46e40de57ebea6518a6ac0feacb5191206cd0b8eedbd71f7c68715b691946
+          KAOPU_FARMLAND_R27_ROOT=/tmp/farmland-r27 \
+          KAOPU_N19_OUTPUT=/tmp/farmland_screen_space_result_n19.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_screen_space_n19.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_screen_space_result_n19.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_result_n19.json

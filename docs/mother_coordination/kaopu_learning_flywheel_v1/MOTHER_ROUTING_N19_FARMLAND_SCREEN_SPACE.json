@@ -1,0 +1,42 @@
+{
+  "schema": "kaopu.mother-routing.farmland-screen-space-n19/1",
+  "status": "prepared-for-delivery",
+  "sourceCommit": "haihao0307/guilin-dem-pipeline@4b53e5e84b8973884827ed81abad0c0f16148b14",
+  "finding": "R045.27 is numerically real but its locked-camera maximum sampled geometric motion is only 0.146297 px; the amplitude-normalized plan diagnostic cannot stand in for unnormalized perspective salience.",
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "haihao0307/guilin-dem-pipeline PR65",
+      "state": "prepared-for-delivery",
+      "reason": "new R045.27 implementation and visual feedback creates a concrete, non-duplicate acceptance gate for the active R045.28 experiment",
+      "acceptance": [
+        "fixed implementation commit",
+        "exact camera, internal render size and mesh grid",
+        "world-space delta and unnormalized projected pixel-motion distributions",
+        "normal/style response kept separate from geometric motion",
+        "normalized plan diagnostic explicitly labeled diagnostic",
+        "browser/device receipt and human visual acceptance kept separate"
+      ]
+    },
+    {
+      "mother": "Landscape",
+      "state": "not-routed",
+      "reason": "Farmland fixed-camera source-specific result; no new Landscape implementation receipt"
+    },
+    {
+      "mother": "Brick Material",
+      "state": "not-routed",
+      "reason": "no Brick fixed-terrain-camera consumer"
+    }
+  ],
+  "prohibitions": [
+    "do not modify production Mother branches",
+    "do not use a normalized plan panel as perspective acceptance",
+    "do not interpret the tenfold negative control as an amplitude recommendation",
+    "do not unlock terraces, parcels or hydraulic claims",
+    "do not call delivery adoption"
+  ],
+  "acknowledgement": "Unknown",
+  "implementation": "Unknown",
+  "productionAdoption": "Unknown"
+}

@@ -1,0 +1,247 @@
+{
+  "schema": "kaopu.probe.farmland-screen-space-n19/1",
+  "source": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "4b53e5e84b8973884827ed81abad0c0f16148b14",
+    "implementationCommit": "8c57582b58b9c1b0eee2ee9c5bacdbe35cb441b5",
+    "camera": {
+      "position": [
+        322,
+        154,
+        360
+      ],
+      "target": [
+        0,
+        18,
+        -52
+      ],
+      "focalPixels": 770,
+      "canvas": [
+        650,
+        650
+      ]
+    },
+    "mesh": {
+      "cells": [
+        52,
+        62
+      ],
+      "worldStepMeters": [
+        8.846153846153847,
+        8.387096774193548
+      ]
+    }
+  },
+  "passed": true,
+  "gateCount": 13,
+  "passedCount": 13,
+  "checks": [
+    {
+      "name": "fixed_source_version",
+      "pass": true,
+      "value": {
+        "before": "R045.26",
+        "after": "R045.27"
+      },
+      "limit": "R045.26 -> R045.27"
+    },
+    {
+      "name": "audit_camera_literal_locked",
+      "pass": true,
+      "value": "camera([322,154,360],[0,18,-52],770)",
+      "limit": "exact audit camera literal present"
+    },
+    {
+      "name": "audit_canvas_locked",
+      "pass": true,
+      "value": "can.width=650;can.height=650",
+      "limit": "650 x 650 internal canvas"
+    },
+    {
+      "name": "audit_mesh_grid_locked",
+      "pass": true,
+      "value": "nx=52,nz=62",
+      "limit": "52 x 62 cells"
+    },
+    {
+      "name": "visual_acceptance_remains_false",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "active_render_vertices_exist",
+      "pass": true,
+      "value": 316,
+      "limit": ">50 vertices with |delta| > 0.003 m"
+    },
+    {
+      "name": "render_vertex_motion_is_subpixel",
+      "pass": true,
+      "value": {
+        "count": 316,
+        "min": 0.003979930985961144,
+        "p50": 0.028016891373334036,
+        "p95": 0.106269260770011,
+        "max": 0.1432200669450201,
+        "mean": 0.039260516707476316
+      },
+      "limit": "all active fixed-view mesh vertices move <0.5 px"
+    },
+    {
+      "name": "dense_peak_motion_is_subpixel",
+      "pass": true,
+      "value": {
+        "count": 973,
+        "min": 0.0037270214758598473,
+        "p50": 0.027131159059944964,
+        "p95": 0.10430729490790064,
+        "max": 0.1462965182083074,
+        "mean": 0.0391136334840351
+      },
+      "limit": "all dense support samples move <0.5 px"
+    },
+    {
+      "name": "most_active_vertices_move_under_tenth_pixel",
+      "pass": true,
+      "value": {
+        "0.1": 0.9240506329113924
+      },
+      "limit": ">90% move <0.1 px"
+    },
+    {
+      "name": "tenfold_amplitude_control_is_live",
+      "pass": true,
+      "value": {
+        "count": 316,
+        "min": 9.995604061359115,
+        "p50": 9.999209557344582,
+        "p95": 10.000611703494041,
+        "max": 10.001526328815059,
+        "mean": 9.998954432355658
+      },
+      "limit": "median projection response approximately 10x"
+    },
+    {
+      "name": "normal_response_exists",
+      "pass": true,
+      "value": {
+        "count": 311,
+        "min": 0.0008400412493722055,
+        "p50": 0.10088270207388375,
+        "p95": 0.26367636112879544,
+        "max": 0.36763991675983304,
+        "mean": 0.11836880735265039
+      },
+      "limit": "non-zero fixed-grid normal change"
+    },
+    {
+      "name": "renderer_style_response_exists",
+      "pass": true,
+      "value": {
+        "count": 311,
+        "min": 0.0013404870551158334,
+        "p50": 0.04433640531886232,
+        "p95": 0.15610597926310515,
+        "max": 0.24319266936920117,
+        "mean": 0.05959641132056776
+      },
+      "limit": "non-zero per-cell HSL/RGB style change"
+    },
+    {
+      "name": "plan_diagnostic_normalizes_amplitude",
+      "pass": true,
+      "value": true,
+      "limit": "plan panel divides by this round maximum before coloring"
+    }
+  ],
+  "metrics": {
+    "activeRenderVertices": 316,
+    "renderVertexElevationDeltaMeters": {
+      "count": 316,
+      "min": 0.0030083690475610552,
+      "p50": 0.018630475332576873,
+      "p95": 0.07983741693447655,
+      "max": 0.10049547919991755,
+      "mean": 0.028111927555882564
+    },
+    "renderVertexMotionPixels": {
+      "count": 316,
+      "min": 0.003979930985961144,
+      "p50": 0.028016891373334036,
+      "p95": 0.106269260770011,
+      "max": 0.1432200669450201,
+      "mean": 0.039260516707476316
+    },
+    "renderVertexMotionFractionsBelowPixels": {
+      "1": 1,
+      "0.05": 0.7120253164556962,
+      "0.1": 0.9240506329113924,
+      "0.25": 1,
+      "0.5": 1
+    },
+    "denseSupportMotionPixels": {
+      "count": 973,
+      "min": 0.0037270214758598473,
+      "p50": 0.027131159059944964,
+      "p95": 0.10430729490790064,
+      "max": 0.1462965182083074,
+      "mean": 0.0391136334840351
+    },
+    "denseSupportElevationDeltaMeters": {
+      "count": 973,
+      "min": 0.0030079758687976193,
+      "p50": 0.01805975002080168,
+      "p95": 0.07864421023266943,
+      "max": 0.10223353638825543,
+      "mean": 0.028000237080956752
+    },
+    "tenfoldAmplitudeProjectionRatio": {
+      "count": 316,
+      "min": 9.995604061359115,
+      "p50": 9.999209557344582,
+      "p95": 10.000611703494041,
+      "max": 10.001526328815059,
+      "mean": 9.998954432355658
+    },
+    "activeRenderCells": 311,
+    "renderCellNormalAngleDegrees": {
+      "count": 311,
+      "min": 0.0008400412493722055,
+      "p50": 0.10088270207388375,
+      "p95": 0.26367636112879544,
+      "max": 0.36763991675983304,
+      "mean": 0.11836880735265039
+    },
+    "renderCellIlluminationDelta": {
+      "count": 311,
+      "min": 0.0000031908747457620734,
+      "p50": 0.0003381000504316667,
+      "p95": 0.001122705907952104,
+      "max": 0.001525357759781354,
+      "mean": 0.00044961374651862255
+    },
+    "renderCellRgbEuclidean8": {
+      "count": 311,
+      "min": 0.0013404870551158334,
+      "p50": 0.04433640531886232,
+      "p95": 0.15610597926310515,
+      "max": 0.24319266936920117,
+      "mean": 0.05959641132056776
+    },
+    "renderCellProjectedAreaPixels2": {
+      "count": 311,
+      "min": 25.113667941564927,
+      "p50": 54.06240018559038,
+      "p95": 137.98346197837964,
+      "max": 180.97749269602355,
+      "mean": 64.3279784792446
+    }
+  },
+  "interpretationBoundary": [
+    "pixel displacement is a geometric screen-space diagnostic, not a human just-noticeable-difference threshold",
+    "per-cell RGB delta replays the audit renderer style formula, not a calibrated display or perceptual metric",
+    "the amplitude-normalized plan panel demonstrates support and sign, not fixed-view salience",
+    "human visual acceptance remains the Mother receipt and is not inferred from this probe"
+  ]
+}

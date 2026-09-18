@@ -1,0 +1,65 @@
+{
+  "id": "KAOPU-NOISE-N19-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N18_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N18_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_SEED_NAMESPACE_N18.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6J",
+    "topic": "fixed-camera terrain screen-space resolvability",
+    "question": "Why can a numerically real 0.102 m Farmland transition remain difficult to read in its locked fixed view?",
+    "state": "candidate-partial-pinned-source-cpu-projection-style-replay-verified",
+    "evidence": [
+      "references/farmland-screen-space-n19/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_screen_space_n19.mjs",
+      "PROBES/farmland_screen_space_result_n19.json",
+      "LEARNING_LOG/2026-09-18_FARMLAND_SCREEN_SPACE_N19.md",
+      "CURRENT_BEST_VIEW_N19_FARMLAND_SCREEN_SPACE.md"
+    ],
+    "checks": "13/13 local pass; CI pending",
+    "integration": "routing prepared, not acknowledged",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "R045.27 maximum dense projected motion is 0.146297 px in its exact fixed camera",
+    "92.405% of active rendered vertices move less than 0.1 px",
+    "tenfold amplitude negative control produces approximately tenfold projected motion",
+    "the renderer's normal and continuous style response exists but remains small",
+    "the plan diagnostic normalizes by the round maximum and therefore cannot prove perspective salience"
+  ],
+  "verificationReceipt": {
+    "checks": "13/13 local pass",
+    "successfulRun": "pending",
+    "sourceReplay": "fixed Farmland R045.27 commit and four source SHA-256 values",
+    "runtime": "Node.js CPU exact camera/projection/style replay",
+    "hardwareGpuBrowserMobile": "not exercised by N19 probe",
+    "evidenceIndependence": "Mother numeric/browser/human receipt is one root; N19 CPU projection is a derived source replay; SideFX and Unreal documentation are separate contract references, not independent R045.27 measurements"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one incremental R045.28 screen-space acceptance gate"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no relevant new implementation receipt"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no relevant fixed-terrain-camera consumer"
+    }
+  ],
+  "nextGap": "Obtain the completed R045.28 fixed-commit numeric, browser, screen-space and human visual receipts; do not extend package-only statistics while the Mother experiment is still in progress."
+}
