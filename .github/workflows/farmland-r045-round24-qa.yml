@@ -56,27 +56,17 @@ jobs:
           with open(os.path.join(out,'r045_round24_browser_result.json'),'w') as f: json.dump(r,f,indent=2)
           print(json.dumps(r,indent=2)); raise SystemExit(0 if r['passed'] else 3)
           PY
-      - name: Build compact visual-review thumbnail
+      - name: Build reviewable screenshot base64
         if: always()
         shell: bash
         run: |
           set -e
           OUT="$PWD/farmland-object-dna/research/r045-autonomous-rebuild/round-24"
           SRC="$OUT/r045_round24_fixed_view.png"
-          TMP=/tmp/r045_round24_thumb.jpg
-          rm -f "$TMP" "$OUT/r045_round24_fixed_view_thumb.b64.txt"
-          if command -v magick >/dev/null 2>&1; then
-            magick "$SRC" -resize 420x270 -strip -quality 72 "$TMP"
-          elif command -v convert >/dev/null 2>&1; then
-            convert "$SRC" -resize 420x270 -strip -quality 72 "$TMP"
-          elif command -v ffmpeg >/dev/null 2>&1; then
-            ffmpeg -loglevel error -y -i "$SRC" -vf 'scale=420:-2' -q:v 7 "$TMP"
-          else
-            echo 'no thumbnail encoder found' >&2; exit 3
-          fi
-          base64 -w0 "$TMP" > "$OUT/r045_round24_fixed_view_thumb.b64.txt"
-          test -s "$OUT/r045_round24_fixed_view_thumb.b64.txt"
-          echo "thumbnail_bytes=$(wc -c < "$TMP") base64_bytes=$(wc -c < "$OUT/r045_round24_fixed_view_thumb.b64.txt")"
+          test -s "$SRC"
+          base64 -w76 "$SRC" > "$OUT/r045_round24_fixed_view.b64.txt"
+          test -s "$OUT/r045_round24_fixed_view.b64.txt"
+          echo "png_bytes=$(wc -c < "$SRC") base64_bytes=$(wc -c < "$OUT/r045_round24_fixed_view.b64.txt")"
       - name: Build concise QA summary
         if: always()
         shell: bash
@@ -100,7 +90,7 @@ jobs:
             farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_browser_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_summary.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view.png
-            farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view_thumb.b64.txt
+            farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view.b64.txt
       - name: Persist machine-readable and visual QA evidence
         if: always()
         shell: bash
@@ -108,7 +98,7 @@ jobs:
           set -e
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_summary.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view.png farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view_thumb.b64.txt || true
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_summary.json farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view.png farmland-object-dna/research/r045-autonomous-rebuild/round-24/r045_round24_fixed_view.b64.txt
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'farmland R045.24 persist QA evidence [skip ci]'
           git push origin HEAD:${GITHUB_REF_NAME}
