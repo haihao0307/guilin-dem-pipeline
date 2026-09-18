@@ -1,0 +1,46 @@
+(async()=>{'use strict';
+const doc=FieldKernel.decode(window.FISH_FIELD_DATA),$=id=>document.getElementById(id),canvas=$('canvas');
+const gl=canvas.getContext('webgl2',{antialias:true,alpha:false});if(!gl)throw Error('WebGL2 unavailable');
+const vertex=`#version 300 es
+precision highp float;
+precision highp int;
+in vec3 pos,normal,color,geoNormal,emission;in vec3 params;
+uniform mat4 vp,view;uniform float focal,time,motion,sizeScale,pointGain;uniform int isFish;
+uniform vec3 spine[33];uniform float angles[33];
+out vec3 center,n,gN,c,e;out float radius,alpha,rough;out vec3 rest;
+void main(){vec3 p=pos;vec3 sn=normal,gn=geoNormal;rest=pos;
+ if(isFish==1&&motion>.5){float originalZ=pos.z*.35603609-.06;float s=clamp((.01-originalZ)/.24821342,0.,1.)*32.;int i=min(31,int(floor(s)));float f=s-float(i),a=mix(angles[i],angles[i+1],f);vec3 base=mix(spine[i],spine[i+1],f);if(originalZ<=.01){p.x=base.x+cos(a)*pos.x;p.z=base.z+sin(a)*pos.x;mat3 r=mat3(cos(a),0.,sin(a),0.,1.,0.,-sin(a),0.,cos(a));sn=r*sn;gn=r*gn;}}
+ p*=sizeScale;center=p;n=sn;gN=gn;c=color;e=emission;alpha=params.x;rough=params.y;radius=params.z*pointGain*sizeScale;vec4 v=view*vec4(p,1.);gl_Position=vp*vec4(p,1.);gl_PointSize=clamp(2.*radius*focal/max(.05,-v.z),1.5,100.);
+}`;
+const fragment=`#version 300 es
+precision highp float;
+precision highp int;
+in vec3 center,n,gN,c,e,rest;in float radius,alpha,rough;
+uniform vec3 eye,light;uniform mat4 vp,invView;uniform vec2 resolution;uniform float focal;uniform int palette,isFish;uniform float exposure;
+out vec4 outColor;
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+void main(){if(alpha<.13)discard;vec2 nd=(gl_FragCoord.xy-.5*resolution)/focal;vec3 ray=normalize((invView*vec4(nd,-1.,0.)).xyz),gn=normalize(gN);float den=dot(ray,gn);if(abs(den)<.045)discard;float t=dot(center-eye,gn)/den;if(t<0.)discard;vec3 p=eye+ray*t;if(length(p-center)>radius)discard;vec4 clip=vp*vec4(p,1.);gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);
+ vec3 N=normalize(n);if(dot(N,eye-p)<0.)N=-N;vec3 V=normalize(eye-p),L=normalize(light),H=normalize(L+V);float nv=max(dot(N,V),.001),nl=max(dot(N,L),0.),nh=max(dot(N,H),0.),vh=max(dot(V,H),0.);
+ vec3 base=clamp(c,0.,1.);
+ if(isFish==1&&palette>0){float lum=dot(base,vec3(.2126,.7152,.0722));float stripe=smoothstep(.22,.27,abs(sin((rest.z+.6)*15.+rest.y*4.)));if(palette==1)base=mix(vec3(.018,.045,.14),vec3(.95,.47,.012),clamp(lum*1.8+rest.y*1.1,0.,1.));if(palette==2)base=mix(vec3(.95,.15,.018),vec3(.92,.9,.75),stripe)*(.6+lum*.6);if(palette==3)base=mix(vec3(.14,.022,.065),vec3(.15,.57,.52),clamp(lum*2.,0.,1.));}
+ float a=max(.045,rough*rough),a2=a*a,d=a2/(3.14159*pow(nh*nh*(a2-1.)+1.,2.));float k=(rough+1.)*(rough+1.)/8.,gv=nv/(nv*(1.-k)+k),gl=nl/(nl*(1.-k)+k);vec3 f0=vec3(.04*.421242),F=f0+(1.-f0)*pow(1.-vh,5.);vec3 spec=d*gv*gl*F/max(.004,4.*nl*nv);
+ vec3 shade=(base*(1.-F)/3.14159+spec)*nl*3.15+base*(.25+.13*max(N.y,0.)) +e*.55;
+ outColor=vec4(pow(aces(shade*exposure),vec3(1./2.2)),1.);
+}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
+const U={};for(const k of ['vp','view','invView','focal','time','motion','sizeScale','pointGain','isFish','spine','angles','eye','light','resolution','palette','exposure'])U[k]=gl.getUniformLocation(program,k);
+const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);const attrs=[['pos',3,0],['normal',3,3],['color',3,6],['params',3,9],['geoNormal',3,12],['emission',3,15]];for(const[name,n,offset]of attrs){const a=gl.getAttribLocation(program,name);if(a>=0){gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,18*4,offset*4)}}
+let specimen=null,kind='fish',points=0,paused=false,moving=false,time=0,last=performance.now(),palette=0,dist=1.7,yaw=1.36,pitch=.18,scale=1,drag=null,frames=0,fps=0,stamp=performance.now();const cache={};
+function setData(a){specimen=a;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,a.data,gl.STATIC_DRAW);points=a.count;}
+function setMode(v){kind=v;moving=v==='fish'?moving:false;if(!cache[v])cache[v]=v==='fish'?FieldKernel.fish(doc,1):v==='brain'?CoralKernel.brain(0):v==='brain-purple'?CoralKernel.brain(1.4):CoralKernel.staghorn(13);setData(cache[v]);dist=v==='fish'?1.70:v==='staghorn'?3.0:2.05;$('detail').textContent=v==='fish'?'源约束双参数场 · 尚非完整解剖内核':'数学形态候选 · 非特定珊瑚物种';document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===v));}
+const norm=a=>{const l=Math.hypot(...a);return a.map(v=>v/l)},cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+function camera(){const eye=[dist*Math.cos(pitch)*Math.sin(yaw),dist*Math.sin(pitch),dist*Math.cos(pitch)*Math.cos(yaw)],z=norm(eye),x=norm(cross([0,1,0],z)),y=cross(z,x);const view=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);const inv=new Float32Array([x[0],x[1],x[2],0,y[0],y[1],y[2],0,z[0],z[1],z[2],0,...eye,1]);const f=1/Math.tan(.62/2),asp=canvas.width/canvas.height,near=.03,far=15,p=new Float32Array([f/asp,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0]);const vp=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)vp[c*4+r]+=p[k*4+r]*view[c*4+k];return{eye,view,inv,vp,focal:canvas.height*f*.5}}
+function spine(){const p=new Float32Array(33*3),a=new Float32Array(33),ds=.24821342/.35603609/32;let x=0,z=(.01+.06)/.35603609;p[2]=z;const amp=[0.0, 0.010053, 0.010053, 0.029613, 0.104245, 0.145853, 0.225781, 0.2954],ph=[-1.400334, 0.057657, 0.057657, -0.20646, -0.591352, -0.756882, -1.174572, -1.511436];for(let i=0;i<33;i++){const s=i/32,f=s*7,j=Math.min(6,Math.floor(f)),t=f-j;const A=amp[j]*(1-t)+amp[j+1]*t,P=ph[j]*(1-t)+ph[j+1]*t;a[i]=A*Math.sin(time*2*Math.PI/2.06666657+P);if(i>0){const theta=(a[i]+a[i-1])*.5;x+=Math.sin(theta)*ds;z-=Math.cos(theta)*ds;p[i*3]=x;p[i*3+2]=z;}}gl.uniform3fv(U.spine,p);gl.uniform1fv(U.angles,a);return{p,a,ds}}
+function draw(now){const dt=Math.max(0,(now-last)/1000);last=now;if(!paused)time+=dt;const ratio=Math.min(devicePixelRatio,1.25),w=Math.floor(innerWidth*ratio),h=Math.floor((innerHeight-$('top').getBoundingClientRect().height)*ratio);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.BLEND);gl.clearColor(.045,.075,.09,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const C=camera();gl.uniformMatrix4fv(U.vp,false,C.vp);gl.uniformMatrix4fv(U.view,false,C.view);gl.uniformMatrix4fv(U.invView,false,C.inv);gl.uniform3fv(U.eye,C.eye);gl.uniform3fv(U.light,[.5,.8,.65]);gl.uniform2f(U.resolution,w,h);gl.uniform1f(U.focal,C.focal);gl.uniform1f(U.time,time);gl.uniform1f(U.motion,moving?1:0);gl.uniform1f(U.sizeScale,scale);gl.uniform1f(U.pointGain,kind==='fish'?1.1:1.02);gl.uniform1i(U.isFish,kind==='fish'?1:0);gl.uniform1i(U.palette,palette);gl.uniform1f(U.exposure,1.15);spine();gl.drawArrays(gl.POINTS,0,points);frames++;if(now-stamp>1000){fps=frames*1000/(now-stamp);frames=0;stamp=now;$('status').textContent=`${points.toLocaleString()} 个函数采样点 · 鱼体三角面 0 · ${fps.toFixed(1)} FPS · ${moving?'运动研究：未验收':'静态形态检查'}`}requestAnimationFrame(draw)}
+for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>setMode(b.dataset.mode);
+$('palette').onchange=e=>{palette=+e.target.value;$('paletteNote').textContent=palette?'仅为配色实验，不是新物种。':'原参考外观场的有损函数拟合。'};
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'继续':'暂停'};$('motion').onclick=()=>{moving=!moving;$('motion').textContent=moving?'关闭游动研究':'开启游动研究'};$('side').onclick=()=>{yaw=Math.PI*.5;pitch=0};$('three').onclick=()=>{yaw=1.05;pitch=.28};$('head').onclick=()=>{yaw=.38;pitch=.12;dist=1.2};$('scale').oninput=e=>{scale=+e.target.value};
+canvas.onpointerdown=e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)};canvas.onpointermove=e=>{if(drag){yaw-=(e.clientX-drag[0])*.008;pitch=Math.max(-1.4,Math.min(1.4,pitch+(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY]}};canvas.onpointerup=()=>drag=null;canvas.onpointercancel=()=>drag=null;canvas.onwheel=e=>{e.preventDefault();dist=Math.max(.7,Math.min(5,dist*Math.exp(e.deltaY*.001)))};
+setMode('fish');$('boot').remove();window.FunctionStudy={setMode,setData,getState:()=>({kind,points,paused,moving,time,fps,glError:gl.getError(),sourceFacesInRuntime:0}),spine,setView:(y,p,d)=>{yaw=y;pitch=p;dist=d},setMoving:v=>moving=v,fieldDoc:doc};requestAnimationFrame(draw);
+})().catch(e=>{document.getElementById('boot').textContent='启动失败：'+e.message;console.error(e)});
