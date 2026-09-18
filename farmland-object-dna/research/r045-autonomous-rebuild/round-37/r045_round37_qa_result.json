@@ -1,0 +1,360 @@
+{
+  "version": "R045.37",
+  "passed": false,
+  "gateCount": 34,
+  "passedCount": 31,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.37",
+      "limit": "R045.37"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carriers"
+    },
+    {
+      "name": "terrace_geometry_substantive_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5045566963432688,
+        "changeFrom35": 0.015703662941921215,
+        "active": 488,
+        "oldActive": 488,
+        "core": 345,
+        "oldCore": 345,
+        "gainCells": 20,
+        "thresholdCross": 0,
+        "maxGain": 0.0487184328918695,
+        "unsafe": 0,
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0,
+        "groups": [
+          86,
+          200,
+          202
+        ],
+        "rowRunsN": 76,
+        "rowRunsO": 76,
+        "fragmentationBurdenN": 0.1557377049180328,
+        "fragmentationBurdenO": 0.1557377049180328,
+        "medianLongestN": 54,
+        "medianLongestO": 54,
+        "maxLongestN": 72,
+        "maxLongestO": 72
+      },
+      "limit": ".20m < max delta < .95m"
+    },
+    {
+      "name": "cached_field_is_material",
+      "pass": false,
+      "value": {
+        "gainCells": 20,
+        "maxGain": 0.0487184328918695
+      },
+      "limit": ">20 samples gain >.004 and max gain >.01"
+    },
+    {
+      "name": "cached_field_changes_topology",
+      "pass": false,
+      "value": {
+        "thresholdCross": 0
+      },
+      "limit": ">2 weak inherited samples cross .12"
+    },
+    {
+      "name": "r37_change_from_r35_bounded",
+      "pass": true,
+      "value": 0.015703662941921215,
+      "limit": ".005m < sampled max change < .40m"
+    },
+    {
+      "name": "support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 488,
+        "oldActive": 488
+      },
+      "limit": "active support >= R35"
+    },
+    {
+      "name": "core_does_not_shrink",
+      "pass": true,
+      "value": {
+        "core": 345,
+        "oldCore": 345
+      },
+      "limit": "core support >= R35"
+    },
+    {
+      "name": "fragmentation_burden_improves_or_holds",
+      "pass": true,
+      "value": {
+        "burdenN": 0.1557377049180328,
+        "burdenO": 0.1557377049180328
+      },
+      "limit": "runs/active <=1.01x R35"
+    },
+    {
+      "name": "longest_ribbons_hold_or_improve",
+      "pass": true,
+      "value": {
+        "medianNew": 54,
+        "medianOld": 54,
+        "maxNew": 72,
+        "maxOld": 72
+      },
+      "limit": "median longest run >= R35"
+    },
+    {
+      "name": "all_three_groups_remain_material",
+      "pass": true,
+      "value": [
+        86,
+        200,
+        202
+      ],
+      "limit": "each group >20 active samples"
+    },
+    {
+      "name": "cached_candidates_stay_safe",
+      "pass": true,
+      "value": {
+        "unsafe": 0
+      },
+      "limit": "no gained sample in drainage core/outside eligibility/receiver"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero support/delta <=12m drainage"
+    },
+    {
+      "name": "r36_verified_seed_signal_retained",
+      "pass": false,
+      "value": {
+        "seedCompared": 3,
+        "seedRetained": 3,
+        "maxSeedLoss": 0.03414498365075769
+      },
+      "limit": ">=65% sampled R36 positive seeds remain positive in R37"
+    },
+    {
+      "name": "r35_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 294,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "step/phase/raw exactly inherited"
+    },
+    {
+      "name": "bench_riser_samples_exist",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6101468736072166
+      },
+      "limit": ">10 bench and >3 riser samples"
+    },
+    {
+      "name": "benches_flatter_than_r30",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6101468736072166
+      },
+      "limit": "bench/base median <.90"
+    },
+    {
+      "name": "risers_steeper_than_benches",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6101468736072166
+      },
+      "limit": "riser slope >1.25x bench"
+    },
+    {
+      "name": "risers_steepen_vs_r30",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6101468736072166
+      },
+      "limit": "riser/base median >1.08"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.7659721144764824,
+      "limit": "<1.25m per 6m"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R36 numeric success does not imply visual acceptance, because its real Chrome audit timed out. Conversely, a timeout does not justify merely raising the timeout: pointwise fan search cost was part of the implementation defect. R37 changes both topology representation and evaluation architecture while preserving stair amplitude and hydrology.",
+      "limit": "numeric pass != visual pass; timeout != raise timeout"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the lattice and interpolated joins are synthetic QA morphology. The 12.5 m macro DEM and photographs still cannot supply surveyed branch/merge locations, parcel boundaries, bund/channel sections, inlet/outlet sill elevations or event water management.",
+      "limit": "missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO unknowns remain field boundary/location, microtopography, bund section, channel section and water-control elevation. Surface continuity is not ownership or hydraulic connectivity.",
+      "limit": "surface continuity != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord research is used only for ordering: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. No Blender dimensions, Voronoi cells or shader displacement are treated as agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png was reopened for visible nested, unequal-width, contour-following continuity and preserved drainage interruptions only; no metric dimensions or hydraulic state are inferred.",
+      "limit": "visual morphology only"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5045566963432688,
+      "changeFrom35": 0.015703662941921215,
+      "active": 488,
+      "oldActive": 488,
+      "core": 345,
+      "oldCore": 345,
+      "gainCells": 20,
+      "thresholdCross": 0,
+      "maxGain": 0.0487184328918695,
+      "unsafe": 0,
+      "hardCoreActive": 0,
+      "hardCoreDelta": 0,
+      "groups": [
+        86,
+        200,
+        202
+      ],
+      "rowRunsN": 76,
+      "rowRunsO": 76,
+      "fragmentationBurdenN": 0.1557377049180328,
+      "fragmentationBurdenO": 0.1557377049180328,
+      "medianLongestN": 54,
+      "medianLongestO": 54,
+      "maxLongestN": 72,
+      "maxLongestO": 72
+    },
+    "terraceMorphology": {
+      "benchN": 62,
+      "riserN": 14,
+      "benchRatioMedian": 0.2604845857102642,
+      "riserRatioMedian": 2.436454981437061,
+      "benchSlopeMedian": 0.0655900406174896,
+      "riserSlopeMedian": 0.6101468736072166
+    },
+    "seedRetained": 3,
+    "seedCompared": 3,
+    "maxSeedLoss": 0.03414498365075769,
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.7659721144764824
+  }
+}
