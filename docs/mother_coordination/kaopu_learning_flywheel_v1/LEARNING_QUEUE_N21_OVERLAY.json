@@ -1,0 +1,67 @@
+{
+  "id": "KAOPU-NOISE-N21-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N20_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N20_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_FARMLAND_ASPECT_SAMPLING_N20.md",
+    "MEETINGS/2026-09-18/EXPERT_FARMLAND_ASPECT_0300.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6L",
+    "topic": "Farmland terrace cut/fill accounting and lattice phase",
+    "question": "Does R045.32's both-cut-and-fill gate establish volume balance, and what minimum receipt is transferable?",
+    "state": "candidate-partial-pinned-source-cpu-area-and-phase-counterexample-verified",
+    "evidence": [
+      "references/farmland-terrace-cut-fill-n21/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_terrace_cut_fill_n21.mjs",
+      "PROBES/farmland_terrace_cut_fill_result_n21.json",
+      "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_CUT_FILL_N21.md",
+      "CURRENT_BEST_VIEW_N21_FARMLAND_TERRACE_CUT_FILL.md"
+    ],
+    "checks": "8/8 local pass; CI pending at initial commit",
+    "integration": "routing prepared, not yet delivered at initial commit",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "R045.32's retained 4 m lattice reproduces 57.306215 positive and 57.541003 negative sampled metres",
+    "after 16 m2 area weighting that lattice gives 916.899434 m3 fill, 920.656044 m3 cut and -3.756610 m3 net",
+    "four other 4 m origin phases reverse the net sign and span -171.073900 to +120.993493 m3",
+    "a 1 m midpoint estimate gives 917.263101 m3 fill, 904.842781 m3 cut and +12.420320 m3 net but is not an exact continuous integral",
+    "worst net difference from that dense estimate grows across the fixed phase set from 64.587666 m3 at 2 m to 183.494220 m3 at 4 m and 310.606602 m3 at 8 m",
+    "maximum height delta stays similar while integrated net varies widely, so a local amplitude bound is not a volume bound"
+  ],
+  "verificationReceipt": {
+    "checks": "8/8 local pass; CI pending at initial commit",
+    "successfulRun": null,
+    "sourceReplay": "fixed Farmland R045.32 commit plus two SHA-256 source locks",
+    "runtime": "Node.js CPU exact Mother area integration and negative-control lattice phase replay",
+    "hardwareGpuBrowserMobile": "not exercised by N21 probe",
+    "evidenceIndependence": "R045.32 is one implementation root; N21 is a derived fixed-source counterexample; SideFX docs are a separate contract root; inherited expert review is candidate interpretation, not empirical execution evidence"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one incremental cut/fill accounting warning; not delivered, acknowledged or adopted at initial commit"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no fixed R045.32 consumer"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no terrace-earthwork consumer"
+    }
+  ],
+  "nextGap": "Obtain Farmland acknowledgement and a versioned area-weighted receipt with offset/finer-grid convergence; only then compare the analytic heightfield with the actual render mesh, without promoting geometric balance to soil or hydraulic truth."
+}

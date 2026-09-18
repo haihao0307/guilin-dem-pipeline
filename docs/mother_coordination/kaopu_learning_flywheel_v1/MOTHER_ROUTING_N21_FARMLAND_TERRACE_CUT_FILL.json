@@ -1,0 +1,45 @@
+{
+  "schema": "kaopu.mother-routing.farmland-terrace-cut-fill-n21/1",
+  "status": "prepared-not-delivered",
+  "sourceLearningNote": "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_CUT_FILL_N21.md",
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "haihao0307/guilin-dem-pipeline PR65",
+      "reason": "R045.32 now enables synthetic terrace geometry, but its current both-signs QA does not establish volume balance and is strongly lattice-phase sensitive",
+      "incrementalGuidance": [
+        "retain the existing positive/negative sample diagnostic and label its units as sampled metres",
+        "add cell-area-weighted cut, fill, signed net and moved volume",
+        "version support, spacing, lattice origin, interpolation/filter and surface versions",
+        "add one offset and one finer-grid replay with an accepted convergence tolerance",
+        "keep analytic heightfield, renderer mesh, soil mass, water bed and visual acceptance as separate receipts",
+        "do not automatically mean-subtract, change riser amplitude or unlock hydraulic state from N21"
+      ],
+      "acceptance": {
+        "delivered": false,
+        "deliveryReceipt": null,
+        "acknowledged": false,
+        "implemented": false,
+        "devicePublicChecked": false,
+        "userAccepted": false
+      }
+    }
+  ],
+  "notRouted": [
+    {
+      "mother": "Landscape",
+      "reason": "the counterexample is tied to the current Farmland R045.32 terrace implementation"
+    },
+    {
+      "mother": "Brick Material",
+      "reason": "no current terrace-earthwork consumer"
+    }
+  ],
+  "frozen": [
+    "production Mother branches",
+    "Canonical Truth",
+    "Frozen R1",
+    "R045.32 visual/parcel/water/production locks",
+    "inherited drainage carriers and foreground receiver"
+  ]
+}

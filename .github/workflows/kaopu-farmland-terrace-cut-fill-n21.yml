@@ -1,0 +1,40 @@
+name: KAOPU Farmland terrace cut-fill N21
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_terrace_cut_fill_n21.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_terrace_cut_fill_result_n21.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-terrace-cut-fill-n21/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-terrace-cut-fill-n21.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r32
+          git -C /tmp/farmland-r32 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r32 fetch --depth 1 origin 888f6b190ca10b6b4ae3cf2739c0da2e38629194
+          git -C /tmp/farmland-r32 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r32 rev-parse HEAD)" = 888f6b190ca10b6b4ae3cf2739c0da2e38629194
+      - name: Verify locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r32/farmland-object-dna/research/r045-autonomous-rebuild/round-32
+          test "$(sha256sum "$base/r045_round32_kernel.mjs" | cut -d' ' -f1)" = 5ebbbf451fb318eb19fd301938e23e2cf27d9733582dabe82a57adc93ee1a138
+          test "$(sha256sum "$base/r045_round32_qa.mjs" | cut -d' ' -f1)" = ac2e74541874cb5df62d27f24259b52df2ba99232720dbf8b6652bc2eb8bee71
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r32 \
+          KAOPU_N21_OUTPUT=/tmp/farmland_terrace_cut_fill_result_n21.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_terrace_cut_fill_n21.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_terrace_cut_fill_result_n21.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_terrace_cut_fill_result_n21.json

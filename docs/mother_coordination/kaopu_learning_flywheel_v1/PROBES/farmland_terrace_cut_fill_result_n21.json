@@ -1,0 +1,238 @@
+{
+  "schema": "kaopu.probe.farmland-terrace-cut-fill-n21/1",
+  "source": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "commit": "888f6b190ca10b6b4ae3cf2739c0da2e38629194",
+    "version": "R045.32",
+    "coordinateUnits": "meters",
+    "heightUnits": "meters"
+  },
+  "passed": true,
+  "gateCount": 8,
+  "passedCount": 8,
+  "checks": [
+    {
+      "name": "fixed_version",
+      "pass": true,
+      "value": "R045.32",
+      "limit": "R045.32"
+    },
+    {
+      "name": "mother_lattice_replayed",
+      "pass": true,
+      "value": {
+        "sampleCount": 3096,
+        "positiveSampleMeters": 57.3062146438,
+        "negativeSampleMeters": 57.5410027729,
+        "assumedCellAreaSquareMeters": 16,
+        "fillCubicMeters": 916.899434301,
+        "cutCubicMeters": 920.656044366,
+        "netCubicMeters": -3.7566100642
+      },
+      "limit": "exact R045.32 sampled pos/neg replay"
+    },
+    {
+      "name": "dense_estimate_has_both_cut_and_fill",
+      "pass": true,
+      "value": {
+        "stepMeters": 1,
+        "phase": [
+          0.5,
+          0.5
+        ],
+        "sampleCount": 57600,
+        "activeAreaSquareMeters": 18266,
+        "fillCubicMeters": 917.2631009,
+        "cutCubicMeters": 904.842780559,
+        "netCubicMeters": 12.420320341,
+        "imbalanceFractionOfMovedVolume": 0.00681646465631,
+        "fillCutRatio": 1.01372649548,
+        "maxAbsDeltaMeters": 0.502693387151
+      },
+      "limit": "both exceed 800 m3 on the declared 1 m lattice"
+    },
+    {
+      "name": "mother_lattice_is_near_balanced_but_not_a_certificate",
+      "pass": true,
+      "value": {
+        "motherLatticeNet": -3.7566100642,
+        "phaseSweep": {
+          "min": -171.073899608,
+          "max": 120.993493401
+        }
+      },
+      "limit": "published phase near zero while other 4 m phases reverse sign beyond +/-100 m3"
+    },
+    {
+      "name": "four_meter_phase_uncertainty_is_large",
+      "pass": true,
+      "value": {
+        "min": -171.073899608,
+        "max": 120.993493401
+      },
+      "limit": "phase range >250 m3"
+    },
+    {
+      "name": "coarsening_increases_worst_net_difference",
+      "pass": true,
+      "value": {
+        "two": 64.5876661449,
+        "four": 183.494219949,
+        "eight": 310.606602439
+      },
+      "limit": "2 m < 4 m < 8 m for this fixed phase set"
+    },
+    {
+      "name": "max_height_change_does_not_bound_volume_error",
+      "pass": true,
+      "value": {
+        "maxDeltaRange": {
+          "min": 0.46429050932,
+          "max": 0.49286870236
+        },
+        "netRange": {
+          "min": -171.073899608,
+          "max": 120.993493401
+        }
+      },
+      "limit": "similar sampled max delta alongside large net-volume range"
+    },
+    {
+      "name": "locks_preserved",
+      "pass": true,
+      "value": {
+        "visualAcceptance": false,
+        "parcelGenerationEnabled": false,
+        "waterStateKnown": false,
+        "productionReady": false
+      },
+      "limit": "all remain false"
+    }
+  ],
+  "boundsMeters": {
+    "xmin": -230,
+    "xmax": 130,
+    "zmin": -140,
+    "zmax": 20
+  },
+  "denseEstimate": {
+    "stepMeters": 1,
+    "phase": [
+      0.5,
+      0.5
+    ],
+    "sampleCount": 57600,
+    "activeAreaSquareMeters": 18266,
+    "fillCubicMeters": 917.2631009,
+    "cutCubicMeters": 904.842780559,
+    "netCubicMeters": 12.420320341,
+    "imbalanceFractionOfMovedVolume": 0.00681646465631,
+    "fillCutRatio": 1.01372649548,
+    "maxAbsDeltaMeters": 0.502693387151
+  },
+  "phaseSweeps": [
+    {
+      "stepMeters": 2,
+      "phaseCount": 4,
+      "fillCubicMeters": {
+        "min": 883.868953031,
+        "max": 955.03229316
+      },
+      "cutCubicMeters": {
+        "min": 878.024306674,
+        "max": 932.834487433
+      },
+      "netCubicMeters": {
+        "min": -39.5155808121,
+        "max": 77.0079864859
+      },
+      "imbalanceFraction": {
+        "min": -0.0216386974614,
+        "max": 0.0420106975926
+      },
+      "maxAbsDeltaMeters": {
+        "min": 0.479970828538,
+        "max": 0.501138468785
+      },
+      "worstAbsNetDifferenceFromDenseEstimateCubicMeters": 64.5876661449
+    },
+    {
+      "stepMeters": 4,
+      "phaseCount": 4,
+      "fillCubicMeters": {
+        "min": 817.876964835,
+        "max": 1012.93095018
+      },
+      "cutCubicMeters": {
+        "min": 849.477619122,
+        "max": 988.950864443
+      },
+      "netCubicMeters": {
+        "min": -171.073899608,
+        "max": 120.993493401
+      },
+      "imbalanceFraction": {
+        "min": -0.0946819042941,
+        "max": 0.0635180325102
+      },
+      "maxAbsDeltaMeters": {
+        "min": 0.46429050932,
+        "max": 0.49286870236
+      },
+      "worstAbsNetDifferenceFromDenseEstimateCubicMeters": 183.494219949
+    },
+    {
+      "stepMeters": 8,
+      "phaseCount": 4,
+      "fillCubicMeters": {
+        "min": 821.661892024,
+        "max": 1097.07950035
+      },
+      "cutCubicMeters": {
+        "min": 774.052577568,
+        "max": 995.568037766
+      },
+      "netCubicMeters": {
+        "min": -140.962097623,
+        "max": 323.02692278
+      },
+      "imbalanceFraction": {
+        "min": -0.0790019688387,
+        "max": 0.172637157255
+      },
+      "maxAbsDeltaMeters": {
+        "min": 0.430067311497,
+        "max": 0.48321387985
+      },
+      "worstAbsNetDifferenceFromDenseEstimateCubicMeters": 310.606602439
+    }
+  ],
+  "motherLattice": {
+    "sampleCount": 3096,
+    "positiveSampleMeters": 57.3062146438,
+    "negativeSampleMeters": 57.5410027729,
+    "assumedCellAreaSquareMeters": 16,
+    "fillCubicMeters": 916.899434301,
+    "cutCubicMeters": 920.656044366,
+    "netCubicMeters": -3.7566100642
+  },
+  "currentBestView": [
+    "positive and negative height changes prove only that both cut-like and fill-like samples exist; they do not prove earthwork balance",
+    "cut and fill receipts require declared support, height and coordinate units, cell area, signed volume, grid spacing and origin phase",
+    "R045.32 is numerically near-balanced on its retained 4 m lattice, but other 4 m phases reverse the net sign and span more than 250 m3",
+    "even a converged geometric volume is not a soil-mass certificate without density, bulking/compaction, boundary import/export and construction history"
+  ],
+  "rejected": [
+    "both positive and negative samples imply balanced cut and fill",
+    "an unweighted sum of sampled height deltas is already a volume receipt",
+    "one near-zero coarse-lattice net value proves conservation",
+    "a bounded maximum height delta bounds integrated earthwork error",
+    "synthetic terrace geometry is hydraulic, geotechnical or erosion truth"
+  ],
+  "unknown": [
+    "continuous-domain cut and fill integrals and a justified convergence tolerance",
+    "soil density, bulking, compaction, spoil/import policy and construction sequence",
+    "actual surveyed terrace sections and field microtopography",
+    "hardware GPU, public runtime, Mother adoption and user visual acceptance"
+  ]
+}
