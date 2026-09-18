@@ -14,6 +14,7 @@ installEvidenceGzipLoader();
 installReadingControls();
 THREE.Object3D.prototype[Symbol.for('wenzhou.r3.3.surface-evidence-installed')]=true;
 installSoilContext();installEnvironmentContext();installWorldScore();
+if(window.__WENZHOU_HISTORY_1942===true){const {installNg51IslandRelief}=await import('./ng51-island-relief.js');installNg51IslandRelief();}
 await import('../r3-6/bootstrap.js');
 if(window.__WENZHOU_HISTORY_1942===true){
   const canvas=document.getElementById('terrain');
