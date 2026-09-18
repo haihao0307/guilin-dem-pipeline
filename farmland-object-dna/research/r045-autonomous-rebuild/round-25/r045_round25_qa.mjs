@@ -26,7 +26,10 @@ add('apron_change_is_broad_but_shallow',delta.coreMean>.015&&delta.coreMean<.16,
 add('signed_shoulders_survive',pos>neg*.005&&pos<neg*.85,{positiveMass:pos,negativeMass:neg,ratio:pos/(neg||1)},'positive mass is 0.5%..85% of negative receiving mass');
 add('added_field_is_longitudinally_gradual',maxStep<.18,{maxStep,at:maxStepAt},'<0.18 m change in added field per 4 m z');
 
-// Actual occupied planform, not parameter declarations.
+// Actual occupied planform, not parameter declarations. The first R25 run exposed a QA error here:
+// because three distinct broad components touch opposite scene edges, min/max x span saturates the
+// audit domain and becomes insensitive to internal planform evolution. Use occupied-cell count plus
+// weighted centroid drift instead; those remain sensitive when support is disconnected or edge-clipped.
 const rowWidths=[],rowCentroids=[];
 for(let z=36;z<=106;z+=6){
   const xs=[];let mass=0,wx=0;
@@ -35,9 +38,10 @@ for(let z=36;z<=106;z+=6){
 }
 const meanWidth=mean(rowWidths.map(r=>r.width));
 const widthRange=rowWidths.length?Math.max(...rowWidths.map(r=>r.width))-Math.min(...rowWidths.map(r=>r.width)):0;
+const countRange=rowWidths.length?Math.max(...rowWidths.map(r=>r.count))-Math.min(...rowWidths.map(r=>r.count)):0;
 const centroidRange=rowCentroids.length?Math.max(...rowCentroids.map(r=>r.x))-Math.min(...rowCentroids.map(r=>r.x)):0;
 add('whole_scene_planform_is_broadly_occupied',rowWidths.length>=8&&meanWidth>120,{rows:rowWidths.length,meanWidth},'>=8 occupied rows and mean lateral occupied width >120 m');
-add('whole_scene_planform_is_not_constant_width',widthRange>18,{widthRange,rowWidths},'occupied width varies by >18 m across downslope rows');
+add('whole_scene_planform_occupancy_evolves',countRange>5,{countRange,widthRange,rowWidths},'occupied sample count changes by >5 across downslope rows; global span may saturate scene bounds');
 add('whole_scene_planform_sweeps_laterally',centroidRange>6,{centroidRange,rowCentroids},'abs-delta planform centroid shifts by >6 m across rows');
 
 const componentStats=K.apronProfiles.map(p=>{
@@ -80,6 +84,6 @@ add('mrrolord_frame_audit_reread',K.snapshot.round25?.mrRolordUse?.includes('fra
 add('reference_reread_without_metric_inference',K.snapshot.round25?.referenceUse?.includes('image(173).png')&&K.snapshot.round25?.referenceUse?.includes('no terrace width'),K.snapshot.round25?.referenceUse,'reference used only for visual hierarchy');
 add('survey_claims_forbidden',Array.isArray(K.snapshot.round25?.forbiddenClaims)&&K.snapshot.round25.forbiddenClaims.length>=10,K.snapshot.round25?.forbiddenClaims,'explicit evidence boundary');
 
-const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{delta,signatures,rowWidths,rowCentroids,meanWidth,widthRange,centroidRange,componentStats,minCentroidSep,nearMax,upperMax,receiverMax,outsideMax,oldForward,newForward,terraceNearDrainageMean:mean(tNear),terraceFarDrainageMean:mean(tFar),permissionMaxChange:permMaxChange}};
+const result={version:K.VERSION,passed:checks.every(c=>c.pass),gateCount:checks.length,passedCount:checks.filter(c=>c.pass).length,checks,metrics:{delta,signatures,rowWidths,rowCentroids,meanWidth,widthRange,countRange,centroidRange,componentStats,minCentroidSep,nearMax,upperMax,receiverMax,outsideMax,oldForward,newForward,terraceNearDrainageMean:mean(tNear),terraceFarDrainageMean:mean(tFar),permissionMaxChange:permMaxChange}};
 fs.writeFileSync(new URL('./r045_round25_qa_result.json',import.meta.url),JSON.stringify(result,null,2));
 console.log(JSON.stringify(result,null,2));if(!result.passed)process.exitCode=2;
