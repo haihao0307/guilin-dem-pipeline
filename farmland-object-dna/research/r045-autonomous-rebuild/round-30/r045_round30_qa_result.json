@@ -1,0 +1,682 @@
+{
+  "version": "R045.30",
+  "passed": false,
+  "gateCount": 42,
+  "passedCount": 40,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.30",
+      "limit": "R045.30"
+    },
+    {
+      "name": "three_aspect_profiles",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major"
+        ],
+        [
+          "OUTLET-B",
+          "subordinate"
+        ],
+        [
+          "OUTLET-C",
+          "local"
+        ]
+      ],
+      "limit": "three outlet-tied aspect profiles"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited planimetric graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "r29_break_profiles_preserved",
+      "pass": true,
+      "value": [
+        "OUTLET-A",
+        "OUTLET-B",
+        "OUTLET-C"
+      ],
+      "limit": "R29 breakline definitions unchanged"
+    },
+    {
+      "name": "aspect_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -92,
+          "zEnd": 94,
+          "width0": 88,
+          "width1": 166,
+          "centre0": -18,
+          "sweep": 52,
+          "bend": 24,
+          "twist": 0.72,
+          "counter": -0.2
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -78,
+          "zEnd": 82,
+          "width0": 68,
+          "width1": 120,
+          "centre0": 20,
+          "sweep": -44,
+          "bend": -19,
+          "twist": -0.58,
+          "counter": 0.17
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -60,
+          "zEnd": 68,
+          "width0": 52,
+          "width1": 88,
+          "centre0": -10,
+          "sweep": 30,
+          "bend": 14,
+          "twist": 0.46,
+          "counter": -0.13
+        }
+      ],
+      "limit": "three unique aspect signatures"
+    },
+    {
+      "name": "declared_aspect_scales_are_ordered",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -92,
+          "zEnd": 94,
+          "width0": 88,
+          "width1": 166,
+          "centre0": -18,
+          "sweep": 52,
+          "bend": 24,
+          "twist": 0.72,
+          "counter": -0.2
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -78,
+          "zEnd": 82,
+          "width0": 68,
+          "width1": 120,
+          "centre0": 20,
+          "sweep": -44,
+          "bend": -19,
+          "twist": -0.58,
+          "counter": 0.17
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -60,
+          "zEnd": 68,
+          "width0": 52,
+          "width1": 88,
+          "centre0": -10,
+          "sweep": 30,
+          "bend": 14,
+          "twist": 0.46,
+          "counter": -0.13
+        }
+      ],
+      "limit": "major > subordinate > local in width and support length"
+    },
+    {
+      "name": "aspect_handedness_changes",
+      "pass": true,
+      "value": [
+        0.72,
+        -0.58,
+        0.46
+      ],
+      "limit": "adjacent hierarchy members rotate opposite ways"
+    },
+    {
+      "name": "aspect_articulation_is_substantive_but_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.6860857870695986,
+        "deltaMean": 0.055016855481246726,
+        "coreMean": 0.06998491133227744,
+        "pos": 71.862149015988,
+        "neg": 127.24385097064409,
+        "maxStep": 0.4174779344856061,
+        "maxAt": [
+          -230,
+          -20
+        ]
+      },
+      "limit": ".08 m < max aspect delta <= .851 m"
+    },
+    {
+      "name": "aspect_articulation_is_broad",
+      "pass": true,
+      "value": 0.06998491133227744,
+      "limit": "core mean abs delta >.004 m and <.30 m"
+    },
+    {
+      "name": "both_relief_signs_survive",
+      "pass": true,
+      "value": {
+        "pos": 71.862149015988,
+        "neg": 127.24385097064409
+      },
+      "limit": "raised and lowered flanks both survive"
+    },
+    {
+      "name": "aspect_field_is_longitudinally_gradual",
+      "pass": false,
+      "value": {
+        "maxStep": 0.4174779344856061,
+        "maxAt": [
+          -230,
+          -20
+        ]
+      },
+      "limit": "<.18 m added delta change per 4 m z"
+    },
+    {
+      "name": "aspect_reaches_lower_agricultural_slope",
+      "pass": true,
+      "value": 298,
+      "limit": ">30 active samples at z=-80..-16"
+    },
+    {
+      "name": "aspect_reaches_footslope",
+      "pass": true,
+      "value": 377,
+      "limit": ">30 active samples at z=-12..28"
+    },
+    {
+      "name": "aspect_reaches_receiving_plain",
+      "pass": true,
+      "value": 536,
+      "limit": ">30 active samples at z=32..82"
+    },
+    {
+      "name": "aspect_overlaps_r29_contact_break_system",
+      "pass": true,
+      "value": 483,
+      "limit": ">20 cells overlap substantive R29 break response"
+    },
+    {
+      "name": "all_three_aspect_components_exist",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "mass": 84.63600297460118,
+          "centroid": [
+            -63.354963252372414,
+            29.00934107641283
+          ],
+          "peak": 0.5262264178018508,
+          "count": 732,
+          "occupiedRows": 27,
+          "pos": 25.382496803827095,
+          "neg": 59.25350617077404
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "mass": 49.586528888534595,
+          "centroid": [
+            -7.090472020518945,
+            25.74077599782542
+          ],
+          "peak": 0.3001374925326877,
+          "count": 620,
+          "occupiedRows": 24,
+          "pos": 27.521384014760052,
+          "neg": 22.065144873774596
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "mass": 24.784837538848482,
+          "centroid": [
+            126.83831265528055,
+            26.232713248340726
+          ],
+          "peak": 0.2070742752068028,
+          "count": 291,
+          "occupiedRows": 20,
+          "pos": 12.951205873445646,
+          "neg": 11.83363166540283
+        }
+      ],
+      "limit": "each component has substantive two-sided response"
+    },
+    {
+      "name": "actual_aspect_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "count": 732,
+          "rows": 27
+        },
+        {
+          "id": "OUTLET-B",
+          "count": 620,
+          "rows": 24
+        },
+        {
+          "id": "OUTLET-C",
+          "count": 291,
+          "rows": 20
+        }
+      ],
+      "limit": "occupied samples major > subordinate > local by >3% each step"
+    },
+    {
+      "name": "aspect_components_remain_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minSep": 56.35935140908097,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "scaleClass": "major",
+            "mass": 84.63600297460118,
+            "centroid": [
+              -63.354963252372414,
+              29.00934107641283
+            ],
+            "peak": 0.5262264178018508,
+            "count": 732,
+            "occupiedRows": 27,
+            "pos": 25.382496803827095,
+            "neg": 59.25350617077404
+          },
+          {
+            "id": "OUTLET-B",
+            "scaleClass": "subordinate",
+            "mass": 49.586528888534595,
+            "centroid": [
+              -7.090472020518945,
+              25.74077599782542
+            ],
+            "peak": 0.3001374925326877,
+            "count": 620,
+            "occupiedRows": 24,
+            "pos": 27.521384014760052,
+            "neg": 22.065144873774596
+          },
+          {
+            "id": "OUTLET-C",
+            "scaleClass": "local",
+            "mass": 24.784837538848482,
+            "centroid": [
+              126.83831265528055,
+              26.232713248340726
+            ],
+            "peak": 0.2070742752068028,
+            "count": 291,
+            "occupiedRows": 20,
+            "pos": 12.951205873445646,
+            "neg": 11.83363166540283
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >15 m"
+    },
+    {
+      "name": "surface_aspect_actually_rotates",
+      "pass": true,
+      "value": {
+        "samples": 525,
+        "angleMax": 47.51291790537251,
+        "angleMean": 6.454501203219099,
+        "angleAt": [
+          -60,
+          34
+        ]
+      },
+      "limit": ">40 samples, max rotation >.45 deg, mean >.04 deg"
+    },
+    {
+      "name": "surface_aspect_rotation_is_bounded",
+      "pass": false,
+      "value": {
+        "angleMax": 47.51291790537251,
+        "angleAt": [
+          -60,
+          34
+        ]
+      },
+      "limit": "max sampled rotation <35 deg"
+    },
+    {
+      "name": "both_rotation_handednesses_survive",
+      "pass": true,
+      "value": {
+        "signedPos": 237,
+        "signedNeg": 288
+      },
+      "limit": ">8 sampled rotations in each handedness"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R30 change at z<=-105"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside R30 support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 12 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "aspect_articulation_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.3682632931045364,
+          "at": [
+            60,
+            24
+          ]
+        },
+        "new": {
+          "maxRise": 0.39928295530493463,
+          "at": [
+            100,
+            36
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R29 +.14 m"
+    },
+    {
+      "name": "terrace_permission_recomputed_after_gradient_change",
+      "pass": true,
+      "value": 0.4428245313756826,
+      "limit": "permission must respond to R30 gradient/curvature change"
+    },
+    {
+      "name": "permission_change_remains_bounded",
+      "pass": true,
+      "value": 0.4428245313756826,
+      "limit": "localized aspect update must not globally overturn suitability"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.656819113375155,
+      "limit": ">.02 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "R29 being subtle in the whole-scene view does not imply that more vertical amplitude or terrace stripes are the missing cause. A broad sheet can remain visually flat because adjacent lower-slope masses share nearly the same aspect; R30 changes aspect before terrace geometry.",
+      "limit": "must reject amplitude/terrace-stripe shortcut"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "the Xiaoma/TLO checkpoint still has no selected parcel and explicitly lists field microtopography, bund sections, channel sections and water-control elevations as unknown; R30 aspect articulation is synthetic substrate geometry, not survey truth.",
+      "limit": "checkpoint unknowns remain explicit"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved frame audit is reread for ordering only: river hierarchy -> accumulated terrain influence -> terrain-conforming land use. Its Voronoi experiment, Blender dimensions, shader displacement and adaptive subdivision are not copied as agricultural truth.",
+      "limit": "reuse process ordering only, not Blender implementation truth"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round. Only the visible unequal nested hillside masses, non-parallel contour envelopes and changing local face directions are used; no terrace width, riser height, channel dimension, water depth or regional metric is inferred.",
+      "limit": "image(173).png used only for visible morphology"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed slope aspect",
+        "surveyed breakline position",
+        "surveyed terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known inlet sill",
+        "known outlet sill",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "deltaMax": 0.6860857870695986,
+      "deltaMean": 0.055016855481246726,
+      "coreMean": 0.06998491133227744,
+      "pos": 71.862149015988,
+      "neg": 127.24385097064409,
+      "maxStep": 0.4174779344856061,
+      "maxAt": [
+        -230,
+        -20
+      ]
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "zStart": -92,
+        "zEnd": 94,
+        "width0": 88,
+        "width1": 166,
+        "centre0": -18,
+        "sweep": 52,
+        "bend": 24,
+        "twist": 0.72,
+        "counter": -0.2
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "zStart": -78,
+        "zEnd": 82,
+        "width0": 68,
+        "width1": 120,
+        "centre0": 20,
+        "sweep": -44,
+        "bend": -19,
+        "twist": -0.58,
+        "counter": 0.17
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "zStart": -60,
+        "zEnd": 68,
+        "width0": 52,
+        "width1": 88,
+        "centre0": -10,
+        "sweep": 30,
+        "bend": 14,
+        "twist": 0.46,
+        "counter": -0.13
+      }
+    ],
+    "lowerCount": 298,
+    "footCount": 377,
+    "plainCount": 536,
+    "overlap29": 483,
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "mass": 84.63600297460118,
+        "centroid": [
+          -63.354963252372414,
+          29.00934107641283
+        ],
+        "peak": 0.5262264178018508,
+        "count": 732,
+        "occupiedRows": 27,
+        "pos": 25.382496803827095,
+        "neg": 59.25350617077404
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "mass": 49.586528888534595,
+        "centroid": [
+          -7.090472020518945,
+          25.74077599782542
+        ],
+        "peak": 0.3001374925326877,
+        "count": 620,
+        "occupiedRows": 24,
+        "pos": 27.521384014760052,
+        "neg": 22.065144873774596
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "mass": 24.784837538848482,
+        "centroid": [
+          126.83831265528055,
+          26.232713248340726
+        ],
+        "peak": 0.2070742752068028,
+        "count": 291,
+        "occupiedRows": 20,
+        "pos": 12.951205873445646,
+        "neg": 11.83363166540283
+      }
+    ],
+    "minCentroidSep": 56.35935140908097,
+    "aspectRotation": {
+      "samples": 525,
+      "meanDeg": 6.454501203219099,
+      "maxDeg": 47.51291790537251,
+      "maxAt": [
+        -60,
+        34
+      ],
+      "signedPos": 237,
+      "signedNeg": 288
+    },
+    "farUpstreamMax": 0,
+    "nearMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.3682632931045364,
+      "at": [
+        60,
+        24
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.39928295530493463,
+      "at": [
+        100,
+        36
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.656819113375155,
+    "permissionMaxChange": 0.4428245313756826
+  }
+}
