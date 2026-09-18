@@ -1,0 +1,254 @@
+{
+  "version": "R045.21",
+  "passed": false,
+  "gateCount": 24,
+  "passedCount": 22,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.21",
+      "limit": "R045.21"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "agricultural_face_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.4939320996123709,
+        "mean": 0.05243722211051648,
+        "n": 4292,
+        "at": [
+          -82,
+          -76
+        ],
+        "maxStep": 0.07812261847424162,
+        "maxStepAt": [
+          -70,
+          -92
+        ],
+        "centroidX": 32.51206893509952,
+        "leftMean": 0.04079683792534662,
+        "rightMean": 0.06407760629568648
+      },
+      "limit": "0.45 m < max delta < 1.25 m synthetic macro-massing sanity"
+    },
+    {
+      "name": "change_is_broad_not_single_patch",
+      "pass": false,
+      "value": 0.05243722211051648,
+      "limit": "0.08 m < mean abs delta < 0.55 m across lower-slope audit band"
+    },
+    {
+      "name": "one_sided_mass_is_measurably_asymmetric",
+      "pass": false,
+      "value": {
+        "centroidX": 32.51206893509952,
+        "leftMean": 0.04079683792534662,
+        "rightMean": 0.06407760629568648
+      },
+      "limit": "|delta centroid x| >12 m and left/right mean difference >0.035 m"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.07812261847424162,
+        "at": [
+          -70,
+          -92
+        ]
+      },
+      "limit": "<0.22 m change in delta per 4 m"
+    },
+    {
+      "name": "r20_upper_repair_and_headwaters_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change at z<=-138"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside lower-slope support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "lower_slope_does_not_gain_new_longitudinal_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.059551397568158526,
+          "at": [
+            -5,
+            32
+          ]
+        },
+        "new": {
+          "maxRise": 0.101096143650804,
+          "at": [
+            105,
+            32
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R20 + 0.18 m"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6929188879703424,
+      "limit": ">0.035 while geometry remains locked"
+    },
+    {
+      "name": "permission_is_recomputed_from_new_ground",
+      "pass": true,
+      "value": 0.8737997256515775,
+      "limit": "permission mask should respond to changed ground rather than remain stale"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "flattening the candidate area or adding terrace stripes would confuse a land-use pattern with a causal landform. R21 changes the macro ground first and keeps agricultural geometry locked",
+      "limit": "must distinguish terrace pattern from causal landform"
+    },
+    {
+      "name": "xiaoma_state_boundary_retained",
+      "pass": true,
+      "value": "geometry and water state remain separate; visual continuity or a conserved display does not establish hydraulic connectivity, field microtopography, soil state or discharge",
+      "limit": "visual/geometry continuity must not become hydraulic-state claim"
+    },
+    {
+      "name": "mrrolord_provenance_is_honest",
+      "pass": true,
+      "value": "reuse only the saved drainage-first hierarchy: topology/carriers before land use; this round does not claim a fresh viewing of the original video",
+      "limit": "saved research may be reused but not misreported as fresh video viewing"
+    },
+    {
+      "name": "references_are_not_metric_truth",
+      "pass": true,
+      "value": "user terrace photographs are used only for the hierarchy of one broad hillside rolling into lower ground and for unequal contour-scale masses; no dimensions are extracted",
+      "limit": "visual hierarchy only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed agricultural slope",
+        "measured terrace bench",
+        "measured bund section",
+        "active irrigation",
+        "field water depth",
+        "soil/sediment property",
+        "ownership",
+        "regional terrace dimensions"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.4939320996123709,
+      "mean": 0.05243722211051648,
+      "n": 4292,
+      "at": [
+        -82,
+        -76
+      ],
+      "maxStep": 0.07812261847424162,
+      "maxStepAt": [
+        -70,
+        -92
+      ],
+      "centroidX": 32.51206893509952,
+      "leftMean": 0.04079683792534662,
+      "rightMean": 0.06407760629568648
+    },
+    "nearMax": 0,
+    "upperMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.059551397568158526,
+      "at": [
+        -5,
+        32
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.101096143650804,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6929188879703424,
+    "permissionMaxChange": 0.8737997256515775
+  }
+}
