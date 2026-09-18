@@ -1,0 +1,31 @@
+name: Package Stone Money v022 handoff
+on:
+  push:
+    branches: [handoff/stone-money-island-v022-20260918]
+    paths: [.github/workflows/stone-money-handoff-v022.yml]
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build complete package and validate clean extraction
+        run: python handoffs/stone-money-island-v0.2.2-20260918/build_handoff.py
+      - name: Preserve package on the dedicated handoff branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add handoffs/stone-money-island-v0.2.2-20260918
+          git diff --cached --quiet || git commit -m 'handoff: publish verified Stone Money v022 complete package'
+          git push origin HEAD:handoff/stone-money-island-v022-20260918
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Stone_Money_Island_V022_FULL_HANDOFF
+          path: |
+            handoffs/stone-money-island-v0.2.2-20260918/*.zip
+            handoffs/stone-money-island-v0.2.2-20260918/*.sha256
+            handoffs/stone-money-island-v0.2.2-20260918/PACKAGE_VERIFY.json
