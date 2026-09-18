@@ -1,0 +1,371 @@
+{
+  "version": "R045.31",
+  "passed": true,
+  "gateCount": 32,
+  "passedCount": 32,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.31",
+      "limit": "R045.31"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited planimetric graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "terrace_geometry_is_substantive_but_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.46710865783376243,
+        "deltaMean": 0.02423247577921956,
+        "pos": 39.399803237388234,
+        "neg": 35.623941775075615,
+        "maxStep": 0.7316333845475311,
+        "maxStepAt": [
+          -96,
+          -52
+        ],
+        "active": 531,
+        "core": 197
+      },
+      "limit": ".20 m < max terrace delta < .90 m"
+    },
+    {
+      "name": "terrace_geometry_has_both_cut_and_fill",
+      "pass": true,
+      "value": {
+        "pos": 39.399803237388234,
+        "neg": 35.623941775075615
+      },
+      "limit": "both signed responses >5 aggregate sample-m"
+    },
+    {
+      "name": "pilot_has_broad_core",
+      "pass": true,
+      "value": {
+        "active": 531,
+        "core": 197
+      },
+      "limit": ">80 samples with mask >.60"
+    },
+    {
+      "name": "terrace_increment_is_not_a_cliff",
+      "pass": true,
+      "value": {
+        "maxStep": 0.7316333845475311,
+        "maxStepAt": [
+          -96,
+          -52
+        ]
+      },
+      "limit": "<1.05 m change in added terrace delta per 4 m z"
+    },
+    {
+      "name": "synthetic_step_spacing_varies",
+      "pass": true,
+      "value": {
+        "min": 1.118829952232927,
+        "max": 1.62,
+        "range": 0.5011700477670731
+      },
+      "limit": ">.24 m variation in synthetic step-height control"
+    },
+    {
+      "name": "contour_phase_is_warped",
+      "pass": true,
+      "value": {
+        "min": -0.3870501877827784,
+        "max": 0.35925767223852645,
+        "range": 0.7463078600213049
+      },
+      "limit": ">.28 m phase range"
+    },
+    {
+      "name": "pilot_planform_is_not_a_rectangle",
+      "pass": true,
+      "value": {
+        "rows": 31,
+        "centreRange": 142,
+        "widthRange": 228,
+        "countRange": 20,
+        "multiRunRows": 29
+      },
+      "limit": "centre drift >18 m and occupied width variation >28 m"
+    },
+    {
+      "name": "pilot_contains_real_skips_or_splits",
+      "pass": true,
+      "value": {
+        "rows": 31,
+        "centreRange": 142,
+        "widthRange": 228,
+        "countRange": 20,
+        "multiRunRows": 29
+      },
+      "limit": ">=3 sampled rows contain more than one active run"
+    },
+    {
+      "name": "notch_operator_is_material",
+      "pass": true,
+      "value": 0.2881441486946167,
+      "limit": " <.42 at designed non-metric morphology notch"
+    },
+    {
+      "name": "bench_and_riser_samples_exist",
+      "pass": true,
+      "value": {
+        "benchN": 61,
+        "riserN": 12,
+        "benchRatioMean": 0.410078956025968,
+        "benchRatioMedian": 0.28771923602026694,
+        "riserRatioMean": 2.630549140425909,
+        "riserRatioMedian": 2.432934512533207,
+        "benchSlopeMean": 0.10803785047777406,
+        "riserSlopeMean": 0.6456045920727341
+      },
+      "limit": ">24 bench and >10 riser core samples"
+    },
+    {
+      "name": "benches_are_flatter_than_r30_substrate",
+      "pass": true,
+      "value": {
+        "benchN": 61,
+        "riserN": 12,
+        "benchRatioMean": 0.410078956025968,
+        "benchRatioMedian": 0.28771923602026694,
+        "riserRatioMean": 2.630549140425909,
+        "riserRatioMedian": 2.432934512533207,
+        "benchSlopeMean": 0.10803785047777406,
+        "riserSlopeMean": 0.6456045920727341
+      },
+      "limit": "median bench/base gradient ratio <.72"
+    },
+    {
+      "name": "risers_are_steeper_than_benches",
+      "pass": true,
+      "value": {
+        "benchMedianSlope": 0.07083904495218309,
+        "riserMedianSlope": 0.6434253644400263
+      },
+      "limit": "median riser slope > 1.45x median bench slope"
+    },
+    {
+      "name": "risers_steepen_relative_to_r30",
+      "pass": true,
+      "value": {
+        "benchN": 61,
+        "riserN": 12,
+        "benchRatioMean": 0.410078956025968,
+        "benchRatioMedian": 0.28771923602026694,
+        "riserRatioMean": 2.630549140425909,
+        "riserRatioMedian": 2.432934512533207,
+        "benchSlopeMean": 0.10803785047777406,
+        "riserSlopeMean": 0.6456045920727341
+      },
+      "limit": "median riser/base gradient ratio >1.35"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R31 change far upstream"
+    },
+    {
+      "name": "support_is_localized_to_agricultural_slope",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside pilot support"
+    },
+    {
+      "name": "drainage_axis_cores_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 12 m inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "terrace_risers_do_not_create_pathological_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.08084969181683466,
+          "at": [
+            166,
+            12
+          ]
+        },
+        "new": {
+          "maxRise": 0.08084969181683466,
+          "at": [
+            166,
+            12
+          ]
+        }
+      },
+      "limit": "new worst 4 m forward rise <= R30 +1.05 m"
+    },
+    {
+      "name": "terrace_geometry_enabled_only_as_pilot",
+      "pass": true,
+      "value": {
+        "terraceGeometryEnabled": true,
+        "terracePilotPreviewEnabled": true
+      },
+      "limit": "localized pilot geometry ON"
+    },
+    {
+      "name": "global_visual_acceptance_remains_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "R30 numeric/browser success does not prove the lower-slope stage is visually accepted, and weak whole-scene change does not imply that vertical amplitude should be increased. After reopening the R30 fixed view, the substrate is stable enough for a bounded terrace morphology experiment, not for declaring terrain truth.",
+      "limit": "must reject numeric-pass->visual-pass and weak-visibility->more-height shortcuts"
+    },
+    {
+      "name": "r30_fixed_view_was_reopened",
+      "pass": true,
+      "value": "R30 fixed-view evidence was actually reopened before this implementation. It shows no new seam, wall or receiver break, but still reads broad and smooth. Continuing indefinite substrate amplitude tuning would confound shape with visibility; R31 therefore advances one priority step with a localized reversible pilot while global visualAcceptance remains false.",
+      "limit": "actual R30 fixed view reviewed before stage advance"
+    },
+    {
+      "name": "xiaoma_truth_boundary_retained",
+      "pass": true,
+      "value": "the Xiaoma/TLO checkpoint still lacks selected-field microtopography, surveyed bund/channel sections and water-control elevations. Therefore R31 bench spacing, riser transition and pilot footprint are synthetic morphology only and cannot be treated as Yunnan engineering dimensions or hydraulic truth.",
+      "limit": "no survey/hydraulic overclaim"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved frame audit is reread for ordering only: drainage hierarchy -> accumulated terrain influence -> terrain-conforming land use. Voronoi cells, Blender dimensions, shader displacement and adaptive subdivision are not copied as agricultural truth.",
+      "limit": "process ordering only"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round. Only visible irregular nested bench envelopes, varying widths, non-parallel curves and local skips/merges motivate the morphology; no metric terrace width, riser height, channel dimension or water depth is inferred.",
+      "limit": "morphology only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed terrace footprint",
+        "surveyed terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known inlet sill",
+        "known outlet sill",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.46710865783376243,
+      "deltaMean": 0.02423247577921956,
+      "pos": 39.399803237388234,
+      "neg": 35.623941775075615,
+      "maxStep": 0.7316333845475311,
+      "maxStepAt": [
+        -96,
+        -52
+      ],
+      "active": 531,
+      "core": 197
+    },
+    "rowMetrics": {
+      "rows": 31,
+      "centreRange": 142,
+      "widthRange": 228,
+      "countRange": 20,
+      "multiRunRows": 29
+    },
+    "terraceMorphology": {
+      "benchN": 61,
+      "riserN": 12,
+      "benchRatioMean": 0.410078956025968,
+      "benchRatioMedian": 0.28771923602026694,
+      "riserRatioMean": 2.630549140425909,
+      "riserRatioMedian": 2.432934512533207,
+      "benchSlopeMean": 0.10803785047777406,
+      "riserSlopeMean": 0.6456045920727341
+    },
+    "stepRange": 0.5011700477670731,
+    "phaseRange": 0.7463078600213049,
+    "farUp": 0,
+    "nearDrain": 0,
+    "receiver": 0,
+    "outside": 0,
+    "oldForward": {
+      "maxRise": 0.08084969181683466,
+      "at": [
+        166,
+        12
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.08084969181683466,
+      "at": [
+        166,
+        12
+      ]
+    }
+  }
+}
