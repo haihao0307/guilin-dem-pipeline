@@ -3,7 +3,7 @@
 Date: 2026-09-18  
 Bounded question: Does R045.36 remain continuous when its drainage-clearance predicate crosses the hard stitch gate?
 
-Status: **Candidate partial / pinned R045.36 CPU semantic counterexample verified; coordinator CI and routing pending; Mother implementation/adoption, hardware or public runtime and user acceptance Unknown**
+Status: **Candidate partial / pinned R045.36 CPU semantic counterexample verified; Mother implementation/adoption, hardware or public runtime and user acceptance Unknown**
 
 ## Observation roots
 
@@ -32,7 +32,7 @@ This is an actual epsilon-scale boundary seam missed by the 6 m anti-cliff gate.
 
 An analysis-only counterexample repair applies `smoothstep(0.035, 0.055, drainage_clearance)` to the **R36–R35 effect increment**, not to the complete terrain. It reduces the same epsilon jump to `3.3661e-7 m` and becomes exactly R36 at the checked interior point where clearance exceeds `0.055`. This proves the zero-at-boundary construction, but the `0.02` mask-space width is not a selected production parameter.
 
-Local replay passes `9/9` gates. Coordinator CI is pending. Local and CI replay are the same analysis design, not independent evidence.
+Local replay and [GitHub Actions run 35366242389](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35366242389) pass `9/9` gates. Local and CI replay are the same analysis design, not independent evidence.
 
 ### Observation root C — mature primary contracts
 
@@ -42,7 +42,7 @@ These are transferable compositing contracts, not evidence that N23's demonstrat
 
 ### Observation root D — routing and acknowledgement state
 
-The latest PR65 conversation contains the N22 route but no Mother acknowledgement. R35/R36 commits therefore count as new source evidence, not as acknowledgement, implementation of N22, or adoption. N23 routing is prepared and waits for successful coordinator CI; delivery, acknowledgement, implementation and adoption remain distinct.
+The latest PR65 conversation contained the N22 route but no Mother acknowledgement. R35/R36 commits therefore count as new source evidence, not as acknowledgement, implementation of N22, or adoption. N23 was [delivered once after successful coordinator replay](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5732699491); delivery, acknowledgement, implementation and adoption remain distinct.
 
 ## Candidate
 
@@ -84,6 +84,6 @@ The analysis taper demonstrates one construction that closes this exact countere
 
 ## Routing recommendation
 
-After successful coordinator CI, deliver one incremental Farmland warning: classify the predicates, make every soft boundary zero-compatible on the effect increment, and add epsilon value/gradient/curvature gates without weakening the current coarse, cut/fill, fixed-view, drainage, parcel, hydraulic or production locks. Do not prescribe the demonstration width or smooth intentional hard breaks.
+One incremental Farmland warning was [delivered to PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5732699491): classify the predicates, make every soft boundary zero-compatible on the effect increment, and add epsilon value/gradient/curvature gates without weakening the current coarse, cut/fill, fixed-view, drainage, parcel, hydraulic or production locks. The message does not prescribe the demonstration width or ask Mother to smooth intentional hard breaks. Acknowledgement, implementation and adoption remain Unknown.
 
 No Landscape or Brick route is warranted from this R36-specific counterexample. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.
