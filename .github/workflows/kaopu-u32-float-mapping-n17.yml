@@ -53,6 +53,7 @@ jobs:
             "$root/u32_float_mapping_result_n17.json" /tmp/u32_float_webgl2_result_n17.json
           jq -e '.summary.status == "pass" and .summary.passed == 6' /tmp/u32_float_webgl2_result_n17.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: kaopu-u32-float-cpu-webgl2-n17
           path: |
@@ -82,6 +83,7 @@ jobs:
           cargo run --release --locked --bin u32_float_n17 2>/tmp/n17-wgpu-stderr.log | tee /tmp/u32_float_wgsl_result_n17.json
           jq -e '.summary.status == "pass" and .exactCpuMatch == true and (.bits|length) == 24' /tmp/u32_float_wgsl_result_n17.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: kaopu-u32-float-native-wgsl-n17
           path: |

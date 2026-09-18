@@ -22,4 +22,6 @@ r["expected"]=expected
 r["checks"]=[{"id":k,"pass":bool(v)} for k,v in checks.items()]
 r["summary"]={"checks":len(checks),"passed":sum(map(bool,checks.values())),"failed":sum(not v for v in checks.values()),"status":"pass" if all(checks.values()) else "fail"}
 pathlib.Path(sys.argv[3]).write_text(json.dumps(r,indent=2)+"\n",encoding="utf-8")
-if not all(checks.values()): raise SystemExit(json.dumps(r["summary"]))
+if not all(checks.values()):
+    print(json.dumps(r,indent=2))
+    raise SystemExit(json.dumps(r["summary"]))
