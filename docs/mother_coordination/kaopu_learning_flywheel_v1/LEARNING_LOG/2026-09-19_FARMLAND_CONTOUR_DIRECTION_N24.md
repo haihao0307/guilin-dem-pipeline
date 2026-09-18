@@ -28,7 +28,7 @@ Results:
 
 A minimal classifier control keeps masks, family, step, index and 6/12 m spacing identical. A horizontal two-cell run is accepted; rotating the support 90 degrees makes the same world-X classifier reject it. This proves coordinate-axis dependence of the classifier. It does not prove the local-tangent diagnostic is the right production continuation.
 
-Local replay passes `8/8` gates. CI is pending. Local and CI replay are the same analysis design, not independent evidence.
+Local replay and [GitHub Actions run 35377632888](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35377632888) pass `8/8` gates. Local and CI replay are the same analysis design, not independent evidence.
 
 ### Observation root C — mature primary contracts
 
@@ -38,7 +38,7 @@ These sources support keeping scalar masks, local direction fields and output mo
 
 ### Observation root D — routing and acknowledgement state
 
-N23 was delivered once and remains unacknowledged. R37-R39 are therefore not labelled implementation or adoption of N23. N24 routing is prepared after local verification and will be delivered once only if the coordinator CI replay succeeds.
+N23 was delivered once and remains unacknowledged. R37-R39 are therefore not labelled implementation or adoption of N23. After successful coordinator replay, N24 was [delivered once to PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5734116729); delivery is not acknowledgement, implementation or adoption.
 
 ## Candidate
 
@@ -82,6 +82,6 @@ For a topology claim, either derive neighbourhood direction from a declared loca
 
 ## Routing recommendation
 
-After CI, deliver one incremental Farmland gate: label current row metrics as axis-specific, add rotated/offset lattice checks and a two-dimensional component/graph receipt, and pin the height/derivative/low-gradient contract if a local frame is used. Do not prescribe the N24 tangent diagnostic, raise risers, smooth drainage locks or unlock parcels/hydraulics/production.
+One incremental Farmland gate was [delivered after CI](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5734116729): label current row metrics as axis-specific, add rotated/offset lattice checks and a two-dimensional component/graph receipt, and pin the height/derivative/low-gradient contract if a local frame is used. It does not prescribe the N24 tangent diagnostic, raise risers, smooth drainage locks or unlock parcels/hydraulics/production. Acknowledgement, implementation and adoption remain Unknown.
 
 No Landscape or Brick route is warranted from this R39-specific counterexample. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.
