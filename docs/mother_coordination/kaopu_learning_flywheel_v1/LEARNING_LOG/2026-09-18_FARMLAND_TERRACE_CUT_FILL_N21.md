@@ -29,7 +29,7 @@ That near-zero value is not a conservation certificate. Keeping the same `4 m` s
 
 A bounded `1 m` midpoint estimate over the enclosing `360 m × 160 m` domain gives fill `917.263101 m³`, cut `904.842781 m³`, and net `+12.420320 m³` (`0.6816%` of moved volume). This is a denser estimate, **not an exact continuous integral**. Against it, the worst net difference among the fixed phase set grows from `64.587666 m³` at `2 m`, to `183.494220 m³` at `4 m`, to `310.606602 m³` at `8 m`.
 
-All `8/8` N21 gates pass locally. This probe is derived from the same fixed Mother field, so it is not an independent terrain observation. It establishes a numerical counterexample to the sufficiency of the present gate; it does not prove that the final continuous R045.32 surface is materially unbalanced.
+All `8/8` N21 gates pass locally and on [GitHub Actions run 35342738951](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35342738951). This probe is derived from the same fixed Mother field, so it is not an independent terrain observation. It establishes a numerical counterexample to the sufficiency of the present gate; it does not prove that the final continuous R045.32 surface is materially unbalanced.
 
 ### Observation root C — mature-system contracts
 
@@ -83,6 +83,6 @@ No automatic mean subtraction or amplitude change is recommended. A numerical re
 
 ## Routing recommendation
 
-Route one incremental warning to Farmland PR65 after the coordinator evidence is fixed: retain the current `pos/neg` diagnostic, but label its units and add area-weighted cut, fill and net with grid spacing/origin plus one offset and one finer-grid replay. Do not rebalance geometry, unlock water state, or call the result soil conservation from N21 alone.
+One incremental warning was [delivered to Farmland PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5729787684): retain the current `pos/neg` diagnostic, but label its units and add area-weighted cut, fill and net with grid spacing/origin plus one offset and one finer-grid replay. Do not rebalance geometry, unlock water state, or call the result soil conservation from N21 alone. Delivery is not acknowledgement, implementation or adoption; all three remain Unknown.
 
 No Landscape or Brick route is warranted from this R045.32-specific implementation counterexample. First-tier expert AI was not called in this learning round; routine cross-AI discussion remains owned by the separate expert task.
