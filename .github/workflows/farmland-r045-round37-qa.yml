@@ -12,9 +12,12 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Precompute verified R36 stitch cache
+        shell: bash
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_build_seed_cache.mjs
       - name: Generate numeric result
         shell: bash
         run: node farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_qa.mjs
@@ -62,6 +65,7 @@ jobs:
           name: farmland-r045-round37-audit
           if-no-files-found: warn
           path: |
+            farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_seed_cache.mjs
             farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_qa_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_browser_result.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_summary.json
@@ -72,7 +76,7 @@ jobs:
         run: |
           set -e
           git config user.name 'github-actions[bot]';git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
-          git add farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_summary.json
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_seed_cache.mjs farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_summary.json
           if [ -f farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_fixed_view.png ]; then git add farmland-object-dna/research/r045-autonomous-rebuild/round-37/r045_round37_fixed_view.png; fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'farmland R045.37 persist QA evidence [skip ci]';git push origin HEAD:${GITHUB_REF_NAME}
