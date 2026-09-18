@@ -36,7 +36,7 @@ function supportAt(x,z,base){
   const row=active.filter(s=>s.dz===0),upper=active.filter(s=>s.dz>0),lower=active.filter(s=>s.dz<0),near=active.filter(s=>Math.hypot(s.dx,s.dz)<=8.6);
   const cross=upper.length+lower.length;
   const spread=(row.length>0&&cross>0)||(upper.length>0&&lower.length>0);
-  const strong=near.length>=2&&active.length>=3&&spread;
+  const strong=near.length>=2&&active.length>=2&&spread;
   let opposite=false;
   for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++){
     const a=active[i],b=active[j],la=Math.hypot(a.dx,a.dz),lb=Math.hypot(b.dx,b.dz);
@@ -48,10 +48,11 @@ function supportAt(x,z,base){
 
 // R40 moves from centimetre-scale run-end repair to a higher-order family-organization pass.
 // Existing R39 active terrace geometry is bit-exact. A weak R39 sample can be promoted only where
-// multiple already-active same-family neighbours occupy at least two contour-row sectors. This creates
-// short diagonal/lateral junctions that allow nested ribbons to branch or re-merge between adjacent
-// rows, while a single neighbour cannot grow a new island. The operation is non-recursive and all
-// promoted samples are re-gated by slope/family/drainage/receiver safety; hard drainage <=12 m stays zero.
+// at least two already-active, same-family, stair-compatible near neighbours occupy more than one
+// contour-row sector. This creates short diagonal/lateral junctions that allow nested ribbons to branch
+// or re-merge between adjacent rows, while a single neighbour cannot grow a new island. The operation
+// is non-recursive and all promoted samples are re-gated by slope/family/drainage/receiver safety;
+// hard drainage <=12 m stays zero.
 export function familyOrganizationGain(x,z){
   const base=r39At(x,z);if(base.mask>.12)return 0;
   const safety=safetyAt(x,z);if(safety<=0)return 0;
@@ -78,7 +79,7 @@ export function suitability(x,z){return R30.suitability(x,z)}
 
 export const snapshot={...R39.snapshot,version:VERSION,visualAcceptance:false,browserQA:false,productionReady:false,parcelGenerationEnabled:false,terraceGeometryEnabled:true,terracePilotPreviewEnabled:true,waterStateKnown:false,round40:{
  scope:'organize verified R39 terrace ribbons into limited same-family adjacent-row junctions so nesting, branching and re-merging can emerge without raising risers or erasing drainage breaks',
- method:'hold every already-active R39 sample, stair step, phase, raw response and 0.84 amplitude fixed. Promote only R39-weak samples with at least two near and three total already-active same-family stair-compatible R39 neighbours spanning more than one contour-row sector; re-gate by agricultural slope, family envelope, drainage and foreground receiver; never recurse from new R40 cells.',
+ method:'hold every already-active R39 sample, stair step, phase, raw response and 0.84 amplitude fixed. Promote only R39-weak samples with at least two near already-active same-family stair-compatible R39 neighbours spanning more than one contour-row sector; re-gate by agricultural slope, family envelope, drainage and foreground receiver; never recurse from new R40 cells.',
  logicCorrection:'Weak perspective readability does not imply insufficient riser amplitude. Lower fragmentation or greater connectedness also does not prove correct topology because an indiscriminate closing can erase legitimate drainage breaks. R40 therefore tests structured same-family junction evidence instead of height amplification or global mask closing.',
  constraint:'the 6 m organization lattice, neighbour sectors, 12 m hard-core rule and generated junctions are synthetic QA morphology, not surveyed Yunnan terrace branch/merge geometry. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations or event water-management records.',
  xiaomaBoundary:'Xiaoma/TLO evidence boundaries remain active: surface continuity cannot establish parcel ownership, hydraulic connectivity, head, water depth, discharge or gate state, and field geometry remains unknown without field-scale evidence.',
