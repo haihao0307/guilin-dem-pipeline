@@ -33,7 +33,7 @@ function foregroundClearance(x,z){
 }
 function compatiblePair(old,x,z,ax,az,d){
   const a=R34.terraceStateAt(x-ax*d,z-az*d),b=R34.terraceStateAt(x+ax*d,z+az*d);
-  if(a.mask<.075||b.mask<.075)return null;
+  if(a.mask<.06||b.mask<.06)return null;
   if(a.groupIndex!==b.groupIndex||a.groupIndex!==old.groupIndex)return null;
   const step=.5*(a.step+b.step);
   if(Math.abs(a.step-b.step)>Math.max(.16,.22*step))return null;
@@ -44,7 +44,7 @@ function compatiblePair(old,x,z,ax,az,d){
 function bestPair(old,x,z){
   const t=contourTangent(x,z),dist=[12,24,36,48,54];let best=null;
   for(const d of dist){const p=compatiblePair(old,x,z,t.tx,t.tz,d);if(p&&(!best||p.strength>best.strength))best={...p,axis:'contour'}}
-  if(!best||best.strength<.16){for(const d of [12,24,36]){const p=compatiblePair(old,x,z,1,0,d);if(p&&(!best||p.strength>best.strength))best={...p,axis:'row-fallback'}}}
+  if(!best||best.strength<.14){for(const d of [12,24,36]){const p=compatiblePair(old,x,z,1,0,d);if(p&&(!best||p.strength>best.strength))best={...p,axis:'row-fallback'}}}
   return best;
 }
 export function contourPairAt(x,z){const old=R35.terraceStateAt(x,z);return bestPair(old,x,z)}
@@ -54,10 +54,15 @@ function stitchInfoAt(x,z){
   const dd=R30.nearestExtendedDrainageDistance(x,z);if(dd<=12)return{old,target:0,pair:null};
   const group=R35.terraceGroupEnvelope(x,z),broad=R35.broadTerraceEligibility(x,z);if(group<.045||broad<.035)return{old,target:0,pair:null};
   const drain=R35.terraceDrainageClearance(x,z),river=foregroundClearance(x,z);if(drain<=.035||river<=.035)return{old,target:0,pair:null};
-  const pair=bestPair(old,x,z);if(!pair||pair.strength<=Math.max(.115,old.mask+.006))return{old,target:0,pair:null};
+  const pair=bestPair(old,x,z);if(!pair||pair.strength<.07)return{old,target:0,pair:null};
   const slopeSafety=.42+.58*C((broad-.035)/.24,0,1),familySafety=.42+.58*C((group-.045)/.30,0,1),drainSafety=.40+.60*C((drain-.035)/.58,0,1),riverSafety=.40+.60*C((river-.035)/.58,0,1);
   const axisSafety=pair.axis==='contour'?1:.72,distanceSafety=C(1-(pair.distance-12)/96,.58,1),safety=Math.min(slopeSafety,familySafety,drainSafety,riverSafety)*axisSafety*distanceSafety;
-  const target=C(old.mask+.72*(pair.strength-old.mask)*safety,0,.56);
+  // Interpolate across a supported contour gap rather than requiring the two shoulders to be strictly stronger
+  // than the inherited centre. A bounded family-support term lets a weak-positive gap cross the active threshold
+  // only when both shoulders, the same family, the local agricultural slope and drainage clearances all agree.
+  const interpolated=pair.strength*(.78+.22*safety)+.22*group*safety*C(1-old.mask/.58,0,1);
+  const target=C(Math.max(old.mask,interpolated),0,.56);
+  if(target<=old.mask+.002)return{old,target:0,pair:null};
   return{old,target,pair};
 }
 export function contourStitchStrength(x,z){return stitchInfoAt(x,z).target}
@@ -83,7 +88,7 @@ export const snapshot={
   parcelGenerationEnabled:false,terraceGeometryEnabled:true,terracePilotPreviewEnabled:true,waterStateKnown:false,
   round36:{
     scope:'scale the verified R35 short-gap idea into a wider contour-faithful terrace-family stitch while keeping stair geometry, hard drainage breaks, parcels and hydraulics locked',
-    method:'hold the R35 step, phase, raw stair response and 0.84 vertical amplitude fixed. For weak/support-gap samples inside the inherited agricultural slope, search same-family compatible shoulders on both sides from 12 to 54 m primarily along the local R30 contour tangent. Use the frozen R34 shoulder field to avoid recursive R35 bridge evaluation, then apply a distance-damped bounded stitch only when broad slope/family eligibility and drainage/receiver clearances remain open; the canonical row axis is a reduced-strength fallback only.',
+    method:'hold the R35 step, phase, raw stair response and 0.84 vertical amplitude fixed. For weak/support-gap samples inside the inherited agricultural slope, search same-family compatible shoulders on both sides from 12 to 54 m primarily along the local R30 contour tangent. Use the frozen R34 shoulder field to avoid recursive R35 bridge evaluation, then interpolate a bounded continuity mask only when both shoulders, the same family, broad slope eligibility and drainage/receiver clearances agree; the canonical row axis is a reduced-strength fallback only.',
     logicCorrection:'The fact that R35 produced safe bridges does not imply that making those bridges taller will solve the visual cluster problem; amplitude and topology are different variables. It also does not justify global mask closing, because a visually convenient join may be a real drainage break. R36 therefore changes continuity scale only, keeps the inherited stair frame/amplitude fixed, and requires same-family two-sided contour support before any larger stitch can appear.',
     constraint:'real terrace continuation, branch and merge locations cannot be reconstructed quickly from the present 12.5 m macro DEM and photographs. Selected-field metre/sub-metre microtopography, surveyed riser/bund/channel sections, management boundaries, inlet/outlet sill elevations and event water-management records are still absent. These stitches are synthetic morphology candidates, not surveyed Yunnan terrace junctions.',
     xiaomaBoundary:'the Xiaoma/TLO intake still marks field location/boundary, sampling window, field microtopography, bund section, channel section and water-control elevation unknown. Contour continuity does not establish ownership, hydraulic connectivity, head, water depth, discharge or gate state; R36 creates none of those states.',
