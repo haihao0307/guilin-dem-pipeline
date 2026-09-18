@@ -1,4 +1,4 @@
-"""Real v0.2.1 Chromium regression. QA only relocates the player/advances time.
+"""Real v0.2.2 Chromium regression. QA only relocates the player/advances time.
 Terrain, rocks, water, spear intersection and capture transactions are unmodified.
 Mobile is touch emulation, not a physical-device or human visual acceptance.
 """
@@ -18,11 +18,11 @@ base = os.environ.get('SMI_PUBLIC_URL')
 if not base:
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(ROOT)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    base = f'http://127.0.0.1:{server.server_port}/releases/v0.2.1/index.html'
+    base = f'http://127.0.0.1:{server.server_port}/releases/v0.2.2/index.html'
 parts = urlsplit(base)
 query = dict(parse_qsl(parts.query)); query['qa'] = '1'
 url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
-report = {'version': '0.2.1', 'url': url, 'browserPassed': False, 'physicalDeviceTest': False,
+report = {'version': '0.2.2', 'url': url, 'browserPassed': False, 'physicalDeviceTest': False,
           'visualAcceptance': False, 'cases': [], 'notes': [
               'Live WebGL terrain/water; no environment mocks.',
               'QA player placement; visible UI pickups/craft/spear hit.',
@@ -95,7 +95,7 @@ def main():
                 response = page.goto(url, wait_until='domcontentloaded', timeout=60000)
                 assert response and response.status == 200, 'Entry did not return HTTP 200'
                 page.wait_for_function('window.OceanIsland?.qa.ready && window.StoneMoneySurvival', timeout=120000)
-                assert page.evaluate('StoneMoneySurvival.version') == '0.2.1', 'Wrong runtime version'
+                assert page.evaluate('StoneMoneySurvival.version') == '0.2.2', 'Wrong runtime version'
                 assert not page.locator('#error').inner_text().strip(), 'Runtime error panel'
                 tap('#smiStart'); page.wait_for_function('StoneMoneySurvival.getMode()==="playing"')
                 page.evaluate('StoneMoneySurvival.test.advance(3)')
