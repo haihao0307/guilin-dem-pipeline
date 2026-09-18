@@ -20,6 +20,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add handoffs/stone-money-island-v0.2.2-20260918
+          git add -f handoffs/stone-money-island-v0.2.2-20260918/*.zip
           git diff --cached --quiet || git commit -m 'handoff: publish verified Stone Money v022 complete package'
           git push origin HEAD:handoff/stone-money-island-v022-20260918
       - uses: actions/upload-artifact@v4
