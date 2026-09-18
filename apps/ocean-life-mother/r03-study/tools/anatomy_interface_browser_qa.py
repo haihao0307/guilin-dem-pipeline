@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 root=Path(__file__).resolve().parents[1]
 js=(root/'src'/'anatomy-kernel.js').read_text()
-spec={"schema":"kaopu-fish-anatomy-articulation/0.1","parts":[
+spec={"schema":"kaopu-fish-anatomy-articulation/0.1","coordinateFrame":"source-local","lengthUnit":"source-unit","angleUnit":"rad","parts":[
  {"id":"head","kind":"rigid-fixed","parent":None,"anchor":[0,0,0]},
  {"id":"lower-jaw","kind":"rigid-hinge","parent":"head","anchor":[0,-.02,.12],"axis":[1,0,0],"angleRange":[-.1,.65]},
  {"id":"gill-cover-left","kind":"rigid-hinge","parent":"head","anchor":[.035,0,.02],"axis":[0,1,0],"angleRange":[-.18,.18]},
