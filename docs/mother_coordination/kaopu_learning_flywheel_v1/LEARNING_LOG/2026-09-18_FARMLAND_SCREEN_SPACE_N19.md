@@ -1,9 +1,9 @@
 # KAOPU Learning Note — N19 Farmland fixed-view screen-space contract
 
 Date: 2026-09-18  
-Bounded question: Why can a numerically real `0.102 m` terrain transition remain difficult to read in the locked Farmland fixed view?
+Bounded question: Why can numerically real `0.102–0.128 m` terrain changes remain difficult to read in the locked Farmland fixed view?
 
-Status: **Candidate partial / fixed-source CPU projection and style replay verified; R045.28 result, calibrated perception, target device and user acceptance Unknown**
+Status: **Candidate partial / pinned R045.27 and R045.28 CPU projection and style replay verified; calibrated perception, target device and user acceptance Unknown**
 
 ## Observation roots
 
@@ -11,7 +11,7 @@ Status: **Candidate partial / fixed-source CPU projection and style replay verif
 
 Farmland PR65 completed R045.27 at `4b53e5e84b8973884827ed81abad0c0f16148b14`. Its independent Mother receipt records `40/40` numeric gates, a maximum added transition of `0.1022335364 m`, and real overlap between the agricultural slope and receiving hierarchy. The same receipt explicitly keeps `visualAcceptance=false`: the fixed main perspective still reads primarily as one broad smooth surface, while the diagnostic plan panel shows the added bodies more clearly.
 
-This is new Mother implementation and visual feedback, not adoption of N18 or a promotion of the terrain to surveyed or hydraulic truth. During this N19 cycle the live PR moved on to an initial R045.28 planform-contact implementation. N19 pins the completed R045.27 receipt so the question and result cannot move underneath the test; an in-progress R045.28 implementation is not treated as a completed result.
+This is new Mother implementation and visual feedback, not adoption of N18 or a promotion of the terrain to surveyed or hydraulic truth. During this N19 cycle the live PR completed R045.28 at `e76ce5cac0d91506baf02652258638f3d8be6db3`: `42/42` numeric gates and Chrome startup passed, but the manual fixed-view receipt again kept `visualAcceptance=false`. R045.28 changed planform occupancy and nesting rather than simply multiplying height. Its maximum added elevation was `0.1281751992 m`, yet the perspective still looked nearly unchanged at first glance. N19 pins both completed rounds rather than testing a moving PR head.
 
 ### Observation root B — exact fixed-camera executable replay
 
@@ -30,7 +30,13 @@ All `13/13` local gates passed. Among the `316` rendered vertices where `|R27 de
 
 A denser `973`-sample support replay produced the same boundary: maximum movement `0.146297 px`. A live negative control multiplied only the R27 height delta by ten and produced a median `9.9992×` screen response, so the small result is not a dead projection test.
 
+The same fixed-source replay was then applied to R045.27 → R045.28 using that round's actual `56 × 66` grid. Among `422` active rendered vertices, median movement was `0.032231 px`, the 95th percentile `0.121462 px`, and the maximum `0.183362 px`; `88.626%` were below `0.1 px` and all were below `0.25 px`. The denser `1,121`-sample maximum was `0.178489 px`. The tenfold negative control again returned an approximately tenfold response.
+
 Geometry displacement is not the only visual path. The audit renderer computes one normal and one flat HSL color per terrain cell. Across `311` active cells, the normal-change median was `0.100883°` and the 95th percentile `0.263676°`; the continuous per-cell RGB proxy had median Euclidean change `0.0443/255` and maximum `0.2432/255`. These are exact replays of the audit's formulas before browser rasterization, not calibrated perceptual differences.
+
+R045.28 raised those exact-formula responses only modestly: the active-cell normal-change median was `0.115879°`, the 95th percentile `0.305103°`, and the continuous RGB proxy maximum `0.3171/255`. The Mother visual rejection is therefore compatible with both rounds' computed presentation response.
+
+The first R045.28 extension correctly rejected an R27-specific expectation that more than `90%` of active vertices would remain under `0.1 px`: R045.28 measured `88.626%`. The reusable gate was corrected to preserve the actual distribution and require only the declared result that all active vertices remained under `0.25 px`. This is a scope correction, not a relaxed visual-acceptance gate; human acceptance stays false.
 
 The bottom plan diagnostic uses `abs(delta) / roundMaximum` before coloring. It is deliberately amplitude-normalized: it is good evidence for support, sign and planform separation, but it cannot demonstrate that the same field is salient in the unnormalized perspective.
 
@@ -55,15 +61,15 @@ Pixel bins are diagnostic, not universal visibility thresholds. The current resu
 
 ## Current Best View
 
-R045.27's numerical and visual receipts are not in conflict. The transition exists in world space and overlaps the intended support, while the locked renderer projects its largest sampled vertical change to only about `0.146 px` and produces very small continuous style changes. The normalized plan panel answers “where and with what sign?”; the perspective answers “does the locked presentation make it readable?” Neither replaces the other.
+R045.27 and R045.28's numerical and visual receipts are not in conflict. Their changes exist in world space and overlap the intended support, while the locked renderer projects their largest sampled changes to only about `0.146 px` and `0.183 px` respectively and produces very small continuous style changes. The normalized plan panel answers “where and with what sign?”; the perspective answers “does the locked presentation make it readable?” Neither replaces the other.
 
-For the current R045.28 planform experiment, retain its footprint-first logic and add this screen-space receipt to the existing numeric and human gates. Do not tune to a universal pixel threshold and do not unlock terraces from this probe.
+The R045.28 footprint-first correction was the right causal discipline but was not sufficient for the fixed view. For the next Mother experiment, add this screen-space receipt to the existing numeric and human gates. Do not tune to a universal pixel threshold and do not unlock terraces from this probe.
 
 ## Frozen
 
 - Canonical Truth, Frozen R1 and all production Mother branches remain unchanged.
 - R045.27's `visualAcceptance=false`, terrain/water evidence boundaries and locked terrace/parcel state remain unchanged.
-- R045.28 remains Farmland Mother's implementation responsibility and is not evaluated as complete here.
+- R045.28's `visualAcceptance=false` and all terrace/parcel/water/production locks remain unchanged.
 - N02 noise/shader findings and N14–N18 integer/seed contracts remain unchanged.
 
 ## Rejected
@@ -77,14 +83,13 @@ For the current R045.28 planform experiment, retain its footprint-first logic an
 
 ## Unknown
 
-- Completed R045.28 numeric, browser and human visual receipts.
-- Browser-rasterized A/B difference attributable only to R045.27 after quantization, coverage and compositing.
+- Browser-rasterized A/B differences attributable only to R045.27 and R045.28 after quantization, coverage and compositing.
 - Other cameras, internal resolutions, terrain LODs, filters and target devices.
 - Calibrated human detection or preference thresholds.
 - Surveyed agricultural dimensions, hydraulic state and user acceptance.
 
 ## Routing recommendation
 
-Route one incremental gate to the active Farmland PR65: for R045.28, save the exact camera/render grid, unnormalized perspective pixel-motion and normal/style receipts beside the already separate normalized plan diagnostic and human review. This is a delivered method request only; it is not acknowledgement, implementation or adoption until the Mother returns a fixed commit and result.
+Route one incremental gate to the active Farmland PR65: for the next round after R045.28, save the exact camera/render grid, unnormalized perspective pixel-motion and normal/style receipts beside the already separate normalized plan diagnostic and human review. This is a delivered method request only; it is not acknowledgement, implementation or adoption until the Mother returns a fixed commit and result.
 
 No Landscape or Brick comment is warranted from this Farmland-specific result. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.

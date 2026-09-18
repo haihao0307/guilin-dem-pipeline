@@ -2,8 +2,8 @@
   "schema": "kaopu.probe.farmland-screen-space-n19/1",
   "source": {
     "repository": "haihao0307/guilin-dem-pipeline",
-    "commit": "4b53e5e84b8973884827ed81abad0c0f16148b14",
-    "implementationCommit": "8c57582b58b9c1b0eee2ee9c5bacdbe35cb441b5",
+    "commit": "e76ce5cac0d91506baf02652258638f3d8be6db3",
+    "implementationCommit": "75b8c0ecf9fde853dcd6fbf77118a4d5a617ef1b",
     "camera": {
       "position": [
         322,
@@ -23,12 +23,12 @@
     },
     "mesh": {
       "cells": [
-        52,
-        62
+        56,
+        66
       ],
       "worldStepMeters": [
-        8.84615384615,
-        8.38709677419
+        8.21428571429,
+        7.87878787879
       ]
     }
   },
@@ -40,10 +40,10 @@
       "name": "fixed_source_version",
       "pass": true,
       "value": {
-        "before": "R045.26",
-        "after": "R045.27"
+        "before": "R045.27",
+        "after": "R045.28"
       },
-      "limit": "R045.26 -> R045.27"
+      "limit": "R045.27 -> R045.28"
     },
     {
       "name": "audit_camera_literal_locked",
@@ -60,8 +60,8 @@
     {
       "name": "audit_mesh_grid_locked",
       "pass": true,
-      "value": "nx=52,nz=62",
-      "limit": "52 x 62 cells"
+      "value": "nx=56,nz=66",
+      "limit": "56 x 66 cells"
     },
     {
       "name": "visual_acceptance_remains_false",
@@ -72,19 +72,19 @@
     {
       "name": "active_render_vertices_exist",
       "pass": true,
-      "value": 316,
+      "value": 422,
       "limit": ">50 vertices with |delta| > 0.003 m"
     },
     {
       "name": "render_vertex_motion_is_subpixel",
       "pass": true,
       "value": {
-        "count": 316,
-        "min": 0.00397993098596,
-        "p50": 0.0280168913733,
-        "p95": 0.10626926077,
-        "max": 0.143220066945,
-        "mean": 0.0392605167075
+        "count": 422,
+        "min": 0.00450073768991,
+        "p50": 0.0322306575038,
+        "p95": 0.121462002429,
+        "max": 0.183361585836,
+        "mean": 0.0441777063874
       },
       "limit": "all active fixed-view mesh vertices move <0.5 px"
     },
@@ -92,12 +92,12 @@
       "name": "dense_peak_motion_is_subpixel",
       "pass": true,
       "value": {
-        "count": 973,
-        "min": 0.00372702147586,
-        "p50": 0.0271311590599,
-        "p95": 0.104307294908,
-        "max": 0.146296518208,
-        "mean": 0.039113633484
+        "count": 1121,
+        "min": 0.0036750587208,
+        "p50": 0.0310378985979,
+        "p95": 0.118693617944,
+        "max": 0.178488542348,
+        "mean": 0.0445871133537
       },
       "limit": "all dense support samples move <0.5 px"
     },
@@ -105,7 +105,7 @@
       "name": "all_active_vertices_move_under_quarter_pixel",
       "pass": true,
       "value": {
-        "0.1": 0.924050632911,
+        "0.1": 0.886255924171,
         "0.25": 1
       },
       "limit": "all move <0.25 px; tenth-pixel fraction remains a reported metric"
@@ -114,12 +114,12 @@
       "name": "tenfold_amplitude_control_is_live",
       "pass": true,
       "value": {
-        "count": 316,
-        "min": 9.99560406136,
-        "p50": 9.99920955734,
-        "p95": 10.0006117035,
-        "max": 10.0015263288,
-        "mean": 9.99895443236
+        "count": 422,
+        "min": 9.99438199611,
+        "p50": 9.99898456333,
+        "p95": 10.0003717193,
+        "max": 10.0009380445,
+        "mean": 9.99872451487
       },
       "limit": "median projection response approximately 10x"
     },
@@ -127,12 +127,12 @@
       "name": "normal_response_exists",
       "pass": true,
       "value": {
-        "count": 311,
-        "min": 0.000840041249372,
-        "p50": 0.100882702074,
-        "p95": 0.263676361129,
-        "max": 0.36763991676,
-        "mean": 0.118368807353
+        "count": 405,
+        "min": 0.00587835946667,
+        "p50": 0.115879099628,
+        "p95": 0.305103090798,
+        "max": 0.396487152342,
+        "mean": 0.1374272808
       },
       "limit": "non-zero fixed-grid normal change"
     },
@@ -140,12 +140,12 @@
       "name": "renderer_style_response_exists",
       "pass": true,
       "value": {
-        "count": 311,
-        "min": 0.00134048705512,
-        "p50": 0.0443364053189,
-        "p95": 0.156105979263,
-        "max": 0.243192669369,
-        "mean": 0.0595964113206
+        "count": 405,
+        "min": 0.00191085078215,
+        "p50": 0.0482824456932,
+        "p95": 0.174121304082,
+        "max": 0.317053082633,
+        "mean": 0.0664024029613
       },
       "limit": "non-zero per-cell HSL/RGB style change"
     },
@@ -157,86 +157,86 @@
     }
   ],
   "metrics": {
-    "activeRenderVertices": 316,
+    "activeRenderVertices": 422,
     "renderVertexElevationDeltaMeters": {
-      "count": 316,
-      "min": 0.00300836904756,
-      "p50": 0.0186304753326,
-      "p95": 0.0798374169345,
-      "max": 0.1004954792,
-      "mean": 0.0281119275559
+      "count": 422,
+      "min": 0.00308080462236,
+      "p50": 0.0196500433409,
+      "p95": 0.0870361217513,
+      "max": 0.131456023272,
+      "mean": 0.0300929097101
     },
     "renderVertexMotionPixels": {
-      "count": 316,
-      "min": 0.00397993098596,
-      "p50": 0.0280168913733,
-      "p95": 0.10626926077,
-      "max": 0.143220066945,
-      "mean": 0.0392605167075
+      "count": 422,
+      "min": 0.00450073768991,
+      "p50": 0.0322306575038,
+      "p95": 0.121462002429,
+      "max": 0.183361585836,
+      "mean": 0.0441777063874
     },
     "renderVertexMotionFractionsBelowPixels": {
       "1": 1,
-      "0.05": 0.712025316456,
-      "0.1": 0.924050632911,
+      "0.05": 0.635071090047,
+      "0.1": 0.886255924171,
       "0.25": 1,
       "0.5": 1
     },
     "denseSupportMotionPixels": {
-      "count": 973,
-      "min": 0.00372702147586,
-      "p50": 0.0271311590599,
-      "p95": 0.104307294908,
-      "max": 0.146296518208,
-      "mean": 0.039113633484
+      "count": 1121,
+      "min": 0.0036750587208,
+      "p50": 0.0310378985979,
+      "p95": 0.118693617944,
+      "max": 0.178488542348,
+      "mean": 0.0445871133537
     },
     "denseSupportElevationDeltaMeters": {
-      "count": 973,
-      "min": 0.0030079758688,
-      "p50": 0.0180597500208,
-      "p95": 0.0786442102327,
-      "max": 0.102233536388,
-      "mean": 0.028000237081
+      "count": 1121,
+      "min": 0.00301824683223,
+      "p50": 0.0201439319248,
+      "p95": 0.0871890135902,
+      "max": 0.128175199234,
+      "mean": 0.0303738115097
     },
     "tenfoldAmplitudeProjectionRatio": {
-      "count": 316,
-      "min": 9.99560406136,
-      "p50": 9.99920955734,
-      "p95": 10.0006117035,
-      "max": 10.0015263288,
-      "mean": 9.99895443236
+      "count": 422,
+      "min": 9.99438199611,
+      "p50": 9.99898456333,
+      "p95": 10.0003717193,
+      "max": 10.0009380445,
+      "mean": 9.99872451487
     },
-    "activeRenderCells": 311,
+    "activeRenderCells": 405,
     "renderCellNormalAngleDegrees": {
-      "count": 311,
-      "min": 0.000840041249372,
-      "p50": 0.100882702074,
-      "p95": 0.263676361129,
-      "max": 0.36763991676,
-      "mean": 0.118368807353
+      "count": 405,
+      "min": 0.00587835946667,
+      "p50": 0.115879099628,
+      "p95": 0.305103090798,
+      "max": 0.396487152342,
+      "mean": 0.1374272808
     },
     "renderCellIlluminationDelta": {
-      "count": 311,
-      "min": 0.00000319087474576,
-      "p50": 0.000338100050432,
-      "p95": 0.00112270590795,
-      "max": 0.00152535775978,
-      "mean": 0.000449613746519
+      "count": 405,
+      "min": 0.00000530417887989,
+      "p50": 0.000415980352688,
+      "p95": 0.00129730198864,
+      "max": 0.00211636786166,
+      "mean": 0.000534180957844
     },
     "renderCellRgbEuclidean8": {
-      "count": 311,
-      "min": 0.00134048705512,
-      "p50": 0.0443364053189,
-      "p95": 0.156105979263,
-      "max": 0.243192669369,
-      "mean": 0.0595964113206
+      "count": 405,
+      "min": 0.00191085078215,
+      "p50": 0.0482824456932,
+      "p95": 0.174121304082,
+      "max": 0.317053082633,
+      "mean": 0.0664024029613
     },
     "renderCellProjectedAreaPixels2": {
-      "count": 311,
-      "min": 25.1136679416,
-      "p50": 54.0624001856,
-      "p95": 137.983461978,
-      "max": 180.977492696,
-      "mean": 64.3279784792
+      "count": 405,
+      "min": 23.8573757263,
+      "p50": 51.8805039198,
+      "p95": 141.421189765,
+      "max": 191.010699902,
+      "mean": 65.7561063983
     }
   },
   "interpretationBoundary": [

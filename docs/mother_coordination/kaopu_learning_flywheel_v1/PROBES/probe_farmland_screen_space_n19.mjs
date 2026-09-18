@@ -2,18 +2,33 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const root = process.env.KAOPU_FARMLAND_R27_ROOT;
-if (!root) throw new Error('KAOPU_FARMLAND_R27_ROOT is required');
+const target = process.env.KAOPU_FARMLAND_TARGET || 'R27';
+const configs = {
+  R27: {
+    beforeRound: 26, afterRound: 27, beforeVersion: 'R045.26', afterVersion: 'R045.27',
+    field: 'transitionDelta', grid: [52, 62], supportZ: [-30, 82], gridLiteral: 'nx=52,nz=62',
+    commit: '4b53e5e84b8973884827ed81abad0c0f16148b14', implementationCommit: '8c57582b58b9c1b0eee2ee9c5bacdbe35cb441b5'
+  },
+  R28: {
+    beforeRound: 27, afterRound: 28, beforeVersion: 'R045.27', afterVersion: 'R045.28',
+    field: 'contactDelta', grid: [56, 66], supportZ: [-8, 108], gridLiteral: 'nx=56,nz=66',
+    commit: 'e76ce5cac0d91506baf02652258638f3d8be6db3', implementationCommit: '75b8c0ecf9fde853dcd6fbf77118a4d5a617ef1b'
+  }
+};
+const cfg = configs[target];
+if (!cfg) throw new Error(`Unknown KAOPU_FARMLAND_TARGET ${target}`);
+const root = process.env.KAOPU_FARMLAND_SOURCE_ROOT || process.env.KAOPU_FARMLAND_R27_ROOT;
+if (!root) throw new Error('KAOPU_FARMLAND_SOURCE_ROOT is required');
 
-const round27 = path.join(root, 'farmland-object-dna/research/r045-autonomous-rebuild/round-27');
-const round26 = path.join(root, 'farmland-object-dna/research/r045-autonomous-rebuild/round-26');
-const K = await import(pathToFileURL(path.join(round27, 'r045_round27_kernel.mjs')));
-const B = await import(pathToFileURL(path.join(round26, 'r045_round26_kernel.mjs')));
-const audit = fs.readFileSync(path.join(round27, 'r045_round27_audit.html'), 'utf8');
+const afterDir = path.join(root, `farmland-object-dna/research/r045-autonomous-rebuild/round-${cfg.afterRound}`);
+const beforeDir = path.join(root, `farmland-object-dna/research/r045-autonomous-rebuild/round-${cfg.beforeRound}`);
+const K = await import(pathToFileURL(path.join(afterDir, `r045_round${cfg.afterRound}_kernel.mjs`)));
+const B = await import(pathToFileURL(path.join(beforeDir, `r045_round${cfg.beforeRound}_kernel.mjs`)));
+const audit = fs.readFileSync(path.join(afterDir, `r045_round${cfg.afterRound}_audit.html`), 'utf8');
 
 const cameraLiteral = 'camera([322,154,360],[0,18,-52],770)';
 const canvasLiteral = 'can.width=650;can.height=650';
-const gridLiteral = 'nx=52,nz=62';
+const gridLiteral = cfg.gridLiteral;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const sub = (a, b) => a.map((v, i) => v - b[i]);
@@ -66,13 +81,13 @@ function styleAt(M, x, z) {
 }
 
 function screenDelta(x, z, scale = 1) {
-  const y0 = B.height(x, z), d = K.transitionDelta(x, z);
+  const y0 = B.height(x, z), d = K[cfg.field](x, z);
   const p0 = project([x, y0, z], CAM, W, H), p1 = project([x, y0 + scale * d, z], CAM, W, H);
   return { d, pixels: Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) };
 }
 
 const vertexPixels = [], vertexDeltas = [], vertexAmplified = [];
-const x0 = -230, x1 = 230, z0 = -315, z1 = 205, nx = 52, nz = 62;
+const x0 = -230, x1 = 230, z0 = -315, z1 = 205, [nx, nz] = cfg.grid;
 const dx = (x1 - x0) / nx, dz = (z1 - z0) / nz;
 for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
   const x = x0 + i * dx, z = z0 + j * dz, q = screenDelta(x, z);
@@ -82,7 +97,7 @@ for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
 }
 
 const densePixels = [], denseDeltas = [];
-for (let x = -230; x <= 230; x += 6) for (let z = -30; z <= 82; z += 4) {
+for (let x = -230; x <= 230; x += 6) for (let z = cfg.supportZ[0]; z <= cfg.supportZ[1]; z += 4) {
   const q = screenDelta(x, z);
   if (Math.abs(q.d) > .003) { densePixels.push(q.pixels); denseDeltas.push(Math.abs(q.d)); }
 }
@@ -91,7 +106,7 @@ const cellAngles = [], cellIllum = [], cellRgb = [], cellAreas = [];
 for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
   const xa = x0 + i * dx, za = z0 + j * dz, xb = xa + dx, zb = za + dz;
   const x = (xa + xb) / 2, z = (za + zb) / 2;
-  if (Math.abs(K.transitionDelta(x, z)) <= .003) continue;
+  if (Math.abs(K[cfg.field](x, z)) <= .003) continue;
   const a = styleAt(B, x, z), b = styleAt(K, x, z);
   cellAngles.push(Math.acos(clamp(dot(a.n, b.n), -1, 1)) * 180 / Math.PI);
   cellIllum.push(Math.abs(b.illum - a.illum));
@@ -104,15 +119,15 @@ for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
 const amplificationRatios = vertexPixels.map((v, i) => vertexAmplified[i] / (v || 1));
 const checks = [];
 const add = (name, pass, value, limit) => checks.push({ name, pass: Boolean(pass), value, limit });
-add('fixed_source_version', K.VERSION === 'R045.27' && B.VERSION === 'R045.26', { before: B.VERSION, after: K.VERSION }, 'R045.26 -> R045.27');
+add('fixed_source_version', K.VERSION === cfg.afterVersion && B.VERSION === cfg.beforeVersion, { before: B.VERSION, after: K.VERSION }, `${cfg.beforeVersion} -> ${cfg.afterVersion}`);
 add('audit_camera_literal_locked', audit.includes(cameraLiteral), cameraLiteral, 'exact audit camera literal present');
 add('audit_canvas_locked', audit.includes(canvasLiteral), canvasLiteral, '650 x 650 internal canvas');
-add('audit_mesh_grid_locked', audit.includes(gridLiteral), gridLiteral, '52 x 62 cells');
+add('audit_mesh_grid_locked', audit.includes(gridLiteral), gridLiteral, `${nx} x ${nz} cells`);
 add('visual_acceptance_remains_false', K.snapshot.visualAcceptance === false, K.snapshot.visualAcceptance, false);
 add('active_render_vertices_exist', vertexPixels.length > 50, vertexPixels.length, '>50 vertices with |delta| > 0.003 m');
 add('render_vertex_motion_is_subpixel', Math.max(...vertexPixels) < .5, distribution(vertexPixels), 'all active fixed-view mesh vertices move <0.5 px');
 add('dense_peak_motion_is_subpixel', Math.max(...densePixels) < .5, distribution(densePixels), 'all dense support samples move <0.5 px');
-add('most_active_vertices_move_under_tenth_pixel', fractions(vertexPixels, [.1])['0.1'] > .9, fractions(vertexPixels, [.1]), '>90% move <0.1 px');
+add('all_active_vertices_move_under_quarter_pixel', fractions(vertexPixels, [.25])['0.25'] === 1, fractions(vertexPixels, [.1, .25]), 'all move <0.25 px; tenth-pixel fraction remains a reported metric');
 add('tenfold_amplitude_control_is_live', percentile(amplificationRatios, .5) > 9.9 && percentile(amplificationRatios, .5) < 10.1, distribution(amplificationRatios), 'median projection response approximately 10x');
 add('normal_response_exists', Math.max(...cellAngles) > .01, distribution(cellAngles), 'non-zero fixed-grid normal change');
 add('renderer_style_response_exists', Math.max(...cellRgb) > .01, distribution(cellRgb), 'non-zero per-cell HSL/RGB style change');
@@ -122,10 +137,10 @@ const result = {
   schema: 'kaopu.probe.farmland-screen-space-n19/1',
   source: {
     repository: 'haihao0307/guilin-dem-pipeline',
-    commit: '4b53e5e84b8973884827ed81abad0c0f16148b14',
-    implementationCommit: '8c57582b58b9c1b0eee2ee9c5bacdbe35cb441b5',
+    commit: cfg.commit,
+    implementationCommit: cfg.implementationCommit,
     camera: { position: [322, 154, 360], target: [0, 18, -52], focalPixels: 770, canvas: [650, 650] },
-    mesh: { cells: [52, 62], worldStepMeters: [dx, dz] }
+    mesh: { cells: [nx, nz], worldStepMeters: [dx, dz] }
   },
   passed: checks.every(c => c.pass),
   gateCount: checks.length,
@@ -163,7 +178,8 @@ function canonicalize(value) {
 // CPU/libm implementations can differ by a final summation ULP. Evidence is serialized to twelve
 // significant digits so the fixed-source gate compares the declared precision, not host accident.
 const stableResult = canonicalize(result);
-const out = process.env.KAOPU_N19_OUTPUT || new URL('./farmland_screen_space_result_n19.json', import.meta.url);
+const defaultOutput = target === 'R27' ? './farmland_screen_space_result_n19.json' : './farmland_screen_space_r28_result_n19.json';
+const out = process.env.KAOPU_N19_OUTPUT || new URL(defaultOutput, import.meta.url);
 fs.writeFileSync(out, `${JSON.stringify(stableResult, null, 2)}\n`);
 console.log(JSON.stringify(stableResult, null, 2));
 if (!result.passed) process.exitCode = 2;

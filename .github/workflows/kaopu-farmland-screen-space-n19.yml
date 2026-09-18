@@ -8,6 +8,7 @@ on:
     paths:
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_screen_space_n19.mjs
       - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_result_n19.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_r28_result_n19.json
       - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-screen-space-n19/SOURCE_LOCK.json
       - .github/workflows/kaopu-farmland-screen-space-n19.yml
 
@@ -25,9 +26,9 @@ jobs:
         run: |
           git init -q /tmp/farmland-r27
           git -C /tmp/farmland-r27 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
-          git -C /tmp/farmland-r27 fetch --depth 1 origin 4b53e5e84b8973884827ed81abad0c0f16148b14
+          git -C /tmp/farmland-r27 fetch --depth 1 origin e76ce5cac0d91506baf02652258638f3d8be6db3
           git -C /tmp/farmland-r27 checkout --detach FETCH_HEAD
-          test "$(git -C /tmp/farmland-r27 rev-parse HEAD)" = 4b53e5e84b8973884827ed81abad0c0f16148b14
+          test "$(git -C /tmp/farmland-r27 rev-parse HEAD)" = e76ce5cac0d91506baf02652258638f3d8be6db3
       - name: Verify source locks and replay probe
         shell: bash
         run: |
@@ -36,7 +37,18 @@ jobs:
           test "$(sha256sum "$base/r045_round27_audit.html" | cut -d' ' -f1)" = 1032f3f03e1ff245209223477d1a3a126c664a49ee20d6026584081d7c530745
           test "$(sha256sum "$base/R045_ROUND27_REPORT.md" | cut -d' ' -f1)" = fb5967f7e0074f5161f0a306ccd768af726a5f7f5337758363045662a8a217a5
           test "$(sha256sum "$base/r045_round27_qa_result.json" | cut -d' ' -f1)" = 89e46e40de57ebea6518a6ac0feacb5191206cd0b8eedbd71f7c68715b691946
-          KAOPU_FARMLAND_R27_ROOT=/tmp/farmland-r27 \
+          base28=/tmp/farmland-r27/farmland-object-dna/research/r045-autonomous-rebuild/round-28
+          test "$(sha256sum "$base28/r045_round28_kernel.mjs" | cut -d' ' -f1)" = f142373bc20289d25b6e5b2be17cda4445319b7a052e0907cbb82e6677bf9e60
+          test "$(sha256sum "$base28/r045_round28_audit.html" | cut -d' ' -f1)" = 02fe56fdf9e6a9956de159d572663bab0f77e0c6c7af9a792f29173656f51438
+          test "$(sha256sum "$base28/R045_ROUND28_REPORT.md" | cut -d' ' -f1)" = ffbc9c312517c68e72cbf7c307e05a050d6db0507ae9499eae196e0368b3de39
+          test "$(sha256sum "$base28/r045_round28_qa_result.json" | cut -d' ' -f1)" = 905c45668102f5f213dbbb6672f91aec4817961c04dc020877b0026428cc991a
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r27 \
+          KAOPU_FARMLAND_TARGET=R27 \
           KAOPU_N19_OUTPUT=/tmp/farmland_screen_space_result_n19.json \
             node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_screen_space_n19.mjs >/tmp/probe_stdout.json
           cmp /tmp/farmland_screen_space_result_n19.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_result_n19.json
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r27 \
+          KAOPU_FARMLAND_TARGET=R28 \
+          KAOPU_N19_OUTPUT=/tmp/farmland_screen_space_r28_result_n19.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_screen_space_n19.mjs >/tmp/probe_r28_stdout.json
+          cmp /tmp/farmland_screen_space_r28_result_n19.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_screen_space_r28_result_n19.json
