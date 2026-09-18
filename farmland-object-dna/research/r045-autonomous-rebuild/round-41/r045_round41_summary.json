@@ -1,0 +1,98 @@
+{
+  "version": "R045.41",
+  "passed": false,
+  "passedCount": 29,
+  "gateCount": 33,
+  "failed": [
+    {
+      "name": "r40_failed_materiality_gate_repaired",
+      "pass": false,
+      "value": {
+        "totalGainCells": 5,
+        "maxTotalGain": 0.09459982654157606
+      },
+      "limit": "original R40 total standard retained: >8 weak samples gain >.004 and max gain >.006"
+    },
+    {
+      "name": "r40_failed_topology_gate_repaired",
+      "pass": false,
+      "value": {
+        "totalThreshold": 5,
+        "totalJunction": 4,
+        "totalCrossRow39": 5
+      },
+      "limit": "original material threshold retained: >=6 total crossings, >=4 junctions, and >=6 crossings have direct cross-row R39 support"
+    },
+    {
+      "name": "r41_increment_is_material",
+      "pass": false,
+      "value": {
+        "incGainCells": 0,
+        "incThreshold": 0,
+        "maxIncGain": 0
+      },
+      "limit": ">=3 incremental gain samples, >=2 new threshold crossings, max incremental gain >.004"
+    },
+    {
+      "name": "r41_change_from_r40_bounded",
+      "pass": false,
+      "value": 0,
+      "limit": ".001m < sampled max change < .14m"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 337944,
+    "screenshot_process_clean_exit": true,
+    "render_evidence_present": true,
+    "page_startup_passed": true,
+    "passed": true
+  },
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5073769549580318,
+      "changeFrom40": 0,
+      "active": 534,
+      "oldActive": 534,
+      "core": 356,
+      "oldCore": 356,
+      "incGainCells": 0,
+      "incThreshold": 0,
+      "incIsolated": 0,
+      "incCrossRow": 0,
+      "maxIncGain": 0,
+      "totalGainCells": 5,
+      "totalThreshold": 5,
+      "totalJunction": 4,
+      "totalCrossRow39": 5,
+      "totalOpposite": 3,
+      "maxTotalGain": 0.09459982654157606,
+      "unsafe": 0,
+      "groups": [
+        90,
+        225,
+        219
+      ],
+      "rowRunsN": 78,
+      "rowRunsP": 78,
+      "fragmentationBurdenN": 0.14606741573033707,
+      "fragmentationBurdenP": 0.14606741573033707,
+      "medianLongestN": 60,
+      "medianLongestP": 60,
+      "maxLongestN": 78,
+      "maxLongestP": 78,
+      "existingActiveMaskChange": 0,
+      "existingActiveDeltaChange": 0
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "full 6m R41 weak-domain repair sweep + retained original R40 total material/topology standards + exact existing-R40 inheritance + drainage/receiver boundary checks"
+  }
+}
