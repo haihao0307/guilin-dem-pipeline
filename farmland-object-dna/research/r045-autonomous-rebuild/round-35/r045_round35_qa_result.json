@@ -1,8 +1,8 @@
 {
   "version": "R045.35",
-  "passed": false,
+  "passed": true,
   "gateCount": 37,
-  "passedCount": 34,
+  "passedCount": 37,
   "checks": [
     {
       "name": "version",
@@ -39,27 +39,27 @@
       "pass": true,
       "value": {
         "deltaMax": 0.5045566963432688,
-        "deltaMean": 0.06324873394555162,
-        "active": 484,
+        "deltaMean": 0.06343525964723985,
+        "active": 488,
         "oldActive": 484,
         "core": 345,
         "oldCore": 345,
-        "changeFrom34": 0,
-        "bridgeCells": 0,
+        "changeFrom34": 0.12266811786075164,
+        "bridgeCells": 8,
         "newFromZero": 0,
-        "thresholdCross": 0,
+        "thresholdCross": 4,
         "unsafeBridge": 0,
         "hardCoreActive": 0,
         "hardCoreDelta": 0,
-        "maxBridge": 0,
+        "maxBridge": 0.4468044535274829,
         "groupCounts": [
-          85,
-          197,
+          86,
+          200,
           202
         ],
         "rowRunsN": 76,
         "rowRunsO": 76,
-        "fragmentationBurdenN": 0.15702479338842976,
+        "fragmentationBurdenN": 0.1557377049180328,
         "fragmentationBurdenO": 0.15702479338842976,
         "medianLongestN": 54,
         "medianLongestO": 54,
@@ -70,24 +70,24 @@
     },
     {
       "name": "r35_is_a_real_but_bounded_change_from_r34",
-      "pass": false,
-      "value": 0,
+      "pass": true,
+      "value": 0.12266811786075164,
       "limit": ".0015 m < sampled max R35-R34 surface change < .28 m"
     },
     {
       "name": "short_gap_bridge_is_material",
-      "pass": false,
+      "pass": true,
       "value": {
-        "bridgeCells": 0,
-        "maxBridge": 0
+        "bridgeCells": 8,
+        "maxBridge": 0.4468044535274829
       },
       "limit": ">6 sampled cells gain >0.006 mask"
     },
     {
       "name": "short_gap_bridge_changes_threshold_topology",
-      "pass": false,
+      "pass": true,
       "value": {
-        "thresholdCross": 0
+        "thresholdCross": 4
       },
       "limit": ">1 inherited weak/gap sample crosses the 0.12 active threshold"
     },
@@ -111,9 +111,9 @@
       "name": "active_support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 484,
+        "active": 488,
         "oldActive": 484,
-        "ratio": 1
+        "ratio": 1.0082644628099173
       },
       "limit": "R35 active support >= R34"
     },
@@ -140,7 +140,7 @@
       "name": "fragmentation_burden_improves_or_holds",
       "pass": true,
       "value": {
-        "fragmentationBurdenN": 0.15702479338842976,
+        "fragmentationBurdenN": 0.1557377049180328,
         "fragmentationBurdenO": 0.15702479338842976
       },
       "limit": "row runs per active sample <= 1.01x R34"
@@ -169,8 +169,8 @@
       "name": "all_three_nested_groups_remain_material",
       "pass": true,
       "value": [
-        85,
-        197,
+        86,
+        200,
         202
       ],
       "limit": "each dominant terrace group has >20 active samples on coarse grid"
@@ -310,7 +310,7 @@
     {
       "name": "logic_errors_explicitly_corrected",
       "pass": true,
-      "value": "R34 longer ribbons do not prove that the remaining separated-family reading can be solved by higher risers or by globally inflating the mask. Support strength and support topology are different variables: a stronger island remains an island. Conversely, unrestricted morphological closing would erase meaningful drainage interruptions. R35 therefore tests only short contour-tangent bridges with inherited stair-frame compatibility and keeps every <=12 m drainage core untouched.",
+      "value": "R34 longer ribbons do not prove that the remaining separated-family reading can be solved by higher risers or by globally inflating the mask. Support strength and support topology are different variables: a stronger island remains an island. Conversely, unrestricted morphological closing would erase meaningful drainage interruptions. R35 therefore tests only short two-sided inherited-support bridges, preserves the inherited stair frame and amplitude, and keeps every <=12 m drainage core untouched.",
       "limit": "reject higher-riser/global-inflation and unrestricted closing shortcuts"
     },
     {
@@ -328,7 +328,7 @@
     {
       "name": "mrrolord_ordering_only",
       "pass": true,
-      "value": "the saved MrRolord frame audit is used for ordering only: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. R35 keeps hydrology-first hard exclusions and adds only deterministic world-space contour-tangent morphology; it does not copy Blender dimensions, Voronoi cells, shader displacement or adaptive subdivision as agricultural truth.",
+      "value": "the saved MrRolord frame audit is used for ordering only: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. R35 keeps hydrology-first hard exclusions and adds only deterministic world-space short-gap morphology; it does not copy Blender dimensions, Voronoi cells, shader displacement or adaptive subdivision as agricultural truth.",
       "limit": "process ordering only"
     },
     {
@@ -365,27 +365,27 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5045566963432688,
-      "deltaMean": 0.06324873394555162,
-      "active": 484,
+      "deltaMean": 0.06343525964723985,
+      "active": 488,
       "oldActive": 484,
       "core": 345,
       "oldCore": 345,
-      "changeFrom34": 0,
-      "bridgeCells": 0,
+      "changeFrom34": 0.12266811786075164,
+      "bridgeCells": 8,
       "newFromZero": 0,
-      "thresholdCross": 0,
+      "thresholdCross": 4,
       "unsafeBridge": 0,
       "hardCoreActive": 0,
       "hardCoreDelta": 0,
-      "maxBridge": 0,
+      "maxBridge": 0.4468044535274829,
       "groupCounts": [
-        85,
-        197,
+        86,
+        200,
         202
       ],
       "rowRunsN": 76,
       "rowRunsO": 76,
-      "fragmentationBurdenN": 0.15702479338842976,
+      "fragmentationBurdenN": 0.1557377049180328,
       "fragmentationBurdenO": 0.15702479338842976,
       "medianLongestN": 54,
       "medianLongestO": 54,
