@@ -1,43 +1,18 @@
 {
   "version": "R045.43",
   "passed": false,
-  "passedCount": 27,
+  "passedCount": 30,
   "gateCount": 31,
   "failed": [
-    {
-      "name": "r43_increment_is_material",
-      "pass": false,
-      "value": {
-        "incGainCells": 0,
-        "incThreshold": 0,
-        "maxIncGain": 0
-      },
-      "limit": ">=2 frozen-boundary gains and >=2 threshold crossings"
-    },
-    {
-      "name": "r43_change_from_r42_bounded",
-      "pass": false,
-      "value": 0,
-      "limit": ".001m < sampled max change < .14m"
-    },
     {
       "name": "fragmentation_regression_repaired",
       "pass": false,
       "value": {
-        "burdenN": 0.15185185185185185,
+        "burdenN": 0.15101289134438306,
         "burdenP": 0.15185185185185185,
         "burden40": 0.14606741573033707
       },
-      "limit": "must improve R42 and satisfy unchanged <=101% R40 burden gate"
-    },
-    {
-      "name": "row_run_count_improves",
-      "pass": false,
-      "value": {
-        "rowRunsN": 82,
-        "rowRunsP": 82
-      },
-      "limit": "row runs strictly lower than R42"
+      "limit": "must improve R42 and satisfy unchanged <=101% R40 normalized row-run burden gate"
     }
   ],
   "browser": {
@@ -46,7 +21,7 @@
     "dom_status": 0,
     "ready_marker_status": 0,
     "screenshot_exists": true,
-    "screenshot_bytes": 262570,
+    "screenshot_bytes": 263063,
     "screenshot_process_clean_exit": true,
     "render_evidence_present": true,
     "page_startup_passed": true,
@@ -55,25 +30,26 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5073769549580318,
-      "changeFrom42": 0,
-      "active": 540,
+      "changeFrom42": 0.07069611523688918,
+      "active": 543,
       "oldActive": 540,
       "core": 356,
       "oldCore": 356,
-      "incGainCells": 0,
-      "incThreshold": 0,
+      "incGainCells": 3,
+      "incThreshold": 3,
       "incUnsupported": 0,
-      "maxIncGain": 0,
+      "branchSourceCrossings": 3,
+      "maxIncGain": 0.16,
       "unsafe": 0,
       "groups": [
         92,
-        227,
-        221
+        228,
+        223
       ],
       "rowRunsN": 82,
       "rowRunsP": 82,
       "rowRuns40": 78,
-      "fragmentationBurdenN": 0.15185185185185185,
+      "fragmentationBurdenN": 0.15101289134438306,
       "fragmentationBurdenP": 0.15185185185185185,
       "fragmentationBurden40": 0.14606741573033707,
       "medianLongestN": 57,
@@ -90,6 +66,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m R43 frozen-boundary contour-gap sweep + unchanged R40 fragmentation target + exact active-R42 inheritance + drainage/receiver boundaries"
+    "qaScope": "full 6m R43 frozen-R41-source companion sweep + unchanged R40-normalized fragmentation burden target + exact active-R42 inheritance + drainage/receiver boundaries"
   }
 }
