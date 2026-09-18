@@ -34,7 +34,7 @@ The maximum seam is not caused by a changed integer terrace index: both sides re
 
 A second bounded counterexample interpolates the already-quantized family deltas using the continuous support weights. This removes the hard selector by construction but does not preserve family-level identity: `478/696` (`68.678%`) overlap samples land more than `0.05 m` from every materially active family's own delta. The largest off-family distance is `0.430071 m`; at that sample the two active family deltas are `+0.429642 m` and `-0.488010 m`, while their blend is `-0.057939 m`.
 
-All `8/8` gates pass locally. The first GitHub Actions run `35353093785` preserved a useful instrumentation failure: every gate executed, but byte comparison differed in the last serialized digits of the epsilon-side substrate delta. Reducing general serialization from 12 to 9 significant digits still left the intentionally tiny `baseJump` platform-sensitive in run `35353355332`. The semantic gate was not relaxed: the exact transient value was replaced in the persisted receipt by its tested class, `baseJump < 1e-6 m`; the local diagnostic value remains reported above. Final CI receipt: **pending corrected commit**. Local and CI replay are the same analysis design, not independent evidence.
+All `8/8` gates pass locally and on final [GitHub Actions run 35353622479](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35353622479). The first run `35353093785` preserved a useful instrumentation failure: every gate executed, but byte comparison differed in the last serialized digits of the epsilon-side substrate delta. Reducing general serialization from 12 to 9 significant digits still left the intentionally tiny `baseJump` platform-sensitive in run `35353355332`. The semantic gate was not relaxed: the exact transient value was replaced in the persisted receipt by its tested class, `baseJump < 1e-6 m`; the local diagnostic value remains reported above. Local and CI replay are the same analysis design, not independent evidence.
 
 ### Observation root C — mature primary contracts
 
@@ -44,7 +44,7 @@ These are transferable compositing contracts, not evidence that any particular R
 
 ### Observation root D — routing and acknowledgement state
 
-The latest PR65 conversation contains the N19, N20 and N21 delivered guidance but no Mother reply acknowledging any of them. R045.33 is new implementation evidence, not an acknowledgement receipt. N22 routing is initially prepared only; its final delivery receipt is appended after the coordinator evidence is published.
+The latest PR65 conversation contained the N19, N20 and N21 delivered guidance but no Mother reply acknowledging any of them. R045.33 is new implementation evidence, not an acknowledgement receipt. N22 was [delivered once after its successful replay](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5731101694); delivery is not acknowledgement, implementation or adoption.
 
 ## Candidate
 
@@ -89,6 +89,6 @@ No replacement algorithm is promoted from N22. The next Mother trial should firs
 
 ## Routing recommendation
 
-Send one incremental Farmland warning after publication: before changing R33's family organization, add an epsilon-side family-switch gate and name the junction compositor. Preserve separate family/junction/riser masks and retain N21's area/phase cut/fill receipt. Do not respond by relaxing the current bound, globally blending all quantized heights, raising riser amplitude or unlocking parcels/water.
+One incremental Farmland warning was [delivered to PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5731101694): before changing R33's family organization, add an epsilon-side family-switch gate and name the junction compositor. Preserve separate family/junction/riser masks and retain N21's area/phase cut/fill receipt. Do not respond by relaxing the current bound, globally blending all quantized heights, raising riser amplitude or unlocking parcels/water. Acknowledgement, implementation and adoption remain Unknown.
 
 No Landscape or Brick route is warranted from this R33-specific counterexample. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.

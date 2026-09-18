@@ -27,8 +27,8 @@
       "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_FAMILY_JUNCTION_N22.md",
       "CURRENT_BEST_VIEW_N22_FARMLAND_TERRACE_FAMILY_JUNCTION.md"
     ],
-    "checks": "8/8 local pass; CI 35353093785 and 35353355332 retained as platform-sensitive receipt serialization failures; corrected CI pending",
-    "integration": "routing prepared, not delivered",
+    "checks": "8/8 local and final CI 35353622479 pass; CI 35353093785 and 35353355332 retained as platform-sensitive receipt serialization failures",
+    "integration": "routing delivered once in PR65 comment 5731101694; not acknowledged",
     "productionAdoption": "Unknown",
     "devicePublicUserAcceptance": "Unknown"
   },
@@ -40,7 +40,9 @@
     "family topology, quantization frame, compositor and diagnostics require separate versioned contracts"
   ],
   "verificationReceipt": {
-    "checks": "8/8 local pass; CI 35353093785 and 35353355332 retained as serialization failures; corrected CI pending",
+    "checks": "8/8 local and CI pass",
+    "successfulRun": 35353622479,
+    "failedRunsRetained": [35353093785, 35353355332],
     "sourceReplay": "fixed Farmland R045.33 commit plus four SHA-256 source locks",
     "runtime": "Node.js CPU exact Mother kernel replay with bisection-refined family boundaries",
     "hardwareGpuBrowserMobile": "not exercised by N22 probe; R33's own Chrome receipt is an inherited Mother root",
@@ -50,7 +52,7 @@
     {
       "mother": "Farmland",
       "entry": "guilin-dem-pipeline PR65",
-      "actionThisRound": "prepared one incremental junction-contract warning; not yet delivered or acknowledged"
+      "actionThisRound": "delivered one incremental junction-contract warning in comment 5731101694; not acknowledged, implemented or adopted"
     },
     {
       "mother": "Landscape",
