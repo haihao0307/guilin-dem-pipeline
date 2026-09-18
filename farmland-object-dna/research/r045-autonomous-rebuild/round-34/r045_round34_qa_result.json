@@ -2,7 +2,7 @@
   "version": "R045.34",
   "passed": false,
   "gateCount": 40,
-  "passedCount": 39,
+  "passedCount": 38,
   "checks": [
     {
       "name": "version",
@@ -38,30 +38,30 @@
       "name": "terrace_geometry_remains_substantive_but_bounded",
       "pass": true,
       "value": {
-        "deltaMax": 0.5045566963432688,
-        "deltaMean": 0.06324873394555162,
-        "pos": 46.13194281940192,
-        "neg": 40.39232521811264,
-        "active": 484,
+        "deltaMax": 0.5100080019178967,
+        "deltaMean": 0.06763750834391385,
+        "pos": 49.03343215198502,
+        "neg": 43.4946792624891,
+        "active": 500,
         "oldActive": 475,
-        "core": 345,
+        "core": 370,
         "oldCore": 320,
-        "changeFrom33": 0.06266947778499216,
+        "changeFrom33": 0.10841444346028473,
         "zeroViolation": 0,
         "maskDecrease": 0,
-        "weakCross": 9,
-        "liftN": 448,
-        "overlapLift": 362,
+        "weakCross": 25,
+        "liftN": 515,
+        "overlapLift": 369,
         "hardCoreActive": 0,
         "hardCoreDelta": 0,
         "groupCounts": [
-          85,
-          197,
-          202
+          90,
+          200,
+          210
         ],
-        "rowRunsN": 76,
+        "rowRunsN": 80,
         "rowRunsO": 76,
-        "smallGapsN": 20,
+        "smallGapsN": 34,
         "smallGapsO": 4,
         "medianLongestN": 54,
         "medianLongestO": 48,
@@ -73,15 +73,15 @@
     {
       "name": "r34_is_a_real_but_bounded_change_from_r33",
       "pass": true,
-      "value": 0.06266947778499216,
+      "value": 0.10841444346028473,
       "limit": ".004 m < sampled max R34-R33 surface change < .35 m"
     },
     {
       "name": "terrace_geometry_has_both_cut_and_fill",
       "pass": true,
       "value": {
-        "pos": 46.13194281940192,
-        "neg": 40.39232521811264
+        "pos": 49.03343215198502,
+        "neg": 43.4946792624891
       },
       "limit": "both signed responses >6 aggregate sample-m"
     },
@@ -101,7 +101,7 @@
       "name": "weak_positive_support_is_promoted",
       "pass": true,
       "value": {
-        "weakCross": 9
+        "weakCross": 25
       },
       "limit": ">4 weak-positive R33 samples cross the 0.12 active threshold"
     },
@@ -109,7 +109,7 @@
       "name": "support_strengthening_is_material",
       "pass": true,
       "value": {
-        "liftN": 448
+        "liftN": 515
       },
       "limit": ">20 samples gain >0.018 mask"
     },
@@ -117,7 +117,7 @@
       "name": "family_overlap_junctions_are_strengthened",
       "pass": true,
       "value": {
-        "overlapLift": 362
+        "overlapLift": 369
       },
       "limit": ">8 overlap samples gain >0.012 mask"
     },
@@ -125,9 +125,9 @@
       "name": "active_support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 484,
+        "active": 500,
         "oldActive": 475,
-        "ratio": 1.0189473684210526
+        "ratio": 1.0526315789473684
       },
       "limit": "R34 active support >= R33"
     },
@@ -135,17 +135,17 @@
       "name": "terrace_core_does_not_shrink",
       "pass": true,
       "value": {
-        "core": 345,
+        "core": 370,
         "oldCore": 320,
-        "ratio": 1.078125
+        "ratio": 1.15625
       },
       "limit": "R34 core support >= R33"
     },
     {
       "name": "row_fragmentation_does_not_worsen",
-      "pass": true,
+      "pass": false,
       "value": {
-        "rowRunsN": 76,
+        "rowRunsN": 80,
         "rowRunsO": 76
       },
       "limit": "total row runs <= R33 +2"
@@ -154,7 +154,7 @@
       "name": "small_interior_gaps_do_not_increase",
       "pass": false,
       "value": {
-        "smallGapsN": 20,
+        "smallGapsN": 34,
         "smallGapsO": 4
       },
       "limit": "small interior gap cells <= R33"
@@ -183,9 +183,9 @@
       "name": "all_three_nested_groups_remain_material",
       "pass": true,
       "value": [
-        85,
-        197,
-        202
+        90,
+        200,
+        210
       ],
       "limit": "each dominant terrace group has >20 active samples on coarse grid"
     },
@@ -204,12 +204,12 @@
       "name": "bench_and_riser_samples_exist",
       "pass": true,
       "value": {
-        "benchN": 62,
-        "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6057397015411001
+        "benchN": 69,
+        "riserN": 16,
+        "benchRatioMedian": 0.25862331118649123,
+        "riserRatioMedian": 2.469098273108279,
+        "benchSlopeMedian": 0.06328253088809166,
+        "riserSlopeMedian": 0.6293506865614094
       },
       "limit": ">10 bench and >3 riser coarse core samples"
     },
@@ -217,12 +217,12 @@
       "name": "benches_are_flatter_than_r30_substrate",
       "pass": true,
       "value": {
-        "benchN": 62,
-        "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6057397015411001
+        "benchN": 69,
+        "riserN": 16,
+        "benchRatioMedian": 0.25862331118649123,
+        "riserRatioMedian": 2.469098273108279,
+        "benchSlopeMedian": 0.06328253088809166,
+        "riserSlopeMedian": 0.6293506865614094
       },
       "limit": "median bench/base gradient ratio <.90"
     },
@@ -230,12 +230,12 @@
       "name": "risers_are_steeper_than_benches",
       "pass": true,
       "value": {
-        "benchN": 62,
-        "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6057397015411001
+        "benchN": 69,
+        "riserN": 16,
+        "benchRatioMedian": 0.25862331118649123,
+        "riserRatioMedian": 2.469098273108279,
+        "benchSlopeMedian": 0.06328253088809166,
+        "riserSlopeMedian": 0.6293506865614094
       },
       "limit": "median riser slope >1.25x median bench slope"
     },
@@ -243,12 +243,12 @@
       "name": "risers_steepen_relative_to_r30",
       "pass": true,
       "value": {
-        "benchN": 62,
-        "riserN": 14,
-        "benchRatioMedian": 0.2604845857102642,
-        "riserRatioMedian": 2.436454981437061,
-        "benchSlopeMedian": 0.0655900406174896,
-        "riserSlopeMedian": 0.6057397015411001
+        "benchN": 69,
+        "riserN": 16,
+        "benchRatioMedian": 0.25862331118649123,
+        "riserRatioMedian": 2.469098273108279,
+        "benchSlopeMedian": 0.06328253088809166,
+        "riserSlopeMedian": 0.6293506865614094
       },
       "limit": "median riser/base gradient ratio >1.08"
     },
@@ -280,10 +280,10 @@
       "name": "terrace_increment_is_not_a_cliff",
       "pass": true,
       "value": {
-        "maxAddedStep": 0.7659721144764824,
+        "maxAddedStep": 0.8227921986890547,
         "maxAddedAt": [
-          78,
-          -66
+          -6,
+          -36
         ]
       },
       "limit": "<1.25 m added-delta change per 6 m"
@@ -324,14 +324,14 @@
     {
       "name": "logic_errors_explicitly_corrected",
       "pass": true,
-      "value": "R33 remaining cluster visibility does not prove that risers are too low or that terrace amplitude should increase. It also does not justify unrestricted dilation into new terrain. Two earlier R34 formulations further confused geometric sophistication with useful computation by repeatedly recomputing off-axis or duplicated permission fields. Final R34 tests the smallest causal change: strengthen only already-positive inherited support and leave all zero-support boundaries and elevation quantization unchanged.",
+      "value": "R33 remaining cluster visibility does not prove that risers are too low or that terrace amplitude should increase. It also does not justify unrestricted dilation into new terrain. Two earlier R34 formulations further confused geometric sophistication with useful computation by repeatedly recomputing off-axis or duplicated permission fields. The first cheap remap then showed that merely lengthening ribbons is not enough when weak corridors remain just under the active threshold. Final R34 keeps the smallest causal variable—positive inherited support strength—and explicitly closes that threshold artifact without changing footprint or elevation quantization.",
       "limit": "reject low-riser, outward-dilation and over-complexity shortcuts"
     },
     {
       "name": "failed_attempts_are_retained",
       "pass": true,
-      "value": "the first R34 implementation used local R30 gradient tangents plus six off-axis permission probes per terrace query; a second formulation still recomputed duplicated permission fields. Both kept numeric generation running for minutes rather than the normal round budget. They remain in Git history but were rejected instead of treating compute cost as irrelevant.",
-      "limit": "retain computationally impractical attempts in history"
+      "value": "the first R34 implementation used local R30 gradient tangents plus six off-axis permission probes per terrace query; a second formulation still recomputed duplicated permission fields. Both kept numeric generation running for minutes rather than the normal round budget. A third cheap 1.20-1.40 remap completed in 22 seconds and passed 39/40, but increased short sub-threshold gap cells from 4 to 20 while keeping row runs unchanged; it is retained as a measured failure rather than hidden.",
+      "limit": "retain computational and measured threshold-gap failures"
     },
     {
       "name": "real_world_constraint_is_explicit",
@@ -383,30 +383,30 @@
   ],
   "metrics": {
     "geometry": {
-      "deltaMax": 0.5045566963432688,
-      "deltaMean": 0.06324873394555162,
-      "pos": 46.13194281940192,
-      "neg": 40.39232521811264,
-      "active": 484,
+      "deltaMax": 0.5100080019178967,
+      "deltaMean": 0.06763750834391385,
+      "pos": 49.03343215198502,
+      "neg": 43.4946792624891,
+      "active": 500,
       "oldActive": 475,
-      "core": 345,
+      "core": 370,
       "oldCore": 320,
-      "changeFrom33": 0.06266947778499216,
+      "changeFrom33": 0.10841444346028473,
       "zeroViolation": 0,
       "maskDecrease": 0,
-      "weakCross": 9,
-      "liftN": 448,
-      "overlapLift": 362,
+      "weakCross": 25,
+      "liftN": 515,
+      "overlapLift": 369,
       "hardCoreActive": 0,
       "hardCoreDelta": 0,
       "groupCounts": [
-        85,
-        197,
-        202
+        90,
+        200,
+        210
       ],
-      "rowRunsN": 76,
+      "rowRunsN": 80,
       "rowRunsO": 76,
-      "smallGapsN": 20,
+      "smallGapsN": 34,
       "smallGapsO": 4,
       "medianLongestN": 54,
       "medianLongestO": 48,
@@ -420,21 +420,21 @@
       "maxRawDiff": 0
     },
     "terraceMorphology": {
-      "benchN": 62,
-      "riserN": 14,
-      "benchRatioMedian": 0.2604845857102642,
-      "riserRatioMedian": 2.436454981437061,
-      "benchSlopeMedian": 0.0655900406174896,
-      "riserSlopeMedian": 0.6057397015411001
+      "benchN": 69,
+      "riserN": 16,
+      "benchRatioMedian": 0.25862331118649123,
+      "riserRatioMedian": 2.469098273108279,
+      "benchSlopeMedian": 0.06328253088809166,
+      "riserSlopeMedian": 0.6293506865614094
     },
     "farUp": 0,
     "nearDrain": 0,
     "receiver": 0,
     "outside": 0,
-    "maxAddedStep": 0.7659721144764824,
+    "maxAddedStep": 0.8227921986890547,
     "maxAddedAt": [
-      78,
-      -66
+      -6,
+      -36
     ]
   }
 }
