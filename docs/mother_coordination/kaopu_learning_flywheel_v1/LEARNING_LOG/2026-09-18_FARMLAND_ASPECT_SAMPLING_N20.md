@@ -28,7 +28,7 @@ The missed peak is nearly flat under the current contract: old and new gradient 
 
 An independent analytic counterexample applies the same orthogonal gradient perturbation `0.01` to base magnitudes `0.014` and `0.14`. The direction changes are `35.5377°` and `4.0856°` respectively. Direction becomes ill-conditioned as slope magnitude approaches zero even when the vector perturbation is unchanged.
 
-All `8/8` gates pass locally. `abs(atan2(cross,dot))` agrees with the existing `acos(normalized dot)` magnitude to below `1e-9°` on retained non-degenerate samples; `atan2` adds a signed, wrap-safe receipt but does not cure near-flat conditioning.
+All `8/8` gates pass locally. The fixed-source replay also passed on GitHub Actions in [run 35331597228](https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/35331597228). `abs(atan2(cross,dot))` agrees with the existing `acos(normalized dot)` magnitude to below `1e-9°` on retained non-degenerate samples; `atan2` adds a signed, wrap-safe receipt but does not cure near-flat conditioning.
 
 This replay is derived from the fixed Mother source and is not an independent empirical terrain observation.
 
@@ -83,6 +83,6 @@ The corrective action is not to raise `35°` until the test passes. Keep the exi
 
 ## Routing recommendation
 
-Route one incremental warning to Farmland PR65 after the coordinator CI replay succeeds: keep the preserved failed iterations; add magnitude/vector-delta plus signed-angle receipts and an offset/denser lattice around any threshold maximum; do not weaken the threshold or select a new slope floor from N20 alone. Delivery will remain distinct from acknowledgement, implementation and adoption.
+One incremental warning was [delivered to Farmland PR65](https://github.com/haihao0307/guilin-dem-pipeline/pull/65#issuecomment-5728319568): keep the preserved failed iterations; add magnitude/vector-delta plus signed-angle receipts and an offset/denser lattice around any threshold maximum; do not weaken the threshold or select a new slope floor from N20 alone. Delivery is not acknowledgement, implementation or adoption; all three remain Unknown.
 
 No Landscape or Brick route is warranted from this Farmland-specific counterexample. First-tier expert AI was not called; routine cross-AI discussion remains owned by the separate expert task.
