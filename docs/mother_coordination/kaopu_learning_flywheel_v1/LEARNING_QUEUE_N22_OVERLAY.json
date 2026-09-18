@@ -1,0 +1,65 @@
+{
+  "id": "KAOPU-NOISE-N22-FLYWHEEL-20260918",
+  "status": "active",
+  "supersedesOverlay": "LEARNING_QUEUE_N21_OVERLAY.json",
+  "inherits": [
+    "LEARNING_QUEUE_N21_OVERLAY.json",
+    "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_CUT_FILL_N21.md",
+    "CURRENT_BEST_VIEW_N21_FARMLAND_TERRACE_CUT_FILL.md"
+  ],
+  "policy": {
+    "oneQuestionPerRound": true,
+    "noScheduleChange": true,
+    "noPhotoReconstructionStudy": true,
+    "noExternalOceanStudy": true,
+    "preserveFrozenTruth": true,
+    "productionMotherMutation": false
+  },
+  "completedThisRound": {
+    "id": "N02-6M",
+    "topic": "Farmland multi-family quantized terrace junctions",
+    "question": "Does R045.33's continuous overlap mask make the composed terrace height continuous, and is direct height blending sufficient?",
+    "state": "candidate-partial-pinned-source-cpu-semantic-counterexample-verified",
+    "evidence": [
+      "references/farmland-terrace-family-junction-n22/SOURCE_LOCK.json",
+      "PROBES/probe_farmland_terrace_family_junction_n22.mjs",
+      "PROBES/farmland_terrace_family_junction_result_n22.json",
+      "LEARNING_LOG/2026-09-18_FARMLAND_TERRACE_FAMILY_JUNCTION_N22.md",
+      "CURRENT_BEST_VIEW_N22_FARMLAND_TERRACE_FAMILY_JUNCTION.md"
+    ],
+    "checks": "8/8 local pass; CI pending initial commit",
+    "integration": "routing prepared, not delivered",
+    "productionAdoption": "Unknown",
+    "devicePublicUserAcceptance": "Unknown"
+  },
+  "newKnowledge": [
+    "R045.33 combines a smooth max support envelope with a discontinuous dominant-family step/phase selector",
+    "126 sampled switch pairs refine to epsilon-scale label changes; 112 exceed 5 cm and the maximum height seam is 0.797561 m",
+    "the largest seam keeps the same integer level index on both sides, so index equality is insufficient",
+    "directly blending completed family heights moves 68.678% of sampled overlaps more than 5 cm from every active family level",
+    "family topology, quantization frame, compositor and diagnostics require separate versioned contracts"
+  ],
+  "verificationReceipt": {
+    "checks": "8/8 local pass; CI pending initial commit",
+    "sourceReplay": "fixed Farmland R045.33 commit plus four SHA-256 source locks",
+    "runtime": "Node.js CPU exact Mother kernel replay with bisection-refined family boundaries",
+    "hardwareGpuBrowserMobile": "not exercised by N22 probe; R33's own Chrome receipt is an inherited Mother root",
+    "evidenceIndependence": "R045.33 is one implementation root; N22 is a derived fixed-source counterexample; SideFX docs are a separate mature contract root"
+  },
+  "routes": [
+    {
+      "mother": "Farmland",
+      "entry": "guilin-dem-pipeline PR65",
+      "actionThisRound": "prepared one incremental junction-contract warning; not yet delivered or acknowledged"
+    },
+    {
+      "mother": "Landscape",
+      "actionThisRound": "not routed; no fixed R045.33 consumer"
+    },
+    {
+      "mother": "Brick Material",
+      "actionThisRound": "not routed; no terrace-family consumer"
+    }
+  ],
+  "nextGap": "Mother must choose a junction topology/compositor and return versioned epsilon value/gradient, N21 cut-fill, fixed-view and lock receipts before any adoption claim."
+}

@@ -1,0 +1,42 @@
+name: KAOPU Farmland terrace family junction N22
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - coordination/kaopu-learning-flywheel-r1-20260909
+    paths:
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_terrace_family_junction_n22.mjs
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_terrace_family_junction_result_n22.json
+      - docs/mother_coordination/kaopu_learning_flywheel_v1/references/farmland-terrace-family-junction-n22/SOURCE_LOCK.json
+      - .github/workflows/kaopu-farmland-terrace-family-junction-n22.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch fixed Farmland source
+        shell: bash
+        run: |
+          git init -q /tmp/farmland-r33
+          git -C /tmp/farmland-r33 remote add origin https://github.com/haihao0307/guilin-dem-pipeline.git
+          git -C /tmp/farmland-r33 fetch --depth 1 origin f8b180f1b1bda01885bdef6e3a2ab25e0c2257f8
+          git -C /tmp/farmland-r33 checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/farmland-r33 rev-parse HEAD)" = f8b180f1b1bda01885bdef6e3a2ab25e0c2257f8
+      - name: Verify locks and replay probe
+        shell: bash
+        run: |
+          base=/tmp/farmland-r33/farmland-object-dna/research/r045-autonomous-rebuild
+          test "$(sha256sum "$base/round-30/r045_round30_kernel.mjs" | cut -d' ' -f1)" = 964ce07778cc571273fc78c5e77a54d65e1393f1d85a3a69c4eb91a7df327f18
+          test "$(sha256sum "$base/round-31/r045_round31_kernel.mjs" | cut -d' ' -f1)" = bbfb57a1c960d61e80acfde283e4f800245a98793f35dedf2cecba2de0f0995d
+          test "$(sha256sum "$base/round-32/r045_round32_kernel.mjs" | cut -d' ' -f1)" = 5ebbbf451fb318eb19fd301938e23e2cf27d9733582dabe82a57adc93ee1a138
+          test "$(sha256sum "$base/round-33/r045_round33_kernel.mjs" | cut -d' ' -f1)" = b6b6475feefd92542922b05f106350d1e57c9577646fd37d4bf98beeec493896
+          KAOPU_FARMLAND_SOURCE_ROOT=/tmp/farmland-r33 \
+          KAOPU_N22_OUTPUT=/tmp/farmland_terrace_family_junction_result_n22.json \
+            node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/probe_farmland_terrace_family_junction_n22.mjs >/tmp/probe_stdout.json
+          cmp /tmp/farmland_terrace_family_junction_result_n22.json docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/farmland_terrace_family_junction_result_n22.json
