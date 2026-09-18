@@ -50,7 +50,7 @@ export function terraceGroupMask(x,z){return terraceStateAt(x,z).mask}
 export function terraceFrameAt(x,z){const s=r42At(x,z);return{step:s.step,phase:s.phase}}
 export function terraceDelta(x,z){return terraceStateAt(x,z).delta}
 export function height(x,z){return R30.height(x,z)+terraceDelta(x,z)}
-export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x-e,z))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
+export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z-e))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
 export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 export function terracePermission(x,z){return R30.terracePermission(x,z)}
