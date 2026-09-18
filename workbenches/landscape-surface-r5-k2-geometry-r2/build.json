@@ -1,0 +1,55 @@
+{
+  "schema": "LANDSCAPE_R5_K2_G2_STRONGER_GEOMETRY_TUNING_V1",
+  "date": "2026-09-17",
+  "sourcePath": "workbenches/landscape-surface-r5-k2-geometry-r1/index.html",
+  "sourceSha256": "36ca41019aaa9f05b027a9129d7a531750254b29625ec2b896cd29ec2cb8f7ec",
+  "candidatePath": "workbenches/landscape-surface-r5-k2-geometry-r2/index.html",
+  "candidateSha256": "a39289412b636750ecb26dad6ea5f6673613ef8f274e3f457a47165a68791f80",
+  "candidateBytes": 100736,
+  "geometry": {
+    "defaultStrength": 1.65,
+    "defaultConcavity": 0.85,
+    "defaultSpikeGuard": 0.95,
+    "baseAmplitudeM": 0.48,
+    "nominalAmplitudeM": 0.792,
+    "scaleM": 7.2,
+    "requestedLayers": 3,
+    "expectedEffectiveLayers": 3,
+    "meshSafetyFraction": 0.22,
+    "smoothing": 0.34,
+    "downwardNeedlePolicy": "rounded breakaway cutter + three bounded one-ring tip suppression passes + outward displacement suppression on downward normals",
+    "tuningNote": "broader three-band geometry field; stronger concavity; lower smoothing; larger local safe cap while downward outward motion remains suppressed",
+    "antiSpikeStabilization": "precompute per-vertex edge/altitude safety scale; skip unsafe micro-triangles; bounded upward tip correction capped to 1.8-2.6% local scale; accept only zero-flip trial"
+  },
+  "surface": {
+    "scopeDefault": 1.55,
+    "scopeRange": [
+      0.6,
+      3.0
+    ],
+    "microDefault": 1.8,
+    "microRange": [
+      1.4,
+      4.0
+    ],
+    "breakContrastDefault": 1.6,
+    "breakContrastRange": [
+      1.0,
+      3.5
+    ],
+    "controls": [
+      "shellScale",
+      "shellContrast",
+      "shellCoverage",
+      "shellDirection",
+      "breakContrast",
+      "surfacePresets"
+    ]
+  },
+  "macroGeometryReplacement": false,
+  "cameraAffectsGeometry": false,
+  "timeAffectsStaticRock": false,
+  "geometryFieldCoupled": false,
+  "visualApproved": false,
+  "productionReady": false
+}

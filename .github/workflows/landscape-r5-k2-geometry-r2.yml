@@ -1,0 +1,118 @@
+name: Landscape R5.K2.G2 Stronger Geometry
+
+on:
+  push:
+    branches:
+      - feature/landscape-microscope-geometry-lab-r1-20260916
+    paths:
+      - workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
+      - workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
+      - workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+      - workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
+      - .github/workflows/landscape-r5-k2-geometry-r2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R5.K2.G2 candidate
+        run: |
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+          python -m py_compile workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2/build_r2.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2/fix_scalar_smoothing.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2/retune_r2.py
+          python workbenches/landscape-surface-r5-k2-geometry-r2/stabilize_spike_guard.py
+
+      - name: Static workbench QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          root = Path('workbenches/landscape-surface-r5-k2-geometry-r2')
+          s = (root / 'index.html').read_text(encoding='utf-8')
+          b = json.loads((root / 'build.json').read_text(encoding='utf-8'))
+          required = [
+              'microscopeGeometryR2', 'LANDSCAPE_MICROSCOPE_GEOMETRY_R2',
+              'antiSpikeAdjustedVertices', 'antiSpikeRejectedTrials', 'baseTriangleFlipCount',
+              'id="geo"', 'id="concavity"', 'id="spikeGuard"',
+              'id="shellScale"', 'id="shellContrast"', 'id="shellCoverage"',
+              'id="shellDirection"', 'id="breakContrast"',
+              'data-surface="extreme"', 'uShellContrast', 'uBreakContrast',
+              'function neighborScalar'
+          ]
+          for token in required:
+              assert token in s, token
+          assert b['schema'] == 'LANDSCAPE_R5_K2_G2_STRONGER_GEOMETRY_TUNING_V1'
+          assert b['macroGeometryReplacement'] is False
+          assert b['geometryFieldCoupled'] is False
+          assert b['geometry']['defaultStrength'] == 1.65
+          assert b['geometry']['scaleM'] == 7.2
+          blocks = []
+          for sid in ('worldSource', 'generateSource'):
+              m = re.search(r'<script id="%s" type="text/plain">(.*?)</script>' % sid, s, re.S)
+              assert m, sid
+              blocks.append(m.group(1))
+          Path('/tmp/landscape-g2-worker.js').write_text('\n'.join(blocks), encoding='utf-8')
+          print(json.dumps(b, ensure_ascii=False, indent=2))
+          PY
+          node --check /tmp/landscape-g2-worker.js
+
+      - name: Prepare numerical runtime QA
+        run: |
+          cp /tmp/landscape-g2-worker.js /tmp/landscape-g2-runtime.js
+          cat >> /tmp/landscape-g2-runtime.js <<'JS'
+          const fs=require('fs');
+          function run(label,overrides={}){
+            const cfg={schema:'landscape-function-world/1',core:'limestone-water-2',seed:83,stage:4,fracture:1,relief:1,geo:1.65,concavity:.85,spikeGuard:.95,...overrides};
+            const data=generateScene(cfg,()=>{});
+            const g=data.report.microscopeGeometry;
+            console.log(label.toUpperCase()+'='+JSON.stringify(g));
+            if(!g)throw Error(label+': missing geometry report');
+            if(g.schema!=='LANDSCAPE_MICROSCOPE_GEOMETRY_R2')throw Error(label+': wrong schema');
+            if(g.protectedDriftCount!==0)throw Error(label+': protected drift '+g.protectedDriftCount);
+            if(g.triangleFlipCount!==0)throw Error(label+': triangle flips '+g.triangleFlipCount);
+            if(g.baseTriangleFlipCount!==0)throw Error(label+': anti-spike base flips '+g.baseTriangleFlipCount);
+            if(g.effectiveAmplitudeM<=0)throw Error(label+': zero effective amplitude');
+            if(g.maxDisplacementM<0.050)throw Error(label+': geometry still too weak '+g.maxDisplacementM);
+            if(g.effectiveLayers!==3)throw Error(label+': unexpected geometry bands '+g.effectiveLayers);
+            if(g.antiSpikePasses<1||g.antiSpikeAdjustedVertices<1)throw Error(label+': anti-spike correction did not execute');
+            return {label,config:cfg,microscopeGeometry:g,mainVertices:data.report.mainVertices,mainTriangles:data.report.mainTriangles,geometryGridM:data.report.geometryGridM};
+          }
+          const standard=run('standard');
+          const strong=run('strong',{geo:2.40,concavity:1.10,spikeGuard:1.0});
+          if(strong.microscopeGeometry.maxDisplacementM+1e-9<standard.microscopeGeometry.maxDisplacementM)throw Error('strong preset reduced geometry response');
+          const out={schema:'LANDSCAPE_R5_K2_G2_RUNTIME_QA',date:'2026-09-17',variants:[standard,strong],geometryFieldCoupled:false,visualApproved:false,productionReady:false};
+          fs.writeFileSync('workbenches/landscape-surface-r5-k2-geometry-r2/runtime-qa.json',JSON.stringify(out,null,2));
+          console.log(JSON.stringify(out));
+          JS
+          node --check /tmp/landscape-g2-runtime.js
+
+      - name: Run numerical geometry QA
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: node /tmp/landscape-g2-runtime.js
+
+      - name: Materialize candidate and evidence
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-surface-r5-k2-geometry-r2/index.html \
+                  workbenches/landscape-surface-r5-k2-geometry-r2/build.json \
+                  workbenches/landscape-surface-r5-k2-geometry-r2/runtime-qa.json
+          if git diff --cached --quiet; then
+            echo "R5.K2.G2 already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize stronger R5.K2.G2 workbench [skip ci]"
+          git push

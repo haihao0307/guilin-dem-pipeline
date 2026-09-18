@@ -1,0 +1,68 @@
+{
+  "schema": "LANDSCAPE_MICROSCOPE_REAL_GEOMETRY_LAB_R1",
+  "date": "2026-09-16",
+  "branch": "feature/landscape-microscope-geometry-lab-r1-20260916",
+  "baseCommit": "e7e04ffab58d97edd4442443fcba682d3f2c9de5",
+  "candidateCommit": "83d3649728e1eb2c21c995f42e9bb0026c20a464",
+  "candidatePath": "workbenches/landscape-microscope-geometry-r1/index.html",
+  "candidateBlobSha": "b1e1307a082272702251237cfbb7dcbf7c98b6e8",
+  "candidateSha256": "1e7404a272b1887908030743d83eea17f63c491ce4c62211dfb1313882b24c52",
+  "candidateBytes": 20500,
+  "purpose": "isolate and verify Microscope-driven real vertex displacement before integrating into the accepted R5 karst body",
+  "learningSources": [
+    "docs/mother_coordination/learning-r1-20260905/FUNCTION_LESSON_01.md",
+    "docs/mother_coordination/learning-r1-20260905/FUNCTION_APPLICATION_MAP.md",
+    "docs/mother_coordination/learning-r1-20260905/references/MACROSCOPIC_MICROSCOPE_ROCK_DETAIL.md",
+    "issue #61 coordinator review 5556771516"
+  ],
+  "geometryContract": {
+    "referenceDomain": "fixed object-space P0",
+    "detailSeries": "D_N(q)=0.5*sum_j(2^-j*(C(2^j q)-mu_j)); old terms are not renormalized when N increases",
+    "displacement": "P=P0+n0*A*M*(D_N-bias*max(D_N,0)^2)",
+    "gate": "M protects top and foot; protected vertices remain bitwise unchanged by the displacement loop",
+    "cameraAffectsGeometry": false,
+    "timeAffectsStaticRock": false
+  },
+  "implementedControls": [
+    "displacement amplitude A in metres",
+    "reference scale ell in metres",
+    "geometry octave count N",
+    "structural direction R",
+    "position-dependent rotation strength",
+    "un-calibrated dissolution bias",
+    "A/B split view",
+    "wireframe",
+    "fixed hero/cliff/silhouette/protection views"
+  ],
+  "defaultIndependentNumericCheck": {
+    "maxDisplacementM": 0.3681446139,
+    "rmsDisplacementM": 0.0766588003,
+    "maxNormalAngleDeg": 17.2813646,
+    "protectedDriftCount": 0,
+    "protectedVertexCount": 3136,
+    "triangleFlipCount": 0
+  },
+  "strongPresetIndependentNumericCheck": {
+    "amplitudeM": 0.9,
+    "maxDisplacementM": 0.6024184591,
+    "rmsDisplacementM": 0.1254416731,
+    "maxNormalAngleDeg": 26.6823807,
+    "protectedDriftCount": 0,
+    "triangleFlipCount": 0
+  },
+  "checks": {
+    "remoteBlobMatchesLocalGitBlob": true,
+    "nodeSyntaxCheck": true,
+    "independentGeometryMetricReplication": true,
+    "browserWebGLRuntime": "not_run_in_current_execution_environment",
+    "visualUserApproval": false
+  },
+  "stoneReference": {
+    "donor": "HOUSE@53a4b0728678e31ba4ebf2a9267a213597d8f226 Brick Mother atelier-r4",
+    "status": "preserved_not_claimed_matched_in_this_lab",
+    "reason": "this isolated pass holds material mostly neutral so geometry change cannot be hidden by colour/roughness; exact donor surface response is the next integration gate"
+  },
+  "r5KarstModified": false,
+  "visualApproved": false,
+  "productionReady": false
+}
