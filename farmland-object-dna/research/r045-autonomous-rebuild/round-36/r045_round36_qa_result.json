@@ -1,8 +1,8 @@
 {
   "version": "R045.36",
-  "passed": false,
+  "passed": true,
   "gateCount": 39,
-  "passedCount": 37,
+  "passedCount": 39,
   "checks": [
     {
       "name": "version",
@@ -39,30 +39,30 @@
       "pass": true,
       "value": {
         "deltaMax": 0.5045566963432688,
-        "deltaMean": 0.06348088269492737,
-        "active": 488,
+        "deltaMean": 0.0641458386524015,
+        "active": 496,
         "oldActive": 488,
         "core": 345,
         "oldCore": 345,
-        "changeFrom35": 0.04482427224245533,
-        "stitchCells": 3,
+        "changeFrom35": 0.2120135044085936,
+        "stitchCells": 20,
         "newFromZero": 0,
-        "thresholdCross": 0,
+        "thresholdCross": 8,
         "unsafeStitch": 0,
         "hardCoreActive": 0,
         "hardCoreDelta": 0,
-        "maxStitch": 0.47805345913849534,
-        "contourPairs": 2,
-        "rowFallbackPairs": 1,
-        "maxPairDistance": 36,
+        "maxStitch": 0.56,
+        "contourPairs": 16,
+        "rowFallbackPairs": 4,
+        "maxPairDistance": 48,
         "groupCounts": [
           86,
-          200,
-          202
+          202,
+          208
         ],
         "rowRunsN": 76,
         "rowRunsO": 76,
-        "fragmentationBurdenN": 0.1557377049180328,
+        "fragmentationBurdenN": 0.1532258064516129,
         "fragmentationBurdenO": 0.1557377049180328,
         "medianLongestN": 54,
         "medianLongestO": 54,
@@ -74,23 +74,23 @@
     {
       "name": "r36_is_a_real_but_bounded_change_from_r35",
       "pass": true,
-      "value": 0.04482427224245533,
+      "value": 0.2120135044085936,
       "limit": ".0015 m < sampled max R36-R35 surface change < .35 m"
     },
     {
       "name": "wider_contour_stitch_is_material",
-      "pass": false,
+      "pass": true,
       "value": {
-        "stitchCells": 3,
-        "maxStitch": 0.47805345913849534
+        "stitchCells": 20,
+        "maxStitch": 0.56
       },
       "limit": ">10 sampled cells gain >0.006 mask"
     },
     {
       "name": "stitch_changes_threshold_topology",
-      "pass": false,
+      "pass": true,
       "value": {
-        "thresholdCross": 0
+        "thresholdCross": 8
       },
       "limit": ">2 inherited weak/gap samples cross the 0.12 active threshold"
     },
@@ -98,8 +98,8 @@
       "name": "contour_axis_is_primary",
       "pass": true,
       "value": {
-        "contourPairs": 2,
-        "rowFallbackPairs": 1
+        "contourPairs": 16,
+        "rowFallbackPairs": 4
       },
       "limit": "contour-tangent accepted stitches >= row-axis fallback stitches"
     },
@@ -107,7 +107,7 @@
       "name": "wider_search_is_actually_used",
       "pass": true,
       "value": {
-        "maxPairDistance": 36
+        "maxPairDistance": 48
       },
       "limit": "at least one accepted stitch uses a two-sided pair at >=36 m"
     },
@@ -123,9 +123,9 @@
       "name": "active_support_does_not_shrink",
       "pass": true,
       "value": {
-        "active": 488,
+        "active": 496,
         "oldActive": 488,
-        "ratio": 1
+        "ratio": 1.0163934426229508
       },
       "limit": "R36 active support >= R35"
     },
@@ -152,7 +152,7 @@
       "name": "fragmentation_burden_improves_or_holds",
       "pass": true,
       "value": {
-        "fragmentationBurdenN": 0.1557377049180328,
+        "fragmentationBurdenN": 0.1532258064516129,
         "fragmentationBurdenO": 0.1557377049180328
       },
       "limit": "row runs per active sample <= 1.015x R35"
@@ -182,8 +182,8 @@
       "pass": true,
       "value": [
         86,
-        200,
-        202
+        202,
+        208
       ],
       "limit": "each dominant terrace group has >20 active samples on coarse grid"
     },
@@ -385,30 +385,30 @@
   "metrics": {
     "geometry": {
       "deltaMax": 0.5045566963432688,
-      "deltaMean": 0.06348088269492737,
-      "active": 488,
+      "deltaMean": 0.0641458386524015,
+      "active": 496,
       "oldActive": 488,
       "core": 345,
       "oldCore": 345,
-      "changeFrom35": 0.04482427224245533,
-      "stitchCells": 3,
+      "changeFrom35": 0.2120135044085936,
+      "stitchCells": 20,
       "newFromZero": 0,
-      "thresholdCross": 0,
+      "thresholdCross": 8,
       "unsafeStitch": 0,
       "hardCoreActive": 0,
       "hardCoreDelta": 0,
-      "maxStitch": 0.47805345913849534,
-      "contourPairs": 2,
-      "rowFallbackPairs": 1,
-      "maxPairDistance": 36,
+      "maxStitch": 0.56,
+      "contourPairs": 16,
+      "rowFallbackPairs": 4,
+      "maxPairDistance": 48,
       "groupCounts": [
         86,
-        200,
-        202
+        202,
+        208
       ],
       "rowRunsN": 76,
       "rowRunsO": 76,
-      "fragmentationBurdenN": 0.1557377049180328,
+      "fragmentationBurdenN": 0.1532258064516129,
       "fragmentationBurdenO": 0.1557377049180328,
       "medianLongestN": 54,
       "medianLongestO": 54,
