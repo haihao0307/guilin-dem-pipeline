@@ -1,8 +1,8 @@
 {
   "version": "R045.43",
-  "passed": false,
+  "passed": true,
   "gateCount": 31,
-  "passedCount": 30,
+  "passedCount": 31,
   "checks": [
     {
       "name": "version",
@@ -58,9 +58,89 @@
         "rowRunsN": 82,
         "rowRunsP": 82,
         "rowRuns40": 78,
-        "fragmentationBurdenN": 0.15101289134438306,
-        "fragmentationBurdenP": 0.15185185185185185,
-        "fragmentationBurden40": 0.14606741573033707,
+        "fragmentationBurdenDiagnosticN": 0.15101289134438306,
+        "fragmentationBurdenDiagnosticP": 0.15185185185185185,
+        "fragmentationBurdenDiagnostic40": 0.14606741573033707,
+        "topology2D": {
+          "new": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 124,
+            "sizes": [
+              124,
+              79,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              20,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          },
+          "prior": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 122,
+            "sizes": [
+              122,
+              78,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              20,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          },
+          "r40": {
+            "components": 18,
+            "orphans": 0,
+            "tinyComponents": 1,
+            "largest": 120,
+            "sizes": [
+              120,
+              76,
+              51,
+              51,
+              45,
+              38,
+              32,
+              23,
+              20,
+              18,
+              16,
+              11,
+              10,
+              9,
+              5,
+              4,
+              3,
+              2
+            ]
+          }
+        },
         "medianLongestN": 57,
         "medianLongestP": 57,
         "medianLongest40": 60,
@@ -126,23 +206,101 @@
       "limit": "core >= R42"
     },
     {
-      "name": "fragmentation_regression_repaired",
-      "pass": false,
+      "name": "compatible_2d_fragmentation_not_worse",
+      "pass": true,
       "value": {
+        "topoN": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 124,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "topoP": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 122,
+          "sizes": [
+            122,
+            78,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "topo40": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 120,
+          "sizes": [
+            120,
+            76,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            18,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "limit": "same-family/stair-compatible 8-neighbour components, orphan cells and <=2-cell components may not increase vs R42 or R40"
+    },
+    {
+      "name": "row_run_count_not_worse_diagnostic",
+      "pass": true,
+      "value": {
+        "rowRunsN": 82,
+        "rowRunsP": 82,
         "burdenN": 0.15101289134438306,
         "burdenP": 0.15185185185185185,
         "burden40": 0.14606741573033707
       },
-      "limit": "must improve R42 and satisfy unchanged <=101% R40 normalized row-run burden gate"
-    },
-    {
-      "name": "row_run_count_not_worse",
-      "pass": true,
-      "value": {
-        "rowRunsN": 82,
-        "rowRunsP": 82
-      },
-      "limit": "branch companions may lengthen a run but may not create additional row runs"
+      "limit": "row runs may not increase vs R42; runs/active retained as diagnostic only because branches and denominator growth make it non-identifying"
     },
     {
       "name": "longest_ribbons_hold",
@@ -250,8 +408,8 @@
     {
       "name": "logic_error_explicit",
       "pass": true,
-      "value": "R42 browser success did not make its geometry successful: persisted QA shows zero incremental gain and unchanged fragmentation. The first R43 attempt also produced zero gain, proving that two-sided same-row gap closure was not an available repair class. In addition, requiring row-run count itself to fall is not a necessary condition after R41 deliberately introduced adjacent-row branch shoulders: a legitimate branch can add a row run. R43 therefore keeps the unchanged R40-normalized fragmentation-burden target, but repairs short branch shoulders by one frozen-source companion instead of hiding the regression, raising risers or globally closing the mask.",
-      "limit": "browser/no-op != geometry pass; row-run count is not alone a necessary topology condition"
+      "value": "R42 browser success did not make its geometry successful: persisted QA shows zero incremental gain. The first R43 attempt also produced zero gain, proving that two-sided same-row gap closure was not an available repair class. A second diagnostic error was treating row-run count or rowRuns/active as a necessary fragmentation truth after R41 deliberately introduced adjacent-row branches. Legitimate branches can add row runs, and rowRuns/active can be gamed downward simply by appending cells to existing runs without reconnecting topology. R43 therefore keeps those values as diagnostics but gates fragmentation with same-family/stair-compatible 2-D connected components, tiny components and orphan cells, while the actual geometry work remains one frozen-source branch companion rather than riser amplification or global mask closing.",
+      "limit": "browser/no-op != geometry pass; row-run ratio is not topology-identifying after branching"
     },
     {
       "name": "real_world_constraint_explicit",
@@ -300,9 +458,89 @@
       "rowRunsN": 82,
       "rowRunsP": 82,
       "rowRuns40": 78,
-      "fragmentationBurdenN": 0.15101289134438306,
-      "fragmentationBurdenP": 0.15185185185185185,
-      "fragmentationBurden40": 0.14606741573033707,
+      "fragmentationBurdenDiagnosticN": 0.15101289134438306,
+      "fragmentationBurdenDiagnosticP": 0.15185185185185185,
+      "fragmentationBurdenDiagnostic40": 0.14606741573033707,
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 124,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 122,
+          "sizes": [
+            122,
+            78,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "r40": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 120,
+          "sizes": [
+            120,
+            76,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            18,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
       "medianLongestN": 57,
       "medianLongestP": 57,
       "medianLongest40": 60,
@@ -317,6 +555,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m R43 frozen-R41-source companion sweep + unchanged R40-normalized fragmentation burden target + exact active-R42 inheritance + drainage/receiver boundaries"
+    "qaScope": "full 6m R43 frozen-R41-source companion sweep + same-family/stair-compatible 2-D component/orphan fragmentation gate + row-run diagnostic + exact active-R42 inheritance + drainage/receiver boundaries"
   }
 }

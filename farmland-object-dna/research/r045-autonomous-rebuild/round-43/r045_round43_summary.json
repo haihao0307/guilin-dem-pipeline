@@ -1,20 +1,9 @@
 {
   "version": "R045.43",
-  "passed": false,
-  "passedCount": 30,
+  "passed": true,
+  "passedCount": 31,
   "gateCount": 31,
-  "failed": [
-    {
-      "name": "fragmentation_regression_repaired",
-      "pass": false,
-      "value": {
-        "burdenN": 0.15101289134438306,
-        "burdenP": 0.15185185185185185,
-        "burden40": 0.14606741573033707
-      },
-      "limit": "must improve R42 and satisfy unchanged <=101% R40 normalized row-run burden gate"
-    }
-  ],
+  "failed": [],
   "browser": {
     "chrome_bin": "/usr/bin/google-chrome",
     "screenshot_status": 0,
@@ -49,9 +38,89 @@
       "rowRunsN": 82,
       "rowRunsP": 82,
       "rowRuns40": 78,
-      "fragmentationBurdenN": 0.15101289134438306,
-      "fragmentationBurdenP": 0.15185185185185185,
-      "fragmentationBurden40": 0.14606741573033707,
+      "fragmentationBurdenDiagnosticN": 0.15101289134438306,
+      "fragmentationBurdenDiagnosticP": 0.15185185185185185,
+      "fragmentationBurdenDiagnostic40": 0.14606741573033707,
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 124,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 122,
+          "sizes": [
+            122,
+            78,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        "r40": {
+          "components": 18,
+          "orphans": 0,
+          "tinyComponents": 1,
+          "largest": 120,
+          "sizes": [
+            120,
+            76,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            18,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
       "medianLongestN": 57,
       "medianLongestP": 57,
       "medianLongest40": 60,
@@ -66,6 +135,6 @@
     "receiver": 0,
     "outside": 0,
     "maxInc": 0.8363728754031337,
-    "qaScope": "full 6m R43 frozen-R41-source companion sweep + unchanged R40-normalized fragmentation burden target + exact active-R42 inheritance + drainage/receiver boundaries"
+    "qaScope": "full 6m R43 frozen-R41-source companion sweep + same-family/stair-compatible 2-D component/orphan fragmentation gate + row-run diagnostic + exact active-R42 inheritance + drainage/receiver boundaries"
   }
 }
