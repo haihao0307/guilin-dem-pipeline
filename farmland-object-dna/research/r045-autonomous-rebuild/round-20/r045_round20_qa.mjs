@@ -11,14 +11,12 @@ add('terrain_carriers_planimetry_preserved',JSON.stringify(K.terrainChannels)===
 add('r18_headwater_profile_definitions_preserved',JSON.stringify(K.headwaterFootprintProfiles)===JSON.stringify(R18.headwaterFootprintProfiles),K.headwaterFootprintProfiles.map(p=>({id:p.id,angleDeg:p.angleDeg,major:p.major,minor:p.minor,centerShift:p.centerShift})),'exact R18 source-footprint definitions');
 
 let maxDelta=0,sumDelta=0,nDelta=0,at=null,outside=0,lower=0,receiver=0,permissionDiff=0;const activeRows=new Map();
-for(let x=-220;x<=220;x+=6)for(let z=-224;z<=-172;z+=2){const d=Math.abs(K.upperWallContinuityRepairDelta(x,z));if(d>maxDelta){maxDelta=d;at=[x,z]}sumDelta+=d;nDelta++;activeRows.set(z,Math.max(activeRows.get(z)||0,d))}
-for(let x=-220;x<=220;x+=10){for(const z of [-300,-240,-226,-170,-168,-158,-140,-80,0,80,140])outside=Math.max(outside,Math.abs(K.height(x,z)-R18.height(x,z)));for(const z of [-168,-158,-140,-80,0,80,140]){lower=Math.max(lower,Math.abs(K.height(x,z)-R18.height(x,z)));permissionDiff=Math.max(permissionDiff,Math.abs(K.terracePermission(x,z)-R18.terracePermission(x,z)))}const rz=K.riverZ(x);for(const dz of [-6,0,6])receiver=Math.max(receiver,Math.abs(K.height(x,rz+dz)-R18.height(x,rz+dz)))}
+for(let x=-220;x<=220;x+=6)for(let z=-224;z<=-170;z+=2){const d=Math.abs(K.upperWallContinuityRepairDelta(x,z));if(d>maxDelta){maxDelta=d;at=[x,z]}sumDelta+=d;nDelta++;activeRows.set(z,Math.max(activeRows.get(z)||0,d))}
+for(let x=-220;x<=220;x+=10){for(const z of [-300,-240,-226,-168,-158,-140,-80,0,80,140])outside=Math.max(outside,Math.abs(K.height(x,z)-R18.height(x,z)));for(const z of [-168,-158,-140,-80,0,80,140]){lower=Math.max(lower,Math.abs(K.height(x,z)-R18.height(x,z)));permissionDiff=Math.max(permissionDiff,Math.abs(K.terracePermission(x,z)-R18.terracePermission(x,z)))}const rz=K.riverZ(x);for(const dz of [-6,0,6])receiver=Math.max(receiver,Math.abs(K.height(x,rz+dz)-R18.height(x,rz+dz)))}
 const delta={max:maxDelta,mean:sumDelta/(nDelta||1),n:nDelta,at};
-// The old wall itself rises >5 m/4 m. A successful inverse correction can therefore be several
-// metres. This is a broad numerical sanity guard only; acceptance is determined by final terrain.
-add('repair_is_substantive_for_multi_metre_debt',maxDelta>1&&maxDelta<8,delta,'1 m < max correction < 8 m sanity bound; do not confuse correction amplitude with terrain acceptance');
+add('repair_is_substantive_for_multi_metre_debt',maxDelta>1&&maxDelta<8,delta,'1 m < max correction < 8 m sanity bound; final terrain is the acceptance object');
 add('repair_remains_spatially_bounded',delta.mean<.28,delta.mean,'mean absolute correction <0.28 m over audit band');
-add('repair_is_band_limited',outside<1e-9,outside,'zero sampled change outside z=-226..-170');
+add('repair_is_band_limited',outside<1e-9,outside,'zero sampled change outside z=-226..-168');
 add('lower_agricultural_slope_unchanged',lower<1e-9,lower,'zero sampled height change at z>=-168');
 add('terrace_permission_exactly_inherited',permissionDiff<1e-12,permissionDiff,'zero permission difference');
 add('front_receiver_unchanged',receiver<1e-9,receiver,'zero sampled change around receiver river');
@@ -31,8 +29,8 @@ add('final_terrain_wall_fraction_is_removed',newWall.fraction===0,{oldWall,newWa
 add('final_terrain_uphill_step_is_bounded',newWall.maxRise<=.500001,{old:oldWall.maxRise,new:newWall.maxRise,at:[newWall.at,newWall.z]},'R20 max interior 4 m uphill rise <=0.50 m');
 add('contiguous_upper_wall_span_removed',newWall.maxContiguousSpan===0,{old:oldWall.maxContiguousSpan,new:newWall.maxContiguousSpan},'zero contiguous failing span');
 
-let rampMax=-Infinity,rampAt=null;for(let x=-205;x<=205;x+=10)for(let z=-222;z<=-174;z+=4){const rise=K.height(x,z+4)-K.height(x,z);if(rise>rampMax){rampMax=rise;rampAt=[x,z]}}
-add('entry_exit_ramps_do_not_create_new_large_uphill_barrier',rampMax<1.25,{rampMax,at:rampAt},'<1.25 m uphill rise per 4 m across the full repair band');
+let rampMax=-Infinity,rampAt=null;for(let x=-205;x<=205;x+=10)for(let z=-222;z<=-170;z+=4){const rise=K.height(x,z+4)-K.height(x,z);if(rise>rampMax){rampMax=rise;rampAt=[x,z]}}
+add('entry_exit_ramps_do_not_create_new_large_uphill_barrier',rampMax<1.25,{rampMax,at:rampAt},'<1.25 m uphill rise per 4 m across entry, repaired interior, and full exit to inherited terrain');
 
 let peakRepair=[];for(const p of K.headwaterFootprintProfiles){let max=0,px=0,pz=0;for(let x=-210;x<=210;x+=8)for(let z=-216;z<=-160;z+=4){const v=R18.headwaterFootprintComponent(p,x,z);if(v>max){max=v;px=x;pz=z}}peakRepair.push({id:p.id,sourcePeak:max,at:[px,pz],r20Correction:Math.abs(K.upperWallContinuityRepairDelta(px,pz))})}
 add('source_footprint_functions_remain_present',peakRepair.every(p=>p.sourcePeak>.05),peakRepair,'all inherited A/B/C source components remain non-zero at their own peaks');
