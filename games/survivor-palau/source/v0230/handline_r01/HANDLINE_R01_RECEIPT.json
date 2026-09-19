@@ -1,0 +1,86 @@
+{
+  "id": "SMI-HANDLINE-R01-A1",
+  "baseBranch": "work/smi-v0230-game-fishing-loop-20260918",
+  "baseSha": "c07eec73616f613acde90881ac642b0972f12391",
+  "candidateBranch": "work/smi-handline-playable-r01-20260919",
+  "testedHeadBeforeReceipt": "a64623fd6a995a6155b0fa8feb770184b3c743fd",
+  "dependency": {
+    "path": "games/survivor-palau/source/v0230/fishing_core.cjs",
+    "gitBlob": "b90b7bad470f062448621e2bd789d1e5d4b38c44",
+    "exactBlobMaterializedForControllerTest": true
+  },
+  "testedFiles": {
+    "handline_controller.cjs": "d39866df1a1ebd1f9997bde171945d2053d0398f",
+    "handline_controller.test.cjs": "8def0b95eb200f4cf269457b29107167cff68a4c",
+    "handline_browser.js": "ee6fb9f86fa410f8f0073f4e2a27d633244f75ab",
+    "build_candidate.py": "6c828f63c32c0a3e6e1d62c8c4bd846c757a3998",
+    "build_candidate.test.py": "63d07aa061b18b1e2438a6523cd2dc1add4aae45"
+  },
+  "executed": [
+    {
+      "command": "node games/survivor-palau/source/v0230/handline_r01/handline_controller.test.cjs",
+      "runtime": "Node.js v22.16.0",
+      "result": "PASS",
+      "passed": 9,
+      "failed": 0,
+      "notes": [
+        "stable existing fishId",
+        "reel changes core restLength and fish state",
+        "give line changes core restLength",
+        "left/right angle changes logical hand anchor and fish trajectory",
+        "pause freezes controller state",
+        "snapshot/restore continues deterministically",
+        "restart preserves fish identity and initial line state",
+        "weak line breaks causally through core tension",
+        "adapter adds zero explicit reposition at medium switches; frame travel is recorded separately"
+      ]
+    },
+    {
+      "command": "node --check games/survivor-palau/source/v0230/handline_r01/handline_browser.js",
+      "runtime": "Node.js v22.16.0",
+      "result": "PASS",
+      "scope": "syntax only; not a browser interaction test"
+    },
+    {
+      "command": "python games/survivor-palau/source/v0230/handline_r01/build_candidate.test.py",
+      "runtime": "Python 3 local automation container",
+      "result": "PASS",
+      "scope": "fixture verifies exact locateFish/API patch-point rules and injection markers; it is not the full game build"
+    }
+  ],
+  "baselineCheck": {
+    "command": "node games/survivor-palau/source/v0230/fishing_core.test.cjs",
+    "result": "PASS on a local semantic mirror during startup",
+    "caveat": "The startup baseline command was first run before the exact repository blob was materialized; it is not counted as an exact-byte repository checkout run. The later controller test used the exact b90b7bad... fishing_core blob."
+  },
+  "integrationDesign": {
+    "usesExistingFishingCore": true,
+    "usesExistingGameFishId": true,
+    "candidateBuilderOverwritesProduction": false,
+    "productionSaveSchemaModified": false,
+    "frozenOceanWeatherModified": false,
+    "newFishAssetCreated": false,
+    "browserHookPurpose": "candidate build only: expose one existing fish pose, current player hand pose, current water elevation and screen projection without editing the production release"
+  },
+  "crossingGate": {
+    "formalThresholdMeters": 0.15,
+    "passed": false,
+    "reason": "Inherited fishing_core crossingJumpMax measures raw per-step travel, not medium-switch teleport. R01 only proves it adds zero explicit reposition at a medium state switch; shared 30/60/120 fps crossing QA remains required."
+  },
+  "browser": {
+    "candidateBuiltFromFullRelease": false,
+    "desktopInteractiveCheck": false,
+    "mobile390x844InteractiveCheck": false,
+    "reason": "The automation container cannot resolve github.com and connector-managed repository files cannot be mounted into that container; only source-level connector writes/readback and local exact module tests were possible."
+  },
+  "acceptance": {
+    "sourceModified": true,
+    "interactive3D": false,
+    "staticImageSubstitute": false,
+    "publicHttpsPassed": false,
+    "browserPassed": false,
+    "visualAcceptance": false,
+    "physicalDeviceTest": false,
+    "productionReady": false
+  }
+}
