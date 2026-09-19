@@ -1,0 +1,88 @@
+name: Stone Money V0260 eroded arch
+on:
+  push:
+    branches: [work/stone-money-island-v0260-eroded-arch-20260920]
+    paths:
+      - .github/workflows/stone-money-v0260-eroded-arch.yml
+      - .github/scripts/stone-money-public026.py
+      - games/survivor-palau/source/v0200/**
+permissions:
+  contents: write
+concurrency:
+  group: stone-money-v0260-eroded-arch
+  cancel-in-progress: true
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/stone-money-island-v0260-eroded-arch-20260920
+      - name: Build V0.2.6 from frozen ocean baseline
+        run: python games/survivor-palau/source/v0200/build_v026.py
+      - name: Verify source and geometry relations
+        run: python games/survivor-palau/source/v0200/verify_v026_relations.py
+      - name: Desktop and 390x844 browser QA
+        run: |
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+          timeout 900s python -u games/survivor-palau/source/v0200/verify_v026_browser.py
+      - name: Preserve exact tested runtime and receipts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/releases/v0.2.5 games/survivor-palau/releases/v0.2.6
+          git diff --cached --quiet || git commit -m 'build(stone-money): record V0.2.6 asymmetric eroded arch evidence'
+          git pull --rebase origin work/stone-money-island-v0260-eroded-arch-20260920
+          git push origin HEAD:work/stone-money-island-v0260-eroded-arch-20260920
+      - name: Publish immutable public path after local gates pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,hashlib,urllib.request,urllib.error,os,subprocess,time
+          p=Path('games/survivor-palau/releases/v0.2.6')
+          qa=json.loads((p/'BROWSER_QA.json').read_text());build=json.loads((p/'BUILD_RECEIPT.json').read_text())
+          assert qa['browserPassed'],'local browser QA failed; do not publish'
+          data=(p/'index.html').read_bytes();digest=hashlib.sha256(data).hexdigest();assert digest==build['entrySha256']
+          source=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();folder='games/stone-money-island/v0.2.6-'+digest[:8]
+          API='https://api.github.com/repos/haihao0307/guilin-dem-pipeline/'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'}
+          def api(path,body=None,method=None):
+           req=urllib.request.Request(API+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'))
+           with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
+          blob=api('git/blobs',{'content':data.decode(),'encoding':'utf-8'})['sha']
+          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','version':'0.2.6','sourceCommit':source,'entrySha256':digest,'localBrowserPassed':True,'frozenSourceUnchanged':True,'archGeometry':'asymmetric-vegetated-eroded-ridge-v026','visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
+          for attempt in range(4):
+           head=api('git/ref/heads/gh-pages')['object']['sha'];base=api('git/commits/'+head)['tree']['sha']
+           tree=api('git/trees',{'base_tree':base,'tree':[{'path':folder+'/index.html','mode':'100644','type':'blob','sha':blob},{'path':folder+'/SOURCE.json','mode':'100644','type':'blob','content':source_info}]})['sha']
+           commit=api('git/commits',{'message':'publish(stone-money): add immutable V0.2.6 eroded arch review','tree':tree,'parents':[head]})['sha']
+           try:api('git/refs/heads/gh-pages',{'sha':commit,'force':False},'PATCH');break
+           except urllib.error.HTTPError as e:
+            if e.code not in (409,422) or attempt==3:raise
+            time.sleep(2)
+          url='https://haihao0307.github.io/guilin-dem-pipeline/'+folder+'/index.html'
+          with open(os.environ['GITHUB_ENV'],'a') as out:
+           for k,v in {'SMI_PUBLIC_URL':url,'SMI_EXPECTED_SHA256':digest,'SMI_SOURCE_COMMIT':source,'SMI_PAGES_COMMIT':commit}.items():out.write(k+'='+v+'\n')
+          print(json.dumps({'url':url,'sourceCommit':source,'pagesCommit':commit,'sha256':digest},indent=2))
+          PY
+      - name: Verify exact public bytes and real browser entry
+        run: timeout 520s python -u .github/scripts/stone-money-public026.py
+      - name: Preserve publication proof
+        if: always()
+        run: |
+          git add games/survivor-palau/releases/v0.2.6
+          git diff --cached --quiet || git commit -m 'verify(stone-money): record V0.2.6 public browser proof'
+          git pull --rebase origin work/stone-money-island-v0260-eroded-arch-20260920
+          git push origin HEAD:work/stone-money-island-v0260-eroded-arch-20260920
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-v0260-eroded-arch
+          path: |
+            games/survivor-palau/releases/v0.2.6/
+            /tmp/stone-money-v0260-qa/
+            /tmp/smi-public026/
+          if-no-files-found: error
