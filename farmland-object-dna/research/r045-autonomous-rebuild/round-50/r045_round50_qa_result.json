@@ -1,0 +1,411 @@
+{
+  "version": "R045.50",
+  "passed": false,
+  "gateCount": 29,
+  "passedCount": 28,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.50",
+      "limit": "R045.50"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact R47 graph"
+    },
+    {
+      "name": "carrier_identity",
+      "pass": true,
+      "value": {
+        "channels": 12,
+        "outlets": 3
+      },
+      "limit": "exact R47 carriers"
+    },
+    {
+      "name": "material_contour_front",
+      "pass": false,
+      "value": {
+        "gains": 3,
+        "cross": 3,
+        "active": 551,
+        "oldActive": 548,
+        "gainGroups": [
+          1,
+          1,
+          1
+        ],
+        "modes": [
+          "frozen-r47-adjacent-contour-front-extension"
+        ]
+      },
+      "limit": ">=8 supported gains/crossings"
+    },
+    {
+      "name": "at_least_two_groups_gain",
+      "pass": true,
+      "value": [
+        1,
+        1,
+        1
+      ],
+      "limit": "gains in >=2 families"
+    },
+    {
+      "name": "long_curved_support_material",
+      "pass": true,
+      "value": {
+        "longSpan": 2,
+        "curved": 2,
+        "maxSpan": 30,
+        "maxDistance": 30,
+        "maxTurn": 25.996366451794245,
+        "patterns": 3
+      },
+      "limit": "long span + curvature preserved from R49 advance"
+    },
+    {
+      "name": "hillside_spread",
+      "pass": true,
+      "value": {
+        "gainSpan": {
+          "x": 222,
+          "z": 66
+        }
+      },
+      "limit": ">=48m x and >=12m z"
+    },
+    {
+      "name": "frozen_adjacency_real",
+      "pass": true,
+      "value": {
+        "nearAdjBad": 0
+      },
+      "limit": "all promotions touch <=8.6m frozen support"
+    },
+    {
+      "name": "supported_safe",
+      "pass": true,
+      "value": {
+        "unsupported": 0,
+        "unsafe": 0
+      },
+      "limit": "all supported and safe"
+    },
+    {
+      "name": "alignment_real",
+      "pass": true,
+      "value": 0.43183548296430446,
+      "limit": ">=.34"
+    },
+    {
+      "name": "bounded_nontrivial_change",
+      "pass": true,
+      "value": 0.05440887467879496,
+      "limit": ".006m < change < .22m"
+    },
+    {
+      "name": "existing_r47_active_exact",
+      "pass": true,
+      "value": {
+        "oldMaskChange": 0,
+        "oldDeltaChange": 0
+      },
+      "limit": "exact"
+    },
+    {
+      "name": "core_not_shrunk",
+      "pass": true,
+      "value": {
+        "core": 356,
+        "oldCore": 356
+      },
+      "limit": ">= R47 core"
+    },
+    {
+      "name": "all_three_groups_material",
+      "pass": true,
+      "value": [
+        96,
+        230,
+        225
+      ],
+      "limit": "each >20"
+    },
+    {
+      "name": "fragmentation_not_worse",
+      "pass": true,
+      "value": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 125,
+          "second": 79,
+          "sizes": [
+            125,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            12,
+            11,
+            10,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "limit": "no new compatible fragments"
+    },
+    {
+      "name": "major_components_not_shrunk",
+      "pass": true,
+      "value": {
+        "new": [
+          125,
+          79
+        ],
+        "prior": [
+          124,
+          79
+        ]
+      },
+      "limit": "main components nondecreasing"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardA": 0,
+        "hardD": 0
+      },
+      "limit": "zero <=12m"
+    },
+    {
+      "name": "r47_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 77,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "exact"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.8363728754031337,
+      "limit": "<1.25m / 6m"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false"
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R49 passed curvature, long-span, spread, safety and browser gates but produced only 3 threshold crossings because it required inherited mask >0.004. Treating that procedural residue as evidence was a false constraint; lowering the materiality QA would instead hide the failure. R50 removes the residue but adds an adjacency requirement so newly activated cells remain attached to frozen accepted terrain rather than creating isolated fragments.",
+      "limit": "R49 bottleneck + no gate-lowering explicit"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m audit lattice, 24 m support window, 0.34 tangent gate, one-step frozen adjacency, support-pair rules, stair tolerances and 12 m hard drainage core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity, water head/depth/discharge/gate states or event water-management records.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: geometric continuity, adjacency, a longer contour ribbon or conservation do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state without field-scale evidence.",
+      "limit": "continuity != hydraulics"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord frame audit is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> vegetation/paths/materials. Voronoi, Blender dimensions, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png was reread for non-metric morphology only: long curved contour-following ribbons, unequal widths, nested organization, local junctions and drainage interruptions. No terrace width, continuation length, riser height, channel size, water depth or hydraulic parameter is inferred from the photograph.",
+      "limit": "nonmetric morphology"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "active": 551,
+      "oldActive": 548,
+      "core": 356,
+      "oldCore": 356,
+      "gains": 3,
+      "cross": 3,
+      "curved": 2,
+      "maxTurn": 25.996366451794245,
+      "longSpan": 2,
+      "maxSpan": 30,
+      "maxDistance": 30,
+      "unsupported": 0,
+      "unsafe": 0,
+      "nearAdjBad": 0,
+      "maxChange": 0.05440887467879496,
+      "oldMaskChange": 0,
+      "oldDeltaChange": 0,
+      "minAlignment": 0.43183548296430446,
+      "groups": [
+        96,
+        230,
+        225
+      ],
+      "gainGroups": [
+        1,
+        1,
+        1
+      ],
+      "gainSpan": {
+        "x": 222,
+        "z": 66
+      },
+      "modes": [
+        "frozen-r47-adjacent-contour-front-extension"
+      ],
+      "vectorPatterns": 3,
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 125,
+          "second": 79,
+          "sizes": [
+            125,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            12,
+            11,
+            10,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        }
+      }
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "6m full-slope frozen-R47 adjacent contour-front sweep + exact inherited active/stair surface + drainage/receiver protection + compatible 2-D fragmentation guard"
+  }
+}
