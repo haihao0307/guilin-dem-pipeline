@@ -1,4 +1,84 @@
-function I(){return[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]}function MM(a,b){let o=Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o}function P(f,a,n,z){let t=1/Math.tan(f/2),q=1/(n-z);return[t/a,0,0,0,0,t,0,0,0,0,(z+n)*q,-1,0,0,2*z*n*q,0]}function L(e,t,u){let z=N(S(e,t)),x=N(X(u,z)),y=X(z,x);return[x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x[0]*e[0]-x[1]*e[1]-x[2]*e[2],-y[0]*e[0]-y[1]*e[1]-y[2]*e[2],-z[0]*e[0]-z[1]*e[1]-z[2]*e[2],1]}function Y(a){let q=Math.cos(a),s=Math.sin(a);return[q,0,-s,0,0,1,0,0,s,0,q,0,0,0,0,1]}
-let yaw=.72,pitch=1.12,dist=8.25,target=[.05,.62,0],autoA=0,drag=0,lx=0,ly=0,right=0,wind=.65,showGrid=1,wire=0,showFlag=1,showCover=0;function eye(){return[target[0]+dist*Math.sin(pitch)*Math.cos(yaw),target[1]+dist*Math.cos(pitch),target[2]+dist*Math.sin(pitch)*Math.sin(yaw)]}c.onpointerdown=e=>{drag=1;lx=e.clientX;ly=e.clientY;right=e.button===2;c.setPointerCapture(e.pointerId)};c.onpointerup=()=>drag=0;c.onpointermove=e=>{if(!drag)return;let dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;if(right){target[0]-=dx*dist*.0014*Math.sin(yaw);target[2]+=dx*dist*.0014*Math.cos(yaw);target[1]+=dy*dist*.0014}else{yaw-=dx*.007;pitch=Math.max(.10,Math.min(3.02,pitch+dy*.007))}};c.oncontextmenu=e=>e.preventDefault();c.onwheel=e=>{e.preventDefault();dist=Math.max(2,Math.min(18,dist*Math.exp(e.deltaY*.001))) };
-function view(v){if(v==='top'){yaw=1.57;pitch=.08;dist=7.8;target=[.1,.35,0]}else if(v==='bow'){yaw=.55;pitch=1.08;dist=5;target=[2.05,1.05,-.1]}else if(v==='stern'){yaw=2.6;pitch=1.17;dist=5;target=[-2.2,.48,.12]}else if(v==='engine'){yaw=2.45;pitch=1.02;dist=3.3;target=[-1.5,.72,0]}else if(v==='side'){yaw=1.57;pitch=1.28;dist=7.2;target=[.05,.48,0]}else{yaw=.72;pitch=1.12;dist=8.25;target=[.05,.62,0]}document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===v))}document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>view(b.dataset.v));$('grid').onchange=e=>showGrid=e.target.checked;$('wire').onchange=e=>wire=e.target.checked;$('cover').onchange=e=>showCover=e.target.checked;$('showFlag').onchange=e=>showFlag=e.target.checked;$('wind').oninput=e=>{wind=+e.target.value;$('windVal').textContent=wind.toFixed(2)};$('pole').oninput=e=>{let h=+e.target.value;$('poleVal').textContent=h.toFixed(2)+' m';flagBase=poleFlag(h);F=compile(flag)};
-function resize(){let v=$('view'),d=Math.min(devicePixelRatio||1,2),w=Math.max(1,v.clientWidth*d|0),h=Math.max(1,v.clientHeight*d|0);if(c.width!==w||c.height!==h){c.width=w;c.height=h;gl.viewport(0,0,w,h)}}function draw(m,model,vp,line=wire){bind(m,line);gl.uniformMatrix4fv(um,false,new Float32Array(model));gl.uniformMatrix4fv(uv,false,new Float32Array(MM(vp,model)));gl.drawElements(line?gl.LINES:gl.TRIANGLES,line?m.en:m.n,gl.UNSIGNED_SHORT,0)}let frames=0,ft=performance.now();function render(t){resize();if($('auto').checked)autoA+=.003;gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clearColor(.82,.85,.87,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);let vp=MM(P(.73,c.width/c.height,.05,100),L(eye(),target,[0,1,0])),model=Y(autoA);if(showGrid){let gg=new G();for(let i=-10;i<=10;i++){box(0,-.025,i,20,.006,.008,[.42,.46,.48],0,0,0,gg);box(i,-.025,0,.008,.006,20,[.42,.46,.48],0,0,0,gg)}let gm=compile(gg);draw(gm,I(),vp,false);gl.deleteBuffer(gm.vb);gl.deleteBuffer(gm.ib);gl.deleteBuffer(gm.eb)}draw(M,model,vp);if(!showCover){/* cover remains visually minor; open state is default */}if(showFlag){let a=F.o.v;for(let i=0;i<a.length;i+=9){let x=a[i],u=Math.max(0,Math.min(1,(2.34-x)/.93));a[i+2]=-0.32+Math.sin(t*.004*wind+u*7+a[i+1]*3)*.07*u*wind}gl.bindBuffer(gl.ARRAY_BUFFER,F.vb);gl.bufferSubData(gl.ARRAY_BUFFER,0,new Float32Array(a));draw(F,model,vp)}frames++;if(t-ft>1000){$('status').textContent='3D 运行中 · '+Math.round(frames*1000/(t-ft))+' FPS';frames=0;ft=t}requestAnimationFrame(render)}$('loading').style.display='none';$('status').textContent='3D 已启动 · 船体 / 发动机 / 舵 / 旗帜可检查';requestAnimationFrame(render)
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { createMaterials, applyHullMaterial } from './materials.js';
+import { buildBoatSystems } from './mechanics.js';
+import { buildHistoricalFlag } from './flag.js';
+
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),viewport=$('viewport'),loading=$('loading'),loadFill=$('loadFill'),loadMessage=$('loadMessage'),errorBox=$('error'),status=$('status');
+const HULL_CHUNKS=[...Array.from({length:6},(_,i)=>`assets/hull/hull_${String(i).padStart(2,'0')}.txt`),'assets/hull/hull_06a.txt','assets/hull/hull_06b.txt'];
+const EXPECTED_SHA='9aca025c1a8d629661392d50aad962708e756fe8ae61164bd60b0f8d18b676bb';
+
+function progress(value,message){loadFill.style.width=`${Math.round(value*100)}%`;if(message)loadMessage.textContent=message}
+function fail(err){console.error(err);loading.style.display='none';errorBox.style.display='block';errorBox.textContent=`工作台启动失败：${err?.message||err}`;status.textContent='启动失败，错误已显示在左侧';}
+function decodeBase64(text){const bin=atob(text),out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+async function gunzip(bytes){if(!('DecompressionStream' in window))throw new Error('浏览器不支持 gzip 解压，请使用当前版 Chrome / Edge / Safari。');const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));return new Uint8Array(await new Response(stream).arrayBuffer())}
+async function sha256(bytes){const hash=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function loadSourceHull(){
+  progress(.05,'读取原始船体数据…');
+  const parts=[];
+  for(let i=0;i<HULL_CHUNKS.length;i++){
+    const r=await fetch(HULL_CHUNKS[i],{cache:'force-cache'});if(!r.ok)throw new Error(`船体数据 ${i+1}/${HULL_CHUNKS.length} 无法读取（HTTP ${r.status}）`);parts.push((await r.text()).trim());progress(.08+(i+1)/HULL_CHUNKS.length*.35,`读取原始船体 ${i+1} / ${HULL_CHUNKS.length}`);
+  }
+  progress(.48,'校验并还原原始 GLB…');const glb=await gunzip(decodeBase64(parts.join('')));
+  const digest=await sha256(glb);if(digest!==EXPECTED_SHA)throw new Error('原始船体校验不一致，已停止加载以避免使用错误版本。');
+  progress(.62,'建立原船体拓扑与材质…');const url=URL.createObjectURL(new Blob([glb],{type:'model/gltf-binary'}));
+  try{return await new GLTFLoader().loadAsync(url)}finally{URL.revokeObjectURL(url)}
+}
+
+async function main(){
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance',alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xcbd1d4);
+  const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new RoomEnvironment(renderer),.035).texture;pmrem.dispose();
+  const camera=new THREE.PerspectiveCamera(42,1,.015,100);camera.position.set(5.55,3.05,5.65);
+  const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=1.8;controls.maxDistance=18;controls.target.set(.28,.58,0);controls.maxPolarAngle=Math.PI*.94;
+  scene.add(new THREE.HemisphereLight(0xffffff,0x4b5962,1.1));
+  const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(4.8,7.8,5.2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=6;key.shadow.camera.bottom=-6;key.shadow.bias=-.00012;scene.add(key);
+  const fill=new THREE.DirectionalLight(0xaed6ee,1.05);fill.position.set(-5,3,-4);scene.add(fill);
+  const rim=new THREE.DirectionalLight(0xffd4a4,.75);rim.position.set(-3,4,5);scene.add(rim);
+  const groundMaterial=new THREE.MeshStandardMaterial({color:0xbfc6ca,roughness:.98,metalness:0});const ground=new THREE.Mesh(new THREE.CircleGeometry(12,128),groundMaterial);ground.rotation.x=-Math.PI/2;ground.position.y=-.055;ground.receiveShadow=true;scene.add(ground);
+  const grid=new THREE.GridHelper(20,40,0x6f7a80,0xaab2b6);grid.position.y=-.05;grid.material.opacity=.29;grid.material.transparent=true;scene.add(grid);
+
+  const mats=createMaterials(renderer);const gltf=await loadSourceHull();
+  const boatRoot=new THREE.Group();boatRoot.name='1944_small_boat_complete';scene.add(boatRoot);
+  const sourceHull=gltf.scene;sourceHull.name='preserved_source_hull';applyHullMaterial(sourceHull,mats);boatRoot.add(sourceHull);
+  const sourceBox=new THREE.Box3().setFromObject(sourceHull),sourceSize=sourceBox.getSize(new THREE.Vector3());
+  if(sourceSize.x<4.0||sourceSize.x>5.2)throw new Error(`原始船体尺寸异常：${sourceSize.x.toFixed(2)} m`);
+  progress(.73,'安装历史发动机、轴系与转向机构…');const systems=buildBoatSystems(boatRoot,mats);
+  progress(.84,'建立船头 65×65 三维布料旗帜…');const flag=buildHistoricalFlag(boatRoot,mats,1.72);
+  progress(.94,'执行结构检查与镜头配置…');
+
+  const allMaterials=new Set();boatRoot.traverse(o=>{if(o.isMesh){for(const m of(Array.isArray(o.material)?o.material:[o.material]))allMaterials.add(m)}});
+  const views={
+    hero:{p:[5.55,3.05,5.65],t:[.28,.58,0]},
+    top:{p:[.22,8.4,.01],t:[.22,.32,0],up:[0,0,-1]},
+    bow:{p:[4.65,2.55,3.35],t:[2.22,1.30,-.15]},
+    stern:{p:[-4.45,1.80,3.10],t:[-1.86,.45,.03]},
+    engine:{p:[-2.85,1.68,2.25],t:[-1.03,.70,0]},
+    side:{p:[.15,1.62,6.85],t:[.15,.48,0]}
+  };
+  function setView(name){const v=views[name]||views.hero;camera.up.fromArray(v.up||[0,1,0]);camera.position.fromArray(v.p);controls.target.fromArray(v.t);controls.update();document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name))}
+  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+  setView('hero');
+  let wind=.62,rudderAngle=0,autoRotate=false,engineRunning=true;
+  $('autoRotate').onchange=e=>autoRotate=e.target.checked;
+  $('showGround').onchange=e=>ground.visible=grid.visible=e.target.checked;
+  $('wireframe').onchange=e=>{for(const m of allMaterials)m.wireframe=e.target.checked};
+  $('showMechanics').onchange=e=>systems.systems.visible=e.target.checked;
+  $('showFlag').onchange=e=>flag.setVisible(e.target.checked);
+  $('engineRun').onchange=e=>engineRunning=e.target.checked;
+  $('wind').oninput=e=>{wind=+e.target.value;$('windValue').textContent=wind.toFixed(2)};
+  $('rudder').oninput=e=>{rudderAngle=THREE.MathUtils.degToRad(+e.target.value);systems.rudderPivot.rotation.y=rudderAngle;$('rudderValue').textContent=`${e.target.value}°`};
+  $('poleHeight').oninput=e=>{const h=+e.target.value;flag.rebuild(h);$('poleValue').textContent=`${h.toFixed(2)} m`};
+  function resize(){const w=Math.max(1,viewport.clientWidth),h=Math.max(1,viewport.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
+  progress(1,'原始船体校验通过，3A 工作台已就绪');await new Promise(r=>setTimeout(r,180));loading.style.display='none';
+  status.textContent=`原始船体 SHA-256 校验通过 · ${sourceSize.x.toFixed(2)} m · 三维机械与布料已启动`;
+  const clock=new THREE.Clock();let frames=0,stamp=performance.now();
+  function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,clock.getDelta());if(autoRotate)boatRoot.rotation.y+=dt*.18;if(engineRunning){systems.flywheel.rotation.x-=dt*14.5;systems.propeller.rotation.x-=dt*19.5;systems.engine.position.y=Math.sin(now*.035)*.0009+.46}else systems.engine.position.y=.46;
+    flag.update(now,wind);controls.update();renderer.render(scene,camera);frames++;if(now-stamp>1000){status.textContent=`3D 运行中 · ${Math.round(frames*1000/(now-stamp))} FPS · 原船体拓扑保留`;frames=0;stamp=now}}
+  requestAnimationFrame(animate);
+}
+main().catch(fail);
