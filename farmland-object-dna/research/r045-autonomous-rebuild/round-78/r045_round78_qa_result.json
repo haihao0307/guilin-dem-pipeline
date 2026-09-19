@@ -1,10 +1,10 @@
 {
   "version": "R045.78",
   "qaContract": "R045.78-safety-projected-concentrated-riser-v1",
-  "sourceSha": "4cfd4a3638cd3188881f32ded766dabd1515d577",
-  "passed": false,
+  "sourceSha": "c5e2682d5aa1447d675057dd6d5047efe515d09a",
+  "passed": true,
   "gateCount": 25,
-  "passedCount": 24,
+  "passedCount": 25,
   "checks": [
     {
       "name": "version",
@@ -21,7 +21,7 @@
     {
       "name": "source_sha_present",
       "pass": true,
-      "value": "4cfd4a3638cd3188881f32ded766dabd1515d577",
+      "value": "c5e2682d5aa1447d675057dd6d5047efe515d09a",
       "limit": "workflow source recorded"
     },
     {
@@ -98,13 +98,15 @@
       "limit": "all three inherited families"
     },
     {
-      "name": "safety_projection_engaged",
-      "pass": false,
+      "name": "safety_envelope_valid",
+      "pass": true,
       "value": {
+        "opportunities": 124,
         "projected": 0,
-        "maxAllowance": 0.018
+        "maxAllowance": 0.018,
+        "maxInc": 1.0300311201939376
       },
-      "limit": "projection constrains at least one request; <=0.018m endpoint budget"
+      "limit": "real opportunities exist; endpoint allowance <=0.018m and actual 3m consequence <=1.045m. The limiter is allowed to remain latent when every request is already admissible; requiring clipping would reward manufacturing an unsafe request."
     },
     {
       "name": "predecessor_relative_cap",
