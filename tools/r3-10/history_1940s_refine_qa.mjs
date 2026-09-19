@@ -11,8 +11,9 @@ try{
   await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1940sRefineOsmObjects||0)>0,{},{timeout:30000});
   await page.waitForFunction(()=>window.__wenzhouNg51IslandRelief?.ready===true||document.querySelector('#terrain')?.dataset.ng51IslandReliefError,{},{timeout:120000});
   await page.waitForFunction(()=>window.__wenzhouFullBathymetry?.ready===true||document.querySelector('#terrain')?.dataset.ng51BathymetryError,{},{timeout:120000});
+  await page.waitForFunction(()=>window.__wenzhouSeaSurface?.ready===true,{},{timeout:30000});
   await page.waitForTimeout(700);
-  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null),ir=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null),br=await page.evaluate(()=>window.__wenzhouFullBathymetry||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
+  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null),ir=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null),br=await page.evaluate(()=>window.__wenzhouFullBathymetry||null),sr=await page.evaluate(()=>window.__wenzhouSeaSurface||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
   check(!ds.history1940sRefineError,`refine runtime error: ${ds.history1940sRefineError||''}`);
   check(r?.schema==='wenzhou-map-mother/1940s-refine-r28','R28 refine state missing');
   check(r?.mask?.[0]>=1500&&r?.mask?.[1]>=1500,'refined mask resolution too low');
@@ -54,6 +55,13 @@ try{
   check(String(br?.registrationGuard||'').includes('cannot emit a terrain-added event'),'seabed terrain-identity guard missing');
   check(String(br?.role||'').includes('independent of the dynamic sea surface'),'seabed/sea-surface separation missing');
   check(ds.ng51BathymetrySourceBuffered==='true','full bathymetry buffered-source dataset marker missing');
+  check(sr?.schema==='wenzhou-sea-surface-display/v2'&&sr?.ready===true,'sea surface display v2 missing');
+  check(sr?.visualStyle==='low-frequency-cross-ripple-r2','sea surface retained high-frequency stripe shader');
+  check(Number(sr?.opacity)===0.62,'sea surface opacity contract changed');
+  check(sr?.waveCoordinateSpace==='normalized-patch-uv','sea wave coordinate space is not patch-normalized');
+  check(sr?.ownerRole==='canonical-terrain-candidate'&&sr?.decorativeLayerExclusion===true,'sea surface was allowed to rebind to a decorative relief layer');
+  check(ds.seaSurfaceVisualStyle==='low-frequency-cross-ripple-r2','sea visual-style dataset marker missing');
+  check(ds.seaSurfaceOwnerRole==='canonical-terrain-candidate','sea owner-role dataset marker missing');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
-  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,bathymetry:br,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,ng51IslandReliefBuildMs:ds.ng51IslandReliefBuildMs,ng51BathymetryBuildMs:ds.ng51BathymetryBuildMs,ng51BathymetrySourceBuffered:ds.ng51BathymetrySourceBuffered,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,bathymetry:br,seaSurface:sr,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,ng51IslandReliefBuildMs:ds.ng51IslandReliefBuildMs,ng51BathymetryBuildMs:ds.ng51BathymetryBuildMs,ng51BathymetrySourceBuffered:ds.ng51BathymetrySourceBuffered,seaSurfaceVisualStyle:ds.seaSurfaceVisualStyle,seaSurfaceOwnerRole:ds.seaSurfaceOwnerRole,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
 }catch(e){const ds=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(c=>({...c.dataset})):{};failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,dataset:ds,consoleErrors,failures},null,2));}finally{await browser.close();}if(failures.length)process.exit(1);
