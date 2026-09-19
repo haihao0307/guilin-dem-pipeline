@@ -2,12 +2,13 @@ from pathlib import Path
 import hashlib,re,json,subprocess
 import build_v026
 from harden_v027 import apply as harden_v027
+from harden_v027b import apply as harden_v027b
 
 HERE=Path(__file__).resolve().parent
 base=HERE.parents[1]/'releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html'
 assert hashlib.sha256(base.read_bytes()).hexdigest()=='dac1a80440d731488546b317ff8f286c55c8c63d5a2e9f1da3f8c900bbbc4710'
 source=HERE.parents[1]/'releases/v0.2.6/index.html'
-s=harden_v027(source.read_text())
+s=harden_v027b(harden_v027(source.read_text()))
 pattern=r'const __OM_TEXT__=(\{.*?\});\n'
 a=re.search(pattern,base.read_text(),re.S);b=re.search(pattern,s,re.S);assert a and b and a.group(1)==b.group(1)
 OUT=HERE.parents[1]/'releases/v0.2.7';OUT.mkdir(exist_ok=True,parents=True)
