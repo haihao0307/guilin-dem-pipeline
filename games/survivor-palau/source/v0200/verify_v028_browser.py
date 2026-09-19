@@ -48,7 +48,7 @@ with sync_playwright() as p:
    assert life['rai'] and life['rai']['x']==-178 and life['rai']['z']==104
    assert life['diag']['fishWaterViolations']==0 and life['submerged']>0
    assert life['diag']['archGeometry']=='dissolved-mushroom-rock-island-v028-revealed'
-   assert life['diag']['archPosition']==[210,190]
+   assert life['diag']['archPosition']==[96,208]
    assert life['diag']['archOpening']['nominalMainSpan']>=23.9
    assert life['diag']['archOpening']['secondarySeaCave'] is True
    assert life['diag']['archMass']['minimumRoofThickness']>=4.9
