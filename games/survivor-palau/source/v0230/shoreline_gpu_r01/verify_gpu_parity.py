@@ -4,9 +4,7 @@ from playwright.sync_api import sync_playwright
 ROOT=pathlib.Path(__file__).resolve().parent
 probe=json.loads(subprocess.check_output(['node',str(ROOT/'gpu_parity_probe.cjs')],text=True))
 samples=probe['samples']; glsl=probe['glsl']
-VS='#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VerID<<1)&2),float(gl_VerID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}'
-# Preserve the tested shader text exactly; gl_VerID above is intentionally fixed below before execution.
-VS=VS.replace('gl_VerID','gl_VertexID')
+VS='#version 300 es\nvoid main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}'
 FS='#version 300 es\nprecision highp float;uniform vec2 uP;out vec4 O;\n'+glsl+'\nvoid main(){vec3 f=smiWakeFrameG(uP);O=vec4(smiAuthoritativeBedG(uP),f.z,f.x,bedH(uP));}'
 html='''<!doctype html><meta charset=utf-8><pre id=result>pending</pre><canvas id=c width=1 height=1></canvas><script>\n'''+f'''const VS={json.dumps(VS)},FS={json.dumps(FS)},samples={json.dumps(samples)};\n'''+r'''
 function shader(gl,type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
