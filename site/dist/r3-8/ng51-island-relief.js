@@ -179,7 +179,7 @@ async function buildIslandGeometry(active,payload,islandInfo,islandTexture,runIs
   g.setAttribute('uv',new THREE.BufferAttribute(uvs,2));
   g.setIndex(new THREE.BufferAttribute(indices,1));
   g.computeVertexNormals();g.computeBoundingSphere();
-  const m=new THREE.MeshStandardMaterial({alphaMap:islandTexture,alphaTest:.5,vertexColors:true,roughness:1,metalness:0,side:THREE.FrontSide});
+  const m=new THREE.MeshStandardMaterial({alphaTest:.5,vertexColors:true,roughness:1,metalness:0,side:THREE.FrontSide});
   const mesh=new THREE.Mesh(g,m);
   mesh.scale.y=active.terrain.scale?.y??1;
   mesh.renderOrder=1.15;
@@ -224,6 +224,7 @@ export function installNg51IslandRelief(){
       if(!cut)throw Error('NG51 relief 无法按替换单元切除 200m 岛体底层');
       active.terrain.material.alphaMap=cut.texture;active.terrain.material.needsUpdate=true;
       active.scene.add(built.mesh);
+      built.mesh.material.alphaMap=islandTexture;built.mesh.material.needsUpdate=true;
       layer={terrain:active.terrain,mesh:built.mesh,originalAlpha,cutTexture:cut.texture,islandTexture};
       const state={
         schema:'wenzhou-ng51-island-relief-runtime/v2',ready:true,patchId:active.patchId,source:'canonical-dem-r1',
@@ -232,6 +233,7 @@ export function installNg51IslandRelief(){
         islandCells:built.islandCells,vertices:built.vertices,triangles:built.triangles,heightRangeM:payload.meta.heightRangeM,
         buildMs:built.buildMs,scanYieldCount:built.scanYieldCount,geometryYieldCount:built.geometryYieldCount,
         maxScanChunkMs:built.maxScanChunkMs,maxGeometryChunkMs:built.maxGeometryChunkMs,geometryFinalizeMs:built.geometryFinalizeMs,
+        registrationGuard:'alpha map attached only after scene registration; this derived mesh cannot emit a terrain-added event',
         replacementPolicy:'Only canonical 50 m cells with valid four-corner support replace the 200 m base. Unsupported island pixels remain on the base layer; historical water is never promoted to land.',
       };
       window.__wenzhouNg51IslandRelief=state;
