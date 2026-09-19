@@ -1,0 +1,15 @@
+COMMAND:
+python3 -m http.server 4173 --bind 127.0.0.1 --directory /mnt/data/fish_r1_t01_audit/apps/ocean-life-mother
+
+RESULT:
+PID=476
+GET /r02/index.html -> HTTP 200, 3998 bytes
+GET /r00/payload/payload-00.txt -> HTTP 404, 335-byte Python server error body
+
+SERVER LOG:
+127.0.0.1 - - [19/Sep/2026 09:18:55] "GET /r02/index.html HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2026 09:18:55] code 404, message File not found
+127.0.0.1 - - [19/Sep/2026 09:18:55] "GET /r00/payload/payload-00.txt HTTP/1.1" 404 -
+
+BROWSER ATTEMPT:
+Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:4173/r02/index.html
