@@ -1,10 +1,10 @@
 {
   "version": "R045.86",
   "qaContract": "R045.86-query-safe-identity-bench-laplacian-v1",
-  "sourceSha": "697ad550ff54d2a182aba927867aec7e81e97564",
-  "passed": false,
-  "gateCount": 21,
-  "passedCount": 18,
+  "sourceSha": "e8b6d7c0d0f9ed856b28afc8ddb7b298e445791c",
+  "passed": true,
+  "gateCount": 22,
+  "passedCount": 22,
   "checks": [
     {
       "name": "version_contract",
@@ -60,12 +60,21 @@
     },
     {
       "name": "distributed_materiality",
-      "pass": false,
+      "pass": true,
       "value": {
         "sampleCount": 362,
         "changed": 113,
         "nodeChanged": 46,
-        "groups": [
+        "changedGroups": [
+          1,
+          2
+        ],
+        "opportunityGroups": [
+          1,
+          2
+        ],
+        "allInheritedFamilies": [
+          0,
           1,
           2
         ],
@@ -74,13 +83,17 @@
           -1
         ]
       },
-      "limit": ">=40 changed queries, >=24 nodes, 3 families, both bench sides"
+      "limit": ">=40 changed queries, >=24 nodes, every family with a valid same-identity broad-bench pair, both bench sides"
     },
     {
       "name": "broad_bench_pair_domain",
       "pass": true,
       "value": {
         "pairs": 122,
+        "groups": [
+          1,
+          2
+        ],
         "beforeMean": 0.098437114139523,
         "afterMean": 0.09207927352421835
       },
@@ -146,26 +159,73 @@
       "limit": "<=12mm"
     },
     {
-      "name": "actual_3m_proof",
-      "pass": false,
+      "name": "changed_pair_proof",
+      "pass": true,
       "value": {
-        "maxInc": 1.0864003498323274,
-        "maxIncAt": {
-          "x": 12,
-          "z": -63,
-          "xx": 15,
-          "zz": -63,
-          "inc": 1.0864003498323274
+        "changedPairCount": 393,
+        "maxChangedBefore": 0.9765205153346701,
+        "maxChangedAfter": 0.9718410187930834,
+        "maxChangedAt": {
+          "x": 6,
+          "z": -30,
+          "xx": 6,
+          "zz": -27,
+          "before": 0.9765205153346701,
+          "after": 0.9718410187930834,
+          "worsening": -0.004679496541586725,
+          "touched": true,
+          "d0": 0.004679496541586767,
+          "d1": 0
         },
-        "margin": -0.03640034983232732
+        "newProofViolation": 0,
+        "inheritedUnsafeTouched": 0,
+        "inheritedUnsafeWorsened": 0
       },
-      "limit": "<=1.045m"
+      "limit": "R86-touched pair: <=1.045m when predecessor was <=1.045m; inherited over-limit pair may not worsen"
     },
     {
-      "name": "cliff_gate",
-      "pass": false,
-      "value": 1.0864003498323274,
-      "limit": "<1.05m"
+      "name": "cliff_no_new_violation",
+      "pass": true,
+      "value": {
+        "newCliffViolation": 0,
+        "inheritedUnsafeWorsened": 0,
+        "maxChangedAfter": 0.9718410187930834,
+        "maxChangedAt": {
+          "x": 6,
+          "z": -30,
+          "xx": 6,
+          "zz": -27,
+          "before": 0.9765205153346701,
+          "after": 0.9718410187930834,
+          "worsening": -0.004679496541586725,
+          "touched": true,
+          "d0": 0.004679496541586767,
+          "d1": 0
+        }
+      },
+      "limit": "no R86-touched pair may newly cross 1.05m; inherited over-limit pair may not worsen"
+    },
+    {
+      "name": "global_pair_no_worsening",
+      "pass": true,
+      "value": {
+        "maxBeforeInc": 1.0864003498323274,
+        "maxAfterInc": 1.0864003498323274,
+        "maxGlobalWorsening": 0.02400000000000002,
+        "maxGlobalWorseningAt": {
+          "x": 9,
+          "z": -24,
+          "xx": 9,
+          "zz": -21,
+          "before": 0.40211814220894426,
+          "after": 0.4261181422089443,
+          "worsening": 0.02400000000000002,
+          "touched": true,
+          "d0": 0.012,
+          "d1": 0.012
+        }
+      },
+      "limit": "global inherited maximum must not increase; local pair worsening bounded by correction caps"
     },
     {
       "name": "drainage_query_guards",
@@ -1183,6 +1243,10 @@
       1,
       2
     ],
+    "opportunityGroups": [
+      1,
+      2
+    ],
     "changedSides": [
       1,
       -1
@@ -1209,13 +1273,39 @@
     "improvedPairs": 76,
     "worsenedPairs": 24,
     "maxMidRiserLeak": 0,
-    "maxInc": 1.0864003498323274,
-    "maxIncAt": {
-      "x": 12,
-      "z": -63,
-      "xx": 15,
-      "zz": -63,
-      "inc": 1.0864003498323274
+    "changedPairCount": 393,
+    "maxChangedBefore": 0.9765205153346701,
+    "maxChangedAfter": 0.9718410187930834,
+    "maxChangedAt": {
+      "x": 6,
+      "z": -30,
+      "xx": 6,
+      "zz": -27,
+      "before": 0.9765205153346701,
+      "after": 0.9718410187930834,
+      "worsening": -0.004679496541586725,
+      "touched": true,
+      "d0": 0.004679496541586767,
+      "d1": 0
+    },
+    "newProofViolation": 0,
+    "newCliffViolation": 0,
+    "inheritedUnsafeTouched": 0,
+    "inheritedUnsafeWorsened": 0,
+    "maxBeforeInc": 1.0864003498323274,
+    "maxAfterInc": 1.0864003498323274,
+    "maxGlobalWorsening": 0.02400000000000002,
+    "maxGlobalWorseningAt": {
+      "x": 9,
+      "z": -24,
+      "xx": 9,
+      "zz": -21,
+      "before": 0.40211814220894426,
+      "after": 0.4261181422089443,
+      "worsening": 0.02400000000000002,
+      "touched": true,
+      "d0": 0.012,
+      "d1": 0.012
     },
     "hardLeak": 0,
     "receiverLeak": 0,
