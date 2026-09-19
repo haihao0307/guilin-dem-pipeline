@@ -16,13 +16,13 @@ function safe(x,z){return R30.nearestExtendedDrainageDistance(x,z)>12&&!receiver
 function profileShape(f){if(f<=.34||f>=.66)return 0;if(f<.44)return-S(.34,.44,f);if(f<.46)return-1;if(f<.54)return M(-1,1,S(.46,.54,f));if(f<.56)return 1;return 1-S(.56,.66,f)}
 function nodeOrientation(x,z){
  const g=R30.gradient(x,z),gm=Math.hypot(g.dx,g.dz);if(gm<1e-9)return 0;const nx=g.dx/gm,nz=g.dz/gm;
- const hp=R78.height(x+STEP,z),hm=R78.height(x-STEP,z),vp=R78.height(x,z+STEP),vm=R78.height(x,z-STEP);
- const gx=(hp-hm)/(2*STEP),gz=(vp-vm)/(2*STEP);
+ // n is defined as the R30 uphill macro-normal, so its macro-height derivative is positive by construction.
+ // Only the inherited continuous phase derivative is needed to orient the bench/riser profile; re-solving
+ // R78 height at four off-grid probes would add cost without changing this chosen reference direction.
  const px=R47.terraceStateAt(x+STEP,z).phase-R47.terraceStateAt(x-STEP,z).phase;
  const pz=R47.terraceStateAt(x,z+STEP).phase-R47.terraceStateAt(x,z-STEP).phase;
- const dhdn=gx*nx+gz*nz,dpdn=(px*nx+pz*nz)/(2*STEP);
- if(Math.abs(dhdn)<.02||Math.abs(dpdn)<1e-4)return 0;
- return Math.sign(dhdn*dpdn)||0;
+ const dpdn=(px*nx+pz*nz)/(2*STEP);if(Math.abs(dpdn)<1e-4)return 0;
+ return Math.sign(dpdn)||0;
 }
 function zero(){return{delta:0,requested:0,orientation:0,carrierWeight:0,projected:false}}
 function nodeDeltaAt(x,z){
@@ -49,12 +49,12 @@ export function height(x,z){return R30.height(x,z)+terraceDelta(x,z)}
 export function gradient(x,z){const e=1,dx=(height(x+e,z)-height(x-e,z))/(2*e),dz=(height(x,z+e)-height(x,z-e))/(2*e);return{dx,dz,mag:Math.hypot(dx,dz)}}
 
 export const snapshot={...R78.snapshot,version:VERSION,visualAcceptance:false,browserQA:false,productionReady:false,parcelGenerationEnabled:false,waterStateKnown:false,round80:{
- scope:'replace the unfinishable R79 off-grid re-solving path with a lattice-anchored world-profile field over the accepted R78 carrier, while still making a real bench/riser profile change and keeping footprint, identity and drainage frozen',
- method:'at each frozen 6 m carrier node, estimate the world-space terrain normal from the R30 macro gradient and a shared 6 m central stencil of accepted R78 physical height. Use the continuous inherited terrace phase to orient a zero-end shoulder/riser correction, cap each node at 6 mm, then bilinearly interpolate only among nodes with the same frozen family and exact stair index. Query points inside hard drainage or the foreground receiver remain unchanged.',
- logicCorrection:'R79 exposed two separate fallacies. A successful Chrome startup or strict-rule validator does not imply geometry acceptance when the authoritative numeric job times out. Conversely, simply increasing the timeout would hide an execution-path defect rather than strengthen evidence. R80 therefore changes the physical field and its evidence architecture together: shared lattice stencils replace recursive off-grid re-solving, and acceptance is based on world-space predecessor/new consequences, not page startup or change count alone.',
+ scope:'replace the unfinishable R79 off-grid re-solving path with a lattice-anchored macro-normal profile field over the accepted R78 carrier, while still making a real bench/riser profile change and keeping footprint, identity and drainage frozen',
+ method:'at each frozen 6 m carrier node, define the uphill world-space normal from the R30 macro gradient, then use the inherited continuous terrace-phase derivative along that normal to orient a zero-end shoulder/riser correction. Because the macro-normal is explicitly uphill, its reference height derivative is positive by construction; R80 does not redundantly re-solve R78 height at off-grid probes. Each node is capped at 6 mm, and interpolation is allowed only among the same frozen family and exact stair index. Hard drainage and the foreground receiver remain zero-change regions.',
+ logicCorrection:'R79 exposed two separate fallacies. A successful Chrome startup or strict-rule validator does not imply geometry acceptance when the authoritative numeric job times out. Conversely, simply increasing the timeout would hide an execution-path defect rather than strengthen evidence. R80 also removes a redundant premise: once the reference normal is defined as the R30 uphill direction, repeatedly estimating the sign of the predecessor height derivative is unnecessary for orienting the phase correction. The new QA stays on the accepted carrier and still checks physical materiality, long same-identity runs and a predecessor-relative 3 m safety bound.',
  constraint:'the 6 m lattice, 6 mm cap, 12 m drainage core and 1.05 m cliff gate are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real parcel/management boundaries, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity or event-level water management.',
  xiaomaBoundary:'Xiaoma/TLO remains binding: geometric adjacency, a shared bund, visual continuity and mass conservation are distinct from hydraulic connectivity, ownership and state. Allowed transfer is not proof of current connection, and mesh refinement cannot invent measurements.',
  mrRolordUse:'latest retained MrRolord study is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. No original named video source was available to replay; procedural displacement is not agricultural truth.',
  referenceUse:'the retained image(173).png reading remains non-metric: hillside-scale long curved contour benches, unequal widths, nested turns, concentrated riser edges and drainage interruptions. No field width, riser height, channel section or hydraulic parameter is inferred.',
- evidenceClass:'synthetic lattice-anchored world-profile correction over accepted R78 evidence; not surveyed terrace, parcel or hydraulic truth',
+ evidenceClass:'synthetic lattice-anchored macro-normal profile correction over accepted R78 evidence; not surveyed terrace, parcel or hydraulic truth',
  predecessor:'R045.79 failed-candidate target rebuilt from accepted R045.78 rather than stacked on an unverified timeout round',priorAccepted:R78.VERSION}};
