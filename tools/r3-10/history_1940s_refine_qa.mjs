@@ -10,8 +10,9 @@ try{
   await page.waitForFunction(()=>document.querySelector('#terrain')?.dataset.osmLoaded==='true',{},{timeout:120000});
   await page.waitForFunction(()=>Number(document.querySelector('#terrain')?.dataset.history1940sRefineOsmObjects||0)>0,{},{timeout:30000});
   await page.waitForFunction(()=>window.__wenzhouNg51IslandRelief?.ready===true||document.querySelector('#terrain')?.dataset.ng51IslandReliefError,{},{timeout:120000});
+  await page.waitForFunction(()=>window.__wenzhouNg51Bathymetry?.ready===true||document.querySelector('#terrain')?.dataset.ng51BathymetryError,{},{timeout:120000});
   await page.waitForTimeout(700);
-  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null),ir=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
+  const r=await page.evaluate(()=>window.__wenzhouMapMother1940sRefine||null),ir=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null),br=await page.evaluate(()=>window.__wenzhouNg51Bathymetry||null);const ds=await page.locator('#terrain').evaluate(c=>({...c.dataset}));
   check(!ds.history1940sRefineError,`refine runtime error: ${ds.history1940sRefineError||''}`);
   check(r?.schema==='wenzhou-map-mother/1940s-refine-r28','R28 refine state missing');
   check(r?.mask?.[0]>=1500&&r?.mask?.[1]>=1500,'refined mask resolution too low');
@@ -38,6 +39,14 @@ try{
   check(Number(ir?.maxScanChunkMs)>=0&&Number(ir?.maxScanChunkMs)<250,'NG51 island scan blocked the main thread too long');
   check(Number(ir?.maxGeometryChunkMs)>=0&&Number(ir?.maxGeometryChunkMs)<250,'NG51 island geometry blocked the main thread too long');
   check(String(ir?.replacementPolicy||'').includes('Unsupported island pixels remain on the base layer'),'unsupported island fallback policy missing');
+  check(!ds.ng51BathymetryError,`NG51 bathymetry runtime error: ${ds.ng51BathymetryError||''}`);
+  check(br?.schema==='wenzhou-ng51-bathymetry-runtime/v1'&&br?.ready===true,'NG51 bathymetry runtime missing');
+  check(br?.sourceCrs==='EPSG:9518','NG51 bathymetry CRS identity missing');
+  check(Array.isArray(br?.heightRangeM)&&br.heightRangeM[0]<0,'NG51 bathymetry has no below-sea relief');
+  check((br?.waterCells||0)>0&&(br?.triangles||0)>0,'NG51 bathymetry generated no historical-water geometry');
+  check(Number(br?.buildMs)>0&&Number(br?.buildMs)<60000,'NG51 bathymetry build time out of bound');
+  check(Number(br?.maxChunkMs)>=0&&Number(br?.maxChunkMs)<250,'NG51 bathymetry blocked the main thread too long');
+  check(String(br?.role||'').includes('independent of the dynamic sea surface'),'seabed/sea-surface separation missing');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
-  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,ng51IslandReliefBuildMs:ds.ng51IslandReliefBuildMs,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,bathymetry:br,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,ng51IslandReliefBuildMs:ds.ng51IslandReliefBuildMs,ng51BathymetryBuildMs:ds.ng51BathymetryBuildMs,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
 }catch(e){const ds=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(c=>({...c.dataset})):{};failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,dataset:ds,consoleErrors,failures},null,2));}finally{await browser.close();}if(failures.length)process.exit(1);
