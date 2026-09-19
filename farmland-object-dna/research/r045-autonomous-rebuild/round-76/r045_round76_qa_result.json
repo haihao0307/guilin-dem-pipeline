@@ -1,10 +1,10 @@
 {
   "version": "R045.76",
   "qaContract": "R045.76-neighbor-aware-cliff-safe-carrier-profile-v1",
-  "sourceSha": "abe580564fead91576484cfa1f0b410b77ed80da",
+  "sourceSha": "f9aca30de4b933ebf299f305da5eab9e303137f3",
   "passed": false,
   "gateCount": 29,
-  "passedCount": 28,
+  "passedCount": 27,
   "checks": [
     {
       "name": "version",
@@ -21,7 +21,7 @@
     {
       "name": "source_sha_present",
       "pass": true,
-      "value": "abe580564fead91576484cfa1f0b410b77ed80da",
+      "value": "f9aca30de4b933ebf299f305da5eab9e303137f3",
       "limit": "workflow source commit recorded"
     },
     {
@@ -76,18 +76,18 @@
       "pass": true,
       "value": {
         "rawOpportunity": 124,
-        "changed": 124,
-        "ratio": 1,
+        "changed": 122,
+        "ratio": 0.9838709677419355,
         "unsupportedChanged": 0
       },
       "limit": ">=100 raw carrier opportunities, >=100 physical changes, >=95% realization, no unsupported authoritative-node change"
     },
     {
       "name": "neighbor_envelope_engaged",
-      "pass": true,
+      "pass": false,
       "value": {
         "clampedCount": 2,
-        "infeasibleCount": 0
+        "infeasibleCount": 2
       },
       "limit": "the failed R75 relation must trigger at least one real safety clamp; all envelopes feasible"
     },
@@ -101,10 +101,10 @@
     },
     {
       "name": "known_pair_repaired",
-      "pass": true,
+      "pass": false,
       "value": {
         "r75FailedPair": 1.1266328093651596,
-        "r76RepairedPair": 0.8970801666487694
+        "r76RepairedPair": 1.112919833351231
       },
       "limit": "same pair repaired below unchanged 1.05m / 3m gate"
     },
@@ -112,20 +112,16 @@
       "name": "long_same_identity_continuity",
       "pass": true,
       "value": {
-        "largestRun": 20,
+        "largestRun": 19,
         "largestRunSpan": 56.92099788303083,
         "longRuns": [
           {
-            "cells": 20,
+            "cells": 19,
             "span": 56.92099788303083
           },
           {
             "cells": 15,
             "span": 49.47726750741192
-          },
-          {
-            "cells": 15,
-            "span": 51.26402247190518
           },
           {
             "cells": 14,
@@ -160,7 +156,7 @@
             "span": 30
           }
         ],
-        "cellsInLongRuns": 124
+        "cellsInLongRuns": 108
       },
       "limit": ">=2 same-family+exact-index changed runs each >=6 cells and >=30m; at least 12 changed cells in long runs"
     },
@@ -231,8 +227,8 @@
     },
     {
       "name": "added_height_change_bounded",
-      "pass": false,
-      "value": 0.10791983335123068,
+      "pass": true,
+      "value": 0.029052805273193455,
       "limit": "R76-R74 <=0.035m per authoritative node"
     },
     {
@@ -283,7 +279,7 @@
     {
       "name": "logic_fallacy_explicit",
       "pass": true,
-      "value": "R75 exposed a precise inference error: an absolute per-node height cap of 0.035 m does not imply a relative 3 m neighbor-difference cap. The failed pair reached 1.126632809 m even though every node individually respected the absolute cap. This is an absolute-bound-versus-Lipschitz-bound error. R76 therefore constrains the actual local relation that failed, rather than lowering the 1.05 m QA threshold or merely reducing global amplitude. Passing this local gate still does not prove whole-slope visual acceptance.",
+      "value": "R75 exposed an absolute-bound-versus-Lipschitz-bound error: an absolute per-node height cap of 0.035 m does not imply a relative 3 m neighbor-difference cap. The first R76 attempt then exposed a second constraint-composition error: clamping a candidate to the node cap and afterwards clamping it to a neighbor interval can undo the node cap if the intervals do not coincide. R76 now intersects both admissible intervals first and only then clamps once. It neither lowers the 1.05 m QA threshold nor assumes that passing this local relation proves whole-slope visual acceptance.",
       "limit": "absolute node bound is not a local Lipschitz bound"
     },
     {
@@ -327,21 +323,21 @@
     ],
     "longAccepted": 10,
     "rawOpportunity": 124,
-    "changed": 124,
-    "totalChanged": 124,
-    "realizationRatio": 1,
+    "changed": 122,
+    "totalChanged": 122,
+    "realizationRatio": 0.9838709677419355,
     "clampedCount": 2,
-    "infeasibleCount": 0,
+    "infeasibleCount": 2,
     "changedGroups": [
       2,
       1,
       0
     ],
-    "largestRun": 20,
+    "largestRun": 19,
     "largestRunSpan": 56.92099788303083,
-    "longRunCount": 11,
-    "cellsInLongRuns": 124,
-    "maxAdded": 0.10791983335123068,
+    "longRunCount": 10,
+    "cellsInLongRuns": 108,
+    "maxAdded": 0.029052805273193455,
     "maxInc": 0.970865989209788,
     "maxIncAt": {
       "x": 0,
@@ -351,7 +347,7 @@
       "inc": 0.970865989209788
     },
     "r75FailedPair": 1.1266328093651596,
-    "r76RepairedPair": 0.8970801666487694,
+    "r76RepairedPair": 1.112919833351231,
     "identityBleed": 0,
     "weightedOffgrid": 462,
     "changedPoints": [
@@ -1413,18 +1409,6 @@
       },
       {
         "x": 18,
-        "z": -24,
-        "change": 0.10791983335123068,
-        "rawChange": -0.008723089333551074,
-        "clamped": true,
-        "mask": 0.9831152211909636,
-        "frac": 0.4374113292073911,
-        "groupIndex": 2,
-        "index": 3,
-        "dd": 27.853974625518426
-      },
-      {
-        "x": 18,
         "z": -18,
         "change": 0.02054905669791976,
         "rawChange": 0.020549056697919774,
@@ -1434,18 +1418,6 @@
         "groupIndex": 2,
         "index": 2,
         "dd": 29.92820677848257
-      },
-      {
-        "x": 18,
-        "z": -12,
-        "change": 0.07371184717877344,
-        "rawChange": -0.006258466393787171,
-        "clamped": true,
-        "mask": 1,
-        "frac": 0.45360513855435025,
-        "groupIndex": 2,
-        "index": 2,
-        "dd": 32.002438931446704
       },
       {
         "x": 18,
@@ -5457,7 +5429,7 @@
         4.426471588443059,
         4.4218325640586125,
         4.417866849504785,
-        4.577557944631955,
+        4.469638111280725,
         5.74465768865094,
         5.735407278123263,
         6.048281236098414,
@@ -5573,7 +5545,7 @@
         2.826596871724756,
         2.834878714753811,
         2.7939698396044195,
-        2.89849225259545,
+        2.8247804054166767,
         4.067036259685791,
         4.08232645747894,
         4.297129472864623,
