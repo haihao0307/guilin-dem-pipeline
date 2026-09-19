@@ -1,0 +1,578 @@
+{
+  "version": "R045.70",
+  "qaContract": "R045.70-quantized-contour-ribbon-union-v1",
+  "sourceSha": "83b4b219fe85a122de8adb240ebd8ca00ac7c873",
+  "passed": false,
+  "gateCount": 26,
+  "passedCount": 23,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.70",
+      "limit": "R045.70"
+    },
+    {
+      "name": "qa_contract",
+      "pass": true,
+      "value": "R045.70-quantized-contour-ribbon-union-v1",
+      "limit": "exact contract id"
+    },
+    {
+      "name": "source_sha_present",
+      "pass": true,
+      "value": "83b4b219fe85a122de8adb240ebd8ca00ac7c873",
+      "limit": "workflow source commit recorded"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "plan_frame_exact",
+      "pass": true,
+      "value": {
+        "maskErr": 0,
+        "stepErr": 0,
+        "phaseErr": 0,
+        "indexErr": 0,
+        "baseErr": 0,
+        "groupErr": 0
+      },
+      "limit": "exact frozen R47/R68 mask/group/step/phase/index/base"
+    },
+    {
+      "name": "active_footprint_exact",
+      "pass": true,
+      "value": {
+        "activeN": 548,
+        "activeP": 548,
+        "thresholdCross": 0
+      },
+      "limit": "exact R68 active footprint"
+    },
+    {
+      "name": "macro_evidence_material",
+      "pass": false,
+      "value": {
+        "candidateTotal": 43,
+        "acceptedNode": 9,
+        "acceptedComponents": 2,
+        "acceptedFamilies": [
+          0,
+          2
+        ]
+      },
+      "limit": ">=20 frozen candidates, >=12 accepted nodes, >=2 accepted same-index ribbons across >=2 families"
+    },
+    {
+      "name": "macro_evidence_span",
+      "pass": false,
+      "value": {
+        "size": 5,
+        "span": 18,
+        "accepted": true,
+        "groupIndex": 2,
+        "index": 2
+      },
+      "limit": "largest frozen same-index ribbon >=4 nodes and >=24m physical span"
+    },
+    {
+      "name": "profile_change_material",
+      "pass": true,
+      "value": {
+        "changed": 9,
+        "maxChange": 0.028784162527750567
+      },
+      "limit": ">=8 physical changes and max change >10mm"
+    },
+    {
+      "name": "multi_family_change",
+      "pass": true,
+      "value": [
+        2,
+        0
+      ],
+      "limit": ">=2 terrace families participate"
+    },
+    {
+      "name": "changed_run_material",
+      "pass": true,
+      "value": {
+        "largestChanged": 5,
+        "largestChangedSpan": 18,
+        "cellsInRuns": 9,
+        "changeComponents": 2
+      },
+      "limit": "physical changes include compatible same-index runs; >=6 changed cells in >=3-cell/12m runs"
+    },
+    {
+      "name": "all_changes_supported",
+      "pass": true,
+      "value": 0,
+      "limit": "every changed 6m node belongs to precomputed accepted same-index ribbon evidence"
+    },
+    {
+      "name": "inactive_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero change at inherited mask <=0.12"
+    },
+    {
+      "name": "strong_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero change at inherited mask >=0.82"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardChanged": 0,
+        "hard": 0
+      },
+      "limit": "zero change in <=12m drainage core"
+    },
+    {
+      "name": "foreground_receiver_exact",
+      "pass": true,
+      "value": {
+        "receiverChanged": 0,
+        "receiver": 0
+      },
+      "limit": "zero change in receiver +12m band"
+    },
+    {
+      "name": "outside_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero outside terrace support domain"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.028784162527750567,
+      "limit": "R70-R68 <=0.070m per authoritative node"
+    },
+    {
+      "name": "three_meter_cliff_gate",
+      "pass": true,
+      "value": {
+        "maxInc": 0.7572487707289925,
+        "maxIncAt": {
+          "x": 78,
+          "z": -90,
+          "xx": 75,
+          "zz": -90,
+          "inc": 0.7572487707289925
+        }
+      },
+      "limit": "<1.05m terrace increment / 3m at every changed 6m node"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        95,
+        229,
+        224
+      ],
+      "limit": "three terrace families retained"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending fixed-view review"
+    },
+    {
+      "name": "logic_fallacy_explicit",
+      "pass": false,
+      "value": "R69 showed a double-filter fallacy: each candidate node already had strong bilateral contour-run evidence, yet a second per-edge tangent-alignment test discarded curved lattice segments merely because a short 6 m quantized step was not aligned enough at both endpoints. That conflates discretization error with absence of contour support. Removing that redundant test is not permission to connect arbitrary cells: R70 tightens identity to exact inherited family plus exact terrace index and retains drainage separation. A second fallacy is that more accepted nodes would by itself prove visual success; fixed-camera A/B remains an independent gate.",
+      "limit": "quantized edge misalignment != missing contour evidence; more nodes != visual acceptance"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m audit lattice, coherence/span/support thresholds, four-node/18 m same-index component gate, 0.050*step sine profile, 0.070 m delta cap and inherited 12 m drainage core are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real management parcels, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity or event-level water management.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: visually stronger same-index contour ribbons, adjacency and conservation do not establish parcel ownership, surveyed riser section, hydraulic exchange, head, depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord video audit is used only for hydrology-first ordering: river hierarchy -> accumulated terrain influence -> terrain-conforming land use -> paths/vegetation/materials. Voronoi, shader displacement and adaptive subdivision are not agricultural truth and are not copied literally.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_reread_honest",
+      "pass": true,
+      "value": "image(173).png was re-resolved and reread in this run. It supports only non-metric morphology: multiple nested contour-following terrace bands, unequal widths, concentrated dark riser edges, curved turns and natural drainage interruptions. No field width, riser height, channel section or hydraulic parameter is inferred from the photograph.",
+      "limit": "exact image reread; non-metric use only"
+    }
+  ],
+  "metrics": {
+    "activeN": 548,
+    "activeP": 548,
+    "groups": [
+      95,
+      229,
+      224
+    ],
+    "candidateTotal": 43,
+    "acceptedNode": 9,
+    "acceptedComponents": 2,
+    "acceptedFamilies": [
+      0,
+      2
+    ],
+    "largestEvidence": {
+      "size": 5,
+      "span": 18,
+      "accepted": true,
+      "groupIndex": 2,
+      "index": 2
+    },
+    "changed": 9,
+    "changedGroups": [
+      2,
+      0
+    ],
+    "largestChanged": 5,
+    "largestChangedSpan": 18,
+    "cellsInRuns": 9,
+    "changeComponentCount": 2,
+    "maxChange": 0.028784162527750567,
+    "maxInc": 0.7572487707289925,
+    "maxIncAt": {
+      "x": 78,
+      "z": -90,
+      "xx": 75,
+      "zz": -90,
+      "inc": 0.7572487707289925
+    },
+    "inactiveChanged": 0,
+    "unsupportedChanged": 0,
+    "hardChanged": 0,
+    "receiverChanged": 0,
+    "strongChanged": 0,
+    "outside": 0,
+    "hard": 0,
+    "receiver": 0,
+    "changedPoints": [
+      {
+        "x": 30,
+        "z": 0,
+        "change": -0.028784162527750567,
+        "mask": 0.5116528963935326,
+        "groupIndex": 2,
+        "index": 2,
+        "componentSize": 5,
+        "componentSpan": 18,
+        "coherence": 0.9964497857997029,
+        "runSpan": 36,
+        "dd": 25.80697580112788
+      },
+      {
+        "x": 36,
+        "z": -6,
+        "change": 0.023898649494930493,
+        "mask": 0.5530536048019816,
+        "groupIndex": 2,
+        "index": 2,
+        "componentSize": 5,
+        "componentSpan": 18,
+        "coherence": 0.6077431957872969,
+        "runSpan": 33.941125496954285,
+        "dd": 17.4928556845359
+      },
+      {
+        "x": 36,
+        "z": 0,
+        "change": -0.022530879957366134,
+        "mask": 0.45479169229022215,
+        "groupIndex": 2,
+        "index": 2,
+        "componentSize": 5,
+        "componentSpan": 18,
+        "coherence": 0.9976225937937606,
+        "runSpan": 36,
+        "dd": 21.213203435596427
+      },
+      {
+        "x": 42,
+        "z": 0,
+        "change": 0.0024169577421915764,
+        "mask": 0.2579892902854344,
+        "groupIndex": 2,
+        "index": 2,
+        "componentSize": 5,
+        "componentSpan": 18,
+        "coherence": 0.9970858668843174,
+        "runSpan": 36,
+        "dd": 17.4928556845359
+      },
+      {
+        "x": 48,
+        "z": 0,
+        "change": 0.000026930839481166535,
+        "mask": 0.1258994449419108,
+        "groupIndex": 2,
+        "index": 2,
+        "componentSize": 5,
+        "componentSpan": 18,
+        "coherence": 0.9968356914826555,
+        "runSpan": 36,
+        "dd": 15.297058540778355
+      },
+      {
+        "x": 78,
+        "z": -90,
+        "change": 0.0199027789572217,
+        "mask": 0.750933270577567,
+        "groupIndex": 0,
+        "index": 19,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "coherence": 0.7713705959863312,
+        "runSpan": 30,
+        "dd": 44.78211401719504
+      },
+      {
+        "x": 84,
+        "z": -90,
+        "change": 0.02500622156938412,
+        "mask": 0.5627084628887788,
+        "groupIndex": 0,
+        "index": 19,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "coherence": 0.9930131940738685,
+        "runSpan": 36,
+        "dd": 40.72776624609097
+      },
+      {
+        "x": 90,
+        "z": -90,
+        "change": 0.002006887600238136,
+        "mask": 0.4643644162328815,
+        "groupIndex": 0,
+        "index": 19,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "coherence": 0.7683489296327328,
+        "runSpan": 30,
+        "dd": 34.7685603940999
+      },
+      {
+        "x": 96,
+        "z": -90,
+        "change": -0.003171151373120684,
+        "mask": 0.2394552242056759,
+        "groupIndex": 0,
+        "index": 19,
+        "componentSize": 4,
+        "componentSpan": 18,
+        "coherence": 0.46054990071656227,
+        "runSpan": 24,
+        "dd": 28.7838081951155
+      }
+    ],
+    "graphSummary": {
+      "candidateNodes": 43,
+      "acceptedNodes": 9,
+      "rejectedNodes": 34,
+      "acceptedComponents": 2,
+      "acceptedFamilies": [
+        0,
+        2
+      ],
+      "components": [
+        {
+          "size": 5,
+          "span": 18,
+          "accepted": true,
+          "groupIndex": 2,
+          "index": 2
+        },
+        {
+          "size": 4,
+          "span": 18,
+          "accepted": true,
+          "groupIndex": 0,
+          "index": 19
+        },
+        {
+          "size": 3,
+          "span": 13.416407864998739,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 5
+        },
+        {
+          "size": 3,
+          "span": 12,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 6
+        },
+        {
+          "size": 3,
+          "span": 12,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 15
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 2
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 3
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 1
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 3
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 0,
+          "index": 22
+        },
+        {
+          "size": 2,
+          "span": 6,
+          "accepted": false,
+          "groupIndex": 0,
+          "index": 21
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 19
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 6
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 3
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 4
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 16
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 11
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 13
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 8
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 7
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 0,
+          "index": 24
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 2,
+          "index": 12
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 1,
+          "index": 11
+        },
+        {
+          "size": 1,
+          "span": 0,
+          "accepted": false,
+          "groupIndex": 0,
+          "index": 22
+        }
+      ]
+    },
+    "qaScope": "authoritative 6m whole-slope same-family + exact-index quantized contour-ribbon union over frozen R47/R68 footprint; frozen bilateral run evidence + bounded full-phase profile expression + exact drainage/footprint locks + 3m local cliff checks + source provenance"
+  }
+}
