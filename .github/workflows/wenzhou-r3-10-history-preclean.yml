@@ -25,6 +25,7 @@ jobs:
       - name: Static syntax
         run: |
           set -euo pipefail
+          node --check site/dist/r3-2/sea-demo.js
           node --check site/dist/r3-8/history-1942-preclean.js
           node --check site/dist/r3-8/history-1942-entry.js
           node --check site/dist/r3-8/history-1942-shell.js
