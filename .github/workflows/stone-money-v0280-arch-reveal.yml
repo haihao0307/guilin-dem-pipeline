@@ -54,7 +54,7 @@ jobs:
            req=urllib.request.Request(API+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'))
            with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
           blob=api('git/blobs',{'content':data.decode(),'encoding':'utf-8'})['sha']
-          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','version':'0.2.8','sourceCommit':source,'entrySha256':digest,'localBrowserPassed':True,'frozenSourceUnchanged':True,'archGeometry':'dissolved-mushroom-rock-island-v028-revealed','archPosition':[210,190],'visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
+          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','version':'0.2.8','sourceCommit':source,'entrySha256':digest,'localBrowserPassed':True,'frozenSourceUnchanged':True,'archGeometry':'dissolved-mushroom-rock-island-v028-revealed','archPosition':[96,208],'visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
           for attempt in range(4):
            head=api('git/ref/heads/gh-pages')['object']['sha'];base=api('git/commits/'+head)['tree']['sha']
            tree=api('git/trees',{'base_tree':base,'tree':[{'path':folder+'/index.html','mode':'100644','type':'blob','sha':blob},{'path':folder+'/SOURCE.json','mode':'100644','type':'blob','content':source_info}]})['sha']
