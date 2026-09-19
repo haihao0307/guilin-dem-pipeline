@@ -1,0 +1,85 @@
+name: Landscape Small Karst Brick V2.6 R2.1 Two Pass V2
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-brick-v26-r2-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r2-1-brick-v26/build_r21_fix.py
+      - .github/workflows/landscape-small-karst-brick-v26-r21-two-pass-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R2.1 two-pass page
+        run: |
+          python -m py_compile workbenches/landscape-small-karst-field-r2-1-brick-v26/build_r21.py
+          python -m py_compile workbenches/landscape-small-karst-field-r2-1-brick-v26/build_r21_fix.py
+          python workbenches/landscape-small-karst-field-r2-1-brick-v26/build_r21_fix.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-small-karst-field-r2-1-brick-v26')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=['STRICT_BRICK_V26_STONE_BLOCK_TWO_PASS','const GEOMETRY_FS=','const MATERIAL_FS=',"renderer:'two-pass-continuous-field'",'uHoleSize','孔洞大小','RGBA16F','EXT_color_buffer_float',"dataset.karstReady='true'"]
+          for token in required: assert token in s,token
+          assert b['schema']=='LANDSCAPE_SMALL_KARST_BRICK_V26_R21_TWO_PASS'
+          for name,file in [('VS','/tmp/r21.vert'),('GEOMETRY_FS','/tmp/r21-geom.frag'),('MATERIAL_FS','/tmp/r21-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r21-app.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/r21-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r21.vert
+          glslangValidator -S frag /tmp/r21-geom.frag
+          glslangValidator -S frag /tmp/r21-mat.frag
+
+      - name: Run browser and capture proof
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 40); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium || sudo apt-get install -y -qq chromium-browser
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL=http://127.0.0.1:8000/workbenches/landscape-small-karst-field-r2-1-brick-v26/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --window-size=1440,1000 --run-all-compositor-stages-before-draw --virtual-time-budget=18000 --screenshot=/tmp/r21.png "$URL"
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --run-all-compositor-stages-before-draw --virtual-time-budget=18000 --dump-dom "$URL" >/tmp/r21-dom.html
+          grep -q 'data-karst-ready="true"' /tmp/r21-dom.html
+          ! grep -q 'data-karst-failure="true"' /tmp/r21-dom.html
+          test -s /tmp/r21.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-small-karst-r21-proof-v2
+          path: /tmp/r21.png
+          retention-days: 7
+
+      - name: Materialize fixed page
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-small-karst-field-r2-1-brick-v26/index.html workbenches/landscape-small-karst-field-r2-1-brick-v26/build.json
+          if git diff --cached --quiet; then echo "R2.1 already materialized"; exit 0; fi
+          git commit -m "fix(landscape): materialize browser-tested Brick V2.6 R2.1 [skip ci]"
+          git push
