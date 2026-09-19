@@ -56,7 +56,7 @@ function describe(doc){
 function selectableAction(descriptor,index){return structuredClone(requireIndex(index,descriptor.actions,'action'));}
 function shareablePair(evidence){
  // Evidence must come from per-channel source comparison, not filenames or visual likeness.
- const eq=(key)=>evidence.geometryArrays?.some(x=>x.attribute===key&&x.equal===true)===true;
+ const eq=(key)=>{const matches=(evidence.geometryArrays||[]).filter(x=>x.attribute===key);return matches.length>0&&matches.every(x=>x.equal===true);};
  return {basePositions:eq('POSITION'),indices:eq('indices'),uv:eq('TEXCOORD_0'),
   normals:eq('NORMAL'),tangents:eq('TANGENT'),
   imagePayloads:Array.isArray(evidence.imagePayloadsExactlyEqual)&&evidence.imagePayloadsExactlyEqual.length>0&&evidence.imagePayloadsExactlyEqual.every(x=>x===true),
