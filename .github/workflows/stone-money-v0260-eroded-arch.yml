@@ -33,7 +33,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add games/survivor-palau/releases/v0.2.5 games/survivor-palau/releases/v0.2.6
-          git diff --cached --quiet || git commit -m 'build(stone-money): record V0.2.6 asymmetric eroded arch evidence'
+          git diff --cached --quiet || git commit -m 'build(stone-money): record corrected V0.2.6 island-arch evidence'
           git pull --rebase origin work/stone-money-island-v0260-eroded-arch-20260920
           git push origin HEAD:work/stone-money-island-v0260-eroded-arch-20260920
       - name: Publish immutable public path after local gates pass
@@ -54,11 +54,11 @@ jobs:
            req=urllib.request.Request(API+path,headers=headers,data=None if body is None else json.dumps(body).encode(),method=method or ('GET' if body is None else 'POST'))
            with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
           blob=api('git/blobs',{'content':data.decode(),'encoding':'utf-8'})['sha']
-          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','version':'0.2.6','sourceCommit':source,'entrySha256':digest,'localBrowserPassed':True,'frozenSourceUnchanged':True,'archGeometry':'asymmetric-vegetated-eroded-ridge-v026','visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
+          source_info=json.dumps({'title':'Stone Money Island','subtitle':'Survivor Palau','version':'0.2.6','sourceCommit':source,'entrySha256':digest,'localBrowserPassed':True,'frozenSourceUnchanged':True,'archGeometry':'offcenter-mushroom-rock-island-v026b','visualAcceptance':False,'publicVerified':False},ensure_ascii=False,indent=2)+'\n'
           for attempt in range(4):
            head=api('git/ref/heads/gh-pages')['object']['sha'];base=api('git/commits/'+head)['tree']['sha']
            tree=api('git/trees',{'base_tree':base,'tree':[{'path':folder+'/index.html','mode':'100644','type':'blob','sha':blob},{'path':folder+'/SOURCE.json','mode':'100644','type':'blob','content':source_info}]})['sha']
-           commit=api('git/commits',{'message':'publish(stone-money): add immutable V0.2.6 eroded arch review','tree':tree,'parents':[head]})['sha']
+           commit=api('git/commits',{'message':'publish(stone-money): add immutable corrected V0.2.6 island arch review','tree':tree,'parents':[head]})['sha']
            try:api('git/refs/heads/gh-pages',{'sha':commit,'force':False},'PATCH');break
            except urllib.error.HTTPError as e:
             if e.code not in (409,422) or attempt==3:raise
@@ -74,7 +74,7 @@ jobs:
         if: always()
         run: |
           git add games/survivor-palau/releases/v0.2.6
-          git diff --cached --quiet || git commit -m 'verify(stone-money): record V0.2.6 public browser proof'
+          git diff --cached --quiet || git commit -m 'verify(stone-money): record corrected V0.2.6 public browser proof'
           git pull --rebase origin work/stone-money-island-v0260-eroded-arch-20260920
           git push origin HEAD:work/stone-money-island-v0260-eroded-arch-20260920
       - uses: actions/upload-artifact@v4
