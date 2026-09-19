@@ -13,6 +13,7 @@ const NC=new Map(),RC=new Map(),QC=new Map(),SC=new Map();
 const key=(x,z)=>`${Number(x).toFixed(4)},${Number(z).toFixed(4)}`;
 function receiver(x,z){return Math.abs(z-R30.riverZ(x))<=R30.riverW(x)+12}
 function safe(x,z){return R30.nearestExtendedDrainageDistance(x,z)>12&&!receiver(x,z)}
+function carrierEligible(x,z){const old=R47.terraceStateAt(x,z);return safe(x,z)&&old.mask>.48&&R78.r78CarrierWeightAt(x,z)>1e-12}
 function profile(f){return C((S(.44,.56,f)-f)/.44,-1,1)}
 function zero(){return{delta:0,requested:0,allowance:0,orientation:0,carrierWeight:0,worstPrior3m:0,projected:false}}
 
@@ -37,7 +38,9 @@ function nodeRequest(x,z){
 }
 export function r83RequestedFieldAt(x,z){
  const k=key(x,z);if(RC.has(k))return RC.get(k);
- if(!safe(x,z)){RC.set(k,0);return 0}
+ // The query itself must remain inside the accepted carrier. Same-identity corner
+ // evidence is not permission to bleed a correction into weak/unsupported space.
+ if(!carrierEligible(x,z)){RC.set(k,0);return 0}
  const old=R47.terraceStateAt(x,z),x0=Math.floor(x/STEP)*STEP,z0=Math.floor(z/STEP)*STEP,tx=(x-x0)/STEP,tz=(z-z0)/STEP;
  const cs=[[x0,z0,(1-tx)*(1-tz)],[x0+STEP,z0,tx*(1-tz)],[x0,z0+STEP,(1-tx)*tz],[x0+STEP,z0+STEP,tx*tz]];
  let s=0;
@@ -54,7 +57,7 @@ export function r83RequestedFieldAt(x,z){
 }
 function queryCorrection(x,z){
  const k=key(x,z);if(QC.has(k))return QC.get(k);
- if(!safe(x,z)){const r=zero();QC.set(k,r);return r}
+ if(!carrierEligible(x,z)){const r=zero();QC.set(k,r);return r}
  const requested=r83RequestedFieldAt(x,z),env=r83PairEnvelopeAt(x,z),delta=C(requested,-env.allowance,env.allowance),old=R47.terraceStateAt(x,z),nr=nodeRequest(Math.round(x/STEP)*STEP,Math.round(z/STEP)*STEP);
  const r={delta,requested,allowance:env.allowance,orientation:nr.orientation||0,carrierWeight:R78.r78CarrierWeightAt(x,z),worstPrior3m:env.worstPrior3m,projected:Math.abs(delta-requested)>1e-12,mask:old.mask};QC.set(k,r);return r;
 }
@@ -71,8 +74,8 @@ export function height(x,z){return R30.height(x,z)+terraceDelta(x,z)}
 
 export const snapshot={...R81.snapshot,version:VERSION,visualAcceptance:false,browserQA:false,parcelGenerationEnabled:false,waterStateKnown:false,productionReady:false,round83:{
  scope:'repair the failed R82 real 3 m cliff proof without widening the accepted R81 terrace footprint or weakening the visual-amplitude objective',
- method:'build the stronger stair-minus-ramp request from frozen R78/R81 carrier nodes with ordinary bilinear weights including zero/excluded corners, then apply the predecessor-relative half-margin safety envelope at every queried coordinate, including 3 m midpoints used by rendering and QA',
- logicCorrection:'R82 incorrectly inferred that pair-budgeting 6 m authoritative endpoints was sufficient for off-grid safety. Its renormalized interpolation could amplify a surviving request at a 3 m midpoint, producing 1.0537467306 m and failing both the 1.045 construction proof and the 1.05 cliff gate. R83 removes renormalization and makes the pair budget query-local; node caps alone are not a proof of neighbor safety.',
+ method:'build the stronger stair-minus-ramp request from frozen R78/R81 carrier nodes with ordinary bilinear weights including zero/excluded corners, require the queried point itself to remain inside the accepted carrier, then apply the predecessor-relative half-margin safety envelope at every queried coordinate, including 3 m midpoints used by rendering and QA',
+ logicCorrection:'R82 incorrectly inferred that pair-budgeting 6 m authoritative endpoints was sufficient for off-grid safety. Its renormalized interpolation could amplify a surviving request at a 3 m midpoint, producing 1.0537467306 m and failing both the 1.045 construction proof and the 1.05 cliff gate. R83 removes renormalization, keeps off-grid corrections inside the accepted carrier, and makes the pair budget query-local; node caps alone are not a proof of neighbor safety.',
  constraint:'the 6 m lattice, 3 m probes, 1.045 m construction target, 1.05 m cliff gate, 0.040 m request cap, inherited carrier and 12 m drainage core are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real parcels/management boundaries, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity or event-level water management.',
  xiaomaBoundary:'Xiaoma/TLO remains binding: geometric continuity, adjacency, shared-bund appearance and conservation do not establish hydraulic connectivity, ownership, head, depth, discharge, gate state, soil-water state or event state; unobserved state stays unknown.',
  mrRolordUse:'the retained MrRolord method record is used only for sequencing: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video source was not available to replay; no replay is claimed and procedural displacement is not agricultural truth.',
