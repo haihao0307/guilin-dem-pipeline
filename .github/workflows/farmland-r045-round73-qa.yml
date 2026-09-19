@@ -41,7 +41,7 @@ jobs:
           BYTES=$(wc -c < r045_round73_fixed_view.png 2>/dev/null || echo 0)
           STARTUP=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
           ACCEPTED=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
-          printf '{"source_sha":"%s","qa_contract":"R045.73-identity-clipped-full-carrier-ribbons-v1","chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$GITHUB_SHA" "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$STARTUP" "$ACCEPTED" > r045_round73_browser_result.json
+          printf '{"source_sha":"%s","qa_contract":"R045.73-identity-clipped-full-component-ribbons-v2","chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$GITHUB_SHA" "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$STARTUP" "$ACCEPTED" > r045_round73_browser_result.json
           cat r045_round73_browser_result.json
           kill $(cat /tmp/r73-http.pid) 2>/dev/null || true
           [ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ]
@@ -73,7 +73,7 @@ jobs:
       - name: Verify result provenance before persistence
         if: always()
         run: |
-          node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_qa_result.json'); if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.73-identity-clipped-full-carrier-ribbons-v1') process.exit(3); console.log('provenance ok',q.sourceSha,q.qaContract)"
+          node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_qa_result.json'); if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.73-identity-clipped-full-component-ribbons-v2') process.exit(3); console.log('provenance ok',q.sourceSha,q.qaContract)"
           git fetch origin ${GITHUB_REF_NAME}
           REMOTE=$(git rev-parse origin/${GITHUB_REF_NAME})
           test "$REMOTE" = "$GITHUB_SHA" || { echo "branch moved from $GITHUB_SHA to $REMOTE; refusing stale evidence persistence"; exit 4; }
@@ -87,4 +87,4 @@ jobs:
           git push origin HEAD:${GITHUB_REF_NAME}
       - name: Require authoritative numeric and browser gates
         if: always()
-        run: node -e "const fs=require('fs'),q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_qa_result.json');const p='./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_browser_result.json';const b=fs.existsSync(p)?require(p):{passed:false};if(q.sourceSha!==process.env.GITHUB_SHA||b.source_sha!==process.env.GITHUB_SHA||q.qaContract!=='R045.73-identity-clipped-full-carrier-ribbons-v1'||b.qa_contract!=='R045.73-identity-clipped-full-carrier-ribbons-v1'||!q.passed||!b.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount+'; browser '+b.passed+'; source '+q.sourceSha)"
+        run: node -e "const fs=require('fs'),q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_qa_result.json');const p='./farmland-object-dna/research/r045-autonomous-rebuild/round-73/r045_round73_browser_result.json';const b=fs.existsSync(p)?require(p):{passed:false};if(q.sourceSha!==process.env.GITHUB_SHA||b.source_sha!==process.env.GITHUB_SHA||q.qaContract!=='R045.73-identity-clipped-full-component-ribbons-v2'||b.qa_contract!=='R045.73-identity-clipped-full-component-ribbons-v2'||!q.passed||!b.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount+'; browser '+b.passed+'; source '+q.sourceSha)"
