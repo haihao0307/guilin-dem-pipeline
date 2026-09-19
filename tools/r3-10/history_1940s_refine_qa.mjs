@@ -27,12 +27,17 @@ try{
   check(ds.history1940sRefine==='r28','R28 dataset marker missing');
   check(ds.history1940sTerrainHeightUnchanged==='true','terrain-height invariant dataset marker missing');
   check(!ds.ng51IslandReliefError,`NG51 island relief runtime error: ${ds.ng51IslandReliefError||''}`);
+  check(ir?.schema==='wenzhou-ng51-island-relief-runtime/v2','NG51 canonical island relief v2 missing');
   check(ir?.ready===true,'NG51 canonical island relief missing');
   check(ir?.source==='canonical-dem-r1','NG51 island relief not sourced from canonical DEM');
   check(ir?.sourceSpacingM===12.5&&ir?.runtimeSpacingM===50,'NG51 island relief spacing contract wrong');
   check(ir?.islandHoleCount>=90,'NG51 island relief lost historical island holes');
   check((ir?.islandCells||0)>0&&(ir?.triangles||0)>0,'NG51 island relief produced no geometry');
   check((ir?.baseIslandMaskPixelsCut||0)>0,'200m base island layer was not cut before 50m replacement');
+  check(Number(ir?.buildMs)>0&&Number(ir?.buildMs)<60000,'NG51 island relief build time out of bound');
+  check(Number(ir?.maxScanChunkMs)>=0&&Number(ir?.maxScanChunkMs)<250,'NG51 island scan blocked the main thread too long');
+  check(Number(ir?.maxGeometryChunkMs)>=0&&Number(ir?.maxGeometryChunkMs)<250,'NG51 island geometry blocked the main thread too long');
+  check(String(ir?.replacementPolicy||'').includes('Unsupported island pixels remain on the base layer'),'unsupported island fallback policy missing');
   await page.screenshot({path:`${out}/desktop-refine-r28.png`,fullPage:true});
-  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
+  console.log(JSON.stringify({passed:!failures.length,target,refinement:r,islandRelief:ir,dataset:{history1940sRefine:ds.history1940sRefine,history1940sRefineMask:ds.history1940sRefineMask,history1940sIslandPixelsRestored:ds.history1940sIslandPixelsRestored,history1940sBlurLandGrowthClamped:ds.history1940sBlurLandGrowthClamped,history1940sTerrainHeightUnchanged:ds.history1940sTerrainHeightUnchanged,history1940sXuanmenForcedWaterPixels:ds.history1940sXuanmenForcedWaterPixels,history1940sRefineOsmObjects:ds.history1940sRefineOsmObjects,history1940sRefineRoadHidden:ds.history1940sRefineRoadHidden,ng51IslandReliefBuildMs:ds.ng51IslandReliefBuildMs,osmLoaded:ds.osmLoaded},consoleErrors,failures},null,2));
 }catch(e){const ds=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(c=>({...c.dataset})):{};failures.push(e.stack||String(e));console.log(JSON.stringify({passed:false,target,dataset:ds,consoleErrors,failures},null,2));}finally{await browser.close();}if(failures.length)process.exit(1);
