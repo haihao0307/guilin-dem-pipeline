@@ -5,6 +5,7 @@ const META_URL='./data/bathymetry/ng51-etopo2022-15s.json';
 const DATA_URL='./data/bathymetry/ng51-etopo2022-15s.i16';
 const EXPECTED_SOURCE_SHA='5b46d290694fb0b5019b800334c6eb42157fe4fea0bc0b253c54424db924bb70';
 const BUILD_BUDGET_MS=8;
+const DEPTH_STOPS=[[-240,0x0c2742],[-120,0x164c68],[-60,0x246d7b],[-25,0x3d8b88],[-8,0x68a69a],[0,0x8ab9a2]].map(([h,c])=>[h,new THREE.Color(c)]);
 
 function sha(buffer){
   return crypto.subtle.digest('SHA-256',buffer).then(b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join(''));
@@ -56,10 +57,9 @@ function waterAt(mask,e,n){
   return mask.data[(py*mask.width+px)*4+1]>=128;
 }
 function depthColor(h,out){
-  const stops=[[-240,0x0c2742],[-120,0x164c68],[-60,0x246d7b],[-25,0x3d8b88],[-8,0x68a69a],[0,0x8ab9a2]];
-  const v=Math.min(0,h);let k=1;while(k<stops.length-1&&v>stops[k][0])k++;
-  const a=stops[k-1],b=stops[k],t=THREE.MathUtils.clamp((v-a[0])/(b[0]-a[0]),0,1);
-  return out.setHex(a[1]).lerp(new THREE.Color(b[1]),t);
+  const v=Math.min(0,h);let k=1;while(k<DEPTH_STOPS.length-1&&v>DEPTH_STOPS[k][0])k++;
+  const a=DEPTH_STOPS[k-1],b=DEPTH_STOPS[k],t=THREE.MathUtils.clamp((v-a[0])/(b[0]-a[0]),0,1);
+  return out.copy(a[1]).lerp(b[1],t);
 }
 function makeWaterTexture(info){
   const t=new THREE.CanvasTexture(info.image);
@@ -79,7 +79,7 @@ async function buildGeometry(payload,waterInfo,runIsCurrent){
       positions[vp]=(e-centerE)/1000;positions[vp+1]=(h===noData?0:h)/1000;positions[vp+2]=(centerN-n)/1000;
       depthColor(h===noData?0:h,col);colors[vp]=col.r;colors[vp+1]=col.g;colors[vp+2]=col.b;vp+=3;
       uvs[up]=(e-box[0])/(box[2]-box[0]);uvs[up+1]=(n-box[1])/(box[3]-box[1]);up+=2;
-      if(h!==noData&&waterAt(mask,e,n)){valid[q]=1;validVertices++;}
+      if(h!==noData&&h<=0&&waterAt(mask,e,n)){valid[q]=1;validVertices++;}
     }
     if((r&7)===0){
       const elapsed=performance.now()-chunkStart;maxChunkMs=Math.max(maxChunkMs,elapsed);
@@ -90,7 +90,7 @@ async function buildGeometry(payload,waterInfo,runIsCurrent){
   const maxIndices=(rows-1)*(columns-1)*6,indices=new Uint32Array(maxIndices);let iw=0,waterCells=0;
   for(let r=0;r<rows-1;r++)for(let c=0;c<columns-1;c++){
     const a=r*columns+c,b=a+1,d=(r+1)*columns+c,e=d+1;
-    if(!(valid[a]||valid[b]||valid[d]||valid[e]))continue;
+    if(!(valid[a]&&valid[b]&&valid[d]&&valid[e]))continue;
     indices[iw++]=a;indices[iw++]=d;indices[iw++]=b;indices[iw++]=b;indices[iw++]=d;indices[iw++]=e;waterCells++;
   }
   if(!waterCells)throw Error('NG51 bathymetry 未生成历史海域单元');
@@ -113,7 +113,7 @@ export function installNg51Bathymetry(){
       const waterTexture=makeWaterTexture(waterInfo),material=new THREE.MeshStandardMaterial({alphaMap:waterTexture,alphaTest:.5,vertexColors:true,roughness:1,metalness:0,side:THREE.FrontSide});
       const mesh=new THREE.Mesh(built.geometry,material);mesh.renderOrder=.8;mesh.userData={wenzhouNg51Bathymetry:true,source:'NOAA ETOPO 2022 v1 15 arc-second',sourceCrs:payload.meta.sourceCrs,verticalReference:payload.meta.sourceVerticalReference,truthBoundary:payload.meta.truthBoundary};
       active.scene.add(mesh);layer={mesh,waterTexture};
-      const state={schema:'wenzhou-ng51-bathymetry-runtime/v1',ready:true,patchId:active.patchId,source:payload.meta.source,sourceSha256:payload.meta.sourceSha256,sourceCrs:payload.meta.sourceCrs,sourceVerticalReference:payload.meta.sourceVerticalReference,shape:payload.meta.shape,heightRangeM:payload.meta.heightRangeM,waterCells:built.waterCells,validVertices:built.validVertices,triangles:built.triangles,buildMs:built.buildMs,yieldCount:built.yieldCount,maxChunkMs:built.maxChunkMs,truthBoundary:payload.meta.truthBoundary,role:'derived broad seabed basis under historical water; independent of the dynamic sea surface'};
+      const state={schema:'wenzhou-ng51-bathymetry-runtime/v1',ready:true,patchId:active.patchId,source:payload.meta.source,sourceSha256:payload.meta.sourceSha256,sourceCrs:payload.meta.sourceCrs,sourceVerticalReference:payload.meta.sourceVerticalReference,shape:payload.meta.shape,heightRangeM:payload.meta.heightRangeM,waterCells:built.waterCells,validVertices:built.validVertices,triangles:built.triangles,buildMs:built.buildMs,yieldCount:built.yieldCount,maxChunkMs:built.maxChunkMs,truthBoundary:payload.meta.truthBoundary,cellPolicy:'all four ETOPO corners must be at or below 0 m and inside strict historical water; uncertain shoreline cells remain unrendered',role:'derived broad seabed basis under historical water; independent of the dynamic sea surface'};
       window.__wenzhouNg51Bathymetry=state;const c=canvas();if(c){delete c.dataset.ng51BathymetryError;c.dataset.ng51Bathymetry='true';c.dataset.ng51BathymetryCells=String(built.waterCells);c.dataset.ng51BathymetryTriangles=String(built.triangles);c.dataset.ng51BathymetryBuildMs=String(built.buildMs);}
       window.dispatchEvent(new CustomEvent('wenzhou:ng51-bathymetry-ready',{detail:state}));
     }catch(error){window.__wenzhouNg51Bathymetry={ready:false,error:String(error?.message||error)};const c=canvas();if(c)c.dataset.ng51BathymetryError=String(error?.message||error);console.error(error);}
