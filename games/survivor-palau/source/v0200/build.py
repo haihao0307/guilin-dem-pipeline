@@ -8,8 +8,8 @@ s=base.read_text()
 def replace(a,b):
  global s
  assert s.count(a)==1,(a[:120],s.count(a));s=s.replace(a,b)
-replace("const VERSION='stone-money-island-0.1.6.0-original-ocean'","const VERSION='stone-money-island-0.2.0-shore-survival'")
-replace('<title>Stone Money Island · V0.1.6.0</title>','<title>Stone Money Island — Survivor Palau · Day 1</title>')
+replace("const VERSION='stone-money-island-0.1.6.0-original-ocean'","const VERSION='stone-money-island-0.2.1-beach-contact'")
+replace('<title>Stone Money Island · V0.1.6.0</title>','<title>Stone Money Island — Survivor Palau · V0.2.1</title>')
 replace('</style>','\n'+(HERE/'chapter.css').read_text()+'\n</style>')
 replace('let frozenOcean;','let frozenOcean,survival;')
 replace('const api={qa,prepare,drawSky,drawSea,bindGame,','const api={qa,resetClock:t=>{lastWorldTime=t;seaTime=t;W.reset();W.tick(t);envForce=true;baking=false;},prepare,drawSky,drawSea,bindGame,')
@@ -35,9 +35,10 @@ replace('function updateGlassRects(){','function updateGlassRects(){if(survival)
 s=harden(s)
 pattern=r'const __OM_TEXT__=(\{.*?\});\n'
 a=re.search(pattern,base.read_text(),re.S);b=re.search(pattern,s,re.S);assert a and b and a.group(1)==b.group(1)
-OUT=HERE.parents[1]/'releases/v0.2.0';OUT.mkdir(exist_ok=True,parents=True)
+OUT=HERE.parents[1]/'releases/v0.2.1';OUT.mkdir(exist_ok=True,parents=True)
 (OUT/'index.html').write_text(s)
 for i,script in enumerate(re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)):
  p=OUT/f'.syntax-{i}.mjs';p.write_text(script);subprocess.run(['node','--check',str(p)],check=True);p.unlink()
-receipt={'version':'0.2.0','baseCommit':'9e0780eaff274d5ab606c7c09a99f92bcac045ab','baseSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
-(OUT/'BUILD_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n');print(json.dumps(receipt,ensure_ascii=False,indent=2))
+receipt={'version':'0.2.1','baseCommit':'19960d5d455ca5bb7be66e5ed47ed4b82ecc21bc','baseOceanSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shorelineQuery':'StoneMoneyShoreline.shoreAt uses the same bedHeight and waterLevel as rendering/player contact','candidateBeach':{'radius':36,'beachWidth':16.5,'shelfWidth':34,'regime':'reef-protected lagoon','surveyed':False},'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
+(OUT/'BUILD_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps(receipt,ensure_ascii=False,indent=2))
