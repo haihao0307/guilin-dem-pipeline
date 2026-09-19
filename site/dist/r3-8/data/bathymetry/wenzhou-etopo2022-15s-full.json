@@ -1,0 +1,49 @@
+{
+  "schema": "wenzhou-full-bathymetry-basis/v1",
+  "source": "NOAA ETOPO 2022 v1 15 arc-second surface elevation",
+  "sourceTiles": [
+    {
+      "name": "N30E090",
+      "url": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E090_surface.tif",
+      "sha256": "1137f43b1420917ed5771aa8cd9acbf9060efa73393d4bc422b7aaca84499df5"
+    },
+    {
+      "name": "N30E120",
+      "url": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E120_surface.tif",
+      "sha256": "5b46d290694fb0b5019b800334c6eb42157fe4fea0bc0b253c54424db924bb70"
+    }
+  ],
+  "sourceCrs": "EPSG:9518",
+  "sourceVerticalReference": "EGM2008 height where encoded by EPSG:9518; retained as source metadata and not assumed equal to canonical DEM vertical datum",
+  "role": "derived broad seabed basis over a buffer around the full Wenzhou display domain; not a historical sounding survey or sea-surface datum",
+  "boundsLonLat": [
+    119.5,
+    26.75,
+    123.0,
+    29.5
+  ],
+  "shape": [
+    660,
+    840
+  ],
+  "dtype": "int16-le-m",
+  "noData": -32768,
+  "transform": [
+    0.004166666666666667,
+    0.0,
+    119.5,
+    0.0,
+    -0.004166666666666667,
+    29.5
+  ],
+  "heightRangeM": [
+    -240,
+    1416
+  ],
+  "rawSha256": "3ec172eb5ab3d14ba0b96f5b0f19f7cf2ab5c7e980b1a671410251f185fd3221",
+  "rawBytes": 1108800,
+  "gzipSha256": "335b43bc8f48511ee469141dbe78c48f34a6b7bccb95c500ce0b89e17573e4e4",
+  "gzipBytes": 342506,
+  "displayBoundaryPolicy": "source mosaic is buffered beyond the active terrain window; runtime clips only with the final historical land/water mask, never with this rectangular source boundary",
+  "truthBoundary": "ETOPO supplies broad derived relief only. Historical map controls coastline/islands. Dynamic sea surface remains separate. Uncertain shoreline cells are not rendered."
+}
