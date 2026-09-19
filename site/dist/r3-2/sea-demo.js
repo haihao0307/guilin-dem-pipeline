@@ -2,7 +2,9 @@ import * as THREE from 'three';
 
 const SEA_DISPLAY_DATUM_M = 0;
 const SEA_WAVE_AMPLITUDE_M = 0.22;
-const FLAG = Symbol.for('wenzhou.r3.2.sea-demo-installed');
+const SEA_SURFACE_OPACITY = 0.62;
+const SEA_VISUAL_STYLE = 'low-frequency-cross-ripple-r2';
+const FLAG = Symbol.for('wenzhou.r3.2.sea-demo-r2-installed');
 
 function buildSeaGeometry(box, segments) {
   const minX = box.min.x, maxX = box.max.x, minZ = box.min.z, maxZ = box.max.z;
@@ -41,7 +43,7 @@ function buildSeaMaterial(landMask) {
     uniforms: {
       uLandMask: { value: landMask },
       uTime: { value: 0 },
-      uOpacity: { value: 0.78 }
+      uOpacity: { value: SEA_SURFACE_OPACITY }
     },
     vertexShader: `
       uniform float uTime;
@@ -50,11 +52,10 @@ function buildSeaMaterial(landMask) {
       void main() {
         vUv = uv;
         vec3 p = position;
-        float xm = p.x * 1000.0;
-        float zm = p.z * 1000.0;
-        float w1 = sin(xm * 0.035 + uTime * 0.85) * 0.00012;
-        float w2 = sin(zm * 0.052 - uTime * 0.58) * 0.000065;
-        float w3 = sin((xm + zm) * 0.11 + uTime * 1.25) * 0.000035;
+        const float TAU = 6.28318530718;
+        float w1 = sin((uv.x * 5.0 + uv.y * 2.0) * TAU + uTime * 0.18) * 0.000090;
+        float w2 = sin((uv.x * -3.0 + uv.y * 4.0) * TAU - uTime * 0.13) * 0.000075;
+        float w3 = sin((uv.x * 8.0 + uv.y * 7.0) * TAU + uTime * 0.23) * 0.000055;
         p.y += w1 + w2 + w3;
         vWave = (w1 + w2 + w3) * 1000.0;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -70,13 +71,17 @@ function buildSeaMaterial(landMask) {
         float land = texture2D(uLandMask, vUv).g;
         float sea = 1.0 - land;
         if (sea < 0.5) discard;
-        float shimmer = 0.5 + 0.5 * sin(vUv.x * 1250.0 + vUv.y * 760.0 + uTime * 2.0);
-        float band = clamp(0.5 + vWave * 1.8, 0.0, 1.0);
-        vec3 deep = vec3(0.025, 0.20, 0.29);
-        vec3 mid = vec3(0.05, 0.34, 0.43);
-        vec3 light = vec3(0.20, 0.55, 0.62);
-        vec3 color = mix(deep, mid, 0.45 + band * 0.25);
-        color = mix(color, light, shimmer * 0.08);
+        const float TAU = 6.28318530718;
+        float r1 = sin((vUv.x * 13.0 + vUv.y * 7.0) * TAU + uTime * 0.19);
+        float r2 = sin((vUv.x * -9.0 + vUv.y * 11.0) * TAU - uTime * 0.14);
+        float ripple = 0.5 + 0.25 * r1 + 0.25 * r2;
+        float softGlint = smoothstep(0.72, 0.98, ripple);
+        float band = clamp(0.5 + vWave * 1.35, 0.0, 1.0);
+        vec3 deep = vec3(0.020, 0.185, 0.265);
+        vec3 mid = vec3(0.045, 0.315, 0.390);
+        vec3 light = vec3(0.180, 0.490, 0.525);
+        vec3 color = mix(deep, mid, 0.50 + band * 0.18);
+        color = mix(color, light, softGlint * 0.035);
         gl_FragColor = vec4(color, uOpacity * sea);
       }
     `,
@@ -90,6 +95,13 @@ function isTerrainCandidate(object) {
   return !!(
     object?.isMesh &&
     !object.userData?.wenzhouSeaDemo &&
+    !object.userData?.wenzhouNg51IslandRelief &&
+    !object.userData?.wenzhouNg51Bathymetry &&
+    !object.userData?.wenzhouFullBathymetry &&
+    !object.userData?.wenzhouSurfaceEvidence &&
+    !object.userData?.wenzhouLandcoverEvidence &&
+    !object.userData?.wenzhouSoilContextEvidence &&
+    !object.userData?.wenzhouOsmEvidence &&
     object.material?.alphaMap &&
     object.geometry?.attributes?.uv &&
     object.geometry?.attributes?.position
@@ -110,7 +122,27 @@ export function installSeaDemo() {
     canvas.dataset.seaSurfaceKind = 'demonstration';
     canvas.dataset.seaDisplayDatumM = String(SEA_DISPLAY_DATUM_M);
     canvas.dataset.seaWaveAmplitudeM = String(SEA_WAVE_AMPLITUDE_M);
+    canvas.dataset.seaSurfaceOpacity = String(SEA_SURFACE_OPACITY);
+    canvas.dataset.seaSurfaceVisualStyle = SEA_VISUAL_STYLE;
+    canvas.dataset.seaSurfaceOwnerRole = 'canonical-terrain-candidate';
     canvas.dataset.seaVisible = String(visible);
+  }
+
+  function publishState(terrain, mesh, visible) {
+    window.__wenzhouSeaSurface = {
+      schema: 'wenzhou-sea-surface-display/v2',
+      ready: true,
+      terrainUuid: terrain.uuid,
+      meshUuid: mesh.uuid,
+      ownerRole: 'canonical-terrain-candidate',
+      visualStyle: SEA_VISUAL_STYLE,
+      opacity: SEA_SURFACE_OPACITY,
+      displayDatumM: SEA_DISPLAY_DATUM_M,
+      waveAmplitudeM: SEA_WAVE_AMPLITUDE_M,
+      waveCoordinateSpace: 'normalized-patch-uv',
+      decorativeLayerExclusion: true,
+      visible
+    };
   }
 
   function disposeActive() {
@@ -133,6 +165,8 @@ export function installSeaDemo() {
     mesh.userData.kind = 'demonstration-environment-layer';
     mesh.userData.displayDatumM = SEA_DISPLAY_DATUM_M;
     mesh.userData.waveAmplitudeM = SEA_WAVE_AMPLITUDE_M;
+    mesh.userData.visualStyle = SEA_VISUAL_STYLE;
+    mesh.userData.ownerTerrainUuid = terrain.uuid;
     mesh.renderOrder = 1;
 
     const checkbox = document.getElementById('show-sea');
@@ -151,6 +185,7 @@ export function installSeaDemo() {
     active = layer;
     originalAdd.call(scene, mesh);
     writeCanvasState(mesh.visible);
+    publishState(terrain, mesh, mesh.visible);
 
     mesh.onBeforeRender = (renderer, renderScene, camera) => {
       if (layer.disposed) return;
@@ -193,6 +228,7 @@ export function installSeaDemo() {
       if (active) {
         active.mesh.visible = checkbox.checked;
         writeCanvasState(checkbox.checked);
+        if (window.__wenzhouSeaSurface) window.__wenzhouSeaSurface.visible = checkbox.checked;
         if (active.renderer && active.camera) active.renderer.render(active.scene, active.camera);
       } else {
         writeCanvasState(checkbox.checked);
