@@ -1,0 +1,200 @@
+{
+  "version": "R045.48",
+  "passed": false,
+  "passedCount": 29,
+  "gateCount": 34,
+  "failed": [
+    {
+      "name": "r48_contour_reach_material",
+      "pass": false,
+      "value": {
+        "gains": 1,
+        "cross": 1,
+        "active": 549,
+        "oldActive": 548,
+        "gainGroups": [
+          1,
+          0,
+          0
+        ],
+        "directions": [
+          "NE6<-NE6"
+        ]
+      },
+      "limit": ">=8 supported gains and >=8 new active samples"
+    },
+    {
+      "name": "r48_reach_is_multiscale",
+      "pass": false,
+      "value": {
+        "longReach": 0,
+        "minReach": 16.970562748477143,
+        "maxReach": 16.970562748477143
+      },
+      "limit": ">=2 promotions use >18m frozen support reach and max reach >=24m"
+    },
+    {
+      "name": "r48_curvature_retained",
+      "pass": false,
+      "value": {
+        "curved": 0,
+        "maxTurn": 0.0000012074182697257333,
+        "directions": [
+          "NE6<-NE6"
+        ]
+      },
+      "limit": ">=2 promoted endpoints use a curved support arc"
+    },
+    {
+      "name": "r48_hillside_spread",
+      "pass": false,
+      "value": {
+        "gainSpan": {
+          "x": 0,
+          "z": 0
+        },
+        "gainGroups": [
+          1,
+          0,
+          0
+        ]
+      },
+      "limit": "new support spans >=60m across slope and >=18m vertically"
+    },
+    {
+      "name": "at_least_two_groups_gain",
+      "pass": false,
+      "value": [
+        1,
+        0,
+        0
+      ],
+      "limit": "new reach appears in >=2 terrace families"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 304032,
+    "screenshot_process_clean_exit": true,
+    "render_evidence_present": true,
+    "page_startup_passed": true,
+    "passed": true
+  },
+  "metrics": {
+    "geometry": {
+      "active": 549,
+      "oldActive": 548,
+      "core": 356,
+      "oldCore": 356,
+      "gains": 1,
+      "cross": 1,
+      "curved": 0,
+      "maxTurn": 0.0000012074182697257333,
+      "longReach": 0,
+      "minReach": 16.970562748477143,
+      "maxReach": 16.970562748477143,
+      "unsupported": 0,
+      "unsafe": 0,
+      "maxChange": 0.0272558593628561,
+      "oldMaskChange": 0,
+      "oldDeltaChange": 0,
+      "minAlignment": 0.43183548296430446,
+      "minSecondAlignment": 0.3877196185389894,
+      "groups": [
+        96,
+        229,
+        224
+      ],
+      "gainGroups": [
+        1,
+        0,
+        0
+      ],
+      "gainSpan": {
+        "x": 0,
+        "z": 0
+      },
+      "directions": [
+        "NE6<-NE6"
+      ],
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            10,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "straightRuns": {
+        "new": {
+          "best": 14,
+          "totalStarts": 598,
+          "totalLength": 2196
+        },
+        "prior": {
+          "best": 14,
+          "totalStarts": 596,
+          "totalLength": 2192
+        }
+      }
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "6m full-slope frozen-R47 multiscale contour-reach sweep + exact inherited active/stair surface + drainage/receiver protection + compatible 2-D fragmentation guard"
+  }
+}
