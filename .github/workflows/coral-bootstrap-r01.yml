@@ -1,0 +1,56 @@
+name: Coral Mother R01 Bootstrap
+
+on:
+  push:
+    branches:
+      - work/smi-v0230-coral-habitat-snag-20260918
+    paths:
+      - .coral_bootstrap/**
+      - .github/workflows/coral-bootstrap-r01.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coral-bootstrap-r01
+  cancel-in-progress: true
+
+jobs:
+  materialize-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/smi-v0230-coral-habitat-snag-20260918
+          fetch-depth: 0
+      - name: Reconstruct audited source payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .coral_bootstrap/payload.00
+          test -f .coral_bootstrap/payload.01
+          test -f .coral_bootstrap/payload.02
+          test -f .coral_bootstrap/payload.03
+          cat .coral_bootstrap/payload.00 .coral_bootstrap/payload.01 .coral_bootstrap/payload.02 .coral_bootstrap/payload.03 | base64 -d > /tmp/coral-mother-r01.tar.gz
+          echo 'bf71ed9aa2dc460dd63bafac3bc3c06158513bf8a63a892b0b70e66f3a57ea73  /tmp/coral-mother-r01.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/coral-mother-r01.tar.gz -C .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify same-object contract before commit
+        run: |
+          node --check games/survivor-palau/source/v0230/coral_mother_r01/coral_core.js
+          node games/survivor-palau/source/v0230/coral_mother_r01/coral_core.test.cjs
+          node -e "JSON.parse(require('fs').readFileSync('games/survivor-palau/source/v0230/coral_mother_r01/CORAL_R01_RECEIPT.json','utf8')); JSON.parse(require('fs').readFileSync('games/survivor-palau/source/v0230/coral_mother_r01/presets_r01.kaopu.json','utf8'));"
+      - name: Commit readable Coral Mother source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .coral_bootstrap
+          rm -f .github/workflows/coral-bootstrap-r01.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat(coral): add R01 shared render-hide-line mother object'
+          git push origin HEAD:work/smi-v0230-coral-habitat-snag-20260918
