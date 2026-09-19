@@ -37,10 +37,13 @@ def apply(s: str) -> str:
     rep("qa.shoreline='physical-bed-water-permission-v023';",
         "qa.shoreline='physical-bed-water-permission-v024';")
 
-    # Make the arch read as a real void rather than three small unrelated rocks.
+    # The first V0.2.4 attempt used three large superellipsoid pieces and read
+    # as a rectangular wall from the inspection camera.  Replace it with seven
+    # smaller overlapping karst masses.  Their inner extents leave a real open
+    # void; no alpha cutout or billboard is used to fake an arch.
     rep(
         "const archBed=Math.max(host.bed(186,144),-8);b.rock([176,archBed+13,144],[4.4,15.5,6.2],[.31,.34,.30]);b.rock([196,archBed+14,144],[4.7,16.8,6.4],[.30,.33,.29]);b.rock([186,archBed+27,144],[14.2,3.8,6.1],[.32,.35,.31]);",
-        "const archBed=Math.max(host.bed(186,144),-8);b.rock([174,archBed+17,144],[5.8,20.5,8.0],[.31,.34,.30]);b.rock([198,archBed+18,144],[6.1,21.5,8.3],[.30,.33,.29]);b.rock([186,archBed+34,144],[17.0,5.8,8.1],[.32,.35,.31]);b.rock([168,archBed+4.5,145],[10.0,5.8,10.5],[.30,.33,.29]);b.rock([204,archBed+5.0,145],[10.5,6.2,11.0],[.30,.33,.29]);"
+        "const archBed=Math.max(host.bed(186,144),-8);b.rock([174,archBed+8,144],[5.0,9.5,7.2],[.31,.34,.30]);b.rock([176,archBed+20,144],[4.5,7.5,7.0],[.30,.33,.29]);b.rock([198,archBed+8,144],[5.1,9.8,7.3],[.31,.34,.30]);b.rock([196,archBed+20,144],[4.5,7.5,7.0],[.30,.33,.29]);b.rock([181,archBed+27,144],[6.5,5.3,7.0],[.32,.35,.31]);b.rock([191,archBed+27,144],[6.5,5.3,7.0],[.32,.35,.31]);b.rock([186,archBed+31,144],[7.2,5.0,7.1],[.33,.36,.32]);"
     )
 
     # Background islands behind the arch: they remain separate bodies, so the
@@ -54,9 +57,11 @@ def apply(s: str) -> str:
     # ocean domain.  V0.2.3 exposed the finite water-mesh edge as pale wedges at
     # the lower corners; this camera keeps the playable island and immediate
     # Rock Islands visible without pretending the finite mesh is infinite.
+    # Arch view now looks nearly straight through the void so nearby islands do
+    # not hide the opening.
     rep(
         "if(cameraMode==='aerial'){camera.eye=[0,285,330];camera.target=[0,-8,0];camera.forward=norm(sub(camera.target,camera.eye));camera.right=norm(cross(camera.forward,[0,1,0]));camera.up=cross(camera.right,camera.forward);camera.fov=61*Math.PI/180;host.lookAt(camera.view,camera.eye,camera.target,[0,1,0]);host.perspective(camera.proj,camera.fov,aspect,.15,90000);return true;}",
-        "if(cameraMode==='aerial'){camera.eye=[0,190,240];camera.target=[0,-5,0];camera.forward=norm(sub(camera.target,camera.eye));camera.right=norm(cross(camera.forward,[0,1,0]));camera.up=cross(camera.right,camera.forward);camera.fov=46*Math.PI/180;host.lookAt(camera.view,camera.eye,camera.target,[0,1,0]);host.perspective(camera.proj,camera.fov,aspect,.15,90000);return true;}if(cameraMode==='arch'){camera.eye=[132,42,228];camera.target=[186,18,144];camera.forward=norm(sub(camera.target,camera.eye));camera.right=norm(cross(camera.forward,[0,1,0]));camera.up=cross(camera.right,camera.forward);camera.fov=47*Math.PI/180;host.lookAt(camera.view,camera.eye,camera.target,[0,1,0]);host.perspective(camera.proj,camera.fov,aspect,.15,60000);return true;}"
+        "if(cameraMode==='aerial'){camera.eye=[0,190,240];camera.target=[0,-5,0];camera.forward=norm(sub(camera.target,camera.eye));camera.right=norm(cross(camera.forward,[0,1,0]));camera.up=cross(camera.right,camera.forward);camera.fov=46*Math.PI/180;host.lookAt(camera.view,camera.eye,camera.target,[0,1,0]);host.perspective(camera.proj,camera.fov,aspect,.15,90000);return true;}if(cameraMode==='arch'){camera.eye=[186,34,214];camera.target=[186,14,144];camera.forward=norm(sub(camera.target,camera.eye));camera.right=norm(cross(camera.forward,[0,1,0]));camera.up=cross(camera.right,camera.forward);camera.fov=43*Math.PI/180;host.lookAt(camera.view,camera.eye,camera.target,[0,1,0]);host.perspective(camera.proj,camera.fov,aspect,.15,60000);return true;}"
     )
 
     # Add a direct landmark view without moving the player or changing world
