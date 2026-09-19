@@ -1,9 +1,50 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Stone Money Island｜1944 日军小木船工作台</title><style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101214;color:#edf1f3;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}#app{display:grid;grid-template-columns:300px 1fr;height:100%}aside{padding:15px;background:#171a1d;border-right:1px solid #343a3f;overflow:auto}main{position:relative;min-width:0;background:radial-gradient(circle at 50% 30%,#edf0f1,#c5cbd0);touch-action:none}canvas{width:100%;height:100%;display:block}h1{font-size:18px;margin:0 0 7px}.sub{font-size:12px;line-height:1.5;color:#aab2b8}.tags{margin:9px 0}.tag{display:inline-block;font-size:10px;padding:3px 7px;margin:0 5px 5px 0;border:1px solid #3e454a;border-radius:999px;background:#252a2e}section{border-top:1px solid #2e3438;margin-top:12px;padding-top:11px}h2{font-size:11px;letter-spacing:.08em;margin:0 0 8px;color:#d6dce0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}button{padding:8px 5px;border:1px solid #444c52;border-radius:6px;background:#272d31;color:#f3f5f6;cursor:pointer}button.active{background:#5b4932;border-color:#b99762}.toggle{display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:12px}.row{margin:8px 0}label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}.val{color:#9ed7ff}input[type=range]{width:100%;accent-color:#c6a36a}input[type=checkbox]{accent-color:#c6a36a}.note{font-size:11px;color:#939ca3;line-height:1.45}#hud{position:absolute;left:12px;bottom:12px;padding:9px 11px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(6,8,10,.62);font-size:12px;line-height:1.45;backdrop-filter:blur(5px)}#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#d4d9dc;color:#20262a;z-index:2}#err{display:none;color:#ffd0d0;background:#321e20;border:1px solid #7d4547;border-radius:6px;padding:7px;font-size:11px;margin-top:8px}@media(max-width:720px){#app{grid-template-columns:1fr;grid-template-rows:1fr 230px}main{grid-row:1}aside{grid-row:2;border-right:0;border-top:1px solid #343a3f;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:0 10px}aside>h1,aside>.sub,aside>.tags,aside>#err{grid-column:1/-1}section{margin-top:4px;padding-top:6px}}
-</style></head><body><div id="app"><aside><h1>1944 日军小木船工作台</h1><div class="sub">小型、低舷、平艉、尖首，可乘三至四人。现代舷外机已去掉，换成旧式内置低速发动机、轴传动、三叶桨、艉外舵叶和舵柄；旭日旗位于船头高杆并随风摆动。</div><div class="tags"><span class="tag">STONE MONEY ISLAND</span><span class="tag">1944 PALAU</span><span class="tag">DIRECT WEBGL</span></div><div id="err"></div>
-<section><h2>视角</h2><div class="grid"><button data-v="hero" class="active">总览</button><button data-v="top">俯视</button><button data-v="bow">船头旗杆</button><button data-v="stern">船尾转向</button><button data-v="engine">发动机</button><button data-v="side">侧面</button></div></section>
-<section><h2>显示</h2><div class="toggle"><span>自动转台</span><input id="auto" type="checkbox"></div><div class="toggle"><span>网格地面</span><input id="grid" type="checkbox" checked></div><div class="toggle"><span>结构线检查</span><input id="wire" type="checkbox"></div><div class="toggle"><span>发动机防护盖</span><input id="cover" type="checkbox"></div><div class="toggle"><span>显示旗帜</span><input id="showFlag" type="checkbox" checked></div></section>
-<section><h2>旗帜 / 风</h2><div class="row"><label><span>风速</span><span id="windVal" class="val">0.65</span></label><input id="wind" type="range" min="0" max="1.4" step=".01" value=".65"></div><div class="row"><label><span>旗杆高度</span><span id="poleVal" class="val">1.85 m</span></label><input id="pole" type="range" min="1.25" max="2.35" step=".01" value="1.85"></div></section>
-<section><h2>结构</h2><div class="note">推进：内置低速机＋直轴三叶桨<br>转向：艉外舵叶＋木质舵柄<br>操作：左键旋转，右键平移，滚轮缩放；手机单指旋转、双指缩放。</div></section></aside>
-<main id="view"><div id="loading">正在建立三维船体…</div><canvas id="c"></canvas><div id="hud">左键旋转 · 右键平移 · 滚轮缩放<br><span id="status">启动中</span></div></main></div>
-<script src="core.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Stone Money Island｜1944 日军小木船 3A 工作台</title>
+<style>
+:root{--bg:#0e1114;--panel:#171b1f;--line:#343b41;--text:#eef2f4;--muted:#98a2a9;--accent:#c09a61;--accent2:#8bc5e6;--danger:#d47777}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+#app{display:grid;grid-template-columns:340px 1fr;width:100%;height:100%}
+#panel{background:linear-gradient(180deg,#1b2024,#111417);border-right:1px solid var(--line);padding:16px;overflow:auto;z-index:5;box-shadow:5px 0 24px rgba(0,0,0,.28)}
+#viewport{position:relative;min-width:0;min-height:0;background:radial-gradient(circle at 50% 27%,#e8ecee 0,#cbd1d4 58%,#aeb6bb 100%);touch-action:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+h1{font-size:18px;margin:0 0 7px;letter-spacing:.01em}.sub{font-size:12px;line-height:1.55;color:var(--muted)}
+.tags{margin:10px 0 4px}.tag{display:inline-block;padding:4px 8px;margin:0 5px 5px 0;border:1px solid #3a4248;border-radius:999px;background:#242a2f;font-size:10px;letter-spacing:.04em}
+section{border-top:1px solid #2d3439;margin-top:14px;padding-top:12px}section h2{font-size:11px;letter-spacing:.10em;color:#d7dde1;margin:0 0 9px;text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}button{background:#252c31;color:#f4f6f7;border:1px solid #434c52;border-radius:7px;padding:9px 7px;font-size:12px;cursor:pointer}button:hover{background:#31393f}button.active{background:#5b4931;border-color:#bd9963}
+.toggle{display:flex;align-items:center;justify-content:space-between;margin:9px 0;font-size:12px;color:#d6dce0}input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.row{margin:9px 0}label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#d7dcdf;margin-bottom:5px}.value{color:var(--accent2);min-width:54px;text-align:right;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:var(--accent)}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:4px 0;color:#aeb6bc}.kv b{color:#e2e7ea;text-align:right;font-weight:600}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px}.chip{font-size:10px;border:1px solid #3b4349;border-radius:5px;padding:4px 6px;color:#cbd2d6;background:#22272b}.note{font-size:11px;color:#919ba2;line-height:1.5}
+#hud{position:absolute;left:14px;bottom:14px;z-index:3;background:rgba(7,9,11,.66);border:1px solid rgba(255,255,255,.16);padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;backdrop-filter:blur(7px)}
+#loading{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#dce1e4,#bec6cb);color:#1c252a}.loadbox{width:min(420px,78%);text-align:center}.loadtitle{font-size:15px;font-weight:700;margin-bottom:9px}.bar{height:7px;background:rgba(0,0,0,.15);border-radius:999px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#83643f,#d2ac72);transition:width .18s}.loadmsg{font-size:11px;margin-top:8px;color:#53616a}
+#error{display:none;margin-top:10px;border:1px solid #7d4749;background:#321f21;color:#ffd2d2;border-radius:7px;padding:8px;font-size:11px;line-height:1.45}
+#quality{position:absolute;right:14px;top:14px;z-index:3;background:rgba(13,16,18,.58);border:1px solid rgba(255,255,255,.14);padding:8px 10px;border-radius:8px;font-size:10px;letter-spacing:.05em;color:#e8edef;backdrop-filter:blur(6px)}
+@media(max-width:780px){#app{grid-template-columns:1fr;grid-template-rows:1fr 256px}#viewport{grid-row:1}#panel{grid-row:2;border-right:0;border-top:1px solid var(--line);padding:11px;display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#panel>h1,#panel>.sub,#panel>.tags,#panel>#error{grid-column:1/-1}section{margin-top:6px;padding-top:7px}#quality{display:none}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="app">
+<aside id="panel">
+<h1>1944 日军小木船 3A 工作台</h1>
+<div class="sub">严格保留你提供的原始高精度船体拓扑；只移除现代舷外机与现代标识。新增旧式小型船用发动机、完整轴系、三叶螺旋桨、艉外舵与舵柄，以及船头高位三维布料旗帜。</div>
+<div class="tags"><span class="tag">SOURCE HULL RETAINED</span><span class="tag">PBR</span><span class="tag">1944 PALAU</span><span class="tag">3A INSPECTION</span></div>
+<div id="error"></div>
+<section><h2>Camera</h2><div class="grid2"><button data-view="hero" class="active">总览</button><button data-view="top">俯视</button><button data-view="bow">船头旗杆</button><button data-view="stern">船尾转向</button><button data-view="engine">发动机</button><button data-view="side">侧面轮廓</button></div></section>
+<section><h2>Display</h2><div class="toggle"><span>自动转台</span><input id="autoRotate" type="checkbox"></div><div class="toggle"><span>中性检查地面</span><input id="showGround" type="checkbox" checked></div><div class="toggle"><span>拓扑线框</span><input id="wireframe" type="checkbox"></div><div class="toggle"><span>显示机械系统</span><input id="showMechanics" type="checkbox" checked></div><div class="toggle"><span>显示旗帜</span><input id="showFlag" type="checkbox" checked></div><div class="toggle"><span>发动机运转</span><input id="engineRun" type="checkbox" checked></div></section>
+<section><h2>Steering / Wind</h2><div class="row"><label><span>舵角</span><span id="rudderValue" class="value">0°</span></label><input id="rudder" type="range" min="-28" max="28" step="1" value="0"></div><div class="row"><label><span>风速</span><span id="windValue" class="value">0.62</span></label><input id="wind" type="range" min="0" max="1.35" step="0.01" value="0.62"></div><div class="row"><label><span>旗杆高度</span><span id="poleValue" class="value">1.72 m</span></label><input id="poleHeight" type="range" min="1.42" max="2.08" step="0.01" value="1.72"></div></section>
+<section><h2>Inspection</h2><div class="chips"><span class="chip">原船体拓扑</span><span class="chip">封闭船底</span><span class="chip">旧木 PBR</span><span class="chip">真实轴系</span><span class="chip">65×65 布料网格</span></div><div class="kv"><span>船体</span><b>原 GLB 高精度网格</b></div><div class="kv"><span>发动机</span><b>1930s 小型水冷机</b></div><div class="kv"><span>推进</span><b>联轴器—艉轴—三叶桨</b></div><div class="kv"><span>转向</span><b>舵柄—舵轴—舵叶</b></div><div class="kv"><span>旗帜</span><b>16 光芒真实布料</b></div><div class="note" style="margin-top:8px">鼠标左键旋转，右键平移，滚轮缩放；手机单指旋转、双指缩放。</div></section>
+</aside>
+<main id="viewport">
+<div id="loading"><div class="loadbox"><div class="loadtitle">正在装载原始高精度船体</div><div class="bar"><div id="loadFill" class="fill"></div></div><div id="loadMessage" class="loadmsg">准备 3A 工作台…</div></div></div>
+<canvas id="canvas"></canvas><div id="quality">SOURCE HULL · HIGH DETAIL MECHANICS · PHYSICAL CLOTH</div><div id="hud">左键旋转 · 右键平移 · 滚轮缩放<br><span id="status">启动中</span></div>
+</main>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
