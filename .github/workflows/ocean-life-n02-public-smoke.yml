@@ -8,7 +8,11 @@ on:
       - apps/ocean-life-mother/nature-core/n02/tools/**
       - .github/workflows/ocean-life-n02-public-smoke.yml
 permissions:
-  contents: read
+  contents: write
+  pages: write
+concurrency:
+  group: ocean-life-n02-publication
+  cancel-in-progress: false
 jobs:
   public-smoke:
     runs-on: ubuntu-latest
@@ -28,11 +32,16 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Numeric regression
         run: node apps/ocean-life-mother/nature-core/n02/tools/numerical.cjs
-      - name: Actual public HTTP and WebGL checks
+      - name: Actual WebGL checks on exact candidate before publication
+        run: xvfb-run -a python apps/ocean-life-mother/nature-core/n02/tools/browser_qa.py
+      - name: Add immutable namespace to existing Pages without replacing other sites
         env:
           N02_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python apps/ocean-life-mother/nature-core/n02/tools/publish_pages.py
+      - name: Actual public HTTP and WebGL checks
         run: |
-          URL="https://raw.githack.com/haihao0307/guilin-dem-pipeline/${N02_SHA}/apps/ocean-life-mother/nature-core/n02/index.html"
+          URL=$(python -c "import json; print(json.load(open('apps/ocean-life-mother/nature-core/n02/qa/PAGES_WRITTEN.json'))['url'])")
           xvfb-run -a python apps/ocean-life-mother/nature-core/n02/tools/browser_qa.py --public-url "$URL"
       - uses: actions/upload-artifact@v5
         if: always()
