@@ -27,7 +27,7 @@ try:
     page.goto(URL,wait_until='domcontentloaded',timeout=60000);page.wait_for_function("window.OceanIsland?.qa.ready || document.getElementById('error')?.textContent.trim()",timeout=150000)
     assert not page.locator('#error').inner_text();assert page.evaluate("OceanIsland.qa.ready && StoneMoneySurvival && StoneMoneyShoreline")
     page.locator('#smiStart').click();page.wait_for_function("StoneMoneySurvival.getMode()==='playing'",timeout=25000)
-    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='dissolved-mushroom-rock-island-v028-revealed';assert diag['archPosition']==[210,190];assert diag['archOpening']['nominalMainSpan']>=23.9;assert diag['archOpening']['secondarySeaCave'] is True;assert diag['archMass']['minimumRoofThickness']>=4.9;case['arch']={'position':diag['archPosition'],'opening':diag['archOpening'],'mass':diag['archMass']}
+    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='dissolved-mushroom-rock-island-v028-revealed';assert diag['archPosition']==[96,208];assert diag['archOpening']['nominalMainSpan']>=23.9;assert diag['archOpening']['secondarySeaCave'] is True;assert diag['archMass']['minimumRoofThickness']>=4.9;case['arch']={'position':diag['archPosition'],'opening':diag['archOpening'],'mass':diag['archMass']}
     assert diag['fishWaterViolations']==0
     for mode in ['aerial','arch','fish']:
      case['phase']=mode;save();page.evaluate('(m)=>StoneMoneySurvival.setCameraMode(m)',mode);page.wait_for_timeout(600);assert page.evaluate('StoneMoneySurvival.getCameraMode()')==mode
