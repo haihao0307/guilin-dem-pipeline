@@ -24,10 +24,11 @@ function nodeOrientation(x,z){
  if(Math.abs(dhdn)<.02||Math.abs(dpdn)<1e-4)return 0;
  return Math.sign(dhdn*dpdn)||0;
 }
+function zero(){return{delta:0,requested:0,orientation:0,carrierWeight:0,projected:false}}
 function nodeDeltaAt(x,z){
  const k=keyOf(x,z);if(NODE_CACHE.has(k))return NODE_CACHE.get(k);
- const old=R47.terraceStateAt(x,z),w=R78.r78CarrierWeightAt(x,z);
- if(old.mask<=.48||w<=1e-12||!safe(x,z)){const r={delta:0,requested:0,orientation:0,carrierWeight:0,projected:false};NODE_CACHE.set(k,r);return r}
+ const old=R47.terraceStateAt(x,z);if(old.mask<=.48||!safe(x,z)){const r=zero();NODE_CACHE.set(k,r);return r}
+ const w=R78.r78CarrierWeightAt(x,z);if(w<=1e-12){const r=zero();NODE_CACHE.set(k,r);return r}
  const ori=nodeOrientation(x,z);if(!ori){const r={delta:0,requested:0,orientation:0,carrierWeight:w,projected:false};NODE_CACHE.set(k,r);return r}
  const requested=ADDED_CAP*ori*profileShape(old.frac)*w;
  const r={delta:C(requested,-ADDED_CAP,ADDED_CAP),requested,orientation:ori,carrierWeight:w,projected:false};NODE_CACHE.set(k,r);return r;
