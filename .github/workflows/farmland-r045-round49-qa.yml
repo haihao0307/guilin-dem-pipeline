@@ -21,6 +21,18 @@ jobs:
       - name: Gate numeric QA
         if: always()
         run: node -e "let r=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-49/r045_round49_qa_result.json');console.log(r.passedCount+'/'+r.gateCount);if(!r.passed){for(const c of r.checks.filter(x=>!x.pass))console.error('FAIL',c.name,JSON.stringify(c.value),'limit',c.limit);process.exit(2)}"
+      - name: Persist numeric evidence early
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          P='farmland-object-dna/research/r045-autonomous-rebuild/round-49/r045_round49_qa_result.json'
+          test -f "$P" || exit 0
+          git config user.name 'github-actions[bot]';git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
+          git add "$P"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'farmland R045.49 persist numeric QA [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}
       - name: Build fixed-view audit cache
         if: always()
         shell: bash
@@ -71,12 +83,13 @@ jobs:
             farmland-object-dna/research/r045-autonomous-rebuild/round-49/r045_round49_summary.json
             farmland-object-dna/research/r045-autonomous-rebuild/round-49/r045_round49_audit_cache.mjs
             farmland-object-dna/research/r045-autonomous-rebuild/round-49/r045_round49_fixed_view.png
-      - name: Persist evidence
+      - name: Persist visual evidence
         if: always()
         shell: bash
         run: |
           set -e
           git config user.name 'github-actions[bot]';git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
-          for f in r045_round49_qa_result.json r045_round49_browser_result.json r045_round49_summary.json r045_round49_audit_cache.mjs r045_round49_fixed_view.png; do if [ -f "farmland-object-dna/research/r045-autonomous-rebuild/round-49/$f" ]; then git add "farmland-object-dna/research/r045-autonomous-rebuild/round-49/$f"; fi; done
+          for f in r045_round49_browser_result.json r045_round49_summary.json r045_round49_audit_cache.mjs r045_round49_fixed_view.png; do if [ -f "farmland-object-dna/research/r045-autonomous-rebuild/round-49/$f" ]; then git add "farmland-object-dna/research/r045-autonomous-rebuild/round-49/$f"; fi; done
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'farmland R045.49 persist QA evidence [skip ci]';git push origin HEAD:${GITHUB_REF_NAME}
+          git commit -m 'farmland R045.49 persist visual QA evidence [skip ci]'
+          git push origin HEAD:${GITHUB_REF_NAME}
