@@ -17,6 +17,7 @@ function contourTangent(x,z){const e=2,gx=(R30.height(x+e,z)-R30.height(x-e,z))/
 function segmentSafe(ax,az,bx,bz){for(const t of [0,.25,.5,.75,1])if(safetyAt(ax+(bx-ax)*t,az+(bz-az)*t)<=.10)return false;return true}
 const vdot=(ax,az,bx,bz)=>{const am=Math.hypot(ax,az)||1,bm=Math.hypot(bx,bz)||1;return (ax*bx+az*bz)/(am*bm)};
 const angleDeg=(c)=>Math.acos(C(c,-1,1))*180/Math.PI;
+const NEAR_DIRS=[[6,0],[-6,0],[0,6],[0,-6],[6,6],[6,-6],[-6,6],[-6,-6]];
 
 // R49 fixed the eight-direction aliasing problem: the frozen-R47 support cloud produced real curved, long-span,
 // safely separated support and passed 33/34 gates. But only 3 cells crossed the activity threshold. The cause
@@ -28,7 +29,13 @@ const angleDeg=(c)=>Math.acos(C(c,-1,1))*180/Math.PI;
 export function contourFrontSupportAt(x,z){
  const ck=keyOf(x,z);if(SUPPORT_CACHE.has(ck))return SUPPORT_CACHE.get(ck);
  const base=r47At(x,z);if(base.mask>ACTIVE||base.groupIndex<0||safetyAt(x,z)<=.10){SUPPORT_CACHE.set(ck,null);return null}
- const tan0=contourTangent(x,z),supports=[];
+ const tan0=contourTangent(x,z);
+ // Exact semantic prefilter: every valid R50 pair must contain a <=8.6 m frozen support. Rejecting candidates
+ // without such a neighbor avoids the expensive 24 m cloud scan but does not change which candidates can pass.
+ let hasAdjacent=false;
+ for(const [dx,dz] of NEAR_DIRS){const dist=Math.hypot(dx,dz),qx=x+dx,qz=z+dz,q=r47At(qx,qz);if(q.mask<=ACTIVE||!compatible(base,q))continue;const align=Math.abs((dx*tan0.tx+dz*tan0.tz)/dist);if(align<.34||!segmentSafe(x,z,qx,qz))continue;hasAdjacent=true;break}
+ if(!hasAdjacent){SUPPORT_CACHE.set(ck,null);return null}
+ const supports=[];
  for(let dx=-24;dx<=24;dx+=6)for(let dz=-24;dz<=24;dz+=6){
   if(dx===0&&dz===0)continue;const dist=Math.hypot(dx,dz);if(dist<5.9||dist>30.1)continue;
   const qx=x+dx,qz=z+dz,q=r47At(qx,qz);if(q.mask<=ACTIVE||!compatible(base,q)||!segmentSafe(x,z,qx,qz))continue;
@@ -66,7 +73,7 @@ export function suitability(x,z){return R30.suitability(x,z)}
 
 export const snapshot={...R47.snapshot,version:VERSION,visualAcceptance:false,browserQA:false,productionReady:false,parcelGenerationEnabled:false,terraceGeometryEnabled:true,terracePilotPreviewEnabled:true,waterStateKnown:false,round50:{
  scope:'remove R49 inherited-positive-mask bottleneck while requiring every zero/weak candidate to touch frozen R47 active support and a second longer contour support; keep inherited terrain, riser amplitude and drainage separators exact',
- method:'start from accepted R47, not failed R48/R49 geometry. A non-active same-family/stair-compatible candidate may be promoted even when its inherited mask is exactly zero, but only if one frozen R47 active support lies within one 6 m/diagonal audit step, a second frozen R47 support establishes the contour direction at >=12 m reach, both full segments clear quarter-sampled agricultural/drainage/receiver safety, and the support pair satisfies same-side extension or opposite-side short-bridge geometry. R50 promotions never seed R50.',
+ method:'start from accepted R47, not failed R48/R49 geometry. A non-active same-family/stair-compatible candidate may be promoted even when its inherited mask is exactly zero, but only if one frozen R47 active support lies within one 6 m/diagonal audit step, a second frozen R47 support establishes the contour direction at >=12 m reach, both full segments clear quarter-sampled agricultural/drainage/receiver safety, and the support pair satisfies same-side extension or opposite-side short-bridge geometry. R50 promotions never seed R50. An exact adjacent-support prefilter skips cloud scans only when no valid R50 pair can exist.',
  logicCorrection:'R49 passed curvature, long-span, spread, safety and browser gates but produced only 3 threshold crossings because it required inherited mask >0.004. Treating that procedural residue as evidence was a false constraint; lowering the materiality QA would instead hide the failure. R50 removes the residue but adds an adjacency requirement so newly activated cells remain attached to frozen accepted terrain rather than creating isolated fragments.',
  constraint:'the 6 m audit lattice, 24 m support window, 0.34 tangent gate, one-step frozen adjacency, support-pair rules, stair tolerances and 12 m hard drainage core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions. Current 12.5 m macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations, hydraulic connectivity, water head/depth/discharge/gate states or event water-management records.',
  xiaomaBoundary:'Xiaoma/TLO remains binding: geometric continuity, adjacency, a longer contour ribbon or conservation do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state without field-scale evidence.',
