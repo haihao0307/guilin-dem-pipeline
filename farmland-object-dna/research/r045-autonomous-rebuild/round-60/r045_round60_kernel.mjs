@@ -9,13 +9,10 @@ const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const ACTIVE=.12, SHOULDER=.075;
 const CACHE=new Map();
 const keyOf=(x,z)=>`${Number(x).toFixed(4)},${Number(z).toFixed(4)}`;
-// d values below are lattice-axis step magnitudes, not physical metres for diagonals. Physical distances are
-// computed explicitly with hypot() and are the only values used by QA/reporting.
 const DIRS=[[1,0,'E'],[-1,0,'W'],[0,1,'S'],[0,-1,'N'],[1,1,'SE'],[-1,-1,'NW'],[1,-1,'NE'],[-1,1,'SW']];
 const FIRST=[6,12,18,24];
 const SECOND=[6,12,18];
 const vdot=(ax,az,bx,bz)=>{const am=Math.hypot(ax,az)||1,bm=Math.hypot(bx,bz)||1;return (ax*bx+az*bz)/(am*bm)};
-
 function compatible(a,b){if(a.groupIndex!==b.groupIndex)return false;const step=.5*(a.step+b.step);return Math.abs(a.step-b.step)<=Math.max(.22,.30*step)&&Math.abs(a.index-b.index)<=4}
 function foregroundClearance(x,z){const gap=Math.abs(z-R30.riverZ(x));return S(R30.riverW(x)+18,R30.riverW(x)+44,gap)}
 function safetyAt(x,z){const dd=R30.nearestExtendedDrainageDistance(x,z);if(dd<=12)return 0;const broad=R35.broadTerraceEligibility(x,z),group=R35.terraceGroupEnvelope(x,z),drain=R35.terraceDrainageClearance(x,z),river=foregroundClearance(x,z);if(broad<.03||group<.035||drain<=.035||river<=.035)return 0;return Math.min(.52+.48*C((broad-.03)/.24,0,1),.52+.48*C((group-.035)/.30,0,1),.46+.54*C((drain-.035)/.58,0,1),.46+.54*C((river-.035)/.58,0,1))}
@@ -23,33 +20,30 @@ function contourTangent(x,z){const e=2,gx=(R30.height(x+e,z)-R30.height(x-e,z))/
 function aligned(x,z,dx,dz,min=.42){const t=contourTangent(x,z),m=Math.hypot(dx,dz)||1;return Math.abs((dx*t.tx+dz*t.tz)/m)>=min}
 function segmentSafe(ax,az,bx,bz){const len=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.ceil(len/3));for(let i=0;i<=n;i++){const t=i/n;if(safetyAt(ax+(bx-ax)*t,az+(bz-az)*t)<=.10)return false}return true}
 
-// R59 proved an important negative: an opposed-support bridge search produced zero changes. The first R60
-// attempt then proved the endpoint diagnosis but remained under-material (4 promotions vs the fixed >=8 gate).
-// Inspection showed that requiring BOTH inward frozen supports to exceed the active threshold discarded valid
-// frozen endpoint shoulders. R60 now requires a monotone frozen run instead: q1 must be a materially stronger
-// inherited R58 shoulder and q2 behind it must be active. This still cannot recurse, cannot cross drainage, and
-// cannot use an R60-created cell as evidence. It therefore extends a pre-existing contour run rather than growing
-// a free morphology. Browser success and cell count remain insufficient on their own; topology/run QA stays hard.
+// R59 rendered but changed zero terrace cells. The first R60 attempt then found four safe endpoint cells but
+// failed the unchanged materiality gate. The revised run follows a frozen monotone support gradient: q1 may be
+// an inherited R58 shoulder materially stronger than the candidate, while q2 behind it must be ACTIVE. All
+// evidence remains frozen R58, so new R60 cells cannot recursively seed themselves.
 export function contourRunSupportAt(x,z){
  const base=R58.terraceStateAt(x,z);if(base.mask>ACTIVE||base.mask<=.001||safetyAt(x,z)<=.10)return null;
  let best=null;
  for(const [ux,uz,name] of DIRS){
    const ulen=Math.hypot(ux,uz);if(!aligned(x,z,ux,uz,.38))continue;
-   for(const d1 of FIRST){
-     const q1x=x-ux*d1,q1z=z-uz*d1,q1=R58.terraceStateAt(q1x,q1z);
+   for(const d1AxisStep of FIRST){
+     const q1x=x-ux*d1AxisStep,q1z=z-uz*d1AxisStep,q1=R58.terraceStateAt(q1x,q1z);
      if(q1.mask<=Math.max(SHOULDER,base.mask+.012)||!compatible(base,q1)||!segmentSafe(x,z,q1x,q1z))continue;
      if(!aligned(q1x,q1z,ux,uz,.34))continue;
      for(const [vx,vz,name2] of DIRS){
        const turn=vdot(ux,uz,vx,vz);if(turn<.70)continue;
        const vlen=Math.hypot(vx,vz);
-       for(const d2 of SECOND){
-         const q2x=q1x-vx*d2,q2z=q1z-vz*d2,q2=R58.terraceStateAt(q2x,q2z);
+       for(const d2AxisStep of SECOND){
+         const q2x=q1x-vx*d2AxisStep,q2z=q1z-vz*d2AxisStep,q2=R58.terraceStateAt(q2x,q2z);
          if(q2.mask<=ACTIVE||!compatible(base,q2)||!compatible(q1,q2)||!segmentSafe(q1x,q1z,q2x,q2z))continue;
          if(!aligned(q2x,q2z,vx,vz,.30))continue;
-         const firstDistance=d1*ulen,secondDistance=d2*vlen,spanDistance=firstDistance+secondDistance;
+         const firstDistance=d1AxisStep*ulen,secondDistance=d2AxisStep*vlen,spanDistance=firstDistance+secondDistance;
          const turnDeg=Math.acos(C(turn,-1,1))*180/Math.PI,source=Math.min(q1.mask,q2.mask),forwardCells=firstDistance/6;
          const score=.026*spanDistance+.30*source+.18*safetyAt(x,z)+.10*forwardCells-.002*turnDeg;
-         if(!best||score>best.score)best={mode:'frozen-r58-contour-endpoint-shoulder-to-active-anchor',direction:`${name}<-${name2}`,d1AxisStep:d1,d2AxisStep:d2,firstDistance,secondDistance,spanDistance,forwardCells,turnDeg,score,groupIndex:base.groupIndex,sourceMasks:[q1.mask,q2.mask],sourceIndices:[q1.index,q2.index],safety:safetyAt(x,z)};
+         if(!best||score>best.score)best={mode:'frozen-r58-contour-endpoint-shoulder-to-active-anchor',direction:`${name}<-${name2}`,d1AxisStep,d2AxisStep,firstDistance,secondDistance,spanDistance,d1:firstDistance,d2:secondDistance,span:spanDistance,forwardCells,turnDeg,score,groupIndex:base.groupIndex,sourceMasks:[q1.mask,q2.mask],sourceIndices:[q1.index,q2.index],safety:safetyAt(x,z)};
        }
      }
    }
