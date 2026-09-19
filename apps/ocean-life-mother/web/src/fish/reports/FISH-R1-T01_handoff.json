@@ -1,0 +1,70 @@
+{
+  "schema": "fish-mother.task-handoff/1.0",
+  "taskId": "FISH-R1-T01",
+  "date": "2026-09-19",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "instructionCommit": "c4b634bd9ca5a84335ea57ce1b092ec9ee5e15b4",
+  "cleanBranch": "handoff/ocean-life-fish-mother-clean-r02-20260919",
+  "cleanHead": "11970757e0233f31446ed399257de1dd4bdf1c00",
+  "target": {
+    "referenceId": "FISH-REF-001",
+    "label": "Largemouth Bass",
+    "selectedDefect": "head-mouth structural relationship; source binding for jaw/mouth/orbit relationship",
+    "defectVerification": "blocked_missing_native_source_and_reference_bytes"
+  },
+  "inputGates": {
+    "nativeSource": {
+      "status": "fail",
+      "missing": [
+        "apps/ocean-life-mother/web/src/fish/renderers/blackBassFish.js",
+        "apps/ocean-life-mother/web/src/fish/styles.css",
+        "apps/ocean-life-mother/web/src/fish/main.js",
+        "apps/ocean-life-mother/docs/species-geometry-cards/black-bass-card-r1.md"
+      ]
+    },
+    "reference": {
+      "status": "fail",
+      "requiredSha256": "c1b964b34e80e8534b7801c496576d6a594938d217b4f763b35d04a922b3ee64",
+      "rawBytesMounted": false,
+      "fallbackEvidenceMounted": false
+    },
+    "runtime": {
+      "status": "partial_fail",
+      "entryHttp": 200,
+      "entryBytes": 3998,
+      "firstRequiredDependency": "r00/payload/payload-00.txt",
+      "firstRequiredDependencyHttp": 404,
+      "managedChromium": "ERR_BLOCKED_BY_ADMINISTRATOR"
+    }
+  },
+  "uploadedPackage": {
+    "path": "/mnt/data/OCEAN_LIFE_FISH_MOTHER_FULL_PACKAGE.zip",
+    "sha256": "c13d4ffd024ce5b73b63fd9e3e45fb945f2184d3acbd29240d2dedc1c808940d",
+    "entries": [
+      {
+        "name": "OCEAN_LIFE_FISH_MOTHER_FULL_HANDOFF.md",
+        "bytes": 26553,
+        "sha256": "a218b4c2a55ce7effc8a4096844bbcf5a74a68eab59d49cccda492f6b407c5f4"
+      }
+    ],
+    "containsNativeSource": false,
+    "containsReferenceBinary": false,
+    "containsRunnableDependencies": false
+  },
+  "cleanupDisposition": {
+    "keep": ["R00", "R01", "R02", "Bird", "handoff records", "reference indexes", "failure evidence", "other Mothers"],
+    "rejectedExclude": ["OLM-N02 toy-fish route and publication path"],
+    "archiveReference": ["legacy FISH-REF-001 intake evidence", "R03 study evidence"],
+    "deleted": []
+  },
+  "results": {
+    "code": "blocked_no_mutation",
+    "numeric": "not_run",
+    "visual": "not_produced",
+    "userAcceptance": "not_requested",
+    "publication": "not_attempted"
+  },
+  "nextMigrationTargetPreserved": "FISH-REF-002 tuna",
+  "completionClaim": false,
+  "productionReady": false
+}
