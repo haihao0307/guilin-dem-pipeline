@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>Coral Mother R02｜Functional Growth Field</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<canvas id="gl" aria-label="Coral Mother 3D Workbench"></canvas>
+
+<section id="mast" class="glass">
+  <div class="eyebrow">KAOPU · CORAL MOTHER / R02</div>
+  <h1>函数生长珊瑚母体</h1>
+  <p>上传模型只作为形体证据；珊瑚由生长前沿、营养／流场、空间竞争和 Microscope 表面函数共同生成。渲染、鱼躲藏与钓线接触仍读取同一个对象。</p>
+  <div id="identity">
+    <b>对象</b><span id="objectId">building…</span>
+    <b>形态</b><span id="morphName">桌面型</span>
+    <b>共同来源</b><span id="identityPass">render = fish hide = line contact</span>
+  </div>
+</section>
+
+<aside id="panel" class="glass">
+  <div class="section">
+    <div class="label">Morphology / 结构母体</div>
+    <div class="row" id="morphButtons">
+      <button class="active" data-morph="table">桌面型</button>
+      <button data-morph="staghorn">鹿角型</button>
+      <button data-morph="fan">扇型</button>
+      <button data-morph="cauliflower">菜花型</button>
+      <button data-morph="brain">脑纹型</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="label">Shared interactions / 同一对象交互</div>
+    <div class="row">
+      <button id="hideFish" class="cyan">鱼群躲藏</button>
+      <button id="roamFish">恢复游动</button>
+      <button id="castLine" class="warn">抛线接触</button>
+      <button id="releaseLine">释放钓线</button>
+    </div>
+    <div class="note"><strong>“相同对象”</strong>指相同 objectId、生成定义和空间状态。渲染网格、鱼可达点与钓线碰撞代理是同一对象的派生读数，不强迫三者使用同一组三角面。</div>
+  </div>
+
+  <div class="section">
+    <div class="label">Growth fields / 生长环境</div>
+    <label class="slider"><span>营养通量</span><input id="nutrient" type="range" min="0.45" max="1.55" step="0.01" value="1.00"><output>1.00</output></label>
+    <label class="slider"><span>流场偏置</span><input id="current" type="range" min="0" max="1.5" step="0.01" value="0.72"><output>0.72</output></label>
+    <label class="slider"><span>分枝压力</span><input id="density" type="range" min="0.55" max="1.45" step="0.01" value="1.00"><output>1.00</output></label>
+    <label class="slider"><span>Microscope</span><input id="roughness" type="range" min="0" max="1.4" step="0.01" value="0.68"><output>0.68</output></label>
+    <label class="slider"><span>生长年龄</span><input id="age" type="range" min="0.62" max="1.45" step="0.01" value="1.00"><output>1.00</output></label>
+    <div class="note"><strong>边界：</strong>营养、流场与空间竞争决定大形；Microscope 只在既有骨架薄壳中改变真实几何。不会把普通噪声或颜色当成珊瑚生长。</div>
+  </div>
+
+  <div class="section">
+    <div class="label">Inspection / 检查</div>
+    <div class="row">
+      <button id="debug">显示交互骨架</button>
+      <button id="viewClose">近景</button>
+      <button id="viewHabitat">栖息全景</button>
+      <button id="viewTop">俯视</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="label">Runtime telemetry</div>
+    <div id="telemetry">
+      <span class="k">Render source</span><span class="v ok" id="tRender">—</span>
+      <span class="k">Fish hide source</span><span class="v ok" id="tFish">—</span>
+      <span class="k">Line query source</span><span class="v ok" id="tLine">—</span>
+      <span class="k">Growth kernel</span><span class="v" id="tKernel">—</span>
+      <span class="k">Graph nodes</span><span class="v" id="tNodes">0</span>
+      <span class="k">Graph edges</span><span class="v" id="tEdges">0</span>
+      <span class="k">Reference files</span><span class="v">7 audited</span>
+      <span class="k">Hide nodes</span><span class="v" id="tHide">0</span>
+      <span class="k">Collision probes</span><span class="v" id="tProbe">0</span>
+      <span class="k">Visible triangles</span><span class="v" id="tTri">0</span>
+      <span class="k">Line state</span><span class="v hot" id="tLineState">idle</span>
+      <span class="k">Fish state</span><span class="v" id="tFishState">roaming</span>
+      <span class="k">FPS</span><span class="v" id="tFps">—</span>
+      <span class="k">Traditional LOD</span><span class="v ok">disabled</span>
+    </div>
+  </div>
+  <div class="section">
+    <details>
+      <summary class="label" style="cursor:pointer">Reference audit / 上传样板结论</summary>
+      <div class="note" style="margin-top:8px">
+        <b>形体真值：</b>红珊瑚样本用于分枝图；扇珊瑚用于近平面分枝；Whitsundays 群落用于群落覆盖与遮蔽；三组彩色礁体用于组合密度和色彩分区。<br>
+        <b>排除：</b>Pond Weed 属柔性水草；不进入刚性钙化珊瑚骨架。高面数礁体与装饰性组合不能直接当单体物种真值。<br><b>算法分工：</b>鹿角／扇形／菜花使用营养—流场—竞争驱动的生长尖端图；桌面使用增生前沿，脑纹使用闭合体 level set 与 Gray–Scott 表面场。它们共享环境与对象合同，不强迫共用一条形态方程。<br><b>外部链接：</b>Vargov LC0089 只作为礁体组合层次参考，未抓取或导入其几何。<br><b>许可边界：</b>红珊瑚样本内置 metadata 标记 CC-BY-NC-4.0；本工作台只读取结构统计，不包含或再分发该网格。
+      </div>
+    </details>
+  </div>
+</aside>
+
+<footer id="bottom" class="glass">
+  <span class="badge">可见形体 <b>1 object</b></span>
+  <span class="badge">鱼躲藏 <b>same object</b></span>
+  <span class="badge">钓线接触 <b>same object</b></span>
+  <span class="badge">外部模型 / 贴图 <b>0</b></span>
+  <span id="event">拖动旋转 · 滚轮缩放 · 点击海床可改变抛线方向</span>
+</footer>
+
+<div id="loading"><div class="box glass"><div class="orb"></div><b>建立 Coral Habitat Object</b><span>生成形体、遮蔽点、碰撞代理与可测试关系……</span></div></div>
+<pre id="error"></pre>
+
+<script src="./coral.js"></script>
+</body>
+</html>
