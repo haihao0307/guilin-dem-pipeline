@@ -1,4 +1,4 @@
-"""Real-browser gate for Stone Money Island V0.2.6."""
+"""Real-browser gate for screenshot-corrected Stone Money Island V0.2.6."""
 from __future__ import annotations
 from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
@@ -47,9 +47,9 @@ with sync_playwright() as p:
    life=page.evaluate("""() => {const g=StoneMoneySurvival,d=g.diagnostics(),fish=g.getFish().filter(f=>f.state==='swimming'),rai=g.getDefinitions().find(x=>x.type==='rai');return {diag:d,rai,fish:fish.length,submerged:fish.filter(f=>f.submerged).length};}""")
    assert life['rai'] and life['rai']['x']==-178 and life['rai']['z']==104
    assert life['diag']['fishWaterViolations']==0 and life['submerged']>0
-   assert life['diag']['archGeometry']=='asymmetric-vegetated-eroded-ridge-v026'
-   assert abs(life['diag']['archOpening']['span']-31.2)<.01 and abs(life['diag']['archOpening']['height']-21.0)<.01
-   assert life['diag']['archOpening']['tidalUndercut'] is True and life['diag']['archOpening']['asymmetric'] is True
+   assert life['diag']['archGeometry']=='offcenter-mushroom-rock-island-v026b'
+   assert abs(life['diag']['archOpening']['waterlineSpan']-18.1)<.01 and abs(life['diag']['archOpening']['nominalSectionSpan']-22.05)<.01 and abs(life['diag']['archOpening']['height']-23.3)<.01
+   assert life['diag']['archOpening']['tidalUndercut'] is True and life['diag']['archOpening']['asymmetric'] is True and life['diag']['archOpening']['offCenter'] is True
    case['life']=life
 
    for mode in ['aerial','arch','fish']:
@@ -61,7 +61,7 @@ with sync_playwright() as p:
     if name=='desktop' and mode=='aerial':
      left=pale(shot,(0,270,40,370));right=pale(shot,(920,270,960,370));case['aerialPaleEdgeFraction']={'left':left,'right':right};assert left<.25 and right<.25
     if name=='desktop' and mode=='arch':
-     cf=chroma(shot,(405,195,555,355));nf=neutral(shot,(330,125,630,315));gf=green(shot,(300,85,660,210));case['archImageMetrics']={'openingChroma':cf,'upperNeutral':nf,'crownGreen':gf};assert cf>.16,cf;assert nf<.78,nf;assert gf>.015,gf
+     cf=chroma(shot,(410,205,560,375));nf=neutral(shot,(300,105,680,330));gf=green(shot,(270,55,700,235));case['archImageMetrics']={'openingChroma':cf,'upperNeutral':nf,'crownGreen':gf};assert cf>.15,cf;assert nf<.76,nf;assert gf>.02,gf
 
    if name=='mobile':
     for sel in ['#smiJoy','#smiPrimary','#smiAerial','#smiArchView','#smiFishView']:
