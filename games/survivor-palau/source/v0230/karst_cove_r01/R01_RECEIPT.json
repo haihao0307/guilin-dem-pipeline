@@ -1,0 +1,82 @@
+{
+  "id": "SMI-KARST-COVE-R01-20260919",
+  "issue": 96,
+  "baseBranch": "work/smi-v0230-game-fishing-loop-20260918",
+  "baseCommit": "c07eec73616f613acde90881ac642b0972f12391",
+  "candidateBranch": "work/smi-karst-cove-r01-20260919",
+  "implementationHeadBeforeReceipt": "1c599d031b8c545ca475c74c24d5f26bb451fe54",
+  "sourceInputs": {
+    "authoredShelter": "games/survivor-palau/source/v0200/chapter.js@c07eec73616f613acde90881ac642b0972f12391",
+    "g05": "docs/mother_coordination/kaopu_learning_flywheel_v1/HANDOFFS/2026-09-18/GAME_LIVING_ISLAND_G05.md@cafd0b75d4891e3f7a96da92219979e17d38ff35"
+  },
+  "sourceFrameObserved": {
+    "solidSlabBoundsMetres": {"min": [22.8, 1.0, 9.1], "max": [31.2, 5.68, 18.5]},
+    "raisedGroundPatch": {"x": [23.3, 30.7], "z": [9.7, 18.1], "minY": 1.35},
+    "playerXZ": [24.0, 22.8],
+    "shelterXZ": [25.2, 12.1]
+  },
+  "firstExecutedBaseline": {
+    "runtime": "Node.js v22.16.0",
+    "attempt1Exit": 1,
+    "attempt1Failure": "local audit script reduce callback returned the mapped array instead of the accumulator; TypeError reading b.min. This was a temporary audit-script bug, not a repository defect.",
+    "attempt2Exit": 0,
+    "attempt2Result": "Recovered the existing authored slab and ground-patch bounds recorded above."
+  },
+  "implementation": {
+    "fieldId": "SMI_KARST_COVE_R01",
+    "units": "metre",
+    "kind": "implicit occupancy score; positive=rock, negative=void/outside",
+    "exactSignedDistanceClaimed": false,
+    "sharedConsumers": ["diagnostic mesh", "contact probes", "finite-difference normals", "ray occlusion"],
+    "shapeFeatures": ["open entrance", "widened lower cavity", "narrower high shoulder", "roof overhang", "closed back", "non-solid interior"]
+  },
+  "executedTest": {
+    "command": "node /mnt/data/karst_cove_r01/karst_cove.test.cjs",
+    "runtime": "Node.js v22.16.0",
+    "exitCode": 0,
+    "passed": 14,
+    "failed": 0,
+    "localDiagnosticMesh": {"stepMetres": 0.30, "triangles": 11824, "vertices": 23648, "sha256": "23f7f25f442a53e451b6f98e1ae2110305f3f24cd8c46c8e33b542d2770a0589"},
+    "determinismProbeMesh": {"stepMetres": 0.42, "triangles": 6000, "sha256": "961fd58c8494aa44e502b836c49446c42ee8ee3f27acbde8770d6ff31d89dcb6"},
+    "gates": [
+      "candidate evidence metadata",
+      "non-solid body-height interior",
+      "rock side/back classification",
+      "standing entrance clearance",
+      "roof overhang contact",
+      "open entrance ray",
+      "blocked lateral ray",
+      "blocked roof ray",
+      "finite unit normals",
+      "outside classification",
+      "floor below open cavity",
+      "deterministic scalar queries",
+      "deterministic same-field diagnostic mesh",
+      "invalid numeric input rejection"
+    ]
+  },
+  "browserAttempt": {
+    "page": "games/survivor-palau/source/v0230/karst_cove_r01/diagnostic.html",
+    "server": "python3 -m http.server 8765 --bind 127.0.0.1",
+    "browser": "/usr/bin/chromium",
+    "desktopAttempt": "1365x768",
+    "mobileAttempt": "390x844",
+    "result": "BLOCKED_IN_CURRENT_RUNTIME",
+    "symptom": "Chromium could not initialize an EGL/ANGLE display; GPU process exited during initialization. Headless screenshot attempts timed out and no valid screenshot was produced.",
+    "representativeErrors": ["xcb_connect() failed", "eglInitialize SwANGLE failed with EGL_NOT_INITIALIZED", "Initialization of all EGL display types failed"],
+    "screenshotsProduced": false
+  },
+  "knownLimitations": [
+    "The dimensions are authored candidates in the existing shelter coordinate frame, not measured Palau cave geometry.",
+    "The scalar field is not a verified metric signed-distance field, so ray/contact routines use bounded sampling rather than sphere tracing.",
+    "The diagnostic mesh is voxel-boundary inspection topology, not production topology and not integrated into the shipped game.",
+    "The current game still uses the older slab shelter until a separate integration change is reviewed; this task did not modify chapter.js or the production entry.",
+    "No desktop/mobile visual evidence exists because the current Chromium runtime could not initialize WebGL/EGL.",
+    "No public deployment, physical-device test or user visual acceptance is claimed."
+  ],
+  "sceneIntegrated": false,
+  "visualAcceptance": false,
+  "physicalDeviceTest": false,
+  "productionReady": false,
+  "nextSingleGate": "Integrate this same field behind the existing shelter interface without touching global terrain/Ocean, then run a real-browser A/B on a runtime with working WebGL and verify the player can enter the mouth, stand inside, contact the roof/walls and receive the same occlusion as the rendered rock."
+}
