@@ -19,7 +19,10 @@ for(const p of samples.values()){
 }
 const mean=a=>a.reduce((s,v)=>s+v,0)/(a.length||1),quant=(a,q)=>{if(!a.length)return 0;const b=[...a].sort((x,y)=>x-y),i=(b.length-1)*q,l=Math.floor(i),h=Math.ceil(i);return b[l]+(b[h]-b[l])*(i-l)};
 const riserMean=mean(riserAbs),benchMean=mean(benchAbs),benchMax=benchAbs.length?Math.max(...benchAbs):0,concentration=riserMean/Math.max(1e-9,benchMean);
-let maxInc=0,maxIncAt=null;for(const p of samples.values()){const c=K.terraceDelta(p.x,p.z);for(const[xx,zz]of[[p.x+3,p.z],[p.x-3,p.z],[p.x,p.z+3],[p.x,p.z-3]]){const inc=Math.abs(K.terraceDelta(xx,zz)-c);if(inc>maxInc){maxInc=inc;maxIncAt={x:p.x,z:p.z,xx,zz,inc}}}}
+// Authoritative local safety domain is exactly the accepted 6 m carrier nodes and
+// their four rendered 3 m cardinal neighbours. Checking every midpoint again as a
+// new centre only expands the domain to 1.5 m pairs that this round does not claim.
+let maxInc=0,maxIncAt=null;for(const p of cand){const c=K.terraceDelta(p.x,p.z);for(const[xx,zz]of[[p.x+3,p.z],[p.x-3,p.z],[p.x,p.z+3],[p.x,p.z-3]]){const inc=Math.abs(K.terraceDelta(xx,zz)-c);if(inc>maxInc){maxInc=inc;maxIncAt={x:p.x,z:p.z,xx,zz,inc}}}}
 let id=0,wire=0,nodeChanged=0;const nodeChanges=[];for(const c of cand){const n=K.terraceStateAt(c.x,c.z),p=R83.terraceStateAt(c.x,c.z),b=R47.terraceStateAt(c.x,c.z),d=n.delta-p.delta;if(Math.abs(d)>1e-7){nodeChanged++;nodeChanges.push({...c,change:d,projected:K.r84CorrectionAt(c.x,c.z).projected})}wire=Math.max(wire,Math.abs(d-K.r84CorrectionAt(c.x,c.z).delta));id=Math.max(id,Math.abs(n.mask-b.mask),Math.abs(n.step-b.step),Math.abs(n.phase-b.phase),Math.abs(n.index-b.index),Math.abs(n.base-b.base),Math.abs(n.groupIndex-b.groupIndex))}
 const guards=[...plan.filter(c=>c.dd<=12).slice(0,16),...plan.filter(c=>c.mask<=.12&&c.dd>12).slice(0,16),...plan.filter(c=>receiver(c.x,c.z)).slice(0,16),...plan.filter(c=>c.mask>.48&&c.accepted!==true&&c.dd>12&&!receiver(c.x,c.z)).slice(0,16)];let guardLeak=0;for(const c of guards)guardLeak=Math.max(guardLeak,Math.abs(K.r84CorrectionAt(c.x,c.z).delta));
 const checks=[],ck=(name,pass,value,limit)=>checks.push({name,pass:!!pass,value,limit});
