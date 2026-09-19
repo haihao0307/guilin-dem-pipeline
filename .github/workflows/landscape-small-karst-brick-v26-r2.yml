@@ -1,0 +1,69 @@
+name: Landscape Small Karst Brick V2.6 R2
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-brick-v26-r2-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r2-brick-v26/index.html
+      - .github/workflows/landscape-small-karst-brick-v26-r2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify strict transfer contract and extract shaders
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('workbenches/landscape-small-karst-field-r2-brick-v26/index.html')
+          s=p.read_text(encoding='utf-8')
+          required=[
+            '小尺度帕劳卡斯特 R2',
+            'HOUSE@ea08bb33768f88f10ad9622075ddaa34cb8019c3',
+            'stone-block',
+            'id="holeSize"',
+            'uniform float uOverall,uHeight,uWidth,uHoleSize',
+            'vec3(.04,.047,.052)',
+            'vec3(.31,.31,.29)',
+            'vec3(.66,.63,.55)',
+            'vec3(.034,.041,.048)',
+            'vec3(.44,.34,.25)',
+            'vec3(.48,.25,.11)',
+            'vec3(.82,.80,.72)',
+            'vec3(.04,.058,.075)',
+            'float scale=max(4.0,uOverall*6.0)',
+            'float density=1.46/2.2,variety=1.58/1.8',
+            'q*7.6',
+            '*8.4*6.2831853',
+            'q*30.',
+            'mix(.78,.96,roughDriver)',
+            'uHoleSize',
+            'window.__KARST_READY__=true'
+          ]
+          for token in required:
+            assert token in s, token
+          assert 'uColorWarp' not in s
+          assert 'Landscape 自行设计' in s
+          vs=re.search(r'const VS=`(.*?)`;\nconst FS=',s,re.S)
+          fs=re.search(r'const FS=`(.*?)`;\nfunction compile',s,re.S)
+          assert vs and fs
+          Path('/tmp/karst-r2.vert').write_text(vs.group(1),encoding='utf-8')
+          Path('/tmp/karst-r2.frag').write_text(fs.group(1),encoding='utf-8')
+          app="'use strict';\n"+s.rsplit('</script>',1)[0].rsplit('<script>',1)[1]
+          Path('/tmp/karst-r2-app.js').write_text(app,encoding='utf-8')
+          print({'bytes':p.stat().st_size,'material':'Brick Mother V2.6 stone-block','holeSizeControl':True})
+          PY
+          node --check /tmp/karst-r2-app.js
+      - name: Compile WebGL2 shaders
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/karst-r2.vert
+          glslangValidator -S frag /tmp/karst-r2.frag
