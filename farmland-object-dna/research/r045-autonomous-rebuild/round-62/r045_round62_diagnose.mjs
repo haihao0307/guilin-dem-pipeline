@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import * as R58 from '../round-58/r045_round58_kernel.mjs';
+import * as R60 from '../round-60/r045_round60_kernel.mjs';
+import * as R35 from '../round-35/r045_round35_kernel.mjs';
+import * as R30 from '../round-30/r045_round30_kernel.mjs';
+const C=(x,a,b)=>Math.max(a,Math.min(b,x));const S=(a,b,x)=>{const t=C((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const vdot=(ax,az,bx,bz)=>{const am=Math.hypot(ax,az)||1,bm=Math.hypot(bx,bz)||1;return (ax*bx+az*bz)/(am*bm)};
+function foregroundClearance(x,z){const gap=Math.abs(z-R30.riverZ(x));return S(R30.riverW(x)+18,R30.riverW(x)+44,gap)}
+function safetyAt(x,z){const dd=R30.nearestExtendedDrainageDistance(x,z);if(dd<=12)return 0;const broad=R35.broadTerraceEligibility(x,z),group=R35.terraceGroupEnvelope(x,z),drain=R35.terraceDrainageClearance(x,z),river=foregroundClearance(x,z);if(broad<.03||group<.035||drain<=.035||river<=.035)return 0;return Math.min(.52+.48*C((broad-.03)/.24,0,1),.52+.48*C((group-.035)/.30,0,1),.46+.54*C((drain-.035)/.58,0,1),.46+.54*C((river-.035)/.58,0,1))}
+function contourTangent(x,z){const e=2,gx=(R30.height(x+e,z)-R30.height(x-e,z))/(2*e),gz=(R30.height(x,z+e)-R30.height(x,z-e))/(2*e),m=Math.hypot(gx,gz);return m<1e-9?{tx:1,tz:0}:{tx:-gz/m,tz:gx/m}}
+function segmentSafe(ax,az,bx,bz){const len=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.ceil(len/3));for(let i=0;i<=n;i++){const t=i/n;if(safetyAt(ax+(bx-ax)*t,az+(bz-az)*t)<=.10)return false}return true}
+const seeds=[];for(let z=-132;z<=12;z+=6)for(let x=-222;x<=120;x+=6){const b=R58.terraceStateAt(x,z);if(b.mask>.12||safetyAt(x,z)<=.10)continue;const sup=R60.contourRunSupportAt(x,z);if(sup)seeds.push({x,z,state:b,tangent:contourTangent(x,z),safety:safetyAt(x,z)})}
+const counts={tested:0,eligibleBase:0,nearSeed:0,sameGroup:0,stepOk:0,index4:0,index6:0,tube:0,tangent42:0,vector72:0,vector55:0,pathSafe:0,allExceptIndex4:0,allExceptVector72:0,allExceptGroup:0};const tops=[];
+for(let z=-132;z<=12;z+=6)for(let x=-222;x<=120;x+=6){counts.tested++;const b=R58.terraceStateAt(x,z);if(b.mask>.12||safetyAt(x,z)<=.10)continue;counts.eligibleBase++;const ct=contourTangent(x,z);for(const s of seeds){const dx=x-s.x,dz=z-s.z,dist=Math.hypot(dx,dz);if(dist<3||dist>30)continue;counts.nearSeed++;const sameGroup=b.groupIndex===s.state.groupIndex;if(sameGroup)counts.sameGroup++;const step=.5*(b.step+s.state.step),stepOk=Math.abs(b.step-s.state.step)<=Math.max(.22,.30*step);if(sameGroup&&stepOk)counts.stepOk++;const id=Math.abs(b.index-s.state.index),index4=id<=4,index6=id<=6;if(sameGroup&&stepOk&&index4)counts.index4++;if(sameGroup&&stepOk&&index6)counts.index6++;const st=s.tangent,along=Math.abs(dx*st.tx+dz*st.tz),cross=Math.abs(-dx*st.tz+dz*st.tx),tube=along>=3&&along<=27&&cross<=8.5;if(sameGroup&&stepOk&&index4&&tube)counts.tube++;const tc=Math.abs(vdot(ct.tx,ct.tz,st.tx,st.tz)),ta=tc>=.42;if(sameGroup&&stepOk&&index4&&tube&&ta)counts.tangent42++;const va=Math.abs(vdot(dx,dz,st.tx,st.tz)),v72=va>=.72,v55=va>=.55;if(sameGroup&&stepOk&&index4&&tube&&ta&&v72)counts.vector72++;if(sameGroup&&stepOk&&index4&&tube&&ta&&v55)counts.vector55++;const safe=segmentSafe(x,z,s.x,s.z);if(sameGroup&&stepOk&&index4&&tube&&ta&&v72&&safe)counts.pathSafe++;
+ if(sameGroup&&stepOk&&tube&&ta&&v72&&safe&&!index4)counts.allExceptIndex4++;
+ if(sameGroup&&stepOk&&index4&&tube&&ta&&safe&&!v72)counts.allExceptVector72++;
+ if(!sameGroup&&stepOk&&index4&&tube&&ta&&v72&&safe)counts.allExceptGroup++;
+ const score=(sameGroup?4:0)+(stepOk?3:0)+(index4?3:Math.max(0,3-.3*(id-4)))+(tube?4:0)+(ta?2:0)+(v72?2:v55?1:0)+(safe?4:0)-.08*cross-.02*along;
+ tops.push({score,x,z,seedX:s.x,seedZ:s.z,mask:b.mask,group:b.groupIndex,seedGroup:s.state.groupIndex,index:b.index,seedIndex:s.state.index,indexDiff:id,step:b.step,seedStep:s.state.step,dist,along,cross,tangentContinuity:tc,vectorAlignment:va,sameGroup,stepOk,index4,index6,tube,ta,v72,v55,safe});
+ }}
+tops.sort((a,b)=>b.score-a.score);const result={seeds:seeds.map(s=>({x:s.x,z:s.z,group:s.state.groupIndex,index:s.state.index,step:s.state.step,mask:s.state.mask,safety:s.safety,tangent:s.tangent})),counts,topCandidates:tops.slice(0,80)};fs.writeFileSync(new URL('./r045_round62_diagnostic_result.json',import.meta.url),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

@@ -1,0 +1,383 @@
+{
+  "identity": {
+    "world_id": "earth",
+    "object_id": "research-traditional-paddy-system-002",
+    "type_id": "paddy",
+    "variant_id": "traditional_manual_irrigated_research",
+    "configuration_id": "research-only-v002",
+    "revision": "v0.1.1-research",
+    "valid_time": {
+      "start": null,
+      "end": null,
+      "precision": "unknown"
+    },
+    "recorded_at": "2026-09-07",
+    "evidence": {
+      "kind": "conflicted",
+      "sources": [
+        "https://whc.unesco.org/en/list/1111/",
+        "https://whc.unesco.org/document/122860",
+        "https://www.knowledgebank.irri.org/training/fact-sheets/crop-establishment/manual-transplanting",
+        "https://www.knowledgebank.irri.org/step-by-step-production/growth/water-management"
+      ],
+      "method_version": "farmland-object-dna-v0.1.1",
+      "uncertainty": "System relations have authoritative starting sources. Local geometry, sections, dimensions, water allocation hardware, cultivar and historical configuration remain unresolved."
+    },
+    "review_status": "candidate"
+  },
+  "spatial": {
+    "crs": null,
+    "frame": "local-research-frame",
+    "units": "m",
+    "vertical_datum": null,
+    "boundary": [[0, 0, 0], [40, 0, 0], [40, 30, 0], [0, 30, 0]],
+    "area_m2": 1200,
+    "elevation_range_m": null,
+    "slope_mean_deg": null,
+    "terrain_ref": "unknown-authoritative-dem",
+    "terrain_features": {
+      "ridge": "unknown",
+      "valley": "unknown",
+      "flow_direction": "unknown",
+      "flow_accumulation": "unknown"
+    },
+    "research_status": "terrain_truth_missing"
+  },
+  "parcel": {
+    "cells": [
+      {
+        "id": "field-cell-001",
+        "boundary_ref": "unknown",
+        "bed_elevation_field": "unknown",
+        "mud_surface_elevation": "unknown",
+        "shared_boundary_refs": [],
+        "source_card_status": "incomplete",
+        "ready_for_geometry": false
+      }
+    ],
+    "bunds": [
+      {
+        "id": "bund-segment-001",
+        "served_fields": ["field-cell-001", "external-or-edge"],
+        "crest_width_m": "unknown",
+        "crest_elevation_m": "unknown",
+        "height_m": "unknown",
+        "base_width_m": "unknown",
+        "inner_slope": "unknown",
+        "outer_slope": "unknown",
+        "compaction": "unknown",
+        "walkability": "unknown",
+        "cross_section_status": "missing",
+        "source_card_status": "incomplete",
+        "ready_for_geometry": false
+      }
+    ],
+    "paths": [
+      {
+        "id": "footpath-001",
+        "mode": "pedestrian_manual_agriculture",
+        "width_m": "unknown",
+        "slope": "unknown",
+        "connects": ["unknown-settlement", "field-cell-001"],
+        "source_card_status": "incomplete"
+      }
+    ],
+    "relations": [
+      {
+        "kind": "belongs_to_settlement",
+        "target_id": "unknown-settlement",
+        "evidence": {
+          "kind": "unknown",
+          "sources": [],
+          "method_version": null,
+          "uncertainty": "settlement not yet selected"
+        }
+      },
+      {
+        "kind": "served_by_path",
+        "target_id": "footpath-001",
+        "evidence": {
+          "kind": "generated",
+          "sources": [],
+          "method_version": "research-placeholder",
+          "uncertainty": "topology only"
+        }
+      }
+    ],
+    "scale_modulus": {
+      "terrain_constraint": "unknown",
+      "hydraulic_constraint": "unknown",
+      "human_walk_constraint": "unknown",
+      "tool_constraint": "unknown",
+      "animal_power_constraint": "unknown",
+      "labor_constraint": "unknown",
+      "ownership_history_constraint": "unknown",
+      "solved": false
+    }
+  },
+  "hydraulics": {
+    "water_source": {
+      "id": "source-001",
+      "source_ref": "unknown",
+      "source_type": "unknown",
+      "authority": "external-water-source",
+      "water_level_m": "unknown",
+      "available_discharge_m3_s": "unknown",
+      "reliability": "unknown",
+      "source_card_status": "incomplete"
+    },
+    "inlets": [
+      {
+        "id": "field-inlet-001",
+        "field_id": "field-cell-001",
+        "invert_elevation_m": "unknown",
+        "opening_geometry": "unknown",
+        "control_method": "unknown",
+        "upstream_head_m": "unknown",
+        "downstream_head_m": "unknown",
+        "cross_section_status": "missing",
+        "ready_for_geometry": false
+      }
+    ],
+    "outlets": [
+      {
+        "id": "field-outlet-001",
+        "field_id": "field-cell-001",
+        "invert_elevation_m": "unknown",
+        "opening_geometry": "unknown",
+        "control_method": "unknown",
+        "overflow_elevation_m": "unknown",
+        "cross_section_status": "missing",
+        "ready_for_geometry": false
+      }
+    ],
+    "channels": [
+      {
+        "id": "intake-channel-001",
+        "channel_type": "intake_or_main_channel",
+        "from": "source-001",
+        "to": "divider-001",
+        "bed_elevation_start_m": "unknown",
+        "bed_elevation_end_m": "unknown",
+        "bed_width_m": "unknown",
+        "top_width_m": "unknown",
+        "design_depth_m": "unknown",
+        "current_depth_m": "unknown",
+        "longitudinal_slope": "unknown",
+        "side_slope": "unknown",
+        "material": "unknown",
+        "cross_section_status": "missing",
+        "ready_for_geometry": false
+      },
+      {
+        "id": "field-supply-channel-001",
+        "channel_type": "branch_or_field_channel",
+        "from": "divider-001",
+        "to": "field-inlet-001",
+        "bed_elevation_start_m": "unknown",
+        "bed_elevation_end_m": "unknown",
+        "bed_width_m": "unknown",
+        "top_width_m": "unknown",
+        "design_depth_m": "unknown",
+        "current_depth_m": "unknown",
+        "longitudinal_slope": "unknown",
+        "side_slope": "unknown",
+        "material": "unknown",
+        "cross_section_status": "missing",
+        "ready_for_geometry": false
+      },
+      {
+        "id": "field-drain-001",
+        "channel_type": "drainage_channel",
+        "from": "field-outlet-001",
+        "to": "downstream-receiver-001",
+        "bed_elevation_start_m": "unknown",
+        "bed_elevation_end_m": "unknown",
+        "bed_width_m": "unknown",
+        "top_width_m": "unknown",
+        "design_depth_m": "unknown",
+        "current_depth_m": "unknown",
+        "longitudinal_slope": "unknown",
+        "side_slope": "unknown",
+        "material": "unknown",
+        "cross_section_status": "missing",
+        "ready_for_geometry": false
+      }
+    ],
+    "dividers": [
+      {
+        "id": "divider-001",
+        "type": "traditional-divider-research-target",
+        "local_name": "unknown",
+        "geometry": "unknown",
+        "ratio_mechanism": "unknown",
+        "water_right_relation": "unknown",
+        "cross_section_status": "missing",
+        "evidence_status": "research_target",
+        "ready_for_geometry": false
+      }
+    ],
+    "downstream_receiver": {
+      "id": "downstream-receiver-001",
+      "type": "unknown",
+      "authority": "external-water-system"
+    },
+    "graph": [
+      {"from": "source-001", "to": "intake-channel-001", "kind": "feeds"},
+      {"from": "intake-channel-001", "to": "divider-001", "kind": "feeds"},
+      {"from": "divider-001", "to": "field-supply-channel-001", "kind": "divides_to"},
+      {"from": "field-supply-channel-001", "to": "field-inlet-001", "kind": "feeds"},
+      {"from": "field-inlet-001", "to": "field-cell-001", "kind": "feeds"},
+      {"from": "field-cell-001", "to": "field-outlet-001", "kind": "drains_to"},
+      {"from": "field-outlet-001", "to": "field-drain-001", "kind": "drains_to"},
+      {"from": "field-drain-001", "to": "downstream-receiver-001", "kind": "drains_to"}
+    ],
+    "surface_water_depth_m": null,
+    "water_state": {
+      "bed_elevation_m": "unknown",
+      "mud_surface_elevation_m": "unknown",
+      "water_surface_elevation_m": "unknown",
+      "average_depth_m": "unknown",
+      "storage_area_m2": "unknown",
+      "storage_volume_m3": "unknown",
+      "bund_crest_minimum_m": "unknown",
+      "inflow_m3": "unknown",
+      "rainfall_m3": "unknown",
+      "outflow_m3": "unknown",
+      "overflow_m3": "unknown",
+      "evaporation_m3": "unknown",
+      "seepage_m3": "unknown",
+      "storage_change_m3": "unknown",
+      "mass_balance_error_m3": "unknown"
+    },
+    "irrigation_demand_m3_per_day": null,
+    "drainage_state": "unknown",
+    "closed_graph_check": false,
+    "elevation_check": false,
+    "mass_balance_check": false
+  },
+  "soil": {
+    "texture": "unknown",
+    "cultivated_layer_depth_m": "unknown",
+    "puddled_layer_depth_m": "unknown",
+    "plow_pan_depth_m": "unknown",
+    "infiltration_state": "unknown",
+    "organic_matter": "unknown",
+    "clod_distribution": "unknown",
+    "source_card_status": "incomplete"
+  },
+  "crop": {
+    "species": "Oryza sativa",
+    "variety": null,
+    "stage": "unknown",
+    "canopy_cover": null,
+    "planting_method": "manual_transplant_research_target",
+    "establishment": {
+      "seedling_age_days": "unknown",
+      "seedlings_per_hill": "unknown",
+      "row_spacing_m": "unknown",
+      "hill_spacing_m": "unknown",
+      "planting_depth_m": "unknown",
+      "planting_angle": "unknown",
+      "missing_hill_rate": "unknown",
+      "repair_rate": "unknown",
+      "field_water_depth_m": "unknown"
+    },
+    "stage_models": {
+      "nursery": "missing",
+      "lifting_seedlings": "missing",
+      "transplanted": "missing",
+      "establishment": "missing",
+      "tillering": "missing",
+      "stem_elongation": "missing",
+      "panicle_initiation": "missing",
+      "booting": "missing",
+      "heading": "missing",
+      "flowering": "missing",
+      "grain_filling": "missing",
+      "maturity": "missing",
+      "harvest": "missing",
+      "stubble": "missing"
+    },
+    "ready_for_geometry": false
+  },
+  "laborSettlement": {
+    "settlement_ref": "unknown-settlement",
+    "household_ref": "unknown-household",
+    "available_labor_person_days": null,
+    "maintenance_capacity_state": "unknown",
+    "distance_to_field_m": "unknown",
+    "tool_profile": "unknown",
+    "animal_power_profile": "unknown",
+    "water_rights": "unknown",
+    "maintenance_group": "unknown",
+    "tasks": [
+      "source_protection",
+      "channel_cleaning",
+      "divider_operation",
+      "bund_repair",
+      "water_control",
+      "field_preparation",
+      "transplanting",
+      "weeding",
+      "harvest"
+    ]
+  },
+  "calendar": {
+    "profile": "unknown-local-calendar",
+    "cultivar_context": "unknown",
+    "climate_context": "unknown",
+    "events": []
+  },
+  "maintenance": {
+    "bund_condition": "unknown",
+    "channel_condition": "unknown",
+    "divider_condition": "unknown",
+    "terrace_riser_condition": "unknown",
+    "backlog": "unknown"
+  },
+  "degradation": {
+    "abandonment_state": "unknown",
+    "breach_state": "unknown",
+    "siltation_state": "unknown",
+    "weed_invasion_state": "unknown",
+    "terrace_collapse_state": "unknown",
+    "forest_damage_dependency": "unknown"
+  },
+  "coupling": {
+    "inputs": [
+      {"field": "terrain_elevation", "authority": "DEM_or_Landscape"},
+      {"field": "forest_recharge_context", "authority": "Forest_or_Vegetation_System"},
+      {"field": "precipitation_rate", "authority": "Weather_Mother"},
+      {"field": "source_water_level", "authority": "water_source_system"},
+      {"field": "available_labor", "authority": "population_or_settlement_system"}
+    ],
+    "outputs": [
+      {"field": "irrigation_demand", "authority": "Farmland_Object_DNA"},
+      {"field": "surface_water_elevation", "authority": "Farmland_Object_DNA"},
+      {"field": "surface_water_depth_field", "authority": "Farmland_Object_DNA"},
+      {"field": "drainage_discharge", "authority": "Farmland_Object_DNA"},
+      {"field": "canopy_cover", "authority": "Farmland_Object_DNA"},
+      {"field": "labor_task_schedule", "authority": "Farmland_Object_DNA"}
+    ]
+  },
+  "representation": {
+    "seed": 2,
+    "method_version": "farmland-object-dna-v0.1.1",
+    "mode": "research",
+    "debug_only": true,
+    "public_candidate": false,
+    "visible_proxy_policy": "forbidden_in_public_candidate",
+    "forbidden_proxy_types": [
+      "round_tube_channel",
+      "round_tube_bund",
+      "flat_fake_water",
+      "isolated_hydraulic_icon",
+      "mechanical_grid_parcel",
+      "repeated_band_terrace",
+      "cone_rice_stage_scaling"
+    ],
+    "microscope_allowed": false,
+    "runtime_budget": null
+  }
+}

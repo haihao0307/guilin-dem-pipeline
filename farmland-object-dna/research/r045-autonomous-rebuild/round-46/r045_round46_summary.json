@@ -1,0 +1,142 @@
+{
+  "version": "R045.46",
+  "passed": false,
+  "passedCount": 28,
+  "gateCount": 30,
+  "failed": [
+    {
+      "name": "r46_contour_extension_material",
+      "pass": false,
+      "value": {
+        "gains": 3,
+        "cross": 3,
+        "active": 546,
+        "oldActive": 543,
+        "directions": [
+          "NW",
+          "W",
+          "SE"
+        ]
+      },
+      "limit": ">=4 gain samples, >=4 new active samples"
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": false,
+      "value": "R45 incorrectly treated a reduction in global compatible-component count as a necessary improvement. Protected drainage corridors can legitimately split terrace support into separate components, so forcing fewer global components can reward crossing a separator. R46 instead verifies local contour-run continuation inside the protected domain and requires compatible components/orphans/tiny fragments to be no worse; browser rendering cannot compensate for failed numeric geometry.",
+      "limit": "global component reduction is not necessary across drainage separators"
+    }
+  ],
+  "browser": {
+    "chrome_bin": "/usr/bin/google-chrome",
+    "screenshot_status": 0,
+    "dom_status": 0,
+    "ready_marker_status": 0,
+    "screenshot_exists": true,
+    "screenshot_bytes": 406772,
+    "screenshot_process_clean_exit": true,
+    "render_evidence_present": true,
+    "page_startup_passed": true,
+    "passed": true
+  },
+  "metrics": {
+    "geometry": {
+      "active": 546,
+      "oldActive": 543,
+      "core": 356,
+      "oldCore": 356,
+      "gains": 3,
+      "cross": 3,
+      "unsupported": 0,
+      "unsafe": 0,
+      "maxChange": 0.06265152690939962,
+      "oldMaskChange": 0,
+      "oldDeltaChange": 0,
+      "minAlignment": 0.5897948713351957,
+      "groups": [
+        94,
+        229,
+        223
+      ],
+      "directions": [
+        "NW",
+        "W",
+        "SE"
+      ],
+      "topology2D": {
+        "new": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            51,
+            51,
+            45,
+            38,
+            32,
+            23,
+            20,
+            20,
+            16,
+            11,
+            10,
+            9,
+            5,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "straightRuns": {
+        "new": {
+          "best": 14,
+          "totalStarts": 592,
+          "totalLength": 2184
+        },
+        "prior": {
+          "best": 14,
+          "totalStarts": 584,
+          "totalLength": 2172
+        }
+      }
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "6m full-slope frozen-R43 contour-run endpoint sweep + exact R43 active/stair inheritance + drainage/receiver protection + compatible 2-D fragmentation guard"
+  }
+}

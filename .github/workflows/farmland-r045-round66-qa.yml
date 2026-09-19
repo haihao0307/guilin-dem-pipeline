@@ -1,0 +1,65 @@
+name: farmland-r045-round66-qa
+on:
+  push:
+    branches: [restart/farmland-object-dna-v020-20260907]
+    paths:
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_kernel.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_build_audit_cache.mjs'
+      - 'farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_audit.html'
+      - '.github/workflows/farmland-r045-round66-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  qa-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run R66 authoritative numeric QA
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa.mjs
+      - name: Build fixed-view audit cache
+        run: node farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_build_audit_cache.mjs
+      - name: Require numeric gate
+        run: node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa_result.json');if(!q.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount)"
+      - name: Real Chrome fixed-view startup and screenshot
+        run: |
+          set +e
+          cd farmland-object-dna/research/r045-autonomous-rebuild/round-66
+          python3 -m http.server 8000 >/tmp/r66-http.log 2>&1 & echo $! >/tmp/r66-http.pid
+          sleep 1
+          CHROME=/usr/bin/google-chrome
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1400,900 --screenshot=r045_round66_fixed_view.png http://127.0.0.1:8000/r045_round66_audit.html
+          SS=$?
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --dump-dom http://127.0.0.1:8000/r045_round66_audit.html > r045_round66_dom.html
+          DOM=$?
+          grep -q 'data-ready="true"' r045_round66_dom.html
+          READY=$?
+          BYTES=$(wc -c < r045_round66_fixed_view.png 2>/dev/null || echo 0)
+          printf '{"chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)" "$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)" > r045_round66_browser_result.json
+          cat r045_round66_browser_result.json
+          kill $(cat /tmp/r66-http.pid) 2>/dev/null || true
+          [ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ]
+      - name: Strict Farmland rules
+        run: node farmland-object-dna/tools/qa_farmland_strict_rules.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: farmland-r045-round66-fixed-view
+          path: |
+            farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_fixed_view.png
+            farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_browser_result.json
+            farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_audit_cache.mjs
+          if-no-files-found: warn
+      - name: Recheck gates before persistence
+        run: node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa_result.json'),b=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_browser_result.json');if(!q.passed||!b.passed)process.exit(2)"
+      - name: Persist machine evidence
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
+          git add farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-66/r045_round66_browser_result.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'farmland R045.66 persist QA and browser evidence [skip ci]'
+          git pull --rebase origin ${GITHUB_REF_NAME}
+          git push origin HEAD:${GITHUB_REF_NAME}

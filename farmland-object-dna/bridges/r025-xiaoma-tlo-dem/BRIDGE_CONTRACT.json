@@ -1,0 +1,126 @@
+{
+  "schema": "farmland-xiaoma-tlo-dem-bridge/r025",
+  "bridge_id": "FARMLAND_XIAOMA_TLO_DEM_BRIDGE_R025_20260911",
+  "date": "2026-09-11",
+  "status": "ready_for_deterministic_packaging",
+  "sender": "Farmland Object DNA",
+  "recipients": [
+    "Xiaoma / TLO",
+    "DEM / Landscape",
+    "next Farmland executor"
+  ],
+  "r025_baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "branch": "restart/farmland-object-dna-v020-20260907",
+    "commit": "082d2ae692f9fae3811531a847d2cb53e8ff348f",
+    "tree": "c12ffbf8f7ed8a8bdd46f1d2ecb96625cf6ae573",
+    "pull_request": 65,
+    "validation_run": 34546616093,
+    "validation_conclusion": "success",
+    "test_count": 106
+  },
+  "knowledge_flow": {
+    "received": [
+      "Xiaoma TLO discussion draft at fixed commit and file hashes",
+      "Guilin canonical DEM identity AOI tiling anchor and hydrology records at fixed commits and file hashes",
+      "user-supplied portal URL receipt whose protected content was not read"
+    ],
+    "adopted": [
+      "candidate T L O communication checkpoint",
+      "time-first and explicit-source-version semantics",
+      "stable Object identity independent of camera and renderer",
+      "Guilin-only macro terrain authority boundary",
+      "explicit unknown and source-confirmed status discipline"
+    ],
+    "not_adopted": [
+      "frozen TLO file format or core Farmland schema change",
+      "unread protected portal claims",
+      "synthetic Landscape R6 as terrain truth",
+      "Guilin DEM as Honghe terrain",
+      "12.5 m DEM as field-component or centimeter water-depth truth"
+    ],
+    "published": [
+      "XIAOMA_TLO_DEM_INTAKE.json",
+      "FARMLAND_TLO_CHECKPOINT.json",
+      "cross_mother_intake.py",
+      "probe_cross_mother_intake_r025.py",
+      "test_cross_mother_intake_r025.py"
+    ]
+  },
+  "tlo": {
+    "status": "candidate_not_frozen",
+    "coordinate_order": [
+      "t",
+      "x",
+      "y",
+      "z"
+    ],
+    "object_is_mesh": false,
+    "object_is_fifth_geometric_dimension": false,
+    "farmland_core_schema_changed": false,
+    "unfrozen_parts": [
+      "file_extension",
+      "binary_or_text_container",
+      "chunk_and_index_layout",
+      "compression_codec",
+      "streaming_protocol",
+      "global_location_contract",
+      "event_encoding",
+      "relation_ontology"
+    ]
+  },
+  "terrain_authority": {
+    "canonical_release": "guilin-native-12p5m-single-truth-v001",
+    "canonical_release_commit": "e4906653b705712edb610ee31f91716f18922369",
+    "region": "Guilin accepted AOI only",
+    "crs": "EPSG:32649",
+    "grid": [
+      17408,
+      18867
+    ],
+    "resolution_m": [
+      12.5,
+      12.5
+    ],
+    "tile_count": 54,
+    "numeric_tiles_in_farmland": false,
+    "terrain_sample_read": false,
+    "query_adapter_implemented": false,
+    "field_component_resolution": false,
+    "honghe_covered": false
+  },
+  "explicit_unknowns": [
+    "parcel_site",
+    "parcel_boundary",
+    "terrain_sample_window",
+    "field_microtopography",
+    "bund_sections",
+    "channel_sections",
+    "water_control_elevations"
+  ],
+  "requests": {
+    "xiaoma_tlo": [
+      "review the candidate semantic mapping without treating it as user-confirmed or frozen",
+      "return any semantic correction with an explicit status source and version time"
+    ],
+    "dem_landscape": [
+      "after a Guilin parcel is selected provide canonical numeric sample access tied to the locked release",
+      "for Honghe provide a separate same-region authoritative terrain source rather than reusing Guilin"
+    ],
+    "farmland": [
+      "select the intended regional parcel before any terrain query",
+      "obtain field-scale boundary microtopography section and water-control surveys before geometry"
+    ]
+  },
+  "gates": {
+    "bridge_semantics_ready": true,
+    "numeric_terrain_connected": false,
+    "field_scale_terrain_complete": false,
+    "honghe_terrain_complete": false,
+    "ready_for_regional_geometry": false,
+    "ready_for_structural_truth_workbench": false,
+    "ready_for_public_candidate": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  }
+}

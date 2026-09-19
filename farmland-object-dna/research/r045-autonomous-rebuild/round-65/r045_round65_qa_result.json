@@ -1,0 +1,507 @@
+{
+  "version": "R045.65",
+  "passed": false,
+  "gateCount": 24,
+  "passedCount": 23,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.65",
+      "limit": "R045.65"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact R58 inherited graph"
+    },
+    {
+      "name": "plan_frame_exact",
+      "pass": true,
+      "value": {
+        "maskErr": 0,
+        "stepErr": 0,
+        "phaseErr": 0,
+        "indexErr": 0,
+        "baseErr": 0,
+        "groupErr": 0
+      },
+      "limit": "exact R47/R58 mask/group/step/phase/index/base"
+    },
+    {
+      "name": "active_footprint_exact",
+      "pass": true,
+      "value": {
+        "activeN": 548,
+        "activeP": 548,
+        "thresholdCross": 0
+      },
+      "limit": "exact accepted R58 active footprint; zero threshold crossings"
+    },
+    {
+      "name": "weak_active_coverage_material",
+      "pass": false,
+      "value": {
+        "eligible": 129,
+        "changedEligible": 24,
+        "ratio": 0.18604651162790697
+      },
+      "limit": ">=12 eligible existing-active cells; >=8 material height changes; >=55% realization"
+    },
+    {
+      "name": "coverage_gain_material",
+      "pass": true,
+      "value": {
+        "meanGain": 0.03142136906629825,
+        "maxGain": 0.09336969628645544
+      },
+      "limit": "mean >0.006 and max >0.02 blend gain on eligible support"
+    },
+    {
+      "name": "multifamily_profile_change",
+      "pass": true,
+      "value": [
+        0,
+        1,
+        2
+      ],
+      "limit": ">=2 terrace families participate"
+    },
+    {
+      "name": "inactive_cells_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "zero change where inherited mask <=0.12"
+    },
+    {
+      "name": "strong_profile_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "exact R58 at inherited mask >=0.55"
+    },
+    {
+      "name": "all_changes_supported",
+      "pass": true,
+      "value": 0,
+      "limit": "every changed 6m cell belongs to eligible existing-active profile band"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardChanged": 0,
+        "hard": 0
+      },
+      "limit": "zero R65-R58 change in <=12m drainage core"
+    },
+    {
+      "name": "foreground_receiver_exact",
+      "pass": true,
+      "value": {
+        "receiverChanged": 0,
+        "receiver": 0
+      },
+      "limit": "zero R65-R58 change in receiver +12m band"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0 outside terrace support domain"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.00613904121522614,
+      "limit": "0.002m < max R65-R58 delta <0.10m"
+    },
+    {
+      "name": "three_meter_cliff_gate",
+      "pass": true,
+      "value": {
+        "maxInc": 0.3984338729247273,
+        "maxIncAt": {
+          "x": 78,
+          "z": -108,
+          "xx": 78,
+          "zz": -105,
+          "inc": 0.3984338729247273
+        }
+      },
+      "limit": "<1.05m terrace increment / 3m at every changed 6m cell"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        95,
+        229,
+        224
+      ],
+      "limit": "three terrace families material"
+    },
+    {
+      "name": "directional_profile_not_degraded",
+      "pass": true,
+      "value": {
+        "bench": {
+          "n": 0,
+          "newMedian": null,
+          "priorMedian": null,
+          "ratio": null
+        },
+        "riser": {
+          "n": 14,
+          "newMedian": 0.13216969341354534,
+          "priorMedian": 0.12983142873972542,
+          "ratio": 1.0180100049465486
+        }
+      },
+      "limit": "where sampled: composed bench <=112% R58 and terrace riser >=90% R58"
+    },
+    {
+      "name": "profile_contrast_not_degraded",
+      "pass": true,
+      "value": null,
+      "limit": "riser/bench directional contrast >=90% R58"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending fixed-view review"
+    },
+    {
+      "name": "wrong_bottleneck_corrected",
+      "pass": true,
+      "value": "R62-R64 showed that local footprint growth is the wrong bottleneck for hillside-scale legibility: the authoritative 6m slope has 548 already-active terrace cells but only 16 inactive weak cells that even clear inherited safety, and only seven of those are directly adjacent to accepted active topology. Requiring ever more promoted cells would turn an arbitrary count gate into geometry truth and would pressure the algorithm to cross legitimate separators. R65 therefore changes the causal variable that actually controls broad visual reading—profile coverage on the 548 existing active cells—without adding one square metre of footprint. This is a wrong-bottleneck correction, not a relaxed drainage or topology gate.",
+      "limit": "footprint-promotion quota rejected as materiality proxy"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 0.12-0.42 coverage interval, 0.24 weak-ramp cap, 0.46-0.54 stair transition, 6m audit lattice, 0.6m directional probe and inherited 12m drainage core are synthetic morphology/QA scales, not surveyed Yunnan terrace dimensions. A 12.5m macro DEM and photographs cannot supply field/sub-metre microtopography, real parcel/management boundaries, bund/riser/channel sections, inlet/outlet sill elevations, observed hydraulic connectivity, head/depth/discharge/gate states or event-level water management.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: a more legible bench/riser profile, geometric continuity and conservation do not establish parcel ownership, surveyed riser section, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord research is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video is not available to replay; Blender/Voronoi/shader dimensions are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is reread only as non-metric morphology evidence that broad portions of the agricultural slope read as long contour-following benches separated by concentrated darker riser edges, with unequal widths, nested bends and drainage interruptions. No width, height, channel size or hydraulic parameter is inferred from the photograph.",
+      "limit": "nonmetric only"
+    }
+  ],
+  "metrics": {
+    "activeN": 548,
+    "activeP": 548,
+    "thresholdCross": 0,
+    "groups": [
+      95,
+      229,
+      224
+    ],
+    "eligible": 129,
+    "changed": 24,
+    "changedEligible": 24,
+    "changedGroups": [
+      0,
+      1,
+      2
+    ],
+    "meanGain": 0.03142136906629825,
+    "maxGain": 0.09336969628645544,
+    "changedPoints": [
+      {
+        "x": -192,
+        "z": -120,
+        "change": -0.0003486537798699091,
+        "mask": 0.191896912675051,
+        "groupIndex": 0,
+        "coverageGain": 0.03474626921304207,
+        "phaseFrac": 0.4263579264337629,
+        "dd": 13.873416958817597
+      },
+      {
+        "x": -162,
+        "z": -30,
+        "change": 0.0014277958570128174,
+        "mask": 0.21391213733323222,
+        "groupIndex": 1,
+        "coverageGain": 0.05583134541466511,
+        "phaseFrac": 0.5098110915386824,
+        "dd": 16.994116628998395
+      },
+      {
+        "x": -144,
+        "z": -78,
+        "change": -0.00001269789885702255,
+        "mask": 0.15764801492062597,
+        "groupIndex": 1,
+        "coverageGain": 0.010390339226179712,
+        "phaseFrac": 0.40966184640176806,
+        "dd": 14.92037690739827
+      },
+      {
+        "x": -108,
+        "z": -108,
+        "change": -0.0012932919756343322,
+        "mask": 0.18772758829289213,
+        "groupIndex": 0,
+        "coverageGain": 0.031173219095878297,
+        "phaseFrac": 0.4615942107144235,
+        "dd": 15.556349186104047
+      },
+      {
+        "x": -54,
+        "z": -18,
+        "change": -0.00012092387106021896,
+        "mask": 0.1416392449981394,
+        "groupIndex": 2,
+        "coverageGain": 0.0035659180362280487,
+        "phaseFrac": 0.4617665307117891,
+        "dd": 14.738680104342125
+      },
+      {
+        "x": -18,
+        "z": -96,
+        "change": -0.002081198132218076,
+        "mask": 0.2890132593551218,
+        "groupIndex": 1,
+        "coverageGain": 0.09269031107302916,
+        "phaseFrac": 0.4304438072956511,
+        "dd": 15.837924380294098
+      },
+      {
+        "x": -18,
+        "z": -84,
+        "change": -0.00020068851382207264,
+        "mask": 0.1487132106593605,
+        "groupIndex": 0,
+        "coverageGain": 0.006174742175525896,
+        "phaseFrac": 0.4517320013953867,
+        "dd": 14.559526896682918
+      },
+      {
+        "x": 0,
+        "z": 0,
+        "change": 0.00494995726443536,
+        "mask": 0.289911347316797,
+        "groupIndex": 2,
+        "coverageGain": 0.09253783266352339,
+        "phaseFrac": 0.5161846952060998,
+        "dd": 19.33791757609323
+      },
+      {
+        "x": 6,
+        "z": -120,
+        "change": 0.00022427573800574974,
+        "mask": 0.18157531478180222,
+        "groupIndex": 0,
+        "coverageGain": 0.026181684013246626,
+        "phaseFrac": 0.5760656083988103,
+        "dd": 15.179293755116195
+      },
+      {
+        "x": 18,
+        "z": -84,
+        "change": -0.0035320688363923228,
+        "mask": 0.21122155061962067,
+        "groupIndex": 1,
+        "coverageGain": 0.05307606561452081,
+        "phaseFrac": 0.4663010232113116,
+        "dd": 15.127885101351103
+      },
+      {
+        "x": 24,
+        "z": -60,
+        "change": -0.00004104155544566723,
+        "mask": 0.14516676951033444,
+        "groupIndex": 1,
+        "coverageGain": 0.004783556374018386,
+        "phaseFrac": 0.4253004502999893,
+        "dd": 14.114857081171344
+      },
+      {
+        "x": 30,
+        "z": -30,
+        "change": 0.0003647322805458951,
+        "mask": 0.15463364726618367,
+        "groupIndex": 2,
+        "coverageGain": 0.008857379347443009,
+        "phaseFrac": 0.52158566134095,
+        "dd": 14.560219778561038
+      },
+      {
+        "x": 42,
+        "z": 0,
+        "change": 0.00613904121522614,
+        "mask": 0.2579892902854344,
+        "groupIndex": 2,
+        "coverageGain": 0.08946837262028906,
+        "phaseFrac": 0.5278412521514819,
+        "dd": 17.4928556845359
+      },
+      {
+        "x": 66,
+        "z": -24,
+        "change": -0.00013751001953839215,
+        "mask": 0.18435790272242097,
+        "groupIndex": 1,
+        "coverageGain": 0.02839655627835678,
+        "phaseFrac": 0.41796079535597563,
+        "dd": 17.186494981702857
+      },
+      {
+        "x": 72,
+        "z": -24,
+        "change": 0.000002072617113525743,
+        "mask": 0.12912372059536703,
+        "groupIndex": 1,
+        "coverageGain": 0.0006524363661225397,
+        "phaseFrac": 0.5824634645611342,
+        "dd": 22.816553682605516
+      },
+      {
+        "x": 78,
+        "z": -108,
+        "change": -0.000005844575734270663,
+        "mask": 0.3687913433022487,
+        "groupIndex": 0,
+        "coverageGain": 0.028349882296277634,
+        "phaseFrac": 0.402659515255003,
+        "dd": 31.56246253218989
+      },
+      {
+        "x": 84,
+        "z": -54,
+        "change": -0.00016175602358409202,
+        "mask": 0.34681343898225825,
+        "groupIndex": 1,
+        "coverageGain": 0.05600262688096311,
+        "phaseFrac": 0.40992906038975896,
+        "dd": 37.318092127009926
+      },
+      {
+        "x": 96,
+        "z": -90,
+        "change": -0.0037235991241017508,
+        "mask": 0.2394552242056759,
+        "groupIndex": 0,
+        "coverageGain": 0.07946095589765231,
+        "phaseFrac": 0.45374487942455843,
+        "dd": 28.7838081951155
+      },
+      {
+        "x": 96,
+        "z": -84,
+        "change": 0.001203371370569981,
+        "mask": 0.29250838374552623,
+        "groupIndex": 2,
+        "coverageGain": 0.0920205115717671,
+        "phaseFrac": 0.5035753842937538,
+        "dd": 28.356325895188046
+      },
+      {
+        "x": 96,
+        "z": -66,
+        "change": 0.00007187083539307582,
+        "mask": 0.169866568360027,
+        "groupIndex": 2,
+        "coverageGain": 0.017688918348042558,
+        "phaseFrac": 0.5828682480819012,
+        "dd": 26.420634749130603
+      },
+      {
+        "x": 96,
+        "z": -36,
+        "change": -0.003356471827585361,
+        "mask": 0.2761204935832329,
+        "groupIndex": 1,
+        "coverageGain": 0.09336969628645544,
+        "phaseFrac": 0.4431956711999492,
+        "dd": 22.98924206830547
+      },
+      {
+        "x": 96,
+        "z": -30,
+        "change": 0.005512500482236615,
+        "mask": 0.33842030695205105,
+        "groupIndex": 1,
+        "coverageGain": 0.06462762740459896,
+        "phaseFrac": 0.5286652903747742,
+        "dd": 22.169417685483282
+      },
+      {
+        "x": 96,
+        "z": -24,
+        "change": 0.00009687103895725246,
+        "mask": 0.14223257221380647,
+        "groupIndex": 1,
+        "coverageGain": 0.0037589332070333955,
+        "phaseFrac": 0.517045156075902,
+        "dd": 21.349593302661095
+      },
+      {
+        "x": 102,
+        "z": -72,
+        "change": 0.0001554371131192887,
+        "mask": 0.16174145507492302,
+        "groupIndex": 2,
+        "coverageGain": 0.01264584705409992,
+        "phaseFrac": 0.5060428766528347,
+        "dd": 21.265824557671095
+      }
+    ],
+    "inactiveChanged": 0,
+    "unsupportedChanged": 0,
+    "hardChanged": 0,
+    "receiverChanged": 0,
+    "strongErr": 0,
+    "maxChange": 0.00613904121522614,
+    "maxInc": 0.3984338729247273,
+    "maxIncAt": {
+      "x": 78,
+      "z": -108,
+      "xx": 78,
+      "zz": -105,
+      "inc": 0.3984338729247273
+    },
+    "outside": 0,
+    "hard": 0,
+    "receiver": 0,
+    "bench": {
+      "n": 0,
+      "newMedian": null,
+      "priorMedian": null,
+      "ratio": null
+    },
+    "riser": {
+      "n": 14,
+      "newMedian": 0.13216969341354534,
+      "priorMedian": 0.12983142873972542,
+      "ratio": 1.0180100049465486
+    },
+    "contrast": null,
+    "qaScope": "authoritative 6m whole-slope existing-active profile-coverage sweep + exact plan/footprint locks + directional cross-contour profile diagnostics + 3m local cliff checks at every changed 6m cell"
+  }
+}

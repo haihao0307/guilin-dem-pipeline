@@ -1,0 +1,3 @@
+import fs from 'node:fs';import * as W from '../source/world.mjs';
+const errors=[];const f='T4',outlet=W.portsByField[f].outlets[0];for(const openness of [1,.5,0]){const s=W.makeState();W.setPortOpenness(s,outlet.id,openness);W.step(s,1);const q=Math.abs(s.lastFlows[outlet.edgeId]||0);if(openness===0&&q>1e-12)errors.push('closed_flows');if(Math.abs(W.balance(s))>1e-8)errors.push('balance');}
+const out={version:W.VERSION,ok:!errors.length,errors,port:outlet.id,edge:outlet.edgeId};fs.writeFileSync(new URL('./control-r035.json',import.meta.url),JSON.stringify(out,null,2)+'\n');console.log(JSON.stringify(out,null,2));if(errors.length)process.exit(1);

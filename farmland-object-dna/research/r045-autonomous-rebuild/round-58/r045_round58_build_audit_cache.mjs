@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import * as K from './r045_round58_kernel.mjs';
+import * as B from '../round-56/r045_round56_kernel.mjs';
+import * as R47 from '../round-47/r045_round47_kernel.mjs';
+import {AUDIT as A56} from '../round-56/r045_round56_audit_cache.mjs';
+
+const src=A56.terrain,srcDx=(src.x1-src.x0)/src.nx,srcDz=(src.z1-src.z0)/src.nz,ix=[];for(let i=0;i<=28;i+=2)ix.push(i);const iz=[];for(let j=0;j<=12;j+=2)iz.push(j);
+const x0=src.x0,x1=src.x0+ix.at(-1)*srcDx,z0=src.z0,z1=src.z0+iz.at(-1)*srcDz,nx=ix.length-1,nz=iz.length-1,before=[],after=[];
+for(const j of iz){const z=src.z0+j*srcDz,rb=[],ra=[];for(const i of ix){const x=src.x0+i*srcDx;rb.push(src.after[j][i]);ra.push(K.height(x,z))}before.push(rb);after.push(ra)}
+const rivers=[];for(let x=x0;x<=x1+.01;x+=24){const z=K.riverZ(x),h=K.height(x,z);rivers.push([x,z,h+.28,h+.28])}
+const dx=(x1-x0)/nx,dz=(z1-z0)/nz,plan=[];for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const x=x0+(i+.5)*dx,z=z0+(j+.5)*dz,n=K.terraceStateAt(x,z),o=B.terraceStateAt(x,z),r=R47.terraceStateAt(x,z);plan.push({i,j,mask:n.mask,groupIndex:n.groupIndex,frac:n.frac,dd:K.nearestExtendedDrainageDistance(x,z),change:n.delta-o.delta,coverageGain:n.coverageProfileGain||0,priorMask:r.mask})}
+let qr={metrics:{changedPoints:[]}};try{qr=JSON.parse(fs.readFileSync(new URL('./r045_round58_qa_result.json',import.meta.url),'utf8'))}catch{}
+const exactChanges=(qr.metrics?.changedPoints||[]).filter(p=>Math.abs(p.change)>1e-6);
+function qAt(x,z){const s=R47.terraceStateAt(x,z);return s.base+s.phase}function normalAt(x,z){const e=.75,gx=(qAt(x+e,z)-qAt(x-e,z))/(2*e),gz=(qAt(x,z+e)-qAt(x,z-e))/(2*e),m=Math.hypot(gx,gz)||1;return[gx/m,gz/m]}
+const centers=exactChanges.filter(p=>Math.abs(p.change)>.002).slice(0,2).map(p=>[p.x,p.z]);const profiles=centers.map(([x,z])=>{const[nx_,nz_]=normalAt(x,z),samples=[];for(let d=-3;d<=3.0001;d+=.60){const xx=x+d*nx_,zz=z+d*nz_;samples.push([d,B.height(xx,zz),K.height(xx,zz),B.terraceDelta(xx,zz),K.terraceDelta(xx,zz)])}return{x,z,nx:nx_,nz:nz_,samples}});
+let changeMax=0,changed=0,active=0;for(const c of plan){changeMax=Math.max(changeMax,Math.abs(c.change));if(Math.abs(c.change)>.002)changed++;if(c.mask>.12)active++}
+const data={version:K.VERSION,terrain:{x0,x1,z0,z1,nx,nz,before,after},rivers,planSpec:{x0,x1,z0,z1,nx,nz},plan,exactChanges,profiles,state:{changeMax,coarseChanged:changed,exactChanged:exactChanges.length,active},generatedAt:new Date().toISOString(),source:'R045.58 fixed view: A reuses persisted R56 surface; B evaluates corrected medium-support profile cap; orange exact-change markers come from authoritative 6m QA'};
+fs.writeFileSync(new URL('./r045_round58_audit_cache.mjs',import.meta.url),`export const AUDIT=${JSON.stringify(data)};\n`);console.log(JSON.stringify({version:data.version,vertices:(nx+1)*(nz+1),planCells:plan.length,profiles:profiles.length,state:data.state},null,2));

@@ -1,0 +1,346 @@
+{
+  "version": "R045.58",
+  "passed": true,
+  "gateCount": 19,
+  "passedCount": 19,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.58",
+      "limit": "R045.58"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "plan_frame_frozen",
+      "pass": true,
+      "value": {
+        "maskChange": 0,
+        "stepChange": 0,
+        "phaseChange": 0,
+        "indexChange": 0,
+        "baseChange": 0
+      },
+      "limit": "exact R47 mask/step/phase/index/base"
+    },
+    {
+      "name": "strong_core_exact",
+      "pass": true,
+      "value": 0,
+      "limit": "R56 exact at R47 mask >=0.64"
+    },
+    {
+      "name": "medium_support_material",
+      "pass": true,
+      "value": {
+        "mediumChanged": 16,
+        "changed": 16,
+        "active": 548
+      },
+      "limit": ">=6 changed 6m audit cells in inherited medium support"
+    },
+    {
+      "name": "medium_support_multifamily",
+      "pass": true,
+      "value": [
+        1,
+        2,
+        0
+      ],
+      "limit": ">=2 terrace families participate"
+    },
+    {
+      "name": "coverage_gain_material",
+      "pass": true,
+      "value": {
+        "avgCoverageGain": 0.08010426652770286,
+        "coverageGainMax": 0.16719530421711323
+      },
+      "limit": "mean >0.01 and max >0.03"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.01769647839937359,
+      "limit": "0.002m < max terrace-delta change <0.10m"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "no change outside R47 0.22<mask<0.64 band"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardChanged": 0,
+        "unsafeChanged": 0
+      },
+      "limit": "zero R58 changes inside <=12m drainage core"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero changed samples within receiver +12m band"
+    },
+    {
+      "name": "original_three_meter_cliff_gate_restored",
+      "pass": true,
+      "value": {
+        "maxInc": 0.5546563392828006,
+        "maxIncAt": {
+          "x": 24,
+          "z": -48,
+          "xx": 21,
+          "zz": -48,
+          "inc": 0.5546563392828006
+        },
+        "r57FailedValue": 1.112919833351231
+      },
+      "limit": "<1.05m terrace increment / 3m at every changed 6m audit cell; R57 failed at 1.112919833351231m"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        95,
+        229,
+        224
+      ],
+      "limit": "three terrace families material on 6m lattice"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending manual fixed-view review"
+    },
+    {
+      "name": "measurement_coarsening_fallacy_rejected",
+      "pass": true,
+      "value": "R57 first failed the original 6 m audit because a local 3 m increment reached 1.112919833351231 m, above the fixed 1.05 m gate. A later 12 m audit missed that extremum and therefore produced an apparent pass. Treating the coarser pass as proof would be a measurement-coarsening fallacy. R58 restores the 6 m whole-slope change search and evaluates 3 m neighbors at every changed 6 m cell; it fixes the geometry rather than weakening or spatially skipping the safety gate.",
+      "limit": "coarser audit cannot erase a finer-grid failure"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 0.22/0.58 support thresholds, 0.52 spread cap, 0.46-0.54 transition, 6 m audit lattice and inherited 12 m drainage hard core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM and photographs cannot provide field microtopography, real parcel/management boundaries, bund/riser/channel sections, inlet/outlet sill elevations, hydraulic connectivity, water head/depth/discharge/gate state or event water-management records.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: geometric adjacency and a more legible terrace profile do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry evidence != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord study is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video is not available to replay in this run; Blender dimensions, Voronoi, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is reread only as non-metric morphology evidence: long contour-following benches separated by concentrated darker riser edges over broad portions of the agricultural slope, unequal widths, nested bends and drainage interruptions. No width, height, channel size or hydraulic parameter is inferred from it.",
+      "limit": "nonmetric only"
+    }
+  ],
+  "metrics": {
+    "active": 548,
+    "groups": [
+      95,
+      229,
+      224
+    ],
+    "mediumChanged": 16,
+    "changed": 16,
+    "changedGroups": [
+      1,
+      2,
+      0
+    ],
+    "changedPoints": [
+      {
+        "x": -216,
+        "z": -84,
+        "change": -0.000019664854122775077,
+        "mask": 0.4589929777529723,
+        "groupIndex": 1,
+        "coverageGain": 0.03606855931526143,
+        "dd": 19.113987803451156
+      },
+      {
+        "x": -144,
+        "z": -60,
+        "change": 0.000993489751582908,
+        "mask": 0.40098576829239163,
+        "groupIndex": 1,
+        "coverageGain": 0.15496198758569052,
+        "dd": 16.66408571081293
+      },
+      {
+        "x": -78,
+        "z": 0,
+        "change": 0.010672959875060131,
+        "mask": 0.4294442653615811,
+        "groupIndex": 2,
+        "coverageGain": 0.10955684254906334,
+        "dd": 39.16033027723459
+      },
+      {
+        "x": -18,
+        "z": -96,
+        "change": -0.0011227386752903357,
+        "mask": 0.2890132593551218,
+        "groupIndex": 1,
+        "coverageGain": 0.05000340691035917,
+        "dd": 15.837924380294098
+      },
+      {
+        "x": 0,
+        "z": 0,
+        "change": 0.002739574243820375,
+        "mask": 0.289911347316797,
+        "groupIndex": 2,
+        "coverageGain": 0.051215444780787676,
+        "dd": 19.33791757609323
+      },
+      {
+        "x": 24,
+        "z": -54,
+        "change": -0.005095063870051403,
+        "mask": 0.4089087365083314,
+        "groupIndex": 1,
+        "coverageGain": 0.14524360709147172,
+        "dd": 15.365466506930717
+      },
+      {
+        "x": 24,
+        "z": -48,
+        "change": 0.01769647839937359,
+        "mask": 0.4117201279446817,
+        "groupIndex": 1,
+        "coverageGain": 0.14122533866734288,
+        "dd": 16.622641039315955
+      },
+      {
+        "x": 42,
+        "z": 0,
+        "change": 0.0011081337720908885,
+        "mask": 0.2579892902854344,
+        "groupIndex": 2,
+        "coverageGain": 0.016149578046268598,
+        "dd": 17.4928556845359
+      },
+      {
+        "x": 78,
+        "z": -108,
+        "change": -0.00003446877160548367,
+        "mask": 0.3687913433022487,
+        "groupIndex": 0,
+        "coverageGain": 0.16719530421711323,
+        "dd": 31.56246253218989
+      },
+      {
+        "x": 84,
+        "z": -54,
+        "change": -0.0004234117867509546,
+        "mask": 0.34681343898225825,
+        "groupIndex": 1,
+        "coverageGain": 0.1465922058728611,
+        "dd": 37.318092127009926
+      },
+      {
+        "x": 90,
+        "z": -90,
+        "change": 0.0013976719799927012,
+        "mask": 0.4643644162328815,
+        "groupIndex": 0,
+        "coverageGain": 0.02044241938451352,
+        "dd": 34.7685603940999
+      },
+      {
+        "x": 96,
+        "z": -90,
+        "change": -0.00020580955973102666,
+        "mask": 0.2394552242056759,
+        "groupIndex": 0,
+        "coverageGain": 0.004391940110644023,
+        "dd": 28.7838081951155
+      },
+      {
+        "x": 96,
+        "z": -84,
+        "change": 0.0007164586734813017,
+        "mask": 0.29250838374552623,
+        "groupIndex": 2,
+        "coverageGain": 0.054786822477380086,
+        "dd": 28.356325895188046
+      },
+      {
+        "x": 96,
+        "z": -78,
+        "change": 0.0003464731934814391,
+        "mask": 0.4651587578500037,
+        "groupIndex": 2,
+        "coverageGain": 0.018081444028108906,
+        "dd": 27.85137022714343
+      },
+      {
+        "x": 96,
+        "z": -36,
+        "change": -0.0012211895806332057,
+        "mask": 0.2761204935832329,
+        "groupIndex": 1,
+        "coverageGain": 0.0339708199886584,
+        "dd": 22.98924206830547
+      },
+      {
+        "x": 96,
+        "z": -30,
+        "change": 0.01124056944861418,
+        "mask": 0.33842030695205105,
+        "groupIndex": 1,
+        "coverageGain": 0.13178254341772128,
+        "dd": 22.169417685483282
+      }
+    ],
+    "avgCoverageGain": 0.08010426652770286,
+    "coverageGainMax": 0.16719530421711323,
+    "strongErr": 0,
+    "maxChange": 0.01769647839937359,
+    "unsupportedChanged": 0,
+    "hardChanged": 0,
+    "receiverChanged": 0,
+    "maxInc": 0.5546563392828006,
+    "maxIncAt": {
+      "x": 24,
+      "z": -48,
+      "xx": 21,
+      "zz": -48,
+      "inc": 0.5546563392828006
+    },
+    "maskChange": 0,
+    "stepChange": 0,
+    "phaseChange": 0,
+    "indexChange": 0,
+    "baseChange": 0,
+    "qaScope": "authoritative 6m whole-slope change search; 3m neighbor cliff checks at every changed 6m cell; unchanged areas inherit R56 which already passed its global 3m gate"
+  }
+}

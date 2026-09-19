@@ -1,0 +1,48 @@
+{
+  "version": "R045.04",
+  "passed": true,
+  "gateCount": 21,
+  "checks": [
+    {"name":"hydrology_node_count","pass":true,"value":22,"limit":22},
+    {"name":"permitted_transfer_count","pass":true,"value":37,"limit":37},
+    {"name":"unknown_current_water_state","pass":true,"value":0,"limit":0},
+    {"name":"all_sources_reach_front_river","pass":true,"value":[true,true,true],"limit":true},
+    {"name":"transfer_graph_acyclic","pass":true,"value":true,"limit":true},
+    {"name":"connected_rear_ridge_min_relief","pass":true,"value":11.92526392727865,"limit":"> 6.5m"},
+    {"name":"connected_rear_ridge_coverage","pass":true,"value":1,"limit":"> 0.68"},
+    {"name":"saddles_remain_lower_sections","pass":true,"value":[11.701802262196587,7.755954186364789],"limit":"1.8..30m"},
+    {"name":"headwater_paths_no_large_uphill_step","pass":true,"value":[-7.699112402790661,-3.0829583222871477,-8.012598822360921,-7.494358135266758,-2.7911640357644103,-5.822519755643107,-0.745868584988024],"limit":"< 1.2m segment rise"},
+    {"name":"headwater_hollows_have_convergent_relief","pass":true,"value":[0.18446447983063763,4.940178215725744,2.1945498398340035,0.7151802422785067,1.6586250346447002,4.665106047712179,1.1955436073004932],"limit":"mean >1m and >=5/7 >0.35m"},
+    {"name":"ridge_wall_profile_similarity_reduced","pass":true,"value":[0.9948609792655557,0.9259108628583193],"limit":"R04 < R03 - 0.035"},
+    {"name":"ridge_wall_not_uniformly_replaced","pass":true,"value":[0.8174982586092582,0.9954710962220302],"limit":">0.08 correlation spread"},
+    {"name":"secondary_crest_lengths_not_uniform","pass":true,"value":0.2356966928740823,"limit":">0.07 CV"},
+    {"name":"branch_spur_lengths_not_uniform","pass":true,"value":0.28572991885475396,"limit":">0.05 CV"},
+    {"name":"middle_shoulders_create_local_slope_breaks","pass":true,"value":[0.000806572469361555,0.016173201969974293,0.007139205879950872,0.018687746553574414,0.011843484893825362,0.0032203555778549386],"limit":"mean abs curvature > .006"},
+    {"name":"central_forward_profile_no_opposing_wall","pass":true,"value":0.4648653511995775,"limit":"< 0.65m / 4m"},
+    {"name":"river_confined_to_front_receiver","pass":true,"value":[161.9136802902821,179.32887035686338],"limit":"154<z<188"},
+    {"name":"no_agriculture_beyond_front_river","pass":true,"value":0,"limit":0},
+    {"name":"terrace_permission_constrained","pass":true,"value":0.42411812961443807,"limit":"0.10..0.62"},
+    {"name":"terrace_permission_zero_near_streams","pass":true,"value":0,"limit":"< 0.03"},
+    {"name":"terrace_permission_viable_away_from_streams","pass":true,"value":0.7280831559696557,"limit":"> 0.28"}
+  ],
+  "metrics": {
+    "crestReliefMin": 11.92526392727865,
+    "crestReliefMean": 21.484331120774208,
+    "saddleDepths": [11.701802262196587,7.755954186364789],
+    "streamRises": [-7.699112402790661,-3.0829583222871477,-8.012598822360921,-7.494358135266758,-2.7911640357644103,-5.822519755643107,-0.745868584988024],
+    "hollowContrasts": [0.18446447983063763,4.940178215725744,2.1945498398340035,0.7151802422785067,1.6586250346447002,4.665106047712179,1.1955436073004932],
+    "profileCorrelationR03": {"avg":0.9948609792655557,"max":0.9992312783564241,"min":0.9888009110648301},
+    "profileCorrelationR04": {"avg":0.9259108628583193,"max":0.9954710962220302,"min":0.8174982586092582},
+    "secondaryCrestLengthCv": 0.2356966928740823,
+    "branchSpurLengthCv": 0.28572991885475396,
+    "shoulderCurvature": [0.000806572469361555,0.016173201969974293,0.007139205879950872,0.018687746553574414,0.011843484893825362,0.0032203555778549386],
+    "maxCentralRise4m": 0.4648653511995775,
+    "riverRange": [161.9136802902821,179.32887035686338],
+    "terracePermissionAbove065": 0.42411812961443807,
+    "nearStreamPermission": 0,
+    "farStreamPermission": 0.7280831559696557
+  },
+  "snapshot": {
+    "version":"R045.04","visualAcceptance":false,"browserQA":false,"productionReady":false,"sedimentTransportSimulation":false,"regionalMicrotopographyTruth":false,"parcelGenerationEnabled":false,"terraceGeometryEnabled":false,"waterStateKnown":false,"mountainHierarchy":"main crest -> unequal secondary crests -> branching spurs -> headwater hollows -> middle shoulders"
+  }
+}

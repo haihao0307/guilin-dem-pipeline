@@ -1,0 +1,206 @@
+{
+  "version": "R045.52",
+  "passed": false,
+  "gateCount": 21,
+  "passedCount": 19,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.52",
+      "limit": "R045.52"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact R47"
+    },
+    {
+      "name": "carrier_identity",
+      "pass": true,
+      "value": {
+        "channels": 12,
+        "outlets": 3
+      },
+      "limit": "exact R47"
+    },
+    {
+      "name": "footprint_exact",
+      "pass": true,
+      "value": {
+        "maskChange": 0,
+        "active": 548,
+        "oldActive": 548
+      },
+      "limit": "R47 mask and active set exact"
+    },
+    {
+      "name": "stair_frame_exact",
+      "pass": true,
+      "value": {
+        "stepChange": 0,
+        "phaseChange": 0
+      },
+      "limit": "step/phase exact"
+    },
+    {
+      "name": "all_groups_exact_support",
+      "pass": true,
+      "value": [
+        95,
+        229,
+        224
+      ],
+      "limit": "all three remain material"
+    },
+    {
+      "name": "profile_change_material",
+      "pass": true,
+      "value": {
+        "changed": 71,
+        "maxChange": 0.16976279908061065
+      },
+      "limit": ">=20 changed samples, .012<max<.28m"
+    },
+    {
+      "name": "weak_shoulders_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "mask<.24 exact"
+    },
+    {
+      "name": "shoulder_slope_reduced",
+      "pass": false,
+      "value": {
+        "n": 40,
+        "old": 0.5784046319141848,
+        "new": 0.5892758167504777,
+        "ratio": 1.0187951206412638
+      },
+      "limit": "median transition-shoulder slope <97% R47"
+    },
+    {
+      "name": "riser_slope_concentrated",
+      "pass": false,
+      "value": {
+        "n": 32,
+        "old": 0.6429029890054083,
+        "new": 0.6598177947713914,
+        "ratio": 1.02631004374727
+      },
+      "limit": "median central-riser slope >103% R47"
+    },
+    {
+      "name": "hard_drainage_exact",
+      "pass": true,
+      "value": {
+        "hardA": 0,
+        "hardD": 0
+      },
+      "limit": "zero support/delta <=12m"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "no_new_cliff",
+      "pass": true,
+      "value": 0.951799471168673,
+      "limit": "<1.25m / 6m"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false"
+    },
+    {
+      "name": "logic_correction_explicit",
+      "pass": true,
+      "value": "R49, R50 and R51 independently tried larger support clouds, zero-mask activation and one-shell tangent growth yet produced only 3, 3 and 1 threshold crossings. Continuing to assume footprint continuity is the dominant visual defect after those falsifications would be confirmation bias. The accepted footprint is locally saturated under the current family/drainage/stair constraints. R52 therefore changes a different causal variable—profile concentration—without raising terrace step height or expanding footprint. A sharper riser is not evidence of the surveyed riser section, so it remains a visual morphology experiment and must pass a separate fixed-view gate.",
+      "limit": "failed support hypothesis acknowledged"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 0.44-0.56 transition interval, strong-mask blend, 6 m QA lattice and inherited 12 m drainage core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions or measured riser geometry. Current 12.5 m macro DEM and photographs cannot provide field microtopography, real parcel/management boundaries, bund/riser/channel sections, inlet/outlet sill elevations, hydraulic connectivity, water head/depth/discharge/gate states or event water-management records.",
+      "limit": "field truth missing"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: a crisper visible bench/riser profile does not establish parcel ownership, surveyed riser section, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "visual profile != truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord frame audit remains ordering discipline only: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> vegetation/paths/materials. Blender dimensions, Voronoi, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png was reread only for non-metric morphology: terrace benches read as broad contour-following bands separated by comparatively concentrated riser edges, while widths vary and drainage interruptions remain. No bench width, riser width/height, channel size or hydraulic parameter is inferred from the photograph.",
+      "limit": "nonmetric only"
+    }
+  ],
+  "metrics": {
+    "active": 548,
+    "oldActive": 548,
+    "groups": [
+      95,
+      229,
+      224
+    ],
+    "maskChange": 0,
+    "stepChange": 0,
+    "phaseChange": 0,
+    "changed": 71,
+    "maxChange": 0.16976279908061065,
+    "weakDelta": 0,
+    "shoulder": {
+      "n": 40,
+      "old": 0.5784046319141848,
+      "new": 0.5892758167504777,
+      "ratio": 1.0187951206412638
+    },
+    "riser": {
+      "n": 32,
+      "old": 0.6429029890054083,
+      "new": 0.6598177947713914,
+      "ratio": 1.02631004374727
+    },
+    "hardA": 0,
+    "hardD": 0,
+    "far": 0,
+    "outside": 0,
+    "receiver": 0,
+    "maxInc": 0.951799471168673,
+    "qaScope": "6m full-slope accepted-R47 footprint exact + transition shoulder/riser profile concentration + drainage/receiver protection"
+  }
+}

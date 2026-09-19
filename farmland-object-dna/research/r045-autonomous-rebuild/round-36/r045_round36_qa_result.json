@@ -1,0 +1,442 @@
+{
+  "version": "R045.36",
+  "passed": true,
+  "gateCount": 39,
+  "passedCount": 39,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.36",
+      "limit": "R045.36"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited planimetric graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "terrace_geometry_remains_substantive_but_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5045566963432688,
+        "deltaMean": 0.0641458386524015,
+        "active": 496,
+        "oldActive": 488,
+        "core": 345,
+        "oldCore": 345,
+        "changeFrom35": 0.2120135044085936,
+        "stitchCells": 20,
+        "newFromZero": 0,
+        "thresholdCross": 8,
+        "unsafeStitch": 0,
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0,
+        "maxStitch": 0.56,
+        "contourPairs": 16,
+        "rowFallbackPairs": 4,
+        "maxPairDistance": 48,
+        "groupCounts": [
+          86,
+          202,
+          208
+        ],
+        "rowRunsN": 76,
+        "rowRunsO": 76,
+        "fragmentationBurdenN": 0.1532258064516129,
+        "fragmentationBurdenO": 0.1557377049180328,
+        "medianLongestN": 54,
+        "medianLongestO": 54,
+        "maxLongestN": 72,
+        "maxLongestO": 72
+      },
+      "limit": ".20 m < max terrace delta < .95 m"
+    },
+    {
+      "name": "r36_is_a_real_but_bounded_change_from_r35",
+      "pass": true,
+      "value": 0.2120135044085936,
+      "limit": ".0015 m < sampled max R36-R35 surface change < .35 m"
+    },
+    {
+      "name": "wider_contour_stitch_is_material",
+      "pass": true,
+      "value": {
+        "stitchCells": 20,
+        "maxStitch": 0.56
+      },
+      "limit": ">10 sampled cells gain >0.006 mask"
+    },
+    {
+      "name": "stitch_changes_threshold_topology",
+      "pass": true,
+      "value": {
+        "thresholdCross": 8
+      },
+      "limit": ">2 inherited weak/gap samples cross the 0.12 active threshold"
+    },
+    {
+      "name": "contour_axis_is_primary",
+      "pass": true,
+      "value": {
+        "contourPairs": 16,
+        "rowFallbackPairs": 4
+      },
+      "limit": "contour-tangent accepted stitches >= row-axis fallback stitches"
+    },
+    {
+      "name": "wider_search_is_actually_used",
+      "pass": true,
+      "value": {
+        "maxPairDistance": 48
+      },
+      "limit": "at least one accepted stitch uses a two-sided pair at >=36 m"
+    },
+    {
+      "name": "stitch_candidates_stay_inside_safe_terrain_zone",
+      "pass": true,
+      "value": {
+        "unsafeStitch": 0
+      },
+      "limit": "no sampled stitch inside hard drainage core, outside broad slope/family eligibility, or receiver exclusion"
+    },
+    {
+      "name": "active_support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 496,
+        "oldActive": 488,
+        "ratio": 1.0163934426229508
+      },
+      "limit": "R36 active support >= R35"
+    },
+    {
+      "name": "terrace_core_does_not_shrink",
+      "pass": true,
+      "value": {
+        "core": 345,
+        "oldCore": 345,
+        "ratio": 1
+      },
+      "limit": "R36 core support >= R35"
+    },
+    {
+      "name": "row_run_count_does_not_materially_worsen",
+      "pass": true,
+      "value": {
+        "rowRunsN": 76,
+        "rowRunsO": 76
+      },
+      "limit": "threshold-level row runs <= R35 + 2"
+    },
+    {
+      "name": "fragmentation_burden_improves_or_holds",
+      "pass": true,
+      "value": {
+        "fragmentationBurdenN": 0.1532258064516129,
+        "fragmentationBurdenO": 0.1557377049180328
+      },
+      "limit": "row runs per active sample <= 1.015x R35"
+    },
+    {
+      "name": "longest_ribbons_do_not_shorten",
+      "pass": true,
+      "value": {
+        "medianNew": 54,
+        "medianOld": 54,
+        "maxNew": 72,
+        "maxOld": 72
+      },
+      "limit": "median longest row run >= R35"
+    },
+    {
+      "name": "hard_drainage_core_stays_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero terrace support/delta at <=12 m drainage distance"
+    },
+    {
+      "name": "all_three_nested_groups_remain_material",
+      "pass": true,
+      "value": [
+        86,
+        202,
+        208
+      ],
+      "limit": "each dominant terrace group has >20 active samples on coarse grid"
+    },
+    {
+      "name": "zero_support_reporting_is_explicit",
+      "pass": true,
+      "value": {
+        "newFromZero": 0
+      },
+      "limit": "reported explicitly; topology may strengthen weak-positive support without inventing measured footprints"
+    },
+    {
+      "name": "r35_quantization_frame_is_exactly_preserved",
+      "pass": true,
+      "value": {
+        "samples": 322,
+        "maxStepDiff": 0,
+        "maxPhaseDiff": 0,
+        "maxRawDiff": 0
+      },
+      "limit": "step, phase and raw stair response exactly inherited from R35"
+    },
+    {
+      "name": "bench_and_riser_samples_exist",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": ">10 bench and >3 riser coarse core samples"
+    },
+    {
+      "name": "benches_are_flatter_than_r30_substrate",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "median bench/base gradient ratio <.90"
+    },
+    {
+      "name": "risers_are_steeper_than_benches",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "median riser slope >1.25x median bench slope"
+    },
+    {
+      "name": "risers_steepen_relative_to_r30",
+      "pass": true,
+      "value": {
+        "benchN": 62,
+        "riserN": 14,
+        "benchRatioMedian": 0.2604845857102642,
+        "riserRatioMedian": 2.436454981437061,
+        "benchSlopeMedian": 0.0655900406174896,
+        "riserSlopeMedian": 0.6057397015411001
+      },
+      "limit": "median riser/base gradient ratio >1.08"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled terrace change far upstream"
+    },
+    {
+      "name": "support_is_localized_to_agricultural_slope",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled terrace change outside support"
+    },
+    {
+      "name": "drainage_axis_cores_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled terrace change within 12 m inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled terrace change around receiver river"
+    },
+    {
+      "name": "terrace_increment_is_not_a_cliff",
+      "pass": true,
+      "value": {
+        "maxAddedStep": 0.7659721144764824,
+        "maxAddedAt": [
+          78,
+          -66
+        ]
+      },
+      "limit": "<1.25 m added-delta change per 6 m"
+    },
+    {
+      "name": "terrace_geometry_enabled_only_as_pilot",
+      "pass": true,
+      "value": {
+        "terraceGeometryEnabled": true,
+        "terracePilotPreviewEnabled": true
+      },
+      "limit": "synthetic terrace morphology ON"
+    },
+    {
+      "name": "global_visual_acceptance_remains_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_errors_explicitly_corrected",
+      "pass": true,
+      "value": "The fact that R35 produced safe bridges does not imply that making those bridges taller will solve the visual cluster problem; amplitude and topology are different variables. It also does not justify global mask closing, because a visually convenient join may be a real drainage break. R36 therefore changes continuity scale only, keeps the inherited stair frame/amplitude fixed, and requires same-family two-sided contour support before any larger stitch can appear.",
+      "limit": "reject taller-riser and unrestricted closing shortcuts"
+    },
+    {
+      "name": "real_world_constraint_is_explicit",
+      "pass": true,
+      "value": "real terrace continuation, branch and merge locations cannot be reconstructed quickly from the present 12.5 m macro DEM and photographs. Selected-field metre/sub-metre microtopography, surveyed riser/bund/channel sections, management boundaries, inlet/outlet sill elevations and event water-management records are still absent. These stitches are synthetic morphology candidates, not surveyed Yunnan terrace junctions.",
+      "limit": "state missing real-world evidence that blocks fast reconstruction"
+    },
+    {
+      "name": "xiaoma_truth_boundary_retained",
+      "pass": true,
+      "value": "the Xiaoma/TLO intake still marks field location/boundary, sampling window, field microtopography, bund section, channel section and water-control elevation unknown. Contour continuity does not establish ownership, hydraulic connectivity, head, water depth, discharge or gate state; R36 creates none of those states.",
+      "limit": "no contour-continuity -> hydraulic-truth error"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord frame audit is used for ordering only: drainage hierarchy -> accumulated terrain influence -> terrain valleys/benches -> terrain-conforming land use. R36 keeps the inherited hydrology-first hard exclusions and deterministic world-space geometry; Blender dimensions, Voronoi cells, shader displacement and adaptive subdivision are not copied as agricultural truth.",
+      "limit": "process ordering only"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round. R36 uses only visible morphology: long curved contour-following benches form nested families, can reconnect locally, and still preserve narrow drainage interruptions. No metric terrace width, stitch length, riser height, channel size, water depth or hydraulic parameter is inferred from the image.",
+      "limit": "morphology only"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed terrace footprint",
+        "surveyed terrace width",
+        "measured branch location",
+        "measured merge location",
+        "measured stitch length",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known inlet sill",
+        "known outlet sill",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known gate state",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5045566963432688,
+      "deltaMean": 0.0641458386524015,
+      "active": 496,
+      "oldActive": 488,
+      "core": 345,
+      "oldCore": 345,
+      "changeFrom35": 0.2120135044085936,
+      "stitchCells": 20,
+      "newFromZero": 0,
+      "thresholdCross": 8,
+      "unsafeStitch": 0,
+      "hardCoreActive": 0,
+      "hardCoreDelta": 0,
+      "maxStitch": 0.56,
+      "contourPairs": 16,
+      "rowFallbackPairs": 4,
+      "maxPairDistance": 48,
+      "groupCounts": [
+        86,
+        202,
+        208
+      ],
+      "rowRunsN": 76,
+      "rowRunsO": 76,
+      "fragmentationBurdenN": 0.1532258064516129,
+      "fragmentationBurdenO": 0.1557377049180328,
+      "medianLongestN": 54,
+      "medianLongestO": 54,
+      "maxLongestN": 72,
+      "maxLongestO": 72
+    },
+    "frameIdentity": {
+      "samples": 322,
+      "maxStepDiff": 0,
+      "maxPhaseDiff": 0,
+      "maxRawDiff": 0
+    },
+    "terraceMorphology": {
+      "benchN": 62,
+      "riserN": 14,
+      "benchRatioMedian": 0.2604845857102642,
+      "riserRatioMedian": 2.436454981437061,
+      "benchSlopeMedian": 0.0655900406174896,
+      "riserSlopeMedian": 0.6057397015411001
+    },
+    "farUp": 0,
+    "nearDrain": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxAddedStep": 0.7659721144764824,
+    "maxAddedAt": [
+      78,
+      -66
+    ]
+  }
+}

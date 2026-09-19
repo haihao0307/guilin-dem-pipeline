@@ -1,0 +1,959 @@
+{
+  "version": "R045.27",
+  "passed": true,
+  "gateCount": 40,
+  "passedCount": 40,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.27",
+      "limit": "R045.27"
+    },
+    {
+      "name": "three_transition_profiles",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major"
+        ],
+        [
+          "OUTLET-B",
+          "subordinate"
+        ],
+        [
+          "OUTLET-C",
+          "local"
+        ]
+      ],
+      "limit": "exactly three inherited outlet-tied transition profiles"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "r26_receiving_hierarchy_identity_preserved",
+      "pass": true,
+      "value": [
+        [
+          "OUTLET-A",
+          "major",
+          24,
+          130,
+          82,
+          158
+        ],
+        [
+          "OUTLET-B",
+          "subordinate",
+          36,
+          120,
+          62,
+          104
+        ],
+        [
+          "OUTLET-C",
+          "local",
+          48,
+          108,
+          54,
+          88
+        ]
+      ],
+      "limit": "exact R26 receiving-hierarchy definitions retained"
+    },
+    {
+      "name": "transition_profiles_are_not_clones",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -30,
+          "zEnd": 82,
+          "width0": 44,
+          "width1": 126,
+          "centre0": -10,
+          "sweep": 44,
+          "bend": 24,
+          "hollow": 0.082,
+          "shoulder": 0.048,
+          "nested": 0.031,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -22,
+          "zEnd": 74,
+          "width0": 36,
+          "width1": 94,
+          "centre0": 18,
+          "sweep": -35,
+          "bend": 19,
+          "hollow": 0.064,
+          "shoulder": 0.039,
+          "nested": 0.025,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -14,
+          "zEnd": 64,
+          "width0": 28,
+          "width1": 68,
+          "centre0": -14,
+          "sweep": 27,
+          "bend": -16,
+          "hollow": 0.049,
+          "shoulder": 0.031,
+          "nested": 0.019,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "three unique transition signatures"
+    },
+    {
+      "name": "declared_transition_scales_are_ordered",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "zStart": -30,
+          "zEnd": 82,
+          "width0": 44,
+          "width1": 126,
+          "centre0": -10,
+          "sweep": 44,
+          "bend": 24,
+          "hollow": 0.082,
+          "shoulder": 0.048,
+          "nested": 0.031,
+          "edgeSign": 1
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "zStart": -22,
+          "zEnd": 74,
+          "width0": 36,
+          "width1": 94,
+          "centre0": 18,
+          "sweep": -35,
+          "bend": 19,
+          "hollow": 0.064,
+          "shoulder": 0.039,
+          "nested": 0.025,
+          "edgeSign": -1
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "zStart": -14,
+          "zEnd": 64,
+          "width0": 28,
+          "width1": 68,
+          "centre0": -14,
+          "sweep": 27,
+          "bend": -16,
+          "hollow": 0.049,
+          "shoulder": 0.031,
+          "nested": 0.019,
+          "edgeSign": 1
+        }
+      ],
+      "limit": "major > subordinate > local in declared width and support length"
+    },
+    {
+      "name": "transition_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.10223353638825543,
+        "mean": 0.012404124955047509,
+        "coreMean": 0.017501016853955057,
+        "n": 2233,
+        "maxAt": [
+          -80,
+          46
+        ],
+        "maxStep": 0.023056880219282386,
+        "maxStepAt": [
+          -86,
+          66
+        ],
+        "positiveMass": 1.825687214032216,
+        "negativeMass": 25.872723810588887,
+        "positiveToNegative": 0.07056416739875761
+      },
+      "limit": "0.02 m < max R27 delta < 0.32 m"
+    },
+    {
+      "name": "transition_change_is_broad_but_shallow",
+      "pass": true,
+      "value": 0.017501016853955057,
+      "limit": "0.002 m < core mean abs delta < 0.09 m"
+    },
+    {
+      "name": "signed_transition_shoulders_survive",
+      "pass": true,
+      "value": {
+        "positiveMass": 1.825687214032216,
+        "negativeMass": 25.872723810588887,
+        "ratio": 0.07056416739875761
+      },
+      "limit": "positive shoulder mass is 0.15%..95% of negative transition mass"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.023056880219282386,
+        "at": [
+          -86,
+          66
+        ]
+      },
+      "limit": "<0.12 m change in R27 field per 4 m z"
+    },
+    {
+      "name": "transition_reaches_agricultural_slope_side",
+      "pass": true,
+      "value": 86,
+      "limit": ">25 active samples at z=-20..6"
+    },
+    {
+      "name": "transition_reaches_receiving_plain_side",
+      "pass": true,
+      "value": 415,
+      "limit": ">80 active samples at z=28..68"
+    },
+    {
+      "name": "transition_overlaps_r26_receiving_hierarchy",
+      "pass": true,
+      "value": 314,
+      "limit": ">35 cells where R27 connector and R26 hierarchy both have substantive signal"
+    },
+    {
+      "name": "all_three_transition_components_exist",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "scaleClass": "major",
+          "mass": 9.57077772482617,
+          "centroid": [
+            -156.72033300857683,
+            40.26646987404247
+          ],
+          "peak": 0.08512426923754116,
+          "peakAt": [
+            -174,
+            48
+          ],
+          "count": 309,
+          "occupiedRows": 17,
+          "positive": 0.5495809681132051,
+          "negative": 9.021196756712968
+        },
+        {
+          "id": "OUTLET-B",
+          "scaleClass": "subordinate",
+          "mass": 4.271802146347131,
+          "centroid": [
+            -29.03720271939954,
+            37.32675001494745
+          ],
+          "peak": 0.048483309152054996,
+          "peakAt": [
+            -78,
+            42
+          ],
+          "count": 213,
+          "occupiedRows": 14,
+          "positive": 0.7882959096372717,
+          "negative": 3.483506236709858
+        },
+        {
+          "id": "OUTLET-C",
+          "scaleClass": "local",
+          "mass": 1.7883894430744305,
+          "centroid": [
+            118.43928170893784,
+            36.49093629456554
+          ],
+          "peak": 0.02606612241605608,
+          "peakAt": [
+            90,
+            48
+          ],
+          "count": 137,
+          "occupiedRows": 9,
+          "positive": 0.4421445274464478,
+          "negative": 1.3462449156279823
+        }
+      ],
+      "limit": "each component peak >0.01 m and >20 occupied samples"
+    },
+    {
+      "name": "actual_transition_scale_hierarchy_survives",
+      "pass": true,
+      "value": [
+        {
+          "id": "OUTLET-A",
+          "count": 309,
+          "rows": 17
+        },
+        {
+          "id": "OUTLET-B",
+          "count": 213,
+          "rows": 14
+        },
+        {
+          "id": "OUTLET-C",
+          "count": 137,
+          "rows": 9
+        }
+      ],
+      "limit": "actual occupied samples major > subordinate > local by >6% each step"
+    },
+    {
+      "name": "transition_components_remain_spatially_distinct",
+      "pass": true,
+      "value": {
+        "minSep": 127.7169672098934,
+        "componentStats": [
+          {
+            "id": "OUTLET-A",
+            "scaleClass": "major",
+            "mass": 9.57077772482617,
+            "centroid": [
+              -156.72033300857683,
+              40.26646987404247
+            ],
+            "peak": 0.08512426923754116,
+            "peakAt": [
+              -174,
+              48
+            ],
+            "count": 309,
+            "occupiedRows": 17,
+            "positive": 0.5495809681132051,
+            "negative": 9.021196756712968
+          },
+          {
+            "id": "OUTLET-B",
+            "scaleClass": "subordinate",
+            "mass": 4.271802146347131,
+            "centroid": [
+              -29.03720271939954,
+              37.32675001494745
+            ],
+            "peak": 0.048483309152054996,
+            "peakAt": [
+              -78,
+              42
+            ],
+            "count": 213,
+            "occupiedRows": 14,
+            "positive": 0.7882959096372717,
+            "negative": 3.483506236709858
+          },
+          {
+            "id": "OUTLET-C",
+            "scaleClass": "local",
+            "mass": 1.7883894430744305,
+            "centroid": [
+              118.43928170893784,
+              36.49093629456554
+            ],
+            "peak": 0.02606612241605608,
+            "peakAt": [
+              90,
+              48
+            ],
+            "count": 137,
+            "occupiedRows": 9,
+            "positive": 0.4421445274464478,
+            "negative": 1.3462449156279823
+          }
+        ]
+      },
+      "limit": "pairwise component centroid separation >12 m"
+    },
+    {
+      "name": "whole_transition_occupancy_evolves",
+      "pass": true,
+      "value": {
+        "rows": [
+          {
+            "z": -16,
+            "count": 12,
+            "centroid": -126.85784267180402
+          },
+          {
+            "z": -10,
+            "count": 20,
+            "centroid": -121.6925855271512
+          },
+          {
+            "z": -4,
+            "count": 21,
+            "centroid": -109.85411321818488
+          },
+          {
+            "z": 2,
+            "count": 28,
+            "centroid": -91.15589500004299
+          },
+          {
+            "z": 8,
+            "count": 40,
+            "centroid": -80.07876490776313
+          },
+          {
+            "z": 14,
+            "count": 57,
+            "centroid": -87.97161117094234
+          },
+          {
+            "z": 20,
+            "count": 62,
+            "centroid": -91.45156820073205
+          },
+          {
+            "z": 26,
+            "count": 66,
+            "centroid": -90.73931540165134
+          },
+          {
+            "z": 32,
+            "count": 76,
+            "centroid": -94.09081756081852
+          },
+          {
+            "z": 38,
+            "count": 72,
+            "centroid": -101.00130064150507
+          },
+          {
+            "z": 44,
+            "count": 83,
+            "centroid": -93.01766190355517
+          },
+          {
+            "z": 50,
+            "count": 77,
+            "centroid": -94.54873901482887
+          },
+          {
+            "z": 56,
+            "count": 59,
+            "centroid": -108.83688640800644
+          },
+          {
+            "z": 62,
+            "count": 56,
+            "centroid": -119.11832738317128
+          },
+          {
+            "z": 68,
+            "count": 49,
+            "centroid": -135.45436386299733
+          }
+        ],
+        "countRange": 71
+      },
+      "limit": ">=8 active rows and occupied-cell count range >5"
+    },
+    {
+      "name": "whole_transition_sweeps_laterally",
+      "pass": true,
+      "value": {
+        "centroidRange": 55.375598955234196,
+        "rows": [
+          {
+            "z": -16,
+            "count": 12,
+            "centroid": -126.85784267180402
+          },
+          {
+            "z": -10,
+            "count": 20,
+            "centroid": -121.6925855271512
+          },
+          {
+            "z": -4,
+            "count": 21,
+            "centroid": -109.85411321818488
+          },
+          {
+            "z": 2,
+            "count": 28,
+            "centroid": -91.15589500004299
+          },
+          {
+            "z": 8,
+            "count": 40,
+            "centroid": -80.07876490776313
+          },
+          {
+            "z": 14,
+            "count": 57,
+            "centroid": -87.97161117094234
+          },
+          {
+            "z": 20,
+            "count": 62,
+            "centroid": -91.45156820073205
+          },
+          {
+            "z": 26,
+            "count": 66,
+            "centroid": -90.73931540165134
+          },
+          {
+            "z": 32,
+            "count": 76,
+            "centroid": -94.09081756081852
+          },
+          {
+            "z": 38,
+            "count": 72,
+            "centroid": -101.00130064150507
+          },
+          {
+            "z": 44,
+            "count": 83,
+            "centroid": -93.01766190355517
+          },
+          {
+            "z": 50,
+            "count": 77,
+            "centroid": -94.54873901482887
+          },
+          {
+            "z": 56,
+            "count": 59,
+            "centroid": -108.83688640800644
+          },
+          {
+            "z": 62,
+            "count": 56,
+            "centroid": -119.11832738317128
+          },
+          {
+            "z": 68,
+            "count": 49,
+            "centroid": -135.45436386299733
+          }
+        ]
+      },
+      "limit": "weighted planform centroid shifts by >5 m"
+    },
+    {
+      "name": "far_upstream_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R27 change at z<=-36"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside R27 support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "transition_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.3619045730617425,
+          "at": [
+            60,
+            22
+          ]
+        },
+        "new": {
+          "maxRise": 0.3674278851859105,
+          "at": [
+            60,
+            22
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R26 + 0.10 m"
+    },
+    {
+      "name": "terrace_permission_recomputed_after_surface_change",
+      "pass": true,
+      "value": 0.0352203662269992,
+      "limit": "permission must not remain bit-identical after R27 touches candidate substrate"
+    },
+    {
+      "name": "permission_change_remains_bounded",
+      "pass": true,
+      "value": 0.0352203662269992,
+      "limit": "localized substrate update must not globally overturn suitability"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6666580770255508,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_pilot_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "R26 hierarchy being numerically real but visually weak does not justify simply increasing vertical amplitude or drawing terraces. Visibility is not causality; R27 changes the missing slope-to-receiver planform connection first.",
+      "limit": "must reject amplitude-only or terrace-overlay visibility fix"
+    },
+    {
+      "name": "stale_permission_logic_corrected",
+      "pass": true,
+      "value": "because R27 modifies the lowest part of the future terrace-candidate zone, inheriting the old terrace-permission mask would be stale. Permission is recomputed from the R27 surface while terrace geometry remains disabled.",
+      "limit": "surface change in candidate zone requires permission recomputation"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "a continuous or visually connected ground surface does not establish hydraulic connectivity, water depth, discharge, gate state, soil-water state or sediment state; those require common-datum microtopography, control elevations, interface identity and time-resolved evidence.",
+      "limit": "continuous morphology cannot be promoted to hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the previously saved drainage-first study is reused only for ordering: inherited river hierarchy/carriers -> accumulated terrain influence -> later land use. No Blender dimension, Voronoi parcel style or hydraulic truth is imported.",
+      "limit": "reuse ordering only, not dimensions or truth"
+    },
+    {
+      "name": "user_reference_reopened_without_metric_inference",
+      "pass": true,
+      "value": "image(173).png was reopened this round for unequal nested contour occupation, changing widths and curved slope-to-lower-field transitions only; no terrace width, riser height, channel size, water depth or regional metric is inferred.",
+      "limit": "image(173).png reopened only for visible hierarchy"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed transition footprint",
+        "measured terrace width",
+        "measured riser height",
+        "measured bund section",
+        "measured channel section",
+        "known control elevation",
+        "known hydraulic connectivity",
+        "known water depth",
+        "known discharge",
+        "known soil-water state",
+        "known sediment state",
+        "regional truth from photograph"
+      ],
+      "limit": "explicit evidence boundary"
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.10223353638825543,
+      "mean": 0.012404124955047509,
+      "coreMean": 0.017501016853955057,
+      "n": 2233,
+      "maxAt": [
+        -80,
+        46
+      ],
+      "maxStep": 0.023056880219282386,
+      "maxStepAt": [
+        -86,
+        66
+      ],
+      "positiveMass": 1.825687214032216,
+      "negativeMass": 25.872723810588887,
+      "positiveToNegative": 0.07056416739875761
+    },
+    "signatures": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "zStart": -30,
+        "zEnd": 82,
+        "width0": 44,
+        "width1": 126,
+        "centre0": -10,
+        "sweep": 44,
+        "bend": 24,
+        "hollow": 0.082,
+        "shoulder": 0.048,
+        "nested": 0.031,
+        "edgeSign": 1
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "zStart": -22,
+        "zEnd": 74,
+        "width0": 36,
+        "width1": 94,
+        "centre0": 18,
+        "sweep": -35,
+        "bend": 19,
+        "hollow": 0.064,
+        "shoulder": 0.039,
+        "nested": 0.025,
+        "edgeSign": -1
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "zStart": -14,
+        "zEnd": 64,
+        "width0": 28,
+        "width1": 68,
+        "centre0": -14,
+        "sweep": 27,
+        "bend": -16,
+        "hollow": 0.049,
+        "shoulder": 0.031,
+        "nested": 0.019,
+        "edgeSign": 1
+      }
+    ],
+    "slopeSideCount": 86,
+    "receiverSideCount": 415,
+    "overlapCount": 314,
+    "componentStats": [
+      {
+        "id": "OUTLET-A",
+        "scaleClass": "major",
+        "mass": 9.57077772482617,
+        "centroid": [
+          -156.72033300857683,
+          40.26646987404247
+        ],
+        "peak": 0.08512426923754116,
+        "peakAt": [
+          -174,
+          48
+        ],
+        "count": 309,
+        "occupiedRows": 17,
+        "positive": 0.5495809681132051,
+        "negative": 9.021196756712968
+      },
+      {
+        "id": "OUTLET-B",
+        "scaleClass": "subordinate",
+        "mass": 4.271802146347131,
+        "centroid": [
+          -29.03720271939954,
+          37.32675001494745
+        ],
+        "peak": 0.048483309152054996,
+        "peakAt": [
+          -78,
+          42
+        ],
+        "count": 213,
+        "occupiedRows": 14,
+        "positive": 0.7882959096372717,
+        "negative": 3.483506236709858
+      },
+      {
+        "id": "OUTLET-C",
+        "scaleClass": "local",
+        "mass": 1.7883894430744305,
+        "centroid": [
+          118.43928170893784,
+          36.49093629456554
+        ],
+        "peak": 0.02606612241605608,
+        "peakAt": [
+          90,
+          48
+        ],
+        "count": 137,
+        "occupiedRows": 9,
+        "positive": 0.4421445274464478,
+        "negative": 1.3462449156279823
+      }
+    ],
+    "minCentroidSep": 127.7169672098934,
+    "rows": [
+      {
+        "z": -16,
+        "count": 12,
+        "centroid": -126.85784267180402
+      },
+      {
+        "z": -10,
+        "count": 20,
+        "centroid": -121.6925855271512
+      },
+      {
+        "z": -4,
+        "count": 21,
+        "centroid": -109.85411321818488
+      },
+      {
+        "z": 2,
+        "count": 28,
+        "centroid": -91.15589500004299
+      },
+      {
+        "z": 8,
+        "count": 40,
+        "centroid": -80.07876490776313
+      },
+      {
+        "z": 14,
+        "count": 57,
+        "centroid": -87.97161117094234
+      },
+      {
+        "z": 20,
+        "count": 62,
+        "centroid": -91.45156820073205
+      },
+      {
+        "z": 26,
+        "count": 66,
+        "centroid": -90.73931540165134
+      },
+      {
+        "z": 32,
+        "count": 76,
+        "centroid": -94.09081756081852
+      },
+      {
+        "z": 38,
+        "count": 72,
+        "centroid": -101.00130064150507
+      },
+      {
+        "z": 44,
+        "count": 83,
+        "centroid": -93.01766190355517
+      },
+      {
+        "z": 50,
+        "count": 77,
+        "centroid": -94.54873901482887
+      },
+      {
+        "z": 56,
+        "count": 59,
+        "centroid": -108.83688640800644
+      },
+      {
+        "z": 62,
+        "count": 56,
+        "centroid": -119.11832738317128
+      },
+      {
+        "z": 68,
+        "count": 49,
+        "centroid": -135.45436386299733
+      }
+    ],
+    "countRange": 71,
+    "centroidRange": 55.375598955234196,
+    "farUpstreamMax": 0,
+    "nearMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.3619045730617425,
+      "at": [
+        60,
+        22
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.3674278851859105,
+      "at": [
+        60,
+        22
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6666580770255508,
+    "permissionMaxChange": 0.0352203662269992
+  }
+}

@@ -1,0 +1,343 @@
+{
+  "version": "R045.41",
+  "passed": false,
+  "gateCount": 33,
+  "passedCount": 32,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.41",
+      "limit": "R045.41"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact inherited graph"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carriers"
+    },
+    {
+      "name": "terrace_geometry_substantive_bounded",
+      "pass": true,
+      "value": {
+        "deltaMax": 0.5073769549580318,
+        "changeFrom40": 0.04667020996838607,
+        "active": 540,
+        "oldActive": 534,
+        "core": 356,
+        "oldCore": 356,
+        "incGainCells": 6,
+        "incThreshold": 6,
+        "incIsolated": 0,
+        "incCrossRow": 6,
+        "maxIncGain": 0.115,
+        "totalGainCells": 11,
+        "totalThreshold": 11,
+        "totalJunction": 4,
+        "totalCrossRow39": 11,
+        "totalOpposite": 3,
+        "maxTotalGain": 0.115,
+        "unsafe": 0,
+        "groups": [
+          92,
+          227,
+          221
+        ],
+        "rowRunsN": 82,
+        "rowRunsP": 78,
+        "fragmentationBurdenN": 0.15185185185185185,
+        "fragmentationBurdenP": 0.14606741573033707,
+        "medianLongestN": 57,
+        "medianLongestP": 60,
+        "maxLongestN": 78,
+        "maxLongestP": 78,
+        "existingActiveMaskChange": 0,
+        "existingActiveDeltaChange": 0
+      },
+      "limit": ".20m < max delta < .95m"
+    },
+    {
+      "name": "r40_failed_materiality_gate_repaired",
+      "pass": true,
+      "value": {
+        "totalGainCells": 11,
+        "maxTotalGain": 0.115
+      },
+      "limit": "retain R40 standard: >8 gain samples and max >.006"
+    },
+    {
+      "name": "r40_failed_topology_gate_repaired",
+      "pass": true,
+      "value": {
+        "totalThreshold": 11,
+        "totalJunction": 4,
+        "totalCrossRow39": 11
+      },
+      "limit": "retain R40 standard: >=6 crossings, >=4 junctions, >=6 cross-row supported"
+    },
+    {
+      "name": "branch_remerge_evidence_present",
+      "pass": true,
+      "value": {
+        "totalOpposite": 3
+      },
+      "limit": ">=2 promoted junctions with opposed inherited R39 support"
+    },
+    {
+      "name": "r41_increment_is_material",
+      "pass": true,
+      "value": {
+        "incGainCells": 6,
+        "incThreshold": 6,
+        "maxIncGain": 0.115
+      },
+      "limit": ">=3 incremental gain samples, >=2 threshold crossings, max gain >.004"
+    },
+    {
+      "name": "r41_increment_crossrow_supported",
+      "pass": true,
+      "value": {
+        "incThreshold": 6,
+        "incCrossRow": 6,
+        "incIsolated": 0
+      },
+      "limit": "every R41 crossing has >=2 compatible immediate R40 neighbours and cross-row support"
+    },
+    {
+      "name": "r41_change_from_r40_bounded",
+      "pass": true,
+      "value": 0.04667020996838607,
+      "limit": ".001m < max sampled change < .14m"
+    },
+    {
+      "name": "existing_r40_active_surface_exact",
+      "pass": true,
+      "value": {
+        "existingActiveMaskChange": 0,
+        "existingActiveDeltaChange": 0
+      },
+      "limit": "all already-active R40 samples exact"
+    },
+    {
+      "name": "support_does_not_shrink",
+      "pass": true,
+      "value": {
+        "active": 540,
+        "oldActive": 534
+      },
+      "limit": "active >= R40"
+    },
+    {
+      "name": "core_does_not_shrink",
+      "pass": true,
+      "value": {
+        "core": 356,
+        "oldCore": 356
+      },
+      "limit": "core >= R40"
+    },
+    {
+      "name": "fragmentation_not_worse",
+      "pass": false,
+      "value": {
+        "burdenN": 0.15185185185185185,
+        "burdenP": 0.14606741573033707
+      },
+      "limit": "runs/active <=101% R40"
+    },
+    {
+      "name": "longest_ribbons_hold",
+      "pass": true,
+      "value": {
+        "medianNew": 57,
+        "medianOld": 60,
+        "maxNew": 78,
+        "maxOld": 78
+      },
+      "limit": "median loses <=6m and max >=R40"
+    },
+    {
+      "name": "all_three_groups_remain_material",
+      "pass": true,
+      "value": [
+        92,
+        227,
+        221
+      ],
+      "limit": "each >20"
+    },
+    {
+      "name": "repair_candidates_stay_safe",
+      "pass": true,
+      "value": {
+        "unsafe": 0
+      },
+      "limit": "no incremental gain in hard drainage/outside eligibility/receiver"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": {
+        "hardCoreActive": 0,
+        "hardCoreDelta": 0
+      },
+      "limit": "zero <=12m drainage"
+    },
+    {
+      "name": "r40_stair_frame_exact",
+      "pass": true,
+      "value": {
+        "frameN": 77,
+        "maxStep": 0,
+        "maxPhase": 0,
+        "maxRaw": 0
+      },
+      "limit": "step/phase/raw exact"
+    },
+    {
+      "name": "far_upstream_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "drainage_core_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "terrace_increment_not_cliff",
+      "pass": true,
+      "value": 0.8363728754031337,
+      "limit": "<1.25m / 6m"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "production_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R40 required more than eight material gain cells, but its sampled eligibility admitted only five gain cells. Lowering the gate would conceal an impossible gate/eligibility pairing. A successful browser render also does not prove terrace topology, and lower fragmentation does not prove an agricultural branch or merge is true. R41 therefore retains the materiality gate and introduces one explicit adjacent-row shoulder class instead of increasing riser amplitude or globally closing the mask.",
+      "limit": "browser/fragmentation != topology truth"
+    },
+    {
+      "name": "real_world_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m QA lattice, three-sample shoulder rule, 12 m hard-core exclusion and generated junctions are synthetic morphology parameters, not surveyed Yunnan terrace dimensions or measured branch/merge locations. Current macro DEM and photographs cannot provide field microtopography, parcel/management boundaries, bund-riser-channel sections, inlet/outlet sill elevations or event water-management records.",
+      "limit": "synthetic parameters and missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO boundaries remain active: continuity, adjacency and conservation do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state or soil-water state without the missing field-scale evidence.",
+      "limit": "continuity/adjacency/conservation != ownership/hydraulics"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "the saved MrRolord study is used only for ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use. Blender dimensions, Voronoi cells, shader displacement and adaptive subdivision are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png was reread this round only for non-metric morphology: long curved contour-following ribbons, unequal widths, local branch/re-merge organization and drainage interruptions. No metric terrace width, junction length, riser height, channel size, water depth or hydraulic parameter is inferred from the photograph.",
+      "limit": "visual morphology only"
+    }
+  ],
+  "metrics": {
+    "geometry": {
+      "deltaMax": 0.5073769549580318,
+      "changeFrom40": 0.04667020996838607,
+      "active": 540,
+      "oldActive": 534,
+      "core": 356,
+      "oldCore": 356,
+      "incGainCells": 6,
+      "incThreshold": 6,
+      "incIsolated": 0,
+      "incCrossRow": 6,
+      "maxIncGain": 0.115,
+      "totalGainCells": 11,
+      "totalThreshold": 11,
+      "totalJunction": 4,
+      "totalCrossRow39": 11,
+      "totalOpposite": 3,
+      "maxTotalGain": 0.115,
+      "unsafe": 0,
+      "groups": [
+        92,
+        227,
+        221
+      ],
+      "rowRunsN": 82,
+      "rowRunsP": 78,
+      "fragmentationBurdenN": 0.15185185185185185,
+      "fragmentationBurdenP": 0.14606741573033707,
+      "medianLongestN": 57,
+      "medianLongestP": 60,
+      "maxLongestN": 78,
+      "maxLongestP": 78,
+      "existingActiveMaskChange": 0,
+      "existingActiveDeltaChange": 0
+    },
+    "far": 0,
+    "near": 0,
+    "receiver": 0,
+    "outside": 0,
+    "maxInc": 0.8363728754031337,
+    "qaScope": "full 6m R41 weak-domain repair sweep + retained R40 total material/topology standards + exact active-R40 inheritance + drainage/receiver boundaries"
+  }
+}

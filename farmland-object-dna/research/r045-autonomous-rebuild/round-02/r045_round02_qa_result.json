@@ -1,0 +1,38 @@
+{
+  "version": "R045.02",
+  "passed": true,
+  "checks": [
+    {"name":"unique-identities","pass":true,"detail":{"count":76}},
+    {"name":"no-inferred-water-state","pass":true,"detail":{"interfaces":37}},
+    {"name":"valid-transfer-endpoints","pass":true,"detail":{}},
+    {"name":"all-sources-reach-front-river","pass":true,"detail":{}},
+    {"name":"transfer-graph-acyclic","pass":true,"detail":{}},
+    {"name":"single-forward-descent","pass":true,"detail":{"maxRisePer4m":0.34745757809384736,"riseAt":21}},
+    {"name":"no-opposite-agricultural-wall","pass":true,"detail":{"beyondMaxSuitability":0}},
+    {"name":"front-river-terminal-band","pass":true,"detail":{"rzMin":161.9136802902821,"rzMax":179.32887035686338}},
+    {"name":"hydrology-shaped-ridge-valley-relief","pass":true,"detail":{"reliefSamples":[{"id":"A","mean":3.819157276988044,"vals":[3.229388665079224,4.005703373838699,4.434544255955759,3.606992813078495]},{"id":"B","mean":4.440392704900921,"vals":[4.001661296680869,4.509571520394953,5.040056177241505,4.2102818252863585]},{"id":"C","mean":2.061359119579498,"vals":[0.8077903824497028,1.765136997743145,2.5640569904414434,3.108452107683699]}],"reliefStd":1.0075045419897775}},
+    {"name":"catchment-asymmetry-present","pass":true,"detail":{"reliefMeans":[3.819157276988044,4.440392704900921,2.061359119579498],"reliefStd":1.0075045419897775}},
+    {"name":"foothill-fan-proxy-declines-downfan","pass":true,"detail":{"fanProfiles":[{"id":"FAN-A","samples":[2.45,1.7131028723088164,1.1978454902500886,0.8375643060937098,0.5856464565357039],"declining":true},{"id":"FAN-B","samples":[2.95,2.1264904146406507,1.5328682995113787,1.1049592358703257,0.7965034656430189],"declining":true},{"id":"FAN-C","samples":[2.1,1.4429690384030402,0.9915045932332357,0.6812906806999808,0.46813398019171626],"declining":true}]}},
+    {"name":"fan-transition-no-cliff","pass":true,"detail":{"fanContinuity":[{"id":"FAN-A","worstRisePer4m":0.18950694668529056,"at":32},{"id":"FAN-B","worstRisePer4m":0.30570420655870567,"at":28},{"id":"FAN-C","worstRisePer4m":0.15578826678545443,"at":36}]}},
+    {"name":"terrace-permission-is-mask-not-everywhere","pass":true,"detail":{"permittedFraction":0.48756339048539}},
+    {"name":"terrace-zones-avoid-major-gullies","pass":true,"detail":{"streamMean":0,"interMean":0.8269620620584687}},
+    {"name":"no-sediment-simulation-overclaim","pass":true,"detail":{"physicsClaims":{"realWeather":false,"realSoilExchange":false,"realGateStates":false,"realFlowRates":false,"regionalMicrotopography":false,"sedimentTransportSimulation":false}}}
+  ],
+  "summary": {
+    "nodes": 22,
+    "edges": 54,
+    "permittedTransfers": 37,
+    "maxRisePer4m": 0.34745757809384736,
+    "riverZ": [161.9136802902821,179.32887035686338],
+    "ridgeValleyReliefMean": 3.4403030338228207,
+    "ridgeValleyReliefStd": 1.0075045419897775,
+    "terracePermittedFraction": 0.48756339048539,
+    "streamPermissionMean": 0,
+    "interfluvePermissionMean": 0.8269620620584687,
+    "fanProfiles": [
+      {"id":"FAN-A","samples":[2.45,1.7131028723088164,1.1978454902500886,0.8375643060937098,0.5856464565357039],"declining":true},
+      {"id":"FAN-B","samples":[2.95,2.1264904146406507,1.5328682995113787,1.1049592358703257,0.7965034656430189],"declining":true},
+      {"id":"FAN-C","samples":[2.1,1.4429690384030402,0.9915045932332357,0.6812906806999808,0.46813398019171626],"declining":true}
+    ]
+  }
+}

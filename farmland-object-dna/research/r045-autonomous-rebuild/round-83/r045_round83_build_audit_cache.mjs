@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+const q=JSON.parse(fs.readFileSync(new URL('./r045_round83_qa_result.json',import.meta.url),'utf8'));
+if(!q.audit?.before||!q.audit?.after||!q.audit?.plan||!q.audit?.rivers)throw new Error('R83 audit grid missing');
+const A=q.audit,m=q.metrics||{},changes=m.changedPoints||[],by=new Map(changes.map(p=>[`${p.x},${p.z}`,p]));
+let changeMax=0,coarseChanged=0;
+for(let j=0;j<A.before.length;j++)for(let i=0;i<A.before[j].length;i++){const d=A.after[j][i]-A.before[j][i];changeMax=Math.max(changeMax,Math.abs(d));if(Math.abs(d)>.001)coarseChanged++}
+const data={version:q.version,qaContract:q.qaContract,sourceSha:q.sourceSha,terrain:{x0:A.x0,x1:A.x1,z0:A.z0,z1:A.z1,nx:A.nx,nz:A.nz,before:A.before,after:A.after},rivers:A.rivers,planSpec:A.planSpec,plan:A.plan.map(c=>({...c,change:(by.get(`${c.x},${c.z}`)?.change)||0,projected:(by.get(`${c.x},${c.z}`)?.projected)||false})),exactChanges:changes,runs:m.runs||[],state:{qaPassed:q.passed===true,candidates:m.candidates||0,opportunities:m.opportunities||0,exactChanged:changes.length,coverage:m.coverage||0,projected:m.projected||0,maxChange:m.maxChange||0,medianAdded:m.medianAdded||0,p75Added:m.p75Added||0,priorContrast:m.priorContrast||0,currentContrast:m.currentContrast||0,contrastRatio:m.contrastRatio||0,longRuns:(m.runs||[]).length,maxInc:m.maxInc||0,prior82Max:m.prior82Max||0,maxProbeAdded:m.maxProbeAdded||0,changeMax,coarseChanged},generatedAt:new Date().toISOString(),source:'R045.83 fixed view: accepted R045.81 vs query-safe 3 m envelope repair of failed R045.82. Orange is physical R83-R81 change; red ring is a request clipped by the query-local predecessor envelope; blue-grey is inherited hard drainage. Visual acceptance remains false unless human fixed-view review explicitly passes it.'};
+fs.writeFileSync(new URL('./r045_round83_audit_cache.mjs',import.meta.url),`export const AUDIT=${JSON.stringify(data)};\n`);
+console.log(JSON.stringify(data.state,null,2));

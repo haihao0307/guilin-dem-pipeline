@@ -1,0 +1,159 @@
+{
+  "system": "Farmland Object DNA",
+  "version": "0.2.0-clean-restart",
+  "date": "2026-09-11",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "activeBranch": "restart/farmland-object-dna-v020-20260907",
+  "restartBaseline": {
+    "branch": "feature/farmland-object-dna-v001",
+    "sha": "309695a43dadec8b967c9ec543136dfc1e84addd"
+  },
+  "entry": "farmland-object-dna/RESTART_START_HERE.md",
+  "mandatoryRules": "farmland-object-dna/FARMLAND_PRODUCTION_RULES.md",
+  "failureRegister": "farmland-object-dna/V001_FAILURE_REGISTER.md",
+  "workOrder": "farmland-object-dna/PRODUCTION_RESTART_TASKS.md",
+  "currentFullHandoff": {
+    "id": "FARMLAND_OBJECT_DNA_CURRENT_FULL_HANDOFF_R025_20260911",
+    "entry": "farmland-object-dna/CURRENT_FULL_HANDOFF.md",
+    "machineEntry": "farmland-object-dna/CURRENT_FULL_HANDOFF.json",
+    "name": "Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip",
+    "path": "farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.zip",
+    "receipt": "farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.receipt.json",
+    "sha256": "farmland-object-dna/distributions/Farmland_Object_DNA_Current_Full_Handoff_R025_2026-09-11.sha256",
+    "canonicalBridgeArtifact": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip",
+    "sourceCommit": "9fb3c6837bc8358a57450d48758760fa96a51ca8",
+    "sourceTree": "5702677fa967895d658b7f4e352c065388344f2b",
+    "archiveSha256": "815a599044ea3717d1c5cc4e399c1ca211485db9b9aa9551b017f454227e8010",
+    "archiveBytes": 222262,
+    "payloadFileCount": 79,
+    "unitTestCount": 118,
+    "status": "verified_current_farmland_full_handoff",
+    "numericTerrainConnected": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "package": {
+    "name": "Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip",
+    "path": "farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.zip",
+    "receipt": "farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.receipt.json",
+    "sha256": "farmland-object-dna/distributions/Farmland_Object_DNA_Full_Clean_Restart_2026-09-07_V0.2.0.sha256",
+    "latest": "farmland-object-dna/distributions/LATEST.json",
+    "status": "historical_v020_restart_snapshot_does_not_include_r021_r025",
+    "supersededForCurrentHandoffBy": "currentFullHandoff",
+    "verificationRequired": true
+  },
+  "bridgePackage": {
+    "id": "FARMLAND_XIAOMA_TLO_DEM_BRIDGE_R025_20260911",
+    "name": "Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip",
+    "path": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip",
+    "receipt": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.receipt.json",
+    "sha256": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.sha256",
+    "latest": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/LATEST.json",
+    "sourceCommit": "9fb3c6837bc8358a57450d48758760fa96a51ca8",
+    "sourceTree": "5702677fa967895d658b7f4e352c065388344f2b",
+    "archiveSha256": "815a599044ea3717d1c5cc4e399c1ca211485db9b9aa9551b017f454227e8010",
+    "archiveBytes": 222262,
+    "payloadFileCount": 79,
+    "unitTestCount": 118,
+    "recipients": [
+      "Xiaoma / TLO",
+      "DEM / Landscape",
+      "next Farmland executor"
+    ],
+    "status": "verified_deterministic_handoff",
+    "numericTerrainConnected": false,
+    "visualAcceptance": false,
+    "productionReady": false
+  },
+  "scope": {
+    "primary": "traditional low-mechanization farmland object system",
+    "firstObject": "traditional irrigated rice paddy",
+    "firstSamples": [
+      "flatland_manual_paddy",
+      "mountain_terrace_paddy"
+    ],
+    "futureFamilies": [
+      "dry_field",
+      "vegetable_garden",
+      "orchard",
+      "nursery",
+      "fallow"
+    ]
+  },
+  "rejectedPredecessor": {
+    "id": "FARMLAND_DNA_WB_V0.1.0_20260907",
+    "status": "rejected",
+    "visualAcceptance": false,
+    "productionReady": false,
+    "shareAllowed": false,
+    "allowedUse": "negative_reference_only"
+  },
+  "authorityBoundaries": {
+    "terrainTruth": "DEM or Landscape authority",
+    "weather": "Weather Mother",
+    "oceanTideAndCoastalWater": "Ocean Mother",
+    "farmlandTopologyLifecycleHydraulics": "Farmland Object DNA",
+    "humanPopulationAndLabor": "external population or settlement authority",
+    "buildingAndVillage": "Building or Settlement authority",
+    "animalBehavior": "Animal authority"
+  },
+  "mandatoryResearch": {
+    "componentSourceCards": "required_before_geometry",
+    "channelPlanLongitudinalCrossSections": "required",
+    "bundTerraceFieldSections": "required",
+    "sourceToReceiverHydraulicGraph": "required",
+    "waterMassBalance": "required",
+    "riceEstablishmentAndStageMorphology": "required",
+    "yuanyangForestWaterVillageTerraceSystem": "required_for_yuanyang_profile",
+    "traditionalWoodenWaterDivider": "research_target_until_evidenced"
+  },
+  "productionOrder": [
+    "evidence",
+    "system_relationships",
+    "plans_and_sections",
+    "dimensions_and_human_scale",
+    "hydraulic_graph_and_mass_balance",
+    "rice_lifecycle",
+    "structural_truth_workbench",
+    "aaa_material_light_motion",
+    "microscope_microdetail",
+    "internal_multi_view_qa",
+    "public_candidate"
+  ],
+  "status": {
+    "cleanRestart": true,
+    "researchGate": "in_progress",
+    "schemaReady": true,
+    "strictValidator": "pass_r025_bridge_118_tests",
+    "structuralTruthWorkbench": "foundation_r025_contracts_only_no_visual_workbench",
+    "activePublicCandidate": null,
+    "browserQA": "not_run_for_v020",
+    "visualAcceptance": false,
+    "productionReady": false,
+    "waterAccountingResearch": "r021_implemented_synthetic_probe",
+    "hydraulicResearch": "r022_ideal_sections_and_six_synthetic_scenarios",
+    "regionalEvidence": "r023_unesco_ICOMOS_contract_20_facts_8_dimensions_unknown",
+    "parcelTopologyResearch": "r023_coordinate_validated_two_synthetic_fixtures",
+    "riceLifecycleResearch": "r024_14_stage_organ_contract_24_regional_parameters_unknown_no_geometry",
+    "crossMotherIntake": "r025_tlo_candidate_and_guilin_dem_identity_locked_numeric_terrain_not_connected",
+    "terrainResearch": "r025_guilin_macro_authority_only_no_sample_no_field_resolution_not_for_honghe"
+  },
+  "currentResearch": {
+    "id": "R025",
+    "entry": "farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/README.md",
+    "probe": "python farmland-object-dna/tools/probe_cross_mother_intake_r025.py",
+    "scope": "fixed_source_tlo_candidate_and_guilin_macro_dem_identity_no_numeric_samples_field_resolution_or_geometry",
+    "sourceDocuments": [
+      "git:handoff/xiaoma-tlo-dna-v0.1-20260908@a4e1b79298205f37dd09b5c63cbcfbe88912e6f9",
+      "git:feature/landscape-karst-kaopu-r6-20260910@a77819b949f79f77601e612d6b30fc22873931f7",
+      "git-tag:guilin-native-12p5m-single-truth-v001@e4906653b705712edb610ee31f91716f18922369",
+      "https://whc.unesco.org/en/list/1111/"
+    ],
+    "sourceReceipt": "farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/XIAOMA_TLO_DEM_INTAKE.json",
+    "tloCheckpoint": "farmland-object-dna/research/r025-xiaoma-tlo-dem-intake/FARMLAND_TLO_CHECKPOINT.json",
+    "bridgeContract": "farmland-object-dna/bridges/r025-xiaoma-tlo-dem/BRIDGE_CONTRACT.json",
+    "bridgePackage": "farmland-object-dna/distributions/bridges/r025-xiaoma-tlo-dem/Farmland_Object_DNA_Xiaoma_TLO_DEM_Bridge_R025_2026-09-11.zip",
+    "originalPackageIncludesR025": false,
+    "next": "select a regional parcel, attach accessible canonical numeric terrain for that same region, and obtain field-scale surveys before terrain queries or geometry"
+  }
+}

@@ -1,0 +1,154 @@
+name: Farmland R027 continuous ground workbench gate
+
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - '.github/workflows/Farmland_R027_continuous_ground_gate.yml'
+      - 'farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  public-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      VERSION_MARKER: FARMLAND_MOTHER_R027_CONTINUOUS_GROUND_20260912
+      PAGE_PATH: farmland-object-dna/Farmland_Mother_R027_Continuous_Ground_Workbench_2026-09-12/index.html
+      DIAG_PATH: farmland-object-dna/diagnostics/Farmland_R027_Browser_Gate_Diagnostic.txt
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Build fixed-commit public URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "PUBLIC_URL=https://rawcdn.githack.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/${PAGE_PATH}" >> "$GITHUB_ENV"
+
+      - name: HTTP and source contract check
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 50); do
+            if curl --fail --location --silent --show-error --output /tmp/farmland-r027.html "$PUBLIC_URL"; then
+              if grep -q "$VERSION_MARKER" /tmp/farmland-r027.html; then break; fi
+            fi
+            if [ "$attempt" = 50 ]; then echo 'R027 fixed-commit page did not become readable.'; exit 1; fi
+            sleep 5
+          done
+          grep -q 'terrainMeshCount = 1' /tmp/farmland-r027.html
+          grep -q "new THREE.PlaneGeometry(W,D,segX,segZ)" /tmp/farmland-r027.html
+          grep -q '草帽农人 × 4' /tmp/farmland-r027.html
+          grep -q '水牛 × 2' /tmp/farmland-r027.html
+          grep -q 'SYNTHETIC QA' /tmp/farmland-r027.html
+          curl --fail --location --silent --show-error --output /tmp/three.module.js 'https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js'
+          test -s /tmp/three.module.js
+
+      - name: Install browser driver library
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --quiet selenium
+          google-chrome --version
+
+      - name: Desktop and mobile browser interaction gate
+        id: browser
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "$(dirname "$DIAG_PATH")"
+          cat > /tmp/farmland_r027_browser_gate.py <<'PY'
+          import os, json, time, traceback
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+          from selenium.webdriver.support import expected_conditions as EC
+
+          url=os.environ['PUBLIC_URL']; marker=os.environ['VERSION_MARKER']; diag=os.environ['DIAG_PATH']; results=[]
+          def log(x): results.append(str(x))
+          def driver(w,h):
+              o=webdriver.ChromeOptions()
+              for a in ['--headless=new','--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-certificate-errors']: o.add_argument(a)
+              o.set_capability('goog:loggingPrefs',{'browser':'ALL'})
+              d=webdriver.Chrome(options=o); d.set_window_size(w,h); return d
+          def open_page(d):
+              d.get(url)
+              WebDriverWait(d,20).until(lambda x:x.execute_script('return document.readyState') in ('interactive','complete'))
+              if 'External Content Notice' in d.title:
+                  log('githack_notice=seen')
+                  WebDriverWait(d,12).until(EC.element_to_be_clickable((By.CSS_SELECTOR,'button.url-action-button'))).click()
+              try:
+                  WebDriverWait(d,30).until(lambda x:x.execute_script("return document.body && document.body.dataset.runtimeReady === 'true'"))
+              except Exception:
+                  log('runtime_ready='+str(d.execute_script("return document.body && document.body.dataset.runtimeReady")))
+                  log('title='+d.title)
+                  try:
+                      logs=d.get_log('browser')
+                      log('browser_logs='+json.dumps(logs,ensure_ascii=False))
+                  except Exception as le:
+                      log('browser_log_error='+repr(le))
+                  raise
+          def check(label,w,h):
+              d=driver(w,h)
+              try:
+                  log(f'=== {label} {w}x{h} ==='); open_page(d)
+                  assert marker in d.page_source
+                  assert len(d.find_elements(By.TAG_NAME,'canvas'))>=1
+                  assert d.execute_script('return document.body.dataset.terrainMeshCount')=='1'
+                  slope=d.find_element(By.CSS_SELECTOR,'button[data-cam="slope"]'); slope.click(); time.sleep(.2); assert 'active' in slope.get_attribute('class').split()
+                  human=d.find_element(By.CSS_SELECTOR,'button[data-cam="human"]'); human.click(); time.sleep(.2); assert 'active' in human.get_attribute('class').split()
+                  wt=d.find_element(By.ID,'waterToggle'); before=wt.is_selected(); wt.click(); time.sleep(.1); assert wt.is_selected()!=before; wt.click()
+                  lt=d.find_element(By.ID,'lifeToggle'); before=lt.is_selected(); lt.click(); time.sleep(.1); assert lt.is_selected()!=before; lt.click()
+                  r=d.execute_script("const a=document.getElementById('title').getBoundingClientRect(),b=document.getElementById('controls').getBoundingClientRect();return {iw:innerWidth,ih:innerHeight,a:{l:a.left,r:a.right,t:a.top,b:a.bottom},b:{l:b.left,r:b.right,t:b.top,b:b.bottom}}")
+                  assert r['a']['l']>=-1 and r['a']['r']<=r['iw']+1 and r['b']['l']>=-1 and r['b']['r']<=r['iw']+1
+                  if label=='mobile': assert r['a']['b']<r['b']['t'] and r['b']['b']<=r['ih']+1
+                  severe=[]
+                  for e in d.get_log('browser'):
+                      msg=e.get('message','').lower()
+                      if e.get('level')!='SEVERE': continue
+                      if 'favicon' in msg: continue
+                      if 'server.ethicalads.io' in msg or 'ethicalads' in msg: continue
+                      severe.append(e)
+                  if severe: raise AssertionError(json.dumps(severe,ensure_ascii=False))
+                  log('runtime_ready=true');log('terrain_mesh_count=1');log('camera_interaction=pass');log('water_toggle=pass');log('life_toggle=pass');log('viewport=pass');log('browser_severe_logs=0_project_errors')
+              finally: d.quit()
+          ok=True
+          try:
+              check('desktop',1440,960);check('mobile',390,844)
+          except Exception:
+              ok=False;log('ERROR:\n'+traceback.format_exc())
+          with open(diag,'w',encoding='utf-8') as f:
+              f.write('commit='+os.environ['GITHUB_SHA']+'\nurl='+url+'\n'+'\n'.join(results)+'\n')
+          raise SystemExit(0 if ok else 1)
+          PY
+          python /tmp/farmland_r027_browser_gate.py
+
+      - name: Persist browser diagnostic on failure
+        if: steps.browser.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$DIAG_PATH"
+          git commit -m 'Farmland R027: capture browser gate diagnostic'
+          git push origin HEAD:restart/farmland-object-dna-v020-20260907
+
+      - name: Enforce browser result
+        if: steps.browser.outcome == 'failure'
+        shell: bash
+        run: exit 1
+
+      - name: Summary
+        if: steps.browser.outcome == 'success'
+        shell: bash
+        run: |
+          cat "$DIAG_PATH" >> "$GITHUB_STEP_SUMMARY"
+          echo 'R027 fixed-commit HTTP, one-ground contract, desktop, 390x844 and interaction checks: PASS' >> "$GITHUB_STEP_SUMMARY"

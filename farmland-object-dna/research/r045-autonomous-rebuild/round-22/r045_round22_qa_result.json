@@ -1,0 +1,389 @@
+{
+  "version": "R045.22",
+  "passed": true,
+  "gateCount": 25,
+  "passedCount": 25,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.22",
+      "limit": "R045.22"
+    },
+    {
+      "name": "water_graph_identity_preserved",
+      "pass": true,
+      "value": {
+        "nodes": [
+          22,
+          22
+        ],
+        "edges": [
+          55,
+          55
+        ]
+      },
+      "limit": "exact planimetric graph identity"
+    },
+    {
+      "name": "terrain_carriers_identity_preserved",
+      "pass": true,
+      "value": {
+        "terrainChannels": 12,
+        "outlets": 3
+      },
+      "limit": "exact inherited carrier arrays"
+    },
+    {
+      "name": "directional_face_change_is_substantive",
+      "pass": true,
+      "value": {
+        "max": 0.5752216501274625,
+        "mean": 0.050756742697284814,
+        "n": 4218,
+        "at": [
+          80,
+          52
+        ],
+        "maxStep": 0.07717190304484667,
+        "maxStepAt": [
+          86,
+          68
+        ],
+        "bandStats": [
+          {
+            "range": [
+              -124,
+              -72
+            ],
+            "centroidX": 3.700093519522476,
+            "meanAbs": 0.03597902664520921,
+            "mass": 37.27427160443674
+          },
+          {
+            "range": [
+              -68,
+              -16
+            ],
+            "centroidX": 6.153374495355599,
+            "meanAbs": 0.044910213769525906,
+            "mass": 46.526981465228836
+          },
+          {
+            "range": [
+              -12,
+              40
+            ],
+            "centroidX": 56.82865464440371,
+            "meanAbs": 0.06267238831171694,
+            "mass": 64.92859429093875
+          },
+          {
+            "range": [
+              44,
+              84
+            ],
+            "centroidX": 62.5733708535866,
+            "meanAbs": 0.0793501461056425,
+            "mass": 64.591018929993
+          }
+        ],
+        "bandShift": 58.87327733406413,
+        "signed": {
+          "positiveCentroidX": 92.04729536932464,
+          "negativeCentroidX": -89.11829974479936,
+          "separation": 181.16559511412402,
+          "positiveMass": 150.54020614860227,
+          "negativeMass": 63.551734548544836
+        }
+      },
+      "limit": "0.30 m < max added delta < 0.95 m"
+    },
+    {
+      "name": "directional_change_is_broad",
+      "pass": true,
+      "value": 0.050756742697284814,
+      "limit": "0.05 m < mean abs delta < 0.38 m"
+    },
+    {
+      "name": "occupancy_moves_across_slope_downhill",
+      "pass": true,
+      "value": {
+        "bandStats": [
+          {
+            "range": [
+              -124,
+              -72
+            ],
+            "centroidX": 3.700093519522476,
+            "meanAbs": 0.03597902664520921,
+            "mass": 37.27427160443674
+          },
+          {
+            "range": [
+              -68,
+              -16
+            ],
+            "centroidX": 6.153374495355599,
+            "meanAbs": 0.044910213769525906,
+            "mass": 46.526981465228836
+          },
+          {
+            "range": [
+              -12,
+              40
+            ],
+            "centroidX": 56.82865464440371,
+            "meanAbs": 0.06267238831171694,
+            "mass": 64.92859429093875
+          },
+          {
+            "range": [
+              44,
+              84
+            ],
+            "centroidX": 62.5733708535866,
+            "meanAbs": 0.0793501461056425,
+            "mass": 64.591018929993
+          }
+        ],
+        "bandShift": 58.87327733406413
+      },
+      "limit": "absolute-delta x centroid range across z bands >22 m"
+    },
+    {
+      "name": "bay_and_shoulder_are_spatially_separated",
+      "pass": true,
+      "value": {
+        "positiveCentroidX": 92.04729536932464,
+        "negativeCentroidX": -89.11829974479936,
+        "separation": 181.16559511412402,
+        "positiveMass": 150.54020614860227,
+        "negativeMass": 63.551734548544836
+      },
+      "limit": "positive and negative morphology centroids separated by >120 m in x"
+    },
+    {
+      "name": "added_field_is_longitudinally_gradual",
+      "pass": true,
+      "value": {
+        "maxStep": 0.07717190304484667,
+        "at": [
+          86,
+          68
+        ]
+      },
+      "limit": "<0.20 m change in added field per 4 m z"
+    },
+    {
+      "name": "r21_upper_headwater_work_untouched",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled R22 change at z<=-134"
+    },
+    {
+      "name": "support_is_band_limited",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change outside lower-slope support"
+    },
+    {
+      "name": "drainage_axes_are_protected",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change within 10 m of inherited drainage axes"
+    },
+    {
+      "name": "foreground_receiver_is_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "zero sampled change around receiver river"
+    },
+    {
+      "name": "directional_massing_does_not_create_new_wall",
+      "pass": true,
+      "value": {
+        "old": {
+          "maxRise": 0.14285383893742432,
+          "at": [
+            105,
+            32
+          ]
+        },
+        "new": {
+          "maxRise": 0.2098744002052737,
+          "at": [
+            105,
+            32
+          ]
+        }
+      },
+      "limit": "new worst 4 m uphill rise <= R21 + 0.20 m"
+    },
+    {
+      "name": "terrace_permission_excludes_drainage",
+      "pass": true,
+      "value": 0,
+      "limit": "<0.01"
+    },
+    {
+      "name": "future_terrace_candidates_remain",
+      "pass": true,
+      "value": 0.6814326037170066,
+      "limit": ">0.03 while geometry remains locked"
+    },
+    {
+      "name": "permission_recomputed_from_directional_ground",
+      "pass": true,
+      "value": 0.601946317632428,
+      "limit": "permission mask must respond to R22 ground"
+    },
+    {
+      "name": "visual_acceptance_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "terrace_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "parcel_generator_locked",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "water_state_unknown",
+      "pass": true,
+      "value": false,
+      "limit": false
+    },
+    {
+      "name": "logic_error_explicitly_corrected",
+      "pass": true,
+      "value": "increasing the amplitude of R21 long shoulders would magnify the near-parallel-ribbon artifact. R22 changes occupancy and direction before adding any terrace pattern",
+      "limit": "must reject amplitude-only response to parallel-ribbon artifact"
+    },
+    {
+      "name": "xiaoma_state_boundary_retained",
+      "pass": true,
+      "value": "a visually continuous terrain and protected drainage geometry still do not establish hydraulic connectivity, water depth, discharge, gate state, soil water or sediment state",
+      "limit": "terrain appearance must not become hydraulic-state claim"
+    },
+    {
+      "name": "mrrolord_provenance_is_honest",
+      "pass": true,
+      "value": "reuse only the saved drainage-first hierarchy (topology/carriers -> terrain influence -> land use); no fresh original-video viewing is claimed in this round",
+      "limit": "saved research may be reused but not misreported as fresh viewing"
+    },
+    {
+      "name": "references_are_not_metric_truth",
+      "pass": true,
+      "value": "the retained terrace photograph is used only as a visual hierarchy check for unequal nested masses and contour-following occupation; no bench width, riser height or hydraulic dimension is extracted",
+      "limit": "visual hierarchy only; no metric extraction"
+    },
+    {
+      "name": "survey_claims_forbidden",
+      "pass": true,
+      "value": [
+        "surveyed basin footprint",
+        "measured terrace bench",
+        "measured riser or bund section",
+        "active irrigation connectivity",
+        "field water depth",
+        "discharge",
+        "soil or sediment property",
+        "ownership or cadastral boundary",
+        "regional terrace dimensions"
+      ],
+      "limit": "explicit evidence boundary"
+    }
+  ],
+  "metrics": {
+    "delta": {
+      "max": 0.5752216501274625,
+      "mean": 0.050756742697284814,
+      "n": 4218,
+      "at": [
+        80,
+        52
+      ],
+      "maxStep": 0.07717190304484667,
+      "maxStepAt": [
+        86,
+        68
+      ],
+      "bandStats": [
+        {
+          "range": [
+            -124,
+            -72
+          ],
+          "centroidX": 3.700093519522476,
+          "meanAbs": 0.03597902664520921,
+          "mass": 37.27427160443674
+        },
+        {
+          "range": [
+            -68,
+            -16
+          ],
+          "centroidX": 6.153374495355599,
+          "meanAbs": 0.044910213769525906,
+          "mass": 46.526981465228836
+        },
+        {
+          "range": [
+            -12,
+            40
+          ],
+          "centroidX": 56.82865464440371,
+          "meanAbs": 0.06267238831171694,
+          "mass": 64.92859429093875
+        },
+        {
+          "range": [
+            44,
+            84
+          ],
+          "centroidX": 62.5733708535866,
+          "meanAbs": 0.0793501461056425,
+          "mass": 64.591018929993
+        }
+      ],
+      "bandShift": 58.87327733406413,
+      "signed": {
+        "positiveCentroidX": 92.04729536932464,
+        "negativeCentroidX": -89.11829974479936,
+        "separation": 181.16559511412402,
+        "positiveMass": 150.54020614860227,
+        "negativeMass": 63.551734548544836
+      }
+    },
+    "nearMax": 0,
+    "upperMax": 0,
+    "receiverMax": 0,
+    "outsideMax": 0,
+    "oldForward": {
+      "maxRise": 0.14285383893742432,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "newForward": {
+      "maxRise": 0.2098744002052737,
+      "at": [
+        105,
+        32
+      ]
+    },
+    "terraceNearDrainageMean": 0,
+    "terraceFarDrainageMean": 0.6814326037170066,
+    "permissionMaxChange": 0.601946317632428
+  }
+}

@@ -1,0 +1,40 @@
+name: farmland-r045-round41-diagnostic
+on:
+  push:
+    branches:
+      - restart/farmland-object-dna-v020-20260907
+    paths:
+      - '.github/workflows/farmland-r045-round41-diagnostic.yml'
+  workflow_dispatch:
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan R39/R40 weak topology candidates
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import * as R39 from './farmland-object-dna/research/r045-autonomous-rebuild/round-39/r045_round39_kernel.mjs';
+          import * as R40 from './farmland-object-dna/research/r045-autonomous-rebuild/round-40/r045_round40_kernel.mjs';
+          import * as R35 from './farmland-object-dna/research/r045-autonomous-rebuild/round-35/r045_round35_kernel.mjs';
+          import * as R30 from './farmland-object-dna/research/r045-autonomous-rebuild/round-30/r045_round30_kernel.mjs';
+          const C=(x,a,b)=>Math.max(a,Math.min(b,x));
+          function compatible(a,b){if(a.groupIndex!==b.groupIndex)return false;const step=.5*(a.step+b.step);return Math.abs(a.step-b.step)<=Math.max(.18,.24*step)&&Math.abs(a.index-b.index)<=3}
+          const near=[[6,0],[-6,0],[0,6],[0,-6],[6,6],[-6,6],[6,-6],[-6,-6]];
+          const ext=[[12,0],[-12,0],[12,6],[-12,6],[12,-6],[-12,-6]];
+          function supp(fn,x,z,b,offs){const a=[];for(const [dx,dz] of offs){const n=fn(x+dx,z+dz);if(n.mask>.12&&compatible(b,n))a.push({dx,dz,mask:n.mask})}return a}
+          function safe(x,z){const dd=R30.nearestExtendedDrainageDistance(x,z);if(dd<=12)return false;const rg=Math.abs(z-R30.riverZ(x));return R35.broadTerraceEligibility(x,z)>=.03&&R35.terraceGroupEnvelope(x,z)>=.035&&R35.terraceDrainageClearance(x,z)>.035&&rg>R30.riverW(x)+18}
+          const rows=[];let counts={weakSafe:0,r40Gain:0,r40Cross:0,strongExact:0,oneNearPlusExt:0,twoNearNoSpread:0,oneNearCross:0};
+          for(let z=-132;z<=12;z+=6)for(let x=-222;x<=120;x+=6){const o=R39.terraceStateAt(x,z),p=R40.terraceStateAt(x,z);if(o.mask>.12||!safe(x,z))continue;counts.weakSafe++;const n=supp(R39.terraceStateAt,x,z,o,near),e=supp(R39.terraceStateAt,x,z,o,ext),all=n.concat(e);const row=n.filter(s=>s.dz===0),cross=n.filter(s=>s.dz!==0),up=n.filter(s=>s.dz>0),down=n.filter(s=>s.dz<0);const spread=(row.length&&cross.length)||(up.length&&down.length);const strong=n.length>=2&&spread;const gain=p.mask-o.mask;if(gain>.00001)counts.r40Gain++;if(o.mask<=.12&&p.mask>.12)counts.r40Cross++;if(strong)counts.strongExact++;if(n.length===1&&all.length>=2)counts.oneNearPlusExt++;if(n.length>=2&&!spread)counts.twoNearNoSpread++;if(n.length===1&&cross.length===1)counts.oneNearCross++;
+            if(gain>.00001||strong||(n.length===1&&all.length>=2)||(n.length>=2&&!spread))rows.push({x,z,old:o.mask,r40:p.mask,gain,group:o.groupIndex,index:o.index,step:o.step,near:n,ext:e,strong,spread,safety:true});
+          }
+          rows.sort((a,b)=>b.gain-a.gain||b.near.length-a.near.length||b.ext.length-a.ext.length);
+          const out={counts,rows:rows.slice(0,120)};fs.writeFileSync('/tmp/r41_diag.json',JSON.stringify(out,null,2));console.log(JSON.stringify(out,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: farmland-r045-round41-diagnostic
+          path: /tmp/r41_diag.json
