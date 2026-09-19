@@ -55,7 +55,7 @@ def apply(s: str) -> str:
 
     rep(
         "cameraMode,archGeometry:'continuous-eroded-ridge-v025',archOpening:{span:29,height:21.8,tidalUndercut:true},source:'object definitions + state + relations; original sea/sky retained',limitations:",
-        "cameraMode,archGeometry:'asymmetric-vegetated-eroded-ridge-v026',archOpening:{span:31.2,height:24.2,tidalUndercut:true,asymmetric:true},archCrown:'deterministic-vegetation-same-geometry-build',source:'object definitions + state + relations; original sea/sky retained',limitations:"
+        "cameraMode,archGeometry:'asymmetric-vegetated-eroded-ridge-v026',archOpening:{span:31.2,height:21.0,tidalUndercut:true,asymmetric:true},archCrown:'deterministic-vegetation-same-geometry-build',source:'object definitions + state + relations; original sea/sky retained',limitations:"
     )
 
     return s
