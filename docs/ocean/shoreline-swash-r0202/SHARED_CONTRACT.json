@@ -1,0 +1,53 @@
+{
+  "contractId": "SMI-OCEAN-SHORE-R0202",
+  "date": "2026-09-19",
+  "reference": {
+    "url": "https://x.com/cryptomanavan/status/2096111310177992738/video/1",
+    "metadataReadable": true,
+    "videoReadable": false,
+    "status": "video_pending",
+    "rule": "No frame-specific claim until the video payload is readable."
+  },
+  "canonicalBase": "core/ocean-mother-r0201-canonical-20260917",
+  "frozenBaseMustRemainByteStable": true,
+  "queries": {
+    "surfaceAt": ["eta", "normal", "surfaceVelocity", "depth", "breakerEnergy", "clarity"],
+    "shoreAt": ["signedDistance", "tangent", "outwardNormal", "exposure", "beachSlope"],
+    "substrateAt": ["elevation", "materialClass", "porosity", "roughness", "erodibility"],
+    "swashAt": ["inundation", "flowVelocity", "runupPhase", "backwashPhase", "foamSource"],
+    "wetnessAt": ["waterContent", "lastInundationTime", "dryingRate", "opticalDarkening"],
+    "intertidalAt": ["immersionFraction", "waveStress", "salinityCandidate", "habitatClass"]
+  },
+  "firstCell": {
+    "name": "wake-up-bay-white-sand-shallow-reef",
+    "lengthMetersCandidate": [24, 40],
+    "regime": "reef_protected_lagoon",
+    "deliverables": [
+      "continuous bed profile",
+      "depth-transformed wave",
+      "uprush and backwash",
+      "energy-derived foam",
+      "inundation-memory wet sand",
+      "fish landing probe",
+      "canoe beaching probe",
+      "intertidal habitat strip"
+    ]
+  },
+  "acceptance": {
+    "maxWaterTerrainGapMeters": 0.05,
+    "requiredFrameRates": [30, 60, 120],
+    "requiredViewports": ["desktop", "390x844"],
+    "saveRestore": true,
+    "canonicalByteStable": true,
+    "visualAcceptance": false,
+    "physicalDeviceTest": false,
+    "productionReady": false
+  },
+  "startGate": {
+    "codeCommitRequired": true,
+    "testOrNumericalReceiptRequired": true,
+    "visualEvidenceRequiredWhenRenderingChanges": true,
+    "knownLimitationsRequired": true,
+    "discussionAloneCountsAsProgress": false
+  }
+}
