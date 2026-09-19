@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
 const SEA_DISPLAY_DATUM_M = 0;
-const SEA_WAVE_AMPLITUDE_M = 0.22;
-const SEA_SURFACE_OPACITY = 0.62;
-const SEA_VISUAL_STYLE = 'low-frequency-cross-ripple-r2';
-const FLAG = Symbol.for('wenzhou.r3.2.sea-demo-r2-installed');
+const SEA_WAVE_AMPLITUDE_M = 0.10;
+const SEA_SURFACE_OPACITY = 0.70;
+const SEA_VISUAL_STYLE = 'stable-low-frequency-transmission-r3';
+const FLAG = Symbol.for('wenzhou.r3.2.sea-demo-r3-installed');
 
 function buildSeaGeometry(box, segments) {
   const minX = box.min.x, maxX = box.max.x, minZ = box.min.z, maxZ = box.max.z;
@@ -53,9 +53,9 @@ function buildSeaMaterial(landMask) {
         vUv = uv;
         vec3 p = position;
         const float TAU = 6.28318530718;
-        float w1 = sin((uv.x * 5.0 + uv.y * 2.0) * TAU + uTime * 0.18) * 0.000090;
-        float w2 = sin((uv.x * -3.0 + uv.y * 4.0) * TAU - uTime * 0.13) * 0.000075;
-        float w3 = sin((uv.x * 8.0 + uv.y * 7.0) * TAU + uTime * 0.23) * 0.000055;
+        float w1 = sin((uv.x * 3.2 + uv.y * 1.4) * TAU + uTime * 0.11) * 0.000045;
+        float w2 = sin((uv.x * -2.1 + uv.y * 2.8) * TAU - uTime * 0.09) * 0.000035;
+        float w3 = sin((uv.x * 5.1 + uv.y * 4.2) * TAU + uTime * 0.14) * 0.000020;
         p.y += w1 + w2 + w3;
         vWave = (w1 + w2 + w3) * 1000.0;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -72,20 +72,20 @@ function buildSeaMaterial(landMask) {
         float sea = 1.0 - land;
         if (sea < 0.5) discard;
         const float TAU = 6.28318530718;
-        float r1 = sin((vUv.x * 13.0 + vUv.y * 7.0) * TAU + uTime * 0.19);
-        float r2 = sin((vUv.x * -9.0 + vUv.y * 11.0) * TAU - uTime * 0.14);
-        float ripple = 0.5 + 0.25 * r1 + 0.25 * r2;
-        float softGlint = smoothstep(0.72, 0.98, ripple);
-        float band = clamp(0.5 + vWave * 1.35, 0.0, 1.0);
-        vec3 deep = vec3(0.020, 0.185, 0.265);
-        vec3 mid = vec3(0.045, 0.315, 0.390);
-        vec3 light = vec3(0.180, 0.490, 0.525);
-        vec3 color = mix(deep, mid, 0.50 + band * 0.18);
-        color = mix(color, light, softGlint * 0.035);
+        float broad1 = sin((vUv.x * 2.6 + vUv.y * 1.8) * TAU + uTime * 0.07);
+        float broad2 = sin((vUv.x * -1.7 + vUv.y * 2.3) * TAU - uTime * 0.05);
+        float tone = 0.5 + 0.25 * broad1 + 0.25 * broad2;
+        float band = clamp(0.5 + vWave * 0.75, 0.0, 1.0);
+        vec3 deep = vec3(0.030, 0.205, 0.285);
+        vec3 mid = vec3(0.060, 0.330, 0.400);
+        vec3 light = vec3(0.115, 0.405, 0.455);
+        vec3 color = mix(deep, mid, 0.48 + band * 0.12);
+        color = mix(color, light, tone * 0.018);
         gl_FragColor = vec4(color, uOpacity * sea);
       }
     `,
     transparent: true,
+    depthTest: true,
     depthWrite: false,
     side: THREE.DoubleSide
   });
@@ -125,12 +125,13 @@ export function installSeaDemo() {
     canvas.dataset.seaSurfaceOpacity = String(SEA_SURFACE_OPACITY);
     canvas.dataset.seaSurfaceVisualStyle = SEA_VISUAL_STYLE;
     canvas.dataset.seaSurfaceOwnerRole = 'canonical-terrain-candidate';
+    canvas.dataset.seaSurfaceSpecularGlint = 'false';
     canvas.dataset.seaVisible = String(visible);
   }
 
   function publishState(terrain, mesh, visible) {
     window.__wenzhouSeaSurface = {
-      schema: 'wenzhou-sea-surface-display/v2',
+      schema: 'wenzhou-sea-surface-display/v3',
       ready: true,
       terrainUuid: terrain.uuid,
       meshUuid: mesh.uuid,
@@ -140,6 +141,7 @@ export function installSeaDemo() {
       displayDatumM: SEA_DISPLAY_DATUM_M,
       waveAmplitudeM: SEA_WAVE_AMPLITUDE_M,
       waveCoordinateSpace: 'normalized-patch-uv',
+      specularGlint: false,
       decorativeLayerExclusion: true,
       visible
     };
@@ -197,7 +199,7 @@ export function installSeaDemo() {
       layer.loopStarted = true;
       const tick = time => {
         if (layer.disposed) return;
-        if (layer.mesh.visible && layer.renderer && layer.camera && time - layer.lastFrame >= 33) {
+        if (layer.mesh.visible && layer.renderer && layer.camera && time - layer.lastFrame >= 50) {
           layer.material.uniforms.uTime.value = time * 0.001;
           layer.renderer.render(layer.scene, layer.camera);
           layer.lastFrame = time;
