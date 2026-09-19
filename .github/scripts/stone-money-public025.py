@@ -27,7 +27,7 @@ try:
     page.goto(URL,wait_until='domcontentloaded',timeout=60000);page.wait_for_function("window.OceanIsland?.qa.ready || document.getElementById('error')?.textContent.trim()",timeout=150000)
     assert not page.locator('#error').inner_text();assert page.evaluate("OceanIsland.qa.ready && StoneMoneySurvival && StoneMoneyShoreline")
     page.locator('#smiStart').click();page.wait_for_function("StoneMoneySurvival.getMode()==='playing'",timeout=25000)
-    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='continuous-parametric-karst-v025';case['arch']=diag['archOpening']
+    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='continuous-eroded-ridge-v025';assert diag['archOpening']['span']==29 and diag['archOpening']['height']==21.8;case['arch']=diag['archOpening']
     for mode in ['aerial','arch','fish']:
      case['phase']=mode;save();page.evaluate('(m)=>StoneMoneySurvival.setCameraMode(m)',mode);page.wait_for_timeout(600);assert page.evaluate('StoneMoneySurvival.getCameraMode()')==mode
      page.evaluate("Promise.race([OceanIsland.holdForReview(),new Promise((_,r)=>setTimeout(()=>r(Error('frame timeout')),30000))])")
