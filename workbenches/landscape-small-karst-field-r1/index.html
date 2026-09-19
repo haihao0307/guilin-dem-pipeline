@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Landscape Mother · 小尺度帕劳卡斯特原型 R1</title>
+<style>
+  :root{color-scheme:light;--ink:#17342d;--paper:rgba(244,248,239,.90);--accent:#315c48;--line:rgba(255,255,255,.7)}
+  *{box-sizing:border-box} html,body{width:100%;height:100%;margin:0;overflow:hidden;font:12px/1.45 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:linear-gradient(#a4c5d7,#d8e4dc 62%,#98a78b)}
+  canvas{width:100%;height:100%;display:block;touch-action:none}
+  header{position:absolute;left:18px;top:16px;right:18px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+  .brand,.toolbar,.panel,.badge{pointer-events:auto;background:var(--paper);border:1px solid var(--line);backdrop-filter:blur(12px);box-shadow:0 12px 28px rgba(28,48,39,.13)}
+  .brand{padding:12px 15px;border-radius:12px}.eyebrow{font-size:9px;letter-spacing:2px;opacity:.72}.brand h1{margin:4px 0 0;font-size:19px;font-weight:630}.sub{margin-top:5px;font-size:10px;opacity:.7}
+  button,input{font:inherit}button{border:0;border-radius:8px;background:transparent;padding:9px 12px;color:inherit;cursor:pointer}button:hover,button.active{background:var(--accent);color:#fff}
+  .toolbar{display:flex;gap:4px;padding:5px;border-radius:11px}
+  .panel{position:absolute;right:18px;top:72px;width:304px;max-height:calc(100% - 104px);overflow:auto;border-radius:13px;padding:16px 18px}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.row:first-child{margin-top:0}.row label{font-weight:580}.row output{font-variant-numeric:tabular-nums;color:#7c5c3e}
+  input[type=range]{width:100%;accent-color:var(--accent);margin:5px 0 0}.group{margin-top:15px;padding-top:13px;border-top:1px solid rgba(47,79,62,.16)}.group h3{margin:0 0 5px;font-size:11px;letter-spacing:1px;opacity:.65}
+  .note{font-size:10px;opacity:.68;margin:8px 0 0}.badge{position:absolute;left:18px;bottom:17px;padding:9px 11px;border-radius:10px;font-size:10px}.badge b{font-weight:650}
+  #error{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:80vw;padding:16px;border-radius:10px;background:#f9eee9;color:#912c1f;display:none;white-space:pre-wrap}
+  .hide{display:none!important}
+  @media(max-width:720px){header{left:10px;right:10px;top:10px}.brand{max-width:210px;padding:9px 11px}.brand h1{font-size:15px}.toolbar button{padding:8px}.panel{left:10px;right:10px;top:94px;width:auto;max-height:52vh}.badge{left:10px;bottom:10px}.sub{font-size:8px}}
+</style>
+</head>
+<body>
+<canvas id="view" aria-label="连续隐式场小尺度帕劳卡斯特原型"></canvas>
+<header>
+  <div class="brand"><div class="eyebrow">LANDSCAPE MOTHER · CONTINUOUS FIELD</div><h1>小尺度帕劳卡斯特原型 R1</h1><div class="sub">房屋级母体 · 无预展开网格 · Brick V2.6 形体语言迁移</div></div>
+  <div class="toolbar"><button id="reset">复位</button><button id="togglePanel">调节</button><button id="wire">灰模</button></div>
+</header>
+<aside class="panel" id="panel">
+  <div class="group" style="margin-top:0;padding-top:0;border-top:0"><h3>形体比例</h3>
+    <div class="row"><label for="overall">整体大小</label><output id="overallOut">1.00×</output></div><input id="overall" type="range" min="0.55" max="2.20" step="0.01" value="1.00">
+    <div class="row"><label for="height">高度</label><output id="heightOut">1.00×</output></div><input id="height" type="range" min="0.60" max="1.70" step="0.01" value="1.00">
+    <div class="row"><label for="width">宽度</label><output id="widthOut">1.00×</output></div><input id="width" type="range" min="0.60" max="1.80" step="0.01" value="1.00">
+  </div>
+  <div class="group"><h3>Brick / Break 形体语言</h3>
+    <div class="row"><label for="macro">大变形</label><output id="macroOut">1.25</output></div><input id="macro" type="range" min="0" max="2.5" step="0.01" value="1.25">
+    <div class="row"><label for="cavity">洞蚀深度</label><output id="cavityOut">1.10</output></div><input id="cavity" type="range" min="0" max="2.2" step="0.01" value="1.10">
+    <div class="row"><label for="warp">域 Warp</label><output id="warpOut">1.45</output></div><input id="warp" type="range" min="0" max="3" step="0.01" value="1.45">
+    <div class="row"><label for="detail">细节强度</label><output id="detailOut">1.35</output></div><input id="detail" type="range" min="0" max="2.4" step="0.01" value="1.35">
+    <div class="row"><label for="detailScale">细节尺度</label><output id="detailScaleOut">1.00×</output></div><input id="detailScale" type="range" min="0.35" max="2.6" step="0.01" value="1.00">
+  </div>
+  <div class="group"><h3>材料 / 分区</h3>
+    <div class="row"><label for="colorWarp">色彩 Warp</label><output id="colorWarpOut">1.35</output></div><input id="colorWarp" type="range" min="0" max="3" step="0.01" value="1.35">
+    <div class="row"><label for="soil">顶部积土</label><output id="soilOut">0.72</output></div><input id="soil" type="range" min="0" max="1" step="0.01" value="0.72">
+    <p class="note">顶部积土只读取向上、向天开口的外表面；主洞内壁不参与。</p>
+  </div>
+</aside>
+<div class="badge"><b>尺度参考：</b>默认约 16 m 高 / 12 m 宽；白色标尺为 2 m。</div>
+<div id="error"></div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('view');
+const gl=canvas.getContext('webgl2',{antialias:false,alpha:true,powerPreference:'high-performance'});
+if(!gl){document.getElementById('error').style.display='block';document.getElementById('error').textContent='需要 WebGL2。';return;}
+const vs=`#version 300 es
+precision highp float;
+const vec2 P[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));
+out vec2 vUv;
+void main(){vec2 p=P[gl_VertexID];vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+const fs=`#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 frag;
+uniform vec2 uRes;uniform float uTime;
+uniform vec3 uCam;uniform mat3 uBasis;
+uniform float uOverall,uHeight,uWidth,uMacro,uCavity,uWarp,uDetail,uDetailScale,uColorWarp,uSoil;
+uniform int uGray;
+#define MAX_STEPS 104
+#define FAR 80.0
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(hash31(i),hash31(i+vec3(1,0,0)),f.x),mix(hash31(i+vec3(0,1,0)),hash31(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash31(i+vec3(0,0,1)),hash31(i+vec3(1,0,1)),f.x),mix(hash31(i+vec3(0,1,1)),hash31(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float s=.57*noise(p);p=p*2.03+vec3(17.1,7.7,13.4);s+=.28*noise(p);p=p*2.07+vec3(11.7,5.3,17.9);s+=.15*noise(p);return s;}
+float ridge(vec3 p){float n0=1.-abs(noise(p)*2.-1.);p=p*2.09+vec3(11.7,5.3,17.9);float n1=1.-abs(noise(p)*2.-1.);p=p*2.07+vec3(3.7,17.2,9.1);float n2=1.-abs(noise(p)*2.-1.);return (n0*n0*.57+n1*n1*.28+n2*n2*.15);}
+float turb(vec3 p){float n0=abs(noise(p)*2.-1.);p=p*2.07+vec3(3.7,17.2,9.1);float n1=abs(noise(p)*2.-1.);return n0*.68+n1*.32;}
+vec3 warpVec(vec3 p){return vec3(noise(p+vec3(17.1,3.8,9.2)),noise(p+vec3(4.4,19.7,12.1)),noise(p+vec3(13.8,7.2,23.4)))-.5;}
+float smin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+float sdEllipsoid(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-5);}
+float sdCapsuleY(vec3 p,float h,float r){p.y-=clamp(p.y,-h,h);return length(p)-r;}
+float baseForm(vec3 p){
+  float d=sdEllipsoid(p-vec3(-.55,-.15,.10),vec3(3.05,7.75,2.95));
+  d=smin(d,sdEllipsoid(p-vec3(-1.95,1.25,.55),vec3(2.35,5.35,2.40)),.82);
+  d=smin(d,sdEllipsoid(p-vec3(2.05,-1.15,-.45),vec3(2.75,4.45,2.45)),.72);
+  d=smin(d,sdEllipsoid(p-vec3(.35,5.25,-.70),vec3(2.05,3.15,1.95)),.62);
+  d=smin(d,sdEllipsoid(p-vec3(-1.10,-3.95,1.05),vec3(1.95,3.75,2.05)),.58);
+  d=smin(d,sdEllipsoid(p-vec3(-2.55,-3.15,.20),vec3(1.35,2.75,1.55)),.48);
+  return d;
+}
+float caveField(vec3 p){
+  float c1=sdEllipsoid(p-vec3(-1.10,-2.60,2.05),vec3(2.55,2.20,3.15));
+  float c2=sdEllipsoid(p-vec3(2.35,.65,1.55),vec3(1.45,1.25,2.05));
+  float c3=sdEllipsoid(p-vec3(-2.85,2.15,-.2),vec3(1.15,1.55,1.5));
+  float c4=sdEllipsoid(p-vec3(.25,4.15,1.2),vec3(.85,.72,1.05));
+  return min(min(c1,c2),min(c3,c4));
+}
+float mapRock(vec3 wp){
+  float s=max(uOverall,.1); vec3 p=wp/s; p.x/=max(uWidth,.1); p.z/=max(uWidth,.1); p.y/=max(uHeight,.1);
+  vec3 q=p;
+  vec3 w0=warpVec(p*.18+vec3(2.4,-3.1,5.7));
+  q+=w0*(.82*uWarp);
+  vec3 w1=warpVec((q+w0)*.43+vec3(-7.7,8.3,2.1));
+  q+=w1*(.14*uWarp);
+  float d=baseForm(q);
+  float cave=caveField(q);
+  d=max(d,-(cave+.16*(noise(q*.7)-.5)*uCavity));
+  float f=max(.16,uDetailScale);
+  float macro=(fbm(q*.23*f)-.5)*.92 + (ridge(q*.46*f)-.5)*.54;
+  float mid=(ridge(q*1.10*f)-.5)*.42 + (noise(q*2.15*f)-.5)*.24;
+  float fine=(noise(q*5.2*f)-.5)*.11;
+  float directional=(noise(vec3(q.x*.45,q.y*.15,q.z*.45)+w0*1.4)-.5)*.22;
+  float grooves=exp(-pow(sin(q.y*.48+q.x*.18+q.z*.22+sin(q.y*.11)*1.7),2.)/.055)*clamp(1.-abs(q.y)/8.5,0.,1.);
+  d += uMacro*(macro+directional)*.62 + uDetail*(mid+fine)*.28 + grooves*.17;
+  return d*s*min(uWidth,uHeight);
+}
+float mapGround(vec3 p){return p.y+7.85 + .18*sin(p.x*.24)+.14*sin(p.z*.31);}
+vec2 mapScene(vec3 p){float rock=mapRock(p),ground=mapGround(p);return rock<ground?vec2(rock,1.):vec2(ground,2.);}
+vec3 normalAt(vec3 p){float e=.014*max(.65,uOverall);vec2 h=vec2(1.,-1.)*.5773;return normalize(h.xyy*mapScene(p+h.xyy*e).x+h.yyx*mapScene(p+h.yyx*e).x+h.yxy*mapScene(p+h.yxy*e).x+h.xxx*mapScene(p+h.xxx*e).x);}
+float softShadow(vec3 ro,vec3 rd,float mint,float maxt){float res=1.,t=mint;for(int i=0;i<22;i++){float h=mapScene(ro+rd*t).x;res=min(res,18.*h/t);t+=clamp(h,.025,.45);if(res<.01||t>maxt)break;}return clamp(res,0.,1.);}
+float ao(vec3 p,vec3 n){float o=0.,s=1.;for(int i=1;i<=3;i++){float h=.10*float(i);float d=mapScene(p+n*h).x;o+=(h-d)*s;s*=.58;}return clamp(1.-o*1.65,0.,1.);}
+float skyOpen(vec3 p){float open=1.;for(int i=1;i<=5;i++){float h=.42*float(i*i);open*=smoothstep(-.05,.26,mapScene(p+vec3(0,h,0)).x);}return open;}
+vec3 rockColor(vec3 p,vec3 n,float occ){
+  float cw=max(.0,uColorWarp);vec3 cp=p*.085;cp+=warpVec(cp*.42+vec3(7.3,-4.1,11.2))*cw*.95;cp+=warpVec(cp*1.31+vec3(-9.2,13.1,4.7))*cw*.28;
+  float a=fbm(cp),b=ridge(cp*2.4),c=turb(cp*4.3),d=fbm(cp*.55+vec3(12.7,-4.6,8.1));
+  vec3 col=mix(vec3(.33,.35,.34),vec3(.61,.57,.47),smoothstep(.22,.82,a));
+  col=mix(col,vec3(.26,.31,.32),smoothstep(.58,.88,(1.-a)*.55+b*.45)*.42);
+  col=mix(col,vec3(.55,.38,.20),smoothstep(.63,.86,d*.55+c*.45)*.27);
+  col=mix(col,vec3(.73,.70,.57),smoothstep(.70,.91,b*.6+(1.-c)*.4)*.31);
+  col=mix(col,vec3(.12,.15,.14),smoothstep(.64,.88,(1.-d)*.52+c*.48)*(1.-occ)*.45);
+  float soilMask=uSoil*smoothstep(.55,.83,n.y)*smoothstep(1.6,5.4,p.y)*skyOpen(p+n*.08);
+  float soilNoise=fbm(p*.33+vec3(5.7,0,-8.3));
+  vec3 soilCol=mix(vec3(.24,.18,.105),vec3(.33,.28,.13),soilNoise);
+  col=mix(col,soilCol,soilMask*.76);
+  col=mix(col,vec3(.18,.25,.09),soilMask*smoothstep(.54,.78,fbm(p*.62))*0.55);
+  return col;
+}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec3 ro=uCam,rd=normalize(uBasis*vec3(uv,1.55));
+  float t=0.;vec2 hit=vec2(FAR,0.);vec3 p=ro;
+  for(int i=0;i<MAX_STEPS;i++){p=ro+rd*t;hit=mapScene(p);if(abs(hit.x)<.0018*max(1.,t*.15)||t>FAR)break;t+=max(hit.x*.72,.007);}
+  vec3 sky=mix(vec3(.73,.84,.89),vec3(.92,.93,.84),clamp(rd.y*.5+.5,0.,1.));
+  if(t>FAR){frag=vec4(sky,1);return;}
+  vec3 n=normalAt(p);vec3 sunDir=normalize(vec3(-.63,.78,.38));float diff=max(dot(n,sunDir),0.);float sh=softShadow(p+n*.025,sunDir,.04,24.);float occ=ao(p,n);
+  vec3 col;
+  if(hit.y<1.5){col=rockColor(p,n,occ);if(uGray==1)col=vec3(dot(col,vec3(.2126,.7152,.0722))*.78+.15);}else{float g=fbm(p*.18);col=mix(vec3(.26,.30,.19),vec3(.42,.40,.25),g);}
+  vec3 hemi=mix(vec3(.14,.17,.19),vec3(.43,.49,.48),n.y*.5+.5);
+  col*=hemi*occ+vec3(1.15,1.08,.95)*diff*sh*.86;
+  float rim=pow(1.-max(dot(n,-rd),0.),3.);col+=vec3(.16,.20,.21)*rim*.35;
+  float fog=1.-exp(-max(0.,t-25.)*.018);col=mix(col,sky,fog);
+  col=pow(col/(1.+col),vec3(.4545));
+  // 2 m scale bar in screen space
+  vec2 q=gl_FragCoord.xy/uRes;float bar=step(abs(q.x-.08),.004)*step(.73,q.y)*step(q.y,.90);col=mix(col,vec3(.98),bar);
+  frag=vec4(col,1.);
+}`;
+function compile(type,src){const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(sh));return sh;}
+let program;
+try{program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vs));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));}
+catch(e){const box=document.getElementById('error');box.style.display='block';box.textContent=e.stack||e;return;}
+const vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.useProgram(program);
+const U={};['uRes','uTime','uCam','uBasis','uOverall','uHeight','uWidth','uMacro','uCavity','uWarp','uDetail','uDetailScale','uColorWarp','uSoil','uGray'].forEach(k=>U[k]=gl.getUniformLocation(program,k));
+const state={overall:1,height:1,width:1,macro:1.25,cavity:1.10,warp:1.45,detail:1.35,detailScale:1,colorWarp:1.35,soil:.72,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]};
+const ids=['overall','height','width','macro','cavity','warp','detail','detailScale','colorWarp','soil'];
+function sync(){for(const k of ids){const el=document.getElementById(k),out=document.getElementById(k+'Out');el.value=state[k];out.textContent=Number(state[k]).toFixed(2)+(k==='overall'||k==='height'||k==='width'||k==='detailScale'?'×':'');}}
+ids.forEach(k=>document.getElementById(k).addEventListener('input',e=>{state[k]=+e.target.value;document.getElementById(k+'Out').textContent=state[k].toFixed(2)+(k==='overall'||k==='height'||k==='width'||k==='detailScale'?'×':'');dirty=true;}));
+document.getElementById('reset').onclick=()=>{Object.assign(state,{overall:1,height:1,width:1,macro:1.25,cavity:1.10,warp:1.45,detail:1.35,detailScale:1,colorWarp:1.35,soil:.72,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]});document.getElementById('wire').classList.remove('active');sync();dirty=true;};
+document.getElementById('togglePanel').onclick=()=>document.getElementById('panel').classList.toggle('hide');
+document.getElementById('wire').onclick=e=>{state.gray=1-state.gray;e.currentTarget.classList.toggle('active',!!state.gray);dirty=true;};
+let dirty=true,drag=false,lastX=0,lastY=0;
+canvas.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;state.theta-=(e.clientX-lastX)*.005;state.phi=Math.max(.22,Math.min(2.9,state.phi-(e.clientY-lastY)*.004));lastX=e.clientX;lastY=e.clientY;dirty=true;});
+canvas.addEventListener('pointerup',()=>drag=false);canvas.addEventListener('pointercancel',()=>drag=false);
+canvas.addEventListener('wheel',e=>{e.preventDefault();state.radius=Math.max(11,Math.min(62,state.radius*Math.exp(e.deltaY*.0012)));dirty=true;},{passive:false});
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.45);const w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);dirty=true;}}
+addEventListener('resize',resize);resize();sync();
+function norm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function frame(t){requestAnimationFrame(frame);resize();if(!dirty)return;dirty=false;const cp=Math.cos(state.phi),sp=Math.sin(state.phi),ct=Math.cos(state.theta),st=Math.sin(state.theta);const eye=[state.target[0]+state.radius*sp*st,state.target[1]+state.radius*cp,state.target[2]+state.radius*sp*ct];const f=norm([state.target[0]-eye[0],state.target[1]-eye[1],state.target[2]-eye[2]]),r=norm(cross(f,[0,1,0])),u=cross(r,f);const basis=new Float32Array([r[0],r[1],r[2],u[0],u[1],u[2],f[0],f[1],f[2]]);gl.useProgram(program);gl.bindVertexArray(vao);gl.uniform2f(U.uRes,canvas.width,canvas.height);gl.uniform1f(U.uTime,t*.001);gl.uniform3fv(U.uCam,eye);gl.uniformMatrix3fv(U.uBasis,false,basis);for(const k of ids)gl.uniform1f(U['u'+k[0].toUpperCase()+k.slice(1)],state[k]);gl.uniform1i(U.uGray,state.gray);gl.drawArrays(gl.TRIANGLES,0,3);}
+requestAnimationFrame(frame);window.__KARST_READY__=true;window.__KARST_STATE__=state;
+})();
+</script>
+</body>
+</html>
