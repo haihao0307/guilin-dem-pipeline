@@ -1,0 +1,95 @@
+name: Wenzhou Full Bathymetry Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - wenzhou-island-relief-watermask-20260917
+    paths:
+      - 'records/R3_10/WENZHOU_FULL_BATHYMETRY_BUILD_TRIGGER'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install raster tools
+        run: pip install --disable-pip-version-check rasterio==1.4.3 numpy==2.1.3
+      - name: Download NOAA ETOPO 2022 source tiles
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wenzhou-bathy
+          base='https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif'
+          curl -fL --retry 4 --retry-delay 3 "$base/ETOPO_2022_v1_15s_N30E090_surface.tif" -o /tmp/wenzhou-bathy/e090.tif
+          curl -fL --retry 4 --retry-delay 3 "$base/ETOPO_2022_v1_15s_N30E120_surface.tif" -o /tmp/wenzhou-bathy/e120.tif
+          sha256sum /tmp/wenzhou-bathy/e090.tif /tmp/wenzhou-bathy/e120.tif | tee /tmp/wenzhou-bathy/source.sha256
+      - name: Mosaic a buffer around the full Wenzhou display domain
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import gzip, hashlib, json
+          import numpy as np
+          import rasterio
+          from rasterio.merge import merge
+
+          sources=[Path('/tmp/wenzhou-bathy/e090.tif'),Path('/tmp/wenzhou-bathy/e120.tif')]
+          opened=[rasterio.open(p) for p in sources]
+          try:
+              epsg=[s.crs.to_epsg() if s.crs else None for s in opened]
+              if any(x!=9518 for x in epsg): raise SystemExit(f'unexpected ETOPO CRS list {epsg}')
+              # Buffered beyond the active Wenzhou terrain so no ETOPO tile/crop edge can cross the normal camera view.
+              bounds=(119.50,26.75,123.00,29.50)
+              a,tr=merge(opened,bounds=bounds,res=(1/240,1/240),nodata=-32768,dtype='int16',method='first')
+              data=np.asarray(a[0],dtype='<i2')
+          finally:
+              for s in opened:s.close()
+
+          out=Path('site/dist/r3-8/data/bathymetry');out.mkdir(parents=True,exist_ok=True)
+          raw=data.tobytes();gz=gzip.compress(raw,compresslevel=9,mtime=0)
+          payload=out/'wenzhou-etopo2022-15s-full.i16.gz';payload.write_bytes(gz)
+          valid=data[data!=-32768]
+          meta={
+            'schema':'wenzhou-full-bathymetry-basis/v1',
+            'source':'NOAA ETOPO 2022 v1 15 arc-second surface elevation',
+            'sourceTiles':[
+              {'name':'N30E090','url':'https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E090_surface.tif','sha256':hashlib.sha256(sources[0].read_bytes()).hexdigest()},
+              {'name':'N30E120','url':'https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_N30E120_surface.tif','sha256':hashlib.sha256(sources[1].read_bytes()).hexdigest()},
+            ],
+            'sourceCrs':'EPSG:9518',
+            'sourceVerticalReference':'EGM2008 height where encoded by EPSG:9518; retained as source metadata and not assumed equal to canonical DEM vertical datum',
+            'role':'derived broad seabed basis over a buffer around the full Wenzhou display domain; not a historical sounding survey or sea-surface datum',
+            'boundsLonLat':[119.50,26.75,123.00,29.50],
+            'shape':list(data.shape),
+            'dtype':'int16-le-m',
+            'noData':-32768,
+            'transform':[tr.a,tr.b,tr.c,tr.d,tr.e,tr.f],
+            'heightRangeM':[int(valid.min()),int(valid.max())],
+            'rawSha256':hashlib.sha256(raw).hexdigest(),
+            'rawBytes':len(raw),
+            'gzipSha256':hashlib.sha256(gz).hexdigest(),
+            'gzipBytes':len(gz),
+            'displayBoundaryPolicy':'source mosaic is buffered beyond the active terrain window; runtime clips only with the final historical land/water mask, never with this rectangular source boundary',
+            'truthBoundary':'ETOPO supplies broad derived relief only. Historical map controls coastline/islands. Dynamic sea surface remains separate. Uncertain shoreline cells are not rendered.'
+          }
+          (out/'wenzhou-etopo2022-15s-full.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(meta,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit compact full-domain bathymetry basis
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/dist/r3-8/data/bathymetry/wenzhou-etopo2022-15s-full.i16.gz site/dist/r3-8/data/bathymetry/wenzhou-etopo2022-15s-full.json
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'data(wenzhou): add buffered full-domain ETOPO seabed basis'
+          git push origin HEAD:wenzhou-island-relief-watermask-20260917
