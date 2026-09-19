@@ -1,0 +1,36 @@
+{
+  "suite": "SMI shoreline GPU bed parity R01",
+  "profileId": "SMI_WAKE_BAY_R01",
+  "executed": true,
+  "command": "xvfb-run -a python games/survivor-palau/source/v0230/shoreline_gpu_r01/verify_gpu_parity.py",
+  "browser": "/usr/bin/chromium",
+  "webgl2": true,
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "sampleCount": 25,
+  "sampleCoverage": [
+    "wake-bay centre cross-shore profile including blend edges",
+    "mean-water contact",
+    "bay angular full-weight and fade boundaries"
+  ],
+  "results": {
+    "maxGpuCpuBedErrorMeters": 0.0005372878790528279,
+    "maxGpuCpuWeightError": 0.00000848814293186173,
+    "maxGpuCpuSignedDistanceErrorMeters": 0.0037155151367258554,
+    "maxGpuCpuLegacyBedFixtureErrorMeters": 0.0005372878790528279,
+    "authoritativeMeanWaterContactGapMeters": 0.0000014227628707952356,
+    "oldLegacyMeanWaterContactGapMeters": 0.17999996769001597
+  },
+  "thresholds": {
+    "gpuCpuBedErrorMetersMax": 0.001,
+    "gpuCpuWeightErrorMax": 0.00002,
+    "gpuCpuSignedDistanceErrorMetersMax": 0.005,
+    "gpuCpuLegacyFixtureErrorMetersMax": 0.001,
+    "meanWaterContactGapMetersMax": 0.05
+  },
+  "passed": true,
+  "scope": "standalone WebGL2 numerical shader probe; not complete scene render or device acceptance",
+  "visualAcceptance": false,
+  "physicalDeviceTest": false,
+  "productionReady": false
+}
