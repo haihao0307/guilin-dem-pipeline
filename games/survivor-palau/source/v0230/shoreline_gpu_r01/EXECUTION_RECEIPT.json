@@ -1,0 +1,84 @@
+{
+  "id": "SMI-OCEAN-BED-PARITY-R01-20260919",
+  "status": "executable-adapter-and-webgl-parity-pass-scene-integration-pending",
+  "baseBranch": "work/smi-v0230-game-fishing-loop-20260918",
+  "baseCommit": "c07eec73616f613acde90881ac642b0972f12391",
+  "candidateBranch": "work/smi-ocean-bed-parity-r01-20260919",
+  "testedCodeHeadBeforeReceipt": "52b42c5c2fdab5aee529fd2cf15ead1d98fbf7ba",
+  "authoritativeProfile": {
+    "id": "SMI_WAKE_BAY_R01",
+    "path": "games/survivor-palau/source/v0230/shoreline_profile.cjs",
+    "blob": "5ca0e45e6eabba7df21619627cd697c1f0570374"
+  },
+  "recordedVisualBlocker": {
+    "path": "games/survivor-palau/releases/v0.2.3.0/VISUAL_REVIEW.md",
+    "blob": "566480e63c3223a7e606ed43463e623367baf75a",
+    "releaseIndexBlob": "dd622326acec6f7461b4c72e4198dc4ba291d52b",
+    "fact": "CPU terrain/player/water query use SMI_WAKE_BAY_R01 while the current GPU waveSurface reads inherited bedH; current visual review records a detached or over-expanded bright nearshore sheet and visualAcceptance=false."
+  },
+  "remoteTestedBlobReadback": {
+    "shoreline_gpu_adapter.cjs": "dfb8fa26ea0b8de733f2527f4cb68a996743787d",
+    "legacy_v0230_fixture.cjs": "a6a086f04730d672106683468f25b953a4589a7e",
+    "shoreline_gpu_adapter.test.cjs": "e9f4c787fecaa7e75504c1eaa667f13938a8d225",
+    "patch_nearshore_common.cjs": "b657b963e698571b22b65d38d436a8e8025bbdac",
+    "patch_nearshore_common.test.cjs": "290e121852bae472b9c754cc6f09b2ef0adbce85",
+    "gpu_parity_probe.cjs": "67bfa9f19ab6857aa69a0b181f00ae396995851e",
+    "verify_gpu_parity.py": "9559b7bd7685c5279f85e2ea4225b5540595de2a"
+  },
+  "executedCommands": [
+    {
+      "command": "node games/survivor-palau/source/v0230/shoreline_profile.test.cjs",
+      "result": "PASS",
+      "notes": "Baseline authoritative profile: C1 knots, seaward monotonicity, zero mean-water CPU contact gap within floating precision, outside-bay legacy preservation, render/contact same CPU field."
+    },
+    {
+      "command": "node games/survivor-palau/source/v0230/shoreline_gpu_r01/shoreline_gpu_adapter.test.cjs",
+      "result": "PASS",
+      "notes": "24 source-contract samples. Old legacy bed is 0.18 m below the authoritative mean-water contact at bay centre; authoritative CPU bed contact gap is 0."
+    },
+    {
+      "command": "node games/survivor-palau/source/v0230/shoreline_gpu_r01/patch_nearshore_common.test.cjs",
+      "result": "PASS",
+      "notes": "Exactly two local COMMON changes; unpatch is byte-identical; double patch and missing wave anchor are rejected."
+    },
+    {
+      "command": "xvfb-run -a python games/survivor-palau/source/v0230/shoreline_gpu_r01/verify_gpu_parity.py",
+      "result": "PASS",
+      "notes": "Actual WebGL2 fragment-shader execution in Chromium ANGLE/SwiftShader. 25 samples across cross-shore and bay angular blend boundaries."
+    }
+  ],
+  "webglParity": {
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "samples": 25,
+    "maxGpuCpuBedErrorMeters": 0.0005372878790528279,
+    "maxGpuCpuWeightError": 0.00000848814293186173,
+    "maxGpuCpuSignedDistanceErrorMeters": 0.0037155151367258554,
+    "oldLegacyMeanWaterContactGapMeters": 0.17999996769001597,
+    "authoritativeGpuMeanWaterContactGapMeters": 0.0000014227628707952356,
+    "formalContactGateMeters": 0.05,
+    "standaloneParityPass": true
+  },
+  "implementation": {
+    "approach": "Generate local GLSL profile/blend functions from authoritative shoreline_profile.cjs constants, then patch only the waveSurface bed read from bedH(p) to smiAuthoritativeBedG(p).",
+    "globalLegacyBedChanged": false,
+    "privateShorelineCreated": false,
+    "foamRecolored": false,
+    "frozenDeepOceanOrCloudChanged": false,
+    "productionEntryChanged": false,
+    "reversiblePatch": true
+  },
+  "firstShaderFailureAndCorrection": "The first WebGL compile exposed an invalid generated negative-bound subtraction token (s--18.0). The generator was corrected to parenthesize negative cross-shore constants before the recorded passing run; the failure was not counted as a pass.",
+  "fullSceneA_B": {
+    "executed": false,
+    "reason": "The candidate branch intentionally does not overwrite the release entry. Direct container GitHub materialization failed with DNS resolution for github.com, while the connector could inspect source but did not provide the oversized release HTML as a mounted browser file. No full-scene screenshot is claimed."
+  },
+  "nextSingleGate": "Apply patch_nearshore_common to a candidate copy of the current release COMMON/waveSurface in an isolated builder, run the complete scene at desktop and 390x844, and compare the detached-white-sheet defect. If it remains after bed parity, inspect the legacy smiShoreDistance-driven foam/breaker bands before changing anything else.",
+  "knownLimitationsPath": "games/survivor-palau/source/v0230/shoreline_gpu_r01/KNOWN_LIMITATIONS.md",
+  "sceneIntegrated": false,
+  "browserFullSceneVerified": false,
+  "visualAcceptance": false,
+  "physicalDeviceTest": false,
+  "publicVerified": false,
+  "productionReady": false
+}
