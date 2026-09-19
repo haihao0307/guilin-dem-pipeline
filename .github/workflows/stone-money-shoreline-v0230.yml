@@ -1,0 +1,58 @@
+name: Stone Money wake-bay shoreline R01
+on:
+  push:
+    branches: [work/smi-v0230-game-fishing-loop-20260918]
+    paths:
+      - .github/workflows/stone-money-shoreline-v0230.yml
+      - games/survivor-palau/source/v0230/shoreline_profile.cjs
+      - games/survivor-palau/source/v0230/shoreline_profile.test.cjs
+      - games/survivor-palau/source/v0230/build_shoreline_v0230.py
+      - games/survivor-palau/source/v0230/verify_shoreline_browser.py
+      - games/survivor-palau/source/v0230/KNOWN_LIMITATIONS.md
+permissions:
+  contents: write
+concurrency:
+  group: stone-money-shoreline-v0230
+  cancel-in-progress: true
+jobs:
+  shoreline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Numerical continuity and shared-contact gate
+        run: node games/survivor-palau/source/v0230/shoreline_profile.test.cjs
+      - name: Build isolated v0.2.3.0 candidate
+        run: python games/survivor-palau/source/v0230/build_shoreline_v0230.py
+      - name: Install browser harness
+        run: python -m pip install playwright
+      - name: Desktop and 390x844 real Chromium check
+        run: timeout 600s python -u games/survivor-palau/source/v0230/verify_shoreline_browser.py
+      - name: Preserve evidence and exact source receipt
+        if: always()
+        run: |
+          mkdir -p games/survivor-palau/releases/v0.2.3.0/evidence
+          cp -f /tmp/smi-shoreline-v0230/* games/survivor-palau/releases/v0.2.3.0/evidence/ 2>/dev/null || true
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          p=Path('games/survivor-palau/releases/v0.2.3.0/BUILD_RECEIPT.json')
+          if p.exists():
+              d=json.loads(p.read_text());d['sourceCommit']=os.environ['GITHUB_SHA'];p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stone-money-shoreline-v0230-evidence
+          path: |
+            games/survivor-palau/releases/v0.2.3.0/
+            /tmp/smi-shoreline-v0230/
+      - name: Commit verified candidate to the working branch
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games/survivor-palau/releases/v0.2.3.0
+          git diff --cached --quiet || git commit -m 'verify(game): record wake-bay shoreline R01 browser evidence'
+          git pull --rebase origin work/smi-v0230-game-fishing-loop-20260918
+          git push origin HEAD:work/smi-v0230-game-fishing-loop-20260918
