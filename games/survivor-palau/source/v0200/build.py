@@ -1,6 +1,7 @@
 from pathlib import Path
-import hashlib,re,json,subprocess
+import hashlib,re,json,subprocess,math
 from harden import apply as harden
+from harden_v022 import apply as harden_v022
 HERE=Path(__file__).resolve().parent
 base=HERE.parents[1]/'releases/v0.1.6.0/Stone_Money_Island_V0.1.6.0_Direct_Open.html'
 assert hashlib.sha256(base.read_bytes()).hexdigest()=='dac1a80440d731488546b317ff8f286c55c8c63d5a2e9f1da3f8c900bbbc4710'
@@ -33,12 +34,15 @@ code='''
 replace("document.body.dataset.oceanScene='unified';progress.textContent=",code+"\ndocument.body.dataset.oceanScene='unified';progress.textContent=")
 replace('function updateGlassRects(){','function updateGlassRects(){if(survival){glassCount=0;glassDirty=false;return;}')
 s=harden(s)
+s=harden_v022(s)
 pattern=r'const __OM_TEXT__=(\{.*?\});\n'
 a=re.search(pattern,base.read_text(),re.S);b=re.search(pattern,s,re.S);assert a and b and a.group(1)==b.group(1)
-OUT=HERE.parents[1]/'releases/v0.2.1';OUT.mkdir(exist_ok=True,parents=True)
+OUT=HERE.parents[1]/'releases/v0.2.2';OUT.mkdir(exist_ok=True,parents=True)
 (OUT/'index.html').write_text(s)
 for i,script in enumerate(re.findall(r'<script[^>]*>([\s\S]*?)</script>',s)):
  p=OUT/f'.syntax-{i}.mjs';p.write_text(script);subprocess.run(['node','--check',str(p)],check=True);p.unlink()
-receipt={'version':'0.2.1','baseCommit':'19960d5d455ca5bb7be66e5ed47ed4b82ecc21bc','baseOceanSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shorelineQuery':'StoneMoneyShoreline.shoreAt uses the same bedHeight and waterLevel as rendering/player contact','candidateBeach':{'radius':36,'beachWidth':16.5,'shelfWidth':34,'regime':'reef-protected lagoon','surveyed':False},'shelterCollision':'conservative authored bounds; not exact curved-rock contact','visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','cave shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
+old_area=math.pi*(27**2-(27-11)**2)
+new_area=math.pi*(92**2-(92-50)**2)
+receipt={'version':'0.2.2','sourceBranch':'work/stone-money-island-v0220-physical-beach-20260919','baseCommit':'f39280fbc13d2c2b6a571045285b1c52cc301b60','baseOceanSha256':hashlib.sha256(base.read_bytes()).hexdigest(),'entrySha256':hashlib.sha256(s.encode()).hexdigest(),'bytes':len(s.encode()),'frozenShaderAndWorkerStringsUnchanged':True,'qaChangesGeometry':False,'sharedProjectionNear':.15,'shorelineQuery':'StoneMoneyShoreline.physicalWaterAt and shoreAt use the same bedHeight/waterLevel as rendering and player contact','candidateBeach':{'radius':92,'beachWidth':50,'shelfWidth':84,'nominalAreaRatioVsOriginal':new_area/old_area,'regime':'reef-protected lagoon','surveyed':False},'physicalWaterGate':'water fragments are rejected when local bed exceeds the shared run-up ceiling','fishWaterBinding':'uncaught fish are drawn and targetable only after the shared bed/water queries prove submergence','constructedStoneHouseRemoved':True,'curlSheetDrawn':False,'visualAcceptance':False,'physicalDeviceTest':False,'publicVerified':False,'gameplay':['on-foot first person','wooden spear craft and geometric fish hit','coconut use','inventory object transitions','natural shelter rest and day counter','patrol LOS candidate and failure','local save','damaged radio inspection only']}
 (OUT/'BUILD_RECEIPT.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(receipt,ensure_ascii=False,indent=2))
