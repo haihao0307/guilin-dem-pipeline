@@ -1,0 +1,4 @@
+'use strict';
+const assert=require('node:assert/strict');const F=require('./legacy_v0230_fixture.cjs'),P=require('./patch_nearshore_common.cjs');
+const original=F.glslLegacySource+'\nuniform float uSeaLevel;\nfloat waveSurface(vec2 p,out float breaker){float bed=bedH(p),level=uSeaLevel;breaker=level-bed;return bed;}\n';
+const r=P.patchCommon(original);assert.equal(r.changes,2);assert.match(r.source,/SMI_WAKE_BAY_GPU_ADAPTER_BEGIN/);assert.match(r.source,/float bed=smiAuthoritativeBedG\(p\),level=uSeaLevel/);assert(!/float bed=bedH\(p\),level=uSeaLevel/.test(r.source));assert.equal(P.unpatchCommon(r.source),original);assert.throws(()=>P.patchCommon(r.source),/already present/);assert.throws(()=>P.patchCommon(F.glslLegacySource),/waveSurface/);console.log(JSON.stringify({suite:'nearshore COMMON reversible patch',passed:true,changes:r.changes,profileId:r.profileId,roundTripByteIdentical:true}));
