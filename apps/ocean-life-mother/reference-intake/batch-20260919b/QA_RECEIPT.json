@@ -1,0 +1,91 @@
+{
+  "schema": "ocean-life-batch02-study-receipt/0.1",
+  "batch": "20260919B",
+  "date": "2026-09-19",
+  "baselineCommit": "3ef8b4cb70800e65eea6b75c000a505d2dcd5af2",
+  "actualSourceAudit": {
+    "filesRead": 12,
+    "uniqueFileHashes": 12,
+    "sourceBytes": 247812836,
+    "accessorsDecodedAndFinite": 5143,
+    "embeddedImagesDecoded": 32,
+    "sourceAnimationClips": 12,
+    "posedSamplesComputed": 48,
+    "poseSampling": "Four equally spaced source times per clip. Morph positions applied before joint/node transformations. Not full glTF conformance or biological validation.",
+    "staticGT": true,
+    "formalMaterialVariantsFound": 0,
+    "sourceViewsInspected": "Two base-colour source-inspection views per uploaded file, using original geometry only offline. Source GT includes a colour-chart-like auxiliary object; Demasoni helper-labelled mesh excluded only from subject crop and retained in audit.",
+    "sourceImagesAreNotNativeOutput": true
+  },
+  "mantaEvidence": {
+    "sourceRefs": ["RAY-REF-001", "RAY-REF-002"],
+    "basePositionArraysEqual": true,
+    "indexArraysEqual": true,
+    "sourceUVArraysEqual": true,
+    "skinWeightArraysEqual": true,
+    "morphPositionArraysEqual": true,
+    "threeImagePayloadsByteEqual": true,
+    "sourceNormalAndTangentArraysEqual": false,
+    "morphNormalArraysEqual": false,
+    "nodeDefinitionsEqual": false,
+    "changedOrUnmatchedAnimationTargets": 211,
+    "feedingWeightKeyCount": 721,
+    "swimmingWeightKeyCount": 1,
+    "swimmingConstantMorphWeights": [0, 0, 1],
+    "wholeAssetDeduplicationAccepted": false,
+    "sameBiologicalIndividualProven": false,
+    "note": "Morph inputs have substantial source-local scale contributions. Neither their magnitude nor scene trajectory is reported as physical fin excursion or natural swimming speed."
+  },
+  "schoolEvidence": {
+    "morphTargets": 100,
+    "skinCount": 0,
+    "animatedWeightChannels": 1,
+    "durationSeconds": 12.458333015441895,
+    "candidateIndividualBlocks": 10,
+    "verticesPerBlock": 446,
+    "trianglesPerBlock": 674,
+    "crossBlockFaces": 0,
+    "sameIndexArraysAcrossBlocks": false,
+    "sampleTimes": 17,
+    "segmentation": "Source-specific ten contiguous topologically isolated blocks with equal vertex/face counts, checked visually. Not a universal semantic segmenter.",
+    "autonomousBoidsExtracted": false,
+    "predatorOrPlayerResponseProvided": false
+  },
+  "newRoutingAdapter": {
+    "file": "src/reference-routing.js",
+    "gitBlobSha": "9ba49f9c89aa8d1bb53c6b16e07dceeee6502d46",
+    "sha256": "de92dec0566b36bb2ef0d55b1799faecd019666106561df17f4518a043443f2f",
+    "nodeTestsPassed": 13,
+    "nodeTestsFailed": 0,
+    "features": ["unlit source kept distinct from relightable PBR", "material slots not counted as colour variants", "known variant mapping and base-material fallback", "unknown variants and conflicting workflows rejected", "action selection separate from appearance", "hybrid morph/skin intake order", "per-channel sharing requires all compared primitive channels to agree", "input documents unchanged"],
+    "newUniversalKaopuFormatDeclared": false,
+    "existingProductionRendererModified": false
+  },
+  "readerChecks": {
+    "passed": 10,
+    "failed": 0,
+    "scope": "Source identity, image/accessor coverage, increasing key times, observed poses, static GT, shortest quaternion path, truncated header rejection, synthetic morph-before-skin transform, and source-specific school partition. Not complete malformed-file or arbitrary-extension validation."
+  },
+  "browserChecks": {
+    "engine": "Chromium",
+    "transport": "set_content",
+    "viewports": [[1280,900],[390,844]],
+    "sourceSelectionsExercisedPerViewport": 12,
+    "actionSelectionExercised": true,
+    "pageErrors": 0,
+    "horizontalOverflow": false,
+    "htmlSha256": "f5a78f7e3e577d67e7dbec04f5f39d509d9c66d92641783632132e9c8d0b0e39",
+    "scope": "Data-routing interface only. No WebGL renderer invoked, no native fish appearance or public navigation acceptance."
+  },
+  "failuresRecorded": [
+    "Initial manta comparator assumed identical animation target sets and raised KeyError for node20 scale. Fixed by comparing the union and recording unmatched targets; final comparison completed.",
+    "Initial school probe assumed equal relative triangle indices between ten blocks; assertion failed. Retained differing indices, validated only block isolation/equal counts and source-specific visual correspondence; no shared-topology claim.",
+    "Attempt to persist tools/source_reader.py through GitHub.create_file was blocked by the tool safety check. Not retried through a different path or encoding. That observer and the full observation harnesses remain local only."
+  ],
+  "persistence": {
+    "remote": ["REFERENCE_REGISTER.json", "src/reference-routing.js", "tools/routing_qa.cjs", "QA_RECEIPT.json", "CURRENT_INTAKE.md"],
+    "localOnly": "/mnt/data/ocean_batch02_20260919/ contains full source audit, decoded-header cache, source pose reader, source-image inspection, school/manta probes and browser harness/results. Availability is not guaranteed in another runtime.",
+    "originalAssets": "User conversation attachments; no original meshes/images/rigs/complete tracks exported as native runtime payloads."
+  },
+  "gates": {"nativeVisualAcceptance":false,"motionAcceptance":false,"speciesAcceptance":false,"productionReady":false,"shareAllowed":false}
+}
