@@ -27,7 +27,7 @@ try:
     page.goto(URL,wait_until='domcontentloaded',timeout=60000);page.wait_for_function("window.OceanIsland?.qa.ready || document.getElementById('error')?.textContent.trim()",timeout=150000)
     assert not page.locator('#error').inner_text();assert page.evaluate("OceanIsland.qa.ready && StoneMoneySurvival && StoneMoneyShoreline")
     page.locator('#smiStart').click();page.wait_for_function("StoneMoneySurvival.getMode()==='playing'",timeout=25000)
-    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='asymmetric-vegetated-eroded-ridge-v026';assert abs(diag['archOpening']['span']-31.2)<.01 and abs(diag['archOpening']['height']-21.0)<.01;assert diag['archOpening']['asymmetric'] is True and diag['archOpening']['tidalUndercut'] is True;case['arch']=diag['archOpening']
+    diag=page.evaluate('StoneMoneySurvival.diagnostics()');assert diag['archGeometry']=='offcenter-mushroom-rock-island-v026b';assert abs(diag['archOpening']['waterlineSpan']-18.1)<.01 and abs(diag['archOpening']['nominalSectionSpan']-22.05)<.01 and abs(diag['archOpening']['height']-23.3)<.01;assert diag['archOpening']['asymmetric'] is True and diag['archOpening']['offCenter'] is True and diag['archOpening']['tidalUndercut'] is True;case['arch']=diag['archOpening']
     fish=page.evaluate("StoneMoneySurvival.diagnostics()");assert fish['fishWaterViolations']==0
     for mode in ['aerial','arch','fish']:
      case['phase']=mode;save();page.evaluate('(m)=>StoneMoneySurvival.setCameraMode(m)',mode);page.wait_for_timeout(600);assert page.evaluate('StoneMoneySurvival.getCameraMode()')==mode
