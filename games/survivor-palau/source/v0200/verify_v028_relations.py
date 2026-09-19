@@ -24,13 +24,17 @@ mid=(main_l+main_r)*.5
 main_span=(main_r-main_l)*half_span
 cave_span=(cave_r-cave_l)*half_span
 opening_height=main_hole(mid)-min(base(main_l),base(main_r))
+# Authored distant Rock Island centres in the live inherited field.
+karst=[(-83,34),(76,-53),(112,23),(-119,-71),(38,106),(-178,104),(192,-118),(214,82),(-218,-142),(154,174),(236,154),(255,181),(224,204)]
+arch=(96,208)
+nearest=min(math.hypot(arch[0]-x,arch[1]-z) for x,z in karst)
 required=[
  'stone-money-island-0.2.8-arch-reveal',
  'mainL=-.18,mainR=.58',
  'archCurve(u,mainL,mainR,11.6,.56,.20)',
- "b.dissolvedArch([210,archBed+7.8,190],31.5,10.6",
+ "b.dissolvedArch([96,archBed+7.8,208],31.5,10.6",
  "archGeometry:'dissolved-mushroom-rock-island-v028-revealed'",
- 'archPosition:[210,190]',
+ 'archPosition:[96,208]',
  'nominalMainSpan:23.94',
  'secondarySeaCave:true',
  'physical-bed-water-permission-v024',
@@ -40,6 +44,7 @@ required=[
 ]
 forbidden=[
  "b.dissolvedArch([186,archBed+7.8,144],31.5,10.6",
+ "b.dissolvedArch([210,archBed+7.8,190],31.5,10.6",
  "archGeometry:'dissolved-mushroom-rock-island-v027'",
 ]
 missing=[x for x in required if x not in html]
@@ -50,6 +55,7 @@ report={
  'mainOpeningHeightApproxM':opening_height,'minimumRoofThicknessM':min(roof),
  'archPositionXZ':receipt.get('archLandmark',{}).get('positionXZ'),
  'openWaterApproach':receipt.get('archLandmark',{}).get('openWaterApproach'),
+ 'nearestAuthoredKarstCenterDistanceM':nearest,
  'missingRuntimeRelations':missing,'activePreviousArchRelations':present_forbidden,
  'frozenOceanUnchanged':receipt.get('frozenShaderAndWorkerStringsUnchanged'),
  'stoneMoneyRockIsland':receipt.get('stoneMoneyRockIsland'),
@@ -59,8 +65,8 @@ report={
 report['passed']=bool(
  not missing and not present_forbidden
  and 23.5<main_span<24.5 and 5.2<cave_span<6.1
- and opening_height>20 and min(roof)>4.5
- and report['archPositionXZ']==[210,190] and report['openWaterApproach'] is True
+ and opening_height>20 and min(roof)>4.5 and nearest>65
+ and report['archPositionXZ']==[96,208] and report['openWaterApproach'] is True
  and report['frozenOceanUnchanged'] is True and report['stoneMoneyRockIsland'] is True
  and report['deepTrenchMeters']==185 and report['fishMotherIntegrated'] is False
 )
