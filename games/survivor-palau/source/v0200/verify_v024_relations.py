@@ -14,9 +14,15 @@ required=[
  "id=\"smiArchView\"",
  "camera.eye=[0,190,240]",
  "camera.fov=46*Math.PI/180",
- "b.rock([174,archBed+17,144]",
- "b.rock([198,archBed+18,144]",
- "b.rock([186,archBed+34,144]",
+ "camera.eye=[186,34,214]",
+ "camera.fov=43*Math.PI/180",
+ "b.rock([174,archBed+8,144]",
+ "b.rock([176,archBed+20,144]",
+ "b.rock([198,archBed+8,144]",
+ "b.rock([196,archBed+20,144]",
+ "b.rock([181,archBed+27,144]",
+ "b.rock([191,archBed+27,144]",
+ "b.rock([186,archBed+31,144]",
  "[236,154,13.0,25.0,11.0,1283]",
  "{id:'rai-01',type:'rai',name:'石钱',x:-178,z:104}",
  "trench=-185",
@@ -31,6 +37,7 @@ report={
  'fishMotherReason':receipt.get('fishMotherReason'),
  'inspectionViews':receipt.get('inspectionViews'),
  'aerialBoundaryPolicy':receipt.get('aerialBoundaryPolicy'),
+ 'archConstruction':'seven overlapping karst masses with a true open void',
 }
 (OUT/'RELATION_QA.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(report,ensure_ascii=False,indent=2))
