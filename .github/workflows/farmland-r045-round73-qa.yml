@@ -45,10 +45,21 @@ jobs:
           cat r045_round73_browser_result.json
           kill $(cat /tmp/r73-http.pid) 2>/dev/null || true
           [ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ]
-      - name: Strict Farmland rules
+      - name: Farmland contract validator smoke
         if: always()
-        continue-on-error: true
-        run: node farmland-object-dna/tools/qa_farmland_strict_rules.mjs
+        run: |
+          set -euo pipefail
+          python -m json.tool farmland-object-dna/QUALITY_GATES.json >/dev/null
+          python farmland-object-dna/tools/validate_farmland_dna.py farmland-object-dna/examples/traditional-paddy-v002-research.json > /tmp/r73-farmland-validator.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('/tmp/r73-farmland-validator.json').read_text())
+          assert data['ok'] is True
+          assert data['mode']=='research'
+          assert data['visualAcceptance'] is False
+          assert data['productionReady'] is False
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
