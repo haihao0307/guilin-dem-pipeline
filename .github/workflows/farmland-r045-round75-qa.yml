@@ -71,6 +71,7 @@ jobs:
             farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_audit_cache.mjs
           if-no-files-found: warn
       - name: Verify result provenance before persistence
+        id: provenance
         if: always()
         run: |
           node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_qa_result.json'); if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.75-full-carrier-profile-coherence-v1') process.exit(3); console.log('provenance ok',q.sourceSha,q.qaContract)"
@@ -78,9 +79,9 @@ jobs:
           REMOTE=$(git rev-parse origin/${GITHUB_REF_NAME})
           test "$REMOTE" = "$GITHUB_SHA" || { echo "branch moved from $GITHUB_SHA to $REMOTE; refusing stale evidence persistence"; exit 4; }
       - name: Persist machine and fixed-view evidence
-        if: always()
+        if: ${{ always() && steps.provenance.outcome == 'success' }}
         run: |
-          git config user.name 'github-actions[bot]'; git config user.email '41898242+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'; git config user.email '4189824+github-actions[bot]@users.noreply.github.com'
           git add farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_qa_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_browser_result.json farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_audit_cache.mjs farmland-object-dna/research/r045-autonomous-rebuild/round-75/r045_round75_fixed_view.png || true
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'farmland R045.75 persist QA browser and fixed-view evidence [skip ci]'
