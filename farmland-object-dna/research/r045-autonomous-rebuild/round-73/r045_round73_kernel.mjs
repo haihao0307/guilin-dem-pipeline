@@ -5,7 +5,7 @@ import * as R72 from '../round-72/r045_round72_kernel.mjs';
 export * from '../round-68/r045_round68_kernel.mjs';
 
 export const VERSION='R045.73';
-export const R73_CONTRACT='R045.73-identity-clipped-full-carrier-ribbons-v1';
+export const R73_CONTRACT='R045.73-identity-clipped-full-component-ribbons-v2';
 const X0=-216,X1=114,Z0=-126,Z1=6,STEP=6;
 const CACHE=new Map(),EXACT=new Map();
 const C=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -18,12 +18,12 @@ function exactCarrierAt(x,z){
  const k=keyOf(x,z);let v=EXACT.get(k);if(v!==undefined)return v;
  const old=R47.terraceStateAt(x,z),comp=R72.r72ComponentAt(x,z),node=R72.r72NodeAt(x,z);
  const accepted=Boolean(comp.accepted),editable=accepted&&old.mask>.12&&old.mask<.82&&safe(x,z);
- const withinReach=editable&&Number.isFinite(comp.seedDistance)&&comp.seedDistance<=30.000001;
- v={accepted,editable,withinReach,old,comp,node};EXACT.set(k,v);return v;
+ // R72 already reported acceptedEditable===acceptedExpressive (25===25): enlarging seed radius cannot add an authoritative node.
+ // R73 therefore uses the whole already-accepted exact-identity component and treats frozen strong nodes as continuity carriers, never edit targets.
+ const withinComponent=editable;
+ v={accepted,editable,withinComponent,withinReach:withinComponent,old,comp,node};EXACT.set(k,v);return v;
 }
-function cornerContribution(x,z,q){
- const e=exactCarrierAt(x,z);return e.withinReach&&sameIdentity(e.old,q)?1:0;
-}
+function cornerContribution(x,z,q){const e=exactCarrierAt(x,z);return e.withinComponent&&sameIdentity(e.old,q)?1:0}
 function identityWeightAt(x,z){
  if(x<X0||x>X1||z<Z0||z>Z1||!safe(x,z))return 0;
  const q=R47.terraceStateAt(x,z);if(q.mask<=.12||q.mask>=.82)return 0;
@@ -53,12 +53,12 @@ export function slope(x,z){return gradient(x,z).mag}
 export function curvature(x,z){const e=2,c=height(x,z),xx=(height(x+e,z)-2*c+height(x-e,z))/(e*e),zz=(height(x,z+e)-2*c+height(x,z-e))/(e*e);return xx+zz}
 
 export const snapshot={...R68.snapshot,version:VERSION,visualAcceptance:false,browserQA:false,productionReady:false,parcelGenerationEnabled:false,waterStateKnown:false,round73:{
- scope:'convert the accepted R72 exact-identity carrier components into longer readable profile ribbons while removing off-grid identity bleed; keep inherited footprint, stair identity, strong cores and drainage separators frozen',
- method:'reuse only R72 components already accepted from frozen R47 same-family + exact-index connectivity and R67 contour evidence seeds. Medium-support nodes may express the ribbon when they lie within 30 m physical distance of a seed. At off-grid render/3 m QA probes, bilinear interpolation is identity-clipped: a corner contributes only when its frozen R47 family and exact stair index match the query point. R73 is reconstructed from accepted R68 geometry rather than stacked on R72, so evidence reach changes do not compound prior unverified corrections.',
- logicCorrection:'R72 correctly separated graph membership, evidence seeding and edit eligibility, but its off-grid interpolation mixed bare expressive bits without checking the query terrace identity. A nonzero interpolated weight can therefore cross a family/index boundary even when every authoritative 6 m node is valid. That is an interpolation-category error: valid node evidence does not license cross-identity surface blending. R73 clips interpolation by the frozen terrace identity and then extends only inside the already accepted component. Longer carrier expression still does not prove visual acceptance.',
- constraint:'the 6 m authoritative lattice, 30 m seed-reach cap, 0.070*step profile, 0.090 m node cap and inherited 12 m drainage core are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real parcel/management boundaries, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity or event-level water management.',
+ scope:'turn the already-accepted R72 exact-identity terrace components into readable full-component profile ribbons while removing off-grid identity bleed; keep inherited footprint, stair identity, strong cores and drainage separators frozen',
+ method:'reuse only R72 components already accepted from frozen R47 same-family + exact-index connectivity and R67 contour-evidence seeds. Every safe medium-support node in an accepted component may express the R73 profile; frozen strong nodes are never edited but remain part of the visual/topological carrier. At off-grid render/3 m QA probes, bilinear interpolation is identity-clipped: a corner contributes only when its frozen R47 family and exact stair index match the query point. R73 is reconstructed from accepted R68 geometry rather than stacked on unaccepted R72 geometry.',
+ logicCorrection:'Two R72 inference errors are corrected. First, acceptedEditable and acceptedExpressive were both 25, so increasing seed radius cannot create new authoritative support; treating a larger radius as progress is a denominator error. Second, a changed-only run treats deliberately frozen strong carrier cells as gaps, although those cells already contain the strongest inherited terrace geometry. Continuity must therefore be tested on the union of frozen strong carrier + physically changed medium support inside one accepted exact-identity component, while material change is still measured separately. R72 also interpolated bare expressive bits without checking the query terrace identity; valid 6 m node evidence does not license blending across a family/index boundary. R73 clips off-grid interpolation by frozen identity. A longer full-component carrier still does not prove visual acceptance.',
+ constraint:'the 6 m authoritative lattice, full-component evidence rule, 0.070*step profile, 0.090 m node cap and inherited 12 m drainage core are synthetic morphology/QA controls, not surveyed Yunnan terrace dimensions. A 12.5 m macro DEM plus photographs cannot recover metre/sub-metre field microtopography, real parcel/management boundaries, measured bund/riser/channel sections, inlet/outlet invert elevations, observed hydraulic connectivity or event-level water management.',
  xiaomaBoundary:'Xiaoma/TLO remains binding: geometry, adjacency, component continuity and conservation are necessary bookkeeping/evidence relations but do not establish hydraulic exchange law, head, depth, discharge, gate state, soil-water state, sediment state or parcel ownership.',
  mrRolordUse:'saved MrRolord research is used only for hydrology-first ordering: river hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. Voronoi, shader displacement and adaptive subdivision are not agricultural truth.',
  referenceUse:'the supplied terrace photograph is used only as non-metric morphology evidence for long nested contour-following benches, unequal widths, curved turns, concentrated riser edges and drainage interruptions. No field width, riser height, channel section or hydraulic parameter is inferred.',
- evidenceClass:'synthetic identity-clipped component-carried terrace ribbon expression over frozen inherited terrace identity; not surveyed terrace, parcel or hydraulic truth',
+ evidenceClass:'synthetic identity-clipped full-component terrace ribbon expression over frozen inherited terrace identity; not surveyed terrace, parcel or hydraulic truth',
  priorR72:R72.VERSION}};
