@@ -1,0 +1,81 @@
+name: Landscape Small Karst Field R1
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-field-r1-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r1/build_small_karst.py
+      - .github/workflows/landscape-small-karst-field-r1.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize continuous-field prototype
+        run: |
+          python -m py_compile workbenches/landscape-small-karst-field-r1/build_small_karst.py
+          python workbenches/landscape-small-karst-field-r1/build_small_karst.py
+
+      - name: Static app and field contract QA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          root=Path('workbenches/landscape-small-karst-field-r1')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=[
+            '小尺度帕劳卡斯特原型 R1',
+            '无预展开网格',
+            'float mapRock(vec3 wp)',
+            'float baseForm(vec3 p)',
+            'float caveField(vec3 p)',
+            'uOverall,uHeight,uWidth',
+            'uMacro,uCavity,uWarp,uDetail,uDetailScale',
+            'uColorWarp,uSoil',
+            'Brick V2.6 形体语言迁移',
+            'window.__KARST_READY__=true',
+          ]
+          for token in required: assert token in s, token
+          assert 'https://' not in s and 'http://' not in s
+          assert b['schema']=='LANDSCAPE_SMALL_KARST_CONTINUOUS_FIELD_R1'
+          assert b['prototypeCount']==1
+          assert b['preservedPreviousWorkbenches'] is True
+          assert b['representation'].startswith('continuous signed-distance field')
+          m=re.search(r'<script>(.*?)</script>',s,re.S)
+          assert m
+          Path('/tmp/small-karst-app.js').write_text(m.group(1),encoding='utf-8')
+          vs=re.search(r'const vs=`(.*?)`;\nconst fs=',m.group(1),re.S)
+          fs=re.search(r'const fs=`(.*?)`;\nfunction compile',m.group(1),re.S)
+          assert vs and fs
+          Path('/tmp/small-karst.vert').write_text(vs.group(1),encoding='utf-8')
+          Path('/tmp/small-karst.frag').write_text(fs.group(1),encoding='utf-8')
+          print(json.dumps(b,ensure_ascii=False,indent=2))
+          PY
+          node --check /tmp/small-karst-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/small-karst.vert
+          glslangValidator -S frag /tmp/small-karst.frag
+
+      - name: Commit materialized workbench
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-small-karst-field-r1/index.html \
+                  workbenches/landscape-small-karst-field-r1/build.json
+          if git diff --cached --quiet; then
+            echo "Small karst prototype already materialized"
+            exit 0
+          fi
+          git commit -m "qa(landscape): materialize small continuous karst R1 [skip ci]"
+          git push
