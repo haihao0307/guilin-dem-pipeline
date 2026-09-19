@@ -23,6 +23,10 @@ def chroma_fraction(path:Path,box):
  im=Image.open(path).convert('RGB').crop(box);px=list(im.getdata())
  return sum(1 for r,g,b in px if max(r,g,b)-min(r,g,b)>28)/max(1,len(px))
 
+def neutral_fraction(path:Path,box):
+ im=Image.open(path).convert('RGB').crop(box);px=list(im.getdata())
+ return sum(1 for r,g,b in px if max(r,g,b)-min(r,g,b)<18 and 65<(r+g+b)/3<205)/max(1,len(px))
+
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'])
  for name,width,height in [('desktop',960,540),('mobile',390,844)]:
@@ -56,8 +60,8 @@ with sync_playwright() as p:
    life=page.evaluate("""() => {const g=StoneMoneySurvival,d=g.diagnostics(),fish=g.getFish().filter(f=>f.state==='swimming'),rai=g.getDefinitions().find(x=>x.type==='rai');return {diag:d,rai,fish:fish.length,submerged:fish.filter(f=>f.submerged).length};}""")
    assert life['rai'] and life['rai']['x']==-178 and life['rai']['z']==104
    assert life['diag']['fishWaterViolations']==0 and life['submerged']>0
-   assert life['diag']['archGeometry']=='continuous-parametric-karst-v025'
-   assert life['diag']['archOpening']['span']==32 and life['diag']['archOpening']['height']==22.6 and life['diag']['archOpening']['tidalUndercut'] is True
+   assert life['diag']['archGeometry']=='continuous-eroded-ridge-v025'
+   assert life['diag']['archOpening']['span']==29 and life['diag']['archOpening']['height']==21.8 and life['diag']['archOpening']['tidalUndercut'] is True
    case['life']=life
 
    page.evaluate("StoneMoneySurvival.setCameraMode('aerial')");page.wait_for_timeout(700)
@@ -75,9 +79,9 @@ with sync_playwright() as p:
    try: page.screenshot(path=str(arch),timeout=20000)
    finally: page.evaluate('OceanIsland.resumeFromReview()')
    if name=='desktop':
-    # The central opening must reveal chromatic water/sky/background rather than
-    # being filled by the near-grey limestone mesh.
-    cf=chroma_fraction(arch,(420,190,540,340));case['archOpeningChromaFraction']=cf;assert cf>.18,cf
+    # Opening must reveal water/sky/background; a broad neutral slab filling the
+    # centre would signal a regression toward the bridge-like study.
+    cf=chroma_fraction(arch,(420,205,540,350));nf=neutral_fraction(arch,(360,150,600,300));case['archOpeningChromaFraction']=cf;case['archUpperNeutralFraction']=nf;assert cf>.18,cf;assert nf<.82,nf
 
    page.evaluate("StoneMoneySurvival.setCameraMode('fish')");page.wait_for_timeout(700)
    page.evaluate("Promise.race([OceanIsland.holdForReview(),new Promise((_,r)=>setTimeout(()=>r(Error('GPU fish timeout')),30000))])")
