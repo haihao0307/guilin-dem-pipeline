@@ -16,5 +16,20 @@ code = code.replace(
     "window.__KARST_DIAGNOSTICS__={renderer:'two-pass-continuous-field',material:'Brick Mother V2.6 stone-block locked'};'''",
     "window.__KARST_DIAGNOSTICS__={renderer:'two-pass-continuous-field',material:'Brick Mother V2.6 stone-block locked'};})();'''",
 )
+# The copied V2.6 stone material normalizes its field by the current overall
+# object scale. R2's one-pass shader saw uOverall through the shared uniform
+# block; the split material program must declare and bind it explicitly.
+code = code.replace(
+    "uniform float uSoil;\nuniform int uGray;",
+    "uniform float uSoil,uOverall;\nuniform int uGray;",
+)
+code = code.replace(
+    "UM=locations(materialProgram,['uRes','uPositionTex','uNormalTex','uCam','uSoil','uGray']);",
+    "UM=locations(materialProgram,['uRes','uPositionTex','uNormalTex','uCam','uSoil','uOverall','uGray']);",
+)
+code = code.replace(
+    "gl.uniform1f(UM.uSoil,state.soil);gl.uniform1i(UM.uGray,state.gray);",
+    "gl.uniform1f(UM.uSoil,state.soil);gl.uniform1f(UM.uOverall,state.overall);gl.uniform1i(UM.uGray,state.gray);",
+)
 namespace = {"__file__": str(original), "__name__": "__main__"}
 exec(compile(code, str(original), "exec"), namespace)
