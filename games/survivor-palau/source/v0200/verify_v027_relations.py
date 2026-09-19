@@ -39,8 +39,8 @@ required=[
  'trench=-185',
 ]
 forbidden=[
- 'const shrubs=[-1.03,-.91,-.79',
- "archGeometry:'offcenter-mushroom-rock-island-v026b'",
+ "b.islandArch([186,archBed+7.5,144],31.5,10.2",
+ "cameraMode,archGeometry:'offcenter-mushroom-rock-island-v026b'",
 ]
 missing=[x for x in required if x not in html]
 present_forbidden=[x for x in forbidden if x in html]
@@ -50,7 +50,7 @@ report={
  'mainOpeningHeightApproxM':opening_height,'minimumRoofThicknessM':min(roof),
  'unequalCrownLobeDifferenceM':lobe_difference,'tidalToCrownWidthRatio':.46,
  'vegetationPockets':receipt.get('archLandmark',{}).get('vegetationPockets'),
- 'missingRuntimeRelations':missing,'forbiddenPreviousRhythm':present_forbidden,
+ 'missingRuntimeRelations':missing,'activePreviousArchRelations':present_forbidden,
  'frozenOceanUnchanged':receipt.get('frozenShaderAndWorkerStringsUnchanged'),
  'stoneMoneyRockIsland':receipt.get('stoneMoneyRockIsland'),
  'deepTrenchMeters':receipt.get('deepTrenchMeters'),
