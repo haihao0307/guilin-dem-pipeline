@@ -1,0 +1,596 @@
+{
+  "version": "R045.63",
+  "passed": false,
+  "gateCount": 27,
+  "passedCount": 23,
+  "checks": [
+    {
+      "name": "version",
+      "pass": true,
+      "value": "R045.63",
+      "limit": "R045.63"
+    },
+    {
+      "name": "water_graph_identity",
+      "pass": true,
+      "value": {
+        "nodes": 22,
+        "edges": 55
+      },
+      "limit": "exact R58 inherited graph"
+    },
+    {
+      "name": "existing_r58_active_exact",
+      "pass": true,
+      "value": {
+        "oldMaskErr": 0,
+        "oldDeltaErr": 0
+      },
+      "limit": "every R58 active 6m cell exact"
+    },
+    {
+      "name": "frozen_rail_material",
+      "pass": true,
+      "value": 548,
+      "limit": ">=500 accepted frozen R58 active rail samples"
+    },
+    {
+      "name": "material_continuation",
+      "pass": false,
+      "value": {
+        "gains": 5,
+        "cross": 5,
+        "active": 553,
+        "priorActive": 548,
+        "heightMaterial": 5
+      },
+      "limit": ">=8 supported gains, >=6 threshold crossings, >=6 material height changes"
+    },
+    {
+      "name": "two_rail_support_material",
+      "pass": false,
+      "value": {
+        "extension": 2,
+        "bracket": 3,
+        "gains": 5
+      },
+      "limit": "every gain has two frozen rails and >=8 total gains"
+    },
+    {
+      "name": "new_cross_chain_materiality",
+      "pass": false,
+      "value": {
+        "components": 4,
+        "largest": 2,
+        "chainCells": 2,
+        "multiCellComponents": 1,
+        "sizes": [
+          2,
+          1,
+          1,
+          1
+        ]
+      },
+      "limit": "new promotions include coherent compatible chains; >=4 cells belong to multi-cell chains"
+    },
+    {
+      "name": "rail_geometry_bounded",
+      "pass": true,
+      "value": {
+        "maxReach": 24.73863375370596,
+        "maxCross": 9.780013574697463
+      },
+      "limit": "all supports <=33m reach and <=10.5m cross-contour"
+    },
+    {
+      "name": "multifamily_continuation",
+      "pass": true,
+      "value": [
+        0,
+        2,
+        1
+      ],
+      "limit": ">=2 terrace families"
+    },
+    {
+      "name": "whole_slope_spatial_materiality",
+      "pass": true,
+      "value": {
+        "xSpan": 156,
+        "zSpan": 24
+      },
+      "limit": "promotions span >=48m one axis and >=12m other"
+    },
+    {
+      "name": "all_promotions_supported",
+      "pass": true,
+      "value": 0,
+      "limit": "zero unsupported gains"
+    },
+    {
+      "name": "promotion_safety",
+      "pass": true,
+      "value": 0,
+      "limit": "zero promoted cells in <=12m drainage or receiver +12m"
+    },
+    {
+      "name": "compatible_topology_not_worse",
+      "pass": false,
+      "value": {
+        "new": {
+          "components": 19,
+          "orphans": 1,
+          "tiny": 2,
+          "largest": 125,
+          "second": 79,
+          "sizes": [
+            125,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            12,
+            11,
+            9,
+            6,
+            6,
+            3,
+            2,
+            1
+          ]
+        },
+        "prior": {
+          "components": 18,
+          "orphans": 0,
+          "tiny": 1,
+          "largest": 124,
+          "second": 79,
+          "sizes": [
+            124,
+            79,
+            52,
+            52,
+            45,
+            38,
+            32,
+            23,
+            21,
+            20,
+            16,
+            11,
+            11,
+            9,
+            6,
+            4,
+            3,
+            2
+          ]
+        }
+      },
+      "limit": "components/orphans/tiny non-increasing"
+    },
+    {
+      "name": "major_components_not_shrunk",
+      "pass": true,
+      "value": {
+        "new": [
+          125,
+          79
+        ],
+        "prior": [
+          124,
+          79
+        ]
+      },
+      "limit": "largest and top-two non-decreasing"
+    },
+    {
+      "name": "long_run_support_improves",
+      "pass": true,
+      "value": {
+        "new": {
+          "best": 14,
+          "total": 2212,
+          "longRuns": 266,
+          "longCells": 1592
+        },
+        "prior": {
+          "best": 14,
+          "total": 2192,
+          "longRuns": 265,
+          "longCells": 1585
+        }
+      },
+      "limit": "best nondecreasing and >=24m straight-run support cells increase"
+    },
+    {
+      "name": "height_change_bounded",
+      "pass": true,
+      "value": 0.0600737526321338,
+      "limit": ".004m < max R63-R58 delta < .16m"
+    },
+    {
+      "name": "three_meter_cliff_gate",
+      "pass": true,
+      "value": {
+        "maxInc": 0.09915236515558573,
+        "maxIncAt": {
+          "x": -78,
+          "z": -84,
+          "xx": -78,
+          "zz": -87,
+          "inc": 0.09915236515558573
+        }
+      },
+      "limit": "<1.05m terrace increment / 3m around every changed 6m cell"
+    },
+    {
+      "name": "hard_drainage_core_empty",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "foreground_receiver_unchanged",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "support_localized",
+      "pass": true,
+      "value": 0,
+      "limit": "0"
+    },
+    {
+      "name": "three_groups_retained",
+      "pass": true,
+      "value": [
+        98,
+        230,
+        225
+      ],
+      "limit": "three terrace families material"
+    },
+    {
+      "name": "locks_retained",
+      "pass": true,
+      "value": {
+        "visual": false,
+        "parcel": false,
+        "water": false,
+        "production": false
+      },
+      "limit": "all false pending fixed-view acceptance"
+    },
+    {
+      "name": "logic_error_explicit",
+      "pass": true,
+      "value": "R62 failed 24/27 while Chrome passed. Its diagnostic counted 16 safety-eligible weak cells, only five within 30 m of the four frozen R60 seeds, and only two same-family seed-neighbours; those two were the seeds themselves. Widening the seed radius or lowering family/safety gates would be threshold chasing, not new evidence. The correct inference is that four endpoint seeds are insufficient evidence for hillside-scale continuation, so R63 changes the frozen support source to the already accepted R58 active contour rail while keeping materiality and safety gates unchanged. Browser success remains renderability evidence only.",
+      "limit": "four seeds insufficient; browser != geometry"
+    },
+    {
+      "name": "field_constraint_explicit",
+      "pass": true,
+      "value": "the 6 m audit rail, 4.5-33 m rail reach, 10.5 m cross-contour cap, tangent gates and inherited 12 m hard drainage core are synthetic morphology/QA parameters, not surveyed Yunnan terrace dimensions. The 12.5 m macro DEM and photographs cannot provide field/sub-metre microtopography, parcel/management boundaries, bund/riser/channel sections, inlet/outlet sill elevations, observed hydraulic connectivity, head/depth/discharge/gate state or event-level water management.",
+      "limit": "synthetic parameters and missing field truth explicit"
+    },
+    {
+      "name": "xiaoma_boundary_retained",
+      "pass": true,
+      "value": "Xiaoma/TLO remains binding: geometric continuity, adjacency and conservation are necessary evidence only and do not establish parcel ownership, hydraulic connectivity, head, water depth, discharge, gate state, soil-water state or sediment state.",
+      "limit": "geometry != hydraulic truth"
+    },
+    {
+      "name": "mrrolord_ordering_only",
+      "pass": true,
+      "value": "saved MrRolord research is used only as ordering discipline: drainage hierarchy -> accumulated terrain influence -> terrain-conforming contour land use -> paths/vegetation/materials. The original named video is not available to replay and Blender/Voronoi/shader dimensions are not agricultural truth.",
+      "limit": "ordering only"
+    },
+    {
+      "name": "reference_nonmetric",
+      "pass": true,
+      "value": "image(173).png is reread only as non-metric morphology evidence for long curved contour ribbons, unequal widths, nested bends, local branch/rejoin and drainage interruptions. No terrace width, reach, riser height, channel size or hydraulic parameter is inferred from the photograph.",
+      "limit": "nonmetric only"
+    }
+  ],
+  "metrics": {
+    "active": 553,
+    "priorActive": 548,
+    "gains": 5,
+    "cross": 5,
+    "heightMaterial": 5,
+    "unsupported": 0,
+    "unsafe": 0,
+    "maxChange": 0.0600737526321338,
+    "groups": [
+      98,
+      230,
+      225
+    ],
+    "changedGroups": [
+      0,
+      2,
+      1
+    ],
+    "supportModes": {
+      "extension": 2,
+      "bracket": 3
+    },
+    "frozenRailCount": 548,
+    "changedPoints": [
+      {
+        "x": -78,
+        "z": -84,
+        "gain": 0.17,
+        "change": -0.021005624765068544,
+        "groupIndex": 0,
+        "mode": "frozen-r58-two-rail-contour-extension",
+        "supportA": {
+          "x": -66,
+          "z": -90,
+          "mask": 0.9357543737661453,
+          "index": 20,
+          "step": 1.3472743683551163,
+          "dist": 13.416407864998739,
+          "along": 12.87094244849139,
+          "cross": 3.7866661441989358,
+          "vectorAlignment": 0.9593434083104778,
+          "tangentContinuity": 0.9287559753005442
+        },
+        "supportB": {
+          "x": -54,
+          "z": -90,
+          "mask": 0.6589183399421434,
+          "index": 18,
+          "step": 1.3963383640882783,
+          "dist": 24.73863375370596,
+          "along": 24.682362864964077,
+          "cross": 1.6676220801615287,
+          "vectorAlignment": 0.9977253841379397,
+          "tangentContinuity": 0.9675812205075216
+        },
+        "dd": 43.689184331893934
+      },
+      {
+        "x": -60,
+        "z": -84,
+        "gain": 0.17,
+        "change": 0.047819550329705786,
+        "groupIndex": 0,
+        "mode": "frozen-r58-two-rail-contour-extension",
+        "supportA": {
+          "x": -54,
+          "z": -90,
+          "mask": 0.6589183399421434,
+          "index": 18,
+          "step": 1.3963383640882783,
+          "dist": 8.485281374238571,
+          "along": 7.907638446455926,
+          "cross": 3.0772153321033793,
+          "vectorAlignment": 0.9319241281100736,
+          "tangentContinuity": 0.9998277989849691
+        },
+        "supportB": {
+          "x": -48,
+          "z": -90,
+          "mask": 0.140135283168734,
+          "index": 17,
+          "step": 1.4229959517110522,
+          "dist": 13.416407864998739,
+          "along": 13.40006533573558,
+          "cross": 0.6620037749271059,
+          "vectorAlignment": 0.99878189978811,
+          "tangentContinuity": 0.9648013424606546
+        },
+        "dd": 27.201457567949056
+      },
+      {
+        "x": -54,
+        "z": -84,
+        "gain": 0.17,
+        "change": 0.0600737526321338,
+        "groupIndex": 0,
+        "mode": "frozen-r58-two-rail-contour-bracket",
+        "supportA": {
+          "x": -66,
+          "z": -90,
+          "mask": 0.9357543737661453,
+          "index": 20,
+          "step": 1.3472743683551163,
+          "dist": 13.416407864998739,
+          "along": -9.184298257283096,
+          "cross": 9.780013574697463,
+          "vectorAlignment": 0.6845571742972619,
+          "tangentContinuity": 0.9792399710320504
+        },
+        "supportB": {
+          "x": -48,
+          "z": -90,
+          "mask": 0.140135283168734,
+          "index": 17,
+          "step": 1.4229959517110522,
+          "dist": 8.485281374238571,
+          "along": 7.7048677962750975,
+          "cross": 3.5545762394303644,
+          "vectorAlignment": 0.9080273778153287,
+          "tangentContinuity": 0.9469326296905695
+        },
+        "dd": 21.235602644430205
+      },
+      {
+        "x": -66,
+        "z": -78,
+        "gain": 0.17,
+        "change": 0.05138615941886192,
+        "groupIndex": 2,
+        "mode": "frozen-r58-two-rail-contour-bracket",
+        "supportA": {
+          "x": -60,
+          "z": -78,
+          "mask": 0.1650963883379131,
+          "index": 15,
+          "step": 1.4004757042701947,
+          "dist": 6,
+          "along": 5.5148319729054975,
+          "cross": 2.363604939624909,
+          "vectorAlignment": 0.9191386621509162,
+          "tangentContinuity": 0.9997475093745459
+        },
+        "supportB": {
+          "x": -78,
+          "z": -72,
+          "mask": 0.8921816940183885,
+          "index": 15,
+          "step": 1.357240127583048,
+          "dist": 13.416407864998739,
+          "along": -13.393268885435905,
+          "cross": 0.7876220936556795,
+          "vectorAlignment": 0.9982753222922508,
+          "tangentContinuity": 0.9652784296000724
+        },
+        "dd": 33.80651123327351
+      },
+      {
+        "x": -210,
+        "z": -60,
+        "gain": 0.14568902756065555,
+        "change": -0.007466390937715299,
+        "groupIndex": 1,
+        "mode": "frozen-r58-two-rail-contour-bracket",
+        "supportA": {
+          "x": -216,
+          "z": -66,
+          "mask": 0.1318236317079129,
+          "index": 10,
+          "step": 1.4847019060911841,
+          "dist": 8.485281374238571,
+          "along": -7.597682032327305,
+          "cross": 3.778257235240985,
+          "vectorAlignment": 0.8953954143929711,
+          "tangentContinuity": 0.9990368673992763
+        },
+        "supportB": {
+          "x": -204,
+          "z": -60,
+          "mask": 0.19671821812150092,
+          "index": 10,
+          "step": 1.4757125535739628,
+          "dist": 6,
+          "along": 5.687969633784145,
+          "cross": 1.90971239854316,
+          "vectorAlignment": 0.9479949389640242,
+          "tangentContinuity": 0.9718769967058178
+        },
+        "dd": 20.043355119664344
+      }
+    ],
+    "spatialSpan": {
+      "xSpan": 156,
+      "zSpan": 24
+    },
+    "newCrossChains": {
+      "components": 4,
+      "largest": 2,
+      "chainCells": 2,
+      "multiCellComponents": 1,
+      "sizes": [
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    "topology2D": {
+      "new": {
+        "components": 19,
+        "orphans": 1,
+        "tiny": 2,
+        "largest": 125,
+        "second": 79,
+        "sizes": [
+          125,
+          79,
+          52,
+          52,
+          45,
+          38,
+          32,
+          23,
+          21,
+          20,
+          16,
+          12,
+          11,
+          9,
+          6,
+          6,
+          3,
+          2,
+          1
+        ]
+      },
+      "prior": {
+        "components": 18,
+        "orphans": 0,
+        "tiny": 1,
+        "largest": 124,
+        "second": 79,
+        "sizes": [
+          124,
+          79,
+          52,
+          52,
+          45,
+          38,
+          32,
+          23,
+          21,
+          20,
+          16,
+          11,
+          11,
+          9,
+          6,
+          4,
+          3,
+          2
+        ]
+      }
+    },
+    "straightRuns": {
+      "new": {
+        "best": 14,
+        "total": 2212,
+        "longRuns": 266,
+        "longCells": 1592
+      },
+      "prior": {
+        "best": 14,
+        "total": 2192,
+        "longRuns": 265,
+        "longCells": 1585
+      }
+    },
+    "maxReach": 24.73863375370596,
+    "maxCross": 9.780013574697463,
+    "maxInc": 0.09915236515558573,
+    "maxIncAt": {
+      "x": -78,
+      "z": -84,
+      "xx": -78,
+      "zz": -87,
+      "inc": 0.09915236515558573
+    },
+    "outside": 0,
+    "hard": 0,
+    "receiver": 0,
+    "qaScope": "authoritative 6m whole-slope frozen-R58 two-rail sweep + explicit new-chain gate + exact old-active inheritance + 2D topology/long-run guards + <=3m path/local safety checks"
+  }
+}
