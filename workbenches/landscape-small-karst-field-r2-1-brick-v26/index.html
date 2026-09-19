@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Landscape Mother · Small Karst R2 · Brick Mother V2.6 Strict Transfer</title>
+<style>
+:root{color-scheme:dark;--bg:#0e100f;--panel:#151714ee;--text:#eee9df;--muted:#aaa59d;--gold:#d7a66b;--line:#ffffff18}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);font:12px/1.45 Inter,system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
+header{position:absolute;left:14px;top:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:3}.brand,.tools,.panel,.badge{pointer-events:auto;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);box-shadow:0 16px 50px #0007}.brand{padding:12px 14px;border-radius:12px}.eyebrow{font-size:9px;letter-spacing:.14em;color:var(--gold);font-weight:800}.brand h1{font-size:17px;margin:4px 0 0}.sub{margin-top:5px;font-size:9px;color:var(--muted)}.tools{display:flex;gap:5px;padding:5px;border-radius:11px}button{border:1px solid transparent;border-radius:8px;padding:8px 11px;background:#ffffff07;color:var(--text);cursor:pointer}button:hover,button.on{border-color:#d7a66b66;background:#d7a66b18;color:#ffe5bb}
+.panel{position:absolute;right:14px;top:76px;width:314px;max-height:calc(100% - 100px);overflow:auto;border-radius:13px;padding:16px 18px;z-index:3}.panel.hide{display:none}.group+.group{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}.group h3{font-size:10px;letter-spacing:.12em;color:var(--gold);margin:0 0 8px}.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}.row output{color:#d7a66b;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#b9864e;margin:5px 0}.note{font-size:9px;color:var(--muted);line-height:1.65;margin:9px 0 0}.lock{padding:9px 10px;border:1px solid #d7a66b2f;border-radius:8px;background:#d7a66b0c;color:#cfc7bc;font-size:9px;line-height:1.6}.badge{position:absolute;left:14px;bottom:14px;padding:8px 10px;border-radius:9px;font-size:9px;color:#d0cbc1;z-index:3}.error{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;background:#3b1512;padding:16px;max-width:80vw;white-space:pre-wrap;border-radius:10px}
+@media(max-width:700px){header{left:8px;right:8px;top:8px}.brand{max-width:210px;padding:9px 10px}.brand h1{font-size:14px}.sub{font-size:7px}.tools button{padding:7px}.panel{left:8px;right:8px;top:91px;width:auto;max-height:54vh}.badge{left:8px;bottom:8px}}
+</style>
+</head>
+<body data-transfer="STRICT_BRICK_V26_STONE_BLOCK_TWO_PASS">
+<canvas id="view" aria-label="Small continuous karst with Brick Mother V2.6 stone material"></canvas>
+<header><div class="brand"><div class="eyebrow">LANDSCAPE MOTHER · STRICT TRANSFER</div><h1>小尺度帕劳卡斯特 R2.1</h1><div class="sub">形体沿用 R1 · Brick Mother V2.6 石块质感/色彩原样迁移</div></div><div class="tools"><button id="reset">复位</button><button id="panelBtn">调节</button><button id="gray">灰模</button></div></header>
+<aside class="panel" id="panel">
+<div class="group"><h3>形体比例</h3><div class="row"><label for="overall">整体大小</label><output id="overallOut">1.00×</output></div><input id="overall" type="range" min=".55" max="2.2" step=".01" value="1"><div class="row"><label for="height">高度</label><output id="heightOut">1.00×</output></div><input id="height" type="range" min=".6" max="1.7" step=".01" value="1"><div class="row"><label for="width">宽度</label><output id="widthOut">1.00×</output></div><input id="width" type="range" min=".6" max="1.8" step=".01" value="1"></div>
+<div class="group"><h3>孔洞</h3><div class="row"><label for="holeSize">孔洞大小</label><output id="holeSizeOut">1.00×</output></div><input id="holeSize" type="range" min=".35" max="1.85" step=".01" value="1"><div class="row"><label for="cavity">孔洞深度</label><output id="cavityOut">1.10</output></div><input id="cavity" type="range" min="0" max="2.2" step=".01" value="1.10"></div>
+<div class="group"><h3>形体细节</h3><div class="row"><label for="macro">大变形</label><output id="macroOut">1.05</output></div><input id="macro" type="range" min="0" max="2.5" step=".01" value="1.05"><div class="row"><label for="warp">域 Warp</label><output id="warpOut">1.20</output></div><input id="warp" type="range" min="0" max="3" step=".01" value="1.20"><div class="row"><label for="detail">细节强度</label><output id="detailOut">1.00</output></div><input id="detail" type="range" min="0" max="2.4" step=".01" value="1.00"><div class="row"><label for="detailScale">细节尺度</label><output id="detailScaleOut">1.00×</output></div><input id="detailScale" type="range" min=".35" max="2.6" step=".01" value="1"></div>
+<div class="group"><h3>Brick Mother V2.6 固定材料</h3><div class="lock">来源锁定：HOUSE@ea08bb33768f88f10ad9622075ddaa34cb8019c3 · stone-block。颜色、孔隙、风化、水痕、粗糙度、微法线与 Gaea 场参数不再由 Landscape 自行设计。</div><div class="row"><label for="soil">顶部积土</label><output id="soilOut">0.52</output></div><input id="soil" type="range" min="0" max="1" step=".01" value=".52"><p class="note">积土只作用于向上且向天开口的外表面；主洞内壁不参与。</p></div>
+</aside>
+<div class="badge">默认约 16 m 高 / 12 m 宽 · 连续隐式场 · 无预展开山体网格</div><div id="error" class="error"></div>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('view'),gl=canvas.getContext('webgl2',{antialias:false,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:true});
+if(!gl){const e=document.getElementById('error');e.style.display='block';e.textContent='需要 WebGL2';return}
+const VS=`#version 300 es
+precision highp float;const vec2 P[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));void main(){gl_Position=vec4(P[gl_VertexID],0.,1.);}`;
+const GEOMETRY_FS=`#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location=0) out vec4 gPosition;
+layout(location=1) out vec4 gNormal;
+uniform vec2 uRes;
+uniform vec3 uCam;
+uniform mat3 uBasis;
+uniform float uOverall,uHeight,uWidth,uHoleSize,uCavity,uMacro,uWarp,uDetail,uDetailScale,uSoil;
+#define MAX_STEPS 104
+#define FAR 80.0
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}vec3 hash33(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453123);}
+float valueNoise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);float a=hash31(i),b=hash31(i+vec3(1,0,0)),c=hash31(i+vec3(0,1,0)),d=hash31(i+vec3(1,1,0)),e=hash31(i+vec3(0,0,1)),g=hash31(i+vec3(1,0,1)),h=hash31(i+vec3(0,1,1)),j=hash31(i+vec3(1,1,1));return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+float gradientNoise3(vec3 p){vec3 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);float a=dot(normalize(hash33(i)*2.-1.),f),b=dot(normalize(hash33(i+vec3(1,0,0))*2.-1.),f-vec3(1,0,0)),c=dot(normalize(hash33(i+vec3(0,1,0))*2.-1.),f-vec3(0,1,0)),d=dot(normalize(hash33(i+vec3(1,1,0))*2.-1.),f-vec3(1,1,0)),e=dot(normalize(hash33(i+vec3(0,0,1))*2.-1.),f-vec3(0,0,1)),g=dot(normalize(hash33(i+vec3(1,0,1))*2.-1.),f-vec3(1,0,1)),h=dot(normalize(hash33(i+vec3(0,1,1))*2.-1.),f-vec3(0,1,1)),j=dot(normalize(hash33(i+vec3(1,1,1))*2.-1.),f-vec3(1,1,1));return mix(mix(mix(a,b,u.x),mix(c,d,u.x),u.y),mix(mix(e,g,u.x),mix(h,j,u.x),u.y),u.z)*.5+.5;}
+float fbmGradient(vec3 p){float v=0.,a=.52,t=0.;for(int i=0;i<5;i++){v+=gradientNoise3(p)*a;t+=a;p=p*2.03+vec3(19.1,7.7,13.4);a*=.49;}return v/t;}float ridgedFbm(vec3 p){float v=0.,a=.56,t=0.;for(int i=0;i<5;i++){float n=1.-abs(gradientNoise3(p)*2.-1.);v+=n*n*a;t+=a;p=p*2.11+vec3(11.7,5.3,17.9);a*=.47;}return v/t;}float fbmValueFast(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=valueNoise3(p)*a;t+=a;p=p*2.05+vec3(7.3,15.1,3.9);a*=.48;}return v/t;}float turbulence(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=abs(valueNoise3(p)*2.-1.)*a;t+=a;p=p*2.07+vec3(3.7,17.2,9.1);a*=.5;}return v/t;}
+vec2 worley3(vec3 p){vec3 ip=floor(p),fp=fract(p);float f1=10.,f2=10.;for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 cell=vec3(float(x),float(y),float(z)),point=hash33(ip+cell),dv=cell+point-fp;float d2=dot(dv,dv);if(d2<f1){f2=f1;f1=d2;}else if(d2<f2)f2=d2;}return sqrt(vec2(f1,f2));}vec3 domainWarp(vec3 p){return vec3(fbmValueFast(p+vec3(17.1,3.8,9.2)),fbmValueFast(p+vec3(4.4,19.7,12.1)),fbmValueFast(p+vec3(13.8,7.2,23.4)))-.5;}
+float bmSat(float v){return clamp(v,0.,1.);}float bmAuto(float v,float lo,float hi){return bmSat((v-lo)/max(hi-lo,.00001));}float bmClarity(float v,float a){float t=bmSat(v),l=t*t*(3.-2.*t);return bmSat(t+(t-l)*a*1.45);}float bmMask(float v,float sharp){float w=mix(.30,.035,bmSat(sharp/1.6));return smoothstep(.5-w,.5+w,v);}vec3 srgbToLinear(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(vec3(.04045),c));}vec3 linearToSrgb(vec3 c){return mix(c*12.92,1.055*pow(max(c,0.),vec3(1./2.4))-.055,step(vec3(.0031308),c));}vec3 adjustSaturation(vec3 c,float s){float l=dot(c,vec3(.2126,.7152,.0722));return mix(vec3(l),c,s);}
+struct Fields{float rugged;float strata;float microErosion;float rockMap;float flow;float protrusion;float cavity;};Fields gaea(vec3 p,vec3 n){vec3 sv=vec3(8231.*.0113,8231.*.0197,8231.*.0311)*.91;vec3 q=p+domainWarp(p*.73+sv*.21)*.22;float ra=ridgedFbm(q*7.6+sv*.67),rb=ridgedFbm((q+domainWarp(q*1.31))*7.6*.53+sv*1.19),rug=bmClarity(ra*.68+rb*.32,.74);vec2 cells=worley3(q*7.6*.76+sv*.89);float plate=1.-smoothstep(.026,.17,cells.y-cells.x);float phaseNoise=fbmValueFast(q*3.7+sv*1.91)-.5;float phase=(q.y+q.x*.18+q.z*.075+phaseNoise*.18)*8.4*6.2831853+sv.x;float sw=sin(phase)*.5+.5;float sg=bmAuto(fbmValueFast(q*2.65+sv*1.43),.27,.82),sb=bmAuto(fbmValueFast(q*5.1+sv*2.11),.33,.81);float strata=bmMask(sw*(.16+sg*.52)*(.31+sb*.69),.7*.72);float mb=ridgedFbm(q*30.+sv*1.77),mg=bmAuto(turbulence(q*30.*.31+sv*2.13),.31,.86),micro=smoothstep(.61,.94,mb)*mg;float slope=1.-abs(n.y),pa=bmAuto(fbmValueFast(q*2.12+sv*2.73),.30,.79),pb=bmAuto(fbmGradient(q*4.35+sv*1.57),.28,.76);float rock=bmMask((pa*.46+pb*.34+rug*.20)*(.57+slope*.43),.7*.50);float vertical=bmAuto(1.-(p.y+.5),.08,.92),fn=bmAuto(fbmValueFast(vec3(q.x*2.1,q.y*.57,q.z*2.1)+sv*2.47),.48,.86),flow=bmMask(vertical*fn*(.38+slope*.62),.7*.58);Fields o;o.rugged=rug;o.strata=strata;o.microErosion=micro;o.rockMap=rock;o.flow=flow;o.protrusion=bmSat(rug*.60+strata*.12+pa*.28);o.cavity=bmSat(micro*.41+(1.-rug)*.27+(1.-pb)*.24+plate*.08);return o;}
+float smin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+float sdEllipsoid(vec3 p,vec3 r){float k0=length(p/r),k1=length(p/(r*r));return k0*(k0-1.)/max(k1,1e-5);}float baseForm(vec3 p){float d=sdEllipsoid(p-vec3(-.55,-.15,.10),vec3(3.05,7.75,2.95));d=smin(d,sdEllipsoid(p-vec3(-1.95,1.25,.55),vec3(2.35,5.35,2.40)),.82);d=smin(d,sdEllipsoid(p-vec3(2.05,-1.15,-.45),vec3(2.75,4.45,2.45)),.72);d=smin(d,sdEllipsoid(p-vec3(.35,5.25,-.70),vec3(2.05,3.15,1.95)),.62);d=smin(d,sdEllipsoid(p-vec3(-1.10,-3.95,1.05),vec3(1.95,3.75,2.05)),.58);d=smin(d,sdEllipsoid(p-vec3(-2.55,-3.15,.20),vec3(1.35,2.75,1.55)),.48);return d;}float caveField(vec3 p){float hs=max(.20,uHoleSize);float c1=sdEllipsoid(p-vec3(-1.10,-2.60,2.05),vec3(2.55,2.20,3.15)*hs);float c2=sdEllipsoid(p-vec3(2.35,.65,1.55),vec3(1.45,1.25,2.05)*hs);float c3=sdEllipsoid(p-vec3(-2.85,2.15,-.2),vec3(1.15,1.55,1.5)*hs);float c4=sdEllipsoid(p-vec3(.25,4.15,1.2),vec3(.85,.72,1.05)*hs);return min(min(c1,c2),min(c3,c4));}
+float mapRock(vec3 wp){float s=max(uOverall,.1);vec3 p=wp/s;p.x/=max(uWidth,.1);p.z/=max(uWidth,.1);p.y/=max(uHeight,.1);vec3 q=p,w0=domainWarp(p*.18+vec3(2.4,-3.1,5.7));q+=w0*(.82*uWarp);vec3 w1=domainWarp((q+w0)*.43+vec3(-7.7,8.3,2.1));q+=w1*(.14*uWarp);float d=baseForm(q),cave=caveField(q);d=max(d,-(cave+.16*(valueNoise3(q*.7)-.5)*uCavity));float f=max(.16,uDetailScale),macro=(fbmGradient(q*.23*f)-.5)*.92+(ridgedFbm(q*.46*f)-.5)*.54,mid=(ridgedFbm(q*1.10*f)-.5)*.42+(valueNoise3(q*2.15*f)-.5)*.24,fine=(valueNoise3(q*5.2*f)-.5)*.11,directional=(valueNoise3(vec3(q.x*.45,q.y*.15,q.z*.45)+w0*1.4)-.5)*.22,grooves=exp(-pow(sin(q.y*.48+q.x*.18+q.z*.22+sin(q.y*.11)*1.7),2.)/.055)*clamp(1.-abs(q.y)/8.5,0.,1.);d+=uMacro*(macro+directional)*.62+uDetail*(mid+fine)*.28+grooves*.17;return d*s*min(uWidth,uHeight);}float mapGround(vec3 p){return p.y+7.85+.18*sin(p.x*.24)+.14*sin(p.z*.31);}vec2 mapScene(vec3 p){float r=mapRock(p),g=mapGround(p);return r<g?vec2(r,1.):vec2(g,2.);}vec3 normalAt(vec3 p){float e=.014*max(.65,uOverall);vec2 h=vec2(1.,-1.)*.5773;return normalize(h.xyy*mapScene(p+h.xyy*e).x+h.yyx*mapScene(p+h.yyx*e).x+h.yxy*mapScene(p+h.yxy*e).x+h.xxx*mapScene(p+h.xxx*e).x);}float softShadow(vec3 ro,vec3 rd,float mint,float maxt){float res=1.,t=mint;for(int i=0;i<22;i++){float h=mapScene(ro+rd*t).x;res=min(res,18.*h/t);t+=clamp(h,.025,.45);if(res<.01||t>maxt)break;}return clamp(res,0.,1.);}float aoField(vec3 p,vec3 n){float o=0.,s=1.;for(int i=1;i<=3;i++){float h=.10*float(i),d=mapScene(p+n*h).x;o+=(h-d)*s;s*=.58;}return clamp(1.-o*1.65,0.,1.);}float skyOpen(vec3 p){float o=1.;for(int i=1;i<=5;i++){float h=.42*float(i*i);o*=smoothstep(-.05,.26,mapScene(p+vec3(0,h,0)).x);}return o;}
+
+void main(){
+  vec2 uv=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+  vec3 ro=uCam,rd=normalize(uBasis*vec3(uv,1.55));
+  float t=0.;vec2 hit=vec2(FAR,0.);vec3 p=ro;
+  for(int i=0;i<MAX_STEPS;i++){
+    p=ro+rd*t;hit=mapScene(p);
+    if(abs(hit.x)<.0016*max(1.,t*.14)||t>FAR)break;
+    t+=max(hit.x*.70,.006);
+  }
+  if(t>FAR){gPosition=vec4(0.,0.,0.,0.);gNormal=vec4(rd,1.);return;}
+  vec3 N=normalAt(p);float occ=aoField(p,N);
+  gPosition=vec4(p,hit.y);
+  gNormal=vec4(N,occ);
+}`;
+const MATERIAL_FS=`#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outColor;
+uniform vec2 uRes;
+uniform sampler2D uPositionTex;
+uniform sampler2D uNormalTex;
+uniform vec3 uCam;
+uniform float uSoil,uOverall;
+uniform int uGray;
+float hash31(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}vec3 hash33(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453123);}
+float valueNoise3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);float a=hash31(i),b=hash31(i+vec3(1,0,0)),c=hash31(i+vec3(0,1,0)),d=hash31(i+vec3(1,1,0)),e=hash31(i+vec3(0,0,1)),g=hash31(i+vec3(1,0,1)),h=hash31(i+vec3(0,1,1)),j=hash31(i+vec3(1,1,1));return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,g,f.x),mix(h,j,f.x),f.y),f.z);}
+float gradientNoise3(vec3 p){vec3 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);float a=dot(normalize(hash33(i)*2.-1.),f),b=dot(normalize(hash33(i+vec3(1,0,0))*2.-1.),f-vec3(1,0,0)),c=dot(normalize(hash33(i+vec3(0,1,0))*2.-1.),f-vec3(0,1,0)),d=dot(normalize(hash33(i+vec3(1,1,0))*2.-1.),f-vec3(1,1,0)),e=dot(normalize(hash33(i+vec3(0,0,1))*2.-1.),f-vec3(0,0,1)),g=dot(normalize(hash33(i+vec3(1,0,1))*2.-1.),f-vec3(1,0,1)),h=dot(normalize(hash33(i+vec3(0,1,1))*2.-1.),f-vec3(0,1,1)),j=dot(normalize(hash33(i+vec3(1,1,1))*2.-1.),f-vec3(1,1,1));return mix(mix(mix(a,b,u.x),mix(c,d,u.x),u.y),mix(mix(e,g,u.x),mix(h,j,u.x),u.y),u.z)*.5+.5;}
+float fbmGradient(vec3 p){float v=0.,a=.52,t=0.;for(int i=0;i<5;i++){v+=gradientNoise3(p)*a;t+=a;p=p*2.03+vec3(19.1,7.7,13.4);a*=.49;}return v/t;}float ridgedFbm(vec3 p){float v=0.,a=.56,t=0.;for(int i=0;i<5;i++){float n=1.-abs(gradientNoise3(p)*2.-1.);v+=n*n*a;t+=a;p=p*2.11+vec3(11.7,5.3,17.9);a*=.47;}return v/t;}float fbmValueFast(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=valueNoise3(p)*a;t+=a;p=p*2.05+vec3(7.3,15.1,3.9);a*=.48;}return v/t;}float turbulence(vec3 p){float v=0.,a=.54,t=0.;for(int i=0;i<4;i++){v+=abs(valueNoise3(p)*2.-1.)*a;t+=a;p=p*2.07+vec3(3.7,17.2,9.1);a*=.5;}return v/t;}
+vec2 worley3(vec3 p){vec3 ip=floor(p),fp=fract(p);float f1=10.,f2=10.;for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 cell=vec3(float(x),float(y),float(z)),point=hash33(ip+cell),dv=cell+point-fp;float d2=dot(dv,dv);if(d2<f1){f2=f1;f1=d2;}else if(d2<f2)f2=d2;}return sqrt(vec2(f1,f2));}vec3 domainWarp(vec3 p){return vec3(fbmValueFast(p+vec3(17.1,3.8,9.2)),fbmValueFast(p+vec3(4.4,19.7,12.1)),fbmValueFast(p+vec3(13.8,7.2,23.4)))-.5;}
+float bmSat(float v){return clamp(v,0.,1.);}float bmAuto(float v,float lo,float hi){return bmSat((v-lo)/max(hi-lo,.00001));}float bmClarity(float v,float a){float t=bmSat(v),l=t*t*(3.-2.*t);return bmSat(t+(t-l)*a*1.45);}float bmMask(float v,float sharp){float w=mix(.30,.035,bmSat(sharp/1.6));return smoothstep(.5-w,.5+w,v);}vec3 srgbToLinear(vec3 c){return mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),step(vec3(.04045),c));}vec3 linearToSrgb(vec3 c){return mix(c*12.92,1.055*pow(max(c,0.),vec3(1./2.4))-.055,step(vec3(.0031308),c));}vec3 adjustSaturation(vec3 c,float s){float l=dot(c,vec3(.2126,.7152,.0722));return mix(vec3(l),c,s);}
+struct Fields{float rugged;float strata;float microErosion;float rockMap;float flow;float protrusion;float cavity;};Fields gaea(vec3 p,vec3 n){vec3 sv=vec3(8231.*.0113,8231.*.0197,8231.*.0311)*.91;vec3 q=p+domainWarp(p*.73+sv*.21)*.22;float ra=ridgedFbm(q*7.6+sv*.67),rb=ridgedFbm((q+domainWarp(q*1.31))*7.6*.53+sv*1.19),rug=bmClarity(ra*.68+rb*.32,.74);vec2 cells=worley3(q*7.6*.76+sv*.89);float plate=1.-smoothstep(.026,.17,cells.y-cells.x);float phaseNoise=fbmValueFast(q*3.7+sv*1.91)-.5;float phase=(q.y+q.x*.18+q.z*.075+phaseNoise*.18)*8.4*6.2831853+sv.x;float sw=sin(phase)*.5+.5;float sg=bmAuto(fbmValueFast(q*2.65+sv*1.43),.27,.82),sb=bmAuto(fbmValueFast(q*5.1+sv*2.11),.33,.81);float strata=bmMask(sw*(.16+sg*.52)*(.31+sb*.69),.7*.72);float mb=ridgedFbm(q*30.+sv*1.77),mg=bmAuto(turbulence(q*30.*.31+sv*2.13),.31,.86),micro=smoothstep(.61,.94,mb)*mg;float slope=1.-abs(n.y),pa=bmAuto(fbmValueFast(q*2.12+sv*2.73),.30,.79),pb=bmAuto(fbmGradient(q*4.35+sv*1.57),.28,.76);float rock=bmMask((pa*.46+pb*.34+rug*.20)*(.57+slope*.43),.7*.50);float vertical=bmAuto(1.-(p.y+.5),.08,.92),fn=bmAuto(fbmValueFast(vec3(q.x*2.1,q.y*.57,q.z*2.1)+sv*2.47),.48,.86),flow=bmMask(vertical*fn*(.38+slope*.62),.7*.58);Fields o;o.rugged=rug;o.strata=strata;o.microErosion=micro;o.rockMap=rock;o.flow=flow;o.protrusion=bmSat(rug*.60+strata*.12+pa*.28);o.cavity=bmSat(micro*.41+(1.-rug)*.27+(1.-pb)*.24+plate*.08);return o;}
+float smin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+struct MatData{vec3 albedo;float rough;float cavity;float height;};MatData brickStone(vec3 wp,vec3 n,float occ){float scale=max(4.0,uOverall*6.0);vec3 p=wp/scale,detailSeed=vec3(9040.*.0113,9040.*.0197,9040.*.0311),colorSeed=vec3(8632.*.0113,8632.*.0197,8632.*.0311),poreSeed=vec3(8538.*.0113,8538.*.0197,8538.*.0311);vec3 warped=p+domainWarp(p*1.75*.72+detailSeed)*.20,colorWarped=p+domainWarp(p*1.75*.58+colorSeed)*(.20*1.22),poreWarped=p+domainWarp(p*18.*.10+poreSeed)*(.20*.72);float macro=fbmGradient(colorWarped*1.75+colorSeed*.31),macroB=fbmValueFast(colorWarped*1.75*.63+colorSeed*1.27),ridge=ridgedFbm(warped*6.2+detailSeed*.57),turb=turbulence(warped*6.2*.68+detailSeed*.91),micro=gradientNoise3(warped*36.+detailSeed*1.7),grit=valueNoise3(warped*36.*2.35+detailSeed*3.1),crustBroad=ridgedFbm(warped*10.5+detailSeed*2.17),crustFine=fbmValueFast(warped*24.+detailSeed*3.73),crustFlake=smoothstep(.45,.82,crustBroad*.68+crustFine*.32);float density=1.46/2.2,variety=1.58/1.8;vec2 cell=worley3(poreWarped*18.+poreSeed*.27);float aa=max(fwidth(cell.x)*1.4,.003),poreCore=1.-smoothstep(.105-aa,.105+.05+aa,cell.x),poreGate=smoothstep(mix(.62,.45,density),.88,valueNoise3(poreWarped*18.*.31+poreSeed*4.3)),pore=poreCore*poreGate;vec2 mc=worley3(poreWarped*18.*mix(.46,.34,variety)+poreSeed*.61);float maa=max(fwidth(mc.x)*1.55,.006),mr=mix(.105,.175,variety),medium=(1.-smoothstep(mr-maa,mr+.055+maa,mc.x))*smoothstep(mix(.70,.52,density),.91,fbmValueFast(poreWarped*2.35+poreSeed*2.7));vec2 lc=worley3(poreWarped*18.*mix(.235,.165,variety)+poreSeed*1.17);float laa=max(fwidth(lc.x)*1.65,.008),lr=mix(.105,.205,variety),large=(1.-smoothstep(lr-laa,lr+.070+laa,lc.x))*smoothstep(mix(.82,.66,density),.95,fbmGradient(poreWarped*1.55+poreSeed*3.6));float mediumRing=smoothstep(mr*.76,mr,mc.x)*(1.-smoothstep(mr,mr+.095,mc.x)),largeRing=smoothstep(lr*.70,lr,lc.x)*(1.-smoothstep(lr,lr+.13,lc.x)),rim=clamp(mediumRing*.72+largeRing,0.,1.);vec2 mineralCell=worley3(warped*21.+colorSeed*1.17);float mineralCore=1.-smoothstep(.055,.145+fwidth(mineralCell.x),mineralCell.x),mineral=mineralCore*smoothstep(.57,.90,valueNoise3(warped*21.*.37+colorSeed*2.9));Fields f=gaea(p,n);vec3 low=srgbToLinear(vec3(.04,.047,.052)),mean=srgbToLinear(vec3(.31,.31,.29)),high=srgbToLinear(vec3(.66,.63,.55)),dark=srgbToLinear(vec3(.034,.041,.048)),warm=srgbToLinear(vec3(.44,.34,.25)),oxide=srgbToLinear(vec3(.48,.25,.11)),mineralColor=srgbToLinear(vec3(.82,.80,.72)),wet=srgbToLinear(vec3(.04,.058,.075));float tone=clamp(pow(macro,1./1.46),0.,1.);vec3 albedo=mix(low,high,tone);albedo=mix(albedo,mean,.18);float stoneRegion=fbmValueFast(colorWarped*.78+colorSeed*.59),stoneB=fbmGradient(colorWarped*1.82+colorSeed*1.31),stoneC=fbmValueFast(colorWarped*4.2+colorSeed*2.77),blue=1.-smoothstep(.34,.57,stoneRegion),neutral=smoothstep(.28,.48,stoneRegion)*(1.-smoothstep(.58,.76,stoneRegion)),warmR=smoothstep(.55,.79,stoneRegion*.70+stoneB*.30),olive=smoothstep(.62,.86,stoneB*.43+f.flow*.27),rust=smoothstep(.70,.91,stoneC*.31+f.flow*.20+f.cavity*.20),wetR=smoothstep(.55,.84,f.cavity*.47+f.flow*.35+(1.-stoneC)*.18),calcite=smoothstep(.70,.91,ridgedFbm(colorWarped*4.8+colorSeed*5.7)*.54+f.strata*.29+stoneB*.17),layer=f.strata*smoothstep(.39,.76,stoneB*.61+f.rockMap*.39)*1.02;vec3 slate=mix(mean,srgbToLinear(vec3(.085,.16,.235)),.66),neutralStone=mix(mean,srgbToLinear(vec3(.32,.32,.29)),.44),earth=mix(mean,srgbToLinear(vec3(.37,.24,.13)),.58),oliveGray=mix(mean,srgbToLinear(vec3(.16,.22,.10)),.58),calciteCol=mix(mineralColor,srgbToLinear(vec3(.86,.84,.74)),.46),rustStone=mix(oxide,srgbToLinear(vec3(.54,.12,.025)),.52);albedo=mix(albedo,slate,blue*.52);albedo=mix(albedo,neutralStone,neutral*.32);albedo=mix(albedo,earth,warmR*.34);albedo=mix(albedo,oliveGray,olive*.26);albedo=mix(albedo,calciteCol,calcite*.32+layer*.16);albedo=mix(albedo,rustStone,rust*.25);albedo=mix(albedo,wet,wetR*.38);albedo=mix(albedo,dark,f.rockMap*.10*1.3);float cavity=clamp(pore*.22+medium*.66+large+f.cavity*.40,0.,1.);albedo=mix(albedo,mix(dark,wet,wetR*.66),clamp(pore*.22+medium*.66+large,0.,1.)*.58);albedo=mix(albedo,mix(mineralColor,warm,.18),rim*(.12+1.58*.09));albedo*=1.-cavity*(.20+.12*.8+.045*1.32);albedo=adjustSaturation(albedo,.94+1.34*.18);albedo=clamp(albedo,vec3(.004),vec3(1.));float height=(macro-.5)*.16+(ridge-.5)*.22+(micro-.5)*.082+(grit-.5)*.014+(crustBroad-.5)*.12+(crustFine-.5)*.0408+mineral*.18+(f.protrusion-.5)*.34*1.3+(f.strata-.5)*.24*1.02-f.microErosion*.29*1.08+rim*(.10+1.58*.05)-medium*(.23+1.32*.07)-large*(.40+1.32*.12)-cavity*(.56+1.32*.12);float roughDriver=clamp(.14+micro*.20+ridge*.15+cavity*.34+f.rockMap*.18*1.3+f.strata*.10*1.02+f.microErosion*.15*1.08+crustFlake*.16+crustBroad*.08+rim*.20+medium*.14+large*.18-mineral*.08,0.,1.);MatData o;o.albedo=albedo;o.rough=mix(.78,.96,roughDriver);o.cavity=cavity;o.height=height;return o;}
+float D_GGX(float NoH,float a){float a2=a*a,d=NoH*NoH*(a2-1.)+1.;return a2/(3.14159265*d*d+.00001);}float G_Schlick(float NoV,float k){return NoV/(NoV*(1.-k)+k+.00001);}vec3 F_Schlick(float VoH,vec3 F0){return F0+(1.-F0)*pow(1.-VoH,5.);}vec3 shadeLight(vec3 N,vec3 V,vec3 L,vec3 lc,float intensity,vec3 albedo,float rough){vec3 H=normalize(V+L);float NoL=max(dot(N,L),0.),NoV=max(dot(N,V),.001),NoH=max(dot(N,H),0.),VoH=max(dot(V,H),0.),a=max(.05,rough*rough),k=(rough+1.)*(rough+1.)/8.;vec3 F=F_Schlick(VoH,vec3(.026));float D=D_GGX(NoH,a),G=G_Schlick(NoV,k)*G_Schlick(NoL,k);vec3 spec=(D*G*F)/(4.*NoV*max(NoL,.001)+.0001),kd=1.-F;return(kd*albedo/3.14159265+spec)*NoL*lc*intensity;}
+
+void main(){
+  ivec2 pixel=ivec2(gl_FragCoord.xy);
+  vec4 gp=texelFetch(uPositionTex,pixel,0);
+  vec4 gn=texelFetch(uNormalTex,pixel,0);
+  if(gp.w<.5){
+    vec3 rd=normalize(gn.xyz);
+    vec3 sky=mix(vec3(.035,.040,.043),vec3(.105,.116,.118),clamp(rd.y*.5+.5,0.,1.));
+    outColor=vec4(sky,1.);return;
+  }
+  vec3 p=gp.xyz,N=normalize(gn.xyz);float occ=clamp(gn.w,0.,1.);
+  if(gp.w>1.5){
+    float g=fbmValueFast(p*.18);
+    vec3 c=mix(vec3(.05,.055,.052),vec3(.11,.105,.085),g);
+    outColor=vec4(linearToSrgb(c),1.);return;
+  }
+  MatData m=brickStone(p,N,occ);
+  vec3 dpdx=dFdx(p),dpdy=dFdy(p),R1=cross(dpdy,N),R2=cross(N,dpdx);
+  float det=dot(dpdx,R1);
+  if(abs(det)>.000001){
+    vec3 grad=sign(det)*(dFdx(m.height)*R1+dFdy(m.height)*R2);
+    N=normalize(abs(det)*N-grad*.15);
+  }
+  vec3 albedo=m.albedo;
+  float soilMask=uSoil*smoothstep(.55,.83,N.y)*smoothstep(1.6,5.4,p.y);
+  vec3 soilCol=mix(srgbToLinear(vec3(.24,.18,.105)),srgbToLinear(vec3(.33,.28,.13)),fbmValueFast(p*.33+vec3(5.7,0,-8.3)));
+  albedo=mix(albedo,soilCol,soilMask*.76);
+  albedo=mix(albedo,srgbToLinear(vec3(.18,.25,.09)),soilMask*smoothstep(.54,.78,fbmValueFast(p*.62))*.55);
+  if(uGray==1)albedo=vec3(dot(albedo,vec3(.2126,.7152,.0722)));
+  vec3 V=normalize(uCam-p),L1=normalize(vec3(-.44,.83,.36)),L2=normalize(vec3(.62,.47,-.63)),L3=normalize(vec3(-.12,.28,-.95));
+  vec3 color=vec3(0.);
+  color+=shadeLight(N,V,L1,vec3(1.,.975,.94),2.18,albedo,m.rough);
+  color+=shadeLight(N,V,L2,vec3(.48,.64,.88),.52,albedo,m.rough);
+  color+=shadeLight(N,V,L3,vec3(.86,.62,.42),.18,albedo,m.rough);
+  float aocc=clamp(occ-m.cavity*.24,.50,1.);
+  color+=albedo*(.31+.14*clamp(N.y*.5+.5,0.,1.));
+  color*=aocc;
+  color=1.-exp(-color*.96);
+  color=pow(max(color,0.),vec3(1.015));
+  outColor=vec4(linearToSrgb(color),1.);
+}`;
+function makeShader(type,src,label){
+  const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(label+' shader compile:\n'+(gl.getShaderInfoLog(sh)||'(empty log)'));
+  return sh;
+}
+function makeProgram(vertexSource,fragmentSource,label){
+  const program=gl.createProgram();
+  const v=makeShader(gl.VERTEX_SHADER,vertexSource,label+' vertex');
+  const f=makeShader(gl.FRAGMENT_SHADER,fragmentSource,label+' fragment');
+  gl.attachShader(program,v);gl.attachShader(program,f);gl.linkProgram(program);
+  const ok=gl.getProgramParameter(program,gl.LINK_STATUS),log=gl.getProgramInfoLog(program)||'';
+  gl.deleteShader(v);gl.deleteShader(f);
+  if(!ok)throw Error(label+' program link:\n'+(log||'(empty log)'));
+  return program;
+}
+function locations(program,names){const result={};for(const name of names)result[name]=gl.getUniformLocation(program,name);return result}
+let geometryProgram,materialProgram,UG,UM,vao,framebuffer,positionTex,normalTex,targetW=0,targetH=0;
+try{
+  if(!gl.getExtension('EXT_color_buffer_float'))throw Error('浏览器缺少 EXT_color_buffer_float，无法运行双程序连续场。');
+  geometryProgram=makeProgram(VS,GEOMETRY_FS,'geometry');
+  materialProgram=makeProgram(VS,MATERIAL_FS,'Brick V2.6 material');
+  UG=locations(geometryProgram,['uRes','uCam','uBasis','uOverall','uHeight','uWidth','uHoleSize','uCavity','uMacro','uWarp','uDetail','uDetailScale','uSoil']);
+  UM=locations(materialProgram,['uRes','uPositionTex','uNormalTex','uCam','uSoil','uOverall','uGray']);
+  vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  framebuffer=gl.createFramebuffer();positionTex=gl.createTexture();normalTex=gl.createTexture();
+}catch(err){const e=document.getElementById('error');e.style.display='block';e.textContent=err.stack||err;document.documentElement.dataset.karstFailure='true';throw err}
+function allocTexture(tex,w,h){gl.bindTexture(gl.TEXTURE_2D,tex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null)}
+function resizeTargets(w,h){if(w===targetW&&h===targetH)return;targetW=w;targetH=h;allocTexture(positionTex,w,h);allocTexture(normalTex,w,h);gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,positionTex,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,normalTex,0);gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);const status=gl.checkFramebufferStatus(gl.FRAMEBUFFER);gl.bindFramebuffer(gl.FRAMEBUFFER,null);if(status!==gl.FRAMEBUFFER_COMPLETE)throw Error('双程序缓冲区不完整: 0x'+status.toString(16))}
+const state={overall:1,height:1,width:1,holeSize:1,cavity:1.10,macro:1.05,warp:1.20,detail:1.0,detailScale:1,soil:.52,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]},ids=['overall','height','width','holeSize','cavity','macro','warp','detail','detailScale','soil'];
+function suffix(k){return['overall','height','width','holeSize','detailScale'].includes(k)?'×':''}
+function sync(){for(const k of ids){const e=document.getElementById(k),o=document.getElementById(k+'Out');e.value=state[k];o.textContent=Number(state[k]).toFixed(2)+suffix(k)}}
+ids.forEach(k=>document.getElementById(k).oninput=e=>{state[k]=+e.target.value;document.getElementById(k+'Out').textContent=state[k].toFixed(2)+suffix(k);dirty=true});
+document.getElementById('reset').onclick=()=>{Object.assign(state,{overall:1,height:1,width:1,holeSize:1,cavity:1.10,macro:1.05,warp:1.20,detail:1,detailScale:1,soil:.52,gray:0,theta:.56,phi:1.27,radius:28,target:[0,.4,0]});document.getElementById('gray').classList.remove('on');sync();dirty=true};
+document.getElementById('panelBtn').onclick=()=>document.getElementById('panel').classList.toggle('hide');
+document.getElementById('gray').onclick=e=>{state.gray=1-state.gray;e.currentTarget.classList.toggle('on',!!state.gray);dirty=true};
+let dirty=true,drag=false,lx=0,ly=0;
+canvas.onpointerdown=e=>{drag=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId)};
+canvas.onpointermove=e=>{if(!drag)return;state.theta-=(e.clientX-lx)*.005;state.phi=Math.max(.22,Math.min(2.9,state.phi-(e.clientY-ly)*.004));lx=e.clientX;ly=e.clientY;dirty=true};
+canvas.onpointerup=()=>drag=false;canvas.onpointercancel=()=>drag=false;
+canvas.onwheel=e=>{e.preventDefault();state.radius=Math.max(11,Math.min(62,state.radius*Math.exp(e.deltaY*.0012)));dirty=true};
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.25),w=Math.max(1,Math.floor(innerWidth*dpr)),h=Math.max(1,Math.floor(innerHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);resizeTargets(w,h);dirty=true}}
+addEventListener('resize',()=>{try{resize()}catch(err){const e=document.getElementById('error');e.style.display='block';e.textContent=err.stack||err;document.documentElement.dataset.karstFailure='true'}});
+function norm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function drawGeometry(eye,basis){gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(geometryProgram);gl.bindVertexArray(vao);gl.uniform2f(UG.uRes,canvas.width,canvas.height);gl.uniform3fv(UG.uCam,eye);gl.uniformMatrix3fv(UG.uBasis,false,basis);for(const k of ids)if(UG['u'+k[0].toUpperCase()+k.slice(1)]!==undefined&&UG['u'+k[0].toUpperCase()+k.slice(1)]!==null)gl.uniform1f(UG['u'+k[0].toUpperCase()+k.slice(1)],state[k]);gl.drawArrays(gl.TRIANGLES,0,3)}
+function drawMaterial(eye){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.useProgram(materialProgram);gl.bindVertexArray(vao);gl.uniform2f(UM.uRes,canvas.width,canvas.height);gl.uniform3fv(UM.uCam,eye);gl.uniform1f(UM.uSoil,state.soil);gl.uniform1f(UM.uOverall,state.overall);gl.uniform1i(UM.uGray,state.gray);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,positionTex);gl.uniform1i(UM.uPositionTex,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,normalTex);gl.uniform1i(UM.uNormalTex,1);gl.drawArrays(gl.TRIANGLES,0,3)}
+let firstFrame=true;
+function frame(){requestAnimationFrame(frame);try{resize();if(!dirty)return;dirty=false;const cp=Math.cos(state.phi),sp=Math.sin(state.phi),ct=Math.cos(state.theta),st=Math.sin(state.theta),eye=[state.target[0]+state.radius*sp*st,state.target[1]+state.radius*cp,state.target[2]+state.radius*sp*ct],f=norm([state.target[0]-eye[0],state.target[1]-eye[1],state.target[2]-eye[2]]),r=norm(cross(f,[0,1,0])),u=cross(r,f),basis=new Float32Array([r[0],r[1],r[2],u[0],u[1],u[2],f[0],f[1],f[2]]);drawGeometry(eye,basis);drawMaterial(eye);if(firstFrame){firstFrame=false;window.__KARST_READY__=true;document.documentElement.dataset.karstReady='true'}}catch(err){const e=document.getElementById('error');e.style.display='block';e.textContent=err.stack||err;document.documentElement.dataset.karstFailure='true';dirty=false}}
+sync();resize();requestAnimationFrame(frame);window.__KARST_STATE__=state;window.__KARST_DIAGNOSTICS__={renderer:'two-pass-continuous-field',material:'Brick Mother V2.6 stone-block locked'};})();</script></body></html>
