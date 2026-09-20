@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "BIRD-NO-SIMPLIFIED-SUBSTITUTE-001",
+  "domain": "bird",
+  "source": "user_correction",
+  "createdAt": "2026-09-21",
+  "failureClass": "UNAUTHORIZED_CREATIVE_SUBSTITUTE",
+  "failureDescription": "Reference-locked bird task produced a newly invented/simplified visible bird instead of measuring and reproducing the requested reference.",
+  "mustNeverRepeat": [
+    "generic bird body",
+    "invented beak/head proportions",
+    "toy/placeholder bird shown as progress",
+    "unreferenced hidden-area completion"
+  ],
+  "requiredEvidence": [
+    "exact reference set",
+    "target anatomy delta",
+    "base/head SHA",
+    "fixed-view reference comparison",
+    "known unknowns"
+  ],
+  "gateLogic": [
+    "creativeSubstituteDetected must be false",
+    "candidate must descend from accepted/evidence-backed baseline",
+    "unknown anatomy must remain UNKNOWN until evidenced"
+  ],
+  "appliesTo": [
+    "Bird Mother",
+    "Animal Mother",
+    "Game bird consumers"
+  ],
+  "active": true
+}
