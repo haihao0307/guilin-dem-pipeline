@@ -12,6 +12,22 @@
 
 本交接包不含原始 TIFF。用户自行保管源文件，缺少 TIFF 不构成接管阻断。仅使用已有 canonical 数值文件，不下载或重新导入 TIFF，不把冷备份打回交接包。
 
+## Mother Production Operating System R2
+
+全部 Mother / Codex / 子执行端开工前必须读取并执行 `knowledge/MOTHER_PRODUCTION_OPERATING_SYSTEM_R2_ZH.md`。
+
+生产默认流程固定为：
+`LOCK → EXECUTE → VERIFY → PROMOTE`
+
+每个明确任务先建立 Task Anchor；每个候选统一使用 R2 Delivery Receipt；每一次重要用户纠正转成 Regression Case。模板：
+- `ops/mother_execution/templates/TASK_ANCHOR_R2.json`
+- `ops/mother_execution/templates/DELIVERY_RECEIPT_R2.json`
+- `ops/mother_execution/templates/REGRESSION_CASE_R2.json`
+
+Producer 不能批准自己。用户不再作为第一层 QA：候选必须先过合同、新鲜度、参考保真和机器门禁。内部失败不得为了展示而发给用户；没有合法新产物时使用 `NO_NEW_ARTIFACT`。
+
+同一个 bounded task 最多允许两次内部失败循环；第二次仍失败则进入 ROOT_CAUSE_REVIEW，不再凭感觉微调，也不无限更换 worker。
+
 ## 所有 Mother 共用视觉产出规则
 
 DEM、Cloud Mother、Weather Mother、Ocean Mother、Coast、Landscape Mother 及本仓库后续全部 Mother，默认禁止调用图像生成或图像编辑工具。禁止生成概念图、效果图、预览图、参考图、海报、缩略图，也禁止用图片代替真实三维成果。
