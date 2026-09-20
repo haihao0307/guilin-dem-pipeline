@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "TERRAIN-NO-STALE-DELIVERY-001",
+  "domain": "terrain",
+  "source": "user_correction",
+  "createdAt": "2026-09-21",
+  "failureClass": "STALE_OR_WRONG_TARGET_DELIVERY",
+  "failureDescription": "After a clear overnight terrain task, an older terrain/result was shown instead of a post-dispatch candidate for the requested change.",
+  "mustNeverRepeat": [
+    "old terrain shown as today's result",
+    "old release silently reopened",
+    "old screenshot resent as new evidence",
+    "wrong target substituted for requested terrain change"
+  ],
+  "requiredEvidence": [
+    "dispatch anchor",
+    "base/head SHA",
+    "target terrain diff",
+    "current-head browser evidence",
+    "freshness proof"
+  ],
+  "gateLogic": [
+    "freshArtifactProven=true",
+    "staleOrWrongTargetDetected=false",
+    "fallbackActive=false for acceptance"
+  ],
+  "appliesTo": [
+    "Landscape Mother",
+    "Game Mother",
+    "Terrain execution lines"
+  ],
+  "active": true
+}
