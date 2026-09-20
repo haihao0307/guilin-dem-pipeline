@@ -1,6 +1,14 @@
 # Stone Money Island
 ## Survivor Palau
 
+## 2026-09-20 小妈知识与参考交接入口
+
+本轮用户要求把已整理的 Stone Money 资料交给 **Stone Money Game**。先读 [`docs/STONE_MONEY_GAME_KNOWLEDGE_INTAKE_20260920_ZH.md`](docs/STONE_MONEY_GAME_KNOWLEDGE_INTAKE_20260920_ZH.md)：汇集故事与玩法要求、实景场景关系、钓鱼跨介质合同、岸滩/Weather/鱼/珊瑚/植物分工，以及已建立的私有参考库入库责任。
+
+本次只是知识文件和入口追加，没有重建游戏、修改运行源码、合并其他 Mother 或替换发布版本。下方 V0.2.0 信息保留为历史接续，不能据此覆盖当前工作分支。资料已写入不代表执行端已签收或功能已接入；实际接收者按交接末尾的简短回执记录使用和缺项。
+
+## 历史接续记录（V0.2.0）
+
 当前接续：V0.2.0 岸边求生。先读 `docs/CHAPTER_01_V0200.md`。本轮主角已改为执行对日军小型运输船攻击任务的战斗机飞行员；飞机受损，主人公未受伤。漂流数日后的白沙滩是游戏开场，飞行攻击留给后续制作。
 
 工作分支：`work/stone-money-island-v0200-shore-survival-20260918`。
