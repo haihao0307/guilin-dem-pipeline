@@ -45,6 +45,10 @@ jobs:
           python games/survivor-palau/palau-world/airai-r04/scripts/build_airai_reef_evidence.py \
             --intake /tmp/airai-reef-intake \
             --output games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Apply ENC M_QUAL quality evidence
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_enc_quality_r02.py \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
