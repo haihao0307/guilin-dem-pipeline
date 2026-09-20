@@ -1,0 +1,85 @@
+name: Palau KAOPU source supplement R2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [data/palau-kaopu-source-intake-r2-20260920]
+    paths:
+      - tools/palau_source_supplement_r2.py
+      - .github/workflows/palau-kaopu-source-intake-r2.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: palau-kaopu-source-intake-r2
+  cancel-in-progress: true
+
+jobs:
+  supplement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    env:
+      OUT: /tmp/palau-kaopu-source-supplement-r2
+      PROJ_NETWORK: ON
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: .tif,.TIF,.gz,.webp,.json,.xml
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data/palau-kaopu-source-intake-r2-20260920
+
+      - name: Install bathymetry tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gdal-bin gzip zip
+          python -m pip install --upgrade pip
+          python -m pip install requests beautifulsoup4 numpy pillow rasterio mercantile
+
+      - name: Download processed NOAA products and repair open bathymetry
+        run: |
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+          python -u tools/palau_source_supplement_r2.py --out "$OUT" | tee "$OUT/intake-r2.log"
+          test -f "$OUT/metadata/R2_DOWNLOAD_REPORT.json"
+          test -f "$OUT/metadata/NOAA_MULTIBEAM_PRODUCT_INVENTORY_R2.json"
+          test -f "$OUT/metadata/OPEN_WATERS_SEASCAPE_R2.json"
+
+      - name: Preserve source identities and receipts
+        if: always()
+        run: |
+          mkdir -p evidence/palau-source-intake-r2
+          for f in \
+            R2_DOWNLOAD_REPORT.json \
+            NOAA_MULTIBEAM_PRODUCT_INVENTORY_R2.json \
+            NOAA_MULTIBEAM_RASTER_METADATA_R2.json \
+            NOAA_MULTIBEAM_POINT_CARRIERS_R2.json \
+            NOAA_LEGACY_PALAU_DATASETS_R2.json \
+            OPEN_WATERS_SEASCAPE_R2.json \
+            IHO_DCDB_CSB_RETRY_R2.json; do
+            if [ -f "$OUT/metadata/$f" ]; then cp "$OUT/metadata/$f" evidence/palau-source-intake-r2/; fi
+          done
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f evidence/palau-source-intake-r2
+          if ! git diff --cached --quiet; then
+            git commit -m 'data(palau): record processed source supplement R2'
+            git pull --rebase origin data/palau-kaopu-source-intake-r2-20260920
+            git push origin HEAD:data/palau-kaopu-source-intake-r2-20260920
+          fi
+
+      - name: Make one supplement package
+        if: always()
+        run: |
+          cd /tmp
+          zip -q -0 -r Palau_KAOPU_Source_Supplement_R2.zip palau-kaopu-source-supplement-r2
+          ls -lh Palau_KAOPU_Source_Supplement_R2.zip
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Palau-KAOPU-Source-Supplement-R2
+          path: /tmp/Palau_KAOPU_Source_Supplement_R2.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
