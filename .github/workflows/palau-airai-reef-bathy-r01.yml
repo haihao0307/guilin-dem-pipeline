@@ -54,6 +54,11 @@ jobs:
           python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_noaa_survey_coverage_r03.py \
             --intake /tmp/airai-reef-intake \
             --results games/survivor-palau/palau-world/airai-r04/results-r01
+      - name: Reconcile GMRT high-resolution contributor context
+        run: |
+          python games/survivor-palau/palau-world/airai-r04/scripts/postprocess_gmrt_context_r04.py \
+            --intake /tmp/airai-reef-intake \
+            --results games/survivor-palau/palau-world/airai-r04/results-r01
       - name: Preserve small derived products on work branch
         run: |
           git config user.name 'github-actions[bot]'
