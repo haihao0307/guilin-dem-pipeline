@@ -1,7 +1,7 @@
-# Tuna native branch R03.2 status
+# Tuna native branch R03.3 status
 
-R03.2 advances the first tuna branch from a coarse whole-fish preview to a body-rooted, source-independent functional fish with 36 parts, 24 semantic controls and 18,832 triangles.
+R03.3 advances the tuna branch to 67 source-independent function parts, 24 semantic controls and 19,820 triangles. It adds twenty-five fin-ray structures plus paired maxillary, preopercular and supraorbital head-detail curves.
 
-Numerical and local browser gates pass. Visual and natural-motion gates do not pass.
+Base and detail suites pass 536 assertions in total. Desktop 1440×1000, mobile 390×844 and four fixed views pass with WebGL error 0.
 
-Most important remaining visual gap: the reference observation still contains substantially richer head folds, fin-ray structure, caudal geometry and skin variation. The next slice must improve continuous anatomy and surface response rather than hide this gap with stronger colour or specular effects.
+Visual and natural-motion gates remain closed. The reference still has richer continuous head folds, fin-ray density, caudal geometry and skin response. The next slice must convert line-like head details into continuous tissue surfaces and improve outer fin silhouettes rather than hide the gap with stronger colour or highlights.
