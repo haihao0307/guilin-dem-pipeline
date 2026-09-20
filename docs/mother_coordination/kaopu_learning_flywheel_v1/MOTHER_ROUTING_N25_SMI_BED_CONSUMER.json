@@ -1,0 +1,40 @@
+{
+  "id": "KAOPU-ROUTE-N25-SMI-BED-CONSUMER-20260920",
+  "status": "prepared-not-adopted",
+  "learningQuestion": "SMI-Q-BED-PARITY-01",
+  "recipient": {
+    "mother": "Ocean",
+    "issue": 94,
+    "pullRequest": 100
+  },
+  "increment": "The PR100 waveSurface adapter is partial: fixed-release vertex d0 and vThickness still use legacy bedH, and fragment shoreline bands still use legacy smiShoreDistance.",
+  "counterexample": {
+    "coordinateMeters": [23.773102305096508, 22.595179809081475],
+    "seaLevelMeters": 0.18,
+    "legacyThicknessMeters": 0.18,
+    "authoritativeThicknessMeters": 0,
+    "foamVisibilityGateLegacy": 1,
+    "foamVisibilityGateAuthoritative": 0
+  },
+  "requestedBoundedExperiment": [
+    "Use one versioned authoritative bed/distance contract for wave displacement, shallow depth, thickness and local shoreline bands inside the wake-bay support.",
+    "Preserve exact legacy behavior at zero blend weight and do not change frozen deep-ocean/cloud or production entry.",
+    "Add source-count guards and same-coordinate CPU/WebGL checks at both blend boundaries and the mean-water crossing.",
+    "Record full-scene desktop and 390x844 A/B, hardware/runtime identity, cost and remaining visual gap separately."
+  ],
+  "acceptance": {
+    "guidanceDelivered": true,
+    "motherAcknowledged": false,
+    "implementationAccepted": false,
+    "browserFullSceneVerified": false,
+    "deviceVerified": false,
+    "userVisualAcceptance": false
+  },
+  "frozen": [
+    "deep-ocean source",
+    "cloud source",
+    "global legacy bed",
+    "production entry",
+    "canonical CPU terrain/contact truth"
+  ]
+}
