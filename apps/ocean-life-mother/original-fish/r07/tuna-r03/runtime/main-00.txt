@@ -1,0 +1,88 @@
+import {buildTunaR03, TUNA_R03_PROFILE, clamp, finletMotion} from './source-bundle.mjs';
+
+const canvas=document.getElementById('view');
+const statusEl=document.getElementById('status');
+const fatalEl=document.getElementById('fatal');
+const metricsEl=document.getElementById('metrics');
+const gl=canvas.getContext('webgl2',{antialias:true,alpha:false,preserveDrawingBuffer:true,premultipliedAlpha:false});
+if(!gl) fail('WebGL2 不可用，无法打开 Original Fish 金枪鱼工作台。');
+
+const vs=`#version 300 es
+precision highp float;
+in vec3 position;
+in vec3 normal;
+in vec4 param;
+uniform mat4 uViewProj;
+uniform mat4 uModel;
+uniform float uTime;
+uniform float uAmplitude;
+uniform float uPeriod;
+uniform float uSwim;
+out vec3 vNormal;
+out vec3 vWorld;
+out vec3 vLocal;
+out vec4 vParam;
+void main(){
+  vec3 p=position;
+  vec3 n=normal;
+  float u=clamp(position.x+0.5,0.0,1.0);
+  float tailness=clamp(1.0-u,0.0,1.0);
+  float omega=6.28318530718/max(0.25,uPeriod);
+  float phase=omega*uTime-1.18*tailness;
+  float env=0.015+0.985*pow(tailness,2.65);
+  float lateral=uSwim*uAmplitude*env*sin(phase);
+  float dEnv=-2.65*pow(max(tailness,0.00001),1.65);
+  float slope=uSwim*uAmplitude*(-dEnv*sin(phase)+1.18*env*cos(phase));
+  float a=atan(slope),ca=cos(a),sa=sin(a);
+  p.z+=lateral;
+  n=normalize(vec3(ca*n.x+sa*n.z,n.y,-sa*n.x+ca*n.z));
+  vec4 world=uModel*vec4(p,1.0);
+  vWorld=world.xyz;
+  vNormal=normalize(mat3(uModel)*n);
+  vLocal=p;
+  vParam=param;
+  gl_Position=uViewProj*world;
+}`;
+
+const fs=`#version 300 es
+precision highp float;
+in vec3 vNormal;
+in vec3 vWorld;
+in vec3 vLocal;
+in vec4 vParam;
+uniform vec3 uCamera;
+uniform vec3 uLight;
+uniform int uMaterial;
+uniform float uWet;
+uniform float uFinTranslucency;
+uniform vec4 uOverride;
+out vec4 outColor;
+float sat(float x){return clamp(x,0.0,1.0);} 
+void main(){
+  if(uMaterial==99){outColor=uOverride;return;}
+  vec3 n=normalize(vNormal);
+  vec3 l=normalize(uLight-vWorld);
+  vec3 v=normalize(uCamera-vWorld);
+  vec3 h=normalize(l+v);
+  float ndl=max(dot(n,l),0.0);
+  float ndv=max(dot(n,v),0.0);
+  float back=max(dot(-n,l),0.0);
+  float rim=pow(1.0-ndv,2.2);
+  vec3 base=vec3(0.30,0.42,0.44);
+  float rough=0.38;
+  float alpha=1.0;
+  if(uMaterial==0){
+    float x=vLocal.x;
+    float y=vLocal.y;
+    float dorsal=smoothstep(-0.01,0.115,y);
+    float belly=1.0-smoothstep(-0.145,-0.035,y);
+    vec3 silver=vec3(0.43,0.54,0.55);
+    vec3 deep=vec3(0.035,0.105,0.17);
+    vec3 ventral=vec3(0.66,0.70,0.66);
+    base=mix(silver,deep,dorsal);
+    base=mix(base,ventral,belly*0.78);
+    float stripe=exp(-pow((y+0.020)/0.026,2.0))*smoothstep(-0.23,-0.02,x)*smoothstep(0.51,0.34,x);
+    base=mix(base,vec3(0.73,0.57,0.15),stripe*0.62);
+    float shoulder=smoothstep(0.10,0.36,x)*smoothstep(0.50,0.38,x);
+    base=mix(base,vec3(0.18,0.32,0.34),shoulder*0.28);
+    float 
