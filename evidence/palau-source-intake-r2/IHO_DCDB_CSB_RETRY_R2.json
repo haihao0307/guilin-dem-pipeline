@@ -1,0 +1,80 @@
+[
+  {
+    "method": "GET",
+    "endpoint": "/count",
+    "kwargs": {
+      "params": {
+        "bbox": "134.22820105775745,6.792006436378491,135.00024636263274,7.890407692444282"
+      }
+    },
+    "success": false,
+    "error": "request failed https://q81rej0j12.execute-api.us-east-1.amazonaws.com/count: HTTP 500"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/platforms",
+    "kwargs": {
+      "params": {
+        "bbox": "134.22820105775745,6.792006436378491,135.00024636263274,7.890407692444282"
+      }
+    },
+    "success": true,
+    "payload": {
+      "count": 10,
+      "data": [
+        {
+          "provider": "SB2030",
+          "platform": "Aggressor_II"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "PalauVessel1"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "PalauVessel3"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "PalauVessel4"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "PalauVessel6"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "Patrol_Boat_Bisebusch"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "Patrol_Boat_Bul"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "Patrol_Boat_Eliduid"
+        },
+        {
+          "provider": "SB2030",
+          "platform": "Patrol_Boat_Kabekl_Mtal"
+        }
+      ]
+    }
+  },
+  {
+    "method": "GET",
+    "endpoint": "/count",
+    "kwargs": {
+      "params": {
+        "bbox": "134.22820105775745,6.792006436378491,135.00024636263274,7.890407692444282",
+        "datasets": "csb"
+      }
+    },
+    "success": false,
+    "error": "request failed https://q81rej0j12.execute-api.us-east-1.amazonaws.com/count: HTTP 500"
+  },
+  {
+    "fallback": "s3://noaa-dcdb-bathymetry-pds",
+    "policy": "inventory only until API recovers; do not recursively download the global archive"
+  }
+]
