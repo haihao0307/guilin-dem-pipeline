@@ -474,13 +474,13 @@
         "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Ageomorphic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
         "featureCountReturned": 2852,
         "bytes": 28441943,
-        "sha256": "03ba9ee5343e27da276aa78980dbc07aeb009e928bf6defad4e4797c052d647d"
+        "sha256": "ecf95b8ecd98937de9d82872af55c4fd49e371daa309b1d756323401223d6909"
       },
       "benthic": {
         "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Abenthic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
         "featureCountReturned": 8508,
-        "bytes": 36964176,
-        "sha256": "3ac72b9f5fe6ab35cb702f483887284e9f111fcdbe0f830b72946238fdcfd28b"
+        "bytes": 36969786,
+        "sha256": "126168033acba0905b38c9597efed4922b8648da45a98441305e1d37f91d0992"
       }
     },
     "layers": {
@@ -985,5 +985,127 @@
     "candidateGridMutation": false,
     "candidateGridReason": "Scene metadata alone is not a depth observation. No Sentinel-derived depth is injected into the candidate bathymetry grid in R06.",
     "palauWorldContract": "Any future Sentinel-derived shallow-water term must enter the same PalauWorld.sample() evidence conductor with source identity, mask, uncertainty and validity domain; no separate LOD world."
+  },
+  "osmSemanticsR07": {
+    "schema": "kaopu.palau.osm-reef-coast-mangrove-r07/1.0",
+    "contextBBoxWGS84": [
+      134.49,
+      7.27,
+      134.64,
+      7.42
+    ],
+    "coreBBoxWGS84": [
+      134.535,
+      7.315,
+      134.605,
+      7.385
+    ],
+    "userConfirmedAnchorWGS84": [
+      134.5667427743189,
+      7.349032638038719
+    ],
+    "source": {
+      "provider": "Geofabrik OpenStreetMap extract",
+      "file": "raw/osm/palau-latest.osm.pbf",
+      "sha256": "29ef0f3218ef28ada8585987dfb8d8afcac5910dcc44b6d4f80be3f9ec2d204a",
+      "license": "OpenStreetMap data © OpenStreetMap contributors, ODbL 1.0",
+      "extraction": "GDAL/OGR OSM driver; spatially clipped to the Airai context/core boxes",
+      "sourceIdentityRule": "OSM community mapping is retained as semantic/cartographic evidence, not hydrographic survey truth."
+    },
+    "rawLayerFeatureCountsInContext": {
+      "points": 145,
+      "lines": 383,
+      "multilinestrings": 0,
+      "multipolygons": 1688
+    },
+    "extractionErrors": {},
+    "semanticSummary": [
+      {
+        "semanticRole": "reef",
+        "contextFeatureCount": 14,
+        "coreFeatureCount": 2,
+        "coreClippedAreaKm2": 13.905333,
+        "coreClippedBoundaryLengthKm": 59.641211,
+        "nearestFeatureToAnchorM": 64.366
+      },
+      {
+        "semanticRole": "coastline",
+        "contextFeatureCount": 50,
+        "coreFeatureCount": 18,
+        "coreClippedAreaKm2": 0.0,
+        "coreClippedBoundaryLengthKm": 32.727474,
+        "nearestFeatureToAnchorM": 860.203
+      },
+      {
+        "semanticRole": "mangrove",
+        "contextFeatureCount": 7,
+        "coreFeatureCount": 1,
+        "coreClippedAreaKm2": 0.820998,
+        "coreClippedBoundaryLengthKm": 6.389494,
+        "nearestFeatureToAnchorM": 1005.132
+      },
+      {
+        "semanticRole": "tidalflat",
+        "contextFeatureCount": 0,
+        "coreFeatureCount": 0,
+        "coreClippedAreaKm2": 0.0,
+        "coreClippedBoundaryLengthKm": 0.0,
+        "nearestFeatureToAnchorM": null
+      },
+      {
+        "semanticRole": "shoal",
+        "contextFeatureCount": 0,
+        "coreFeatureCount": 0,
+        "coreClippedAreaKm2": 0.0,
+        "coreClippedBoundaryLengthKm": 0.0,
+        "nearestFeatureToAnchorM": null
+      },
+      {
+        "semanticRole": "beach",
+        "contextFeatureCount": 3,
+        "coreFeatureCount": 2,
+        "coreClippedAreaKm2": 0.001142,
+        "coreClippedBoundaryLengthKm": 0.270327,
+        "nearestFeatureToAnchorM": 265.793
+      },
+      {
+        "semanticRole": "island",
+        "contextFeatureCount": 8,
+        "coreFeatureCount": 3,
+        "coreClippedAreaKm2": 20.790796,
+        "coreClippedBoundaryLengthKm": 43.401395,
+        "nearestFeatureToAnchorM": 944.32
+      },
+      {
+        "semanticRole": "islet",
+        "contextFeatureCount": 6,
+        "coreFeatureCount": 0,
+        "coreClippedAreaKm2": 0.0,
+        "coreClippedBoundaryLengthKm": 0.0,
+        "nearestFeatureToAnchorM": 7517.405
+      }
+    ],
+    "coreDerivedFeatureCount": 26,
+    "tagRules": {
+      "reef": "natural=reef OR reef=* OR seamark:sea_area:category=reef",
+      "coastline": "natural=coastline",
+      "mangrove": "natural=wetland + wetland=mangrove, or legacy natural=mangrove",
+      "supporting": [
+        "natural=wetland + wetland=tidalflat",
+        "natural=shoal",
+        "natural=beach",
+        "place=island",
+        "place=islet"
+      ]
+    },
+    "methodBoundary": {
+      "validRole": "OSM helps preserve mapped coast/island/mangrove/reef semantics and provides an independent cartographic cross-check against Allen Coral Atlas and optical imagery.",
+      "notDepthTruth": "OSM reef/coast/mangrove tags do not supply measured bathymetry and must not create or cap water depth.",
+      "coastlineDatumCaution": "OSM natural=coastline represents the mapped shoreline convention and is not silently treated as the same vertical datum as ENC sounding/chart datum.",
+      "coverageCaution": "Missing OSM tags mean unmapped/unknown, not evidence that reef or mangrove is absent."
+    },
+    "candidateGridMutation": false,
+    "candidateGridReason": "R07 is a semantic and shoreline evidence layer only. It does not modify the candidate bathymetry grid.",
+    "palauWorldContract": "OSM semantics may gate labels, land/water/reef semantic masks and provenance inside the same PalauWorld.sample() conductor; they do not create a separate LOD world."
   }
 }
