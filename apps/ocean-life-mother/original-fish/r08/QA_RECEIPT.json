@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.original-fish.tuna-r08-source-benchmark-qa/1.0",
+  "schema": "kaopu.original-fish.tuna-r08-source-benchmark-qa/1.1",
   "date": "2026-09-20",
   "branch": "work/original-fish-r08-tuna-hifi-restart-20260920",
   "baseCommit": "5115808bbd42b837e28a2bc4b8bed47641ce29a4",
@@ -39,6 +39,14 @@
       "fullLocalBenchmarkBytes": 45453,
       "fullLocalBenchmarkState": "LOCAL_REPRODUCIBLE_NOT_PUBLISHED"
     },
+    "anatomyPartition": {
+      "path": "benchmark/ANATOMY_PARTITION_R01_SUMMARY.json",
+      "bytes": 10345,
+      "sha256": "617888f352ed3c295fec3fa9672c1cb8e0435fa06e8af0a290772567a1d425d4",
+      "fullLocalPartitionSha256": "3902fcb0346a163a92de58a070f4dc61f8e02be9cd229bd3c09e194b6cad66bf",
+      "fullLocalPartitionBytes": 13250,
+      "status": "DRAFT_NOT_ACCEPTED"
+    },
     "tool": {
       "path": "tools/source_benchmark.py",
       "bytes": 8095,
@@ -52,7 +60,12 @@
     ],
     "contourSamplesPerView": 256,
     "skeletonBindPoseJoints": 98,
-    "skinInfluenceInventory": true
+    "skinInfluenceInventory": true,
+    "numericTest": {
+      "command": "node tests/source-benchmark.test.mjs",
+      "result": "Original Fish Tuna R08 benchmark and partition: 47 assertions passed",
+      "status": "PASS"
+    }
   },
   "gates": {
     "oldProductionLineRejected": true,
@@ -61,6 +74,8 @@
     "silhouetteBaselineComplete": true,
     "skeletonInventoryComplete": true,
     "skinInfluenceInventoryComplete": true,
+    "anatomicalPartitionDrafted": true,
+    "continuityTargetsRecorded": true,
     "anatomicalPartitionAccepted": false,
     "nativeCandidateAllowed": false,
     "visualAcceptance": false,
