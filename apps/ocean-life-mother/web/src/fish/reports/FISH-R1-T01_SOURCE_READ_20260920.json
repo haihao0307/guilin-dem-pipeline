@@ -1,0 +1,104 @@
+{
+  "schema": "fish-r1-t01.source-read/1.0",
+  "taskId": "FISH-R1-T01",
+  "observedAt": "2026-09-20T02:05:00Z",
+  "input": {
+    "runtimePath": "/mnt/data/model_67a_-_largemouth_bass(2).glb",
+    "filename": "model_67a_-_largemouth_bass(2).glb",
+    "bytes": 18644040,
+    "sha256": "c1b964b34e80e8534b7801c496576d6a594938d217b4f763b35d04a922b3ee64",
+    "expectedSha256": "c1b964b34e80e8534b7801c496576d6a594938d217b4f763b35d04a922b3ee64",
+    "identityResult": "EXACT_MATCH"
+  },
+  "glb": {
+    "magic": "glTF",
+    "version": 2,
+    "declaredLength": 18644040,
+    "actualLength": 18644040,
+    "lengthMatch": true,
+    "chunks": [
+      {"type": "JSON", "bytes": 48784},
+      {"type": "BIN", "bytes": 18595228}
+    ],
+    "asset": {
+      "title": "Model 67A - Largemouth Bass",
+      "author": "DigitalLife3D",
+      "generator": "Sketchfab-16.53.0",
+      "license": "CC-BY-NC-4.0",
+      "source": "https://sketchfab.com/3d-models/model-67a-largemouth-bass-e60c457636b640629747c19feac4906c"
+    },
+    "counts": {
+      "scenes": 1,
+      "nodes": 42,
+      "meshes": 2,
+      "primitives": 2,
+      "verticesSummed": 8686,
+      "triangles": 16128,
+      "materials": 1,
+      "textures": 4,
+      "images": 4,
+      "skins": 1,
+      "skinJoints": 33,
+      "animations": 1,
+      "animationChannels": 74
+    },
+    "meshBreakdown": [
+      {"name": "Object_0", "roleObserved": "body and fins", "vertices": 8556, "triangles": 15904, "boundsMin": [-0.0331997648,-0.0732754245,-0.2382134199], "boundsMax": [0.0331997685,0.0704923198,0.1178226694]},
+      {"name": "Object_1", "roleObserved": "paired eye volumes", "vertices": 130, "triangles": 224, "boundsMin": [-0.01877724,0.00223768,0.06562610], "boundsMax": [0.01860430,0.01878107,0.08175484]}
+    ],
+    "material": {
+      "alphaMode": "BLEND",
+      "metallicFactor": 0,
+      "specularFactor": 0.42124199697207376,
+      "extensionsUsed": ["KHR_materials_specular"],
+      "imageMimeTypes": ["image/png","image/png","image/jpeg","image/png"]
+    },
+    "rig": {
+      "skinJointCount": 33,
+      "animationName": "Swim Cycle",
+      "jawNode": "jaw_22",
+      "jawBindPivotSourceCoordinates": [0.0,-0.0265282431,0.0643457175],
+      "jawObservedRelativeAnimationRangeDeg": [-0.6546024112,0.0076137127]
+    },
+    "eyes": {
+      "leftCenterSourceCoordinates": [-0.01642162,0.01074783,0.07416826],
+      "rightCenterSourceCoordinates": [0.01634877,0.01073904,0.07414965],
+      "observedApproximateExtents": [0.006635,0.01654331,0.01612859]
+    }
+  },
+  "selectedDefect": {
+    "name": "NON_STRUCTURAL_MOUTH",
+    "statement": "The rejected generic carrier represented the mouth as a simplified mark/part relationship rather than a jaw-hinged cavity. The first native correction separates cranium, lower jaw and mouth cavity and anchors jaw motion at the observed jaw_22 pivot.",
+    "naturalConstraint": "Adult largemouth bass upper jaw extends behind the rear margin of the eye.",
+    "sourceModelBoundary": "The source file is an N2 transitional reference, not final biological truth or a shippable runtime asset."
+  },
+  "newNativeKernel": {
+    "path": "apps/ocean-life-mother/web/src/fish/renderers/blackBassFish.js",
+    "sourceMeshRuntimeDependency": false,
+    "embeddedSourceVertices": false,
+    "embeddedSourceTextures": false,
+    "embeddedSourceRigTracks": false,
+    "retainedData": ["low-dimensional cranial stations","low-dimensional jaw envelope","jaw pivot","eye anchors","evidence labels"],
+    "generatedParts": ["cranial","lowerJaw","mouthCavity"],
+    "numericAcceptance": "TESTED_CANDIDATE",
+    "visualAcceptance": false,
+    "userAcceptance": false,
+    "productionReady": false
+  },
+  "commands": [
+    {
+      "command": "sha256sum /mnt/data/model_67a_-_largemouth_bass(2).glb",
+      "result": "c1b964b34e80e8534b7801c496576d6a594938d217b4f763b35d04a922b3ee64"
+    },
+    {
+      "command": "node apps/ocean-life-mother/web/src/fish/tests/blackBassFish.test.mjs",
+      "result": "FISH-R1-T01 black-bass head/mouth kernel: 15 assertions passed"
+    }
+  ],
+  "cache": {
+    "repository": "haihao0307/KAOPU-REFERENCE-CACHE",
+    "manifestState": "LOCAL_RUNTIME_VERIFIED_PENDING_LFS_INGEST",
+    "binaryCommittedToLfs": false,
+    "blocker": "Current GitHub connector has UTF-8 contents writes but no Git LFS binary upload action."
+  }
+}
