@@ -1,5 +1,5 @@
 {
-  "schema":"kaopu.original-fish.measured-size-series/0.1",
+  "schema":"kaopu.original-fish.measured-size-series/0.2",
   "speciesId":"amphiprion_ocellaris_black_morph",
   "speciesScientific":"Amphiprion ocellaris",
   "evidenceTier":"N1_SCIENTIFIC_NATURE",
@@ -7,6 +7,12 @@
   "source":{"sourceId":"RAHEEM2021_IJF_BLACK_OCELLARIS","type":"primary_research","url":"https://epubs.icar.org.in/index.php/IJF/article/download/102354/44497/467821"},
   "conditions":{"context":"hatchery-reared black A. ocellaris","note":"Do not merge directly with other A. ocellaris morph/stock series without cross-source calibration."},
   "lengthDefinition":"TL",
+  "sourceMeasurementSemantics":{
+    "headWidthMm":"source table label preserved; exact measurement axis/station not explicit enough in the currently accessible methods text",
+    "bodyWidthMm":"source table label preserved; exact measurement axis/station not explicit enough in the currently accessible methods text",
+    "safeUse":"interpolate the reported scalar within this source series only",
+    "unsafeUse":"do not reinterpret these scalars as a full top-view width curve or cross-section without a measurement-definition source"
+  },
   "anchors":[
     {"ageDph":50,"TLmm":20.82,"SLmm":18.81,"headLengthMm":5.45,"headWidthMm":5.11,"bodyWidthMm":7.36,"eyeDiameterMm":2.28},
     {"ageDph":60,"TLmm":23.69,"SLmm":21.66,"headLengthMm":5.79,"headWidthMm":6.10,"bodyWidthMm":7.89,"eyeDiameterMm":2.49},
@@ -17,6 +23,7 @@
   ],
   "validInterpolationRangeTLmm":[20.82,34.50],
   "productionScope":"VISIBLE_EDGE_TO_PRIMARY_REEF_FISH_BAND",
-  "unknowns":["full side contour","width curve along u","cross-section shape along u","fin origin coordinates","full skeleton coordinates"],
+  "readiness":{"measuredScalarSeries":true,"topViewCurve":false,"fullSideCurve":false,"full3D":false},
+  "unknowns":["full side contour","width curve along u","cross-section shape along u","fin origin coordinates","full skeleton coordinates","exact measurement axis/station for source head-width/body-width labels"],
   "crossSourceBridge":{"toFishBase71mmCard":"CANDIDATE_NEEDS_CALIBRATION_NOT_INTERPOLATABLE_YET"}
 }
