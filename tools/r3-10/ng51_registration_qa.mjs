@@ -1,0 +1,51 @@
+import {createRequire} from 'node:module';
+import {mkdir} from 'node:fs/promises';
+const {chromium}=createRequire(import.meta.url)('playwright');
+const target=process.env.WZ1942_URL||'http://127.0.0.1:8768/site/dist/r3-8/history-1942.html';
+const out=process.env.WZ1942_OUT||'/tmp/wz1942-registration';
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});
+const context=await browser.newContext({viewport:{width:1536,height:960},reducedMotion:'reduce'});
+if(target.includes('githack'))await context.setExtraHTTPHeaders({Cookie:'__Http-phish=1'});
+const page=await context.newPage(),failures=[],consoleErrors=[];
+const check=(value,message)=>{if(!value)failures.push(message);};
+page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
+page.on('pageerror',error=>consoleErrors.push(error.stack||String(error)));
+try{
+  await page.goto(target,{waitUntil:'domcontentloaded',timeout:120000});
+  await page.waitForFunction(()=>window.__wenzhouNg51Registration?.ready===true||document.querySelector('#terrain')?.dataset.ng51RegistrationError,{},{timeout:120000});
+  await page.waitForFunction(()=>window.__wenzhouFullBathymetry?.ready===true||document.querySelector('#terrain')?.dataset.ng51BathymetryError,{},{timeout:120000});
+  await page.waitForTimeout(900);
+  const state=await page.evaluate(()=>window.__wenzhouNg51Registration||null);
+  const relief=await page.evaluate(()=>window.__wenzhouNg51IslandRelief||null);
+  const bathymetry=await page.evaluate(()=>window.__wenzhouFullBathymetry||null);
+  const dataset=await page.locator('#terrain').evaluate(element=>({...element.dataset}));
+  check(!dataset.ng51RegistrationError,`registration runtime error: ${dataset.ng51RegistrationError||''}`);
+  check(state?.schema==='wenzhou-ng51-island-relief-runtime/v3'&&state?.ready===true,'NG51 registration v3 missing');
+  check(state?.registrationContract==='shared-final-refined-land-mask-r1','shared shoreline contract missing');
+  check(state?.sharedShorelineMask===true,'island relief does not share final shoreline mask');
+  check(state?.renderMaskSource==='final-refined-land-mask','island render mask is not final refined land');
+  check(state?.historicalIslandRole==='coarse-ownership-zone-only','historical sheet is still treated as an exact shoreline');
+  check((state?.sourceCells||0)>(state?.registeredCells||0)&&(state?.registeredCells||0)>0,'registration did not reject any mismatched historical-zone cells');
+  check((state?.registrationRejectedWaterCells||0)>0,'historical island-zone water mismatch was not removed');
+  check((state?.acceptedCenterOutsideFinalLand??-1)===0,'registered island cells remain outside final land mask');
+  check((state?.registeredCutCells||0)===(state?.registeredCells||-1),'base cut and island replacement do not use the same cells');
+  check(state?.terrainTransformMatched===true,'island relief transform does not match canonical terrain');
+  check(relief?.schema==='wenzhou-ng51-island-relief-runtime/v3','public island relief state was not upgraded to v3');
+  check(relief?.registeredCells===state?.registeredCells,'registration state and island state diverged');
+  check(bathymetry?.ready===true&&String(bathymetry?.cellPolicy||'').includes('sampled per fragment'),'seabed final-water clipping missing');
+  check(dataset.ng51Registration==='shared-final-refined-land-mask-r1','registration dataset marker missing');
+  check(dataset.ng51RegistrationSharedMask==='true','shared-mask dataset marker missing');
+  check(dataset.ng51RegistrationOutsideLand==='0','outside-land island cells survived');
+  check(dataset.ng51RegistrationTransformMatched==='true','terrain transform dataset marker failed');
+  check(consoleErrors.length===0,`console errors: ${consoleErrors.join(' | ')}`);
+  await page.screenshot({path:`${out}/desktop-registration-overview.png`,fullPage:true});
+  await page.locator('#terrain').hover();await page.mouse.wheel(0,-1600);await page.waitForTimeout(1000);
+  await page.screenshot({path:`${out}/desktop-registration-close.png`,fullPage:true});
+  console.log(JSON.stringify({passed:!failures.length,target,registration:state,bathymetry:{schema:bathymetry?.schema,ready:bathymetry?.ready,cellPolicy:bathymetry?.cellPolicy},dataset:{ng51Registration:dataset.ng51Registration,ng51RegistrationCells:dataset.ng51RegistrationCells,ng51RegistrationRejectedWater:dataset.ng51RegistrationRejectedWater,ng51RegistrationOutsideLand:dataset.ng51RegistrationOutsideLand,ng51RegistrationTransformMatched:dataset.ng51RegistrationTransformMatched},consoleErrors,failures},null,2));
+}catch(error){
+  failures.push(error.stack||String(error));
+  let dataset={};try{dataset=await page.locator('#terrain').count()?await page.locator('#terrain').evaluate(element=>({...element.dataset})):{};}catch{}
+  console.log(JSON.stringify({passed:false,target,dataset,consoleErrors,failures},null,2));
+}finally{await browser.close();}
+if(failures.length)process.exit(1);
