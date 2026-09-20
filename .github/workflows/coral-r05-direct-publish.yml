@@ -20,7 +20,7 @@ jobs:
           ref: gh-pages
           fetch-depth: 0
 
-      - name: Build direct uncompressed workbench
+      - name: Recover and repair direct workbench
         shell: bash
         run: |
           set -euo pipefail
@@ -29,13 +29,14 @@ jobs:
           import base64, hashlib, json, zlib
 
           src = Path('coral-mother-r05-growth-field-c7b87a4')
-          out = Path('coral-mother-r05-direct-no-loader')
+          out = Path('coral-mother-r05-direct-r2')
           out.mkdir(parents=True, exist_ok=True)
 
           text = ''.join((src / f'coral-runtime-{i:02d}.b64').read_text(encoding='utf-8') for i in range(8))
           payload = base64.b64decode(''.join(text.split()))
           assert payload[:2] == b'\x1f\x8b', 'payload is not gzip'
 
+          # Recover the intact DEFLATE body while bypassing the invalid archived gzip trailer.
           flags = payload[3]
           i = 10
           if flags & 0x04:
@@ -47,14 +48,27 @@ jobs:
               i = payload.index(0, i) + 1
           if flags & 0x02:
               i += 2
-          html = zlib.decompress(payload[i:-8], -15)
+          recovered = zlib.decompress(payload[i:-8], -15)
 
-          expected_len = 43318
-          recovered_sha = 'd21714163f9bac936d82b5729203527bdcb57f00e1336b197155c9f71ea938df'
-          actual_sha = hashlib.sha256(html).hexdigest()
+          assert len(recovered) == 43318
+          assert hashlib.sha256(recovered).hexdigest() == 'd21714163f9bac936d82b5729203527bdcb57f00e1336b197155c9f71ea938df'
+
+          # Repair the one corrupted growth-expression token pair found by Node and Chromium.
+          fixes = [
+              (b'let e+n[0]uter*(', b'let edge=outer*('),
+              (b'(e+n[-.10)', b'(edge-.10)'),
+          ]
+          html = recovered
+          applied = []
+          for bad, good in fixes:
+              count = html.count(bad)
+              assert count == 1, (bad, count)
+              html = html.replace(bad, good)
+              applied.append({'from': bad.decode(), 'to': good.decode(), 'count': count})
+
           lower = html.lower()
-          assert len(html) == expected_len, (len(html), expected_len)
-          assert actual_sha == recovered_sha, (actual_sha, recovered_sha)
+          actual_sha = hashlib.sha256(html).hexdigest()
+          assert len(html) == 43318
           assert lower.startswith(b'<!doctype html>')
           assert b'<canvas' in lower
           assert b'</html>' in lower
@@ -64,7 +78,7 @@ jobs:
 
           (out / 'index.html').write_bytes(html)
           q = {
-              'schema': 'CORAL_MOTHER_R05_DIRECT_PUBLISH_QA',
+              'schema': 'CORAL_MOTHER_R05_DIRECT_R2_QA',
               'bytes': len(html),
               'sha256': actual_sha,
               'externalSplitPayloadRequests': 0,
@@ -72,12 +86,14 @@ jobs:
               'networkFetchCalls': 0,
               'gzipTrailerIgnored': True,
               'recoveredPayloadHashMatched': True,
+              'syntaxRepairs': applied,
+              'browserQA': {'passed': False},
           }
           (out / 'QA_DIRECT.json').write_text(json.dumps(q, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          print(q)
+          print(json.dumps(q, ensure_ascii=False, indent=2))
           PY
 
-      - name: Locate inline JavaScript syntax error
+      - name: Static JavaScript syntax gate
         shell: bash
         run: |
           set -euo pipefail
@@ -88,38 +104,22 @@ jobs:
           class Scripts(HTMLParser):
               def __init__(self):
                   super().__init__(convert_charrefs=False)
-                  self.in_script = False
-                  self.attrs = {}
-                  self.buf = []
-                  self.scripts = []
+                  self.in_script = False; self.buf = []; self.scripts = []
               def handle_starttag(self, tag, attrs):
-                  if tag.lower() == 'script':
-                      self.in_script = True
-                      self.attrs = dict(attrs)
-                      self.buf = []
+                  if tag.lower() == 'script': self.in_script = True; self.buf = []
               def handle_endtag(self, tag):
                   if tag.lower() == 'script' and self.in_script:
-                      self.scripts.append((self.attrs, ''.join(self.buf)))
-                      self.in_script = False
+                      self.scripts.append(''.join(self.buf)); self.in_script = False
               def handle_data(self, data):
-                  if self.in_script:
-                      self.buf.append(data)
+                  if self.in_script: self.buf.append(data)
 
-          html = Path('coral-mother-r05-direct-no-loader/index.html').read_text(encoding='utf-8')
+          html = Path('coral-mother-r05-direct-r2/index.html').read_text(encoding='utf-8')
           p = Scripts(); p.feed(html)
-          out = Path('/tmp/r05-scripts'); out.mkdir(exist_ok=True)
-          print('SCRIPT_COUNT', len(p.scripts))
-          for i, (attrs, text) in enumerate(p.scripts):
-              path = out / f'script-{i:02d}.js'
-              path.write_text(text, encoding='utf-8')
-              print(i, attrs, len(text), path)
+          assert len(p.scripts) == 1, len(p.scripts)
+          Path('/tmp/r05-script.js').write_text(p.scripts[0], encoding='utf-8')
+          print('INLINE_SCRIPT_BYTES', len(p.scripts[0].encode()))
           PY
-          status=0
-          for f in /tmp/r05-scripts/*.js; do
-            echo "CHECKING $f"
-            node --check "$f" || status=$?
-          done
-          exit "$status"
+          node --check /tmp/r05-script.js
 
       - name: Headless browser gate
         shell: bash
@@ -142,8 +142,7 @@ jobs:
               last = None
               for _ in range(attempts):
                   try:
-                      with urllib.request.urlopen(url, timeout=2) as r:
-                          return json.load(r)
+                      with urllib.request.urlopen(url, timeout=2) as r: return json.load(r)
                   except Exception as e:
                       last = e; time.sleep(.2)
               raise last
@@ -163,34 +162,50 @@ jobs:
 
           call('Page.enable'); call('Runtime.enable')
           call('Page.addScriptToEvaluateOnNewDocument', {'source': "window.__qaErrors=[];addEventListener('error',e=>window.__qaErrors.push({message:String(e.message||e.error||e),filename:e.filename,line:e.lineno,column:e.colno,stack:e.error&&e.error.stack}));addEventListener('unhandledrejection',e=>window.__qaErrors.push({message:String(e.reason||e),stack:e.reason&&e.reason.stack}));"})
-          call('Page.navigate', {'url': 'http://127.0.0.1:8765/coral-mother-r05-direct-no-loader/'})
-          time.sleep(8)
-          expr = """JSON.stringify((()=>{const c=document.querySelector('canvas');let gl=false;try{gl=!!(c&&(c.getContext('webgl2')||c.getContext('webgl')))}catch(e){}return{ready:document.readyState,title:document.title,canvas:document.querySelectorAll('canvas').length,controls:document.querySelectorAll('button,input,select').length,gl,body:(document.body.innerText||'').slice(0,4000),errors:window.__qaErrors||[]}})())"""
+          call('Page.navigate', {'url': 'http://127.0.0.1:8765/coral-mother-r05-direct-r2/'})
+          time.sleep(9)
+          expr = """JSON.stringify((()=>{const c=document.querySelector('canvas');let gl=false;try{gl=!!(c&&(c.getContext('webgl2')||c.getContext('webgl')))}catch(e){}return{ready:document.readyState,title:document.title,canvas:document.querySelectorAll('canvas').length,controls:document.querySelectorAll('button,input,select').length,gl,width:c&&c.width,height:c&&c.height,body:(document.body.innerText||'').slice(0,5000),errors:window.__qaErrors||[]}})())"""
           q = json.loads(call('Runtime.evaluate', {'expression': expr, 'returnByValue': True})['result']['value'])
           print(json.dumps(q, ensure_ascii=False, indent=2))
-          assert q['ready'] == 'complete'
-          assert q['canvas'] >= 1
-          assert q['controls'] >= 6
-          assert q['gl'] is True
-          assert '启动失败' not in q['body']
-          assert 'Failed to fetch' not in q['body']
+          assert q['ready'] == 'complete', q
+          assert q['canvas'] >= 1, q
+          assert q['controls'] >= 6, q
+          assert q['gl'] is True, q
+          assert q['width'] and q['height'], q
+          assert '启动失败' not in q['body'], q
+          assert 'Failed to fetch' not in q['body'], q
           assert not q['errors'], q
+
           shot = call('Page.captureScreenshot', {'format': 'png', 'captureBeyondViewport': False})
-          Path('/tmp/r05-direct-qa.png').write_bytes(base64.b64decode(shot['data']))
-          assert Path('/tmp/r05-direct-qa.png').stat().st_size > 10000
+          shot_path = Path('coral-mother-r05-direct-r2/QA_SCREENSHOT_1440x1100.png')
+          shot_path.write_bytes(base64.b64decode(shot['data']))
+          assert shot_path.stat().st_size > 10000
+
+          qa_path = Path('coral-mother-r05-direct-r2/QA_DIRECT.json')
+          qa = json.loads(qa_path.read_text(encoding='utf-8'))
+          qa['browserQA'] = {
+              'passed': True,
+              'viewport': '1440x1100',
+              'readyState': q['ready'],
+              'title': q['title'],
+              'canvasCount': q['canvas'],
+              'canvasPixels': [q['width'], q['height']],
+              'controlCount': q['controls'],
+              'webglContext': q['gl'],
+              'runtimeErrors': q['errors'],
+              'startupFailureText': False,
+              'screenshotBytes': shot_path.stat().st_size,
+          }
+          qa_path.write_text(json.dumps(qa, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           ws.close()
           PY
 
-      - name: Commit direct page
+      - name: Commit browser-verified direct page
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'Haihao_Nature Grace HK'
           git config user.email 'haihao0307@gmail.com'
-          git add coral-mother-r05-direct-no-loader/
-          if git diff --cached --quiet; then
-            echo 'No direct-page changes.'
-          else
-            git commit -m 'fix(coral): publish browser-verified direct R05'
-            git push origin gh-pages
-          fi
+          git add coral-mother-r05-direct-r2/
+          git commit -m 'fix(coral): publish browser-verified R05 direct r2'
+          git push origin gh-pages
