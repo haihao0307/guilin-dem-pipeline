@@ -1,0 +1,60 @@
+micro=(sin(235.0*x+17.0*y)*sin(205.0*y-9.0*x))*0.5+0.5;
+    base*=0.985+0.022*micro;
+    base+=vec3(0.035,0.060,0.075)*rim;
+    rough=mix(0.42,0.22,uWet);
+  }else if(uMaterial==1){
+    float ray=0.5+0.5*sin(95.0*vParam.x+19.0*vParam.y);
+    float tailGold=smoothstep(-0.52,-0.16,vLocal.x);
+    base=mix(vec3(0.085,0.165,0.205),vec3(0.48,0.39,0.12),tailGold*0.68);
+    base*=0.78+0.28*ray;
+    base+=vec3(0.08,0.11,0.12)*back;
+    rough=0.34;
+    alpha=mix(1.0,0.72,uFinTranslucency);
+  }else if(uMaterial==2){
+    float ring=smoothstep(0.25,0.65,abs(vParam.y-0.5)*2.0);
+    base=mix(vec3(0.006,0.010,0.012),vec3(0.30,0.22,0.055),ring*0.72);
+    rough=0.18;
+  }else if(uMaterial==3){
+    base=vec3(0.20,0.34,0.38);
+    rough=0.06;
+    alpha=0.10+0.18*rim;
+  }else if(uMaterial==4){base=vec3(0.16,0.22,0.20);rough=0.36;}
+  else if(uMaterial==5){base=vec3(0.045,0.010,0.012);rough=0.55;}
+  else if(uMaterial==6){base=vec3(0.13,0.25,0.27);rough=0.32;}
+  else if(uMaterial==7){base=vec3(0.26,0.35,0.31);rough=0.32;}
+  else if(uMaterial==8){base=vec3(0.52,0.36,0.07);rough=0.19;}
+  else if(uMaterial==9){base=vec3(0.002,0.004,0.006);rough=0.08;}
+  float specPower=mix(22.0,92.0,1.0-rough);
+  float spec=pow(max(dot(n,h),0.0),specPower)*(0.045+0.30*uWet);
+  float coat=pow(max(dot(n,h),0.0),190.0)*uWet*0.18;
+  vec3 color=base*(0.24+0.76*ndl)+base*0.13*back+vec3(1.0)*spec+vec3(0.72,0.90,0.95)*coat;
+  color+=base*rim*0.10;
+  outColor=vec4(color,alpha);
+}`;
+
+const program=link(vs,fs);
+const attrib={position:gl.getAttribLocation(program,'position'),normal:gl.getAttribLocation(program,'normal'),param:gl.getAttribLocation(program,'param')};
+const uni={
+  viewProj:gl.getUniformLocation(program,'uViewProj'),model:gl.getUniformLocation(program,'uModel'),time:gl.getUniformLocation(program,'uTime'),
+  amp:gl.getUniformLocation(program,'uAmplitude'),period:gl.getUniformLocation(program,'uPeriod'),swim:gl.getUniformLocation(program,'uSwim'),
+  camera:gl.getUniformLocation(program,'uCamera'),light:gl.getUniformLocation(program,'uLight'),material:gl.getUniformLocation(program,'uMaterial'),
+  wet:gl.getUniformLocation(program,'uWet'),finTranslucency:gl.getUniformLocation(program,'uFinTranslucency'),override:gl.getUniformLocation(program,'uOverride')
+};
+
+const materialId={body:0,fin:1,eye:2,cornea:3,lip:4,mouth:5,operculum:6,keel:7,iris:8,pupil:9};
+let sceneMeshes=[];
+let skeletonMesh=null;
+let swimOn=true;
+let amplitude=0.045;
+let period=TUNA_R03_PROFILE.semanticRig.sourceClipPeriodSeconds;
+let mouthOpen=0;
+let gillOpen=0.35;
+let yaw=0,pitch=0,zoom=1,currentView='side';
+let dragging=false,lastX=0,lastY=0;
+const start=performance.now();
+
+function buildScene(){
+  disposeScene();
+  const built=buildTunaR03();
+  sceneMeshes=built.parts.map((part,index)=>createMesh(part,index));
+  skeletonMesh=crea
