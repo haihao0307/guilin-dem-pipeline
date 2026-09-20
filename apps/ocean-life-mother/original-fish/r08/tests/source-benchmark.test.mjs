@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const root = new URL('../', import.meta.url);
 const benchmark = JSON.parse(fs.readFileSync(new URL('benchmark/SOURCE_BENCHMARK_R01_SUMMARY.json', root), 'utf8'));
+const anatomy = JSON.parse(fs.readFileSync(new URL('benchmark/ANATOMY_PARTITION_R01_SUMMARY.json', root), 'utf8'));
 const qa = JSON.parse(fs.readFileSync(new URL('QA_RECEIPT.json', root), 'utf8'));
 let checks = 0;
 const ok = (value, message) => { assert(value, message); checks++; };
@@ -30,9 +31,22 @@ for (const view of ['side_left','three_quarter','front','top']) {
 ok(benchmark.fullLocalBenchmark.repositoryState === 'LOCAL_REPRODUCIBLE_NOT_PUBLISHED', 'full benchmark boundary');
 ok(benchmark.restartGate.nativeCandidateAllowed === false, 'candidate blocked');
 ok(benchmark.restartGate.anatomicalPartitionAccepted === false, 'anatomical partition pending');
+
+ok(anatomy.schema === 'kaopu.original-fish.tuna-source-anatomy-partition-summary/1.0', 'anatomy schema');
+ok(anatomy.sourceSha256 === benchmark.input.sha256, 'anatomy source identity');
+ok(anatomy.regions.length === 12, 'source region inventory');
+ok(anatomy.warning.includes('Upper/Lower'), 'misleading source-name warning');
+ok(anatomy.continuityTargets.length === 5, 'continuity target count');
+ok(anatomy.continuityTargets.some(x => x.id === 'BODY_CONTINUITY'), 'body continuity target');
+ok(Boolean(anatomy.keyAnchors.UpperJaw_06 && anatomy.keyAnchors.LoweJaw_09), 'jaw anchors');
+ok(Boolean(anatomy.keyAnchors['Eye.L_07'] && anatomy.keyAnchors['Eye.R_08']), 'eye anchors');
+ok(anatomy.gate.partitionDrafted === true, 'partition drafted');
+ok(anatomy.gate.partitionAccepted === false, 'partition not accepted');
+ok(anatomy.gate.nativeCandidateAllowed === false, 'partition blocks candidate');
+
 ok(qa.gates.oldProductionLineRejected === true, 'old line rejected');
 ok(qa.gates.sourceReferenceRead === true, 'source read');
 ok(qa.gates.nativeCandidateAllowed === false, 'QA candidate blocked');
 ok(qa.publication.rawSourcePublished === false, 'raw source not published');
 
-console.log(`Original Fish Tuna R08 source benchmark: ${checks} assertions passed`);
+console.log(`Original Fish Tuna R08 benchmark and partition: ${checks} assertions passed`);
