@@ -1,0 +1,182 @@
+name: Coral R06 T03 Hard Surface Color
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/coral-r06-t03-hard-surface-color.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: pages
+
+      - name: Build T03 direct page
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          src = Path('pages/coral-mother-r06-pocillopora-t02-noaa-palau/index.html')
+          assert src.exists(), src
+          html = src.read_text(encoding='utf-8')
+
+          def rep(old, new, count=1):
+              global html
+              assert old in html, old[:180]
+              html = html.replace(old, new, count)
+
+          rep('<title>Coral Mother R06 · NOAA / Palau Classification T02</title>', '<title>Coral Mother R06 · Hard Surface + Live Color T03</title>')
+          rep('PROCEDURAL · R06-T02', 'PROCEDURAL · R06-T03')
+          rep('Coral Mother R06 · Pocillopora 单物种复刻 T02', 'Coral Mother R06 · Pocillopora 硬珊瑚表面 T03')
+          rep('NOAA / PALAU CONTRACT · visualAcceptance=false', 'HARD SURFACE / LIVE COLOR · visualAcceptance=false')
+          rep('标本拟合枝图 → 独立管状骨骼；无 GLB / 无贴图', '标本拟合枝图 → 轻量珊瑚杯波场 + 活组织色；0 GLB / 0 texture')
+          rep('<span class="chip"><strong>COLOR LOCK</strong> · 中性骨骼</span>', '<span class="chip"><strong>SURFACE</strong> · ANALYTIC WAVE / 0 TEXTURE</span><span class="chip"><strong>LIVE COLOR</strong> · VISUAL CANDIDATE</span>')
+          rep('先把一个标本看清楚，再抽象成物种母体。本工作台只做骨架与枝序 A/B；颜色、荧光和水下光谱全部冻结，不能用艳色掩盖形体误差。', '继续保持标本／函数 A/B。大形体仍由枝图生成；硬珊瑚的珊瑚杯、细脊和骨骼颗粒改用轻量解析波场表达，不增加贴图与重几何。活体色是视觉候选，不冒充 NOAA 分类色。')
+
+          diag_marker = '<div class="sectionTitle">Diagnostic / 诊断</div><div class="buttons" id="diag"><button data-diag="neutral" class="on">中性骨骼</button><button data-diag="order">枝序分级</button><button data-diag="tips">枝端 / 节点</button><button data-diag="silhouette">纯轮廓</button><button data-diag="void">空隙检查</button></div>\n<div class="sectionTitle">Reconstruction / 复刻参数</div>'
+          diag_new = '<div class="sectionTitle">Diagnostic / 诊断</div><div class="buttons" id="diag"><button data-diag="neutral" class="on">形体检查</button><button data-diag="order">枝序分级</button><button data-diag="tips">枝端 / 节点</button><button data-diag="silhouette">纯轮廓</button><button data-diag="void">空隙检查</button></div>\n<div class="sectionTitle">Living color / 活组织视觉候选</div><div class="buttons" id="palette"><button data-palette="rose" class="on">活体玫粉</button><button data-palette="ochre">活体金褐</button><button data-palette="olive">活体橄榄</button><button data-palette="bleached">白化存活</button><button data-palette="skeleton">裸露骨骼</button></div><div class="note"><strong>色彩边界：</strong>NOAA 的 Hard / stony coral 与 Branching Coral 不规定单一颜色。这里的玫粉、金褐、橄榄是活体视觉候选；白化与裸骨分开显示，不能把颜色按钮当物种分类。</div>\n<div class="sectionTitle">Reconstruction / 复刻参数</div>'
+          rep(diag_marker, diag_new)
+
+          verr = '<label class="param"><span class="paramHead"><b>表面疣突</b><output id="verrucaeO">0.55</output></span><input id="verrucae" type="range" min="0" max="1" step="0.01" value="0.55"><small>短钝突起，不是细长分枝</small></label>\n</div>'
+          verr_new = '<label class="param"><span class="paramHead"><b>表面疣突</b><output id="verrucaeO">0.55</output></span><input id="verrucae" type="range" min="0" max="1" step="0.01" value="0.55"><small>短钝突起，不是细长分枝</small></label>\n<label class="param"><span class="paramHead"><b>珊瑚杯尺度</b><output id="cupScaleO">18.0</output></span><input id="cupScale" type="range" min="8" max="34" step="0.5" value="18"><small>解析波场频率；不增加三角面</small></label>\n<label class="param"><span class="paramHead"><b>杯口阴影</b><output id="cupDepthO">0.68</output></span><input id="cupDepth" type="range" min="0" max="1" step="0.01" value="0.68"><small>小杯、小脊的明暗深度</small></label>\n<label class="param"><span class="paramHead"><b>骨骼颗粒</b><output id="grainO">0.34</output></span><input id="grain" type="range" min="0" max="1" step="0.01" value="0.34"><small>高频粗糙；仅着色器计算</small></label>\n</div>'
+          rep(verr, verr_new)
+
+          old_fs = "const FS=`precision highp float;varying vec3 vWorld,vNormal;varying vec4 vColor;uniform float uPointPass,uSilhouette,uRoughness;void main(){if(uPointPass>.5){vec2 q=gl_PointCoord-.5;if(dot(q,q)>.25)discard;gl_FragColor=vColor;return;}vec3 n=normalize(vNormal),L=normalize(vec3(.42,.82,.34));float d=.27+.73*max(dot(n,L),0.);float micro=1.+uRoughness*.055*sin(dot(vWorld,vec3(29.3,17.1,23.7))+sin(vWorld.y*41.));vec3 c=uSilhouette>.5?vec3(.94):vColor.rgb*d*micro;gl_FragColor=vec4(c,vColor.a);}`;"
+          new_fs = "const FS=`precision highp float;varying vec3 vWorld,vNormal;varying vec4 vColor;uniform float uPointPass,uSilhouette,uRoughness,uCupScale,uCupDepth,uGrain;float wave(vec3 p){float a=sin(p.x+sin(p.y*.63));float b=sin(p.y*1.07+sin(p.z*.57));float c=sin(p.z*.91+sin(p.x*.71));return (a*b+b*c+c*a)*.333333;}void main(){if(uPointPass>.5){vec2 q=gl_PointCoord-.5;if(dot(q,q)>.25)discard;gl_FragColor=vColor;return;}vec3 p=vWorld*uCupScale;float w=wave(p);float ring=1.-smoothstep(.18,.78,abs(w));float ridge=smoothstep(.42,.96,abs(w));vec3 perturb=vec3(sin(p.y+p.z*.37),sin(p.z+p.x*.43),sin(p.x+p.y*.31));vec3 n=normalize(vNormal+perturb*(.035+.095*uCupDepth));vec3 L=normalize(vec3(.42,.82,.34));float d=.22+.78*max(dot(n,L),0.);float cupShade=1.-uCupDepth*(.20*ring-.07*ridge);float grain=1.+uGrain*.055*sin(dot(vWorld,vec3(91.7,73.1,57.9))+sin(vWorld.y*117.));float broad=1.+uRoughness*.045*sin(dot(vWorld,vec3(29.3,17.1,23.7))+sin(vWorld.y*41.));vec3 c=uSilhouette>.5?vec3(.94):vColor.rgb*d*cupShade*grain*broad;c+=vColor.rgb*ridge*uCupDepth*.045;gl_FragColor=vec4(c,vColor.a);}`;"
+          rep(old_fs, new_fs)
+
+          old_u = "const U={view:gl.getUniformLocation(prog,'uView'),proj:gl.getUniformLocation(prog,'uProj'),point:gl.getUniformLocation(prog,'uPointSize'),pass:gl.getUniformLocation(prog,'uPointPass'),sil:gl.getUniformLocation(prog,'uSilhouette'),rough:gl.getUniformLocation(prog,'uRoughness')};"
+          new_u = "const U={view:gl.getUniformLocation(prog,'uView'),proj:gl.getUniformLocation(prog,'uProj'),point:gl.getUniformLocation(prog,'uPointSize'),pass:gl.getUniformLocation(prog,'uPointPass'),sil:gl.getUniformLocation(prog,'uSilhouette'),rough:gl.getUniformLocation(prog,'uRoughness'),cupScale:gl.getUniformLocation(prog,'uCupScale'),cupDepth:gl.getUniformLocation(prog,'uCupDepth'),grain:gl.getUniformLocation(prog,'uGrain')};"
+          rep(old_u, new_u)
+
+          old_cfg = "const colors={neutral:[.80,.77,.68,1],primary:[.89,.61,.30,1],secondary:[.35,.75,.76,1],tertiary:[.69,.47,.78,1],fine:[.83,.77,.58,1],muted:[.28,.36,.34,1],tip:[.96,.74,.38,1],node:[.36,.88,.77,1]};\nconst cfg={view:'persp',compare:'split',diag:'neutral',thickness:1.15,fine:0,tip:1,rough:.42,point:1.55,verrucae:.55};\nfunction colorFor(o){if(cfg.diag!=='order')return cfg.diag==='void'?colors.muted:colors.neutral;if(o<2)return colors.primary;if(o<4)return colors.secondary;if(o<6)return colors.tertiary;return colors.fine}"
+          new_cfg = "const colors={neutral:[.80,.77,.68,1],primary:[.89,.61,.30,1],secondary:[.35,.75,.76,1],tertiary:[.69,.47,.78,1],fine:[.83,.77,.58,1],muted:[.28,.36,.34,1],tip:[.96,.74,.38,1],node:[.36,.88,.77,1]};\nconst livePalettes={rose:[[.56,.105,.18,1],[.82,.23,.29,1],[.98,.52,.38,1],[1.,.75,.48,1]],ochre:[[.34,.16,.07,1],[.58,.31,.10,1],[.78,.51,.20,1],[.96,.76,.37,1]],olive:[[.18,.28,.08,1],[.31,.46,.13,1],[.49,.66,.22,1],[.78,.85,.42,1]],bleached:[[.80,.77,.69,1],[.88,.84,.74,1],[.95,.91,.82,1],[1.,.97,.89,1]],skeleton:[[.66,.63,.55,1],[.75,.71,.62,1],[.84,.80,.70,1],[.92,.88,.79,1]]};\nconst cfg={view:'persp',compare:'split',diag:'neutral',palette:'rose',thickness:1.15,fine:0,tip:1,rough:.42,point:1.55,verrucae:.55,cupScale:18,cupDepth:.68,grain:.34};\nfunction colorFor(o){if(cfg.diag==='order'){if(o<2)return colors.primary;if(o<4)return colors.secondary;if(o<6)return colors.tertiary;return colors.fine}if(cfg.diag==='void')return colors.muted;if(cfg.diag==='tips')return colors.neutral;const p=livePalettes[cfg.palette]||livePalettes.rose;if(o<2)return p[0];if(o<4)return p[1];if(o<6)return p[2];return p[3]}"
+          rep(old_cfg, new_cfg)
+
+          old_draw_ref = "gl.uniform1f(U.sil,0);gl.uniform1f(U.rough,0);gl.enable(gl.BLEND);"
+          new_draw_ref = "gl.uniform1f(U.sil,0);gl.uniform1f(U.rough,0);gl.uniform1f(U.cupScale,1);gl.uniform1f(U.cupDepth,0);gl.uniform1f(U.grain,0);gl.enable(gl.BLEND);"
+          rep(old_draw_ref, new_draw_ref)
+          old_draw_gen = "gl.uniform1f(U.sil,cfg.diag==='silhouette'?1:0);gl.uniform1f(U.rough,cfg.rough);gl.drawArrays(gl.TRIANGLES,0,genGpu.count);"
+          new_draw_gen = "gl.uniform1f(U.sil,cfg.diag==='silhouette'?1:0);gl.uniform1f(U.rough,cfg.rough);gl.uniform1f(U.cupScale,cfg.cupScale);gl.uniform1f(U.cupDepth,cfg.cupDepth);gl.uniform1f(U.grain,cfg.grain);gl.drawArrays(gl.TRIANGLES,0,genGpu.count);"
+          rep(old_draw_gen, new_draw_gen)
+
+          old_loop = "document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('on',x===b));setView(b.dataset.view)});$('reset').onclick=()=>setView(cfg.view);document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));cfg.compare=b.dataset.mode});document.querySelectorAll('[data-diag]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-diag]').forEach(x=>x.classList.toggle('on',x===b));cfg.diag=b.dataset.diag;rebuild()});for(const k of ['thickness','fine','tip','rough','point','verrucae']){const el=$(k),out=$(k+'O');el.oninput=()=>{cfg[k]=Number(el.value);out.value=Number(el.value).toFixed(k==='fine'?3:2);if(k!=='point')rebuild()}}"
+          new_loop = "document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('on',x===b));setView(b.dataset.view)});$('reset').onclick=()=>setView(cfg.view);document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));cfg.compare=b.dataset.mode});document.querySelectorAll('[data-diag]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-diag]').forEach(x=>x.classList.toggle('on',x===b));cfg.diag=b.dataset.diag;rebuild()});document.querySelectorAll('[data-palette]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-palette]').forEach(x=>x.classList.toggle('on',x===b));cfg.palette=b.dataset.palette;rebuild()});for(const k of ['thickness','fine','tip','rough','point','verrucae','cupScale','cupDepth','grain']){const el=$(k),out=$(k+'O');el.oninput=()=>{cfg[k]=Number(el.value);out.value=Number(el.value).toFixed(k==='fine'?3:k==='cupScale'?1:2);if(!['point','cupScale','cupDepth','grain'].includes(k))rebuild()}}"
+          rep(old_loop, new_loop)
+
+          old_qa = "noExternalAssets:true,runtimeGLB:0,runtimeTextures:0,networkFetches:0,visualAcceptance:false}"
+          new_qa = "noExternalAssets:true,runtimeGLB:0,runtimeTextures:0,networkFetches:0,surfaceTextureBytes:0,microDetailMode:'analytic wave shader',palette:cfg.palette,cupScale:cfg.cupScale,cupDepth:cfg.cupDepth,grain:cfg.grain,visualAcceptance:false}"
+          rep(old_qa, new_qa)
+
+          old_note = '<div class="note"><strong>形态边界：</strong>右侧仍是“标本拟合的枝图复刻”，不是已完成的通用 Pocillopora DNA。下一步只继续收敛 Branching Coral 下的 P. damicornis 物种规则；Seriatopora hystrix 将作为同一 NOAA 生长形态下的反例验证，而不是新造分类。</div>'
+          new_note = '<div class="note"><strong>当前边界：</strong>本轮只解决硬珊瑚表面过光滑和缺少活体色的问题。珊瑚杯与颗粒是低成本解析波场，不是物种级 corallite 真值；P. damicornis 的枝序与包络仍需继续 A/B 收敛，visualAcceptance 保持 false。</div>'
+          rep(old_note, new_note)
+
+          classification_inject = '<script>window.__CORAL_R06_CLASSIFICATION__='
+          assert classification_inject in html
+          html = html.replace('"visualAcceptance":false};</script></body>', '"surfaceContract":"analytic wave / zero texture","colorContract":"candidate live tissue palettes; not NOAA category truth","visualAcceptance":false};</script></body>', 1)
+
+          low = html.lower()
+          assert 'fetch(' not in html and '.glb' not in low
+          assert 'uCupScale' in html and 'data-palette="rose"' in html
+          assert 'surfaceTextureBytes:0' in html
+
+          out = Path('pages/coral-mother-r06-pocillopora-t03-hard-surface-color')
+          out.mkdir(parents=True, exist_ok=True)
+          (out/'index.html').write_text(html, encoding='utf-8')
+          qa = {
+            'schema':'CORAL_MOTHER_R06_T03_HARD_SURFACE_COLOR_QA',
+            'bytes':len(html.encode()),'sha256':hashlib.sha256(html.encode()).hexdigest(),
+            'directSingleFile':True,'runtimeGLB':0,'runtimeTextures':0,'surfaceTextureBytes':0,
+            'networkFetchCalls':0,'microDetailMode':'analytic wave shader',
+            'defaultPalette':'rose','customClassesAllowed':False,
+            'desktopBrowserQA':False,'mobile390x844QA':False,
+            'visualAcceptance':False,'productionReady':False
+          }
+          (out/'QA_DIRECT.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(qa,ensure_ascii=False))
+          PY
+
+      - name: Browser gate desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client
+          python3 -m http.server 8768 --directory pages/coral-mother-r06-pocillopora-t03-hard-surface-color >/tmp/coral-t03-http.log 2>&1 &
+          HTTP_PID=$!
+          trap 'kill $HTTP_PID 2>/dev/null || true' EXIT
+          python3 - <<'PY'
+          import base64,json,shutil,subprocess,time,urllib.request
+          from pathlib import Path
+          import websocket
+          chrome=shutil.which('google-chrome') or shutil.which('chromium') or shutil.which('chromium-browser')
+          assert chrome
+          def wait(url):
+            last=None
+            for _ in range(100):
+              try:
+                with urllib.request.urlopen(url,timeout=2) as r:return json.load(r)
+              except Exception as e:last=e;time.sleep(.2)
+            raise last
+          def run(label,w,h,port):
+            prof=f'/tmp/coral-t03-{label}';shutil.rmtree(prof,ignore_errors=True)
+            p=subprocess.Popen([chrome,'--headless=new','--no-sandbox','--disable-dev-shm-usage',f'--remote-debugging-port={port}','--remote-allow-origins=*','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist',f'--window-size={w},{h}',f'--user-data-dir={prof}','about:blank'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            try:
+              target=next(x for x in wait(f'http://127.0.0.1:{port}/json/list') if x.get('type')=='page')
+              ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=20,origin='http://127.0.0.1');seq=0
+              def call(method,params=None):
+                nonlocal seq;seq+=1;i=seq;ws.send(json.dumps({'id':i,'method':method,'params':params or {}}))
+                while True:
+                  m=json.loads(ws.recv())
+                  if m.get('id')==i:
+                    if 'error'in m:raise RuntimeError(m['error'])
+                    return m.get('result',{})
+              call('Page.enable');call('Runtime.enable')
+              call('Page.addScriptToEvaluateOnNewDocument',{'source':"window.__qaErrors=[];addEventListener('error',e=>window.__qaErrors.push(String(e.message||e.error||e)));addEventListener('unhandledrejection',e=>window.__qaErrors.push(String(e.reason||e)));"})
+              call('Page.navigate',{'url':'http://127.0.0.1:8768/'});time.sleep(9)
+              expr=r'''JSON.stringify((()=>{const c=document.querySelector('canvas');let gl=false;try{gl=!!(c&&(c.getContext('webgl2')||c.getContext('webgl')))}catch(e){}const s=document.querySelector('#stage')?.getBoundingClientRect(),k=document.querySelector('#controls')?.getBoundingClientRect();return{ready:document.readyState,title:document.title,canvas:document.querySelectorAll('canvas').length,controls:document.querySelectorAll('button,input,select').length,palettes:document.querySelectorAll('[data-palette]').length,gl,qa:window.__CORAL_R06_QA__||{},cls:window.__CORAL_R06_CLASSIFICATION__||{},errors:window.__qaErrors||[],body:(document.body.innerText||'').slice(0,12000),stageBeforeControls:!!(s&&k&&s.top<k.top&&s.bottom<=k.top+20),innerWidth,scrollWidth:document.documentElement.scrollWidth,horizontalOverflow:document.documentElement.scrollWidth>innerWidth+1}})())'''
+              q=json.loads(call('Runtime.evaluate',{'expression':expr,'returnByValue':True})['result']['value'])
+              assert q['ready']=='complete' and q['canvas']==1 and q['controls']>=28 and q['palettes']==5 and q['gl'] is True,q
+              assert q['stageBeforeControls'] and not q['horizontalOverflow'] and not q['errors'],q
+              assert q['qa'].get('ready') and q['qa'].get('runtimeGLB')==0 and q['qa'].get('runtimeTextures')==0 and q['qa'].get('surfaceTextureBytes')==0,q
+              assert q['qa'].get('microDetailMode')=='analytic wave shader',q
+              assert '珊瑚杯尺度' in q['body'] and '活体玫粉' in q['body'] and '白化存活' in q['body'],q
+              for pal in ['ochre','olive','bleached','skeleton','rose']:
+                call('Runtime.evaluate',{'expression':f"document.querySelector('[data-palette={pal}]').click()"});time.sleep(.35)
+              r=json.loads(call('Runtime.evaluate',{'expression':"JSON.stringify({errors:window.__qaErrors||[],qa:window.__CORAL_R06_QA__||{}})",'returnByValue':True})['result']['value'])
+              assert not r['errors'] and r['qa'].get('palette')=='rose',r
+              shot=call('Page.captureScreenshot',{'format':'png','captureBeyondViewport':False});img=base64.b64decode(shot['data']);assert len(img)>15000
+              Path(f'pages/coral-mother-r06-pocillopora-t03-hard-surface-color/QA_SCREENSHOT_{label.upper()}.png').write_bytes(img)
+              ws.close();return {'passed':True,'viewport':f'{w}x{h}','webgl':True,'runtimeErrors':0,'horizontalOverflow':False,'paletteButtons':5,'screenshotBytes':len(img)}
+            finally:
+              p.terminate()
+              try:p.wait(timeout=5)
+              except: p.kill()
+          desktop=run('desktop_1440x1100',1440,1100,9251);mobile=run('mobile_390x844',390,844,9252)
+          qp=Path('pages/coral-mother-r06-pocillopora-t03-hard-surface-color/QA_DIRECT.json');qa=json.loads(qp.read_text());qa['desktopBrowserQA']=True;qa['mobile390x844QA']=True;qa['browserQA']={'desktop':desktop,'mobile':mobile};qp.write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(qa,ensure_ascii=False))
+          PY
+
+      - name: Publish T03
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add coral-mother-r06-pocillopora-t03-hard-surface-color/
+          git commit -m 'publish(coral): R06 T03 hard surface and live color'
+          git pull --rebase origin gh-pages
+          git push origin gh-pages
