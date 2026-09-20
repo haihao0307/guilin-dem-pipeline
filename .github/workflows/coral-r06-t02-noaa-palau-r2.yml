@@ -1,0 +1,120 @@
+name: Coral R06 T02 NOAA Palau Classification R2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/coral-r06-t02-noaa-palau-r2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+          path: pages
+
+      - name: Build T02 direct page
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          src=Path('pages/coral-mother-r06-pocillopora-t01-4824c87/index.html')
+          html=src.read_text(encoding='utf-8')
+          replacements={
+            '<title>Coral Mother R06 · Pocillopora Specimen-First T01</title>':'<title>Coral Mother R06 · NOAA / Palau Classification T02</title>',
+            'PROCEDURAL · R06-T01':'PROCEDURAL · R06-T02',
+            'Coral Mother R06 · Pocillopora 单物种复刻 T01':'Coral Mother R06 · Pocillopora 单物种复刻 T02',
+            'SPECIMEN-FIRST · visualAcceptance=false':'NOAA / PALAU CONTRACT · visualAcceptance=false',
+            '<span class="chip"><strong>COLOR LOCK</strong> · 中性骨骼</span>':'<span class="chip"><strong>NOAA TYPE</strong> · HARD / STONY CORAL</span><span class="chip"><strong>NOAA FORM</strong> · BRANCHING CORAL</span><span class="chip"><strong>COLOR LOCK</strong> · 中性骨骼</span>'
+          }
+          for a,b in replacements.items():
+              assert a in html,a
+              html=html.replace(a,b,1)
+          css='''.classGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.classCard{padding:11px 12px;border:1px solid #79d8cf22;border-radius:13px;background:#061815a8;min-height:82px}.classCard span{display:block;color:#7f978f;font-size:8px;text-transform:uppercase;letter-spacing:.1em}.classCard b{display:block;margin-top:4px;color:#e9efe8;font-size:11px;line-height:1.35}.classCard small{display:block;margin-top:5px;color:#799089;font-size:8px;line-height:1.35}.classCard.official{border-color:#79d8cf45}.classCard.official b{color:#91e1d6}.classCard.unresolved{border-color:#e7b46f45}.classCard.unresolved b{color:#f1c47c}@media(max-width:720px){.classGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.classCard{min-height:94px}}'''
+          html=html.replace('</style>',css+'</style>',1)
+          section='''<div class="sectionTitle">Official Classification / NOAA + Palau 官方分类</div><div class="classGrid" id="officialClassification"><div class="classCard official"><span>Formal Taxonomy</span><b>Animalia → Cnidaria → Anthozoa → Scleractinia → Pocilloporidae</b><small>Pocillopora damicornis</small></div><div class="classCard official"><span>NOAA Broad Type</span><b>Hard / stony coral</b><small>刚性钙质骨骼；大类不替代正式分类</small></div><div class="classCard official"><span>NOAA Growth Form</span><b>Branching Coral</b><small>生长形态，不是科、属或种</small></div><div class="classCard unresolved"><span>Palau Occurrence Evidence</span><b>UNRESOLVED</b><small>当前 Smithsonian 标本不是帕劳出现记录；不猜测</small></div></div><div class="note"><strong>分类边界：</strong>“紧凑团块、短粗分枝、疣突丰富、钝端”只作为物种形态描述；不再建立“菜花珊瑚类”等自造类别。Palau 层保存 CRRF 物种记录、深度／群落语境和 PICRC 监测字段，不另造一套分类。</div>'''
+          marker='<div class="sectionTitle">View / 同步观察</div>'
+          assert marker in html
+          html=html.replace(marker,section+marker,1)
+          old='<div class="note"><strong>边界：</strong>右侧目前是“标本拟合的枝图复刻”，不是已经完成的通用 Pocillopora DNA。下一步要把扫描标本的个体枝图转成可变的生长规则，并用 Seriatopora hystrix 作为反例，防止两个物种退化成同一个分枝参数。</div>'
+          new='<div class="note"><strong>形态边界：</strong>右侧仍是“标本拟合的枝图复刻”，不是已完成的通用 Pocillopora DNA。下一步只继续收敛 Branching Coral 下的 P. damicornis 物种规则；Seriatopora hystrix 将作为同一 NOAA 生长形态下的反例验证，而不是新造分类。</div>'
+          assert old in html
+          html=html.replace(old,new,1)
+          cls={'ready':True,'contract':'NOAA_PALAU_R01','customClassesAllowed':False,'scientificName':'Pocillopora damicornis','taxonomicOrder':'Scleractinia','family':'Pocilloporidae','noaaBroadType':'Hard / stony coral','noaaGrowthForm':'Branching Coral','palauOccurrenceEvidence':'UNRESOLVED','visualAcceptance':False}
+          html=html.replace('</body>','<script>window.__CORAL_R06_CLASSIFICATION__='+json.dumps(cls,ensure_ascii=False,separators=(',',':'))+';</script></body>',1)
+          low=html.lower(); assert 'fetch(' not in html and '.glb' not in low and 'cauliflower coral' not in low
+          out=Path('pages/coral-mother-r06-pocillopora-t02-noaa-palau'); out.mkdir(parents=True,exist_ok=True)
+          (out/'index.html').write_text(html,encoding='utf-8')
+          (out/'CLASSIFICATION_NOAA_PALAU_R01.json').write_text(json.dumps(cls,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          qa={'schema':'CORAL_MOTHER_R06_T02_NOAA_PALAU_QA','bytes':len(html.encode()),'sha256':hashlib.sha256(html.encode()).hexdigest(),'directSingleFile':True,'runtimeGLB':0,'runtimeTextures':0,'networkFetchCalls':0,'customClassesAllowed':False,'noaaBroadType':'Hard / stony coral','noaaGrowthForm':'Branching Coral','palauOccurrenceEvidence':'UNRESOLVED','desktopBrowserQA':False,'mobile390x844QA':False,'visualAcceptance':False,'productionReady':False}
+          (out/'QA_DIRECT.json').write_text(json.dumps(qa,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Browser gate desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet websocket-client
+          python3 -m http.server 8767 --directory pages/coral-mother-r06-pocillopora-t02-noaa-palau >/tmp/coral-t02-http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER 2>/dev/null || true' EXIT
+          python3 - <<'PY'
+          import base64,json,shutil,subprocess,time,urllib.request
+          from pathlib import Path
+          import websocket
+          chrome=shutil.which('google-chrome') or shutil.which('chromium') or shutil.which('chromium-browser'); assert chrome
+          def wait(url):
+              for _ in range(100):
+                  try:
+                      with urllib.request.urlopen(url,timeout=2) as r:return json.load(r)
+                  except:time.sleep(.2)
+              raise RuntimeError(url)
+          def gate(label,w,h,port):
+              profile=f'/tmp/t02-{label}';shutil.rmtree(profile,ignore_errors=True)
+              p=subprocess.Popen([chrome,'--headless=new','--no-sandbox','--disable-dev-shm-usage',f'--remote-debugging-port={port}','--remote-allow-origins=*','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist',f'--window-size={w},{h}',f'--user-data-dir={profile}','about:blank'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+              try:
+                  t=next(x for x in wait(f'http://127.0.0.1:{port}/json/list') if x.get('type')=='page')
+                  ws=websocket.create_connection(t['webSocketDebuggerUrl'],timeout=20,origin='http://127.0.0.1');seq=0
+                  def call(m,pa=None):
+                      nonlocal seq;seq+=1;i=seq;ws.send(json.dumps({'id':i,'method':m,'params':pa or {}}))
+                      while 1:
+                          x=json.loads(ws.recv())
+                          if x.get('id')==i:return x.get('result',{})
+                  call('Page.enable');call('Runtime.enable');call('Page.addScriptToEvaluateOnNewDocument',{'source':"window.__qaErrors=[];addEventListener('error',e=>window.__qaErrors.push(String(e.message||e.error||e)));addEventListener('unhandledrejection',e=>window.__qaErrors.push(String(e.reason||e)));"});call('Page.navigate',{'url':'http://127.0.0.1:8767/'});time.sleep(9)
+                  expr="""JSON.stringify((()=>{const c=document.querySelector('canvas');let gl=false;try{gl=!!(c&&(c.getContext('webgl2')||c.getContext('webgl')))}catch(e){}const s=document.querySelector('#stage')?.getBoundingClientRect(),k=document.querySelector('#controls')?.getBoundingClientRect();return{ready:document.readyState,canvas:document.querySelectorAll('canvas').length,controls:document.querySelectorAll('button,input,select').length,gl,qa:window.__CORAL_R06_QA__||{},cls:window.__CORAL_R06_CLASSIFICATION__||{},errors:window.__qaErrors||[],body:(document.body.innerText||'').toUpperCase(),stageBeforeControls:!!(s&&k&&s.bottom<=k.top+20),overflow:document.documentElement.scrollWidth>innerWidth+1}})())"""
+                  r=call('Runtime.evaluate',{'expression':expr,'returnByValue':True});q=json.loads(r['result']['value'])
+                  assert q['ready']=='complete' and q['canvas']==1 and q['controls']>=20 and q['gl'] and q['stageBeforeControls'] and not q['overflow'] and not q['errors'],q
+                  assert q['qa'].get('ready') and q['qa'].get('runtimeGLB')==0 and q['qa'].get('networkFetches')==0,q
+                  assert q['cls'].get('customClassesAllowed') is False and q['cls'].get('palauOccurrenceEvidence')=='UNRESOLVED',q
+                  assert 'NOAA BROAD TYPE' in q['body'] and 'PALAU OCCURRENCE EVIDENCE' in q['body'] and 'UNRESOLVED' in q['body'],q
+                  shot=call('Page.captureScreenshot',{'format':'png','captureBeyondViewport':False});img=base64.b64decode(shot['data']);assert len(img)>15000
+                  Path(f'pages/coral-mother-r06-pocillopora-t02-noaa-palau/QA_SCREENSHOT_{label.upper()}.png').write_bytes(img);ws.close()
+                  return {'passed':True,'viewport':f'{w}x{h}','webgl':True,'runtimeErrors':0,'horizontalOverflow':False,'screenshotBytes':len(img)}
+              finally:
+                  p.terminate()
+                  try:p.wait(timeout=5)
+                  except:p.kill()
+          d=gate('desktop_1440x1100',1440,1100,9251);m=gate('mobile_390x844',390,844,9252)
+          qp=Path('pages/coral-mother-r06-pocillopora-t02-noaa-palau/QA_DIRECT.json');q=json.loads(qp.read_text());q['desktopBrowserQA']=True;q['mobile390x844QA']=True;q['browserQA']={'desktop':d,'mobile':m};qp.write_text(json.dumps(q,ensure_ascii=False,indent=2)+'\n')
+          PY
+
+      - name: Publish T02
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd pages
+          git config user.name 'Haihao_Nature Grace HK'
+          git config user.email 'haihao0307@gmail.com'
+          git add coral-mother-r06-pocillopora-t02-noaa-palau/
+          git commit -m 'publish(coral): R06 T02 NOAA Palau classification' || true
+          git pull --rebase origin gh-pages
+          git push origin gh-pages
