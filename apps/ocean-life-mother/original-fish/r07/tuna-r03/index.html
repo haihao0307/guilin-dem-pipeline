@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Original Fish · Tuna R03</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body><div id="app">
+<canvas id="view" aria-label="Original Fish 金枪鱼分支 R03 三维工作台"></canvas>
+<header><div><strong>ORIGINAL FISH · TUNA R03</strong><span>靠谱主干 / 金枪鱼分支 · source-independent function fish</span></div><div id="status" class="status">启动中</div></header>
+<aside>
+<section><h1>固定视角</h1><div class="grid" id="views"><button data-view="side" class="active">侧视</button><button data-view="three">斜侧</button><button data-view="front">正面</button><button data-view="top">俯视</button></div></section>
+<section><label class="row"><span>尾部摆幅</span><output id="ampOut">0.045</output></label><input id="amp" type="range" min="0" max="0.09" step="0.002" value="0.045"><label class="row"><span>动作周期</span><output id="periodOut">2.17 s</output></label><input id="period" type="range" min="0.65" max="3.6" step="0.05" value="2.1667"><div class="grid"><button id="swim" class="active">游动</button><button id="reset">复位</button></div></section>
+<section><label class="row"><span>嘴部开合</span><output id="mouthOut">0.00</output></label><input id="mouth" type="range" min="0" max="1" step="0.02" value="0"><label class="row"><span>鳃盖呼吸</span><output id="gillOut">0.35</output></label><input id="gill" type="range" min="0" max="1" step="0.02" value="0.35"><label><input id="skeleton" type="checkbox"> 24-control 语义骨架</label><label><input id="wire" type="checkbox"> 三角网格</label><label><input id="wet" type="checkbox" checked> 湿润介质高光</label><label><input id="fins" type="checkbox" checked> 薄鳍透光</label></section>
+<section class="evidence"><h2>证据边界</h2><p><b>精确输入：</b><code>FISH-REF-002</code> 两版 603 组 accessor 一致。</p><p><b>原生：</b>41 截面体、鳍膜、鳍小叶、尾柄侧棱、眼/角膜、嘴、鳃盖线与 24-control 动作接口。</p><p><b>运动：</b>前躯刚性、尾向幅度增长、鳍小叶后向相位延迟；属于自然关系约束，不是已完成物种标定。</p><p><b>不含：</b>源网格、源贴图、98 关节或源动画轨道。</p><p><b>状态：</b>工程候选；视觉、自然动作与用户验收未通过。</p></section>
+</aside>
+<footer><span id="metrics">—</span><span>拖拽旋转 · 滚轮缩放</span></footer>
+<div id="fatal" hidden></div>
+</div><script type="module" src="main.js"></script></body>
+</html>
