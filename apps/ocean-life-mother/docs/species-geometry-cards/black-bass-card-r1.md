@@ -51,16 +51,18 @@ Texas Parks and Wildlife Department 与 Florida Museum 的识别资料均把“�
 
 R1 原生内核分开生成：
 
-1. `cranial`：头颅连续截面；
+1. `cranial`：连续头颅截面；
 2. `lowerJaw`：独立低维截面包络；
 3. `mouthCavity`：独立口腔体积；
 4. `jawHinge`：固定在源观察铰点归一化位置；
-5. `eye anchors`：双眼保持独立体积锚点；
-6. `maxillary rear constraint`：后端必须在眼后缘之后。
+5. `eyeLeft / eyeRight`：双眼独立体积；
+6. `maxillaryLeft / maxillaryRight`：上颌骨侧板；
+7. `upperLip / lowerLip`：独立唇缘薄实体；
+8. `maxillary rear constraint`：后端必须在眼后缘之后。
 
 函数只保留低维截面、锚点和关系，不保存或可逆还原原模型拓扑。
 
-## 6. 当前测试
+## 6. 当前测试与三维工作台
 
 运行：
 
@@ -68,26 +70,36 @@ R1 原生内核分开生成：
 node apps/ocean-life-mother/web/src/fish/tests/blackBassFish.test.mjs
 ```
 
-当前结果：`15 assertions passed`。
+当前结果：`27 assertions passed`。
 
 覆盖：
 
 - 精确 SHA 身份；
 - 淡水身份不被改名；
-- 无源网格运行依赖；
-- 生成坐标有限；
+- 无源网格、贴图、蒙皮和动画运行依赖；
+- 纵向截面重采样保持单调；
+- 所有生成坐标有限；
 - 颌部铰点不随开合漂移；
 - 下颌开合保持到铰点的距离；
 - 张口角度越界被夹紧；
 - maxillary 后端处于眼后缘之后；
-- 头颅、下颌和口腔是分开的生成部件。
+- 头颅、下颌、口腔、眼、上颌骨和唇缘均为分开的函数生成部件。
+
+三维入口：
+
+```text
+apps/ocean-life-mother/web/src/fish/index.html
+```
+
+工作台使用无外部依赖的 WebGL2，提供侧视、斜侧、正面、俯视、下颌张角、开合演示、结构显隐、三角网格、拖拽和缩放。桌面 `1440×1000` 与手机 `390×844` 的本地浏览器结构检查均通过；这仍不是公开发布验收。
 
 ## 7. 尚未通过
 
-- 生成鱼头与参考的固定视角视觉误差尚未收敛；
-- 鳃盖、唇缘厚度、口腔内部、牙齿和眼睛光学尚未完成；
+- 生成鱼头与参考的固定视角视觉误差仍未收敛；
+- 当前是头部限定候选，后端切口仍可见，不是完整鱼体；
+- 鳃盖、唇缘过渡、口腔内部、牙齿和眼睛光学尚未达到写实要求；
 - 当前 maxillary 精确后移量仍是候选；
-- 材质、运动、完整鱼体和浏览器公开工作台尚未验收；
+- 材质、完整鱼体、自然动作和公开工作台尚未验收；
 - `visualAcceptance=false`；
 - `userAcceptance=false`；
 - `productionReady=false`。
