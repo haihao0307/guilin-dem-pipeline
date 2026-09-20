@@ -1,0 +1,110 @@
+name: Landscape Palau Karst R2.4 Three Sea Erosion V2
+
+on:
+  push:
+    branches:
+      - feature/landscape-small-karst-brick-v26-r2-20260919
+    paths:
+      - workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build_r24_fix_v2.py
+      - .github/workflows/landscape-palau-karst-r24-three-sea-erosion-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build R2.4 three sea-eroded forms
+        run: |
+          python -m py_compile workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build_r24.py
+          python -m py_compile workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build_r24_fix_v2.py
+          python workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build_r24_fix_v2.py
+
+      - name: Static contract and shader compilation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('workbenches/landscape-small-karst-field-r2-4-three-sea-erosion')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          required=[
+            'PALAU_KARST_R24_THREE_SEA_EROSION',
+            'P1 高瘦礁塔','P2 宽厚岩岛','P3 偏心双体',
+            'uVariant','uSeaLevel','uSeaNotch','uWetBand',
+            'two-pass-r24-three-sea-erosion',
+            'data-karst-ready'
+          ]
+          for token in required: assert token in s or token in json.dumps(b,ensure_ascii=False), token
+          assert b['schema']=='LANDSCAPE_PALAU_KARST_R24_THREE_SEA_EROSION'
+          assert len(b['variants'])==3
+          assert b['marineErosion']['irregularWaterline'] is True
+          assert b['marineErosion']['wetDarkBand'] is True
+          for name,file in [('VS','/tmp/r24.vert'),('GEOMETRY_FS','/tmp/r24-geom.frag'),('MATERIAL_FS','/tmp/r24-mat.frag')]:
+            m=re.search(rf'const {name}=`(.*?)`;',s,re.S);assert m,name
+            Path(file).write_text(m.group(1),encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/r24-app.js').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/r24-app.js
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq glslang-tools
+          glslangValidator -S vert /tmp/r24.vert
+          glslangValidator -S frag /tmp/r24-geom.frag
+          glslangValidator -S frag /tmp/r24-mat.frag
+
+      - name: Run Chromium and capture proof
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL=http://127.0.0.1:8000/workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=22000 \
+            --dump-dom "$URL" >/tmp/r24-dom.html 2>/tmp/r24-chrome.log
+          grep -q 'data-karst-ready="true"' /tmp/r24-dom.html
+          ! grep -q 'data-karst-failure="true"' /tmp/r24-dom.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=22000 \
+            --window-size=1440,1000 --screenshot=/tmp/r24.png "$URL" \
+            >/tmp/r24-shot.log 2>&1
+          test -s /tmp/r24.png
+          test $(stat -c%s /tmp/r24.png) -gt 100000
+          mkdir -p /tmp/r24-proof
+          cp /tmp/r24.png /tmp/r24-proof/r24.png
+          cp /tmp/r24-dom.html /tmp/r24-proof/dom.html
+          cp workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build.json /tmp/r24-proof/build.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landscape-palau-karst-r24-three-sea-erosion-proof-v2
+          path: /tmp/r24-proof
+          retention-days: 7
+
+      - name: Materialize browser-tested R2.4
+        run: |
+          git config user.name "Landscape Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/index.html \
+                  workbenches/landscape-small-karst-field-r2-4-three-sea-erosion/build.json
+          if git diff --cached --quiet; then
+            echo "R2.4 already materialized"
+            exit 0
+          fi
+          git commit -m "feat(landscape): materialize browser-tested R2.4 three sea-eroded forms [skip ci]"
+          git push
