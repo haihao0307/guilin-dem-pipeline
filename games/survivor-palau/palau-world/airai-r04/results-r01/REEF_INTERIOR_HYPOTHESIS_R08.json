@@ -1,0 +1,312 @@
+{
+  "schema": "kaopu.palau.reef-interior-zone-reconciliation-r08/1.1",
+  "coreBBoxWGS84": [
+    134.535,
+    7.315,
+    134.605,
+    7.385
+  ],
+  "sourceIdentity": {
+    "soundings": {
+      "path": "vectors/SOUNDG_QUALITY_JOINED.geojson",
+      "sha256": "289bd5cbcbeabf2a9a242b5c456e317876c9446c5fece8710b2fbe47b1b7a773",
+      "role": "measured ENC sounding evidence with M_QUAL lineage"
+    },
+    "allenGeomorphic": {
+      "path": "vectors/ALLEN_GEOMORPHIC_CORE_R05.geojson",
+      "sha256": "3a827df229abf01f649fa786402d8c250e02ffc3727712842694b73c53e0a933",
+      "role": "shallow geomorphic semantic evidence, not depth truth"
+    },
+    "depare": {
+      "path": "vectors/DEPARE.geojson",
+      "sha256": "cb1f1e11049ab06a5f51ac970a3055fdf61b5c4904736b9b98df31e78fee594b",
+      "role": "ENC charted depth-area context"
+    },
+    "osm": {
+      "path": "vectors/OSM_SEMANTICS_CORE_R07.geojson",
+      "sha256": "4ca9a5c85ffed8c78aae901eab1385075a83c7e4a5b4da1682c932ebad5c7539",
+      "role": "independent community semantic cross-check, not hydrographic truth"
+    }
+  },
+  "verticalDatum": {
+    "status": "UNRESOLVED_NO_CONVERSION_APPLIED",
+    "soundingVERDATCounts": {},
+    "depareVERDATCounts": {},
+    "rule": "R08 preserves encoded ENC vertical-datum fields and does not numerically transform depths between datums."
+  },
+  "coreSoundings": 392,
+  "allenMappedSoundings": 89,
+  "zoneSummary": {
+    "outside_allen_geomorphic_or_unclassified": {
+      "allenClassCounts": {
+        "UNMAPPED": 303
+      },
+      "depthStatsM": {
+        "count": 303,
+        "min": 2.8,
+        "p05": 11.21,
+        "median": 29.2,
+        "p95": 73.39999999999986,
+        "max": 850.0,
+        "between60And70M": 9,
+        "deeperThan100M": 9
+      },
+      "catzocCounts": {
+        "B": 213,
+        "D": 90
+      },
+      "byCATZOC": {
+        "B": {
+          "count": 213,
+          "min": 2.8,
+          "p05": 9.860000000000001,
+          "median": 27.2,
+          "p95": 43.0,
+          "max": 62.0,
+          "between60And70M": 2,
+          "deeperThan100M": 0
+        },
+        "D": {
+          "count": 90,
+          "min": 7.3,
+          "p05": 23.45,
+          "median": 38.0,
+          "p95": 355.1999999999998,
+          "max": 850.0,
+          "between60And70M": 7,
+          "deeperThan100M": 9
+        }
+      },
+      "insideOsmReefPolygon": 0
+    },
+    "reef_flat_or_crest": {
+      "allenClassCounts": {
+        "Terrestrial Reef Flat": 6,
+        "Reef Crest": 3,
+        "Outer Reef Flat": 1
+      },
+      "depthStatsM": {
+        "count": 10,
+        "min": 0.1,
+        "p05": 0.955,
+        "median": 2.45,
+        "p95": 11.899999999999995,
+        "max": 13.7,
+        "between60And70M": 0,
+        "deeperThan100M": 0
+      },
+      "catzocCounts": {
+        "D": 6,
+        "B": 4
+      },
+      "byCATZOC": {
+        "B": {
+          "count": 4,
+          "min": 2.0,
+          "p05": 2.045,
+          "median": 2.3499999999999996,
+          "p95": 2.485,
+          "max": 2.5,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        },
+        "D": {
+          "count": 6,
+          "min": 0.1,
+          "p05": 0.6749999999999999,
+          "median": 7.6499999999999995,
+          "p95": 12.7,
+          "max": 13.7,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        }
+      },
+      "insideOsmReefPolygon": 2
+    },
+    "shallow_lagoon": {
+      "allenClassCounts": {},
+      "depthStatsM": {
+        "count": 0,
+        "min": null,
+        "p05": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "between60And70M": 0,
+        "deeperThan100M": 0
+      },
+      "catzocCounts": {},
+      "byCATZOC": {},
+      "insideOsmReefPolygon": 0
+    },
+    "deep_lagoon": {
+      "allenClassCounts": {
+        "Deep Lagoon": 23
+      },
+      "depthStatsM": {
+        "count": 23,
+        "min": 2.7,
+        "p05": 3.3499999999999996,
+        "median": 17.7,
+        "p95": 35.899999999999984,
+        "max": 37.0,
+        "between60And70M": 0,
+        "deeperThan100M": 0
+      },
+      "catzocCounts": {
+        "D": 18,
+        "B": 5
+      },
+      "byCATZOC": {
+        "B": {
+          "count": 5,
+          "min": 2.7,
+          "p05": 3.9000000000000004,
+          "median": 11.2,
+          "p95": 23.199999999999996,
+          "max": 25.4,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        },
+        "D": {
+          "count": 18,
+          "min": 3.3,
+          "p05": 3.7249999999999996,
+          "median": 19.7,
+          "p95": 37.0,
+          "max": 37.0,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        }
+      },
+      "insideOsmReefPolygon": 0
+    },
+    "reef_slope": {
+      "allenClassCounts": {
+        "Reef Slope": 48,
+        "Back Reef Slope": 3,
+        "Sheltered Reef Slope": 3
+      },
+      "depthStatsM": {
+        "count": 54,
+        "min": 2.3,
+        "p05": 3.165,
+        "median": 9.4,
+        "p95": 22.944999999999986,
+        "max": 32.0,
+        "between60And70M": 0,
+        "deeperThan100M": 0
+      },
+      "catzocCounts": {
+        "B": 50,
+        "D": 4
+      },
+      "byCATZOC": {
+        "B": {
+          "count": 50,
+          "min": 2.3,
+          "p05": 3.145,
+          "median": 9.0,
+          "p95": 15.529999999999998,
+          "max": 24.7,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        },
+        "D": {
+          "count": 4,
+          "min": 9.9,
+          "p05": 11.715,
+          "median": 27.0,
+          "p95": 32.0,
+          "max": 32.0,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        }
+      },
+      "insideOsmReefPolygon": 0
+    },
+    "plateau": {
+      "allenClassCounts": {
+        "Plateau": 2
+      },
+      "depthStatsM": {
+        "count": 2,
+        "min": 8.9,
+        "p05": 8.925,
+        "median": 9.15,
+        "p95": 9.375,
+        "max": 9.4,
+        "between60And70M": 0,
+        "deeperThan100M": 0
+      },
+      "catzocCounts": {
+        "B": 2
+      },
+      "byCATZOC": {
+        "B": {
+          "count": 2,
+          "min": 8.9,
+          "p05": 8.925,
+          "median": 9.15,
+          "p95": 9.375,
+          "max": 9.4,
+          "between60And70M": 0,
+          "deeperThan100M": 0
+        }
+      },
+      "insideOsmReefPolygon": 0
+    }
+  },
+  "workingHypothesisAudit": {
+    "hypothesis": "major channels about 60-70 m and reef-interior water generally below 100 m depth",
+    "allHighQualityCATZOC_A1_A2_B": {
+      "count": 274,
+      "min": 2.0,
+      "p05": 3.665,
+      "median": 25.3,
+      "p95": 42.0,
+      "max": 62.0,
+      "between60And70M": 2,
+      "deeperThan100M": 0
+    },
+    "highQualityInsideAllenShallowGeomorphicCoverage": {
+      "count": 61,
+      "min": 2.0,
+      "p05": 2.4,
+      "median": 8.7,
+      "p95": 15.8,
+      "max": 25.4,
+      "between60And70M": 0,
+      "deeperThan100M": 0
+    },
+    "highQualityOutsideAllenShallowGeomorphicCoverage": {
+      "count": 213,
+      "min": 2.8,
+      "p05": 9.860000000000001,
+      "median": 27.2,
+      "p95": 43.0,
+      "max": 62.0,
+      "between60And70M": 2,
+      "deeperThan100M": 0
+    },
+    "interpretationRule": "Allen shallow geomorphic coverage cannot define the full reef interior; >100 m soundings outside Allen coverage are not automatically reef-interior contradictions.",
+    "forcedToHypothesis": false
+  },
+  "candidateGrid": {
+    "depthGridUnchanged": "grids/candidate_depth_chart_datum_m_r02.tif",
+    "uncertaintyGridUnchanged": "grids/candidate_uncertainty_m_r02.tif",
+    "nearestEvidenceGridUnchanged": "grids/nearest_evidence_distance_m_r02.tif",
+    "semanticCompanionGrid": "grids/candidate_semantic_zone_r08.tif",
+    "semanticZoneCodes": {
+      "outside_allen_geomorphic_or_unclassified": 1,
+      "reef_flat_or_crest": 2,
+      "shallow_lagoon": 3,
+      "deep_lagoon": 4,
+      "reef_slope": 5,
+      "plateau": 6
+    },
+    "candidateGridMutation": false,
+    "reason": "R08 improves traceability and hypothesis testing without inventing depth from habitat/OSM semantics."
+  },
+  "palauWorldContract": "R08 semantic zones and provenance are companion evidence for the same PalauWorld.sample() conductor; no separate LOD world is introduced."
+}
