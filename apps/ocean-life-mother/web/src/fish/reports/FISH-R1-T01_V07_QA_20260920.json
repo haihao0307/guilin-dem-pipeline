@@ -1,0 +1,127 @@
+{
+  "schema": "fish-r1-t01.v07-qa/1.0",
+  "taskId": "FISH-R1-T01",
+  "date": "2026-09-20",
+  "candidate": {
+    "branch": "work/fish-r1-t01-source-gate-20260919",
+    "codeCommit": "d7ab7dfbe09473c6ca65ec353824f98ec7e4b35d",
+    "entry": "apps/ocean-life-mother/web/src/fish/index-v07.html",
+    "runtime": "apps/ocean-life-mother/web/src/fish/main-v07.js",
+    "module": "apps/ocean-life-mother/web/src/fish/v07/blackBassFish-v07.js",
+    "sourceMeshRuntimeDependency": false,
+    "sourceTextureRuntimeDependency": false,
+    "sourceRigRuntimeDependency": false,
+    "sourceAnimationRuntimeDependency": false,
+    "visualAcceptance": false,
+    "userAcceptance": false,
+    "productionReady": false
+  },
+  "exactReference": {
+    "filename": "model_67a_-_largemouth_bass(2).glb",
+    "bytes": 18644040,
+    "sha256": "c1b964b34e80e8534b7801c496576d6a594938d217b4f763b35d04a922b3ee64",
+    "identityResult": "EXACT_MATCH",
+    "evidenceTier": "N2_TRANSITIONAL_REFERENCE"
+  },
+  "boundedDefect": {
+    "selected": "NON_STRUCTURAL_MOUTH",
+    "v07Increment": [
+      "replace the stepped lateral mouth cut with a narrow analytic slit",
+      "preserve cheek and orbit continuity around the slit",
+      "generate cross-mouth upper and lower lip bands",
+      "couple lower lip and oral floor to the jaw hinge without body-length stretch",
+      "add rounded commissures",
+      "embed maxillary curves instead of detached plates",
+      "add narrow opercular overlap shells and boundary curves"
+    ],
+    "outOfScope": [
+      "full body reconstruction",
+      "finished scales and skin PBR",
+      "teeth and complete oral tissue",
+      "accepted cornea/iris optics",
+      "natural full-body motion",
+      "public deployment"
+    ]
+  },
+  "numeric": {
+    "command": "node apps/ocean-life-mother/web/src/fish/tests/blackBassFish-v07.test.mjs",
+    "result": "FISH-R1-T01 black-bass head/mouth kernel v0.7: 54 assertions passed",
+    "status": "PASS",
+    "checks": [
+      "exact source SHA and freshwater identity",
+      "monotone low-dimensional profiles",
+      "finite generated coordinates",
+      "narrow cranial mouth slit actually removes bounded side faces",
+      "jaw hinge remains invariant",
+      "jaw-tip distance to hinge remains constant during opening",
+      "mouth cavity expands with jaw state",
+      "lower lip follows jaw while upper lip remains fixed",
+      "maxillary remains behind the rear eye boundary",
+      "bilateral opercular shells stay on their assigned side",
+      "all semantic generated parts contain finite geometry",
+      "source asset dependencies remain false"
+    ]
+  },
+  "browser": {
+    "engine": "Chromium 144.0.7559.96 under Xvfb",
+    "networkNavigation": "ERR_BLOCKED_BY_ADMINISTRATOR",
+    "fallbackLoadMode": "Playwright page.set_content with exact local index/CSS/runtime/modules",
+    "desktopViewport": [1440, 1000],
+    "mobileViewport": [390, 844],
+    "statusText": "原生函数 v0.7 运行中",
+    "metrics": "原生部件 19 · 33,716 triangles · source runtime dependency = false",
+    "desktopWebglError": 0,
+    "mobileWebglError": 0,
+    "mobileHorizontalOverflow": 0,
+    "pageErrors": [],
+    "consoleErrors": [],
+    "interactionChecks": [
+      "side/three-quarter/front/top presets",
+      "jaw slider",
+      "animated opening",
+      "operculum visibility",
+      "cavity visibility",
+      "wireframe",
+      "drag rotation",
+      "wheel zoom"
+    ],
+    "publicNavigationAcceptance": false
+  },
+  "screenshots": {
+    "desktop_v07.png": "8794fc35b8ac1eb69952b6dd2d32a279dcda5a6fa15bae3f487ee855020740ce",
+    "side_v07.png": "f3e9f1af802deef8aa43c3bf9943170d4093a1e722db3f0bc8ab900ffdd1efbf",
+    "three_v07.png": "709269f7b91e651447679beeb58ff2d0d43447a4a8da30fb07592642fec45dcd",
+    "front_v07.png": "5d42013c195f99d45b5ffb534821332f9406e967e39321f734ab9573d26150bb",
+    "top_v07.png": "8a7d935c1379349bbc31e2b5c55a57afd10d7b8f40fdf80d401bd2e305e0b122",
+    "three_open_v07.png": "8473953cea983b2820d5f2e7dbef29992c7d6cfb2d1a6e94d811dea09eda427b",
+    "mobile_v07.png": "14d01bff1c234fbfbc4fa2bfd3327251a47cc5d0f3af1e4dcac7da730afc4bb0"
+  },
+  "visualSelfReview": {
+    "fixedViewsProduced": true,
+    "status": "NOT_ACCEPTED",
+    "improved": [
+      "the large stepped cheek/orbit cut from earlier candidates is gone",
+      "the mouth reads as a bounded slit with separate lips and cavity rather than a painted line",
+      "the lower lip follows the jaw and the operculum has an explicit overlap boundary"
+    ],
+    "remainingDefects": [
+      "the closed mouth still reads as an engineering dark wedge rather than converged soft tissue",
+      "lip-to-maxillary and mouth-corner transitions remain too mechanical",
+      "opercular curvature and cheek volume are still simplified",
+      "eye optics, teeth, oral tissue and full material response are incomplete",
+      "this remains a head-only bounded candidate, not a full fish"
+    ]
+  },
+  "referenceBatch": {
+    "batchId": "FISH-GAME-ASSET-VIS-20260920-R01",
+    "imageCount": 15,
+    "use": "N2 color, silhouette and PBR observation only",
+    "naturalTruthBoundary": "NOAA/PIFSC/primary research/museum/direct natural observation",
+    "cacheState": "PENDING_ORIGINAL_BYTES_AND_SHA256"
+  },
+  "release": {
+    "published": false,
+    "shareAllowed": false,
+    "reason": "visual acceptance is false and no public deployment was authorised"
+  }
+}
