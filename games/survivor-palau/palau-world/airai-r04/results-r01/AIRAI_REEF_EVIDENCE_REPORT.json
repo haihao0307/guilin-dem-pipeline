@@ -439,5 +439,108 @@
       "reason": "GMRT is retained as regional/high-resolution context until source lineage and vertical compatibility are resolved. ENC SOUNDG/DEPCNT with M_QUAL remain the current reef-depth constraints."
     },
     "sourceIdentityBoundary": "A valid topo-mask pixel means GMRT high-resolution contributor coverage. It must not be relabeled as ship multibeam or direct measurement without contributor-level provenance."
+  },
+  "allenCoralAtlasR05": {
+    "schema": "kaopu.palau.allen-coral-atlas-r05/1.0",
+    "contextBBoxWGS84": [
+      134.49,
+      7.27,
+      134.64,
+      7.42
+    ],
+    "coreBBoxWGS84": [
+      134.535,
+      7.315,
+      134.605,
+      7.385
+    ],
+    "service": {
+      "title": "Allen Coral Atlas Web Feature Service",
+      "accessConstraints": "CC BY 4.0",
+      "updateSequence": "257",
+      "featureTypes": [
+        "coral-atlas:benthic_data_verbose",
+        "coral-atlas:geomorphic_data_verbose"
+      ]
+    },
+    "westernMicronesiaMapMetadata": [
+      {
+        "region_name": "Western Micronesia",
+        "publication_date": "2022-04-12"
+      }
+    ],
+    "sourceFetch": {
+      "geomorphic": {
+        "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Ageomorphic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
+        "featureCountReturned": 2852,
+        "bytes": 28441943,
+        "sha256": "4ac43a82dc56f3d5295f669f33dfceddb145c68c17a0d6a6a20e1898271ff163"
+      },
+      "benthic": {
+        "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Abenthic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
+        "featureCountReturned": 8508,
+        "bytes": 36964176,
+        "sha256": "0b8b3c2d4e5f91a2d09ee932e9be1068399bf8d76ee3e4a730fb41911da962ea"
+      }
+    },
+    "layers": {
+      "geomorphic": {
+        "sourceLayer": "coral-atlas:geomorphic_data_verbose",
+        "contextFeatureCount": 2852,
+        "coreFeatureCount": 617,
+        "contextFeatureAreaKm2": 60.303713120699,
+        "coreFeatureAreaKm2": 17.187111507335608,
+        "properties": {
+          "class_name": {
+            "unique": 10,
+            "top": {
+              "Deep Lagoon": 137,
+              "Terrestrial Reef Flat": 134,
+              "Outer Reef Flat": 113,
+              "Reef Slope": 77,
+              "Back Reef Slope": 66,
+              "Inner Reef Flat": 33,
+              "Sheltered Reef Slope": 19,
+              "Reef Crest": 17,
+              "Shallow Lagoon": 14,
+              "Plateau": 7
+            }
+          }
+        }
+      },
+      "benthic": {
+        "sourceLayer": "coral-atlas:benthic_data_verbose",
+        "contextFeatureCount": 8508,
+        "coreFeatureCount": 2079,
+        "contextFeatureAreaKm2": 55.584250133529366,
+        "coreFeatureAreaKm2": 16.380432898456498,
+        "properties": {
+          "class_name": {
+            "unique": 6,
+            "top": {
+              "Coral/Algae": 563,
+              "Rock": 513,
+              "Rubble": 490,
+              "Seagrass": 370,
+              "Sand": 76,
+              "Microalgal Mats": 67
+            }
+          }
+        }
+      }
+    },
+    "bathymetryAccess": {
+      "documentedProduct": "10 m satellite-derived bathymetry GeoTIFF",
+      "automationAcquisitionStatus": "LOGIN_OR_INTERACTIVE_EXPORT_REQUIRED",
+      "usedInCandidateDepthGrid": false
+    },
+    "methodBoundary": {
+      "geomorphicNominalMappingDepth": "~15 m",
+      "benthicNominalMappingDepth": "~10 m",
+      "reefExtentServiceStatus": "Current WFS capabilities advertise benthic and geomorphic vector layers only.",
+      "important": "These shallow habitat vectors are not a complete mask for 60-70 m channels or all reef-interior water."
+    },
+    "candidateGridMutation": false,
+    "candidateGridReason": "Do not clip the bathymetry grid with shallow habitat polygons; that would erase legitimate deeper lagoon/channel water."
   }
 }
