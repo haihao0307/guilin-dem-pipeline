@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu.original-fish.semantic-rig/0.1",
+  "speciesBranch": "tuna",
+  "sourceReferenceId": "FISH-REF-002",
+  "sourceVariants": [
+    "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe",
+    "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0"
+  ],
+  "sourceEvidenceTier": "N2_TRANSITIONAL_REFERENCE",
+  "sourceJointCount": 98,
+  "rawAnimationChannels": 291,
+  "nativeControlCount": 24,
+  "sourceRuntimeDependency": false,
+  "compression": {
+    "dropScaleChannels": true,
+    "meaningfulScaleChannels": 0,
+    "meaningfulTranslationChannels": 4,
+    "meaningfulRotationChannels": 68,
+    "mergeTwinBodyCenter": {
+      "sourceNodes": [13, 89],
+      "sourceNames": ["Hips_01", "Spine.005_076"],
+      "bindCenterDistance": 0
+    }
+  },
+  "controls": {
+    "root": {"sourceNodes":[8],"sourceNames":["_rootJoint"]},
+    "body_center": {"sourceNodes":[13,89],"sourceNames":["Hips_01","Spine.005_076"]},
+    "trunk_front": {"sourceNodes":[14],"sourceNames":["Spine_02"]},
+    "trunk_anterior": {"sourceNodes":[15],"sourceNames":["Spine.001_03"]},
+    "neck": {"sourceNodes":[16],"sourceNames":["Spine.002_04"]},
+    "head": {"sourceNodes":[17],"sourceNames":["Head_05"]},
+    "peduncle_0": {"sourceNodes":[90],"sourceNames":["Spine.006_077"]},
+    "peduncle_1": {"sourceNodes":[91],"sourceNames":["Spine.007_078"]},
+    "peduncle_2": {"sourceNodes":[92],"sourceNames":["Spine.008_079"]},
+    "jaw_upper": {"sourceNodes":[18],"sourceNames":["UpperJaw_06"]},
+    "jaw_lower": {"sourceNodes":[21],"sourceNames":["LoweJaw_09"]},
+    "eye_left": {"sourceNodes":[19],"sourceNames":["Eye.L_07"]},
+    "eye_right": {"sourceNodes":[20],"sourceNames":["Eye.R_08"]},
+    "operculum_left": {"sourceNodes":[22],"sourceNames":["Side.L_010"],"confidence":"CANDIDATE_NAME_LOCATION_WEIGHT"},
+    "operculum_right": {"sourceNodes":[23],"sourceNames":["Side.R_011"],"confidence":"CANDIDATE_NAME_LOCATION_WEIGHT"},
+    "pectoral_left": {"sourceNodes":[24,25,26,27,28,29]},
+    "pectoral_right": {"sourceNodes":[34,35,36,37,38,39]},
+    "pelvic_left": {"sourceNodes":[30,31,32,33]},
+    "pelvic_right": {"sourceNodes":[40,41,42,43]},
+    "dorsal_field": {"sourceNodeRange":[44,88],"sourceNodeCount":45,"nativeRepresentation":"membrane_plus_five_controls"},
+    "dorsal_rear": {"sourceNodes":[101,102,103,104,105]},
+    "anal_fin": {"sourceNodes":[106,107,108,109]},
+    "caudal_upper": {"sourceNodes":[93,94,95,96]},
+    "caudal_lower": {"sourceNodes":[97,98,99,100]}
+  },
+  "axialBindCenters": {
+    "body_center": [0,-0.04904547993736385,-0.09554179374235834],
+    "trunk_front": [0,-0.049999626385257345,0.12889682810894354],
+    "trunk_anterior": [0,-0.04626376819772439,0.34074560346307764],
+    "neck": [0,-0.04570377174576568,0.568048289842279],
+    "head": [0,-0.04171870848828716,0.7468418570888932],
+    "peduncle_0": [0,-0.06091079148979715,-0.4084243527490631],
+    "peduncle_1": [0,-0.0714352481808762,-0.6846715635976348],
+    "peduncle_2": [0,-0.08073364464530666,-0.9582004217992045]
+  },
+  "rules": [
+    "The native rig keeps semantic relationships, not all 98 source joints.",
+    "Source animation is a transitional authored prior, not natural swim truth.",
+    "Scale channels are discarded because no source scale channel exceeds the 1e-4 significance threshold.",
+    "The 45-node dorsal ray field becomes a membrane controlled by five native dorsal controls, not 45 permanent game joints.",
+    "The upper and lower caudal lobes remain separate controls.",
+    "Eyes and transparent cornea remain separate material and semantic layers."
+  ],
+  "acceptance": {
+    "numeric": true,
+    "motion": false,
+    "visual": false,
+    "user": false,
+    "productionReady": false
+  }
+}
