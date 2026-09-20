@@ -1,0 +1,96 @@
+name: Stone Money Island V0.2.9 Palau Sea Cut V4
+
+on:
+  push:
+    branches:
+      - work/stone-money-island-v0290-palau-seacut-20260920
+    paths:
+      - games/survivor-palau/source/build_v0290_review_fix.py
+      - .github/workflows/stone-money-island-v0290-palau-seacut-v4.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build direct-review V0.2.9
+        run: |
+          python -m py_compile games/survivor-palau/source/build_v0290_review_fix.py
+          python games/survivor-palau/source/build_v0290_review_fix.py
+
+      - name: Static contract and JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('games/survivor-palau/releases/v0.2.9')
+          s=(root/'index.html').read_text(encoding='utf-8')
+          b=json.loads((root/'build.json').read_text(encoding='utf-8'))
+          for token in ['stone-money-island-0.2.9-palau-seacut','palauSeaCutProfileV029','karstReviewAttempts','dataset.karstReviewReady','smiKarstView',"cameraMode='karst'"]:
+            assert token in s, token
+          assert b['review']['retryStart'] is True
+          scripts=re.findall(r'<script type="module">(.*?)</script>',s,re.S);assert scripts
+          Path('/tmp/v029.mjs').write_text(scripts[-1],encoding='utf-8')
+          PY
+          node --check /tmp/v029.mjs
+
+      - name: Run Chromium and capture direct karst scene
+        run: |
+          python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+          SERVER=$!
+          trap 'kill $SERVER || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then break; fi
+            sleep .25
+          done
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser || sudo apt-get install -y -qq chromium
+            CHROME=$(command -v chromium || command -v chromium-browser)
+          fi
+          URL='http://127.0.0.1:8000/games/survivor-palau/releases/v0.2.9/index.html?qa=1&karstReview=1'
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=85000 \
+            --dump-dom "$URL" >/tmp/v029-dom.html 2>/tmp/v029-chrome.log
+          grep -q 'stone-money-island-0.2.9-palau-seacut' /tmp/v029-dom.html
+          grep -q 'data-karst-review-ready="true"' /tmp/v029-dom.html
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=85000 \
+            --window-size=1440,900 --screenshot=/tmp/v029-karst.png "$URL" \
+            >/tmp/v029-shot.log 2>&1
+          test -s /tmp/v029-karst.png
+          test $(stat -c%s /tmp/v029-karst.png) -gt 100000
+          mkdir -p /tmp/v029-proof
+          cp /tmp/v029-karst.png /tmp/v029-proof/v029-karst.png
+          cp /tmp/v029-dom.html /tmp/v029-proof/dom.html
+          cp /tmp/v029-chrome.log /tmp/v029-proof/chrome.log
+          cp games/survivor-palau/releases/v0.2.9/build.json /tmp/v029-proof/build.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stone-money-island-v029-palau-seacut-direct-scene-v4
+          path: /tmp/v029-proof
+          retention-days: 7
+
+      - name: Materialize direct-review V0.2.9
+        run: |
+          git config user.name "Game Mother"
+          git config user.email "actions@users.noreply.github.com"
+          git add games/survivor-palau/releases/v0.2.9/index.html \
+                  games/survivor-palau/releases/v0.2.9/build.json
+          if git diff --cached --quiet; then
+            echo "V0.2.9 direct review already materialized"
+            exit 0
+          fi
+          git commit -m "fix(game): materialize direct Palau karst review scene [skip ci]"
+          git push
