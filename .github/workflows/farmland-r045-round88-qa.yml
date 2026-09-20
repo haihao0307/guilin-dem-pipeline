@@ -29,9 +29,9 @@ jobs:
           python3 -m http.server 8000 >/tmp/r88-http.log 2>&1 & echo $! >/tmp/r88-http.pid
           sleep 1
           CHROME=/usr/bin/google-chrome
-          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1400,900 --screenshot=r045_round88_fixed_view.png http://127.0.0.1:8000/r045_round88_audit.html
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --hide-scrollbars --run-all-compositor-stages-before-draw --virtual-time-budget=3000 --window-size=1400,900 --screenshot=r045_round88_fixed_view.png http://127.0.0.1:8000/r045_round88_audit.html
           SS=$?
-          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --dump-dom http://127.0.0.1:8000/r045_round88_audit.html > r045_round88_dom.html
+          timeout 30s $CHROME --headless --no-sandbox --disable-gpu --virtual-time-budget=3000 --dump-dom http://127.0.0.1:8000/r045_round88_audit.html > r045_round88_dom.html
           DOM=$?
           grep -q 'data-ready="true"' r045_round88_dom.html; READY=$?
           BYTES=$(wc -c < r045_round88_fixed_view.png 2>/dev/null || echo 0)
