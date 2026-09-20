@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {buildTunaR03} from '../source-bundle.mjs';
+import {buildFinRayDetails,buildHeadDetailParts,enhanceTuna} from '../detail-overlay.mjs';
+let n=0;const ok=(v,m)=>{assert(v,m);n++};const eq=(a,b,m)=>{assert.equal(a,b,m);n++};
+const rays=buildFinRayDetails();eq(rays.length,25,'fin rays');
+ok(rays.every(x=>x.transparent&&x.material==='fin'),'fin rays retain thin-fin material');
+const head=buildHeadDetailParts();eq(head.length,6,'paired head structures');
+ok(head.filter(x=>x.name.startsWith('maxillary')).length===2,'paired maxillary');
+ok(head.filter(x=>x.name.startsWith('preoperculum')).length===2,'paired preoperculum');
+ok(head.filter(x=>x.name.startsWith('supraorbital')).length===2,'paired supraorbital');
+const built=enhanceTuna(buildTunaR03());
+eq(built.schema,'kaopu.original-fish.generated/0.3.3');
+eq(built.parts.length,67);
+eq(built.detailRevision,'R03.3_FIN_RAYS_HEAD_FOLDS');
+const names=new Set(built.parts.map(x=>x.name));eq(names.size,built.parts.length,'part names unique');
+for(const name of ['dorsalRay0','rearDorsalRay4','analRay2','caudalUpperRay4','caudalLowerRay4','maxillaryLeft','preoperculumRight','supraorbitalLeft'])ok(names.has(name),`contains ${name}`);
+for(const p of built.parts){ok(p.positions.every(Number.isFinite),`${p.name} positions finite`);ok(p.indices.every(Number.isFinite),`${p.name} indices finite`)}
+const triangles=built.parts.reduce((s,p)=>s+p.indices.length/3,0);
+eq(Math.round(triangles),19820,'detail triangle receipt');
+console.log(`Original Fish Tuna R03.3 detail overlay: ${n} assertions passed; ${built.parts.length} parts; ${triangles} triangles`);
