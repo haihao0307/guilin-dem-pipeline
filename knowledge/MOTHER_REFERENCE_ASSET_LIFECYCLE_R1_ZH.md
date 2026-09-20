@@ -77,8 +77,12 @@ KAOPU 的根本目标不是复制某个模型、某张图或某个作者的表�
 
 使用独立 PRIVATE GitHub repository，且与生产代码仓库分离。
 
-建议仓库名：
+当前 bootstrap HEAD：b43c2d3c6c51d071a1ce4e2f1970bd0ea4d109cd
+
+当前正式缓存仓库：
 haihao0307/KAOPU-REFERENCE-CACHE
+
+状态：ACTIVE_PRIVATE_CACHE（2026-09-20 已创建并完成 bootstrap）
 
 路径规范：
 
