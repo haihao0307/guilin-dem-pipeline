@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu.palau.gmrt-context-r04/1.0",
+  "gmrtRole": "HIGH_RESOLUTION_CONTRIBUTOR_CONTEXT_NOT_REEF_SURVEY_TRUTH",
+  "contextBBoxWGS84": [
+    134.49,
+    7.27,
+    134.64,
+    7.42
+  ],
+  "coreBBoxWGS84": [
+    134.535,
+    7.315,
+    134.605,
+    7.385
+  ],
+  "storyAnchorWGS84": [
+    134.5667427743189,
+    7.349032638038719
+  ],
+  "sourceFiles": {
+    "topo": "raw/gmrt/airai_topo_max.tif",
+    "topoMask": "raw/gmrt/airai_topo_mask_max.tif",
+    "metadata": "metadata/gmrt/airai_metadata.json",
+    "metadataState": "PRESENT"
+  },
+  "raster": {
+    "crs": "EPSG:4326",
+    "shape": [
+      278,
+      276
+    ],
+    "nodata": null,
+    "highResolutionContributorPixelsContext": 41163,
+    "highResolutionOceanPixelsContext": 21357,
+    "corePixelCount": 16256,
+    "coreHighResolutionContributorPixels": 6326,
+    "coreHighResolutionOceanPixels": 1456,
+    "coreHighResolutionContributorFraction": 0.3891486220472441,
+    "coreHighResolutionOceanFraction": 0.08956692913385826,
+    "nearestHighResolutionOceanPixelToStoryAnchorM": 3152.2956531915615
+  },
+  "coreHighResolutionOceanDepthM": {
+    "count": 1456,
+    "min": 129.86572265625,
+    "p05": 265.00016021728516,
+    "median": 556.0100402832031,
+    "p95": 1045.4730529785156,
+    "max": 1300.02880859375
+  },
+  "workingHypothesisCheck": {
+    "pixelsBetween60And70M": 0,
+    "pixelsDeeperThan100M": 1456,
+    "status": "CONTEXT_CHECK_ONLY",
+    "warning": "GMRT topo-mask identifies high-resolution contributors, not a homogeneous survey. These pixels may include curated multibeam or contributed grids and are not used to prove reef-interior maximum depth."
+  },
+  "verticalDatumBoundary": "No vertical-datum conversion is performed. GMRT elevations remain in their published synthesis frame; ENC chart depths remain in their chart-datum frame. Direct residuals are therefore not treated as truth.",
+  "candidateGridUse": {
+    "used": false,
+    "reason": "GMRT is retained as regional/high-resolution context until source lineage and vertical compatibility are resolved. ENC SOUNDG/DEPCNT with M_QUAL remain the current reef-depth constraints."
+  },
+  "sourceIdentityBoundary": "A valid topo-mask pixel means GMRT high-resolution contributor coverage. It must not be relabeled as ship multibeam or direct measurement without contributor-level provenance."
+}
