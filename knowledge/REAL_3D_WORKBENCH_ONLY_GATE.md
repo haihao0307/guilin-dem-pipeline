@@ -18,6 +18,12 @@
 
 上述表达绝不解释为生成概念图、效果图、海报、缩略图、静态预览图或伪造的界面截图。
 
+## 一点五、参考复刻任务不是“做一版看看”
+
+如果任务包含“按参考、复刻、学习这个对象、照着做、不要想象补画”，则除本门禁外，必须同时执行 `knowledge/REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE.md`。
+
+此类任务默认 `TASK_MODE=REPLICATION_LOCKED`、`CREATIVE_AUTHORIZATION=FALSE`。真实三维要求并不意味着可以先造一个低保真三维替身；generic / toy / placeholder / 自行补画同样判定失败。没有依据的区域保持 UNKNOWN，而不是为了形成完整模型而自行设计。
+
 ## 二、图像工具硬禁令
 
 除非用户在当前对话中明确要求“生成图片”“画一张图”“修改这张图片”“给我截图”，否则：
