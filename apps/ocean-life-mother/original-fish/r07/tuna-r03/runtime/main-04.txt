@@ -1,0 +1,41 @@
+m.transparent);
+  const transparent=sceneMeshes.filter(m=>m.transparent).sort((a,b)=>distance2(camera,transformPoint(global,b.centroid))-distance2(camera,transformPoint(global,a.centroid)));
+  gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.disable(gl.BLEND);gl.depthMask(true);
+  for(const mesh of opaque)drawMesh(mesh,global,time,false);
+  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.disable(gl.CULL_FACE);
+  for(const mesh of transparent)drawMesh(mesh,global,time,false);
+  gl.depthMask(true);gl.disable(gl.BLEND);
+
+  if(document.getElementById('wire').checked){
+    gl.disable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+    gl.uniform1i(uni.material,99);gl.uniform4f(uni.override,.72,.90,.92,.17);
+    for(const mesh of sceneMeshes){const local=partModel(mesh,time),model=multiply(global,local);gl.uniformMatrix4fv(uni.model,false,model);gl.bindVertexArray(mesh.vao);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,mesh.edgeBuffer);gl.drawElements(gl.LINES,mesh.edgeCount,gl.UNSIGNED_INT,0)}
+    gl.depthMask(true);gl.disable(gl.BLEND);
+  }
+  if(document.getElementById('skeleton').checked&&skeletonMesh){
+    gl.disable(gl.DEPTH_TEST);gl.uniform1i(uni.material,99);gl.uniform4f(uni.override,1.0,.62,.18,.96);gl.uniformMatrix4fv(uni.model,false,global);gl.bindVertexArray(skeletonMesh.vao);gl.drawArrays(gl.LINES,0,skeletonMesh.count);gl.enable(gl.DEPTH_TEST);
+  }
+  gl.bindVertexArray(null);
+  requestAnimationFrame(draw);
+}
+
+function drawMesh(mesh,global,time){const local=partModel(mesh,time),model=multiply(global,local);gl.uniformMatrix4fv(uni.model,false,model);gl.uniform1i(uni.material,mesh.material);gl.bindVertexArray(mesh.vao);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,mesh.ebo);gl.drawElements(gl.TRIANGLES,mesh.indexCount,gl.UNSIGNED_INT,0)}
+
+function cameraState(){
+  const aspect=canvas.width/canvas.height;
+  const center=[-.05,-.025,0];
+  let camera,up=[0,1,0];
+  if(currentView==='side')camera=[-.02,.01,1.72];
+  else if(currentView==='three')camera=[1.18,.24,1.40];
+  else if(currentView==='front')camera=[1.80,-.015,0];
+  else{camera=[-.02,1.72,0];up=[1,0,0]}
+  let height,width,bottom,top;
+  if(aspect<0.72){
+    width=.74/zoom;height=width/aspect;bottom=-height*1.34;top=height*.66;
+  }else{
+    height=.78/zoom;width=height*aspect;bottom=-height;top=height;
+  }
+  return{camera,vp:multiply(ortho(-width,width,bottom,top,.02,10),lookAt(camera,center,up))};
+}
+function resize(){const d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}}
+function distance2(a,b){return(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])
