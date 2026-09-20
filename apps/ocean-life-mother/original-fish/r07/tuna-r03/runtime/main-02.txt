@@ -1,0 +1,37 @@
+teSkeleton(built.skeleton);
+  const tris=sceneMeshes.reduce((s,m)=>s+m.indexCount/3,0);
+  metricsEl.textContent=`${sceneMeshes.length} function parts · ${built.skeleton.controls.length} semantic controls · ${Math.round(tris).toLocaleString()} triangles · source dependency=false`;
+}
+
+function createMesh(part,index){
+  const positions=new Float32Array(part.positions);
+  const indices=new Uint32Array(part.indices);
+  const normals=calculateNormals(positions,indices);
+  const params=new Float32Array(part.params?.length===positions.length/3*4?part.params:new Array(positions.length/3*4).fill(0));
+  const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  const pbo=bufferAttrib(gl.ARRAY_BUFFER,positions,attrib.position,3);
+  const nbo=bufferAttrib(gl.ARRAY_BUFFER,normals,attrib.normal,3);
+  const qbo=bufferAttrib(gl.ARRAY_BUFFER,params,attrib.param,4);
+  const ebo=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  const edges=uniqueEdges(indices),edgeBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,edgeBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,edges,gl.STATIC_DRAW);
+  const centroid=centroidOf(positions);
+  return {name:part.name,index,material:materialId[part.material]??0,transparent:Boolean(part.transparent),vao,indexCount:indices.length,ebo,edgeBuffer,edgeCount:edges.length,centroid,dispose(){gl.deleteVertexArray(vao);gl.deleteBuffer(pbo);gl.deleteBuffer(nbo);gl.deleteBuffer(qbo);gl.deleteBuffer(ebo);gl.deleteBuffer(edgeBuffer)}};
+}
+
+function createSkeleton(skeleton){
+  const pos=[];
+  for(const [a,b] of skeleton.segments)pos.push(...a,...b);
+  const positions=new Float32Array(pos),params=new Float32Array((positions.length/3)*4),normals=new Float32Array(positions.length);
+  const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  const pbo=bufferAttrib(gl.ARRAY_BUFFER,positions,attrib.position,3);
+  const nbo=bufferAttrib(gl.ARRAY_BUFFER,normals,attrib.normal,3);
+  const qbo=bufferAttrib(gl.ARRAY_BUFFER,params,attrib.param,4);
+  gl.bindVertexArray(null);
+  return{vao,count:positions.length/3,dispose(){gl.deleteVertexArray(vao);gl.deleteBuffer(pbo);gl.deleteBuffer(nbo);gl.deleteBuffer(qbo)}};
+}
+
+function bufferAttrib(target,data,location,size){const b=gl.createBuffer();gl.bindBuffer(target,b);gl.bufferData(target,data,gl.STATIC_DRAW);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,0,0);return b}
+function disposeScene(){for(const m of sceneMeshes)m.dispose?.();sceneMeshes=[];skeletonMesh?.dispose?.();skeletonMesh=null}
+function centroidOf(p){const c=[0,0,0],n=p.length/3;for(let i=0;i<p.length;i+=3){c[0]+=p[i];c[1]+=p[i+1];c[2]+=p[i+2]}return c.map(v=>v/n)}
+function calculateNormals(p,idx){co
