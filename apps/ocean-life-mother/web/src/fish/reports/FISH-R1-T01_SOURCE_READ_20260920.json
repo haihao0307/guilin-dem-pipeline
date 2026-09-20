@@ -1,7 +1,8 @@
 {
-  "schema": "fish-r1-t01.source-read/1.0",
+  "schema": "fish-r1-t01.source-read/1.1",
   "taskId": "FISH-R1-T01",
   "observedAt": "2026-09-20T02:05:00Z",
+  "updatedAt": "2026-09-20T02:35:00Z",
   "input": {
     "runtimePath": "/mnt/data/model_67a_-_largemouth_bass(2).glb",
     "filename": "model_67a_-_largemouth_bass(2).glb",
@@ -68,22 +69,31 @@
   },
   "selectedDefect": {
     "name": "NON_STRUCTURAL_MOUTH",
-    "statement": "The rejected generic carrier represented the mouth as a simplified mark/part relationship rather than a jaw-hinged cavity. The first native correction separates cranium, lower jaw and mouth cavity and anchors jaw motion at the observed jaw_22 pivot.",
+    "statement": "The rejected generic carrier represented the mouth as a simplified mark/part relationship rather than a jaw-hinged cavity. The first native correction separates cranium, lower jaw, mouth cavity, lips and maxillary plates and anchors jaw motion at the observed jaw_22 pivot.",
     "naturalConstraint": "Adult largemouth bass upper jaw extends behind the rear margin of the eye.",
     "sourceModelBoundary": "The source file is an N2 transitional reference, not final biological truth or a shippable runtime asset."
   },
   "newNativeKernel": {
     "path": "apps/ocean-life-mother/web/src/fish/renderers/blackBassFish.js",
+    "version": "0.2",
     "sourceMeshRuntimeDependency": false,
     "embeddedSourceVertices": false,
     "embeddedSourceTextures": false,
     "embeddedSourceRigTracks": false,
     "retainedData": ["low-dimensional cranial stations","low-dimensional jaw envelope","jaw pivot","eye anchors","evidence labels"],
-    "generatedParts": ["cranial","lowerJaw","mouthCavity"],
+    "generatedParts": ["cranial","lowerJaw","mouthCavity","eyeLeft","eyeRight","maxillaryLeft","maxillaryRight","upperLipLeft","upperLipRight","lowerLipLeft","lowerLipRight"],
     "numericAcceptance": "TESTED_CANDIDATE",
     "visualAcceptance": false,
     "userAcceptance": false,
     "productionReady": false
+  },
+  "workbench": {
+    "entry": "apps/ocean-life-mother/web/src/fish/index.html",
+    "renderer": "dependency-free WebGL2",
+    "fixedViews": ["side","three-quarter","front","top"],
+    "controls": ["jaw angle","animated opening","part visibility","wireframe","drag rotate","wheel zoom"],
+    "desktopAndMobileLocalBrowserQA": "PASS_FOR_LOCAL_STRUCTURAL_CANDIDATE",
+    "publicNavigationAcceptance": false
   },
   "commands": [
     {
@@ -92,7 +102,7 @@
     },
     {
       "command": "node apps/ocean-life-mother/web/src/fish/tests/blackBassFish.test.mjs",
-      "result": "FISH-R1-T01 black-bass head/mouth kernel: 15 assertions passed"
+      "result": "FISH-R1-T01 black-bass head/mouth kernel v0.2: 27 assertions passed"
     }
   ],
   "cache": {
