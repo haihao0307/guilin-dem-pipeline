@@ -233,7 +233,20 @@
     "preferredDepthGrid": "grids/candidate_depth_chart_datum_m_r02.tif",
     "uncertaintyGrid": "grids/candidate_uncertainty_m_r02.tif",
     "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r02.tif",
-    "qualityWeightGrid": "grids/candidate_source_quality_weight_r02.tif"
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r02.tif",
+    "numericDepthValuesChanged": false,
+    "soundingDatumCode": 24,
+    "soundingDatumName": "local datum",
+    "sourceCells": [
+      "US4TB3P0"
+    ],
+    "outputs": {
+      "depth": "grids/candidate_depth_chart_datum_m_r09.tif",
+      "uncertainty": "grids/candidate_uncertainty_m_r09.tif",
+      "nearestEvidence": "grids/nearest_evidence_distance_m_r09.tif",
+      "qualityWeight": "grids/candidate_source_quality_weight_r09.tif"
+    },
+    "rule": "R09 improves datum provenance only; it does not convert chart sounding datum to MSL or another vertical datum."
   },
   "noaaSurveyCoverageR03": {
     "schema": "kaopu.palau.noaa-survey-coverage-r03/1.0",
@@ -474,13 +487,13 @@
         "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Ageomorphic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
         "featureCountReturned": 2852,
         "bytes": 28441943,
-        "sha256": "e04df38f5f5eba8e1a2373bf49c55b2f4871e61f1f4434c2d9ddd8cc0468207a"
+        "sha256": "fbd232ebff54b2bc5493c52d90ce76e6b3f73ac34f1805660ab7a0a59c30bd36"
       },
       "benthic": {
         "url": "https://allencoralatlas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=coral-atlas%3Abenthic_data_verbose&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=134.49%2C7.27%2C134.64%2C7.42%2CEPSG%3A4326&count=200000",
         "featureCountReturned": 8508,
         "bytes": 36964176,
-        "sha256": "e3e3a2add8f54ff5c817c064d404edff33a268b9ff969d5ddd15fa262616badd"
+        "sha256": "4f9b5be0a3d635acfaa20eb1404e283b315944276f555789b3522231a26fd3f5"
       }
     },
     "layers": {
@@ -1124,7 +1137,7 @@
       },
       "allenGeomorphic": {
         "path": "vectors/ALLEN_GEOMORPHIC_CORE_R05.geojson",
-        "sha256": "95e7cc0724955194d67b14f676e60a40e554f785193eb94c186018055b5ded92",
+        "sha256": "2e4806a70b93e47a1ab767556acb5397d44d37196c02fa562f79f270a2e6639e",
         "role": "shallow geomorphic semantic evidence, not depth truth"
       },
       "depare": {
@@ -1419,5 +1432,284 @@
       "reason": "R08 improves traceability and hypothesis testing without inventing depth from habitat/OSM semantics."
     },
     "palauWorldContract": "R08 semantic zones and provenance are companion evidence for the same PalauWorld.sample() conductor; no separate LOD world is introduced."
+  },
+  "soundingDatumR09": {
+    "schema": "kaopu.palau.s57-sounding-datum-r09/1.0",
+    "coreBBoxWGS84": [
+      134.535,
+      7.315,
+      134.605,
+      7.385
+    ],
+    "contextBBoxWGS84": [
+      134.49,
+      7.27,
+      134.64,
+      7.42
+    ],
+    "standardsBasis": {
+      "ihoUoc": "https://iho.int/iho_pubs/standard/S-57Ed3.1/S-57%20Appendix%20B.1%20Annex%20A%20UOC%20Edition%204.1.0_Jan18_EN.pdf",
+      "gdalS57": "https://gdal.org/en/latest/drivers/vector/s57.html",
+      "rule": "S-57 SOUNDG, VALSOU, DRVAL1/2 and VALDCO are referenced to DSPM SDAT unless an M_SDAT area overrides it. Individual depth objects should not be used to infer sounding datum from VERDAT."
+    },
+    "correctionToEarlierR08Audit": "Empty per-feature VERDAT on SOUNDG/DEPARE is expected under S-57 ENC encoding rules and was not a valid reason to call the sounding datum unresolved. R09 reads dataset-level DSPM SDAT and checks M_SDAT overrides instead.",
+    "encCellMetadata": {
+      "US4TB3C0": {
+        "zipSha256": "fe80a18aab00893522437b3d58c79104424cfdbf227f6cc6e1b049ce7ed08efe",
+        "baseName": "US4TB3C0.000",
+        "datasetName": "US4TB3C0.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250416",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 17,
+        "soundingDatumCode": 24,
+        "soundingDatumName": "local datum",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 45000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US4TB3J0": {
+        "zipSha256": "ed3eb9f82ee4e907bffb8bd3a9d06bfb8e71377a1be98ef7548b839088c00f1e",
+        "baseName": "US4TB3J0.000",
+        "datasetName": "US4TB3J0.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250416",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 1,
+        "soundingDatumName": "mean low water springs",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 22000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US4TB3P0": {
+        "zipSha256": "016e287a9632b9a8d29da2a2cc31818a101910fbe90d3cc51bc4112d30db54b0",
+        "baseName": "US4TB3P0.000",
+        "datasetName": "US4TB3P0.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250416",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 24,
+        "soundingDatumName": "local datum",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 22000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US5TB3P1": {
+        "zipSha256": "202a6fab5b3628657f18556cad8273bfda517c4a244525fcdf9dd41dbbf9acbf",
+        "baseName": "US5TB3P1.000",
+        "datasetName": "US5TB3P1.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250416",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 9,
+        "soundingDatumName": "low water springs",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 8000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US5TB4S1": {
+        "zipSha256": "bad01a91a2ff8bf207c653a0e33c02251987acb5321c8c75cc0f471a0b07909b",
+        "baseName": "US5TB4S1.000",
+        "datasetName": "US5TB4S1.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20251002",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 4,
+        "soundingDatumName": "lowest low water",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 12000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US5TB4S2": {
+        "zipSha256": "b6278ba9e20ccbb683ed46604d1abb55d422390a2febb346355ea350babaa0d6",
+        "baseName": "US5TB4S2.000",
+        "datasetName": "US5TB4S2.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20251002",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 4,
+        "soundingDatumName": "lowest low water",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 12000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US5TB4Y1": {
+        "zipSha256": "f4ca05df88f508f33ab7ce7cc71481fa9b73254127d23363f23496942eaaaf02",
+        "baseName": "US5TB4Y1.000",
+        "datasetName": "US5TB4Y1.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250924",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 4,
+        "soundingDatumName": "lowest low water",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 12000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      },
+      "US5TB4Y3": {
+        "zipSha256": "0aa30b8acd263832ecb537f9febb49b8a74a65af03fe9f7518a35ea4a1bb3cb5",
+        "baseName": "US5TB4Y3.000",
+        "datasetName": "US5TB4Y3.000",
+        "edition": "1",
+        "updateNumber": "0",
+        "issueDate": "20250924",
+        "horizontalDatumCode": 2,
+        "verticalDatumCode": 3,
+        "soundingDatumCode": 4,
+        "soundingDatumName": "lowest low water",
+        "depthUnitCode": 1,
+        "heightUnitCode": 1,
+        "positionalAccuracyUnitCode": 1,
+        "compilationScale": 12000,
+        "dspmFieldsFound": [
+          "DSPM_CSCL",
+          "DSPM_DUNI",
+          "DSPM_HDAT",
+          "DSPM_HUNI",
+          "DSPM_PUNI",
+          "DSPM_SDAT",
+          "DSPM_VDAT"
+        ]
+      }
+    },
+    "m_sdatOverrideCount": 0,
+    "m_sdatOverrides": [],
+    "coreSourceCells": {
+      "soundings": [
+        "US4TB3P0"
+      ],
+      "depthContours": [
+        "US4TB3P0"
+      ],
+      "depthAreas": [
+        "US4TB3P0"
+      ],
+      "candidateConstraintCells": [
+        "US4TB3P0"
+      ]
+    },
+    "candidateConstraintDatumCodes": [
+      24
+    ],
+    "candidateConstraintDatumStatus": "UNIFORM_RESOLVED",
+    "candidateConstraintDatumCode": 24,
+    "candidateConstraintDatumName": "local datum",
+    "soundings": {
+      "allSoundings": 1411,
+      "coreSoundings": 392,
+      "coreResolved": 392,
+      "coreUnresolved": 0,
+      "coreDatumCodeCounts": {
+        "24": 392
+      },
+      "coreDatumNameCounts": {
+        "local datum": 392
+      },
+      "coreDatumSourceCounts": {
+        "DSPM_SDAT": 392
+      }
+    },
+    "datumAwareCandidateGrid": {
+      "built": true,
+      "numericDepthValuesChanged": false,
+      "soundingDatumCode": 24,
+      "soundingDatumName": "local datum",
+      "sourceCells": [
+        "US4TB3P0"
+      ],
+      "outputs": {
+        "depth": "grids/candidate_depth_chart_datum_m_r09.tif",
+        "uncertainty": "grids/candidate_uncertainty_m_r09.tif",
+        "nearestEvidence": "grids/nearest_evidence_distance_m_r09.tif",
+        "qualityWeight": "grids/candidate_source_quality_weight_r09.tif"
+      },
+      "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+      "rule": "R09 improves datum provenance only; it does not convert chart sounding datum to MSL or another vertical datum."
+    },
+    "conversionBoundary": "No conversion to mean sea level, ellipsoid height, or another datum is applied without an explicit datum transformation model.",
+    "palauWorldContract": "R09 datum provenance is metadata/evidence consumed by the same PalauWorld.sample() conductor; it does not create a separate LOD world."
   }
 }
