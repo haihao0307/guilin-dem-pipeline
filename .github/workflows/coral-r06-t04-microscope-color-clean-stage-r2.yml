@@ -30,7 +30,19 @@ jobs:
           path: pages
 
       - name: Build T04 page
-        run: python3 repo/tools/coral/coral_r06_t04_build.py pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('repo/tools/coral/coral_r06_t04_build.py')
+          s=p.read_text(encoding='utf-8')
+          block='''    rep(\n        "networkFetches:0,visualAcceptance:false}",\n        "networkFetches:0,microscopeMode:\'3-band analytic wave\',activePalette:cfg.palette,visualAcceptance:false}",\n    )\n'''
+          if block in s:
+              s=s.replace(block,'')
+          p.write_text(s,encoding='utf-8')
+          PY
+          python3 repo/tools/coral/coral_r06_t04_build.py pages
 
       - name: Browser gate
         shell: bash
