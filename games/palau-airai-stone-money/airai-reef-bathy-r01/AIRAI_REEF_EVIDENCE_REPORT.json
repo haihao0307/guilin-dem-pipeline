@@ -120,7 +120,119 @@
       }
     }
   },
-  "verticalDatum": "NOAA ENC chart datum unresolved; M_SDAT retained separately",
+  "verticalDatum": "NOAA ENC chart datum unresolved; M_SDAT absent in converted AOI layers; per-sounding/source VERDAT retained where encoded",
   "truthBoundary": "Only source observations are evidence. Interpolated grid is a candidate expression with NoData and uncertainty.",
-  "visualAcceptance": false
+  "visualAcceptance": false,
+  "encQualityR02": {
+    "schema": "kaopu.palau.airai-enc-quality-r02/1.0",
+    "coreBBoxWGS84": [
+      134.535,
+      7.315,
+      134.605,
+      7.385
+    ],
+    "allSoundings": 1411,
+    "coreSoundings": 392,
+    "coreMatchedToMQUAL": 392,
+    "coreUnqualified": 0,
+    "coreCATZOCCounts": {
+      "B": 274,
+      "D": 118
+    },
+    "coreByCATZOC": {
+      "B": {
+        "count": 274,
+        "depthStatsM": {
+          "count": 274,
+          "min": 2.0,
+          "p05": 3.665,
+          "median": 25.3,
+          "p95": 42.0,
+          "max": 62.0
+        },
+        "between60And70M": 2,
+        "deeperThan100M": 0,
+        "surveyEndYears": {
+          "2004": 274
+        }
+      },
+      "D": {
+        "count": 118,
+        "depthStatsM": {
+          "count": 118,
+          "min": 0.1,
+          "p05": 7.180000000000001,
+          "median": 34.0,
+          "p95": 288.54999999999967,
+          "max": 850.0
+        },
+        "between60And70M": 7,
+        "deeperThan100M": 9,
+        "surveyEndYears": {
+          "1938": 118
+        }
+      }
+    },
+    "coreSurveyEndYears": {
+      "2004": 274,
+      "1938": 118
+    },
+    "coreSurveyStartYears": {
+      "NULL": 274,
+      "1915": 118
+    },
+    "coreSourceCells": {
+      "US4TB3P0": 392
+    },
+    "sourceLineageExamples": [
+      "Former Japan Chart 481 (Ed. 1940, Rev. 1944), from Japan surveys, Scale 1:25,000",
+      "U.S. Navy LIDAR Survey, Archive No. 04HFM01, Scale 1:5,000-1:10,000"
+    ],
+    "modelWeightBoundary": "quality_model_weight is a relative interpolation weight, not an IHO CATZOC accuracy conversion",
+    "officialCATZOCEnumeration": {
+      "1": "A1",
+      "2": "A2",
+      "3": "B",
+      "4": "C",
+      "5": "D",
+      "6": "U"
+    },
+    "m_sdatPresent": false,
+    "qualityAwareCandidateGrid": {
+      "built": true,
+      "resolutionM": 25.0,
+      "shape": [
+        310,
+        310
+      ],
+      "validFraction": 0.5918210197710718,
+      "evidenceCount": 1055,
+      "soundings": 392,
+      "contourConstraints": 663,
+      "maxInterpolationDistanceM": 800.0,
+      "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+      "preferredDepthGrid": "grids/candidate_depth_chart_datum_m_r02.tif",
+      "uncertaintyGrid": "grids/candidate_uncertainty_m_r02.tif",
+      "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r02.tif",
+      "qualityWeightGrid": "grids/candidate_source_quality_weight_r02.tif"
+    }
+  },
+  "candidateGridPreferred": {
+    "built": true,
+    "resolutionM": 25.0,
+    "shape": [
+      310,
+      310
+    ],
+    "validFraction": 0.5918210197710718,
+    "evidenceCount": 1055,
+    "soundings": 392,
+    "contourConstraints": 663,
+    "maxInterpolationDistanceM": 800.0,
+    "status": "CANDIDATE_NOT_SURVEY_TRUTH",
+    "preferredDepthGrid": "grids/candidate_depth_chart_datum_m_r02.tif",
+    "uncertaintyGrid": "grids/candidate_uncertainty_m_r02.tif",
+    "nearestEvidenceGrid": "grids/nearest_evidence_distance_m_r02.tif",
+    "qualityWeightGrid": "grids/candidate_source_quality_weight_r02.tif"
+  }
 }
