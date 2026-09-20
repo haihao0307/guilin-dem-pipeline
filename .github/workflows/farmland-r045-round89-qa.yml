@@ -37,7 +37,7 @@ jobs:
           BYTES=$(wc -c < r045_round89_fixed_view.png 2>/dev/null || echo 0)
           STARTUP=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
           ACCEPTED=$([ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $READY -eq 0 ] && [ $BYTES -gt 10000 ] && echo true || echo false)
-          printf '{"source_sha":"%s","qa_contract":"R045.89-riser-run-support-extension-v1","chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$GITHUB_SHA" "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$STARTUP" "$ACCEPTED" > r045_round89_browser_result.json
+          printf '{"source_sha":"%s","qa_contract":"R045.89-riser-run-coherence-v2","chrome":"%s","screenshot_status":%d,"dom_status":%d,"ready_status":%d,"png_bytes":%d,"page_startup_passed":%s,"passed":%s}\n' "$GITHUB_SHA" "$CHROME" "$SS" "$DOM" "$READY" "$BYTES" "$STARTUP" "$ACCEPTED" > r045_round89_browser_result.json
           cat r045_round89_browser_result.json
           kill $(cat /tmp/r89-http.pid) 2>/dev/null || true
           [ $SS -eq 0 ] && [ $DOM -eq 0 ] && [ $BYTES -gt 10000 ]
@@ -67,7 +67,7 @@ jobs:
         id: provenance
         if: always()
         run: |
-          node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_qa_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.89-riser-run-support-extension-v1')process.exit(3)"
+          node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_qa_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||q.qaContract!=='R045.89-riser-run-coherence-v2')process.exit(3)"
           git fetch origin ${GITHUB_REF_NAME}
           REMOTE=$(git rev-parse origin/${GITHUB_REF_NAME})
           test "$REMOTE" = "$GITHUB_SHA" || { echo 'branch moved; refusing stale evidence'; exit 4; }
@@ -81,4 +81,4 @@ jobs:
           git push origin HEAD:${GITHUB_REF_NAME}
       - name: Require authoritative numeric and browser gates
         if: always()
-        run: node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_qa_result.json'),b=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_browser_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||b.source_sha!==process.env.GITHUB_SHA||!q.passed||!b.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount+'; browser '+b.passed)"
+        run: node -e "const q=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_qa_result.json'),b=require('./farmland-object-dna/research/r045-autonomous-rebuild/round-89/r045_round89_browser_result.json');if(q.sourceSha!==process.env.GITHUB_SHA||b.source_sha!==process.env.GITHUB_SHA||q.qaContract!=='R045.89-riser-run-coherence-v2'||b.qa_contract!=='R045.89-riser-run-coherence-v2'||!q.passed||!b.passed)process.exit(2);console.log(q.passedCount+'/'+q.gateCount+'; browser '+b.passed)"
