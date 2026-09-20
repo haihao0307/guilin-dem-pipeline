@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#031916">
+<title>Coral Mother R05 · Growth Field Lab</title>
+<style>
+:root{--bg:#041613;--panel:#0a1e1a;--panel2:#0d2520;--line:#b9e5d51c;--text:#eef7f1;--muted:#93aaa2;--gold:#e7b46f;--cyan:#72d7cf;--stage:min(72vh,760px)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#0b2d2b 0,#041613 52%,#02100e 100%);color:var(--text);font:14px/1.55 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+body{padding:10px 0 28px}button,input,select{font:inherit}main{width:min(1500px,100%);margin:auto;padding:0 10px}
+#stage{position:relative;height:var(--stage);min-height:520px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#03110f;box-shadow:0 24px 90px #0008;isolation:isolate}
+#gl{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;z-index:5;pointer-events:none;border:1px solid #ffffff1c;background:#051411c9;backdrop-filter:blur(12px);box-shadow:0 12px 34px #0006}
+#titleHud{top:14px;left:14px;max-width:min(560px,calc(100% - 28px));padding:12px 14px;border-radius:14px}
+#titleHud b{display:block;font-size:14px;letter-spacing:.08em;color:#f7e8cf}#titleHud small{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+#scaleHud{left:14px;bottom:14px;padding:9px 11px;border-radius:11px;font:700 10px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;color:#f4dfbd}
+#scaleHud small{display:block;color:#91a49d;font:500 8px/1.3 system-ui}
+#modeHud{right:14px;top:14px;padding:9px 11px;border-radius:11px;color:#bce8df;font:700 9px/1.3 ui-monospace,monospace;text-align:right}
+#controls{margin-top:12px;padding:18px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#0a211c,#071915);box-shadow:0 20px 70px #0005}
+.controlHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.controlHead h1{margin:0;font-size:17px;letter-spacing:.06em;color:#f5e8d3}.controlHead p{margin:4px 0 0;color:var(--muted);font-size:11px;max-width:760px}.badge{padding:7px 10px;border:1px solid #73d9cf3b;border-radius:999px;background:#73d9cf12;color:#aee8e1;font:700 9px/1.2 ui-monospace,monospace;white-space:nowrap}
+.sectionTitle{margin:16px 0 8px;color:#dcb47d;font:800 10px/1.2 system-ui;letter-spacing:.14em;text-transform:uppercase}
+.typeGrid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px}.typeBtn{min-height:66px;padding:8px 6px;border:1px solid #ffffff14;border-radius:12px;background:#ffffff05;color:#aebeb8;cursor:pointer;transition:.16s}.typeBtn strong{display:block;font-size:11px}.typeBtn span{display:block;margin-top:3px;color:#748b83;font-size:8px}.typeBtn:hover{transform:translateY(-1px);border-color:#72d7cf55}.typeBtn.on{border-color:#e7b46f;background:linear-gradient(145deg,#e7b46f1d,#72d7cf0e);color:#fff3df;box-shadow:inset 0 0 0 1px #e7b46f22,0 10px 24px #0003}.typeBtn.on span{color:#b9c9c3}
+.toolRow{display:flex;flex-wrap:wrap;gap:7px}.toolRow button{padding:8px 11px;border:1px solid #ffffff16;border-radius:10px;background:#ffffff06;color:#b9c8c2;cursor:pointer}.toolRow button.on,.toolRow button:hover{border-color:#72d7cf6b;background:#72d7cf16;color:#e9fffb}
+.paramGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.param{padding:10px 11px;border:1px solid #ffffff10;border-radius:12px;background:#0002}.paramHead{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px}.paramHead b{font-size:10px;color:#c8d6d1}.paramHead output{font:700 9px/1.2 ui-monospace,monospace;color:#e7b46f}.param input[type=range]{width:100%;accent-color:#70d7ce}.param small{display:block;margin-top:4px;color:#71877f;font-size:8px}
+.scaleRow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.scaleBtn{min-height:50px;border:1px solid #ffffff15;border-radius:11px;background:#ffffff05;color:#a8bab3;cursor:pointer}.scaleBtn b{display:block;font-size:10px}.scaleBtn span{display:block;color:#72867f;font-size:8px}.scaleBtn.on{border-color:#e7b46f;background:#e7b46f18;color:#fff0da}.scaleBtn.on span{color:#c7a879}
+.bottomGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-top:12px}.metrics,.evidence{padding:13px;border:1px solid #ffffff11;border-radius:14px;background:#0002}.metricGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.metric{padding:9px;border:1px solid #ffffff0d;border-radius:10px;background:#ffffff04}.metric b{display:block;color:#e1c18f;font:800 10px/1.2 ui-monospace,monospace}.metric span{display:block;margin-top:3px;color:#82968f;font-size:8px}.evidence p{margin:0 0 7px;color:#9eb1aa;font-size:9px}.evidence p:last-child{margin-bottom:0}.evidence b{color:#d8b27c}.foot{margin-top:10px;color:#6f847c;font-size:8px;text-align:right}
+@media(max-width:1100px){.typeGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.paramGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.bottomGrid{grid-template-columns:1fr}.metricGrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:650px){:root{--stage:58vh}body{padding-top:0}main{padding:0}#stage{min-height:420px;border-radius:0;border-left:0;border-right:0}#controls{margin:8px 6px 0;padding:13px;border-radius:17px}.controlHead{display:block}.badge{display:inline-block;margin-top:8px}.typeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.paramGrid{grid-template-columns:1fr 1fr}.scaleRow{grid-template-columns:repeat(3,minmax(0,1fr))}.metricGrid{grid-template-columns:repeat(2,minmax(0,1fr))}#titleHud{top:8px;left:8px;max-width:calc(100% - 16px);padding:9px 10px}#modeHud{display:none}#scaleHud{left:8px;bottom:8px}.toolRow button{flex:1 1 30%;padding:8px 5px;font-size:10px}}
+@media(max-width:390px){.paramGrid{grid-template-columns:1fr}.typeBtn{min-height:58px}.controlHead h1{font-size:15px}}
+</style>
+</head>
+<body>
+<main>
+<section id="stage">
+<canvas id="gl"></canvas>
+<div id="titleHud" class="hud"><b id="hudTitle">TABULATE · 桌面型</b><small id="hudSub">融合径向生长场 · 边缘活跃增长 · 下方庇护空间</small></div>
+<div id="modeHud" class="hud">APPEARANCE<br><span id="fps">-- FPS</span></div>
+<div id="scaleHud" class="hud">COLONY SCALE · <span id="scaleText">1.0 m</span><small>函数显示尺度，不替代物种定值</small></div>
+</section>
+<section id="controls">
+<div class="controlHead"><div><h1>Coral Mother R05 · Growth Field Lab</h1><p>八类独立函数母体。参考模型只用于形态测量与反向验证；运行时没有 GLB、贴图或外部网络依赖。</p></div><div class="badge">NO RUNTIME GLB · NO TRADITIONAL LOD</div></div>
+<div class="sectionTitle">Morphology / 形态母体</div>
+<div class="typeGrid" id="typeGrid"></div>
+<div class="sectionTitle">Observation / 观察</div>
+<div class="toolRow">
+<button data-mode="0" class="on">外观</button><button data-mode="1">结构</button><button data-mode="2">Microscope</button><button id="neutralBtn">中性检查</button><button id="cameraBtn">重置镜头</button><button id="seedBtn">换一株</button>
+</div>
+<div class="sectionTitle">Real Scale / 真实尺度</div>
+<div class="scaleRow" id="scaleRow"></div>
+<div class="sectionTitle">Growth DNA / 生长参数</div>
+<div class="paramGrid" id="paramGrid"></div>
+<div class="bottomGrid">
+<div class="metrics"><div class="sectionTitle" style="margin-top:0">Numerical QA / 数值自检</div><div class="metricGrid" id="metricGrid"></div></div>
+<div class="evidence"><div class="sectionTitle" style="margin-top:0">Evidence Boundary / 证据边界</div><p><b>NOAA：</b>硬珊瑚 polyp 常见量级约 1–3 mm；软珊瑚与硬珊瑚必须使用不同支撑和运动内核。</p><p><b>CRRF Palau：</b>浅礁、外礁坡与 60–75 m 以下深坡群落不能用同一随机撒布配方。</p><p><b>Reference Cache：</b>七个 GLB 已完成 SHA-256 去重和几何审查；只蒸馏枝序、褶皱、群落间距与表面频带。</p></div>
+</div>
+<div class="foot">R05 active iteration · species-level calibration and physical mobile-GPU acceptance pending</div>
+</section>
+</main>
+<script>
+'use strict';
+const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), mix=(a,b,t)=>a+(b-a)*t;
+const V={
+ add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+ mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s], dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+ cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+ len:a=>Math.hypot(a[0],a[1],a[2]), norm:a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l]},
+ lerp:(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t),mix(a[2],b[2],t)]
+};
+class RNG{constructor(seed=1){this.s=(seed>>>0)||1} next(){let x=this.s;x^=x<<13;x^=x>>>17;x^=x<<5;this.s=x>>>0;return this.s/4294967296} range(a,b){return mix(a,b,this.next())} signed(){return this.next()*2-1} pick(a){return a[(this.next()*a.length)|0]}}
+const M4={
+ ident:()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]),
+ mul:(a,b)=>{const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[0*4+r]*b[c*4+0]+a[1*4+r]*b[c*4+1]+a[2*4+r]*b[c*4+2]+a[3*4+r]*b[c*4+3];return o},
+ perspective:(fovy,asp,n,f)=>{const t=1/Math.tan(fovy/2),o=new Float32Array(16);o[0]=t/asp;o[5]=t;o[10]=(f+n)/(n-f);o[11]=-1;o[14]=2*f*n/(n-f);return o},
+ lookAt:(eye,tar,up=[0,1,0])=>{const z=V.norm(V.sub(eye,tar)),x=V.norm(V.cross(up,z)),y=V.cross(z,x),o=M4.ident();o[0]=x[0];o[1]=y[0];o[2]=z[0];o[4]=x[1];o[5]=y[1];o[6]=z[1];o[8]=x[2];o[9]=y[2];o[10]=z[2];o[12]=-V.dot(x,eye);o[13]=-V.dot(y,eye);o[14]=-V.dot(z,eye);return o},
+ scale:(s)=>new Float32Array([s,0,0,0,0,s,0,0,0,0,s,0,0,0,0,1])
+};
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]}
+function hash3(x,y,z){let n=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return n-Math.floor(n)}
+class MeshBuilder{
+ constructor(){this.v=[];this.i=[];this.boundsMin=[1e9,1e9,1e9];this.boundsMax=[-1e9,-1e9,-1e9];this.meta={branchOrder:0,voidRatio:0,polypMm:'1–3',kernel:''}}
+ push(p,n,c,d=[0,1,0,0]){const k=this.v.length/13;this.v.push(...p,...n,...c,...d);for(let j=0;j<3;j++){this.boundsMin[j]=Math.min(this.boundsMin[j],p[j]);this.boundsMax[j]=Math.max(this.boundsMax[j],p[j])}return k}
+ tri(a,b,c){this.i.push(a,b,c)} quad(a,b,c,d){this.tri(a,b,c);this.tri(a,c,d)}
+ merge(m){const off=this.v.length/13;this.v.push(...m.v);for(const x of m.i)this.i.push(x+off);for(let j=0;j<3;j++){this.boundsMin[j]=Math.min(this.boundsMin[j],m.boundsMin[j]);this.boundsMax[j]=Math.max(this.boundsMax[j],m.boundsMax[j])}}
+ finalize(){return{vertices:new Float32Array(this.v),indices:new Uint32Array(this.i),boundsMin:this.boundsMin,boundsMax:this.boundsMax,meta:this.meta}}
+}
+function frameFor(t,prevN){let n=prevN;if(!n||Math.abs(V.dot(n,t))>.94)n=Math.abs(t[1])<.9?[0,1,0]:[1,0,0];let b=V.norm(V.cross(t,n));n=V.norm(V.cross(b,t));return[n,b]}
+function addTube(m,pts,radii,opt={}){
+ const sides=opt.sides||9, base=opt.color||[.7,.35,.25], flex=opt.flex||(()=>0), polyp=opt.polyp||1, order=opt.order||0, ridge=opt.ridge||0;
+ let prevN=null, rings=[];
+ for(let k=0;k<pts.length;k++){
+  const t=V.norm(V.sub(pts[Math.min(k+1,pts.length-1)],pts[Math.max(0,k-1)]));const fr=frameFor(t,prevN);prevN=fr[0];const ring=[];
+  for(let s=0;s<sides;s++){const a=TAU*s/sides,rad=V.norm(V.add(V.mul(fr[0],Math.cos(a)),V.mul(fr[1],Math.sin(a))));const wob=1+(opt.wobble||0)*Math.sin(a*3+k*.9);const p=V.add(pts[k],V.mul(rad,radii[k]*wob));const tt=k/(pts.length-1||1);let c=base;if(opt.colorFn)c=opt.colorFn(tt,k,s);ring.push(m.push(p,rad,c,[flex(tt,k),polyp,ridge,order]))}rings.push(ring)
+ }
+ for(let k=0;k<rings.length-1;k++)for(let s=0;s<sides;s++)m.quad(rings[k][s],rings[k][(s+1)%sides],rings[k+1][(s+1)%sides],rings[k+1][s]);
+ if(opt.cap!==false){for(const end of [0,rings.length-1]){const t=end===0?V.norm(V.sub(pts[0],pts[1])):V.norm(V.sub(pts.at(-1),pts.at(-2)));const ci=m.push(pts[end===0?0:pts.length-1],t,opt.tipColor||base,[flex(end),polyp,ridge,order]);for(let s=0;s<sides;s++){const a=rings[end][s],b=rings[end][(s+1)%sides];if(end===0)m.tri(ci,b,a);else m.tri(ci,a,b)}}}
+}
+function addUVSphere(m,c,rx,ry,rz,opt={}){
+ const nu=opt.nu||32,nv=opt.nv||18,base=opt.color||[.6,.4,.25],rings=[];
+ for(let y=0;y<=nv;y++){const v=y/nv,ph=Math.PI*v,row=[];for(let x=0;x<=nu;x++){const u=x/nu,th=TAU*u;let n=[Math.sin(ph)*Math.cos(th),Math.cos(ph),Math.sin(ph)*Math.sin(th)];let disp=opt.deform?opt.deform(u,v,n):0;let p=[c[0]+n[0]*(rx+disp),c[1]+n[1]*(ry+disp),c[2]+n[2]*(rz+disp)];let nn=V.norm([n[0]/rx,n[1]/ry,n[2]/rz]);let ridge=opt.ridge?opt.ridge(u,v,n):0;let col=opt.colorFn?opt.colorFn(u,v,ridge):base;row.push(m.push(p,nn,col,[opt.flex?opt.flex(v):0,opt.polyp||1,ridge,opt.order||0]))}rings.push(row)}
+ for(let y=0;y<nv;y++)for(let x=0;x<nu;x++)m.quad(rings[y][x],rings[y][x+1],rings[y+1][x+1],rings[y+1][x]);
+}
+function addThickPolarSurface(m,opt){
+ const segA=opt.segA||96,segR=opt.segR||18,thick=opt.thick||.05,top=[],bot=[];
+ for(let ir=0;ir<=segR;ir++){let rt=ir/segR,ra=[],rb=[];for(let ia=0;ia<=segA;ia++){let at=ia/segA,a=TAU*at;let p=opt.pos(rt,a,at),eps=.002;let pu=opt.pos(clamp(rt+eps,0,1),a,at),pv=opt.pos(rt,a+eps,(a+eps)/TAU);let n=V.norm(V.cross(V.sub(pv,p),V.sub(pu,p)));if(n[1]<0)n=V.mul(n,-1);let c=opt.colorFn?opt.colorFn(rt,a):opt.color;let ex=[opt.flex?opt.flex(rt,a):0,opt.polyp||1,opt.ridge?opt.ridge(rt,a):0,opt.order||0];ra.push(m.push(V.add(p,V.mul(n,thick*.5)),n,c,ex));rb.push(m.push(V.add(p,V.mul(n,-thick*.5)),V.mul(n,-1),c,ex))}top.push(ra);bot.push(rb)}
+ for(let r=0;r<segR;r++)for(let a=0;a<segA;a++){m.quad(top[r][a],top[r][a+1],top[r+1][a+1],top[r+1][a]);m.quad(bot[r][a+1],bot[r][a],bot[r+1][a],bot[r+1][a+1])}
+ for(const r of [0,segR])for(let a=0;a<segA;a++){if(r===0)m.quad(top[r][a+1],top[r][a],bot[r][a],bot[r][a+1]);else m.quad(top[r][a],top[r][a+1],bot[r][a+1],bot[r][a])}
+}
+function addRock(m,rng,scale=1){addUVSphere(m,[0,-.08,0],1.0*scale,.22*scale,.82*scale,{nu:28,nv:10,color:[.22,.25,.20],polyp:0,deform:(u,v,n)=>.07*(hash3(u*9,v*11,rng.s)-.5),colorFn:(u,v)=>{let q=hash3(u*14,v*18,2);return[.18+.08*q,.20+.07*q,.16+.06*q]}})}
+function curvePoints(start,dir,len,steps,rng,bend=.15){const pts=[];let p=[...start],d=V.norm(dir);for(let i=0;i<=steps;i++){let t=i/steps;pts.push([...p]);d=V.norm(V.add(d,[rng.signed()*bend/steps,.10/steps,rng.signed()*bend/steps]));p=V.add(p,V.mul(d,len/steps*(.92+.16*rng.next())))}return pts}
+const TYPES=[
+ {id:'tabulate',zh:'桌面型',en:'TABULATE',sub:'融合径向生长场 · 边缘活跃增长 · 下方庇护空间',soft:false,polyp:'1–3 mm'},
+ {id:'branching',zh:'鹿角型',en:'BRANCHING',sub:'主枝 / 次枝 / 顶端优势 · 枝间避让 · 活跃生长端',soft:false,polyp:'1–3 mm'},
+ {id:'cauliflower',zh:'菜花型',en:'DIGITATE',sub:'半球群体包络 · 短指状枝簇 · 共同附着基底',soft:false,polyp:'1–3 mm'},
+ {id:'massive',zh:'脑纹块状',en:'MASSIVE',sub:'稳定块体包络 · 连续迷宫沟脊 · 低矮缓慢扩张',soft:false,polyp:'1–10 mm'},
+ {id:'foliose',zh:'叶状杯型',en:'FOLIOSE',sub:'多层厚板片 · 旋卷褶皱 · 层间排斥与缝隙',soft:false,polyp:'1–5 mm'},
+ {id:'fan',zh:'海扇型',en:'SOFT FAN',sub:'近主平面网状分枝 · 横向连桥 · 迎流柔性响应',soft:true,polyp:'octocoral'},
+ {id:'plume',zh:'海羽型',en:'SOFT PLUME',sub:'柔性主轴 · 交替羽枝 · 根部刚 / 末端柔',soft:true,polyp:'octocoral'},
+ {id:'leather',zh:'皮革软珊瑚',en:'SOFT LEATHER',sub:'厚组织柄 · 褶皱冠部 · 独立短 polyp 场',soft:true,polyp:'octocoral'}
+];
+const PALETTES={
+ tabulate:[[.55,.27,.20],[.88,.52,.34],[1.0,.79,.54]],branching:[[.38,.23,.18],[.82,.48,.34],[1,.83,.64]],cauliflower:[[.44,.33,.20],[.82,.64,.38],[.95,.85,.64]],massive:[[.12,.35,.35],[.18,.59,.55],[.78,.73,.47]],foliose:[[.28,.13,.34],[.58,.24,.55],[.91,.59,.55]],fan:[[.38,.12,.42],[.75,.25,.57],[1,.62,.54]],plume:[[.36,.24,.10],[.72,.45,.18],[.96,.76,.40]],leather:[[.24,.34,.17],[.55,.55,.24],[.88,.69,.35]]
+};
+function pal(type,t,tip=0){const p=PALETTES[type],a=t<.55?V.lerp(p[0],p[1],t/.55):V.lerp(p[1],p[2],(t-.55)/.45);return V.lerp(a,p[2],tip)}
+function rotateY(v,a){let c=Math.cos(a),s=Math.sin(a);return[v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c]}
+function randomHemisphere(rng){let y=rng.range(.15,1),a=rng.range(0,TAU),r=Math.sqrt(1-y*y);return[r*Math.cos(a),y,r*Math.sin(a)]}
+function kernelTabulate(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:2,voidRatio:.42,polypMm:'1–3',kernel:'TABULATE_FUSED_RADIAL_FIELD'};addRock(m,rng,.86);
+ const trunk=curvePoints([0,.08,0],[.03,1,.02],1.08,7,rng,.08);addTube(m,trunk,trunk.map((_,i)=>mix(.30,.16,i/(trunk.length-1))),{sides:12,color:pal('tabulate',.18),polyp:params.polyps,order:.1,wobble:.05});
+ const outerBase=1.35+params.age*.52,open=.75+params.openness*.25;
+ addThickPolarSurface(m,{segA:112,segR:20,thick:.075+params.surface*.035,polyp:params.polyps,order:.35,color:[1,1,1],
+  pos:(r,a)=>{let ro=.16+(outerBase*(.84+.10*Math.sin(5*a+.7)+.05*Math.sin(11*a))*open-.16)*Math.pow(r,.9);let y=1.02+.08*Math.sin(a*3+ro*2.1)+.035*Math.sin(a*9+ro*5)-.11*r*r;return[ro*Math.cos(a),y,ro*Math.sin(a)]},
+  colorFn:(r,a)=>pal('tabulate',.30+.42*r,.34*Math.pow(r,4)),ridge:(r,a)=>Math.pow(r,4)});
+ const arms=Math.floor(8+params.density*7);for(let j=0;j<arms;j++){let a=TAU*j/arms+rng.signed()*.10,pts=[];for(let k=0;k<7;k++){let t=k/6,rr=mix(.10,outerBase*.9,t),y=1.0+.05*Math.sin(a*3+rr*2)-.05*t;pts.push([rr*Math.cos(a),y,rr*Math.sin(a)])}addTube(m,pts,pts.map((_,k)=>mix(.105,.045,k/6)),{sides:7,colorFn:t=>pal('tabulate',.35+.45*t,t>.8?.7:0),polyp:params.polyps,order:.55,cap:true});
+  if(params.age>.4){for(let q=0;q<2;q++){let t=.58+q*.17,start=pts[Math.floor(t*6)],dir=V.norm([Math.cos(a+(q?1:-1)*.55)*.45,.72,Math.sin(a+(q?1:-1)*.55)*.45]),bp=curvePoints(start,dir,.25+params.density*.10,4,rng,.10);addTube(m,bp,bp.map((_,k)=>mix(.06,.018,k/(bp.length-1))),{sides:6,colorFn:x=>pal('tabulate',.62+.3*x,.7*x),polyp:params.polyps,order:.8})}}
+ }
+ return m.finalize();
+}
+function kernelBranching(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:3,voidRatio:.50-.14*params.density,polypMm:'1–3 mm',kernel:'BRANCH_GRAPH_APICAL_AVOIDANCE'};addRock(m,rng,.72);addUVSphere(m,[0,.14,0],.48,.24,.46,{nu:26,nv:12,color:pal('branching',.14),polyp:params.polyps,deform:(u,v)=>.025*Math.sin(u*TAU*6+v*8)});
+ const prim=Math.floor(4+params.density*3),nodes=[];function repulse(p,d){let f=[0,0,0];for(const n of nodes){let dv=V.sub(p,n),l=V.len(dv);if(l<.48&&l>.001)f=V.add(f,V.mul(V.norm(dv),(.48-l)*.5))}return V.norm(V.add(d,f))}
+ function makePath(start,dir,len,steps,bend){let pts=[start],p=start,d=V.norm(dir);for(let k=1;k<=steps;k++){d=repulse(p,V.norm(V.add(d,[rng.signed()*bend,.035+rng.next()*.022,rng.signed()*bend])));p=V.add(p,V.mul(d,len/steps));pts.push(p);nodes.push(p)}return pts}
+ for(let j=0;j<prim;j++){let a=TAU*j/prim+rng.signed()*.16,lean=mix(.12,.32,params.openness),start=[Math.cos(a)*.20,.12,Math.sin(a)*.20],dir=V.norm([Math.cos(a)*lean,.96,Math.sin(a)*lean]),len=1.35+rng.range(-.08,.28),tr=makePath(start,dir,len,8,.028);addTube(m,tr,tr.map((_,k)=>mix(.17,.035,k/(tr.length-1))),{sides:9,wobble:.03,colorFn:t=>pal('branching',.20+.52*t,t>.80?.95:0),tipColor:PALETTES.branching[2],polyp:params.polyps,order:.15});
+   const levels=params.age>.72?[3,5,6]:[3,5];for(let li=0;li<levels.length;li++){let k=levels[li],origin=tr[k],tangent=V.norm(V.sub(tr[Math.min(k+1,tr.length-1)],tr[Math.max(0,k-1)])),side=V.norm(V.cross(tangent,[0,1,0]));if(V.len(side)<.1)side=[Math.cos(a+Math.PI/2),0,Math.sin(a+Math.PI/2)];let sign=((j+li)%2?1:-1),out=V.norm(V.add(V.mul(side,sign*mix(.55,.85,params.openness)),V.add(V.mul(tangent,.35),[Math.cos(a)*.35,.55,Math.sin(a)*.35]))),bp=makePath(origin,out,.42+rng.range(0,.22)*params.age,5,.04);addTube(m,bp,bp.map((_,q)=>mix(.075,.016,q/(bp.length-1))),{sides:7,wobble:.035,colorFn:x=>pal('branching',.48+.38*x,.72*x),tipColor:PALETTES.branching[2],polyp:params.polyps,order:.58});
+      if(params.density>.58&&li>0){let end=bp[3],d2=V.norm(V.add(out,[sign*.22,.42,-sign*.15])),sp=makePath(end,d2,.22+rng.range(0,.12),4,.035);addTube(m,sp,[.038,.027,.018,.010,.005],{sides:6,colorFn:x=>pal('branching',.66+.28*x,.85*x),polyp:params.polyps,order:.9})}}
+ }
+ return m.finalize();
+}
+function kernelCauliflower(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:2,voidRatio:.18-.06*params.density,polypMm:'1–3 mm',kernel:'DIGITATE_ROSETTE_ENVELOPE'};addRock(m,rng,.70);addUVSphere(m,[0,.25,0],.70,.30,.66,{nu:34,nv:14,colorFn:(u,v)=>pal('cauliflower',.16+.24*v),polyp:params.polyps,deform:(u,v)=>.035*Math.sin(u*TAU*7+v*10)});
+ const R=Math.floor(11+params.density*8),gold=2.3999632297;for(let i=0;i<R;i++){let q=(i+.5)/R,y=.30+.64*(1-q),rr=Math.sqrt(Math.max(0,1-y*y)),a=i*gold+rng.signed()*.10,radial=V.norm([rr*Math.cos(a),y,rr*Math.sin(a)]),base=[radial[0]*.36,.26+radial[1]*.20,radial[2]*.36],stemDir=V.norm(V.add(radial,[0,.42,0])),stem=curvePoints(base,stemDir,.30+rng.range(0,.18),4,rng,.07),r0=.10+rng.range(-.012,.018);addTube(m,stem,stem.map((_,k)=>mix(r0,r0*.72,k/(stem.length-1))),{sides:8,wobble:.055,colorFn:t=>pal('cauliflower',.30+.35*t,.20*t),polyp:params.polyps,order:.35});let crown=stem.at(-1),buds=3+(params.density>.72&&i%3===0?1:0);for(let b=0;b<buds;b++){let aa=a+TAU*b/buds+rng.signed()*.18,dir=V.norm([Math.cos(aa)*.62,.68+rng.range(-.06,.15),Math.sin(aa)*.62]),len=.20+rng.range(.02,.16)*params.age,bp=curvePoints(crown,dir,len,3,rng,.05),br=r0*.62;addTube(m,bp,[br,br*.74,br*.54,br*.30],{sides:7,wobble:.06,colorFn:t=>pal('cauliflower',.48+.38*t,.62*t),polyp:params.polyps,order:.78});let tip=bp.at(-1);addUVSphere(m,tip,br*.34,br*.30,br*.34,{nu:8,nv:5,color:pal('cauliflower',.88,1),polyp:params.polyps})}}
+ return m.finalize();
+}
+function brainFieldN(n){let x=n[0],y=n[1],z=n[2],ang=1.65*y+.35*Math.sin(3.1*y),w=x*Math.cos(ang)+z*Math.sin(ang)+.22*Math.sin(3.2*z+1.7*x)+.08*Math.sin(7.0*y);return Math.exp(-Math.abs(Math.sin(8.2*w))*4.8)}
+function kernelMassive(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:0,voidRatio:.08,polypMm:'1–10 mm',kernel:'MASSIVE_LABYRINTH_ENVELOPE'};addRock(m,rng,.84);const c=[0,.56,0],rx=1.32+params.age*.16,ry=.68+params.age*.09,rz=1.10+params.age*.13;
+ addUVSphere(m,c,rx,ry,rz,{nu:180,nv:90,polyp:params.polyps,order:.08,
+  deform:(u,v,n)=>.010*Math.sin(u*TAU*17+v*11)+(.022+.026*params.surface)*brainFieldN(n),
+  ridge:(u,v,n)=>brainFieldN(n),
+  colorFn:(u,v,r)=>V.lerp([.12,.30,.25],[.58,.70,.43],Math.pow(r,.75))});
+ return m.finalize();
+}
+function kernelFoliose(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:1,voidRatio:.46,polypMm:'1–5',kernel:'FOLIOSE_LAYERED_WHORL_FIELD'};addRock(m,rng,.72);const layers=Math.floor(3+params.age*4);addTube(m,[[0,.05,0],[0,.46,0],[.02,.75,0]],[.26,.22,.15],{sides:12,color:pal('foliose',.15),polyp:params.polyps,order:.1,wobble:.05});
+ for(let l=0;l<layers;l++){let phase=l*1.31+rng.range(-.2,.2),outer=.55+l*.19+params.openness*.18,base=.48+l*.14;addThickPolarSurface(m,{segA:96,segR:16,thick:.045+.025*params.surface,polyp:params.polyps,order:.25+.08*l,
+   pos:(r,a)=>{let edge=outer*(.90+.08*Math.sin(4*a+phase)+.04*Math.sin(9*a-phase));let ro=.10+(edge-.10)*Math.pow(r,.86);let cup=.28*Math.pow(r,1.65);let wave=(.06+.04*params.surface)*Math.sin(3*a+phase+ro*2.3)*r*r+.025*Math.sin(11*a-phase)*r;return[ro*Math.cos(a+phase*.12),base+cup+wave,ro*Math.sin(a+phase*.12)]},
+   colorFn:(r,a)=>pal('foliose',.18+.42*(l/layers)+.24*r,.45*Math.pow(r,5)),ridge:(r,a)=>Math.pow(r,5)});}
+ return m.finalize();
+}
+function kernelFan(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:4,voidRatio:.62-.16*params.density,polypMm:'octocoral',kernel:'SOFT_FAN_PLANAR_NET'};addRock(m,rng,.62);const levelPts=[];
+ function grow(start,ang,len,rad,depth,order,z0){let pts=[start],p=start,steps=5;for(let k=1;k<=steps;k++){let t=k/steps,cur=ang+rng.signed()*.035*t,dir=[Math.sin(cur),Math.cos(cur),z0+.05*Math.sin(t*Math.PI+rng.next())];p=V.add(p,V.mul(V.norm(dir),len/steps));pts.push(p);let key=Math.round(p[1]*6);(levelPts[key]||(levelPts[key]=[])).push(p)}addTube(m,pts,pts.map((_,k)=>mix(rad,rad*.34,k/steps)),{sides:7,wobble:.03,colorFn:t=>pal('fan',.22+.52*t,.50*t),polyp:params.polyps,order:order/4,flex:t=>Math.pow(clamp((start[1]+len*t)/2.5,0,1),1.45)});if(depth<=0)return;let sp=mix(.30,.52,params.openness),origin=pts[4];grow(origin,ang-sp+rng.signed()*.05,len*rng.range(.58,.69),rad*.61,depth-1,order+1,z0+rng.signed()*.025);grow(origin,ang+sp+rng.signed()*.05,len*rng.range(.58,.69),rad*.61,depth-1,order+1,z0+rng.signed()*.025)}
+ const trunk=[[0,.02,0],[.01,.38,0],[0,.72,0]];addTube(m,trunk,[.17,.13,.10],{sides:9,color:pal('fan',.15),polyp:params.polyps,flex:t=>t*.16,order:.04});let roots=5;for(let j=0;j<roots;j++){let ang=(j-(roots-1)/2)*.28,st=[(j-(roots-1)/2)*.07,.58,0];grow(st,ang,1.18+rng.range(-.04,.12),.085,3+(params.age>.78?1:0),0,rng.signed()*.018)}
+ for(const arr of levelPts){if(!arr||arr.length<2)continue;arr.sort((a,b)=>a[0]-b[0]);for(let i=0;i<arr.length-1;i++){let a=arr[i],b=arr[i+1],d=V.len(V.sub(a,b));if(d>.14&&d<.38&&rng.next()<.22+.18*params.density)addTube(m,[a,V.lerp(a,b,.5),b],[.014,.012,.014],{sides:5,color:pal('fan',.58),polyp:params.polyps,order:.96,flex:()=>clamp(a[1]/2.5,0,1)})}}
+ return m.finalize();
+}
+function kernelPlume(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:3,voidRatio:.55-.14*params.density,polypMm:'octocoral',kernel:'SOFT_PLUME_ALTERNATE_PINNAE'};addRock(m,rng,.60);let trunk=curvePoints([0,.02,0],[.02,1,.015],2.15+params.age*.28,14,rng,.075);addTube(m,trunk,trunk.map((_,i)=>mix(.15,.035,i/(trunk.length-1))),{sides:8,wobble:.035,colorFn:t=>pal('plume',.18+.47*t,.24*t),polyp:params.polyps,order:.06,flex:t=>Math.pow(t,1.5)});
+ const count=Math.floor(15+params.density*12);for(let j=2;j<count+2;j++){let t=j/(count+3),idx=Math.floor(t*(trunk.length-1)),origin=trunk[idx],sign=j%2?1:-1,len=(.30+.52*Math.sin(Math.PI*t))*(.82+.28*params.age),dir=V.norm([sign*(.85+.12*rng.next()),.25+rng.range(.03,.16),rng.signed()*.20]),pts=curvePoints(origin,dir,len,5,rng,.08);addTube(m,pts,pts.map((_,k)=>mix(.050*(1-t*.28),.012,k/(pts.length-1))),{sides:6,wobble:.05,colorFn:x=>pal('plume',.34+.44*x,.52*x),polyp:params.polyps,order:.45,flex:x=>Math.pow(t*.62+x*.38,1.35)});
+  for(let q=2;q<=4;q++){if(q===4&&params.density<.55)continue;let p=pts[q],side=V.norm([sign*.40,.78,(q%2?1:-1)*.32]),sp=curvePoints(p,side,.11+.11*(1-t),3,rng,.06);addTube(m,sp,[.017,.012,.008,.004],{sides:5,colorFn:x=>pal('plume',.60+.28*x,.62*x),polyp:params.polyps,order:.82,flex:()=>Math.pow(t,1.3)})}
+ }
+ return m.finalize();
+}
+function kernelLeather(params,rng){
+ const m=new MeshBuilder();m.meta={branchOrder:0,voidRatio:.20,polypMm:'octocoral',kernel:'SOFT_LEATHER_TISSUE_CAP'};addRock(m,rng,.74);addUVSphere(m,[0,.48,0],.50,.60,.46,{nu:36,nv:20,polyp:params.polyps,flex:v=>.07*v,colorFn:(u,v)=>pal('leather',.15+.34*v),deform:(u,v,n)=>.028*Math.sin(u*TAU*5+v*8)});
+ const outer=1.05+params.age*.20;addThickPolarSurface(m,{segA:120,segR:22,thick:.11+.035*params.surface,polyp:params.polyps,order:.25,
+  pos:(r,a)=>{let ro=.10+(outer*(.91+.08*Math.sin(6*a+.5)+.035*Math.sin(13*a))-.10)*Math.pow(r,.84);let dome=.13*(1-r*r),ruff=(.055+.035*params.surface)*Math.sin(5*a+ro*3.2)*Math.pow(r,1.7);return[ro*Math.cos(a),1.00+dome+ruff,ro*Math.sin(a)]},
+  colorFn:(r,a)=>pal('leather',.25+.40*r,.45*Math.pow(r,5)),ridge:(r,a)=>Math.pow(r,4),flex:(r,a)=>.14+.56*Math.pow(r,1.7)});
+ const polys=Math.floor(34+params.polyps*70);for(let j=0;j<polys;j++){let a=rng.range(0,TAU),rr=Math.sqrt(rng.next())*outer*.86,base=[rr*Math.cos(a),1.02+.13*(1-(rr/outer)*(rr/outer))+.04*Math.sin(5*a+rr*3.2),rr*Math.sin(a)],h=.055+rng.range(0,.05),pts=[base,[base[0]+rng.signed()*.008,base[1]+h,base[2]+rng.signed()*.008]];addTube(m,pts,[.023,.010],{sides:6,color:pal('leather',.88,1),polyp:0,order:.94,flex:()=>.68})}
+ return m.finalize();
+}
+function buildCoral(type,params){const rng=new RNG(params.seed*977+type.length*131);let out;switch(type){case'tabulate':out=kernelTabulate(params,rng);break;case'branching':out=kernelBranching(params,rng);break;case'cauliflower':out=kernelCauliflower(params,rng);break;case'massive':out=kernelMassive(params,rng);break;case'foliose':out=kernelFoliose(params,rng);break;case'fan':out=kernelFan(params,rng);break;case'plume':out=kernelPlume(params,rng);break;default:out=kernelLeather(params,rng)}return out}
+const gl=document.getElementById('gl').getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'});if(!gl)throw new Error('WebGL2 required');
+const VS=`#version 300 es
+precision highp float;
+layout(location=0)in vec3 aPos;layout(location=1)in vec3 aNormal;layout(location=2)in vec3 aColor;layout(location=3)in vec4 aData;
+uniform mat4 uVP;uniform mat4 uModel;uniform float uTime;uniform float uCurrent;uniform int uSoft;
+out vec3 vWorld;out vec3 vObj;out vec3 vNormal;out vec3 vColor;out vec4 vData;
+void main(){vec3 p=aPos;vec3 n=aNormal;if(uSoft==1){float f=aData.x;float ph=uTime*.72+p.y*1.35+p.z*.62;float sw=sin(ph)*uCurrent*f*.14;p.x+=sw;p.z+=cos(ph*.83)*uCurrent*f*.065;n=normalize(n+vec3(cos(ph)*uCurrent*f*.05,0.,-sin(ph)*uCurrent*f*.04));}vec4 w=uModel*vec4(p,1.);vWorld=w.xyz;vObj=p;vNormal=mat3(uModel)*n;vColor=aColor;vData=aData;gl_Position=uVP*w;}`;
+const FS=`#version 300 es
+precision highp float;
+in vec3 vWorld;in vec3 vObj;in vec3 vNormal;in vec3 vColor;in vec4 vData;
+uniform vec3 uEye;uniform float uTime;uniform float uSurface;uniform float uPoly;uniform float uHue;uniform int uMode;uniform int uNeutral;uniform int uType;
+out vec4 frag;
+float h(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*n3(p);p=p*2.03+vec3(7.1,3.7,5.2);a*=.5;}return s;}
+vec3 hueShift(vec3 c,float a){const mat3 toYIQ=mat3(.299,.587,.114,.596,-.275,-.321,.212,-.523,.311);const mat3 toRGB=mat3(1.,.956,.621,1.,-.272,-.647,1.,-1.106,1.703);vec3 q=toYIQ*c;float ang=atan(q.z,q.y)+a;float ch=length(q.yz);q.y=ch*cos(ang);q.z=ch*sin(ang);return clamp(toRGB*q,0.,1.);}
+void main(){vec3 n=normalize(vNormal);float micro=fbm(vObj*(11.+uSurface*24.));float fine=n3(vObj*(58.+uSurface*70.));float eps=(micro-.5)*(.06+.10*uSurface)+(fine-.5)*.035*uSurface;n=normalize(n+vec3(dFdx(eps)*7.,eps*.22,dFdy(eps)*7.));vec3 base=hueShift(vColor,uHue);base*=.82+.34*micro;base+=vData.z*vec3(.16,.13,.08);
+ float ps=mix(22.,78.,uPoly);vec3 cell=fract(vObj*ps)-.5;float d=length(cell);float dotp=1.-smoothstep(.12,.31,d);float ring=smoothstep(.18,.25,d)-smoothstep(.25,.33,d);float pol=(dotp*.28+ring*.22)*uPoly*vData.y;base=mix(base,base*1.22+vec3(.08,.06,.035),pol);if(uType==3){float br=clamp(vData.z,0.,1.);base=mix(base*.58,base*1.22+vec3(.04,.07,.02),br);}
+ if(uMode==1){float o=clamp(vData.w,0.,1.);base=mix(vec3(.10,.24,.22),vec3(1.,.58,.22),o);base+=vData.z*vec3(.25,.25,.12);}else if(uMode==2){base=pow(base,vec3(.82));base+=pol*vec3(.18,.14,.08);}
+ vec3 L1=normalize(vec3(-.45,.82,.34)),L2=normalize(vec3(.65,.32,-.62)),Vd=normalize(uEye-vWorld);float nd=max(dot(n,L1),0.),fill=max(dot(n,L2),0.);float rim=pow(1.-max(dot(n,Vd),0.),2.2);vec3 H=normalize(L1+Vd);float spec=pow(max(dot(n,H),0.),mix(18.,55.,uNeutral==1?.2:.65));vec3 light=uNeutral==1?vec3(1.0):vec3(.72,.94,.92);vec3 col=base*(.34+nd*.82+fill*.28)*light+spec*vec3(.34,.38,.35)+rim*vec3(.07,.20,.19);
+ float depth=length(uEye-vWorld);float fog=1.-exp(-depth*depth*.012);vec3 fogc=uNeutral==1?vec3(.10,.105,.10):vec3(.025,.135,.145);col=mix(col,fogc,clamp(fog,0.,.58));frag=vec4(pow(col,vec3(.92)),1.);}`;
+const FVS=`#version 300 es
+precision highp float;layout(location=0)in vec3 aPos;uniform mat4 uVP;out vec3 vP;void main(){vP=aPos;gl_Position=uVP*vec4(aPos,1.);}`;
+const FFS=`#version 300 es
+precision highp float;in vec3 vP;uniform float uTime;uniform int uNeutral;out vec4 frag;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}void main(){float q=n(vP.xz*1.8)+.5*n(vP.xz*5.7);float c=sin(vP.x*2.2+uTime*.22)+sin(vP.z*2.6-uTime*.18);c=pow(max(0.,c*.25+.35),3.);vec3 b=uNeutral==1?vec3(.18,.17,.15):vec3(.08,.15,.13);b*=.72+.34*q;b+=c*(uNeutral==1?vec3(.04):vec3(.035,.12,.10));float g=smoothstep(12.,4.,length(vP.xz));frag=vec4(b*g,1.);}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}function program(vs,fs){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,vs));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p}
+const prog=program(VS,FS),floorProg=program(FVS,FFS);const vao=gl.createVertexArray(),vbo=gl.createBuffer(),ibo=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo);const stride=13*4;gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,stride,12);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,3,gl.FLOAT,false,stride,24);gl.enableVertexAttribArray(3);gl.vertexAttribPointer(3,4,gl.FLOAT,false,stride,36);gl.bindVertexArray(null);
+const floorV=new Float32Array([-14,-.32,-14,14,-.32,-14,14,-.32,14,-14,-.32,14]),floorI=new Uint16Array([0,1,2,0,2,3]),fvao=gl.createVertexArray(),fvbo=gl.createBuffer(),fibo=gl.createBuffer();gl.bindVertexArray(fvao);gl.bindBuffer(gl.ARRAY_BUFFER,fvbo);gl.bufferData(gl.ARRAY_BUFFER,floorV,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,12,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,fibo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,floorI,gl.STATIC_DRAW);gl.bindVertexArray(null);
+const state={type:'tabulate',seed:7,age:.72,density:.64,openness:.58,surface:.66,polyps:.62,current:.42,hue:0,sizeM:1,mode:0,neutral:0,mesh:null,indexCount:0,bounds:null,meta:null};
+const camera={yaw:-.68,pitch:.24,dist:5.2,target:[0,.78,0],drag:false,x:0,y:0};
+const typeGrid=document.getElementById('typeGrid'),scaleRow=document.getElementById('scaleRow'),paramGrid=document.getElementById('paramGrid'),metricGrid=document.getElementById('metricGrid');
+for(const t of TYPES){const b=document.createElement('button');b.className='typeBtn'+(t.id===state.type?' on':'');b.dataset.type=t.id;b.innerHTML=`<strong>${t.zh}</strong><span>${t.en}</span>`;typeGrid.appendChild(b)}
+const SCALES=[{m:.05,n:'微型',s:'5 cm'},{m:.25,n:'小型',s:'25 cm'},{m:1,n:'中型',s:'1 m'},{m:5,n:'大型',s:'5 m'},{m:15,n:'房屋级',s:'15 m'},{m:31,n:'巨型礁体',s:'31 m'}];for(const s of SCALES){const b=document.createElement('button');b.className='scaleBtn'+(s.m===state.sizeM?' on':'');b.dataset.scale=s.m;b.innerHTML=`<b>${s.n}</b><span>${s.s}</span>`;scaleRow.appendChild(b)}
+const PARAMS=[
+ ['age','生长年龄','AGE',.25,1,.01,'控制层级、层数与群体成熟度'],['density','群体密度','DENSITY',.15,1,.01,'控制枝数、叶层与 polyp 数量'],['openness','开放度','OPENNESS',.10,1,.01,'控制分叉角、冠幅与层间空间'],['surface','微表面','MICRO SURFACE',0,1,.01,'Brick V2.6 多尺度粗糙度与孔隙强度'],['polyps','水螅体密度','POLYP FIELD',0,1,.01,'毫米级表面场代理，不等于物种定值'],['current','水流响应','CURRENT',0,1,.01,'仅软珊瑚按根部刚度与末端柔度响应'],['hue','色相偏移','HUE',-.45,.45,.01,'仅做观察调色，不写回自然颜色真值']
+];
+for(const [id,zh,en,min,max,step,note] of PARAMS){const d=document.createElement('label');d.className='param';d.innerHTML=`<div class="paramHead"><b>${zh} · ${en}</b><output id="out-${id}"></output></div><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${state[id]}"><small>${note}</small>`;paramGrid.appendChild(d)}
+function fmt(v){return(+v).toFixed(2)}function refreshOutputs(){for(const [id] of PARAMS)document.getElementById('out-'+id).textContent=fmt(state[id])}
+refreshOutputs();
+let rebuildTimer=0;function scheduleBuild(){clearTimeout(rebuildTimer);rebuildTimer=setTimeout(rebuild,35)}
+for(const [id] of PARAMS){document.getElementById(id).addEventListener('input',e=>{state[id]=+e.target.value;refreshOutputs();if(id==='current'||id==='hue'||id==='surface'||id==='polyps'){}else scheduleBuild()})}
+typeGrid.addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(!b)return;state.type=b.dataset.type;for(const x of typeGrid.children)x.classList.toggle('on',x===b);rebuild()});
+scaleRow.addEventListener('click',e=>{const b=e.target.closest('[data-scale]');if(!b)return;state.sizeM=+b.dataset.scale;for(const x of scaleRow.children)x.classList.toggle('on',x===b);updateHUD();updateMetrics()});
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=+b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));if(state.mode===2){camera.dist=Math.max(2.3,camera.dist*.55);camera.target=[0,1.05,0]}document.getElementById('modeHud').firstChild.nodeValue=(state.mode===0?'APPEARANCE':state.mode===1?'STRUCTURE':'MICROSCOPE')+'\n'});
+document.getElementById('neutralBtn').onclick=e=>{state.neutral=1-state.neutral;e.target.classList.toggle('on',!!state.neutral)};document.getElementById('cameraBtn').onclick=()=>fitCamera(true);document.getElementById('seedBtn').onclick=()=>{state.seed=(state.seed+37)%997;scheduleBuild()};
+function updateHUD(){const t=TYPES.find(x=>x.id===state.type);document.getElementById('hudTitle').textContent=`${t.en} · ${t.zh}`;document.getElementById('hudSub').textContent=t.sub;document.getElementById('scaleText').textContent=state.sizeM<1?Math.round(state.sizeM*100)+' cm':state.sizeM.toFixed(state.sizeM<10?1:0)+' m'}
+function boundsSize(){if(!state.bounds)return[1,1,1];return V.sub(state.bounds.max,state.bounds.min)}
+function fitCamera(hard=false){const s=boundsSize(),max=Math.max(...s);camera.target=[(state.bounds.min[0]+state.bounds.max[0])/2,(state.bounds.min[1]+state.bounds.max[1])/2,(state.bounds.min[2]+state.bounds.max[2])/2];camera.dist=max*1.18+.62;if(hard){camera.yaw=-.68;camera.pitch=.24}}
+function updateMetrics(){if(!state.mesh)return;const s=boundsSize(),scale=state.sizeM/Math.max(...s),dims=s.map(x=>x*scale);const v=state.mesh.vertices.length/13,t=state.mesh.indices.length/3,meta=state.meta;const items=[['L×W×H',dims.map(x=>x<1?(x*100).toFixed(0)+'cm':x.toFixed(2)+'m').join(' × '),'工程尺度'],['TRIANGLES',t.toLocaleString(),'当前母体'],['VERTICES',v.toLocaleString(),'函数生成'],['BRANCH ORDER',meta.branchOrder,'生成层级'],['VOID PROXY',(meta.voidRatio*100).toFixed(0)+'%','空隙代理'],['POLYP',meta.polypMm,'证据档位'],['KERNEL',meta.kernel,'独立形态核'],['SOURCE', '0 GLB','运行时依赖']];metricGrid.innerHTML=items.map(x=>`<div class="metric"><b>${x[1]}</b><span>${x[0]} · ${x[2]}</span></div>`).join('')}
+function rebuild(){const p={seed:state.seed,age:state.age,density:state.density,openness:state.openness,surface:state.surface,polyps:state.polyps,current:state.current,hue:state.hue};const mesh=buildCoral(state.type,p);state.mesh=mesh;state.indexCount=mesh.indices.length;state.bounds={min:mesh.boundsMin,max:mesh.boundsMax};state.meta=mesh.meta;gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,mesh.vertices,gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ibo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);fitCamera();updateHUD();updateMetrics()}
+const stage=document.getElementById('stage');function posFromEvent(e){return[e.clientX,e.clientY]}stage.addEventListener('pointerdown',e=>{camera.drag=true;camera.x=e.clientX;camera.y=e.clientY;stage.setPointerCapture(e.pointerId)});stage.addEventListener('pointermove',e=>{if(!camera.drag)return;let dx=e.clientX-camera.x,dy=e.clientY-camera.y;camera.x=e.clientX;camera.y=e.clientY;camera.yaw-=dx*.006;camera.pitch=clamp(camera.pitch-dy*.005,-.05,1.05)});stage.addEventListener('pointerup',()=>camera.drag=false);stage.addEventListener('pointercancel',()=>camera.drag=false);stage.addEventListener('wheel',e=>{e.preventDefault();camera.dist=clamp(camera.dist*Math.exp(e.deltaY*.001),1.2,18)},{passive:false});
+function resize(){const dpr=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.floor(gl.canvas.clientWidth*dpr)),h=Math.max(1,Math.floor(gl.canvas.clientHeight*dpr));if(gl.canvas.width!==w||gl.canvas.height!==h){gl.canvas.width=w;gl.canvas.height=h;gl.viewport(0,0,w,h)}}
+function loc(p,n){return gl.getUniformLocation(p,n)}const U={vp:loc(prog,'uVP'),model:loc(prog,'uModel'),time:loc(prog,'uTime'),current:loc(prog,'uCurrent'),soft:loc(prog,'uSoft'),eye:loc(prog,'uEye'),surface:loc(prog,'uSurface'),poly:loc(prog,'uPoly'),hue:loc(prog,'uHue'),mode:loc(prog,'uMode'),neutral:loc(prog,'uNeutral'),type:loc(prog,'uType')};const FU={vp:loc(floorProg,'uVP'),time:loc(floorProg,'uTime'),neutral:loc(floorProg,'uNeutral')};
+let last=performance.now(),frames=0,fpsT=last;function render(now){resize();let dt=Math.min(.05,(now-last)/1000);last=now;frames++;if(now-fpsT>700){document.getElementById('fps').textContent=Math.round(frames*1000/(now-fpsT))+' FPS';frames=0;fpsT=now}const asp=gl.canvas.width/gl.canvas.height,cp=Math.cos(camera.pitch),eye=[camera.target[0]+Math.sin(camera.yaw)*cp*camera.dist,camera.target[1]+Math.sin(camera.pitch)*camera.dist,camera.target[2]+Math.cos(camera.yaw)*cp*camera.dist],vp=M4.mul(M4.perspective(.76,asp,.03,100),M4.lookAt(eye,camera.target));gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.clearColor(state.neutral?.10:.018,state.neutral?.105:.075,state.neutral?.10:.082,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ gl.useProgram(floorProg);gl.uniformMatrix4fv(FU.vp,false,vp);gl.uniform1f(FU.time,now/1000);gl.uniform1i(FU.neutral,state.neutral);gl.bindVertexArray(fvao);gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
+ gl.useProgram(prog);gl.uniformMatrix4fv(U.vp,false,vp);gl.uniformMatrix4fv(U.model,false,M4.ident());gl.uniform1f(U.time,now/1000);gl.uniform1f(U.current,state.current);gl.uniform1i(U.soft,TYPES.find(x=>x.id===state.type).soft?1:0);gl.uniform3fv(U.eye,eye);gl.uniform1f(U.surface,state.surface);gl.uniform1f(U.poly,state.polyps);gl.uniform1f(U.hue,state.hue);gl.uniform1i(U.mode,state.mode);gl.uniform1i(U.neutral,state.neutral);gl.uniform1i(U.type,TYPES.findIndex(x=>x.id===state.type));gl.bindVertexArray(vao);gl.drawElements(gl.TRIANGLES,state.indexCount,gl.UNSIGNED_INT,0);gl.bindVertexArray(null);requestAnimationFrame(render)}
+rebuild();requestAnimationFrame(render);window.CoralMotherR05={state,buildCoral,rebuild,version:'R05.0.0'};
+</script></body></html>
