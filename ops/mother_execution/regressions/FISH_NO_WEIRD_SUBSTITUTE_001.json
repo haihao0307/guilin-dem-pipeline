@@ -1,0 +1,32 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "FISH-NO-WEIRD-SUBSTITUTE-001",
+  "domain": "fish",
+  "source": "user_correction",
+  "createdAt": "2026-09-21",
+  "failureClass": "UNAUTHORIZED_CREATIVE_SUBSTITUTE",
+  "failureDescription": "Fish task produced an invented/strange/generic fish before source measurement, creating a false baseline that required repeated correction.",
+  "mustNeverRepeat": [
+    "generic fish silhouette",
+    "invented head-mouth-gill relation",
+    "color variant used to substitute structural match",
+    "toy fish promoted to production"
+  ],
+  "requiredEvidence": [
+    "reference identity/SHA where available",
+    "measured head-mouth-operculum relation",
+    "target-only production diff",
+    "fixed side/front/top comparison"
+  ],
+  "gateLogic": [
+    "REPLICATION_LOCKED=true",
+    "creativeAuthorization=false unless user explicitly changes it",
+    "rejected fish cannot be next baseline"
+  ],
+  "appliesTo": [
+    "Fish Mother",
+    "Ocean Life Mother",
+    "Stone Money Game"
+  ],
+  "active": true
+}
