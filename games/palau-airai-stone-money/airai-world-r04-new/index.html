@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Airai / Stone Money Island — 完整地图 R04 新工作台</title>
+<style>
+:root{color-scheme:dark;--panel:rgba(3,18,26,.84);--line:rgba(190,238,238,.22);--text:#eefafa;--muted:#9cc1c7;--accent:#64f0df;--warn:#ffcf70;--story:#ff745f}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#031018;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
+#top{position:fixed;left:max(14px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.card{pointer-events:auto;background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.35)}
+#title{padding:14px 16px;max-width:min(660px,calc(100vw - 28px))}h1{font-size:clamp(17px,2vw,24px);margin:0 0 5px;letter-spacing:.01em}.sub{color:var(--muted);font-size:12px;line-height:1.45}.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;margin:7px 6px 0 0;font-size:11px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06)}.dot{width:7px;height:7px;border-radius:50%;background:#ffd36b}.dot.ok{background:#63f0b5}.dot.bad{background:#ff756b}
+#toolbar{margin-left:auto;padding:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:48vw}button{appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#eefafa;border-radius:11px;padding:9px 11px;font:600 12px/1 system-ui;cursor:pointer}button:hover,button.active{background:rgba(100,240,223,.16);border-color:rgba(100,240,223,.42)}button.story{border-color:rgba(255,116,95,.45)}
+#panel{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));width:min(330px,calc(100vw - 28px));padding:13px 14px}.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:7px 0}.row label{font-size:12px;color:#dff4f2}.row small{color:var(--muted)}input[type=range]{width:126px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.check{display:flex;gap:7px;align-items:center;font-size:12px;color:#cfe6e7}.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}.legend span{font-size:9px;color:#b4d0d3;text-align:center}.sw{height:7px;border-radius:999px;margin-bottom:3px}.status{font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#acd0d3;margin-top:9px;white-space:pre-line}
+#info{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:min(330px,calc(100vw - 28px));padding:13px 14px}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.kpi{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);border-radius:11px;padding:9px}.kpi b{display:block;font-size:16px}.kpi span{font-size:10px;color:var(--muted)}.truth{margin-top:10px;font-size:10px;line-height:1.45;color:#a9c4c7;border-top:1px solid rgba(255,255,255,.09);padding-top:9px}
+#tip{position:fixed;display:none;pointer-events:none;padding:8px 10px;border-radius:10px;background:rgba(1,12,18,.9);border:1px solid rgba(255,255,255,.14);font:11px/1.4 ui-monospace,monospace;color:#eafafa;max-width:260px}
+@media(max-width:760px){#top{display:block}#toolbar{margin-top:8px;margin-left:0;max-width:100%;justify-content:flex-start}#title{padding:11px 12px}#panel{width:min(290px,calc(100vw - 28px));padding:10px 11px}#info{display:none}.checks{grid-template-columns:1fr 1fr}.row{margin:5px 0}button{padding:8px 9px}.legend{display:none}}
+</style>
+</head>
+<body>
+<canvas id="world" aria-label="Airai full map evidence workbench"></canvas>
+<div id="top">
+  <div id="title" class="card">
+    <h1>Airai / Stone Money Island · 完整地图 R04</h1>
+    <div class="sub">全图范围 134.49–134.64°E / 7.27–7.42°N；故事岛锚点采用已确认位置。外圈是简化背景，Airai 与故事岛周边显示真实海图、岸线、岛屿和礁盘证据。</div>
+    <span class="badge"><i id="loadDot" class="dot"></i><span id="loadLabel">正在读取真实数据</span></span>
+    <span class="badge">R11 水深证据</span><span class="badge">单一 PalauWorld 入口</span><span class="badge">无传统 LOD</span>
+  </div>
+  <div id="toolbar" class="card">
+    <button id="btnFull" class="active">完整地图</button>
+    <button id="btnCore">核心礁盘</button>
+    <button id="btnStory" class="story">故事岛</button>
+    <button id="btnView">切换俯视</button>
+    <button id="btnReset">复位</button>
+  </div>
+</div>
+<div id="panel" class="card">
+  <div class="row"><label>视角倾斜 <small id="tiltVal"></small></label><input id="tilt" type="range" min="0.15" max="1" step="0.01" value="0.56"></div>
+  <div class="row"><label>水深夸张 <small id="depthVal"></small></label><input id="depth" type="range" min="0" max="2.5" step="0.05" value="0.8"></div>
+  <div class="row"><label>证据点大小 <small id="pointVal"></small></label><input id="point" type="range" min="0.5" max="4" step="0.1" value="1.7"></div>
+  <div class="checks">
+    <label class="check"><input id="showLand" type="checkbox" checked>岛屿 / 岸线</label>
+    <label class="check"><input id="showReef" type="checkbox" checked>礁盘语义</label>
+    <label class="check"><input id="showDepth" type="checkbox" checked>实测水深点</label>
+    <label class="check"><input id="showCore" type="checkbox" checked>核心范围</label>
+  </div>
+  <div class="legend">
+    <div><div class="sw" style="background:#8fe7df"></div><span>0–10 m</span></div>
+    <div><div class="sw" style="background:#2cbad1"></div><span>10–40 m</span></div>
+    <div><div class="sw" style="background:#17639d"></div><span>40–100 m</span></div>
+    <div><div class="sw" style="background:#081f55"></div><span>&gt;100 m</span></div>
+  </div>
+  <div id="status" class="status">初始化中…</div>
+</div>
+<div id="info" class="card">
+  <div class="kpis"><div class="kpi"><b id="nLand">—</b><span>岛屿面</span></div><div class="kpi"><b id="nReef">—</b><span>礁盘 / 海岸语义</span></div><div class="kpi"><b id="nDepth">—</b><span>NOAA ENC 水深点</span></div><div class="kpi"><b>134.566743 / 7.349033</b><span>故事岛锚点</span></div></div>
+  <div class="truth">本工作台是新的完整地图证据视图，不是旧 R01/R03 场景。水深数值保留 NOAA ENC 本地海图基准；未转换为 MSL。点间空白仍是未知，不把屏幕视觉插值称为测绘真值。</div>
+</div>
+<div id="tip"></div>
+<script>
+'use strict';
+(() => {
+const BBOX={minLon:134.49,maxLon:134.64,minLat:7.27,maxLat:7.42};
+const CORE={minLon:134.535,maxLon:134.605,minLat:7.315,maxLat:7.385};
+const ANCHOR=[134.5667427743189,7.349032638038719];
+const DATA_BASE='../airai-reef-bathy-r01/vectors/';
+const ENDPOINTS={land:DATA_BASE+'LNDARE.geojson',coast:DATA_BASE+'COALNE.geojson',semantics:DATA_BASE+'OSM_SEMANTICS_CORE_R07.geojson',soundings:DATA_BASE+'SOUNDG_NORMALIZED.geojson'};
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});
+const tip=document.getElementById('tip');
+const ui={status:document.getElementById('status'),loadDot:document.getElementById('loadDot'),loadLabel:document.getElementById('loadLabel'),nLand:document.getElementById('nLand'),nReef:document.getElementById('nReef'),nDepth:document.getElementById('nDepth'),tilt:document.getElementById('tilt'),depth:document.getElementById('depth'),point:document.getElementById('point'),tiltVal:document.getElementById('tiltVal'),depthVal:document.getElementById('depthVal'),pointVal:document.getElementById('pointVal'),showLand:document.getElementById('showLand'),showReef:document.getElementById('showReef'),showDepth:document.getElementById('showDepth'),showCore:document.getElementById('showCore')};
+const state={yaw:-.34,tilt:+ui.tilt.value,zoom:1,panX:0,panY:0,depthExag:+
