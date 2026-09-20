@@ -1,0 +1,89 @@
+{
+  "schema": "kaopu.original-fish.reference-rig-ranking/1.0",
+  "date": "2026-09-20",
+  "basis": [
+    "apps/ocean-life-mother/reference-intake/batch-20260919/REFERENCE_REGISTER.json",
+    "apps/ocean-life-mother/reference-intake/batch-20260919b/REFERENCE_REGISTER.json",
+    "apps/ocean-life-mother/reference-intake/batch-20260919c/REFERENCE_REGISTER.json",
+    "apps/ocean-life-mother/reference-intake/batch-20260919d/REFERENCE_REGISTER.json"
+  ],
+  "selectionRule": "Separate raw rig/animation completeness from suitability as the first shared Original Fish baseline.",
+  "candidates": [
+    {
+      "referenceId": "FISH-REF-006",
+      "label": "Guppy female",
+      "sourceIdentity": "freshwater guppy",
+      "rawRig": {"joints": 191, "clips": 2, "channelsByClip": [332, 428], "totalKnownChannels": 760},
+      "materials": "four materials; BLEND/MASK/OPAQUE; specular-glossiness; author-labelled Heart layer",
+      "rawCompletenessRank": 1,
+      "baselineDecision": "STRESS_TEST_LATER",
+      "reason": "Richest raw rig and two actions, but materially and anatomically specialised; poor first shared core because thin transparent fins, internal layer and freshwater-specific proportions would bias the baseline."
+    },
+    {
+      "referenceId": "FISH-REF-012",
+      "label": "Rainbow Trout - Redband",
+      "sourceIdentity": "freshwater salmonid",
+      "rawRig": {"joints": 138, "clips": 6, "actions": ["Casual_Swim", "Idle", "Surge_Swim", "Casual_Swim_Young", "Idle_Young", "Surge_Young"]},
+      "materials": "adult and Young meshes/materials; six authored clips",
+      "rawCompletenessRank": 2,
+      "baselineDecision": "MOTION_LIBRARY_VALIDATION_AFTER_TUNA",
+      "reason": "Best action variety, but adult/Young is authored presentation rather than measured growth and source review is not yet a clean biological lifecycle foundation."
+    },
+    {
+      "referenceId": "FISH-REF-002",
+      "label": "Tuna Fish",
+      "sourceIdentity": "marine fusiform bony fish; exact tuna species not independently verified",
+      "rawRig": {"joints": 98, "clips": 1, "clipName": "Swim", "durationSeconds": 2.1666667461395264, "channels": 291},
+      "geometry": {"meshes": 3, "vertices": 4637, "triangles": 7944},
+      "materials": "separate body, eye and cornea; metallic-roughness; cornea BLEND",
+      "variants": [
+        {"filename": "tuna_fish.glb", "sha256": "f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0", "textures": "6 x 1024"},
+        {"filename": "tuna_fish (1)(1).glb", "sha256": "5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe", "textures": "6 x 4096"}
+      ],
+      "variantIntegrity": "nodes, meshes, skins, animations, materials and all 603 decoded accessor arrays exactly equal; image payloads differ",
+      "rawCompletenessRank": 3,
+      "baselineDecision": "SELECTED_FIRST_STANDARDIZATION_BASELINE",
+      "reason": "Not the largest rig, but the best balance of typical marine spindle form, dense single-cycle motion coverage, clean body/eye/cornea separation, moderate geometry cost, permissive CC-BY source declaration and duplicated export integrity."
+    },
+    {
+      "referenceId": "FISH-REF-004",
+      "label": "Great Hammerhead Shark",
+      "rawRig": {"joints": 42, "clips": 1, "durationSeconds": 11.966666664928198, "channels": 122},
+      "baselineDecision": "SEPARATE_SHARK_FAMILY",
+      "reason": "Useful named gill/jaw and shark-body reference, but distinct cartilaginous-fish anatomy and CC-BY-NC source make it unsuitable as the first shared bony-fish core."
+    },
+    {
+      "referenceId": "FISH-REF-003",
+      "label": "Koi Fish",
+      "rawRig": {"joints": 0, "morphTargets": 150, "clips": 1, "targetPath": "weights"},
+      "baselineDecision": "MORPH_ANIMATION_ADAPTER_TEST",
+      "reason": "Valuable proof that motion can be morph-based without bones; not the first skeleton standardization source."
+    },
+    {
+      "referenceId": "FISH-REF-008",
+      "label": "Giant Trevally",
+      "rawRig": {"joints": 0, "clips": 0},
+      "baselineDecision": "STATIC_SHAPE_REFERENCE_ONLY",
+      "reason": "CC0 and game-relevant but has no source motion or rig; cannot bootstrap the motion/skeleton line."
+    }
+  ],
+  "selected": {
+    "referenceId": "FISH-REF-002",
+    "workingName": "Tuna Baseline R07",
+    "purpose": "First complete semantic-rig and motion normalization pass for Original Fish",
+    "notClaims": [
+      "This does not prove the source animation is biologically correct.",
+      "This does not identify the exact tuna species from the filename alone.",
+      "This does not authorize copying the source mesh, texture or keyframes into the native runtime.",
+      "This does not make all fish share tuna proportions."
+    ]
+  },
+  "currentBlocker": {
+    "status": "EXACT_TUNA_BYTES_NOT_PRESENT_IN_CURRENT_RUNTIME_OR_REFERENCE_CACHE",
+    "requiredOneOf": [
+      "tuna_fish.glb with SHA256 f75f073a2999ee20c4839434d28f90565e486b50270e663f48484cca2dbae9f0",
+      "tuna_fish (1)(1).glb with SHA256 5603d4aabc9a1127856841335a86ae7aa462b6b25d1a6586e93bf644f4d47abe"
+    ],
+    "note": "Repository contains detailed audit records, not the raw tuna binaries. Do not substitute a similarly named tuna."
+  }
+}
