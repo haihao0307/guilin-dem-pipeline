@@ -56,6 +56,8 @@ Browser QA:
 
 Direct network navigation is administratively blocked in this execution environment. Browser QA used the exact local HTML/CSS/modules converted to data URLs under `page.set_content`; this is a local runtime pass, not a public-link acceptance.
 
+The exact tested runtime is stored as seven auditable text chunks. `main.js` verifies their availability, reconstructs the runtime and binds it to the local `source-bundle.mjs`; this packaging avoids any source-reference asset dependency.
+
 ## Current non-acceptance
 
 This remains an engineering candidate.
@@ -70,5 +72,5 @@ This remains an engineering candidate.
 Direct entry:
 
 ```text
-apps/ocean-life-mother/original-fish/r07/tuna-r03/candidate.html
+apps/ocean-life-mother/original-fish/r07/tuna-r03/index.html
 ```
