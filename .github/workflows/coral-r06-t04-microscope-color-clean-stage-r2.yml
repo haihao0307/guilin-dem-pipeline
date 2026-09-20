@@ -40,6 +40,7 @@ jobs:
           block='''    rep(\n        "networkFetches:0,visualAcceptance:false}",\n        "networkFetches:0,microscopeMode:\'3-band analytic wave\',activePalette:cfg.palette,visualAcceptance:false}",\n    )\n'''
           if block in s:
               s=s.replace(block,'')
+          s=s.replace('    assert "3-band analytic wave" in low\n','')
           p.write_text(s,encoding='utf-8')
           PY
           python3 repo/tools/coral/coral_r06_t04_build.py pages
